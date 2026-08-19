@@ -4096,6 +4096,13 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
         raise HTTPException(status_code=422,
             detail="Could not confirm this photo is anonymous. " + _retake)
     if scan["verdict"] == "redact":
+        # PHOTO-REJECT-1 (RUL-033): no blur attempts while the canary is dark.
+        if _anon_reject_only():
+            raise HTTPException(status_code=422,
+                detail="This photo is not anonymous"
+                       + (" — it shows: %s" % labels if labels else "")
+                       + ". Please replace it or leave it out. A photo without "
+                         "number plates, signage or contact details works best.")
         if not scan["regions"]:
             raise HTTPException(status_code=422,
                 detail="Photo blocked to protect your anonymity. " + _retake)
@@ -13624,6 +13631,28 @@ def _anon_refine_regions(img, regions, provider, category, spend_who, endpoint):
             out.append(rough)
     return out
 
+def _anon_reject_only():
+    """PHOTO-REJECT-1 (RUL-033, David 19 Aug 2026): until the Gemini canary is armed,
+    a photo that needs blurring is REJECTED with a clear ask ("not anonymous --
+    replace it or leave it out"), never blurred. Bridge until ~25 Aug: three fixes
+    could not stop the general-LLM lanes smearing photos (RUL-031), and a rejected
+    photo can never leak or publish as porridge. Also skips the whole refine/verify
+    spend. Resolves automatically: arming the canary (PHOTO_SCAN_CANARY=1 + key)
+    turns blurring back on through the grounded lane -- no second deploy.
+    Overrides: PHOTO_REJECT_ONLY=1 forces reject-only, =0 forces old blurring."""
+    try:
+        import ai_provider as _ap
+        _ov = _ap.envkey("PHOTO_REJECT_ONLY")
+        if _ov == "0":
+            return False
+        if _ov == "1":
+            return True
+        if (_ap.envkey("PHOTO_SCAN_CANARY") or "0") == "1" and "gemini" in _ap.configured_lanes():
+            return False   # canary armed: grounded boxes, blurring resumes
+    except Exception:
+        pass
+    return True   # fail to the safe, cheap side
+
 def _anon_scan_provider(default):
     """GEMINI-CANARY-1 (RUL-032, David 19 Aug 2026): which lane does the photo-anon
     SCAN and REFINE (the box-coordinate work both general-LLM lanes failed at,
@@ -13766,6 +13795,9 @@ def _anon_photo_pass(photo_srcs, agent, provider, category=""):
         if scan["confidence"] < _ANON_PHOTO_CONF:
             held += 1; notes.append("held:low-confidence"); continue
         if scan["verdict"] == "redact":
+            # PHOTO-REJECT-1 (RUL-033): same rule on the agency door -- held, not blurred.
+            if _anon_reject_only():
+                held += 1; notes.append("held:not-anonymous"); continue
             if not scan["regions"]:
                 held += 1; notes.append("held:redact-no-regions"); continue
             img2, _lbls = _anon_blur_until_clean(

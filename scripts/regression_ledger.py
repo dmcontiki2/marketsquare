@@ -5557,5 +5557,42 @@ def rg_account_binding_enforced():
     return out
 
 
+@entry("RG-0122", "While the canary is dark, a photo needing blur is REJECTED with the ask -- never smeared, never spent on",
+       LOCKED, scope="bea_main.py PHOTO-REJECT-1: BOTH doors (seller gate _seller_photo_anon_gate "
+       "and agency _anon_photo_pass). Class property: no upload path may reach "
+       "_anon_blur_until_clean while _anon_reject_only() is True -- reject/hold is the only "
+       "outcome for a redact verdict, with copy that names the ask (replace it or leave it out)",
+       fixed_on="2026-08-19",
+       ref="RUL-033 (David, 19 Aug 2026): 'reject any photos which need a blurring... just "
+           "until the 25th when I have the funds for Gemini'. Bridge rule: the general-LLM "
+           "lanes smear (RUL-031), and a rejected photo can never leak or publish as porridge; "
+           "it also skips the whole refine/verify spend. Self-resolving: PHOTO_SCAN_CANARY=1 + "
+           "GEMINI_API_KEY turns blurring back on through the grounded lane (RG-0121) with no "
+           "second deploy; PHOTO_REJECT_ONLY=0/1 is the manual override either way.")
+def rg_photo_reject_only():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "running outside the repo -- reject-only check skipped")]
+    if "def _anon_reject_only" not in bea:
+        return [(FAIL, "PHOTO-REJECT-1 has GONE: _anon_reject_only missing from bea_main.py")]
+    # both doors must consult the switch BEFORE any blur call
+    gate = bea.split("def _seller_photo_anon_gate", 1)[-1].split("\ndef ", 1)[0]
+    if "_anon_reject_only()" not in gate.split("_anon_blur_until_clean")[0]:
+        out.append((FAIL, "the seller gate can reach the blur loop without consulting "
+                          "_anon_reject_only -- the reject-only bridge is bypassed"))
+    imp = bea.split("def _anon_photo_pass", 1)[-1].split("\ndef ", 1)[0]
+    if "_anon_reject_only()" not in imp.split("_anon_blur_until_clean")[0]:
+        out.append((FAIL, "the agency import can reach the blur loop without consulting "
+                          "_anon_reject_only -- the reject-only bridge is bypassed"))
+    if "not anonymous" not in gate:
+        out.append((FAIL, "the rejection copy lost its ask -- the seller must be told to "
+                          "replace the photo or leave it out"))
+    if not out:
+        out.append((INFO, "both doors reject/hold on redact while the canary is dark; "
+                          "copy names the ask"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

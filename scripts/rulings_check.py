@@ -71,6 +71,11 @@ REFLECTIONS = {
                                      "rg_gate_admin_never_locked"], []),
    ("RULINGS.md", ["NOBODY ENTITLED TO ENTER MAY BE LOCKED OUT BY THEIR DEVICE"], []),
  ],
+ "RUL-033": [
+   ("bea_main.py", ["def _anon_reject_only", "PHOTO-REJECT-1"], []),
+   ("scripts/regression_ledger.py", ["RG-0122", "rg_photo_reject_only"], []),
+   ("RULINGS.md", ["REJECT-ONLY BRIDGE"], []),
+ ],
  "RUL-031": [
    ("RULINGS.md", ["NO MORE MICRO-FIXES TO THE ANON-BLUR MACHINERY"], []),
    ("CHANGELOG.md", ["deliberately NOT re-patched"], []),

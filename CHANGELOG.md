@@ -1,3 +1,9 @@
+## 2026-08-19 — PHOTO-REJECT-1 (RUL-033): reject-only bridge until the Gemini canary arms (~25 Aug)
+
+David: reject any photo that needs blurring — "this photo is not anonymous, please replace it or leave it out" — no blur attempts until funds for the Gemini key land on the 25th. Wired on BOTH doors: the seller gate raises 422 with the labels named ("This photo is not anonymous — it shows: number plate. Please replace it or leave it out…"); the agency import holds the photo (`held:not-anonymous`). No upload path can reach `_anon_blur_until_clean` while the bridge is up (RG-0122 guards this as a class).
+
+Self-resolving by design: `_anon_reject_only()` returns False the moment the canary is armed (GEMINI_API_KEY + PHOTO_SCAN_CANARY=1 after the eval passes) — blurring resumes through the grounded lane with NO second deploy. Manual overrides: PHOTO_REJECT_ONLY=1 (force bridge) / =0 (force old blurring). Side benefit while the bridge is up: the entire refine/verify AI spend stops; only the single scan call remains. Rides the same pending deploy as PHOTO-ORDER-1. Tested offline: default→reject, override 0/1, canary-armed→blurring resumes.
+
 ## 2026-08-19 — LEDGER-DUP-1: two sessions claimed RG-0118/0119 simultaneously; OPEN newcomers renumbered, guard added
 
 This session (photo order + gemini canary) and a concurrent session (relay proof + account binding) both appended ledger entries as RG-0118/RG-0119. Per the never-renumber-LOCKED rule, the concurrent session's LOCKED entries keep the ids; this session's OPEN entries moved: **photo order/cover = RG-0120**, **gemini canary = RG-0121** (earlier fragments today say 0118/0119 — read them as 0120/0121). Class fix: the `entry()` decorator now refuses a duplicate id at import (LEDGER-DUP-1), so the next collision is loud, not ambiguous.
