@@ -4777,5 +4777,85 @@ def rg_link_survives_prefetch():
     return out
 
 
+
+@entry("RG-0110", "A real user signs in ON THE DEVICE THEY ARE USING -- entry never depends on which device opens the mail",
+       OPEN, scope="the LAUNCH user sign-in lane entire (not the pre-launch gate): "
+                   "/auth/request-link minting the code, /auth/verify-code redeeming it, the shared "
+                   "_establish_user_session used by BOTH the link and the code so the doors cannot "
+                   "drift, the sign-in email carrying the code above the link, and the ms.js code box "
+                   "that every caller of requestSignInLink inherits. CLASS: any future sign-in surface "
+                   "must offer the typed code, not a link alone.",
+       ref="David, 19 Aug 2026, on the launch gate: 'I need access for users with no effort... zero "
+           "retries. How do I email 10000 people to help them after they tried a few times.' The "
+           "magic link cannot meet that and never could: it signs in whichever device OPENS the "
+           "mail, and mail overwhelmingly opens on a phone while the person is on a laptop. Every "
+           "user that happens to is stranded mid-task with no self-service way out, and at launch "
+           "scale there is no support channel to rescue them -- the workaround we used for one "
+           "tester (hand her a password) is proof of the defect, not a fix. A typed 6-digit code "
+           "removes the device dependency entirely: read it wherever the mail landed, type it where "
+           "you already are, no tab lost, no app switch, and no mail scanner can spend it. The link "
+           "stays for people already reading mail on the device they want. "
+           "CORRECTION on record: an earlier note in this session claimed /auth/verify carried the "
+           "same single-use prefetch fault as the gate link (RG-0109). It does NOT -- /auth/verify "
+           "has no jti and no single-use, so a scanner fetch is harmless there. The user-path defect "
+           "is the DEVICE dependency, which is a different and larger problem. "
+           "EXPECTED OPEN until this rides a deploy.")
+def rg_signin_device_independent():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        if "SIGNIN-CODE-1" not in bea or "/auth/verify-code" not in bea:
+            out.append((FAIL, "bea_main.py lost the typed-code sign-in -- users are back to a "
+                              "link that only works on whichever device opens the mail"))
+        if "def _establish_user_session" not in bea:
+            out.append((FAIL, "the shared session establisher is gone -- the link door and the "
+                              "code door can now drift apart silently"))
+        # both doors must go through the one establisher
+        for fn in ("def auth_verify(", "def auth_verify_code("):
+            seg = bea.split(fn)[1][:1400] if fn in bea else ""
+            if seg and "_establish_user_session" not in seg:
+                out.append((FAIL, "%s no longer routes through _establish_user_session" % fn.strip("def (")))
+        if "_signin_codes" not in bea or "_SIGNIN_CODE_TRIES" not in bea:
+            out.append((FAIL, "the sign-in code store / guess budget is gone"))
+    js = repo_file("ms.js") or ""
+    if js:
+        if "showSignInCodeBox" not in js:
+            out.append((FAIL, "ms.js lost the sign-in code box -- the email carries a code the "
+                              "user has nowhere to type"))
+        if "requestSignInLink" in js and "showSignInCodeBox(email" not in js:
+            out.append((FAIL, "requestSignInLink no longer reveals the code box, so some sign-in "
+                              "surface is link-only again"))
+    if repo_file("migrations/025_gate_nolock.py") is not None:
+        m = repo_file("migrations/025_gate_nolock.py")
+        if "/auth/verify-code" not in m:
+            out.append((FAIL, "migration 025 no longer exempts /auth/verify-code -- pre-launch "
+                              "testers cannot use the code door"))
+    # Live: the endpoint must reach the APP and refuse a junk code with JSON.
+    try:
+        req = urllib.request.Request(BASE + "/auth/verify-code",
+                                     data=json.dumps({"email": "rg-probe@example.invalid",
+                                                      "code": "000000"}).encode(),
+                                     headers=dict(UA, **{"Content-Type": "application/json"}),
+                                     method="POST")
+        try:
+            urllib.request.urlopen(req, timeout=TIMEOUT).read()
+            out.append((FAIL, "live /auth/verify-code ACCEPTED a junk code -- anyone can sign in "
+                              "as anyone. Stop everything."))
+        except urllib.error.HTTPError as he:
+            body = (he.read() or b"").decode("utf-8", "replace")
+            if he.code == 429:
+                out.append((INFO, "live /auth/verify-code rate-limited this probe -- limiter alive"))
+            elif he.code != 401:
+                out.append((FAIL, "live /auth/verify-code answered %s, expected 401" % he.code))
+            elif "detail" not in body:
+                out.append((FAIL, "live /auth/verify-code 401 came from nginx, not the app -- the "
+                                  "code door has not landed"))
+    except Exception as ex:
+        out.append((FAIL, "live /auth/verify-code unreachable (%r)" % ex))
+    if not out:
+        out.append((INFO, "typed-code sign-in live; both doors share one session establisher"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

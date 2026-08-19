@@ -1284,9 +1284,73 @@ async function requestSignInLink(inputId, msgId){
   try{
     const r = await fetch(BEA_URL+'/auth/request-link',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});
     const d = await r.json().catch(function(){return {};});
-    if(r.ok){ if(msg){ msg.style.color='var(--green)'; msg.innerHTML='✓ Check your email — we sent a sign-in link to <strong>'+email+'</strong>. It expires in 20 minutes.'; } else showToast('Check your email for your sign-in link'); }
+    if(r.ok){
+      if(msg){ msg.style.color='var(--green)'; msg.innerHTML='✓ We emailed <strong>'+email+'</strong> a 6-digit code. Type it below — you can stay on this page.'; }
+      else showToast('Check your email for your sign-in code');
+      showSignInCodeBox(email, msg);   // SIGNIN-CODE-1
+    }
     else { if(msg){ msg.style.color='#ef4444'; msg.textContent=(d && d.detail) || 'Could not send — check the address and try again.'; } }
   }catch(e){ if(msg){ msg.style.color='#ef4444'; msg.textContent='Could not connect — please try again.'; } }
+}
+
+// ── SIGNIN-CODE-1 (19 Aug 2026, David: "no effort access with zero retries") ──
+// A magic link signs in whichever device OPENS the mail. Mail opens on a phone; the
+// person is usually on a laptop. That strands them with no way to finish, and at
+// launch scale there is nobody to email them back. So after we send, we drop a code
+// box straight into the same panel: read the code wherever the mail landed, type it
+// where you already are. Built to work for EVERY caller of requestSignInLink, so no
+// sign-in surface can be left behind.
+function showSignInCodeBox(email, msg){
+  if(!msg || !msg.parentNode) return;
+  var id = 'ts-signin-code-box';
+  var old = document.getElementById(id);
+  if(old) old.parentNode.removeChild(old);
+  var box = document.createElement('div');
+  box.id = id;
+  box.style.cssText = 'margin-top:12px';
+  box.innerHTML =
+    '<div style="display:flex;gap:8px;align-items:stretch">'
+  +   '<input id="ts-signin-code" type="text" inputmode="numeric" autocomplete="one-time-code" '
+  +     'maxlength="6" placeholder="6-digit code" '
+  +     'style="flex:1;min-width:0;padding:12px 14px;font-size:18px;letter-spacing:5px;'
+  +     'text-align:center;border-radius:10px;border:1.5px solid var(--line,#cbd5e1);'
+  +     'background:var(--surface,#fff);color:inherit;outline:none">'
+  +   '<button id="ts-signin-code-btn" type="button" '
+  +     'style="padding:12px 18px;font-size:14px;font-weight:700;background:var(--green,#16a34a);'
+  +     'color:#fff;border:none;border-radius:10px;cursor:pointer;white-space:nowrap">Sign in</button>'
+  + '</div>'
+  + '<div id="ts-signin-code-msg" style="font-size:12px;margin-top:7px;color:var(--text-3,#64748b)">'
+  +   'Reading the email on your phone? Type the code here — this device signs in.</div>';
+  msg.parentNode.insertBefore(box, msg.nextSibling);
+  var inp = document.getElementById('ts-signin-code');
+  var btn = document.getElementById('ts-signin-code-btn');
+  var m2  = document.getElementById('ts-signin-code-msg');
+  function submit(){
+    var code = ((inp.value)||'').replace(/\D/g,'');
+    if(code.length !== 6){ m2.style.color='#ef4444'; m2.textContent='Enter the 6 digits from the email.'; return; }
+    btn.disabled = true; m2.style.color='var(--text-3,#64748b)'; m2.textContent='Signing you in…';
+    fetch(BEA_URL+'/auth/verify-code',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:email, code:code})})
+    .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, status:r.status, d:d}; }); })
+    .then(function(res){
+      if(res.ok && res.d && res.d.ok){
+        try{ localStorage.setItem('ms_user_email', res.d.email);
+             localStorage.setItem('ms_aa_email', res.d.email); }catch(e){}
+        m2.style.color='var(--green,#16a34a)'; m2.textContent='✓ Signed in.';
+        if(typeof updateHeaderAuthBtn==='function') updateHeaderAuthBtn();
+        setTimeout(function(){ location.reload(); }, 550);
+        return;
+      }
+      m2.style.color='#ef4444';
+      m2.textContent = (res.d && res.d.detail) ||
+        (res.status===429 ? 'Too many attempts — wait a few minutes.' : 'That code did not work.');
+      btn.disabled = false;
+    })
+    .catch(function(){ m2.style.color='#ef4444'; m2.textContent='Could not connect — try again.'; btn.disabled=false; });
+  }
+  btn.addEventListener('click', submit);
+  inp.addEventListener('keydown', function(e){ if(e.key==='Enter') submit(); });
+  setTimeout(function(){ try{ inp.focus(); }catch(e){} }, 120);
 }
 
 // ── HEADER AUTH BUTTON + SIGN OUT (added 8 Jul 2026) ──────────

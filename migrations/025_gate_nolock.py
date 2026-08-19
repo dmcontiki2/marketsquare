@@ -27,6 +27,7 @@ entry it is entitled to complete:
   location = /admin/login         POST {password}     -> admin token + cookie (never locked out)
   location = /admin/change-pin    POST                -> finishes forced PIN change
   location = /admin/verify        GET  X-Admin-Token  -> lets a held token re-assert
+  location = /auth/verify-code    POST {email, code}  -> ts_user session (SIGNIN-CODE-1)
 
 CONTAINMENT — these do NOT weaken the gate:
   * None of them serve content. They accept a credential and answer 200/401.
@@ -80,7 +81,8 @@ def find_site():
 
 HDRS = ("proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; "
         "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;")
-WANT = ["/review/claim-code", "/admin/login", "/admin/change-pin", "/admin/verify"]
+WANT = ["/review/claim-code", "/admin/login", "/admin/change-pin", "/admin/verify",
+        "/auth/verify-code"]   # SIGNIN-CODE-1: the real users' zero-retry door
 LINES = "".join(
     "    location = %-19s { proxy_pass http://127.0.0.1:8000; %s }\n" % (p, HDRS)
     for p in WANT)

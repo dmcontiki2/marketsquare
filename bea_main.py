@@ -12228,17 +12228,31 @@ def _safe_from(value, fallback: str = _RESEND_SAFE_FROM) -> str:
     return out
 
 
-def _send_login_email(to_email: str, link: str) -> str:
-    """Email the sign-in link. Resend if configured, else Gmail SMTP. Returns
-    'sent' | 'failed' | 'dry' (no email transport configured)."""
-    subject = "Your TrustSquare sign-in link"
+def _send_login_email(to_email: str, link: str, code: str = "") -> str:
+    """Email the sign-in code + link. Resend if configured, else Gmail SMTP. Returns
+    'sent' | 'failed' | 'dry' (no email transport configured).
+
+    SIGNIN-CODE-1 (19 Aug 2026, David): the CODE leads, the link follows. A link can
+    only ever sign in the device that opens it -- and mail overwhelmingly opens on a
+    phone while the person is on a laptop. At 10,000 users there is no support channel
+    that can rescue the ones that strands, so the code is the primary path and the link
+    is the convenience."""
+    subject = "Your TrustSquare sign-in code"
     html = (
         "<div style='font-family:Inter,Arial,sans-serif;max-width:440px;margin:auto'>"
         "<h2 style='color:#0c1a2e'>Sign in to TrustSquare</h2>"
-        "<p>Tap the button to sign in. This link works once and expires in 20 minutes.</p>"
+        "<p style='margin-bottom:6px'>Type this code into the TrustSquare tab you already have open:</p>"
+        "<p style='font-size:34px;letter-spacing:9px;font-weight:800;color:#0c1a2e;"
+        "background:#f1f5f9;border-radius:10px;padding:14px 0;text-align:center;margin:10px 0'>"
+        + (code or "") + "</p>"
+        "<p style='color:#6b7280;font-size:13px'>It works on whatever device you are actually using "
+        "&mdash; read it here, type it there.</p>"
+        "<p style='color:#6b7280;font-size:13px'>Or, if you are reading this on the device you want "
+        "to use, tap the button:</p>"
         "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
         "text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700'>Sign in &rarr;</a></p>"
-        "<p style='color:#6b7280;font-size:12px'>If you didn't request this, you can ignore this email.</p>"
+        "<p style='color:#6b7280;font-size:12px'>Both expire in 20 minutes. "
+        "If you didn't request this, you can ignore this email.</p>"
         "</div>"
     )
     key = os.getenv("RESEND_API_KEY", "")
@@ -12266,7 +12280,8 @@ def _send_login_email(to_email: str, link: str) -> str:
             msg["From"] = "TrustSquare <" + GMAIL_ADDRESS + ">"
             msg["To"] = to_email
             msg["Subject"] = subject
-            msg.set_content("Sign in to TrustSquare: " + link + "  (expires in 20 minutes)")
+            msg.set_content("Your TrustSquare sign-in code: " + (code or "")
+                            + "\n\nType it into the TrustSquare tab you have open, or sign in here:\n" + link + "  (expires in 20 minutes)")
             msg.add_alternative(html, subtype="html")
             with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
                 server.starttls()
@@ -12278,9 +12293,89 @@ def _send_login_email(to_email: str, link: str) -> str:
             return "failed"
     return "dry"
 
+# ── SIGNIN-CODE-1 (19 Aug 2026, David) — zero-retry sign-in for REAL users ──────
+# David's ruling, on the launch gate: "I need access for users with no effort... zero
+# retries." The magic link cannot deliver that at scale and never could -- it signs in
+# whichever device OPENS the mail, and mail opens on a phone. Every user that happens
+# to is stranded, and at 10,000 users there is no support channel to rescue them.
+# A typed code has none of that: it works on the device the person is actually using,
+# no app switch, no tab loss, no scanner can spend it. Link stays as the convenience
+# path for people already reading mail on the device they want to use.
+_SIGNIN_CODE_MIN   = 20     # matches the link's life
+_SIGNIN_CODE_TRIES = 6
+_signin_codes      = {}     # email -> {"code":str,"exp":epoch,"tries":int}
+
+def _signin_code_ok(email: str, code: str) -> bool:
+    """Consume a sign-in code. Constant-time, single use, budgeted."""
+    import hmac as _hmac, time as _t
+    now = _t.time()
+    for _k in [k for k, v in _signin_codes.items() if v.get("exp", 0) < now]:
+        _signin_codes.pop(_k, None)
+    rec = _signin_codes.get(email)
+    if not rec or rec["exp"] < now:
+        return False
+    rec["tries"] += 1
+    if rec["tries"] > _SIGNIN_CODE_TRIES:
+        _signin_codes.pop(email, None)
+        return False
+    if _hmac.compare_digest(rec["code"], (code or "").strip()):
+        _signin_codes.pop(email, None)
+        return True
+    return False
+
+def _establish_user_session(email: str, response: Response):
+    """The ONE place a user session is created. Both /auth/verify (link) and
+    /auth/verify-code (typed code) land here, so the two doors can never drift."""
+    conn = database.get_db()
+    try:
+        conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (email,))
+        # AGENCY-MEMBER-1 (3 Aug 2026): first successful sign-in IS the join.
+        try:
+            conn.execute(
+                "UPDATE agency_members SET status='active', joined_at=? "
+                "WHERE LOWER(agent_email)=? AND status='invited'",
+                (datetime.now(timezone.utc).isoformat(), email))
+        except Exception:
+            pass
+        conn.commit()
+        row = conn.execute("SELECT name FROM users WHERE email=?", (email,)).fetchone()
+        name = row["name"] if row and row["name"] else email.split("@")[0]
+    finally:
+        conn.close()
+    # ACCOUNT-BIND-1 (5 Aug 2026): proven email possession, kept as an HttpOnly cookie.
+    _sess_tok = _pyjwt.encode(
+        {"scope": "user", "sub": email,
+         "exp": datetime.now(timezone.utc) + timedelta(days=180),
+         "iat": datetime.now(timezone.utc)},
+        _JWT_SECRET, algorithm=_JWT_ALGO)
+    response.set_cookie("ts_user", _sess_tok, max_age=180*24*3600,
+                        httponly=True, secure=True, samesite="lax", path="/")
+    return {"ok": True, "email": email, "name": name}
+
+class _SignInCodeVerify(_BaseModel):
+    email: str
+    code: str
+
+@app.post("/auth/verify-code")
+def auth_verify_code(req: _SignInCodeVerify, request: Request, response: Response):
+    """SIGNIN-CODE-1: sign in with the 6-digit code from the email, in the tab the
+    person already has open. No device hop, no link to lose, nothing a mail scanner
+    can spend. Rate-limited per IP on top of the per-code guess budget."""
+    ip = (request.headers.get("x-forwarded-for")
+          or (request.client.host if request.client else "?")).split(",")[0].strip()
+    if not _review_rate_ok(ip):
+        raise HTTPException(status_code=429, detail="Too many attempts. Please wait a few minutes.")
+    email = (req.email or "").strip().lower()
+    if not _signin_code_ok(email, req.code or ""):
+        raise HTTPException(status_code=401,
+                            detail="That code is wrong or has expired — send yourself a new one.")
+    _log.info("signin-code OK for %s from %s", email, ip)
+    return _establish_user_session(email, response)
+
 @app.post("/auth/request-link")
 def auth_request_link(req: _SignInRequest):
-    """Email a signed sign-in link. Always returns ok (no account enumeration)."""
+    """Email a sign-in CODE (primary) and link (convenience). Always returns ok."""
+    import time as _t
     email = (req.email or "").strip().lower()
     if "@" not in email or "." not in email.split("@")[-1]:
         raise HTTPException(status_code=400, detail="Please enter a valid email address.")
@@ -12289,7 +12384,9 @@ def auth_request_link(req: _SignInRequest):
          "exp": datetime.now(timezone.utc) + timedelta(minutes=20),
          "iat": datetime.now(timezone.utc)},
         _JWT_SECRET, algorithm=_JWT_ALGO)
-    status = _send_login_email(email, APP_URL + "/?signin=" + token)
+    code = _new_review_code()
+    _signin_codes[email] = {"code": code, "exp": _t.time() + _SIGNIN_CODE_MIN * 60, "tries": 0}
+    status = _send_login_email(email, APP_URL + "/?signin=" + token, code)
     return {"ok": True, "sent": status}
 
 @app.post("/auth/verify")
@@ -12306,37 +12403,7 @@ def auth_verify(req: _SignInVerify, response: Response):
     email = (payload.get("email") or "").strip().lower()
     if not email:
         raise HTTPException(status_code=401, detail="This sign-in link is not valid.")
-    conn = database.get_db()
-    try:
-        conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (email,))
-        # AGENCY-MEMBER-1 (3 Aug 2026, David): agency_members.status was written
-        # 'invited' at invite time and NEVER advanced — nothing anywhere set
-        # 'active' or joined_at, so any future logic keyed on active membership
-        # would have misfired. First successful sign-in IS the join.
-        try:
-            conn.execute(
-                "UPDATE agency_members SET status='active', joined_at=? "
-                "WHERE LOWER(agent_email)=? AND status='invited'",
-                (datetime.now(timezone.utc).isoformat(), email))
-        except Exception:
-            pass
-        conn.commit()
-        row = conn.execute("SELECT name FROM users WHERE email=?", (email,)).fetchone()
-        name = row["name"] if row and row["name"] else email.split("@")[0]
-    finally:
-        conn.close()
-    # ACCOUNT-BIND-1 (5 Aug 2026): a verified magic link now ESTABLISHES a server
-    # session — the missing piece of LAUNCH-AUTH-1. The proof of email possession is
-    # kept as an HttpOnly cookie so charging endpoints can bind to a PROVEN identity
-    # instead of a caller-typed email. Same JWT machinery, distinct scope 'user'.
-    _sess_tok = _pyjwt.encode(
-        {"scope": "user", "sub": email,
-         "exp": datetime.now(timezone.utc) + timedelta(days=180),
-         "iat": datetime.now(timezone.utc)},
-        _JWT_SECRET, algorithm=_JWT_ALGO)
-    response.set_cookie("ts_user", _sess_tok, max_age=180*24*3600,
-                        httponly=True, secure=True, samesite="lax", path="/")
-    return {"ok": True, "email": email, "name": name}
+    return _establish_user_session(email, response)   # SIGNIN-CODE-1: one shared door
 
 # ── AGENCY (Team plan) — umbrella over agent sellers ───────────────────────
 class _AgencyCreate(_BaseModel):
