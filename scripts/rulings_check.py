@@ -41,6 +41,15 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-028": [
+   ("bea_main.py", ["ONETAP-1", "def _oauth_verify_id_token", "def _apple_client_secret",
+                    "auth_sub"], []),
+   ("ms.js", ["mountOneTap"], ["accounts.google.com/gsi"]),
+   ("marketsquare.html", ["onetap-buttons"], ["accounts.google.com/gsi"]),
+   ("migrations/025_gate_nolock.py", ["/auth/oauth/"], []),
+   ("scripts/regression_ledger.py", ["RG-0111", "rg_onetap_no_third_party"], []),
+   ("RULINGS.md", ["FEDERATED ONE-TAP SIGN-IN"], []),
+ ],
  "RUL-027": [
    ("bea_main.py", ["GATE-NOLOCK-1", "def _grant_review_cookie", "/review/claim-code",
                     "admin-master/", "admin-team/"], []),

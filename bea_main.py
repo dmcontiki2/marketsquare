@@ -508,6 +508,18 @@ def run_migrations(conn):
     if "buyer_token" not in user_cols:
         conn.execute("ALTER TABLE users ADD COLUMN buyer_token TEXT")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_users_buyer_token ON users(buyer_token)")
+    # ── ONETAP-1 (19 Aug 2026, David's ruling) — federated sign-in identity ──
+    # auth_sub is the provider's STABLE subject id. Email can change at the
+    # provider (and Apple private-relay addresses are opaque), so the sub is the
+    # durable key; email stays the human-facing handle and the link to any
+    # existing magic-link account.
+    if "auth_provider" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN auth_provider TEXT")
+    if "auth_sub" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN auth_sub TEXT")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_users_auth_sub ON users(auth_provider, auth_sub)")
+    if "auth_linked_at" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN auth_linked_at TEXT")
 
     # ── Wishlist Feed feature (v1.2.0) ──────────────────────────
     # Per-buyer signals: implicit (browse_search/browse_view) + explicit
@@ -12351,6 +12363,228 @@ def _establish_user_session(email: str, response: Response):
     response.set_cookie("ts_user", _sess_tok, max_age=180*24*3600,
                         httponly=True, secure=True, samesite="lax", path="/")
     return {"ok": True, "email": email, "name": name}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ONETAP-1 (19 Aug 2026) — "Sign in with Google" / "Sign in with Apple"
+# ══════════════════════════════════════════════════════════════════════════════
+# David's ruling: "We need the same effortless process Google and Apple has...
+# Even a single retry will lose customers. For everyone."
+#
+# WHY THE REDIRECT FLOW AND NOT THE ONE-TAP SCRIPT
+# ------------------------------------------------
+# Google's One Tap needs their gsi/client JavaScript in our page. RG-0025 is a
+# LOCKED entry recording David's post-breach ruling: NO third-party code on the
+# app at all -- a remote loader in <head> ran for every visitor, gate or no gate,
+# and was POSTing visited URLs off-box. That ruling is not negotiable for a
+# convenience feature. So this is the plain OAuth 2.0 / OIDC authorization-code
+# redirect: the button is an ordinary link, the browser goes to Google, comes
+# back with a code, and the SERVER does the rest. Zero third-party script, and
+# for a user already signed into Google it is still a single tap.
+#
+# WHAT IT GIVES THE USER
+#   click -> (already signed in to Google) -> back in the app, signed in.
+#   No email, no code, no link, no waiting, no device dependency, no retry.
+#
+# FAILS DARK: with no credentials configured, /auth/providers reports the lane
+# off and the UI never renders the button. Nothing breaks, nothing half-works.
+_OAUTH_STATE_MIN = 15     # a start->callback round trip must complete in 15 min
+
+_OIDC = {
+    "google": {
+        "authorize": "https://accounts.google.com/o/oauth2/v2/auth",
+        "token":     "https://oauth2.googleapis.com/token",
+        "jwks":      "https://www.googleapis.com/oauth2/v3/certs",
+        "issuers":   ("https://accounts.google.com", "accounts.google.com"),
+        "scope":     "openid email profile",
+        "client_id_env":     "GOOGLE_CLIENT_ID",
+        "client_secret_env": "GOOGLE_CLIENT_SECRET",
+    },
+    "apple": {
+        "authorize": "https://appleid.apple.com/auth/authorize",
+        "token":     "https://appleid.apple.com/auth/token",
+        "jwks":      "https://appleid.apple.com/auth/keys",
+        "issuers":   ("https://appleid.apple.com",),
+        "scope":     "openid email name",
+        "client_id_env":     "APPLE_CLIENT_ID",       # the Services ID
+        "client_secret_env": None,                     # generated, see _apple_client_secret
+    },
+}
+
+def _oauth_redirect_uri(provider: str) -> str:
+    return APP_URL.rstrip("/") + "/auth/oauth/" + provider + "/callback"
+
+def _apple_client_secret():
+    """Apple does not issue a static secret: the client secret IS an ES256 JWT we
+    sign with the .p8 key from the Apple developer portal. Returns None (lane dark)
+    if any piece is missing -- never a half-configured lane."""
+    team = os.getenv("APPLE_TEAM_ID", "").strip()
+    kid  = os.getenv("APPLE_KEY_ID", "").strip()
+    sid  = os.getenv("APPLE_CLIENT_ID", "").strip()
+    key  = os.getenv("APPLE_PRIVATE_KEY", "").strip().replace("\\n", "\n")
+    if not (team and kid and sid and key):
+        return None
+    try:
+        now = datetime.now(timezone.utc)
+        return _pyjwt.encode(
+            {"iss": team, "iat": now, "exp": now + timedelta(days=180),
+             "aud": "https://appleid.apple.com", "sub": sid},
+            key, algorithm="ES256", headers={"kid": kid})
+    except Exception as exc:
+        _log.error("apple client secret could not be signed: %s", exc)
+        return None
+
+def _oauth_ready(provider: str) -> bool:
+    cfg = _OIDC.get(provider)
+    if not cfg:
+        return False
+    if not os.getenv(cfg["client_id_env"], "").strip():
+        return False
+    if provider == "apple":
+        return _apple_client_secret() is not None
+    return bool(os.getenv(cfg["client_secret_env"], "").strip())
+
+@app.get("/auth/providers")
+def auth_providers():
+    """Which one-tap lanes are actually live. The UI renders a button ONLY for a
+    lane that answers true here, so an unconfigured provider is invisible rather
+    than a button that fails -- a dead button IS a retry, which is the whole thing
+    we are removing."""
+    return {p: _oauth_ready(p) for p in _OIDC}
+
+@app.get("/auth/oauth/{provider}/start")
+def auth_oauth_start(provider: str, request: Request, next: str = "/"):
+    """Send the browser to the provider. Plain 302, no script anywhere."""
+    from fastapi.responses import RedirectResponse
+    from urllib.parse import urlencode as _ue
+    cfg = _OIDC.get(provider)
+    if not cfg or not _oauth_ready(provider):
+        raise HTTPException(status_code=503, detail="That sign-in option is not available.")
+    import secrets as _sec_local   # local: this block sits ABOVE the module-level
+    nonce = _sec_local.token_urlsafe(16)   # `import secrets as _ts_secrets`, so do not lean on it
+    # State carries the nonce and the landing path, SIGNED -- so the callback can
+    # prove the round trip started here without us holding server-side state
+    # (which would break across workers and restarts, i.e. would cause retries).
+    state = _pyjwt.encode(
+        {"scope": "oauth-state", "p": provider, "nonce": nonce,
+         "next": next if next.startswith("/") else "/",
+         "exp": datetime.now(timezone.utc) + timedelta(minutes=_OAUTH_STATE_MIN),
+         "iat": datetime.now(timezone.utc)},
+        _REVIEW_SECRET, algorithm=_JWT_ALGO)
+    params = {
+        "client_id": os.getenv(cfg["client_id_env"], "").strip(),
+        "redirect_uri": _oauth_redirect_uri(provider),
+        "response_type": "code",
+        "scope": cfg["scope"],
+        "state": state,
+        "nonce": nonce,
+    }
+    if provider == "google":
+        params["prompt"] = "select_account"
+    if provider == "apple":
+        params["response_mode"] = "form_post"   # Apple POSTs the callback
+    return RedirectResponse(url=cfg["authorize"] + "?" + _ue(params), status_code=302)
+
+def _oauth_verify_id_token(provider: str, id_token: str, nonce: str):
+    """Verify the provider's ID token against its published JWKS. Returns the
+    claims dict, or raises. Signature, issuer, audience, expiry and nonce are all
+    checked -- an unverified ID token is just a string a caller typed."""
+    cfg = _OIDC[provider]
+    aud = os.getenv(cfg["client_id_env"], "").strip()
+    try:
+        jwk_client = _pyjwt.PyJWKClient(cfg["jwks"])
+        signing_key = jwk_client.get_signing_key_from_jwt(id_token).key
+    except Exception as exc:
+        raise HTTPException(status_code=502,
+                            detail="Could not reach %s to verify sign-in." % provider) from exc
+    claims = _pyjwt.decode(id_token, signing_key,
+                           algorithms=["RS256", "ES256"], audience=aud)
+    if claims.get("iss") not in cfg["issuers"]:
+        raise HTTPException(status_code=401, detail="Sign-in token had the wrong issuer.")
+    if nonce and claims.get("nonce") and claims.get("nonce") != nonce:
+        raise HTTPException(status_code=401, detail="Sign-in token did not match this request.")
+    return claims
+
+def _oauth_complete(provider: str, code: str, state: str, response: Response):
+    """Exchange the code, verify the ID token, establish the session. Shared by the
+    Google (GET) and Apple (POST) callbacks so the two can never drift."""
+    from fastapi.responses import RedirectResponse
+    cfg = _OIDC.get(provider)
+    if not cfg or not _oauth_ready(provider):
+        raise HTTPException(status_code=503, detail="That sign-in option is not available.")
+    try:
+        st = _pyjwt.decode(state, _REVIEW_SECRET, algorithms=[_JWT_ALGO])
+    except Exception as exc:
+        raise HTTPException(status_code=401,
+                            detail="That sign-in attempt expired. Please tap the button again.") from exc
+    if st.get("scope") != "oauth-state" or st.get("p") != provider:
+        raise HTTPException(status_code=401, detail="Sign-in state did not match.")
+    secret = (_apple_client_secret() if provider == "apple"
+              else os.getenv(cfg["client_secret_env"], "").strip())
+    try:
+        r = httpx.post(cfg["token"], data={
+            "code": code,
+            "client_id": os.getenv(cfg["client_id_env"], "").strip(),
+            "client_secret": secret,
+            "redirect_uri": _oauth_redirect_uri(provider),
+            "grant_type": "authorization_code",
+        }, headers={"Content-Type": "application/x-www-form-urlencoded"}, timeout=20)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="Could not reach the sign-in provider.") from exc
+    if r.status_code != 200:
+        _log.error("oauth %s token exchange HTTP %s: %s", provider, r.status_code, r.text[:300])
+        raise HTTPException(status_code=401, detail="Sign-in could not be completed.")
+    tok = r.json()
+    id_token = tok.get("id_token")
+    if not id_token:
+        raise HTTPException(status_code=401, detail="Sign-in provider returned no identity token.")
+    claims = _oauth_verify_id_token(provider, id_token, st.get("nonce") or "")
+    email = (claims.get("email") or "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=401,
+                            detail="That account did not share an email address, so we cannot create your account.")
+    # Google states email_verified; Apple only returns verified addresses.
+    if provider == "google" and str(claims.get("email_verified", "true")).lower() not in ("true", "1"):
+        raise HTTPException(status_code=401, detail="That Google account's email is not verified.")
+    sub = claims.get("sub") or ""
+    out = _establish_user_session(email, response)   # the ONE session door
+    try:
+        conn = database.get_db()
+        try:
+            conn.execute("UPDATE users SET auth_provider=?, auth_sub=?, auth_linked_at=? WHERE email=?",
+                         (provider, sub, datetime.now(timezone.utc).isoformat(), email))
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:
+        _log.warning("oauth %s: session established but sub not recorded for %s: %s",
+                     provider, email, exc)
+    _log.info("oauth sign-in OK: %s via %s", email, provider)
+    return out, (st.get("next") or "/")
+
+@app.get("/auth/oauth/google/callback")
+def auth_oauth_google_callback(request: Request, code: str = "", state: str = "", error: str = ""):
+    from fastapi.responses import RedirectResponse
+    if error or not code:
+        return RedirectResponse(url="/?signin=cancelled", status_code=302)
+    resp = RedirectResponse(url="/", status_code=302)
+    _out, nxt = _oauth_complete("google", code, state, resp)
+    resp.headers["Location"] = nxt + ("&" if "?" in nxt else "?") + "signedin=1"
+    return resp
+
+@app.post("/auth/oauth/apple/callback")
+async def auth_oauth_apple_callback(request: Request):
+    """Apple POSTs the callback as a form (response_mode=form_post)."""
+    from fastapi.responses import RedirectResponse
+    form = await request.form()
+    code = (form.get("code") or "").strip()
+    state = (form.get("state") or "").strip()
+    if not code:
+        return RedirectResponse(url="/?signin=cancelled", status_code=302)
+    resp = RedirectResponse(url="/", status_code=302)
+    _out, nxt = _oauth_complete("apple", code, state, resp)
+    resp.headers["Location"] = nxt + ("&" if "?" in nxt else "?") + "signedin=1"
+    return resp
+
 
 class _SignInCodeVerify(_BaseModel):
     email: str

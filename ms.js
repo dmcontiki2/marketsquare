@@ -1293,6 +1293,54 @@ async function requestSignInLink(inputId, msgId){
   }catch(e){ if(msg){ msg.style.color='#ef4444'; msg.textContent='Could not connect — please try again.'; } }
 }
 
+// ── ONETAP-1 (19 Aug 2026, David: "the same effortless process Google and Apple has") ──
+// Plain links to the server-side OAuth start endpoint. No Google/Apple JavaScript is
+// loaded anywhere — RG-0025 (David's post-breach ruling: no third-party code on the
+// app at all) rules out the One Tap SDK, and the redirect flow is a single tap anyway
+// for anyone already signed in to their Google/Apple account.
+//
+// A button is rendered ONLY for a provider the server reports live. An unconfigured
+// provider must be INVISIBLE, never a button that errors — a dead button is a retry,
+// and the whole point of this lane is zero retries.
+var _oneTapCache = null;
+function mountOneTap(containerId, dividerId){
+  var box = document.getElementById(containerId);
+  if(!box || box.getAttribute('data-mounted') === '1') return;
+  function paint(p){
+    var html = '';
+    if(p && p.google){
+      html += _oneTapBtn('google', 'Continue with Google', '#fff', '#1f2937', '1.5px solid #dadce0',
+        '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.3-4.6 6.9l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16.4z"/><path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.8-6.1C1 16.3 0 20 0 24s1 7.7 2.6 10.8l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.5-2 15.3-5.5l-7.1-5.5c-2 1.4-4.6 2.2-8.2 2.2-6.3 0-11.7-3.7-13.6-9.8l-7.8 6.1C6.5 42.6 14.6 48 24 48z"/></svg>');
+    }
+    if(p && p.apple){
+      html += _oneTapBtn('apple', 'Continue with Apple', '#000', '#fff', '1.5px solid #000',
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M16.4 12.8c0-2.6 2.1-3.9 2.2-4-1.2-1.8-3.1-2-3.8-2-1.6-.2-3.1 .9-3.9 .9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2 .9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.5 0 2 .8 3.3 .8 1.4 0 2.2-1.2 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.6-1-2.6-3.9zM14 4.4c.7-.9 1.2-2.1 1.1-3.4-1 0-2.3 .7-3.1 1.6-.7 .8-1.2 2-1.1 3.2 1.2 .1 2.3-.6 3.1-1.4z"/></svg>');
+    }
+    if(!html) return;             // no live provider: stay invisible, no divider
+    box.innerHTML = html;
+    box.setAttribute('data-mounted','1');
+    var d = dividerId && document.getElementById(dividerId);
+    if(d) d.style.display = 'flex';
+  }
+  if(_oneTapCache){ paint(_oneTapCache); return; }
+  fetch(BEA_URL + '/auth/providers')
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(p){ if(p){ _oneTapCache = p; paint(p); } })
+    .catch(function(){ /* lane simply stays hidden — email sign-in is untouched */ });
+}
+function _oneTapBtn(provider, label, bg, fg, border, icon){
+  var nxt = encodeURIComponent(location.pathname || '/');
+  return '<a href="' + BEA_URL + '/auth/oauth/' + provider + '/start?next=' + nxt + '" '
+    + 'style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;'
+    + 'box-sizing:border-box;margin-bottom:10px;background:' + bg + ';color:' + fg + ';'
+    + 'border:' + border + ';border-radius:50px;padding:13px 14px;font-family:\'Syne\',sans-serif;'
+    + 'font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;">'
+    + icon + '<span>' + label + '</span></a>';
+}
+document.addEventListener('DOMContentLoaded', function(){
+  mountOneTap('onetap-buttons', 'onetap-divider');
+});
+
 // ── SIGNIN-CODE-1 (19 Aug 2026, David: "no effort access with zero retries") ──
 // A magic link signs in whichever device OPENS the mail. Mail opens on a phone; the
 // person is usually on a laptop. That strands them with no way to finish, and at

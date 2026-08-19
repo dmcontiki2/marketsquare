@@ -4857,5 +4857,88 @@ def rg_signin_device_independent():
     return out
 
 
+
+@entry("RG-0111", "Federated sign-in is ONE TAP and loads NO third-party script -- effortless entry never costs us the post-breach rule",
+       OPEN, scope="the ONETAP-1 lane entire: /auth/providers, /auth/oauth/{provider}/start, the "
+                   "Google GET callback and the Apple POST callback, _oauth_verify_id_token "
+                   "(signature + issuer + audience + nonce), _apple_client_secret, the users "
+                   "auth_provider/auth_sub columns, migration 025's exemptions, and the ms.js "
+                   "mountOneTap buttons. TWO obligations held together, and BOTH are the entry: "
+                   "(1) one tap, no email round trip; (2) not one byte of Google or Apple "
+                   "JavaScript on any app page.",
+       ref="David, 19 Aug 2026: 'We need the same effortless process Google and Apple has... Even "
+           "a single retry will lose customers. For everyone.' Chosen implementation is the plain "
+           "OAuth 2.0 / OIDC authorization-code REDIRECT flow, deliberately NOT Google One Tap: "
+           "One Tap requires accounts.google.com/gsi/client in our page, and RG-0025 records "
+           "David's post-breach ruling that no third-party code runs on the app at all -- a remote "
+           "loader in <head> executed for every visitor regardless of the gate and was POSTing "
+           "visited URLs off-box. A convenience feature does not get to reopen that. The redirect "
+           "flow is still a single tap for anyone already signed in to their provider, and the "
+           "server does all verification. Identity is keyed on the provider's stable sub as well "
+           "as email, so a provider-side email change or an Apple private-relay address does not "
+           "fork the account. An unconfigured provider renders NO button at all -- a dead button "
+           "is a retry, which is the precise thing this entry exists to prevent. "
+           "EXPECTED OPEN until David creates the Google OAuth client + Apple Services ID and the "
+           "credentials are on the box; the lane is dark and harmless until then.")
+def rg_onetap_no_third_party():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        for needle, why in (("ONETAP-1", "the one-tap lane"),
+                            ("/auth/oauth/{provider}/start", "the start endpoint"),
+                            ("def _oauth_verify_id_token", "ID-token verification"),
+                            ("def _apple_client_secret", "Apple's signed client secret"),
+                            ("auth_sub", "the stable provider subject id")):
+            if needle not in bea:
+                out.append((FAIL, "bea_main.py lost %s (%s)" % (why, needle)))
+        # verification must be REAL -- signature, audience, issuer, nonce
+        seg = bea.split("def _oauth_verify_id_token")[1][:2000] if "def _oauth_verify_id_token" in bea else ""
+        for needle, why in (("PyJWKClient", "JWKS signature verification"),
+                            ("audience=aud", "the audience check"),
+                            ("issuers", "the issuer check"),
+                            ("nonce", "the nonce check")):
+            if seg and needle not in seg:
+                out.append((FAIL, "ID-token verification no longer performs %s -- an unverified "
+                                  "token is just a string the caller typed" % why))
+        if seg and "options={\"verify_signature\": False}" in seg:
+            out.append((FAIL, "ID-token signature verification has been DISABLED"))
+    # The no-third-party-script obligation, asserted in OUR source (RG-0025 covers live)
+    for f in ("marketsquare.html", "ms.js"):
+        t = repo_file(f) or ""
+        for banned in ("accounts.google.com/gsi", "apple.com/auth/authorize.js",
+                       "appleid.cdn-apple.com"):
+            if banned in t:
+                out.append((FAIL, "%s now loads a third-party sign-in script (%s) -- RG-0025 / "
+                                  "David's post-breach ruling forbids it; use the redirect flow"
+                            % (f, banned)))
+    js = repo_file("ms.js") or ""
+    if js and "mountOneTap" not in js:
+        out.append((FAIL, "ms.js lost the one-tap buttons"))
+    if js and "/auth/oauth/' + provider + '/start" not in js:
+        out.append((FAIL, "the buttons no longer point at the server-side start endpoint"))
+    m = repo_file("migrations/025_gate_nolock.py") or ""
+    if m and "/auth/oauth/" not in m:
+        out.append((FAIL, "migration 025 no longer exempts the OAuth round trip -- federated "
+                          "sign-in cannot complete behind the pre-launch gate"))
+    # Live half: the lane must ANSWER (even if dark) and must never 500.
+    try:
+        r = urllib.request.urlopen(urllib.request.Request(BASE + "/auth/providers",
+                                                          headers=dict(UA)), timeout=TIMEOUT)
+        d = json.loads(r.read().decode("utf-8", "replace"))
+        live = [k for k, v in d.items() if v]
+        out.append((INFO, "live providers configured: %s" % (", ".join(live) if live else
+                                                             "none yet (lane dark, buttons hidden)")))
+    except urllib.error.HTTPError as he:
+        if he.code in (401, 403):
+            out.append((FAIL, "live /auth/providers is still gated -- migration 025 has not landed"))
+        else:
+            out.append((FAIL, "live /auth/providers answered %s" % he.code))
+    except Exception as ex:
+        out.append((FAIL, "live /auth/providers unreachable (%r)" % ex))
+    if not out:
+        out.append((INFO, "one-tap lane present, verified server-side, zero third-party script"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

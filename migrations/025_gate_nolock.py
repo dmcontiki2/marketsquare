@@ -28,6 +28,8 @@ entry it is entitled to complete:
   location = /admin/change-pin    POST                -> finishes forced PIN change
   location = /admin/verify        GET  X-Admin-Token  -> lets a held token re-assert
   location = /auth/verify-code    POST {email, code}  -> ts_user session (SIGNIN-CODE-1)
+  location = /auth/providers      GET  -> which federated lanes are live (ONETAP-1)
+  location ^~ /auth/oauth/        GET/POST -> the Google/Apple round trip (ONETAP-1)
 
 CONTAINMENT — these do NOT weaken the gate:
   * None of them serve content. They accept a credential and answer 200/401.
@@ -82,10 +84,17 @@ def find_site():
 HDRS = ("proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; "
         "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;")
 WANT = ["/review/claim-code", "/admin/login", "/admin/change-pin", "/admin/verify",
-        "/auth/verify-code"]   # SIGNIN-CODE-1: the real users' zero-retry door
+        "/auth/verify-code",   # SIGNIN-CODE-1: the real users' zero-retry door
+        "/auth/providers"]     # ONETAP-1: which federated lanes are live
+# ONETAP-1: the OAuth round trip is a PREFIX (start + callback under /auth/oauth/).
+# A cookie-less browser must be able to leave for Google and come back, or federated
+# sign-in cannot work behind the pre-launch gate at all.
+WANT_PREFIX = ["/auth/oauth/"]
 LINES = "".join(
     "    location = %-19s { proxy_pass http://127.0.0.1:8000; %s }\n" % (p, HDRS)
-    for p in WANT)
+    for p in WANT) + "".join(
+    "    location ^~ %-18s { proxy_pass http://127.0.0.1:8000; %s }\n" % (p, HDRS)
+    for p in WANT_PREFIX)
 
 FUNCTIONAL_GATE = re.compile(r"location\s*/\s*\{[^}]*auth_request\s+/_review_gate;", re.S)
 ANCHOR = re.compile(r"(?m)^([ \t]*)location = /review/enter[^\n]*\n")
@@ -104,7 +113,8 @@ def main():
     text = open(real, encoding="utf-8", errors="replace").read()
 
     # 1. FUNCTIONAL idempotency — the exempt locations themselves, not a marker
-    have = ["location = " + p in text for p in WANT]
+    have = ["location = " + p in text for p in WANT] + \
+           ["location ^~ " + p in text for p in WANT_PREFIX]
     if all(have):
         say("no-lock exemptions already FUNCTIONALLY present — nothing to do")
         return 0
@@ -115,7 +125,7 @@ def main():
         return 0
 
     # 3. Collision refusal — a partial/manual variant means a human reconciles first.
-    collisions = [p for p, h in zip(WANT, have) if h]
+    collisions = [p for p, h in zip(WANT + WANT_PREFIX, have) if h]
     if collisions:
         say("REFUSING (fails safe): the conf already exempts " + "; ".join(collisions))
         say("but not all four — adding ours would duplicate nginx locations.")
@@ -131,8 +141,9 @@ def main():
         say("does not know. Not editing.")
         return 4
     new = ANCHOR.sub(lambda m: m.group(0) + LINES, text, count=1)
-    if not all("location = " + p in new for p in WANT):
-        say("FAILED: substitution did not land all four exempt lines"); return 4
+    if not (all("location = " + p in new for p in WANT)
+            and all("location ^~ " + p in new for p in WANT_PREFIX)):
+        say("FAILED: substitution did not land every exempt line"); return 4
     if not FUNCTIONAL_GATE.search(new):
         say("FAILED: the catch-all gate is no longer functional after the edit — not writing")
         return 4
