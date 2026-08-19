@@ -79,7 +79,7 @@ REFLECTIONS = {
    ("ai_provider.py", ["def _gemini", "GEMINI CANARY (RUL-032"], []),
    ("bea_main.py", ["def _anon_scan_provider", "GEMINI-CANARY-1"], []),
    ("scripts/eval_photo_anon.py", ["100% plate recall"], []),
-   ("scripts/regression_ledger.py", ["RG-0119", "rg_gemini_canary"], []),
+   ("scripts/regression_ledger.py", ["RG-0121", "rg_gemini_canary"], []),
    ("AI_BASELINE.json", ["CANARY (photo scan/refine only)"], []),
  ],
  "RUL-026": [

@@ -1,0 +1,3 @@
+## 2026-08-19 — LEDGER-DUP-1: two sessions claimed RG-0118/0119 simultaneously; OPEN newcomers renumbered, guard added
+
+This session (photo order + gemini canary) and a concurrent session (relay proof + account binding) both appended ledger entries as RG-0118/RG-0119. Per the never-renumber-LOCKED rule, the concurrent session's LOCKED entries keep the ids; this session's OPEN entries moved: **photo order/cover = RG-0120**, **gemini canary = RG-0121** (earlier fragments today say 0118/0119 — read them as 0120/0121). Class fix: the `entry()` decorator now refuses a duplicate id at import (LEDGER-DUP-1), so the next collision is loud, not ambiguous.

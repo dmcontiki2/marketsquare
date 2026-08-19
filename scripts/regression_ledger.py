@@ -331,7 +331,14 @@ LEDGER = []
 
 
 def entry(rid, title, state, scope, fixed_on="", ref=""):
+    # LEDGER-DUP-1 (19 Aug 2026): two concurrent sessions both claimed RG-0118/0119.
+    # A duplicated id makes the whole board ambiguous -- refuse loudly at import so the
+    # session that collides fixes it before anything else runs. Never silently renumber.
     def deco(fn):
+        if any(e["id"] == rid for e in LEDGER):
+            raise SystemExit("LEDGER-DUP-1: id %s is already taken by '%s' -- pick the next "
+                             "free number (LOCKED entries never move; OPEN newcomer moves)"
+                             % (rid, next(e["title"] for e in LEDGER if e["id"] == rid)))
         LEDGER.append({"id": rid, "title": title, "state": state, "scope": scope,
                        "fixed_on": fixed_on, "ref": ref, "fn": fn})
         return fn
@@ -5341,7 +5348,7 @@ def rg_envkey_not_bare_getenv():
     return out
 
 
-@entry("RG-0118", "A seller controls photo ORDER and the COVER -- and an edit-screen save reaches the buyer view",
+@entry("RG-0120", "A seller controls photo ORDER and the COVER -- and an edit-screen save reaches the buyer view",
        OPEN, scope="the whole listing-photo order lane: ms.js edit screen (elMakeCover/elMovePhoto/"
        "reset-per-open/prefix fallback) AND bea_main.py PUT /listings/{id} PHOTO-ORDER-1 prefix "
        "rewrite. Class, not instance: ANY photo edit (reorder, remove, add, replace) must land in "
@@ -5442,7 +5449,7 @@ def rg_intro_relay_proven():
     return out
 
 
-@entry("RG-0119", "The photo-anon scan canary is GROUNDING-CLASS, dark by default, and can never be the verifier",
+@entry("RG-0121", "The photo-anon scan canary is GROUNDING-CLASS, dark by default, and can never be the verifier",
        OPEN, scope="the GEMINI-CANARY-1 lane entire: ai_provider.py gemini adapter + TASK_MODEL row, "
        "AI_BASELINE.json/ai_price_card.json coverage, bea_main.py _anon_scan_provider routing "
        "(initial scan + refine ONLY). Class property protected: the VERIFY pass in "
