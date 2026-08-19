@@ -1,5 +1,5 @@
 {
- "next_id": 51,
+ "next_id": 55,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -80,7 +80,7 @@
   },
   "DW-010": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-17",
+   "last_seen": "2026-08-19",
    "sev": "MEDIUM",
    "source": "cc_age_check (Monday lane)",
    "status": "OPEN",
@@ -174,7 +174,7 @@
   },
   "DW-021": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "sev": "LOW",
    "source": "cost sweep",
    "status": "OPEN",
@@ -215,7 +215,7 @@
   },
   "DW-026": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "sev": "HIGH",
    "source": "deploy post-mortem (silent no-op ship)",
    "status": "OPEN",
@@ -223,7 +223,7 @@
    "summary": "First clean day since the recurrence — NO new lock artefact today (newest aside 14 Aug). Debris + gap persist: stale asides at .git top level; RG-0015 entry text still names index.lock ONLY (ledger line 773) despite the GIT-LOCK-3 note."
   },
   "DW-028": {
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "first_seen": "2026-08-07",
    "sev": "MEDIUM",
    "source": "ledger/probe network blindness (permanent fix)",
@@ -232,7 +232,7 @@
   },
   "DW-027": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "sev": "HIGH",
    "source": "TS-0022 doctrine collision (Maroushka x3)",
    "status": "OPEN",
@@ -240,7 +240,7 @@
   },
   "DW-029": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "sev": "MEDIUM",
    "source": "production secrets exposed in a chat transcript",
    "status": "OPEN",
@@ -261,9 +261,11 @@
    "last_seen": "2026-08-16",
    "sev": "MEDIUM",
    "source": "live verification (Stays last mile)",
-   "status": "OPEN",
+   "status": "CLOSED",
    "note": "check passing since 2026-08-09 (4th day) - awaiting David's close",
-   "summary": "Condition still unmet on technicality: HEAD 1 ahead by d10d8ac (06:29 maintenance bookkeeping, no deployable files); tree 12 entries watch exhaust; drift substance CLEAN today"
+   "summary": "Condition still unmet on technicality: HEAD 1 ahead by d10d8ac (06:29 maintenance bookkeeping, no deployable files); tree 12 entries watch exhaust; drift substance CLEAN today",
+   "closed": "2026-08-16",
+   "disposition": "CLOSED 2026-08-16 (md) — HEAD == origin/deploy == bd3d958, zero modified tracked files. JSON state repaired 2026-08-19 (bookkeeping drift, no new closure)."
   },
   "DW-032": {
    "first_seen": "2026-08-08",
@@ -294,7 +296,7 @@
   },
   "DW-035": {
    "first_seen": "2026-08-10",
-   "last_seen": "2026-08-17",
+   "last_seen": "2026-08-19",
    "sev": "LOW",
    "source": "Monday deep static scan",
    "status": "OPEN",
@@ -305,9 +307,11 @@
    "last_seen": "2026-08-16",
    "sev": "MEDIUM",
    "source": "release state (NEW today)",
-   "status": "OPEN",
+   "status": "CLOSED",
    "note": "release SHIPPED (fd3188f, HEAD == origin/deploy); drift now comes from UNCOMMITTED working-tree edits",
-   "summary": "Substance shipped: 3775309 ancestor of origin/deploy; MSJS-DRIFT cleared (v483 byte-identical). Condition fails only on d10d8ac morning bookkeeping commit — unreachable at 06:30 as written"
+   "summary": "Substance shipped: 3775309 ancestor of origin/deploy; MSJS-DRIFT cleared (v483 byte-identical). Condition fails only on d10d8ac morning bookkeeping commit — unreachable at 06:30 as written",
+   "closed": "2026-08-16",
+   "disposition": "CLOSED 2026-08-16 (md) — HEAD == origin/deploy (release 08:48); MSJS-DRIFT clean; migration chain through 021 recorded done. JSON state repaired 2026-08-19 (bookkeeping drift, no new closure)."
   },
   "DW-037": {
    "first_seen": "2026-08-11",
@@ -320,7 +324,7 @@
   },
   "DW-038": {
    "first_seen": "2026-08-12",
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "sev": "HIGH",
    "source": "smoke_test + server-side edge probe (NEW today)",
    "status": "OPEN",
@@ -346,9 +350,11 @@
    "first_seen": "2026-08-13",
    "sev": "MEDIUM",
    "source": "gate scope vs documented intent (NEW today)",
-   "status": "OPEN",
+   "status": "CLOSED",
    "last_seen": "2026-08-16",
-   "summary": "Day 4 byte-identical: 401 on terms/privacy/eula/login/payment-test/demo-listings/demo-sellers/flags/wonders; 200 on / support static-ms.js health; RG-0081 emailed-link locked, scope unchanged"
+   "summary": "Day 4 byte-identical: 401 on terms/privacy/eula/login/payment-test/demo-listings/demo-sellers/flags/wonders; 200 on / support static-ms.js health; RG-0081 emailed-link locked, scope unchanged",
+   "closed": "2026-08-16",
+   "disposition": "CLOSED 2026-08-16 (md) — RUL-020 executed: migrations/021 exempts /terms + /privacy at origin; both 200. JSON state repaired 2026-08-19 (bookkeeping drift, no new closure)."
   },
   "DW-042": {
    "first_seen": "2026-08-13",
@@ -371,7 +377,7 @@
   },
   "DW-044": {
    "first_seen": "2026-08-15",
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "sev": "MEDIUM",
    "source": "cost perimeter (via DW-043)",
    "status": "OPEN",
@@ -389,7 +395,7 @@
   },
   "DW-046": {
    "first_seen": "2026-08-15",
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "sev": "MEDIUM",
    "source": "fea_integrity_check",
    "status": "OPEN",
@@ -397,7 +403,7 @@
   },
   "DW-047": {
    "first_seen": "2026-08-16",
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "sev": "LOW",
    "source": "cost sweep",
    "status": "OPEN",
@@ -405,7 +411,7 @@
   },
   "DW-048": {
    "first_seen": "2026-08-17",
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "sev": "HIGH",
    "source": "cost sweep",
    "status": "OPEN",
@@ -413,21 +419,61 @@
   },
   "DW-049": {
    "first_seen": "2026-08-17",
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "sev": "MEDIUM",
    "source": "audit instrument",
-   "status": "OPEN",
-   "summary": "Predicted false CRITICAL did NOT fire — but only because a REAL deploy is staged (bea_main.py ahead). Instrument still untaught: no CRLF normalization in audit_global_qa.py; raw Δ16,552B ≈ 1 byte/line = pure CRLF (deploy_drift, which normalizes, says ms.js MATCHES live). Will fire falsely again once the staged deploy ships."
+   "status": "CLOSED",
+   "summary": "Predicted false CRITICAL did NOT fire — but only because a REAL deploy is staged (bea_main.py ahead). Instrument still untaught: no CRLF normalization in audit_global_qa.py; raw Δ16,552B ≈ 1 byte/line = pure CRLF (deploy_drift, which normalizes, says ms.js MATCHES live). Will fire falsely again once the staged deploy ships.",
+   "closed": "2026-08-19",
+   "disposition": "CLOSED 2026-08-19 — the predicted post-ship false CRITICAL did not fire. Post-deploy audit recorded VERSION-KEY-BENIGN (repo v453 / live v504, served bytes IDENTICAL, 1,081,905B both sides), MSJS-DRIFT absent, zero CRITICAL. RESIDUAL: audit_global_qa.py still has no CRLF normalization — it passed because the bytes genuinely match, not because the compare was taught."
   },
   "DW-050": {
    "first_seen": "2026-08-18",
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "sev": "LOW",
    "source": "deploy_drift + git status",
-   "status": "OPEN",
-   "summary": "NEW — deploy staged, not shipped: bea_main.py local-ahead of live (uncommitted M bea_main.py; audit MSJS-DRIFT/VERSION-KEY read the same staging). Normal workflow — listed so it cannot silently age. Next: attended commit + /ship (or tonight's /TSL)."
+   "status": "CLOSED",
+   "summary": "NEW — deploy staged, not shipped: bea_main.py local-ahead of live (uncommitted M bea_main.py; audit MSJS-DRIFT/VERSION-KEY read the same staging). Normal workflow — listed so it cannot silently age. Next: attended commit + /ship (or tonight's /TSL).",
+   "closed": "2026-08-19",
+   "disposition": "CLOSED 2026-08-19 — deploy_drift re-ran and PASSES: 'clean - all 19 tracked files match live'. Release 4a76ad2 shipped 06:35 (MIGRATE-IMPORT-1 + gate-down); live ms.js v498->v504 byte-identical to repo; ONETAP endpoints now answer. RESIDUAL: uncommitted doc changes remain in the tree (listed in the commit block, not a fault)."
+  },
+  "DW-051": {
+   "sev": "HIGH",
+   "source": "post_deploy migration chain (server log)",
+   "summary": "Migration chain STILL stalled: today's post_deploy ran 023_relink_wonders_railexp.py which FAILED rc=3 'REFUSE: cannot import main (MS_API_KEY environment variable is not set)'; 024/025/026 skipped. .migrations_done still ends at 022. MIGRATE-IMPORT-1's CWD guard did not address the real blocker (missing server env). RG-0116 passes because it asserts the guard in source, not the outcome.",
+   "next_action": "Attended: run the post_deploy migration runner with the service EnvironmentFile (MS_API_KEY), re-run, confirm .migrations_done reaches 026, and tighten RG-0116 to assert the done list advances.",
+   "first_seen": "2026-08-19",
+   "last_seen": "2026-08-19",
+   "status": "OPEN"
+  },
+  "DW-052": {
+   "sev": "MEDIUM",
+   "source": "regression ledger self-contradiction",
+   "summary": "RG-0108 fails daily with 'CONTAINMENT BREACH: anonymous /listings answered 200' while RG-0115 (LOCKED today) asserts the gate is deliberately DOWN on both halves — anonymous 200 is now correct. Verified live: / /listings /wonders /flags all 200, /review/verify {valid:true}, /_review_gate 200. Also 4 entries READY TO LOCK (RG-0107/0109/0110/0111).",
+   "next_action": "Attended: rewrite RG-0108's live half to assert the ADMIN DOOR only (gate-state-independent); promote the 4 ready-to-lock entries.",
+   "first_seen": "2026-08-19",
+   "last_seen": "2026-08-19",
+   "status": "OPEN"
+  },
+  "DW-053": {
+   "sev": "LOW",
+   "source": "regression ledger, deploy-window run",
+   "summary": "Ledger run at 06:33, overlapping the 06:35:36 release, reported '1 previously-fixed issue(s) HAVE COME BACK'; three re-runs (06:36/06:39/06:52) all returned 0 REGRESSED, 101 holding. Window symptoms: /auth/providers 404->502->200. False regression from a restarting app, not a rot.",
+   "next_action": "Attended: have the ledger detect a deploy in flight (version/?v= change mid-run, or any 502) and re-probe once before declaring a regression.",
+   "first_seen": "2026-08-19",
+   "last_seen": "2026-08-19",
+   "status": "OPEN"
+  },
+  "DW-054": {
+   "sev": "MEDIUM",
+   "source": "AI-watch (web)",
+   "summary": "Anthropic logged its 14th status incident in two weeks, incl. a ~36-min multi-product outage on 16 Aug 2026 (claude.ai/Console/API/Claude Code/Cowork, began as auth failure) and a 3-hour invalid cert on the status page 14 Aug. No MarketSquare impact observed ($0.00 spend, breaker RG-0032 in place) but the failover has never been exercised. Stale trackers still print the cancelled Sonnet 5 $3/$15 reversion — settled by DW-032, do not re-raise.",
+   "next_action": "Attended: confirm the AI breaker fails OVER on a vendor 5xx/auth failure and add a ledger entry asserting it.",
+   "first_seen": "2026-08-19",
+   "last_seen": "2026-08-19",
+   "status": "OPEN"
   }
  },
- "last_run": "2026-08-18",
- "last_verdict": "AMBER — site green (health ok 0.36s, TLS 37d); smoke 30/39 (all 9 = DW-038 cluster); ledger 96/93 holding, 0 regressed, 3 open; sweep 3 crit/14 warn (no new class); spend $0.00 today, $1.76 MTD of $100; cron parity OK; 0 closed, 1 new (DW-050)"
+ "last_run": "2026-08-19",
+ "last_verdict": "AMBER"
 }

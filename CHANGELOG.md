@@ -1,3 +1,81 @@
+## 19 Aug 2026 — ENVKEY-1 strikes a third time: Google OAuth (and Resend) read credentials the wrong way
+
+**Symptom:** David completed the entire Google Cloud console setup correctly, ran
+`add_google_oauth.bat`, and the app still reported `{"google":false}`. The credentials were on the
+box and correct. The app simply could not see them.
+
+**Cause — a trap this codebase documents twice and I walked straight past.** The `marketsquare`
+systemd unit does **not** export `/var/www/marketsquare/.env` into the process, so a bare
+`os.getenv()` returns empty **on the server** no matter what the `.env` file says.
+`ai_provider.envkey()` exists precisely for this: environment first, then read the `.env` directly.
+It is the established pattern, and the `RELAY_*` block carries an eight-line comment explaining
+exactly this failure. The ONETAP-1 lane shipped with bare `os.getenv` anyway.
+
+The symptom is always the same and always misleading: **the feature behaves as though it was never
+configured**, so the reflex is to go re-check the credentials — which are fine.
+
+**Fixed:** 10 reads in the OAuth lane converted to `ai_provider.envkey()`.
+
+### The guard fired on RESEND_API_KEY — and it was a FALSE ALARM. Corrected same session.
+
+RG-0117 went red against **nine** bare `os.getenv("RESEND_API_KEY")` reads, and I wrote that this
+probably meant Resend had never been active and all mail had been silently falling through to the
+Gmail SMTP backup — flagged as suspected, explicitly not claimed.
+
+**Proved on the box, and it is not true.** Reading the live process environment:
+
+```
+process has GOOGLE_CLIENT_ID : 0     <- .env is NOT exported (ENVKEY-1 confirmed)
+process has RESEND_API_KEY   : 1     <- but THIS one IS in the process
+```
+
+`RESEND_API_KEY` is set **directly in the systemd unit**, not sourced from `.env`, so the bare
+`os.getenv()` reads have always worked for it. **Resend has been live all along and email has not
+been going out via Gmail.** The spam-folder theory built on it was wrong and is withdrawn.
+
+The nine conversions to `envkey()` stay — `envkey()` checks the environment first and finds
+exactly the same value, so behaviour is identical today, and the code stops depending on which
+of two mechanisms happens to supply a given key. No harm, slightly more robust.
+
+**The lesson is about the assertion, not the key.** RG-0117 asserts a *code pattern* and I read
+its red as evidence of a *runtime state*. Those are different claims. The entry was right that the
+pattern was inconsistent; it could never have told us whether the value reaches the process. Only
+`/proc/<pid>/environ` could, and that check existed and was one command away.
+
+**Ledger.** RG-0117 (LOCKED) asserts the class across eight guarded credential names, with a
+vacuity guard (RG-0068) so it can never pass by matching nothing. Its ref now records that a red
+on this entry means *the code pattern is inconsistent* — never, on its own, that a credential is
+missing at runtime.
+
+**Confirmed on the box:** credentials present and correctly shaped (`client id` ends
+`apps.googleusercontent.com`, `secret` starts `GOCSPX-`), `.env` is not exported to the process,
+and the OAuth lane on the server still lacks the envkey fix — so `google:false` is fully explained
+and needs only a deploy.
+
+## 19 Aug 2026 — RUL-030: Apple sign-in is out; Google alone is the federated lane
+
+David, asked and answered twice: *"Why Apple? I am not going for the $99 subscription."* Recorded
+as a ruling so no future session re-proposes it.
+
+- **Google is free** — no billing account, no subscription, no per-sign-in charge. It covers the
+  large majority of users.
+- Anyone without a Google account uses the **6-digit email code** (SIGNIN-CODE-1) as fallback.
+- The Apple code **stays in `bea_main.py` but is dark**: with no `APPLE_CLIENT_ID`,
+  `_apple_client_secret()` returns `None`, `/auth/providers` reports `apple:false`, and no button
+  is ever rendered. Not a half-configured lane, not a maintenance burden — it does not exist as
+  far as the app or any user is concerned. Ripping it out would be churn for zero benefit.
+
+**Docs corrected.** `ONETAP_SETUP.md` §2 now reads *"Apple — NOT DOING IT"* instead of a 30-minute
+setup section, and the deliverable was reissued as **`Google Sign-In Setup — nice.docx`**
+(the old `Google & Apple Sign-In — nice.docx` removed). This was my error: David said *"the same
+effortless process Google and Apple has"*, I built and documented both, and then kept presenting
+Apple as a step after he had twice said the $99 was out.
+
+**Also shipped:** `add_google_oauth.bat` on the proven `add_openai_key.bat` pattern — prompts for
+both values, appends to the server `.env` only if absent, restarts BEA, then prints
+`/auth/providers` to prove the lane came up. Gitignored like every other credential bat, so the
+secret never enters the repo or this chat.
+
 ## 19 Aug 2026 — SIGNIN-CODE-1: zero-retry sign-in for real users (launch path, not the gate)
 
 **David's ruling, on the launch gate:** *"I need access for users with no effort... zero retries.
