@@ -5262,7 +5262,15 @@ def rg_migration_import_contract():
            "already written to .env -- David had done the console work correctly and the app "
            "still said the lane was dark. Symptom is always the same and always misleading: the "
            "feature behaves as though it was never configured. Ten bare os.getenv calls replaced. "
-           "This entry exists so the NEXT lane cannot repeat it.")
+           "This entry exists so the NEXT lane cannot repeat it. "
+           "SCOPE OF A RED, added the same day after over-reading one: this entry asserts a CODE "
+           "PATTERN. A red means the pattern is inconsistent -- it does NOT mean a credential is "
+           "missing at runtime, and must not be reported as though it does. On its first run it "
+           "went red against 9 bare RESEND_API_KEY reads and that was written up as 'Resend has "
+           "never been live, all mail fell through to Gmail'. FALSE: RESEND_API_KEY is set "
+           "directly in the systemd unit, so it was in the process the whole time (proven via "
+           "/proc/<pid>/environ: GOOGLE_CLIENT_ID=0, RESEND_API_KEY=1). Runtime presence is "
+           "answerable only by reading the process environment, which is one command.")
 def rg_envkey_not_bare_getenv():
     out = []
     bea = repo_file("bea_main.py")
