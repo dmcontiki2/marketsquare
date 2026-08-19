@@ -1440,42 +1440,67 @@ def rg_origin_refuses_direct():
     return out
 
 
-@entry("RG-0029", "The reviewer token gate ENFORCES at the origin: anonymous data requests get 401",
-       LOCKED, scope="every data endpoint (GATE-ENFORCE-1 / migrations/016); /health, documents, /static, "
-                     "payment webhook, worker lanes and acme stay open", fixed_on="2026-08-13",
-       ref="Planned 5 Aug 2026 with GATE-ENFORCE-1 but NEVER ADDED -- the class failure this "
-           "exposes is the UNASSERTED FIX: the app half (ts_review cookie + /review/verify) "
-           "shipped and works, but migration 007 (nginx auth_request on the data API) never "
-           "took effect, and with no assertion here the gap was invisible. The Cloudflare "
-           "IP-only scaffolding rule masked it by blocking everyone until 7 Aug (DW-019/DW-023). "
-           "Added 7 Aug 2026 as OPEN so the gap is machinery-visible from today: expected to "
-           "FAIL until migration 007 is applied over SSH (DW-020), then READY TO LOCK. "
-           "CLOSED 13 Aug 2026, David's ruling: 007 activated via DEFER-1 but failed rc 3 twice — "
-           "sites-enabled + sites-available are duplicate REAL files, not symlinks, so find_site "
-           "refused; failing FIRST it also blocked everything after it. Migration 016 applied the "
-           "same gate with an ENABLED-FIRST lookup and FUNCTIONAL idempotency (auth_request "
-           "present, not a marker string). Verified live: anon /wonders|/flags|/demo-sellers|"
-           "/listings 401; /health+documents+static 200; /review/login alive. Ledger body probes "
-           "read through the gate via a one-shot reviewer login (_review_cookie).")
-def rg_origin_gate_enforces():
+@entry("RG-0029", "The pre-launch gate is DOWN BY RULING (RUL-029) -- with the curtain "
+       "gone, the app-key guards and the re-arm path are what must hold",
+       LOCKED, fixed_on="2026-08-13",
+       scope="the pre-launch gate lane entire. SUPERSEDED-BY RUL-029 (19 Aug 2026). This entry "
+             "asserted the gate ENFORCES; it is not weakened, it is REPOINTED at what protects "
+             "us now the gate is deliberately down, and at the ability to put it back",
+       ref="GATE-ENFORCE-1/2 (migrations 016) armed the origin gate 13 Aug. SUPERSEDED-BY "
+           "RUL-029, 19 Aug 2026 -- David: 'we can not even give 3 people constant access to "
+           "the app?'. The gate existed to protect an unfinished app and had become the main "
+           "obstacle to finding out whether the app was ready, so it came down 10 days early "
+           "via migration 026. LAUNCH DATES UNCHANGED. Three things carry this entry now: "
+           "(1) gate STATE is deferred to RG-0115, which checks BOTH halves; (2) private data "
+           "must STILL refuse an anonymous caller, because with the curtain gone the app-key "
+           "guards (RG-0094) are the only line rather than the second; (3) the re-arm path must "
+           "survive -- migration 026 prints an nginx backup and every credential door (reviewer "
+           "code, email link, 6-digit code, admin password) stays in the code, UNUSED rather "
+           "than deleted. A lowered gate is not a demolished one; if any of the three rot, this "
+           "goes red.")
+def rg_gate_posture_after_ruling():
     out = []
+    for path, what in (("/tuppence/balance?email=probe@example.invalid", "a Tuppence balance"),
+                       ("/tuppence/history?email=probe@example.invalid", "Tuppence history"),
+                       ("/users/probe@example.invalid", "a user record")):
+        try:
+            urllib.request.urlopen(urllib.request.Request(BASE + path, headers=dict(UA)),
+                                   timeout=TIMEOUT).read()
+            out.append((FAIL, "EXPOSURE: an anonymous caller read %s with no app key. The "
+                              "pre-launch gate is down by ruling, so these guards are the ONLY "
+                              "thing between the public and private data." % what))
+        except urllib.error.HTTPError as he:
+            if he.code not in (401, 403):
+                out.append((FAIL, "%s answered %s anonymously, expected 401/403" % (what, he.code)))
+        except Exception:
+            pass
     try:
-        code = _status("/wonders")
-    except Exception as ex:
-        return [(FAIL, "/wonders unreachable while probing the gate: " + repr(ex))]
-    if code == 200:
-        out.append((FAIL, "anonymous GET /wonders answered 200 -- the origin token gate is NOT "
-                          "enforcing; the reviewer curtain is client-side only"))
-    elif code not in (401, 403):
-        out.append((FAIL, "anonymous GET /wonders answered %d -- neither open nor gated" % code))
-    try:
-        if _status("/health") != 200:
-            out.append((FAIL, "/health no longer answers 200 -- the gate exemption list is wrong "
-                              "(deploy rollback and external monitoring both depend on it)"))
-    except Exception as ex:
-        out.append((FAIL, "/health unreachable: " + repr(ex)))
+        urllib.request.urlopen(urllib.request.Request(BASE + "/dashboard.html",
+                                                      headers=dict(UA)), timeout=TIMEOUT).read()
+        out.append((FAIL, "EXPOSURE: /dashboard.html served anonymously -- lowering the review "
+                          "gate must never expose the admin dashboard"))
+    except urllib.error.HTTPError as he:
+        if he.code not in (401, 403):
+            out.append((FAIL, "/dashboard.html answered %s anonymously, expected 401/403" % he.code))
+    except Exception:
+        pass
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        out.append((INFO, "outside the repo -- re-arm path not checked here"))
+    else:
+        for needle, what in (("def review_login", "the reviewer-code door"),
+                             ("def review_enter", "the emailed-link door"),
+                             ("def review_claim_code", "the 6-digit-code door")):
+            if needle not in bea:
+                out.append((FAIL, "%s was DELETED, not merely unused -- RUL-029 lowered the gate, "
+                                  "it did not demolish it, and this removes the re-arm path"
+                            % what))
+        if repo_file("migrations/026_gate_down.py") is None:
+            out.append((FAIL, "migration 026 is gone -- the documented re-arm command went with it"))
+    if not out:
+        out.append((INFO, "gate down by ruling; private reads + dashboard still refuse "
+                          "anonymously; every door still in source"))
     return out
-
 
 @entry("RG-0030", "The in-app tester fault channel exists, is fail-closed, and ships to every page",
        LOCKED, scope="all tester-facing pages (index, admin, legal, 9 adventure maps)",
@@ -4054,11 +4079,13 @@ def rg_paystack_webhook_lane():
 
 
 @entry("RG-0092", "The legal documents are PUBLIC: anonymous /terms and /privacy answer 200 "
-       "with the real pages, while the reviewer gate still guards the rest",
+       "with the real pages",
        LOCKED, fixed_on="2026-08-16",
-       scope="the live edge + nginx exempt list, all markets. Both halves asserted: the legal "
-             "docs are open AND the gate did not silently widen (/wonders stays non-200 "
-             "anonymously)",
+       scope="the live edge + nginx exempt list, all markets. The legal docs are open. The "
+             "former second half -- 'and the gate did not silently widen (/wonders stays "
+             "non-200)' -- was RETIRED 19 Aug 2026 when RUL-029 lowered the gate deliberately: "
+             "that clause would now assert the opposite of a standing ruling. Gate STATE is "
+             "RG-0029 + RG-0115's job; this entry keeps the RUL-020 promise it was written for",
        ref="RUL-020, 16 Aug 2026: David's decree -- the EULA is final and binding and must be "
            "available to users; no legal-review hold, not to be re-discussed. Mechanism: "
            "migrations/021_open_legal_docs.py adds ungated location blocks for /terms and "
@@ -4083,12 +4110,12 @@ def rg_legal_docs_public():
             out.append((FAIL, "anonymous GET %s answers %d -- the legal documents are gated "
                               "again; RUL-020 says they must be public (rerun "
                               "migrations/021_open_legal_docs.py)" % (path, he.code)))
-    c, _ = _code("/wonders")
-    if c == 200:
-        out.append((FAIL, "anonymous /wonders answers 200 -- the gate itself has fallen, this "
-                          "is GATE-ENFORCE-1 rot (DW-023 class), not the RUL-020 exemption"))
+    # The '/wonders must stay non-200' clause was RETIRED 19 Aug 2026 (RUL-029): the gate
+    # is down by ruling, so that check would now assert the opposite of standing canon.
+    # Gate STATE lives in RG-0029 (posture + what still protects us) and RG-0115 (both
+    # halves actually down). This entry keeps ONLY the RUL-020 promise it was written for.
     if not out:
-        out.append((INFO, "legal docs open, gate still standing (/wonders %d anonymously)" % c))
+        out.append((INFO, "legal docs open and served (gate state: see RG-0029 / RG-0115)"))
     return out
 
 
@@ -5091,8 +5118,8 @@ def rg_no_chronic_danger():
 
 
 
-@entry("RG-0112", "When the gate is DOWN it is down for everyone -- both halves, no overlay, no 401, and it can be re-armed in one command",
-       OPEN, scope="the gate-lowering change entire: nginx /_review_gate returning 200 (server "
+@entry("RG-0115", "When the gate is DOWN it is down for everyone -- both halves, no overlay, no 401, and it can be re-armed in one command",
+       LOCKED, fixed_on="2026-08-19", scope="the gate-lowering change entire: nginx /_review_gate returning 200 (server "
                    "half) AND /review/verify answering {valid:true} (the client overlay half). "
                    "BOTH are the entry -- lowering only the server half leaves every visitor "
                    "staring at the overlay, which is indistinguishable from being locked out.",
@@ -5104,7 +5131,7 @@ def rg_no_chronic_danger():
            "unchanged, only the gate moved. Done as an nginx-only change (migration 026) precisely "
            "because the deploy lane was not reaching the server and this could not be allowed to "
            "wait on that fault. Reversal is a file copy from the printed backup, so this is a "
-           "lowered gate, not a demolished one. EXPECTED OPEN until 026 is applied.")
+           "lowered gate, not a demolished one. PROMOTED 19 Aug 2026: 026 applied on the box (backup marketsquare.bak-gatedown-20260819-041800); verified live from outside -- /review/verify {valid:true}, /listings + /wonders + / all 200 anonymously, while /tuppence/*, /users/* and /dashboard.html still refuse. Locked. (Numbered 0115: this entry was first written as 0112, which a concurrent session had already committed for the Postgres ratchet -- theirs was first, so this one moved. The collision is itself the lesson: two sessions picking `max+1` off their own read of the file will collide, and a duplicate @entry silently shadows a real assertion.)")
 def rg_gate_actually_down():
     out = []
     # Client half: the overlay hides only on {"valid":true} from /review/verify.

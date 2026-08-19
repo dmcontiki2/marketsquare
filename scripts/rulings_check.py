@@ -43,7 +43,7 @@ def _read(path):
 REFLECTIONS = {
  "RUL-029": [
    ("migrations/026_gate_down.py", ["GATE-DOWN-1", "/review/verify"], []),
-   ("scripts/regression_ledger.py", ["RG-0112", "rg_gate_actually_down"], []),
+   ("scripts/regression_ledger.py", ["RG-0115", "rg_gate_actually_down"], []),
    ("RULINGS.md", ["PRE-LAUNCH GATE COMES DOWN TODAY"], []),
  ],
  "RUL-028": [
