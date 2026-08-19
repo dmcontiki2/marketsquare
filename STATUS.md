@@ -5,6 +5,14 @@
 
 ## Current Session
 
+## 2026-08-18 — Showcase supers made immortal (RUL-026)
+Fade exemption + admin-only deletes in bea_main; migration 024 heals hurt rows. On disk,
+compiles green; RIDES THE NEXT DEPLOY (with the rail-map cap fixes already queued).
+
+## 2026-08-18 — Pin-bounce fixed at template level (PINSPREAD-GUARD-1, RG-0103)
+- Bouncing pins on rail maps: self-retriggering PIN-SPREAD loop, guarded at the
+  template, 11 maps rebuilt, busters bumped. Rides the next deploy with heritage 319.
+
 ## 2026-08-18 — Heritage catalog: canon fixed, one deploy click pending
 - Root wonders.json 300 -> 319 staged (WONDERS-CANON-1; fork retired; RG-0102 LOCKED).
   gzip already live. On David's next deploy: 319 serves, migration 023 relinks, then

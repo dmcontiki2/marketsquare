@@ -1,3 +1,41 @@
+## 2026-08-18 — SHOWCASE-IMMORTAL-1: supers exempt from fade-out; admin-only delete (RUL-026)
+
+David: fade warnings were reaching the super demos — "they should stay live and only be
+deleted by admin users." Root cause: supers are real listings (showcase=1, is_demo=0), so
+FADE-1's lifecycle sweep treated them as user listings. Class fix:
+- _lifecycle_sweep: candidate query + archive step both exclude showcase listings.
+- Deletes: keyed /listings/{id} DELETE now demands real admin credentials (X-Admin-Token /
+  X-Admin-Key) for showcase — the ms.js-public app key alone is refused; the seller-email
+  delete path 403s showcase outright. "Showcase adverts are admin-managed."
+- migrations/024_showcase_immortal.py revives any already-faded/archived showcase and
+  clears stale fade-nudge stamps on the next deploy.
+- Records: RUL-026 · RG-0106 (LOCKED, repo-asserted; live from next deploy) · reflections.
+
+## 2026-08-18 — PINSPREAD-GUARD-1: the bouncing-pin loop killed at the template (David's catch)
+
+- David spotted an orange pin bouncing on the US rail map (Leg 3; earlier an orange+green
+  pair). Root cause read straight out of PIN-SPREAD-1: spreadPins() adds tether legs /
+  clearSpread() removes them, and queueSpread listens to layeradd+layerremove — the
+  machinery retriggered ITSELF every ~140 ms, snapping clustered pins home and fanning
+  them out again, animated by the .28s transition: a visible ~3x/second bounce whenever
+  any cluster existed past base zoom. A synthetic-hover probe froze the tab the same way.
+- Fix in scripts/journey_template.html (single source): a busy flag makes the machinery
+  deaf to its OWN synchronous layer events; leg redraws, layer-control toggles and zooms
+  still retrigger normally. All 11 maps rebuilt (RAIL-PHOTOS-1 embeds inherited), ms.js
+  busters +1 x11 read-then-increment, planner selftest green (pin-spread still asserted),
+  ledger RG-0103 LOCKED trips on template OR any built map regressing to unguarded.
+- LOCAL with the heritage 319 catalog — both ride David's next deploy click.
+
+## 2026-08-18 — Watch note: RG-0081 can self-trip on ledger-run frequency
+
+A morning of many full ledger runs from one IP (this session ×6 + maintenance loop +
+a concurrent session) exhausted /review/request-link's per-IP limiter — RG-0081 went RED
+("429 — a tester cannot ask for a link") and recovered on its own once the window cleared.
+Not a lane fault; the limiter did its job against our own hammering. If RG-0081 reds on a
+429 again: wait the window out and rerun before treating it as a regression. Candidate
+hardening for the entry's owner: 429-from-own-probe → UNVERIFIED/blind (GATE-CACHE-1
+semantics), never RED.
+
 ## 2026-08-18 — maintenance-loop addendum: GIT-LOCK-3 fired for real
 
 - `git_unlock.py` found and healed TWO stranded lock-class files (`.git/index.lock`,
