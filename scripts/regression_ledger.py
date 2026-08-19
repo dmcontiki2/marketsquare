@@ -5090,5 +5090,54 @@ def rg_no_chronic_danger():
     return out
 
 
+
+@entry("RG-0112", "When the gate is DOWN it is down for everyone -- both halves, no overlay, no 401, and it can be re-armed in one command",
+       OPEN, scope="the gate-lowering change entire: nginx /_review_gate returning 200 (server "
+                   "half) AND /review/verify answering {valid:true} (the client overlay half). "
+                   "BOTH are the entry -- lowering only the server half leaves every visitor "
+                   "staring at the overlay, which is indistinguishable from being locked out.",
+       ref="David, 19 Aug 2026: 'How else am I going to have confidence that we are ready for the "
+           "soft launch if we cant give it to more people to test. We can not even give 3 people "
+           "constant access to the app?' The logic had inverted -- the gate existed to protect an "
+           "unfinished app and had become the main thing preventing him from learning whether the "
+           "app was finished. Lowered today rather than 29 Aug; RUL-001's LAUNCH dates are "
+           "unchanged, only the gate moved. Done as an nginx-only change (migration 026) precisely "
+           "because the deploy lane was not reaching the server and this could not be allowed to "
+           "wait on that fault. Reversal is a file copy from the printed backup, so this is a "
+           "lowered gate, not a demolished one. EXPECTED OPEN until 026 is applied.")
+def rg_gate_actually_down():
+    out = []
+    # Client half: the overlay hides only on {"valid":true} from /review/verify.
+    try:
+        r = urllib.request.urlopen(urllib.request.Request(BASE + "/review/verify",
+                                                          headers=dict(UA)), timeout=TIMEOUT)
+        d = json.loads(r.read().decode("utf-8", "replace"))
+        if d.get("valid") is not True:
+            out.append((FAIL, "/review/verify answered 200 but not valid:true -- the gate overlay "
+                              "will still cover the app for every visitor"))
+    except urllib.error.HTTPError as he:
+        out.append((FAIL, "anonymous /review/verify answered %s -- the CLIENT half of the gate is "
+                          "still up: visitors see the gate screen even if nginx lets them "
+                          "through" % he.code))
+    except Exception as ex:
+        out.append((FAIL, "/review/verify unreachable (%r)" % ex))
+    # Server half: a real content path must answer 200 anonymously.
+    try:
+        rr = urllib.request.urlopen(urllib.request.Request(BASE + "/listings", headers=dict(UA)),
+                                    timeout=TIMEOUT)
+        if rr.getcode() != 200:
+            out.append((FAIL, "anonymous /listings answered %s, expected 200" % rr.getcode()))
+    except urllib.error.HTTPError as he:
+        out.append((FAIL, "anonymous /listings still answers %s -- the SERVER half of the gate is "
+                          "still armed" % he.code))
+    except Exception as ex:
+        out.append((FAIL, "/listings unreachable (%r)" % ex))
+    if repo_file("migrations/026_gate_down.py") is None:
+        out.append((INFO, "outside the repo -- source half not checked here"))
+    if not out:
+        out.append((INFO, "gate is down on BOTH halves -- anyone can browse, no overlay, no 401"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

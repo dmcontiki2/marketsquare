@@ -41,6 +41,11 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-029": [
+   ("migrations/026_gate_down.py", ["GATE-DOWN-1", "/review/verify"], []),
+   ("scripts/regression_ledger.py", ["RG-0112", "rg_gate_actually_down"], []),
+   ("RULINGS.md", ["PRE-LAUNCH GATE COMES DOWN TODAY"], []),
+ ],
  "RUL-028": [
    ("bea_main.py", ["ONETAP-1", "def _oauth_verify_id_token", "def _apple_client_secret",
                     "auth_sub"], []),
