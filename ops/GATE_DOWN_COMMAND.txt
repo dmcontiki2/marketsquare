@@ -1,46 +1,55 @@
 GATE-DOWN-1 — lower the pre-launch gate, right now, without a deploy.
-19 Aug 2026 · David's ruling · reversible in one command (printed at the end of the run)
+19 Aug 2026 · David's ruling (RUL-029) · reversible in one command
 
 WHY THIS ROUTE: the deploy lane is not reaching the server, so this deliberately does not
-depend on it. It is an nginx-only change and carries its own backup, config test and
-auto-restore. It touches nothing in the application.
+depend on it. nginx-only change, carries its own backup, config test and auto-restore.
+It touches nothing in the application.
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║  USE THE ORIGIN IP, NOT THE DOMAIN.                                      ║
+║  trustsquare.co resolves to CLOUDFLARE, which proxies HTTP/HTTPS only    ║
+║  and does not carry SSH — that is why port 22 timed out.                 ║
+║  Your own bats already use:   root@178.104.73.239                        ║
+╚══════════════════════════════════════════════════════════════════════════╝
 
 ────────────────────────────────────────────────────────────────────────────
-STEP 1 — paste this ONE block into a terminal (it SSHes in and runs the change):
+STEP 1 — copy the migration up, then run it (two commands, paste as-is)
 ────────────────────────────────────────────────────────────────────────────
 
-ssh root@trustsquare.co "echo IyEvdXNyL2Jpbi9lbnYgcHl0aG9uMwoiIiIwMjZfZ2F0ZV9kb3duLnB5IOKAlCBHQVRFLURPV04tMSAoMTkgQXVnIDIwMjYsIERhdmlkJ3MgcnVsaW5nKS4KClRIRSBSVUxJTkcKLS0tLS0tLS0tLQpEYXZpZDogIkhvdyBlbHNlIGFtIEkgZ29pbmcgdG8gaGF2ZSBjb25maWRlbmNlIHRoYXQgd2UgYXJlIHJlYWR5IGZvciB0aGUgc29mdCBsYXVuY2ggaWYgd2UKY2FuJ3QgZ2l2ZSBpdCB0byBtb3JlIHBlb3BsZSB0byB0ZXN0LiBXZSBjYW4gbm90IGV2ZW4gZ2l2ZSAzIHBlb3BsZSBjb25zdGFudCBhY2Nlc3MgdG8gdGhlCmFwcD8iIFRoZSBsb2dpYyBoYWQgaW52ZXJ0ZWQ6IHRoZSBnYXRlIGV4aXN0cyB0byBwcm90ZWN0IGFuIHVuZmluaXNoZWQgYXBwLCBidXQgaXQgaGFkIGJlY29tZQp0aGUgbWFpbiB0aGluZyBwcmV2ZW50aW5nIGhpbSBmcm9tIGZpbmRpbmcgb3V0IHdoZXRoZXIgdGhlIGFwcCBJUyBmaW5pc2hlZC4gSXQgY29tZXMgZG93bgp0b2RheSByYXRoZXIgdGhhbiAyOSBBdWcgKFJVTC0wMDEncyBzb2Z0LWxhdW5jaCBkYXRlLCB3aGljaCB0aGlzIGJyaW5ncyBmb3J3YXJkIGZvciB0aGUgR0FURQpvbmx5IC0tIHRoZSBsYXVuY2ggZGF0ZXMgdGhlbXNlbHZlcyBhcmUgdW5jaGFuZ2VkKS4KCldIWSBUSElTIElTIEFOIE5HSU5YLU9OTFkgQ0hBTkdFCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tClRoZSBnYXRlIGhhcyB0d28gaGFsdmVzIGFuZCBCT1RIIGhhbmcgb2ZmIG9uZSBlbmRwb2ludDoKICAqIHNlcnZlciBoYWxmIC0tIG5naW54IGBhdXRoX3JlcXVlc3QgL19yZXZpZXdfZ2F0ZWAsIHdoaWNoIHByb3hpZXMgdG8gdGhlIGFwcCdzIC9yZXZpZXcvdmVyaWZ5CiAgKiBjbGllbnQgaGFsZiAtLSBtYXJrZXRzcXVhcmUuaHRtbCBjYWxscyAvcmV2aWV3L3ZlcmlmeSBhbmQgc2hvd3MgdGhlIG92ZXJsYXkgdW5sZXNzIGl0IGdldHMKICAgICAgICAgICAgICAgICAgIHsidmFsaWQiOnRydWV9ClNvIG1ha2luZyAvcmV2aWV3L3ZlcmlmeSBhbnN3ZXIgMjAwIGZvciBldmVyeW9uZSBkcm9wcyBib3RoIGhhbHZlcyBhdCBvbmNlLCB3aXRoIE5PIGFwcGxpY2F0aW9uCmRlcGxveS4gVGhhdCBtYXR0ZXJzIHRvZGF5IGJlY2F1c2UgdGhlIGRlcGxveSBsYW5lIGlzIG5vdCByZWFjaGluZyB0aGUgc2VydmVyOyB0aGlzIGNoYW5nZSBpcwp0aGVyZWZvcmUgaW5kZXBlbmRlbnQgb2YgdGhhdCBmYXVsdCBhbmQgY2FuIGdvIGluIG92ZXIgU1NILgoKV0hBVCBJVCBET0VTCiAgMS4gbG9jYXRpb24gPSAvX3Jldmlld19nYXRlICAtPiBgcmV0dXJuIDIwMDtgICAoYXV0aF9yZXF1ZXN0IGFsd2F5cyBwYXNzZXMpCiAgMi4gbG9jYXRpb24gPSAvcmV2aWV3L3ZlcmlmeSAtPiByZXR1cm5zIHsidmFsaWQiOnRydWUsInNjb3BlIjoicmV2aWV3In0gdG8gZXZlcnlvbmUKTm90aGluZyBlbHNlIGlzIHRvdWNoZWQuIFRoZSBleGVtcHQgbG9jYXRpb25zLCB0aGUgYXBwLCB0aGUgY29va2llcyBhbmQgZXZlcnkgY3JlZGVudGlhbCBwYXRoCnN0YXkgZXhhY3RseSBhcyB0aGV5IGFyZS4KClJFVkVSU0lORyBJVCAob25lIGNvbW1hbmQsIGFuZCBpdCBpcyBhIHJlYWwgcm9sbGJhY2ssIG5vdCBhIHJlYnVpbGQpCiAgICBjcCA8cHJpbnRlZCBiYWNrdXA+IDxzaXRlIGZpbGU+ICYmIG5naW54IC10ICYmIG5naW54IC1zIHJlbG9hZApUaGUgZ2F0ZSByZXR1cm5zIGludGFjdCwgY29va2llcyBwZW9wbGUgYWxyZWFkeSBob2xkIHN0aWxsIHdvcmssIG5vdGhpbmcgd2FzIGRlbGV0ZWQuCgpTQUZFVFk6IDAxOS8wMjUgc2tlbGV0b24gLS0gZW5hYmxlZC1maXJzdCBmaW5kX3NpdGU7IEZVTkNUSU9OQUwgaWRlbXBvdGVuY3k7IHJlZnVzYWwgcmF0aGVyCnRoYW4gZ3Vlc3Npbmc7IGJhY2t1cCBPVVRTSURFIHRoZSBnbG9iYmVkIGRpciAoTkdJTlgtQkFLLUxPT1AtMSk7IG5naW54IC10IHdpdGggYXV0by1yZXN0b3JlOwpyZWxvYWQgd2l0aCBhdXRvLXJlc3RvcmUuCgpWRVJJRlkgYWZ0ZXIgYXBwbHlpbmcgKGFub255bW91cywgbm8gY29va2llKToKICAgIGN1cmwgLXMgaHR0cHM6Ly90cnVzdHNxdWFyZS5jby9yZXZpZXcvdmVyaWZ5ICAgICAtPiB7InZhbGlkIjp0cnVlLCJzY29wZSI6InJldmlldyJ9CiAgICBjdXJsIC1zSSBodHRwczovL3RydXN0c3F1YXJlLmNvL2xpc3RpbmdzICAgICAgICAgLT4gMjAwICh3YXMgNDAxKQpSZWdyZXNzaW9uIGxlZGdlciBSRy0wMTEyIGFzc2VydHMgZXhhY3RseSB0aGlzLgoiIiIKaW1wb3J0IG9zLCByZSwgc2h1dGlsLCBzdWJwcm9jZXNzLCBzeXMsIGdsb2IKZnJvbSBkYXRldGltZSBpbXBvcnQgZGF0ZXRpbWUsIHRpbWV6b25lCgpBUFBMWSA9ICItLWFwcGx5IiBpbiBzeXMuYXJndgpUUyA9IGRhdGV0aW1lLm5vdyh0aW1lem9uZS51dGMpLnN0cmZ0aW1lKCIlWSVtJWQtJUglTSVTIikKCmRlZiBzYXkobSk6IHByaW50KCJbMDI2X2dhdGVfZG93bl0gIiArIG0sIGZsdXNoPVRydWUpCgpkZWYgZmluZF9zaXRlKCk6CiAgICBkZWYgX2hpdHMocGF0cyk6CiAgICAgICAgb3V0ID0ge30KICAgICAgICBmb3IgcGF0IGluIHBhdHM6CiAgICAgICAgICAgIGZvciBjIGluIGdsb2IuZ2xvYihwYXQpOgogICAgICAgICAgICAgICAgaWYgbm90IG9zLnBhdGguaXNmaWxlKGMpOiBjb250aW51ZQogICAgICAgICAgICAgICAgaWYgb3MucGF0aC5iYXNlbmFtZShjKS5maW5kKCIuYmFrIikgIT0gLTE6IGNvbnRpbnVlCiAgICAgICAgICAgICAgICB0cnk6IHQgPSBvcGVuKGMsIGVuY29kaW5nPSJ1dGYtOCIsIGVycm9ycz0icmVwbGFjZSIpLnJlYWQoKQogICAgICAgICAgICAgICAgZXhjZXB0IEV4Y2VwdGlvbjogY29udGludWUKICAgICAgICAgICAgICAgIGlmICJ0cnVzdHNxdWFyZS5jbyIgaW4gdCBhbmQgInNlcnZlcl9uYW1lIiBpbiB0IGFuZCAiMTI3LjAuMC4xOjgwMDAiIGluIHQ6CiAgICAgICAgICAgICAgICAgICAgb3V0LnNldGRlZmF1bHQob3MucGF0aC5yZWFscGF0aChjKSwgYykKICAgICAgICByZXR1cm4gbGlzdChvdXQuaXRlbXMoKSkKICAgIGVuID0gX2hpdHMoWyIvZXRjL25naW54L3NpdGVzLWVuYWJsZWQvKiJdKQogICAgcmV0dXJuIGVuIGlmIGVuIGVsc2UgX2hpdHMoWyIvZXRjL25naW54L3NpdGVzLWF2YWlsYWJsZS8qIiwgIi9ldGMvbmdpbngvY29uZi5kLyouY29uZiJdKQoKT1BFTl9HQVRFID0gKCIgICAgbG9jYXRpb24gPSAvX3Jldmlld19nYXRlIHsgcmV0dXJuIDIwMDsgfSAgICMgR0FURS1ET1dOLTE6IGdhdGUgbG93ZXJlZCAiCiAgICAgICAgICAgICAiMTkgQXVnIDIwMjYgKERhdmlkKSAtLSByZXN0b3JlIGZyb20gYmFja3VwIHRvIHJlLWFybVxuIikKT1BFTl9WRVJJRlkgPSAoIiAgICBsb2NhdGlvbiA9IC9yZXZpZXcvdmVyaWZ5IHsgZGVmYXVsdF90eXBlIGFwcGxpY2F0aW9uL2pzb247ICIKICAgICAgICAgICAgICAgInJldHVybiAyMDAgJ3tcInZhbGlkXCI6dHJ1ZSxcInNjb3BlXCI6XCJyZXZpZXdcIn0nOyB9ICAgIyBHQVRFLURPV04tMVxuIikKClJFX0dBVEVfQkxPQ0sgPSByZS5jb21waWxlKHIiWyBcdF0qbG9jYXRpb24gPSAvX3Jldmlld19nYXRlIFx7Lio/XG5bIFx0XSpcfVxuIiwgcmUuUykKUkVfR0FURV9PTkVMSU5FID0gcmUuY29tcGlsZShyIig/bSleWyBcdF0qbG9jYXRpb24gPSAvX3Jldmlld19nYXRlIFx7W15cbl0qXH1bIFx0XSpcbiIpClJFX1ZFUklGWSA9IHJlLmNvbXBpbGUociIoP20pXlsgXHRdKmxvY2F0aW9uID0gL3Jldmlldy92ZXJpZnlbXlxuXSpcbiIpCgpkZWYgbWFpbigpOgogICAgaWYgbm90IEFQUExZOgogICAgICAgIHNheSgiZHJ5IHJ1biAobm8gLS1hcHBseSkg4oCUIG5vdGhpbmcgY2hhbmdlZCIpOyByZXR1cm4gMAogICAgc2l0ZXMgPSBmaW5kX3NpdGUoKQogICAgaWYgbm90IHNpdGVzOgogICAgICAgIHNheSgiRkFJTEVEOiBjb3VsZCBub3QgbG9jYXRlIHRoZSB0cnVzdHNxdWFyZS5jbyBuZ2lueCBzaXRlIGZpbGUiKTsgcmV0dXJuIDMKICAgIGlmIGxlbihzaXRlcykgPiAxOgogICAgICAgIHNheSgiRkFJTEVEOiBtdWx0aXBsZSBjYW5kaWRhdGUgc2l0ZSBmaWxlcywgcmVmdXNpbmcgdG8gZ3Vlc3M6ICIKICAgICAgICAgICAgKyAiLCAiLmpvaW4ocCBmb3IgcCwgXyBpbiBzaXRlcykpOyByZXR1cm4gMwogICAgcmVhbCwgX3Nob3duID0gc2l0ZXNbMF0KICAgIHNheSgic2l0ZSBmaWxlOiAiICsgcmVhbCkKICAgIHRleHQgPSBvcGVuKHJlYWwsIGVuY29kaW5nPSJ1dGYtOCIsIGVycm9ycz0icmVwbGFjZSIpLnJlYWQoKQoKICAgIGlmICJHQVRFLURPV04tMSIgaW4gdGV4dCBhbmQgInJldHVybiAyMDAiIGluIHRleHQ6CiAgICAgICAgc2F5KCJnYXRlIGlzIEFMUkVBRFkgZG93biAoR0FURS1ET1dOLTEgcHJlc2VudCkg4oCUIG5vdGhpbmcgdG8gZG8iKTsgcmV0dXJuIDAKCiAgICBuZXcgPSB0ZXh0CiAgICBuX2dhdGUgPSAwCiAgICBpZiBSRV9HQVRFX0JMT0NLLnNlYXJjaChuZXcpOgogICAgICAgIG5ldyA9IFJFX0dBVEVfQkxPQ0suc3ViKE9QRU5fR0FURSwgbmV3LCBjb3VudD0xKTsgbl9nYXRlID0gMQogICAgZWxpZiBSRV9HQVRFX09ORUxJTkUuc2VhcmNoKG5ldyk6CiAgICAgICAgbmV3ID0gUkVfR0FURV9PTkVMSU5FLnN1YihPUEVOX0dBVEUsIG5ldywgY291bnQ9MSk7IG5fZ2F0ZSA9IDEKICAgIGlmIG5vdCBuX2dhdGU6CiAgICAgICAgc2F5KCJubyBgbG9jYXRpb24gPSAvX3Jldmlld19nYXRlYCBibG9jayBmb3VuZCDigJQgaXMgdGhlIGdhdGUgZXZlbiBhcm1lZCBoZXJlPyIpCiAgICAgICAgc2F5KCJSZWZ1c2luZyB0byBndWVzcy4gTm90aGluZyBjaGFuZ2VkLiIpOyByZXR1cm4gNAogICAgaWYgbm90IFJFX1ZFUklGWS5zZWFyY2gobmV3KToKICAgICAgICBzYXkoIm5vIGBsb2NhdGlvbiA9IC9yZXZpZXcvdmVyaWZ5YCBleGVtcHQgbGluZSBmb3VuZCDigJQgcmVmdXNpbmcgKHRoZSBjbGllbnQgb3ZlcmxheSIpCiAgICAgICAgc2F5KCJ3b3VsZCBzdGF5IHVwIGFuZCB1c2VycyB3b3VsZCBzdGlsbCBzZWUgdGhlIGdhdGUgc2NyZWVuKS4iKTsgcmV0dXJuIDQKICAgIG5ldyA9IFJFX1ZFUklGWS5zdWIoT1BFTl9WRVJJRlksIG5ldywgY291bnQ9MSkKCiAgICBfYmFrZGlyID0gIi9yb290L25naW54LXNpdGUtYmFja3VwcyIKICAgIG9zLm1ha2VkaXJzKF9iYWtkaXIsIGV4aXN0X29rPVRydWUpCiAgICBiYWNrdXAgPSBvcy5wYXRoLmpvaW4oX2Jha2Rpciwgb3MucGF0aC5iYXNlbmFtZShyZWFsKSArICIuYmFrLWdhdGVkb3duLSIgKyBUUykKICAgIHNodXRpbC5jb3B5ZmlsZShyZWFsLCBiYWNrdXApOyBzYXkoImJhY2t1cDogIiArIGJhY2t1cCkKICAgIG9wZW4ocmVhbCwgInciLCBlbmNvZGluZz0idXRmLTgiKS53cml0ZShuZXcpCiAgICB0ID0gc3VicHJvY2Vzcy5ydW4oWyJuZ2lueCIsICItdCJdLCBjYXB0dXJlX291dHB1dD1UcnVlLCB0ZXh0PVRydWUpCiAgICBpZiB0LnJldHVybmNvZGUgIT0gMDoKICAgICAgICBzYXkoIm5naW54IC10IEZBSUxFRCDigJQgcmVzdG9yaW5nLiBzdGRlcnI6Iik7IHNheSgodC5zdGRlcnIgb3IgIiIpWzo4MDBdKQogICAgICAgIHNodXRpbC5jb3B5ZmlsZShiYWNrdXAsIHJlYWwpOyBzdWJwcm9jZXNzLnJ1bihbIm5naW54IiwgIi10Il0pOyByZXR1cm4gNQogICAgc2F5KCJuZ2lueCAtdCBvayIpCiAgICByID0gc3VicHJvY2Vzcy5ydW4oWyJuZ2lueCIsICItcyIsICJyZWxvYWQiXSwgY2FwdHVyZV9vdXRwdXQ9VHJ1ZSwgdGV4dD1UcnVlKQogICAgaWYgci5yZXR1cm5jb2RlICE9IDA6CiAgICAgICAgc2F5KCJyZWxvYWQgRkFJTEVEIOKAlCByZXN0b3JpbmciKTsgc2F5KChyLnN0ZGVyciBvciAiIilbOjQwMF0pCiAgICAgICAgc2h1dGlsLmNvcHlmaWxlKGJhY2t1cCwgcmVhbCk7IHN1YnByb2Nlc3MucnVuKFsibmdpbngiLCAiLXMiLCAicmVsb2FkIl0pOyByZXR1cm4gNgogICAgc2F5KCJHQVRFIElTIERPV04g4oCUIHRydXN0c3F1YXJlLmNvIGlzIG5vdyBvcGVuIHRvIGFueW9uZSwgbm8gY29kZSwgbm8gbGluaywgbm8gYWxsb3ctbGlzdC4iKQogICAgc2F5KCJWZXJpZnk6IGN1cmwgLXMgaHR0cHM6Ly90cnVzdHNxdWFyZS5jby9yZXZpZXcvdmVyaWZ5ICAtPiB7XCJ2YWxpZFwiOnRydWUsLi4ufSIpCiAgICBzYXkoIiAgICAgICAgY3VybCAtc0kgaHR0cHM6Ly90cnVzdHNxdWFyZS5jby9saXN0aW5ncyAgICAgIC0+IDIwMCIpCiAgICBzYXkoIlJFLUFSTSAob25lIGNvbW1hbmQpOiBjcCAlcyAlcyAmJiBuZ2lueCAtdCAmJiBuZ2lueCAtcyByZWxvYWQiICUgKGJhY2t1cCwgcmVhbCkpCiAgICByZXR1cm4gMAoKaWYgX19uYW1lX18gPT0gIl9fbWFpbl9fIjoKICAgIHN5cy5leGl0KG1haW4oKSkK | base64 -d > /tmp/026_gate_down.py && python3 /tmp/026_gate_down.py --apply"
+scp C:\Users\David\Projects\MarketSquare\migrations\026_gate_down.py root@178.104.73.239:/tmp/
 
-(If your SSH alias is different, swap root@trustsquare.co for whatever
- deploy_marketsquare.bat uses as %SERVER%.)
+ssh root@178.104.73.239 "python3 /tmp/026_gate_down.py --apply"
 
-It prints, in order: the site file it found, the backup path, "nginx -t ok", and then
-either GATE IS DOWN or a refusal explaining exactly what it would not guess at.
-If anything fails it restores the backup itself — the gate stays up rather than
-half-changed.
+It prints, in order: the site file it found · the backup path · "nginx -t ok" · then either
+GATE IS DOWN or a refusal naming exactly what it would not guess at. If anything fails it
+restores the backup itself — the gate stays UP rather than half-changed.
 
 ────────────────────────────────────────────────────────────────────────────
-STEP 2 — prove it from anywhere (no cookie, no code):
+STEP 2 — prove it (from anywhere, no cookie, no code)
 ────────────────────────────────────────────────────────────────────────────
 
-curl -s  https://trustsquare.co/review/verify     ->  {"valid":true,"scope":"review"}
-curl -sI https://trustsquare.co/listings          ->  HTTP/2 200      (was 401)
+Open https://trustsquare.co in a private window. No gate screen should appear.
 
-Then just open https://trustsquare.co in a private window. No gate screen should appear.
-
-────────────────────────────────────────────────────────────────────────────
-STEP 3 — while you are on the box, grab the deploy log (the other blocker):
-────────────────────────────────────────────────────────────────────────────
-
-ssh root@trustsquare.co "tail -40 /var/log/marketsquare-deploy.log; echo ---; systemctl status marketsquare-deploy.timer --no-pager | head -20"
-
-Paste that output back and I will tell you why deploys stopped landing.
+Or from a terminal:
+    curl -s  https://trustsquare.co/review/verify   ->  {"valid":true,"scope":"review"}
+    curl -sI https://trustsquare.co/listings        ->  HTTP/2 200      (was 401)
 
 ────────────────────────────────────────────────────────────────────────────
-TO PUT THE GATE BACK (real rollback, nothing was deleted):
+STEP 3 — while you are on the box, grab the deploy log (the OTHER blocker)
 ────────────────────────────────────────────────────────────────────────────
 
-The run prints the exact command, of the form:
-  cp /root/nginx-site-backups/<file>.bak-gatedown-<timestamp> /etc/nginx/sites-enabled/<file> && nginx -t && nginx -s reload
+ssh root@178.104.73.239 "tail -40 /var/log/marketsquare-deploy.log; echo '--- TIMER ---'; systemctl status marketsquare-deploy.timer --no-pager | head -20; echo '--- SERVICE ---'; systemctl status marketsquare-deploy.service --no-pager | head -20"
 
-Cookies people already hold keep working either way.
+Paste that output back. It is the one thing this session cannot read, and it is blocking
+the Google sign-in, the 6-digit code and everything else built today.
+
+────────────────────────────────────────────────────────────────────────────
+TO PUT THE GATE BACK (real rollback — nothing was deleted)
+────────────────────────────────────────────────────────────────────────────
+
+The run prints the exact command. It looks like:
+
+    ssh root@178.104.73.239 "cp /root/nginx-site-backups/<file>.bak-gatedown-<ts> /etc/nginx/sites-enabled/<file> && nginx -t && nginx -s reload"
+
+Cookies people already hold keep working either way. The reviewer code, email link,
+6-digit code and admin password all stay in the code — simply unused while the gate is down.
