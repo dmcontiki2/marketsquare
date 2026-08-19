@@ -5442,5 +5442,113 @@ def rg_intro_relay_proven():
     return out
 
 
+@entry("RG-0119", "The photo-anon scan canary is GROUNDING-CLASS, dark by default, and can never be the verifier",
+       OPEN, scope="the GEMINI-CANARY-1 lane entire: ai_provider.py gemini adapter + TASK_MODEL row, "
+       "AI_BASELINE.json/ai_price_card.json coverage, bea_main.py _anon_scan_provider routing "
+       "(initial scan + refine ONLY). Class property protected: the VERIFY pass in "
+       "_anon_blur_until_clean must NEVER route through the canary helper -- the verifier is the "
+       "leak guarantee and stays on the active lane, whatever scans",
+       ref="RUL-031/032 (David, 19 Aug 2026). Three fixes to the blur machinery (5/7/10 Aug) did "
+           "not stop over-smeared publishes because both general-LLM lanes fail at box "
+           "coordinates -- a task-model mismatch, not vendor quality. David ruled: no more "
+           "micro-fixes; Gemini 3.7 Flash (grounding-trained, ~0.13x base cost) scans and "
+           "refines as a canary, the active lane verifies every redaction. Dark until "
+           "GEMINI_API_KEY + PHOTO_SCAN_CANARY=1, and traffic only after "
+           "scripts/eval_photo_anon.py shows 100% plate recall on the eval set (Haiku already "
+           "lost this task once by being cheapest). OPEN until the eval passes and the canary "
+           "is armed live.")
+def rg_gemini_canary():
+    out = []
+    ap = repo_file("ai_provider.py"); bea = repo_file("bea_main.py")
+    if ap is not None:
+        if '"gemini"' not in ap or "def _gemini" not in ap:
+            out.append((FAIL, "the gemini lane has GONE from ai_provider.py"))
+        if '"gemini":    {"sonnet"' in ap and '"gemini"' in ap.split("_FAILOVER_ORDER_DEFAULT = ")[-1].split("]")[0]:
+            out.append((FAIL, "gemini crept into the default failover order -- the canary must "
+                              "never be an automatic failover target"))
+    if bea is not None:
+        if "def _anon_scan_provider" not in bea:
+            out.append((FAIL, "GEMINI-CANARY-1 routing helper has GONE from bea_main.py"))
+        else:
+            # the verify pass must stay on the caller's lane: inside _anon_blur_until_clean the
+            # verify _anon_photo_scan calls must NOT pass through _anon_scan_provider
+            body = bea.split("def _anon_blur_until_clean", 1)[-1].split("\ndef ", 1)[0]
+            for seg in body.split("_anon_photo_scan(")[1:]:
+                if "_anon_scan_provider" in seg.split(")")[0:2][0]:
+                    out.append((FAIL, "a VERIFY call inside _anon_blur_until_clean routes through "
+                                      "the canary helper -- the verifier must stay on the active "
+                                      "lane; the leak guarantee may never share the scanner's "
+                                      "blind spots"))
+                    break
+    # live half: armed only after the eval -- until then this entry stays OPEN
+    import json as _j
+    try:
+        _fl = _j.loads(_get("/flags"))
+        armed = bool(_fl.get("photo_scan_canary"))
+    except Exception:
+        armed = False
+    if not armed:
+        out.append((FAIL, "canary not armed live yet (eval pending) -- expected while OPEN"))
+    if not out:
+        out.append((INFO, "gemini canary armed: scans/refines on gemini, verify on the active lane"))
+    return out
+
+
+
+@entry("RG-0119", "A charge binds to a PROVEN identity -- no session no paid action, and a session can never act as someone else",
+       LOCKED, fixed_on="2026-08-19",
+       scope="ACCOUNT-BIND-1 enforced, the whole bound lane: _bind_charged_email at every paid "
+             "call site (intros create, intro accept via BIND-OWNER-1, the seller AI tools) plus "
+             "the launch switch itself. Class: any NEW paid endpoint must route through "
+             "_bind_charged_email; a typed-email charge path is a regression of this entry.",
+       ref="Flipped ON by David 19 Aug 2026 ~19:50 SAST, informed not hopeful: 7 days of shadow "
+           "log showed 0 MISMATCH and 1 no-session -- and the 1 was this morning's relay E2E "
+           "test itself (the intro was created by API without the buyer cookie). Verified live "
+           "from outside within minutes of the flip, all four quadrants: key-only intro accept "
+           "-> 401 (closing the hole the relay E2E had just walked through); no-session intro "
+           "create -> 401; signed-in buyer acting as SELF -> 200 (positive path, fresh 6-digit "
+           "sign-in, throwaway listing #374, deleted); signed-in buyer acting as SOMEONE ELSE "
+           "-> 403. Google one-tap (RG-0111) is what made this flip cheap: the sign-in a "
+           "refused caller is sent to is now one tap, not an email round trip.")
+def rg_account_binding_enforced():
+    out = []
+    try:
+        r = urllib.request.urlopen(urllib.request.Request(BASE + "/flags", headers=dict(UA)),
+                                   timeout=TIMEOUT)
+        d = json.loads(r.read().decode("utf-8", "replace"))
+        if d.get("account_binding") is not True:
+            out.append((FAIL, "account_binding flag is OFF -- paid actions are back to trusting "
+                              "a typed email, and intro-accept is open to anyone with the "
+                              "public app key"))
+    except Exception as ex:
+        out.append((FAIL, "/flags unreachable (%r)" % ex))
+    # Live: a sessionless caller with only the public key must be refused on a bound action.
+    try:
+        req = urllib.request.Request(BASE + "/intros",
+                data=json.dumps({"listing_id": 1, "buyer_email": "rg-probe@example.invalid",
+                                 "buyer_name": "probe", "message": "rg-0119 probe"}).encode(),
+                headers=dict(UA, **{"Content-Type": "application/json",
+                                    "X-Api-Key": "ms_mk_2026_pretoria_admin"}), method="POST")
+        urllib.request.urlopen(req, timeout=TIMEOUT).read()
+        out.append((FAIL, "a NO-SESSION intro create was ACCEPTED -- binding is not enforcing "
+                          "(and this probe may have created a real intro row)"))
+    except urllib.error.HTTPError as he:
+        if he.code not in (401,):
+            out.append((FAIL, "no-session intro create answered %s, expected 401" % he.code))
+    except Exception as ex:
+        out.append((FAIL, "/intros unreachable (%r)" % ex))
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        if "def _bind_charged_email" not in bea:
+            out.append((FAIL, "_bind_charged_email is gone -- the binding lane has no engine"))
+        if "BIND-OWNER-1" not in bea:
+            out.append((FAIL, "intro accept lost its owner check (BIND-OWNER-1) -- anyone with "
+                              "the app key can accept again"))
+    if not out:
+        out.append((INFO, "binding enforcing: sessionless paid action refused; engine + owner "
+                          "check present in source"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
