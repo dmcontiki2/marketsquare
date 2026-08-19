@@ -5103,7 +5103,7 @@ def _relay_forward(to_real: str, from_alias: str, subject: str, body: str) -> bo
     if not to_clean:
         _log.warning("INTRO-RELAY-1 forward skipped — bad recipient")
         return False
-    key = os.getenv("RESEND_API_KEY", "")
+    key = ai_provider.envkey("RESEND_API_KEY") or ""
     if not key:
         _log.error("INTRO-RELAY-1 forward skipped — RESEND_API_KEY not set")
         return False
@@ -7195,7 +7195,7 @@ def _demand_render_invite(ticket, prospect, code):
 def _demand_send_invite(to_email, subject, html):
     """The ONLY send path. Triple-gated: env ON + dry-run OFF + RESEND_API_KEY present.
     Writes the outreach ledger AT send (one touch per address, enforced upstream)."""
-    key = os.getenv("RESEND_API_KEY", "")
+    key = ai_provider.envkey("RESEND_API_KEY") or ""
     if not (DEMAND_LOOP_ENABLED and not DEMAND_LOOP_DRYRUN and key):
         return ("dry", None)
     try:
@@ -9724,7 +9724,7 @@ def trust_score_set_credential(req: CredentialUpdateReq, _key: str = Depends(aut
     # TS-0010 (Maroushka, 5 Aug 2026): her ID silently failed review - she re-uploaded
     # blind. Every decision now mails the person (Resend transactional; skipped without a key).
     try:
-        _rk = os.getenv("RESEND_API_KEY", "")
+        _rk = ai_provider.envkey("RESEND_API_KEY") or ""
         if _rk and req.status in ("earned", "rejected"):
             _sname = sig.get("name", req.signal_id)
             if req.status == "earned":
@@ -12048,7 +12048,7 @@ def _send_review_link_email(to_email: str, link: str, code: str = "") -> str:
         "<p style='color:#6b7280;font-size:12px'>If you didn't request this, you can ignore this email.</p>"
         "</div>"
     )
-    key = os.getenv("RESEND_API_KEY", "")
+    key = ai_provider.envkey("RESEND_API_KEY") or ""
     if key:
         try:
             import httpx
@@ -12290,7 +12290,7 @@ def _send_login_email(to_email: str, link: str, code: str = "") -> str:
         "If you didn't request this, you can ignore this email.</p>"
         "</div>"
     )
-    key = os.getenv("RESEND_API_KEY", "")
+    key = ai_provider.envkey("RESEND_API_KEY") or ""
     if key:
         try:
             import httpx
@@ -12410,6 +12410,12 @@ def _establish_user_session(email: str, response: Response):
 #
 # FAILS DARK: with no credentials configured, /auth/providers reports the lane
 # off and the UI never renders the button. Nothing breaks, nothing half-works.
+# ENVKEY-1 (see ai_provider.envkey and the RELAY_* block): the systemd unit does NOT
+# export the server .env to this process, so a bare os.getenv() is EMPTY on the box no
+# matter what is written to .env. Every key in this codebase goes through envkey(),
+# which checks the environment first and then reads /var/www/marketsquare/.env.
+# 19 Aug 2026: this lane shipped with bare os.getenv and reported google:false with
+# perfectly good credentials on disk -- the exact ENVKEY-1 symptom, twice documented.
 _OAUTH_STATE_MIN = 15     # a start->callback round trip must complete in 15 min
 
 _OIDC = {
@@ -12440,10 +12446,10 @@ def _apple_client_secret():
     """Apple does not issue a static secret: the client secret IS an ES256 JWT we
     sign with the .p8 key from the Apple developer portal. Returns None (lane dark)
     if any piece is missing -- never a half-configured lane."""
-    team = os.getenv("APPLE_TEAM_ID", "").strip()
-    kid  = os.getenv("APPLE_KEY_ID", "").strip()
-    sid  = os.getenv("APPLE_CLIENT_ID", "").strip()
-    key  = os.getenv("APPLE_PRIVATE_KEY", "").strip().replace("\\n", "\n")
+    team = (ai_provider.envkey("APPLE_TEAM_ID") or "").strip()
+    kid  = (ai_provider.envkey("APPLE_KEY_ID") or "").strip()
+    sid  = (ai_provider.envkey("APPLE_CLIENT_ID") or "").strip()
+    key  = (ai_provider.envkey("APPLE_PRIVATE_KEY") or "").strip().replace("\\n", "\n")
     if not (team and kid and sid and key):
         return None
     try:
@@ -12460,11 +12466,11 @@ def _oauth_ready(provider: str) -> bool:
     cfg = _OIDC.get(provider)
     if not cfg:
         return False
-    if not os.getenv(cfg["client_id_env"], "").strip():
+    if not (ai_provider.envkey(cfg["client_id_env"]) or "").strip():
         return False
     if provider == "apple":
         return _apple_client_secret() is not None
-    return bool(os.getenv(cfg["client_secret_env"], "").strip())
+    return bool((ai_provider.envkey(cfg["client_secret_env"]) or "").strip())
 
 @app.get("/auth/providers")
 def auth_providers():
@@ -12494,7 +12500,7 @@ def auth_oauth_start(provider: str, request: Request, next: str = "/"):
          "iat": datetime.now(timezone.utc)},
         _REVIEW_SECRET, algorithm=_JWT_ALGO)
     params = {
-        "client_id": os.getenv(cfg["client_id_env"], "").strip(),
+        "client_id": (ai_provider.envkey(cfg["client_id_env"]) or "").strip(),
         "redirect_uri": _oauth_redirect_uri(provider),
         "response_type": "code",
         "scope": cfg["scope"],
@@ -12512,7 +12518,7 @@ def _oauth_verify_id_token(provider: str, id_token: str, nonce: str):
     claims dict, or raises. Signature, issuer, audience, expiry and nonce are all
     checked -- an unverified ID token is just a string a caller typed."""
     cfg = _OIDC[provider]
-    aud = os.getenv(cfg["client_id_env"], "").strip()
+    aud = (ai_provider.envkey(cfg["client_id_env"]) or "").strip()
     try:
         jwk_client = _pyjwt.PyJWKClient(cfg["jwks"])
         signing_key = jwk_client.get_signing_key_from_jwt(id_token).key
@@ -12542,11 +12548,11 @@ def _oauth_complete(provider: str, code: str, state: str, response: Response):
     if st.get("scope") != "oauth-state" or st.get("p") != provider:
         raise HTTPException(status_code=401, detail="Sign-in state did not match.")
     secret = (_apple_client_secret() if provider == "apple"
-              else os.getenv(cfg["client_secret_env"], "").strip())
+              else (ai_provider.envkey(cfg["client_secret_env"]) or "").strip())
     try:
         r = httpx.post(cfg["token"], data={
             "code": code,
-            "client_id": os.getenv(cfg["client_id_env"], "").strip(),
+            "client_id": (ai_provider.envkey(cfg["client_id_env"]) or "").strip(),
             "client_secret": secret,
             "redirect_uri": _oauth_redirect_uri(provider),
             "grant_type": "authorization_code",
@@ -14164,7 +14170,7 @@ async def _infra_cloudflare():
         return {"status": "warn", "detail": "unreachable: " + type(e).__name__}
 
 async def _infra_resend():
-    key = os.getenv("RESEND_API_KEY")
+    key = ai_provider.envkey("RESEND_API_KEY")
     if not key:
         return {"status": "nokey", "detail": "RESEND_API_KEY not set"}
     try:
@@ -17099,7 +17105,7 @@ def _smtp_send_reply(to_addr: str, subject: str, body: str,
         return False
     subj = subject if subject.lower().startswith("re:") else f"Re: {subject}"
     # ── Path 1: Resend (L3a — replies from the trustsquare.co brand, not personal Gmail)
-    resend_key = os.getenv("RESEND_API_KEY", "")
+    resend_key = ai_provider.envkey("RESEND_API_KEY") or ""
     support_from = _safe_from(os.getenv("SUPPORT_FROM_EMAIL"), "TrustSquare Support <support@mail.trustsquare.co>")
     if resend_key:
         try:
@@ -17239,7 +17245,7 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
     status = "drafted"
     can_auto = (
         EMAIL_AUTO_SEND
-        and (bool(os.getenv("RESEND_API_KEY")) or bool(GMAIL_APP_PASSWORD))
+        and (bool(ai_provider.envkey("RESEND_API_KEY")) or bool(GMAIL_APP_PASSWORD))
         and result["auto_safe"]
         and category in _AUTO_SEND_CATEGORIES
         and bool(draft_reply)
@@ -18436,7 +18442,7 @@ RESP_PENALTY_ACTIVE_DAYS = 90 # penalty eases (drops out of the score) after thi
 def _send_system_email(to_email: str, subject: str, html: str) -> str:
     """Transactional lifecycle email. Resend if configured, Gmail SMTP fallback
     (MAIL-FALLBACK-1 pattern). Returns 'sent' | 'failed' | 'dry'."""
-    key = os.getenv("RESEND_API_KEY", "")
+    key = ai_provider.envkey("RESEND_API_KEY") or ""
     if key:
         try:
             import httpx

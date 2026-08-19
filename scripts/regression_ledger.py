@@ -5247,5 +5247,49 @@ def rg_migration_import_contract():
     return out
 
 
+
+@entry("RG-0117", "Server credentials are read through envkey(), never bare os.getenv -- the systemd unit does not export .env",
+       LOCKED, fixed_on="2026-08-19",
+       scope="EVERY credential/config read in bea_main.py that expects a value from "
+             "/var/www/marketsquare/.env. Class, not instance: the trap catches any new lane, and "
+             "it has now caught three (RELAY_* 5 Aug, the AI lanes 31 Jul, Google OAuth 19 Aug).",
+       ref="ENVKEY-1, 17 Jul 2026. The marketsquare systemd unit does NOT export the server .env "
+           "into the process, so a bare os.getenv() returns empty ON THE BOX however correct the "
+           ".env file is. ai_provider.envkey() checks the environment first, then reads the .env "
+           "directly -- it is the established pattern and the RELAY_ block carries an eight-line "
+           "comment explaining exactly this. 19 Aug 2026: the ONETAP-1 Google lane shipped with "
+           "bare os.getenv anyway and reported google:false with perfectly good credentials "
+           "already written to .env -- David had done the console work correctly and the app "
+           "still said the lane was dark. Symptom is always the same and always misleading: the "
+           "feature behaves as though it was never configured. Ten bare os.getenv calls replaced. "
+           "This entry exists so the NEXT lane cannot repeat it.")
+def rg_envkey_not_bare_getenv():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "outside the repo -- source-only entry")]
+    # Credentials that live in the server .env and MUST go through envkey().
+    GUARDED = ("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "APPLE_CLIENT_ID", "APPLE_TEAM_ID",
+               "APPLE_KEY_ID", "APPLE_PRIVATE_KEY", "RELAY_INBOUND_SECRET", "RESEND_API_KEY")
+    seen = 0
+    for name in GUARDED:
+        for bad in ('os.getenv("%s"' % name, "os.environ.get(\"%s\"" % name,
+                    'os.environ["%s"]' % name):
+            if bad in bea:
+                out.append((FAIL, "%s is read with a bare %s -- on the server that returns EMPTY "
+                                  "(the systemd unit does not export .env) and the feature will "
+                                  "silently report itself unconfigured. Use "
+                                  "ai_provider.envkey(). ENVKEY-1." % (name, bad.split("(")[0])))
+        if name in bea:
+            seen += 1
+    # RG-0068: never pass by matching nothing.
+    if seen == 0:
+        out.append((FAIL, "none of the guarded credential names appear in bea_main.py -- this "
+                          "assertion is running blind and must be re-pointed"))
+    if not out:
+        out.append((INFO, "all %d guarded credentials read through envkey()" % seen))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
