@@ -238,8 +238,8 @@
           + 'blocks it before the request leaves (origin <code>null</code> is not allowed by the '
           + 'server\u2019s CORS list). No password will work here.<br><br>'
           + 'Open <a href="' + BEA_ABS + '/dashboard.html" style="color:#fbbf24;font-weight:700">'
-          + BEA_ABS + '/dashboard.html</a> instead \u2014 entering the reviewer code at '
-          + '<a href="' + BEA_ABS + '/" style="color:#fbbf24;font-weight:700">' + BEA_ABS + '/</a> first.';
+          + BEA_ABS + '/dashboard.html</a> instead \u2014 your admin password unlocks it '
+          + 'there directly (GATE-NOLOCK-1); no reviewer code needed.';
         if(loginScreen.firstChild) loginScreen.insertBefore(w, loginScreen.firstChild);
         else loginScreen.appendChild(w);
       }
@@ -311,8 +311,14 @@
              NOT on the exempt list (migrations/018). The old code called r.json() blind, the
              parse threw, and the .catch mislabelled EVERY refusal as a network failure. That
              single wrong message is why this fault kept being re-diagnosed from zero. */
-          showLoginError('Locked by the pre-launch gate. Open https://trustsquare.co/ first, ' +
-                         'enter the reviewer code, then reload this page in the same browser.');
+          /* GATE-NOLOCK-1 (19 Aug 2026): /admin/login is now EXEMPT at the origin
+             (migrations/025) and a correct admin credential grants the gate cookie
+             itself, so the dashboard no longer needs the reviewer code first. A 401
+             here therefore means the password/PIN really is wrong — the old message
+             sent David to perform a step that was impossible and told him his correct
+             password was an incorrect reviewer code. */
+          showLoginError('Password or PIN not accepted. If this box is new, open ' +
+                         'https://trustsquare.co/ once and unlock it there first.');
         }
         else if(r.status === 503){
           showLoginError('Server auth not configured (503) \u2014 MS_ADMIN_PASSWORD or MS_JWT_SECRET is unset on the box.');
@@ -357,7 +363,8 @@
         } else if(r.status === 401 || r.status === 403){
           /* GATE-TRUTH-2: the change-PIN path was left blind by GATE-TRUTH-1, which only
              patched the login path in this file. Same origin gate, same blind parse. */
-          changeErr.textContent = 'Locked by the pre-launch gate. Open https://trustsquare.co/ first, enter the reviewer code, then retry.';
+          /* GATE-NOLOCK-1: /admin/change-pin is exempt at the origin too (migrations/025). */
+          changeErr.textContent = 'Current PIN not accepted. If this box is new, open https://trustsquare.co/ once and unlock it there first.';
           changeErr.style.display = 'block';
         } else {
           changeErr.textContent = 'PIN change failed (' + r.status + '). Please try again.';

@@ -41,6 +41,17 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-027": [
+   ("bea_main.py", ["GATE-NOLOCK-1", "def _grant_review_cookie", "/review/claim-code",
+                    "admin-master/", "admin-team/"], []),
+   ("migrations/025_gate_nolock.py", ["GATE-NOLOCK-1", "/admin/login"], []),
+   ("marketsquare.html", ["gate-otp-block", "gateClaimCode"],
+                         ["Incorrect reviewer code. Please check it and try again."]),
+   ("dashboard.server.html", ["GATE-NOLOCK-1"], ["Locked by the pre-launch gate"]),
+   ("scripts/regression_ledger.py", ["RG-0107", "RG-0108",
+                                     "rg_gate_admin_never_locked"], []),
+   ("RULINGS.md", ["NOBODY ENTITLED TO ENTER MAY BE LOCKED OUT BY THEIR DEVICE"], []),
+ ],
  "RUL-026": [
    ("bea_main.py", ["RUL-026: showcase supers never fade", "Showcase adverts are admin-managed."], []),
    ("migrations/024_showcase_immortal.py", ["RUL-026"], []),

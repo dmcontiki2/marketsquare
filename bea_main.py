@@ -11838,6 +11838,33 @@ def _review_rate_ok(ip: str) -> bool:
     rec[0] += 1
     return rec[0] <= 8                        # max 8 attempts / 10 min / IP
 
+# GATE-NOLOCK-1 (19 Aug 2026, David) — ONE place that grants gate passage.
+# Born from a real lockout: David requested an email link on his LAPTOP, the link
+# opened on his PHONE (mail app), so the phone got the cookie and the laptop stayed
+# locked; and the admin password could not rescue him because nginx (GATE-ENFORCE-2)
+# refuses anonymous /admin/login at the ORIGIN, so the correct super-admin password
+# surfaced as "Incorrect reviewer code". Three doors now grant the SAME cookie:
+#   * reviewer code            (/review/login)        — break-glass, unchanged
+#   * emailed one-time link    (/review/enter)        — same-device convenience
+#   * emailed 6-digit code     (/review/claim-code)   — CROSS-DEVICE (read on phone,
+#                                                       type on laptop)  <- the fix
+#   * admin password / team PIN(/admin/login)         — the super admin can NEVER be
+#                                                       locked out of his own app
+def _grant_review_cookie(response: Response, why: str = "?"):
+    """Mint a review-scope JWT and set it as the ts_review cookie. This grants ONLY
+    passage past the pre-launch gate — never admin, identity or superuser rights
+    (different secret, different scope; _require_admin decodes with _JWT_SECRET)."""
+    token = _pyjwt.encode(
+        {"scope": "review",
+         "exp": datetime.now(timezone.utc) + timedelta(days=_REVIEW_TOKEN_DAYS),
+         "iat": datetime.now(timezone.utc)},
+        _REVIEW_SECRET, algorithm=_JWT_ALGO)
+    response.set_cookie("ts_review", token, max_age=_REVIEW_TOKEN_DAYS*24*3600,
+                        httponly=True, secure=True, samesite="lax", path="/")
+    _log.info("gate cookie GRANTED via %s", why)
+    return token
+
+
 class _ReviewLoginRequest(_BaseModel):
     code: str
 
@@ -11861,16 +11888,9 @@ def review_login(req: _ReviewLoginRequest, request: Request, response: Response)
         _log.warning("review-login FAILED from %s", ip)
         raise HTTPException(status_code=401, detail="Incorrect reviewer code.")
     _log.info("review-login OK from %s", ip)
-    payload = {
-        "scope": "review",
-        "exp": datetime.now(timezone.utc) + timedelta(days=_REVIEW_TOKEN_DAYS),
-        "iat": datetime.now(timezone.utc),
-    }
-    token = _pyjwt.encode(payload, _REVIEW_SECRET, algorithm=_JWT_ALGO)
     # GATE-ENFORCE-1 (5 Aug 2026): also set an HttpOnly cookie so nginx auth_request can gate
     # document + API requests — a top-level navigation cannot carry the X-Review-Token header.
-    response.set_cookie("ts_review", token, max_age=_REVIEW_TOKEN_DAYS*24*3600,
-                        httponly=True, secure=True, samesite="lax", path="/")
+    token = _grant_review_cookie(response, "reviewer-code")
     return {"token": token, "expires_days": _REVIEW_TOKEN_DAYS}
 
 @app.get("/review/verify")
@@ -11915,6 +11935,34 @@ def review_verify(x_review_token: str = Header(default=None), ts_review: str = C
 _REVIEW_EMAILS_FILE = "/var/www/marketsquare/review_emails.txt"
 _REVIEW_LINK_MIN    = 30      # emailed link lives 30 minutes, works once
 _review_link_used   = {}      # jti -> exp epoch (single-use memory)
+# GATE-NOLOCK-1: the same email also carries a 6-DIGIT CODE. A magic link can only
+# ever unlock the device that OPENS it — mail opens on the phone, so the laptop the
+# tester actually works on stays locked. The code is device-independent: read it on
+# whatever device shows the mail, type it into whatever device is locked.
+_review_codes       = {}      # email -> {"code": str, "exp": epoch, "tries": int}
+_REVIEW_CODE_TRIES  = 6       # per-code guess budget (on top of the per-IP limit)
+
+def _new_review_code():
+    import secrets as _secrets
+    return "".join(str(_secrets.randbelow(10)) for _ in range(6))
+
+def _review_code_ok(email: str, code: str) -> bool:
+    """Consume a 6-digit gate code. Constant-time compare, single use, budgeted."""
+    import hmac as _hmac, time as _t
+    now = _t.time()
+    for _k in [k for k, v in _review_codes.items() if v.get("exp", 0) < now]:
+        _review_codes.pop(_k, None)
+    rec = _review_codes.get(email)
+    if not rec or rec["exp"] < now:
+        return False
+    rec["tries"] += 1
+    if rec["tries"] > _REVIEW_CODE_TRIES:
+        _review_codes.pop(email, None)
+        return False
+    if _hmac.compare_digest(rec["code"], (code or "").strip()):
+        _review_codes.pop(email, None)     # single use
+        return True
+    return False
 
 def _review_emails():
     """Lower-cased reviewer email allowlist. Env first, then file; re-read every call."""
@@ -11933,19 +11981,25 @@ def _review_emails():
             out.add(ln)
     return out
 
-def _send_review_link_email(to_email: str, link: str) -> str:
+def _send_review_link_email(to_email: str, link: str, code: str = "") -> str:
     """Email the one-time gate access link. Mirrors _send_login_email's proven
     transport (Resend -> Gmail SMTP fallback, RESEND-FROM-1 + MAIL-FALLBACK-1
     lessons kept). Returns 'sent' | 'failed' | 'dry'."""
-    subject = "Your TrustSquare access link"
+    subject = "Your TrustSquare access code"
     html = (
         "<div style='font-family:Inter,Arial,sans-serif;max-width:440px;margin:auto'>"
         "<h2 style='color:#0c1a2e'>Open TrustSquare</h2>"
-        "<p>Tap the button to open the TrustSquare preview. This link works once "
-        "and expires in " + str(_REVIEW_LINK_MIN) + " minutes; after that your "
-        "browser stays signed in.</p>"
+        "<p style='margin-bottom:6px'><b>Reading this on your phone but working on a laptop?</b> "
+        "Type this code into the TrustSquare screen that is waiting on that device:</p>"
+        "<p style='font-size:34px;letter-spacing:9px;font-weight:800;color:#0c1a2e;"
+        "background:#f1f5f9;border-radius:10px;padding:14px 0;text-align:center;margin:10px 0'>"
+        + (code or "") + "</p>"
+        "<p style='color:#6b7280;font-size:13px'>Or, if you are already on the device you want to "
+        "use, just tap the button:</p>"
         "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
         "text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700'>Open TrustSquare &rarr;</a></p>"
+        "<p style='color:#6b7280;font-size:12px'>The code and the link each work once and expire in "
+        + str(_REVIEW_LINK_MIN) + " minutes. After that, that browser stays signed in for a year.</p>"
         "<p style='color:#6b7280;font-size:12px'>If you didn't request this, you can ignore this email.</p>"
         "</div>"
     )
@@ -11970,8 +12024,11 @@ def _send_review_link_email(to_email: str, link: str) -> str:
             msg["From"] = "TrustSquare <" + GMAIL_ADDRESS + ">"
             msg["To"] = to_email
             msg["Subject"] = subject
-            msg.set_content("Open TrustSquare: " + link + "  (works once, expires in "
-                            + str(_REVIEW_LINK_MIN) + " minutes)")
+            msg.set_content("Your TrustSquare access code: " + (code or "")
+                            + "\n\nType it into the TrustSquare screen waiting on your device,"
+                            + "\nor open this link on the device you want to use:\n" + link
+                            + "\n\n(Each works once and expires in "
+                            + str(_REVIEW_LINK_MIN) + " minutes.)")
             msg.add_alternative(html, subtype="html")
             with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
                 server.starttls()
@@ -12005,8 +12062,38 @@ def review_request_link(req: _ReviewLinkRequest, request: Request):
          "exp": datetime.now(timezone.utc) + timedelta(minutes=_REVIEW_LINK_MIN),
          "iat": datetime.now(timezone.utc)},
         _REVIEW_SECRET, algorithm=_JWT_ALGO)
-    status = _send_review_link_email(email, APP_URL + "/review/enter?t=" + tok)
+    import time as _t
+    code = _new_review_code()
+    _review_codes[email] = {"code": code, "exp": _t.time() + _REVIEW_LINK_MIN * 60, "tries": 0}
+    status = _send_review_link_email(email, APP_URL + "/review/enter?t=" + tok, code)
     _log.info("review-link %s to %s (requested from %s)", status.upper(), email, ip)
+    # GATE-TRUTH-1 doctrine: do not tell a tester "check your email" when the mail
+    # transport failed. "sent" is the only truthful green. (No enumeration leak: an
+    # off-list email returned above without ever reaching this line.)
+    return {"ok": True, "delivery": status}
+
+class _ReviewCodeClaim(_BaseModel):
+    email: str
+    code: str
+
+@app.post("/review/claim-code")
+def review_claim_code(req: _ReviewCodeClaim, request: Request, response: Response):
+    """GATE-NOLOCK-1 — redeem the 6-digit code from the access email ON THE DEVICE
+    THAT IS LOCKED. This is the cross-device door: the magic link can only unlock
+    the browser that opens it, and mail usually opens on a phone while the tester
+    is working on a laptop. Same allowlist, same rate limit, same 30-minute life,
+    same review-scope cookie — no new privilege, just a second way through."""
+    ip = (request.headers.get("x-forwarded-for")
+          or (request.client.host if request.client else "?")).split(",")[0].strip()
+    if not _review_rate_ok(ip):
+        raise HTTPException(status_code=429, detail="Too many attempts. Please wait a few minutes.")
+    email = (req.email or "").strip().lower()
+    if not _review_code_ok(email, req.code or ""):
+        _log.warning("review-claim-code FAILED for %s from %s", email or "?", ip)
+        raise HTTPException(status_code=401,
+                            detail="That code is wrong or has expired. Ask for a fresh one.")
+    _grant_review_cookie(response, "email-code/" + email)
+    _log.info("review-claim-code OK for %s from %s", email, ip)
     return {"ok": True}
 
 @app.get("/review/enter")
@@ -12038,14 +12125,8 @@ def review_enter(request: Request, t: str = ""):
         return _bounce("already used")
     _review_link_used[jti] = float(payload.get("exp") or (_now + _REVIEW_LINK_MIN * 60))
     email = (payload.get("email") or "?").lower()
-    token = _pyjwt.encode(
-        {"scope": "review",
-         "exp": datetime.now(timezone.utc) + timedelta(days=_REVIEW_TOKEN_DAYS),
-         "iat": datetime.now(timezone.utc)},
-        _REVIEW_SECRET, algorithm=_JWT_ALGO)
     resp = RedirectResponse(url="/", status_code=302)
-    resp.set_cookie("ts_review", token, max_age=_REVIEW_TOKEN_DAYS*24*3600,
-                    httponly=True, secure=True, samesite="lax", path="/")
+    _grant_review_cookie(resp, "email-link/" + email)
     _log.info("review-enter OK for %s from %s", email, ip)
     return resp
 
@@ -13449,14 +13530,32 @@ def agency_import(agency_id: int, req: _AgencyImport):
         conn.close()
 
 @app.post("/admin/login")
-def admin_login(req: _AdminLoginRequest):
-    """Check master password OR team PIN. Returns JWT or must_change_pin signal."""
+def admin_login(req: _AdminLoginRequest, request: Request, response: Response):
+    """Check master password OR team PIN. Returns JWT or must_change_pin signal.
+
+    GATE-NOLOCK-1 (19 Aug 2026, David): a correct admin credential ALSO grants the
+    ts_review gate cookie. Before this, the pre-launch gate could lock the super
+    admin out of his own app and dashboard — the origin refused anonymous
+    /admin/login (GATE-ENFORCE-2), so the right password came back as
+    "Incorrect reviewer code" and there was no way in without the reviewer code.
+    The admin credential is strictly stronger than the reviewer code, so granting
+    the weaker cookie alongside the admin token adds no privilege — it just stops
+    the strongest credential in the system being the one that cannot open the door.
+    Paired with migration 025, which exempts this endpoint at the origin.
+    Rate-limited per IP (shared reviewer limiter) because it is now reachable
+    anonymously through the gate."""
+    ip = (request.headers.get("x-forwarded-for")
+          or (request.client.host if request.client else "?")).split(",")[0].strip()
+    if not _review_rate_ok(ip):
+        raise HTTPException(status_code=429, detail="Too many attempts. Please wait a few minutes.")
     if not _ADMIN_PASSWORD:
         raise HTTPException(status_code=503, detail="Admin password not configured on server.")
 
     # 1. Master password — immediate token, no PIN change required
     if req.password == _ADMIN_PASSWORD or req.password.strip() == _ADMIN_PASSWORD:
-        return {"token": _make_token("master"), "expires_hours": _TOKEN_HOURS, "role": "master"}
+        _grant_review_cookie(response, "admin-master/" + ip)
+        return {"token": _make_token("master"), "expires_hours": _TOKEN_HOURS, "role": "master",
+                "gate": "unlocked"}
 
     # 2. Team PIN — numeric only, 4-8 digits
     candidate = req.password.strip()
@@ -13476,12 +13575,14 @@ def admin_login(req: _AdminLoginRequest):
                             "user_id": row["id"],
                             "name": row["name"],
                         }
+                    _grant_review_cookie(response, "admin-team/" + str(row["name"]))
                     return {
                         "token": _make_token(f"team:{row['name']}"),
                         "expires_hours": _TOKEN_HOURS,
                         "role": "team",
                         "name": row["name"],
                         "email": row["email"] if "email" in row.keys() else "",
+                        "gate": "unlocked",
                     }
         finally:
             conn.close()
@@ -13489,7 +13590,7 @@ def admin_login(req: _AdminLoginRequest):
     raise HTTPException(status_code=401, detail="Incorrect password or PIN.")
 
 @app.post("/admin/change-pin")
-def admin_change_pin(req: _AdminChangePinRequest):
+def admin_change_pin(req: _AdminChangePinRequest, response: Response):
     """
     Forced PIN change on first login.
     Verifies current PIN, sets new PIN, clears must_change_pin flag, returns token.
@@ -13516,12 +13617,17 @@ def admin_change_pin(req: _AdminChangePinRequest):
                     (new_hash, row["id"])
                 )
                 conn.commit()
+                # GATE-NOLOCK-1: finishing the forced PIN change is a successful
+                # login — grant gate passage too, or the new team member lands
+                # behind the pre-launch gate with a valid admin token and no way in.
+                _grant_review_cookie(response, "admin-pinchange/" + str(row["name"]))
                 return {
                     "token": _make_token(f"team:{row['name']}"),
                     "expires_hours": _TOKEN_HOURS,
                     "role": "team",
                     "name": row["name"],
                     "pin_changed": True,
+                    "gate": "unlocked",
                 }
     finally:
         conn.close()

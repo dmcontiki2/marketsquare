@@ -2950,7 +2950,16 @@ def rg_maint_key_alone():
            "'Connection error. Please try again.'. Fix: gate script parses text-first, names the "
            "refusal ('Incorrect reviewer code'), surfaces 429/503 in words. EXPECTED open while the "
            "deploy engine is stalled (DW-042). PROMOTED 14 Aug 2026: the marker now reads off the "
-           "live document -- a wrong reviewer code says so in words. Locked.")
+           "live document -- a wrong reviewer code says so in words. Locked. "
+           "ASSERTION CORRECTED 19 Aug 2026 (GATE-NOLOCK-1, not a weakening): this entry pinned the "
+           "LITERAL string 'Incorrect reviewer code. Please check it and try again.' -- and that "
+           "exact sentence turned out to be the next lie in the same class. The 401 it explains is "
+           "the ORIGIN refusing /admin/login, so a CORRECT super-admin password read back as an "
+           "incorrect reviewer code and locked David out of his own app (RG-0108). Pinning one "
+           "sentence made the ledger defend the wording instead of the PROPERTY. The check now "
+           "asserts the property -- a named refusal that says what was actually rejected, plus the "
+           "429 and 503 branches in words -- and explicitly trips if the discredited sentence "
+           "comes back.")
 def rg_gate_truth():
     out = []
     try:
@@ -2961,8 +2970,20 @@ def rg_gate_truth():
     except Exception as ex:
         out.append((FAIL, "could not read the live document (%r)" % ex))
     src = repo_file("marketsquare.html")
-    if src is not None and "Incorrect reviewer code. Please check it and try again." not in src:
-        out.append((FAIL, "repo marketsquare.html lost the truthful gate branch"))
+    if src is not None:
+        if "GATE-TRUTH-1" not in src:
+            out.append((FAIL, "repo marketsquare.html lost the truthful gate branch"))
+        # The property: a 401/403 at the gate is NAMED, never rendered as a network error.
+        if "r.status === 401 || r.status === 403" not in src:
+            out.append((FAIL, "the gate script no longer branches on 401/403 -- a refusal will "
+                              "fall through to the .catch and lie as 'Connection error' again"))
+        if "Too many attempts" not in src or "switched off right now" not in src:
+            out.append((FAIL, "the 429 / 503 gate refusals are no longer surfaced in words"))
+        # The discredited sentence must not return: it calls a correct admin password wrong.
+        if "Incorrect reviewer code. Please check it and try again." in src:
+            out.append((FAIL, "the gate screen is again reporting EVERY 401 as 'Incorrect reviewer "
+                              "code' -- that sentence is what hid the super-admin lockout "
+                              "(GATE-NOLOCK-1, RG-0108). Name what was actually rejected."))
     return out
 
 
@@ -4544,6 +4565,157 @@ def rg_showcase_immortal():
         out.append((INFO, "outside the repo -- source half not checked here"))
     if not out:
         out.append((INFO, "sweep exemption + admin-only deletes asserted in source"))
+    return out
+
+
+
+# ── GATE-NOLOCK-1 (19 Aug 2026) ──────────────────────────────────────────────
+@entry("RG-0107", "No one who is entitled to enter can be locked out by the DEVICE they entered on -- the emailed code unlocks the machine in front of them",
+       OPEN, scope="the cross-device gate lane entire: the 6-digit code minted and mailed by "
+                   "/review/request-link, redeemed at /review/claim-code, exempt at the origin "
+                   "(migration 025), and the marketsquare.html code box that appears once a link "
+                   "has been requested. NOT limited to David or to laptops: this is the whole "
+                   "class of 'requested on device A, mail opens on device B'. The link path "
+                   "(/review/enter) must ALSO stay alive -- losing it is a failure of this entry.",
+       ref="David, 19 Aug 2026, with screenshots: he asked for a link on his LAPTOP, the mail "
+           "opened on his PHONE, the phone got the ts_review cookie and the laptop -- the machine "
+           "he actually works on -- stayed locked with no way to finish. A magic link can only "
+           "ever unlock the browser that OPENS it; GATE-EMAIL-1 (RG-0081) shipped only that half, "
+           "so the lockout class it was built to end simply changed shape. The device-independent "
+           "half is a 6-digit code in the SAME email: read it wherever the mail landed, type it "
+           "where you are locked. 30-minute life, single use, 6-guess budget, same allowlist, "
+           "same per-IP limit, same review-scope cookie -- no new privilege, a second door. "
+           "Urgency: Maroushka is handing this link to agencies; a gate that locks out the super "
+           "admin will lock out testers, and each one is a lost first impression. "
+           "EXPECTED OPEN until migration 025 rides a deploy; promote to LOCKED the moment the "
+           "live half answers.")
+def rg_gate_cross_device_code():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        if "/review/claim-code" not in bea or "_review_code_ok" not in bea:
+            out.append((FAIL, "bea_main.py lost the cross-device code lane (/review/claim-code)"))
+        if "def review_enter" not in bea:
+            out.append((FAIL, "the emailed LINK path is gone -- the code must be a second door, "
+                              "never a replacement"))
+        if "_REVIEW_CODE_TRIES" not in bea:
+            out.append((FAIL, "the per-code guess budget is gone -- a 6-digit code with unlimited "
+                              "tries is a 1-in-a-million lock with infinite keys"))
+        html = repo_file("marketsquare.html") or ""
+        if "gate-otp-block" not in html or "gateClaimCode" not in html:
+            out.append((FAIL, "marketsquare.html lost the code box -- the tester has nowhere to "
+                              "type the code that was mailed to them"))
+    if repo_file("migrations/025_gate_nolock.py") is None:
+        out.append((INFO, "outside the repo -- source half not checked here"))
+    # Live half: the endpoint must answer WITHOUT a cookie (exempt at the origin) and
+    # must REFUSE a wrong code. A nginx HTML 401 (no JSON detail) means 025 never landed.
+    try:
+        req = urllib.request.Request(BASE + "/review/claim-code",
+                                     data=json.dumps({"email": "rg-probe@example.invalid",
+                                                      "code": "000000"}).encode(),
+                                     headers=dict(UA, **{"Content-Type": "application/json"}),
+                                     method="POST")
+        try:
+            urllib.request.urlopen(req, timeout=TIMEOUT).read()
+            out.append((FAIL, "live /review/claim-code ACCEPTED a junk code for an off-list email "
+                              "-- the gate is open to anyone who can count to six digits"))
+        except urllib.error.HTTPError as he:
+            body = (he.read() or b"").decode("utf-8", "replace")
+            if he.code != 401:
+                out.append((FAIL, "live /review/claim-code answered %s, expected 401" % he.code))
+            elif "expired" not in body and "wrong" not in body:
+                out.append((FAIL, "live /review/claim-code 401 came from nginx, not the app "
+                                  "(no JSON detail) -- migration 025 has not landed, so a locked "
+                                  "device still cannot redeem its code. Body: %r" % body[:120]))
+    except Exception as ex:
+        out.append((FAIL, "live /review/claim-code unreachable (%r)" % ex))
+    if not out:
+        out.append((INFO, "cross-device code lane answers and refuses correctly"))
+    return out
+
+
+@entry("RG-0108", "The SUPER ADMIN can always get into his own app -- the strongest credential in the system is never the one that cannot open the door",
+       OPEN, scope="the admin-credential gate lane entire: /admin/login, /admin/change-pin and "
+                   "/admin/verify exempt at the origin (migration 025); a correct admin password "
+                   "or team PIN granting the ts_review cookie in bea_main.py; and the gate-screen "
+                   "and dashboard messages that must no longer report a CORRECT password as an "
+                   "incorrect reviewer code. Class, not instance: any future gate must keep an "
+                   "admin door, on every device, for every admin -- not just David, not just the "
+                   "master password.",
+       ref="David, 19 Aug 2026, with screenshots: 'not even the old password works'. Cause: "
+           "GATE-ENFORCE-2 (RG-0029/migration 016) arms the catch-all and /admin/login was "
+           "deliberately NOT exempt, so nginx refused the request at the ORIGIN with an HTML 401 "
+           "before the app ever saw the password. The gate screen's GATE-TRUTH-1 branch then "
+           "rendered that 401 as 'Incorrect reviewer code' -- the correct super-admin password "
+           "reading back as a wrong one -- and dashboard.server.html told him to go enter the "
+           "reviewer code at trustsquare.co first, i.e. to perform the exact step that was "
+           "impossible. Three layers each doing their job produced a total lockout of the one "
+           "person who cannot be locked out. Fix: exempt the credential endpoints (they serve no "
+           "content, answer only 200/401, and are now behind the 8-per-10-min per-IP limiter) and "
+           "grant the WEAKER review cookie on a successful admin login -- strictly no new "
+           "privilege, since an admin token already outranks a reviewer cookie. "
+           "EXPECTED OPEN until migration 025 rides a deploy; promote to LOCKED once live.")
+def rg_gate_admin_never_locked():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        if "GATE-NOLOCK-1" not in bea:
+            out.append((FAIL, "bea_main.py lost the GATE-NOLOCK-1 lane"))
+        if "_grant_review_cookie(response, \"admin-master/\" + ip)" not in bea:
+            out.append((FAIL, "a correct MASTER password no longer grants gate passage -- the "
+                              "super admin can be locked out of his own app again"))
+        if "admin-team/" not in bea:
+            out.append((FAIL, "a correct team PIN no longer grants gate passage"))
+        if "def admin_login(req: _AdminLoginRequest, request: Request, response: Response)" not in bea:
+            out.append((FAIL, "admin_login lost its Response/Request parameters -- it cannot set "
+                              "the gate cookie or rate-limit by IP"))
+        if "_review_rate_ok(ip)" not in bea.split("def admin_login")[1][:1200]:
+            out.append((FAIL, "admin_login is anonymously reachable but NO LONGER rate limited"))
+    dash = repo_file("dashboard.server.html") or ""
+    if dash and "Locked by the pre-launch gate" in dash:
+        out.append((FAIL, "dashboard.server.html still tells the admin to enter the reviewer code "
+                          "first -- instructions to perform an impossible step"))
+    html = repo_file("marketsquare.html") or ""
+    if html and "Incorrect reviewer code. Please check it and try again." in html:
+        out.append((FAIL, "the gate screen still reports a rejected ADMIN password as an "
+                          "'Incorrect reviewer code' -- the message that hid this fault"))
+    if repo_file("migrations/025_gate_nolock.py") is None:
+        out.append((INFO, "outside the repo -- source half not checked here"))
+    # Live half: anonymous /admin/login must reach the APP (JSON 401), not nginx (HTML 401),
+    # while a content path stays gated. Never send a real credential from the ledger.
+    try:
+        req = urllib.request.Request(BASE + "/admin/login",
+                                     data=json.dumps({"password": "rg-probe-not-a-password"}).encode(),
+                                     headers=dict(UA, **{"Content-Type": "application/json"}),
+                                     method="POST")
+        try:
+            urllib.request.urlopen(req, timeout=TIMEOUT).read()
+            out.append((FAIL, "live /admin/login ACCEPTED a junk password -- stop everything"))
+        except urllib.error.HTTPError as he:
+            body = (he.read() or b"").decode("utf-8", "replace")
+            if he.code == 429:
+                out.append((INFO, "live /admin/login rate-limited this probe (429) -- limiter alive"))
+            elif he.code != 401:
+                out.append((FAIL, "live /admin/login answered %s, expected 401" % he.code))
+            elif "detail" not in body:
+                out.append((FAIL, "live /admin/login 401 came from nginx, not the app (no JSON "
+                                  "detail) -- migration 025 has not landed and the super admin is "
+                                  "still locked out. Body: %r" % body[:120]))
+    except Exception as ex:
+        out.append((FAIL, "live /admin/login unreachable (%r)" % ex))
+    # The gate itself must STILL be armed -- this fix must never become a way in.
+    try:
+        req = urllib.request.Request(BASE + "/listings", headers=dict(UA))
+        urllib.request.urlopen(req, timeout=TIMEOUT).read()
+        out.append((FAIL, "CONTAINMENT BREACH: anonymous /listings answered 200 -- the no-lock "
+                          "exemptions opened the gate itself"))
+    except urllib.error.HTTPError as he:
+        if he.code not in (401, 403):
+            out.append((FAIL, "anonymous /listings answered %s, expected 401/403" % he.code))
+    except Exception:
+        pass
+    if not out:
+        out.append((INFO, "admin door reaches the app; content paths stay gated"))
     return out
 
 
