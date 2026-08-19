@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrustSquare — How Users Get In (Access Model Map)</title>
+<style>
+  :root{
+    --ink:#0c1a2e; --ink2:#334155; --mut:#64748b; --line:#e2e8f0; --bg:#f8fafc;
+    --noai:#16a34a; --noai-bg:#f0fdf4; --noai-ln:#bbf7d0;
+    --temp:#d97706; --temp-bg:#fffbeb; --temp-ln:#fde68a;
+    --perm:#2563eb; --perm-bg:#eff6ff; --perm-ln:#bfdbfe;
+    --stop:#dc2626; --stop-bg:#fef2f2; --stop-ln:#fecaca;
+    --infra:#475569; --infra-bg:#f1f5f9; --infra-ln:#cbd5e1;
+    --ai:#7c3aed; --ai-bg:#f5f3ff; --ai-ln:#ddd6fe;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:28px 20px 60px;background:var(--bg);color:var(--ink);
+       font-family:'Segoe UI',Inter,-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+       line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:auto}
+  h1{font-size:27px;margin:0 0 4px;letter-spacing:-.4px}
+  .sub{color:var(--mut);font-size:14px;margin-bottom:22px}
+  h2{font-size:17px;margin:34px 0 12px;padding-bottom:7px;border-bottom:2px solid var(--line);
+     letter-spacing:-.2px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+        box-shadow:0 1px 2px rgba(15,23,42,.05)}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+  .g4{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.7px;
+       text-transform:uppercase;padding:3px 9px;border-radius:20px;border:1px solid}
+  .t-noai{color:var(--noai);background:var(--noai-bg);border-color:var(--noai-ln)}
+  .t-temp{color:var(--temp);background:var(--temp-bg);border-color:var(--temp-ln)}
+  .t-perm{color:var(--perm);background:var(--perm-bg);border-color:var(--perm-ln)}
+  .t-stop{color:var(--stop);background:var(--stop-bg);border-color:var(--stop-ln)}
+  .t-infra{color:var(--infra);background:var(--infra-bg);border-color:var(--infra-ln)}
+  .t-ai{color:var(--ai);background:var(--ai-bg);border-color:var(--ai-ln)}
+
+  .hero{background:linear-gradient(135deg,#052e16 0%,#14532d 100%);color:#dcfce7;
+        border-radius:14px;padding:22px 24px;margin-bottom:8px}
+  .hero h3{margin:0 0 8px;font-size:20px;color:#fff;letter-spacing:-.3px}
+  .hero p{margin:0;font-size:14.5px;color:#bbf7d0}
+  .hero .proof{margin-top:14px;background:rgba(0,0,0,.28);border-radius:9px;padding:11px 14px;
+        font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#86efac;white-space:pre-wrap}
+
+  .door{border-left:5px solid var(--noai);padding-left:14px}
+  .door h4{margin:0 0 3px;font-size:15px}
+  .door .who{font-size:12.5px;color:var(--mut);margin-bottom:8px}
+  .kv{font-size:13px;margin:5px 0}
+  .kv b{color:var(--ink2)}
+  code{background:#f1f5f9;border:1px solid var(--line);border-radius:4px;padding:1px 5px;
+       font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:#0f172a}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
+  th{text-align:left;background:#f1f5f9;padding:9px 11px;font-size:11px;text-transform:uppercase;
+     letter-spacing:.5px;color:var(--ink2);border-bottom:2px solid var(--line)}
+  td{padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .ok{color:var(--noai);font-weight:700}
+  .no{color:var(--stop);font-weight:700}
+
+  .flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;margin:6px 0 4px}
+  .step{flex:1;min-width:158px;background:#fff;border:1px solid var(--line);border-radius:10px;
+        padding:12px 13px;position:relative;margin-right:26px}
+  .step:last-child{margin-right:0}
+  .step:after{content:"→";position:absolute;right:-21px;top:50%;transform:translateY(-50%);
+        font-size:19px;color:#94a3b8;font-weight:700}
+  .step:last-child:after{display:none}
+  .step .n{font-size:10px;font-weight:800;color:var(--mut);letter-spacing:.6px}
+  .step .t{font-size:13.5px;font-weight:700;margin:3px 0 4px}
+  .step .d{font-size:11.5px;color:var(--mut);line-height:1.4}
+  .step.gate{border-color:var(--stop-ln);background:var(--stop-bg)}
+  .step.app{border-color:var(--noai-ln);background:var(--noai-bg)}
+
+  .legend{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0 4px}
+  .note{font-size:12.5px;color:var(--mut);margin-top:9px;line-height:1.55}
+  .big{font-size:15px;font-weight:700}
+  ul{margin:7px 0 0;padding-left:19px;font-size:13px}
+  li{margin:4px 0}
+  .foot{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);
+        font-size:11.5px;color:var(--mut)}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>How users get into TrustSquare</h1>
+<div class="sub">The complete access model &mdash; 19 Aug 2026, read off the code on disk. Built to answer one question first:
+<b>does any of this depend on Claude being healthy?</b></div>
+
+<div class="hero">
+  <h3>No. Nothing in the access path touches any AI vendor.</h3>
+  <p>Every door into the app is nginx + FastAPI + bcrypt + JWT + email. If Anthropic, OpenAI and
+  Scaleway all went dark at once, every user could still sign in and browse. AI is used for
+  <i>content</i> features inside the app &mdash; never for <i>entry</i>.</p>
+  <div class="proof">Proof — scan of every function in the auth/gate path for AI references:
+
+  review_login            AI refs: NONE      admin_login             AI refs: NONE
+  review_verify           AI refs: NONE      admin_change_pin        AI refs: NONE
+  review_request_link     AI refs: NONE      admin_verify            AI refs: NONE
+  review_enter            AI refs: NONE      _grant_review_cookie    AI refs: NONE
+  review_claim_code       AI refs: NONE      _review_code_ok         AI refs: NONE
+  _review_emails          AI refs: NONE      _review_rate_ok         AI refs: NONE
+  _review_code_hash       AI refs: NONE      _send_review_link_email AI refs: NONE</div>
+</div>
+<div class="note">Asserted permanently by regression ledger RG-0107 / RG-0108, which test the live doors on every run.</div>
+
+<h2>The one thing that confused you: there are TWO layers, and both use email</h2>
+<div class="grid g2">
+  <div class="card" style="border-top:4px solid var(--temp)">
+    <span class="tag t-temp">Temporary &middot; gone 29 Aug</span>
+    <h3 style="margin:9px 0 4px;font-size:16px">Layer 1 &mdash; The pre-launch GATE</h3>
+    <div style="font-size:13px;color:var(--mut);margin-bottom:9px">A doorman on the whole building.
+    Nothing to do with who you are &mdash; just "is the public allowed in yet?"</div>
+    <div class="kv"><b>Cookie:</b> <code>ts_review</code> &middot; 365 days &middot; HttpOnly, Secure</div>
+    <div class="kv"><b>Signed with:</b> <code>_REVIEW_SECRET</code> &mdash; a <i>different</i> key from admin,
+      so a gate pass can never be read as an admin token</div>
+    <div class="kv"><b>Grants:</b> passage only. No identity, no admin, no superuser.</div>
+    <div class="kv"><b>Enforced by:</b> nginx <code>auth_request</code> on the catch-all (GATE-ENFORCE-2)</div>
+    <div class="note"><b>This is what locked you out.</b> It disappears at the soft launch on
+    Fri 29 Aug (RUL-001) &mdash; after that the gate simply is not there.</div>
+  </div>
+  <div class="card" style="border-top:4px solid var(--perm)">
+    <span class="tag t-perm">Permanent &middot; the real product</span>
+    <h3 style="margin:9px 0 4px;font-size:16px">Layer 2 &mdash; The user ACCOUNT</h3>
+    <div style="font-size:13px;color:var(--mut);margin-bottom:9px">Your own key to your own flat.
+    This is how every real buyer and seller signs in, forever.</div>
+    <div class="kv"><b>Cookie:</b> <code>ts_user</code> &middot; 180 days &middot; set only by <code>/auth/verify</code></div>
+    <div class="kv"><b>How:</b> email a magic link at <code>/auth/request-link</code>, click it, account created on first use</div>
+    <div class="kv"><b>Signed with:</b> <code>_JWT_SECRET</code> (ACCOUNT-BIND-1, 5 Aug)</div>
+    <div class="kv"><b>Grants:</b> identity &mdash; your listings, your Tuppence, your intros</div>
+    <div class="note">Untouched by last week's lockout and untouched by this fix. Per RUL-015,
+    personal accounts stay email-linked; admin surfaces keep password/PIN.</div>
+  </div>
+</div>
+
+<h2>The four doors through the gate &mdash; and which device each one opens</h2>
+<div class="grid g4">
+  <div class="card door">
+    <span class="tag t-noai">Break-glass</span>
+    <h4 style="margin-top:9px">1. Reviewer code</h4>
+    <div class="who">Anyone you hand the code to</div>
+    <div class="kv"><code>POST /review/login</code></div>
+    <div class="kv"><b>Unlocks:</b> the device you type it on</div>
+    <div class="kv"><b>Checked:</b> bcrypt against a hash held only on the server</div>
+    <div class="note">Never leaves the server as plaintext. Revoke by replacing the hash file &mdash; no restart.</div>
+  </div>
+  <div class="card door" style="border-left-color:var(--temp)">
+    <span class="tag t-temp">Same device only</span>
+    <h4 style="margin-top:9px">2. Emailed link</h4>
+    <div class="who">Allow-listed testers</div>
+    <div class="kv"><code>GET /review/enter?t=…</code></div>
+    <div class="kv"><b>Unlocks:</b> <i>only</i> the browser that opens the mail</div>
+    <div class="kv"><b>Life:</b> 30 min, single use</div>
+    <div class="note"><b>This is what caught you.</b> Mail opened on your phone &rarr; the phone got in,
+    the laptop stayed locked. Not a bug &mdash; it is what a magic link fundamentally is.</div>
+  </div>
+  <div class="card door">
+    <span class="tag t-noai">New &middot; fixes it</span>
+    <h4 style="margin-top:9px">3. Emailed 6-digit code</h4>
+    <div class="who">Allow-listed testers, any device</div>
+    <div class="kv"><code>POST /review/claim-code</code></div>
+    <div class="kv"><b>Unlocks:</b> the device you type it on &mdash; read it anywhere</div>
+    <div class="kv"><b>Life:</b> 30 min, single use, 6 guesses</div>
+    <div class="note">Same email as the link. Read it on the phone, type it on the laptop. This is the
+    door that makes the gate device-independent (RUL-027).</div>
+  </div>
+  <div class="card door">
+    <span class="tag t-noai">New &middot; never locked out</span>
+    <h4 style="margin-top:9px">4. Admin password / PIN</h4>
+    <div class="who">You and your team</div>
+    <div class="kv"><code>POST /admin/login</code></div>
+    <div class="kv"><b>Unlocks:</b> the device you type it on &mdash; plus admin rights</div>
+    <div class="kv"><b>Grants:</b> admin token <i>and</i> the gate pass</div>
+    <div class="note">Previously blocked at the origin, which is why your correct password read back as
+    "Incorrect reviewer code". Now the strongest credential opens every door.</div>
+  </div>
+</div>
+<div class="note"><b>All four share one rate limit:</b> 8 attempts per 10 minutes per IP.
+<b>All four hand out the identical <code>ts_review</code> cookie</b> &mdash; one place in the code
+(<code>_grant_review_cookie</code>), so the doors can never drift apart.</div>
+
+<h2>What actually happens when someone opens trustsquare.co</h2>
+<div class="flow">
+  <div class="step"><div class="n">1 &middot; EDGE</div><div class="t">Cloudflare</div>
+    <div class="d">DNS, TLS, CDN, bot filtering. Never sees your credentials in the clear.</div></div>
+  <div class="step gate"><div class="n">2 &middot; ORIGIN GATE</div><div class="t">nginx auth_request</div>
+    <div class="d">Catch-all <code>location /</code> asks <code>/review/verify</code>: is there a valid
+    <code>ts_review</code> cookie?</div></div>
+  <div class="step"><div class="n">3 &middot; DECISION</div><div class="t">Pass or 401</div>
+    <div class="d">No valid cookie &rarr; refused right here, before the app is even reached.</div></div>
+  <div class="step app"><div class="n">4 &middot; APP</div><div class="t">FastAPI</div>
+    <div class="d">Serves the page and data. Identity (if any) comes from <code>ts_user</code>, separately.</div></div>
+</div>
+<div class="note">Step 2 is the whole story of your lockout: the refusal happened at nginx, so the app
+never saw your password &mdash; and the screen guessed wrong about why.</div>
+
+<h2>What answers WITHOUT a gate pass, and why that is safe</h2>
+<table>
+  <tr><th style="width:26%">Endpoint</th><th style="width:20%">Why exempt</th><th>Could it leak the marketplace?</th></tr>
+  <tr><td><code>/review/login</code><br><code>/review/claim-code</code></td><td>You must be able to present a credential</td><td class="ok">No &mdash; accepts a credential, answers 200 or 401. Serves no content.</td></tr>
+  <tr><td><code>/review/request-link</code><br><code>/review/enter</code></td><td>You must be able to ask for and redeem a link</td><td class="ok">No &mdash; allow-list decides, and an off-list email gets the same "ok" so nobody can enumerate testers.</td></tr>
+  <tr><td><code>/admin/login</code><br><code>/admin/change-pin</code><br><code>/admin/verify</code></td><td>The admin must never be locked out <span class="tag t-noai" style="font-size:9px">NEW</span></td><td class="ok">No &mdash; credential check only, now rate-limited. This is the 19 Aug fix.</td></tr>
+  <tr><td><code>/terms</code>, <code>/privacy</code></td><td>Legally must be reachable (RUL-020)</td><td class="ok">No &mdash; public documents by design.</td></tr>
+  <tr><td><code>/health</code></td><td>The deploy engine's own health check</td><td class="ok">No &mdash; returns a status word and a version.</td></tr>
+  <tr><td><code>/payment/webhook</code><br><code>/email/inbound</code><br><code>/intro/relay</code></td><td>Paystack and mail providers call these; they have no cookie</td><td class="ok">No &mdash; each verifies its own signature/secret.</td></tr>
+  <tr><td><code>/.well-known/</code></td><td>Certificate renewal</td><td class="ok">No.</td></tr>
+  <tr><td style="background:var(--stop-bg)"><b>Everything else</b><br><code>/listings</code>, <code>/wonders</code>, the app itself</td><td style="background:var(--stop-bg)"><b>GATED</b></td><td style="background:var(--stop-bg)" class="no">Refused with 401 unless you hold a valid <code>ts_review</code> cookie. Verified on every ledger run.</td></tr>
+</table>
+
+<h2>Where AI actually sits &mdash; and what happens when a vendor dies</h2>
+<div class="grid g2">
+  <div class="card" style="border-top:4px solid var(--noai)">
+    <span class="tag t-noai">Zero AI</span>
+    <h3 style="margin:9px 0 6px;font-size:15.5px">Entry, accounts, payments, listings, browsing</h3>
+    <ul>
+      <li>Every door above &mdash; plain crypto and email</li>
+      <li>User accounts, sessions, Tuppence balances</li>
+      <li>Paystack money path</li>
+      <li>Browsing, search, intros</li>
+    </ul>
+    <div class="note"><b>Claude down = no effect whatsoever.</b> So is OpenAI down. So is all three at once.</div>
+  </div>
+  <div class="card" style="border-top:4px solid var(--ai)">
+    <span class="tag t-ai">Uses AI</span>
+    <h3 style="margin:9px 0 6px;font-size:15.5px">Content helpers only</h3>
+    <ul>
+      <li>Advert coach / listing write-up help</li>
+      <li>Photo anonymity scanning (vision tier)</li>
+      <li>Triage and market notes</li>
+    </ul>
+    <div class="note"><b>Three-lane failover, and Claude is not the base lane:</b>
+      <br><b>BASE</b> = OpenAI (all five tiers) &rarr; <b>FAILOVER</b> = Anthropic &rarr; <b>SAFETY NET</b> = Scaleway.
+      A dead vendor degrades one helper feature, never entry.</div>
+  </div>
+</div>
+<div class="note big" style="color:var(--ink)">So the thing you were worried about is already true by design: your users' access has never depended on Claude, or on any AI vendor. What depended on Claude last night was <i>your ability to build</i> &mdash; a different problem, and the one worth solving next.</div>
+
+<h2>What changes at launch</h2>
+<table>
+  <tr><th style="width:16%">Date</th><th style="width:24%">Event</th><th>What it means for access</th></tr>
+  <tr><td><b>Now &rarr; 28 Aug</b></td><td><span class="tag t-temp">Gated preview</span></td><td>Four doors above. Testers need an allow-list entry or the reviewer code. This is the phase Maroushka is sharing into.</td></tr>
+  <tr><td><b>Fri 29 Aug</b></td><td><span class="tag t-perm">Soft launch &mdash; gate down</span></td><td>The <code>ts_review</code> layer is removed entirely. No code, no link, no allow-list. Anyone can browse; the account magic link is the only sign-in.</td></tr>
+  <tr><td><b>Mon 1 Sep</b></td><td><span class="tag t-perm">Full launch</span></td><td>Public. Access model is Layer 2 alone.</td></tr>
+</table>
+<div class="note">RUL-001, fixed sequence, expressly reviewed. Every lockout problem you have hit belongs
+to a layer that has eleven days left to live.</div>
+
+<h2>Legend</h2>
+<div class="legend">
+  <span class="tag t-noai">Works with every AI vendor down</span>
+  <span class="tag t-temp">Temporary &mdash; removed at launch</span>
+  <span class="tag t-perm">Permanent &mdash; the real product</span>
+  <span class="tag t-stop">Gated / refused</span>
+  <span class="tag t-ai">Uses an AI lane (failover-backed)</span>
+  <span class="tag t-infra">Infrastructure</span>
+</div>
+
+<div class="foot">
+  Read off the code on disk, 19 Aug 2026 &mdash; <code>bea_main.py</code> (GATE-NOLOCK-1),
+  <code>migrations/016/018/019/021/025</code>, <code>AI_BASELINE.json</code> v2.0,
+  <code>RULINGS.md</code> RUL-001 / RUL-015 / RUL-020 / RUL-027.
+  Asserted live by regression ledger RG-0107, RG-0108, RG-0028, RG-0092.
+</div>
+
+</div></body></html>

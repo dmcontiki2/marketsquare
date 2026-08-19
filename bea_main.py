@@ -11933,8 +11933,18 @@ def review_verify(x_review_token: str = Header(default=None), ts_review: str = C
 #     (David's own has, three times on record) and a hard bind would re-create
 #     the exact lockouts this change exists to end.
 _REVIEW_EMAILS_FILE = "/var/www/marketsquare/review_emails.txt"
-_REVIEW_LINK_MIN    = 30      # emailed link lives 30 minutes, works once
-_review_link_used   = {}      # jti -> exp epoch (single-use memory)
+_REVIEW_LINK_MIN    = 30      # emailed link lives 30 minutes
+# LINK-PREFETCH-1 (19 Aug 2026, David + Maroushka): the link was STRICTLY single-use,
+# and that is why it read "expired" the instant a human clicked it. Nobody had used it
+# -- a MACHINE had. Mail providers, security gateways and click-tracking (Resend
+# rewrites links when click tracking is on) fetch a URL before the recipient ever sees
+# it; that fetch claimed the jti, so the real click arrived second and was refused.
+# Strict single-use is the wrong trade here: the token is already short-lived (30 min),
+# allow-listed, HTTPS-only and scoped to browse-only passage. We keep the jti record
+# for AUDIT (who claimed, when, how often) but a repeat claim inside the window is now
+# ALLOWED and idempotent -- a prefetch costs nothing and the human still gets in.
+# HEAD is refused outright without touching the record: a HEAD is never a person.
+_review_link_used   = {}      # jti -> {"exp": epoch, "n": claims, "first": epoch}
 # GATE-NOLOCK-1: the same email also carries a 6-DIGIT CODE. A magic link can only
 # ever unlock the device that OPENS it — mail opens on the phone, so the laptop the
 # tester actually works on stays locked. The code is device-independent: read it on
@@ -12096,6 +12106,13 @@ def review_claim_code(req: _ReviewCodeClaim, request: Request, response: Respons
     _log.info("review-claim-code OK for %s from %s", email, ip)
     return {"ok": True}
 
+@app.head("/review/enter")
+def review_enter_head():
+    """LINK-PREFETCH-1: scanners often HEAD a link before delivery. Answer politely and
+    touch NOTHING -- never let a machine's probe affect the human's claim."""
+    from fastapi.responses import Response as _R
+    return _R(status_code=204)
+
 @app.get("/review/enter")
 def review_enter(request: Request, t: str = ""):
     """Claim an emailed gate link: validate, burn the jti, set the ts_review
@@ -12105,8 +12122,16 @@ def review_enter(request: Request, t: str = ""):
     ip = (request.headers.get("x-forwarded-for")
           or (request.client.host if request.client else "?")).split(",")[0].strip()
     def _bounce(reason):
+        # GATE-WHY-1 (19 Aug 2026): carry the REASON to the screen. Every refusal used to
+        # collapse into "expired or already used", so a link killed by a scanner prefetch
+        # was indistinguishable from a genuinely stale one -- and cost two diagnosis
+        # rounds with real testers waiting. The code is coarse on purpose (no token, no
+        # email, nothing an attacker learns): expired | invalid | used | none.
         _log.warning("review-enter refused (%s) from %s", reason, ip)
-        return RedirectResponse(url="/?gate=expired", status_code=302)
+        why = ("expired" if "expired" in reason else
+               "used"    if "claimed" in reason or "used" in reason else
+               "none"    if "no " in reason else "invalid")
+        return RedirectResponse(url="/?gate=expired&why=" + why, status_code=302)
     if not t:
         return _bounce("no token")
     try:
@@ -12119,11 +12144,26 @@ def review_enter(request: Request, t: str = ""):
         return _bounce("wrong scope")
     jti = payload.get("jti") or ""
     _now = datetime.now(timezone.utc).timestamp()
-    for _k in [k for k, v in _review_link_used.items() if v < _now]:
+    for _k in [k for k, v in _review_link_used.items()
+               if (v.get("exp", 0) if isinstance(v, dict) else v) < _now]:
         _review_link_used.pop(_k, None)
-    if not jti or jti in _review_link_used:
-        return _bounce("already used")
-    _review_link_used[jti] = float(payload.get("exp") or (_now + _REVIEW_LINK_MIN * 60))
+    if not jti:
+        return _bounce("no jti")
+    # LINK-PREFETCH-1: repeat claims inside the 30-minute window are ALLOWED. The
+    # expiry is the control, not the counter. We still record every claim so a link
+    # being replayed after the window, or claimed absurdly often, is visible.
+    rec = _review_link_used.get(jti)
+    if rec is None:
+        _review_link_used[jti] = {"exp": float(payload.get("exp") or (_now + _REVIEW_LINK_MIN * 60)),
+                                  "n": 1, "first": _now}
+    else:
+        rec["n"] = rec.get("n", 1) + 1
+        if rec["n"] == 2:
+            _log.info("review-enter: link %s claimed a 2nd time -- almost certainly a mail "
+                      "scanner or click-tracker prefetch, which is exactly why this is no "
+                      "longer refused (LINK-PREFETCH-1)", jti[:8])
+        if rec["n"] > 25:
+            return _bounce("claimed %d times" % rec["n"])
     email = (payload.get("email") or "?").lower()
     resp = RedirectResponse(url="/", status_code=302)
     _grant_review_cookie(resp, "email-link/" + email)

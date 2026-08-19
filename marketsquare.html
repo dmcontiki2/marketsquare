@@ -490,7 +490,19 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   };
   if(/[?&]gate=expired\b/.test(location.search)){
     showGate();
-    showLinkMsg('That access link has expired or was already used \u2014 enter your email for a fresh one.', true);
+    /* GATE-WHY-1 (19 Aug 2026): say WHICH refusal it was. One blind sentence for every
+       cause is what made the scanner-prefetch fault take two rounds to find. */
+    var _m = /[?&]why=([a-z]+)/.exec(location.search);
+    var _why = _m ? _m[1] : '';
+    var _txt = 'That access link did not work \u2014 enter your email for a fresh one.';
+    if(_why === 'expired'){ _txt = 'That link is older than 30 minutes \u2014 enter your email for a fresh one.'; }
+    else if(_why === 'used'){ _txt = 'That link has been opened too many times \u2014 enter your email for a fresh one, or use the 6-digit code.'; }
+    else if(_why === 'invalid'){ _txt = 'That link was damaged in transit (some mail apps break long links) \u2014 request a fresh one and use the 6-digit code instead.'; }
+    else if(_why === 'none'){ _txt = 'That link arrived without its access token \u2014 request a fresh one and use the 6-digit code instead.'; }
+    showLinkMsg(_txt, true);
+    /* The code box is the scanner-proof door -- open it straight away on any link failure. */
+    var _ob = document.getElementById('gate-otp-block');
+    if(_ob){ _ob.style.display = 'block'; }
     try { history.replaceState(null, '', location.pathname); } catch(e){}
   }
 

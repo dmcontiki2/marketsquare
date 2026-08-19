@@ -4719,5 +4719,63 @@ def rg_gate_admin_never_locked():
     return out
 
 
+
+@entry("RG-0109", "A MACHINE touching an access link can never spend it -- only a person's click counts",
+       OPEN, scope="the emailed-link claim lane entire: /review/enter GET + HEAD, the "
+                   "_review_link_used record, and the reason carried to the gate screen. CLASS, not "
+                   "instance: any future one-time URL we email (gate link, account magic link "
+                   "/auth/verify, agent invites) inherits this rule -- mail providers, security "
+                   "gateways and click-trackers WILL fetch it before the human does.",
+       ref="David + Maroushka, 19 Aug 2026: she opened the gate, asked for a link, clicked it and "
+           "was told the link had expired -- INSTANTLY, on a link seconds old. David had hit the "
+           "same thing. Nothing had expired and no person had used it: a machine had. Resend "
+           "rewrites URLs when click tracking is on, and mail scanners fetch links before "
+           "delivery; that fetch claimed the single-use jti, so the real click arrived second and "
+           "was refused. Strict single-use was the wrong trade for a token that is already 30 "
+           "minutes long, allow-list-bound, HTTPS-only and scoped to browse-only passage. Repeat "
+           "claims inside the window are now idempotent (the EXPIRY is the control, not the "
+           "counter); the jti record is kept for audit and an absurd replay count still refuses; "
+           "HEAD is answered 204 without touching the record. Paired with GATE-WHY-1: every "
+           "refusal now carries a coarse reason (expired|used|invalid|none) to the screen, because "
+           "collapsing them into one sentence is what cost two diagnosis rounds with testers "
+           "waiting. The 6-digit code (RG-0107) is the scanner-proof door and is now opened "
+           "automatically whenever a link fails. EXPECTED OPEN until this rides a deploy.")
+def rg_link_survives_prefetch():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        if "LINK-PREFETCH-1" not in bea:
+            out.append((FAIL, "bea_main.py lost the prefetch-tolerant claim"))
+        if "return _bounce(\"already used\")" in bea:
+            out.append((FAIL, "the strict single-use refusal is BACK -- a scanner prefetch will "
+                              "again spend the tester's link before they can click it"))
+        if "def review_enter_head" not in bea:
+            out.append((FAIL, "HEAD /review/enter is no longer answered separately -- a scanner's "
+                              "HEAD can reach the claim path again"))
+        if "GATE-WHY-1" not in bea:
+            out.append((FAIL, "the bounce no longer carries WHY -- we are blind on the next one"))
+        html = repo_file("marketsquare.html") or ""
+        if html and "GATE-WHY-1" not in html:
+            out.append((FAIL, "the gate screen lost the per-reason message"))
+    # Live: a HEAD must answer without a redirect-to-expired, and GET garbage must say why.
+    try:
+        class _NR(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, *a, **k): return None
+        op = urllib.request.build_opener(_NR)
+        rq = urllib.request.Request(BASE + "/review/enter?t=garbage", headers=dict(UA))
+        try:
+            r = op.open(rq, timeout=TIMEOUT); code, loc = r.getcode(), ""
+        except urllib.error.HTTPError as he:
+            code, loc = he.code, (he.headers.get("Location") or "")
+        if code == 302 and "why=" not in loc:
+            out.append((FAIL, "live /review/enter bounces without a reason (%r) -- GATE-WHY-1 has "
+                              "not landed; the next link failure will be blind again" % loc))
+    except Exception as ex:
+        out.append((FAIL, "live /review/enter unreachable (%r)" % ex))
+    if not out:
+        out.append((INFO, "link claim tolerates machine fetches; refusals carry a reason"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
