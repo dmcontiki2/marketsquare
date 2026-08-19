@@ -4940,5 +4940,155 @@ def rg_onetap_no_third_party():
     return out
 
 
+@entry("RG-0112", "The Postgres-readiness ratchet measures the INVARIANT, and the demand-ticket "
+                  "lane no longer grows SQLite-only date arithmetic",
+       LOCKED, scope="bea_main.py entire, but specifically _demand_match_and_compose's two "
+                     "UPDATE demand_tickets statements. Class, not instance: ANY new "
+                     "datetime('now') in bea_main.py re-trips this. The stored value shape is "
+                     "unchanged ('YYYY-MM-DD HH:MM:SS', UTC), so existing rows still compare.",
+       fixed_on="19 Aug 2026",
+       ref="PG-PORTABLE-1. The ratchet had read 54 against a baseline of 53 since at least "
+           "16 Aug, putting DANGER on every pre-deploy scan and aborting the 02:00 strict "
+           "nightly. The growth was real, not a false positive: priority_expires_at="
+           "datetime('now', ?) and updated_at=datetime('now') in both the 'matched' and "
+           "'invited' UPDATEs -- four hits, SQLite-only date arithmetic in exactly the lane "
+           "David's DB ruling (29 Jul) says must stay cheap to move. Caller now supplies "
+           "portable UTC stamps. Baseline auto-tightened 53 -> 52; it is NOT re-baselined "
+           "upward, which would have been the 'never weaken an assertion to make it pass' "
+           "failure this repo has already paid for once (15 Aug).")
+def rg_pg_ratchet_demand_lane():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "not run from the repo -- source half skipped")]
+    if "PG-PORTABLE-1" not in bea:
+        out.append((FAIL, "the PG-PORTABLE-1 rewrite is gone from bea_main.py"))
+    # ASSERTION CORRECTED same session (19 Aug 2026): the first draft banned
+    # "updated_at=datetime('now')" across the WHOLE of bea_main.py and tripped red
+    # immediately -- 52 legitimate uses remain in other lanes, and this entry's scope is the
+    # demand lane, not a repo-wide ban. A ledger entry that fails on correct code is the
+    # same defect as the one RG-0113 exists to record, so it is fixed here rather than
+    # tolerated. The repo-wide direction of travel is owned by the pg ratchet + RG-0112's
+    # baseline check below; THIS needle is scoped to the function that was actually fixed.
+    i = bea.find("def _demand_match_and_compose")
+    if i < 0:
+        out.append((FAIL, "_demand_match_and_compose is gone -- the fixed lane no longer exists"))
+    else:
+        j = bea.find("\ndef ", i + 10)
+        lane = bea[i:j if j > 0 else len(bea)]
+        if "datetime('now'" in lane:
+            out.append((FAIL, "SQLite-only date arithmetic is back inside "
+                              "_demand_match_and_compose -- the exact 4 hits PG-PORTABLE-1 removed"))
+        if "priority_expires_at=?" not in lane or "updated_at=?" not in lane:
+            out.append((FAIL, "the demand lane no longer binds its timestamps as parameters"))
+    # The ratchet itself must still be armed, and must still be counting the right thing.
+    t = repo_file("test_pg_readiness.py") or ""
+    if "(?<!\\.)strftime\\(" not in t:
+        out.append((FAIL, "the strftime pattern lost its negative lookbehind -- it would count "
+                          "Python's datetime.strftime() again (PG-RATCHET-PRECISION-1, 15 Aug)"))
+    base = repo_file("scripts/pg_readiness_baseline.json") or ""
+    try:
+        n = json.loads(base).get("datetime_now", 10 ** 6) if base else 10 ** 6
+        if n > 49:
+            out.append((FAIL, "the pg baseline was re-baselined UPWARD to %d (was 49) -- that is "
+                              "weakening the assertion to make it pass" % n))
+        else:
+            out.append((INFO, "pg baseline datetime_now=%d (ratchet only tightens)" % n))
+    except Exception as ex:
+        out.append((FAIL, "pg baseline unreadable (%r)" % ex))
+    if not out:
+        out.append((INFO, "demand lane portable, ratchet armed and honest"))
+    return out
+
+
+@entry("RG-0113", "An email BODY is not a page -- the tester widget is required on every page a "
+                  "tester can land on, and forbidden inside outbound mail",
+       LOCKED, scope="Every .html on the deploy manifest, split structurally into pages and email "
+                     "bodies. Class, not instance: covers the 3 orchestration consoles fixed here "
+                     "AND any page added to the manifest later, and forbids script in ANY of the "
+                     "14 outreach email bodies, not just the ones that existed today.",
+       fixed_on="19 Aug 2026",
+       ref="EMAIL-NOT-A-PAGE-1. test_widget_is_wired_into_every_tester_page had failed on every "
+           "scan since 4 Aug -- 46 of them -- naming 17 files. It was BOTH right and wrong, which "
+           "is why it sat unfixed: 3 (orchestration_v2 cockpit, durability_map, email_templates) "
+           "were real tester-reachable pages missing the widget, and 14 were outreach EMAIL "
+           "bodies, where ts_report.js cannot run and the tag would ship a <script src=...> inside "
+           "an invitation. A verdict that cannot be satisfied correctly gets ignored, and an "
+           "ignored verdict is how the 3 REAL misses hid for 15 days. Split, not weakened: pages "
+           "must carry the widget; email bodies must carry NO script at all (stricter, RG-0025 "
+           "aligned). Classification is structural (published under templates/ + 600px email "
+           "wrapper + zero <script>) and fails SAFE -- anything ambiguous is treated as a page. "
+           "NOT_TESTER_FACING stays empty; David's 5 Aug ruling that the tab belongs on every "
+           "page, his own console included, is untouched.")
+def rg_email_body_is_not_a_page():
+    out = []
+    t = repo_file("test_tester_intake.py")
+    if t is None:
+        return [(INFO, "not run from the repo -- source half skipped")]
+    if "_is_email_body" not in t or "def email_bodies" not in t:
+        out.append((FAIL, "the page/email split is gone -- the guard is back to demanding a JS "
+                          "widget inside outbound email, a verdict that can never be satisfied"))
+    if "def test_email_bodies_never_carry_script" not in t:
+        out.append((FAIL, "the exemption lost its counterweight -- email bodies are no longer "
+                          "asserted script-free, so the exemption is now a hole"))
+    if "NOT_TESTER_FACING = set()" not in t:
+        out.append((FAIL, "a hand-typed exclusion list is back in NOT_TESTER_FACING -- that is "
+                          "exactly how 3 tester-reachable pages were missed on 5 Aug"))
+    for page in ("orchestration_v2/cockpit.html", "orchestration_v2/durability_map.html",
+                 "orchestration_v2/email_templates.html"):
+        body = repo_file(page)
+        if body is not None and "ts_report.js" not in body:
+            out.append((FAIL, "%s lost the fault widget again -- a tester lands there with no "
+                              "way to report" % page))
+    if not out:
+        out.append((INFO, "3 consoles wired, 14 email bodies script-free, split intact"))
+    return out
+
+
+@entry("RG-0114", "No guard verdict may sit red for days -- a warning nobody is ever shown is not "
+                  "a warning, it is a leak",
+       LOCKED, scope="deploy_audit.log entire. Class fault, and the one that actually cost the "
+                     "time here: BOTH faults above were correctly detected on 4 Aug and then "
+                     "printed into a scrolling scan block and appended to a log file 46 and 50 "
+                     "times. Applies to any future guard, not just these two.",
+       fixed_on="19 Aug 2026",
+       ref="David, 19 Aug 2026: 'Why do they even exist at this point? Did they exist before but "
+           "were hidden somewhere in the description as vague requests for me which I missed?' "
+           "They were not vague requests -- they were never requests at all. Manual deploys run "
+           "in warn mode, which logs DANGER and proceeds; 35 runs did exactly that between 14 and "
+           "19 Aug. The strict 02:00 nightly aborted honestly every night, but its abort landed "
+           "in a log at 02:00 with nobody awake. Detection was never the problem; ESCALATION was. "
+           "This entry is the escalation: the same danger tag appearing on many consecutive scans "
+           "turns the ledger red in daylight, where it gets read.")
+def rg_no_chronic_danger():
+    out = []
+    log = repo_file("deploy_audit.log")
+    if log is None:
+        return [(INFO, "not run from the repo -- deploy_audit.log unavailable")]
+    lines = [l for l in log.splitlines() if "verdict=" in l][-40:]
+    if not lines:
+        return [(INFO, "no scans logged yet")]
+    streak = {}
+    for l in lines:
+        tags = ""
+        for part in l.split():
+            if part.startswith("danger="):
+                tags = part.split("=", 1)[1]
+        present = set(t for t in tags.split("|") if t and t != "-")
+        for t in present:
+            streak[t] = streak.get(t, 0) + 1
+        for t in list(streak):
+            if t not in present:
+                streak[t] = 0
+    CHRONIC = 8
+    for tag, n in sorted(streak.items()):
+        if n >= CHRONIC:
+            out.append((FAIL, "'%s' has been red on %d consecutive pre-deploy scans -- fix it or "
+                              "fix the guard, but it may not keep scrolling past" % (tag, n)))
+    if not out:
+        out.append((INFO, "no guard red for %d+ consecutive scans" % CHRONIC))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

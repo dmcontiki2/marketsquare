@@ -7334,6 +7334,16 @@ def _demand_match_and_compose(conn, limit=20):
     rows = conn.execute("SELECT * FROM demand_tickets WHERE state='open' ORDER BY score DESC, id LIMIT ?",
                         (limit,)).fetchall()
     for t in rows:
+        # PG-PORTABLE-1 (19 Aug 2026): the 90-day cool-down cutoff is computed here rather
+        # than by SQLite's now-literal date arithmetic inside the WHERE clause. (The literal
+        # is deliberately NOT spelled out in this comment: the pg ratchet is a regex over this
+        # file, so prose quoting the pattern counts as an occurrence and keeps the guard red --
+        # a trap already paid for on 15 Aug.) Same window,
+        # same ruling (shared suppression ledger, 90-day cool-down, permanent on
+        # suppressed=1), same stored-value shape -- but the comparison is now a bound
+        # parameter, so this SELECT moves to Postgres unchanged.
+        _cutoff90 = (__import__('datetime').datetime.utcnow()
+                     - __import__('datetime').timedelta(days=90)).isoformat(sep=" ", timespec="seconds")
         # Match city by NAME, not id: geo_cities can hold duplicate rows for the same
         # city (e.g. two "Pretoria" ids), so the ticket's city_id and the prospect's
         # resolved city_id may differ even for the same place. Comparing the resolved
@@ -7345,9 +7355,9 @@ def _demand_match_and_compose(conn, limit=20):
                        OR LOWER(TRIM(COALESCE(p.city_name,'')))
                           = LOWER(TRIM(COALESCE((SELECT name FROM geo_cities WHERE id = ?), '__nocity__'))) )
                  AND NOT EXISTS (SELECT 1 FROM outreach_ledger o WHERE o.email_hash = p.email_hash
-                                 AND (o.suppressed = 1 OR o.sent_at >= datetime('now','-90 days')))
+                                 AND (o.suppressed = 1 OR o.sent_at >= ?))
                LIMIT 1""",
-            (t["category"], t["category"], t["city_id"], t["city_id"])).fetchone()
+            (t["category"], t["category"], t["city_id"], t["city_id"], _cutoff90)).fetchone()
         if not p:
             continue
         out["matched"] += 1
@@ -7355,18 +7365,31 @@ def _demand_match_and_compose(conn, limit=20):
         html = _demand_render_invite(t, p, None)   # code allocation joins at flip-on (launch_codes)
         conn.execute("INSERT INTO demand_invites_outbox (ticket_id, email_hash, subject, body, dry_run) VALUES (?,?,?,?,?)",
                      (t["id"], p["email_hash"], subject, html, 1 if DEMAND_LOOP_DRYRUN else 0))
+        # PG-PORTABLE-1 (19 Aug 2026): both timestamps were SQLite-only now-literal date
+        # arithmetic. Caller now supplies portable UTC stamps in SQLite's own
+        # 'YYYY-MM-DD HH:MM:SS' shape, so stored values are unchanged and this UPDATE
+        # moves to Postgres untouched.
+        _dnow = __import__('datetime').datetime.utcnow()
+        _dnow_s = _dnow.isoformat(sep=" ", timespec="seconds")
+        _dexp_s = (_dnow + __import__('datetime').timedelta(
+            hours=DEMAND_PRIORITY_HOURS)).isoformat(sep=" ", timespec="seconds")
         conn.execute("UPDATE demand_tickets SET state='matched', matched_prospect=?, matched_item=?, "
-                     "priority_expires_at=datetime('now', ?), updated_at=datetime('now') WHERE id=?",
-                     (p["email_hash"], p["scraped_item"], "+" + str(DEMAND_PRIORITY_HOURS) + " hours", t["id"]))
+                     "priority_expires_at=?, updated_at=? WHERE id=?",
+                     (p["email_hash"], p["scraped_item"], _dexp_s, _dnow_s, t["id"]))
         out["composed"] += 1
         # The ONLY send path - triple-gated inside; dry-run returns ("dry", None) untouched.
         status, _mid = _demand_send_invite(p["email_enc"] or "", subject, html)
         if status == "sent":
             conn.execute("INSERT INTO outreach_ledger (email_hash, channel, campaign) VALUES (?,?,?)",
                          (p["email_hash"], "demand_invite", "ticket:" + str(t["id"])))
+            # PG-PORTABLE-1: same rewrite as the 'matched' UPDATE above.
+            _inow = __import__('datetime').datetime.utcnow()
+            _inow_s = _inow.isoformat(sep=" ", timespec="seconds")
+            _iexp_s = (_inow + __import__('datetime').timedelta(
+                hours=DEMAND_PRIORITY_HOURS)).isoformat(sep=" ", timespec="seconds")
             conn.execute("UPDATE demand_tickets SET state='invited', "
-                         "priority_expires_at=datetime('now', ?), updated_at=datetime('now') WHERE id=?",
-                         ("+" + str(DEMAND_PRIORITY_HOURS) + " hours", t["id"]))
+                         "priority_expires_at=?, updated_at=? WHERE id=?",
+                         (_iexp_s, _inow_s, t["id"]))
             out["sent"] = out.get("sent", 0) + 1
     return out
 

@@ -15,8 +15,8 @@ NOT_TESTER_FACING = set()   # 5 Aug: David ruled the tab belongs on EVERY page, 
                             # console included. Nothing is excluded. Keep it that way.
 
 
-def tester_pages(here):
-    """Every .html the site actually deploys, minus the operator console."""
+def _manifest_html(here):
+    """Every .html the site actually deploys, as (source, destination) pairs."""
     out = []
     mp = os.path.join(here, "ops", "autodeploy", "deploy_manifest.txt")
     with open(mp, encoding="utf-8", errors="replace") as f:
@@ -24,10 +24,44 @@ def tester_pages(here):
             line = line.split("#")[0].strip()
             if "|" not in line:
                 continue
-            src = line.split("|")[0].strip()
+            parts = [x.strip() for x in line.split("|")]
+            src, dest = parts[0], parts[1] if len(parts) > 1 else parts[0]
             if src.endswith(".html") and src not in NOT_TESTER_FACING:
-                out.append(src)
+                out.append((src, dest))
     return out
+
+
+def _is_email_body(here, src, dest):
+    """EMAIL-NOT-A-PAGE-1 (19 Aug 2026). An email BODY is not a page a tester can land on,
+    so requiring the fault widget on one was a verdict that could never be satisfied
+    correctly: ts_report.js cannot run in a mail client, and shipping the tag would put a
+    <script src=...> inside outbound mail - spam-filter poison and a tracker-shaped artifact
+    in an invitation. That single wrong assertion put DANGER on 46 pre-deploy scans from
+    4 Aug onward and aborted the strict-mode nightly, which is exactly how a real fault gets
+    waved through.
+
+    Detected STRUCTURALLY, never by a hand-typed name (the same reason the manifest drives
+    this file): published under a templates/ directory AND carrying the 600px email wrapper
+    AND containing no <script> at all. A real PAGE added under templates/ will carry a script
+    or lack the email wrapper, so it falls through to the page rule and must carry the widget.
+    The classification fails SAFE - anything ambiguous is treated as a page."""
+    if "/templates/" not in dest.replace("\\", "/"):
+        return False
+    try:
+        body = open(os.path.join(here, src), encoding="utf-8", errors="replace").read()
+    except OSError:
+        return False
+    return "<script" not in body.lower() and re.search(r"max-width:\s*600px", body) is not None
+
+
+def tester_pages(here):
+    """Every deployed .html a tester can actually land on - email bodies excluded."""
+    return [s for s, d in _manifest_html(here) if not _is_email_body(here, s, d)]
+
+
+def email_bodies(here):
+    """The deployed .html files that are email bodies, not pages."""
+    return [s for s, d in _manifest_html(here) if _is_email_body(here, s, d)]
 
 def _read(name):
     with open(os.path.join(HERE, name), encoding="utf-8", errors="replace") as f:
@@ -232,6 +266,19 @@ def test_every_photo_door_applies_the_same_rules():
         "the agency import no longer checks the moderation flag - an anonymous but " \
         "unacceptable photo could be attached from an agency feed"
     assert "_anon_photo_scan" in blk, "the agency import stopped using the shared vision scan"
+
+
+def test_email_bodies_never_carry_script():
+    """The other half of EMAIL-NOT-A-PAGE-1. Email bodies are exempt from the widget, so
+    this is the assertion that keeps that exemption honest: they must carry NO script at
+    all - not ts_report.js, not a third party (RG-0025). Exempting them from one rule
+    without binding them to a stricter one is how an exemption becomes a hole."""
+    bodies = email_bodies(HERE)
+    assert len(bodies) >= 14, \
+        "only %d email bodies classified - the structural test or the manifest changed" % len(bodies)
+    dirty = [n for n in bodies
+             if os.path.isfile(os.path.join(HERE, n)) and "<script" in _read(n).lower()]
+    assert not dirty, ("a script tag reached an outbound email body: " + ", ".join(dirty))
 
 
 def test_widget_is_deployable():
