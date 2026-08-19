@@ -3535,6 +3535,45 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
                 sep = "\n" if existing_desc[bracket_end+1:bracket_end+2] == "\n" else ""
                 d["description"] = photo_prefix + sep + d["description"]
 
+    # ── PHOTO-ORDER-1 (19 Aug 2026, Maroushka via David): the edit screen saves
+    # photo_urls, but buyers read the [photos:...] description prefix FIRST —
+    # so a reorder/remove/add made in the edit screen never reached the buyer
+    # view, and a replacement photo could never become the cover. When the
+    # seller submits photo_urls, the prefix is rewritten to the SAME order
+    # (captions preserved by URL from the old prefix), and thumb/medium are
+    # synced to position 0 server-side so every client sees the same cover.
+    if "photo_urls" in d:
+        try:
+            _new_urls = d["photo_urls"]
+            if isinstance(_new_urls, str):
+                _new_urls = json.loads(_new_urls or "[]")
+            _new_urls = [u for u in (_new_urls or []) if isinstance(u, str) and u.strip()]
+        except Exception:
+            _new_urls = None   # unparseable — leave everything as submitted
+        if _new_urls is not None:
+            # description that will actually be written (the preserve block above
+            # may already have re-attached the OLD prefix to an edited description)
+            _desc = d.get("description", existing["description"] or "")
+            _caps = {}
+            if _desc.startswith("[photos:"):
+                _pend = _desc.find("]")
+                if _pend != -1:
+                    for _entry in _desc[len("[photos:"):_pend].split("|"):
+                        if "::" in _entry:
+                            _u, _c = _entry.split("::", 1)
+                            if _c:
+                                _caps[_u] = _c
+                    _desc = _desc[_pend + 1:].lstrip("\n")
+            if _new_urls:
+                _prefix = "[photos:" + "|".join(
+                    u + ("::" + _caps[u] if u in _caps else "") for u in _new_urls) + "]"
+                d["description"] = _prefix + ("\n" + _desc if _desc else "")
+                # cover = position 0, everywhere, no exceptions
+                d.setdefault("thumb_url", _new_urls[0])
+                d.setdefault("medium_url", _new_urls[0])
+            else:
+                d["description"] = _desc
+
     sets = ", ".join(f"{k} = ?" for k in d.keys())
     vals = list(d.values())
     conn.execute(

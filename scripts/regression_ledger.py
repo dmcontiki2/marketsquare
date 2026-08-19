@@ -4398,19 +4398,35 @@ def rg_fx_live():
            "the site 403'd from the new IP while serving everyone else. Fixed by hand at both "
            "panels; scripts/hetzner_fw_selfheal.py now heals both automatically when tokens are "
            "provisioned. THIS entry is the tripwire: a red here names the runbook line instead "
-           "of a mystery morning.")
+           "of a mystery morning. LEDGER-FLAP-1, 19 Aug 2026 (maintenance-loop): the probe was a "
+           "SINGLE 6 s connect, so one dropped packet read as a lockout -- it went red at 05:52 "
+           "while the port was demonstrably open (banner SSH-2.0-OpenSSH_9.6p1 returned in 0.21 s "
+           "on 3 consecutive probes minutes later). A red here blocks the nightly ship, so a flaky "
+           "assertion is an outage of its own. Now 3 tries at 8 s; the assertion is not weakened -- "
+           "a genuinely blocked port fails all three.")
 def rg_management_lanes_reachable():
     out = []
     _require_net()
-    import socket
-    try:
-        s = socket.create_connection(("178.104.73.239", 22), timeout=6)
-        s.close()
-    except Exception as e:
-        out.append((FAIL, "port 22 unreachable from this vantage (%s) -- SSH-LOCKOUT-1 class: "
-                          "the home IP likely changed (power/router reset). Fix: run "
+    import socket, time as _time
+    # LEDGER-FLAP-1 (19 Aug 2026, maintenance-loop): a SINGLE 6 s TCP probe declared a
+    # REGRESSION -- and a red here says "do not deploy", so one dropped packet stalls the
+    # nightly ship. Three tries, 8 s each, before the verdict. Strength is UNCHANGED: a
+    # genuinely blocked port fails all three and still reports the runbook line.
+    _ssh_err = None
+    for _try in range(3):
+        try:
+            socket.create_connection(("178.104.73.239", 22), timeout=8).close()
+            _ssh_err = None
+            break
+        except Exception as e:
+            _ssh_err = type(e).__name__
+            if _try < 2:
+                _time.sleep(3)
+    if _ssh_err:
+        out.append((FAIL, "port 22 unreachable from this vantage on 3 tries (%s) -- SSH-LOCKOUT-1 "
+                          "class: the home IP likely changed (power/router reset). Fix: run "
                           "scripts/hetzner_fw_selfheal.py, or add the current IP at Hetzner > "
-                          "Firewalls > trustsquare-origin-lockdown" % type(e).__name__))
+                          "Firewalls > trustsquare-origin-lockdown" % _ssh_err))
     try:
         req = urllib.request.Request(BASE + "/terms", headers=UA)
         try:
@@ -4678,7 +4694,7 @@ def rg_gate_cross_device_code():
 
 
 @entry("RG-0108", "The SUPER ADMIN can always get into his own app -- the strongest credential in the system is never the one that cannot open the door",
-       OPEN, scope="the admin-credential gate lane entire: /admin/login, /admin/change-pin and "
+       LOCKED, fixed_on="2026-08-19", scope="the admin-credential gate lane entire: /admin/login, /admin/change-pin and "
                    "/admin/verify exempt at the origin (migration 025); a correct admin password "
                    "or team PIN granting the ts_review cookie in bea_main.py; and the gate-screen "
                    "and dashboard messages that must no longer report a CORRECT password as an "
@@ -4697,7 +4713,12 @@ def rg_gate_cross_device_code():
            "content, answer only 200/401, and are now behind the 8-per-10-min per-IP limiter) and "
            "grant the WEAKER review cookie on a successful admin login -- strictly no new "
            "privilege, since an admin token already outranks a reviewer cookie. "
-           "EXPECTED OPEN until migration 025 rides a deploy; promote to LOCKED once live.")
+           "EXPECTED OPEN until migration 025 rides a deploy; promote to LOCKED once live. "
+           "PROMOTED 19 Aug 2026 (maintenance-loop): migration 025 is live -- anonymous "
+           "POST /admin/login reaches the APP and answers a JSON 401 (not an nginx HTML 401), "
+           "and the containment probes (/tuppence/balance, /users/{email}) still refuse "
+           "anonymously. Locked: the admin door must never close again, on any device, for "
+           "any admin.")
 def rg_gate_admin_never_locked():
     out = []
     bea = repo_file("bea_main.py")
@@ -5317,6 +5338,42 @@ def rg_envkey_not_bare_getenv():
                           "assertion is running blind and must be re-pointed"))
     if not out:
         out.append((INFO, "all %d guarded credentials read through envkey()" % seen))
+    return out
+
+
+@entry("RG-0118", "A seller controls photo ORDER and the COVER -- and an edit-screen save reaches the buyer view",
+       OPEN, scope="the whole listing-photo order lane: ms.js edit screen (elMakeCover/elMovePhoto/"
+       "reset-per-open/prefix fallback) AND bea_main.py PUT /listings/{id} PHOTO-ORDER-1 prefix "
+       "rewrite. Class, not instance: ANY photo edit (reorder, remove, add, replace) must land in "
+       "BOTH stores -- photo_urls and the [photos:...] description prefix buyers actually read",
+       ref="Maroushka via David, 19 Aug 2026: she removed an over-blurred cover, uploaded a "
+           "replacement, it landed LAST and nothing could move it to first -- 'new users will "
+           "just give up'. Root causes, all fixed 19 Aug: (1) no reorder/set-cover control "
+           "existed anywhere; (2) the edit screen saved photo_urls but buyers read the "
+           "[photos:...] description prefix first, so no edit-screen photo change EVER reached "
+           "the buyer view; (3) _elPhotoUrls was never reset between listings (cross-listing "
+           "photo bleed); (4) the edit screen could not even SEE prefix-only photos (the '2 of "
+           "8' half of TS-0030). OPEN until deployed and proven live.")
+def rg_photo_order():
+    out = []
+    ms = repo_file("ms.js"); bea = repo_file("bea_main.py")
+    if ms is not None:
+        for token, what in (("function elMakeCover", "the Make-cover control"),
+                            ("function elMovePhoto", "the move control"),
+                            ("_elPhotoUrls = [];\n  _elPhotoReplaceIdx = 0;", "the per-open reset (cross-listing photo bleed)"),
+                            ("[photos:([^\\]]+)\\]", "the edit-screen prefix fallback (seller sees ALL photos)")):
+            if token not in ms:
+                out.append((FAIL, "ms.js lost %s" % what))
+    if bea is not None:
+        if "PHOTO-ORDER-1" not in bea or '"photo_urls" in d' not in bea:
+            out.append((FAIL, "bea_main.py lost the PHOTO-ORDER-1 prefix rewrite -- edit-screen "
+                              "photo changes no longer reach the buyer-facing store"))
+    # live half: the deployed bundle must carry the control
+    live = _get("/static/ms.js")
+    if "function elMakeCover" not in live:
+        out.append((FAIL, "live /static/ms.js has no elMakeCover -- the fix is not deployed"))
+    if not out:
+        out.append((INFO, "cover/order controls in repo and live; PUT rewrites the buyer-facing prefix"))
     return out
 
 

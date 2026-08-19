@@ -9050,6 +9050,12 @@ let elAISuggestions = {};   // { fieldId: {suggestion, reason} }
 async function openEditListing(beaId) {
   if (!beaId) { showToast('Cannot edit this listing'); return; }
 
+  /* PHOTO-ORDER-1 (19 Aug 2026): _elPhotoUrls is module-level and was never
+     reset between listings — opening a second listing showed (and could SAVE)
+     the previous listing's photos. Reset per open; elRenderPhotos re-reads. */
+  _elPhotoUrls = [];
+  _elPhotoReplaceIdx = 0;
+
   let dl = dashState.listings.find(d => d.beaListingId === beaId);
 
   // If _raw is missing (e.g. listing came from the intros path, not /listings/mine)
@@ -9380,6 +9386,19 @@ function elRenderPhotos(raw, photoWarning) {
         if (Array.isArray(parsed) && parsed.length) _elPhotoUrls = parsed;
       }
     } catch(e) {}
+    /* PHOTO-ORDER-1 (19 Aug 2026): most published listings carry their photos
+       ONLY in the [photos:...] description prefix (photo_urls is null) — the
+       edit screen fell back to the single thumb and showed "1 photo" for an
+       8-photo advert (TS-0030's "2 of 8" view). Read the prefix too. */
+    if (!_elPhotoUrls.length && raw.description) {
+      const pm = String(raw.description).match(/^\[photos:([^\]]+)\]/);
+      if (pm) {
+        _elPhotoUrls = pm[1].split('|').filter(Boolean).map(en => {
+          const sp = en.indexOf('::');
+          return sp > -1 ? en.slice(0, sp) : en;
+        });
+      }
+    }
     if (!_elPhotoUrls.length) {
       if (raw.medium_url) _elPhotoUrls = [raw.medium_url];
       else if (raw.thumb_url) _elPhotoUrls = [raw.thumb_url];
@@ -9400,6 +9419,12 @@ function elRenderPhotos(raw, photoWarning) {
       <div style="display:flex;gap:4px;margin-top:5px;">
         <button class="el-photo-replace" onclick="elTriggerPhotoReplace(${i})" style="flex:1;">🔄</button>
         <button class="el-photo-replace" onclick="elRemovePhoto(${i})" style="flex:0 0 32px;color:#ef4444;">✕</button>
+      </div>
+      <div style="display:flex;gap:4px;margin-top:4px;">
+        <button class="el-photo-replace" onclick="elMovePhoto(${i},-1)" ${i===0?'disabled style="flex:0 0 32px;opacity:.3;"':'style="flex:0 0 32px;"'}>◀</button>
+        ${i===0 ? '<button class="el-photo-replace" disabled style="flex:1;opacity:.45;">★ Cover</button>'
+                : `<button class="el-photo-replace" onclick="elMakeCover(${i})" style="flex:1;color:var(--accent-bright);font-weight:700;">★ Make cover</button>`}
+        <button class="el-photo-replace" onclick="elMovePhoto(${i},1)" ${i===_elPhotoUrls.length-1?'disabled style="flex:0 0 32px;opacity:.3;"':'style="flex:0 0 32px;"'}>▶</button>
       </div>
       ${hasPhotoIssue && i===0 ? `<div class="el-photo-ai-note">⚠️ ${photoWarning}</div>` : ''}
     </div>`).join('') +
@@ -9428,6 +9453,33 @@ function elRemovePhoto(idx) {
   }
   elRenderPhotos(elCurrentRaw || {photo_urls: JSON.stringify(_elPhotoUrls)}, '');
   showToast('Photo removed — tap Save Changes to apply');
+}
+
+/* PHOTO-ORDER-1 (19 Aug 2026, Maroushka via David): a replacement photo landed
+   LAST with no way to make it the cover — new users would just give up. Cover
+   is always position 0; these two give the seller full control of order. */
+function _elSyncPhotoOrder(msg) {
+  if (elCurrentRaw) {
+    elCurrentRaw.photo_urls = JSON.stringify(_elPhotoUrls);
+    if (_elPhotoUrls.length) {
+      elCurrentRaw.thumb_url  = _elPhotoUrls[0];
+      elCurrentRaw.medium_url = _elPhotoUrls[0];
+    }
+  }
+  elRenderPhotos(elCurrentRaw || {photo_urls: JSON.stringify(_elPhotoUrls)}, '');
+  showToast(msg + ' — tap Save Changes to apply');
+}
+function elMakeCover(idx) {
+  if (idx <= 0 || idx >= _elPhotoUrls.length) return;
+  const u = _elPhotoUrls.splice(idx, 1)[0];
+  _elPhotoUrls.unshift(u);
+  _elSyncPhotoOrder('★ Cover photo set');
+}
+function elMovePhoto(idx, delta) {
+  const j = idx + delta;
+  if (idx < 0 || j < 0 || idx >= _elPhotoUrls.length || j >= _elPhotoUrls.length) return;
+  const u = _elPhotoUrls[idx]; _elPhotoUrls[idx] = _elPhotoUrls[j]; _elPhotoUrls[j] = u;
+  _elSyncPhotoOrder('Photo moved');
 }
 
 async function elAddPhoto(event) {

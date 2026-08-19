@@ -5,6 +5,8 @@
 
 ## Current Session
 
+- **PHOTO-ORDER-1 built, not yet shipped** (19 Aug): seller reorder/★-cover controls + PUT prefix rewrite so edit-screen photo changes reach the buyer view; fixes the "replacement lands last" and "2 of 8 photos" faults (Maroushka). RG-0118 OPEN awaiting deploy. Blur over-smear NOT re-patched — vendor-swap decision pending with David.
+
 - **Deploy gate unblocked (19 Aug).** The two guards that had put DANGER on every
   pre-deploy scan since 4 Aug are fixed: PG-PORTABLE-1 (demand lane no longer grows
   SQLite-only date arithmetic; surface 53 → 49) and EMAIL-NOT-A-PAGE-1 (3 orchestration
