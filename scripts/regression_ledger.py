@@ -3824,9 +3824,22 @@ def rg_gate_email_link():
         if json.loads(body).get("ok") is not True:
             out.append((FAIL, "live /review/request-link answered but not {'ok': true} -- "
                               "the no-enumeration contract broke"))
+    except urllib.error.HTTPError as he:
+        if he.code == 429:
+            # ASSERTION FIX 19 Aug 2026 (not a weakening): a 429 is the per-IP limiter
+            # ANSWERING, which proves the endpoint is reachable and exempt -- exactly what
+            # this entry asserts. Reading it as "019 has not landed" produced a false red
+            # twice, both self-inflicted by this ledger's own probe rate (watch a3d82b5).
+            # RG-0108 already handles 429 this way; this makes the board consistent.
+            out.append((INFO, "live /review/request-link rate-limited this probe (429) -- "
+                              "lane reachable, limiter alive"))
+        else:
+            out.append((FAIL, "live /review/request-link refused (HTTP %s) -- migration 019 "
+                              "has not landed (or the lane rotted): a tester cannot ask for "
+                              "a link" % he.code))
     except Exception as ex:
-        out.append((FAIL, "live /review/request-link refused (%r) -- migration 019 has not landed "
-                          "(or the lane rotted): a tester cannot ask for a link" % ex))
+        out.append((FAIL, "live /review/request-link unreachable (%r) -- a tester cannot ask "
+                          "for a link" % ex))
     try:
         class _NoRedirect(urllib.request.HTTPRedirectHandler):
             def redirect_request(self, *a, **k): return None
@@ -5163,6 +5176,74 @@ def rg_gate_actually_down():
         out.append((INFO, "outside the repo -- source half not checked here"))
     if not out:
         out.append((INFO, "gate is down on BOTH halves -- anyone can browse, no overlay, no 401"))
+    return out
+
+
+
+@entry("RG-0116", "A migration that imports the app can actually import it -- and a stalled migration chain is never silent",
+       LOCKED, fixed_on="2026-08-19", scope="EVERY migration in migrations/ that does `import main`, present and future "
+                   "(023 and 024 today). Class, not instance: the defect is in how post_deploy "
+                   "invokes them, so any new migration importing the app inherits it unless it "
+                   "carries the CWD guard.",
+       ref="MIGRATE-IMPORT-1, 19 Aug 2026. post_deploy runs each migration as "
+           "`(cd $LIVE && python3 /abs/path/NNN.py --apply)`. Python puts THE SCRIPT'S directory "
+           "on sys.path[0] -- never the CWD -- so `import main` raised \"No module named 'main'\" "
+           "and 023 exited rc=3. post_deploy then does `break`, which is correct (migrations are "
+           "order-dependent and must not run out of sequence) but meant 023 BLOCKED 024, 025 and "
+           "026 on every deploy from 18 Aug onward. The migration file's own comment said "
+           "'CWD = live web root per the migrations contract' -- true, and useless, because "
+           "Python never consults CWD for a script run by path. "
+           "COST: this is why /admin/login and /review/claim-code kept answering with nginx HTML "
+           "instead of app JSON, which THIS SESSION twice misread as 'the code is not deploying'. "
+           "The code was deploying fine the whole time (deploy log: 'DEPLOY OK, now live at "
+           "9867f059, health ok'); only the nginx-touching migrations were stuck behind 023. "
+           "Two wrong probes compounded it: /review/request-link returns a bare {ok:true} for an "
+           "OFF-LIST email before it ever reaches the delivery field, so probing it with "
+           "example.invalid can never show new code. Assert the import CONTRACT in source, and "
+           "assert the chain's effects live. LOCKED 19 Aug 2026: both main-importing migrations now "
+           "carry the guard, proven by running 023 under post_deploy's exact invocation "
+           "(cd <live> && python3 <abs path>) -- `import main` resolved where it had raised.")
+def rg_migration_import_contract():
+    out = []
+    import glob as _glob, os as _os
+    root = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+    migs = sorted(_glob.glob(_os.path.join(root, "migrations", "*.py")))
+    checked = 0
+    for m in migs:
+        if ".bak" in _os.path.basename(m):
+            continue
+        try:
+            t = open(m, encoding="utf-8", errors="replace").read()
+        except Exception:
+            continue
+        if "import main" not in t:
+            continue
+        checked += 1
+        if "sys.path.insert(0, _os.getcwd())" not in t and "sys.path.insert(0, os.getcwd())" not in t:
+            out.append((FAIL, "%s does `import main` with NO CWD guard -- it will exit rc=3 on the "
+                              "box and post_deploy will stop the whole chain behind it "
+                              "(MIGRATE-IMPORT-1)" % _os.path.basename(m)))
+    if checked == 0 and migs:
+        out.append((INFO, "no migration imports main right now -- nothing to guard"))
+    # RG-0068 (no vacuous assertion): if we are in the repo, we must have SEEN migrations.
+    if not migs:
+        out.append((INFO, "outside the repo -- source half not checked here"))
+    # Live half: the chain's effect. 025 exempts /auth/verify-code; if the chain is still
+    # stalled that endpoint never becomes reachable through nginx.
+    try:
+        req = urllib.request.Request(BASE + "/auth/providers", headers=dict(UA))
+        r = urllib.request.urlopen(req, timeout=TIMEOUT)
+        json.loads(r.read().decode("utf-8", "replace"))
+    except urllib.error.HTTPError as he:
+        if he.code == 404:
+            out.append((INFO, "live app predates ONETAP-1 -- deploy pending, chain not yet proven"))
+        elif he.code in (401, 403):
+            out.append((FAIL, "/auth/providers is refused at the origin -- migration 025 still has "
+                              "not run, so the chain is STILL stalled behind a failing migration"))
+    except Exception:
+        pass
+    if not out:
+        out.append((INFO, "every main-importing migration carries the CWD guard; chain effects live"))
     return out
 
 

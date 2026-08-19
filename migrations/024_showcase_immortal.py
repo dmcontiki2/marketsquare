@@ -7,6 +7,13 @@ are fixed in code; THIS heals the data: any showcase listing not 'live' comes
 back, and fade-nudge stamps are cleared so no stale warning lingers.
 Idempotent; safe to re-run.
 """
+import os as _os, sys as _sys
+# MIGRATE-IMPORT-1 (19 Aug 2026): post_deploy runs us as `cd $LIVE && python3 <abs path>`.
+# Python puts THIS FILE's directory on sys.path[0] -- never the CWD -- so `import main`
+# raised "No module named 'main'" and post_deploy stopped the whole chain behind it
+# (023 blocked 024/025/026 from 18 Aug onward). CWD is where main.py actually lives.
+if _os.getcwd() not in _sys.path:
+    _sys.path.insert(0, _os.getcwd())
 import sys
 from datetime import datetime, timezone
 
