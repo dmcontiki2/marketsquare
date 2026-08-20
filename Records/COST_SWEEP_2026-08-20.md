@@ -20,9 +20,9 @@ _Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sw
 - ✅ **OK** — bea_main.py:16979 `ai_batch_card_listings` — ceiling ✓ spend-log ✓
 - ✅ **OK** — bea_main.py:17242 `_classify_email` — ceiling ✓ spend-log ✓
 - ✅ **OK** — bea_main.py:18173 `grade_card_condition` — ceiling ✓ spend-log ✓
-- 🟠 **WARN** — bea_main.py:18937 `_ts_breaker_heartbeat` — spend-log ✓ but NO _check_cost_ceiling
-- 🔴 **CRITICAL** — bea_main.py:19000 `planner_heritage_compose` — UNWRAPPED & UNMETERED Anthropic call (no ceiling, no spend log, no Tuppence)
-- 🟠 **WARN** — bea_main.py:18938 `_hb_loop` — spend-log ✓ but NO _check_cost_ceiling
+- 🟠 **WARN** — bea_main.py:18938 `_ts_breaker_heartbeat` — spend-log ✓ but NO _check_cost_ceiling
+- 🔴 **CRITICAL** — bea_main.py:19001 `planner_heritage_compose` — UNWRAPPED & UNMETERED Anthropic call (no ceiling, no spend log, no Tuppence)
+- 🟠 **WARN** — bea_main.py:18939 `_hb_loop` — spend-log ✓ but NO _check_cost_ceiling
 - ✅ **OK** — advert_agent.py:785 `run_model` — metered via Tuppence hold/settle
 
 ## Model discipline — Haiku unless paid + metered (P1)
@@ -44,7 +44,7 @@ _Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sw
 - ℹ️ **INFO** — MarketSquare/bea_main.py:1588 Sonnet in the provider-model registry (TASK_MODEL/fallback) — single-source, Tuppence-metered; keep justified
 - ℹ️ **INFO** — MarketSquare/bea_main.py:15718 model constant `PRICE_CHECK_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
 - ℹ️ **INFO** — MarketSquare/dashboard.server.html:1201 model name inside a UI display label — text on a diagram, not a call site (DW-009)
-- 🟠 **WARN** — MarketSquare/DEFENCE_COVERAGE_MAP.html:95 unknown model family `claude-fable-5` — classify
+- 🟠 **WARN** — MarketSquare/DEFENCE_COVERAGE_MAP.html:96 unknown model family `claude-fable-5` — classify
 - ℹ️ **INFO** — MarketSquare/main.py:966 Sonnet in the provider-model registry (TASK_MODEL/fallback) — single-source, Tuppence-metered; keep justified
 - ℹ️ **INFO** — MarketSquare/main.py:967 Sonnet in the provider-model registry (TASK_MODEL/fallback) — single-source, Tuppence-metered; keep justified
 - ℹ️ **INFO** — MarketSquare/main.py:9614 model constant `VISION_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified

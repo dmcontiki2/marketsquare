@@ -1,3 +1,68 @@
+## 2026-08-20 — SUPER-HEAL-1 + POSTDEPLOY-EYES-1: why the deploy didn't bring the supers back, and why that class ends here
+
+David deployed, the supers stayed gone, and his verdict was the right one: *"This is our old
+recurring, lets work 4 hours on it problem all over."* Two separate faults, both now fixed at the
+class, not the instance.
+
+**Fault 1 — the every-deploy self-heal only healed ABSENCE, never STATE.**
+`seed_super_global.py` is the idempotent step post_deploy runs on every single deploy, and its own
+contract says it *"skips any listing whose exact title already exists."* A super that exists but
+has been **hidden** (`listing_status` faded/archived) therefore looked perfectly healthy to it —
+so redeploying could never bring one back, no matter how many times David clicked. The only thing
+that could heal state was the one-shot migration 027, sitting behind a chain that has jammed
+before and silently (023 blocked 024–026 from 18 Aug for three days).
+
+*Fix:* `heal_hidden_supers()` in `seed_super_global.py`, running on **every** deploy, before the
+in-sync early exit (a hidden super now counts as work, so the "nothing to do" shortcut can never
+skip it). Unit-proven against a synthetic DB: heals faded and archived supers and showcase rows,
+clears stale fade stamps, **leaves a real seller's faded listing alone**, idempotent on re-run,
+and a no-op on a schema without the flags. Migration 027 stays as the belt to these braces.
+
+**Fault 2 — nobody could see what a deploy's post-steps actually did.**
+This is the real reason these become four-hour mornings. After the deploy there was no way, short
+of SSH, to answer: did the seed run? did the migration chain jam? on which migration? The failure
+was invisible, so the session guessed — and guessing is what burns the hours.
+
+*Fix:* `post_deploy.sh` now records every step's outcome and writes
+`$LIVE/static/post_deploy_status.json` **on EXIT via a trap**, so even an aborted run leaves its
+story behind. Readable over plain HTTP with no credential (`/static/post_deploy_status.json`), so
+any session — or David on his phone — can see it. A failed migration names itself and says
+`CHAIN JAMMED HERE`. Exercised locally against a deliberately failing migration: it correctly
+reported `migration:099_bad.py failed` and that everything behind it was skipped.
+
+**Ledger.** RG-0124 added (OPEN — deliberately FAILS while the artefact is absent, because
+"absent" IS the blind state it exists to end; flips READY TO LOCK on the deploy that carries it).
+RG-0123 extended: its source half now asserts the seed heals STATE, so a future session cannot
+quietly return `seed_super_global.py` to healing absence only — which is precisely this recurrence.
+
+**What David does:** one more deploy. The supers come back through the seed lane this time, which
+cannot be jammed by a stuck migration.
+
+## 2026-08-20 — RUL-035: the supers stay through launch, and retire one by one as real listings replace them
+
+David, on being shown the fade: *"i think they are needed for the launch and a while thereafter.
+We will remove them as they get good live replacements."* Recorded as **RUL-035** — a ruling, not
+a note, so the next session cannot re-decide it.
+
+What it fixes in the machinery:
+
+- **No sunset date, no bulk removal.** Nothing automatic may ever remove a super — not the fade
+  sweep, not the archive step, not expiry. That is now true of `super_example`, not just
+  `showcase` (SUPER-IMMORTAL-2, same session).
+- **Retirement is a deliberate admin act, per shelf**, taken only once that category carries a
+  real seller listing good enough to be the measuring stick in its place.
+- **A shelf may never go dark as a side effect.** RG-0123 now encodes exactly that asymmetry: a
+  super that 404s is read as a RETIREMENT and passes; a super the machinery *hid* is a
+  regression; and an empty category shelf in Pretoria is a regression either way. So the ledger
+  will let David retire the Collectors super the day a real collector listing stands up, and
+  will go red the day one disappears without a replacement.
+- rulings_check now asserts RUL-035 across bea_main.py, migration 027, the ledger and RULINGS.md
+  — and asserts the PROPERTY (`super_example` is in the protected set), never a literal SQL
+  spelling, which is the mistake that let RG-0106 sit green through the fault it existed to catch.
+
+Ledger after this session: 116 entries, 0 regressed, RG-0123 open by design until the deploy runs
+027 and the eight supers come back.
+
 ## 2026-08-20 — SUPER-IMMORTAL-2: the supers faded overnight because the exemption watched the wrong flag
 
 David, first thing: *"Claude we lost a lot of adverts? Why"* — the Collectors and Services tiles

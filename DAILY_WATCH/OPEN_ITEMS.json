@@ -84,7 +84,7 @@
       "sev": "MEDIUM",
       "source": "cc_age_check (Monday lane)",
       "status": "OPEN",
-      "summary": "Not re-run today (Monday lane). Last measurement 17 Aug: CC-002 open 68d vs 7d threshold; today would read 71d."
+      "summary": "Re-run on the close-all pass: CC-002 open 71d vs 7d threshold. FAIL."
     },
     "DW-011": {
       "first_seen": "2026-08-03",
@@ -220,7 +220,7 @@
       "source": "deploy post-mortem (silent no-op ship)",
       "status": "OPEN",
       "note": "did not recur 2026-08-08 and 2026-08-09; class fix still open",
-      "summary": "Lock class recurred: live .git/HEAD.lock at 04:38Z during the concurrent attended session; sandbox self-heal renamed stale_locks/HEAD.lock.20260820T043826Z. Never stranded, RG-0015 green. Legacy asides + RG-0015 index.lock-only wording persist."
+      "summary": "Re-checked on the close-all pass and does NOT pass: live .git/HEAD.lock present plus 10 stale asides at .git top level; RG-0015 (ledger:780) still names index.lock ONLY."
     },
     "DW-028": {
       "last_seen": "2026-08-20",
@@ -300,7 +300,7 @@
       "sev": "LOW",
       "source": "Monday deep static scan",
       "status": "OPEN",
-      "summary": "Not re-run today (Monday lane). Last run 17 Aug: 181 findings, 4 NEW LOW ruff B007, 0 crash-class, 4/4 tools."
+      "summary": "RE-RUN out of the Monday lane on the close-all pass: 184 findings, 2 NEW (ruff F401 bea_main.py:12591 unused RedirectResponse; ruff B905 migrations/025_gate_nolock.py:128 zip without strict=), 0 crash-class, 4/4 tools. FAIL."
     },
     "DW-036": {
       "first_seen": "2026-08-11",
@@ -484,9 +484,12 @@
       "last_seen": "2026-08-20",
       "sev": "LOW",
       "source": "run_daily_checks deploy_drift",
-      "status": "OPEN",
+      "status": "CLOSED",
       "summary": "NEW - DEPLOY DRIFT: 1 file local-ahead of live: bea_main.py (tracked 19, never_deployed [], missing_local []). The ahead content is commit 9f021af SUPER-IMMORTAL-2 plus migration 027 - the fix for DW-056 is committed but not on the box.",
-      "next_action": "Attended: commit the doc tree, then /ship (or /TSL); note 027 will not apply until DW-051 is unstuck."
+      "next_action": "Attended: commit the doc tree, then /ship (or /TSL); note 027 will not apply until DW-051 is unstuck.",
+      "closed": "2026-08-20",
+      "evidence": "run_daily_checks deploy_drift: \"clean - all 19 tracked files match live\" after release 0109c21 (06:42:53) carrying 9f021af + b11298c.",
+      "disposition": "CLOSED 2026-08-20 same morning. RESIDUAL: shipping the code did NOT clear the symptom - Pretoria collectors/services still answer [] because the faded rows need migrations/027 and the chain is stalled at 022 (DW-056 + DW-051)."
     },
     "DW-056": {
       "first_seen": "2026-08-20",
@@ -494,10 +497,17 @@
       "sev": "HIGH",
       "source": "regression ledger RG-0123 + live probe",
       "status": "OPEN",
-      "summary": "NEW and BUYER-VISIBLE - the 19 Aug 20:17 release restart let the lifecycle sweep fade all eight seeded ZA supers (265,266,267,268,269,270,271,272) because RUL-026 keyed the exemption on showcase while every seeded super carries super_example=1 with showcase NULL. Verified live: GET /listings?city=Pretoria&category=collectors -> [] and &category=services -> [] - those tiles read 0 listings to every buyer. Source fix committed (9f021af) and heal is migrations/027_super_immortal.py; NEITHER is live (DW-055 + DW-051).",
+      "summary": "NEW and BUYER-VISIBLE - the 19 Aug 20:17 release restart let the lifecycle sweep fade all eight seeded ZA supers (265,266,267,268,269,270,271,272) because RUL-026 keyed the exemption on showcase while every seeded super carries super_example=1 with showcase NULL. Verified live: GET /listings?city=Pretoria&category=collectors -> [] and &category=services -> [] - those tiles read 0 listings to every buyer. Source fix committed (9f021af) and heal is migrations/027_super_immortal.py; NEITHER is live (DW-055 + DW-051). UPDATE 06:42: release 0109c21 shipped the source fix (drift now clean) and the shelves STILL answer [] - confirming the heal migration 027 is the missing half.",
       "next_action": "Attended, first thing: ship 9f021af, unstick the migration chain (DW-051) so 027 runs, confirm the Pretoria collectors and services shelves answer non-empty, then promote RG-0123 to LOCKED."
     }
   },
   "last_run": "2026-08-20",
-  "last_verdict": "AMBER"
+  "last_verdict": "AMBER",
+  "recheck_pass_2026_08_20": {
+    "requested_by": "David: close all open actions",
+    "items_rechecked": 15,
+    "closed": 0,
+    "reason": "no originating check passed; every remaining row needs a write this observe-only task is barred from making, or a decision that is David's",
+    "highest_leverage_unlock": "DW-051 (stalled migration chain) - clearing it runs 027 and closes DW-056 with it"
+  }
 }
