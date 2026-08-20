@@ -4006,7 +4006,9 @@ def rg_failover_consults_baseline():
 # session (0080, 0082, 0083 each taken between this session's planning and its write). The
 # register is append-only and never renumbered, so the gap is harmless; racing is not.
 @entry("RG-0090", "PARKED by RUL-029 -- the document is public by design; this becomes live again the moment the gate is re-armed",
-       OPEN, scope="the index document at / (and any gated HTML the edge caches). The DATA side "
+       LOCKED, fixed_on="2026-08-20 (promoted: READY TO LOCK -- passes while the gate is down; "
+                        "re-arming the gate re-activates the edge-cache assertion, which is the point)",
+       scope="the index document at / (and any gated HTML the edge caches). The DATA side "
                    "already holds: /wonders and /listings answer 401 anonymously -- this entry is "
                    "about the HTML shell alone",
        ref="Found 15 Aug 2026 during the GATE-EMAIL-1 /tsl verify: anonymous GET / answered 200 "
@@ -5363,7 +5365,9 @@ def rg_envkey_not_bare_getenv():
 
 
 @entry("RG-0120", "A seller controls photo ORDER and the COVER -- and an edit-screen save reaches the buyer view",
-       OPEN, scope="the whole listing-photo order lane: ms.js edit screen (elMakeCover/elMovePhoto/"
+       LOCKED, fixed_on="2026-08-20 (promoted: READY TO LOCK -- cover/order controls proven in repo "
+                        "AND live, and PUT /listings/{id} rewrites the buyer-facing [photos:...] prefix)",
+       scope="the whole listing-photo order lane: ms.js edit screen (elMakeCover/elMovePhoto/"
        "reset-per-open/prefix fallback) AND bea_main.py PUT /listings/{id} PHOTO-ORDER-1 prefix "
        "rewrite. Class, not instance: ANY photo edit (reorder, remove, add, replace) must land in "
        "BOTH stores -- photo_urls and the [photos:...] description prefix buyers actually read",
