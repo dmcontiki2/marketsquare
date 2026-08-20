@@ -31,12 +31,14 @@ Drop the reviewer code for testers entirely: allow-list their 4 IPs at Cloudflar
 the site — nothing to type. Origin firewall (RG-0028) still blocks everyone else. Closest thing to
 "no password, just works." Auditor-accepted as short-term containment.
 
-## State right now
-- Marketplace gated (public blocked, testers/you in with the code) — WORKING (server-proven).
-- Admin/dashboard exempt — WORKING.
-- Cloudflare WAF still CLOSED (only David's IP reaches the site). Testers NOT yet let in.
-  Last step before testers can reach it: open/relax the WAF — do this only after David confirms
-  his own browser login works cleanly.
+## State right now (updated 19 Aug 2026 — WAF-OPEN-1, RUL-034)
+- Cloudflare edge OPEN: the "PRELAUNCH GATE - block all except allowlisted IPs" custom rule is
+  DISABLED (kept in the CF dash as break-glass — re-enabling blocks ALL testers). Every visitor
+  now reaches the ORIGIN gate; the email-link flow above is live and server-proven (link mail
+  delivered to David's inbox in 1s, 19 Aug).
+- Marketplace gated at the ORIGIN (GATE-ENFORCE-1 + GATE-EMAIL-1 allow-list) — the designed guard.
+- Admin/dashboard exempt — WORKING (password door, RUL-015).
+- Earlier note "WAF still CLOSED / testers NOT yet let in" is SUPERSEDED by this.
 
 ## 4. SSH to the server (you) - and the lockout that looks like a dead box
 

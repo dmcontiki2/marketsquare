@@ -1,3 +1,87 @@
+## 2026-08-20 — SUPER-IMMORTAL-2: the supers faded overnight because the exemption watched the wrong flag
+
+David, first thing: *"Claude we lost a lot of adverts? Why"* — the Collectors and Services tiles
+read **0 listings**. He was right, and he was right again when he asked whether it was the
+fade-out design. It was.
+
+**What happened.** The 19 Aug 20:17 release restarted the service. `_lifecycle_daily_loop` fires
+its first sweep **two minutes after boot** — so a deploy is a sweep trigger — and at **18:21Z**
+it flipped all eight ZA supers to `faded`: 265 Cars, 266 Tutors, 267/268 Services, 269
+Collectors, 270/271 Adventures, 272 Local Market. All were seeded 20 Jul, which had just crossed
+the free-tier 30-day window. Collectors, Services and Local Market fell to zero because the super
+**was** the whole shelf; Property/Cars/Tutors/Adventures survived only because their supers were
+re-seeded 25 Jul–17 Aug and have not aged in yet.
+
+**Why RUL-026 did not save them.** SHOWCASE-IMMORTAL-1 (18 Aug) exempted `showcase = 1`. Every
+seeded super carries `super_example = 1` with **`showcase` NULL** — and the candidate query said
+`AND (l.showcase = 0 OR l.showcase IS NULL)`, so the exemption did not merely miss them, it
+*positively selected* them. Migration 024 heals on the same wrong key, so it would not have
+brought them back either. The guard, the heal and the ledger entry all agreed with each other
+and were wrong together.
+
+**Class fix (source, rides the next deploy).**
+
+- `_lifecycle_sweep`: candidate query **and** archive step now exempt
+  `COALESCE(super_example,0) != 1` as well as `COALESCE(showcase,0) != 1`.
+- Both delete guards (`DELETE /listings/{id}` and the seller-email path) now treat
+  `super_example` as admin-managed too — the showcase-only guard had left every seeded super
+  deletable with the app key that ships publicly in `ms.js`.
+- `migrations/027_super_immortal.py` revives any faded/archived super or showcase listing,
+  clears stale fade stamps, and **verifies zero left hidden** before returning 0.
+
+**Ledger.** RG-0123 added (OPEN — its live half names all eight faded ids and every dark shelf;
+flips READY TO LOCK the moment 027 lands). RG-0106's assertion **corrected, not weakened**: it
+pinned two literal SQL strings, which is why it sat green through a fault it was written to
+catch, then went red when the SQL was strengthened. It now asserts the property.
+
+Also cleared while here: the funnel snapshot regression (card `2026-08-19.1` vs snapshot
+`2026-08-01.1`) — regenerated, so the deploy gate is not held by an unrelated red.
+
+**Standing lesson.** A restart is a sweep trigger. Any lifecycle guard has to be correct in
+SOURCE before a deploy, because the deploy itself is what runs the machinery.
+
+## 2026-08-19 — WAF PRELAUNCH GATE disabled: testers can finally reach the email-link gate (WAF-OPEN-1)
+
+**Fault:** Marietjie (allow-listed tester) got Cloudflare's "Sorry, you have been blocked" page
+on trustsquare.co — server journal showed ZERO requests from her in 5+ days. Root cause: the
+Cloudflare custom rule "PRELAUNCH GATE - block all except allowlisted IPs" (post-breach
+lockdown, 4 Aug) was still ACTIVE — only David's three 197.185.x.x IPs reached the origin.
+GATE-EMAIL-1 (15 Aug) built the tester email-link gate, but the edge was never reopened, so no
+tester could ever see it. The 15 Aug changelog even said "Testers: next visit, type your
+email" — impossible while the edge rule stood.
+
+**Fix (David's ruling, 19 Aug, on the phone with Marietjie):** rule set to DISABLED (not
+deleted — one click re-enables) in the CF dashboard. The ORIGIN gate (GATE-ENFORCE-1 +
+GATE-EMAIL-1 allow-list) is now the pre-launch guard, as designed.
+
+**Verified end-to-end:** (1) root fetch from a non-allowlisted IP: 403 -> 200 the moment the
+rule saved; (2) POST /review/request-link for dmcontiki2@gmail.com -> Resend 200 ->
+"Your TrustSquare access code" landed in Gmail 1 second later. Confirmation email then sent
+to Marietjie (Afrikaans) — only after the proof, per David's explicit condition.
+
+**Watch items surfaced (not fixed this session):**
+- Anonymous GET /listings and /flags answer 200 — RESOLVED as intended: RUL-029 (19 Aug,
+  earlier session) took the ORIGIN gate down by ruling; ledger RG-0029/RG-0115 assert the
+  gate-down state. With the CF edge rule now also disabled, the site is effectively PUBLIC
+  ahead of the 29 Aug soft launch — WAF-OPEN-1 completed what RUL-029 started.
+- Ledger run (live-only, executed on the server from /tmp): 6 reds, ALL run-context artifacts
+  — 5 x "repo file unreadable" (run outside the repo hard-fails instead of skipping: RG-0070/
+  0071/0074/0078/0079) and RG-0028 "origin accepted direct connection" (the server connecting
+  to itself; verified from OUTSIDE: 80/443 both refused, firewall intact). No real regressions;
+  nothing WAF-OPEN-1 touched went red. Wart worth noting: those 5 entries should demote to
+  "skipped" outside the repo like their siblings do. Sandbox in-repo run hung >20 min on the
+  proxy and was killed — rerun in-repo next session for the LOCK promotions (RG-0075, RG-0120
+  both print READY TO LOCK).
+- Resend probe 422s every ~5 min in the journal (services-status mail probe) + recurring
+  ERROR RESEND-FROM-1 "malformed sender 'TrustSquare'" — real sends succeed via fallback,
+  but the env var RESEND_FROM (or equivalent) needs the full "Name <addr>" form. Noise now,
+  outage-mask later.
+
+**Tester grant (David's instruction, same session):** Marietjie credited 500 Tuppence to test
+freely — transactions row id 199, type `tester_grant` (deliberately NOT `topup`, so revenue
+metrics stay clean, and NOT `monthly_allocation`, so the non-rolling grant sweep never expires
+it). DB backup first: .db-backups/marketsquare-pre-tester-grant-20260819.db. Balance verified 500.
+
 ## 2026-08-19 — PHOTO-REJECT-1 (RUL-033): reject-only bridge until the Gemini canary arms (~25 Aug)
 
 David: reject any photo that needs blurring — "this photo is not anonymous, please replace it or leave it out" — no blur attempts until funds for the Gemini key land on the 25th. Wired on BOTH doors: the seller gate raises 422 with the labels named ("This photo is not anonymous — it shows: number plate. Please replace it or leave it out…"); the agency import holds the photo (`held:not-anonymous`). No upload path can reach `_anon_blur_until_clean` while the bridge is up (RG-0122 guards this as a class).

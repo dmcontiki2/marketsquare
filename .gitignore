@@ -150,3 +150,6 @@ add_openai_key.bat
 # predeploy_check scratch flags — diagnostic output, never repo content (5 Aug 2026)
 DEPLOY_REVIEW_*.flag
 .lintenv/
+
+.ledger_state.json
+.ledger_state.json.*

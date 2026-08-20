@@ -71,6 +71,15 @@ REFLECTIONS = {
                                      "rg_gate_admin_never_locked"], []),
    ("RULINGS.md", ["NOBODY ENTITLED TO ENTER MAY BE LOCKED OUT BY THEIR DEVICE"], []),
  ],
+ "RUL-034": [
+   # WAF-OPEN-1: the CF edge rule is DISABLED; the ORIGIN gate is the pre-launch guard.
+   # Superseded wording must be GONE, or a next session re-learns "testers not yet let in".
+   ("ACCESS_CHEATSHEET.md", ["WAF-OPEN-1", "Cloudflare edge OPEN"],
+    ["Testers NOT yet let in"]),
+   ("RULINGS.md", ["Edge gate DOWN for all visitors"], []),
+   ("CHANGELOG.md", ["WAF-OPEN-1"], []),
+   ("STATUS.md", ["Edge OPEN for testers"], []),
+ ],
  "RUL-033": [
    ("bea_main.py", ["def _anon_reject_only", "PHOTO-REJECT-1"], []),
    ("scripts/regression_ledger.py", ["RG-0122", "rg_photo_reject_only"], []),
