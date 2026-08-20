@@ -4606,16 +4606,30 @@ def rg_pinspread_guard():
        ref="RUL-026, 18 Aug 2026: David -- 'the super demos should stay live and only be "
            "deleted by admin users'. Fault: supers were born as real listings (showcase=1, "
            "is_demo=0), so FADE-1 treated them as user listings and fade warnings reached "
-           "the house accounts.")
+           "the house accounts. ASSERTION CORRECTED 20 Aug 2026: it pinned literal SQL, so "
+           "it could never see that the exemption had NEVER covered the seeded supers -- see "
+           "RG-0123 (SUPER-IMMORTAL-2), which owns the super_example half of this class.")
 def rg_showcase_immortal():
+    # ASSERTION CORRECTED 20 Aug 2026 (SUPER-IMMORTAL-2), not weakened. This entry used to
+    # pin two literal SQL strings -- the comment "RUL-026: showcase supers never fade" and
+    # "AND (showcase = 0 OR showcase IS NULL)". Pinning the WORDING meant the entry stayed
+    # green while the property it names was false for every seeded super (super_example=1,
+    # showcase NULL -- which `showcase IS NULL` positively INCLUDED as a fade candidate),
+    # and then went red when the predicate was strengthened to COALESCE(...) != 1. It now
+    # asserts the PROPERTY: whatever the SQL says, both the candidate query and the archive
+    # step must exclude showcase listings. The super_example half is RG-0123's.
     out = []
     bea = repo_file("bea_main.py")
     if bea is not None:
-        if "RUL-026: showcase supers never fade" not in bea:
-            out.append((FAIL, "bea_main.py lost the sweep's showcase exemption"))
+        sweep = bea.split("def _lifecycle_sweep", 1)[-1].split("\n@app.", 1)[0]
+        cands = sweep.split("for c in cands", 1)[0]
+        if "showcase" not in cands:
+            out.append((FAIL, "bea_main.py lost the sweep's showcase exemption -- a showcase "
+                              "listing is a fade candidate again"))
         if bea.count("Showcase adverts are admin-managed.") < 2:
             out.append((FAIL, "a delete endpoint lost its showcase admin guard"))
-        if "AND (showcase = 0 OR showcase IS NULL)" not in bea:
+        arch = sweep.split("FADE: archive after", 1)[-1].split('res["fade_archived"]', 1)[0]
+        if "showcase" not in arch:
             out.append((FAIL, "the archive step lost its showcase exclusion"))
     mig = repo_file("migrations/024_showcase_immortal.py")
     if mig is None:
@@ -5591,6 +5605,100 @@ def rg_photo_reject_only():
     if not out:
         out.append((INFO, "both doors reject/hold on redact while the canary is dark; "
                           "copy names the ask"))
+    return out
+
+
+@entry("RG-0123", "A SUPER advert is immortal -- the fade sweep can never hide the measuring stick, "
+       "and no shelf goes dark because the exemption watched the wrong flag",
+       OPEN, scope="ALL categories, ALL markets. Class property: the lifecycle sweep's protected "
+       "set is keyed on what the listing IS (super_example) as well as the banner flag "
+       "(showcase). RUL-026 keyed it on showcase alone; every seeded super carries "
+       "super_example=1 with showcase NULL, so `showcase IS NULL` INCLUDED them as fade "
+       "candidates -- the exemption read as its own opposite. Both halves asserted: the "
+       "SOURCE predicate (sweep candidates + archive step + both delete guards) and the LIVE "
+       "state (no super faded/archived, and every seeded shelf still answers).",
+       fixed_on="",
+       ref="SUPER-IMMORTAL-2 (20 Aug 2026, David: 'we lost a lot of adverts? Why'). The 19 Aug "
+           "20:17 release restarted the service; _lifecycle_daily_loop fires 2 minutes after "
+           "boot, and at 18:21Z it faded all eight ZA supers (265-272: Cars, Tutors, Services "
+           "x2, Collectors, Adventures x2, Local Market) whose 20 Jul seed date had just "
+           "crossed the free-tier 30-day window. Collectors and Services fell to '0 listings' "
+           "on the home tiles because the super WAS the whole shelf. Two lessons kept here: "
+           "(1) a restart is a sweep trigger, so any deploy can fire lifecycle machinery -- "
+           "the guard must be right in SOURCE, not just healed by a migration; (2) 024's heal "
+           "and RUL-026's guard both keyed on `showcase`, so the fix and its ledger entry "
+           "agreed with each other and were wrong together. 027_super_immortal.py heals the "
+           "data on the next deploy; this entry flips READY TO LOCK the moment it lands.")
+def rg_supers_immortal():
+    out = []
+
+    # ── SOURCE half: the protected predicate must name super_example ──
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        out.append((INFO, "running outside the repo -- source half skipped"))
+    else:
+        sweep = bea.split("def _lifecycle_sweep", 1)[-1].split("\n@app.", 1)[0]
+        cands = sweep.split("for c in cands", 1)[0]
+        if "super_example" not in cands:
+            out.append((FAIL, "the fade CANDIDATE query does not exempt super_example -- "
+                              "a seeded super (showcase NULL) is a fade candidate again"))
+        arch = sweep.split("FADE: archive after", 1)[-1]
+        if "super_example" not in arch.split("res[\"fade_archived\"]", 1)[0]:
+            out.append((FAIL, "the fade->archive step does not exempt super_example -- "
+                              "a faded super is archived for good after the grace window"))
+        dele = bea.split("def delete_listing(", 1)[-1].split("\n@app.", 1)[0]
+        if "super_example" not in dele:
+            out.append((FAIL, "the keyed DELETE guard checks showcase only -- the public "
+                              "app key in ms.js can delete a super"))
+        sdel = bea.split("def delete_listing_by_seller", 1)[-1].split("\n@app.", 1)[0]
+        if "super_example" not in sdel:
+            out.append((FAIL, "the seller-email DELETE guard checks showcase only -- a "
+                              "super is deletable by anyone who knows its seller address"))
+        if repo_file("migrations/027_super_immortal.py") is None:
+            out.append((FAIL, "migrations/027_super_immortal.py is gone -- nothing heals a "
+                              "super that already faded"))
+
+    # ── LIVE half: no super may be out of sight, and no shelf may be dark ──
+    SUPER_IDS = (265, 266, 267, 268, 269, 270, 271, 272)
+    hidden = []
+    for lid in SUPER_IDS:
+        try:
+            row = _json("/listings/%d" % lid)
+        except Exception as e:
+            out.append((INFO, "live probe of listing %d failed (%s) -- state unverified"
+                              % (lid, str(e)[:60])))
+            continue
+        st = (row.get("listing_status") or "live").lower()
+        if not row.get("super_example"):
+            out.append((INFO, "listing %d is no longer flagged super_example -- if the seed "
+                              "set moved, repoint SUPER_IDS rather than weakening this" % lid))
+            continue
+        if st in ("faded", "archived"):
+            hidden.append("%d %s=%s" % (lid, row.get("category"), st))
+    if hidden:
+        out.append((FAIL, "super advert(s) hidden by the lifecycle sweep: " + ", ".join(hidden)
+                          + " -- run migrations/027_super_immortal.py (rides the next deploy)"))
+
+    # The property David sees: a seeded category never reads "0 listings" at home.
+    try:
+        feed = _json("/listings?city=Pretoria")
+        rows = feed.get("listings", feed) if isinstance(feed, dict) else feed
+        cats = set()
+        for l in rows:
+            c = str(l.get("category") or "").lower()
+            cats.add("adventures" if c.startswith("adventures") else c)
+        for want in ("collectors", "services", "cars", "tutors", "property",
+                     "adventures", "local_market"):
+            if want not in cats:
+                out.append((FAIL, "the %s shelf is EMPTY in Pretoria -- the category tile "
+                                  "reads '0 listings' to every buyer" % want))
+    except Exception as e:
+        out.append((INFO, "live /listings probe failed (%s) -- shelf check unverified"
+                          % str(e)[:60]))
+
+    if not out:
+        out.append((INFO, "all eight supers live; every seeded shelf answers; the sweep, the "
+                          "archive step and both delete guards exempt super_example"))
     return out
 
 

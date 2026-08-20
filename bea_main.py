@@ -3625,10 +3625,14 @@ def delete_listing(listing_id: int, _key: str = Depends(auth.require_api_key),
                    x_admin_token: str = Header(default=None),
                    x_admin_key: str = Header(default=None)):
     conn = database.get_db()
-    _row = conn.execute("SELECT showcase FROM listings WHERE id = ?", (listing_id,)).fetchone()
-    if _row and _row["showcase"]:
+    _row = conn.execute("SELECT showcase, super_example FROM listings WHERE id = ?",
+                        (listing_id,)).fetchone()
+    if _row and (_row["showcase"] or _row["super_example"]):
         # RUL-026 (18 Aug 2026): showcase supers are admin-managed — the app key
         # alone (public in ms.js) must never delete one.
+        # SUPER-IMMORTAL-2 (20 Aug 2026): super_example counts too — the seeded
+        # supers carry super_example=1 with showcase NULL, so the showcase-only
+        # guard left every one of them deletable with the public app key.
         try:
             _require_admin_or_key(x_admin_token, x_admin_key)
         except HTTPException:
@@ -3646,7 +3650,8 @@ def delete_listing_by_seller(listing_id: int, email: str):
     seller_email on the listing. Used by buyer-facing edit screen."""
     conn = database.get_db()
     row = conn.execute(
-        "SELECT seller_email, showcase FROM listings WHERE id = ?", (listing_id,)
+        "SELECT seller_email, showcase, super_example FROM listings WHERE id = ?",
+        (listing_id,)
     ).fetchone()
     if not row:
         conn.close()
@@ -3654,7 +3659,7 @@ def delete_listing_by_seller(listing_id: int, email: str):
     if (row["seller_email"] or "").lower() != email.lower():
         conn.close()
         raise HTTPException(status_code=403, detail="Email does not match listing owner")
-    if row["showcase"]:
+    if row["showcase"] or row["super_example"]:   # SUPER-IMMORTAL-2
         conn.close()
         raise HTTPException(status_code=403, detail="Showcase adverts are admin-managed.")
     conn.execute("DELETE FROM listings WHERE id = ?", (listing_id,))
@@ -18631,7 +18636,13 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
                LEFT JOIN users u ON LOWER(u.email) = LOWER(l.seller_email)
                WHERE l.listing_status IN ('live','paused')
                  AND (l.is_demo = 0 OR l.is_demo IS NULL)
-                 AND (l.showcase = 0 OR l.showcase IS NULL)  -- RUL-026: showcase supers never fade
+                 -- SUPER-IMMORTAL-2 (20 Aug 2026): RUL-026 keyed the exemption on
+                 -- `showcase`, but the seeded supers carry super_example=1 with
+                 -- showcase NULL -- so `showcase IS NULL` INCLUDED them and the
+                 -- 19 Aug 20:17 release restart faded all eight ZA supers at 18:21Z.
+                 -- The exemption is the SUPER, not the banner flag. Both now exempt.
+                 AND COALESCE(l.showcase, 0) != 1
+                 AND COALESCE(l.super_example, 0) != 1
                  AND l.seller_email IS NOT NULL AND l.seller_email != ''"""
         ).fetchall()
         for c in cands:
@@ -18673,7 +18684,8 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
         # ── FADE: archive after the 14-day grace ──
         cutoff = (now - timedelta(days=_FADE_GRACE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
         rows = conn.execute("SELECT id FROM listings WHERE listing_status='faded' "
-                            "AND (showcase = 0 OR showcase IS NULL) "
+                            "AND COALESCE(showcase, 0) != 1 "
+                            "AND COALESCE(super_example, 0) != 1 "   # SUPER-IMMORTAL-2
                             "AND status_changed_at IS NOT NULL AND status_changed_at <= ?",
                             (cutoff,)).fetchall()
         for r in rows:
