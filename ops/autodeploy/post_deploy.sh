@@ -18,6 +18,7 @@ set -u
 SRC="${MS_SRC:-/opt/marketsquare-src}"
 LIVE="${MS_LIVE:-/var/www/marketsquare}"
 TS="$(date -u '+%Y%m%d-%H%M%S')"
+
 say() { echo "[post_deploy] $*"; }
 
 # ── POSTDEPLOY-EYES-1 (20 Aug 2026) ──────────────────────────────────────────
@@ -40,10 +41,40 @@ write_status() {
 }
 trap write_status EXIT
 
+# ── MIGRATE-ENV-1 (20 Aug 2026, DW-051/RG-0125) ──────────────────────────────
+# The chain sat jammed at 023 for two days with "REFUSE: cannot import main". The
+# post-mortem found TWO faults, and fixing either alone still leaves it jammed:
+#   1. ENV — migrations were run with a bare environment, but main.py refuses to
+#      import without MS_API_KEY, which the unit carries as an inline systemd
+#      Environment= (not in secrets.env, so sourcing that file is not enough).
+#   2. INTERPRETER — we ran the system `python3`, while the service runs
+#      $LIVE/venv/bin/uvicorn. The venv has python-multipart; system python does
+#      not, so `import main` dies on FastAPI form data even WITH the env loaded.
+# Class property, not an instance fix: any script that imports the app must run in
+# the SAME interpreter and the SAME environment as the app it is importing. Applies
+# to the seeds below and every future migration, not just 023.
+MS_PY="$LIVE/venv/bin/python3"
+[ -x "$MS_PY" ] || MS_PY="$(command -v python3)"
+say "env: interpreter $MS_PY"
+if command -v systemctl >/dev/null 2>&1; then
+    # parse the unit's inline Environment= into exports; never echo the values
+    _envexp="$(systemctl show marketsquare -p Environment --value 2>/dev/null \
+               | tr ' ' '\n' \
+               | sed -n 's/^\([A-Z_][A-Z0-9_]*\)=\(.*\)$/export \1="\2"/p')"
+    [ -n "$_envexp" ] && eval "$_envexp" && say "env: service environment loaded ($(printf '%s' "$_envexp" | grep -c '^export ') vars)"
+    unset _envexp
+fi
+[ -r /etc/marketsquare/secrets.env ] && { set -a; . /etc/marketsquare/secrets.env; set +a; say "env: secrets.env loaded"; }
+if [ -z "${MS_API_KEY:-}" ]; then
+    say "env: WARNING - MS_API_KEY still unset; every migration that imports the app WILL refuse"
+    step env failed "MS_API_KEY unset - migrations importing the app will refuse (MIGRATE-ENV-1)"
+fi
+
+
 # ── 1. Idempotent super-listing seed (same contract as the old bat step 3g) ──
 if [ -f "$LIVE/seed_super_global.py" ]; then
     say "seed: running seed_super_global.py --apply (idempotent)"
-    if (cd "$LIVE" && python3 seed_super_global.py --apply); then
+    if (cd "$LIVE" && "$MS_PY" seed_super_global.py --apply); then
         say "seed: ok"; step seed ok
     else
         say "seed: FAILED (rc=$?) — run it by hand: cd $LIVE && python3 seed_super_global.py --apply"; step seed failed "run by hand: cd $LIVE && python3 seed_super_global.py --apply"
@@ -58,7 +89,7 @@ fi
 # (media_push.bat carries those) — so it silently no-ops until media lands.
 if [ -f "$LIVE/seed_super_ladder_global.py" ]; then
     say "ladder-seed: running seed_super_ladder_global.py --apply (idempotent)"
-    if (cd "$LIVE" && python3 seed_super_ladder_global.py --apply); then
+    if (cd "$LIVE" && "$MS_PY" seed_super_ladder_global.py --apply); then
         say "ladder-seed: ok"; step ladder_seed ok
     else
         say "ladder-seed: FAILED (rc=$?) — run by hand: cd $LIVE && python3 seed_super_ladder_global.py --apply"
@@ -110,7 +141,7 @@ else
         # WHICH migration jammed but not WHY, and the why still needed SSH -- half an eye is
         # still a blind spot. tee keeps the deploy log byte-identical to before.
         MOUT="$(mktemp)"
-        if (cd "$LIVE" && python3 "$m" --apply) 2>&1 | tee "$MOUT"; [ "${PIPESTATUS[0]}" -eq 0 ]; then
+        if (cd "$LIVE" && "$MS_PY" "$m" --apply) 2>&1 | tee "$MOUT"; [ "${PIPESTATUS[0]}" -eq 0 ]; then
             echo "$base" >> "$DONE_FILE"
             say "migrations: $base ok (recorded)"; step "migration:$base" ok "$(tail -n 1 "$MOUT" | tr -d '"' | cut -c1-200)"
         else
