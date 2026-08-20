@@ -20,16 +20,36 @@ LIVE="${MS_LIVE:-/var/www/marketsquare}"
 TS="$(date -u '+%Y%m%d-%H%M%S')"
 say() { echo "[post_deploy] $*"; }
 
+# ── POSTDEPLOY-EYES-1 (20 Aug 2026) ──────────────────────────────────────────
+# Every step's outcome, written where ANY session can read it over plain HTTP.
+# Born from a blind morning: the supers stayed hidden after a deploy and nothing
+# outside the server's journal could say whether the seed ran, whether a migration
+# had jammed the chain, or which one. A step nobody can observe is a step that
+# fails silently -- exactly the class the regression ledger exists to end.
+STATUS_JSON="$LIVE/static/post_deploy_status.json"
+STEPS=""
+step() {  # step <name> <ok|failed|skipped|deferred> [detail]
+    local d="${3:-}"; d="${d//\"/\'}"
+    STEPS="${STEPS:+$STEPS,}{\"step\":\"$1\",\"result\":\"$2\",\"detail\":\"$d\"}"
+}
+write_status() {
+    mkdir -p "$(dirname "$STATUS_JSON")" 2>/dev/null || true
+    printf '{"generated_at":"%s","ref":"%s","steps":[%s]}\n' \
+        "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "${MS_DEPLOY_REF:-deploy}" "$STEPS" \
+        > "$STATUS_JSON" 2>/dev/null || say "status: could not write $STATUS_JSON"
+}
+trap write_status EXIT
+
 # ── 1. Idempotent super-listing seed (same contract as the old bat step 3g) ──
 if [ -f "$LIVE/seed_super_global.py" ]; then
     say "seed: running seed_super_global.py --apply (idempotent)"
     if (cd "$LIVE" && python3 seed_super_global.py --apply); then
-        say "seed: ok"
+        say "seed: ok"; step seed ok
     else
-        say "seed: FAILED (rc=$?) — run it by hand: cd $LIVE && python3 seed_super_global.py --apply"
+        say "seed: FAILED (rc=$?) — run it by hand: cd $LIVE && python3 seed_super_global.py --apply"; step seed failed "run by hand: cd $LIVE && python3 seed_super_global.py --apply"
     fi
 else
-    say "seed: seed_super_global.py not on the box (manifest ships it) — skipped"
+    say "seed: seed_super_global.py not on the box (manifest ships it) — skipped"; step seed skipped "not on the box"
 fi
 
 # ── 1b. Idempotent 3-tier LADDER seed (SUPER-AFRICA-1, 12 Aug 2026) ──────────
@@ -39,7 +59,7 @@ fi
 if [ -f "$LIVE/seed_super_ladder_global.py" ]; then
     say "ladder-seed: running seed_super_ladder_global.py --apply (idempotent)"
     if (cd "$LIVE" && python3 seed_super_ladder_global.py --apply); then
-        say "ladder-seed: ok"
+        say "ladder-seed: ok"; step ladder_seed ok
     else
         say "ladder-seed: FAILED (rc=$?) — run by hand: cd $LIVE && python3 seed_super_ladder_global.py --apply"
     fi
@@ -76,7 +96,7 @@ for m in "$SRC"/migrations/*.py; do
 done
 
 if [ "${#pending[@]}" -eq 0 ]; then
-    say "migrations: none pending"
+    say "migrations: none pending"; step migrations ok "none pending"
 else
     # snapshot the live DBs once, before the first pending migration
     BK="$LIVE/.db-backups/$TS"
@@ -88,9 +108,10 @@ else
         say "migrations: running $base"
         if (cd "$LIVE" && python3 "$m" --apply); then
             echo "$base" >> "$DONE_FILE"
-            say "migrations: $base ok (recorded)"
+            say "migrations: $base ok (recorded)"; step "migration:$base" ok
         else
             say "migrations: $base FAILED (rc=$?) — NOT recorded; later migrations skipped this run."
+            step "migration:$base" failed "CHAIN JAMMED HERE -- every later migration was skipped this run"
             say "migrations: restore if needed: cp $BK/<file>.db $LIVE/  then systemctl restart marketsquare"
             break
         fi

@@ -5661,6 +5661,16 @@ def rg_supers_immortal():
         if repo_file("migrations/027_super_immortal.py") is None:
             out.append((FAIL, "migrations/027_super_immortal.py is gone -- nothing heals a "
                               "super that already faded"))
+        # SUPER-HEAL-1: the every-deploy lane must heal STATE, not just absence. The one-shot
+        # migration is the belt; this is the braces, and it is the half that cannot jam.
+        seed = repo_file("scripts/seed_super_global.py")
+        if seed is None:
+            out.append((FAIL, "scripts/seed_super_global.py is gone -- the every-deploy "
+                              "self-heal lane for the supers no longer exists"))
+        elif "heal_hidden_supers" not in seed or "hidden_supers" not in seed:
+            out.append((FAIL, "seed_super_global.py heals ABSENCE only again -- a super that "
+                              "exists but is hidden will survive every future deploy, which "
+                              "is exactly the 19-20 Aug recurrence"))
 
     # ── LIVE half: no super may be out of sight, and no shelf may be dark ──
     SUPER_IDS = (265, 266, 267, 268, 269, 270, 271, 272)
@@ -5688,7 +5698,9 @@ def rg_supers_immortal():
             hidden.append("%d %s=%s" % (lid, row.get("category"), st))
     if hidden:
         out.append((FAIL, "super advert(s) hidden by the lifecycle sweep: " + ", ".join(hidden)
-                          + " -- run migrations/027_super_immortal.py (rides the next deploy)"))
+                          + " -- heal rides the NEXT DEPLOY via seed_super_global.py "
+                            "(SUPER-HEAL-1, every-deploy lane); migration 027 is the belt "
+                            "to that braces"))
     if retired:
         out.append((INFO, "super(s) retired by admin, shelf checked below (RUL-035): "
                           + ", ".join(str(i) for i in retired)))
@@ -5713,6 +5725,68 @@ def rg_supers_immortal():
     if not out:
         out.append((INFO, "all eight supers live; every seeded shelf answers; the sweep, the "
                           "archive step and both delete guards exempt super_example"))
+    return out
+
+
+@entry("RG-0124", "A deploy REPORTS what its post-steps did -- a jammed migration chain names "
+       "itself, over plain HTTP, to anyone who looks",
+       OPEN, scope="ops/autodeploy/post_deploy.sh entire: the seed, the ladder seed and every "
+       "migration in the chain. Class property: no step of a deploy may succeed or fail where "
+       "only the server's journal can see it. The artefact is $LIVE/static/post_deploy_status.json "
+       "-- readable with no credential, so ANY session (or David on his phone) can answer 'did "
+       "the deploy actually do the thing' without SSH.",
+       fixed_on="",
+       ref="POSTDEPLOY-EYES-1 (20 Aug 2026). David deployed to bring the faded supers back and "
+           "they stayed gone; the session then had NO way to tell whether the seed ran, whether "
+           "the migration chain had jammed, or on which migration -- and that blindness, not the "
+           "fault itself, is what turns these into the four-hour mornings. The chain has jammed "
+           "before and silently: 023 blocked 024-026 from 18 Aug for three days. post_deploy.sh "
+           "now records every step's outcome and writes it on EXIT (trap), so even an aborted "
+           "run leaves its story behind.")
+def rg_post_deploy_observable():
+    out = []
+    sh = repo_file("ops/autodeploy/post_deploy.sh")
+    if sh is None:
+        out.append((INFO, "outside the repo -- source half skipped"))
+    else:
+        if "POSTDEPLOY-EYES-1" not in sh or "post_deploy_status.json" not in sh:
+            out.append((FAIL, "post_deploy.sh no longer records its steps -- a deploy can "
+                              "silently do nothing again"))
+        if "trap write_status EXIT" not in sh:
+            out.append((FAIL, "the status file is no longer written on EXIT -- an aborted "
+                              "post-deploy would leave no trace, which is the whole point"))
+        if 'step "migration:$base" failed' not in sh:
+            out.append((FAIL, "a FAILED migration no longer names itself in the status file "
+                              "-- the jam would be invisible again"))
+
+    # LIVE half: the artefact must actually be reachable without a credential.
+    st = _status("/static/post_deploy_status.json")
+    if st == 404:
+        # OPEN, not passing: until the artefact is actually on the box we are still blind,
+        # which is the exact state this entry exists to end. It must not read green early.
+        out.append((FAIL, "no post_deploy_status.json on the box -- still blind to what a "
+                          "deploy's post-steps did; lands with the first deploy carrying "
+                          "POSTDEPLOY-EYES-1, and this flips READY TO LOCK then"))
+    elif st != 200:
+        out.append((FAIL, "post_deploy_status.json is not readable (HTTP %s) -- the eyes are "
+                          "behind a door again" % st))
+    else:
+        try:
+            doc = _json("/static/post_deploy_status.json")
+            bad = [x for x in doc.get("steps", []) if x.get("result") == "failed"]
+            if bad:
+                out.append((FAIL, "last deploy reported failed step(s): "
+                                  + "; ".join("%s (%s)" % (x.get("step"), x.get("detail"))
+                                              for x in bad)))
+            else:
+                out.append((INFO, "last deploy %s: %d step(s), none failed"
+                                  % (doc.get("generated_at"), len(doc.get("steps", [])))))
+        except Exception as e:
+            out.append((FAIL, "post_deploy_status.json is unreadable as JSON (%s)"
+                              % str(e)[:60]))
+
+    if not out:
+        out.append((INFO, "every post-deploy step is recorded and publicly readable"))
     return out
 
 

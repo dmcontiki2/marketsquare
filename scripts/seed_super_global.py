@@ -240,6 +240,50 @@ except Exception:
 RESET_NULL = ["listing_lat","listing_lng","street_address","nearby_pois","boost_until"]
 RESET_ZERO = ["view_count"]
 
+# ── SUPER-HEAL-1 (20 Aug 2026, RUL-035) ──────────────────────────────────────
+# The recurrence this ends: this seed is the every-deploy self-healing step, but it
+# healed ABSENCE only -- "skips any listing whose exact title already exists". A super
+# that EXISTS but has been HIDDEN (listing_status faded/archived) therefore looked
+# perfectly healthy to it, deploy after deploy. On 19 Aug the release restart faded all
+# eight ZA supers and no amount of redeploying brought them back, because the only thing
+# that could heal STATE was a one-shot migration sitting behind a chain that has jammed
+# before (023 blocked 024-026 for three days, 18 Aug). State is now healed HERE, on every
+# deploy, in the lane that cannot jam.
+def hidden_supers(conn, has_cols):
+    """Supers/showcase listings that exist but are out of sight. Never guesses: if the
+    flags are not in the schema yet there is nothing to heal."""
+    flags = [c for c in ("super_example", "showcase") if c in has_cols]
+    if not flags or "listing_status" not in has_cols:
+        return []
+    pred = " OR ".join("COALESCE(%s,0)=1" % c for c in flags)
+    where = "(%s) AND (listing_status IN ('faded','archived')" % pred
+    if "fade_nudge_sent_at" in has_cols:
+        where += " OR fade_nudge_sent_at IS NOT NULL"
+    where += ")"
+    return conn.execute(
+        "SELECT id, category, city, listing_status FROM listings WHERE " + where
+    ).fetchall()
+
+
+def heal_hidden_supers(conn, has_cols):
+    """Bring every hidden super back live and clear stale fade stamps. Idempotent."""
+    rows = hidden_supers(conn, has_cols)
+    if not rows:
+        return []
+    now = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+    sets = ["listing_status = CASE WHEN listing_status IN ('faded','archived') "
+            "THEN 'live' ELSE listing_status END"]
+    if "status_changed_at" in has_cols:
+        sets.append("status_changed_at = CASE WHEN listing_status IN ('faded','archived') "
+                    "THEN ? ELSE status_changed_at END")
+    if "fade_nudge_sent_at" in has_cols:
+        sets.append("fade_nudge_sent_at = NULL")
+    for r in rows:
+        params = ([now] if "status_changed_at" in has_cols else []) + [r["id"]]
+        conn.execute("UPDATE listings SET " + ", ".join(sets) + " WHERE id = ?", params)
+    return rows
+
+
 plan, skips, warns = [], [], []
 for cc, iso2, cname, city, rlabel, rname, lat, lng, cur in COUNTRIES:
     for cat, catkey in CAT_KEY.items():
@@ -326,7 +370,12 @@ if not APPLY:
 col_missing = "country" not in has
 bf_need = 0 if col_missing else backfill_needed(conn)
 ta_need = 0 if col_missing else trust_align_needed(conn)
-if (not col_missing) and (not plan) and bf_need == 0 and ta_need == 0:
+hs_need = hidden_supers(conn, has)          # SUPER-HEAL-1: a hidden super IS work
+if hs_need:
+    print("\nHIDDEN SUPERS: %d exist but are out of sight -- %s"
+          % (len(hs_need), ", ".join("%s/%s=%s" % (r["id"], r["category"], r["listing_status"])
+                                     for r in hs_need)))
+if (not col_missing) and (not plan) and bf_need == 0 and ta_need == 0 and not hs_need:
     print("\n[IN SYNC] country column present, all exemplars exist, country + trust consistent — no changes, no backup.")
     for iso2 in ("ZA","US","GB","AU"):
         n = conn.execute("SELECT COUNT(*) FROM listings WHERE country=?", (iso2,)).fetchone()[0]
@@ -337,6 +386,14 @@ print(f"\n[WORK] country column {'MISSING' if col_missing else 'present'}, "
 
 bak = DB + ".bak-" + datetime.now().strftime("%Y%m%d-%H%M%S") + "-superglobal"
 shutil.copy2(DB, bak); print(f"DB backed up -> {bak}")
+
+# 0) SUPER-HEAL-1: put hidden supers back in sight FIRST -- RUL-035, every deploy
+_healed = heal_hidden_supers(conn, has)
+if _healed:
+    print("  supers healed: %d back live -- %s"
+          % (len(_healed), ", ".join("%s/%s" % (r["id"], r["category"]) for r in _healed)))
+else:
+    print("  supers healed: none hidden")
 
 # 1) ensure the country column exists (this is what surfaces l.country to the frontend)
 added = ensure_country_column(conn)
