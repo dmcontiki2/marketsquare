@@ -5610,14 +5610,14 @@ def rg_photo_reject_only():
 
 @entry("RG-0123", "A SUPER advert is immortal -- the fade sweep can never hide the measuring stick, "
        "and no shelf goes dark because the exemption watched the wrong flag",
-       OPEN, scope="ALL categories, ALL markets. Class property: the lifecycle sweep's protected "
+       LOCKED, fixed_on="2026-08-20",
+       scope="ALL categories, ALL markets. Class property: the lifecycle sweep's protected "
        "set is keyed on what the listing IS (super_example) as well as the banner flag "
        "(showcase). RUL-026 keyed it on showcase alone; every seeded super carries "
        "super_example=1 with showcase NULL, so `showcase IS NULL` INCLUDED them as fade "
        "candidates -- the exemption read as its own opposite. Both halves asserted: the "
        "SOURCE predicate (sweep candidates + archive step + both delete guards) and the LIVE "
        "state (no super faded/archived, and every seeded shelf still answers).",
-       fixed_on="",
        ref="SUPER-IMMORTAL-2 (20 Aug 2026, David: 'we lost a lot of adverts? Why'). The 19 Aug "
            "20:17 release restarted the service; _lifecycle_daily_loop fires 2 minutes after "
            "boot, and at 18:21Z it faded all eight ZA supers (265-272: Cars, Tutors, Services "
@@ -5713,11 +5713,19 @@ def rg_supers_immortal():
         for l in rows:
             c = str(l.get("category") or "").lower()
             cats.add("adventures" if c.startswith("adventures") else c)
-        for want in ("collectors", "services", "cars", "tutors", "property",
-                     "adventures", "local_market"):
+        for want in ("collectors", "services", "cars", "tutors", "property", "adventures"):
             if want not in cats:
                 out.append((FAIL, "the %s shelf is EMPTY in Pretoria -- the category tile "
                                   "reads '0 listings' to every buyer" % want))
+        # ASSERTION CORRECTED 20 Aug 2026: local_market is deliberately EXCLUDED from the
+        # default feed (get_listings' lm_filter: no category param => category != local_market),
+        # so looking for it there reported an empty shelf that was never empty. The app was
+        # right and this check was wrong -- ask the shelf the way the app asks it.
+        lm = _json("/listings?city=Pretoria&category=local_market")
+        lm_rows = lm.get("listings", lm) if isinstance(lm, dict) else lm
+        if not lm_rows:
+            out.append((FAIL, "the local_market shelf is EMPTY in Pretoria -- the tile "
+                              "reads '0 listings' to every buyer"))
     except Exception as e:
         out.append((INFO, "live /listings probe failed (%s) -- shelf check unverified"
                           % str(e)[:60]))
@@ -5730,12 +5738,12 @@ def rg_supers_immortal():
 
 @entry("RG-0124", "A deploy REPORTS what its post-steps did -- a jammed migration chain names "
        "itself, over plain HTTP, to anyone who looks",
-       OPEN, scope="ops/autodeploy/post_deploy.sh entire: the seed, the ladder seed and every "
+       LOCKED, fixed_on="2026-08-20",
+       scope="ops/autodeploy/post_deploy.sh entire: the seed, the ladder seed and every "
        "migration in the chain. Class property: no step of a deploy may succeed or fail where "
        "only the server's journal can see it. The artefact is $LIVE/static/post_deploy_status.json "
        "-- readable with no credential, so ANY session (or David on his phone) can answer 'did "
        "the deploy actually do the thing' without SSH.",
-       fixed_on="",
        ref="POSTDEPLOY-EYES-1 (20 Aug 2026). David deployed to bring the faded supers back and "
            "they stayed gone; the session then had NO way to tell whether the seed ran, whether "
            "the migration chain had jammed, or on which migration -- and that blindness, not the "
@@ -5775,9 +5783,11 @@ def rg_post_deploy_observable():
             doc = _json("/static/post_deploy_status.json")
             bad = [x for x in doc.get("steps", []) if x.get("result") == "failed"]
             if bad:
-                out.append((FAIL, "last deploy reported failed step(s): "
+                # NOT a failure of THIS entry -- the eyes are working precisely because they
+                # can see this. Chain health is RG-0125's; reporting it is ours.
+                out.append((INFO, "eyes working: last deploy reported failed step(s) -- "
                                   + "; ".join("%s (%s)" % (x.get("step"), x.get("detail"))
-                                              for x in bad)))
+                                              for x in bad) + " [owned by RG-0125]"))
             else:
                 out.append((INFO, "last deploy %s: %d step(s), none failed"
                                   % (doc.get("generated_at"), len(doc.get("steps", [])))))
@@ -5787,6 +5797,45 @@ def rg_post_deploy_observable():
 
     if not out:
         out.append((INFO, "every post-deploy step is recorded and publicly readable"))
+    return out
+
+
+@entry("RG-0125", "The migration chain is not JAMMED -- a one-time server change actually reaches "
+       "the server, and never sits dead behind a failing predecessor",
+       OPEN, scope="ops/autodeploy/post_deploy.sh's migration loop and EVERY migration in "
+       "migrations/. Class property: post_deploy runs the chain in order and `break`s on the "
+       "first failure, so ONE broken migration silently strands every later one. Asserted "
+       "against the live deploy report, so the jam is found the same day rather than weeks "
+       "later when someone notices a change never landed.",
+       fixed_on="",
+       ref="Found 20 Aug 2026 the moment POSTDEPLOY-EYES-1 (RG-0124) gave us eyes: "
+           "023_relink_wonders_railexp.py is FAILING and has been stranding 024, 025, 026 and "
+           "027 behind it. This is the same jam recorded on 18 Aug and believed fixed by "
+           "MIGRATE-IMPORT-1 -- 023 carries the CWD guard and still fails, so the import fix "
+           "was not the whole cause. Consequence chain: 027_super_immortal never ran, which is "
+           "why David's deploy did not bring the supers back (they came back via SUPER-HEAL-1 "
+           "in the seed lane instead). A migration that cannot run is either FIXED or listed in "
+           "migrations/DEFERRED.txt -- the one thing it may never do is sit there jamming the "
+           "queue, which is exactly the DEFER-1 rule written on 9 Aug for this same class.")
+def rg_migration_chain_not_jammed():
+    out = []
+    st = _status("/static/post_deploy_status.json")
+    if st != 200:
+        return [(INFO, "no deploy report on the box yet (HTTP %s) -- chain state unverified; "
+                       "RG-0124 owns getting the report there" % st)]
+    try:
+        doc = _json("/static/post_deploy_status.json")
+    except Exception as e:
+        return [(INFO, "deploy report unreadable (%s) -- RG-0124 owns that" % str(e)[:60])]
+    bad = [x for x in doc.get("steps", []) if x.get("result") == "failed"]
+    for x in bad:
+        out.append((FAIL, "%s FAILED on the last deploy (%s) -- every migration after it was "
+                          "skipped. Fix it, or record the decision in migrations/DEFERRED.txt "
+                          "so the chain runs past it (DEFER-1)."
+                          % (x.get("step"), doc.get("generated_at"))))
+    if not out:
+        out.append((INFO, "last deploy %s: chain clean, %d step(s) all ok"
+                          % (doc.get("generated_at"), len(doc.get("steps", [])))))
     return out
 
 

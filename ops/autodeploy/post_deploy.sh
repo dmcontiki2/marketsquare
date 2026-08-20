@@ -106,15 +106,20 @@ else
     for m in "${pending[@]}"; do
         base="$(basename "$m")"
         say "migrations: running $base"
-        if (cd "$LIVE" && python3 "$m" --apply); then
+        # POSTDEPLOY-EYES-2 (20 Aug 2026): capture the migration's OWN output. EYES-1 told us
+        # WHICH migration jammed but not WHY, and the why still needed SSH -- half an eye is
+        # still a blind spot. tee keeps the deploy log byte-identical to before.
+        MOUT="$(mktemp)"
+        if (cd "$LIVE" && python3 "$m" --apply) 2>&1 | tee "$MOUT"; [ "${PIPESTATUS[0]}" -eq 0 ]; then
             echo "$base" >> "$DONE_FILE"
-            say "migrations: $base ok (recorded)"; step "migration:$base" ok
+            say "migrations: $base ok (recorded)"; step "migration:$base" ok "$(tail -n 1 "$MOUT" | tr -d '"' | cut -c1-200)"
         else
             say "migrations: $base FAILED (rc=$?) — NOT recorded; later migrations skipped this run."
-            step "migration:$base" failed "CHAIN JAMMED HERE -- every later migration was skipped this run"
+            step "migration:$base" failed "CHAIN JAMMED HERE (later migrations skipped) :: $(tail -n 3 "$MOUT" | tr '\n' ' ' | tr -d '"' | cut -c1-300)"
             say "migrations: restore if needed: cp $BK/<file>.db $LIVE/  then systemctl restart marketsquare"
             break
         fi
+        rm -f "$MOUT" 2>/dev/null || true
     done
 fi
 exit 0
