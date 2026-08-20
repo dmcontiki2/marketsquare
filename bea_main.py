@@ -12588,7 +12588,6 @@ def _oauth_verify_id_token(provider: str, id_token: str, nonce: str):
 def _oauth_complete(provider: str, code: str, state: str, response: Response):
     """Exchange the code, verify the ID token, establish the session. Shared by the
     Google (GET) and Apple (POST) callbacks so the two can never drift."""
-    from fastapi.responses import RedirectResponse
     cfg = _OIDC.get(provider)
     if not cfg or not _oauth_ready(provider):
         raise HTTPException(status_code=503, detail="That sign-in option is not available.")
@@ -18960,6 +18959,15 @@ async def _ts_breaker_heartbeat():
                 _p, _t = _row["provider"], _row["task"]
                 if not _hb_brk.claim_probe(_p, _t):
                     continue   # someone else holds the half-open lease
+                # HEARTBEAT-CEILING-1 (20 Aug 2026, DW-021): the probe is tiny but it is
+                # still spend, and this loop runs unattended forever. _check_cost_ceiling
+                # raises 429 when the platform ceiling is reached; in a background loop
+                # that means SKIP THIS TICK, not crash — the breaker probes again next
+                # minute once the day rolls over or the ceiling is raised.
+                try:
+                    _check_cost_ceiling("system:heartbeat")
+                except Exception:
+                    continue   # over the daily ceiling — do not spend on a probe
                 _r = await asyncio.to_thread(
                     ai_provider.complete, [{"role": "user", "content": "ping"}],
                     task=_t, max_tokens=8, provider=_p, probe=True, timeout=20)
@@ -19016,6 +19024,10 @@ def planner_heritage_compose(req: PlannerComposeReq, _key: str = Depends(auth.re
         conn.close()
     if n >= 5:
         raise HTTPException(status_code=429, detail="Daily planner limit reached — try again tomorrow")
+    # PLANNER-COST-1 (20 Aug 2026, DW-048): this lane is FREE class (no Tuppence),
+    # so nothing else caps what it can spend. The seam already routes the call; the
+    # ceiling and the spend log are the other two rails every paid call must carry.
+    _check_cost_ceiling(email)   # C1 — refuse over the daily ceiling
 
     cand = [w for w in _load_wonders()
             if (req.country or "").strip().lower() in (w.get("country") or "").lower()]
@@ -19047,6 +19059,11 @@ def planner_heritage_compose(req: PlannerComposeReq, _key: str = Depends(auth.re
             if raw.startswith("```"):
                 raw = raw.strip("`").lstrip("json").strip()
             plan = _jr.validate_heritage_plan(json.loads(raw), list(wmap.keys()), days)
+            # PLANNER-COST-1: log the tokens that actually served, on the lane that
+            # actually answered, so a planner call is visible on the spend dashboard.
+            _log_ai_spend(email, "/planner/heritage/compose", "haiku",
+                          r.in_tokens, r.out_tokens,
+                          provider=r.provider, model=r.model)
             break
         except Exception as e:
             last_err = str(e)[:200]

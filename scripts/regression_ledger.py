@@ -281,6 +281,36 @@ def listings():
     return _json("/demo-listings")["listings"]
 
 
+# ── LEDGER-STABLE-1 (20 Aug 2026, DW-053) ───────────────────────────────────
+# Twice in one morning this ledger cried "previously-fixed issue(s) HAVE COME BACK.
+# Do not deploy over this." while nothing had rotted: once because it ran across a
+# deploy restart (19 Aug), once because an ATTENDED SESSION was rewriting the very
+# files the assertions read — bea_main.py, this file and ai_funnel_snapshot.json all
+# changed mid-run (20 Aug). A tripwire that fires on its own instability is the
+# cry-wolf failure RG-0068 exists to prevent, so the run now measures whether the
+# ground moved underneath it and says so instead of blaming the app.
+# It NEVER suppresses a regression — it labels the run untrustworthy and asks for a
+# re-run, which is the honest answer when the evidence was read from a moving target.
+_WATCHED_SOURCES = ("bea_main.py", "ms.js", "marketsquare.html", "ai_price_card.json",
+                    "ai_funnel_snapshot.json", "scripts/regression_ledger.py",
+                    "ops/autodeploy/post_deploy.sh")
+
+
+def _source_fingerprint():
+    """mtime of every repo file the assertions read. Cheap; no content hashing."""
+    out = {}
+    for rel in _WATCHED_SOURCES:
+        try:
+            out[rel] = os.stat(os.path.join(REPO, rel)).st_mtime
+        except OSError:
+            out[rel] = None
+    return out
+
+
+def _sources_changed(before, after):
+    return sorted(k for k in before if before[k] != after.get(k))
+
+
 def repo_file(name):
     """Return repo file text, or None when running outside the repo."""
     p = os.path.join(REPO, name)
@@ -1278,7 +1308,9 @@ def run():
 
 
 def main():
+    _fp_before = _source_fingerprint()
     results, took = run()
+    _moved = _sources_changed(_fp_before, _source_fingerprint())
     n = lambda s: sum(1 for r in results if r["status"] == s)
     regressed, holding, open_, ready = n("REGRESSION"), n("HOLDING"), n("OPEN"), n("READY TO LOCK")
     unver = n("UNVERIFIED")
@@ -1287,7 +1319,11 @@ def main():
         print(json.dumps({"date": datetime.date.today().isoformat(), "took_s": took,
                           "regressed": regressed, "holding": holding,
                           "open": open_, "ready_to_lock": ready, "unverified": unver,
+                          "sources_changed_mid_run": _moved,
+                          "unstable_run": bool(_moved and regressed),
                           "entries": results}, indent=1))
+        if _moved and regressed:
+            return 3   # LEDGER-STABLE-1: read from a moving target - re-run
         return 1 if regressed else (2 if unver else 0)
 
     print(f"# Regression ledger — {datetime.date.today().isoformat()}  ({took}s · {BASE})")
@@ -1311,7 +1347,13 @@ def main():
         if r["status"] == "READY TO LOCK":
             print(f"           >>> now passing — change state to LOCKED so it cannot come back")
     print()
-    if regressed:
+    if regressed and _moved:
+        print(f"RESULT: UNSTABLE RUN — {regressed} entr(ies) reported a regression, but these "
+              f"repo file(s) CHANGED underneath the run: {', '.join(_moved)}. "
+              f"The evidence was read from a moving target, so this verdict is not trustworthy "
+              f"either way. Re-run when the tree is settled before believing OR dismissing it "
+              f"(LEDGER-STABLE-1, DW-053).")
+    elif regressed:
         print(f"RESULT: {regressed} previously-fixed issue(s) HAVE COME BACK. Do not deploy over this.")
     elif unver:
         print(f"RESULT: no regressions in what COULD be checked, but {unver} entr(ies) were NOT "
@@ -1321,7 +1363,9 @@ def main():
         print(f"RESULT: no regressions. {ready} open item(s) now pass — promote them to LOCKED.")
     else:
         print(f"RESULT: every locked fix is holding. {open_} known defect(s) still open.")
-    # 1 = a real regression · 2 = blind (unverified) · 0 = genuinely clean
+    # 1 = a real regression · 2 = blind (unverified) · 3 = unstable run · 0 = clean
+    if regressed and _moved:
+        return 3
     return 1 if regressed else (2 if unver else 0)
 
 

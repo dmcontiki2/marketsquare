@@ -125,7 +125,7 @@ def main():
         return 0
 
     # 3. Collision refusal — a partial/manual variant means a human reconciles first.
-    collisions = [p for p, h in zip(WANT + WANT_PREFIX, have) if h]
+    collisions = [p for p, h in zip(WANT + WANT_PREFIX, have, strict=True) if h]
     if collisions:
         say("REFUSING (fails safe): the conf already exempts " + "; ".join(collisions))
         say("but not all four — adding ours would duplicate nginx locations.")

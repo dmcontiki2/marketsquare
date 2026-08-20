@@ -39,6 +39,10 @@ KNOWN_NON_MODELS = {"mem"}
 # considered). Reading an agent's notes about a model as a call site is the same
 # category error as reading a price card as one -- DW-009, 14 Aug 2026. .lintenv is
 # the vendored eslint tree installed by scripts/deep_scan.py.
+# DW-047 (20 Aug 2026): .ledger_state.json is the regression ledger's own exhaust —
+# it records which model text an assertion saw, so scanning it makes the instrument
+# report on itself, exactly the self-referential loop DW-043 closed for the watch files.
+SKIP_FILES = {".ledger_state.json"}
 SKIP_DIRS = {"node_modules", "__pycache__", ".git", "archive", "_CCP_STAGED",
              ".maint_agent", ".lintenv",
              ".ruff_cache", ".claude", "Kronberg", "Obsidian", "Records"}
@@ -74,7 +78,7 @@ def iter_files(root: Path):
             dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
             for fname in filenames:
                 p = Path(dirpath) / fname
-                if p.suffix.lower() not in SCAN_EXT or SKIP_FILE.search(p.name):
+                if p.suffix.lower() not in SCAN_EXT or SKIP_FILE.search(p.name) or p.name in SKIP_FILES:
                     continue
                 yield p
 
@@ -225,6 +229,18 @@ def model_discipline(root: Path):
                     findings.append((INFO, f"{rel}:{line} Sonnet — allowed: paid Level-2, Tuppence-metered"))
                 else:
                     findings.append((WARN, f"{rel}:{line} Sonnet outside the metered AdvertAgent registry — justify or downgrade to Haiku"))
+            elif fam == "fable":
+                # DW-047 FIX (20 Aug 2026). Fable is a REAL family, not an unknown one, and
+                # it had been WARNing on four files since 16 Aug purely because the sweep had
+                # never been taught the name. Every hit to date is reference/text — the
+                # coverage map, the maintenance agent's model note, the ledger and its state
+                # file — none of them dispatch. Classify it like any premium family: a real
+                # CALL SITE is a finding (David picks the model, but it must be metered);
+                # reference text is INFO. Same shape as the sonnet branch above.
+                if rel.endswith((".py", ".js")) and re.search(r"(?:complete|create|messages|model)\s*\(", ltxt):
+                    findings.append((WARN, f"{rel}:{line} Fable ({m.group(0)}) at a call site — premium family, confirm it is metered"))
+                else:
+                    findings.append((INFO, f"{rel}:{line} Fable ({m.group(0)}) in reference text — not a call site (DW-047)"))
             else:
                 findings.append((WARN, f"{rel}:{line} unknown model family `{m.group(0)}` — classify"))
     return findings
