@@ -18636,8 +18636,9 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
                LEFT JOIN users u ON LOWER(u.email) = LOWER(l.seller_email)
                WHERE l.listing_status IN ('live','paused')
                  AND (l.is_demo = 0 OR l.is_demo IS NULL)
-                 -- SUPER-IMMORTAL-2 (20 Aug 2026): RUL-026 keyed the exemption on
-                 -- `showcase`, but the seeded supers carry super_example=1 with
+                 -- RUL-026: showcase supers never fade -- and SUPER-IMMORTAL-2
+                 -- (20 Aug 2026) makes that true of the SUPERS too. RUL-026 keyed it on
+                 -- `showcase` alone; the seeded supers carry super_example=1 with
                  -- showcase NULL -- so `showcase IS NULL` INCLUDED them and the
                  -- 19 Aug 20:17 release restart faded all eight ZA supers at 18:21Z.
                  -- The exemption is the SUPER, not the banner flag. Both now exempt.
