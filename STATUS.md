@@ -3,9 +3,88 @@
 > narrative history — do not hunt `OPEN:` fragments here to learn what's open; read `OPEN_LOOPS.md`.
 
 
+## Live State
+BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · **104 live listings · 59 sellers · 115 introductions (1 pending)** · World Heritage layer 332 sites · 8 showcase supers live and immortal (RUL-035 / SUPER-IMMORTAL-2) · every-deploy self-heal now heals super STATE, not just absence (SUPER-HEAL-1) · post-deploy report readable at `/static/post_deploy_status.json` (POSTDEPLOY-EYES-1/2) · migration chain unjammed through 027 (MIGRATE-ENV-1: app's own interpreter + environment) · AI cost guardrails LIVE with ceiling + spend log on the planner and breaker-heartbeat lanes (PLANNER-COST-1 / HEARTBEAT-CEILING-1) · regression ledger 118 entries, 114 holding, **0 REGRESSED**, exit 0, with a mid-run instability detector (LEDGER-STABLE-1) · pre-launch: Cloudflare WAF allowlist DISABLED (WAF-OPEN-1), origin gate GATE-ENFORCE-1 the only guard · **SOFT-to-PUBLIC Fri 29 Aug 2026 · FULL LAUNCH Mon 1 Sep 2026 (RUL-001)**
+
+## Last Completed (2026-08-20 — supers restored, migration chain unjammed)
+- **Supers back on the shelves, verified live.** The 06:58 release carried SUPER-HEAL-1; listings 265-272 all read `listing_status=live` with `fade_nudge_sent_at NULL`, and `/listings?city=Pretoria&category=Collectors` returns 269, `&category=Services` returns 267, in both letter-cases. **RG-0123 + RG-0124 LOCKED**, DW-056 closed with evidence. The seed lane did it, not migration 027 — which is the whole point of healing STATE on every deploy instead of trusting a one-shot.
+- **MIGRATE-ENV-1 — the migration jam fixed at the class.** Two faults, both required: post_deploy ran migrations with a bare env (main.py refuses without MS_API_KEY, which lives inline in the systemd unit, not secrets.env) AND with system `python3` instead of `$LIVE/venv/bin/python3` (no python-multipart, so `import main` died). Rule now: any script importing the app runs in the app's own interpreter and environment. Proven on the box — **023 rc=0** (84/104 listings relinked, stranded since 18 Aug), **024 rc=0**, **027 rc=0**.
+- **POSTDEPLOY-EYES-1/2** — every post-deploy step now records its outcome to `$LIVE/static/post_deploy_status.json` via an EXIT trap, readable over plain HTTP with no credential. A jammed migration names itself and its own output, so the next session reads the CAUSE instead of guessing. This is the fix for the four-hour morning.
+- **Cost rails + instrument honesty.** PLANNER-COST-1 and HEARTBEAT-CEILING-1 put a ceiling and a spend log on `planner_heritage_compose` and the breaker heartbeat (over-ceiling skips a tick rather than raising inside a background loop). LEDGER-STABLE-1 fingerprints the repo files the assertions read and reports **UNSTABLE RUN (exit 3)** rather than a false regression when the tree moves mid-run. Cost sweep now classifies the Fable family. Lint: ruff F401 + B905 cleared; deep scan 184 -> 182, 0 new.
+- **Close-all pass:** 11 items closed (DW-021/026/035/038/046/047/048/052/053/055/056), 8 open, 1 new and red (DW-057).
+- **RUL-035 recorded** — the supers stay through launch and retire one by one as real listings replace them; nothing automatic may ever remove one.
+
+## Next Session (priorities)
+- **DAVID — DW-057/DW-029: rotate the production secrets.** A command printed the service unit's entire inline environment into a chat transcript (MS_API_KEY, PAYSTACK_WEBHOOK_SECRET, RESEND_API_KEY, CF_CACHE_TOKEN, MS_DEPLOY_TOKEN, FOUNDERS_ID_SALT, TRAVELPAYOUTS_TOKEN, NUMISTA/JUSTTCG). Second exposure of the same credentials, and the WAF allowlist is down. Run `ROTATE_SECRETS.bat`; MS_API_KEY, MS_DEPLOY_TOKEN and FOUNDERS_ID_SALT need the unit edited too.
+- **DW-051 close-out:** read `.migrations_done` on the box and confirm it reaches **027** (023/024/027 are evidenced rc=0; 025/026 are not individually proven yet), then tighten RG-0116 to assert the DONE LIST advances rather than the guard in source.
+- **DAVID — DW-027 ruling (day 14):** above a blurred-fraction threshold, refuse the photo, behind a launch switch defaulting OFF. Also pending: the anon-blur vendor swap (RUL-031) — no further micro-fixes.
+- **DW-054:** prove the AI breaker fails OVER (not merely open) on a vendor 5xx/auth failure, and add the ledger entry asserting it. Ten Anthropic incidents 12-19 Aug; the failover has still never been exercised.
+- **DW-044 (David's call, model selection):** bring AdvertAgent inside the ai_provider seam or strike the `claude-opus-4-6` rate row and record it as out of perimeter.
+- **DW-010:** CC-002 open 71d against a 7-day threshold — land it or formally defer it. A decision not taken, not a threshold breach.
+- **DW-028:** provision the ops API_KEY locally (cleanest inside the rotation) so RG-0101's gzip probe stops being 401'd.
+- **LEDGER-STABLE-1 has no ledger entry of its own** — outstanding against the standing rule; blue on the coverage map until written.
+- **Standing:** COST-SWEEP-LANE-1; LAUNCH-GATES set; ORCH-POLICY-1; DEMO-4; W12-FORYOU; CUTOVER-1; WONDER-DUP-1->10; PHOTO-ORDER-1 shipped, RG-0120 LOCKED.
+
 ## Current Session
 
-## 2026-08-20 — Supers faded by the 19 Aug release restart; class fix in source, awaiting deploy
+- **MIGRATE-ENV-1 shipped** — the two-fault migration jam (missing `MS_API_KEY` *and* the
+  wrong Python interpreter) is fixed at class level in `ops/autodeploy/post_deploy.sh`.
+  023/024/027 proven rc=0 on the box with the venv interpreter + service environment;
+  023 relinked 84/104 listings against the expanded wonders catalog. RG-0125 flips green
+  once a deploy records the chain past 022.
+
+## 2026-08-20 — maintenance-loop
+
+Daily B2b maintenance session ran clean. Fault queue EMPTY (0 new, 0 fix-shipped;
+26 verified / 7 closed / 2 duplicate of 35). Shadow agent heartbeat posted and
+readable at `/dashboard/maint`. Regression ledger green before and after; RG-0090
+and RG-0120 promoted OPEN -> LOCKED. RG-0125 (migration 023 jamming the chain)
+narrowed — catalog and import refuse paths both ruled out by live probe; the cause
+text arrives with POSTDEPLOY-EYES-2 on the next deploy. No code fix shipped this
+session because nothing in the queue asked for one.
+
+## 2026-08-20 (afternoon) — Deploy landed, supers live, migration chain unjammed; one RED left and it is David's
+
+- **Supers are back on the shelves — verified live, not assumed.** David's 06:58 release
+  carried SUPER-HEAL-1; listings 265-272 all read `listing_status=live` with
+  `fade_nudge_sent_at NULL`, and `/listings?city=Pretoria&category=Collectors` returns 269,
+  `&category=Services` returns 267, in both letter-cases. **RG-0123 and RG-0124 LOCKED.**
+  DW-056 CLOSED with evidence. The seed lane did it, not migration 027 — which is the point
+  of healing STATE on every deploy rather than trusting a one-shot.
+- **The deploy report immediately earned its keep** (POSTDEPLOY-EYES-1/2): it named
+  `023_relink_wonders_railexp.py` as the jam that had stranded 024-027 since 18 Aug.
+  RG-0125 opened on it rather than leaving it to jam quietly again.
+- **MIGRATE-ENV-1 — the jam is fixed at the class.** Two faults, both required: post_deploy
+  ran migrations with a bare env (main.py refuses without MS_API_KEY, which lives inline in
+  the systemd unit, not secrets.env) AND with system python3 instead of `$LIVE/venv/bin/python3`
+  (no python-multipart, so `import main` died). Rule now: **any script importing the app runs
+  in the app's own interpreter and environment.** Proven on the box — 023 rc=0
+  (84/104 listings relinked, stranded since 18 Aug), 024 rc=0, 027 rc=0.
+- **Cost rails + instrument honesty.** PLANNER-COST-1 and HEARTBEAT-CEILING-1 put a ceiling
+  and a spend log on `planner_heritage_compose` and the breaker heartbeat (the heartbeat
+  skips a tick over the ceiling rather than raising inside a background loop).
+  LEDGER-STABLE-1 fingerprints the repo files the assertions read and reports **UNSTABLE RUN
+  (exit 3)** instead of a false regression when the tree moves mid-run. Fable family now
+  classified by the cost sweep. Lint: ruff F401 + B905 cleared; deep scan 184 -> 182, 0 new.
+- **Close-all pass:** 11 items closed today (DW-021/026/035/038/046/047/048/052/053/055/056),
+  **8 still open**. Ledger: exit 0, 118 entries, 114 holding, **0 REGRESSED**.
+- **NEEDS DAVID — this is the red one. DW-057: rotate the production secrets.**
+  During the migration hunt a command printed the service unit's entire inline environment
+  into a chat transcript — MS_API_KEY, PAYSTACK_WEBHOOK_SECRET, RESEND_API_KEY, CF_CACHE_TOKEN,
+  MS_DEPLOY_TOKEN, FOUNDERS_ID_SALT, TRAVELPAYOUTS_TOKEN, NUMISTA/JUSTTCG. That is the DW-029
+  class recurring, so the same credentials are now burnt **twice**, and the pre-launch gate is
+  down (RG-0115) so the site is publicly readable while they are still live. Rotate-at-convenience
+  no longer stands. Action: double-click `ROTATE_SECRETS.bat` (covers most); MS_API_KEY,
+  MS_DEPLOY_TOKEN and FOUNDERS_ID_SALT need the unit edited too. Standing correction on my side:
+  never run a command that prints a whole environment — parse into exports, never echo.
+- Also still David's, unchanged: DW-027 (blur-threshold ruling, day 14), DW-029 (rotation, same
+  action as DW-057), DW-044 (AdvertAgent model rates outside the seam), DW-054 (AI breaker has
+  never been proven to fail OVER), DW-010 (CC-002 open 71d — land it or formally defer it).
+- **11 days to the 1 Sep full launch (RUL-001).**
+
+## 2026-08-20 (early) — Supers faded by the 19 Aug release restart; class fix in source
+> **Superseded by the afternoon entry above — the deploy this entry asked for landed at 06:58
+> and the supers are live. Kept for the diagnosis.**
 
 - **Cause proven, not guessed:** listings 265-272 read `listing_status=faded`,
   `status_changed_at=2026-08-19T18:21Z` on live — the sweep that runs 2 minutes after every

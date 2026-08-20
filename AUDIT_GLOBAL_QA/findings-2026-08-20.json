@@ -1,6 +1,6 @@
 {
  "date": "2026-08-20",
- "took_s": 13.2,
+ "took_s": 15.7,
  "findings": [
   {
    "sev": "INFO",
@@ -12,7 +12,7 @@
    "sev": "INFO",
    "area": "drift",
    "id": "VERSION-KEY-BENIGN",
-   "msg": "repo html pins ms.js v454, live pins v507, but the served bytes are IDENTICAL to the repo \u2014 this is the server's monotonic ?v= bump, not drift. Recorded, not raised (DW-001)."
+   "msg": "repo html pins ms.js v454, live pins v509, but the served bytes are IDENTICAL to the repo \u2014 this is the server's monotonic ?v= bump, not drift. Recorded, not raised (DW-001)."
   }
  ]
 }

@@ -20,14 +20,13 @@ _Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sw
 - ✅ **OK** — bea_main.py:16979 `ai_batch_card_listings` — ceiling ✓ spend-log ✓
 - ✅ **OK** — bea_main.py:17242 `_classify_email` — ceiling ✓ spend-log ✓
 - ✅ **OK** — bea_main.py:18173 `grade_card_condition` — ceiling ✓ spend-log ✓
-- 🟠 **WARN** — bea_main.py:18938 `_ts_breaker_heartbeat` — spend-log ✓ but NO _check_cost_ceiling
-- 🔴 **CRITICAL** — bea_main.py:19001 `planner_heritage_compose` — UNWRAPPED & UNMETERED Anthropic call (no ceiling, no spend log, no Tuppence)
-- 🟠 **WARN** — bea_main.py:18939 `_hb_loop` — spend-log ✓ but NO _check_cost_ceiling
+- ✅ **OK** — bea_main.py:18938 `_ts_breaker_heartbeat` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:19010 `planner_heritage_compose` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:18939 `_hb_loop` — ceiling ✓ spend-log ✓
 - ✅ **OK** — advert_agent.py:785 `run_model` — metered via Tuppence hold/settle
 
 ## Model discipline — Haiku unless paid + metered (P1)
 
-- 🟠 **WARN** — MarketSquare/.ledger_state.json:825 unknown model family `claude-fable-5` — classify
 - 🟠 **WARN** — MarketSquare/AI_BASELINE.json:85 Sonnet outside the metered AdvertAgent registry — justify or downgrade to Haiku
 - 🟠 **WARN** — MarketSquare/AI_BASELINE.json:249 Sonnet outside the metered AdvertAgent registry — justify or downgrade to Haiku
 - 🟠 **WARN** — MarketSquare/AI_BASELINE.json:291 Sonnet outside the metered AdvertAgent registry — justify or downgrade to Haiku
@@ -44,7 +43,7 @@ _Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sw
 - ℹ️ **INFO** — MarketSquare/bea_main.py:1588 Sonnet in the provider-model registry (TASK_MODEL/fallback) — single-source, Tuppence-metered; keep justified
 - ℹ️ **INFO** — MarketSquare/bea_main.py:15718 model constant `PRICE_CHECK_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
 - ℹ️ **INFO** — MarketSquare/dashboard.server.html:1201 model name inside a UI display label — text on a diagram, not a call site (DW-009)
-- 🟠 **WARN** — MarketSquare/DEFENCE_COVERAGE_MAP.html:96 unknown model family `claude-fable-5` — classify
+- ℹ️ **INFO** — MarketSquare/DEFENCE_COVERAGE_MAP.html:96 Fable (claude-fable-5) in reference text — not a call site (DW-047)
 - ℹ️ **INFO** — MarketSquare/main.py:966 Sonnet in the provider-model registry (TASK_MODEL/fallback) — single-source, Tuppence-metered; keep justified
 - ℹ️ **INFO** — MarketSquare/main.py:967 Sonnet in the provider-model registry (TASK_MODEL/fallback) — single-source, Tuppence-metered; keep justified
 - ℹ️ **INFO** — MarketSquare/main.py:9614 model constant `VISION_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
@@ -52,8 +51,8 @@ _Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sw
 - ℹ️ **INFO** — MarketSquare/failover/ai_backends.py:45 model constant `REASON_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
 - ℹ️ **INFO** — MarketSquare/failover/ai_backends.py:46 model constant `REASON_VISION_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
 - ℹ️ **INFO** — MarketSquare/marketing/src/build_set.py:14 model constant `SAMPLE_RUN_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
-- 🟠 **WARN** — MarketSquare/scripts/maintenance_agent.py:328 unknown model family `claude-fable-5` — classify
-- 🟠 **WARN** — MarketSquare/scripts/regression_ledger.py:3281 unknown model family `claude-fable-5` — classify
+- ℹ️ **INFO** — MarketSquare/scripts/maintenance_agent.py:328 Fable (claude-fable-5) in reference text — not a call site (DW-047)
+- ℹ️ **INFO** — MarketSquare/scripts/regression_ledger.py:3281 Fable (claude-fable-5) in reference text — not a call site (DW-047)
 - ℹ️ **INFO** — AdvertAgent/service/advert_agent.py:115 Sonnet — allowed: paid Level-2, Tuppence-metered
 - ℹ️ **INFO** — AdvertAgent/service/advert_agent.py:158 Sonnet — allowed: paid Level-2, Tuppence-metered
 - ℹ️ **INFO** — AdvertAgent/service/advert_agent.py:262 Sonnet — allowed: paid Level-2, Tuppence-metered
@@ -92,13 +91,13 @@ _Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sw
 
 - ✅ **OK** — `AdvertAgent/run_video_reports.py` — sanctioned operator-only paid script (Generates live rich AdvertAgent feature reports for the feature videos; outputs ); not reachable from any app code path
 
-## Paid call-site inventory (149 hits)
+## Paid call-site inventory (146 hits)
 
 - **Anthropic API** (14): `MarketSquare/ai_provider.py:113`, `MarketSquare/ai_provider.py:114`, `MarketSquare/main.py:1014`, `MarketSquare/main.py:1024`, `MarketSquare/subscription_monitor.py:122`, `MarketSquare/failover/ai_backends.py:13`, `MarketSquare/failover/ai_backends.py:142`, `MarketSquare/failover/ai_backends.py:144`, `MarketSquare/scripts/peer_pack_ai.py:62`, `MarketSquare/scripts/regression_ledger.py:895`, `AdvertAgent/run_video_reports.py:37`, `AdvertAgent/run_video_reports.py:125` …
 - **Anthropic SDK** (5): `MarketSquare/data_audit.py:154`, `MarketSquare/main.py:8028`, `CityLauncher/emailer/emailer.py:106`, `CityLauncher/orchestration/haiko_agent.py:228`, `CityLauncher/orchestration/strategist_agent.py:301`
 - **Google APIs** (17): `MarketSquare/ai_provider.py:226`, `MarketSquare/bea_main.py:12476`, `MarketSquare/bea_main.py:12477`, `MarketSquare/bea_main.py:14374`, `MarketSquare/citylauncher_ops.html:717`, `CityLauncher/citylauncher_launch.html:1052`, `CityLauncher/CITYLAUNCHER_REDESIGN.html:50`, `CityLauncher/api/server.py:172`, `CityLauncher/dashboard/citylauncher.html:899`, `CityLauncher/scraper/sources/google_maps.py:14`, `CityLauncher/scraper/sources/google_maps.py:185`, `CityLauncher/scraper/sources/google_maps.py:218` …
-- **OpenAI** (44): `MarketSquare/.ledger_state.json:184`, `MarketSquare/.ledger_state.json:605`, `MarketSquare/.ledger_state.json:629`, `MarketSquare/add_openai_key.bat:10`, `MarketSquare/add_openai_key.bat:11`, `MarketSquare/add_openai_key.bat:11`, `MarketSquare/add_openai_key.bat:13`, `MarketSquare/AI_BASELINE.json:442`, `MarketSquare/ai_provider.py:59`, `MarketSquare/ai_provider.py:156`, `MarketSquare/ai_provider.py:168`, `MarketSquare/ai_provider.py:292` …
+- **OpenAI** (41): `MarketSquare/add_openai_key.bat:10`, `MarketSquare/add_openai_key.bat:11`, `MarketSquare/add_openai_key.bat:11`, `MarketSquare/add_openai_key.bat:13`, `MarketSquare/AI_BASELINE.json:442`, `MarketSquare/ai_provider.py:59`, `MarketSquare/ai_provider.py:156`, `MarketSquare/ai_provider.py:168`, `MarketSquare/ai_provider.py:292`, `MarketSquare/bea_main.py:14396`, `MarketSquare/bea_main.py:14529`, `MarketSquare/bea_main.py:14540` …
 - **Paid data feeds** (66): `MarketSquare/ai_service_tiers.py:19`, `MarketSquare/ai_service_tiers.py:110`, `MarketSquare/ai_service_tiers.py:111`, `MarketSquare/ai_service_tiers.py:113`, `MarketSquare/ai_service_tiers.py:198`, `MarketSquare/ai_service_tiers.py:199`, `MarketSquare/ai_service_tiers.py:206`, `MarketSquare/ai_service_tiers.py:207`, `MarketSquare/ai_service_tiers.py:238`, `MarketSquare/ai_service_tiers.py:239`, `MarketSquare/ai_service_tiers.py:243`, `MarketSquare/ai_service_tiers.py:244` …
 - **Paystack (txn)** (3): `MarketSquare/bea_main.py:14293`, `MarketSquare/payments.py:32`, `MarketSquare/subscription_monitor.py:157`
 
-**Totals:** 3 critical · 15 warnings · 24 ok · 28 info
+**Totals:** 2 critical · 9 warnings · 27 ok · 31 info

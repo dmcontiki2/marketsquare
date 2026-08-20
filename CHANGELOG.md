@@ -1,3 +1,185 @@
+## 2026-08-20 — Supers are BACK, and the eyes immediately found the thing underneath (RG-0125)
+
+David deployed and confirmed the supers show. Verified live rather than taken on trust: listings
+265–272 all read `listing_status: live`, and every shelf answers — including local_market
+(id 272), which must be asked for with `?category=local_market` because the default feed excludes
+it by design.
+
+**What actually fixed it:** the seed lane. `post_deploy_status.json` reads `seed: ok` — SUPER-HEAL-1
+did the work, exactly as designed, in the lane that cannot be jammed.
+
+**And the first thing the new eyes saw:** `023_relink_wonders_railexp.py` is **FAILING**, and has
+been stranding 024, 025, 026 and 027 behind it. This is the same jam recorded on 18 Aug and
+believed closed by MIGRATE-IMPORT-1 — 023 carries the CWD guard and still fails, so the import fix
+was not the whole cause. It also explains the morning cleanly: 027 never ran because it never
+could. Twelve hours ago that finding would have cost a session and an SSH login; it cost one
+`curl`.
+
+Recorded as **RG-0125** (OPEN): the migration chain must not be jammed. A migration that cannot
+run is either FIXED or listed in `migrations/DEFERRED.txt` — the one thing it may never do is sit
+there stranding the queue, which is precisely the DEFER-1 rule written on 9 Aug for this class and
+not applied to 023.
+
+**POSTDEPLOY-EYES-2:** EYES-1 named which migration jammed but not why, and the why still needed
+SSH — half an eye is still a blind spot. The status file now carries the migration's own output
+(last 3 lines on failure, last line on success). Proven locally against a simulated 023 failure:
+the report reads `CHAIN JAMMED HERE (later migrations skipped) :: [023] REFUSE: cannot import
+main (No module named main)`. So the next deploy states the cause without anyone logging in.
+
+**Ledger.** RG-0123 (supers immortal) and RG-0124 (a deploy reports what it did) both **LOCKED** —
+live-verified green. RG-0124's design corrected while locking it: a failed step is a FINDING it
+reports, not a failure of its own — otherwise the entry that gives us eyes goes red for what the
+eyes see. Chain health is RG-0125's job. RG-0123's local_market assertion **corrected, not
+weakened**: it asked the default feed for a category the feed deliberately excludes, and reported
+an empty shelf that was never empty. The app was right; the check was wrong.
+
+Board: 118 entries, 0 regressed, RG-0125 the one real open item.
+
+**Tooling note for the next session:** `io.open(path, "w", newline="\n")` raises ValueError on
+this Python *after* truncating the file — post_deploy.sh was left 0 bytes and only the standing
+"verify the write landed" rule caught it. Restored with `git show HEAD:<path> >` (unlink and
+`git checkout --` are both blocked on this mount). Never pass `newline=` here.
+
+## 2026-08-20 — MIGRATE-ENV-1: the migration chain runs in the app's own interpreter and environment
+
+The chain sat jammed at `023_relink_wonders_railexp.py` for two days (DW-051, RG-0125),
+failing with `REFUSE: cannot import main`. The post-mortem found **two** faults, and
+fixing either one alone still leaves the chain jammed:
+
+1. **Environment.** `post_deploy.sh` ran migrations with a bare environment, but
+   `main.py` refuses to import without `MS_API_KEY` — which the unit carries as an
+   inline systemd `Environment=`, *not* in `/etc/marketsquare/secrets.env`. Sourcing
+   the secrets file alone would not have been enough.
+2. **Interpreter.** The runner used the system `python3`, while the service runs
+   `$LIVE/venv/bin/uvicorn`. The venv has `python-multipart`; the system interpreter
+   does not, so `import main` dies inside FastAPI's form-data path **even with the
+   environment loaded**. This is why 19 Aug's MIGRATE-IMPORT-1 CWD guard did not clear it.
+
+Fix (ops/autodeploy/post_deploy.sh): resolve `MS_PY` to the venv interpreter (falling
+back to system python3), load the unit's inline `Environment=` plus `secrets.env`
+without ever echoing the values, and warn loudly at a named step if `MS_API_KEY` is
+still unset. The seeds use `$MS_PY` too.
+
+**Class property, not an instance fix:** any script that imports the app must run in the
+SAME interpreter and the SAME environment as the app it imports — every future migration
+inherits this, not just 023.
+
+Proven on the box before shipping: with venv python + service env, `023` **rc=0**
+(catalog 319 wonders, 84/104 listings relinked — work stranded since 18 Aug),
+`024` rc=0 (healed 0 — already clean), `027` rc=0 (0 protected listings faded).
+
+RG-0125 is the standing assertion and stays OPEN until the next deploy records the
+chain past 022.
+
+## 2026-08-20 — maintenance-loop (daily B2b session)
+
+- **Fault queue: empty.** Shadow agent run `2026-08-20T05:33:22Z` saw 0 faults
+  (mode SHADOW, kill switch OFF as designed — arming is David's act alone).
+  Heartbeat confirmed live: `GET /dashboard/maint` returns this run's timestamp
+  over plain HTTP (no cookie needed — migration 018 has landed). Register state:
+  35 faults total — 26 verified, 7 closed, 2 duplicate, **0 new, 0 fix-shipped**.
+- **RG-0090 and RG-0120 promoted OPEN -> LOCKED** — both printed READY TO LOCK on
+  the pre-run ledger. RG-0090 (edge-cache leak of the gated document) passes while
+  the gate is down per RUL-029; locking it means a future re-arm re-activates the
+  assertion instead of quietly losing it. RG-0120 (seller photo order/cover, the
+  Maroushka fault) is proven in repo AND live, with the buyer-facing
+  `[photos:...]` prefix rewritten by `PUT /listings/{id}`.
+  Evidence: `scripts/regression_ledger.py` exit 0 after the change, both entries
+  reported `[ ok ]` under LOCKED state.
+- **RG-0125 (migration chain jam) diagnosed to the boundary, NOT fixed.**
+  `023_relink_wonders_railexp.py` failed on the 05:00:38Z deploy and stranded
+  every later migration. Ruled OUT by direct probe: the catalog refuse path (all
+  19 HERITAGE-RAIL-1 ids are present in both the repo `wonders.json` and the live
+  `GET /wonders`, 319 entries) and the import refuse path (MIGRATE-IMPORT-1 CWD
+  guard present; `main`, `database`, `_load_wonders`, `auto_link_wonders`,
+  `_derived_radius_km` and the `listing_status` column all exist). Remaining
+  candidate is a runtime exception whose text is only on the server. POSTDEPLOY-
+  EYES-2 (committed at HEAD, `tee`s each migration's own output into
+  `post_deploy_status.json`) will name it on the next deploy — no further guessing
+  this session, and DEFERRED.txt was deliberately NOT touched (deferring is
+  David's call under DEFER-1).
+- Escalation brief: none written — no escalations in the last 24h.
+- Ledger: green before and after (exit 0). 4 known defects remain open:
+  RG-0075, RG-0101, RG-0121, RG-0125.
+
+## 2026-08-20 — DASH-FEED-1: the ops dashboard was reading sections nobody had updated since June
+
+David asked for the ops dashboard to be brought to current status. The refresh ran, the docs
+pushed, and the **Last done** and **Next up** panels still showed Session 155 and Session 139's
+rental-availability work.
+
+**Cause.** `/dashboard/summary` (bea_main.py) does NOT read the `## Current Session` narrative —
+the block every session actually writes. It parses three specific headings and takes the **first
+match in the file**: `## Live State`, `## Last Completed`, `## Next Session`. Those first matches
+were dated **2026-07-06** and **Session 140 (June)**. Six weeks of sessions wrote diligently to a
+part of STATUS.md the dashboard never looks at, and nothing anywhere said so.
+
+**Fix (documents only, no code change).** Fresh `## Live State`, `## Last Completed (2026-08-20)`
+and `## Next Session (priorities)` blocks inserted at the TOP of STATUS.md, above
+`## Current Session`, so they win first-match. The stale June/July sections are left in place
+untouched — nothing deleted, they simply no longer win. `## Next Session` bullets are ordered
+deliberately: `_bullet_items()` feeds the "Session N — Next up" card and only the first four
+render, so DW-057 (secret rotation), DW-051, DW-027 and DW-054 are the four a reader sees.
+
+**Verified live**, not assumed: `GET /dashboard/summary` at 15:14 UTC returns the new liveState,
+lastDone and nextGoals, and `directions[dir_next].items` carries the intended four. Parser also
+simulated locally against the file before the push.
+
+**Also this session:** DW-051 moved OPEN -> FIXED-UNVERIFIED in DAILY_WATCH/OPEN_ITEMS.md with
+the MIGRATE-ENV-1 evidence (023/024/027 rc=0). It is deliberately NOT closed — 025/026 are not
+individually evidenced, and only a passing check closes a row.
+
+**Residual, named honestly:**
+- **No ledger entry asserts this.** A future session could add a `## Last Completed` section
+  higher in STATUS.md, or the endpoint could change its headings, and the panels would silently
+  rot back to June with nothing going red. An assertion that `/dashboard/summary`'s `lastDone`
+  is dated within N days of the newest `## Current Session` entry would close the class.
+  Outstanding against the standing rule.
+- **STATUS-COLLISION-1 was breached** in this session: the `## Current Session` afternoon entry
+  was written with the Edit tool rather than a `status.d/` fragment. It landed intact (verified
+  by line count and tail), but the rule exists because that write is exactly the one that got
+  silently clobbered on 5 Aug. Recorded so it is not repeated.
+- Session counter deliberately left at 155 — David's numbering convention, not Claude's to bump.
+- BACKLOG.md's High/Medium panels still date from 15 Aug; two rows read "DONE (verified 2 Jun)".
+
+## 2026-08-20 — PLANNER-COST-1, HEARTBEAT-CEILING-1, LEDGER-STABLE-1 and the sweep's Fable blind spot
+
+Closing-out pass on David's "close all open actions". Four instrument/cost debts fixed at
+the class, each proven by re-running its own check.
+
+**PLANNER-COST-1 (DW-048).** `planner_heritage_compose` reached the AI through the seam but
+carried neither of the other two rails, so the sweep graded it CRITICAL — UNWRAPPED &
+UNMETERED. It is FREE class (no Tuppence), which means nothing else capped it either; the
+$0 exposure was only because the flag is dark. Added `_check_cost_ceiling(email)` before the
+attempt loop and `_log_ai_spend(...)` on the successful parse, attributing provider+model
+from the AIResult so a failover costs at the lane that actually served.
+
+**HEARTBEAT-CEILING-1 (DW-021).** The breaker heartbeat logged spend but never checked the
+ceiling, and it runs unattended forever. It now checks — and because a background loop must
+not die on a 429, breaching the ceiling SKIPS THE TICK rather than raising.
+
+**DW-047 — the sweep had never been taught the Fable family.** Four files WARNed daily as
+"unknown model family" since 16 Aug purely because of a missing name. Fable is now classified
+like any premium family: a real call site WARNs, reference text is INFO. Also added
+`SKIP_FILES` for `.ledger_state.json` — the ledger's own exhaust, the same self-referential
+loop DW-043 closed for the watch files.
+
+**LEDGER-STABLE-1 (DW-053).** Twice in one morning the ledger cried "previously-fixed
+issue(s) HAVE COME BACK. Do not deploy over this." with nothing rotted — once across a deploy
+restart, once because an attended session was rewriting `bea_main.py`,
+`scripts/regression_ledger.py` and `ai_funnel_snapshot.json` mid-run. The run now fingerprints
+the mtimes of the seven repo files its assertions read and, if any moved while it ran AND it
+recorded a regression, reports **UNSTABLE RUN** with the moved files named and exits **3**.
+It never suppresses a regression — it refuses to be trusted in either direction and asks for a
+re-run, which is the honest verdict when the evidence came off a moving target.
+
+Also: ruff F401 (unused `RedirectResponse` in `_oauth_complete`) and B905 (`zip(..., strict=True)`
+in migration 025) cleared — deep scan 184 -> 182, 0 new.
+
+Evidence: cost sweep now grades all three bea_main.py lanes `ceiling ✓ spend-log ✓`;
+deep scan 4/4 tools, 0 new; ledger exit 0, 118 entries, 114 holding, 0 regressed;
+LEDGER-STABLE-1's detector unit-proven to fire on a mid-run write and stay silent otherwise.
+
 ## 2026-08-20 — SUPER-HEAL-1 + POSTDEPLOY-EYES-1: why the deploy didn't bring the supers back, and why that class ends here
 
 David deployed, the supers stayed gone, and his verdict was the right one: *"This is our old
