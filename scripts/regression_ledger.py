@@ -5628,7 +5628,11 @@ def rg_photo_reject_only():
            "the guard must be right in SOURCE, not just healed by a migration; (2) 024's heal "
            "and RUL-026's guard both keyed on `showcase`, so the fix and its ledger entry "
            "agreed with each other and were wrong together. 027_super_immortal.py heals the "
-           "data on the next deploy; this entry flips READY TO LOCK the moment it lands.")
+           "data on the next deploy; this entry flips READY TO LOCK the moment it lands. "
+           "RUL-035 (David, 20 Aug): the supers are needed THROUGH launch and a while after, "
+           "then retired one by one as good live replacements arrive -- so a super that 404s "
+           "is a deliberate retirement and passes, while a super the MACHINERY hid is a "
+           "regression, and an EMPTY SHELF is a regression either way.")
 def rg_supers_immortal():
     out = []
 
@@ -5660,8 +5664,15 @@ def rg_supers_immortal():
 
     # ── LIVE half: no super may be out of sight, and no shelf may be dark ──
     SUPER_IDS = (265, 266, 267, 268, 269, 270, 271, 272)
-    hidden = []
+    hidden, retired = [], []
     for lid in SUPER_IDS:
+        # RUL-035: a super may LEAVE -- deliberately, one shelf at a time, once a real
+        # listing is good enough to replace it. A 404 is therefore a retirement, not a
+        # regression; what must never happen is the SHELF going dark, which the category
+        # sweep below is what actually holds. Machinery hiding a super IS a regression.
+        if _status("/listings/%d" % lid) == 404:
+            retired.append(lid)
+            continue
         try:
             row = _json("/listings/%d" % lid)
         except Exception as e:
@@ -5678,6 +5689,9 @@ def rg_supers_immortal():
     if hidden:
         out.append((FAIL, "super advert(s) hidden by the lifecycle sweep: " + ", ".join(hidden)
                           + " -- run migrations/027_super_immortal.py (rides the next deploy)"))
+    if retired:
+        out.append((INFO, "super(s) retired by admin, shelf checked below (RUL-035): "
+                          + ", ".join(str(i) for i in retired)))
 
     # The property David sees: a seeded category never reads "0 listings" at home.
     try:

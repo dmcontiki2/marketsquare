@@ -96,6 +96,16 @@ REFLECTIONS = {
    ("scripts/regression_ledger.py", ["RG-0121", "rg_gemini_canary"], []),
    ("AI_BASELINE.json", ["CANARY (photo scan/refine only)"], []),
  ],
+ "RUL-035": [
+   # The supers stay through launch; retirement is a deliberate admin act, one shelf at a
+   # time, never a side effect of machinery. Assert the PROPERTY (super_example is in the
+   # protected set), not any one spelling of the SQL -- RG-0106 was green for a week
+   # because it pinned a literal string. See SUPER-IMMORTAL-2.
+   ("bea_main.py", ["SUPER-IMMORTAL-2", "super_example"], []),
+   ("migrations/027_super_immortal.py", ["super_example", "showcase"], []),
+   ("scripts/regression_ledger.py", ["RG-0123", "rg_supers_immortal"], []),
+   ("RULINGS.md", ["THE SUPERS STAY THROUGH LAUNCH"], []),
+ ],
  "RUL-026": [
    ("bea_main.py", ["RUL-026: showcase supers never fade", "Showcase adverts are admin-managed."], []),
    ("migrations/024_showcase_immortal.py", ["RUL-026"], []),
