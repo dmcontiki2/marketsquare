@@ -14819,6 +14819,45 @@ async def admin_services_status(service: str = None, _admin=Depends(_require_adm
                     "status": "ok" if jt else "nokey",
                     "detail": "key set (presence only — no cheap live probe)" if jt else "JUSTTCG_API_KEY not set",
                     "key": _infra_mask(jt)})
+    # ID-NPR-6 (21 Aug 2026, David): the ID-verification lane belongs on this panel
+    # like every other external service. It was armed on 21 Aug and was NOT visible
+    # here — exactly the "a partner you cannot see is a partner that fails silently"
+    # fault this panel exists to prevent. David caught it.
+    #
+    # PRESENCE-ONLY BY DESIGN, and the honesty matters: a live probe would be a
+    # BILLABLE DHA query ($1.10). This panel must never spend money on a refresh.
+    # So green here means "provider named and key present", never "a check works".
+    # The first real check is what proves the lane (RG-0136).
+    if service in (None, "id_verify"):
+        try:
+            import id_verify_provider as _idv
+            _st = _idv.status()
+            _key = os.getenv("ID_VERIFY_API_KEY")
+            if _st.get("available"):
+                _stat, _det = "ok", ("provider %s · key set · %sT per check "
+                                     "(presence only — a live probe would be a "
+                                     "billable DHA query)" % (_st.get("provider"),
+                                                              ID_NPR_PRICE_T))
+            elif not _st.get("known"):
+                _stat, _det = "warn", ("ID_VERIFY_PROVIDER=%s is not a known provider "
+                                       "— no check can run" % _st.get("provider"))
+            elif not _st.get("configured"):
+                _stat, _det = "nokey", ("provider %s named but ID_VERIFY_API_KEY not set "
+                                        "— lane DARK, no seller can buy a check"
+                                        % _st.get("provider"))
+            else:
+                _stat, _det = "nokey", "lane DARK — set ID_VERIFY_PROVIDER + ID_VERIFY_API_KEY"
+            out.append({"id": "id_verify", "label": "ID verification",
+                        "kind": "Home Affairs ID check (DHA) · seller green tick",
+                        "status": _stat, "detail": _det, "key": _infra_mask(_key)})
+        except Exception as _e:
+            out.append({"id": "id_verify", "label": "ID verification",
+                        "kind": "Home Affairs ID check (DHA) · seller green tick",
+                        "status": "warn",
+                        "detail": "provider module not importable on this server "
+                                  "(%s) — check the deploy manifest" % type(_e).__name__,
+                        "key": ""})
+
     # DATA & PARTNERS (David 1 Aug 2026): dark feeds are SHOWN so their wiring exists before
     # enable-day — a partner you cannot see is a partner that fails silently when its flag
     # flips. Presence-only: NEVER live-probe paid providers from a panel refresh. The env

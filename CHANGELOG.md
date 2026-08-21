@@ -1,3 +1,64 @@
+## 2026-08-21 — TRUTH-REVIEW-1: two-day post-mortem of the wrong-status runs; the EVIDENCE LADDER becomes standing method
+
+David: status and BIT answers over 19–21 Aug were 2–3 times wrong before the true state
+surfaced. Fable review of all ten incidents confirms it, and finds ONE root shared by every
+wrongness and ONE shape shared by every correction:
+
+**Every wrong answer was read from a representation of state** — a stale doc (ONETAP-DOC-1),
+a code-pattern red voiced as runtime (RG-0117 "Resend dark"), a dot defaulted green
+(BIT SELF-TEST), hand-written ✅ verdicts (SERVICES), key-presence painted as liveness
+(AIPROV), a hardcoded banner, the flattering one of two contradicting files (golden gate).
+**Every correction was a probe** — /auth/providers, /proc/<pid>/environ, /dashboard/bit,
+a curl of the endpoint, post_deploy_status.json.
+
+Ten faults, five classes, all with shipped fixes + ledger locks (RG-0114, RG-0125, RG-0130,
+RG-0131, RG-0133, RG-0134, LEDGER-DUP-1, execution-class guards, manifest+probe on ID-NPR).
+Full review: `TWO_DAY_TRUTH_REVIEW — nice.docx` + `TRUTH_REVIEW_19_21AUG.html` (in Visuals).
+
+**The class fix (new standing section in ../CLAUDE.md): the EVIDENCE LADDER.**
+PROBED > EXECUTED > READ > RECALLED. Only PROBED may be reported as fact/green/live/done;
+READ must be voiced as "the file claims…" and probed before it reaches David — probe wins,
+file fixed in the same run; RECALLED is never reportable; a code-pattern red is never a
+runtime claim; no instrument defaults to a health colour (RG-0133's property as a design
+rule for every new surface); every doc status line carries date + verification method; the
+canonical probe set is named so checking costs one command. This generalizes the
+ONETAP-DOC-1 sweep-prompt rule to EVERY session — interactive ones included, which is where
+the wrong answers were actually delivered.
+
+Cost model impact: none.
+
+## 2026-08-21 — ID-NPR-6: the ID-verification lane was missing from the infrastructure panel
+
+David, looking at the +1 page: *"should we not have the new ID checker API/provider here and
+live (green)?"* Yes. It should have been there the moment the lane was armed, and it wasn't.
+
+The panel's own header states the doctrine — *"A dead key turns red instead of failing silently
+for a month"* — and the code comment beside the dark feeds says it plainer still: *"a partner
+you cannot see is a partner that fails silently when its flag flips."* Didit was configured and
+serving with no row at all, which is precisely the condition both lines exist to prevent. Every
+other external service is listed, including ones that are deliberately dark.
+
+Added, distinguishing three states rather than a binary:
+- **ok** — provider named and key present
+- **nokey** — provider named, key absent: "lane DARK, no seller can buy a check"
+- **warn** — `ID_VERIFY_PROVIDER` set to something unrecognised, so no check can run at all,
+  which would otherwise look identical to a missing key
+- plus a **warn** if the provider module cannot be imported, naming the deploy manifest — the
+  exact failure that was one commit away two days running
+
+**Deliberately PRESENCE-ONLY, and the row says so on its face.** A live probe here would be a
+billable DHA query at $1.10, on every dashboard refresh. Green on this row means "provider
+named and key present" and must never be read as "a check works" — the same distinction that
+made `/id-verify/status` reporting READY not the same thing as the lane being proven. The first
+real check is still what proves it (RG-0136, still OPEN).
+
+Ledger RG-0136 now asserts the row exists, that it never calls `verify_id()`, and that the
+"presence only" wording stays — so a future edit cannot quietly turn a dashboard refresh into a
+spend.
+
+Cost model impact: none, and structurally none — the assertion against a billable probe is the
+point.
+
 ## 2026-08-21 — ONETAP-DOC-1: Google OAuth was live; the doc said dark, and I repeated the doc
 
 David, on reading the new third-party register: *"I am sure we have done this already."* He was

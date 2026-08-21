@@ -6605,6 +6605,23 @@ def rg_id_npr():
         out.append((FAIL, "the tick no longer keys off green_tick -- an AI document "
                           "check could be shown to a buyer as 'verified'"))
 
+    # 4e ── the lane must be VISIBLE on the infrastructure panel. David caught its
+    # absence on 21 Aug: "a partner you cannot see is a partner that fails silently."
+    # And the row must stay PRESENCE-ONLY -- a live probe here would spend $1.10 of
+    # real money on every dashboard refresh.
+    if '"id": "id_verify"' not in bea:
+        out.append((FAIL, "the ID-verification row is missing from the infrastructure "
+                          "panel -- a dead key would fail silently instead of turning red"))
+    else:
+        i = bea.find('if service in (None, "id_verify")')
+        seg = bea[i:i+2000] if i > 0 else ""
+        if "verify_id(" in seg:
+            out.append((FAIL, "the infrastructure panel row calls verify_id() -- that is a "
+                              "BILLABLE DHA query on every dashboard refresh"))
+        if "presence only" not in seg:
+            out.append((FAIL, "the ID-verify panel row no longer says 'presence only' -- "
+                              "green there must never be read as 'a check works'"))
+
     # 5 ── the guards themselves
     if tests is None:
         out.append((FAIL, "test_id_npr.py missing"))
