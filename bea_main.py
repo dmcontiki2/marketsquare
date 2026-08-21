@@ -5642,6 +5642,30 @@ def verify_identity_npr(email: str, payload: NPRVerifyRequest,
             pass
 
 
+@app.get("/id-verify/status")
+def id_verify_status():
+    """
+    Is the ID-verification lane alive? Public, no secrets.
+
+    CLAUDE.md supplier doctrine: a dead feed must turn RED, never go silent.
+    This is the probe that makes "did the key land?" answerable without SSH —
+    the question that cost a round-trip on 21 Aug because there was no way to
+    see it from outside.
+    """
+    try:
+        import id_verify_provider
+        st = id_verify_provider.status()
+    except Exception as e:
+        return {"available": False, "provider": "unknown",
+                "error": f"{type(e).__name__}: the provider module is missing "
+                         f"on this server (check the deploy manifest)"}
+    st["price_t"] = ID_NPR_PRICE_T
+    st["note"] = ("READY — sellers can buy a check." if st.get("available")
+                  else "DARK — no seller can buy a check and nothing can be "
+                       "charged. Set ID_VERIFY_PROVIDER and ID_VERIFY_API_KEY.")
+    return st
+
+
 @app.get("/users/{email}/id-status")
 def id_status(email: str):
     """

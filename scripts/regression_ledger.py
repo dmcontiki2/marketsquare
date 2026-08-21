@@ -6571,6 +6571,22 @@ def rg_id_npr():
                               "split to 'Merwe' and legitimate SA sellers would be "
                               "charged and refused on a PARTIAL_MATCH"))
 
+    # 4b ── the provider module must SHIP. bea_main imports it inside the
+    # endpoint, so a missing file does not crash startup -- it 500s the check
+    # instead, silently. Exactly the hardcoded-list trap that half-shipped
+    # TEACH-DEPLOY-1 in CityLauncher on the same day.
+    man = repo_file("ops/autodeploy/deploy_manifest.txt")
+    if man is not None and "id_verify_provider.py" not in man:
+        out.append((FAIL, "id_verify_provider.py is NOT in the deploy manifest -- "
+                          "bea_main.py would ship without it and every check would "
+                          "500 on a server that looks healthy"))
+
+    # 4c ── the lane must be observable from outside, or 'did the key land?'
+    # costs an SSH round-trip every time
+    if "/id-verify/status" not in bea:
+        out.append((FAIL, "the /id-verify/status probe is gone -- provider health "
+                          "becomes invisible and a dead lane goes silent"))
+
     # 5 ── the guards themselves
     if tests is None:
         out.append((FAIL, "test_id_npr.py missing"))

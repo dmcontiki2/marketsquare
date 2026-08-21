@@ -67,6 +67,7 @@ ai_service_tiers.py        | ai_service_tiers.py
 ai_provider.py             | ai_provider.py
 launch_redemption.py       | launch_redemption.py
 account_closure.py         | account_closure.py
+id_verify_provider.py      | id_verify_provider.py
 estate_agents.py           | estate_agents.py
 
 # ── Dashboard docs (BEA parses these at GET /dashboard/summary) ──────────────
