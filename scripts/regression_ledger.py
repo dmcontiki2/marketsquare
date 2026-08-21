@@ -5850,13 +5850,13 @@ def rg_post_deploy_observable():
 
 @entry("RG-0125", "The migration chain is not JAMMED -- a one-time server change actually reaches "
        "the server, and never sits dead behind a failing predecessor",
-       OPEN, scope="ops/autodeploy/post_deploy.sh's migration loop and EVERY migration in "
+       LOCKED, scope="ops/autodeploy/post_deploy.sh's migration loop and EVERY migration in "
        "migrations/. Class property: post_deploy runs the chain in order and `break`s on the "
        "first failure, so ONE broken migration silently strands every later one. Asserted "
        "against the live deploy report, so the jam is found the same day rather than weeks "
        "later when someone notices a change never landed.",
-       fixed_on="",
-       ref="Found 20 Aug 2026 the moment POSTDEPLOY-EYES-1 (RG-0124) gave us eyes: "
+       fixed_on="2026-08-20",
+       ref="LOCKED 20 Aug 2026: MIGRATE-ENV-1 cleared the jam and the live deploy report proves it -- 2026-08-20T15:56:13Z, seven steps, 023 through 027 all ok. Found 20 Aug 2026 the moment POSTDEPLOY-EYES-1 (RG-0124) gave us eyes: "
            "023_relink_wonders_railexp.py is FAILING and has been stranding 024, 025, 026 and "
            "027 behind it. This is the same jam recorded on 18 Aug and believed fixed by "
            "MIGRATE-IMPORT-1 -- 023 carries the CWD guard and still fails, so the import fix "
@@ -5884,6 +5884,150 @@ def rg_migration_chain_not_jammed():
     if not out:
         out.append((INFO, "last deploy %s: chain clean, %d step(s) all ok"
                           % (doc.get("generated_at"), len(doc.get("steps", [])))))
+    return out
+
+
+@entry("RG-0126", "The ledger can still tell an unstable RUN from a real regression -- its own "
+       "cry-wolf guard is present and has not been weakened",
+       LOCKED, scope="scripts/regression_ledger.py itself. Class property, not an instance: any "
+       "future edit that drops the fingerprint, shrinks the watched set, or converts the "
+       "exit-3 path into a silent pass re-opens the fault. Source-half only by nature -- "
+       "the instrument is the subject.",
+       fixed_on="2026-08-20",
+       ref="LOCKED 20 Aug 2026 on the run that introduced it -- guard intact, 7 watched sources including this file. LEDGER-STABLE-1, 20 Aug 2026 (DW-053). Twice in one morning this ledger announced "
+           "'previously-fixed issue(s) HAVE COME BACK. Do not deploy over this.' while nothing "
+           "had rotted -- once across a deploy restart (19 Aug), once because an attended "
+           "session was rewriting bea_main.py, this file and ai_funnel_snapshot.json mid-run "
+           "(20 Aug). DW-053 closed with the guard built and unit-proven, but David's standing "
+           "rule is that a fix is not done until an assertion holds it, and that assertion was "
+           "never written -- it went onto the coverage map as blue. This is it. "
+           "The guard must satisfy three properties, and each is checked as a property: "
+           "(1) the run fingerprints the sources before and after; (2) it reports UNSTABLE and "
+           "exits 3 rather than either blaming the app or swallowing the finding; (3) the "
+           "watched set is not decorative -- it must include this file, because the case that "
+           "actually bit was this file being rewritten underneath a running check.")
+def rg_ledger_stability_guard():
+    out = []
+    me = repo_file("scripts/regression_ledger.py")
+    if me is None:
+        return [(INFO, "outside the repo -- the instrument cannot inspect itself here")]
+
+    if "_source_fingerprint" not in me or "_sources_changed" not in me:
+        out.append((FAIL, "the mid-run fingerprint is GONE -- the ledger can no longer tell a "
+                          "moving tree from a regression, which is the exact cry-wolf failure "
+                          "LEDGER-STABLE-1 closed (DW-053)"))
+
+    if "UNSTABLE RUN" not in me:
+        out.append((FAIL, "no UNSTABLE RUN verdict in the run summary -- an unstable run would "
+                          "again be reported as if the app had regressed"))
+
+    if "return 3" not in me and "sys.exit(3)" not in me:
+        out.append((FAIL, "the exit-3 path is gone -- callers (nightly, deploy gate) can no "
+                          "longer distinguish 'untrustworthy run, re-run me' from 'clean'"))
+
+    # The watched set must be real, and must include this file -- the case that bit.
+    try:
+        watched = _WATCHED_SOURCES
+    except NameError:
+        watched = ()
+    if len(watched) < 5:
+        out.append((FAIL, "the watched-source set has shrunk to %d file(s) -- a guard that "
+                          "watches almost nothing reports stable almost always" % len(watched)))
+    if not any("regression_ledger.py" in w for w in watched):
+        out.append((FAIL, "the ledger no longer watches ITSELF -- the 20 Aug incident was this "
+                          "very file being rewritten mid-run, so dropping it re-opens the fault"))
+
+    if not out:
+        out.append((INFO, "instability guard intact: %d watched sources incl. itself, "
+                          "UNSTABLE RUN verdict and exit-3 path both present" % len(watched)))
+    return out
+
+
+@entry("RG-0127", "The ops dashboard reads the section the sessions actually write -- its panels "
+       "cannot silently rot while STATUS.md is diligently updated",
+       LOCKED, scope="STATUS.md's dashboard-feed headings and GET /dashboard/summary. Class "
+       "property: the endpoint takes the FIRST match of each heading anywhere in a 300 KB "
+       "append-only file, so ANY future session that adds a '## Last Completed' section above "
+       "the current one silently re-points the dashboard at it. Not specific to today's "
+       "sections -- it asserts freshness of whichever section wins.",
+       fixed_on="2026-08-20",
+       ref="LOCKED 20 Aug 2026: winning section 0 days old and the live panels answer. DASH-FEED-1, 20 Aug 2026. David asked for the ops dashboard to be brought current; "
+           "the docs pushed and the Last-done and Next-up panels still showed Session 155 and "
+           "Session 139's June work. Cause: /dashboard/summary does NOT read the "
+           "'## Current Session' block every session writes -- it parses '## Live State', "
+           "'## Last Completed' and '## Next Session' and takes the first match in the file. "
+           "Those first matches were dated 2026-07-06 and Session 140 (June). Six weeks of "
+           "sessions wrote carefully into a part of STATUS.md the dashboard never looks at, and "
+           "nothing anywhere said so -- a silent instrument, which is the class RG-0068 and "
+           "POSTDEPLOY-EYES-1 both exist to end. Fixed by inserting fresh sections at the top "
+           "so they win first-match; the stale ones stay in place, they simply no longer win. "
+           "The freshness window is 21 days deliberately: long enough that a quiet fortnight is "
+           "not a false red, short enough that six weeks of rot is impossible.")
+def rg_dashboard_feed_current():
+    out = []
+    STALE_DAYS = 21
+
+    status = repo_file("STATUS.md")
+    if status is None:
+        out.append((INFO, "outside the repo -- source half not checked here"))
+    else:
+        # The heading the endpoint will actually match: the FIRST one in the file.
+        m = re.search(r"^## Last Completed([^\n]*)$", status, re.MULTILINE)
+        if not m:
+            out.append((FAIL, "STATUS.md has NO '## Last Completed' heading -- /dashboard/summary "
+                              "will render an empty Last-done panel"))
+        else:
+            heading = m.group(1)
+            d = re.search(r"(\d{4})-(\d{2})-(\d{2})", heading)
+            if not d:
+                out.append((FAIL, "the winning '## Last Completed%s' heading carries no ISO date "
+                                  "-- freshness cannot be judged, so rot cannot be detected"
+                                  % heading[:60]))
+            else:
+                when = datetime.date(int(d.group(1)), int(d.group(2)), int(d.group(3)))
+                age = (datetime.date.today() - when).days
+                if age > STALE_DAYS:
+                    out.append((FAIL, "the section /dashboard/summary reads is %d days old "
+                                      "(%s). Sessions are writing somewhere the dashboard does "
+                                      "not read -- move a fresh '## Last Completed' block ABOVE "
+                                      "it in STATUS.md (DASH-FEED-1)." % (age, when.isoformat())))
+                else:
+                    out.append((INFO, "winning Last-Completed section is %d day(s) old (%s)"
+                                      % (age, when.isoformat())))
+
+    # Live half: the panels the browser gets must not be empty, and the Next-up card
+    # renders only the first four bullets -- fewer than four is a half-empty card.
+    st = _status("/dashboard/summary")
+    if st != 200:
+        out.append((INFO, "/dashboard/summary not readable from here (HTTP %s) -- live half "
+                          "unverified" % st))
+        return out
+    try:
+        doc = _json("/dashboard/summary")
+    except Exception as e:
+        out.append((INFO, "/dashboard/summary unreadable (%s)" % str(e)[:60]))
+        return out
+
+    for key in ("liveState", "lastDone", "nextGoals"):
+        if not (doc.get(key) or "").strip():
+            out.append((FAIL, "/dashboard/summary returns an EMPTY %s -- that panel is blank on "
+                              "David's dashboard" % key))
+
+    bullets = [ln for ln in (doc.get("nextGoals") or "").splitlines()
+               if ln.strip().startswith(("- ", "* "))]
+    if 0 < len(bullets) < 4:
+        out.append((INFO, "only %d Next-up bullet(s) -- the direction card renders up to four"
+                          % len(bullets)))
+
+    # Drift: the live copy should match the repo's winning section. This is INFO, not FAIL --
+    # editing STATUS.md before running refresh_dashboard.bat is normal, and a tripwire that
+    # fires on normal work is the cry-wolf failure RG-0068 exists to prevent.
+    if status is not None and doc.get("lastDone"):
+        first_live = (doc["lastDone"].strip().splitlines() or [""])[0][:80]
+        if first_live and first_live not in status:
+            out.append((INFO, "live Last-done does not appear in the repo STATUS.md -- server "
+                              "and repo disagree; whoever edits next should re-run "
+                              "refresh_dashboard.bat"))
     return out
 
 

@@ -16,13 +16,21 @@ audit reports, chat threads) FEEDS this file; David reads only this.
 
 Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. Not duplicated here.
 
+**Last reconciled: 2026-08-20 (attended).** Previous reconciliation 14 Aug — six days in which
+this file was not the integrator it claims to be: L2 had been class-fixed on 16 Aug and still sat
+here as live work. Rule 2 says the session that closes a loop edits this file LAST; the honest
+reading is that sessions closed loops and did not. **9 days to soft-public (Fri 29 Aug) · 12 days
+to full launch (Mon 1 Sep) — RUL-001.**
+
 ---
 
 
 ## 🔴 BLOCKING NOW
 *(nothing proceeds until these clear)*
 
-— none —
+| # | Loop | Owner | Single next action | Opened | Source |
+|---|------|-------|--------------------|--------|--------|
+| B1 | **Production secrets are exposed, twice** — DW-029 (7 Aug) and DW-057 (20 Aug, caused by the watch itself: `systemctl show -p Environment` printed the whole unit env into a transcript). MS_API_KEY · PAYSTACK_WEBHOOK_SECRET · RESEND_API_KEY · CF_CACHE_TOKEN · MS_DEPLOY_TOKEN · FOUNDERS_ID_SALT · TRAVELPAYOUTS_TOKEN · NUMISTA/JUSTTCG. The WAF allowlist is DOWN (WAF-OPEN-1), so the site is publicly reachable while the old credentials are still live. Promoted to BLOCKING because going public on 29 Aug with burnt payment and mail credentials is not a risk to carry. | [D] | David: `ROTATE_SECRETS.bat`; then MS_API_KEY, MS_DEPLOY_TOKEN and FOUNDERS_ID_SALT need the systemd unit edited too. Claude then drives Resend > Cloudflare > Numista/JustTCG/Travelpayouts. | 2026-08-07 / 2026-08-20 | DAILY_WATCH DW-029, DW-057 |
 
 ## 🟠 LIVE LOOPS (open, need to move) — ranked
 
@@ -31,7 +39,6 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 | L5 | **Fix-agent phase-aware + operational path proven** — pre-launch now: only legal+costly gate, design gets IMPLEMENTED not backlogged (David 9 Aug scoping); runs as root (repo owner), shadow-clean on the real queue. Agent still OFF. | [D]+[C] | Deploy -> re-run the shadow dry-run as root with MAINT_PHASE=prelaunch -> read the design changes it proposes on real faults. Then close: state-dir out of repo + confirm the server can pass its own anonymity gate. | 2026-08-09 | this session |
 | L6 | **BIT-AIM-1: FEA probes mis-aimed** — BIT board live (13's timer works) but degraded 5/8: B-FEA-SHELL/EXAMPLE/CONTRACT all fail because BIT_BASE=localhost:8000 carries no FEA. Per-probe base needed (nginx+gate-token on box, or edge+named-UA). | [C] | Tomorrow's maintenance loop (or attended): registry per-probe base + runner resolve + verify on the 15-min board. | 2026-08-11 | changelog.d 2026-08-11-b4-6 |
 | L8 | **External uptime monitor — NOT BUILT** (moved 14 Aug from DAILY_WATCH DW-003, which merged DW-022). Nothing is broken; something is unbuilt, so it belongs here not in the fault register. The daily watch is desktop-bound and runs once at 06:30 — a closed app is a blind day (it missed 6 Aug), and the 01:30 cron has now recorded a HIGH anomaly into a file nobody reads until morning three days running. The armed gate does NOT block outside probes (/ and /health answer 200 anonymously), so this is buildable today. | [D] | David: name a service (or say 'pick one') and Claude wires a 5-min ping that pages his phone and owes nothing to his desktop, this app, or that server. | 2026-08-14 | DAILY_WATCH DW-003/DW-022 |
-| L2 | **git-on-FUSE stale .lock files** every commit — worked around via `_to_delete/`, needs a real fix. | [C] | Diagnose root cause + permanent fix in an attended session (not urgent). | 2026-07-23 | STATUS.md S150 |
 | L3 | **SCOREBOARD-1 shipped-not-live** — agent + guards + nightly wiring in repo (7/7 tests); probes OFF until enabled. | [D] | Next deploy carries it, then run `enable_scoreboard.bat` once. | 2026-08-03 | CHANGELOG SCOREBOARD-1 |
 | L7 | **Tooling-through-the-gate** — GATE-ENFORCE-2 (13 Aug) raises the origin token gate; on-box/edge tooling reading data endpoints anonymously (maintenance-loop intake, server smoke data probes) will 401. UA-EDGE-1's sibling. Ledger already fixed (reads via reviewer cookie). | [C] | NARROWED same day: agent verified UNAFFECTED (localhost default; RG-0053 now asserts it structurally). Remaining: attended off-box tools (fault_reconcile, cost sweep) need the reviewer cookie when next used; server smoke data probes need cookie or localhost vantage. | 2026-08-13 | changelog.d 2026-08-13-gate-enforce-activated |
 
@@ -49,6 +56,8 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 | D14 | **Designer-role binding** (5 Aug boundary redraw item 2) — guidelines now written (DESIGN_CHANGE_GUIDELINES.md); until bound, you are the gate by default. | [D] | Rule: you / a design agent / both. No urgency before launch. | 2026-08-11 | MAINTENANCE_AGENT.md amendment |
 
 ## ✅ CLOSED — last 7 days
+
+- **L2 CLOSED 2026-08-20 (reconciliation — it had actually been fixed on 16 Aug and nobody moved the row).** "git-on-FUSE stale .lock files every commit" is class-fixed, not worked around: **GIT-LOCK-3** made both lanes self-heal — every git-writing .bat calls `git_unlock.bat` first (clears a stale lock ONLY when no git.exe is running, so it can never race a live commit), and every sandbox git WRITE runs `scripts/git_unlock.py`, which RENAMES lock-class files into `.git/stale_locks/` because FUSE blocks unlink. All sandbox reads use `GIT_OPTIONAL_LOCKS=0` so read-only git can never plant a lock. EVIDENCE: both files present on disk, and tonight's full ledger run reports **`[  ok  ] RG-0015`**, which tripwires the whole class LIVE (a lock stranded >60 min turns the ledger red the same day). The row survived four days past its own fix — that lag is the reason this file now carries a "last reconciled" stamp.
 
 - **D8 CLOSED 11 Aug 2026** — Stays/B&B fully live: code rode the 05:06 /TSL, David ran media_push, STAY_IDS already wired (336/337/338), outreach hrefs already flipped (verified idempotent). 
 - **D13 CLOSED 11 Aug 2026** — TS-0018 referent named by David = the dashboard Launch Blockers column; removed same day (VIZ-MAPS-4); fault closed.

@@ -80,7 +80,7 @@ session because nothing in the queue asked for one.
 - Also still David's, unchanged: DW-027 (blur-threshold ruling, day 14), DW-029 (rotation, same
   action as DW-057), DW-044 (AdvertAgent model rates outside the seam), DW-054 (AI breaker has
   never been proven to fail OVER), DW-010 (CC-002 open 71d — land it or formally defer it).
-- **11 days to the 1 Sep full launch (RUL-001).**
+- **9 days to soft-public (Fri 29 Aug) · 12 days to full launch (Mon 1 Sep) — RUL-001.**
 
 ## 2026-08-20 (early) — Supers faded by the 19 Aug release restart; class fix in source
 > **Superseded by the afternoon entry above — the deploy this entry asked for landed at 06:58
