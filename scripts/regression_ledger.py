@@ -6563,6 +6563,13 @@ def rg_id_npr():
         if "billable" not in prov:
             out.append((FAIL, "provider result lost its 'billable' flag -- a supplier "
                               "failure could charge a seller"))
+        if "_check_didit" in prov and "CONCLUSIVE" not in prov:
+            out.append((FAIL, "the Didit adapter lost its conclusive-outcome gate -- "
+                              "an inconclusive result could now charge a seller"))
+        if "_check_didit" in prov and "_SURNAME_PARTICLES" not in prov:
+            out.append((FAIL, "surname-particle handling removed: 'van der Merwe' would "
+                              "split to 'Merwe' and legitimate SA sellers would be "
+                              "charged and refused on a PARTIAL_MATCH"))
 
     # 5 ── the guards themselves
     if tests is None:
@@ -6570,14 +6577,16 @@ def rg_id_npr():
     else:
         for name in ("test_duplicate_hash_on_second_account_is_flagged_not_granted",
                      "test_intro_gate_still_uses_only_id_verified_at",
-                     "test_provider_fails_closed_when_unconfigured"):
+                     "test_provider_fails_closed_when_unconfigured",
+                     "test_sa_surname_particles_stay_with_the_surname",
+                     "test_partial_match_is_not_a_pass"):
             if name not in tests:
                 out.append((FAIL, "guard removed: " + name))
 
     if not out:
         out.append((INFO, "NPR tier separate from the intro gate; buyer notice informs "
                           "without blocking; duplicate-ID trap intact; provider fails "
-                          "closed; 10 guards present"))
+                          "closed; PARTIAL_MATCH never passes; 14 guards present"))
     return out
 
 

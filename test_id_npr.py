@@ -150,6 +150,45 @@ def test_intro_gate_still_uses_only_id_verified_at():
     assert 'id_npr_verified_at' not in body, \
         'RUL-039: NPR verification must NEVER gate introductions'
 
+def test_sa_surname_particles_stay_with_the_surname():
+    """A bad split returns PARTIAL_MATCH: seller charged, tick refused."""
+    p = importlib.import_module('id_verify_provider')
+    for name, first, last in [
+        ('Johannes Petrus van der Merwe', 'Johannes Petrus', 'van der Merwe'),
+        ('Maria du Plessis',              'Maria',           'du Plessis'),
+        ('Anna Janse van Rensburg',       'Anna',            'Janse van Rensburg'),
+        ('Jan de Villiers',               'Jan',             'de Villiers'),
+        ('Thabo Mbeki',                   'Thabo',           'Mbeki'),
+    ]:
+        assert p._split_name(name) == (first, last), f'bad split for {name}'
+
+
+def test_dob_derived_from_sa_id_number():
+    p = importlib.import_module('id_verify_provider')
+    assert p._dob_from_sa_id('8001015009087') == '1980-01-01'
+    assert p._dob_from_sa_id('0503201234083') == '2005-03-20'
+    for junk in ('', 'abc', '12'):
+        assert p._dob_from_sa_id(junk) == '', 'junk must yield no DOB, not a guess'
+
+
+def test_didit_never_charges_without_a_conclusive_outcome():
+    """Mirrors Didit's own billing rule: conclusive only."""
+    src = open('id_verify_provider.py', encoding='utf-8').read()
+    i = src.find('def _check_didit')
+    body = src[i:]
+    assert 'CONCLUSIVE' in body, 'conclusive-outcome gate missing'
+    assert "'MATCH', 'PARTIAL_MATCH', 'NO_MATCH', 'DOCUMENT_NOT_FOUND'" in body
+    assert 'billable=False' in body, 'transport failures must not be billable'
+
+
+def test_partial_match_is_not_a_pass():
+    """The ID exists but the name does not match — that IS the scam shape."""
+    src = open('id_verify_provider.py', encoding='utf-8').read()
+    i = src.find('def _check_didit')
+    body = src[i:]
+    assert "verified = (code == 'MATCH')" in body, \
+        'only a full MATCH may verify — PARTIAL_MATCH must never pass'
+
 
 if __name__ == '__main__':
     fns = [v for k,v in sorted(globals().items()) if k.startswith('test_')]

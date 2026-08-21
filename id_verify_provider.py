@@ -81,11 +81,164 @@ class NPRResult:
 # Add a provider by writing a _check_<key> function and registering it here.
 # Keep 'stub' first and default so an unconfigured server cannot spend money.
 PROVIDERS = {
-    'stub':      'Disabled — no provider configured. Never charges.',
-    # 'verifynow': DHA NPR via aggregator. ~R27-30/check.
-    # 'didit':     DHA NPR + photo retrieval + fingerprint. USD pricing.
-    # 'dha':       Direct, R10 real-time / R1 batch. Requires accreditation.
+    'stub':  'Disabled — no provider configured. Never charges.',
+    'didit': ('DHA National Population Register via Didit '
+              '(zaf_africa_national_id). $1.10 per CONCLUSIVE query, '
+              'pay-per-success, no contract, self-service key.'),
+    # 'verifynow': DHA NPR via SA aggregator, ~R27-30/check. Not implemented.
+    # 'dha':       Direct, R10 real-time / R1 batch. Needs accreditation.
 }
+
+# ── Didit ────────────────────────────────────────────────────────────────────
+DIDIT_URL = 'https://verification.didit.me/v3/database-validation/'
+DIDIT_SERVICE = 'zaf_africa_national_id'
+
+
+def _dob_from_sa_id(id_number: str) -> str:
+    '''
+    Derive YYYY-MM-DD from the first 6 digits of a 13-digit SA ID (YYMMDD).
+
+    Didit requires date_of_birth, and asking a seller to retype what is
+    already encoded in their ID number is an extra field to get wrong. The
+    century pivot: SA IDs are YY only, so 00-29 is read as 2000s and 30-99 as
+    1900s. That is the standard convention and is safe until 2030 — a person
+    born in 2030 cannot be an adult seller before then.
+    '''
+    digits = ''.join(ch for ch in (id_number or '') if ch.isdigit())
+    if len(digits) < 6:
+        return ''
+    yy, mm, dd = digits[0:2], digits[2:4], digits[4:6]
+    try:
+        y, m, d = int(yy), int(mm), int(dd)
+    except ValueError:
+        return ''
+    if not (1 <= m <= 12 and 1 <= d <= 31):
+        return ''
+    century = 2000 if y <= 29 else 1900
+    return f'{century + y:04d}-{m:02d}-{d:02d}'
+
+
+# Surname particles. A naive "last word is the surname" split turns
+# "Johannes van der Merwe" into surname "Merwe", which comes back from the
+# register as PARTIAL_MATCH — the seller is charged and refused a tick for a
+# bug in our string handling. A large share of South African surnames carry
+# one of these, so this is a correctness requirement here, not a nicety.
+_SURNAME_PARTICLES = {
+    'van', 'von', 'de', 'den', 'der', 'du', 'da', 'dos', 'das', 'di',
+    'le', 'la', 'ter', 'te', 'ten', 'op', 'in', 'aan', 'aus', 'zu',
+    'janse', 'jansen', 'nel',   # 'janse van', 'jansen van'
+}
+
+
+def _split_name(full_name: str) -> tuple[str, str]:
+    """
+    Split a full name into (first_names, surname), keeping particles with the
+    surname. Walks backwards from the end while the preceding token is a
+    particle, so "Johannes Petrus van der Merwe" -> ("Johannes Petrus",
+    "van der Merwe").
+    """
+    parts = [p for p in (full_name or '').replace(',', ' ').split() if p]
+    if not parts:
+        return '', ''
+    if len(parts) == 1:
+        return parts[0], parts[0]
+
+    i = len(parts) - 1                      # index where the surname starts
+    while i > 1 and parts[i - 1].lower().strip('.') in _SURNAME_PARTICLES:
+        i -= 1
+    # Never swallow the only given name.
+    if i < 1:
+        i = 1
+    return ' '.join(parts[:i]), ' '.join(parts[i:])
+
+
+def _check_didit(id_number: str, full_name: str, timeout: int) -> NPRResult:
+    '''
+    One DHA lookup via Didit.
+
+    BILLING (their docs): charged only on a CONCLUSIVE result. Not charged
+    when the registry is unreachable, when required fields are missing, or
+    when the request is rejected before reaching the source. `billable`
+    mirrors that exactly, so we never pass on a cost we did not incur.
+
+    OUTCOMES:
+      MATCH                       -> verified
+      PARTIAL_MATCH               -> NOT verified. The ID exists but a name or
+                                     DOB field did not match, which is exactly
+                                     the shape of someone using an ID that is
+                                     not theirs. Conclusive, so billable.
+      NO_MATCH / DOCUMENT_NOT_FOUND -> not verified, conclusive, billable
+      anything else / transport error -> not billable
+    '''
+    import requests
+
+    api_key = (os.getenv('ID_VERIFY_API_KEY') or '').strip()
+    base = (os.getenv('ID_VERIFY_BASE_URL') or DIDIT_URL).strip()
+    digits = ''.join(ch for ch in (id_number or '') if ch.isdigit())
+    first, last = _split_name(full_name)
+    dob = _dob_from_sa_id(digits)
+
+    if not digits or not first or not dob:
+        return NPRResult(ok=False, billable=False, provider='didit',
+                         reason='Missing or unusable ID number / name / date '
+                                'of birth — not sent, not charged.')
+
+    fields = {
+        'issuing_state': 'ZAF',
+        'services':      DIDIT_SERVICE,
+        'first_name':    first,
+        'last_name':     last,
+        'date_of_birth': dob,
+        'national_id':   digits,
+    }
+    try:
+        resp = requests.post(
+            base,
+            headers={'x-api-key': api_key},
+            files={k: (None, v) for k, v in fields.items()},   # multipart
+            timeout=timeout,
+        )
+    except Exception as e:                      # noqa: BLE001
+        return NPRResult(ok=False, billable=False, provider='didit',
+                         reason=f'Could not reach the verification service '
+                                f'({type(e).__name__}). No charge.')
+
+    if resp.status_code != 200:
+        return NPRResult(ok=False, billable=False, provider='didit',
+                         reason=f'Verification service returned HTTP '
+                                f'{resp.status_code}. No charge.')
+    try:
+        body = resp.json()
+    except Exception:
+        return NPRResult(ok=False, billable=False, provider='didit',
+                         reason='Unreadable response from the verification '
+                                'service. No charge.')
+
+    vals = body.get('validations') or []
+    code = (vals[0].get('outcome_code') if vals else '') or ''
+    code = str(code).upper()
+    ref = str(body.get('request_id') or '')
+
+    CONCLUSIVE = {'MATCH', 'PARTIAL_MATCH', 'NO_MATCH', 'DOCUMENT_NOT_FOUND'}
+    if code not in CONCLUSIVE:
+        return NPRResult(ok=False, billable=False, provider='didit',
+                         reference=ref,
+                         reason=f'Inconclusive result ({code or "unknown"}). '
+                                f'No charge.')
+
+    verified = (code == 'MATCH')
+    reasons = {
+        'MATCH':              'Confirmed against the Home Affairs register.',
+        'PARTIAL_MATCH':      'The ID number exists but the name or date of '
+                              'birth did not match the register.',
+        'NO_MATCH':           'The register returned no match for these details.',
+        'DOCUMENT_NOT_FOUND': 'This ID number was not found in the register.',
+    }
+    return NPRResult(ok=True, verified=verified, billable=True,
+                     provider='didit', reference=ref,
+                     reason=reasons[code],
+                     raw={'outcome_code': code,
+                          'match_type': body.get('match_type')})
 
 
 def provider_name() -> str:
