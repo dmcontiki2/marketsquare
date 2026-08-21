@@ -1988,7 +1988,7 @@ loadDashboard();
 <div id="ops-view" style="display:none;padding:24px 20px;max-width:900px;margin:0 auto;">
   <div class="health-panel" id="bit-ops-panel">
     <div class="health-title">🧪 BIT SELF-TEST
-      <span id="bit-ops-dot" style="margin-left:6px;color:#10b981;">●</span>
+      <span id="bit-ops-dot" style="margin-left:6px;color:#6b7280;" title="grey until /dashboard/bit answers — green is earned, never the default (INSTRUMENT-TRUTH-1)">●</span>
       <span class="health-updated" id="bit-ops-updated">loading…</span>
     </div>
     <div id="bit-ops-summary" style="font-size:13px;margin:6px 0 10px;"></div>
@@ -2005,7 +2005,7 @@ loadDashboard();
       <div class="health-metric"><div class="hm-label">Volume (Overpass DB)</div><div class="hm-value">100 GB SSD · /mnt/HC_Volume_105840760</div></div>
       <div class="health-metric"><div class="hm-label">Bandwidth</div><div class="hm-value">20 TB/mo</div></div>
       <div class="health-metric"><div class="hm-label">Location</div><div class="hm-value">Hetzner NBG1 · Germany</div></div>
-      <div class="health-metric"><div class="hm-label">Cost</div><div class="hm-value">CPX32 €17.99 + Volume €6.58 = €24.57/mo</div></div>
+      <div class="health-metric"><div class="hm-label">Cost</div><div class="hm-value">CPX32 €15.49 <span style="font-size:10px;color:#f59e0b">GRANDFATHERED</span> + Volume €6.58 = €22.07/mo<div style="font-size:10px;color:#94a3b8;margin-top:3px">New-order price today €35.49 (+129%) — ANY rescale reprices permanently (RUL-025). Static: canon.yml server_eur_month.</div></div></div>
     </div>
   </div>
   <div class="health-panel">
@@ -2020,14 +2020,15 @@ loadDashboard();
     </div>
   </div>
   <div class="health-panel">
-    <div class="health-title">🚀 SERVICES</div>
+    <div class="health-title">🚀 SERVICES <span style="font-size:10px;font-weight:700;color:#f59e0b;letter-spacing:.5px">STATIC REFERENCE — NOT MEASURED</span></div>
+    <div style="font-size:11px;color:#f59e0b;margin:-4px 0 10px;padding:7px 10px;border-radius:7px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.35)">⚠️ These are the services as CONFIGURED, written by hand — they are not probed and will read “Active” even when a service is down. For live state use the <b>Infrastructure</b> card on the Launch Switch tab, which probes <code>/admin/services-status</code> per row. (INSTRUMENT-TRUTH-1)</div>
     <div class="health-grid">
-      <div class="health-metric"><div class="hm-label">BEA (FastAPI)</div><div class="hm-value" style="color:#4ade80">✅ Active · port 8000</div></div>
-      <div class="health-metric"><div class="hm-label">Nginx</div><div class="hm-value" style="color:#4ade80">✅ Active · ports 80/443</div></div>
-      <div class="health-metric"><div class="hm-label">n8n Workflows</div><div class="hm-value" style="color:#4ade80">✅ Active · port 5678</div></div>
-      <div class="health-metric"><div class="hm-label">Overpass (self-hosted)</div><div class="hm-value" style="color:#f59e0b">⚠️ Pending re-import · port 12345</div></div>
-      <div class="health-metric"><div class="hm-label">Cloudflare CDN</div><div class="hm-value" style="color:#4ade80">✅ Active · Zone cached</div></div>
-      <div class="health-metric"><div class="hm-label">R2 Storage</div><div class="hm-value" style="color:#4ade80">✅ Active · Photos + media</div></div>
+      <div class="health-metric"><div class="hm-label">BEA (FastAPI)</div><div class="hm-value" style="color:#94a3b8">configured · port 8000</div></div>
+      <div class="health-metric"><div class="hm-label">Nginx</div><div class="hm-value" style="color:#94a3b8">configured · ports 80/443</div></div>
+      <div class="health-metric"><div class="hm-label">n8n Workflows</div><div class="hm-value" style="color:#94a3b8">configured · port 5678</div></div>
+      <div class="health-metric"><div class="hm-label">Overpass (self-hosted)</div><div class="hm-value" style="color:#94a3b8">configured · pending re-import · port 12345</div></div>
+      <div class="health-metric"><div class="hm-label">Cloudflare CDN</div><div class="hm-value" style="color:#94a3b8">configured · Zone cached</div></div>
+      <div class="health-metric"><div class="hm-label">R2 Storage</div><div class="hm-value" style="color:#94a3b8">configured · Photos + media</div></div>
     </div>
   </div>
   <div class="health-panel">

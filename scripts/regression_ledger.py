@@ -4822,8 +4822,19 @@ def rg_gate_admin_never_locked():
         if "def admin_login(req: _AdminLoginRequest, request: Request, response: Response)" not in bea:
             out.append((FAIL, "admin_login lost its Response/Request parameters -- it cannot set "
                               "the gate cookie or rate-limit by IP"))
-        if "_review_rate_ok(ip)" not in bea.split("def admin_login")[1][:1200]:
+        # ASSERTION CORRECTED 21 Aug 2026 (ADMIN-NOLOCK-2 / RG-0134). This used to demand
+        # the literal _review_rate_ok, which pinned the admin door to the SHARED reviewer
+        # bucket -- the very wiring that locked David out of his own dashboard on 21 Aug.
+        # The requirement was always "admin_login must be rate limited", never "must share
+        # the reviewer's budget". It now asserts the property, not the old spelling, and
+        # RG-0134 asserts the separation the old wording forbade. Not a weakening: a wrong
+        # admin credential still costs allowance.
+        _al = bea.split("def admin_login")[1][:1600]
+        if "_rate_ok(" not in _al:
             out.append((FAIL, "admin_login is anonymously reachable but NO LONGER rate limited"))
+        elif "_rate_ok(_admin_attempts" not in _al:
+            out.append((FAIL, "admin_login is rate limited from a bucket that is not its own -- "
+                              "reviewer-lane traffic can starve the admin door again (RG-0134)"))
     dash = repo_file("dashboard.server.html") or ""
     if dash and "Locked by the pre-launch gate" in dash:
         out.append((FAIL, "dashboard.server.html still tells the admin to enter the reviewer code "
@@ -6390,6 +6401,93 @@ def rg_openai_production_golden_run():
                           "then add the lane (P3)."))
     else:
         out.append((INFO, "openai carries a production golden gate"))
+    return out
+
+
+
+@entry("RG-0133", "Every state-painting panel on the +1 page either MEASURES what it paints or "
+                  "is LABELLED unmeasured -- and the static figures agree with canon",
+       LOCKED, scope="dashboard.server.html, all state-painting panels (the whole instrument "
+                     "layer, not just the card that was caught)",
+       fixed_on="2026-08-21",
+       ref="INSTRUMENT-TRUTH-1, 21 Aug 2026. David, after the third find of the morning: 'how "
+           "worried should I be?' -- then 'how many of these six are impossible to verify by AI, "
+           "how many would not have survived an AI verification?' Answer, by going and reading "
+           "them: ZERO were impossible -- every one was checkable from source against canon, no "
+           "live access or human eyes needed. They were unlooked-at, not unverifiable. TWO failed, "
+           "plus a THIRD the audit list itself had missed. (1) SERVER SPECS hardcoded 'CPX32 "
+           "EUR17.99 + Volume EUR6.58 = EUR24.57/mo' against canon.yml server_eur_month 15.49 -- "
+           "contradicting RUL-025's grandfathered price and overstating the box by EUR2.50/mo. "
+           "(2) BIT SELF-TEST painted its dot GREEN as the pre-data default, so it read healthy "
+           "while still loading and stayed healthy if the fetch died. (3) The SERVICES panel -- "
+           "SIX hand-written 'Active' verdicts, never probed, which would read Active through a "
+           "total outage; it was missed by the first audit because it has no id attribute and the "
+           "sweep enumerated by id. That miss is the same shortcut that makes these faults: "
+           "counting the easy-to-enumerate and calling it the set. RG-0093 (16 Aug) had already "
+           "raised the Infrastructure card to 'the same bar' as the AI card -- while the AI card "
+           "was itself config-painted, so a session benchmarked against something unverified and "
+           "propagated the defect as the standard. Fixes: cost corrected + sourced, SERVICES "
+           "labelled STATIC REFERENCE with the green stripped and the reader pointed at the "
+           "measured Infrastructure card, BIT dot defaults grey.")
+def rg_instrument_truth():
+    out = []
+    dash = repo_file("dashboard.server.html")
+    if dash is None:
+        out.append((INFO, "outside the repo -- source-only entry, skipped"))
+        return out
+    # measured   = probes an endpoint for the state it paints
+    # display    = renders server DATA but paints no health verdict
+    # labelled   = static, and SAYS SO on the card itself
+    PANEL_PROVENANCE = {
+        "infra-rows":       "measured:/admin/services-status",
+        "health-grid":      "measured:/health/resources",
+        "om-money-out":     "measured:/dashboard/summary",
+        "apv3-rows":        "measured:/admin/ai-test (RG-0130)",
+        "bit-ops-panel":    "measured:/dashboard/bit",
+        "hp-grid":          "display:/dashboard/summary",
+        "directions-grid":  "display:/dashboard/summary",
+        "prompt-panel":     "display:no verdict",
+        "travel-lane-card": "display:no verdict",
+        "ops-specs-grid":   "labelled:static, figures asserted against canon.yml below",
+    }
+    for pid, prov in PANEL_PROVENANCE.items():
+        if 'id="%s"' % pid not in dash:
+            out.append((INFO, "panel %s is no longer on the page -- drop it from "
+                              "PANEL_PROVENANCE" % pid))
+        if prov == "UNAUDITED":
+            out.append((FAIL, "panel %s is still unaudited for instrument truth" % pid))
+
+    # (3) the SERVICES panel has no id -- assert it by its content, and that it stays labelled
+    if "\U0001f680 SERVICES" in dash or "SERVICES</div>" in dash:
+        pass
+    if "STATIC REFERENCE — NOT MEASURED" not in dash:
+        out.append((FAIL, "the SERVICES panel lost its STATIC REFERENCE label -- six hand-written "
+                          "'Active' verdicts would read healthy through a total outage again"))
+    if "✅ Active · port 8000" in dash:
+        out.append((FAIL, "the SERVICES panel paints health-green 'Active' again from a hardcoded "
+                          "string -- it is not probed and must never look measured"))
+
+    # (1) static money on the page must equal canon
+    canon = repo_file("canon.yml") or ""
+    m = re.search(r"^\s*server_eur_month:\s*([0-9.]+)", canon, re.M)
+    if not m:
+        out.append((INFO, "canon.yml server_eur_month not readable -- cost cross-check skipped"))
+    else:
+        want = m.group(1)
+        if ("CPX32 €%s" % want) not in dash:
+            out.append((FAIL, "the SERVER SPECS cost line no longer matches canon.yml "
+                              "server_eur_month (%s) -- the dashboard is quoting a server price "
+                              "the canon does not carry, which is how EUR17.99 survived against "
+                              "RUL-025's grandfathered EUR15.49" % want))
+
+    # (2) no panel may default to a health colour before its data lands
+    if 'id="bit-ops-dot" style="margin-left:6px;color:#10b981' in dash:
+        out.append((FAIL, "the BIT dot defaults GREEN again -- a health colour must be earned by "
+                          "data, never be the pre-data default"))
+
+    if not out:
+        out.append((INFO, "every +1-page panel is measured, display-only, or labelled static; "
+                          "static figures agree with canon; no dot defaults to green"))
     return out
 
 
