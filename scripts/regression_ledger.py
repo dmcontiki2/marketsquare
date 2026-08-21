@@ -6491,6 +6491,96 @@ def rg_instrument_truth():
     return out
 
 
+@entry("RG-0136", "Paid Home Affairs ID verification stays OPTIONAL, HONEST and CHEAP TO BE WRONG: "
+       "only an NPR pass may be called 'verified' to a buyer, the tick never gates an "
+       "introduction, a reused ID number is flagged not inherited, and no provider failure "
+       "can ever charge a seller",
+       OPEN, fixed_on="",
+       scope="Sellers in every category; the buyer warning names the deposit risk for "
+             "ACCOMMODATION specifically because that is the scam it exists to counter. "
+             "NOT yet covered: the UI green tick and warning are backend-ready but the "
+             "front-end render is not built, and no provider is configured -- so today the "
+             "capability is dark and correct rather than live. Say so; do not imply a "
+             "seller can actually buy a check yet.",
+       ref="ID-NPR-1 / RUL-039, 21 Aug 2026. David, on the stay-deposit scam: build the "
+           "capability into the ID upload to buy verification at 1 Tuppence, 'less forced "
+           "and at the same time better visibility... only ever do this verification one "
+           "time, against a database of ID numbers'. Three states -- submitted / "
+           "ai_checked / npr_verified -- because the existing Sonnet document check was "
+           "setting users.id_verified_at at confidence >=0.60 with the code's own comment "
+           "'no human review path', and that flag is what buyers were being shown as "
+           "'verified'. It only proves the document is legible and self-consistent. "
+           "The one-check-ever dedupe carries a security twist that must not be optimised "
+           "away: the same ID hash on a SECOND account is a duplicate identity claim, so it "
+           "is flagged and granted nothing -- a reused ID is a fraud signal, not a saving. "
+           "OPEN until a provider is configured and a real check has run end to end; "
+           "promote to LOCKED then.")
+def rg_id_npr():
+    out = []
+    bea = repo_file("bea_main.py")
+    prov = repo_file("id_verify_provider.py")
+    tests = repo_file("test_id_npr.py")
+
+    if bea is None:
+        return [(FAIL, "bea_main.py not readable from here")]
+
+    # 1 ── the paid tier must stay a SEPARATE column from the introduction gate.
+    # A session "simplifying" these into one would silently make the tick a
+    # barrier, which is the exact opposite of David's ruling.
+    i = bea.find("def _seller_intro_gate")
+    gate = bea[i:i + 1400] if i > 0 else ""
+    if not gate:
+        out.append((FAIL, "_seller_intro_gate not found"))
+    else:
+        if "id_verified_at" not in gate:
+            out.append((FAIL, "the introduction gate lost its id_verified_at check"))
+        if "id_npr_verified_at" in gate:
+            out.append((FAIL, "RUL-039 BREACH: the paid NPR tick has become an "
+                              "introduction gate -- it must never block a seller"))
+
+    # 2 ── the buyer notice must be informational, never able to raise
+    j = bea.find("def _seller_verification_notice")
+    if j < 0:
+        out.append((FAIL, "the unverified-seller buyer notice is missing"))
+    else:
+        body = bea[j:j + 2200]
+        if "raise HTTPException" in body:
+            out.append((FAIL, "RUL-039 BREACH: the unverified-seller notice can raise -- "
+                              "it must inform, never block"))
+        if "Never pay a deposit" not in body:
+            out.append((FAIL, "the stay warning no longer names the deposit risk"))
+
+    # 3 ── the duplicate-identity trap must still be there
+    if "duplicate_hash" not in bea:
+        out.append((FAIL, "the duplicate-ID trap is gone: a reused ID number could now "
+                          "inherit another account's verification"))
+
+    # 4 ── the provider must fail closed (no provider => no charge)
+    if prov is None:
+        out.append((FAIL, "id_verify_provider.py missing -- the swappable adapter is the "
+                          "supplier-fallback doctrine for this lane"))
+    else:
+        if "billable" not in prov:
+            out.append((FAIL, "provider result lost its 'billable' flag -- a supplier "
+                              "failure could charge a seller"))
+
+    # 5 ── the guards themselves
+    if tests is None:
+        out.append((FAIL, "test_id_npr.py missing"))
+    else:
+        for name in ("test_duplicate_hash_on_second_account_is_flagged_not_granted",
+                     "test_intro_gate_still_uses_only_id_verified_at",
+                     "test_provider_fails_closed_when_unconfigured"):
+            if name not in tests:
+                out.append((FAIL, "guard removed: " + name))
+
+    if not out:
+        out.append((INFO, "NPR tier separate from the intro gate; buyer notice informs "
+                          "without blocking; duplicate-ID trap intact; provider fails "
+                          "closed; 10 guards present"))
+    return out
+
+
 @entry("RG-0135", "Every journey map an advert can show has FREE pre-information under it: "
        "itinerary, real cost, entry/visas, health, safety notices, money/taxes/tipping and "
        "a dated re-check list -- and the panel ends in an INTRODUCTION, never a sale",

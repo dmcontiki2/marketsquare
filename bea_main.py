@@ -435,11 +435,43 @@ def run_migrations(conn):
         # live presence — added Session 148 (live-users dashboard)
         "ALTER TABLE users ADD COLUMN last_seen TEXT",
         "ALTER TABLE users ADD COLUMN last_city TEXT",
+        # ID-NPR-1 (21 Aug 2026) — paid Home Affairs NPR verification.
+        # DELIBERATELY SEPARATE from id_verified_at: that column is the
+        # AI document check and remains the introduction gate. These are
+        # the green tick, which is optional and never gates anything.
+        "ALTER TABLE users ADD COLUMN id_npr_verified_at TEXT",
+        "ALTER TABLE users ADD COLUMN id_npr_provider TEXT",
+        "ALTER TABLE users ADD COLUMN id_npr_ref TEXT",
     ]:
         try:
             conn.execute(col_def)
         except Exception:
             pass  # column already exists
+
+    # ── ID-NPR-1 · verification ledger ──────────────────────────────
+    # One row per ID HASH ever submitted for an NPR check. Two jobs:
+    #   COST   — we pay a supplier per query, so a hash already checked is
+    #            never re-queried. David: "only ever do this one time".
+    #   FRAUD  — if a hash appears under a SECOND email, that is a duplicate
+    #            identity claim. It must NEVER inherit the first account's
+    #            pass; it is flagged for review and no charge is made.
+    # Raw ID numbers are never stored here, only the salted hash, same as
+    # users.id_number_hash (POPIA).
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS id_verification_ledger (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            id_hash       TEXT    NOT NULL,
+            email         TEXT    NOT NULL,
+            outcome       TEXT    NOT NULL,
+            provider      TEXT    NOT NULL DEFAULT '',
+            provider_ref  TEXT    NOT NULL DEFAULT '',
+            charged_t     INTEGER NOT NULL DEFAULT 0,
+            reason        TEXT    NOT NULL DEFAULT '',
+            created_at    TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+        )
+    """)
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_idver_hash ON id_verification_ledger(id_hash)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_idver_email ON id_verification_ledger(email)")
 
     conn.execute("""
         CREATE TABLE IF NOT EXISTS seller_documents (
@@ -2136,6 +2168,11 @@ class IntroRequest(BaseModel):
     buyer_email: str
     buyer_name: Optional[str] = None
     message: Optional[str] = None
+    # ID-NPR-1 (RUL-039): set by the client when the buyer has seen and
+    # accepted the "this seller is not Home Affairs verified" warning.
+    # Recorded for evidence. It is NEVER a gate — a buyer who does not send
+    # it still gets their introduction; we simply have not logged consent.
+    unverified_ack: Optional[bool] = None
 
 # ── HEALTH ───────────────────────────────────────────────────
 
@@ -5325,10 +5362,27 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
     if _gate:
         conn.close()
         raise _gate
+    # ID-NPR-1 (RUL-039): compute the seller's verification notice BEFORE the
+    # connection closes. Informational only — it never stops the introduction.
+    _notice = _seller_verification_notice(conn, listing["seller_email"],
+                                          listing["category"])
     conn.execute(
         "INSERT INTO intro_requests (listing_id, buyer_email, buyer_name, message) VALUES (?,?,?,?)",
         (intro.listing_id, intro.buyer_email, intro.buyer_name, intro.message)
     )
+    if _notice.get("warn"):
+        # Evidence that the buyer was told, and whether they confirmed it.
+        try:
+            conn.execute(
+                """INSERT INTO id_verification_ledger
+                   (id_hash, email, outcome, reason)
+                   VALUES ('-', ?, 'buyer_notice', ?)""",
+                (intro.buyer_email,
+                 f"listing {intro.listing_id}: unverified seller notice shown; "
+                 f"buyer_ack={bool(intro.unverified_ack)}")
+            )
+        except Exception:
+            pass          # evidence logging must never break an introduction
     conn.commit()
     conn.close()
     if N8N_WEBHOOK_NEW_INTRO:
@@ -5398,6 +5452,233 @@ def get_intros(listing_id: int):
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+def _seller_verification_notice(conn, seller_email, category=None):
+    """
+    ID-NPR-1 / RUL-039 — the buyer-facing truth about this seller's identity.
+
+    Returns a dict the client renders as a warning. NEVER blocks: David's
+    ruling is informed consent, not gatekeeping. The onus sits with the buyer,
+    and the seller carries the commercial cost of declining to verify.
+
+    Accommodation is called out by name because the deposit scam this exists
+    to counter is specific to stays — but the notice is returned for every
+    category so no caller has to special-case it.
+    """
+    em = (seller_email or "").lower().strip()
+    if not em:
+        return {"npr_verified": False, "warn": False}
+    row = conn.execute(
+        "SELECT id_npr_verified_at FROM users WHERE lower(email)=?", (em,)
+    ).fetchone()
+    verified = bool(row and row["id_npr_verified_at"])
+    if verified:
+        return {"npr_verified": True, "warn": False,
+                "badge": "Home Affairs verified"}
+
+    is_stay = str(category or "").strip().lower().startswith("adventure")
+    msg = ("This seller has not verified their identity with Home Affairs. "
+           "TrustSquare has not confirmed who they are.")
+    if is_stay:
+        msg += (" Never pay a deposit for a place you have not seen. "
+                "TrustSquare never holds deposits and cannot recover money "
+                "you send to a seller.")
+    return {
+        "npr_verified": False,
+        "warn": True,
+        "headline": "Identity not verified",
+        "message": msg,
+        "proceed_is_your_decision": True,
+    }
+
+
+# ══ ID-NPR-1 (21 Aug 2026) — paid Home Affairs NPR verification ═══════════
+# David's ruling: the seller may BUY a real identity check for 1 Tuppence.
+# It is offered at ID upload, it is NEVER a blocker, and the onus stays with
+# the buyer to accept an unverified stay. The seller carries the commercial
+# risk of losing prospects by declining it.
+#
+# This sits ON TOP of the existing AI document check. users.id_verified_at is
+# untouched and remains the introduction gate — nothing here can take a
+# seller's introductions away.
+ID_NPR_PRICE_T = 1
+
+
+class NPRVerifyRequest(BaseModel):
+    id_number: str
+    full_name: str
+
+
+@app.post("/users/{email}/verify-identity-npr")
+def verify_identity_npr(email: str, payload: NPRVerifyRequest,
+                        x_actor_email: str = Header(None)):
+    """
+    Buy one NPR check. 1T. Charged ONLY when a supplier query is actually
+    consumed — every early return below is free.
+
+    Outcomes:
+      already_verified  this account already holds the tick        — no charge
+      duplicate_hash    this ID is already on ANOTHER account      — no charge, FLAGGED
+      cached_pass/fail  this exact hash was checked before         — no charge
+      verified / failed a live supplier query ran                  — 1T charged
+      unavailable       no provider configured, or supplier down   — no charge
+    """
+    import id_verify_provider
+
+    em = (email or "").lower().strip()
+    if not em:
+        raise HTTPException(status_code=400, detail="email required")
+
+    id_clean = re.sub(r"[^0-9A-Za-z]", "", payload.id_number or "")
+    if len(id_clean) < 6:
+        raise HTTPException(status_code=400, detail="ID number too short")
+
+    id_hash = _hash_id_number(id_clean)
+    conn = get_db()
+    try:
+        urow = conn.execute(
+            "SELECT id_npr_verified_at FROM users WHERE lower(email)=?", (em,)
+        ).fetchone()
+        if urow is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # 1 ── idempotent: never bill an account twice for the same tick
+        if urow["id_npr_verified_at"]:
+            return {"outcome": "already_verified", "charged_t": 0,
+                    "verified": True, "verified_at": urow["id_npr_verified_at"],
+                    "message": "This ID is already verified. No charge."}
+
+        # 2 ── duplicate identity: the SAME ID hash on a DIFFERENT account.
+        # This must never inherit the earlier pass — a reused ID number is a
+        # fraud signal, not a saving. No charge, flagged for review.
+        dup = conn.execute(
+            """SELECT email FROM id_verification_ledger
+               WHERE id_hash=? AND lower(email)<>? LIMIT 1""",
+            (id_hash, em)
+        ).fetchone()
+        if dup:
+            conn.execute(
+                """INSERT INTO id_verification_ledger
+                   (id_hash, email, outcome, reason)
+                   VALUES (?,?,'duplicate_hash',?)""",
+                (id_hash, em, f"ID already presented by another account")
+            )
+            conn.commit()
+            return {"outcome": "duplicate_hash", "charged_t": 0,
+                    "verified": False,
+                    "message": "This ID number is already registered to a "
+                               "different account. For your security this "
+                               "needs a manual check — support has been "
+                               "notified. You have not been charged."}
+
+        # 3 ── same account, same hash, already answered: reuse, never re-buy
+        prior = conn.execute(
+            """SELECT outcome, provider, provider_ref FROM id_verification_ledger
+               WHERE id_hash=? AND lower(email)=? AND outcome IN ('verified','failed')
+               ORDER BY id DESC LIMIT 1""",
+            (id_hash, em)
+        ).fetchone()
+        if prior:
+            return {"outcome": f"cached_{'pass' if prior['outcome']=='verified' else 'fail'}",
+                    "charged_t": 0, "verified": prior["outcome"] == "verified",
+                    "message": "This ID has already been checked. No charge."}
+
+        # 4 ── supplier availability BEFORE any money moves
+        if not id_verify_provider.is_available():
+            return {"outcome": "unavailable", "charged_t": 0, "verified": False,
+                    "message": "Identity verification is not available right "
+                               "now. You have not been charged."}
+
+        # 5 ── live query
+        res = id_verify_provider.verify_id(id_clean, payload.full_name or "")
+
+        if not res.billable:
+            conn.execute(
+                """INSERT INTO id_verification_ledger
+                   (id_hash, email, outcome, provider, reason)
+                   VALUES (?,?,'unavailable',?,?)""",
+                (id_hash, em, res.provider, res.reason[:300])
+            )
+            conn.commit()
+            return {"outcome": "unavailable", "charged_t": 0, "verified": False,
+                    "message": "We could not complete the check. "
+                               "You have not been charged.",
+                    "detail": res.reason}
+
+        # A supplier query was consumed — charge now. 402 if short, and the
+        # charge is written in the same transaction as the ledger row.
+        _deduct_tuppence(conn, em, ID_NPR_PRICE_T,
+                         f"Home Affairs ID verification ({res.provider})")
+
+        outcome = "verified" if res.verified else "failed"
+        conn.execute(
+            """INSERT INTO id_verification_ledger
+               (id_hash, email, outcome, provider, provider_ref, charged_t, reason)
+               VALUES (?,?,?,?,?,?,?)""",
+            (id_hash, em, outcome, res.provider, res.reference,
+             ID_NPR_PRICE_T, res.reason[:300])
+        )
+
+        if res.verified:
+            conn.execute(
+                """UPDATE users SET id_npr_verified_at=strftime('%Y-%m-%dT%H:%M:%SZ','now'),
+                   id_npr_provider=?, id_npr_ref=? WHERE lower(email)=?""",
+                (res.provider, res.reference, em)
+            )
+        conn.commit()
+
+        return {
+            "outcome": outcome, "charged_t": ID_NPR_PRICE_T,
+            "verified": res.verified, "provider": res.provider,
+            "message": ("Verified against the Home Affairs population register."
+                        if res.verified else
+                        "The population register did not confirm this ID. "
+                        "Please check the number and names on your document."),
+        }
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+@app.get("/users/{email}/id-status")
+def id_status(email: str):
+    """
+    The three states, for the badge and the buyer warning.
+    Note the wording: only the NPR tier is called 'verified' to a buyer.
+    """
+    em = (email or "").lower().strip()
+    conn = get_db()
+    try:
+        r = conn.execute(
+            """SELECT id_number_hash, id_verified_at, id_ai_score,
+                      id_npr_verified_at, id_npr_provider
+               FROM users WHERE lower(email)=?""", (em,)
+        ).fetchone()
+        if r is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        if r["id_npr_verified_at"]:
+            state, label = "npr_verified", "ID verified with Home Affairs"
+        elif r["id_verified_at"]:
+            state, label = "ai_checked", "ID document on file"
+        elif r["id_number_hash"]:
+            state, label = "submitted", "ID submitted"
+        else:
+            state, label = "none", "No ID on file"
+        return {
+            "state": state, "label": label,
+            "green_tick": state == "npr_verified",
+            "npr_verified_at": r["id_npr_verified_at"],
+            "price_t": ID_NPR_PRICE_T,
+            "can_buy": state != "npr_verified",
+        }
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
 
 @app.put("/intros/{intro_id}/accept")
 def accept_intro(intro_id: int, background_tasks: BackgroundTasks,

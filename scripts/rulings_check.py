@@ -110,6 +110,22 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-039": [
+   # Paid NPR verification: offered, visible, never a blocker.
+   # Assert the PROPERTIES that must not rot, not the wording:
+   #   1. the ruling is on record
+   #   2. the paid tier is a SEPARATE column from the intro gate (id_verified_at
+   #      keeps its job — a session must never "simplify" these into one)
+   #   3. the ledger exists (one check ever) AND the duplicate-hash trap is coded
+   #   4. the provider is a swappable adapter that fails closed
+   #   5. the guards exist
+   ("RULINGS.md", ["PAID HOME AFFAIRS ID VERIFICATION AT 1 TUPPENCE"], []),
+   ("bea_main.py", ["id_npr_verified_at", "id_verification_ledger",
+                    "duplicate_hash", "ID_NPR_PRICE_T"], []),
+   ("id_verify_provider.py", ["billable", "is_available", "fail"], []),
+   ("test_id_npr.py", ["test_duplicate_hash_on_second_account_is_flagged_not_granted",
+                       "test_npr_column_is_separate_from_intro_gate"], []),
+ ],
  "RUL-038": [
    # The advert must carry the pre-information, and it must sit BELOW the map.
    # Assert the PROPERTY, not a spelling: the data exists, the renderer exists, the
