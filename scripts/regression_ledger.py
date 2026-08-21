@@ -6498,10 +6498,12 @@ def rg_instrument_truth():
        OPEN, fixed_on="",
        scope="Sellers in every category; the buyer warning names the deposit risk for "
              "ACCOMMODATION specifically because that is the scam it exists to counter. "
-             "NOT yet covered: the UI green tick and warning are backend-ready but the "
-             "front-end render is not built, and no provider is configured -- so today the "
-             "capability is dark and correct rather than live. Say so; do not imply a "
-             "seller can actually buy a check yet.",
+             "Front end SHIPPED 21 Aug (seller buy-card, green tick, buyer warning) and the "
+             "Didit provider is CONFIGURED -- the lane is armed end to end. STILL NOT "
+             "PROVEN: no real NPR query has ever run, so (a) whether Didit's 500 free "
+             "monthly verifications cover Database Validation or it bills $1.10 from call "
+             "one, and (b) the outcome mapping against a real registry response, are both "
+             "untested. Do not call this proven until a live check has completed.",
        ref="ID-NPR-1 / RUL-039, 21 Aug 2026. David, on the stay-deposit scam: build the "
            "capability into the ID upload to buy verification at 1 Tuppence, 'less forced "
            "and at the same time better visibility... only ever do this verification one "
@@ -6586,6 +6588,22 @@ def rg_id_npr():
     if "/id-verify/status" not in bea:
         out.append((FAIL, "the /id-verify/status probe is gone -- provider health "
                           "becomes invisible and a dead lane goes silent"))
+
+    # 4d ── the FRONT END must exist and must stay advisory. Backend-only was
+    # the state that let this be "done" while no seller could buy anything.
+    msjs = repo_file("ms.js")
+    if msjs is None or "msUnverifiedGate" not in (msjs or ""):
+        out.append((FAIL, "the buyer warning is not in ms.js -- the lane is armed but "
+                          "no buyer is ever told a seller is unverified"))
+    elif "catch(e){ return true; }" not in msjs:
+        out.append((FAIL, "RUL-039 BREACH: msUnverifiedGate can fail closed -- a warning "
+                          "error would block a buyer's introduction"))
+    if msjs and "msRenderIdVerifyCard" not in msjs:
+        out.append((FAIL, "the seller's buy-a-check card is gone -- verification is "
+                          "unreachable from the app"))
+    if msjs and "green_tick" not in msjs:
+        out.append((FAIL, "the tick no longer keys off green_tick -- an AI document "
+                          "check could be shown to a buyer as 'verified'"))
 
     # 5 ── the guards themselves
     if tests is None:

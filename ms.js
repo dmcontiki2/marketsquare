@@ -5179,7 +5179,14 @@ function submitIntro(){
     // Post to BEA if listing is a live listing
     if(BEA_ENABLED && l.isLive) {
       const beaId = parseInt(String(l.id).replace('bea_',''));
-      apiPost('/intros', { listing_id: beaId, buyer_email: email, buyer_name: name, message: msg || null });
+      // ID-NPR-5 (RUL-039): tell the buyer if this seller is unverified. Advisory
+      // only — declining is the buyer stepping back, never us refusing them.
+      (async () => {
+        const ok = await msUnverifiedGate(l.sellerEmail || l.seller_email || '', l.category);
+        if(!ok){ showToast('Introduction not sent.'); return; }
+        apiPost('/intros', { listing_id: beaId, buyer_email: email, buyer_name: name,
+                             message: msg || null, unverified_ack: true });
+      })();
     }
   }
 }
@@ -14033,6 +14040,11 @@ function msRenderLiveSignals(signals){
       if(sig.key === 'id_verified'){
         actionBtn = '<button class="ms-sig-action" data-action="upload-id">Upload ID →</button>';
       }
+      // ID-NPR-5: the paid Home Affairs check lives in its own card so it is
+      // never mistaken for the free document upload above it.
+      if(sig.key === 'id_verified' && typeof msRenderIdVerifyCard === 'function'){
+        setTimeout(()=>msRenderIdVerifyCard('ms-id-verify-card'), 0);
+      }
     }
 
     return '<div class="ms-signal-row">'
@@ -16886,3 +16898,158 @@ setInterval(function(){
     }, 500);
   }catch(e){}
 })();
+
+
+/* ══ ID-NPR-5 · Home Affairs verification, front end (RUL-039) ═══════════════
+   Three pieces, all deliberately non-blocking:
+     1. msIdVerifyCard()  — the seller's buy-a-check card (1 Tuppence)
+     2. msVerifiedTick()  — the green tick, ONLY for an NPR pass
+     3. msUnverifiedGate()— the buyer's warning before an introduction
+
+   David's ruling: offered, visible, never forced. A seller who declines keeps
+   their listing and their introductions; a buyer who proceeds is told plainly
+   and the choice stays theirs. Nothing here may ever block.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const MS_ID_STATE = { cache: {} };
+
+async function msIdStatus(email, force){
+  if(!email) return null;
+  const k = email.toLowerCase();
+  if(!force && MS_ID_STATE.cache[k]) return MS_ID_STATE.cache[k];
+  try{
+    const r = await fetch(BEA_URL+'/users/'+encodeURIComponent(email)+'/id-status');
+    if(!r.ok) return null;
+    const d = await r.json();
+    MS_ID_STATE.cache[k] = d;
+    return d;
+  }catch(e){ return null; }
+}
+
+/* The tick. Only an NPR pass earns it — an AI document check never does. */
+function msVerifiedTick(state){
+  if(!state || !state.green_tick) return '';
+  return '<span class="ms-id-tick" title="Identity verified against the Home Affairs '
+       + 'population register">'
+       + '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">'
+       + '<circle cx="8" cy="8" r="8" fill="#16a34a"></circle>'
+       + '<path d="M4.5 8.2l2.3 2.3 4.7-4.7" fill="none" stroke="#fff" '
+       + 'stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>'
+       + '</svg><span>Verified</span></span>';
+}
+
+/* The seller's card. Shown once an ID is on file; buying is always optional. */
+async function msRenderIdVerifyCard(containerId){
+  const id = containerId || 'ms-id-verify-card';
+  let host = document.getElementById(id);
+  if(!host){
+    // Create our own host rather than editing the 418KB page. It sits directly
+    // under the trust-signals list, which is where a seller is already looking
+    // at what their ID is worth.
+    const anchor = document.getElementById('ms-trust-signals');
+    if(!anchor) return;
+    host = document.createElement('div');
+    host.id = id;
+    anchor.parentNode.insertBefore(host, anchor.nextSibling);
+  }
+  const email = localStorage.getItem('ms_user_email') || localStorage.getItem('ms_aa_email') || '';
+  if(!email){ host.innerHTML=''; return; }
+
+  const [st, lane] = await Promise.all([
+    msIdStatus(email, true),
+    fetch(BEA_URL+'/id-verify/status').then(r=>r.ok?r.json():null).catch(()=>null)
+  ]);
+  if(!st){ host.innerHTML=''; return; }
+
+  if(st.state === 'npr_verified'){
+    host.innerHTML = '<div class="ms-idv ms-idv-done">'+msVerifiedTick(st)
+      + '<div class="ms-idv-body"><strong>Identity verified with Home Affairs</strong>'
+      + '<p>Buyers see the green tick on your listings.</p></div></div>';
+    return;
+  }
+  /* Lane down, or no ID on file yet — say so honestly, offer nothing to click. */
+  if(!lane || !lane.available){
+    host.innerHTML = '<div class="ms-idv"><div class="ms-idv-body">'
+      + '<strong>Home Affairs verification</strong>'
+      + '<p>Temporarily unavailable. Nothing has been charged — try again later.</p>'
+      + '</div></div>';
+    return;
+  }
+  if(st.state === 'none'){
+    host.innerHTML = '<div class="ms-idv"><div class="ms-idv-body">'
+      + '<strong>Home Affairs verification</strong>'
+      + '<p>Upload your ID first, then you can verify it against the Home Affairs '
+      + 'register and earn the green tick.</p></div></div>';
+    return;
+  }
+
+  const price = (lane.price_t || 1);
+  host.innerHTML = '<div class="ms-idv"><div class="ms-idv-body">'
+    + '<strong>Get the green tick — ' + price + ' Tuppence</strong>'
+    + '<p>We check your ID number against the Home Affairs population register. '
+    + 'Buyers see a verified badge on your listings. This is optional — your '
+    + 'listings and introductions work either way.</p>'
+    + '<label class="ms-idv-field">Full name as it appears on your ID'
+    + '<input id="ms-idv-name" type="text" autocomplete="name" placeholder="e.g. Anna Janse van Rensburg"></label>'
+    + '<label class="ms-idv-field">ID number'
+    + '<input id="ms-idv-num" type="text" inputmode="numeric" maxlength="13" placeholder="13 digits"></label>'
+    + '<button class="ms-idv-btn" id="ms-idv-go">Verify my ID · ' + price + 'T</button>'
+    + '<p class="ms-idv-fine">You are charged only if the register gives us an answer. '
+    + 'If it cannot be reached, you pay nothing.</p>'
+    + '</div></div>';
+
+  const go = document.getElementById('ms-idv-go');
+  if(go) go.onclick = () => msBuyIdVerification(email, containerId);
+}
+
+async function msBuyIdVerification(email, containerId){
+  const nameEl = document.getElementById('ms-idv-name');
+  const numEl  = document.getElementById('ms-idv-num');
+  const btn    = document.getElementById('ms-idv-go');
+  const full   = (nameEl && nameEl.value || '').trim();
+  const idnum  = (numEl && numEl.value || '').replace(/\D/g,'');
+  if(full.length < 3){ showToast('Enter your full name as it appears on your ID'); return; }
+  if(idnum.length !== 13){ showToast('A South African ID number is 13 digits'); return; }
+
+  if(btn){ btn.disabled = true; btn.textContent = 'Checking…'; }
+  try{
+    const r = await fetch(BEA_URL+'/users/'+encodeURIComponent(email)+'/verify-identity-npr', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ id_number: idnum, full_name: full })
+    });
+    const d = await r.json().catch(()=>({}));
+    if(r.status === 402){
+      showToast(d.detail || 'Not enough Tuppence — top up and try again', 5000);
+      if(btn){ btn.disabled = false; btn.textContent = 'Verify my ID · 1T'; }
+      return;
+    }
+    showToast(d.message || 'Done', 6000);
+    MS_ID_STATE.cache = {};
+    await msRenderIdVerifyCard(containerId);
+    if(typeof loadLiveListings === 'function') loadLiveListings(0);
+  }catch(e){
+    showToast('Could not complete the check. You have not been charged.', 5000);
+    if(btn){ btn.disabled = false; btn.textContent = 'Verify my ID · 1T'; }
+  }
+}
+
+/* The buyer's warning. Returns true to proceed. NEVER blocks — declining is
+   simply the buyer choosing not to continue, not us refusing them. */
+async function msUnverifiedGate(sellerEmail, category){
+  try{
+    if(!sellerEmail) return true;
+    const st = await msIdStatus(sellerEmail);
+    if(st && st.green_tick) return true;          // verified — no warning
+
+    const isStay = String(category||'').toLowerCase().indexOf('adventure') === 0;
+    let msg = 'This seller has not verified their identity with Home Affairs. '
+            + 'TrustSquare has not confirmed who they are.';
+    if(isStay){
+      msg += '\n\nNever pay a deposit for a place you have not seen. '
+           + 'TrustSquare never holds deposits and cannot recover money you send '
+           + 'to a seller.';
+    }
+    msg += '\n\nDo you want to continue with this introduction?';
+    return window.confirm(msg);
+  }catch(e){ return true; }   /* a warning failure must never block a buyer */
+}
