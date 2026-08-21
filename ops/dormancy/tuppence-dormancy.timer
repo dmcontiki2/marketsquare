@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  tuppence-dormancy.timer — the monthly sweep that keeps EULA §6.3's promise.
+#
+#  §6.3 promises unused Tuppence expires after 24 months of inactivity AND that we
+#  email the holder at least 30 days beforehand. This timer is the second half of
+#  that promise. It runs monthly, not daily: the 30-day notice window is measured
+#  in days, so a monthly cadence can never make a warning late by more than a few
+#  days, and the sweep is a no-op the rest of the time.
+#
+#  EXPECTED RESULT FOR ~20 MONTHS: zero. The oldest accounts date from April 2026,
+#  so nothing can reach 24 months of inactivity before roughly April 2028. It runs
+#  anyway — a compliance mechanism first exercised on the day it matters is one
+#  that has never been tested.
+#
+#  Enable with:  systemctl enable --now tuppence-dormancy.timer
+#  Watch with:   systemctl list-timers tuppence-dormancy.timer
+#  Last run:     journalctl -u tuppence-dormancy.service -n 50
+# ─────────────────────────────────────────────────────────────────────────────
+[Unit]
+Description=Monthly Tuppence dormancy sweep (EULA 6.3 — 24-month expiry, 30-day notice)
+
+[Timer]
+# 04:40 UTC on the 1st of each month — off-peak, and clear of the 05:20 maintenance run.
+OnCalendar=*-*-01 04:40:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+Unit=tuppence-dormancy.service
+
+[Install]
+WantedBy=timers.target

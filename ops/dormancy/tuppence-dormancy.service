@@ -1,0 +1,33 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  tuppence-dormancy.service — one monthly run of the dormancy sweep.
+#
+#  Triggered by tuppence-dormancy.timer. Oneshot: exits after each run.
+#
+#  SAFETY, by construction:
+#   · The sweep NEVER expires anything without a warning email that was actually
+#     sent AND is at least 30 days old. No warning on record = it warns instead.
+#   · It refuses to run with --apply when RESEND_API_KEY is absent, so an expiry
+#     can never ride on a warning that could not be sent. EnvironmentFile below
+#     supplies the key; if that file is missing the run exits 2 and changes nothing.
+#   · Expiry is one offsetting `dormancy_expiry` ledger row — the wallet stays a
+#     pure SUM(amount). Nothing is ever destructively updated.
+#
+#  To dry-run by hand before trusting it:
+#     cd /var/www/marketsquare && python3 tuppence_dormancy.py
+#  (no --apply = report only, writes nothing, sends nothing)
+# ─────────────────────────────────────────────────────────────────────────────
+[Unit]
+Description=Tuppence dormancy sweep (EULA 6.3) — warn at 23 months, expire at 24
+After=network-online.target marketsquare.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/var/www/marketsquare
+# RESEND_API_KEY lives in the live env file; without it --apply refuses (exit 2).
+EnvironmentFile=-/var/www/marketsquare/.env
+ExecStart=/usr/bin/python3 /var/www/marketsquare/tuppence_dormancy.py --apply
+TimeoutStartSec=900
+
+# A failed sweep must never thrash: the next monthly tick simply tries again.
+# Nothing is half-applied — each account is committed independently.

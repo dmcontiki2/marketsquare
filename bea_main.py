@@ -11,6 +11,7 @@ import ai_service_tiers  # Tiered Value Selector: tier config + availability res
 import feature_flags     # TVS STEP 5: server-readable paid/provider flag store
 import tier_resolvers    # TVS STEP 3: FREE/owned data resolvers (no paid/consumption API)
 import launch_redemption  # Founders Badge + monthly Tuppence allocation + flood control (Canon Addendum 1)
+import account_closure     # ACCOUNT-CLOSE-1: EULA SS14 closure/retention/restore (21 Aug 2026)
 import ai_provider        # D1 seam: ALL LLM inference goes through ai_provider.complete() (P0, 17 Jul 2026)
 import asyncio
 import os
@@ -4458,10 +4459,28 @@ def create_user(user: User, _key: str = Depends(auth.require_api_key)):
             (user.ai_sessions, user.email)
         )
         conn.commit()
+    # ACCOUNT-CLOSE-1: a returning user gets their retained Tuppence back (EULA 14.1/14.3).
+    # Matched on the verified ID hash where one exists, else the email address. Never
+    # raises into the signup path — a restore failure must not block registration.
+    restored = None
+    if is_new:
+        try:
+            _row = conn.execute(
+                "SELECT id_number_hash FROM users WHERE lower(email)=lower(?)",
+                (user.email,)).fetchone()
+            _idh = _row["id_number_hash"] if _row and "id_number_hash" in _row.keys() else None
+            restored = account_closure.restore_on_return(conn, user.email, _idh)
+        except Exception as exc:
+            _log.error("ACCOUNT-CLOSE-1 restore check failed for %s: %s", user.email, exc)
     conn.close()
     if is_new:
         _brevo_mark_signed_up(user.email)   # EMAIL-WAVE-1: wave suppression on signup
-    return {"message": "User created successfully"}
+    out = {"message": "User created successfully"}
+    if restored:
+        out["restored_tuppence"] = restored["restored"]
+        out["message"] = ("Welcome back — %dT restored from your previous account."
+                          % restored["restored"])
+    return out
 
 @app.get("/users/{email}")
 def get_user(email: str, _key: str = Depends(auth.require_api_key)):
@@ -4989,13 +5008,43 @@ async def upload_user_id(email: str, file: UploadFile = File(...), _key: str = D
     finally:
         conn.close()
 
+# ══ ACCOUNT-CLOSE-1 (21 Aug 2026) — EULA SS14.1/14.2/14.3 in code ══════════
+# This endpoint used to be `DELETE FROM users` — a hard delete that said nothing
+# about Tuppence, left orphaned transactions, kept no audit trail, and made SS14.1's
+# restore promise impossible to honour. David's 21 Aug ruling: unused Tuppence is
+# RETAINED on closure and RESTORED in full if the same verified identity returns
+# within 24 months; forfeiture survives ONLY for breach causes B5 (payment fraud)
+# and B6 (identity fraud). Never converted to cash — retention is continued access
+# to a service credit, not a right of repayment (Banks Act, BACKLOG O2).
 @app.delete("/users/{email}")
-def delete_user(email: str, _key: str = Depends(auth.require_api_key)):
+def close_user_account(email: str,
+                       closure_type: str = "user",
+                       cause: str = None,
+                       _key: str = Depends(auth.require_api_key)):
+    """Close an account per EULA SS14. closure_type: user | breach | convenience.
+    `cause` is B1..B6 for breach closures; only B5/B6 forfeit."""
+    if closure_type not in ("user", "breach", "convenience"):
+        raise HTTPException(status_code=400,
+                            detail="closure_type must be user, breach or convenience")
     conn = database.get_db()
-    conn.execute("DELETE FROM users WHERE email = ?", (email,))
-    conn.commit()
-    conn.close()
-    return {"message": "User deleted"}
+    try:
+        result = account_closure.close_account(conn, email, closure_type, cause)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="User not found")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    finally:
+        conn.close()
+    if result["forfeited"]:
+        result["message"] = ("Account closed. Tuppence forfeited under EULA 14.2 "
+                             f"({result['cause']}).")
+    elif result["retained_tuppence"]:
+        result["message"] = (f"Account closed. {result['retained_tuppence']} Tuppence "
+                             "retained for 24 months and restored in full if you "
+                             "register again with the same verified identity.")
+    else:
+        result["message"] = "Account closed. No Tuppence balance to retain."
+    return result
 
 # ── INTRO REQUESTS ───────────────────────────────────────────
 # Intros are buyer-initiated — no API key required to submit.

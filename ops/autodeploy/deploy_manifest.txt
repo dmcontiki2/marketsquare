@@ -63,6 +63,7 @@ payments.py                | payments.py
 ai_service_tiers.py        | ai_service_tiers.py
 ai_provider.py             | ai_provider.py
 launch_redemption.py       | launch_redemption.py
+account_closure.py         | account_closure.py
 estate_agents.py           | estate_agents.py
 
 # ── Dashboard docs (BEA parses these at GET /dashboard/summary) ──────────────
@@ -102,6 +103,7 @@ ops/bit/bit_runner.py        | bit/bit_runner.py
 ops/bit/bit_mitigator.py     | bit/bit_mitigator.py
 ops/bit/bit_registry.json    | bit/bit_registry.json
 scripts/ops_sweep.py | ops_sweep.py
+scripts/tuppence_dormancy.py | tuppence_dormancy.py
 journey_render.py             | journey_render.py
 scripts/journey_template.html | journey_template.html
 orchestration_v2/cockpit.html | orchestrator/v2/cockpit.html

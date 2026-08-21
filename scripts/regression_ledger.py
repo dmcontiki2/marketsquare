@@ -6053,5 +6053,208 @@ def rg_dashboard_feed_current():
     return out
 
 
+@entry("RG-0128", "The AI breaker fails OVER, not merely open -- a vendor outage moves the request "
+       "to another lane instead of becoming our outage",
+       LOCKED, scope="ai_provider.complete() for EVERY task tier and every configured lane. Class "
+       "property, not one vendor: the decision under test is chain construction and the "
+       "move-to-next-lane behaviour, so it holds for whichever lane happens to be active. "
+       "Asserted through the harness scripts/prove_ai_failover.py, which substitutes the "
+       "ADAPTERS (the vendor sockets) and exercises the REAL complete(), the REAL cost-approved "
+       "fallback ranking and the REAL breaker recording -- only the sockets are stubbed.",
+       fixed_on="2026-08-21",
+       ref="LOCKED 21 Aug 2026 on the run that introduced it -- 13/13 harness checks. AI-FAILOVER-PROOF-1, 21 Aug 2026 (DW-054). The row had stood since 19 Aug on one "
+           "sentence: 'the failover has still never been exercised' -- against 10 Anthropic "
+           "incidents between 12 and 19 Aug 2026, eight consecutive days without a clear one, "
+           "including the ~36-minute multi-product outage of 16 Aug that BEGAN as an auth "
+           "failure. A breaker that only OPENS converts a vendor outage into ours. "
+           "Proving it against a real vendor means either spending on a live call or "
+           "deliberately breaking the live lane eight days before launch (RUL-001); neither is "
+           "justified, and the seam makes neither necessary. 13/13 checks pass: a 5xx, a 401 and "
+           "a 429 each move to the next lane and return THAT lane's answer; all-lanes-down still "
+           "fails honestly and reports the REQUESTED lane's error rather than the last one tried; "
+           "probe=True and allow_fallback=False are both respected, so a probe's verdict stays "
+           "unambiguously the target's. "
+           "NAMED LIMIT, deliberately not hidden: this asserts the DECISION layer. Whether "
+           "failover has anywhere to GO in production depends on two or more lanes carrying keys "
+           "on the box, and that is readable only at /ops/selfcheck (ai.lanes_configured), which "
+           "is OPS-key gated. So the live half below reports INFO, not a pass -- and provisioning "
+           "that key is now the ONE thing it is still wanted for, DW-028 having been closed by "
+           "repointing the gzip probe off it.")
+def rg_ai_breaker_fails_over():
+    out = []
+    import subprocess as _sp, os as _os
+
+    harness = _os.path.join(REPO, "scripts", "prove_ai_failover.py")
+    if not _os.path.exists(harness):
+        out.append((FAIL, "scripts/prove_ai_failover.py is GONE -- the only proof that the "
+                          "breaker fails over rather than merely opening has been deleted"))
+        return out
+
+    src = repo_file("ai_provider.py")
+    if src is None:
+        out.append((INFO, "outside the repo -- harness not run here"))
+    else:
+        # Structural: the chain must be [requested] + fallbacks, and a failed lane must not
+        # end the loop. If someone flattens complete() back to a single attempt, the harness
+        # would still pass a stubbed world -- assert the shape too.
+        if "_cost_approved_fallbacks" not in src:
+            out.append((FAIL, "ai_provider lost _cost_approved_fallbacks -- the chain can no "
+                              "longer be built, so there is nothing to fail over to"))
+        try:
+            r = _sp.run([sys.executable, harness], capture_output=True, text=True, timeout=120,
+                        cwd=REPO)
+            tail = (r.stdout or "").strip().splitlines()[-1:] or [""]
+            if r.returncode != 0:
+                out.append((FAIL, "failover harness FAILED (exit %s): %s"
+                                  % (r.returncode, tail[0][:160])))
+            else:
+                nchecks = ""
+                for ln in (r.stdout or "").splitlines():
+                    if "checks ·" in ln:
+                        nchecks = ln.strip()
+                out.append((INFO, "failover proven in the decision layer — %s"
+                                  % (nchecks or "harness exit 0")))
+        except Exception as e:
+            out.append((INFO, "could not run the failover harness here (%s)" % str(e)[:70]))
+
+    # Live half: how many lanes actually carry keys on the box. OPS-key gated, so this is
+    # INFO either way -- an unreadable instrument must never read as a pass.
+    st = _status("/ops/selfcheck")
+    if st == 200:
+        try:
+            doc = _json("/ops/selfcheck")
+            lanes = ((doc.get("ai") or {}).get("lanes_configured") or [])
+            if len(lanes) < 2:
+                out.append((FAIL, "the box has %d configured AI lane(s) (%s) -- failover is "
+                                  "proven in code but has NOWHERE TO GO in production"
+                                  % (len(lanes), ", ".join(lanes) or "none")))
+            else:
+                out.append((INFO, "%d lanes configured live (%s) -- failover has somewhere to go"
+                                  % (len(lanes), ", ".join(lanes))))
+        except Exception as e:
+            out.append((INFO, "/ops/selfcheck unreadable (%s)" % str(e)[:60]))
+    else:
+        out.append((INFO, "live lane count not readable (HTTP %s at /ops/selfcheck -- OPS key "
+                          "not provisioned). The decision layer is proven; whether production "
+                          "has a second lane to move to is UNSEEN, not assumed." % st))
+    return out
+
+
+
+@entry("RG-0129", "The EULA's Tuppence promises are BOTH implementable: expiry needs an aged "
+       "warning, and termination never forfeits except for fraud",
+       LOCKED, scope="eula_clean.html SS6.3 + SS14.1-14.3 (the published promise) against "
+                     "scripts/tuppence_dormancy.py (the machinery that keeps it). Source-side "
+                     "by design -- the sweep runs on the box against the live DB, which no "
+                     "anonymous session can read. ALL markets.",
+       fixed_on="2026-08-21",
+       ref="TUPPENCE-DORMANCY-1 + the 21 Aug termination reconciliation. Two faults of the same "
+           "class -- the EULA said things nothing on disk could deliver or agreed with. "
+           "(a) SS6.3 has promised since v1.13 that unused Tuppence expires after 24 months of "
+           "inactivity AND that we email 30 days before. NOTHING implemented either half: we "
+           "published a notice commitment we could not keep. (b) SS6.3/SS14.1/SS14.2/SS14.3 "
+           "forfeited Tuppence on termination while our own canon "
+           "(LOCAL_MARKET_REQUIREMENTS.md LM-14b) said 'purchased Tuppence is never confiscated "
+           "-- it was bought with real money', and the code had no termination path touching "
+           "Tuppence at all. David's ruling 21 Aug: retain and restore on re-registration; "
+           "forfeit ONLY for B5 payment fraud and B6 identity fraud. This entry tripwires BOTH "
+           "halves so neither can rot: the sweep must keep existing with the notice as a hard "
+           "precondition, and the EULA must keep saying retained-not-forfeited.")
+def rg_tuppence_promises_are_keepable():
+    out = []
+    src = repo_file("eula_clean.html")
+    sweep = repo_file("scripts/tuppence_dormancy.py")
+    if src is None:
+        return [(INFO, "not run from the repo -- this is a source-side check")]
+
+    # --- half 1: the dormancy machinery exists and is notice-gated ---
+    if not sweep:
+        out.append((FAIL, "scripts/tuppence_dormancy.py is GONE -- EULA SS6.3 promises a "
+                          "24-month expiry and a 30-day warning email with nothing to deliver "
+                          "either"))
+    else:
+        for needle, what in (
+            ("DORMANT_MONTHS = 24", "the 24-month dormancy constant SS6.3 states"),
+            ("NOTICE_DAYS = 30", "the 30-day notice period SS6.3 promises"),
+            ("dormancy_expiry", "the offsetting ledger row (wallet stays a pure txn sum)"),
+            ("tuppence_dormancy_notices", "the table that PROVES a warning was sent"),
+        ):
+            if needle not in sweep:
+                out.append((FAIL, "tuppence_dormancy.py no longer carries %s (%s)"
+                                  % (needle, what)))
+        # the load-bearing safety property: expiry may never ride on a missing/young warning
+        if "age < NOTICE_DAYS" not in sweep:
+            out.append((FAIL, "the sweep no longer checks that the warning is at least "
+                              "NOTICE_DAYS old -- Tuppence could expire without the notice "
+                              "SS6.3 promises"))
+        if 'if not notice or not notice["warned_at"]' not in sweep:
+            out.append((FAIL, "the sweep no longer refuses to expire when NO warning is on "
+                              "record -- the notice is meant to be a hard precondition"))
+        if "--apply" not in sweep or "dry = not a.apply" not in sweep:
+            out.append((FAIL, "the sweep is no longer dry-run by default"))
+
+    # --- half 2: the EULA still says retained, not forfeited ---
+    for needle, what in (
+        ("retained on your account record", "SS14.1 retention"),
+        ("cause B5 (payment fraud", "SS14.2 fraud-only forfeiture"),
+        ("cause B6 (identity fraud", "SS14.2 fraud-only forfeiture"),
+        ("no Tuppence is forfeited", "SS14.3 -- the Platform ended it, so nothing is forfeited"),
+    ):
+        if needle not in src:
+            out.append((FAIL, "EULA lost %s (missing: %r) -- the termination reconciliation "
+                              "of 21 Aug 2026 has been reverted" % (what, needle)))
+    for gone in ("all unused Tuppence is forfeited",
+                 "unused Tuppence in your account is forfeited",
+                 "All unused Tuppence is forfeited (non-refundable)"):
+        if gone in src:
+            out.append((FAIL, "blanket-forfeiture wording is BACK in the EULA (%r) -- it "
+                              "contradicts LM-14b and David's 21 Aug ruling" % gone))
+
+    # --- the Banks Act guard: no-cash-out must never be softened ---
+    if "not redeemable for cash under any circumstances" not in src:
+        out.append((FAIL, "the no-cash-redemption rule is GONE from SS6.3 -- this is the "
+                          "load-bearing Banks Act protection (BACKLOG O2); a right of "
+                          "repayment pushes Tuppence toward the statutory definition of a "
+                          "deposit"))
+
+    # --- half 3: the closure lane exists and honours the ruling in CODE ---
+    closure = repo_file("account_closure.py")
+    bea = repo_file("bea_main.py") or ""
+    if not closure:
+        out.append((FAIL, "account_closure.py is GONE -- SS14.1/SS14.3 promise retention and "
+                          "restore-on-return with nothing to deliver it"))
+    else:
+        if 'FRAUD_CAUSES = ("B5", "B6")' not in closure:
+            out.append((FAIL, "account_closure.py no longer restricts forfeiture to B5/B6 -- "
+                              "David's 21 Aug ruling was that ONLY fraud forfeits"))
+        for needle, what in (
+            ("closure_retention", "the offsetting retention ledger row"),
+            ("closure_restore", "the restore ledger row"),
+            ("def restore_on_return", "the restore-on-return path SS14.1 promises"),
+            ("RETENTION_MONTHS = 24", "the 24-month retention window"),
+        ):
+            if needle not in closure:
+                out.append((FAIL, "account_closure.py lost %s (%s)" % (needle, what)))
+        if "lower(user_email)=lower(?)" not in closure:
+            out.append((FAIL, "account_closure balance lookup is case-sensitive again -- a "
+                              "mixed-case address reads a zero balance and retains NOTHING "
+                              "(caught in test 21 Aug 2026)"))
+    if "DELETE FROM users WHERE email" in bea:
+        out.append((FAIL, "bea_main.py hard-deletes users again -- a deleted row cannot honour "
+                          "SS14.1's restore promise, and the old path said nothing about "
+                          "Tuppence at all"))
+    if "account_closure.close_account" not in bea:
+        out.append((FAIL, "the account-closure endpoint no longer calls close_account -- "
+                          "closures would not retain, record or forfeit correctly"))
+    if "account_closure.restore_on_return" not in bea:
+        out.append((FAIL, "registration no longer checks for retained Tuppence -- a returning "
+                          "user would silently lose what SS14.1 promises back"))
+
+    if not out:
+        out.append((INFO, "SS6.3/SS14 promises are keepable: dormancy sweep present and "
+                          "notice-gated, termination retains rather than forfeits (fraud "
+                          "excepted), no-cash-out intact"))
+    return out
+
 if __name__ == "__main__":
     sys.exit(main())
