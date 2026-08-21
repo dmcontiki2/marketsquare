@@ -41,6 +41,31 @@ SHAPES = {  # (in_low, out_low, in_high, out_high)
     "vision": (1100 + 400, 1200, 19200 + 800, 1200),  # images + prompt text
 }
 GATE_ORDER = {"production": 0, "golden-set-passed": 1, "pending-golden-set": 2}
+
+# GOLDEN-AUTHORITY-1 (21 Aug 2026) -- ai_price_card.json and ai_scoreboard.GOLDEN_PASS
+# disagreed about openai for three weeks: the card said gate "golden-set-passed" (citing
+# GS-OAI-V1, which ran on the SANDBOX key with raw vendor calls) while GOLDEN_PASS excluded
+# openai by design because the server-key run (RG-0016) was never done. The +1 card's funnel
+# rendered the optimistic one, so the page told David every tier was golden-set-passed on a
+# lane that had never been golden-run in production. The scoreboard is the gate of RECORD;
+# the price card's golden_set block is EVIDENCE. A provider absent from GOLDEN_PASS can never
+# be published as passed, whatever the card claims.
+def _production_golden_pass():
+    """Providers whose PRODUCTION golden run is on record. Empty set on import failure
+    would silently re-open the hole, so a failure is loud."""
+    try:
+        sys.path.insert(0, REPO)
+        from ai_scoreboard import GOLDEN_PASS
+        return set(GOLDEN_PASS)
+    except Exception as e:
+        raise SystemExit("GOLDEN-AUTHORITY-1: cannot read ai_scoreboard.GOLDEN_PASS (%s) -- "
+                         "refusing to publish gate labels from the price card alone" % e)
+
+def _gate_reconciled(prov, gate_eff):
+    """Downgrade any 'passed/production' claim for a provider the production gate does not list."""
+    if gate_eff in ("production", "golden-set-passed") and prov not in _production_golden_pass():
+        return "pending-golden-set"
+    return gate_eff
 GATE_ELIGIBLE = {"production", "golden-set-passed"}
 
 
@@ -113,6 +138,7 @@ def main():
             tier_gate = (e.get("gate_by_tier", {}).get(tier) or {}).get("status")
             gate_eff = {"production": "production", "passed": "golden-set-passed",
                         "pending": "pending-golden-set"}.get(tier_gate, e.get("gate"))
+            gate_eff = _gate_reconciled(prov, gate_eff)
             pi, po = usd(e, card)
             lo = il / 1e6 * pi + ol / 1e6 * po
             hi = ih / 1e6 * pi + oh / 1e6 * po
@@ -181,8 +207,11 @@ def main():
                     mid = ((il/1e6*pi + ol/1e6*po) + (ih/1e6*pi + oh/1e6*po)) / 2 * 1000
                 aa = (e.get("aa_index") or {}).get("score")
                 g = (e.get("gate_by_tier", {}).get(tier) or {}).get("status") or e.get("gate")
+                g_eff = {"production":"production","passed":"golden-set-passed",
+                         "pending":"pending"}.get(g, g)
+                g_eff = _gate_reconciled(prov, g_eff)      # GOLDEN-AUTHORITY-1
                 rows.append(((aa/mid) if (aa and mid) else 0, prov,
-                             {"provider": prov, "gate": {"production":"production","passed":"golden-set-passed","pending":"pending"}.get(g, g)}))
+                             {"provider": prov, "gate": g_eff}))
             snap["tiers"][tier] = [x[2] for x in sorted(rows, key=lambda x: -x[0])]
         sp = os.path.join(REPO, "ai_funnel_snapshot.json")
         json.dump(snap, open(sp, "w", encoding="utf-8"), indent=1)

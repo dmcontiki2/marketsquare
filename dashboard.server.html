@@ -2416,10 +2416,30 @@ window._apv3Roles = {
   anthropic: {rank:2, role:'AUTO-FAILOVER', tag:'FAILOVER',  colour:'#3b82f6', mult:'4.4\u20134.7x', note:'Continuity on a dropout \u2014 dearer by design. Also the DESIGN/guidance tool'},
   scaleway:  {rank:3, role:'SAFETY NET',    tag:'LAST RESORT',colour:'#f59e0b', mult:'7.6\u20138.1x', note:'Bans and jurisdiction only. Cost-exempt by role \u2014 reaching it must ALERT and be time-boxed'}
 };
-window._apv3PendingFlip = true;  /* set false once OPENAI_API_KEY is on the server and the live-seam golden run passes */
+/* AIPROV-VERIFY-1 (21 Aug 2026): _apv3PendingFlip WAS a hardcoded true that no one remembered
+   to clear. The flip actually happened 14 Aug 20:05 UTC, so for a week the page told David the
+   flip was 'pending: server key, live-seam golden run, spend attribution' when the key WAS
+   present, the flip WAS live and spend attribution WAS fixed (15 Aug). A banner a human must
+   remember to turn off is not an instrument. It is derived from live /flags now. */
 /* Back-compat shims (DASH-AIPROV-2): the Infrastructure/services card was built on v2's
    globals — keep them alive so removing the v2 script never strands another card again. */
 window._apv2B = window._apv3B; window._apv2Tok = window._apv3Tok; window._apv2 = window._apv3;
+/* AIPROV-VERIFY-1 (21 Aug 2026, David's question): the dot used to go GREEN on CONFIG alone
+   -- 'this id is the selected lane' + 'an API key string exists in the env'. Neither is proof the
+   vendor answers. Green now means a real /admin/ai-test round trip SUCCEEDED, and decays after 24h. */
+window._apv3VerTTL = 24*3600*1000;
+window._apv3VerGet = function(id){
+  try{ var m=JSON.parse(localStorage.getItem('ms_apv3_verify')||'{}'); var v=m[id];
+    if(!v) return null; if(Date.now()-v.t > window._apv3VerTTL) return null;
+    v.hhmm=new Date(v.t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); return v;
+  }catch(e){ return null; }
+};
+window._apv3VerSet = function(id, ok, msg){
+  try{ var m=JSON.parse(localStorage.getItem('ms_apv3_verify')||'{}');
+    m[id]={ok:!!ok, t:Date.now(), msg:String(msg||'').slice(0,120)};
+    localStorage.setItem('ms_apv3_verify', JSON.stringify(m));
+  }catch(e){}
+};
 window.apv3Render = function(){
   var d=window._apv3, box=document.getElementById('apv3-rows'); if(!box) return;
   var pin=document.getElementById('apv3-pin');
@@ -2438,6 +2458,15 @@ window.apv3Render = function(){
     var active=(p.id===d.active), avail=!!p.available;
     var role=R[p.id]||{};
     var st = active?['#22c55e','ACTIVE'+(d.override&&d.override.provider===p.id?' (PIN)':'')]:(avail?['#22c55e','STANDBY']:['#6b7280','DISABLED — no key']);
+    /* AIPROV-VERIFY-1: config-green is downgraded until a live call proves the lane answers. */
+    var ver = avail ? window._apv3VerGet(p.id) : null, vtxt='', vcol='var(--muted)';
+    if(avail){
+      if(!ver){ st[0]='#f59e0b'; st[1]=st[1]+' \u00b7 UNVERIFIED';
+        vtxt='\u26a0\ufe0f key present &amp; lane selected \u2014 but no live call verified. Press <b>Test</b>.'; vcol='#f59e0b'; }
+      else if(!ver.ok){ st[0]='#ef4444'; st[1]=st[1]+' \u00b7 TEST FAILED';
+        vtxt='\u2717 live call FAILED at '+ver.hhmm+(ver.msg?(' \u2014 '+ver.msg):''); vcol='#ef4444'; }
+      else { vtxt='\u2713 live call verified '+ver.hhmm+' (decays after 24h)'; vcol='#22c55e'; }
+    }
     var models=p.models?('fast '+(p.models.haiku||'—').split('-20')[0]+' &middot; reason '+(p.models.sonnet||'—')):'';
     h+='<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">'
       +'<span style="width:9px;height:9px;border-radius:50%;background:'+st[0]+';opacity:'+(active?'1':(avail?'.55':'.6'))+';flex:0 0 auto;"></span>'
@@ -2446,6 +2475,7 @@ window.apv3Render = function(){
       +' <span style="color:var(--muted);font-weight:400;font-size:11px">'+(p.jurisdiction||'')+'</span></div>'
       +'<div style="font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+models+'</div>'
       +(role.note?('<div style="font-size:10px;color:var(--muted);opacity:.8;margin-top:2px">'+role.mult+' vs base &middot; '+role.note+'</div>'):'')
+      +(vtxt?('<div style="font-size:10px;color:'+vcol+';margin-top:3px">'+vtxt+'</div>'):'')
       +'</div>'
       +'<span style="font-size:10.5px;font-weight:700;color:'+(active?'#22c55e':(avail?'var(--text)':'var(--muted)'))+';flex:0 0 auto">'+st[1]+'</span>'
       +'<button type="button" onclick="apv3Test(\''+p.id+'\')" '+(avail?'':'disabled ')+'style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;cursor:'+(avail?'pointer':'not-allowed')+';font-family:inherit;opacity:'+(avail?'1':'.4')+'">Test</button>'
@@ -2453,6 +2483,11 @@ window.apv3Render = function(){
       +(avail&&p.id!==d.standing?('<button type="button" onclick="aiProvPick(\''+p.id+'\')" style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid #22c55e66;background:#22c55e18;color:#22c55e;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Make standing</button>'):'')
       +'</div>';
   });
+  if(h) h+='<div style="font-size:10px;color:var(--muted);opacity:.85;padding:7px 0 0">'
+    +'Dot key \u2014 <span style="color:#22c55e">green</span>: a real API call succeeded in the last 24h. '
+    +'<span style="color:#f59e0b">amber</span>: configured (key + selected lane) but never proven live. '
+    +'<span style="color:#ef4444">red</span>: last live call failed. '
+    +'Grey: no key. The server publishes no liveness field \u2014 <b>Test</b> is the only proof.</div>';
   box.innerHTML=h||'<div style="color:var(--muted);font-size:12px">Registry unavailable.</div>';
   var fb=document.getElementById('apv3-funnel');
   if(fb){
@@ -2471,18 +2506,27 @@ window.apv3Render = function(){
   var rb=document.getElementById('apv3-rolebar');
   if(rb){
     var wantBase='openai', on=(d.active===wantBase);
-    if(window._apv3PendingFlip){
-      rb.style.cssText='display:block;font-size:12px;margin:-2px 0 10px;padding:8px 11px;border-radius:8px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.45);color:var(--text)';
-      rb.innerHTML='&#9888;&#65039; <b>Baseline says BASE = openai</b>, live standing lane is <b>'+d.standing+'</b>. '
-        +'The flip is <b>pending preconditions</b>: server key, live-seam golden run, spend attribution fix. '
-        +'<span style="opacity:.75">Manual override below stays available at all times.</span>';
-    } else if(!on){
-      rb.style.cssText='display:block;font-size:12px;margin:-2px 0 10px;padding:8px 11px;border-radius:8px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.45);color:var(--text)';
-      rb.innerHTML='&#128308; <b>Serving on '+d.active+'</b>, not the base lane. '
+    /* Derived, not hardcoded: is the SERVING lane's production golden gate on record?
+       The funnel snapshot carries the reconciled gate (GOLDEN-AUTHORITY-1). */
+    var gate=null;
+    try{ if(d.funnel&&d.funnel.tiers){ Object.keys(d.funnel.tiers).forEach(function(t){
+      d.funnel.tiers[t].forEach(function(x){ if(x.provider===d.active && !gate) gate=x.gate; }); }); } }catch(e){}
+    var ungated = (gate && gate.indexOf('pending')===0);
+    var css=function(c){ return 'display:block;font-size:12px;margin:-2px 0 10px;padding:8px 11px;border-radius:8px;background:rgba('+c+',.12);border:1px solid rgba('+c+',.45);color:var(--text)'; };
+    if(!on){
+      rb.style.cssText=css('239,68,68');
+      rb.innerHTML='&#128308; <b>Serving on '+d.active+'</b>, not the base lane ('+wantBase+'). '
         +(d.active==='scaleway'?'That is the SAFETY NET at ~8x base cost &mdash; time-box it.':'Cost is above baseline while this holds.');
+    } else if(ungated){
+      rb.style.cssText=css('245,158,11');
+      rb.innerHTML='&#9888;&#65039; <b>Serving on the base lane (openai)</b> \u2014 the flip is DONE. '
+        +'Outstanding: this lane\u2019s <b>production golden run has never been executed</b> '
+        +'(GS-OAI-V1 ran on a sandbox key with raw vendor calls; scripts/golden_seam_v2.py needs the '
+        +'server key on the Hetzner box). Until it passes, openai stays out of GOLDEN_PASS.';
     } else {
-      rb.style.cssText='display:block;font-size:12px;margin:-2px 0 10px;padding:8px 11px;border-radius:8px;background:rgba(34,197,94,.10);border:1px solid rgba(34,197,94,.35);color:var(--text)';
-      rb.innerHTML='&#9989; Serving on the <b>base lane</b> (openai). Failover order: openai &rarr; anthropic &rarr; scaleway.';
+      rb.style.cssText=css('34,197,94');
+      rb.innerHTML='&#9989; Serving on the <b>base lane</b> (openai), production golden gate on record. '
+        +'Failover order: openai &rarr; anthropic &rarr; scaleway.';
     }
   }
 };
@@ -2497,9 +2541,10 @@ window.apv3Load = function(){
 window.apv3Test = function(p){
   var out=document.getElementById('apv3-out'); if(out) out.textContent='Testing '+p+'…';
   fetch(window._apv3B+'/admin/ai-test',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':window._apv3Tok()},body:JSON.stringify({provider:p})})
-   .then(function(r){ if(r.status===401){ if(out) out.textContent='Admin session expired — reload + PIN.'; return null; } return r.json(); })
-   .then(function(d){ if(!d) return; if(out) out.textContent=(d.ok?'✓ ':'✗ ')+d.provider+' ('+d.model+'): '+(d.text||d.detail||'(no text)'); })
-   .catch(function(e){ if(out) out.textContent='Test failed: '+e; });
+   .then(function(r){ if(r.status===401){ if(out) out.innerHTML='<b>Admin session expired</b> — this is the dashboard\u2019s own login, NOT a fault at the provider. The test never ran. Reload the page and re-enter the admin PIN, then press Test again.'; return null; } return r.json(); })
+   .then(function(d){ if(!d) return; window._apv3VerSet(d.provider||p, d.ok, d.text||d.detail||''); window.apv3Render();
+     if(out) out.textContent=(d.ok?'✓ ':'✗ ')+d.provider+' ('+d.model+'): '+(d.text||d.detail||'(no text)'); })
+   .catch(function(e){ window._apv3VerSet(p,false,String(e)); window.apv3Render(); if(out) out.textContent='Test failed: '+e; });
 };
 window.apv3Pin = function(p){
   var msg = p ? ('PIN the live AI vendor to '+p+' for '+(window._apv3.ttl||24)+' hours? This outranks any automatic selection; the standing lane ('+window._apv3.standing+') resumes when the pin expires.') : 'Remove the pin now? The standing lane resumes immediately.';

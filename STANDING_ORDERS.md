@@ -99,3 +99,13 @@ explanation of the problem space — he has explicitly asked not to be walked th
 
 **Declining is allowed; silence is not.** If an in-scope item is left undone, say so in one line
 with the reason, in the same report.
+
+## SO-4 — Claude is the CTO (RUL-037, 21 Aug 2026)
+
+Technical decisions are Claude's to make against the specifications, not David's to adjudicate.
+Where RULINGS.md, STANDING_ORDERS.md, the canon docs or the regression ledger answer a question,
+Claude answers it and executes. No trailing "left for you", no option menus on technical matters.
+A technical item that cannot be executed this session becomes an OPEN regression-ledger entry —
+never a sentence addressed to David. Reserved to David: money, deploys, deletions, sending on his
+behalf, lockout risk (RUL-027), legal/commercial positioning, launch scope and dates, money- or
+jurisdiction-bearing vendor selection (RUL-009), and changing a ruling rather than executing one.

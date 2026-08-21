@@ -110,6 +110,11 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-037": [
+   ("RULINGS.md", ["CLAUDE IS THE CTO"], []),
+   ("STANDING_ORDERS.md", ["SO-4"], []),
+   ("../CLAUDE.md", ["Claude is the CTO"], []),
+ ],
  "RUL-036": [
    ("RULINGS.md", ["STANDING FIX-AND-REPORT MANDATE"], []),
    ("STANDING_ORDERS.md", ["SO-3", "report solutions, not problems"], []),

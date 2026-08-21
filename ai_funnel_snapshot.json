@@ -5,7 +5,7 @@
   "haiku": [
    {
     "provider": "openai",
-    "gate": "golden-set-passed"
+    "gate": "pending-golden-set"
    },
    {
     "provider": "anthropic",
@@ -19,7 +19,7 @@
   "triage": [
    {
     "provider": "openai",
-    "gate": "golden-set-passed"
+    "gate": "pending-golden-set"
    },
    {
     "provider": "anthropic",
@@ -33,7 +33,7 @@
   "sonnet": [
    {
     "provider": "openai",
-    "gate": "golden-set-passed"
+    "gate": "pending-golden-set"
    },
    {
     "provider": "scaleway",
@@ -47,7 +47,7 @@
   "vision": [
    {
     "provider": "openai",
-    "gate": "golden-set-passed"
+    "gate": "pending-golden-set"
    },
    {
     "provider": "anthropic",

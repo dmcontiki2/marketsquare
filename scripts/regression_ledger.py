@@ -6256,5 +6256,142 @@ def rg_tuppence_promises_are_keepable():
                           "excepted), no-cash-out intact"))
     return out
 
+
+@entry("RG-0130", "The AI Providers card never paints a lane GREEN on configuration alone -- "
+                  "green means a live call was proven, amber means configured-but-unproven",
+       LOCKED, scope="all three lanes (openai/anthropic/scaleway), +1 dashboard page",
+       fixed_on="2026-08-21",
+       ref="AIPROV-VERIFY-1. David asked on 21 Aug: 'ACTIVE is green -- if I didn't press Test "
+           "I would not have known?' He was right. The dot was driven by p.id===active plus "
+           "p.available, and /flags computes available as bool(envkey('OPENAI_API_KEY')) -- a "
+           "KEY-PRESENCE check, no network call. So a revoked/over-quota/wrong key painted "
+           "solid green on the lane serving live traffic. The card now downgrades an unproven "
+           "lane to amber UNVERIFIED, turns it red when the last Test failed, and only goes "
+           "green for 24h after a real /admin/ai-test round trip. Also: a 401 on Test now says "
+           "plainly it is the DASHBOARD login that expired, not a provider fault -- the old "
+           "wording ('Admin session expired -- reload + PIN') sat in the provider card's own "
+           "output line and read like the provider had dropped.")
+def rg_ai_provider_card_verified_green():
+    out = []
+    dash = repo_file("dashboard.server.html")
+    if dash is None:
+        out.append((INFO, "outside the repo -- source-only entry, skipped"))
+        return out
+    for needle, what in (
+        ("window._apv3VerGet", "the verification-state reader"),
+        ("window._apv3VerSet", "the verification-state writer (fed by the Test button)"),
+        ("UNVERIFIED", "the amber configured-but-unproven label"),
+        ("TEST FAILED", "the red last-test-failed label"),
+        ("_apv3VerTTL", "the decay window, so a stale green cannot stand forever"),
+    ):
+        if needle not in dash:
+            out.append((FAIL, "the AI Providers card lost %s (missing %r) -- a lane can paint "
+                              "green on config alone again, which is exactly AIPROV-VERIFY-1"
+                              % (what, needle)))
+    # the Test button must actually RECORD its outcome, or green can never be earned
+    if "_apv3VerSet(d.provider||p" not in dash:
+        out.append((FAIL, "the Test handler no longer records its result -- the dot would be "
+                          "permanently amber and the fix is cosmetic"))
+    # the 401 message must not sit there implying a provider fault
+    if "NOT a fault at the provider" not in dash:
+        out.append((FAIL, "the Test 401 message no longer says it is the dashboard login that "
+                          "expired -- it reads as a provider outage in the provider card"))
+    if not out:
+        out.append((INFO, "AI Providers card: green is earned by a live call, amber is "
+                          "configured-but-unproven, 401 names itself as a login expiry"))
+    return out
+
+
+
+@entry("RG-0131", "ONE authority for the production golden gate -- the funnel may never publish a "
+                  "lane as golden-set-passed when ai_scoreboard.GOLDEN_PASS does not list it",
+       LOCKED, scope="all lanes and all four tiers, +1 dashboard funnel strip",
+       fixed_on="2026-08-21",
+       ref="GOLDEN-AUTHORITY-1. Two files disagreed for three weeks and the dashboard rendered "
+           "the flattering one: ai_price_card.json carried gate 'golden-set-passed' for openai "
+           "(citing GS-OAI-V1, which ran on a SANDBOX key with raw vendor calls) while "
+           "ai_scoreboard.GOLDEN_PASS excluded openai BY DESIGN pending the server-key run "
+           "(RG-0016). So the +1 card showed 'openai (golden-set-passed)' on haiku, triage, "
+           "sonnet and vision for the lane serving all live traffic. price_truth.py now "
+           "reconciles every gate label against GOLDEN_PASS in both the report and the "
+           "snapshot, and raises rather than defaulting open if the scoreboard cannot be read.")
+def rg_golden_gate_single_authority():
+    out = []
+    pt = repo_file("scripts/price_truth.py")
+    if pt is None:
+        out.append((INFO, "outside the repo -- source-only entry, skipped"))
+        return out
+    for needle, what in (
+        ("_production_golden_pass", "the GOLDEN_PASS reader"),
+        ("_gate_reconciled", "the downgrade helper"),
+        ("from ai_scoreboard import GOLDEN_PASS", "the single authority import"),
+    ):
+        if needle not in pt:
+            out.append((FAIL, "price_truth.py lost %s (missing %r) -- the price card can publish "
+                              "an unearned golden gate again" % (what, needle)))
+    if pt.count("_gate_reconciled(prov") < 2:
+        out.append((FAIL, "the gate reconcile is applied fewer than twice -- BOTH the printed "
+                          "report and the --snapshot the dashboard renders must be reconciled; "
+                          "the snapshot is the one David actually looks at"))
+    if "raise SystemExit" not in pt.split("_production_golden_pass")[1][:600]:
+        out.append((FAIL, "a failure to read GOLDEN_PASS no longer raises -- an import error "
+                          "would silently re-open the hole by publishing the card's own claim"))
+    # and the shipped snapshot must not contradict the scoreboard
+    try:
+        import json as _j
+        sp = os.path.join(REPO, "ai_funnel_snapshot.json")
+        if os.path.exists(sp):
+            sys.path.insert(0, REPO)
+            from ai_scoreboard import GOLDEN_PASS as _GP
+            snap = _j.load(open(sp, encoding="utf-8"))
+            for tier, rows in (snap.get("tiers") or {}).items():
+                for r in rows:
+                    if r.get("gate") in ("production", "golden-set-passed") and r.get("provider") not in _GP:
+                        out.append((FAIL, "ai_funnel_snapshot.json still publishes %s as %r on "
+                                          "tier %s while GOLDEN_PASS does not list it -- "
+                                          "re-run scripts/price_truth.py --snapshot"
+                                          % (r.get("provider"), r.get("gate"), tier)))
+    except Exception as e:
+        out.append((INFO, "snapshot cross-check skipped (%s)" % e))
+    if not out:
+        out.append((INFO, "golden gate has one authority: the scoreboard; card claims are "
+                          "evidence and cannot promote themselves"))
+    return out
+
+
+@entry("RG-0132", "The BASE lane's PRODUCTION golden run is on record -- openai is in GOLDEN_PASS",
+       OPEN, scope="openai, the lane serving 100% of live traffic",
+       ref="AI_LANE_GUIDANCE P2/P3, never executed. GS-OAI-V1 (1 Aug) ran on a SANDBOX key with "
+           "RAW vendor calls -- it bypassed the message translation, the reasoning_effort='none' "
+           "pin and max_completion_tokens handling that production actually uses. "
+           "scripts/golden_seam_v2.py exists and runs the same 8 golden prompts THROUGH "
+           "ai_provider.complete(provider='openai', probe=True); it refuses to run without the "
+           "production key, so it needs one run ON THE HETZNER BOX, then openai added to "
+           "GOLDEN_PASS (P3). This entry is OPEN, not a nag: it fails until that run happens and "
+           "prints READY TO LOCK the moment it does. Tracking this in the ledger rather than in a "
+           "sentence to David is the point -- it is a technical execution step, not a decision.")
+def rg_openai_production_golden_run():
+    out = []
+    sb = repo_file("ai_scoreboard.py")
+    if sb is None:
+        out.append((INFO, "outside the repo -- source-only entry, skipped"))
+        return out
+    try:
+        sys.path.insert(0, REPO)
+        from ai_scoreboard import GOLDEN_PASS
+        listed = "openai" in GOLDEN_PASS
+    except Exception as e:
+        out.append((FAIL, "cannot read GOLDEN_PASS (%s)" % e))
+        return out
+    if not listed:
+        out.append((FAIL, "openai is NOT in GOLDEN_PASS -- the base lane serving all live "
+                          "traffic has no production golden run on record. Run "
+                          "scripts/golden_seam_v2.py on the server with the production key, "
+                          "then add the lane (P3)."))
+    else:
+        out.append((INFO, "openai carries a production golden gate"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
