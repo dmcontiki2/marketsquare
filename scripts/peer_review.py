@@ -69,6 +69,17 @@ LENSES = {
    "blocking calls in async paths, scalability bottlenecks, degradation under load.",
  "maintainability": "LENS: MAINTAINABILITY. Complexity, duplication, dead code, doc-vs-code "
    "drift, single-file monolith risks, what the next engineer will misunderstand.",
+ "legal": "LENS: LEGAL / REGULATORY ASSESSMENT. You are assessing legal RESEARCH and CONTRACT "
+   "DRAFTING, not code. Judge: (a) is each statutory citation real, correctly numbered and "
+   "still in force as at August 2026 - name any citation you believe is wrong, superseded or "
+   "invented; (b) is the consent model stated for each jurisdiction correct, especially the "
+   "B2B / corporate-subscriber position; (c) does the extraterritorial analysis hold for a "
+   "South African sender with no local establishment; (d) do the drafted contract clauses "
+   "actually achieve what they claim under the named local law, and would any be void, "
+   "unenforceable or counter-productive; (e) what material legal risk has the Author MISSED "
+   "entirely. You are NOT giving legal advice or approval and must say so; you are a second "
+   "independent reading whose value is catching what one lineage missed. Where you are "
+   "uncertain, say uncertain - a confident wrong answer here is worse than an admitted gap.",
  "full": "LENS: FULL SWEEP. Apply ALL of the above lenses (design, code, security, privacy, "
    "cost, operability, performance, maintainability), prioritize findings by impact, and "
    "say which lens each finding came from.",
