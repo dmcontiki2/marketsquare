@@ -1,6 +1,6 @@
 # ONETAP-1 — Google sign-in: what only David can do
 
-Status: **code shipped, lane dark.** The buttons do not render until credentials exist on the
+Status: **LIVE — Google is configured and serving** (verified 21 Aug 2026: `GET /auth/providers` → `{"google":true,"apple":false}`, and `/auth/oauth/google/start` returns 302 to Google). Apple stays dark by ruling (RUL-030). The text below is kept as the setup record; the buttons render because credentials exist on the
 box. Nothing is broken while it is dark — email sign-in is untouched.
 
 RUL-028 · regression ledger RG-0111 · implemented as the server-side OAuth redirect flow
@@ -60,7 +60,8 @@ Then restart the service.
 curl https://trustsquare.co/auth/providers
 ```
 
-- `{"google":false,"apple":false}` → lane dark, no buttons (this is today)
+- `{"google":false,"apple":false}` → lane dark, no buttons (was the state until 21 Aug 2026)
+- `{"google":true,"apple":false}` → **the state today** — Google button renders, Apple never does (RUL-030)
 - `{"google":true,"apple":false}`  → the Google button renders. `apple:false` is
   correct and permanent — see section 2.
 

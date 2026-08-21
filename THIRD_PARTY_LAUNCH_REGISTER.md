@@ -29,7 +29,6 @@ Numista/JustTCG/Travelpayouts. Launch bar G2 makes this **hard by 29 Aug**.
 |---|---|---|
 | **NOW** | Rotate the exposed secrets (above) | Secrets · the one BLOCKING item |
 | **NOW** | **Confirm the domain registrar, expiry and auto-renew for trustsquare.co** | Recorded *nowhere*. The only dependency that can take the whole platform down with no warning, no owner and no monitor |
-| **NOW** (~10 min) | Google Cloud OAuth: create project, configure consent screen, **publish it**, create the Web client, run `add_google_oauth.bat` | Account + secret. RUL-028 calls this "the primary door"; left in *Testing* only listed test users can sign in |
 | **NOW** | Name an external uptime monitor (or say "pick one") | Vendor choice. Was due 22 Aug; still not built |
 | **~25 Aug** | Buy the budget-capped **Gemini** key, paste to server | Money + secret. Until then photo anonymisation runs reject-only (RUL-033) |
 | **By 27 Aug** | **Ship the deploy backlog** — the live site on 29 Aug is whatever has SHIPPED | Deploys reserved to David (RUL-037) |
@@ -72,7 +71,7 @@ Numista/JustTCG/Travelpayouts. Launch bar G2 makes this **hard by 29 Aug**.
 | **Resend** | **Sending live** on the **free tier**. `mail.trustsquare.co` verified, root domain not. Its own health probe 422s every ~5 min on a malformed sender — *noise now, outage-mask later* | Operationally yes — it carries sign-in |
 | **Gmail SMTP** (fallback) | Live, sending **from a personal address** | Presentation risk at public launch |
 | **support@trustsquare.co** | Inbound live via Cloudflare worker; outbound via `mail.` with Reply-To. A5 still cites the dead Brevo plan | Partly satisfied |
-| **Google OAuth** | **Code shipped, lane DARK, account not created** | Not hard — but launches on the fallback door |
+| **Google OAuth** | ✅ **LIVE** — verified 21 Aug: `/auth/providers` → `google:true`, start endpoint 302s. RG-0111 LOCKED. *Only residue:* confirm the consent screen is **Published**, not left in Testing — in Testing only listed test users can sign in | No |
 | **Apple Sign-In** | **OUT by ruling (RUL-030). Do not re-propose.** | — |
 | **n8n** | Self-hosted, running (verified 2 Jun) | No |
 | **WhatsApp / Meta** | **Not a dependency.** Only open question is AL-8: the SEV-1 wake channel | No |
