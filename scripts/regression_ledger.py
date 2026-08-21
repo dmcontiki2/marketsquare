@@ -3663,12 +3663,20 @@ def rg_eula_one_source_and_ai_disclosed():
     terms = repo_file("terms.html") or ""
     msjs  = repo_file("ms.js") or ""
     start = "<p><strong>TrustSquare</strong></p>"
-    endp  = ("· Republic of South Africa · Country Schedules: United Kingdom · "
-             "United States · Australia</em></p>\n")
-    i, j = terms.find(start), terms.find(endp)
-    if i == -1 or j == -1:
+    # EULA-ANCHOR-1 (20 Aug 2026): this used to hardcode the full Country-Schedule list,
+    # so ADDING schedules D-G (v1.14: France, Portugal, New Zealand, Argentina) made the
+    # assertion report a FORK that did not exist -- the three copies were byte-identical
+    # throughout. The assertion was wrong, not the artefact. Anchor on the stable prefix
+    # and find the paragraph close, so the schedule list can grow without going red.
+    end_prefix = "· Republic of South Africa · Country Schedules:"
+    end_close  = "</em></p>\n"
+    i = terms.find(start)
+    jp = terms.find(end_prefix)
+    j = terms.find(end_close, jp) if jp != -1 else -1
+    endp_len = len(end_close)
+    if i == -1 or jp == -1 or j == -1:
         out.append((FAIL, "terms.html has no recognisable EULA body -- anchors gone"))
-    elif terms[i:j + len(endp)] != src:
+    elif terms[i:j + endp_len] != src:
         out.append((FAIL, "terms.html EULA body has drifted from eula_clean.html -- the published "
                           "terms are not the source (run scripts/eula_sync.py)"))
 

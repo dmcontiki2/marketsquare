@@ -31,7 +31,12 @@ TERMS   = os.path.join(ROOT, "terms.html")
 MSJS    = os.path.join(ROOT, "ms.js")
 
 BODY_START = "<p><strong>TrustSquare</strong></p>"
-BODY_END_P = "· Republic of South Africa · Country Schedules: United Kingdom · United States · Australia</em></p>\n"
+# EULA-ANCHOR-1 (20 Aug 2026): the end anchor used to hardcode the full Country-Schedule
+# list, so ADDING a schedule (v1.14: France, Portugal, New Zealand, Argentina) silently
+# broke the sync guard. Anchor on the stable prefix instead and find the paragraph end,
+# so the list can grow without disarming the one writer. Still refuses rather than guesses.
+BODY_END_PREFIX = "· Republic of South Africa · Country Schedules:"
+BODY_END_CLOSE  = "</em></p>\n"
 JS_KEY     = 'const _EULA_HTML = "'
 
 
@@ -47,19 +52,33 @@ def wr(p, s):
 def canon():
     """The authoritative EULA body: the whole of eula_clean.html."""
     s = rd(SOURCE)
-    if BODY_START not in s or BODY_END_P not in s:
+    if BODY_START not in s or _end_index(s) is None:
         sys.exit("REFUSING: eula_clean.html is missing its start/end anchors.")
     if len(s) < 50000:
         sys.exit("REFUSING: eula_clean.html is %d bytes — too short to be the EULA." % len(s))
     return s
 
 
+def _end_index(s):
+    """Index just past the closing </em></p> of the version/schedules footer line.
+
+    Returns None when the anchor is absent — callers refuse rather than guess.
+    """
+    j = s.find(BODY_END_PREFIX)
+    if j == -1:
+        return None
+    k = s.find(BODY_END_CLOSE, j)
+    if k == -1:
+        return None
+    return k + len(BODY_END_CLOSE)
+
+
 def terms_span(s):
     i = s.find(BODY_START)
-    j = s.find(BODY_END_P)
-    if i == -1 or j == -1:
+    end = _end_index(s)
+    if i == -1 or end is None:
         sys.exit("REFUSING: terms.html is missing its body anchors.")
-    return i, j + len(BODY_END_P)
+    return i, end
 
 
 def js_span(s):
