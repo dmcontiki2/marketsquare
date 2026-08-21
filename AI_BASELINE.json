@@ -288,7 +288,7 @@
   },
   {
    "id": "D8",
-   "what": "AdvertAgent is entirely outside the perimeter -- no seam, 10 hardcoded claude-sonnet-4-6 sites, unregistered claude-opus-4-6 rate row, no downscale, max_searches to 20 at $0.01",
+   "what": "AdvertAgent sits OUTSIDE the seam BY DECISION, not by drift (DW-044, 21 Aug 2026): it calls Anthropic directly because it uses the web-search tool, which the ai_provider seam does not carry. Perimeter tidied the same day -- the unregistered premium-tier rate row was struck (nothing here ever called it; all 10 live functions run claude-sonnet-4-6), and calc_cost() now logs UNPRICED MODEL loudly instead of silently costing an unknown model at the Sonnet rate. Still true and still David's call by the model-selection standing rule: 10 hardcoded sonnet sites, no downscale ladder, max_searches up to 20 at $0.01. Moving it inside the seam is a real refactor (the web-search tool is Anthropic-shaped) and is deliberately NOT done.",
    "where": "AdvertAgent/service/advert_agent.py:33-38, 115-649, 785-794",
    "effect": "none of this baseline reaches it",
    "severity": "MEDIUM"

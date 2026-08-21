@@ -153,3 +153,7 @@ DEPLOY_REVIEW_*.flag
 
 .ledger_state.json
 .ledger_state.json.*
+
+# Housekeeping quarantine — junk pulled out of the tree for review, never repo content
+# (fuse_hidden orphans, LibreOffice .~lock files, probe litter). DW-watch 21 Aug 2026.
+_CLEANUP_REVIEW_*/

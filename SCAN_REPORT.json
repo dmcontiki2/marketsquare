@@ -1,7 +1,7 @@
 {
  "schema_version": 2,
  "report_type": "deep_static_scan",
- "generated_at": "2026-08-20T14:33:33Z",
+ "generated_at": "2026-08-21T04:22:02Z",
  "generated_by": "scripts/deep_scan.py (DW-012/DW-035 fix, 14 Aug 2026)",
  "scan_scope": {
   "python": [
@@ -20,7 +20,7 @@
   ]
  },
  "tools": [
-  "ruff ruff 0.16.3",
+  "ruff ruff 0.16.4",
   "vulture vulture 2.16",
   "pylint pylint 4.0.7",
   "eslint v9.39.5"
@@ -1112,7 +1112,7 @@
    "code": "F541",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 1312,
+   "line": 1348,
    "msg": "f-string without any placeholders",
    "new": false
   },
@@ -1121,7 +1121,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 2330,
+   "line": 2374,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -1130,7 +1130,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 2735,
+   "line": 2779,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
