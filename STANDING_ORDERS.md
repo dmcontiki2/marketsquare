@@ -75,3 +75,27 @@ the platform. Binding rules for every AI render, any category:
 _First applied:_ garden-service listing 268 photo 3 re-cut (v3) from an identifiable worker
 in dirty overalls to a hands-and-rake detail shot, after David caught the pairing risk
 against photo 2's neat presentation.
+
+## SO-3 · Resolve the open-action queue; report solutions, not problems  (21 Aug 2026, David — RUL-036)
+
+David's words: *"I am stuck in the details here... assume the task of resolving the open actions
+where the required approval to fix them already directionally agree with our requirements and
+goals, please fix those ones and just report the solutions to me; this will then allow me a veto
+at that point."*
+
+**Do without asking** — anything whose intended end-state is already written down:
+- an open regression-ledger entry (the entry text IS the agreed direction),
+- a wrong or proxy assertion (correct it, never weaken it, and say so in the entry),
+- a ruling not yet reflected in canon,
+- a defect that contradicts an existing RUL, STANDING_ORDERS or a canon doc.
+
+**Still bring to David** — unchanged by this order:
+- deploys, money, deletions, sending anything on his behalf;
+- anything whose failure mode is locking him out of his own app (RUL-027);
+- anything that would *change* a decision rather than *execute* one.
+
+**The report is a solution list.** What was broken · what was done · what he may veto. Not an
+explanation of the problem space — he has explicitly asked not to be walked through the details.
+
+**Declining is allowed; silence is not.** If an in-scope item is left undone, say so in one line
+with the reason, in the same report.

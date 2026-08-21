@@ -48,9 +48,15 @@ traces to a payment. BEA <-> PSP <-> bank, monthly, no orphans in any direction.
 is Paddle's problem (that is what the 5% buys). Without MoR (Phase-2 Stripe): UK VAT from first
 sale, AU GST at A$75k, US state-nexus tracking — per GATE1-PAY-INTL.
 
-## §4 Accountant — engage at FIRST REVENUE, not Year 2 (recommendation)
-The model budgets R2,000/mo from Year 2; a Year-1 structuring consult is cheap vs one wrong VAT
-call. Hand them exactly these six questions:
+## §4 Accountant — engaged from MONTH 1 (RULED, no longer a recommendation)
+
+**RUL-023(a), David, 18 Aug 2026: the accountant is engaged from MONTH 1 at R2,000/mo
+(+R500 software) — not Year 2.** This section used to read "the model budgets R2,000/mo from
+Year 2", which is the wording David's ruling overturned; Rev C of the cost workbook carries the
+month-1 line. Year-1 revenue on plan crosses the R2.3m compulsory VAT threshold, so the
+structuring consult is not optional and not deferrable.
+
+Hand them exactly these six questions:
 1. VAT: when does compulsory registration trigger on our ramp, do zero-rated exports to a
    non-resident MoR (Paddle) count as taxable supplies, and does the 2026 platform-operator
    change touch us?

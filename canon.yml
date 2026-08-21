@@ -37,7 +37,14 @@ launch:                         # CC-003 (David ruling, 12 Jun 2026)
 infra:
   server: "Hetzner CPX32"
   server_specs: "4 vCPU / 8 GB / 160 GB NVMe"
-  server_eur_month: 15.49
+  # RUL-025 (David, 18 Aug 2026): this 15.49 is GRANDFATHERED. The current new-order price
+  # for this box is EUR 35.49 (+129% after the 1 Apr and 15 Jun 2026 increases), and ANY
+  # rescale reprices us permanently at the new rate. DO NOT rescale the production box
+  # without pricing it first. Recorded migration target when the box must change anyway:
+  # CX43 (8 vCPU / 16 GB / 160 GB) at EUR 15.99 -- taken then, NOT before launch.
+  server_eur_month: 15.49          # grandfathered; new-order price today EUR 35.49
+  server_eur_month_new_order: 35.49
+  server_rescale_policy: "price before rescaling (RUL-025); target CX43 @ EUR 15.99 when forced"
   hetzner_volume: {gb: 100, eur_month: 5.20, use: "disk/DB headroom"}
   hetzner_object_storage: {eur_month: 5.99, use: "daily DB backups"}
   photo_cdn: "Cloudflare R2 (marketsquare-media, $0 egress)"

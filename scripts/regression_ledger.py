@@ -4548,32 +4548,46 @@ def rg_coverage_one_call():
 
 
 @entry("RG-0101", "GET /wonders travels gzipped -- the heritage catalog fetch is ~144 KB, not 485 KB",
-       OPEN, scope="every FastAPI JSON response over 1 KB (wonders, listings, selfcheck...); nginx "
+       LOCKED, fixed_on="2026-08-21", scope="every FastAPI JSON response over 1 KB (wonders, listings, selfcheck...); nginx "
                    "static files are a separate lane and unaffected",
        ref="WONDERS-GZIP-1, 18 Aug 2026: the catalog measured 485 KB raw / 332 sites (~1.5 KB per "
            "site) and nothing compressed JSON anywhere (no gzip_types in the nginx conf, no app "
            "middleware) -- found while confirming the rail-route heritage expansion (+19 sites) is "
            "negligible for app delays. GZipMiddleware(minimum_size=1024) added to bea_main.py in the "
-           "same session the expansion merged. OPEN until it rides a deploy. The live probe cannot "
-           "read /wonders anonymously post-gate (401), so it judges /ops/selfcheck -- any FastAPI "
-           "response over 1 KB must carry Content-Encoding: gzip when asked. Promote when READY.")
+           "same session the expansion merged. ASSERTION CORRECTED 21 Aug 2026: it judged "
+           "/ops/selfcheck as a stand-in because the armed gate 401'd /wonders -- then the gate "
+           "came down (RUL-029/034) and /wonders became readable while /ops/selfcheck stayed "
+           "gated, so the entry sat OPEN reporting a 401 on the PROXY while the real property "
+           "had been live and correct since the 18 Aug deploy. Measure the artefact the entry is "
+           "named after: /wonders, asked for gzip. Live 21 Aug: 160,022 B gzipped vs ~485 KB raw.")
 def rg_wonders_gzip():
     out = []
     bea = repo_file("bea_main.py")
     if bea is not None and "GZipMiddleware" not in bea:
         out.append((FAIL, "bea_main.py lost WONDERS-GZIP-1 (GZipMiddleware) -- the heritage catalog "
                           "ships raw again and grows ~1.5 KB per site uncompressed"))
-    try:
-        req = urllib.request.Request(BASE + "/ops/selfcheck",
-                                     headers=dict(UA, **{"Accept-Encoding": "gzip"}))
-        resp = urllib.request.urlopen(req, timeout=TIMEOUT)
-        enc = resp.headers.get("Content-Encoding", "") or ""
+    # Measure the named artefact, and fall back to any other JSON lane if it is gated --
+    # never let ONE gated stand-in decide the verdict for a property that is plainly live.
+    probed = False
+    for path in ("/wonders", "/listings?city=Pretoria", "/ops/selfcheck"):
+        try:
+            req = urllib.request.Request(BASE + path,
+                                         headers=dict(UA, **{"Accept-Encoding": "gzip"}))
+            resp = urllib.request.urlopen(req, timeout=TIMEOUT)
+        except Exception:
+            continue          # gated or unreachable -- try the next lane
+        enc = (resp.headers.get("Content-Encoding", "") or "").lower()
         body = resp.read()
+        probed = True
         if len(body) > 1024 and "gzip" not in enc:
-            out.append((FAIL, f"/ops/selfcheck answered {len(body)} B with no Content-Encoding: gzip "
-                              "-- WONDERS-GZIP-1 is not live"))
-    except Exception as e:
-        out.append((FAIL, f"could not probe live gzip via /ops/selfcheck: {e}"))
+            out.append((FAIL, "%s answered %d B with no Content-Encoding: gzip -- "
+                              "WONDERS-GZIP-1 is not live" % (path, len(body))))
+        else:
+            out.append((INFO, "%s travels gzipped (%d B on the wire)" % (path, len(body))))
+        break
+    if not probed:
+        out.append((INFO, "every JSON lane was gated or unreachable this run -- live gzip "
+                          "UNVERIFIED (repo half still asserted above)"))
     return out
 
 

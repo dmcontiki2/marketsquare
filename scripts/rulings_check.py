@@ -96,6 +96,24 @@ REFLECTIONS = {
    ("scripts/regression_ledger.py", ["RG-0121", "rg_gemini_canary"], []),
    ("AI_BASELINE.json", ["CANARY (photo scan/refine only)"], []),
  ],
+ "RUL-023": [
+   # (a) accountant from MONTH 1, not Year 2 -- the canon file itself carried the overturned
+   # wording until 21 Aug, which is exactly what a reflection assertion is for.
+   ("FINANCE_CANON.md", ["engaged from MONTH 1", "RUL-023(a)"], ["budgets R2,000/mo from Year 2"]),
+   ("RULINGS.md", ["COST BASE, PRE-LAUNCH"], []),
+ ],
+ "RUL-024": [
+   ("Records/DB_DECISION_2026-07-29.md", ["Launch runs on SQLite"], []),
+   ("RULINGS.md", ["POSTGRES STAYS POST-LAUNCH"], []),
+ ],
+ "RUL-025": [
+   ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
+   ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
+ ],
+ "RUL-036": [
+   ("RULINGS.md", ["STANDING FIX-AND-REPORT MANDATE"], []),
+   ("STANDING_ORDERS.md", ["SO-3", "report solutions, not problems"], []),
+ ],
  "RUL-035": [
    # The supers stay through launch; retirement is a deliberate admin act, one shelf at a
    # time, never a side effect of machinery. Assert the PROPERTY (super_example is in the
