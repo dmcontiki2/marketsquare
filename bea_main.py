@@ -11964,15 +11964,89 @@ def _review_code_hash():
     except Exception:
         return None
 
-def _review_rate_ok(ip: str) -> bool:
+# ADMIN-NOLOCK-2 (21 Aug 2026) — the super admin can never be rate-limited out of his
+# own dashboard by traffic he did not generate.
+#
+# What broke (David, locked out of the Session Dashboard, 21 Aug): GATE-NOLOCK-1 made
+# /admin/login share ONE per-IP bucket with /review/login, and that bucket counted EVERY
+# attempt, success included. So the machine lanes on David's own IP — the regression
+# ledger, the maintenance agent, a phone hitting the gate — minted review tokens, each
+# mint burning one of the 8 slots, and the strongest credential in the system (the master
+# admin password) hit "Too many attempts" without a single wrong password ever being typed.
+# That is exactly the lockout GATE-NOLOCK-1 was written to end, re-entered through the
+# limiter instead of through the origin gate.
+#
+# Three changes, each load-bearing:
+#   1. SEPARATE BUCKETS. Admin credentials get their own counter. Reviewer-lane traffic
+#      can never consume the admin allowance again — different door, different budget.
+#   2. ONLY FAILURES COUNT. A correct credential is not a brute-force attempt. Successes
+#      no longer consume allowance, and a success CLEARS the IP's counter outright. This
+#      alone kills the machine-mint starvation class: the ledger/agent mints all succeed.
+#   3. THE ANSWER IS A NUMBER. The 429 carries the exact seconds remaining and a
+#      Retry-After header, so "wait a few minutes" becomes "try again in 3m 20s".
+# Brute-force protection is intact: a wrong password still counts, and the window is
+# unchanged. Only the bookkeeping got honest.
+_admin_attempts    = {}   # ip -> [failed_count, window_start_epoch]
+
+_RATE_WINDOW       = 600  # 10 minutes, both lanes
+_REVIEW_MAX_FAILS  = 8    # reviewer code: unchanged budget, failures only
+_ADMIN_MAX_FAILS   = 10   # admin password/PIN: its own budget, failures only
+
+
+def _rate_retry_after(bucket: dict, ip: str) -> int:
+    """Seconds until this IP's window rolls over. 0 when it is already clear."""
+    import time as _t
+    rec = bucket.get(ip)
+    if not rec:
+        return 0
+    left = int(_RATE_WINDOW - (_t.time() - rec[1]))
+    return left if left > 0 else 0
+
+
+def _rate_ok(bucket: dict, ip: str, max_fails: int) -> bool:
+    """True while this IP still has FAILED-attempt budget in the current window.
+    Never mutates the count — call _rate_note_failure() only when a credential is
+    actually wrong, so a legitimate login costs nothing (ADMIN-NOLOCK-2 rule 2)."""
+    import time as _t
+    rec = bucket.get(ip)
+    if not rec or _t.time() - rec[1] > _RATE_WINDOW:
+        bucket.pop(ip, None)
+        return True
+    return rec[0] < max_fails
+
+
+def _rate_note_failure(bucket: dict, ip: str) -> None:
+    """Record ONE wrong credential from this IP."""
     import time as _t
     now = _t.time()
-    rec = _review_attempts.get(ip)
-    if not rec or now - rec[1] > 600:        # 10-minute window
-        _review_attempts[ip] = [1, now]
-        return True
-    rec[0] += 1
-    return rec[0] <= 8                        # max 8 attempts / 10 min / IP
+    rec = bucket.get(ip)
+    if not rec or now - rec[1] > _RATE_WINDOW:
+        bucket[ip] = [1, now]
+    else:
+        rec[0] += 1
+
+
+def _rate_clear(bucket: dict, ip: str) -> None:
+    """A correct credential proves this IP is not an attacker — wipe its slate."""
+    bucket.pop(ip, None)
+
+
+def _rate_429(bucket: dict, ip: str) -> HTTPException:
+    """A 429 that tells the human WHEN, not 'a few minutes' (ADMIN-NOLOCK-2 rule 3)."""
+    left = _rate_retry_after(bucket, ip)
+    if left >= 60:
+        when = "%dm %02ds" % (left // 60, left % 60)
+    else:
+        when = "%d seconds" % max(left, 1)
+    return HTTPException(
+        status_code=429,
+        detail="Too many failed attempts. Try again in %s." % when,
+        headers={"Retry-After": str(max(left, 1))})
+
+
+def _review_rate_ok(ip: str) -> bool:
+    """Back-compat shim: reviewer lane, failures only, its own bucket."""
+    return _rate_ok(_review_attempts, ip, _REVIEW_MAX_FAILS)
 
 # GATE-NOLOCK-1 (19 Aug 2026, David) — ONE place that grants gate passage.
 # Born from a real lockout: David requested an email link on his LAPTOP, the link
@@ -12010,8 +12084,8 @@ def review_login(req: _ReviewLoginRequest, request: Request, response: Response)
     NOTHING but passage past the pre-launch gate (browse view). Never admin/superuser."""
     ip = (request.headers.get("x-forwarded-for")
           or (request.client.host if request.client else "?")).split(",")[0].strip()
-    if not _review_rate_ok(ip):
-        raise HTTPException(status_code=429, detail="Too many attempts. Please wait a few minutes.")
+    if not _rate_ok(_review_attempts, ip, _REVIEW_MAX_FAILS):
+        raise _rate_429(_review_attempts, ip)
     stored = _review_code_hash()
     if not stored:
         raise HTTPException(status_code=503, detail="Reviewer access is not currently enabled.")
@@ -12021,8 +12095,11 @@ def review_login(req: _ReviewLoginRequest, request: Request, response: Response)
     except Exception:
         ok = False
     if not ok:
+        # ADMIN-NOLOCK-2: only a WRONG code costs allowance.
+        _rate_note_failure(_review_attempts, ip)
         _log.warning("review-login FAILED from %s", ip)
         raise HTTPException(status_code=401, detail="Incorrect reviewer code.")
+    _rate_clear(_review_attempts, ip)
     _log.info("review-login OK from %s", ip)
     # GATE-ENFORCE-1 (5 Aug 2026): also set an HttpOnly cookie so nginx auth_request can gate
     # document + API requests — a top-level navigation cannot carry the X-Review-Token header.
@@ -14057,13 +14134,18 @@ def admin_login(req: _AdminLoginRequest, request: Request, response: Response):
     anonymously through the gate."""
     ip = (request.headers.get("x-forwarded-for")
           or (request.client.host if request.client else "?")).split(",")[0].strip()
-    if not _review_rate_ok(ip):
-        raise HTTPException(status_code=429, detail="Too many attempts. Please wait a few minutes.")
+    # ADMIN-NOLOCK-2: the admin door has its OWN failure budget. Reviewer-lane
+    # traffic (ledger mints, agent mints, a phone at the gate) can no longer starve
+    # the strongest credential in the system out of its own dashboard.
+    if not _rate_ok(_admin_attempts, ip, _ADMIN_MAX_FAILS):
+        raise _rate_429(_admin_attempts, ip)
     if not _ADMIN_PASSWORD:
         raise HTTPException(status_code=503, detail="Admin password not configured on server.")
 
     # 1. Master password — immediate token, no PIN change required
     if req.password == _ADMIN_PASSWORD or req.password.strip() == _ADMIN_PASSWORD:
+        _rate_clear(_admin_attempts, ip)          # ADMIN-NOLOCK-2: success wipes the slate
+        _rate_clear(_review_attempts, ip)         # master credential rescues the gate lane too
         _grant_review_cookie(response, "admin-master/" + ip)
         return {"token": _make_token("master"), "expires_hours": _TOKEN_HOURS, "role": "master",
                 "gate": "unlocked"}
@@ -14086,6 +14168,7 @@ def admin_login(req: _AdminLoginRequest, request: Request, response: Response):
                             "user_id": row["id"],
                             "name": row["name"],
                         }
+                    _rate_clear(_admin_attempts, ip)   # ADMIN-NOLOCK-2
                     _grant_review_cookie(response, "admin-team/" + str(row["name"]))
                     return {
                         "token": _make_token(f"team:{row['name']}"),
@@ -14098,6 +14181,9 @@ def admin_login(req: _AdminLoginRequest, request: Request, response: Response):
         finally:
             conn.close()
 
+    # ADMIN-NOLOCK-2: reached only when the credential really was wrong.
+    _rate_note_failure(_admin_attempts, ip)
+    _log.warning("admin-login FAILED from %s", ip)
     raise HTTPException(status_code=401, detail="Incorrect password or PIN.")
 
 @app.post("/admin/change-pin")
