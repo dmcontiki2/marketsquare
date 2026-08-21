@@ -1,3 +1,43 @@
+## 2026-08-21 — ID-NPR-4: the 500 I shipped, and the guards that should have caught it
+
+First live call after the deploy: `GET /users/{email}/id-status` returned **Internal Server
+Error**. My bug, and an embarrassing one.
+
+**Cause.** `bea_main.py` does `import database` and nothing else — there is no bare `get_db`
+in the module namespace. All 195 existing call sites use `database.get_db()`. Both of my new
+endpoints called `get_db()`, which is a `NameError` the moment the line executes. Fixed.
+
+**Why 14 guards missed it.** Every one of them asserted on *source text* — that a string
+appears, that a function is defined, that a flag exists. Not one executed the endpoint. A
+guard that reads code rather than running it cannot see a name that fails to resolve. Three
+new guards close that class:
+
+- `test_no_bare_get_db_in_bea_main` — asserts zero bare `get_db()` anywhere in the file
+  (negative-tested: it does detect the bare form and ignore the qualified one).
+- `test_id_npr_endpoints_execute_without_nameerror` — walks the AST of all three endpoints and
+  fails on any called name that resolves neither locally, nor at module scope, nor in
+  builtins. This is the general form of the fault, not a patch for the instance.
+- `test_no_new_sqlite_strftime_in_the_id_npr_block` — see below.
+
+**Also mine, and flagged by the deploy's own pre-scan:** `PG-READINESS: SQLite-specific
+surface GREW {'strftime': (15, 17)}`. Both new uses were mine — a `DEFAULT
+strftime('now')` on the ledger table and a `SET id_npr_verified_at=strftime('now')`. Every one
+of those is a line that has to be rewritten when the Postgres move happens (RUL-024), so
+growing the count is a real cost, not a style note. Replaced with a portable `_utc_now()`
+helper and explicit `created_at` values on insert. Count is back to 14, one *below* where it
+started.
+
+**Not mine, but it failed on the same scan and should not get lost:** `MAINTENANCE:
+complaint-pipeline guard FAILED — test_auto_reply_gate_not_gmail_only: auto-reply gate
+regressed to Gmail-only (Resend is the launch path)`. Nothing in this lane touches auto-reply
+or Resend. It is pre-existing, it was already failing before today's work, and it is about the
+launch email path — worth someone's attention on its own merits.
+
+The deploy verdict was **DANGER** and it proceeded because the scan runs in `mode=warn`. It
+was right on both counts it raised against me.
+
+Cost model impact: none.
+
 ## 2026-08-21 — ID-NPR-3: the provider module was not on the deploy manifest, and the lane had no probe
 
 David pasted the Didit key into the server `.env`, restarted, and asked me to check it. Two

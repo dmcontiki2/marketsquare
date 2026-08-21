@@ -189,6 +189,82 @@ def test_partial_match_is_not_a_pass():
     assert "verified = (code == 'MATCH')" in body, \
         'only a full MATCH may verify — PARTIAL_MATCH must never pass'
 
+def test_no_bare_get_db_in_bea_main():
+    """
+    The 500 that reached production on 21 Aug: my endpoints called a bare
+    get_db(), but bea_main.py only does `import database` — there is no such
+    name, so every call raised NameError. 195 other call sites use
+    database.get_db(). String-matching guards missed it because they never
+    executed the path; this one asserts the property directly.
+    """
+    import re
+    src = open('bea_main.py', encoding='utf-8', errors='replace').read()
+    bare = re.findall(r'(?<![.\w])get_db\(\)', src)
+    assert not bare, (f'{len(bare)} bare get_db() call(s) in bea_main.py — '
+                      f'must be database.get_db(), or it is a NameError at runtime')
+
+
+def test_no_new_sqlite_strftime_in_the_id_npr_block():
+    """PG-readiness: strftime('now') is a SQLite-ism the guard counts."""
+    src = open('bea_main.py', encoding='utf-8', errors='replace').read()
+    i = src.find('ID_NPR_PRICE_T = 1')
+    j = src.find('@app.put("/intros/{intro_id}/accept")')
+    block = src[i:j] if 0 < i < j else ''
+    assert block, 'ID-NPR block not found'
+    assert "strftime('%Y-%m-%dT%H:%M:%SZ','now')" not in block, \
+        'ID-NPR block reintroduced a SQLite strftime — use _utc_now()'
+    assert '_utc_now' in block, '_utc_now helper missing from the ID-NPR block'
+
+
+def test_id_npr_endpoints_execute_without_nameerror():
+    """
+    Compile-and-scan the two endpoint functions for names that do not resolve
+    at module scope. This is the class of fault that a source-text assertion
+    cannot see.
+    """
+    import ast
+    src = open('bea_main.py', encoding='utf-8', errors='replace').read()
+    tree = ast.parse(src)
+    module_names = set()
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            module_names.add(node.name)
+        elif isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name):
+                    module_names.add(t.id)
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            for al in node.names:
+                module_names.add((al.asname or al.name).split('.')[0])
+    for fn in ('verify_identity_npr', 'id_status', 'id_verify_status'):
+        node = next((n for n in ast.walk(tree)
+                     if isinstance(n, ast.FunctionDef) and n.name == fn), None)
+        assert node is not None, f'{fn} missing'
+        local = {a.arg for a in node.args.args}
+        for sub in ast.walk(node):
+            if isinstance(sub, ast.Assign):
+                for t in sub.targets:
+                    if isinstance(t, ast.Name):
+                        local.add(t.id)
+            elif isinstance(sub, (ast.Import, ast.ImportFrom)):
+                for al in sub.names:
+                    local.add((al.asname or al.name).split('.')[0])
+            elif isinstance(sub, (ast.For, ast.comprehension)):
+                tgt = getattr(sub, 'target', None)
+                if isinstance(tgt, ast.Name):
+                    local.add(tgt.id)
+        for sub in ast.walk(node):
+            if isinstance(sub, ast.Call) and isinstance(sub.func, ast.Name):
+                name = sub.func.id
+                if name in local or name in module_names or name in dir(__builtins__):
+                    continue
+                import builtins
+                if hasattr(builtins, name):
+                    continue
+                raise AssertionError(
+                    f'{fn}() calls {name}() which resolves nowhere at module '
+                    f'scope — this is the NameError class that 500d on 21 Aug')
+
 
 if __name__ == '__main__':
     fns = [v for k,v in sorted(globals().items()) if k.startswith('test_')]

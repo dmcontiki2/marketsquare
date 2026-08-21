@@ -467,7 +467,7 @@ def run_migrations(conn):
             provider_ref  TEXT    NOT NULL DEFAULT '',
             charged_t     INTEGER NOT NULL DEFAULT 0,
             reason        TEXT    NOT NULL DEFAULT '',
-            created_at    TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+            created_at    TEXT    NOT NULL DEFAULT ''
         )
     """)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_idver_hash ON id_verification_ledger(id_hash)")
@@ -5375,11 +5375,11 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
         try:
             conn.execute(
                 """INSERT INTO id_verification_ledger
-                   (id_hash, email, outcome, reason)
-                   VALUES ('-', ?, 'buyer_notice', ?)""",
+                   (id_hash, email, outcome, reason, created_at)
+                   VALUES ('-', ?, 'buyer_notice', ?, ?)""",
                 (intro.buyer_email,
                  f"listing {intro.listing_id}: unverified seller notice shown; "
-                 f"buyer_ack={bool(intro.unverified_ack)}")
+                 f"buyer_ack={bool(intro.unverified_ack)}", _utc_now())
             )
         except Exception:
             pass          # evidence logging must never break an introduction
@@ -5504,6 +5504,14 @@ def _seller_verification_notice(conn, seller_email, category=None):
 ID_NPR_PRICE_T = 1
 
 
+def _utc_now() -> str:
+    """Portable UTC timestamp. Deliberately NOT strftime('now') — that is a
+    SQLite-ism and the PG-readiness guard counts them, because every one is a
+    line that has to be rewritten when the Postgres move happens."""
+    from datetime import datetime as _dt
+    return _dt.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
 class NPRVerifyRequest(BaseModel):
     id_number: str
     full_name: str
@@ -5534,7 +5542,7 @@ def verify_identity_npr(email: str, payload: NPRVerifyRequest,
         raise HTTPException(status_code=400, detail="ID number too short")
 
     id_hash = _hash_id_number(id_clean)
-    conn = get_db()
+    conn = database.get_db()
     try:
         urow = conn.execute(
             "SELECT id_npr_verified_at FROM users WHERE lower(email)=?", (em,)
@@ -5559,9 +5567,9 @@ def verify_identity_npr(email: str, payload: NPRVerifyRequest,
         if dup:
             conn.execute(
                 """INSERT INTO id_verification_ledger
-                   (id_hash, email, outcome, reason)
-                   VALUES (?,?,'duplicate_hash',?)""",
-                (id_hash, em, f"ID already presented by another account")
+                   (id_hash, email, outcome, reason, created_at)
+                   VALUES (?,?,'duplicate_hash',?,?)""",
+                (id_hash, em, "ID already presented by another account", _utc_now())
             )
             conn.commit()
             return {"outcome": "duplicate_hash", "charged_t": 0,
@@ -5595,9 +5603,9 @@ def verify_identity_npr(email: str, payload: NPRVerifyRequest,
         if not res.billable:
             conn.execute(
                 """INSERT INTO id_verification_ledger
-                   (id_hash, email, outcome, provider, reason)
-                   VALUES (?,?,'unavailable',?,?)""",
-                (id_hash, em, res.provider, res.reason[:300])
+                   (id_hash, email, outcome, provider, reason, created_at)
+                   VALUES (?,?,'unavailable',?,?,?)""",
+                (id_hash, em, res.provider, res.reason[:300], _utc_now())
             )
             conn.commit()
             return {"outcome": "unavailable", "charged_t": 0, "verified": False,
@@ -5613,17 +5621,17 @@ def verify_identity_npr(email: str, payload: NPRVerifyRequest,
         outcome = "verified" if res.verified else "failed"
         conn.execute(
             """INSERT INTO id_verification_ledger
-               (id_hash, email, outcome, provider, provider_ref, charged_t, reason)
-               VALUES (?,?,?,?,?,?,?)""",
+               (id_hash, email, outcome, provider, provider_ref, charged_t, reason, created_at)
+               VALUES (?,?,?,?,?,?,?,?)""",
             (id_hash, em, outcome, res.provider, res.reference,
-             ID_NPR_PRICE_T, res.reason[:300])
+             ID_NPR_PRICE_T, res.reason[:300], _utc_now())
         )
 
         if res.verified:
             conn.execute(
-                """UPDATE users SET id_npr_verified_at=strftime('%Y-%m-%dT%H:%M:%SZ','now'),
+                """UPDATE users SET id_npr_verified_at=?,
                    id_npr_provider=?, id_npr_ref=? WHERE lower(email)=?""",
-                (res.provider, res.reference, em)
+                (_utc_now(), res.provider, res.reference, em)
             )
         conn.commit()
 
@@ -5673,7 +5681,7 @@ def id_status(email: str):
     Note the wording: only the NPR tier is called 'verified' to a buyer.
     """
     em = (email or "").lower().strip()
-    conn = get_db()
+    conn = database.get_db()
     try:
         r = conn.execute(
             """SELECT id_number_hash, id_verified_at, id_ai_score,
