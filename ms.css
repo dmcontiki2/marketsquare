@@ -1334,3 +1334,30 @@ pre,.ai-result pre,.ai-result code{max-width:100%;overflow-x:auto}
 .lm-detail-desc,.lm-card-title,.mltitle,.lm-detail-title{overflow-wrap:anywhere}
 img,svg,video,canvas,iframe{max-width:100%}
 /* end mobile fit safety net */
+
+
+/* ── TRIP-ESSENTIALS-1 (21 Aug 2026) — the "Before you go" panel ─────────────
+   The panel itself is inline-styled by ms.js so it can be rendered and tested
+   headless. Only the bits CSS can do and inline styles cannot live here:
+   open/closed state, hover, and the print view a traveller hands to an agency. */
+details.te-sec > summary::-webkit-details-marker { display: none; }
+details.te-sec > summary::marker { content: ""; }
+details.te-sec > summary { transition: background var(--t, .15s); }
+details.te-sec > summary:hover { background: var(--surface-2); }
+details.te-sec > summary .te-chev {
+  margin-left: auto; flex-shrink: 0; color: var(--text-3);
+  font-size: 12px; font-weight: 700; line-height: 1;
+  transition: transform .16s ease;
+}
+details.te-sec[open] > summary .te-chev { transform: rotate(180deg); }
+.trip-essentials a[target="_blank"]:hover { color: var(--accent); }
+
+@media print {
+  /* teExpandAll() opens every section before calling print(), so the PDF the
+     traveller hands over is the WHOLE brief — not just what was open on screen. */
+  .trip-essentials { break-inside: auto; }
+  .trip-essentials details.te-sec { break-inside: avoid; border-color: #ccc; }
+  .trip-essentials .te-chev,
+  .trip-essentials button { display: none !important; }
+  .trip-essentials a[target="_blank"] { color: #555 !important; }
+}

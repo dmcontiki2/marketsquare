@@ -27,6 +27,64 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 ## Current Session
 
+- **TRIP-ESSENTIALS-1 built (21 Aug)** — every journey advert now carries free pre-information
+  under its map: itinerary, real cost, entry & visas, health, safety notices, money/taxes/tipping,
+  best season, connectivity and a dated "check on the day" list. 13 journeys, 440 fact rows, 76%
+  sourced, facts verified 21 Aug. Closes David's repeated ask ("a map and a single sentence" was a
+  major rejection point) — RUL-038 + RG-0135 so it cannot be lost again. Panel sits BELOW the map
+  by David's scanning-sweep ruling. Free, introductory-service only: it hands off to a travel
+  agency through the existing introduction flow. **Not deployed** — RG-0135 is OPEN on exactly one
+  assertion (live 404) and promotes to LOCKED on the next `deploy`-ref push. Stays, guides and
+  non-super tours are the same class and are NOT yet covered.
+
+## 2026-08-21 — maintenance-loop (daily B2b session)
+
+Daily maintenance loop ran end to end with nothing to fix. Regression ledger GREEN on both
+the pre- and post-run passes (every LOCKED entry holding, 3 known defects still OPEN). The
+shadow maintenance agent ran in the foreground and saw **0 faults, 0 actions**
+(`.maint_agent/run_20260821T053334Z.json`), and its heartbeat is confirmed on
+`GET /dashboard/maint` at `2026-08-21T05:33:34Z` (received 05:33:49Z, brain KEYED:anthropic,
+shadow) — the dashboard's B2b readiness row is live and current.
+
+Fault queue: new 0 · triaged 0 · fix-shipped 0 · verified 26 · closed 7. No patches applied,
+therefore no AIK-VERIFY-1 evidence rows and no new ledger entries were due. No escalation
+brief for the date (escalation_brief.py: no escalations in the last 24h). Nothing pushed and
+nothing deployed — NIGHTLY-SHIP-1 (05:45 nightly TSL) carries committed work through the gates.
+
+Standing open items unchanged and tracked by the ledger, not by prose: RG-0121 (photo-anon
+canary dark, eval pending) and RG-0132 (openai has no production golden run on record —
+`scripts/golden_seam_v2.py` must be run on the server with the production key, then the lane
+added to GOLDEN_PASS).
+
+- **INSTRUMENT-TRUTH-1 (21 Aug):** remaining +1-page panels audited. None were unverifiable; two
+  failed (SERVER SPECS cost contradicted canon.yml/RUL-025 by €2.50/mo; BIT dot defaulted green)
+  plus the SERVICES panel — six hardcoded "Active" verdicts — which the first sweep missed because
+  it enumerated by `id`. All fixed or labelled. **RG-0133 LOCKED** and now asserts the class:
+  measured-or-labelled, static figures match canon, no dot defaults to a health colour.
+
+- **RUL-037 (21 Aug) — Claude is the CTO.** Technical decisions are made against the specs and
+  executed, not handed back to David. Trailing "left for you" / option menus on technical matters
+  are banned; an unexecutable technical item becomes an OPEN ledger entry instead. Reflected in
+  CLAUDE.md, STANDING_ORDERS SO-4, rulings_check (37 rulings, 0 FAIL).
+- **AIPROV-VERIFY-1 + GOLDEN-AUTHORITY-1 (21 Aug):** the +1 page's AI Providers card was asserting
+  three unverified states — green dot on config alone, a hardcoded "flip pending" banner a week
+  after the flip, and `openai (golden-set-passed)` on all four tiers when the production golden run
+  was never done. All three now derive from facts. Ledger RG-0130/RG-0131 LOCKED, **RG-0132 OPEN**
+  (run `scripts/golden_seam_v2.py` on the Hetzner box with the production key, then add openai to
+  GOLDEN_PASS). Repo-side only — rides the next deploy.
+
+- **AIPROV-VERIFY-1 (21 Aug):** AI Providers card no longer paints a lane green on
+  configuration alone. Amber = key present but never proven live; green = a real
+  `/admin/ai-test` succeeded (decays 24h); red = last test failed. Test-button 401 now
+  names itself as a dashboard-login expiry, not a provider fault. Ledger RG-0130 LOCKED.
+  **Open for David:** `_apv3PendingFlip` is still hardcoded `true`, so the "flip pending
+  preconditions" banner contradicts live flags (`active=openai, standing=openai`, key present).
+
+- **ADMIN-NOLOCK-2 shipped** — David was locked out of the Session Dashboard by his own
+  rate limiter (shared bucket with the reviewer lane, counting successes). `/admin/login`
+  now has its own failure-only budget; successful token mints cost nothing in either lane;
+  429s report exact seconds. Locked as RG-0134. Ledger green, exit 0.
+
 - **MIGRATE-ENV-1 shipped** — the two-fault migration jam (missing `MS_API_KEY` *and* the
   wrong Python interpreter) is fixed at class level in `ops/autodeploy/post_deploy.sh`.
   023/024/027 proven rc=0 on the box with the venv interpreter + service environment;

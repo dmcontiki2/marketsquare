@@ -6530,7 +6530,8 @@ def rg_trip_essentials():
                               "scripts/build_trip_essentials.py"))
         else:
             try:
-                body = data[data.index("window.TRIP_ESSENTIALS =") + 23:].rstrip().rstrip(";")
+                _MARK = "window.TRIP_ESSENTIALS ="
+                body = data[data.index(_MARK) + len(_MARK):].rstrip().rstrip(";")
                 trips = _j.loads(body)["trips"]
             except Exception as ex:
                 out.append((FAIL, "trip_essentials.js will not parse: %s" % repr(ex)[:90]))
@@ -6572,13 +6573,13 @@ def rg_trip_essentials():
                                       "an introductory service" % pat))
     if ms is not None:
         for need, why in (("function tripEssentialsPanel", "the renderer"),
-                          ("tripEssentialsPanel(l, id)", "the CALL from the detail template"),
+                          ("? tripEssentialsPanel(l, id) : ''", "the CALL from the detail template"),
                           ("does not sell or book", "the introductory-service disclaimer")):
             if need not in ms:
                 out.append((FAIL, "ms.js lost %s ('%s')" % (why, need)))
         # Placement: the essentials must render AFTER the map block, never before it.
         i_map = ms.find("adv-reserve-map")
-        i_ess = ms.find("tripEssentialsPanel(l, id)")
+        i_ess = ms.find("? tripEssentialsPanel(l, id) : ''")
         if i_map > -1 and i_ess > -1 and i_ess < i_map:
             out.append((FAIL, "the essentials panel now renders ABOVE the map -- David's "
                               "21 Aug placement ruling was BELOW it, because a scanning reader "
@@ -6625,7 +6626,8 @@ def rg_trip_essentials():
         out.append((FAIL, "live /static/trip_essentials.js is not the data file"))
     else:
         try:
-            n_live = len(_j.loads(live[live.index("window.TRIP_ESSENTIALS =") + 23:].rstrip().rstrip(";"))["trips"])
+            _M = "window.TRIP_ESSENTIALS ="
+            n_live = len(_j.loads(live[live.index(_M) + len(_M):].rstrip().rstrip(";"))["trips"])
         except Exception:
             n_live = -1
         if trips is not None and n_live != len(trips):

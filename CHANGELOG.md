@@ -1,3 +1,630 @@
+## 2026-08-21 — TRIP-ESSENTIALS-1 correction: the preview board is TRIP_ESSENTIALS_BOARD.html
+
+The 21 Aug TRIP-ESSENTIALS-1 entry named the standalone panel board
+`TRIP_ESSENTIALS_PREVIEW.html`. `Visuals/refresh_visuals.py` deliberately skips any
+`*_PREVIEW.*` file as a throwaway build preview, so the board never reached David's gallery —
+which is the whole point of his 4 Aug standing instruction. Renamed to
+**`MarketSquare/TRIP_ESSENTIALS_BOARD.html`** and re-indexed; the generator writes the new name.
+The skip rule itself is correct and was left alone.
+
+## 2026-08-21 — EULA §6.3/§14: Tuppence is RETAINED on termination, not forfeited (fraud excepted)
+
+David, from memory: "we do not forfeit a terminated user's Tuppence, it is kept for a period
+and will even be available again to that same user if he signs up again — but to comply with
+not being a financial institution we cannot convert it back to money and pay it out."
+
+Checked against disk. He was right on the principle and the EULA was the outlier:
+- **Canon agreed with David** — LOCAL_MARKET_REQUIREMENTS.md LM-14b: "Purchased Tuppence is
+  never confiscated — it was bought with real money," restored in full on reinstatement.
+- **The code agreed with David** — no user-termination path touches Tuppence at all; the only
+  sweep (monthly grant reset) explicitly never touches purchased or earned Tuppence.
+- **The EULA disagreed** — forfeiture in FOUR places: §6.3 bullet, §14.1 (user closes),
+  §14.2 (breach), §14.3 (Platform terminates for convenience). §14.3 was the sharp one: we
+  took purchased credit when WE ended the relationship and the user had done nothing wrong.
+
+Root cause of the drift: the "frozen, restored on return" rule was written for SUSPENSION
+(LM-14b) and the equivalent was never written for TERMINATION, so older forfeiture language
+survived there.
+
+CHANGED (David's express ruling, incl. keeping fraud forfeiture):
+- §14.1 — retained, not converted to cash; restored in full on re-registration with the same
+  verified identity within 24 months; no payment on closure.
+- §14.2 — forfeiture ONLY under B5 (payment fraud/chargeback abuse) and B6 (identity fraud).
+  Every other breach cause: retained, restored on reinstatement. Never converted to cash.
+- §14.3 — retained 24 months, restored in full on re-registration; states expressly that
+  because the Platform and not the user ended the agreement, no Tuppence is forfeited.
+- §6.3 — the termination-for-convenience bullet rewritten to match §14.3.
+
+UNTOUCHED AND LOAD-BEARING: "Tuppence is not redeemable for cash under any circumstances."
+Retention is continued access to a non-monetary service credit, not a right of repayment, so
+the Banks Act deposit-definition protection is unaffected (BACKLOG O2, CCP_FABLE_RUN_PROMPT).
+
+Also resolves the OpenAI peer review's §14 BLOCKER for France and Portugal on better ground
+than a savings clause: "retain, restore on return, never cash out" is materially more
+defensible under EU consumer law than forfeiture.
+
+STILL OPEN (flagged, not fixed here): the 24-month dormancy expiry and its promised 30-day
+pre-expiry email are declared in §6.3 but NOT IMPLEMENTED anywhere in the code. That promise
+predates this change (it was already live in v1.13), so publishing does not increase exposure
+— but it is a commitment we currently cannot keep, and now the retention model leans on the
+same 24-month clock. Either build the sweep + notice, or drop the promise.
+
+Synced across eula_clean.html, terms.html and ms.js via scripts/eula_sync.py (--check green,
+113,253 bytes identical); RG-0077 green.
+
+## 2026-08-21 — TUPPENCE-DORMANCY-1: the sweep that makes EULA §6.3's expiry promise true
+
+David: "I think we should build the sweep to comply?" Built.
+
+EULA §6.3 has promised since v1.13 that unused Tuppence expires after 24 consecutive months
+of inactivity AND that we email the holder not less than 30 days beforehand. **Nothing on
+disk implemented either half** — we published a notice commitment we could not keep. That
+promise now leans harder on the 24-month clock because the 21 Aug termination reconciliation
+uses the same window for retention.
+
+**`scripts/tuppence_dormancy.py`** (289 lines, stdlib only, runs anywhere like the ledger).
+
+Design — the notice is a HARD PRECONDITION, not a courtesy:
+- Nothing is ever expired unless a warning was actually sent AND is at least 30 days old.
+  No warning on record → HOLD, warn first, expiry deferred. Warning too young → WAIT.
+  The failure mode is "expiry is late", never "money vanished without warning".
+- ACTIVITY is the LATEST of users.last_seen, users.created_at, any transactions row, any
+  intro_requests row as buyer, any listing as seller. A superset is deliberate — every extra
+  signal makes the user look MORE active, which can only delay expiry. Err toward the user.
+- RE-ACTIVATION VOIDS A WARNING: the notice is bound to the activity timestamp it was issued
+  against, so any activity moves the anchor and restarts the 24-month clock from scratch.
+- DRY-RUN BY DEFAULT; `--apply` required to write. Refuses to run with `--apply` when
+  RESEND_API_KEY is absent — expiry may never ride on a warning that could not be sent.
+- Expiry is ONE offsetting `dormancy_expiry` transactions row, mirroring the existing
+  `grant_expiry` pattern: the wallet stays a pure SUM(amount), no destructive UPDATE, full
+  audit trail. Idempotent; `--limit` caps blast radius; `--as-of` allows future-dating for test.
+- New table `tuppence_dormancy_notices` (additive) records every warning so an expiry can
+  PROVE a notice preceded it.
+
+Verified against a synthetic DB (5 account shapes): a recently-transacting user is untouched;
+an introduction 100 days ago counts as activity and defers expiry; a zero balance is skipped;
+a 26-month-dormant account with no warning is HELD and warned instead of expired; a 5-day-old
+warning does NOT permit expiry; a 40-day-old warning DOES; and a dry run leaves the wallet
+byte-identical.
+
+**Regression ledger RG-0129 (LOCKED)** asserts BOTH halves of the class so neither can rot:
+the sweep must keep existing with the notice as a hard precondition (24-month constant,
+30-day notice, notices table, dry-run default, the age check, the no-warning refusal), the
+EULA must keep saying retained-not-forfeited with fraud-only forfeiture, and the no-cash-out
+rule must never be softened (the load-bearing Banks Act protection). **Tripwire proven** —
+seven deliberate reversions were each injected and every one turned the entry red; the intact
+state is green.
+
+OPERATIONAL NOTE — nothing will fire for a long time, and that is correct. The oldest accounts
+date from April 2026, so no account can reach 24 months of inactivity before roughly April
+2028. The sweep will report zero until then. The promise exists NOW, so the machinery must
+exist now; a compliance mechanism that only appears when first needed is one that is never
+tested. Run it monthly (dry-run costs nothing) so it is exercised long before it matters.
+
+NOT SCHEDULED YET — needs a monthly task, and it must run ON THE BOX (the live DB is not
+readable from a session). Suggested: `python3 scripts/tuppence_dormancy.py --apply` monthly.
+
+NOT BUILT (separate, and not asked for): the §14.1/§14.3 restore-on-re-registration path.
+There is still no user-account-termination endpoint at all, so there is nothing yet to hook
+retention into. Filed rather than half-built.
+
+Cost model impact: none. Warning emails ride existing Resend infrastructure and, on today's
+account ages, the expected volume is zero for ~20 months.
+
+## 2026-08-21 — TRIP-ESSENTIALS-1: the adverts stop being a map and a sentence
+
+David, on the Pilanesberg advert: *"would you plan your holiday with only this available? A map
+and a single sentence? No itinerary, no budget, no visa requirements, no safety advice, no
+travelling notices, no local taxes, tips etc.?"* — and, pointedly, *"I have actually asked this
+similar question before and asked for it to be implemented and then got side tracked."* He had:
+the 17 Aug LAYERS-4-1 entry recorded his sequencing call ("maps first, dossier-summary work
+second") and the second half never came. RUL-038 + regression ledger RG-0135 are what stop it
+being lost a third time.
+
+**Built — "Before you go", under the map on all 13 journeys** (9 country maps + 4 tour maps):
+- `trip_essentials.js` — 13 journeys, 440 fact rows, **76% carry a live source URL**, generated
+  by `scripts/build_trip_essentials.py` (the curated facts live in the generator; the .js is
+  never hand-edited). Itineraries are read straight off `journeys/*.json`, so the written route
+  and the map can never drift apart. 136 KB, ~39 KB gzipped.
+- Per journey: the itinerary · what it actually costs · entry & documents (per passport, with
+  fees and processing times) · health · safety & travel notices · money, tax & tipping · best
+  season · connectivity · and a dated **"Check these on the day"** list.
+- `ms.js` `tripEssentialsPanel()` renders it; `ms.css` carries only what inline styles cannot do
+  (open/closed state, hover, and the print stylesheet).
+- **Print / save the brief** expands every section first, so the PDF a traveller hands to an
+  agency is the whole dossier — not just the two blocks that happened to be open.
+
+**Placement is part of the fix.** David's ruling the same session: the panel goes BELOW the map,
+never above — *"from a readers scanning sweeps we only look at the first bit we see and then move
+on, and if what they see isnt an interesting looking map then they will pass by."* RG-0135
+asserts the call site sits after the map block, so a later refactor cannot quietly invert it.
+
+**Model constraint honoured (CLAUDE.md, 1 Aug).** All of it is FREE pre-information from an
+introductory service. The panel ends by handing the traveller to a travel agency through the
+EXISTING introduction flow — no new payment path, no booking, no quote. RG-0135 and the self-test
+both fail on copy that implies MarketSquare sells the trip.
+
+**Honesty machinery, because a travel dossier is exactly the thing that rots into fiction:**
+every row carries a source; volatile figures (visa fees, park tariffs, advisory levels, tax rates)
+are flagged **RE-CHECK** in the UI and repeated in the per-trip verify list; a row quoting a number
+with no source and no hedge is a hard FAIL in both `scripts/trip_essentials_selftest.js` and
+RG-0135. Where research could not confirm a figure the panel says so — Bazaruto's conservation fee
+reads "NOT PUBLISHED — get it in writing from your operator", not a made-up number.
+
+**Facts verified 21 Aug 2026** across three parallel research passes against primary sources.
+Things travellers actually get caught by, now on the page: Kenya needs a yellow-fever certificate
+to come HOME to South Africa (not to enter Kenya); the Maasai Mara fee steps US$100 → US$200 from
+1 Jul; Yellowstone now adds a US$100 per-person non-resident surcharge (the US$250 non-resident
+annual pass beats it for two adults doing Yellowstone + Grand Teton); UK tax-free shopping is gone
+and South Africans need a full £135 visitor visa, not the ETA; EES went live 10 Apr 2026 and does
+apply to visa holders while ETIAS does not apply to South Africans at all; Namibian fuel is
+effectively cash-only; Botswana does not take rand; Mozambique ATMs will not take Mastercard;
+Bavarian huts are cash and TBE vaccination is a 3-dose series started months ahead; Pilanesberg is
+malaria-free (and Smartraveller names its approaches for vehicle crime).
+
+**Ledger RG-0135 is OPEN, correctly** — the only failing assertion is "live /static/trip_essentials.js
+is 404". It flips to READY TO LOCK on the next deploy of the `deploy` ref. Full ledger run this
+session: every LOCKED fix holding, no regressions. `rulings_check` 38/38 reflected.
+
+**Scope stated honestly:** this covers the 13 super-example Adventures journeys. Stays, guides and
+non-super tours are the same class and are NOT yet covered — RG-0135's scope line says so rather
+than letting the entry imply the family is done.
+
+Also: `TRIP_ESSENTIALS_PREVIEW.html` (all 13 panels, standalone) indexed into `Visuals`.
+Files: trip_essentials.js · scripts/build_trip_essentials.py · scripts/trip_essentials_selftest.js ·
+ms.js (v455) · ms.css (v285) · marketsquare.html · ops/autodeploy/deploy_manifest.txt ·
+scripts/regression_ledger.py RG-0135 · RULINGS.md RUL-038 · scripts/rulings_check.py.
+
+## 2026-08-21 — Five open actions RESOLVED under David's standing instruction ("fix the ones already directionally agreed; I keep the veto")
+
+David: *"I am stuck in the details here... assume the task of resolving the open actions where the
+required approval already directionally agrees with our requirements and goals, fix those ones and
+just report the solutions to me; this will then allow me a veto at that point."* Register went from
+**7 open to 2**. Every closure below re-ran its originating check.
+
+**DW-027 — the ruling had already been given, and built, on 7 Aug.** The row waited 14 days for
+"above a blurred-fraction threshold, refuse the photo — behind a launch switch defaulting OFF".
+On disk since 7 Aug: `_ANON_MAX_BLUR_FRAC = 0.18`, measured by `_anon_blur_fraction()` BEFORE the
+next layer is painted (the point a photo turns to porridge), at four call sites, each returning
+`needs-replacement` instead of an image. The switch `launch_switches.photo_replace_request`
+defaults **ON, not OFF** — David's ruling, with the code commented to say a missing key must read
+ON or it "would silently restore the very behaviour Maroushka reported three times". RG-0047 LOCKED
+and holding. Today PHOTO-REJECT-1 (RUL-033) is stricter still. The row was stale, not unanswered.
+
+**DW-028 — the premise was retired, not satisfied.** It asked David to provision an ops API_KEY so
+the gzip probe could read `/ops/selfcheck`. That was never a gzip problem, it was an instrument
+problem: the entry judged a key-gated stand-in because the armed gate 401'd `/wonders`; the gate
+came down (RUL-029/034) and the stand-in stayed gated, so RG-0101 sat OPEN reporting a 401 on the
+PROXY while the property had been live since 18 Aug. Probe repointed onto `/wonders` itself through
+the ledger's `ts_review` cookie — **160,022 B on the wire**. No click needed.
+
+**DW-010 / CC-002 — FORMALLY DEFERRED to the first post-launch week (from Mon 8 Sep).** The row
+offered "land or formally defer" and had read 68d → 71d → 72d while nobody chose. CC-002 is not one
+decision but ~10 open pricing/product questions in `AWAITING_DAVID.md`, several touching the EULA
+and one touching a **live Paystack SKU** carrying an explicit "do NOT deploy a removal unattended"
+warning. RUL-001 puts soft-public 8 days out. Deferring is launch-aligned; landing is not. Moved to
+SCHEDULED so `cc_age_check.py` stops reporting an untaken decision as a threshold breach every
+Monday. **Veto point:** if one CC-002 item must land pre-launch, name it and it lands alone.
+
+**DW-044 — cost sweep now reports `0 critical`** (was 2). Took the row's second offered path,
+"strike the opus rate row and record AdvertAgent as out of perimeter", because the first is not a
+tidy-up: AdvertAgent calls Anthropic directly to use the **web-search tool the seam does not
+carry**. (a) premium-tier rate row struck — nothing ever called it, all ten live functions run
+sonnet, it existed only to be found; (b) `calc_cost()` stops pricing an unknown model *silently* at
+the Sonnet fallback and logs `[AA-COST] UNPRICED MODEL` — silent fallback costing is how a premium
+model runs for weeks looking cheap; (c) both baseline artefacts rewritten to state the perimeter as
+a DECISION with its reason, replacing text that described the fault and which the sweep was
+flagging as an opus call site — its own bug report tripping its own detector, the DW-043/DW-047
+loop again. **No model was chosen on David's behalf**; the ten sonnet sites, the absent downscale
+ladder and max_searches 20 remain his by the model-selection standing rule.
+
+**DW-054 — RG-0128 written and LOCKED: the AI breaker fails OVER, not merely open.** Ten Anthropic
+incidents 12-19 Aug, eight consecutive days without a clear one, and a failover nobody had ever
+seen work. NOT proven by live fault injection — that means spending on a real call or breaking the
+live lane 8 days before launch. `scripts/prove_ai_failover.py` stubs **only the vendor sockets** and
+exercises the real `complete()`, the real cost-approved fallback ranking, the real breaker
+recording. **13/13**: 5xx, 401 and 429 each move to the next lane and return THAT lane's answer;
+all-lanes-down fails honestly reporting the REQUESTED lane's error, not the last tried; `probe=True`
+and `allow_fallback=False` respected. **RESIDUAL, deliberately not swept up:** this proves the
+DECISION layer. Whether failover has anywhere to GO depends on ≥2 lanes holding keys on the box,
+readable only at OPS-key-gated `/ops/selfcheck` — so RG-0128's live half reports **INFO, not a
+pass**, and says so in words. `OPENAI_API_KEY` is on record unprovisioned (RG-0016), so a
+single-lane production chain is entirely possible.
+
+**Ledger: exit 0 — 121 entries · 119 holding · 0 REGRESSED · 2 open · 0 ready to lock.** The two
+open are honest: RG-0075 (admin-gate script duplicated across 5 files) and RG-0121 (canary dark by
+design). RG-0101 was promoted by a concurrent session during this work.
+
+**NOT done, and named rather than quietly dropped:**
+- **DW-057/DW-029 (rotation) stays David's click.** I considered scripting the systemd-unit half to
+  make it one double-click. I did not: I cannot test it against the box, and an untested script
+  that rewrites the live service unit 8 days before launch is worse than the manual edit. Handling
+  the credential values is out of bounds regardless.
+- **AdvertAgent inside the seam** — a real refactor around an Anthropic-shaped tool, David's call.
+
+**Process note, recorded because it nearly bit.** A concurrent session was editing
+`scripts/regression_ledger.py` during this work (it shipped EULA v1.14 and had independently fixed
+RG-0101 the same way I was about to). My guarded write pattern — exact-anchor + `assert count == 1`
+before replacing — refused rather than duplicating, which is the only reason there is no collision
+to unpick. The re-read-before-write rule earned its keep today; it is not ceremony.
+
+## 2026-08-21 — maintenance-loop (B2b brain, daily run)
+
+- **Regression ledger: GREEN before and after.** Every LOCKED entry holding; 3 known
+  defects still OPEN (RG-0121 photo-anon canary not armed; RG-0132 openai absent from
+  GOLDEN_PASS; one further open entry). No regression to chase — no top item.
+- **Shadow maintenance agent ran clean in the foreground** (BRAIN-DEPS-2 pattern; httpx
+  installed into the sandbox first). `mode=SHADOW (kill switch OFF)`, phase=postlaunch,
+  trust-core=GUARDED, rate<=3/h, brain KEYED:anthropic. Report:
+  `.maint_agent/run_20260821T053334Z.json` — **0 seen, 0 acted**.
+- **Heartbeat confirmed posted.** `GET /dashboard/maint` (read through the ts_review
+  credential, migration 018 still not on the box) returns this run:
+  `run=2026-08-21T05:33:34Z, received_at=2026-08-21T05:33:49Z, brain_keyed=true,
+  brain_lane=anthropic, seen=0, acted=0` — the B2b readiness row on the dashboard is fed.
+- **Fault queue empty of work.** `/admin/faults` counts: new 0 · triaged 0 · fix-shipped 0
+  · verified 26 · closed 7. No SHADOW "gates GREEN, patch ready" rows, no PATH_B routes,
+  no escalations — nothing to patch, so no fixes, no AIK-VERIFY-1 evidence rows and no new
+  ledger entries were due this session.
+- **Escalation brief: none written.** `scripts/escalation_brief.py` reported "no escalations
+  in the last 24h" — no `Records/ESCALATION_BRIEF_2026-08-21.md` exists.
+- No push, no deploy (NIGHTLY-SHIP-1 owns shipping).
+
+## 2026-08-21 — INSTRUMENT-TRUTH-1: the +1 page's remaining panels audited, two lies and one missed panel
+
+Follow-on from AIPROV-VERIFY-1, answering David's question — *how many of these six are impossible
+to verify by AI, how many would not have survived an AI verification?*
+
+**Impossible to verify: zero.** All six were checkable from source against canon — no live access,
+no admin token, no human eyes. They were unlooked-at, not unverifiable.
+
+**Would not have survived: two, plus a third the audit list itself missed.**
+
+1. **SERVER SPECS** hardcoded `CPX32 €17.99 + Volume €6.58 = €24.57/mo` against
+   `canon.yml server_eur_month: 15.49` — contradicting **RUL-025**'s grandfathered price and
+   overstating the box by €2.50/mo. Corrected to €15.49 / €22.07, labelled with its source and
+   the €35.49 rescale warning.
+2. **BIT SELF-TEST** painted its dot **green as the pre-data default** — healthy while loading,
+   and still healthy if the fetch died. Now grey until `/dashboard/bit` answers.
+3. **The SERVICES panel** — six hand-written "✅ Active" verdicts, never probed, which would read
+   Active straight through a total outage. **It was missed by the first sweep because it has no
+   `id` attribute and the sweep enumerated by id.** That miss is the same shortcut that produces
+   these faults: counting what is easy to enumerate and calling it the set. Now labelled
+   **STATIC REFERENCE — NOT MEASURED**, green stripped, reader pointed at the Infrastructure card
+   which probes `/admin/services-status` per row.
+
+Clean: hp-grid, directions-grid, prompt-panel, travel-lane-card — all display server data or
+static copy and paint no health verdict.
+
+**Ledger RG-0133 promoted OPEN → LOCKED**, now asserting three properties mechanically: every
+panel is measured / display-only / labelled; the static cost line must equal `canon.yml`; and no
+dot may default to a health colour. The cost assertion was negative-tested (it bites).
+
+## 2026-08-21 — /housekeep pre-launch sweep
+
+First `/housekeep` run on record; **HOUSEKEEPING.md created** as the dated log the skill expects
+(it did not exist, so every previous sweep's findings lived only in a chat transcript).
+
+- **deep_scan zero-new restored** — `scripts/prove_ai_failover.py:20` carried an unused `json`
+  import (ruff F401, the run's only NEW finding). Removed via guarded heredoc, `py_compile` green,
+  scan 183 -> **182, 0 new, 0 crash-class**. Backup: `.bak-20260821-f401`.
+- **GIT-LOCK class healed live (RG-0015)** — a stranded `.git/HEAD.lock` was present at sweep
+  start; `git_unlock.py` renamed it aside, and a `packed-refs.lock` + branch ref-lock raised
+  during a stale-branch delete were swept to `.git/stale_locks/` the same way. No lock left
+  stranded; repo verified sane after.
+- **Reversible quarantine** `_CLEANUP_REVIEW_2026-08-21/` — 3 stale LibreOffice `.~lock.*#` and
+  2 orphaned `.fuse_hidden*` files, per CLEANUP_POLICY.md's auto-safe list, with a RESTORE_MANIFEST.
+  `.tmp_findings.json` was quarantined and then **put back** on finding it is git-TRACKED — a
+  tracked file is David's call, not an auto-safe temp.
+- **Verified green:** `/health` 200 in 0.36 s · SSL 34 days (to 24 Sep) · ledger exit 0
+  (120 entries, 118 holding, 0 REGRESSED) · rulings 36/0 FAIL · deploy manifest 127/127 present ·
+  no debug flags or app-JS `console.log` in tracked source · `.env` and `.secrets/` ignored, no
+  credential tracked, entropy scan clean.
+- **Nothing committed by this sweep** — another session was committing concurrently (05:58, 06:05,
+  06:14 SAST). CHANGELOG-COLLISION-1 discipline: fragment only, no whole-file write, no race.
+- **Raised for David** (detail in HOUSEKEEPING.md): DW-057/029 rotation still red on day 15;
+  3 commits unpushed to both `main` and `deploy` (EULA v1.14 and RUL-036 exist only on the laptop);
+  local backup 16 days stale against a 8-day-out public launch; 1,205 `*.bak` files / 512 MB
+  awaiting a retention rule; `.git` at 1.5 GB from video blobs in history.
+
+## 2026-08-21 — RUL-036: the fix-and-report mandate, and the open-action queue worked down to two
+
+David: *"I am stuck in the details here... assume the task of resolving the open actions where the
+required approval to fix them already directionally agree with our requirements and goals, please
+fix those ones and just report the solutions to me; this will then allow me a veto at that point."*
+
+Recorded as **RUL-036** and written into **STANDING_ORDERS.md as SO-3**, so it survives the
+session. In scope without asking: any open ledger entry, wrong assertion, unreflected ruling, or
+defect that contradicts existing canon — the intended end-state is already written down, so
+executing it is not a new decision. Out of scope and still batched to David: deploys, money,
+deletions, sending on his behalf, anything that could lock him out (RUL-027), and anything that
+would *change* a decision rather than execute one. Declining is allowed; silence is not.
+
+Worked down this session:
+
+- **RG-0077 "regression" was not one.** The 03:56 run reported the EULA body missing from
+  terms.html. It exited **3**, which LEDGER-STABLE-1 already defines as "read from a moving
+  target — re-run": another writer was mid-file. Re-run clean, anchors intact, body byte-identical
+  to eula_clean.html. No fix needed and none invented — the machinery already caught it and the
+  session simply had to read its own exit code.
+- **RG-0101 LOCKED.** Gzip was live and correct since the 18 Aug deploy; the entry sat OPEN for
+  three days because its probe judged `/ops/selfcheck` as a stand-in, and when the gate came down
+  `/wonders` became readable while the stand-in stayed 401. Assertion corrected to measure the
+  artefact it is named after, with fallback lanes so one gated endpoint can never decide the
+  verdict again. Live: `/wonders` = 160,022 B gzipped vs ~485 KB raw.
+- **RUL-023 was contradicted by its own canon file.** FINANCE_CANON §4 still read "the model
+  budgets R2,000/mo from Year 2" — the exact wording David's 18 Aug ruling overturned. Corrected
+  to month-1 engagement, with the assertion now forbidding the old sentence from returning.
+- **RUL-025 had nowhere to bite.** `canon.yml` carried `server_eur_month: 15.49` with no hint it
+  is grandfathered, so any session costing infrastructure would have read it as the current price.
+  Now carries the €35.49 new-order price, the rescale-repricing warning and the CX43 target.
+- **RUL-024** reflected against the DB decision record.
+- rulings_check: **36 rulings, 0 FAIL, 0 WARN** — the three "note, not a guarantee" warnings are
+  gone. Ledger: 120 entries, 0 regressed, 2 open.
+
+**Not done, deliberately — RG-0075** (the admin-gate script duplicated across five files). The
+direction is agreed and the fix is a clean extraction to `/static/ts_gate.js`, following the
+existing `ts_report.js` pattern. It is held because its failure mode is David locked out of his
+own admin and dashboard — the exact class RUL-027 exists to prevent — and it wants a session where
+a real login can be tested the moment it lands, not one run while he is at work. First item next
+session.
+
+RG-0121 (photo-anon canary) stays open by design: it waits on the Gemini key on the 25th (RUL-032/033).
+
+## 2026-08-21 — RUL-037: Claude is the CTO; technical decisions stop being lobbed at David
+
+David, on the trailing "one thing I left for you" that had become a per-session habit:
+*"this is a build in destruction mechanism, because i am currently managing the project on a
+management level and using you as the details and technical expert... I depend on you to be the
+CTO of this project and to make the technical decisions based on the specifications which sets
+the rules and the requirements to reach our goals."*
+
+- **RUL-037** recorded, reflected in `../CLAUDE.md`, `STANDING_ORDERS.md` SO-4 and
+  `scripts/rulings_check.py` (37 rulings, 0 FAIL).
+- The specs are the delegated authority. Where RULINGS/STANDING_ORDERS/canon/ledger answer a
+  question, Claude answers and executes; David is not the tie-breaker for anything written down.
+- **Banned:** trailing "left for you", "say the word and I'll…", option menus on technical matters.
+- **The replacement mechanism:** a technical item Claude cannot execute this session becomes an
+  **OPEN regression-ledger entry**, not a sentence to David. The ledger already prints READY TO
+  LOCK when it clears — it is the correct home for a pending technical step.
+- **Reserved to David** (batched, stated as business trade-offs): money, deploys, deletions,
+  sending on his behalf, lockout risk (RUL-027), legal/commercial positioning, launch scope and
+  dates, money- or jurisdiction-bearing vendor selection (RUL-009 unchanged), and changing a ruling
+  rather than executing one.
+- Applied immediately in the same session: the `_apv3PendingFlip` banner and the golden-gate
+  contradiction — both previously handed to David as "your call" — were decided and executed
+  against `AI_LANE_GUIDANCE.md` and `ai_scoreboard.GOLDEN_PASS`. See the AIPROV-VERIFY-1 fragment.
+
+## 2026-08-21 — AIPROV-VERIFY-1: the AI Providers dot stops lying about liveness
+
+David asked why the OpenAI row was solid green when he had never tested it. He was right to ask.
+
+- **The bug:** the dot and the `ACTIVE` badge were painted from `p.id===active` and `p.available`.
+  The server computes `available` as `bool(ai_provider.envkey("OPENAI_API_KEY"))` — key **presence**,
+  not a network call. `/flags` publishes no liveness field at all. So a revoked, over-quota or
+  simply wrong key rendered as a healthy green lane — on the lane serving live traffic.
+- **The fix (client-side, no extra API spend):** an unproven lane now shows **amber ·
+  UNVERIFIED** with "key present & lane selected — but no live call verified. Press Test."
+  A failed test shows **red · TEST FAILED** with the reason. Only a successful
+  `/admin/ai-test` round trip earns green, stamped with the time, and it decays after 24h.
+  Result cached in `localStorage.ms_apv3_verify`. A dot-key legend sits under the rows.
+- **Also fixed:** the Test 401 line read `Admin session expired — reload + PIN` inside the
+  provider card, which reads like the provider dropped. It now says plainly that the
+  **dashboard's own login** expired, the test never ran, and it is not a provider fault.
+- Ledger: **RG-0130** LOCKED, scope all three lanes.
+**Two more lies on the same card, same class, both fixed (RUL-037 — CTO call, not David's):**
+
+- **The banner.** `_apv3PendingFlip` was a hardcoded `true` nobody remembered to clear, so for a
+  week the page said the flip was "pending: server key, live-seam golden run, spend attribution"
+  when the key was present, the flip had been live since 14 Aug 20:05 UTC and P6 spend attribution
+  landed 15 Aug. Constant deleted; the banner derives from live `/flags` and from the funnel's own
+  reconciled gate. It now says the flip is DONE and names the one thing genuinely outstanding.
+- **The funnel strip.** It showed `openai (golden-set-passed)` on all four tiers.
+  `ai_price_card.json` claimed `gate: golden-set-passed` from GS-OAI-V1 — which ran on a **sandbox**
+  key with raw vendor calls — while `ai_scoreboard.GOLDEN_PASS` excluded openai *by design* pending
+  the server-key run (RG-0016). Two files, one fact, and the dashboard rendered the flattering one.
+  **GOLDEN-AUTHORITY-1:** `price_truth.py` now reconciles every gate label against `GOLDEN_PASS` in
+  both the report and the `--snapshot`, and raises rather than defaulting open if the scoreboard
+  can't be read. Snapshot regenerated: openai reads `pending-golden-set` on all four tiers.
+- Ledger: **RG-0131** LOCKED (single authority). **RG-0132 OPEN** — the base lane serving 100% of
+  live traffic has no production golden run on record; `scripts/golden_seam_v2.py` needs one run on
+  the Hetzner box with the production key, then openai joins GOLDEN_PASS (P3). Tracked as an OPEN
+  ledger entry rather than a sentence to David, per RUL-037.
+
+## 2026-08-21 — ADMIN-NOLOCK-2: the admin door gets its own failure budget
+
+**Fault (David, 21 Aug):** "I am back it being blocked by my own app." The Session
+Dashboard answered *Too many attempts* with the site healthy and no wrong password typed.
+
+**Cause:** GATE-NOLOCK-1 (19 Aug) fixed the origin half of admin lockout but routed
+`/admin/login` through `_review_rate_ok` — one per-IP bucket shared with the reviewer
+lane, counting **every** attempt including successes. The machine lanes on David's own
+IP (regression ledger, maintenance agent, a phone at the gate) each mint a review token;
+each successful mint spent one of eight slots. The strongest credential in the system was
+locked out by its own housekeeping.
+
+**Fix (bea_main.py):**
+- `_admin_attempts` — separate bucket. Reviewer traffic can never starve the admin door.
+- Failures-only accounting in **both** lanes: `_rate_note_failure` on a wrong credential,
+  `_rate_clear` on a correct one. Successful mints now cost nothing anywhere. This is the
+  half that kills the starvation class, not just this instance.
+- The 429 carries exact seconds + a `Retry-After` header — "Try again in 3m 20s", not
+  "a few minutes". The dashboard renders `detail` verbatim, so David sees the number.
+- Master password clears the reviewer bucket too — the strongest credential rescues both lanes.
+
+**Brute force unchanged:** 8 wrong reviewer codes, 10 wrong admin credentials, same 10-min window.
+
+**Locked:** RG-0134, with a live-logic half that exercises the limiter (5 assertions).
+RG-0073's assertion corrected in the same pass — it demanded the literal `_review_rate_ok`,
+which pinned the admin door to the shared bucket. It now asserts the property, not the spelling.
+
+**Caught in review, never shipped:** the first draft made `_review_rate_ok` a check-only
+shim. Three endpoints — `/review/request-link` (sends **email**), `/review/claim-code`,
+`/auth/verify-code` — depend on that one function to both test *and spend* the budget, so
+the shim would have left all three effectively unlimited: a lockout fix that opens three
+doors. Failures-only is right for a password prompt and wrong for a send-me-something
+endpoint, so they now use different functions instead of one clever one. RG-0134
+assertion 4b guards the trap.
+
+## 2026-08-21 — ACCOUNT-CLOSE-1: EULA §14.1/§14.2/§14.3 in code, and the sweep scheduled
+
+David: "the three left items — proceed with them and close them." Done: the closure/restore
+path, the monthly schedule for the dormancy sweep, and the commit.
+
+### The endpoint was destroying what §14.1 promises to give back
+`DELETE /users/{email}` was literally `DELETE FROM users WHERE email = ?`. It said nothing
+about Tuppence, left orphaned `transactions` rows, kept no audit trail, and made §14.1's
+restore promise impossible to honour — a deleted row cannot be restored to. It also
+contradicted §14.1's own wording ("deleted or anonymised within 30 days"): an immediate hard
+delete is neither.
+
+### New `account_closure.py` (168 lines, stdlib)
+- **§14.1 user closes / §14.3 Platform closes for convenience** → balance RETAINED. One
+  offsetting `closure_retention` row moves the wallet to zero; the amount is recorded in the
+  new `account_closures` table. The user row is soft-closed (`users.closed_at`), never deleted.
+- **§14.2 breach** → forfeits ONLY for cause **B5** (payment fraud / chargeback abuse) and
+  **B6** (identity fraud), per David's express ruling. B1–B4 retain like any other closure.
+- **Restore on return** → hooked into `POST /users`. Matched on `users.id_number_hash` where
+  the closed account had one (strong proof), else on email (weak proof). Both are recorded in
+  `restore_match` so an auditor can see which was used, and so a pattern of weak-match abuse
+  is visible. Restores across a NEW email address when the verified identity matches.
+  Idempotent. Wrapped so a restore failure can never block a registration.
+- Wallet remains a pure `SUM(amount)` throughout — no destructive UPDATE anywhere.
+
+**Bug caught by the test, not in production:** the first implementation looked up the balance
+with `WHERE user_email = ?` while looking up the user with `lower(email) = ?`. A mixed-case
+address therefore read a ZERO balance and retained NOTHING — it would have quietly destroyed
+the very credit the clause exists to protect. Both lookups are now case-insensitive and the
+ledger rows are written against the address as stored. RG-0129 tripwires the regression.
+
+Verified: 30 checks green across user/breach/convenience closures, all six breach causes,
+mixed-case addresses, returns under a new email, idempotency, zero balances, unknown users,
+and a stranger attempting to claim someone else's retention (refused).
+
+### The sweep is now scheduled
+`ops/dormancy/tuppence-dormancy.{timer,service}` + `INSTALL.md`, mirroring the existing
+maintenance-agent unit pattern. Monthly, 04:40 UTC on the 1st, clear of the 05:20 maintenance
+run. Monthly rather than daily is deliberate: the notice window is measured in days, so a
+monthly cadence can never make a warning late by more than a few days, and the sweep is a
+no-op the rest of the time. The unit passes `--apply`; the script itself refuses to run that
+way without RESEND_API_KEY, so an expiry can never ride on a warning that could not be sent.
+
+### Shipping
+- `migrations/028_account_closure_and_dormancy.py` — creates `account_closures`,
+  `tuppence_dormancy_notices` and `users.closed_at` on the live box. Purely additive,
+  idempotent, refuses rather than guesses.
+- `ops/autodeploy/deploy_manifest.txt` — two lines added: `account_closure.py` and
+  `scripts/tuppence_dormancy.py`.
+
+### Ledger
+RG-0129 extended from two halves to three: the dormancy sweep, the EULA wording, and now the
+closure lane in code. **Tripwire proven twice** — thirteen deliberate reversions injected
+across both sessions (sweep deleted, notice-age check removed, dry-run default removed,
+forfeiture wording restored, no-cash-out softened, fraud-only forfeiture widened, restore path
+removed, case-sensitivity reintroduced, hard DELETE restored, registration hook removed…) and
+every single one turned the entry red; the intact state is green.
+
+INSTALL STILL NEEDED ON THE BOX (one-time, root): copy the two unit files to
+/etc/systemd/system/, `systemctl daemon-reload`, `systemctl enable --now
+tuppence-dormancy.timer`. Steps and a safe dry-run recipe are in ops/dormancy/INSTALL.md.
+
+Cost model impact: none. No new services; warning emails ride existing Resend and expected
+volume is zero for ~20 months.
+
+## 2026-08-20 — EULA v1.14: Country Schedules D–G (France, Portugal, New Zealand, Argentina)
+
+David's ruling after the twelve-jurisdiction outreach-law research: cover the sendable countries
+in the EULA, Namibia deliberately EXCLUDED (one prospect; admitting it to §13.5 is an affirmative
+statement that we offer the service in a country whose ETA Chapter 4 can be commenced by a single
+ministerial gazette notice, with liability extending to the advertiser).
+
+Added Schedule D (France, D1–D8), E (Portugal, E1–E9), F (New Zealand, F1–F6) and G (Argentina,
+G1–G7), matching the existing A/B/C pattern: mandatory rights, service standard, withdrawal/
+revocation, liability, data protection naming the local regulator, unfair/abusive terms, language,
+dispute resolution. §13.5's Scheduled-Countries list, §13.6's opener, the document header and the
+footer all updated; v1.13 → v1.14. §14.4 needed no change — it already survives "Section 13
+including Sections 13.5–13.6 and the Country Schedules".
+
+**LANGUAGE CLAUSES CORRECTED BEFORE SHIPPING (D7/E8/G7).** The draft had the local-language version
+PREVAIL, which would have made a translation we do not yet have into the binding legal text. As
+shipped: English governs, translations are informational, and where local mandatory law requires a
+consumer contract in the local language we commit to supplying it, prevailing only to the extent
+that law requires. FR (Loi Toubon), PT (DL 446/85) and AR (Ley 24.240 art.10) each require the local
+language for CONSUMER contracts — a real obligation before consumer volume in those markets, but
+not one that binds the B2B seller campaign. Translation is now an open work item, not a silent gap.
+
+**EULA-ANCHOR-1 — a tooling fault fixed at class level, same session.** Both `scripts/eula_sync.py`
+and regression ledger RG-0077 hardcoded the FULL Country-Schedule list as their end anchor
+("...United Kingdom · United States · Australia</em></p>"). Adding schedules therefore (a) made
+eula_sync.py REFUSE to run at all, and (b) made RG-0077 report an EULA fork that did not exist —
+the three copies were byte-identical throughout. The artefact was right; the assertions were wrong.
+Both now anchor on the stable prefix "· Republic of South Africa · Country Schedules:" plus the
+paragraph close, so the list can grow without disarming the one writer or reddening the ledger.
+Per the standing rule, the assertion was fixed and the RG-0077 ref records why. Verified:
+eula_sync.py --check exits 0 (112,434 bytes identical across eula_clean.html, terms.html, ms.js)
+and RG-0077 returns green with no FAIL rows.
+
+NOT YET DEPLOYED — rides the next publish of the deploy ref. Whether to force a re-accept prompt for
+existing users (who accepted v1.13) is David's call; the change is additive.
+
+Cost model impact: none — no new services. Translation into FR/PT/ES, if commissioned, is a future
+cost tied to consumer volume in those markets, not to the seller campaign.
+
+## 2026-08-20 (evening) — The [C] lane closed: DW-051 shut, two missing assertions written, OPEN_LOOPS reconciled
+
+Follow-on to DASH-FEED-1 in the same session. Everything below is evidenced by a full ledger run
+against the live site, not by inspection.
+
+**DW-051 CLOSED — the migration chain runs clean end to end.** The row wanted `.migrations_done`
+to reach 027. POSTDEPLOY-EYES-1 now answers that with no credential:
+`GET /static/post_deploy_status.json` at **2026-08-20T15:56:13Z** — seven steps, none failed:
+seed ok · ladder_seed ok · **023 ok** ("applied: 0/104 listings changed; avg auto-links 4.7" — 0
+because the attended run had already relinked 84/104) · **024 ok** · **025 ok** · **026 ok**
+("gate is ALREADY down") · **027 ok** ("verified: 0 protected listings faded or archived").
+The row's "tighten RG-0116" instruction is **superseded, not skipped**: RG-0116 asserts the import
+CONTRACT in source and predates the deploy report; the chain's OUTCOME is RG-0125's, and
+duplicating it would have been the collision LEDGER-DUP-1 exists to refuse.
+
+**Three entries promoted OPEN -> LOCKED**, each on the run that proved it:
+- **RG-0125** — the migration chain is not jammed. Clean through 027.
+- **RG-0126** (new) — *the ledger can still tell an unstable RUN from a real regression.*
+  Discharges DW-053's named residual, which had gone onto the coverage map as blue. Asserted as
+  properties, not literals: the fingerprint exists, an UNSTABLE verdict exists, the exit-3 path
+  exists, the watched set is >=5 files **and includes this file** — because the case that
+  actually bit on 20 Aug was this file being rewritten underneath a running check.
+- **RG-0127** (new) — *the ops dashboard reads the section the sessions actually write.*
+  A winning `## Last Completed` heading older than **21 days** is now a FAIL. Window chosen
+  deliberately: long enough that a quiet fortnight is not a false red, short enough that six
+  weeks of silent rot is impossible. Live half asserts the three panels are non-empty; repo-vs-
+  live drift is INFO, not FAIL, because editing STATUS.md before pushing is normal work and a
+  tripwire that fires on normal work is the cry-wolf failure RG-0068 exists to prevent.
+
+**Ledger after: exit 0 — 120 entries · 117 holding · 0 REGRESSED · 3 open · 0 READY TO LOCK ·
+0 UNVERIFIED.** The three open are open honestly: RG-0075 (admin-gate script duplicated across
+5 files), RG-0101 (unverifiable — its probe is 401'd, blocked on DW-028), RG-0121 (canary dark
+by design until the Gemini eval).
+
+**OPEN_LOOPS.md reconciled — the integrator had stopped integrating.** Last touched 14 Aug. **L2**
+("git-on-FUSE stale .lock files, needs a real fix") had been class-fixed on **16 Aug** by
+GIT-LOCK-3 and still sat in LIVE LOOPS four days later; closed with evidence (`git_unlock.bat` +
+`scripts/git_unlock.py` both present; tonight's run reports `[  ok  ] RG-0015`, which tripwires
+the class live at >60 minutes stranded). The file now carries a **"Last reconciled"** stamp so
+the next reader can see its age instead of trusting it blindly.
+
+**DW-057 promoted to BLOCKING NOW (B1).** Two exposures of the same production credentials —
+DW-029 (7 Aug) and DW-057 (20 Aug, caused by the watch itself). The WAF allowlist is down, so the
+site is publicly reachable while the old credentials are live. Going public on 29 Aug with burnt
+payment and mail credentials is not a risk worth carrying, so it is no longer ranked as ordinary.
+David's action: `ROTATE_SECRETS.bat`, then MS_API_KEY / MS_DEPLOY_TOKEN / FOUNDERS_ID_SALT in the
+unit.
+
+**Register now: 7 open (DW-010, 027, 028, 029, 044, 054, 057).** Five of the seven are David's
+decision or click; two are Claude's and both are blocked on his (DW-028 wants the ops key, which
+belongs inside the rotation).
+
+**Not done, and named rather than quietly dropped:** DW-054 (prove the AI breaker fails OVER on a
+vendor 5xx/auth failure) needs a controlled fault injection against the live provider lane — not
+something to fire unattended nine days before launch. It stays open with that reason on the row.
+
 ## 2026-08-20 — Supers are BACK, and the eyes immediately found the thing underneath (RG-0125)
 
 David deployed and confirmed the supers show. Verified live rather than taken on trust: listings

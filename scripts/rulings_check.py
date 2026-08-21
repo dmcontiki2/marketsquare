@@ -110,6 +110,18 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-038": [
+   # The advert must carry the pre-information, and it must sit BELOW the map.
+   # Assert the PROPERTY, not a spelling: the data exists, the renderer exists, the
+   # page loads it, and the manifest ships it. Placement itself is asserted by
+   # RG-0135 (which compares the call site against the map block in ms.js).
+   ("RULINGS.md", ["AN ADVERT FOR A TRIP MUST CARRY THE PRE-INFORMATION"], []),
+   ("ms.js", ["tripEssentialsPanel", "does not sell or book"], []),
+   ("trip_essentials.js", ["window.TRIP_ESSENTIALS"], []),
+   ("marketsquare.html", ["/static/trip_essentials.js"], []),
+   ("ops/autodeploy/deploy_manifest.txt", ["trip_essentials.js"], []),
+   ("scripts/regression_ledger.py", ["RG-0135", "rg_trip_essentials"], []),
+ ],
  "RUL-037": [
    ("RULINGS.md", ["CLAUDE IS THE CTO"], []),
    ("STANDING_ORDERS.md", ["SO-4"], []),
