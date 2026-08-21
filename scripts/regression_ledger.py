@@ -6491,5 +6491,307 @@ def rg_instrument_truth():
     return out
 
 
+@entry("RG-0135", "Every journey map an advert can show has FREE pre-information under it: "
+       "itinerary, real cost, entry/visas, health, safety notices, money/taxes/tipping and "
+       "a dated re-check list -- and the panel ends in an INTRODUCTION, never a sale",
+       OPEN, fixed_on="",
+       scope="Super-example Adventures adverts, all 13 journeys (9 country maps + 4 tour "
+             "maps). NOT yet the other advert families David named in the same breath -- "
+             "stays, guides and non-super tours still show a map and a sentence. Those are "
+             "the same class and need the same fix; say so rather than implying it is done",
+       ref="TRIP-ESSENTIALS-1, 21 Aug 2026. David, on seeing the Pilanesberg advert: "
+           "'would you plan your holiday with only this available? A map and a single "
+           "sentence? No itinerary, no budget, no visa requirements, no safety advice, no "
+           "travelling notices, no local taxes, tips etc.? ... this is a major rejection "
+           "point and is true for ALL of our adverts with tours/holidays/stays/guides.' He "
+           "had asked for this before and it was lost to launch work -- the 17 Aug LAYERS-4-1 "
+           "note even recorded the sequencing ('maps first, dossier-summary work second') and "
+           "then the second half never came. This entry is what stops it being lost a third "
+           "time. PLACEMENT is part of the fix, not a detail: David's ruling the same day was "
+           "that the panel sits BELOW the map, because a scanning reader takes in the first "
+           "block and moves on -- if that block is not an interesting map they pass by. "
+           "MODEL: MarketSquare is an introductory service (CLAUDE.md, 1 Aug 2026), so the "
+           "panel informs for free and hands off to a travel agency; copy that implied we "
+           "sell or book the trip would be a defect, and is asserted against here. "
+           "OPEN until the panel is DEPLOYED and proven live; promote to LOCKED then.")
+def rg_trip_essentials():
+    import json as _j, re as _re
+    out = []
+
+    # ── source side: the data, the renderer, the wiring ──────────────────────
+    data = repo_file("trip_essentials.js")
+    ms   = repo_file("ms.js")
+    idx  = repo_file("marketsquare.html")
+    man  = repo_file("ops/autodeploy/deploy_manifest.txt")
+    trips = None
+    if data is not None:
+        if not data.rstrip().endswith(";"):
+            out.append((FAIL, "trip_essentials.js is TRUNCATED -- rebuild with "
+                              "scripts/build_trip_essentials.py"))
+        else:
+            try:
+                body = data[data.index("window.TRIP_ESSENTIALS =") + 23:].rstrip().rstrip(";")
+                trips = _j.loads(body)["trips"]
+            except Exception as ex:
+                out.append((FAIL, "trip_essentials.js will not parse: %s" % repr(ex)[:90]))
+        if trips is not None:
+            thin = [t["key"] for t in trips
+                    if not t.get("itinerary") or not t.get("verify")
+                    or not (t.get("budget") or {}).get("rows") or len(t.get("sections") or []) < 5]
+            if thin:
+                out.append((FAIL, "trip(s) missing a required block (itinerary / budget / "
+                                  ">=5 sections / re-check list): " + ", ".join(thin)))
+            # An unsourced NUMBER is how a dossier quietly becomes fiction.
+            MONEY  = _re.compile(r"(?:R\s?\d|US\$\s?\d|N\$\s?\d|A\$\s?\d|£\s?\d|€\s?\d|\$\s?\d"
+                                 r"|(?:EGP|MZN|BWP|KES|ZMW|TZS|AUD|EUR|GBP|USD|ZAR|NAD)\s?\d"
+                                 r"|\bP\s?\d{2,}|\d+(?:\.\d+)?\s?%)")
+            HONEST = _re.compile(r"not published|could not be confirmed|UNVERIFIED|not confirmed"
+                                 r"|no scheme found|ask your|ask the|ask before|ask us|confirm"
+                                 r"|verify|indicative|not independently|not stated|no official"
+                                 r"|this advert's own", _re.I)
+            bare = []
+            for t in trips:
+                rows = list((t.get("budget") or {}).get("rows") or [])
+                for s in (t.get("sections") or []):
+                    rows += s.get("rows") or []
+                for r in rows:
+                    if r.get("src"):
+                        continue
+                    txt = " ".join([r.get("v", ""), r.get("n", ""), r.get("l", "")])
+                    if MONEY.search(txt) and not HONEST.search(txt):
+                        bare.append("%s::%s" % (t["key"], r.get("l", "?")[:34]))
+            if bare:
+                out.append((FAIL, "%d fact row(s) quote a number with NO source and no honest "
+                                  "hedge: %s" % (len(bare), ", ".join(bare[:6]))))
+            # The model constraint. This panel may never read like a shopfront.
+            blob = _j.dumps(trips)
+            for pat in (r"\bbook now\b", r"\bwe (?:can )?book\b", r"\bour price\b",
+                        r"\bbuy this trip\b", r"\breserve your seat\b"):
+                if _re.search(pat, blob, _re.I):
+                    out.append((FAIL, "copy implies MarketSquare SELLS the trip (/%s/) -- we are "
+                                      "an introductory service" % pat))
+    if ms is not None:
+        for need, why in (("function tripEssentialsPanel", "the renderer"),
+                          ("tripEssentialsPanel(l, id)", "the CALL from the detail template"),
+                          ("does not sell or book", "the introductory-service disclaimer")):
+            if need not in ms:
+                out.append((FAIL, "ms.js lost %s ('%s')" % (why, need)))
+        # Placement: the essentials must render AFTER the map block, never before it.
+        i_map = ms.find("adv-reserve-map")
+        i_ess = ms.find("tripEssentialsPanel(l, id)")
+        if i_map > -1 and i_ess > -1 and i_ess < i_map:
+            out.append((FAIL, "the essentials panel now renders ABOVE the map -- David's "
+                              "21 Aug placement ruling was BELOW it, because a scanning reader "
+                              "bounces off anything that is not an interesting map first"))
+        # ── the anti-drift assertion: a NEW map with no essentials trips this red ──
+        if trips is not None:
+            keys = set()
+            for t in trips:
+                m = t.get("match") or {}
+                keys.add(("tour", m.get("tour")) if m.get("tour") else ("country", m.get("country")))
+            def _cfg_keys(name):
+                m = _re.search(r"const %s = \{(.*?)\n\};" % name, ms, _re.S)
+                return set(_re.findall(r"^\s*([A-Za-z0-9_]+):\s*\{", m.group(1), _re.M)) if m else set()
+            orphan = ([c for c in _cfg_keys("ADV_COUNTRY_MAP") if ("country", c) not in keys]
+                      + [t for t in _cfg_keys("ADV_TOUR_MAP") if ("tour", t) not in keys])
+            if orphan:
+                out.append((FAIL, "map(s) with NO pre-information behind them -- an advert that "
+                                  "is still just a map and a sentence: " + ", ".join(sorted(orphan))))
+    if idx is not None and "/static/trip_essentials.js" not in idx:
+        out.append((FAIL, "marketsquare.html does not load trip_essentials.js -- the panel "
+                          "renders nothing at all"))
+    if idx is not None and _re.search(r'trip_essentials\.js[^>]*\bdefer\b', idx):
+        out.append((FAIL, "trip_essentials.js is deferred. A deep link (?listing=NNN -- exactly "
+                          "what the journey maps emit) renders the detail during ms.js's first "
+                          "pass, so deferred data arrives too late and the panel vanishes"))
+    if man is not None and "trip_essentials.js" not in man:
+        out.append((FAIL, "trip_essentials.js is not in deploy_manifest.txt -- it will never "
+                          "reach the server (ONE DEPLOY places by manifest only)"))
+
+    # ── live side ────────────────────────────────────────────────────────────
+    # A 404 here is the EXPECTED open state before the first deploy. Name it as
+    # "not shipped yet", not as an instrument crash -- a tripwire that reports
+    # itself broken is the cry-wolf failure RG-0068/LEDGER-OFFLINE-1 exist to stop.
+    try:
+        live = _get("/static/trip_essentials.js")
+    except urllib.error.HTTPError as ex:
+        if ex.code == 404:
+            out.append((FAIL, "not deployed yet: live /static/trip_essentials.js is 404. The "
+                              "panel exists in the repo and is manifest-listed; it reaches "
+                              "travellers on the next deploy of the `deploy` ref."))
+            return out
+        raise
+    if "window.TRIP_ESSENTIALS" not in live:
+        out.append((FAIL, "live /static/trip_essentials.js is not the data file"))
+    else:
+        try:
+            n_live = len(_j.loads(live[live.index("window.TRIP_ESSENTIALS =") + 23:].rstrip().rstrip(";"))["trips"])
+        except Exception:
+            n_live = -1
+        if trips is not None and n_live != len(trips):
+            out.append((FAIL, "live carries %s trips, the repo carries %d -- a stale deploy"
+                        % (n_live if n_live >= 0 else "unparseable", len(trips))))
+    home = _get("/")
+    if "/static/trip_essentials.js" not in home:
+        out.append((FAIL, "the live index does not load trip_essentials.js"))
+
+    if not out:
+        out.append((INFO, "%d journeys carry full pre-information; every map is covered; "
+                          "placement is below the map; no unsourced numbers" % len(trips or [])))
+    return out
+
+
+
+@entry("RG-0134", "The admin door has its OWN failure budget and only WRONG credentials spend it -- "
+                  "the super admin can never be rate-limited out of his own dashboard by traffic "
+                  "he did not generate",
+       LOCKED, scope="the login rate-limiter class entire: /admin/login and /review/login get "
+                     "failure-only accounting in separate buckets, while /review/request-link, "
+                     "/review/claim-code and /auth/verify-code keep CALL counting (a send "
+                     "endpoint must meter calls, not failures). Both halves of the fault: the "
+                     "shared bucket (cause) and successes spending budget (the half that starves "
+                     "every lane)",
+       fixed_on="2026-08-21",
+       ref="ADMIN-NOLOCK-2. David, 21 Aug 2026: 'I am back it being blocked by my own app.' The "
+           "Session Dashboard answered 'Too many attempts. Please wait a few minutes.' with the "
+           "site healthy and not one wrong password typed. Cause: GATE-NOLOCK-1 (19 Aug) fixed "
+           "the ORIGIN half of admin lockout but routed /admin/login through _review_rate_ok -- "
+           "ONE per-IP bucket shared with the reviewer lane, counting EVERY attempt including "
+           "successes. The machine lanes on David's own IP (regression ledger, maintenance "
+           "agent, audit_global_qa, fault_reconcile) each mint a review token, each mint spent "
+           "one of eight slots, and the strongest credential in the system was locked out by its "
+           "own housekeeping. SECOND time this class re-entered by a different door: GATE-CACHE-1 "
+           "(14 Aug, RG-0070) taught the READERS to survive a burnt allowance; it never stopped "
+           "the allowance being burnt by successes. Fixed at the cause: (1) _admin_attempts is a "
+           "separate bucket, so reviewer traffic can never starve the admin door; (2) a FAILED "
+           "credential calls _rate_note_failure and a correct one calls _rate_clear, so mints -- "
+           "which all succeed -- cost nothing in either lane; (3) the 429 carries exact seconds "
+           "plus Retry-After, so the human is told WHEN instead of 'a few minutes'. Brute force "
+           "unchanged: 8 wrong reviewer codes, 10 wrong admin credentials, same 10-minute window. "
+           "CAUGHT IN REVIEW, NEVER SHIPPED: the first draft made _review_rate_ok check-only, "
+           "which would have left three call-metered endpoints unlimited -- assertion 4b below "
+           "now guards that trap, because a lockout fix that opens three doors is worse than the "
+           "lockout. Proven by 6 live-logic assertions over the extracted limiter.")
+def rg_admin_door_has_own_failure_budget():
+    out = []
+    c = repo_file("bea_main.py")
+    if c is None:
+        out.append((FAIL, "bea_main.py unreadable -- the lockout guarantee is UNPROVEN"))
+        return out
+
+    # 1. The buckets are separate.
+    if "_admin_attempts" not in c:
+        out.append((FAIL, "the admin lane has no bucket of its own again -- /admin/login is "
+                          "sharing the reviewer allowance and David gets locked out of his own "
+                          "dashboard by machine traffic (ADMIN-NOLOCK-2 cause half)"))
+
+    # 2. Failure-only accounting exists at all.
+    for fn in ("_rate_note_failure", "_rate_clear", "_rate_ok"):
+        if fn not in c:
+            out.append((FAIL, "bea_main.py lost %s -- the login limiter is counting attempts "
+                              "again instead of failures, so successful token mints spend "
+                              "allowance and the starvation class is fully re-opened" % fn))
+
+    # 3. The admin endpoint uses ITS bucket, not the reviewer one.
+    i = c.find('@app.post("/admin/login")')
+    if i < 0:
+        out.append((FAIL, "/admin/login is gone -- this assertion has lost its subject and "
+                          "would pass vacuously (see RG-0068)"))
+    else:
+        body = c[i:i + 4000]
+        if "_rate_ok(_admin_attempts" not in body:
+            out.append((FAIL, "/admin/login no longer gates on _admin_attempts -- the admin "
+                              "door is back on the shared reviewer budget"))
+        if "_review_rate_ok" in body:
+            out.append((FAIL, "/admin/login calls _review_rate_ok again -- this is the exact "
+                              "19 Aug wiring that locked David out on 21 Aug"))
+        if "_rate_clear(_admin_attempts" not in body:
+            out.append((FAIL, "a correct admin credential no longer clears the bucket -- the "
+                              "super admin can be held out after proving who he is"))
+
+    # 4. A success in the reviewer lane must not spend allowance either.
+    j = c.find('@app.post("/review/login")')
+    if j >= 0:
+        rbody = c[j:j + 2500]
+        if "_rate_clear(_review_attempts" not in rbody:
+            out.append((FAIL, "/review/login no longer clears on success -- every machine mint "
+                              "spends a slot again (the mechanism that burnt the allowance)"))
+        if "_rate_note_failure(_review_attempts" not in rbody:
+            out.append((FAIL, "/review/login no longer records failures -- brute-force "
+                              "protection has been removed, not relaxed"))
+
+    # 4b. THE TRAP THIS FIX ALMOST FELL INTO. _review_rate_ok is the ONLY budget check for
+    # /review/request-link (sends EMAIL), /review/claim-code and /auth/verify-code. The first
+    # draft of ADMIN-NOLOCK-2 turned it into a check-only shim, which would have left all
+    # three effectively UNLIMITED -- a lockout fix that opens three doors. Failures-only is
+    # right for a password prompt and WRONG for a send-me-something endpoint; they are not
+    # interchangeable. Caught in review 21 Aug, never shipped.
+    k = c.find("def _review_rate_ok(")
+    if k < 0:
+        out.append((FAIL, "_review_rate_ok is gone -- /review/request-link (an EMAIL sender), "
+                          "/review/claim-code and /auth/verify-code have lost their only rate "
+                          "limit"))
+    elif "rec[0] += 1" not in c[k:k + 1600]:
+        out.append((FAIL, "_review_rate_ok no longer increments -- it CHECKS without SPENDING, "
+                          "so /review/request-link can be driven as a mail bomb and "
+                          "/auth/verify-code brute-forced without limit. This is the exact "
+                          "draft error caught in review on 21 Aug"))
+    for ep in ('@app.post("/review/request-link")', '@app.post("/review/claim-code")',
+               '@app.post("/auth/verify-code")'):
+        e = c.find(ep)
+        if e >= 0 and "_review_rate_ok(ip)" not in c[e:e + 1200]:
+            out.append((FAIL, "%s no longer consumes rate budget -- an unmetered send/verify "
+                              "endpoint" % ep))
+
+    # 5. The 429 tells the human a number, not prose.
+    if "Retry-After" not in c or "Try again in %s" not in c:
+        out.append((FAIL, "the rate-limit refusal no longer carries the seconds remaining -- "
+                          "'wait a few minutes' is the message that sent David to guess"))
+
+    # Functional half: the extracted limiter actually behaves.
+    try:
+        import io as _io
+        s = _io.open(os.path.join(REPO, "bea_main.py"), encoding="utf-8").read()
+        a = s.index("_admin_attempts    = {}")
+        b = s.index("def _review_rate_ok(ip: str) -> bool:")
+        ns = {"HTTPException": Exception, "_review_attempts": {}}
+        exec(s[a:b], ns)                                         # noqa: S102 - our own source
+        ok_, note_ = ns["_rate_ok"], ns["_rate_note_failure"]
+        clr_, ret_ = ns["_rate_clear"], ns["_rate_retry_after"]
+        A, R, IP = ns["_admin_attempts"], ns["_review_attempts"], "203.0.113.7"
+        for _ in range(50):                                      # machine mints, all successful
+            ok_(R, IP, 8); clr_(R, IP)
+        if not ok_(A, IP, 10):
+            out.append((FAIL, "LIVE LOGIC: 50 successful reviewer mints closed the admin door "
+                              "-- the 21 Aug lockout reproduces"))
+        for _ in range(8):
+            note_(R, IP)
+        if ok_(R, IP, 8):
+            out.append((FAIL, "LIVE LOGIC: 8 wrong reviewer codes did not lock the reviewer "
+                              "lane -- brute-force protection is gone"))
+        if not ok_(A, IP, 10):
+            out.append((FAIL, "LIVE LOGIC: reviewer failures leaked into the admin bucket -- "
+                              "the buckets are not actually separate"))
+        for _ in range(10):
+            note_(A, IP)
+        if ok_(A, IP, 10):
+            out.append((FAIL, "LIVE LOGIC: 10 wrong admin credentials did not lock the admin "
+                              "lane -- this fix traded a lockout for an open door"))
+        if not (0 < ret_(A, IP) <= 600):
+            out.append((FAIL, "LIVE LOGIC: retry-after is not a sane number of seconds"))
+        clr_(A, IP)
+        if not ok_(A, IP, 10):
+            out.append((FAIL, "LIVE LOGIC: a correct admin credential did not clear the bucket"))
+    except Exception as exc:                                     # noqa: BLE001
+        out.append((FAIL, "LIVE LOGIC: the limiter could not be exercised (%s) -- unproven"
+                    % exc))
+
+    if not out:
+        out.append((INFO, "admin door has its own 10-failure budget; successes cost nothing in "
+                          "either lane; the three call-metered endpoints still spend; refusals "
+                          "carry exact seconds"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

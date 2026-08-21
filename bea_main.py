@@ -12045,8 +12045,26 @@ def _rate_429(bucket: dict, ip: str) -> HTTPException:
 
 
 def _review_rate_ok(ip: str) -> bool:
-    """Back-compat shim: reviewer lane, failures only, its own bucket."""
-    return _rate_ok(_review_attempts, ip, _REVIEW_MAX_FAILS)
+    """ORIGINAL check-and-increment semantics, kept EXACTLY as it was, for the callers
+    that must limit CALLS rather than failures.
+
+    Caught during review of ADMIN-NOLOCK-2, 21 Aug 2026, before it shipped: the first
+    draft made this a check-only shim. Three live endpoints -- /review/request-link
+    (sends EMAIL: uncounted calls are a mail-bomb), /review/claim-code and
+    /auth/verify-code -- depended on this ONE function to both test and spend the
+    budget. A check-only shim would have left all three effectively unlimited: a
+    lockout fix that quietly opened three doors. Failures-only accounting is right for
+    a password prompt and WRONG for a send-me-something endpoint; the two are not
+    interchangeable, so they get different functions instead of one clever one.
+    Anything not explicitly migrated stays on this call-counting path -- fail closed."""
+    import time as _t
+    now = _t.time()
+    rec = _review_attempts.get(ip)
+    if not rec or now - rec[1] > _RATE_WINDOW:
+        _review_attempts[ip] = [1, now]
+        return True
+    rec[0] += 1
+    return rec[0] <= _REVIEW_MAX_FAILS
 
 # GATE-NOLOCK-1 (19 Aug 2026, David) — ONE place that grants gate passage.
 # Born from a real lockout: David requested an email link on his LAPTOP, the link

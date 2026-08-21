@@ -24,3 +24,11 @@ locked out by its own housekeeping.
 **Locked:** RG-0134, with a live-logic half that exercises the limiter (5 assertions).
 RG-0073's assertion corrected in the same pass — it demanded the literal `_review_rate_ok`,
 which pinned the admin door to the shared bucket. It now asserts the property, not the spelling.
+
+**Caught in review, never shipped:** the first draft made `_review_rate_ok` a check-only
+shim. Three endpoints — `/review/request-link` (sends **email**), `/review/claim-code`,
+`/auth/verify-code` — depend on that one function to both test *and spend* the budget, so
+the shim would have left all three effectively unlimited: a lockout fix that opens three
+doors. Failures-only is right for a password prompt and wrong for a send-me-something
+endpoint, so they now use different functions instead of one clever one. RG-0134
+assertion 4b guards the trap.
