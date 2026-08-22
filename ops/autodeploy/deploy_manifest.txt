@@ -141,3 +141,6 @@ orchestration_v2/templates/tutors_outreach.html | orchestrator/v2/templates/tuto
 # ── DW-045 (16 Aug 2026): the smoke instrument rides the SAME deploy as the app,
 #    so the 01:30 cron sensor can never again grade with a retired assertion. ──
 smoke_test.py              | smoke_test.py
+
+# ── SAW-1 (22 Aug 2026): Study & Work Abroad teaser — static preview, RUL-042 ──
+studyabroad_teaser.html    | static/studyabroad_teaser.html

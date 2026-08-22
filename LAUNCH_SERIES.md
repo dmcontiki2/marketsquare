@@ -10,6 +10,7 @@ Cadence: steady beats burst — one good video a week beats four at launch then 
 | 5 | Safe and anonymous — the design | trust | YouTube | idea |
 | 6 | Launch announcement — Pretoria, we're live | launch | YouTube + app | idea |
 | 7 | Seller spotlight — Aunty Ester, 83 (tutor) | trust + recruit | YouTube | script+prompts ready — feature-videos/11-tutor-spotlight/ |
+| 8 | Study & Work Abroad — know before you go (feature teaser) | awareness + feature | YouTube + app | spiel-ready — feature-videos/12-study-abroad/SPIEL.md |
 | S1-S7 | UGC shorts Wave 1 (see shorts/SHORTS_WAVE1.md) | reach | Shorts/TikTok | spiel-ready |
 
 In-app set: LIVE baseline (introduction v2 shipped 12 Jul + how-to library).

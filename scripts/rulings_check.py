@@ -110,6 +110,16 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-042": [
+   # Positioning IS the ruling: preparation is ours (actuals-based), the PLAN is the
+   # agency's, and partner agencies are first-class in the design. If a future spec
+   # drifts into "we plan it for you" or drops the agency handoff, the register row
+   # is the anchor the next session must hit; D15 keeps the three reserved business
+   # calls visible until David takes them; the assessment docx must keep existing.
+   ("RULINGS.md", ["PREPARATION IS OURS, THE PLAN IS THE AGENCY"], []),
+   ("OPEN_LOOPS.md", ["Study & Work-Abroad Advisor"], []),
+   ("STUDY_WORK_ABROAD_ADVISOR_ASSESSMENT — nice.docx", [], []),
+ ],
  "RUL-041": [
    # The tours resubmit is a one-off act, so the DURABLE half is what must stay true:
    # the token is recorded unrotatable-with-reasons, the loop says AWAIT rather than

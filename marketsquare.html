@@ -784,6 +784,18 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div class="lm-banner-chev">›</div>
   </div>
 
+  <!-- ══ SAW-1 (22 Aug 2026): Study & Work Abroad teaser entry — static preview page, RUL-042.
+       Feature engine ships post-launch; this banner + page are additive and label themselves
+       COMING SHORTLY (honesty class of RUL-040). Remove the banner = one block. ══ -->
+  <div class="lm-banner" onclick="window.open('/static/studyabroad_teaser.html?v=1','_blank','noopener')" role="button" tabindex="0">
+    <div class="lm-banner-icon" style="width:56px;height:40px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:25px;background:linear-gradient(140deg,#1F3864,#2F5496);border-radius:8px;">🎓</div>
+    <div class="lm-banner-body">
+      <div class="lm-banner-title">Study &amp; Work Abroad <span style="background:#b91c1c;color:#fff;font-size:9.5px;font-weight:800;letter-spacing:.5px;padding:2px 7px;border-radius:99px;vertical-align:2px;margin-left:6px;">COMING SHORTLY</span></div>
+      <div class="lm-banner-sub">Varsity &amp; work-visa preparation reports — see a worked example.</div>
+    </div>
+    <div class="lm-banner-chev">›</div>
+  </div>
+
   <!-- Category chips -->
   <div class="chips" id="chip-row">
     <div class="chip active" onclick="setFilter(this,'All')">All</div>

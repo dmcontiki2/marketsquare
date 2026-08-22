@@ -8368,5 +8368,38 @@ def rg_migrations_tracked():
     return [(INFO, "every migration on disk is tracked -- schema and code ship together")]
 
 
+@entry("RG-0158", "Study & Work Abroad teaser serves live WITH its honesty labels -- "
+                  "Coming-Shortly banner, AI-example label, and its home-surface entry",
+       OPEN, scope="/static/studyabroad_teaser.html + the SAW-1 banner in the live index. CLASS: "
+             "a preview surface must carry its Coming-Shortly and AI-example labels for as long "
+             "as it exists -- shipping the page without the labels, or the labels without the "
+             "page, is the defect (RUL-040/RUL-042 honesty class). When the real feature goes "
+             "live this entry is SUPERSEDED deliberately, never quietly.",
+       ref="SAW-1, 22 Aug 2026. Built additively per David's 'build now, no risk to the launch "
+           "baseline': one static page, one lm-banner block in marketsquare.html, one manifest "
+           "line. OPEN until it rides the next deploy; expected to print READY TO LOCK the "
+           "morning after. Example dossier facts sourced+dated 22 Aug 2026 (DHET/Stipendium, "
+           "DE blocked account, UK visa+IHS, NL fee ranges) with RE-CHECK flags per RUL-038.")
+def rg_studyabroad_teaser_live():
+    out = []
+    try:
+        page = _get("/static/studyabroad_teaser.html?v=1")
+    except Exception as ex:
+        return [(FAIL, "teaser page not served: %s" % repr(ex)[:70])]
+    if "COMING SHORTLY" not in page:
+        out.append((FAIL, "Coming-Shortly banner missing from the teaser page"))
+    if "AI-GENERATED EXAMPLE DOSSIER" not in page:
+        out.append((FAIL, "AI-example label missing -- the worked example could read as a real report"))
+    if "NOT A REPORT FOR A REAL USER" not in page:
+        out.append((FAIL, "the 'not a report for a real user' wording is gone"))
+    try:
+        idx = _get("/")
+        if "studyabroad_teaser.html" not in idx:
+            out.append((FAIL, "SAW-1 home-surface banner missing from the live index"))
+    except Exception as ex:
+        out.append((FAIL, "index unreadable: %s" % repr(ex)[:60]))
+    return out or [(INFO, "teaser live with both honesty labels and its entry banner")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
