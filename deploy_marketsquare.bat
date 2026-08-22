@@ -48,6 +48,12 @@ call "%PROJECT%\git_unlock.bat"
 :: covers the CHILD references INSIDE ms.js (tour maps etc.) before we commit.
 if defined PYEXE %PYEXE% "%PROJECT%\scripts\autobump.py"
 
+:: -- PROVENANCE-1 (22 Aug 2026): refuse to ship a dashboard that paints a
+::    health colour nothing measures. Advisory (does not block), but it prints
+::    loudly so a hand-typed green chip is caught the day it is added, not the
+::    day David happens to notice it contradicts something he remembers.
+if defined PYEXE if exist "%PROJECT%\scripts\dashboard_provenance.py" %PYEXE% "%PROJECT%\scripts\dashboard_provenance.py" --check
+
 :: -- SESSION-COUNTER-1 (22 Aug 2026): recompute the session number from the
 ::    status.d/changelog.d fragments BEFORE the compilers archive them, so the
 ::    JSON this release ships is current. Replaces the prose regex that pinned

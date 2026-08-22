@@ -416,7 +416,7 @@
     <!-- Server Health Panel -->
     <div class="health-panel" id="health-panel">
       <div class="health-title">
-        <span>⚡ Server Health <span id="health-status-dot" style="margin-left:6px;color:#10b981;">●</span></span>
+        <span>⚡ Server Health <span id="health-status-dot" style="margin-left:6px;color:#64748b;" title="not measured yet">●</span></span>
         <span class="health-updated" id="health-updated">Loading…</span>
       </div>
       <div class="health-grid" id="health-grid"></div>
@@ -583,7 +583,7 @@
   <div id="om-hero">
     <div class="om-tile"><div class="om-k">In · MTD</div><div class="om-n" id="om-money-in">—</div></div>
     <div class="om-tile"><div class="om-k">AI out · MTD</div><div class="om-n" id="om-money-out">—</div></div>
-    <div class="om-tile" style="background:#1E3A5F"><div class="om-k">Server fixed</div><div class="om-n">€4.51/mo</div></div>
+    <div class="om-tile" style="background:#1E3A5F"><div class="om-k">Server fixed</div><div class="om-n" id="om-cost-hero">—</div></div>
   </div>
 
   <!-- PEOPLE -->
@@ -602,7 +602,7 @@
   <div class="om-blk omf-people" style="left:20px;top:334px;width:180px">
     <h3>David</h3><div class="om-role">phone + desktop → Admin console</div>
     <div class="om-chips omc-ncr"><span class="om-chip nw"><span class="om-dot"></span>escalations <span class="om-v">B3</span></span></div>
-    <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>kill switches armed</span></div>
+    <div class="om-chips omc-switches"><span class="om-chip nw"><span class="om-dot"></span>kill switches armed <span class="om-v">not measured</span></span></div>
   </div>
 
   <!-- EDGE -->
@@ -617,7 +617,7 @@
   <div class="om-blk omf-edge" style="left:240px;top:196px;width:180px">
     <h3>CF Email Worker</h3><div class="om-role">inbound mail → /email/inbound</div>
     <div class="om-chips omc-traffic"><span class="om-chip g" id="om-mailtotal"><span class="om-dot"></span>triaged total <span class="om-v">—</span></span></div>
-    <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>routing on</span></div>
+    <div class="om-chips omc-switches"><span class="om-chip nw"><span class="om-dot"></span>routing on <span class="om-v">not measured</span></span></div>
     <div class="om-chips omc-ncr"><span class="om-chip g" id="om-mailspam"><span class="om-dot"></span>spam 30d <span class="om-v">—</span></span></div>
   </div>
 
@@ -640,7 +640,7 @@
   </div>
   <div class="om-blk omf-apps" style="left:460px;top:436px;width:210px">
     <h3>AdvertAgent</h3><div class="om-role">super-advert coach + publisher</div>
-    <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>per-use AI</span></div>
+    <div class="om-chips omc-switches"><span class="om-chip nw"><span class="om-dot"></span>per-use AI <span class="om-v">not measured</span></span></div>
     <div class="om-chips omc-money"><span class="om-chip nw"><span class="om-dot"></span>packs sold <span class="om-v">—</span></span></div>
   </div>
 
@@ -655,7 +655,7 @@
   <div class="om-blk omf-server" style="left:730px;top:196px;width:122px;z-index:5">
     <h3>SQLite</h3><div class="om-role">market.db</div>
     <div class="om-chips omc-traffic"><span class="om-chip g" id="om-db"><span class="om-dot"></span><span class="om-v">—</span></span></div>
-    <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>nightly backup</span></div>
+    <div class="om-chips omc-switches"><span class="om-chip nw"><span class="om-dot"></span>nightly backup <span class="om-v">not measured</span></span></div>
   </div>
   <div class="om-blk omf-server" style="left:868px;top:196px;width:122px;z-index:5">
     <h3>Redis</h3><div class="om-role">sessions · limits</div>
@@ -670,7 +670,7 @@
   <div class="om-blk omf-server" style="left:730px;top:404px;width:260px">
     <h3>Host / OS</h3><div class="om-role">CPX32 · /health/resources</div>
     <div class="om-chips omc-traffic"><span class="om-chip g" id="om-cpu"><span class="om-dot"></span>CPU <span class="om-v">—</span></span><span class="om-chip g" id="om-ram"><span class="om-dot"></span>RAM <span class="om-v">—</span></span><span class="om-chip g" id="om-disk"><span class="om-dot"></span>disk <span class="om-v">—</span></span></div>
-    <div class="om-chips omc-money"><span class="om-chip g"><span class="om-dot"></span>fixed <span class="om-v">€4.51/mo</span></span></div>
+    <div class="om-chips omc-money"><span class="om-chip nw" id="om-cost"><span class="om-dot"></span>fixed <span class="om-v">—</span></span></div>
     <div class="om-chips omc-switches"><span class="om-chip nw" id="om-sslsvc"><span class="om-dot"></span>SSL days <span class="om-v">—</span></span></div>
   </div>
 
@@ -730,7 +730,7 @@
   </div>
   <div class="om-blk omf-agent" style="left:620px;top:588px;width:168px">
     <h3>Pulse / Monitor</h3><div class="om-role">daily heartbeat, amber/red alerts</div>
-    <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>scheduled daily</span></div>
+    <div class="om-chips omc-switches"><span class="om-chip nw"><span class="om-dot"></span>scheduled daily <span class="om-v">not measured</span></span></div>
     <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span>verdict <span class="om-v">—</span></span></div>
   </div>
   <div class="om-blk omf-agent" style="left:800px;top:588px;width:168px">
@@ -741,7 +741,7 @@
   <div class="om-blk omf-agent" style="left:980px;top:588px;width:168px">
     <h3>Outreach</h3><div class="om-role">wave sends, founding sellers</div>
     <div class="om-chips omc-switches"><span class="om-chip o"><span class="om-dot"></span>gated (wave-1)</span></div>
-    <div class="om-chips omc-money"><span class="om-chip g"><span class="om-dot"></span>no-AI default</span></div>
+    <div class="om-chips omc-money"><span class="om-chip nw"><span class="om-dot"></span>no-AI default <span class="om-v">policy, not probed</span></span></div>
   </div>
   <div class="om-blk omf-agent" style="left:1160px;top:588px;width:168px">
     <h3>Video Pipeline</h3><div class="om-role">launch clips: generate→QC→pack</div>
@@ -1573,6 +1573,32 @@ function switchView(view) {
     if(cls){ el.className = 'om-chip ' + cls; }
     if(tip !== undefined){ el.title = tip; }
   }
+  // PROVENANCE-1 (22 Aug 2026): ONE source for the infrastructure cost.
+  // The map used to say the server cost EUR 4.51/mo and the Ops view said
+  // EUR 22.07/mo -- the same server, two hand-typed numbers, five-fold apart,
+  // while canon.yml (named on this page as the source of truth) said EUR 26.68
+  // and was served to nobody. Both surfaces now read the same endpoint, so the
+  // two panels can no longer disagree.
+  function loadFixedCosts(){
+    fetch(EP + '/dashboard/fixed-costs').then(function(r){ return r.json(); }).then(function(c){
+      if(!c || !c.sourced_ok){ throw new Error('canon.yml unreadable'); }
+      fill('om-cost', c.label, 'g', c.breakdown + ' \u00b7 source: ' + c.source);
+      var hero = document.getElementById('om-cost-hero');
+      if(hero){ hero.textContent = c.label; hero.title = c.breakdown; }
+      var o = document.getElementById('ops-cost');
+      if(o && o.firstChild){ o.firstChild.nodeValue = c.label; }
+      var n = document.getElementById('ops-cost-note');
+      if(n){ n.textContent = c.breakdown + ' \u00b7 new-order price today \u20ac'
+             + c.server_eur_month_new_order + ' \u2014 any rescale reprices permanently (RUL-025).'; }
+    }).catch(function(e){
+      fill('om-cost', 'unreadable', 'r', 'canon.yml did not answer \u2014 no number is invented here.');
+      var hero = document.getElementById('om-cost-hero');
+      if(hero){ hero.textContent = '\u2014'; hero.title = 'cost feed offline'; }
+      var n = document.getElementById('ops-cost-note');
+      if(n){ n.textContent = 'cost feed offline \u2014 canon.yml did not answer'; }
+    });
+  }
+
   function fail(ids, ep, err){ ids.forEach(function(id){ fill(id, 'offline', 'r', (ep||'feed') + ' failed just now' + (err ? ' — ' + err : '') + '. The map never invents a number; retry in 60s.'); }); }
   function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 
@@ -1604,6 +1630,7 @@ function switchView(view) {
   }
 
   function omLoad(){
+    loadFixedCosts();
     var upd = document.getElementById('om-upd');
     if(upd) upd.textContent = 'refreshing…';
 
@@ -1919,6 +1946,11 @@ function loadHealth() {
     .catch(() => {
       const grid = document.getElementById('health-grid');
       if (grid) grid.innerHTML = '<div style="font-size:12px;color:#ef4444;">Health check failed — server may be restarting</div>';
+      // PROVENANCE-1 (22 Aug 2026): the dot used to keep its last colour when the
+      // feed died, so a dead /health/resources left a green light burning over an
+      // error message. A light nothing is measuring goes grey.
+      const dot = document.getElementById('health-status-dot');
+      if (dot) { dot.style.color = '#64748b'; dot.title = 'health feed offline — this light is not measuring anything right now'; }
     });
 }
 
@@ -2033,9 +2065,20 @@ function populate() {
     div.addEventListener('mouseleave', function(){ div.style.borderColor = 'rgba(255,255,255,.08)'; });
     div.addEventListener('click', function(){ selectDir(div, d); });
     const items = (d.items||[]).map(function(i){ return '<div style="font-size:12px;color:#94a3b8;padding:2px 0;">• '+i+'</div>'; }).join('');
+    // PROVENANCE-1 (22 Aug 2026): every card says where its content came from.
+    // Three of these five (CityLauncher, AdvertAgent, Agentic OS) are Python list
+    // literals written on 4 Jun 2026 and never touched since -- they had been
+    // showing the same "priorities" every session for eleven weeks while looking
+    // exactly as current as the two doc-fed cards beside them. A static card now
+    // wears a dated STATIC tag and is visibly dimmed, so it cannot pass for live.
+    var isStatic = (d.source === 'static');
+    var prov = isStatic
+      ? '<div style="font-size:10px;color:#f59e0b;margin-top:10px;padding-top:8px;border-top:1px solid rgba(245,158,11,.25);">STATIC \u2014 written ' + (d.static_since || 'undated') + ', not derived from any document</div>'
+      : '<div style="font-size:10px;color:#64748b;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);">live from ' + (d.source || 'unknown source') + '</div>';
+    if (isStatic) { div.style.opacity = '.62'; }
     div.innerHTML = '<div style="font-size:11px;font-weight:700;color:'+d.colour+';text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">'+d.project+'</div>'
       + '<div style="font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:10px;">'+d.title+'</div>'
-      + items;
+      + items + prov;
     grid.appendChild(div);
   });
 
@@ -2111,7 +2154,7 @@ loadDashboard();
       <div class="health-metric"><div class="hm-label">Volume (Overpass DB)</div><div class="hm-value">100 GB SSD · /mnt/HC_Volume_105840760</div></div>
       <div class="health-metric"><div class="hm-label">Bandwidth</div><div class="hm-value">20 TB/mo</div></div>
       <div class="health-metric"><div class="hm-label">Location</div><div class="hm-value">Hetzner NBG1 · Germany</div></div>
-      <div class="health-metric"><div class="hm-label">Cost</div><div class="hm-value">CPX32 €15.49 <span style="font-size:10px;color:#f59e0b">GRANDFATHERED</span> + Volume €6.58 = €22.07/mo<div style="font-size:10px;color:#94a3b8;margin-top:3px">New-order price today €35.49 (+129%) — ANY rescale reprices permanently (RUL-025). Static: canon.yml server_eur_month.</div></div></div>
+      <div class="health-metric"><div class="hm-label">Cost</div><div class="hm-value" id="ops-cost">—<div style="font-size:10px;color:#94a3b8;margin-top:3px" id="ops-cost-note">reading canon.yml…</div></div></div>
     </div>
   </div>
   <div class="health-panel">

@@ -6417,6 +6417,12 @@ def rg_openai_production_golden_run():
            "live access or human eyes needed. They were unlooked-at, not unverifiable. TWO failed, "
            "plus a THIRD the audit list itself had missed. (1) SERVER SPECS hardcoded 'CPX32 "
            "EUR17.99 + Volume EUR6.58 = EUR24.57/mo' against canon.yml server_eur_month 15.49 -- "
+           "[ASSERTION UPDATED 22 Aug 2026, PROVENANCE-1: check (1) no longer greps for a "
+           "literal price string. That form could only catch ONE hand-typed number drifting "
+           "and sat green while a second hand-typed price, EUR4.51/mo on the Ops Map, "
+           "contradicted it five-fold for months. Cost is now FED from canon.yml at request "
+           "time, so the check asserts the feed exists and that no hardcoded monthly price "
+           "survives anywhere in the markup -- strictly stronger, not weaker.] "
            "contradicting RUL-025's grandfathered price and overstating the box by EUR2.50/mo. "
            "(2) BIT SELF-TEST painted its dot GREEN as the pre-data default, so it read healthy "
            "while still loading and stayed healthy if the fetch died. (3) The SERVICES panel -- "
@@ -6467,18 +6473,34 @@ def rg_instrument_truth():
         out.append((FAIL, "the SERVICES panel paints health-green 'Active' again from a hardcoded "
                           "string -- it is not probed and must never look measured"))
 
-    # (1) static money on the page must equal canon
+    # (1) money on the page must COME FROM canon, not merely happen to match it.
+    #     ASSERTION UPDATED 22 Aug 2026 (PROVENANCE-1) and deliberately STRENGTHENED.
+    #     The original form grepped for the literal string "CPX32 EUR15.49" in the
+    #     markup -- it could only catch a hand-typed number that had drifted, and it
+    #     could never catch a SECOND hand-typed number elsewhere on the page. That is
+    #     exactly what happened: the Ops Map carried "fixed EUR4.51/mo" while this
+    #     check sat green on the Ops view's "CPX32 EUR15.49", five-fold apart, both
+    #     hand-typed, for months. The cost surfaces are now fed from canon.yml at
+    #     request time via /dashboard/fixed-costs, so the new assertion is that the
+    #     FEED exists and that no hardcoded server price remains to contradict it.
+    #     Strictly stronger: under the old rule two panels could disagree and pass;
+    #     under this one a hardcoded price is a failure wherever it appears.
     canon = repo_file("canon.yml") or ""
     m = re.search(r"^\s*server_eur_month:\s*([0-9.]+)", canon, re.M)
     if not m:
         out.append((INFO, "canon.yml server_eur_month not readable -- cost cross-check skipped"))
+    elif "loadFixedCosts" not in dash or 'id="ops-cost"' not in dash:
+        out.append((FAIL, "the cost surfaces are no longer fed from canon.yml "
+                          "(/dashboard/fixed-costs) -- a hand-typed price can drift from the "
+                          "canon again, which is how EUR4.51 and EUR22.07 coexisted on one page"))
     else:
-        want = m.group(1)
-        if ("CPX32 €%s" % want) not in dash:
-            out.append((FAIL, "the SERVER SPECS cost line no longer matches canon.yml "
-                              "server_eur_month (%s) -- the dashboard is quoting a server price "
-                              "the canon does not carry, which is how EUR17.99 survived against "
-                              "RUL-025's grandfathered EUR15.49" % want))
+        # Any surviving hardcoded monthly EUR price is a contradiction waiting to happen.
+        markup = re.sub(r"<script[^>]*>.*?</script>", "", dash, flags=re.DOTALL)
+        stray = [s for s in re.findall(r"€\s?\d+[.,]\d\d\s*/?\s*mo", markup)]
+        if stray:
+            out.append((FAIL, "hardcoded monthly price(s) %s are still painted in the markup -- "
+                              "they can drift from canon.yml and contradict the live cost feed"
+                              % ", ".join(sorted(set(stray)))))
 
     # (2) no panel may default to a health colour before its data lands
     if 'id="bit-ops-dot" style="margin-left:6px;color:#10b981' in dash:
@@ -8170,6 +8192,137 @@ def rg_session_number_derived():
     if not [o for o in out if o[0] == FAIL]:
         out.append((INFO, "session number is derived (repo %s, live %s, as of %s) and the "
                           "badge dates itself" % (repo_n, live_n, as_of[:10])))
+    return out
+
+@entry("RG-0155", "No surface on the dashboard wears a health colour that nothing measures -- "
+                  "and an INVENTORY exists, so the next unfed panel is caught by machinery "
+                  "rather than by David's memory",
+       LOCKED, fixed_on="2026-08-22",
+       scope="dashboard.server.html, every om-chip carrying a health class, plus "
+             "DASHBOARD_PROVENANCE.json and scripts/dashboard_provenance.py. CLASS, and "
+             "deliberately the WHOLE class: the auditor enumerates every chip on the page, so "
+             "a panel added next month is covered without anyone remembering to add an "
+             "assertion for it. Registered static entries carry review dates and FAIL when "
+             "those pass, so the registry cannot become a hiding place.",
+       ref="PROVENANCE-1, 22 Aug 2026. David: 'the dashboard becomes a liability if it either "
+           "shows stagnant information or the worst case is wrong information ... it feels as "
+           "if I am the Automator and need to remember what changed?' A full audit that day "
+           "found 141 asserted surfaces on the page: 65 live-fed, 8 doc-parsed and 68 "
+           "HAND-TYPED. Nine chips painted a health colour with no feed at all -- 'kill "
+           "switches armed', 'nightly backup', 'routing on', 'scheduled daily', 'no-AI "
+           "default', 'per-use AI' among them -- and the same server was costed at EUR 4.51/mo "
+           "on the Ops Map and EUR 22.07/mo on the Ops view while canon.yml, named ON THE PAGE "
+           "as the source of truth, said EUR 26.68 and was served to no one. The health dot "
+           "was born green in the markup and never reset on a failed fetch, so a dead feed "
+           "left a green light burning over an error message. Root cause was not that people "
+           "typed values in: it was that NOTHING ENUMERATED THEM, so the only index was "
+           "David's memory, and every prior fix (RG-0133, RG-0153, INSTRUMENT-TRUTH-1/2) was "
+           "instance-scoped and left the other 68 standing. Fixed by inverting the default: "
+           "the auditor lists every chip, an unfed health colour is a defect unless registered "
+           "with a reason and an expiry, cost now comes from one endpoint reading canon.yml so "
+           "two panels cannot disagree, and the five direction cards declare their source with "
+           "static ones dimmed and dated. Proven by injecting a fake green chip: caught, exit 1.")
+def rg_dashboard_provenance():
+    out = []
+    aud = os.path.join(REPO, "scripts", "dashboard_provenance.py")
+    reg = repo_file("DASHBOARD_PROVENANCE.json")
+    if not os.path.exists(aud):
+        return [(FAIL, "scripts/dashboard_provenance.py is gone -- the dashboard has no "
+                       "inventory again, which is the whole defect")]
+    if reg is None:
+        out.append((INFO, "registry not read (outside the repo)"))
+    else:
+        try:
+            entries = json.loads(reg).get("static_surfaces", [])
+        except Exception as ex:
+            entries = []
+            out.append((FAIL, "DASHBOARD_PROVENANCE.json is unparseable: %s" % repr(ex)[:80]))
+        for e in entries:
+            if not e.get("review_by"):
+                out.append((FAIL, "registered surface %r has no review_by -- a static "
+                                  "declaration with no expiry is a permanent hiding place"
+                                  % e.get("asserts", e.get("slug"))))
+
+    rc = os.system('"%s" "%s" --check >%s 2>&1' % (sys.executable, aud, os.devnull))
+    if rc != 0:
+        out.append((FAIL, "dashboard_provenance --check fails -- at least one chip paints a "
+                          "health colour nothing measures, or a registered static surface has "
+                          "passed its review date (run the script for the list)"))
+
+    html = repo_file("dashboard.server.html")
+    if html is not None:
+        if 'id="health-status-dot" style="margin-left:6px;color:#10b981;"' in html:
+            out.append((FAIL, "the Server Health dot is born green in the markup again -- a "
+                              "light must be grey until something measures it"))
+        if "loadFixedCosts" not in html:
+            out.append((FAIL, "the cost feed is gone -- the cost surfaces are back to "
+                              "hand-typed numbers that can disagree with each other"))
+        if "STATIC \u2014 written" not in html and "STATIC \u2014 written" not in html:
+            if "static_since" not in html and "d.source === 'static'" not in html:
+                out.append((FAIL, "direction cards no longer declare their source -- a static "
+                                  "card can pass as this session's priorities again"))
+
+    if not [o for o in out if o[0] == FAIL]:
+        out.append((INFO, "every health colour on the dashboard is fed, honestly dashed, or "
+                          "registered with a live review date; cost reads canon.yml"))
+    return out
+
+
+@entry("RG-0156", "orchestrator.html ships through the ONE DEPLOY manifest, carries no "
+                  "hardcoded access code, and never renders a data outage as an all-clear",
+       OPEN,
+       scope="orchestrator.html and its live counterpart at trustsquare.co/orchestrator. "
+             "CLASS: any page served from the web root but absent from "
+             "ops/autodeploy/deploy_manifest.txt is outside the one deploy engine and will "
+             "fossilise exactly like this one. The empty-state rule is general -- no page may "
+             "render a fetch failure as reassurance.",
+       ref="PROVENANCE-1 / ORCH-DRIFT-1, 22 Aug 2026, found while auditing the dashboard after "
+           "David said the Orchestration page 'has too many [faults] and I did not even try to "
+           "keep it updated - and that is wrong because I do have an expectation of it auto "
+           "updating and being factual.' He is right, and the cause is structural: the page is "
+           "LIVE (nginx serves /orchestrator from /var/www/marketsquare behind Basic Auth) but "
+           "is NOT in deploy_manifest.txt. It was hand-uploaded; the repo copy was last touched "
+           "4 Jun 2026, 79 days ago. Meanwhile STATUS.md and CHANGELOG.md DO ship, so the "
+           "doc-fed tiles kept updating while the HTML around them fossilised -- which is "
+           "precisely what makes a stale page look maintained. Three defects follow from it: "
+           "(1) DEPLOY -- outside the one engine, violating DEPLOY-CONSOLIDATION-1; the repo "
+           "and live copies have diverged and the live one cannot be read from a session "
+           "(Basic Auth), so which is authoritative is not knowable from here. (2) SECRET -- "
+           "access code 96315 is hardcoded at line 96 of a file in a public web root, and it "
+           "is a launch gate (LAUNCH_BAR_2026-08-15 G2, '96315 killed', hard 29 Aug, status "
+           "OPEN); worse, the gate is dead code -- line 100 unconditionally reveals the app "
+           "without ever calling checkCode(), so the page asserts a protection it does not "
+           "run. (3) FALSE ALL-CLEAR -- jget() swallows every error and returns null, so a "
+           "404, a 500, expired auth or a corrupt report.json all render as 'Nothing waiting "
+           "on you. \u2728' plus four more cheerful empties. A total data outage looks like a "
+           "clean board. Also asserts '~05:00 SAST', wrong since 11 Jun when the loop merged "
+           "to one 06:30 task. NOT executed this session on purpose: adding the 79-day-old "
+           "repo copy to the manifest would OVERWRITE whatever is live with stale content, and "
+           "rotating a live access code is David's call (RUL-027). Logged here per RUL-037 "
+           "rather than handed over as a sentence he has to remember.")
+def rg_orchestrator_in_one_deploy():
+    out = []
+    mf = repo_file(os.path.join("ops", "autodeploy", "deploy_manifest.txt"))
+    html = repo_file("orchestrator.html")
+    if mf is None or html is None:
+        return [(INFO, "repo half not read")]
+
+    if "orchestrator.html" not in mf:
+        out.append((FAIL, "orchestrator.html is served live but is NOT in "
+                          "deploy_manifest.txt -- it is outside the one deploy engine and "
+                          "drifts silently"))
+    if "96315" in html:
+        out.append((FAIL, "access code 96315 is still hardcoded in a file that sits in a "
+                          "public web root (launch gate G2, hard 29 Aug)"))
+    if "Nothing waiting on you" in html:
+        out.append((FAIL, "the empty state still renders a data outage as an all-clear -- a "
+                          "failed fetch must say the feed failed, never 'nothing to do'"))
+    if "05:00 SAST" in html:
+        out.append((FAIL, "the page still claims the loop runs ~05:00 SAST -- merged to a "
+                          "single 06:30 task on 11 Jun 2026"))
+    if not [o for o in out if o[0] == FAIL]:
+        out.append((INFO, "orchestrator page is in the manifest, carries no hardcoded code, "
+                          "and reports feed failures honestly"))
     return out
 
 

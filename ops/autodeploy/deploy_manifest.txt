@@ -78,6 +78,10 @@ STATUS.md                  | STATUS.md
 # SESSION-COUNTER-1 (22 Aug 2026): the badge's derived number. Ships WITH STATUS.md
 # because the endpoint reads it instead of regex-scraping 'Session <n>' out of prose.
 SESSION_COUNTER.json       | SESSION_COUNTER.json
+# PROVENANCE-1 (22 Aug 2026): the cost figures the dashboard reads at
+# /dashboard/fixed-costs. The page NAMED canon.yml as its source of truth for
+# months while nothing served it, which is how EUR 4.51 and EUR 22.07 coexisted.
+canon.yml                  | canon.yml
 CHANGELOG.md               | CHANGELOG.md
 BACKLOG.md                 | BACKLOG.md
 AUDIT_PROGRESS.md          | AUDIT_PROGRESS.md

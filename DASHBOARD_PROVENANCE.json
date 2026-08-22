@@ -1,0 +1,27 @@
+{
+  "_doc": "PROVENANCE-1 (22 Aug 2026). The register of dashboard surfaces that are ALLOWED to be static.",
+  "_why": "David, 22 Aug 2026: 'it feels as if I am the Automator and need to remember what changed?' He was the inventory. A provenance audit that day found 141 asserted surfaces on dashboard.server.html, 68 of them hand-typed, including the same server costed at EUR 4.51/mo and EUR 22.07/mo on the same page. Nothing enumerated them, so the only way a wrong panel got caught was David contradicting it from memory.",
+  "_rule": "A chip carrying a health colour must be (a) fed by a live endpoint, (b) demoted to the honest not-wired style, or (c) listed here with a reason AND a review date. An entry whose review_by has passed FAILS the audit, so this file can never become a hiding place. Run: python3 scripts/dashboard_provenance.py --check",
+  "_not_a_loophole": "Register a surface only when it is a genuine plan/contract fact that no endpoint can measure. If something CAN be probed, probe it. When in doubt, demote it to not-wired -- an honest dash beats a confident colour.",
+
+  "static_surfaces": [
+    {
+      "slug": "dashboard.server.html#cost-r-0",
+      "asserts": "Cloudflare cost R 0",
+      "why_static": "Cloudflare Free plan carries no line item and no billing API is wired. It is a plan fact, not a measurement. It stops being true the moment the zone is upgraded to Pro (USD 20/mo) -- which is a deliberate act, hence a review date rather than a probe.",
+      "review_by": "2026-09-30",
+      "review_trigger": "Any Cloudflare plan change, or the first month after full launch when real traffic could force an upgrade.",
+      "registered": "2026-08-22",
+      "registered_in": "PROVENANCE-1"
+    },
+    {
+      "slug": "dashboard.server.html#free-tier",
+      "asserts": "Resend free tier",
+      "why_static": "Resend's free tier is 3,000 emails/month. The account is on it today and no billing endpoint is wired. Launch traffic is exactly what would breach it, so this is time-boxed to just after launch rather than left standing.",
+      "review_by": "2026-09-30",
+      "review_trigger": "First full month of launch email volume, or any Resend plan change.",
+      "registered": "2026-08-22",
+      "registered_in": "PROVENANCE-1"
+    }
+  ]
+}

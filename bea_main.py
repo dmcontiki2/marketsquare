@@ -11810,6 +11810,50 @@ def _session_number(status_text: str):
     sm = _re2.search(r"Session (\d+)", status_text)
     return (int(sm.group(1)) if sm else 0), "", "prose-fallback"
 
+def _fixed_costs():
+    """PROVENANCE-1 (22 Aug 2026): ONE source for what the infrastructure costs.
+
+    On 22 Aug the dashboard asserted the SAME server at EUR 4.51/mo (Ops Map chip,
+    green) and EUR 22.07/mo (Ops view Cost tile) while canon.yml -- named on the
+    page as the source of truth -- said 15.49 + 5.20 + 5.99 = EUR 26.68. Three
+    numbers, all hand-typed, none reconciled, because nothing ever SERVED canon.yml
+    to the page. Every cost surface now reads this endpoint, so a contradiction
+    between two panels is no longer expressible.
+
+    Parsed with a plain regex rather than PyYAML: no new runtime dependency, and
+    the four fields we need are flat scalars.
+    """
+    txt = _read_file("canon.yml")
+    def num(pat, default=0.0):
+        m = _re2.search(pat, txt)
+        return float(m.group(1)) if m else default
+    server = num(r"server_eur_month:\s*([\d.]+)")
+    new_order = num(r"server_eur_month_new_order:\s*([\d.]+)")
+    volume = num(r"hetzner_volume:\s*\{[^}]*eur_month:\s*([\d.]+)")
+    objstore = num(r"hetzner_object_storage:\s*\{[^}]*eur_month:\s*([\d.]+)")
+    m = _re2.search(r"server:\s*\"([^\"]+)\"", txt)
+    plan = m.group(1) if m else ""
+    total = round(server + volume + objstore, 2)
+    return {
+        "plan": plan,
+        "server_eur_month": server,
+        "server_eur_month_new_order": new_order,
+        "volume_eur_month": volume,
+        "object_storage_eur_month": objstore,
+        "total_eur_month": total,
+        "label": "EUR %.2f/mo" % total,
+        "breakdown": "%s EUR %.2f (grandfathered) + volume EUR %.2f + object storage EUR %.2f"
+                     % (plan or "server", server, volume, objstore),
+        "source": "canon.yml (PROVENANCE-1) -- the only place these figures are written",
+        "sourced_ok": bool(txt),
+    }
+
+
+@app.get("/dashboard/fixed-costs")
+def dashboard_fixed_costs():
+    """The fixed monthly infrastructure cost, read from canon.yml at request time."""
+    return _fixed_costs()
+
 def _section(text: str, heading_re: str) -> str:
     m = _re2.search(heading_re + r"\n(.*?)(?=\n## |\Z)", text, _re2.DOTALL | _re2.IGNORECASE)
     return m.group(1).strip() if m else ""
@@ -11916,6 +11960,7 @@ def dashboard_summary():
     directions = [
         {
             "id": "dir_next",
+            "source": "STATUS.md \u00b7 ## Next Session",
             "project": "TrustSquare",
             "title": "Session " + str(next_session) + " — Next up",
             "colour": "#3b82f6",
@@ -11926,6 +11971,7 @@ def dashboard_summary():
         },
         {
             "id": "dir_blockers",
+            "source": "BACKLOG.md \u00b7 ## Launch Blockers",
             "project": "TrustSquare",
             "title": "Launch Blockers",
             # DASH-COLOUR-1 (15 Aug 2026): state-driven, per David's colour doctrine (4 Aug) --
@@ -11939,6 +11985,8 @@ def dashboard_summary():
         },
         {
             "id": "dir_cl",
+            "source": "static",
+            "static_since": "2026-06-04",
             "project": "CityLauncher",
             "title": "Wave 1 — Pretoria Launch",
             "colour": "#8b5cf6",
@@ -11949,6 +11997,8 @@ def dashboard_summary():
         },
         {
             "id": "dir_aa",
+            "source": "static",
+            "static_since": "2026-06-04",
             "project": "AdvertAgent",
             "title": "AI Coach — Tier Gating",
             "colour": "#f59e0b",
@@ -11959,6 +12009,8 @@ def dashboard_summary():
         },
         {
             "id": "dir_infra",
+            "source": "static",
+            "static_since": "2026-06-04",
             "project": "Agentic OS",
             "title": "Agentic OS — Framework",
             "colour": "#10b981",

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Provenance Map — 22 Aug 2026</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#0f172a; --line:rgba(255,255,255,.08);
+    --ink:#f1f5f9; --dim:#94a3b8; --faint:#64748b;
+    --measured:#10b981;   /* probed live — trustworthy */
+    --doc:#3b82f6;        /* parsed from a document we maintain */
+    --static:#f59e0b;     /* hand-typed, declared, expires */
+    --unfed:#ef4444;      /* hand-typed, undeclared — the liability */
+    --navy:#1E3A5F;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       padding:32px 24px 64px}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:-.02em}
+  .sub{color:var(--dim);font-size:14px;margin:0 0 28px}
+  .quote{border-left:3px solid var(--navy);background:rgba(30,58,95,.28);
+         padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 30px;
+         font-style:italic;color:#cbd5e1}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);
+     margin:38px 0 14px;font-weight:700}
+
+  /* ── legend ── */
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 26px}
+  .lg{display:flex;align-items:center;gap:8px;background:var(--panel);
+      border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:12.5px}
+  .sw{width:11px;height:11px;border-radius:3px;flex:none}
+
+  /* ── the bar ── */
+  .bar{display:flex;height:46px;border-radius:10px;overflow:hidden;
+       border:1px solid var(--line);margin-bottom:10px}
+  .seg{display:flex;align-items:center;justify-content:center;
+       font-size:12.5px;font-weight:700;color:#04121f;white-space:nowrap}
+  .barnote{color:var(--faint);font-size:12.5px;margin:0 0 8px}
+
+  /* ── cards ── */
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .card.bad{border-color:rgba(239,68,68,.4)}
+  .card.good{border-color:rgba(16,185,129,.35)}
+  .k{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:700}
+  .n{font-size:27px;font-weight:800;margin:6px 0 2px;letter-spacing:-.02em}
+  .cap{font-size:12.5px;color:var(--dim);line-height:1.5}
+
+  /* ── cost table ── */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:4px}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.07em;
+     color:var(--faint);padding:8px 10px;border-bottom:1px solid var(--line);font-weight:700}
+  td{padding:10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top}
+  td.num{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+  .tag{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;
+       border-radius:999px;letter-spacing:.04em}
+  .t-bad{background:rgba(239,68,68,.16);color:#fca5a5}
+  .t-good{background:rgba(16,185,129,.16);color:#6ee7b7}
+  .scroll{overflow-x:auto}
+
+  /* ── cause chain ── */
+  .chain{display:grid;gap:12px}
+  .step{display:grid;grid-template-columns:34px 1fr;gap:14px;align-items:start;
+        background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 17px}
+  .num{width:34px;height:34px;border-radius:9px;background:var(--navy);color:#fff;
+       display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+  .step h3{margin:0 0 5px;font-size:14.5px}
+  .step p{margin:0;color:var(--dim);font-size:13px;line-height:1.6}
+
+  /* ── before / after ── */
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:720px){.ba{grid-template-columns:1fr}}
+  .ba .card h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.07em}
+  .ba ul{margin:0;padding-left:18px;color:var(--dim);font-size:13px;line-height:1.75}
+  .before h3{color:#fca5a5} .after h3{color:#6ee7b7}
+
+  .foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
+        color:var(--faint);font-size:12px}
+  code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:4px;font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Dashboard Provenance Map</h1>
+  <p class="sub">MarketSquare · <code>dashboard.server.html</code> · audited 22 Aug 2026 · 141 asserted surfaces</p>
+
+  <div class="quote">
+    “The dashboard becomes a liability if it either shows stagnant information or the worst case is
+    wrong information … it feels as if I am the Automator and need to remember what changed?”
+  </div>
+
+  <h2>What the dashboard was actually telling you</h2>
+  <div class="bar">
+    <div class="seg" style="background:var(--measured);flex:65"  title="65 surfaces">65 measured</div>
+    <div class="seg" style="background:var(--doc);flex:8"        title="8 surfaces">8</div>
+    <div class="seg" style="background:var(--unfed);flex:68"     title="68 surfaces">68 hand-typed</div>
+  </div>
+  <p class="barnote">Every block looked identical on screen. Nothing marked which was which.</p>
+
+  <div class="legend">
+    <span class="lg"><span class="sw" style="background:var(--measured)"></span>Measured — probed live, trustworthy</span>
+    <span class="lg"><span class="sw" style="background:var(--doc)"></span>Doc-fed — parsed from a file we maintain</span>
+    <span class="lg"><span class="sw" style="background:var(--static)"></span>Static, declared — reason + expiry date</span>
+    <span class="lg"><span class="sw" style="background:var(--unfed)"></span>Static, undeclared — the liability</span>
+  </div>
+
+  <h2>The clearest example: what does the server cost?</h2>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Surface</th><th>Said</th><th>Where that number lived</th><th></th></tr></thead>
+    <tbody>
+      <tr><td>Ops Map — hero tile</td><td class="num">€4.51/mo</td><td>typed into the HTML</td><td><span class="tag t-bad">wrong</span></td></tr>
+      <tr><td>Ops Map — cost chip (green)</td><td class="num">€4.51/mo</td><td>typed into the HTML</td><td><span class="tag t-bad">wrong</span></td></tr>
+      <tr><td>Ops view — Cost tile</td><td class="num">€22.07/mo</td><td>typed into the HTML</td><td><span class="tag t-bad">wrong</span></td></tr>
+      <tr><td><code>canon.yml</code> — the actual source of truth</td><td class="num">€26.68/mo</td><td>15.49 + 5.20 + 5.99</td><td><span class="tag t-good">true</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="barnote" style="margin-top:12px">
+    The page <em>named</em> <code>canon.yml</code> as its source of truth — while nothing ever served it.
+    Three numbers, five-fold apart, on one screen. All now read one endpoint, so two panels can no longer disagree.
+  </p>
+
+  <h2>Why it kept happening — the real cause</h2>
+  <div class="chain">
+    <div class="step"><div class="num">1</div><div>
+      <h3>Nothing enumerated the claims</h3>
+      <p>There was no list of what the dashboard asserts. So the only index was your memory — which is
+      exactly why it felt like you were the automator. <strong>You were the inventory.</strong></p>
+    </div></div>
+    <div class="step"><div class="num">2</div><div>
+      <h3>Provenance was invisible</h3>
+      <p>A live-fed chip and a hand-typed chip render identically. A wrong panel could only be caught by
+      contradicting something you already knew. That is not a system — that is you doing QA from memory.</p>
+    </div></div>
+    <div class="step"><div class="num">3</div><div>
+      <h3>Every previous fix was instance-scoped</h3>
+      <p>RG-0133, RG-0153, INSTRUMENT-TRUTH-1 and -2 each named specific elements and fixed those.
+      All 68 hand-typed surfaces survived every one of them, because nobody had the list.</p>
+    </div></div>
+    <div class="step"><div class="num">4</div><div>
+      <h3>Failure rendered as success</h3>
+      <p>The health dot was born green in the markup and never reset when the feed died — a green light
+      burning directly above the words “Health check failed”. On the Orchestration page it is worse: any
+      fetch failure renders as <em>“Nothing waiting on you. ✨”</em>.</p>
+    </div></div>
+  </div>
+
+  <h2>The inversion</h2>
+  <div class="ba">
+    <div class="card before">
+      <h3>Before</h3>
+      <ul>
+        <li>Un-fed was <strong>silent and invisible</strong></li>
+        <li>A green chip needed no justification</li>
+        <li>Staleness had no visual state</li>
+        <li>New hand-painted panels were free to add</li>
+        <li>Detection depended on David noticing</li>
+      </ul>
+    </div>
+    <div class="card after">
+      <h3>After</h3>
+      <ul>
+        <li>Un-fed is a <strong>build failure</strong></li>
+        <li>A colour must be earned, dashed, or declared</li>
+        <li>Declarations carry an <strong>expiry date</strong></li>
+        <li>A new unfed panel trips red the same day</li>
+        <li>Detection is machinery, not memory</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Where it stands tonight</h2>
+  <div class="grid">
+    <div class="card good">
+      <div class="k">Health colours audited</div>
+      <div class="n" style="color:var(--measured)">70</div>
+      <div class="cap">33 live-fed · 28 honestly dashed · 2 declared static with September review dates</div>
+    </div>
+    <div class="card good">
+      <div class="k">Unfed defects</div>
+      <div class="n" style="color:var(--measured)">0</div>
+      <div class="cap">Was 9 this morning. Six green chips demoted, two registered, cost wired to canon.</div>
+    </div>
+    <div class="card bad">
+      <div class="k">Orchestration page</div>
+      <div class="n" style="color:var(--unfed)">4</div>
+      <div class="cap">Open defects, tracked as RG-0156. Served live but outside the deploy manifest — repo copy is 79 days stale.</div>
+    </div>
+    <div class="card">
+      <div class="k">Tripwire proven</div>
+      <div class="n" style="color:var(--static)">✓</div>
+      <div class="cap">A fake green chip was injected and caught — exit 1 — then removed. The guard is tested, not hoped.</div>
+    </div>
+  </div>
+
+  <h2>Still open — deliberately not touched tonight</h2>
+  <div class="card bad" style="margin-top:2px">
+    <div class="cap" style="color:#cbd5e1;line-height:1.7">
+      <strong style="color:#fca5a5">orchestrator.html</strong> is served live from the web root but is
+      <strong>not in <code>deploy_manifest.txt</code></strong> — hand-uploaded, so the repo copy and the
+      live copy have drifted apart for 79 days. Because <code>STATUS.md</code> and <code>CHANGELOG.md</code>
+      <em>do</em> ship, its doc-fed tiles kept updating while the page around them fossilised — which is
+      precisely what makes a stale page look maintained.<br><br>
+      It also hardcodes access code <strong>96315</strong> behind a gate that never executes (the page
+      asserts a protection it does not run), and that code is launch gate G2, hard 29 Aug.<br><br>
+      Not fixed here on purpose: shipping the 79-day-old repo copy would <em>overwrite</em> whatever is
+      live, and rotating a live access code is your call. Logged as <strong>RG-0156</strong> so the
+      machinery carries it, not you.
+    </div>
+  </div>
+
+  <div class="foot">
+    Generated 22 Aug 2026 · MarketSquare · PROVENANCE-1 · guarded by RG-0155 (locked) and RG-0156 (open)<br>
+    Audit: <code>python3 scripts/dashboard_provenance.py</code> · Registry: <code>DASHBOARD_PROVENANCE.json</code>
+  </div>
+
+</div>
+</body>
+</html>
