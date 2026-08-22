@@ -5366,10 +5366,32 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
     # connection closes. Informational only — it never stops the introduction.
     _notice = _seller_verification_notice(conn, listing["seller_email"],
                                           listing["category"])
-    conn.execute(
-        "INSERT INTO intro_requests (listing_id, buyer_email, buyer_name, message) VALUES (?,?,?,?)",
+    # ── INTRO-HOLD-1 (RG-0145, 22 Aug 2026) ─────────────────────────────────────
+    # The EULA says 1T is COMMITTED (HELD) at request and burned only on delivery.
+    # Until today nothing was held: the buyer agreed to a mechanism that did not exist,
+    # and the ECT Act s44 argument ("until delivery it is only held, not spent") had no
+    # implementation behind it. The hold is a real -1 ledger row, so the buyer sees the
+    # commitment in their balance immediately, exactly as they were told.
+    _hold_balance = conn.execute(
+        "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
+        (intro.buyer_email,)).fetchone()["bal"]
+    if _hold_balance is None or _hold_balance < 1:
+        conn.close()
+        raise HTTPException(
+            status_code=402,
+            detail="1 Tuppence is needed to request an introduction. It is held, not spent — "
+                   "released in full if the seller declines or the request expires.")
+    _cur = conn.execute(
+        "INSERT INTO intro_requests (listing_id, buyer_email, buyer_name, message, tuppence_held) "
+        "VALUES (?,?,?,?,1)",
         (intro.listing_id, intro.buyer_email, intro.buyer_name, intro.message)
     )
+    _new_intro_id = _cur.lastrowid
+    conn.execute(
+        "INSERT INTO transactions (user_email, type, amount, description) "
+        "VALUES (?, 'intro_hold', -1, ?)",
+        (intro.buyer_email, "Introduction requested · 1T held · listing #%s · intro #%s"
+                            % (intro.listing_id, _new_intro_id)))
     if _notice.get("warn"):
         # Evidence that the buyer was told, and whether they confirmed it.
         try:
@@ -5714,6 +5736,38 @@ def id_status(email: str):
             pass
 
 
+def _release_intro_hold(conn, intro_id, reason):
+    """INTRO-HOLD-1 (RG-0145): return a held Tuppence, exactly once.
+
+    The EULA promises the hold is "released in full" on decline, expiry or withdrawal.
+    Releasing twice would MINT Tuppence, so the release is written as a conditional UPDATE
+    and the money row is only added when that UPDATE actually claimed the row — the same
+    rowcount-is-truth discipline as INTRO-CHARGE-ONCE-1. Never releases a burned hold.
+
+    Returns True when a hold was returned by THIS call.
+    """
+    try:
+        upd = conn.execute(
+            "UPDATE intro_requests SET hold_released_at = ? "
+            "WHERE id = ? AND COALESCE(tuppence_held, 0) = 1 "
+            "AND hold_released_at IS NULL AND COALESCE(tuppence_charged, 0) = 0",
+            (_utc_now(), intro_id))
+        if upd.rowcount != 1:
+            return False
+        row = conn.execute("SELECT buyer_email FROM intro_requests WHERE id = ?",
+                           (intro_id,)).fetchone()
+        if not row or not row["buyer_email"]:
+            return False
+        conn.execute(
+            "INSERT INTO transactions (user_email, type, amount, description) "
+            "VALUES (?, 'intro_hold_release', 1, ?)",
+            (row["buyer_email"], "Introduction hold released · %s · intro #%s" % (reason, intro_id)))
+        return True
+    except Exception as _he:
+        _log.error("INTRO-HOLD-1: release failed for intro #%s (%s): %s", intro_id, reason, _he)
+        return False
+
+
 @app.put("/intros/{intro_id}/accept")
 def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
                  _key: str = Depends(auth.require_api_key),
@@ -5737,16 +5791,98 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
             conn.close()
             raise HTTPException(status_code=403,
                                 detail="Only the listing owner can accept an introduction.")
-    conn.execute(
-        "UPDATE intro_requests SET status = 'accepted', tuppence_charged = 1 WHERE id = ?",
-        (intro_id,)
-    )
-    # Deduct 1 Tuppence from the buyer's wallet
-    conn.execute(
-        "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, 'intro_deduct', -1, ?)",
-        (intro["buyer_email"], f"Intro accepted · listing #{intro['listing_id']} · {listing['title'] if listing else ''}")
-    )
-    conn.commit()
+    # ── INTRO-CHARGE-ONCE-1 (RG-0142, 22 Aug 2026) ──────────────────────────────
+    # This block used to be two unguarded writes. A retry, a double-click or a slow
+    # network could send the same PUT twice and each call inserted ANOTHER -1 row:
+    # four accepts, four charges, one introduction, balance -3T (EXECUTED against a
+    # replica during the 22 Aug forensic audit). There was also no floor at zero, so a
+    # buyer with 0T went negative on the FIRST accept.
+    #
+    # Three guarantees now, and they are deliberately enforced in the DATABASE rather
+    # than in Python, because two concurrent requests can both pass an if-statement:
+    #   1. ONE CHARGE PER INTRODUCTION — the UPDATE carries its own precondition and we
+    #      trust its rowcount, not a prior SELECT. Whoever loses the race writes nothing.
+    #   2. NO NEGATIVE WALLET — balance is checked inside the same immediate transaction.
+    #   3. ALL OR NOTHING — status flag and money row commit together or not at all.
+    # The pattern is estate_agents.py's (409 on a settled intro, 402 below balance),
+    # which the flagship buyer path never got.
+    try:
+        # get_db() uses sqlite3's DEFAULT isolation level, which opens transactions
+        # implicitly on the first write. If one is already open (a refactor upstream, a
+        # future write before this point) a bare BEGIN IMMEDIATE raises "cannot start a
+        # transaction within a transaction" and every accept would 500. We do not commit
+        # someone else's partial work to get our lock: we proceed without it, because the
+        # single-charge guarantee lives in the conditional UPDATE's rowcount, not here.
+        # BEGIN IMMEDIATE only tightens the balance read against a concurrent writer.
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+        except Exception:
+            pass
+        _row = conn.execute(
+            "SELECT status, COALESCE(tuppence_charged, 0) AS charged, buyer_email, "
+            "       COALESCE(tuppence_held, 0) AS held, hold_released_at AS released_at "
+            "FROM intro_requests WHERE id = ?", (intro_id,)).fetchone()
+        if _row is None:
+            conn.rollback(); conn.close()
+            raise HTTPException(status_code=404, detail="Intro not found")
+        _settled = (_row["status"] or "").strip().lower() in ("accepted", "declined")
+        _already_charged = int(_row["charged"] or 0)      # the tuppence_charged flag
+        if _settled or _already_charged or _row["status"] == "accepted":
+            conn.rollback(); conn.close()
+            raise HTTPException(
+                status_code=409,
+                detail="This introduction was already %s — it is charged once, never twice."
+                       % ((_row["status"] or "accepted").strip().lower() or "accepted"))
+        _buyer = _row["buyer_email"]
+        # INTRO-HOLD-1: if a hold was placed at request time the money has ALREADY left
+        # the wallet. Delivery BURNS that hold — it must never deduct a second Tuppence.
+        _held = int(_row["held"] or 0) and not _row["released_at"]
+        _balance = conn.execute(
+            "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
+            (_buyer,)).fetchone()["bal"]
+        if not _held and (_balance is None or _balance < 1):   # insufficient -> 402, never a negative wallet
+            conn.rollback(); conn.close()
+            raise HTTPException(
+                status_code=402,
+                detail="Insufficient Tuppence — 1T is needed to accept this introduction.")
+        _upd = conn.execute(
+            "UPDATE intro_requests SET status = 'accepted', tuppence_charged = 1 "
+            "WHERE id = ? AND COALESCE(tuppence_charged, 0) = 0 "
+            "AND COALESCE(LOWER(status), 'pending') NOT IN ('accepted', 'declined')",
+            (intro_id,))
+        if _upd.rowcount != 1:
+            # Someone else won the race between our read and our write.
+            conn.rollback(); conn.close()
+            raise HTTPException(status_code=409,
+                                detail="This introduction was just accepted elsewhere.")
+        if _held:
+            # The hold becomes the fee. Append a ZERO-amount audit row rather than mutating
+            # the original -1: the ledger stays append-only and the burn is still visible.
+            conn.execute(
+                "INSERT INTO transactions (user_email, type, amount, description) "
+                "VALUES (?, 'intro_burn', 0, ?)",
+                (_buyer, f"Introduction delivered · held 1T burned · listing #{intro['listing_id']} "
+                         f"· {listing['title'] if listing else ''}"))
+        else:
+            # Legacy intro created before INTRO-HOLD-1: nothing was held, so charge now.
+            conn.execute(
+                "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, 'intro_deduct', -1, ?)",
+                (_buyer, f"Intro accepted · listing #{intro['listing_id']} · {listing['title'] if listing else ''}")
+            )
+        conn.commit()
+    except HTTPException:
+        raise
+    except Exception as _ce:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        try:
+            conn.close()
+        except Exception:
+            pass
+        _log.error("INTRO-CHARGE-ONCE-1: accept failed for intro #%s: %s", intro_id, _ce)
+        raise HTTPException(status_code=500, detail="Could not accept this introduction.")
     # INTRO-RELAY-1 (5 Aug 2026): with the relay ON, the introduction happens through
     # masked aliases — the raw counterpart addresses never leave TrustSquare (not to the
     # parties, not to the webhook). Flag OFF = today's behaviour, byte for byte.
@@ -5806,11 +5942,31 @@ def decline_intro(intro_id: int, background_tasks: BackgroundTasks,
         if _owner and _sess != _owner:
             conn.close()
             raise HTTPException(status_code=403, detail="Only the listing owner can decline an introduction.")
-    conn.execute(
-        "UPDATE intro_requests SET status = 'declined' WHERE id = ?",
-        (intro_id,)
-    )
+    # INTRO-CHARGE-ONCE-1 (RG-0142): a CHARGED introduction may not be declined. Without
+    # this, decline-after-accept left tuppence_charged = 1 with status 'declined' and no
+    # refund row — the buyer paid for an introduction the record calls declined.
+    _drow = conn.execute(
+        "SELECT status, COALESCE(tuppence_charged, 0) AS charged FROM intro_requests "
+        "WHERE id = ?", (intro_id,)).fetchone()
+    if _drow is not None and (int(_drow["charged"] or 0)
+                              or (_drow["status"] or "").strip().lower() == "accepted"):
+        conn.close()
+        raise HTTPException(status_code=409,
+                            detail="This introduction was already accepted and charged — "
+                                   "it cannot be declined.")
+    _dupd = conn.execute(
+        "UPDATE intro_requests SET status = 'declined' WHERE id = ? "
+        "AND COALESCE(tuppence_charged, 0) = 0 "
+        "AND COALESCE(LOWER(status), 'pending') NOT IN ('accepted', 'declined')",
+        (intro_id,))
+    # INTRO-HOLD-1: a declined introduction returns the hold in full, as promised.
+    if _dupd.rowcount == 1:
+        _release_intro_hold(conn, intro_id, "declined by seller")
     conn.commit()
+    if _dupd.rowcount != 1:
+        conn.close()
+        raise HTTPException(status_code=409,
+                            detail="This introduction is no longer pending.")
     conn.close()
     if N8N_WEBHOOK_DECLINE:
         payload = {
@@ -11623,6 +11779,37 @@ def _read_file(name: str) -> str:
     p = _PROJECT_ROOT / name
     return p.read_text(encoding="utf-8") if p.exists() else ""
 
+def _session_number(status_text: str):
+    """SESSION-COUNTER-1 (22 Aug 2026) -- the badge number, derived not scraped.
+
+    Was:  sm = _re2.search(r"Session (\d+)", status)
+    -- the FIRST match of the literal text "Session <digits>" anywhere in a
+    329 KB append-only prose file. It landed on STATUS.md line 1650, a 1 Aug
+    paragraph whose own subject was a previous freeze of this same counter, and
+    the badge sat on 155 for three weeks while 20 sittings went by. Nothing in
+    the codebase ever incremented anything; freezing was the default, not the
+    failure. Two earlier "permanent" fixes edited the number and left the
+    mechanism, so each lasted exactly one session.
+
+    Now: read SESSION_COUNTER.json, which scripts/session_counter.py derives
+    from the status.d/ and changelog.d/ fragments every session is required to
+    leave. Returns (number, as_of, basis). The as_of date and the basis both
+    reach the dashboard on purpose -- a number that carries its own date
+    confesses when it stops moving, and a fallback that is labelled a fallback
+    can never masquerade as a measured value.
+    """
+    try:
+        p = _PROJECT_ROOT / "SESSION_COUNTER.json"
+        if p.exists():
+            d = json.loads(p.read_text(encoding="utf-8"))
+            n = int(d.get("session", 0))
+            if n > 0 and d.get("basis") == "derived":
+                return n, str(d.get("computed_at", "")), "derived"
+    except Exception:
+        pass
+    sm = _re2.search(r"Session (\d+)", status_text)
+    return (int(sm.group(1)) if sm else 0), "", "prose-fallback"
+
 def _section(text: str, heading_re: str) -> str:
     m = _re2.search(heading_re + r"\n(.*?)(?=\n## |\Z)", text, _re2.DOTALL | _re2.IGNORECASE)
     return m.group(1).strip() if m else ""
@@ -11655,8 +11842,7 @@ def dashboard_summary():
     changelog = _read_file("CHANGELOG.md")
 
     # Parse STATUS.md
-    sm = _re2.search(r"Session (\d+)", status)
-    current_session = int(sm.group(1)) if sm else 0
+    current_session, session_asof, session_basis = _session_number(status)
 
     live_state  = _section(status, r"## Live State")
     last_done   = _section(status, r"## Last Completed[^\n]*")
@@ -11799,6 +11985,8 @@ def dashboard_summary():
     return {
         "generatedAt": _dt.utcnow().strftime("%d %b %Y · %H:%M UTC"),
         "currentSession": current_session,
+        "sessionAsOf": session_asof,
+        "sessionBasis": session_basis,
         "nextSession": next_session,
         "liveState": live_state,
         "lastDone": last_done,
@@ -19350,6 +19538,9 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
         for ir in gone:
             if not dry_run:
                 conn.execute("UPDATE intro_requests SET status='expired' WHERE id=?", (ir["id"],))
+                # INTRO-HOLD-1: the buyer's email below says "You were not charged." With a
+                # hold in place that is only true if we actually return it here.
+                _release_intro_hold(conn, ir["id"], "request expired")
             res["resp_removed"] += 1
             if ir["buyer_email"]:
                 _mail(ir["buyer_email"], "We couldn\u2019t make this introduction",

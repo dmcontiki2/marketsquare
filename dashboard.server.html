@@ -1982,7 +1982,38 @@ function el(id){ return document.getElementById(id); }
 
 function populate() {
   // Header
-  el('session-badge').textContent = 'Session ' + DATA.currentSession;
+  // SESSION-COUNTER-1 (22 Aug 2026): the badge carries its own as-of date, so a
+  // frozen number is VISIBLY frozen. Before this, the badge read a number scraped
+  // by regex from the first "Session <n>" in a 329 KB prose file and sat on 155
+  // for three weeks while 20 sittings passed. A number alone can lie forever; a
+  // number beside its own date confesses the moment it stops moving. Grey +
+  // UNVERIFIED whenever the value did not come from the derived counter.
+  (function renderSessionBadge(){
+    var b = el('session-badge');
+    if (!b) return;
+    var n     = DATA.currentSession,
+        asOf  = DATA.sessionAsOf  || '',
+        basis = DATA.sessionBasis || '';
+    var stale = false, why = '';
+    if (basis !== 'derived') {
+      stale = true;
+      why = 'number scraped from prose, not derived (SESSION_COUNTER.json missing on server)';
+    } else if (!asOf) {
+      stale = true; why = 'counter carries no date';
+    } else {
+      var ageDays = (Date.now() - Date.parse(asOf)) / 86400000;
+      if (!isFinite(ageDays)) { stale = true; why = 'counter date unreadable'; }
+      else if (ageDays > 2)   { stale = true; why = 'counter last computed ' + Math.floor(ageDays) + ' days ago'; }
+    }
+    b.textContent = 'Session ' + (n || '\u2014') + (asOf ? ' \u00b7 as of ' + asOf.slice(0, 10) : '');
+    if (stale) {
+      b.style.background = '#64748b';
+      b.title = 'UNVERIFIED \u2014 ' + why;
+    } else {
+      b.style.background = '';
+      b.title = 'Derived by scripts/session_counter.py from session fragments \u00b7 ' + asOf;
+    }
+  })();
   el('gen-time').textContent = DATA.generatedAt;
 
   // VIZ-MAPS-2: Live State sidebar removed (unused; phone UX) — populate no longer touches it.

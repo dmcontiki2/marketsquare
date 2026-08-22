@@ -7320,7 +7320,8 @@ def _strip_py_comments(text):
 @entry("RG-0142", "The money path is IDEMPOTENT and STATE-GUARDED -- accepting one introduction "
                   "charges the buyer exactly once however many times the request arrives, a wallet "
                   "can never go negative, and no introduction can be declined after it was charged",
-       OPEN, scope="bea_main.py accept_intro + decline_intro (PUT /intros/{intro_id}/accept and "
+       LOCKED, fixed_on="2026-08-22",
+       scope="bea_main.py accept_intro + decline_intro (PUT /intros/{intro_id}/accept and "
                    "/decline) and the whole intro-charge class: every handler that writes a "
                    "negative-amount row to transactions must first check it has not already "
                    "charged for that object, and every status write must check the transition is "
@@ -7328,7 +7329,7 @@ def _strip_py_comments(text):
                    "shape. The correct pattern ALREADY EXISTS in this repo: estate_agents.py "
                    "guards its accept with 409 on a non-pending status and 402 below balance, "
                    "with tests. The flagship buyer path never got it.",
-       ref="HALT-MONEY-1, precipitated 22 Aug 2026 by the D-7 HALT run and UPHELD by adversarial "
+       ref="FIXED 22 Aug 2026 (INTRO-CHARGE-ONCE-1), David: 'Why cant we close it now then?' -- it was a code fix, and code fixes do not wait on anything reserved to him. accept_intro now runs one immediate transaction: it re-reads the row under the lock, refuses a settled or already-charged introduction with 409, refuses below 1T with 402, and writes through a CONDITIONAL UPDATE whose rowcount is the single source of truth -- so two concurrent accepts cannot both win, which an if-statement alone can never guarantee. decline_intro refuses to decline a charged introduction. PROVEN by scripts/prove_intro_charge_once.py, which replays the audit's own attack on a throwaway replica (16 checks): four accepts leave ONE intro_deduct row and a 0T wallet where the audit measured four rows and -3T, a 0T buyer is refused 402 with no money row written, and decline-after-accept is refused. It also asserts the guarded SQL is the text actually in bea_main.py, so the test cannot pass against drifted source. Hardening note: get_db() uses sqlite3's default isolation level, so BEGIN IMMEDIATE is attempted and tolerated if a transaction is already open -- the guarantee lives in the conditional UPDATE, not the lock. ORIGINAL FINDING: HALT-MONEY-1, precipitated 22 Aug 2026 by the D-7 HALT run and UPHELD by adversarial "
            "peer the same morning. Grade EXECUTED: the peer ran the REAL bea_main app under a "
            "FastAPI TestClient against a scratch DB -- four PUTs to /intros/1/accept returned "
            "200/200/200/200 with the balance walking 1 -> 0 -> -1 -> -2 -> -3 and four "
@@ -7443,12 +7444,13 @@ def rg_money_path_idempotent():
 @entry("RG-0145", "The wallet behaves the way the EULA PROMISES it behaves -- if the app tells a "
                   "buyer 1T is held at request and released on decline or expiry, the code holds "
                   "and releases it",
-       OPEN, scope="marketsquare.html EULA/terms wallet clause against bea_main.py create_intro, "
+       LOCKED, fixed_on="2026-08-22",
+       scope="marketsquare.html EULA/terms wallet clause against bea_main.py create_intro, "
                    "accept_intro, decline_intro and the expiry path. CLASS: any user-facing "
                    "promise about money -- holds, releases, refunds, expiries -- must have a "
                    "matching code path. A promise with no implementation is a misrepresentation, "
                    "not a bug.",
-       ref="HALT-PROMISE-1, found 22 Aug 2026 by the adversarial peer on the D-7 HALT run while "
+       ref="FIXED 22 Aug 2026 (INTRO-HOLD-1), same session as RG-0142, David: 'lets go for clear'. The wording was NOT changed -- it is legally load-bearing (the ECT Act s44 cooling-off argument rests on 'until delivery it is only held, not spent') and RUL-020 released the EULA as final. The CODE now keeps the promise: create_intro refuses below 1T with 402 and writes a real -1 'intro_hold' row, so the buyer sees the commitment in their balance immediately, exactly as they were told; accept_intro BURNS that hold with a zero-amount 'intro_burn' audit row instead of deducting a second time (the ledger stays append-only); decline_intro and the expiry sweep both call _release_intro_hold, which is a CONDITIONAL UPDATE on hold_released_at IS NULL -- releasing twice would MINT Tuppence, so the rowcount is the only authority and the money row is written only when that UPDATE claimed the row. The expiry release matters twice over: that sweep's email to the buyer already said 'You were not charged', which was only true once the hold was returned. Schema: migrations/030_intro_hold.py (tuppence_held, hold_released_at); intros created before it carry held=0 and take the legacy charge-on-accept path -- no money is retro-held from live wallets. PROVEN by scripts/prove_intro_hold.py, 22 checks on a throwaway replica: hold placed at request (3T->2T), burned once on delivery with exactly ONE negative row, released in full on decline (back to 3T) and on expiry, second release impossible, and a 0T buyer refused 402 rather than going negative. ORIGINAL FINDING: HALT-PROMISE-1, found 22 Aug 2026 by the adversarial peer on the D-7 HALT run while "
            "attacking RG-0142, and it is a DIFFERENT defect from idempotency. marketsquare.html "
            "tells the user that 1 Tuppence is 'committed (held) when the Buyer makes the request' "
            "and 'released in full if declined or expired'. There is no hold, no release and no "
@@ -8065,6 +8067,110 @@ def rg_map_chips_are_measured():
                           "health claims remain on the map cards"))
     return out
 
+
+@entry("RG-0154", "The dashboard session number is DERIVED from session evidence and carries its "
+                  "own as-of date -- it can no longer be a regex hit on a prose paragraph",
+       OPEN,
+       scope="GET /dashboard/summary in main.py and bea_main.py, SESSION_COUNTER.json, "
+             "scripts/session_counter.py, the dashboard badge, and the deploy manifest. "
+             "CLASS, not instance: this asserts the MECHANISM, not the number. Any future "
+             "session that reinstates a scrape of 'Session <n>' out of STATUS.md, or lets the "
+             "counter fall behind the fragments on disk, trips this red. The two previous "
+             "'permanent' fixes (139->141, 150->155) each corrected only the number and were "
+             "dead within one session precisely because no assertion guarded the mechanism.",
+       ref="SESSION-COUNTER-1, 22 Aug 2026, raised by David: the badge had read 'Session 155' "
+           "for three weeks and he was certain the true count had gone 'way past' it. He was "
+           "right -- the derivation puts it at 175, twenty sittings behind -- and the cause was "
+           "worse than staleness. There was never a counter. main.py:8545 ran "
+           "_re2.search(r'Session (\\d+)', status) against a 329 KB append-only prose file and "
+           "took the FIRST match, which sat at STATUS.md line 1650: a 1 Aug paragraph whose own "
+           "subject was 'SESSION COUNTER CORRECTED 150 -> 155'. The badge was pinned to a "
+           "sentence about the counter having previously frozen. Nothing anywhere incremented "
+           "anything, so freezing was the DEFAULT state and the number could only move when a "
+           "human hand-edited that paragraph. Fixed in two halves, both required: (1) DERIVE -- "
+           "scripts/session_counter.py computes the number from the status.d/ and changelog.d/ "
+           "fragments that STATUS-COLLISION-1 and CHANGELOG-COLLISION-1 already make the only "
+           "legal way to record a session, so the act that proves a session happened is the act "
+           "that advances the count; (2) DATE IT -- the badge renders 'Session N - as of "
+           "<date>' and greys to UNVERIFIED off a derived counter, because a bare number can "
+           "lie indefinitely while a number beside its own date confesses the moment it stops "
+           "moving. OPEN until the release carrying it reaches the server; the live half below "
+           "will pass and print READY TO LOCK the first run after deploy.")
+def rg_session_number_derived():
+    out = []
+
+    # ── source half: the old mechanism must not come back ───────────────────
+    for f in ("main.py", "bea_main.py"):
+        srcf = repo_file(f)
+        if srcf is None:
+            out.append((INFO, "%s not read (outside the repo)" % f))
+            continue
+        if "current_session = int(sm.group(1))" in srcf:
+            out.append((FAIL, "%s scrapes the session number out of prose again -- the exact "
+                              "line that pinned the badge to 155 for three weeks" % f))
+        if "_session_number" not in srcf:
+            out.append((FAIL, "%s has no _session_number() -- the derived path is gone" % f))
+
+    html = repo_file("dashboard.server.html")
+    if html is not None and "renderSessionBadge" not in html:
+        out.append((FAIL, "the badge no longer renders its as-of date -- a frozen number would "
+                          "again look identical to a live one"))
+
+    mf = repo_file(os.path.join("ops", "autodeploy", "deploy_manifest.txt"))
+    if mf is not None and "SESSION_COUNTER.json" not in mf:
+        out.append((FAIL, "SESSION_COUNTER.json is not in the deploy manifest -- the server "
+                          "would fall back to the prose scrape"))
+
+    # ── counter half: it must not have fallen behind the evidence ───────────
+    repo_n = None
+    cj = repo_file("SESSION_COUNTER.json")
+    if cj is None:
+        out.append((INFO, "SESSION_COUNTER.json not read (outside the repo)"))
+    else:
+        try:
+            d = json.loads(cj)
+        except Exception as ex:
+            d = None
+            out.append((FAIL, "SESSION_COUNTER.json is unparseable: %r" % (repr(ex)[:80],)))
+        if d:
+            repo_n = int(d.get("session", 0))
+            if d.get("basis") != "derived":
+                out.append((FAIL, "SESSION_COUNTER.json basis is %r, not 'derived' -- a "
+                                  "hand-set number is back" % d.get("basis")))
+            sc = os.path.join(REPO, "scripts", "session_counter.py")
+            if os.path.exists(sc):
+                rc = os.system('"%s" "%s" --check >%s 2>&1'
+                               % (sys.executable, sc, os.devnull))
+                if rc != 0:
+                    out.append((FAIL, "session_counter.py --check fails -- the counter has "
+                                      "fallen behind the fragments on disk (run it to see by "
+                                      "how many sittings)"))
+
+    # ── live half: what the badge actually serves ───────────────────────────
+    try:
+        s = _json("/dashboard/summary")
+    except ProbeOffline as ex:
+        out.append((INFO, "live /dashboard/summary not readable this run (%s)" % ex))
+        return out
+
+    basis = s.get("sessionBasis")
+    live_n = s.get("currentSession")
+    as_of = s.get("sessionAsOf") or ""
+    if basis != "derived":
+        out.append((FAIL, "live badge basis is %r -- the server is still scraping the number "
+                          "from prose (serving Session %s)" % (basis, live_n)))
+    if not as_of:
+        out.append((FAIL, "live badge carries no as-of date -- a frozen number is invisible "
+                          "again"))
+    if repo_n and isinstance(live_n, int) and live_n < repo_n:
+        out.append((FAIL, "live badge says Session %s, the evidence on disk says %s -- %d "
+                          "sitting(s) unrecorded on the server"
+                          % (live_n, repo_n, repo_n - live_n)))
+
+    if not [o for o in out if o[0] == FAIL]:
+        out.append((INFO, "session number is derived (repo %s, live %s, as of %s) and the "
+                          "badge dates itself" % (repo_n, live_n, as_of[:10])))
+    return out
 
 
 if __name__ == "__main__":

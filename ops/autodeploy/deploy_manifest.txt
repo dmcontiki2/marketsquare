@@ -75,6 +75,9 @@ estate_agents.py           | estate_agents.py
 
 # ── Dashboard docs (BEA parses these at GET /dashboard/summary) ──────────────
 STATUS.md                  | STATUS.md
+# SESSION-COUNTER-1 (22 Aug 2026): the badge's derived number. Ships WITH STATUS.md
+# because the endpoint reads it instead of regex-scraping 'Session <n>' out of prose.
+SESSION_COUNTER.json       | SESSION_COUNTER.json
 CHANGELOG.md               | CHANGELOG.md
 BACKLOG.md                 | BACKLOG.md
 AUDIT_PROGRESS.md          | AUDIT_PROGRESS.md

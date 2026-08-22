@@ -48,6 +48,12 @@ call "%PROJECT%\git_unlock.bat"
 :: covers the CHILD references INSIDE ms.js (tour maps etc.) before we commit.
 if defined PYEXE %PYEXE% "%PROJECT%\scripts\autobump.py"
 
+:: -- SESSION-COUNTER-1 (22 Aug 2026): recompute the session number from the
+::    status.d/changelog.d fragments BEFORE the compilers archive them, so the
+::    JSON this release ships is current. Replaces the prose regex that pinned
+::    the dashboard badge to 155 for three weeks.
+if defined PYEXE if exist "%PROJECT%\scripts\session_counter.py" %PYEXE% "%PROJECT%\scripts\session_counter.py" --quiet
+
 :: -- CHANGELOG-COLLISION-1 (2 Aug 2026): fold pending changelog.d/ fragments into
 :: -- CHANGELOG.md (the ONE writer) so the record rides this release commit. Sessions
 :: -- drop fragments, never rewrite CHANGELOG.md directly - see scripts/changelog_compile.py.

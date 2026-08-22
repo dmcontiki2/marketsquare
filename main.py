@@ -8510,6 +8510,37 @@ def _read_file(name: str) -> str:
     p = _PROJECT_ROOT / name
     return p.read_text(encoding="utf-8") if p.exists() else ""
 
+def _session_number(status_text: str):
+    """SESSION-COUNTER-1 (22 Aug 2026) -- the badge number, derived not scraped.
+
+    Was:  sm = _re2.search(r"Session (\d+)", status)
+    -- the FIRST match of the literal text "Session <digits>" anywhere in a
+    329 KB append-only prose file. It landed on STATUS.md line 1650, a 1 Aug
+    paragraph whose own subject was a previous freeze of this same counter, and
+    the badge sat on 155 for three weeks while 20 sittings went by. Nothing in
+    the codebase ever incremented anything; freezing was the default, not the
+    failure. Two earlier "permanent" fixes edited the number and left the
+    mechanism, so each lasted exactly one session.
+
+    Now: read SESSION_COUNTER.json, which scripts/session_counter.py derives
+    from the status.d/ and changelog.d/ fragments every session is required to
+    leave. Returns (number, as_of, basis). The as_of date and the basis both
+    reach the dashboard on purpose -- a number that carries its own date
+    confesses when it stops moving, and a fallback that is labelled a fallback
+    can never masquerade as a measured value.
+    """
+    try:
+        p = _PROJECT_ROOT / "SESSION_COUNTER.json"
+        if p.exists():
+            d = json.loads(p.read_text(encoding="utf-8"))
+            n = int(d.get("session", 0))
+            if n > 0 and d.get("basis") == "derived":
+                return n, str(d.get("computed_at", "")), "derived"
+    except Exception:
+        pass
+    sm = _re2.search(r"Session (\d+)", status_text)
+    return (int(sm.group(1)) if sm else 0), "", "prose-fallback"
+
 def _section(text: str, heading_re: str) -> str:
     m = _re2.search(heading_re + r"\n(.*?)(?=\n## |\Z)", text, _re2.DOTALL | _re2.IGNORECASE)
     return m.group(1).strip() if m else ""
@@ -8542,8 +8573,7 @@ def dashboard_summary():
     changelog = _read_file("CHANGELOG.md")
 
     # Parse STATUS.md
-    sm = _re2.search(r"Session (\d+)", status)
-    current_session = int(sm.group(1)) if sm else 0
+    current_session, session_asof, session_basis = _session_number(status)
 
     live_state  = _section(status, r"## Live State")
     last_done   = _section(status, r"## Last Completed[^\n]*")
@@ -8683,6 +8713,8 @@ def dashboard_summary():
     return {
         "generatedAt": _dt.utcnow().strftime("%d %b %Y · %H:%M UTC"),
         "currentSession": current_session,
+        "sessionAsOf": session_asof,
+        "sessionBasis": session_basis,
         "nextSession": next_session,
         "liveState": live_state,
         "lastDone": last_done,
