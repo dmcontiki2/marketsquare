@@ -7150,9 +7150,10 @@ def rg_google_consent_published():
 
 @entry("RG-0140", "AI example adverts are labelled as AI examples -- no shipped asset calls one "
                   "a SUPER ADVERT, and the detail pill says it is not a real listing",
-       OPEN, scope="ms.js, ALL FOUR renderers that paint the exemplar ribbon (browse lcard, "
-                   "Adventures renderAdvGrid, the listing detail pill, Local Market cards) "
-                   "-- repo AND the live-served build at the ?v= the live index references",
+       LOCKED, scope="ms.js, ALL FOUR renderers that paint the exemplar ribbon (browse lcard, "
+                     "Adventures renderAdvGrid, the listing detail pill, Local Market cards) "
+                     "-- repo AND the live-served build at the ?v= the live index references",
+       fixed_on="2026-08-22",
        ref="AI-EXAMPLE-1, David's ruling 22 Aug 2026 (RUL-038). The red ribbon said '★ SUPER "
            "ADVERT'. David's finding: a star plus the word SUPER reads as an ACCOLADE on a real, "
            "live listing -- so an AI-generated example advert looked like something a buyer could "
@@ -7166,7 +7167,7 @@ def rg_google_consent_published():
            "known failure mode -- RG-0014's own history is three passes that each fixed one "
            "renderer and left the others bare -- so this entry asserts ALL FOUR sites at once and "
            "asserts the ABSENCE of the old wording, which a fifth renderer copy-pasted from an "
-           "old one would trip. OPEN until the next frontend deploy ships the new ms.js -- the repo half passes now, the live half cannot until David ships. The moment this reports READY TO LOCK, promote it to LOCKED. STRENGTHENED same day (22 Aug, David): also asserts the ABSENCE of 'free for a real seller to claim'. The first cut of the pill branched on showcase and offered exactly that -- struck, because it implies a seller could claim THAT EXACT advert, and therefore that the advert already exists as a real thing. The whole point of the rename is to stop an exemplar reading as a real, transactable listing; a claim offer walks it straight back. Never weakened.")
+           "old one would trip. OPEN until the next frontend deploy ships the new ms.js -- the repo half passes now, the live half cannot until David ships. PROMOTED TO LOCKED 22 Aug 2026 after the deploy: live ms.js v516 carries all four labelled sites, the old wording absent. STRENGTHENED same day (22 Aug, David): also asserts the ABSENCE of 'free for a real seller to claim'. The first cut of the pill branched on showcase and offered exactly that -- struck, because it implies a seller could claim THAT EXACT advert, and therefore that the advert already exists as a real thing. The whole point of the rename is to stop an exemplar reading as a real, transactable listing; a claim offer walks it straight back. Never weakened.")
 def rg_ai_example_label():
     out = []
     LABEL = "AI EXAMPLE GENERATED ADVERT"
@@ -7212,8 +7213,9 @@ def rg_ai_example_label():
 
 
 @entry("RG-0141", "Every demo map carries the red DEMO tab, and it is NOT gated on the tester flag",
-       OPEN, scope="all 15 adventures_*_map.html demo pages + ts_demo_banner.js + the deploy "
-                   "manifest -- repo AND live",
+       LOCKED, scope="all 15 adventures_*_map.html demo pages + ts_demo_banner.js + the deploy "
+                     "manifest -- repo AND live",
+       fixed_on="2026-08-22",
        ref="DEMO-BANNER-1, David's ruling 22 Aug 2026 (RUL-038, second half). The demo maps had "
            "no page-level statement that they are demonstrations; the only right-edge tab was the "
            "gold REPORT tab, which is a TESTER instrument and is removed at Soft Launch. David's "
@@ -7224,7 +7226,7 @@ def rg_ai_example_label():
            "demo map loads it AND that the script never reads the tester flag or the tester "
            "check. Also asserts the ONE-DEPLOY rule for a new deployable file (a manifest line, "
            "never an scp) and RG-0025's first-party rule (no third-party host in the script). "
-           "New demo map with no DEMO tab = red the same day. OPEN until the next deploy places ts_demo_banner.js on the server; promote to LOCKED the run it reports READY TO LOCK.")
+           "New demo map with no DEMO tab = red the same day. OPEN until the next deploy places ts_demo_banner.js on the server; PROMOTED TO LOCKED 22 Aug 2026 after the deploy: /static/ts_demo_banner.js serves and mounts the tab, and the live ZA demo map loads it.")
 def rg_demo_banner_on_demo_maps():
     import glob
     out = []
