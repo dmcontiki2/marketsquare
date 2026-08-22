@@ -116,7 +116,8 @@ REFLECTIONS = {
    # forbidden clause. (b) the DEMO tab exists, ships, and is NOT on the tester lane:
    # ts_report.js is removed at Soft Launch and DEMO must survive that day.
    ("RULINGS.md", ["AI EXAMPLE GENERATED ADVERTS, AND A DEMO BANNER"], []),
-   ("ms.js", ["AI EXAMPLE GENERATED ADVERT", "not a real listing"], ["SUPER ADVERT"]),
+   ("ms.js", ["AI EXAMPLE GENERATED ADVERT", "not a real listing"],
+                ["SUPER ADVERT", "free for a real seller to claim"]),
    ("ts_demo_banner.js", ["ts-demo-tab"], ["fault_report"]),
    ("adventures_za_map.html", ["ts_demo_banner.js"], []),
    ("ops/autodeploy/deploy_manifest.txt", ["ts_demo_banner.js"], []),

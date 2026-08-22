@@ -6,10 +6,15 @@ plus the word SUPER reads as an accolade on a genuine listing; there is no selle
 an exemplar, so an Introduction bought against one introduces the buyer to nobody. All
 four ms.js renderers that paint the ribbon — browse `lcard`, Adventures `renderAdvGrid`,
 the listing detail pill, Local Market cards — now read **AI EXAMPLE GENERATED ADVERT**,
-no star. The detail pill leads with *not a real listing*:
+no star. The detail pill leads with *not a real listing*, in ONE wording for every exemplar:
 
-* showcase: "not a real listing; an AI-made example, free for a real seller to claim"
-* otherwise: "not a real listing; an AI-made example of the benchmark for this category"
+> AI EXAMPLE GENERATED ADVERT — not a real listing; an AI-made example of the benchmark
+> for this category
+
+The showcase branch that read *"free for a real seller to claim"* was removed the same
+day at David's instruction: it implied a seller could claim **that exact advert**, and
+therefore that the advert already exists as a real thing. One wording, no branch, so the
+claim implication cannot come back through the showcase path.
 
 The `super_example` DB column keeps its name — this is a labelling change, not a
 data-model change, which is why RG-0014 (does the ribbon render at all) is untouched by
