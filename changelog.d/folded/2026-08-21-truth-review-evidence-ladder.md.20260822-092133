@@ -1,0 +1,19 @@
+
+**The review's own verification pass then practiced what it preaches — probed, found four
+live items, fixed all four in-session:**
+1. `.git/HEAD.lock` stranded >60 min (RG-0015 red) — healed via `scripts/git_unlock.py`
+   (rename-aside, GIT-LOCK-3 lane); 11 tmp_obj orphans await the host sweep as designed.
+2. RG-0114 red: the maintenance-agent guard had been red on 10 consecutive scans — against
+   CORRECT code. `test_auto_reply_gate_not_gmail_only` pinned the SPELLING
+   `os.getenv("RESEND_API_KEY")` that ENVKEY-1 (19 Aug) rightly converted to
+   `ai_provider.envkey()`. Assertion corrected to the property (envkey path + Gmail
+   fallback, bare form banned) — RG-0073's lesson applied, not tolerated. Suite 5/5.
+3. PG-readiness ratchet red, strftime 15→16: the 16th was `_utc_now()`'s own DOCSTRING
+   quoting the counted pattern — the comment-trap paid for on 15 and 19 Aug, walked into a
+   third time. Reworded; the docstring now warns against naming the pattern. Ratchet PASS at 15.
+4. RG-0135 + RG-0136 were printing READY TO LOCK — promoted OPEN → LOCKED per the standing
+   promotion rule (anchored 1-line edits, py_compile clean).
+
+Final board after fixes: **129 entries · 126 holding · 0 REGRESSED · 3 open · exit 0.**
+Pre-deploy scan verdict REVIEW, danger list empty. Backups beside every touched file
+(`*.bak-20260821-19*`).

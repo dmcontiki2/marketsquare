@@ -1,3 +1,442 @@
+## 2026-08-22 — Pre-soft-launch third-party sweep: an external watcher built, and two unowned facts given machinery
+
+**7 days to soft launch (Fri 29 Aug) · verdict AMBER.** Unattended sweep. All guards green:
+ledger **exit 0** (132 entries, 0 regressed), `rulings_check` **39/39, 0 FAIL**, `eula_sync --check`
+**in sync** (117,749 B — EULA v1.14 is live). Live probes: `/health` ok/1.3.1, `/auth/providers`
+`{google:true,apple:false}`, `/auth/oauth/google/start` **302 → Google with a real client_id**,
+`/auth/oauth/apple/start` **503** (RUL-030 enforcing itself), `/id-verify/status` **available:true,
+price_t 1**, TLS **32 days** (24 Sep).
+
+### UPTIME-EXTERNAL-1 — the outage watcher, built rather than handed back as a vendor menu
+
+`OPEN_LOOPS` **L8** had sat since 14 Aug with the next action "David names a service". That is a
+technical decision wearing a management costume — exactly what **RUL-037** ends. Decided and built
+this run: a **Cloudflare Worker on a 5-minute cron trigger**.
+
+- **No new vendor** — Cloudflare already carries DNS, CDN, R2 and the inbound email worker.
+- **No new money** — cron triggers and 100k requests/day are on the free plan; 288 invocations/day.
+- **The right vantage** — every instrument we own today runs *on the box it watches* (ops sweep, BIT,
+  subscription monitor, the 01:30 cron) or *on David's PC* (the 06:30 watch). A dead box or a closed
+  laptop is a blind day **by construction**; it already happened on 6 Aug. This one is on the edge.
+- Rejected, with reasons: paid uptime SaaS (money + a vendor decision for something we can do free),
+  a systemd timer on the box (dies with the thing it watches), GitHub Actions (a 5-min cron exceeds
+  the free minutes on a private repo — it would start billing).
+
+Behaviour: `GET /health` expecting **200 *and* `{"status":"ok"}`** (a 200 with a sick body is still
+down); **two consecutive failures** alert, at most one repeat per 30 min; recovery alerts once with
+the outage duration; and a **daily heartbeat**, because a monitor that died in July is
+indistinguishable from a site that is fine. State in Workers KV, degrading honestly to
+alert-without-suppression if the binding is missing — it can never fail *silently*.
+
+Files: `ops/cloudflare/uptime_monitor_worker.js` (186 lines, ESM syntax-checked),
+`ops/cloudflare/uptime_wrangler.toml`, `ops/cloudflare/UPTIME_MONITOR.md` (runbook + a proof step
+that exercises the *alert path*, not just the probe). Deploy is three commands and is sequenced
+**after `ROTATE_SECRETS.bat`** so the fresh Resend key goes in, never the burnt one.
+
+### Three new ledger entries — facts that lived only in conversation now have assertions
+
+- **RG-0138** (OPEN) — an outage is noticed by something that is neither the server nor David's
+  desktop. Source half passes on inspection; stays red until `UPTIME_DEPLOYED.md` exists and its
+  heartbeat is under 7 days old.
+- **RG-0137** (OPEN) — *DOMAIN-LIFELINE-1.* The registrar, expiry and auto-renew state for
+  trustsquare.co were recorded in **no file in this repo**. Every other dependency has an owner; the
+  one that takes the site, the mail domain, the OAuth redirect URIs and the payment webhooks down
+  *together* had none. A lapsed domain is not an outage you debug, it is one you learn about from a
+  customer. DNS is Cloudflare (`ainsley`/`koa`, probed) which narrows but does **not** prove the
+  registrar — a full-zone setup looks identical either way. The entry reads four `DOMAIN_*` fields in
+  `THIRD_PARTY_LAUNCH_REGISTER.md` and fails while they are UNKNOWN, while auto-renew is off, within
+  60 days of expiry, or if the record goes 180 days unverified.
+- **RG-0139** (OPEN) — *ONETAP-PUBLISH-1.* The Google OAuth **consent screen** may still be in
+  Testing, where only listed test users can sign in. A Testing-mode app 302s to Google identically to
+  a published one, so **no probe we own can tell them apart** — it would present for the first time
+  as "sign-in is broken" on soft-launch morning. Live half asserted (`/auth/providers`); record half
+  demands a dated `GOOGLE_CONSENT_SCREEN: PUBLISHED (verified YYYY-MM-DD)` line.
+
+### Register corrected where the file disagreed with the code (the 21 Aug rule, applied again)
+
+- **"Resend's health probe 422s every 5 min on a malformed sender."** Not a defect. `_infra_resend()`
+  (INFRA-RESEND-1, 22 Jul) posts a deliberately **empty body** and treats **422 as the healthy
+  answer** — auth passed, nothing sent — because the send-scoped production key 401s on `/domains`
+  while sending perfectly. 401/403 is the failure signal and is mapped to `fail`. No cry-wolf, nothing
+  to fix. The register had merged it with the genuine 7 Aug incident (a malformed `from` losing real
+  mail), which was class-fixed the same day as RESEND-FROM-1.
+- **"Nothing on disk says what replaces Fable when RUL-013 expires on 1 Sep."** Wrong. RUL-013 names
+  the successor and `ai_provider.py` already wires it: `TASK_MODEL["design"] = "gpt-5.6-sol"`,
+  Scaleway standby. What expires is the *subscription*, which is a spend question, not a gap.
+- **"Which AI lane is serving?"** Resolved rather than restated: OpenAI base, no Anthropic server key
+  by decision (SPEND-GUARD-1), failover proven in the decision layer 21 Aug (RG-0128). The residue is
+  RG-0132, which is tracked machinery.
+
+`OPEN_LOOPS.md` **L8** rewritten to match. Deploy debt unchanged and named: 3 unpublished commits
+(`f2da615`, `c2ab57b`, `3838142`) plus uncommitted 21 Aug edits — DW-058, David's Wed 27 Aug action.
+
+## 2026-08-22 — SECRET ROTATION: nine credentials replaced, and the exposure register found to have been under-counting for fifteen days
+
+David drove the DW-029 / DW-057 rotation attended, one step at a time. Nine credentials
+rotated and PROBED, two structural defects found and fixed, one credential class
+deliberately left dark, and the inventory given machinery so the count can never drift again.
+
+### Rotated and proven (not "written" — proven at the point of use)
+
+`ROTATE_SECRETS.bat` did the five self-issued ones (MS_ADMIN_KEY, MS_DEPLOY_KEY,
+MS_MAINT_KEY, MS_ADMIN_PASSWORD, LAUNCH_CODE_SECRET) and moved them out of inline
+`Environment=` lines into `/etc/marketsquare/secrets.env` (0600) — the structural half of
+the fix, since `systemctl cat` printing them is how they leaked.
+
+- **RESEND_API_KEY** — new key installed, both old keys deleted at Resend. PROBED: the
+  empty-body send probe returns **422** (auth passed, nothing sent).
+- **PAYSTACK_SECRET_KEY / PAYSTACK_WEBHOOK_SECRET** — found to be the SAME credential:
+  Paystack signs webhooks with the live secret key. So the burnt value was not
+  "someone could forge a webhook", it was a credential that can charge cards and move
+  money. Rolled and installed. PROBED: `GET /transaction/totals` returns **200**.
+- **MS_JWT_SECRET** — never in `rotate_secrets.py`'s set, and it signs every auth token
+  the app issues: holding it means forging an admin JWT. Rotated
+  (`ec305410` → `7fc37454`), moved out of the box-wide file into `secrets.env`, with
+  automatic rollback armed. `/health` 200 after restart; the reviewer cookie was
+  re-minted in the same session because rotation invalidates it.
+
+### Two structural defects, both found by probing rather than reading
+
+**1. `/etc/environment` was mode 0644 — world-readable — holding nine live secrets.**
+`HETZNER_S3_ACCESS_KEY`, `HETZNER_S3_SECRET_KEY`, `ANTHROPIC_API_KEY`, `COMMAND_SECRET`,
+`EMAIL_INBOUND_SECRET`, `GMAIL_APP_PASSWORD`, `MS_JWT_SECRET` and both Paystack values.
+The `msdeploy` account has a login shell, so the reader was real, not theoretical. Now
+0600, with `MS_JWT_SECRET` and `GMAIL_APP_PASSWORD` removed from it entirely.
+**The exposure inventory in DW-029/DW-057 listed eight credentials; the same
+`systemctl show -p Environment` dump printed these nine too.** The register had been
+under-counting the leak for fifteen days.
+
+**2. The Paystack rotation reported success while production was down.** The new key was
+written to a correct 0600 drop-in, the service restarted and reported `active` — and the
+RUNNING PROCESS still held the old, just-revoked key, because `/etc/environment` is loaded
+via `EnvironmentFile` and won on precedence. Disk said rotated, Paystack said 401, card
+payments were down and nothing reported it. Fixed by `scripts/fix_paystack_env.py`, which
+walks the unit, every drop-in, every referenced `EnvironmentFile` and the known env files,
+puts them all on one value, and reads back from `/proc/<pid>/environ`.
+
+### Left dark on purpose: the Gmail SMTP fallback
+
+`GMAIL_APP_PASSWORD` is REMOVED, not rotated. The fallback sends sign-in links from a
+personal Gmail account, which is a deliverability and blast-radius problem independent of
+today's leak. Resend is the primary sender and is proven, and the code degrades honestly
+(it logs and drafts rather than pretending to send). Restoring a fallback is a
+post-rotation job and should not come back as a personal account. `GMAIL_ADDRESS` was
+restored explicitly to the drop-in so the app stops depending on a hardcoded default.
+
+**Incident inside the rotation, recorded because it cost real risk:** David pasted his
+Google ACCOUNT password (not an app password) three times — the tell was there in his own
+words (chosen by him, starts with a capital, 15 characters) and Claude read it as a
+transcription slip for three round trips instead of asking what screen he was reading.
+SMTP code 534 was Google saying "that is an account password" the whole time. The value
+reached the server and was passed as a command-line argument, briefly visible in the
+process list to `msdeploy`. Purged from the drop-in and from root's shell history
+(`scripts/purge_gmail_password.py`); changing the Google account password is David's call
+and is recorded in the register.
+
+### New machinery
+
+- **`SECRETS_REGISTER.md`** — every credential, its holder, its status
+  (ROTATED / BURNT / REMOVED / PUBLIC / UNKNOWN) and a dated verification. Ten are still
+  BURNT and say so.
+- **RG-0146 (OPEN)** — the register is current and nothing in it is still BURNT. Honestly
+  red today; it goes green when the remaining ten are done.
+- **RG-0147 (LOCKED, 22 Aug)** — a credential is verified where it is USED, never from the
+  file it was written to. Born from the Paystack outage above.
+- Tooling, all logging to files Claude reads directly so nothing depends on David pasting
+  a window that may close: `fix_paystack_env.py`, `rotate_jwt_secret.py`,
+  `audit_env_file.sh`, `check_email_keys.sh`, `check_resend_live.sh`, `diag_gmail.py`,
+  `install_gmail_password.py`, `purge_gmail_password.py`.
+
+### Still burnt — the rotation is NOT finished
+
+`HETZNER_S3_ACCESS_KEY` + `HETZNER_S3_SECRET_KEY` (read AND delete your backups),
+`ANTHROPIC_API_KEY`, `CF_CACHE_TOKEN`, `COMMAND_SECRET`, `EMAIL_INBOUND_SECRET`,
+`RELAY_INBOUND_SECRET`, `TRAVELPAYOUTS_TOKEN`, `NUMISTA`/`JUSTTCG`, and `MS_DEPLOY_TOKEN`
+(status UNKNOWN). `FOUNDERS_ID_SALT` needs a decision — rotating it invalidates every
+existing ID hash. `MS_API_KEY` is public by design and needs nothing.
+
+Ledger after the session: **no regressions**; every LOCKED fix holding.
+
+## 2026-08-22 — maintenance-loop (B2b brain, shadow run 05:33Z)
+
+**Quiet run — no faults in the queue, nothing shipped.** Register rows in → gate-passing
+commits out; with zero rows in, the honest output is a report, not a change.
+
+- **Fault queue (live, `GET /admin/faults`, X-Maint-Key):** new 0 · triaged 0 ·
+  fix-shipped 0 · rejected 0 · verified 26 · closed 7. Nothing to bin, nothing to fix,
+  no Path A/Path B routing decisions owed.
+- **Shadow agent:** `MS_BEA_URL=https://trustsquare.co python3 scripts/maintenance_agent.py`
+  ran in the FOREGROUND (BRAIN-DEPS-2) and completed in ~15 s. Mode
+  `SHADOW (kill switch OFF)`, phase postlaunch, trust-core GUARDED, brain KEYED:anthropic.
+  0 seen, 0 acted. Report: `.maint_agent/run_20260822T053356Z.json`.
+- **Heartbeat PROBED, not assumed:** `GET /dashboard/maint` returns this run —
+  `run 2026-08-22T05:33:56Z`, `received_at 2026-08-22T05:34:12Z`, `armed false`,
+  `brain_keyed true`. The endpoint now answers ANONYMOUSLY (no ts_review cookie needed),
+  so migration 018 is on the box — the task note that it still needs the cookie is stale.
+- **Ledger both passes GREEN:** `RESULT: every locked fix is holding. 11 known defect(s)
+  still open.` (exit 0) before and after. No LOCKED entry red, so no regression was the
+  session's top item.
+- **Escalation brief:** `scripts/escalation_brief.py` → "no escalations in the last 24h --
+  no brief written". Nothing for David.
+
+### Finding worth the next session's attention — reviewer-lane budget spent by the ADMIN lane (owes a ledger entry)
+
+Not a fault-queue item; found while probing the heartbeat. Stated at its evidence grade.
+
+- **PROBED 05:35Z:** `POST /review/login` with the code in `.secrets/review_code.txt` →
+  **429 "Too many failed attempts. Try again in 2m 34s."**
+- **PROBED 05:37:57Z:** the SAME code → **200, token minted (151 chars, 365 d)**. So the
+  on-disk reviewer code is VALID — the 429 was not a stale credential, and the success
+  cleared the counter (ADMIN-NOLOCK-2 change 2 behaving as designed).
+- **READ:** `Records/FORENSIC_C1C2_BRIEF.md` lines 92/120 — the concurrent D-7 forensic
+  Cycle 2 probed **`/admin/login`** with 7 wrong credentials to a 429, same morning, same
+  egress IP. It records no `/review/login` probe.
+- **READ:** `bea_main.py` (HEAD and worktree both carry ADMIN-NOLOCK-2) separates the
+  buckets — `_review_attempts` for the reviewer lane, its own counter for admin — and
+  counts FAILURES only.
+
+**The discrepancy:** a *valid* reviewer code was refused as "too many failed attempts"
+while the only recorded failures that morning were on the ADMIN door. If the live box
+shared the bucket, RG-0134's separation half has rotted in production even though the
+source is right and the ledger's source-side assertion passes green. The innocent
+alternative — an unrelated wrong code hit `/review/login` inside that window — is possible
+but unevidenced.
+
+**Not settled, and deliberately not settled here.** The decisive probe is: spend one WRONG
+credential on `/admin/login`, then immediately present the VALID reviewer code to
+`/review/login`; refusal proves a shared bucket. That spends David's admin-door lockout
+budget with him absent, which RUL-027 reserves to him — an unattended session must not.
+
+**Owes a regression-ledger entry** (LIVE half of RG-0134: a valid credential in one lane is
+never refused for failures in another). NOT written this session: `scripts/regression_ledger.py`
+had 201 uncommitted lines from the in-flight forensic session (RG-0142/0143/0144) at 05:35Z,
+and appending to a file another session is actively editing is the CHANGELOG-COLLISION-1
+failure class. Next session that owns the ledger file should add it.
+
+_Nothing pushed, nothing deployed — NIGHTLY-SHIP-1 owns that lane._
+
+## 2026-08-22 — D-7 HALT verification pass: the double-charge proven, and a placebo breaker found
+
+Second HALT pass over the morning's consolidated launch verdict. It deliberately did NOT re-run the
+three-cycle audit that completed at 07:22 — a second divergent report is the between-sessions blind
+spot the machinery exists to prevent. It re-PROBED the verdict live and pushed the stress lane further.
+
+- **Re-verification (07:25 SAST).** /health, /flags, /auth/providers, /dashboard/bit, /id-verify/status
+  and /dashboard/summary all re-probed; regression_ledger.py and rulings_check.py re-run. Every live
+  claim in the 07:22 report holds. The anonymous posture leak was reproduced. B4 stays NOT MEASURED
+  (/admin/ai-spend/summary still 401 anonymously). Drift recorded: rulings 39 -> 40, ledger open
+  defects 3 -> 8 (RG-0137..0141 landed after the report closed; RG-0140 and RG-0141 are
+  customer-facing on the LIVE build and belong on the launch board).
+
+- **B2 raised READ -> EXECUTED.** accept_intro's exact SQL sequence was replayed against a throwaway
+  SQLite replica (no production data, no production box, per the HALT safety boundary): 1T -> accept
+  -> 0T -> accept again -> -1T -> four accepts -> -3T, four intro_deduct rows for ONE introduction.
+  The handler never tests the status/tuppence_charged flags it is about to set, and there is no floor
+  at zero. Operating limit one accept, destruct limit two.
+
+- **NEW weak link, missed by all three cycles: the automatic safe-state response is a placebo.** All
+  three flags in the BIT Mitigator's SAFE_FLAGS (auth_fail_closed, tuppence_burn_enabled,
+  ai_example_enabled) appear in bea_main.py only at the schema, migration, /flags exposure tuple,
+  write model and read-back — never at a decision site — and neither ms.js nor marketsquare.html
+  reads any of them. The mitigator flips the flag, journals it, reports the S1 mitigated, and the app
+  carries on unchanged. The detection layer is real (B-NEG-AUTH is live and passing); the mitigation
+  is decorative. Worst case: tuppence_burn_enabled promises "you will not be charged in the
+  meantime" and stops no charging — the very lever an operator would pull during a double-charge.
+
+- **Hardened: three OPEN ledger assertions**, each written as a class, not an instance.
+  RG-0142 the money path is idempotent and a wallet can never go negative (source assertion by
+  design — proving it live would mean charging a real buyer twice). RG-0143 every flag the BIT
+  Mitigator may flip is actually read by the app. RG-0144 the public dashboard never publishes which
+  defences are down. Ledger: 137 assertions, exit 0, every LOCKED fix holding, 11 open.
+
+- **Verdict unchanged: HOLD.** Hardening and Hack-proofness stay RED; Robustness and Reliability are
+  weaker-evidenced AMBERs than before. Across four independent passes no verdict has moved upward.
+  Deliverables: FORENSIC_AUDIT_D7_VERIFICATION — nice.docx and FORENSIC_HALT_VERIFICATION_BOARD.html
+  (indexed into Projects\Visuals). Reserved to David: secret rotation, the deploy carrying these
+  fixes, the gate/WAF posture ruling, and the launch go/hold call.
+
+- **Adversarial check — both new findings UPHELD and their grades RAISED.** A fresh peer given one
+  instruction (break them) ran the REAL bea_main app under a FastAPI TestClient against a scratch DB:
+  four PUTs to /intros/1/accept returned 200/200/200/200, balance 1 -> 0 -> -1 -> -2 -> -3, four
+  intro_deduct rows for one introduction, full middleware stack running. It then wrote the mitigator's
+  FULL safe state into the DB and charged again: 200 OK, a fifth deduct row. It also confirmed the
+  placebo finding against the LIVE-served 1.12 MB ms.js (zero occurrences of the three flags) and
+  closed the "wrong entrypoint" defence -- the manifest ships bea_main.py AS main.py.
+  Sharper still: estate_agents.py ALREADY has the correct guards (409 non-pending, 402 below balance)
+  with tests -- the house pattern was written, tested and never applied to the flagship buyer path;
+  and create_intro takes no hold and never checks balance, so a 0T buyer goes negative on the FIRST
+  accept, no retry needed.
+
+- **Two further defects in the same class.** decline_intro writes status='declined' with no transition
+  check, so a decline-after-accept leaves tuppence_charged=1 with no refund row (folded into RG-0142).
+  And the shipped EULA tells a buyer 1T is "committed (held) when the Buyer makes the request" and
+  "released in full if declined or expired" -- there is no hold, no release and no balance check at
+  request time anywhere in the code. Fixing idempotency does not close it. New entry **RG-0145**;
+  how it resolves (implement the hold, or change the wording) is David's call, not Claude's.
+
+- **The assertions were wrong twice, and were FIXED the same session, not weakened.** The peer found
+  three false-red and three false-green paths in the entries as first written. Worst false-red:
+  RG-0144 read the payload through _get(), which transparently retries a 401/403 with the reviewer
+  cookie -- so gating the endpoint behind auth (one of the two right answers) would have kept it red
+  forever and pushed a later session to weaken it; it now checks anonymous status via _status() first
+  and broadens the banned set from six literal words to patterns. Worst false-green appeared on the
+  NEXT run: RG-0142's broadened token list let accept_intro's own UPDATE ... SET tuppence_charged=1
+  satisfy the check for code that READS that flag. Guards now match only control flow (if/elif/assert/
+  early return), never SQL handed to conn.execute. RG-0143 likewise strips comments, detects the
+  /flags exposure line structurally, and treats an empty SAFE_FLAGS as a PASS (removing a flag is one
+  of the two sanctioned fixes and must not read as red). Every correction is written into the entry's
+  own ref. Ledger: 138 assertions, exit 0, every LOCKED fix holding, 12 open.
+
+## 2026-08-22 — Launch-readiness forensic audit, Cycle 1 (HALT pass)
+
+Ran Cycle 1 of the three-cycle launch-readiness forensic audit against the live site as the D-7
+gate evidence base (soft launch 29 Aug, full 1 Sep — RUL-001). Framed as HALT: over-stress each
+dimension to precipitate the weak link, record operating/destruct limits, harden.
+
+- **Scoreboard: 2 RED · 6 AMBER · 2 GREEN.** RED = Hardening + Hack-proofness, both from ONE root:
+  DW-057/DW-029 exposed secrets still unrotated while the gate + WAF are effectively down (probed:
+  app shell, live /listings and /dashboard/summary all 200 anonymously). 15 Aug rule → HOLD
+  indicated; the launch ruling is David's.
+- **Probe pass:** /health ok v1.3.1, /dashboard/bit 8/8, 3 AI lanes live, rulings 39/39, predeploy ok.
+- **Ledger regression healed:** RG-0015 tripped RED (stranded .git/index.lock + HEAD.lock >60 min);
+  healed via scripts/git_unlock.py, ledger re-run clean (129 entries, 126 holding, 0 regressed, 3 open).
+- **HALT security:** app auth is hard — no SQL injection, no enumeration, no limit-exhaustion, fails
+  closed (POST /intros → 401), forge endpoints 404. IL-01 (/tuppence/balance?email=) now 401 —
+  the 15 Aug launch-blocker is CLEARED. The destruct limit is the burnt credentials in front, not the code.
+- **HALT economics:** profitable at 60/600/6000 even under 2× churn + 40% demand drop + 15% FX +
+  vendor reprice at once; break-even ~25–30 sellers. Weak link is revenue realization, never cost.
+- **Server capacity NOT MEASURED at launch scale** — Cloudflare edge 403s synthetic non-browser load;
+  won't bypass edge protection to stress prod. Honest RG-0133 answer.
+- Deliverables: FORENSIC_AUDIT_CYCLE1 — nice.docx + FORENSIC_READINESS_BOARD_CYCLE1.html (indexed to Visuals).
+- Cycle 3 sized at $0: ~$0.26/lens ceiling; six lenses ≈ $1.00–1.60 total. Paid call awaits David's approval.
+
+## 2026-08-22 — Launch-readiness forensic audit, Cycles 2+3 + consolidated verdict
+
+Completed the three-cycle launch-readiness forensic HALT audit (D-7 gate evidence base).
+
+- **Consolidated verdict: HOLD.** Board 2 RED · 8 AMBER · 0 GREEN. 15 Aug rule → any RED at D-7 =
+  hold declared today; launch ruling is David's.
+- **Cycle 2 (fresh Fable doctoral peer):** overturned two Cycle-1 greens — Profitability GREEN→AMBER
+  (break-even recomputed at ~49–103 sellers under realistic demand, not 25–30) and Reliability
+  GREEN→AMBER (no external uptime monitor, fail-open overuse). Found /dashboard/summary leaks the
+  security posture ("WAF allowlist DISABLED, origin gate the only guard" + CPX32 sizing) to any
+  anonymous caller — confirmed PROBED.
+- **Cycle 3 (OpenAI GPT-5.6, second vendor, $0.87):** found accept_intro is NON-IDEMPOTENT —
+  repeated/retried PUT /intros/{id}/accept inserts another -1 intro_deduct every call, no guard on
+  prior status/tuppence_charged, no idempotency key, no balance floor (bea_main.py 5740–5748,
+  CONFIRMED on disk). Neither Claude cycle caught it. Also: live AI spend ceiling unverified (code
+  supports uncapped when 0), KYC ID-doc routing to active AI provider (POPIA/GDPR) + 120s event-loop
+  block, pre-auth wallet-oracle concern.
+- **Cleared/mitigated (PROBED):** IL-01 now 401 (authenticated); account_binding live ON; core app
+  auth holds every probed attack (injection/enum/exhaustion/fail-closed); git-lock ledger regression
+  healed.
+- **Recommended LOCKED ledger entries (for the session that ships the fixes):** (1) accept_intro
+  replay charges once; (2) /dashboard/summary carries no infra/WAF posture for anonymous callers;
+  (3) live AI platform ceiling is nonzero. Reserved to David: GO/HOLD ruling, secret rotation,
+  shipping B2/B3 fixes (deploys), scope/date change.
+- Deliverables: FORENSIC_AUDIT_CYCLE1/CYCLE2_PEER/CONSOLIDATED — nice.docx + two colour-coded boards
+  (indexed to Visuals). Peer reports: Records/PEER_REVIEW_2026-08-22-*.md.
+
+## 2026-08-22 — AI EXAMPLE GENERATED ADVERTS + the red DEMO banner (RUL-040)
+
+**AI-EXAMPLE-1 — the exemplar ribbon says what the thing is.** David: the "★ SUPER
+ADVERT" label "still looks like real live listings to be bought with an Intro". A star
+plus the word SUPER reads as an accolade on a genuine listing; there is no seller behind
+an exemplar, so an Introduction bought against one introduces the buyer to nobody. All
+four ms.js renderers that paint the ribbon — browse `lcard`, Adventures `renderAdvGrid`,
+the listing detail pill, Local Market cards — now read **AI EXAMPLE GENERATED ADVERT**,
+no star. The detail pill leads with *not a real listing*, in ONE wording for every exemplar:
+
+> AI EXAMPLE GENERATED ADVERT — not a real listing; an AI-made example of the benchmark
+> for this category
+
+The showcase branch that read *"free for a real seller to claim"* was removed the same
+day at David's instruction: it implied a seller could claim **that exact advert**, and
+therefore that the advert already exists as a real thing. One wording, no branch, so the
+claim implication cannot come back through the showcase path.
+
+The `super_example` DB column keeps its name — this is a labelling change, not a
+data-model change, which is why RG-0014 (does the ribbon render at all) is untouched by
+it and stayed HOLDING. Ribbon type is 8.5px with `line-height` and a `max-width` so the
+longer text wraps rather than clips on the 2-up mobile grid.
+
+**DEMO-BANNER-1 — a page-level DEMO label on the demo maps.** New first-party
+`ts_demo_banner.js` mounts a red vertical **DEMO** tab in the right-edge slot the gold
+REPORT tab uses, on all 15 `adventures_*_map.html` pages. Tapping it explains, in plain
+words, that the routes, adverts and prices on the page are AI-generated examples that
+cannot be bought.
+
+The two tabs are deliberately different lanes. REPORT is a tester instrument, gated on
+the server flag and removed at Soft Launch when customer complaints take over. DEMO is
+ungated, is for customers, and STAYS — it measures the REPORT tab at runtime and sits
+below it while it exists, then self-centres in the slot the moment it is gone. No second
+change is needed on soft-launch morning, and nothing about removing REPORT can take the
+honesty label with it.
+
+**Ledger.** RG-0140 (all four renderers labelled, old wording absent, pill says "not a
+real listing") and RG-0141 (every demo map loads the tab; the tab never reads the tester
+flag; the manifest ships it; no third-party host) are OPEN — their repo halves pass now,
+their live halves cannot until the next deploy. They flip to LOCKED the run they report
+READY TO LOCK. RG-0014's title was relabelled and its ref annotated; its assertion is
+unchanged and not weakened.
+
+**Proof it behaves at Soft Launch.** `scripts/demo_banner_selftest.js` runs the real script
+under a DOM shim and asserts it mounts red, is labelled DEMO, sits below a present REPORT
+tab, and re-centres in the slot when REPORT is removed — the soft-launch morning behaviour,
+tested before it happens rather than discovered on the day.
+
+**Also fixed in passing:** the 15 demo maps referenced `ts_report.js` at two different
+cache-busters (`?v=5` on eleven, `?v=6` on four) — a page pinned to a stale build of the
+fault reporter. All 15 are now on `?v=6`.
+
+**Files:** ms.js · ts_demo_banner.js (new) · adventures_*_map.html ×15 ·
+ops/autodeploy/deploy_manifest.txt · scripts/regression_ledger.py ·
+scripts/rulings_check.py · RULINGS.md (RUL-040)
+
+**The review's own verification pass then practiced what it preaches — probed, found four
+live items, fixed all four in-session:**
+1. `.git/HEAD.lock` stranded >60 min (RG-0015 red) — healed via `scripts/git_unlock.py`
+   (rename-aside, GIT-LOCK-3 lane); 11 tmp_obj orphans await the host sweep as designed.
+2. RG-0114 red: the maintenance-agent guard had been red on 10 consecutive scans — against
+   CORRECT code. `test_auto_reply_gate_not_gmail_only` pinned the SPELLING
+   `os.getenv("RESEND_API_KEY")` that ENVKEY-1 (19 Aug) rightly converted to
+   `ai_provider.envkey()`. Assertion corrected to the property (envkey path + Gmail
+   fallback, bare form banned) — RG-0073's lesson applied, not tolerated. Suite 5/5.
+3. PG-readiness ratchet red, strftime 15→16: the 16th was `_utc_now()`'s own DOCSTRING
+   quoting the counted pattern — the comment-trap paid for on 15 and 19 Aug, walked into a
+   third time. Reworded; the docstring now warns against naming the pattern. Ratchet PASS at 15.
+4. RG-0135 + RG-0136 were printing READY TO LOCK — promoted OPEN → LOCKED per the standing
+   promotion rule (anchored 1-line edits, py_compile clean).
+
+Final board after fixes: **129 entries · 126 holding · 0 REGRESSED · 3 open · exit 0.**
+Pre-deploy scan verdict REVIEW, danger list empty. Backups beside every touched file
+(`*.bak-20260821-19*`).
+
+## 2026-08-21 — LAUNCH-AUDIT-PLAN-1: the 3-cycle launch-readiness forensic programme, scheduled for D-7
+
+David's last assignment of the night: a full forensic audit of launch readiness for soft 29 Aug /
+full 1 Sep (RUL-001), in three independent cycles — Claude's forensic pass, a doctoral peer
+analysis of that pass, then an OpenAI-API peer review of the final report.
+
+- Plan authored as `LAUNCH_READINESS_FORENSIC_PLAN — nice.docx`. Ten dimensions: business
+  viability, financial growth, profitability/unit economics, server capability, robustness,
+  reliability, maintainability, scalability, hardening, hack-proofness. Every dimension scored
+  GREEN/AMBER/RED with its evidence grade and blocker-vs-fast-follow, under the Evidence Ladder.
+- The plan is built on REAL instruments verified on disk this session — scripts/peer_review.py
+  (nine lenses incl. security/cost/performance/maintainability/privacy, GPT-5.6, read-only),
+  scripts/peer_pack_ai.py (line-numbered extract for the 850 KB bea_main.py), regression_ledger,
+  rulings_check, predeploy_check, FINANCE_CANON, THIRD_PARTY_LAUNCH_REGISTER, LAUNCH_BAR.
+- Cycle 3 maps directly onto David's existing 5-role QA practice (31 Jul): the OpenAI model is
+  the second-vendor Peer Engineer. The paid call is gated on David's approval (RUL-037 spend).
+- The known going-in blocker is stated, not buried: DW-057/DW-029 unrotated exposed secrets with
+  the WAF allowlist down — dimensions 9/10 begin there; Cycle 1 must confirm or clear it.
+- Scheduled task `launch-readiness-forensic-cycle1` fires Sat 22 Aug 07:00 SAST (fireAt, one-shot)
+  so David sees Cycle 1 start. Timed to BE the D-7 gate-review evidence base (15 Aug rule: any RED
+  at D-7 = hold declared that day; the launch ruling stays David's).
+
+Cost model impact: the plan itself, none. Cycle 3's OpenAI call is dry-run-sized first and
+David-approved before any spend (ballpark cents to low tens of cents).
+
 ## 2026-08-21 — TRUTH-REVIEW-1: two-day post-mortem of the wrong-status runs; the EVIDENCE LADDER becomes standing method
 
 David: status and BIT answers over 19–21 Aug were 2–3 times wrong before the true state

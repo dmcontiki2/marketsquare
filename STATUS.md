@@ -27,6 +27,89 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 ## Current Session
 
+## 2026-08-22 — secret rotation (attended, DW-029 / DW-057)
+
+Nine credentials rotated and PROBED: the five self-issued via `ROTATE_SECRETS.bat`, plus
+RESEND_API_KEY (422 auth), PAYSTACK_SECRET_KEY + PAYSTACK_WEBHOOK_SECRET (200 auth — one
+credential, not two) and MS_JWT_SECRET (fingerprint changed, /health 200, reviewer cookie
+re-minted).
+
+Two structural defects fixed: `/etc/environment` was 0644 world-readable holding nine live
+secrets (now 0600, with `msdeploy` confirmed as a real potential reader), and a correct
+rotation reported success while the running process still held the revoked Paystack key —
+card payments were down with nothing reporting it. Both now have assertions (RG-0146 OPEN,
+RG-0147 LOCKED) and a `SECRETS_REGISTER.md` that names all 22 credentials with dated status.
+
+The DW-029/DW-057 exposure list was incomplete: it named eight credentials, the same
+environment dump printed nine more.
+
+Gmail SMTP fallback deliberately left dark — Resend is the proven primary sender, and the
+fallback should not return as a personal Gmail account.
+
+**NOT finished — ten credentials still BURNT**, including both Hetzner S3 keys (backup
+read/delete) and ANTHROPIC_API_KEY. RG-0146 stays red until they are done. Reserved to
+David: the vendor dashboards, the Google account password change, and the FOUNDERS_ID_SALT
+decision.
+
+### Maintenance loop — 22 Aug 2026, 05:33Z (D-10 to full launch)
+
+Quiet run. **0 faults in the queue** (new 0 · triaged 0 · fix-shipped 0 · rejected 0;
+verified 26, closed 7), so no fixes were shipped and no fault rows changed status.
+
+- Regression ledger GREEN both passes — every LOCKED fix holding, 11 known defects open
+  (exit 0). No regression to chase.
+- Shadow agent ran foreground, 0 seen / 0 acted; heartbeat PROBED live at
+  `GET /dashboard/maint` (run 05:33:56Z, received 05:34:12Z, armed false). The endpoint
+  answers anonymously now — migration 018 is on the box, so the runbook line saying the
+  heartbeat GET still needs a ts_review cookie is out of date.
+- Escalation brief: none written — no escalations in 24h.
+- Reviewer gate: the code in `.secrets/review_code.txt` is PROVEN valid (200, token minted
+  05:37:57Z). An earlier 429 in the same window came from failure budget the reviewer lane
+  did not generate — see the changelog fragment; it owes a LIVE-half ledger entry against
+  RG-0134 that was deliberately not written while the forensic session holds 201
+  uncommitted lines in `scripts/regression_ledger.py`.
+- Not pushed, not deployed.
+
+**D-7 HALT verification pass (22 Aug, 07:25–07:40 SAST).** The three-cycle forensic programme completed
+at 07:22; this pass re-probed its verdict live rather than repeating it. Verdict UNCHANGED: **HOLD** —
+Hardening and Hack-proofness RED. Two additions. (1) The accept_intro double-charge is now **EXECUTED**
+grade, not READ: replayed on a throwaway replica it charges the buyer once per request and drives the
+wallet negative (-3T after four accepts, no floor). (2) NEW, missed by all three cycles — the BIT
+Mitigator's automatic safe-state response is a **placebo**: all three SAFE_FLAGS are written, journalled
+and reported as mitigations while nothing in bea_main.py or the front end reads them. Detection is real;
+mitigation is decorative. Both findings were then handed to a fresh adversarial peer with one instruction -- break them -- and both were UPHELD with their grades RAISED: it ran the real app under a TestClient (four accepts, four charges, balance -3T) and applied the mitigator's full safe state (charge still succeeded). It found two more in the same class: decline_intro is unguarded (charged-then-declined, no refund row), and the shipped EULA promises a 1T hold/release the code never implements -- a legal exposure, and David's call which way it resolves. Four OPEN ledger entries carry it all: RG-0142 (money path idempotent and state-guarded), RG-0143 (no placebo breakers), RG-0144 (no public posture leak), RG-0145 (wallet matches the promise). The peer also found three false-red and three false-green paths in the entries as first written; all were FIXED the same session, with the correction recorded in each entry's ref, never weakened. Ledger 138 assertions, exit 0, all LOCKED holding, 12 open. Also noted: RG-0140/RG-0141 are live-build customer-facing defects that landed
+after the consolidated report closed and belong on the launch board. Reserved to David: rotate the
+exposed secrets, approve the deploy carrying these fixes, rule the gate/WAF posture, and make the
+launch go/hold call.
+
+### AI EXAMPLE GENERATED ADVERTS + DEMO banner (RUL-040, 22 Aug)
+
+The exemplar ribbon no longer says "★ SUPER ADVERT" anywhere — all four ms.js renderers
+say **AI EXAMPLE GENERATED ADVERT**, and the detail pill leads with "not a real listing".
+A red **DEMO** tab (`ts_demo_banner.js`, new, in the manifest) now sits in the REPORT
+tab's right-edge slot on all 15 adventures demo maps; it is ungated, so it survives Soft
+Launch when the tester REPORT tab is removed, and re-centres itself in the slot when that
+happens.
+
+State: **in the repo, NOT yet live.** Ledger RG-0140 and RG-0141 are OPEN — repo halves
+pass, live halves fail until the next deploy places the new ms.js and ts_demo_banner.js.
+Promote both to LOCKED on the first run after the deploy that reports READY TO LOCK.
+Ledger run 22 Aug after the change: 0 REGRESSED, 126 holding, RG-0014 HOLDING.
+
+- **TRUTH-REVIEW-1 (Fable):** two-day post-mortem of the wrong-status/BIT runs — ten faults,
+  five classes, all fixes confirmed locked. Class fix: the **EVIDENCE LADDER** standing method
+  now in ../CLAUDE.md (PROBED > EXECUTED > READ > RECALLED; only PROBED is reportable as fact).
+  Deliverables: `TWO_DAY_TRUTH_REVIEW — nice.docx` + `TRUTH_REVIEW_19_21AUG.html` (in Visuals).
+  Verification pass fixed four live items: HEAD.lock healed, maintenance-agent guard assertion
+  corrected (spelling→property), strftime docstring comment-trap reworded (ratchet 15, PASS),
+  RG-0135/0136 promoted LOCKED. Ledger: 129 · 0 regressed · exit 0.
+
+- **LAUNCH-AUDIT-PLAN-1:** 3-cycle launch-readiness forensic programme authored
+  (`LAUNCH_READINESS_FORENSIC_PLAN — nice.docx`) and scheduled — task
+  `launch-readiness-forensic-cycle1` fires Sat 22 Aug 07:00 SAST to begin Cycle 1 (Claude
+  forensic) → Cycle 2 (doctoral Fable peer) → Cycle 3 (OpenAI peer_review.py, David-approved
+  spend). Ten dimensions, Evidence-Ladder scored, timed as the D-7 gate-review evidence base.
+
 ### ID-NPR (RUL-039) — the verification LANE IS ARMED · 21 Aug 2026
 
 `GET /id-verify/status` → `{"provider":"didit","configured":true,"available":true,
