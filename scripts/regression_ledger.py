@@ -77,7 +77,7 @@ Stdlib only. Live checks need only network, so any session or machine can run it
 Repo checks run additionally when the script sits inside the repo; otherwise they
 report SKIPPED rather than failing.
 """
-import json, os, re, sys, time, datetime, urllib.request, urllib.error
+import json, os, re, subprocess, sys, time, datetime, urllib.request, urllib.error
 
 BASE = os.environ.get("TS_BASE", "https://trustsquare.co").rstrip("/")
 UA = {"User-Agent": "TrustSquare-RegressionLedger/1.0 (dmcontiki2@gmail.com)"}
@@ -8324,6 +8324,48 @@ def rg_orchestrator_in_one_deploy():
         out.append((INFO, "orchestrator page is in the manifest, carries no hardcoded code, "
                           "and reports feed failures honestly"))
     return out
+
+@entry("RG-0157", "No migration sits untracked while the shipping app already depends on it -- "
+                  "schema and code always deploy together",
+       LOCKED, fixed_on="2026-08-22",
+       scope="migrations/*.py versus git's index. CLASS: ANY untracked migration is a deploy "
+             "hazard, not merely today's. The manifest engine ships what git delivers and "
+             "post_deploy.sh runs migrations from the repo, so a migration that was never "
+             "committed simply does not exist as far as the server is concerned -- while the "
+             "code that needs it ships perfectly.",
+       ref="DEPLOY-COHERENCE-1, 22 Aug 2026, caught on the way to a deploy David was about to "
+           "authorise. bea_main.py (which ships AS main.py, manifest line 19) had been "
+           "committed carrying INTRO-HOLD-1: INSERT INTO intro_requests (..., tuppence_held) "
+           "plus reads of hold_released_at. The migration that CREATES both columns, "
+           "migrations/030_intro_hold.py, was still untracked. Deploying that pair would have "
+           "pushed code writing to a column the live database does not have -- every "
+           "introduction request throwing, on the money path, on the product's core action. "
+           "The near-miss came from a real collision: a concurrent session's in-flight work was "
+           "swept into commit 76606ff by an over-broad git add, which committed the CODE half "
+           "while leaving the SCHEMA half untracked and made the tree look complete when it was "
+           "not. Fixed by committing 030 (verified first: compiles, guards on PRAGMA "
+           "table_info so it is genuinely idempotent, additive nullable columns only, and it "
+           "explicitly does NOT retro-hold money from existing wallets) and by this assertion, "
+           "which is cheap and mechanical: an untracked migration is always wrong.")
+def rg_migrations_tracked():
+    mig = os.path.join(REPO, "migrations")
+    if not os.path.isdir(mig):
+        return [(INFO, "outside the repo -- migrations/ not read")]
+    try:
+        out_txt = subprocess.check_output(
+            ["git", "ls-files", "--others", "--exclude-standard", "migrations/"],
+            cwd=REPO, stderr=subprocess.DEVNULL,
+            env=dict(os.environ, GIT_OPTIONAL_LOCKS="0")).decode("utf-8", "replace")
+    except Exception as ex:
+        return [(INFO, "git not readable here (%s)" % repr(ex)[:60])]
+
+    stray = [l.strip() for l in out_txt.splitlines()
+             if l.strip().endswith(".py") and "__pycache__" not in l]
+    if stray:
+        return [(FAIL, "untracked migration(s) %s -- the app can ship depending on schema the "
+                       "server will never receive. Commit them or delete them; never deploy "
+                       "past this" % ", ".join(sorted(stray)))]
+    return [(INFO, "every migration on disk is tracked -- schema and code ship together")]
 
 
 if __name__ == "__main__":
