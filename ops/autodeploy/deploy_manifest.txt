@@ -25,6 +25,9 @@ ms.js                      | static/ms.js
 trip_essentials.js         | static/trip_essentials.js
 ms.css                     | static/ms.css
 ts_report.js               | static/ts_report.js
+# DEMO-BANNER-1 (22 Aug 2026): the red DEMO tab on the demo maps. Ungated -- unlike
+# ts_report.js it is a customer-facing honesty label and SURVIVES Soft Launch.
+ts_demo_banner.js          | static/ts_demo_banner.js
 
 # ── Service worker (served from web root, not /static/) ──────────────────────
 assets/service-worker.js   | service-worker.js

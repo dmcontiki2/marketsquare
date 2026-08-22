@@ -110,6 +110,18 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-040": [
+   # (a) the label states what the thing IS, at every renderer, and the old accolade
+   # wording is GONE -- a fifth renderer copy-pasted from an old one would trip the
+   # forbidden clause. (b) the DEMO tab exists, ships, and is NOT on the tester lane:
+   # ts_report.js is removed at Soft Launch and DEMO must survive that day.
+   ("RULINGS.md", ["AI EXAMPLE GENERATED ADVERTS, AND A DEMO BANNER"], []),
+   ("ms.js", ["AI EXAMPLE GENERATED ADVERT", "not a real listing"], ["SUPER ADVERT"]),
+   ("ts_demo_banner.js", ["ts-demo-tab"], ["fault_report"]),
+   ("adventures_za_map.html", ["ts_demo_banner.js"], []),
+   ("ops/autodeploy/deploy_manifest.txt", ["ts_demo_banner.js"], []),
+   ("scripts/regression_ledger.py", ["RG-0140", "RG-0141"], []),
+ ],
  "RUL-039": [
    # Paid NPR verification: offered, visible, never a blocker.
    # Assert the PROPERTIES that must not rot, not the wording:

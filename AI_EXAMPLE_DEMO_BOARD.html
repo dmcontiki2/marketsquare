@@ -1,0 +1,127 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Example Adverts + DEMO banner — preview (RUL-040)</title>
+<style>
+  :root{--navy:#0c1a2e;--red:#e63946;--gold:#C8873A;--line:#e2e8f0;--ink:#1f2937;--mute:#6b7280;}
+  *{box-sizing:border-box}
+  body{margin:0;padding:28px 20px 90px;font:15px/1.6 Inter,system-ui,Arial,sans-serif;color:var(--ink);background:#f7f8fa;}
+  .wrap{max-width:940px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px;color:var(--navy)}
+  .sub{color:var(--mute);font-size:13.5px;margin:0 0 26px}
+  h2{font-size:15px;margin:30px 0 10px;color:var(--navy);border-bottom:2px solid var(--line);padding-bottom:6px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:0 0 8px;font-size:12.5px}
+  .key{display:flex;align-items:center;gap:7px}
+  .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:640px){.pair{grid-template-columns:1fr}}
+  .col h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px;color:var(--mute)}
+  .col.before h3{color:#b91c1c} .col.after h3{color:#15803d}
+  .lgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .lcard{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .ibox{height:96px;position:relative;overflow:hidden;background:linear-gradient(135deg,#8fb6d9,#c9a37a)}
+  .cbody{padding:8px 10px 11px}
+  .ctitle{font-size:12.5px;font-weight:700;line-height:1.3}
+  .cloc{font-size:11px;color:var(--mute);margin-top:2px}
+  .cprice{font-size:13px;font-weight:800;color:var(--navy);margin-top:4px}
+  .note{background:#fff;border:1px solid var(--line);border-left:4px solid var(--navy);border-radius:8px;padding:13px 16px;font-size:13.5px;margin:12px 0}
+  .note b{color:var(--navy)}
+  .fake-report{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:9000;background:#C8873A;color:#fff;border:none;border-radius:12px 0 0 12px;padding:16px 9px;font:800 12px Inter,system-ui,Arial,sans-serif;letter-spacing:1.6px;writing-mode:vertical-rl;box-shadow:-2px 2px 16px rgba(200,135,58,.5);cursor:default}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:var(--navy);color:#fff;padding:11px 16px;font-size:13px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;z-index:9500}
+  .bar button{background:var(--red);color:#fff;border:none;border-radius:7px;padding:8px 13px;font:700 12.5px Inter,system-ui,Arial,sans-serif;cursor:pointer}
+  .bar span{opacity:.82}
+</style>
+<div class="wrap">
+  <h1>AI Example Generated Adverts + the DEMO banner</h1>
+  <p class="sub">RUL-040, 22 Aug 2026 — preview of the change as it sits in the repo. Not yet deployed.
+  The DEMO tab on the right of this page is the <b>real</b> <code>ts_demo_banner.js</code> file, loaded from disk.</p>
+
+  <div class="legend">
+    <span class="key"><i class="dot" style="background:#e63946"></i> red = <b>not real / demonstration</b> (customer-facing, permanent)</span>
+    <span class="key"><i class="dot" style="background:#C8873A"></i> gold = <b>tester instrument</b> (removed at Soft Launch)</span>
+  </div>
+
+  <h2>1 · The ribbon on the card</h2>
+  <div class="pair">
+    <div class="col before">
+      <h3>Before — reads as an accolade on a real listing</h3>
+      <div class="lgrid">
+        <div class="lcard"><div class="ibox">
+          <div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:9px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.05em;font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">★ SUPER ADVERT</div>
+        </div><div class="cbody"><div class="ctitle">4 Bed Family Home, Waterkloof</div><div class="cloc">📍 Pretoria</div><div class="cprice">R4 250 000</div></div></div>
+        <div class="lcard"><div class="ibox" style="background:linear-gradient(135deg,#e0a96d,#7b8fa3)">
+          <div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:9px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.05em;font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">★ SUPER ADVERT</div>
+        </div><div class="cbody"><div class="ctitle">Sunrise Balloon Safari</div><div class="cloc">📍 Pilanesberg</div><div class="cprice">R2 950 pp</div></div></div>
+      </div>
+    </div>
+    <div class="col after">
+      <h3>After — states what the thing is</h3>
+      <div class="lgrid">
+        <div class="lcard"><div class="ibox">
+          <div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:8.5px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.02em;line-height:1.2;max-width:calc(100% - 8px);font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">AI EXAMPLE GENERATED ADVERT</div>
+        </div><div class="cbody"><div class="ctitle">4 Bed Family Home, Waterkloof</div><div class="cloc">📍 Pretoria</div><div class="cprice">R4 250 000</div></div></div>
+        <div class="lcard"><div class="ibox" style="background:linear-gradient(135deg,#e0a96d,#7b8fa3)">
+          <div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:8.5px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.02em;line-height:1.2;max-width:calc(100% - 8px);font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">AI EXAMPLE GENERATED ADVERT</div>
+        </div><div class="cbody"><div class="ctitle">Sunrise Balloon Safari</div><div class="cloc">📍 Pilanesberg</div><div class="cprice">R2 950 pp</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="note"><b>Why the star had to go.</b> A star plus the word SUPER reads as a badge of quality
+  awarded to a genuine listing. There is no seller behind an exemplar — an Introduction bought against one
+  introduces the buyer to nobody. The four renderers changed together: browse cards, the Adventures grid,
+  the detail pill, Local Market cards.</div>
+
+  <h2>2 · The pill on the listing page</h2>
+  <div class="pair">
+    <div class="col before"><h3>Before</h3>
+      <div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.05em;font-family:Syne,sans-serif;">★ SUPER ADVERT — the benchmark listing for this category</div>
+    </div>
+    <div class="col after"><h3>After</h3>
+      <div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.02em;font-family:Syne,sans-serif;">AI EXAMPLE GENERATED ADVERT — not a real listing; an AI-made example of the benchmark for this category</div>
+      <div style="height:9px"></div>
+      <div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.02em;font-family:Syne,sans-serif;">AI EXAMPLE GENERATED ADVERT — not a real listing; an AI-made example, free for a real seller to claim</div>
+    </div>
+  </div>
+
+  <h2>3 · The DEMO tab on the demo maps</h2>
+  <div class="note"><b>Look right.</b> The gold REPORT tab is the tester instrument — it disappears at Soft
+  Launch. The red DEMO tab sits below it while it exists, and <b>re-centres itself in the slot the moment
+  REPORT is gone</b>. Press the button below to simulate soft-launch morning and watch it move. Tap DEMO
+  itself to read what a customer reads.</div>
+</div>
+
+<button class="fake-report" id="ts-report-tab" title="simulated tester tab">REPORT</button>
+
+<div class="bar">
+  <button id="toggle">Remove the REPORT tab (simulate Soft Launch)</button>
+  <span id="msg">The red DEMO tab is the real ts_demo_banner.js, loaded from disk — not a mock-up.</span>
+</div>
+
+<script>
+  /* Load the REAL ts_demo_banner.js, whether this board is opened from the
+     MarketSquare folder or from its copy in Projects\Visuals. */
+  (function () {
+    var paths = ['./ts_demo_banner.js', '../../MarketSquare/ts_demo_banner.js', '../MarketSquare/ts_demo_banner.js'];
+    (function next(i) {
+      if (i >= paths.length) {
+        document.getElementById('msg').textContent =
+          'ts_demo_banner.js not found from this folder — open the copy in the MarketSquare folder to see the live tab.';
+        return;
+      }
+      var sc = document.createElement('script');
+      sc.src = paths[i];
+      sc.onerror = function () { next(i + 1); };
+      document.body.appendChild(sc);
+    })(0);
+  })();
+</script>
+<script>
+  var t = document.getElementById('toggle'), rep = document.getElementById('ts-report-tab'), gone = false;
+  t.onclick = function () {
+    if (!gone) { rep.remove(); gone = true; t.textContent = 'Bring the REPORT tab back';
+      document.getElementById('msg').textContent = 'REPORT gone — DEMO re-centred itself. No second change needed at Soft Launch.'; }
+    else { document.body.appendChild(rep); gone = false; t.textContent = 'Remove the REPORT tab (simulate Soft Launch)';
+      document.getElementById('msg').textContent = 'REPORT back — DEMO stepped down out of its way.'; }
+    if (window.tsDemoBannerPlace) setTimeout(window.tsDemoBannerPlace, 30);
+  };
+</script>

@@ -759,7 +759,7 @@ def rg_all_deploy_paths_bump():
     return out
 
 
-@entry("RG-0014", "Adventures-screen cards show the red ★ SUPER ADVERT ribbon",
+@entry("RG-0014", "Adventures-screen cards show the red AI EXAMPLE GENERATED ADVERT ribbon",
        LOCKED, scope="Adventures dedicated screen, ALL markets (one shared renderer)", fixed_on="2026-07-30",
        ref="Added 29 Jul 2026. Fixed TWICE before yet the Adventures tab stayed bare: SUPER-1 "
            "(Session 144) put the ribbon on the shared browse lcard renderer + the detail pill, "
@@ -770,7 +770,7 @@ def rg_all_deploy_paths_bump():
            "tab. Third pass (29 Jul) patched renderAdvGrid() itself. OPEN until the next frontend "
            "deploy ships ms.js v409; the moment this reports READY TO LOCK, promote to LOCKED. "
            "Live side checks the build browsers actually receive at the ?v= the live index "
-           "references (RG-0013 class), so a cache-stale deploy cannot fake a pass.")
+           "references (RG-0013 class), so a cache-stale deploy cannot fake a pass. RELABELLED 22 Aug 2026 (AI-EXAMPLE-1, RUL-038): the ribbon's TEXT changed from 'SUPER ADVERT' to 'AI EXAMPLE GENERATED ADVERT'. The assertion is unchanged and NOT weakened -- it always checked that renderAdvGrid() reads l.super_example (the DB field, which keeps its name), never the label. RG-0140 asserts the wording itself.")
 def rg_adv_screen_super_ribbon():
     out = []
 
@@ -6495,7 +6495,7 @@ def rg_instrument_truth():
        "only an NPR pass may be called 'verified' to a buyer, the tick never gates an "
        "introduction, a reused ID number is flagged not inherited, and no provider failure "
        "can ever charge a seller",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-08-21",
        scope="Sellers in every category; the buyer warning names the deposit risk for "
              "ACCOMMODATION specifically because that is the scam it exists to counter. "
              "Front end SHIPPED 21 Aug (seller buy-card, green tick, buyer warning) and the "
@@ -6644,7 +6644,7 @@ def rg_id_npr():
 @entry("RG-0135", "Every journey map an advert can show has FREE pre-information under it: "
        "itinerary, real cost, entry/visas, health, safety notices, money/taxes/tipping and "
        "a dated re-check list -- and the panel ends in an INTRODUCTION, never a sale",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-08-21",
        scope="Super-example Adventures adverts, all 13 journeys (9 country maps + 4 tour "
              "maps). NOT yet the other advert families David named in the same breath -- "
              "stays, guides and non-super tours still show a map and a sentence. Those are "
@@ -6942,6 +6942,341 @@ def rg_admin_door_has_own_failure_budget():
         out.append((INFO, "admin door has its own 10-failure budget; successes cost nothing in "
                           "either lane; the three call-metered endpoints still spend; refusals "
                           "carry exact seconds"))
+    return out
+
+
+
+@entry("RG-0137", "The domain that carries EVERYTHING has a recorded owner, a recorded expiry "
+                  "and auto-renew ON -- the one dependency that can end the business silently",
+       OPEN, scope="trustsquare.co, the apex the whole platform answers on. RECORD-half by "
+                   "nature: no anonymous probe can read a registrar's expiry or auto-renew "
+                   "flag, so the assertion is that the FACT IS WRITTEN DOWN where the next "
+                   "session reads, dated, and not near lapse. Class, not instance: any domain "
+                   "the business depends on belongs in this block.",
+       ref="DOMAIN-LIFELINE-1, 22 Aug 2026 (pre-soft-launch third-party sweep). Found: the "
+           "registrar, the expiry date and the auto-renew state for trustsquare.co were "
+           "recorded in NO file in the repo -- not in the third-party register, not in the "
+           "access cheatsheet, not in canon. Every other dependency here has an owner and a "
+           "state; the one that takes the site, the mail domain, the OAuth redirect URIs and "
+           "the payment webhooks down together had none. A lapsed domain is not an outage you "
+           "debug, it is one you discover from a customer. DNS is on Cloudflare "
+           "(ainsley/koa.ns.cloudflare.com, probed 22 Aug) which narrows but does NOT prove "
+           "the registrar -- a full-zone Cloudflare setup looks identical whether Cloudflare "
+           "or a third party holds the registration. RDAP/WHOIS lookup was not available to "
+           "the sweep session, so the fact has to come from David once and then live here.")
+def rg_domain_lifeline_recorded():
+    out = []
+    txt = repo_file("THIRD_PARTY_LAUNCH_REGISTER.md")
+    if txt is None:
+        out.append((INFO, "outside the repo -- record-only entry, skipped"))
+        return out
+    import re as _re
+    from datetime import datetime as _dt
+
+    def field(name):
+        m = _re.search(r"^%s:\s*(.+)$" % name, txt, _re.M)
+        return (m.group(1).strip() if m else "")
+
+    reg = field("DOMAIN_REGISTRAR")
+    exp = field("DOMAIN_EXPIRY")
+    ren = field("DOMAIN_AUTORENEW").lower()
+    ver = field("DOMAIN_VERIFIED_ON")
+    unknown = ("", "unknown", "UNKNOWN", "tbd", "TBD", "-")
+
+    if reg in unknown:
+        out.append((FAIL, "DOMAIN_REGISTRAR is not recorded -- nobody can say who holds "
+                          "trustsquare.co or where the renewal card lives"))
+    if exp in unknown:
+        out.append((FAIL, "DOMAIN_EXPIRY is not recorded -- the lapse date is unknown"))
+    else:
+        try:
+            days = (_dt.strptime(exp[:10], "%Y-%m-%d") - _dt.utcnow()).days
+            if days < 60:
+                out.append((FAIL, "domain expires in %d day(s) (%s) -- inside the 60-day "
+                                  "danger window" % (days, exp[:10])))
+            else:
+                out.append((INFO, "domain expiry %s (%d days out)" % (exp[:10], days)))
+        except Exception:
+            out.append((FAIL, "DOMAIN_EXPIRY %r is not a YYYY-MM-DD date" % exp[:20]))
+    if ren not in ("on", "yes", "enabled", "true"):
+        out.append((FAIL, "DOMAIN_AUTORENEW is %r -- renewal depends on someone remembering"
+                    % (ren or "unrecorded")))
+    if ver in unknown:
+        out.append((FAIL, "DOMAIN_VERIFIED_ON is not recorded -- an undated status assertion "
+                          "is a defect (the evidence-ladder rule)"))
+    else:
+        try:
+            age = (_dt.utcnow() - _dt.strptime(ver[:10], "%Y-%m-%d")).days
+            if age > 180:
+                out.append((FAIL, "the domain record was last verified %d days ago (%s) -- "
+                                  "stale, re-read it at the registrar" % (age, ver[:10])))
+        except Exception:
+            out.append((FAIL, "DOMAIN_VERIFIED_ON %r is not a YYYY-MM-DD date" % ver[:20]))
+
+    if not out:
+        out.append((INFO, "registrar %s · expiry %s · auto-renew %s · verified %s"
+                    % (reg, exp[:10], ren, ver[:10])))
+    return out
+
+
+@entry("RG-0138", "An outage is noticed by something that is NEITHER the server nor David's "
+                  "desktop -- an external watcher pings /health on a schedule and can wake him",
+       OPEN, scope="The whole outage-detection lane. Class property: every instrument that "
+                   "currently watches trustsquare.co runs either ON the box it watches (ops "
+                   "sweep, BIT, subscription monitor, cron sensors) or on David's PC (the "
+                   "06:30 daily watch) -- so a dead box or a closed laptop is a blind day, by "
+                   "construction. This asserts an independent vantage exists AND is alive, "
+                   "not merely that a file describing one is in the repo.",
+       ref="UPTIME-EXTERNAL-1, 22 Aug 2026. OPEN_LOOPS L8 has carried 'external uptime "
+           "monitor -- NOT BUILT' since 14 Aug with the next action 'David names a service', "
+           "which is a vendor fork he should never have been handed (RUL-037): the technical "
+           "decision is Claude's against the specs. Decided and built this run: a CLOUDFLARE "
+           "WORKER on a 5-minute cron trigger -- no new vendor (Cloudflare already carries "
+           "DNS, CDN and the inbound email worker), no new money (cron triggers and 100k "
+           "requests/day are on the free plan, which RUL-022's no-paid-source spirit and the "
+           "fixed-cost pricing rule both prefer), and a vantage that owes nothing to the "
+           "Hetzner box or to a laptop being open. Two consecutive failures alert, recovery "
+           "alerts once, and a DAILY HEARTBEAT proves the watcher itself is alive -- because "
+           "a monitor that has silently died is indistinguishable from a site that is fine. "
+           "Deploy is one wrangler command and needs David's Cloudflare token + the RESEND "
+           "key, so it is sequenced to ride straight after the secret rotation (fresh key, "
+           "not a burnt one). Stays OPEN until the deploy marker and a live heartbeat exist.")
+def rg_external_uptime_watcher():
+    out = []
+    js = repo_file("ops/cloudflare/uptime_monitor_worker.js")
+    tm = repo_file("ops/cloudflare/uptime_wrangler.toml")
+    if js is None or tm is None:
+        out.append((FAIL, "the external watcher's source is missing from the repo "
+                          "(ops/cloudflare/uptime_monitor_worker.js + uptime_wrangler.toml)"))
+        return out
+    if "/health" not in js:
+        out.append((FAIL, "the watcher does not probe /health"))
+    if "scheduled" not in js:
+        out.append((FAIL, "the watcher has no scheduled (cron) handler -- it would never run "
+                          "on its own"))
+    if "HEARTBEAT" not in js.upper():
+        out.append((FAIL, "the watcher has no daily heartbeat -- a silently dead monitor "
+                          "reads exactly like a healthy site"))
+    if "crons" not in tm:
+        out.append((FAIL, "uptime_wrangler.toml declares no cron trigger"))
+
+    dep = repo_file("ops/cloudflare/UPTIME_DEPLOYED.md")
+    if dep is None:
+        out.append((FAIL, "NOT DEPLOYED -- source is ready and proven-by-inspection, but no "
+                          "deploy marker exists, so nothing outside the box is watching. "
+                          "Run ops/cloudflare/UPTIME_MONITOR.md's one command after the "
+                          "secret rotation, then write the marker."))
+    else:
+        import re as _re
+        from datetime import datetime as _dt
+        m = _re.search(r"^LAST_HEARTBEAT:\s*(\d{4}-\d{2}-\d{2})", dep, _re.M)
+        if not m:
+            out.append((FAIL, "deploy marker carries no LAST_HEARTBEAT date"))
+        else:
+            age = (_dt.utcnow() - _dt.strptime(m.group(1), "%Y-%m-%d")).days
+            if age > 7:
+                out.append((FAIL, "the watcher's last heartbeat was %d days ago (%s) -- the "
+                                  "monitor itself is down" % (age, m.group(1))))
+            else:
+                out.append((INFO, "external watcher deployed; heartbeat %s (%d day(s) old)"
+                            % (m.group(1), age)))
+    return out
+
+
+@entry("RG-0139", "The Google sign-in door is open to EVERYONE, not just listed test users -- "
+                  "the consent screen is PUBLISHED and the fact is dated",
+       OPEN, scope="Google OAuth, the only social sign-in lane (Apple is OUT by RUL-030). "
+                   "Two halves: the LIVE half -- the app advertises and wires the lane -- and "
+                   "the RECORD half, because an OAuth app left in 'Testing' 302s to Google "
+                   "exactly like a published one and only fails at the moment a real stranger "
+                   "tries to sign in. No anonymous probe can tell the two apart, so the "
+                   "publishing state must be read once at the console and written down dated.",
+       ref="ONETAP-PUBLISH-1, 22 Aug 2026. Companion to RG-0111 (the lane is live) and to "
+           "ONETAP-DOC-1 (21 Aug -- the register wrongly said the lane was dark while "
+           "/auth/providers said google:true; the probe won and the doc was fixed). This "
+           "entry closes the remaining, subtler version of the same trap: a Testing-mode "
+           "consent screen is invisible to every instrument we own and would present as "
+           "'sign-in is broken for new users' on soft-launch morning, with 100 test-user "
+           "slots as the only capacity. Verified live 22 Aug: /auth/providers -> "
+           "{google:true,apple:false} and /auth/oauth/google/start 302s to "
+           "accounts.google.com carrying a client_id; /auth/oauth/apple/start 503s, which is "
+           "RUL-030 enforcing itself.")
+def rg_google_consent_published():
+    out = []
+    try:
+        prov = _get("/auth/providers")
+        if '"google": true' not in prov.replace('":', '": ').replace("  ", " "):
+            if '"google":true' not in prov.replace(" ", ""):
+                out.append((FAIL, "LIVE: /auth/providers no longer advertises google -- the "
+                                  "sign-in lane went dark"))
+    except ProbeOffline as e:
+        out.append((INFO, "live half not read (%s)" % e))
+
+    txt = repo_file("THIRD_PARTY_LAUNCH_REGISTER.md")
+    if txt is None:
+        out.append((INFO, "outside the repo -- record half skipped"))
+        return out
+    import re as _re
+    from datetime import datetime as _dt
+    m = _re.search(r"^GOOGLE_CONSENT_SCREEN:\s*(.+)$", txt, _re.M)
+    val = (m.group(1).strip() if m else "")
+    if not val or val.upper().startswith(("UNKNOWN", "TBD", "-")):
+        out.append((FAIL, "GOOGLE_CONSENT_SCREEN is not recorded -- nobody has confirmed the "
+                          "app is Published rather than in Testing, where only listed test "
+                          "users can sign in"))
+    elif "TESTING" in val.upper():
+        out.append((FAIL, "the consent screen is in TESTING -- strangers cannot sign in with "
+                          "Google. Publish it in the Google Cloud console."))
+    elif "PUBLISHED" not in val.upper():
+        out.append((FAIL, "GOOGLE_CONSENT_SCREEN reads %r -- not a recognised state" % val[:40]))
+    else:
+        d = _re.search(r"(\d{4}-\d{2}-\d{2})", val)
+        if not d:
+            out.append((FAIL, "the PUBLISHED claim carries no verification date -- an undated "
+                              "status assertion is a defect"))
+        else:
+            age = (_dt.utcnow() - _dt.strptime(d.group(1), "%Y-%m-%d")).days
+            if age > 90:
+                out.append((FAIL, "the PUBLISHED claim was last verified %d days ago (%s) -- "
+                                  "re-read it at the console" % (age, d.group(1))))
+            else:
+                out.append((INFO, "consent screen PUBLISHED, verified %s (%d day(s) ago)"
+                            % (d.group(1), age)))
+    return out
+
+
+# ════════════════════════════════════════════════════════════════════════════
+
+
+@entry("RG-0140", "AI example adverts are labelled as AI examples -- no shipped asset calls one "
+                  "a SUPER ADVERT, and the detail pill says it is not a real listing",
+       OPEN, scope="ms.js, ALL FOUR renderers that paint the exemplar ribbon (browse lcard, "
+                   "Adventures renderAdvGrid, the listing detail pill, Local Market cards) "
+                   "-- repo AND the live-served build at the ?v= the live index references",
+       ref="AI-EXAMPLE-1, David's ruling 22 Aug 2026 (RUL-038). The red ribbon said '★ SUPER "
+           "ADVERT'. David's finding: a star plus the word SUPER reads as an ACCOLADE on a real, "
+           "live listing -- so an AI-generated example advert looked like something a buyer could "
+           "spend an Introduction on. That is a mis-selling risk in the one place the model cannot "
+           "afford one: MarketSquare only ever sells the introduction, and there is no seller "
+           "behind an exemplar to introduce anyone to. Fix: the label states what the thing IS "
+           "('AI EXAMPLE GENERATED ADVERT'), the star is gone, and the detail pill leads with "
+           "'not a real listing'. The DB column stays super_example -- this is a labelling fix, "
+           "not a data-model change, which is why RG-0014 (the ribbon RENDERS at all) still "
+           "asserts on the field and is untouched by it. Scope note: a partial fix here is the "
+           "known failure mode -- RG-0014's own history is three passes that each fixed one "
+           "renderer and left the others bare -- so this entry asserts ALL FOUR sites at once and "
+           "asserts the ABSENCE of the old wording, which a fifth renderer copy-pasted from an "
+           "old one would trip. OPEN until the next frontend deploy ships the new ms.js -- the repo half passes now, the live half cannot until David ships. The moment this reports READY TO LOCK, promote it to LOCKED.")
+def rg_ai_example_label():
+    out = []
+    LABEL = "AI EXAMPLE GENERATED ADVERT"
+    OLD = "SUPER ADVERT"
+
+    def check(js, where):
+        if OLD in js:
+            out.append((FAIL, where + " still calls an AI example advert a '" + OLD + "' -- the "
+                              "accolade wording reads as a real, buyable listing (AI-EXAMPLE-1)"))
+        n = js.count(LABEL)
+        if n < 4:
+            out.append((FAIL, where + " paints the exemplar ribbon at only %d of the 4 renderers "
+                              "(browse / Adventures / detail pill / Local Market) -- the "
+                              "partial-rename failure mode" % n))
+        else:
+            out.append((INFO, where + ": %d labelled site(s), old wording absent" % n))
+        if "not a real listing" not in js:
+            out.append((FAIL, where + " detail pill no longer says 'not a real listing' -- the "
+                              "sentence that stops a buyer spending an Introduction on an exemplar"))
+
+    fe = repo_file("ms.js")
+    if fe is None:
+        out.append((INFO, "ms.js not present (running outside the repo) -- repo half skipped"))
+    else:
+        check(fe, "repo ms.js")
+
+    try:
+        mv = re.search(r"ms\.js\?v=(\d+)", _get("/"))
+        check(_get("/static/ms.js" + ("?v=" + mv.group(1) if mv else "")),
+              "live-served ms.js" + (" v" + mv.group(1) if mv else ""))
+    except ProbeOffline as e:
+        out.append((INFO, "live half not read (%s)" % e))
+    except Exception as ex:
+        out.append((FAIL, "could not verify the live-served ms.js build: %r" % (ex,)))
+    return out
+
+
+# ════════════════════════════════════════════════════════════════════════════
+
+
+@entry("RG-0141", "Every demo map carries the red DEMO tab, and it is NOT gated on the tester flag",
+       OPEN, scope="all 15 adventures_*_map.html demo pages + ts_demo_banner.js + the deploy "
+                   "manifest -- repo AND live",
+       ref="DEMO-BANNER-1, David's ruling 22 Aug 2026 (RUL-038, second half). The demo maps had "
+           "no page-level statement that they are demonstrations; the only right-edge tab was the "
+           "gold REPORT tab, which is a TESTER instrument and is removed at Soft Launch. David's "
+           "instruction: put a red DEMO banner in that slot. The trap this entry exists to catch "
+           "is the obvious wrong implementation -- hanging DEMO off ts_report.js or off the "
+           "launch_switches.fault_report flag, which would delete the customer-facing honesty "
+           "label on the exact day the first customers arrive. So this asserts BOTH that every "
+           "demo map loads it AND that the script never reads the tester flag or the tester "
+           "check. Also asserts the ONE-DEPLOY rule for a new deployable file (a manifest line, "
+           "never an scp) and RG-0025's first-party rule (no third-party host in the script). "
+           "New demo map with no DEMO tab = red the same day. OPEN until the next deploy places ts_demo_banner.js on the server; promote to LOCKED the run it reports READY TO LOCK.")
+def rg_demo_banner_on_demo_maps():
+    import glob
+    out = []
+    SRC = "ts_demo_banner.js"
+
+    js = repo_file(SRC)
+    if js is None:
+        out.append((INFO, "outside the repo -- repo half skipped"))
+    else:
+        if "ts-demo-tab" not in js or ">DEMO" not in js.replace("'DEMO'", ">DEMO"):
+            out.append((FAIL, SRC + " no longer mounts a tab labelled DEMO"))
+        if "#e63946" not in js:
+            out.append((FAIL, SRC + " no longer paints the DEMO tab red (#e63946) -- red is the "
+                              "signal that separates it from the gold tester REPORT tab"))
+        # check the CODE, not the prose: the header comment legitimately explains
+        # why the tab is not gated on the tester flag, and naming it there must
+        # not trip the assertion that the code never reads it.
+        code = re.sub(r"/\*.*?\*/", " ", js, flags=re.S)
+        code = re.sub(r"(?m)^\s*//.*$", " ", code)
+        for banned in ("fault_report", "isTester", "/flags"):
+            if banned in code:
+                out.append((FAIL, SRC + " reads %r -- the DEMO label must NOT be gated on the "
+                                  "tester lane, or it vanishes at Soft Launch when the REPORT "
+                                  "tab is removed" % banned))
+        for host in ("http://", "https://"):
+            if host in js.replace("https://trustsquare.co", ""):
+                out.append((FAIL, SRC + " references an absolute URL -- demo pages are "
+                                  "first-party-only (RG-0025)"))
+
+        maps = sorted(glob.glob(os.path.join(REPO, "adventures_*_map.html")))
+        if not maps:
+            out.append((FAIL, "no adventures_*_map.html demo pages found in the repo"))
+        missing = [os.path.basename(m) for m in maps
+                   if SRC not in open(m, encoding="utf-8", errors="replace").read()]
+        if missing:
+            out.append((FAIL, "demo map(s) with no DEMO tab: " + ", ".join(missing)))
+        else:
+            out.append((INFO, "%d demo map(s), every one loads %s" % (len(maps), SRC)))
+
+        man = repo_file(os.path.join("ops", "autodeploy", "deploy_manifest.txt"))
+        if man is not None and SRC not in man:
+            out.append((FAIL, SRC + " is not in deploy_manifest.txt -- it will never reach the "
+                              "server (ONE-DEPLOY: a new deployable file is one manifest line)"))
+
+    try:
+        live = _get("/static/" + SRC)
+        if "ts-demo-tab" not in live:
+            out.append((FAIL, "live-served " + SRC + " does not mount the DEMO tab"))
+        else:
+            out.append((INFO, "live " + SRC + " serves and mounts the DEMO tab"))
+        if SRC not in _get("/static/adventures_za_map.html"):
+            out.append((FAIL, "the live ZA demo map does not load " + SRC))
+    except ProbeOffline as e:
+        out.append((INFO, "live half not read (%s)" % e))
+    except Exception as ex:
+        out.append((FAIL, "could not verify the live DEMO tab: %r" % (ex,)))
     return out
 
 

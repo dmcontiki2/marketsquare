@@ -2847,7 +2847,7 @@ function renderAdvGrid(){
       : `<div class="adv-card-img-placeholder">${isAccom?'🏕':'🌄'}</div>`;
 
     return `<div style="background:#fff;border:1.5px solid #e2e5ea;border-radius:16px;overflow:hidden;cursor:pointer;" onclick="openDetail('${esc(l.id)}')">
-      <div style="position:relative;">${imgHtml}${l.super_example?'<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:9px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.05em;font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">★ SUPER ADVERT</div>':''}${(String(l.id).startsWith('demo_'))?'<div class="demo-card-badge"></div>':''}</div>
+      <div style="position:relative;">${imgHtml}${l.super_example?'<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:8.5px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.02em;line-height:1.2;max-width:calc(100% - 8px);font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">AI EXAMPLE GENERATED ADVERT</div>':''}${(String(l.id).startsWith('demo_'))?'<div class="demo-card-badge"></div>':''}</div>
       <div style="padding:12px 14px 14px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
           <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${badgeCol};background:${badgeBg};padding:2px 8px;border-radius:10px;">${catLabel}</span>
@@ -3886,7 +3886,7 @@ function cardHtml(l){
   return`<div class="lcard${l.paused?' paused':''}" onclick="${l.paused?'':` openDetail('${l.id}')`}">
     <div class="ibox${_isCollectors?' collectors-thumb':''}" style="background:${catCfg(l).bg}">
       ${imgHtml}
-      ${l.super_example?'<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:9px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.05em;font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">★ SUPER ADVERT</div>':''}
+      ${l.super_example?'<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:8.5px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.02em;line-height:1.2;max-width:calc(100% - 8px);font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">AI EXAMPLE GENERATED ADVERT</div>':''}
       ${(String(l.id).startsWith('demo_')||String(l.id).startsWith('ph_'))?'<div class="demo-card-badge"></div>':''}
       ${l.feat&&!l.paused?'<div class="feat-badge">Featured</div>':''}
       ${l.paused?'<div class="paused-badge">⏸ Pending</div>':''}
@@ -4326,7 +4326,7 @@ function openDetail(id){
         <span class="model-badge ${m}" style="position:static;font-size:10px;padding:3px 8px;">${isCommit?'⏳ Commitment':'👥 Soft Queue'}</span>
         ${l.feat?'<span style="font-size:10px;font-weight:700;color:var(--accent);">★ FEATURED</span>':''}${fspark(l)}
       </div>
-      ${l.super_example?'<div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.05em;font-family:Syne,sans-serif;margin-bottom:6px;">★ SUPER ADVERT — '+(l.showcase?'showcase listing, free for a real seller to claim':'the benchmark listing for this category')+'</div>':''}
+      ${l.super_example?'<div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.02em;font-family:Syne,sans-serif;margin-bottom:6px;">AI EXAMPLE GENERATED ADVERT — '+(l.showcase?'not a real listing; an AI-made example, free for a real seller to claim':'not a real listing; an AI-made example of the benchmark for this category')+'</div>':''}
       <div class="dtitle">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
       <div class="dmeta"><div class="dmi" onclick="showListingAreaMap('${id}')" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||l.country.toUpperCase()}`:''}${advEnvLabel?' · '+advEnvLabel:''} <span style="color:var(--accent);font-size:11px;font-weight:600;">· View on map</span></div></div>
       <div class="price-block">
@@ -13169,7 +13169,7 @@ async function lmLoadGrid() {
         `<div class="lcard" onclick="lmOpenDetail(${c.id})">` +
         `<div class="ibox" style="background:#1f2937">` +
           imgHtml +
-          (c.super_example ? '<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:9px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.05em;font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">\u2605 SUPER ADVERT</div>' : '') +
+          (c.super_example ? '<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:8.5px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.02em;line-height:1.2;max-width:calc(100% - 8px);font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">AI EXAMPLE GENERATED ADVERT</div>' : '') +
           (isFeat ? '<div class="feat-badge">Featured</div>' : '') +
           `<div class="model-badge queue">🛍️ Queue</div>` +
           `<button class="wish-btn ${svLM?'saved':''}" onclick="event.stopPropagation();lmToggleWish(event,${c.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="${svLM?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>` +
