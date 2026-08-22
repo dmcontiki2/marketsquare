@@ -32,15 +32,20 @@ REGISTER_VERIFIED: 2026-08-22
 | HETZNER_S3_ACCESS_KEY + HETZNER_S3_SECRET_KEY | hetzner_s3.conf (0600) | 10:0x | PROBED: real `ListObjectsV2` against `marketsquare-media` succeeded. **THE NAME LIES — these are CLOUDFLARE R2 credentials**, endpoint `2026215991ebbdad051b8ef569d622aa.eu.r2.cloudflarestorage.com`. New token is scoped to the media bucket ONLY (was account-wide), so a future leak cannot reach `trustsquare-backups`. Old Cloudflare token `MarketSquare Media` still to be deleted |
 | CF_CACHE_TOKEN | cloudflare.conf (0600) | 10:4x | PROBED: **a real cache purge against `trustsquare.co` succeeded**. New token `trustsquare-cache-purge-2026-08-22` is scoped to that ONE zone and Cache Purge ONLY — the old token also carried DNS Write, which nothing in the code uses. Old `Trustsquare Cache Purge` token to be deleted |
 | NUMISTA_API_KEY + JUSTTCG_API_KEY | zz-catalog-keys.conf (0600) | 11:4x | PROBED: Numista `/api/v3/types` returned 200 (58 matches) with its `Numista-API-Key` header; JustTCG `/v1/cards` returned 200 with `x-api-key`. Both were defined in `datakeys.conf` in systemd's QUOTED form, which the first tools could not see — burnt values now stripped off disk. Canonical file is named to sort LAST so nothing can override it. **JUSTTCG_API_KEY was then UNSET 12:08 — the TCG price lane is deliberately DARK.** Its free tier is licensed personal/non-commercial and MarketSquare is commercial; the key is rotated, valid and backed up, so switching on is one paste the day David subscribes ($19/mo). See FEED_LICENCES.md + RG-0148 |
+| MS_DEPLOY_TOKEN | deploy-token.conf (0600) | 12:34 | Minted fresh server-side (e205259d -> 76b30e21), local `.secrets/deploy_keys.txt` updated in the same run. No vendor, no counterpart |
+| EMAIL_INBOUND_SECRET | zz-inbound.conf + /etc/environment + app .env, ALL THREE (0600) | 12:41 | PROBED: running process holds it. Took four attempts — three different values were found in three files at once, and the service was being restarted underneath us by the 2-minute autodeploy timer. Resolved by writing ONE value to EVERY location so precedence cannot matter. **PROBED anonymously 12:5x: `/email/inbound` answers 401 'Invalid inbound secret', NOT the 503 the code returns when the variable is empty — so the secret is loaded and being compared.** Worker `trustsquare-email-triage` pasted to match; that half is unverifiable from outside by construction and is proven only by real inbound mail |
+| RELAY_INBOUND_SECRET | zz-inbound.conf + app .env (0600) | 12:37 | Rotated (b454baa6 -> 16bbb094). Read via `ai_provider.envkey()`, so it needs process env OR the app .env — the first attempt skipped it entirely because the check only looked at process env. **PROBED: `/intro/relay` answers 401 anonymously, so the door enforces — but that endpoint returns 401 for BOTH a wrong secret and an empty one, so unlike the email door this does NOT prove the value is set. The relay's server half rests on the process fingerprint (READ-grade), not a probe.** Worker `intro-relay` pasted to match |
 
 ## Still burnt — exposed, live, NOT yet replaced
 
 | Credential | Why it matters | Rotate where | Blocked on |
 |---|---|---|---|
-| COMMAND_SECRET | consumer not yet identified — establish before rotating | self-issued | Claude to identify |
-| EMAIL_INBOUND_SECRET | authenticates POST /email/inbound | self-issued, both sides | Cloudflare Worker + server |
-| RELAY_INBOUND_SECRET | authenticates the intro relay Worker | add_relay_secret.bat | Cloudflare Worker + server |
-| MS_DEPLOY_TOKEN | authenticated deploy hook | server + add_deploy_token.bat | status UNKNOWN — establish |
+
+## Removed rather than rotated
+
+| Credential | What was found | Action | Date |
+|---|---|---|---|
+| COMMAND_SECRET | **Nothing consumes it.** No reference in any Python, JavaScript, batch or shell file in the repo, none in the deployed code on the server, and the running process did not carry it. It survived only as a stale line | **DELETED** from `/etc/environment` rather than rotated — a burnt secret that nothing reads is pure liability, and rotation would have preserved a thing with no purpose | 2026-08-22 |
 
 ## Unrotatable — accepted risk, with reasons
 
