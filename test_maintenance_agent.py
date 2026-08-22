@@ -33,9 +33,18 @@ def test_ack_always_sends_except_spam():
     assert "_smtp_send_reply" in blk, "ACK no longer uses the Resend-first send path"
 
 def test_auto_reply_gate_not_gmail_only():
+    # CORRECTED 21 Aug 2026 (TRUTH-REVIEW-1): the original pinned the SPELLING
+    # os.getenv("RESEND_API_KEY"). ENVKEY-1 (19 Aug) rightly converted that read to
+    # ai_provider.envkey() -- systemd does not export .env, so the bare form is the
+    # actual bug -- and this guard then sat red for 10 scans against CORRECT code
+    # (RG-0114 caught the sitting). Assert the PROPERTY: the gate consults Resend
+    # via the envkey path, with the Gmail fallback -- and the outlawed bare form
+    # must stay gone (a red here is a CODE-PATTERN claim, never a runtime one).
     src = _read("bea_main.py")
-    assert 'and (bool(os.getenv("RESEND_API_KEY")) or bool(GMAIL_APP_PASSWORD))' in src, \
-        "auto-reply gate regressed to Gmail-only (Resend is the launch path)"
+    assert 'and (bool(ai_provider.envkey("RESEND_API_KEY")) or bool(GMAIL_APP_PASSWORD))' in src, \
+        "auto-reply gate regressed: must consult Resend (via envkey, ENVKEY-1) with Gmail fallback"
+    assert 'and (bool(os.getenv("RESEND_API_KEY")) or bool(GMAIL_APP_PASSWORD))' not in src, \
+        "auto-reply gate re-grew a bare os.getenv RESEND read (ENVKEY-1 class: invisible on the server)"
 
 def test_escalation_brief_wired():
     # B3 (11 Aug 2026): the safety/legal/cost brief. Three properties must hold:

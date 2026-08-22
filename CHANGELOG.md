@@ -1,3 +1,143 @@
+## 2026-08-22 — three false failures from one wrong assumption about a verification endpoint
+
+`CF_CACHE_TOKEN` took five attempts. **Four of them failed because of the check, not the
+credential.** Recorded because the failure mode is subtle and cost the most time of anything
+in the rotation.
+
+- **Wrong endpoint.** The installer verified with `GET /user/tokens/verify`. That is a
+  USER-level endpoint. A token scoped to one zone's Cache Purge cannot call it, so it
+  answers **401 whether the token is good or not**. The original token passed only because
+  it was broader (Cache Purge + DNS Write, account-scoped) — which made the check look
+  sound right up until it was replaced by a properly narrow one. **A verification that
+  fails closed on correct input is worse than no verification: it destroys good work.**
+- **Wrong constant.** "Cloudflare API tokens are 40 characters" was asserted from memory
+  and is false — this account issues 53. That wrong number was then wired into the
+  installer as a warning, so the tool *agreed* with the wrong diagnosis and sent David back
+  to re-copy a correct value three times.
+- **What proved it:** replacing the check with the job the credential exists to do — a real
+  `POST /zones/{zone}/purge_cache` against a URL that does not exist. Harmless, and end to
+  end. It passed first time on the value that had been "failing" all along.
+
+**Rule taken from this: verify a credential by exercising its ACTUAL permission, never by
+calling a broader endpoint it may not be entitled to.** The same rule already existed one
+level down (RG-0147: verify at the point of use, not at the file) — this extends it: the
+probe must be inside the credential's own scope, or a least-privilege credential will read
+as broken. Every verifier written today follows it: Resend by a send probe, Paystack by a
+transaction call, Anthropic by a models list, R2 by a bucket listing, Gmail by an SMTP
+login, Cloudflare by a purge.
+
+Net effect: the new token is deliberately NARROWER than the one it replaces — one zone,
+Cache Purge only, no DNS Write.
+
+## 2026-08-22 — Travelpayouts tours review resubmitted, and the token found to be unrotatable
+
+**Resubmitted (RUL-041).** OPEN_LOOPS D10 had reserved the resubmit moment to David — scheduled
+1 Sep, "earlier on David's word". He gave it. The project went back for review on 22 Aug with
+`/flags` reporting `mode: live`, the gate down (RUL-029/034) and the 5 Aug objection —
+*"website under development or not yet ready"* — answered by real change: EULA v1.14 live,
+the honesty labelling built, the site publicly reachable. 26 programs auto-connect on approval,
+including GetYourGuide, Viator and Booking.com, at ~8% commission against 1.1-1.3% on flights.
+Timing was the argument for going now rather than waiting: a few days' review lands approval
+near SOFT LAUNCH (29 Aug) instead of starting the clock after it.
+
+**The decision inside it.** RUL-040's labelling — AI EXAMPLE GENERATED ADVERT ribbons, "not a
+real listing" pills, red DEMO tabs — is not yet live (RG-0140/0141 both report their live halves
+failing, pending deploy). It is also *exactly* what "not ready" looks like to a reviewer. Claude's
+call, put to David in business terms and agreed: **submit now, do not hold the deploy.** The labels
+exist because an exemplar must never be mistaken for a buyable listing. An affiliate reviewer's
+impression does not outrank a promise to buyers, and a decline on those grounds gets answered in
+writing rather than by hiding the label.
+
+**TRAVELPAYOUTS_TOKEN cannot be rotated.** Checked on the page during the secret rotation
+(Programs → Aviasales → API): one permanent token per account, a copy button and nothing else —
+no regenerate, no roll, no second token. It is therefore moved from "still burnt" to
+**UNROTATABLE-ACCEPTED** in `SECRETS_REGISTER.md`, with the reasoning recorded: read-only cached
+fare data, no customer data, no money, no write path, no billing exposure (marker 758984, no
+contract), server-side only, and RG-0025 already forbids any TP script on app pages so it cannot
+leak through the front end again. Quota exhaustion degrades exactly the way the SUPPLIER FALLBACK
+DOCTRINE already handles — no indicative fare, fall back to the agency card.
+
+**RG-0146 was strengthened rather than allowed to go quieter.** Moving a row out of "still burnt"
+would otherwise reduce the red count for free, so the entry now polices the new category: an
+UNROTATABLE row must carry a DATED decision and real reasoning, or it fails as "a burnt credential
+with a nicer label".
+
+## 2026-08-22 — the precedence trap, twice, and the tool that ends it
+
+Recorded separately from the rotation entry because the fault is about METHOD, not about
+any one credential.
+
+**systemd applies environment in order, and the last assignment wins.** The unit, then
+every drop-in in *lexicographic* order (there are 17 on this service), then each
+`EnvironmentFile` where its directive sits. A correctly-written 0600 drop-in is therefore
+not enough — it has to be the *last* definition, and nothing about writing it tells you
+whether it was.
+
+It bit twice in one morning:
+
+- **Paystack.** The new key was written to `paystack.conf`, the service restarted clean and
+  reported `active` — and `/etc/environment`, loaded later via `env.conf`, still held the
+  just-revoked key. Disk said rotated, Paystack said 401, **card payments were down and
+  nothing reported it.**
+- **CF_CACHE_TOKEN.** The new value went into `cloudflare.conf`; `datakeys.conf` sorts after
+  it and held the old one. The rotation reported success and **changed nothing.**
+
+**What caught both: reading back from `/proc/<pid>/environ`** — the RG-0147 assertion,
+written that same morning off the first incident and earning itself on the second.
+The write is not the fact.
+
+**New standing tool: `scripts/consolidate_env_var.py VAR CANONICAL_FILE`.** Finds every
+definition across the unit, all drop-ins and their EnvironmentFiles; strips all but the
+canonical one (backups first); restarts; and reports the fingerprint the RUNNING PROCESS
+ends up with. Plus `scripts/diag_env_var.py VAR`, which prints the whole precedence chain
+in systemd's own order so the next session can SEE which file wins instead of guessing.
+
+**CF_CACHE_TOKEN is NOT rotated.** A 53-character value was installed (Cloudflare tokens
+are 40 — most likely the R2 token value from the previous step), it verified 401, and
+cache purge broke until the previous token was restored from backup. Restored and PROBED:
+token active, zone `trustsquare.co` reachable. The old token remains burnt-but-working and
+is the lowest-harm item outstanding.
+
+## 2026-08-22 — the Gmail fallback had NEVER worked, and a Google account password was burnt without anyone counting it
+
+Follow-on to the same morning's secret rotation, recorded separately because the finding
+outlives the rotation. Supersedes the "leave the Gmail fallback dark" call in that entry —
+evidence overtook it inside the hour.
+
+**The fallback had never authenticated once.** David's app-password list at Google was
+**empty**, and had always been. The 15-character value the server carried as
+`GMAIL_APP_PASSWORD` was his Google **ACCOUNT** password, which Gmail refuses over SMTP —
+code 534, "application-specific password required", which is Google saying precisely that.
+So every review-link and sign-in email that ever fell through to the SMTP path failed, was
+logged, and was swallowed. The lane reported healthy because nothing ever asserted it.
+
+Same class as RG-0143's placebo breaker: **a fallback nobody has exercised is decoration
+until it is proven.** And a second lesson with teeth: **a credential named for what it is
+supposed to be tells you nothing about what it is.** `GMAIL_APP_PASSWORD` held something
+that was not an app password, in a variable read by code that assumed it was, for months.
+
+**Fixed:** a real app password (16 lowercase, Google-generated, named `TrustSquare SMTP
+fallback`) created and installed via `install_gmail_password.py`. **PROBED: SMTP LOGIN
+ACCEPTED** — the first successful authentication in the app's life. `GMAIL_ADDRESS` is
+now set explicitly in the same 0600 drop-in instead of relying on a hardcoded default.
+
+**The exposure nobody counted.** Because that value was his account password, and
+`/etc/environment` was mode 0644 and is loaded by the unit via `EnvironmentFile`, his
+**Google account password was printed into the DW-057 transcript dump on 20 Aug** along
+with the eight credentials that were counted. It was invisible to every review because it
+was wearing the wrong name. 2-Step Verification is ON, which is what keeps this out of
+emergency territory — the password alone does not grant sign-in. The change is outstanding
+and is David's; it is recorded in `SECRETS_REGISTER.md`, not left in a sentence.
+
+**How the session went wrong, recorded so the next one does better.** David said three
+times, in different words, that he was using a password he had CHOSEN — "I always start my
+gmail passwords with a capital letter and it works". Claude read that as a transcription
+slip and sent him back for a cleaner copy three times, when the honest reading was that he
+was looking at a different screen entirely. The tell was in the data too: 15 characters
+where the format is 16, and an SMTP code that names the exact fault. **When a user's
+description of what they are doing conflicts with the assumption, the assumption is what
+should be tested first.**
+
 ## 2026-08-22 — Pre-soft-launch third-party sweep: an external watcher built, and two unowned facts given machinery
 
 **7 days to soft launch (Fri 29 Aug) · verdict AMBER.** Unattended sweep. All guards green:

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MarketSquare — Launch-Readiness HALT Board · Cycle 1</title>
+<style>
+:root{--navy:#1F3864;--blue:#2F5496;--green:#538135;--greenbg:#E7F2E3;--amber:#C55A11;--amberbg:#FFF4E5;--red:#C00000;--redbg:#FBE4E4;--ink:#262626;--muted:#595959;--line:#D9D9D9;}
+*{box-sizing:border-box}body{font-family:Calibri,Segoe UI,system-ui,Arial,sans-serif;color:var(--ink);margin:0;background:#fff;line-height:1.4}
+.wrap{max-width:1120px;margin:0 auto;padding:24px}
+h1{color:var(--navy);font-size:26px;margin:0 0 2px;border-bottom:3px solid var(--navy);padding-bottom:8px}
+.sub{color:var(--blue);font-weight:700;font-size:14px;margin:8px 0 2px}
+.meta{color:var(--muted);font-size:12px;font-style:italic;margin:0 0 16px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 18px;font-size:12.5px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:14px;font-weight:700}
+.g{background:var(--greenbg);color:var(--green);border:1px solid var(--green)}
+.a{background:var(--amberbg);color:var(--amber);border:1px solid var(--amber)}
+.r{background:var(--redbg);color:var(--red);border:1px solid var(--red)}
+.headline{border-left:6px solid var(--red);background:var(--redbg);padding:14px 16px;border-radius:6px;margin:0 0 18px;font-size:14px}
+.headline b{color:var(--red)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.card{border:1px solid var(--line);border-radius:8px;padding:13px 14px;border-top:5px solid var(--blue);background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.card.green{border-top-color:var(--green)} .card.amber{border-top-color:var(--amber)} .card.red{border-top-color:var(--red)}
+.card h3{margin:0 0 4px;font-size:15px;color:var(--navy)}
+.verdict{font-weight:800;font-size:12px;letter-spacing:.5px;padding:2px 8px;border-radius:10px;float:right}
+.verdict.green{background:var(--greenbg);color:var(--green)} .verdict.amber{background:var(--amberbg);color:var(--amber)} .verdict.red{background:var(--redbg);color:var(--red)}
+.grade{font-size:11px;color:var(--muted);margin:0 0 6px}
+.finding{font-size:12.5px;margin:6px 0}
+.limits{font-size:11.5px;color:var(--ink);background:#F5F7FB;border-radius:5px;padding:6px 8px;margin-top:8px}
+.limits b{color:var(--blue)}
+.sec{color:var(--navy);font-size:18px;margin:26px 0 10px;border-bottom:1px solid var(--line);padding-bottom:5px}
+table{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:6px}
+th{background:var(--navy);color:#fff;text-align:left;padding:7px 9px} td{padding:6px 9px;border:1px solid var(--line)}
+tr:nth-child(even) td{background:#EAF0FA}
+.foot{color:var(--muted);font-size:11.5px;margin-top:20px;font-style:italic}
+</style></head><body><div class="wrap">
+<h1>MarketSquare — Launch-Readiness HALT Board</h1>
+<div class="sub">Cycle 1 · Claude's forensic + HALT stress pass · trustsquare.co</div>
+<div class="meta">D-7 gate review · 22 Aug 2026 · Soft launch Fri 29 Aug · Full launch Mon 1 Sep (RUL-001) · Evidence ladder: PROBED &gt; EXECUTED &gt; READ</div>
+<div class="legend">
+<span class="chip g">● GREEN — probed, holds</span>
+<span class="chip a">● AMBER — works, unproven at scale / mitigated</span>
+<span class="chip r">● RED — blocker</span>
+<span class="chip" style="background:#F5F7FB;color:var(--muted);border:1px solid var(--line)">Score: 2 RED · 6 AMBER · 2 GREEN</span>
+</div>
+<div class="headline"><b>HOLD indicated.</b> Two dimensions land RED — <b>Hardening</b> and <b>Hack-proofness</b> — both from ONE root: production secrets exposed twice and still unrotated, while the gate + WAF are effectively down (probed: app shell, live /listings and /dashboard/summary all answer 200 anonymously). By the 15 Aug rule, any RED at D-7 = hold declared that day. The launch ruling is David's. This is a single, David-clearable blocker — rotate the secrets + rule the gate posture and both REDs clear; the app's own auth already passes every probed attack.</div>
+
+<div class="grid">
+<div class="card amber"><span class="verdict amber">AMBER</span><h3>1 · Business viability</h3><div class="grade">PROBED + READ · fast-follow</div><div class="finding">59 sellers · 104 listings · 115 lifetime introductions — the two-sided market functions live. Demand at public scale is unproven.</div><div class="limits"><b>Limit:</b> functions at 59 sellers; conversion funnel health at public scale = not measured.</div></div>
+
+<div class="card amber"><span class="verdict amber">AMBER</span><h3>2 · Financial growth</h3><div class="grade">EXECUTED + READ · fast-follow</div><div class="finding">Ramp credible and profitable 60→6000. Rests on intros/seller/mo + paid conversion — both assumptions.</div><div class="limits"><b>Operating limit:</b> growth story stays credible while demand inputs hold; <b>breaks</b> when realized intros/seller falls below model.</div></div>
+
+<div class="card green"><span class="verdict green">GREEN</span><h3>3 · Profitability / unit economics</h3><div class="grade">EXECUTED · not a blocker</div><div class="finding">Break-even ~25–30 sellers even under combined stress. Cost base tiny; intro fee ~100% margin. No ad-valorem cost (canon-compliant).</div><div class="limits"><b>Destruct limit:</b> only revenue realization breaks it — never cost. Survives 2× churn + FX + reprice + 40% demand drop at once.</div></div>
+
+<div class="card amber"><span class="verdict amber">AMBER</span><h3>4 · Server capability</h3><div class="grade">PROBED today / NOT MEASURED at launch · fast-follow</div><div class="finding">Healthy today: p50 ~120 ms, SQLite 2.88 MB, BIT 8/8. Launch-scale load never measured — edge blocks synthetic load.</div><div class="limits"><b>Operating limit:</b> flat & healthy at trivial current load; <b>launch-concurrency limit UNKNOWN</b> (won't stress prod).</div></div>
+
+<div class="card amber"><span class="verdict amber">AMBER</span><h3>5 · Robustness</h3><div class="grade">PROBED + EXECUTED + READ · fast-follow</div><div class="finding">3 AI lanes live; failover proven in the decision layer (13/13). Paystack/Resend/relay single-fail behaviour not live-tested.</div><div class="limits"><b>Limit:</b> AI vendor loss degrades gracefully (proven); payment/mail cascade behaviour unmeasured.</div></div>
+
+<div class="card green"><span class="verdict green">GREEN</span><h3>6 · Reliability</h3><div class="grade">PROBED · not a blocker</div><div class="finding">BIT 8/8 fresh, auth fails closed, no demo bleed, ledger 126/129 holding. Instruments honest (RG-0133).</div><div class="limits"><b>Gap:</b> no independent external uptime monitor — reliability is self-reported.</div></div>
+
+<div class="card amber"><span class="verdict amber">AMBER</span><h3>7 · Maintainability</h3><div class="grade">PROBED + READ · fast-follow</div><div class="finding">bea_main.py = 1.0 MB single file; 12 files uncommitted on disk. Strong change machinery (ledger/rulings/compilers) offsets it.</div><div class="limits"><b>Human destruct limit:</b> a 2am fault in a 1 MB monolith with an uncommitted tree is the diagnosis risk.</div></div>
+
+<div class="card amber"><span class="verdict amber">AMBER</span><h3>8 · Scalability</h3><div class="grade">READ + PROBED · not a blocker at 60</div><div class="finding">SQLite today (fine at 60). Postgres move (RUL-024) not executed; ~79 SQLite-coupled call sites remain.</div><div class="limits"><b>First wall:</b> SQLite write concurrency + single box between 600 and 6000 sellers.</div></div>
+
+<div class="card red"><span class="verdict red">RED</span><h3>9 · Hardening</h3><div class="grade">PROBED + READ · <b style="color:#C00000">BLOCKER</b></div><div class="finding">The 29 Aug gate-down exposure is LIVE NOW, 7 days early: gate down both halves + WAF allowlist down + secrets unrotated. IL-01 is now authenticated (cleared).</div><div class="limits"><b>Destruct limit reached:</b> the current live state IS the destruct condition for security.</div></div>
+
+<div class="card red"><span class="verdict red">RED</span><h3>10 · Hack-proofness</h3><div class="grade">PROBED + READ · <b style="color:#C00000">BLOCKER</b></div><div class="finding">App auth is hard — no injection, no enumeration, no exhaustion, fails closed. But exposed unrotated secrets mean one stolen credential bypasses all of it.</div><div class="limits"><b>Blast radius:</b> total — one valid stolen MS_API_KEY / PAYSTACK_WEBHOOK_SECRET walks past every check.</div></div>
+</div>
+
+<h2 class="sec">HALT weak links precipitated</h2>
+<table>
+<tr><th>Weak link</th><th>Surfaced by</th><th>Status this session</th></tr>
+<tr><td>Stranded git locks (index.lock + HEAD.lock &gt;60 min)</td><td>Ledger RG-0015 tripped RED</td><td style="color:#538135;font-weight:700">FIXED — healed via git_unlock.py; ledger re-run clean, 0 regressed. LOCKED (RG-0015).</td></tr>
+<tr><td>Gate-down exposure live 7 days early</td><td>Probe: shell + /listings + /dashboard/summary 200 anon</td><td>Reserved to David (gate posture + rotation)</td></tr>
+<tr><td>Unrotated exposed production secrets</td><td>STATUS.md + OPEN_LOOPS B1</td><td style="color:#C00000;font-weight:700">THE BLOCKER — reserved to David (RUL-027/037)</td></tr>
+<tr><td>No launch-scale load instrument</td><td>HALT load ramp blocked at Cloudflare edge</td><td>Fast-follow: browser-UA rate-bounded probe vs staging</td></tr>
+<tr><td>openai base lane has no production golden run</td><td>Ledger RG-0132 OPEN (serves 100% traffic)</td><td>Fast-follow: run golden_seam_v2.py on server</td></tr>
+</table>
+
+<div class="foot">Cycle 1 of 3. Next: Cycle 2 doctoral peer analysis (fresh Fable sub-agent, tries to break this audit) → Cycle 3 OpenAI peer review (on David's spend approval, ~$1.00–1.60 ceiling). Authored under the Evidence Ladder, 22 Aug 2026.</div>
+</div></body></html>

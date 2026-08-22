@@ -5505,9 +5505,11 @@ ID_NPR_PRICE_T = 1
 
 
 def _utc_now() -> str:
-    """Portable UTC timestamp. Deliberately NOT strftime('now') — that is a
-    SQLite-ism and the PG-readiness guard counts them, because every one is a
-    line that has to be rewritten when the Postgres move happens."""
+    """Portable UTC timestamp. Deliberately NOT the SQLite date-format
+    function -- that is a SQLite-ism the PG-readiness ratchet counts, because
+    every one must be rewritten at the Postgres move. (Do not name the counted
+    pattern here: the ratchet greps this file, comments included -- the trap
+    paid for on 15 and 19 Aug.)"""
     from datetime import datetime as _dt
     return _dt.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 

@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MarketSquare — Consolidated Launch-Readiness Verdict (3 cycles)</title>
+<style>
+:root{--navy:#1F3864;--blue:#2F5496;--green:#538135;--greenbg:#E7F2E3;--amber:#C55A11;--amberbg:#FFF4E5;--red:#C00000;--redbg:#FBE4E4;--ink:#262626;--muted:#595959;--line:#D9D9D9}
+*{box-sizing:border-box}body{font-family:Calibri,Segoe UI,system-ui,Arial,sans-serif;color:var(--ink);margin:0;background:#fff;line-height:1.4}
+.wrap{max-width:1180px;margin:0 auto;padding:24px}
+h1{color:var(--navy);font-size:26px;margin:0 0 2px;border-bottom:3px solid var(--navy);padding-bottom:8px}
+.sub{color:var(--blue);font-weight:700;font-size:14px;margin:8px 0 2px}
+.meta{color:var(--muted);font-size:12px;font-style:italic;margin:0 0 14px}
+.verdictbar{background:var(--redbg);border-left:6px solid var(--red);border-radius:6px;padding:14px 16px;margin:0 0 18px;font-size:14.5px}
+.verdictbar b{color:var(--red)}
+.count{display:inline-block;font-weight:800;padding:3px 12px;border-radius:14px;margin-right:8px}
+.cr{background:var(--redbg);color:var(--red);border:1px solid var(--red)} .ca{background:var(--amberbg);color:var(--amber);border:1px solid var(--amber)} .cg{background:var(--greenbg);color:var(--green);border:1px solid var(--green)}
+table{border-collapse:collapse;width:100%;font-size:12.5px;margin:8px 0 4px}
+th{background:var(--navy);color:#fff;text-align:left;padding:8px 9px;font-size:12px} td{padding:7px 9px;border:1px solid var(--line);vertical-align:top}
+tr:nth-child(even) td{background:#F4F7FC}
+.p{font-weight:800;text-align:center;border-radius:4px;padding:2px 0}
+.g{background:var(--greenbg);color:var(--green)} .a{background:var(--amberbg);color:var(--amber)} .r{background:var(--redbg);color:var(--red)}
+.arrow{color:var(--muted);font-size:11px}
+.sec{color:var(--navy);font-size:18px;margin:26px 0 8px;border-bottom:1px solid var(--line);padding-bottom:5px}
+.blk td:first-child{font-weight:700}
+.tagr{color:var(--red);font-weight:700}.tagg{color:var(--green);font-weight:700}
+.legend{font-size:12px;color:var(--muted);margin:8px 0 0}
+.foot{color:var(--muted);font-size:11.5px;margin-top:20px;font-style:italic}
+.cycles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:10px 0}
+.cyc{border:1px solid var(--line);border-top:5px solid var(--blue);border-radius:8px;padding:11px 13px;font-size:12.5px}
+.cyc h4{margin:0 0 5px;color:var(--navy);font-size:13.5px}
+</style></head><body><div class="wrap">
+<h1>MarketSquare — Consolidated Launch-Readiness Verdict</h1>
+<div class="sub">Three independent cycles · Claude forensic+HALT · Fable doctoral peer · OpenAI GPT-5.6 second vendor</div>
+<div class="meta">D-7 gate review · 22 Aug 2026 · Soft launch Fri 29 Aug · Full launch Mon 1 Sep (RUL-001) · Evidence ladder: PROBED &gt; EXECUTED &gt; READ · Cycle 3 spend $0.87</div>
+
+<div class="verdictbar"><b>VERDICT: HOLD.</b> Board after three cycles: <span class="count cr">2 RED</span><span class="count ca">8 AMBER</span><span class="count cg">0 GREEN</span> — by the 15 Aug rule, any RED at D-7 = HOLD declared today. The launch ruling is David's. The two REDs survived every adversarial pass and were <b>reinforced</b> by a confirmed money-path double-charge defect, an anonymous security-posture leak, and an unverified AI spend ceiling. None is architectural — each has a known, bounded fix. The economics, the core app auth, and the instruments held.</div>
+
+<table>
+<tr><th style="width:2%">#</th><th style="width:16%">Dimension</th><th style="width:7%">Cycle&nbsp;1</th><th style="width:7%">Cycle&nbsp;2</th><th style="width:7%">Cycle&nbsp;3</th><th style="width:8%">FINAL</th><th style="width:53%">Operating / destruct limit — final</th></tr>
+<tr><td>1</td><td>Business viability</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td>Functions at 59 sellers; public-scale demand not measured</td></tr>
+<tr><td>2</td><td>Financial growth</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td>Credible while demand inputs hold; unproven at launch</td></tr>
+<tr><td>3</td><td>Profitability / unit econ</td><td class="p g">GREEN</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td>Break-even ~49–103 sellers (peer-corrected from 25–30). Cost never breaks it; revenue realization does</td></tr>
+<tr><td>4</td><td>Server capability</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td>Fine today; launch-scale NOT MEASURED + event-loop/SQLite blocking found in code</td></tr>
+<tr><td>5</td><td>Robustness</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td>AI failover proven; payment/mail/KYC single-fail untested</td></tr>
+<tr><td>6</td><td>Reliability</td><td class="p g">GREEN</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td>BIT 8/8 today, but no external uptime monitor + fail-open overused</td></tr>
+<tr><td>7</td><td>Maintainability</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td>1 MB monolith, duplicated logic; 2am-diagnosis risk</td></tr>
+<tr><td>8</td><td>Scalability</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td class="p a">AMBER</td><td>SQLite fine at 60; first wall 600–6000; Postgres not executed</td></tr>
+<tr><td>9</td><td>Hardening</td><td class="p r">RED</td><td class="p r">RED</td><td class="p r">RED</td><td class="p r">RED</td><td>Destruct condition is LIVE: gate+WAF down, secrets unrotated, posture leaked anonymously</td></tr>
+<tr><td>10</td><td>Hack-proofness</td><td class="p r">RED</td><td class="p r">RED</td><td class="p r">RED</td><td class="p r">RED</td><td>App auth hard, but stolen credential = total blast radius; accept_intro not idempotent (double-charge)</td></tr>
+</table>
+<div class="legend">Movement: two greens fell under scrutiny (Profitability, Reliability); nothing rose. That one-directional drift is the signal that adversarial review was doing its job.</div>
+
+<h2 class="sec">Consolidated blocker register</h2>
+<table class="blk">
+<tr><th style="width:30%">Blocker</th><th style="width:14%">Found by</th><th style="width:14%">Grade</th><th style="width:42%">Fix owner / action</th></tr>
+<tr><td class="tagr">B1 · Exposed secrets unrotated + gate & WAF down</td><td>C1 + all</td><td>READ + PROBED (exposure live)</td><td><b>DAVID</b> — ROTATE_SECRETS.bat + systemd edit; Claude drives vendor rotation; rule gate posture</td></tr>
+<tr><td class="tagr">B2 · accept_intro non-idempotent → buyer double-charge</td><td>C3 (OpenAI), confirmed on disk</td><td>READ (verified line 5740–5748)</td><td>Small code fix (status/charged guard + idempotent txn + balance floor) → ship one-deploy → LOCK a replay assertion</td></tr>
+<tr><td class="tagr">B3 · /dashboard/summary leaks posture anonymously</td><td>C2 (Fable), probed</td><td>PROBED</td><td>Gate endpoint behind auth OR strip infra/WAF line → ship</td></tr>
+<tr><td>B4 · Live AI spend ceiling unverified; uncapped path exists</td><td>C3 (OpenAI)</td><td>NOT MEASURED (admin 401)</td><td>Read /admin/ai-spend/summary on box; confirm nonzero ceiling + rejection test</td></tr>
+<tr><td>KYC · ID docs → active AI provider (POPIA/GDPR) + 120s event-loop block</td><td>C3 (OpenAI)</td><td>READ</td><td>Keep paid KYC/NPR OFF at launch (optional, never proven live); dedicated lane if enabled</td></tr>
+</table>
+<div class="legend"><b>Cleared / mitigated (not blockers):</b> IL-01 now authenticated (PROBED 401) · account_binding live ON (PROBED) · core app auth holds every probed attack · git-lock ledger regression healed this session.</div>
+
+<h2 class="sec">What each cycle added — the case for three vendors</h2>
+<div class="cycles">
+<div class="cyc"><h4>Cycle 1 · Claude (forensic + HALT)</h4>Probed live, confirmed the secrets blocker, proved app auth is hard, stress-tested economics (robust), scored server load NOT MEASURED honestly, healed a live ledger regression.</div>
+<div class="cyc"><h4>Cycle 2 · Fable (doctoral peer)</h4>Overturned two greens, recomputed break-even at realistic demand (~49–103 sellers), and read the /dashboard/summary body Cycle 1 skipped — a posture leak.</div>
+<div class="cyc"><h4>Cycle 3 · OpenAI GPT-5.6 (2nd vendor)</h4>Found the accept_intro double-charge defect neither Claude cycle caught, the uncapped-AI-spend path, KYC privacy/perf blockers, and the pre-auth wallet oracle.</div>
+</div>
+
+<div class="foot">HALT dividend: five launch-day failures precipitated in the lab 7 days early. B2 (silent buyer double-charging in a trust-branded marketplace) is a small fix now, a refund crisis on 2 Sep. Path to GO: rotate secrets (David) · idempotent accept_intro · sanitise /dashboard/summary · verify AI ceiling · keep KYC off. One-month slip available if held (soft 28 Sep / full 1 Oct). Reserved to David: the GO/HOLD ruling, secret rotation, shipping the fixes, any scope/date change. Authored under the Evidence Ladder, 22 Aug 2026.</div>
+</div></body></html>

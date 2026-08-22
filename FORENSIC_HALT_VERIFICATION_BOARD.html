@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MarketSquare — D-7 HALT Verification Board · 22 Aug 2026</title>
+<style>
+ :root{--navy:#1F3864;--blue:#2F5496;--pale:#EAF0FA;--red:#B01F1F;--amber:#C55A11;
+       --green:#538135;--grey:#595959;--line:#D9D9D9;--bg:#F7F9FC}
+ *{box-sizing:border-box} body{margin:0;background:var(--bg);color:#262626;
+   font:15px/1.45 Calibri,Segoe UI,system-ui,sans-serif}
+ .wrap{max-width:1180px;margin:0 auto;padding:26px 20px 60px}
+ h1{color:var(--navy);font-size:27px;margin:0 0 4px;border-bottom:3px solid var(--navy);padding-bottom:8px}
+ .sub{color:var(--blue);font-weight:700;margin:8px 0 2px}
+ .meta{color:var(--grey);font-style:italic;font-size:12.5px;margin-bottom:20px}
+ h2{color:var(--blue);font-size:18px;margin:30px 0 10px;border-bottom:1px solid var(--line);padding-bottom:5px}
+ .verdict{background:#fff;border-left:8px solid var(--red);border-radius:5px;padding:16px 18px;
+   box-shadow:0 1px 3px rgba(0,0,0,.07);margin-bottom:8px}
+ .verdict b{color:var(--red);font-size:20px}
+ .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:11px;margin:12px 0}
+ .card{background:#fff;border-radius:5px;padding:11px 13px;box-shadow:0 1px 3px rgba(0,0,0,.07);
+   border-top:4px solid var(--grey)}
+ .card.red{border-top-color:var(--red)} .card.amber{border-top-color:var(--amber)}
+ .card.green{border-top-color:var(--green)} .card.grey{border-top-color:var(--grey)}
+ .card .n{font-size:11px;color:var(--grey);text-transform:uppercase;letter-spacing:.5px}
+ .card .d{font-weight:700;color:var(--navy);font-size:14px;margin:2px 0 6px}
+ .pill{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:700;color:#fff}
+ .p-red{background:var(--red)} .p-amber{background:var(--amber)} .p-green{background:var(--green)}
+ .p-grey{background:var(--grey)} .p-blue{background:var(--blue)}
+ .lim{font-size:12px;color:var(--grey);margin-top:7px;line-height:1.35}
+ table{width:100%;border-collapse:collapse;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.07);
+   border-radius:5px;overflow:hidden;font-size:13.5px}
+ th{background:var(--navy);color:#fff;text-align:left;padding:9px 11px;font-weight:700}
+ td{padding:8px 11px;border-top:1px solid var(--line);vertical-align:top}
+ tr:nth-child(even) td{background:var(--pale)}
+ .box{background:#fff;border-left:6px solid var(--blue);border-radius:5px;padding:13px 16px;
+   margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+ .box.warn{border-left-color:var(--amber);background:#FFF9F2}
+ .box.ok{border-left-color:var(--green);background:#F4FAF2}
+ .box b{color:var(--navy)}
+ code{background:#F2F2F2;padding:1px 5px;border-radius:3px;font:12px Consolas,monospace}
+ pre{background:#2b2b2b;color:#e6e6e6;padding:13px 15px;border-radius:5px;overflow:auto;
+   font:12.5px/1.5 Consolas,monospace}
+ .legend{display:flex;gap:16px;flex-wrap:wrap;margin:10px 0 0;font-size:12.5px;color:var(--grey)}
+ .legend span{display:flex;align-items:center;gap:6px}
+ .sw{width:13px;height:13px;border-radius:3px;display:inline-block}
+ footer{margin-top:34px;color:var(--grey);font-size:12px;font-style:italic;
+   border-top:1px solid var(--line);padding-top:12px}
+</style></head><body><div class="wrap">
+
+<h1>MarketSquare — D-7 HALT Verification Board</h1>
+<div class="sub">Second HALT pass over the consolidated launch verdict · trustsquare.co</div>
+<div class="meta">Saturday 22 August 2026, 07:25–07:40 SAST · Soft launch Fri 29 Aug · Full launch Mon 1 Sep (RUL-001)
+ · Evidence ladder: PROBED &gt; EXECUTED &gt; READ &gt; RECALLED</div>
+
+<div class="verdict">
+ <b>VERDICT: HOLD — unchanged, and better evidenced.</b><br>
+ Two dimensions stay RED (Hardening, Hack-proofness). By the 15 August rule, any RED at the D-7 gate review
+ means a hold is declared that day. The launch go/hold ruling is David's. This pass re-probed the 07:22
+ consolidated verdict live rather than repeating it, raised the money-path double-charge from READ to EXECUTED (confirmed on the real handler), and precipitated one new weak link all three cycles missed.
+</div>
+<div class="legend">
+ <span><i class="sw" style="background:#B01F1F"></i> RED — blocker</span>
+ <span><i class="sw" style="background:#C55A11"></i> AMBER — works, unproven at scale</span>
+ <span><i class="sw" style="background:#538135"></i> GREEN — probed and holds</span>
+ <span><i class="sw" style="background:#595959"></i> NOT MEASURED — no live instrument</span>
+</div>
+
+<h2>The ten dimensions after four independent passes</h2>
+<div class="grid">
+ <div class="card amber"><div class="n">01</div><div class="d">Business viability</div>
+   <span class="pill p-amber">AMBER</span>
+   <div class="lim">59 sellers · 104 listings · 115 intros live. Public-scale demand never measured.</div></div>
+ <div class="card amber"><div class="n">02</div><div class="d">Financial growth</div>
+   <span class="pill p-amber">AMBER</span>
+   <div class="lim">Credible while demand inputs hold. Both inputs are still unmeasured.</div></div>
+ <div class="card amber"><div class="n">03</div><div class="d">Profitability / unit econ</div>
+   <span class="pill p-amber">AMBER</span>
+   <div class="lim">Break-even ~49–103 sellers (peer-corrected from 25–30). Cost never breaks it; revenue realization does.</div></div>
+ <div class="card amber"><div class="n">04</div><div class="d">Server capability</div>
+   <span class="pill p-amber">AMBER</span>
+   <div class="lim">Healthy today (p50 ~120 ms). <b>Launch-scale load NOT MEASURED</b> — the edge blocks synthetic load and we will not bypass it 7 days out.</div></div>
+ <div class="card amber"><div class="n">05</div><div class="d">Robustness</div>
+   <span class="pill p-amber">AMBER</span>
+   <div class="lim">AI failover proven. <b>New:</b> the automatic BIT mitigation is a placebo — the breaker inventory is smaller than it looked.</div></div>
+ <div class="card amber"><div class="n">06</div><div class="d">Reliability</div>
+   <span class="pill p-amber">AMBER</span>
+   <div class="lim">BIT 8/8 fresh, ledger exit 0. <b>New fail-green surface found in the safety layer itself.</b> No external monitor (RG-0138 open).</div></div>
+ <div class="card amber"><div class="n">07</div><div class="d">Maintainability</div>
+   <span class="pill p-amber">AMBER</span>
+   <div class="lim">1 MB single-file monolith. Strong change machinery offsets it; 2 a.m. diagnosis risk is real.</div></div>
+ <div class="card amber"><div class="n">08</div><div class="d">Scalability</div>
+   <span class="pill p-amber">AMBER</span>
+   <div class="lim">SQLite fine at 60. First wall 600–6000. Postgres move (RUL-024) not executed.</div></div>
+ <div class="card red"><div class="n">09</div><div class="d">Hardening</div>
+   <span class="pill p-red">RED</span>
+   <div class="lim"><b>Destruct condition is LIVE now.</b> Gate + WAF down, secrets unrotated, and the posture leak reproduced anonymously at 07:25.</div></div>
+ <div class="card red"><div class="n">10</div><div class="d">Hack-proofness</div>
+   <span class="pill p-red">RED</span>
+   <div class="lim">App auth is genuinely hard. But a stolen credential = total blast radius, and the money path is now <b>proven</b> non-idempotent.</div></div>
+</div>
+
+<h2>HALT finding 1 — double-charge, raised READ → EXECUTED</h2>
+<p><code>accept_intro</code> (PUT <code>/intros/{intro_id}/accept</code>) reads the intro row, then unconditionally
+writes <code>status='accepted', tuppence_charged=1</code> and inserts a −1 <code>intro_deduct</code> row. It never tests
+the flags it is about to set. Replayed against a throwaway SQLite replica — no production data, no production box:</p>
+<pre>start balance          : 1T
+after 1st accept       : 0T   (correct)
+after 2nd accept (dbl) : -1T   &lt;-- buyer charged twice for ONE introduction
+after 4 total accepts  : -3T   &lt;-- wallet is NEGATIVE, no balance floor
+intro_deduct rows      : 4 for 1 introduction</pre>
+<div class="box warn"><b>⚠ Operating limit: one accept. Destruct limit: two.</b>
+A double-click, retry, proxy replay or refresh charges again each time, the wallet has no floor at zero, and the
+relay and webhook re-fire — both parties get duplicate introduction emails. On a platform whose entire brand is
+trust and whose only till is Tuppence, this is the defect that loses a founding buyer permanently, and it is
+invisible to the operator because the intro looks correctly accepted.</div>
+
+<h2>HALT finding 2 — NEW: the automatic safe-state response is a placebo</h2>
+<p>The HALT addendum asks which breaker is real and which is decorative. Here is the honest answer for the
+BIT Mitigator — the fast, reversible step between “an S1 test is failing at users now” and “a human gets to it”.</p>
+<table><tr><th>Flag it may flip</th><th>Triggered by</th><th>Its promise</th><th>Read by the app?</th></tr>
+<tr><td><code>auth_fail_closed</code></td><td>B-NEG-AUTH (S1, live, passing)</td><td>force auth closed</td><td><span class="pill p-red">NO</span></td></tr>
+<tr><td><code>tuppence_burn_enabled</code></td><td>B-NEG-DELIVER-CHARGE</td><td>“you will not be charged in the meantime”</td><td><span class="pill p-red">NO</span></td></tr>
+<tr><td><code>ai_example_enabled</code></td><td>B-FEA-EXAMPLE / B-FEA-CONTRACT</td><td>stop serving AI examples</td><td><span class="pill p-red">NO</span></td></tr></table>
+<div class="box warn"><b>⚠ A placebo breaker is worse than no breaker.</b>
+All three flags appear in <code>bea_main.py</code> only at the schema, the migration, the <code>/flags</code> exposure
+tuple, the write model and the read-back — never at a decision site; neither <code>ms.js</code> nor
+<code>marketsquare.html</code> reads any of them. The mitigator writes the row, journals the flip and reports the S1
+mitigated, while the app carries on unchanged. No breaker at least escalates to a human; a placebo consumes the
+incident. The worst is <code>tuppence_burn_enabled</code> — the very lever an operator would pull during the
+double-charge incident above, promising “you will not be charged”, stopping nothing.</div>
+<div class="box"><b>ℹ Scope, stated precisely.</b> The <b>detection</b> layer is real — B-NEG-AUTH is a live S1 check and
+it PASSES today. What is decorative is the automatic <b>mitigation</b>. Two honest fixes, either acceptable: make each
+flag load-bearing at its decision site, or remove it from <code>SAFE_FLAGS</code> so the mitigator escalates to a human
+instead of pretending.</div>
+
+<h2>Hardened this pass — three OPEN ledger assertions</h2>
+<table><tr><th>Entry</th><th>Asserts</th><th>State</th><th>Evidence grade</th></tr>
+<tr><td><b>RG-0142</b></td><td>The money path is idempotent — one introduction charges exactly once, and a wallet can never go negative</td><td><span class="pill p-amber">OPEN</span></td><td><span class="pill p-blue">EXECUTED</span></td></tr>
+<tr><td><b>RG-0143</b></td><td>Every flag the BIT Mitigator may flip is actually read by the app — no placebo breakers</td><td><span class="pill p-amber">OPEN</span></td><td><span class="pill p-blue">EXECUTED</span></td></tr>
+<tr><td><b>RG-0144</b></td><td>The public dashboard never publishes which defences are down</td><td><span class="pill p-amber">OPEN</span></td><td><span class="pill p-green">PROBED</span></td></tr><tr><td><b>RG-0145</b></td><td>The wallet behaves the way the EULA promises — 1T held at request, released on decline or expiry</td><td><span class="pill p-amber">OPEN</span></td><td><span class="pill p-grey">READ</span></td></tr></table>
+<p>Each is written as a <b>class</b>, not an instance. Ledger now runs 138 assertions · exit 0 · every LOCKED fix
+holding · 12 known defects open. Each prints READY TO LOCK the moment its fix lands.</p>
+
+<h2>The adversarial check — both new findings survived</h2>
+<p>Neither new finding had been peer-reviewed, so a fresh reviewer with no stake in them was given one instruction:
+break them. It did not. It strengthened both — then found real defects in the assertions written to hold them.</p>
+<table><tr><th>Finding</th><th>Peer verdict</th><th>What the peer added</th></tr>
+<tr><td>Money path not idempotent</td><td><span class="pill p-blue">UPHELD · grade raised</span></td>
+<td>Ran the <b>real handler</b> under a FastAPI TestClient against a scratch DB, not a replica: four PUTs returned
+200/200/200/200, balance 1→0→−1→−2→−3, four charge rows for one introduction, full middleware stack running.</td></tr>
+<tr><td>Safe-state response is a placebo</td><td><span class="pill p-blue">UPHELD · grade raised</span></td>
+<td>Wrote the mitigator's <b>full safe state</b> into the DB, then charged again: 200 OK, a fifth deduct row.
+Confirmed against the <b>live-served</b> 1.12 MB ms.js — zero occurrences of any of the three flags.</td></tr></table>
+<div class="box"><b>ℹ Three things that sharpen the picture.</b>
+<b>The fix is not novel</b> — <code>estate_agents.py</code> already refuses a non-pending accept with a 409 and an empty
+wallet with a 402, with tests. The house pattern was written, tested, and never applied to the flagship buyer path.
+<b>It is worse than first found</b> — <code>create_intro</code> takes no hold and never checks balance, so a 0T buyer
+goes negative on the <b>first</b> accept; no retry, no double-click, no race required.
+<b>One defence checked and closed</b> — <code>main.py</code> is not a live second app; the deploy manifest ships
+<code>bea_main.py</code> as <code>main.py</code>, so this is not an artefact of auditing the wrong entrypoint.</div>
+<h2>Two further defects in the same class</h2>
+<div class="box warn"><b>⚠ The EULA promises a mechanism that does not exist.</b>
+The shipped terms tell a buyer 1T is “committed (held) when the Buyer makes the request” and “released in full if
+declined or expired”. There is no hold, no release and no balance check at request time anywhere in the code. Fixing
+the idempotency does <i>not</i> close this — both can be true and this still be false. It is a legal and product
+exposure, not only an engineering one, and which way it resolves (implement the hold, or change the wording) is
+David's call. <b>RG-0145.</b></div>
+<div class="box warn"><b>⚠ Decline is unguarded too.</b>
+<code>decline_intro</code> writes <code>status='declined'</code> with no transition check, so declining after an accept
+leaves <code>tuppence_charged=1</code> with no refund row — the buyer paid for an introduction the record calls
+declined. Folded into <b>RG-0142</b> as the same missing-transition-guard class.</div>
+<div class="box warn"><b>⚠ And the assertions themselves were wrong — twice, fixed the same session.</b>
+The peer found three false-red and three false-green paths in the entries as first written. Worst false-red: RG-0144
+read the payload through a helper that transparently retries with the reviewer cookie, so gating the endpoint behind
+auth — one of the two right answers — would have kept it red forever and pushed a later session to weaken it. Worst
+false-green appeared on the very next run: RG-0142's own broadened token list let <code>accept_intro</code>'s
+<code>UPDATE ... SET tuppence_charged=1</code> satisfy the check for code that <i>reads</i> that flag. Guards now match
+only control flow, never SQL handed to <code>conn.execute</code>. Both corrections are written into the entries' refs —
+an assertion that is wrong gets fixed and said out loud, never quietly weakened.</div>
+<h2>Fresh probe re-verification, 07:25 SAST</h2>
+<table><tr><th>Probe</th><th>Result</th><th>Agrees with the 07:22 report?</th></tr>
+<tr><td>GET /health</td><td>200 · BEA v1.3.1 · SQLite 2.88 MB · integrity ok</td><td>Yes</td></tr>
+<tr><td>GET /flags</td><td>200 · mode=live · account_binding ON · intro_relay ON</td><td>Yes</td></tr>
+<tr><td>GET /auth/providers</td><td>200 · google=true · apple=false</td><td>Yes</td></tr>
+<tr><td>GET /dashboard/bit</td><td>200 · 8/8 PASS · zero failing</td><td>Yes</td></tr>
+<tr><td>GET /id-verify/status</td><td>200 · didit · configured · READY · 1T</td><td>Yes</td></tr>
+<tr><td>GET /dashboard/summary</td><td><b>200 anonymously</b> · publishes defence posture</td><td>Yes — worse than logged</td></tr>
+<tr><td>GET /admin/ai-spend/summary</td><td>401 — still unreadable</td><td>Yes — B4 stays NOT MEASURED</td></tr>
+<tr><td>regression_ledger.py</td><td>exit 0 · all LOCKED holding · open count grew 3 → 11</td><td>Partly — drift below</td></tr>
+<tr><td>rulings_check.py</td><td>40 checked · 0 FAIL · 0 WARN</td><td>Superseded — was 39</td></tr></table>
+<div class="box"><b>ℹ Drift since the report was written.</b> Two new customer-facing defects landed on the live build
+after the consolidated report closed: <b>RG-0140</b> — the live <code>ms.js</code> still calls an AI example advert a
+“SUPER ADVERT” and has dropped the “not a real listing” line, so a buyer can spend a real Introduction on an exemplar;
+and <b>RG-0141</b> — the red DEMO tab could not be verified live (404). Both are deploy-gap defects: repo halves pass,
+live halves do not. Both belong on the launch board alongside B1–B4.</div>
+
+<h2>The consolidated blocker register</h2>
+<table><tr><th>#</th><th>Blocker</th><th>Grade</th><th>Owner / action</th></tr>
+<tr><td>B1</td><td>Exposed production secrets unrotated (DW-057/029) + gate &amp; WAF down</td><td><span class="pill p-red">PROBED</span></td><td><b>DAVID</b> — ROTATE_SECRETS.bat + systemd edit; lockout risk (RUL-027)</td></tr>
+<tr><td>B2</td><td>accept_intro non-idempotent — buyer double-charged, wallet goes negative</td><td><span class="pill p-blue">EXECUTED</span></td><td>Claude — guard + one transaction + balance floor. RG-0142. Deploy is David's.</td></tr>
+<tr><td>B3</td><td>/dashboard/summary leaks security posture anonymously</td><td><span class="pill p-green">PROBED</span></td><td>Claude — gate it or strip the infra lines. RG-0144.</td></tr>
+<tr><td>B4</td><td>Live AI spend ceiling unverified; code supports an uncapped state</td><td><span class="pill p-grey">NOT MEASURED</span></td><td>Read /admin/ai-spend/summary on the box before launch</td></tr>
+<tr><td>B5</td><td><b>NEW</b> — BIT auto-mitigation is a placebo on all three safe-state flags</td><td><span class="pill p-blue">EXECUTED</span></td><td>Claude — consume the flags or remove them from SAFE_FLAGS. RG-0143.</td></tr>
+<tr><td>B6</td><td><b>NEW</b> — live build mislabels AI examples as “SUPER ADVERT”; DEMO tab 404</td><td><span class="pill p-green">PROBED</span></td><td>Deploy gap — RG-0140 / RG-0141 already open</td></tr><tr><td>B7</td><td><b>NEW</b> — EULA promises a 1T hold/release the code never implements</td><td><span class="pill p-grey">READ</span></td><td><b>DAVID</b> — implement the hold, or change the wording. Legal/commercial call. RG-0145.</td></tr><tr><td>B8</td><td><b>NEW</b> — decline_intro unguarded: charged-then-declined leaves no refund</td><td><span class="pill p-blue">EXECUTED</span></td><td>Claude — transition guard. Folded into RG-0142.</td></tr></table>
+
+<div class="box ok"><b>★ The HALT dividend.</b> Eight launch-day failures precipitated in the lab, seven days early —
+the unrotated secrets, the double-charge, the posture leak, the unverified AI spend ceiling, the mislabelled AI
+examples, the placebo safe-state response, the unguarded decline, and terms promising a wallet mechanism the code never implemented. Every one is a bounded, known fix; none is architectural. Across five
+independent passes — Claude forensic, Fable doctoral peer, OpenAI second vendor, this verification pass and its own adversarial check — <b>not one
+verdict has moved upward under scrutiny.</b> The board is not being scored optimistically, and that is why the honest
+answer today is HOLD rather than a hopeful GO.</div>
+
+<h2>Reserved to David</h2>
+<table><tr><th>Decision</th><th>Why it is yours, not Claude's</th></tr>
+<tr><td>Rotate the exposed production secrets</td><td>Needs the systemd hand-edit and carries lockout risk (RUL-027). The one blocker only you can clear — it gates both REDs.</td></tr>
+<tr><td>Approve the deploy carrying the RG-0142/0143/0144 fixes</td><td>Fixes are small and reversible; shipping is a deploy, and deploys are reserved.</td></tr>
+<tr><td>Rule the gate + WAF posture through 29 Aug</td><td>A commercial and risk call, not a technical one (RUL-034).</td></tr>
+<tr><td>The launch go / hold ruling</td><td>Two REDs at D-7 = hold declared today under the 15 August rule. The ruling is yours.</td></tr></table>
+
+<footer>Compiled 22 August 2026, 07:40 SAST under the Evidence Ladder (PROBED &gt; EXECUTED &gt; READ &gt; RECALLED).
+Companions: FORENSIC_AUDIT_CYCLE1, FORENSIC_AUDIT_CYCLE2_PEER, FORENSIC_AUDIT_CONSOLIDATED and
+FORENSIC_AUDIT_D7_VERIFICATION — nice.docx. Destructive over-stress ran only against a throwaway replica;
+nothing in this pass touched production data or loaded the live box.</footer>
+</div></body></html>

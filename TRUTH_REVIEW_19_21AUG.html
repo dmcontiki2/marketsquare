@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two-Day Truth Review — 19–21 Aug 2026</title>
+<style>
+  :root{
+    --navy:#1F3864; --blue:#2F5496; --ink:#262626; --muted:#595959; --paper:#F7F8FB;
+    --cA:#C62828; --cB:#F9A825; --cC:#AD1457; --cD:#6A1B9A; --cE:#1565C0; --ok:#2E7D32;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Calibri,Arial,sans-serif;background:var(--paper);color:var(--ink);line-height:1.45;padding:0 0 60px}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  header{background:var(--navy);color:#fff;padding:34px 0 26px;margin-bottom:28px}
+  header h1{font-size:28px;font-weight:700}
+  header p{opacity:.85;margin-top:6px;max-width:900px}
+  h2{color:var(--navy);font-size:20px;margin:34px 0 14px;border-bottom:2px solid var(--navy);padding-bottom:6px}
+  .pattern{display:flex;gap:18px;flex-wrap:wrap}
+  .path{flex:1 1 420px;border-radius:10px;padding:18px;border:1px solid #ddd;background:#fff}
+  .path.bad{border-top:6px solid var(--cA)} .path.good{border-top:6px solid var(--ok)}
+  .path h3{font-size:15px;margin-bottom:10px}
+  .path.bad h3{color:var(--cA)} .path.good h3{color:var(--ok)}
+  .chain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+  .node{background:#f1f3f8;border:1px solid #ccd;border-radius:8px;padding:8px 12px;text-align:center}
+  .node.red{background:#FDEBEA;border-color:var(--cA);color:var(--cA);font-weight:700}
+  .node.green{background:#E7F2E3;border-color:var(--ok);color:var(--ok);font-weight:700}
+  .arr{color:var(--muted);font-weight:700}
+  .path p{font-size:12.5px;color:var(--muted);margin-top:10px}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 4px}
+  .lg{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #ddd;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600}
+  .sw{width:14px;height:14px;border-radius:4px;display:inline-block}
+  .tl{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+  .day{flex:1 1 300px;background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px}
+  .day h4{color:var(--navy);font-size:15px;margin-bottom:8px}
+  .ev{display:flex;gap:8px;align-items:baseline;font-size:12.5px;margin:5px 0}
+  .dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px;position:relative;top:1px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:16px;margin-top:14px}
+  .card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:16px;border-left:7px solid #999;display:flex;flex-direction:column}
+  .card .tag{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+  .card h4{font-size:15px;color:var(--navy);margin-bottom:8px}
+  .card .said,.card .truth{font-size:13px;margin:4px 0}
+  .card .said b{color:var(--cA)} .card .truth b{color:var(--ok)}
+  .card .why{font-size:12.5px;color:var(--muted);margin:8px 0;font-style:italic}
+  .fix{margin-top:auto;background:#E7F2E3;border-left:4px solid var(--ok);border-radius:6px;padding:8px 10px;font-size:12.5px}
+  .fix b{color:var(--ok)}
+  .ladder{display:flex;flex-direction:column;gap:10px;max-width:860px}
+  .rung{display:flex;gap:14px;align-items:stretch;background:#fff;border:1px solid #ddd;border-radius:10px;overflow:hidden}
+  .rname{flex:0 0 150px;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px;padding:14px}
+  .rbody{padding:12px 16px;font-size:13.5px}
+  .rbody b{color:var(--navy)}
+  .note{background:#EAF0FA;border-left:4px solid var(--blue);border-radius:6px;padding:12px 16px;font-size:13.5px;margin-top:16px;max-width:860px}
+  footer{margin-top:40px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Two-Day Truth Review — 19–21 Aug 2026</h1>
+  <p>Why status &amp; BIT answers were wrong 2–3 times before the truth surfaced — ten faults, five classes,
+  every fix shipped &amp; ledger-locked, and the one standing rule that prevents the recurrence.</p>
+</div></header>
+<div class="wrap">
+
+<h2>The pattern behind all ten faults</h2>
+<div class="pattern">
+  <div class="path bad">
+    <h3>✗ How every wrong answer happened</h3>
+    <div class="chain">
+      <span class="node">Reality<br>(the live app)</span><span class="arr">·</span>
+      <span class="node">A representation<br><small>doc · code pattern · hardcoded dot · cached JSON · memory</small></span>
+      <span class="arr">→ read →</span>
+      <span class="node red">WRONG ANSWER<br>×2–3</span>
+    </div>
+    <p>The representation was cheaper to read than the app was to ask — and it had silently gone stale, defaulted green, or asserted what it never measured.</p>
+  </div>
+  <div class="path good">
+    <h3>✓ How every correction happened</h3>
+    <div class="chain">
+      <span class="node">Reality<br>(the live app)</span>
+      <span class="arr">→ probe →</span>
+      <span class="node green">TRUE ANSWER<br>first time</span>
+    </div>
+    <p>/auth/providers · /proc/&lt;pid&gt;/environ · /dashboard/bit · curl the endpoint · post_deploy_status.json — each truth cost exactly one command. The probes existed all along.</p>
+  </div>
+</div>
+
+<h2>Five fault classes</h2>
+<div class="legend">
+  <span class="lg"><span class="sw" style="background:var(--cA)"></span>A · Reported from a file, not a probe</span>
+  <span class="lg"><span class="sw" style="background:var(--cB)"></span>B · Green by default / unmeasured verdict</span>
+  <span class="lg"><span class="sw" style="background:var(--cC)"></span>C · Guards that read code, never ran it</span>
+  <span class="lg"><span class="sw" style="background:var(--cD)"></span>D · Detected but never escalated</span>
+  <span class="lg"><span class="sw" style="background:var(--cE)"></span>E · Concurrent sessions colliding</span>
+</div>
+
+<h2>Timeline</h2>
+<div class="tl">
+  <div class="day"><h4>Tue 19 Aug</h4>
+    <div class="ev"><span class="dot" style="background:var(--cA)"></span>“Resend probably dark” claimed from a grep — probe said live all along</div>
+    <div class="ev"><span class="dot" style="background:var(--cD)"></span>Two guards red for 15 days — logged 50 &amp; 46×, escalated never</div>
+    <div class="ev"><span class="dot" style="background:var(--cE)"></span>Two sessions both claimed ledger ids RG-0118/0119</div>
+  </div>
+  <div class="day"><h4>Wed 20 Aug</h4>
+    <div class="ev"><span class="dot" style="background:var(--cD)"></span>Migration 023 jam “believed closed” — still stranding 024–027</div>
+    <div class="ev"><span class="dot" style="background:var(--cD)"></span>Deploy could not say WHY a step failed (half an eye)</div>
+  </div>
+  <div class="day"><h4>Fri 21 Aug</h4>
+    <div class="ev"><span class="dot" style="background:var(--cA)"></span>“Google sign-in dark, task for David” — live for days; doc was stale</div>
+    <div class="ev"><span class="dot" style="background:var(--cB)"></span>BIT dot green by default · SERVICES ✅ never probed · AI dot green on key presence · stale banner · cost ≠ canon</div>
+    <div class="ev"><span class="dot" style="background:var(--cC)"></span>ID-NPR 500 shipped past 14 guards · module missing from manifest</div>
+    <div class="ev"><span class="dot" style="background:var(--cE)"></span>Concurrent whole-file overwrite wiped a ledger entry (re-applied)</div>
+  </div>
+</div>
+
+<h2>The ten faults — each with its fix</h2>
+<div class="cards">
+  <div class="card" style="border-left-color:var(--cA)"><span class="tag" style="color:var(--cA)">A · read, not probed</span>
+    <h4>F1 — Google sign-in reported dark (ONETAP-DOC-1)</h4>
+    <p class="said"><b>Said:</b> lane dark; ten-minute setup task handed to David.</p>
+    <p class="truth"><b>True:</b> live &amp; serving for days — <code>/auth/providers</code> said so; RG-0111 already knew.</p>
+    <p class="why">Register built from stale ONETAP_SETUP.md — “(this is today)” had silently become a lie.</p>
+    <div class="fix"><b>Fix:</b> doc corrected &amp; dated; register cites the probe; rule — probe wins, file fixed in the same run.</div>
+  </div>
+  <div class="card" style="border-left-color:var(--cA)"><span class="tag" style="color:var(--cA)">A · read, not probed</span>
+    <h4>F2 — “Resend is probably dark” (RG-0117 misread)</h4>
+    <p class="said"><b>Said:</b> mail likely falling through to Gmail; spam-folder theory built on top.</p>
+    <p class="truth"><b>True:</b> Resend live all along — key set in the systemd unit; <code>/proc/&lt;pid&gt;/environ</code> proved it in one command.</p>
+    <p class="why">A code-pattern red was voiced as a runtime state. Different claims.</p>
+    <div class="fix"><b>Fix:</b> RG-0117 ref now states exactly what its red means — pattern inconsistency, never a missing credential.</div>
+  </div>
+  <div class="card" style="border-left-color:var(--cB)"><span class="tag" style="color:#B7791F">B · green by default</span>
+    <h4>F3 — BIT dot healthy while loading (and while dead)</h4>
+    <p class="said"><b>Said:</b> green — before data arrived, and still green if the fetch died.</p>
+    <p class="truth"><b>True:</b> unknown until <code>/dashboard/bit</code> answers.</p>
+    <p class="why">The default colour WAS a verdict. A dot that fails green cannot be trusted when green.</p>
+    <div class="fix"><b>Fix:</b> grey until data · RG-0133 LOCKED: “no dot may default to a health colour”, negative-tested.</div>
+  </div>
+  <div class="card" style="border-left-color:var(--cB)"><span class="tag" style="color:#B7791F">B · green by default</span>
+    <h4>F4 — SERVICES: six hand-written “✅ Active”</h4>
+    <p class="said"><b>Said:</b> six services Active — through any outage, forever.</p>
+    <p class="truth"><b>True:</b> nothing probed them; the panel was prose wearing a verdict.</p>
+    <p class="why">Missed by the first audit because it had no id — counting what is easy to enumerate and calling it the set.</p>
+    <div class="fix"><b>Fix:</b> labelled STATIC REFERENCE — NOT MEASURED, greens stripped; reader pointed at the probed Infrastructure card.</div>
+  </div>
+  <div class="card" style="border-left-color:var(--cB)"><span class="tag" style="color:#B7791F">B · green by default</span>
+    <h4>F5 — AI provider green = key presence; stale banner; cost ≠ canon</h4>
+    <p class="said"><b>Said:</b> OpenAI solid green (never tested) · flip “pending” a week after it shipped · server €24.57/mo.</p>
+    <p class="truth"><b>True:</b> presence ≠ liveness · flip DONE since 14 Aug · canon says €15.49 (RUL-025).</p>
+    <p class="why">Configuration painted as health; a hardcoded banner nobody cleared; a number contradicting canon.yml.</p>
+    <div class="fix"><b>Fix:</b> amber UNVERIFIED until a live test passes, green decays in 24 h (RG-0130) · banner derives from /flags · cost pinned to canon (RG-0133).</div>
+  </div>
+  <div class="card" style="border-left-color:var(--cB)"><span class="tag" style="color:#B7791F">B · green by default</span>
+    <h4>F6 — Two files, one fact; the flattering one rendered</h4>
+    <p class="said"><b>Said:</b> openai “golden-set-passed” on all four tiers.</p>
+    <p class="truth"><b>True:</b> the scoreboard excluded openai by design, pending the production-key run.</p>
+    <p class="why">Price card and scoreboard disagreed; the dashboard picked the flattering source.</p>
+    <div class="fix"><b>Fix:</b> GOLDEN-AUTHORITY-1 — one authority, reconciled everywhere, raises rather than defaulting open (RG-0131; RG-0132 tracks the production run).</div>
+  </div>
+  <div class="card" style="border-left-color:var(--cC)"><span class="tag" style="color:var(--cC)">C · guards that read</span>
+    <h4>F7 — A 500 shipped past 14 green guards (ID-NPR-4)</h4>
+    <p class="said"><b>Said:</b> guards 14/14, lane ready.</p>
+    <p class="truth"><b>True:</b> first live call → Internal Server Error (bare <code>get_db()</code> NameError).</p>
+    <p class="why">Every guard asserted on source TEXT; not one executed the endpoint. Text cannot see a name that fails to resolve.</p>
+    <div class="fix"><b>Fix:</b> execution-class guards — AST name-resolution test (the general form), bare-call ban, both negative-tested.</div>
+  </div>
+  <div class="card" style="border-left-color:var(--cC)"><span class="tag" style="color:var(--cC)">C · guards that read</span>
+    <h4>F8 — Looked done from the outside (ID-NPR-3)</h4>
+    <p class="said"><b>Said:</b> key pasted, restart done → checkable.</p>
+    <p class="truth"><b>True:</b> the code was never deployed; the provider module wasn’t even on the manifest; the lane had no probe at all.</p>
+    <p class="why">A correct key on a server running code that has never heard of it — inert, not broken, and invisible.</p>
+    <div class="fix"><b>Fix:</b> manifest entry + ledger assertion (next new module trips red) + public <code>/id-verify/status</code> answering READY or DARK in one call.</div>
+  </div>
+  <div class="card" style="border-left-color:var(--cD)"><span class="tag" style="color:var(--cD)">D · never escalated</span>
+    <h4>F9 — Right answer, buried: 15 days of logged DANGER</h4>
+    <p class="said"><b>Said:</b> (nothing — that was the fault)</p>
+    <p class="truth"><b>True:</b> two real faults detected on 4 Aug, printed 50 &amp; 46 times; only the 02:00 nightly aborted, unseen. Plus: 023 jam “believed closed”, still stranding 024–027.</p>
+    <p class="why">Detection was never the problem. Escalation was.</p>
+    <div class="fix"><b>Fix:</b> RG-0114 — 8+ consecutive red scans turns the LEDGER red in daylight · POSTDEPLOY-EYES-2 — the deploy report carries the failing migration’s own output · RG-0125 — a migration is FIXED or DEFERRED, never silently jamming.</div>
+  </div>
+  <div class="card" style="border-left-color:var(--cE)"><span class="tag" style="color:var(--cE)">E · concurrent writers</span>
+    <h4>F10 — Sessions overwriting each other’s truth</h4>
+    <p class="said"><b>Said:</b> two sessions both “owned” RG-0118/0119; later a whole-file overwrite wiped a fresh ledger entry.</p>
+    <p class="truth"><b>True:</b> last-writer-wins, no error raised — same family as the CHANGELOG/STATUS clobbers.</p>
+    <p class="why">Shared files with multiple uncoordinated writers.</p>
+    <div class="fix"><b>Fix:</b> <code>entry()</code> refuses duplicate ids at import (loud, not ambiguous) · fragment machinery (changelog.d / status.d) · ledger appends re-checked after landing.</div>
+  </div>
+</div>
+
+<h2>The prevention — the Evidence Ladder (now standing method in CLAUDE.md)</h2>
+<div class="ladder">
+  <div class="rung"><div class="rname" style="background:var(--ok)">PROBED</div>
+    <div class="rbody"><b>A live measurement made this session.</b> The only grade that may be reported as fact — “live”, “done”, “active”, “green”. Canonical probes: /health · /flags · /auth/providers · /dashboard/bit · /id-verify/status · post_deploy_status.json · regression ledger · rulings_check. One command each.</div></div>
+  <div class="rung"><div class="rname" style="background:#3B7A57">EXECUTED</div>
+    <div class="rbody"><b>The code path actually ran</b> (a test that calls the endpoint, not one that greps for it). Reportable as “passes in test”. Guards that only read source text sit BELOW this rung — that is how F7 shipped.</div></div>
+  <div class="rung"><div class="rname" style="background:var(--cB);color:#3d2c00">READ</div>
+    <div class="rbody"><b>A file, doc, code pattern, dashboard or cached JSON.</b> May only be voiced as “the file claims…” and MUST be probed before it reaches a report. Probe and file disagree → the probe wins and the file is fixed in the same run. Every doc status line carries its date + how it was verified.</div></div>
+  <div class="rung"><div class="rname" style="background:var(--cA)">RECALLED</div>
+    <div class="rbody"><b>Memory of a past session.</b> Never reportable. Go probe.</div></div>
+</div>
+<div class="note">ℹ️ <b>Design rule riding along (RG-0133, generalized):</b> no instrument may default to a health colour and no hand-written verdict may wear one — grey/UNVERIFIED until data answers, NOT MEASURED if nothing probes it. An instrument that fails green is worse than no instrument.</div>
+
+<footer>Compiled 21 Aug 2026 · Sources: changelog.d 19–21 Aug fragments, git log, regression ledger · Standing rule: CLAUDE.md “Status truth — the EVIDENCE LADDER” · Companion report: TWO_DAY_TRUTH_REVIEW — nice.docx</footer>
+</div>
+</body>
+</html>

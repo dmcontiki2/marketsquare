@@ -2304,17 +2304,17 @@ const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', BW:'P', KE:'KSh', US:'$
 // tour map on the detail page. Keyed by listing.country (which now survives normalization).
 // No entry => no map (safe default). Files ship to /static/ via deploy step 3c-*.
 const ADV_COUNTRY_MAP = {
-  ZA: { file:'adventures_za_map.html?v=1', title:'🗺️ Plan the trip', blurb:'Pretoria to the Pilanesberg — switch the layers: the driving route, heritage stops, three bushveld stays and partner spots. Tap the pins for photos, prices and directions.' },
-  US: { file:'adventures_us_map.html?v=18',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
-  GB: { file:'adventures_gb_map.html?v=19',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
-  AU: { file:'adventures_au_map.html?v=18',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
+  ZA: { file:'adventures_za_map.html?v=2', title:'🗺️ Plan the trip', blurb:'Pretoria to the Pilanesberg — switch the layers: the driving route, heritage stops, three bushveld stays and partner spots. Tap the pins for photos, prices and directions.' },
+  US: { file:'adventures_us_map.html?v=19',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
+  GB: { file:'adventures_gb_map.html?v=20',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
+  AU: { file:'adventures_au_map.html?v=19',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
   // NA un-gated 26 Jul 2026 — assets/journey/nam complete (23/23):
-  NA: { file:'adventures_na_map.html?v=20',      title:'🗺️ Drive the route',           blurb:'Seven days door to door — fly in from Joburg (indicative fares shown), the red dunes to the great waterhole, and home. Tap a day, then the pins: the flights, the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
-  BW: { file:'adventures_bw_map.html?v=19',      title:'🗺️ Explore the delta',        blurb:'Seven days door to door — fly in from Joburg, the mokoro channels to the open salt pan, and home. Tap a day, then the pins: the flights, the delta, the predators, the elephant herds and the pan.' },
-  MZ: { file:'adventures_mz_map.html?v=19',      title:'🗺️ Sail the coast',           blurb:'Seven days door to door — fly in from Joburg (indicative fares shown), dhows, reefs and the stone island, and home. Tap a day, then the pins: the flights, the dhows, the sandbanks and the island stone town.' },
+  NA: { file:'adventures_na_map.html?v=21',      title:'🗺️ Drive the route',           blurb:'Seven days door to door — fly in from Joburg (indicative fares shown), the red dunes to the great waterhole, and home. Tap a day, then the pins: the flights, the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
+  BW: { file:'adventures_bw_map.html?v=20',      title:'🗺️ Explore the delta',        blurb:'Seven days door to door — fly in from Joburg, the mokoro channels to the open salt pan, and home. Tap a day, then the pins: the flights, the delta, the predators, the elephant herds and the pan.' },
+  MZ: { file:'adventures_mz_map.html?v=20',      title:'🗺️ Sail the coast',           blurb:'Seven days door to door — fly in from Joburg (indicative fares shown), dhows, reefs and the stone island, and home. Tap a day, then the pins: the flights, the dhows, the sandbanks and the island stone town.' },
   // KE added 10 Aug 2026 (SUPER-AFRICA-1 Kenya pilot):
-  KE: { file:'adventures_ke_map.html?v=11',      title:'🗺️ Drive the circuit',        blurb:'Seven days door to door — fly in from Cape Town (indicative return fares shown), five days from capital to the great herds, and fly home. Tap a day, then the pins: the flights, the Rift, the lakes, the balloons and where you sleep.' },
-  DE: { file:'adventures_de_map.html?v=9',      title:'🗺️ Walk the route',            blurb:'The five-day Bavarian Alps trek — tap a day to walk it: the towns, the peaks, the huts and the lakeside finish.' },
+  KE: { file:'adventures_ke_map.html?v=12',      title:'🗺️ Drive the circuit',        blurb:'Seven days door to door — fly in from Cape Town (indicative return fares shown), five days from capital to the great herds, and fly home. Tap a day, then the pins: the flights, the Rift, the lakes, the balloons and where you sleep.' },
+  DE: { file:'adventures_de_map.html?v=10',      title:'🗺️ Walk the route',            blurb:'The five-day Bavarian Alps trek — tap a day to walk it: the towns, the peaks, the huts and the lakeside finish.' },
 };
 
 // Per-tour maps (26 Jul 2026, David): a tour's map follows the TOUR, not the country, so
@@ -2322,10 +2322,10 @@ const ADV_COUNTRY_MAP = {
 // the Cape-to-Cairo rail journey). Keyed by listing.tour (route code); when absent the map
 // falls back to ADV_COUNTRY_MAP[country], so every existing country tour is unchanged.
 const ADV_TOUR_MAP = {
-  c2c: { file:'adventures_c2c_map.html?v=22', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
-  usrail: { file:'adventures_us_rail_map.html?v=10', title:'🗺️ Ride the line', blurb:'Chicago to San Francisco on the storied Zephyr route — tap a leg, then the pins: the Mississippi, the Rockies\u2019 canyons, the desert dawn and Donner Pass down to the Bay.' },
-  gbrail: { file:'adventures_gb_rail_map.html?v=10', title:'🗺️ Ride the line', blurb:'London to the Hebridean sea — tap a leg, then the pins: York and Durham, the Northumberland coast, Rannoch Moor and the steam finale over Glenfinnan.' },
-  aurail: { file:'adventures_au_rail_map.html?v=10', title:'🗺️ Ride the line', blurb:'The Ghan, Adelaide to Darwin — tap a leg, then the pins: the Flinders at dusk, the Marla dawn, the red heart and the Top End finale.' },
+  c2c: { file:'adventures_c2c_map.html?v=23', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
+  usrail: { file:'adventures_us_rail_map.html?v=11', title:'🗺️ Ride the line', blurb:'Chicago to San Francisco on the storied Zephyr route — tap a leg, then the pins: the Mississippi, the Rockies\u2019 canyons, the desert dawn and Donner Pass down to the Bay.' },
+  gbrail: { file:'adventures_gb_rail_map.html?v=11', title:'🗺️ Ride the line', blurb:'London to the Hebridean sea — tap a leg, then the pins: York and Durham, the Northumberland coast, Rannoch Moor and the steam finale over Glenfinnan.' },
+  aurail: { file:'adventures_au_rail_map.html?v=11', title:'🗺️ Ride the line', blurb:'The Ghan, Adelaide to Darwin — tap a leg, then the pins: the Flinders at dusk, the Marla dawn, the red heart and the Top End finale.' },
 };
 
 // Optional paid extensions per tour. Surfaced as clearly-priced add-ons under the tour's ONE

@@ -1,0 +1,35 @@
+# UPTIME-EXTERNAL-1 — external uptime watcher for trustsquare.co (22 Aug 2026)
+# Deploy:  wrangler deploy --config ops/cloudflare/uptime_wrangler.toml
+# Runbook: ops/cloudflare/UPTIME_MONITOR.md
+#
+# Cost: Workers free plan — cron triggers included, 100k requests/day. A 5-minute
+# cron is 288 invocations/day. Nothing here can bill.
+
+name = "trustsquare-uptime"
+main = "uptime_monitor_worker.js"
+compatibility_date = "2026-08-01"
+workers_dev = true          # gives a *.workers.dev URL for the manual /-check
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+TARGET_URL          = "https://trustsquare.co/health"
+EXPECT_JSON_STATUS  = "ok"
+FAILS_BEFORE_ALERT  = "2"
+REPEAT_ALERT_MINUTES = "30"
+HEARTBEAT_UTC_HOUR  = "6"
+ALERT_TO            = "dmcontiki2@gmail.com"
+# Must be on the domain Resend has VERIFIED (mail.trustsquare.co) — the root domain is
+# not verified and Resend refuses it, the RESEND-FROM-1 lesson of 7 Aug 2026.
+ALERT_FROM          = "TrustSquare Uptime <hello@mail.trustsquare.co>"
+
+# State: repeat-suppression + heartbeat bookkeeping. Created by the runbook's step 1.
+# The worker degrades honestly without it (probes and alerts still work; repeats are
+# no longer suppressed), so a missing binding can never make it silent.
+[[kv_namespaces]]
+binding = "UPTIME_STATE"
+id      = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# SECRET, never in this file, never in git:
+#   wrangler secret put RESEND_API_KEY --config ops/cloudflare/uptime_wrangler.toml

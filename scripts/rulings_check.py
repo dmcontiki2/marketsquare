@@ -110,6 +110,17 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-041": [
+   # The tours resubmit is a one-off act, so the DURABLE half is what must stay true:
+   # the token is recorded unrotatable-with-reasons, the loop says AWAIT rather than
+   # re-submit, and the no-third-party-script rule that shapes any future partner
+   # imagery is still asserted. If a later session "fixes" the loop by resubmitting
+   # unchanged, or quietly re-adds a TP script for photos, these trip.
+   ("RULINGS.md", ["THE TRAVELPAYOUTS TOURS REVIEW WAS RESUBMITTED EARLY"], []),
+   ("SECRETS_REGISTER.md", ["UNROTATABLE-ACCEPTED", "TRAVELPAYOUTS_TOKEN"], []),
+   ("OPEN_LOOPS.md", ["RESUBMITTED 22 Aug 2026", "AWAIT OUTCOME"], []),
+   ("scripts/regression_ledger.py", ["RG-0025", "RG-0146"], []),
+ ],
  "RUL-040": [
    # (a) the label states what the thing IS, at every renderer, and the old accolade
    # wording is GONE -- a fifth renderer copy-pasted from an old one would trip the

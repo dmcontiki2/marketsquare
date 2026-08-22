@@ -7284,111 +7284,248 @@ def rg_demo_banner_on_demo_maps():
     return out
 
 
-@entry("RG-0142", "The money path is IDEMPOTENT -- accepting one introduction charges the buyer "
-                  "exactly once, however many times the request arrives, and a wallet can never "
-                  "go negative",
-       OPEN, scope="bea_main.py accept_intro (PUT /intros/{intro_id}/accept) and the whole "
-                   "intro-charge class: every handler that writes a negative-amount row to "
-                   "transactions must first check it has not already charged for that object. "
-                   "CLASS, not instance -- lm_intro_deduct / lm_boost_deduct are the same shape "
-                   "and belong in this block the moment they are asserted.",
-       ref="HALT-MONEY-1, precipitated 22 Aug 2026 by the D-7 launch-readiness HALT run "
-           "(Cycle 3 OpenAI review found it by inspection; the 07:30 verification pass PROVED "
-           "it by execution against a throwaway sqlite replica: start 1T -> accept -> 0T -> "
-           "accept again -> -1T -> four accepts -> -3T, four intro_deduct rows for ONE "
-           "introduction). accept_intro reads the intro row and then unconditionally does "
-           "UPDATE intro_requests SET status='accepted', tuppence_charged=1 followed by an "
-           "INSERT of a -1 intro_deduct transaction. It never tests the status or the "
-           "tuppence_charged flag it is about to set, so a double-click, a client retry, a "
-           "proxy replay or a refresh charges the buyer again each time; there is also no "
-           "floor at zero, so the wallet goes negative. On a platform whose entire brand is "
-           "TRUST and whose only till is Tuppence, silently taking a second Tuppence for one "
-           "introduction is the defect that costs a founding buyer permanently. The fix is "
-           "small and known: return early (idempotent 200) when the intro is already accepted "
-           "or already charged, do the read-check-write in ONE transaction, and refuse below "
-           "zero balance. OPEN until that guard ships; promote to LOCKED the run it reports "
-           "READY TO LOCK. This is a source assertion -- it must never be weakened to a live "
-           "probe, because proving it live would mean charging a real buyer twice.")
+# ---------------------------------------------------------------------------
+# HALT money-path + safety-layer block. Written 22 Aug 2026 by the D-7 HALT
+# verification pass; CORRECTED the same session after a fresh adversarial peer
+# found three false-red and three false-green paths in the first cut. The
+# corrections are named in each ref -- an assertion that is wrong gets fixed,
+# never weakened, and never silently.
+# ---------------------------------------------------------------------------
+
+def _conditional_lines(code):
+    """Only CONTROL FLOW counts as a guard. Scanning raw handler text let the SQL that
+    WRITES tuppence_charged satisfy the check for code that READS it -- a false green
+    caught 22 Aug 2026 the same session it was introduced. A guard is an if/elif/assert
+    or an early return/raise, never a string literal handed to conn.execute()."""
+    keep = []
+    for ln in code.splitlines():
+        s = ln.strip()
+        if re.match(r"^(if|elif|assert)\b", s) or " if " in s or s.startswith(("raise ", "return ")):
+            if "conn.execute" in s or "UPDATE " in s or "INSERT " in s:
+                continue
+            keep.append(s)
+    return "\n".join(keep)
+
+
+def _strip_py_comments(text):
+    """Comments and docstrings must never satisfy an assertion. A TODO saying
+    'check tuppence_charged' is not a check (peer finding, 22 Aug 2026)."""
+    text = re.sub(r'"""(?:.|\n)*?"""', " ", text)
+    text = re.sub(r"'''(?:.|\n)*?'''", " ", text)
+    return re.sub(r"(?m)#.*$", " ", text)
+
+
+@entry("RG-0142", "The money path is IDEMPOTENT and STATE-GUARDED -- accepting one introduction "
+                  "charges the buyer exactly once however many times the request arrives, a wallet "
+                  "can never go negative, and no introduction can be declined after it was charged",
+       OPEN, scope="bea_main.py accept_intro + decline_intro (PUT /intros/{intro_id}/accept and "
+                   "/decline) and the whole intro-charge class: every handler that writes a "
+                   "negative-amount row to transactions must first check it has not already "
+                   "charged for that object, and every status write must check the transition is "
+                   "legal. CLASS, not instance -- lm_intro_deduct / lm_boost_deduct are the same "
+                   "shape. The correct pattern ALREADY EXISTS in this repo: estate_agents.py "
+                   "guards its accept with 409 on a non-pending status and 402 below balance, "
+                   "with tests. The flagship buyer path never got it.",
+       ref="HALT-MONEY-1, precipitated 22 Aug 2026 by the D-7 HALT run and UPHELD by adversarial "
+           "peer the same morning. Grade EXECUTED: the peer ran the REAL bea_main app under a "
+           "FastAPI TestClient against a scratch DB -- four PUTs to /intros/1/accept returned "
+           "200/200/200/200 with the balance walking 1 -> 0 -> -1 -> -2 -> -3 and four "
+           "intro_deduct rows for ONE introduction, the full middleware stack running. Worse than "
+           "first found: create_intro takes no hold and never checks balance, so a 0T buyer goes "
+           "negative on the FIRST accept with no retry needed. Balance is COALESCE(SUM(amount),0) "
+           "at ~13 sites -- there is no balance column and no floor; _deduct_tuppence has a 402 "
+           "floor but accept_intro does not call it, it INSERTs -1 directly. transactions carries "
+           "no unique index, trigger or constraint, and ms.js handleIntro does not disable the "
+           "button during the await, so two fast clicks fire two PUTs. decline_intro is "
+           "unguarded in the same way: declining after an accept leaves tuppence_charged=1 with "
+           "no refund row -- the buyer paid for an introduction the record calls declined. "
+           "CORRECTED 22 Aug after peer review: (1) comments and docstrings are stripped before "
+           "any guard scan, so a TODO can no longer satisfy it; (2) the guard-1 token set now "
+           "accepts the repo's OWN proven pattern (status != 'pending' -> 409) which the first "
+           "cut would have called red AFTER a correct fix -- a false-red is how an assertion gets "
+           "weakened by a later session; (3) the handler window is found by structure, not a "
+           "4000-char slice that a growing handler could slide out of; (4) the concurrency guard "
+           "is a FAIL, not an INFO, because an interleaved double-accept is the same defect. "
+           "CORRECTED TWICE the same session: the broadened token set immediately produced a FALSE GREEN -- accept_intro's own UPDATE ... SET tuppence_charged=1 satisfied the check for code that READS the flag. Guards are now matched only against control flow (if/elif/assert/early return), never against SQL handed to conn.execute. Source assertion BY DESIGN -- it must never be 'strengthened' into a live probe, "
+           "because proving it live would mean charging a real buyer twice.")
 def rg_money_path_idempotent():
     out = []
     src = repo_file("bea_main.py")
     if src is None:
         return [(INFO, "outside the repo -- source half skipped")]
 
-    i = src.find("def accept_intro(")
-    if i < 0:
+    def _handler(name):
+        i = src.find("def %s(" % name)
+        if i < 0:
+            return None
+        j = src.find("\n@app.", i + 1)
+        k = src.find("\n@entry", i + 1)
+        ends = [x for x in (j, k) if x > 0]
+        return src[i:(min(ends) if ends else i + 12000)]
+
+    acc = _handler("accept_intro")
+    if acc is None:
         out.append((FAIL, "accept_intro no longer exists in bea_main.py -- the money path moved; "
                           "re-point this assertion rather than deleting it"))
         return out
-    body = src[i:i + 4000]
+    acc_code = _strip_py_comments(acc)
 
-    # The charge itself must still be the thing we are guarding.
-    if "intro_deduct" not in body:
+    if "intro_deduct" not in acc_code:
         out.append((INFO, "accept_intro no longer writes intro_deduct directly -- confirm the "
                           "charge moved behind a guarded helper, then re-point this entry"))
         return out
+    before = acc_code[:acc_code.find("intro_deduct")]
 
-    charge_at = body.find("intro_deduct")
-    before = body[:charge_at]
-
-    # GUARD 1 -- it must refuse to charge twice.
-    already = any(tok in before for tok in (
-        'intro["status"] == "accepted"', "intro['status'] == 'accepted'",
-        'intro["tuppence_charged"]', "intro['tuppence_charged']",
-        "already_accepted", "_already_charged"))
-    if not already:
-        out.append((FAIL, "accept_intro charges the buyer WITHOUT first checking whether this "
-                          "introduction was already accepted or already charged -- a retry or "
-                          "double-click takes a second Tuppence for one introduction "
-                          "(PROVEN by replica execution 22 Aug 2026)"))
+    # GUARD 1 -- refuse to charge twice. Accepts the repo's own proven estate-agent
+    # pattern as well as an explicit already-charged test.
+    tests = _conditional_lines(before)
+    guard1 = any(tok in tests for tok in (
+        '!= "pending"', "!= 'pending'",
+        '== "accepted"', "== 'accepted'",
+        "tuppence_charged", "already_accepted", "_already_charged", "idempot"))
+    if not guard1:
+        out.append((FAIL, "accept_intro charges the buyer WITHOUT first checking the introduction's "
+                          "status or whether it was already charged -- a retry or double-click "
+                          "takes a second Tuppence for one introduction (EXECUTED against the real "
+                          "app 22 Aug: four accepts, four charges, balance -3T). "
+                          "estate_agents.py already does this correctly with a 409"))
     else:
-        out.append((INFO, "accept_intro checks prior accepted/charged state before charging"))
+        out.append((INFO, "accept_intro guards the accept transition before charging"))
 
     # GUARD 2 -- the wallet must have a floor.
-    floor = any(tok in before for tok in ("balance", "_wallet_balance", "insufficient", "SUM(amount)"))
-    if not floor:
+    guard2 = any(tok in tests for tok in (
+        "balance", "_deduct_tuppence", "insufficient", "402"))
+    if not guard2:
         out.append((FAIL, "accept_intro never reads the buyer's balance before deducting -- the "
-                          "wallet has no floor at zero and goes negative on repeat "
-                          "(PROVEN: -3T after four accepts on the replica)"))
+                          "wallet has no floor at zero. create_intro takes no hold either, so a "
+                          "0T buyer goes negative on the FIRST accept"))
     else:
-        out.append((INFO, "accept_intro reads a balance before deducting"))
+        out.append((INFO, "accept_intro tests a balance before deducting"))
 
-    # GUARD 3 -- read-check-write must not straddle a commit boundary.
-    if "BEGIN IMMEDIATE" not in body and "_charge_once" not in body:
-        out.append((INFO, "no BEGIN IMMEDIATE / _charge_once helper in accept_intro -- two "
-                          "concurrent accepts can still interleave between the check and the "
-                          "insert even once GUARD 1 lands; the fix wants one transaction"))
+    # GUARD 3 -- read-check-write must not straddle a commit boundary (FAIL, not INFO:
+    # an interleaved double-accept charges twice exactly like a retry does).
+    guard3 = any(tok in acc_code for tok in ("BEGIN IMMEDIATE", "_charge_once", "IMMEDIATE"))
+    if not guard3:
+        out.append((FAIL, "accept_intro's read-check-write is not one transaction (no BEGIN "
+                          "IMMEDIATE / _charge_once) -- two concurrent accepts interleave between "
+                          "the check and the insert and charge twice even once GUARD 1 lands"))
+    else:
+        out.append((INFO, "the charge runs inside one immediate transaction"))
+
+    # GUARD 4 -- decline must be state-guarded too, or a charged intro can be declined.
+    dec = _handler("decline_intro")
+    if dec is None:
+        out.append((INFO, "decline_intro not found -- decline half skipped"))
+    else:
+        dec_code = _strip_py_comments(dec)
+        i = dec_code.find("status = 'declined'")
+        if i < 0:
+            i = dec_code.find('status = "declined"')
+        if i < 0:
+            out.append((INFO, "decline_intro no longer writes a declined status directly"))
+        else:
+            head = dec_code[:i]
+            head = _conditional_lines(head)
+            if not any(tok in head for tok in ('!= "pending"', "!= 'pending'", "tuppence_charged",
+                                               '== "accepted"', "== 'accepted'", "409")):
+                out.append((FAIL, "decline_intro sets status='declined' without checking the "
+                                  "introduction was not already accepted and charged -- a "
+                                  "decline-after-accept leaves tuppence_charged=1 with no refund "
+                                  "row: the buyer paid for an introduction the record calls "
+                                  "declined"))
+            else:
+                out.append((INFO, "decline_intro guards the decline transition"))
+    return out
+
+
+@entry("RG-0145", "The wallet behaves the way the EULA PROMISES it behaves -- if the app tells a "
+                  "buyer 1T is held at request and released on decline or expiry, the code holds "
+                  "and releases it",
+       OPEN, scope="marketsquare.html EULA/terms wallet clause against bea_main.py create_intro, "
+                   "accept_intro, decline_intro and the expiry path. CLASS: any user-facing "
+                   "promise about money -- holds, releases, refunds, expiries -- must have a "
+                   "matching code path. A promise with no implementation is a misrepresentation, "
+                   "not a bug.",
+       ref="HALT-PROMISE-1, found 22 Aug 2026 by the adversarial peer on the D-7 HALT run while "
+           "attacking RG-0142, and it is a DIFFERENT defect from idempotency. marketsquare.html "
+           "tells the user that 1 Tuppence is 'committed (held) when the Buyer makes the request' "
+           "and 'released in full if declined or expired'. There is no hold, no release and no "
+           "balance check at request time anywhere in the code: create_intro records the request "
+           "and charges nothing, accept_intro then INSERTs the -1 directly, and a declined or "
+           "expired introduction has nothing to release because nothing was ever held. Fixing "
+           "RG-0142's floor-at-accept does NOT close this -- the two can both be true and this "
+           "still be false. It matters beyond correctness: on a trust-branded marketplace the "
+           "terms a buyer agreed to describe a mechanism that does not exist, which is a legal "
+           "and product exposure, not only an engineering one. Two honest resolutions: implement "
+           "the hold/release, or change the wording to describe what the code actually does. "
+           "Reserved to David which way it goes -- that is a commercial and legal call, not a "
+           "technical one. OPEN until promise and code agree.")
+def rg_wallet_matches_the_promise():
+    out = []
+    src = repo_file("bea_main.py")
+    fe = repo_file("marketsquare.html")
+    if src is None or fe is None:
+        return [(INFO, "outside the repo -- source half skipped")]
+
+    promises_hold = bool(re.search(r"committed\s*\(held\)|is held when|held when the buyer",
+                                   fe, flags=re.I))
+    promises_release = bool(re.search(r"released in full|refunded in full|release[sd]?\s+if\s+declined",
+                                      fe, flags=re.I))
+    if not (promises_hold or promises_release):
+        out.append((INFO, "the shipped terms no longer promise a hold/release -- promise and code "
+                          "agree by removal; confirm that was deliberate"))
+        return out
+
+    code = _strip_py_comments(src)
+    has_hold = any(tok in code for tok in (
+        "intro_hold", "'hold'", '"hold"', "hold_tuppence", "_place_hold", "intro_held"))
+    if not has_hold:
+        out.append((FAIL, "the shipped terms tell the buyer 1T is HELD when the request is made, "
+                          "but no hold exists in the code -- create_intro charges nothing and "
+                          "accept_intro deducts directly. The user agreed to a mechanism that is "
+                          "not implemented"))
+    else:
+        out.append((INFO, "a hold mechanism exists in the code"))
+
+    if promises_release:
+        has_release = any(tok in code for tok in (
+            "_release_hold", "release_hold", "intro_refund", "'hold_release'", "hold_released"))
+        if not has_release:
+            out.append((FAIL, "the shipped terms promise the held Tuppence is RELEASED in full on "
+                              "decline or expiry, but no release path exists -- there is nothing "
+                              "to release because nothing was held"))
+        else:
+            out.append((INFO, "a release path exists in the code"))
     return out
 
 
 @entry("RG-0143", "Every flag the BIT Mitigator is allowed to flip is actually READ by the app -- "
                   "the automatic safe-state response changes behaviour instead of only changing a "
                   "row and reporting success",
-       OPEN, scope="ops/bit/bit_mitigator.py SAFE_FLAGS entire (ai_example_enabled, "
+       OPEN, scope="ops/bit/bit_mitigator.py SAFE_FLAGS entire (today: ai_example_enabled, "
                    "auth_fail_closed, tuppence_burn_enabled) against bea_main.py and the shipped "
-                   "front end. CLASS property: any flag added to SAFE_FLAGS in future is caught "
-                   "by the same assertion. This is about the MITIGATION layer only -- the BIT "
-                   "DETECTION layer is real and passing (B-NEG-AUTH is live and PASSes today).",
-       ref="HALT-PLACEBO-1, precipitated 22 Aug 2026 by the D-7 launch-readiness HALT run -- the "
-           "addendum's robustness question, 'which breaker is real and which is decorative', "
-           "answered honestly for the first time. The BIT Mitigator exists as the fast, "
-           "reversible step between 'an S1 BIT is failing at users now' and 'a human gets to it' "
-           "-- it flips a pre-declared flag to a safe value in seconds and journals the flip. "
-           "PROBED/EXECUTED finding: all three flags in SAFE_FLAGS appear in bea_main.py ONLY at "
-           "the CREATE TABLE, the ALTER TABLE migration, the /flags exposure tuple, the pydantic "
-           "write model and the read-back. Not one is consumed at a decision site, and neither "
-           "ms.js nor marketsquare.html reads any of them. So the mitigator writes the row, "
-           "journals it, and reports the S1 mitigated -- while the app carries on doing exactly "
-           "what it was doing. That is a safety system that FAILS GREEN, the precise class "
-           "RG-0133 and INSTRUMENT-TRUTH-1 exist to kill, sitting on the layer David depends on "
-           "most: the one that acts at 2 a.m. when no operator is awake. The worst of the three "
-           "is tuppence_burn_enabled, whose declared user message is 'you will not be charged in "
-           "the meantime' -- it stops no charging, and it is the very lever anyone would reach "
-           "for during an RG-0142 double-charge incident. Two honest fixes, either acceptable: "
-           "make each flag load-bearing at its decision site, or delete the flag from SAFE_FLAGS "
-           "so the mitigator escalates to a human instead of pretending. What is NOT acceptable "
-           "is leaving a placebo that reports success. OPEN until every SAFE_FLAG is either "
-           "consumed or removed.")
+                   "front end. CLASS property: any flag added to SAFE_FLAGS in future is caught by "
+                   "the same assertion. MITIGATION layer only -- the BIT DETECTION layer is real "
+                   "and passing (B-NEG-AUTH is a live S1 check and PASSes).",
+       ref="HALT-PLACEBO-1, precipitated 22 Aug 2026 by the D-7 HALT run and UPHELD by adversarial "
+           "peer the same morning, which raised it from READ to EXECUTED: with the mitigator's "
+           "FULL safe-state written into a scratch DB (tuppence_burn_enabled=0, "
+           "ai_example_enabled=0, auth_fail_closed=1) the real app still returned 200 to another "
+           "accept and wrote a fifth intro_deduct row. The safe state stops nothing. Every real "
+           "switch in this codebase has a per-flag helper (_account_binding_enabled, "
+           "_intro_relay_enabled, the fault_report reader); these three have none, and there is no "
+           "generic _switch() fan-out. PROBED live: the served ms.js -- 1.12 MB, fetched from the "
+           "server, not the repo copy -- contains zero occurrences of any of the three names and "
+           "reads only f.effective from /flags, never bit_flags. main.py is not a second app: "
+           "deploy_manifest.txt ships bea_main.py AS main.py. 'Placebo' is the fair word because "
+           "escalation fires only for UNMAPPED BITs, so for these three the mitigator returns 200, "
+           "reports APPLIED, and the console-only user_msg 'you will not be charged in the "
+           "meantime' is never shown to a user and never true. CORRECTED 22 Aug after peer review: "
+           "(1) comments are stripped before counting a consumer, so one mention in a comment can "
+           "no longer clear the verdict; (2) the /flags exposure line is detected structurally "
+           "rather than by a hardcoded tuple substring that reformatting would defeat; (3) an "
+           "EMPTY SAFE_FLAGS is a PASS, not a parse failure -- removing a flag from the "
+           "allow-list is one of the two sanctioned fixes and must not read as red.")
 def rg_mitigator_flags_are_real():
     out = []
     mit = repo_file(os.path.join("ops", "bit", "bit_mitigator.py"))
@@ -7396,26 +7533,39 @@ def rg_mitigator_flags_are_real():
     if mit is None or src is None:
         return [(INFO, "outside the repo -- source half skipped")]
 
-    m = re.search(r"SAFE_FLAGS\s*=\s*\{(.*?)\n\}", mit, flags=re.S)
+    m = re.search(r"SAFE_FLAGS\s*=\s*\{(.*?)^\}", mit, flags=re.S | re.M)
+    if not m:
+        m = re.search(r"SAFE_FLAGS\s*=\s*\{(.*?)\}", mit, flags=re.S)
     if not m:
         out.append((FAIL, "bit_mitigator.py no longer declares SAFE_FLAGS -- re-point this "
                           "assertion rather than deleting it"))
         return out
     flags = re.findall(r'"([a-z0-9_]+)"\s*:\s*\{', m.group(1))
     if not flags:
-        out.append((FAIL, "SAFE_FLAGS parsed empty -- the mitigator's allow-list cannot be read, "
-                          "so nothing can vouch that its levers are real"))
+        out.append((INFO, "SAFE_FLAGS is empty -- the mitigator may flip nothing and must escalate "
+                          "every BIT to a human. That is one of the two sanctioned resolutions; "
+                          "no placebo lever can exist"))
         return out
 
-    # Lines that merely DECLARE or ECHO a flag, rather than acting on it.
-    def _is_plumbing(line):
+    def _is_plumbing(line, flag):
         s = line.strip()
-        return (s.startswith("ALTER TABLE") or '"ALTER TABLE' in s
-                or "INTEGER NOT NULL DEFAULT" in s
-                or re.match(r'^[a-z0-9_]+:\s*Optional\[bool\]', s)
-                or re.match(r'^"[a-z0-9_]+":\s*bool\(d\.get', s)
-                or ('"ai_example_enabled", "auth_fail_closed"' in s))
+        if not s:
+            return True
+        # schema / migration / model / read-back / the /flags exposure tuple, detected
+        # structurally: a line that only quotes flag NAMES in a row is an exposure list.
+        if "INTEGER NOT NULL DEFAULT" in s or s.startswith("ALTER TABLE") or '"ALTER TABLE' in s:
+            return True
+        if re.match(r'^[a-z0-9_]+:\s*Optional\[', s):
+            return True
+        if re.match(r'^"[a-z0-9_]+":\s*bool\(d\.get', s):
+            return True
+        if len(re.findall(r'"[a-z0-9_]+"', s)) >= 2 and "(" not in s.replace("(", "", 1):
+            return True
+        if re.match(r'^"[a-z0-9_]+",?$', s):
+            return True
+        return False
 
+    code = _strip_py_comments(src)
     front = ""
     for fe in ("ms.js", "marketsquare.html"):
         t = repo_file(fe)
@@ -7424,15 +7574,15 @@ def rg_mitigator_flags_are_real():
 
     placebo = []
     for f in flags:
-        live_sites = [ln for ln in src.splitlines() if f in ln and not _is_plumbing(ln)]
-        if not live_sites and f not in front:
+        live = [ln for ln in code.splitlines() if f in ln and not _is_plumbing(ln, f)]
+        if not live and f not in front:
             placebo.append(f)
 
     if placebo:
-        out.append((FAIL, "the BIT Mitigator may flip %d flag(s) that NOTHING reads: %s -- "
-                          "flipping them changes a row and reports the S1 mitigated while the "
-                          "app's behaviour is unchanged. A placebo breaker is worse than no "
-                          "breaker, because it consumes the incident" %
+        out.append((FAIL, "the BIT Mitigator may flip %d flag(s) that NOTHING reads: %s -- flipping "
+                          "them changes a row and reports the S1 mitigated while the app's "
+                          "behaviour is unchanged. A placebo breaker is worse than no breaker, "
+                          "because it consumes the incident instead of escalating it" %
                           (len(placebo), ", ".join(sorted(placebo)))))
     else:
         out.append((INFO, "all %d mitigator flag(s) are consumed at a decision site" % len(flags)))
@@ -7440,47 +7590,326 @@ def rg_mitigator_flags_are_real():
     if "tuppence_burn_enabled" in placebo:
         out.append((FAIL, "tuppence_burn_enabled is one of them -- its declared user message "
                           "promises 'you will not be charged in the meantime' while charging "
-                          "continues. This is the lever an operator would pull during an "
-                          "RG-0142 double-charge incident"))
+                          "continues (EXECUTED: full safe-state applied, the charge still "
+                          "succeeded). This is the lever an operator would pull during an RG-0142 "
+                          "double-charge incident"))
     return out
 
 
 @entry("RG-0144", "The public dashboard does not tell an anonymous stranger which defences are "
                   "down -- security posture is never published on an unauthenticated endpoint",
-       OPEN, scope="GET /dashboard/summary, the one dashboard payload that answers anonymously "
-                   "today. CLASS: any unauthenticated endpoint that renders operational prose "
-                   "belongs here -- the assertion is about publishing POSTURE, not about this "
+       OPEN, scope="GET /dashboard/summary, the dashboard payload that answers anonymously today. "
+                   "CLASS: any unauthenticated endpoint that renders operational prose belongs "
+                   "here -- the assertion is about publishing POSTURE to strangers, not about this "
                    "one route.",
-       ref="HALT-LEAK-1, found by the Cycle 2 doctoral peer on 22 Aug 2026 and PROBED again at "
-           "07:25 the same morning: GET /dashboard/summary returns 200 to an anonymous client "
-           "and its prose states in plain words that the Cloudflare WAF allowlist is DISABLED "
-           "and that the origin gate is 'the only guard', alongside the box sizing, the stack, "
-           "the live listing/seller/introduction counts and the launch dates. That is a "
-           "reconnaissance gift: it tells an attacker which single control to test and, thanks "
-           "to RUL-001 being quoted in the same payload, exactly which week to test it. It costs "
-           "nothing to fix -- put the endpoint behind auth, or strip the infrastructure and "
-           "defence sentences from the public payload and keep them on the authenticated +1 "
-           "page where they belong. Note this entry asserts the ABSENCE of posture disclosure, "
-           "not the state of the WAF itself: RUL-034 deliberately keeps the allowlist down "
-           "pre-launch and RG-0029 owns the gate posture. Telling the world about it is the "
-           "separate defect. OPEN until the public payload stops naming the defences.")
+       ref="HALT-LEAK-1, found by the Cycle 2 doctoral peer on 22 Aug 2026 and re-PROBED at 07:25: "
+           "GET /dashboard/summary returns 200 to an anonymous client and its prose states in "
+           "plain words that the Cloudflare WAF allowlist is DISABLED and the origin gate is 'the "
+           "only guard', alongside the box sizing, the stack, the live counts and the launch "
+           "dates. That is a reconnaissance gift -- it names the single control to test and, with "
+           "RUL-001 quoted beside it, the week to test it. This asserts the ABSENCE of posture "
+           "disclosure to ANONYMOUS callers; RUL-034 deliberately keeps the allowlist down "
+           "pre-launch and RG-0029 owns the gate posture itself. Telling the world about it is the "
+           "separate defect. CORRECTED 22 Aug after peer review, which found a false-red that "
+           "would have punished the better fix: the first cut read the body through _get(), which "
+           "transparently RETRIES a 401/403 with the reviewer cookie -- so gating the endpoint "
+           "behind auth (one of the two right answers) would still have shown the posture prose to "
+           "the authenticated read and kept the entry red forever, pushing a later session to "
+           "weaken it. It now checks the ANONYMOUS status first via _status() and only reads the "
+           "body when a stranger can actually get one. Also broadened: the banned set was six "
+           "literal words that 'bot management is off', 'allow-list' or 'the origin token is the "
+           "sole control' would all have walked straight past.")
 def rg_no_public_posture_leak():
     out = []
-    BANNED = ("WAF", "allowlist", "only guard", "firewall", "GATE-ENFORCE", "unprotected")
+    PATH = "/dashboard/summary"
     try:
-        body = _get("/dashboard/summary")
+        st = _status(PATH)
+    except ProbeOffline as e:
+        return [(INFO, "live half not read (%s)" % e)]
+
+    if st in (401, 403):
+        out.append((INFO, "%s refuses anonymous callers (%d) -- a stranger reads no posture" % (PATH, st)))
+        return out
+    if st != 200:
+        out.append((INFO, "%s answered %d anonymously -- nothing published" % (PATH, st)))
+        return out
+
+    try:
+        req = urllib.request.Request(BASE + PATH, headers=UA)
+        body = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
     except ProbeOffline as e:
         return [(INFO, "live half not read (%s)" % e)]
     except Exception as ex:
-        return [(FAIL, "could not read /dashboard/summary anonymously: %r" % (ex,))]
+        return [(FAIL, "could not read %s anonymously: %r" % (PATH, ex))]
 
-    hits = [w for w in BANNED if w.lower() in body.lower()]
+    PATTERNS = (
+        r"\bWAF\b", r"allow[\s\-_]?list", r"\bfirewall\b", r"bot\s*management",
+        r"only\s+guard", r"sole\s+(?:guard|control)", r"GATE[\s\-_]?ENFORCE",
+        r"\bunprotected\b", r"\bdisabled\b.{0,40}\b(?:WAF|gate|guard|firewall)\b",
+        r"origin\s+(?:gate|token).{0,30}\b(?:only|sole)\b",
+    )
+    hits = sorted({p for p in PATTERNS if re.search(p, body, flags=re.I)})
     if hits:
-        out.append((FAIL, "/dashboard/summary answers an anonymous client AND names the defence "
-                          "posture (%s) -- it tells a stranger which control to test" %
-                          ", ".join(hits)))
+        out.append((FAIL, "%s answers an ANONYMOUS client AND names the defence posture "
+                          "(%d pattern(s) matched: %s) -- it tells a stranger which control to "
+                          "test" % (PATH, len(hits), ", ".join(h[:26] for h in hits))))
     else:
         out.append((INFO, "the public summary names no defence posture"))
+    return out
+
+
+
+@entry("RG-0146", "Every credential the app holds is in SECRETS_REGISTER.md with a dated "
+                  "status, and none of them is still BURNT",
+       OPEN, scope="MarketSquare/SECRETS_REGISTER.md against the whole credential set. CLASS, not "
+                   "instance: any NEW credential added to the app must get a row, and any row left "
+                   "at BURNT or UNKNOWN keeps this red. Record-half assertion by necessity -- the "
+                   "values live on the box and reading them is exactly the act that burnt them "
+                   "twice (DW-029, DW-057), so this asserts the RECORD is honest and current, in "
+                   "the shape RG-0137 established for facts no probe we own can reach.",
+       ref="SECRETS-REGISTER-1, 22 Aug 2026. Born mid-rotation: DW-029/DW-057 had counted EIGHT "
+           "exposed credentials for fifteen days, and the box was found carrying NINE MORE in "
+           "/etc/environment at mode 0644 -- world-readable, with msdeploy holding a login shell to "
+           "read it. The same `systemctl show -p Environment` dump that burnt the eight printed "
+           "these nine too, so the register had been under-counting the leak the whole time. A "
+           "prose list inside a daily-watch row cannot hold an inventory; this entry gives it "
+           "machinery. Nine credentials were rotated and PROBED on 22 Aug (Resend 422, Paystack "
+           "200, JWT fingerprint changed with /health 200); the rest stay BURNT in the register "
+           "until they are replaced, which is what keeps this entry honestly red rather than "
+           "cosmetically green.")
+def rg_secrets_register_current():
+    out = []
+    txt = repo_file("SECRETS_REGISTER.md")
+    if txt is None:
+        return [(INFO, "repo half not read (run from inside the repo to check the register)")]
+    if not txt.strip():
+        return [(FAIL, "SECRETS_REGISTER.md is missing -- the credential inventory has no owner")]
+
+    m = re.search(r"REGISTER_VERIFIED:\s*(\d{4}-\d{2}-\d{2})", txt)
+    if not m:
+        out.append((FAIL, "the register carries no REGISTER_VERIFIED date -- an undated inventory "
+                          "is a claim, not a record"))
+    else:
+        try:
+            age = (datetime.date.today() - datetime.date(*map(int, m.group(1).split("-")))).days
+            if age > 180:
+                out.append((FAIL, "the register was last verified %d days ago (%s) -- stale"
+                                  % (age, m.group(1))))
+            else:
+                out.append((INFO, "register verified %s (%d days ago)" % (m.group(1), age)))
+        except Exception:
+            out.append((FAIL, "REGISTER_VERIFIED is not a readable date"))
+
+    burnt = len(re.findall(r"^\|\s*[A-Z][A-Z0-9_ /]+\s*\|", txt, flags=re.M))
+    still = txt.split("## Still burnt", 1)
+    if len(still) == 2:
+        rows = [l for l in still[1].split("## ")[0].splitlines()
+                if l.startswith("|") and not l.startswith("|---") and "Credential" not in l]
+        if rows:
+            out.append((FAIL, "%d credential(s) are still BURNT -- exposed, live and not replaced: %s"
+                              % (len(rows), ", ".join(r.split("|")[1].strip() for r in rows[:6]))))
+        else:
+            out.append((INFO, "no credential is still marked BURNT"))
+    else:
+        out.append((FAIL, "the register has no 'Still burnt' section -- its shape changed"))
+
+    # UNROTATABLE rows are allowed to exist, but never silently: each must carry a
+    # dated decision and its reasoning, or it is just a BURNT row wearing a better word.
+    unrot = txt.split("## Unrotatable", 1)
+    if len(unrot) == 2:
+        rows = [l for l in unrot[1].split("## ")[0].splitlines()
+                if l.startswith("|") and not l.startswith("|---") and "Credential" not in l]
+        for r in rows:
+            cells = [c.strip() for c in r.split("|")[1:-1]]
+            name = cells[0] if cells else "?"
+            if len(cells) < 4 or not re.search(r"\d{4}-\d{2}-\d{2}", cells[-1]):
+                out.append((FAIL, "%s is marked unrotatable with no DATED decision -- that is a "
+                                  "burnt credential with a nicer label" % name))
+            elif len(cells[2]) < 80:
+                out.append((FAIL, "%s is marked unrotatable but the acceptance reasoning is thin "
+                                  "(%d chars) -- say why it is survivable" % (name, len(cells[2]))))
+            else:
+                out.append((INFO, "%s: unrotatable, accepted, reasoned and dated" % name))
+
+    if "0644" in txt and "Now 0600" not in txt and "now 0600" not in txt.lower():
+        out.append((FAIL, "the register records a world-readable secrets file with no remediation"))
+    out.append((INFO, "%d credential row(s) in the register" % burnt))
+    return out
+
+
+@entry("RG-0147", "A credential is verified where it is USED -- the running process -- never "
+                  "from the file it was written to",
+       LOCKED, fixed_on="2026-08-22",
+       scope="The rotation method itself, for every credential on the box. CLASS property: "
+                   "any rotation tool added later must read back from /proc/<pid>/environ (or an "
+                   "authenticated live probe) and compare, not trust its own write. Asserted "
+                   "against the tooling in the repo.",
+       ref="ROTATE-VERIFY-1, 22 Aug 2026. Paid for in a live outage the same morning: the Paystack "
+           "key was written correctly to a 0600 systemd drop-in, the service restarted clean and "
+           "reported active -- and the RUNNING PROCESS still held the old, just-revoked key, "
+           "because /etc/environment is loaded via EnvironmentFile and won on precedence. Disk "
+           "said rotated; production said 401; card payments were down and nothing reported it. "
+           "The write is not the fact. Only the process environment and a live authenticated call "
+           "are the fact -- which is the evidence-ladder rule (PROBED over READ) applied to "
+           "secrets, and it is why every tool built this session ends with a read-back and a real "
+           "call to the vendor.")
+def rg_rotation_verifies_at_use():
+    out = []
+    tools = ("scripts/rotate_secrets.py", "scripts/fix_paystack_env.py",
+             "scripts/install_gmail_password.py", "scripts/rotate_jwt_secret.py")
+    seen = 0
+    for t in tools:
+        body = repo_file(t)
+        if body is None:
+            continue
+        seen += 1
+        if "environ" not in body:
+            out.append((FAIL, "%s writes a credential but never reads it back from the running "
+                              "process -- it can report success while production holds the old "
+                              "value" % t))
+    if not seen:
+        return [(INFO, "rotation tooling not present in this checkout")]
+    if not [o for o in out if o[0] == FAIL]:
+        out.append((INFO, "all %d rotation tool(s) read back from the running process" % seen))
+    return out
+
+
+
+@entry("RG-0148", "Every third-party data feed the app serves to customers is used within a "
+                  "licence that PERMITS commercial use",
+       LOCKED, fixed_on="2026-08-22",
+       scope="Every external data source rendered to a user or used to price a listing: JustTCG "
+                   "(TCG prices), Numista (coin catalogue), Travelpayouts/Aviasales (fares), and any "
+                   "feed added later. CLASS, not instance -- the question 'may we use this "
+                   "commercially' must be answered per feed, in writing, before launch traffic. "
+                   "Record-half assertion: licence terms are not machine-readable, so this asserts "
+                   "the DECISION exists and is dated, in the RG-0137 shape.",
+       ref="FEED-LICENCE-1, 22 Aug 2026, found during the secret rotation while looking up where "
+           "JustTCG keys are managed. JustTCG's pricing page states plainly: 'The free tier stays "
+           "personal and non-commercial', with commercial use -- storefronts, inventory, anything "
+           "customer-facing -- requiring a paid plan (Starter $19/mo, 10k calls; free tier 1,000/mo "
+           "with a 100/day cap). MarketSquare is a commercial marketplace and "
+           "`tier_resolvers.justtcg_price()` serves card prices into listings, so the free tier is "
+           "outside its licence at launch. This is not a technical fault and Claude does not decide "
+           "it: RUL-037 reserves spend to David. Three honest routes -- pay the $19/mo, drop the TCG "
+           "price tier and let Numista carry collectibles, or keep the lane dark until it earns its "
+           "keep. Numista's own terms and Travelpayouts' affiliate terms need the same one-line "
+           "answer beside it. The entry stays OPEN until FEED_LICENCES.md records a dated decision "
+           "per feed -- because a licence breach discovered after launch is a takedown, not a bug.")
+def rg_feed_licences_decided():
+    txt = repo_file("FEED_LICENCES.md")
+    if txt is None:
+        return [(INFO, "repo half not read")]
+    if not txt.strip():
+        return [(FAIL, "FEED_LICENCES.md does not exist -- no feed's commercial-use position is "
+                       "recorded. JustTCG's free tier is explicitly non-commercial and is serving "
+                       "prices into a commercial marketplace")]
+    out = []
+    for feed in ("JustTCG", "Numista", "Travelpayouts"):
+        # the row may name the feed plus its programme ("Travelpayouts / Aviasales"),
+        # so match the feed name at the start of the cell, not the whole cell.
+        m = re.search(r"(?mi)^\|\s*%s\b[^|]*\|(.+)$" % feed, txt)
+        if not m:
+            out.append((FAIL, "%s has no row in FEED_LICENCES.md" % feed))
+        elif not re.search(r"\d{4}-\d{2}-\d{2}", m.group(1)):
+            out.append((FAIL, "%s's licence position carries no DATED decision" % feed))
+        else:
+            out.append((INFO, "%s: licence position recorded and dated" % feed))
+    return out
+
+
+
+@entry("RG-0149", "A feed's licence OBLIGATIONS are honoured in the product, not merely recorded "
+                  "in a document -- attribution shown, retention respected",
+       OPEN, scope="Every feed in FEED_LICENCES.md that carries obligations. Today that is Numista "
+                   "(display N# identifiers, credit Numista as source, do not store catalogue data "
+                   "beyond a 7-day metadata cache). CLASS: any feed added with obligations must be "
+                   "asserted the same way -- a licence honoured only in a markdown table is not "
+                   "honoured.",
+       ref="FEED-OBLIGATION-1, 22 Aug 2026. Numista's API terms require the N# identifier to be "
+           "displayed for catalogue search results, Numista named as the data source, and -- the "
+           "operationally sharp one -- catalogue data NOT stored or cached, with permitted metadata "
+           "capped at 7 days. `ai_service_tiers.py` already credits 'Catalogue price from Numista', "
+           "so the source half is met; the N# display and the retention rule are UNVERIFIED against "
+           "the code. This matters because their paid plan is EUR100 activation + EUR100/month "
+           "minimum, so the free plan is the working position indefinitely and its conditions are "
+           "the price of admission. Deliberately OPEN rather than guessed: the honest state is "
+           "'recorded, not proven'.")
+def rg_feed_obligations_honoured():
+    out = []
+    lic = repo_file("FEED_LICENCES.md")
+    if lic is None:
+        return [(INFO, "repo half not read")]
+    if "N#" not in (lic or ""):
+        out.append((FAIL, "FEED_LICENCES.md no longer records the N# obligation"))
+    tiers = repo_file("ai_service_tiers.py") or ""
+    if "Numista" in tiers:
+        out.append((INFO, "source attribution present in the tier copy"))
+    else:
+        out.append((FAIL, "the Numista tier no longer names Numista as the source"))
+    src = repo_file("bea_main.py") or ""
+    if "N#" in src or "numista_id" in src or "n_number" in src:
+        out.append((INFO, "an N# identifier appears in the server source"))
+    else:
+        out.append((FAIL, "no N# identifier is displayed anywhere in the server source -- Numista's "
+                          "terms require it for catalogue search results"))
+    out.append((FAIL, "retention UNVERIFIED: nothing proves Numista catalogue data is not persisted "
+                      "in listings beyond their 7-day metadata window"))
+    return out
+
+
+
+@entry("RG-0150", "We hold Numista's IDENTIFIER and never Numista's DATA -- no catalogue figure "
+                  "is persisted, and search runs per LISTING, never per view",
+       OPEN, scope="numista_match.py, migrations/029_numista_ref.py, the listings schema, and any "
+                   "future code touching the coin catalogue. CLASS: the property is 'their figures "
+                   "are never stored by us', so ANY new column, cache or field holding a Numista "
+                   "price, estimate or mintage trips this -- not merely the ones named today.",
+       ref="N#-REFERRAL-1, David's design 22 Aug 2026 (FEED_LICENCES.md, N_REFERRAL_DESIGN.md). "
+           "Numista forbids storing or caching catalogue data (permitted metadata max 7 days) but "
+           "allows storing N# identifiers without a time limit. Any design pinning a catalogue "
+           "price to a listing is therefore either a breach (stored) or a per-view cost "
+           "(re-fetched) -- and the per-view version also lets any visitor burn the 2,000/month "
+           "quota. Referral removes all three: one search per LISTING CREATED, the N# kept "
+           "forever, the price read by the user on Numista's own site. This entry exists because "
+           "the failure mode is silent and LEGAL rather than technical: a cached price would work "
+           "perfectly and still be a takedown risk. OPEN until the endpoint and the ms.js "
+           "picker/link land and the live half can be probed.")
+def rg_numista_identifier_only():
+    out = []
+    mod = repo_file("numista_match.py")
+    if mod is None:
+        return [(INFO, "repo half not read")]
+    if not mod:
+        return [(FAIL, "numista_match.py is missing -- the referral design has no implementation")]
+
+    figure_fields = [f for f in ('"price"', '"estimate"', '"mintage"', '"value"')
+                     if f in mod]
+    if figure_fields:
+        out.append((FAIL, "numista_match.py builds %s into its return value -- candidates must "
+                          "carry identifiers and labels only" % ", ".join(figure_fields)))
+    else:
+        out.append((INFO, "the matcher returns identifiers and labels, no figures"))
+
+    mig = repo_file("migrations/029_numista_ref.py") or ""
+    if not mig:
+        out.append((FAIL, "migration 029_numista_ref.py is missing"))
+    else:
+        if "FORBIDDEN" not in mig:
+            out.append((FAIL, "029 no longer refuses catalogue-figure columns"))
+        else:
+            out.append((INFO, "029 refuses to run if a catalogue-figure column exists"))
+        for col in ("numista_id", "numista_matched_by"):
+            if col not in mig:
+                out.append((FAIL, "029 no longer creates %s" % col))
+
+    if "MONTHLY_CAP" not in mod:
+        out.append((FAIL, "the matcher has no monthly cap -- the free plan can be overrun"))
+    else:
+        out.append((INFO, "monthly cap present; degrades to no-candidates, never an error"))
+
+    out.append((FAIL, "live half not yet buildable: the match endpoint and the ms.js link/credit "
+                      "are not shipped, so 'no figure reaches the browser' cannot be probed"))
     return out
 
 
