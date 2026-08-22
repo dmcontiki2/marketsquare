@@ -15,15 +15,16 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 - **RUL-035 recorded** — the supers stay through launch and retire one by one as real listings replace them; nothing automatic may ever remove one.
 
 ## Next Session (priorities)
-- **DAVID — DW-057/DW-029: rotate the production secrets.** A command printed the service unit's entire inline environment into a chat transcript (MS_API_KEY, PAYSTACK_WEBHOOK_SECRET, RESEND_API_KEY, CF_CACHE_TOKEN, MS_DEPLOY_TOKEN, FOUNDERS_ID_SALT, TRAVELPAYOUTS_TOKEN, NUMISTA/JUSTTCG). Second exposure of the same credentials, and the WAF allowlist is down. Run `ROTATE_SECRETS.bat`; MS_API_KEY, MS_DEPLOY_TOKEN and FOUNDERS_ID_SALT need the unit edited too.
-- **DW-051 close-out:** read `.migrations_done` on the box and confirm it reaches **027** (023/024/027 are evidenced rc=0; 025/026 are not individually proven yet), then tighten RG-0116 to assert the DONE LIST advances rather than the guard in source.
-- **DAVID — DW-027 ruling (day 14):** above a blurred-fraction threshold, refuse the photo, behind a launch switch defaulting OFF. Also pending: the anon-blur vendor swap (RUL-031) — no further micro-fixes.
-- **DW-054:** prove the AI breaker fails OVER (not merely open) on a vendor 5xx/auth failure, and add the ledger entry asserting it. Ten Anthropic incidents 12-19 Aug; the failover has still never been exercised.
-- **DW-044 (David's call, model selection):** bring AdvertAgent inside the ai_provider seam or strike the `claude-opus-4-6` rate row and record it as out of perimeter.
-- **DW-010:** CC-002 open 71d against a 7-day threshold — land it or formally defer it. A decision not taken, not a threshold breach.
-- **DW-028:** provision the ops API_KEY locally (cleanest inside the rotation) so RG-0101's gzip probe stops being 401'd.
+- **DAVID — DEPLOY the 22 Aug work.** Publish the `deploy` ref (`deploy_marketsquare.bat`, or `/TSL` for the guarded path). Carries: the Ops Dashboard truth fixes (Cloudflare probe verified IN SCOPE, object-storage probe actually authenticates, R2 row correctly labelled, Numista + encrypted-backup rows added, Paystack's hardcoded "test mode" chip wired to real data, JustTCG shown as OFF BY DECISION), `numista_match.py`, and **migration 029** (N# columns). RG-0150 and RG-0151 hold their live halves open until this ships.
+- **N#-REFERRAL-1 — finish the build.** Design and first pieces are on disk (`N_REFERRAL_DESIGN.md`, `migrations/029_numista_ref.py`, `numista_match.py`). Remaining: `POST /listings/{id}/numista-match`, the seller's picker at listing time, and the catalogue link + source credit at view time. One search per LISTING, never per view; store the N# and never a Numista figure.
+- **DAVID (spend) — JustTCG $19/mo.** The lane is dark and lawful today because the free tier is licensed personal/non-commercial. Pay and switch it on (the key is rotated and valid — one paste), drop the TCG tier and let Numista carry collectibles, or leave it dark. RG-0148 is LOCKED; RG-0149 stays open until Numista's N# display and retention rules are proven in the product.
+- **D10 — Travelpayouts tours review.** Resubmitted 22 Aug (RUL-041) after David's word; 26 programs auto-connect on approval. Read the outcome in a few days. On decline: read the reason, do NOT resubmit unchanged, and do not weaken RUL-040 labelling to pass.
+- **DW-058 — deploy drift.** HEAD is ahead of `origin/deploy` with uncommitted session work. Closes when `deploy_drift` reads clean; the deploy above is most of it.
+- **MIGRATION EVIDENCE:** after the deploy, read `.migrations_done` on the box and confirm it reaches **029**, then tighten RG-0116 to assert the DONE LIST advances rather than the guard in source. (Deliberately carries no watch-row number: the originating row is closed, and RG-0152 flags closed rows listed as work — the check survives, the stale reference does not.)
 - **LEDGER-STABLE-1 has no ledger entry of its own** — outstanding against the standing rule; blue on the coverage map until written.
-- **Standing:** COST-SWEEP-LANE-1; LAUNCH-GATES set; ORCH-POLICY-1; DEMO-4; W12-FORYOU; CUTOVER-1; WONDER-DUP-1->10; PHOTO-ORDER-1 shipped, RG-0120 LOCKED.
+- **Standing:** COST-SWEEP-LANE-1; LAUNCH-GATES set; ORCH-POLICY-1; DEMO-4; W12-FORYOU; CUTOVER-1; WONDER-DUP-1->10.
+
+_Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
 

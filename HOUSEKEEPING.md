@@ -61,3 +61,15 @@ Changes sit in the working tree and in `changelog.d/`, for the next committer to
   transcript. Deferred to an attended session with the rotation.
 - **Dependency freshness:** no `requirements.txt` at project root (only `assets/`), so the FastAPI
   stack's pinned set was not enumerable from here. Needs the server-side venv to answer honestly.
+
+## Unit-file sanity (added 22 Aug 2026)
+
+    ssh root@178.104.73.239 "systemd-analyze verify marketsquare.service 2>&1 | grep -i 'invalid environment'"
+
+Must return NOTHING. A non-empty result means systemd is silently discarding a setting —
+found exactly that on 22 Aug: `demand.conf` set `DEMAND_FROM_EMAIL` to the single word
+"TrustSquare" because the value contained a space and was not quoted, and the address was
+dropped. Nothing broke only because `_safe_from()` substituted an identical fallback, which
+is precisely why it went unnoticed. Quote any `Environment=` whose value contains a space:
+
+    Environment="VAR=value with spaces"

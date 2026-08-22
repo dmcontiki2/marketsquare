@@ -14710,22 +14710,55 @@ def _infra_mask(v):
     return ("…" + v[-4:]) if len(v) >= 8 else "set"
 
 async def _infra_cloudflare():
+    """Cache-purge credential health.
+
+    VERIFY-IN-SCOPE-1 (22 Aug 2026). This probe used to ask /user/tokens/verify and then read
+    the zone's cache ruleset. Both are OUTSIDE the permission a purge token needs, so the
+    moment the token was narrowed to 'Cache Purge, one zone' — least privilege, deliberately —
+    the panel reported it INVALID and advised rolling it. It was working perfectly; a real
+    purge succeeded the same minute. A check that fails on correct input is worse than no
+    check: it destroys good work and sends the next session to the wrong console.
+
+    So: try the broad endpoints first (they still tell us more when the token is broad), and
+    when they are refused, fall back to the ONLY thing this credential exists to do — a real
+    purge of one URL that does not exist. Harmless, free, and conclusive."""
     tok = os.getenv("CF_CACHE_TOKEN"); zone = os.getenv("CF_ZONE_ID")
     if not tok or not zone:
         return {"status": "nokey", "detail": "CF_CACHE_TOKEN / CF_ZONE_ID not set"}
     try:
         async with httpx.AsyncClient(timeout=8) as cl:
-            v = await cl.get("https://api.cloudflare.com/client/v4/user/tokens/verify",
-                             headers={"Authorization": "Bearer " + tok})
-            if not v.json().get("success"):
-                return {"status": "fail", "detail": "token INVALID — cache purge broken (roll token in CF dash)"}
-            r = await cl.get("https://api.cloudflare.com/client/v4/zones/%s/rulesets/phases/http_request_cache_settings/entrypoint" % zone,
-                             headers={"Authorization": "Bearer " + tok})
-            rd = r.json()
-            if not rd.get("success"):
-                return {"status": "fail", "detail": "token ok but ZONE access failed — wrong CF_ZONE_ID?"}
-            n = len((rd.get("result") or {}).get("rules") or [])
-            return {"status": "ok", "detail": "token active · zone ok · %d cache rule(s) · purge-on-deploy armed" % n}
+            hdrs = {"Authorization": "Bearer " + tok}
+            broad = False
+            try:
+                v = await cl.get("https://api.cloudflare.com/client/v4/user/tokens/verify",
+                                 headers=hdrs)
+                broad = bool(v.json().get("success"))
+            except Exception:
+                broad = False
+
+            if broad:
+                r = await cl.get("https://api.cloudflare.com/client/v4/zones/%s/rulesets/phases/"
+                                 "http_request_cache_settings/entrypoint" % zone, headers=hdrs)
+                rd = r.json()
+                if rd.get("success"):
+                    n = len((rd.get("result") or {}).get("rules") or [])
+                    return {"status": "ok",
+                            "detail": "token active · zone ok · %d cache rule(s) · purge-on-deploy armed" % n}
+
+            # Narrow (purge-only) token, or a broad token without zone read: exercise the
+            # actual permission. Purging a URL that is not cached changes nothing.
+            pr = await cl.post("https://api.cloudflare.com/client/v4/zones/%s/purge_cache" % zone,
+                               headers=dict(hdrs, **{"Content-Type": "application/json"}),
+                               json={"files": ["https://trustsquare.co/__panel_probe__"]})
+            if pr.status_code == 200 and (pr.json() or {}).get("success"):
+                return {"status": "ok",
+                        "detail": ("purge PROVEN by a real call · token is scoped to Cache Purge "
+                                   "on this zone only (least privilege — do NOT broaden it to "
+                                   "make a checker happy)")}
+            if pr.status_code in (401, 403):
+                return {"status": "fail",
+                        "detail": "token REJECTED for cache purge — purge-on-deploy is broken"}
+            return {"status": "warn", "detail": "purge probe returned HTTP %d" % pr.status_code}
     except Exception as e:
         return {"status": "warn", "detail": "unreachable: " + type(e).__name__}
 
@@ -14768,15 +14801,34 @@ async def _infra_paystack():
         return {"status": "warn", "detail": "unreachable: " + type(e).__name__}
 
 async def _infra_hetzner_s3():
-    ep = os.getenv("HETZNER_S3_ENDPOINT"); ak = os.getenv("HETZNER_S3_ACCESS_KEY"); sk = os.getenv("HETZNER_S3_SECRET_KEY")
-    if not (ep and ak and sk):
-        return {"status": "nokey", "detail": "S3 credentials incomplete"}
+    """Listing-photo object storage. NOTE THE NAME LIES: the HETZNER_S3_* variables have
+    pointed at CLOUDFLARE R2 since the migration — endpoint <account>.eu.r2.cloudflarestorage.com,
+    bucket marketsquare-media. The names are kept for compatibility; the label tells the truth.
+
+    ROTATE-VERIFY-1 (22 Aug 2026): this used to GET the endpoint and call ANY HTTP response
+    "ok" — which proves a host is reachable, not that our credentials work. A revoked key
+    would have shown green. It now performs a real signed ListObjectsV2, the same test that
+    caught the credential swap during the rotation."""
+    ep = os.getenv("HETZNER_S3_ENDPOINT"); ak = os.getenv("HETZNER_S3_ACCESS_KEY")
+    sk = os.getenv("HETZNER_S3_SECRET_KEY"); bucket = os.getenv("HETZNER_S3_BUCKET")
+    if not (ep and ak and sk and bucket):
+        return {"status": "nokey", "detail": "object-storage credentials incomplete"}
+    vendor = "Cloudflare R2" if "r2.cloudflarestorage.com" in ep else "S3-compatible store"
+
+    def _list():
+        import boto3
+        from botocore.client import Config as _Cfg
+        cl = boto3.client("s3", endpoint_url=ep, aws_access_key_id=ak,
+                          aws_secret_access_key=sk, config=_Cfg(signature_version="s3v4"))
+        return cl.list_objects_v2(Bucket=bucket, MaxKeys=1)
     try:
-        async with httpx.AsyncClient(timeout=8) as cl:
-            r = await cl.get(ep)
-            return {"status": "ok", "detail": "endpoint alive (HTTP %d) · creds set · bucket %s" % (r.status_code, os.getenv("HETZNER_S3_BUCKET") or "?")}
+        await asyncio.to_thread(_list)
+        return {"status": "ok",
+                "detail": "%s · bucket %s · AUTHENTICATED (signed list succeeded)" % (vendor, bucket)}
     except Exception as e:
-        return {"status": "warn", "detail": "endpoint unreachable: " + type(e).__name__}
+        return {"status": "fail",
+                "detail": "%s · bucket %s · credentials REJECTED or bucket unreachable (%s)"
+                          % (vendor, bucket, type(e).__name__)}
 
 async def _infra_ssl():
     try:
@@ -14797,7 +14849,11 @@ _INFRA_CHECKS = {
     "cloudflare":  ("Cloudflare",      "CDN · cache · DNS",   _infra_cloudflare,  "CF_CACHE_TOKEN"),
     "resend":      ("Resend",          "transactional email",           _infra_resend,      "RESEND_API_KEY"),
     "paystack":    ("Paystack",        "payments (ZAR)",                _infra_paystack,    "PAYSTACK_SECRET_KEY"),
-    "hetzner_s3":  ("Hetzner S3",      "object storage · backups", _infra_hetzner_s3,  "HETZNER_S3_ACCESS_KEY"),
+    # The env names say Hetzner; the endpoint is Cloudflare R2 and the bucket holds LISTING
+    # PHOTOS, not backups. Backups are a separate lane (rclone -> R2 trustsquare-backups),
+    # shown on its own row below. A row that names the wrong vendor AND the wrong purpose
+    # sends the next incident to the wrong console — it did, on 22 Aug 2026.
+    "hetzner_s3":  ("Object storage (R2)", "listing photos · bucket marketsquare-media", _infra_hetzner_s3,  "HETZNER_S3_ACCESS_KEY"),
     "ssl":         ("TLS certificate", "trustsquare.co",                _infra_ssl,         None),
 }
 
@@ -14816,11 +14872,60 @@ async def admin_services_status(service: str = None, _admin=Depends(_require_adm
                     "key": _infra_mask(os.getenv(envk)) if envk else None})
         out.append(res)
     if service in (None, "justtcg"):
+        # FEED-LICENCE-1 (22 Aug 2026): the lane is DARK BY DECISION, not broken. JustTCG's
+        # free tier is licensed personal/non-commercial and MarketSquare is commercial, so the
+        # key is deliberately unset until the $19/mo plan is bought. Reporting that as a plain
+        # "not set" would read as a fault and invite someone to "fix" it back into a breach.
         jt = os.getenv("JUSTTCG_API_KEY")
-        out.append({"id": "justtcg", "label": "JustTCG", "kind": "card pricing data",
+        out.append({"id": "justtcg", "label": "JustTCG", "kind": "trading-card pricing data",
                     "status": "ok" if jt else "nokey",
-                    "detail": "key set (presence only — no cheap live probe)" if jt else "JUSTTCG_API_KEY not set",
+                    "detail": ("key set (presence only — no cheap live probe)" if jt else
+                               "OFF BY DECISION — free tier is licensed personal/non-commercial; "
+                               "paid plan $19/mo unlocks it. Not a fault. See FEED_LICENCES.md"),
                     "key": _infra_mask(jt)})
+    if service in (None, "numista"):
+        # A LIVE feed that was invisible on this panel until 22 Aug — the exact
+        # "partner you cannot see fails silently" fault the panel exists to prevent.
+        # PRESENCE-ONLY BY DESIGN: a live search spends the 2,000/month free quota, and a
+        # panel refresh must never spend a metered resource (same rule as the DHA row).
+        nk = os.getenv("NUMISTA_API_KEY")
+        _quota = ""
+        try:
+            import numista_match as _nm
+            _q = _nm.quota_state()
+            _quota = " · %d/%d searches used this month" % (_q["used"], _q["cap"])
+        except Exception:
+            _quota = " · quota counter not readable"
+        out.append({"id": "numista", "label": "Numista", "kind": "coin catalogue — N# referral",
+                    "status": "ok" if nk else "nokey",
+                    "detail": (("key set (presence only — a live search would spend free-tier "
+                                "quota)" + _quota) if nk else
+                               "NUMISTA_API_KEY not set — coin listings cannot be matched to a "
+                               "catalogue N#, so no referral link is offered"),
+                    "key": _infra_mask(nk)})
+    if service in (None, "backups"):
+        # The encrypted nightly backup (rclone -> R2 trustsquare-backups) had NO instrument
+        # anywhere until 22 Aug: it ran on trust and was verified for the first time by hand
+        # that day. An untested backup is a hope. This reads the last run's own log — free,
+        # no spend, and it fails LOUD when the lane goes quiet, which is the whole point.
+        import os as _os, time as _time
+        _cands = ["/root/r2backup/backup.log", "/var/log/r2backup.log"]
+        _log = next((c for c in _cands if _os.path.isfile(c)), None)
+        if not _log:
+            _st, _dt = "nokey", ("no backup log found — the encrypted backup lane is "
+                                 "UNMEASURED, not proven absent")
+        else:
+            _age_h = (_time.time() - _os.path.getmtime(_log)) / 3600.0
+            if _age_h <= 36:
+                _st, _dt = "ok", "last run %.1f h ago (nightly 03:17) · encrypted, client-side" % _age_h
+            elif _age_h <= 96:
+                _st, _dt = "warn", "last run %.1f h ago — a night has been missed" % _age_h
+            else:
+                _st, _dt = "fail", ("last run %.0f h ago — the backup lane is DOWN and nothing "
+                                    "else was telling you" % _age_h)
+        out.append({"id": "backups", "label": "Encrypted backups",
+                    "kind": "rclone → R2 trustsquare-backups · client-side encrypted",
+                    "status": _st, "detail": _dt, "key": None})
     # ID-NPR-6 (21 Aug 2026, David): the ID-verification lane belongs on this panel
     # like every other external service. It was armed on 21 Aug and was NOT visible
     # here — exactly the "a partner you cannot see is a partner that fails silently"

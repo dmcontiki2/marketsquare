@@ -1,3 +1,79 @@
+## 2026-08-22 — the Ops Dashboard made to tell the truth about the rotation
+
+David asked for the day's changes to be reflected on the Ops Dashboard, and checking it
+first found the panel was wrong or blind in five places. All fixed in the repo; **none of it
+is live until the next deploy.**
+
+**1. A false red on Cloudflare (VERIFY-IN-SCOPE-1).** `_infra_cloudflare` judged the token
+with `GET /user/tokens/verify` (user-level) and a zone ruleset read (needs Zone Read). The new
+purge token is scoped to **Cache Purge on one zone and nothing else** — least privilege, on
+purpose — so the panel reported `FAIL — token INVALID … roll token in CF dash` about a token
+that had performed a real purge successfully minutes earlier. The advice would have restarted
+the exact loop that cost an hour this morning. Now: broad endpoints first (they still say more
+when a token IS broad), falling back to a real purge of a non-existent URL. Asserted by RG-0151.
+
+**2. A green that could not fail on object storage.** `_infra_hetzner_s3` did a bare `GET` on
+the endpoint and called any HTTP response "ok" — proving a host is reachable, not that our
+credentials work. Revoked keys would have shown green. Now a signed `ListObjectsV2`.
+
+**3. A row naming the wrong vendor AND the wrong purpose.** It read *"Hetzner S3 · object
+storage · backups"*. The endpoint is **Cloudflare R2** and the bucket holds **listing photos**;
+backups are a different lane entirely. That mislabel sent this very session to the Hetzner
+console, where credentials were generated and installed into an R2 lane — a real photo-storage
+outage. Now: *"Object storage (R2) · listing photos · bucket marketsquare-media"*.
+
+**4. Two live feeds that were invisible.** **Numista** was serving coin data with no row at all
+— the precise "a partner you cannot see fails silently" fault the panel's own comment says it
+exists to prevent. Added, presence-only by design (a live search would spend free-tier quota,
+same rule as the billable DHA row) and showing the monthly counter. **Encrypted backups** had no
+instrument anywhere: the rclone → R2 lane ran nightly on trust and was verified by hand for the
+first time today. Added, reading the last run's own log — ok under 36h, warn to 96h, then fail.
+
+**5. Two hand-written verdicts wearing health colours (RG-0133's rule).** The Paystack card
+carried a hardcoded `test mode` chip fed by nothing — false since the live key went in, on the
+one card where a wrong answer costs money. It now starts "not wired" and is filled from the
+probe. And JustTCG's row read as a plain fault when it is **OFF BY DECISION** (free tier
+licensed non-commercial); it now says so, because "not set" invites someone to helpfully set it
+back into a licence breach.
+
+**Also confirmed, not a defect:** the red `service checks offline` chip and the admin lockout
+were the JWT and admin-password rotations working as intended. Sign-in with the new password
+restores both.
+
+## 2026-08-22 — a config line systemd had been discarding, and the guard that hid it
+
+Found in passing while repairing the inbound secrets: `systemd-analyze verify` reported
+`demand.conf:5: Invalid environment assignment, ignoring: <hello@mail.trustsquare.co>`.
+
+**The fault.** The line was written unquoted:
+
+    Environment=DEMAND_FROM_EMAIL=TrustSquare <hello@mail.trustsquare.co>
+
+systemd splits `Environment=` on whitespace, so it set `DEMAND_FROM_EMAIL` to the single
+word **"TrustSquare"** and threw the address away as a malformed second assignment. PROBED
+before the fix: the running process carried `DEMAND_FROM_EMAIL='TrustSquare'`. The configured
+sender for outbound demand mail had never once been in effect.
+
+**Why nothing broke.** `_safe_from()` (RESEND-FROM-1, added 7 Aug after a real sender
+incident) rejects any value that is not a well-formed address on the verified sending domain
+and substitutes `_RESEND_SAFE_FROM` — which is defined as *exactly*
+`"TrustSquare <hello@mail.trustsquare.co>"`, the string the broken line was trying to set.
+So the guard silently produced the intended result and the defect was invisible. Defence in
+depth working as designed, and also the reason it survived undetected.
+
+**Fixed:** the assignment is quoted as a whole, the orphaned `<hello@…>` fragment removed.
+PROBED after: `DEMAND_FROM_EMAIL='TrustSquare <hello@mail.trustsquare.co>'`, service active,
+/health 200, and `systemd-analyze verify` reports **no invalid environment assignment in any
+drop-in** — the check was widened to the whole unit, not just this line.
+
+**The lesson, and it is the day's theme again:** a fault that a fallback absorbs is still a
+fault. It waits for the day someone changes the fallback or sets a different sender. The same
+shape as the Gmail SMTP fallback that had never authenticated, and the BIT mitigator flipping
+flags nothing reads.
+
+**Added to the monthly sweep:** `systemd-analyze verify marketsquare.service` must report no
+invalid assignments. It costs one command and would have caught this the month it appeared.
+
 ## 2026-08-22 — RUL-040 live: AI example adverts labelled, DEMO banner on the demo maps
 
 Shipped through /TSL. The pre-deploy gate first returned `CM=REVIEW` — fifteen fragments

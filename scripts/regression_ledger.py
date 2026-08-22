@@ -7663,7 +7663,8 @@ def rg_no_public_posture_leak():
 
 @entry("RG-0146", "Every credential the app holds is in SECRETS_REGISTER.md with a dated "
                   "status, and none of them is still BURNT",
-       OPEN, scope="MarketSquare/SECRETS_REGISTER.md against the whole credential set. CLASS, not "
+       LOCKED, fixed_on="2026-08-22",
+       scope="MarketSquare/SECRETS_REGISTER.md against the whole credential set. CLASS, not "
                    "instance: any NEW credential added to the app must get a row, and any row left "
                    "at BURNT or UNKNOWN keeps this red. Record-half assertion by necessity -- the "
                    "values live on the box and reading them is exactly the act that burnt them "
@@ -7912,6 +7913,156 @@ def rg_numista_identifier_only():
 
     out.append((FAIL, "live half not yet buildable: the match endpoint and the ms.js link/credit "
                       "are not shipped, so 'no figure reaches the browser' cannot be probed"))
+    return out
+
+
+
+@entry("RG-0151", "Every credential probe tests the credential's OWN permission -- never a "
+                  "broader endpoint the credential is not entitled to call",
+       OPEN, scope="Every _infra_* probe on the Infrastructure panel and every verifier in "
+                   "scripts/. CLASS: the fault is 'a check that fails on correct input', so ANY "
+                   "new probe that reaches for a user-level or admin-level endpoint to judge a "
+                   "narrowly-scoped key belongs here.",
+       ref="VERIFY-IN-SCOPE-1, 22 Aug 2026, paid for twice in one day. (1) The rotation tooling "
+           "verified the new Cloudflare token with GET /user/tokens/verify -- a USER-level "
+           "endpoint that a token scoped to one zone's Cache Purge cannot call. It answered 401 "
+           "regardless of whether the token was good, so a CORRECT token was reported broken "
+           "three times and David was sent back to re-copy a valid value. (2) The Infrastructure "
+           "panel had the same bug plus a second one (reading zone rulesets, which needs Zone "
+           "Read), so the moment the token was narrowed to least privilege the panel showed FAIL "
+           "and advised 'roll token in CF dash' -- advice that would have restarted the loop. "
+           "Both now fall back to a real cache purge of a non-existent URL: harmless, free, and "
+           "conclusive. THE GENERAL RULE: least privilege makes broad probes lie, so the probe "
+           "must shrink to the credential, never the credential grow to the probe. A checker that "
+           "cannot fail is worthless; a checker that cannot pass is worse, because it destroys "
+           "good work. OPEN until the panel change is deployed and its live half can be read.")
+def rg_probes_verify_in_scope():
+    out = []
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "repo half not read")]
+    cf = src[src.find("async def _infra_cloudflare"):] if "_infra_cloudflare" in src else ""
+    cf = cf[:cf.find("async def _infra_resend")] if "_infra_resend" in cf else cf
+    if not cf:
+        return [(FAIL, "_infra_cloudflare not found")]
+    if "purge_cache" not in cf:
+        out.append((FAIL, "the Cloudflare probe does not exercise cache purge -- a purge-scoped "
+                          "token will be reported broken"))
+    else:
+        out.append((INFO, "the Cloudflare probe falls back to a real purge (in-scope)"))
+    if "roll token in CF dash" in cf:
+        out.append((FAIL, "the probe still advises rolling the token on a false red"))
+    s3 = src[src.find("async def _infra_hetzner_s3"):] if "_infra_hetzner_s3" in src else ""
+    s3 = s3[:s3.find("async def _infra_ssl")] if "_infra_ssl" in s3 else s3
+    if s3 and "list_objects_v2" not in s3:
+        out.append((FAIL, "the object-storage probe does not authenticate -- a bare GET on the "
+                          "endpoint would show green with revoked credentials"))
+    elif s3:
+        out.append((INFO, "the object-storage probe performs a signed list (in-scope)"))
+    out.append((FAIL, "live half unread: the panel change is not deployed, so the real verdicts "
+                      "cannot be probed yet"))
+    return out
+
+
+
+@entry("RG-0152", "The 'Next Session' block never directs the next session at work that is "
+                  "already CLOSED",
+       LOCKED, fixed_on="2026-08-22",
+       scope="STATUS.md '## Next Session (priorities)' cross-referenced against "
+             "DAILY_WATCH/OPEN_ITEMS.md. CLASS: any DW-### named as a priority must not appear "
+             "in the watch's CLOSED sections. The block is hand-maintained -- it has no compiler "
+             "like CHANGELOG.md and STATUS.md's Current Session -- so it needs an assertion "
+             "instead of a habit.",
+       ref="STALE-DIRECTIVE-1, 22 Aug 2026. The Ops Dashboard renders this block as its "
+           "'NEXT SESSION' card, so whatever sits here is what the next session is told to do. "
+           "Found carrying NINE items of which SIX were already finished: DW-027, DW-054, "
+           "DW-044, DW-010 and DW-028 were all closed on 21 Aug and still listed on 22 Aug, and "
+           "the top item told David to rotate the production secrets on the morning he finished "
+           "rotating them. This is the same failure the rulings register was built for -- work "
+           "that is done, not written where the next session reads. Cheap to check: the watch "
+           "already records closures, so the two only have to be compared.")
+def rg_next_session_not_stale():
+    status = repo_file("STATUS.md")
+    watch = repo_file(os.path.join("DAILY_WATCH", "OPEN_ITEMS.md"))
+    if status is None or watch is None:
+        return [(INFO, "repo half not read")]
+    head = "## Next Session (priorities)"
+    if head not in status:
+        return [(FAIL, "STATUS.md no longer has a '%s' block -- the dashboard card reads it" % head)]
+    seg = status[status.index(head):]
+    nxt = seg.find("\n## ", 10)
+    seg = seg[:nxt] if nxt > 0 else seg
+
+    named = set(re.findall(r"DW-\d{3}", seg))
+    closed = set()
+    for m in re.finditer(r"\*\*(DW-\d{3})\*\* CLOSED", watch):
+        closed.add(m.group(1))
+    for m in re.finditer(r"(DW-\d{3})\s+CLOSED", watch):
+        closed.add(m.group(1))
+
+    # An item may be MENTIONED as closed (the audit trail line at the foot); only flag a
+    # DW that is named in a bullet as work to do.
+    todo = set()
+    for line in seg.splitlines():
+        ls = line.strip()
+        if not ls.startswith("-"):
+            continue
+        if re.search(r"(?i)closed .* and removed|removed from this list", ls):
+            continue
+        todo |= set(re.findall(r"DW-\d{3}", ls))
+
+    stale = sorted(todo & closed)
+    out = []
+    if stale:
+        out.append((FAIL, "the Next Session block still asks for CLOSED item(s): %s -- the "
+                          "dashboard is directing the next session at finished work"
+                          % ", ".join(stale)))
+    else:
+        out.append((INFO, "%d DW item(s) named, none of them already closed" % len(todo)))
+    if "rotate the production secrets" in seg:
+        out.append((FAIL, "the secret-rotation directive is still listed -- it completed 22 Aug"))
+    return out
+
+
+
+@entry("RG-0153", "No chip on the visual maps asserts a service state that nothing measured -- "
+                  "every external-service light is live-fed and can be re-tested on the spot",
+       LOCKED, fixed_on="2026-08-22",
+       scope="dashboard.server.html visual maps, external-service cards. CLASS: any NEW chip that "
+             "paints a health colour for a service must read it from /admin/services-status or "
+             "stay in the dashed not-wired style. Extends RG-0133 from the +1 page's instruments "
+             "to the map cards.",
+       ref="INSTRUMENT-TRUTH-2, 22 Aug 2026, found by David reading his own dashboard: "
+           "'All of these looks wrong.' He was right on all four. Paystack carried a HARDCODED "
+           "'test mode' chip -- false from the moment the live key went in, on the one card where "
+           "a wrong answer costs money. Cloudflare carried a hardcoded green 'proxied'. Resend, a "
+           "live mail lane, had NO chip at all on the Switches view. And 'SSL days' sat dashed "
+           "while the server had measured the number all along. All four now read from the same "
+           "probe the Infrastructure card uses. David's second instruction shipped with it: "
+           "'allow a press on any coloured light to initiate that test live' -- each chip re-runs "
+           "ITS OWN check via ?service=<id> and repaints from the answer, because a dashboard you "
+           "can only believe gets ignored, and one you can challenge gets trusted.")
+def rg_map_chips_are_measured():
+    html = repo_file("dashboard.server.html")
+    if html is None:
+        return [(INFO, "repo half not read")]
+    out = []
+    for bad, what in (('<span class="om-dot"></span>test mode', 'Paystack "test mode"'),
+                      ('<span class="om-dot"></span>proxied', 'Cloudflare "proxied"')):
+        if bad in html:
+            out.append((FAIL, "a hardcoded %s chip is back -- it asserts a state nothing "
+                              "measured" % what))
+    for cid, label in (("om-psmode", "Paystack mode"), ("om-cfsvc", "Cloudflare purge"),
+                       ("om-resendsvc", "Resend key"), ("om-sslsvc", "SSL days")):
+        if cid not in html:
+            out.append((FAIL, "the %s chip (%s) is gone -- that card shows no measured state"
+                              % (label, cid)))
+    if "_SVC_CHIPS" not in html or "click to re-test" not in html:
+        out.append((FAIL, "click-to-retest wiring is missing -- the lights can no longer be "
+                          "challenged on the spot"))
+    if not [o for o in out if o[0] == FAIL]:
+        out.append((INFO, "4 external-service chips are live-fed and re-testable; no hardcoded "
+                          "health claims remain on the map cards"))
     return out
 
 

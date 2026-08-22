@@ -610,7 +610,9 @@
     <h3>Cloudflare CDN</h3><div class="om-role">cache + purge-on-deploy</div>
     <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span>cache hit <span class="om-v">—</span></span></div>
     <div class="om-chips omc-money"><span class="om-chip g"><span class="om-dot"></span>cost <span class="om-v">R 0</span></span></div>
-    <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>proxied</span></div>
+    <!-- INSTRUMENT-TRUTH-2: was a hardcoded green "proxied" fed by nothing. Now the live
+         cache-purge verdict from /admin/services-status. -->
+    <div class="om-chips omc-switches"><span class="om-chip nw" id="om-cfsvc"><span class="om-dot"></span>purge <span class="om-v">—</span></span></div>
   </div>
   <div class="om-blk omf-edge" style="left:240px;top:196px;width:180px">
     <h3>CF Email Worker</h3><div class="om-role">inbound mail → /email/inbound</div>
@@ -669,7 +671,7 @@
     <h3>Host / OS</h3><div class="om-role">CPX32 · /health/resources</div>
     <div class="om-chips omc-traffic"><span class="om-chip g" id="om-cpu"><span class="om-dot"></span>CPU <span class="om-v">—</span></span><span class="om-chip g" id="om-ram"><span class="om-dot"></span>RAM <span class="om-v">—</span></span><span class="om-chip g" id="om-disk"><span class="om-dot"></span>disk <span class="om-v">—</span></span></div>
     <div class="om-chips omc-money"><span class="om-chip g"><span class="om-dot"></span>fixed <span class="om-v">€4.51/mo</span></span></div>
-    <div class="om-chips omc-switches"><span class="om-chip nw"><span class="om-dot"></span>SSL days <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-switches"><span class="om-chip nw" id="om-sslsvc"><span class="om-dot"></span>SSL days <span class="om-v">—</span></span></div>
   </div>
 
   <!-- EXTERNAL -->
@@ -686,12 +688,19 @@
   <div class="om-blk omf-ext" style="left:1040px;top:268px;width:180px">
     <h3>Paystack</h3><div class="om-role">Tuppence in · money IN</div>
     <div class="om-chips omc-money"><span class="om-chip g" id="om-tuppence"><span class="om-dot"></span>topups <span class="om-v">—</span></span><span class="om-chip nw"><span class="om-dot"></span>MTD in (R) <span class="om-v">—</span></span></div>
-    <div class="om-chips omc-switches"><span class="om-chip o"><span class="om-dot"></span>test mode</span></div>
+    <!-- INSTRUMENT-TRUTH-2 (22 Aug 2026): this chip was HARDCODED to "test mode" and fed by
+         nothing. It was false from the moment the live key went in, on the one card where a
+         wrong answer costs money. RG-0133's rule applies: no hand-written verdict wears a
+         health colour. It now starts as "not wired" and is filled from /admin/services-status. -->
+    <div class="om-chips omc-switches"><span class="om-chip nw" id="om-psmode"><span class="om-dot"></span>mode <span class="om-v">—</span></span></div>
   </div>
   <div class="om-blk omf-ext" style="left:1040px;top:376px;width:180px">
     <h3>Resend</h3><div class="om-role">outbound mail (acks, closure letters)</div>
     <div class="om-chips omc-traffic"><span class="om-chip g" id="om-mailsent"><span class="om-dot"></span>auto-sent 30d <span class="om-v">—</span></span></div>
     <div class="om-chips omc-money"><span class="om-chip g"><span class="om-dot"></span>free tier</span></div>
+    <!-- INSTRUMENT-TRUTH-2: Resend had NO chip on the Switches view, so a live mail lane
+         rendered blank exactly where an operator looks for its state. -->
+    <div class="om-chips omc-switches"><span class="om-chip nw" id="om-resendsvc"><span class="om-dot"></span>key <span class="om-v">—</span></span></div>
   </div>
   <div class="om-blk omf-ext" style="left:1040px;top:458px;width:180px" id="om-relay-blk"
        title="INTRO-RELAY-1 — the neutral ground (David's doctrine: nothing of the customer's leaves TrustSquare except a consented, revocable email channel — never the address itself).&#10;&#10;SWITCH OFF: an accepted intro exchanges the parties' real email addresses (legacy behaviour).&#10;SWITCH ON: buyer and seller talk through masked intro-…@relay.trustsquare.co aliases — Cloudflare Email Routing catches the mail, the BEA verifies the two enrolled parties, Resend forwards it. Real addresses never leave the database; kill an alias and the channel dies.&#10;&#10;RAIL: the Cloudflare worker + MX + RELAY_INBOUND_SECRET must be 'ready' before the switch goes ON.&#10;&#10;ACCT BINDING: paid actions charge the PROVEN signed-in identity (magic-link session), never a caller-typed email.">
@@ -739,7 +748,7 @@
     <div class="om-chips omc-switches"><span class="om-chip o"><span class="om-dot"></span>session-invoked</span></div>
   </div>
   </div></div>
-  <div id="om-foot">Chips with a solid dot are fed live by the server (flags, service checks, faults, resources, presence, AI spend, BIT, email triage). Dashed chips are honestly not wired yet — B-OPS batches: money-in (Paystack), req/h, deploys/wk, SSL days, feedback classes. A red chip means that feed failed just now.</div>
+  <div id="om-foot">Chips with a solid dot are fed live by the server (flags, service checks, faults, resources, presence, AI spend, BIT, email triage). Dashed chips are honestly not wired yet — B-OPS batches: money-in (Paystack), req/h, deploys/wk, feedback classes. Chips on the external-service cards (Paystack mode, Cloudflare purge, Resend key, SSL days) are live and CLICKABLE — pressing one re-runs that check on the spot. A red chip means that feed failed just now.</div>
 </div>
 </div>
 
@@ -1727,6 +1736,72 @@ function switchView(view) {
         down.forEach(function(x){ html += '<span class="om-chip r" title="' + esc(x.detail || x.status) + '"><span class="om-dot"></span>' + esc(x.id) + ' ' + esc(x.status) + '</span>'; });
         if(nokey.length) html += '<span class="om-chip o" title="No API key configured — a deliberate OFF, not a fault: ' + esc(nokey.map(function(x){return x.id;}).join(', ')) + '"><span class="om-dot"></span>' + nokey.length + ' no key (off)</span>';
         sc.innerHTML = html || '<span class="om-chip o"><span class="om-dot"></span>no checks</span>';
+
+        // INSTRUMENT-TRUTH-2 (22 Aug 2026): these card chips used to be HARDCODED —
+        // Paystack "test mode" (false the moment the live key went in), Cloudflare
+        // "proxied" (green, fed by nothing), and Resend had no chip at all on this view.
+        // RG-0133's rule: no hand-written verdict wears a health colour. Each is now
+        // filled from the same probe the Infrastructure card uses, or stays "not wired".
+        function byId(list, id){ return list.filter(function(x){ return x.id === id; })[0]; }
+        var _SVC_CHIPS = { 'om-psmode':'paystack', 'om-cfsvc':'cloudflare',
+                           'om-resendsvc':'resend', 'om-sslsvc':'ssl' };
+        var _SVC_PAINT = {};
+        function paint(elId, svc, fn){
+          var el = document.getElementById(elId);
+          if(fn) _SVC_PAINT[elId] = fn;
+          if(!el || !svc) return;
+          var v = fn(String(svc.detail || ''), svc.status);
+          el.className = 'om-chip ' + v.cls;
+          el.innerHTML = '<span class="om-dot"></span>' + v.txt;
+          el.title = svc.detail || svc.status;
+        }
+        paint('om-psmode', byId(svcs, 'paystack'), function(d, st){
+          var live = /LIVE mode/i.test(d), test = /TEST mode/i.test(d);
+          return { cls: st === 'ok' ? (live ? 'g' : 'o') : 'r',
+                   txt: live ? 'LIVE mode' : test ? 'TEST mode' : 'mode <span class="om-v">?</span>' };
+        });
+        paint('om-cfsvc', byId(svcs, 'cloudflare'), function(d, st){
+          return { cls: st === 'ok' ? 'g' : (st === 'nokey' ? 'o' : 'r'),
+                   txt: st === 'ok' ? 'purge ok' : (st === 'nokey' ? 'no token' : 'purge FAIL') };
+        });
+        paint('om-resendsvc', byId(svcs, 'resend'), function(d, st){
+          return { cls: st === 'ok' ? 'g' : (st === 'nokey' ? 'o' : 'r'),
+                   txt: st === 'ok' ? 'key valid' : (st === 'nokey' ? 'no key' : 'key DEAD') };
+        });
+        paint('om-sslsvc', byId(svcs, 'ssl'), function(d, st){
+          var m = /(\d+)\s*days/i.exec(d);
+          return { cls: st === 'ok' ? 'g' : (st === 'warn' ? 'a' : 'r'),
+                   txt: 'SSL days <span class="om-v">' + (m ? m[1] : '?') + '</span>' };
+        });
+
+        // CLICK-TO-RETEST (David, 22 Aug 2026): "allow a press on any coloured light to
+        // initiate that test live". A dashboard that can only be believed is a dashboard
+        // that gets ignored; one you can challenge on the spot gets trusted. Each painted
+        // chip re-runs ITS OWN check via ?service=<id> and repaints from the answer.
+        Object.keys(_SVC_CHIPS).forEach(function(elId){
+          var el = document.getElementById(elId);
+          if(!el) return;
+          var sid = _SVC_CHIPS[elId];
+          el.style.cursor = 'pointer';
+          el.title = (el.title || '') + '  ·  click to re-test now';
+          if(el._wired) return;
+          el._wired = true;
+          el.addEventListener('click', function(){
+            var keep = el.innerHTML;
+            el.innerHTML = '<span class="om-dot"></span>testing…';
+            fetch(B + '/admin/services-status?service=' + encodeURIComponent(sid),
+                  {headers:{'X-Admin-Token': tok}})
+              .then(function(r){ return r.json(); })
+              .then(function(d2){
+                var one = (d2.services || [])[0];
+                if(!one){ el.innerHTML = keep; return; }
+                paint(elId, one, _SVC_PAINT[elId]);
+                el.title = (one.detail || one.status) + '  ·  re-tested ' +
+                           new Date().toLocaleTimeString();
+              })
+              .catch(function(){ el.innerHTML = keep; });
+          });
+        });
       }).catch(function(e){
         var sc = document.getElementById('om-svcchips');
         if(sc) sc.innerHTML = '<span class="om-chip r" title="/admin/services-status failed just now — ' + esc(String(e).slice(0,60)) + '"><span class="om-dot"></span>service checks offline</span>';
