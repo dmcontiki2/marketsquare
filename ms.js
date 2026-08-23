@@ -1501,7 +1501,7 @@ function _agL(key){
     setup:'Collector shops are set up by TrustSquare on application.',
     created:'Shop created',createTest:'Create a test shop',namePh:'Shop name',
     manualUrl:'/static/TrustSquare_Agency_Playbook.pdf',
-    gate:'Gate: <b>SAPS Second-Hand Goods registration</b> — statutory to trade · also scored: SAADA / SAAND / NAADA · SANGS grading · CIPC'};
+    gate:'Gate: <b>SAPS Second-Hand Goods registration</b> — statutory to trade · also scored: SAADA / SAAND / NAADA · SANGS grading · CIPC · years trading · pieces sold (declared)'};
   var I={title:'Institution console',brand:'Institution',people:'Tutors',person:'Tutor',
     invite:'Invite tutor',noPeople:'No tutors yet — invite one above.',
     ph:'tutor@centre.co.za',imports:'Import your tutor listings',
@@ -1509,7 +1509,7 @@ function _agL(key){
     setup:'Tutor institutions are set up by TrustSquare on application.',
     created:'Institution created',createTest:'Create a test institution',namePh:'Institution name',
     manualUrl:'/static/TrustSquare_Agency_Playbook.pdf',
-    gate:'Gate: <b>safety clearances</b> (PCC + Child Protection + Sexual Offenders registers) — verified SACE covers all three · also scored: SAQA qualification'};
+    gate:'Gate: <b>safety clearances</b> (PCC + Child Protection + Sexual Offenders registers) — verified SACE covers all three · also scored: SAQA qualification · subjects & NQF level · years · results track record (declared) · the institution\'s own DHET/Umalusi/CIPC standing'};
   var S={title:'Company console',brand:'Company',people:'Technicians',person:'Technician',
     invite:'Invite technician',noPeople:'No technicians yet — invite one above.',
     ph:'tech@company.co.za',imports:'Import your service listings',
@@ -1517,7 +1517,7 @@ function _agL(key){
     setup:'Service companies are set up by TrustSquare on application.',
     created:'Company created',createTest:'Create a test company',namePh:'Company name',
     manualUrl:'/static/TrustSquare_Agency_Playbook.pdf',
-    gate:'Gate: <b>trade CoC licence</b> (PIRB / DoEL Installation Electrician) — per service class · also scored: public liability insurance · CIDB'};
+    gate:'Gate: <b>trade CoC licence</b> (PIRB / DoEL Installation Electrician) — per service class · also scored: public liability insurance · CIDB grading · years · response commitment'};
   var P={title:'Placement console',brand:'Placement agency',people:'Consultants',person:'Consultant',
     invite:'Invite consultant',noPeople:'No consultants yet — invite one above.',
     ph:'consultant@agency.co.za',imports:'Import your programmes',
@@ -1525,7 +1525,7 @@ function _agL(key){
     setup:'Placement agencies are set up by TrustSquare on application.',
     created:'Placement agency created',createTest:'Create a test placement agency',namePh:'Agency name',
     manualUrl:'/static/TrustSquare_Agency_Playbook.pdf',
-    gate:'Gate: <b>DEL registration</b> — and workseekers never pay, by law and by design · also scored: APSO · sponsor networks · bonding'};
+    gate:'Gate: <b>DEL registration</b> — and workseekers never pay, by law and by design · also scored: APSO · sponsor networks (IAPA / J-1 / cruise lines) · bonding · years · placements (declared)'};
   var _s = window._tsSkin || (window._tsOperatorMode ? 'operator' : 'agency');
   return ({agency:A, operator:O, dealer:D, collector:C, institution:I, service_company:S, placement:P}[_s]||A)[key]||key;
 }

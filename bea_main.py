@@ -9644,6 +9644,10 @@ _CATEGORY_SIGNALS = {
         "category.cars.rwc":               {"name": "Roadworthy certificate (RWC)", "points": 6, "how_to_earn": "Upload roadworthy certificate."},
     },
     "Tutors": {
+        # VERT-4-1b (RUL-049): tutor-institution agent credentials
+        "category.institution.clearances": {"name": "Safety clearances (PCC + Child Protection + Sexual Offenders registers)", "points": 10, "how_to_earn": "Reference numbers only — ops sight-verifies with the issuing bodies; documents are never stored (POPIA). A verified SACE registration covers all three."},
+        "category.institution.sace": {"name": "SACE registration", "points": 12, "how_to_earn": "SACE number — verified against the SACE register. SACE embeds police clearance and both register screenings."},
+        "category.institution.saqa": {"name": "SAQA-verified qualification", "points": 6, "how_to_earn": "SAQA verification reference for the qualification."},
         "category.tutors.clearance":       {"name": "Police clearance / DBS check", "points": 8, "how_to_earn": "Upload SAPS clearance (saps.gov.za) · DBS (UK) · WWC (AU) · state background check (US). Critical for tutors working with minors."},
         "category.tutors.sace":            {"name": "SACE registration", "points": 8,  "how_to_earn": "Upload SACE registration certificate — verified at sace.org.za. Required for SA school teachers; not required for private/independent or tertiary tutors."},
         "category.tutors.cert_diploma":    {"name": "Certificate or Diploma (NQF5–6)", "points": 6, "how_to_earn": "Upload certificate."},
@@ -9657,6 +9661,11 @@ _CATEGORY_SIGNALS = {
         "category.tutors.strong_cv":       {"name": "Strong structured CV", "points": 2, "how_to_earn": "Upload CV with clear dates, subjects taught, and institutions — assessed at onboarding."},
     },
     "Services-Technical": {
+        # VERT-4-1b (RUL-049): service-company technician credentials
+        "category.service.trade_licence": {"name": "Trade licence (PIRB / DoEL Installation Electrician)", "points": 12, "how_to_earn": "The CoC-issuing licence for the trade — PIRB for plumbing, DoEL IE/Wireman's for electrical. Gates go-live for regulated trades."},
+        "category.service.cipc_registered": {"name": "Registered company (CIPC)", "points": 5, "how_to_earn": "CIPC registration number — must at least be submitted before go-live."},
+        "category.service.insured": {"name": "Public liability insurance", "points": 6, "how_to_earn": "Policy schedule or broker letter."},
+        "category.service.cidb": {"name": "CIDB grading (construction)", "points": 4, "how_to_earn": "CIDB registration number and grade."},
         "category.services_tech.trade_cert": {"name": "Formal trade certificate", "points": 8, "how_to_earn": "Upload (City & Guilds, TVET, MERSETA, CETA, Red Seal)."},
         "category.services_tech.body_reg":   {"name": "Professional body registration", "points": 12, "how_to_earn": "Upload (ECSA, PIRB, NHBRC, FSCA, SAICA) — verified."},
         "category.services_tech.insurance":  {"name": "Public liability insurance", "points": 5, "how_to_earn": "Upload policy schedule with expiry date. Expected by any homeowner hiring a trade into their property."},
@@ -9701,6 +9710,11 @@ _CATEGORY_SIGNALS = {
         "category.adv_acc.award":            {"name": "AA Travel / TripAdvisor / Booking.com award", "points": 3, "how_to_earn": "Upload award certificate or screenshot."},
     },
     "Collectors": {
+        # VERT-4-1b (RUL-049): collector-dealer agent credentials
+        "category.collector.shg_registered": {"name": "SAPS Second-Hand Goods dealer registration", "points": 12, "how_to_earn": "Dealer registration under the Second-Hand Goods Act 6 of 2009 — ops verifies against the SAPS register. Statutory to trade; gates the dealer profile going live."},
+        "category.collector.cipc_registered": {"name": "Registered company (CIPC)", "points": 5, "how_to_earn": "CIPC registration number — must at least be submitted before go-live."},
+        "category.collector.assoc_member": {"name": "Dealer association member (SAADA / SAAND / NAADA)", "points": 5, "how_to_earn": "Membership letter or card — verified against the association's member list."},
+        "category.collector.grading": {"name": "Grading partner (SANGS / NGC / PCGS)", "points": 4, "how_to_earn": "Evidence of a standing grading/authentication arrangement."},
         "category.collectors.specialisation": {"name": "Category specialisation declared", "points": 4, "how_to_earn": "Write your collecting domain in your profile."},
         "category.collectors.tx_1_4":         {"name": "1–4 successful transactions", "points": 8, "how_to_earn": "Complete introductions — system tracked."},
         "category.collectors.tx_5_14":        {"name": "5–14 successful transactions", "points": 6, "how_to_earn": "System tracked.", "additional_to": "category.collectors.tx_1_4"},
@@ -9739,6 +9753,13 @@ _CATEGORY_SIGNALS = {
         "category.travel.years_7plus":       {"name": "Trading 7+ years", "points": 5, "how_to_earn": "Upload company profile / CV.", "additional_to": "category.travel.years_3_7"},
         "category.travel.client_insurance":  {"name": "Client travel-insurance facility", "points": 4, "how_to_earn": "Upload proof of the travel-insurance facility offered to clients."},
         "category.travel.financial_bonding": {"name": "Financial bonding / guarantee", "points": 5, "how_to_earn": "Upload proof of a bonding or guarantee scheme protecting client payments."},
+    },
+    "Placement": {
+        # VERT-4-1b (RUL-049): placement-agency consultant credentials (engine dark, RUL-046)
+        "category.placement.del_registered": {"name": "DEL private employment agency registration", "points": 12, "how_to_earn": "Employment Services Act 4 of 2014 registration — ops verifies against the DEL register. The Act prohibits charging workseekers; so do we."},
+        "category.placement.cipc_registered": {"name": "Registered company (CIPC)", "points": 5, "how_to_earn": "CIPC registration number — must at least be submitted before go-live."},
+        "category.placement.apso": {"name": "APSO membership", "points": 5, "how_to_earn": "APSO membership — verified against the member directory."},
+        "category.placement.sponsors": {"name": "Sponsor network (IAPA / J-1 sponsors / cruise lines)", "points": 5, "how_to_earn": "Evidence of standing sponsor/partner relationships."},
     },
     "Tour_Guides": {
         "category.tour_guides.provincial_reg":  {"name": "Registered tourist guide (provincial)", "points": 12, "how_to_earn": "Upload your provincial registrar guide badge number (Tourism Act) — verified where the register is available."},
