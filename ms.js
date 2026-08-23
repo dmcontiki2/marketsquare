@@ -16798,9 +16798,9 @@ async function advertBulkRun(){
         +(a.photos&&a.photos.held?' · '+a.photos.held+' photo(s) held':'')+'</div>';
     });
     h+='<div style="font-size:11px;color:var(--text-3);margin-top:6px;">Drafts sit under each agent — they review, fix anything the 50/100 quality gate flags, and publish.</div>';
+    h+='<div style="margin-top:8px;"><a href="#" onclick="_renderAgency(window._agencyId);return false;" style="font-size:12px;color:var(--navy,#0c1a2e);font-weight:700;">\u21bb Refresh console counts</a> <span style="font-size:11px;color:var(--text-3);">(your report stays on screen until you do)</span></div>';
     if(rep) rep.innerHTML=h;
     showToast((d.imported||0)+' adverts imported as drafts');
-    _renderAgency(window._agencyId);
   }catch(e){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">Network hiccup — nothing may have been saved. Check the listing counts above before re-sending (re-imports duplicate).</div>'; }
   finally{ var g2=document.getElementById('ad-bulk-go'); if(g2){ g2.disabled=false; g2.textContent='Import adverts'; } }
 }
