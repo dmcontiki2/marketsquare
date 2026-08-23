@@ -736,7 +736,8 @@ async function _msInit(){
   if(sp.get('signin')){
     const _tok = sp.get('signin');
     // AGENCY-LINK-1 (RG-0164, 23 Aug 2026): a console link carries signin+org params together.
-    const _orgChain = sp.get('agency')==='1' ? 'agency' : (sp.get('operator')==='1' ? 'operator' : (sp.get('dealer')==='1' ? 'dealer' : null));
+    const _orgChain = ['agency','operator','dealer','collector','institution','service_company','placement']
+      .find(function(k){ return sp.get(k)==='1'; }) || null;
     window.history.replaceState({}, '', window.location.pathname);
     (async function(){
       try{
@@ -754,7 +755,7 @@ async function _msInit(){
             // Chain straight into the org console AFTER verify lands -- the standalone
             // org-param handlers below skip when signin is present, so no race.
             if(_orgChain==='operator') window._tsOperatorMode=true;
-            if(_orgChain==='dealer') window._tsSkin='dealer';
+            else if(_orgChain!=='agency') window._tsSkin=_orgChain;
             if(typeof openAgencyConsole==='function'){ openAgencyConsole(); } else { goTo('dashboard'); }
           } else {
             goTo('dashboard');
@@ -832,6 +833,15 @@ async function _msInit(){
     window._tsSkin = 'dealer';
     setTimeout(function(){ if(typeof openAgencyConsole==='function') openAgencyConsole(_dlAid,_dlNew); }, 150);
   }
+  // VERT-4-1 (RUL-049): the four recruited verticals' console deep-links
+  ['collector','institution','service_company','placement'].forEach(function(_vk){
+    if (sp.get(_vk) === '1' && !sp.get('signin')) {
+      var _vAid = parseInt(sp.get('aid')||'',10)||null; var _vNew = sp.get('new')==='1';
+      window.history.replaceState({}, '', window.location.pathname);
+      window._tsSkin = _vk;
+      setTimeout(function(){ if(typeof openAgencyConsole==='function') openAgencyConsole(_vAid,_vNew); }, 150);
+    }
+  });
   if (sp.get('plans') === '1') {
     window.history.replaceState({}, '', window.location.pathname);
     setTimeout(() => openPlans('dashboard'), 100);
@@ -1480,8 +1490,37 @@ function _agL(key){
     setup:'Dealerships are set up by TrustSquare on application.',
     created:'Dealership created',createTest:'Create a test dealership',namePh:'Dealership name',
     manualUrl:'/static/TrustSquare_Agency_Playbook.pdf'};
+  // VERT-4-1 (RUL-049, 24 Aug 2026): the four recruited verticals become real skins.
+  var C={title:'Shop console',brand:'Shop',people:'Dealers',person:'Dealer',
+    invite:'Invite dealer',noPeople:'No dealers yet — invite one above.',
+    ph:'dealer@shop.co.za',imports:'Import your current pieces',
+    intros:'Intros to dealers',stock:'Pieces (pooled)',org:'shop',
+    setup:'Collector shops are set up by TrustSquare on application.',
+    created:'Shop created',createTest:'Create a test shop',namePh:'Shop name',
+    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf'};
+  var I={title:'Institution console',brand:'Institution',people:'Tutors',person:'Tutor',
+    invite:'Invite tutor',noPeople:'No tutors yet — invite one above.',
+    ph:'tutor@centre.co.za',imports:'Import your tutor listings',
+    intros:'Intros to tutors',stock:'Tutor listings (pooled)',org:'institution',
+    setup:'Tutor institutions are set up by TrustSquare on application.',
+    created:'Institution created',createTest:'Create a test institution',namePh:'Institution name',
+    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf'};
+  var S={title:'Company console',brand:'Company',people:'Technicians',person:'Technician',
+    invite:'Invite technician',noPeople:'No technicians yet — invite one above.',
+    ph:'tech@company.co.za',imports:'Import your service listings',
+    intros:'Intros to technicians',stock:'Service listings (pooled)',org:'company',
+    setup:'Service companies are set up by TrustSquare on application.',
+    created:'Company created',createTest:'Create a test company',namePh:'Company name',
+    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf'};
+  var P={title:'Placement console',brand:'Placement agency',people:'Consultants',person:'Consultant',
+    invite:'Invite consultant',noPeople:'No consultants yet — invite one above.',
+    ph:'consultant@agency.co.za',imports:'Import your programmes',
+    intros:'Intros to consultants',stock:'Programmes (pooled)',org:'placement agency',
+    setup:'Placement agencies are set up by TrustSquare on application.',
+    created:'Placement agency created',createTest:'Create a test placement agency',namePh:'Agency name',
+    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf'};
   var _s = window._tsSkin || (window._tsOperatorMode ? 'operator' : 'agency');
-  return ({agency:A, operator:O, dealer:D}[_s]||A)[key]||key;
+  return ({agency:A, operator:O, dealer:D, collector:C, institution:I, service_company:S, placement:P}[_s]||A)[key]||key;
 }
 // ── AGENCY CONSOLE (Team plan admin) — reached via ?agency=1 or goTo('agency') ──
 async function openAgencyConsole(aidOverride, forceNew){
@@ -1572,12 +1611,10 @@ async function _renderAgency(agencyId){
           return '<option value="agency"'+(s==='agency'?' selected':'')+'>Estate agency</option>'
           +'<option value="operator"'+(s==='operator'?' selected':'')+'>Tour operator</option>'
           +'<option value="dealer"'+(s==='dealer'?' selected':'')+'>Car dealership</option>'
-          // RG-0169: the other recruited verticals are shown honestly as not-yet-skinned --
-          // their orgs use the estate-agency mechanics meanwhile; skins land per vertical.
-          +'<option disabled>— Collector shop (skin coming)</option>'
-          +'<option disabled>— Tutor institution (skin coming)</option>'
-          +'<option disabled>— Service company (skin coming)</option>'
-          +'<option disabled>— Placement agency (skin coming · RUL-046)</option>'; })()
+          +'<option value="collector"'+(s==='collector'?' selected':'')+'>Collector shop</option>'
+          +'<option value="institution"'+(s==='institution'?' selected':'')+'>Tutor institution</option>'
+          +'<option value="service_company"'+(s==='service_company'?' selected':'')+'>Service company</option>'
+          +'<option value="placement"'+(s==='placement'?' selected':'')+'>Placement agency</option>'; })()
       +'</select></div>';
   }
   el.innerHTML= opsBar
@@ -16648,14 +16685,15 @@ function agencyBulkOpen(){
   var d=document.createElement('div'); d.id='ag-bulk-box';
   d.style.cssText='background:var(--surface,#fff);border:2px dashed var(--border);border-radius:12px;padding:14px 16px;margin:12px 0;';
   d.style.boxSizing='border-box'; d.style.maxWidth='100%';
-  var _v=(window._tsSkin==='dealer')?'cars':(window._tsSkin==='operator')?'travel':'property';
-  var _vlbl=_v==='cars'?'Car sales agents (MIRA gate)':_v==='travel'?'Tour agents (ASATA gate)':'Estate agents (FFC gate)';
+  var _v=agencySkinVertical();
+  var _vlbl=({cars:'Car sales agents (MIRA gate)',travel:'Tour agents (ASATA gate)',collector:'Collector dealers (SAPS SHG gate)',institution:'Tutors (safety-clearances gate: PCC + CPR + NRSO)',service_company:'Technicians (trade-licence gate)',placement:'Placement consultants (DEL gate)'})[_v]||'Estate agents (FFC gate)';
   d.innerHTML='<div style="font-weight:700;font-size:14px;margin-bottom:4px;">Bulk add agents — paste your list, we do the rest</div>'+
     '<div style="font-size:12.5px;color:var(--text-3);line-height:1.6;margin-bottom:6px;">Paste your agent list straight from Excel or your system\'s CSV export. <b>Only the email column is required</b> — everything else is optional and simply makes each agent\'s profile stronger. Every agent you upload gets their own sign-in link automatically.</div>'+
     '<div style="font-size:12px;color:var(--text-3);line-height:1.6;margin-bottom:6px;">The first line must be the column names. Use any of these, in any order:<br>'+
     '<code style="display:block;white-space:normal;word-break:break-word;font-size:11px;background:var(--surface-2,#f4f6fa);border-radius:8px;padding:7px 9px;margin:4px 0;">'+
     '<b>basics:</b> email, name, city, country, suburbs, years_experience, properties_sold, listing_cap<br>'+
-    '<b>estate agents:</b> ppra_number, ffc_year, nqf_level, body &nbsp;·&nbsp; <b>car sales:</b> mira_number, inspection_partner &nbsp;·&nbsp; <b>tour agents:</b> asata_number, iata_code, cipc_number, bonding_proof</code>'+
+    '<b>estate agents:</b> ppra_number, ffc_year, nqf_level, body &nbsp;·&nbsp; <b>car sales:</b> mira_number, inspection_partner &nbsp;·&nbsp; <b>tour agents:</b> asata_number, iata_code, cipc_number, bonding_proof<br>'+
+    '<b>collectors:</b> shg_registration, assoc_memberships, grading_partner &nbsp;·&nbsp; <b>tutors:</b> sace_number, clearance_refs, saqa_ref &nbsp;·&nbsp; <b>services:</b> trade_licence, insurance_ref, cidb_grade &nbsp;·&nbsp; <b>placement:</b> del_pea_number, apso_member, sponsor_network</code>'+
     'This console is set to <b>'+_vlbl+'</b>. Credentials land as <b>pending</b> — our ops team verifies each against the issuing register, and that is when trust points appear. Headline and bio contain commas, so add those via JSON or let each agent write their own after signing in.</div>'+
     '<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">'+
     '<button onclick="agencyBulkCopy(\'header\')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:11.5px;cursor:pointer;">⧉ Copy the column header</button>'+
@@ -16670,11 +16708,20 @@ function agencyBulkOpen(){
 }
 // AGENCY-BULK-UX-1 (23 Aug 2026, David's eyeball): copyable header + example so an
 // agency admin can start in Excel, not in documentation. Only email is required.
+// VERT-4-1: one map from console skin -> backend vertical (RUL-049)
+function agencySkinVertical(){
+  return ({dealer:'cars',operator:'travel',collector:'collector',institution:'institution',
+           service_company:'service_company',placement:'placement'})[window._tsSkin]||'property';
+}
 function agencyBulkHeader(){
-  return 'email,name,city,country,suburbs,years_experience,properties_sold,ppra_number,ffc_year,nqf_level,body,mira_number,inspection_partner,asata_number,iata_code,cipc_number,bonding_proof,listing_cap';
+  return 'email,name,city,country,suburbs,years_experience,properties_sold,ppra_number,ffc_year,nqf_level,body,mira_number,inspection_partner,asata_number,iata_code,cipc_number,bonding_proof,shg_registration,assoc_memberships,grading_partner,sace_number,clearance_refs,saqa_ref,trade_licence,insurance_ref,cidb_grade,del_pea_number,apso_member,sponsor_network,listing_cap';
 }
 function agencyBulkExample(){
   var s=window._tsSkin;
+  if(s==='collector') return 'email,name,city,country,years_experience,shg_registration,cipc_number,assoc_memberships,listing_cap\npieter@antiques.co.za,Pieter van Wyk,Cape Town,ZA,18,SHG-2019-04471,2015/123456/07,SAADA,10';
+  if(s==='institution') return 'email,name,city,country,years_experience,sace_number,saqa_ref,listing_cap\nnomsa@brightpath.co.za,Nomsa Khumalo,Durban,ZA,9,SACE1234567,SAQA-VR-88213,10';
+  if(s==='service_company') return 'email,name,city,country,years_experience,trade_licence,cipc_number,insurance_ref,listing_cap\nthemba@reliableflow.co.za,Themba Nkosi,Johannesburg,ZA,12,PIRB-LP-30991,2012/098765/07,SANTAM-PL-44821,10';
+  if(s==='placement') return 'email,name,city,country,years_experience,del_pea_number,cipc_number,apso_member,listing_cap\nlisa@atlanticplacements.co.za,Lisa Botha,Cape Town,ZA,7,DEL-PEA-11842,2018/054321/07,APSO,10';
   if(s==='dealer') return 'email,name,city,country,years_experience,mira_number,inspection_partner,listing_cap\nsipho@dealership.co.za,Sipho Dlamini,Silverton,ZA,8,MIRA4432,AA Inspections,10';
   if(s==='operator') return 'email,name,city,country,years_experience,asata_number,iata_code,listing_cap\nthandi@tours.co.za,Thandi Mokoena,Cape Town,ZA,9,ASATA1180,IATA778,10';
   return 'email,name,city,country,suburbs,years_experience,properties_sold,ppra_number,ffc_year,nqf_level,body,listing_cap\nann@agency.co.za,Ann Smith,Pretoria,ZA,"Waterkloof, Brooklyn",12,240,PPRA123,2026,5,IEASA,10';
@@ -16717,7 +16764,7 @@ async function agencyBulkRun(){
   if(rep) rep.innerHTML='<div style="font-size:12px;color:var(--text-3);">Uploading '+agents.length+' agents…</div>';
   try{
     var r=await fetch(BEA_URL+'/agencies/'+window._agencyId+'/agents/bulk',{method:'POST',
-      headers:{'Content-Type':'application/json','X-Api-Key':API_KEY},body:JSON.stringify({agents:agents,vertical:(window._tsSkin==='dealer'?'cars':window._tsSkin==='operator'?'travel':'property')})});
+      headers:{'Content-Type':'application/json','X-Api-Key':API_KEY},body:JSON.stringify({agents:agents,vertical:agencySkinVertical()})});
     var d=await r.json();
     if(!r.ok){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">'+((d&&d.detail)||'Upload failed')+'</div>'; return; }
     var h='<div style="font-size:12.5px;font-weight:700;margin-bottom:4px;">'+d.onboarded+' onboarded · '+d.failed+' failed</div>';
@@ -16746,11 +16793,17 @@ function advertBulkExample(){
 }
 function advertBulkOpen(){
   var el=document.getElementById('agency-body'); if(!el) return;
+  if(window._tsSkin==='placement'){
+    // RUL-046: the placement ENGINE is dark for launch -- programmes become listable
+    // when studywork_live flips. Roster onboarding works today; say so honestly.
+    showToast('Programme listings arrive when the Study & Work engine goes live — your consultant roster onboards today.');
+    return;
+  }
   var box=document.getElementById('ad-bulk-box');
   if(box){ box.remove(); return; }
   var d=document.createElement('div'); d.id='ad-bulk-box';
   d.style.cssText='background:var(--surface,#fff);border:2px dashed var(--border);border-radius:12px;padding:14px 16px;margin:12px 0;box-sizing:border-box;max-width:100%;';
-  var _cat=(window._tsSkin==='dealer')?'Cars':(window._tsSkin==='operator')?'Adventures':'Property';
+  var _cat=({dealer:'Cars',operator:'Adventures',collector:'Collectors',institution:'Tutors',service_company:'Services'})[window._tsSkin]||'Property';
   d.innerHTML='<div style="font-weight:700;font-size:14px;margin-bottom:4px;">Bulk import adverts — your whole book, as drafts</div>'+
     '<div style="font-size:12.5px;color:var(--text-3);line-height:1.6;margin-bottom:6px;">One line per advert, pasted from Excel or your system\'s export. Required: <b>agent_email</b> (someone already on your roster above) and a <b>title</b>. Photos are web addresses in a <b>photos</b> column, separated by | . Every advert lands as a <b>draft</b> under that agent — contact details are stripped, photos are checked, and nothing goes live until the agent reviews and publishes.</div>'+
     '<div style="font-size:12px;color:var(--text-3);line-height:1.6;margin-bottom:6px;">Columns you can use (any order — leave out what you don\'t have; category defaults to <b>'+_cat+'</b> here):<br>'+
@@ -16846,7 +16899,7 @@ async function advertBulkRun(){
   if(!_raw){ if(rep) rep.innerHTML='<div style="color:var(--text-3,#5f6b78);font-size:12px;">Nothing to import yet — the grey text is just an example. Paste your own advert list into the box, then tap Import adverts.</div>'; return; }
   var rows=_agBulkParse(_raw);
   if(!rows||!rows.length){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">Could not read that — the first line must be the column names (e.g. agent_email,title,price), with one advert per line below it. Tap ⧉ Copy a filled example to see a working sample.</div>'; return; }
-  var _cat=(window._tsSkin==='dealer')?'Cars':(window._tsSkin==='operator')?'Adventures':'Property';
+  var _cat=({dealer:'Cars',operator:'Adventures',collector:'Collectors',institution:'Tutors',service_company:'Services'})[window._tsSkin]||'Property';
   rows.forEach(function(r){
     if(!r.category) r.category=_cat;
     ['beds','baths','garages','floor_area','erf_size','vehicle_year','mileage_km'].forEach(function(k){ if(r[k]!==undefined) r[k]=parseInt(r[k],10)||null; });

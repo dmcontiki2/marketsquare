@@ -13537,7 +13537,9 @@ def agency_wave_prep(req: _AgencyWavePrep, _key: str = Depends(auth.require_api_
                                   "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
             out.append({"admin_email": admin, "ok": True, "agency_id": aid, "name": name, "created": created,
                         "console_link": APP_URL + "/?signin=" + _tok + "&" +
-                                        ({"operator": "operator", "dealer": "dealer"}.get((req.skin or "agency").lower(), "agency")) + "=1"})
+                                        ({"operator": "operator", "dealer": "dealer", "collector": "collector",
+                                          "institution": "institution", "service_company": "service_company",
+                                          "placement": "placement"}.get((req.skin or "agency").lower(), "agency")) + "=1"})
         conn.commit()
     finally:
         conn.close()

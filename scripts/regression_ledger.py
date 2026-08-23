@@ -8691,10 +8691,10 @@ def rg_vertical_skins():
     import os as _os
     fp = _os.path.join(REPO, "ms.js")
     js = open(fp, encoding="utf-8", errors="replace").read() if _os.path.exists(fp) else ""
-    needed = {"collector": "Collector", "tutor_institution": "Tutor institution",
-              "service_company": "Service company", "placement": "Placement"}
+    needed = {"collector": "Collector", "institution": "Tutor institution",
+              "service_company": "Service company", "placement": "Placement"}   # keys = the real skin keys
     # a skin exists when _agL carries a labeled map for it (heuristic: 'skinname:' key in the _agL maps region)
-    agl = js[js.find("function _agL"): js.find("function _agL") + 3000]
+    agl = js[js.find("function _agL"): js.find("function _agL") + 12000]
     for key, label in needed.items():
         if ("%s:" % key) not in agl and ("'%s'" % key) not in agl:
             out.append((FAIL, "no console skin for the recruited vertical: " + label))

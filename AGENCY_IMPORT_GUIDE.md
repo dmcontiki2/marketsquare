@@ -24,7 +24,7 @@ listing quality + 50% trust score).
 ```json
 {
   "api_key": "tsq_agency_...",       // your agency key authenticates the roster too (AGENCY-KEY-1)
-  "vertical": "property",            // property | cars | travel — or per-agent
+  "vertical": "property",            // property | cars | travel | collector | institution | service_company | placement
   "agents": [{
     "email": "ann@youragency.co.za", "name": "Ann Smith",
     "city": "Pretoria", "country": "ZA", "suburbs": "Waterkloof, Brooklyn",
@@ -34,6 +34,10 @@ listing quality + 50% trust score).
     // property: "ppra_number", "ffc_year", "nqf_level" (4|5|6), "body_memberships"
     // cars:     "mira_number", "inspection_partner"
     // travel:   "asata_number", "iata_code", "cipc_number", "bonding_proof"
+    // collector:   "shg_registration", "assoc_memberships", "grading_partner"
+    // institution: "sace_number", "clearance_refs", "saqa_ref"   (refs only — documents never stored)
+    // service:     "trade_licence", "insurance_ref", "cidb_grade"
+    // placement:   "del_pea_number", "apso_member", "sponsor_network"
   }]
 }
 ```

@@ -110,6 +110,14 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-049": [
+   # Four recruited verticals built: backend verticals exist and the skins are real.
+   ("RULINGS.md", ["THE FOUR RECRUITED VERTICALS ARE BUILT"], []),
+   ("estate_agents.py", ["CREDENTIAL_SLOTS_COLLECTOR", "CREDENTIAL_SLOTS_INSTITUTION",
+                          "CREDENTIAL_SLOTS_SERVICE", "CREDENTIAL_SLOTS_PLACEMENT",
+                          "category.institution.clearances"], []),
+   ("ms.js", ["collector:C, institution:I, service_company:S, placement:P"], []),
+ ],
  "RUL-048": [
    # A Pro seat is EARNED (agent's $5 subscription + EULA), never granted by a console
    # flip. must_NOT polices the old silent-toggle wiring coming back to the UI.

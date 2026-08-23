@@ -174,6 +174,65 @@ CREDENTIAL_SLOTS_TRAVEL = [
      "verify": "Proof of a bonding or guarantee scheme protecting client payments — the strongest anti-scam signal for travellers."},
 ]
 
+# ── VERT-4-1 (RUL-049, 24 Aug 2026): the four recruited verticals, gates registry-
+# verified 23 Aug (SKIN_DESIGNS — nice.docx carries sources + David's ratification). ──
+CREDENTIAL_SLOTS_COLLECTOR = [
+    {"slot": "shg_registration", "signal_id": "category.collector.shg_registered", "points": 12,
+     "label": "SAPS Second-Hand Goods dealer registration", "legal": True,
+     "verify": "Checked against the SAPS second-hand goods dealer register (Act 6 of 2009). Statutory to trade — gates go-live."},
+    {"slot": "cipc_number", "signal_id": "category.collector.cipc_registered", "points": 5,
+     "label": "Registered company (CIPC)", "legal": True,
+     "verify": "CIPC registration number — must at least be submitted before go-live."},
+    {"slot": "assoc_memberships", "signal_id": "category.collector.assoc_member", "points": 5,
+     "label": "Dealer association (SAADA / SAAND / NAADA)", "legal": False,
+     "verify": "Membership letter or card — verified against the association's member list."},
+    {"slot": "grading_partner", "signal_id": "category.collector.grading", "points": 4,
+     "label": "Grading partner (SANGS / NGC / PCGS)", "legal": False,
+     "verify": "Evidence of a standing grading/authentication arrangement."},
+]
+
+CREDENTIAL_SLOTS_INSTITUTION = [
+    {"slot": "clearance_refs", "signal_id": "category.institution.clearances", "points": 10,
+     "label": "Safety clearances (SAPS PCC + Child Protection Register + Sexual Offenders Register)", "legal": True,
+     "verify": "REFERENCE NUMBERS ONLY — ops sight-verifies against the issuing bodies; clearance documents are never stored (POPIA). The child-safety minimum — gates go-live. A verified SACE registration covers all three."},
+    {"slot": "sace_number", "signal_id": "category.institution.sace", "points": 12,
+     "label": "SACE registration", "legal": True,
+     "verify": "Verified against the SACE register. SACE registration embeds police clearance + both register screenings — verifying it also earns the clearances gate."},
+    {"slot": "saqa_ref", "signal_id": "category.institution.saqa", "points": 6,
+     "label": "SAQA-verified qualification", "legal": False,
+     "verify": "SAQA verification reference for the tutor's qualification."},
+]
+
+CREDENTIAL_SLOTS_SERVICE = [
+    {"slot": "trade_licence", "signal_id": "category.service.trade_licence", "points": 12,
+     "label": "Trade licence (PIRB / DoEL Installation Electrician / class-statutory)", "legal": True,
+     "verify": "The CoC-issuing licence for the technician's trade — PIRB for plumbing, DoEL IE/Wireman's for electrical. Gates go-live for regulated trades; unregulated trades are flagged to ops for the CIPC+insurance fallback."},
+    {"slot": "cipc_number", "signal_id": "category.service.cipc_registered", "points": 5,
+     "label": "Registered company (CIPC)", "legal": True,
+     "verify": "CIPC registration number — must at least be submitted before go-live."},
+    {"slot": "insurance_ref", "signal_id": "category.service.insured", "points": 6,
+     "label": "Public liability insurance", "legal": False,
+     "verify": "Policy schedule or broker letter."},
+    {"slot": "cidb_grade", "signal_id": "category.service.cidb", "points": 4,
+     "label": "CIDB grading (construction)", "legal": False,
+     "verify": "CIDB registration number and grade."},
+]
+
+CREDENTIAL_SLOTS_PLACEMENT = [
+    {"slot": "del_pea_number", "signal_id": "category.placement.del_registered", "points": 12,
+     "label": "DEL private employment agency registration", "legal": True,
+     "verify": "Verified against the Department of Employment and Labour register (Employment Services Act 4 of 2014). Statutory — and the Act prohibits charging workseekers, which is exactly the TrustSquare model. Gates go-live."},
+    {"slot": "cipc_number", "signal_id": "category.placement.cipc_registered", "points": 5,
+     "label": "Registered company (CIPC)", "legal": True,
+     "verify": "CIPC registration number — must at least be submitted before go-live."},
+    {"slot": "apso_member", "signal_id": "category.placement.apso", "points": 5,
+     "label": "APSO membership", "legal": False,
+     "verify": "APSO membership — verified against the member directory."},
+    {"slot": "sponsor_network", "signal_id": "category.placement.sponsors", "points": 5,
+     "label": "Sponsor network (IAPA / J-1 sponsors / cruise lines)", "legal": False,
+     "verify": "Evidence of standing sponsor/partner relationships (IAPA membership, J-1 sponsor agreements, cruise-line contracts)."},
+]
+
 _NQF_CHAIN = {
     4: ["category.property.nqf4"],
     5: ["category.property.nqf4", "category.property.nqf5"],
@@ -314,6 +373,109 @@ VERTICALS = {
                        "visa and permit requirements, and cancellation terms buried in fine print. A bonded, "
                        "accredited tour agent carries what they may, and facilitates the rest."),
         "sold_noun": "trips",
+    },
+    "collector": {
+        "label": "Collector Dealer",
+        "listing_category": "collectors",
+        "slots": CREDENTIAL_SLOTS_COLLECTOR,
+        "badge_signals": {
+            "category.collector.shg_registered": "SAPS SHG registered dealer",
+            "category.collector.cipc_registered": "Registered company (CIPC)",
+            "category.collector.assoc_member": "Dealer association member",
+            "category.collector.grading": "Grading partner",
+        },
+        "stock_photo": "/static/agent-stock/property.jpg",
+        "gate_signal": "category.collector.shg_registered",
+        "gate_label": "SAPS Second-Hand Goods registration",
+        "gate_desc": "statutory minimum to trade",
+        "submit_required": [("category.collector.cipc_registered", "CIPC company registration not submitted")],
+        "advantages": [
+            "Authentication and provenance — a dealer stakes a reputation on what a piece IS, before you pay for what it claims to be.",
+            "Fair, catalogue-based valuation — priced against Numista, auction records and grading standards, not sentiment.",
+            "Serious collectors, not chancers — introductions come from buyers who already paid to reach you.",
+            "Safe handover — no strangers with cash at your door; the exchange is arranged properly.",
+        ],
+        "legal_note": ("Trading collectibles privately carries risks you keep: fakes, misgraded pieces, and "
+                       "Second-Hand Goods Act obligations on dealers. A SAPS-registered dealer carries what "
+                       "they may, and facilitates the rest."),
+        "sold_noun": "pieces",
+    },
+    "institution": {
+        "label": "Tutor",
+        "listing_category": "tutors",
+        "slots": CREDENTIAL_SLOTS_INSTITUTION,
+        "badge_signals": {
+            "category.institution.clearances": "Safety-cleared (PCC + CPR + NRSO)",
+            "category.institution.sace": "SACE registered",
+            "category.institution.saqa": "SAQA-verified qualification",
+        },
+        "stock_photo": "/static/agent-stock/property.jpg",
+        "gate_signal": "category.institution.clearances",
+        "gate_label": "Safety clearances (PCC + CPR + NRSO)",
+        "gate_desc": "child-safety minimum — a verified SACE registration covers all three",
+        "submit_required": [],
+        "advantages": [
+            "Register-cleared tutors — police clearance plus the Child Protection and Sexual Offenders registers, checked before anyone meets your child.",
+            "Verified qualifications — SACE or SAQA-verified, not a claimed degree.",
+            "Subject-matched — ranked by the subjects and levels your learner actually needs.",
+            "Progress accountability — an institution behind the tutor, not a stranger from a flyer.",
+        ],
+        "legal_note": ("Hiring a tutor privately carries risks you keep: unverified strangers with your child, "
+                       "claimed qualifications, no recourse. Schools are legally required to run register checks "
+                       "on anyone working with children — our gate simply applies the same standard."),
+        "sold_noun": "learners",
+    },
+    "service_company": {
+        "label": "Technician",
+        "listing_category": "services",
+        "slots": CREDENTIAL_SLOTS_SERVICE,
+        "badge_signals": {
+            "category.service.trade_licence": "Licensed (CoC-issuing)",
+            "category.service.cipc_registered": "Registered company (CIPC)",
+            "category.service.insured": "Public liability insured",
+            "category.service.cidb": "CIDB graded",
+        },
+        "stock_photo": "/static/agent-stock/property.jpg",
+        "gate_signal": "category.service.trade_licence",
+        "gate_label": "Trade licence",
+        "gate_desc": "the CoC-issuing minimum for regulated trades",
+        "submit_required": [("category.service.cipc_registered", "CIPC company registration not submitted")],
+        "advantages": [
+            "Licensed, CoC-issuing professionals — the certificate your insurance and property transfer depend on, signed by someone allowed to sign it.",
+            "Insured work — public liability cover before anyone lifts a tool.",
+            "Vetted local teams — ranked by trust and the quality of their work, in your area.",
+            "No cash-at-door chancers — introductions are accepted by the technician, with a score attached.",
+        ],
+        "legal_note": ("Hiring trades privately carries risks you keep: unlicensed work that voids insurance, "
+                       "invalid Certificates of Compliance, and no recourse. A licensed technician carries what "
+                       "they may, and facilitates the rest."),
+        "sold_noun": "jobs",
+    },
+    "placement": {
+        "label": "Placement Consultant",
+        "listing_category": "placement",
+        "slots": CREDENTIAL_SLOTS_PLACEMENT,
+        "badge_signals": {
+            "category.placement.del_registered": "DEL-registered agency",
+            "category.placement.cipc_registered": "Registered company (CIPC)",
+            "category.placement.apso": "APSO member",
+            "category.placement.sponsors": "Sponsor network",
+        },
+        "stock_photo": "/static/agent-stock/travel.jpg",
+        "gate_signal": "category.placement.del_registered",
+        "gate_label": "DEL registration",
+        "gate_desc": "statutory minimum for a private employment agency",
+        "submit_required": [("category.placement.cipc_registered", "CIPC company registration not submitted")],
+        "advantages": [
+            "DEL-registered agencies only — registration with the Department of Employment and Labour is the law, and our gate.",
+            "You never pay the agency — the Employment Services Act prohibits charging workseekers, and so do we: the consultant pays 1T to accept YOUR introduction.",
+            "Honest programme facts — sourced and dated, no guaranteed-visa promises (the rules that protect you are our rules too).",
+            "Dossier-ready handoff — your preparation arrives organised, so the consultant starts on your plan, not your paperwork.",
+        ],
+        "legal_note": ("Overseas placement carries real risks you keep: unregistered agencies, fees the law "
+                       "prohibits, and visa promises nobody can make. A DEL-registered, bonded agency carries "
+                       "what they may, and facilitates the rest."),
+        "sold_noun": "placements",
     },
 }
 
@@ -571,6 +733,19 @@ class BulkAgentIn(BaseModel):
     iata_code: Optional[str] = None
     cipc_number: Optional[str] = None
     bonding_proof: Optional[str] = None
+    # VERT-4-1 (RUL-049): the four recruited verticals' credential slots
+    shg_registration: Optional[str] = None
+    assoc_memberships: Optional[str] = None
+    grading_partner: Optional[str] = None
+    sace_number: Optional[str] = None
+    clearance_refs: Optional[str] = None
+    saqa_ref: Optional[str] = None
+    trade_licence: Optional[str] = None
+    insurance_ref: Optional[str] = None
+    cidb_grade: Optional[str] = None
+    del_pea_number: Optional[str] = None
+    apso_member: Optional[str] = None
+    sponsor_network: Optional[str] = None
 
 class BulkOnboardIn(BaseModel):
     agents: List[BulkAgentIn]
@@ -617,40 +792,35 @@ def bulk_onboard_agents(agency_id: int, req: BulkOnboardIn,
                 vertical=_v),
                 sold_source="agency")
             pending = []
-            if _v == "property":
-                if (a.ppra_number or "").strip():
-                    _cred_pending(conn, email, "category.property.ppra")
-                    pending.append("ppra")
-                if a.ffc_year:
-                    _cred_pending(conn, email, "category.property.ffc")
-                    pending.append("ffc")
-                if a.nqf_level in _NQF_CHAIN:
-                    for sid in _NQF_CHAIN[a.nqf_level]:
-                        _cred_pending(conn, email, sid)
-                    pending.append(f"nqf{a.nqf_level}")
-                if a.body_memberships:
-                    _cred_pending(conn, email, "category.property.body")
-                    pending.append("body")
-            elif _v == "cars":
-                if (a.mira_number or "").strip():
-                    _cred_pending(conn, email, "category.cars.dealer_reg")
-                    pending.append("mira")
-                if (a.inspection_partner or "").strip():
-                    _cred_pending(conn, email, "category.cars.inspection")
-                    pending.append("inspection")
-            else:   # travel
-                if (a.asata_number or "").strip():
-                    _cred_pending(conn, email, "category.travel.asata_member")
-                    pending.append("asata")
-                if (a.iata_code or "").strip():
-                    _cred_pending(conn, email, "category.travel.iata_accredited")
-                    pending.append("iata")
-                if (a.cipc_number or "").strip():
-                    _cred_pending(conn, email, "category.travel.cipc_registered")
-                    pending.append("cipc")
-                if (a.bonding_proof or "").strip():
-                    _cred_pending(conn, email, "category.travel.financial_bonding")
-                    pending.append("bonding")
+            # VERT-4-1 (RUL-049): GENERIC slot walk -- a new vertical needs slots in
+            # VERTICALS and fields on BulkAgentIn, never another branch here. This is
+            # the class fix for the hardcoded if/elif that silently routed unknown
+            # verticals into the travel branch.
+            _V = VERTICALS[_v]
+            for _slot in _V["slots"]:
+                _sid = _slot.get("signal_id")
+                if not _sid:
+                    if _slot["slot"] == "nqf_level" and a.nqf_level in _NQF_CHAIN:
+                        for _s2 in _NQF_CHAIN[a.nqf_level]:
+                            _cred_pending(conn, email, _s2)
+                        pending.append(f"nqf{a.nqf_level}")
+                    continue
+                _val = getattr(a, _slot["slot"], None)
+                if _val is None:
+                    continue
+                if isinstance(_val, str) and not _val.strip():
+                    continue
+                if isinstance(_val, list) and not _val:
+                    continue
+                _cred_pending(conn, email, _sid)
+                pending.append(_slot["slot"])
+            # INSTITUTION rule (RUL-049): a submitted SACE number embeds the three
+            # safety clearances -- mark the clearances gate pending alongside it, so
+            # ops verifying SACE earns the gate in one act.
+            if _v == "institution" and (a.sace_number or "").strip() and not (a.clearance_refs or "").strip():
+                _cred_pending(conn, email, "category.institution.clearances")
+                if "clearance_refs" not in pending:
+                    pending.append("clearance_refs")
             report.append({"email": email, "ok": True, "anon_ref": ref, "vertical": _v,
                            "credentials_pending": pending,
                            "note": "Score moves only when ops verifies each credential."})
