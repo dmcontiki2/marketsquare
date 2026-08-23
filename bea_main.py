@@ -13423,6 +13423,7 @@ class _AgencyCreate(_BaseModel):
     name: str
     admin_email: str
     countries: list = []
+    send_link: bool = True   # AGENCY-LINK-1 (23 Aug 2026): email the admin their console sign-in link
 
 class _AgentInvite(_BaseModel):
     email: str
@@ -13471,7 +13472,71 @@ def create_agency(req: _AgencyCreate, _key: str = Depends(auth.require_api_key))
         conn.commit()
     finally:
         conn.close()
-    return {"ok": True, "id": aid, "name": name, "admin_email": admin, "api_key": api_key, "countries": countries}
+    # AGENCY-LINK-1 (RG-0164, 23 Aug 2026): until now the created admin was emailed
+    # NOTHING -- the console existed but no door was ever handed over. Send a magic
+    # sign-in link that chains straight into the console (?signin=<jwt>&agency=1).
+    link_status = "skipped"
+    if getattr(req, "send_link", True):
+        try:
+            _tok = _pyjwt.encode({"email": admin, "purpose": "signin",
+                                  "exp": datetime.now(timezone.utc) + timedelta(hours=72),
+                                  "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
+            link_status = _send_login_email(admin, APP_URL + "/?signin=" + _tok + "&agency=1")
+        except Exception as exc:
+            _log.error("agency console-link email failed: %s", exc)
+            link_status = "failed"
+    return {"ok": True, "id": aid, "name": name, "admin_email": admin, "api_key": api_key,
+            "countries": countries, "console_link_email": link_status}
+
+class _AgencyWavePrep(_BaseModel):
+    agencies: list                 # rows: {name, admin_email, countries?}
+    link_days: int = 14
+    skin: str = "agency"           # agency | operator | dealer -- picks the console skin param
+
+@app.post("/agencies/wave-prep")
+def agency_wave_prep(req: _AgencyWavePrep, _key: str = Depends(auth.require_api_key)):
+    """AGENCY-WAVE-1 (RG-0163/0164, 23 Aug 2026): pre-create scraped agencies for the
+    outreach wave and mint each admin a one-click console link (?signin=<jwt>&agency=1).
+    Idempotent by admin_email -- an existing agency gets a fresh link, never a duplicate
+    org. Sends NO email: the outreach email is the first contact and carries the link
+    (the n8n payload node honors prospect.magic_link). Unlike create_agency these orgs
+    land verified=0 -- verification is earned on application, and the 'agency' seller
+    tier follows verification (AGENCY-TIER-1)."""
+    days = max(1, min(int(req.link_days or 14), 30))
+    out = []
+    conn = database.get_db()
+    try:
+        for row in (req.agencies or [])[:500]:
+            name = str((row or {}).get("name") or "").strip()
+            admin = str((row or {}).get("admin_email") or "").strip().lower()
+            if "@" not in admin or not name:
+                out.append({"admin_email": admin or None, "ok": False,
+                            "error": "name and valid admin_email required"})
+                continue
+            a = conn.execute("SELECT id, name FROM agencies WHERE LOWER(admin_email)=? ORDER BY id LIMIT 1",
+                             (admin,)).fetchone()
+            created = False
+            if a:
+                aid, name = a["id"], a["name"]
+            else:
+                countries = ",".join([str(c).strip().upper() for c in (row.get("countries") or ["ZA"]) if str(c).strip()])
+                cur = conn.execute("INSERT INTO agencies (name, admin_email, api_key, countries, verified) VALUES (?,?,?,?,0)",
+                                   (name, admin, "tsq_agency_" + uuid.uuid4().hex, countries))
+                aid = cur.lastrowid
+                created = True
+                conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (admin,))
+                conn.execute("INSERT OR IGNORE INTO agency_members (agency_id, agent_email, role, status, joined_at) "
+                             "VALUES (?,?, 'admin','active', strftime('%Y-%m-%dT%H:%M:%SZ','now'))", (aid, admin))
+            _tok = _pyjwt.encode({"email": admin, "purpose": "signin",
+                                  "exp": datetime.now(timezone.utc) + timedelta(days=days),
+                                  "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
+            out.append({"admin_email": admin, "ok": True, "agency_id": aid, "name": name, "created": created,
+                        "console_link": APP_URL + "/?signin=" + _tok + "&" +
+                                        ({"operator": "operator", "dealer": "dealer"}.get((req.skin or "agency").lower(), "agency")) + "=1"})
+        conn.commit()
+    finally:
+        conn.close()
+    return {"prepared": sum(1 for r in out if r.get("ok")), "rows": out}
 
 @app.get("/agencies/{agency_id}")
 def get_agency(agency_id: int, _key: str = Depends(auth.require_api_key)):

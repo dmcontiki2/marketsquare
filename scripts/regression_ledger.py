@@ -8517,5 +8517,89 @@ def rg_placement_templates_ship():
     return out or [(INFO, "all nine templates in repo + manifest, and the SAW deploy is live")]
 
 
+
+@entry("RG-0163", "The city-wave launcher carries an AGENCY lane -- agency_outreach is reachable from the wave machinery",
+       LOCKED, fixed_on="2026-08-23", scope="citylauncher_ops.html + n8n/n8n_outreach_workflow.json. The agency wave (scraped estate agencies, "
+             "AGENCY-AUDIT 23 Aug 2026) cannot be launched today: the launcher's category set and the n8n templateMap "
+             "carry only solo-seller templates; templates/agency_outreach.html is deployed but nothing sends it. "
+             "CLASS: every recruited vertical (agency, dealer, operator, placement) needs a send lane, not just a template.",
+       ref="AGENCY-AUDIT-1, 23 Aug 2026. Repo-pattern check by design (the n8n instance is not probe-able from here); "
+           "EXECUTED-grade proof stays with the first real wave send. FIXED AGENCY-WAVE-1 23 Aug 2026: "
+           "n8n templateMap carries Estate Agents/Agency -> agency_outreach, honors prospect.magic_link, and "
+           "drops agency prospects without a console link; citylauncher documents the lane; live half asserts "
+           "POST /agencies/wave-prep is deployed (405 to bare GET, never 404). Skins: wave-prep mints "
+           "agency/operator/dealer params. Runbook: AGENCY_WAVE_RUNBOOK.md.")
+def rg_agency_wave_lane():
+    out = []
+    import os as _os
+    found = False
+    for f in ("n8n/n8n_outreach_workflow.json", "citylauncher_ops.html"):
+        fp = _os.path.join(REPO, f)
+        if _os.path.exists(fp):
+            txt = open(fp, encoding="utf-8", errors="replace").read()
+            if "agency_outreach" in txt:
+                found = True
+    if not found:
+        out.append((FAIL, "no wave machinery references agency_outreach -- the agency wave cannot be sent"))
+    # live half: the link-minting endpoint must be deployed (bare GET answers 405, a missing route 404)
+    try:
+        _get("/agencies/wave-prep")
+        out.append((FAIL, "GET /agencies/wave-prep answered 200 -- it must be POST-only"))
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            out.append((FAIL, "/agencies/wave-prep not live (404) -- the AGENCY-LINK-1 deploy has not ridden"))
+        # 405/401/403 = route exists behind its method/key guards: correct
+    except Exception as ex:
+        out.append((FAIL, "wave-prep probe unreadable: %s" % repr(ex)[:60]))
+    return out or [(INFO, "agency lane present in wave machinery + wave-prep endpoint live")]
+
+
+@entry("RG-0164", "An agency admin's emailed link lands them signed-in INSIDE their console -- signin token chains to ?agency=1 without a race",
+       LOCKED, fixed_on="2026-08-23", scope="ms.js: the ?signin= handler verifies async and goTo('dashboard'); the ?agency=1 handler fires at "
+             "150ms and reads ms_aa_email -- combined links race, and create_agency sends the admin nothing at all. "
+             "CLASS: every org skin (agency/operator/dealer/placement) needs the one-click landing, or the outreach "
+             "email's 'your onboarding opens pre-filled' promise is false.",
+       ref="AGENCY-AUDIT-1, 23 Aug 2026. Code-pattern check, labeled as such: asserts the signin success path "
+           "explicitly hands off to the agency console when the link carries the agency param. "
+           "FIXED AGENCY-LINK-1 23 Aug 2026: signin success chains to openAgencyConsole (all three org skins), "
+           "standalone org handlers skip when signin present (race closed), create_agency emails the admin a "
+           "console link, /agencies/wave-prep mints link batches without emailing, and My Space shows an "
+           "'Agency console' card to any agency admin (by-admin resolved). E2E-probed live 23 Aug 2026.")
+def rg_agency_signin_console_chain():
+    out = []
+    import os as _os, re as _re
+    fp = _os.path.join(REPO, "ms.js")
+    if _os.path.exists(fp):
+        txt = open(fp, encoding="utf-8", errors="replace").read()
+        m = _re.search(r"signin.{0,4000}?openAgencyConsole", txt, _re.S)
+        if not _re.search(r"if\(sp\.get\('signin'\)\)[\s\S]{0,2500}openAgencyConsole", txt):
+            out.append((FAIL, "signin handler does not chain to the agency console -- combined signin+agency links race"))
+    else:
+        out.append((FAIL, "ms.js not found"))
+    return out or [(INFO, "signin handler hands off to the agency console")]
+
+
+@entry("RG-0165", "agency_outreach.html tells agencies the AGENCY onboarding story -- console, roster bulk-add, import guide -- not the solo-seller flow",
+       LOCKED, fixed_on="2026-08-23", scope="orchestration_v2/templates/agency_outreach.html. Its 'Getting your agency live' steps describe the "
+             "individual magic-link sell flow; an agency with 50-500 mandates needs the three real lanes (concierge "
+             "import / console self-serve / API import guide). CLASS: outreach copy must describe the lane the "
+             "recipient will actually land in (INSTRUMENT-TRUTH applied to email).",
+       ref="AGENCY-AUDIT-1, 23 Aug 2026. FIXED AGENCY-WAVE-1 same day: all three recruited-vertical templates "
+           "(agency, travel_agency, cars_dealer) now carry the three-lane block -- concierge reply / console "
+           "self-serve / IT import guide -- plus the drafts+quality-gate safety line and the Agents-as-a-Service "
+           "link. The check asserts the import-guide/AaaS links stay present.")
+def rg_agency_outreach_tells_agency_story():
+    out = []
+    import os as _os
+    fp = _os.path.join(REPO, "orchestration_v2", "templates", "agency_outreach.html")
+    if not _os.path.exists(fp):
+        out.append((FAIL, "agency_outreach.html missing from repo"))
+    else:
+        txt = open(fp, encoding="utf-8", errors="replace").read()
+        if ("agency-import-guide" not in txt) and ("agents-as-a-service" not in txt):
+            out.append((FAIL, "outreach template never mentions the import guide or the agents-as-a-service page"))
+    return out or [(INFO, "outreach template carries the real agency lanes")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

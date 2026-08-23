@@ -735,6 +735,8 @@ async function _msInit(){
   // ── SELF-SERVE SIGN-IN: ?signin=<token> from an emailed magic link ──
   if(sp.get('signin')){
     const _tok = sp.get('signin');
+    // AGENCY-LINK-1 (RG-0164, 23 Aug 2026): a console link carries signin+org params together.
+    const _orgChain = sp.get('agency')==='1' ? 'agency' : (sp.get('operator')==='1' ? 'operator' : (sp.get('dealer')==='1' ? 'dealer' : null));
     window.history.replaceState({}, '', window.location.pathname);
     (async function(){
       try{
@@ -748,7 +750,15 @@ async function _msInit(){
           showToast('✓ Signed in — welcome!');
           if(typeof loadLiveDash==='function'){ try{ await loadLiveDash(); }catch(e){} }
           if(typeof renderDash==='function') renderDash();
-          goTo('dashboard');
+          if(_orgChain){
+            // Chain straight into the org console AFTER verify lands -- the standalone
+            // org-param handlers below skip when signin is present, so no race.
+            if(_orgChain==='operator') window._tsOperatorMode=true;
+            if(_orgChain==='dealer') window._tsSkin='dealer';
+            if(typeof openAgencyConsole==='function'){ openAgencyConsole(); } else { goTo('dashboard'); }
+          } else {
+            goTo('dashboard');
+          }
           if(typeof updateHeaderAuthBtn==='function') updateHeaderAuthBtn();
           setTimeout(promptAddToHomeScreen, 1200);
         } else {
@@ -803,20 +813,20 @@ async function _msInit(){
   // ── PLANS DEEP-LINK ────────────────────────────────────────
   // trustsquare.co/?plans=1 — opens subscription plans screen directly (used by admin app link)
   // ── AGENCY CONSOLE deep-link: trustsquare.co/?agency=1 (&aid=N views a specific org · &new=1 forces create) ──
-  if (sp.get('agency') === '1') {
+  if (sp.get('agency') === '1' && !sp.get('signin')) {   // AGENCY-LINK-1: signin path chains itself
     var _agAid = parseInt(sp.get('aid')||'',10)||null; var _agNew = sp.get('new')==='1';
     window.history.replaceState({}, '', window.location.pathname);
     setTimeout(function(){ if(typeof openAgencyConsole==='function') openAgencyConsole(_agAid,_agNew); }, 150);
   }
   // ── OPERATOR CONSOLE deep-link: trustsquare.co/?operator=1 (tour operators — same console, operator labels; &aid=N / &new=1 as above) ──
-  if (sp.get('operator') === '1') {
+  if (sp.get('operator') === '1' && !sp.get('signin')) {   // AGENCY-LINK-1: signin path chains itself
     var _opAid = parseInt(sp.get('aid')||'',10)||null; var _opNew = sp.get('new')==='1';
     window.history.replaceState({}, '', window.location.pathname);
     window._tsOperatorMode = true;
     setTimeout(function(){ if(typeof openAgencyConsole==='function') openAgencyConsole(_opAid,_opNew); }, 150);
   }
   // DEALER-SKIN-1: trustsquare.co/?dealer=1 (motor dealerships — same console, dealer labels)
-  if (sp.get('dealer') === '1') {
+  if (sp.get('dealer') === '1' && !sp.get('signin')) {   // AGENCY-LINK-1: signin path chains itself
     var _dlAid = parseInt(sp.get('aid')||'',10)||null; var _dlNew = sp.get('new')==='1';
     window.history.replaceState({}, '', window.location.pathname);
     window._tsSkin = 'dealer';
@@ -13498,6 +13508,20 @@ function msInit(){
   // Superuser ops entry (7 Jul 2026): reveal the console card in My Space
   var opsCard=document.getElementById('ms-ops-console-card');
   if(opsCard) opsCard.style.display=(typeof isSuperuser==='function' && isSuperuser())?'':'none';
+  // AGENCY-LINK-1 (RG-0164 class, 23 Aug 2026): an agency ADMIN gets a visible console
+  // entry in My Space -- until now the only doors were the superuser OPS card and a
+  // naked ?agency=1 deep link no agency could know about.
+  var agAdminCard=document.getElementById('ms-agency-console-card');
+  if(agAdminCard){
+    agAdminCard.style.display='none';
+    var _agAdmEml=localStorage.getItem('ms_aa_email')||'';
+    if(_agAdmEml && !(typeof isSuperuser==='function' && isSuperuser()) && !(typeof DEMO_MODE!=='undefined' && DEMO_MODE)){
+      (async function(){ try{
+        var r=await fetch(BEA_URL+'/agencies/by-admin/'+encodeURIComponent(_agAdmEml),{headers:{'X-Api-Key':API_KEY}});
+        if(r.ok) agAdminCard.style.display='';
+      }catch(e){} })();
+    }
+  }
   // Self-heal (7 Jul 2026): the localStorage flag is only written at sign-in, so a
   // sign-in that predates the flag leaves it stale-0 while the server says 1.
   // Re-verify once from the server and reveal without forcing a re-sign-in.
