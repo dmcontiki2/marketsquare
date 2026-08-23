@@ -1547,7 +1547,7 @@ async function _renderAgency(agencyId){
     // RUL-048 (23 Aug 2026): a Pro seat is EARNED via the agent's own $5 subscription
     // (EULA + payment) -- the console invites the upgrade, it never grants one.
     const acts=m.role==='admin'?'':((m.seat_paid
-        ?'<span title="Managed by the agent\'s own subscription" style="font-size:11px;font-weight:700;color:#1e40af;background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;padding:5px 9px;">Pro seat · $5/mo</span> '
+        ?'<span title="Set by TrustSquare ops (e.g. after manual payment). Self-serve subscription billing arrives with SEAT-SUB-1 (RG-0167)." style="font-size:11px;font-weight:700;color:#1e40af;background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;padding:5px 9px;">Pro seat · ops-set</span> '
         :'<button onclick="agencyProInvite(\''+m.email+'\','+(m.listing_cap||10)+')" title="The agent takes the $5/month Pro seat themselves — EULA + subscription" style="border:1px solid var(--border);background:#fff;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">Pro seat? · $5</button> ')
       +'<button onclick="agencyRemove(\''+m.email+'\')" style="border:1px solid #fecaca;background:#fff;color:#b91c1c;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">Remove</button>');
     return '<tr style="border-bottom:1px solid #f1f3f7;">'
