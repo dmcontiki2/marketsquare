@@ -1,3 +1,13 @@
+## 2026-08-23 — DRAFT-VIEW-1: the agency admin can VIEW an agent's drafts
+
+- David, seeing the new "1 draft" chip: "how do i view it?" — there was no way: drafts
+  were only visible to the owning agent's own sign-in. An admin who imports the book
+  must be able to eyeball what landed (especially needs-review rows).
+- The amber drafts chip is now tappable → an inline read-only panel lists that agent's
+  drafts (thumb, title, price, suburb·city, per-category spec line, photo count,
+  import date), fetched from /listings/mine with the app key. Publishing stays with
+  the agent — the panel says so.
+
 ## 2026-08-23 — DRAFT-VIS-1: imported drafts are VISIBLE in the agency console
 
 - David, minutes after the first console import: "Where is the test import?" — the
