@@ -1629,7 +1629,15 @@ async function _renderAgency(agencyId){
           +'<option value="institution"'+(s==='institution'?' selected':'')+'>Tutor institution</option>'
           +'<option value="service_company"'+(s==='service_company'?' selected':'')+'>Service company</option>'
           +'<option value="placement"'+(s==='placement'?' selected':'')+'>Placement agency</option>'; })()
-      +'</select></div>';
+      +'</select>'
+      +(function(){   // SKIN-HINT-1 (24 Aug 2026): a skin that does not match the org's members
+        var _inf=_agencyInferSkin(a);
+        if(_inf && _inf!==(window._tsSkin||(window._tsOperatorMode?'operator':'agency'))){
+          return '<div style="flex-basis:100%;font-size:11px;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:5px 9px;">This org\'s members are <b>'+_inf.replace('_',' ')+'</b>-vertical — you\'re viewing it through another skin (fine as a lens). To see this skin with real data, pick its example org in the LEFT dropdown.</div>';
+        }
+        return '';
+      })()
+      +'</div>';
   }
   el.innerHTML= opsBar
     +'<div style="background:var(--navy,#0c1a2e);color:#fff;border-radius:14px;padding:18px 20px;margin-bottom:14px;">'
