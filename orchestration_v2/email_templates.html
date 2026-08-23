@@ -16,15 +16,15 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
 <header class="hd">
   <div class="k">Solar Council · TrustSquare</div>
   <h1>Email Templates — the pre-launch waves</h1>
-  <p>The 14 outreach templates exactly as the wave machinery will send them. Snapshot from CityLauncher/emailer/templates, 16 Aug 2026. Click any card to open the real template.</p>
+  <p>All 15 outreach templates plus the placement 8-email onboarding sequence, exactly as the wave machinery sends them — the previews are the real files, live. Metadata and badges computed from the templates on disk, 23 Aug 2026. Click any card to open the real template.</p>
 </header>
 <div style="display:flex;gap:8px;margin-bottom:18px">
   <a href="cockpit.html" style="text-decoration:none;font-size:13px;font-weight:700;padding:9px 16px;border-radius:10px;background:#fff;color:var(--navy);border:1.5px solid var(--line)">🛰️ Control Room</a>
   <a href="durability_map.html" style="text-decoration:none;font-size:13px;font-weight:700;padding:9px 16px;border-radius:10px;background:#fff;color:var(--navy);border:1.5px solid var(--line)">🧭 Durability Map</a>
   <a href="email_templates.html" style="text-decoration:none;font-size:13px;font-weight:700;padding:9px 16px;border-radius:10px;background:var(--navy);color:#fff;border:1.5px solid var(--navy)">📧 Email Templates</a>
 </div>
-<div class="ctx"><strong style="color:var(--navy)">How the waves run:</strong> one email per prospect, ever — batch 12 · Tue/Wed/Thu sends · 5% bounce stop · zero complaints tolerated · National key accounts first · every wave HALTS at AWAITING_APPROVAL until David approves it. Sender: David at TrustSquare &lt;david@mail.trustsquare.co&gt; (Resend-verified). Agency templates show the bonus on top of the verified 40-point base; individual templates start the story at 40. The UK/US/AU localization layer (terminology + email-law footers) is in build — these are the ZA-canon versions.</div>
-<h2>Agency lane — 7 templates (send first: National key accounts)</h2>
+<div class="ctx"><strong style="color:var(--navy)">How the waves run:</strong> one email per prospect, ever — batch 12 · Tue/Wed/Thu sends · 5% bounce stop · zero complaints tolerated · National key accounts first · every wave HALTS at AWAITING_APPROVAL until David approves it. Sender: David at TrustSquare &lt;david@mail.trustsquare.co&gt; (Resend-verified). Agency templates show the bonus on top of the verified 40-point base; individual templates start the story at 40. The UK/US/AU localization layer (terminology + email-law footers) is in build — these are the ZA-canon versions. AGENCY-WAVE-1 (23 Aug 2026): the estate-agency, travel-agency and dealer templates now carry the three-lane onboarding block (concierge reply / console self-serve / IT import guide) and their {{magic_link}} is the pre-minted CONSOLE link from POST /agencies/wave-prep — the n8n payload node drops any agency prospect without one, so a console CTA can never lie. Launch-special blocks are gone from every template (RUL-047, parked at D16). Placement outreach sending stays reserved to David (RUL-046). Wave-day checklist: AGENCY_WAVE_RUNBOOK.md.</div>
+<h2>Agency lane — 8 templates (send first: National key accounts)</h2>
 <div class="grid"><div style="background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;display:flex;flex-direction:column">
   <div style="height:170px;overflow:hidden;position:relative;background:#eef1f5;border-bottom:1px solid var(--line)">
     <iframe src="templates/agency_outreach.html" loading="lazy" style="width:200%;height:340px;transform:scale(.5);transform-origin:0 0;border:0;pointer-events:none"></iframe>
@@ -32,8 +32,8 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Property Agencies</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: 40 + 45 = 85 · 25 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: 40 + 45 = 85 · 23 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">three-lane onboarding</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
     <a href="templates/agency_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div>
@@ -44,8 +44,8 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Travel Agencies</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: signals live (S129) · 26 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: signals live (S129) · 23 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">three-lane onboarding</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
     <a href="templates/travel_agency_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div>
@@ -56,8 +56,8 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Tour Guides</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: signals live (S129) · 24 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: signals live (S129) · 20 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
     <a href="templates/tour_guide_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div>
@@ -68,8 +68,8 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Car Dealers</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: 40 + 37 = 77 · 21 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: 40 + 37 = 77 · 19 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">three-lane onboarding</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
     <a href="templates/cars_dealer_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div>
@@ -80,8 +80,8 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Collector Dealers</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: 40 + 34 = 74 · 23 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: 40 + 34 = 74 · 20 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
     <a href="templates/collectors_dealer_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div>
@@ -92,8 +92,8 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Tutor Institutions</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: 40 + 41 = 81 · 23 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: 40 + 41 = 81 · 20 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
     <a href="templates/tutor_institution_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div>
@@ -104,9 +104,21 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Service Companies</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: 40 + 42 = 82 · 23 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · Trust-Score story: 40 + 42 = 82 · 20 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span><span style="font-size:10.5px;font-weight:800;color:#0c1a2e;background:#ffd70033;border:1px solid #d4af37;border-radius:8px;padding:2px 7px">BEA-true</span></div>
     <a href="templates/service_company_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;display:flex;flex-direction:column">
+  <div style="height:170px;overflow:hidden;position:relative;background:#eef1f5;border-bottom:1px solid var(--line)">
+    <iframe src="templates/placement_agency_outreach.html" loading="lazy" style="width:200%;height:340px;transform:scale(.5);transform-origin:0 0;border:0;pointer-events:none"></iframe>
+    <a href="templates/placement_agency_outreach.html" target="_blank" style="position:absolute;inset:0" title="Open placement_agency_outreach.html"></a>
+  </div>
+  <div style="padding:12px 14px 14px">
+    <div style="font-weight:800;font-size:14px;color:var(--navy)">Placement Agencies</div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Agency lane · J-1 · cruise · H-2A · education consultancies · 19 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span><span style="font-size:10.5px;font-weight:700;color:#5f6b78;background:#5f6b7818;border:1px solid #5f6b7855;border-radius:8px;padding:2px 7px;margin-right:5px">sending reserved · RUL-046</span></div>
+    <a href="templates/placement_agency_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div></div>
 <h2>Individual sellers — 7 templates</h2>
@@ -117,8 +129,8 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Property — individual sellers</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual lane · Trust-Score story: base 40 start · 21 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual lane · Trust-Score story: base 40 start · 18 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span></div>
     <a href="templates/property_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div>
@@ -129,8 +141,8 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Tutors — individual</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual lane · Trust-Score story: base 40 start · 21 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual lane · Trust-Score story: base 40 start · 18 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span></div>
     <a href="templates/tutors_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div>
@@ -141,8 +153,8 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Collectors — individual</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual lane · Trust-Score story: base 40 start · 22 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual lane · Trust-Score story: base 40 start · 19 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span></div>
     <a href="templates/collectors_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div>
@@ -153,8 +165,8 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Services — Casuals</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual lane · Trust-Score story: base 40 start · 21 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual lane · Trust-Score story: base 40 start · 18 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span></div>
     <a href="templates/services_casuals_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div>
@@ -165,8 +177,8 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Services — Technical</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual lane · Trust-Score story: base 40 start · 22 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual lane · Trust-Score story: base 40 start · 19 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span></div>
     <a href="templates/services_technical_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div>
@@ -177,8 +189,8 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Adventures — Accommodation</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual/Host lane · Trust-Score story: base 40 start · 16 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual/Host lane · Trust-Score story: base 40 start · 13 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span></div>
     <a href="templates/adventures_accommodation_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div>
@@ -189,9 +201,107 @@ h2{font-size:16px;margin:26px 0 12px;color:var(--navy)}
   </div>
   <div style="padding:12px 14px 14px">
     <div style="font-weight:800;font-size:14px;color:var(--navy)">Adventures — Experiences</div>
-    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual/Host lane · Trust-Score story: base 40 start · 22 KB · snapshot 16 Aug 2026</div>
-    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">launch special</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no magic link</span><span style="font-size:10.5px;font-weight:700;color:#b91c1c;background:#b91c1c18;border:1px solid #b91c1c55;border-radius:8px;padding:2px 7px;margin-right:5px">no Ruby Spark</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Individual/Host lane · Trust-Score story: base 40 start · 19 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">unsubscribe</span><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#1d4ed818;border:1px solid #1d4ed855;border-radius:8px;padding:2px 7px;margin-right:5px">CTA · {{magic_link}}</span></div>
     <a href="templates/adventures_experiences_outreach.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
+  </div>
+</div></div>
+
+<h2>Placement onboarding — the 8-email sequence, Day 0–18 (SAW-5 · RUL-046 · engine dark for launch)</h2>
+<div class="grid"><div style="background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;display:flex;flex-direction:column">
+  <div style="height:170px;overflow:hidden;position:relative;background:#eef1f5;border-bottom:1px solid var(--line)">
+    <iframe src="templates/placement_onboarding/onboard_1.html" loading="lazy" style="width:200%;height:340px;transform:scale(.5);transform-origin:0 0;border:0;pointer-events:none"></iframe>
+    <a href="templates/placement_onboarding/onboard_1.html" target="_blank" style="position:absolute;inset:0" title="Open placement_onboarding/onboard_1.html"></a>
+  </div>
+  <div style="padding:12px 14px 14px">
+    <div style="font-weight:800;font-size:14px;color:var(--navy)">1 · Welcome — your founding seat is confirmed</div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Day 0 · on invite acceptance · 5 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#5f6b78;background:#5f6b7818;border:1px solid #5f6b7855;border-radius:8px;padding:2px 7px;">post-acceptance sequence · no unsubscribe block</span></div>
+    <a href="templates/placement_onboarding/onboard_1.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;display:flex;flex-direction:column">
+  <div style="height:170px;overflow:hidden;position:relative;background:#eef1f5;border-bottom:1px solid var(--line)">
+    <iframe src="templates/placement_onboarding/onboard_2.html" loading="lazy" style="width:200%;height:340px;transform:scale(.5);transform-origin:0 0;border:0;pointer-events:none"></iframe>
+    <a href="templates/placement_onboarding/onboard_2.html" target="_blank" style="position:absolute;inset:0" title="Open placement_onboarding/onboard_2.html"></a>
+  </div>
+  <div style="padding:12px 14px 14px">
+    <div style="font-weight:800;font-size:14px;color:var(--navy)">2 · Introductions, not leads</div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Day 1 · 5 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#5f6b78;background:#5f6b7818;border:1px solid #5f6b7855;border-radius:8px;padding:2px 7px;">post-acceptance sequence · no unsubscribe block</span></div>
+    <a href="templates/placement_onboarding/onboard_2.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;display:flex;flex-direction:column">
+  <div style="height:170px;overflow:hidden;position:relative;background:#eef1f5;border-bottom:1px solid var(--line)">
+    <iframe src="templates/placement_onboarding/onboard_3.html" loading="lazy" style="width:200%;height:340px;transform:scale(.5);transform-origin:0 0;border:0;pointer-events:none"></iframe>
+    <a href="templates/placement_onboarding/onboard_3.html" target="_blank" style="position:absolute;inset:0" title="Open placement_onboarding/onboard_3.html"></a>
+  </div>
+  <div style="padding:12px 14px 14px">
+    <div style="font-weight:800;font-size:14px;color:var(--navy)">3 · Verification is your moat</div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Day 3 · 4 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#5f6b78;background:#5f6b7818;border:1px solid #5f6b7855;border-radius:8px;padding:2px 7px;">post-acceptance sequence · no unsubscribe block</span></div>
+    <a href="templates/placement_onboarding/onboard_3.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;display:flex;flex-direction:column">
+  <div style="height:170px;overflow:hidden;position:relative;background:#eef1f5;border-bottom:1px solid var(--line)">
+    <iframe src="templates/placement_onboarding/onboard_4.html" loading="lazy" style="width:200%;height:340px;transform:scale(.5);transform-origin:0 0;border:0;pointer-events:none"></iframe>
+    <a href="templates/placement_onboarding/onboard_4.html" target="_blank" style="position:absolute;inset:0" title="Open placement_onboarding/onboard_4.html"></a>
+  </div>
+  <div style="padding:12px 14px 14px">
+    <div style="font-weight:800;font-size:14px;color:var(--navy)">4 · List your programmes</div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Day 5 · 4 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#5f6b78;background:#5f6b7818;border:1px solid #5f6b7855;border-radius:8px;padding:2px 7px;">post-acceptance sequence · no unsubscribe block</span></div>
+    <a href="templates/placement_onboarding/onboard_4.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;display:flex;flex-direction:column">
+  <div style="height:170px;overflow:hidden;position:relative;background:#eef1f5;border-bottom:1px solid var(--line)">
+    <iframe src="templates/placement_onboarding/onboard_5.html" loading="lazy" style="width:200%;height:340px;transform:scale(.5);transform-origin:0 0;border:0;pointer-events:none"></iframe>
+    <a href="templates/placement_onboarding/onboard_5.html" target="_blank" style="position:absolute;inset:0" title="Open placement_onboarding/onboard_5.html"></a>
+  </div>
+  <div style="padding:12px 14px 14px">
+    <div style="font-weight:800;font-size:14px;color:var(--navy)">5 · The best-prepared candidates you've ever received</div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Day 7 · attaches both example dossiers · 4 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#5f6b78;background:#5f6b7818;border:1px solid #5f6b7855;border-radius:8px;padding:2px 7px;">post-acceptance sequence · no unsubscribe block</span></div>
+    <a href="templates/placement_onboarding/onboard_5.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;display:flex;flex-direction:column">
+  <div style="height:170px;overflow:hidden;position:relative;background:#eef1f5;border-bottom:1px solid var(--line)">
+    <iframe src="templates/placement_onboarding/onboard_6.html" loading="lazy" style="width:200%;height:340px;transform:scale(.5);transform-origin:0 0;border:0;pointer-events:none"></iframe>
+    <a href="templates/placement_onboarding/onboard_6.html" target="_blank" style="position:absolute;inset:0" title="Open placement_onboarding/onboard_6.html"></a>
+  </div>
+  <div style="padding:12px 14px 14px">
+    <div style="font-weight:800;font-size:14px;color:var(--navy)">6 · The rules that protect you</div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Day 10 · 4 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#5f6b78;background:#5f6b7818;border:1px solid #5f6b7855;border-radius:8px;padding:2px 7px;">post-acceptance sequence · no unsubscribe block</span></div>
+    <a href="templates/placement_onboarding/onboard_6.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;display:flex;flex-direction:column">
+  <div style="height:170px;overflow:hidden;position:relative;background:#eef1f5;border-bottom:1px solid var(--line)">
+    <iframe src="templates/placement_onboarding/onboard_7.html" loading="lazy" style="width:200%;height:340px;transform:scale(.5);transform-origin:0 0;border:0;pointer-events:none"></iframe>
+    <a href="templates/placement_onboarding/onboard_7.html" target="_blank" style="position:absolute;inset:0" title="Open placement_onboarding/onboard_7.html"></a>
+  </div>
+  <div style="padding:12px 14px 14px">
+    <div style="font-weight:800;font-size:14px;color:var(--navy)">7 · You are early — that is worth something</div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Day 14 · 4 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#5f6b78;background:#5f6b7818;border:1px solid #5f6b7855;border-radius:8px;padding:2px 7px;">post-acceptance sequence · no unsubscribe block</span></div>
+    <a href="templates/placement_onboarding/onboard_7.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;display:flex;flex-direction:column">
+  <div style="height:170px;overflow:hidden;position:relative;background:#eef1f5;border-bottom:1px solid var(--line)">
+    <iframe src="templates/placement_onboarding/onboard_8.html" loading="lazy" style="width:200%;height:340px;transform:scale(.5);transform-origin:0 0;border:0;pointer-events:none"></iframe>
+    <a href="templates/placement_onboarding/onboard_8.html" target="_blank" style="position:absolute;inset:0" title="Open placement_onboarding/onboard_8.html"></a>
+  </div>
+  <div style="padding:12px 14px 14px">
+    <div style="font-weight:800;font-size:14px;color:var(--navy)">8 · Your two-minute go-live checklist</div>
+    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">Day 18 · 4 KB · refreshed 23 Aug 2026 (computed from disk)</div>
+    <div style="margin-bottom:10px"><span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#16a34a18;border:1px solid #16a34a55;border-radius:8px;padding:2px 7px;margin-right:5px">no launch special · parked D16</span><span style="font-size:10.5px;font-weight:700;color:#5f6b78;background:#5f6b7818;border:1px solid #5f6b7855;border-radius:8px;padding:2px 7px;">post-acceptance sequence · no unsubscribe block</span></div>
+    <a href="templates/placement_onboarding/onboard_8.html" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">Open the real template ↗</a>
   </div>
 </div></div>
 </div>
