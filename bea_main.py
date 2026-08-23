@@ -13441,6 +13441,9 @@ def _agency_agent_rollup(conn, email):
     email = (email or "").lower().strip()
     u = conn.execute("SELECT trust_score, slot_limit, name, seller_tier FROM users WHERE LOWER(email)=?", (email,)).fetchone()
     live = conn.execute("SELECT COUNT(*) c FROM listings WHERE LOWER(seller_email)=? AND (listing_status IS NULL OR listing_status='live')", (email,)).fetchone()["c"]
+    # DRAFT-VIS-1 (23 Aug 2026, David: "where is the test import?"): an imported book
+    # landed as drafts and the console showed 0/cap -- invisible. Drafts are counted too.
+    drafts = conn.execute("SELECT COUNT(*) c FROM listings WHERE LOWER(seller_email)=? AND listing_status='draft'", (email,)).fetchone()["c"]
     try:
         intros_n = conn.execute("SELECT COUNT(*) c FROM intro_requests WHERE LOWER(seller_email)=?", (email,)).fetchone()["c"]
     except Exception:
@@ -13449,6 +13452,7 @@ def _agency_agent_rollup(conn, email):
             "name": (u["name"] if u and u["name"] else email.split("@")[0]),
             "trust_score": int(u["trust_score"]) if u and u["trust_score"] is not None else 40,
             "listings_live": live,
+            "listings_draft": drafts,
             "intros": intros_n,
             "tier": (u["seller_tier"] if u and u["seller_tier"] else "free")}
 
@@ -13548,17 +13552,19 @@ def get_agency(agency_id: int, _key: str = Depends(auth.require_api_key)):
             raise HTTPException(status_code=404, detail="Agency not found")
         members = conn.execute("SELECT agent_email, listing_cap, seat_paid, role, status, agent_name, city, country FROM agency_members "
                                "WHERE agency_id=? AND status!='removed' ORDER BY role DESC, agent_email", (agency_id,)).fetchall()
-        agents = []; used = 0; allowance = 0
+        agents = []; used = 0; allowance = 0; drafts_total = 0
         for m in members:
             r = _agency_agent_rollup(conn, m["agent_email"])
             r.update({"listing_cap": m["listing_cap"], "seat_paid": bool(m["seat_paid"]), "role": m["role"], "status": m["status"],
                       "agent_name": m["agent_name"], "city": m["city"], "country": m["country"]})   # AGENT-FILTER-1
             used += r["listings_live"]; allowance += m["listing_cap"]
+            drafts_total += r.get("listings_draft", 0)
             agents.append(r)
         return {"id": a["id"], "name": a["name"], "admin_email": a["admin_email"],
                 "countries": a["countries"], "plan": a["plan"], "verified": bool(a["verified"]),
                 "api_key": a["api_key"], "agents": agents,
-                "rollup": {"agents": len(agents), "listings_used": used, "listings_allowance": allowance}}
+                "rollup": {"agents": len(agents), "listings_used": used, "listings_allowance": allowance,
+                           "listings_draft": drafts_total}}
     finally:
         conn.close()
 
