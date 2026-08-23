@@ -2,6 +2,10 @@
 **9 July 2026 · MarketSquare / TrustSquare · companion to `ROADMAP_4_AI_INDEPENDENCE.md` and `AI_PROVIDER_DEPENDENCY_POSTURE_2026-06-19.md`**
 **Prompted by:** David — "use open-source Llama-type LLMs (and better), adopting newer ones as they are RELEASED and proven independent (not trojan horses), all residing in an off-grid air-gapped Karoo farm... always used as the trusted validator, independently and comparatively whilst using the frontier models." Recorded so the reasoning is not re-litigated.
 
+## Plain-language summary (David, 23 Aug 2026)
+**“It doesn’t need to be as clever as it needs to be invisible.”**
+No network to reach it, no vendor to lean on it, no jurisdiction that even knows it’s there. Its power isn’t in what it can answer — it’s that nobody can make it change its answer. The frontier models perform on a stage; the Karoo box sits in the dark and tells the truth. That is the whole design in one line.
+
 ## Decision (confirmed, not new-in-spirit)
 The sovereign spine of MarketSquare's AI is **open-weight models we hold and run ourselves**, physically on an **air-gapped, off-grid cluster at the Karoo farm**. Its **primary standing role is the trusted validator**: it runs **continuously alongside** the frontier models, independently and comparatively checking their output — and it is **also** the fallback that can carry the core service the moment a gate closes. Claude mid-tier (Haiku/Sonnet/Opus) stays the everyday **generator** while available; the Karoo cluster is the everyday **referee**.
 
