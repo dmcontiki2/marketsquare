@@ -194,3 +194,17 @@ Wed 08/19/2026  5:30:02.56  committed 5 change(s)
  create mode 100644 OUTREACH_LAW_WORKING_NOTES_2026-08-20.md
  create mode 100644 changelog.d/2026-08-20-close-c-lane.md
 Fri 08/21/2026  5:30:02.40  committed 6 change(s)
+[main 49e6ed3] Nightly checkpoint Sun 08/23/2026  5:30:02.39 (auto, no deploy)
+ 15 files changed, 368 insertions(+), 1 deletion(-)
+ rename changelog.d/{ => folded}/2026-08-22-commit-scope-note.md (100%)
+ rename changelog.d/{ => folded}/2026-08-22-money-path-closed.md (100%)
+ rename changelog.d/{ => folded}/2026-08-22-provenance-1.md (100%)
+ rename changelog.d/{ => folded}/2026-08-22-session-counter-1.md (100%)
+ rename changelog.d/{ => folded}/2026-08-22-study-abroad-advisor.md (100%)
+ rename changelog.d/{ => folded}/2026-08-22-studyabroad-teaser.md (100%)
+ rename status.d/{ => folded}/2026-08-22-provenance-1.md (100%)
+ rename status.d/{ => folded}/2026-08-22-session-counter-1.md (100%)
+ rename status.d/{ => folded}/2026-08-22-study-abroad-advisor.md (100%)
+ rename status.d/{ => folded}/2026-08-22-studyabroad-teaser.md (100%)
+ create mode 100644 status.d/folded/2026-08-22-tsl-held.md
+Sun 08/23/2026  5:30:02.50  committed 25 change(s)

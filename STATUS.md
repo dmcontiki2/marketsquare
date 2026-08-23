@@ -28,6 +28,12 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+## 2026-08-23 — maintenance-loop (scheduled)
+
+Quiet run. Queue 0/0/0 (new/fix-shipped/verified this run). Ledger green before and
+after — all LOCKED holding, 14 OPEN. Heartbeat probed live on /dashboard/maint
+(05:33:47Z). No escalation brief (none in 24h). No commits of code; fragments only.
+
 2026-08-22 (attended, David, ~21:25 UTC): /TSL RUN STAGED AND HELD — NOT DEPLOYED. All gates green,
 stopped deliberately on a concurrent-writer hazard. State for whoever picks this up: 3 commits sit ahead
 of the deploy ref (76606ff SESSION-COUNTER-1, 085430f PROVENANCE-1, 02d9184 DEPLOY-COHERENCE-1; 21 files).
