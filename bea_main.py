@@ -13448,7 +13448,13 @@ def _agency_agent_rollup(conn, email):
         intros_n = conn.execute("SELECT COUNT(*) c FROM intro_requests WHERE LOWER(seller_email)=?", (email,)).fetchone()["c"]
     except Exception:
         intros_n = 0
+    try:
+        _vp = conn.execute("SELECT vertical FROM agent_profiles WHERE agent_email=?", (email,)).fetchone()
+        _vertical = (_vp["vertical"] if _vp and _vp["vertical"] else None)
+    except Exception:
+        _vertical = None
     return {"email": email,
+            "vertical": _vertical,   # ORG-SKIN-1: lets the ops console infer the org's skin
             "name": (u["name"] if u and u["name"] else email.split("@")[0]),
             "trust_score": int(u["trust_score"]) if u and u["trust_score"] is not None else 40,
             "listings_live": live,

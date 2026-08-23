@@ -1577,6 +1577,11 @@ async function _renderAgency(agencyId){
   let a=null;
   try{ const r=await fetch(BEA_URL+'/agencies/'+agencyId,{headers:{'X-Api-Key':API_KEY}}); if(r.ok) a=await r.json(); }catch(e){}
   if(!a){ el.innerHTML='<div style="padding:30px;text-align:center;color:#ef4444;">Could not load agency.</div>'; return; }
+  if(window._tsSkinAuto){
+    var _inf=_agencyInferSkin(a);
+    if(_inf && _inf!==window._tsSkin){ window._tsSkin=_inf; window._tsOperatorMode=(_inf==='operator'); }
+    window._tsSkinAuto=false;
+  }
   window._agencyName=a.name||'';   // rename prompt names its target (7 Jul 2026)
   window._agAgents=(a.agents||[]);   // AGENT-FILTER-1
   window._agencyKey=a.api_key||'';   // ADVERT-BULK-1: the imports card's uploader auths with it
@@ -1705,8 +1710,19 @@ async function _agencyOrgList(){
   try{ const r=await fetch(BEA_URL+'/agencies',{headers:{'X-Api-Key':API_KEY}}); if(r.ok){ const d=await r.json(); window._tsOrgList=d.agencies||[]; } }catch(e){}
   return window._tsOrgList||[];
 }
-function agencyOpsSwitch(id){ id=parseInt(id,10); if(!id) return; window._agencyId=id; _renderAgency(id); }
-function agencyOpsSkin(v){ window._tsSkin=v; window._tsOperatorMode=(v==='operator'); _renderAgency(window._agencyId); }
+function agencyOpsSwitch(id){ id=parseInt(id,10); if(!id) return; window._agencyId=id; window._tsSkinAuto=true; _renderAgency(id); }
+// ORG-SKIN-1 (24 Aug 2026, David: "each with his own example"): picking an org infers its
+// skin from the members' dominant vertical, so the two dropdowns agree by themselves.
+// A manual skin pick (agencyOpsSkin) always wins and switches auto-inference off.
+function _agencyInferSkin(a){
+  var map={property:'agency',cars:'dealer',travel:'operator',collector:'collector',
+           institution:'institution',service_company:'service_company',placement:'placement'};
+  var tally={};
+  (a.agents||[]).forEach(function(m){ var k=map[m.vertical]; if(k) tally[k]=(tally[k]||0)+1; });
+  var best=null,n=0; Object.keys(tally).forEach(function(k){ if(tally[k]>n){ best=k; n=tally[k]; } });
+  return best;
+}
+function agencyOpsSkin(v){ window._tsSkinAuto=false; window._tsSkin=v; window._tsOperatorMode=(v==='operator'); _renderAgency(window._agencyId); }
 
 function demoBannerJoin() {
   // Redirect prospect to the real onboarding app
