@@ -110,6 +110,16 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-044": [
+   # The examples are full PDFs from the template generator; the teaser links them;
+   # the refugee pathway stays factual and un-graded ("NOT A WORK ROUTE"). A session
+   # that deletes the generator, unlinks the PDFs, or turns the adjacent-pathway
+   # panel into a recommendation trips here.
+   ("RULINGS.md", ["FULL HOUSE-FORMAT PDFs", "NOT A WORK ROUTE"], []),
+   ("scripts/build_dossier_pdf.py", ["P4", "AI-GENERATED EXAMPLE"], []),
+   ("scripts/dossier_examples.py", ["ADJACENT PATHWAY - NOT A WORK ROUTE", "Scam Wall"], []),
+   ("studyabroad_teaser.html", ["Dossier_EXAMPLE_Study_Hungary.pdf", "Dossier_EXAMPLE_Work_USA_Farm.pdf"], []),
+ ],
  "RUL-043": [
    # 5T is canon; both benchmark examples exist on the teaser; the work example is
    # honest about Canada being closed; videos are shelved full-length items, not

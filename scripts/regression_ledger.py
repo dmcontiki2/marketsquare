@@ -8430,5 +8430,34 @@ def rg_workroute_example_live():
     return out or [(INFO, "work-route example live with its labels and the honest no")]
 
 
+@entry("RG-0160", "Both full example dossier PDFs serve live and the teaser links them",
+       OPEN, scope="/static/studywork/Dossier_EXAMPLE_Study_Hungary.pdf + "
+             "Dossier_EXAMPLE_Work_USA_Farm.pdf + their dl links on the teaser (SAW-3, RUL-044). "
+             "CLASS: a Feature's worked examples are part of the feature surface -- a dead "
+             "example link is a broken shop window. PDFs ship via the MEDIA lane [1b], the page "
+             "via the code deploy: this entry catches the half-shipped state where either lane "
+             "ran without the other.",
+       ref="SAW-3, 23 Aug 2026. OPEN until BOTH the next code deploy (teaser v2 with dl links) "
+           "AND a media_push run (PDFs) have happened. Generator: scripts/build_dossier_pdf.py "
+           "(the P4 prototype) + dossier_examples.py.")
+def rg_dossier_pdfs_live():
+    out = []
+    try:
+        page = _get("/static/studyabroad_teaser.html?v=2")
+        for f in ("Dossier_EXAMPLE_Study_Hungary.pdf", "Dossier_EXAMPLE_Work_USA_Farm.pdf"):
+            if f not in page:
+                out.append((FAIL, "teaser does not link %s" % f))
+    except Exception as ex:
+        out.append((FAIL, "teaser unreadable: %s" % repr(ex)[:60]))
+    for f in ("Dossier_EXAMPLE_Study_Hungary.pdf", "Dossier_EXAMPLE_Work_USA_Farm.pdf"):
+        try:
+            body = _get("/static/studywork/" + f)
+            if not body.startswith("%PDF"):
+                out.append((FAIL, "%s serves but is not a PDF" % f))
+        except Exception as ex:
+            out.append((FAIL, "%s not served: %s" % (f, repr(ex)[:50])))
+    return out or [(INFO, "both example dossiers live and linked")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
