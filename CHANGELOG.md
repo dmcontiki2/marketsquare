@@ -1,3 +1,13 @@
+## 2026-08-23 — DRAFT-VIS-1: imported drafts are VISIBLE in the agency console
+
+- David, minutes after the first console import: "Where is the test import?" — the
+  draft existed (listing 375 under demo.agent) but the console showed 0/20: agent
+  rows and the pooled card counted only LIVE listings. An agency that imports its
+  book and sees zeros will assume the import failed — the exact wrong-status class.
+- _agency_agent_rollup now counts drafts (listings_draft per agent + pooled total);
+  the agents table shows an amber "N drafts" chip beside the live/cap meter, and the
+  Listings (pooled) card adds "N drafts awaiting publish". No schema change.
+
 ## 2026-08-23 — ADVERT-BULK-1: the console can bulk-import ADVERTS (David's question closed a real gap)
 
 - David, eyeballing: "How would a property agency bulk upload all of their property
