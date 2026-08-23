@@ -1,17 +1,22 @@
 @echo off
 REM update_fea_baseline.bat -- one-shot, ATTENDED (DW-061: deploy-not-tamper pattern)
-REM Shows the FEA delta on the box, waits for your eyeball, refreshes fea_baseline.json,
-REM re-checks. Target/path match the daily loop: msdeploy @ /opt/marketsquare-src.
+REM v2: points at the LIVE instrument in the web root (/var/www/marketsquare -- the copy
+REM the 01:30 cron sensor runs, with index.html + baseline beside it), NOT the src clone.
+REM v2 guard: a traceback/garbage in step 1 ABORTS -- only a real delta reaches the pause.
 REM BAT LESSON honored: ssh output goes to a %TEMP% file, never for /f ('ssh ...').
 setlocal
 set SERVER=msdeploy@178.104.73.239
-set FEA=/opt/marketsquare-src/fea_integrity_check.py
+set FEA=/var/www/marketsquare/fea_integrity_check.py
 set OUT=%TEMP%\fea_check.json
 
 echo === 1/3 current FEA status (the delta to eyeball) ===
 ssh -o ConnectTimeout=15 %SERVER% "python3 %FEA% --json" > "%OUT%" 2>&1
 type "%OUT%"
 echo.
+findstr /C:"\"status\"" "%OUT%" >nul || (
+  echo ABORT: step 1 did not return FEA JSON - nothing was changed. Show the output above to Claude.
+  goto :done
+)
 findstr /C:"\"status\": \"ok\"" "%OUT%" >nul && (
   echo Baseline already clean - nothing to update.
   goto :done
