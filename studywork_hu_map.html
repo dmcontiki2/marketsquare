@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Study in Hungary - the surroundings</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--navy:#1F3864;--blue:#2F5496;--gold:#c9a227;--bg:#0d1b2e;--card:#13233a;--line:#24385a;--txt:#e8eef7;--mut:#9db0cc;--green:#538135;--amber:#c55a11;--red:#b91c1c}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.5 'Segoe UI',system-ui,sans-serif}
+header{padding:14px 16px 10px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+header h1{font-size:18px}
+header .sub{font-size:12px;color:var(--mut)}
+.chips{display:flex;gap:8px;padding:0 16px 10px;flex-wrap:wrap}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--mut)}
+.chip.on{background:var(--navy);border-color:var(--gold);color:#fff}
+#map{height:calc(100vh - 108px);min-height:430px}
+.leaflet-popup-content{font:12.5px/1.45 'Segoe UI',sans-serif}
+.leaflet-popup-content b{color:#1F3864}
+.pop-img{width:220px;height:146px;object-fit:cover;border-radius:6px;display:block;margin-top:6px;background:#dde5f0}
+.legend{position:absolute;bottom:18px;left:12px;z-index:900;background:rgba(13,27,46,.92);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:11.5px;color:var(--mut);max-width:280px}
+.legend b{color:var(--txt)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+</style></head><body>
+
+<header><h1>Study in Hungary - the surroundings</h1><div class="sub">Worked example map - Lerato's Budapest (and the smart alternatives)</div></header>
+<div class="chips" id="chips"></div>
+<div id="map"></div>
+<div class="legend"><b>Legend</b><br><span class="dot" style="background:#c9a227"></span>journey / home&nbsp;
+<span class="dot" style="background:#538135"></span>the goal&nbsp;
+<span class="dot" style="background:#2F5496"></span>daily life&nbsp;
+<span class="dot" style="background:#c55a11"></span>worth knowing<br>Toggle the chips - each layer answers one question.</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/static/ts_demo_banner.js" defer></script>
+<script>
+var map=L.map('map',{scrollWheelZoom:true}).setView([47.3,19.2],6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors',maxZoom:18}).addTo(map);
+var C={home:'#c9a227',goal:'#538135',life:'#2F5496',know:'#c55a11'};
+function pin(g,ll,cat,title,body,img){
+  var m=L.circleMarker(ll,{radius:8,color:C[cat],fillColor:C[cat],fillOpacity:.95,weight:2});
+  var h='<b>'+title+'</b><br>'+body;
+  if(img)h+='<img class="pop-img" loading="lazy" src="/static/studywork/'+img+'" onerror="this.style.display=\'none\'">';
+  m.bindPopup(h); m.addTo(g); return m;
+}
+function arc(g,a,b,col){var mid=[(a[0]+b[0])/2+(Math.abs(a[1]-b[1])>30?18:2),(a[1]+b[1])/2];
+  L.polyline([a,mid,b],{color:col||'#c9a227',weight:2,opacity:.7,dashArray:'7 8'}).addTo(g);}
+
+var gJourney=L.layerGroup(),gCampus=L.layerGroup(),gLife=L.layerGroup(),gAlt=L.layerGroup();
+arc(gJourney,[-26.13,28.24],[47.44,19.26]);
+pin(gJourney,[-26.13,28.24],'home','OR Tambo, Johannesburg','Where the journey starts - one connection to Budapest.','sw_hu_1_airport.jpg');
+pin(gJourney,[47.44,19.26],'home','Budapest Ferenc Liszt Airport','Landing card in hand - the 100E airport bus runs straight to the centre.','sw_hu_2_aerial.jpg');
+pin(gCampus,[47.481,19.056],'goal','ELTE - Lazar-ter campus area','Top theoretical CS faculty in the country. Entrance exam: maths + logic.','sw_hu_3_arrival.jpg');
+pin(gCampus,[47.487,19.058],'goal','BME - the technical university','Engineering powerhouse on the Danube bank.',null);
+pin(gCampus,[47.533,19.033],'goal','Obuda University','Applied computing, strong international cohort - the pragmatic pick.','sw_hu_4_campus.jpg');
+pin(gLife,[47.487,19.059],'life','Great Market Hall','Groceries at student prices - Saturday morning ritual.','sw_hu_6_life.jpg');
+pin(gLife,[47.497,19.054],'life','Deak Ferenc ter','Every metro line crosses here - the student pass covers all of it.',null);
+pin(gLife,[47.500,19.045],'life','Danube banks + Chain Bridge','The free evening: Parliament lit up across the water.','sw_hu_5_city.jpg');
+pin(gLife,[47.51,19.08],'life','Dorm belt (VIII/IX districts)','Where scholarship dorm places cluster - free beats any flat.',null);
+pin(gAlt,[47.55,21.62],'know','University of Debrecen','Excellent CS, half the living cost of Budapest - the smart second choice.',null);
+pin(gAlt,[46.25,20.15],'know','University of Szeged','Sunniest city in Hungary, strong informatics faculty, gentle rents.',null);
+var LAYERS={'The journey':gJourney,'The campuses':gCampus,'Student life':gLife,'The smart alternatives':gAlt};
+
+var chipRow=document.getElementById('chips');
+Object.keys(LAYERS).forEach(function(name,i){
+  var c=document.createElement('div');c.className='chip'+(i===0?' on':'');c.textContent=name;
+  c.onclick=function(){
+    var on=c.classList.toggle('on');
+    if(on)map.addLayer(LAYERS[name]);else map.removeLayer(LAYERS[name]);
+  };
+  chipRow.appendChild(c);
+  if(i===0)map.addLayer(LAYERS[name]);
+});
+</script></body></html>

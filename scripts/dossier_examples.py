@@ -39,6 +39,7 @@ HUNGARY = {
             {"name":"Exams online","sub":"Feb - Apr 2027","v":"HIGH"},
             {"name":"Award + visa","sub":"May - Jul 2027","v":"HIGH"},
             {"name":"Budapest / Debrecen","sub":"arrive Sep 2027","v":"HIGH"}]),
+  ("photos",[("sw_hu_1_airport.jpg","OR Tambo - where it starts"),("sw_hu_2_aerial.jpg","Wheels down over the Danube"),("sw_hu_3_arrival.jpg","First morning on campus")]),
   ("h2","What the scholarship actually gives you"),
   ("table",["Item","What you get","Detail"],
    [["Tuition","<b>100% covered</b>","Full exemption for the whole degree, not one year"+RC],
@@ -91,6 +92,9 @@ HUNGARY = {
     ["Rules shift year to year","MEDIUM","Every flagged figure gets re-checked at the official source before you submit - your adviser does exactly that"],
     ["Homesickness, winters","LOW","12 months of stipend means summers can come home; strong SA student community in Hungary"]],
    [190,55,None]),
+  ("h2","The surroundings"),
+  ("photos",[("sw_hu_4_campus.jpg","The campus courtyard"),("sw_hu_5_city.jpg","Parliament across the water - the free evening"),("sw_hu_6_life.jpg","Great Market Hall - groceries at student prices")]),
+  ("mapshot","sw_hu_mapshot.jpg","The surroundings, mapped - the interactive layered version (journey / campuses / student life / smart alternatives) lives in the app."),
   ("h1","6 - Opportunities beyond the degree"),
   ("p","- <b>Zero tuition debt</b> - you graduate owing nothing.<br/>"
       "- <b>EU mobility:</b> as an enrolled EU-university student, Erasmus+ exchange semesters across Europe open up.<br/>"
@@ -143,6 +147,7 @@ USA_FARM = {
             {"name":"Consulate JHB","sub":"DS-2019, interview","v":"HIGH"},
             {"name":"Host farm, USA","sub":"12 months J-1","v":"HIGH"},
             {"name":"Season 2 option","sub":"H-2A, no cap","v":"MEDIUM"}]),
+  ("photos",[("sw_us_1_airport.jpg","OR Tambo - duffel and work gloves"),("sw_us_2_aerial.jpg","The Midwest quilt from seat 34A"),("sw_us_3_arrival.jpg","The host farm gate")]),
   ("h2","Door one - J-1 Agricultural Intern (start this month)"),
   ("table",["Fact","Detail"],
    [["Who qualifies","Enrolled students OR graduates within 12 months of programme start - <b>your BSc Agric qualifies you today, and stops qualifying you next year</b>"],
@@ -194,6 +199,9 @@ USA_FARM = {
     ["Isolation on remote farms","LOW","SA crews are common in the H-2A lane; ask your recruiter where compatriots are placed"],
     ["Programme rules shift","MEDIUM","Every flagged figure is re-checked before you sign - your placement agency does exactly that"]],
    [190,55,None]),
+  ("h2","The surroundings"),
+  ("photos",[("sw_us_4_farm.jpg","Row-crop scale - the office"),("sw_us_5_town.jpg","Main street and the elevator"),("sw_us_6_life.jpg","The farmstead evening - rent-free")]),
+  ("mapshot","sw_us_mapshot.jpg","Farm country, mapped - the interactive layered version (journey / farm belt / town life / seasons) lives in the app."),
   ("h1","7 - What this year buys your career"),
   ("p","- <b>Large-scale mechanised experience</b> - US row-crop scale is CV gold back home.<br/>"
       "- <b>Capital:</b> free housing on H-2A makes this the rare year abroad you SAVE through.<br/>"

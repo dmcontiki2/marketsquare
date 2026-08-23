@@ -17,6 +17,7 @@ from reportlab.lib.enums import TA_LEFT, TA_CENTER
 from reportlab.platypus import (BaseDocTemplate, PageTemplate, Frame, Paragraph,
                                 Spacer, Table, TableStyle, PageBreak, Flowable,
                                 KeepTogether)
+from reportlab.platypus import Image as RLImage
 
 NAVY  = colors.HexColor("#1F3864"); BLUE  = colors.HexColor("#2F5496")
 GOLD  = colors.HexColor("#C9A227"); LBLUE = colors.HexColor("#EAF0FA")
@@ -181,6 +182,27 @@ def build(d, out):
         elif kind=="callout": story.append(callout(sec[1], *sec[2], label=sec[3] if len(sec)>3 else None))
         elif kind=="table":
             story.append(styled_table(sec[1], sec[2], sec[3]))
+        elif kind=="photos":
+            outdir_l = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "studywork")
+            cells=[]; caps=[]
+            for fn,cap in sec[1]:
+                fp=os.path.join(outdir_l,fn)
+                if os.path.exists(fp):
+                    cells.append(RLImage(fp, width=(W-2*M-8*mm)/3, height=(W-2*M-8*mm)/3*2/3))
+                    caps.append(P(cap,"small"))
+            for i in range(0,len(cells),3):
+                row_imgs=cells[i:i+3]; row_caps=caps[i:i+3]
+                t=Table([row_imgs,row_caps], colWidths=[(W-2*M)/max(len(row_imgs),1)]*len(row_imgs))
+                t.setStyle(TableStyle([("TOPPADDING",(0,0),(-1,-1),2),("BOTTOMPADDING",(0,0),(-1,-1),2),
+                                       ("LEFTPADDING",(0,0),(-1,-1),2),("RIGHTPADDING",(0,0),(-1,-1),2),
+                                       ("VALIGN",(0,0),(-1,-1),"TOP")]))
+                story.append(t)
+        elif kind=="mapshot":
+            outdir_l = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "studywork")
+            fp=os.path.join(outdir_l, sec[1])
+            if os.path.exists(fp):
+                story.append(RLImage(fp, width=W-2*M, height=(W-2*M)*0.56))
+                story.append(P(sec[2],"small"))
         elif kind=="chips":
             row=[]
             for label,v in sec[1]:

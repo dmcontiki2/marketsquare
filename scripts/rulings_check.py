@@ -110,6 +110,16 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-045": [
+   # The visual language is template law: photo arc + surroundings + layered map.
+   # Both map pages exist with the demo banner include (RUL-040 scope rule for new
+   # demo pages); the teaser links them; the queue carries the 12 persona prompts.
+   ("studywork_hu_map.html", ["ts_demo_banner.js", "The smart alternatives"], []),
+   ("studywork_us_map.html", ["ts_demo_banner.js", "The seasons"], []),
+   ("studyabroad_teaser.html", ["studywork_hu_map.html", "studywork_us_map.html"], []),
+   ("HIGGSFIELD_REGEN_QUEUE.md", ["sw_hu_1_airport.jpg", "sw_us_6_life.jpg"], []),
+   ("scripts/build_dossier_pdf.py", ["mapshot"], []),
+ ],
  "RUL-044": [
    # The examples are full PDFs from the template generator; the teaser links them;
    # the refugee pathway stays factual and un-graded ("NOT A WORK ROUTE"). A session

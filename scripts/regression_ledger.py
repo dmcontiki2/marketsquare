@@ -8459,5 +8459,34 @@ def rg_dossier_pdfs_live():
     return out or [(INFO, "both example dossiers live and linked")]
 
 
+@entry("RG-0161", "Both surroundings maps serve live with their layers, demo banner and teaser links",
+       OPEN, scope="/static/studywork_hu_map.html + studywork_us_map.html (SAW-4, RUL-045). "
+             "CLASS: the layered map is part of the dossier's visual language -- a dead map link "
+             "or a demo map without its DEMO banner (RUL-040) is the defect.",
+       ref="SAW-4, 23 Aug 2026. OPEN until the next code deploy ships the pages + teaser links. "
+           "Photo-embed completion is tracked by the filesystem (assets/studywork sw_*.jpg) and "
+           "HIGGSFIELD_REGEN_QUEUE section 6, not by this entry.")
+def rg_studywork_maps_live():
+    out = []
+    for f, needle in (("studywork_hu_map.html", "The smart alternatives"),
+                      ("studywork_us_map.html", "The seasons")):
+        try:
+            page = _get("/static/" + f)
+            if "ts_demo_banner.js" not in page:
+                out.append((FAIL, "%s lacks the DEMO banner include (RUL-040)" % f))
+            if needle not in page:
+                out.append((FAIL, "%s lost its layer set" % f))
+        except Exception as ex:
+            out.append((FAIL, "%s not served: %s" % (f, repr(ex)[:50])))
+    try:
+        teaser = _get("/static/studyabroad_teaser.html?v=2")
+        for f in ("studywork_hu_map.html", "studywork_us_map.html"):
+            if f not in teaser:
+                out.append((FAIL, "teaser does not link %s" % f))
+    except Exception as ex:
+        out.append((FAIL, "teaser unreadable: %s" % repr(ex)[:60]))
+    return out or [(INFO, "both layered maps live, bannered and linked")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

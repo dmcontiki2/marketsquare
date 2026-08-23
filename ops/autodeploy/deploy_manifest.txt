@@ -144,3 +144,5 @@ smoke_test.py              | smoke_test.py
 
 # ── SAW-1 (22 Aug 2026): Study & Work Abroad teaser — static preview, RUL-042 ──
 studyabroad_teaser.html    | static/studyabroad_teaser.html
+studywork_hu_map.html      | static/studywork_hu_map.html
+studywork_us_map.html      | static/studywork_us_map.html

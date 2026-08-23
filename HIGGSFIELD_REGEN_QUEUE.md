@@ -70,3 +70,43 @@ across every image; prefer wide or hands-and-task framing; absolutely no text in
 6. "Moraine Lake, Banff, Canada, turquoise water and peaks at sunrise, no people, photorealistic"
    -> sw_canada_1.jpg  (used on the honest 'CLOSED for SA passports' card)
 After generation: run media_push.bat (section 1b ships them, hash-gated).
+
+## 6. HIGH — Dossier persona-journey photos (12 images, ~24 credits) · SAW-4, David 23 Aug
+Model Nano Banana Pro, aspect 3:2, higgsfield.ai/ai/image. Downloads land in MarketSquare\_incoming
+(GRANT-KILL-1); claim = mv to assets/studywork/ with the exact names below, then
+`python3 scripts/build_dossier_pdf.py` re-embeds them and media_push.bat [1b] ships them.
+PERSONA CONSISTENCY: generate image 1 of each set first, then reference-chain ("the SAME young
+woman/man") for the rest. Parity rule RUL-018/SO-2: clean, well-kept clothing, identical dignity
+standard, faces natural or angled away; absolutely no text anywhere in any image.
+
+LERATO SET — "a young South African woman, 18, natural hair, smart navy jacket over white tee":
+1. "...at an airport departures hall with a silver suitcase and boarding pass in hand, looking up at
+   the departures board, warm morning light, photorealistic" -> sw_hu_1_airport.jpg
+2. "Aerial view through an aircraft window over Budapest at golden hour, the Danube curving past the
+   Parliament building far below, wingtip in frame, photorealistic" -> sw_hu_2_aerial.jpg
+3. "The SAME young woman arriving at a grand European university entrance with her suitcase, autumn
+   trees, morning light, seen from behind at three-quarter angle, photorealistic" -> sw_hu_3_arrival.jpg
+4. "Historic European university courtyard with students crossing between lectures, autumn morning,
+   warm stone facades, photorealistic" -> sw_hu_4_campus.jpg
+5. "Budapest Chain Bridge and Parliament across the Danube at dusk, lamps just lit, seen from the
+   embankment, photorealistic" -> sw_hu_5_city.jpg
+6. "Interior of Budapest Great Market Hall, produce stalls under the iron roof, morning shoppers,
+   photorealistic" -> sw_hu_6_life.jpg
+
+PIETER SET — "a young South African man, early twenties, short beard, clean olive work shirt":
+7. "...at an airport departures hall with a canvas duffel bag, work gloves tucked in the side pocket,
+   looking at the departures board, photorealistic" -> sw_us_1_airport.jpg
+8. "Aerial view through an aircraft window over the American Midwest, a vast quilt of green and gold
+   crop circles and section-line roads, late afternoon, photorealistic" -> sw_us_2_aerial.jpg
+9. "The SAME young man greeted with a handshake at a farm gate by an older farmer in a clean plaid
+   shirt, white pickup truck behind, both faces angled away, golden hour, photorealistic" -> sw_us_3_arrival.jpg
+10. "A modern green combine harvesting a vast cornfield at golden hour, dust glowing, flat horizon,
+    photorealistic" -> sw_us_4_farm.jpg
+11. "Small American Midwest town main street with a tall white grain elevator at the end of the
+    street, pickup trucks, summer evening, photorealistic" -> sw_us_5_town.jpg
+12. "A farmstead porch at dusk, work boots by the door, distant silos against an orange sky,
+    photorealistic" -> sw_us_6_life.jpg
+
+MAP SNAPSHOTS (no generation - Chrome screenshots): open /static/studywork_hu_map.html and
+_us_map.html (or the local files), all layers on, screenshot -> sw_hu_mapshot.jpg / sw_us_mapshot.jpg
+into assets/studywork/, rebuild PDFs.
