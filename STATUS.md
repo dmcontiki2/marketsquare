@@ -28,6 +28,54 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+## 2026-08-23 — SAW-5: placement lane ready; launch posture settled
+Engine dark for launch (RUL-046); teaser is the surface. 9 email templates staged + manifested.
+Photos: 12/12 done + embedded. Awaiting David: TSL deploy, media_push, agency target list to invite.
+
+## 2026-08-23 — SAW-4: photo/map machinery ready, generation blocked on extension
+Maps built + linked; PDF embed machinery live; 12 prompts queued. One human step: connect the
+Claude-in-Chrome extension, then any session can run the generation end-to-end (runbook + §6).
+
+## 2026-08-23 — SAW-4 photo run COMPLETE (12/12)
+All dossier photos generated (24 credits), claimed, and embedded — both example PDFs now carry the
+persona journey strips and surroundings (5pp / 6pp). Map snapshots follow the next deploy (one
+screenshot each + rebuild + media_push). Ship state: code deploy (teaser v2, maps) + media_push
+(12 jpgs + 2 PDFs) = RG-0158 stays green, RG-0159/0160/0161 go READY TO LOCK.
+
+## 2026-08-23 — SAW-3: example dossier PDFs ready
+Two full house-format example dossiers built + QC'd; generator = P4 prototype. Ship needs BOTH
+lanes: next code deploy (teaser links) + a media_push run (PDFs). RG-0160 OPEN polices it.
+
+## 2026-08-23 — SAW-2 done: both worked examples + spec on disk, 5T canon
+Teaser now carries study + work examples (RUL-043); spec at STUDYWORK_DOSSIER_SPEC.md (P1 done,
+P2 data_study is next build). Videos shelved full-length items. Photos: Higgsfield queue §5, media
+lane [1b] ready. To David: deploy timing, agency outreach, video unshelve.
+
+## 2026-08-23 — Founders Badge parked (RUL-047); placement outreach re-based
+Badge copy gone from every customer surface; machinery dormant; D16 holds the future occasion.
+Placement invite now genuinely placement-specific. All templates ride the next deploy.
+
+## 2026-08-23 — DW-061 closed, DW-058 fixed-unverified
+
+FEA baseline refreshed attended (bat v2), re-check ok/alerts[]. Register updated in
+prose + JSON. Remaining open loops: DW-029/057 (ten burnt credentials — vendor
+dashboards), DW-058 auto-closes on next clean host-side drift read. Ledger: 12 open.
+
+## 2026-08-23 — post-deploy verification (attended)
+
+Deploy ref published by David (74ab420); probed: deploy==HEAD, /health 200, ledger
+green 0 REGRESSED. RG-0154 and RG-0158 promoted to LOCKED. DW-058 substance closed
+(commits in, deploy live, server runs new code) — formal close on next host-side
+deploy_drift clean read. DW-061 will re-alert on this deploy; needs on-box
+--update-baseline. 12 ledger entries honestly open.
+
+- AGENCY-WAVE-1 shipped: agency onboarding audit gaps RG-0163/0164/0165 all CLOSED and
+  LOCKED same day. Agencies now have a one-click console landing (signin+org chain),
+  wave-prep link minting, an admin console card in My Space, honest three-lane outreach
+  copy in all three recruited-vertical templates, and a sendable Estate Agents lane in
+  the n8n wave. Wave-day checklist: AGENCY_WAVE_RUNBOOK.md. Preconditions to send:
+  gate-down (29 Aug) + n8n re-import + David's send (RUL-046).
+
 ## 2026-08-23 — maintenance-loop (scheduled)
 
 Quiet run. Queue 0/0/0 (new/fix-shipped/verified this run). Ledger green before and

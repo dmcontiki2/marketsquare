@@ -1,3 +1,154 @@
+## 2026-08-23 — SAW-5: placement-agency vertical + 8-email onboarding; engine stays dark for launch (RUL-046)
+David's launch-risk instinct confirmed as ruling: teaser-only surface for soft launch, the 5T engine
+builds dark behind studywork_live and flips post-golden-set (a dossier that misquotes a visa fact in
+launch week wounds the trust axis we sell). New agency vertical: PLACEMENT (J-1 providers, cruise
+recruiters, H-2A recruiters, education consultancies). Built: placement_agency_outreach.html (house
+skeleton, farm-gate hero from the generated set) + placement_onboarding/onboard_1..8.html + SEQUENCE.md
+(Day 0-18 cadence; email 5 attaches both example dossier PDFs; email 6 carries the honesty rules —
+no guaranteed visas, no hidden fees, dated facts). 9 manifest rows; RG-0162 OPEN; RUL-046 checked
+green. Outreach sending stays David's.
+
+## 2026-08-23 — SAW-4: dossier visual language — persona photo arc + layered surroundings maps (RUL-045)
+David: Higgsfield photos of both personas (airport / aerial over the end city / arrival) + surroundings
++ 'a map of the surrounding with our typical map layers'. Landed: 12 persona-consistent prompts queued
+(HIGGSFIELD_REGEN_QUEUE §6, ~24 credits, parity rule encoded; downloads to _incoming per GRANT-KILL-1);
+two layered Leaflet maps (HU: journey/campuses/student life/smart alternatives; US: journey/farm belt/
+town life/seasons) with ts_demo_banner includes, popup photos wired to the same assets, manifest rows,
+teaser links; PDF template gained photos + mapshot sections (render when assets exist, silent when not).
+RG-0161 OPEN. BLOCKED ONE STEP: the generation run needs the Claude-in-Chrome extension, not connected
+this session — one click (open the Claude side panel in Chrome); then: date +%s floor, generate 12,
+mv from _incoming to assets/studywork, screenshot both maps to sw_*_mapshot.jpg, python3
+scripts/build_dossier_pdf.py, media_push.
+
+## 2026-08-23 — SAW-3: two full example dossier PDFs + the template generator (RUL-044)
+David: every Feature carries actual examples; dossiers in the house PDF format, every detail covered.
+Built scripts/build_dossier_pdf.py (Professional-Navy A4 template: navy/gold cover with contents,
+red AI-EXAMPLE band + every-page footer tag, gold section bars, route band flowable, verdict chips,
+zebra tables, RE-CHECK flags — THE P4 PROTOTYPE of the live dossier engine) + dossier_examples.py.
+Two dossiers (4pp each, visually QC'd page by page): Lerato/Hungary study deep-dive (plan to Sept
+2027, year-1 totals R50-95k) and Pieter/agri-graduate USA farm work (J-1 12-month window urgency,
+H-2A no-cap lane, Scam Wall, and the Afrikaner refugee pathway handled factually as ADJACENT
+PATHWAY — NOT A WORK ROUTE). PDFs in assets/studywork (media lane [1b] + pdf filter); teaser links
+both. RG-0160 OPEN (catches half-shipped code/media state). Facts searched + dated 23 Aug 2026.
+
+## 2026-08-23 — SAW-2: work-route example + full dossier spec; 5T confirmed (RUL-043)
+David: 5T CONFIRMED, build greenlit, second benchmark example = a young person JUST OUT OF MATRIC
+wanting a gap year of overseas work (corrected from "graduate"); videos are FULL-LENGTH quality-script
+items, SHELVED until the dossier spec is approved. Delivered: worked example 2 on the teaser ("Sipho",
+19 — five routes incl. the honest Canada CLOSED verdict; real doors: cruise via SOA/GRI/Crew Life@Sea,
+J-1 au pair (matric qualifies, 12–24mo), J-1 summer camp, H-2B with SA ON the 2026 list; scam warnings;
+real SA placement agencies named as references, not endorsements), second Leaflet map, six photo cards
+wired to /static/studywork/ (Higgsfield queue section 5 + media_push lane [1b] added — photos are an
+attended run). STUDYWORK_DOSSIER_SPEC.md + nice docx (4 stages, data_study schema, rails $1/report
+ceiling, golden honesty gate, phases P1-P5). LAUNCH_SERIES rows 8–9 SHELVED (RUL-043). RG-0158 probe
+strengthened: two labelled examples + the CLOSED verdict must survive live. Nothing deployed.
+
+## 2026-08-23 — RUL-047: Founders Badge PARKED — all customer-facing mention removed
+David's ruling: the concept wasn't completed for launch — removed everywhere, parked for one future
+once-off occasion (Christmas/Black Friday class, his date, premier-subscription injection). Cut the
+LAUNCH_SPECIAL block from all 15 outreach templates (comment-marker surgical); cleaned onboard_7 +
+SEQUENCE; re-copied marketing deck/poster builders; reissued the agency playbook docx; PRICING_CANON
+§4 carries the PARKED banner. Machinery (launch_redemption.py, env-gated routes, ms.js renderer)
+stays dormant — never minted, unreachable, and it is what the future occasion reuses. ALSO: placement
+outreach fully re-based off its travel skeleton — placement credential stack (DoEL registration,
+J-1 sponsor partnership, APSO, cruise-line official status), placement steps, journey-maps block cut,
+tour cards replaced with the two example dossiers. rulings_check RUL-047 polices re-surfacing with
+must-NOT needles. OPEN_LOOPS D16 holds the occasion decision.
+
+## 2026-08-23 — update_fea_baseline.bat: DW-061's close becomes one double-click
+
+The FEA instrument measures ON-DISK web-root files, so it runs only on the box; the
+sandbox has no SSH lane (BatchMode fails, by design). Rather than hand David a command,
+the one-shot bat pattern (add_travelpayouts_key.bat precedent): shows the current FEA
+delta for the attended eyeball the DW-061 row requires, pauses, runs --update-baseline
+at /opt/marketsquare-src via msdeploy, re-checks, and prints a flat OK / still-alerting
+verdict. ssh output piped to %TEMP% + findstr, never for /f. DW-061 closes on the next
+watch pass after a clean re-check.
+
+## 2026-08-23 — update_fea_baseline.bat v2: wrong copy targeted, guard added
+
+First run hit FileNotFoundError: the bat SSHed to the SOURCE CLONE
+(/opt/marketsquare-src), but fea_integrity_check.py resolves index.html/ms.js/ms.css
+and its baseline BESIDE ITSELF — the live instrument is the copy in the web root
+(/var/www/marketsquare, sensor.py ROOT, the one the 01:30 cron runs). v2 targets that
+copy. Second defect the run exposed: a traceback flowed through to the eyeball pause
+as if it were a delta — v2 aborts unless step 1 returns FEA JSON, so nothing is ever
+updated on garbage input. No ledger entry: first-run path slip fixed same session, and
+the only assertable form is a static tautology of the fix; recurs -> entry.
+
+## 2026-08-23 — DW-061 CLOSED, DW-058 FIXED-UNVERIFIED: the deploy's tail is tied off
+
+David ran update_fea_baseline.bat v2 attended. Delta eyeballed at probe grade first:
+index (415,388 B) and ms.css (131,924 B) byte-identical repo<->origin; ms.js origin
+identical to the HEAD blob (worktree delta was CRLF checkout only); v509->518 /
+v373->382 = the 21+23 Aug deploys; +3,035 B edge delta = known CF injection. Baseline
+refreshed on the box; re-check PROBED status ok, alerts []. DW-061 CLOSED in both
+OPEN_ITEMS.md and .json (kept in line per the 21 Aug reconciliation lesson). DW-058
+moved to FIXED-UNVERIFIED — deploy published and probed live, formal CLOSE when the
+host-side deploy_drift re-passes. No ledger entry for the baseline refresh: the FEA
+alert was the instrument working correctly on a legit deploy, not a defect; an
+'FEA reads ok' assertion would rot on every deploy by design.
+
+## 2026-08-23 — DW-029 + DW-057 CLOSED: the rotation finished Friday; the watch was never told
+
+David caught it: 'I thought we fixed the credential burns yesterday' — he was right, and this
+morning's report repeated 'ten still burnt' from the stale DW-029 row anyway. STATUS-TRUTH
+violation, mine: a READ (watch row last edited before Friday's final batch) was voiced as fact
+without probing, when SECRETS_REGISTER.md ('Still burnt' table empty) and RG-0146 (LOCKED,
+green today) were one command away. Rows now CLOSED in prose + JSON with evidence. Residual
+that remains genuinely open: FOUNDERS_ID_SALT decision (Claude's call, own open ledger entry).
+
+## 2026-08-23 — deploy verified; RG-0154 + RG-0158 promoted to LOCKED
+
+David published the deploy ref (74ab420) in an attended session. Verified from the
+sandbox: origin/deploy == HEAD, 0 ahead; /health 200; ledger 151 entries, 139 holding,
+0 REGRESSED. Both entries that were waiting on this deploy now pass live and were
+promoted OPEN -> LOCKED same-session per the ledger rule: RG-0154 (session badge
+derived + dated — SESSION-COUNTER-1 + migration 030 live; its passing live probes also
+prove the server runs the new bea_main.py, closing the drift substance of DW-058) and
+RG-0158 (SAW teaser live with both honesty labels + index banner — locked the morning
+after, exactly as its ref predicted). check_deploy_drift.py itself needs SSH (no host
+key in sandbox) — the host-side daily check will read clean and close DW-058 formally.
+Expected knock-on: DW-061's FEA sensor will re-alert on this deploy (deploy-not-tamper
+pattern); closes with --update-baseline on the box, attended.
+
+## 2026-08-23 — AGENCY-WAVE-1: the agency email wave is real — console links, wave lane, honest templates (RG-0163/64/65 CLOSED)
+
+- **RG-0164 (console landing)**: create_agency now emails the admin a magic console
+  link (?signin=<jwt>&agency=1); new idempotent `POST /agencies/wave-prep` pre-creates
+  scraped agencies (verified=0) and mints 14-day console links in batch WITHOUT
+  emailing (the outreach email is the first contact); ms.js signin success chains
+  straight into the org console (agency/operator/dealer skins) and the standalone
+  org-param handlers skip when signin is present — the 150ms race is closed; My Space
+  now shows an "Agency console" card to any real agency admin (by-admin resolved) —
+  until now the only doors were the superuser OPS card and a naked deep link.
+- **RG-0165 (honest templates)**: all three recruited-vertical outreach templates
+  (agency, travel_agency, cars_dealer) replace the solo-seller 4-step story with the
+  three-lane block — concierge reply / 5-min console self-serve / IT import guide —
+  plus the drafts+50/100-gate safety line and Import Guide + Agents-as-a-Service links.
+- **RG-0163 (wave lane)**: n8n payload node maps Estate Agents/Agency → agency_outreach,
+  sends prospect.magic_link when present (console links from wave-prep) and DROPS
+  agency prospects without one (a console CTA that can't open a console is a lie);
+  citylauncher carries the lane map. Live half asserts /agencies/wave-prep is deployed.
+- All three promoted OPEN → LOCKED (fixed_on 2026-08-23). Wave-day checklist:
+  AGENCY_WAVE_RUNBOOK.md (gate-down precondition, n8n re-import, reply-to, dry-run).
+
+## 2026-08-23 — AGENCY-AUDIT-1: agency onboarding audited for the soft-launch email wave
+
+- Audited the full agency onboarding surface ahead of the scraped-agency email wave
+  (David's ask, 23 Aug). VERDICT: both lanes exist and are live — API import
+  (POST /agencies/{id}/agents/bulk roster + /agencies/{id}/import adverts, per-advert
+  report, anonymisation + photo scan + 50/100 publish gate) AND self-serve console
+  (invite agent, CSV/JSON bulk add, seat tiers, caps, remove, filters). Import guide,
+  Agents-as-a-Service page and Agency Playbook PDF all probed live behind the gate.
+- Three OPEN ledger entries added for the gaps that block the wave being effortless:
+  RG-0163 (no Agency lane in citylauncher/n8n — agency_outreach.html is deployed but
+  nothing can send it), RG-0164 (?signin= token never chains to ?agency=1 — combined
+  links race, and create_agency emails the admin nothing), RG-0165 (agency_outreach
+  "how it works" steps describe the solo-seller flow, not the console/import lanes).
+- Deliverable: AGENCY_ONBOARDING_AUDIT — nice.docx (findings, evidence grades, the
+  three-lane "effortless" email copy ready to paste once RG-0164 lands).
+
 ## 2026-08-23 — Third-party launch sweep: secrets rotation CONFIRMED CLEAR; EULA v1.15 live; deploy debt is the remaining gate
 
 **TPSWEEP-3** (scheduled `pre-soft-launch-third-party-check`, unattended). 6 days to soft launch — verdict AMBER.
