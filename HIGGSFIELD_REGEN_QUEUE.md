@@ -110,3 +110,12 @@ PIETER SET — "a young South African man, early twenties, short beard, clean ol
 MAP SNAPSHOTS (no generation - Chrome screenshots): open /static/studywork_hu_map.html and
 _us_map.html (or the local files), all layers on, screenshot -> sw_hu_mapshot.jpg / sw_us_mapshot.jpg
 into assets/studywork/, rebuild PDFs.
+
+### §6 STATUS: DONE 23 Aug 2026 — all 12 generated, claimed, embedded
+Run by Claude via Chrome extension (Nano Banana Pro, 3:2, 24 credits). Persona chaining via the
+Reference button worked (hu_3 from hu_1; us_3 from us_1). All 12 claimed from _incoming to
+assets/studywork/*.jpg (PNG->JPG q88, 1264x848) and embedded in both dossier PDFs same session.
+STILL PENDING: the two map snapshots (sw_hu_mapshot.jpg / sw_us_mapshot.jpg) — extension cannot
+open file:// pages, so screenshot the LIVE maps after the next deploy, drop into assets/studywork,
+run scripts/build_dossier_pdf.py, media_push. RG-0161 tracks the maps; the PDFs render without
+them gracefully until then.
