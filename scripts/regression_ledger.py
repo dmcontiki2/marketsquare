@@ -8404,7 +8404,7 @@ def rg_studyabroad_teaser_live():
 
 @entry("RG-0159", "The WORK-route worked example is live: second labelled AI-example plus the "
                   "honest Canada CLOSED verdict",
-       OPEN, scope="/static/studyabroad_teaser.html v2 (SAW-2). CLASS: sibling increment of "
+       LOCKED, fixed_on="2026-08-23", scope="/static/studyabroad_teaser.html v2 (SAW-2). CLASS: sibling increment of "
              "RG-0158 -- the LOCKED entry asserts the v1 surface; this asserts the RUL-043 "
              "additions: a SECOND labelled example (matric gap-year work route) and the honest "
              "CLOSED verdict. Softening the Canada verdict to sell the dream is the defect.",
@@ -8460,7 +8460,7 @@ def rg_dossier_pdfs_live():
 
 
 @entry("RG-0161", "Both surroundings maps serve live with their layers, demo banner and teaser links",
-       OPEN, scope="/static/studywork_hu_map.html + studywork_us_map.html (SAW-4, RUL-045). "
+       LOCKED, fixed_on="2026-08-23", scope="/static/studywork_hu_map.html + studywork_us_map.html (SAW-4, RUL-045). "
              "CLASS: the layered map is part of the dossier's visual language -- a dead map link "
              "or a demo map without its DEMO banner (RUL-040) is the defect.",
        ref="SAW-4, 23 Aug 2026. OPEN until the next code deploy ships the pages + teaser links. "
@@ -8489,7 +8489,7 @@ def rg_studywork_maps_live():
 
 
 @entry("RG-0162", "The placement-agency lane's nine templates ship with the deploy -- outreach + all 8 onboarding emails",
-       OPEN, scope="orchestrator/v2/templates/placement_agency_outreach.html + placement_onboarding/onboard_1..8.html "
+       LOCKED, fixed_on="2026-08-23", scope="orchestrator/v2/templates/placement_agency_outreach.html + placement_onboarding/onboard_1..8.html "
              "on the server (SAW-5, RUL-046). CLASS: an onboarding SEQUENCE with a missing email is a broken funnel "
              "-- eight means eight.",
        ref="SAW-5, 23 Aug 2026. OPEN until the next deploy ships the manifest rows. Server-side presence is probed "
