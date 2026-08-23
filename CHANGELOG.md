@@ -1,3 +1,27 @@
+## 2026-08-23 — Orchestration Email Templates page refreshed to the current wave set
+
+- email_templates.html (ops dashboard, /orchestrator/v2/) rebuilt: 15 outreach
+  templates (placement_agency_outreach added to the agency lane) plus a new
+  Placement Onboarding section with all 8 sequence emails and their Day 0-18
+  cadence (SAW-5/RUL-046). Every card's badges are now COMPUTED from the template
+  files on disk (unsubscribe, launch-special absence per RUL-047, {{magic_link}}
+  CTA, three-lane onboarding) instead of hand-painted — the stale green "launch
+  special" chips (all 14 were false since RUL-047) and the ambiguous "no magic
+  link"/"no Ruby Spark" chips are gone. Header documents the AGENCY-WAVE-1
+  console-link rule and the wave-day runbook. Metadata dated + method-stamped.
+
+## 2026-08-23 — AGENCY-WAVE-1 SHIPPED LIVE + E2E-proven; three SAW entries promoted
+
+- Release fd22db5 published via ms-deploy (all gates green after two fixes: wave-prep
+  SQL made portable, fault widget wired into the three SAW pages). Live validation:
+  /health ok · live ms.js carries AGENCY-LINK-1 · POST /agencies/wave-prep works on
+  live (idempotent, Kronberg agency 1) · minted console link opened in Chrome landed
+  signed-in INSIDE the agency console. Ledger after: 158 entries, 0 regressed,
+  RG-0163/0164/0165 LOCKED and holding.
+- RG-0159/0161/0162 (SAW lane) first passed with this release — promoted to LOCKED
+  per the READY-TO-LOCK rule. RG-0160 stays OPEN: the example-dossier PDFs ride the
+  media lane (media_push.bat), which has not run.
+
 ## 2026-08-23 — SAW-5: placement-agency vertical + 8-email onboarding; engine stays dark for launch (RUL-046)
 David's launch-risk instinct confirmed as ruling: teaser-only surface for soft launch, the 5T engine
 builds dark behind studywork_live and flips post-golden-set (a dossier that misquotes a visa fact in
