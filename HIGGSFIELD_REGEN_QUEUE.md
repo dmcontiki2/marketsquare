@@ -51,3 +51,22 @@ Sets: tutors, svctech, svccas, advexp, advacc, collect — two extra angles each
 to each set's main. Purpose: literal 100 listing-quality on every exemplar.
 
 After any regen: scp to /var/www/marketsquare/static/super/ + chmod 644 + purge cache.
+
+
+## 5. MEDIUM — Study & Work Abroad example photos (6 images, ~12 credits) · SAW-2, RUL-043
+Save all to assets/studywork/ (new media lane section [1b] in media_push.bat -> /static/studywork/).
+Representation parity rule (RUL-018/SO-2) applies: clean, well-kept workwear, identical standard
+across every image; prefer wide or hands-and-task framing; absolutely no text in any image.
+1. "Young crew member in crisp white cruise-line service uniform setting a table in an elegant
+   ship dining room, ocean through the windows, photorealistic" -> sw_cruise_1.jpg
+2. "Large modern cruise ship leaving harbour at golden hour, aerial three-quarter view,
+   photorealistic" -> sw_cruise_2.jpg
+3. "Wooden canoes on a calm New England summer-camp lake at dawn, pine forest, camp cabins on
+   the shore, photorealistic" -> sw_camp_1.jpg
+4. "Ski-resort base village in Colorado in fresh snow, lifts running, staff member in neat resort
+   jacket clearing the walkway, wide shot, photorealistic" -> sw_h2b_1.jpg
+5. "Sunlit American suburban family kitchen, young au pair and host parent preparing lunchboxes
+   together, faces turned away, warm documentary style, photorealistic" -> sw_aupair_1.jpg
+6. "Moraine Lake, Banff, Canada, turquoise water and peaks at sunrise, no people, photorealistic"
+   -> sw_canada_1.jpg  (used on the honest 'CLOSED for SA passports' card)
+After generation: run media_push.bat (section 1b ships them, hash-gated).

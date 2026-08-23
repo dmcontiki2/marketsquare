@@ -44,7 +44,7 @@ tr:nth-child(even) td{background:rgba(47,84,150,.08)}
 .vl{background:rgba(185,28,28,.14);color:#ff9b9b;border:1px solid var(--red)}
 .rc{display:inline-block;background:rgba(197,90,17,.15);color:#f0a35e;border:1px solid var(--amber);font-size:10px;font-weight:800;letter-spacing:.5px;border-radius:99px;padding:1px 7px;margin-left:5px;vertical-align:1px}
 .src{font-size:10.5px;color:#7288a8;margin-top:2px}
-#map{height:380px;border-radius:12px;border:1px solid var(--line);margin:10px 0}
+#map,#map2{height:380px;border-radius:12px;border:1px solid var(--line);margin:10px 0}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:640px){.grid2{grid-template-columns:1fr}}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
@@ -58,6 +58,11 @@ tr:nth-child(even) td{background:rgba(47,84,150,.08)}
 .hand-box p{font-size:13.5px;color:#d7e2f5}
 .foot{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);font-size:11px;color:#7288a8;line-height:1.6}
 .notyours{background:var(--card2);border:1px dashed var(--line);border-radius:10px;padding:11px 14px;font-size:12.5px;color:var(--mut);margin-top:14px}
+.ph-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0}
+.ph{background:var(--card2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.ph img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#0a1626}
+.ph .cap{font-size:11px;color:var(--mut);padding:6px 8px}
+.closedtag{background:#3a1214;color:#ff9b9b;border:1px solid var(--red);font-weight:800;font-size:11px;letter-spacing:.5px;padding:3px 9px;border-radius:99px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -81,9 +86,9 @@ tr:nth-child(even) td{background:rgba(47,84,150,.08)}
   </div>
 
   <h2><span class="bar">▍</span> Feature video</h2>
-  <div class="video"><div class="play">▶</div><b>Study &amp; Work Abroad — know before you go</b><span>Arriving with the feature. Watch this space.</span></div>
+  <div class="video"><div class="play">▶</div><b>Study Abroad — know before you go</b><span>Full-length feature video with a quality script — in planning, arriving with the feature.</span></div>
 
-  <h2><span class="bar">▍</span> A worked example</h2>
+  <h2><span class="bar">▍</span> Worked example 1 — the study route</h2>
   <div class="exlabel"><b>AI-GENERATED EXAMPLE DOSSIER — NOT A REPORT FOR A REAL USER.</b> An AI-made example of the benchmark for this feature, for one imagined student. The facts in it are real, sourced and dated; anything that changes often is flagged <span class="rc" style="margin-left:2px">RE-CHECK</span>. Your dossier will be built fresh, for you.</div>
 
   <div class="persona"><div class="av">👩🏽‍🎓</div><div><b>&ldquo;Lerato&rdquo;, 18 — Pretoria East</b><p>Matric average 78% (Maths 82%). Dream: a BSc Computer Science abroad. Family budget: about R150,000 a year. Wants quality, safety, and the right to work after graduating.</p></div></div>
@@ -125,6 +130,68 @@ tr:nth-child(even) td{background:rgba(47,84,150,.08)}
 
   <div class="notyours">This example is deliberately honest: two of Lerato&rsquo;s five routes score LOW on her budget. A dossier that only says yes is an advert. Ours is preparation.</div>
 
+  <h2><span class="bar">▍</span> Worked example 2 — the work route</h2>
+  <div class="video"><div class="play">▶</div><b>Work Abroad — the matric gap year, honestly</b><span>Full-length feature video with a quality script — in planning, arriving with the feature.</span></div>
+
+  <div class="exlabel" style="margin-top:16px"><b>AI-GENERATED EXAMPLE DOSSIER — NOT A REPORT FOR A REAL USER.</b> A second AI-made example of the benchmark, for one imagined school-leaver. Real facts, sourced and dated; changeable ones flagged <span class="rc" style="margin-left:2px">RE-CHECK</span>.</div>
+
+  <div class="persona"><div class="av">🧑🏾</div><div><b>&ldquo;Sipho&rdquo;, 19 — Centurion</b><p>He&rsquo;s just out of matric — no varsity training yet — and wants one year of overseas work — to earn, to see the world, and to come home knowing what direction to choose. Family can help with about R40,000 to launch. First idea: &ldquo;America or Canada&rdquo;.</p></div></div>
+
+  <h2 style="font-size:17px"><span class="bar">▍</span> Sipho&rsquo;s five routes — including the honest no</h2>
+  <table>
+    <tr><th>Route</th><th>Cost to launch (est.)</th><th>What it really is</th><th>Viability</th></tr>
+    <tr><td><b>🚢 Cruise ships</b> — the classic SA lane</td><td>≈ R15–25k (STCW safety course, medicals, documents)<div class="src">course + document costs vary by provider · checked 23 Aug 2026<span class="rc">RE-CHECK</span></div></td><td>4–8&nbsp;month paid contracts, food and cabin included — SA has a real recruitment industry: SOA (official MSC agency for Southern Africa), GRI (est. 1999), Crew Life@Sea. Legitimate agencies charge candidates NO fee.<div class="src">agency-published requirements · checked 23 Aug 2026</div></td><td><span class="v vh">HIGH</span></td></tr>
+    <tr><td><b>🇺🇸 USA — Au Pair (J-1)</b></td><td>≈ R25–40k (programme, visa, flights — much offset by the programme)<div class="src">sponsor-agency published costs · checked 23 Aug 2026<span class="rc">RE-CHECK</span></div></td><td>Ages 18–26, matric qualifies. 12&nbsp;months with a vetted host family, extendable to 24; weekly stipend + room, board and a study allowance. Needs childcare references and a driver&rsquo;s licence. Only through State-Department-designated sponsor agencies — SA lanes exist.<div class="src">J-1 au pair programme rules · checked 23 Aug 2026</div></td><td><span class="v vh">HIGH — with refs + licence</span></td></tr>
+    <tr><td><b>🇺🇸 USA — Summer camp (J-1)</b></td><td>≈ R20–30k, largely offset by camp salary<div class="src">programme-published · checked 23 Aug 2026<span class="rc">RE-CHECK</span></div></td><td>The classic SA gap-year starter: 9–12 weeks as a camp counselor + a travel window after. 18+, youth-work experience helps. A summer, not a year — pairs well with au pair or cruise for the rest of it.</td><td><span class="v vh">HIGH — but short</span></td></tr>
+    <tr><td><b>🇺🇸 USA — Seasonal work (H-2B)</b></td><td>Employer-carried in the main; beware anyone selling &ldquo;guaranteed visas&rdquo;</td><td>South Africa IS on the 2026 H-2B eligible list (82 countries). Real seasonal jobs — ski resorts, hospitality, landscaping — but the EMPLOYER petitions, and an annual cap applies. Comes through employers and licensed recruiters only.<div class="src">DHS/USCIS eligible-country list, Jan 2026 · checked 23 Aug 2026<span class="rc">RE-CHECK — list is re-issued annually</span></div></td><td><span class="v vm">MEDIUM — cap + sponsorship timing</span></td></tr>
+    <tr><td><b>🇨🇦 Canada — working holiday</b></td><td>—</td><td>The honest no: Canada&rsquo;s working-holiday programme (IEC) has no working-holiday agreement with South Africa, and matric-only employer permits are unrealistic. The dossier says so — and shows the later doors: study route, or skills built during the gap year.<div class="src">IRCC IEC partner-country list · checked 23 Aug 2026<span class="rc">RE-CHECK</span></div></td><td><span class="closedtag">CLOSED for SA passports</span></td></tr>
+  </table>
+
+  <div id="map2"></div>
+  <div class="src" style="margin-top:-4px">Sipho&rsquo;s map: green and amber pins are real doors; the grey-red pin is the honest no. In the live feature every pin opens photos, typical earnings and the agency lane behind it.</div>
+
+  <div class="ph-row">
+    <div class="ph"><img src="/static/studywork/sw_cruise_1.jpg" alt="" loading="lazy" onerror="this.closest('.ph').style.display='none'"><div class="cap">Dining-room crew — where thousands of SA contracts start</div></div>
+    <div class="ph"><img src="/static/studywork/sw_cruise_2.jpg" alt="" loading="lazy" onerror="this.closest('.ph').style.display='none'"><div class="cap">4–8 month contracts, cabin and meals included</div></div>
+    <div class="ph"><img src="/static/studywork/sw_camp_1.jpg" alt="" loading="lazy" onerror="this.closest('.ph').style.display='none'"><div class="cap">New England summer camp — the classic starter</div></div>
+    <div class="ph"><img src="/static/studywork/sw_h2b_1.jpg" alt="" loading="lazy" onerror="this.closest('.ph').style.display='none'"><div class="cap">Colorado ski season — H-2B seasonal work</div></div>
+    <div class="ph"><img src="/static/studywork/sw_aupair_1.jpg" alt="" loading="lazy" onerror="this.closest('.ph').style.display='none'"><div class="cap">Au pair year — stipend, family, study allowance</div></div>
+    <div class="ph"><img src="/static/studywork/sw_canada_1.jpg" alt="" loading="lazy" onerror="this.closest('.ph').style.display='none'"><div class="cap">Banff can wait — the dossier shows the later doors</div></div>
+  </div>
+
+  <div class="grid2" style="margin-top:8px">
+    <div class="panel">
+      <h3>💡 Opportunities the dossier surfaces</h3>
+      <ul>
+        <li>Cruise contracts pay in USD/EUR with food and lodging included — the rare gap year you come home from with savings.</li>
+        <li>The au pair year extends to a maximum of 24 months — one application, up to two years of growth.</li>
+        <li>Summer camp + au pair or cruise stack into a full, funded year.</li>
+        <li>Every route builds references and work discipline — the direction decision gets made with money in the bank and the world seen.</li>
+      </ul>
+    </div>
+    <div class="panel risk">
+      <h3>⚠️ Risks it warns about — plainly</h3>
+      <ul>
+        <li>There is no &ldquo;walk-in work visa&rdquo; for the USA. Anyone selling one is selling a scam.</li>
+        <li>Legitimate cruise recruiters charge candidates nothing. A big upfront &ldquo;placement fee&rdquo; is a red flag.</li>
+        <li>Passports and apostilled police clearances take weeks — start the paperwork before the interview, not after.</li>
+        <li>H-2B is capped annually — timing beats enthusiasm.</li>
+        <li>A stipend is not a salary: the au pair year is rich in growth, modest in savings. The dossier does that maths honestly.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:12px">
+    <h3>🤝 The real placement lane (examples, not endorsements)</h3>
+    <ul>
+      <li>Cruise: Shosholoza Ocean Academy — the official MSC Cruises agency for Southern Africa; GRI — Gourmet Recruitment International, placing since 1999, no candidate fees; Crew Life@Sea, Cape Town.</li>
+      <li>USA programmes: State-Department-designated J-1 sponsor agencies, reached through established SA agents.</li>
+    </ul>
+    <div class="src" style="margin-top:6px">MarketSquare is not affiliated with these organisations. With the live feature, your dossier ends in an introduction to a registered placement agency on MarketSquare — that introduction is what your 5 Tuppence buys, together with the dossier itself.</div>
+  </div>
+
+  <div class="notyours">One of Sipho&rsquo;s five routes is flatly CLOSED — because an honest no in week one is worth more than a maybe that eats a year. Preparation, not promises.</div>
+
   <div class="hand-box">
     <h3>Then — the introduction that matters</h3>
     <p>MarketSquare will never replace education and immigration professionals, and says so. Your dossier ends with an introduction to a registered agency on MarketSquare who takes it and builds your actual application plan — documents, deadlines, submissions, guidance. We prepare you; they plan with you. MarketSquare never processes tuition, visa fees or bookings.</p>
@@ -154,6 +221,25 @@ tr:nth-child(even) td{background:rgba(47,84,150,.08)}
     L.circleMarker(p.ll,{radius:7,color:col[p.v],fillColor:col[p.v],fillOpacity:.95}).addTo(map)
       .bindPopup('<b>'+p.name+'</b><br>Viability: '+p.v);
     if(p.ll[0]!==home[0]) L.polyline([home,p.ll],{color:col[p.v],weight:1.6,opacity:.55,dashArray:'6 7'}).addTo(map);
+  });
+})();
+(function(){
+  var m=L.map('map2',{scrollWheelZoom:false}).setView([25,-40],3);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors',maxZoom:18}).addTo(m);
+  var home=[-25.86,28.19];
+  var col={HIGH:'#538135',MEDIUM:'#c55a11',CLOSED:'#7f1d1d'};
+  var pts=[
+    {ll:[25.77,-80.19],name:'🚢 Miami — cruise homeport',v:'HIGH'},
+    {ll:[40.06,-74.41],name:'🇺🇸 New Jersey — au pair year',v:'HIGH'},
+    {ll:[44.31,-69.78],name:'🇺🇸 Maine — summer camp',v:'HIGH'},
+    {ll:[39.64,-106.37],name:'🇺🇸 Colorado — H-2B ski season',v:'MEDIUM'},
+    {ll:[51.18,-115.57],name:'🇨🇦 Banff — CLOSED for SA passports (no working-holiday agreement)',v:'CLOSED'}
+  ];
+  L.circleMarker(home,{radius:7,color:'#c9a227',fillColor:'#c9a227',fillOpacity:1}).addTo(m).bindPopup('<b>Home — Centurion</b>');
+  pts.forEach(function(p){
+    L.circleMarker(p.ll,{radius:7,color:col[p.v],fillColor:col[p.v],fillOpacity:p.v==='CLOSED'?.55:.95}).addTo(m)
+      .bindPopup('<b>'+p.name+'</b><br>Viability: '+p.v);
+    L.polyline([home,p.ll],{color:col[p.v],weight:1.6,opacity:p.v==='CLOSED'?.3:.55,dashArray:'6 7'}).addTo(m);
   });
 })();
 </script>

@@ -35,6 +35,9 @@ echo  ============================================================
 echo  [1/7] SUPER exemplar photos (assets\super to /static/super)...
 %SYNC% -LocalDir "%PROJECT%\assets\super" -Filter *.jpg -RemoteDir %REMOTE%/static/super -Server %SERVER%
 
+echo  [1b] Study ^& Work Abroad example photos (assets\studywork to /static/studywork)...
+if exist "%PROJECT%\assets\studywork" %SYNC% -LocalDir "%PROJECT%\assets\studywork" -Filter *.jpg -RemoteDir %REMOTE%/static/studywork -Server %SERVER%
+if exist "%PROJECT%\assets\studywork" ssh -n -o ConnectTimeout=15 %SERVER% "chmod 755 %REMOTE%/static/studywork 2>/dev/null; chmod 644 %REMOTE%/static/studywork/*.jpg 2>/dev/null; true"
 echo  [2/7] Feature/tutor videos (videos to /static/videos)...
 %SYNC% -LocalDir "%PROJECT%\videos" -Filter *.mp4 -RemoteDir %REMOTE%/static/videos -Server %SERVER%
 

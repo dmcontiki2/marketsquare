@@ -1,5 +1,6 @@
 # Study & Work Abroad — know before you go (feature teaser)
-Target: 75s · YouTube + in-app clip (captions burned in, mobile-muted rule) · status: spiel-ready
+STATUS: SHELVED (RUL-043, 23 Aug 2026) — David: FULL-LENGTH video with a quality script, not a short. This 75s spiel is the BASE to expand from once the dossier spec is approved; do not render it as-is.
+Original target: 75s · YouTube + in-app clip (captions burned in, mobile-muted rule) · status: spiel-ready
 
 ## Spiel (voice, ~75s)
 Every year thousands of young South Africans dream of studying or working overseas —

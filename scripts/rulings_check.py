@@ -110,6 +110,16 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-043": [
+   # 5T is canon; both benchmark examples exist on the teaser; the work example is
+   # honest about Canada being closed; videos are shelved full-length items, not
+   # rendered shorts. A session that ships a 10s short, silently unshleves, or
+   # softens the Canada verdict to sell the dream trips these needles.
+   ("RULINGS.md", ["5T CONFIRMED", "FULL-LENGTH AND SHELVED"], []),
+   ("studyabroad_teaser.html", ["just out of matric", "no working-holiday agreement"], []),
+   ("LAUNCH_SERIES.md", ["SHELVED (RUL-043)"], []),
+   ("STUDYWORK_DOSSIER_SPEC.md", ["5 Tuppence", "full-length"], []),
+ ],
  "RUL-042": [
    # Positioning IS the ruling: preparation is ours (actuals-based), the PLAN is the
    # agency's, and partner agencies are first-class in the design. If a future spec

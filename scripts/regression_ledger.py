@@ -8393,6 +8393,12 @@ def rg_studyabroad_teaser_live():
         out.append((FAIL, "AI-example label missing -- the worked example could read as a real report"))
     if "NOT A REPORT FOR A REAL USER" not in page:
         out.append((FAIL, "the 'not a report for a real user' wording is gone"))
+    if page.count("AI-GENERATED EXAMPLE DOSSIER") < 2:
+        out.append((FAIL, "fewer than TWO labelled worked examples -- the work-route example "
+                          "(RUL-043) is missing or unlabelled"))
+    if "CLOSED for SA passports" not in page:
+        out.append((FAIL, "the honest Canada CLOSED verdict is gone -- the work example may "
+                          "not sell a door that does not exist"))
     try:
         idx = _get("/")
         if "studyabroad_teaser.html" not in idx:
