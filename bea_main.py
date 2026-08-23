@@ -13524,9 +13524,10 @@ def agency_wave_prep(req: _AgencyWavePrep, _key: str = Depends(auth.require_api_
                                    (name, admin, "tsq_agency_" + uuid.uuid4().hex, countries))
                 aid = cur.lastrowid
                 created = True
-                conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (admin,))
-                conn.execute("INSERT OR IGNORE INTO agency_members (agency_id, agent_email, role, status, joined_at) "
-                             "VALUES (?,?, 'admin','active', strftime('%Y-%m-%dT%H:%M:%SZ','now'))", (aid, admin))
+                conn.execute("INSERT INTO users (email) VALUES (?) ON CONFLICT DO NOTHING", (admin,))
+                conn.execute("INSERT INTO agency_members (agency_id, agent_email, role, status, joined_at) "
+                             "VALUES (?,?, 'admin','active', ?) ON CONFLICT DO NOTHING",
+                             (aid, admin, datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")))
             _tok = _pyjwt.encode({"email": admin, "purpose": "signin",
                                   "exp": datetime.now(timezone.utc) + timedelta(days=days),
                                   "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
