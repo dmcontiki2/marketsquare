@@ -1728,6 +1728,37 @@ async function _agencyOrgList(){
   try{ const r=await fetch(BEA_URL+'/agencies',{headers:{'X-Api-Key':API_KEY}}); if(r.ok){ const d=await r.json(); window._tsOrgList=d.agencies||[]; } }catch(e){}
   return window._tsOrgList||[];
 }
+/* ── FRESH-1 (24 Aug 2026, David: "Three times recurring...") — the stale-tab class.
+   The deploy engine bumps the ?v= cache-buster monotonically; an OPEN tab never
+   refetches index, so new releases stay invisible until a human guesses "hard
+   refresh". The app now checks the served index every 5 minutes and offers a
+   one-tap reload. Never auto-reloads — a seller mid-listing loses nothing. ── */
+function _freshMyV(){
+  try{
+    var s=document.querySelector('script[src*="ms.js"]');
+    var m=s && s.src.match(/[?&]v=(\d+)/);
+    return m?parseInt(m[1],10):null;
+  }catch(e){ return null; }
+}
+async function _freshCheck(){
+  try{
+    var mine=_freshMyV(); if(mine===null) return;
+    var r=await fetch('/', {cache:'no-store'});
+    if(!r.ok) return;
+    var t=await r.text();
+    var m=t.match(/ms\.js\?v=(\d+)/);
+    if(m && parseInt(m[1],10)>mine && !document.getElementById('ts-fresh-bar')){
+      var d=document.createElement('div'); d.id='ts-fresh-bar';
+      d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:74px;z-index:99999;background:#0c1a2e;color:#fff;border-radius:50px;padding:10px 18px;font-size:13px;font-family:Syne,sans-serif;font-weight:700;box-shadow:0 6px 24px rgba(12,26,46,.35);cursor:pointer;display:flex;gap:10px;align-items:center;';
+      d.innerHTML='✨ A new version just shipped <span style="background:#C8873A;border-radius:50px;padding:4px 12px;">Tap to refresh</span>';
+      d.onclick=function(){ location.reload(); };
+      document.body.appendChild(d);
+    }
+  }catch(e){}
+}
+setTimeout(_freshCheck, 45000);
+setInterval(_freshCheck, 300000);
+
 function agencyOpsSwitch(id){ id=parseInt(id,10); if(!id) return; window._agencyId=id; window._tsSkinAuto=true; _renderAgency(id); }
 // ORG-SKIN-1 (24 Aug 2026, David: "each with his own example"): picking an org infers its
 // skin from the members' dominant vertical, so the two dropdowns agree by themselves.

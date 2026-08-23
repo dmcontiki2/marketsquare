@@ -8704,5 +8704,28 @@ def rg_vertical_skins():
     return out or [(INFO, "all recruited verticals carry console skins")]
 
 
+
+@entry("RG-0170", "An open tab notices a new release by itself -- the stale-tab class is closed with a one-tap refresh offer",
+       LOCKED, fixed_on="2026-08-24", scope="ms.js FRESH-1: 5-minute poll of the served index's ms.js ?v= against the "
+             "running one; a floating one-tap reload bar when a deploy landed; never auto-reloads (mid-listing input is "
+             "sacred). CLASS: three occurrences on 23-24 Aug alone -- the offline-shell first paint, the cached-shell "
+             "E2E, and David's 'nothing has changed?' -- every one was a human diagnosing staleness the app could see.",
+       ref="FRESH-1, 24 Aug 2026, born of David's 'Three times recurring...'.")
+def rg_fresh_tab():
+    out = []
+    import os as _os
+    fp = _os.path.join(REPO, "ms.js")
+    js = open(fp, encoding="utf-8", errors="replace").read() if _os.path.exists(fp) else ""
+    for needle in ("_freshCheck", "ts-fresh-bar"):
+        if needle not in js:
+            out.append((FAIL, "repo ms.js lost the freshness poller: " + needle))
+    try:
+        if "_freshCheck" not in _get("/static/ms.js"):
+            out.append((FAIL, "live ms.js does not carry FRESH-1 -- open tabs are stale-blind again"))
+    except Exception as ex:
+        out.append((FAIL, "live ms.js unreadable: %s" % repr(ex)[:60]))
+    return out or [(INFO, "open tabs self-detect new releases and offer the reload")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
