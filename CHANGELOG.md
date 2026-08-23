@@ -1,3 +1,15 @@
+## 2026-08-24 — VERT-4-1b: the four verticals' signals join the TRUST CATALOG; demo cast completed
+
+- David's comparison caught the missing half of VERT-4-1: the 15 new credential
+  signals existed in VERTICALS (badges, gates, pending queue) but NOT in
+  _CATEGORY_SIGNALS — so POST /trust-score/credential 400'd on them, ops could
+  never verify, and no trust points could ever flow. All 15 registered (Collectors /
+  Tutors / Services-Technical / new Placement group) with points matching the slots.
+- Gate strips brought to full design parity (also-scored lists complete).
+- Demo cast per David's ask: each example org gets its second persona (the
+  gate-pending variant) and member 1's gate ops-verified — so every skin shows
+  both credential states (✓ earned green, pending amber), matching the preview.
+
 ## 2026-08-24 — FRESH-1 (RG-0170): the stale-tab class is CLOSED
 
 - David: "Three times recurring..." — three times in one day an open tab hid fresh
