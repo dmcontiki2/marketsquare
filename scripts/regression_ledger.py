@@ -8092,7 +8092,7 @@ def rg_map_chips_are_measured():
 
 @entry("RG-0154", "The dashboard session number is DERIVED from session evidence and carries its "
                   "own as-of date -- it can no longer be a regex hit on a prose paragraph",
-       OPEN,
+       LOCKED, fixed_on="2026-08-23 (promoted: READY TO LOCK after the 23 Aug deploy carried SESSION-COUNTER-1 + migration 030 -- badge now derived, dated, basis named)",
        scope="GET /dashboard/summary in main.py and bea_main.py, SESSION_COUNTER.json, "
              "scripts/session_counter.py, the dashboard badge, and the deploy manifest. "
              "CLASS, not instance: this asserts the MECHANISM, not the number. Any future "
@@ -8370,7 +8370,8 @@ def rg_migrations_tracked():
 
 @entry("RG-0158", "Study & Work Abroad teaser serves live WITH its honesty labels -- "
                   "Coming-Shortly banner, AI-example label, and its home-surface entry",
-       OPEN, scope="/static/studyabroad_teaser.html + the SAW-1 banner in the live index. CLASS: "
+       LOCKED, fixed_on="2026-08-23 (promoted: READY TO LOCK the morning after, exactly as the ref predicted -- SAW-1 rode the 23 Aug deploy; teaser live with both honesty labels + index banner)",
+       scope="/static/studyabroad_teaser.html + the SAW-1 banner in the live index. CLASS: "
              "a preview surface must carry its Coming-Shortly and AI-example labels for as long "
              "as it exists -- shipping the page without the labels, or the labels without the "
              "page, is the defect (RUL-040/RUL-042 honesty class). When the real feature goes "
