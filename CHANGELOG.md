@@ -1,3 +1,215 @@
+## 2026-08-22 — SAW-1: Study & Work Abroad teaser built (additive, rides next deploy)
+David's call on Maroushka's feature (RUL-042): build now with zero launch-baseline risk. Delivered as
+pure addition: `studyabroad_teaser.html` (Coming-Shortly banner, 4-stage explainer, video slot, and a
+fully worked AI-EXAMPLE dossier — real sourced+dated facts incl. DHET's 100 Stipendium Hungaricum
+scholarships, Germany's €0 tuition / €11,904 blocked account, UK £558 visa + £776/yr IHS, NL €9–24k
+fee band, all RE-CHECK-flagged per RUL-038), one lm-banner entry block in marketsquare.html, one
+manifest line. Video: LAUNCH_SERIES row 8 + feature-videos/12-study-abroad/SPIEL.md (spiel-ready for
+the overnight pipeline). Ledger: RG-0158 OPEN — locks after the deploy. NOT deployed this session;
+deploys are David's word. Rollback: remove the banner block + manifest line.
+
+## 2026-08-22 — Study & Work-Abroad Advisor: assessed viable, positioning ruled (RUL-042)
+
+Maroushka's feature idea assessed as CTO: ~$0.50–1.00 per report vs 5T = $10 — heaviest member of the existing 5T deep-dive class (retirement_planner precedent), free/owned data only, no paid feed, ~70% machinery reuse, MVP 3–5 sessions. David RULED the positioning same session: MarketSquare provides PREPARATION built on actuals (what is possible, typically needed, viability/risks/opportunities); partner education & immigration agencies take the Dossier and provide the actual plans and guidance — the handoff IS the Tuppence introduction, and it closes the regulated-advice exposure by design. Register: RUL-042; reserved business calls batched in OPEN_LOOPS D15; assessment: STUDY_WORK_ABROAD_ADVISOR_ASSESSMENT — nice.docx.
+
+## 2026-08-22 — SESSION-COUNTER-1: the session badge was never a counter
+
+**Raised by David**, who was certain the badge reading "Session 155" had been
+overtaken "way past" that number, and who noted this had been "permanently
+fixed" before. Both halves of that were correct.
+
+**What it actually was.** `GET /dashboard/summary` did this, at `main.py:8545`:
+
+```python
+sm = _re2.search(r"Session (\d+)", status)
+current_session = int(sm.group(1)) if sm else 0
+```
+
+That is a regex for the FIRST occurrence of the literal text `Session <digits>`
+anywhere in STATUS.md — a 329 KB, 2,431-line, append-only prose file. The line
+it landed on was **line 1650**, dated 1 Aug 2026, whose own text reads
+*"SESSION COUNTER CORRECTED 150 -> 155"*. The badge was pinned to a paragraph
+whose subject was a previous freeze of the same counter.
+
+Nothing in the codebase incremented anything. **Freezing was the default, not
+the failure mode.** The number could only move when a human hand-edited that
+paragraph — which is why the two earlier "permanent" fixes (139→141 in Session
+141, 150→155 in Session 155) each had a shelf life of exactly one session: both
+corrected the NUMBER and left the MECHANISM.
+
+**True number: 175**, derived from 20 distinct session-days of fragments between
+2 and 22 Aug on top of the 1 Aug anchor. A floor, not an exact count.
+
+**Fixed in two halves, both necessary:**
+
+1. **Derive, don't transcribe.** `scripts/session_counter.py` computes the number
+   from the `status.d/` and `changelog.d/` fragments that STATUS-COLLISION-1 and
+   CHANGELOG-COLLISION-1 already make the only legal way to record a session. The
+   act that proves a session happened is now the act that advances the count, so
+   it cannot freeze while work continues. Written to `SESSION_COUNTER.json`,
+   shipped by the manifest, recomputed by `deploy_marketsquare.bat` before the
+   compilers archive the fragments.
+2. **Carry the as-of date.** The badge renders `Session N · as of <date>` and
+   greys to UNVERIFIED when the value did not come from the derived counter. A
+   bare number can lie indefinitely; a number beside its own date confesses the
+   moment it stops moving. This is RG-0133's rule (no instrument paints a state
+   nothing measured) applied to the header badge.
+
+**RG-0154** asserts the mechanism, not the number — OPEN until the release
+reaches the server, then READY TO LOCK. Any future reinstatement of the prose
+scrape, or any drift between the counter and the fragments on disk, trips it red.
+
+Touched: `main.py`, `bea_main.py`, `dashboard.server.html`, `dashboard.html`,
+`scripts/session_counter.py` (new), `SESSION_COUNTER.json` (new),
+`ops/autodeploy/deploy_manifest.txt`, `deploy_marketsquare.bat`,
+`scripts/regression_ledger.py`.
+
+## 2026-08-22 — PROVENANCE-1: the dashboard had no inventory, so David was the inventory
+
+**Raised by David:** *"the dashboard becomes a liability if it either shows stagnant
+information or the worst case is wrong information ... it feels as if I am the
+Automator and need to remember what changed?"*
+
+He is describing an architectural hole, not a mood. A full provenance audit of
+`dashboard.server.html` found **141 asserted surfaces: 65 live-fed, 8 doc-parsed,
+and 68 HAND-TYPED.**
+
+**What was actually wrong**
+
+- **The same server was costed twice, differently.** Ops Map: `€4.51/mo` (green
+  chip *and* hero tile). Ops view: `CPX32 €15.49 + Volume €6.58 = €22.07/mo`.
+  `canon.yml` — named *on the page itself* as the source of truth — says
+  15.49 + 5.20 + 5.99 = **€26.68**. Three numbers, five-fold apart, all
+  hand-typed, because **nothing ever served canon.yml to the page.**
+- **Nine chips painted a health colour with no feed at all**: `kill switches
+  armed`, `nightly backup`, `routing on`, `scheduled daily`, `no-AI default`,
+  `per-use AI`, plus the two cost chips and Cloudflare/Resend plan claims. Six
+  of them were **green**.
+- **The Server Health dot was born green in the markup** and the failure path
+  never reset it — a dead `/health/resources` left a green light burning directly
+  above the words "Health check failed".
+- **Three of the five direction cards are Python list literals** written
+  4 Jun 2026 (`dir_cl`, `dir_aa`, `dir_infra`) and never touched since. For
+  eleven weeks they showed identical "priorities" while looking exactly as
+  current as the two doc-fed cards beside them.
+
+**The root cause is not that people typed values in.** It is that:
+
+1. **Nothing enumerated them.** There was no list of what the dashboard claims,
+   so the only index was David's memory. That is why he felt like the automator —
+   he *was* the inventory.
+2. **Provenance was invisible.** A live chip and a hand-typed chip render
+   identically, so a wrong one could only be caught by contradicting something
+   the reader already knew.
+3. **Every prior fix was instance-scoped.** RG-0133, RG-0153 and
+   INSTRUMENT-TRUTH-1/2 each named specific element ids. All 68 hand-typed
+   surfaces survived them because nobody had the list.
+
+**The inversion.** `scripts/dashboard_provenance.py` enumerates every chip on the
+page and proves each is fed. A health colour with no feed is a **defect** unless
+registered in `DASHBOARD_PROVENANCE.json` with a reason *and a review date* — and
+an expired review date fails, so the registry can never become a hiding place.
+Proven by injecting a fake green chip: caught, exit 1, clean after removal.
+Wired into `deploy_marketsquare.bat`.
+
+**Fixed this session:** all 9 unfed chips (6 demoted to the honest not-wired
+style, 2 registered with Sept review dates, cost wired); cost now reads
+`/dashboard/fixed-costs` → `canon.yml` from **all three** surfaces so two panels
+can no longer disagree; the health dot starts grey and goes grey when the feed
+dies; every direction card declares its source, with static ones dimmed and
+tagged `STATIC — written 2026-06-04`.
+
+**RG-0155** LOCKED (the class: an inventory exists and every colour is earned).
+**RG-0156** OPEN — `orchestrator.html` is served live from the web root but is
+**not in `deploy_manifest.txt`**; hand-uploaded, repo copy 79 days old. It also
+hardcodes access code `96315` (launch gate G2, hard 29 Aug) behind a gate that
+never executes, and renders any fetch failure as `"Nothing waiting on you. ✨"`.
+Not executed here on purpose: shipping the stale repo copy would overwrite live
+content, and rotating a live code is David's call.
+
+**RG-0133 assertion strengthened** (not weakened): it used to grep for the literal
+`CPX32 €15.49`, which could only catch one drifting number and sat green while
+`€4.51/mo` contradicted it elsewhere. It now asserts the cost *feed* exists and
+that no hardcoded monthly price survives anywhere in the markup. The new form
+immediately caught a survivor the old one could not — the `€4.51/mo` hero tile.
+
+## 2026-08-22 — the money path closed: charged exactly once, and the EULA's hold made real
+
+David: *"Why cant we close it now then?"* and *"lets go for clear"*. Both were code fixes, and
+code fixes do not wait on anything reserved to him. Two LOCKED entries, both proven by replay
+against throwaway replicas — no production data, no production box.
+
+### INTRO-CHARGE-ONCE-1 (RG-0142 → LOCKED)
+
+The 22 Aug forensic audit EXECUTED the attack: four accepts on one introduction produced four
+`intro_deduct` rows and a balance of **-3T**. `accept_intro` tested neither the introduction's
+status nor `tuppence_charged` before charging, read no balance, and its read-check-write was
+not one transaction.
+
+Now one immediate transaction: re-read under the lock → **409** on a settled or already-charged
+introduction → **402** below 1T → then a **conditional UPDATE whose rowcount is the single
+source of truth**. Two concurrent accepts cannot both win, which an `if` statement can never
+guarantee. `decline_intro` refuses to decline a charged introduction, so the "paid for, recorded
+declined, no refund" state is unreachable.
+
+**Hardening found on the way:** `get_db()` uses sqlite3's default isolation level, so a bare
+`BEGIN IMMEDIATE` raises when a transaction is already open. Safe today (only SELECTs precede
+it) but one refactor from 500-ing every accept — it is now attempted and tolerated, because the
+guarantee lives in the UPDATE, not the lock.
+
+`scripts/prove_intro_charge_once.py`, 16 checks: four accepts leave ONE money row and a 0T
+wallet; a 0T buyer is refused 402 with nothing written; decline-after-accept refused. It also
+asserts the guarded SQL is the text actually in `bea_main.py`, so it cannot pass against drifted
+source.
+
+### INTRO-HOLD-1 (RG-0145 → LOCKED)
+
+The shipped EULA promises in four clauses that 1T is **committed (held)** at request, **burned**
+only on delivery, and **released in full** on decline, expiry or withdrawal. The ECT Act s44
+cooling-off argument rests on it: *"Until delivery, the Tuppence is only held, not spent."*
+**No hold existed.** Users had agreed to a mechanism that was not implemented — a
+misrepresentation rather than a bug.
+
+The wording was NOT changed: it is legally load-bearing and RUL-020 released the EULA as final.
+The code now keeps it. `create_intro` refuses below 1T (**402**) and writes a real `-1`
+`intro_hold` row, so the buyer sees the commitment in their balance immediately. `accept_intro`
+**burns** that hold with a zero-amount `intro_burn` audit row rather than deducting again — the
+ledger stays append-only. `decline_intro` and the expiry sweep both call `_release_intro_hold`,
+a conditional UPDATE on `hold_released_at IS NULL`: releasing twice would **mint** Tuppence, so
+the rowcount is the only authority.
+
+**The expiry release matters twice over** — that sweep's email already told the buyer *"You were
+not charged"*, which only became true once the hold was returned.
+
+Schema: `migrations/030_intro_hold.py`. Intros created before it carry `held=0` and take the
+legacy charge-on-accept path; **no money is retro-held from live wallets.**
+
+`scripts/prove_intro_hold.py`, 22 checks: 3T → hold → 2T; delivery burns it with exactly one
+negative row; decline returns it to 3T; expiry likewise; a second release is impossible; a 0T
+buyer is refused rather than going negative.
+
+**Both need the deploy to reach customers, and migrations 029 + 030 ride with it.**
+
+## 2026-08-22 — Note: commit 76606ff carries a second session's work
+
+Housekeeping, so later archaeology is not misled. The SESSION-COUNTER-1 commit
+`76606ff` also swept in **uncommitted working-tree changes from a concurrent
+session** — INTRO-HOLD-1 / RG-0145 (the 1T hold on introduction request, the
+`_release_intro_hold` helper, and its ledger edits) in `bea_main.py` and
+`scripts/regression_ledger.py`. That work is **not** SESSION-COUNTER-1's and the
+commit message does not describe it.
+
+Nothing was lost or altered — the changes were on disk before the commit and are
+byte-identical in it; committing them protected them rather than risking them.
+History was deliberately **not** rewritten: on this FUSE mount a rebase is far
+more dangerous than a mislabelled commit.
+
+**Lesson, cheap to apply:** naming explicit paths on `git add` is not sufficient
+isolation when a file is one *both* sessions are editing. Before adding a shared
+hot file (`bea_main.py`, `main.py`, `scripts/regression_ledger.py`), diff it and
+check whether the hunks are actually yours. `main.py` in the same commit was
+clean; `bea_main.py` was not.
+
 ## 2026-08-22 — the Ops Dashboard made to tell the truth about the rotation
 
 David asked for the day's changes to be reflected on the Ops Dashboard, and checking it

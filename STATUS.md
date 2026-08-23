@@ -28,6 +28,78 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+2026-08-22 (attended, David, ~21:25 UTC): /TSL RUN STAGED AND HELD — NOT DEPLOYED. All gates green,
+stopped deliberately on a concurrent-writer hazard. State for whoever picks this up: 3 commits sit ahead
+of the deploy ref (76606ff SESSION-COUNTER-1, 085430f PROVENANCE-1, 02d9184 DEPLOY-COHERENCE-1; 21 files).
+Rollback tag ALREADY CUT at the live ref d5a25f9: rollback-20260822-232006-pre-provenance. Gates at time of
+hold: deploy lock FREE (peeked only, never acquired — the batch owns acquire/release); CM+DB gate = ok
+(STATUS/CHANGELOG/CHANGE_REGISTER ok, primary DB 2,879,488 bytes integrity ok, proved over HTTPS /health);
+regression ledger exit 0 (every locked fix holding, 13 open); rulings_check 41 checked 0 FAIL 0 WARN;
+dashboard_provenance --check exit 0; session_counter --check ok at 175. WHY HELD: a second session was
+actively writing (RULINGS.md +2, OPEN_LOOPS.md +1, scripts/rulings_check.py +10 uncommitted, plus two
+untracked study-abroad-advisor fragments and a .docx touched within 10 minutes). deploy_marketsquare.bat
+line 112 is `git add -A` and then pushes HEAD to BOTH main and deploy, so shipping would have committed and
+published another session's half-finished work under a "Release" message and folded their pending fragments
+out from under them. Live site was never at risk — none of their three files are in deploy_manifest.txt —
+the objection was provenance, not availability, and it is the same class as the DEPLOY-COHERENCE-1 near-miss
+caught earlier the same evening (RG-0157). David's call: hold until that session finishes. TO RESUME: confirm
+`git status` is clean, re-run `python tsl_gate.py gate`, then run deploy_marketsquare.bat. Expect after ship:
+badge 155 -> 175 with an as-of date, cost surfaces read canon.yml (EUR 26.68) instead of the old EUR 4.51 /
+EUR 22.07 contradiction, migration 030 runs once (additive, idempotent), and RG-0154 should flip green and
+print READY TO LOCK. RG-0156 (orchestrator) stays OPEN either way — that page is outside the manifest.
+
+## 2026-08-22 — SAW-1 teaser ready, awaiting next deploy
+Study & Work Abroad teaser (RUL-042) built additively — page + banner + manifest + spiel; RG-0158 OPEN
+polices the honesty labels once live. Full feature engine (data_study layer, intake/options/dossier
+prompts) remains the post-launch build per the assessment. D15: only 5T confirm + September go/no-go remain.
+
+## 2026-08-22 — Study & Work-Abroad Advisor (Maroushka, 5T)
+
+Assessed viable (see nice.docx); RUL-042 rules the positioning — preparation ours on actuals, the plan is the agency's, agencies first-class on-platform, handoff = introduction. Open business calls: OPEN_LOOPS D15. Build is POST-launch; nothing deployed.
+
+2026-08-22 (attended, David, evening): SESSION-COUNTER-1 — THE SESSION BADGE WAS NEVER A COUNTER.
+David challenged the "Session 155" badge as long overtaken and noted it had been "permanently fixed"
+before. Both correct. /dashboard/summary took the FIRST regex match of "Session <n>" anywhere in this
+329 KB append-only file; it landed on line 1650 — the 1 Aug paragraph that itself reads "SESSION
+COUNTER CORRECTED 150 -> 155". Nothing ever incremented anything, so freezing was the DEFAULT state,
+and the two earlier fixes (139->141, 150->155) each corrected the number and left the mechanism, so
+each lasted one session. TRUE NUMBER: 175 (anchor 155 at 1 Aug + 20 distinct session-days of
+status.d/changelog.d fragments to 22 Aug; a floor — two sittings in one day count once). FIX, two
+halves: (1) scripts/session_counter.py DERIVES the number from the fragments every session is already
+required to leave, writes SESSION_COUNTER.json, ships via the manifest, recomputes in
+deploy_marketsquare.bat before the compilers archive the fragments — the act that proves a session
+happened now advances the count; (2) the badge renders "Session N · as of <date>" and greys to
+UNVERIFIED off a derived counter, because a bare number lies indefinitely while a dated one confesses
+when it stops moving (RG-0133's rule applied to the header). RG-0154 asserts the MECHANISM, not the
+number — OPEN until deployed, then READY TO LOCK; it trips red if the prose scrape returns or the
+counter drifts behind the fragments. NOT YET DEPLOYED — deploy is David's call; the live badge will
+read 155 until the release goes out, and RG-0154's live half correctly fails until then.
+
+2026-08-22 (attended, David, evening): PROVENANCE-1 — THE DASHBOARD HAD NO INVENTORY. David:
+"it feels as if I am the Automator and need to remember what changed?" Audit of dashboard.server.html
+found 141 asserted surfaces: 65 live-fed, 8 doc-parsed, 68 HAND-TYPED. The same server was costed at
+€4.51/mo (Ops Map chip AND hero tile) and €22.07/mo (Ops view) while canon.yml — named ON THE PAGE as
+the source of truth — said €26.68 and was served to nobody. Nine chips painted a health colour with no
+feed (six green: kill switches armed / nightly backup / routing on / scheduled daily / no-AI default /
+per-use AI). The health dot was born green in markup and never reset on failure, so a dead feed left a
+green light over an error message. Three of the five direction cards (dir_cl, dir_aa, dir_infra) are
+Python literals written 4 Jun 2026, unchanged for eleven weeks, indistinguishable from the live cards.
+ROOT CAUSE: nothing ENUMERATED the claims, so the only index was David's memory — he WAS the inventory;
+provenance was invisible (a live chip and a typed chip render identically); and every prior fix
+(RG-0133, RG-0153, INSTRUMENT-TRUTH-1/2) named specific ids, so 68 surfaces survived them.
+FIX — inversion: scripts/dashboard_provenance.py enumerates every chip and proves each is fed; an unfed
+health colour is a defect unless registered in DASHBOARD_PROVENANCE.json with a reason AND a review date
+that expires. Wired into deploy_marketsquare.bat. Proven by injecting a fake green chip (caught, exit 1).
+All 9 defects cleared: 6 demoted to not-wired, 2 registered (review 30 Sep), cost wired to a new
+/dashboard/fixed-costs reading canon.yml from all three surfaces; health dot starts and fails grey;
+direction cards declare source, static ones dimmed and dated. RG-0155 LOCKED. RG-0133 STRENGTHENED
+(was grepping a literal price; now asserts the feed exists and no hardcoded monthly price survives —
+the new form immediately caught the €4.51 hero tile the old one could not). RG-0156 OPEN: orchestrator.html
+is served live but is NOT in deploy_manifest.txt (hand-uploaded, repo copy 79 days stale), hardcodes access
+code 96315 behind a gate that never runs (launch gate G2, hard 29 Aug), and renders any fetch failure as
+"Nothing waiting on you. ✨". Deliberately not executed — shipping the stale repo copy would overwrite live
+content and rotating a live code is David's call. NOT YET DEPLOYED — deploy is David's.
+
 ### RUL-040 SHIPPED and LOCKED (22 Aug)
 
 Deployed via /TSL. Probed live, not assumed: index references **ms.js v516**; the served
