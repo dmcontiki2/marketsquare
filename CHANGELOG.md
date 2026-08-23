@@ -1,3 +1,38 @@
+## 2026-08-24 — VERT-4-1 (RUL-049): the four recruited verticals are BUILT
+
+- David ratified the overnight skin designs ("Can we already build it into the app?").
+  Gates as registry-verified 23 Aug: collector = SAPS SHG dealer registration ·
+  tutor institution = safety clearances (PCC+CPR+NRSO; verified SACE covers all
+  three) · service company = trade CoC-issuing licence (PIRB / DoEL IE) · placement
+  = DEL registration. CTO defaults (vetoable): clearance REFS only, never documents
+  (POPIA); gate-pending onboarding on starter; placement ships engine-dark (RUL-046).
+- Backend: VERTICALS 3→7 with full credential slots, badges, gates, advantages and
+  legal notes; the bulk loop's hardcoded if/elif (which silently routed unknown
+  verticals into travel) replaced by a GENERIC slot walk; SACE submission auto-marks
+  the clearances gate pending; BulkAgentIn +12 credential fields; wave-prep mints
+  all seven skin params.
+- Frontend: four full _agL skins, picker enabled, deep links (?collector=1 etc.),
+  signin chains for all seven, per-skin bulk examples + gate labels, extended column
+  header, placement advert-import shows the honest dark-engine notice. Guides
+  updated (verticals list + credential columns). RUL-049 registered + needled;
+  RG-0169 locks on live verify.
+
+## 2026-08-24 — SKIN-DESIGN-1: the four missing console skins designed overnight (David's ask)
+
+- David, heading to bed: "What is the chances of you designing these 4 skins while I
+  go to sleep?" — done, design-only, nothing wired or deployed. Deliverables:
+  SKIN_DESIGNS_PREVIEW.html (four fully-skinned console mockups — labels, gates,
+  roster columns, pitch, example rows; indexed into Visuals) and SKIN_DESIGNS —
+  nice.docx (gates with registry verification + sources, label maps, credential
+  columns, batched ratification questions).
+- Gates proposed and registry-verified 23 Aug: collector = SAPS Second-Hand Goods
+  Act dealer registration; tutor institution = SACE (embeds PCC + Child Protection
+  Register + Sexual Offenders Register) or SAQA-qual + same clearances; service
+  company = trade-statutory CoC-issuing licences (PIRB / DoEL IE) per class;
+  placement = DEL private-employment-agency registration (the Act's workseeker-fee
+  prohibition matches our model exactly). RG-0169 stays OPEN; locks per skin as
+  David ratifies each gate and the build ships.
+
 ## 2026-08-23 — RG-0169: the skin picker tells the truth about recruited verticals
 
 - David: "the drop down still only shows three types of agencies?" — correct, and
