@@ -1474,14 +1474,16 @@ function _agL(key){
     intros:'Intros to agents',stock:'Listings (pooled)',org:'agency',
     setup:'Agencies are set up by TrustSquare on application.',
     created:'Agency created',createTest:'Create a test agency',namePh:'Agency name',
-    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf'};
+    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf',
+    gate:'Gate: <b>FFC</b> — the legal minimum to trade · also scored: PPRA · NQF 4/5/6+ · professional body'};
   var O={title:'Operator console',brand:'Operator',people:'Guides & consultants',person:'Guide',
     invite:'Invite guide',noPeople:'No guides yet — invite one above.',
     ph:'guide@email.com',imports:'Import your current trips',
     intros:'Intros to guides',stock:'Trips (pooled)',org:'operator',
     setup:'Tour operators are set up by TrustSquare on application.',
     created:'Operator created',createTest:'Create a test operator',namePh:'Operator name',
-    manualUrl:'/static/TrustSquare_Tour_Operator_Playbook.pdf'};
+    manualUrl:'/static/TrustSquare_Tour_Operator_Playbook.pdf',
+    gate:'Gate: <b>ASATA membership</b> — the professional minimum · also scored: IATA · CIPC · client-payment bonding'};
   // DEALER-SKIN-1 (17 Jul 2026, David): motor dealerships — same console & endpoints, dealer labels
   var D={title:'Dealership console',brand:'Dealership',people:'Sales agents',person:'Sales agent',
     invite:'Invite sales agent',noPeople:'No sales agents yet — invite one above.',
@@ -1489,7 +1491,8 @@ function _agL(key){
     intros:'Intros to sales agents',stock:'Vehicles (pooled)',org:'dealership',
     setup:'Dealerships are set up by TrustSquare on application.',
     created:'Dealership created',createTest:'Create a test dealership',namePh:'Dealership name',
-    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf'};
+    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf',
+    gate:'Gate: <b>MIRA dealer registration</b> — the professional minimum · also scored: independent inspection partner'};
   // VERT-4-1 (RUL-049, 24 Aug 2026): the four recruited verticals become real skins.
   var C={title:'Shop console',brand:'Shop',people:'Dealers',person:'Dealer',
     invite:'Invite dealer',noPeople:'No dealers yet — invite one above.',
@@ -1497,28 +1500,32 @@ function _agL(key){
     intros:'Intros to dealers',stock:'Pieces (pooled)',org:'shop',
     setup:'Collector shops are set up by TrustSquare on application.',
     created:'Shop created',createTest:'Create a test shop',namePh:'Shop name',
-    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf'};
+    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf',
+    gate:'Gate: <b>SAPS Second-Hand Goods registration</b> — statutory to trade · also scored: SAADA / SAAND / NAADA · SANGS grading · CIPC'};
   var I={title:'Institution console',brand:'Institution',people:'Tutors',person:'Tutor',
     invite:'Invite tutor',noPeople:'No tutors yet — invite one above.',
     ph:'tutor@centre.co.za',imports:'Import your tutor listings',
     intros:'Intros to tutors',stock:'Tutor listings (pooled)',org:'institution',
     setup:'Tutor institutions are set up by TrustSquare on application.',
     created:'Institution created',createTest:'Create a test institution',namePh:'Institution name',
-    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf'};
+    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf',
+    gate:'Gate: <b>safety clearances</b> (PCC + Child Protection + Sexual Offenders registers) — verified SACE covers all three · also scored: SAQA qualification'};
   var S={title:'Company console',brand:'Company',people:'Technicians',person:'Technician',
     invite:'Invite technician',noPeople:'No technicians yet — invite one above.',
     ph:'tech@company.co.za',imports:'Import your service listings',
     intros:'Intros to technicians',stock:'Service listings (pooled)',org:'company',
     setup:'Service companies are set up by TrustSquare on application.',
     created:'Company created',createTest:'Create a test company',namePh:'Company name',
-    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf'};
+    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf',
+    gate:'Gate: <b>trade CoC licence</b> (PIRB / DoEL Installation Electrician) — per service class · also scored: public liability insurance · CIDB'};
   var P={title:'Placement console',brand:'Placement agency',people:'Consultants',person:'Consultant',
     invite:'Invite consultant',noPeople:'No consultants yet — invite one above.',
     ph:'consultant@agency.co.za',imports:'Import your programmes',
     intros:'Intros to consultants',stock:'Programmes (pooled)',org:'placement agency',
     setup:'Placement agencies are set up by TrustSquare on application.',
     created:'Placement agency created',createTest:'Create a test placement agency',namePh:'Agency name',
-    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf'};
+    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf',
+    gate:'Gate: <b>DEL registration</b> — and workseekers never pay, by law and by design · also scored: APSO · sponsor networks · bonding'};
   var _s = window._tsSkin || (window._tsOperatorMode ? 'operator' : 'agency');
   return ({agency:A, operator:O, dealer:D, collector:C, institution:I, service_company:S, placement:P}[_s]||A)[key]||key;
 }
@@ -1595,7 +1602,9 @@ async function _renderAgency(agencyId){
         :'<button onclick="agencyProInvite(\''+m.email+'\','+(m.listing_cap||10)+')" title="The agent takes the $5/month Pro seat themselves — EULA + subscription" style="border:1px solid var(--border);background:#fff;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">Pro seat? · $5</button> ')
       +'<button onclick="agencyRemove(\''+m.email+'\')" style="border:1px solid #fecaca;background:#fff;color:#b91c1c;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">Remove</button>');
     return '<tr style="border-bottom:1px solid #f1f3f7;">'
-      +'<td style="padding:10px;"><div style="font-weight:600;">'+(m.name||m.email)+'</div><div style="font-size:11px;color:var(--text-3);">'+m.email+'</div></td>'
+      +'<td style="padding:10px;"><div style="font-weight:600;">'+(m.name||m.email)+'</div><div style="font-size:11px;color:var(--text-3);">'+m.email+'</div>'
+        +((m.credentials&&m.credentials.length)?'<div style="font-size:10.5px;margin-top:2px;">'+m.credentials.map(function(c){return '<span style="color:'+(c.status==='earned'?'#166534':'#92400e')+';font-weight:'+(c.gate?'700':'400')+';">'+c.label+(c.status==='earned'?' ✓':' · pending')+'</span>';}).join(' <span style="color:var(--text-3);">·</span> ')+'</div>':'')
+        +'</td>'
       +'<td style="padding:10px;">'+m.listings_live+' / '+cap+' <span style="display:inline-block;width:54px;height:6px;background:#eef1f6;border-radius:6px;vertical-align:middle;margin-left:6px;"><i style="display:block;height:100%;width:'+pct+'%;background:#C8873A;border-radius:6px;"></i></span>'+((m.listings_draft||0)?' <span onclick="agencyDraftsView(\''+m.email+'\');event.stopPropagation();" title="Tap to view this agent\'s drafts (read-only)" style="cursor:pointer;font-size:10.5px;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:1px 7px;margin-left:6px;">'+m.listings_draft+' draft'+(m.listings_draft>1?'s':'')+' ▸</span>':'')+'</td>'
       +'<td style="padding:10px;color:'+tc+';font-weight:700;">'+m.trust_score+'</td>'
       +'<td style="padding:10px;">'+m.intros+'</td>'
@@ -1626,6 +1635,7 @@ async function _renderAgency(agencyId){
     +'<div style="background:var(--navy,#0c1a2e);color:#fff;border-radius:14px;padding:18px 20px;margin-bottom:14px;">'
       +'<div style="font-family:Syne,sans-serif;font-weight:800;font-size:19px;">'+a.name+' <span style="font-size:11px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:3px 10px;margin-left:6px;">✓ '+(a.verified?'Verified':'Pending')+' '+_agL('brand')+'</span>'+(localStorage.getItem('ms_superuser')==='1'?' <button onclick="agencyRename()" title="Rename before a demo" style="background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;cursor:pointer;margin-left:6px;">\u270E Rename</button>':'')+' <a href="'+_agL('manualUrl')+'" target="_blank" title="Open the onboarding playbook (PDF)" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">User manual</a> <a href="/static/agency-import-guide.html" target="_blank" title="Bulk-import your adverts: schema, rules, error report" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">Import guide</a> <a href="/static/agents-as-a-service.html" target="_blank" title="The buy-in page: three categories, the screens each prospect and agent sees, the scores and the 1T lead deal" style="display:inline-block;border:1px solid rgba(232,201,123,.6);background:rgba(232,201,123,.15);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">&#9733; Agents as a Service</a>'+'</div>'
       +'<div style="font-size:12px;opacity:.7;margin-top:4px;">Admin '+a.admin_email+' · operating in '+(a.countries||'—')+'</div></div>'
+    +'<div style="background:#f0f7f2;border-left:4px solid #1e7d4f;border-radius:0 10px 10px 0;padding:8px 13px;margin-bottom:12px;font-size:12px;color:#274536;line-height:1.5;">'+_agL('gate')+'</div>'
     +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">'
       +'<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:22px;font-weight:800;font-family:Syne,sans-serif;">'+a.rollup.agents+'</div><div style="font-size:11px;color:var(--text-3);">'+_agL('people')+'</div></div>'
       +'<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:22px;font-weight:800;font-family:Syne,sans-serif;">'+a.rollup.listings_used+' / '+a.rollup.listings_allowance+'</div><div style="font-size:11px;color:var(--text-3);">'+_agL('stock')+((a.rollup.listings_draft||0)?' · <b style="color:#92400e;">'+a.rollup.listings_draft+' draft'+(a.rollup.listings_draft>1?'s':'')+' awaiting publish</b>':'')+'</div></div>'

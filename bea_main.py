@@ -13453,7 +13453,27 @@ def _agency_agent_rollup(conn, email):
         _vertical = (_vp["vertical"] if _vp and _vp["vertical"] else None)
     except Exception:
         _vertical = None
+    # CONSOLE-RICH-1 (24 Aug 2026, David: "will look good in the app itself?"): the
+    # member's submitted credentials, labeled, gate-first -- the console shows the
+    # same story the design preview showed. Only pending/earned are listed; claims
+    # never score until ops verifies (earned).
+    creds = []
+    try:
+        if _vertical:
+            from estate_agents import VERTICALS as _VERTS
+            _vd = _VERTS.get(_vertical) or {}
+            _rows = {r["signal_id"]: r["status"] for r in conn.execute(
+                "SELECT signal_id, status FROM user_credentials WHERE email=?", (email,)).fetchall()}
+            _gate_sid = _vd.get("gate_signal")
+            for _sid, _lbl in (_vd.get("badge_signals") or {}).items():
+                _st = _rows.get(_sid)
+                if _st in ("pending", "earned"):
+                    creds.append({"label": _lbl, "status": _st, "gate": _sid == _gate_sid})
+            creds.sort(key=lambda c: (not c["gate"], c["label"]))
+    except Exception:
+        creds = []
     return {"email": email,
+            "credentials": creds,
             "vertical": _vertical,   # ORG-SKIN-1: lets the ops console infer the org's skin
             "name": (u["name"] if u and u["name"] else email.split("@")[0]),
             "trust_score": int(u["trust_score"]) if u and u["trust_score"] is not None else 40,
