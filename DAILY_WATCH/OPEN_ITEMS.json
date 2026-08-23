@@ -250,11 +250,12 @@
     },
     "DW-029": {
       "first_seen": "2026-08-07",
-      "last_seen": "2026-08-22",
+      "last_seen": "2026-08-23",
       "sev": "MEDIUM",
       "source": "production secrets exposed in a chat transcript",
-      "status": "OPEN",
-      "summary": "Not re-checked - this task does not read secrets. Day 16. Gate is down, so the site is publicly readable while old credentials are live."
+      "status": "CLOSED",
+      "summary": "Not re-checked - this task does not read secrets. Day 16. Gate is down, so the site is publicly readable while old credentials are live. CLOSED 23 Aug (register reconciliation): the 22 Aug session finished the set the same day this row was last written \u2014 'last-four-secrets' fragment: MS_DEPLOY_TOKEN reminted, RELAY/EMAIL_INBOUND rotated into their CF Workers, COMMAND_SECRET deleted (nothing consumed it). SECRETS_REGISTER.md 'Still burnt' table is EMPTY and RG-0146 (LOCKED) asserts none BURNT \u2014 green on today's run. The register was updated Friday; this watch row was not. Residual: FOUNDERS_ID_SALT decision pending, tracked by its own open ledger entry.",
+      "next_action": "None \u2014 closed 2026-08-23, evidence: SECRETS_REGISTER.md + RG-0146 green."
     },
     "DW-030": {
       "first_seen": "2026-08-08",
@@ -532,12 +533,12 @@
     },
     "DW-057": {
       "first_seen": "2026-08-20",
-      "last_seen": "2026-08-22",
+      "last_seen": "2026-08-23",
       "sev": "HIGH",
       "source": "close-all pass, operator error (mine)",
-      "status": "OPEN",
-      "summary": "NEW - the DW-029 class recurred and the watch caused it: `systemctl show marketsquare -p Environment` printed the unit's entire inline environment (MS_API_KEY, PAYSTACK_WEBHOOK_SECRET, RESEND_API_KEY, CF_CACHE_TOKEN, MS_DEPLOY_TOKEN, FOUNDERS_ID_SALT, TRAVELPAYOUTS_TOKEN, Numista/JustTCG) in clear text into a chat transcript. Later commands parse the env into exports without echoing, and the shipped MIGRATE-ENV-1 block does the same, but these values are burnt.",
-      "next_action": "David: rotate - ROTATE_SECRETS.bat covers most; MS_API_KEY, MS_DEPLOY_TOKEN and FOUNDERS_ID_SALT need the systemd unit edited too. Claude: never run a command that prints a whole environment."
+      "status": "CLOSED",
+      "summary": "NEW - the DW-029 class recurred and the watch caused it: `systemctl show marketsquare -p Environment` printed the unit's entire inline environment (MS_API_KEY, PAYSTACK_WEBHOOK_SECRET, RESEND_API_KEY, CF_CACHE_TOKEN, MS_DEPLOY_TOKEN, FOUNDERS_ID_SALT, TRAVELPAYOUTS_TOKEN, Numista/JustTCG) in clear text into a chat transcript. Later commands parse the env into exports without echoing, and the shipped MIGRATE-ENV-1 block does the same, but these values are burnt. CLOSED 23 Aug with DW-029 \u2014 its stated close condition ('when the remaining ten are rotated') was met 22 Aug; see DW-029. The structural half (secrets in 0600 files, verify-at-point-of-use) is RG-0147, LOCKED.",
+      "next_action": "None \u2014 closed 2026-08-23, evidence: SECRETS_REGISTER.md + RG-0146 green."
     },
     "DW-058": {
       "first_seen": "2026-08-21",
