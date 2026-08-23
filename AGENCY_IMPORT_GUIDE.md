@@ -1,6 +1,9 @@
 # MarketSquare Agency Import Guide
 *Give this to the agency's IT person or systems administrator. One-time setup: ±1 hour.*
 
+> **No IT person?** This entire import also works as a simple paste: open your agency
+> console and tap **⇪ Bulk import adverts** (next to your API key). Same pipeline, same report.
+
 ## How it works
 1. TrustSquare invites your agents (each gets a sign-in link). Every advert you send
    must carry the `agent_email` of an invited agent — unmatched emails are skipped.

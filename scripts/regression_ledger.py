@@ -8601,5 +8601,34 @@ def rg_agency_outreach_tells_agency_story():
     return out or [(INFO, "outreach template carries the real agency lanes")]
 
 
+
+@entry("RG-0166", "The console can bulk-import ADVERTS, not only agents -- the no-IT door to the import pipeline exists and ships",
+       LOCKED, fixed_on="2026-08-23", scope="ms.js advertBulkOpen/advertBulkRun + the imports-card button; live /static/ms.js. "
+             "Born of David's eyeball question 23 Aug 2026: 'how would a property agency bulk upload all of their "
+             "property adverts?' -- the answer was 'only via the API or concierge', which broke the wave's effortless "
+             "promise for non-IT agencies. CLASS: every lane the outreach email promises must have a console door.",
+       ref="ADVERT-BULK-1, 23 Aug 2026. The box drives the SAME POST /agencies/{id}/import pipeline (auth = agency "
+           "api_key in body) -- no second import engine. Repo half asserts the functions and button; live half "
+           "asserts the deployed ms.js carries them.")
+def rg_console_advert_bulk():
+    out = []
+    import os as _os
+    fp = _os.path.join(REPO, "ms.js")
+    if _os.path.exists(fp):
+        js = open(fp, encoding="utf-8", errors="replace").read()
+        for needle in ("function advertBulkOpen", "function advertBulkRun", "Bulk import adverts"):
+            if needle not in js:
+                out.append((FAIL, "repo ms.js lost: " + needle))
+    else:
+        out.append((FAIL, "ms.js not found"))
+    try:
+        live = _get("/static/ms.js")
+        if "advertBulkOpen" not in live:
+            out.append((FAIL, "live ms.js does not carry the advert bulk box -- the ADVERT-BULK-1 deploy has not ridden"))
+    except Exception as ex:
+        out.append((FAIL, "live ms.js unreadable: %s" % repr(ex)[:60]))
+    return out or [(INFO, "console advert bulk-import present in repo and live")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

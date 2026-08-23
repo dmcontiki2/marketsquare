@@ -32,7 +32,8 @@ asserted by regression ledger RG-0163 / RG-0164 / RG-0165. Sending is DAVID's ac
 5. **Trigger the n8n wave** with `category: "Estate Agents"` (dry-run first —
    the payload node logs how many agency prospects were dropped for missing links;
    0 dropped is the target).
-6. **Lane-1 replies** (concierge): use the Import Guide flow on the agency's behalf —
+6. **Lane-1 replies** (concierge): EITHER paste their list into their console's
+   ⇪ Bulk import adverts box (ADVERT-BULK-1 — no code), OR use the Import Guide flow —
    `/agencies/{id}/agents/bulk` for the roster, `/agencies/{id}/import` for the book;
    both keys are in the agency's console header.
 

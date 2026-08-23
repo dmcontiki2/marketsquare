@@ -1540,6 +1540,7 @@ async function _renderAgency(agencyId){
   if(!a){ el.innerHTML='<div style="padding:30px;text-align:center;color:#ef4444;">Could not load agency.</div>'; return; }
   window._agencyName=a.name||'';   // rename prompt names its target (7 Jul 2026)
   window._agAgents=(a.agents||[]);   // AGENT-FILTER-1
+  window._agencyKey=a.api_key||'';   // ADVERT-BULK-1: the imports card's uploader auths with it
   const _agRowFn=function(m){
     const cap=m.listing_cap||10; const pct=Math.min(100,Math.round((m.listings_live/cap)*100));
     const tc=m.trust_score>=70?'#166534':(m.trust_score>=40?'#1e40af':'#6b7280');
@@ -1580,7 +1581,9 @@ async function _renderAgency(agencyId){
     +'<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;">'
       +'<div style="font-weight:700;font-size:14px;">'+_agL('imports')+'</div>'
       +'<div style="font-size:12px;color:var(--text-3);margin:4px 0 8px;">POST adverts (each with an agent_email) to <code>/agencies/'+a.id+'/import</code> with this key — each lands as a draft under that agent.</div>'
-      +'<div style="font-family:monospace;background:#0f172a;color:#a7f3d0;border-radius:8px;padding:8px 11px;font-size:12px;word-break:break-all;">'+a.api_key+'</div></div>'
+      +'<div style="font-family:monospace;background:#0f172a;color:#a7f3d0;border-radius:8px;padding:8px 11px;font-size:12px;word-break:break-all;">'+a.api_key+'</div>'
+      +'<div style="margin-top:10px;"><button onclick="advertBulkOpen()" title="Paste your stock list — every advert lands as a draft under the right agent" style="background:#fff;color:var(--navy,#0c1a2e);border:1.5px solid var(--navy,#0c1a2e);border-radius:50px;padding:9px 16px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">⇪ Bulk import adverts</button>'
+      +'<span style="font-size:11px;color:var(--text-3);margin-left:10px;">No IT needed — same pipeline as the API.</span></div></div>'
     +'<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">'
       +'<div style="font-weight:700;font-size:14px;margin-bottom:8px;">'+_agL('people')+'</div>'
       +'<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">'
@@ -16718,6 +16721,90 @@ async function agencyBulkRun(){
     _renderAgency(window._agencyId);
   }catch(e){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">Network hiccup — try again.</div>'; }
 }
+/* ── ADVERT-BULK-1 (23 Aug 2026, David: "how would a property agency bulk upload all
+   of their property adverts?") — the console door to POST /agencies/{id}/import.
+   Same locked pipeline as the IT/API lane: anonymisation, photo scan, drafts, caps,
+   per-advert report. This box only parses a paste and shows the report honestly. ── */
+function advertBulkHeader(){
+  return 'agent_email,category,title,description,price,city,suburb,area,photos,listing_type,prop_type,beds,baths,garages,floor_area,erf_size,rental_status,available_from,make,model,variant,vehicle_year,mileage_km,transmission,fuel_type,body_type,colour';
+}
+function advertBulkExample(){
+  var s=window._tsSkin;
+  if(s==='dealer') return 'agent_email,category,title,price,city,suburb,make,model,vehicle_year,mileage_km,transmission,fuel_type,photos\nsales@dealership.co.za,Cars,2019 Toyota Hilux 2.8 GD-6 double cab,R 489 000,Pretoria,Silverton,Toyota,Hilux,2019,98500,Automatic,Diesel,https://example.com/hilux1.jpg|https://example.com/hilux2.jpg';
+  if(s==='operator') return 'agent_email,category,title,description,price,city,photos\nguide@tours.co.za,Adventures,Kruger 4-day safari — Big 5 & bush walks,Four days in a private reserve with a lead guide,R 18 500 pp,Nelspruit,https://example.com/kruger1.jpg';
+  return 'agent_email,category,title,price,city,suburb,listing_type,prop_type,beds,baths,photos\nann@agency.co.za,Property,Sunny 3-bed family home in Waterkloof,R 2 450 000,Pretoria,Waterkloof,For Sale,House,3,2,https://example.com/house1.jpg|https://example.com/house2.jpg';
+}
+function advertBulkOpen(){
+  var el=document.getElementById('agency-body'); if(!el) return;
+  var box=document.getElementById('ad-bulk-box');
+  if(box){ box.remove(); return; }
+  var d=document.createElement('div'); d.id='ad-bulk-box';
+  d.style.cssText='background:var(--surface,#fff);border:2px dashed var(--border);border-radius:12px;padding:14px 16px;margin:12px 0;box-sizing:border-box;max-width:100%;';
+  var _cat=(window._tsSkin==='dealer')?'Cars':(window._tsSkin==='operator')?'Adventures':'Property';
+  d.innerHTML='<div style="font-weight:700;font-size:14px;margin-bottom:4px;">Bulk import adverts — your whole book, as drafts</div>'+
+    '<div style="font-size:12.5px;color:var(--text-3);line-height:1.6;margin-bottom:6px;">One line per advert, pasted from Excel or your system\'s export. Required: <b>agent_email</b> (someone already on your roster above) and a <b>title</b>. Photos are web addresses in a <b>photos</b> column, separated by | . Every advert lands as a <b>draft</b> under that agent — contact details are stripped, photos are checked, and nothing goes live until the agent reviews and publishes.</div>'+
+    '<div style="font-size:12px;color:var(--text-3);line-height:1.6;margin-bottom:6px;">Columns you can use (any order — leave out what you don\'t have; category defaults to <b>'+_cat+'</b> here):<br>'+
+    '<code style="display:block;white-space:normal;word-break:break-word;font-size:11px;background:var(--surface-2,#f4f6fa);border-radius:8px;padding:7px 9px;margin:4px 0;">'+
+    '<b>basics:</b> agent_email, category, title, description, price, city, suburb, area, photos<br>'+
+    '<b>property:</b> listing_type, prop_type, beds, baths, garages, floor_area, erf_size, rental_status, available_from &nbsp;·&nbsp; <b>cars:</b> make, model, variant, vehicle_year, mileage_km, transmission, fuel_type, body_type, colour</code>'+
+    'Start with 5–10 adverts to see your report, then send the rest. Each advert is AI-processed, so big batches take a few minutes — keep this tab open. Re-importing the same advert creates a duplicate: send each one once.</div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">'+
+    '<button onclick="advertBulkCopy(\'header\')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:11.5px;cursor:pointer;">⧉ Copy the column header</button>'+
+    '<button onclick="advertBulkCopy(\'example\')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:11.5px;cursor:pointer;">⧉ Copy a filled example</button></div>'+
+    '<textarea id="ad-bulk-text" rows="7" placeholder="'+advertBulkExample().replace(/"/g,'&quot;').replace(/\n/g,'&#10;')+'" style="width:100%;box-sizing:border-box;max-width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px;font-family:monospace;font-size:12px;"></textarea>'+
+    '<div style="display:flex;gap:8px;margin-top:8px;"><button id="ad-bulk-go" onclick="advertBulkRun()" style="background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:10px 18px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Import adverts</button>'+
+    '<button onclick="document.getElementById(\'ad-bulk-box\').remove()" style="background:none;border:1px solid var(--border);border-radius:50px;padding:10px 18px;cursor:pointer;">Cancel</button></div>'+
+    '<div id="ad-bulk-report" style="margin-top:10px;"></div>';
+  var anchorEl=el.querySelector('#ag-inv-email');
+  if(anchorEl && anchorEl.parentElement && anchorEl.parentElement.parentElement){ anchorEl.parentElement.parentElement.parentElement.insertBefore(d, anchorEl.parentElement.parentElement); }
+  else el.appendChild(d);
+  d.scrollIntoView({behavior:'smooth', block:'center'});
+}
+function advertBulkCopy(kind){
+  var txt = kind==='header' ? advertBulkHeader() : advertBulkExample();
+  try{ navigator.clipboard.writeText(txt).then(function(){ showToast(kind==='header'?'Column header copied — paste it as row 1 in Excel':'Example copied — paste it into the box or into Excel'); },
+    function(){ showToast('Could not copy — long-press the text to copy manually'); }); }
+  catch(e){ showToast('Could not copy — long-press the text to copy manually'); }
+}
+async function advertBulkRun(){
+  var rep=document.getElementById('ad-bulk-report');
+  var _raw=((document.getElementById('ad-bulk-text')||{}).value||'').trim();
+  if(!_raw){ if(rep) rep.innerHTML='<div style="color:var(--text-3,#5f6b78);font-size:12px;">Nothing to import yet — the grey text is just an example. Paste your own advert list into the box, then tap Import adverts.</div>'; return; }
+  var rows=_agBulkParse(_raw);
+  if(!rows||!rows.length){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">Could not read that — the first line must be the column names (e.g. agent_email,title,price), with one advert per line below it. Tap ⧉ Copy a filled example to see a working sample.</div>'; return; }
+  var _cat=(window._tsSkin==='dealer')?'Cars':(window._tsSkin==='operator')?'Adventures':'Property';
+  rows.forEach(function(r){
+    if(!r.category) r.category=_cat;
+    ['beds','baths','garages','floor_area','erf_size','vehicle_year','mileage_km'].forEach(function(k){ if(r[k]!==undefined) r[k]=parseInt(r[k],10)||null; });
+    if(typeof r.photos==='string') r.photos=r.photos.split(/[|\s]+/).map(function(u){return u.trim();}).filter(Boolean);
+  });
+  var bad=rows.filter(function(r){ return !(r.agent_email&&String(r.agent_email).indexOf('@')>0) || !r.title; });
+  if(bad.length){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">'+bad.length+' line(s) are missing agent_email or title — every advert needs both. Fix those lines and try again.</div>'; return; }
+  var go=document.getElementById('ad-bulk-go'); if(go){ go.disabled=true; go.textContent='Importing '+rows.length+'…'; }
+  if(rep) rep.innerHTML='<div style="font-size:12px;color:var(--text-3);">Importing '+rows.length+' advert'+(rows.length===1?'':'s')+' — each one is AI-processed, this can take a few minutes…</div>';
+  try{
+    var r=await fetch(BEA_URL+'/agencies/'+window._agencyId+'/import',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({api_key:window._agencyKey||'',adverts:rows})});
+    var d=await r.json();
+    if(!r.ok){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">'+((d&&d.detail)||'Import failed')+'</div>'; return; }
+    var h='<div style="font-size:12.5px;font-weight:700;margin-bottom:4px;">'+(d.imported||0)+' imported as drafts'
+      +((d.needs_review||0)?' · '+d.needs_review+' flagged for review':'')
+      +((d.unmatched_no_agent||0)?' · <span style="color:#b91c1c;">'+d.unmatched_no_agent+' skipped — agent not on your roster (add them with Bulk add first)</span>':'')
+      +((d.skipped_at_cap||0)?' · <span style="color:#b91c1c;">'+d.skipped_at_cap+' over an agent\'s listing cap</span>':'')
+      +' · photos: '+(d.photos_attached||0)+' attached'+((d.photos_held||0)?', <span style="color:#b45309;">'+d.photos_held+' held (branded/flyer images are never stored)</span>':'')+'</div>';
+    (d.rows||[]).forEach(function(a){
+      h+='<div style="font-size:11.5px;padding:3px 0;border-bottom:1px dashed var(--border);">✓ '+(a.title||'(untitled)')+' → '+a.agent_email
+        +(a.needs_review?' · <b>needs review</b>':'')
+        +(a.photos&&a.photos.held?' · '+a.photos.held+' photo(s) held':'')+'</div>';
+    });
+    h+='<div style="font-size:11px;color:var(--text-3);margin-top:6px;">Drafts sit under each agent — they review, fix anything the 50/100 quality gate flags, and publish.</div>';
+    if(rep) rep.innerHTML=h;
+    showToast((d.imported||0)+' adverts imported as drafts');
+    _renderAgency(window._agencyId);
+  }catch(e){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">Network hiccup — nothing may have been saved. Check the listing counts above before re-sending (re-imports duplicate).</div>'; }
+  finally{ var g2=document.getElementById('ad-bulk-go'); if(g2){ g2.disabled=false; g2.textContent='Import adverts'; } }
+}
+
 /* ── AGENT-SVC-3: Tour agents for holiday SEARCHERS (Adventures screen) ──
    Buyer-side, not sell-flow: the searcher opens the panel, sees why a tour
    agent, picks one anonymously, and the agent gets the lead (accepts at 1T). */
