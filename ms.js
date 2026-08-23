@@ -1548,7 +1548,7 @@ async function _renderAgency(agencyId){
       +'<button onclick="agencyRemove(\''+m.email+'\')" style="border:1px solid #fecaca;background:#fff;color:#b91c1c;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">Remove</button>');
     return '<tr style="border-bottom:1px solid #f1f3f7;">'
       +'<td style="padding:10px;"><div style="font-weight:600;">'+(m.name||m.email)+'</div><div style="font-size:11px;color:var(--text-3);">'+m.email+'</div></td>'
-      +'<td style="padding:10px;">'+m.listings_live+' / '+cap+' <span style="display:inline-block;width:54px;height:6px;background:#eef1f6;border-radius:6px;vertical-align:middle;margin-left:6px;"><i style="display:block;height:100%;width:'+pct+'%;background:#C8873A;border-radius:6px;"></i></span>'+((m.listings_draft||0)?' <span title="Imported or saved adverts awaiting the agent\'s review and publish" style="font-size:10.5px;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:1px 7px;margin-left:6px;">'+m.listings_draft+' draft'+(m.listings_draft>1?'s':'')+'</span>':'')+'</td>'
+      +'<td style="padding:10px;">'+m.listings_live+' / '+cap+' <span style="display:inline-block;width:54px;height:6px;background:#eef1f6;border-radius:6px;vertical-align:middle;margin-left:6px;"><i style="display:block;height:100%;width:'+pct+'%;background:#C8873A;border-radius:6px;"></i></span>'+((m.listings_draft||0)?' <span onclick="agencyDraftsView(\''+m.email+'\');event.stopPropagation();" title="Tap to view this agent\'s drafts (read-only)" style="cursor:pointer;font-size:10.5px;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:1px 7px;margin-left:6px;">'+m.listings_draft+' draft'+(m.listings_draft>1?'s':'')+' ▸</span>':'')+'</td>'
       +'<td style="padding:10px;color:'+tc+';font-weight:700;">'+m.trust_score+'</td>'
       +'<td style="padding:10px;">'+m.intros+'</td>'
       +'<td style="padding:10px;font-size:11px;">'+(m.role==='admin'?'admin':((m.tier==='pro'?'Pro':'Starter')+' · '+m.status))+'</td>'
@@ -16766,6 +16766,43 @@ function advertBulkCopy(kind){
     function(){ showToast('Could not copy — long-press the text to copy manually'); }); }
   catch(e){ showToast('Could not copy — long-press the text to copy manually'); }
 }
+/* ── DRAFT-VIEW-1 (23 Aug 2026, David: "how do i view it?") — the agency admin's
+   read-only window onto an agent's drafts. Tap the amber chip in the agents table. ── */
+async function agencyDraftsView(email){
+  var existing=document.getElementById('ag-drafts-panel');
+  if(existing){ var same=existing.getAttribute('data-email')===email; existing.remove(); if(same) return; }
+  var tb=document.getElementById('ag-agents-tb'); if(!tb) return;
+  var tblEl=tb.closest('table'); var card=tblEl?tblEl.parentElement:null; if(!card) return;
+  var d=document.createElement('div'); d.id='ag-drafts-panel'; d.setAttribute('data-email',email);
+  d.style.cssText='border:1.5px solid #fcd34d;background:#fffbeb;border-radius:12px;padding:12px 14px;margin-top:12px;';
+  d.innerHTML='<div style="font-size:12px;color:var(--text-3);">Loading '+email+' drafts…</div>';
+  card.appendChild(d); d.scrollIntoView({behavior:'smooth',block:'nearest'});
+  var ls=[];
+  try{
+    var r=await fetch(BEA_URL+'/listings/mine?email='+encodeURIComponent(email),{headers:{'X-Api-Key':API_KEY}});
+    var j=await r.json(); ls=(Array.isArray(j)?j:(j.listings||[])).filter(function(l){return (l.listing_status||'')==='draft';});
+  }catch(e){ d.innerHTML='<div style="color:#b91c1c;font-size:12px;">Could not load drafts — try again.</div>'; return; }
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+    +'<div style="font-weight:700;font-size:13.5px;color:#92400e;">Drafts — '+email+' <span style="font-weight:400;font-size:11px;color:var(--text-3);">(read-only — the agent reviews and publishes from their own sign-in)</span></div>'
+    +'<button onclick="document.getElementById(\'ag-drafts-panel\').remove()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;cursor:pointer;">Close</button></div>';
+  if(!ls.length){ h+='<div style="font-size:12px;color:var(--text-3);">No drafts right now.</div>'; d.innerHTML=h; return; }
+  ls.forEach(function(l){
+    var spec='';
+    if(l.category==='Property'){ spec=[l.prop_type,(l.beds?l.beds+' bed':''),(l.baths?l.baths+' bath':''),l.listing_type].filter(Boolean).join(' · '); }
+    else if(l.category==='Cars'){ spec=[l.vehicle_year,l.make,l.model,(l.mileage_km?Number(l.mileage_km).toLocaleString()+' km':''),l.transmission].filter(Boolean).join(' · '); }
+    else { spec=[l.category,l.subject,l.service_type].filter(Boolean).join(' · '); }
+    var nph=0; try{ var pu=l.photo_urls; if(typeof pu==='string') pu=JSON.parse(pu||'[]'); if(Array.isArray(pu)) nph=pu.length; }catch(e){}
+    h+='<div style="display:flex;gap:10px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:9px 11px;margin-bottom:7px;align-items:center;">'
+      +(l.thumb_url?'<img src="'+l.thumb_url+'" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0;">':'<div style="width:52px;height:52px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📄</div>')
+      +'<div style="min-width:0;">'
+      +'<div style="font-weight:700;font-size:13px;color:var(--navy,#0c1a2e);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(l.title||'(untitled)')+'</div>'
+      +'<div style="font-size:11.5px;color:var(--text-3);">'+[(l.price||''),[l.suburb,l.city].filter(Boolean).join(', '),spec].filter(Boolean).join(' · ')+'</div>'
+      +'<div style="font-size:11px;color:var(--text-3);">'+nph+' photo'+(nph===1?'':'s')+(l.created_at?' · imported '+String(l.created_at).slice(0,10):'')+' · <span style="color:#92400e;font-weight:700;">draft</span></div>'
+      +'</div></div>';
+  });
+  d.innerHTML=h;
+}
+
 async function advertBulkRun(){
   var rep=document.getElementById('ad-bulk-report');
   var _raw=((document.getElementById('ad-bulk-text')||{}).value||'').trim();
