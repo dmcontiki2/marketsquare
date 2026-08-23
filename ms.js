@@ -16634,15 +16634,43 @@ function agencyBulkOpen(){
   if(box){ box.remove(); return; }
   var d=document.createElement('div'); d.id='ag-bulk-box';
   d.style.cssText='background:var(--surface,#fff);border:2px dashed var(--border);border-radius:12px;padding:14px 16px;margin:12px 0;';
-  d.innerHTML='<div style="font-weight:700;font-size:14px;margin-bottom:4px;">Bulk add agents — one process, same template as the solo form</div>'+
-    '<div style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:8px;">Vertical: <b>'+(window._tsSkin==='dealer'?'Car sales agents (MIRA gate)':window._tsSkin==='operator'?'Tour agents (ASATA gate)':'Estate agents (FFC gate)')+'</b> — set by the console skin. Paste <b>CSV</b> (header row required) or a <b>JSON array</b>. CSV columns: <code style="font-size:11px;">email,name,city,country,suburbs,years_experience,properties_sold,ppra_number,ffc_year,nqf_level,body,mira_number,inspection_partner,asata_number,iata_code,cipc_number,bonding_proof,listing_cap</code> — use JSON for headline/bio (commas). Credentials land as <b>pending</b>; trust scores move only after ops verifies. Estate agents need a verified FFC, car sales agents a verified MIRA registration, before going live.</div>'+
-    '<textarea id="ag-bulk-text" rows="7" placeholder="email,name,city,country,suburbs,years_experience,properties_sold,ppra_number,ffc_year,nqf_level,body,listing_cap\nann@agency.co.za,Ann Smith,Pretoria,ZA,&quot;Waterkloof, Brooklyn&quot;,12,240,PPRA123,2026,5,IEASA,10" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px;font-family:monospace;font-size:12px;"></textarea>'+
+  d.style.boxSizing='border-box'; d.style.maxWidth='100%';
+  var _v=(window._tsSkin==='dealer')?'cars':(window._tsSkin==='operator')?'travel':'property';
+  var _vlbl=_v==='cars'?'Car sales agents (MIRA gate)':_v==='travel'?'Tour agents (ASATA gate)':'Estate agents (FFC gate)';
+  d.innerHTML='<div style="font-weight:700;font-size:14px;margin-bottom:4px;">Bulk add agents — paste your list, we do the rest</div>'+
+    '<div style="font-size:12.5px;color:var(--text-3);line-height:1.6;margin-bottom:6px;">Paste your agent list straight from Excel or your system\'s CSV export. <b>Only the email column is required</b> — everything else is optional and simply makes each agent\'s profile stronger. Every agent you upload gets their own sign-in link automatically.</div>'+
+    '<div style="font-size:12px;color:var(--text-3);line-height:1.6;margin-bottom:6px;">The first line must be the column names. Use any of these, in any order:<br>'+
+    '<code style="display:block;white-space:normal;word-break:break-word;font-size:11px;background:var(--surface-2,#f4f6fa);border-radius:8px;padding:7px 9px;margin:4px 0;">'+
+    '<b>basics:</b> email, name, city, country, suburbs, years_experience, properties_sold, listing_cap<br>'+
+    '<b>estate agents:</b> ppra_number, ffc_year, nqf_level, body &nbsp;·&nbsp; <b>car sales:</b> mira_number, inspection_partner &nbsp;·&nbsp; <b>tour agents:</b> asata_number, iata_code, cipc_number, bonding_proof</code>'+
+    'This console is set to <b>'+_vlbl+'</b>. Credentials land as <b>pending</b> — our ops team verifies each against the issuing register, and that is when trust points appear. Headline and bio contain commas, so add those via JSON or let each agent write their own after signing in.</div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">'+
+    '<button onclick="agencyBulkCopy(\'header\')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:11.5px;cursor:pointer;">⧉ Copy the column header</button>'+
+    '<button onclick="agencyBulkCopy(\'example\')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:11.5px;cursor:pointer;">⧉ Copy a filled example</button></div>'+
+    '<textarea id="ag-bulk-text" rows="7" placeholder="'+agencyBulkExample().replace(/"/g,'&quot;').replace(/\n/g,'&#10;')+'" style="width:100%;box-sizing:border-box;max-width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px;font-family:monospace;font-size:12px;"></textarea>'+
     '<div style="display:flex;gap:8px;margin-top:8px;"><button onclick="agencyBulkRun()" style="background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:10px 18px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Upload roster</button>'+
     '<button onclick="document.getElementById(\'ag-bulk-box\').remove()" style="background:none;border:1px solid var(--border);border-radius:50px;padding:10px 18px;cursor:pointer;">Cancel</button></div>'+
     '<div id="ag-bulk-report" style="margin-top:10px;"></div>';
   var anchorEl=el.querySelector('#ag-inv-email');
   if(anchorEl && anchorEl.parentElement && anchorEl.parentElement.parentElement){ anchorEl.parentElement.parentElement.insertBefore(d, anchorEl.parentElement.nextSibling); }
   else el.appendChild(d);
+}
+// AGENCY-BULK-UX-1 (23 Aug 2026, David's eyeball): copyable header + example so an
+// agency admin can start in Excel, not in documentation. Only email is required.
+function agencyBulkHeader(){
+  return 'email,name,city,country,suburbs,years_experience,properties_sold,ppra_number,ffc_year,nqf_level,body,mira_number,inspection_partner,asata_number,iata_code,cipc_number,bonding_proof,listing_cap';
+}
+function agencyBulkExample(){
+  var s=window._tsSkin;
+  if(s==='dealer') return 'email,name,city,country,years_experience,mira_number,inspection_partner,listing_cap\nsipho@dealership.co.za,Sipho Dlamini,Silverton,ZA,8,MIRA4432,AA Inspections,10';
+  if(s==='operator') return 'email,name,city,country,years_experience,asata_number,iata_code,listing_cap\nthandi@tours.co.za,Thandi Mokoena,Cape Town,ZA,9,ASATA1180,IATA778,10';
+  return 'email,name,city,country,suburbs,years_experience,properties_sold,ppra_number,ffc_year,nqf_level,body,listing_cap\nann@agency.co.za,Ann Smith,Pretoria,ZA,"Waterkloof, Brooklyn",12,240,PPRA123,2026,5,IEASA,10';
+}
+function agencyBulkCopy(kind){
+  var txt = kind==='header' ? agencyBulkHeader() : agencyBulkExample();
+  try{ navigator.clipboard.writeText(txt).then(function(){ showToast(kind==='header'?'Column header copied — paste it as row 1 in Excel':'Example copied — paste it into the box or into Excel'); },
+    function(){ showToast('Could not copy — long-press the text to copy manually'); }); }
+  catch(e){ showToast('Could not copy — long-press the text to copy manually'); }
 }
 function _agBulkParse(text){
   text=String(text||'').trim();
@@ -16669,8 +16697,10 @@ function _agBulkParse(text){
 }
 async function agencyBulkRun(){
   var rep=document.getElementById('ag-bulk-report');
-  var agents=_agBulkParse((document.getElementById('ag-bulk-text')||{}).value);
-  if(!agents||!agents.length){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">Could not parse — check the header row (CSV) or JSON syntax.</div>'; return; }
+  var _raw=((document.getElementById('ag-bulk-text')||{}).value||'').trim();
+  if(!_raw){ if(rep) rep.innerHTML='<div style="color:var(--text-3,#5f6b78);font-size:12px;">Nothing to upload yet — the grey text is just an example. Paste your own agent list into the box (⧉ Copy a filled example gives you the format), then tap Upload roster.</div>'; return; }
+  var agents=_agBulkParse(_raw);
+  if(!agents||!agents.length){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">Could not read that — the first line must be the column names (e.g. email,name,city), with one agent per line below it. Tap ⧉ Copy a filled example to see a working sample.</div>'; return; }
   if(rep) rep.innerHTML='<div style="font-size:12px;color:var(--text-3);">Uploading '+agents.length+' agents…</div>';
   try{
     var r=await fetch(BEA_URL+'/agencies/'+window._agencyId+'/agents/bulk',{method:'POST',
