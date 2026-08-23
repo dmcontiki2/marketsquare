@@ -51,7 +51,13 @@ Exempt categories (raw `l.category` keys): `adventures`, `adventure`, `experienc
 ## 3 · Introduction fee (independent of subscription)
 **1 Tuppence = USD $2, fixed.** Buyers pay **1T per Introduction** regardless of tier. Subscriptions buy *slots* (sellers) and *reach* (buyers) — never introductions.
 
-## 4 · Founders Badge ("Ruby Spark") — launch special
+## 4 · Founders Badge ("Ruby Spark") — **PARKED (RUL-047, 23 Aug 2026 — not part of launch)**
+
+> David: the concept was not completed for launch. ALL customer-facing mention removed (outreach
+> templates, onboarding emails, marketing builders, playbook). Backend machinery stays dormant and
+> env-gated OFF; the badge is RESERVED for a single once-off occasion David will pick once a customer
+> base exists (Christmas / Black Friday class) as a premier-subscription once-off injection. Nothing
+> below is offered to anyone until that day.
 - Mints **only on the $20 Pro** subscription during the launch window (`QUALIFYING_TIERS = ("pro",)`). **Window posture (David, 6 Jul 2026): activated PER CITY, post-launch, on traction — each city's activation sets its own definitive deadline (the old 2026-08-01 was a placeholder, now removed from all app copy; machinery stays env-gated OFF until activation).**
 - Advantage: **+20% Tuppence for life**, rounded up — **Pro 10 -> 12T**. Honoured on any paid plan after minting; survives downgrade/pause.
 - One human, one badge; ID-hash bound; never re-minted. Full canon: `Patents/Canon_Addendum_1_FoundersBadge.docx` (rev 3).

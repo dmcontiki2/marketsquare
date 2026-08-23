@@ -169,8 +169,8 @@ stat(s, 5.01, 1.7, 2.23, "11,679", "suburbs mapped in South Africa alone");
 stat(s, 7.24, 1.7, 2.23, "7", "listing categories, Property first among equals");
 s.addShape(p.shapes.ROUNDED_RECTANGLE, { x: 0.55, y: 3.35, w: 8.9, h: 1.5, rectRadius: 0.07, fill: { color: NAVY }, line: { type: "none" } });
 spark(s, 0.85, 3.62, 0.32);
-s.addText([{ text: "The founding window — the Ruby Spark.  ", options: { bold: true, color: WHITE, fontSize: 14 } },
-  { text: "Each city opens one founding window. Verified agencies that join inside it mint the Ruby Spark badge — minted at launch, never minted again — plus founders' preferential terms for life. Early isn't a risk here; it's the prize.", options: { color: "C7D2E3", fontSize: 12 } }],
+s.addText([{ text: "The founding window — position, earned early.  ", options: { bold: true, color: WHITE, fontSize: 14 } },
+  { text: "Verified agencies that join early are positioned before the first buyer walks in — listings live, Trust Score banked, founding recognition on the profile. Early isn't a risk here; it's position.", options: { color: "C7D2E3", fontSize: 12 } }],
   { x: 1.35, y: 3.55, w: 7.9, h: 1.15, fontFace: BF, margin: 0, valign: "top" });
 draftFooter(s);
 
@@ -187,7 +187,7 @@ asks.forEach((a, i) => {
   s.addText(a[1], { x: x + 0.2, y: 2.3, w: 2.0, h: 0.8, fontFace: BF, fontSize: 11, color: "C7D2E3", margin: 0, valign: "top" });
 });
 s.addText([{ text: "In return: ", options: { bold: true, color: WHITE } },
-  { text: "day-one presence in your city, the Ruby Spark founding badge, white-glove import of your full book — at zero cost, on the tier that stays free forever.", options: { color: "C7D2E3" } }],
+  { text: "day-one presence in your city, verified credentials scored and visible, white-glove import of your full book — at zero cost, on the tier that stays free forever.", options: { color: "C7D2E3" } }],
   { x: 0.55, y: 3.45, w: 6.3, h: 1.2, fontFace: BF, fontSize: 13.5, margin: 0, valign: "top" });
 s.addImage({ path: QR, x: 8.35, y: 3.45, w: 1.35, h: 1.35 });
 s.addText("trustsquare.co", { x: 8.2, y: 4.75, w: 1.65, h: 0.3, fontFace: BF, fontSize: 10.5, color: "C7D2E3", align: "center", margin: 0 });
@@ -202,7 +202,7 @@ const citySlides = [
    "Full UK geo live in-app. Founding agencies define the London launch book — first verified agencies anchor their boroughs before public open.",
    "Founding window opens: [DATE — London]"],
   ["New York", "United States · launch wave 1",
-   "US geo live in-app. The founding window anchors Manhattan and the boroughs ahead of public open — Ruby Spark status is citywide and permanent.",
+   "US geo live in-app. The founding window anchors Manhattan and the boroughs ahead of public open — founding position is citywide and lasting.",
    "Founding window opens: [DATE — New York]"],
   ["Sydney", "Australia · launch wave 1",
    "AU geo live in-app. Founding agencies set the Sydney standard — verified, badged and loaded before the city opens to buyers.",
@@ -220,7 +220,7 @@ citySlides.forEach(C => {
   s.addShape(p.shapes.ROUNDED_RECTANGLE, { x: 6.25, y: 1.95, w: 3.2, h: 2.95, rectRadius: 0.07, fill: { color: ICE }, line: { color: LINE, width: 1 } });
   spark(s, 6.5, 2.2, 0.28);
   s.addText([{ text: "Founding terms\n", options: { bold: true, fontSize: 13, color: NAVY } },
-    { text: "Free agency tier — never a paywall\nRuby Spark founding badge\nFounders' preferential terms for life\nFull white-glove import included", options: { fontSize: 11, color: MUTED, lineSpacing: 17 } }],
+    { text: "Free agency tier — never a paywall\nVerified credentials, scored and visible\nFounding recognition on your profile\nFull white-glove import included", options: { fontSize: 11, color: MUTED, lineSpacing: 17 } }],
     { x: 6.95, y: 2.12, w: 2.35, h: 1.95, fontFace: BF, margin: 0, valign: "top" });
   s.addShape(p.shapes.ROUNDED_RECTANGLE, { x: 6.5, y: 4.18, w: 2.7, h: 0.5, rectRadius: 0.07, fill: { color: "DBE4F0" }, line: { type: "none" } });
   s.addText(C[3], { x: 6.62, y: 4.18, w: 2.5, h: 0.5, fontFace: HF, fontSize: 11.5, bold: true, color: ACCENT, margin: 0, valign: "middle" });

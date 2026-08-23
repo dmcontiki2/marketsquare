@@ -11,7 +11,7 @@ Runner: n8n (same lane as n8n_outreach_workflow.json) or manual send during foun
 | 4 | Day 5 | List your programmes | The 4 questions a listing answers; AI drafting |
 | 5 | Day 7 | The best-prepared candidates you've ever received | Dossier pipeline; ATTACH both example dossier PDFs |
 | 6 | Day 10 | The rules that protect you | No guaranteed visas, no hidden fees, dated facts |
-| 7 | Day 14 | You are early — that is worth something | Founding benefits, +20% for-life, launch visibility |
+| 7 | Day 14 | You are early — that is worth something | Founding recognition, launch visibility, first introductions |
 | 8 | Day 18 | Your two-minute go-live checklist | Checklist + human support + publish CTA |
 
 Companion outreach (cold invite, BEFORE the sequence): templates/placement_agency_outreach.html.

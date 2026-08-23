@@ -110,6 +110,20 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-047": [
+   # The badge is PARKED: canon says so, and the customer-facing surfaces must stay
+   # CLEAN of it until David names the occasion. must_NOT needles police re-surfacing
+   # on the highest-traffic templates + both builders; the placement lane doubles as
+   # the travel-remnant guard (no ASATA/journey copy in a placement invite).
+   ("PRICING_CANON.md", ["PARKED (RUL-047"], []),
+   ("RULINGS.md", ["THE FOUNDERS BADGE IS PARKED"], []),
+   ("orchestration_v2/templates/travel_agency_outreach.html", [], ["launch_code", "Founders Badge"]),
+   ("orchestration_v2/templates/agency_outreach.html", [], ["launch_code", "Founders Badge"]),
+   ("orchestration_v2/templates/placement_agency_outreach.html", ["Placement Agency"], ["launch_code", "Founders Badge", "ASATA", "journey map"]),
+   ("orchestration_v2/templates/placement_onboarding/onboard_7.html", ["Founding status"], ["20%", "for-life", "Founders Badge"]),
+   ("marketing/src/build_deck.js", [], ["Ruby Spark"]),
+   ("marketing/src/build_posters.py", [], ["founding badge"]),
+ ],
  "RUL-046": [
    # The placement vertical exists as artefacts: cold invite + all 8 onboarding
    # emails + the cadence doc + manifest rows; and the launch posture (engine dark,
