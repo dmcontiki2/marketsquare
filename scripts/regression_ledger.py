@@ -8652,5 +8652,30 @@ def rg_pro_seat_purchasable():
     return out or [(INFO, "agent-side seat subscription lane present")]
 
 
+
+@entry("RG-0168", "NOTHING goes live without the seller's own EULA acceptance -- imports land drafts, and publish 403s until the agent accepts",
+       LOCKED, fixed_on="2026-08-23", scope="bea_main.py publish_listing (the ONE draft->live door). CLASS: every arrival "
+             "path -- solo signup, agency invite, roster bulk, advert import -- converges on this gate; a second publish "
+             "path that skips it would be the fault. David's requirement, 23 Aug 2026: 'All agents has to go through the "
+             "EULA acceptance irrespective of how we import them.'",
+       ref="AGENCY-KEY-1 session, 23 Aug 2026. Code-pattern half (labeled as such) + E2E-probed live same day: "
+           "PUT /listings/375/publish for an EULA-less agent answered 403 'EULA not accepted'. Superuser bypass is "
+           "deliberate (admin testing) and part of the assertion.")
+def rg_eula_gates_live():
+    out = []
+    import os as _os
+    fp = _os.path.join(REPO, "bea_main.py")
+    if _os.path.exists(fp):
+        s = open(fp, encoding="utf-8", errors="replace").read()
+        if "EULA not accepted" not in s:
+            out.append((FAIL, "publish_listing lost its EULA 403 -- drafts could go live without acceptance"))
+        i = s.find("def publish_listing")
+        if i >= 0 and "eula_accepted_at" not in s[i:i+3000]:
+            out.append((FAIL, "publish_listing no longer reads eula_accepted_at"))
+    else:
+        out.append((FAIL, "bea_main.py not found"))
+    return out or [(INFO, "the one draft->live door still demands the seller's EULA acceptance")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

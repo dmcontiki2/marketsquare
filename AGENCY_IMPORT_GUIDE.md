@@ -23,6 +23,7 @@ listing quality + 50% trust score).
 `POST https://trustsquare.co/agencies/{your_id}/agents/bulk` (same API key), JSON:
 ```json
 {
+  "api_key": "tsq_agency_...",       // your agency key authenticates the roster too (AGENCY-KEY-1)
   "vertical": "property",            // property | cars | travel — or per-agent
   "agents": [{
     "email": "ann@youragency.co.za", "name": "Ann Smith",

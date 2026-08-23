@@ -16818,13 +16818,17 @@ async function agencyDraftsView(email){
     if(l.category==='Property'){ spec=[l.prop_type,(l.beds?l.beds+' bed':''),(l.baths?l.baths+' bath':''),l.listing_type].filter(Boolean).join(' · '); }
     else if(l.category==='Cars'){ spec=[l.vehicle_year,l.make,l.model,(l.mileage_km?Number(l.mileage_km).toLocaleString()+' km':''),l.transmission].filter(Boolean).join(' · '); }
     else { spec=[l.category,l.subject,l.service_type].filter(Boolean).join(' · '); }
-    var nph=0; try{ var pu=l.photo_urls; if(typeof pu==='string') pu=JSON.parse(pu||'[]'); if(Array.isArray(pu)) nph=pu.length; }catch(e){}
+    // PHOTO-COUNT-TRUTH (23 Aug 2026, David: "says 0 photos but shows a photo"): imports
+    // store photos server-side with thumb/medium on the row and photo_urls NULL -- so a
+    // count is only claimable when photo_urls exists; otherwise say what we can SEE.
+    var nph=null; try{ var pu=l.photo_urls; if(typeof pu==='string') pu=JSON.parse(pu||'[]'); if(Array.isArray(pu)&&pu.length) nph=pu.length; }catch(e){}
+    var photoTxt = nph!==null ? (nph+' photo'+(nph===1?'':'s')) : (l.thumb_url ? 'photos attached ✓' : 'no photos yet');
     h+='<div style="display:flex;gap:10px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:9px 11px;margin-bottom:7px;align-items:center;">'
       +(l.thumb_url?'<img src="'+l.thumb_url+'" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0;">':'<div style="width:52px;height:52px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📄</div>')
       +'<div style="min-width:0;">'
       +'<div style="font-weight:700;font-size:13px;color:var(--navy,#0c1a2e);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(l.title||'(untitled)')+'</div>'
       +'<div style="font-size:11.5px;color:var(--text-3);">'+[(l.price||''),[l.suburb,l.city].filter(Boolean).join(', '),spec].filter(Boolean).join(' · ')+'</div>'
-      +'<div style="font-size:11px;color:var(--text-3);">'+nph+' photo'+(nph===1?'':'s')+(l.created_at?' · imported '+String(l.created_at).slice(0,10):'')+' · <span style="color:#92400e;font-weight:700;">draft</span></div>'
+      +'<div style="font-size:11px;color:var(--text-3);">'+photoTxt+(l.created_at?' · imported '+String(l.created_at).slice(0,10):'')+' · <span style="color:#92400e;font-weight:700;">draft</span></div>'
       +'</div></div>';
   });
   d.innerHTML=h;

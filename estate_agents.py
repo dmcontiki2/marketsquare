@@ -40,7 +40,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
 import auth
@@ -575,16 +575,25 @@ class BulkAgentIn(BaseModel):
 class BulkOnboardIn(BaseModel):
     agents: List[BulkAgentIn]
     vertical: Optional[str] = None   # agency-level default; per-agent overrides
+    api_key: Optional[str] = None    # AGENCY-KEY-1 (23 Aug 2026): the agency's OWN key may auth the roster --
+                                     # the Import Guide always promised "same API key"; now the code agrees
 
 @router.post("/agencies/{agency_id}/agents/bulk")
-def bulk_onboard_agents(agency_id: int, req: BulkOnboardIn, _key: str = Depends(auth.require_api_key)):
+def bulk_onboard_agents(agency_id: int, req: BulkOnboardIn,
+                        x_api_key: Optional[str] = Header(default=None, alias="X-Api-Key")):
     """Agency bulk onboarding: membership + anonymised service profile + credential
-    CLAIMS (pending, verified by ops before they score)."""
+    CLAIMS (pending, verified by ops before they score).
+    AUTH (AGENCY-KEY-1): EITHER the app X-Api-Key header (console path) OR the
+    agency's own api_key in the body (the IT-person path the Import Guide documents,
+    mirroring /agencies/{id}/import)."""
     conn = database.get_db()
     try:
         init_schema(conn)
-        if not conn.execute("SELECT id FROM agencies WHERE id=?", (agency_id,)).fetchone():
+        _ag = conn.execute("SELECT id, api_key FROM agencies WHERE id=?", (agency_id,)).fetchone()
+        if not _ag:
             raise HTTPException(status_code=404, detail="Agency not found")
+        if not ((x_api_key and x_api_key == auth.API_KEY) or (req.api_key and req.api_key == _ag["api_key"])):
+            raise HTTPException(status_code=401, detail="Auth failed: send the app X-Api-Key header, or your agency api_key in the body")
         report = []
         for a in req.agents:
             email = (a.email or "").strip().lower()

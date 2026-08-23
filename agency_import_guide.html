@@ -41,7 +41,8 @@ private sellers and holiday searchers choosing an agent, ranked by <b>Best Match
 (50% listing quality + 50% trust score).</p>
 <pre><code>POST https://trustsquare.co/agencies/{your_id}/agents/bulk
 {
-  "vertical": "property",            // property | cars | travel — or per-agent
+  "api_key": "tsq_agency_...",   // your agency key (or send the console's X-Api-Key header)
+"vertical": "property",            // property | cars | travel — or per-agent
   "agents": [{
     "email": "ann@youragency.co.za", "name": "Ann Smith",
     "city": "Pretoria", "country": "ZA", "suburbs": "Waterkloof, Brooklyn",
