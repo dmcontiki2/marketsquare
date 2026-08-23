@@ -1,3 +1,14 @@
+## 2026-08-24 — FRESH-1 (RG-0170): the stale-tab class is CLOSED
+
+- David: "Three times recurring..." — three times in one day an open tab hid fresh
+  work (offline-shell first paint, cached-shell E2E, "nothing has changed?"), and
+  every time the fix was a human guessing "hard refresh". Now the app polls the
+  served index's ms.js ?v= every 5 minutes against its own; when a deploy has
+  landed, a floating "✨ New version — tap to refresh" bar appears. Never
+  auto-reloads (a seller mid-listing loses nothing). RG-0170 LOCKED (repo + live).
+- Also SKIN-HINT-1: viewing an org through a mismatched skin now explains itself
+  and points at the left dropdown, where the per-vertical example orgs live.
+
 ## 2026-08-24 — CONSOLE-RICH-1: the real console now shows what the design preview promised
 
 - David, comparing preview to app: "your skins has great examples which will look

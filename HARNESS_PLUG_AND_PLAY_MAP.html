@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Harness, Explained — Plug-and-Play AI</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --ink:#e2e8f0; --muted:#94a3b8;
+    --hosted:#3b82f6; --hostedbg:#1e3a5f;
+    --local:#14b8a6;  --localbg:#134e4a;
+    --harness:#f59e0b; --harnessbg:#3f2d10;
+    --gov:#a78bfa;    --govbg:#312255;
+    --pc:#4ade80;     --pcbg:#14391f;
+    --log:#94a3b8;    --logbg:#293241;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding:28px 24px 40px}
+  h1{font-size:26px;font-weight:700;text-align:center;letter-spacing:.3px}
+  .sub{color:var(--muted);text-align:center;margin:8px auto 30px;max-width:820px;font-size:14.5px;line-height:1.5}
+  .board{display:flex;gap:0;justify-content:center;align-items:stretch;max-width:1280px;margin:0 auto;flex-wrap:wrap}
+  .col{display:flex;flex-direction:column;gap:10px;min-width:230px;flex:1;max-width:330px}
+  .coltitle{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:6px}
+  .coltitle small{display:block;font-weight:400;letter-spacing:.3px;text-transform:none;color:var(--muted);margin-top:3px;font-size:11.5px}
+  /* model cartridges */
+  .cart{border-radius:10px;padding:11px 14px 11px 16px;position:relative;border:1px solid transparent}
+  .cart::after{content:"";position:absolute;right:-9px;top:50%;transform:translateY(-50%);width:9px;height:22px;border-radius:0 5px 5px 0}
+  .hosted{background:var(--hostedbg);border-color:var(--hosted)}
+  .hosted::after{background:var(--hosted)}
+  .local{background:var(--localbg);border-color:var(--local)}
+  .local::after{background:var(--local)}
+  .cart b{font-size:14px;display:block}
+  .cart span{font-size:11.5px;color:var(--muted)}
+  .price{float:right;font-size:10.5px;padding:2px 7px;border-radius:20px;font-weight:600;margin-top:1px}
+  .hosted .price{background:var(--hosted);color:#fff}
+  .local .price{background:var(--local);color:#04211d}
+  /* connector rails */
+  .rail{display:flex;flex-direction:column;justify-content:center;align-items:center;width:64px;color:var(--muted);gap:4px}
+  .rail .wire{font-size:20px;line-height:1.15;letter-spacing:-1px}
+  .rail .lbl{font-size:9.5px;letter-spacing:1px;text-transform:uppercase;text-align:center;color:var(--muted)}
+  .railL .wire{color:var(--hosted)}
+  .railR .wire{color:var(--pc)}
+  /* harness */
+  .hub{flex:1.35;min-width:300px;max-width:400px;background:var(--harnessbg);border:2px solid var(--harness);border-radius:16px;padding:16px 16px 14px;display:flex;flex-direction:column;gap:9px}
+  .hub h2{font-size:17px;color:var(--harness);text-align:center;letter-spacing:1px}
+  .hub .tag{font-size:11px;color:var(--muted);text-align:center;font-style:italic;margin-bottom:4px}
+  .chip{border-radius:8px;padding:8px 12px;font-size:12.5px;border:1px solid}
+  .chip b{display:block;font-size:13px}
+  .chip span{color:var(--muted);font-size:11px}
+  .c-core{background:#2b1f0a;border-color:var(--harness)}
+  .c-gov{background:var(--govbg);border-color:var(--gov)}
+  .c-log{background:var(--logbg);border-color:var(--log)}
+  .socket{background:#0b1220;border:1px dashed var(--hosted);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--muted);text-align:center}
+  .socket b{color:var(--ink)}
+  /* pc side */
+  .tool{background:var(--pcbg);border:1px solid var(--pc);border-radius:10px;padding:10px 14px}
+  .tool b{font-size:13.5px;display:block}
+  .tool span{font-size:11.5px;color:var(--muted)}
+  /* truths + legend */
+  .truths{display:flex;gap:14px;justify-content:center;max-width:1280px;margin:30px auto 0;flex-wrap:wrap}
+  .truth{flex:1;min-width:260px;max-width:410px;background:var(--panel);border-radius:12px;padding:14px 18px;border-top:3px solid}
+  .truth b{display:block;margin-bottom:4px;font-size:14px}
+  .truth p{font-size:12.5px;color:var(--muted);line-height:1.5}
+  .t1{border-color:var(--hosted)} .t2{border-color:var(--harness)} .t3{border-color:var(--gov)}
+  .legend{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin:26px auto 0;max-width:1100px;background:var(--panel);border-radius:12px;padding:12px 20px}
+  .key{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+  .dot{width:13px;height:13px;border-radius:4px;flex:0 0 auto}
+  .foot{text-align:center;color:#64748b;font-size:11px;margin-top:22px}
+  @media(max-width:1000px){.rail{width:100%;flex-direction:row;padding:8px 0}.rail .wire{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+  <h1>The Harness, Explained</h1>
+  <p class="sub">A harness (DeepSeek Harness, Claude Code, Codex&hellip;) is the machine <b>between</b> the brain and your computer.
+  The AI model is just a <b>cartridge</b> that plugs into one socket &mdash; swap it any time. The harness holds the hands:
+  it is what actually reads your files, runs your apps and touches your world. And the rules dial belongs to the owner.</p>
+
+  <div class="board">
+    <!-- MODELS -->
+    <div class="col">
+      <div class="coltitle" style="color:var(--hosted)">Intelligence &mdash; the brains<small>swappable cartridges, one plugs in at a time</small></div>
+      <div class="cart hosted"><span class="price">API $</span><b>Claude (Anthropic)</b><span>hosted frontier &mdash; rented capability</span></div>
+      <div class="cart hosted"><span class="price">API $</span><b>GPT (OpenAI)</b><span>hosted frontier &mdash; rented capability</span></div>
+      <div class="cart hosted"><span class="price">API $</span><b>DeepSeek V4 / Gemini / others</b><span>hosted frontier &mdash; rented capability</span></div>
+      <div class="cart local"><span class="price">FREE</span><b>gpt-oss &middot; Llama &middot; Mistral</b><span>open weights on your own hardware</span></div>
+      <div class="cart local"><span class="price">FREE</span><b>Qwen &middot; DeepSeek (open)</b><span>open weights &mdash; safe behind an air gap</span></div>
+    </div>
+
+    <!-- LEFT RAIL -->
+    <div class="rail railL">
+      <div class="wire">&#9654;<br>&#9654;<br>&#9654;</div>
+      <div class="lbl">one<br>socket</div>
+    </div>
+
+    <!-- HARNESS -->
+    <div class="hub">
+      <h2>THE HARNESS</h2>
+      <div class="tag">&ldquo;everything is a plugin&rdquo;</div>
+      <div class="socket"><b>MODEL SOCKET</b> &mdash; any brain fits; swapping it changes nothing else</div>
+      <div class="chip c-core"><b>Agent loop</b><span>plan &rarr; act &rarr; check &rarr; repeat until the job is done</span></div>
+      <div class="chip c-core"><b>Tool registry</b><span>the verbs: read, write, run, search, click</span></div>
+      <div class="chip c-core"><b>Sandbox</b><span>a fenced yard where risky work is contained</span></div>
+      <div class="chip c-core"><b>Session state &amp; skills</b><span>memory of the task; reusable know-how</span></div>
+      <div class="chip c-gov"><b>Permission policy &mdash; YOUR RULES</b><span>the owner sets the dial: ask-every-time &hellip; full autonomy</span></div>
+      <div class="chip c-log"><b>Event log</b><span>every action recorded &mdash; replayable, auditable</span></div>
+    </div>
+
+    <!-- RIGHT RAIL -->
+    <div class="rail railR">
+      <div class="wire">&#9654;<br>&#9654;<br>&#9654;<br>&#9654;<br>&#9654;</div>
+      <div class="lbl">many<br>hands</div>
+    </div>
+
+    <!-- PC -->
+    <div class="col">
+      <div class="coltitle" style="color:var(--pc)">Your computer &mdash; the hands<small>what the harness can reach and manage</small></div>
+      <div class="tool"><b>Files &amp; folders</b><span>read, write, organise, clean up, back up</span></div>
+      <div class="tool"><b>Shell &amp; scripts</b><span>run commands, builds, deploys, scheduled jobs</span></div>
+      <div class="tool"><b>Applications</b><span>open and drive apps &mdash; Word, Excel, browsers, editors</span></div>
+      <div class="tool"><b>Web &amp; browser</b><span>search, fetch, fill forms, verify live results</span></div>
+      <div class="tool"><b>Connectors</b><span>email, calendar, Slack, cloud drives via MCP</span></div>
+      <div class="tool"><b>Sub-agents</b><span>delegate parallel work to helper agents</span></div>
+    </div>
+  </div>
+
+  <div class="truths">
+    <div class="truth t1"><b>1 &middot; The brain is a plugin</b><p>Swap Claude for GPT for a local model without rebuilding anything. Models now compete purely on merit &mdash; best one for the job wins, no lock-in.</p></div>
+    <div class="truth t2"><b>2 &middot; The harness holds the hands</b><p>Files, shell, apps, web &mdash; the tools stay identical whichever brain is plugged in. The harness, not the model, is what acts on your computer.</p></div>
+    <div class="truth t3"><b>3 &middot; The owner holds the rules</b><p>Permissions are a dial you set, not a policy you inherit. In your own home, on your own harness, with a local model &mdash; the whole stack answers to you.</p></div>
+  </div>
+
+  <div class="legend">
+    <div class="key"><div class="dot" style="background:var(--hosted)"></div>Hosted frontier models (rented, metered)</div>
+    <div class="key"><div class="dot" style="background:var(--local)"></div>Open-weight models (owned, free to run)</div>
+    <div class="key"><div class="dot" style="background:var(--harness)"></div>Harness core (open source, MIT)</div>
+    <div class="key"><div class="dot" style="background:var(--gov)"></div>Owner governance &mdash; your rules</div>
+    <div class="key"><div class="dot" style="background:var(--pc)"></div>Your computer &amp; tools</div>
+    <div class="key"><div class="dot" style="background:var(--log)"></div>Audit trail</div>
+  </div>
+
+  <p class="foot">Concept map &middot; 23 Aug 2026 &middot; companion to AI_SOVEREIGNTY_PHYSICAL_LAYER_DECISION_2026-07-09.md &mdash; the Karoo box is an open-weight cartridge running in a harness behind the air gap.</p>
+</body>
+</html>
