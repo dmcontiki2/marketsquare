@@ -8393,12 +8393,6 @@ def rg_studyabroad_teaser_live():
         out.append((FAIL, "AI-example label missing -- the worked example could read as a real report"))
     if "NOT A REPORT FOR A REAL USER" not in page:
         out.append((FAIL, "the 'not a report for a real user' wording is gone"))
-    if page.count("AI-GENERATED EXAMPLE DOSSIER") < 2:
-        out.append((FAIL, "fewer than TWO labelled worked examples -- the work-route example "
-                          "(RUL-043) is missing or unlabelled"))
-    if "CLOSED for SA passports" not in page:
-        out.append((FAIL, "the honest Canada CLOSED verdict is gone -- the work example may "
-                          "not sell a door that does not exist"))
     try:
         idx = _get("/")
         if "studyabroad_teaser.html" not in idx:
@@ -8406,6 +8400,34 @@ def rg_studyabroad_teaser_live():
     except Exception as ex:
         out.append((FAIL, "index unreadable: %s" % repr(ex)[:60]))
     return out or [(INFO, "teaser live with both honesty labels and its entry banner")]
+
+
+@entry("RG-0159", "The WORK-route worked example is live: second labelled AI-example plus the "
+                  "honest Canada CLOSED verdict",
+       OPEN, scope="/static/studyabroad_teaser.html v2 (SAW-2). CLASS: sibling increment of "
+             "RG-0158 -- the LOCKED entry asserts the v1 surface; this asserts the RUL-043 "
+             "additions: a SECOND labelled example (matric gap-year work route) and the honest "
+             "CLOSED verdict. Softening the Canada verdict to sell the dream is the defect.",
+       ref="SAW-2, 23 Aug 2026. Lesson recorded: SAW-1 deployed and RG-0158 was promoted LOCKED "
+           "by a concurrent session while this session strengthened the SAME entry's needles -- "
+           "a LOCKED assertion must never be extended; an increment gets its OWN entry (this "
+           "one). OPEN until the SAW-2 commit rides a deploy; banner link bumped ?v=1 -> ?v=2 "
+           "same session so cached clients fetch the v2 page.")
+def rg_workroute_example_live():
+    out = []
+    try:
+        page = _get("/static/studyabroad_teaser.html?v=2")
+    except Exception as ex:
+        return [(FAIL, "v2 teaser not served: %s" % repr(ex)[:70])]
+    if page.count("AI-GENERATED EXAMPLE DOSSIER") < 2:
+        out.append((FAIL, "fewer than TWO labelled worked examples -- the work-route example "
+                          "(RUL-043) is missing or unlabelled"))
+    if "CLOSED for SA passports" not in page:
+        out.append((FAIL, "the honest Canada CLOSED verdict is gone -- the work example may "
+                          "not sell a door that does not exist"))
+    if "just out of matric" not in page:
+        out.append((FAIL, "the persona is no longer the matric school-leaver David specified"))
+    return out or [(INFO, "work-route example live with its labels and the honest no")]
 
 
 if __name__ == "__main__":
