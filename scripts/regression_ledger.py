@@ -8679,13 +8679,16 @@ def rg_eula_gates_live():
 
 
 @entry("RG-0169", "Every recruited agency vertical gets a real console skin -- outreach never sells a console its vertical does not have",
-       OPEN, scope="ms.js _agL skin map vs the agency-lane outreach templates. Skinned today: estate (agency), travel "
+       LOCKED, fixed_on="2026-08-24", scope="ms.js _agL skin map vs the agency-lane outreach templates. Skinned today: estate (agency), travel "
              "(operator), cars (dealer). Recruited but skinless: collectors_dealer, tutor_institution, service_company, "
              "placement_agency (RUL-046 first-class). CLASS: a vertical's wave may only fire once its console skin (labels, "
              "credential gate, import wording) exists -- AGENCY_WAVE_RUNBOOK carries the same rule.",
        ref="David's eyeball, 23 Aug 2026: 'the drop down still only shows three types of agencies'. OPEN by design "
            "pre-launch (RUL-046 risk instinct: no invented credential gates days before launch); locks when the four "
-           "skins exist. Credential-gate design per vertical is canon work, not a UI patch.")
+           "skins exist. Credential-gate design per vertical is canon work, not a UI patch. "
+           "FIXED VERT-4-1 (RUL-049) 24 Aug 2026: all four built with registry-verified gates -- SAPS SHG / "
+           "safety clearances (SACE covers) / trade CoC licences / DEL registration -- E2E-probed live same day "
+           "(template endpoints + collector bulk onboard on ZZ-TEST, credentials pending as designed).")
 def rg_vertical_skins():
     out = []
     import os as _os
