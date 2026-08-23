@@ -8677,5 +8677,29 @@ def rg_eula_gates_live():
     return out or [(INFO, "the one draft->live door still demands the seller's EULA acceptance")]
 
 
+
+@entry("RG-0169", "Every recruited agency vertical gets a real console skin -- outreach never sells a console its vertical does not have",
+       OPEN, scope="ms.js _agL skin map vs the agency-lane outreach templates. Skinned today: estate (agency), travel "
+             "(operator), cars (dealer). Recruited but skinless: collectors_dealer, tutor_institution, service_company, "
+             "placement_agency (RUL-046 first-class). CLASS: a vertical's wave may only fire once its console skin (labels, "
+             "credential gate, import wording) exists -- AGENCY_WAVE_RUNBOOK carries the same rule.",
+       ref="David's eyeball, 23 Aug 2026: 'the drop down still only shows three types of agencies'. OPEN by design "
+           "pre-launch (RUL-046 risk instinct: no invented credential gates days before launch); locks when the four "
+           "skins exist. Credential-gate design per vertical is canon work, not a UI patch.")
+def rg_vertical_skins():
+    out = []
+    import os as _os
+    fp = _os.path.join(REPO, "ms.js")
+    js = open(fp, encoding="utf-8", errors="replace").read() if _os.path.exists(fp) else ""
+    needed = {"collector": "Collector", "tutor_institution": "Tutor institution",
+              "service_company": "Service company", "placement": "Placement"}
+    # a skin exists when _agL carries a labeled map for it (heuristic: 'skinname:' key in the _agL maps region)
+    agl = js[js.find("function _agL"): js.find("function _agL") + 3000]
+    for key, label in needed.items():
+        if ("%s:" % key) not in agl and ("'%s'" % key) not in agl:
+            out.append((FAIL, "no console skin for the recruited vertical: " + label))
+    return out or [(INFO, "all recruited verticals carry console skins")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

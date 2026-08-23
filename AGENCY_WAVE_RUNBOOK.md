@@ -16,6 +16,14 @@ asserted by regression ledger RG-0163 / RG-0164 / RG-0165. Sending is DAVID's ac
    is the master; the change adds the Estate Agents→agency_outreach lane, honors
    prospect.magic_link, and DROPS agency prospects without a console link).
 
+## Which verticals may wave (RG-0169 rule)
+Only verticals whose console SKIN exists may receive console-CTA waves: estate
+agencies, travel agencies/operators, car dealers. Collector shops, tutor
+institutions, service companies and placement agencies WAIT until their skin
+(labels + credential gate + import wording) ships — RG-0169 tracks this and the
+picker marks them "(skin coming)". Their templates exist; sending them early would
+land recipients in a console wearing another vertical's labels and gates.
+
 ## Wave-day steps (per city)
 1. **Pick the agency prospects** in CityLauncher (category: Estate Agents) — name,
    admin email per agency.

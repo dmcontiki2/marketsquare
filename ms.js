@@ -1571,7 +1571,13 @@ async function _renderAgency(agencyId){
         +(function(){ var s=window._tsSkin||(window._tsOperatorMode?'operator':'agency');
           return '<option value="agency"'+(s==='agency'?' selected':'')+'>Estate agency</option>'
           +'<option value="operator"'+(s==='operator'?' selected':'')+'>Tour operator</option>'
-          +'<option value="dealer"'+(s==='dealer'?' selected':'')+'>Car dealership</option>'; })()
+          +'<option value="dealer"'+(s==='dealer'?' selected':'')+'>Car dealership</option>'
+          // RG-0169: the other recruited verticals are shown honestly as not-yet-skinned --
+          // their orgs use the estate-agency mechanics meanwhile; skins land per vertical.
+          +'<option disabled>— Collector shop (skin coming)</option>'
+          +'<option disabled>— Tutor institution (skin coming)</option>'
+          +'<option disabled>— Service company (skin coming)</option>'
+          +'<option disabled>— Placement agency (skin coming · RUL-046)</option>'; })()
       +'</select></div>';
   }
   el.innerHTML= opsBar
