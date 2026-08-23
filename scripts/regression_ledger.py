@@ -8630,5 +8630,27 @@ def rg_console_advert_bulk():
     return out or [(INFO, "console advert bulk-import present in repo and live")]
 
 
+
+@entry("RG-0167", "The Pro seat is PURCHASABLE end-to-end -- the agent's own $5/mo seat subscription (EULA + payment) exists",
+       OPEN, scope="ms.js agent-side seat-subscribe lane + bea_main.py seat plan handling (marker SEAT-SUB-1 when built). "
+             "RUL-048: an agency agent lifts 10->20 + Pro AI suite ONLY by subscribing themselves -- EULA accepted, $5/mo "
+             "paid, through the subscription machinery. Until this lane ships, the console can only INVITE the upgrade "
+             "(agencyProInvite) and the tier is ops-settable for reconciliation. CLASS: no paid tier is ever reachable "
+             "without its payment flow -- the console flip that granted Pro at $0 is the exact fault class.",
+       ref="RUL-048, 23 Aug 2026. Payments are the gated deploy class (ONE_DEPLOY agent-flow rule 3): this build queues "
+           "for David's one-word ship when the Paystack seat product is wired. Locks when SEAT-SUB-1 passes E2E.")
+def rg_pro_seat_purchasable():
+    out = []
+    import os as _os
+    found = False
+    for f in ("ms.js", "bea_main.py"):
+        fp = _os.path.join(REPO, f)
+        if _os.path.exists(fp) and "SEAT-SUB-1" in open(fp, encoding="utf-8", errors="replace").read():
+            found = True
+    if not found:
+        out.append((FAIL, "no SEAT-SUB-1 lane in repo -- the Pro seat cannot actually be bought yet (console invites only)"))
+    return out or [(INFO, "agent-side seat subscription lane present")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -110,6 +110,13 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-048": [
+   # A Pro seat is EARNED (agent's $5 subscription + EULA), never granted by a console
+   # flip. must_NOT polices the old silent-toggle wiring coming back to the UI.
+   ("RULINGS.md", ["A PRO SEAT IS EARNED THROUGH THE SUBSCRIPTION FLOW"], []),
+   ("PRICING_CANON.md", ["Agency Pro seat (RUL-048"], []),
+   ("ms.js", ["agencyProInvite"], ['onclick="agencySeat(']),
+ ],
  "RUL-047": [
    # The badge is PARKED: canon says so, and the customer-facing surfaces must stay
    # CLEAN of it until David names the occasion. must_NOT needles police re-surfacing

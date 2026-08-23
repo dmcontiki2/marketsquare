@@ -1544,7 +1544,11 @@ async function _renderAgency(agencyId){
   const _agRowFn=function(m){
     const cap=m.listing_cap||10; const pct=Math.min(100,Math.round((m.listings_live/cap)*100));
     const tc=m.trust_score>=70?'#166534':(m.trust_score>=40?'#1e40af':'#6b7280');
-    const acts=m.role==='admin'?'':('<button onclick="agencySeat(\''+m.email+'\','+(m.seat_paid?0:1)+')" style="border:1px solid var(--border);background:#fff;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">'+(m.seat_paid?'↓ Starter (10)':'↑ Pro (20) · $5')+'</button> '
+    // RUL-048 (23 Aug 2026): a Pro seat is EARNED via the agent's own $5 subscription
+    // (EULA + payment) -- the console invites the upgrade, it never grants one.
+    const acts=m.role==='admin'?'':((m.seat_paid
+        ?'<span title="Managed by the agent\'s own subscription" style="font-size:11px;font-weight:700;color:#1e40af;background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;padding:5px 9px;">Pro seat · $5/mo</span> '
+        :'<button onclick="agencyProInvite(\''+m.email+'\','+(m.listing_cap||10)+')" title="The agent takes the $5/month Pro seat themselves — EULA + subscription" style="border:1px solid var(--border);background:#fff;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">Pro seat? · $5</button> ')
       +'<button onclick="agencyRemove(\''+m.email+'\')" style="border:1px solid #fecaca;background:#fff;color:#b91c1c;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">Remove</button>');
     return '<tr style="border-bottom:1px solid #f1f3f7;">'
       +'<td style="padding:10px;"><div style="font-weight:600;">'+(m.name||m.email)+'</div><div style="font-size:11px;color:var(--text-3);">'+m.email+'</div></td>'
@@ -16768,6 +16772,29 @@ function advertBulkCopy(kind){
 }
 /* ── DRAFT-VIEW-1 (23 Aug 2026, David: "how do i view it?") — the agency admin's
    read-only window onto an agent's drafts. Tap the amber chip in the agents table. ── */
+/* ── RUL-048 lane: invite-to-upgrade. The admin can nudge; the agent subscribes. ── */
+function agencyProInvite(email, cap){
+  var ex=document.getElementById('ag-pro-panel');
+  if(ex){ var same=ex.getAttribute('data-email')===email; ex.remove(); if(same) return; }
+  var tb=document.getElementById('ag-agents-tb'); if(!tb) return;
+  var tblEl=tb.closest('table'); var card=tblEl?tblEl.parentElement:null; if(!card) return;
+  var d=document.createElement('div'); d.id='ag-pro-panel'; d.setAttribute('data-email',email);
+  d.style.cssText='border:1.5px solid var(--border);background:var(--surface-2,#f4f6fa);border-radius:12px;padding:12px 14px;margin-top:12px;';
+  d.innerHTML='<div style="font-weight:700;font-size:13.5px;color:var(--navy,#0c1a2e);margin-bottom:4px;">The Pro seat is the agent\'s own upgrade</div>'
+   +'<div style="font-size:12.5px;color:var(--text-3);line-height:1.6;">A Pro seat lifts '+email+' from 10 to <b>20 listings</b> and unlocks the Pro AI suite for <b>$5/month</b>. It\'s a real subscription on the agent\'s own account: they sign in, accept the EULA, and subscribe under <b>My Space → Subscription &amp; Billing</b>. No tier changes hands without that — the console can invite the upgrade, never grant it.</div>'
+   +'<div style="display:flex;gap:8px;margin-top:9px;flex-wrap:wrap;">'
+   +'<button onclick="agencyProNudge(\''+email+'\','+(cap||10)+')" style="background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:8px 15px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;font-size:12px;">Send them a sign-in link</button>'
+   +'<button onclick="document.getElementById(\'ag-pro-panel\').remove()" style="background:none;border:1px solid var(--border);border-radius:50px;padding:8px 15px;cursor:pointer;font-size:12px;">Close</button></div>';
+  card.appendChild(d); d.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+async function agencyProNudge(email, cap){
+  try{
+    const r=await fetch(BEA_URL+'/agencies/'+window._agencyId+'/agents',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':API_KEY},
+      body:JSON.stringify({email:email, listing_cap:(cap||10)})});   // resend keeps their current cap
+    if(r.ok){ showToast('Sign-in link sent to '+email+' — they upgrade under Subscription & Billing'); }
+    else { const d=await r.json().catch(function(){return {};}); showToast((d&&d.detail)||'Could not send the link'); }
+  }catch(e){ showToast('Could not reach server'); }
+}
 async function agencyDraftsView(email){
   var existing=document.getElementById('ag-drafts-panel');
   if(existing){ var same=existing.getAttribute('data-email')===email; existing.remove(); if(same) return; }

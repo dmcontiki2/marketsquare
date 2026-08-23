@@ -27,6 +27,8 @@ This doc mirrors these constants for humans; the **code is the final word**, and
 | Pro | $20 | R360 | 30 | 10T |
 | Agency | free + verified | R0 | 10 base (grows with Trust Score) | 0 |
 
+**Agency Pro seat (RUL-048, 23 Aug 2026):** an agency agent lifts 10 → 20 slots + the Pro AI suite by taking their **own $5/month seat subscription** — EULA acceptance and payment by the agent through the subscription machinery. The console can invite the upgrade, never grant it; no tier or cap changes hands without the subscription. (Purchasable flow tracked as RG-0167 until live.)
+
 
 ## 2 · Buyer subscription tiers — the wishlist/search reach axis
 | Tier | USD/mo | ZAR/mo | Reach |
