@@ -1,3 +1,19 @@
+## 2026-08-23 — RUL-048: a Pro seat is EARNED, never flipped — console lane rebuilt
+
+- David, eyeballing the console: the per-agent Pro/Starter toggle changed listing
+  numbers with no subscription flow. Ruled: the free Agency seat is the 10-listing
+  perk; 20 listings + Pro AI suite = the AGENT'S OWN $5/month subscription, with the
+  agent accepting the EULA and paying — never a console value flip (the old toggle
+  silently set seller_tier=pro at $0).
+- Executed same session: RULINGS.md RUL-048 + rulings_check needles (the old
+  onclick="agencySeat(" wiring is policed must-NOT); PRICING_CANON §1 Pro-seat
+  clause; console rebuilt — Pro rows show a "Pro seat · $5/mo" chip, Starter rows
+  get "Pro seat? · $5" → explainer panel + "Send them a sign-in link" nudge (resend
+  keeps their cap); playbook v3 pars 36/37/79/83 corrected to the agent-subscribes
+  model. PUT seat_paid remains ops-only reconciliation.
+- The purchasable flow itself (Paystack seat product + EULA, marker SEAT-SUB-1) is
+  RG-0167 OPEN — payments are the gated class, queued for David's one-word ship.
+
 ## 2026-08-23 — DRAFT-VIEW-1: the agency admin can VIEW an agent's drafts
 
 - David, seeing the new "1 draft" chip: "how do i view it?" — there was no way: drafts
