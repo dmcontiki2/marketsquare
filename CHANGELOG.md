@@ -1,3 +1,14 @@
+## 2026-08-24 — ORG-SKIN-1: every vertical gets its example org, and the dropdowns agree by themselves
+
+- David: "will the top right drop down then each get one of those skins? Each with
+  his own example perhaps?" — Yes on both. The agent rollup now carries each
+  member's vertical, and picking an org in the ops bar auto-selects its skin from
+  the members' dominant vertical (a manual skin pick always wins). Four demo orgs
+  created on live, one credentialed sample member each: Karoo Collectables (test) ·
+  Bright Path Tutoring (test) · Reliable Flow Services (test) · Atlantic Placements
+  (test) — plus a sample draft where the vertical has a listing category
+  (placement stays roster-only, engine dark per RUL-046).
+
 ## 2026-08-24 — VERT-4-1 (RUL-049): the four recruited verticals are BUILT
 
 - David ratified the overnight skin designs ("Can we already build it into the app?").
