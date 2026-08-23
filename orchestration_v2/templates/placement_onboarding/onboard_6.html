@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The honesty rules — TrustSquare</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f5f5f0; color: #1a1a1a; }
+    .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; }
+    .header { background: #1a1a2e; padding: 28px 40px; text-align: center; }
+    .header-logo { font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; }
+    .header-logo span { color: #d4a853; }
+    .header-tag { display:inline-block; margin-top:8px; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#a0b0c8; font-weight:600; }
+    .step-tag { display:inline-block; background:#0f3460; color:#d4a853; font-size:11px; font-weight:700; letter-spacing:1.5px; padding:5px 14px; border-radius:20px; margin-bottom:14px; }
+    .hero { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%); padding: 38px 40px; text-align: center; }
+    .hero-title { font-size: 24px; font-weight: 700; color: #ffffff; line-height: 1.3; margin-bottom: 10px; }
+    .hero-subtitle { font-size: 15px; color: #a0b0c8; line-height: 1.6; }
+    .body { padding: 36px 40px; }
+    .greeting { font-size: 15px; color: #333; margin-bottom: 20px; line-height: 1.65; }
+    .value-prop { background: #f8f6f0; border-left: 4px solid #d4a853; border-radius: 0 8px 8px 0; padding: 18px 22px; margin: 22px 0; }
+    .value-prop p { font-size: 14.5px; color: #444; line-height: 1.7; }
+    .feature { display: flex; align-items: flex-start; margin-bottom: 16px; }
+    .feature-icon { font-size: 20px; margin-right: 14px; flex-shrink: 0; margin-top: 2px; }
+    .feature-text h4 { font-size: 14.5px; font-weight: 600; color: #1a1a2e; margin-bottom: 3px; }
+    .feature-text p { font-size: 13.5px; color: #666; line-height: 1.55; }
+    .cta-section { text-align: center; padding: 26px 0 6px; }
+    .cta-button { display: inline-block; background: #d4a853; color: #1a1a2e; font-size: 16px; font-weight: 700; padding: 14px 36px; border-radius: 8px; text-decoration: none; letter-spacing: 0.3px; }
+    .cta-note { font-size: 12.5px; color: #888; margin-top: 10px; }
+    .warn { background: #fff4e5; border: 1px solid #e8b06a; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .warn p { font-size: 13.5px; color: #7a4a00; line-height: 1.6; }
+    .footer { background: #f0f0ea; padding: 24px 40px; text-align: center; }
+    .footer p { font-size: 12px; color: #888; line-height: 1.7; }
+    .footer a { color: #666; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="header-logo">Trust<span>Square</span></div>
+      <div class="header-tag">For Placement Agencies</div>
+    </div>
+    <div class="hero">
+      <div class="step-tag">ONBOARDING · EMAIL 6 OF 8</div>
+      <div class="hero-title">The rules that protect you: what no listing may ever claim.</div>
+      <div class="hero-subtitle">Simple, non-negotiable, and the reason a TrustSquare introduction is worth accepting.</div>
+    </div>
+    <div class="body">
+      <div class="greeting">Dear {{contact_name}},</div>
+      <div class="greeting">Our listing standards exist to keep every legitimate agency ahead of every scammer. They are short:</div>
+      <div class="feature"><div class="feature-icon">🚫</div><div class="feature-text"><h4>No guaranteed visas</h4><p>Visas are decided by governments. Employers petition; sponsors designate; nobody sells outcomes. Listings state processes, never promises.</p></div></div>
+      <div class="feature"><div class="feature-icon">🚫</div><div class="feature-text"><h4>No hidden candidate fees</h4><p>Every cost a candidate will pay appears in the listing. A fee that surfaces later is a removable offence.</p></div></div>
+      <div class="feature"><div class="feature-icon">📌</div><div class="feature-text"><h4>Sources and dates on volatile facts</h4><p>Wages, quotas and visa rules change. Where your listing quotes them, they carry a date — our dossiers do the same.</p></div></div>
+      <div class="warn"><p><strong>Why this helps you:</strong> candidates arrive having read our scam warnings. In that light, an agency that meets these standards does not look ordinary — it looks like the only safe choice.</p></div>
+      <div class="cta-section">
+        <a class="cta-button" href="https://trustsquare.co/terms">Read the full listing standards</a>
+        <div class="cta-note">Email 7: your founding-agency benefits.</div>
+      </div>
+    </div>
+    <div class="footer">
+      <p>TrustSquare · MarketSquare — the introduction marketplace built on trust.<br>
+      You are receiving this because {{agency_name}} accepted a founding placement-agency invitation.<br>
+      <a href="https://trustsquare.co">trustsquare.co</a> · <a href="mailto:hello@trustsquare.co">hello@trustsquare.co</a></p>
+    </div>
+  </div>
+</body>
+</html>

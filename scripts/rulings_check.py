@@ -110,6 +110,17 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-046": [
+   # The placement vertical exists as artefacts: cold invite + all 8 onboarding
+   # emails + the cadence doc + manifest rows; and the launch posture (engine dark,
+   # teaser only) is written in the register. Deleting an email from the sequence
+   # or un-manifesting the lane trips here.
+   ("RULINGS.md", ["EIGHT-EMAIL ONBOARDING STANDARD", "ENGINE STAYS DARK FOR LAUNCH"], []),
+   ("orchestration_v2/templates/placement_agency_outreach.html", ["Placement Agency"], []),
+   ("orchestration_v2/templates/placement_onboarding/SEQUENCE.md", ["onboard_1..8", "Day 18"], []),
+   ("orchestration_v2/templates/placement_onboarding/onboard_8.html", ["Go-live checklist", "EMAIL 8 OF 8"], []),
+   ("ops/autodeploy/deploy_manifest.txt", ["placement_onboarding/onboard_8.html"], []),
+ ],
  "RUL-045": [
    # The visual language is template law: photo arc + surroundings + layered map.
    # Both map pages exist with the demo banner include (RUL-040 scope rule for new

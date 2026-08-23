@@ -8488,5 +8488,34 @@ def rg_studywork_maps_live():
     return out or [(INFO, "both layered maps live, bannered and linked")]
 
 
+@entry("RG-0162", "The placement-agency lane's nine templates ship with the deploy -- outreach + all 8 onboarding emails",
+       OPEN, scope="orchestrator/v2/templates/placement_agency_outreach.html + placement_onboarding/onboard_1..8.html "
+             "on the server (SAW-5, RUL-046). CLASS: an onboarding SEQUENCE with a missing email is a broken funnel "
+             "-- eight means eight.",
+       ref="SAW-5, 23 Aug 2026. OPEN until the next deploy ships the manifest rows. Server-side presence is probed "
+           "via the deployed teaser page as a deploy-freshness witness plus the manifest on disk; template files "
+           "are not web-readable by design, so the disk half asserts the repo and the deploy stamp asserts the ride.")
+def rg_placement_templates_ship():
+    out = []
+    import os as _os
+    tdir = _os.path.join(REPO, "orchestration_v2", "templates")
+    if _os.path.isdir(tdir):
+        if not _os.path.exists(_os.path.join(tdir, "placement_agency_outreach.html")):
+            out.append((FAIL, "outreach template missing from repo"))
+        for i in range(1, 9):
+            if not _os.path.exists(_os.path.join(tdir, "placement_onboarding", "onboard_%d.html" % i)):
+                out.append((FAIL, "onboard_%d.html missing -- eight means eight" % i))
+        man = open(_os.path.join(REPO, "ops", "autodeploy", "deploy_manifest.txt"), encoding="utf-8").read()
+        if "placement_onboarding/onboard_8.html" not in man:
+            out.append((FAIL, "manifest does not carry the onboarding rows"))
+    try:
+        page = _get("/static/studyabroad_teaser.html?v=2")
+        if "Dossier_EXAMPLE_Work_USA_Farm.pdf" not in page:
+            out.append((FAIL, "the SAW deploy has not ridden yet -- templates not live either"))
+    except Exception as ex:
+        out.append((FAIL, "deploy witness unreadable: %s" % repr(ex)[:50]))
+    return out or [(INFO, "all nine templates in repo + manifest, and the SAW deploy is live")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
