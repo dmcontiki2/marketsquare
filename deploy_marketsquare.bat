@@ -77,6 +77,7 @@ if not defined PYEXE (
 set SCANRC=%errorlevel%
 if /I "%PREDEPLOY_MODE%"=="strict" if not "%SCANRC%"=="0" (
     echo  ABORT: pre-deploy scan flagged a dangerous change - strict mode. See deploy_audit.log.
+    call "%PROJECT%\notify_attention.bat" "MarketSquare - DEPLOY ABORTED (pre-deploy scan) - press a key"
     pause
     exit /b 1
 )
@@ -85,6 +86,7 @@ if not exist "%PROJECT%\tsl_gate.py" goto :gates_done
 if errorlevel 1 (
     echo  ABORT: another TrustSquare release is already running - lock held.
     echo  If you are certain none is, delete "%PROJECT%\.tsl.lock" and retry.
+    call "%PROJECT%\notify_attention.bat" "MarketSquare - DEPLOY ABORTED (release lock held) - press a key"
     pause
     exit /b 1
 )
@@ -94,6 +96,7 @@ if errorlevel 1 (
     if /I "%TSL_MODE%"=="strict" (
         echo  ABORT: CM+DB gate not clean - strict mode. Fix the gate findings first.
         %PYEXE% "%PROJECT%\tsl_gate.py" release
+        call "%PROJECT%\notify_attention.bat" "MarketSquare - DEPLOY ABORTED (CM+DB gate) - press a key"
         pause
         exit /b 1
     )
@@ -168,10 +171,15 @@ echo.
 echo  ============================================================
 echo   RELEASE COMPLETE
 echo  ============================================================
+:: WINDOW-ZORDER-1: this window is very likely BEHIND Claude. Windows will not let a
+:: background-launched console steal the foreground, so we flash the taskbar button
+:: instead - the native signal, and it works from behind. See notify_attention.ps1.
+call "%PROJECT%\notify_attention.bat" "MarketSquare - RELEASE COMPLETE - press a key"
 pause
 exit /b 0
 
 :release_lock_fail
 if defined TSL_LOCK_HELD if defined PYEXE %PYEXE% "%PROJECT%\tsl_gate.py" release
+call "%PROJECT%\notify_attention.bat" "MarketSquare - RELEASE FAILED - press a key"
 pause
 exit /b 1

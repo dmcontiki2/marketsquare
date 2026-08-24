@@ -9303,5 +9303,66 @@ def rg_fares_lane_cache_only():
     return out
 
 
+@entry("RG-0183", "Every point where the deploy stops and waits for David FLASHES for him -- a console he cannot see can still ask",
+       LOCKED, scope="deploy_marketsquare.bat: every `pause` reachable after %PROJECT% is set, plus notify_attention.bat/.ps1",
+       fixed_on="2026-08-25",
+       ref="WINDOW-ZORDER-1 (25 Aug 2026). David: 'my terminal window just stubbornly appears behind "
+           "the claude window and then i miss it... it used to sit in front of Claude and not behind.' "
+           "CAUSE, and it is not his machine: the deploy is now launched BY A CLAUDE SESSION (the "
+           "/start skill launches deploy_marketsquare.bat itself), and the desktop-control tooling "
+           "launches apps in background mode by design -- 'the user's focus is preserved' -- so the "
+           "console opens behind whatever he is looking at. When HE double-clicks it, Windows grants "
+           "foreground to a user-initiated launch and it lands in front, exactly as it always did. "
+           "Nothing was misconfigured; a general focus-preservation rule met the one window that ends "
+           "in `pause`. WHY NOT JUST RAISE IT: Windows refuses SetForegroundWindow to a process that "
+           "does not own the foreground, deliberately, and fighting that would be fighting the thing "
+           "that stops every other app interrupting him. So we use the signal Windows provides for "
+           "exactly this -- FlashWindowEx with FLASHW_TIMERNOFG, which flashes the taskbar button "
+           "until the window is looked at -- plus a beep and a title the taskbar can be read at a "
+           "glance. CLASS, not instance: this asserts EVERY waiting `pause` is preceded by the "
+           "notifier, so a future session adding a new abort path that waits silently trips it red. "
+           "The three ABORT pauses matter more than the success one -- a deploy that stopped on a "
+           "gate failure and was never seen is the expensive version of this fault. NOT PROVEN ON "
+           "THE MACHINE: the PowerShell cannot run from the Linux sandbox, so this is a source-level "
+           "assertion; the beep+flash is confirmed by the next deploy, or in two seconds by "
+           "double-clicking notify_attention.bat, which self-tests with no arguments.")
+def rg_deploy_pauses_flash():
+    bat = repo_file("deploy_marketsquare.bat")
+    if bat is None:
+        return [(INFO, "running outside the repo -- deploy notifier check skipped")]
+    out = []
+    for helper in ("notify_attention.bat", "notify_attention.ps1"):
+        if repo_file(helper) is None:
+            out.append((FAIL, helper + " is GONE -- the deploy can stop and wait where David "
+                               "cannot see it, with nothing to tell him"))
+    ps = repo_file("notify_attention.ps1") or ""
+    if "FlashWindowEx" not in ps:
+        out.append((FAIL, "notify_attention.ps1 no longer flashes the taskbar -- a beep alone is "
+                          "missed by anyone wearing headphones or sitting in another room"))
+    if "0x0000000F" not in ps and "FLASHW_TIMERNOFG" not in ps:
+        out.append((FAIL, "the flash no longer persists until the window is looked at -- a few "
+                          "flashes while he is out of the room is the same as none"))
+
+    lines = bat.splitlines()
+    misses = []
+    for i, ln in enumerate(lines):
+        if ln.strip().lower() != "pause":
+            continue                       # inline `& pause &` guards run before %PROJECT% exists
+        # Must be an actual CALL, not merely the string appearing nearby -- the first
+        # cut of this check searched for "notify_attention" in the preceding lines and
+        # could never fail, because the explanatory COMMENT above the pause names the
+        # script. A guard that matches its own documentation is not a guard (7 Aug rule).
+        window = [l.strip().lower() for l in lines[max(0, i - 4):i]]
+        if not any(l.startswith("call ") and "notify_attention.bat" in l for l in window):
+            misses.append(i + 1)
+    if misses:
+        out.append((FAIL, "deploy_marketsquare.bat waits for a keypress at line(s) %s with NO "
+                          "notifier before it -- that stop is invisible when the console is behind "
+                          "Claude, which is exactly the 25 Aug fault"
+                          % ", ".join(str(m) for m in misses)))
+    return out or [(INFO, "all %d waiting pause(s) flash, beep and rename the window first"
+                          % sum(1 for l in lines if l.strip().lower() == "pause"))]
+
+
 if __name__ == "__main__":
     sys.exit(main())
