@@ -89,7 +89,7 @@ is UNROTATABLE-ACCEPTED (dated reasoning in the register, policed by RG-0146). O
 | `GET /id-verify/status` | `available:true` · `"READY — sellers can buy a check"` · `price_t:1` | PROBED |
 | `GET /terms` | 200, serving **EULA v1.15** — LEGAL_VERSIONS said "not yet deployed"; the probe won, file corrected this run | PROBED |
 | TLS certificate | expires **2026-09-24** — **32 days** | PROBED |
-| `/static/studyabroad_teaser.html` | **404** — SAW-1 is committed, not shipped (RG-0158's honest red) | PROBED |
+| `/static/studyabroad_teaser.html` | **200, live** with both honesty labels (RG-0158 LOCKED 23 Aug; UNLISTED from Browse 24 Aug per RUL-050 — page stays, banner gone) | PROBED 2026-08-24 |
 | `regression_ledger.py` | **exit 0** · 151 entries · **0 REGRESSED** · 14 honestly open | EXECUTED |
 | `rulings_check.py` | **42 rulings, 0 FAIL, 0 WARN** | EXECUTED |
 | `eula_sync.py --check` | **in sync**, 117,749 B across the three copies (source = v1.15) | EXECUTED |
