@@ -247,6 +247,29 @@ def _get(path):
     return _cache[path]
 
 
+def _headers(path):
+    """Live RESPONSE HEADERS, lowercased keys. Added 24 Aug 2026 for RG-0178/0179/0180.
+
+    Deliberately NOT cached with _get: header parity is the thing under test, and a
+    body cache would happily serve headers from a different request. Errors that still
+    carry a response (401/403/404) still carry headers, so those are used rather than
+    thrown away -- a gated page's headers are exactly as interesting as an open one's.
+    """
+    key = "HDR:" + path
+    if key not in _cache:
+        _require_net()
+        req = urllib.request.Request(BASE + path, headers=UA)
+        try:
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+                h = dict(r.headers)
+        except urllib.error.HTTPError as e:
+            h = dict(e.headers or {})
+        except Exception as ex:
+            raise ProbeOffline(repr(ex)[:140])
+        _cache[key] = {k.lower(): v for k, v in h.items()}
+    return _cache[key]
+
+
 def _status(path):
     """HTTP status for an UNAUTHENTICATED request. Never cached, never raises on 4xx/5xx —
     403/401 are legitimate answers here (RG-0027: the pre-launch gate must refuse anonymous GETs)."""
@@ -1212,31 +1235,69 @@ def rg_terms_edge_matches_origin():
            "code on the app at all; if that is a prerequisite for Travelpayouts' products, the offer "
            "is passed. Affiliate revenue continues via plain affiliate LINKS, which need no script. "
            "This entry now asserts the surface stays clean -- any future session re-adding a remote "
-           "loader trips it red.")
+           "loader trips it red. STRENGTHENED 24 Aug 2026 (REMOTE-CODE-GUARD-1), on the day "
+           "Travelpayouts came back with an approval: the assertion WAS a two-string blocklist "
+           "(tp-em.com, NTU3Mzkx.js), which catches only the loader we already removed -- a new "
+           "snippet from a new host, which is exactly what a re-approved affiliate account hands "
+           "you, sailed past it GREEN. That was the assertion being WRONG, not weakened to make "
+           "something pass; it is now the CLASS: any remote script/iframe/stylesheet origin, by "
+           "static tag or by createElement+.src, on the live surface OR in any file the deploy "
+           "manifest ships, that is not on the dated allowlist in scripts/no_remote_code_guard.py. "
+           "That first run also surfaced cdnjs.cloudflare.com, loaded dynamically by ms.js aiLeaflet() and inventoried nowhere until now.")
 def rg_no_third_party_script_on_surface():
-    BANNED = ("tp-em.com", "NTU3Mzkx.js")
+    # The allowlist is duplicated here ON PURPOSE. The ledger must run live-only,
+    # stdlib-only, from any session with no repo -- so it cannot import the guard.
+    # scripts/no_remote_code_guard.py is the authority; RG-0177 asserts the two agree.
+    ALLOWED = ("unpkg.com", "cdnjs.cloudflare.com", "fonts.googleapis.com", "fonts.gstatic.com")
     PAGES = ["/"] + ["/static/adventures_%s_map.html" % m
                      for m in ("reserve", "us", "uk", "au", "na", "bw", "mz", "c2c", "de", "ke")]
+    RE_REMOTE = re.compile(
+        r"""<(?:script|iframe)[^>]+src=["'](?:https?:)?//([^/"'?]+)"""
+        r"""|<link[^>]+href=["'](?:https?:)?//([^/"'?]+)"""
+        r"""|createElement\(\s*["']script["']\s*\)[\s\S]{0,300}?\.src\s*=\s*["'](?:https?:)?//([^/"'?]+)""",
+        re.I)
+
+    def origins(body):
+        seen = set()
+        for m in RE_REMOTE.finditer(body):
+            h = (m.group(1) or m.group(2) or m.group(3) or "").lower()
+            if h:
+                seen.add(h)
+        return seen
+
     out = []
     for p in PAGES:
         try:
             body = _get(p)
-            for mark in BANNED:
-                if mark in body:
-                    out.append((FAIL, p + " carries third-party loader marker '" + mark + "' -- remote "
-                                      "code is back on the app surface; David's 3 Aug ruling forbids it"))
         except Exception as ex:
-            out.append((FAIL, p + " unreachable while checking for third-party scripts: " + repr(ex)))
-    src_html = repo_file("marketsquare.html")
-    if src_html is not None:
-        for mark in BANNED:
-            if mark in src_html:
-                out.append((FAIL, "repo marketsquare.html carries '" + mark + "' -- the next deploy would "
-                                  "put a third-party script back on the index"))
-        ext = sorted(set(re.findall(r'<script[^>]+src=["\']https?://([^/"\']+)', src_html, re.I)))
-        if ext:
-            out.append((INFO, "external script origins on the index (eyeball these deliberately): "
-                              + ", ".join(ext)))
+            out.append((FAIL, p + " unreachable while checking for third-party code: " + repr(ex)))
+            continue
+        for h in sorted(origins(body) - set(ALLOWED)):
+            out.append((FAIL, p + " loads remote code from '" + h + "', which is not on the "
+                               "allowlist -- third-party code is back on the app surface; "
+                               "David's 3 Aug 2026 ruling forbids it"))
+
+    # Repo side: catch it BEFORE it ships, across every file the manifest places,
+    # not just the index. Skipped silently when running outside the repo.
+    man = repo_file("ops/autodeploy/deploy_manifest.txt")
+    if man is None:
+        out.append((INFO, "running outside the repo -- live surface checked, pre-deploy scan skipped"))
+        return out
+    rels = [ln.split("|")[0].strip() for ln in man.splitlines()
+            if ln.strip() and not ln.strip().startswith("#") and "|" in ln]
+    scanned = 0
+    for rel in rels:
+        if not rel.lower().endswith((".html", ".js", ".css")):
+            continue
+        text = repo_file(rel)
+        if text is None:
+            continue
+        scanned += 1
+        for h in sorted(origins(text) - set(ALLOWED)):
+            out.append((FAIL, "repo " + rel + " references remote code from '" + h + "' -- the next "
+                              "deploy would put a third-party script back on the app"))
+    out.append((INFO, "pre-deploy scan: %d deployable html/js/css files clean, allowlist = %s"
+                      % (scanned, ", ".join(ALLOWED))))
     return out
 
 
@@ -8927,6 +8988,217 @@ def rg_popia_suppression():
     except Exception as ex:
         out.append((FAIL, "gate probe failed to run: %s" % repr(ex)[:50]))
     return out or [(INFO, "register + gates present in repo AND the live API refuses anonymous PII reads (n8n cross-store proof still manual)")]
+
+
+@entry("RG-0177", "The remote-code guard is REAL, can still FAIL, and its allowlist has not drifted from the ledger's",
+       LOCKED, scope="repo: scripts/no_remote_code_guard.py + this file's RG-0025 copy of ALLOWED",
+       fixed_on="2026-08-24",
+       ref="REMOTE-CODE-GUARD-1 (24 Aug 2026). RG-0025 is now a CLASS assertion, and a class assertion "
+           "has two new ways to rot that a two-string blocklist did not have. (1) The guard could be "
+           "quietly neutered -- an allowlist entry added with no reason, or the detection regexes "
+           "loosened -- and everything stays green. So this runs the guard's OWN self-test, which "
+           "feeds it the actual 3 Aug loader tag, the same loader shape on a NEW host, an unknown "
+           "host, a remote iframe and a remote stylesheet, and requires it to catch all five. A guard "
+           "that cannot fail is decoration (the 7 Aug rule, applied to itself). (2) The ledger keeps "
+           "its own copy of the allowlist because it must run stdlib-only with no repo, so the two "
+           "copies can silently disagree -- which would mean the pre-deploy guard and the live check "
+           "police different rules. This asserts they are character-for-character the same set. "
+           "ALSO PINNED HERE: every allowlisted host must carry a written reason, so 'why is this "
+           "origin trusted' is never again answered by a shrug.")
+def rg_remote_code_guard_is_real():
+    import subprocess as _sp, os as _os, re as _re
+    gp = _os.path.join(REPO, "scripts", "no_remote_code_guard.py")
+    if not _os.path.exists(gp):
+        return [(FAIL, "scripts/no_remote_code_guard.py is GONE -- the pre-deploy half of RG-0025 "
+                       "is unenforced and a third-party loader can ship again")]
+    out = []
+    try:
+        r = _sp.run([sys.executable, gp, "--self-test"], capture_output=True, text=True, timeout=60)
+        if r.returncode != 0:
+            out.append((FAIL, "the guard's self-test FAILED -- it no longer catches the 3 Aug loader "
+                              "class, so its green means nothing: " + (r.stdout or r.stderr)[-300:]))
+    except Exception as ex:
+        out.append((FAIL, "could not run the guard self-test: " + repr(ex)[:80]))
+
+    src = repo_file("scripts/no_remote_code_guard.py")
+    if src is None:
+        return out or [(INFO, "guard present, source unreadable from here")]
+    block = src.split("ALLOWED = {", 1)[-1].split("\n}", 1)[0]
+    hosts = set(_re.findall(r'^\s*"([^"]+)"\s*:', block, _re.M))
+    ledger_copy = set(_re.findall(r'ALLOWED = \(([^)]*)\)', src if False else
+                                  repo_file("scripts/regression_ledger.py") or "")[0].replace('"', '').split(","))
+    ledger_copy = {h.strip() for h in ledger_copy if h.strip()}
+    if hosts != ledger_copy:
+        out.append((FAIL, "allowlist DRIFT -- guard has %s, this ledger has %s. The pre-deploy check "
+                          "and the live check are policing different rules; make them agree"
+                          % (sorted(hosts), sorted(ledger_copy))))
+    for h in sorted(hosts):
+        seg = _re.search(r'"%s"\s*:\s*("(?:[^"\\]|\\.)*"(?:\s*"(?:[^"\\]|\\.)*")*)' % _re.escape(h), block)
+        if not seg or len(seg.group(1)) < 40:
+            out.append((FAIL, "allowlisted origin '" + h + "' has no written reason -- an origin nobody "
+                              "can justify is an origin nobody audited"))
+    return out or [(INFO, "guard self-test passes, %d allowlisted origins, all with reasons, "
+                          "ledger copy in step" % len(hosts))]
+
+
+@entry("RG-0178", "A script-src Content-Security-Policy is ENFORCED at the edge -- the browser itself refuses un-allowlisted remote code",
+       OPEN, scope="live response headers on trustsquare.co, BOTH the index and the app paths; shipped by migrations/031_csp_and_index_headers.py",
+       ref="CSP-SCRIPT-SRC-1 (24 Aug 2026). THE HOLE THE 3 AUG BREACH WENT THROUGH. The CSP is "
+           "'frame-ancestors self' and nothing else -- no script-src -- so any script tag that reaches "
+           "a page executes, from any origin on the internet. Every other control we own sits on OUR "
+           "side of the paste: guards, ledgers and rulings all assume a human or an agent put the tag "
+           "there and somebody notices. script-src is the only control that fails the LOAD even when "
+           "the tag is already on the page -- which covers XSS, a compromised CDN, and a future session "
+           "pasting a snippet in good faith because the affiliate dashboard asked it to. A full CSP was "
+           "deferred on 16 Jul 2026 because the index carries ~163 inline onclick handlers; that "
+           "deferral is the reason the loader ran to completion. 'unsafe-inline' keeps all 163 handlers "
+           "working and STILL blocks every remote origin, so the thing that was 'too hard' was never "
+           "needed to close this. OPEN, not LOCKED, because it is genuinely not live: the header rides "
+           "migrations/031 on David's next deploy (deploys are his, RUL-037). READY TO LOCK the moment "
+           "the live header carries script-src.")
+def rg_csp_script_src_enforced():
+    out = []
+    for path, label in (("/?cb=ledger", "the index"), ("/terms", "an app path")):
+        try:
+            csp = _headers(path).get("content-security-policy", "") or ""
+        except Exception as ex:
+            out.append((FAIL, "could not read the live CSP on %s: %s" % (label, repr(ex)[:70])))
+            continue
+        if "script-src" not in csp:
+            out.append((FAIL, "%s (%s) has no script-src (CSP is %r) -- the browser will execute a "
+                              "remote script from ANY origin if one ever reaches the page; "
+                              "migrations/031_csp_and_index_headers.py closes it on the next deploy"
+                              % (label, path, csp[:90] or "ABSENT")))
+            continue
+        directive = csp.split("script-src", 1)[1].split(";", 1)[0]
+        for tok in ("'unsafe-eval'", " *", "http:"):
+            if tok in directive:
+                out.append((FAIL, "%s has script-src but it is wide open (%r) -- that is a header, "
+                                  "not a control" % (label, directive.strip()[:90])))
+                break
+    return out
+
+
+@entry("RG-0179", "The INDEX carries the same security headers as every other page -- nginx add_header inheritance has not silently dropped them",
+       OPEN, scope="live GET / on trustsquare.co vs GET /terms; fixed by migrations/031_csp_and_index_headers.py",
+       ref="INDEX-HEADERS-1 (24 Aug 2026). PROBED, cache MISS so this is the origin answering, not an "
+           "edge artifact: GET /terms returns x-frame-options, x-content-type-options, referrer-policy, "
+           "content-security-policy and strict-transport-security. GET /?cb=... returns NONE OF THEM. "
+           "Cause is nginx's add_header inheritance rule -- a level inherits add_header ONLY IF it "
+           "declares none of its own. `location = / {}` sets its own Cache-Control (visible on /, "
+           "absent on /terms) and that ONE directive discards the entire inherited security set. "
+           "So the single most sensitive document on the site -- index.html is both the public front "
+           "door AND the page that renders the SA Smart ID / passport upload flow, AND the exact page "
+           "the Travelpayouts loader was pasted into on 2 Aug -- has been serving naked, while "
+           "nginx_security_headers.conf sat on disk saying otherwise. THAT is why it survived: the "
+           "file was READ, the page was never PROBED (the 21 Aug evidence-ladder lesson, landing again "
+           "on a security control this time). CLASS, not instance: this asserts header PARITY between "
+           "the index and an app path, so any future location block that shadows the set trips red -- "
+           "naming the five headers individually would just move the blind spot. READY TO LOCK once "
+           "migration 031 has ridden a deploy.")
+def rg_index_header_parity():
+    KEYS = ("content-security-policy", "x-frame-options", "x-content-type-options",
+            "referrer-policy", "strict-transport-security")
+    try:
+        idx = _headers("/?cb=ledger")
+        app = _headers("/terms")
+    except Exception as ex:
+        return [(FAIL, "could not probe header parity: " + repr(ex)[:80])]
+    missing = [k for k in KEYS if app.get(k) and not idx.get(k)]
+    if missing:
+        return [(FAIL, "the INDEX is missing security headers that /terms serves: %s. An nginx "
+                       "location block is shadowing the inherited add_header set -- the front page "
+                       "and the ID-upload flow are unprotected" % ", ".join(missing))]
+    differ = [k for k in KEYS if app.get(k) and idx.get(k) and idx[k] != app[k]]
+    if differ:
+        return [(FAIL, "index and /terms disagree on %s -- one of them is weaker than the other "
+                       "and nobody chose that" % ", ".join(differ))]
+    return []
+
+
+@entry("RG-0180", "connect-src is tightened from 'https:' to a named allowlist",
+       OPEN, scope="live CSP connect-src directive on trustsquare.co",
+       ref="CSP-CONNECT-1 (24 Aug 2026) -- the honest limit of CSP-SCRIPT-SRC-1, recorded rather than "
+           "quietly omitted. Migration 031 ships connect-src 'self' https:, which means a script that "
+           "somehow DID execute could still POST data out -- the 3 Aug capture showed the loader "
+           "POSTing to /collect and /collect_batch, which is exactly this channel. It is left open on "
+           "purpose for now: closing it needs the app's own outbound XHR/fetch/EventSource targets "
+           "inventoried at RUNTIME (a static scan on 24 Aug found no absolute external fetch targets, "
+           "but absence in source is not proof of absence at runtime), and a wrong connect-src breaks "
+           "live payments or auth silently. Post-launch job. script-src is the control that stops the "
+           "script existing at all, and that one is tight -- this is defence in depth, not the door.")
+def rg_csp_connect_src_tight():
+    try:
+        csp = _headers("/terms").get("content-security-policy", "") or ""
+    except Exception as ex:
+        return [(FAIL, "could not read the live CSP: " + repr(ex)[:70])]
+    if "connect-src" not in csp:
+        return [(FAIL, "no connect-src directive at all -- falls back to default-src; verify that is "
+                       "deliberate")]
+    directive = csp.split("connect-src", 1)[1].split(";", 1)[0]
+    if "https:" in directive or "*" in directive:
+        return [(FAIL, "connect-src is still open (%r) -- a script that executed could exfiltrate. "
+                       "Tighten to named origins once the runtime inventory exists" % directive.strip())]
+    return []
+
+
+
+@entry("RG-0181", "The affiliate lane is a SERVER-SIDE link-out that fails closed -- it can never grow into an injected script, and it never invents a partner link",
+       OPEN, scope="travelpayouts_partners.py (TP-LINKOUT-1) + its manifest row; lane dark until TP_LINKOUT_ENABLED, deeplinks unfilled",
+       ref="TP-LINKOUT-1 (24 Aug 2026). Built the day Travelpayouts' dashboard was offering +25% "
+           "GetYourGuide rewards, expiring that same day, to switch the Drive loader back on -- on "
+           "precisely the programs we most want. The 2 Aug breach did not happen because anyone was "
+           "careless; it happened because the EASY path was their script and no house-built "
+           "alternative existed on disk. This module is the alternative, so 'no' stays cheap the next "
+           "time. WHAT IT ASSERTS, as a class: the lane serves 302s and JSON, never markup and never a "
+           "script; every outbound host is on a hard allowlist that must contain none of the "
+           "Travelpayouts SCRIPT hosts; and build_url REFUSES rather than guesses -- a program whose "
+           "deeplink has not been read from its own link tool cannot be linked to at all, which is why "
+           "all 26 sit at deeplink=None today. OPEN on two honest counts: the lane is dark "
+           "(TP_LINKOUT_ENABLED unset) and no deeplink has been filled, so nothing customer-visible "
+           "exists yet. READY TO LOCK when the module ships, the selftest passes from the repo, and at "
+           "least one deeplink is real. NOTE FOR THE NEXT SESSION: filling a deeplink is a dated, "
+           "per-program act -- read that program's own link tool. Do NOT paste a format from memory.")
+def rg_partner_lane_fails_closed():
+    src = repo_file("travelpayouts_partners.py")
+    if src is None:
+        return [(FAIL, "travelpayouts_partners.py is GONE -- the safe alternative to their script no "
+                       "longer exists, which is how the easy path wins again")]
+    out = []
+    for needle, msg in (
+        ("ALLOWED_HOSTS", "the outbound host allowlist is gone -- any host could be redirected to"),
+        ("RedirectResponse", "the lane no longer redirects -- check it has not started serving markup"),
+        ("TP_LINKOUT_ENABLED", "the dark-by-default flag is gone -- the lane would be live on deploy"),
+    ):
+        if needle not in src:
+            out.append((FAIL, msg))
+    for banned in ("tp-em.com", "emrld.cc"):
+        # allowed to APPEAR in prose/selftest; must never be in the allowlist set
+        block = src.split("ALLOWED_HOSTS = {", 1)[-1].split("}", 1)[0]
+        if banned in block:
+            out.append((FAIL, "'" + banned + "' is inside ALLOWED_HOSTS -- a Travelpayouts script "
+                              "host has been allowlisted as a redirect target"))
+    for marker in ("<script", "createElement("):
+        if marker in src:
+            out.append((FAIL, "travelpayouts_partners.py contains '" + marker + "' -- the link-out "
+                              "lane has started emitting script, which is the 3 Aug breach shape"))
+    import subprocess as _sp, os as _os
+    mp = _os.path.join(REPO, "travelpayouts_partners.py")
+    if _os.path.exists(mp):
+        try:
+            r = _sp.run([sys.executable, mp], capture_output=True, text=True, timeout=60)
+            if r.returncode != 0:
+                out.append((FAIL, "the lane's own selftest FAILS -- its refusals no longer refuse: "
+                                  + (r.stdout or r.stderr)[-250:]))
+        except Exception as ex:
+            out.append((INFO, "could not run the lane selftest here: " + repr(ex)[:70]))
+    if "TP_LINKOUT_ENABLED" in src and "deeplink=None" not in src.replace(" ", ""):
+        pass
+    unfilled = src.count(", None),")
+    if unfilled:
+        out.append((INFO, "lane is dark and %d program(s) still await a real deeplink -- expected "
+                          "while OPEN" % unfilled))
+    return out
 
 
 if __name__ == "__main__":

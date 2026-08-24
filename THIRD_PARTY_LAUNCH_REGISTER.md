@@ -51,10 +51,11 @@ are LOCKED. DW-058 CLOSED with probe evidence.
 2. **Domain registrar / expiry / auto-renew UNRECORDED** (RG-0137). The one dependency that can end
    everything silently. DNS on Cloudflare is PROBED; registry RDAP is unreachable from here (tried
    this run) — only David's registrar login answers it.
-3. **RG-0156 — orchestrator.html**: outside the deploy manifest, hardcoded access code in a public
+3. **CSP + index security headers are NOT LIVE** (RG-0178 / RG-0179) — **NEW, found 24 Aug by probe.** `GET /?cb=…` returns **none** of the five security headers `/terms` returns (origin-confirmed on a cache MISS): nginx `add_header` inheritance, `location = / {}` declares its own Cache-Control and discards the inherited set. The naked page is the front door, the ID-upload flow, and the page the Travelpayouts loader was pasted into. There is also no `script-src` anywhere, so any script reaching any page executes. `migrations/031_csp_and_index_headers.py` closes both and must ride the **Wed 27 Aug** ship.
+4. **RG-0156 — orchestrator.html**: outside the deploy manifest, hardcoded access code in a public
    web root, empty state renders outage as all-clear. Launch gate G2, hard 29 Aug. Claude's build in
    an attended session; must ride a deploy by **Wed 27 Aug (3 days)**.
-4. **External uptime monitor still NOT DEPLOYED** (RG-0138) — built 22 Aug, unblocked since the
+5. **External uptime monitor still NOT DEPLOYED** (RG-0138) — built 22 Aug, unblocked since the
    rotation, 3 commands in `ops/cloudflare/UPTIME_MONITOR.md`. Every blind day is a blind day, and
    launch weekend unwatched is the worst possible blind spot.
 
@@ -78,7 +79,7 @@ build before the agency wave fires, ideally before 29 Aug).
 | **Once** | — | One smallest-pack **Paystack** buy with tab-close → closes the detached-credit E2E | Real money on the live rail |
 | **Once** | — | One real **Didit** ID check → settles the free-500-vs-$1.10 billing shape (the unproven clause) | Real money |
 | **When convenient** | — | Delete the two superseded **Cloudflare tokens** (`MarketSquare Media`, `Trustsquare Cache Purge`) | Dashboard login. Rotation residue, not blocking |
-| **1 Sep 09:00** | 8 | **Travelpayouts tours: READ THE OUTCOME** — resubmitted 22 Aug (RUL-041, D10), 26 programs auto-connect on approval | Commercial |
+| ~~1 Sep 09:00~~ **ANSWERED 24 Aug** | — | **Travelpayouts tours: DECLINED AGAIN** (probed at the partner dashboard, not read off the email). Same reason as 5 Aug: *"website under development or not yet ready."* Available 26 / blocked 20 — Booking.com, Viator, GetYourGuide still blocked. Per RUL-041 do NOT resubmit unchanged; **David picks the resubmit moment** (soft launch 29 Aug is the natural one). Their dashboard offered +25% GYG rewards, expiring 24 Aug, to switch the Drive loader back on — declined, Drive stays Off. | Commercial |
 | **Before 1 Sep** | 8 | **Renew or drop the Anthropic subscription** — technical successor decided and wired (RUL-013, `ai_provider.py`: `gpt-5.6-sol`, Scaleway standby); this is only the subscription question | Spend |
 | **Month 1** | — | Appoint the **accountant** (R2,000/mo + R500 software, RUL-023) | Engagement + spend |
 

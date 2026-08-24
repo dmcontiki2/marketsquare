@@ -19457,6 +19457,20 @@ estate_agents.configure(anon_fn=_anon_regex_clean, quality_fn=_import_quality_sc
 estate_agents.init_schema()
 app.include_router(estate_agents.router)
 
+# ── TP-LINKOUT-1 (24 Aug 2026): the SAFE affiliate lane — server-side 302s, no
+# third-party script, hard host allowlist, dark unless TP_LINKOUT_ENABLED is set.
+# Built the day Travelpayouts' dashboard offered +25% rewards to switch their
+# Drive loader back on. The whole point is that saying no stays cheap because a
+# house-built alternative exists. RG-0025 forbids their script; this is the
+# thing you reach for instead. Wrapped because a monetisation side-lane must
+# never be able to take the app down at boot.
+try:
+    import travelpayouts_partners
+    travelpayouts_partners.init_schema()
+    app.include_router(travelpayouts_partners.router)
+except Exception as _tp_ex:      # pragma: no cover
+    print("[TP-LINKOUT-1] partner lane not mounted: %r" % (_tp_ex,), flush=True)
+
 # ═══ AI FEATURE HOLD LEDGER (AdvertAgent service · commit→burn→release) ═══
 # Canonical Tuppence HOLD model (Codex v4.8 / C10–C13): commit-on-request,
 # burn-on-delivery, release-on-failure. A8-compliant: purchase-only deduction

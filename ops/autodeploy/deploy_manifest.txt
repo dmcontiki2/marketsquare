@@ -72,6 +72,10 @@ launch_redemption.py       | launch_redemption.py
 account_closure.py         | account_closure.py
 id_verify_provider.py      | id_verify_provider.py
 estate_agents.py           | estate_agents.py
+# TP-LINKOUT-1 (24 Aug 2026): the safe affiliate lane. Server-side 302s only --
+# no third-party script ever reaches a page (RG-0025). Dark unless the server env
+# sets TP_LINKOUT_ENABLED, so deploying this file changes nothing customer-facing.
+travelpayouts_partners.py  | travelpayouts_partners.py
 
 # ── Dashboard docs (BEA parses these at GET /dashboard/summary) ──────────────
 STATUS.md                  | STATUS.md
