@@ -110,6 +110,14 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-052": [
+   # International scraped-address outreach RELEASED (David, 24 Aug): US/UK/AU waves
+   # proceed on the wave-plan schedule with no counsel pre-gate; counsel review is an
+   # ordinary follow-up (SS6.1A class). A "before 4 Sep" gate reappearing on the wave
+   # board, or the ruling row vanishing, trips here.
+   ("RULINGS.md", ["INTERNATIONAL SCRAPED-ADDRESS OUTREACH IS RELEASED"], []),
+   ("WAVE_PLAN_LAUNCH_2026.html", ["RELEASED (RUL-052"], ["Counsel item before 4 Sep"]),
+ ],
  "RUL-051": [
    # Features relist waits for the VIDEOS (David, 24 Aug): the Browse card returns only
    # once the full-length feature videos (RUL-043, shelved) are done, on David's word.
