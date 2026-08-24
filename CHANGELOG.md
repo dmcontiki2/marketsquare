@@ -1,3 +1,12 @@
+## 2026-08-24 — RG-0174 LOCKED: customer email = support pipeline only; worker dead-letter deployed
+
+- David ran `wrangler deploy` (trustsquare-email-triage). Final E2E: tests E and F each got
+  exactly ONE reply (ONE-REPLY-1 holding live; F's ack carried ref LIST-15). Attachment lane
+  (stock lists) still forwards to a human mailbox by design.
+- Evidence grades stated in the entry ref: app half PROBED, worker half EXECUTED+repo-PROBED
+  (Gmail suppresses same-Message-ID self-sent returns, so the no-forward negative shows only
+  on third-party mail). RG-0174 promoted LOCKED per the READY-TO-LOCK rule.
+
 ## 2026-08-24 — SHIPPED: ONE-REPLY-1 + support Reply-To live (release 06:23:42, tag ship-20260824-0623)
 
 - Rode the 06:23:42 release (concurrent-session commit swept the files; origin/deploy = 9bb74cf).
