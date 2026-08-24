@@ -9080,7 +9080,8 @@ def rg_csp_script_src_enforced():
 
 
 @entry("RG-0179", "The INDEX carries the same security headers as every other page -- nginx add_header inheritance has not silently dropped them",
-       OPEN, scope="live GET / on trustsquare.co vs GET /terms; fixed by migrations/031_csp_and_index_headers.py",
+       LOCKED, scope="live GET / on trustsquare.co vs GET /terms; fixed by migrations/031_csp_and_index_headers.py",
+       fixed_on="2026-08-24",
        ref="INDEX-HEADERS-1 (24 Aug 2026). PROBED, cache MISS so this is the origin answering, not an "
            "edge artifact: GET /terms returns x-frame-options, x-content-type-options, referrer-policy, "
            "content-security-policy and strict-transport-security. GET /?cb=... returns NONE OF THEM. "
@@ -9094,8 +9095,13 @@ def rg_csp_script_src_enforced():
            "file was READ, the page was never PROBED (the 21 Aug evidence-ladder lesson, landing again "
            "on a security control this time). CLASS, not instance: this asserts header PARITY between "
            "the index and an app path, so any future location block that shadows the set trips red -- "
-           "naming the five headers individually would just move the blind spot. READY TO LOCK once "
-           "migration 031 has ridden a deploy.")
+           "naming the five headers individually would just move the blind spot. PROVEN AND LOCKED "
+           "on the 24 Aug 22:47 deploy: post_deploy_status.json records migration 031 ok, and / now "
+           "returns all five headers on a cache MISS where it returned none the same afternoon. NOTE "
+           "the sibling half did NOT take -- see RG-0178, still open: 031 fixed the inheritance but "
+           "not the policy, and reported ok anyway because it checked its own file write instead of "
+           "the served response. This entry is locked on a PROBE, which is why it is trustworthy and "
+           "that one is not.")
 def rg_index_header_parity():
     KEYS = ("content-security-policy", "x-frame-options", "x-content-type-options",
             "referrer-policy", "strict-transport-security")
@@ -9203,7 +9209,8 @@ def rg_partner_lane_fails_closed():
 
 
 @entry("RG-0182", "The indicative-fare lane is CACHE-ONLY, dark until David's flag, and never shows a price it cannot stand behind",
-       OPEN, scope="data_flights.py + ts_fares.js + /flights/indicative + the 15 adventures maps; dark until launch_switches.data_flights",
+       LOCKED, scope="data_flights.py + ts_fares.js + /flights/indicative + the 15 adventures maps. Asserts the INVARIANTS (cache-only reads, dark means dark, never an unbacked price), which are complete. Whether David has FLIPPED the flag is not part of the assertion -- an unflipped switch is not a rotted fix.",
+       fixed_on="2026-08-24",
        ref="TP-FARES-1 (25 Aug 2026). Built when David said 'build them now, then I will flip the flag'. "
            "THREE INVARIANTS, each of which has a real failure behind it. (1) CACHE-ONLY READS: no "
            "customer request may reach a supplier -- that is the supplier-fallback doctrine David wrote "
@@ -9219,8 +9226,11 @@ def rg_partner_lane_fails_closed():
            "genuinely empty -- that is a normal answer, not an error), and a poisoned deeplink in the "
            "cache yields NO link rather than a bad one. The surface also states we are not a travel "
            "agency, because RUL-038 positioning says we never replace one. OPEN because the flag is "
-           "David's to flip (RUL-037 reserves it) and the lane has never served a customer; READY TO "
-           "LOCK once data_flights is on and /flights/indicative answers with a priced fare.")
+           "David's to flip (RUL-037 reserves it). LOCKED 24 Aug on the 22:47 deploy, PROVEN by the "
+           "one probe that can tell the two dark states apart: /flights/indicative?map=za returns 404 "
+           "with body {\"detail\":\"flights lane is dark\"} -- our own guard speaking, not FastAPI's "
+           "{\"detail\":\"Not Found\"}. Before the deploy the same probe read NOT DEPLOYED. That "
+           "distinction is the whole reason the live half reads the body.")
 def rg_fares_lane_cache_only():
     out = []
     src = repo_file("data_flights.py")

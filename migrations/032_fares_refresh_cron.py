@@ -80,6 +80,12 @@ def main():
             "which is the safe state; provision the token and the 06:20 run fills it.")
         return 0
 
+    # Python does NOT put the CWD on sys.path for `python3 <script>` -- it puts the
+    # SCRIPT's directory (migrations/) there. post_deploy runs us with CWD = the live
+    # web root, which is where data_flights.py lands, so the import needs CWD added
+    # explicitly. Proven by the 24 Aug 22:47 deploy, which recorded
+    # ModuleNotFoundError(No module named 'data_flights') and skipped the first fill.
+    sys.path.insert(0, os.getcwd())
     try:
         import data_flights
         data_flights.init_schema()
