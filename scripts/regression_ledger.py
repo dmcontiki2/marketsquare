@@ -9144,7 +9144,8 @@ def rg_csp_connect_src_tight():
 
 
 @entry("RG-0181", "The affiliate lane is a SERVER-SIDE link-out that fails closed -- it can never grow into an injected script, and it never invents a partner link",
-       OPEN, scope="travelpayouts_partners.py (TP-LINKOUT-1) + its manifest row; lane dark until TP_LINKOUT_ENABLED, deeplinks unfilled",
+       LOCKED, scope="travelpayouts_partners.py (TP-LINKOUT-1) + its manifest row. Asserts the INVARIANT (fails closed, no script, host allowlist), which is complete and must stay true. Feature completeness -- lane dark until TP_LINKOUT_ENABLED, all 26 deeplinks still None -- is deliberately NOT part of the assertion: an unbuilt feature is not a rotted fix, and conflating the two is how a ledger starts crying wolf.",
+       fixed_on="2026-08-24",
        ref="TP-LINKOUT-1 (24 Aug 2026). Built the day Travelpayouts' dashboard was offering +25% "
            "GetYourGuide rewards, expiring that same day, to switch the Drive loader back on -- on "
            "precisely the programs we most want. The 2 Aug breach did not happen because anyone was "

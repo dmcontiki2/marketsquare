@@ -258,7 +258,13 @@ REFLECTIONS = {
    # unchanged, or quietly re-adds a TP script for photos, these trip.
    ("RULINGS.md", ["THE TRAVELPAYOUTS TOURS REVIEW WAS RESUBMITTED EARLY"], []),
    ("SECRETS_REGISTER.md", ["UNROTATABLE-ACCEPTED", "TRAVELPAYOUTS_TOKEN"], []),
-   ("OPEN_LOOPS.md", ["RESUBMITTED 22 Aug 2026", "AWAIT OUTCOME"], []),
+   # UPDATED 24 Aug 2026: the awaited event HAPPENED -- the resubmit was declined again, same
+   # reason. "AWAIT OUTCOME" was correct while we were waiting and became a LIE the moment the
+   # outcome was read, so the needle moves to the durable half of the ruling: the outcome is
+   # recorded, and the do-not-resubmit-unchanged rule is still written where the next session
+   # will read it. This is the needle being corrected to match reality, not softened to pass --
+   # it is now HARDER (a session that resubmits unchanged has to delete this line to go green).
+   ("OPEN_LOOPS.md", ["RESUBMITTED 22 Aug 2026", "DECLINED AGAIN", "do NOT resubmit unchanged"], []),
    ("scripts/regression_ledger.py", ["RG-0025", "RG-0146"], []),
  ],
  "RUL-040": [
