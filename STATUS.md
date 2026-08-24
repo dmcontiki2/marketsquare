@@ -28,6 +28,12 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+## 2026-08-24 — ONE-REPLY-1 live and E2E-proven (one reply, ref folded in); worker wrangler deploy is the last email-routing step
+
+- Release 06:23:42 smoke-tested green; test D = one reply with ref LIST-13 (PROBED).
+- AWAITING David: `cd cloudflare_email_worker && wrangler deploy`, then Claude re-tests
+  for no-personal-copy and promotes RG-0174.
+
 ## 2026-08-24 — Launching-soon markers on the placement lane (RUL-051)
 
 Features relist now gated on the videos being done (David's word to relist). Placement console,
