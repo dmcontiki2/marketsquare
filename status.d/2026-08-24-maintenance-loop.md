@@ -1,0 +1,1 @@
+- Maintenance loop 2026-08-24 (05:33 UTC): quiet run. Ledger green before and after (all LOCKED holding, 14 open). Fault queue empty (0 seen / 0 acted, SHADOW). Heartbeat PROBED on /dashboard/maint at 2026-08-24T05:34:06Z. No escalations in 24h. Verified: live probe + ledger runs this session.
