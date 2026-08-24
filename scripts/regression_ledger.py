@@ -8369,9 +8369,9 @@ def rg_migrations_tracked():
 
 
 @entry("RG-0158", "Study & Work Abroad teaser serves live WITH its honesty labels -- "
-                  "Coming-Shortly banner, AI-example label, and its home-surface entry",
+                  "Coming-Shortly banner and AI-example label (home-surface needle retired, RUL-050)",
        LOCKED, fixed_on="2026-08-23 (promoted: READY TO LOCK the morning after, exactly as the ref predicted -- SAW-1 rode the 23 Aug deploy; teaser live with both honesty labels + index banner)",
-       scope="/static/studyabroad_teaser.html + the SAW-1 banner in the live index. CLASS: "
+       scope="/static/studyabroad_teaser.html (SAW-1 index banner retired 24 Aug 2026, RUL-050 -- unlisted, still live). CLASS: "
              "a preview surface must carry its Coming-Shortly and AI-example labels for as long "
              "as it exists -- shipping the page without the labels, or the labels without the "
              "page, is the defect (RUL-040/RUL-042 honesty class). When the real feature goes "
@@ -8380,7 +8380,7 @@ def rg_migrations_tracked():
            "baseline': one static page, one lm-banner block in marketsquare.html, one manifest "
            "line. OPEN until it rides the next deploy; expected to print READY TO LOCK the "
            "morning after. Example dossier facts sourced+dated 22 Aug 2026 (DHET/Stipendium, "
-           "DE blocked account, UK visa+IHS, NL fee ranges) with RE-CHECK flags per RUL-038.")
+           "DE blocked account, UK visa+IHS, NL fee ranges) with RE-CHECK flags per RUL-038. AMENDED 24 Aug 2026 (RUL-050): David pulled the banner off Browse for launch -- the teaser videos are shelved placeholders (RUL-043) and a front-door card onto them reads badly; the page stays live UNLISTED (onboard_5 links it). The home-surface needle was removed DELIBERATELY here, not weakened silently; rulings_check RUL-050 now asserts the banner's ABSENCE on Browse.")
 def rg_studyabroad_teaser_live():
     out = []
     try:
@@ -8393,13 +8393,7 @@ def rg_studyabroad_teaser_live():
         out.append((FAIL, "AI-example label missing -- the worked example could read as a real report"))
     if "NOT A REPORT FOR A REAL USER" not in page:
         out.append((FAIL, "the 'not a report for a real user' wording is gone"))
-    try:
-        idx = _get("/")
-        if "studyabroad_teaser.html" not in idx:
-            out.append((FAIL, "SAW-1 home-surface banner missing from the live index"))
-    except Exception as ex:
-        out.append((FAIL, "index unreadable: %s" % repr(ex)[:60]))
-    return out or [(INFO, "teaser live with both honesty labels and its entry banner")]
+    return out or [(INFO, "teaser live with both honesty labels (unlisted since RUL-050)")]
 
 
 @entry("RG-0159", "The WORK-route worked example is live: second labelled AI-example plus the "
@@ -8729,7 +8723,7 @@ def rg_fresh_tab():
 
 
 @entry("RG-0171", "A lane that promises a sign-in link SENDS one -- bulk roster onboarding emails every agent their invite, and the invite email is an invite (no empty code box)",
-       OPEN, scope="estate_agents.py bulk_onboard_agents (invite_fn seam) + bea_main.py _mint_agent_invite/_send_invite_email/_send_html_email + ms.js bulk toast. "
+       LOCKED, fixed_on="2026-08-24", scope="estate_agents.py bulk_onboard_agents (invite_fn seam) + bea_main.py _mint_agent_invite/_send_invite_email/_send_html_email + ms.js bulk toast. "
              "Found 24 Aug 2026 walking the agency funnel as a recipient: outreach lane 2 and the Import Guide promise 'each agent instantly "
              "gets a sign-in link' and the console toasted 'magic links & verification queued' -- but /agencies/{id}/agents/bulk sent NOTHING, "
              "and the single-invite lane mailed the sign-in CODE template with an EMPTY code box and a 20-minute expiry claim on a 72-hour token. "
@@ -8788,6 +8782,37 @@ def rg_opsmap_loader():
         if '<span class="om-chip nw" id="%s"' % cid not in src:
             out.append((FAIL, "placeholder chip %s wears a health colour before data answers (RG-0133 rule on the map)" % cid))
     return out or [(INFO, "ops-map loader fires all feeds; unfilled chips are grey until a live answer paints them")]
+
+
+
+@entry("RG-0173", "The agency funnel is walked END-TO-END by MACHINERY -- a synthetic journey probe (email links -> console -> roster invite -> advert import) runs against live and leaves a fresh witness",
+       OPEN, scope="scripts/agency_journey_probe.py (to build) + agency_journey_status.json witness. Born of David's question 24 Aug 2026: "
+             "'how did we work on this so long and find these major fails days before launch?' Post-mortem answer: every slice was "
+             "pattern-asserted, but no assertion crossed the SEAMS between slices -- the console promised links the backend never sent, "
+             "and only a persona-grade walk (the first ever, 24 Aug) caught it. CLASS: a funnel is proven by walking it as the recipient, "
+             "not by asserting its parts; every recruited-vertical funnel (agency/dealer/operator) needs the same walk before its wave fires.",
+       ref="AGENCY-JOURNEY-1, opened 24 Aug 2026. Spec: probe every outreach-link anonymously; mint a throwaway org via wave-prep "
+           "(idempotent); exercise agents/bulk with a sink address and assert per-agent link=sent; exercise the import lane; write "
+           "agency_journey_status.json {ok, ran_at}. Passes when the script exists and the witness is green and fresh (<8 days).")
+def rg_agency_journey_probe():
+    out = []
+    import os as _os, json as _json, time as _time
+    sp = _os.path.join(REPO, "scripts", "agency_journey_probe.py")
+    wp = _os.path.join(REPO, "agency_journey_status.json")
+    if not _os.path.exists(sp):
+        out.append((FAIL, "no journey probe script -- the funnel is only ever walked by a session's memory"))
+    if _os.path.exists(wp):
+        try:
+            w = _json.load(open(wp, encoding="utf-8"))
+            if not w.get("ok"):
+                out.append((FAIL, "last journey walk FAILED: %s" % str(w.get("detail", ""))[:80]))
+            elif _time.time() - float(w.get("ran_at", 0)) > 8 * 86400:
+                out.append((FAIL, "journey witness stale (>8 days) -- walk it again before trusting the funnel"))
+        except Exception as ex:
+            out.append((FAIL, "journey witness unreadable: %s" % repr(ex)[:50]))
+    else:
+        out.append((FAIL, "no journey witness -- the probe has never run"))
+    return out or [(INFO, "the funnel was walked by machinery recently and it passed")]
 
 
 if __name__ == "__main__":

@@ -1,3 +1,22 @@
+## 2026-08-24 — SAW-BANNER-OFF-1: Study & Work Abroad entry off Browse for launch (RUL-050)
+
+David's call: the teaser's two feature-video slots are shelved placeholders (RUL-043) and the
+Browse card walks a first-time visitor straight into them — a bad first scan for launch week.
+The SAW-1 banner block is removed from marketsquare.html (tombstone comment marks the spot); the
+teaser page, both example dossier PDFs and both layered maps stay DEPLOYED and LIVE but UNLISTED
+— placement onboarding email 5 keeps linking the page. RG-0158's home-surface needle retired
+deliberately (dated amendment in its ref); rulings_check RUL-050 now polices the banner's absence
+on Browse until David relists it with the feature (studywork_live / unshelved videos).
+
+## 2026-08-24 — AGENCY-INVITE-MAIL-1 SHIPPED by David; RG-0171 promoted LOCKED; journey-probe class opened
+
+- David deployed; live probe: /health ok, served ms.js carries the honest bulk toast, the
+  false "magic links & verification queued" is gone. Ledger green (exit 0), RG-0171 passed
+  on first post-ship run and was promoted LOCKED per the READY-TO-LOCK rule.
+- RG-0173 opened (AGENCY-JOURNEY-1): synthetic end-to-end journey probe for the recruited-
+  vertical funnels — machinery-walked funnels, not session-memory-walked. Born of David's
+  "how did we find these major fails only days before launch?" post-mortem.
+
 ## 2026-08-24 — OPSMAP-CRASH-1: the Ops Map's phantom blocker
 
 The +1 page's Ops Map froze at its placeholders — "flags loading…", "service checks

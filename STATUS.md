@@ -28,6 +28,13 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+## 2026-08-24 — SAW banner off Browse (RUL-050)
+
+Study & Work Abroad card removed from the Browse index for launch — shelved-video placeholders
+must not be a front-door destination. Teaser page + PDFs + maps stay live, unlisted (onboard_5
+still links them). RG-0158 amended, rulings_check RUL-050 polices the absence. Relisting is
+David's word, with the feature.
+
 - OPSMAP-CRASH-1 fixed (24 Aug): ops-map loader crash (undefined EP from PROVENANCE-1)
   froze all chips at placeholder colours — the "blocker" David saw was a default red,
   not a fault (register probed clean: 0 active). EP→B + placeholder chips grey until

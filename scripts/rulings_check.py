@@ -110,6 +110,16 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-050": [
+   # The Study & Work Abroad entry is OFF Browse for launch (David, 24 Aug): the teaser
+   # videos are shelved placeholders (RUL-043), so the front-door card goes. The page
+   # itself stays live UNLISTED (onboard_5 links it; RUL-044/045 artefacts). must_NOT
+   # polices any teaser banner/link returning to Browse before David relists it.
+   ("RULINGS.md", ["ENTRY COMES OFF BROWSE FOR LAUNCH"], []),
+   ("marketsquare.html", [], ["studyabroad_teaser"]),
+   ("studyabroad_teaser.html", ["COMING SHORTLY"], []),
+   ("ops/autodeploy/deploy_manifest.txt", ["studyabroad_teaser.html"], []),
+ ],
  "RUL-049": [
    # Four recruited verticals built: backend verticals exist and the skins are real.
    ("RULINGS.md", ["THE FOUR RECRUITED VERTICALS ARE BUILT"], []),
