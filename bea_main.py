@@ -19471,6 +19471,44 @@ try:
 except Exception as _tp_ex:      # pragma: no cover
     print("[TP-LINKOUT-1] partner lane not mounted: %r" % (_tp_ex,), flush=True)
 
+
+# ── TP-FARES-1 (25 Aug 2026): indicative fares for the journey maps.
+# READ PATH ONLY — this endpoint touches our own fare cache and never a supplier,
+# so no traveller request can be slowed, rate-limited or billed by anyone else
+# (supplier-fallback doctrine, David 1 Aug 2026). Dark until David flips
+# launch_switches.data_flights; while dark it 404s, matching the planner lane's
+# rule that an off flag answers 404 and never 500.
+try:
+    import data_flights
+    data_flights.init_schema()
+
+    @app.get("/flights/indicative")
+    def flights_indicative(map: str = None, origin: str = None, destination: str = None,
+                           currency: str = data_flights.DEFAULT_CURRENCY):
+        if not data_flights.flag_on():
+            raise HTTPException(status_code=404, detail="flights lane is dark")
+        if map:
+            route = data_flights.route_for_map(map)
+            if not route:
+                raise HTTPException(status_code=404, detail="no route for that map")
+            origin, destination = route
+        if not origin or not destination:
+            raise HTTPException(status_code=400, detail="need map, or origin and destination")
+        out = data_flights.get_indicative(origin.upper()[:3], destination.upper()[:3],
+                                          (currency or "zar").lower()[:3])
+        if out.get("available") and out.get("deeplink_path"):
+            try:
+                import travelpayouts_partners as _tpp
+                out["book_url"] = _tpp.build_fare_url(out.pop("deeplink_path"))
+                out["disclosure"] = _tpp.DISCLOSURE
+            except Exception:
+                out.pop("deeplink_path", None)
+        else:
+            out.pop("deeplink_path", None)
+        return out
+except Exception as _fares_ex:   # pragma: no cover
+    print("[TP-FARES-1] fares lane not mounted: %r" % (_fares_ex,), flush=True)
+
 # ═══ AI FEATURE HOLD LEDGER (AdvertAgent service · commit→burn→release) ═══
 # Canonical Tuppence HOLD model (Codex v4.8 / C10–C13): commit-on-request,
 # burn-on-delivery, release-on-failure. A8-compliant: purchase-only deduction

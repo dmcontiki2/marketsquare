@@ -28,6 +28,10 @@ ts_report.js               | static/ts_report.js
 # DEMO-BANNER-1 (22 Aug 2026): the red DEMO tab on the demo maps. Ungated -- unlike
 # ts_report.js it is a customer-facing honesty label and SURVIVES Soft Launch.
 ts_demo_banner.js          | static/ts_demo_banner.js
+# TP-FARES-1 (25 Aug 2026): the indicative "getting there" fare card on the journey
+# maps. First-party only -- its ONLY network call is our own /flights/indicative,
+# which reads our own cache. Renders nothing while data_flights is off.
+ts_fares.js                | static/ts_fares.js
 
 # ── Service worker (served from web root, not /static/) ──────────────────────
 assets/service-worker.js   | service-worker.js
@@ -76,6 +80,9 @@ estate_agents.py           | estate_agents.py
 # no third-party script ever reaches a page (RG-0025). Dark unless the server env
 # sets TP_LINKOUT_ENABLED, so deploying this file changes nothing customer-facing.
 travelpayouts_partners.py  | travelpayouts_partners.py
+# TP-FARES-1: the fare cache + swappable supplier adapter. The app reads ONLY this
+# cache; the supplier is contacted on a schedule, never on a customer request.
+data_flights.py            | data_flights.py
 
 # ── Dashboard docs (BEA parses these at GET /dashboard/summary) ──────────────
 STATUS.md                  | STATUS.md

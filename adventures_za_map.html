@@ -106,5 +106,8 @@ setTimeout(function(){map.invalidateSize();},250);
 </script>
 <script src="/static/ts_report.js?v=6" defer></script>
 <script src="/static/ts_demo_banner.js?v=1" defer></script>
+<!-- TP-FARES-1 (25 Aug 2026): indicative "getting there" fare, first-party only.
+     Renders NOTHING while launch_switches.data_flights is off (endpoint 404s). -->
+<script src="/static/ts_fares.js?v=1" defer></script>
 </body>
 </html>

@@ -77,7 +77,11 @@ ALLOWED_HOSTS = {
 # ---------------------------------------------------------------------------
 PROGRAMS = {
     # slug:            (brand,              category,              reward,        cookie,   deeplink)
-    "aviasales":       ("Aviasales",        "Flights",             "40%",         "30 days", None),
+    # DEEPLINK FILLED 25 Aug 2026 — READ from the live API, not invented (RG-0181).
+    # v3 prices_for_dates returns a relative `link` such as /search/JNB1309CPT1?t=...
+    # which is the program's own search URL; prefixed with the brand host and carrying
+    # our marker it is a valid affiliate deep link. Probed JNB-CPT R1,187 the same day.
+    "aviasales":       ("Aviasales",        "Flights",             "40%",         "30 days", "https://www.aviasales.com/"),
     "kiwi":            ("Kiwi.com",         "Flights",             "3%",          "30 days", None),
     "klook":           ("Klook",            "Tours & Activities",  "2–5%",        "7–30 days", None),
     "tiqets":          ("Tiqets",           "Tours & Activities",  "3.5–8%",      "30 days", None),
@@ -196,6 +200,26 @@ def clickout(slug: str, request: Request, u: str = None):
     return r
 
 
+def build_fare_url(path):
+    """Turn the relative `link` a fare carries into a safe, marked affiliate URL.
+
+    ALL outbound URL construction for this program goes through here so the host
+    allowlist is enforced in exactly one place. A path that is not a relative
+    path — anyone trying to smuggle an absolute URL through the fare cache —
+    is refused outright rather than sanitised into something that looks fine.
+    """
+    if not path or not isinstance(path, str) or not path.startswith("/") or path.startswith("//"):
+        return None
+    host = "www.aviasales.com"
+    if host not in ALLOWED_HOSTS:
+        return None
+    joined = "https://" + host + path
+    parts = urlsplit(joined)
+    q = dict(parse_qsl(parts.query, keep_blank_values=True))
+    q["marker"] = MARKER
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(q), ""))
+
+
 def selftest():
     """Prove the refusals actually refuse. Run: python3 travelpayouts_partners.py"""
     ok = True
@@ -208,6 +232,11 @@ def selftest():
         ("no host in the allowlist is a Travelpayouts SCRIPT host", not (
             ALLOWED_HOSTS & {"tp-em.com", "emrld.cc"})),
         ("registry size matches the 26 probed on 24 Aug 2026", len(PROGRAMS) == 26),
+        ("a relative fare path becomes a marked affiliate URL",
+         (build_fare_url("/search/JNB1309CPT1?t=abc") or "").startswith("https://www.aviasales.com/search/")
+         and "marker=" in (build_fare_url("/search/JNB1309CPT1?t=abc") or "")),
+        ("an ABSOLUTE url smuggled through the fare cache is refused",
+         build_fare_url("https://tp-em.com/x") is None and build_fare_url("//tp-em.com/x") is None),
         ("blocked list holds the 20 the partner refuses", len(BLOCKED) == 20),
     ]
     for label, passed in checks:

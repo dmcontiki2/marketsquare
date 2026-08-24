@@ -9202,5 +9202,106 @@ def rg_partner_lane_fails_closed():
     return out
 
 
+@entry("RG-0182", "The indicative-fare lane is CACHE-ONLY, dark until David's flag, and never shows a price it cannot stand behind",
+       OPEN, scope="data_flights.py + ts_fares.js + /flights/indicative + the 15 adventures maps; dark until launch_switches.data_flights",
+       ref="TP-FARES-1 (25 Aug 2026). Built when David said 'build them now, then I will flip the flag'. "
+           "THREE INVARIANTS, each of which has a real failure behind it. (1) CACHE-ONLY READS: no "
+           "customer request may reach a supplier -- that is the supplier-fallback doctrine David wrote "
+           "on 1 Aug after Amadeus died mid-integration and Google billed ~$360 silently. The read path "
+           "touches our SQLite only; a cron is the sole thing that contacts Travelpayouts, so supplier "
+           "loss ages the cache instead of breaking the page. (2) DARK MEANS DARK: while the flag is 0 "
+           "the endpoint 404s even though real fares ARE cached, and ts_fares.js renders nothing at all "
+           "-- no spinner, no placeholder, no 'loading fares', because an empty state that promises a "
+           "price is a small lie. The dark case is the one that gets skipped in testing, so the harness "
+           "scripts/prove_fares_lane.py tests it FIRST. (3) NEVER A PRICE WE CANNOT STAND BEHIND: every "
+           "served fare carries its age, a fare older than 21 days is withheld rather than shown stale, "
+           "a thin route falls back to the agency card with no number (the 1 Aug dry run found CPT-GRJ "
+           "genuinely empty -- that is a normal answer, not an error), and a poisoned deeplink in the "
+           "cache yields NO link rather than a bad one. The surface also states we are not a travel "
+           "agency, because RUL-038 positioning says we never replace one. OPEN because the flag is "
+           "David's to flip (RUL-037 reserves it) and the lane has never served a customer; READY TO "
+           "LOCK once data_flights is on and /flights/indicative answers with a priced fare.")
+def rg_fares_lane_cache_only():
+    out = []
+    src = repo_file("data_flights.py")
+    js = repo_file("ts_fares.js")
+    if src is None or js is None:
+        return [(FAIL, "data_flights.py or ts_fares.js is GONE -- the fare lane has been removed")]
+
+    read_path = src.split("def get_indicative", 1)[-1].split("\ndef ", 1)[0]
+    for needle in ("urlopen", "urllib", "requests."):
+        if needle in read_path:
+            out.append((FAIL, "get_indicative() now reaches the network ('%s') -- a customer request "
+                              "can hit a supplier, which is exactly what the 1 Aug doctrine forbids"
+                              % needle))
+    if "STALE_DAYS" not in src:
+        out.append((FAIL, "the staleness guard is gone -- an ancient cached fare could be shown as a price"))
+    if "def flag_on" not in src or "data_flights" not in src:
+        out.append((FAIL, "the lane no longer reads launch_switches.data_flights -- it is not dark-able"))
+
+    # The surface must stay first-party. Its ONLY call is our own origin.
+    for host in ("travelpayouts.com", "tp.media", "tp-em.com", "aviasales.com"):
+        if 'src="http' in js or ("//" + host) in js.replace("https://www.aviasales.com/search/", ""):
+            out.append((FAIL, "ts_fares.js references '" + host + "' directly -- the fare card must "
+                              "only ever call our own /flights/indicative"))
+            break
+    for needed, msg in (("nofollow sponsored", "the outward link lost its rel=nofollow sponsored"),
+                        ("Indicative only", "the indicative disclaimer is gone from the card"),
+                        ("not a travel agency", "the card no longer says we are not a travel agency"),
+                        ("may earn a commission", "the commission disclosure is gone from the card")):
+        if needed not in js:
+            out.append((FAIL, msg))
+
+    # The harness must exist AND pass -- a proof nobody runs is decoration.
+    import subprocess as _sp, os as _os
+    hp = _os.path.join(REPO, "scripts", "prove_fares_lane.py")
+    if not _os.path.exists(hp):
+        out.append((FAIL, "scripts/prove_fares_lane.py is gone -- the dark/lit behaviour is unproven"))
+    else:
+        try:
+            r = _sp.run([sys.executable, hp], capture_output=True, text=True, timeout=90)
+            if r.returncode != 0:
+                out.append((FAIL, "the dark/lit harness FAILS: " + (r.stdout or r.stderr)[-300:]))
+        except Exception as ex:
+            out.append((INFO, "could not run the fares harness here: " + repr(ex)[:70]))
+
+    # Live half. BOTH "flag is off" and "never deployed" answer 404, so the STATUS CODE
+    # ALONE CANNOT TELL THEM APART -- and a ledger that reads a missing feature as a
+    # correctly-dark one is exactly the silent green this whole file exists to prevent.
+    # The bodies differ: FastAPI's own miss says {"detail":"Not Found"}; our dark guard
+    # says {"detail":"flights lane is dark"}. So the body is what gets read.
+    try:
+        import urllib.request as _ur
+        req = _ur.Request(BASE + "/flights/indicative?map=za", headers=UA)
+        try:
+            with _ur.urlopen(req, timeout=TIMEOUT) as r:
+                code, raw = r.status, r.read().decode("utf-8", "replace")
+        except urllib.error.HTTPError as e:
+            code, raw = e.code, (e.read() or b"").decode("utf-8", "replace")
+    except Exception as ex:
+        return out + [(INFO, "could not probe the fares endpoint: " + repr(ex)[:60])]
+    if code == 404:
+        if "lane is dark" in raw:
+            out.append((INFO, "lane is DEPLOYED and dark (404 'flights lane is dark') -- exactly "
+                              "right until David flips data_flights"))
+        else:
+            out.append((FAIL, "the fares endpoint is NOT DEPLOYED -- 404 body is %r, not our "
+                                  "dark guard. The maps carry ts_fares.js but the route behind it "
+                                  "does not exist yet; it rides the next deploy" % raw[:60]))
+    elif code == 200:
+        try:
+            import json as _json
+            body = _json.loads(_get("/flights/indicative?map=za"))
+        except Exception:
+            body = {}
+        if body.get("available") and not body.get("age_days"):
+            out.append((FAIL, "a fare is served with NO age -- the card cannot label it honestly"))
+        if body.get("available") and "Indicative" not in (body.get("disclaimer") or ""):
+            out.append((FAIL, "a fare is served without its indicative disclaimer"))
+    else:
+        out.append((FAIL, "/flights/indicative answered %s -- a dark lane must 404, never error" % code))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
