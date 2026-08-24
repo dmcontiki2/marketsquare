@@ -1,3 +1,144 @@
+## 2026-08-25 — TP-FARES-1: indicative fares on the journey maps, cache-only, dark until David's flag
+
+**David:** *"Please build them now Claude, then i will flip the flag. It is still a zero cost?"*
+
+**Cost: zero, and structurally so — not zero-for-now.** The Travelpayouts flight **Data** API is
+token-only and free; the 50k-MAU gate people quote applies to their **Search** API, which we do not
+use. There is no per-query billing, so no bill can run away the way Google's silent ~$360 did. Duffel
+search ($0.005/query, hard cap) stays the unwired standby adapter. Commission flowing **in** is income,
+not a variable cost — the 1 Aug pricing rule bars variable costs, not income.
+
+**Probed live with the project token, 25 Aug.** All 10 unique map routes returned real fares in native
+ZAR, each with a real deeplink: JNB→CPT **R1,187**, MPM R1,608, GBE R1,683, WDH R2,373, NBO R2,989,
+CAI R4,246, LHR R5,287, FRA R5,929, SYD R7,662, JFK R8,449. `v3/prices_for_dates` returns a relative
+`link` — and *that* is where the Aviasales deeplink in `travelpayouts_partners.py` came from. Read from
+the API, not invented, which is what RG-0181 demanded.
+
+### Built
+
+- **`data_flights.py`** — fare cache + swappable supplier adapter. Two paths that never touch:
+  `get_indicative()` reads our SQLite **only** and contains no network code at all (asserted); `refresh()`
+  is the sole caller of a supplier and runs on a schedule, never on a customer request. Supplier loss
+  therefore ages the cache instead of breaking the page — the 1 Aug supplier-fallback doctrine, made
+  mechanical. Politeness cap of 40 calls per run; their courtesy is what's being protected, since
+  there's no bill to protect.
+- **`GET /flights/indicative`** in `bea_main.py` — 404s while dark, matching the planner lane's rule
+  that an off flag answers 404 and never 500. Import wrapped so a monetisation side-lane can never take
+  the app down at boot.
+- **`ts_fares.js`** on all 15 adventures maps — first-party only; its one network call is our own
+  endpoint. Travelpayouts is contacted by our server on a schedule, never by a traveller's browser.
+  **Renders nothing** when dark, uncached, stale, or on any error — no spinner, no placeholder, no
+  "loading fares…", because an empty state that promises a price is a small lie. Every price prints its
+  **age**; *"Indicative only. Not a quote and not live availability"* cannot be omitted; the outward link
+  is `rel="nofollow sponsored"` with the commission disclosure **in the card**; and it says plainly that
+  MarketSquare is not a travel agency (RUL-038 positioning).
+- **`migrations/032_fares_refresh_cron.py`** — daily 06:20 refresh + first fill, so the cache is warm
+  *before* the flag flips rather than empty on the day. Skips the fill safely if the token isn't in the
+  environment; the lane just stays dark and silent, which is the safe state.
+- **`scripts/prove_fares_lane.py`** — 13/13, offline. Tests the **dark** case first, because a lane
+  only ever tested lit is a lane whose "off" is a hope. Also proves: a 400-day-old fare is withheld
+  rather than shown stale; a thin route falls back to the agency card with no number; and a poisoned
+  deeplink planted in the cache yields **no** link rather than a bad one.
+
+### Ledger
+
+**RG-0182 OPEN.** Its live half reads the 404 **body**, not just the status code — because "flag is off"
+and "never deployed" both return 404, and a ledger that reads a missing feature as a correctly-dark one
+is precisely the silent green the ledger exists to prevent. It currently reports, correctly:
+*"the fares endpoint is NOT DEPLOYED — 404 body is `{"detail":"Not Found"}`, not our dark guard."*
+
+**Verification:** ledger exit 0 · 175 entries · 155 holding · **0 regressed** · rulings 56/0 FAIL ·
+remote-code guard clean across 63 deployable files · fares harness 13/13 · `node --check` clean.
+
+**Sequence from here:** the code rides David's next deploy → RG-0182 flips to *"deployed and dark"* →
+David flips `data_flights` → fares appear on the maps.
+
+## 2026-08-24 — Travelpayouts: the review was NOT passed, and two live security holes found closing the door
+
+**What David asked:** Travelpayouts came back saying "we are back up again" — read the email, integrate
+their services, and do not let them breach us again.
+
+**What the email actually says.** `support@travelpayouts.com`, Sat 22 Aug 16:53, subject *"Next steps
+for your Travelpayouts partnership"*: *"We've reviewed your project and connected it to relevant brands…
+you already have access to brands' programs and can start monetizing your content right away."* It
+carries no snippet, no instruction and no action. It is their generic connected-brands template.
+
+**What the partner dashboard says (PROBED, 24 Aug 21:51 server time, project Trustsquare / ID 758984).**
+The 22 Aug resubmit (RUL-041) was **declined again, for the identical reason as 5 Aug**:
+
+> *"20 programs are currently unavailable for Trustsquare… Your website is currently under development
+> or not yet ready. Please complete setting up your site and re-submit your Project for review."*
+
+- **Available: 26** — Aviasales (40%), Kiwi.com, Klook, Tiqets, WeGoTrip, KKday, Go City, Welcome
+  Pickups, Kiwitaxi, GetTransfer, intui.travel, Localrent, GetRentacar, Economybookings, QEEQ,
+  AutoEurope, BikesBooking, Radical Storage, AirHelp, Compensair, EKTA, Airalo, Yesim, GigSky, Saily,
+  Drimsim. This is the same shelf that has been available since 2 Aug — nothing new was unlocked.
+- **Still blocked: 20** — including every headliner David approved on 1 Aug: **Booking.com, Viator,
+  GetYourGuide**, plus Expedia, Agoda, Trip.com, Tripadvisor Experiences, DiscoverCars, Hotels.com,
+  Vrbo, Omio, 12Go, Hostelworld, Busbud, Traveloka, Ticketmaster, Vio.com, Rakuten Travel,
+  VisitorsCoverage, Insubuy.
+- **Drive reads "Drive is not working"** — correct, we removed the loader on 3 Aug — and the page was
+  dangling *"Enable all Drive functions to unlock +25% GetYourGuide rewards through September 30.
+  Available until August 24"*: an expiring incentive to reinstall the exact breach vector, aimed at the
+  exact programs we are missing. The five Drive functions (Targeted Offers — *"shows them relevant
+  travel offer in a background tab"*, Switch Links, Link Relevant Keywords, Insert Recommendations,
+  Display Smart Previews) remain **Off** and stay off. Not taken.
+
+**Evidence-ladder note.** The email is a REPRESENTATION and said one thing; the dashboard is a PROBE
+and said another. The probe wins, and this changelog is the correction.
+
+### The two live security holes found while closing the door
+
+1. **INDEX-HEADERS-1 — the front page serves no security headers at all.** Measured on a cache MISS, so
+   this is the origin answering: `GET /terms` returns X-Frame-Options, X-Content-Type-Options,
+   Referrer-Policy, Content-Security-Policy and HSTS. `GET /?cb=…` returns **none of the five**. Cause
+   is nginx's `add_header` inheritance rule — a level inherits `add_header` only if it declares none of
+   its own, and `location = / {}` declares its own Cache-Control, which silently discards the entire
+   inherited set. So the one document that is both the public front door and the SA Smart ID / passport
+   upload flow — and the exact page the Drive loader was pasted into — has been serving naked, while
+   `nginx_security_headers.conf` sat on disk saying otherwise. It survived because the file was READ and
+   the page was never PROBED.
+2. **CSP-SCRIPT-SRC-1 — there is no `script-src` anywhere.** The CSP is `frame-ancestors 'self'` and
+   nothing else, so any script tag reaching a page executes, from any origin. A full CSP was deferred on
+   16 Jul because the index carries ~163 inline `onclick` handlers; that deferral is why the 3 Aug loader
+   ran to completion. `'unsafe-inline'` keeps all 163 handlers working **and still blocks every remote
+   origin** — the thing that was "too hard" was never needed to close this.
+
+### Shipped this session
+
+- **`scripts/no_remote_code_guard.py`** (REMOTE-CODE-GUARD-1) — scans every file the deploy manifest
+  actually places for remote script/iframe/stylesheet references, by static tag *and* by
+  `createElement('script') + .src` (the loader's own shape), against a dated allowlist with a written
+  reason per origin. Exit 1 on violation. Carries a `--self-test` that feeds it the real 3 Aug tag, the
+  same shape on a new host, an unknown host, a remote iframe and a remote stylesheet, and requires all
+  five to be caught — a guard that cannot fail is decoration.
+  *Its first run surfaced **cdnjs.cloudflare.com**, loaded dynamically by `ms.js aiLeaflet()` and
+  inventoried nowhere until now.*
+- **RG-0025 rewritten from an instance to a CLASS.** It asserted the absence of two literal strings
+  (`tp-em.com`, `NTU3Mzkx.js`) — which catches only the loader we already removed. A new snippet from a
+  new host, exactly what a re-approved affiliate account hands you, sailed past it green. It now checks
+  every non-allowlisted remote origin, live *and* across the whole manifest. The assertion was wrong,
+  not weakened.
+- **`migrations/031_csp_and_index_headers.py`** — sets the full CSP (script-src `'self' 'unsafe-inline'`
+  + unpkg + cdnjs, no `unsafe-eval`, no wildcard, plus object-src none / base-uri / form-action) and
+  adds the header include *inside* `location = /` so the index stops serving naked. Refuses rather than
+  guesses if it cannot identify the files, backs up outside the globbed dir, `nginx -t` with auto-restore,
+  reload with auto-restore, one-command rollback printed on apply. **Rides David's next deploy.**
+- **`travelpayouts_partners.py`** (TP-LINKOUT-1) — the safe integration: server-side 302s only, hard
+  outbound host allowlist, our marker appended as a query parameter, click-outs recorded by us before
+  the partner hears about it, `Referrer-Policy: no-referrer` on the hop, and a plain-English disclosure
+  string. **Fails closed:** all 26 programs carry `deeplink=None`, because the per-brand link formats
+  have not been read yet and the module will not invent one. Dark unless `TP_LINKOUT_ENABLED` is set.
+  Built precisely so that saying no to Drive stays cheap.
+- **New ledger entries:** RG-0177 (the guard is real, can still fail, allowlist has not drifted),
+  RG-0178 (script-src enforced — OPEN), RG-0179 (index/app header parity — OPEN), RG-0180 (connect-src
+  tightening — OPEN, the honest limit recorded rather than omitted), RG-0181 (the link-out lane fails
+  closed and can never grow into a script — OPEN).
+
+**Model constraint respected throughout:** MarketSquare is an introductory service and is never merchant
+of record. A link-out is compatible because the traveller pays the partner directly; commission flowing
+in is income, not a variable cost (1 Aug pricing ruling).
+
 ## 2026-08-24 — RUL-056: property day off the singles ladders, wave board v3
 
 David's ruling: the singles property day is not going to be successful — removed from
