@@ -110,6 +110,14 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-054": [
+   # POPIA suppression invariant (David, 24 Aug): separate register, verified at the
+   # send chokepoint; prospect PII never public. Losing any needle re-opens the breach.
+   ("RULINGS.md", ["THE POPIA SUPPRESSION INVARIANT"], []),
+   ("../CityLauncher/api/server.py", ["SUPPRESS-1", "LAUNCH-API-LOCK-1", "CREATE TABLE IF NOT EXISTS suppression"], []),
+   ("../CityLauncher/emailer/emailer.py", ["_is_suppressed", "refusing send to opted-out"], []),
+   ("citylauncher_ops.html", ["X-Launch-Key"], []),
+ ],
  "RUL-053": [
    # The launch wave plan (David, 24 Aug): Pretoria ladder from Fri 28 Aug, global
    # launch day Tue 1 Sep (all cities send Stays), SA rolls daily, global three hold

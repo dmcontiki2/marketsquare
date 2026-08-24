@@ -8860,9 +8860,20 @@ def rg_one_inbox_one_reply():
 def rg_wave_hygiene():
     out = []
     import os as _os, json as _json, time as _time
+    # CAT-ALIAS-1 (24 Aug 2026, executed): the scraper's real category names are aliased in the
+    # n8n templateMap and an unmapped category DROPS instead of falling back to the property
+    # template. Losing either re-opens wrong-template sends at wave scale.
+    nf = _os.path.join(REPO, "n8n", "n8n_outreach_workflow.json")
+    if _os.path.exists(nf):
+        nw = open(nf, encoding="utf-8", errors="replace").read()
+        if "CAT-ALIAS-1" not in nw or "teachers_trainers" not in nw:
+            out.append((FAIL, "n8n templateMap lost the scraper-category aliases -- wrong-template sends are back"))
+        if "|| 'property_outreach'" in nw:
+            out.append((FAIL, "n8n templateKey fallback is property_outreach again -- unmapped categories get the wrong email"))
     wp = _os.path.join(REPO, "wave_hygiene_status.json")
     if not _os.path.exists(wp):
-        return [(FAIL, "no wave-hygiene witness -- source tags / suppression / intl pass not yet done and proven")]
+        out.append((FAIL, "no wave-hygiene witness -- source tags / suppression / intl pass not yet done and proven"))
+        return out
     try:
         w = _json.load(open(wp, encoding="utf-8"))
         for k in ("source_tags", "suppression", "intl_pass"):
@@ -8873,6 +8884,49 @@ def rg_wave_hygiene():
     except Exception as ex:
         out.append((FAIL, "witness unreadable: %s" % repr(ex)[:50]))
     return out or [(INFO, "wave hygiene done and witnessed: tags, suppression, intl pass")]
+
+
+
+@entry("RG-0176", "The POPIA suppression invariant holds END-TO-END -- one opt-out click suppresses in EVERY send lane's store, and the prospect PII API answers 401 to strangers",
+       OPEN, scope="CityLauncher suppression register + LAUNCH-API-LOCK-1 (built 24 Aug, RUL-054) -- repo halves pass; TWO live halves outstanding: "
+             "(a) the n8n outreach lane reads the ORCHESTRATION prospect store (opted_out column), a different DB from the launcher store the "
+             "/optout endpoint writes -- one click must provably suppress in BOTH (needs a server-side look at the orchestration DB + a witnessed "
+             "round-trip test); (b) GET /launch-api/prospects/list must answer 401 without X-Launch-Key -- provable only after David provisions "
+             "LAUNCH_API_KEY in the server env and the CityLauncher deploy rides. CLASS: a suppression list per store is a breach waiting; "
+             "there is ONE register and every lane checks it.",
+       ref="SUPPRESS-1 / LAUNCH-API-LOCK-1, 24 Aug 2026. Offline proof executed same day: get_prospects excludes the register; send_email refuses "
+           "a suppressed address fail-safe. Promote when both live halves are witnessed.")
+def rg_popia_suppression():
+    out = []
+    import os as _os
+    sp = _os.path.join(REPO, "..", "CityLauncher", "api", "server.py")
+    ep = _os.path.join(REPO, "..", "CityLauncher", "emailer", "emailer.py")
+    if _os.path.exists(sp):
+        w = open(sp, encoding="utf-8", errors="replace").read()
+        for needle, msg in [("CREATE TABLE IF NOT EXISTS suppression", "the suppression register DDL is gone"),
+                            ("LAUNCH-API-LOCK-1", "the API key gate is gone -- prospect PII is public again"),
+                            ("optout_link'", "/optout no longer writes the register")]:
+            if needle not in w:
+                out.append((FAIL, msg))
+    if _os.path.exists(ep):
+        w = open(ep, encoding="utf-8", errors="replace").read()
+        if "_is_suppressed" not in w or "refusing send to opted-out" not in w:
+            out.append((FAIL, "send_email lost its last-gate suppression check"))
+    try:
+        import urllib.request as _ur
+        req = _ur.Request("https://trustsquare.co/launch-api/prospects/list?limit=1",
+                          headers={"User-Agent": "TrustSquare-Ledger/1.0"})
+        try:
+            _ur.urlopen(req, timeout=15)
+            out.append((FAIL, "launch-api served prospect PII to an ANONYMOUS reader -- LAUNCH_API_KEY not provisioned or gate not deployed"))
+        except Exception as e:
+            code = getattr(e, "code", None)
+            if code not in (401, 403):
+                out.append((FAIL, "prospects/list gate probe unexpected: %s" % repr(e)[:60]))
+            # 401/403 = locked: correct
+    except Exception as ex:
+        out.append((FAIL, "gate probe failed to run: %s" % repr(ex)[:50]))
+    return out or [(INFO, "register + gates present in repo AND the live API refuses anonymous PII reads (n8n cross-store proof still manual)")]
 
 
 if __name__ == "__main__":

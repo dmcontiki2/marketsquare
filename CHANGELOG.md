@@ -1,3 +1,31 @@
+## 2026-08-24 — RUL-054 / SUPPRESS-1 / LAUNCH-API-LOCK-1: the POPIA suppression invariant built
+
+- David's rule audited against the machinery (probed): opt-out core existed and was sound
+  (permanent status, clear-safe, UNIQUE email blocks re-scrape); emailer lanes filter. Gaps
+  closed same session: separate canonical `suppression` register written by /optout; the
+  register verified at TWO gates incl. inside send_email itself (fail-safe: unreadable
+  register = no send; offline proof executed); launch-api PII endpoints key-gated
+  (X-Launch-Key; found serving full prospect PII anonymously — Claude read 3,241 rows
+  without auth this morning; /database/clear was publicly callable, now disabled without a
+  key). Ops dashboard prompts/stores the key; fill_wave_gaps sends it.
+- RG-0176 OPEN: n8n lane reads the orchestration store — one-click-both-stores proof +
+  live 401 await the CityLauncher deploy + LAUNCH_API_KEY provisioning (David's acts).
+
+## 2026-08-24 — WAVE_SEND_PLAN.xlsx: the lists checked against RUL-053; CAT-ALIAS-1 wrong-template fix
+
+- Live pull from the CityLauncher prospects API (3,241 listed; scraper running concurrently —
+  stats reported 4,237). Workbook WAVE_SEND_PLAN.xlsx: 98 plan cells day-by-day, 653-address
+  send queue with per-row template hyperlinks, 90-cell Scrape TODO, agency reserve (401),
+  131 suspect emails parked (typo TLDs, image-strings, rejected rows).
+- VERDICT: plan not yet covered — STAYS only in Pretoria (197 valid; 13 other cities 0-3);
+  PROPERTY singles never scraped (0 anywhere); TUTORS deep (DBN 662, PMB 640; global three
+  ~20 each); Services unsplit casual/technical (queue carries keyword-suggested class).
+- CAT-ALIAS-1: n8n templateMap gained aliases for the scraper's real category names
+  (teachers_trainers, adventures_accommodation, Services, Collector Shops...) and the
+  unmapped-category fallback now DROPS instead of sending property_outreach to everyone —
+  2,300+ prospects would have received the wrong template. n8n must RE-IMPORT the workflow
+  JSON (runbook precondition). RG-0175 strengthened to tripwire both.
+
 ## 2026-08-24 — RUL-053: the launch wave plan is canon; board ships to the +1 page
 
 - David ratified the v2 wave board: Pretoria ladder from Fri 28 Aug; GLOBAL LAUNCH Tue 1 Sep
