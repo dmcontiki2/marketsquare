@@ -110,6 +110,16 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-053": [
+   # The launch wave plan (David, 24 Aug): Pretoria ladder from Fri 28 Aug, global
+   # launch day Tue 1 Sep (all cities send Stays), SA rolls daily, global three hold
+   # to 4 Sep, agencies selective on traction, cap 30/cat/city/day. The board ships
+   # at /static/wave_plan.html and the +1 page links it (WAVE-PLAN-1).
+   ("RULINGS.md", ["THE LAUNCH WAVE PLAN"], []),
+   ("WAVE_PLAN_LAUNCH_2026.html", ["GLOBAL", "HOLD", "1 SEP"], []),
+   ("ops/autodeploy/deploy_manifest.txt", ["wave_plan.html"], []),
+   ("dashboard.server.html", ["WAVE-PLAN-1"], []),
+ ],
  "RUL-052": [
    # International scraped-address outreach RELEASED (David, 24 Aug): US/UK/AU waves
    # proceed on the wave-plan schedule with no counsel pre-gate; counsel review is an

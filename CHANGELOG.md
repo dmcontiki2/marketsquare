@@ -1,3 +1,15 @@
+## 2026-08-24 — RUL-053: the launch wave plan is canon; board ships to the +1 page
+
+- David ratified the v2 wave board: Pretoria ladder from Fri 28 Aug; GLOBAL LAUNCH Tue 1 Sep
+  (10 SA cities + NY/London/Sydney all send Stays); SA rolls daily behind Pretoria; global
+  three hold to 4 Sep then roll; agencies selective on traction; cars self-onboards; cap
+  30/category/city/day; holistic gates (31 Aug go-for-1-Sep, 3 Sep go-for-global-roll).
+  RUL-001's drifted weekday names corrected in the row (dates unchanged).
+- Board deployed as static/wave_plan.html (manifest) + WAVE-PLAN-1 card on the +1 page.
+  rulings_check RUL-053 (53 rulings, 0 FAIL). RG-0175 opened: source tags, cross-wave
+  suppression proof, intl template pass — witnessed before the first wave fires.
+- Rides David's next deploy.
+
 ## 2026-08-24 — Third-party launch register: daily sweep (5 days to soft launch, AMBER)
 
 **THIRD-PARTY-SWEEP (scheduled, unattended).** All probes green: /health ok 1.3.1 · root 200 in

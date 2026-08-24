@@ -156,3 +156,6 @@ orchestration_v2/templates/placement_onboarding/onboard_5.html | orchestrator/v2
 orchestration_v2/templates/placement_onboarding/onboard_6.html | orchestrator/v2/templates/placement_onboarding/onboard_6.html
 orchestration_v2/templates/placement_onboarding/onboard_7.html | orchestrator/v2/templates/placement_onboarding/onboard_7.html
 orchestration_v2/templates/placement_onboarding/onboard_8.html | orchestrator/v2/templates/placement_onboarding/onboard_8.html
+
+# WAVE-PLAN-1 (RUL-053, 24 Aug 2026) -- the launch wave plan board, linked from the +1 page
+WAVE_PLAN_LAUNCH_2026.html          | static/wave_plan.html

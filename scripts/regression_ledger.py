@@ -8848,5 +8848,32 @@ def rg_one_inbox_one_reply():
     return out or [(INFO, "customer mail: support pipeline only, one reply per inbound, personal inbox = dead-letter")]
 
 
+
+@entry("RG-0175", "Wave mechanical hygiene is DONE and witnessed before the first wave -- source tags on every CTA, cross-wave unsubscribe suppression proven, international template pass",
+       OPEN, scope="orchestration_v2/templates/*_outreach.html CTA links + the n8n suppression path + a wave_hygiene_status.json witness. "
+             "RUL-053(g), due Fri 28 Aug 2026 (first wave). Three items, holistic per David: (a) every outreach CTA to trustsquare.co "
+             "carries a wave source tag (?src=<wave>) so signups credit their wave and the holistic gates read numbers, not feelings; "
+             "(b) an unsubscribe from any wave provably suppresses that address in every later wave (witnessed test); (c) one holistic "
+             "pass of the templates for US/UK/AU markets (currency, locale wording, send windows). CLASS: a wave may not fire while its "
+             "measurement or suppression machinery is unproven.",
+       ref="WAVE-HYGIENE-1, opened 24 Aug 2026 per RUL-053. Passes when the witness file reports all three ok and fresh.")
+def rg_wave_hygiene():
+    out = []
+    import os as _os, json as _json, time as _time
+    wp = _os.path.join(REPO, "wave_hygiene_status.json")
+    if not _os.path.exists(wp):
+        return [(FAIL, "no wave-hygiene witness -- source tags / suppression / intl pass not yet done and proven")]
+    try:
+        w = _json.load(open(wp, encoding="utf-8"))
+        for k in ("source_tags", "suppression", "intl_pass"):
+            if w.get(k) != "ok":
+                out.append((FAIL, "wave hygiene item not ok: %s = %s" % (k, w.get(k))))
+        if _time.time() - float(w.get("ran_at", 0)) > 14 * 86400:
+            out.append((FAIL, "wave-hygiene witness stale (>14 days)"))
+    except Exception as ex:
+        out.append((FAIL, "witness unreadable: %s" % repr(ex)[:50]))
+    return out or [(INFO, "wave hygiene done and witnessed: tags, suppression, intl pass")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
