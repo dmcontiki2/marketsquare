@@ -28,6 +28,21 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- OPSMAP-CRASH-1 fixed (24 Aug): ops-map loader crash (undefined EP from PROVENANCE-1)
+  froze all chips at placeholder colours — the "blocker" David saw was a default red,
+  not a fault (register probed clean: 0 active). EP→B + placeholder chips grey until
+  data answers (RG-0172 LOCKED). Awaits David's ship to go live.
+
+## 2026-08-24 — agency funnel walked end-to-end; one real trap found and fixed (AGENCY-INVITE-MAIL-1)
+
+- Funnel probe (recipient view, clean client): all 10 outreach-email links/images answer 200
+  anonymously — the gate is DOWN for reads today. Email CTA → console landing was E2E-proven
+  23 Aug (Kronberg). CSV paste parser honours quoted commas. Bulk ADVERT import asserted live
+  (RG-0166).
+- Trap: bulk agent roster never sent the promised sign-in links; invite email was the code
+  template with an empty code box. Fixed on disk (bea_main.py, estate_agents.py, ms.js),
+  56/56 tests, ledger RG-0171 OPEN pending deploy. AWAITING: David's ship.
+
 ## 2026-08-23 — SAW-5: placement lane ready; launch posture settled
 Engine dark for launch (RUL-046); teaser is the surface. 9 email templates staged + manifested.
 Photos: 12/12 done + embedded. Awaiting David: TSL deploy, media_push, agency target list to invite.

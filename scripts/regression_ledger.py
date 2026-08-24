@@ -8632,7 +8632,7 @@ def rg_console_advert_bulk():
 
 
 @entry("RG-0167", "The Pro seat is PURCHASABLE end-to-end -- the agent's own $5/mo seat subscription (EULA + payment) exists",
-       OPEN, scope="ms.js agent-side seat-subscribe lane + bea_main.py seat plan handling (marker SEAT-SUB-1 when built). "
+       LOCKED, fixed_on="2026-08-24", scope="ms.js agent-side seat-subscribe lane + bea_main.py seat plan handling (marker SEAT-SUB-1 when built). "
              "RUL-048: an agency agent lifts 10->20 + Pro AI suite ONLY by subscribing themselves -- EULA accepted, $5/mo "
              "paid, through the subscription machinery. Until this lane ships, the console can only INVITE the upgrade "
              "(agencyProInvite) and the tier is ops-settable for reconciliation. CLASS: no paid tier is ever reachable "
@@ -8725,6 +8725,69 @@ def rg_fresh_tab():
     except Exception as ex:
         out.append((FAIL, "live ms.js unreadable: %s" % repr(ex)[:60]))
     return out or [(INFO, "open tabs self-detect new releases and offer the reload")]
+
+
+
+@entry("RG-0171", "A lane that promises a sign-in link SENDS one -- bulk roster onboarding emails every agent their invite, and the invite email is an invite (no empty code box)",
+       OPEN, scope="estate_agents.py bulk_onboard_agents (invite_fn seam) + bea_main.py _mint_agent_invite/_send_invite_email/_send_html_email + ms.js bulk toast. "
+             "Found 24 Aug 2026 walking the agency funnel as a recipient: outreach lane 2 and the Import Guide promise 'each agent instantly "
+             "gets a sign-in link' and the console toasted 'magic links & verification queued' -- but /agencies/{id}/agents/bulk sent NOTHING, "
+             "and the single-invite lane mailed the sign-in CODE template with an EMPTY code box and a 20-minute expiry claim on a 72-hour token. "
+             "CLASS: every onboarding lane that promises an email must send it, and every toast states what actually happened (INSTRUMENT-TRUTH). "
+             "OPEN until the deploy rides (live half checks the served ms.js); repo half already passes -- promote on first green run after ship.",
+       ref="AGENCY-INVITE-MAIL-1, 24 Aug 2026. Fix: one transport helper (_send_html_email, keeps MAIL-FALLBACK-1 in ONE place), a real invite "
+           "template (_send_invite_email), one minter (_mint_agent_invite) used by BOTH the single-invite endpoint and the bulk lane via "
+           "estate_agents.configure(invite_fn=...); per-agent 'link': sent|failed|dry in the bulk report; console toast/report show it honestly.")
+def rg_bulk_invite_links():
+    out = []
+    import os as _os
+    ea_fp = _os.path.join(REPO, "estate_agents.py")
+    bm_fp = _os.path.join(REPO, "bea_main.py")
+    if _os.path.exists(ea_fp) and _os.path.exists(bm_fp):
+        ea = open(ea_fp, encoding="utf-8", errors="replace").read()
+        bm = open(bm_fp, encoding="utf-8", errors="replace").read()
+        if "_INVITE_FN" not in ea:
+            out.append((FAIL, "bulk roster lane lost its invite seam -- bulk-added agents get no sign-in link"))
+        if "_mint_agent_invite" not in bm or "_send_invite_email" not in bm:
+            out.append((FAIL, "bea_main no longer mints/sends the agent invite email"))
+        if "invite_fn=_mint_agent_invite" not in bm:
+            out.append((FAIL, "estate_agents.configure no longer injects invite_fn -- the bulk lane's seam is dark"))
+        if "magic links & verification queued" in open(_os.path.join(REPO, "ms.js"), encoding="utf-8", errors="replace").read():
+            out.append((FAIL, "repo ms.js still carries the false 'magic links & verification queued' toast"))
+    try:
+        live = _get("/static/ms.js")
+        if "magic links & verification queued" in live:
+            out.append((FAIL, "live console still toasts 'magic links & verification queued' -- the AGENCY-INVITE-MAIL-1 deploy has not ridden"))
+    except Exception as ex:
+        out.append((FAIL, "live ms.js unreadable: %s" % repr(ex)[:60]))
+    return out or [(INFO, "bulk roster sends real invite links and the console reports honestly")]
+
+
+@entry("RG-0172", "The Ops Map loader survives to fire every feed, and no chip wears a health colour before data answers",
+       LOCKED, fixed_on="2026-08-24", scope="dashboard.server.html ops-map IIFE (OPSMAP-CRASH-1). PROVENANCE-1 (22 Aug) introduced "
+             "fetch(EP + ...) into loadFixedCosts while the IIFE base is B -- omLoad's FIRST statement threw ReferenceError, so "
+             "ALL 10 feeds died and every chip froze at its static placeholder: blockers wore hardcoded RED with no data, flags/service "
+             "checks sat amber at 'loading...' (David read a phantom blocker off it, 24 Aug). CLASS: (1) one undefined identifier at the "
+             "top of a loader silently freezes the whole instrument panel; (2) RG-0133's rule applied to the map -- a frozen chip must "
+             "show grey/dashed, never a default red/amber/green that counterfeits a verdict. Source-scope checks only: the served page "
+             "is auth-gated, so the live half cannot be probed anonymously; the deploy manifest ships this exact file.",
+       ref="OPSMAP-CRASH-1, 24 Aug 2026. Fix: EP->B (one line) + 11 placeholder chips (fault lane, faultflag, BIT, flags/svc loading) "
+           "reclassed om-chip nw until fill()/fail() paints them from a live answer.")
+def rg_opsmap_loader():
+    out = []
+    import os as _os
+    fp = _os.path.join(REPO, "dashboard.server.html")
+    if not _os.path.exists(fp):
+        return [(INFO, "repo not present -- source check skipped (live page is auth-gated)")]
+    src = open(fp, encoding="utf-8", errors="replace").read()
+    if "fetch(EP" in src:
+        out.append((FAIL, "an undefined-base fetch(EP...) is back in the dashboard -- the loader-crash class has returned"))
+    if "fetch(B + '/dashboard/fixed-costs')" not in src:
+        out.append((FAIL, "the fixed-costs feed no longer reads from the one base B"))
+    for cid in ("om-f-blocker", "om-f-major", "om-f-retest"):
+        if '<span class="om-chip nw" id="%s"' % cid not in src:
+            out.append((FAIL, "placeholder chip %s wears a health colour before data answers (RG-0133 rule on the map)" % cid))
+    return out or [(INFO, "ops-map loader fires all feeds; unfilled chips are grey until a live answer paints them")]
 
 
 if __name__ == "__main__":

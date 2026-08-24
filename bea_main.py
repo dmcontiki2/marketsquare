@@ -13035,6 +13035,91 @@ def _safe_from(value, fallback: str = _RESEND_SAFE_FROM) -> str:
     return out
 
 
+def _send_html_email(to_email: str, subject: str, html: str, plain: str) -> str:
+    """One transport for outbound app mail: Resend if configured, else Gmail SMTP.
+    Carries MAIL-FALLBACK-1 (22 Jul 2026): a configured-but-unauthorized Resend key
+    falls through to Gmail, never short-circuits with 'failed'.
+    Returns 'sent' | 'failed' | 'dry' (no transport configured)."""
+    key = ai_provider.envkey("RESEND_API_KEY") or ""
+    if key:
+        try:
+            import httpx
+            r = httpx.post("https://api.resend.com/emails",
+                headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
+                json={"from": _safe_from(os.getenv("DEMAND_FROM_EMAIL")),
+                      "to": [to_email], "subject": subject, "html": html},
+                timeout=20)
+            if r.status_code in (200, 201):
+                return "sent"
+            # MAIL-FALLBACK-1 (22 Jul 2026): a configured-but-unauthorized Resend key
+            # (403 "not authorized to send from trustsquare.co") was short-circuiting
+            # here with "failed", so the Gmail SMTP fallback below NEVER ran and no
+            # sign-in link reached any user. Fall through to Gmail instead.
+            _log.error("app email (resend) HTTP %s: %s -- falling back to Gmail SMTP",
+                       r.status_code, r.text[:200])
+        except Exception as exc:
+            _log.error("app email (resend) failed: %s -- falling back to Gmail SMTP", exc)
+    if GMAIL_APP_PASSWORD:
+        try:
+            msg = EmailMessage()
+            msg["From"] = "TrustSquare <" + GMAIL_ADDRESS + ">"
+            msg["To"] = to_email
+            msg["Subject"] = subject
+            msg.set_content(plain)
+            msg.add_alternative(html, subtype="html")
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
+                server.starttls()
+                server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+                server.send_message(msg)
+            return "sent"
+        except Exception as exc:
+            _log.error("app email (smtp) failed: %s", exc)
+            return "failed"
+    return "dry"
+
+
+def _send_invite_email(to_email: str, link: str, agency_name: str = "") -> str:
+    """AGENCY-INVITE-MAIL-1 (24 Aug 2026): the agent-invite email. The old wiring sent
+    _send_login_email with code='' -- an EMPTY code box headlined 'type this code', and
+    copy claiming 20-minute expiry against a 72-hour token. Invite wording, honest
+    expiry, the code path named as the fallback (SIGNIN-CODE-1: code is primary)."""
+    who = (agency_name or "").strip()
+    subject = (who + " added you to TrustSquare") if who else "You have been added to TrustSquare"
+    html = (
+        "<div style='font-family:Inter,Arial,sans-serif;max-width:440px;margin:auto'>"
+        "<h2 style='color:#0c1a2e'>" + (who or "Your agency") + " set up your TrustSquare account</h2>"
+        "<p>Your listings, leads and professional profile live here. Tap the button on the "
+        "device you want to work from:</p>"
+        "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
+        "text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700'>Open my account &rarr;</a></p>"
+        "<p style='color:#6b7280;font-size:13px'>The button works for 72 hours. After that (or on "
+        "another device) just go to <a href='" + APP_URL + "' style='color:#0f3460'>trustsquare.co</a>, "
+        "tap <b>Sign in</b>, and we&rsquo;ll email you a 6-digit code &mdash; no password needed, ever.</p>"
+        "<p style='color:#6b7280;font-size:12px'>If you weren&rsquo;t expecting this, you can ignore it "
+        "&mdash; nothing goes live without you.</p>"
+        "</div>"
+    )
+    plain = ((who or "Your agency") + " set up your TrustSquare account.\n\nOpen it here (works for 72 hours):\n"
+             + link + "\n\nAny other time or device: go to " + APP_URL
+             + ", tap Sign in, and we'll email you a 6-digit code.")
+    return _send_html_email(to_email, subject, html, plain)
+
+
+def _mint_agent_invite(email: str, agency_name: str = "") -> str:
+    """Mint the 72h signin token and send the invite email. Returns sent|failed|dry.
+    The ONE invite sender -- used by invite_agent and injected into
+    estate_agents.configure(invite_fn=...) so the bulk roster lane sends the SAME
+    link the single-invite lane does (a lane that promises a link must send one)."""
+    try:
+        token = _pyjwt.encode({"email": email, "purpose": "signin",
+                               "exp": datetime.now(timezone.utc) + timedelta(hours=72),
+                               "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
+        return _send_invite_email(email, APP_URL + "/?signin=" + token, agency_name)
+    except Exception as exc:
+        _log.error("agent invite email failed: %s", exc)
+        return "failed"
+
+
 def _send_login_email(to_email: str, link: str, code: str = "") -> str:
     """Email the sign-in code + link. Resend if configured, else Gmail SMTP. Returns
     'sent' | 'failed' | 'dry' (no email transport configured).
@@ -13062,43 +13147,9 @@ def _send_login_email(to_email: str, link: str, code: str = "") -> str:
         "If you didn't request this, you can ignore this email.</p>"
         "</div>"
     )
-    key = ai_provider.envkey("RESEND_API_KEY") or ""
-    if key:
-        try:
-            import httpx
-            r = httpx.post("https://api.resend.com/emails",
-                headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
-                json={"from": _safe_from(os.getenv("DEMAND_FROM_EMAIL")),
-                      "to": [to_email], "subject": subject, "html": html},
-                timeout=20)
-            if r.status_code in (200, 201):
-                return "sent"
-            # MAIL-FALLBACK-1 (22 Jul 2026): a configured-but-unauthorized Resend key
-            # (403 "not authorized to send from trustsquare.co") was short-circuiting
-            # here with "failed", so the Gmail SMTP fallback below NEVER ran and no
-            # sign-in link reached any user. Fall through to Gmail instead.
-            _log.error("login email (resend) HTTP %s: %s -- falling back to Gmail SMTP",
-                       r.status_code, r.text[:200])
-        except Exception as exc:
-            _log.error("login email (resend) failed: %s -- falling back to Gmail SMTP", exc)
-    if GMAIL_APP_PASSWORD:
-        try:
-            msg = EmailMessage()
-            msg["From"] = "TrustSquare <" + GMAIL_ADDRESS + ">"
-            msg["To"] = to_email
-            msg["Subject"] = subject
-            msg.set_content("Your TrustSquare sign-in code: " + (code or "")
-                            + "\n\nType it into the TrustSquare tab you have open, or sign in here:\n" + link + "  (expires in 20 minutes)")
-            msg.add_alternative(html, subtype="html")
-            with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
-                server.starttls()
-                server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
-                server.send_message(msg)
-            return "sent"
-        except Exception as exc:
-            _log.error("login email (smtp) failed: %s", exc)
-            return "failed"
-    return "dry"
+    plain = ("Your TrustSquare sign-in code: " + (code or "")
+             + "\n\nType it into the TrustSquare tab you have open, or sign in here:\n" + link + "  (expires in 20 minutes)")
+    return _send_html_email(to_email, subject, html, plain)
 
 # ── SIGNIN-CODE-1 (19 Aug 2026, David) — zero-retry sign-in for REAL users ──────
 # David's ruling, on the launch gate: "I need access for users with no effort... zero
@@ -13646,14 +13697,18 @@ def invite_agent(agency_id: int, req: _AgentInvite, _key: str = Depends(auth.req
         conn.commit()
     finally:
         conn.close()
+    _ag_name = ""
     try:
-        token = _pyjwt.encode({"email": email, "purpose": "signin",
-                               "exp": datetime.now(timezone.utc) + timedelta(hours=72),
-                               "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
-        _send_login_email(email, APP_URL + "/?signin=" + token)
-    except Exception as exc:
-        _log.error("agency invite email failed: %s", exc)
-    return {"ok": True, "email": email, "listing_cap": cap, "status": "invited"}
+        _c2 = database.get_db()
+        try:
+            _r2 = _c2.execute("SELECT name FROM agencies WHERE id=?", (agency_id,)).fetchone()
+            _ag_name = (_r2["name"] if _r2 else "") or ""
+        finally:
+            _c2.close()
+    except Exception:
+        pass
+    _link_status = _mint_agent_invite(email, _ag_name)
+    return {"ok": True, "email": email, "listing_cap": cap, "status": "invited", "link": _link_status}
 
 @app.put("/agencies/{agency_id}/agents/{email}")
 def update_agent_cap(agency_id: int, email: str, req: _AgentCapUpdate, _key: str = Depends(auth.require_api_key)):
@@ -19369,7 +19424,7 @@ app.include_router(launch_redemption.router)
 # launch_redemption). Anon + quality scoring injected from this file so both
 # sides always use the same passes.
 import estate_agents
-estate_agents.configure(anon_fn=_anon_regex_clean, quality_fn=_import_quality_score)
+estate_agents.configure(anon_fn=_anon_regex_clean, quality_fn=_import_quality_score, invite_fn=_mint_agent_invite)
 estate_agents.init_schema()
 app.include_router(estate_agents.router)
 

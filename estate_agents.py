@@ -51,13 +51,16 @@ router = APIRouter()
 # ── Injected seams (bea_main.configure) ──────────────────────────────────────
 _ANON_FN = None       # text -> (clean, hits)
 _QUALITY_FN = None    # listings row/dict -> (score, missing)
+_INVITE_FN = None     # email, agency_name -> 'sent'|'failed'|'dry'  (AGENCY-INVITE-MAIL-1)
 
-def configure(anon_fn=None, quality_fn=None):
-    global _ANON_FN, _QUALITY_FN
+def configure(anon_fn=None, quality_fn=None, invite_fn=None):
+    global _ANON_FN, _QUALITY_FN, _INVITE_FN
     if anon_fn:
         _ANON_FN = anon_fn
     if quality_fn:
         _QUALITY_FN = quality_fn
+    if invite_fn:
+        _INVITE_FN = invite_fn
 
 _FALLBACK_STRIP = [
     re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"),
@@ -764,7 +767,7 @@ def bulk_onboard_agents(agency_id: int, req: BulkOnboardIn,
     conn = database.get_db()
     try:
         init_schema(conn)
-        _ag = conn.execute("SELECT id, api_key FROM agencies WHERE id=?", (agency_id,)).fetchone()
+        _ag = conn.execute("SELECT id, api_key, name FROM agencies WHERE id=?", (agency_id,)).fetchone()
         if not _ag:
             raise HTTPException(status_code=404, detail="Agency not found")
         if not ((x_api_key and x_api_key == auth.API_KEY) or (req.api_key and req.api_key == _ag["api_key"])):
@@ -827,10 +830,25 @@ def bulk_onboard_agents(agency_id: int, req: BulkOnboardIn,
         conn.commit()
     finally:
         conn.close()
+    # AGENCY-INVITE-MAIL-1 (24 Aug 2026): the lane PROMISES 'each agent instantly
+    # gets a sign-in link' (outreach lane 2 + Import Guide step 1) -- so send it,
+    # per agent, and report what actually happened. 'dry' = no invite seam
+    # configured (standalone tests) or no mail transport on the server.
+    _ag_name = ""
+    try:
+        _ag_name = (_ag["name"] or "") if "name" in _ag.keys() else ""
+    except Exception:
+        pass
+    for _r in report:
+        if _r.get("ok"):
+            try:
+                _r["link"] = _INVITE_FN(_r["email"], _ag_name) if _INVITE_FN else "dry"
+            except Exception:
+                _r["link"] = "failed"
     ok_n = sum(1 for r in report if r.get("ok"))
     return {"ok": True, "agency_id": agency_id, "onboarded": ok_n,
             "failed": len(report) - ok_n, "agents": report,
-            "next": "Verify pending credentials via /trust-score/credentials/pending, then each agent publishes their profile."}
+            "next": "Sign-in links emailed to each onboarded agent (per-agent 'link' shows sent/failed). Ops verifies pending credentials via /trust-score/credentials/pending; then each agent publishes their profile."}
 
 # ── Local ranked agent list (seller-facing, anonymised) ─────────────────────
 

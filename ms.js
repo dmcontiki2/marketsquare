@@ -16835,11 +16835,12 @@ async function agencyBulkRun(){
     var h='<div style="font-size:12.5px;font-weight:700;margin-bottom:4px;">'+d.onboarded+' onboarded · '+d.failed+' failed</div>';
     (d.agents||[]).forEach(function(a){
       h+='<div style="font-size:11.5px;padding:3px 0;border-bottom:1px dashed var(--border);">'+
-        (a.ok?('✓ '+a.email+' → <b>Agent '+a.anon_ref+'</b>'+(a.credentials_pending&&a.credentials_pending.length?' · pending: '+a.credentials_pending.join(', '):'')):('✗ '+a.email+' — '+a.error))+'</div>';
+        (a.ok?('✓ '+a.email+' → <b>Agent '+a.anon_ref+'</b>'+(a.credentials_pending&&a.credentials_pending.length?' · pending: '+a.credentials_pending.join(', '):''))+(a.link==='sent'?' · ✉ sign-in link emailed':(a.link?' · ✉ email did not send — they can sign in at trustsquare.co with their email':'')):('✗ '+a.email+' — '+a.error))+'</div>';
     });
     h+='<div style="font-size:11px;color:var(--text-3);margin-top:6px;">'+(d.next||'')+'</div>';
     if(rep) rep.innerHTML=h;
-    showToast(d.onboarded+' agents onboarded — magic links & verification queued');
+    var _sent=(d.agents||[]).filter(function(a){return a.link==='sent';}).length;
+    showToast(_sent?d.onboarded+' agents onboarded — '+_sent+' sign-in links emailed':d.onboarded+' agents onboarded — sign-in emails not sent (see report)');
     _renderAgency(window._agencyId);
   }catch(e){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">Network hiccup — try again.</div>'; }
 }

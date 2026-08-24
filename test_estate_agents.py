@@ -32,7 +32,10 @@ import estate_agents
 def _fake_quality(row):
     d = dict(row)
     return (80 if (d.get("description") or "").count(" ") > 5 else 30), []
-estate_agents.configure(quality_fn=_fake_quality)
+_invites = []
+def _fake_invite(email, agency_name=""):
+    _invites.append((email, agency_name)); return "sent"
+estate_agents.configure(quality_fn=_fake_quality, invite_fn=_fake_invite)
 
 import auth
 from fastapi import FastAPI
@@ -53,7 +56,7 @@ r = c.get("/agents/template")
 check("template 200 + slots", r.status_code == 200 and len(r.json()["credential_slots"]) == 4)
 
 # 2 bulk onboard 2 agents with credential claims
-r = c.post("/agencies/1/agents/bulk", json={"agents": [
+r = c.post("/agencies/1/agents/bulk", json={"api_key": "k", "agents": [
     {"email": "ann@tr.co", "name": "Ann Smith", "city": "Pretoria", "suburbs": "Waterkloof, Brooklyn",
      "headline": "Call Ann on 082 123 4567 for luxury homes", "bio": " ".join(["word"]*35),
      "years_experience": 12, "properties_sold": 240, "ppra_number": "PPRA123", "ffc_year": 2026,
@@ -64,6 +67,8 @@ j = r.json()
 check("bulk onboard 200 + 2 ok", r.status_code == 200 and j["onboarded"] == 2, r.text)
 ann_ref = j["agents"][0]["anon_ref"]
 check("nqf5 implies nqf4 pending", "nqf5" in j["agents"][0]["credentials_pending"])
+# AGENCY-INVITE-MAIL-1: every ok agent gets a sign-in link, honestly reported
+check("bulk sends invite links", all(x.get("link") == "sent" for x in j["agents"] if x.get("ok")) and ("ann@tr.co", "Test Realty") in _invites, j)
 
 # 3 anonymisation: phone stripped from headline (fallback strip active)
 r = c.get("/agents/profile", params={"email": "ann@tr.co"})
@@ -160,7 +165,7 @@ check("cars template: MIRA slot + label", j["label"] == "Car Sales Agent" and j[
 check("cars template: gate is MIRA", "MIRA" in j["go_live_gate"])
 
 # 11 bulk onboard car agents with agency-level vertical
-r = c.post("/agencies/1/agents/bulk", json={"vertical": "cars", "agents": [
+r = c.post("/agencies/1/agents/bulk", json={"api_key": "k", "vertical": "cars", "agents": [
     {"email": "carl@wbc.co", "name": "Carl Benz", "city": "Pretoria", "suburbs": "Silverton, Gezina",
      "headline": "Call 082 999 8888 — bakkies and SUVs", "bio": " ".join(["word"]*35),
      "years_experience": 8, "properties_sold": 320, "mira_number": "MIRA-771", "inspection_partner": "AA South Africa"},
@@ -168,7 +173,7 @@ r = c.post("/agencies/1/agents/bulk", json={"vertical": "cars", "agents": [
      "headline": "Hatchbacks", "bio": " ".join(["word"]*35)}]})
 j = r.json()
 check("cars bulk: 2 onboarded, vertical=cars", r.status_code == 200 and j["onboarded"] == 2 and j["agents"][0]["vertical"] == "cars")
-check("cars bulk: mira+inspection pending", j["agents"][0]["credentials_pending"] == ["mira", "inspection"])
+check("cars bulk: mira+inspection pending", j["agents"][0]["credentials_pending"] == ["mira_number", "inspection_partner"])  # VERT-4-1 slot names
 carl_ref = j["agents"][0]["anon_ref"]
 
 # 12 gate: publish blocked until MIRA verified
@@ -219,14 +224,14 @@ j = r.json()
 check("travel template: ASATA slot + label", j["label"] == "Tour Agent" and j["credential_slots"][0]["slot"] == "asata_number")
 check("travel template: gate is ASATA", "ASATA" in j["go_live_gate"])
 
-r = c.post("/agencies/1/agents/bulk", json={"vertical": "travel", "agents": [
+r = c.post("/agencies/1/agents/bulk", json={"api_key": "k", "vertical": "travel", "agents": [
     {"email": "tina@safaris.co", "name": "Tina Tours", "city": "Pretoria", "suburbs": "Menlyn",
      "headline": "Kruger and Vic Falls packages — WhatsApp 082 444 5555", "bio": " ".join(["word"]*35),
      "years_experience": 9, "properties_sold": 60, "asata_number": "ASATA-991",
      "iata_code": "IATA-12345", "cipc_number": "2016/123456/07", "bonding_proof": "SATIB bond"}]})
 j = r.json()
 check("travel bulk onboarded", r.status_code == 200 and j["onboarded"] == 1 and j["agents"][0]["vertical"] == "travel")
-check("travel creds pending", j["agents"][0]["credentials_pending"] == ["asata", "iata", "cipc", "bonding"])
+check("travel creds pending", j["agents"][0]["credentials_pending"] == ["asata_number", "iata_code", "cipc_number", "bonding_proof"])  # VERT-4-1 slot names
 tina_ref = j["agents"][0]["anon_ref"]
 
 r = c.put("/agents/profile/publish", params={"email": "tina@safaris.co"})
