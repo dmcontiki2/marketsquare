@@ -1,3 +1,16 @@
+## 2026-08-24 — RUL-056: property day off the singles ladders, wave board v3
+
+David's ruling: the singles property day is not going to be successful — removed from
+all three singles ladders (Pretoria, 10 SA cities, NY·London·Sydney) on
+WAVE_PLAN_LAUNCH_2026.html, now v3. Ladders shift up one day (Pretoria ✓ 3 Sep,
+SA ✓ 7 Sep, global ✓ 9 Sep); volume curve recomputed (330/300 mid-week, 90×2 tail);
+Property legend entry removed; notes carry the reasoning. Launch dates, gates,
+30-cap and the global hold are unchanged. Property inventory arrives via the
+Phase-3 estate-agency waves (RUL-053(f)) and organic listings. Recorded as RUL-056
+(supersedes-in-part RUL-053(a)(b)(c)); rulings_check needle polices the board —
+a returning PROPERTY chip trips red. Board ships at /static/wave_plan.html on the
+next deploy.
+
 ## 2026-08-24 — RUL-054 / SUPPRESS-1 / LAUNCH-API-LOCK-1: the POPIA suppression invariant built
 
 - David's rule audited against the machinery (probed): opt-out core existed and was sound

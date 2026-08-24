@@ -1,7 +1,7 @@
-# Global QA audit — 2026-08-23 (14.2s)
+# Global QA audit — 2026-08-24 (16.6s)
 
 **3 findings** (2 new vs previous run)
 
+- **MEDIUM** [links] 🆕 `LINKS-DEAD` — 5 hardcoded external links failing (checked 11): ['https://example.com/hilux1.jpg', 'https://example.com/hilux2.jpg', 'https://example.com/house1.jpg', 'https://example.com/house2.jpg', 'https://example.com/kruger1.jpg']
 - **INFO** [demo] `DEMO-PLACEHOLDERS` — 3 'coming soon' placeholder listings present (by design; verify they stay out of counts)
-- **INFO** [drift] 🆕 `MSJS-DRIFT` — live ms.js (v517, 1122109B) != repo ms.js (1139164B) — expected while a deploy is staged; CRITICAL if it persists after deploying
-- **INFO** [drift] 🆕 `VERSION-KEY` — repo html pins ms.js v459, live pins v517 AND the bytes differ (see MSJS-DRIFT) — a real deploy is staged
+- **INFO** [drift] 🆕 `VERSION-KEY-BENIGN` — repo html pins ms.js v476, live pins v539, but the served bytes are IDENTICAL to the repo — this is the server's monotonic ?v= bump, not drift. Recorded, not raised (DW-001).
