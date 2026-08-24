@@ -13035,6 +13035,21 @@ def _safe_from(value, fallback: str = _RESEND_SAFE_FROM) -> str:
     return out
 
 
+def _update_triage_status(fault_code, status):
+    """ONE-REPLY-1: the triage row is written pre-send; reflect the send outcome."""
+    if not fault_code:
+        return
+    try:
+        conn = database.get_db()
+        try:
+            conn.execute("UPDATE email_triage SET status=? WHERE fault_code=?", (status, fault_code))
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:
+        _log.error("triage status update failed: %s", exc)
+
+
 def _send_html_email(to_email: str, subject: str, html: str, plain: str) -> str:
     """One transport for outbound app mail: Resend if configured, else Gmail SMTP.
     Carries MAIL-FALLBACK-1 (22 Jul 2026): a configured-but-unauthorized Resend key
@@ -13047,7 +13062,8 @@ def _send_html_email(to_email: str, subject: str, html: str, plain: str) -> str:
             r = httpx.post("https://api.resend.com/emails",
                 headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
                 json={"from": _safe_from(os.getenv("DEMAND_FROM_EMAIL")),
-                      "to": [to_email], "subject": subject, "html": html},
+                      "to": [to_email], "subject": subject, "html": html,
+                      "reply_to": os.getenv("SUPPORT_REPLY_TO", "support@trustsquare.co")},
                 timeout=20)
             if r.status_code in (200, 201):
                 return "sent"
@@ -13065,6 +13081,7 @@ def _send_html_email(to_email: str, subject: str, html: str, plain: str) -> str:
             msg["From"] = "TrustSquare <" + GMAIL_ADDRESS + ">"
             msg["To"] = to_email
             msg["Subject"] = subject
+            msg["Reply-To"] = os.getenv("SUPPORT_REPLY_TO", "support@trustsquare.co")
             msg.set_content(plain)
             msg.add_alternative(html, subtype="html")
             with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
@@ -18362,6 +18379,13 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
     urgency = result["urgency"]
     draft_reply = result["draft_reply"]
 
+    # ONE-REPLY-1 (24 Aug 2026, found by live E2E routing test: one complaint got TWO
+    # conflicting auto-replies in the same second -- the classifier's draft AND the
+    # MAINT-B1 ack). One inbound email gets ONE outbound email: persist FIRST so the
+    # fault reference exists, then the substantive auto-reply CARRIES the reference;
+    # the bare ack rides alone only when no auto-reply is safe to send. MAINT-B1's
+    # promise (immediate acknowledgment with reference, David-approved wording
+    # 29 Jul 2026) is kept in both branches; MAINT_ACK_SEND=0 still switches it off.
     status = "drafted"
     can_auto = (
         EMAIL_AUTO_SEND
@@ -18372,9 +18396,6 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
     )
     if category == "spam":
         status = "skipped"
-    elif can_auto:
-        sent = _smtp_send_reply(from_addr, subject, draft_reply, req.message_id)
-        status = "sent" if sent else "failed"
 
     fault_code = None
     try:
@@ -18396,18 +18417,26 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
     except Exception as exc:
         _log.error("email_triage persist failed: %s", exc)
 
-    # MAINT-B1 ACK (29 Jul 2026, David-approved wording): every non-spam complainant
-    # gets an IMMEDIATE acknowledgment with their fault-code reference. Rides
-    # _smtp_send_reply (Resend from the verified mail subdomain, Gmail fallback).
-    # Total-autonomy ruling: sends by default; MAINT_ACK_SEND=0 is the off switch.
     ack_sent = False
-    if category != "spam" and fault_code and os.getenv("MAINT_ACK_SEND", "1") == "1":
+    if category != "spam" and can_auto:
+        _ref_line = ""
+        if fault_code:
+            _ref_line = (
+                f"\n\nYour reference is {fault_code} -- your report is logged in our "
+                "fix queue. If our fix needs anything from you, we'll write to this "
+                "address."
+            )
+        sent = _smtp_send_reply(from_addr, subject, (draft_reply or "") + _ref_line, req.message_id)
+        status = "sent" if sent else "failed"
+        ack_sent = bool(sent and fault_code)
+        _update_triage_status(fault_code, status)
+    elif category != "spam" and fault_code and os.getenv("MAINT_ACK_SEND", "1") == "1":
         _ack = (
             "Hi there,\n\n"
-            "Thank you — your report is logged and already in our fix queue with "
+            "Thank you \u2014 your report is logged and already in our fix queue with "
             f"reference {fault_code}. You don't need to do anything further; if our "
             "fix needs anything from you, we'll write to this address.\n\n"
-            "— TrustSquare Support"
+            "\u2014 TrustSquare Support"
         )
         try:
             ack_sent = _smtp_send_reply(from_addr, subject or "your report", _ack, req.message_id)

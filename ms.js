@@ -1521,7 +1521,7 @@ function _agL(key){
   var P={title:'Placement console',brand:'Placement agency',people:'Consultants',person:'Consultant',
     invite:'Invite consultant',noPeople:'No consultants yet — invite one above.',
     ph:'consultant@agency.co.za',imports:'Import your programmes',
-    intros:'Intros to consultants',stock:'Programmes (pooled)',org:'placement agency',
+    intros:'Intros to consultants',stock:'Programmes (pooled) — launching soon',org:'placement agency',
     setup:'Placement agencies are set up by TrustSquare on application.',
     created:'Placement agency created',createTest:'Create a test placement agency',namePh:'Agency name',
     manualUrl:'/static/TrustSquare_Agency_Playbook.pdf',

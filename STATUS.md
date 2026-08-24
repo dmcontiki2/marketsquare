@@ -28,6 +28,11 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+## 2026-08-24 — Launching-soon markers on the placement lane (RUL-051)
+
+Features relist now gated on the videos being done (David's word to relist). Placement console,
+onboard_5 and the outreach invite each carry a "launching soon" marker; no date promised.
+
 ## 2026-08-24 — SAW banner off Browse (RUL-050)
 
 Study & Work Abroad card removed from the Browse index for launch — shelved-video placeholders

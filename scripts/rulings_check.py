@@ -110,6 +110,16 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-051": [
+   # Features relist waits for the VIDEOS (David, 24 Aug): the Browse card returns only
+   # once the full-length feature videos (RUL-043, shelved) are done, on David's word.
+   # Until then the feature lives in the agency surfaces, marked launching soon (no
+   # public date, RUL-046). Dropping a marker, or relisting early, trips here.
+   ("RULINGS.md", ["FEATURES RELIST WAITS FOR THE VIDEOS"], []),
+   ("ms.js", ["Programmes (pooled) \u2014 launching soon"], []),
+   ("orchestration_v2/templates/placement_onboarding/onboard_5.html", ["Launching soon"], []),
+   ("orchestration_v2/templates/placement_agency_outreach.html", ["launching soon"], []),
+ ],
  "RUL-050": [
    # The Study & Work Abroad entry is OFF Browse for launch (David, 24 Aug): the teaser
    # videos are shelved placeholders (RUL-043), so the front-door card goes. The page

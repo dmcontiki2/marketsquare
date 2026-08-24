@@ -8815,5 +8815,38 @@ def rg_agency_journey_probe():
     return out or [(INFO, "the funnel was walked by machinery recently and it passed")]
 
 
+
+@entry("RG-0174", "Customer email routes to the SUPPORT pipeline, never routinely to a personal inbox -- and one inbound email gets exactly ONE reply",
+       OPEN, scope="cloudflare_email_worker/src/worker.js (personal forward = dead-letter only) + bea_main.py email_inbound "
+             "(ONE-REPLY-1: persist first, single outbound carrying the fault ref) + _send_html_email Reply-To. "
+             "Found 24 Aug 2026 by live E2E routing test (David's ask): the CF worker forwarded EVERY inbound to "
+             "dmcontiki2@gmail.com by design-era safety net, and one complaint received TWO conflicting auto-replies "
+             "in the same second (classifier draft + MAINT-B1 ack). CLASS: the support pipeline is the customer "
+             "channel; a personal inbox may only ever be a dead-letter; reply lanes must be mutually exclusive. "
+             "OPEN until BOTH deploys ride (app /ship + wrangler worker deploy) and a clean E2E re-test shows one "
+             "reply and no personal-inbox copy -- then promote.",
+       ref="ONE-INBOX-1 + ONE-REPLY-1, 24 Aug 2026. E2E evidence: test to support@ triaged, ref LIST-11 minted, "
+           "branded replies from support@mail.trustsquare.co in <5s; test to billing@ proved catch-all ON; forwards "
+           "landed in the personal inbox (the fault). Reply-To support@trustsquare.co added to the shared transport "
+           "so even Gmail-SMTP fallback sends route replies into the pipeline.")
+def rg_one_inbox_one_reply():
+    out = []
+    import os as _os
+    wf = _os.path.join(REPO, "cloudflare_email_worker", "src", "worker.js")
+    bm_fp = _os.path.join(REPO, "bea_main.py")
+    if _os.path.exists(wf):
+        w = open(wf, encoding="utf-8", errors="replace").read()
+        n_fwd = w.count("message.forward(")
+        if n_fwd != 1 or "if (!triaged || hasAttachments)" not in w or w.index("if (!triaged") > w.index("message.forward("):
+            out.append((FAIL, "worker forwards customer mail to the personal inbox outside the dead-letter branch"))
+    if _os.path.exists(bm_fp):
+        bm = open(bm_fp, encoding="utf-8", errors="replace").read()
+        if "ONE-REPLY-1" not in bm or 'elif category != "spam" and fault_code' not in bm:
+            out.append((FAIL, "email_inbound no longer guarantees one reply per inbound (ONE-REPLY-1 gone)"))
+        if bm.count('os.getenv("SUPPORT_REPLY_TO", "support@trustsquare.co")') < 3:
+            out.append((FAIL, "transactional transport lost its support Reply-To -- replies would go to the sending mailbox"))
+    return out or [(INFO, "customer mail: support pipeline only, one reply per inbound, personal inbox = dead-letter")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
