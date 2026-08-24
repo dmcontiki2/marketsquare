@@ -110,6 +110,13 @@ REFLECTIONS = {
    ("canon.yml", ["RUL-025", "server_eur_month_new_order", "35.49"], []),
    ("RULINGS.md", ["DO NOT RESCALE THE PRODUCTION BOX"], []),
  ],
+ "RUL-055": [
+   # Register is marketing-only and one-way (24 Aug): never cleared by signup; BEA
+   # transactional lanes deliberately do NOT consult it. The row vanishing, or a
+   # signup-clears-suppression code path appearing, trips here.
+   ("RULINGS.md", ["MARKETING-ONLY, ONE-WAY, AND NEVER CLEARED BY SIGNUP"], []),
+   ("../CityLauncher/api/server.py", [], ["DELETE FROM suppression"]),
+ ],
  "RUL-054": [
    # POPIA suppression invariant (David, 24 Aug): separate register, verified at the
    # send chokepoint; prospect PII never public. Losing any needle re-opens the breach.
