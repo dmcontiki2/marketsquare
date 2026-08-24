@@ -125,6 +125,13 @@ REFLECTIONS = {
    ("../CityLauncher/emailer/emailer.py", ["_is_suppressed", "refusing send to opted-out"], []),
    ("citylauncher_ops.html", ["X-Launch-Key"], []),
  ],
+ "RUL-056": [
+   # The singles property day is REMOVED (David, 24 Aug): off all three singles ladders,
+   # board v3; property arrives via the Phase-3 estate-agency waves. A PROPERTY chip
+   # reappearing on the wave board, or the ruling row vanishing, trips here.
+   ("RULINGS.md", ["THE SINGLES PROPERTY DAY IS REMOVED"], []),
+   ("WAVE_PLAN_LAUNCH_2026.html", ["property day removed from the singles ladders", "(v3)"], ["chip prop"]),
+ ],
  "RUL-053": [
    # The launch wave plan (David, 24 Aug): Pretoria ladder from Fri 28 Aug, global
    # launch day Tue 1 Sep (all cities send Stays), SA rolls daily, global three hold
