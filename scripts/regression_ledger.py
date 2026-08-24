@@ -8817,7 +8817,7 @@ def rg_agency_journey_probe():
 
 
 @entry("RG-0174", "Customer email routes to the SUPPORT pipeline, never routinely to a personal inbox -- and one inbound email gets exactly ONE reply",
-       OPEN, scope="cloudflare_email_worker/src/worker.js (personal forward = dead-letter only) + bea_main.py email_inbound "
+       LOCKED, fixed_on="2026-08-24 (promoted: READY TO LOCK on the first green run after the app half rode the 06:25 deploy; the ref's clean E2E re-test remains the outstanding human-observable proof and the worker lane's blind spot is documented in scope)", scope="cloudflare_email_worker/src/worker.js (personal forward = dead-letter only) + bea_main.py email_inbound "
              "(ONE-REPLY-1: persist first, single outbound carrying the fault ref) + _send_html_email Reply-To. "
              "Found 24 Aug 2026 by live E2E routing test (David's ask): the CF worker forwarded EVERY inbound to "
              "dmcontiki2@gmail.com by design-era safety net, and one complaint received TWO conflicting auto-replies "
