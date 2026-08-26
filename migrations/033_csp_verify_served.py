@@ -133,20 +133,85 @@ def csp_files():
     return out
 
 
-def served_csp():
-    """Ask the SERVER what it serves. The only evidence that counts."""
+def _csp_once(port, use_tls):
+    """One measurement. Returns (status, csp) or raises."""
+    import http.client, ssl as _ssl
+    if use_tls:
+        ctx = _ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = _ssl.CERT_NONE      # we are talking to 127.0.0.1, not the world
+        conn = http.client.HTTPSConnection("127.0.0.1", port, timeout=10, context=ctx,
+                                           server_hostname="trustsquare.co")   # SNI picks the vhost
+    else:
+        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
     try:
-        import http.client
-        conn = http.client.HTTPConnection("127.0.0.1", 80, timeout=10)
         conn.request("GET", "/", headers={"Host": "trustsquare.co",
                                           "User-Agent": "TrustSquare-Migration/033"})
         r = conn.getresponse()
         val = r.getheader("Content-Security-Policy") or ""
+        status = r.status
         r.read()
+        return status, val
+    finally:
         conn.close()
-        return val
-    except Exception as ex:
-        return "ERROR:" + repr(ex)[:80]
+
+
+def served_csp(settle=0):
+    """Ask the SERVER what it serves. The only evidence that counts.
+
+    CSP-SCRIPT-SRC-5 (26 Aug 2026) -- TWO bugs lived in the old four-line version, and
+    between them they made 033 fail three deploys in a row while the rewrite it performed
+    was actually correct:
+
+      (1) IT MEASURED THE WRONG RESPONSE. It fetched http://127.0.0.1/ and read the
+          headers off whatever came back -- and what comes back is
+          "HTTP/1.1 301 Moved Permanently, Location: https://trustsquare.co/". The port-80
+          block is a REDIRECT, not the site. So the migration was asserting the CSP of a
+          301 it does not care about, and would have kept failing no matter how correctly
+          it rewrote the config. Now it speaks TLS to :443 with SNI so nginx selects the
+          real vhost, and it FAILS LOUDLY on a 3xx rather than silently measuring it --
+          reading a redirect as if it were the page is the whole bug and must never be
+          silent again.
+
+      (2) IT RACED THE RELOAD. `nginx -s reload` is asynchronous: the master signals the
+          workers and old workers keep serving until their connections drain. A fetch
+          fired immediately after the reload can be answered by a worker still holding
+          the OLD config, so a perfectly good rewrite measures as "no effect". `settle`
+          polls until the answer stops changing instead of trusting the first read.
+
+    CLASS: an assertion is only as good as WHAT it measures. This is the third instance
+    of that same lesson in one morning -- audit_global_qa.py compared bytes when it meant
+    content (CRLF), 033 compared prose when it meant directives (the comment), and here
+    it measured a redirect when it meant the page.
+    """
+    import time as _t
+    deadline = _t.time() + settle
+    last = None
+    while True:
+        try:
+            status, val = _csp_once(443, True)
+            if 300 <= status < 400:
+                return "ERROR:https-also-redirected(%d)" % status
+            if val and val != last:
+                last = val
+                if _t.time() < deadline:
+                    _t.sleep(1)          # value changed -- let the reload finish settling
+                    continue
+            return val
+        except Exception as ex:
+            if _t.time() < deadline:
+                _t.sleep(1)
+                continue
+            # Fall back to :80 ONLY to report, never to pass: label it so a redirect can
+            # never be mistaken for the page again.
+            try:
+                status, val = _csp_once(80, False)
+                if 300 <= status < 400:
+                    return "ERROR:port-443-unreachable(%s); port-80 is a %d redirect, " \
+                           "not the page" % (repr(ex)[:40], status)
+                return val
+            except Exception:
+                return "ERROR:" + repr(ex)[:80]
 
 
 def main():
@@ -218,7 +283,7 @@ def main():
         if r.returncode != 0:
             raise RuntimeError("reload failed:\n" + (r.stderr or r.stdout))
 
-        after = served_csp()
+        after = served_csp(settle=15)   # reload is async -- do not race the workers
         say("served CSP AFTER : %r" % after[:110])
         if "script-src" not in after:
             # CSP-SCRIPT-SRC-3: do not just fail -- say WHERE the surviving policy
