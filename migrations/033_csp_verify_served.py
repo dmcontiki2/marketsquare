@@ -156,13 +156,41 @@ def main():
             "Not guessing where to write one.")
         return 1
 
-    stale = {p: t for p, t in files.items() if "script-src" not in t}
+    # CSP-SCRIPT-SRC-4 (26 Aug 2026) -- THE BUG THAT MADE 033 FAIL TWICE.
+    # This line used to read:  if "script-src" not in t   -- i.e. it asked whether
+    # the FILE TEXT mentioned script-src. /etc/nginx/snippets/security_headers.conf
+    # carries a COMMENT reading "A full Content-Security-Policy (script-src/style-src
+    # /img-src) is deliberately ...". That comment contains the literal string
+    # "script-src", so the only file that actually needed rewriting tested as
+    # already-fixed, `stale` came back EMPTY, the migration rewrote NOTHING
+    # ("restoring 0 file(s)" in the 02:07Z run), and then failed honestly because the
+    # served header had of course not changed. Two deploys, both undiagnosable from
+    # the failure text alone.
+    # CLASS -- and it is the same class as the CRLF false positive fixed in
+    # audit_global_qa.py the same morning: THE PROGRAM COMPARED THE WRONG THING.
+    # Staleness is a property of the DIRECTIVE, never of the surrounding prose, so
+    # comments are stripped and only the add_header values are tested.
+    def _directive_values(text):
+        """Every add_header Content-Security-Policy value in `text`, comments removed."""
+        uncommented = "\n".join(
+            ln for ln in text.splitlines() if not ln.lstrip().startswith("#"))
+        return [m.group(0) for m in RE_CSP.finditer(uncommented)]
+
+    stale = {}
+    for p, t in files.items():
+        vals = _directive_values(t)
+        if not vals:
+            continue                      # only a comment mentioned CSP here
+        if any("script-src" not in v for v in vals):
+            stale[p] = t
     say("CSP declared in %d file(s); %d still lack script-src" % (len(files), len(stale)))
     for p in files:
         say("   %s  %s" % ("NEEDS FIX" if p in stale else "already ok", p))
 
     before = served_csp()
     say("served CSP BEFORE: %r" % before[:110])
+    # Both halves must agree before claiming success: the SERVED header proves the
+    # effect, `stale` proves no declaration was left behind to win a later reload.
     if "script-src" in before and not stale:
         say("already applied and PROVEN on the served response. Nothing to do.")
         return 0
@@ -196,8 +224,8 @@ def main():
             # CSP-SCRIPT-SRC-3: do not just fail -- say WHERE the surviving policy
             # lives. The 24 Aug failure was undiagnosable precisely because it did not.
             for _p, _t in sorted(csp_files().items()):
-                for _m in RE_CSP.finditer(_t):
-                    say("   STILL DECLARES CSP: %s :: %s" % (_p, _m.group(0).strip()[:90]))
+                for _v in _directive_values(_t):
+                    say("   STILL DECLARES CSP: %s :: %s" % (_p, _v.strip()[:90]))
             raise RuntimeError("the server still does not SERVE script-src after the reload — "
                                "something else is emitting the header (the STILL DECLARES lines "
                                "above name every file nginx reads that sets one). Not claiming "
