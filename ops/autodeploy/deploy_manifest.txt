@@ -170,3 +170,11 @@ orchestration_v2/templates/placement_onboarding/onboard_8.html | orchestrator/v2
 
 # WAVE-PLAN-1 (RUL-053, 24 Aug 2026) -- the launch wave plan board, linked from the +1 page
 WAVE_PLAN_LAUNCH_2026.html          | static/wave_plan.html
+
+# RG-0156 (26 Aug 2026) -- the Orchestrator daily brief. It was served live at
+# trustsquare.co/orchestrator (nginx: `location /orchestrator` -> try_files
+# /orchestrator.html) while being ABSENT from this manifest, so it sat outside the
+# one deploy engine and fossilised -- the exact class this file exists to prevent.
+# Access is enforced server-side at nginx (anonymous GET answers 401); the page
+# itself no longer carries a client-side code.
+orchestrator.html                   | orchestrator.html

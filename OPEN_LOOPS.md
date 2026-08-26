@@ -28,6 +28,20 @@ to full launch (Mon 1 Sep) — RUL-001.**
 ## 🔴 BLOCKING NOW
 *(nothing proceeds until these clear)*
 
+> **26 Aug 2026 — B1 is DISCHARGED by probe; it is sitting in the wrong section.**
+> The third-party sweep re-verified it this morning: `SECRETS_REGISTER.md`'s "Still burnt" table is
+> EMPTY, **RG-0146 and RG-0147 are LOCKED and green on today's ledger run**, and the row's own text
+> has said "ROTATION COMPLETE" since 23 Aug. It stays printed here only because this file has no
+> compiler and edits are kept additive (CHANGELOG-COLLISION-1 class) — **move it to CLOSED at the
+> next attended reconciliation.** Residue, neither of them blocking: David deletes the two superseded
+> Cloudflare tokens; FOUNDERS_ID_SALT rotate-or-accept is Claude's pending call.
+>
+> **What genuinely blocks 29 Aug today is not here — it is in `THIRD_PARTY_LAUNCH_REGISTER.md`
+> (swept 26 Aug):** anonymous PII on `/launch-api/prospects/list` (fixed in code, needs a deploy),
+> the jammed migration chain, no `script-src` CSP at the edge, SSH down with the RED-alert path down
+> with it, and the still-undeployed uptime watcher.
+
+
 | # | Loop | Owner | Single next action | Opened | Source |
 |---|------|-------|--------------------|--------|--------|
 | B1 | **Production secrets exposed, twice — ROTATION IN PROGRESS 22 Aug.** Nine credentials rotated and PROBED (5 self-issued + Resend 422 + Paystack 200 + JWT). Two structural defects fixed: `/etc/environment` was 0644 world-readable holding nine secrets (now 0600; `msdeploy` had a login shell), and a correct write reported success while production held the revoked Paystack key — card payments were down unreported. The exposure list in DW-029/DW-057 was under-counting by nine. Inventory now machine-checked: `SECRETS_REGISTER.md` + RG-0146 (red until clean), RG-0147 LOCKED. | [D]+[C] | **ROTATION COMPLETE — corrected 23 Aug by the third-party sweep (this cell was mid-rotation text):** SECRETS_REGISTER.md 'Still burnt' table is EMPTY (REGISTER_VERIFIED 2026-08-22) and RG-0146 is LOCKED and passing ('no credential is still marked BURNT'). All ten resolved: HETZNER_S3 ×2 (rotated, actually Cloudflare R2, media-scoped), ANTHROPIC_API_KEY, CF_CACHE_TOKEN, EMAIL_INBOUND_SECRET, RELAY_INBOUND_SECRET, NUMISTA (rotated+probed), JUSTTCG (rotated then deliberately UNSET — licence, RG-0148), MS_DEPLOY_TOKEN (re-minted), COMMAND_SECRET (deleted — nothing consumed it), TRAVELPAYOUTS_TOKEN (UNROTATABLE-ACCEPTED, dated reasoning). Google ACCOUNT password changed 22 Aug. Residue: David deletes 2 superseded Cloudflare tokens; FOUNDERS_ID_SALT is Claude's pending call. CLOSE this row at the next attended reconciliation. | 2026-08-07 / 2026-08-20 | DAILY_WATCH DW-029, DW-057 · SECRETS_REGISTER.md |

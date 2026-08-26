@@ -157,3 +157,11 @@ DEPLOY_REVIEW_*.flag
 # Housekeeping quarantine — junk pulled out of the tree for review, never repo content
 # (fuse_hidden orphans, LibreOffice .~lock files, probe litter). DW-watch 21 Aug 2026.
 _CLEANUP_REVIEW_*/
+
+# Photo-anon EVAL SET and the real seller originals behind it (Switch Test Plan
+# step 0, RUL-031/032, 26 Aug 2026). These are a real seller's photos with real
+# number plates — the whole point of the lane is that they never travel. They were
+# untracked but NOT ignored, so any `git add -A` would have swept them into the
+# GitHub mirror. Rebuild the deterministic part with scripts/build_eval_set.py.
+eval_photos/
+private_originals_listing246/

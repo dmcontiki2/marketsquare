@@ -196,10 +196,20 @@ def audit_drift():
     try:
         live = get(f"{BASE}/static/ms.js?v={v}", binary=True)
         local = open(os.path.join(REPO, "ms.js"), "rb").read()
-        if hashlib.md5(live).hexdigest() != hashlib.md5(local).hexdigest():
+        # DW-072 FIX 26 Aug 2026 (CRLF-DRIFT-1): compare CONTENT, not line endings.
+        # The repo lives on a Windows/FUSE mount and ms.js carries ~17,389 CR bytes;
+        # the served file is LF-only. A raw byte compare therefore reported drift
+        # every single run and cost a live-drift scare on 26 Aug: the audit said
+        # "live 1156049B != repo 1173438B — a real deploy is staged", and the
+        # difference was exactly the 17,389 CRs. This is the same trap the FEA
+        # sensor hit in DW-061. Normalise CR out of BOTH sides before hashing; the
+        # byte counts are still reported raw so a genuine size change is visible.
+        _norm = lambda b: b.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        if hashlib.md5(_norm(live)).hexdigest() != hashlib.md5(_norm(local)).hexdigest():
             add("INFO", "drift", "MSJS-DRIFT",
-                f"live ms.js (v{v}, {len(live)}B) != repo ms.js ({len(local)}B) — expected while a deploy is staged; "
-                "CRITICAL if it persists after deploying")
+                f"live ms.js (v{v}, {len(live)}B) != repo ms.js ({len(local)}B) — content differs "
+                "after line-ending normalisation, so this is REAL drift, not CRLF; "
+                "expected while a deploy is staged, CRITICAL if it persists after deploying")
     except Exception as e:
         add("MEDIUM", "drift", "MSJS-FETCH", f"served ms.js unreadable: {e}")
     # DW-001 FIX 14 Aug 2026: the server bumps ?v= MONOTONICALLY on live index.html by
