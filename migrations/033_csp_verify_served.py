@@ -68,18 +68,68 @@ def say(m):
     print("[033_csp] " + m, flush=True)
 
 
+def _nginx_T_files():
+    """Every file nginx ACTUALLY reads, from `nginx -T`.
+
+    CSP-SCRIPT-SRC-3 (26 Aug 2026). The 24 Aug run of this migration reported
+    "CSP declared in N file(s); 0 still lack script-src" and then measured a
+    served policy of `frame-ancestors 'self'` -- i.e. it rewrote every file it
+    could SEE and the emitter was not among them. That is a search defect, not a
+    server defect: SEARCH below is a fixed list of globs, none of them recursive
+    (`snippets/*` misses `snippets/security/*`) and all of them under /etc/nginx
+    (an include by absolute path from anywhere else is invisible).
+
+    `nginx -T` dumps the fully-resolved configuration and names each source file
+    on a `# configuration file <path>:` line. That is the authoritative set --
+    it cannot miss an include, wherever it lives. Falls back to the old globs if
+    nginx -T is unavailable, so this is strictly additive.
+    """
+    found = []
+    try:
+        r = subprocess.run(["nginx", "-T"], capture_output=True, text=True, timeout=30)
+        if r.returncode == 0:
+            for line in (r.stdout or "").splitlines():
+                m = re.match(r"^#\s*configuration file\s+(/\S+?):\s*$", line)
+                if m:
+                    found.append(m.group(1))
+    except Exception as ex:
+        say("nginx -T unavailable (%s) -- falling back to the fixed globs" % repr(ex)[:60])
+    return found
+
+
 def csp_files():
+    """Return {realpath: text} for every nginx file that DECLARES a CSP.
+
+    Union of three sources so nothing can hide: what nginx says it reads
+    (authoritative), a RECURSIVE walk of /etc/nginx, and the original globs.
+    """
+    cands = list(_nginx_T_files())
+
+    for root, _dirs, names in os.walk("/etc/nginx"):        # recursive, unlike SEARCH
+        for n in names:
+            cands.append(os.path.join(root, n))
+
+    for pat in SEARCH:                                      # original behaviour, kept
+        cands.extend(glob.glob(pat))
+
     out = {}
-    for pat in SEARCH:
-        for c in glob.glob(pat):
-            if not os.path.isfile(c) or ".bak" in os.path.basename(c):
-                continue
-            try:
-                t = open(c, encoding="utf-8", errors="replace").read()
-            except Exception:
-                continue
-            if RE_CSP.search(t):
-                out.setdefault(os.path.realpath(c), t)
+    seen = set()
+    for c in cands:
+        try:
+            rp = os.path.realpath(c)
+        except Exception:
+            continue
+        if rp in seen:
+            continue
+        seen.add(rp)
+        if not os.path.isfile(rp) or ".bak" in os.path.basename(rp):
+            continue
+        try:
+            t = open(rp, encoding="utf-8", errors="replace").read()
+        except Exception:
+            continue
+        if RE_CSP.search(t):
+            out[rp] = t
     return out
 
 
@@ -143,8 +193,15 @@ def main():
         after = served_csp()
         say("served CSP AFTER : %r" % after[:110])
         if "script-src" not in after:
+            # CSP-SCRIPT-SRC-3: do not just fail -- say WHERE the surviving policy
+            # lives. The 24 Aug failure was undiagnosable precisely because it did not.
+            for _p, _t in sorted(csp_files().items()):
+                for _m in RE_CSP.finditer(_t):
+                    say("   STILL DECLARES CSP: %s :: %s" % (_p, _m.group(0).strip()[:90]))
             raise RuntimeError("the server still does not SERVE script-src after the reload — "
-                               "something else is emitting the header. Not claiming success.")
+                               "something else is emitting the header (the STILL DECLARES lines "
+                               "above name every file nginx reads that sets one). Not claiming "
+                               "success.")
     except Exception as ex:
         say("FAILED (%s) — restoring %d file(s) and reloading" % (str(ex)[:180], len(backups)))
         for p, dest in backups.items():

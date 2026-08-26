@@ -125,6 +125,75 @@ def _require_net():
         raise ProbeOffline(_NET["why"])
 
 
+# ── LEDGER-DEPS-1 (26 Aug 2026) ────────────────────────────────────────────
+# The THIRD way the instrument fails while the app is fine. LEDGER-OFFLINE-1
+# covered no network; GATE-CACHE-1 covered a rate-limited credential; this covers
+# a MISSING LOCAL DEPENDENCY.
+#
+# Several entries prove themselves by running a harness in a subprocess and
+# reading its exit code. When the machine running the ledger simply lacks a
+# third-party module that harness imports, the subprocess dies on its import
+# line -- it never reaches a single assertion -- and a returncode of 1 was being
+# read as "the fix has ROTTED".
+#
+# Proven 26 Aug 2026 in the maintenance sandbox: RG-0181 and RG-0182 both printed
+# REGRESSION and the run closed "5 previously-fixed issue(s) HAVE COME BACK. Do
+# not deploy over this." Both harnesses then passed 9/9 and 13/13 the instant
+# `pip install fastapi` ran. Nothing about the app had changed or could have.
+# That is textbook cry-wolf, and this file's own preamble says a tripwire that
+# cries wolf is worth less than no tripwire, because it also carries false comfort.
+#
+# A missing dependency is an INSTRUMENT limit, so it reports NOT EVALUATED ->
+# UNVERIFIED (loudly not a pass, exit 2), never REGRESSION. The demotion is
+# deliberately narrow: it applies ONLY when the dead import is a third-party
+# module. If the missing module is one of OUR OWN repo files, the fix really has
+# been deleted and the entry must stay RED -- which is the whole point.
+_DEP_DIED = re.compile(r"ModuleNotFoundError: No module named ['\"]([\w.]+)['\"]")
+
+
+def _missing_third_party(text):
+    """Return the module name if `text` shows a subprocess that died on a missing
+    THIRD-PARTY import, else None. A missing repo module returns None -- that is a
+    real regression and must stay red."""
+    if not text:
+        return None
+    m = _DEP_DIED.search(text)
+    if not m:
+        return None
+    mod = m.group(1).split(".")[0]
+    # Ours? Then it is not a dependency problem, it is a deletion.
+    for cand in (os.path.join(REPO, mod + ".py"),
+                 os.path.join(REPO, mod),
+                 os.path.join(REPO, "scripts", mod + ".py")):
+        if os.path.exists(cand):
+            return None
+    return mod
+
+
+def _harness(argv, timeout=90, cwd=None):
+    """Run a proof in a subprocess. Returns (ok, blind, detail).
+
+    blind=True means the harness NEVER RAN -- a missing third-party import killed
+    it before its first assertion -- which says nothing whatsoever about the app.
+    Callers must turn blind into a 'NOT EVALUATED' INFO (-> UNVERIFIED), never a FAIL.
+    """
+    try:
+        r = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, cwd=cwd)
+    except Exception as ex:
+        return False, True, "could not run the harness here: " + repr(ex)[:80]
+    blob = (r.stdout or "") + (r.stderr or "")
+    if r.returncode != 0:
+        mod = _missing_third_party(blob)
+        if mod:
+            return False, True, (
+                "NOT EVALUATED - this machine lacks the third-party module %r, so the harness "
+                "died at its import line and ran ZERO assertions. An instrument limit, not a "
+                "verdict on the app (LEDGER-DEPS-1). Install it and re-run before trusting "
+                "this board." % mod)
+        return False, False, (r.stdout or r.stderr or "")[-300:]
+    return True, False, (r.stdout or "")
+
+
 _REVIEW = {"cookie": None, "tried": False, "rate_limited": False}
 
 # GATE-CACHE-1 (14 Aug 2026). /review/login is rate-limited 8 per 10 min. Every PROCESS
@@ -6172,22 +6241,19 @@ def rg_ai_breaker_fails_over():
         if "_cost_approved_fallbacks" not in src:
             out.append((FAIL, "ai_provider lost _cost_approved_fallbacks -- the chain can no "
                               "longer be built, so there is nothing to fail over to"))
-        try:
-            r = _sp.run([sys.executable, harness], capture_output=True, text=True, timeout=120,
-                        cwd=REPO)
-            tail = (r.stdout or "").strip().splitlines()[-1:] or [""]
-            if r.returncode != 0:
-                out.append((FAIL, "failover harness FAILED (exit %s): %s"
-                                  % (r.returncode, tail[0][:160])))
-            else:
-                nchecks = ""
-                for ln in (r.stdout or "").splitlines():
-                    if "checks ·" in ln:
-                        nchecks = ln.strip()
-                out.append((INFO, "failover proven in the decision layer — %s"
-                                  % (nchecks or "harness exit 0")))
-        except Exception as e:
-            out.append((INFO, "could not run the failover harness here (%s)" % str(e)[:70]))
+        ok, blind, detail = _harness([sys.executable, harness], timeout=120, cwd=REPO)
+        if blind:
+            out.append((INFO, detail))          # LEDGER-DEPS-1: instrument, not app
+        elif not ok:
+            tail = (detail or "").strip().splitlines()[-1:] or [""]
+            out.append((FAIL, "failover harness FAILED: %s" % tail[0][:160]))
+        else:
+            nchecks = ""
+            for ln in (detail or "").splitlines():
+                if "checks ·" in ln:
+                    nchecks = ln.strip()
+            out.append((INFO, "failover proven in the decision layer — %s"
+                              % (nchecks or "harness exit 0")))
 
     # Live half: how many lanes actually carry keys on the box. OPS-key gated, so this is
     # INFO either way -- an unreadable instrument must never read as a pass.
@@ -9012,13 +9078,12 @@ def rg_remote_code_guard_is_real():
         return [(FAIL, "scripts/no_remote_code_guard.py is GONE -- the pre-deploy half of RG-0025 "
                        "is unenforced and a third-party loader can ship again")]
     out = []
-    try:
-        r = _sp.run([sys.executable, gp, "--self-test"], capture_output=True, text=True, timeout=60)
-        if r.returncode != 0:
-            out.append((FAIL, "the guard's self-test FAILED -- it no longer catches the 3 Aug loader "
-                              "class, so its green means nothing: " + (r.stdout or r.stderr)[-300:]))
-    except Exception as ex:
-        out.append((FAIL, "could not run the guard self-test: " + repr(ex)[:80]))
+    ok, blind, detail = _harness([sys.executable, gp, "--self-test"], timeout=60)
+    if blind:
+        out.append((INFO, detail))              # LEDGER-DEPS-1: instrument, not app
+    elif not ok:
+        out.append((FAIL, "the guard's self-test FAILED -- it no longer catches the 3 Aug loader "
+                          "class, so its green means nothing: " + detail[-300:]))
 
     src = repo_file("scripts/no_remote_code_guard.py")
     if src is None:
@@ -9192,13 +9257,12 @@ def rg_partner_lane_fails_closed():
     import subprocess as _sp, os as _os
     mp = _os.path.join(REPO, "travelpayouts_partners.py")
     if _os.path.exists(mp):
-        try:
-            r = _sp.run([sys.executable, mp], capture_output=True, text=True, timeout=60)
-            if r.returncode != 0:
-                out.append((FAIL, "the lane's own selftest FAILS -- its refusals no longer refuse: "
-                                  + (r.stdout or r.stderr)[-250:]))
-        except Exception as ex:
-            out.append((INFO, "could not run the lane selftest here: " + repr(ex)[:70]))
+        ok, blind, detail = _harness([sys.executable, mp], timeout=60)
+        if blind:
+            out.append((INFO, detail))          # LEDGER-DEPS-1: instrument, not app
+        elif not ok:
+            out.append((FAIL, "the lane's own selftest FAILS -- its refusals no longer refuse: "
+                              + detail[-250:]))
     if "TP_LINKOUT_ENABLED" in src and "deeplink=None" not in src.replace(" ", ""):
         pass
     unfilled = src.count(", None),")
@@ -9268,12 +9332,11 @@ def rg_fares_lane_cache_only():
     if not _os.path.exists(hp):
         out.append((FAIL, "scripts/prove_fares_lane.py is gone -- the dark/lit behaviour is unproven"))
     else:
-        try:
-            r = _sp.run([sys.executable, hp], capture_output=True, text=True, timeout=90)
-            if r.returncode != 0:
-                out.append((FAIL, "the dark/lit harness FAILS: " + (r.stdout or r.stderr)[-300:]))
-        except Exception as ex:
-            out.append((INFO, "could not run the fares harness here: " + repr(ex)[:70]))
+        ok, blind, detail = _harness([sys.executable, hp], timeout=90)
+        if blind:
+            out.append((INFO, detail))          # LEDGER-DEPS-1: instrument, not app
+        elif not ok:
+            out.append((FAIL, "the dark/lit harness FAILS: " + detail[-300:]))
 
     # Live half. BOTH "flag is off" and "never deployed" answer 404, so the STATUS CODE
     # ALONE CANNOT TELL THEM APART -- and a ledger that reads a missing feature as a
@@ -9372,6 +9435,310 @@ def rg_deploy_pauses_flash():
                           % ", ".join(str(m) for m in misses)))
     return out or [(INFO, "all %d waiting pause(s) flash, beep and rename the window first"
                           % sum(1 for l in lines if l.strip().lower() == "pause"))]
+
+
+@entry("RG-0184", "No AI lane that can take traffic is priced from an aggregator or an estimate -- "
+       "first-party or it does not bill",
+       LOCKED, fixed_on="2026-08-26",
+       scope="ai_price_card.json, EVERY model wired in ai_provider.TASK_MODEL. Class property: a "
+             "model may sit on the card with a second-hand price ONLY while its gate says it can "
+             "take no traffic (gate 'reserved'). The moment a lane is production / golden-set-"
+             "passed / eval-pending-with-a-key, its price must carry source_kind 'first-party'.",
+       ref="RUL-032 + the 26 Aug canary run. The gemini-3.7-flash row was captured 19 Aug from "
+           "openrouter.ai at $0.375 in / $1.50 out, and the RUL-032 costing ($548/yr canary vs "
+           "$1,729/yr terra) was built on it. First-party ai.google.dev says the STANDARD tier -- "
+           "the tier ai_provider._gemini's synchronous chat/completions call actually bills at -- "
+           "is $0.75 in / $3.75 out. $0.375 is Google's BATCH input rate; $1.50 was flagged in the "
+           "row itself as an estimate and got used anyway. Input was understated 2x, output 2.5x, "
+           "and the canary's real year-1 cost is ~$845, not $548. Same shape as the incident that "
+           "created RG-0018 (the 18 Jul 'Mistral ~40% of Haiku' claim standing on a stale price) -- "
+           "RG-0018 checks the card is FRESH and COVERING; nothing checked that a price was FIRST-"
+           "PARTY. This entry closes that gap. Corrected 26 Aug 2026 with the workbook rows.")
+def rg_price_first_party():
+    card_txt = repo_file("ai_price_card.json")
+    seam = repo_file("ai_provider.py")
+    if card_txt is None or seam is None:
+        return [(INFO, "running outside the repo -- first-party price check skipped")]
+    try:
+        card = json.loads(card_txt)
+    except Exception as ex:
+        return [(FAIL, f"ai_price_card.json unreadable ({ex!r})")]
+    out = []
+    for prov, pdata in (card.get("providers") or {}).items():
+        for model, row in (pdata.get("models") or {}).items():
+            gate = (row.get("gate") or "").lower()
+            kind = (row.get("source_kind") or "").lower()
+            if gate == "reserved":
+                continue                      # cannot take traffic; a second-hand price is harmless
+            if kind != "first-party":
+                out.append((FAIL, f"{prov}/{model} is gated '{gate or 'unset'}' -- it can reach "
+                                  f"traffic -- but its price is sourced '{kind or 'unset'}'. A "
+                                  "decision standing on a second-hand price is the RG-0018 fault "
+                                  "with a different label. Re-verify on the vendor's own pricing "
+                                  "page and set source_kind: first-party."))
+            src_note = (row.get("source") or "").lower()
+            if "estimate" in src_note and "correction" not in src_note:
+                out.append((FAIL, f"{prov}/{model} still describes its own price as an ESTIMATE "
+                                  "while gated '%s' -- estimates do not bill" % (gate or "unset")))
+    return out or [(INFO, "every model that can take traffic carries a first-party price"
+                          " (%d rows checked)" % sum(len(p.get("models") or {})
+                                                     for p in (card.get("providers") or {}).values()))]
+
+
+@entry("RG-0185", "The photo-anon eval set is REPRODUCIBLE and every row it scores has a truth label",
+       OPEN,
+       scope="scripts/build_eval_set.py + eval_photos/TRUTH.json. Class property: the eval set is "
+             "the evidence every photo-anon model decision rests on, so it must rebuild byte-"
+             "identical (identical evidence for every candidate) and no row may be scored against "
+             "a guessed answer. OPEN until (a) the 19 Aug 2026 Maroushka failure photos and the 3 "
+             "'inappropriate' samples are added, and (b) the five listing-246 rows carry a "
+             "hand-set verdict instead of 'unknown'.",
+       ref="AI_PHOTO_COST_MODEL.xlsx 'Switch Test Plan' step 0 -- '~30 photos ... stored privately; "
+           "never changes, so every model scores on identical evidence'. Built 26 Aug 2026: 22 "
+           "photos (9 synthetic plate shapes, 3 false-positive traps, 5 listing-246 originals, 5 "
+           "off-category). The traps matter as much as the plates -- RUL-031 is a ruling about "
+           "OVER-smearing, so a set of plates alone would score the wrong failure. Also this "
+           "session: eval_photos/ and private_originals_listing246/ were untracked but NOT "
+           "gitignored -- a `git add -A` would have pushed a real seller's plates to the GitHub "
+           "mirror. Now ignored. READY TO LOCK when the set is complete and fully labelled.")
+def rg_eval_set():
+    builder = repo_file("scripts/build_eval_set.py")
+    if builder is None:
+        return [(FAIL, "scripts/build_eval_set.py is GONE -- the eval set can no longer be "
+                       "rebuilt, so 'identical evidence for every candidate' is unprovable")]
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    truth_p = os.path.join(root, "eval_photos", "TRUTH.json")
+    if not os.path.exists(truth_p):
+        return [(FAIL, "eval_photos/TRUTH.json is absent -- the set has not been built here. "
+                       "Run: python3 scripts/build_eval_set.py")]
+    try:
+        doc = json.load(open(truth_p, encoding="utf-8"))
+    except Exception as ex:
+        return [(FAIL, f"eval_photos/TRUTH.json unreadable ({ex!r})")]
+    out, photos = [], doc.get("photos") or []
+    missing_sha = [p["file"] for p in photos if not p.get("sha256")]
+    if missing_sha:
+        out.append((FAIL, "%d eval photo(s) carry no sha256 -- drift cannot be detected: %s"
+                          % (len(missing_sha), ", ".join(missing_sha[:3]))))
+    unknown = [p["file"] for p in photos if p.get("expect") == "unknown"]
+    if unknown:
+        out.append((FAIL, "%d eval photo(s) still have expect='unknown' -- an eval scored against "
+                          "a guessed answer key proves nothing. Set them by hand: %s"
+                          % (len(unknown), ", ".join(unknown[:2]) + ("..." if len(unknown) > 2 else ""))))
+    if not any(f.startswith("real_0819") for f in (p["file"] for p in photos)):
+        out.append((FAIL, "the 19 Aug 2026 Maroushka failure photos are NOT in the set -- the "
+                          "freshest evidence of the fault RUL-031 was written about is missing "
+                          "(they are server-side uploads; pull them in as real_0819_*)"))
+    if len(photos) < 30:
+        out.append((FAIL, "eval set holds %d photos; the Switch Test Plan calls for ~30 including "
+                          "3 'inappropriate' samples, which are absent -- the scan prompt's "
+                          "moderation clause is unscored" % len(photos)))
+    if not any(p.get("expect") == "clean" and "trap" in p["file"] for p in photos):
+        out.append((FAIL, "the false-positive TRAPS have gone from the eval set -- RUL-031 is a "
+                          "ruling about OVER-smearing, so a set of plates alone scores the wrong "
+                          "failure"))
+    return out or [(INFO, "eval set complete: %d photos, every row labelled" % len(photos))]
+
+
+
+@entry("RG-0186", "A server-side migration can SEE every file it must change -- discovery is what nginx "
+       "actually reads, not a guessed list of globs",
+       LOCKED, fixed_on="2026-08-26",
+       scope="migrations/033_csp_verify_served.py discovery + scripts/prove_csp_discovery.py. CLASS "
+             "property, not one migration: any migration that edits server configuration must "
+             "enumerate its targets from what the SERVICE resolves (nginx -T), never from a "
+             "hand-written glob list -- a glob that misses the file is indistinguishable from a "
+             "server that refuses the change, and it fails identically forever.",
+       ref="CSP-SCRIPT-SRC-3 (26 Aug 2026), found by the maintenance loop reading the RG-0125 red. "
+           "The 24 Aug deploy ran 033 and it reported, in its own words, 'CSP declared in N file(s); "
+           "0 still lack script-src' and then measured a SERVED policy of frame-ancestors 'self'. It "
+           "restored 0 files (nothing was stale to restore), failed honestly -- it refuses to claim "
+           "an effect it cannot probe, which is why this was findable at all -- and JAMMED the "
+           "migration chain, so every later one-time server change would have been silently skipped. "
+           "The defect was never the server: 033 searched a FIXED list of globs, none of them "
+           "recursive (snippets/* never reaches snippets/security/*) and all under /etc/nginx, so an "
+           "include one directory deeper, or by absolute path from outside the tree, was invisible. "
+           "It rewrote everything it could see and the emitter was not among them. THE FIX: "
+           "discovery now unions `nginx -T` -- the fully-resolved config, which names every file "
+           "nginx really reads and therefore cannot miss an include -- with a recursive walk of "
+           "/etc/nginx and the original globs; and on failure it now PRINTS every file still "
+           "declaring a CSP, so the next failure is diagnosable instead of mute. This is the same "
+           "lesson as 031's, one level up: 031 declared success from a WRITE instead of a PROBE, and "
+           "033 probed correctly but searched blind. PROVEN by scripts/prove_csp_discovery.py, which "
+           "builds a fixture with the emitter nested one level below the old globs' reach and shows "
+           "the old discovery missing it and the new discovery finding, classifying and correctly "
+           "rewriting it (10/10). NOT YET PROVEN ON THE BOX: the sandbox has no nginx, so whether "
+           "the live server now serves script-src is answered by RG-0178 after the next deploy "
+           "rides -- this entry asserts the discovery, which is the part that was broken.")
+def rg_migration_discovery_authoritative():
+    mig = repo_file("migrations/033_csp_verify_served.py")
+    if mig is None:
+        return [(INFO, "running outside the repo -- migration discovery check skipped")]
+    out = []
+    if "_nginx_T_files" not in mig or '"-T"' not in mig:
+        out.append((FAIL, "033 no longer asks nginx -T what it reads -- discovery is back to a "
+                          "guessed glob list, which is the 24 Aug failure exactly"))
+    if "os.walk" not in mig:
+        out.append((FAIL, "033 lost its recursive walk of /etc/nginx -- a nested snippet is "
+                          "invisible again"))
+    if "STILL DECLARES CSP" not in mig:
+        out.append((FAIL, "033 no longer names the files still declaring a CSP when it fails -- "
+                          "the next failure would be as undiagnosable as the 24 Aug one"))
+    # The migration must still REFUSE to claim an effect it has not probed. That honesty is
+    # what made this fault findable; a version that exits 0 on an unproven write is worse
+    # than the bug.
+    # The honesty invariant, asserted as BEHAVIOUR rather than prose. Two earlier cuts of
+    # this check searched the source for the sentence "Not claiming success" -- first raw,
+    # then whitespace-normalised -- and both went red against a migration that was entirely
+    # correct, because the sentence is split across adjacent string literals ('... Not
+    # claiming " "success.'). A guard that matches wording rather than behaviour breaks the
+    # moment someone re-wraps a line. What actually matters is the control flow: the served
+    # response is read AFTER the reload, and a missing script-src raises instead of returning ok.
+    after_reload = mig.split('nginx", "-s", "reload"', 1)[-1]
+    if "served_csp()" not in after_reload:
+        out.append((FAIL, "033 no longer reads the SERVED response after reloading -- it would be "
+                          "declaring success from the write again, which is exactly 031's mistake"))
+    elif 'if "script-src" not in after' not in after_reload or "raise RuntimeError" not in after_reload:
+        out.append((FAIL, "033 reads the served CSP but no longer RAISES when script-src is absent "
+                          "-- it could report 'ok' for a change the server never served"))
+    tail = mig.split("The site is exactly as it was", 1)[-1][:200]
+    if "return 1" not in tail:
+        out.append((FAIL, "033's failure path no longer returns non-zero after restoring -- an "
+                          "unproven change would be recorded by post_deploy as a successful "
+                          "migration, and the chain would march on believing it landed"))
+
+    hp = os.path.join(REPO, "scripts", "prove_csp_discovery.py")
+    if not os.path.exists(hp):
+        out.append((FAIL, "scripts/prove_csp_discovery.py is gone -- the discovery fix is unproven"))
+    else:
+        ok, blind, detail = _harness([sys.executable, hp], timeout=90)
+        if blind:
+            out.append((INFO, detail))          # LEDGER-DEPS-1
+        elif not ok:
+            out.append((FAIL, "the discovery harness FAILS: " + detail[-300:]))
+        else:
+            out.append((INFO, "discovery proven against a fixture the old globs could not see"))
+    return out
+
+
+@entry("RG-0187", "The ledger can tell a missing DEPENDENCY from a rotted fix -- an instrument that "
+       "cannot run reads UNVERIFIED, never REGRESSION",
+       LOCKED, fixed_on="2026-08-26",
+       scope="scripts/regression_ledger.py _harness()/_missing_third_party() and EVERY entry that "
+             "proves itself by running a subprocess harness (RG-0128, RG-0177, RG-0181, RG-0182 "
+             "today). Source-half by nature -- the instrument is the subject, as with RG-0126. "
+             "CLASS property: the demotion covers third-party imports ONLY; a missing REPO module "
+             "is a deletion and must stay red.",
+       ref="LEDGER-DEPS-1 (26 Aug 2026). The maintenance loop's own opening run produced the "
+           "evidence: RG-0181 and RG-0182 both printed REGRESSION -- 'its refusals no longer "
+           "refuse', 'the dark/lit harness FAILS' -- and the run closed '5 previously-fixed "
+           "issue(s) HAVE COME BACK. Do not deploy over this.' The cause was ModuleNotFoundError: "
+           "No module named 'fastapi'. Both harnesses died on their import line having run ZERO "
+           "assertions; `pip install fastapi` turned them into 9/9 and 13/13 with not one byte of "
+           "app code changed. This is the THIRD instance of one shape -- the instrument reporting "
+           "itself as the app -- after LEDGER-OFFLINE-1 (7 Aug, no network) and GATE-CACHE-1 (14 "
+           "Aug, a 429 credential), and it is treated the same way: NOT EVALUATED -> UNVERIFIED, "
+           "loudly not a pass, exit 2. A false red is worse than no answer -- it invites the next "
+           "session to 'fix' what is not broken and it blocks a deploy for nothing, and this file's "
+           "own preamble says a tripwire that cries wolf carries false comfort. THE NARROWNESS IS "
+           "THE POINT: if the dead import is one of our own repo files the fix really has been "
+           "deleted, so it stays RED -- a demotion that swallowed that would be the silent green "
+           "the preamble calls the worse failure. PROVEN end-to-end the same session: with fastapi "
+           "uninstalled RG-0181/RG-0182 reported UNVERIFIED (not REGRESSION); reinstalled, both "
+           "returned HOLDING; and scripts/prove_ledger_deps.py mutation-tests all four branches "
+           "(10/10).")
+def rg_ledger_deps_blind_not_red():
+    led = repo_file("scripts/regression_ledger.py")
+    if led is None:
+        return [(INFO, "running outside the repo -- LEDGER-DEPS-1 check skipped")]
+    out = []
+    if "_missing_third_party" not in led or "def _harness(" not in led:
+        return [(FAIL, "LEDGER-DEPS-1 has been REMOVED -- a sandbox missing one dependency will "
+                       "cry REGRESSION again and block a deploy for nothing")]
+    if "NOT EVALUATED" not in led.split("def _harness(", 1)[1][:2000]:
+        out.append((FAIL, "_harness no longer emits NOT EVALUATED, so run() cannot demote a blind "
+                          "harness to UNVERIFIED -- the demotion is wired to that exact phrase"))
+    # The narrowing guard: our own modules must NOT be demoted.
+    seg = led.split("def _missing_third_party(", 1)[1][:1200]
+    if "REPO" not in seg:
+        out.append((FAIL, "_missing_third_party no longer checks whether the module is OURS -- a "
+                          "DELETED repo file would now read 'unverified' instead of red, which is "
+                          "the silent-green failure this ledger exists to prevent"))
+
+    # Every harness call site must route through _harness. A new entry that hand-rolls
+    # subprocess.run + returncode re-opens the fault for itself.
+    import re as _re
+    raw = [m for m in _re.findall(r"_sp\.run\(\[sys\.executable[^\n]*", led)]
+    raw += [m for m in _re.findall(r"subprocess\.run\(\[sys\.executable[^\n]*", led)]
+    # The BRAIN-PATH-1 exec probe is a deliberate exception: it asserts importability
+    # itself, so a dead import IS its finding.
+    raw = [m for m in raw if '"-c", probe' not in m and "'-c', probe" not in m]
+    if raw:
+        out.append((FAIL, "%d harness call site(s) still run a subprocess directly instead of via "
+                          "_harness() -- each one can cry REGRESSION on a missing dependency: %s"
+                          % (len(raw), raw[0].strip()[:110])))
+
+    hp = os.path.join(REPO, "scripts", "prove_ledger_deps.py")
+    if not os.path.exists(hp):
+        out.append((FAIL, "scripts/prove_ledger_deps.py is gone -- the blind/red boundary is unproven"))
+    else:
+        ok, blind, detail = _harness([sys.executable, hp], timeout=120)
+        if blind:
+            out.append((INFO, detail))
+        elif not ok:
+            out.append((FAIL, "the LEDGER-DEPS-1 mutation harness FAILS: " + detail[-300:]))
+        else:
+            out.append((INFO, "blind-vs-red boundary proven: dependency deaths demote, real "
+                              "failures and deleted repo modules stay red"))
+    return out
+
+
+
+@entry("RG-0188", "The lockout self-heal can actually HEAL -- the cure for SSH-LOCKOUT-1 is armed, "
+       "not merely written",
+       OPEN,
+       scope="scripts/hetzner_fw_selfheal.py + the tokens it needs (.secrets/hetzner_token.txt, "
+             "and .secrets/cf_waf_token.txt for the Cloudflare half). CLASS property: a documented "
+             "remedy that cannot run is not a remedy. RG-0099 DETECTS the lockout; this asserts the "
+             "fix named in RG-0099's own failure message is executable when that day comes. The CF "
+             "half retires with the prelaunch gate; the Hetzner half stays for good.",
+       ref="Found 26 Aug 2026 by the maintenance loop working the RG-0099 red. Port 22 timed out "
+           "from the session vantage on every try and the ORIGIN (178.104.73.239) was unreachable "
+           "on 22, 443 AND 80, while Cloudflare served /health, / and /terms at 200 -- i.e. the box "
+           "is fine and this egress IP (197.184.106.176) is simply outside the origin allowlist. "
+           "That is SSH-LOCKOUT-1 exactly as RG-0099 describes it. RG-0099's message says 'Fix: run "
+           "scripts/hetzner_fw_selfheal.py' -- so the loop ran it, and it answered 'NO TOKEN ... "
+           "Nothing changed.' The self-healer built on 17 Aug in response to the blackout has never "
+           "been armed, so for nine days the class has been DETECTED but not CURABLE, and nothing "
+           "on the board said so. That gap is the entry. NOTE the script only ever ADDS the current "
+           "IP and never removes a rule, so arming it cannot itself cause a lockout -- but "
+           "provisioning the token is David's act (RUL-027 reserves lockout-risk and secret "
+           "handling to him), which is why this is OPEN rather than fixed. It goes READY TO LOCK "
+           "the moment the token exists and --check answers cleanly.")
+def rg_lockout_selfheal_armed():
+    sh = repo_file("scripts/hetzner_fw_selfheal.py")
+    if sh is None:
+        return [(FAIL, "scripts/hetzner_fw_selfheal.py is GONE -- RG-0099 would detect a lockout "
+                       "and name a remedy that no longer exists")]
+    out = []
+    # The safety property that makes arming this uncontroversial: it must never REMOVE a rule.
+    low = sh.lower()
+    if "delete" in low and "never remove" not in low:
+        out.append((FAIL, "the self-heal may now DELETE firewall rules -- it is only safe to arm "
+                          "while it strictly adds"))
+    tok = os.path.join(REPO, ".secrets", "hetzner_token.txt")
+    if not os.path.exists(tok):
+        out.append((FAIL, "no .secrets/hetzner_token.txt -- the documented cure for SSH-LOCKOUT-1 "
+                          "exits 'NO TOKEN, nothing changed'. The class is detected but NOT "
+                          "curable, and a real lockout would need a hand-fix at the Hetzner panel "
+                          "while nobody can reach the box. David provisions this one (RUL-027)."))
+    cf = os.path.join(REPO, ".secrets", "cf_waf_token.txt")
+    if not os.path.exists(cf):
+        out.append((INFO, "no .secrets/cf_waf_token.txt -- the Cloudflare half of the self-heal is "
+                          "also unarmed. Lower stakes: the CF gate retires at launch, and the edge "
+                          "is currently serving this vantage fine."))
+    return out or [(INFO, "lockout self-heal is armed and add-only")]
+
 
 
 if __name__ == "__main__":
