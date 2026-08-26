@@ -63,6 +63,7 @@ echo.
 echo   BLOCKED. Nothing was committed, nothing was pushed.
 echo   A gate failed - fix it before arming a deploy you will not be watching.
 echo.
+pause
 exit /b 1
 
 :pushfail
@@ -70,4 +71,5 @@ echo.
 echo   Commit succeeded but the push to main FAILED. Nothing is armed.
 echo   Check your network / GitHub auth and re-run.
 echo.
+pause
 exit /b 1

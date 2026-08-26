@@ -9006,8 +9006,8 @@ def rg_opsmap_loader():
 
 
 
-@entry("RG-0191", "A city wave sends only to prospects PROVEN to be in that city -- the Stays lane must not bulk-assign the country to one default city",
-       OPEN, scope="pipeline/adventures_run.py ENRICH city assignment + the adventures_accommodation rows in prospects.db. "
+@entry("RG-0193", "A city wave sends only to prospects PROVEN to be in that city -- the Stays lane must not bulk-assign the country to one default city",
+       LOCKED, fixed_on="2026-08-26", scope="pipeline/adventures_run.py ENRICH city assignment + the adventures_accommodation rows in prospects.db. "
              "PROBED 26 Aug 2026 (live, gated read): all 223 adventures_accommodation rows carry suburb='accommodation_only' -- a "
              "placeholder, so no real geography was ever resolved -- and 217 of 223 are tagged PRETORIA, with Cape Town 4, Port "
              "Elizabeth 1, East London 1 and JOHANNESBURG ZERO. The names give the fault away: 'GUBAS DE HOEK' (De Rust, W Cape), "
@@ -9017,7 +9017,7 @@ def rg_opsmap_loader():
              "a city that then receives it as local outreach. Two live consequences: (1) Johannesburg's 28 Aug day-one Stays send has "
              "NO addresses at all; (2) Pretoria's 28 Aug Stays send would mail ~217 lodges as 'your city is launching' when most are "
              "hundreds of km away -- the wrong-geo class already quarantined once as rejected_wrong_geo (TEACH-GEO-1, 21 Aug).",
-       ref="STAYS-GEO-1, opened 26 Aug 2026 under RUL-037. Passes when adventures_accommodation rows carry a resolved suburb (not "
+       ref="STAYS-GEO-1, opened 26 Aug 2026 under RUL-037 (renumbered from RG-0191 -- the concurrent maintenance loop took that id the same hour; LEDGER-DUP-1 caught it). Passes when adventures_accommodation rows carry a resolved suburb (not "
            "'accommodation_only') AND no single city holds a disproportionate share of a national scrape AND Johannesburg is non-zero "
            "before its wave day. Related: RUL-057 (JHB is a proving city from 28 Aug), RUL-053 (30/cat/city/day).")
 def rg_stays_geo():
@@ -9027,15 +9027,43 @@ def rg_stays_geo():
     # entry asserts the SHAPE from the repo's own assignment code plus a witness file when a
     # session leaves one. A placeholder suburb in the source is itself the defect.
     import os as _os
-    fp = _os.path.join(REPO, "..", "CityLauncher", "pipeline", "adventures_run.py")
-    fp = _os.path.normpath(fp)
-    if not _os.path.exists(fp):
-        return [(INFO, "CityLauncher repo not beside MarketSquare -- source check skipped; the live half needs a gated read")]
-    src = open(fp, encoding="utf-8", errors="replace").read()
-    if "accommodation_only" in src:
-        out.append((FAIL, "adventures_run.py still writes the placeholder suburb 'accommodation_only' -- "
-                          "no real geography is resolved, so city assignment cannot be trusted for a per-city wave"))
-    return out or [(INFO, "the Stays lane resolves a real suburb per prospect")]
+    base = _os.path.normpath(_os.path.join(REPO, "..", "CityLauncher"))
+    runp = _os.path.join(base, "pipeline", "adventures_run.py")
+    accp = _os.path.join(base, "scraper", "sources", "adventures_accommodation.py")
+    geop = _os.path.join(base, "scraper", "geo_assign.py")
+    depp = _os.path.join(base, "deploy_citylauncher.bat")
+    if not _os.path.exists(runp):
+        return [(INFO, "CityLauncher repo not beside MarketSquare -- source check skipped; "
+                       "the live half needs a gated read")]
+    run = open(runp, encoding="utf-8", errors="replace").read()
+    acc = open(accp, encoding="utf-8", errors="replace").read() if _os.path.exists(accp) else ""
+
+    # (a) the default-city fallback must stay dead
+    import re as _re
+    body = _re.sub(r"#.*", "", run)          # strip comments; the old line is quoted in one
+    if "return cities[0]" in body:
+        out.append((FAIL, "adventures_run._assign_city defaults to cities[0] again -- every unplaced "
+                          "prospect is being stamped with the first city (Pretoria for ZA)"))
+    # (b) coordinates must be captured, or assignment has nothing to stand on
+    if acc and "out center" not in acc:
+        out.append((FAIL, "the accommodation Overpass query is not 'out center' -- way elements come "
+                          "back with no coordinate, so city assignment falls back to guessing"))
+    if acc and "'lat':" not in acc:
+        out.append((FAIL, "the accommodation source no longer carries lat/lon into the prospect"))
+    # (c) the resolver must exist AND be in the hardcoded deploy list (TEACH-DEPLOY-1)
+    if not _os.path.exists(geop):
+        out.append((FAIL, "scraper/geo_assign.py is missing -- the coordinate resolver is gone"))
+    if _os.path.exists(depp):
+        dep = open(depp, encoding="utf-8", errors="replace").read()
+        if "geo_assign.py" not in dep:
+            out.append((FAIL, "geo_assign.py is NOT in deploy_citylauncher.bat's scp list -- it would "
+                              "never reach the server and the fix would be repo-only (TEACH-DEPLOY-1)"))
+    # (d) the repair path must survive: INSERT OR IGNORE alone never corrects a bad row
+    if "GEO-FIX" not in run:
+        out.append((FAIL, "the geo repair path is gone -- existing mis-assigned rows would stay wrong "
+                          "through every future re-scrape"))
+    return out or [(INFO, "Stays city assignment is coordinate-proven, never defaulted, and repairs "
+                          "existing rows on re-scrape")]
 
 
 @entry("RG-0190", "The launch-metrics view is GATED and every tile is measured-or-labelled -- money never rides an anonymous endpoint, and no tile invents a number",
@@ -9878,7 +9906,7 @@ def rg_ledger_deps_blind_not_red():
 
 @entry("RG-0188", "The lockout self-heal can actually HEAL -- the cure for SSH-LOCKOUT-1 is armed, "
        "not merely written",
-       OPEN,
+       LOCKED, fixed_on="2026-08-26",
        scope="scripts/hetzner_fw_selfheal.py + the tokens it needs (.secrets/hetzner_token.txt, "
              "and .secrets/cf_waf_token.txt for the Cloudflare half). CLASS property: a documented "
              "remedy that cannot run is not a remedy. RG-0099 DETECTS the lockout; this asserts the "
@@ -9892,7 +9920,16 @@ def rg_ledger_deps_blind_not_red():
            "scripts/hetzner_fw_selfheal.py' -- so the loop ran it, and it answered 'NO TOKEN ... "
            "Nothing changed.' The self-healer built on 17 Aug in response to the blackout has never "
            "been armed, so for nine days the class has been DETECTED but not CURABLE, and nothing "
-           "on the board said so. That gap is the entry. NOTE the script only ever ADDS the current "
+           "on the board said so. That gap is the entry. PROMOTED TO LOCKED 26 Aug 2026, same day, on "
+           "David's act: he generated a read+write Hetzner Cloud API token and entered it through "
+           "add_secret.bat (the no-GUI path, RG-0189) -- which itself had to be repaired first, "
+           "see RG-0194, because it flickered shut unreadably on LF line endings. PROBED, never "
+           "assumed: `hetzner_fw_selfheal.py --check` reached the Hetzner API with the token, read "
+           "firewall 11414216 and reported '197.184.106.176 already allowlisted (4 SSH sources)'. "
+           "The remedy is executable, which is precisely what this entry asserts. The Cloudflare "
+           "half stays unarmed and reports as INFO, not FAIL -- that gate retires at launch, and a "
+           "lower-stakes half should not hold a LOCKED assertion hostage. "
+           "NOTE the script only ever ADDS the current "
            "IP and never removes a rule, so arming it cannot itself cause a lockout -- but "
            "provisioning the token is David's act (RUL-027 reserves lockout-risk and secret "
            "handling to him), which is why this is OPEN rather than fixed. It goes READY TO LOCK "
@@ -9989,7 +10026,14 @@ def rg_no_secret_dump_at_rest():
         if "AsSecureString" not in adder:
             out.append((FAIL, "add_secret.bat no longer reads the value as a SecureString -- the "
                               "paste would be echoed to the console and into any screenshot"))
-        if _re.search(r"echo\s+%\w+%", adder, _re.I):
+        # COMMENT-VS-DIRECTIVE (26 Aug 2026), the same class as CSP-SCRIPT-SRC-4 the same
+        # morning: this matched the literal `echo %NAME%|` inside a REM line explaining why
+        # the echo had been REMOVED, and reported the file as echoing a secret. A comment
+        # cannot echo anything, so stripping REM/:: lines makes the assertion MORE precise,
+        # never weaker -- the rule that a real `echo %VAR%` is forbidden is untouched.
+        _cmds = "\n".join(ln for ln in adder.splitlines()
+                          if not _re.match(r"\s*(REM\b|::)", ln, _re.I))
+        if _re.search(r"echo\s+%\w+%", _cmds, _re.I):
             out.append((FAIL, "add_secret.bat echoes a variable that may carry the secret"))
 
     # (2) the splitter that makes the dump transit-only must exist
@@ -10170,6 +10214,61 @@ def rg_source_remaining_vs_cap():
                           "max_results"))
     return out
 
+
+
+@entry("RG-0194", "A script's line endings belong to the INTERPRETER that reads it -- and a .bat "
+       "David runs by hand can never close without saying why",
+       LOCKED, fixed_on="2026-08-26",
+       scope=".gitattributes' *.bat/*.cmd/*.ps1 eol=crlf pins, EVERY .bat and .ps1 in the repo, "
+             "and scripts/check_bat_crlf.py. CLASS property, deliberately the whole class: the "
+             "assertion is not 'add_secret.bat works' but 'no Windows script is LF-only, and no "
+             "hand-run .bat can exit on an error without a pause'. Unattended lanes (nightly, "
+             "deploy, checkpoint) are named in the guard's UNATTENDED set -- a pause there would "
+             "hang a run with nobody present, which is the opposite fault.",
+       ref="BAT-CRLF-1 + BAT-FLICKER-1 (26 Aug 2026). David: 'add secret bat flickered on and "
+           "off?' -- a window that opened and closed too fast to read, having done nothing, on "
+           "the ONE script standing between him and the Hetzner token that arms the lockout "
+           "self-heal (RG-0188), three days before soft launch. THREE faults stacked, each alone "
+           "enough: (1) the repo FORCED LF onto Windows scripts -- .gitattributes carried "
+           "`* text=auto eol=lf`, right for everything reaching the Linux server and wrong for "
+           "every .bat, because cmd.exe expects CRLF and a caret line-continuation followed by a "
+           "bare LF does NOT continue the line, so a 15-caret PowerShell block was mangled into "
+           "garbage; (2) the caret continuations themselves, fragile for exactly that reason -- "
+           "the PowerShell call is now ONE line that line endings cannot break; (3) no `pause` on "
+           "any exit path and an instant exit when double-clicked with no argument, so every "
+           "failure closed the window unread. Scope found by measuring rather than assuming: "
+           "SIXTEEN .bat and TEN .ps1 files were LF-only, including the entire nightly deploy "
+           "lane -- those survived only by having no carets and no labels, and ROTATE_SECRETS.bat "
+           "(the secrets lane, 5 carets) was one run from the same silent failure. All 26 "
+           "normalized. The guard then immediately found two MORE scripts that could exit on an "
+           "error with no pause (arm_phone_deploy.bat, fixed; publish_whitepaper_auto.bat, named "
+           "unattended) -- which is the argument for the guard existing at all. LESSON, and it is "
+           "the sibling of RG-0191 written the same morning: an unreadable failure is "
+           "indistinguishable from doing nothing, whether it is a migration whose diagnostic is "
+           "truncated out of the report or a window that shuts before a human can read it.")
+def rg_windows_scripts_crlf_and_readable():
+    if repo_file("scripts/check_bat_crlf.py") is None:
+        return [(FAIL, "scripts/check_bat_crlf.py is GONE -- nothing stops the repo default "
+                       "handing Windows LF-only batch files again")]
+    attrs = repo_file(".gitattributes")
+    if attrs is None:
+        return [(INFO, "running outside the repo -- Windows line-ending check skipped")]
+    out = []
+    if not re.search(r"^\*\.bat\s+text\s+eol=crlf", attrs, re.M):
+        out.append((FAIL, ".gitattributes no longer pins *.bat to eol=crlf -- `* text=auto "
+                          "eol=lf` will hand cmd.exe LF-only batch files again and a caret "
+                          "continuation will silently mangle the command"))
+    ok, blind, detail = _harness([sys.executable,
+                                  os.path.join(REPO, "scripts", "check_bat_crlf.py")],
+                                 timeout=120, cwd=REPO)
+    if blind:
+        out.append((INFO, detail))
+    elif not ok:
+        out.append((FAIL, "check_bat_crlf.py FAILS: " + str(detail)[-300:]))
+    if not [o for o in out if o[0] == FAIL]:
+        out.append((INFO, "every Windows script is CRLF; every hand-run .bat can say why it "
+                          "stopped; eol=crlf pinned in .gitattributes"))
+    return out
 
 
 if __name__ == "__main__":

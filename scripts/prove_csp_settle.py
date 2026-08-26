@@ -144,6 +144,40 @@ def main():
     check("a 3xx is reported as an ERROR, never measured as if it were the page",
           got.startswith("ERROR:") and "redirect" in got)
 
+    print("\nTHE MEASUREMENT PATH ACTUALLY RUNS (CSP-SCRIPT-SRC-7)")
+    # The operative cause of ALL FOUR 033 failures: HTTPSConnection was handed a
+    # `server_hostname=` keyword it does not accept, so every :443 attempt died on the
+    # CONSTRUCTOR before a packet moved, fell through to the :80 fallback, and measured the
+    # very 301 the previous fix existed to stop measuring. Two days invisible, because the
+    # report window cut the line that named it. CLASS: a call signature is only proven by
+    # CALLING it -- point the real function at a dead port and demand a CONNECTION error.
+    # A TypeError there means the code cannot work anywhere, on any server, ever.
+    import http.client as _hc, inspect as _inspect
+    params = list(_inspect.signature(_hc.HTTPSConnection.__init__).parameters)
+    check("HTTPSConnection genuinely has no server_hostname parameter (the trap is real)",
+          "server_hostname" not in params)
+    # COMMENT-VS-CODE, the THIRD instance of this class today (after the nginx CSP comment
+    # in 033 and the REM line in add_secret.bat): the comment above the fix quotes the very
+    # call it removed, and a naive search matched the explanation instead of the code. Strip
+    # comment lines and assert against CODE only -- that is what the claim is about.
+    src_mig = "\n".join(ln for ln in open(MIG, encoding="utf-8").read().splitlines()
+                        if not ln.lstrip().startswith("#"))
+    check("033 no longer passes server_hostname to the HTTPSConnection constructor",
+          not re.search(r"HTTPSConnection\([^)]*server_hostname", src_mig, re.S))
+    m2 = load_migration()
+    errs = {}
+    for tls in (True, False):
+        try:
+            m2._csp_once(44399, tls)      # nothing listens here
+            errs[tls] = "unexpected-success"
+        except TypeError as ex:
+            errs[tls] = "TypeError:" + str(ex)[:60]
+        except (ConnectionError, OSError):
+            errs[tls] = "connection-error"
+    check("the TLS measurement path constructs cleanly (connection error, never TypeError)",
+          errs[True] == "connection-error")
+    check("the plain path constructs cleanly too", errs[False] == "connection-error")
+
     print("\nTHE FAILURE IS DIAGNOSABLE FROM ITS OWN REPORT")
     src = open(MIG, encoding="utf-8").read()
     check("the raise LEADS with the measured value (survives a head-truncated window)",
@@ -159,7 +193,7 @@ def main():
     check("post_deploy.sh strips backslashes as well as quotes (JSON safety)",
           mm is not None and re.search(r"tr -d '\"\\\\'", sh) is not None)
 
-    total = 11
+    total = 15
     print("\n%d/%d passed" % (total - len(fails), total))
     return 1 if fails else 0
 

@@ -4,6 +4,22 @@
 
 * text=auto eol=lf
 
+# ── BAT-CRLF-1 (26 Aug 2026) ────────────────────────────────────────────────
+# EXCEPTION to the eol=lf rule above, and it must stay an exception.
+# The rule above is right for everything that reaches the Linux server. It is
+# WRONG for Windows scripts: cmd.exe reads a .bat byte by byte and expects CRLF.
+# A caret line-continuation followed by a bare LF does NOT continue the line --
+# cmd mangles the command, throws, and the window closes instantly. That is the
+# 26 Aug "add_secret.bat flickered on and off": 15 caret continuations feeding a
+# PowerShell block, LF endings, no pause, nothing readable before it vanished.
+# ROTATE_SECRETS.bat carried the same latent fault (5 carets), and the deploy
+# lane bats would have inherited it on any fresh checkout.
+# CLASS: a script's line endings belong to the interpreter that reads it, never
+# to the repo's default. Guarded by scripts/check_bat_crlf.py, ledger RG-0192.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
 # Explicitly enforce LF for the files we deploy to the Linux server
 bea_main.py text eol=lf
 marketsquare.html text eol=lf

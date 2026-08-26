@@ -135,13 +135,26 @@ def csp_files():
 
 def _csp_once(port, use_tls):
     """One measurement. Returns (status, csp) or raises."""
-    import http.client, ssl as _ssl
+    import http.client, socket, ssl as _ssl
     if use_tls:
         ctx = _ssl.create_default_context()
         ctx.check_hostname = False
         ctx.verify_mode = _ssl.CERT_NONE      # we are talking to 127.0.0.1, not the world
-        conn = http.client.HTTPSConnection("127.0.0.1", port, timeout=10, context=ctx,
-                                           server_hostname="trustsquare.co")   # SNI picks the vhost
+        # CSP-SCRIPT-SRC-7 (26 Aug 2026) -- THE OPERATIVE CAUSE OF ALL FOUR FAILURES, and it
+        # was invisible for two days because the report window cut the line that named it.
+        # This read:  HTTPSConnection(..., server_hostname="trustsquare.co")
+        # HTTPSConnection HAS NO server_hostname PARAMETER (host, port, key_file, cert_file,
+        # timeout, source_address, context, check_hostname, blocksize -- that is the whole
+        # list). So every :443 attempt raised TypeError on the CONSTRUCTOR, before a single
+        # packet, fell through to the :80 fallback, and measured the 301 the previous fix had
+        # just been written to stop measuring. The migration could never have passed.
+        # SNI on HTTPSConnection comes from its `host`, which must stay 127.0.0.1 so the TCP
+        # connection reaches the origin rather than Cloudflare. So wrap the socket by hand:
+        # loopback for the connection, trustsquare.co for the SNI, which is exactly what was
+        # intended. Guarded by prove_csp_settle.py's constructor smoke test.
+        conn = http.client.HTTPSConnection("127.0.0.1", port, timeout=10, context=ctx)
+        _raw = socket.create_connection(("127.0.0.1", port), timeout=10)
+        conn.sock = ctx.wrap_socket(_raw, server_hostname="trustsquare.co")
     else:
         conn = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
     try:

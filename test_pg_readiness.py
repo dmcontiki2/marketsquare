@@ -21,9 +21,30 @@ PATTERNS = {
     "insert_or":    r"INSERT OR (?:IGNORE|REPLACE)",
 }
 
+def _code_only(src):
+    """bea_main.py with its COMMENTS removed -- string literals untouched.
+
+    PG-RATCHET-PRECISION-2 (26 Aug 2026), the sibling of PRECISION-1 above and the
+    FOURTH instance of one class in a single session: a comment explaining why a
+    SQLite-ism had been REMOVED still contained the literal datetime('now','-1 day'),
+    so the ratchet counted the explanation, reported the surface as grown, and put
+    DANGER on the scan -- against code that had just been made portable. Writing
+    "do not use X" must never register as a use of X. tokenize is used rather than a
+    regex because only tokenize can tell a `#` in a comment from a `#` inside a
+    string literal, and SQL fragments live in string literals here.
+    """
+    import io as _io, tokenize as _tok
+    try:
+        toks = list(_tok.generate_tokens(_io.StringIO(src).readline))
+    except Exception:
+        return src                      # unparseable: count everything, never silently pass
+    return "\n".join(t.string for t in toks if t.type != _tok.COMMENT)
+
+
 def counts():
     src = open(os.path.join(HERE, "bea_main.py"), encoding="utf-8", errors="replace").read()
-    return {k: len(re.findall(p, src)) for k, p in PATTERNS.items()}
+    code = _code_only(src)
+    return {k: len(re.findall(p, code)) for k, p in PATTERNS.items()}
 
 def test_sqlite_surface_never_grows():
     cur = counts()

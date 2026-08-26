@@ -12219,8 +12219,13 @@ async def dashboard_launch_metrics(_admin=Depends(_require_admin_or_key)):
             "SELECT COUNT(*) FROM users WHERE COALESCE(seller_tier,'free') NOT IN ('free','')")
         out.append(_m("subscriptions", "Paid subscriptions", v, ok, "users.seller_tier", note))
 
+        # PG-READINESS (26 Aug 2026): the cutoff is computed in Python and BOUND, not
+        # written as SQLite's datetime('now','-1 day') -- Postgres has no such function, and
+        # the ratchet exists so the migration stays cheap (David's DB ruling). Same pattern
+        # already used for the repeat-window and cooldown cutoffs elsewhere in this file.
+        _c24 = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
         v, ok, note = _count(
-            "SELECT COUNT(*) FROM lm_complaints WHERE filed_at >= datetime('now','-1 day')")
+            "SELECT COUNT(*) FROM lm_complaints WHERE filed_at >= ?", (_c24,))
         out.append(_m("complaints_24h", "Complaints (24h)", v, ok, "lm_complaints.filed_at", note))
 
         v, ok, note = _count(

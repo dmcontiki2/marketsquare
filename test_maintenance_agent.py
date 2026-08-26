@@ -24,11 +24,52 @@ def test_triage_bins_present():
     assert '"bin": _bin' in src, "triage result no longer carries the bin"
 
 def test_ack_always_sends_except_spam():
+    """CORRECTED 26 Aug 2026 (TRUTH-REVIEW-2) -- the SECOND instance in this file of the
+    fault its own neighbour below already documents: the guard pinned a SPELLING, not a
+    property. It searched for the literal 'MAINT-B1 ACK'; ONE-REPLY-1 (24 Aug, RG-0174)
+    restructured the block for a genuinely BETTER reason -- one inbound email had produced
+    TWO conflicting auto-replies in the same second -- and the comment became 'MAINT-B1 ack'.
+    The acknowledgment behaviour was never lost for a moment, and this guard then sat red on
+    8 consecutive pre-deploy scans against CORRECT code until RG-0114 escalated the sitting.
+    A red that is wrong is worse than no red: it trains the eye to scroll past.
+
+    So assert the PROPERTIES David actually cares about, which no restructuring can smuggle
+    away, and let the wording move freely:
+      1. every non-spam complaint is acknowledged, on one of exactly two mutually exclusive
+         branches (ONE-REPLY-1: one inbound email -> ONE outbound email);
+      2. the acknowledgment always carries the fault reference;
+      3. spam is acknowledged never;
+      4. the MAINT_ACK_SEND kill switch still exists;
+      5. it still sends via _smtp_send_reply (the Resend-first path).
+    """
     src = _read("bea_main.py")
-    i = src.find('MAINT-B1 ACK')
-    assert i > 0, "the ACK block is gone"
-    blk = src[i:i+900]
-    assert 'category != "spam"' in blk, "ACK must send for every non-spam complaint"
+    assert "ONE-REPLY-1" in src, "the one-inbound-one-outbound rule is gone (RG-0174)"
+    # Anchor on a UNIQUE token, not the first hit of a shared one. Written after this very
+    # test anchored on src.find("ONE-REPLY-1") and landed on an unrelated docstring 292,506
+    # characters earlier -- the same ambiguity class as the whole 033 family. `can_auto = (`
+    # appears exactly once and is the head of the block being asserted.
+    i = src.find("can_auto = (")
+    assert i > 0, "the reply-gating block is gone (can_auto)"
+    blk = src[max(0, i - 1200):i + 2500]
+
+    # 1. two branches, and they are MUTUALLY EXCLUSIVE (if / elif, never two sends)
+    assert 'if category != "spam" and can_auto:' in blk, \
+        "the auto-reply branch that carries the reference is gone"
+    assert 'elif category != "spam"' in blk, \
+        "the bare-ack branch is gone, or is no longer an elif -- an if/if pair sends TWICE, " \
+        "which is the exact fault ONE-REPLY-1 was written to end"
+
+    # 2. the reference reaches the reporter on BOTH branches
+    assert "_ref_line" in blk and "fault_code" in blk, \
+        "the auto-reply no longer carries the fault reference"
+    assert "reference {fault_code}" in blk, \
+        "the bare ack no longer quotes the fault reference"
+
+    # 3. spam is never acknowledged
+    assert blk.count('category != "spam"') >= 2, \
+        "a branch lost its spam exclusion -- spam would be acknowledged"
+
+    # 4/5. kill switch and send path
     assert 'MAINT_ACK_SEND' in blk, "ACK kill switch (MAINT_ACK_SEND) lost"
     assert "_smtp_send_reply" in blk, "ACK no longer uses the Resend-first send path"
 
