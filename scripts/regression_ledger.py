@@ -8397,7 +8397,7 @@ def rg_dashboard_provenance():
 
 @entry("RG-0156", "orchestrator.html ships through the ONE DEPLOY manifest, carries no "
                   "hardcoded access code, and never renders a data outage as an all-clear",
-       OPEN,
+       LOCKED, fixed_on="2026-08-26",
        scope="orchestrator.html and its live counterpart at trustsquare.co/orchestrator. "
              "CLASS: any page served from the web root but absent from "
              "ops/autodeploy/deploy_manifest.txt is outside the one deploy engine and will "
@@ -8426,7 +8426,25 @@ def rg_dashboard_provenance():
            "to one 06:30 task. NOT executed this session on purpose: adding the 79-day-old "
            "repo copy to the manifest would OVERWRITE whatever is live with stale content, and "
            "rotating a live access code is David's call (RUL-027). Logged here per RUL-037 "
-           "rather than handed over as a sentence he has to remember.")
+           "rather than handed over as a sentence he has to remember. "
+           "FIXED 26 Aug 2026, all four defects: (a) orchestrator.html added to "
+           "deploy_manifest.txt (nginx maps /orchestrator -> try_files /orchestrator.html, so it "
+           "places at the web root); (b) the client-side access code REMOVED entirely rather than "
+           "rotated -- PROBED first and found that DOMContentLoaded revealed #app unconditionally, "
+           "so 96315 was a published secret enforcing nothing, while anonymous GET of "
+           "/orchestrator, /report.json and /approve all answer 401 at nginx, which is the real "
+           "gate. Rotating a code that gates nothing would have been ceremony; deleting the "
+           "pretence is the fix, and it needed no RUL-027 call because no live access changed. "
+           "(c) jget() now returns {ok,data,why} instead of null-for-everything, fill() renders a "
+           "distinct FEED UNAVAILABLE / FIELD MISSING banner, and the health badge has a grey "
+           "'not measured' state (RG-0133 class); (d) the ~05:00 SAST claim corrected to 06:30. "
+           "The 'Nothing waiting on you. \u2728' copy went too -- the sparkle was itself a "
+           "verdict, and an empty list is not a verdict. FOUR PRESENCE ASSERTIONS ADDED the same "
+           "run: the original four checks were all ABSENCE tests, which a page rendering nothing "
+           "at all would also pass, so the honest-failure machinery is now asserted positively and "
+           "cannot be quietly removed. Source-side by nature -- the live page is auth-gated and "
+           "cannot be probed anonymously -- but it is now inside the one deploy engine, which is "
+           "the durable property this entry was about. Rides the Wed 27 Aug ship.")
 def rg_orchestrator_in_one_deploy():
     out = []
     mf = repo_file(os.path.join("ops", "autodeploy", "deploy_manifest.txt"))
@@ -8447,6 +8465,25 @@ def rg_orchestrator_in_one_deploy():
     if "05:00 SAST" in html:
         out.append((FAIL, "the page still claims the loop runs ~05:00 SAST -- merged to a "
                           "single 06:30 task on 11 Jun 2026"))
+    # ADDED 26 Aug 2026 alongside the fix. The four checks above are ABSENCE tests --
+    # they prove the old defects are gone, but every one of them would also pass on a
+    # page that simply rendered nothing at all. These are the PRESENCE half: the
+    # machinery that makes a failed feed announce itself must actually be in the file,
+    # so a later edit cannot quietly restore the all-clear behaviour while still
+    # satisfying the absence tests. Written because the absence-only shape is exactly
+    # how a fix rots without the board noticing.
+    if "FEED UNAVAILABLE" not in html:
+        out.append((FAIL, "the failed-feed banner is gone -- with no explicit outage state the "
+                          "page can only render emptiness, which reads as an all-clear"))
+    if "res.ok" not in html or "{ok:true" not in html.replace(" ", ""):
+        out.append((FAIL, "jget no longer distinguishes a failed fetch from an empty result -- "
+                          "returning null for both is what made an outage look like a clean board"))
+    if "FIELD MISSING" not in html:
+        out.append((FAIL, "a report that loads but omits a list would render as empty again -- "
+                          "an absent field is a broken feed, not 'nothing to do'"))
+    if "not measured" not in html:
+        out.append((FAIL, "the health badge no longer has an unmeasured state -- an unreachable "
+                          "probe must read grey, never amber 'check' (RG-0133 class)"))
     if not [o for o in out if o[0] == FAIL]:
         out.append((INFO, "orchestrator page is in the manifest, carries no hardcoded code, "
                           "and reports feed failures honestly"))
@@ -9726,18 +9763,129 @@ def rg_lockout_selfheal_armed():
     if "delete" in low and "never remove" not in low:
         out.append((FAIL, "the self-heal may now DELETE firewall rules -- it is only safe to arm "
                           "while it strictly adds"))
+    # STRENGTHENED 26 Aug 2026: presence was never the property -- RUNNABILITY is.
+    # This assertion falsely went READY TO LOCK the same day, because a session
+    # created an EMPTY .secrets/hetzner_token.txt as a paste target for David and
+    # os.path.exists() was satisfied by a 0-byte file. The self-heal would still
+    # have exited 'NO TOKEN, nothing changed' in a real lockout, with a green board
+    # saying it was armed. That is the RG-0133 class (a light nothing measured)
+    # landing on the ledger itself, and it is exactly the failure mode this entry
+    # was written to prevent. Empty and stub values are now named distinctly from
+    # missing, because the remedies differ: one needs a file, one needs a value.
     tok = os.path.join(REPO, ".secrets", "hetzner_token.txt")
     if not os.path.exists(tok):
         out.append((FAIL, "no .secrets/hetzner_token.txt -- the documented cure for SSH-LOCKOUT-1 "
                           "exits 'NO TOKEN, nothing changed'. The class is detected but NOT "
                           "curable, and a real lockout would need a hand-fix at the Hetzner panel "
                           "while nobody can reach the box. David provisions this one (RUL-027)."))
+    else:
+        try:
+            _tv = open(tok, encoding="utf-8", errors="replace").read().strip()
+        except Exception as _e:
+            _tv = ""
+            out.append((FAIL, ".secrets/hetzner_token.txt exists but could not be read (%s) -- "
+                              "treat as unarmed" % _e))
+        if _tv == "":
+            out.append((FAIL, "'.secrets/hetzner_token.txt' exists but is EMPTY -- the file is a "
+                              "placeholder, not a credential. hetzner_fw_selfheal.py still exits "
+                              "'NO TOKEN, nothing changed'. A present-but-empty secret file is "
+                              "MORE dangerous than a missing one: it satisfies a presence check "
+                              "and paints the board green over an unarmed remedy."))
+        elif len(_tv) < 32 or not _tv.replace("-", "").replace("_", "").isalnum():
+            out.append((FAIL, "'.secrets/hetzner_token.txt' does not hold a plausible Hetzner API "
+                              "token (%d chars) -- Hetzner Cloud tokens are 64 alphanumeric "
+                              "characters. Not asserting the VALUE is right, only that something "
+                              "token-shaped is there; a stub cannot heal a lockout." % len(_tv)))
     cf = os.path.join(REPO, ".secrets", "cf_waf_token.txt")
     if not os.path.exists(cf):
         out.append((INFO, "no .secrets/cf_waf_token.txt -- the Cloudflare half of the self-heal is "
                           "also unarmed. Lower stakes: the CF gate retires at launch, and the edge "
                           "is currently serving this vantage fine."))
     return out or [(INFO, "lockout self-heal is armed and add-only")]
+
+
+@entry("RG-0189", "No secret ever needs a GUI to be entered, and no combined secrets dump is "
+       "allowed to rest on the PC",
+       LOCKED,
+       scope=".secrets/ entire, ROTATE_SECRETS.bat, scripts/split_rotated_secrets.py and "
+             "add_secret.bat. CLASS property, deliberately the whole class: the assertion is not "
+             "'rotated_secrets.txt is gone' but 'NO file under .secrets/ holds two or more "
+             "credentials at rest, and a no-GUI entry path exists'. A rotation that reintroduces a "
+             "combined dump under any name re-trips this.",
+       ref="Paid for on 26 Aug 2026. The 7 Aug rule -- rotate_secrets.py PRINTS NO VALUES, born of "
+           "a diagnostic that dumped the production set into a transcript -- held perfectly and "
+           "was never violated. The failure came from the UNGUARDED DIRECTION: ROTATE_SECRETS.bat "
+           "step [3/4] scp'd the server's combined values file to .secrets/rotated_secrets.txt and "
+           "LEFT IT THERE permanently. On 26 Aug Claude asked David to open Notepad to paste an "
+           "unrelated Hetzner token, Notepad restored its previous tab -- that very file -- and "
+           "Claude's screenshot captured five live self-issued credentials, forcing a re-rotation "
+           "three days before soft launch. Two lessons, both encoded here: (1) a secret at REST in "
+           "a GUI-openable file is a live exposure waiting for an unrelated accident, so the dump "
+           "becomes a transit buffer that is consumed and removed, never a resting place; (2) "
+           "'be careful with the editor' is not a fix -- secret ENTRY must not require a GUI at "
+           "all, because a GUI requires someone to look at the screen, and looking at the screen "
+           "IS the exposure. add_secret.bat is that path (Read-Host -AsSecureString, echoes "
+           "nothing, prints only a length and an 8-char fingerprint). Sibling of RG-0146 (every "
+           "credential has an honest dated row) and RG-0147 (verify at the point of USE): this one "
+           "governs where a credential is allowed to SIT.")
+def rg_no_secret_dump_at_rest():
+    import re as _re
+    sec = os.path.join(REPO, ".secrets")
+    if not os.path.isdir(sec):
+        return [(INFO, ".secrets/ does not exist on this vantage -- nothing to assert")]
+    out = []
+
+    # (1) the no-GUI entry path must exist and must not echo the value
+    adder = repo_file("add_secret.bat")
+    if adder is None:
+        out.append((FAIL, "add_secret.bat is GONE -- secret entry once again needs a GUI editor, "
+                          "which is the exact condition that caused the 26 Aug exposure"))
+    else:
+        if "AsSecureString" not in adder:
+            out.append((FAIL, "add_secret.bat no longer reads the value as a SecureString -- the "
+                              "paste would be echoed to the console and into any screenshot"))
+        if _re.search(r"echo\s+%\w+%", adder, _re.I):
+            out.append((FAIL, "add_secret.bat echoes a variable that may carry the secret"))
+
+    # (2) the splitter that makes the dump transit-only must exist
+    if repo_file("scripts/split_rotated_secrets.py") is None:
+        out.append((FAIL, "scripts/split_rotated_secrets.py is GONE -- the rotation dump has no "
+                          "consumer, so it will once again come to rest under .secrets/"))
+
+    # (3) THE INVARIANT: no file at rest may hold 2+ credentials.
+    #     Deliberately shape-based, not name-based -- renaming the dump must not evade it.
+    kv = _re.compile(r"^[A-Z][A-Z0-9_]{4,}\s*=\s*\S{16,}\s*$", _re.M)
+    ALLOW = {"deploy_keys.txt"}   # the live per-purpose file the deploy lane reads
+    worst = []
+    for name in sorted(os.listdir(sec)):
+        fp = os.path.join(sec, name)
+        if not os.path.isfile(fp):
+            continue
+        try:
+            body = open(fp, encoding="utf-8", errors="replace").read()
+        except Exception:
+            continue
+        keys = sorted({m.split("=")[0].strip() for m in kv.findall(body)})
+        if len(keys) >= 2 and name not in ALLOW:
+            worst.append((name, keys))
+    for name, keys in worst:
+        out.append((FAIL, "'.secrets/%s' holds %d credentials at rest (%s) -- a combined secrets "
+                          "file is one stray editor tab away from an exposure. Split it into "
+                          "per-purpose files and remove it (scripts/split_rotated_secrets.py)."
+                          % (name, len(keys), ", ".join(keys))))
+
+    # (4) stale .bak copies of credential files are the same class, slower
+    baks = [n for n in os.listdir(sec)
+            if _re.search(r"\.bak[-.]", n) and os.path.isfile(os.path.join(sec, n))]
+    if len(baks) > 6:
+        out.append((INFO, "%d .bak credential file(s) under .secrets/ -- backups accumulate "
+                          "secrets forever and nothing prunes them. Not a failure while the count "
+                          "is small; it becomes one when a rotation leaves the previous set lying "
+                          "beside the live one." % len(baks)))
+
+    if not [o for o in out if o[0] == FAIL]:
+        out.append((INFO, "no combined secrets file at rest; no-GUI entry path present"))
+    return out
 
 
 

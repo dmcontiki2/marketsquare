@@ -86,7 +86,7 @@
   </details>
 
   <div class="foot">
-    Source of truth: <code>/orchestrator/report.json</code> · refreshed daily by the Orchestrator (~05:00 SAST).
+    Source of truth: <code>/orchestrator/report.json</code> · refreshed daily by the Orchestrator (06:30 SAST, single merged task since 11 Jun 2026).
     To approve a staged item, tell Claude <code>approve &lt;id&gt;</code> in a session.
     <span id="genby"></span>
   </div>
@@ -174,12 +174,12 @@ async function load(){
     fill('filed',null,{},null,feed);
     fill('ignored',null,{},null,feed);
   } else if(!rep){
-    document.getElementById('headline').textContent='No brief yet \u2014 the Orchestrator has not completed its first run. Check back after 05:00 SAST.';
+    document.getElementById('headline').textContent='No brief yet \u2014 the Orchestrator reachable but has not completed a run. Next run 06:30 SAST.';
     document.getElementById('when').textContent='\u2014';
   } else {
     document.getElementById('headline').textContent=rep.summary_line||'Daily brief';
     document.getElementById('when').textContent='Loop date: '+(rep.loop_date||'?')+(rep.generated_at?(' · generated '+new Date(rep.generated_at).toLocaleString()):'');
-    fill('staged',rep.staged,{approve:true},'Nothing waiting on you. \u2728',feed);
+    fill('staged',rep.staged,{approve:true},'No items awaiting approval in this brief.',feed);
     fill('shipped',rep.shipped,{},'Nothing shipped last run.',feed);
     fill('queue',rep.queue_next,{},'Queue empty.',feed);
     fill('filed',rep.filed,{},'None.',feed);
