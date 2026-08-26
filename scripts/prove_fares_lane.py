@@ -9,17 +9,22 @@ The point is the DARK case. A lane that only gets tested lit is a lane whose
 states either side of his switch are the thing that must be proven, and the
 expensive failure is the one where the surface leaks a price before he flips.
 """
-import os, sqlite3, sys, time
+import os, sqlite3, sys, tempfile, time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DB = "/tmp/prove_fares.db"
+# HARNESS-TMPDIR-1 (26 Aug 2026). This was a hardcoded "/tmp/prove_fares.db" whose
+# cleanup swallowed OSError. On any vantage where a PREVIOUS run left that path owned
+# by another user -- exactly what happened in the 26 Aug sweep sandbox -- the remove
+# failed silently, sqlite opened the stale file read-only, and the harness died with
+# "attempt to write a readonly database". The ledger read that exit code as
+# "RG-0182 HAS COME BACK" two days before soft launch, when nothing about the app had
+# changed. Same family as LEDGER-DEPS-1/RG-0187: a proof that cannot RUN must not be
+# able to masquerade as a proof that FAILED. A fresh mkdtemp per run cannot collide,
+# honours TMPDIR, and needs no cleanup guard to be correct.
+_TMP = tempfile.mkdtemp(prefix="prove_fares_")
+DB = os.path.join(_TMP, "prove_fares.db")
 os.environ["MS_DB"] = DB
 os.environ.setdefault("TRAVELPAYOUTS_MARKER", "758984")
-for f in (DB,):
-    try:
-        os.remove(f)
-    except OSError:
-        pass
 
 import data_flights as F
 import travelpayouts_partners as P

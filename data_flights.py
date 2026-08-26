@@ -243,9 +243,10 @@ def route_for_map(slug):
 
 def selftest():
     """Offline. Proves the READ path never reaches the network and fails safe."""
-    os.environ["MS_DB"] = "/tmp/fares_selftest.db"
+    import tempfile as _tf   # HARNESS-TMPDIR-1: never a shared, possibly-stale path
+    os.environ["MS_DB"] = os.path.join(_tf.mkdtemp(prefix="fares_selftest_"), "fares_selftest.db")
     try:
-        os.remove("/tmp/fares_selftest.db")
+        os.remove(os.environ["MS_DB"])
     except OSError:
         pass
     init_schema()

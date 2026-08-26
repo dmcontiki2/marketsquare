@@ -36,6 +36,24 @@ REGISTER_VERIFIED: 2026-08-22
 | EMAIL_INBOUND_SECRET | zz-inbound.conf + /etc/environment + app .env, ALL THREE (0600) | 12:41 | PROBED: running process holds it. Took four attempts — three different values were found in three files at once, and the service was being restarted underneath us by the 2-minute autodeploy timer. Resolved by writing ONE value to EVERY location so precedence cannot matter. **PROBED anonymously 12:5x: `/email/inbound` answers 401 'Invalid inbound secret', NOT the 503 the code returns when the variable is empty — so the secret is loaded and being compared.** Worker `trustsquare-email-triage` pasted to match; that half is unverifiable from outside by construction and is proven only by real inbound mail |
 | RELAY_INBOUND_SECRET | zz-inbound.conf + app .env (0600) | 12:37 | Rotated (b454baa6 -> 16bbb094). Read via `ai_provider.envkey()`, so it needs process env OR the app .env — the first attempt skipped it entirely because the check only looked at process env. **PROBED: `/intro/relay` answers 401 anonymously, so the door enforces — but that endpoint returns 401 for BOTH a wrong secret and an empty one, so unlike the email door this does NOT prove the value is set. The relay's server half rests on the process fingerprint (READ-grade), not a probe.** Worker `intro-relay` pasted to match |
 
+## Out-of-band copies — a rotation must reach these too (added 26 Aug 2026)
+
+*Why this table exists: on 26 Aug the daily watch tried to send a real RED alert and Resend answered
+`401 "API key is invalid"`. The alert path had been dead since the 22–23 Aug rotation, and **nothing
+noticed for four days** because this register — and RG-0146 with it — only knew about the app's copy
+in `secrets.env`. A second copy of a rotated credential that no register lists is a silent single
+point of failure. Every out-of-band copy goes here, so the next rotation has a checklist and the
+instrument can see the whole surface (DW-076).*
+
+| Credential | Out-of-band copy | Consumer | Status |
+|---|---|---|---|
+| RESEND_API_KEY | `/etc/marketsquare/resend.watch.conf` (0640 root:msdeploy, 74 B, mtime 2026-08-05) | the daily-watch RED-alert send — the ONLY thing that wakes David when the site is down | **DEAD — PROBED 2026-08-26: Resend returns `401 validation_error, API key is invalid`.** Orphaned by the 22–23 Aug rotation, which deleted both old keys. Needs the current key pasted in, same mode/owner. DAVID (root on the box). DW-076 |
+
+**Rotation rule from here on:** rotating a credential is not finished until every row in this table
+carrying that credential has been updated and re-probed. The alert path in particular is exercised
+only by a real RED, so it must be probed deliberately — an untested alert path is an outage you find
+out about from a customer.
+
 ## Still burnt — exposed, live, NOT yet replaced
 
 | Credential | Why it matters | Rotate where | Blocked on |

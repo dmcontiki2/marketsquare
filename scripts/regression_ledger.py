@@ -4614,10 +4614,39 @@ def rg_management_lanes_reachable():
             if _try < 2:
                 _time.sleep(3)
     if _ssh_err:
-        out.append((FAIL, "port 22 unreachable from this vantage on 3 tries (%s) -- SSH-LOCKOUT-1 "
-                          "class: the home IP likely changed (power/router reset). Fix: run "
-                          "scripts/hetzner_fw_selfheal.py, or add the current IP at Hetzner > "
-                          "Firewalls > trustsquare-origin-lockdown" % _ssh_err))
+        # LEDGER-VANTAGE-1 (26 Aug 2026). A red here says "do not deploy", so it must never
+        # fire on a DEGRADED VANTAGE. Same class as LEDGER-DEPS-1/RG-0187 and RG-0186: an
+        # instrument that cannot reach ANY port 22 has not measured the firewall, it has
+        # measured itself. PROVEN 26 Aug 2026: two consecutive full ledger runs read this
+        # REGRESSION while a standalone probe to the SAME origin IP returned the OpenSSH
+        # banner 8/8 in 0.48 s, and calling this very function in isolation returned
+        # "both management lanes clear". LEDGER-FLAP-1's 3-try guard was not enough because
+        # the failure is not a dropped packet -- it is this vantage's port-22 lane under
+        # full-run load. The assertion is NOT weakened: a genuine lockout still fails the
+        # origin while the control hosts answer, and that still reports RED.
+        _ctrl_ok, _ctrl_err = False, None
+        for _h in ("github.com", "gitlab.com"):
+            try:
+                socket.create_connection((_h, 22), timeout=8).close()
+                _ctrl_ok = True
+                break
+            except Exception as e:
+                _ctrl_err = type(e).__name__
+        if not _ctrl_ok:
+            out.append((INFO, "NOT EVALUATED - port 22 is unreachable from this vantage to the "
+                              "ORIGIN (%s) *and* to public control hosts github.com/gitlab.com "
+                              "(%s). This run measured its own socket lane, not the Hetzner "
+                              "firewall (LEDGER-VANTAGE-1), so it says NOTHING about a lockout. "
+                              "Re-probe from a vantage whose port 22 works before trusting this "
+                              "row: python3 -c \"import socket;socket.create_connection("
+                              "('178.104.73.239',22),timeout=8)\"" % (_ssh_err, _ctrl_err)))
+        else:
+            out.append((FAIL, "port 22 unreachable from this vantage on 3 tries (%s) WHILE a "
+                              "control host's port 22 answered -- so the vantage is fine and the "
+                              "origin is not. SSH-LOCKOUT-1 class: the home IP likely changed "
+                              "(power/router reset). Fix: run scripts/hetzner_fw_selfheal.py, or "
+                              "add the current IP at Hetzner > Firewalls > "
+                              "trustsquare-origin-lockdown" % _ssh_err))
     try:
         req = urllib.request.Request(BASE + "/terms", headers=UA)
         try:
@@ -8940,7 +8969,11 @@ def rg_bulk_invite_links():
              "show grey/dashed, never a default red/amber/green that counterfeits a verdict. Source-scope checks only: the served page "
              "is auth-gated, so the live half cannot be probed anonymously; the deploy manifest ships this exact file.",
        ref="OPSMAP-CRASH-1, 24 Aug 2026. Fix: EP->B (one line) + 11 placeholder chips (fault lane, faultflag, BIT, flags/svc loading) "
-           "reclassed om-chip nw until fill()/fail() paints them from a live answer.")
+           "reclassed om-chip nw until fill()/fail() paints them from a live answer. "
+           "WIDENED 26 Aug 2026 (CHIP-GREEN-1): the needle list named only 3 chips, so 21 others still shipped "
+           "hardcoded green -- an audit found them, this assertion did not. Now enforced structurally: any "
+           "id-bearing chip carrying `om-chip g` in static markup trips this entry red, so the class cannot return "
+           "one chip at a time.")
 def rg_opsmap_loader():
     out = []
     import os as _os
@@ -8952,11 +8985,67 @@ def rg_opsmap_loader():
         out.append((FAIL, "an undefined-base fetch(EP...) is back in the dashboard -- the loader-crash class has returned"))
     if "fetch(B + '/dashboard/fixed-costs')" not in src:
         out.append((FAIL, "the fixed-costs feed no longer reads from the one base B"))
-    for cid in ("om-f-blocker", "om-f-major", "om-f-retest"):
+    # CHIP-GREEN-1 (26 Aug 2026): the needle list used to enumerate THREE chips, so
+    # 21 further chips still shipped hardcoded `om-chip g` -- pre-painted GREEN with a
+    # placeholder value of "-" before any feed answered. Found by audit, not by this
+    # assertion, which is the whole point of widening it. The rule is now enforced
+    # structurally: NO id-bearing chip may carry the green class in static markup.
+    import re as _re
+    _green = _re.findall(r'class="om-chip g" id="([a-z0-9\-]+)"', src)
+    if _green:
+        out.append((FAIL, "%d chip(s) wear GREEN in static markup before data answers "
+                          "(RG-0133 rule on the map): %s" % (len(_green), ", ".join(sorted(_green)[:8]))))
+    for cid in ("om-f-blocker", "om-f-major", "om-f-retest", "om-cpu", "om-ram", "om-disk",
+                "om-livenow", "om-users", "om-listings", "om-queue", "om-db", "om-bit",
+                "om-tuppence", "om-mailsent", "om-mailtotal", "om-mailspam", "om-resp",
+                "om-bw", "om-topbin", "om-t-filed", "om-ai-today", "om-ai-mtd",
+                "om-ai-calls", "om-ai-ceil"):
         if '<span class="om-chip nw" id="%s"' % cid not in src:
             out.append((FAIL, "placeholder chip %s wears a health colour before data answers (RG-0133 rule on the map)" % cid))
     return out or [(INFO, "ops-map loader fires all feeds; unfilled chips are grey until a live answer paints them")]
 
+
+
+@entry("RG-0190", "The launch-metrics view is GATED and every tile is measured-or-labelled -- money never rides an anonymous endpoint, and no tile invents a number",
+       LOCKED, fixed_on="2026-08-26", scope="bea_main.py /dashboard/launch-metrics + dashboard.server.html LAUNCH METRICS card. "
+             "David asked (26 Aug) for eight launch-day numbers on one view: Paystack balance, FNB balance, subscriptions, "
+             "complaints 24h, sellers, buyers, INTRO requests, INTRO accepts. TWO invariants, both born of faults paid for the SAME DAY: "
+             "(1) GATING -- LAUNCH-API-FAILCLOSED-1 was landed hours earlier because /launch-api/prospects/list served 200 prospect "
+             "records with names, emails and pre-authenticated magic links to anonymous callers. A new convenience endpoint carrying "
+             "the PAYSTACK BALANCE must not reopen that class, so it sits behind _require_admin_or_key. (2) MEASURED-OR-LABELLED -- "
+             "RG-0133 applied per tile: each metric returns its own measured flag and the card paints NOT MEASURED in grey rather than "
+             "showing a number it did not obtain. FNB is permanently measured=False: no FNB integration exists and bank-login "
+             "automation is out of scope, so the gap is stated on the face of the dashboard instead of being quietly omitted.",
+       ref="LAUNCH-METRICS-1, 26 Aug 2026. Decided under RUL-037 (CTO lane). Source-scope checks only -- the served page and the "
+           "endpoint are both auth-gated, so the live half cannot be probed anonymously (which is itself the point).")
+def rg_launch_metrics():
+    out = []
+    import os as _os, re as _re
+    bp = _os.path.join(REPO, "bea_main.py")
+    dp = _os.path.join(REPO, "dashboard.server.html")
+    if not _os.path.exists(bp) or not _os.path.exists(dp):
+        return [(INFO, "repo not present -- source check skipped (both halves are auth-gated)")]
+    bsrc = open(bp, encoding="utf-8", errors="replace").read()
+    dsrc = open(dp, encoding="utf-8", errors="replace").read()
+
+    if '@app.get("/dashboard/launch-metrics")' not in bsrc:
+        out.append((FAIL, "the launch-metrics endpoint is gone"))
+    else:
+        _seg = bsrc.split('@app.get("/dashboard/launch-metrics")', 1)[1][:400]
+        if "_require_admin_or_key" not in _seg:
+            out.append((FAIL, "launch-metrics is NOT admin-gated -- it carries the Paystack balance "
+                              "(the LAUNCH-API-FAILCLOSED-1 class, reopened)"))
+    # FNB must stay honestly unmeasured, never quietly dropped and never faked
+    if "fnb_balance" not in bsrc:
+        out.append((FAIL, "the FNB tile was removed rather than reported as NOT MEASURED"))
+    elif "NOT MEASURED" not in bsrc.split("fnb_balance", 1)[1][:400]:
+        out.append((FAIL, "the FNB tile no longer declares itself NOT MEASURED -- it must never carry a number"))
+    # the card must not hardcode any tile value
+    if 'id="lm-grid"' not in dsrc:
+        out.append((FAIL, "the LAUNCH METRICS card is gone from the dashboard"))
+    if "loadLaunchMetrics" not in dsrc:
+        out.append((FAIL, "the launch-metrics loader is gone -- the card would sit at its placeholder forever"))
+    return out or [(INFO, "launch-metrics is admin-gated; every tile is measured or says NOT MEASURED")]
 
 
 @entry("RG-0173", "The agency funnel is walked END-TO-END by MACHINERY -- a synthetic journey probe (email links -> console -> roster invite -> advert import) runs against live and leaves a fresh witness",
@@ -9062,7 +9151,15 @@ def rg_wave_hygiene():
 
 
 @entry("RG-0176", "The POPIA suppression invariant holds END-TO-END -- one opt-out click suppresses in EVERY send lane's store, and the prospect PII API answers 401 to strangers",
-       OPEN, scope="CityLauncher suppression register + LAUNCH-API-LOCK-1 (built 24 Aug, RUL-054) -- repo halves pass; TWO live halves outstanding: "
+       LOCKED, fixed_on="2026-08-26",
+       scope="PROMOTED 26 Aug 2026 by the third-party sweep on the ledger's own READY TO LOCK "
+             "print, and independently re-PROBED the same run: anonymous GET "
+             "/launch-api/prospects/list answers HTTP 401 (it served 146 KB of prospect PII plus "
+             "pre-authenticated admin magic-links at 04:20 the same morning -- DW-068). "
+             "LAUNCH_API_KEY is provisioned and the CityLauncher deploy has ridden, so half (b) "
+             "below is CLOSED. Half (a) -- the n8n cross-store suppression round trip -- stays "
+             "proven only by hand and is named here rather than left to weaken the assertion. "
+             "Original scope: CityLauncher suppression register + LAUNCH-API-LOCK-1 (built 24 Aug, RUL-054) -- repo halves pass; TWO live halves outstanding: "
              "(a) the n8n outreach lane reads the ORCHESTRATION prospect store (opted_out column), a different DB from the launcher store the "
              "/optout endpoint writes -- one click must provably suppress in BOTH (needs a server-side look at the orchestration DB + a witnessed "
              "round-trip test); (b) GET /launch-api/prospects/list must answer 401 without X-Launch-Key -- provable only after David provisions "
@@ -9642,7 +9739,13 @@ def rg_migration_discovery_authoritative():
     # moment someone re-wraps a line. What actually matters is the control flow: the served
     # response is read AFTER the reload, and a missing script-src raises instead of returning ok.
     after_reload = mig.split('nginx", "-s", "reload"', 1)[-1]
-    if "served_csp()" not in after_reload:
+    # THIRD CUT, 26 Aug 2026 (CSP-VERIFY-GUARD-3). The two earlier cuts matched the prose
+    # "Not claiming success"; this one matched the CALL SITE spelled `served_csp()` with
+    # empty parens -- and went RED the moment 033 legitimately grew an argument
+    # (`served_csp(settle=15)`, added by CSP-SCRIPT-SRC-5 so the probe stops racing nginx's
+    # asynchronous reload). Same mistake in a new costume: the guard matched a SPELLING,
+    # not the behaviour. Match the call, not its argument list.
+    if "served_csp(" not in after_reload:
         out.append((FAIL, "033 no longer reads the SERVED response after reloading -- it would be "
                           "declaring success from the write again, which is exactly 031's mistake"))
     elif 'if "script-src" not in after' not in after_reload or "raise RuntimeError" not in after_reload:
