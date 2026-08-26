@@ -186,18 +186,29 @@ def served_csp(settle=0):
     """
     import time as _t
     deadline = _t.time() + settle
-    last = None
+    last = ""
     while True:
         try:
             status, val = _csp_once(443, True)
             if 300 <= status < 400:
                 return "ERROR:https-also-redirected(%d)" % status
-            if val and val != last:
-                last = val
-                if _t.time() < deadline:
-                    _t.sleep(1)          # value changed -- let the reload finish settling
-                    continue
-            return val
+            last = val
+            # CSP-SCRIPT-SRC-6 (26 Aug 2026) -- THE BUG THAT MADE 033 FAIL A FOURTH TIME.
+            # The old loop polled "until the answer stops changing". An answer that never
+            # changes has stopped changing on the FIRST read, so a stale worker still
+            # serving the OLD policy satisfied the loop after ~1 second and the migration
+            # measured exactly the value it was waiting for the reload to replace -- while
+            # the rewrite it had just performed was correct. `settle` bought nothing.
+            # CLASS -- and it is the fourth instance of this same family in one morning:
+            # POLL FOR THE EXPECTED STATE, NEVER FOR A STABLE ONE. A steady wrong answer is
+            # indistinguishable from a settled right one, so "it stopped changing" can
+            # never be the exit condition of a verification poll.
+            if "script-src" in val:
+                return val               # the expected state -- done, no need to wait out settle
+            if _t.time() < deadline:
+                _t.sleep(1)
+                continue
+            return val                   # deadline spent and it never arrived -- report what IS served
         except Exception as ex:
             if _t.time() < deadline:
                 _t.sleep(1)
@@ -283,7 +294,7 @@ def main():
         if r.returncode != 0:
             raise RuntimeError("reload failed:\n" + (r.stderr or r.stdout))
 
-        after = served_csp(settle=15)   # reload is async -- do not race the workers
+        after = served_csp(settle=45)   # reload is async -- poll for the EXPECTED state (CSP-SCRIPT-SRC-6)
         say("served CSP AFTER : %r" % after[:110])
         if "script-src" not in after:
             # CSP-SCRIPT-SRC-3: do not just fail -- say WHERE the surviving policy
@@ -291,10 +302,10 @@ def main():
             for _p, _t in sorted(csp_files().items()):
                 for _v in _directive_values(_t):
                     say("   STILL DECLARES CSP: %s :: %s" % (_p, _v.strip()[:90]))
-            raise RuntimeError("the server still does not SERVE script-src after the reload — "
-                               "something else is emitting the header (the STILL DECLARES lines "
-                               "above name every file nginx reads that sets one). Not claiming "
-                               "success.")
+            raise RuntimeError("MEASURED=%r after reload (script-src absent) — the server "
+                               "still does not SERVE it; something else is emitting the header "
+                               "(the STILL DECLARES lines above name every file nginx reads "
+                               "that sets one). Not claiming success." % after[:150])
     except Exception as ex:
         say("FAILED (%s) — restoring %d file(s) and reloading" % (str(ex)[:180], len(backups)))
         for p, dest in backups.items():

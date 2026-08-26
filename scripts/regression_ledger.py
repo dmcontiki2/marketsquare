@@ -10002,5 +10002,94 @@ def rg_no_secret_dump_at_rest():
 
 
 
+@entry("RG-0191", "A verification poll waits for the EXPECTED state, never for a STABLE one -- and "
+       "the value it measured survives into the deploy report",
+       LOCKED, fixed_on="2026-08-26",
+       scope="migrations/033_csp_verify_served.py served_csp() + ops/autodeploy/post_deploy.sh's "
+             "failing-step capture window + scripts/prove_csp_settle.py. CLASS property, not one "
+             "migration: any poll anywhere in this project that waits for a change to land must "
+             "exit on the expected value or on its deadline -- a steady WRONG answer is "
+             "indistinguishable from a settled RIGHT one, so 'it stopped changing' can never be "
+             "the exit condition. Second half is the report: a failure whose cause cannot be read "
+             "off post_deploy_status.json is a defect in the report, not merely bad luck.",
+       ref="CSP-SCRIPT-SRC-6 + POSTDEPLOY-EYES-3 (26 Aug 2026), found by the maintenance loop "
+           "reading the RG-0125 red for the second morning running. 033 has now failed FOUR "
+           "deploys, each a different bug in the same organ -- never in the rewrite it performs, "
+           "always in how it MEASURES whether the rewrite took: -3 could not SEE the emitting file "
+           "(discovery), -4 compared prose not directives (staleness), -5 measured a 301 not the "
+           "page (vantage), and -6 is this one (settling). The 26 Aug 04:05Z run: the settle loop "
+           "exited when 'the value stopped changing', and a stale nginx worker still serving the "
+           "OLD policy answers with the SAME value every read -- so the loop was satisfied on read "
+           "2, about one second after the reload, and returned precisely the value it had been "
+           "asked to wait for the reload to replace. settle=15 bought nothing at all; the correct "
+           "rewrite was then restored and the chain jammed. THE FIX: poll until script-src appears "
+           "or the deadline is spent, return immediately on a first-read hit, and report what IS "
+           "served when the deadline runs out. THE SECOND HALF, same failure: the one line naming "
+           "the measured value was line -4 of 033's output and post_deploy.sh captured "
+           "`tail -n 3 | cut -c1-300` -- so the evidence existed and the report structurally could "
+           "not carry it, which is why four consecutive reports said 'something else is emitting "
+           "the header' and not one said WHAT was served. The raise now LEADS with MEASURED=, and "
+           "the window is 12 lines / 1200 chars with backslashes stripped for JSON safety. PROVEN "
+           "by scripts/prove_csp_settle.py (11/11): it reproduces the old loop returning the stale "
+           "value deterministically, shows the new loop waiting the reads out and returning the "
+           "real policy, shows it not burning the window on a first-read hit, and shows "
+           "CSP-SCRIPT-SRC-5's loud-on-redirect behaviour intact. Whether the LIVE server now "
+           "serves script-src is RG-0178's question, answered after the next deploy rides -- this "
+           "entry asserts the measurement, which is the part that was broken.")
+def rg_poll_for_expected_not_stable():
+    out = []
+    mig = repo_file("migrations/033_csp_verify_served.py")
+    if mig is None:
+        return [(INFO, "running outside the repo -- the settle-loop check is source-side only")]
+
+    if "value changed -- let the reload finish settling" in mig:
+        out.append((FAIL, "033's settle loop is back to exiting when the answer STOPS CHANGING -- "
+                          "a stale worker satisfies that on read 2 and the migration measures the "
+                          "very value it is waiting to see replaced (26 Aug 04:05Z exactly)"))
+    if 'if "script-src" in val:' not in mig:
+        out.append((FAIL, "033 no longer polls for the EXPECTED state -- there is no exit on the "
+                          "value it is waiting for, so settle= is decorative again"))
+    if 'raise RuntimeError("MEASURED=%r' not in mig:
+        out.append((FAIL, "033's failure no longer LEADS with the measured value -- put late in "
+                          "the message it is cut off by the report's head-truncated window, which "
+                          "is how four failures in a row stayed undiagnosable"))
+    if "https-also-redirected" not in mig:
+        out.append((FAIL, "033 stopped failing loudly on a 3xx -- CSP-SCRIPT-SRC-5 regressed and a "
+                          "redirect can be measured as if it were the page"))
+
+    sh = repo_file("ops/autodeploy/post_deploy.sh")
+    if sh is None:
+        out.append((INFO, "post_deploy.sh not readable from here -- report-window half unchecked"))
+    else:
+        m = re.search(r'CHAIN JAMMED HERE.*?tail -n (\d+) "\$MOUT".*?cut -c1-(\d+)', sh)
+        if not m:
+            out.append((FAIL, "post_deploy.sh's failing-migration capture no longer looks like "
+                              "`tail -n N | cut -c1-M` -- the report window cannot be assessed"))
+        else:
+            lines, chars = int(m.group(1)), int(m.group(2))
+            if lines < 12 or chars < 1200:
+                out.append((FAIL, "post_deploy.sh captures only %d line(s) / %d chars of a failing "
+                                  "migration -- narrower than the evidence, so the cause is "
+                                  "destroyed on the way into post_deploy_status.json (it was 3/300 "
+                                  "and it ate the MEASURED line four times)" % (lines, chars)))
+
+    if repo_file("scripts/prove_csp_settle.py") is None:
+        out.append((FAIL, "scripts/prove_csp_settle.py is GONE -- the class has no harness, so the "
+                          "next poll written this way is unprovable"))
+    else:
+        ok, blind, detail = _harness([sys.executable,
+                                      os.path.join(REPO, "scripts", "prove_csp_settle.py")],
+                                     timeout=120, cwd=REPO)
+        if blind:
+            out.append((INFO, detail))
+        elif not ok:
+            out.append((FAIL, "prove_csp_settle.py FAILS: " + str(detail)[-260:]))
+
+    if not [o for o in out if o[0] == FAIL]:
+        out.append((INFO, "poll exits on the expected state, failure leads with MEASURED=, "
+                          "report window 12 lines/1200 chars, harness green"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

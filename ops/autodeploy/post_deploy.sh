@@ -146,7 +146,15 @@ else
             say "migrations: $base ok (recorded)"; step "migration:$base" ok "$(tail -n 1 "$MOUT" | tr -d '"' | cut -c1-200)"
         else
             say "migrations: $base FAILED (rc=$?) — NOT recorded; later migrations skipped this run."
-            step "migration:$base" failed "CHAIN JAMMED HERE (later migrations skipped) :: $(tail -n 3 "$MOUT" | tr '\n' ' ' | tr -d '"' | cut -c1-300)"
+            # POSTDEPLOY-EYES-3 (26 Aug 2026): the window was tail -n 3 | cut -c1-300, and it
+            # DESTROYED the only diagnostic that mattered. 033_csp_verify_served.py failed four
+            # deploys running; each time the line naming the value it measured was line -4 of its
+            # output, one line outside the window, so every report said "something else is
+            # emitting the header" and no report ever said WHAT was served. That is EYES-2's own
+            # blind spot -- capturing a migration's output is worth nothing if the capture is
+            # narrower than the evidence. Widened to 12 lines / 1200 chars, and backslashes are
+            # stripped alongside quotes so a Windows path in an error can never break the JSON.
+            step "migration:$base" failed "CHAIN JAMMED HERE (later migrations skipped) :: $(tail -n 12 "$MOUT" | tr '\n' ' ' | tr -d '"\\' | cut -c1-1200)"
             say "migrations: restore if needed: cp $BK/<file>.db $LIVE/  then systemctl restart marketsquare"
             break
         fi
