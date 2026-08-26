@@ -8589,7 +8589,7 @@ def rg_workroute_example_live():
 
 
 @entry("RG-0160", "Both full example dossier PDFs serve live and the teaser links them",
-       OPEN, scope="/static/studywork/Dossier_EXAMPLE_Study_Hungary.pdf + "
+       LOCKED, fixed_on="2026-08-26", scope="/static/studywork/Dossier_EXAMPLE_Study_Hungary.pdf + "
              "Dossier_EXAMPLE_Work_USA_Farm.pdf + their dl links on the teaser (SAW-3, RUL-044). "
              "CLASS: a Feature's worked examples are part of the feature surface -- a dead "
              "example link is a broken shop window. PDFs ship via the MEDIA lane [1b], the page "
@@ -8597,7 +8597,17 @@ def rg_workroute_example_live():
              "ran without the other.",
        ref="SAW-3, 23 Aug 2026. OPEN until BOTH the next code deploy (teaser v2 with dl links) "
            "AND a media_push run (PDFs) have happened. Generator: scripts/build_dossier_pdf.py "
-           "(the P4 prototype) + dossier_examples.py.")
+           "(the P4 prototype) + dossier_examples.py. "
+           "CLOSED 26 Aug 2026, and the finding is worth keeping: this was never a BUILD job. "
+           "The PDFs had existed at assets/studywork/ since 23 Aug, media_push.bat line 40 already "
+           "carried the *.pdf filter for that folder, and the teaser already linked both. Only the "
+           "MEDIA half had never run while the code half shipped on 23 Aug -- precisely the "
+           "half-shipped state this entry exists to catch, working exactly as designed. One "
+           "media_push.bat run closed it; PROBED immediately after: both serve 200 as "
+           "application/pdf at their exact on-disk byte counts (2072773 and 1687740). A sweep "
+           "earlier the SAME day had this listed as 'still to BUILD' -- the reuse-before-recreate "
+           "check is what caught it, and it would otherwise have cost a day rebuilding assets that "
+           "already existed.")
 def rg_dossier_pdfs_live():
     out = []
     try:
