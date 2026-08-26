@@ -28,6 +28,34 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- **Maintenance loop 2026-08-26 (B2b brain, shadow).** Fault queue drained — 0 new, 26
+  verified, 7 closed, 2 duplicate; agent heartbeat posted 05:35:32Z; no escalations in 24h.
+  Top item was the RG-0125 red: migration 033 jammed the chain on the 04:05:08Z deploy.
+  Root-caused to the migration's settle loop, which exited on a STABLE answer rather than the
+  EXPECTED one and therefore measured the stale policy one second after the reload — the
+  fourth consecutive failure in 033's measurement organ, never in its rewrite. Fixed the poll,
+  widened post_deploy.sh's failing-step capture (3 lines/300 chars was narrower than the
+  evidence and had destroyed the diagnostic four times), added scripts/prove_csp_settle.py
+  (11/11) and locked RG-0191. **RG-0125 remains red until a deploy runs 033 again** — it reads
+  the last deploy report and this loop does not deploy; the commit is left for the nightly TSL.
+  Ledger 166 ok / 17 open / 1 red; rulings 57/57 reflected.
+
+## 2026-08-26 — Johannesburg is a proving city; launch-metrics card built; 21 false greens removed
+
+- **RUL-057**: Johannesburg runs Pretoria's ladder from 28 Aug. Wave board v3.1, lagged block
+  now 9 SA cities. Warm-up volume 30→60/day; 1–2 Sep unchanged; 3–6 Sep each 30 lower.
+- **CityLauncher scrape cap 20→30** (WAVE-CAP-1) — the plan's quota was previously unreachable.
+  Johannesburg all-category re-run started 04:56 UTC at the corrected cap.
+- **LAUNCH-METRICS-1 built, NOT YET DEPLOYED** — `/dashboard/launch-metrics` + dashboard card.
+  Admin-gated (carries Paystack balance). FNB tile is permanently NOT MEASURED by design.
+- **CHIP-GREEN-1**: 21 Ops Map chips were shipping pre-painted green; reclassed and RG-0172
+  widened to enforce the whole class structurally.
+- **Ledger state at time of writing: 2 REGRESSIONS, both `033_csp_verify_served.py`** (RG-0125
+  chain jam on the 04:05 deploy, RG-0186 lost its served-response read). NOT from this work —
+  a concurrent maintenance loop was iterating CSP-SCRIPT-SRC-3/4/5 through the morning. The
+  ledger says *do not deploy over this*: the launch-metrics deploy should wait until 033 is
+  green or recorded in `migrations/DEFERRED.txt`.
+
 ## 2026-08-26 — Third-party sweep (unattended): RED, 3 days to soft launch
 
 Verdict **RED**, and not for the site — the site probes green (`/health` ok v1.3.1, `/` 200 in

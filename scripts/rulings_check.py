@@ -125,6 +125,13 @@ REFLECTIONS = {
    ("../CityLauncher/emailer/emailer.py", ["_is_suppressed", "refusing send to opted-out"], []),
    ("citylauncher_ops.html", ["X-Launch-Key"], []),
  ],
+ "RUL-057": [
+   # Johannesburg is a SECOND PROVING CITY (David, 26 Aug): wave 1, Pretoria's ladder,
+   # same start day; the lagged block drops to 9 SA cities. If a session ever puts JHB
+   # back in the lagged block, "10 SA cities" reappears and this trips.
+   ("RULINGS.md", ["JOHANNESBURG JOINS PRETORIA AS A SECOND PROVING CITY"], []),
+   ("WAVE_PLAN_LAUNCH_2026.html", ["Johannesburg \u00b7 ZA", "9 SA cities", "proving city 2"], ["10 SA cities", "CPT\u00b7JHB"]),
+ ],
  "RUL-056": [
    # The singles property day is REMOVED (David, 24 Aug): off all three singles ladders,
    # board v3; property arrives via the Phase-3 estate-agency waves. A PROPERTY chip

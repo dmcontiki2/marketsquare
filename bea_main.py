@@ -12140,6 +12140,119 @@ def presence_ping(p: PresencePing, _key: str = Depends(auth.require_api_key)):
         conn.close()
     return {"ok": True}
 
+@app.get("/dashboard/launch-metrics")
+async def dashboard_launch_metrics(_admin=Depends(_require_admin_or_key)):
+    """LAUNCH-METRICS-1 (26 Aug 2026, David's request) — the eight numbers he wants
+    on one view for launch day.
+
+    GATED. This carries the Paystack balance, i.e. money. It is deliberately behind
+    _require_admin_or_key -- the SAME guard the Ops Dashboard already satisfies with
+    its X-Admin-Token login, so the page works without a second credential, and a
+    script can use X-Admin-Key instead. Today's LAUNCH-API-
+    FAILCLOSED-1 lesson (an anonymous /launch-api/prospects/list served 200 prospect
+    records with names, emails and pre-authenticated magic links) is exactly what a
+    new convenience endpoint must not repeat.
+
+    Every metric answers with its OWN measured flag per RG-0133: a number is only
+    reported when it was actually measured this call. Anything unmeasured returns
+    value=None and measured=False so the UI can paint it grey / NOT MEASURED.
+    A metric NEVER defaults to a health colour, and never guesses.
+    """
+    import datetime as _dt
+
+    def _m(mid, label, value, measured, source, note=None, unit=None):
+        return {"id": mid, "label": label, "value": value, "measured": bool(measured),
+                "source": source, "note": note, "unit": unit}
+
+    out = []
+
+    # ── 1. Paystack balance (live call, server-side secret only) ─────────
+    _ps_key = os.getenv("PAYSTACK_SECRET_KEY", "")
+    if not _ps_key:
+        out.append(_m("paystack_balance", "Paystack balance", None, False, "paystack",
+                      "PAYSTACK_SECRET_KEY not set on this server", "ZAR"))
+    else:
+        try:
+            async with httpx.AsyncClient(timeout=8.0) as _cl:
+                _r = await _cl.get("https://api.paystack.co/balance",
+                                   headers={"Authorization": "Bearer " + _ps_key})
+            if _r.status_code == 200 and (_r.json() or {}).get("status"):
+                _data = (_r.json() or {}).get("data") or []
+                _zar = next((b for b in _data if (b.get("currency") or "").upper() == "ZAR"), None)
+                _bal = _zar or (_data[0] if _data else None)
+                if _bal is not None:
+                    # Paystack returns minor units (kobo/cents).
+                    out.append(_m("paystack_balance", "Paystack balance",
+                                  round((_bal.get("balance") or 0) / 100.0, 2), True,
+                                  "api.paystack.co/balance", None,
+                                  (_bal.get("currency") or "ZAR").upper()))
+                else:
+                    out.append(_m("paystack_balance", "Paystack balance", None, False,
+                                  "api.paystack.co/balance", "no balance rows returned", "ZAR"))
+            else:
+                out.append(_m("paystack_balance", "Paystack balance", None, False,
+                              "api.paystack.co/balance",
+                              "Paystack returned HTTP %s" % _r.status_code, "ZAR"))
+        except Exception as _e:
+            out.append(_m("paystack_balance", "Paystack balance", None, False,
+                          "api.paystack.co/balance", "call failed: %s" % type(_e).__name__, "ZAR"))
+
+    # ── 2. FNB business account — structurally NOT MEASURED ──────────────
+    # There is no FNB integration in this codebase and no usable business-banking
+    # API. The only route would be automating a bank login, which is not built and
+    # must not be. Reported honestly rather than omitted, so the gap is visible.
+    out.append(_m("fnb_balance", "FNB business account", None, False, None,
+                  "NOT MEASURED — no FNB API integration exists; bank-login automation is out of scope",
+                  "ZAR"))
+
+    # ── 3-8. Live DB counts ──────────────────────────────────────────────
+    conn = database.get_db()
+    try:
+        def _count(sql, args=()):
+            try:
+                row = conn.execute(sql, args).fetchone()
+                return (row[0] if row else 0), True, None
+            except Exception as _e:
+                return None, False, "query failed: %s" % type(_e).__name__
+
+        v, ok, note = _count(
+            "SELECT COUNT(*) FROM users WHERE COALESCE(seller_tier,'free') NOT IN ('free','')")
+        out.append(_m("subscriptions", "Paid subscriptions", v, ok, "users.seller_tier", note))
+
+        v, ok, note = _count(
+            "SELECT COUNT(*) FROM lm_complaints WHERE filed_at >= datetime('now','-1 day')")
+        out.append(_m("complaints_24h", "Complaints (24h)", v, ok, "lm_complaints.filed_at", note))
+
+        v, ok, note = _count(
+            "SELECT COUNT(DISTINCT seller_email) FROM listings "
+            "WHERE seller_email IS NOT NULL AND TRIM(seller_email) <> ''")
+        out.append(_m("sellers", "Sellers", v, ok, "listings.seller_email (distinct)", note))
+
+        v, ok, note = _count(
+            "SELECT COUNT(DISTINCT buyer_email) FROM intro_requests "
+            "WHERE buyer_email IS NOT NULL AND TRIM(buyer_email) <> ''")
+        out.append(_m("buyers", "Buyers", v, ok,
+                      "intro_requests.buyer_email (distinct)", note or
+                      "counts buyers who have made at least one INTRO request"))
+
+        v, ok, note = _count("SELECT COUNT(*) FROM intro_requests")
+        out.append(_m("intro_requests", "INTRO requests", v, ok, "intro_requests", note))
+
+        v, ok, note = _count("SELECT COUNT(*) FROM intro_requests WHERE status = 'accepted'")
+        out.append(_m("intro_accepts", "INTRO accepts", v, ok,
+                      "intro_requests.status='accepted'", note))
+    finally:
+        conn.close()
+
+    _measured = sum(1 for m in out if m["measured"])
+    return {
+        "generated_at": _dt.datetime.now(timezone.utc).isoformat(),
+        "measured": _measured,
+        "total": len(out),
+        "metrics": out,
+    }
+
+
 @app.get("/dashboard/presence")
 def dashboard_presence(city: str = "", window: int = 150):
     """Live users (last_seen within `window` seconds) + subscriber counters for the

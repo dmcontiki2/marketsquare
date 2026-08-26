@@ -9006,6 +9006,38 @@ def rg_opsmap_loader():
 
 
 
+@entry("RG-0191", "A city wave sends only to prospects PROVEN to be in that city -- the Stays lane must not bulk-assign the country to one default city",
+       OPEN, scope="pipeline/adventures_run.py ENRICH city assignment + the adventures_accommodation rows in prospects.db. "
+             "PROBED 26 Aug 2026 (live, gated read): all 223 adventures_accommodation rows carry suburb='accommodation_only' -- a "
+             "placeholder, so no real geography was ever resolved -- and 217 of 223 are tagged PRETORIA, with Cape Town 4, Port "
+             "Elizabeth 1, East London 1 and JOHANNESBURG ZERO. The names give the fault away: 'GUBAS DE HOEK' (De Rust, W Cape), "
+             "'Auldstone House' and 'Highland Saddle and Trout' (Dullstroom, Mpumalanga) and 'Dolphin-View' are all tagged Pretoria. "
+             "Pretoria is acting as a CATCH-ALL DEFAULT for every unresolved row. CLASS, not one lane: any lane that assigns a "
+             "country-wide scrape to cities must resolve each prospect's real location or leave it unassigned -- never default it to "
+             "a city that then receives it as local outreach. Two live consequences: (1) Johannesburg's 28 Aug day-one Stays send has "
+             "NO addresses at all; (2) Pretoria's 28 Aug Stays send would mail ~217 lodges as 'your city is launching' when most are "
+             "hundreds of km away -- the wrong-geo class already quarantined once as rejected_wrong_geo (TEACH-GEO-1, 21 Aug).",
+       ref="STAYS-GEO-1, opened 26 Aug 2026 under RUL-037. Passes when adventures_accommodation rows carry a resolved suburb (not "
+           "'accommodation_only') AND no single city holds a disproportionate share of a national scrape AND Johannesburg is non-zero "
+           "before its wave day. Related: RUL-057 (JHB is a proving city from 28 Aug), RUL-053 (30/cat/city/day).")
+def rg_stays_geo():
+    out = []
+    import json as _json, urllib.request as _u
+    # Live, unauthenticated read is impossible (PII endpoints are gated by design), so this
+    # entry asserts the SHAPE from the repo's own assignment code plus a witness file when a
+    # session leaves one. A placeholder suburb in the source is itself the defect.
+    import os as _os
+    fp = _os.path.join(REPO, "..", "CityLauncher", "pipeline", "adventures_run.py")
+    fp = _os.path.normpath(fp)
+    if not _os.path.exists(fp):
+        return [(INFO, "CityLauncher repo not beside MarketSquare -- source check skipped; the live half needs a gated read")]
+    src = open(fp, encoding="utf-8", errors="replace").read()
+    if "accommodation_only" in src:
+        out.append((FAIL, "adventures_run.py still writes the placeholder suburb 'accommodation_only' -- "
+                          "no real geography is resolved, so city assignment cannot be trusted for a per-city wave"))
+    return out or [(INFO, "the Stays lane resolves a real suburb per prospect")]
+
+
 @entry("RG-0190", "The launch-metrics view is GATED and every tile is measured-or-labelled -- money never rides an anonymous endpoint, and no tile invents a number",
        LOCKED, fixed_on="2026-08-26", scope="bea_main.py /dashboard/launch-metrics + dashboard.server.html LAUNCH METRICS card. "
              "David asked (26 Aug) for eight launch-day numbers on one view: Paystack balance, FNB balance, subscriptions, "
@@ -10089,6 +10121,55 @@ def rg_poll_for_expected_not_stable():
         out.append((INFO, "poll exits on the expected state, failure leads with MEASURED=, "
                           "report window 12 lines/1200 chars, harness green"))
     return out
+
+
+@entry("RG-0192", "A source is told how many it still NEEDS, and never mistakes that for how "
+       "many it may HAVE -- the wave cannot stall at half its target",
+       OPEN, scope="CityLauncher: pipeline/run.py -> every scraper source that takes "
+                   "max_results. Proven on google_maps; the same call shape feeds the other "
+                   "sources, so assume the whole source layer until each is read.",
+       fixed_on="",
+       ref="WAVE-HALFSTALL-1, found 26 Aug 2026 measuring the Johannesburg wave (job 13f63ae7). "
+           "pipeline/run.py calls sources with max_results=max(remaining, 0) -- the number STILL "
+           "NEEDED (4 call sites). google_maps.py's DB pre-check then compares the ABSOLUTE count "
+           "already in the DB against that same argument and returns [] once count >= max_results. "
+           "So a category is refused the moment it passes HALF its target. The run log prints the "
+           "collision verbatim: 'already has 16/14', '17/13', '15/15', '25/5' -- in every case the "
+           "two numbers sum to the target of 30. Five empty returns then trip GM-BREAKER-1 and the "
+           "category is abandoned. Measured effect: six of nine Johannesburg categories froze in "
+           "the 15-17 band and the wave finished 184/270, with ZERO categories brought to quota. "
+           "Raising CAP_PER_CATEGORY 20->30 that morning could not help -- the faulty gate scales "
+           "with the target, so it simply stalls at 15 instead of 10. This is a CLASS defect: the "
+           "argument is a remaining-count at the call site and an absolute-cap at the callee, so "
+           "any source reading it as a cap is wrong the same way. EXPECTED TO FAIL until the "
+           "contract is one thing at both ends (either pass the absolute target, or have the "
+           "callee compare newly-collected against remaining). Needs a deploy, which is David\'s "
+           "to authorise -- logged OPEN rather than handed over as a sentence, per RUL-037. The "
+           "moment this reports READY TO LOCK, promote to LOCKED.")
+def rg_source_remaining_vs_cap():
+    out = []
+    run = repo_file(os.path.join("..", "CityLauncher", "pipeline", "run.py"))
+    gm  = repo_file(os.path.join("..", "CityLauncher", "scraper", "sources", "google_maps.py"))
+    if run is None or gm is None:
+        out.append((INFO, "CityLauncher not beside this repo -- WAVE-HALFSTALL-1 unchecked here"))
+        return out
+
+    passes_remaining = run.count("max_results=max(remaining, 0)")
+    treats_as_cap    = "if _count >= max_results:" in gm
+
+    if passes_remaining and treats_as_cap:
+        out.append((FAIL, "run.py hands a REMAINING count to max_results at %d call site(s) while "
+                          "google_maps.py compares the absolute DB count against it "
+                          "(`if _count >= max_results`) -- the source refuses every category that "
+                          "is past half its target (WAVE-HALFSTALL-1)" % passes_remaining))
+    elif passes_remaining and not treats_as_cap:
+        out.append((INFO, "READY TO LOCK -- google_maps.py no longer reads the remaining-count "
+                          "as an absolute cap"))
+    elif not passes_remaining:
+        out.append((INFO, "READY TO LOCK -- run.py no longer passes a remaining-count as "
+                          "max_results"))
+    return out
+
 
 
 if __name__ == "__main__":

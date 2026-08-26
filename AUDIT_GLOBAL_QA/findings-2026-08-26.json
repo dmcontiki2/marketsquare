@@ -1,6 +1,6 @@
 {
  "date": "2026-08-26",
- "took_s": 15.9,
+ "took_s": 16.6,
  "findings": [
   {
    "sev": "INFO",
@@ -17,14 +17,8 @@
   {
    "sev": "INFO",
    "area": "drift",
-   "id": "MSJS-DRIFT",
-   "msg": "live ms.js (v542, 1156049B) != repo ms.js (1173438B) \u2014 expected while a deploy is staged; CRITICAL if it persists after deploying"
-  },
-  {
-   "sev": "INFO",
-   "area": "drift",
-   "id": "VERSION-KEY",
-   "msg": "repo html pins ms.js v477, live pins v542 AND the bytes differ (see MSJS-DRIFT) \u2014 a real deploy is staged"
+   "id": "VERSION-KEY-BENIGN",
+   "msg": "repo html pins ms.js v477, live pins v545, but the served bytes are IDENTICAL to the repo \u2014 this is the server's monotonic ?v= bump, not drift. Recorded, not raised (DW-001)."
   }
  ]
 }

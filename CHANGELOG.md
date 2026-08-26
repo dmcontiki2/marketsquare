@@ -1,3 +1,224 @@
+## 2026-08-26 — Third-party sweep, second pass: three "do not deploy" reds were the instrument, not the app
+
+**SWEEP-26AUG-2** · commit `da85045` · 3 days to soft launch (Fri 29 Aug, RUL-001)
+
+The pre-soft-launch third-party sweep ran a second time today (the 02:5x pass and the 06:30 daily
+watch preceded it). It re-PROBED their third-party rows independently rather than reading them, and
+found that **four of the ledger's REGRESSED entries were three false alarms and one real one**.
+That matters more than the count: a REGRESSION prints *"Do not deploy over this"*, and the last ship
+day is Wed 27 Aug. Three false reds two days out is a deploy that does not happen.
+
+### LEDGER-VANTAGE-1 — RG-0099 (SSH lockout detector)
+
+Port 22 at the origin was demonstrably **OPEN** — 8/8 probes, 0.48 s, banner
+`SSH-2.0-OpenSSH_9.6p1` — at the same minute two consecutive full ledger runs called it a
+REGRESSION. Calling the entry's own function standalone returned *"both management lanes clear"*.
+LEDGER-FLAP-1 (19 Aug) had already widened this probe to 3 tries × 8 s for a dropped packet; the
+failure is not a dropped packet, it is this vantage's port-22 lane under full-run load.
+
+A **control probe** (`github.com:22`, `gitlab.com:22`) now runs before the verdict:
+
+- origin dead **+ control dead** → `NOT EVALUATED` → UNVERIFIED. The run measured its own socket
+  lane and says nothing whatsoever about the Hetzner firewall.
+- origin dead **+ control alive** → still **RED**, still naming the runbook line.
+
+The assertion is not weakened — a genuine lockout still fails the origin while control hosts answer.
+Same family as LEDGER-DEPS-1/RG-0187 and RG-0186: *an instrument that cannot see the subject has not
+measured it.*
+
+### HARNESS-TMPDIR-1 — RG-0182 (indicative-fare lane)
+
+`scripts/prove_fares_lane.py` hardcoded `/tmp/prove_fares.db` and swallowed `OSError` on cleanup.
+A previous run had left that exact path owned by `nobody:nogroup`, so the remove failed **silently**,
+sqlite opened the stale file read-only, and the harness died with *"attempt to write a readonly
+database"* — which the ledger read as *"RG-0182 has come back"*. `mkdtemp` per run cannot collide,
+honours `TMPDIR`, and needs no cleanup guard to be correct. Same treatment for `data_flights.py`'s
+selftest. **13/13 passing.** RG-0181 was the plain missing-`fastapi` case RG-0187 was written for —
+installed, **9/9**, every refusal refusing.
+
+### CSP-VERIFY-GUARD-3 — RG-0186 (migration proof method)
+
+The guard matched the call site spelled `served_csp()` **with empty parens**, and went red the
+moment 033 legitimately grew an argument (`served_csp(settle=15)`, added by CSP-SCRIPT-SRC-5 so the
+probe stops racing nginx's asynchronous reload). This is the **third** cut of one mistake — the two
+earlier ones matched the prose *"Not claiming success"* — and the file's own comment already warns
+that a guard matching wording rather than behaviour breaks the moment someone re-wraps a line. This
+cut matched a *spelling*. Now matches `served_csp(`.
+
+### RG-0176 promoted OPEN → LOCKED
+
+The ledger had been printing `>>> now passing — change state to LOCKED` and nobody had promoted it.
+Re-probed independently first: anonymous `GET /launch-api/prospects/list` answers **HTTP 401**, where
+at 04:20 the same morning it served **146,226 bytes of prospect PII plus pre-authenticated
+`admin.html?magic=1&…` entry URLs**. A fix that prints READY TO LOCK and is never promoted cannot
+trip red when it rots — which is the precise failure the ledger exists to prevent. The n8n
+cross-store suppression half is still proven only by hand and is named in the scope rather than left
+to weaken the assertion.
+
+### SECRETS_REGISTER.md — a new "Out-of-band copies" table
+
+The daily watch tried to send a real RED alert this morning and Resend answered
+`401 "API key is invalid"`. The watch's key in `/etc/marketsquare/resend.watch.conf` (mtime
+**5 Aug**) was orphaned by the 22–23 Aug rotation, which deleted both old keys — and **nothing
+noticed for four days**, because only a real RED exercises that path and the register knew only the
+app's copy in `secrets.env`. Every second copy of a rotated credential now has a row, with the rule
+that **a rotation is not finished until every row carrying that credential is updated and
+re-probed**. Pasting the current key in is David's (root on the box) — DW-076.
+
+### Board
+
+**183 entries · 165 holding · 1 REGRESSED · 17 open · 0 UNVERIFIED** (opened at 4 REGRESSED +
+2 UNVERIFIED). The survivor is **RG-0125** — `migrations/033` failed on the 04:05:08Z deploy and
+jammed the chain — and it is blocked on a deploy, not on work: the fix rides in `97f8168`, still
+unpublished. `rulings_check.py` 56/56, `eula_sync.py --check` in sync (117,749 B, v1.15).
+
+**CTO note recorded for the next session:** if 033 goes `ok` on the next deploy but RG-0178 stays
+red, the CSP header is being emitted at the **Cloudflare edge**, not by nginx — 033 verifies at the
+origin and cannot see a Transform Rule. That cannot be discriminated from a sandbox vantage, because
+the origin's :443 accepts only Cloudflare IPs.
+
+**RDAP for `.co` is now recorded as permanently machine-unanswerable** — five endpoints, four
+sweeps, and an IANA bootstrap listing no `.co` service. The four `DOMAIN_*` fields need one glance
+at the registrar login, not another sweep.
+
+## 2026-08-26 — maintenance-loop: CSP-SCRIPT-SRC-6 + POSTDEPLOY-EYES-3 (RG-0191)
+
+**Fault queue:** drained. 0 new, 26 verified, 7 closed, 2 duplicate (35 total, probed
+`GET /admin/faults`). Shadow agent ran clean — 0 seen, 0 acted — and its heartbeat is on
+`/dashboard/maint` at 2026-08-26T05:35:32Z. No shadow patch was ready, so nothing was
+applied from that lane. No escalations in 24h, so `escalation_brief.py` wrote no brief.
+
+**The session's top item was the RG-0125 red:** `033_csp_verify_served.py` FAILED on the
+04:05:08Z deploy and jammed the migration chain. Diagnosed to the migration's *measurement*,
+not its rewrite — the fourth consecutive failure in the same organ:
+
+| | what it got wrong |
+|---|---|
+| CSP-SCRIPT-SRC-3 | could not SEE the emitting file (discovery) |
+| CSP-SCRIPT-SRC-4 | compared prose, not directives (staleness) |
+| CSP-SCRIPT-SRC-5 | measured a 301, not the page (vantage) |
+| **CSP-SCRIPT-SRC-6** | **polled for a STABLE answer, not the EXPECTED one (settling)** |
+
+The settle loop exited when "the value stopped changing". A stale nginx worker still serving
+the OLD policy answers with the SAME value every read, so the loop was satisfied on read 2 —
+about one second after the reload — and returned exactly the value it had been asked to wait
+for the reload to replace. `settle=15` bought nothing. A correct rewrite was then restored and
+the chain jammed. **Class rule now on the books: poll for the EXPECTED state, never for a
+stable one.** A steady wrong answer is indistinguishable from a settled right one.
+
+**POSTDEPLOY-EYES-3, the second half of the same failure.** The one line naming the measured
+value was line -4 of 033's output and `post_deploy.sh` captured `tail -n 3 | cut -c1-300` — so
+the evidence existed and the report structurally could not carry it. Four consecutive reports
+said "something else is emitting the header"; not one said what was actually served.
+
+**Changed**
+- `migrations/033_csp_verify_served.py` — `served_csp()` polls until `script-src` appears or
+  the deadline is spent (settle 15s→45s), returns immediately on a first-read hit, and reports
+  what IS served when the window runs out. The raise now LEADS with `MEASURED=` so a
+  head-truncated report window cannot eat it. Loud-on-3xx (CSP-SCRIPT-SRC-5) intact.
+- `ops/autodeploy/post_deploy.sh` — failing-migration capture widened from 3 lines/300 chars to
+  12 lines/1200 chars, backslashes stripped alongside quotes for JSON safety.
+- `scripts/prove_csp_settle.py` — NEW. Reproduces the old loop returning the stale value
+  deterministically, proves the new one waits it out, proves it does not burn the window on a
+  first-read hit, proves the redirect behaviour is not regressed, and asserts the report window.
+  11/11.
+- `scripts/regression_ledger.py` — RG-0191 added LOCKED (RG-0190 was taken; the ledger's own
+  LEDGER-DUP-1 guard caught the collision and it was renumbered rather than forced).
+
+**Ledger after: RG-0125 is STILL RED, and honestly so.** It asserts against the *last deploy
+report*, which cannot change without a deploy — and this loop does not deploy. The fix is
+committed for the 05:45 nightly TSL to carry. If 033 fails a fifth time, the report will for
+the first time name the value it measured. 166 ok / 17 open / 1 red. Rulings: 57 checked, 0 fail.
+
+## 2026-08-26 — RUL-057 (Johannesburg as second proving city) · LAUNCH-METRICS-1 · CHIP-GREEN-1 · WAVE-CAP-1
+
+**RUL-057 — Johannesburg promoted to wave 1.** David's call: JHB is likely the biggest SA
+market, so it belongs in the evidence, not behind it. It now runs Pretoria's ladder
+day-for-day from 28 Aug. Wave board → v3.1: new JHB row under Pretoria, lagged block down to
+**9 SA cities**, volume row recomputed (60/day warm-up; 1–2 Sep unchanged at 420/330; 3 Sep
+300→270; 4–6 Sep 390→360). `data/cities.json` and the dashboard `CITIES_JSON` in CityLauncher
+moved JHB to wave 1 / active. rulings_check RUL-057 asserts it and trips if "10 SA cities"
+ever returns.
+
+**WRONG-FILE-1 — a near miss worth recording.** The JHB edit was first applied to
+`Visuals/MarketSquare/WAVE_PLAN_LAUNCH_2026.html`, which is a **stale v2-era snapshot** that
+ships nowhere. The canonical board is `MarketSquare/WAVE_PLAN_LAUNCH_2026.html` (in the deploy
+manifest as `static/wave_plan.html`). The stale copy still carried the PROPERTY day that
+RUL-056 removed, so publishing from it would have silently reinstated a ruling David had
+already reversed. Caught by reading RULINGS.md before writing, not by any assertion. The
+Visuals copy was restored untouched. **Lesson: `Visuals/` holds INDEX COPIES; never edit one —
+edit the file the deploy manifest names.**
+
+**WAVE-CAP-1 — the scraper could not reach the quota the plan assumes.**
+`CityLauncher/pipeline/run.py` capped at `CAP_PER_CATEGORY = 20` while RUL-053 sends 30 per
+category per city per day and `fill_wave_gaps.py` already computed shortfall against 30.
+Observed live on the first Johannesburg run: `[SKIP] Estate Agents 41/20`, `Tutors 25/20`,
+`Services 32/20` — the three biggest categories skipped outright. Raised to 30; the spec
+decides, the cap follows. Verified live on the re-run (`41/30`).
+
+**LAUNCH-METRICS-1 — eight launch-day numbers on one view** (David's request). New
+`GET /dashboard/launch-metrics` + a LAUNCH METRICS card on `dashboard.server.html`. Gated
+behind `_require_admin_or_key` — it carries the **Paystack balance**, and LAUNCH-API-
+FAILCLOSED-1 was landed hours earlier the same day precisely because a convenience endpoint
+had been left anonymous. Every tile carries its own `measured` flag; unmeasured tiles paint
+grey **NOT MEASURED** and never show a number. **FNB is permanently unmeasured** — no FNB
+integration exists and bank-login automation is out of scope, so the gap is stated on the face
+of the dashboard rather than omitted. Ledger **RG-0190** (LOCKED).
+
+**CHIP-GREEN-1 — 21 Ops Map chips shipped pre-painted GREEN.** RG-0172's needle list
+enumerated only three chips, so 21 others still carried `class="om-chip g"` in static markup
+with a placeholder value of "—" — a counterfeit verdict before any feed answered, the exact
+RG-0133 class. Found by audit, not by the assertion, which is the point. All 21 reclassed to
+`om-chip nw`; RG-0172 now enforces it **structurally** (any id-bearing chip carrying the green
+class in static markup trips red), so the class cannot return one chip at a time. Four
+remaining `om-chip g` without ids are static statements of fact ("free tier", "cost R 0"), not
+measurements, and are left alone.
+
+## 2026-08-26 — CSP-SCRIPT-SRC-5: 033 was measuring a 301 redirect, and racing the reload
+
+Third and (probably) final fault in `migrations/033_csp_verify_served.py`. The CSP-SCRIPT-SRC-4 fix
+earlier today was correct and PROVEN by the deploy that followed: the 04:05Z run's own diagnostic
+printed the NEW policy — `add_header Content-Security-Policy default-src 'self'; script-src 'self'
+'unsafe-inline' ...` — so the rewrite worked. It still failed, because the *verification* was wrong
+in two independent ways.
+
+**(1) It measured the wrong response.** `served_csp()` fetched `http://127.0.0.1/` and read the
+headers off whatever came back. What comes back is:
+
+```
+HTTP/1.1 301 Moved Permanently
+Location: https://trustsquare.co/
+Content-Security-Policy: frame-ancestors 'self'
+```
+
+The port-80 block is a **redirect**, not the site. 033 was asserting the CSP of a 301 it does not
+care about, and would have failed no matter how correctly it rewrote the config. It now speaks TLS
+to `:443` with **SNI** so nginx selects the real vhost, and it **fails loudly on any 3xx** rather
+than silently measuring it — reading a redirect as if it were the page is the whole bug and must
+never be silent again.
+
+**(2) It raced the reload.** `nginx -s reload` is asynchronous — the master signals the workers and
+old workers keep serving until their connections drain. A fetch fired immediately after can be
+answered by a worker still holding the OLD config, so a perfectly good rewrite measures as "no
+effect". The post-reload read now polls for up to 15s until the answer stops changing.
+
+**CLASS — and this is the third instance of one lesson in a single morning.** An assertion is only
+as good as WHAT it measures:
+
+| | compared | should have compared |
+|---|---|---|
+| `audit_global_qa.py` (DW-072) | raw bytes | content, line-endings normalised |
+| `033` CSP-SCRIPT-SRC-4 | file prose incl. comments | the `add_header` directive |
+| `033` CSP-SCRIPT-SRC-5 | a 301 redirect | the actual page over TLS |
+
+Each one produced a confident, wrong answer for days. None was a logic error; all three were the
+program looking at the wrong object. Worth carrying into every future probe: name what you are
+measuring, then check that is what you fetched.
+
+Diagnosis came from the 04:05Z deploy's own improved failure text plus one read-only
+`curl -sI -H 'Host: trustsquare.co' http://127.0.0.1/` on the box — the SSH lane restored earlier
+today is what made that possible at all.
+
 ## 2026-08-26 — CSP-SCRIPT-SRC-4: 033 failed twice because it compared the wrong thing
 
 `migrations/033_csp_verify_served.py` failed on two consecutive deploys (02:07Z and 03:54Z),

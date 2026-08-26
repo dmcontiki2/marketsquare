@@ -1,5 +1,5 @@
 # Cost-Compliance Sweep — 2026-08-26
-_Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sweep is static + $0; scanned 7 repos under `/sessions/serene-awesome-darwin/mnt/Projects`._
+_Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sweep is static + $0; scanned 7 repos under `/sessions/peaceful-magical-johnson/mnt/Projects`._
 
 ## Wrapper compliance — every AI call ceiling-checked + spend-logged (P2)
 
@@ -50,7 +50,7 @@ _Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sw
 - ℹ️ **INFO** — MarketSquare/failover/ai_backends.py:46 model constant `REASON_VISION_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
 - ℹ️ **INFO** — MarketSquare/marketing/src/build_set.py:14 model constant `SAMPLE_RUN_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
 - ℹ️ **INFO** — MarketSquare/scripts/maintenance_agent.py:328 Fable (claude-fable-5) in reference text — not a call site (DW-047)
-- ℹ️ **INFO** — MarketSquare/scripts/regression_ledger.py:3386 Fable (claude-fable-5) in reference text — not a call site (DW-047)
+- ℹ️ **INFO** — MarketSquare/scripts/regression_ledger.py:3455 Fable (claude-fable-5) in reference text — not a call site (DW-047)
 - ℹ️ **INFO** — AdvertAgent/service/advert_agent.py:125 Sonnet — allowed: paid Level-2, Tuppence-metered
 - ℹ️ **INFO** — AdvertAgent/service/advert_agent.py:168 Sonnet — allowed: paid Level-2, Tuppence-metered
 - ℹ️ **INFO** — AdvertAgent/service/advert_agent.py:272 Sonnet — allowed: paid Level-2, Tuppence-metered
@@ -91,9 +91,9 @@ _Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sw
 
 ## Paid call-site inventory (154 hits)
 
-- **Anthropic API** (18): `MarketSquare/ai_provider.py:113`, `MarketSquare/ai_provider.py:114`, `MarketSquare/main.py:1014`, `MarketSquare/main.py:1024`, `MarketSquare/subscription_monitor.py:122`, `MarketSquare/failover/ai_backends.py:13`, `MarketSquare/failover/ai_backends.py:142`, `MarketSquare/failover/ai_backends.py:144`, `MarketSquare/scripts/install_anthropic_key.py:58`, `MarketSquare/scripts/install_anthropic_key.py:59`, `MarketSquare/scripts/peer_pack_ai.py:62`, `MarketSquare/scripts/regression_ledger.py:948` …
+- **Anthropic API** (18): `MarketSquare/ai_provider.py:113`, `MarketSquare/ai_provider.py:114`, `MarketSquare/main.py:1014`, `MarketSquare/main.py:1024`, `MarketSquare/subscription_monitor.py:122`, `MarketSquare/failover/ai_backends.py:13`, `MarketSquare/failover/ai_backends.py:142`, `MarketSquare/failover/ai_backends.py:144`, `MarketSquare/scripts/install_anthropic_key.py:58`, `MarketSquare/scripts/install_anthropic_key.py:59`, `MarketSquare/scripts/peer_pack_ai.py:62`, `MarketSquare/scripts/regression_ledger.py:1017` …
 - **Anthropic SDK** (5): `MarketSquare/data_audit.py:154`, `MarketSquare/main.py:8028`, `CityLauncher/emailer/emailer.py:111`, `CityLauncher/orchestration/haiko_agent.py:228`, `CityLauncher/orchestration/strategist_agent.py:301`
-- **Google APIs** (17): `MarketSquare/ai_provider.py:226`, `MarketSquare/bea_main.py:13264`, `MarketSquare/bea_main.py:13265`, `MarketSquare/bea_main.py:15418`, `MarketSquare/citylauncher_ops.html:727`, `CityLauncher/citylauncher_launch.html:1052`, `CityLauncher/CITYLAUNCHER_REDESIGN.html:50`, `CityLauncher/api/server.py:200`, `CityLauncher/dashboard/citylauncher.html:907`, `CityLauncher/scraper/sources/google_maps.py:14`, `CityLauncher/scraper/sources/google_maps.py:217`, `CityLauncher/scraper/sources/google_maps.py:250` …
+- **Google APIs** (17): `MarketSquare/ai_provider.py:226`, `MarketSquare/bea_main.py:13264`, `MarketSquare/bea_main.py:13265`, `MarketSquare/bea_main.py:15418`, `MarketSquare/citylauncher_ops.html:727`, `CityLauncher/citylauncher_launch.html:1052`, `CityLauncher/CITYLAUNCHER_REDESIGN.html:50`, `CityLauncher/api/server.py:221`, `CityLauncher/dashboard/citylauncher.html:927`, `CityLauncher/scraper/sources/google_maps.py:14`, `CityLauncher/scraper/sources/google_maps.py:217`, `CityLauncher/scraper/sources/google_maps.py:250` …
 - **OpenAI** (42): `MarketSquare/add_openai_key.bat:10`, `MarketSquare/add_openai_key.bat:11`, `MarketSquare/add_openai_key.bat:11`, `MarketSquare/add_openai_key.bat:13`, `MarketSquare/AI_BASELINE.json:442`, `MarketSquare/ai_provider.py:59`, `MarketSquare/ai_provider.py:156`, `MarketSquare/ai_provider.py:168`, `MarketSquare/ai_provider.py:292`, `MarketSquare/bea_main.py:15440`, `MarketSquare/bea_main.py:15573`, `MarketSquare/bea_main.py:15584` …
 - **Paid data feeds** (66): `MarketSquare/ai_service_tiers.py:19`, `MarketSquare/ai_service_tiers.py:110`, `MarketSquare/ai_service_tiers.py:111`, `MarketSquare/ai_service_tiers.py:113`, `MarketSquare/ai_service_tiers.py:198`, `MarketSquare/ai_service_tiers.py:199`, `MarketSquare/ai_service_tiers.py:206`, `MarketSquare/ai_service_tiers.py:207`, `MarketSquare/ai_service_tiers.py:238`, `MarketSquare/ai_service_tiers.py:239`, `MarketSquare/ai_service_tiers.py:243`, `MarketSquare/ai_service_tiers.py:244` …
 - **Paystack (txn)** (6): `MarketSquare/bea_main.py:15226`, `MarketSquare/payments.py:32`, `MarketSquare/subscription_monitor.py:157`, `MarketSquare/scripts/audit_env_file.sh:8`, `MarketSquare/scripts/fix_paystack_env.py:71`, `MarketSquare/scripts/verify_paystack_key.sh:17`
