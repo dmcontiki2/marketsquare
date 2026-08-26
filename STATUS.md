@@ -28,6 +28,91 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+## 2026-08-26 — Third-party sweep (unattended): RED, 3 days to soft launch
+
+Verdict **RED**, and not for the site — the site probes green (`/health` ok v1.3.1, `/` 200 in
+0.47 s, `/payment/test` paystack_connected, `/dashboard/bit` 8/8, TLS 88 days, EULA v1.15 live).
+
+RED because: (1) `GET /launch-api/prospects/list` serves **200 PII records with pre-authenticated
+magic links to an anonymous reader** — re-probed independently this run, and the gate was failing
+open *by design*; (2) the **migration chain is jammed** at `033_csp_verify_served.py` (failed on the
+02:07:10Z deploy) and the fix for it is sitting unshipped in `b77cd2b`; (3) **no `script-src` CSP**
+at the edge on either the index or an app path; (4) **SSH to the origin is down and took the
+RED-alert path with it** — the alert channel is one SSH command to the box; (5) the **external
+uptime watcher is still not deployed**, day 4, which is also the structural fix for (4).
+
+Executed this run, not reported: **LAUNCH-API-FAILCLOSED-1** (`require_launch_key` now 403s when
+`LAUNCH_API_KEY` is unconfigured — inert until the CityLauncher deploy rides, so the exposure is
+live until David deploys) and **CRLF-DRIFT-1** (`audit_global_qa.py` normalises line endings before
+the byte compare; proven — the 17,389-byte "drift" is exactly the repo's CR count).
+
+Ledger **exit 1 — 181 entries, 156 holding, 3 REGRESSED (RG-0099, RG-0125, RG-0154), 20 open,
+2 UNVERIFIED**. Rulings **56, 0 FAIL**. EULA sync green. `THIRD_PARTY_LAUNCH_REGISTER.md` rewritten
+from probes; `OPEN_LOOPS.md` annotated (B1 is discharged and mis-filed under BLOCKING).
+
+David-only and dated in the register: Hetzner firewall IP (restores SSH + the alert path),
+`LAUNCH_API_KEY` + CityLauncher deploy, Google consent-screen state, the four `DOMAIN_*` fields
+(RDAP unreachable for the third sweep running), the uptime-watcher deploy, and the **last ship on
+Wed 27 Aug** — which must carry the migration-033 rewrite.
+
+## 2026-08-26 — Orchestrator locked, secret-at-rest class closed
+
+RG-0156 **LOCKED**: orchestrator.html is in the deploy manifest, the client-side access code is
+gone (it gated nothing — nginx 401s anonymously, which is the real gate), a failed feed now says
+FEED UNAVAILABLE instead of five cheerful empties, and the health badge has a grey unmeasured
+state. Four presence assertions added so the fix cannot be silently removed.
+
+RG-0189 **LOCKED** (SECRET-ONSCREEN-1): no file under `.secrets/` may hold 2+ credentials at rest,
+and secret entry no longer requires a GUI. Built `add_secret.bat` and
+`scripts/split_rotated_secrets.py`; rewrote `ROTATE_SECRETS.bat` so the dump is transit-only and
+credential backups self-prune.
+
+RG-0188 back to **OPEN** — an empty placeholder token file had falsely flipped it to READY TO LOCK.
+Presence is not runnability; the assertion now says so.
+
+RG-0160 is **not a build job**: the dossier PDFs exist and are wired; one `media_push.bat` run
+closes it.
+
+Ledger 182 · 159 holding · 2 REGRESSED (RG-0125, RG-0154 — both clear on the 27 Aug ship) · 19 open.
+
+### Maintenance loop — 26 Aug 2026 (02:20–02:35Z)
+
+**Fault queue clean.** 0 new · 0 triaged · 0 fix-shipped · 26 verified · 7 closed ·
+2 duplicate (35 total). Shadow agent ran foreground, SHADOW mode, 0 seen / 0 acted,
+heartbeat posted to `/dashboard/maint` at 02:22:32Z (brain KEYED:anthropic). No
+escalation brief — no escalations in 24h.
+
+**Ledger: 4 reds in, 3 out — and 2 of the 4 were the instrument, not the app.**
+
+| Entry | Was | Now |
+|---|---|---|
+| RG-0181 / RG-0182 | RED (`ModuleNotFoundError: fastapi`) | **green** — false reds, fixed at class level by LEDGER-DEPS-1 |
+| RG-0125 (migration chain jammed) | RED | fix committed; **clears when the nightly deploy rides** |
+| RG-0099 (SSH lockout) | RED | **still red — needs David** (see below) |
+| RG-0154 (session badge) | green | red: live 178, disk 179 — *this* sitting, clears on deploy |
+
+**Fixed this session (both LOCKED, both with named machine evidence):**
+- **RG-0187 / LEDGER-DEPS-1** — a harness killed by a missing third-party import now reads
+  UNVERIFIED, never REGRESSION. Third instance of "the instrument reporting itself as the
+  app" after LEDGER-OFFLINE-1 and GATE-CACHE-1. A missing *repo* module still stays red.
+- **RG-0186 / CSP-SCRIPT-SRC-3** — migration 033 searched fixed, non-recursive globs and so
+  could never see the file emitting the CSP; it rewrote everything it could see, restored 0
+  files, failed honestly and jammed the chain. Discovery is now `nginx -T` + a recursive walk.
+
+**Needs David (not actionable by the loop):**
+- **RG-0188 (new, OPEN)** — `.secrets/hetzner_token.txt` is absent, so the SSH-LOCKOUT-1
+  self-heal exits "NO TOKEN, nothing changed". The cure named in RG-0099's own failure
+  message has never been armed. Origin `178.104.73.239` is unreachable from this vantage on
+  22/443/80 while Cloudflare serves `/health`, `/` and `/terms` at 200 — the box is fine,
+  this egress IP (197.184.106.176) is simply outside the origin allowlist. The script only
+  ADDS an IP and never removes a rule, so arming it carries no lockout risk; provisioning the
+  token is his (RUL-027).
+
+**Not deployed.** Committed only — NIGHTLY-SHIP-1 (05:45 TSL) carries it. RG-0125 and RG-0154
+are both "waiting for the deploy", not rot.
+
+**Ledger: 181 entries · 158 holding · 3 regressed · 20 open · 0 unverified.**
+
 - **Gemini canary NOT armed — waiting on David.** `GEMINI_API_KEY` does not exist yet. The
   one blocking step: create the key at aistudio.google.com/apikey **with a hard budget cap
   set first** (Google Places burned ~$360 silently), then paste it into
