@@ -8420,9 +8420,30 @@ def rg_session_number_derived():
         out.append((FAIL, "live badge carries no as-of date -- a frozen number is invisible "
                           "again"))
     if repo_n and isinstance(live_n, int) and live_n < repo_n:
-        out.append((FAIL, "live badge says Session %s, the evidence on disk says %s -- %d "
-                          "sitting(s) unrecorded on the server"
-                          % (live_n, repo_n, repo_n - live_n)))
+        # DEPLOY-DEBT-VOICE-1 (27 Aug 2026). Two very different faults were wearing one
+        # sentence, and the difference decides what a session should DO:
+        #   * the counter has fallen behind the fragments on disk -> a real rot, and the
+        #     remedy is to run session_counter.py. That is the FAIL above.
+        #   * the counter is CORRECT and the server simply has not been shipped yet -> the
+        #     repo is ahead of live, which is deploy debt, and the only remedy IS a deploy.
+        # Calling the second one a REGRESSION made the run exit 1 and print "Do not deploy
+        # over this" -- telling the operator not to do the one thing that fixes it. On the
+        # last ship day before a public launch that is not a cosmetic wording problem, it is
+        # an instrument arguing against its own remedy. Same distinction RG-0144 now draws
+        # between "not written" and "not shipped".
+        counter_is_current = not [o for o in out
+                                  if o[0] == FAIL and "fallen behind the fragments" in o[1]]
+        if counter_is_current:
+            out.append((INFO, "DEPLOY DEBT, not a rotted fix: the counter on disk is correct "
+                              "(Session %s, derived) and the live badge is %s because the "
+                              "server has not been shipped since. %d sitting(s) of debt. The "
+                              "remedy is the next deploy -- this must not read as 'do not "
+                              "deploy' (DEPLOY-DEBT-VOICE-1)"
+                        % (repo_n, live_n, repo_n - live_n)))
+        else:
+            out.append((FAIL, "live badge says Session %s, the evidence on disk says %s -- %d "
+                              "sitting(s) unrecorded on the server"
+                              % (live_n, repo_n, repo_n - live_n)))
 
     if not [o for o in out if o[0] == FAIL]:
         out.append((INFO, "session number is derived (repo %s, live %s, as of %s) and the "
@@ -10465,6 +10486,115 @@ def rg_gate_script_consolidated():
                        "OPEN; RG-0075 holds the drift line meanwhile"
                  % (len(copies), ", ".join(copies)))]
     return [(INFO, "READY TO LOCK -- the admin gate script has a single source")]
+
+
+@entry("RG-0197", "The git lock self-heal covers EVERY repo a wave or a deploy fires from, and "
+       "can still clear a lock left by a command that just failed",
+       LOCKED, fixed_on="2026-08-27",
+       scope="CityLauncher/.git and MarketSquare/.git + scripts/git_unlock.py in both. "
+                   "CLASS property, deliberately both repos: GIT-LOCK-3 was written for "
+                   "MarketSquare, and a cure that covers one of two live repos is not a class fix.",
+       ref="GIT-LOCK-4, found 27 Aug 2026 while committing the WAVE-HALFSTALL-1 fix -- the day "
+           "before Wave 1 fires from CityLauncher. That commit took FIVE attempts. A "
+           "CityLauncher/.git/HEAD.lock dated 25 Aug -- two days old -- was blocking every commit "
+           "in the repo, and each failed attempt left a fresh index.lock behind it, because FUSE "
+           "will not let git unlink its own lock files. Nothing had noticed for two days because "
+           "nothing asserts it: RG-0015 watches MarketSquare only. "
+           "TWO REAL GAPS, and scripts/git_unlock.py being ABSENT is not one of them -- it is "
+           "present in CityLauncher (came in with TEACH-1, d36b592), which is exactly why the "
+           "finding is worth an entry rather than a copy-paste: "
+           "(1) something in that repo writes git WITHOUT calling git_unlock.py first, or the "
+           "25 Aug lock could not have survived a single subsequent commit; and "
+           "(2) the retry window -- FIXED 27 Aug, and the first write of this entry OVERSTATED "
+           "it, which is corrected here rather than left to mislead. The claim was 'refuses to "
+           "clear a lock younger than 15 minutes'. Reading stale() shows the 15-minute threshold "
+           "applies only to NON-EMPTY locks; a 0-byte lock (the strand signature) already had a "
+           "60-second belt. The real gap was narrower and still real: five failed commit attempts "
+           "each planted a fresh 0-byte lock inside the previous one's 60 s belt, so the retry "
+           "that would have cleared it kept being refused. git_unlock.py now consults its own "
+           "git_running() first: a 0-byte lock with pgrep PROVING no git process running is "
+           "unambiguously abandoned and age adds nothing. The belt stays for every other case, "
+           "including git_running() failing and defaulting to True, where it touches nothing. "
+           "Mirrored into CityLauncher. A repo that cannot commit cannot ship a fix. "
+           "STILL OPEN on half (1): nothing yet proves every git-writing path in CityLauncher "
+           "calls the unlock first, and that is what let a lock survive two days.")
+def rg_git_unlock_covers_every_repo():
+    out = []
+    here = repo_file(os.path.join("scripts", "git_unlock.py"))
+    if here is None:
+        out.append((FAIL, "MarketSquare/scripts/git_unlock.py is GONE -- GIT-LOCK-3's sandbox "
+                          "half has been deleted"))
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not os.path.isdir(cl):
+        out.append((INFO, "CityLauncher not beside this repo -- its half unchecked here"))
+        return out or [(INFO, "git_unlock present")]
+    if not os.path.exists(os.path.join(cl, "scripts", "git_unlock.py")):
+        out.append((FAIL, "CityLauncher has no scripts/git_unlock.py -- the repo Wave 1 fires "
+                          "from cannot heal a stale git lock"))
+    # The live half: a lock stranded in EITHER repo. Same 60-minute rule as RG-0015.
+    import time as _t
+    for name, gitdir in (("MarketSquare", os.path.join(REPO, ".git")),
+                         ("CityLauncher", os.path.join(cl, ".git"))):
+        try:
+            for lk in ("index.lock", "HEAD.lock", "packed-refs.lock"):
+                fp = os.path.join(gitdir, lk)
+                if os.path.exists(fp):
+                    age = (_t.time() - os.path.getmtime(fp)) / 60.0
+                    if age > 60:
+                        out.append((FAIL, "%s/.git/%s is STRANDED (%.0f min) -- the next commit "
+                                          "in that repo will fail. Clear it (host: git_unlock.bat "
+                                          "/ sandbox: python3 scripts/git_unlock.py)"
+                                    % (name, lk, age)))
+        except Exception:
+            pass
+    # HALF 2 of the TITLE: it must be able to clear a lock a just-failed command left.
+    # Asserted as behaviour in the source, not as a comment, because this is the half the
+    # first draft of this entry got WRONG by describing rather than reading.
+    for name, path in (("MarketSquare", os.path.join(REPO, "scripts", "git_unlock.py")),
+                       ("CityLauncher", os.path.join(cl, "scripts", "git_unlock.py"))):
+        try:
+            with open(path, encoding="utf-8") as _fh:
+                src = _fh.read() if os.path.exists(path) else ""
+        except Exception:
+            src = ""
+        if src and "if not git_running():" not in src:
+            out.append((FAIL, "%s/scripts/git_unlock.py still gates a 0-byte lock on AGE alone -- "
+                              "a command that fails and plants a fresh lock blocks its own retry "
+                              "(GIT-LOCK-4)" % name))
+
+    # HALF 1 of the TITLE: no SCRIPT in either repo may write git without unlocking first.
+    # Measured 27 Aug rather than assumed -- and the measurement corrected the theory:
+    # CityLauncher contains NO git-writing .bat/.py/.sh at all, so the 25 Aug lock was left
+    # by a SESSION, not by an unguarded script. That is what the self-heal above is for, and
+    # it is why this half is assertable today instead of being a standing worry.
+    # SCOPED TO CITYLAUNCHER ONLY, deliberately. RG-0015 already owns MarketSquare's
+    # coverage and does it properly -- it understands that nightly_ship.bat and friends
+    # DELEGATE to commit.bat / deploy_marketsquare.bat, which unlock first. A naive
+    # "does this file mention git commit and not git_unlock" sweep flagged 7 of them on
+    # its first run. That would have been a false red inside a brand-new entry, which is
+    # the exact sin this file spent 26 Aug removing. One owner per property.
+    import glob as _glob
+    for name, root in (("CityLauncher", cl),):
+        writers = []
+        for ext in ("bat", "py", "sh"):
+            for fp in _glob.glob(os.path.join(root, "**", "*." + ext), recursive=True):
+                if ".bak" in fp or "stale_locks" in fp or "git_unlock" in fp or "_to_delete" in fp:
+                    continue
+                try:
+                    with open(fp, encoding="utf-8", errors="replace") as _fh:
+                        body = _fh.read()
+                except Exception:
+                    continue
+                if re.search(r"git\s+(commit|add|push)", body) and "git_unlock" not in body:
+                    writers.append(os.path.relpath(fp, root))
+        if writers:
+            out.append((FAIL, "%s has %d git-writing script(s) that never call git_unlock: %s -- "
+                              "an unguarded writer is how a lock strands (GIT-LOCK-4 half 1)"
+                        % (name, len(writers), ", ".join(sorted(writers)[:4]))))
+    if not [o for o in out if o[0] == FAIL]:
+        out.append((INFO, "both repos carry the self-heal, both can clear a just-planted 0-byte "
+                          "lock when no git is running, and neither holds a stranded lock"))
+    return out
 
 
 if __name__ == "__main__":

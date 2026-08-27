@@ -109,3 +109,43 @@ unjammed — adding one on the last ship day is the DEFER-1 risk this project ha
 
 **189 entries · 175 holding · 0 REGRESSED · 14 open · 0 ready to lock · exit 0.**
 `rulings_check.py` 58/58. `eula_sync.py --check` in sync (117,749 B). All 8 `prove_*` harnesses pass.
+
+- GIT-LOCK-4 recorded as ledger RG-0197: CityLauncher had a two-day-old .git/HEAD.lock blocking every commit in the repo Wave 1 fires from, and git_unlock.py's 15-minute freshness guard blocks the retry that would clear a lock a failed command just left. Present in both repos, asserted in neither until now.
+
+### DEPLOY-DEBT-VOICE-1 — the ledger was arguing against its own remedy (RG-0154)
+
+RG-0154 went red with *"live badge says Session 179, the evidence on disk says 180"* — so the run
+exited 1 and printed **"Do not deploy over this"**, on the last ship day, when a deploy was the only
+thing that could fix it. Two different faults were wearing one sentence:
+
+- the counter has fallen behind the fragments on disk — a real rot, remedy is `session_counter.py`;
+- the counter is correct and the server simply hasn't shipped — **deploy debt**, remedy is a deploy.
+
+Now distinguished. The first stays a FAIL; the second reports as deploy debt and says so. Same
+distinction RG-0144 gained today between "not written" and "not shipped". An instrument that tells
+the operator not to do the one thing that fixes the finding is not a cosmetic wording problem.
+
+### GIT-LOCK-4 — the repo Wave 1 fires from could not commit at all (RG-0197 → LOCKED)
+
+Committing the wave fix took **five attempts**. A `CityLauncher/.git/HEAD.lock` dated **25 Aug** —
+two days old — was blocking every commit, and each failed attempt planted a fresh 0-byte lock inside
+the previous one's belt, because FUSE will not let git unlink its own lock files. Nothing had noticed
+for two days because RG-0015 watches MarketSquare only.
+
+Two corrections to my own first reading of it, both recorded rather than quietly fixed:
+
+- I wrote that `git_unlock.py` was missing from CityLauncher and that I had copied it across. **It was
+  already there** (came in with TEACH-1, `d36b592`) and my copy was byte-identical. The commit message
+  that said otherwise was amended.
+- I wrote that the guard "refuses to clear a lock younger than 15 minutes". Reading `stale()` shows the
+  15-minute threshold applies only to *non-empty* locks; a 0-byte lock already had a 60-second belt. The
+  real gap was narrower and still real.
+
+`git_unlock.py` now consults its own `git_running()` first: a 0-byte lock with `pgrep` **proving** no
+git process running is unambiguously abandoned, and age adds nothing. The belt stays everywhere else,
+including when `git_running()` fails and defaults to True, where it touches nothing. Mirrored to
+CityLauncher. Also measured rather than assumed: **CityLauncher contains no git-writing `.bat`/`.py`/`.sh`
+at all**, so the 25 Aug lock was left by a session, not an unguarded script — which is what the self-heal
+is for. RG-0197's coverage half is scoped to CityLauncher only, because RG-0015 already owns MarketSquare's
+and does it properly; a naive sweep flagged 7 of its scripts on the first run, which would have been a
+false red inside a brand-new entry.

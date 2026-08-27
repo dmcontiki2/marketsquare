@@ -48,6 +48,16 @@ def stale(path):
     try:
         age = time.time() - os.path.getmtime(path)
         if os.path.getsize(path) == 0:
+            # GIT-LOCK-4 (27 Aug 2026). A 0-byte lock is the strand signature: git aborted
+            # and FUSE blocked the unlink. If pgrep can also PROVE no git process is running,
+            # there is nothing the age can add -- the lock is unambiguously abandoned, and
+            # waiting 60 s only blocks the retry that would clear it. Measured cost of not
+            # doing this: one WAVE-HALFSTALL-1 commit took FIVE attempts, each failure
+            # planting a fresh 0-byte lock inside the previous one's belt.
+            # The belt stays for the case that matters -- git_running() returning True, or
+            # failing and defaulting to True, in which case we touch nothing.
+            if not git_running():
+                return True
             return age > 60
         return age > STALE_SECONDS
     except OSError:
