@@ -9006,6 +9006,41 @@ def rg_opsmap_loader():
 
 
 
+@entry("RG-0195", "A long-running .bat cannot be frozen by a stray mouse click, and nothing worth copying requires a mouse selection",
+       LOCKED, fixed_on="2026-08-26", scope="CityLauncher/fix_console_freeze.bat + show_launch_key.bat, and the console default "
+             "HKCU\\Console\\QuickEdit. THE FAULT (David: 'the old old problem'): Windows consoles ship with QuickEdit Mode ON, so "
+             "one stray click inside the window puts it in selection mode and BLOCKS the running process on its next stdout write. "
+             "It is indistinguishable from a hang. On 26 Aug 2026 deploy_citylauncher.bat sat frozen mid-scp for OVER AN HOUR and "
+             "was diagnosed -- by Claude, from indirect evidence -- as a stalled SSH connection; David pressed Enter and it resumed. "
+             "CLASS, not one script: every .bat in the toolkit is exposed (deploy_citylauncher, fix_launch_key, stop_pipeline, "
+             "commit, start_session, media_push), and the cost is paid in hours of misdiagnosis, not in a visible error. "
+             "SECOND HALF of the fix: with QuickEdit off you cannot drag-select, so any script that PRINTS something the user must "
+             "copy has to put it on the clipboard instead -- otherwise the fix creates a new papercut. Lesson recorded separately: "
+             "ask what the window SAYS before inferring a cause from server-side evidence.",
+       ref="CONSOLE-QUICKEDIT-1, 26 Aug 2026. Host-registry half cannot be asserted from the repo (it is a Windows user setting), so "
+           "this entry asserts the TOOLING that fixes and works around it is present and has not been reverted.")
+def rg_console_quickedit():
+    out = []
+    import os as _os
+    base = _os.path.normpath(_os.path.join(REPO, "..", "CityLauncher"))
+    fixp = _os.path.join(base, "fix_console_freeze.bat")
+    keyp = _os.path.join(base, "show_launch_key.bat")
+    if not _os.path.isdir(base):
+        return [(INFO, "CityLauncher repo not beside MarketSquare -- source check skipped")]
+    if not _os.path.exists(fixp):
+        out.append((FAIL, "fix_console_freeze.bat is gone -- the QuickEdit trap has no remedy in the toolkit"))
+    else:
+        src = open(fixp, encoding="utf-8", errors="replace").read()
+        if "QuickEdit" not in src:
+            out.append((FAIL, "fix_console_freeze.bat no longer touches QuickEdit"))
+    if _os.path.exists(keyp):
+        k = open(keyp, encoding="utf-8", errors="replace").read()
+        if "clip" not in k:
+            out.append((FAIL, "show_launch_key.bat no longer copies the key to the clipboard -- with QuickEdit "
+                              "disabled the key cannot be drag-selected, so it would be unreachable"))
+    return out or [(INFO, "console freeze remedy present; key-printing script copies to clipboard")]
+
+
 @entry("RG-0193", "A city wave sends only to prospects PROVEN to be in that city -- the Stays lane must not bulk-assign the country to one default city",
        LOCKED, fixed_on="2026-08-26", scope="pipeline/adventures_run.py ENRICH city assignment + the adventures_accommodation rows in prospects.db. "
              "PROBED 26 Aug 2026 (live, gated read): all 223 adventures_accommodation rows carry suburb='accommodation_only' -- a "
@@ -9050,6 +9085,18 @@ def rg_stays_geo():
                           "back with no coordinate, so city assignment falls back to guessing"))
     if acc and "'lat':" not in acc:
         out.append((FAIL, "the accommodation source no longer carries lat/lon into the prospect"))
+    # CSV-FIELDS-1 (26 Aug 2026): adding lat/lon to the prospect dict without adding them
+    # to the FIXED DictWriter fieldnames raised
+    #   ValueError: dict contains fields not in fieldnames: 'lat','lon'
+    # and killed the run at the CSV step BEFORE city assignment -- so the fix looked like
+    # it had produced nothing, for three hours. The coordinates must be in the CSV (they
+    # are the evidence for every city decision) and the writer must tolerate a new key.
+    if acc and "'lat', 'lon'" not in acc:
+        out.append((FAIL, "the CSV fieldnames no longer carry lat/lon -- the writer will raise on the "
+                          "prospect dict and the run dies before any city is assigned"))
+    if acc and "extrasaction='ignore'" not in acc:
+        out.append((FAIL, "the accommodation CSV writer lost extrasaction='ignore' -- one new upstream "
+                          "key will kill the whole run again"))
     # (c) the resolver must exist AND be in the hardcoded deploy list (TEACH-DEPLOY-1)
     if not _os.path.exists(geop):
         out.append((FAIL, "scraper/geo_assign.py is missing -- the coordinate resolver is gone"))
