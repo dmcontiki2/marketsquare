@@ -1486,9 +1486,34 @@ def main():
     elif regressed:
         print(f"RESULT: {regressed} previously-fixed issue(s) HAVE COME BACK. Do not deploy over this.")
     elif unver:
+        # LEDGER-UNVER-CAUSE-1 (27 Aug 2026). This line used to assert, unconditionally,
+        # "this machine cannot reach {BASE}" -- and it said exactly that on a run whose
+        # two UNVERIFIED entries were demoted by RG-0187 for a MISSING PYTHON MODULE,
+        # on a machine that was curling the site fine in the same minute. A summary that
+        # names the wrong cause sends the next session to fix the wrong thing, which is
+        # the RG-0117 mistake one layer up. The instrument already recorded WHY on each
+        # entry; read it back instead of guessing. Same class as RG-0187: an instrument
+        # limit must be described accurately, not merely demoted honestly.
+        _rows = [r for r in results if r["status"] == "UNVERIFIED"]
+        _ids = ", ".join(r["id"] for r in _rows)
+        _why, _seen = [], set()
+        for r in _rows:
+            for m in r["infos"]:
+                if "NOT EVALUATED" in m:
+                    t = m.split("NOT EVALUATED", 1)[1].lstrip(" -\u2014:")
+                    t = t.split(". ")[0].strip()[:160]
+                    if t and t.lower() not in _seen:
+                        _seen.add(t.lower())
+                        _why.append(t)
+                    break
+        _causes = " | ".join(_why) if _why else "the entries did not say why -- read them above"
+        _net = ("This machine CANNOT reach %s -- re-run where the site is reachable." % BASE
+                if _NET["ok"] is False else
+                "This machine CAN reach %s, so the site is not the cause -- fix what the "
+                "reason names." % BASE)
         print(f"RESULT: no regressions in what COULD be checked, but {unver} entr(ies) were NOT "
-              f"EVALUATED - this machine cannot reach {BASE}. That is not a green board. "
-              f"Re-run somewhere with a route to the site before deploying on this result.")
+              f"EVALUATED ({_ids}). Reason as the instrument recorded it: {_causes}. {_net} "
+              f"That is not a green board -- do not deploy on this result until it is.")
     elif ready:
         print(f"RESULT: no regressions. {ready} open item(s) now pass — promote them to LOCKED.")
     else:
@@ -7833,7 +7858,8 @@ def rg_mitigator_flags_are_real():
 
 @entry("RG-0144", "The public dashboard does not tell an anonymous stranger which defences are "
                   "down -- security posture is never published on an unauthenticated endpoint",
-       OPEN, scope="GET /dashboard/summary, the dashboard payload that answers anonymously today. "
+       LOCKED, fixed_on="2026-08-27 (promoted: READY TO LOCK on the first run after POSTURE-REDACT-1 shipped -- the anonymous read now carries redacted='posture' and the banned-pattern set finds nothing; promoted the SAME session it started passing, because a fix that prints READY TO LOCK and is never promoted cannot trip red when it rots -- DW-079)",
+       scope="GET /dashboard/summary, the dashboard payload that answers anonymously today. "
                    "CLASS: any unauthenticated endpoint that renders operational prose belongs "
                    "here -- the assertion is about publishing POSTURE to strangers, not about this "
                    "one route.",
@@ -10014,7 +10040,13 @@ def rg_migration_discovery_authoritative():
              "proves itself by running a subprocess harness (RG-0128, RG-0177, RG-0181, RG-0182 "
              "today). Source-half by nature -- the instrument is the subject, as with RG-0126. "
              "CLASS property: the demotion covers third-party imports ONLY; a missing REPO module "
-             "is a deletion and must stay red.",
+             "is a deletion and must stay red. EXTENDED 27 Aug 2026 (LEDGER-UNVER-CAUSE-1) to the "
+             "SUMMARY line: demoting honestly is only half the job -- the run must also name the "
+             "REAL reason. The unver branch of main() asserted, unconditionally, that the machine "
+             "could not reach the site, and printed exactly that on a run whose two UNVERIFIED "
+             "entries were dependency demotions on a machine curling the site fine in the same "
+             "minute. It now reads the recorded reason back off each entry and states the network "
+             "verdict from _NET, never from assumption.",
        ref="LEDGER-DEPS-1 (26 Aug 2026). The maintenance loop's own opening run produced the "
            "evidence: RG-0181 and RG-0182 both printed REGRESSION -- 'its refusals no longer "
            "refuse', 'the dark/lit harness FAILS' -- and the run closed '5 previously-fixed "
@@ -10063,6 +10095,21 @@ def rg_ledger_deps_blind_not_red():
         out.append((FAIL, "%d harness call site(s) still run a subprocess directly instead of via "
                           "_harness() -- each one can cry REGRESSION on a missing dependency: %s"
                           % (len(raw), raw[0].strip()[:110])))
+
+    # LEDGER-UNVER-CAUSE-1 (27 Aug 2026): the run may not TELL a session the site was
+    # unreachable unless it measured that. A summary naming the wrong cause sends the
+    # next session to fix the wrong thing -- the RG-0117 mistake one layer up.
+    if "LEDGER-UNVER-CAUSE-1" not in led:
+        out.append((FAIL, "LEDGER-UNVER-CAUSE-1 has been REMOVED -- the NOT EVALUATED summary is "
+                          "free to blame the network again for what was a missing dependency"))
+    else:
+        _tail = led.split("\n    elif unver:", 1)[-1].split("\n    elif ready:", 1)[0]
+        if "_NET[\"ok\"] is False" not in _tail:
+            out.append((FAIL, "the NOT EVALUATED summary no longer gates its unreachable-site "
+                              "claim on the MEASURED network verdict (_NET) -- it is guessing again"))
+        if "Reason as the instrument recorded it" not in _tail:
+            out.append((FAIL, "the NOT EVALUATED summary no longer reads the recorded reason back "
+                              "off the entries -- a session is told a count and no cause"))
 
     hp = os.path.join(REPO, "scripts", "prove_ledger_deps.py")
     if not os.path.exists(hp):
@@ -10394,7 +10441,7 @@ def rg_source_remaining_vs_cap():
                           "(`if _count >= max_results`) -- the source refuses every category that "
                           "is past half its target (WAVE-HALFSTALL-1)" % passes_remaining))
     elif passes_remaining and not treats_as_cap:
-        out.append((INFO, "READY TO LOCK -- google_maps.py no longer reads the remaining-count "
+        out.append((INFO, "holding -- google_maps.py no longer reads the remaining-count "
                           "as an absolute cap"))
     elif not passes_remaining:
         out.append((INFO, "READY TO LOCK -- run.py no longer passes a remaining-count as "
@@ -10486,6 +10533,83 @@ def rg_gate_script_consolidated():
                        "OPEN; RG-0075 holds the drift line meanwhile"
                  % (len(copies), ", ".join(copies)))]
     return [(INFO, "READY TO LOCK -- the admin gate script has a single source")]
+
+
+@entry("RG-0198", "An anonymous caller gets OPERATIONS, never the internal engineering NARRATIVE "
+       "-- the dashboard payload is not a company diary published to strangers",
+       OPEN, scope="GET /dashboard/summary, the same unauthenticated payload RG-0144 polices. "
+                   "RG-0144 owns SECURITY POSTURE (which defence is down); this owns the "
+                   "CONFIDENTIALITY of the internal narrative -- recentChangelog, lastDone, "
+                   "nextGoals, priorityItems. CLASS, not instance: any unauthenticated endpoint "
+                   "that republishes an internal engineering document belongs here. Deliberately "
+                   "SPLIT from RG-0144 rather than folded into it, because one is a "
+                   "reconnaissance control and the other is confidentiality, and a single "
+                   "assertion covering both would be promoted the moment either half passed.",
+       ref="DW-078 (27 Aug 2026), confirmed by an independent anonymous PROBE in the "
+           "pre-soft-launch third-party sweep the same morning: GET /dashboard/summary with no "
+           "credential and no cookie returns 200 / 1,360 B carrying redacted='posture' (so "
+           "POSTURE-REDACT-1 IS working and RG-0144 is genuinely passing) -- and, beside it, "
+           "today's internal engineering changelog verbatim including its own headline, the "
+           "session number and basis, live counts (listings/sellers/introductions/Tuppence "
+           "top-ups) and priorityItems whose first entry literally begins '**DAVID -- DEPLOY the "
+           "22 Aug work.**'. Two days before the site goes public that is a stranger reading the "
+           "engineering log, the burn-down and the operator's to-do list. NOT rated with the "
+           "posture leak: it names no control to attack, so it is confidentiality and "
+           "presentation, not a way in -- which is exactly why it must not ride on RG-0144's "
+           "coat-tails. THE FIX IS NOT MERELY 401-ing THE ROUTE: POSTURE-REDACT-1's own comment "
+           "records that both operator dashboards fetch this with NO credential, so a gate breaks "
+           "David's console, and 'a fix that breaks the console will be reverted under pressure'. "
+           "The honest fix is two-sided -- the consoles start sending the admin key, and the "
+           "anonymous payload keeps its operational fields while the narrative fields come back "
+           "withheld -- and the second side cannot be verified from this vantage without being "
+           "able to load the consoles. OPEN, NOT half-shipped: 27 Aug is the last ship day before "
+           "soft-public (RUL-001) and quietly changing a live endpoint the operator console reads "
+           "on launch eve is how a console goes dark unwatched. Filed as machinery per RUL-037 "
+           "rather than as a sentence to David.")
+def rg_no_public_engineering_narrative():
+    out = []
+    PATH = "/dashboard/summary"
+    try:
+        st = _status(PATH)
+    except ProbeOffline as e:
+        return [(INFO, "live half not read (%s)" % e)]
+    if st in (401, 403):
+        out.append((INFO, "%s refuses anonymous callers (%d) -- no narrative published" % (PATH, st)))
+        return out
+    if st != 200:
+        out.append((INFO, "%s answered %d anonymously -- nothing published" % (PATH, st)))
+        return out
+    try:
+        req = urllib.request.Request(BASE + PATH, headers=UA)
+        body = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
+        doc = json.loads(body)
+    except ProbeOffline as e:
+        return [(INFO, "live half not read (%s)" % e)]
+    except Exception as ex:
+        return [(FAIL, "could not read %s anonymously: %r" % (PATH, ex))]
+
+    # Structural, not wording: the NARRATIVE fields must be absent or withheld for a
+    # stranger. Matching phrases would go green the day somebody reworded the changelog.
+    NARRATIVE = ("recentChangelog", "lastDone", "nextGoals", "priorityItems")
+    def _served(v):
+        if isinstance(v, str):
+            t = v.strip()
+            return len(t) > 80 and "withheld" not in t.lower()
+        if isinstance(v, list):
+            return sum(len(str(x)) for x in v) > 80
+        return False
+    leaking = sorted(k for k in NARRATIVE if _served(doc.get(k)))
+    if leaking:
+        out.append((FAIL, "%s serves the internal engineering narrative to an anonymous caller "
+                          "in %d field(s): %s. A stranger reads the engineering log and the "
+                          "operator's to-do list" % (PATH, len(leaking), ", ".join(leaking))))
+    else:
+        out.append((INFO, "no internal narrative field is served to an anonymous caller"))
+
+    # RG-0144's half must still hold -- this entry may never be read as covering it.
+    if doc.get("redacted") != "posture":
+        out.append((INFO, "note: redacted != 'posture' on this read -- RG-0144 owns that half"))
+    return out
 
 
 @entry("RG-0197", "The git lock self-heal covers EVERY repo a wave or a deploy fires from, and "
