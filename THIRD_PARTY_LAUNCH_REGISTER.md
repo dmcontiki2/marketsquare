@@ -23,18 +23,45 @@ Only PROBED is reported as fact — the 21 Aug lesson (the register said Google 
 *The regression ledger reads these lines directly. They stay red until a human fills them in — that is the point.*
 
 ```
-DOMAIN_REGISTRAR: UNKNOWN
-DOMAIN_EXPIRY: UNKNOWN
+DOMAIN_REGISTRAR: Cloudflare, Inc. (IANA ID 1910 · whois.cloudflare.com · registrar lock ON, clientTransferProhibited)
+DOMAIN_EXPIRY: 2026-12-30
 DOMAIN_AUTORENEW: UNKNOWN
-DOMAIN_VERIFIED_ON: UNKNOWN
-GOOGLE_CONSENT_SCREEN: UNKNOWN
+DOMAIN_VERIFIED_ON: 2026-08-27
+GOOGLE_CONSENT_SCREEN: PUBLISHED (In production · External · verification NOT required, no sensitive or restricted scopes) verified 2026-08-27
 ```
-*Ledger: **RG-0137** (domain lifeline) · **RG-0139** (consent screen published). Both OPEN, both print
-READY TO LOCK the moment the values above are real. **RDAP was NOT re-attempted this run.** Five
-endpoints over four consecutive sweeps have failed and the IANA bootstrap lists no `.co` service —
-that is a settled negative, recorded 26 Aug, and re-running it is the sweep spending time to
-re-learn something it already knows. **These four fields will never be filled by machinery.** One
-glance at David's registrar login settles all four, permanently.*
+*Ledger: **RG-0137** (domain lifeline) · **RG-0139** (consent screen published).*
+
+> ### ⚠️ THE "SETTLED NEGATIVE" WAS WRONG — corrected 27 Aug 2026 (DOMAIN-WHOIS-1)
+> Four consecutive sweeps declared the domain facts **permanently machine-unanswerable**, and the
+> 26 Aug entry hardened that into "these four fields will never be filled by machinery" — an
+> instruction to all future sessions to stop trying. **It took one query to disprove.**
+>
+> Every one of those sweeps was *guessing RDAP hostnames* (`rdap.org`, `rdap.nic.co`,
+> `rdap.identitydigital.services`, `rdap.net`, `rdap.markmonitor.com`) and reading five 404s as
+> proof the data did not exist. None of them **asked the authority which server to use.** The
+> method that works, in two steps and about a second:
+>
+> ```
+> whois.iana.org:43   <- "co"              => refer: whois.registry.co
+> whois.registry.co:43 <- "trustsquare.co" => the full registration record
+> ```
+>
+> `.co` is operated by **CentralNic**, not by any of the registries those five hostnames belong to
+> — which is exactly what a guess cannot tell you and a referral can. **A negative result proves a
+> negative only if the method was right.** Five wrong doors is not a locked building. This is the
+> same shape as the 21 Aug Google-OAuth error the top of this file is written to prevent: a
+> confident recorded "no" that a single probe overturned.
+
+**PROBED 27 Aug 2026 · `whois.registry.co`:** registrar **Cloudflare, Inc.**, created
+2025-12-30, **expiry 2026-12-30 (125 days out)**, status `clientTransferProhibited` (registrar
+lock ON), nameservers KOA/AINSLEY.NS.CLOUDFLARE.COM, **DNSSEC unsigned**. Registrar and DNS are
+the same party, which is why the 22 Aug note that Cloudflare nameservers "narrow but do not prove"
+the registrar was right to hedge — and is now settled.
+
+*Still UNRECORDED, and genuinely David's:* **`DOMAIN_AUTORENEW`.** WHOIS does not publish the
+auto-renew flag — it is a setting inside the registrar account. One look at
+**Cloudflare Dashboard → Domain Registration → Manage → trustsquare.co**. RG-0137 holds one
+failing assertion instead of four until that line reads `ON`.*
 
 ---
 
@@ -55,13 +82,23 @@ glance at David's registrar login settles all four, permanently.*
    Aug rotation. It was found only because a real RED was exercised on 26 Aug and did not deliver.
    **Nothing has been able to wake David about an outage for five days.** Root on the box +
    credential, so David's (RUL-037). Not fixable from this vantage: this sandbox holds no SSH key.
-3. **Google consent screen Published-or-Testing is UNRECORDED** (RG-0139). A Testing-mode app 302s
-   identically to a Published one — invisible to every instrument we own until a stranger tries to
-   sign in on launch morning. OAuth start re-PROBED this run: **302 → accounts.google.com** with a
-   real client_id and the correct `redirect_uri`. The lane works; only its audience is unknown.
-   **This is the last sign-in failure mode that would present for the first time to real users.**
-4. **Domain registrar / expiry / auto-renew UNRECORDED** (RG-0137). The one dependency that can end
-   everything silently, and the only one with no instrument at all.
+3. ~~**Google consent screen Published-or-Testing is UNRECORDED**~~ — ✅ **ANSWERED 27 Aug, READ
+   in the console.** Publishing status **"In production"** (published, NOT Testing), user type
+   **External**, and the Verification centre states in its own words: *"Verification is not
+   required since your app is not requesting any sensitive or restricted scopes."* Data access
+   confirms it — zero sensitive, zero restricted scopes. **Strangers can sign in on Friday.**
+   *Two residuals, neither blocking:* the Audience page displays an **OAuth user cap of "0 users /
+   100 user cap"** — that cap is the unverified-app cap and the console has just said verification
+   is not required, so it should not bind; it is cheap to re-read and the symptom if it ever did
+   bite would be sign-ins refusing at exactly 100 users, so it is worth one look in week one. And
+   **Branding status: "Your branding is not being shown to users"** — the consent screen will show
+   the bare domain rather than the TrustSquare name and logo. Presentation, not function.
+4. ~~**Domain registrar / expiry UNRECORDED**~~ — ✅ **THREE OF FOUR FIELDS ANSWERED 27 Aug.**
+   Registrar **Cloudflare, Inc.**, **expiry 2026-12-30 — 125 days out**, registrar lock ON. The
+   silent-death risk is four months away, not days. **The residual is `DOMAIN_AUTORENEW`**, which
+   WHOIS does not publish: one look at Cloudflare Dashboard → Domain Registration. See the
+   corrected note in MACHINE-READ FIELDS above — the "machinery can never answer this" verdict
+   four sweeps had hardened into canon was itself wrong, and mattered more than the answer.
 
 ### CLOSED SINCE YESTERDAY — all three on live probes, not on a file
 
@@ -96,13 +133,15 @@ load-bearing half) · **RG-0198, opened this run** (below).
 | ~~NOW~~ **DONE (found this run)** | — | ✅ **`.secrets/hetzner_token.txt` is now populated** (64 B). `hetzner_fw_selfheal.py` is armed and **RG-0188 reads `[ ok ]`** — yesterday it exited "NO TOKEN, nothing changed". The next lockout is no longer a hand-fix. *Residual, low stakes: no `.secrets/cf_waf_token.txt`, so the Cloudflare half is unarmed; that half retires with the pre-launch gate* | Was a credential (RUL-037) |
 | **NOW** | 2 | 🔴 **Paste the current Resend key into `/etc/marketsquare/resend.watch.conf`** (keep `0640 root:msdeploy`). Dead since the 22–23 Aug rotation — day 3. RED #2 | Root on the box + credential. DW-076 |
 | **NOW** | 2 | 🔴 **Deploy the uptime watcher** — 3 commands, `ops/cloudflare/UPTIME_MONITOR.md`. Do it *after* the line above. RED #1 | Cloudflare token + Resend secret. RG-0138 |
-| **NOW** | 2 | **Google Cloud console → OAuth consent screen: PUBLISHED or Testing?** Write it into `GOOGLE_CONSENT_SCREEN:` above | Console login. RG-0139 |
-| **NOW** | 2 | **Registrar, expiry and auto-renew for trustsquare.co** → the four `DOMAIN_*` fields above. Machinery has permanently failed this; it will not be asked again | RDAP dead for `.co`. RG-0137 |
+| ~~NOW~~ **DONE 27 Aug** | — | ✅ ~~Google consent screen~~ — READ in the console: **In production**, External, **verification not required** (no sensitive/restricted scopes). Recorded and dated. RG-0139's record half is satisfied | Was a console login |
+| ~~NOW~~ **DONE 27 Aug** | — | ✅ ~~Registrar and expiry~~ — **Cloudflare, Inc., expires 2026-12-30 (125 days)**, registrar lock ON. Answered by WHOIS after four sweeps wrongly declared it machine-unanswerable | Was thought to be David-only |
+| **NOW — 1 min** | 2 | **`DOMAIN_AUTORENEW`: Cloudflare Dashboard → Domain Registration → trustsquare.co.** The ONLY domain field WHOIS cannot publish. Reply with on/off and I will record it | Cloudflare login. RG-0137 |
+| **Week 1, not now** | — | Re-read the **Google OAuth user cap** (Audience page showed 0/100) and consider turning on **consent-screen branding** — the sign-in screen currently shows the bare domain, not TrustSquare | Console login |
 | **TODAY, Wed 27 Aug** | 0 | **The last pre-launch ship, IF one is still wanted.** The 05:45 release already carried everything that was outstanding; the only thing added since is this run's four ledger/instrument commits, which change no app behaviour. **A further deploy today is optional, not required** | Deploys reserved (RUL-037) |
 | **27 Aug — today** | 0 | Turn on **Paystack 2FA** (reminder set for today) | Account security |
 | **Overdue (was ~25 Aug)** | — | Buy the budget-capped **Gemini** key, paste to server. Still absent; photo anonymisation stays reject-only (RUL-033) | Money + secret |
 | **Launch flip** | 2 | Activate **Resend $20/mo 50k tier** (pre-approved B7 — execution, not a new decision) | Spend |
-| **Launch flip** | 2 | Set `LAUNCH_SPECIAL_DEADLINE=2026-09-01` on **both** MarketSquare and CityLauncher (CityLauncher's `.env` still has no such key at all) | Config both sides |
+| **Launch flip** | 2 | Set `LAUNCH_SPECIAL_DEADLINE=2026-09-01` — ✅ **CityLauncher half DONE 27 Aug** (written to its `.env`); the **MarketSquare server env half is still David's** (needs root on the box). ⚠️ **And it is not sufficient on its own:** `launch_codes.enabled()` requires **all three** of `LAUNCH_SPECIAL_ENABLED`, `LAUNCH_CODE_SECRET` and the deadline, and CityLauncher's `.env` carries **none of the other two** — so the launch-special block is currently stripped from every outbound email. Deliberately left off: switching on a customer-facing discount lane is launch scope, and `LAUNCH_CODE_SECRET` is an HMAC key | Config + launch scope |
 | **Before 1 Sep** | 5 | **Renew or drop the Anthropic subscription.** Successor is decided AND wired — re-verified on disk this run: RULINGS RUL-013 plus `ai_provider.py` `TASK_MODEL["openai"]["design"] = "gpt-5.6-sol"`, Scaleway standby. **Nothing is unbuilt here** — this is purely the subscription question | Spend |
 | **Once** | — | One smallest-pack **Paystack** buy with tab-close → closes the detached-credit E2E. `/payment/test` → `paystack_connected: true` re-probed today | Real money on the live rail |
 | **Once** | — | One real **Didit** ID check → settles free-500-vs-$1.10 billing. **Re-verified this run: lane ARMED** (`available:true`, `price_t:1`, *"READY — sellers can buy a check"*) and **still no real NPR query has ever run.** RG-0136 reads `[ ok ]` because it asserts the SAFETY properties (a PARTIAL_MATCH never passes, a provider failure never charges, the tick never gates an introduction); the billing shape is unanswerable without one live check | Real money |

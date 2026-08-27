@@ -7218,8 +7218,22 @@ def rg_admin_door_has_own_failure_budget():
            "debug, it is one you discover from a customer. DNS is on Cloudflare "
            "(ainsley/koa.ns.cloudflare.com, probed 22 Aug) which narrows but does NOT prove "
            "the registrar -- a full-zone Cloudflare setup looks identical whether Cloudflare "
-           "or a third party holds the registration. RDAP/WHOIS lookup was not available to "
-           "the sweep session, so the fact has to come from David once and then live here.")
+           "or a third party holds the registration. **CORRECTED 27 Aug 2026 (DOMAIN-WHOIS-1): "
+           "the claim that this was machine-unanswerable was WRONG, and it had hardened over "
+           "four sweeps into an instruction to stop trying.** Those sweeps GUESSED RDAP "
+           "hostnames (rdap.org, rdap.nic.co, rdap.identitydigital.services, rdap.net, "
+           "rdap.markmonitor.com) and read five 404s as proof the data did not exist. None "
+           "asked the AUTHORITY which server to use. Correct method, ~1 second: query "
+           "whois.iana.org:43 for 'co' -> it refers to whois.registry.co -> query that for the "
+           "domain. `.co` is operated by CentralNic, which no guess was going to reach. "
+           "Result: registrar Cloudflare Inc (IANA 1910), created 2025-12-30, expiry "
+           "2026-12-30, clientTransferProhibited, DNSSEC unsigned. CLASS LESSON, and the "
+           "reason this is written into the ledger rather than a changelog: A NEGATIVE RESULT "
+           "PROVES A NEGATIVE ONLY IF THE METHOD WAS RIGHT -- five wrong doors is not a locked "
+           "building. Same shape as the 21 Aug Google-OAuth error this whole sweep exists to "
+           "prevent. AUTORENEW genuinely cannot be probed -- WHOIS does not publish it, it is "
+           "a registrar-account setting -- so that one field, and only that one, comes from "
+           "David and then lives here.")
 def rg_domain_lifeline_recorded():
     out = []
     txt = repo_file("THIRD_PARTY_LAUNCH_REGISTER.md")
@@ -7341,7 +7355,8 @@ def rg_external_uptime_watcher():
 
 @entry("RG-0139", "The Google sign-in door is open to EVERYONE, not just listed test users -- "
                   "the consent screen is PUBLISHED and the fact is dated",
-       OPEN, scope="Google OAuth, the only social sign-in lane (Apple is OUT by RUL-030). "
+       LOCKED, fixed_on="2026-08-27 (promoted: READY TO LOCK the moment the console was actually READ. The record half sat UNRECORDED for six days across five sweeps, each of which listed it as a David-only errand rather than opening the page -- it took one navigation. Publishing status 'In production', External, and the Verification centre's own words: 'Verification is not required since your app is not requesting any sensitive or restricted scopes.')",
+       scope="Google OAuth, the only social sign-in lane (Apple is OUT by RUL-030). "
                    "Two halves: the LIVE half -- the app advertises and wires the lane -- and "
                    "the RECORD half, because an OAuth app left in 'Testing' 302s to Google "
                    "exactly like a published one and only fails at the moment a real stranger "
