@@ -800,8 +800,18 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
              NOT on the exempt list (migrations/018). The old code called r.json() blind, the
              parse threw, and the .catch mislabelled EVERY refusal as a network failure. That
              single wrong message is why this fault kept being re-diagnosed from zero. */
-          showLoginError('Locked by the pre-launch gate. Open https://trustsquare.co/ first, ' +
-                         'enter the reviewer code, then reload this page in the same browser.');
+          /* GATE-NOLOCK-1 (19 Aug 2026): /admin/login is now EXEMPT at the origin
+             (migrations/025) and a correct admin credential grants the gate cookie
+             itself, so the dashboard no longer needs the reviewer code first. A 401
+             here therefore means the password/PIN really is wrong — the old message
+             sent David to perform a step that was impossible and told him his correct
+             password was an incorrect reviewer code.
+             GATE-DRIFT-1 (27 Aug 2026): this correction landed in dashboard.server.html
+             on 19 Aug and NOT here, for eight days — and this is the copy David actually
+             opens (RG-0076's own ref says so). That is precisely the harm RG-0075 was
+             written about, caught by measuring the copies instead of trusting them. */
+          showLoginError('Password or PIN not accepted. If this box is new, open ' +
+                         'https://trustsquare.co/ once and unlock it there first.');
         }
         else if(r.status === 503){
           showLoginError('Server auth not configured (503) \u2014 MS_ADMIN_PASSWORD or MS_JWT_SECRET is unset on the box.');
@@ -846,7 +856,11 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
         } else if(r.status === 401 || r.status === 403){
           /* GATE-TRUTH-2: the change-PIN path was left blind by GATE-TRUTH-1, which only
              patched the login path in this file. Same origin gate, same blind parse. */
-          changeErr.textContent = 'Locked by the pre-launch gate. Open https://trustsquare.co/ first, enter the reviewer code, then retry.';
+          /* GATE-NOLOCK-1: /admin/change-pin is exempt at the origin too (migrations/025). */
+          /* GATE-DRIFT-1 (27 Aug 2026): synced from dashboard.server.html, where this had been
+             correct since 19 Aug. The SECOND wrong message in this file — the login path was
+             the first. One fault, two paths, three files: exactly why RG-0075 wants one source. */
+          changeErr.textContent = 'Current PIN not accepted. If this box is new, open https://trustsquare.co/ once and unlock it there first.';
           changeErr.style.display = 'block';
         } else {
           changeErr.textContent = 'PIN change failed (' + r.status + '). Please try again.';

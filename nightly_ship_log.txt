@@ -301,3 +301,74 @@ warmed 11 tutor videos on the CF edge
  ============================================================
 Press any key to continue . . . 
 Thu 08/27/2026  2:01:07.82  drift: DEPLOY DRIFT: 1 file(s) local-ahead of live - run /ship: bea_main.py
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Thu 08/27/2026  2:01:07.89
+ ============================================================
+
+ cleared stale .git\HEAD.lock 
+  [autobump] 0 reference(s) bumped
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 60 honestly not-wired, 2 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  OK -- every health colour on the page is fed, honestly dashed, or registered with a live review date.
+folded 1, skipped 0 (already present) · verify OK
+folded 1, skipped 0 (already present) - verify OK
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-08-27T00:01:10Z   mode=strict
+  Working tree: 9 file(s) uncommitted; 0 deploy target(s) changed.
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 49, 'strftime': 15, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  Verdict: ok   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+  [LOCK] acquired by LAPTOP-S0AC8CVC (pid 20408), TTL 30 min.
+  ------------------------------------------------------------
+  TSL PRE-DEPLOY GATE   2026-08-27T00:01:11Z   mode=strict
+  [CM] change-management docs
+    - STATUS.md            [ok]
+    - CHANGELOG.md         [ok]
+    - CHANGE_REGISTER.md   [ok]
+    - STATUS newest date : 2026-08-26 (1 days ago)
+    - CHANGELOG newest    : 2026-08-26
+    - Ship pending        : none detected (working tree clean)
+  [DB] live databases (read-only, msdeploy@178.104.73.239)
+    - primary db        [ok, 2879488 bytes, integrity ok] (cached)
+    - redis             [not readable - not gated]
+    -- proved over HTTPS /health (no credentials needed)
+  Verdict: CM=ok  DB=ok  ->  ok   (logged -> tsl_audit.log)
+  ------------------------------------------------------------
+warning: in the working copy of 'SESSION_COUNTER.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_ship_log.txt', CRLF will be replaced by LF the next time Git touches it
+ [4/6] Committed the working tree.
+ae0d55e Release Thu 08/27/2026  2:01:12.48
+ [5/6] Pushing to the mirror - backup ref main...
+To https://github.com/dmcontiki2/marketsquare.git
+   742d627..ae0d55e  HEAD -> main
+ [5/6] Publishing the deploy ref - THIS is the deploy...
+To https://github.com/dmcontiki2/marketsquare.git
+   742d627..ae0d55e  HEAD -> deploy
+
+  PUBLISHED. The server deploys it within ~2 minutes - with health check,
+  monotonic cache-buster, auto-rollback, then seed + migrations hook.
+
+ [6/6] Waiting ~3 minutes for the server to apply and settle...
+ERROR: Input redirection is not supported, exiting the process immediately.
+  [OK] /health answers ok 
+  DEPLOY DRIFT: 1 file(s) local-ahead of live - run /ship: bea_main.py
+  [WAIT] Not clean yet - one more 2-minute server tick...
+ERROR: Input redirection is not supported, exiting the process immediately.
+DEPLOY DRIFT: 1 file(s) local-ahead of live - run /ship: bea_main.py
+  If still ahead: watch  ssh root@178.104.73.239 "tail -20 /var/log/marketsquare-deploy.log"
+  [LOCK] released.
+
+ ============================================================
+  RELEASE COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Thu 08/27/2026  2:01:27.25  SHIPPED rc=0 â€” server runs migrations + smoke itself

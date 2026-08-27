@@ -125,6 +125,13 @@ REFLECTIONS = {
    ("../CityLauncher/emailer/emailer.py", ["_is_suppressed", "refusing send to opted-out"], []),
    ("citylauncher_ops.html", ["X-Launch-Key"], []),
  ],
+ "RUL-058": [
+   # Ladder re-ordered by MEASURED inventory (David, 26 Aug): Tutors leads, Stays last,
+   # global launch day sends Tutors. If a session puts Stays back on day one, the
+   # "HOLD on Stays" wording returns and this trips.
+   ("RULINGS.md", ["THE SINGLES LADDER IS RE-ORDERED BY MEASURED INVENTORY"], []),
+   ("WAVE_PLAN_LAUNCH_2026.html", ["HOLD<br>on Tutors", "all 4 countries<br>TUTORS"], ["HOLD<br>on Stays"]),
+ ],
  "RUL-057": [
    # Johannesburg is a SECOND PROVING CITY (David, 26 Aug): wave 1, Pretoria's ladder,
    # same start day; the lagged block drops to 9 SA cities. If a session ever puts JHB

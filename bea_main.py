@@ -112,10 +112,54 @@ from email.message import EmailMessage
 # env key is unset — never boot-refuse (lesson of the 23 Jul startup outage).
 MS_ADMIN_KEY = os.environ.get("MS_ADMIN_KEY", "")
 
+
+# ── BIT-LEVERS-REAL-1 (27 Aug 2026) ──────────────────────────────────────────
+# Ledger RG-0143. The BIT Mitigator was allowed to flip three flags that NOTHING
+# in this file read: ai_example_enabled, auth_fail_closed and tuppence_burn_enabled.
+# They existed as schema columns, an admin write model and a /flags exposure tuple
+# — and nowhere else. Flipping one changed a database row, reported the S1 as
+# "mitigated", and left the app behaving exactly as before.
+#
+# That is worse than having no breaker at all: a placebo lever CONSUMES the
+# incident. The operator believes the bleeding stopped and stops escalating.
+# tuppence_burn_enabled is the sharpest case — its declared user message promises
+# "you will not be charged in the meantime" while the charge went through anyway,
+# and it is the exact lever a human would pull during a double-charge incident.
+#
+# Each of the three is now READ at the one place its safe value has to bite.
+# Reads are fail-safe in the direction that keeps today's behaviour: any doubt
+# (missing column, DB unreachable, legacy row) returns the default, so wiring
+# these up cannot itself change how the app runs until somebody deliberately
+# flips a switch.
+def _bit_flag(name: str, default: bool) -> bool:
+    """Fail-safe read of a BIT safe-state flag from launch_switches."""
+    try:
+        import database as _db
+        conn = _db.get_db()
+        try:
+            row = conn.execute(
+                "SELECT %s AS v FROM launch_switches WHERE id=1" % name).fetchone()
+            if row is None or row["v"] is None:
+                return default
+            return bool(row["v"])
+        finally:
+            conn.close()
+    except Exception:
+        return default
+
+
 def _require_admin_or_key(x_admin_token: str = Header(default=None),
                           x_admin_key: str = Header(default=None)):
     if x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY:
         return {"via": "admin-key"}
+    # RG-0143 / B-NEG-AUTH: when auth_fail_closed is ON the admin surface narrows to
+    # the env-only key. The JWT path is refused outright — that is the wider, more
+    # forgeable door, and it is where a "bad key still returned 200" fault would live.
+    # Default 0 keeps today's behaviour; the Mitigator's safe value is True.
+    if _bit_flag("auth_fail_closed", False):
+        raise HTTPException(
+            status_code=401,
+            detail="Admin credentials required (fail-closed mode: admin key only).")
     if x_admin_token and _JWT_SECRET:
         try:  # _pyjwt/_JWT_SECRET defined later at module level — resolved at call time
             return _pyjwt.decode(x_admin_token, _JWT_SECRET, algorithms=[_JWT_ALGO])
@@ -5837,14 +5881,28 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
         # INTRO-HOLD-1: if a hold was placed at request time the money has ALREADY left
         # the wallet. Delivery BURNS that hold — it must never deduct a second Tuppence.
         _held = int(_row["held"] or 0) and not _row["released_at"]
+        # RG-0143 / B-NEG-DELIVER-CHARGE + B-NEG-COST-CEILING. The Mitigator's safe value
+        # is False, and the user message it publishes is "A service is being checked; you
+        # will not be charged in the meantime." Until today nothing read this flag, so that
+        # sentence was shown to buyers while the charge went through — the promise and the
+        # code disagreed, on the money path, during the exact incident the lever exists for.
+        # OFF now means what it says: the introduction is still DELIVERED (the message
+        # promises no charge, not no service), any hold is returned in full, and no Tuppence
+        # is deducted. Default True keeps today's behaviour.
+        _burn_on = _bit_flag("tuppence_burn_enabled", True)
         _balance = conn.execute(
             "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
             (_buyer,)).fetchone()["bal"]
-        if not _held and (_balance is None or _balance < 1):   # insufficient -> 402, never a negative wallet
+        if _burn_on and not _held and (_balance is None or _balance < 1):   # insufficient -> 402, never a negative wallet
             conn.rollback(); conn.close()
             raise HTTPException(
                 status_code=402,
                 detail="Insufficient Tuppence — 1T is needed to accept this introduction.")
+        if not _burn_on and _held:
+            # Release BEFORE the tuppence_charged flip: _release_intro_hold is a conditional
+            # UPDATE that requires tuppence_charged = 0, and it is the one authority on
+            # whether the money actually went back (releasing twice would MINT Tuppence).
+            _release_intro_hold(conn, intro_id, "burn disabled by BIT safe-state")
         _upd = conn.execute(
             "UPDATE intro_requests SET status = 'accepted', tuppence_charged = 1 "
             "WHERE id = ? AND COALESCE(tuppence_charged, 0) = 0 "
@@ -5855,7 +5913,18 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
             conn.rollback(); conn.close()
             raise HTTPException(status_code=409,
                                 detail="This introduction was just accepted elsewhere.")
-        if _held:
+        if not _burn_on:
+            # Charge waived by the BIT safe-state. tuppence_charged is still set to 1 by the
+            # UPDATE above so the once-only race guard is untouched and no later accept can
+            # re-charge this intro; the ZERO-amount row records WHY no money moved, keeping
+            # the ledger append-only and the waiver auditable.
+            conn.execute(
+                "INSERT INTO transactions (user_email, type, amount, description) "
+                "VALUES (?, 'intro_waived', 0, ?)",
+                (_buyer, f"Introduction delivered · charge WAIVED by BIT safe-state "
+                         f"(tuppence_burn_enabled off) · listing #{intro['listing_id']} "
+                         f"· {listing['title'] if listing else ''}"))
+        elif _held:
             # The hold becomes the fee. Append a ZERO-amount audit row rather than mutating
             # the original -1: the ledger stays append-only and the burn is still visible.
             conn.execute(
@@ -11897,10 +11966,87 @@ def _table_bold_items(text: str) -> list:
             items.append(m.group(1))
     return items
 
+# ── POSTURE-REDACT-1 (27 Aug 2026) ───────────────────────────────────────────
+# Ledger RG-0144. /dashboard/summary republishes STATUS.md prose to anyone who asks,
+# and STATUS.md had come to carry the SECURITY POSTURE. PROBED anonymously this
+# morning, two days before the site goes public, the endpoint served:
+#
+#   "pre-launch: Cloudflare WAF allowlist DISABLED (WAF-OPEN-1), origin gate
+#    GATE-ENFORCE-1 the only guard"
+#
+# — a stranger was being told which control is off and which single control is left
+# to test. The route's own docstring explains how it happened: "data is not
+# sensitive; security layer is the obscure URL". That was true when the summary was
+# project prose. It stopped being true the day the prose started describing defences,
+# and nothing re-read the claim.
+#
+# Redacting at the SOURCE rather than 401-ing the route, deliberately:
+#   * both operator dashboards fetch this with no credential, so 401 breaks them
+#     two days out, and a fix that breaks the console will be reverted under pressure;
+#   * the CLASS is "STATUS.md prose reaches strangers", not "this one sentence". A
+#     rule that humans must never write about defences in STATUS.md is not a control.
+#     This scrubs by pattern on the way out, so a sentence written next month is
+#     caught by machinery instead of by somebody remembering (the RG-0186 lesson:
+#     enumerate from what the service actually resolves).
+# An authenticated caller still gets the unredacted text.
+_POSTURE_RE = re.compile(
+    r"\bWAF\b|allow[\s\-_]?list|\bfirewall\b|bot\s*management|only\s+guard|"
+    r"sole\s+(?:guard|control)|GATE[\s\-_]?ENFORCE|\bunprotected\b|"
+    r"\bdisabled\b.{0,40}\b(?:WAF|gate|guard|firewall)\b|"
+    r"origin\s+(?:gate|token).{0,30}\b(?:only|sole)\b",
+    re.I)
+_POSTURE_MASK = "[posture detail withheld]"
+
+
+def _redact_posture(obj):
+    """Drop any clause that names the defence posture. Recurses through the payload so
+    a new field cannot leak by being added later."""
+    if isinstance(obj, str):
+        if not _POSTURE_RE.search(obj):
+            return obj
+        out, changed = [], False
+        for line in obj.split("\n"):
+            parts = line.split(" \u00b7 ")          # STATUS.md separates clauses with '·'
+            kept = [c for c in parts if not _POSTURE_RE.search(c)]
+            if len(kept) != len(parts):
+                changed = True
+            joined = " \u00b7 ".join(kept)
+            # A clause list can still hide it inside one long sentence.
+            if _POSTURE_RE.search(joined):
+                joined = _POSTURE_RE.sub(_POSTURE_MASK, joined)
+                changed = True
+            if joined.strip():
+                out.append(joined)
+        res = "\n".join(out)
+        return res if changed or res else obj
+    if isinstance(obj, list):
+        return [_redact_posture(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _redact_posture(v) for k, v in obj.items()}
+    return obj
+
+
+def _summary_caller_is_admin(x_admin_key, x_admin_token) -> bool:
+    if x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY:
+        return True
+    if x_admin_token and _JWT_SECRET:
+        try:
+            _pyjwt.decode(x_admin_token, _JWT_SECRET, algorithms=[_JWT_ALGO])
+            return True
+        except Exception:
+            return False
+    return False
+
+
 @app.get("/dashboard/summary")
-def dashboard_summary():
+def dashboard_summary(x_admin_key: str = Header(default=None),
+                      x_admin_token: str = Header(default=None)):
     """Live dashboard data — STATUS.md + BACKLOG.md + CHANGELOG.md + live DB stats.
-    No auth required (data is not sensitive; security layer is the obscure URL).
+
+    No auth required to READ, but an unauthenticated caller gets the security posture
+    scrubbed (POSTURE-REDACT-1 / RG-0144). The old docstring said "data is not
+    sensitive; security layer is the obscure URL" — that claim aged badly and is the
+    reason the leak went unnoticed.
     """
     status    = _read_file("STATUS.md")
     backlog   = _read_file("BACKLOG.md")
@@ -12055,7 +12201,7 @@ def dashboard_summary():
         },
     ]
 
-    return {
+    _payload = {
         "generatedAt": _dt.utcnow().strftime("%d %b %Y · %H:%M UTC"),
         "currentSession": current_session,
         "sessionAsOf": session_asof,
@@ -12081,6 +12227,10 @@ def dashboard_summary():
         },
         "bea_version": "1.3.1",
     }
+    if not _summary_caller_is_admin(x_admin_key, x_admin_token):
+        _payload = _redact_posture(_payload)
+        _payload["redacted"] = "posture"
+    return _payload
 
 
 
@@ -17266,6 +17416,13 @@ def ai_example(function_id: str):
     """Free worked example for the AI feature panel. ALWAYS returns a valid {result} so the
     'See an example' button can never error, for any feature id. No Tuppence, no auth."""
     fid = (function_id or "").strip()[:64]
+    # RG-0143 / B-FEA-EXAMPLE: the Mitigator's safe value here is False. Honour it as a
+    # 200 carrying the flag's own declared user message rather than an error — the
+    # "can never error" property above is the whole reason this route exists, and the
+    # message was written to be shown to a person. Default 1 keeps today's behaviour.
+    if not _bit_flag("ai_example_enabled", True):
+        return {"result": "Examples are temporarily unavailable — the paid run is unaffected.",
+                "example": True, "unavailable": True, "function_id": fid, **_report_stamp()}
     body = _AI_EXAMPLE_SAMPLES.get(fid) or _ai_example_generic(fid)
     return {"result": body, "example": True, "function_id": fid, **_report_stamp()}
 

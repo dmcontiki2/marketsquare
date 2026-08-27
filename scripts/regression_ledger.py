@@ -3711,23 +3711,76 @@ def rg_gate_truth_all_copies():
     return out
 
 
-@entry("RG-0075", "The admin-gate script has ONE source, not five hand-maintained copies",
-       OPEN, scope="marketsquare.html, dashboard.server.html, dashboard.html, "
-                   "marketsquare_admin.html, archive/session_dashboard_live.html",
-       fixed_on="",
-       ref="The root cause behind RG-0074 is duplication, not any one file. Five hand-maintained "
-           "copies of the same 40 lines is why four separate gate fixes each had to be applied "
-           "again per consumer, and why the dashboard -- the fifth consumer -- received none of "
-           "them. EXPECTED TO FAIL until the gate script is one file included by every surface. "
-           "The moment it passes, promote to LOCKED.")
+@entry("RG-0075", "The admin gate copies have NOT DRIFTED -- every gate fix reaches every copy, "
+       "so a correct password is never reported as a wrong reviewer code",
+       LOCKED, fixed_on="2026-08-27",
+       scope="THE ADMIN gate only: dashboard.server.html (the copy that SHIPS), "
+                   "dashboard.html and marketsquare_admin.html (local operator copies). "
+                   "RE-AIMED 27 Aug 2026 -- see ref: marketsquare.html and "
+                   "archive/session_dashboard_live.html are deliberately NOT in scope now.",
+       ref="The root cause behind RG-0074 is duplication, not any one file. Hand-maintained "
+           "copies of the same 40 lines are why four separate gate fixes each had to be applied "
+           "again per consumer. EXPECTED TO FAIL until the gate script is one file included by "
+           "every surface. The moment it passes, promote to LOCKED. "
+           "RE-AIMED AND SPLIT IN TWO, 27 Aug 2026 (GATE-DRIFT-1). Two corrections, both found by "
+           "actually diffing the copies instead of counting them: "
+           "(1) THE ASSERTION WAS COUNTING A DIFFERENT DOOR. marketsquare.html\'s "
+           "window.adminGateSubmit posts to /review/login -- it is the public REVIEWER gate, not "
+           "the admin gate, and merely shares the identifier. Counting it inflated the fault from "
+           "two variants to five and pointed the remedy at merging two security doors that must "
+           "stay separate. archive/ is archive and is out for the same reason: dead code is not a "
+           "maintenance burden. Real state: THREE files, TWO variants. "
+           "(2) THE DRIFT WAS LIVE AND IT WAS HURTING DAVID. dashboard.html and "
+           "marketsquare_admin.html were EIGHT DAYS behind dashboard.server.html on GATE-NOLOCK-1 "
+           "(19 Aug), on BOTH the login and change-PIN paths. Both still told him \'Locked by the "
+           "pre-launch gate... enter the reviewer code\' on a 401 -- a step that has been "
+           "impossible since migrations/025 exempted /admin/login and /admin/change-pin at the "
+           "origin. So a CORRECT password was reported as a wrong reviewer code, on the copy "
+           "RG-0076\'s own ref records as the one David actually opens. Synced 27 Aug; all three "
+           "now carry the same two messages. "
+           "THE ENTRY NOW ASSERTS BOTH HALVES: consolidation (still open -- and it is genuinely "
+           "constrained, because dashboard.html is opened over file:// where a served /static/*.js "
+           "cannot load, so the fix needs a build step or an inlined shared block, not a script "
+           "tag) AND drift, which is the property that actually causes harm and is checkable "
+           "today. A re-drift now goes red the same day instead of after eight.")
 def rg_gate_script_single_source():
     out = []
-    copies = [r for r in ("marketsquare.html", "dashboard.server.html", "dashboard.html",
-                          "marketsquare_admin.html", "archive/session_dashboard_live.html")
-              if "adminGateSubmit" in (repo_file(r) or "")]
+    ADMIN = ("dashboard.server.html", "dashboard.html", "marketsquare_admin.html")
+    copies = [r for r in ADMIN if "adminGateSubmit" in (repo_file(r) or "")]
+
+    # HALF 2 -- DRIFT. The harm RG-0075 exists to prevent is a gate fix landing in one
+    # copy and not the others, so assert the copies agree on the messages a past fix
+    # corrected. This is checkable NOW; consolidation is not.
+    MUST_AGREE = (
+        ("Password or PIN not accepted",
+         "the GATE-NOLOCK-1 login message (19 Aug) -- a 401 means the password is wrong, "
+         "NOT that the reviewer code is needed"),
+        ("Current PIN not accepted",
+         "the GATE-NOLOCK-1 change-PIN message -- /admin/change-pin is exempt at the origin too"),
+    )
+    STALE = "Locked by the pre-launch gate"
+    for needle, what in MUST_AGREE:
+        missing = [r for r in copies if needle not in (repo_file(r) or "")]
+        if missing:
+            out.append((FAIL, "gate copies have DRIFTED: %s lack %s. That is the exact fault this "
+                              "entry exists for -- a fix applied per-consumer, and the copy David "
+                              "opens is one of the ones that missed it"
+                        % (", ".join(missing), what)))
+    stale = [r for r in copies if STALE in (repo_file(r) or "")]
+    if stale:
+        out.append((FAIL, "%s still tell the operator to 'enter the reviewer code' on a 401 -- "
+                          "impossible since migrations/025 exempted the admin routes, so a CORRECT "
+                          "password reads as a wrong reviewer code (GATE-NOLOCK-1)"
+                    % ", ".join(stale)))
+    if not out:
+        out.append((INFO, "no drift: all %d admin gate copies carry the same corrected messages"
+                    % len(copies)))
+
+    # HALF 1 -- CONSOLIDATION. Still the real fix; still open.
     if len(copies) > 1:
-        out.append((FAIL, "the gate script is duplicated across %d files (%s) -- one shared "
-                          "source would have made GATE-TRUTH-1 fix all of them on 13 Aug"
+        out.append((INFO, "still %d hand-maintained copies (%s) -- consolidation is tracked "
+                          "separately as RG-0196; THIS entry asserts the property that actually "
+                          "causes harm, which is drift"
                     % (len(copies), ", ".join(copies))))
     else:
         out.append((INFO, "READY TO LOCK -- the gate script has a single source"))
@@ -7684,7 +7737,7 @@ def rg_wallet_matches_the_promise():
 @entry("RG-0143", "Every flag the BIT Mitigator is allowed to flip is actually READ by the app -- "
                   "the automatic safe-state response changes behaviour instead of only changing a "
                   "row and reporting success",
-       OPEN, scope="ops/bit/bit_mitigator.py SAFE_FLAGS entire (today: ai_example_enabled, "
+       LOCKED, fixed_on="2026-08-27", scope="ops/bit/bit_mitigator.py SAFE_FLAGS entire (today: ai_example_enabled, "
                    "auth_fail_closed, tuppence_burn_enabled) against bea_main.py and the shipped "
                    "front end. CLASS property: any flag added to SAFE_FLAGS in future is caught by "
                    "the same assertion. MITIGATION layer only -- the BIT DETECTION layer is real "
@@ -7831,10 +7884,36 @@ def rg_no_public_posture_leak():
         r"origin\s+(?:gate|token).{0,30}\b(?:only|sole)\b",
     )
     hits = sorted({p for p in PATTERNS if re.search(p, body, flags=re.I)})
+
+    # POSTURE-REDACT-1 (27 Aug 2026): the REPO half. Without it this entry reads whatever
+    # is DEPLOYED and cannot tell "the fix was never written" from "the fix is written and
+    # not yet shipped" -- two very different things to a session deciding what to do next.
+    hp = os.path.join(REPO, "scripts", "prove_posture_redaction.py")
+    fix_in_source = False
+    if not os.path.exists(hp):
+        out.append((FAIL, "scripts/prove_posture_redaction.py is gone -- the redaction is unproven"))
+    else:
+        ok, blind, detail = _harness([sys.executable, hp], timeout=90)
+        if blind:
+            out.append((INFO, detail))          # LEDGER-DEPS-1
+        elif not ok:
+            out.append((FAIL, "the redaction harness FAILS: " + detail[-300:]))
+        else:
+            fix_in_source = True
+            out.append((INFO, "redaction proven in source (16 checks: the real 27 Aug leak "
+                              "scrubbed, every non-posture field kept, recurses into nested "
+                              "fields, clean text untouched)"))
+
     if hits:
-        out.append((FAIL, "%s answers an ANONYMOUS client AND names the defence posture "
-                          "(%d pattern(s) matched: %s) -- it tells a stranger which control to "
-                          "test" % (PATH, len(hits), ", ".join(h[:26] for h in hits))))
+        if fix_in_source:
+            out.append((FAIL, "%s STILL answers an ANONYMOUS client with the defence posture "
+                              "(%d pattern(s): %s). The redaction IS in the source and passes its "
+                              "harness -- this is undeployed, not unwritten. It clears on the next "
+                              "ship." % (PATH, len(hits), ", ".join(h[:26] for h in hits))))
+        else:
+            out.append((FAIL, "%s answers an ANONYMOUS client AND names the defence posture "
+                              "(%d pattern(s) matched: %s) -- it tells a stranger which control to "
+                              "test" % (PATH, len(hits), ", ".join(h[:26] for h in hits))))
     else:
         out.append((INFO, "the public summary names no defence posture"))
     return out
@@ -9358,7 +9437,15 @@ def rg_remote_code_guard_is_real():
 
 
 @entry("RG-0178", "A script-src Content-Security-Policy is ENFORCED at the edge -- the browser itself refuses un-allowlisted remote code",
-       OPEN, scope="live response headers on trustsquare.co, BOTH the index and the app paths; shipped by migrations/031_csp_and_index_headers.py",
+       LOCKED, fixed_on="2026-08-27",
+       scope="live response headers on trustsquare.co, BOTH the index and the app paths; shipped by migrations/031_csp_and_index_headers.py, finally landed by 033 via CSP-SCRIPT-SRC-5. "
+             "PROMOTED 27 Aug 2026 on a live PROBE, not on the migration reporting ok: GET / and "
+             "GET /terms both return default-src 'self'; script-src 'self' 'unsafe-inline' "
+             "https://unpkg.com https://cdnjs.cloudflare.com. Worth recording because the 26 Aug "
+             "sweep raised a Cloudflare-edge-emitter hypothesis for why the origin fix kept not "
+             "showing up -- that hypothesis is now DISPROVEN: the emitter was nginx all along and "
+             "033 was measuring the port-80 301 redirect. A hypothesis that survives in a doc "
+             "after the probe kills it is the next session's wrong turn.",
        ref="CSP-SCRIPT-SRC-1 (24 Aug 2026). THE HOLE THE 3 AUG BREACH WENT THROUGH. The CSP is "
            "'frame-ancestors self' and nothing else -- no script-src -- so any script tag that reaches "
            "a page executes, from any origin on the internet. Every other control we own sits on OUR "
@@ -9448,7 +9535,28 @@ def rg_index_header_parity():
            "inventoried at RUNTIME (a static scan on 24 Aug found no absolute external fetch targets, "
            "but absence in source is not proof of absence at runtime), and a wrong connect-src breaks "
            "live payments or auth silently. Post-launch job. script-src is the control that stops the "
-           "script existing at all, and that one is tight -- this is defence in depth, not the door.")
+           "script existing at all, and that one is tight -- this is defence in depth, not the door. "
+           "INVENTORY DONE 27 Aug 2026, the thing this entry was blocked on -- but the SHIP is still "
+           "deliberately held to post-launch, because the entry\'s own caution is right and two days "
+           "before public is the worst possible moment to discover a missed XHR target. What was "
+           "measured: EVERY fetch() in ms.js resolves same-origin -- relative paths (/ai/run, "
+           "/ai/jobs/, /ai/functions, /ai/example/, /api/fx, /) or `${BEA_URL}/advert-agent/*`, and "
+           "BEA_URL is the literal \'https://trustsquare.co\' (ms.js line 6). There is not one "
+           "absolute cross-origin fetch/XHR/WebSocket/EventSource/sendBeacon target in the source. "
+           "The cross-origin hosts that DO appear -- unpkg.com and cdnjs.cloudflare.com (Leaflet "
+           "js/css), tile.openstreetmap.org (raster map tiles), fonts.googleapis.com/gstatic.com, "
+           "commons.wikimedia.org -- are script/style/img/font subjects, NOT connect subjects, and "
+           "are already named in their own directives. THE POLICY TO SHIP, so the next session does "
+           "not re-derive it: connect-src \'self\' https://unpkg.com https://cdnjs.cloudflare.com "
+           "https://tile.openstreetmap.org -- the three CDNs kept only because a Leaflet plugin can "
+           "fetch rather than <img>, and keeping three known hosts still forecloses exfiltration to "
+           "an attacker-controlled origin, which is the entire point. THE SAFE WAY TO SHIP IT: send "
+           "it first as Content-Security-Policy-Report-Only alongside the enforced header, collect "
+           "real-browser violation reports for a week, THEN enforce. That turns \'absence in source "
+           "is not proof of absence at runtime\' from an objection into a measurement. Not done "
+           "today on purpose: it needs a new migration, and the chain was only just unjammed "
+           "(RG-0125) -- adding one on the last ship day is the DEFER-1 risk this project has "
+           "already paid for twice.")
 def rg_csp_connect_src_tight():
     try:
         csp = _headers("/terms").get("content-security-policy", "") or ""
@@ -10216,10 +10324,21 @@ def rg_poll_for_expected_not_stable():
 
 @entry("RG-0192", "A source is told how many it still NEEDS, and never mistakes that for how "
        "many it may HAVE -- the wave cannot stall at half its target",
-       OPEN, scope="CityLauncher: pipeline/run.py -> every scraper source that takes "
-                   "max_results. Proven on google_maps; the same call shape feeds the other "
-                   "sources, so assume the whole source layer until each is read.",
-       fixed_on="",
+       LOCKED, scope="CityLauncher: pipeline/run.py -> every scraper source that takes "
+                   "max_results. FIXED 27 Aug 2026 (WAVE-HALFSTALL-1): google_maps.py's DB "
+                   "pre-check no longer gates on the absolute count. The contract is now one "
+                   "thing at both ends -- max_results means HOW MANY MORE TO COLLECT, which is "
+                   "how every other line in that file already read it -- and the zero-cost "
+                   "short-circuit is preserved and correct: it fires on max_results <= 0, i.e. "
+                   "when the caller says nothing more is needed. The DB count is still read, but "
+                   "REPORTED not enforced, so the log keeps its visibility without the gate. "
+                   "THE WHOLE SOURCE LAYER HAS NOW BEEN READ rather than assumed (the scope's own "
+                   "instruction): openstreetmap, duckduckgo, bing, teachers_trainers, "
+                   "adventures_accommodation and adventures_experiences all compare "
+                   "NEWLY-COLLECTED (`len(prospects) >= max_results`) against the remaining "
+                   "budget, which is correct; google_maps held the only absolute-count gate in "
+                   "the layer. The CLI flag now documents the contract at the boundary.",
+       fixed_on="2026-08-27",
        ref="WAVE-HALFSTALL-1, found 26 Aug 2026 measuring the Johannesburg wave (job 13f63ae7). "
            "pipeline/run.py calls sources with max_results=max(remaining, 0) -- the number STILL "
            "NEEDED (4 call sites). google_maps.py's DB pre-check then compares the ABSOLUTE count "
@@ -10316,6 +10435,36 @@ def rg_windows_scripts_crlf_and_readable():
         out.append((INFO, "every Windows script is CRLF; every hand-run .bat can say why it "
                           "stopped; eol=crlf pinned in .gitattributes"))
     return out
+
+
+@entry("RG-0196", "The admin gate script has ONE source -- the consolidation RG-0075 was "
+       "originally written for",
+       OPEN, scope="dashboard.server.html (ships), dashboard.html and marketsquare_admin.html "
+                   "(local operator copies). Split out of RG-0075 on 27 Aug 2026.",
+       fixed_on="",
+       ref="RG-0075 was retitled that day to assert DRIFT, because drift is the property that "
+           "actually hurt -- and because a title claiming 'ONE source, not five copies' while the "
+           "assertion only measured drift is the same wording-vs-behaviour mistake this file has "
+           "now made four times (CSP-VERIFY-GUARD-1/2/3). An entry must assert what its title "
+           "says. So the consolidation gets its own entry rather than being quietly absorbed into "
+           "a LOCKED one. "
+           "WHY IT IS STILL OPEN, and it is not laziness: dashboard.html is opened over file:// -- "
+           "RG-0076 exists because of that habit and STATUS.md records it as the copy David "
+           "actually opens. A file:// page cannot load /static/admin_gate.js (origin 'null'), so "
+           "the obvious fix breaks the very consumer that has been missing every gate fix. The "
+           "real options are a build step that inlines one shared block into all three at deploy "
+           "time, or dropping the file:// habit. Both are post-launch changes to the ADMIN ENTRY "
+           "PATH, and doing that on the last ship day before a public launch carries lockout risk "
+           "(RUL-027, reserved to David). Deliberately deferred, with the drift tripwire holding "
+           "the line until then.")
+def rg_gate_script_consolidated():
+    ADMIN = ("dashboard.server.html", "dashboard.html", "marketsquare_admin.html")
+    copies = [r for r in ADMIN if "adminGateSubmit" in (repo_file(r) or "")]
+    if len(copies) > 1:
+        return [(FAIL, "the admin gate is still %d hand-maintained copies (%s) -- EXPECTED while "
+                       "OPEN; RG-0075 holds the drift line meanwhile"
+                 % (len(copies), ", ".join(copies)))]
+    return [(INFO, "READY TO LOCK -- the admin gate script has a single source")]
 
 
 if __name__ == "__main__":
