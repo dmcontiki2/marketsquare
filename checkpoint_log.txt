@@ -222,3 +222,9 @@ Mon 08/24/2026  5:30:01.90  clean - nothing to commit
  create mode 100644 status.d/2026-08-26-third-party-sweep.md
  create mode 100644 status.d/folded/2026-08-26-gemini-canary-armup.md
 Wed 08/26/2026  5:30:03.45  committed 26 change(s)
+[main 4f482b8] Nightly checkpoint Thu 08/27/2026  5:30:01.98 (auto, no deploy)
+ 11 files changed, 734 insertions(+), 51 deletions(-)
+ create mode 100644 changelog.d/2026-08-26-jhb-wave1-launch-metrics.md
+ create mode 100644 changelog.d/2026-08-27-open-items-sweep.md
+ create mode 100644 scripts/prove_posture_redaction.py
+Thu 08/27/2026  5:30:02.09  committed 11 change(s)

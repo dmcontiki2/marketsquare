@@ -1,3 +1,197 @@
+## 2026-08-27 — Open-items sweep: two live defects, one PII-class leak, and an assertion that was aiming at the wrong door
+
+**OPEN-ITEMS-27AUG** · last ship day before soft-public (Fri 29 Aug, RUL-001)
+
+Ledger opened at **0 REGRESSED · 16 open** and closed at **0 REGRESSED · 14 open**, with three
+entries promoted to LOCKED. What follows is what was actually wrong, not what was tidied.
+
+### WAVE-HALFSTALL-1 — every category refused to fill past HALF its target (RG-0192 → LOCKED)
+
+`pipeline/run.py` calls each scraper with `max_results=max(CAP_PER_CATEGORY - already_in_db, 0)`
+— the number **still needed**. `google_maps.py`'s DB pre-check then compared the **absolute** count
+already in the database against that same argument:
+
+```
+CAP 20 · DB holds 11 · remaining = 9 · 11 >= 9  ->  "already has 11/9" -> return []
+```
+
+So a category was refused the moment it passed half its target, **silently, and reported as a cost
+saving**. The Johannesburg wave finished 184/270 with zero categories brought to quota, and raising
+the cap 20→30 could not help because the faulty gate scales with the target.
+
+Fixed by making the contract one thing at both ends: `max_results` means *how many more to collect*,
+which is how every other line in that file already read it. The zero-cost short-circuit is preserved
+and now correct — it fires on `max_results <= 0`. The DB count is still logged, but **reported, never
+enforced**. The whole source layer was then read rather than assumed (the scope's own instruction):
+`openstreetmap`, `duckduckgo`, `bing`, `teachers_trainers`, `adventures_accommodation` and
+`adventures_experiences` all compare newly-collected against the remaining budget and are correct.
+google_maps held the only absolute-count gate in the layer. **Wave 1 fires tomorrow.**
+
+### BIT-LEVERS-REAL-1 — three circuit breakers were placebos (RG-0143 → LOCKED)
+
+The BIT Mitigator was allowed to flip `ai_example_enabled`, `auth_fail_closed` and
+`tuppence_burn_enabled`. All three existed as schema columns, an admin write model and a `/flags`
+exposure tuple — **and nowhere else**. Flipping one changed a row, reported the S1 as mitigated, and
+left the app behaving exactly as before.
+
+That is worse than having no breaker, because a placebo lever *consumes the incident*: the operator
+believes the bleeding stopped and stops escalating. The sharpest case is `tuppence_burn_enabled`,
+whose declared user message promises **"you will not be charged in the meantime"** while the charge
+went through anyway — and it is the exact lever a human would pull during a double-charge incident.
+
+Each is now read where its safe value has to bite. `tuppence_burn_enabled` off means what it says:
+the introduction is still **delivered**, any hold is **returned in full**, no Tuppence is deducted,
+and a zero-amount `intro_waived` row records why. `tuppence_charged` is still set by the same
+conditional UPDATE, so the once-only race guard (INTRO-CHARGE-ONCE-1) is untouched. All reads are
+fail-safe toward today's behaviour — wiring them up cannot change how the app runs until somebody
+deliberately flips a switch. `prove_intro_hold.py` (22 checks) and `prove_intro_charge_once.py`
+(16 checks) both still pass, and both assert the guarded SQL is the text actually in `bea_main.py`.
+
+### POSTURE-REDACT-1 — the site told strangers which defences were down (RG-0144)
+
+`GET /dashboard/summary`, probed anonymously two days before public launch, served:
+
+> pre-launch: Cloudflare WAF allowlist DISABLED (WAF-OPEN-1), origin gate GATE-ENFORCE-1 the only guard
+
+The route's own docstring explains how it happened — *"data is not sensitive; security layer is the
+obscure URL"*. True when the summary was project prose; false the day the prose began describing
+defences, and nothing re-read the claim.
+
+Redacted at the source rather than 401-ing the route, deliberately: both operator dashboards fetch
+it with no credential, and a fix that breaks the console gets reverted under pressure. The scrub is
+by pattern and **recurses through the whole payload**, so a field added next month is caught by
+machinery rather than by someone remembering not to write about defences in STATUS.md. An
+authenticated caller still gets the unredacted text. Proven by `scripts/prove_posture_redaction.py`
+(16 checks, using the real 27 Aug leak as its fixture): 6 posture patterns → 0, all 18 fields
+retained, clean text returned byte-identical. **Written and proven; ships on the next deploy** —
+RG-0144 now distinguishes "not written" from "not shipped", which it previously could not.
+
+### GATE-DRIFT-1 — the assertion was counting a different door (RG-0075 → LOCKED, RG-0196 opened)
+
+Diffing the five "duplicate" gate copies instead of counting them found two things:
+
+1. **`marketsquare.html` is not a copy.** Its `adminGateSubmit` posts to `/review/login` — it is the
+   public **reviewer** gate, sharing only the identifier. Counting it inflated the fault from two
+   variants to five and pointed the remedy at merging two security doors that must stay separate.
+   Real state: three files, two variants.
+2. **The drift was live and it was hurting David.** `dashboard.html` and `marketsquare_admin.html`
+   were **eight days** behind on GATE-NOLOCK-1 (19 Aug), on *both* the login and change-PIN paths.
+   Both still said *"Locked by the pre-launch gate… enter the reviewer code"* on a 401 — a step
+   impossible since `migrations/025` exempted those routes. **A correct password was being reported
+   as a wrong reviewer code, on the copy RG-0076's own ref records as the one David actually opens.**
+
+Synced; all three now carry the same two corrected messages. RG-0075 was **retitled to assert drift**
+— the property that causes harm and is checkable today — because a title claiming "ONE source, not
+five copies" while the assertion only measured drift is the same wording-vs-behaviour mistake this
+file has now made four times. Consolidation moved to **RG-0196**, kept OPEN and honestly blocked:
+`dashboard.html` is opened over `file://`, where `/static/admin_gate.js` cannot load, so the obvious
+fix breaks the very consumer that keeps missing gate fixes. That is a post-launch change to the admin
+entry path with lockout risk (RUL-027).
+
+### RG-0178 promoted — script-src is live at the edge
+
+PROBED, not taken from the migration reporting ok: `GET /` and `GET /terms` both return
+`default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com`.
+This also **disproves the Cloudflare-edge-emitter hypothesis** the 26 Aug sweep recorded — the emitter
+was nginx all along and 033 had been measuring the port-80 301 redirect. That hypothesis is struck
+from the record rather than left to become the next session's wrong turn.
+
+### RG-0180 advanced, deliberately not shipped
+
+The inventory it was blocked on is done: **every** `fetch()` in `ms.js` resolves same-origin, and
+`BEA_URL` is the literal `https://trustsquare.co`. There is not one absolute cross-origin
+fetch/XHR/WebSocket/EventSource/sendBeacon target in the source. The policy to ship is recorded in
+the entry, along with the safe way to ship it (Report-Only first, then enforce). **Not shipped
+today**: the entry's own caution is right, it needs a new migration, and the chain was only just
+unjammed — adding one on the last ship day is the DEFER-1 risk this project has already paid for twice.
+
+### Board
+
+**189 entries · 175 holding · 0 REGRESSED · 14 open · 0 ready to lock · exit 0.**
+`rulings_check.py` 58/58. `eula_sync.py --check` in sync (117,749 B). All 8 `prove_*` harnesses pass.
+
+- GIT-LOCK-4 recorded as ledger RG-0197: CityLauncher had a two-day-old .git/HEAD.lock blocking every commit in the repo Wave 1 fires from, and git_unlock.py's 15-minute freshness guard blocks the retry that would clear a lock a failed command just left. Present in both repos, asserted in neither until now.
+
+### DEPLOY-DEBT-VOICE-1 — the ledger was arguing against its own remedy (RG-0154)
+
+RG-0154 went red with *"live badge says Session 179, the evidence on disk says 180"* — so the run
+exited 1 and printed **"Do not deploy over this"**, on the last ship day, when a deploy was the only
+thing that could fix it. Two different faults were wearing one sentence:
+
+- the counter has fallen behind the fragments on disk — a real rot, remedy is `session_counter.py`;
+- the counter is correct and the server simply hasn't shipped — **deploy debt**, remedy is a deploy.
+
+Now distinguished. The first stays a FAIL; the second reports as deploy debt and says so. Same
+distinction RG-0144 gained today between "not written" and "not shipped". An instrument that tells
+the operator not to do the one thing that fixes the finding is not a cosmetic wording problem.
+
+### GIT-LOCK-4 — the repo Wave 1 fires from could not commit at all (RG-0197 → LOCKED)
+
+Committing the wave fix took **five attempts**. A `CityLauncher/.git/HEAD.lock` dated **25 Aug** —
+two days old — was blocking every commit, and each failed attempt planted a fresh 0-byte lock inside
+the previous one's belt, because FUSE will not let git unlink its own lock files. Nothing had noticed
+for two days because RG-0015 watches MarketSquare only.
+
+Two corrections to my own first reading of it, both recorded rather than quietly fixed:
+
+- I wrote that `git_unlock.py` was missing from CityLauncher and that I had copied it across. **It was
+  already there** (came in with TEACH-1, `d36b592`) and my copy was byte-identical. The commit message
+  that said otherwise was amended.
+- I wrote that the guard "refuses to clear a lock younger than 15 minutes". Reading `stale()` shows the
+  15-minute threshold applies only to *non-empty* locks; a 0-byte lock already had a 60-second belt. The
+  real gap was narrower and still real.
+
+`git_unlock.py` now consults its own `git_running()` first: a 0-byte lock with `pgrep` **proving** no
+git process running is unambiguously abandoned, and age adds nothing. The belt stays everywhere else,
+including when `git_running()` fails and defaults to True, where it touches nothing. Mirrored to
+CityLauncher. Also measured rather than assumed: **CityLauncher contains no git-writing `.bat`/`.py`/`.sh`
+at all**, so the 25 Aug lock was left by a session, not an unguarded script — which is what the self-heal
+is for. RG-0197's coverage half is scoped to CityLauncher only, because RG-0015 already owns MarketSquare's
+and does it properly; a naive sweep flagged 7 of its scripts on the first run, which would have been a
+false red inside a brand-new entry.
+
+## 2026-08-26 (evening) — STAYS-GEO-1 executed live · RUL-058 ladder re-order
+
+**The geo fix ran, and the truth arrived.** Live adventures/accommodation pass (`dc641865`)
+after a clean dry run. National Stays went from 223 rows "sendable" to **64 coordinate-proven**;
+**180 quarantined** as `rejected_wrong_geo` (never deleted, restored the moment they are
+re-proven); 16 already invalid.
+
+| City | Before | After |
+|---|---|---|
+| Pretoria | 217 | **6** |
+| Johannesburg | 0 | **1** |
+| Cape Town | 4 | 23 |
+
+Pretoria collapsing 217 → 6 is not a loss, it is the fault being removed: those lodges were
+never in Pretoria. Cape Town and the Garden Route now lead, which is what SA guest-house
+inventory actually looks like. Johannesburg's single row is *Jumbo House, Roodepoort* —
+correctly placed, with a real suburb instead of the `accommodation_only` placeholder.
+
+**Two bugs of mine, both found the hard way and both now covered:**
+1. `lat`/`lon` were added to the prospect dict but not to the CSV writer's FIXED fieldnames,
+   so `csv.DictWriter` raised and killed the run **at the CSV step, before city assignment** —
+   the run looked like it produced nothing for three hours. Fixed with the fields added plus
+   `extrasaction='ignore'`. RG-0193 now asserts both.
+2. An earlier `max_results=40` "test" hit `[SKIP] already at 223/40` and never scraped, so it
+   never touched the failing path. A skip is not a pass. `tests/test_stays_geo.py` now proves
+   the whole path offline in two seconds — resolver, CSV, repair, quarantine, country scoping —
+   and must be run BEFORE requesting a deploy.
+
+**RUL-058 — ladder re-ordered by measured inventory.** With real numbers in hand, Stays could
+not lead: 6 Pretoria / 1 Johannesburg against a 30 target, i.e. Gate 1 would have read almost
+nothing. New order on all ladders: **Tutors → Services casual → Services technical →
+Experiences → Collectors → Stays**. Only Tutors clears 30 in both proving cities (72 / 82).
+Global launch day now sends TUTORS; the global three hold on Tutors to 4 Sep. Board is v3.2.
+Order change only — same six sends, same days, ceiling untouched.
+
+**CONSOLE-QUICKEDIT-1 (RG-0195).** `deploy_citylauncher.bat` sat frozen mid-scp for over an
+hour and was diagnosed as a stalled SSH connection. It had been clicked: Windows QuickEdit
+blocks a process on its next stdout write until Enter is pressed. `fix_console_freeze.bat`
+disables it; `show_launch_key.bat` now copies to clipboard because with QuickEdit off you
+cannot drag-select. The lesson recorded with it: ask what the window SAYS before inferring a
+cause from server-side evidence.
+
 ## 2026-08-26 — BAT-CRLF-1 · CSP-SCRIPT-SRC-7 · RG-0188 locked · four guards cleared
 
 David: *"add secret bat flickered on and off?"* — a window that opened and shut too fast to
