@@ -261,3 +261,26 @@ do fix work, so grants exist before they are needed rather than after.
 Until (a) and (b) exist, PRE-LAUNCH behaviour in practice is: the agent fixes the PATH_A class
 autonomously and silently as ruled, and the ESCALATE class accumulates for the next fix session.
 That is a real improvement on David reading every report — but it is not yet "AI fixes it without me".
+
+## MAINT-DEPS-1 — the lane installs what its INSTRUMENTS need, not just what CRASHES (28 Aug 2026)
+
+**Step 0 of every maintenance run, before the ledger:** `python3 scripts/maint_deps.py`
+(idempotent, ~1 s warm; `--check` reports without installing and exits 1 if anything is missing).
+
+Why it earned its own step. BRAIN-DEPS-2 taught the lane to install `httpx` because the shadow
+agent *dies* without it — a loud failure, so it got fixed. `fastapi` fails **quietly**: the
+regression ledger's harness-backed entries (RG-0181, RG-0182) die at their import line, RG-0187
+honestly demotes them to `[ ???? ] NOT EVALUATED`, and the run signs off "that is not a green
+board". Nothing goes red, so nothing forces the fix — and those two entries were blind on every
+sandbox run from 26 Aug to 27 Aug inclusive (DW-071 closed while explicitly recording the
+residual: *"fastapi is absent from the sandbox bootstrap"*). **A blind instrument that never
+complains is worse than a red one.**
+
+Proven 28 Aug 2026: with `fastapi` present, RG-0181 and RG-0182 both read `[  ok  ]` and the
+board came back **0 UNVERIFIED for the first time** — 191 entries, 177 holding, 14 open,
+0 REGRESSED. The two harnesses were never broken; nobody could see them.
+
+CLASS property, deliberately not a two-package list: any module the lane's INSTRUMENTS import
+belongs in `REQUIRED`. A new harness that needs a new package adds a line there — it does not
+get to be silently blind for a fortnight first.
+

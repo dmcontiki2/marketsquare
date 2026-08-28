@@ -9371,7 +9371,7 @@ def rg_one_inbox_one_reply():
 
 
 @entry("RG-0175", "Wave mechanical hygiene is DONE and witnessed before the first wave -- source tags on every CTA, cross-wave unsubscribe suppression proven, international template pass",
-       OPEN, scope="orchestration_v2/templates/*_outreach.html CTA links + the n8n suppression path + a wave_hygiene_status.json witness. "
+       LOCKED, fixed_on="2026-08-28 (promoted: READY TO LOCK on the run of the very day the first wave is due -- RUL-053(g) names Fri 28 Aug 2026, and an unasserted gate on the day it matters is the DW-079 lesson repeated. All three properties report ok and fresh from the witness file: source tags, cross-wave suppression, intl template pass. The suppression half is a POPIA property, which is why this could not be left blue over a sending weekend -- DW-081)", scope="orchestration_v2/templates/*_outreach.html CTA links + the n8n suppression path + a wave_hygiene_status.json witness. "
              "RUL-053(g), due Fri 28 Aug 2026 (first wave). Three items, holistic per David: (a) every outreach CTA to trustsquare.co "
              "carries a wave source tag (?src=<wave>) so signups credit their wave and the holistic gates read numbers, not feelings; "
              "(b) an unsubscribe from any wave provably suppresses that address in every later wave (witnessed test); (c) one holistic "
@@ -10830,6 +10830,99 @@ def rg_git_unlock_covers_every_repo():
     if not [o for o in out if o[0] == FAIL]:
         out.append((INFO, "both repos carry the self-heal, both can clear a just-planted 0-byte "
                           "lock when no git is running, and neither holds a stranded lock"))
+    return out
+
+
+@entry("RG-0200", "The maintenance lane can SEE its whole board -- no instrument goes blind for "
+       "want of a package the lane could have installed in one second",
+       LOCKED, fixed_on="2026-08-28",
+       scope="scripts/maint_deps.py + the MAINT-DEPS-1 step-0 clause in MAINTENANCE_AGENT.md. "
+             "SOURCE-HALF by nature, exactly like RG-0187 and RG-0126: the instrument is the "
+             "subject. CLASS property, deliberately not a two-package list -- any module the "
+             "lane's INSTRUMENTS import belongs in maint_deps.REQUIRED, so a new harness that "
+             "needs a new package cannot be silently blind for a fortnight first. "
+             "DELIBERATE BOUNDARY, and it is the whole point of the entry: a module MISSING on "
+             "the machine reads INFO, never FAIL. That is RG-0187's own boundary applied to "
+             "itself -- an absent third-party package is an instrument limit, not a rotted fix, "
+             "and a red here would block a deploy over an environment quirk. What CAN go red is "
+             "the MECHANISM: the bootstrap deleted, its coverage narrowed, its detection turned "
+             "into a no-op, or the canon step-0 clause removed.",
+       ref="MAINT-DEPS-1, 28 Aug 2026, found by the daily maintenance loop on an EMPTY fault "
+           "queue -- which is when instrument debt is the only thing left to find. BRAIN-DEPS-2 "
+           "taught the lane to install httpx because the shadow agent DIES without it: a loud "
+           "failure, so it got fixed within a day. fastapi fails QUIETLY -- RG-0181 and RG-0182 "
+           "die at their harness import line, RG-0187 honestly demotes them to NOT EVALUATED, "
+           "and the run signs off 'that is not a green board'. Nothing goes red, so nothing "
+           "forces the fix, and those two entries were blind on EVERY sandbox run from 26 Aug "
+           "onward. DW-071 was closed on 27 Aug while recording the residual in its own close "
+           "note ('fastapi is absent from the sandbox bootstrap') -- a defect that is written "
+           "down and assigned to nobody is a defect that keeps running. A blind instrument that "
+           "never complains is worse than a red one, because a red one gets fixed. "
+           "PROVEN the same session: with fastapi present, RG-0181 and RG-0182 both read ok and "
+           "the board came back 0 UNVERIFIED for the first time -- 191 entries, 177 holding, "
+           "14 open, 0 REGRESSED. The two harnesses were never broken; nobody could see them. "
+           "Detection is asserted BEHAVIOURALLY below (a synthetic missing module must make "
+           "--check exit 1), because a bootstrap that reports ok unconditionally is exactly the "
+           "silent-blindness fault this entry exists to prevent, wearing a different hat.")
+def rg_maint_lane_dependency_bootstrap():
+    out = []
+    boot = repo_file(os.path.join("scripts", "maint_deps.py"))
+    if boot is None:
+        out.append((FAIL, "scripts/maint_deps.py is GONE -- the maintenance lane has no "
+                          "dependency bootstrap, so its instruments go blind silently again "
+                          "(MAINT-DEPS-1)"))
+        return out
+
+    # COVERAGE: the two modules whose absence has actually blinded this lane must be named.
+    for mod, why in (("httpx", "the shadow maintenance agent cannot run at all"),
+                     ("fastapi", "the RG-0181/RG-0182 harnesses demote to NOT EVALUATED")):
+        if ('"%s"' % mod) not in boot and ("'%s'" % mod) not in boot:
+            out.append((FAIL, "maint_deps.py no longer covers %r -- without it %s, and the lane "
+                              "loses the instrument without being told (MAINT-DEPS-1)"
+                        % (mod, why)))
+
+    # DETECTION, asserted as BEHAVIOUR: a bootstrap that always says ok is not a bootstrap.
+    try:
+        import importlib.util as _ilu
+        _spec = _ilu.spec_from_file_location(
+            "_rg0200_maint_deps", os.path.join(REPO, "scripts", "maint_deps.py"))
+        _md = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_md)
+        _md.REQUIRED = dict(_md.REQUIRED)
+        _md.REQUIRED["rg0200_synthetic_absent_module"] = (
+            "rg0200-not-real", "synthetic probe -- proves detection is not a no-op")
+        import io as _io, contextlib as _ctx
+        _buf = _io.StringIO()
+        with _ctx.redirect_stdout(_buf):
+            rc = _md.main(["--check"])
+        if rc != 1:
+            out.append((FAIL, "maint_deps.py --check returned %r with a module that certainly is "
+                              "not installed -- detection is a no-op, so the bootstrap would "
+                              "report a blind lane as healthy (MAINT-DEPS-1)" % (rc,)))
+    except Exception as exc:
+        out.append((FAIL, "maint_deps.py could not be exercised (%r) -- a bootstrap that cannot "
+                          "run cannot bootstrap anything" % (exc,)))
+
+    # The canon must still SEND the lane through it, or the tool exists and nobody calls it.
+    canon = repo_file("MAINTENANCE_AGENT.md")
+    if canon is None or "maint_deps.py" not in (canon or ""):
+        out.append((FAIL, "MAINTENANCE_AGENT.md no longer names scripts/maint_deps.py as step 0 "
+                          "-- an uncalled bootstrap is a decoration (MAINT-DEPS-1)"))
+
+    # ENVIRONMENT: reported, never enforced. RG-0187's boundary, applied to this entry itself.
+    try:
+        import importlib.util as _ilu2
+        missing = [m for m in ("httpx", "fastapi") if _ilu2.find_spec(m) is None]
+        if missing:
+            out.append((INFO, "this machine is missing %s -- the affected instruments are BLIND "
+                              "here until `python3 scripts/maint_deps.py` runs. Instrument limit, "
+                              "not a regression (RG-0187 boundary)" % ", ".join(missing)))
+    except Exception:
+        pass
+
+    if not [o for o in out if o[0] == FAIL]:
+        out.append((INFO, "dependency bootstrap present, covers httpx + fastapi, provably "
+                          "detects a missing module, and the canon still routes step 0 through it"))
     return out
 
 
