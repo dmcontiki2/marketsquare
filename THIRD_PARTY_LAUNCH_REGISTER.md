@@ -2,10 +2,16 @@
 **Every external account, key, subscription and legal document — and whether it is actually ready.**
 
 *Created 21 Aug 2026 · Soft launch to public **Fri 29 Aug 2026** · Full launch **Mon 1 Sep 2026** (RUL-001)*
-*Last ship day **Wed 27 Aug — TODAY.** Nothing deploys on launch eve.*
+*Last ship day was **Wed 27 Aug — PASSED.** Nothing deploys on launch eve.*
 *Maintained by the daily scheduled task `pre-soft-launch-third-party-check`. It rewrites the status column from **evidence**, not from what this file claims.*
 
-**Last swept: 2026-08-27 ~05:0x–07:2x UTC · 2 days to soft launch · verdict AMBER.**
+> **⏱ DATE ROLLED — it is now Fri 28 Aug 2026 (05:1x SAST).** The sweep below ran on the 27th and
+> its "2 days to soft launch" line was true when written. **It is now ONE day.** Recorded rather
+> than silently overwritten, because an undated status assertion that quietly ages is the exact
+> defect this file was set up to catch (the "(this is today)" lesson in ONETAP_SETUP.md). The
+> 27 Aug probe results below have NOT been re-run — treat them as of the 27th until the next sweep.
+
+**Last swept: 2026-08-27 ~05:0x–07:2x UTC · was 2 days to soft launch, now 1 · verdict AMBER.**
 *Verdict held at AMBER, but the composition changed completely: **three of yesterday's seven REDs
 are CLOSED on live probes** — the migration chain is unjammed, a full `script-src` CSP is enforced
 at the edge, and deploy debt is **ZERO for the first time in this register's life**. What remains

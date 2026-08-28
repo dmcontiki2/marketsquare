@@ -10550,6 +10550,93 @@ def rg_gate_script_consolidated():
     return [(INFO, "READY TO LOCK -- the admin gate script has a single source")]
 
 
+@entry("RG-0199", "David's hand-off queue RE-VERIFIES itself against evidence -- an item cannot sit "
+       "in his column because nobody looked, and cannot close because somebody remembered",
+       OPEN, scope="DAVID_QUEUE.md + scripts/david_queue.py. CLASS property, not a to-do list "
+                   "check: any register of work handed to a human must (a) carry a stated "
+                   "verification method per item, (b) re-run those methods rather than trusting "
+                   "its own STATE column, and (c) grade David-confirmed items BELOW probed ones "
+                   "instead of flattening them together. OPEN until every item is closed -- it "
+                   "is a live queue, and an empty queue is the only passing state.",
+       ref="DAVID-QUEUE-1 (27 Aug 2026), built after David asked for his open actions one at a "
+           "time while working. The design constraint was NOT 'keep a list' -- it was the "
+           "project's oldest recurring fault, a list going stale across a session break. "
+           "EVIDENCE IT WAS THE RIGHT CONSTRAINT, from the same morning: the Google consent "
+           "screen and the domain registrar had BOTH sat in the David-only column for six days "
+           "across five consecutive sweeps, and NEITHER was David's -- the consent screen took "
+           "one navigation to read ('In production', verification not required) and the "
+           "registrar took one WHOIS referral (Cloudflare Inc, expiry 2026-12-30). Five sweeps "
+           "re-copied both forward as his errands without once opening the page. A queue "
+           "reconciled only by a human reproduces exactly that, so this one re-runs its own "
+           "verifications: LEDGER:<id> reads the live board, FIELD:<name> reads the register, "
+           "and DAVID means no instrument can see it and it closes on his word with the date "
+           "recorded. The three grades are printed unequally on purpose -- a DAVID-confirmed "
+           "'done' is a weaker fact than a probed one and flattening them is how the evidence "
+           "ladder gets quietly abandoned. Superseded and NOT reused: AWAITING_DAVID.md, which "
+           "was marked superseded in July and would have resurrected a dead file.")
+def rg_david_queue_self_verifies():
+    out = []
+    qp = os.path.join(REPO, "DAVID_QUEUE.md")
+    sp = os.path.join(REPO, "scripts", "david_queue.py")
+    if not os.path.exists(qp):
+        return [(FAIL, "DAVID_QUEUE.md is gone -- David's open actions have no home again")]
+    if not os.path.exists(sp):
+        return [(FAIL, "scripts/david_queue.py is gone -- the queue is back to being reconciled "
+                       "by memory, which is the fault it was built to remove")]
+    import re as _re
+    q = open(qp, encoding="utf-8").read()
+    blocks = _re.findall(r"^## (D\d+) · (.+?)$(.*?)(?=^## D\d+ ·|\Z)", q, _re.M | _re.S)
+    if not blocks:
+        return [(FAIL, "DAVID_QUEUE.md parses to ZERO items -- the format drifted and the "
+                       "runner is now silently serving nothing")]
+
+    ids = [b[0] for b in blocks]
+    if len(set(ids)) != len(ids):
+        out.append((FAIL, "duplicate item id(s) in DAVID_QUEUE.md -- the board is ambiguous"))
+
+    missing, unverified_done = [], []
+    for iid, _title, body in blocks:
+        v = _re.search(r"^VERIFY:\s*(.+)$", body, _re.M)
+        st = _re.search(r"^STATE:\s*(.+)$", body, _re.M)
+        if not v or not v.group(1).strip():
+            missing.append(iid)
+            continue
+        vv = v.group(1).strip()
+        if not (vv.startswith("LEDGER:") or vv.startswith("FIELD:") or vv == "DAVID"):
+            missing.append(iid)
+        # An item may not claim DONE on a machine-checkable method -- the METHOD closes it.
+        if st and st.group(1).strip().upper().startswith("DONE") and vv != "DAVID":
+            unverified_done.append(iid)
+    if missing:
+        out.append((FAIL, "%d queue item(s) carry no usable VERIFY method (%s) -- they can only "
+                          "be closed by someone asserting it, which is the stale-list fault"
+                    % (len(missing), ", ".join(missing[:6]))))
+    if unverified_done:
+        out.append((FAIL, "%d item(s) are hand-marked DONE while carrying a machine-checkable "
+                          "VERIFY (%s) -- the method must close them, never the STATE column"
+                    % (len(unverified_done), ", ".join(unverified_done[:6]))))
+
+    # The runner must actually run, or the whole arrangement is decorative.
+    # --check, not --all: an OPEN queue exits 1 by design (work outstanding) and _harness
+    # would read that as a broken proof. The runner's --check mode reports only on the
+    # instrument, which is what this half of the assertion is about.
+    ok, blind, detail = _harness([sys.executable, sp, "--check"], timeout=120)
+    if blind:
+        out.append((INFO, detail))
+    elif not ok:
+        out.append((FAIL, "scripts/david_queue.py does not run: " + detail[-300:]))
+    else:
+        out.append((INFO, "%d item(s) parsed, every one with a stated verification method"
+                    % len(blocks)))
+
+    still_open = sum(1 for _i, _t, b in blocks
+                     if not _re.search(r"^STATE:\s*DONE", b, _re.M))
+    if still_open:
+        out.append((FAIL, "%d of %d queue item(s) still open -- expected while OPEN; this entry "
+                          "closes when David's column is empty" % (still_open, len(blocks))))
+    return out
+
+
 @entry("RG-0198", "An anonymous caller gets OPERATIONS, never the internal engineering NARRATIVE "
        "-- the dashboard payload is not a company diary published to strangers",
        OPEN, scope="GET /dashboard/summary, the same unauthenticated payload RG-0144 polices. "
