@@ -7204,7 +7204,8 @@ def rg_admin_door_has_own_failure_budget():
 
 @entry("RG-0137", "The domain that carries EVERYTHING has a recorded owner, a recorded expiry "
                   "and auto-renew ON -- the one dependency that can end the business silently",
-       OPEN, scope="trustsquare.co, the apex the whole platform answers on. RECORD-half by "
+       LOCKED, fixed_on="2026-08-28 (promoted: READY TO LOCK on the run after the last field landed. Registrar Cloudflare Inc + expiry 2026-12-30 came from WHOIS on the 27th once the method was right; auto-renew ON came from the Registrations dashboard on the 28th, read in David's own logged-in browser. The toggle was ALREADY on -- so the item that spent six days in his column as an action was, in the end, a read)",
+       scope="trustsquare.co, the apex the whole platform answers on. RECORD-half by "
                    "nature: no anonymous probe can read a registrar's expiry or auto-renew "
                    "flag, so the assertion is that the FACT IS WRITTEN DOWN where the next "
                    "session reads, dated, and not near lapse. Class, not instance: any domain "
@@ -7268,9 +7269,18 @@ def rg_domain_lifeline_recorded():
                 out.append((INFO, "domain expiry %s (%d days out)" % (exp[:10], days)))
         except Exception:
             out.append((FAIL, "DOMAIN_EXPIRY %r is not a YYYY-MM-DD date" % exp[:20]))
-    if ren not in ("on", "yes", "enabled", "true"):
+    # DOMAIN-AUTORENEW-PROVENANCE-1 (28 Aug 2026): match the leading TOKEN, not the whole
+    # line. The first cut demanded a bare "on" and went red on
+    # "ON (read in the Cloudflare Registrations dashboard 2026-08-28; status Active)" -- i.e.
+    # it punished the session that recorded WHERE and WHEN the fact came from. An assertion
+    # that penalises provenance teaches the next session to strip provenance, which is the
+    # opposite of what this file is for. Same shape as RG-0139: state token + a date.
+    if (ren.split() or [""])[0].strip("*_`") not in ("on", "yes", "enabled", "true"):
         out.append((FAIL, "DOMAIN_AUTORENEW is %r -- renewal depends on someone remembering"
                     % (ren or "unrecorded")))
+    elif not _re.search(r"\d{4}-\d{2}-\d{2}", ren):
+        out.append((FAIL, "DOMAIN_AUTORENEW says %r but carries no date -- an undated status "
+                          "assertion silently ages into a lie" % ren[:40]))
     if ver in unknown:
         out.append((FAIL, "DOMAIN_VERIFIED_ON is not recorded -- an undated status assertion "
                           "is a defect (the evidence-ladder rule)"))

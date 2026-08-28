@@ -24,7 +24,7 @@ screen and the domain registrar both sat in this column for six days and neither
 ---
 
 ## D1 · Domain auto-renew — the last field on the domain lifeline
-STATE: OPEN
+STATE: DONE 2026-08-28 (auto-renew ON, status Active, expires Dec 31 2026 — read in the dashboard; nothing needed changing)
 TIME: 1 minute
 VERIFY: FIELD:DOMAIN_AUTORENEW
 WHY_DAVID: Cloudflare account login. WHOIS does not publish the auto-renew flag — it is a setting

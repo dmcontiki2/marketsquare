@@ -31,7 +31,7 @@ Only PROBED is reported as fact — the 21 Aug lesson (the register said Google 
 ```
 DOMAIN_REGISTRAR: Cloudflare, Inc. (IANA ID 1910 · whois.cloudflare.com · registrar lock ON, clientTransferProhibited)
 DOMAIN_EXPIRY: 2026-12-30
-DOMAIN_AUTORENEW: UNKNOWN
+DOMAIN_AUTORENEW: ON (read in the Cloudflare Registrations dashboard 2026-08-28; status Active)
 DOMAIN_VERIFIED_ON: 2026-08-27
 GOOGLE_CONSENT_SCREEN: PUBLISHED (In production · External · verification NOT required, no sensitive or restricted scopes) verified 2026-08-27
 ```
@@ -64,10 +64,14 @@ lock ON), nameservers KOA/AINSLEY.NS.CLOUDFLARE.COM, **DNSSEC unsigned**. Regist
 the same party, which is why the 22 Aug note that Cloudflare nameservers "narrow but do not prove"
 the registrar was right to hedge — and is now settled.
 
-*Still UNRECORDED, and genuinely David's:* **`DOMAIN_AUTORENEW`.** WHOIS does not publish the
-auto-renew flag — it is a setting inside the registrar account. One look at
-**Cloudflare Dashboard → Domain Registration → Manage → trustsquare.co**. RG-0137 holds one
-failing assertion instead of four until that line reads `ON`.*
+**✅ `DOMAIN_AUTORENEW` = ON — READ 28 Aug 2026** in Cloudflare → Domains → Registrations:
+one domain, `trustsquare.co`, status **Active**, **auto-renew toggle ON**, expires **Dec 31, 2026**.
+The domain lifeline is now completely recorded and **RG-0137 is LOCKED**.
+
+*One small discrepancy, recorded rather than silently reconciled:* WHOIS gives the registry expiry
+as **2026-12-30T23:59:59Z** and the dashboard displays **Dec 31, 2026**. That is the same instant
+rendered in two timezones, not two dates — but the register keeps the WHOIS value, because the
+registry is the authority and the dashboard is a rendering of it.*
 
 ---
 
@@ -141,7 +145,7 @@ load-bearing half) · **RG-0198, opened this run** (below).
 | **NOW** | 2 | 🔴 **Deploy the uptime watcher** — 3 commands, `ops/cloudflare/UPTIME_MONITOR.md`. Do it *after* the line above. RED #1 | Cloudflare token + Resend secret. RG-0138 |
 | ~~NOW~~ **DONE 27 Aug** | — | ✅ ~~Google consent screen~~ — READ in the console: **In production**, External, **verification not required** (no sensitive/restricted scopes). Recorded and dated. RG-0139's record half is satisfied | Was a console login |
 | ~~NOW~~ **DONE 27 Aug** | — | ✅ ~~Registrar and expiry~~ — **Cloudflare, Inc., expires 2026-12-30 (125 days)**, registrar lock ON. Answered by WHOIS after four sweeps wrongly declared it machine-unanswerable | Was thought to be David-only |
-| **NOW — 1 min** | 2 | **`DOMAIN_AUTORENEW`: Cloudflare Dashboard → Domain Registration → trustsquare.co.** The ONLY domain field WHOIS cannot publish. Reply with on/off and I will record it | Cloudflare login. RG-0137 |
+| ~~NOW~~ **DONE 28 Aug** | — | ✅ ~~`DOMAIN_AUTORENEW`~~ — **ON**, status Active, expires Dec 31 2026. Read in David's own dashboard once he was logged in. **RG-0137 LOCKED — the domain lifeline is fully recorded.** Nothing was changed; the toggle was already on | Was a Cloudflare login |
 | **Week 1, not now** | — | Re-read the **Google OAuth user cap** (Audience page showed 0/100) and consider turning on **consent-screen branding** — the sign-in screen currently shows the bare domain, not TrustSquare | Console login |
 | **TODAY, Wed 27 Aug** | 0 | **The last pre-launch ship, IF one is still wanted.** The 05:45 release already carried everything that was outstanding; the only thing added since is this run's four ledger/instrument commits, which change no app behaviour. **A further deploy today is optional, not required** | Deploys reserved (RUL-037) |
 | **27 Aug — today** | 0 | Turn on **Paystack 2FA** (reminder set for today) | Account security |
