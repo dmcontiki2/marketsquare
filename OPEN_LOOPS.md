@@ -19,14 +19,22 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 **Last reconciled: 2026-08-20 (attended).** Previous reconciliation 14 Aug — six days in which
 this file was not the integrator it claims to be: L2 had been class-fixed on 16 Aug and still sat
 here as live work. Rule 2 says the session that closes a loop edits this file LAST; the honest
-reading is that sessions closed loops and did not. **9 days to soft-public (Fri 29 Aug) · 12 days
-to full launch (Mon 1 Sep) — RUL-001.**
+reading is that sessions closed loops and did not. **1 DAY to soft-public (Fri 29 Aug) · 4 days to full launch (Mon 1 Sep) — RUL-001.**
+*Day-count refreshed 2026-08-28 by the pre-soft-launch third-party sweep. It was written on
+20 Aug and had quietly aged eight days into a false statement — an undated countdown is the
+same defect class as an undated status assertion (the ONETAP_SETUP.md "(this is today)" lesson).*
 
 ---
 
 
 ## 🔴 BLOCKING NOW
 *(nothing proceeds until these clear)*
+
+> **Section state 2026-08-28: the one row printed here (B1) is DISCHARGED and no longer blocks
+> anything.** It is left in place because this file has no compiler and edits stay additive
+> (CHANGELOG-COLLISION-1 class) — it moves to CLOSED at the next attended reconciliation.
+> **Do not read this heading as "secrets rotation blocks launch". It does not, and has not
+> since 22 Aug.**
 
 > **26 Aug 2026 — B1 is DISCHARGED by probe; it is sitting in the wrong section.**
 > The third-party sweep re-verified it this morning: `SECRETS_REGISTER.md`'s "Still burnt" table is
@@ -36,10 +44,23 @@ to full launch (Mon 1 Sep) — RUL-001.**
 > next attended reconciliation.** Residue, neither of them blocking: David deletes the two superseded
 > Cloudflare tokens; FOUNDERS_ID_SALT rotate-or-accept is Claude's pending call.
 >
-> **What genuinely blocks 29 Aug today is not here — it is in `THIRD_PARTY_LAUNCH_REGISTER.md`
-> (swept 26 Aug):** anonymous PII on `/launch-api/prospects/list` (fixed in code, needs a deploy),
-> the jammed migration chain, no `script-src` CSP at the edge, SSH down with the RED-alert path down
-> with it, and the still-undeployed uptime watcher.
+> **28 Aug 2026 — FOUR OF THE FIVE ITEMS THIS NOTE NAMED AS BLOCKING ARE DISPROVEN BY PROBE.**
+> The 26 Aug wording below is kept for the record and corrected here rather than silently
+> overwritten. Re-probed live this morning (05:0x–05:2x UTC) by the pre-soft-launch sweep:
+> `GET /launch-api/prospects/list` → **401 `X-Launch-Key required`** (the anonymous-PII hole is
+> shut and deployed) · `/static/post_deploy_status.json` → **`migrations ok, "none pending"`**,
+> generated `2026-08-28T03:08:38Z` (the chain is unjammed) · full `script-src` CSP served on both
+> `/` and `/terms` (`default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com
+> https://cdnjs.cloudflare.com; … object-src 'none'; frame-ancestors 'self'`) · origin **port 22
+> OPEN 3/3** (`SSH-2.0-OpenSSH_9.6p1`). **Only the fifth is still true.**
+>
+> **What genuinely threatens 29 Aug, as of 28 Aug, is exactly two things and they are the same
+> thing twice — nothing would tell David the site is down over launch weekend:**
+> **(1)** the external uptime watcher is **built 22 Aug and still not deployed — day 6**
+> (L8 below · ledger RG-0138 · DAVID_QUEUE D4), and **(2)** the RED-alert Resend key in
+> `/etc/marketsquare/resend.watch.conf` is **dead — day 3** (DW-076 · DAVID_QUEUE D3), re-probed
+> from the box at 04:39 UTC today and still refused. Both are David's by RUL-037 (root on the box
+> + credentials). Neither is code and neither needs a deploy.
 
 
 | # | Loop | Owner | Single next action | Opened | Source |
