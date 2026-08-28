@@ -29,7 +29,7 @@ ALERT_FROM          = "TrustSquare Uptime <hello@mail.trustsquare.co>"
 # no longer suppressed), so a missing binding can never make it silent.
 [[kv_namespaces]]
 binding = "UPTIME_STATE"
-id      = "REPLACE_WITH_KV_NAMESPACE_ID"
+id      = "d8a9733e29ca47c290208855cbbef690"   # UPTIME_STATE, created 2026-08-28
 
 # SECRET, never in this file, never in git:
 #   wrangler secret put RESEND_API_KEY --config ops/cloudflare/uptime_wrangler.toml
