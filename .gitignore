@@ -165,3 +165,6 @@ _CLEANUP_REVIEW_*/
 # GitHub mirror. Rebuild the deterministic part with scripts/build_eval_set.py.
 eval_photos/
 private_originals_listing246/
+
+# wrangler local cache (UPTIME-EXTERNAL-1, 28 Aug 2026) - build artefact, never source
+.wrangler/
