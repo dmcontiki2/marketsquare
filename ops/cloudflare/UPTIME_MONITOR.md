@@ -40,17 +40,21 @@ timer on the box (self-referential — it dies with the thing it watches), and G
 Do this **after** the secret rotation (`ROTATE_SECRETS.bat`) so the fresh Resend key goes in,
 never the burnt one.
 
-```bash
+**Run these in PowerShell on David's PC, not on the server.** Use `npx wrangler`, never bare
+`wrangler` — it is not installed globally on this machine, and the bare form cost a round trip
+on launch eve, 28 Aug 2026. `cloudflare_email_worker/README.md` already had it right.
+
+```powershell
 cd C:\Users\David\Projects\MarketSquare
 
 # 1. state store (free tier). Copy the printed id into uptime_wrangler.toml.
-wrangler kv namespace create UPTIME_STATE
+npx wrangler kv namespace create UPTIME_STATE
 
 # 2. the alert credential — prompts, never echoes, never touches git
-wrangler secret put RESEND_API_KEY --config ops/cloudflare/uptime_wrangler.toml
+npx wrangler secret put RESEND_API_KEY --config ops/cloudflare/uptime_wrangler.toml
 
 # 3. ship it
-wrangler deploy --config ops/cloudflare/uptime_wrangler.toml
+npx wrangler deploy --config ops/cloudflare/uptime_wrangler.toml
 ```
 
 ## Prove it works (do not skip — an unproven monitor is not a monitor)
