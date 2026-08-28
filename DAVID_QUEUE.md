@@ -67,7 +67,7 @@ a real RED fired on 26 Aug and did not arrive. The conf file is untouched — 74
 key, not the burnt one.
 
 ## D4 · Deploy the external uptime watcher
-STATE: OPEN
+STATE: DONE 2026-08-28 (Worker trustsquare-uptime live, cron */5, PROBED ok:true kv:true 11:31:54 UTC; RG-0138 promoted OPEN -> LOCKED. Alert half unproven until the 06:00 UTC heartbeat lands 29 Aug)
 TIME: 10 minutes
 VERIFY: LEDGER:RG-0138
 WHY_DAVID: `wrangler` needs an interactive Cloudflare login on your machine, and step 2 prompts for

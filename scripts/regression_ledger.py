@@ -7301,7 +7301,8 @@ def rg_domain_lifeline_recorded():
 
 @entry("RG-0138", "An outage is noticed by something that is NEITHER the server nor David's "
                   "desktop -- an external watcher pings /health on a schedule and can wake him",
-       OPEN, scope="The whole outage-detection lane. Class property: every instrument that "
+       LOCKED, fixed_on="2026-08-28 (deployed by David on the eve of soft-public after six days built-but-undeployed; Worker trustsquare-uptime, version 896f82f8, cron */5, PROBED ok:true kv:true at 11:31:54 UTC. Promoted the same session it started passing -- an entry that prints READY TO LOCK and is left OPEN cannot trip red when it rots. NOTE the marker's own caveat: the PROBE half is proven, the ALERT half is not -- no successful send has been observed, and the first scheduled heartbeat lands 06:00 UTC 29 Aug. This entry asserts an independent vantage exists and is alive; it does not claim mail was delivered.)",
+       scope="The whole outage-detection lane. Class property: every instrument that "
                    "currently watches trustsquare.co runs either ON the box it watches (ops "
                    "sweep, BIT, subscription monitor, cron sensors) or on David's PC (the "
                    "06:30 daily watch) -- so a dead box or a closed laptop is a blind day, by "
