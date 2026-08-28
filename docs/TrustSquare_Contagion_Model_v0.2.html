@@ -324,6 +324,7 @@ const PARAMS = [
 
  {k:"varCap",   g:"University lane", l:"Emails per US city per day", lo:5, mid:20, hi:30, src:"data", n:"RUL-053's 30/category/city/day cap still binds. This lane sends Tutors only, into the eleven US cities ALREADY on the plan - it opens no new geography, because RUL-059's own rationale is that the binding constraint is liquidity and spreading thin while every city is below the cliff makes it worse."},
  {k:"varDays",  g:"University lane", l:"Sending days in the lane", lo:3, mid:8, hi:20, src:"guess", n:"How long the campaign runs. Tutoring and test-prep businesses in eleven metros is a finite list."},
+ {k:"varSeats", g:"University lane", l:"Listing capacity per business that signs up", lo:1, mid:3, hi:8, src:"guess", n:"RUL-059(e) targets tutoring capacity, not individuals - a test-prep centre or a campus learning-support service brings several tutors on one account. This is why the lane can matter despite a small list."},
  {k:"varMult",  g:"University lane", l:"Conversion vs an ordinary cold singles email", lo:.8, mid:2.0, hi:4.5, src:"guess", n:"RUL-059(e): the target is tutoring CAPACITY - test-prep centres, learning-support services - not faculty. A business whose product is tutoring hours has an obvious reason to list and can carry several tutors on one signup, so it should convert well above a cold email to a private individual. Untested."},
  {k:"bundleT", g:"Money", l:"Tuppence bought per purchase", lo:1, mid:5, hi:25, src:"guess", n:"NOT IN CANON, and it decides whether the introduction business works. An introduction is 1T = $2. A merchant-of-record charge costs 5% + $0.50, so selling Tuppence one at a time burns 30% of a $2 introduction in fees; at 5T a purchase it is 8%, at 25T it is 6%. This is a pricing decision, not a modelling one - the model only shows you what each answer costs."},
  {k:"introRt", g:"Money", l:"Intros per active seller /week", lo:.05, mid:.30, hi:1.0, src:"data", n:"Measurable now from intro_requests.created_at."},
@@ -596,7 +597,10 @@ function simulate(seed, L, sample, keepTrace, v32){
   }
 
   const trace = keepTrace? {A:[],R:[],mix:[],snap:[],arcs:[],events:[]} : null;
-  let everAct=0, waveSignups=0, varsitySignups=0, refSignups=0, varsityDecay=1;
+  let everAct=0, waveSignups=0, varsitySignups=0, refSignups=0, varsityDecay=1, newListWk=0;
+  // one list per city, sized by the campaign the ruling actually authorises
+  const varsityPool=new Float64Array(VARSITY_IX.length);
+  for(let vi=0; vi<VARSITY_IX.length; vi++) varsityPool[vi]=P.varCap*P.varDays;
   let tpAccrued=0;
   const seriesTot=new Float64Array(WEEKS);
   let deliverDecay=1;
@@ -642,14 +646,19 @@ function simulate(seed, L, sample, keepTrace, v32){
       varsityDecay *= (1 - Math.min(.06, L.complaint*2.2));
       const convV = P.deliver*varsityDecay*P.open*P.click*P.signup*(1+1.3*L.badge)
                     *delayPen*proof*P.varMult;
-      for(const i of VARSITY_IX){
-        if(pool[i]<=0) continue;
-        const send=Math.min(Math.round(P.varCap), Math.round(pool[i]));
+      for(let vi=0; vi<VARSITY_IX.length; vi++){
+        const i=VARSITY_IX[vi];
+        // Its OWN list - RUL-059 commissions scraper/sources/us_university_tutors.py.
+        // Drawing from the CityLauncher city pool would be wrong twice: that pool is
+        // private individuals, and the main ladder has already emptied it.
+        if(varsityPool[vi]<=0) continue;
+        const send=Math.min(Math.round(P.varCap), Math.round(varsityPool[vi]));
         if(send<=0) continue;
         const got=binom(r,send,Math.min(.9,convV));
-        E[i]+=got; waveSignups+=got; varsitySignups+=got;
-        pool[i]-=send; sent[i]+=send; S[i]=Math.max(0,S[i]-got);
-        if(pool[i]<0) pool[i]=0;
+        // RUL-059(e): the target is tutoring CAPACITY. A learning centre that signs up
+        // carries several tutors' worth of listings on one account.
+        E[i]+=got*P.varSeats; waveSignups+=got; varsitySignups+=got;
+        varsityPool[vi]-=send; sent[i]+=send; S[i]=Math.max(0,S[i]-got);
       }
     }
 
@@ -742,7 +751,7 @@ function simulate(seed, L, sample, keepTrace, v32){
       LT[i]=P.lqFloor+(1-P.lqFloor)*Lq[i];
       Aeff[i]=A0[i]+P.w5*A5[i]+P.w20*A20[i]+P.wAg*AG[i];
     }
-    const newAct=new Float64Array(n);
+    const newAct=new Float64Array(n); newListWk=0;
     for(let i=0;i<n;i++){
       // force of infection
       const betaHere = beta*proof*(1+P.localProof*Lq[i]);
@@ -771,7 +780,7 @@ function simulate(seed, L, sample, keepTrace, v32){
       const act=binom(r,Math.round(E[i]),P.pAct*delayPen);
       const lap=binom(r,Math.round(E[i]-act),P.eLapse);
       // A registration that never listed is the warmest list in the app, not a corpse.
-      E[i]-=act+lap; WARM[i]+=lap; A0[i]+=act; newAct[i]=act; everAct+=act;
+      E[i]-=act+lap; WARM[i]+=lap; A0[i]+=act; newAct[i]=act; everAct+=act; newListWk+=act;
       // buyers: sellers bring their own customer base
       if(act>0){ const want=binom(r,Math.round(act*P.custPer),P.custJoin);
                  const got=Math.min(want,Math.round(GS[i])); GS[i]-=got; BU[i]+=got; }
@@ -1008,6 +1017,10 @@ function simulate(seed, L, sample, keepTrace, v32){
         planFilled:planFilled*WEEKS_PER_MONTH, planGaps:planGaps*WEEKS_PER_MONTH,
         unmet:(function(){let t=0;for(let i=0;i<n;i++)t+=UD[i];return t;})(),
         organicEver:Math.max(0,everAct-waveSignups),
+        addressable:(function(){let t=0;for(let i=0;i<n;i++)t+=N[i];return t;})(),
+        publicPool:(function(){let t=0;for(let i=0;i<n;i++)t+=GP[i];return t;})(),
+        sellerLeft:(function(){let t=0;for(let i=0;i<n;i++)t+=S[i];return t;})(),
+        newListers:newListWk,
         dormant:(function(){let t=0;for(let i=0;i<n;i++)t+=D[i];return t;})(),
         warm:(function(){let t=0;for(let i=0;i<n;i++)t+=WARM[i];return t;})(),
         lostFor:(function(){let t=0;for(let i=0;i<n;i++)t+=Q[i];return t;})(),
@@ -1375,6 +1388,23 @@ function diagnose(st){
       Math.round(st.featRev||0).toLocaleString()+'/mo of plan runs at 2T and 5T. AI compose is costing $'+
       Math.round(st.featCost||0).toLocaleString()+'/mo against that.');
   }
+  // Saturation is a binding constraint too, and the model knew it without saying so.
+  const addr=st.addressable||0, pen=addr>0?(ever/addr):0;
+  const pubUse=(st.publicPool||0)>0?((st.buyers||0)/st.publicPool):0;
+  if(pen>0.5){
+    add(pen>0.85?2:1,'Running out of people to recruit',
+      Math.round(100*pen)+'% of the addressable seller pool has now listed ('+
+      Math.round(ever).toLocaleString()+' of '+Math.round(addr).toLocaleString()+
+      ', already net of the '+Math.round(100*(PM.incumbent.obs!==null?PM.incumbent.obs:PM.incumbent.mid))+
+      '% the incumbents hold). First-time listers are down to '+Math.round(st.newListers||0).toLocaleString()+
+      ' a week. This is SATURATION, not competition - no clone has arrived, and the incumbent share is a fixed haircut, not a rival taking your people. '+
+      'Note the whole plateau sits on smeDen, which is the model’s number-one driver and still a pure guess: at 4.0 per 1,000 the ceiling is twice as far away, at 0.6 you hit it three times sooner.');
+    add(0,'The buyer side is nowhere near done',
+      'Only '+(100*pubUse).toFixed(1)+'% of the reachable public has become a buyer ('+
+      Math.round(st.buyers||0).toLocaleString()+' of '+Math.round(st.publicPool||0).toLocaleString()+
+      '). Revenue keeps climbing on buyers after sellers stop - but the buyer engine is POWERED by sellers, '+
+      'so buyer growth decelerates as the seller base flattens. That is why the money curve bends without ever falling.');
+  }
   const EN=ENSD[VIEW];
   if(EN && week>20){
     const p50=EN.p50[week], det=tot, hi=Math.max(p50,det), lo=Math.max(1,Math.min(p50,det));
@@ -1451,6 +1481,8 @@ function cmpBar(){
     ['Signed up from a wave', sn.waveSignups||0, so.waveSignups||0, 0],
     ['Buyers',         sn.buyers||0,      so.buyers||0,      0],
     ['Dormant',        sn.dormant||0,     so.dormant||0,     0],
+    ['New listers /wk', sn.newListers||0,  so.newListers||0,  0],
+    ['Seller pool left', sn.sellerLeft||0, so.sellerLeft||0,  0],
     ['Truly lost',     sn.lostFor||0,     so.lostFor||0,     0],
     ['Cities live',    sn.cities||0,      so.cities||0,      0],
     ['Countries',      sn.ctry||0,        so.ctry||0,        0],

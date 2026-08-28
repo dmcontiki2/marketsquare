@@ -1,0 +1,13 @@
+{
+  "ran_at": 1787887591.6274242,
+  "ran_at_human": "2026-08-28T03:26:31.627429+00:00",
+  "source_tags": "ok",
+  "suppression": "ok",
+  "intl_pass": "not_done",
+  "detail": {
+    "source_tags": "WAVE-TAG-1 (28 Aug): build_magic_link appends ?src=<city>-<category>-<YYYYMMDD> on BOTH the fresh and LEGACY branches. Probed before the fix: 0 of 14 templates carried a tag; every CTA is {{magic_link}}, so the tag lives in the one builder. Proven by tests/test_wave_hygiene.py (CityLauncher), 6 assertions.",
+    "suppression": "send_email REFUSES a suppressed address at the single chokepoint \u2014 proven by EXECUTING it against a temp register, and fail-safe when the register is unreadable. Live /launch-api/optout returns 200. NOTE: n8n is NOT in the CityLauncher send path (zero references in emailer/ or pipeline/), so RG-0176's n8n cross-store item does not gate this wave; it gates any future n8n lane.",
+    "intl_pass": "NOT DONE. Today's wave is ZA only (Pretoria + Johannesburg). The US/UK/AU templates first send on 1 Sep (global launch day). Currency, locale wording and send windows must be reviewed before THAT date. Recorded as not_done rather than nudged to ok."
+  },
+  "wave": "2026-08-28 ZA Tutors \u2014 Pretoria + Johannesburg"
+}
