@@ -1,5 +1,5 @@
 {
- "next_id": 78,
+ "next_id": 81,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -580,13 +580,14 @@
   },
   "DW-062": {
    "first_seen": "2026-08-24",
-   "last_seen": "2026-08-26",
+   "last_seen": "2026-08-27",
    "sev": "MEDIUM",
    "source": "audit_global_qa LINKS-DEAD",
    "status": "OPEN",
    "closed": null,
    "summary": "RE-RAN 06:35 and FAILED again, unchanged: audit LINKS-DEAD still names the same 5 example.com URLs inside the bulk-import CSV template strings in ms.js (~16856-16858). Third consecutive failing pass.",
-   "next_action": "Attended: self-hosted /static sample URLs OR teach the audit to exempt template strings; closes when LINKS-DEAD drops from the audit."
+   "next_action": "Attended: self-hosted /static sample URLs OR teach the audit to exempt template strings; closes when LINKS-DEAD drops from the audit.",
+   "evidence": "RE-RAN 2026-08-27 and FAILED — 4th consecutive failing pass. audit_global_qa LINKS-DEAD: same 5 example.com image URLs of 11 checked, inside the bulk-import CSV template strings in ms.js."
   },
   "DW-063": {
    "first_seen": "2026-08-24",
@@ -600,7 +601,7 @@
   },
   "DW-064": {
    "first_seen": "2026-08-24",
-   "last_seen": "2026-08-26",
+   "last_seen": "2026-08-27",
    "sev": "LOW",
    "source": "fea_integrity_check + cron sensor",
    "status": "OPEN",
@@ -608,7 +609,8 @@
    "references": "DW-061",
    "summary": "RE-CHECKED 06:37 with SSH restored (first real re-run since 24 Aug) and STILL alert: index 415388->415200 (-188), ms.js v518->v545, ms.css v382->v409. Deploy not tamper — deploy_drift clean (19/19), audit VERSION-KEY-BENIGN. Baseline now stale across four deploys.",
    "next_action": "Attended: eyeball delta then update_fea_baseline.bat; closes on probed status ok, alerts [].",
-   "note_2026_08_26": "NOT RE-CHECKED — fea_integrity_check.py is on the box and SSH is down (DW-065). Could neither fail nor close today."
+   "note_2026_08_26": "NOT RE-CHECKED — fea_integrity_check.py is on the box and SSH is down (DW-065). Could neither fail nor close today.",
+   "evidence": "RE-PROBED 2026-08-27 over SSH and FAILED — fea_integrity_check status: alert, alerts ['index bytes 415388 -> 415200 (delta -188)']; notes ms.js v518->v548, ms.css v382->v412 (moved again with the 02:01 and 05:45 releases). deploy_drift clean + audit VERSION-KEY-BENIGN prove it is a deploy, not a tamper. Baseline stale across six deploys."
   },
   "DW-065": {
    "first_seen": "2026-08-26",
@@ -624,12 +626,14 @@
   },
   "DW-066": {
    "first_seen": "2026-08-26",
-   "last_seen": "2026-08-26",
+   "last_seen": "2026-08-27",
    "sev": "HIGH",
    "source": "regression ledger RG-0125 + live post_deploy_status.json",
-   "status": "OPEN",
+   "status": "CLOSED",
    "summary": "STILL RED 06:40. post_deploy_status.json still generated_at 2026-08-26T04:05:08Z (box mtime confirms) with migration:033_csp_verify_served.py failed, CHAIN JAMMED HERE. Live headers re-probed after the 06:02 release: still frame-ancestors only. Attended session mid-hunt (7cc3110 CSP-SCRIPT-SRC-4, 97f8168 CSP-SCRIPT-SRC-5).",
-   "next_action": "Fix 033 (scripts/prove_csp_discovery.py appears to be the 26 Aug session hunting the emitter) or record it in migrations/DEFERRED.txt; closes when RG-0125 re-runs green."
+   "next_action": "Fix 033 (scripts/prove_csp_discovery.py appears to be the 26 Aug session hunting the emitter) or record it in migrations/DEFERRED.txt; closes when RG-0125 re-runs green.",
+   "closed": "2026-08-27",
+   "evidence": "CLOSED 2026-08-27 — RG-0125 ok: 'last deploy 2026-08-27T03:46:59Z: chain clean, 3 step(s) all ok'; live /static/post_deploy_status.json confirms generated_at 2026-08-27T03:46:59Z, seed/ladder_seed/migrations all ok, migrations 'none pending'."
   },
   "DW-067": {
    "first_seen": "2026-08-26",
@@ -657,30 +661,36 @@
   },
   "DW-069": {
    "first_seen": "2026-08-26",
-   "last_seen": "2026-08-26",
+   "last_seen": "2026-08-27",
    "sev": "MEDIUM",
    "source": "regression ledger RG-0178 / RG-0180 (open) + probe",
-   "status": "OPEN",
+   "status": "CLOSED",
    "summary": "RE-PROBED 06:40, unchanged including after the 06:02 release: / and /terms return content-security-policy 'frame-ancestors self' only; no script-src, no connect-src. XFO/nosniff/referrer-policy/HSTS all present, so the header lane works. no_remote_code_guard.py (RG-0177 passing) is the only remaining barrier to the TP-Drive breach class.",
-   "next_action": "Fix with DW-066 (one root cause); closes when RG-0178 re-runs green with script-src on both the index and an app path."
+   "next_action": "Fix with DW-066 (one root cause); closes when RG-0178 re-runs green with script-src on both the index and an app path.",
+   "closed": "2026-08-27",
+   "evidence": "CLOSED 2026-08-27 — RG-0178 ok (fixed 2026-08-27, promoted on a live probe); probed independently: GET / and GET /terms both return script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com. RESIDUAL: connect-src still blanket 'self' https: — RG-0180 honestly open, coverage-map card not a live row."
   },
   "DW-070": {
    "first_seen": "2026-08-26",
-   "last_seen": "2026-08-26",
+   "last_seen": "2026-08-27",
    "sev": "LOW",
    "source": "self-heartbeat",
-   "status": "OPEN",
+   "status": "CLOSED",
    "summary": "Unchanged. 25 Aug run missed (last_run 08-24 -> 08-26). This 06:30 pass ran the SAME day as the 04:20 one, so the gap it measures is 0 days not 1 — a same-day re-run cannot satisfy the close condition and is not used to close it.",
-   "next_action": "Leave the app open at 06:30; closes when a run lands exactly 1 day after the previous last_run."
+   "next_action": "Leave the app open at 06:30; closes when a run lands exactly 1 day after the previous last_run.",
+   "closed": "2026-08-27",
+   "evidence": "CLOSED 2026-08-27 — self-heartbeat: previous last_run 2026-08-26, today 2026-08-27, gap exactly 1 day (the row's stated close condition). RESIDUAL: the watch is still desktop-bound — OPEN_LOOPS L8 / RG-0138."
   },
   "DW-071": {
    "first_seen": "2026-08-26",
-   "last_seen": "2026-08-26",
+   "last_seen": "2026-08-27",
    "sev": "LOW",
    "source": "regression ledger instrument debt (RG-0181, RG-0182) + run-to-run variance",
-   "status": "OPEN",
+   "status": "CLOSED",
    "summary": "HALF-FIXED by an attended session: new LOCKED entry RG-0187 teaches the ledger that a missing third-party dependency reads UNVERIFIED, never REGRESSION. PROBED 06:35: RG-0181 and RG-0182 now report [ ???? ] UNVERIFIED and the headline reads 2 REGRESSED / 2 UNVERIFIED. Still blind, not fixed: fastapi absent from the sandbox bootstrap, prove_fares_lane.py still writes a read-only DB. One clean run banked of the two required.",
-   "next_action": "Add fastapi to the sandbox bootstrap + give the fares harness a writable temp DB copy, or teach both entries to report UNVERIFIED rather than REGRESSED on a vantage fault (RG-0133 grey-until-measured applied to the ledger). Closes when two consecutive sandbox runs agree with no environment-fault reds."
+   "next_action": "Add fastapi to the sandbox bootstrap + give the fares harness a writable temp DB copy, or teach both entries to report UNVERIFIED rather than REGRESSED on a vantage fault (RG-0133 grey-until-measured applied to the ledger). Closes when two consecutive sandbox runs agree with no environment-fault reds.",
+   "closed": "2026-08-27",
+   "evidence": "CLOSED 2026-08-27 — second consecutive sandbox run with 0 environment-fault reds: 190 entries, 174 holding, 0 REGRESSED, 2 UNVERIFIED; RG-0181/RG-0182 read '[ ???? ] NOT EVALUATED — this machine lacks fastapi' (LEDGER-DEPS-1, RG-0187 holding). RESIDUAL: both harnesses remain BLIND — fastapi absent from the sandbox bootstrap, prove_fares_lane.py writes to a read-only DB."
   },
   "DW-072": {
    "first_seen": "2026-08-26",
@@ -695,12 +705,13 @@
   },
   "DW-073": {
    "first_seen": "2026-08-26",
-   "last_seen": "2026-08-26",
+   "last_seen": "2026-08-27",
    "sev": "HIGH",
    "source": "RED-alert path — attempted and FAILED this session",
    "status": "OPEN",
    "summary": "STILL BROKEN — exercised twice today, failed on both hops. 04:20: ssh connect timed out (DW-065). 06:42 with SSH restored: the command reached Resend, which answered 401 validation_error 'API key is invalid' (see DW-076). The structural fault stands: the RED path is one SSH command to the very box it monitors, and nothing asserts it.",
-   "next_action": "Give the RED path a transport independent of the box/SSH (same answer as OPEN_LOOPS L8) and add a ledger entry so it is asserted. Closes when a RED-condition send is proven from a vantage needing no SSH."
+   "next_action": "Give the RED path a transport independent of the box/SSH (same answer as OPEN_LOOPS L8) and add a ledger entry so it is asserted. Closes when a RED-condition send is proven from a vantage needing no SSH.",
+   "evidence": "NOT EXERCISED 2026-08-27 — today's verdict is AMBER, not RED, so no send was triggered; a green morning is not evidence about the alert path. Structural fault unchanged: the RED path is one SSH command to the box it monitors, and nothing asserts it."
   },
   "DW-074": {
    "first_seen": "2026-08-26",
@@ -716,34 +727,66 @@
   },
   "DW-075": {
    "first_seen": "2026-08-26",
-   "last_seen": "2026-08-26",
+   "last_seen": "2026-08-27",
    "sev": "HIGH",
    "source": "regression ledger RG-0186 (new entry, REGRESSED on arrival)",
-   "status": "OPEN",
+   "status": "CLOSED",
    "summary": "Second rotted LOCKED fix in today's run and it is the migration-proof method itself. RG-0186 ('a server-side migration can SEE every file it must change — discovery is what nginx actually reads') REGRESSION: '033 no longer reads the SERVED response after reloading — it would be declaring success from the write again, which is exactly 031's mistake'. Discovery half passes; verification half regressed. CLASS assertion covering any migration that edits server configuration.",
-   "next_action": "Attended (in flight): restore the served-response re-read in 033 alongside the port-443/settle fix from 97f8168; closes when RG-0186 re-runs green."
+   "next_action": "Attended (in flight): restore the served-response re-read in 033 alongside the port-443/settle fix from 97f8168; closes when RG-0186 re-runs green.",
+   "closed": "2026-08-27",
+   "evidence": "CLOSED 2026-08-27 — RG-0186 ok (fixed 2026-08-26), 'discovery proven against a fixture the old globs could not see'; the verification half restored in the CSP hunt and sibling RG-0191 written and LOCKED alongside it."
   },
   "DW-076": {
    "first_seen": "2026-08-26",
-   "last_seen": "2026-08-26",
+   "last_seen": "2026-08-27",
    "sev": "HIGH",
    "source": "RED-alert send attempted 06:42 — Resend returned 401",
    "status": "OPEN",
    "summary": "The watch's Resend alert key is DEAD and has been since the credential rotation. /etc/marketsquare/resend.watch.conf (74B, 0640 root:msdeploy, mtime 2026-08-05 06:26 UTC, shape re_HGA...CxQx) is refused by Resend: 401 validation_error 'API key is invalid'. The 22-23 Aug rotation deleted both old Resend keys and minted a new one into secrets.env for the app; the watch's copy was orphaned and nothing noticed because nothing exercises the alert path except a real RED — the first since the rotation was this morning. SECRETS_REGISTER.md + RG-0146 report clean and are right about the app's key; neither knows this second copy exists.",
-   "next_action": "DAVID (credential, RUL-037 reserved): put the current Resend key into /etc/marketsquare/resend.watch.conf, keep 0640 root:msdeploy. CTO lane: register every out-of-band copy of a rotated credential in SECRETS_REGISTER.md so RG-0146 sees it, and assert the alert path on a schedule. Closes when a send returns a Resend id."
+   "next_action": "DAVID (credential, RUL-037 reserved): put the current Resend key into /etc/marketsquare/resend.watch.conf, keep 0640 root:msdeploy. CTO lane: register every out-of-band copy of a rotated credential in SECRETS_REGISTER.md so RG-0146 sees it, and assert the alert path on a schedule. Closes when a send returns a Resend id.",
+   "evidence": "RE-PROBED 2026-08-27 read-only and STILL DEAD (day 2) — GET https://api.resend.com/domains with the key from /etc/marketsquare/resend.watch.conf returns HTTP 400 {'statusCode':400,'message':'API key is invalid','name':'validation_error'}. File unchanged: 74 B, -rw-r----- root:msdeploy, mtime 2026-08-05 06:26."
   },
   "DW-077": {
    "first_seen": "2026-08-26",
-   "last_seen": "2026-08-26",
+   "last_seen": "2026-08-27",
    "sev": "HIGH",
    "source": "regression ledger RG-0188 (new open entry)",
-   "status": "OPEN",
+   "status": "CLOSED",
    "summary": "The cure for the lockout that fired this morning cannot run. RG-0188: '.secrets/hetzner_token.txt exists but is EMPTY — the file is a placeholder, not a credential; hetzner_fw_selfheal.py still exits NO TOKEN, nothing changed. A present-but-empty secret file is MORE dangerous than a missing one: it satisfies a presence check and paints the board green over an unarmed remedy.' SSH-LOCKOUT-1 recurred at 04:20 today and cleared only because David was awake to add the IP by hand. CF half also unarmed (no .secrets/cf_waf_token.txt), lower stakes.",
-   "next_action": "DAVID (credential, RUL-037 reserved): paste a Hetzner API token with firewall write scope into .secrets/hetzner_token.txt (gitignored). Closes when RG-0188 re-runs green."
+   "next_action": "DAVID (credential, RUL-037 reserved): paste a Hetzner API token with firewall write scope into .secrets/hetzner_token.txt (gitignored). Closes when RG-0188 re-runs green.",
+   "closed": "2026-08-27",
+   "evidence": "CLOSED 2026-08-27 — RG-0188 ok (fixed 2026-08-26): the lockout self-heal is armed, .secrets/hetzner_token.txt no longer empty. RESIDUAL: Cloudflare half still unarmed (no .secrets/cf_waf_token.txt) — lower stakes, that gate retires at launch."
+  },
+  "DW-078": {
+   "first_seen": "2026-08-27",
+   "last_seen": "2026-08-27",
+   "sev": "MEDIUM",
+   "source": "anonymous PROBE of GET /dashboard/summary (raised alongside ledger RG-0144)",
+   "status": "OPEN",
+   "summary": "Anonymous GET /dashboard/summary returns HTTP 200, 15,208 B, and its recentChangelog field publishes today's internal engineering changelog verbatim — headline '2026-08-27 — Open-items sweep: two live defects, one PII-class leak, and an assertion that was aiming at the wrong door' — plus internal file paths, fault ids and a worked failure trace. RG-0144 passes correctly (it scrubs the posture field; redacted:'posture' is present) — the gap is SCOPE, not a rotted fix.",
+   "next_action": "CTO lane: extend the redactor to the narrative fields (recentChangelog, lastDone, blockers) for the anonymous caller, or answer them only to an authenticated one; widen RG-0144's assertion to the whole payload. Closes when an anonymous probe returns no internal defect narrative."
+  },
+  "DW-079": {
+   "first_seen": "2026-08-27",
+   "last_seen": "2026-08-27",
+   "sev": "MEDIUM",
+   "source": "regression ledger RG-0144 (READY TO LOCK, still open in source)",
+   "status": "OPEN",
+   "summary": "The run's only READY TO LOCK: RG-0144 ('the public dashboard does not tell an anonymous stranger which defences are down') prints '>>> now passing — change state to LOCKED so it cannot come back', info 'redaction proven in source (16 checks: the real 27 Aug leak scrubbed...)'. While it stays open in source a rot cannot trip the board red — armed but unasserted, the BLUE-card condition.",
+   "next_action": "CTO lane: promote RG-0144 OPEN -> LOCKED in scripts/regression_ledger.py, folding DW-078's wider scope into the same assertion. Closes when the ledger reports RG-0144 LOCKED and passing."
+  },
+  "DW-080": {
+   "first_seen": "2026-08-27",
+   "last_seen": "2026-08-27",
+   "sev": "LOW",
+   "source": "regression ledger RG-0192 (instrument prose)",
+   "status": "OPEN",
+   "summary": "RG-0192 reads '[ ok ] fixed 2026-08-27' yet still carries the pre-promotion info string 'READY TO LOCK -- google_maps.py no longer reads the remaining-count as an absolute cap'. Does not affect the exit code or the ready-to-lock count (correctly 1 = RG-0144). Filed as the RG-0133 instrument-truth class in miniature: a verdict string left behind after the state changed.",
+   "next_action": "CTO lane: clear the stale info string on promotion, or have _promote() strip a READY TO LOCK prefix on state change so the class cannot recur. Closes when the ledger prints RG-0192 with no READY TO LOCK text."
   }
  },
- "last_run": "2026-08-26",
- "last_verdict": "RED",
+ "last_run": "2026-08-27",
+ "last_verdict": "AMBER",
  "recheck_pass_2026_08_20": {
   "requested_by": "David: close all open actions",
   "items_rechecked": 15,
@@ -877,5 +920,33 @@
   "red_email": "ATTEMPTED AND FAILED AGAIN — SSH succeeded this time, Resend refused the key: 401 validation_error \"API key is invalid\". Filed as DW-076; DW-073 stays open.",
   "verdict_reason": "two LOCKED fixes rotted (RG-0125 migration chain jammed, RG-0186 migration verification) — site itself green on every probe",
   "concurrency_note": "An attended session was working the CSP fault throughout (commits 7cc3110 05:52, 97f8168 06:0x, Release 14d927f 06:02)."
+ },
+ "watch_pass_2026_08_27": {
+  "verdict": "AMBER",
+  "site": "GREEN — /health ok 1.3.1 (db integrity ok), root 200 in 0.54s, /payment/test ok + paystack_connected true, TLS 87d (22 Nov 2026), /dashboard/bit 8/8 PASS",
+  "ledger": "exit 2 — 190 entries, 174 holding, 0 REGRESSED, 13 open, 1 READY TO LOCK (RG-0144), 2 UNVERIFIED (RG-0181/0182, fastapi absent)",
+  "smoke": "sandbox 40/40 all passed; cron 39/39 all_green (box copy one assertion behind repo — accepted read, not a finding)",
+  "audit": "3 findings, 0 new (1 MEDIUM LINKS-DEAD = DW-062, 2 INFO by design)",
+  "cost_sweep": "exit 1 — 0 critical, 9 warnings, WARN set byte-identical to 26 Aug",
+  "deploy_drift": "clean — all 19 tracked files match live",
+  "sensors": "35 UP / 15 HELD / 1 PLANNED / 0 DOWN / 0 DEGRADED; disk 45% used, 40G free; orchestrator queue [] staged []",
+  "cron_parity": "loop_date 2026-08-27, parity holds on smoke/health/spend; spend $0.00 today of $100, MTD $1.89 / 318 calls",
+  "fea_integrity": "alert — index bytes 415388 -> 415200 (DW-064); the cron sensor HIGH anomaly is the same fact",
+  "closed": [
+   "DW-066",
+   "DW-069",
+   "DW-070",
+   "DW-071",
+   "DW-075",
+   "DW-077"
+  ],
+  "new": [
+   "DW-078",
+   "DW-079",
+   "DW-080"
+  ],
+  "checks_run": "12 of 13 (Monday canon/deep-scan lane not due — Thursday)",
+  "email_sent": false,
+  "email_reason": "verdict AMBER, not RED — no email by rule. Alert path re-probed read-only and still broken (DW-076)."
  }
 }

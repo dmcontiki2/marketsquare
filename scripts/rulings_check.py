@@ -125,6 +125,14 @@ REFLECTIONS = {
    ("../CityLauncher/emailer/emailer.py", ["_is_suppressed", "refusing send to opted-out"], []),
    ("citylauncher_ops.html", ["X-Launch-Key"], []),
  ],
+ "RUL-059": [
+   # US-only university-tutor lane: build now, send only on evidence, never from the
+   # main sending domain. UK is OUT. If a session adds a UK lane or points this at
+   # the primary domain, the guard strings below go missing and this trips.
+   ("RULINGS.md", ["US-ONLY UNIVERSITY-TUTOR LANE"], []),
+   ("../CityLauncher/scraper/sources/us_university_tutors.py",
+    ["COUNTRY = 'US'", "SEND_SUBDOMAIN_REQUIRED", "RUL-059"], ["'UK'", "ac.uk"]),
+ ],
  "RUL-058": [
    # Ladder re-ordered by MEASURED inventory (David, 26 Aug): Tutors leads, Stays last,
    # global launch day sends Tutors. If a session puts Stays back on day one, the
