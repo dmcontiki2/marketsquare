@@ -10926,5 +10926,64 @@ def rg_maint_lane_dependency_bootstrap():
     return out
 
 
+@entry("RG-0201", "A credential that has an OUT-OF-BAND COPY is refreshed in the SAME rotation "
+       "that replaces it -- an alert channel can never be left holding a burnt key",
+       LOCKED, fixed_on="2026-08-28",
+       scope="ROTATE_SECRETS.bat's [4b/6] step -> /etc/marketsquare/resend.watch.conf, and the "
+             "CLASS: any credential listed in SECRETS_REGISTER.md's 'Out-of-band copies' table "
+             "must be refreshed by the rotation itself, never by a human remembering. The "
+             "assertion is source-half by necessity -- the copy lives on the box and this board "
+             "runs from anywhere -- so it asserts the ROTATION CARRIES THE REFRESH, which is the "
+             "cause. Whether the key is alive today is RG-0138's job once the watcher heartbeats.",
+       ref="WATCH-COPY-REFRESH-1, 28 Aug 2026. The 22-23 Aug rotation replaced the app's Resend "
+           "key and silently orphaned the out-of-band copy the daily watch reads to send RED "
+           "alerts. Nothing noticed for THREE DAYS because nothing exercises that path except a "
+           "real outage -- it surfaced on 26 Aug only when a genuine RED fired and never arrived, "
+           "and it was still dead on 28 Aug, the eve of soft-public, leaving the site's one "
+           "wake-David channel down for six days across launch week. "
+           "TWO LESSONS, both recorded rather than smoothed over. "
+           "(1) THE CAUSE IS THE MANUAL DUPLICATE, not the rotation. fix_watch_alerts.bat "
+           "installed the copy once on 5 Aug 2026 and was retired; from then on every rotation "
+           "was one unwritten human step away from killing the alarm. The fix puts that "
+           "install line INSIDE ROTATE_SECRETS.bat so the step cannot be forgotten. "
+           "(2) THE REPAIR ITSELF WENT WRONG FIRST, and that is the sharper lesson: the file was "
+           "assumed to be a plain key=value config and edited with a split on the FIRST '=', "
+           "which destroyed the variable name in 'Environment=RESEND_API_KEY=...'. It is a "
+           "systemd drop-in. Two edits and a wrong probe followed before anyone READ what the "
+           "file was -- the answer was in the repo the whole time, in the retired one-shot that "
+           "created it. A format assumed is a format not probed (the evidence-ladder rule, "
+           "applied to file structure and not only to status). The recovery was one install "
+           "command, and the probe then returned HTTP 200 first time.")
+def rg_outofband_copy_refreshed_by_rotation():
+    out = []
+    txt = repo_file("ROTATE_SECRETS.bat")
+    if txt is None:
+        return [(INFO, "not in the repo -- source half not checkable from this vantage")]
+
+    if "resend.watch.conf" not in txt:
+        out.append((FAIL, "ROTATE_SECRETS.bat does not touch /etc/marketsquare/resend.watch.conf "
+                          "-- a rotation can once again orphan the RED-alert key, which is the "
+                          "exact fault of 22-28 Aug 2026"))
+    elif "install -o root -g msdeploy -m 640" not in txt:
+        out.append((FAIL, "the watch copy is mentioned but not re-INSTALLED with its mode/owner "
+                          "(0640 root:msdeploy) -- the watch runs as msdeploy and cannot read a "
+                          "root-only file"))
+    else:
+        out.append((INFO, "the rotation refreshes the watch copy itself (0640 root:msdeploy)"))
+
+    rtxt = repo_file("SECRETS_REGISTER.md")
+    if rtxt is not None:
+        try:
+            if "Out-of-band copies" not in rtxt:
+                out.append((FAIL, "SECRETS_REGISTER.md has lost its 'Out-of-band copies' table -- "
+                                  "the list this entry's class is defined against"))
+            elif "resend.watch.conf" not in rtxt:
+                out.append((FAIL, "the watch copy is not listed in SECRETS_REGISTER.md, so the "
+                                  "next rotation has no way to know it exists"))
+        except Exception:
+            pass
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

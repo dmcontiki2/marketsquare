@@ -46,6 +46,28 @@ echo.
 echo [4/6] Wiping the copies off the server...
 ssh %SRV% "rm -f /root/ts_rotated_latest.txt /tmp/rotate_secrets.py"
 echo   done.
+
+REM --- WATCH-COPY-REFRESH-1 (28 Aug 2026) ------------------------------------
+REM The daily watch reads the RED-alert Resend key from an OUT-OF-BAND COPY at
+REM /etc/marketsquare/resend.watch.conf -- a duplicate of the app's systemd
+REM drop-in, first installed by the retired fix_watch_alerts.bat on 5 Aug 2026.
+REM A rotation replaces the drop-in and leaves that copy behind, so the ONE
+REM channel that wakes David about an outage dies SILENTLY -- nothing exercises
+REM it except a real RED. That is exactly what happened: the 22-23 Aug rotation
+REM orphaned it, and it was found on 26 Aug only because a genuine RED fired and
+REM never arrived, leaving the site unwatched for six days into launch week.
+REM Refreshing the copy IN THE ROTATION removes the human step that failed.
+REM Asserted by ledger RG-0201.
+echo.
+echo [4b/6] Refreshing the watch RED-alert copy from the live drop-in...
+ssh %SRV% "install -o root -g msdeploy -m 640 /etc/systemd/system/marketsquare.service.d/resend.conf /etc/marketsquare/resend.watch.conf"
+if errorlevel 1 (
+  echo   [!!] COULD NOT refresh /etc/marketsquare/resend.watch.conf.
+  echo   [!!] The outage alarm is now running on a STALE key - fix before you walk away.
+) else (
+  echo   [ok] watch copy refreshed - the RED-alert path carries the new key.
+)
+REM ---------------------------------------------------------------------------
 echo.
 echo [5/6] Filing the values into their per-purpose files...
 python3 scripts\split_rotated_secrets.py

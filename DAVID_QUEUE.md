@@ -51,7 +51,7 @@ CONTEXT: Your reminder for this was set for today. Paystack is the live money ra
 account where a compromise costs real money rather than time.
 
 ## D3 · Resend RED-alert key — the outage alarm is dead
-STATE: OPEN
+STATE: DONE 2026-08-28 (watch copy re-installed from the live systemd drop-in; PROBED `GET https://api.resend.com/domains` = HTTP 200, 74 B, 0640 root:msdeploy)
 TIME: 5 minutes
 VERIFY: DAVID
 WHY_DAVID: Root on the Hetzner box + a live credential. This session has no SSH key, and pasting a
