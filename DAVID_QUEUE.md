@@ -39,7 +39,7 @@ expiry **2026-12-30 (125 days out)**, registrar lock ON. This one field closes *
 "one dependency that can end the business silently", completely.
 
 ## D2 · Paystack 2FA
-STATE: OPEN
+STATE: DONE 2026-08-28 (David confirmed: two-factor authentication enabled on the live money rail)
 TIME: 3 minutes
 VERIFY: DAVID
 WHY_DAVID: Account security — needs your phone/authenticator.
@@ -61,9 +61,9 @@ STEPS:
   2. Put the CURRENT Resend API key into `/etc/marketsquare/resend.watch.conf`
      (keep it `0640 root:msdeploy`).
   3. Reply: `D3 done`.
-CONTEXT: **Dead since the 22–23 Aug rotation — returning `401 validation_error` for five days.**
+CONTEXT: **Dead since the 22–23 Aug rotation — day 3, re-probed from the box at 04:39 UTC on 28 Aug: `GET https://api.resend.com/domains` returns HTTP 400.**
 Nothing has been able to wake you about an outage in that time, and it was only discovered because
-a real RED fired on 26 Aug and did not arrive. **Do this before D4** so the watcher gets the fresh
+a real RED fired on 26 Aug and did not arrive. The conf file is untouched — 74 B, `-rw-r----- root:msdeploy`, mtime still `Aug 5 06:26`. **Soft-public is TOMORROW. Do this before D4** so the watcher gets the fresh
 key, not the burnt one.
 
 ## D4 · Deploy the external uptime watcher
