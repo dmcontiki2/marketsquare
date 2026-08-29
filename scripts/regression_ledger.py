@@ -11325,7 +11325,9 @@ def rg_summary_anon_heartbeat_only():
     out = []
     try:
         import urllib.request
-        req = urllib.request.Request(BASE + "/dashboard/summary")
+        # deliberately anonymous: UA only (Cloudflare drops bare urllib), NEVER the
+        # review cookie -- the whole point is what a stranger sees
+        req = urllib.request.Request(BASE + "/dashboard/summary", headers=UA)
         body = urllib.request.urlopen(req, timeout=15).read().decode("utf-8", "replace")
     except Exception as exc:
         out.append((INFO, "could not probe /dashboard/summary anonymously (%s) -- RG-0211 "
