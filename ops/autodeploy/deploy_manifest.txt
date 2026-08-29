@@ -36,6 +36,12 @@ ts_fares.js                | static/ts_fares.js
 # ── Service worker (served from web root, not /static/) ──────────────────────
 assets/service-worker.js   | service-worker.js
 
+# SIM-DASH-2 (29 Aug 2026, David): the contagion model, linked from dashboard page 4.
+# Dest sits under the /orchestrator/ prefix -> inherits the "TrustSquare Orchestrator"
+# Basic-auth realm (probed 29 Aug: whole prefix 401s anonymously). NEVER move it to an
+# ungated dest -- it carries the wave plan.
+docs/TrustSquare_Contagion_Model_v0.2.html | orchestrator/simulation.html
+
 # ── Legal / support pages ────────────────────────────────────────────────────
 privacy.html               | privacy.html
 terms.html                 | terms.html

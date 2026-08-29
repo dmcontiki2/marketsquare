@@ -11275,7 +11275,7 @@ def rg_a2hs_offered():
 @entry("RG-0210", "The Ops Dashboard carries the BEAT THE MODEL card -- the contagion model's "
        "median seller curve pinned beside the LIVE founding-seller count, so the challenge "
        "David set on launch weekend stares back from dashboard page 4 (Horizon) every day",
-       OPEN,
+       LOCKED, fixed_on="2026-08-29",
        scope="dashboard.server.html (SIM-DASH-1). David, 29 Aug 2026: 'I have set my mind on "
              "proving our simulation wrong in the right direction... add it to the Ops "
              "Dashboard for me to keep reminding me of this challenge.' The model: docs/"
@@ -11287,7 +11287,7 @@ def rg_a2hs_offered():
              "the DB the dashboard already reads), grey/NOT MEASURED when the probe fails, "
              "never a guessed colour (RG-0133 properties); (c) ahead/behind is stated as a "
              "plain signed number of sellers vs the pinned median for the current model week "
-             "(week 0 = Tue 1 Sep 2026); (d) the card names the full model file by repo path (a web link waits for a gated static lane -- the 315KB model is internal). LOCATION AMENDED 29 Aug same day: David placed it on the NEW page 4 (Horizon view, PAGE4-HORIZON-1) beside the auction build track, not the +1 page. BUILT same session in dashboard.server.html; rides the first post-freeze deploy. When David "
+             "(week 0 = Tue 1 Sep 2026); (d) the card LINKS the full model at /orchestrator/simulation.html (SIM-DASH-2, 29 Aug): the manifest deploys it under the /orchestrator/ prefix, which the "TrustSquare Orchestrator" Basic-auth realm covers whole (probed: anonymous 401) -- never move it to an ungated dest, it carries the wave plan. LOCATION AMENDED 29 Aug same day: David placed it on the NEW page 4 (Horizon view, PAGE4-HORIZON-1) beside the auction build track, not the +1 page. BUILT same session; David deployed it himself the same evening (his call, dashboard-only risk) and the LIVE page was verified in-gate via Chrome: future-view + SIM-DASH-1 present, card probing /dashboard/summary and rendering actual=70 / median=0 / +70 AHEAD at week 0. LOCKED same day. When David "
              "beats the curve the card says so in green -- earned, not painted.",
        ref="SIM-DASH-1, 29 Aug 2026. OPEN until a post-freeze deploy carries the marker.")
 def rg_beat_the_model_card():
