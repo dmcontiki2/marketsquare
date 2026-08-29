@@ -11303,5 +11303,41 @@ def rg_beat_the_model_card():
     return out
 
 
+
+@entry("RG-0211", "GET /dashboard/summary tells an anonymous caller almost nothing -- a bare "
+       "heartbeat (generatedAt + bea_version) with counts, session state and infrastructure "
+       "detail reserved for the admin token",
+       OPEN,
+       scope="bea_main.py dashboard_summary + dashboard.server.html loaders (DASH-SUMMARY-"
+             "REDACT-1). Surfaced 29 Aug by David's breach question: the PAGE is gated (401 "
+             "anonymous, probed) but the DATA endpoint serves anonymous callers a redacted-"
+             "posture payload that still carries seller/listing/intro counts, session numbers "
+             "and an infra description line. Pre-existing design, now judged too generous. Fix "
+             "class: _redact_posture tightens to heartbeat-only for callers without the admin "
+             "key; every dashboard loader that needs stats (incl. fuLoad on page 4) attaches "
+             "X-Admin-Token from sessionStorage like omTok() callers already do; verify the "
+             "local file:// dashboard mode still degrades to NOT MEASURED rather than breaking "
+             "(RG-0133 -- a failed probe reads grey, never a guessed number).",
+       ref="DASH-SUMMARY-REDACT-1, 29 Aug 2026. OPEN until built and live. The assertion "
+           "below is LIVE-half: it probes the endpoint anonymously and fails while counts "
+           "leak.")
+def rg_summary_anon_heartbeat_only():
+    out = []
+    try:
+        import urllib.request
+        req = urllib.request.Request(BASE + "/dashboard/summary")
+        body = urllib.request.urlopen(req, timeout=15).read().decode("utf-8", "replace")
+    except Exception as exc:
+        out.append((INFO, "could not probe /dashboard/summary anonymously (%s) -- RG-0211 "
+                          "not evaluated this run" % exc))
+        return out
+    leaks = [t for t in ('"sellers"', '"liveListings"', '"intros"', 'Hetzner', 'SQLite')
+             if t in body]
+    if leaks:
+        out.append((FAIL, "anonymous /dashboard/summary still leaks: %s -- heartbeat-only "
+                          "redaction not yet live" % ", ".join(leaks)))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
