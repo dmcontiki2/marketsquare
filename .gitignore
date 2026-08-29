@@ -168,3 +168,5 @@ private_originals_listing246/
 
 # wrangler local cache (UPTIME-EXTERNAL-1, 28 Aug 2026) - build artefact, never source
 .wrangler/
+enable_launch_special.bat
+add_gemini_key.bat

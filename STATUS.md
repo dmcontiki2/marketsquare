@@ -28,6 +28,131 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+## 2026-08-29 — TrustSquare trade mark lodged at CIPC (3 classes)
+TrustSquare brand-logo device mark filed on iponline in classes 35/36/42 (records 1644020/21/22,
+R590 each, all Queued; applicant David Maurice Conradie personally per standing IP decision).
+David to EFT R1,770 ref AFGGPO. Full record: Patents/TRADEMARK_FILED_2026-08-29.md.
+
+## 2026-08-29 — Email funnel tracking chain LIVE end-to-end (David + Claude, attended)
+Resend webhook created → https://trustsquare.co/launch-api/webhooks/resend (email.opened/clicked/bounced, matching the server handler's STATUS_MAP). Open + click tracking enabled on mail.trustsquare.co via new tracking subdomain links.mail.trustsquare.co (CNAME → links1.resend-dns.com, PROBED resolving + Resend shows Domain verified, all records green). Sync ran: dashboard EMAILED 0→93 (SYNC-STATUS-1 proven live). KNOWN GAP, stated: today's 90 sends predate tracking — no opens/clicks for them (bounces still arrive); tomorrow's sends onward are fully tracked.
+
+## 2026-08-29 — SYNC-STATUS-1: funnel truth now syncs, not just rows (RG-0204)
+David caught EMAILED=0 on the dashboard hours after the first real sends. Cause: sends write the LOCAL prospects.db; the dashboard reads the SERVER's; sync was INSERT OR IGNORE only, so status changes and Resend message_ids never travelled — opens/clicks could not map either. Fixed in sync_local_to_server.py (generate_status_sql: scraped-only forward-push + NOT EXISTS-deduped email_events carry-up), dry-run proven (187 updates, 75 events), RG-0204 LOCKED. Also found: batch 4 (JHB Services, 20) never ran — today = 70 sends, not 90. David to: re-run batch 4, run sync_to_server.bat, and verify the Resend webhook endpoint is configured so opens/clicks flow.
+
+## 2026-08-29 — REPORT tab retired (RUL-064)
+David flipped "Tester fault reporting" OFF on the +1 dashboard; customer complaints now run via support@trustsquare.co (privacy §13). Maroushka's TS-0022 retest letter must be adjusted to email re-uploads before sending (D11). Also confirmed this session: Show Verified stays OFF for launch, maintenance agent stays SHADOW through the weekend, Travelpayouts tours resubmit waits until after 1 Sep.
+
+- **Dashboard page 4 (Horizon) BUILT, undeployed** — Beat-the-Model card (SIM-DASH-1/RG-0210) +
+  auction build track (RUL-067) in dashboard.server.html. Ships on first post-freeze deploy;
+  RG-0210 then locks. Backup: dashboard.server.html.bak-20260829-page4.
+
+## 2026-08-29 — maintenance-loop (scheduled, shadow)
+
+- Queue clean (35 faults, 0 actionable) · agent heartbeat posted 08:29Z · escalations: none in 24h.
+- MAINT-DEPS-2 fixed + RG-0202 LOCKED: maint_deps verify half now probes a fresh interpreter — no more false "still missing after install" on fresh sandboxes.
+- Ledger: 195 entries, 184 holding, 0 REGRESSED, 0 UNVERIFIED, 11 open (all expected-open).
+- NOT touched: ~16 modified files + 28 Aug fragments sitting uncommitted from prior sessions — uncommitted work does not ride NIGHTLY-SHIP-1.
+
+## 2026-08-29 — SEND_FREEZE lifted (RUL-063); first outreach waves LIVE
+David deleted the freeze and sent the first real batches: Tutors PTA 26 / JHB 24, Services PTA 20 / JHB ~20 (≈90; ~10/day headroom kept for service mail until Monday's Pro flip). Local Resend key was stale-burnt (401) — replaced with new domain-scoped sending-only key. DB PROBED: emailed rows carry 2026-08-29 timestamps. Data-hygiene note for the next sweep: junk recipients observed (user@domain.com, filler@godaddy.com, nfo@pta.alliance.org.za typo) — scraper email-validation gap.
+
+## 2026-08-29 — AI credit exhaustion risk closed at the account level (DAVID-grade)
+David armed auto-recharge on BOTH per-token lanes on soft-launch evening: OpenAI (org billing, base lane) and Anthropic (console auto-reload, failover lane) — his word, 29 Aug. Scaleway needs none (postpaid safety net). Gemini remains D5 (prepaid credits). The dashboard half — per-function funds gauge with auto-top-up state — is registered as RG-0203 / AIPROV-FUNDS-1, OPEN, builds first post-launch deploy. Ledger board after RG-0203 registration + git-lock self-heal: 196 entries, 182 holding, 0 regressed, 12 open, 2 UNVERIFIED (known sandbox dependency demotions).
+
+### Pre-soft-launch third-party sweep — 28 Aug 2026 (05:06–05:30 UTC, unattended)
+
+**LAUNCH EVE. 1 day to soft-public (Fri 29 Aug) · 4 days to full launch (Mon 1 Sep) — RUL-001.
+Verdict AMBER.** `THIRD_PARTY_LAUNCH_REGISTER.md` rewritten from this run's evidence.
+
+The product is ready. Every functional probe is green, the ledger holds **180 locked fixes with 0
+regressed**, all **59 rulings** are reflected, the legal documents are live and byte-in-sync, the
+money rail answers, and sign-in works for strangers. **AMBER for one reason: the site goes public
+with nothing watching it.**
+
+- **RED, and it is two halves of one failure — both David's (RUL-037), neither code, neither needing
+  a deploy.** (1) The **external uptime watcher** is built 22 Aug and **undeployed, day 6** —
+  3 wrangler commands, `ops/cloudflare/UPTIME_MONITOR.md`, files verified on disk (RG-0138 · L8 · D4).
+  (2) The **RED-alert Resend key is dead, day 3** — `/etc/marketsquare/resend.watch.conf` re-probed
+  from the box at 04:39 UTC = **HTTP 400**, conf untouched (74 B, mtime `Aug 5 06:26`) (DW-076 · D3).
+  Order matters: the key first, so the fresh one goes in with the watcher.
+- **Every other historical RED is closed on a probe, not a file**: `/launch-api/prospects/list` 401 ·
+  migrations `none pending` · full `script-src` CSP on `/` and `/terms` · port 22 open 3/3 · Google
+  consent screen **In production** · **domain lifeline complete, RG-0137 LOCKED** (WHOIS re-probed:
+  Cloudflare, expiry 2026-12-30 = 124 days, registrar lock ON, auto-renew ON).
+- **Deploy debt is 4 commits and that number would have misled.** Zero of the 18 changed files appear
+  in `deploy_manifest.txt` — no app behaviour is unpublished. The site Friday serves is `50c560b`
+  (28 Aug 05:07 SAST). **No deploy is needed and none should happen on launch eve.**
+- **`OPEN_LOOPS.md` corrected where probes overruled it** (backup beside it): it read "9 days to
+  soft-public" (eight days stale) and named five blockers for 29 Aug, **four of them disproven by
+  probes minutes earlier**. Its 🔴 BLOCKING NOW heading now states plainly that its only row (B1,
+  secrets rotation) is discharged. The row itself stays until an attended reconciliation — that file
+  has no compiler and edits stay additive.
+- **Instrument note, second session running (LEDGER-DEPS-1):** the ledger's first run exited **2**
+  with RG-0181/RG-0182 `NOT EVALUATED` on a missing `fastapi`. RG-0187's honest demotion and
+  yesterday's LEDGER-UNVER-CAUSE-1 cause-naming both worked exactly as designed — but naming a blind
+  spot is not knowing the answer. Installed `fastapi 0.141.1`, re-ran **exit 0, 0 UNVERIFIED**. Two
+  consecutive sandbox sessions have now paid this by hand; the message already names the remedy, so
+  it is recorded rather than re-engineered on launch eve.
+- **RG-0198 deliberately not fixed** (anonymous `/dashboard/summary` still serves the internal
+  engineering narrative). The honest fix is two-sided and its console half is unverifiable from this
+  vantage; changing a live endpoint both operator dashboards read with no credential, on the eve of
+  soft-public, is how a console goes dark unwatched over a launch weekend. It stays asserting.
+- **Overdue, non-blocking:** Paystack 2FA (reminder was 27 Aug, not done) · Gemini key (funds
+  expected ~25 Aug; photo anonymisation stays reject-only, RUL-033).
+
+### Soft-launch readiness audit — 28 Aug 2026 (18:10–18:45 UTC, attended)
+
+David asked for a full readiness audit against ten questions. Deliverable:
+`SOFT_LAUNCH_READINESS_AUDIT_2026-08-28 — nice.docx` (Professional Navy). Verdict: READY,
+send lever in David's hand; audit self-confidence 92%.
+
+- Probes fresh this session: health ok v1.3.1 · anonymous 200 on /, /listings, /terms, /flags
+  (gate down, site already public) · BIT 8/8 (18:08Z) · /dashboard/summary stats 103/70/115 ·
+  id-verify READY · rulings 61/61 · post_deploy 03:08Z clean.
+- Ledger: first run found RG-0197 REGRESSION (MarketSquare/.git/HEAD.lock stranded 391 min) —
+  healed via `scripts/git_unlock.py` (sandbox lane, rename-aside). Sandbox deps httpx+fastapi
+  installed per MAINT-DEPS-1 step-0. Re-run: **183 ok · 11 open · 0 REGRESSED · exit 0**.
+- Q1 (wave): SEND_FREEZE stands (mtime 20 Aug, untouched) → Day-1 send (RUL-053/057/058,
+  Fri 28 Aug Tutors PTA+JHB) did NOT fire — 0 emailed today, 5 ever (PROBED local store).
+  Server /pipeline/run-wave confirmed scrape-only (--skip-email); outreach leaves only the
+  local machine, so the freeze covers the whole lane. Lift = David deletes the file.
+- Q9 seam FLAGGED, mine to fix before wave 2: /launch-api/optout writes the SERVER suppression
+  register; the send lane reads the LOCAL prospects.db, which has NO suppression table. Zero
+  wave-1 exposure (no outreach has ever gone → no opt-outs exist). Action: pull server
+  suppression/opted_out into the sending store before wave 2 (RG-0176(a) class).
+- Alert half of RG-0138 still unproven until the 06:00 UTC 29 Aug heartbeat (stated in doc).
+
+### Maintenance loop — 28 Aug 2026 (05:34 UTC, unattended)
+
+Queue empty: **0 new / 0 fix-shipped**, 26 verified, 7 closed, 2 duplicate (35 rows).
+No product fix was applied because no register rows arrived — the strict B2b contract
+(rows in → gate-passing commits out) produces a report and nothing else on an empty queue.
+
+- Shadow agent run `2026-08-28T05:34:44Z`, mode SHADOW (kill switch OFF, correct — arming is
+  David's act alone), phase postlaunch, trust-core GUARDED, **0 seen / 0 acted**. Heartbeat
+  PROBED at `GET /dashboard/maint`, received `05:35:01Z`, `brain_keyed=true` on the anthropic
+  lane. Foreground per BRAIN-DEPS-2, ~18 s.
+- Regression ledger **green pre and post**, exit 0 both runs. Post: **193 entries · 181 holding ·
+  12 open · 0 REGRESSED · 0 UNVERIFIED**.
+- Escalation brief: **none** — no escalations in the last 24h.
+- **MAINT-DEPS-1 — the instrument debt is now fixed, not noted again.** The FIRST pre-run was
+  *not* green: RG-0181/RG-0182 read `[ ???? ] NOT EVALUATED` for want of `fastapi`. The 27 Aug
+  loop recorded this same finding and recommended the same fix — *"the loop's dependency step
+  should install fastapi as well as httpx"* — and DW-071 was closed the same day while naming the
+  residual in its close note. A recommendation with no owner produced an identical blind run
+  24 hours later, so it was built instead: **`scripts/maint_deps.py`** (idempotent bootstrap,
+  `--check` mode, names what goes blind without each module), **step 0 in MAINTENANCE_AGENT.md**,
+  and **RG-0200 LOCKED** asserting the mechanism — including a behavioural check that detection
+  is not a no-op. Boundary: a missing module reads INFO, never FAIL (RG-0187's rule applied to
+  itself), so this can never red-block a deploy over an environment quirk.
+- Evidence: `py_compile` clean on both touched scripts; synthetic-absent-module test makes
+  `--check` exit 1 and the real check exit 0; ledger post-run exit 0 with RG-0200 `[  ok  ]`.
+- Worktree was already dirty from concurrent launch-eve work (third-party sweep, contagion model,
+  DAILY_WATCH). Staged explicitly, never `-A`. `scripts/regression_ledger.py` carries one
+  change that is **not** this session's — another session's promotion of RG-0175 to LOCKED,
+  complete and green on this run; it rides along because the two edits share a file.
+- No push, no deploy — NIGHTLY-SHIP-1 carries committed work through the gates.
+
 ### Maintenance loop — 27 Aug 2026 (05:35 UTC, unattended)
 
 Queue empty: **0 new / 0 triaged / 0 fix-shipped**, 26 verified, 7 closed. No fixes were

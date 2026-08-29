@@ -60,6 +60,9 @@ Exempt categories (raw `l.category` keys): `adventures`, `adventure`, `experienc
 > env-gated OFF; the badge is RESERVED for a single once-off occasion David will pick once a customer
 > base exists (Christmas / Black Friday class) as a premier-subscription once-off injection. Nothing
 > below is offered to anyone until that day.
+> **RUL-060 (28 Aug 2026): that day arrived** — David armed the once-off occurrence for the
+> launch window, hard close 2026-09-01, CityLauncher wave lane only (the agency lane stays
+> clean). The park above resumes automatically once the window closes.
 - Mints **only on the $20 Pro** subscription during the launch window (`QUALIFYING_TIERS = ("pro",)`). **Window posture (David, 6 Jul 2026): activated PER CITY, post-launch, on traction — each city's activation sets its own definitive deadline (the old 2026-08-01 was a placeholder, now removed from all app copy; machinery stays env-gated OFF until activation).**
 - Advantage: **+20% Tuppence for life**, rounded up — **Pro 10 -> 12T**. Honoured on any paid plan after minting; survives downgrade/pause.
 - One human, one badge; ID-hash bound; never re-minted. Full canon: `Patents/Canon_Addendum_1_FoundersBadge.docx` (rev 3).

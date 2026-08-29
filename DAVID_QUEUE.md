@@ -84,39 +84,74 @@ blind day by construction, and that already happened on 6 Aug. This is the only 
 notice an outage over the launch weekend. No new vendor, no cost.
 
 ## D5 · Gemini key (budget-capped)
-STATE: OPEN
+STATE: OPEN — KEY SHIPPED 2026-08-28; BILLING DEFERRED to next week (David, 28 Aug: Google
+places a ~$50 card verification hold — released ~a week, never charged — and his region routes
+through PREPAID credits; launch-weekend cash goes to Resend instead. Prepaid, when bought, IS
+the hard cap — better than any setting).
+**TRIPWIRE — DO NOT run eval_photo_anon.py or set PHOTO_SCAN_CANARY while the key is unbilled:**
+free-tier traffic is LOGGED by Google, and the eval set carries a real seller's actual plates
+(real_246_*). Billing/credits attach FIRST, then eval, then arming. The key sits dark and
+harmless on the server meanwhile; RUL-033 reject-only is the designed bridge. Remaining, the '-capped' half: billing attach + the $10/mo spend cap in AI Studio. Then reply `D5 done`. Optional accelerator: paste the key into `.secrets\ai_keys.env` as GEMINI_API_KEY=... so Claude can run the eval locally (it gets registered as an out-of-band copy so rotations refresh it)
 TIME: 5 minutes
 VERIFY: DAVID
 WHY_DAVID: Spend.
-STEPS: Buy the key with a budget cap set, paste it to the server env, reply `D5 done`.
+STEPS: 1. aistudio.google.com → API keys → create the key in a NEW project (never the old
+     Places project). Attach billing there — **$0 upfront, pay-per-use**; that card attach is the
+     whole "funds" moment.
+  2. Burn-proofing: click **Create a spend cap** on the same API-keys page and set **$10/month**
+     — AI Studio's native HARD stop (seen live 28 Aug; supersedes the older quota workaround).
+     The Places lesson, solved at the vendor.
+  3. Double-click `add_gemini_key.bat` (built 28 Aug, gitignored) — pastes once, ships to server
+     env, restarts, health-checks. Key only; PHOTO_SCAN_CANARY arming stays RUL-032's own step.
+  4. Reply `D5 key shipped`.
 CONTEXT: Funds were expected ~25 Aug. Until it lands, photo anonymisation runs **reject-only**
 (RUL-033) — sellers' photos get rejected rather than anonymised. Not a launch blocker; it is a
 quality-of-experience cost that grows with every seller who uploads.
+COSTED 28 Aug (docs, READ-grade): Nano Banana-class image ops ≈ $0.039/image at ≤1024px; scans
+are cheaper still. Founding volumes (~300 photos/mo) ≈ **$2–5/month**. Free tier REJECTED on
+purpose: Google logs free-tier traffic for product improvement — seller photos into Google's
+logs is the opposite of what the anonymity lane exists for; paid keys are not logged.
 
 ## D6 · Resend $20/mo 50k tier
 STATE: OPEN
 TIME: 2 minutes
 VERIFY: DAVID
 WHY_DAVID: Spend.
-STEPS: Flip the plan at launch, reply `D6 done`.
+STEPS: **Flip to Pro on Mon 31 Aug** (clean month, no pro-rata) — before the Tue 1 Sep morning
+sends. Reply `D6 done`. A scheduled reminder fires Mon 08:00.
 CONTEXT: Pre-approved (B7) — this is execution of a decision already made, not a new one. Free tier
 carries sign-in email today; it will not carry public launch volume.
+**RUL-061 (28 Aug): David deferred the flip to 1 Sep** — pro-rata for 3 days buys nothing while
+warm-up waves run 60/day under the free 100/day cap (60 wave + ~3 service + heartbeat fits).
+THE CLIFF: Tue 1 Sep sends up to 420; on free tier the day fails 320 short AND wave mail can
+starve the RED-alert lane (same account). Flip Monday = clean full month, no pro-rata. If
+Monday passes unflipped, the 1 Sep morning session must treat sending as BLOCKED, not degraded.
 
 ## D7 · Launch special — on or off for launch?
-STATE: OPEN
+STATE: DONE 2026-08-28 (RUL-060 — David chose ON over the 'off' recommendation and ran enable_launch_special.bat: server armed + health ok [EXECUTED, his transcript], CityLauncher half verified 1/1 [PROBED on disk]; render path proven both ways, block live from the next send batch; hard close 2026-09-01)
 TIME: a decision, not a task
 VERIFY: DAVID
 WHY_DAVID: Launch scope, and `LAUNCH_CODE_SECRET` is an HMAC key.
-STEPS: Tell me **on** or **off**. If on, I generate the secret, set `LAUNCH_SPECIAL_ENABLED`, and
-the block starts rendering into outbound email.
+STEPS: Reply `D7 on` or `D7 off`. If **on**: double-click `enable_launch_special.bat`
+(built 28 Aug — generates the HMAC secret ON the server, arms both halves incl. FOUNDERS_ID_SALT,
+restarts, health-checks, then arms the CityLauncher issuing side; secret never displayed).
+If **off**: nothing to do — the block stays stripped, and D16 keeps the occasion for later.
 CONTEXT: I set `LAUNCH_SPECIAL_DEADLINE=2026-09-01` on CityLauncher today, but reading the code
 first changed the picture: `launch_codes.enabled()` needs **all three** of `LAUNCH_SPECIAL_ENABLED`,
 `LAUNCH_CODE_SECRET` and the deadline, and that `.env` had **none** of the other two. So the launch
 special is currently **stripped from every outbound CityLauncher email** — not mis-dated, absent.
 The MarketSquare server-env half of the deadline also still needs your root access.
+**READ 28 Aug (code, both repos): this switch and RUL-047 are the SAME lever.** The server
+redemption side (`launch_redemption.py`) is the parked founders machinery — its gate needs
+LAUNCH_REDEMPTION_ENABLED + secret + FOUNDERS_ID_SALT + deadline, and every redemption MINTS a
+founders badge ("one badge per human, forever"; "the special is NEVER repeated"). Saying **on**
+therefore SPENDS the once-only occurrence RUL-047 reserved for a moment when a customer base
+exists — and with the 2026-09-01 hard close ("never extended") the window would be the
+soft-public weekend only, in front of ~zero audience. **CTO recommendation: `D7 off` for this
+launch; D16 already tracks naming the real occasion.** Decision stays yours — launch scope.
 
 ## D8 · Anthropic subscription — renew or drop
-STATE: OPEN
+STATE: DONE 2026-08-28 (David: 'works as we have it wired' = DROP, executing RUL-013's no-renew default. Wiring PROBED on source this session: TASK_MODEL design → openai gpt-5.6-sol, scaleway mistral-medium-3.5-128b standby — current 5.6-era rows, the H1 staleness concern does not apply. Residue: if the subscription auto-renews in the account, the cancel click before the billing date is David's)
 TIME: a decision
 VERIFY: DAVID
 WHY_DAVID: Spend.
@@ -127,7 +162,7 @@ The successor is already decided and wired — `ai_provider.py` routes the `desi
 the subscription lane past launch.
 
 ## D9 · One live Paystack buy (smallest pack, close the tab mid-flow)
-STATE: OPEN
+STATE: DONE 2026-08-29 (David: TWO live real Tuppence buys completed through Paystack. He reported this for the SECOND time — the first report was never recorded, so the queue re-served a closed item. Recorded now per the DAVID-grade rule: closes on his word, date written. NOTE, stated not hidden: the close-the-tab-mid-flow detached-credit variant is not confirmed as part of those two buys — if neither buy abandoned the tab, that specific path stays unexercised with real money; ordinary follow-up, not a launch gate.)
 TIME: 5 minutes
 VERIFY: DAVID
 WHY_DAVID: Real money on the live rail.
@@ -146,6 +181,10 @@ CONTEXT: The lane is ARMED and its SAFETY properties are asserted and passing (a
 never passes, a provider failure never charges, the tick never gates an introduction). What is
 unknown is **billing shape**: whether the 500 free monthly verifications cover Database Validation
 or it bills $1.10 from call one. One check settles it.
+READ 28 Aug (didit.me pricing + product pages): Database Validation is listed with its own
+"500 free / month" tier, "from $0.05", with premium government registries at $0.20+/check —
+SA Home Affairs is almost certainly a premium source, so EXPECT the check to bill (the $1.10
+class) despite the free-tier headline. The one real check stays decisive; docs are READ-grade.
 
 ## D11 · Travelpayouts tours — resubmit?
 STATE: OPEN
@@ -162,7 +201,21 @@ STATE: OPEN
 TIME: 2 minutes
 VERIFY: DAVID
 WHY_DAVID: Deletions are reserved to you (RUL-037).
-STEPS: Cloudflare → API Tokens → delete `MarketSquare Media` and `Trustsquare Cache Purge`.
-Reply `D12 done`.
+STEPS: (after Mon 1 Sep — deliberately parked past launch weekend, see CONTEXT)
+  1. From your machine:
+     `ssh root@178.104.73.239 "tr '\0' '\n' < /proc/$(systemctl show -p MainPID --value marketsquare)/environ | grep '^CF_CACHE_TOKEN=' | cut -d= -f2- | xargs -I{} curl -s -H 'Authorization: Bearer {}' https://api.cloudflare.com/client/v4/user/tokens/verify"`
+     → prints the LIVE purge token's `"id"` (PROBED-grade: read from the running process).
+  2. Dashboard → My Profile → API Tokens → `trustsquare-cache` → Actions → **Edit** → the id is
+     in the page URL. **Ids differ → delete `trustsquare-cache`, reply `D12 done`. Ids match →
+     it IS the live token: keep it, reply `D12 keep`** and Claude corrects the register.
 CONTEXT: Rotation residue from 22 Aug. Not blocking anything — but a live token nobody uses is a
 credential nobody is watching.
+**PROBED 28 Aug (dashboard, via your Chrome): half of this item was already true.** User R2
+tokens: NONE — old `MarketSquare Media` is ALREADY GONE. Account tokens: exactly the three
+keepers (`trustsquare-cache-purge-2026-08-22`, `trustsquare-2026-08-22`, `hetzner-backup-rclone`).
+Neither register-named old token exists. The ONE deletion candidate left is user token
+`trustsquare-cache` (zone trustsquare.co: Cache Rules:Edit, Zone:Read, Cache Purge:Purge; last
+used 22 Aug) — but it FAILS the register's fingerprint of the old token (no DNS Write), so it
+was NOT deleted on a name-guess the day before soft-public: if it is somehow the live purge
+lane, deleting it kills CDN purge silently over launch weekend. Step 1's probe settles it
+conclusively in 30 seconds, after the weekend.

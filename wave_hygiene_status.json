@@ -1,13 +1,14 @@
 {
-  "ran_at": 1787887591.6274242,
-  "ran_at_human": "2026-08-28T03:26:31.627429+00:00",
+  "ran_at": 1787889184.0036457,
+  "ran_at_human": "2026-08-28T03:53:04.003656+00:00",
   "source_tags": "ok",
   "suppression": "ok",
-  "intl_pass": "not_done",
+  "intl_pass": "ok",
   "detail": {
     "source_tags": "WAVE-TAG-1 (28 Aug): build_magic_link appends ?src=<city>-<category>-<YYYYMMDD> on BOTH the fresh and LEGACY branches. Probed before the fix: 0 of 14 templates carried a tag; every CTA is {{magic_link}}, so the tag lives in the one builder. Proven by tests/test_wave_hygiene.py (CityLauncher), 6 assertions.",
     "suppression": "send_email REFUSES a suppressed address at the single chokepoint \u2014 proven by EXECUTING it against a temp register, and fail-safe when the register is unreadable. Live /launch-api/optout returns 200. NOTE: n8n is NOT in the CityLauncher send path (zero references in emailer/ or pipeline/), so RG-0176's n8n cross-store item does not gate this wave; it gates any future n8n lane.",
-    "intl_pass": "NOT DONE. Today's wave is ZA only (Pretoria + Johannesburg). The US/UK/AU templates first send on 1 Sep (global launch day). Currency, locale wording and send windows must be reviewed before THAT date. Recorded as not_done rather than nudged to ok."
+    "intl_pass": "PASS PERFORMED AND FIXES LANDED 28 Aug. Three defects found and closed at CLASS level, not instance: (1) INTL-CURRENCY-1 \u2014 localize's rule was `\\bRand\\b -> dollars`, which caught the WORD only, so 'R 380 per hour' and 'R 1 650 000' travelled untouched and Pretoria->New York even produced 'Brooklyn, New York - R3 100 000'. localize_html now FAILS CLOSED on any residual rand for a non-ZA destination, naming the offending text. It does not convert \u2014 a hardcoded exchange rate rots silently. (2) INTL-COPY-1 \u2014 <!--ZA-ONLY-->...<!--/ZA-ONLY--> blocks are stripped for non-ZA and unwrapped for ZA; the ZA worked-example sections (Pilanesberg lodge, R1 650 000 property, R 380/hr tutor cards) are wrapped in 11 templates. (3) 'suburb' now renders neighborhood (US) / area (GB), unchanged for AU/NZ/NA. The accommodation email's central comparison was rewritten currency-free: it used to read 'On a R2,000/night booking: Airbnb takes ~R460... TrustSquare takes $2' \u2014 mixed currency in one sentence, meaningless to a US reader, and it is the strongest argument in the message. PROVEN: tests/test_intl_templates.py \u2014 14 templates x 4 markets, plus a sabotage case proving the guard still refuses if someone adds rand later. TONIGHT'S ZA EMAIL IS BYTE-IDENTICAL to before the change."
   },
-  "wave": "2026-08-28 ZA Tutors \u2014 Pretoria + Johannesburg"
+  "wave": "2026-08-28 ZA Tutors \u2014 Pretoria + Johannesburg",
+  "known_blocker_for_1_sep": "TS_POSTAL_ADDRESS is NOT set. localize refuses US/FR/PT/NZ/AR without a physical postal address (CAN-SPAM and equivalents). TS_EU_REPRESENTATIVE also unset, required for FR/PT. Pre-existing, correctly fail-closed, and must be provisioned on the server before 1 Sep. Does not affect the 28 Aug ZA wave."
 }

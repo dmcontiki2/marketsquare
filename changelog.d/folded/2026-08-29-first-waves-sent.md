@@ -1,0 +1,2 @@
+## 2026-08-29 — SEND_FREEZE lifted (RUL-063); first outreach waves LIVE
+David deleted the freeze and sent the first real batches: Tutors PTA 26 / JHB 24, Services PTA 20 / JHB ~20 (≈90; ~10/day headroom kept for service mail until Monday's Pro flip). Local Resend key was stale-burnt (401) — replaced with new domain-scoped sending-only key. DB PROBED: emailed rows carry 2026-08-29 timestamps. Data-hygiene note for the next sweep: junk recipients observed (user@domain.com, filler@godaddy.com, nfo@pta.alliance.org.za typo) — scraper email-validation gap.

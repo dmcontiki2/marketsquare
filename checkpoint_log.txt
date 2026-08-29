@@ -228,3 +228,9 @@ Wed 08/26/2026  5:30:03.45  committed 26 change(s)
  create mode 100644 changelog.d/2026-08-27-open-items-sweep.md
  create mode 100644 scripts/prove_posture_redaction.py
 Thu 08/27/2026  5:30:02.09  committed 11 change(s)
+[main 1fec593] Nightly checkpoint Fri 08/28/2026  5:30:03.07 (auto, no deploy)
+ 4 files changed, 218 insertions(+), 9 deletions(-)
+ create mode 100644 changelog.d/2026-08-28-contagion-saturation-diagnostic.md
+ create mode 100644 changelog.d/2026-08-28-contagion-v08-travelpayouts-referrals-varsity.md
+ create mode 100644 wave_hygiene_status.json
+Fri 08/28/2026  5:30:03.15  committed 4 change(s)

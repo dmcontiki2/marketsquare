@@ -112,3 +112,17 @@ out about from a customer.
 5. **A credential can live in more than one place with different values.** The
    authoritative value is whatever the RUNNING PROCESS holds — verify there, never
    on disk alone.
+
+## Addendum 2026-08-28 — Cloudflare token cleanup, PROBED via dashboard (D-queue session)
+
+Rows 32–33 say "old token to be deleted" for `MarketSquare Media` and `Trustsquare Cache Purge`.
+Dashboard probe (David's logged-in Chrome, 28 Aug): **old `MarketSquare Media` is ALREADY GONE**
+(R2 → User API Tokens: "There are currently no User API tokens for your buckets"), and **no token
+named `Trustsquare Cache Purge` exists anywhere**. Account tokens = exactly the three keepers
+(`trustsquare-cache-purge-2026-08-22` · `trustsquare-2026-08-22` · `hetzner-backup-rclone`).
+One unexplained USER token remains: **`trustsquare-cache`** (trustsquare.co: Cache Rules:Edit,
+Zone:Read, Cache Purge:Purge; last used 22 Aug; NO DNS Write — so it does NOT match row 33's
+fingerprint of the old token). NOT deleted: if the live purge lane holds it, deletion = silent
+CDN-purge death over launch weekend. Identity check parked to after Mon 1 Sep as DAVID_QUEUE
+D12 step 1 (a PROBED-grade /proc environ → /user/tokens/verify id comparison). Whichever way it
+resolves, this addendum supersedes the two "to be deleted" notes above.

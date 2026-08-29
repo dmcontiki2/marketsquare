@@ -1,3 +1,793 @@
+## 2026-08-29 — TrustSquare trade mark lodged at CIPC (3 classes)
+TrustSquare brand-logo device mark filed on iponline in classes 35/36/42 (records 1644020/21/22,
+R590 each, all Queued; applicant David Maurice Conradie personally per standing IP decision).
+David to EFT R1,770 ref AFGGPO. Full record: Patents/TRADEMARK_FILED_2026-08-29.md.
+
+## 2026-08-29 — Email funnel tracking chain LIVE end-to-end (David + Claude, attended)
+Resend webhook created → https://trustsquare.co/launch-api/webhooks/resend (email.opened/clicked/bounced, matching the server handler's STATUS_MAP). Open + click tracking enabled on mail.trustsquare.co via new tracking subdomain links.mail.trustsquare.co (CNAME → links1.resend-dns.com, PROBED resolving + Resend shows Domain verified, all records green). Sync ran: dashboard EMAILED 0→93 (SYNC-STATUS-1 proven live). KNOWN GAP, stated: today's 90 sends predate tracking — no opens/clicks for them (bounces still arrive); tomorrow's sends onward are fully tracked.
+
+## 2026-08-29 — Third-party sweep, SOFT-LAUNCH MORNING: RED list empty, verdict GREEN, alert path proven in the inbox
+
+The daily pre-soft-launch sweep (`pre-soft-launch-third-party-check`), run 08:30–08:50 UTC on
+launch day itself.
+
+**The headline: yesterday's two REDs are closed and the closing was PROBED, not read.**
+- Uptime watcher: deployed by David 28 Aug; Worker re-probed this run (`ok:true, 200 in 190ms,
+  kv:true`). RG-0138 LOCKED.
+- RED-alert key: re-installed 28 Aug, probed 200 from the box; class fix RG-0201 LOCKED.
+- **The piece only this morning could prove:** `UPTIME_DEPLOYED.md` recorded the alert half
+  UNPROVEN pending the 06:00 UTC launch-morning heartbeat. **Probed David's Gmail: the heartbeat
+  arrived 06:00:22Z** ("UP — 200 in 391ms", from hello@mail.trustsquare.co). Worker → Resend →
+  inbox proven end-to-end. `LAST_HEARTBEAT` rolled to 2026-08-29 in `UPTIME_DEPLOYED.md`.
+
+**Board state:** ledger exit 0, every locked fix holding, 0 regressed, 11 open, 0 unverified
+(after the RG-0200 maint_deps step — fastapi absent in the fresh sandbox again, installed, board
+re-run clean; each sweep must repeat this, the sandbox does not persist). 61 rulings reflected.
+EULA v1.15 in sync and served. Canon pointers ALL IN LINE. `/dashboard/bit` 8/8. Paystack
+connected; 2FA confirmed ON (D2, 28 Aug). Launch special ON (RUL-060, D7). Anthropic subscription:
+DROP decided (D8) — residue is the cancel click before 1 Sep if it auto-renews.
+
+**Deploy debt:** 13 commits / 37 files — **0 deployable** (checked against the manifest). The site
+serves the 28 Aug 03:08Z release. No deploy on launch day.
+
+**Files corrected because probes disagreed:** THIRD_PARTY_LAUNCH_REGISTER.md rewritten (RED
+emptied, AMBER→GREEN, David table cut to 6 open: D5 gemini · D6 Resend tier flip TODAY ·
+D9 Paystack E2E · D10 Didit first real check · D11 tours resubmit · D12 token deletions);
+UPTIME_DEPLOYED.md heartbeat rolled forward on inbox evidence. The scheduled task's own prompt is
+now stale on EIGHT rows (register WATCH-OUT #5 lists them) — it self-terminates after 1 Sep.
+
+**Deliberately not done:** RG-0198 (summary narrative leak) and DW-062 (template-string dead
+links) both need a deploy — first post-launch window, reasons on the register.
+
+## 2026-08-29 — SYNC-STATUS-1: funnel truth now syncs, not just rows (RG-0204)
+David caught EMAILED=0 on the dashboard hours after the first real sends. Cause: sends write the LOCAL prospects.db; the dashboard reads the SERVER's; sync was INSERT OR IGNORE only, so status changes and Resend message_ids never travelled — opens/clicks could not map either. Fixed in sync_local_to_server.py (generate_status_sql: scraped-only forward-push + NOT EXISTS-deduped email_events carry-up), dry-run proven (187 updates, 75 events), RG-0204 LOCKED. Also found: batch 4 (JHB Services, 20) never ran — today = 70 sends, not 90. David to: re-run batch 4, run sync_to_server.bat, and verify the Resend webhook endpoint is configured so opens/clicks flow.
+
+## 2026-08-29 — REPORT tab retired (RUL-064)
+David flipped "Tester fault reporting" OFF on the +1 dashboard; customer complaints now run via support@trustsquare.co (privacy §13). Maroushka's TS-0022 retest letter must be adjusted to email re-uploads before sending (D11). Also confirmed this session: Show Verified stays OFF for launch, maintenance agent stays SHADOW through the weekend, Travelpayouts tours resubmit waits until after 1 Sep.
+
+## 2026-08-29 — PAGE4-HORIZON-1 + SIM-DASH-1: dashboard page 4 built (Horizon)
+
+David: add the auction design track as dashboard page 4, and the simulation with it. Built in
+dashboard.server.html this session (rides the first post-freeze deploy — launch-weekend freeze
+holds): new 🔭 Horizon vtab between Ops and Launch Switch carrying (1) the BEAT THE MODEL card
+(SIM-DASH-1, RG-0210): pinned contagion v0.2 medians (wk0/26/52/104 = 0/21/99/141, week 0 = 1 Sep
+2026) vs the PROBED live seller count from /dashboard/summary, signed ahead/behind delta,
+NOT MEASURED on probe failure; (2) the AUCTION BUILD TRACK (RUL-067): Q4→Q3 roadmap with dashed
+plan-state chips (RG-0133 — no colour until something probes them), banked-assets line, review
+doc + canon references. switchView wired hide-first; all 17 inline script blocks node --check
+clean; RG-0210 amended (location = page 4, model file named by repo path until a gated static
+lane exists) and its source-half now reads READY TO LOCK — lock lands when the deploy ships it live.
+
+## 2026-08-29 — maintenance-loop: MAINT-DEPS-2 — the bootstrap's verify half probed the wrong interpreter
+
+Daily maintenance session (B2b brain, shadow mode). Fault queue CLEAN — 35 faults, 26 verified / 7 closed / 2 duplicate, zero actionable; shadow agent ran foreground, 0 seen 0 acted, heartbeat posted to /dashboard/maint (08:29:19Z).
+
+**MAINT-DEPS-2** (class fix, one day after MAINT-DEPS-1 shipped): `scripts/maint_deps.py`'s install half worked and its verify half lied on first use. On a fresh sandbox the user site-packages dir does not exist at interpreter start, so site.py never adds it to sys.path — the in-process `find_spec()` recheck then reported httpx+fastapi "still missing after install" (exit 1) while every fresh process imported both fine. `_missing()` now probes a FRESH interpreter (`sys.executable -c`), which is the interpreter the instruments actually get; in-process is only the fallback if subprocess itself fails. Evidence, same session: fault reproduced (sys.path stripped of user-site → in-process view reported both missing, fixed probe reported none), `--check` with a synthetic absent module still exits 1 (RG-0200 detection intact). Backup: `maint_deps.py.bak-20260829-103203`.
+
+**RG-0202** added (LOCKED): the verify half must answer for a fresh interpreter — asserted behaviourally with a synthetic module visible only to child interpreters via PYTHONPATH; a revert to in-process probing goes red on every machine. Deliberately split from RG-0200 (absence-lie vs presence-lie), same reasoning as RG-0144/RG-0198.
+
+Ledger after: **195 entries · 184 holding · 0 REGRESSED · 11 open · 0 UNVERIFIED** — RG-0181/RG-0182 evaluate again on this machine (fastapi present via the bootstrap). Escalation brief: none in 24h. Noted, not touched (strict contract): worktree carried ~16 modified files + two 28 Aug changelog fragments uncommitted from earlier sessions — left for their owner; NIGHTLY-SHIP-1 only ships committed work, so that work is not riding until someone commits it.
+
+## 2026-08-29 — LISTING-AUDIT-1: listing-flow friction & AI-usage audit (RG-0205/0206/0207 opened)
+
+David's launch-day question: is listing truly least-friction, is the AI optimally used, do we
+need an in-flow help button? Audited the guided sell flow (ms.js sf*) against the live site
+(live ms.js verified byte-identical to repo, index v549). Verdict: the photo-first skeleton is
+sound (AI draft from main photo, skippable steps, saved drafts, score-gated publish), but three
+defects were defined and opened in the regression ledger for post-freeze builds:
+
+- **RG-0205 SF-AIDESC-1** — the flow discards vision-draft's AI-written description_draft;
+  sellers publish a mechanical "Label: value" spec list.
+- **RG-0206 SF-MULTIVISION-1** — sfRunVision sends 1 photo though the endpoint takes 1–12;
+  secondary photos are never AI-read at draft time.
+- **RG-0207 SF-COACH-ASK-1** — help-button question answered YES: coach bubbles are static,
+  interactive AI is post-publish and paid, yet the EULA promises free everyday guidance.
+  Fix = tappable coach avatar → free, rate-capped lane of the existing /advert-agent/coach.
+
+Also flagged (no entry, smaller): email is requested at the very end via window.prompt —
+should become an inline field earlier in the flow. No code shipped: launch-weekend deploy
+freeze (28 Aug discipline). Ledger run this session: no regressions.
+
+## 2026-08-29 — SEND_FREEZE lifted (RUL-063); first outreach waves LIVE
+David deleted the freeze and sent the first real batches: Tutors PTA 26 / JHB 24, Services PTA 20 / JHB ~20 (≈90; ~10/day headroom kept for service mail until Monday's Pro flip). Local Resend key was stale-burnt (401) — replaced with new domain-scoped sending-only key. DB PROBED: emailed rows carry 2026-08-29 timestamps. Data-hygiene note for the next sweep: junk recipients observed (user@domain.com, filler@godaddy.com, nfo@pta.alliance.org.za typo) — scraper email-validation gap.
+
+## 2026-08-29 — Auction plan review delivered (RUL-067 follow-through)
+
+**Deliverable:** `MarketSquare/Auction Module Review — nice.docx` (Professional Navy). Full review
+of the mothballed Auctions & Offers plan against RUL-067 and today's canon. Verdict: remap, not
+rethink. Key findings: the hold-to-bid ledger primitive (tuppence_held + conditional release)
+already runs in production via intros; four stale items (scp deploy lane → ONE_DEPLOY, 5-tier refs
+→ Starter/Pro, Jun-2026 AI prices → lane machinery, week-plan bravado → gated cadence); one real
+tension (live-theatre liquidity — solved by sequencing offer-mode/async first); legal is the
+longest pole (EULA section, CPA ratification, patent supplement — start Q4 2026). Proposed
+sequence: Q4 make-an-offer → Q1 async auctions → Q2 live theatre + Pro gate → Q3 Regal + sim
+variable. Seven amber decisions remain David's; only offer semantics blocks the first ship.
+
+## 2026-08-29 — AI credit exhaustion risk closed at the account level (DAVID-grade)
+David armed auto-recharge on BOTH per-token lanes on soft-launch evening: OpenAI (org billing, base lane) and Anthropic (console auto-reload, failover lane) — his word, 29 Aug. Scaleway needs none (postpaid safety net). Gemini remains D5 (prepaid credits). The dashboard half — per-function funds gauge with auto-top-up state — is registered as RG-0203 / AIPROV-FUNDS-1, OPEN, builds first post-launch deploy. Ledger board after RG-0203 registration + git-lock self-heal: 196 entries, 182 holding, 0 regressed, 12 open, 2 UNVERIFIED (known sandbox dependency demotions).
+
+## 2026-08-28 — WATCH-COPY-REFRESH-1: the outage alarm is alive, and the cause is fixed (RG-0201)
+
+**The RED-alert channel answers again after six days dead — PROBED `HTTP 200` at 10:44 UTC**, on the
+eve of soft-public. D2 (Paystack 2FA) and D3 (this) both closed today; David's queue is 9 open.
+
+**What was wrong.** `/etc/marketsquare/resend.watch.conf` is the out-of-band copy of the Resend key
+the daily watch uses to send RED alerts — the only channel that wakes David when the site is down.
+It is a duplicate of the app's systemd drop-in, installed ONCE by `fix_watch_alerts.bat` on 5 Aug
+2026, which was then retired. The 22–23 Aug rotation replaced the drop-in and left the copy holding
+a deleted key. **Nothing noticed for three days**, because nothing exercises that path except a real
+outage; it surfaced on 26 Aug only when a genuine RED fired and never arrived.
+
+**The repair — one command, the original mechanism:**
+`install -o root -g msdeploy -m 640 /etc/systemd/system/marketsquare.service.d/resend.conf
+/etc/marketsquare/resend.watch.conf` → 74 B, `0640 root:msdeploy`, probe returns **200**.
+
+**The class fix (this is the half that matters).** `ROTATE_SECRETS.bat` gains step **[4b/6]**, which
+re-installs the watch copy inside every rotation and shouts if it cannot. The unwritten human step
+that failed no longer exists. **Ledger RG-0201 (LOCKED)** asserts the rotation carries the refresh
+and that the copy stays listed in `SECRETS_REGISTER.md`'s out-of-band table — source-half by
+necessity, since the copy lives on the box and the board runs from anywhere. CRLF guard re-run, bat
+still clean (RG-0194).
+
+### The sharper lesson, recorded rather than smoothed over
+
+**The repair itself went wrong twice before anyone read what the file was.** It was assumed to be a
+plain `key=value` config and edited with a split on the FIRST `=`, which destroyed the variable name
+in `Environment=RESEND_API_KEY=…` — it is a **systemd drop-in**. A second attempt inherited the
+damage and a third leaked markdown escaping into the pasted commands, producing a `400` that was
+read as a bad key when the probe had simply run with no key at all. Two of David's `.bak` copies
+were overwritten in the process, so the original content was lost.
+
+**The answer was in the repo the whole time**, in the retired one-shot that created the file. One
+`grep` for `resend.watch` found it; the fix was then one command and returned 200 first time.
+**A format assumed is a format not probed** — the evidence ladder applies to file structure, not
+only to status. Recorded in `SECRETS_REGISTER.md` beside the row, including the reversal of the
+same morning's CTO call (that the replacement must be a newly-minted dedicated key): sound in the
+abstract, wrong about what is built here, and made without reading the mechanism first.
+
+**Also corrected:** David was handed option menus and branching alternatives mid-task, against his
+standing instruction, which cost several rounds on a launch-eve job that was one command long.
+
+**Board after:** ledger **exit 0 · 180 holding · 0 REGRESSED · 12 open**; `RG-0201` reads `[ ok ]`.
+Note: `RG-0200` was taken by a concurrent session and LEDGER-DUP-1 caught the collision — the guard
+worked, and this entry renumbered.
+
+## 2026-08-28 — UPTIME-EXTERNAL-1 DEPLOYED: the site is watched from outside itself (RG-0138 LOCKED)
+
+**Both of the day's REDs are closed on the eve of soft-public.** David's queue: 8 open, down from 11
+this morning. D2 (Paystack 2FA), D3 (RED-alert key) and D4 (this) all closed today.
+
+Worker **`trustsquare-uptime`** is live on Cloudflare's edge — built 22 Aug, undeployed for six days,
+shipped the day before launch. Cron `*/5`, version `896f82f8`, KV `UPTIME_STATE` bound,
+`https://trustsquare-uptime.dmcontiki2.workers.dev`. It probes `/health` and requires **200 AND
+`{"status":"ok"}`** — a 200 with a sick body still counts as down.
+
+**PROBED 11:31:54 UTC:** `{"ok": true, "reason": "200 in 191ms", "consecutiveFails": 0, "kv": true,
+"actions": []}`. This is the first instrument watching trustsquare.co that runs neither on the box
+nor on David's desktop — the blind-day-by-construction gap OPEN_LOOPS L8 was opened for on 14 Aug.
+
+**RG-0138 promoted OPEN → LOCKED in the same session it started passing**, per the standing rule: an
+entry that prints READY TO LOCK and is left open cannot trip red when it rots.
+
+### The alert half is recorded as UNPROVEN, deliberately
+
+The first deploy left the Worker unable to send: `wrangler secret put` created a placeholder Worker
+which `wrangler deploy` then replaced, taking the secret with it. The manual check caught it —
+`"actions": ["heartbeat mail FAILED: RESEND_API_KEY not bound"]` — and the deploy output's binding
+table (KV + 7 vars, **no secret**) confirmed the cause. Re-running `secret put` against the real
+Worker cleared it.
+
+**But an empty `actions` list means nothing errored; it does not mean an email arrived.** No
+successful send has been observed from this Worker, and that is written into
+`ops/cloudflare/UPTIME_DEPLOYED.md` as UNPROVEN rather than smoothed into a green tick — a monitor
+believed to be working while silently unable to deliver is worse than none, which is precisely the
+fault that left this site unwatched 22–28 Aug (DW-076 / RG-0201). **The free proof arrives on its
+own: the daily heartbeat fires 06:00 UTC / 08:00 SAST, so the first one lands on soft-launch
+morning. In the inbox = proven end-to-end; nothing by ~08:30 SAST = the alert path is still dead.**
+
+A new Resend key scoped to **Sending access** was minted for the Worker rather than reusing the
+Full-access production key — an edge Worker that sends one email should not be able to administer
+the Resend account, and a shared credential dying silently is the fault this morning was spent on.
+
+### Runbook corrected
+
+`UPTIME_MONITOR.md` said bare `wrangler`; it is not installed globally on David's machine and the
+project's own `cloudflare_email_worker/README.md` already used `npx wrangler`. Fixed, along with an
+explicit note that the three commands run in PowerShell on the PC, **not** on the server — a wrong
+`cd` and a wrong shell each cost a round trip on launch eve.
+
+**Board:** ledger **exit 0 · 181 holding · 0 REGRESSED · 11 open**. RG-0138 `[ ok ]`, RG-0201 `[ ok ]`.
+
+## 2026-08-28 — Pre-soft-launch third-party sweep: launch eve, AMBER, RED list down to two
+
+**1 day to soft-public (Fri 29 Aug) · 4 days to full launch (Mon 1 Sep) — RUL-001.**
+
+Daily `pre-soft-launch-third-party-check` run, 05:06–05:30 UTC. `THIRD_PARTY_LAUNCH_REGISTER.md`
+rewritten from this run's evidence.
+
+**Verdict AMBER.** Every functional probe green; the RED list is two items that are the same failure
+twice — **on the first weekend strangers use the site, nothing is watching it and nothing can wake
+David.** Both are David's under RUL-037, neither is code, neither needs a deploy:
+
+1. **External uptime watcher — built 22 Aug, undeployed, day 6.** RG-0138 · OPEN_LOOPS L8 ·
+   DAVID_QUEUE D4. Three wrangler commands, `ops/cloudflare/UPTIME_MONITOR.md`; worker/toml/runbook
+   all verified present on disk this run.
+2. **RED-alert Resend key dead, day 3.** `/etc/marketsquare/resend.watch.conf` re-probed from the box
+   04:39 UTC = **HTTP 400**; conf unchanged, 74 B, mtime `Aug 5 06:26`. DW-076 · D3. *Register had
+   said `401` since 26 Aug; today's measured `400` supersedes it — both mean refused.* Do this first
+   so the fresh key goes in with the watcher.
+
+**Everything this register ever called RED is otherwise closed on a live probe:**
+`/launch-api/prospects/list` → 401 · migrations `none pending` (post_deploy `2026-08-28T03:08:38Z`) ·
+full `script-src` CSP on `/` and `/terms` · port 22 open 3/3 · Google consent screen **In production**
+(27 Aug) · domain lifeline complete, **RG-0137 LOCKED** (WHOIS re-probed: Cloudflare, expiry
+2026-12-30, 124 days, registrar lock ON, auto-renew ON, DNSSEC unsigned).
+
+**Executed this run — three things done rather than reported:**
+
+- **The ledger's `fastapi` blind spot cleared, not tolerated.** First run exited **2** with RG-0181
+  and RG-0182 `NOT EVALUATED` — the harness dies at its import line and runs zero assertions.
+  Yesterday's LEDGER-UNVER-CAUSE-1 named the cause honestly and worked exactly as designed, but
+  **naming a blind spot is not knowing the answer.** Installed `fastapi 0.141.1`; board re-ran
+  **exit 0 · 192 entries · 180 holding · 0 REGRESSED · 12 open · 0 UNVERIFIED**. On launch eve,
+  "two entries could not be checked" is not a reportable state.
+- **`OPEN_LOOPS.md` corrected where probes overruled it** (backup kept). It read **"9 days to
+  soft-public"** — written 20 Aug, eight days stale — and its 🔴 BLOCKING NOW note named five things
+  as blocking 29 Aug, **four disproven by probes minutes earlier**. Now states the day count, names
+  the two real threats, and says plainly that its only printed row (B1, secrets rotation) is
+  **discharged** — a section headed BLOCKING NOW on launch eve, about work finished 22 Aug, is the
+  exact rot this sweep exists to kill. B1's row stays physically in place (no compiler on that file;
+  edits stay additive, CHANGELOG-COLLISION-1 class) and moves at the next attended reconciliation.
+- **Deploy debt re-read against the manifest instead of counted.** `origin/deploy..HEAD` = 4 commits,
+  which on launch eve reads like fresh debt. **Zero of the 18 changed files are in
+  `ops/autodeploy/deploy_manifest.txt`** — registers, DAILY_WATCH, changelog.d, scripts, two doc HTMLs.
+  The site Friday serves is `50c560b` (released 28 Aug 05:07 SAST) and already carries everything
+  user-facing. **No deploy needed; none should happen on launch eve.**
+
+**Deliberately NOT fixed: RG-0198** (anonymous `/dashboard/summary` still serves the internal
+engineering narrative). The honest fix is two-sided — consoles start sending the admin key, anonymous
+payload withholds the narrative fields — and the console half cannot be verified from this vantage.
+Changing a live endpoint both operator dashboards read with no credential, on the eve of soft-public,
+is how a console goes dark unwatched over a launch weekend. It stays asserting in the ledger.
+
+**Overdue and worth David's eye:** Paystack 2FA (reminder was 27 Aug, not done) and the Gemini key
+(funds expected ~25 Aug; photo anonymisation stays reject-only, RUL-033). Neither blocks Friday.
+
+**Board:** ledger exit 0 · 192/180 holding · 0 REGRESSED · 12 open · `rulings_check` 59/0 FAIL/0 WARN ·
+`eula_sync --check` in sync 117,749 B · `check_canon_pointers` ALL IN LINE · `david_queue` 12 items,
+11 open · TLS 85 days · BIT 8/8 PASS.
+
+## 2026-08-28 — maintenance-loop: empty queue, first 0-UNVERIFIED board, MAINT-DEPS-1 (RG-0200 LOCKED)
+
+**Queue: nothing to fix.** `GET /admin/faults` — 35 rows total: **0 new · 0 fix-shipped ·
+26 verified · 7 closed · 2 duplicate**. The shadow maintenance agent agreed: run
+`2026-08-28T05:34:44Z`, mode SHADOW (kill switch OFF — arming is David's act alone),
+phase postlaunch, trust-core GUARDED, **0 seen / 0 acted**. Heartbeat confirmed live at
+`GET /dashboard/maint` — `received_at 2026-08-28T05:35:01Z`, `brain_keyed: true`,
+`brain_lane: anthropic`. Report: `.maint_agent/run_20260828T053444Z.json`.
+Escalation brief: **none written** — `escalation_brief.py` reported *"no escalations in the
+last 24h"*, which on this lane really is green.
+
+**BRAIN-DEPS-2 ran clean in the FOREGROUND**, ~18 s, well inside the cap. `httpx` was absent
+and installed as the runbook prescribes; the origin gate never 401'd the lane.
+
+### MAINT-DEPS-1 — the instrument debt that could never go red, so it never got fixed
+
+With an empty fault queue, instrument debt is the only thing left to find, and there was some.
+The **first** pre-run of the regression ledger came back **not green**: RG-0181 and RG-0182 read
+`[ ???? ] NOT EVALUATED` because this machine lacked `fastapi`, so both harnesses died at their
+import line having run **zero** assertions. RG-0187 demoted them honestly and named the cause —
+working exactly as designed — and the run signed off *"that is not a green board — do not deploy
+on this result"*.
+
+The recurrence is the point. `httpx` gets installed every session because the shadow agent **dies**
+without it — a loud failure, so BRAIN-DEPS-2 fixed it within a day. `fastapi` fails **quietly**:
+nothing goes red, so nothing forces the fix. Those two entries had been blind on every sandbox run
+since 26 Aug, and **DW-071 was closed on 27 Aug while recording the residual in its own close note**
+(*"fastapi is absent from the sandbox bootstrap"*). A defect that is written down and assigned to
+nobody is a defect that keeps running. **A blind instrument that never complains is worse than a red
+one, because a red one gets fixed.**
+
+Installing `fastapi` and re-running produced the result that had been unavailable for three days:
+**RG-0181 and RG-0182 both `[  ok  ]`, and the board came back 0 UNVERIFIED for the first time.**
+The two harnesses were never broken — nobody could see them.
+
+**Fixed at class level, not by installing a package:**
+- **`scripts/maint_deps.py` (new)** — one idempotent command (~1 s warm) that gives the lane every
+  third-party module its *instruments* import. `--check` reports without installing and exits 1.
+  `REQUIRED` names the module, its pip name, and **what goes blind without it** — so the cost of a
+  missing dependency is legible at the point of failure instead of three files away.
+- **`MAINTENANCE_AGENT.md`** — MAINT-DEPS-1 clause makes it **step 0 of every run**, before the
+  ledger. An uncalled bootstrap is a decoration.
+- **RG-0200, LOCKED** — asserts the MECHANISM: bootstrap present, covers `httpx` + `fastapi`,
+  **provably detects a missing module** (a synthetic absent module must make `--check` exit 1 — a
+  bootstrap that reports ok unconditionally is the same silent-blindness fault wearing a different
+  hat), and the canon still routes step 0 through it. CLASS property: any module the lane's
+  instruments import belongs in `REQUIRED`, so a new harness cannot be silently blind for a
+  fortnight first.
+
+**The deliberate boundary, and it is the whole entry:** a module *missing on the machine* reads
+**INFO, never FAIL**. That is RG-0187's own boundary applied to itself — an absent third-party
+package is an instrument limit, not a rotted fix, and a red there would block a deploy over an
+environment quirk on launch eve. What CAN go red is the mechanism: bootstrap deleted, coverage
+narrowed, detection turned into a no-op, or the canon clause removed.
+
+### Verification (AIK-VERIFY-1, named machine evidence)
+- `python3 -m py_compile` clean on `scripts/maint_deps.py` and `scripts/regression_ledger.py`.
+- **Negative + positive test**: with a synthetic absent module injected into `REQUIRED`,
+  `--check` exits **1** and names it; with it removed, exits **0**. Detection is not a no-op.
+- **Ledger post-run: exit 0 — 193 entries · 181 holding · 12 open · 0 REGRESSED · 0 UNVERIFIED.**
+  RG-0200 reads `[  ok  ]`.
+
+### Not done, and why
+- **No fault-row updates** — the queue held no `new` or `fix-shipped` row to update. Nothing was
+  fixed in the product, so nothing was declared verified.
+- **No push, no deploy** — NIGHTLY-SHIP-1 (05:45 nightly TSL) carries committed work through the
+  gates. This session commits only.
+
+## 2026-08-28 — DQUEUE-LAST8: the last 8 queue items executed to the David-boundary
+
+David: "complete the last 8 for me" (D5–D12). Everything Claude-doable was done this session;
+the residue is compressed to one-word replies / single clicks, batched in chat.
+
+- **D7 armed-to-one-click:** `enable_launch_special.bat` built (gitignored; secret generated on
+  the server, never displayed — the 21 Aug chat-paste lesson). Code-read finding written into the
+  queue: D7 and RUL-047 are the same lever — redemption mints the once-only founders badge, and
+  the 2026-09-01 hard close makes the window soft-public weekend only. CTO recommendation: off.
+- **D10 narrowed:** Didit docs claim Database Validation carries its own 500-free/month tier;
+  SA Home Affairs likely premium ($0.20+/check) — expect the real check to bill. Real check stays
+  decisive (docs are READ-grade).
+- **D12 half-discharged by probe:** old `MarketSquare Media` R2 user token ALREADY GONE; no token
+  named `Trustsquare Cache Purge` exists. Lone candidate `trustsquare-cache` FAILS the register's
+  DNS-Write fingerprint → deliberately NOT deleted pre-launch; PROBED-grade id-comparison
+  procedure written into D12 for after Mon 1 Sep. SECRETS_REGISTER.md addendum supersedes the
+  stale "to be deleted" notes.
+- **D5, D6, D8, D9, D11 remain David-only by construction** (spend, real money, real ID,
+  commercial timing — RUL-037 reserved set); batched with recommendations in chat this session.
+- Standing checks: rulings 59/59 reflected; ledger 0 regressions, 2 NOT-EVALUATED (sandbox
+  lacked fastapi — installed, re-run at session end).
+
+## 2026-08-28 — DAVID-QUEUE-1: the hand-off queue that re-verifies itself
+
+**DAVID-QUEUE-1** · built after David asked for his open actions served one at a time while he works
+
+David is working from home today and wants the remaining open actions one at a time, to pick up in
+gaps. The list itself is the easy part. The constraint worth designing for is the one that has
+actually been costing him: **a hand-off list going stale across a session break.**
+
+The evidence that this was the right thing to design against came from the same morning. The
+Google consent screen and the domain registrar had **both sat in the David-only column for six
+days across five consecutive sweeps — and neither was David's.** The consent screen took one
+navigation to read ("In production", verification not required). The registrar took one WHOIS
+referral (Cloudflare Inc, expiry 2026-12-30). Five sweeps copied both forward as his errands
+without once opening the page. A queue reconciled only by a human reproduces exactly that.
+
+So `DAVID_QUEUE.md` is read by `scripts/david_queue.py`, which **re-runs each item's stated
+verification** rather than trusting the file's own STATE column:
+
+- `LEDGER:<id>` — closes when that regression-ledger entry stops failing (strongest)
+- `FIELD:<name>` — closes when that field in the third-party register is filled
+- `DAVID` — **no instrument can see it**; closes on his word, with the date recorded
+
+The three grades print unequally on purpose. A David-confirmed "done" is a weaker fact than a
+probed one, and flattening them together is how the evidence ladder gets quietly abandoned.
+
+Twelve items, ordered by dependency then by risk reduction per minute of his attention — D3
+(the dead RED-alert Resend key) is deliberately ahead of D4 (the uptime watcher) because the
+runbook says the watcher must take the fresh key, not the burnt one.
+
+**Not reused: `AWAITING_DAVID.md`**, which was marked superseded in July. Reusing it would have
+resurrected a dead file; the reuse-before-recreate rule was checked first and correctly said no.
+
+Asserted by ledger **RG-0199** (OPEN by design — an empty queue is the only passing state).
+`--check` mode exists so the ledger can test the instrument without an open queue reading as a
+broken proof.
+
+**Also this run:** the register's dated header was corrected — the 27 Aug sweep's "2 days to soft
+launch" had silently become wrong overnight, which is the undated-status defect the file exists to
+catch. And `SESSION_COUNTER.json` was re-derived (180 → 181) after RG-0154 went red on this
+session's own changelog fragments — the mechanism working exactly as intended.
+
+## 2026-08-28 — D8 closed: Anthropic subscription drops at 1 Sep, as wired
+
+David: 'works as we have it wired.' This EXECUTES RUL-013's existing default (arrangement ends
+1 Sep, does not renew) — no new ruling row needed; the authority is already on the register.
+Successor wiring verified on source before closing: ai_provider.py TASK_MODEL routes the design
+tier to gpt-5.6-sol (Scaleway standby), rows are current. One residue flagged in the queue row:
+if the account itself auto-renews, the cancel click is David's before the billing date.
+
+## 2026-08-28 — D7-ARMED / RUL-060: the launch special is ON for the launch window
+
+David ran `enable_launch_special.bat` (his transcript: server armed, health ok, CityLauncher
+half 1/1) — choosing ON over the batch's 'off' recommendation with the RUL-047 trade-off
+stated. Recorded as **RUL-060**: occasion = the launch window, hard close 2026-09-01,
+CityLauncher wave lane only (14 templates carry the block; render path proven both ways this
+session with the code registry untouched); orchestration_v2 agency lane stays badge-clean
+under RUL-047's needles, and the park resumes post-window. Reflections: DAVID_QUEUE D7 DONE ·
+OPEN_LOOPS D16 discharge note · PRICING_CANON §4 dated note · rulings_check RUL-060.
+Queue now 7 open of 12: D5, D6, D8, D9, D10, D11, D12.
+
+## 2026-08-28 — RUL-061: Resend Pro flip deferred to Mon 31 Aug (no pro-rata)
+
+David's call at the Billing screen: warm-up runs 60/day under the free 100/day cap, so the
+$20 Pro subscription starts Mon 31 Aug as a clean month instead of a 3-day pro-rata. The Tue
+1 Sep 420-send day is the cliff: reminder scheduled Mon 08:00 SAST, DAVID_QUEUE D6 carries
+drop-dead wording, unflipped-Monday = 1 Sep sending BLOCKED. rulings_check RUL-061 polices.
+
+## 2026-08-28 — D5 in flight: Gemini key shipped, eval truth labels set, arming path clear
+
+- David created the key (project trustsquare-gemini) and shipped it via the new gitignored
+  `add_gemini_key.bat` (server env +1, restart, health ok — his transcript). Billing attach +
+  AI Studio's native monthly SPEND CAP ($10) are the remaining David steps — the cap is a true
+  hard stop, seen live 28 Aug, superseding the old quota-workaround advice.
+- **The RG-0185(b) blocker cleared:** the five `real_246_*` rows in eval_photos/TRUTH.json were
+  graded by eye from the originals (RUL-037 delegated grading, vetoable): 1385/1387/1389 clean
+  (0 plates; 1389's licence disc is ~4px text — unrecoverable, blurring it protects nothing),
+  1388 redact (1 plate, HP-class frontal), 1386 redact (**2 plates** — own rear + background red
+  SUV's: the tiny-background syn_02 class on real evidence). 0 unknown rows remain; set still
+  NOT FROZEN (RG-0185(a): Maroushka real_0819_* + 3 'inappropriate' samples outstanding).
+- Arming stays RUL-032's bar: eval at 100% plate recall (gemini vs openai baseline), only then
+  PHOTO_SCAN_CANARY=1 — which also drops the RUL-033 reject-only bridge, no second deploy.
+- Price honesty (26 Aug correction stands): first-party Gemini is $0.75/$3.75 per Mtok — canary
+  year-1 ≈ $845 at modeled volume, still ≪ terra's $1,729 (RUL-032 unchanged). Founding-month
+  spend remains small; the $10 cap fails SAFE (cap trip → reject-only returns, never a leak).
+
+## 2026-08-28 — D1 closed: the domain lifeline is fully recorded, and the toggle was already on
+
+**DOMAIN-LIFELINE-1 CLOSED · RG-0137 OPEN → LOCKED** · first item served off the new DAVID_QUEUE
+
+David opened Cloudflare looking for auto-renew and landed on the **zone** overview — auto-renew
+lives at **account** level under Domains → Registrations. Since he was logged in, the read was
+driven directly rather than handed back as directions.
+
+**Result: `trustsquare.co` — status Active, auto-renew ON, expires Dec 31 2026, one domain in the
+account.** Nothing needed changing. Combined with the 27 Aug WHOIS work (registrar **Cloudflare,
+Inc.**, registry expiry **2026-12-30**, registrar lock ON), the domain lifeline is now completely
+recorded and **RG-0137 is LOCKED**.
+
+Worth stating plainly: this item sat in the David-only column for **six days across five sweeps**
+as an action he had to take — and it turned out to be a read of a setting that was already
+correct. That is the third item this week to follow that exact pattern, after the Google consent
+screen and the registrar itself. The DAVID_QUEUE built yesterday exists because of it.
+
+### One discrepancy, recorded rather than reconciled away
+
+WHOIS gives registry expiry **2026-12-30T23:59:59Z**; the dashboard displays **Dec 31, 2026**. Same
+instant, two timezones — not two dates. The register keeps the WHOIS value because the registry is
+the authority and the dashboard is a rendering of it. Noted so a future session does not "fix" one
+to match the other and quietly lose the reason.
+
+### An assertion that punished provenance — fixed
+
+`DOMAIN-AUTORENEW-PROVENANCE-1`: RG-0137's auto-renew check demanded the field equal a bare `on`,
+and went **red** on `ON (read in the Cloudflare Registrations dashboard 2026-08-28; status Active)`.
+It was penalising the session for recording *where and when* the fact came from. An assertion that
+punishes provenance teaches the next session to strip provenance — the opposite of what this ledger
+is for. It now matches the leading token **and requires a date**, the same shape RG-0139 already
+used: an undated status assertion silently ages into a lie.
+
+Ledger: 191 entries · **179 holding** · 0 REGRESSED · 13 open · 0 UNVERIFIED · exit 0.
+
+## 2026-08-28 — CONTAGION-LANG-1 (the model spread worldwide for the wrong reason — v1.0)
+
+David asked whether we could still reach Canada on English, visibility and referrals, and why we would
+not then spread to every other country for the same reasons. Both halves turned out to be right, and the
+second half exposed a defect that had survived nine versions.
+
+### Yes to Canada — and we already do it
+
+Toronto, Vancouver and Montreal receive no wave and never have (`pr = 0`). They arrive on the US corridor
+(3.0), the South African diaspora corridor (1.8), shared English and public exposure — lighting up weeks
+36 to 45. At three years Canada is **5,186 sellers, 3.3%, the eighth largest market**, on zero outbound.
+David's intuition was correct and the model already supported it.
+
+### But "why not everywhere else" was the real question, and the answer was: we did
+
+**The public-exposure pathway had no language gate at all.** `sameLang` only ever touched the
+seller-to-seller gravity graph — the cross-border trickle, a small term — while the `impr × pubBeta ×
+pubReach` pathway that actually drives the whole simulation was purely population-proportional. The
+consequence, unnoticed since v0.1: at three years the biggest markets were **Tokyo 13,854 · Delhi 12,171 ·
+Seoul 9,328 · São Paulo 8,513 · Mexico City 8,262 · Cairo 7,998**, and **South Africa was 4% of all
+sellers**. None of those markets was ever emailed, none shares a language with the product, and the model
+reached them faster than it reached Toronto.
+
+Verified against the product on 28 Aug 2026: `marketsquare.html` is `<html lang="en">`, there is no
+language switcher and there are no translation strings. The app is English, full stop.
+
+### The fix that did not work, and the one that did
+
+First attempt applied `langPen` as a **rate** penalty. Tokyo dropped from 13,854 to 9,684 and stayed
+second — because over a three-year horizon even a five-times-slower market still saturates. **Language is
+a ceiling, not a speed bump:** someone who cannot read the app is not a slow convert, they are not in the
+addressable market at all. Same shape as the incumbent haircut.
+
+Corrected: `langFit` now scales `N` (addressable sellers) and `GP` (reachable public) at initialisation,
+and the per-week multiplier is reduced to the residual friction of the period *before* we localise, so
+nothing is double-counted. Countries where English is official or near-universal in commerce take no
+penalty; the EF English Proficiency Index's top band (Nordics, Netherlands and neighbours) takes half;
+everywhere else pays `langPen` (0.50 / 0.80 / 0.95, tagged **data** — it is a fact about our own HTML).
+
+### What the model says now
+
+| | Before the gate | After |
+|---|---|---|
+| Top markets at 3 years | Tokyo · Delhi · Seoul · São Paulo · Mexico City · Cairo | **US · India · South Africa · UK · Nigeria · Australia · Philippines · Canada** |
+| Tokyo | 13,854 | **2,763** |
+| South Africa share | 4% | **6.5%** |
+| Total sellers | 248,185 | 158,585 |
+
+Every one of the top ten is now English-official or English-in-commerce. **The spread follows English and
+the diaspora exactly as David said it should — the model simply was not enforcing it.** The gate also
+takes about 36% off the runaway, which is a bonus rather than the point.
+
+### Localisation is now a costed decision rather than a shrug
+
+Opening French, Portuguese and Spanish at week 26 is worth **+29%** (158,585 → 204,932 sellers) and brings
+São Paulo and Mexico City into the top six. New `localiseW` lever, default 157 = never, which is today's
+truth. That is the number to weigh against the build cost — and it is the first time the model could
+answer the question at all.
+
+### Also fixed: "Cities" was a misleading headline
+
+The top bar counted cities with **≥ 1 active seller**. At week 26 that read 17 — of which **3** were above
+the liquidity cliff. Split into **Cities lit** and **Cities working** (liquidity ≥ 0.35, the cold-start
+half-works point), with the working figure turning amber when it falls below half of lit, plus both on the
+comparison strip and a diagnostic: *"A city with one seller is a pin on a map — under the cliff a seller
+lasts about ten weeks, over it about seventy-seven. Spreading wider makes this ratio worse, not better."*
+
+### Verification
+
+`node --check` clean; headless page harness green; before/after comparison run on the same seed with the
+gate switched off and on; backups `*.bak-prev10-*` and `*.bak-prelangceil-*`.
+
+## 2026-08-28 — CONTAGION-V08-1 (Travelpayouts · a real referral loop · the RUL-059 university lane)
+
+Continues the contagion-model work folded from 27 Aug. Model file unchanged in name:
+`docs/TrustSquare_Contagion_Model_v0.2.html`, now labelled v0.8 internally.
+
+### Travelpayouts (TP-LINKOUT-1, partner 758984)
+
+Modelled as commission on planner click-outs: flights at 1.1–1.3% (Data API live), tours at ~8%
+(DECLINED 24 Aug, gated behind `tpToursW`, default 157 = still declined). Implementation constraints
+carried into the code comments so a later session cannot regress them: server-side link-out, host
+allowlist, fails closed, dark by flag, RG-0181 asserts the invariant, and **no third-party script runs
+on any app page** — RG-0025 was INVERTED after the 3–4 Aug breach and asserts the absence. Flight
+basket priced from our OWN 1 Aug dry run in native ZAR (JNB-CPT R2,267 · JNB-DUR R1,348 ·
+JNB-WDH R5,080 · JNB-LHR R11,417, mean ≈ R5,000 ≈ $270).
+
+**The finding is not the one expected.** David's premise that the planner runs are where the gross of
+the business sits is **correct** — but the money in a planner run is the Tuppence for the plan, not the
+affiliate commission on top of it. Per run, at mid parameters:
+
+| Line | Per planner run | Share of the plan fee |
+|---|---|---|
+| Tuppence for the plan itself (free/2T mix) | **$1.40** | 100% |
+| Travelpayouts, flights only | $0.01 | 0.6% |
+| Travelpayouts, tours at the mid mix | $0.01 | 0.8% |
+| Travelpayouts, every parameter at its high end | $0.24 | 17.3% |
+
+For tour commission to **match** the plan fee at mid click-out and booking rates, the average tour
+basket would have to be about **$6,481** — a multi-day guided tour or a package, not a $70 activity.
+At scale (week 104, tours approved) Travelpayouts runs at ~$33k/mo against $5.6M/mo total: **1% of
+revenue.**
+
+What it genuinely is: **the only revenue line in the model that needs no payment rail, pays no
+processing fee and creates no merchant-of-record exposure** — the F4 introduction doctrine working in
+our favour. It earns worldwide from day one regardless of `liveKeysW`, and it is pure margin. A good
+garnish, not the meal. Two levers decide whether it becomes material and both are ours: `tpTourMix`
+(what the planners surface — tours pay 6.7× flights) and the tour basket size (packages and
+expeditions, not activities). The $400 minimum payout is surfaced in the diagnostic, because early
+commission accrues without landing in the bank.
+
+### Referrals — asked for, and they were genuinely absent
+
+What existed was a `referral` **lever** that multiplied ambient word of mouth. A referral **programme**
+is a different thing: instrumented, incentivised, attributable. New parameters `refRate`, `refTake`,
+`refKeep` (referred users churn less — applied as a divisor on churn for the referred share of the
+base) and `refCostT` (granted Tuppence per successful referral, real money at $2/T, now flowing into
+the net line). A new `REF` compartment tracks the referred population so the retention advantage decays
+correctly. Worth at week 104, 24 seeds: **28,646 referred sellers**, revenue $5.52M → $5.68M; with the
+incentive at maximum, 31,650 referred and $6.19M.
+
+**The honest headline is that it cannot be switched on.** `refW` defaults to 157 = never, because there
+is no `referred_by`, no invite code and no `inviter_id` anywhere in the schema, and
+`users.referral_count` says *"not yet tracked. Always missing."* The diagnostic now says so whenever the
+programme is off: Airbnb's own engineering blog puts its referral programme at about 25% of new bookings
+in some markets, and ours is one column and one hidden input away from existing. Same missing instrument
+that sits at #1 on the Telemetry tab.
+
+### RUL-059 US university-tutor lane
+
+Encoded literally from the ruling, including the parts that constrain it:
+
+- **(a) UK is OUT** — named academic addresses are personal data under UK GDPR and PECR's
+  corporate-subscriber allowance is not clean for named individuals. The lane is US-only.
+- **(c) NO SEND by default** — `varsityW` defaults to 157, with the ruling's reasoning in the lever note.
+- **(d) Separate sending subdomain, modelled literally** — the lane carries its OWN `varsityDecay`, so a
+  bad campaign into .edu cannot touch the deliverability the South African core depends on. That is the
+  whole point of the ruling and it is now a mechanism, not a comment.
+- **(e) Eleven US cities, no new geography** — `VARSITY_CITIES` names them, and they matched the model's
+  own US cities carrying a prospect pool **exactly**: New York, Los Angeles, Chicago, Houston, Phoenix,
+  Philadelphia, San Antonio, San Diego, Dallas, San Jose, Austin. Denver and the rest carry zero. A good
+  independent cross-check on both the ruling and the model's city data.
+- **Its own list.** The first cut wrongly drew from the CityLauncher city pool — wrong twice, because
+  that pool is private individuals and the main ladder has already emptied it. RUL-059 commissions
+  `scraper/sources/us_university_tutors.py`, so the lane now has its own pool sized by the campaign the
+  ruling authorises. That correction took the lane from 1 signup to 27.
+- **Capacity, not headcount** — new `varSeats` (1/3/8): a test-prep centre or campus learning-support
+  service brings several tutors on one account, which is why a small list can still matter.
+
+Effect on the whole at week 104 (24 seeds): median sellers **276,761 without** the lane, **267,016 with**
+it — within noise, and **not a growth lever**. That is the ruling being right rather than the lane being
+useless. RUL-059's own rationale is depth first: the binding constraint is liquidity, and the lane's
+value is Tutors inventory depth in eleven cities where the scrape found 59 / 18 / 3 / 12 prospects — not
+seller count.
+
+### Verification
+
+`node --check` clean on the full inline script; headless DOM harness runs the real page end to end
+(both simulations, both ensembles, the toggle both ways, the money strip, all four panel tabs); the
+eleven-city cross-check above; backups `TrustSquare_Contagion_Model_v0.2.html.bak-prev08-*`.
+
+Standing caveat unchanged: levels remain in the runaway regime and are not forecasts. Read the per-run
+arithmetic and the relative effects, never the totals.
+
+## 2026-08-28 — CONTAGION-SAT-1 (the plateau explained, and the model now says so)
+
+David asked why profits stagnate in the last slope of year three — good growth from December of
+year two to about April of year three, then decline. Traced, and the model knew the answer without
+ever reporting it.
+
+### It is saturation of the seller pool. Not competition.
+
+No clone ever arrives — `compW` defaults to 157 = never — and the incumbent share is a fixed haircut
+on the addressable market, not a rival taking our people. What actually happens:
+
+| | wk 78 (Feb 28) | wk 104 (Aug 28) | wk 120 (Dec 28) | wk 136 (Apr 29) | wk 156 (Aug 29) |
+|---|---|---|---|---|---|
+| Share of addressable sellers who have listed | 85.1% | 92.8% | 93.9% | 94.9% | **96.0%** |
+| First-time listers per week | **10,854** | 397 | 323 | 260 | **239** |
+| Churn out per week | 7,353 | 5,103 | 4,579 | 4,352 | 4,303 |
+| Came back per week | 2,157 | 3,527 | 3,662 | 3,713 | 3,764 |
+| Net sellers per week | +5,658 | −1,179 | −594 | −379 | −300 |
+
+New recruitment collapses **45×** between week 78 and week 156 while churn stays roughly flat. The
+return trip (dormant → listing again) is what stops it falling off a cliff: it supplies ~3,760 a week
+against ~4,300 leaving. The dormant pool ends at 161,223 against 249,207 active — the model has become
+a churn-and-return equilibrium against an exhausted recruiting ground.
+
+### Revenue lags sellers by about a year, and that is the shape David is seeing
+
+Across 24 seeds: **sellers peak at week 83 (April 2028)** and decline from there; **revenue peaks at
+week 156** and in 0 of 24 runs is it more than 2% below its peak at the end. So revenue does not fall —
+it **bends**. The cause is compositional: revenue rides on buyers (planner runs 75% of it, buyer subs
+and introductions most of the rest), and only **4.0% of the reachable public** has become a buyer by
+week 156, against 96% of sellers. The buyer side is nowhere near exhausted — but the buyer engine is
+*powered by sellers* (`impr` × active sellers), so buyer growth decelerates as the seller base
+flattens. Money curve bends without ever falling.
+
+### The plateau DATE is robust; the LEVEL is not
+
+Sweeping `smeDen`, the model's number-one driver and still a pure guess:
+
+| smeDen | Addressable pool | 80% listed | Peak sellers |
+|---|---|---|---|
+| 0.6 | 159,208 | wk 77 (Feb 2028) | 106,215 |
+| 1.2 | 318,171 | wk 81 (Mar 2028) | 212,912 |
+| 1.8 (mid) | 477,173 | wk 76 (Feb 2028) | 319,629 |
+| 3.0 | 795,211 | wk 77 (Feb 2028) | 531,905 |
+| 4.0 | 1,060,264 | wk 84 (Apr 2028) | 710,325 |
+
+A 6.6× larger addressable market delays saturation by about **eight weeks**, because the growth is
+exponential — the pool size sets the ceiling, not the timing. Same for the incumbent haircut: 30% →
+85% moves the 80% mark only from week 81 to week 73. **So the shape and the date of the plateau are
+robust findings; the height of it is an artefact of the least-grounded number in the model.**
+
+### Fixed: the model was silent about its own binding constraint
+
+Saturation never appeared in the binding-constraint strip, even when it was the thing actually
+governing the curve. Added:
+
+- Two new exposed stocks — `addressable` (sum of the per-city seller pool after the incumbent haircut)
+  and `publicPool` — plus `sellerLeft` and a true first-time-lister counter `newListers`.
+- A diagnostic that fires above 50% penetration (amber above 85%): names saturation explicitly, prints
+  the penetration, the collapse in first-time listers, states that **no competitor has arrived**, and
+  flags that the whole plateau sits on `smeDen`.
+- A paired diagnostic on the other side: how little of the reachable public has been converted, and why
+  revenue keeps climbing after sellers stop.
+- Two rows on the comparison strip: **New listers /wk** and **Seller pool left**.
+
+### Verification
+
+`node --check` clean; headless page harness green end to end; flow balance reconciles
+(new + returned − churned = net, checked at weeks 78/104/120/136/156); backup `*.bak-presat-*`.
+
+Standing caveat unchanged: 96% of the world's addressable sellers listing is the runaway regime, not a
+forecast. The S-curve, the year-two seller peak and the year-three revenue bend are the findings; the
+levels are not.
+
+## 2026-08-28 — CONTAGION-GEO-1 (Pacific added · market barriers modelled · Canada and Mauritius were never excluded)
+
+David asked why we do not spread into Canada, Mauritius, the Pacific islands and China, and noted the
+reasons could be different. They are, in four distinct ways. All four verified against primary sources
+— statute text, regulator sites, national censuses and company filings — not commentary.
+
+### Canada and Mauritius were never excluded
+
+Both have always been in the city data and both light up on their own, by corridor and shared language,
+without ever receiving a wave: Toronto wk 38, Montreal wk 36, Vancouver wk 45, Port Louis wk 42 (seed 7).
+They carry `pr = 0`, which is why they are invisible in the wave board, not absent from the world.
+
+- **Canada** — no legal barrier. PIPEDA attaches on a real-and-substantial-connection test with no
+  registration step; Bill C-27 / CPPA died on prorogation Jan 2025 and was not re-tabled. Québec Law 25
+  s.17 wants a documented PIA before PI leaves the province. **The real trap is CASL**, not privacy —
+  consent for commercial electronic messages, per-violation penalties, and it bites a listings app that
+  emails buyers. Verdict: right to ignore commercially, wrong to blame law or payments.
+- **Mauritius** — the strongest of the four, and the belief keeping us out may be false. DPA 2017 s.14
+  registration is mandatory, but **s.3(5) confines the Act to a controller established in Mauritius, or
+  one using equipment in Mauritius**. On the plain text a South African controller on German servers is
+  out of scope. NOT settled — "uses equipment" is lifted from the old EU Directive, where cookies and
+  scripts on a device once counted, and there is no Mauritian case law or DPO guidance. 1.24m people,
+  73.3% online, corridor 2.0 from ZA. Paystack is not live there, so ZAR card charging.
+
+### The Pacific was our gap, and it is now filled
+
+Fiji, Samoa, Tonga, Vanuatu, PNG, Solomon Islands, New Caledonia and French Polynesia were absent from
+`CITIES` entirely — 121 of 177 mapped countries had no city at all. Eleven Pacific cities added from the
+national statistics offices: Port Moresby 757k (PNG NSO 2024), Greater Suva 268k (FBoS 2017), Lae 203k,
+Grand Nouméa 174k (ISEE 2025), Greater Honiara 170k (SINSO 2019), Papeete urban zone 124k (ISPF 2022),
+Lautoka 72k, Port Vila 49k (VNSO 2020), Apia 36k (SBS 2021), Greater Nuku'alofa 34k. Coordinates from
+OpenStreetMap/Nominatim. Traps recorded in the code so nobody re-derives them wrongly: **PNG's national
+population is genuinely disputed** (2024 census 10.19m against a 2021 modelled 11.78m NSO still
+publishes alongside it); **New Caledonia is shrinking** (Nouméa 94,285 → 85,976, net migration ≈ −18,000
+after the May 2024 unrest, and SPC's projection runs ~11% above the actual census — use the census);
+**Papeete is only the third-largest commune** in French Polynesia, behind Faaa.
+
+Filling the hole does not make the case. The bloc is ~12.9m of whom **10.2m is PNG at 18.8% internet** —
+the worst combination in the set. Strip PNG and it is 2.75m across eight scattered groups with no card
+culture (Fiji runs on M-PAiSA and MyCash, which Paystack cannot touch). The two that would work are
+New Caledonia and French Polynesia — 544k, French, inside CNIL, and **not in SEPA**, though their cards
+are French-bank Visa/MC and clear normally.
+
+### Two markets are now modelled as walls, with the reason stored
+
+New `MARKET_BARRIER` table. A barriered country carries **no addressable market at all** (`N = 0`,
+`GP = 0`), paints dark red on the map with its own legend entry, and raises a diagnostic.
+
+- **Vanuatu — an outright legal blocker.** Data Protection and Privacy Act No. 13 of 2024, in force
+  2 Jan 2025: s.2(1)(e) extraterritorial reach over offering services to people in Vanuatu whether or not
+  payment is required; **s.15(1) — data generated or collected in Vanuatu must not be used elsewhere
+  without prior Ministerial authorisation**, and no adequacy regulations exist. Our servers are in
+  Germany. Port Vila now never lights up.
+- **China — three independent blockers, any one fatal.** (1) PIPL Art. 3(2)(1) reaches us
+  extraterritorially and **Art. 53 requires an in-China representative regardless of user count** — the
+  2024 Cross-Border Data Flow Provisions exempt us from the transfer mechanism under 100,000 users but
+  not from Art. 53. (2) **No payment rail a South African entity can reach**: Paystack has no
+  Alipay/WeChat/UnionPay channel anywhere; Stripe lists SA as "Extended network" pointing back at
+  Paystack; every cross-border PSP holding the China connection needs a merchant entity in a jurisdiction
+  it supports, and none supports SA. UnionPay has 10.2bn cards; Visa holds no clearing licence.
+  (3) **The category is held** — Alibaba's own 20-F calls Xianyu China's largest C2C marketplace by GMV
+  and has published no absolute number since Q2 2021.
+
+**Correcting a common assumption, recorded so it does not resurface:** the **ICP filing is not the China
+blocker**. It attaches to operating from inside China; we do not need one and could not obtain one — a
+filing goes through a mainland host against a mainland business licence, and foreign equity in a VAS
+licence is capped at 50% outside the Oct 2024 pilot zones (13 firms approved by Feb 2025, all large
+multinationals).
+
+### Also
+
+New `barriers` lever (default ON). Turning it off asks the counterfactual — but it barely moves anything,
+because China was never in `CITIES` to begin with, so the counterfactual only frees Vanuatu. **Sizing
+China would mean adding its cities, which is a decision to take deliberately, not a data fix to slip in.**
+City count 171 → 181.
+
+**Deliverable:** `Market Entry — Canada, Mauritius, Pacific, China — nice.docx`.
+
+**Verified:** `node --check` clean; headless page harness green; Port Vila confirmed never active while
+every other new Pacific city lights up (Suva wk 43, Port Moresby wk 39, Honiara wk 51, Apia wk 55,
+Nuku'alofa wk 62, Nouméa wk 49, Papeete wk 52); backup `*.bak-prev09-*`.
+
 ## 2026-08-27 — Third-party sweep, 2 days out: three REDs closed on probes, deploy debt zero, and an instrument that was blaming the network
 
 **PRESOFT-SWEEP-27AUG** · scheduled task `pre-soft-launch-third-party-check` · last ship day before soft-public (Fri 29 Aug, RUL-001)

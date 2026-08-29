@@ -1,0 +1,2 @@
+## 2026-08-29 — REPORT tab retired (RUL-064)
+David flipped "Tester fault reporting" OFF on the +1 dashboard; customer complaints now run via support@trustsquare.co (privacy §13). Maroushka's TS-0022 retest letter must be adjusted to email re-uploads before sending (D11). Also confirmed this session: Show Verified stays OFF for launch, maintenance agent stays SHADOW through the weekend, Travelpayouts tours resubmit waits until after 1 Sep.
