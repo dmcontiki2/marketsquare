@@ -125,6 +125,45 @@ REFLECTIONS = {
    ("../CityLauncher/emailer/emailer.py", ["_is_suppressed", "refusing send to opted-out"], []),
    ("citylauncher_ops.html", ["X-Launch-Key"], []),
  ],
+ "RUL-067": [
+   # Auction module live by ~31 Aug 2027, twin objectives (R-peak extension, Pro-tier
+   # viability). Guarantee: the ruling stays registered and the parked canon it revives
+   # from keeps existing with its decided items intact.
+   ("RULINGS.md", ["AUCTION MODULE", "LIVE BY ~31 AUG 2027"], []),
+   ("PARKED_AUCTIONS.md", ["AU-SELLER", "AU-ENTRY", "Auctions & Offers"], []),
+ ],
+ "RUL-066": [
+   # Ceiling doctrine: every limit = ladder (sell the more / honest plan boundary,
+   # warn-before + never-lose-work / log every hit). If the register loses the doctrine
+   # or the coach-cap scope drops its verbatim copy, this trips.
+   ("RULINGS.md", ["CEILING DOCTRINE"], []),
+   ("scripts/regression_ledger.py", ["CEILING BEHAVIOUR"], []),
+ ],
+ "RUL-065": [
+   # Listing-AI spend approved (soft-launch day): free per-listing envelope may rise to
+   # ~$0.036 worst case for RG-0205/0206/0207. The guarantee: the ruling stays in the
+   # register AND all three ledger entries keep existing (they carry the caps). If a
+   # session deletes or renumbers them, this trips before the spend goes uncapped.
+   ("RULINGS.md", ["LISTING-AI SPEND APPROVED"], []),
+   ("scripts/regression_ledger.py", ["RG-0205", "RG-0206", "RG-0207", "SF-COACH-ASK-1"], []),
+ ],
+ "RUL-061": [
+   # Resend Pro flip deferred to Mon 31 Aug (David, at the Billing screen). The 1 Sep
+   # 420-send day REQUIRES a paid plan (free = 100/day). If the queue loses the
+   # drop-dead wording before the flip is recorded done, this trips.
+   ("RULINGS.md", ["RESEND PRO FLIP DEFERRED TO MON 31 AUG"], []),
+   ("DAVID_QUEUE.md", ["RUL-061"], []),
+ ],
+ "RUL-060": [
+   # The once-off founders occasion is NAMED AND SPENT: David armed the launch special
+   # 28 Aug 2026 for the launch window (hard close 2026-09-01), CityLauncher wave lane
+   # ONLY. The orchestration_v2 agency lane stays clean — RUL-047's needles keep policing
+   # it. If a session un-names the occasion or loses the reflections, this trips.
+   ("RULINGS.md", ["THE LAUNCH SPECIAL IS ARMED"], []),
+   ("DAVID_QUEUE.md", ["RUL-060"], []),
+   ("OPEN_LOOPS.md", ["RUL-060"], []),
+   ("PRICING_CANON.md", ["RUL-060"], []),
+ ],
  "RUL-059": [
    # US-only university-tutor lane: build now, send only on evidence, never from the
    # main sending domain. UK is OUT. If a session adds a UK lane or points this at

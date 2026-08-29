@@ -11060,5 +11060,248 @@ def rg_maint_deps_fresh_interpreter_probe():
     return out
 
 
+@entry("RG-0203", "The +1 AI Providers card answers 'can this AI function STOP?' per feature -- "
+       "funds available per lane, mapped to the app functions it serves, with auto-top-up state",
+       OPEN,
+       scope="dashboard.server.html AI Providers card (AIPROV-FUNDS-1). Requested by David on "
+             "soft-launch evening 29 Aug 2026: the card shows lanes and funnels but no gauge of "
+             "the money each lane can still spend, feature by feature. DESIGN CONSTRAINTS, all "
+             "from the evidence ladder: (a) one row per app AI function (the haiku/triage/"
+             "sonnet/vision funnels already on the card) x the lane that serves it; (b) funds "
+             "shown only where a vendor exposes a probeable balance/usage figure -- anything "
+             "else renders NOT MEASURED plus a dated last-known manual figure, never a guessed "
+             "colour (RG-0133 properties); (c) each lane carries its auto-top-up armed/not-armed "
+             "state, because the stop-risk this card exists to kill is credit exhaustion, not "
+             "vendor outage. Account-side halves already actioned 29 Aug: David guided to arm "
+             "OpenAI auto-recharge + Anthropic auto-reload (Scaleway is postpaid, alert only; "
+             "Gemini = D5 prepaid credits).",
+       ref="AIPROV-FUNDS-1, 29 Aug 2026. OPEN until the strip ships on a post-launch deploy -- "
+           "no deploys on launch weekend (28 Aug freeze discipline). The assertion below greps "
+           "the deployed dashboard source for the data-ai-funds marker plus its NOT MEASURED "
+           "honesty handling; it prints READY TO LOCK the morning the build rides a deploy. "
+           "Server-side probes need keys that exist only on the Hetzner box, so the build "
+           "session is an attended one.")
+def rg_aiprov_funds_gauge():
+    out = []
+    dash = repo_file("dashboard.server.html")
+    if dash is None:
+        out.append((INFO, "repo not present -- source-half of RG-0203 not evaluated here"))
+        return out
+    if 'data-ai-funds' not in dash:
+        out.append((FAIL, "AIPROV-FUNDS-1 not built: dashboard.server.html carries no "
+                          "data-ai-funds strip (per-function funds gauge missing from the "
+                          "AI Providers card)"))
+        return out
+    if 'NOT MEASURED' not in dash:
+        out.append((FAIL, "data-ai-funds strip present but without NOT MEASURED handling -- "
+                          "an unprobeable balance must say so, never wear a guessed figure "
+                          "(RG-0133 honesty class)"))
+    return out
+
+
+@entry("RG-0204", "The CityLauncher local->server sync carries STATUS and message-ids up, not "
+       "only new rows -- the funnel dashboard can never again read 0 while sends sit locally",
+       LOCKED, fixed_on="2026-08-29",
+       scope="CityLauncher/sync_local_to_server.py (SYNC-STATUS-1). CLASS: any lane where an "
+             "action happens on one machine and its truth is read on another must sync the "
+             "STATE CHANGE, not merely the row. Guards asserted: forward-push only lifts "
+             "server rows still at 'scraped' (can never downgrade a server-side open/click/"
+             "bounce/opt-out), and email_events are deduped by NOT EXISTS on (message_id, "
+             "event) because the table has no unique index.",
+       ref="SYNC-STATUS-1, 29 Aug 2026 -- found by David within hours of the FIRST real send "
+           "day: 70 sends recorded locally, dashboard EMAILED stayed 0, and the server's "
+           "Resend webhook could not map opens/clicks because message_ids lived only in the "
+           "local DB. The sync was INSERT OR IGNORE by design and the gap was invisible for "
+           "as long as nothing had ever been emailed. Dry-run proven same session: 187 status "
+           "UPDATEs + 75 events generated. Tooling fault -> ledger entry same session, per the "
+           "16 Aug GIT-LOCK-3 lesson.")
+def rg_citylauncher_sync_status():
+    out = []
+    sync = repo_file(os.path.join("..", "CityLauncher", "sync_local_to_server.py"))
+    if sync is None:
+        out.append((INFO, "CityLauncher repo not present beside this one -- RG-0204 source-half "
+                          "not evaluated here"))
+        return out
+    if 'generate_status_sql' not in sync or 'SYNC-STATUS-1' not in sync:
+        out.append((FAIL, "SYNC-STATUS-1 gone: sync_local_to_server.py no longer carries the "
+                          "status forward-push -- the dashboard will read 0 EMAILED on the next "
+                          "send day while truth sits in the local DB"))
+        return out
+    if "AND status='scraped'" not in sync:
+        out.append((FAIL, "the forward-push lost its downgrade guard (AND status='scraped') -- "
+                          "a local 'emailed' could now overwrite a server-side open/click"))
+    if 'NOT EXISTS' not in sync:
+        out.append((FAIL, "email_events push lost its NOT EXISTS dedupe -- repeated syncs will "
+                          "multiply events on a table with no unique index"))
+    return out
+
+
+
+@entry("RG-0205", "The guided sell flow USES the AI-written description -- vision-draft's "
+       "description_draft leads the listing description instead of being discarded",
+       OPEN,
+       scope="ms.js sfFinish/sfComposeDescription (SF-AIDESC-1). Found in the 29 Aug 2026 "
+             "listing-friction audit: POST /listings/vision-draft returns a 2-4 sentence "
+             "honest description_draft, and the OLD magic-link go-flow applies it -- but the "
+             "guided sell flow (the flow every organic seller now walks) throws it away. "
+             "sfApplyDraft() copies price/make/beds etc. and skips description_draft; "
+             "sfFinish() then composes the description MECHANICALLY (label: value lines via "
+             "sfComposeDescription), so an AI-drafted seller publishes a robotic spec list "
+             "unless they type prose themselves. Fix class: description_draft becomes the "
+             "lead paragraph, composed field lines follow, seller edits win over both.",
+       ref="LISTING-AUDIT-1, 29 Aug 2026. OPEN until a post-launch-weekend deploy carries the "
+           "SF-AIDESC-1 marker (28 Aug freeze discipline -- no launch-weekend deploys).")
+def rg_sf_ai_description_used():
+    out = []
+    ms = repo_file("ms.js")
+    if ms is None:
+        out.append((INFO, "repo not present -- RG-0205 source-half not evaluated here"))
+        return out
+    if 'SF-AIDESC-1' not in ms:
+        out.append((FAIL, "guided sell flow still discards description_draft: ms.js carries no "
+                          "SF-AIDESC-1 wiring in sfFinish/sfComposeDescription"))
+    return out
+
+
+@entry("RG-0206", "The guided sell flow sends ALL chosen photos to vision-draft, not only the "
+       "main one -- the endpoint contract (1-12 photos, primary_photo_index, per-photo "
+       "anonymity indices) is actually exercised",
+       OPEN,
+       scope="ms.js sfRunVision (SF-MULTIVISION-1). Same 29 Aug audit: sfRunVision() appends "
+             "exactly ONE file to the form even though /listings/vision-draft accepts 1-12 and "
+             "returns per-photo off-category and anonymity indices. Consequence: secondary "
+             "photos are never AI-read at draft time (weaker drafts, and a wrong-type or "
+             "identity-revealing photo in slot 2+ is only caught at upload). Fix class: batch "
+             "the filled slots into one vision call when the seller advances from Photos.",
+       ref="LISTING-AUDIT-1, 29 Aug 2026. OPEN until a post-freeze deploy carries "
+           "SF-MULTIVISION-1.")
+def rg_sf_multiphoto_vision():
+    out = []
+    ms = repo_file("ms.js")
+    if ms is None:
+        out.append((INFO, "repo not present -- RG-0206 source-half not evaluated here"))
+        return out
+    if 'SF-MULTIVISION-1' not in ms:
+        out.append((FAIL, "sfRunVision still single-photo: no SF-MULTIVISION-1 marker in ms.js"))
+    return out
+
+
+@entry("RG-0207", "A FREE ask-the-coach affordance exists INSIDE the guided sell flow -- the "
+       "seller can ask a question at any step without leaving the flow or paying",
+       OPEN,
+       scope="ms.js sell flow + POST /advert-agent/coach (SF-COACH-ASK-1). David's 29 Aug "
+             "question ('do we need a help button?') answered YES by audit: the in-flow coach "
+             "bubbles are STATIC text; interactive AI exists only post-publish (edit screen, "
+             "priced per session) -- yet the EULA promises 'everyday in-app guidance is free'. "
+             "The backend endpoint already exists. Fix class: the coach avatar on every sf "
+             "step becomes tappable -> one small ask box -> free guidance lane of "
+             "/advert-agent/coach with step+category+current-fields context; per-session "
+             "rate-cap server-side so the free lane stays flat-cost (pricing canon: no "
+             "unbudgetable variable costs). CEILING BEHAVIOUR (David probe, 29 Aug): "
+             "warn at 8 of 10 (2 questions left), never lose typed work at the cap, "
+             "cap copy funnels to the existing paid dashboard coaching session (1T), "
+             "and every cap-hit logs an event (limit, tier, category) for demand "
+             "telemetry.",
+       ref="LISTING-AUDIT-1, 29 Aug 2026. OPEN until a post-freeze deploy carries "
+           "SF-COACH-ASK-1 in ms.js AND the free guidance lane in bea_main.py.")
+def rg_sf_coach_ask():
+    out = []
+    ms = repo_file("ms.js")
+    if ms is None:
+        out.append((INFO, "repo not present -- RG-0207 source-half not evaluated here"))
+        return out
+    if 'SF-COACH-ASK-1' not in ms:
+        out.append((FAIL, "no in-flow ask-the-coach: SF-COACH-ASK-1 marker absent from ms.js "
+                          "(coach bubbles remain static text; free guidance promise of the "
+                          "EULA has no in-flow surface)"))
+    return out
+
+
+
+@entry("RG-0208", "A pending INTRO nudges the seller before it rots -- reminder ladder exists "
+       "server-side, and the B3 danger zone is warned, never silently entered",
+       OPEN,
+       scope="bea_main.py (INTRO-REMIND-1). David raised 29 Aug (discussed months earlier, "
+             "pre-dating the lane flip): sellers must be reminded to accept/reject a pending "
+             "intro. Today create_intro fires the n8n new-intro webhook ONCE and nothing ever "
+             "re-nudges: no scheduler in bea_main touches intro_requests age. Yet EULA B3 "
+             "BLOCKS a seller at 3 unanswered intros in a rolling 30 days -- so a reminder is "
+             "seller PROTECTION, not spam. Fix class: a periodic sweep (same class as the "
+             "10-min BIT heartbeat lane) walks intros still 'pending': ~24h -> email reminder; "
+             "~72h -> second email + web push where a subscription exists; a seller entering "
+             "the B3 danger zone (2 unanswered in the window) gets an explicit warning naming "
+             "the consequence. All sends logged; no Tuppence ever charged for a reminder.",
+       ref="INTRO-REMIND-1, 29 Aug 2026. OPEN until a post-freeze deploy carries the marker.")
+def rg_intro_reminder_ladder():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        out.append((INFO, "repo not present -- RG-0208 source-half not evaluated here"))
+        return out
+    if 'INTRO-REMIND-1' not in bea:
+        out.append((FAIL, "no intro reminder ladder: bea_main.py carries no INTRO-REMIND-1 "
+                          "sweep -- a pending intro is never re-nudged while EULA B3 counts "
+                          "silence against the seller"))
+    return out
+
+
+@entry("RG-0209", "The app OFFERS the home-screen icon at a chosen moment -- "
+       "promptAddToHomeScreen() has a caller, not just a definition",
+       OPEN,
+       scope="ms.js (A2HS-ASK-1). David asked 29 Aug for invisible-to-user icon creation "
+             "gated only on asking. Audit found the machinery ALREADY BUILT and ORPHANED: "
+             "beforeinstallprompt is captured, promptAddToHomeScreen() exists complete with "
+             "standalone/done guards and the iOS instruction fallback -- and NOTHING calls "
+             "it. Fix class: one trigger at the seller's invested moment (first successful "
+             "publish; optionally sign-in for buyers), so the browser's native install "
+             "prompt asks the one question. Consent notes, settled: the native prompt IS "
+             "the ask (no legal barrier; nothing personal stored, one localStorage flag); "
+             "push NOTIFICATIONS remain a separate browser permission asked only when a "
+             "notification lane (e.g. RG-0208 reminders) wants it -- never bundled.",
+       ref="A2HS-ASK-1, 29 Aug 2026. OPEN until a post-freeze deploy carries the marker.")
+def rg_a2hs_offered():
+    out = []
+    ms = repo_file("ms.js")
+    if ms is None:
+        out.append((INFO, "repo not present -- RG-0209 source-half not evaluated here"))
+        return out
+    if 'A2HS-ASK-1' not in ms:
+        out.append((FAIL, "promptAddToHomeScreen() still has no caller: no A2HS-ASK-1 "
+                          "trigger in ms.js -- the icon is never offered to anyone"))
+    return out
+
+
+
+@entry("RG-0210", "The Ops Dashboard carries the BEAT THE MODEL card -- the contagion model's "
+       "median seller curve pinned beside the LIVE founding-seller count, so the challenge "
+       "David set on launch weekend stares back from dashboard page 4 (Horizon) every day",
+       OPEN,
+       scope="dashboard.server.html (SIM-DASH-1). David, 29 Aug 2026: 'I have set my mind on "
+             "proving our simulation wrong in the right direction... add it to the Ops "
+             "Dashboard for me to keep reminding me of this challenge.' The model: docs/"
+             "TrustSquare_Contagion_Model_v0.2.html (CONTAGION-V02-1, median of 40 seeds, "
+             "v3.2-as-written arm: wk26=21, wk52=99, wk104=141 sellers; best modelled lever "
+             "set reaches wk52=130). DESIGN CONSTRAINTS: (a) the model line is a PINNED "
+             "static week->median table stamped with its model version and build date -- the "
+             "card never re-simulates; (b) the ACTUAL line is PROBED (live seller count from "
+             "the DB the dashboard already reads), grey/NOT MEASURED when the probe fails, "
+             "never a guessed colour (RG-0133 properties); (c) ahead/behind is stated as a "
+             "plain signed number of sellers vs the pinned median for the current model week "
+             "(week 0 = Tue 1 Sep 2026); (d) the card names the full model file by repo path (a web link waits for a gated static lane -- the 315KB model is internal). LOCATION AMENDED 29 Aug same day: David placed it on the NEW page 4 (Horizon view, PAGE4-HORIZON-1) beside the auction build track, not the +1 page. BUILT same session in dashboard.server.html; rides the first post-freeze deploy. When David "
+             "beats the curve the card says so in green -- earned, not painted.",
+       ref="SIM-DASH-1, 29 Aug 2026. OPEN until a post-freeze deploy carries the marker.")
+def rg_beat_the_model_card():
+    out = []
+    dash = repo_file("dashboard.server.html")
+    if dash is None:
+        out.append((INFO, "repo not present -- RG-0210 source-half not evaluated here"))
+        return out
+    if 'SIM-DASH-1' not in dash:
+        out.append((FAIL, "no Beat-the-Model card: dashboard.server.html carries no "
+                          "SIM-DASH-1 marker -- David's standing challenge has no daily "
+                          "surface on the +1 page"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
