@@ -35,6 +35,27 @@ REQUIRED = {
 
 
 def _missing():
+    # MAINT-DEPS-2 (29 Aug 2026): probe in a FRESH interpreter, never only in-process.
+    # On a fresh sandbox the user site-packages dir does not exist when THIS process
+    # starts, so site.py never puts it on sys.path -- an in-process find_spec() then
+    # reports a package pip just installed as still missing, and the verify half
+    # printed FAILED/exit 1 on exactly the machine class this tool was built for
+    # (proven 29 Aug 2026: install succeeded, imports fine in every new process,
+    # this tool said "still missing after install"). The instruments all run as
+    # fresh processes, so the probe now answers the question that actually matters:
+    # can THEY import it.
+    probe = ("import importlib.util,sys;"
+             "print(' '.join(m for m in sys.argv[1:]"
+             " if importlib.util.find_spec(m) is None))")
+    try:
+        r = subprocess.run([sys.executable, "-c", probe] + list(REQUIRED),
+                           capture_output=True, text=True, timeout=60)
+        if r.returncode == 0:
+            return [m for m in r.stdout.split() if m in REQUIRED]
+    except Exception:
+        pass
+    # Fresh probe unavailable (no subprocess on this box?) -- fall back to
+    # in-process, which is better than blind but can under-see a first install.
     return [m for m in REQUIRED if importlib.util.find_spec(m) is None]
 
 

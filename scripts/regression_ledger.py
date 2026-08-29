@@ -10986,5 +10986,79 @@ def rg_outofband_copy_refreshed_by_rotation():
     return out
 
 
+
+@entry("RG-0202", "The dependency bootstrap's VERIFY half answers for the interpreter the "
+       "instruments will actually get -- a package visible to every fresh process can never "
+       "be reported 'still missing'",
+       LOCKED, fixed_on="2026-08-29",
+       scope="scripts/maint_deps.py _missing() -- the probe half of the RG-0200 bootstrap. "
+             "CLASS property: any presence-check that gates an install verdict must probe in "
+             "a FRESH interpreter, because the instruments (maintenance agent, ledger "
+             "harnesses) always run as fresh processes. The failing class is the in-process "
+             "shortcut: on a machine whose user site-packages directory did not exist at "
+             "interpreter start, site.py never adds it to sys.path, so an in-process "
+             "find_spec() cannot see what pip just installed and the verify half lies "
+             "FAILED/exit 1 on exactly the fresh-sandbox machine class the tool was built "
+             "for. Asserted BEHAVIOURALLY and machine-independently below: a synthetic "
+             "module visible only to child interpreters (via PYTHONPATH set after this "
+             "process started) must read PRESENT. A revert to in-process probing goes red "
+             "on every machine, not just fresh ones.",
+       ref="MAINT-DEPS-2, 29 Aug 2026, found by the daily maintenance loop one day after "
+           "MAINT-DEPS-1 shipped -- the bootstrap's install half worked and its verify half "
+           "lied on first use: pip succeeded, every new process imported httpx/fastapi "
+           "fine, and the tool printed 'FAILED -- still missing after install' and exited "
+           "1. RG-0200 asserts the bootstrap EXISTS, covers the right modules, and detects "
+           "absence; this entry owns the opposite lie -- reporting absence where there is "
+           "presence -- which RG-0200's synthetic-absent probe structurally cannot catch. "
+           "Deliberately split, same reasoning as RG-0144/RG-0198: one assertion covering "
+           "both halves would be promoted the moment either half passed. Evidence 29 Aug: "
+           "fault reproduced in-session (sys.path stripped of user-site -> in-process view "
+           "reported httpx+fastapi missing; fixed fresh-probe reported none missing), and "
+           "--check with a synthetic absent module still exits 1, so the RG-0200 detection "
+           "behaviour is intact.")
+def rg_maint_deps_fresh_interpreter_probe():
+    out = []
+    import importlib.util as _ilu
+    _path = os.path.join(REPO, "scripts", "maint_deps.py")
+    if not os.path.exists(_path):
+        out.append((FAIL, "scripts/maint_deps.py is GONE -- RG-0200 owns the loss of the "
+                          "bootstrap; this entry cannot probe its verify half (MAINT-DEPS-2)"))
+        return out
+    import tempfile as _tf, shutil as _sh
+    _td = _tf.mkdtemp(prefix="rg0202_")
+    _old_pp = os.environ.get("PYTHONPATH")
+    try:
+        with open(os.path.join(_td, "rg0202_fresh_only_mod.py"), "w") as _fh:
+            _fh.write("present = True\n")
+        # Children see it via PYTHONPATH; THIS process never adds it to sys.path --
+        # the exact geometry of the first-install fault, recreated synthetically.
+        os.environ["PYTHONPATH"] = _td + os.pathsep + (_old_pp or "")
+        _spec = _ilu.spec_from_file_location("_rg0202_maint_deps", _path)
+        _md = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_md)
+        _md.REQUIRED = {"rg0202_fresh_only_mod":
+                        ("rg0202-not-real", "synthetic fresh-only module -- proves the probe "
+                         "asks a fresh interpreter, not this process")}
+        _missing = _md._missing()
+        if _missing:
+            out.append((FAIL, "maint_deps._missing() reports %r missing although a FRESH "
+                              "interpreter imports it -- the verify half is back to "
+                              "in-process probing and will lie 'still missing after "
+                              "install' on fresh sandboxes (MAINT-DEPS-2)" % (_missing,)))
+        else:
+            out.append((INFO, "the bootstrap's verify half probes a fresh interpreter -- a "
+                              "first-run install can no longer be reported as a failure"))
+    except Exception as exc:
+        out.append((FAIL, "RG-0202 harness could not exercise maint_deps.py (%r) -- the "
+                          "verify half is unproven (MAINT-DEPS-2)" % (exc,)))
+    finally:
+        if _old_pp is None:
+            os.environ.pop("PYTHONPATH", None)
+        else:
+            os.environ["PYTHONPATH"] = _old_pp
+        _sh.rmtree(_td, ignore_errors=True)
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
