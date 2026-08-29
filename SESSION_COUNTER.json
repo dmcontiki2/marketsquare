@@ -1,14 +1,14 @@
 {
-  "session": 181,
-  "computed_at": "2026-08-28T03:16:14Z",
+  "session": 182,
+  "computed_at": "2026-08-29T08:44:16Z",
   "basis": "derived",
   "anchor": {
     "session": 155,
     "date": "2026-08-01"
   },
-  "sittings_after_anchor": 26,
+  "sittings_after_anchor": 27,
   "extra_sittings": {},
-  "newest_evidence": "2026-08-28",
+  "newest_evidence": "2026-08-29",
   "precision": "floor -- distinct session-days; two sittings in one day count once",
   "source": "scripts/session_counter.py (SESSION-COUNTER-1). Do NOT hand-edit this file and do NOT reinstate a prose regex in /dashboard/summary."
 }

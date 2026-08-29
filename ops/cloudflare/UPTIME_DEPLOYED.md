@@ -4,7 +4,7 @@
 
 ```
 DEPLOYED_ON: 2026-08-28
-LAST_HEARTBEAT: 2026-08-28
+LAST_HEARTBEAT: 2026-08-29
 ```
 
 ## What is deployed
@@ -46,6 +46,15 @@ so the first one lands on **soft-launch morning, Sat 29 Aug**. If a heartbeat em
 inbox that morning, the alert path is proven end-to-end and this file's LAST_HEARTBEAT should be
 rolled forward. **If nothing arrives by ~08:30 SAST, the alert path is still dead and must be
 treated as such** — do not assume it works because the deploy succeeded.
+
+## PROVEN 29 Aug 2026 — the heartbeat ARRIVED
+
+**The alert half is no longer unproven.** PROBED in David's Gmail inbox by the 29 Aug third-party
+sweep: message from `hello@mail.trustsquare.co`, subject *"TrustSquare uptime watcher — daily
+heartbeat"*, received **2026-08-29T06:00:22Z**, body reading *"UP — 200 in 391ms"*. The Worker was
+re-probed the same run at 08:36 UTC: `ok:true, 200 in 190ms, kv:true, consecutiveFails:0`. The
+path Worker → Resend → inbox is proven end-to-end on soft-launch morning, exactly as this file
+said it would or would not be. LAST_HEARTBEAT rolled forward on that evidence, not on assumption.
 
 ## Keeping this marker honest
 
