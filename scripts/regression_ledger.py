@@ -369,6 +369,18 @@ def _json(path):
     return json.loads(_get(path))
 
 
+def _ops_key():
+    """MS_API_KEY from .secrets/ops_api_key.txt -- '' when absent. Provisioned 30 Aug 2026
+    (D14): read from the RUNNING process env as root (RG-0147: point of use, never the file --
+    on that day THREE config files carried three different values and the live one matched
+    none of them; see DW-084)."""
+    try:
+        with open(os.path.join(REPO, ".secrets", "ops_api_key.txt"), encoding="utf-8") as f:
+            return f.read().strip()
+    except Exception:
+        return ""
+
+
 def _admin_key():
     """MS_ADMIN_KEY from .secrets/deploy_keys.txt -- '' when absent (outside the repo)."""
     if "ADMKEY" not in _cache:
@@ -6413,10 +6425,29 @@ def rg_ai_breaker_fails_over():
 
     # Live half: how many lanes actually carry keys on the box. OPS-key gated, so this is
     # INFO either way -- an unreadable instrument must never read as a pass.
-    st = _status("/ops/selfcheck")
+    _ok = _ops_key()
+    if _ok:
+        # OPS-KEY-EYES-1 (30 Aug 2026, closes the D14 gap): authenticated read of the live
+        # lane count -- the blue card turns green by assertion, not by a dated hand-probe.
+        try:
+            _req = urllib.request.Request(BASE + "/ops/selfcheck",
+                                          headers=dict(UA, **{"X-Api-Key": _ok}))
+            st = urllib.request.urlopen(_req, timeout=TIMEOUT).getcode()
+        except urllib.error.HTTPError as _e:
+            st = _e.code
+        except Exception as _ex:
+            st = 0
+    else:
+        st = _status("/ops/selfcheck")
     if st == 200:
         try:
-            doc = _json("/ops/selfcheck")
+            if _ok:
+                _req = urllib.request.Request(BASE + "/ops/selfcheck",
+                                              headers=dict(UA, **{"X-Api-Key": _ok}))
+                doc = json.loads(urllib.request.urlopen(_req, timeout=TIMEOUT).read()
+                                 .decode("utf-8", "replace"))
+            else:
+                doc = _json("/ops/selfcheck")
             lanes = ((doc.get("ai") or {}).get("lanes_configured") or [])
             if len(lanes) < 2:
                 out.append((FAIL, "the box has %d configured AI lane(s) (%s) -- failover is "
@@ -6428,9 +6459,15 @@ def rg_ai_breaker_fails_over():
         except Exception as e:
             out.append((INFO, "/ops/selfcheck unreadable (%s)" % str(e)[:60]))
     else:
-        out.append((INFO, "live lane count not readable (HTTP %s at /ops/selfcheck -- OPS key "
-                          "not provisioned). The decision layer is proven; whether production "
-                          "has a second lane to move to is UNSEEN, not assumed." % st))
+        if _ok:
+            out.append((INFO, "live lane count not readable (HTTP %s WITH the provisioned OPS "
+                              "key -- the key has gone stale, likely a service restart flipping "
+                              "MS_API_KEY sources; re-read it from the running process (DW-084)."
+                              % st))
+        else:
+            out.append((INFO, "live lane count not readable (HTTP %s at /ops/selfcheck -- OPS key "
+                              "not provisioned). The decision layer is proven; whether production "
+                              "has a second lane to move to is UNSEEN, not assumed." % st))
     return out
 
 

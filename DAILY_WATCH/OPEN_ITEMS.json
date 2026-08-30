@@ -1,5 +1,5 @@
 {
- "next_id": 84,
+ "next_id": 86,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -764,9 +764,9 @@
    "last_seen": "2026-08-30",
    "sev": "MEDIUM",
    "source": "anonymous PROBE of GET /dashboard/summary + ledger RG-0198",
-   "status": "FIXED-UNVERIFIED",
-   "summary": "FIXED-UNVERIFIED 30 Aug: heartbeat-only anon branch + tokenised dashboard loaders built (DASH-SUMMARY-REDACT-1); RG-0144 harness amended, 16/16. RG-0198/RG-0211 probe LIVE and stay open until the deploy rides.",
-   "next_action": "Closes when the anonymous live probe returns the bare heartbeat and RG-0198 + RG-0211 go green (rides David's next deploy)."
+   "status": "CLOSED",
+   "summary": "CLOSED 30 Aug: David's 07:48 release carried the fix; live anon probe returns bare heartbeat only; RG-0198+RG-0211 LOCKED and ok.",
+   "next_action": "None — closed on live probe + LOCKED assertions."
   },
   "DW-079": {
    "first_seen": "2026-08-27",
@@ -813,6 +813,24 @@
    "status": "CLOSED",
    "summary": "Raised and closed same run (refs closed DW-082, filed new per never-reopen rule): first ledger invocation 2 UNVERIFIED (RG-0181/RG-0182, missing fastapi, exit 2); after bootstrap the re-run evaluated the FULL board: 205 entries · 186 holding · 0 REGRESSED · 19 open · 0 READY TO LOCK · 0 UNVERIFIED · exit 0. RESIDUAL: bootstrap-BEFORE-ledger is the standing watch routine (RG-0200 step-0); this run inverted the order.",
    "next_action": "None — closed 2026-08-30 on the fully-evaluated re-run."
+  },
+  "DW-084": {
+   "first_seen": "2026-08-30",
+   "last_seen": "2026-08-30",
+   "sev": "MEDIUM",
+   "source": "root config sweep vs /proc environ (RG-0147 method)",
+   "status": "OPEN",
+   "summary": "MS_API_KEY in three fingerprints; live value matches no file — restart silently swaps keys. Plus junk file in service.d and stale inline LAUNCH_SPECIAL_DEADLINE (overridden today).",
+   "next_action": "2 Sep attended root window: align sources to live value, clean crud, verify at point of use after planned restart."
+  },
+  "DW-085": {
+   "first_seen": "2026-08-30",
+   "last_seen": "2026-08-30",
+   "sev": "LOW",
+   "source": "server login banner (root SSH)",
+   "status": "OPEN",
+   "summary": "46 pending updates (9 security) + kernel restart required on the production box.",
+   "next_action": "2 Sep: patch + one planned reboot, same window as DW-084, /health watched."
   }
  },
  "last_run": "2026-08-30",
