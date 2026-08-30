@@ -1,3 +1,15 @@
+SHIPPED: David deployed (Release 7b68a93). Live-verified in-gate: title v1.3, all four
+A-plan waves present (20/7/6/14 cities), defaults ring2W=1/3W=4/4W=8/5W=12 scrapeWk=30,
+live page computes wk12=173 (matches Node), zero console errors, no post-deploy 503 this
+time. Both guardrails David ratified the ramp for remain intact: RAMP-1 earned volume +
+stop-loss (pest protection) and RUL-053 caps (market-swamping protection) — the A-plan
+adds persistence, never intensity.
+
+SURFACES UPDATED (David's ask): WAVE_PLAN_LAUNCH_2026.html (→ static/wave_plan.html) gains
+PHASE 4 · The persistent chain + a RUL-074 note + RAMP-1 wording in the volume-cap note;
+dashboard.server.html Beat the Model card names the v1.3 chain defaults while the 28 Aug
+challenge pins stay unmoved. Backups *-20260830-190218. Rides the next deploy.
+
 ## 2026-08-30 — SIM-RING-1 + RUL-074: foothold by machinery, never by luck; model v1.3
 
 David's challenge on the 24 Nov view (only AU lit): the plan is a persistent unbroken
