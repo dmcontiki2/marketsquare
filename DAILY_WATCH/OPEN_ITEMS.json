@@ -1,5 +1,5 @@
 {
- "next_id": 83,
+ "next_id": 84,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -580,12 +580,12 @@
   },
   "DW-062": {
    "first_seen": "2026-08-24",
-   "last_seen": "2026-08-29",
+   "last_seen": "2026-08-30",
    "sev": "MEDIUM",
    "source": "audit_global_qa LINKS-DEAD",
    "status": "OPEN",
    "closed": null,
-   "summary": "RE-RAN 08:29 UTC and FAILED again — SIXTH consecutive failing pass, and soft-public is TODAY. Audit 3 findings (0 new); LINKS-DEAD still names the same 5 example.com URLs (hilux1/2, house1/2, kruger1) of 11 checked, inside the bulk-import CSV template strings in ms.js. From today the tester who imports a sample row verbatim can be a stranger; the draft lands with dead photo links.",
+   "summary": "RE-RAN 04:35 UTC 30 Aug and FAILED again — SEVENTH consecutive failing pass. Audit 3 findings (0 new); LINKS-DEAD still the same 5 example.com URLs (hilux1/2, house1/2, kruger1) of 11, in the bulk-import CSV template strings in ms.js.",
    "next_action": "Attended (CTO lane): point sample rows at self-hosted /static demo images OR teach the audit to exempt template strings; closes when the audit re-run drops LINKS-DEAD.",
    "evidence": "RE-RAN 2026-08-27 and FAILED — 4th consecutive failing pass. audit_global_qa LINKS-DEAD: same 5 example.com image URLs of 11 checked, inside the bulk-import CSV template strings in ms.js."
   },
@@ -601,13 +601,13 @@
   },
   "DW-064": {
    "first_seen": "2026-08-24",
-   "last_seen": "2026-08-29",
+   "last_seen": "2026-08-30",
    "sev": "LOW",
    "source": "fea_integrity_check + cron sensor",
    "status": "OPEN",
    "closed": null,
    "references": "DW-061",
-   "summary": "RE-PROBED 08:32 UTC over SSH — STILL alert, sixth failing re-check; alert string byte-identical a fourth day (index bytes 415388 -> 415200, delta -188), notes unmoved overnight (ms.js v518->v549, ms.css v382->v413). Proven deploy-not-tamper again: deploy_drift clean 19/19 + audit VERSION-KEY-BENIGN. Cron sensor single HIGH anomaly = same fact.",
+   "summary": "RE-PROBED 04:36 UTC 30 Aug over SSH — STILL alert, seventh failing re-check; alert string byte-identical a fifth day (index 415388 -> 415200, -188). Version notes MOVED with David's 06:08 SAST deploy (Release 9050f74): ms.js v518->v551, ms.css v382->v415. Deploy-not-tamper proven again: deploy_drift clean 19/19 + VERSION-KEY-BENIGN. Baseline stale across eight deploys.",
    "next_action": "Attended: eyeball delta then update_fea_baseline.bat; closes on probed status ok, alerts [].",
    "note_2026_08_26": "NOT RE-CHECKED — fea_integrity_check.py is on the box and SSH is down (DW-065). Could neither fail nor close today.",
    "evidence": "RE-PROBED 2026-08-27 over SSH and FAILED — fea_integrity_check status: alert, alerts ['index bytes 415388 -> 415200 (delta -188)']; notes ms.js v518->v548, ms.css v382->v412 (moved again with the 02:01 and 05:45 releases). deploy_drift clean + audit VERSION-KEY-BENIGN prove it is a deploy, not a tamper. Baseline stale across six deploys."
@@ -761,11 +761,11 @@
   },
   "DW-078": {
    "first_seen": "2026-08-27",
-   "last_seen": "2026-08-29",
+   "last_seen": "2026-08-30",
    "sev": "MEDIUM",
    "source": "anonymous PROBE of GET /dashboard/summary + ledger RG-0198",
    "status": "OPEN",
-   "summary": "RE-CHECKED 08:31 UTC via ledger RG-0198 (honestly OPEN): /dashboard/summary still serves the internal engineering narrative to an anonymous caller in 4 fields (lastDone, nextGoals, priorityItems, recentChangelog). Day 3, and from today the anonymous caller can be a genuine stranger — soft-public is open.",
+   "summary": "RE-PROBED 04:38 UTC 30 Aug anonymously — FAILED, day 4. Payload still carries narrative fields AND liveState counts/session/infra detail. RG-0198 and RG-0211 (heartbeat-only redaction, 29 Aug) both honestly OPEN in the full ledger run.",
    "next_action": "CTO lane: redact the four narrative fields for the anonymous caller, or answer them only to an authenticated one; closes when an anonymous probe returns no internal narrative and RG-0198 goes green."
   },
   "DW-079": {
@@ -804,9 +804,18 @@
    "summary": "RAISED AND CLOSED IN THE SAME RUN. First ledger invocation demoted RG-0181/RG-0182 to NOT EVALUATED (fresh sandbox lacked fastapi — LEDGER-DEPS-1 demotion working as designed). Ran the cure RG-0200 names (scripts/maint_deps.py, installed httpx+fastapi); same-session re-run evaluated the FULL board: 194 entries / 183 holding / 0 REGRESSED / 11 open / 0 READY TO LOCK / 0 UNVERIFIED, exit 0. RESIDUAL (cosmetic): maint_deps' same-process self-check prints FAILED while a fresh interpreter imports both; and the ephemeral sandbox means bootstrap-before-ledger is standing watch routine (RG-0200 step-0 clause).",
    "next_action": "None — closed same run on the full-board re-run.",
    "closed": "2026-08-29"
+  },
+  "DW-083": {
+   "first_seen": "2026-08-30",
+   "last_seen": "2026-08-30",
+   "sev": "LOW",
+   "source": "regression ledger first invocation (fresh sandbox)",
+   "status": "CLOSED",
+   "summary": "Raised and closed same run (refs closed DW-082, filed new per never-reopen rule): first ledger invocation 2 UNVERIFIED (RG-0181/RG-0182, missing fastapi, exit 2); after bootstrap the re-run evaluated the FULL board: 205 entries · 186 holding · 0 REGRESSED · 19 open · 0 READY TO LOCK · 0 UNVERIFIED · exit 0. RESIDUAL: bootstrap-BEFORE-ledger is the standing watch routine (RG-0200 step-0); this run inverted the order.",
+   "next_action": "None — closed 2026-08-30 on the fully-evaluated re-run."
   }
  },
- "last_run": "2026-08-29",
+ "last_run": "2026-08-30",
  "last_verdict": "AMBER",
  "recheck_pass_2026_08_20": {
   "requested_by": "David: close all open actions",
@@ -1011,5 +1020,20 @@
   "ai_watch": "no action, no register row — field info only (ZA sovereign AI cloud announced 27 Aug; stale pricing trackers resurfacing)",
   "post_report_action": "RG-0175 promoted OPEN -> LOCKED (CTO lane, RUL-037) on David's question; closes DW-081 the day the first wave fires."
  },
- "watch_pass_2026_08_29": "AMBER (soft-public day). Site green (health ok/1.3.1, 0.37s, payment ok, TLS 85d, BIT 8/8). Ledger exit 0: 194/183 holding/0 regressed/11 open/0 ready/0 unverified — full board evaluated after RG-0200 bootstrap (DW-082 raised+closed same run). Smoke sandbox all-pass (photos 65/65) + cron 39/39; parity holds; spend $0 today/$1.89 MTD of $100. Sweep 0 critical, WARN set identical to 28 Aug. Sensors 35 UP/15 HELD/1 PLANNED/0 DOWN. CLOSED: DW-076 (Resend watch key HTTP 200 — David provisioned) + DW-073 (hop passes; RG-0193 worker vantage LOCKED) + DW-082. Still failing: DW-062 (6th), DW-064 (6th), DW-078 (day 3). AI-watch clear (Sonnet-revert claim stale again; sub-plan weekly caps = field note). Open rows 11."
+ "watch_pass_2026_08_29": "AMBER (soft-public day). Site green (health ok/1.3.1, 0.37s, payment ok, TLS 85d, BIT 8/8). Ledger exit 0: 194/183 holding/0 regressed/11 open/0 ready/0 unverified — full board evaluated after RG-0200 bootstrap (DW-082 raised+closed same run). Smoke sandbox all-pass (photos 65/65) + cron 39/39; parity holds; spend $0 today/$1.89 MTD of $100. Sweep 0 critical, WARN set identical to 28 Aug. Sensors 35 UP/15 HELD/1 PLANNED/0 DOWN. CLOSED: DW-076 (Resend watch key HTTP 200 — David provisioned) + DW-073 (hop passes; RG-0193 worker vantage LOCKED) + DW-082. Still failing: DW-062 (6th), DW-064 (6th), DW-078 (day 3). AI-watch clear (Sonnet-revert claim stale again; sub-plan weekly caps = field note). Open rows 11.",
+ "watch_pass_2026_08_30": {
+  "verdict": "AMBER",
+  "closed": [
+   "DW-083"
+  ],
+  "still_failing": [
+   "DW-062",
+   "DW-064",
+   "DW-078"
+  ],
+  "not_rerunnable": [
+   "DW-063 (Monday lane)"
+  ],
+  "checks_run": "12/13"
+ }
 }

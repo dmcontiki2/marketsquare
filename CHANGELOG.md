@@ -1,3 +1,8 @@
+RESOLVED same session: David approved; deployed via ms-deploy (Release 9050f74, Sun 30 Aug
+06:08). Probed live in-gate: dashboard carries the sim link, /orchestrator/simulation.html
+answers 200 (401 anonymous — gate intact). Ledger re-run: every locked fix holding, RG-0210
+genuinely LOCKED now.
+
 ## 2026-08-30 — SIM-DASH-2 correction: the sim link never reached the live site
 
 David reported the simulation link missing from the dashboard — he is right. Probed live
