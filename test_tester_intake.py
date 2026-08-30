@@ -55,8 +55,16 @@ def _is_email_body(here, src, dest):
 
 
 def tester_pages(here):
-    """Every deployed .html a tester can actually land on - email bodies excluded."""
-    return [s for s, d in _manifest_html(here) if not _is_email_body(here, s, d)]
+    """Every deployed .html a tester can actually land on - email bodies excluded,
+    and so is the Basic-Auth-gated /orchestrator/ ops realm (OPS-REALM-EXEMPT-1,
+    30 Aug 2026): a tester cannot LAND on a page that answers 401 anonymously, so
+    the widget requirement never applied there. The 8-scan red RG-0114 caught was
+    this guard demanding ts_report.js on the contagion model + defence map the
+    moment they joined the manifest (dest orchestrator/...) -- gated ops documents,
+    not tester pages. Judged by DEST (where it is served), never by source name."""
+    return [s for s, d in _manifest_html(here)
+            if not _is_email_body(here, s, d)
+            and not d.strip().lstrip("/").startswith("orchestrator/")]
 
 
 def email_bodies(here):

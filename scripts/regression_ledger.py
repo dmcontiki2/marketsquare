@@ -9712,7 +9712,7 @@ def rg_index_header_parity():
            "is not proof of absence at runtime\' from an objection into a measurement. Not done "
            "today on purpose: it needs a new migration, and the chain was only just unjammed "
            "(RG-0125) -- adding one on the last ship day is the DEFER-1 risk this project has "
-           "already paid for twice.")
+           "already paid for twice. AMENDED 30 Aug 2026 (activation session): the live-half test was a SUBSTRING test (https: matches every named https origin, * matches a wildcard subdomain) so the recorded three-host policy could never pass its own assertion -- fixed to judge TOKENS; migration 034 ships the recorded policy exactly, measured live in Chrome this session (all five surfaces: zero cross-origin connect targets).")
 def rg_csp_connect_src_tight():
     try:
         csp = _headers("/terms").get("content-security-policy", "") or ""
@@ -9722,9 +9722,16 @@ def rg_csp_connect_src_tight():
         return [(FAIL, "no connect-src directive at all -- falls back to default-src; verify that is "
                        "deliberate")]
     directive = csp.split("connect-src", 1)[1].split(";", 1)[0]
-    if "https:" in directive or "*" in directive:
-        return [(FAIL, "connect-src is still open (%r) -- a script that executed could exfiltrate. "
-                       "Tighten to named origins once the runtime inventory exists" % directive.strip())]
+    # ASSERTION FIXED 30 Aug 2026 (CSP-CONNECT-1 activation): the old test was
+    # `"https:" in directive` -- a SUBSTRING test that also matches every named
+    # https:// origin, so the entry's own recorded policy (three named hosts)
+    # could never pass. Openness is a property of TOKENS: only the bare scheme
+    # source `https:` or a bare `*` is a blanket. A named origin is the fix.
+    tokens = directive.split()
+    open_tokens = [t for t in tokens if t in ("https:", "http:", "*", "https://*", "http://*")]
+    if open_tokens:
+        return [(FAIL, "connect-src is still open (%r in %r) -- a script that executed could "
+                       "exfiltrate. Named origins only" % (open_tokens, directive.strip()))]
     return []
 
 
@@ -11224,7 +11231,7 @@ def rg_citylauncher_sync_status():
 
 @entry("RG-0205", "The guided sell flow USES the AI-written description -- vision-draft's "
        "description_draft leads the listing description instead of being discarded",
-       OPEN,
+       LOCKED, fixed_on="2026-08-30",
        scope="ms.js sfFinish/sfComposeDescription (SF-AIDESC-1). Found in the 29 Aug 2026 "
              "listing-friction audit: POST /listings/vision-draft returns a 2-4 sentence "
              "honest description_draft, and the OLD magic-link go-flow applies it -- but the "
@@ -11234,8 +11241,11 @@ def rg_citylauncher_sync_status():
              "sfComposeDescription), so an AI-drafted seller publishes a robotic spec list "
              "unless they type prose themselves. Fix class: description_draft becomes the "
              "lead paragraph, composed field lines follow, seller edits win over both.",
-       ref="LISTING-AUDIT-1, 29 Aug 2026. OPEN until a post-launch-weekend deploy carries the "
-           "SF-AIDESC-1 marker (28 Aug freeze discipline -- no launch-weekend deploys).")
+       ref="LISTING-AUDIT-1, 29 Aug 2026. Was OPEN until a post-launch-weekend deploy carried "
+           "the SF-AIDESC-1 marker. PROMOTED 30 Aug 2026 (Batch 1 session): built unattended, "
+           "and the 06:45Z release carried it the same hour -- the SERVED /static/ms.js was "
+           "PROBED carrying SF-AIDESC-1. Seller prose leads when typed; else the AI draft; "
+           "mechanical lines always follow.")
 def rg_sf_ai_description_used():
     out = []
     ms = repo_file("ms.js")
@@ -11332,7 +11342,7 @@ def rg_intro_reminder_ladder():
 
 @entry("RG-0209", "The app OFFERS the home-screen icon at a chosen moment -- "
        "promptAddToHomeScreen() has a caller, not just a definition",
-       OPEN,
+       LOCKED, fixed_on="2026-08-30",
        scope="ms.js (A2HS-ASK-1). David asked 29 Aug for invisible-to-user icon creation "
              "gated only on asking. Audit found the machinery ALREADY BUILT and ORPHANED: "
              "beforeinstallprompt is captured, promptAddToHomeScreen() exists complete with "
@@ -11343,7 +11353,10 @@ def rg_intro_reminder_ladder():
              "the ask (no legal barrier; nothing personal stored, one localStorage flag); "
              "push NOTIFICATIONS remain a separate browser permission asked only when a "
              "notification lane (e.g. RG-0208 reminders) wants it -- never bundled.",
-       ref="A2HS-ASK-1, 29 Aug 2026. OPEN until a post-freeze deploy carries the marker.")
+       ref="A2HS-ASK-1, 29 Aug 2026. PROMOTED 30 Aug 2026 (Batch 1 session): trigger wired "
+           "after the first successful publish handoff (sfFinish non-draft path), built "
+           "unattended, and the 06:45Z release carried it -- SERVED /static/ms.js PROBED "
+           "carrying A2HS-ASK-1. No notification permission bundled, per the consent note.")
 def rg_a2hs_offered():
     out = []
     ms = repo_file("ms.js")
@@ -11530,6 +11543,114 @@ def rg_outreach_ramp_earned():
         if cat not in pol.get("agency_categories", []):
             out.append((FAIL, "%r dropped from agency_categories -- the Stays & Tours pool is "
                               "invisible to the composer again (STAYS-TOURS-LINEUP-1)" % cat))
+    return out
+
+
+@entry("RG-0214", "The gated ops map and watch register are LIVE documents -- served from the "
+       "repo's fetched origin/main at request time, so the defence map can never again trail "
+       "reality by a whole deploy",
+       OPEN,
+       scope="bea_main.py MAP-LIVE-1 routes + migrations/035_orchestrator_live_map.py. Born of "
+             "the 30 Aug red card that closed hours late because the deploy-placed map was "
+             "stale. D15 (push-scoped PAT) was the preferred fix and remains open to David; "
+             "this is the recorded fallback (DAVID_QUEUE D15 CONTEXT). Class property: the two "
+             "exact-match nginx locations stay INSIDE the TrustSquare Orchestrator Basic-Auth "
+             "realm -- serving the watch register ungated would be an information leak, so the "
+             "migration itself proves 401-anonymous and refuses success without it.",
+       ref="MAP-LIVE-1, 30 Aug 2026 (unattended Batch 1 session). OPEN until a deploy carries "
+           "the routes + migration 035 and the deploy report shows 035 ok with its app-half "
+           "and gate proofs. Promote on READY TO LOCK (DW-079 rule).")
+def rg_map_live_lane():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None and "MAP-LIVE-1" not in bea:
+        out.append((FAIL, "bea_main.py lost the MAP-LIVE-1 routes -- the ops map is "
+                          "deploy-placed-stale again"))
+    if bea is not None:
+        mig = os.path.join(REPO, "migrations", "035_orchestrator_live_map.py")
+        if not os.path.exists(mig):
+            out.append((FAIL, "migrations/035_orchestrator_live_map.py is gone -- the nginx "
+                              "half of MAP-LIVE-1 cannot ship"))
+    # live half: the deploy report must show migration 035 ran ok (the migration
+    # only reports ok after PROVING app 200 + anonymous 401 -- so this one line
+    # carries both proofs; the endpoint itself is Basic-Auth-gated and is
+    # deliberately NOT probed anonymously here).
+    st = _status("/static/post_deploy_status.json")
+    if st != 200:
+        out.append((FAIL, "no deploy report readable (HTTP %s) -- MAP-LIVE-1 live half "
+                          "unproven" % st))
+        return out
+    try:
+        doc = _json("/static/post_deploy_status.json")
+        steps = {x.get("step"): x.get("result") for x in doc.get("steps", [])}
+        hit = [k for k in steps if k and "035" in str(k)]
+        if not hit:
+            out.append((FAIL, "deploy report %s carries no migration-035 step -- the deploy "
+                              "with MAP-LIVE-1 has not shipped yet" % doc.get("generated_at")))
+        elif any(steps[k] == "failed" for k in hit):
+            out.append((FAIL, "migration 035 FAILED on the last deploy (%s) -- read its "
+                              "captured output in the report" % doc.get("generated_at")))
+    except Exception as e:
+        out.append((FAIL, "deploy report unreadable (%s)" % str(e)[:60]))
+    return out
+
+
+@entry("RG-0215", "India outreach is LAW-GATED: no Indian city may be armed in "
+       "waves_policy.json until the outreach-law canon carries a verified India section "
+       "(DPDP Act 2023), the same per-jurisdiction treatment the other nine got",
+       OPEN,
+       scope="jurisdiction-gate CLASS: any country reachable by cities.json whose law is "
+             "not covered in OUTREACH_LAW belongs here -- India (Delhi/Mumbai/Bengaluru, "
+             "staged 30 Aug 2026, INDIA-TUTORS-LANE-1) is the first instance. The pool "
+             "lane (certification directories: Cambridge authorised centres, British "
+             "Council/IDP IELTS partners, Trinity CertTESOL providers) is NOT gated -- "
+             "harvesting is lawful recon; SENDING is what waits.",
+       ref="Born 30 Aug 2026: David directed the India tutors lane; probe found OSM dead "
+           "for IN education (12 hits, all of Delhi) and OUTREACH_LAW_WORKING_NOTES "
+           "covering 9 jurisdictions, India absent. DPDP Act 2023 has a publicly-"
+           "available-data carve-out (s.3(c)) that likely helps, but 'likely' is READ-"
+           "grade, not verified -- the other nine got primary-source verification and "
+           "India gets no less. PASSES (READY TO LOCK) when the law notes carry an India "
+           "section; goes RED if an India city is armed before then.")
+def rg_india_law_gate():
+    out = []
+    notes = os.path.join(REPO, "OUTREACH_LAW_WORKING_NOTES_2026-08-20.md")
+    covered = False
+    import glob as _glob
+    for fp in _glob.glob(os.path.join(REPO, "OUTREACH_LAW*")):
+        try:
+            if fp.endswith(".md") and "INDIA" in open(fp, encoding="utf-8").read().upper():
+                covered = True
+        except Exception:
+            pass
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    india_cities = set()
+    try:
+        for c in json.loads(open(os.path.join(cl, "data", "cities.json"), encoding="utf-8").read()):
+            if c.get("country") == "IN":
+                india_cities.add(c.get("name"))
+    except Exception:
+        pass
+    armed_india = []
+    try:
+        pol = json.loads(open(os.path.join(cl, "emailer", "waves_policy.json"), encoding="utf-8").read())
+        for name, cpol in pol.get("cities", {}).items():
+            if name in india_cities and (cpol.get("armed") or cpol.get("gates_green")):
+                armed_india.append(name)
+    except Exception:
+        pass
+    if armed_india and not covered:
+        out.append((FAIL, "India city/cities %s armed or gates_green while OUTREACH_LAW has NO "
+                          "India section -- sending into an unresearched jurisdiction is the "
+                          "exact fault the 9-jurisdiction doc exists to prevent (RG-0214)"
+                    % ", ".join(sorted(armed_india))))
+    elif not covered:
+        out.append((FAIL, "OUTREACH_LAW does not yet cover India (DPDP Act 2023) -- expected "
+                          "while OPEN. Write the India section with the same primary-source "
+                          "verification as the other nine, then this prints READY TO LOCK"))
+    else:
+        out.append((INFO, "OUTREACH_LAW carries an India section and no India city is armed "
+                          "ahead of it -- promote this entry to LOCKED"))
     return out
 
 

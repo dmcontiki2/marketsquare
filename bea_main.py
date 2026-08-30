@@ -19457,6 +19457,64 @@ def orchestrator_approve(body: _OrchApproveBody):
             "note": "Approved — moved to the front of the queue; the next Fixer run ships it (smoke-gated)."}
 
 
+# ── MAP-LIVE-1 (30 Aug 2026, D15 fallback ruling): the defence map and watch
+# register are served FROM THE REPO'S FETCHED origin/main AT REQUEST TIME, not
+# from the deploy-placed copies. WHY: the deploy timer fetches origin every
+# ~2 min but only resets the tree when the `deploy` ref moves, and the manifest
+# only copies these two files on a full deploy -- so the gated ops map used to
+# trail reality by a whole deploy. `git show origin/main:<path>` reads the
+# freshest PUSHED truth with no checkout and no lock. Falls back to the
+# deploy-placed copy if git cannot answer, and names its source in an
+# X-Map-Source header either way. nginx proxies exactly these two URLs inside
+# the Basic-Auth-gated /orchestrator/ realm (migration 035) -- the exact-match
+# locations outrank the static prefix block, and the app is loopback-only, so
+# the gate still fronts every path to this code.
+_MAP_LIVE_SRC = os.getenv("MS_SRC", "/opt/marketsquare-src")
+_MAP_LIVE_DOCS = {
+    "defence_map.html": ("DEFENCE_COVERAGE_MAP.html", "text/html; charset=utf-8"),
+    "watch_register.md": ("DAILY_WATCH/OPEN_ITEMS.md", "text/markdown; charset=utf-8"),
+}
+
+def _map_live_read(repo_rel, fallback_name):
+    """(bytes, source_label) from origin/main, else the deploy-placed copy."""
+    import subprocess as _sp
+    env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
+    try:
+        body = _sp.run(["git", "-C", _MAP_LIVE_SRC, "show", "origin/main:" + repo_rel],
+                       capture_output=True, timeout=10, env=env)
+        if body.returncode == 0 and body.stdout:
+            sha = _sp.run(["git", "-C", _MAP_LIVE_SRC, "rev-parse", "--short", "origin/main"],
+                          capture_output=True, text=True, timeout=10, env=env)
+            label = "origin/main@" + (sha.stdout.strip() if sha.returncode == 0 else "unknown")
+            return body.stdout, label
+    except Exception:
+        pass
+    try:
+        with open("/var/www/marketsquare/orchestrator/" + fallback_name, "rb") as f:
+            return f.read(), "deploy-placed-fallback"
+    except Exception:
+        return None, None
+
+def _map_live_response(name):
+    from fastapi import Response
+    repo_rel, mtype = _MAP_LIVE_DOCS[name]
+    body, label = _map_live_read(repo_rel, name)
+    if body is None:
+        raise HTTPException(status_code=404, detail=name + " unavailable from both sources")
+    return Response(content=body, media_type=mtype,
+                    headers={"Cache-Control": "no-store", "X-Map-Source": label})
+
+@app.get("/orchestrator/defence_map.html")
+def orchestrator_defence_map_live():
+    """Gated by nginx Basic Auth (same realm as the orchestrator page)."""
+    return _map_live_response("defence_map.html")
+
+@app.get("/orchestrator/watch_register.md")
+def orchestrator_watch_register_live():
+    """Gated by nginx Basic Auth (same realm as the orchestrator page)."""
+    return _map_live_response("watch_register.md")
+
+
 # ═════════════════════════════════════════════════════════════════════════
 # TIERED GRADING — PHASE A  (Session 44, 4 Jun 2026)  [additive, flag-gated]
 # Tier-1 AI condition grader for collectible cards + a private review page.

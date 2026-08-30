@@ -277,4 +277,10 @@ STEPS:
 CONTEXT: Declining is fine — the fallback is the 2 Sep batch item (serve defence_map +
 watch_register from the server's repo checkout at request time), which fixes only the map
 lag, not the shipping class.
+NOTE 2026-08-30 (unattended Batch 1 session): no token file found, so the FALLBACK is now
+BUILT and staged — bea_main.py MAP-LIVE-1 routes + migration 035 serve the defence map and
+watch register from origin/main at request time (rides the next deploy; ledger RG-0214).
+D15 stays OPEN and still worth doing: the PAT fixes the SHIPPING class, which the fallback
+does not touch. When you do it, the next session wires git, pushes the no-op proof, and
+records it in SECRETS_REGISTER.md as originally written.
 
