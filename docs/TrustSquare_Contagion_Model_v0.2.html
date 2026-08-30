@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Contagion Model v1.2 &mdash; Email Wave Plan v3.2</title>
+<title>Contagion Model v1.3 &mdash; Email Wave Plan v3.2</title>
 <style>
 :root{
   --navy:#0d1b2a; --navy2:#11253a; --panel:#132b42; --line:#22405c; --ink:#e8eef4;
@@ -137,7 +137,7 @@ canvas.ch{width:100%;height:78px;display:block}
 <div class="app">
 
   <div class="top">
-    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.2&nbsp;&middot;&nbsp;planners + wave plan v3.2 + RAMP-1</span></div>
+    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.3&nbsp;&middot;&nbsp;planners + wave plan v3.2 + RAMP-1 + second ring</span></div>
     <div class="clock"><span id="dateOut">1 Sep 2026</span><small id="weekOut">week 0 of 156</small></div>
     <div class="ctrls">
       <button class="primary" id="btnPlay">&#9654;&nbsp; Run</button>
@@ -400,7 +400,7 @@ const PM = {}; PARAMS.forEach(p=>{p.obs=null; p.lock=false; PM[p.k]=p;});
 const DEFAULTS={allure:1,badge:.35,discount:0,referral:0,complaint:0,delay:0,poolX:1,batch:28,
   w2Week:8,w3Week:20,stripeW:0,africaW:157,agPush:1,advPush:1,compW:157,compS:1.5,
   dayCap:30,measured:1,agGateW:8,rollW:157,featW:8,liveKeysW:0,barriers:1,localiseW:157,
-  tpW:0,tpToursW:157,refW:157,varsityW:157,ramp:1,rampCap:96};
+  tpW:0,tpToursW:157,refW:157,varsityW:157,ramp:1,rampCap:96,ring2W:1,ring3W:4,ring4W:8,ring5W:12,scrapeWk:30};
 
 /* -------- scenario levers: things David can actually change -------- */
 const LEVERS = {
@@ -423,6 +423,11 @@ const LEVERS = {
   dayCap:   {v:30,   lo:0,  hi:200, st:5,   l:"Emails per category per city per day", n:"RUL-053. The plan's volume row - 60/60/60/60, then 420, 330, 270, then 360 three times and 90 twice - is this cap with every list full. A ceiling, not a forecast."},
   ramp:     {v:1,    lo:0,  hi:1,   st:1,   l:"RAMP-1 sending ramp (0=off)",  n:"The machinery as written 30 Aug 2026 (waves_policy.json + wave_runner.py): each city's wave batch starts at 12 and DOUBLES per consecutive clean wave (bounce <= 2%), capped below. A dirty bounce draw never ramps - it holds at 12. Off = the pre-RAMP assumption: every ladder day sends at the RUL-053 cap from day one. v1.2: past its dated ladder an armed city KEEPS its weekly ramped wave until its plan list is empty - the fortnight was a duration estimate at full caps, never a stop rule."},
   rampCap:  {v:96,   lo:12, hi:200, st:12,  l:"Ramp batch cap /city/wave",    n:"waves_policy ramp.max_batch. 12 -> 24 -> 48 -> 96 in four clean waves, roughly one wave per city per week (Tue-Thu send days, 3-day min gap). RUL-053's 30/category/day still binds each ladder entry; the ramp is the CITY's weekly envelope across its categories. Global cities entering later start their own ramp at 12."},
+  ring2W:   {v:1,    lo:0,  hi:157, st:1,   l:"A-plan Wave 2 arms (US+GB, 'Day 2-3')", n:"RUL-074: the A-plan as built in CityLauncher's Pipeline. Wave 2 = the ten further US cities + ten GB cities, scraped on days 2-3 of launch. Each city runs its own RAMP-1 ramp. 157 = never."},
+  ring3W:   {v:4,    lo:0,  hi:157, st:1,   l:"A-plan Wave 3 arms (AU/NZ)",           n:"Melbourne, Brisbane, Perth, Adelaide + NZ. Timing is yours - the A-plan fixes the SEQUENCE, not the dates; 4 is a placeholder, not a commitment."},
+  ring4W:   {v:8,    lo:0,  hi:157, st:1,   l:"A-plan Wave 4 arms (NA/AR)",           n:"Namibia + Argentina (LOCALIZE-2 country layer built). Placeholder date, sequence per the A-plan."},
+  ring5W:   {v:12,   lo:0,  hi:157, st:1,   l:"A-plan Wave 5 arms (FR/PT)",           n:"France + Portugal (GDPR footer + EU representative live per LOCALIZE-2). Placeholder date, sequence per the A-plan."},
+  scrapeWk: {v:30,   lo:0,  hi:300, st:10,  l:"New prospects scraped /armed city/week", n:"RUL-074's fuel - the Gary Player lever: luck is replaced by list depth. CityLauncher's saturation scraper keeps deepening every ARMED city's pool, so waves never starve (the global three's first salvo was 44 emails against a 55-prospect scrape - a coin flip by construction). 0 = today's pools are all there ever is. Bounded by each city's addressable market."},
   measured: {v:1,    lo:0,  hi:1,   st:1,   l:"Use measured inventory in PTA and JHB", n:"26 Aug counts after the STAYS-GEO-1 repair: Tutors 72/82, Services casual 19/32, Services technical 8/17, Experiences 36/3, Collectors 9/6, Stays 6/1. Only Tutors clears 30 in both cities, so the real ladder sends far less than the cap."},
   agGateW:  {v:8,    lo:0,  hi:157, st:1,   l:"Week agency OUTREACH may start (Phase 3)", n:"Phase 3 is selective, on David's word per wave, once traction shows. Before this week agencies can still find us on their own - what is held is the cold wave, not the hub itself. 157 = never."},
   tpW:      {v:0,    lo:0,  hi:157, st:1,   l:"Week the Travelpayouts link-out goes live", n:"Flights Data API is live now (partner 758984). The affiliate link-out lane itself is built and DARK by flag - TP-LINKOUT-1, server-side, host allowlist, fails closed. Being dark is deliberate, not a defect."},
@@ -551,6 +556,17 @@ const PLAN_MISSING=[];
 })();
 /* how many go out on one ladder day: the cap, or the real list if it is shorter */
 const VARSITY_IX=VARSITY_CITIES.map(nm=>CITY_IX[nm]).filter(i=>i!==undefined);
+/* SIM-RING-1 (RUL-074): David's A-PLAN as built in CityLauncher (citylauncher_launch.html
+   Pipeline - RUN WAVE): five sequential scrape+send waves. Wave 1 = the v3.2 ladder above.
+   Waves 2-5 arm below, each city with its own RAMP-1 ramp; cities already in the ladder
+   are skipped; cities absent from this model's CITIES table are simply not simulated. */
+const APLAN_WAVES=[
+ {k:'ring2W', label:'Wave 2 - Day 2-3 (US+GB)', names:["Los Angeles","Chicago","Houston","Phoenix","Philadelphia","San Antonio","San Diego","Dallas","San Jose","Austin","Manchester","Birmingham","Leeds","Glasgow","Sheffield","Edinburgh","Liverpool","Bristol","Cardiff","Leicester"]},
+ {k:'ring3W', label:'Wave 3 - AU/NZ', names:["Melbourne","Brisbane","Perth","Adelaide","Auckland","Wellington","Christchurch"]},
+ {k:'ring4W', label:'Wave 4 - NA/AR', names:["Windhoek","Swakopmund","Buenos Aires","Cordoba","Santa Fe","Mendoza"]},
+ {k:'ring5W', label:'Wave 5 - FR/PT', names:["Paris","Marseille","Lyon","Toulouse","Nice","Nantes","Montpellier","Bordeaux","Lille","Lisbon","Porto","Braga","Coimbra","Faro"]}
+];
+for(const W of APLAN_WAVES){ W.ix=W.names.map(nm=>CITY_IX[nm]).filter(i=>i!==undefined && !IN_PLAN[i]); }
 function planCap(L,s){
   return (s.meas!==null && L.measured>=.5) ? Math.min(L.dayCap, s.meas) : L.dayCap;
 }
@@ -795,14 +811,41 @@ function simulate(seed, L, sample, keepTrace, v32){
         // between days; the binding constraints are list depth, the cap and the ramp
         if(cap>0){ planLeft[sc.i]-=cap; mail(sc.i, cap, 0); }
       }
+      // SIM-RING-1 (RUL-074): persistent scraping refills every ARMED city's pool
+      // weekly, bounded by the city's remaining addressable market - the chain never
+      // starves on the accident of what was scraped before launch.
+      if(rampOn && L.scrapeWk>0){
+        for(let i=0;i<n;i++){
+          let armed=(planLastW[i]>=0);
+          if(!armed) for(const W of APLAN_WAVES){ if(w>=L[W.k] && L[W.k]<157 && W.ix.indexOf(i)>=0){armed=true;break;} }
+          if(!armed) continue;
+          const add=Math.min(L.scrapeWk*P.catShare, Math.max(0, S[i]-pool[i]));
+          if(add>0) pool[i]+=add;
+        }
+      }
       // SIM-RAMP-2: past its last dated ladder day an armed city KEEPS its weekly
       // ramped wave into the rest of its plan list, gates permitting, until empty.
+      // With persistent scraping ON the plan-list ceiling dissolves - the scraped
+      // pool itself is the bound, exactly as wave_runner works.
       if(rampOn && gateOK){
         for(let i=0;i<n;i++){
-          if(planLastW[i]<0 || w<=planLastW[i] || planLeft[i]<=0) continue;
+          if(planLastW[i]<0 || w<=planLastW[i]) continue;
+          const lim=(L.scrapeWk>0)? pool[i] : planLeft[i];
+          if(lim<=0) continue;
           if(!(i in wkB)) wkB[i]=Math.min(12*Math.pow(2, runClean?(rampStreak[i]||0):0), L.rampCap);
-          const cap=Math.min(wkB[i], planLeft[i]);
-          if(cap>0){ wkB[i]-=cap; planLeft[i]-=cap; mail(i, cap, 0); }
+          const cap=Math.min(wkB[i], Math.round(lim));
+          if(cap>0){ wkB[i]-=cap; if(planLeft[i]>0)planLeft[i]=Math.max(0,planLeft[i]-cap); mail(i, cap, 0); }
+        }
+        // the A-PLAN WAVES 2-5: each wave's cities arm at their lever week with
+        // their own ramp into their own (refilling) pools.
+        for(const W of APLAN_WAVES){
+          if(L[W.k]>=157 || w<L[W.k]) continue;
+          for(const i of W.ix){
+            if(pool[i]<=0) continue;
+            if(!(i in wkB)) wkB[i]=Math.min(12*Math.pow(2, runClean?(rampStreak[i]||0):0), L.rampCap);
+            const cap=Math.min(wkB[i], Math.round(pool[i]));
+            if(cap>0){ wkB[i]-=cap; mail(i, cap, 0); }
+          }
         }
       }
       if(rampOn) for(const k in wkB){ rampStreak[k] = runClean ? (rampStreak[k]||0)+1 : 0; }

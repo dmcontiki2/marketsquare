@@ -57,6 +57,14 @@ REFLECTIONS = {
    ("LAUNCH_EMAILS.md", ["A wrong-city send STANDS"], []),
    ("RULINGS.md", ["RIDE IT OUT, NEVER RECALL"], []),
  ],
+ "RUL-074": [
+   # Persistent chain (30 Aug): second ring + persistent scraping are PLAN defaults in
+   # the sim. If the model loses the ring/scrape levers or their defaults go dark, the
+   # ruling has drifted out of the one surface David reads it from.
+   ("docs/TrustSquare_Contagion_Model_v0.2.html",
+    ["RUL-074", "ring2W:1,ring3W:4,ring4W:8,ring5W:12,scrapeWk:30", "const APLAN_WAVES"], []),
+   ("RULINGS.md", ["FOOTHOLD BY MACHINERY, NEVER BY LUCK"], []),
+ ],
  "RUL-070": [
    # Operational from Hetzner (30 Aug): laptop = design tool only; operational view
    # surfaces are served gated. If the manifest loses the served map/register lines,

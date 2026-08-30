@@ -9682,8 +9682,11 @@ def rg_index_header_parity():
 
 
 @entry("RG-0180", "connect-src is tightened from 'https:' to a named allowlist",
-       OPEN, scope="live CSP connect-src directive on trustsquare.co",
-       ref="CSP-CONNECT-1 (24 Aug 2026) -- the honest limit of CSP-SCRIPT-SRC-1, recorded rather than "
+       LOCKED, scope="live CSP connect-src directive on trustsquare.co", fixed_on="2026-08-30",
+       ref="PROMOTED 30 Aug 2026 the run it printed READY TO LOCK: migration 034_csp_connect_src "
+           "rode David's afternoon deploy (Release ef44fc5), rewrote the served connect-src to the "
+           "named allowlist and PROVED it on the served response (/ and /terms) with rollback "
+           "recorded. Original: CSP-CONNECT-1 (24 Aug 2026) -- the honest limit of CSP-SCRIPT-SRC-1, recorded rather than "
            "quietly omitted. Migration 031 ships connect-src 'self' https:, which means a script that "
            "somehow DID execute could still POST data out -- the 3 Aug capture showed the loader "
            "POSTing to /collect and /collect_batch, which is exactly this channel. It is left open on "
@@ -11549,8 +11552,11 @@ def rg_outreach_ramp_earned():
 @entry("RG-0214", "The gated ops map and watch register are LIVE documents -- served from the "
        "repo's fetched origin/main at request time, so the defence map can never again trail "
        "reality by a whole deploy",
-       OPEN,
-       scope="bea_main.py MAP-LIVE-1 routes + migrations/035_orchestrator_live_map.py. Born of "
+       LOCKED, fixed_on="2026-08-30",
+       scope="PROMOTED 30 Aug 2026 the run it printed READY TO LOCK: migration 035 rode David's "
+             "afternoon deploy (Release ef44fc5), inserted the two gated exact-match locations and "
+             "self-proved 200-in-gate + 401-anonymous for both documents. "
+             "bea_main.py MAP-LIVE-1 routes + migrations/035_orchestrator_live_map.py. Born of "
              "the 30 Aug red card that closed hours late because the deploy-placed map was "
              "stale. D15 (push-scoped PAT) was the preferred fix and remains open to David; "
              "this is the recorded fallback (DAVID_QUEUE D15 CONTEXT). Class property: the two "

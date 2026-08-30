@@ -1,3 +1,35 @@
+## 2026-08-30 — SIM-RING-1 + RUL-074: foothold by machinery, never by luck; model v1.3
+
+David's challenge on the 24 Nov view (only AU lit): the plan is a persistent unbroken
+chain, not one salvo — and a coin-flip foothold is a critical failure that should have
+been FLAGGED, not reported as a statistic. Both accepted. RUL-074 registered (with its
+standing flag rule (d) for Claude). Model v1.3:
+
+- THE A-PLAN, as David built it (CityLauncher Pipeline, citylauncher_launch.html —
+  "This was my A-plan"): five sequential waves now mirrored as levers. Wave 2 "Day 2-3"
+  (10 US + 10 GB cities incl. Glasgow/Edinburgh/Leicester, default wk 1), Wave 3 AU/NZ
+  (wk 4), Wave 4 NA/AR (wk 8), Wave 5 FR/PT (wk 12) — wave DATES are placeholders and
+  David's call; the A-plan fixes the sequence. Each city runs its own RAMP-1 ramp.
+- PERSISTENT SCRAPING (scrapeWk, default 30/city/wk): every armed city's pool refills,
+  bounded by its addressable market — waves never starve on pre-launch scrape depth.
+  Root finding: the global three's whole first salvo was ~44 emails each (entire scraped
+  pool, 55-59 prospects) ≈ 0.3 expected signups — luck by construction.
+- MEASURED (60 seeds, A-plan defaults): wk12 foothold NY 65→93% / LDN 57→87% /
+  SYD 42→82%; wk26 all 100%. Seed-7 mid run wk12 total 37→173, wk52 ~136k.
+- rulings_check RUL-074 wired (lever defaults + RING_IX asserted in the model file);
+  74 rulings, 0 fail. Backup: .bak-20260830-171537. Awaiting deploy.
+
+Also this run: RG-0180 (CSP connect-src allowlist, migration 034) and RG-0214 (gated live
+map lane, migration 035) printed READY TO LOCK after riding David's afternoon deploy —
+both PROMOTED to LOCKED same run per the standing rule. Board green, 16 open.
+
+SHIPPED: David deployed (Release ef44fc5, 14:46 UTC). Live-verified in-gate: title v1.2,
+SIM-RAMP-2 continuation present, live page computes wk16=81 / wk52=35,609 (matches Node).
+Note: /orchestrator/* answered 503 in-gate for ~8 min post-deploy (navigations during the
+restart + migrations 034/035 nginx rewrites), then recovered without intervention; anonymous
+gate held 401 throughout. Same deploy also carried other sessions' pending work (migrations
+034 CSP + 035 orchestrator live-map — both self-proved in the deploy log).
+
 ## 2026-08-30 — WAVE-2 ARMED on David's word ("release the next wave"): Stays & Tours, PTA + JHB
 
 David gave the arming word; the send fires HOST-SIDE via new `CityLauncher/launch_wave2.bat`

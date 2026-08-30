@@ -1,0 +1,7 @@
+
+SHIPPED: David deployed (Release ef44fc5, 14:46 UTC). Live-verified in-gate: title v1.2,
+SIM-RAMP-2 continuation present, live page computes wk16=81 / wk52=35,609 (matches Node).
+Note: /orchestrator/* answered 503 in-gate for ~8 min post-deploy (navigations during the
+restart + migrations 034/035 nginx rewrites), then recovered without intervention; anonymous
+gate held 401 throughout. Same deploy also carried other sessions' pending work (migrations
+034 CSP + 035 orchestrator live-map — both self-proved in the deploy log).
