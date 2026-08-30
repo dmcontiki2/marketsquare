@@ -219,3 +219,40 @@ used 22 Aug) — but it FAILS the register's fingerprint of the old token (no DN
 was NOT deleted on a name-guess the day before soft-public: if it is somehow the live purge
 lane, deleting it kills CDN purge silently over launch weekend. Step 1's probe settles it
 conclusively in 30 seconds, after the weekend.
+
+## D13 · Publish the deploy ref — closes the red card
+STATE: OPEN (added 2026-08-30, attended session)
+TIME: 1 minute
+VERIFY: LEDGER:RG-0211
+WHY_DAVID: The sandbox holds no GitHub push credential (correct, DW-057 class) — publishing the
+deploy ref needs your stored git credentials.
+STEPS:
+  1. Double-click `deploy_marketsquare.bat` (or any `git push` of HEAD to `deploy`).
+  2. Done. The server engine places by manifest, health-checks, auto-rolls-back on failure;
+     the first post-deploy ledger run flips RG-0198/RG-0211 to READY TO LOCK and the watch
+     closes DW-078 with the live evidence.
+CONTEXT: Carries the whole 30 Aug batch: the summary-endpoint heartbeat fix (the RED card),
+/static sample rows, the Defence Coverage button + colour filter, and the gated map + watch
+register (`/orchestrator/defence_map.html`, `/orchestrator/watch_register.md`) so the board is
+phone-reachable per RUL-070.
+
+## D14 · MS_API_KEY → sandbox .secrets — turns the failover blue GREEN
+STATE: OPEN (added 2026-08-30, attended session)
+TIME: 3 minutes
+VERIFY: LEDGER:RG-0128
+WHY_DAVID: The key is root-sealed on the box (`/etc/marketsquare/secrets.env`, 0600) — reading it
+is a credential grant, reserved to you (RUL-027 class).
+STEPS:
+  1. PowerShell: `ssh msdeploy@178.104.73.239` then
+     `sudo grep -r "MS_API_KEY" /etc/marketsquare/ /etc/systemd/system/marketsquare* 2>/dev/null`
+     (sudo asks your root password).
+  2. Copy ONLY the value after `MS_API_KEY=` into
+     `C:\Users\David\Projects\MarketSquare\.secrets\ops_api_key.txt` — one line, no prefix.
+     The folder is gitignored. **Never paste the key into chat** (the DW-029 burn class).
+  3. Reply `D14 done` — the next session teaches RG-0128's live half to read the key and the
+     failover card goes green by assertion.
+CONTEXT: 30 Aug probe proved production HAS two non-Anthropic lanes (OpenAI + Gemini env keys
+live); this grant lets the ledger SEE the lane count every run instead of trusting a dated note.
+OPTIONAL SIBLING, same trip: a push-scoped GitHub PAT for the sandbox (fixes D13's class
+permanently — sessions could then ship end-to-end when you say "close it for me").
+
