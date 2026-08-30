@@ -137,7 +137,7 @@ canvas.ch{width:100%;height:78px;display:block}
 <div class="app">
 
   <div class="top">
-    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.0&nbsp;&middot;&nbsp;planners + wave plan v3.2</span></div>
+    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.1&nbsp;&middot;&nbsp;planners + wave plan v3.2 + RAMP-1</span></div>
     <div class="clock"><span id="dateOut">1 Sep 2026</span><small id="weekOut">week 0 of 156</small></div>
     <div class="ctrls">
       <button class="primary" id="btnPlay">&#9654;&nbsp; Run</button>
@@ -400,7 +400,7 @@ const PM = {}; PARAMS.forEach(p=>{p.obs=null; p.lock=false; PM[p.k]=p;});
 const DEFAULTS={allure:1,badge:.35,discount:0,referral:0,complaint:0,delay:0,poolX:1,batch:28,
   w2Week:8,w3Week:20,stripeW:0,africaW:157,agPush:1,advPush:1,compW:157,compS:1.5,
   dayCap:30,measured:1,agGateW:8,rollW:157,featW:8,liveKeysW:0,barriers:1,localiseW:157,
-  tpW:0,tpToursW:157,refW:157,varsityW:157};
+  tpW:0,tpToursW:157,refW:157,varsityW:157,ramp:1,rampCap:96};
 
 /* -------- scenario levers: things David can actually change -------- */
 const LEVERS = {
@@ -411,7 +411,7 @@ const LEVERS = {
   complaint:{v:0.00, lo:0,  hi:.05, st:.002,l:"Complaint rate /seller /week",  n:"Raises churn, suppresses advocacy, and decays email deliverability."},
   delay:    {v:0.00, lo:0,  hi:1,   st:.05, l:"App slowness penalty",          n:"0 = snappy, 1 = users give up mid-flow."},
   poolX:    {v:1.0,  lo:1,  hi:30,  st:.5,  l:"Prospect pool multiplier",      n:"1x = the 1,385 mx_ok prospects CityLauncher has scraped so far. This is the dial CityLauncher itself turns."},
-  batch:    {v:28,   lo:0,  hi:500, st:10,  l:"Emails sent /week",             n:"waves_policy.json currently allows 12 per batch, Tue-Thu, 3-day gap = about 28/week."},
+  batch:    {v:28,   lo:0,  hi:500, st:10,  l:"Emails sent /week",             n:"v0.1-drip and optional-later-wave lanes only. RAMP-1 (30 Aug 2026) supersedes the flat rate for the v3.2 ladder - see the ramp levers."},
   w2Week:   {v:8,    lo:0,  hi:157, st:1,   l:"Week wave 2 goes out (US GB AU)", n:"You choose when. 157 = never. The moment it fires, people in those cities start catching it."},
   w3Week:   {v:20,   lo:0,  hi:157, st:1,   l:"Week wave 3 goes out (rest)",     n:"FR PT AR NZ NA and anywhere else with a scraped pool. 157 = never."},
   localiseW:{v:157,  lo:0,  hi:157, st:1,   l:"Week we localise beyond English", n:"157 = never, which is today's truth: one language, no switcher, no strings. Setting a week opens the French, Portuguese and Spanish groups - which is what the Adventures and Stays categories would need to reach Europe and Latin America properly. It is a real build, not a flag."},
@@ -421,6 +421,8 @@ const LEVERS = {
   africaW:  {v:0,    lo:0,  hi:157, st:1,   l:"RETIRED - Paystack is already international", n:"Kept only so old presets do not break. NG GH KE EG CI RW were never a separate unlock once Paystack intl was enabled. This lever no longer gates anything."},
   advPush:  {v:1.0,  lo:0,  hi:4,   st:.1,  l:"Showcase push (tours, stays, heritage)", n:"How hard you push the browsable side. It reaches people who were never looking for a marketplace, anywhere on earth."},
   dayCap:   {v:30,   lo:0,  hi:200, st:5,   l:"Emails per category per city per day", n:"RUL-053. The plan's volume row - 60/60/60/60, then 420, 330, 270, then 360 three times and 90 twice - is this cap with every list full. A ceiling, not a forecast."},
+  ramp:     {v:1,    lo:0,  hi:1,   st:1,   l:"RAMP-1 sending ramp (0=off)",  n:"The machinery as written 30 Aug 2026 (waves_policy.json + wave_runner.py): each city's wave batch starts at 12 and DOUBLES per consecutive clean wave (bounce <= 2%), capped below. A dirty bounce draw never ramps - it holds at 12. Off = the pre-RAMP assumption: every ladder day sends at the RUL-053 cap from day one."},
+  rampCap:  {v:96,   lo:12, hi:200, st:12,  l:"Ramp batch cap /city/wave",    n:"waves_policy ramp.max_batch. 12 -> 24 -> 48 -> 96 in four clean waves, roughly one wave per city per week (Tue-Thu send days, 3-day min gap). RUL-053's 30/category/day still binds each ladder entry; the ramp is the CITY's weekly envelope across its categories. Global cities entering later start their own ramp at 12."},
   measured: {v:1,    lo:0,  hi:1,   st:1,   l:"Use measured inventory in PTA and JHB", n:"26 Aug counts after the STAYS-GEO-1 repair: Tutors 72/82, Services casual 19/32, Services technical 8/17, Experiences 36/3, Collectors 9/6, Stays 6/1. Only Tutors clears 30 in both cities, so the real ladder sends far less than the cap."},
   agGateW:  {v:8,    lo:0,  hi:157, st:1,   l:"Week agency OUTREACH may start (Phase 3)", n:"Phase 3 is selective, on David's word per wave, once traction shows. Before this week agencies can still find us on their own - what is held is the cold wave, not the hub itself. 157 = never."},
   tpW:      {v:0,    lo:0,  hi:157, st:1,   l:"Week the Travelpayouts link-out goes live", n:"Flights Data API is live now (partner 758984). The affiliate link-out lane itself is built and DARK by flag - TP-LINKOUT-1, server-side, host allowlist, fails closed. Being dark is deliberate, not a defect."},
@@ -685,6 +687,7 @@ function simulate(seed, L, sample, keepTrace, v32){
 
   const trace = keepTrace? {A:[],R:[],mix:[],snap:[],arcs:[],events:[]} : null;
   let everAct=0, waveSignups=0, varsitySignups=0, refSignups=0, varsityDecay=1, newListWk=0;
+  const rampStreak={};   // RAMP-1: per-city consecutive-clean-wave count
   // one list per city, sized by the campaign the ruling actually authorises
   const varsityPool=new Float64Array(VARSITY_IX.length);
   for(let vi=0; vi<VARSITY_IX.length; vi++) varsityPool[vi]=P.varCap*P.varDays;
@@ -762,12 +765,26 @@ function simulate(seed, L, sample, keepTrace, v32){
       // bounces, complaints, unsubscribes, replies, clicks, first signups. If that
       // look is bad the ladder stops where it stands - which the v0.1 drip could never do.
       const gateOK = bounceOK && L.complaint <= 0.012;
+      // RAMP-1 (30 Aug 2026): volume is EARNED, not configured. Each city's weekly
+      // envelope starts at 12 and doubles per consecutive clean wave (bounce <= 2%)
+      // up to L.rampCap; a dirty bounce draw never ramps. Global cities entering
+      // later start their own ramp at 12 - acceleration is per city, not inherited.
+      const rampOn = L.ramp>=.5;
+      const runClean = P.bounce <= 0.02;
+      const wkB = {};
       for(const sc of PLAN_SCHED[w]){
         if(sc.gate>=1 && !gateOK) continue;
-        // each ladder day is a DIFFERENT category list, so there is no repeat
-        // fatigue between days; the binding constraint is list depth and the cap
-        mail(sc.i, planCap(L,sc), 0);
+        let cap = planCap(L,sc);
+        if(rampOn){
+          if(!(sc.i in wkB)) wkB[sc.i]=Math.min(12*Math.pow(2, runClean?(rampStreak[sc.i]||0):0), L.rampCap);
+          cap = Math.min(cap, wkB[sc.i]);
+          wkB[sc.i] -= cap;
+        }
+        // each ladder day is a DIFFERENT category list, so there is no repeat fatigue
+        // between days; the binding constraints are list depth, the cap and the ramp
+        if(cap>0) mail(sc.i, cap, 0);
       }
+      if(rampOn) for(const k in wkB){ rampStreak[k] = runClean ? (rampStreak[k]||0)+1 : 0; }
       // Optional later outreach wave. Default is NEVER: after the launch window the model
       // is deliberately unencumbered by anything about our present development state -
       // no scraped-list ceiling, no waves_policy batch rate, no per-day cap. Growth from

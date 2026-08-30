@@ -16279,8 +16279,13 @@ function sfScoreS(){
 }
 
 /* ── finish: populate goState, reuse the proven goHandoff tail ── */
+/* SF-AIDESC-1 (RG-0205, 30 Aug 2026): the AI's description_draft from
+   /listings/vision-draft LEADS the composed description instead of being
+   discarded. Order of authority: seller-typed prose (textarea answers) wins
+   over both and takes the lead; otherwise the AI draft leads; the mechanical
+   "Label: value" lines always FOLLOW the lead paragraph, never replace it. */
 function sfComposeDescription(){
-  var f=sfFlow(), out=[];
+  var f=sfFlow(), out=[], prose=[];
   ['B','C'].forEach(function(k){
     var idx=k==='B'?1:2, sec=f.sections[idx];
     sec.rows.forEach(function(r){
@@ -16291,7 +16296,7 @@ function sfComposeDescription(){
          (n left)" nag, which pushes a seller to type something misleading.
          "Not applicable" now scores as a real answer and is dropped here. */
       if(!String(v||'').trim() || /^not applicable$/i.test(String(v).trim())) return;
-      if(r[2]==='textarea') out.push(String(v).trim());
+      if(r[2]==='textarea') prose.push(String(v).trim());
       else out.push(r[1]+': '+String(v).trim());
     });
   });
@@ -16303,7 +16308,11 @@ function sfComposeDescription(){
     out.push(r[1]+': '+String(v).trim());
   });
   if(sfState.features.length) out.push('Features: '+sfState.features.join(', '));
-  return out.join('\n');
+  var ai='';
+  try{ ai=String((sfState.visionDraft&&sfState.visionDraft.description_draft)||'').trim(); }catch(e){ ai=''; }
+  var lead = prose.length ? prose.join('\n\n') : ai;   // seller prose wins over the AI draft
+  if(!lead) return out.join('\n');
+  return out.length ? lead+'\n\n'+out.join('\n') : lead;
 }
 function sfBuildTitle(){
   var A=sfState.A, cat=sfState.cat;
@@ -16404,6 +16413,11 @@ async function sfFinish(draftOnly){
       sfToast('Draft saved — '+(50-sc.total>0?(50-sc.total)+' points to go before it can publish.':'finish any time.'));
     } else {
       await goHandoff();   // routes to seller-onboard (EULA → cars attest → publish)
+      /* A2HS-ASK-1 (RG-0209, 30 Aug 2026): the seller's invested moment — first
+         successful publish handoff. promptAddToHomeScreen() carries its own
+         standalone/already-done guards and the iOS fallback; push NOTIFICATIONS
+         are a separate permission and are never bundled with this ask. */
+      setTimeout(promptAddToHomeScreen, 1600);
     }
   }catch(e){
     console.warn('sfFinish failed', e);

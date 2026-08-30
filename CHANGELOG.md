@@ -1,3 +1,56 @@
+## 2026-08-30 — SIM-RAMP-1: contagion model v1.1 carries the RAMP-1 sending mechanic
+
+David asked what RAMP-1 (earned send volume) does to the simulation, global waves included.
+Built into docs/TrustSquare_Contagion_Model_v0.2.html (internal version v1.0 → v1.1):
+
+- New levers "RAMP-1 sending ramp" (default ON) + "Ramp batch cap /city/wave" (96): each
+  city's weekly ladder envelope starts at 12 and doubles per consecutive clean wave
+  (bounce ≤ 2%), per waves_policy.json as written; a dirty bounce draw holds at 12.
+  RUL-053's 30/category/day still binds each ladder entry. Global cities entering later
+  start their own ramp at 12 — acceleration is per city, not inherited.
+- MEASURED (110-seed ensembles, Node, ramp on vs off): wk13 median 43 vs 56, wk26 ~1,250
+  vs ~1,670 (~25% lower), wk52+ converges (~157k vs ~160k). RAMP-1 is a BRAKE on the
+  launch fortnight, not an accelerator — the ladder empties its lists before most cities
+  earn the cap; long-run is list-depth-bound, not rate-bound.
+- Dashboard "Beat the Model" pins deliberately NOT touched: the card names its vintage
+  (v0.2 built 28 Aug, 40 seeds) and is David's frozen challenge line; recalibration
+  replaces it with real numbers, dated, per the card's own rule.
+- Stale batch-lever note (pre-RAMP "12 per batch ≈ 28/week") corrected same edit.
+- Backup: docs/...v0.2.html.bak-20260830-084301. Verified: engine extracted and run
+  headless in Node, both modes, no exceptions; file ends intact.
+
+## 2026-08-30 — SIM-DASH-3: sim link promoted to a button
+
+David could not find the footnote-sized "Open the full simulation →" link (page 4, Beat
+the Model card fine print) — his request: a proper blue button. Done: link removed from the
+footnote; a standalone blue "Simulation" button (#2563eb) now sits under the card text,
+same gated /orchestrator/simulation.html target. Shipped by David via ms-deploy (Release
+08b1d4b, Sun 30 Aug 08:29); probed live in-gate: button present, old link gone, sim page
+200. Ledger green — RG-0210 asserts the href, unaffected by the label change.
+
+## 2026-08-30 — RAMP-1 + CATPRIO-1: outreach volume is earned, not configured
+
+David asked how to send all of South Africa's outreach in one go off the new Resend Pro
+sub; the clean answer (reputation warm-up, not blast) was ratified and IMPLEMENTED as
+machinery in CityLauncher/emailer:
+
+- RAMP-1: wave_runner.py now computes batch size from measured evidence — ramp_state()
+  doubles defaults.batch_size (12) per CONSECUTIVE clean completed wave (bounce ≤ 2%),
+  capped at 96; a dirty wave resets the streak; stop-loss gates (5% bounce / 0 complaints)
+  untouched. Explicit per-city batch_size still wins (National=30, documented). Policy
+  block in waves_policy.json ("ramp"). No manual fast-lane by design.
+- CATPRIO-1: a city entry may carry category_priority to reorder/subset categories, so a
+  dedicated Stays & Tours wave is targetable when dated. Pretoria default order untouched.
+- Verified: py_compile clean; full --plan dry-run on copied tree (Pretoria wave#1 clean →
+  streak 1 → batch 24; National override 30 holds; all cities blocked by arm/gates);
+  stays-first dry-run composed adventures_accommodation×24 behind 5 gates.
+- Locked: regression ledger RG-0213 (LOCKED) asserts ramp present + wired, max_batch ≤ 200,
+  stop-loss unweakened, adventures categories in the composer pool. Ledger run exit 0.
+- Backups: wave_runner.py.bak-20260830-ramp1, waves_policy.json.bak-20260830-ramp1,
+  regression_ledger.py.bak-20260830-ramp1.
+
+Reserved to David: wave dates + arming (LAUNCH_EMAILS.md rules 2–3); Resend Pro activation Monday.
+
 ## 2026-08-30 — STAYS-TOURS-LINEUP-1: adventures categories added to wave composer
 
 waves_policy.json agency_categories now includes adventures_accommodation and

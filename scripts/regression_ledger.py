@@ -11478,5 +11478,60 @@ def rg_customer_email_firewall():
     return out
 
 
+@entry("RG-0213", "Outreach volume is EARNED, never configured: the CityLauncher wave "
+       "batch size grows only by the RAMP-1 doubling rule (clean measured waves), the "
+       "adventures/Stays-Tours categories stay in the composer pool, and no edit may "
+       "reintroduce a manual blast lane",
+       LOCKED,
+       scope="repo: ../CityLauncher/emailer/wave_runner.py + waves_policy.json. CLASS: any "
+             "path that lets a session send more than the evidence-gated batch belongs "
+             "here. Born of David asking (30 Aug 2026) how to send all of South Africa in "
+             "one go and ratifying the clean answer instead: ramp 12->24->48->96 per "
+             "consecutive clean wave (bounce<=2%), stop-loss gates untouched, explicit "
+             "per-city batch_size the only documented exception (National=30).",
+       ref="RAMP-1 + CATPRIO-1 + STAYS-TOURS-LINEUP-1 (30 Aug 2026, changelog.d). The "
+           "one-go blast was rejected for three reasons that do not age: domain reputation "
+           "on mail.trustsquare.co is shared with transactional email, Resend suspends on "
+           "bounce/complaint spikes, and Gmail/Yahoo bulk rules police >5k/day. A future "
+           "session weakening the ramp to go faster is this entry firing, not a judgment call.")
+def rg_outreach_ramp_earned():
+    out = []
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not os.path.isdir(cl):
+        return [(INFO, "CityLauncher not beside this repo -- RAMP-1 unchecked here (live-only run)")]
+    wr = os.path.join(cl, "emailer", "wave_runner.py")
+    wp = os.path.join(cl, "emailer", "waves_policy.json")
+    if not os.path.exists(wr):
+        return [(FAIL, "CityLauncher/emailer/wave_runner.py is GONE -- the gated wave conductor "
+                       "no longer exists (RAMP-1)")]
+    wsrc = open(wr, encoding="utf-8").read()
+    for needle, why in (("def ramp_state", "the evidence-gated doubling rule"),
+                        ("remaining = effective_batch_size(city, pol)", "compose_batch wired to the ramp"),
+                        ("def city_categories", "per-city category targeting (CATPRIO-1)")):
+        if needle not in wsrc:
+            out.append((FAIL, "wave_runner.py lost %r -- %s is gone (RAMP-1)" % (needle, why)))
+    try:
+        pol = json.loads(open(wp, encoding="utf-8").read())
+    except Exception as e:
+        return out + [(FAIL, "waves_policy.json unreadable (%s) -- the ramp has no policy to read" % e)]
+    r = pol.get("ramp", {})
+    if not r.get("enabled"):
+        out.append((FAIL, "waves_policy.json ramp is missing or disabled -- batch size is no "
+                          "longer evidence-gated (RAMP-1)"))
+    if r.get("max_batch", 10**9) > 200:
+        out.append((FAIL, "ramp.max_batch %r exceeds 200 -- that is a blast lane wearing a "
+                          "ramp's name (RAMP-1 cap was 96)" % r.get("max_batch")))
+    d = pol.get("defaults", {})
+    if d.get("bounce_stop_pct", 999) > 5.0 or d.get("max_complaints", 999) > 0:
+        out.append((FAIL, "defaults stop-loss weakened (bounce_stop_pct %r / max_complaints %r) -- "
+                          "the gates RAMP-1 stands on have been loosened" % (
+                              d.get("bounce_stop_pct"), d.get("max_complaints"))))
+    for cat in ("adventures_accommodation", "adventures_experiences"):
+        if cat not in pol.get("agency_categories", []):
+            out.append((FAIL, "%r dropped from agency_categories -- the Stays & Tours pool is "
+                              "invisible to the composer again (STAYS-TOURS-LINEUP-1)" % cat))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
