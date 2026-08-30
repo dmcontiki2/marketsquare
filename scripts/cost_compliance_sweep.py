@@ -236,7 +236,8 @@ def model_discipline(root: Path):
                 # and any opus hit anywhere, still fires at full severity.
                 elif rel.replace("\\", "/").split("/")[-1] in (
                         "AI_BASELINE.json", "AI_CHALLENGER_BOARD.html",
-                        "AI_MODEL_BASELINE_MAP.html", "ai_price_card.json"):
+                        "AI_MODEL_BASELINE_MAP.html", "ai_price_card.json",
+                        "DEFENCE_COVERAGE_MAP.html"):  # the watch's own report narrates AI-watch findings
                     findings.append((INFO, f"{rel}:{line} Sonnet in a reference document describing the model field — not a call site (reference-doc exemption, 30 Aug 2026)"))
                 else:
                     findings.append((WARN, f"{rel}:{line} Sonnet outside the metered AdvertAgent registry — justify or downgrade to Haiku"))
