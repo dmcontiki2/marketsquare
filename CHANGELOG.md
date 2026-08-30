@@ -1,3 +1,33 @@
+## 2026-08-30 — WATCH-SELFCOMMIT-1: the daily watch commits its own outputs; David never cleans the bot's tree again
+
+David's question this morning: "am I going to have to, for the rest of my days, each day clean the dirty git tree? I am sure this is not how other companies do it." He was right — bots commit their own artifacts (the CI/Dependabot pattern); a human pasting the bot's commit block daily is the anti-pattern. Two facts made the toil doubly unnecessary: the nightly checkpoint (Task Scheduler 05:30, git add -A, git_unlock-guarded) already banks EVERYTHING within 24h, and the watch runs at 06:30 — one hour AFTER the sweep — so its outputs sat dirty all day by pure phase misalignment.
+
+Fix (attended, 30 Aug): the trustsquare-daily-watch task prompt amended — new PHASE D. The watch now: runs `scripts/git_unlock.py` first (GIT-LOCK-3), `git add`s ONLY its explicitly-listed output paths (DAILY_WATCH/*, DEFENCE_COVERAGE_MAP.html, AUDIT_GLOBAL_QA/*, Records/COST_SWEEP_*), never `git add -A`, never app code, never demo_sellers.json, never another session's fragments; commits locally with the day's verdict as the message; NEVER pushes (push stays the deploy/mirror lane). Other sessions' dirty files get one named line in the report — the nightly banks them. SEV-2 secret-in-tree still halts everything loudly. Bootstrap-before-ledger (RG-0200 step-0) also promoted into the task as step 0, closing the DW-082/DW-083 blind-first-invocation class at source. Backstop if the self-commit ever rots: the nightly checkpoint — the tree self-heals within 24h, and the watch files the failure as a finding.
+
+## 2026-08-30 — Pre-launch third-party sweep: GREEN, day 2 of soft-public, rulings warns cleared
+
+- **Sweep verdict GREEN, 2 days to full launch.** All functional probes green (health v1.3.1,
+  Google OAuth 302, Didit armed, Paystack connected, BIT 8/8, EULA v1.15, TLS to 22 Nov).
+  Deploy debt: 1 commit, 0 deployable files. Full ledger board: 205 entries, 0 REGRESSED,
+  0 UNVERIFIED (after the standing fresh-sandbox fastapi bootstrap, third day running).
+- **rulings_check warns 4 → 0 (EXECUTED):** reflection assertion sets added for RUL-062
+  (trademark filing), RUL-063 (send-freeze lift + local key row), RUL-064 (tester channel
+  retired — support@ lane), RUL-068 (Auction Room concept). 69 rulings, 0 FAIL, 0 WARN.
+- **Probe-vs-file fix:** RUL-063 names a SECRETS_REGISTER.md local-key row that did not exist
+  (grep: 0 hits). Row appended (dated, additive) and now held by the new RUL-063 assertion.
+- **Register rewritten** from today's probes: D9 closed (two live Paystack buys 29 Aug,
+  tab-close variant still unexercised), D6 Resend Pro flip due TOMORROW Mon 31 Aug (RUL-061),
+  RUL-069 firewall arming + Anthropic cancel click land Mon 1 Sep, trademark EFT R1,770 pending.
+
+## 2026-08-30 — Attended fix pass on the watch's open items (David: "please fix them for me") + Defence Coverage surfaced
+
+- **DW-062 CLOSED**: the 5 dead `example.com` sample-photo URLs in the ms.js bulk-import CSV templates now point at self-hosted `/static` images (each probed 200 live); audit re-run drops LINKS-DEAD. Live half rides the next deploy (MSJS-DRIFT goes CRITICAL if it persists after).
+- **DW-064 CLOSED**: FEA baseline refreshed on the box after a two-instrument byte-proof (deploy_drift clean 19/19 + audit byte-identical ms.js); re-probe `status: ok, alerts: []`. Eight deploys of staleness cleared.
+- **DW-078 → FIXED-UNVERIFIED** (DASH-SUMMARY-REDACT-1, RG-0211): anonymous `GET /dashboard/summary` now returns a bare heartbeat (`generatedAt` + `bea_version` + `redacted:"heartbeat"`); all 3 dashboard.server.html summary loaders attach X-Admin-Token (self-contained inline, order-independent); unauthenticated views degrade to NOT MEASURED (RG-0133). RG-0144's source harness wiring AMENDED for the stronger fix (accepts redactor-call OR heartbeat branch; property checks untouched; noted in the entry ref) — 16/16, full ledger green after (205 · 186 · 0 REGRESSED · 0 UNVERIFIED). RG-0198/RG-0211 stay open until the deploy rides.
+- **DW-063 → FIXED-UNVERIFIED**: named lint findings removed (F401 estate_agents/numista_match/7×regression_ledger; F841 dashboard_provenance + 2×regression_ledger); every file py_compiles; Monday's deep scan is the closing check.
+- **Defence Coverage Map surfaced** (David liked the report, asked for a button + colour filter): 🛡️ Defence Coverage button added to the Ops Map tab row in dashboard.server.html (opens local file in file:// mode, `/orchestrator/defence_map.html` when served); manifest line added deploying the map into the Basic-auth `/orchestrator/` realm (SIM-DASH-2 pattern — the map names vulnerabilities, it never sits ungated); FILTER-BAR-1 tick boxes on the map filter cards by colour, choice remembered in localStorage, watch's daily edits untouched.
+- All app-code halves are LOCAL — the deploy is David's act. rulings_check 69/69 clean.
+
 RESOLVED same session: David approved; deployed via ms-deploy (Release 9050f74, Sun 30 Aug
 06:08). Probed live in-gate: dashboard carries the sim link, /orchestrator/simulation.html
 answers 200 (401 anonymous — gate intact). Ledger re-run: every locked fix holding, RG-0210
