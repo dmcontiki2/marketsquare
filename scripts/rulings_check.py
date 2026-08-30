@@ -41,6 +41,16 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-069": [
+   # Customer-email firewall (30 Aug, on the eve of full launch): after launch NO
+   # customer email is forwarded to David's personal inbox -- complaints live between
+   # the user and the triage AI; escalation reaches David through the admin surfaces
+   # only. The worker must keep the CUSTOMER_FIREWALL gate, and the personal address
+   # may exist only as the pre-launch dead-letter inside the unarmed branch.
+   ("cloudflare_email_worker/src/worker.js", ["CUSTOMER_FIREWALL", "EMAIL-FIREWALL-1"], []),
+   ("scripts/regression_ledger.py", ["RG-0212"], []),
+   ("RULINGS.md", ["CUSTOMER-EMAIL FIREWALL"], []),
+ ],
  "RUL-030": [
    ("ONETAP_SETUP.md", ["Apple \u2014 NOT DOING IT"], []),
    ("bea_main.py", ["_apple_client_secret"], []),

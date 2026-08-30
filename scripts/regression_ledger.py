@@ -11341,5 +11341,56 @@ def rg_summary_anon_heartbeat_only():
     return out
 
 
+
+@entry("RG-0212", "The customer-email firewall: after launch, no customer mail is ever "
+       "forwarded to a personal inbox -- complaints live between the user and the triage "
+       "AI, and escalation reaches David through the admin surfaces only",
+       OPEN,
+       scope="RUL-069 (30 Aug 2026) + EMAIL-FIREWALL-1 in cloudflare_email_worker/src/"
+             "worker.js. CLASS: any lane that lets a customer's email land in a personal "
+             "mailbox belongs here -- today that is the worker's dead-letter forward "
+             "(triage-unreachable + attachments). SOURCE half asserted below: the worker "
+             "carries the CUSTOMER_FIREWALL gate and the personal address appears ONLY "
+             "inside the unarmed pre-launch branch. LIVE half is why this is OPEN: the "
+             "armed worker must actually be deployed (wrangler var CUSTOMER_FIREWALL=1 + "
+             "worker deploy, David's act at launch, RUL-027 lockout class). Promote when "
+             "the deploy is recorded with its version id in this ref -- the worker's "
+             "config is not anonymously probeable, so the record half follows RG-0141's "
+             "pattern: read once at the console, written down dated. BOUNDARY per "
+             "RUL-069: the outreach reply lane (david@trustsquare.co on B2B wave mail) "
+             "is not customer mail and does not trip this.",
+       ref="EMAIL-FIREWALL-1, 30 Aug 2026. Until armed, ONE-INBOX-1's dead-letter still "
+           "forwards triage-unreachable and attachment mail to the personal inbox -- "
+           "correct pre-launch, a RUL-069 breach after.")
+def rg_customer_email_firewall():
+    out = []
+    wpath = os.path.join(REPO, "cloudflare_email_worker", "src", "worker.js")
+    if not os.path.exists(wpath):
+        out.append((FAIL, "cloudflare_email_worker/src/worker.js is GONE -- the inbound "
+                          "lane has no worker source to carry the firewall (RUL-069)"))
+        return out
+    wsrc = open(wpath, encoding="utf-8").read()
+    if "CUSTOMER_FIREWALL" not in wsrc:
+        out.append((FAIL, "worker.js lost the CUSTOMER_FIREWALL gate -- the personal "
+                          "forward can no longer be sealed at launch (RUL-069)"))
+    fwd = wsrc.count("dmcontiki2@gmail.com")
+    if fwd > 1:
+        out.append((FAIL, "worker.js carries the personal address in %d places -- a "
+                          "forward outside the single gated dead-letter branch breaches "
+                          "the firewall by construction (RUL-069)" % fwd))
+    rec = os.path.join(REPO, "cloudflare_email_worker", "ARMED_RECORD.md")
+    if os.path.exists(rec) and "CUSTOMER_FIREWALL=1" in open(rec, encoding="utf-8").read():
+        out.append((INFO, "source half holds AND the arming record exists (wrangler var "
+                          "CUSTOMER_FIREWALL=1 + worker version, dated) -- the firewall "
+                          "is live; promote this entry"))
+    else:
+        out.append((FAIL, "worker not yet ARMED -- expected while OPEN: the firewall is "
+                          "code, not yet conduct. At launch: wrangler var "
+                          "CUSTOMER_FIREWALL=1 + worker deploy (David, RUL-027 class), "
+                          "then write cloudflare_email_worker/ARMED_RECORD.md with the "
+                          "var, worker version id and date (RG-0141 record pattern)"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

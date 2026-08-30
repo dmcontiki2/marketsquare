@@ -49,6 +49,7 @@ export default {
       subject: subject,
       body: body.slice(0, 20000), // cap; BEA trims further before the model
       message_id: messageId,
+      has_attachments: hasAttachments,
     };
 
     let triaged = false;
@@ -80,6 +81,24 @@ export default {
     // list -- we do it for you"): triage only carries a 20KB text body, so a
     // mail bearing attachments must still reach a human mailbox or the
     // concierge lane starves. Routine attachment-free mail stays pipeline-only.
+    // EMAIL-FIREWALL-1 (RUL-069, 30 Aug 2026): after launch the personal inbox is
+    // sealed off from customer mail entirely. Armed by env.CUSTOMER_FIREWALL="1"
+    // (wrangler var, David's flip at launch):
+    //  - attachment mail no longer routes to the personal inbox; the triage payload
+    //    carries has_attachments so the pipeline owns the concierge follow-up;
+    //  - if triage is unreachable, reject at SMTP time so the sender's own server
+    //    tells them delivery failed -- a bounce is honest, silent loss is not, and
+    //    the worker has no storage to hold mail. Escalation to David happens in the
+    //    admin surfaces (/admin/email-triage, fault queue, escalation brief), never
+    //    by forwarding a customer's email to a personal mailbox.
+    // Pre-launch (flag unset) the ONE-INBOX-1 dead-letter behaviour is unchanged.
+    if (env.CUSTOMER_FIREWALL === "1") {
+      if (!triaged) {
+        console.log(`FIREWALL: triage unreachable, rejecting mail from ${from}`);
+        message.setReject("TrustSquare support intake is temporarily unavailable; please retry shortly or use the in-app support channel.");
+      }
+      return;
+    }
     if (!triaged || hasAttachments) {
       try {
         await message.forward("dmcontiki2@gmail.com");
