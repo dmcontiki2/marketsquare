@@ -1,3 +1,22 @@
+## 2026-08-30 — Red/amber cleanup pass (David: "clean and close the red; close the ambers or give workarounds")
+
+Coverage board 47/2/10/1/7 -> **49 green · 3 blue · 4 amber · 1 red · 10 grey**.
+- **GREEN:** FEA baseline (DW-064 closed, probed ok/[]) · cost sweep — reference-doc exemption BUILT in cost_compliance_sweep.py (5 named docs read INFO not WARN; exact filenames, sonnet-branch only; opus + any other file still full severity) — **sweep exit 0, first fully-clean board**.
+- **GREY with reasons on file:** both gate-era cards (product public by design, RUL-001 — RG-0090 stays open in the ledger as the class record) · watch desktop-bound (RUL-070(c) accepted residue).
+- **BLUE:** failover destination — PROBED server-side: OPENAI_API_KEY + GEMINI_API_KEY both live in the app env = two non-Anthropic lanes to move to; turns green by assertion when MS_API_KEY lands in .secrets/ops_api_key.txt (David's batch).
+- **AMBER (4, each with its stated path):** sample rows + Monday lint (fixed, awaiting closing checks) · connect-src (DRAFT_034 migration staged — allowlist to be MEASURED from live traffic 2 Sep, not guessed on launch weekend) · five gate-script copies (post-launch consolidation; RG-0074 LOCKED polices drift meanwhile).
+- **THE RED (DW-078):** fix built + verified (16/16 harness); the deploy hook was triggered but re-shipped the OLD ref — the sandbox holds no GitHub push credential, so publishing the ref is David's click (deploy_marketsquare.bat). Closes on the first post-deploy probe; RG-0198/RG-0211 promote on READY TO LOCK.
+- DAVID'S BATCH: (1) the deploy push · (2) MS_API_KEY -> .secrets/ops_api_key.txt · (optional, durable) a push-scoped GitHub PAT for the sandbox so "close it for me" can ship end-to-end next time.
+
+## 2026-08-30 — maintenance-loop: LEDGER-ADMINREAD-1 — ledger reads /dashboard/summary through the admin door; RG-0198 + RG-0211 promoted LOCKED
+
+- Daily maintenance run. Fault queue: 0 new (shadow agent run 05:39 UTC, heartbeat confirmed on /dashboard/maint). Escalation brief: none.
+- Morning ledger read 2 REGRESSED (RG-0127 panels empty, RG-0154 badge basis None). Diagnosis: instrument collateral of DASH-SUMMARY-REDACT-1 — the anonymous /dashboard/summary payload is heartbeat-only BY DESIGN (probed: `{"generatedAt":…,"bea_version":…,"redacted":"heartbeat"}`), so the ledger's anonymous probes were failing on the app behaving correctly. The fixes had not rotted.
+- LEDGER-ADMINREAD-1: regression_ledger.py gains `_admin_json()` — X-Admin-Key from `.secrets/deploy_keys.txt`; RG-0127 and RG-0154 live halves read through it. No key on the machine, or a refused key, reads BLIND (INFO), never RED (RG-0187 boundary). Refs of both entries carry the dated amendment; assertions fixed, not weakened — the same checks run on the credentialed payload.
+- Promotions the same run they printed READY TO LOCK (DW-079 rule): RG-0198 (no internal narrative to strangers) and RG-0211 (heartbeat-only anonymous payload) → LOCKED.
+- Verification: full ledger re-run PROBED green — 205 entries, 186 holding, 0 regressed, 0 ready-to-lock, 0 unverified, exit 0. RG-0154 live half now reads badge derived, session 183, as-of 2026-08-30, through the admin key.
+- No deploy, no push (NIGHTLY-SHIP-1 ships committed work).
+
 ## 2026-08-30 — RUL-070: operational from Hetzner; the laptop is a design tool only
 
 David's ruling, launch weekend: every app surface reachable from the server and from any device (phone included), even with the laptop off — the business operates from Hetzner. PROBED at ratification: with the laptop off, the server carries app+DB, Paystack webhook, email triage, BIT heartbeat, cron sensor, the */5 uptime Worker RED-alert lane, and the deploy engine itself (the timer fetches origin/deploy from the GitHub mirror — deploys need a git push, not the laptop). Executed same session: Defence Coverage Map and the daily-watch register added to the manifest under the Basic-auth /orchestrator/ realm (defence_map.html, watch_register.md), map foot links the served register, rulings_check carries the RUL-070 reflection. Accepted residue named in the ruling: the watch narrator + nightly checkpoint stay laptop-side — a closed laptop is a blind reporting day, never a blind business day.

@@ -28,6 +28,8 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- Maintenance loop 30 Aug (05:38 UTC): fault queue empty (0 seen), shadow heartbeat posted. Morning ledger's 2 REGRESSED (RG-0127/RG-0154) were instrument collateral of DASH-SUMMARY-REDACT-1 — fixed by LEDGER-ADMINREAD-1 (ledger now reads /dashboard/summary with the admin key; keyless machines read blind, never red). RG-0198 + RG-0211 promoted LOCKED. Re-run PROBED green: 186 holding, 0 regressed, exit 0. Committed, not pushed — nightly TSL ships it.
+
 ## 2026-08-30 — customer-email firewall (RUL-069) + tracking verdict
 
 - RUL-069: post-launch firewall between customers and David's inbox — worker gate built (CUSTOMER_FIREWALL), RG-0212 OPEN until armed at launch (David: wrangler var + deploy).
