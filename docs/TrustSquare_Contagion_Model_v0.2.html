@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Contagion Model v1.0 &mdash; Email Wave Plan v3.2</title>
+<title>Contagion Model v1.2 &mdash; Email Wave Plan v3.2</title>
 <style>
 :root{
   --navy:#0d1b2a; --navy2:#11253a; --panel:#132b42; --line:#22405c; --ink:#e8eef4;
@@ -137,7 +137,7 @@ canvas.ch{width:100%;height:78px;display:block}
 <div class="app">
 
   <div class="top">
-    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.1&nbsp;&middot;&nbsp;planners + wave plan v3.2 + RAMP-1</span></div>
+    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.2&nbsp;&middot;&nbsp;planners + wave plan v3.2 + RAMP-1</span></div>
     <div class="clock"><span id="dateOut">1 Sep 2026</span><small id="weekOut">week 0 of 156</small></div>
     <div class="ctrls">
       <button class="primary" id="btnPlay">&#9654;&nbsp; Run</button>
@@ -421,7 +421,7 @@ const LEVERS = {
   africaW:  {v:0,    lo:0,  hi:157, st:1,   l:"RETIRED - Paystack is already international", n:"Kept only so old presets do not break. NG GH KE EG CI RW were never a separate unlock once Paystack intl was enabled. This lever no longer gates anything."},
   advPush:  {v:1.0,  lo:0,  hi:4,   st:.1,  l:"Showcase push (tours, stays, heritage)", n:"How hard you push the browsable side. It reaches people who were never looking for a marketplace, anywhere on earth."},
   dayCap:   {v:30,   lo:0,  hi:200, st:5,   l:"Emails per category per city per day", n:"RUL-053. The plan's volume row - 60/60/60/60, then 420, 330, 270, then 360 three times and 90 twice - is this cap with every list full. A ceiling, not a forecast."},
-  ramp:     {v:1,    lo:0,  hi:1,   st:1,   l:"RAMP-1 sending ramp (0=off)",  n:"The machinery as written 30 Aug 2026 (waves_policy.json + wave_runner.py): each city's wave batch starts at 12 and DOUBLES per consecutive clean wave (bounce <= 2%), capped below. A dirty bounce draw never ramps - it holds at 12. Off = the pre-RAMP assumption: every ladder day sends at the RUL-053 cap from day one."},
+  ramp:     {v:1,    lo:0,  hi:1,   st:1,   l:"RAMP-1 sending ramp (0=off)",  n:"The machinery as written 30 Aug 2026 (waves_policy.json + wave_runner.py): each city's wave batch starts at 12 and DOUBLES per consecutive clean wave (bounce <= 2%), capped below. A dirty bounce draw never ramps - it holds at 12. Off = the pre-RAMP assumption: every ladder day sends at the RUL-053 cap from day one. v1.2: past its dated ladder an armed city KEEPS its weekly ramped wave until its plan list is empty - the fortnight was a duration estimate at full caps, never a stop rule."},
   rampCap:  {v:96,   lo:12, hi:200, st:12,  l:"Ramp batch cap /city/wave",    n:"waves_policy ramp.max_batch. 12 -> 24 -> 48 -> 96 in four clean waves, roughly one wave per city per week (Tue-Thu send days, 3-day min gap). RUL-053's 30/category/day still binds each ladder entry; the ramp is the CITY's weekly envelope across its categories. Global cities entering later start their own ramp at 12."},
   measured: {v:1,    lo:0,  hi:1,   st:1,   l:"Use measured inventory in PTA and JHB", n:"26 Aug counts after the STAYS-GEO-1 repair: Tutors 72/82, Services casual 19/32, Services technical 8/17, Experiences 36/3, Collectors 9/6, Stays 6/1. Only Tutors clears 30 in both cities, so the real ladder sends far less than the cap."},
   agGateW:  {v:8,    lo:0,  hi:157, st:1,   l:"Week agency OUTREACH may start (Phase 3)", n:"Phase 3 is selective, on David's word per wave, once traction shows. Before this week agencies can still find us on their own - what is held is the cold wave, not the hub itself. 157 = never."},
@@ -688,6 +688,16 @@ function simulate(seed, L, sample, keepTrace, v32){
   const trace = keepTrace? {A:[],R:[],mix:[],snap:[],arcs:[],events:[]} : null;
   let everAct=0, waveSignups=0, varsitySignups=0, refSignups=0, varsityDecay=1, newListWk=0;
   const rampStreak={};   // RAMP-1: per-city consecutive-clean-wave count
+  // SIM-RAMP-2: the plan's addressable list per city, and its ladder window.
+  // The fortnight in the written plan was a duration ESTIMATE at full caps, not a
+  // stop rule - wave_runner keeps an armed city's Tue-Thu waves until its list is
+  // empty, so slower ramped batches stretch the window instead of stranding the list.
+  const planTot=new Float64Array(n); const planLastW=new Int32Array(n).fill(-1);
+  for(let w2=0;w2<PLAN_SCHED.length;w2++) for(const sc of PLAN_SCHED[w2]){
+    planTot[sc.i]+=planCap(L,sc);
+    if(w2>planLastW[sc.i])planLastW[sc.i]=w2;
+  }
+  const planLeft=planTot.slice();
   // one list per city, sized by the campaign the ruling actually authorises
   const varsityPool=new Float64Array(VARSITY_IX.length);
   for(let vi=0; vi<VARSITY_IX.length; vi++) varsityPool[vi]=P.varCap*P.varDays;
@@ -780,9 +790,20 @@ function simulate(seed, L, sample, keepTrace, v32){
           cap = Math.min(cap, wkB[sc.i]);
           wkB[sc.i] -= cap;
         }
+        cap = Math.min(cap, planLeft[sc.i]);
         // each ladder day is a DIFFERENT category list, so there is no repeat fatigue
         // between days; the binding constraints are list depth, the cap and the ramp
-        if(cap>0) mail(sc.i, cap, 0);
+        if(cap>0){ planLeft[sc.i]-=cap; mail(sc.i, cap, 0); }
+      }
+      // SIM-RAMP-2: past its last dated ladder day an armed city KEEPS its weekly
+      // ramped wave into the rest of its plan list, gates permitting, until empty.
+      if(rampOn && gateOK){
+        for(let i=0;i<n;i++){
+          if(planLastW[i]<0 || w<=planLastW[i] || planLeft[i]<=0) continue;
+          if(!(i in wkB)) wkB[i]=Math.min(12*Math.pow(2, runClean?(rampStreak[i]||0):0), L.rampCap);
+          const cap=Math.min(wkB[i], planLeft[i]);
+          if(cap>0){ wkB[i]-=cap; planLeft[i]-=cap; mail(i, cap, 0); }
+        }
       }
       if(rampOn) for(const k in wkB){ rampStreak[k] = runClean ? (rampStreak[k]||0)+1 : 0; }
       // Optional later outreach wave. Default is NEVER: after the launch window the model

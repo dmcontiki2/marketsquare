@@ -1,3 +1,214 @@
+## 2026-08-30 — WAVE-2 ARMED on David's word ("release the next wave"): Stays & Tours, PTA + JHB
+
+David gave the arming word; the send fires HOST-SIDE via new `CityLauncher/launch_wave2.bat`
+(one double-click: gated runner both cities → prompt → sync_to_server). The sandbox is NOT a
+send vantage — live prospects.db over the FUSE mount threw sqlite disk I/O errors on both a
+read (city_stats) and a write (launch-code mint) this session; a mid-send failure there means
+sent-but-unmarked rows and double-sends. Recorded so no session retries it.
+
+Armed configuration (waves_policy.json, .bak-wave2arm-* kept):
+- Pretoria + Johannesburg: armed + gates_green, category_priority Stays & Tours
+  (adventures_accommodation, adventures_experiences), **batch_size 12 EXPLICIT** — wave 1 counts
+  DIRTY on server bounce truth (6/88 ≈ 6.8%), so RAMP-1 must not double; local bounced_at=0 is
+  instrument blindness (events land server-side), held honest via the documented override.
+- defaults.send_days → daily, min_gap_days 3 → 1: RUL-053's launch ladder sends DAILY; both old
+  values were agency-era cadence (dry-run gate proved min_gap would have blocked until 1 Sep).
+- Agency categories (Tour Operators / Travel Agencies / National) deliberately EXCLUDED — each
+  agency send is David's separate act per RUL-053(f).
+
+Two faults found ARMING, fixed + locked as **RG-0218**:
+- ADV-TMPL-1: raw category `adventures_accommodation` fuzzy-matched the 'Adventures' key first —
+  B&Bs would have received the EXPERIENCES template. Exact TEMPLATES keys added for both.
+- WR-IMPORT-1: `python -m emailer.wave_runner` (the docstring's own usage) died on a bare
+  `import send_freeze`; now dual-style like emailer.py. Dry-run then proved gates + composition
+  (adventures_accommodation×12, wave #2).
+
+Witnesses re-run green: test_junk_guard 12/12, test_wave_hygiene ALL PASS, check_bat_crlf 0 fail
+(launch_wave2.bat CRLF + pause-on-stop compliant). Backups: emailer.py.bak-advtmpl-*,
+wave_runner.py.bak-import-*.
+
+## 2026-08-30 — RUL-071/072: two-engine growth map redrawn; Russia + chess vertical in
+
+RUL-071 (two-engine doctrine): cities.json entries now carry lane=outreach/organic/
+horizon — the pipeline stops conflating "where we may cold-email" with "where we may
+grow". 23 cities staged across the named blind spots (Alaska, South America beyond AR,
+Africa beyond ZA/NA with the 20 Aug law verdicts encoded per city, China as horizon per
+David's acclimatize-first ruling). RG-0215 GENERALIZED same day from the India gate to
+the full jurisdiction gate: armed outreach in an uncovered country = red; ANY arming of
+KE/EG/BW (DO-NOT-COLD-EMAIL verdicts) = red; coverage test tightened to heading-level
+matches after incidental-mention false positives (US/UK/AU/FR/BR now correctly
+uncovered). RUL-072: Moscow + Saint Petersburg staged (lane=organic) — introduction
+model moves no money to sellers, so sanctions-broken rails don't block Russian tutors
+listing; chess = second certification-directory vertical, FIDE trainer titles PROBED
+server-rendered (plain fetch, no browser needed). Pipeline now 122 cities, 28 countries.
+Ledger run exit 0. Backups: regression_ledger.py.bak-20260830-jurisgate,
+cities.json.bak-20260830-twoengine.
+
+## 2026-08-30 — SYNC-PULLDOWN-1: server verdicts finally flow DOWN (RG-0220 LOCKED) · wave-2 truths read off the server
+
+PROBED via the dashboard's own session (X-Launch-Key from David's browser, statuses only):
+of wave 2's 15 sends — 6 now `emailed` server-side, **8 `rejected_wrong_geo`** (STAYS-GEO-1 had
+already geo-rejected those rows ON THE SERVER: Kruger/Breede/Hondeklipbaai/Pongola lodges tagged
+Pretoria locally), and **1 `opted_out`: johannesburg@cityrock.co.za's Resend "Clicked" was the
+unsubscribe link** — the POPIA round trip passed its first live test same-afternoon. SANParks'
+click was a genuine CTA click. Server totals: 94 emailed · 5 bounced · 3 opted_out. The sync's
+`AND status='scraped'` guard CORRECTLY refused to mark geo-rejected rows as emailed — the
+"stuck at 94/95" dashboard was the machinery being honest, not broken.
+
+The defect underneath (third bite in 24h): the sync was one-way UP. Geo-rejections, bounces,
+opt-outs and the suppression register all lived server-side while the SEND lane reads the LOCAL
+store — which also had NO suppression table, so SUPPRESS-1's chokepoint was checking a register
+that didn't exist locally. Fixed at the class:
+
+- **pull_from_server.py** (new): pulls verdict rows + suppression down; precedence rules —
+  opted_out wins over everything, bounced over scraped/emailed, rejected_* over scraped only
+  (send history never rewritten); creates + fills the local suppression table (SUPPRESS-1 armed).
+- **sync_to_server.bat** rewritten: [1/3] pull → [2/3] local report → [3/3] push, every step
+  errorlevel-guarded with pause-on-fail (it printed SYNC COMPLETE over a failed apply today —
+  same wrong-status class as SYNC-LOCKSAFE-1, now impossible in both the bat and the script).
+
+RG-0220 LOCKED (needles on precedence rules + bat pull step + errorlevel guards). Run the bat
+once BEFORE tomorrow's wave: batch-24 composition then reads a pool carrying every server
+verdict. Wave-2 targeting note for the ramp read: 8 wrong-geo sends were local-pool pollution,
+not template or guard failures; bounce count for wave 2 currently 0.
+
+## 2026-08-30 — WAVE 2 SENT (15) · SYNC-LOCKSAFE-1: the sync waits, bails and stops lying (RG-0219 LOCKED)
+
+**Wave 2 fired host-side on David's word**: 15 sends probed in the local store — Pretoria
+adventures_accommodation×12, Johannesburg adventures_experiences×3 (JHB's clean Stays & Tours
+pool is that thin; under-filling beats junk, RG-0217). First fully-tracked wave (pixels live).
+
+**The post-send sync failed loudly and then lied**: dozens of `database is locked (5)` against
+the running citylauncher.service, then "SYNC COMPLETE" — sqlite3 without `.bail` exits 0 over
+errors, and the apply ran with no busy timeout, one lock fight per statement. Fixed at the
+class in sync_local_to_server.py (both apply paths, prospects + gumtree): generated SQL now
+opens `.bail on` + `.timeout 30000` + `BEGIN IMMEDIATE` and closes `COMMIT` (wait for the
+lock once, apply atomically, roll back whole on failure); the caller retries up to 3× on
+"locked" and treats rc==0 with dirty stderr as FAILURE. The SQL's idempotency (OR IGNORE,
+guarded UPDATEs, NOT EXISTS events) is what makes the retry safe — asserted in RG-0219.
+Backup: sync_local_to_server.py.bak-locksafe-*. Re-run of sync_to_server.bat completes the
+partial apply; sends are NOT re-fired by a sync re-run.
+
+**Observed, noted for the ramp seam (not fixed today):** wave_runner stamped today's events
+wave_number=1 (110 total incl. yesterday's) — last_wave read 0 because yesterday's sends
+bypassed the runner. Bookkeeping only: batch size is governed by the explicit 12 override
+(waves_policy), and true bounce data still lives server-side (RG-0176(a)/RG-0204 pull-down
+seam, still open). Straighten wave numbering when the bounce pull-down lands.
+
+## 2026-08-30 — SIM-RAMP-2: ramped cities finish their list; model v1.2
+
+David spotted it from the live sim (22 Dec view): the global three never lit. Diagnosis:
+SIM-RAMP-1 capped their two dated ladder weeks at 12+24=36 of a 180-prospect plan list
+(~0.25 expected signups → 0), then the dated ladder ended and STRANDED the remaining 144 —
+a fidelity bug in the v1.1 implementation, not the plan: the plan's "fortnight" was a
+duration estimate at full caps, while wave_runner actually keeps an armed city's Tue-Thu
+waves until its list is empty. v1.2: past its last dated ladder day an armed city continues
+its weekly ramped wave into the rest of its plan list, gates permitting, until exhausted.
+Verified (Node, mid run wk16): NY 6 / SYD 12 active (LDN lights by wk52 in seed 7); ramp ON
+wk52 total ~35.6k vs ~9.9k flat — the full list landing in higher-proof weeks compounds.
+Title + brand bumped v1.2. Backup: .bak-20260830-164036. Awaiting David's ms-deploy.
+
+## 2026-08-30 — JUNK-GUARD-1: placeholder addresses can no longer be emailed (RG-0217 LOCKED)
+
+Wave 1 (29 Aug, 88 sends) bounced ~6.8% — 6 webhook bounce events — and the send-day note
+had already named the culprits: scraper-swallowed template artifacts (user@domain.com,
+filler@godaddy.com) that pass MX because those domains resolve. 6.8% sits above BOTH the 5%
+stop-loss and RAMP-1's 2% clean bar, so unguarded junk doesn't just waste sends — it blocks
+the earned-volume ramp and spends mail.trustsquare.co reputation shared with transactional mail.
+
+Fix at the class, CityLauncher/emailer/emailer.py: `_looks_junk()` (placeholder local-parts,
+template domains, reserved TLDs — deliberately conservative, info@/admin@ business addresses
+stay sendable) enforced at the send_email chokepoint beside SUPPRESS-1 AND in get_prospects
+batch composition (under-filling a batch beats bouncing it). Witness: tests/test_junk_guard.py,
+12 assertions incl. both wave-1 culprits and the not-junk boundary. Ledger RG-0217 LOCKED with
+a behavioral check (exec of the self-contained guard block). Backups: emailer.py.bak-junkguard-*,
+regression_ledger.py.bak-junkguard-*. py_compile clean both files.
+
+Note for the ramp: wave 1 therefore counts DIRTY on true (server) bounce data — batch size for
+the next wave stays at defaults (12/category/city), not doubled; local bounced_at still reads 0
+because Resend bounce events land server-side only (sync is push-up) — pull-down remains open
+under the RG-0176(a)/RG-0204 seam class.
+
+## 2026-08-30 — INDIA-TUTORS-LANE-1: India certified-teacher pool lined up, law-gated
+
+David directed the India lane (teachers advertising on Fiverr + official English-teaching
+certification holders). Probed and built: Fiverr is a dead outreach lane (no emails, ToS
+bars off-platform contact, self-claimed certs); the working lane is official certification
+directories (Cambridge authorised centres, BC/IDP IELTS partners, Trinity CertTESOL
+providers) — institutions as aggregators per the agency-layer doctrine. OSM measured dead
+for IN education (12 hits, all of Delhi). Delhi/Mumbai/Bengaluru staged in cities.json
+(96→99, .bak kept). RG-0215 (OPEN) gates any India arming on OUTREACH_LAW gaining a
+verified India section (DPDP Act 2023). Full design: CityLauncher/INDIA_TUTORS_LANE.md.
+Ledger run exit 0 after append (dup-guard caught RG-0214 collision; renumbered 0215).
+
+## 2026-08-30 — FIDE-TRAINERS-1: dedicated pipeline built AND run; credential registry live
+
+David asked whether existing pipelines serve the chess lane or a dedicated one was needed
+— dedicated, built, executed same session. CityLauncher/harvesters/fide_trainers.py
+(resumable chunked crawl — sandbox kills background jobs, learned the hard way) crawled
+all 209 FIDE seminar-report posts and populated new prospects.db table fide_trainers:
+4,237 unique titled trainers (NI 1,680 / FI 1,126 / DI 1,023 / FT 408), federations
+normalized — IND 934, RUS 93, RSA 23. Registry not outreach: no emails, wave machine and
+prospects (1,519) untouched. Copy-back md5-verified, integrity ok,
+prospects.db.bak-20260830-fide kept, raw harvest archived .jsonl.gz. Consumer = signup
+claim-your-FIDE-ID → verified tier (RUL-072). Coverage honest: post-2022 awards (the
+growing edge), grows on idempotent re-runs — candidate for the /housekeep cadence.
+
+## 2026-08-30 — FIDE-CLAIM-1 designed: credential claims into backend + flows
+
+David ratified the registry use case (non-intrusive verification that makes the trust
+score mean what it was intended to mean) and asked for the backend/flow design. Delivered:
+CREDENTIAL_CLAIMS_DESIGN.md + Navy .docx — generalized credential_registry +
+credential_claims tables (additive, ONE_DEPLOY-conformant seed of the 4,237-row FIDE
+export), 60-second claim flow, two-tier anti-hijack evidence ladder (Tier B registry-match,
+Tier A anchored to the EXISTING id-verify lane), A2 anonymity mechanics (badge shows class,
+never person), collision/upgrade/revocation rules, env-flagged endpoints incl. no-deploy
+monthly registry refresh, capped trust-score weighting (credential = floor-raiser, not
+crown), status-truth conformant badge (live JOIN only). RG-0216 (OPEN) live-probes
+/credentials/mine and carries the build to the first post-launch-stabilization session.
+
+## 2026-08-30 — BUILD-QUEUE-1: the to-be-built board, derived not remembered
+
+David asked how the piled-up design additions don't get forgotten. Answer made visible:
+scripts/build_queue.py derives BUILD_QUEUE.md + build_queue.html (color-coded board,
+Visuals-indexed) from the regression ledger's OPEN entries — single source, no parallel
+list, regenerated on demand; a built item turns READY TO LOCK green and leaves on
+promotion. Probed live: 18 OPEN entries = the real queue. Same run caught and fixed two
+things before Monday's launch: a stranded .git/HEAD.lock (RG-0015/0197 red — healed via
+git_unlock.py rename) and sandbox fastapi/httpx missing (RG-0181/0182 NOT EVALUATED —
+installed; ledger now exits 0, "every locked fix is holding"). Weekly forcing function:
+scheduled task build-queue-pickup (Wed 08:00) regenerates the board and names the next
+build (first up post-launch: RG-0216 FIDE-CLAIM-1, then RG-0205/6/7 per RUL-065).
+
+## 2026-08-30 — Batch 1 listing improvements built + red/amber follow-ups (unattended, RUL-065)
+
+- **SF-AIDESC-1 (RG-0205):** the guided sell flow now USES the AI's description_draft — it
+  leads the composed listing description; mechanical "Label: value" lines follow; seller-typed
+  prose wins over both. ms.js sfComposeDescription rewritten; node --check clean.
+- **A2HS-ASK-1 (RG-0209):** promptAddToHomeScreen() finally has a caller — one trigger after
+  the first successful publish handoff (sfFinish non-draft path). Existing standalone/done
+  guards untouched; no notification permission bundled.
+- **CSP-CONNECT-1 activated (RG-0180):** connect targets MEASURED live in Chrome (index,
+  adventures ZA map + heritage toggle, listing detail with photos, dashboard — zero
+  cross-origin fetch/XHR anywhere). migrations/034_csp_connect_src.py ships the recorded
+  three-host allowlist; DRAFT_034 removed from docs/. RG-0180's live-half assertion was a
+  substring test that could never pass its own recorded policy — fixed tokenwise, noted in ref.
+- **MAP-LIVE-1 (new RG-0214, D15 fallback):** /orchestrator/defence_map.html +
+  /orchestrator/watch_register.md now served by the app from the repo's fetched origin/main at
+  request time (bea_main.py routes + migration 035, gate-preserving exact-match nginx proxy
+  locations; migration proves app-200 AND anonymous-401 before claiming success). D15 (PAT)
+  stays open to David — it fixes the shipping class this fallback does not.
+- **DW-084 PREPARED live (root, PROBED):** MS_API_KEY live fp == unit inline fp (c42deee7),
+  no other on-disk source remains — restart-safe. Junk drop-in deleted, stale
+  LAUNCH_SPECIAL_DEADLINE=2026-08-01 removed (merged config: single 2026-09-01), unit
+  EnvironmentFile deduped 5→1, daemon-reload done, NO restart. DW-085 re-probed: 37 updates +
+  kernel reboot pending — awaiting David's window.
+- **RG-0114 root-caused + fixed:** tester-intake guard red 8 scans because the contagion model
+  and defence map joined the manifest under the Basic-Auth orchestrator/ realm and the guard
+  demanded the tester widget on them. OPS-REALM-EXEMPT-1: tester_pages() now judges by DEST and
+  exempts the gated realm. Guard suite green; clean scan logged (danger=-).
+- Staged, not shipped (RUL-037): all of the above rides David's next deploy.
+
 ## 2026-08-30 — SIM-RAMP-1: contagion model v1.1 carries the RAMP-1 sending mechanic
 
 David asked what RAMP-1 (earned send volume) does to the simulation, global waves included.

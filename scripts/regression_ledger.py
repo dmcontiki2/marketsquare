@@ -11595,62 +11595,293 @@ def rg_map_live_lane():
     return out
 
 
-@entry("RG-0215", "India outreach is LAW-GATED: no Indian city may be armed in "
-       "waves_policy.json until the outreach-law canon carries a verified India section "
-       "(DPDP Act 2023), the same per-jurisdiction treatment the other nine got",
+@entry("RG-0215", "The JURISDICTION GATE (RUL-071): no city may be armed for outreach "
+       "in a country the outreach-law canon does not cover, and a DO-NOT-COLD-EMAIL "
+       "country (Kenya/Egypt/Botswana, 20 Aug doc verdicts) may never be armed at all -- "
+       "organic growth is ungated, SENDING is what waits for law",
        OPEN,
-       scope="jurisdiction-gate CLASS: any country reachable by cities.json whose law is "
-             "not covered in OUTREACH_LAW belongs here -- India (Delhi/Mumbai/Bengaluru, "
-             "staged 30 Aug 2026, INDIA-TUTORS-LANE-1) is the first instance. The pool "
-             "lane (certification directories: Cambridge authorised centres, British "
-             "Council/IDP IELTS partners, Trinity CertTESOL providers) is NOT gated -- "
-             "harvesting is lawful recon; SENDING is what waits.",
-       ref="Born 30 Aug 2026: David directed the India tutors lane; probe found OSM dead "
-           "for IN education (12 hits, all of Delhi) and OUTREACH_LAW_WORKING_NOTES "
-           "covering 9 jurisdictions, India absent. DPDP Act 2023 has a publicly-"
-           "available-data carve-out (s.3(c)) that likely helps, but 'likely' is READ-"
-           "grade, not verified -- the other nine got primary-source verification and "
-           "India gets no less. PASSES (READY TO LOCK) when the law notes carry an India "
-           "section; goes RED if an India city is armed before then.")
-def rg_india_law_gate():
+       scope="jurisdiction-gate CLASS over the whole pipeline: every country reachable by "
+             "cities.json. Two red conditions: (1) armed outreach city in an uncovered "
+             "country; (2) ANY armed city in a NO-SEND country regardless of coverage. "
+             "The organic lane (word of mouth, reputation -- RUL-071) is deliberately NOT "
+             "gated: signups from anywhere are lawful commerce; recruitment email is what "
+             "needs per-jurisdiction law. Pool harvesting/recon also ungated.",
+       ref="Born 30 Aug 2026 as the India-only gate (INDIA-TUTORS-LANE-1), generalized the "
+           "SAME DAY under RUL-071 (two-engine growth doctrine) and extended to Russia "
+           "under RUL-072 -- the ruling row claimed the generalization and this edit makes "
+           "the claim true in the same day''s session, per the evidence ladder. Coverage "
+           "test is name-presence in OUTREACH_LAW*.md (READ-grade by design): it opens the "
+           "gate for a human LOCK decision, it does not make it. ZA is covered as the home "
+           "market with sends live under RUL-063.")
+def rg_jurisdiction_gate():
     out = []
-    notes = os.path.join(REPO, "OUTREACH_LAW_WORKING_NOTES_2026-08-20.md")
-    covered = False
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not os.path.isdir(cl):
+        return [(INFO, "CityLauncher not beside this repo -- jurisdiction gate unchecked (live-only run)")]
     import glob as _glob
-    for fp in _glob.glob(os.path.join(REPO, "OUTREACH_LAW*")):
+    law = ""
+    for fp in _glob.glob(os.path.join(REPO, "OUTREACH_LAW*.md")):
         try:
-            if fp.endswith(".md") and "INDIA" in open(fp, encoding="utf-8").read().upper():
-                covered = True
+            law += open(fp, encoding="utf-8").read().upper()
         except Exception:
             pass
-    cl = os.path.join(REPO, "..", "CityLauncher")
-    india_cities = set()
+    NAMES = {"ZA": "SOUTH AFRICA", "NZ": "NEW ZEALAND", "AR": "ARGENTINA", "PT": "PORTUGAL",
+             "NA": "NAMIBIA", "KE": "KENYA", "EG": "EGYPT", "ZW": "ZIMBABWE", "BW": "BOTSWANA",
+             "MZ": "MOZAMBIQUE", "IN": "INDIA", "US": "UNITED STATES", "UK": "UNITED KINGDOM",
+             "AU": "AUSTRALIA", "FR": "FRANCE", "BR": "BRAZIL", "CO": "COLOMBIA", "PE": "PERU",
+             "CL": "CHILE", "NG": "NIGERIA", "GH": "GHANA", "TZ": "TANZANIA", "UG": "UGANDA",
+             "RW": "RWANDA", "ET": "ETHIOPIA", "MA": "MOROCCO", "CN": "CHINA", "RU": "RUSSIA"}
+    NO_SEND = {"KE", "EG", "BW"}
+    def covered(cc):
+        # heading-level match only ("## 1. KENYA ..."), not incidental mentions in prose
+        if cc == "ZA":
+            return True
+        import re as _re
+        return bool(_re.search(r"#+\s*\d*\.?\s*" + _re.escape(NAMES.get(cc, "\x00")), law))
+    n2c = {"Maun": "BW", "National": "ZA"}
     try:
         for c in json.loads(open(os.path.join(cl, "data", "cities.json"), encoding="utf-8").read()):
-            if c.get("country") == "IN":
-                india_cities.add(c.get("name"))
-    except Exception:
-        pass
-    armed_india = []
+            n2c[c.get("name")] = c.get("country")
+    except Exception as e:
+        return [(FAIL, "cities.json unreadable (%s) -- the gate cannot map cities to countries" % e)]
     try:
         pol = json.loads(open(os.path.join(cl, "emailer", "waves_policy.json"), encoding="utf-8").read())
-        for name, cpol in pol.get("cities", {}).items():
-            if name in india_cities and (cpol.get("armed") or cpol.get("gates_green")):
-                armed_india.append(name)
-    except Exception:
-        pass
-    if armed_india and not covered:
-        out.append((FAIL, "India city/cities %s armed or gates_green while OUTREACH_LAW has NO "
-                          "India section -- sending into an unresearched jurisdiction is the "
-                          "exact fault the 9-jurisdiction doc exists to prevent (RG-0214)"
-                    % ", ".join(sorted(armed_india))))
-    elif not covered:
-        out.append((FAIL, "OUTREACH_LAW does not yet cover India (DPDP Act 2023) -- expected "
-                          "while OPEN. Write the India section with the same primary-source "
-                          "verification as the other nine, then this prints READY TO LOCK"))
-    else:
-        out.append((INFO, "OUTREACH_LAW carries an India section and no India city is armed "
-                          "ahead of it -- promote this entry to LOCKED"))
+    except Exception as e:
+        return [(FAIL, "waves_policy.json unreadable (%s)" % e)]
+    for name, cpol in pol.get("cities", {}).items():
+        if not (cpol.get("armed") or cpol.get("gates_green")):
+            continue
+        cc = n2c.get(name)
+        if cc is None:
+            out.append((FAIL, "waves_policy city %r is armed but unknown to cities.json -- "
+                              "the gate cannot judge its jurisdiction (RG-0215)" % name))
+        elif cc in NO_SEND:
+            out.append((FAIL, "%s (%s) is armed -- 20 Aug doc verdict is DO NOT COLD EMAIL; "
+                              "organic lane only (RUL-071)" % (name, cc)))
+        elif not covered(cc):
+            out.append((FAIL, "%s (%s) is armed while OUTREACH_LAW has no %s section -- "
+                              "sending into an unresearched jurisdiction (RG-0215)"
+                        % (name, cc, NAMES.get(cc, cc))))
+    if out:
+        return out
+    uncovered = sorted({cc for cc in set(n2c.values()) if cc and not covered(cc)})
+    if uncovered:
+        return [(FAIL, "pipeline reaches uncovered countries (%s) and none is armed -- expected "
+                       "while OPEN. Each outreach lane needs a primary-source OUTREACH_LAW "
+                       "section first; the organic lane is ungated (RUL-071)" % ", ".join(uncovered))]
+    return [(INFO, "every pipeline country covered, no NO-SEND country armed -- promote to LOCKED")]
+
+
+@entry("RG-0216", "FIDE-CLAIM-1 exists and holds its shape: the credential-claim lane "
+       "(claim endpoint, CREDENTIAL_CLAIMS flag, seeded registry) is LIVE per the design "
+       "spec -- verification without identification, badge from a live JOIN, one account "
+       "per credential",
+       OPEN,
+       scope="the credential-claims feature class: /credentials/claim + /credentials/mine "
+             "+ admin queue + registry-upsert refresh, all behind CREDENTIAL_CLAIMS "
+             "(default off), server table credential_registry seeded with the 4,237-row "
+             "FIDE export. Anonymity half is part of the assertion once live: the public "
+             "listing payload may carry tier/badge but NEVER name, credential id or "
+             "federation from a claim.",
+       ref="Design ratified in conversation 30 Aug 2026 (David: the registry gives the "
+           "trust score the meaning we intended). Spec: CREDENTIAL_CLAIMS_DESIGN.md + "
+           ".docx (30 Aug). Build slot: first post-launch-stabilization session (RUL-065 "
+           "timing class -- no launch-weekend deploys). RUL-037 machinery rule: this "
+           "entry, not David''s memory, carries the build across sessions.")
+def rg_credential_claims():
+    out = []
+    base = "https://trustsquare.co"
+    try:
+        import urllib.request as _u
+        req = _u.Request(base + "/credentials/mine", headers={"User-Agent": "ledger-probe"})
+        code = None
+        try:
+            code = _u.urlopen(req, timeout=15).getcode()
+        except Exception as e:
+            code = getattr(e, "code", None)
+        if code in (200, 401, 403):
+            out.append((INFO, "/credentials/mine answers (%s) -- the lane exists; verify flag, "
+                              "seed count and the anonymity half, then promote" % code))
+        else:
+            out.append((FAIL, "/credentials/mine does not answer (%r) -- FIDE-CLAIM-1 not built "
+                              "yet. Expected while OPEN. Spec: CREDENTIAL_CLAIMS_DESIGN.md; "
+                              "build order section 9; seed export from CityLauncher "
+                              "fide_trainers (4,237 rows verified on disk 30 Aug)" % code))
+    except Exception as e:
+        out.append((FAIL, "probe machinery failed (%s) -- treat as not built" % e))
+    return out
+
+
+@entry("RG-0217", "No outreach email is addressed to a PLACEHOLDER -- template artifacts "
+       "(user@domain.com class) are refused at the same chokepoint that enforces the "
+       "opt-out register, and batch composition never counts them",
+       LOCKED,
+       scope="repo: ../CityLauncher/emailer/emailer.py (_looks_junk + send_email refusal + "
+             "get_prospects filter) + tests/test_junk_guard.py. CLASS, not a blocklist: any "
+             "address whose SHAPE says no human reads it (placeholder local-parts, template "
+             "domains, reserved TLDs) -- MX checks pass these because domain.com and "
+             "godaddy.com resolve. Boundary is deliberate and part of the assertion: info@ / "
+             "admin@ business addresses stay sendable; loosening the guard OR widening it to "
+             "eat legitimate business mail both belong here.",
+       ref="JUNK-GUARD-1 (30 Aug 2026). Wave 1 (29 Aug, 88 sends) bounced ~6.8%% -- 6 webhook "
+           "bounce events -- and the 29 Aug send note had already named the culprits as "
+           "scraper-swallowed placeholders. 6.8%% sits ABOVE the 5%% stop-loss and the RAMP-1 "
+           "2%% clean bar, so unguarded junk does not merely waste sends: it blocks the ramp "
+           "and burns domain reputation shared with transactional mail.")
+def rg_junk_guard():
+    out = []
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not os.path.isdir(cl):
+        return [(INFO, "CityLauncher not beside this repo -- JUNK-GUARD-1 unchecked here (live-only run)")]
+    em = os.path.join(cl, "emailer", "emailer.py")
+    if not os.path.exists(em):
+        return [(FAIL, "CityLauncher/emailer/emailer.py is GONE (JUNK-GUARD-1)")]
+    esrc = open(em, encoding="utf-8").read()
+    for needle, why in (("def _looks_junk", "the shape guard itself"),
+                        ("JUNK-GUARD-1: refusing send", "the send_email chokepoint refusal"),
+                        ("not _looks_junk(r.get(", "batch composition filtering")):
+        if needle not in esrc:
+            out.append((FAIL, "emailer.py lost %r -- %s is gone (JUNK-GUARD-1)" % (needle, why)))
+    tp = os.path.join(cl, "tests", "test_junk_guard.py")
+    if not os.path.exists(tp):
+        out.append((FAIL, "tests/test_junk_guard.py is GONE -- the guard has no witness (JUNK-GUARD-1)"))
+    if not out:
+        try:
+            ns = {}
+            i = esrc.index("_JUNK_LOCALPARTS"); j = esrc.index("def send_email")
+            exec(esrc[i:j], ns)  # the guard block is self-contained by construction
+            ok_junk = ns["_looks_junk"]("user@domain.com") and ns["_looks_junk"]("filler@godaddy.com")
+            ok_legit = not ns["_looks_junk"]("info@pretoriatutors.co.za")
+            if not ok_junk:
+                out.append((FAIL, "_looks_junk no longer catches the wave-1 bounce addresses -- guard hollowed out"))
+            if not ok_legit:
+                out.append((FAIL, "_looks_junk eats info@ business addresses -- guard over-widened, sends starve"))
+            if ok_junk and ok_legit:
+                out.append((INFO, "guard behaviorally proven: wave-1 culprits refused, business addresses pass"))
+        except Exception as e:
+            out.append((INFO, "behavioral half unrunnable here (%s) -- source needles hold" % e))
+    return out
+
+
+@entry("RG-0218", "The Stays & Tours wave lane RUNS AS DOCUMENTED: raw adventures category "
+       "names route to their OWN templates (never the fuzzy neighbour's), and the wave "
+       "conductor survives both documented invocation styles",
+       LOCKED,
+       scope="repo: ../CityLauncher/emailer/emailer.py TEMPLATES exact keys "
+             "(adventures_accommodation / adventures_experiences) + wave_runner.py dual-style "
+             "send_freeze import. Found ARMING wave 2 (30 Aug 2026): fuzzy template match hit "
+             "the 'Adventures' key first, so B&B prospects would have received the EXPERIENCES "
+             "copy; and `python -m emailer.wave_runner` -- the docstring's own usage -- died on "
+             "a bare sibling import emailer.py had already learned to guard against.",
+       ref="ADV-TMPL-1 + WR-IMPORT-1 (30 Aug 2026, changelog.d 2026-08-30-wave2-armed). CLASS: "
+           "a template resolved by substring luck and an entry point that only works from one "
+           "working directory are both the same fault -- the documented path silently doing "
+           "something else.")
+def rg_wave2_lane_runs_as_documented():
+    out = []
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not os.path.isdir(cl):
+        return [(INFO, "CityLauncher not beside this repo -- wave-lane checks skipped (live-only run)")]
+    esrc = open(os.path.join(cl, "emailer", "emailer.py"), encoding="utf-8").read()
+    for needle in ("'adventures_accommodation': TMPL_DIR / 'adventures_accommodation_outreach.html'",
+                   "'adventures_experiences':   TMPL_DIR / 'adventures_experiences_outreach.html'"):
+        if needle not in esrc:
+            out.append((FAIL, "TEMPLATES lost the exact adventures key %r -- fuzzy match mails "
+                              "the wrong copy again (ADV-TMPL-1)" % needle.split(':')[0]))
+    for t in ("adventures_accommodation_outreach.html", "adventures_experiences_outreach.html"):
+        if not os.path.exists(os.path.join(cl, "emailer", "templates", t)):
+            out.append((FAIL, "template %s is GONE from disk (ADV-TMPL-1)" % t))
+    wsrc = open(os.path.join(cl, "emailer", "wave_runner.py"), encoding="utf-8").read()
+    if "from emailer import send_freeze" not in wsrc:
+        out.append((FAIL, "wave_runner.py lost the package-style send_freeze import -- "
+                          "`python -m emailer.wave_runner` dies at line one again (WR-IMPORT-1)"))
+    if not out:
+        out.append((INFO, "exact template routing + dual-style entry point both in place"))
+    return out
+
+
+@entry("RG-0219", "The prospect sync can never lose to the service that owns the DB, and can "
+       "never claim success over a failed apply -- it waits for the lock, applies as ONE "
+       "transaction, and reads its own stderr",
+       LOCKED,
+       scope="repo: ../CityLauncher/sync_local_to_server.py, BOTH apply paths (prospects + "
+             "gumtree). CLASS: any remote sqlite apply in this project. Three properties, all "
+             "asserted: (a) .timeout so a busy DB is waited for, never sprayed with "
+             "SQLITE_BUSY; (b) .bail on + single BEGIN IMMEDIATE txn so a failure rolls back "
+             "whole and exits nonzero; (c) the caller treats rc==0 WITH dirty stderr as "
+             "failure -- sqlite3 without .bail exits 0 over hundreds of errors.",
+       ref="SYNC-LOCKSAFE-1 (30 Aug 2026). Found live on wave-2 day: the post-send sync "
+           "sprayed dozens of 'database is locked (5)' lines against the running "
+           "citylauncher.service and then printed SYNC COMPLETE anyway -- a wrong-status "
+           "defect of the evidence-ladder class, on the one day the dashboard numbers "
+           "mattered. Idempotent SQL (OR IGNORE / guarded UPDATEs / NOT EXISTS) is what "
+           "made the retry safe, and that idempotency is load-bearing for this entry.")
+def rg_sync_locksafe():
+    out = []
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not os.path.isdir(cl):
+        return [(INFO, "CityLauncher not beside this repo -- sync checks skipped (live-only run)")]
+    p = os.path.join(cl, "sync_local_to_server.py")
+    if not os.path.exists(p):
+        return [(FAIL, "sync_local_to_server.py is GONE (SYNC-LOCKSAFE-1)")]
+    s = open(p, encoding="utf-8").read()
+    if s.count(".bail on") < 2 or s.count(".timeout 30000") < 2 or s.count("BEGIN IMMEDIATE") < 2:
+        out.append((FAIL, "a sync path lost its lock discipline header (.bail/.timeout/BEGIN "
+                          "IMMEDIATE must wrap BOTH applies) -- SYNC-LOCKSAFE-1"))
+    if s.count("apply.stderr.strip()") < 2:
+        out.append((FAIL, "an apply path no longer reads its own stderr -- rc==0 over errors "
+                          "prints SYNC COMPLETE again (SYNC-LOCKSAFE-1)"))
+    if "INSERT OR IGNORE" not in s:
+        out.append((FAIL, "the sync lost OR IGNORE idempotency -- the retry this entry "
+                          "blesses is no longer safe"))
+    if not out:
+        out.append((INFO, "both applies wait, bail, roll back whole, and are verified against stderr"))
+    return out
+
+
+@entry("RG-0220", "Server VERDICTS flow DOWN before any wave composes -- the send pool can "
+       "never again email an address the server has opted out, bounced or geo-rejected, "
+       "and the sync bat can no longer print COMPLETE over a failed step",
+       LOCKED,
+       scope="repo: ../CityLauncher/pull_from_server.py + sync_to_server.bat (pull is step "
+             "[1/3], both steps errorlevel-guarded and pause on failure). CLASS: the one-way "
+             "sync seam -- every verdict class that lives server-side (opt-out, bounce, "
+             "geo/invalid rejection, the suppression register) must reach the LOCAL store "
+             "the send lane reads. Precedence is part of the assertion: opted_out wins over "
+             "everything (POPIA), bounced over scraped/emailed, rejected_* over scraped only "
+             "(send history is never rewritten).",
+       ref="SYNC-PULLDOWN-1 (30 Aug 2026). Third live bite of the seam in 24h: wave 2 sent 8 "
+           "of 15 under the wrong city (server rows read rejected_wrong_geo -- STAYS-GEO-1 "
+           "verdicts never travelled down), wave-1 bounces were invisible to the ramp, and "
+           "the first live opt-out (a wave-2 recipient, same afternoon) existed only "
+           "server-side. Also arms emailer.py's SUPPRESS-1 chokepoint locally at last: the "
+           "local DB had NO suppression table until this pull creates and fills it.")
+def rg_sync_pulldown():
+    out = []
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not os.path.isdir(cl):
+        return [(INFO, "CityLauncher not beside this repo -- pulldown checks skipped (live-only run)")]
+    pp = os.path.join(cl, "pull_from_server.py")
+    if not os.path.exists(pp):
+        return [(FAIL, "pull_from_server.py is GONE -- server verdicts no longer reach the "
+                       "send pool (SYNC-PULLDOWN-1)")]
+    s = open(pp, encoding="utf-8").read()
+    for needle, why in (("status='opted_out'", "the opt-out-always-wins rule"),
+                        ("status IN ('scraped','emailed')", "bounce precedence"),
+                        ("AND status='scraped'", "rejection precedence (history never rewritten)"),
+                        ("CREATE TABLE IF NOT EXISTS suppression", "arming the local SUPPRESS-1 register")):
+        if needle not in s:
+            out.append((FAIL, "pull_from_server.py lost %r -- %s is gone (SYNC-PULLDOWN-1)" % (needle, why)))
+    bp = os.path.join(cl, "sync_to_server.bat")
+    b = open(bp, encoding="utf-8", errors="replace").read() if os.path.exists(bp) else ""
+    if "pull_from_server.py" not in b:
+        out.append((FAIL, "sync_to_server.bat no longer pulls before pushing -- the wave "
+                          "composes from a stale pool again (SYNC-PULLDOWN-1)"))
+    if b.count("errorlevel 1") < 2:
+        out.append((FAIL, "sync_to_server.bat lost its errorlevel guards -- SYNC COMPLETE "
+                          "can print over a failure again"))
+    if not out:
+        out.append((INFO, "pull-before-push in place, precedence rules intact, bat honest"))
     return out
 
 

@@ -41,6 +41,22 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-071": [
+   # Two-engine doctrine (30 Aug): cities.json carries lane fields (outreach/organic/horizon).
+   ("../CityLauncher/data/cities.json", ['"lane"'], []),
+   ("RULINGS.md", ["TWO-ENGINE GROWTH DOCTRINE"], []),
+ ],
+ "RUL-072": [
+   # Russia staged organic + chess vertical (30 Aug): Moscow rows staged, FIDE registry doctrine.
+   ("../CityLauncher/data/cities.json", ["Moscow"], []),
+   ("../CityLauncher/INDIA_TUTORS_LANE.md", ["FIDE"], []),
+   ("RULINGS.md", ["RUSSIA JOINS THE MAP"], []),
+ ],
+ "RUL-073": [
+   # Wrong-city sends stand (30 Aug): ride it out, never recall; fix is upstream (RG-0220).
+   ("LAUNCH_EMAILS.md", ["A wrong-city send STANDS"], []),
+   ("RULINGS.md", ["RIDE IT OUT, NEVER RECALL"], []),
+ ],
  "RUL-070": [
    # Operational from Hetzner (30 Aug): laptop = design tool only; operational view
    # surfaces are served gated. If the manifest loses the served map/register lines,

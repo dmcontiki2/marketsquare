@@ -28,6 +28,14 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- Batch 1 build (30 Aug, unattended, RUL-065): SF-AIDESC-1 + A2HS-ASK-1 in ms.js (RG-0205/
+  RG-0209 source-halves passing), CSP connect-src migration 034 activated from measured live
+  traffic (RG-0180 assertion fixed tokenwise), MAP-LIVE-1 map/register-from-origin/main lane
+  (routes + migration 035, new RG-0214), DW-084 server prep DONE without restart (key sources
+  aligned+probed, junk/stale config removed, daemon-reloaded), RG-0114 tester-intake guard
+  root-caused (gated ops realm exempted) and scan clean. ALL STAGED — awaiting David's deploy;
+  DW-084/085 restart+apt window awaiting David.
+
 - Maintenance loop 30 Aug (05:38 UTC): fault queue empty (0 seen), shadow heartbeat posted. Morning ledger's 2 REGRESSED (RG-0127/RG-0154) were instrument collateral of DASH-SUMMARY-REDACT-1 — fixed by LEDGER-ADMINREAD-1 (ledger now reads /dashboard/summary with the admin key; keyless machines read blind, never red). RG-0198 + RG-0211 promoted LOCKED. Re-run PROBED green: 186 holding, 0 regressed, exit 0. Committed, not pushed — nightly TSL ships it.
 
 ## 2026-08-30 — customer-email firewall (RUL-069) + tracking verdict

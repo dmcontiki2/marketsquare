@@ -11,6 +11,7 @@
 2. **EARLY vs full:** provisional patent filed before send day → full; not filed → _EARLY
    (outcome only, no mechanism). One decision per wave, decided at send time.
 3. **Build an email only when its wave has a date.** Early builds drift.
+4. **A wrong-city send STANDS (RUL-073, 30 Aug 2026):** sent is sent — never recalled, never followed by a correction. One touch stays one touch; the fix is upstream (pull_from_server.py runs before every wave so geo-verdicts reach the send pool).
 
 ## Wave table
 

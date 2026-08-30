@@ -1,0 +1,39 @@
+# BUILD QUEUE - generated 2026-08-30 11:31 UTC - DO NOT HAND-EDIT
+*Derived from regression_ledger.py OPEN entries (18 waiting). The ledger is the single source; edit nothing here - build the item, the ledger prints READY TO LOCK, a session promotes it, and the row vanishes. ledger otherwise green.*
+
+- **RG-0121** [waiting] The photo-anon scan canary is GROUNDING-CLASS, dark by default, and can never be the verifier
+    - canary not armed live yet (eval pending) -- expected while OPEN
+- **RG-0132** [waiting] The BASE lane's PRODUCTION golden run is on record -- openai is in GOLDEN_PASS
+    - openai is NOT in GOLDEN_PASS -- the base lane serving all live traffic has no production golden run on record. Run scripts/golden_seam_v2.py on the server with the production key, then add the lane (P3).
+- **RG-0149** [READY TO LOCK] A feed's licence OBLIGATIONS are honoured in the product, not merely recorded in a document -- attribution shown, retention respected
+    - an N# identifier appears in the server source
+- **RG-0150** [READY TO LOCK] We hold Numista's IDENTIFIER and never Numista's DATA -- no catalogue figure is persisted, and search runs per LISTING, never per view
+    - monthly cap present; degrades to no-candidates, never an error
+- **RG-0151** [READY TO LOCK] Every credential probe tests the credential's OWN permission -- never a broader endpoint the credential is not entitled to call
+    - the object-storage probe performs a signed list (in-scope)
+- **RG-0173** [waiting] The agency funnel is walked END-TO-END by MACHINERY -- a synthetic journey probe (email links -> console -> roster invite -> advert import) runs against live and leaves a fresh witness
+    - no journey witness -- the probe has never run
+- **RG-0180** [waiting] connect-src is tightened from 'https:' to a named allowlist
+    - connect-src is still open (['https:'] in "'self' https:") -- a script that executed could exfiltrate. Named origins only
+- **RG-0185** [waiting] The photo-anon eval set is REPRODUCIBLE and every row it scores has a truth label
+    - eval set holds 22 photos; the Switch Test Plan calls for ~30 including 3 'inappropriate' samples, which are absent -- the scan prompt's moderation clause is unscored
+- **RG-0196** [waiting] The admin gate script has ONE source -- the consolidation RG-0075 was originally written for
+    - the admin gate is still 3 hand-maintained copies (dashboard.server.html, dashboard.html, marketsquare_admin.html) -- EXPECTED while OPEN; RG-0075 holds the drift line meanwhile
+- **RG-0199** [READY TO LOCK] David's hand-off queue RE-VERIFIES itself against evidence -- an item cannot sit in his column because nobody looked, and cannot close because somebody remembered
+    - 15 item(s) parsed, every one with a stated verification method
+- **RG-0203** [waiting] The +1 AI Providers card answers 'can this AI function STOP?' per feature -- funds available per lane, mapped to the app functions it serves, with auto-top-up state
+    - AIPROV-FUNDS-1 not built: dashboard.server.html carries no data-ai-funds strip (per-function funds gauge missing from the AI Providers card)
+- **RG-0206** [waiting] The guided sell flow sends ALL chosen photos to vision-draft, not only the main one -- the endpoint contract (1-12 photos, primary_photo_index, per-photo anonymity indices) is actually exercised
+    - sfRunVision still single-photo: no SF-MULTIVISION-1 marker in ms.js
+- **RG-0207** [waiting] A FREE ask-the-coach affordance exists INSIDE the guided sell flow -- the seller can ask a question at any step without leaving the flow or paying
+    - no in-flow ask-the-coach: SF-COACH-ASK-1 marker absent from ms.js (coach bubbles remain static text; free guidance promise of the EULA has no in-flow surface)
+- **RG-0208** [waiting] A pending INTRO nudges the seller before it rots -- reminder ladder exists server-side, and the B3 danger zone is warned, never silently entered
+    - no intro reminder ladder: bea_main.py carries no INTRO-REMIND-1 sweep -- a pending intro is never re-nudged while EULA B3 counts silence against the seller
+- **RG-0212** [waiting] The customer-email firewall: after launch, no customer mail is ever forwarded to a personal inbox -- complaints live between the user and the triage AI, and escalation reaches David through the admin surfaces only
+    - worker not yet ARMED -- expected while OPEN: the firewall is code, not yet conduct. At launch: wrangler var CUSTOMER_FIREWALL=1 + worker deploy (David, RUL-027 class), then write cloudflare_email_worker/ARMED_RECORD.md w
+- **RG-0214** [waiting] The gated ops map and watch register are LIVE documents -- served from the repo's fetched origin/main at request time, so the defence map can never again trail reality by a whole deploy
+    - deploy report 2026-08-30T06:45:47Z carries no migration-035 step -- the deploy with MAP-LIVE-1 has not shipped yet
+- **RG-0215** [waiting] The JURISDICTION GATE (RUL-071): no city may be armed for outreach in a country the outreach-law canon does not cover, and a DO-NOT-COLD-EMAIL country (Kenya/Egypt/Botswana, 20 Aug doc verdicts) may never be armed at all -- organic growth is ungated, SENDING is what waits for law
+    - pipeline reaches uncovered countries (AU, BR, CL, CN, CO, ET, FR, GH, IN, MA, NG, PE, RU, RW, TZ, UG, UK, US) and none is armed -- expected while OPEN. Each outreach lane needs a primary-source OUTREACH_LAW section first
+- **RG-0216** [waiting] FIDE-CLAIM-1 exists and holds its shape: the credential-claim lane (claim endpoint, CREDENTIAL_CLAIMS flag, seeded registry) is LIVE per the design spec -- verification without identification, badge from a live JOIN, one account per credential
+    - /credentials/mine does not answer (404) -- FIDE-CLAIM-1 not built yet. Expected while OPEN. Spec: CREDENTIAL_CLAIMS_DESIGN.md; build order section 9; seed export from CityLauncher fide_trainers (4,237 rows verified on di
