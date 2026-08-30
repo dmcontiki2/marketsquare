@@ -1,6 +1,6 @@
 {
  "date": "2026-08-30",
- "took_s": 17.0,
+ "took_s": 13.6,
  "findings": [
   {
    "sev": "INFO",
@@ -9,16 +9,16 @@
    "msg": "3 'coming soon' placeholder listings present (by design; verify they stay out of counts)"
   },
   {
-   "sev": "MEDIUM",
-   "area": "links",
-   "id": "LINKS-DEAD",
-   "msg": "5 hardcoded external links failing (checked 11): ['https://example.com/hilux1.jpg', 'https://example.com/hilux2.jpg', 'https://example.com/house1.jpg', 'https://example.com/house2.jpg', 'https://example.com/kruger1.jpg']"
+   "sev": "INFO",
+   "area": "drift",
+   "id": "MSJS-DRIFT",
+   "msg": "live ms.js (v552, 1156049B) != repo ms.js (1156147B) \u2014 content differs after line-ending normalisation, so this is REAL drift, not CRLF; expected while a deploy is staged, CRITICAL if it persists after deploying"
   },
   {
    "sev": "INFO",
    "area": "drift",
-   "id": "VERSION-KEY-BENIGN",
-   "msg": "repo html pins ms.js v477, live pins v551, but the served bytes are IDENTICAL to the repo \u2014 this is the server's monotonic ?v= bump, not drift. Recorded, not raised (DW-001)."
+   "id": "VERSION-KEY",
+   "msg": "repo html pins ms.js v477, live pins v552 AND the bytes differ (see MSJS-DRIFT) \u2014 a real deploy is staged"
   }
  ]
 }

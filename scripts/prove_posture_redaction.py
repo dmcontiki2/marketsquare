@@ -86,10 +86,18 @@ def main():
     ok(redact(clean) == clean, "a payload with no posture is returned byte-identical")
 
     print("\nTHE WIRING IS PRESENT")
-    ok("_redact_posture(_payload)" in src, "the summary route actually calls the redactor")
+    # AMENDED 30 Aug 2026 (DASH-SUMMARY-REDACT-1, RG-0211): the anon branch was
+    # STRENGTHENED from posture-redacted prose to a heartbeat-only payload, so the
+    # original literal check ("route calls _redact_posture on the anon path") became
+    # a wrong-mechanism assertion -- the property (no posture to strangers) is now
+    # satisfied by not serving the prose at all. Accept either wiring; the property
+    # checks above stay untouched.
+    ok("_redact_posture(_payload)" in src or '"redacted": "heartbeat"' in src,
+       "the anon path is redacted: posture-redactor call or heartbeat-only branch")
     ok("_summary_caller_is_admin(x_admin_key, x_admin_token)" in src,
        "an authenticated caller still gets the unredacted text")
-    ok('"redacted": "posture"' in src or '_payload["redacted"] = "posture"' in src,
+    ok('"redacted": "posture"' in src or '_payload["redacted"] = "posture"' in src
+       or '"redacted": "heartbeat"' in src,
        "the response says it was redacted rather than pretending to be complete")
 
     print("\nTHE LEDGER'S PATTERNS AND THIS HARNESS HAVE NOT DRIFTED")

@@ -12228,8 +12228,18 @@ def dashboard_summary(x_admin_key: str = Header(default=None),
         "bea_version": "1.3.1",
     }
     if not _summary_caller_is_admin(x_admin_key, x_admin_token):
-        _payload = _redact_posture(_payload)
-        _payload["redacted"] = "posture"
+        # DASH-SUMMARY-REDACT-1 (RG-0211, 30 Aug 2026, born of David's 29 Aug breach
+        # question): a stranger gets a HEARTBEAT, nothing else. The previous
+        # _redact_posture pass (kept above for admin-adjacent uses and RG-0144's
+        # banned-pattern history) still served counts, session numbers and an infra
+        # description line -- judged too generous once soft-public opened. Every
+        # dashboard loader that needs stats attaches X-Admin-Token (omTok pattern);
+        # an unauthenticated view degrades to NOT MEASURED (RG-0133), never breaks.
+        return {
+            "generatedAt": _payload.get("generatedAt"),
+            "bea_version": _payload.get("bea_version", "1.3.1"),
+            "redacted": "heartbeat",
+        }
     return _payload
 
 

@@ -137,8 +137,6 @@ def scan_page(page):
         # enclosing element carrying an id and treat that as the chip's feed.
         container = None
         if not cid:
-            before = markup.rfind("<div", 0, markup.find(inner) if inner else 0)
-            head = markup.rfind('<div class="om-chips"', 0, line)
             seg = markup[:sum(len(l) + 1 for l in markup.split("\n")[:line])]
             open_div = seg.rfind("<div")
             if open_div != -1:

@@ -540,6 +540,7 @@
     <button data-l="money">Money</button>
     <button data-l="switches">Switches</button>
     <button data-l="ncr">NCR &amp; Feedback</button>
+    <button id="om-defmap" style="margin-left:10px;border:1.5px solid #1E3A5F;color:#1E3A5F;background:#fff;font-weight:700;" onclick="window.open(window.location.protocol==='file:'?'DEFENCE_COVERAGE_MAP.html':'/orchestrator/defence_map.html','_blank')" title="The daily-watch Defence Coverage Map — every defence as a colour-coded card (green armed+asserted · blue armed-unasserted · amber degraded · red open · grey accepted). Served gated under /orchestrator/; opens the local copy in file:// mode.">&#128737;&#65039; Defence Coverage</button>
     <span class="om-upd" id="om-upd">loading…</span>
   </div>
   <div class="om-legend">
@@ -808,7 +809,8 @@ function fuLoad(){
   if(wkEl)wkEl.textContent=String(week);
   if(mEl)mEl.textContent=(med===null?'—':String(med));
   var B=(window.location.protocol==='file:')?'https://trustsquare.co':'';
-  fetch(B+'/dashboard/summary').then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();}).then(function(d){
+  /* DASH-SUMMARY-REDACT-1 (RG-0211): /dashboard/summary is heartbeat-only for strangers; every loader attaches the admin token when present (omTok pattern). No token -> NOT MEASURED, never a guessed number (RG-0133). */
+  fetch(B+'/dashboard/summary',{headers:(function(){try{var t=sessionStorage.getItem('ms_admin_token')||'';return t?{'X-Admin-Token':t}:{};}catch(e){return {};}})()}).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();}).then(function(d){
     var n=(d&&d.stats&&typeof d.stats.sellers==='number')?d.stats.sellers:null;
     if(n===null)throw new Error('no stats.sellers');
     if(aEl)aEl.textContent=String(n);
@@ -1596,7 +1598,7 @@ async function loadDashboard() {
 
   try {
     const base = window.location.protocol === 'file:' ? 'https://trustsquare.co' : '';
-    const res = await fetch(base + '/dashboard/summary');
+    const res = await fetch(base + '/dashboard/summary', {headers:(function(){try{var t=sessionStorage.getItem('ms_admin_token')||'';return t?{'X-Admin-Token':t}:{};}catch(e){return {};}})()}); // DASH-SUMMARY-REDACT-1
     if (!res.ok) throw new Error('HTTP ' + res.status);
     DATA = await res.json();
     populate();
@@ -1760,7 +1762,7 @@ function switchView(view) {
       }
     }).catch(function(e){ fail(['om-livenow','om-users'], '/dashboard/presence', String(e).slice(0,60)); });
 
-    fetch(B + '/dashboard/summary').then(function(r){return r.json();}).then(function(d){
+    fetch(B + '/dashboard/summary', {headers:(function(){try{var t=sessionStorage.getItem('ms_admin_token')||'';return t?{'X-Admin-Token':t}:{};}catch(e){return {};}})()}).then(function(r){return r.json();}).then(function(d){
       var st = d.stats || {};
       if(st.liveListings !== undefined) fill('om-listings', String(st.liveListings), 'g', 'live listings on the marketplace');
       if(st.tuppenceTopup !== undefined) fill('om-tuppence', String(st.tuppenceTopup), 'g', 'Tuppence top-ups from /dashboard/summary — amounts (rand) land with B-OPS3 Paystack wiring');

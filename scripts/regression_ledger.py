@@ -6330,7 +6330,7 @@ def rg_dashboard_feed_current():
            "repointing the gzip probe off it.")
 def rg_ai_breaker_fails_over():
     out = []
-    import subprocess as _sp, os as _os
+    import os as _os
 
     harness = _os.path.join(REPO, "scripts", "prove_ai_failover.py")
     if not _os.path.exists(harness):
@@ -7884,7 +7884,7 @@ def rg_mitigator_flags_are_real():
 
 @entry("RG-0144", "The public dashboard does not tell an anonymous stranger which defences are "
                   "down -- security posture is never published on an unauthenticated endpoint",
-       LOCKED, fixed_on="2026-08-27 (promoted: READY TO LOCK on the first run after POSTURE-REDACT-1 shipped -- the anonymous read now carries redacted='posture' and the banned-pattern set finds nothing; promoted the SAME session it started passing, because a fix that prints READY TO LOCK and is never promoted cannot trip red when it rots -- DW-079)",
+       LOCKED, fixed_on="2026-08-27 (promoted: READY TO LOCK on the first run after POSTURE-REDACT-1 shipped -- the anonymous read now carries redacted='posture' and the banned-pattern set finds nothing; promoted the SAME session it started passing, because a fix that prints READY TO LOCK and is never promoted cannot trip red when it rots -- DW-079; harness wiring check AMENDED 30 Aug 2026 -- DASH-SUMMARY-REDACT-1 strengthened the anon branch to heartbeat-only, so the harness now accepts redactor-call OR heartbeat wiring; the banned-pattern property checks are unchanged)",
        scope="GET /dashboard/summary, the dashboard payload that answers anonymously today. "
                    "CLASS: any unauthenticated endpoint that renders operational prose belongs "
                    "here -- the assertion is about publishing POSTURE to strangers, not about this "
@@ -8304,7 +8304,6 @@ def rg_next_session_not_stale():
     nxt = seg.find("\n## ", 10)
     seg = seg[:nxt] if nxt > 0 else seg
 
-    named = set(re.findall(r"DW-\d{3}", seg))
     closed = set()
     for m in re.finditer(r"\*\*(DW-\d{3})\*\* CLOSED", watch):
         closed.add(m.group(1))
@@ -8920,7 +8919,6 @@ def rg_agency_signin_console_chain():
     fp = _os.path.join(REPO, "ms.js")
     if _os.path.exists(fp):
         txt = open(fp, encoding="utf-8", errors="replace").read()
-        m = _re.search(r"signin.{0,4000}?openAgencyConsole", txt, _re.S)
         if not _re.search(r"if\(sp\.get\('signin'\)\)[\s\S]{0,2500}openAgencyConsole", txt):
             out.append((FAIL, "signin handler does not chain to the agency console -- combined signin+agency links race"))
     else:
@@ -9209,7 +9207,6 @@ def rg_console_quickedit():
            "before its wave day. Related: RUL-057 (JHB is a proving city from 28 Aug), RUL-053 (30/cat/city/day).")
 def rg_stays_geo():
     out = []
-    import json as _json, urllib.request as _u
     # Live, unauthenticated read is impossible (PII endpoints are gated by design), so this
     # entry asserts the SHAPE from the repo's own assignment code plus a witness file when a
     # session leaves one. A placeholder suburb in the source is itself the defect.
@@ -9279,7 +9276,7 @@ def rg_stays_geo():
            "endpoint are both auth-gated, so the live half cannot be probed anonymously (which is itself the point).")
 def rg_launch_metrics():
     out = []
-    import os as _os, re as _re
+    import os as _os
     bp = _os.path.join(REPO, "bea_main.py")
     dp = _os.path.join(REPO, "dashboard.server.html")
     if not _os.path.exists(bp) or not _os.path.exists(dp):
@@ -9475,7 +9472,7 @@ def rg_popia_suppression():
            "ALSO PINNED HERE: every allowlisted host must carry a written reason, so 'why is this "
            "origin trusted' is never again answered by a shrug.")
 def rg_remote_code_guard_is_real():
-    import subprocess as _sp, os as _os, re as _re
+    import os as _os, re as _re
     gp = _os.path.join(REPO, "scripts", "no_remote_code_guard.py")
     if not _os.path.exists(gp):
         return [(FAIL, "scripts/no_remote_code_guard.py is GONE -- the pre-deploy half of RG-0025 "
@@ -9686,7 +9683,7 @@ def rg_partner_lane_fails_closed():
         if marker in src:
             out.append((FAIL, "travelpayouts_partners.py contains '" + marker + "' -- the link-out "
                               "lane has started emitting script, which is the 3 Aug breach shape"))
-    import subprocess as _sp, os as _os
+    import os as _os
     mp = _os.path.join(REPO, "travelpayouts_partners.py")
     if _os.path.exists(mp):
         ok, blind, detail = _harness([sys.executable, mp], timeout=60)
@@ -9759,7 +9756,7 @@ def rg_fares_lane_cache_only():
             out.append((FAIL, msg))
 
     # The harness must exist AND pass -- a proof nobody runs is decoration.
-    import subprocess as _sp, os as _os
+    import os as _os
     hp = _os.path.join(REPO, "scripts", "prove_fares_lane.py")
     if not _os.path.exists(hp):
         out.append((FAIL, "scripts/prove_fares_lane.py is gone -- the dark/lit behaviour is unproven"))

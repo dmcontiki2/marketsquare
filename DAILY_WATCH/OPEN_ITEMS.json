@@ -583,32 +583,32 @@
    "last_seen": "2026-08-30",
    "sev": "MEDIUM",
    "source": "audit_global_qa LINKS-DEAD",
-   "status": "OPEN",
+   "status": "CLOSED",
    "closed": null,
-   "summary": "RE-RAN 04:35 UTC 30 Aug and FAILED again — SEVENTH consecutive failing pass. Audit 3 findings (0 new); LINKS-DEAD still the same 5 example.com URLs (hilux1/2, house1/2, kruger1) of 11, in the bulk-import CSV template strings in ms.js.",
-   "next_action": "Attended (CTO lane): point sample rows at self-hosted /static demo images OR teach the audit to exempt template strings; closes when the audit re-run drops LINKS-DEAD.",
+   "summary": "CLOSED 30 Aug attended: sample rows repointed to /static images (all probed 200); audit re-run dropped LINKS-DEAD. Residual: live half rides next deploy (MSJS-DRIFT tracks it, CRITICAL if it persists post-deploy).",
+   "next_action": "None — closed on the audit re-run.",
    "evidence": "RE-RAN 2026-08-27 and FAILED — 4th consecutive failing pass. audit_global_qa LINKS-DEAD: same 5 example.com image URLs of 11 checked, inside the bulk-import CSV template strings in ms.js."
   },
   "DW-063": {
    "first_seen": "2026-08-24",
-   "last_seen": "2026-08-24",
+   "last_seen": "2026-08-30",
    "sev": "LOW",
    "source": "scripts/deep_scan.py (Monday lane)",
-   "status": "OPEN",
+   "status": "FIXED-UNVERIFIED",
    "closed": null,
-   "summary": "Monday deep scan: 208 findings, ~15+ NEW vs 21 Aug baseline, 0 crash-class — lint tidiness from the 22-24 Aug build burst (F401/F841/B905/B023/B904/B007). Baseline absorbed them this run; this row is the record.",
-   "next_action": "Tidy attended; closes when a re-run shows the named findings gone."
+   "summary": "FIXED-UNVERIFIED 30 Aug: named F401/F841 findings removed (ruff clean on named files, py_compile green, ledger green); B905/B023/B904 named items already gone.",
+   "next_action": "Closes when Monday's deep-scan re-run (31 Aug) shows the named findings gone."
   },
   "DW-064": {
    "first_seen": "2026-08-24",
    "last_seen": "2026-08-30",
    "sev": "LOW",
    "source": "fea_integrity_check + cron sensor",
-   "status": "OPEN",
+   "status": "CLOSED",
    "closed": null,
    "references": "DW-061",
-   "summary": "RE-PROBED 04:36 UTC 30 Aug over SSH — STILL alert, seventh failing re-check; alert string byte-identical a fifth day (index 415388 -> 415200, -188). Version notes MOVED with David's 06:08 SAST deploy (Release 9050f74): ms.js v518->v551, ms.css v382->v415. Deploy-not-tamper proven again: deploy_drift clean 19/19 + VERSION-KEY-BENIGN. Baseline stale across eight deploys.",
-   "next_action": "Attended: eyeball delta then update_fea_baseline.bat; closes on probed status ok, alerts [].",
+   "summary": "CLOSED 30 Aug attended: two-instrument byte-proof, baseline refreshed on the box, re-probe status ok / alerts [].",
+   "next_action": "None — closed on a probed ok.",
    "note_2026_08_26": "NOT RE-CHECKED — fea_integrity_check.py is on the box and SSH is down (DW-065). Could neither fail nor close today.",
    "evidence": "RE-PROBED 2026-08-27 over SSH and FAILED — fea_integrity_check status: alert, alerts ['index bytes 415388 -> 415200 (delta -188)']; notes ms.js v518->v548, ms.css v382->v412 (moved again with the 02:01 and 05:45 releases). deploy_drift clean + audit VERSION-KEY-BENIGN prove it is a deploy, not a tamper. Baseline stale across six deploys."
   },
@@ -764,9 +764,9 @@
    "last_seen": "2026-08-30",
    "sev": "MEDIUM",
    "source": "anonymous PROBE of GET /dashboard/summary + ledger RG-0198",
-   "status": "OPEN",
-   "summary": "RE-PROBED 04:38 UTC 30 Aug anonymously — FAILED, day 4. Payload still carries narrative fields AND liveState counts/session/infra detail. RG-0198 and RG-0211 (heartbeat-only redaction, 29 Aug) both honestly OPEN in the full ledger run.",
-   "next_action": "CTO lane: redact the four narrative fields for the anonymous caller, or answer them only to an authenticated one; closes when an anonymous probe returns no internal narrative and RG-0198 goes green."
+   "status": "FIXED-UNVERIFIED",
+   "summary": "FIXED-UNVERIFIED 30 Aug: heartbeat-only anon branch + tokenised dashboard loaders built (DASH-SUMMARY-REDACT-1); RG-0144 harness amended, 16/16. RG-0198/RG-0211 probe LIVE and stay open until the deploy rides.",
+   "next_action": "Closes when the anonymous live probe returns the bare heartbeat and RG-0198 + RG-0211 go green (rides David's next deploy)."
   },
   "DW-079": {
    "first_seen": "2026-08-27",
@@ -1034,6 +1034,18 @@
   "not_rerunnable": [
    "DW-063 (Monday lane)"
   ],
-  "checks_run": "12/13"
+  "checks_run": "12/13",
+  "attended_second_pass": {
+   "closed": [
+    "DW-062",
+    "DW-064"
+   ],
+   "fixed_unverified": [
+    "DW-078",
+    "DW-063"
+   ],
+   "ledger": "205/186/0 regressed/0 unverified exit 0",
+   "rulings": "69/69"
+  }
  }
 }

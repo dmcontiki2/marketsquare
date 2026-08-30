@@ -16853,9 +16853,9 @@ function advertBulkHeader(){
 }
 function advertBulkExample(){
   var s=window._tsSkin;
-  if(s==='dealer') return 'agent_email,category,title,price,city,suburb,make,model,vehicle_year,mileage_km,transmission,fuel_type,photos\nsales@dealership.co.za,Cars,2019 Toyota Hilux 2.8 GD-6 double cab,R 489 000,Pretoria,Silverton,Toyota,Hilux,2019,98500,Automatic,Diesel,https://example.com/hilux1.jpg|https://example.com/hilux2.jpg';
-  if(s==='operator') return 'agent_email,category,title,description,price,city,photos\nguide@tours.co.za,Adventures,Kruger 4-day safari — Big 5 & bush walks,Four days in a private reserve with a lead guide,R 18 500 pp,Nelspruit,https://example.com/kruger1.jpg';
-  return 'agent_email,category,title,price,city,suburb,listing_type,prop_type,beds,baths,photos\nann@agency.co.za,Property,Sunny 3-bed family home in Waterkloof,R 2 450 000,Pretoria,Waterkloof,For Sale,House,3,2,https://example.com/house1.jpg|https://example.com/house2.jpg';
+  if(s==='dealer') return 'agent_email,category,title,price,city,suburb,make,model,vehicle_year,mileage_km,transmission,fuel_type,photos\nsales@dealership.co.za,Cars,2019 Toyota Hilux 2.8 GD-6 double cab,R 489 000,Pretoria,Silverton,Toyota,Hilux,2019,98500,Automatic,Diesel,https://trustsquare.co/static/phone_car_lc79.jpg|https://trustsquare.co/static/phone_car_amg.jpg';
+  if(s==='operator') return 'agent_email,category,title,description,price,city,photos\nguide@tours.co.za,Adventures,Kruger 4-day safari — Big 5 & bush walks,Four days in a private reserve with a lead guide,R 18 500 pp,Nelspruit,https://trustsquare.co/static/sf_cat_adventures.jpg';
+  return 'agent_email,category,title,price,city,suburb,listing_type,prop_type,beds,baths,photos\nann@agency.co.za,Property,Sunny 3-bed family home in Waterkloof,R 2 450 000,Pretoria,Waterkloof,For Sale,House,3,2,https://trustsquare.co/static/phone_prop_home.jpg|https://trustsquare.co/static/phone_prop_penthouse.jpg';
 }
 function advertBulkOpen(){
   var el=document.getElementById('agency-body'); if(!el) return;

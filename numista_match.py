@@ -13,7 +13,6 @@ listing still publishes with no link. Never an error, never an overspend.
 """
 import json
 import os
-import time
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone

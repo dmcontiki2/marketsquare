@@ -38,6 +38,43 @@ padding:9px 12px;margin-bottom:9px}
 <div><span class="dot" style="background:var(--grey)"></span><b>ACCEPTED POSTURE</b>&nbsp;— deliberate, with reason on file</div>
 </div>
 
+<!-- COLOUR FILTER (FILTER-BAR-1, 30 Aug 2026, David's ask — static UI, survives the watch's daily card edits; the watch never touches this block) -->
+<div class="legend" id="colour-filter" style="margin-top:8px">
+<div style="font-weight:700">Show:</div>
+<label style="cursor:pointer"><input type="checkbox" data-cf="g" checked> <span class="dot" style="background:var(--green)"></span>green <span data-cfn="g"></span></label>
+<label style="cursor:pointer"><input type="checkbox" data-cf="b" checked> <span class="dot" style="background:var(--blue)"></span>blue <span data-cfn="b"></span></label>
+<label style="cursor:pointer"><input type="checkbox" data-cf="a" checked> <span class="dot" style="background:var(--amber)"></span>amber <span data-cfn="a"></span></label>
+<label style="cursor:pointer"><input type="checkbox" data-cf="r" checked> <span class="dot" style="background:var(--red)"></span>red <span data-cfn="r"></span></label>
+<label style="cursor:pointer"><input type="checkbox" data-cf="n" checked> <span class="dot" style="background:var(--grey)"></span>grey <span data-cfn="n"></span></label>
+<div id="cf-empty" style="display:none;color:var(--dim)">every colour un-ticked — nothing to show</div>
+</div>
+<script>
+(function(){
+  var KEY='ts_defmap_colour_filter';
+  var boxes=document.querySelectorAll('#colour-filter input[data-cf]');
+  try{ var saved=JSON.parse(localStorage.getItem(KEY)||'{}');
+       boxes.forEach(function(b){ if(saved[b.dataset.cf]===false) b.checked=false; }); }catch(e){}
+  function apply(){
+    var st={}, any=false;
+    boxes.forEach(function(b){ st[b.dataset.cf]=b.checked; if(b.checked) any=true; });
+    ['g','b','a','r','n'].forEach(function(c){
+      var items=document.querySelectorAll('.item.'+c);
+      items.forEach(function(el){ el.style.display=st[c]?'':'none'; });
+      var n=document.querySelector('[data-cfn="'+c+'"]'); if(n) n.textContent='('+items.length+')';
+    });
+    document.querySelectorAll('.col').forEach(function(col){
+      var vis=col.querySelectorAll('.item') .length &&
+              Array.prototype.some.call(col.querySelectorAll('.item'),function(el){return el.style.display!=='none';});
+      col.style.display=vis?'':'none';
+    });
+    var em=document.getElementById('cf-empty'); if(em) em.style.display=any?'none':'';
+    try{ localStorage.setItem(KEY,JSON.stringify(st)); }catch(e){}
+  }
+  boxes.forEach(function(b){ b.addEventListener('change',apply); });
+  apply();
+})();
+</script>
+
 <div class="grid">
 <div class="col"><h2>1 · Edge (Cloudflare)</h2>
 <div class="item a"><b><code>connect-src</code> is still a blanket <code>https:</code>, not a named allowlist <span class="chip ca">DEGRADED &middot; NEW &middot; RG-0180</span></b><div class="w"><b>The residual of DW-069, named rather than swept up in its closure.</b> The live header reads <code>connect-src 'self' https:</code> &mdash; so while the browser now refuses to <i>load</i> a script from an un-allowlisted origin, a script that is already running may still <i>talk</i> to any HTTPS host on the internet. That is the exfiltration half of the same breach class the <code>script-src</code> card just closed. <b>RG-0180 is honestly OPEN in the ledger</b> and is the right home for it &mdash; a known defect, defined and tracked, not a rotted fix. Amber rather than red: the load half is now armed, which removes the ordinary route to getting hostile code running in the first place.</div></div>

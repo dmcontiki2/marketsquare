@@ -41,6 +41,7 @@ assets/service-worker.js   | service-worker.js
 # Basic-auth realm (probed 29 Aug: whole prefix 401s anonymously). NEVER move it to an
 # ungated dest -- it carries the wave plan.
 docs/TrustSquare_Contagion_Model_v0.2.html | orchestrator/simulation.html
+DEFENCE_COVERAGE_MAP.html | orchestrator/defence_map.html
 
 # ── Legal / support pages ────────────────────────────────────────────────────
 privacy.html               | privacy.html
