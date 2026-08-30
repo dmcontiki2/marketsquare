@@ -41,6 +41,15 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-070": [
+   # Operational from Hetzner (30 Aug): laptop = design tool only; operational view
+   # surfaces are served gated. If the manifest loses the served map/register lines,
+   # or the dashboard loses the button that reaches them, the ruling has drifted.
+   ("ops/autodeploy/deploy_manifest.txt",
+    ["orchestrator/defence_map.html", "orchestrator/watch_register.md"], []),
+   ("dashboard.server.html", ["om-defmap", "/orchestrator/defence_map.html"], []),
+   ("RULINGS.md", ["OPERATIONAL FROM HETZNER"], []),
+ ],
  "RUL-062": [
    # Trade mark filing scope (29 Aug): brand-logo device mark only, classes 35/36/42,
    # lodged on iponline (records 1644020/1644021/1644022). Word marks DEFERRED, not rejected.

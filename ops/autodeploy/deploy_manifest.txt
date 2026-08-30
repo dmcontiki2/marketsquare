@@ -42,6 +42,7 @@ assets/service-worker.js   | service-worker.js
 # ungated dest -- it carries the wave plan.
 docs/TrustSquare_Contagion_Model_v0.2.html | orchestrator/simulation.html
 DEFENCE_COVERAGE_MAP.html | orchestrator/defence_map.html
+DAILY_WATCH/OPEN_ITEMS.md | orchestrator/watch_register.md
 
 # ── Legal / support pages ────────────────────────────────────────────────────
 privacy.html               | privacy.html
