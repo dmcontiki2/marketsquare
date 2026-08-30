@@ -1,3 +1,13 @@
+## 2026-08-29 — SIM-DASH-2: page 4 polished, simulation deployed behind the orchestrator realm
+
+David, reviewing the live page 4: drop the PAGE 4 · HORIZON label; make the simulation a real
+hyperlink. Done: label removed; the contagion model now deploys via the manifest to
+orchestrator/simulation.html — the whole /orchestrator/ prefix sits behind the "TrustSquare
+Orchestrator" Basic-auth realm (probed: anonymous 401), so the sim inherits the dashboard's own
+gate and David's browser already holds the credentials. Card links it ("Open the full simulation →").
+RG-0210 scope amended. Also this evening: David deployed page 4 himself; live-verified in-gate
+(actual=70 / median=0 / +70 AHEAD at week 0) and RG-0210 promoted OPEN → LOCKED.
+
 ## 2026-08-29 — TrustSquare trade mark lodged at CIPC (3 classes)
 TrustSquare brand-logo device mark filed on iponline in classes 35/36/42 (records 1644020/21/22,
 R590 each, all Queued; applicant David Maurice Conradie personally per standing IP decision).

@@ -24,3 +24,6 @@ David shelved the auctions track until further notice (post-launch). This file p
 | AU-SELLER | ✅ **DECIDED (4 Jun)** — trust floor (Quick 75 / Std 80 / Prem 88 / Regal 92) + subscription floor [SUPERSEDED — referenced the retired 5-tier; remap to the Simpler Model (Starter $5 / Pro $20) when auctions are built]. Free-tier EXCLUDED for now (revisit from history). Premium/Regal also require an actual real-money surety (escrow). | Design | DECIDED |
 
 > **NGINX-HYGIENE — ✅ RESOLVED (3 Jun):** stale `marketsquare.bak-*` files moved out of `/etc/nginx/sites-enabled/` to `/root/nginx-backups/`; "conflicting server_name" warnings now zero; `nginx -t` clean + reloaded.
+
+---
+**29 Aug 2026 — UI direction ratified while parked (RUL-068).** On revival, the Room's design starting point is `Auction/design/Auction_Room_Landscape_Concept.html` (live interactive concept): landscape full-screen theatre, object centre-stage ("nothing covers the object"), four thumb-corner buttons (LOT/ROOM/MAX/BID), AI auctioneer with selectable language + gavel sounds, photo reel drifting to the wings, Portal → Paddock → Room journey, standing watches + pre-hammer reminders. Do not re-derive the Room UI — start there.

@@ -410,3 +410,70 @@ warmed 11 tutor videos on the CF edge
 Press any key to continue . . . 
 Fri 08/28/2026  2:01:20.66  drift: DEPLOY DRIFT: clean - all 19 tracked files match live
 Fri 08/28/2026  2:01:20.69  IN SYNC â€” nothing to ship
+============================================================
+Sun 08/30/2026  2:00:01.88  NIGHTLY SHIP wake
+
+ ============================================================
+  MEDIA PUSH  (hash-gated: only changed files upload)
+  Sun 08/30/2026  2:00:01.93
+ ============================================================
+ [1/7] SUPER exemplar photos (assets\super to /static/super)...
+   [OK] SYNC super: all 375 files already current - upload skipped.
+ [1b] Study & Work Abroad example photos (assets\studywork to /static/studywork)...
+   [OK] SYNC studywork: all 12 files already current - upload skipped.
+   [OK] SYNC studywork: all 2 files already current - upload skipped.
+ [2/7] Feature/tutor videos (videos to /static/videos)...
+   [OK] SYNC videos: all 14 files already current - upload skipped.
+ [3/7] Email images - phone cards + heroes (CityLauncher to /static)...
+   [OK] SYNC assets: all 12 files already current - upload skipped.
+   [OK] SYNC assets: all 4 files already current - upload skipped.
+   [OK] SYNC assets: all 1 files already current - upload skipped.
+ [4/7] Legal must-have cards (PNGs per country)...
+   [OK] SYNC ZA: all 7 files already current - upload skipped.
+   [OK] SYNC US: all 7 files already current - upload skipped.
+   [OK] SYNC UK: all 7 files already current - upload skipped.
+   [OK] SYNC AU: all 7 files already current - upload skipped.
+ [5/7] Agency Playbook PDF...
+   [OK] SYNC MarketSquare: all 1 files already current - upload skipped.
+ [6/7] n8n email templates (untracked HTML)...
+   [OK] SYNC email_templates: all 3 files already current - upload skipped.
+ [7/7] Permissions + CDN purge + video re-warm...
+  [OK] CDN purge requested 
+warmed 11 tutor videos on the CF edge
+  [OK] videos re-warmed 
+
+ ============================================================
+  MEDIA PUSH COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Sun 08/30/2026  2:01:18.32  drift: DEPLOY DRIFT: 1 file(s) local-ahead of live - run /ship: dashboard.server.html
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Sun 08/30/2026  2:01:18.39
+ ============================================================
+
+ cleared stale .git\HEAD.lock 
+  [autobump] 0 reference(s) bumped
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 60 honestly not-wired, 2 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  OK -- every health colour on the page is fed, honestly dashed, or registered with a live review date.
+folded 1, skipped 0 (already present) · verify OK
+no pending fragments.
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-08-30T00:01:21Z   mode=strict
+  Working tree: 7 file(s) uncommitted; 0 deploy target(s) changed.
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 49, 'strftime': 15, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  !! TESTER INTAKE: fault-report guard FAILED:
+       FAIL  test_widget_is_wired_into_every_tester_page - a tester could land on these pages with no way to report a fault: docs/TrustSquare_Contagion_Model_v0.2.html
+  Verdict: DANGER   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+ ABORT: pre-deploy scan flagged a dangerous change - strict mode. See deploy_audit.log.
+Press any key to continue . . . 
+Sun 08/30/2026  2:01:22.67  BLOCKED/FAILED rc=1 â€” tree untouched live, see log above
