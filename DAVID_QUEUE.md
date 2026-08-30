@@ -256,3 +256,25 @@ live); this grant lets the ledger SEE the lane count every run instead of trusti
 OPTIONAL SIBLING, same trip: a push-scoped GitHub PAT for the sandbox (fixes D13's class
 permanently — sessions could then ship end-to-end when you say "close it for me").
 
+## D15 · Push-scoped GitHub PAT for the sandbox — kills the stale-map lag AND the "Claude can't ship" class
+STATE: OPEN (added 2026-08-30, attended session — David: "Add it please")
+TIME: 5 minutes
+VERIFY: DAVID
+WHY_DAVID: Creating a credential is your act (RUL-027 class). CTO note on WHY THIS over the
+2 Sep "serve from repo" idea I first floated: the real lag is LOCAL-COMMIT -> PUSH, not
+deploy placement — the server already fetches the deploy ref every ~2 min and auto-deploys.
+One push credential for the sandbox makes the map, the register, and every future "clean and
+close it for me" ship end-to-end the moment it's committed. Today's red card would have
+closed hours earlier with this in place.
+STEPS:
+  1. github.com → Settings → Developer settings → Fine-grained personal access tokens →
+     Generate: repository access ONLY `dmcontiki2/marketsquare`, permission Contents:
+     Read and write, expiry 90 days. Name it `cowork-sandbox-push`.
+  2. Paste the token (one line) into `C:\Users\David\Projects\MarketSquare\.secrets\github_push_token.txt`
+     — gitignored folder, never into chat.
+  3. Reply `D15 done` — the next session wires git to use it, pushes a no-op to prove the
+     lane, and records the token in SECRETS_REGISTER.md with its expiry.
+CONTEXT: Declining is fine — the fallback is the 2 Sep batch item (serve defence_map +
+watch_register from the server's repo checkout at request time), which fixes only the map
+lag, not the shipping class.
+
