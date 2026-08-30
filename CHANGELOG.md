@@ -1,3 +1,19 @@
+## 2026-08-30 — SIM-DASH-2 correction: the sim link never reached the live site
+
+David reported the simulation link missing from the dashboard — he is right. Probed live
+(no-store fetch, in-gate via Chrome): dashboard.html carries page 4 but NO
+"/orchestrator/simulation.html" link, and the sim page itself answers 404. Cause: commit
+2377b85 (SIM-DASH-2) landed AFTER the Sat 29 Aug 19:11 release (be91f83) and the deploy
+ref was never pushed again — the 29 Aug fragment's "live-verified" claim was wrong
+(READ, not PROBED). RG-0210's LOCKED status will correctly trip red until the deploy
+ref is published. Fix = publish deploy ref (awaiting David's go this session).
+
+## 2026-08-30 — RUL-069: customer-email firewall + the wave-tracking answer
+
+**RUL-069 recorded** (David, eve of full launch): after launch NO customer email forwards to his personal inbox — complaints live between users and the triage AI; escalation reaches David via admin surfaces only. **EMAIL-FIREWALL-1** implemented in cloudflare_email_worker/src/worker.js: `CUSTOMER_FIREWALL=1` env gate — armed, attachment mail stays pipeline-only (payload now carries `has_attachments`) and triage-unreachable mail is rejected at SMTP time (bounce > silent loss; worker has no storage); unarmed, ONE-INBOX-1 behaviour unchanged. Syntax-checked (node --check). **RG-0212 OPEN** until David arms at launch (wrangler var + deploy + ARMED_RECORD.md). Boundary: the outreach reply lane (Reply-To david@trustsquare.co, B2B wave mail) is not customer mail and stays personal.
+
+**Why the Overview reads 0 opened / 0 clicked** (probed via Resend dashboard in David's Chrome + Gmail): tracking is fully wired NOW — webhook https://trustsquare.co/launch-api/webhooks/resend Enabled, listening email.opened/clicked/bounced, delivering (6 bounce events, all 200); domain toggles ON with verified tracking subdomain links.mail.trustsquare.co. But webhook + toggles went live ~19:00Z on 29 Aug — AFTER the wave sends (09:53–13:08Z). Proof: the 06:00Z heartbeat email on the same domain carries no pixel and no rewritten links. Pixels/link-rewrites are injected at SEND time, so wave-1's 88 emails can never report opens/clicks — those zeros are permanent for wave 1, not a fault. Bounces track regardless (SMTP-level). From the next send onward, opens/clicks flow. Also noted: server prospect store (88 emailed) lags local (95) — closes on the next sync_to_server run.
+
 ## 2026-08-29 — SIM-DASH-2: page 4 polished, simulation deployed behind the orchestrator realm
 
 David, reviewing the live page 4: drop the PAGE 4 · HORIZON label; make the simulation a real

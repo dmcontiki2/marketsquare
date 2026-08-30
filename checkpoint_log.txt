@@ -234,3 +234,7 @@ Thu 08/27/2026  5:30:02.09  committed 11 change(s)
  create mode 100644 changelog.d/2026-08-28-contagion-v08-travelpayouts-referrals-varsity.md
  create mode 100644 wave_hygiene_status.json
 Fri 08/28/2026  5:30:03.15  committed 4 change(s)
+[main 971dfce] Nightly checkpoint Sun 08/30/2026  5:30:02.32 (auto, no deploy)
+ 6 files changed, 84 insertions(+), 1 deletion(-)
+ rename changelog.d/{ => folded}/2026-08-29-simlink.md (100%)
+Sun 08/30/2026  5:30:02.41  committed 7 change(s)

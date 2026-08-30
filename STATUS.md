@@ -28,6 +28,11 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+## 2026-08-30 — customer-email firewall (RUL-069) + tracking verdict
+
+- RUL-069: post-launch firewall between customers and David's inbox — worker gate built (CUSTOMER_FIREWALL), RG-0212 OPEN until armed at launch (David: wrangler var + deploy).
+- Wave tracking: wired correctly NOW, but enabled ~6h after the 29 Aug sends — wave-1 opens/clicks unmeasurable forever (no pixel at send time). Bounces tracking fine. Next sends will report.
+
 ## 2026-08-29 — TrustSquare trade mark lodged at CIPC (3 classes)
 TrustSquare brand-logo device mark filed on iponline in classes 35/36/42 (records 1644020/21/22,
 R590 each, all Queued; applicant David Maurice Conradie personally per standing IP decision).
