@@ -369,6 +369,53 @@ def _json(path):
     return json.loads(_get(path))
 
 
+def _admin_key():
+    """MS_ADMIN_KEY from .secrets/deploy_keys.txt -- '' when absent (outside the repo)."""
+    if "ADMKEY" not in _cache:
+        key = ""
+        try:
+            with open(os.path.join(REPO, ".secrets", "deploy_keys.txt"), encoding="utf-8") as f:
+                for ln in f:
+                    if ln.startswith("MS_ADMIN_KEY="):
+                        key = ln.split("=", 1)[1].strip()
+                        break
+        except OSError:
+            pass
+        _cache["ADMKEY"] = key
+    return _cache["ADMKEY"]
+
+
+def _admin_json(path):
+    """Admin-credentialed JSON read (X-Admin-Key header, key from .secrets/deploy_keys.txt).
+
+    LEDGER-ADMINREAD-1 (30 Aug 2026): DASH-SUMMARY-REDACT-1 made the ANONYMOUS payload
+    heartbeat-only BY DESIGN (asserted by RG-0198/RG-0211), so any live half that judges
+    admin-only fields (panels, session badge) must read through the admin door. Raises
+    ProbeOffline when no key is on this machine, the read fails, or the payload comes back
+    still redacted (key refused) -- an instrument limit reads BLIND, never RED (RG-0187
+    boundary). The review cookie is NOT used here: it opens the gate, not the admin fields.
+    """
+    key = _admin_key()
+    if not key:
+        raise ProbeOffline("no MS_ADMIN_KEY on this machine -- admin-only fields unreadable; "
+                           "blind, not a regression")
+    ck = "ADM:" + path
+    if ck not in _cache:
+        _require_net()
+        req = urllib.request.Request(BASE + path, headers=dict(UA, **{"X-Admin-Key": key}))
+        try:
+            _cache[ck] = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
+        except urllib.error.HTTPError as e:
+            raise ProbeOffline("HTTP %s on admin read of %s -- blind, not a regression" % (e.code, path))
+        except Exception as ex:
+            raise ProbeOffline(repr(ex)[:140])
+    doc = json.loads(_cache[ck])
+    if isinstance(doc, dict) and doc.get("redacted"):
+        raise ProbeOffline("admin key not accepted (payload still redacted=%r) -- blind, "
+                           "not a regression" % doc.get("redacted"))
+    return doc
+
+
 def listings():
     return _json("/demo-listings")["listings"]
 
@@ -6221,7 +6268,7 @@ def rg_ledger_stability_guard():
        "the current one silently re-points the dashboard at it. Not specific to today's "
        "sections -- it asserts freshness of whichever section wins.",
        fixed_on="2026-08-20",
-       ref="LOCKED 20 Aug 2026: winning section 0 days old and the live panels answer. DASH-FEED-1, 20 Aug 2026. David asked for the ops dashboard to be brought current; "
+       ref="AMENDED 30 Aug 2026 (LEDGER-ADMINREAD-1): the live half now reads /dashboard/summary with the admin key -- DASH-SUMMARY-REDACT-1 made the anonymous payload heartbeat-only by design (RG-0211), so the anonymous probe had begun failing on the app behaving CORRECTLY. Assertion fixed, not weakened: the same panel checks run on the credentialed payload; no key on the machine reads blind, never red. LOCKED 20 Aug 2026: winning section 0 days old and the live panels answer. DASH-FEED-1, 20 Aug 2026. David asked for the ops dashboard to be brought current; "
            "the docs pushed and the Last-done and Next-up panels still showed Session 155 and "
            "Session 139's June work. Cause: /dashboard/summary does NOT read the "
            "'## Current Session' block every session writes -- it parses '## Live State', "
@@ -6267,13 +6314,15 @@ def rg_dashboard_feed_current():
 
     # Live half: the panels the browser gets must not be empty, and the Next-up card
     # renders only the first four bullets -- fewer than four is a half-empty card.
-    st = _status("/dashboard/summary")
-    if st != 200:
-        out.append((INFO, "/dashboard/summary not readable from here (HTTP %s) -- live half "
-                          "unverified" % st))
-        return out
+    # LEDGER-ADMINREAD-1 (30 Aug 2026): the anonymous payload is heartbeat-only BY DESIGN
+    # (RG-0198/RG-0211), so the panels are judged through the admin door. No key here, or a
+    # refused key, reads BLIND (INFO), never RED -- RG-0187 boundary.
     try:
-        doc = _json("/dashboard/summary")
+        doc = _admin_json("/dashboard/summary")
+    except ProbeOffline as ex:
+        out.append((INFO, "/dashboard/summary admin read not possible here (%s) -- live half "
+                          "unverified" % ex))
+        return out
     except Exception as e:
         out.append((INFO, "/dashboard/summary unreadable (%s)" % str(e)[:60]))
         return out
@@ -8386,7 +8435,7 @@ def rg_map_chips_are_measured():
              "counter fall behind the fragments on disk, trips this red. The two previous "
              "'permanent' fixes (139->141, 150->155) each corrected only the number and were "
              "dead within one session precisely because no assertion guarded the mechanism.",
-       ref="SESSION-COUNTER-1, 22 Aug 2026, raised by David: the badge had read 'Session 155' "
+       ref="AMENDED 30 Aug 2026 (LEDGER-ADMINREAD-1): live half now reads the badge through the admin key -- the anonymous payload is heartbeat-only by design (RG-0211) and had stopped carrying sessionBasis/sessionAsOf to strangers, which is correct. Assertion fixed, not weakened. SESSION-COUNTER-1, 22 Aug 2026, raised by David: the badge had read 'Session 155' "
            "for three weeks and he was certain the true count had gone 'way past' it. He was "
            "right -- the derivation puts it at 175, twenty sittings behind -- and the cause was "
            "worse than staleness. There was never a counter. main.py:8545 ran "
@@ -8456,7 +8505,7 @@ def rg_session_number_derived():
 
     # ── live half: what the badge actually serves ───────────────────────────
     try:
-        s = _json("/dashboard/summary")
+        s = _admin_json("/dashboard/summary")
     except ProbeOffline as ex:
         out.append((INFO, "live /dashboard/summary not readable this run (%s)" % ex))
         return out
@@ -10647,7 +10696,9 @@ def rg_david_queue_self_verifies():
 
 @entry("RG-0198", "An anonymous caller gets OPERATIONS, never the internal engineering NARRATIVE "
        "-- the dashboard payload is not a company diary published to strangers",
-       OPEN, scope="GET /dashboard/summary, the same unauthenticated payload RG-0144 polices. "
+       LOCKED,
+       fixed_on="2026-08-30 (promoted the run it printed READY TO LOCK -- DASH-SUMMARY-REDACT-1 shipped and no internal-narrative field answers an anonymous caller, probed live)",
+       scope="GET /dashboard/summary, the same unauthenticated payload RG-0144 polices. "
                    "RG-0144 owns SECURITY POSTURE (which defence is down); this owns the "
                    "CONFIDENTIALITY of the internal narrative -- recentChangelog, lastDone, "
                    "nextGoals, priorityItems. CLASS, not instance: any unauthenticated endpoint "
@@ -11304,7 +11355,8 @@ def rg_beat_the_model_card():
 @entry("RG-0211", "GET /dashboard/summary tells an anonymous caller almost nothing -- a bare "
        "heartbeat (generatedAt + bea_version) with counts, session state and infrastructure "
        "detail reserved for the admin token",
-       OPEN,
+       LOCKED,
+       fixed_on="2026-08-30 (promoted the run it printed READY TO LOCK -- anonymous payload probed live: generatedAt + bea_version + redacted='heartbeat' and nothing else)",
        scope="bea_main.py dashboard_summary + dashboard.server.html loaders (DASH-SUMMARY-"
              "REDACT-1). Surfaced 29 Aug by David's breach question: the PAGE is gated (401 "
              "anonymous, probed) but the DATA endpoint serves anonymous callers a redacted-"
@@ -11317,7 +11369,7 @@ def rg_beat_the_model_card():
              "(RG-0133 -- a failed probe reads grey, never a guessed number).",
        ref="DASH-SUMMARY-REDACT-1, 29 Aug 2026. OPEN until built and live. The assertion "
            "below is LIVE-half: it probes the endpoint anonymously and fails while counts "
-           "leak.")
+           "leak. Promoted LOCKED 30 Aug 2026 -- heartbeat-only payload probed live.")
 def rg_summary_anon_heartbeat_only():
     out = []
     try:

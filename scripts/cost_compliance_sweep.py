@@ -227,6 +227,17 @@ def model_discipline(root: Path):
             elif fam == "sonnet":
                 if "advert_agent.py" in rel:
                     findings.append((INFO, f"{rel}:{line} Sonnet — allowed: paid Level-2, Tuppence-metered"))
+                # REFERENCE-DOC EXEMPTION (30 Aug 2026, the fix the coverage map named as
+                # "still unbuilt"): these four files DESCRIBE the model field — the baseline
+                # registry, the two visual boards, and the per-MTok rate card. Nothing in
+                # them dispatches a call; verified 24-30 Aug that no .py/.js reads them as a
+                # live model selector (DW-044/DW-009 false-positive class). EXACT filenames
+                # only, sonnet-WARN branch only — a real call site added to any OTHER file,
+                # and any opus hit anywhere, still fires at full severity.
+                elif rel.replace("\\", "/").split("/")[-1] in (
+                        "AI_BASELINE.json", "AI_CHALLENGER_BOARD.html",
+                        "AI_MODEL_BASELINE_MAP.html", "ai_price_card.json"):
+                    findings.append((INFO, f"{rel}:{line} Sonnet in a reference document describing the model field — not a call site (reference-doc exemption, 30 Aug 2026)"))
                 else:
                     findings.append((WARN, f"{rel}:{line} Sonnet outside the metered AdvertAgent registry — justify or downgrade to Haiku"))
             elif fam == "fable":
