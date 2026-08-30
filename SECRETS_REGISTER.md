@@ -126,3 +126,13 @@ fingerprint of the old token). NOT deleted: if the live purge lane holds it, del
 CDN-purge death over launch weekend. Identity check parked to after Mon 1 Sep as DAVID_QUEUE
 D12 step 1 (a PROBED-grade /proc environ → /user/tokens/verify id comparison). Whichever way it
 resolves, this addendum supersedes the two "to be deleted" notes above.
+
+
+## Local outreach sender key (CityLauncher) — RUL-063 local key row
+*Appended 2026-08-30 by the pre-soft-launch third-party sweep: RUL-063 (29 Aug) lists this
+register as a reflection point for the new local key, but no row had been written. Facts from
+the ruling, grade READ (the key itself lives only in CityLauncher's local .env, never here).*
+
+| Key | Where | State |
+|---|---|---|
+| RESEND_API_KEY (local, CityLauncher outreach sender) | CityLauncher `.env` (local machine only) | **REPLACED 2026-08-29** — the old local copy was the burnt 22-Aug key (401s during the first sends; zero sends lost, rows self-recovered). New key is scoped to `mail.trustsquare.co`, sending-only. Standing pattern per RUL-063: per-machine keys, each scoped to the least it needs. |

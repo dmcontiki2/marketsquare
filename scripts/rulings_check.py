@@ -41,6 +41,32 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-062": [
+   # Trade mark filing scope (29 Aug): brand-logo device mark only, classes 35/36/42,
+   # lodged on iponline (records 1644020/1644021/1644022). Word marks DEFERRED, not rejected.
+   ("Patents/TRADEMARK_FILED_2026-08-29.md", ["1644020"], []),
+   ("RULINGS.md", ["TRADE MARK FILING SCOPE"], []),
+ ],
+ "RUL-063": [
+   # Send freeze lifted (29 Aug): first outreach waves sent; the burnt local Resend key
+   # was replaced with a scoped sending-only key and the register carries the row.
+   ("RULINGS.md", ["SEND_FREEZE LIFTED"], []),
+   ("SECRETS_REGISTER.md", ["RUL-063 local key row"], []),
+ ],
+ "RUL-064": [
+   # Tester fault channel retired for customers (29 Aug): complaints run through
+   # support@trustsquare.co (privacy.html s13). The dashboard flag flip is runtime state
+   # (probe /flags fault_report:false), asserted live by the sweeps, not by this file check.
+   ("privacy.html", ["support@trustsquare.co"], []),
+   ("RULINGS.md", ["TESTER FAULT CHANNEL RETIRED"], []),
+ ],
+ "RUL-068": [
+   # Auction Room UI direction ratified (29 Aug): landscape theatre, object first,
+   # four thumb corners. Design direction only; build timing under RUL-067.
+   (os.path.join(PROJECTS, "Auction", "design", "Auction_Room_Landscape_Concept.html"),
+    ["NOTHING COVERS THE OBJECT"], []),
+   ("RULINGS.md", ["AUCTION ROOM UI DIRECTION RATIFIED"], []),
+ ],
  "RUL-069": [
    # Customer-email firewall (30 Aug, on the eve of full launch): after launch NO
    # customer email is forwarded to David's personal inbox -- complaints live between
