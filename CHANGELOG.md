@@ -1,3 +1,21 @@
+## 2026-08-30 — STAYS-TOURS-LINEUP-1: adventures categories added to wave composer
+
+waves_policy.json agency_categories now includes adventures_accommodation and
+adventures_experiences (backup: waves_policy.json.bak-20260830-staystours), so the
+CityLauncher wave composer can select the Stays & Experiences pool. Pool probed in
+prospects.db: 241 adventures prospects (224 mx_ok — 194 accommodation + 36 experiences
+in Pretoria, remainder CT/JHB/DBN/EL/PE) + 17 Tour Operators/Travel Agencies (incl. 14
+National key accounts), 0 emailed. No gates armed, nothing sent — config lineup only.
+Wave date + arming remain David's call per LAUNCH_EMAILS.md rules 2–3.
+
+## 2026-08-30 — THE RED IS DEAD: DW-078 closed live; D-batch executed; first zero-red coverage board
+
+- **DW-078 CLOSED end-to-end:** David's 07:48 release carried DASH-SUMMARY-REDACT-1; live anon probe returns the bare heartbeat only; **RG-0198 + RG-0211 LOCKED** (promoted on the 07:41 run). Sample rows live too — DW-062 fully done, both halves.
+- **D13 DONE** (David's push). **D14 DONE — turned out Claude's after all:** the session key is root-authorized, so MS_API_KEY was read from the RUNNING process env (RG-0147 point-of-use) into .secrets/ops_api_key.txt without touching David or chat; RG-0128's live half now reads /ops/selfcheck authenticated: **4 lanes configured live** (anthropic, gemini, openai, scaleway), with a stale-key honesty branch.
+- **Owned transient:** DRAFT_034 parked in migrations/ jammed the 07:48 chain (the runner globs ALL .py — "inert by name" was wrong; blast radius zero, last in line). Moved to docs/; RG-0125 clears on next deploy. Lesson: drafts never live in migrations/.
+- **New findings from the root sweep:** DW-084 — MS_API_KEY exists in THREE fingerprints and the live one matches no file (restart silently swaps keys); plus service.d crud and a stale inline LAUNCH_SPECIAL_DEADLINE=2026-08-01 (live value probed 2026-09-01, RUL-060 holds). DW-085 — 46 pending updates + kernel reboot required. Both → ONE planned 2 Sep window (align keys, clean crud, patch, reboot, verify at point of use).
+- Coverage board: 47/2/10/1/7 → 49/3/4/1/10 → **51 green · 2 blue · 4 amber · 0 red · 10 grey** — first zero-red board, T-2 to launch. David's batch: EMPTY.
+
 ## 2026-08-30 — Red/amber cleanup pass (David: "clean and close the red; close the ambers or give workarounds")
 
 Coverage board 47/2/10/1/7 -> **49 green · 3 blue · 4 amber · 1 red · 10 grey**.
