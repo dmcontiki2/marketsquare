@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Contagion Model v1.3 &mdash; Email Wave Plan v3.2</title>
+<title>Contagion Model v1.4 &mdash; Email Wave Plan v3.2</title>
 <style>
 :root{
   --navy:#0d1b2a; --navy2:#11253a; --panel:#132b42; --line:#22405c; --ink:#e8eef4;
@@ -137,7 +137,7 @@ canvas.ch{width:100%;height:78px;display:block}
 <div class="app">
 
   <div class="top">
-    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.3&nbsp;&middot;&nbsp;planners + wave plan v3.2 + RAMP-1 + second ring</span></div>
+    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.4&nbsp;&middot;&nbsp;planners + wave plan v3.2 + RAMP-1 + second ring + PA/auctions</span></div>
     <div class="clock"><span id="dateOut">1 Sep 2026</span><small id="weekOut">week 0 of 156</small></div>
     <div class="ctrls">
       <button class="primary" id="btnPlay">&#9654;&nbsp; Run</button>
@@ -376,6 +376,10 @@ const PARAMS = [
 
  {k:"refRate",  g:"Referrals", l:"Invites sent per active user /week", lo:.005, mid:.03, hi:.12, src:"guess", n:"A REFERRAL PROGRAMME, distinct from the word-of-mouth already in the model: instrumented, incentivised and attributable. Airbnb's own engineering blog puts its referral programme at about 25% of new bookings in some markets. Ours cannot be measured at all - there is no referred_by, no invite code and no inviter_id anywhere in the schema, and users.referral_count says 'not yet tracked. Always missing.'"},
  {k:"refTake",  g:"Referrals", l:"Invited person signs up", lo:.05, mid:.18, hi:.40, src:"guess", n:"An invitation from someone you know converts far above cold email - the model's cold wave runs at about 0.7%. This is the cheapest acquisition in the app and the only channel with no payment-fee drag, no list to buy and no deliverability reputation to lose."},
+ {k:"aipaUp",  g:"AI PA", l:"Upgrade lift to $20 Pro while the PA is on", lo:1.2, mid:1.8, hi:3.0, src:"guess", n:"RUL-081 (David, 30 Aug 2026): the AI Personal Assistant is the strongest Pro-tier motive yet designed - an assistant that manages a seller's listings and plans is worth $20/mo in a way a bigger slot count is not. Applied as a multiplier on the Starter->Pro weekly upgrade hazard. Pure guess until the sandbox baseline exists - that is what the 3-month design/test/baseline window is for."},
+ {k:"aipaCost",g:"AI PA", l:"Extra AI spend per active user /week", lo:.005, mid:.02, hi:.08, src:"guess", n:"The token bill of an always-available assistant, everyday tier with occasional heavy calls, across ALL actives (free users get the taste that sells the upgrade). Canon discipline: flat per-user cost, cappable - never ad-valorem."},
+ {k:"aucIntro",g:"Auctions", l:"Introduction multiplier while auctions run", lo:1.1, mid:1.5, hi:2.5, src:"guess", n:"RUL-081: every auction that ends is a winner-introduction by design (the Auction project's locked model - intro-auction, never an on-platform sale, Tuppence only). David is very positive on it as a deal-maker; the hi reflects that conviction, the lo the discipline of an untested lane."},
+ {k:"aucKeep", g:"Auctions", l:"Churn multiplier while auctions run", lo:.70, mid:.85, hi:.97, src:"guess", n:"A live auction gives a seller a reason to come back tomorrow - engagement retention. Applied as a multiplier on the whole churn base."},
  {k:"refKeep",  g:"Referrals", l:"Retention advantage of a referred user", lo:1.0, mid:1.5, hi:2.5, src:"guess", n:"Referred users churn less than acquired ones in most consumer products. Applied here as a divisor on churn for the referred share of the base. Widely asserted, and I found no primary marketplace disclosure of the size - so it stays a guess."},
  {k:"refCostT", g:"Referrals", l:"Tuppence granted per successful referral", lo:0, mid:1, hi:5, src:"guess", n:"The reward, and a real cost: 1T is $2 of introduction value given away. Zero here means a referral programme that is purely social - a badge or a thank-you - which is what the parked Founders Badge was designed to be."},
 
@@ -400,7 +404,7 @@ const PM = {}; PARAMS.forEach(p=>{p.obs=null; p.lock=false; PM[p.k]=p;});
 const DEFAULTS={allure:1,badge:.35,discount:0,referral:0,complaint:0,delay:0,poolX:1,batch:28,
   w2Week:8,w3Week:20,stripeW:0,africaW:157,agPush:1,advPush:1,compW:157,compS:1.5,
   dayCap:30,measured:1,agGateW:8,rollW:157,featW:8,liveKeysW:0,barriers:1,localiseW:157,
-  tpW:0,tpToursW:157,refW:157,varsityW:157,ramp:1,rampCap:96,ring2W:1,ring3W:4,ring4W:8,ring5W:12,scrapeWk:30};
+  tpW:0,tpToursW:157,refW:157,varsityW:157,ramp:1,rampCap:96,ring2W:1,ring3W:4,ring4W:8,ring5W:12,scrapeWk:30,aipaW:13,aucW:26};
 
 /* -------- scenario levers: things David can actually change -------- */
 const LEVERS = {
@@ -428,6 +432,8 @@ const LEVERS = {
   ring4W:   {v:8,    lo:0,  hi:157, st:1,   l:"A-plan Wave 4 arms (NA/AR)",           n:"Namibia + Argentina (LOCALIZE-2 country layer built). Placeholder date, sequence per the A-plan."},
   ring5W:   {v:12,   lo:0,  hi:157, st:1,   l:"A-plan Wave 5 arms (FR/PT)",           n:"France + Portugal (GDPR footer + EU representative live per LOCALIZE-2). Placeholder date, sequence per the A-plan."},
   scrapeWk: {v:30,   lo:0,  hi:300, st:10,  l:"New prospects scraped /armed city/week", n:"RUL-074's fuel - the Gary Player lever: luck is replaced by list depth. CityLauncher's saturation scraper keeps deepening every ARMED city's pool, so waves never starve (the global three's first salvo was 44 emails against a 55-prospect scrape - a coin flip by construction). 0 = today's pools are all there ever is. Bounded by each city's addressable market."},
+  aipaW:    {v:13,   lo:0,  hi:157, st:1,   l:"Week the AI PA switches on",   n:"RUL-081 (David, 30 Aug 2026): ~3 months out - the design/test/baseline window. Lifts $20-Pro upgrades (aipaUp) and burns tokens per active (aipaCost). 157 = never."},
+  aucW:     {v:26,   lo:0,  hi:157, st:1,   l:"Week Auctions switch on",      n:"RUL-081: ~6 months out. Every closed auction is a winner-introduction (aucIntro) and live auctions retain sellers (aucKeep). Phase-1 spec exists; the two human gates (Financial + Regulatory) stay David's and are never auto-shipped. 157 = never."},
   measured: {v:1,    lo:0,  hi:1,   st:1,   l:"Use measured inventory in PTA and JHB", n:"26 Aug counts after the STAYS-GEO-1 repair: Tutors 72/82, Services casual 19/32, Services technical 8/17, Experiences 36/3, Collectors 9/6, Stays 6/1. Only Tutors clears 30 in both cities, so the real ladder sends far less than the cap."},
   agGateW:  {v:0,    lo:0,  hi:157, st:1,   l:"Week agency OUTREACH may start (Phase 3)", n:"RUL-079 (31 Aug 2026): David moved this to WEEK 0. The model's own best lever set is 'roll wk4 + agencies wk0' (99 -> 130 sellers by wk52), and the Ideas tab says why - one agency at 14 agents outruns 300 cold emails at 0.5%, and agencies are the only hub already instrumented. National key accounts armed the same day (waves_policy.json: 22 sendable of 27 after PRIV-OFFICER-1 held five privacy desks). Was 8. Phase 3 is still selective and still on David's word per wave (RUL-053(f)); what changed is the earliest week that word may be given. Before this week agencies can still find us on their own - what is held is the cold wave, not the hub itself. 157 = never."},
   tpW:      {v:0,    lo:0,  hi:157, st:1,   l:"Week the Travelpayouts link-out goes live", n:"Flights Data API is live now (partner 758984). The affiliate link-out lane itself is built and DARK by flag - TP-LINKOUT-1, server-side, host allowlist, fails closed. Being dark is deliberate, not a defect."},
@@ -1019,18 +1025,20 @@ function simulate(seed, L, sample, keepTrace, v32){
     }
 
     // ---- 4. money: upgrades only where a payment rail exists ----
+    // AI PA (RUL-081): once the assistant is on, the Starter->Pro hazard lifts.
+    const paX=(w>=L.aipaW && L.aipaW<157)?P.aipaUp:1;
     for(let i=0;i<n;i++){
       if(!rails.has(CITIES[i].c)) continue;
       const gate=(0.15+0.85*(Lq[i]*Lq[i]/(0.09+Lq[i]*Lq[i])))*(1+1.5*L.discount)*delayPen;
       const u5=binom(r,Math.round(A0[i]),Math.min(.5,P.pUp5*gate));
       A0[i]-=u5; A5[i]+=u5;
-      const u20=binom(r,Math.round(A5[i]),Math.min(.4,P.pUp20*gate));
+      const u20=binom(r,Math.round(A5[i]),Math.min(.4,P.pUp20*gate*paX));
       A5[i]-=u20; A20[i]+=u20;
     }
 
     // ---- 5. churn ----
     for(let i=0;i<n;i++){
-      const base=P.churn + P.churnLon*(1-Lq[i]) + L.complaint*2.0 + 0.02*L.delay - 0.02*L.badge*Math.max(0,1-w/26);
+      const base=(P.churn + P.churnLon*(1-Lq[i]) + L.complaint*2.0 + 0.02*L.delay - 0.02*L.badge*Math.max(0,1-w/26)) * ((w>=L.aucW && L.aucW<157)?P.aucKeep:1);
       // Referred users churn less than acquired ones - applied to the referred share only.
       const at_=A0[i]+A5[i]+A20[i]+AG[i];
       const refShare = at_>0 ? Math.min(1,REF[i]/at_) : 0;
@@ -1118,6 +1126,8 @@ function simulate(seed, L, sample, keepTrace, v32){
       // PRICING CANON: 1 Tuppence = USD $2 and a buyer pays 1T per introduction (canon 3).
       // Seller tiers Free $0 / Starter $5 / Pro $20 / AGENCY FREE (canon 1). Buyer Global $5 (canon 2).
       // Revenue needs a payment rail in that country, so an unrailed country earns nothing.
+      // Auctions (RUL-081): every closed auction is a winner-introduction.
+      const aucX=(w>=L.aucW && L.aucW<157)?P.aucIntro:1;
       let subSeller=0, subBuyer=0, introRev=0, agentsFree=0;
       for(let i=0;i<n;i++){
         if(!rails.has(CITIES[i].c)) continue;
@@ -1126,7 +1136,7 @@ function simulate(seed, L, sample, keepTrace, v32){
                    + AG[i]*P.agSeat*SUB_STARTER*(1-L.discount);   // RUL-048 self-paid agency seat
         agentsFree += AG[i]*(1-P.agSeat);
         subBuyer  += BU[i]*P.buyGlobal*SUB_BUYER_GLOBAL;
-        introRev  += at*P.introRt*P.introAcc*TUPPENCE_USD*WEEKS_PER_MONTH;
+        introRev  += at*P.introRt*P.introAcc*aucX*TUPPENCE_USD*WEEKS_PER_MONTH;
       }
       // introductions the planners generated, and the planner runs themselves
       const railShare = (function(){ let a=0,b=0;
@@ -1160,24 +1170,27 @@ function simulate(seed, L, sample, keepTrace, v32){
         const at=A0[i]+A5[i]+A20[i]+AG[i];
         const rHere = A5[i]*SUB_STARTER+A20[i]*SUB_PRO+AG[i]*P.agSeat*SUB_STARTER
                     + BU[i]*P.buyGlobal*SUB_BUYER_GLOBAL
-                    + at*P.introRt*P.introAcc*TUPPENCE_USD*WEEKS_PER_MONTH;
+                    + at*P.introRt*P.introAcc*aucX*TUPPENCE_USD*WEEKS_PER_MONTH;
         if(CITIES[i].c==="ZA") revZA+=rHere;
         // one subscription charge per paying account per month
         const subs = A5[i]+A20[i]+AG[i]*P.agSeat + BU[i]*P.buyGlobal;
         // one Tuppence purchase per bundle bought
-        const tups = (at*P.introRt*P.introAcc*WEEKS_PER_MONTH)/Math.max(1,P.bundleT);
+        const tups = (at*P.introRt*P.introAcc*aucX*WEEKS_PER_MONTH)/Math.max(1,P.bundleT);
         subCharges+=subs; tupCharges+=tups;
         const pct = (CITIES[i].c==="ZA")?FEE_ZA_PCT:FEE_MOR_PCT;
         const fix = (CITIES[i].c==="ZA")?FEE_ZA_FIX:FEE_MOR_FIX;
         const rev = A5[i]*SUB_STARTER*(1-L.discount)+A20[i]*SUB_PRO*(1-L.discount)
                   + AG[i]*P.agSeat*SUB_STARTER*(1-L.discount)
                   + BU[i]*P.buyGlobal*SUB_BUYER_GLOBAL
-                  + at*P.introRt*P.introAcc*TUPPENCE_USD*WEEKS_PER_MONTH;
+                  + at*P.introRt*P.introAcc*aucX*TUPPENCE_USD*WEEKS_PER_MONTH;
         feeCost += rev*pct + (subs+tups)*fix;
       }
       zaShare = mrr>0 ? revZA/mrr : 1;
       const fixedCost=FIXED_MO_USD;
-      const netCanon=mrr-feeCost-fixedCost-featCostMo-refCostMo;
+      // AI PA (RUL-081): the assistant's token bill, every active user, once on.
+      let aipaCostMo=0;
+      if(w>=L.aipaW && L.aipaW<157){ let ta2=0; for(let i2=0;i2<n;i2++) ta2+=A0[i2]+A5[i2]+A20[i2]+AG[i2]; aipaCostMo=ta2*P.aipaCost*WEEKS_PER_MONTH; }
+      const netCanon=mrr-feeCost-fixedCost-featCostMo-refCostMo-aipaCostMo;
       let bestLq=0,bestCity=-1,poolLeft=0,intlPool=0;
       for(let i=0;i<n;i++){ poolLeft+=pool[i]; if(CITIES[i].c!=="ZA")intlPool+=pool[i];
         if(Lq[i]>bestLq){bestLq=Lq[i];bestCity=i;} }
@@ -1188,6 +1201,7 @@ function simulate(seed, L, sample, keepTrace, v32){
         subSeller:subSeller, subBuyer:subBuyer, introRev:introRev, agentsFree:agentsFree,
         feeCost:feeCost, fixedCost:fixedCost, netCanon:netCanon, zaShare:zaShare,
         featRev:featRevMo, featCost:featCostMo, featIntroRev:featIntroRev, featOn:(featOn?1:0),
+        aipaCost:aipaCostMo, aipaOn:(w>=L.aipaW&&L.aipaW<157?1:0), aucOn:(w>=L.aucW&&L.aucW<157?1:0),
         affRev:affRev, tpClicks:tpClicks*WEEKS_PER_MONTH, tpAccrued:tpAccrued,
         toursOpen:(w>=L.tpToursW?1:0), refCost:refCostMo,
         refSignups:refSignups, refNew:refNew*WEEKS_PER_MONTH, varsitySignups:varsitySignups,

@@ -108,6 +108,11 @@ REFLECTIONS = {
      "dependency graph", "never the first question", "GEO_START"], []),
    ("RULINGS.md", ["NARROWING FUNNEL"], []),
  ],
+ "RUL-081": [
+   # PA + Auctions in the sim (31 Aug): levers present with the ruled default weeks.
+   ("docs/TrustSquare_Contagion_Model_v0.2.html", ["aipaW:13,aucW:26", "aucIntro", "aipaUp"], []),
+   ("RULINGS.md", ["AI PA AT +3 MONTHS, AUCTIONS AT +6"], []),
+ ],
  "RUL-075": [
    # i18n freeze + dry-run readiness (30 Aug): no live-app string extraction before
    # the readiness date; the canon plan file must exist and carry the target date.
