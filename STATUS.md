@@ -28,6 +28,8 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- **OPT-OUT LANE LIVE (OPTOUT-LANE-1, RG-0229 5/5).** People could not opt out at all until today: no `/optout` route existed, the send guard failed open, the pull's SQL had never parsed, and the sync bat printed "SYNC COMPLETE — verified" over the failure. All four fixed and proven end-to-end. First clean wave sent the same day: National #1, 20 emails, **0 opted-out addresses mailed** against a live register holding three real opt-outs, 5 privacy desks held. RG-0220 now executes the pull query instead of reading it.
+
 **Maintenance loop, 31 Aug 2026 (T-1 to full launch).** Fault queue empty — 0 new, 0 triaged,
 0 fix-shipped, 26 verified, 7 closed — so the session's work was finding out why. Three
 defects closed, none of them reported by anyone:

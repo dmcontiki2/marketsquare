@@ -2326,10 +2326,31 @@ from fastapi.responses import HTMLResponse
 _OPTOUT_DB = os.getenv("CITYLAUNCHER_DB", "/var/www/citylauncher/data/prospects.db")
 
 
+# OPTOUT-PARSE-1 (31 Aug 2026). Resend rewrites links for click tracking, and the
+# tracking path arrives CONCATENATED onto the query value: the first real unsubscribe
+# in the product's life recorded as
+#   hey@halfway.co.za/1/010201a05782d54f-.../el9tjix...-gvxe=452
+# so the register held a string that matches nobody, and the actual address was NOT
+# suppressed. A person exercised their right and the machine mis-filed it -- which is
+# indistinguishable, at send time, from them never having asked.
+# So the address is EXTRACTED by shape rather than trusted as given.
+_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,63}")
+
+
+def _clean_optout_addr(raw: str) -> str:
+    """Pull a well-formed address out of whatever the click actually delivered."""
+    s = (raw or "").strip().lower()
+    if not s:
+        return ""
+    s = s.split("/")[0].split("?")[0].split("&")[0].split("#")[0]
+    m = _EMAIL_RE.search(s)
+    return m.group(0) if m else ""
+
+
 def _record_optout(email: str, source: str = "link") -> bool:
     """Record an opt-out. Returns True if it landed. Never raises."""
-    addr = (email or "").strip().lower()
-    if not addr or "@" not in addr or len(addr) > 320:
+    addr = _clean_optout_addr(email)
+    if not addr or len(addr) > 320:
         return False
     try:
         import sqlite3 as _sq
@@ -2395,7 +2416,16 @@ def optout_status():
             if not t:
                 return {"register": "ABSENT", "rows": 0, "armed": False}
             n = conn.execute("SELECT COUNT(*) FROM suppression").fetchone()[0]
-            return {"register": "present", "rows": n, "armed": True}
+            # OPTOUT-PROBE-1 (31 Aug 2026): the lane verifier must WRITE to prove a click
+            # is recorded, so it necessarily leaves rows behind -- 19 of the first 24 were
+            # its probes. A compliance count that silently mixes probes with people is a
+            # misleading number, and this card is read as "how many asked us to stop".
+            # Probes use the reserved .invalid TLD (RFC 2606: can never be deliverable),
+            # so they are separable by construction rather than by naming convention.
+            real = conn.execute("SELECT COUNT(*) FROM suppression "
+                                "WHERE email NOT LIKE '%.invalid'").fetchone()[0]
+            return {"register": "present", "rows": n, "real": real,
+                    "probes": n - real, "armed": True}
         finally:
             conn.close()
     except Exception as _e:
