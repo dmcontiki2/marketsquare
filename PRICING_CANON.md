@@ -43,6 +43,15 @@ Two tiers only (`_buyer_tier` returns `free` | `global`). An earlier per-day “
 
 Exempt categories (raw `l.category` keys): `adventures`, `adventure`, `experiences`, `adventures_experiences`, `accommodation`, `adventures_accommodation`, `tours`, `heritage` — i.e. the whole Adventures/travel family (experiences ≡ adventures) plus Tours and Heritage. Accommodation is **included** (trip lodging is part of planning).
 
+### 2c · Pro includes Global reach (David, 30 Aug 2026 — RUL-078)
+**The $20 Pro subscription carries the $5 Global buyer reach automatically.** David: *"I see [the] $20 subscription as having the [$5] reach, automatically."* Rationale: reach is a query filter, not a cost, and Squire (RUL-077) watches across the reach the subscriber holds — without the bundle a Pro subscriber's agent would be confined to one city, blunting its best cases (the collector hunting nationally, the parent comparing tutors across a metro).
+
+**Consequence for code:** `_buyer_tier()` currently reads `wishlist_subscriptions` alone and returns `free` | `global`. It must ALSO return `global` when the account holds a live **Pro** seller subscription. Until that lands, a Pro subscriber is silently treated as local — asserted by RG-0224.
+
+**Naming note (not a rename):** the $5 buyer tier keeps the name *Global*; Pro simply includes it, the ordinary way a higher plan includes a lower one.
+
+**PRE-EXISTING $5 COLLISION — surfaced 30 Aug 2026, NOT created by it (RUL-080).** Both $5 entries have been in this file since **16 Jun 2026** (commit 1a2d254, same commit): *Starter* ($5, 10 seller slots, §1) and *Global* ($5, buyer reach, §2). A third exists — the **Agency Pro seat** at $5/month (RUL-048, 23 Aug) which buys 20 slots + the Pro AI suite. **David's direction 30 Aug: there must be only ONE $5 tier.** The principle is ruled; the mechanism is not yet chosen and is his (RUL-080). Nothing in the 30 Aug Zoom/Squire discussion altered the $5 tier — RUL-078 added Global reach to **Pro**, which takes nothing away from either $5 product.
+
 ### 2b · Online-mode reach exemption (David, 6 Jul 2026)
 **Listings with `mode` Online/Both (tutors + online-capable services) are borderless — visible to EVERYONE from ANY city on ANY tier.** Same principle as 2a: reach follows whether the buyer can USE the thing from where they are — an online chess trainer is as usable from Sydney as from Pretoria. Physical listings are unchanged (Free = home city, Global = everywhere): **the Global tier's value is reach for the physical world.** Future (logged, demand-driven, NOT built): a "ships nationwide" seller toggle could extend the same principle to shippable goods (collectors); until then physical categories stay tier-gated by design.
 

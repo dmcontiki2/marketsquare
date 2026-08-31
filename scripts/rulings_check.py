@@ -71,6 +71,14 @@ REFLECTIONS = {
     ["SUPPRESS-GATE-1", "def suppression_state", "PLAN-TRUTH-1"], []),
    ("RULINGS.md", ["AGENCY OUTREACH OPENS AT WEEK 0", "not a volume increase"], []),
  ],
+ "RUL-080": [
+   # One $5 tier (30 Aug session, written 31 Aug): principle ruled, mechanism reserved. The blind spot this
+   # polices is the one that prompted it -- a future session must find, in canon, that
+   # the collision PRE-DATES 30 Aug and that RUL-078 added reach to Pro and not to $5.
+   ("PRICING_CANON.md", ["PRE-EXISTING $5 COLLISION", "since **16 Jun 2026**",
+                         "only ONE $5 tier"], []),
+   ("RULINGS.md", ["THERE IS ONLY ONE $5 TIER"], []),
+ ],
  "RUL-078": [
    # Pro includes Global reach (30 Aug). The blind spot this polices: the bundle is a
    # CODE fact (_buyer_tier must consult the seller subscription), not just a pricing

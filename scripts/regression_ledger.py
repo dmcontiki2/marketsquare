@@ -12276,8 +12276,12 @@ def rg_squire():
         out.append((FAIL, "ZOOM_HMI_SPEC.md is gone -- Squire's stated build dependency "
                           "(Zoom first) can no longer be honoured (SQUIRE-1)"))
     if not out:
-        out.append((INFO, "spec intact -- ruled, unbuilt, Zoom-first order recorded "
-                          "(OPEN by design until SQUIRE-1 ships)"))
+        out.append((INFO, "PENDING BUILD -- spec intact; ruled, unbuilt, Zoom-first order "
+                          "recorded. This entry can only assert its PRE-BUILD half today, so "
+                          "it is OPEN by design and must NOT be promoted: promoting now would "
+                          "lock the spec-only assertion and retire the nine shipped-code "
+                          "properties in the scope (LEDGER-PENDING-BUILD-1). Promote when "
+                          "SQUIRE-1 ships AND this harness checks the shipped code."))
     return out
 
 
@@ -12530,6 +12534,107 @@ def rg_suppression_gate():
         out.append((INFO, "the opt-out register is a blocking pre-condition of a real send, "
                           "and dry-runs remain unrestricted"))
     return out
+
+
+@entry("RG-0228", "No outreach email can reach a GOVERNMENT or MILITARY mailbox -- the "
+       "regulator is the government, and a role-name guard does not catch a named "
+       "person at a municipality",
+       LOCKED,
+       scope="repo: ../CityLauncher/emailer/emailer.py -- _looks_government() at the "
+             "send_email chokepoint AND in batch composition, beside JUNK-GUARD-1 and "
+             "PRIV-OFFICER-1. Matches the DOMAIN on exact labels {gov, govt, mil, gouv}, "
+             "so 'govender.co.za' and 'govhotel.com' keep sending while tshwane.gov.za and "
+             "sanjoseca.gov cannot. CLASS, not instance: PRIV-OFFICER-1 polices the "
+             "LOCAL-PART (the role), this polices the DOMAIN (the institution) -- both "
+             "axes are required and neither is a blocklist, so a re-scrape cannot "
+             "reintroduce what an address-list edit removed. .edu and .ac.* are "
+             "deliberately NOT blocked: RUL-059's US lane targets tutoring businesses and "
+             "campus learning-support, which are not government. Held, never suppressed, "
+             "never marked opted-out -- nobody opted out; reach them by contact form.",
+       fixed_on="2026-08-31",
+       ref="GOV-DOMAIN-1 (31 Aug 2026). David asked, on the morning of the last pre-launch "
+           "send day: 'You must please check for us that we dont send to the governmental "
+           "POPIA agents.' PROBED the live unsent pool (1409 rows): EIGHT officer/government "
+           "addresses present, and PRIV-OFFICER-1 refused only SIX. The two that would have "
+           "sent were natashaz@tshwane.gov.za (City of Tshwane, Pretoria/Tour Operators) and "
+           "work2future@sanjoseca.gov (City of San Jose) -- a named person and a programme "
+           "mailbox on government domains, which a role guard cannot see by construction. "
+           "Wave composition happened to exclude them today, which is luck, not a control -- "
+           "the same lesson PRIV-OFFICER-1 was itself born from hours earlier ('a note is "
+           "not a control'). After the fix all 8 are refused and 8 ordinary business "
+           "addresses still send, false-positive checked.")
+def rg_gov_domain():
+    out = []
+    ep = os.path.join(REPO, "..", "CityLauncher", "emailer", "emailer.py")
+    if not os.path.exists(ep):
+        return [(INFO, "CityLauncher not beside this repo -- GOV-DOMAIN-1 skipped (live-only run)")]
+    s = open(ep, encoding="utf-8").read()
+    if "_looks_government" not in s:
+        return [(FAIL, "_looks_government() is GONE -- a cold email can reach a government "
+                       "mailbox again (GOV-DOMAIN-1)")]
+    if "GOV-DOMAIN-1: refusing send" not in s:
+        out.append((FAIL, "the send_email chokepoint no longer refuses government domains "
+                          "(GOV-DOMAIN-1)"))
+    if s.count("_looks_government(") < 3:
+        out.append((FAIL, "_looks_government is no longer applied at BOTH the chokepoint and "
+                          "batch composition -- one path is unguarded (GOV-DOMAIN-1)"))
+    for label in ("'gov'", "'mil'"):
+        if label not in s:
+            out.append((FAIL, "the government label set lost " + label + " (GOV-DOMAIN-1)"))
+    if ".edu" not in s:
+        out.append((FAIL, "the .edu carve-out note is gone -- a future session may over-block "
+                          "RUL-059's US tutoring lane (GOV-DOMAIN-1)"))
+    if not out:
+        out.append((INFO, "government/military domains refused at both the chokepoint and "
+                          "batch composition; .edu carve-out intact"))
+    return out
+
+
+@entry("RG-0229", "A person CAN opt out and we CANNOT email them again -- proven by the "
+       "five gates a real opt-out travels, from the recipient's click to the send "
+       "refusal, never by the presence of code that claims to do it",
+       OPEN,
+       scope="../CityLauncher/verify_optout_lane.py is the assertion; this entry runs it. "
+             "FIVE GATES: (1) the unsubscribe URL answers 200 ANONYMOUSLY on the live "
+             "site -- a recipient is not logged in; (2) a click INCREASES the server "
+             "register's row count; (3) the LOCAL send pool holds the register; (4) "
+             "_is_suppressed() returns True for an address actually in it; (5) with NO "
+             "register the guard REFUSES. CLASS, and this is the whole point of the entry: "
+             "every gate tests an OUTCOME a person experiences, not the presence of code "
+             "that claims the outcome. RG-0220 is the counter-example and the reason this "
+             "exists -- its title promised 'can never again email an address the server has "
+             "opted out' while its check read strings out of two files, so it passed green "
+             "for a week over a protection that did not exist. An outcome in the title "
+             "requires an outcome in the check.",
+       ref="OPTOUT-LANE-1 (31 Aug 2026). David: 'I did not ask you to remove anything but "
+           "the blocker, and the blocker is the false acknowledgement of the opt out "
+           "database, which doesnt exist... This is a project kill risk.' PROBED that "
+           "morning: every outreach email since 24 Aug carried {api_base}/optout, NO such "
+           "route existed anywhere (bea_main/main/worker/ops all swept), no server-side "
+           "suppression DDL existed, the local register had never been created, and "
+           "_is_suppressed() returned False -- 'send it' -- whenever the table was absent. "
+           "110 emails went out with a dead unsubscribe link and a guard that had never "
+           "once consulted real data. FIXED THIS SESSION: SUPPRESS-FAILCLOSED-1 (absence is "
+           "no longer permission) + the /optout GET/POST route + /optout/status proof "
+           "endpoint + this verifier. NOT YET LIVE: the route is staged in bea_main.py and "
+           "needs David's deploy. Live probe reads 404 (not 403), so the path is NOT behind "
+           "the review gate and a deploy should be sufficient -- to be PROVEN by gate 1, "
+           "never assumed. Stays OPEN and RED until all five pass.")
+def rg_optout_lane():
+    import subprocess
+    v = os.path.join(REPO, "..", "CityLauncher", "verify_optout_lane.py")
+    if not os.path.exists(v):
+        return [(FAIL, "verify_optout_lane.py is GONE -- the opt-out lane has no proof "
+                       "and must be treated as unproven (OPTOUT-LANE-1)")]
+    try:
+        r = subprocess.run([sys.executable, v], capture_output=True, text=True, timeout=120)
+    except Exception as e:
+        return [(FAIL, "the opt-out verifier could not run (%s) -- unproven (OPTOUT-LANE-1)" % e)]
+    fails = [ln.strip() for ln in r.stdout.splitlines() if ln.strip().startswith("[FAIL]")]
+    if r.returncode == 0:
+        return [(INFO, "all five gates pass -- a person can opt out and cannot be emailed again")]
+    return [(FAIL, "OPT-OUT LANE UNPROVEN -- %d of 5 gates failing. DO NOT SEND. %s"
+             % (len(fails), " | ".join(f[6:].strip() for f in fails)[:400]))]
 
 
 if __name__ == "__main__":

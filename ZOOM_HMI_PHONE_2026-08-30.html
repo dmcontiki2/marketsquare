@@ -295,7 +295,10 @@ const JOBS={"Home & Garden":["Gardener","Landscaper","Tree felling","Pool servic
 function band(v,cuts,labels){for(let i=0;i<cuts.length;i++)if(v<cuts[i])return labels[i];return labels[labels.length-1];}
 
 function makeListing(cat){
-  const g=geoOf(), o={cat,geo:g,trust:ri(35,96)};
+  /* RANKING SCORE (estate_agents.py _rank_agents): 0.5 x listing quality + 0.5 x trust.
+     The canon formula is a straight 50/50 -- listing quality never weighs less than half.
+     Live today it ranks AGENTS; Zoom applies it to the LISTING order as well. */
+  const g=geoOf(), o={cat,geo:g,trust:ri(35,96),q:ri(28,99)};
   if(cat==="property"){
     o.mode=wpick({Rent:56,Buy:44});
     o.ptype=wpick({House:30,Apartment:34,Townhouse:22,Room:8,Cottage:6});
@@ -465,6 +468,9 @@ function geoTrail(){
   for(let i=(CAT==="travel"?0:1);i<=GEO;i++){const v=SEL._geo&&SEL._geo[GEO_LEVELS[i]];if(v)p.push(v);}
   return p.length>(CAT==="travel"?0:1)?p.join(" › "):"";}
 const fmtR=n=>"R"+n.toLocaleString("en-ZA");
+/* Ranking Score — the promotion method, applied to the RESULT ORDER. */
+const rankOf=d=>0.5*(d.q||0)+0.5*(d.trust||0);
+const byRank=(a,b)=>rankOf(b)-rankOf(a);
 
 /* ================= render ================= */
 function render(){
@@ -488,7 +494,7 @@ function render(){
   $("bf").style.width=(all.length?Math.max(.8,set.length/all.length*100):0)+"%";
 
   /* results */
-  $("list").innerHTML=set.slice(0,40).map(d=>{
+  $("list").innerHTML=set.slice().sort(byRank).slice(0,40).map(d=>{
     const price=d.cat==="services"?fmtR(d.price)+"/hr":fmtR(d.price);
     const meta=d.cat==="property"?`${d.mode} · ${d.geo.l2}`
       :d.cat==="services"?`${d.when} · ${d.geo.l2}`
@@ -496,7 +502,9 @@ function render(){
       :d.cat==="travel"?`${d.geo.l1}, ${d.geo.l0}`
       :`${d.grade} · ${d.geo.l1}`;
     return `<div class="rc"><div class="ph"></div><div class="bd">
-      <div class="t">${d.title}</div><div class="m">${meta}</div><div class="p">${price}</div></div></div>`;}).join("")
+      <div class="t">${d.title}</div><div class="m">${meta}</div>
+      <div class="p">${price}<span style="float:right;color:var(--mut);font-weight:600;font-size:10.5px"
+        title="Ranking Score">${rankOf(d).toFixed(0)}</span></div></div></div>`;}).join("")
     ||`<div style="grid-column:1/-1;color:var(--dim);font-size:12.5px;padding:18px 4px">Nothing here — drop a chip to step back.</div>`;
 
   /* the sheet: question / peek / arrived */

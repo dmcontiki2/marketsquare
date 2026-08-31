@@ -137,3 +137,25 @@ same defect class as an undated status assertion (the ONETAP_SETUP.md "(this is 
 - **[D] Travel funnel endpoint.** The natural conclusion for tours/stays/guides is a PLAN, not a
   listing — the Expedition Dossier handed to a partnered agency, which IS the Tuppence
   introduction. Commercial shape, David's call, needed before the travel lane is armed.
+- **[C] SQUIRE-1 — the Pro subscriber's personal agent. RULED 30 Aug (RUL-077), UNBUILT.**
+  Spec: `SQUIRE_SPEC.md`. Ledger RG-0224 (OPEN). **Builds AFTER Zoom** — a brief is a Zoom path
+  plus prose, so Squire first would write the matching engine twice. Same flag-dark discipline:
+  David sees it on the real app before the field, arming is his act.
+- **[D] Does Pro ($20) include Global buyer reach ($5)?** Without it a Pro subscriber's Squire is
+  confined to one city, which blunts its best cases (the collector hunting nationally, the parent
+  comparing tutors across a metro). CTO recommendation: include it — reach is a query filter, not
+  a cost. Bundling is a pricing call, so it is David's. Needed before Squire's build starts.
+- **[D] DISCHARGED 30 Aug (RUL-078) — "Does Pro include Global reach?"** Answered: **yes, automatically.**
+  The [D] row above is left in place because this file is append-only; it moves to CLOSED at the next
+  attended reconciliation. Residue is a build task, not a decision: `_buyer_tier()` must consult the
+  seller subscription (RG-0224 criterion 9). Squire's build shape and acceptance criteria are also
+  APPROVED and closed to re-litigation.
+- **[D] Pricing page — two different $5 products.** *Starter* ($5, seller slots) and *Global* ($5,
+  buyer reach) are separate purchases and Starter does NOT include reach. Needs the two axes drawn
+  visually apart before the pricing page is next touched. Naming/positioning is David's.
+- **[D] ONE $5 TIER — principle ruled 31 Aug (RUL-080), mechanism still David's.** Supersedes the
+  "two different $5 products" row above, which is left in place (append-only). Three $5 products exist
+  and ALL pre-date 30 Aug: Starter (slots), Global (buyer reach), Agency Pro seat (RUL-048). CTO
+  recommendation: fold Global reach into Starter. **Not executed on launch eve** — `wishlist_subscriptions`
+  is a live Paystack-backed table. Scheduled: first post-launch pricing pass, before the pricing page
+  is next touched.

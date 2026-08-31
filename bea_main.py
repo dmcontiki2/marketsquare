@@ -2298,6 +2298,111 @@ def _tsl_dbproof():
     return out
 
 
+# ── OPTOUT-LANE-1 (31 Aug 2026) ─────────────────────────────────────────────
+# Every outreach email since 24 Aug has carried an unsubscribe link pointing at
+# {api_base}/optout — and NO SUCH ROUTE EXISTED. 110 emails went out with a dead
+# opt-out. Nobody could opt out; nothing recorded it; and the send-time guard
+# (_is_suppressed) read a `suppression` table that was never created, returning
+# "not suppressed" for every address it was ever asked about.
+#
+# This is the missing endpoint. Deliberate properties, each one load-bearing:
+#   * ONE CLICK, NO LOGIN. An opt-out that needs an account is not an opt-out.
+#   * GET **and** POST — RFC 8058 List-Unsubscribe-Post sends POST, and mail
+#     clients pre-fetch GET links, which is fine here: a false opt-out costs us
+#     one prospect, a missed one costs a POPIA breach. Asymmetric on purpose.
+#   * IDEMPOTENT and it NEVER errors to the caller. A 500 on this route reads to
+#     the recipient as "they ignored me".
+#   * It does not reveal whether the address was ever on a list — same page
+#     either way.
+#   * Writes to the CityLauncher pool the wave lane actually reads, creating the
+#     register if absent, and sets the prospect's own status so the existing
+#     pull_from_server.py verdict path carries it down unchanged.
+# NOTE: HTMLResponse is imported HERE, not borrowed from the alias 20k lines below.
+# Caught 31 Aug by running the route instead of compiling it: py_compile passed
+# cleanly while the first real request would have raised NameError. "It compiles"
+# is not "it works" -- the same gap this whole lane exists because of.
+from fastapi.responses import HTMLResponse
+
+_OPTOUT_DB = os.getenv("CITYLAUNCHER_DB", "/var/www/citylauncher/data/prospects.db")
+
+
+def _record_optout(email: str, source: str = "link") -> bool:
+    """Record an opt-out. Returns True if it landed. Never raises."""
+    addr = (email or "").strip().lower()
+    if not addr or "@" not in addr or len(addr) > 320:
+        return False
+    try:
+        import sqlite3 as _sq
+        conn = _sq.connect(_OPTOUT_DB, timeout=15)
+        try:
+            conn.execute("PRAGMA busy_timeout=15000")
+            conn.execute("""CREATE TABLE IF NOT EXISTS suppression (
+                email TEXT PRIMARY KEY,
+                source TEXT,
+                created_at TEXT DEFAULT (datetime('now')))""")
+            conn.execute("INSERT OR IGNORE INTO suppression (email, source) VALUES (?,?)",
+                         (addr, source))
+            try:
+                conn.execute("UPDATE prospects SET status='opted_out' WHERE LOWER(email)=?",
+                             (addr,))
+            except Exception:
+                pass          # suppression is the obligation; the status is a convenience
+            conn.commit()
+            return True
+        finally:
+            conn.close()
+    except Exception as _e:
+        _log.error("OPTOUT-LANE-1 FAILED to record %s: %r", addr[:4] + "***", _e)
+        return False
+
+
+_OPTOUT_PAGE = ("<!doctype html><meta charset=utf-8>"
+                "<meta name=viewport content='width=device-width,initial-scale=1'>"
+                "<title>Unsubscribed - TrustSquare</title>"
+                "<style>body{font:16px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;"
+                "max-width:34em;margin:12vh auto;padding:0 1.2em;color:#1b2436}"
+                "h1{font-size:1.35em;color:#1F3864}p{color:#44536b}</style>"
+                "<h1>You have been unsubscribed.</h1>"
+                "<p>We will not email this address again.</p>"
+                "<p>If this was a mistake, simply ignore this page - we have no "
+                "further contact planned either way.</p>")
+
+
+@app.get("/optout")
+def optout_get(email: str = "", src: str = "link"):
+    _record_optout(email, src or "link")
+    return HTMLResponse(_OPTOUT_PAGE)
+
+
+@app.post("/optout")
+def optout_post(email: str = "", src: str = "list-unsubscribe"):
+    _record_optout(email, src or "list-unsubscribe")
+    return HTMLResponse(_OPTOUT_PAGE)
+
+
+@app.get("/optout/status")
+def optout_status():
+    """PROOF endpoint for OPTOUT-LANE-1: says whether the register EXISTS and how
+    many rows it holds. Deliberately returns no addresses - a count is enough to
+    prove the lane is armed, and an address list here would be the leak this
+    whole entry exists to prevent."""
+    try:
+        import sqlite3 as _sq
+        conn = _sq.connect("file:%s?mode=ro" % _OPTOUT_DB, uri=True, timeout=10)
+        try:
+            t = conn.execute("SELECT name FROM sqlite_master WHERE type='table' "
+                             "AND name='suppression'").fetchone()
+            if not t:
+                return {"register": "ABSENT", "rows": 0, "armed": False}
+            n = conn.execute("SELECT COUNT(*) FROM suppression").fetchone()[0]
+            return {"register": "present", "rows": n, "armed": True}
+        finally:
+            conn.close()
+    except Exception as _e:
+        return {"register": "unreadable", "rows": 0, "armed": False,
+                "reason": str(_e)[:120]}
+
+
 @app.get("/health")
 def health():
     body = {"status": "ok", "service": "TrustSquare BEA", "version": "1.3.1"}

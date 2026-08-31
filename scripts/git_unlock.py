@@ -27,6 +27,26 @@ USAGE
 import glob, os, subprocess, sys, time
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# GIT-LOCK-5 (31 Aug 2026): sweep EVERY sibling repo, not just this one.
+# The tool's own usage line says "run before any sandbox git write" and RG-0197
+# asserts it "covers EVERY repo a wave or a deploy fires from" -- but REPO was
+# hard-coded to MarketSquare, so CityLauncher (the repo the WAVE lane commits
+# from) was invisible. Probed 31 Aug: two 0-byte locks stranded 134 min in
+# CityLauncher/.git while this script printed "no stale locks, nothing to sweep".
+# A tool that reports clean over a live fault is worse than no tool.
+def _repos():
+    out = [REPO]
+    parent = os.path.dirname(REPO)
+    for name in sorted(os.listdir(parent)):
+        cand = os.path.join(parent, name)
+        if cand == REPO:
+            continue
+        if os.path.isdir(os.path.join(cand, ".git")):
+            out.append(cand)
+    return out
+
+
 GITDIR = os.path.join(REPO, ".git")
 ASIDE = os.path.join(GITDIR, "stale_locks")
 STALE_SECONDS = 15 * 60          # generous: host git is invisible from here
@@ -66,8 +86,19 @@ def stale(path):
 
 def main():
     check_only = "--check" in sys.argv
+    rc = 0
+    for repo in _repos():
+        rc = sweep(repo, check_only) or rc
+    return rc
+
+
+def sweep(repo, check_only):
+    global GITDIR, ASIDE
+    GITDIR = os.path.join(repo, ".git")
+    ASIDE = os.path.join(GITDIR, "stale_locks")
+    label = os.path.basename(repo)
     if not os.path.isdir(GITDIR):
-        print("git_unlock.py: no .git here (%s) -- nothing to do" % GITDIR); return 0
+        return 0
     targets = [os.path.join(GITDIR, n) for n in BLOCKING]
     targets += sorted(glob.glob(os.path.join(GITDIR, "next-index-*.lock")))
     asides  = sorted(glob.glob(os.path.join(GITDIR, "HEAD.lock.stale-*")))
@@ -77,18 +108,18 @@ def main():
     fresh = [p for p in present if not stale(p)]
 
     for p in fresh:
-        print("  fresh lock left in place (<%d min): .git/%s" % (STALE_SECONDS // 60, os.path.basename(p)))
+        print("  [%s] fresh lock left in place (<%d min): .git/%s" % (label, STALE_SECONDS // 60, os.path.basename(p)))
     if check_only:
         for p in stale_all:
-            print("  STALE: .git/" + os.path.basename(p))
+            print("  [%s] STALE: .git/%s" % (label, os.path.basename(p)))
         if asides:
-            print("  %d HEAD.lock.stale-* asides await the host sweep" % len(asides))
+            print("  [%s] %d HEAD.lock.stale-* asides await the host sweep" % (label, len(asides)))
         return 1 if stale_blocking else 0
 
     if not stale_all and not asides:
-        print("git_unlock.py: no stale locks, nothing to sweep"); return 0
+        print("git_unlock.py [%s]: no stale locks, nothing to sweep" % label); return 0
     if git_running():
-        print("git_unlock.py: a git process is live here -- leaving all locks in place"); return 0
+        print("git_unlock.py [%s]: a git process is live -- leaving all locks in place" % label); return 0
 
     os.makedirs(ASIDE, exist_ok=True)
     ts = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
@@ -98,13 +129,13 @@ def main():
         try:
             os.rename(p, dest)                 # rename works where unlink is blocked
             healed += 1
-            print("  healed: .git/%s -> stale_locks/" % os.path.basename(p))
+            print("  [%s] healed: .git/%s -> stale_locks/" % (label, os.path.basename(p)))
         except OSError as e:
-            print("  FAILED to aside .git/%s (%s)" % (os.path.basename(p), e))
+            print("  [%s] FAILED to aside .git/%s (%s)" % (label, os.path.basename(p), e))
     orphans = len(glob.glob(os.path.join(GITDIR, "objects", "*", "tmp_obj_*")))
     if orphans:
         print("  note: %d orphaned tmp_obj files in .git/objects (host sweep deletes them)" % orphans)
-    print("git_unlock.py: %d lock(s)/aside(s) healed by rename" % healed)
+    print("git_unlock.py [%s]: %d lock(s)/aside(s) healed by rename" % (label, healed))
     return 0
 
 

@@ -238,3 +238,13 @@ Fri 08/28/2026  5:30:03.15  committed 4 change(s)
  6 files changed, 84 insertions(+), 1 deletion(-)
  rename changelog.d/{ => folded}/2026-08-29-simlink.md (100%)
 Sun 08/30/2026  5:30:02.41  committed 7 change(s)
+[main b043aaf] Nightly checkpoint Mon 08/31/2026  5:30:03.33 (auto, no deploy)
+ 12 files changed, 1696 insertions(+)
+ create mode 100644 I18N_READINESS.md
+ create mode 100644 ZOOM_HMI_PHONE_2026-08-30.html
+ create mode 100644 ZOOM_HMI_PROTOTYPE_2026-08-30.html
+ create mode 100644 ZOOM_HMI_SPEC.md
+ create mode 100644 changelog.d/2026-08-30-i18n-readiness.md
+ create mode 100644 changelog.d/2026-08-30-zoom-narrowing-funnel.md
+ create mode 100644 status.d/2026-08-30-zoom-narrowing-funnel.md
+Mon 08/31/2026  5:30:03.42  committed 12 change(s)

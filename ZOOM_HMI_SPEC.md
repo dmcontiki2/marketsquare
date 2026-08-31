@@ -153,8 +153,90 @@ What is missing:
    Several of these are not columns on `listings` today — **schema work is part of this build,
    and it overlaps the structured-facets track.**
 3. **Zero-count suppression is a server guarantee**, not a client filter.
-4. **Saved paths (Watches)** — persistence + the "For You = your saved paths, run fresh" read.
+4. **RESULT ORDER = THE RANKING SCORE, applied at LISTING level.** *(added 30 Aug after
+   David's question — see §6.1 below.)*
+5. **Saved paths (Watches)** — persistence + the "For You = your saved paths, run fresh" read.
    This is also the natural feed for the demand loop (search-miss → prospect match).
+
+### 6.1 · Result order — the Ranking Score gap (PROBED 30 Aug 2026)
+
+David asked whether properties are always ranked by the Ranking Score. **They are not**, and the
+gap is real rather than a prototype omission.
+
+**What is true on disk:**
+
+- The Ranking Score is `round(0.5 * avg_listing_quality + 0.5 * trust_score, 1)`
+  (`estate_agents.py::_rank_agents`) — a **straight 50/50, no further divide**. Its own
+  self-description: *"0.5 x avg live-listing quality (0-100) + 0.5 x trust score (0-100). Listing
+  quality never weighs less than half."* Asserted by `test_estate_agents.py` for three verticals
+  (79.0 property · 75.0 cars · 73.0 travel).
+- It **did** generalise beyond estate agencies: `VERTICALS` now carries **seven** —
+  property, cars, travel, collector, institution, service_company, placement.
+- **But it ranks AGENTS, not listings.** It orders `agent_profiles` for `/agents/nearby`
+  (suburb match first, then rank). Nothing in the listing feed consults it.
+- **Listings** are ordered by `_sort_map` in `bea_main.py`: default *newest*; options
+  *price_asc / price_desc / trust*; and *smart* = **trust 60% + freshness 40%** — with
+  **no listing-quality term at all**. `super_example` exemplars stay pinned first (SUPER-PIN-1,
+  David 20 Jul) in every variant.
+
+**Consequence:** the method meant to promote listing quality and trust does not touch the
+results a buyer actually browses. A seller can lift their listing quality and see no movement in
+the only place it would be felt.
+
+**CTO decision (RUL-037), executing David's stated intent rather than re-asking him:** Zoom's
+default result order becomes the **Ranking Score at listing level** — `0.5 x listing quality +
+0.5 x seller trust` — the same 50/50 as the agent formula, so one method governs both surfaces.
+Freshness drops from a 40% headline dial to a tiebreak. `super_example` pinning is unchanged
+(SUPER-PIN-1 stands). Both prototypes now sort this way and print the score on each card.
+
+**Build blocker this creates, named not hidden:** listing quality is computed per row today
+(`_import_quality_score`), **not stored** — so SQL cannot order by it. A maintained
+`quality_score` column on `listings` (written on create/edit, backfilled once) is a prerequisite
+of the Zoom result order, and belongs with the §6.2 schema work.
+
+### 6.2 · Reach — the funnel must count only what the viewer can actually see (PROBED 30 Aug 2026)
+
+David: *"the local searcher should only see local items and services; for stays and travel we do
+allow global but then searchable."* Canon confirms the model — and probing found the enforcement
+is not where Zoom needs it.
+
+**What is true on disk:**
+
+- **Buyer reach is its own two-tier axis** (`PRICING_CANON.md` §2): **Free $0 = local city ·
+  Global $5 = national + global.** `_buyer_tier()` returns exactly `free` | `global`.
+- The **$5 / $20 pair is the SELLER slot ladder** — Starter $5 (10 slots, 2T) and Pro $20
+  (30 slots, 10T). Two different axes. *Global buyer reach costs $5, not $20.*
+- **Travel and stays are exempt and borderless** on any tier (§2a): adventures, experiences,
+  accommodation, tours, heritage. **Online-mode listings are exempt too** (§2b) — an online tutor
+  is as usable from Sydney as from Pretoria. Physical categories stay tier-gated: *the Global
+  tier's value is reach for the physical world.*
+- **The gate is enforced ONLY on `/wishlist/feed`.** `GET /listings` — the endpoint every
+  category view and therefore Zoom uses — **takes no buyer identity at all.** No token, no tier.
+  Local-only behaviour is a client convention: the FEA asks for `activeCity.name` and gets it.
+  Anyone may call `/listings?city=Cape%20Town` directly.
+
+**Why this matters more for Zoom than for the current list:** the funnel puts geography on screen
+as a *question with counts*. The moment it offers "Cape Town · 37" to a Free buyer, either the
+count is a lie or the buyer taps into something they cannot see — rule 2 breaks. The present list
+view hides the hole because it never offers another city; the funnel would expose it immediately.
+
+**CTO decisions (RUL-037):**
+
+1. **The reach gate moves into `/listings`**, server-side from the buyer token, applied *inside*
+   the same filtered set the facet counts come from — never as a post-filter. Prerequisite of
+   the Zoom build, alongside the `quality_score` column.
+2. **Geography is tier-shaped.** For a local (Free) buyer the geography question opens at
+   *suburb within my city* and city is not an askable level. For a Global buyer, city becomes a
+   level. Travel and online-mode ignore this entirely — they are borderless by §2a/§2b, and the
+   destination funnel (§3.4) IS the "global but searchable" mechanism David asked for.
+3. **"Empty" and "locked" are different, and only one of them is hidden.** Rule 2 removes
+   zero-count options. An out-of-reach option is NOT zero-count — it is real inventory behind a
+   $5 tier. Per the ceiling doctrine (RUL-066 rung 1: the rejection and the offer arrive
+   together), out-of-reach geography is **shown with its true count and an explicit lock**, never
+   silently hidden. That makes the funnel the most honest upgrade surface in the product: the
+   buyer sees exactly what $5 buys, counted, at the moment they want it.
+4. Every ceiling-hit logs its event (RUL-066 rung 3) — locked-geography taps are demand telemetry
+   for which cities to open next.
 
 ---
 
@@ -197,6 +279,12 @@ Same window, same discipline, no launch-weekend deploys. Full launch is Mon 1 Se
    lower half, no horizontal page overflow.
 7. The four named journeys complete within their measured tap budgets against live data.
 8. The flag defaults OFF and the pre-Zoom category view still renders when it is off.
+10. Facet counts are reach-scoped: a Free buyer is never offered a count that includes listings
+    they cannot open, and travel/online-mode remain borderless on every tier.
+11. An out-of-reach option is shown LOCKED with its true count, never hidden; a zero-count option
+    is still removed. Empty and locked are distinguishable in the UI.
+9. Results are ordered by the Ranking Score (0.5 quality + 0.5 trust), identically to the agent
+   list, with `super_example` still pinned first — one ranking method, two surfaces.
 
 ---
 

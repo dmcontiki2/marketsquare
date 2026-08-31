@@ -288,7 +288,10 @@ const JOBS={"Home & Garden":["Gardener","Landscaper","Tree felling","Pool servic
 function band(v,cuts,labels){for(let i=0;i<cuts.length;i++)if(v<cuts[i])return labels[i];return labels[labels.length-1];}
 
 function makeListing(cat){
-  const g=geoOf(), o={cat,geo:g,trust:ri(35,96)};
+  /* RANKING SCORE (estate_agents.py _rank_agents): 0.5 x listing quality + 0.5 x trust.
+     The canon formula is a straight 50/50 -- listing quality never weighs less than half.
+     Live today it ranks AGENTS; Zoom applies it to the LISTING order as well. */
+  const g=geoOf(), o={cat,geo:g,trust:ri(35,96),q:ri(28,99)};
   if(cat==="property"){
     o.mode=wpick({Rent:56,Buy:44});
     o.ptype=wpick({House:30,Apartment:34,Townhouse:22,Room:8,Cottage:6});
@@ -467,6 +470,9 @@ function nextQ(set){
 
 /* ---------------- render ------------------------------------------------------ */
 function fmtR(n){return "R"+n.toLocaleString("en-ZA");}
+/* Ranking Score — the promotion method, applied to the RESULT ORDER. */
+const rankOf=d=>0.5*(d.q||0)+0.5*(d.trust||0);
+const byRank=(a,b)=>rankOf(b)-rankOf(a);
 /* One geo chip that deepens — never one chip per level. */
 function geoTrail(){
   const p=[]; if(CAT!=="travel")p.push("Pretoria");
@@ -542,7 +548,7 @@ function render(){
   $("stage").innerHTML=html;
 
   /* results */
-  $("res").innerHTML=set.slice(0,60).map(d=>{
+  $("res").innerHTML=set.slice().sort(byRank).slice(0,60).map(d=>{
     const price=d.cat==="services"?fmtR(d.price)+"/hr":fmtR(d.price);
     const meta=d.cat==="property"?`${d.mode} · ${d.geo.l2}`
       :d.cat==="services"?`${d.when} · ${d.geo.l2}`
@@ -550,7 +556,8 @@ function render(){
       :d.cat==="travel"?`${d.geo.l1}, ${d.geo.l0}`
       :`${d.grade} · ${d.geo.l1}`;
     return `<div class="li"><div class="tt">${d.title}</div><div class="mm">${meta}</div>
-      <div class="pp">${price}</div></div>`;}).join("");
+      <div class="pp">${price}<span style="float:right;color:var(--mut);font-weight:600;font-size:11.5px"
+        title="Ranking Score = 50% listing quality + 50% trust">${rankOf(d).toFixed(0)}</span></div></div>`;}).join("");
 
   $("save").disabled=!chips.length;
   $("tot").textContent=DATA.length.toLocaleString();

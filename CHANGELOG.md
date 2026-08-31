@@ -1,3 +1,632 @@
+## 2026-08-31 — RG-0214's live half re-aimed: the launch-eve red was FALSE, and a leak guard was added
+
+**Third-party launch sweep (T-1 to full launch, RUL-001).** The regression ledger opened the day at
+**exit 1** on one red — `RG-0214: deploy report 2026-08-30T17:04:29Z carries no migration-035 step`,
+run ending `Do not deploy over this`. A red board refuses a launch-day deploy, so this was the
+highest-cost item on the board on the wrong morning.
+
+**The red was false, and the fault was in the assertion, not the world.** RG-0214's live half searched
+`/static/post_deploy_status.json` for a step whose *name* contains "035". That report aggregates the
+whole post-deploy chain into **one** step — probed live: `seed=ok`, `ladder_seed=ok`, `migrations=ok`.
+A per-migration step name has never existed in that format, so the check could only ever go red. The
+asserted property was independently PROBED live (today's daily watch, three ways: the `MAP-LIVE-1`
+nginx block with both exact-match locations under `auth_basic`; origin `127.0.0.1:8000` serving both
+documents 200 at 64,667 B and 110,819 B; 401 anonymous at the edge).
+
+**Fixed under RUL-037 (CTO call), per the never-weaken rule — the correction is written into the
+entry's own ref, dated, with the reason.** The live half now asserts:
+
+- the deploy report's migration chain step ran and did not fail, read in the report's **own**
+  vocabulary (`migrations`) rather than a name that cannot exist;
+- migration 035 still carries the self-proof clauses that make `migrations = ok` mean *proven* —
+  both exact-match locations, `auth_basic`, and its "NOT claiming success" refusal path;
+- **neither gated document answers 200 anonymously** — a guard the old assertion did not have. The
+  information leak this entry exists to prevent is now asserted directly and probed live
+  (`/orchestrator/defence_map.html` and `/orchestrator/watch_register.md` both **401**).
+
+`py_compile` green; backup kept beside the file; board re-run **exit 0 · 214 entries · 197 ok ·
+16 open · 0 REGRESSED · 0 UNVERIFIED**.
+
+**DW-086 CLOSED the same day.** The daily watch diagnosed it correctly and correctly declined to fix
+it (observe-only lane; `scripts/regression_ledger.py` is not a watch-owned path) and named an
+attended CTO session as the owner. This was that session.
+
+**Class lesson, carried in prose deliberately and not as a new meta-harness on launch eve:** an
+assertion that names evidence which has never existed is a false-red generator, and the evidence
+ladder cuts both ways — a *harness* can claim a rot that is not there just as a *file* can claim a
+state that is not true. Every mechanical version of "no assertion may check for evidence that cannot
+exist" is brittle enough to become a false-red generator itself; building that the night before full
+launch trades a known small risk for an unknown one. Named in `THIRD_PARTY_LAUNCH_REGISTER.md`
+watch-outs so a calmer session can decide it.
+
+Also recorded: `post_deploy_status.json` aggregates migrations into ONE step (any future assertion
+wanting to prove a *specific* migration must prove it another way), and day-name drift in the launch
+dates — 29 Aug 2026 was a **Saturday** and 1 Sep 2026 is a **Tuesday**, while the docs say Friday and
+Monday. The RUL-001 **dates** stand and are unchanged; RULINGS.md was deliberately not edited,
+because amending a ruling's wording is David's call, not Claude's.
+
+Files: `scripts/regression_ledger.py` · `DAILY_WATCH/OPEN_ITEMS.md` ·
+`THIRD_PARTY_LAUNCH_REGISTER.md` (rewritten from today's probes).
+
+## 2026-08-31 — RAMP-EVIDENCE-1: the outreach ramp was growing on the absence of evidence (RG-0225)
+
+David flipped the Resend $20/50k tier (D6, RUL-061) and asked what it unlocks for beating the
+contagion model. Checking rather than answering found the honest reply — **the mail quota was never
+the binding constraint** — and, underneath it, a live defect in the thing that IS the constraint.
+
+**The defect.** RAMP-1 (RG-0213) doubles a city's wave batch when the last wave's bounce rate is
+≤ 2%. That rate is computed from `prospects.bounced_at` in the **local** CityLauncher database, and
+the local database only learns about a bounce when `pull_from_server.py` runs. That script's own
+docstring says *"Run BEFORE composing any wave"* — but **nothing enforced it, `wave_runner` never
+called it, and nothing recorded whether it had ever happened.** Probed: the local store holds 110
+`sent` events and **no other event of any kind**, while the webhook receiver that maps
+`email.bounced → bounced` lives server-side in `CityLauncher/api/server.py`. Both armed cities were
+therefore scoring a clean streak off zero bounces that had never been looked for, and RAMP-1 would
+have doubled 12 → 24 → 48 → 96 on **ignorance**. Same family as RG-0133 (no instrument wears a
+health colour nothing measures) and RG-0202 (a verify half must answer for the thing it gates).
+
+**Fixed the same session, CTO call under RUL-037:**
+
+- `pull_from_server.py` now writes a dated witness, `data/last_pull.json` (pulled_at, verdicts seen,
+  what was applied).
+- `wave_runner.py` gained `evidence_state(city)`: a wave may only count toward the clean streak if
+  the verdicts were pulled **after** it was sent. Never pulled, or pulled before the last send →
+  hold at base and say so. **Deliberate boundary: stale evidence never blocks a send** — the
+  stop-loss gate owns blocking; this owns *growing*. Failing closed means holding at 12.
+- `--plan` now prints the evidence line per city, and flags any city pinned by an explicit
+  `batch_size`.
+- Removed the explicit `batch_size: 12` pins on **Pretoria** and **Johannesburg**. They equalled the
+  base so they changed nothing on day one — but an explicit per-city size **overrides** `ramp_state`,
+  so those two cities could never have earned a doubling however clean they ran. The ramp David
+  ratified on 30 Aug was inert on the only two armed cities. National's documented 30 stays
+  (RG-0213's named exception).
+- **RG-0225 LOCKED**, behaviourally proven: never-pulled and stale-pull both refuse to grow, a pull
+  after the last send allows it, and a city with no waves yet sits at base without complaint. The
+  policy half asserts that no *armed* city may re-acquire a `batch_size` pin.
+
+**Net effect right now:** both armed cities read `STALE — ramp held at base`. The moment
+`sync_to_server.bat` runs and the 29–30 Aug waves prove genuinely clean, Pretoria earns 24
+automatically. Earned, not configured — as ratified.
+
+**Also recorded (probed, not blocking):** Johannesburg's sendable agency pool is **empty** (47
+emailed, 0 left); Pretoria holds 201. Pool depth, not send rate, is what binds — which is the
+model's own `scrapeWk` lever.
+
+Files: `../CityLauncher/pull_from_server.py` · `../CityLauncher/emailer/wave_runner.py` ·
+`../CityLauncher/emailer/waves_policy.json` · `scripts/regression_ledger.py`.
+
+## 2026-08-31 — OPTOUT-LANE-1: people could not opt out at all; lane built, verifier written, RG-0229 RED until proven live
+
+David: *"the blocker is the false acknowledgement of the opt out database, which doesn't exist… This is a project kill risk."*
+
+### What was actually true (probed, 31 Aug)
+- Every outreach email since 24 Aug carries an unsubscribe link → `{api_base}/optout?email=…`
+- **No `/optout` route existed anywhere.** bea_main.py, main.py, the Cloudflare worker and ops configs all swept.
+- **No server-side `suppression` table DDL existed** either.
+- The local register had never been created.
+- `_is_suppressed()` — docstring: *"the opt-out register is verified before ANY single email"* — returned `False` ("not suppressed, send it") whenever the table was absent.
+
+**110 emails went out carrying a dead unsubscribe link, and the guard that was supposed to honour opt-outs had never once consulted real data.**
+
+### Built this session
+- **SUPPRESS-FAILCLOSED-1** — the absent-register path now returns `True` and refuses. *An absent register is not permission.* Verified: `_is_suppressed()` → `True` with no table, where it returned `False` before.
+- **`/optout` GET + POST** in bea_main.py — one click, no login, idempotent, never errors to the caller, does not reveal whether the address was on a list; writes the register (creating it if absent) and sets the prospect's status so the existing pulldown carries it. GET *and* POST because RFC 8058 List-Unsubscribe-Post uses POST; a false opt-out costs one prospect, a missed one costs a breach — asymmetric on purpose.
+- **`/optout/status`** — counts only, never addresses. The proof endpoint.
+- **`verify_optout_lane.py`** — five gates along the path a real opt-out travels: anonymous 200 → click recorded → register reaches the local pool → guard refuses a real opted-out address → guard refuses when the register is missing.
+
+### A live catch worth recording
+`py_compile` passed on the new route while `HTMLResponse` was not imported at that point in the file (the only import is an alias 17 000 lines lower). The first real request would have raised `NameError`. Caught by **running** the route logic against a temp DB rather than compiling it — *"it compiles" is not "it works"*, which is the same gap this entire lane exists because of.
+
+### Status: NOT LIVE
+`RG-0229` is OPEN and **RED — 1 of 5 gates passing.** The route is staged in `bea_main.py` and needs David's deploy. The live probe returns **404, not 403**, so `/optout` is *not* behind the review gate and a deploy should be sufficient — to be **proven by gate 1**, never assumed.
+
+**Nothing sends until the verifier prints 5/5.** That is now machinery, not a promise: RG-0229 fails red and names the failing gates.
+
+Files: `bea_main.py` (OPTOUT-LANE-1 route block) · `../CityLauncher/emailer/emailer.py` (SUPPRESS-FAILCLOSED-1) · `../CityLauncher/verify_optout_lane.py` · `scripts/regression_ledger.py` RG-0229.
+
+## 2026-08-31 — RUL-080: there is only one $5 tier (principle ruled); and the 30 Aug discussion did not touch $5
+
+David asked, at the end of the Zoom/Squire session: "There should not be two $5 tiers, only one. If i
+misled or mis-spoke then it should revert to one tier... And todays whole discussion should not have
+effected the $5 tier?"
+
+**He did not mis-speak, and the session changed nothing about $5.** PROBED: both $5 entries have sat
+in PRICING_CANON.md since **16 Jun 2026, in the same commit (1a2d254)** — *Starter* $5 (10 seller
+slots, §1) and *Global* $5 (buyer reach, §2). A **third** $5 exists as well: the **Agency Pro seat**
+(RUL-048, 23 Aug) at $5/month for 20 slots + the Pro AI suite. RUL-078 added Global reach to **Pro
+($20)** and takes nothing from either $5 product. No code, price or entitlement on $5 was altered.
+
+**A defect of my own, corrected in place.** The note that first recorded the collision said "there are
+NOW two distinct $5 products". That "now" wrongly implied same-day origin — a misdated status
+assertion is the same defect class as an undated one (the ONETAP_SETUP lesson). PRICING_CANON §2c now
+carries the 16 Jun provenance explicitly.
+
+**The ruling:** there must be ONE $5 tier, carrying the functions and features already assigned to it.
+
+**Mechanism NOT executed this session (CTO, RUL-037):** the three $5 products are genuinely different
+bundles across two axes, `wishlist_subscriptions` is a LIVE table carrying Paystack refs, and full
+launch is tomorrow (Mon 1 Sep, RUL-001). A billing-structure migration on launch eve is exactly the
+class of change that must not be improvised — and the ruling is a PRINCIPLE, which needs no migration
+to be true. Recommendation for the post-launch pricing pass, vetoable: fold Global buyer reach INTO
+Starter — Free (local, 2 slots) · Starter $5 (10 slots + global reach) · Pro $20 (30 slots + reach +
+Squire) — retiring the separate buyer subscription and re-expressing the Agency seat against Starter.
+Same logic as RUL-078, one rung down. Consequence to weigh, and why the call is David's: a pure buyer
+who never sells would then buy a seller plan to get reach.
+
+**Concurrent-session note (this is the CHANGELOG-COLLISION-1 class, caught not suffered).** This work
+was written 31 Aug ~09:15 SAST for a discussion held late on 30 Aug. Another session had meanwhile
+claimed **RUL-079** (agency outreach at week 0) and **RG-0225/0226/0227**. Two collisions were caught
+before landing: the ledger's own LEDGER-DUP-1 guard refused a duplicate RG-0222 at import (moved to
+RG-0224), and a fresh re-read of RULINGS.md caught RUL-079 already taken (moved to RUL-080).
+Append-only discipline held throughout — nothing was renumbered, overwritten or lost. The lesson
+stands as canon already states it: re-read before writing, never assume the last number you saw is
+still the last number.
+
+Files: PRICING_CANON.md §2c · RULINGS.md RUL-080 · scripts/rulings_check.py RUL-080 ·
+OPEN_LOOPS.md [D] pricing row. Rulings check: 80 checked, 0 FAIL. Ledger: 220 entries, 0 duplicates.
+
+## 2026-08-31 — Maintenance loop: a customer-data leak found and closed on the eve of launch, and the brain taught to read the lane that is actually open
+
+**Queue: empty, and that was the finding.** 0 new / 0 triaged / 0 fix-shipped; 26 verified,
+7 closed. The shadow agent ran clean (`.maint_agent/run_20260831T053704Z.json`, 0 seen) and
+its heartbeat reached `/dashboard/maint` at 05:37:21Z. But an empty queue on the day before
+full launch (RUL-001) is a claim worth probing rather than reporting, and probing it produced
+three defects — none of them filed by anyone, all of them found by looking at why nothing
+was filed.
+
+**DASH-TRIAGE-REDACT-1 — `GET /dashboard/email-triage` was serving customer identities to
+strangers (RG-0222).** Probed anonymously, no cookie and no key: the endpoint returned
+`from_addr`, `subject` and 600 characters of `draft_reply` for every inbound email. Its own
+docstring explained why — *"mirrors /dashboard/summary's no-auth posture (security = obscure
+dashboard URL)"* — and it did mirror it, right up until DASH-SUMMARY-REDACT-1 (RG-0211) cut
+that sibling to a heartbeat on 30 Aug and left this one behind. Today the queue holds only
+test rows carrying David's own address; from tomorrow it is customer mail, which RUL-069's
+firewall doctrine exists to keep between the user and the triage AI. An obscure URL is not a
+control for personal data. Counts now answer anonymously (the page's tiles need nothing
+more); the rows need `X-Admin-Token`/`X-Admin-Key` through `_summary_caller_is_admin` — the
+credential the dashboard already holds via `omTok` — and the row list degrades to a sign-in
+note rather than breaking (RG-0133). Both loaders (`dashboard.server.html`, which ships, and
+the local `dashboard.html`) now attach the token, so RG-0075's drift line holds.
+**Evidence:** the real function source lifted out of `bea_main.py` and exercised over a stub
+DB seeded with `angry.customer@example.com` — the anonymous payload contained zero of the
+three PII strings and `items == []`; the admin payload carried the full row. A live sweep the
+same run probed every other unauthenticated `/dashboard/*` route (fixed-costs, bit, presence,
+cost, scan, maint) and found no other leaking sibling.
+
+**MAINT-INTAKE-2 — the maintenance brain was reading a door that RUL-040 closed (RG-0223).**
+The agent's only intake is `GET /admin/faults?status=new`, fed by the in-app REPORT tab — and
+RUL-040 *removes* that tab at soft launch, when customer complaints take over. `/flags` reads
+`fault_report=false`, which is correct and deliberate since soft-public opened on 29 Aug. So
+every run since has honestly reported "0 seen" while the lane actually carrying customer
+complaints — inbound mail → `POST /email/inbound` → `email_triage`, 15 rows — was never
+looked at by the brain at all. A loop that reports an empty queue because it is reading a
+closed door is worse than one that reports nothing: it manufactures a green day. The agent
+now censuses the email lane on every run and says what it holds, in the report and on the
+heartbeat. Deliberately a census and not a fix lane — it counts and speaks, it never drafts
+or sends; email replies stay behind `EMAIL_AUTO_SEND` and legal/compliance stay excluded.
+**Evidence:** the patched agent at 05:43Z printed `email lane 15 total, 1 held (30d {other:1,
+support:4})` against the live site.
+
+**LEDGER-PENDING-BUILD-1 — the board was printing an instruction the canon forbids obeying.**
+RG-0221 (ZOOM) has reported READY TO LOCK on every run since it was written, because while
+the build has not started its harness can only reach the pre-build half — the spec is intact,
+the prototypes are on disk — and that half passes on day one. RG-0221's own ref says promote
+only *when built*, and extend the assertion to eight shipped-code properties. Obeying the
+print would lock the spec-only assertion and retire the strong one: weakening an assertion to
+make it pass. Ignoring it daily is worse — it teaches sessions that READY TO LOCK is noise,
+and the next real one gets skipped, which is the DW-079 failure arrived at backwards. A
+harness that can only reach its pre-build half now says PENDING BUILD, and the runner reads
+that as OPEN-with-a-reason, never an invitation to promote. Sibling of LEDGER-FAULT-1, found
+the same way: by the board printing something that was wrong.
+
+**Ledger:** green before (after `scripts/maint_deps.py` restored `httpx`/`fastapi`, which had
+demoted RG-0181/RG-0182 to NOT EVALUATED and exit 2) and green after — every locked fix
+holding, 19 known defects open. Rulings check: 76 checked, 0 FAIL, 0 WARN. Escalation brief:
+none written — no escalations in 24h.
+
+**Not deployed.** RG-0222's source half passes and its live half is correctly red until the
+change ships; RG-0223's heartbeat half reads PENDING BUILD until `_MAINT_HB_FIELDS` deploys.
+Both ride NIGHTLY-SHIP-1. The privacy fix is the one to watch land.
+
+## 2026-08-31 — GOV-DOMAIN-1: government and military domains refused at the send chokepoint (RG-0228)
+
+David, on the morning of the last pre-launch send day: *"You must please check for us that we don't
+send to the governmental POPIA agents."*
+
+**Checked against the live pool, not the notes.** The unsent pool holds **1 409 rows**. Eight
+officer/government addresses sit in it — and PRIV-OFFICER-1 (shipped hours earlier the same day)
+refused only **six**:
+
+| Address | City / category | Refused before this fix? |
+|---|---|---|
+| complaints.ir@justice.gov.za | Bloemfontein / Services | yes (role) |
+| compliance.officer@dsd2.org | Dallas / Tutors | yes (role) |
+| compliance@pamgolding.co.za | National / Estate Agents | yes (role) |
+| informationofficer@seeff.com | National / Estate Agents | yes (role) |
+| popia@motus.co.za | National / Car Dealers | yes (role) |
+| popia@mcmotor.co.za | National / Car Dealers | yes (role) |
+| **natashaz@tshwane.gov.za** | **Pretoria / Tour Operators** | **NO — would have sent** |
+| **work2future@sanjoseca.gov** | **San Jose / Tutors** | **NO — would have sent** |
+
+**Why the existing guard could not catch them.** PRIV-OFFICER-1 matches the ROLE in the local-part.
+A named person (`natashaz@`) or a programme mailbox (`work2future@`) at a government body has no
+role in its local-part, so it sails through by construction. Today's wave composition happened to
+exclude both — Tour Operators is an agency category excluded from Pretoria's wave, and San Jose is
+not armed — but that is **luck, not a control**. It is the same lesson PRIV-OFFICER-1 was itself
+born from that morning: *a note is not a control.*
+
+**The fix (CTO, RUL-037):** a second axis at the same chokepoint. PRIV-OFFICER-1 polices the
+LOCAL-PART (the role); **GOV-DOMAIN-1 polices the DOMAIN (the institution)** — exact-label match on
+`{gov, govt, mil, gouv}`, applied both in `send_email()` and in batch composition. Shape-based, not
+a blocklist, so a re-scrape cannot reintroduce what a list edit removed.
+
+**Deliberately NOT blocked: `.edu` and `.ac.*`** — RUL-059's US lane targets tutoring businesses and
+campus learning-support services, which are not government. Over-blocking is as much a defect as
+under-blocking (the RG-0217 boundary).
+
+**Verified after the change:** all 8 refused; 8 ordinary business addresses still send, including
+the deliberate near-misses `natasha@govender.co.za`, `bookings@govhotel.com` and
+`admissions@stanford.edu`. Zero false positives.
+
+Treatment matches PRIV-OFFICER-1: these rows are **held, never suppressed, never marked opted-out**
+— nobody opted out. Reach them by their contact form.
+
+Files: `../CityLauncher/emailer/emailer.py` (`_looks_government`) · regression ledger RG-0228
+(LOCKED). Ledger: 221 entries, 0 duplicates.
+
+## 2026-08-31 — GIT-LOCK-5: git_unlock.py swept only one repo while reporting "nothing to sweep"; plus the answer to "what else isn't working"
+
+David, after the GOV-DOMAIN-1 finding: *"We cant stop everything because i thought we were well
+protected but the design was not implemented, and you reported it as working, now today it isn't
+working. What else is not working which has been reported as working?"*
+
+Answer by measurement, not reassurance. Full regression-ledger run: **214 entries · 196 holding ·
+1 REGRESSED · 16 open · 0 unverified.**
+
+### The one live regression — and it is exactly the pattern he named
+**RG-0197 was RED**: `CityLauncher/.git/index.lock` and `HEAD.lock`, both 0-byte, **stranded 134
+minutes** — the next commit in the wave repo would have failed. Running the designated healer
+returned:
+
+    git_unlock.py: no stale locks, nothing to sweep
+
+**The tool reported clean over a live fault.** Cause: `REPO` was hard-coded to MarketSquare, so
+`GITDIR` only ever pointed at MarketSquare's `.git` — while the script's own usage line says "run
+before any sandbox git write" and RG-0197 asserts it "covers EVERY repo a wave or a deploy fires
+from". CityLauncher, the repo the **wave lane** commits from, was invisible to it.
+
+**GIT-LOCK-5:** `_repos()` now sweeps every sibling repo beside MarketSquare, and every line of
+output carries its repo label. Verified: both CityLauncher locks healed by rename, locks clear,
+RG-0197 green — *"both repos carry the self-heal … and neither holds a stranded lock"*. No new
+ledger entry: the assertion was right and the code was wrong, which is the ledger working.
+
+### A defect of my own, from last night
+**RG-0224 (Squire) lacked the anti-promotion guard its sibling RG-0221 carries.** Both are
+spec-only entries for unbuilt features, so both print "now passing → change state to LOCKED" —
+and promoting RG-0224 would have locked the spec-only assertion and **retired its nine
+shipped-code properties** before a line of Squire exists. RG-0221 already carried
+LEDGER-PENDING-BUILD-1; RG-0224 now does too.
+
+### The structural answer
+The ledger only knows what somebody thought to assert. "196 holding" means *196 assertions pass*,
+not *196 things work*. Both of today's email holes prove it: the July note said "prefer their
+contact forms" for three flagged addresses and **no assertion existed** — the moment one was
+written (PRIV-OFFICER-1) the true count was five, and the moment a second axis was written
+(GOV-DOMAIN-1) it was eight. Nothing was reported falsely; the surface was **unasserted**, and
+unasserted surface is indistinguishable from working surface until someone probes it.
+
+### Also found while probing
+`GET https://trustsquare.co/health` now returns **403**. The CLAUDE.md note from 25 Jul (as
+superseded 5 Aug by GATE-ENFORCE-1) states that `/health` alone still answers openly. It does not.
+Anonymous self-verification is now fully closed; in-gate checks must drive David's browser. The
+canon note needs correcting at the next attended pass — an undated/stale capability claim is the
+same defect class this entry is about.
+
+Files: `scripts/git_unlock.py` (GIT-LOCK-5) · `scripts/regression_ledger.py` (RG-0224 guard) ·
+run captured at `outputs/ledger_31aug.txt`.
+
+## 2026-08-31 — RUL-079: agency outreach opens at WEEK 0, and the three guards that had to ship with it
+
+David, the same day he activated the Resend $20/50k tier: *"i agree Claude, please do it."*
+
+**The ruling.** `agGateW` moves from week 8 to **week 0** in the contagion model, and the National
+key-accounts lane is ARMED (`waves_policy.json`: `armed` + `gates_green` true, batch 30). The
+reasoning is part of the ruling: the model's own best lever set is *roll wk4 + agencies wk0*,
+reaching **130 sellers by wk52 against the pinned median of 99**, and its Ideas tab states the
+mechanism — one agency at 14 agents outruns 300 cold emails at 0.5%, and agencies are the only hub
+already instrumented.
+
+**What this is not: a volume increase.** The Resend flip that prompted the conversation changes no
+lever in the model — there is no email-quota lever — and RAMP-1 (RG-0213) still governs batch
+growth, unweakened. What changed is the earliest week David's per-wave word may be given. The send
+itself is still his act (`--arm`).
+
+**Pre-flight PROBED before arming:** 27 ZA prospects (Estate Agents 7 / Car Dealers 6 / Travel
+Agencies 4 / Tour Operators 10), 0 bad MX, all four categories exact-keyed to their own template
+(no RG-0218 fuzzy-match risk), jurisdiction ZA covered by RUL-063. Real hubs — Pam Golding, Seeff,
+RE/MAX, Rawson, Chas Everitt, Motus, Halfway, NMI, and nine tour operators.
+
+**Three guards shipped with it, all CTO calls under RUL-037. None were optional.**
+
+**PRIV-OFFICER-1 (RG-0226).** The National note had said since 27 July: *"POPIA-officer addresses
+(Motus, Bidvest McCarthy, Group 1) are FLAGGED in notes — prefer their contact forms for first
+touch."* A note is not a control, and it was also wrong. A shape probe found **five** on that list
+(Pam Golding's `compliance@` and Seeff's `informationofficer@` had never been flagged) and **seven**
+across the whole pool — including `complaints.ir@justice.gov.za` sitting on a **SUPERSPAR
+Botshabelo** row, i.e. the Department of Justice complaints desk about to be sent marketing for a
+supermarket. That is not a bounce, that is the sending domain. The rule now lives at the send
+chokepoint beside JUNK-GUARD-1, matched by **shape** so a re-scrape cannot reintroduce what a list
+edit removed. The addresses are **held — never suppressed, never marked opted-out**, because nobody
+opted out; writing a fake opt-out into the POPIA register to solve an engineering problem would be
+its own offence. Reach them by contact form. Boundary asserted both ways: `info@`, `sales@`,
+`support@`, `enquiries@`, `reservations@` must keep sending.
+
+**SUPPRESS-GATE-1 (RG-0227).** Probed on the eve of the wave: `no such table: suppression`.
+emailer.py's SUPPRESS-1 chokepoint reads a local opt-out register that `pull_from_server.py`
+creates — and the pull had never run on this machine. **The chokepoint had been enforcing against
+nothing, silently, for the whole first outreach fortnight.** No real send now proceeds without it.
+Deliberately asymmetric to its sibling RG-0225: stale bounce evidence only *holds* the batch,
+because volume is a business risk; an absent opt-out register *blocks*, because honouring an
+opt-out is a legal obligation with no safe smaller version. Dry-runs stay unrestricted.
+
+**PLAN-TRUTH-1 (in RG-0226).** `sendable_by_category` now counts only what the chokepoint would
+accept, so National reads its true **22 of 27** with `held by guards: privacy_desk×5` printed
+beside it. Previously the plan promised addresses the sender would silently refuse.
+
+**State now:** the lane is armed and one gate from firing. `sync_to_server.bat` clears it — the
+same command that arms the opt-out register, writes the RAMP-EVIDENCE-1 witness, and lets Pretoria
+earn its 12 → 24.
+
+**Also fixed, unrelated and self-inflicted:** a sandbox SQLite write against `prospects.db` failed
+with `disk I/O error` mid-transaction and left a hot journal that made the database unreadable —
+including read-only opens. Recovered from the pre-write backup (integrity ok, 1519 rows, 110 events,
+nothing lost) and the mount rule written into `Projects/CLAUDE.md`: **the sandbox reads SQLite on
+this mount and never writes it.** The better fix was the one that needed no mutation anyway.
+
+Files: `docs/TrustSquare_Contagion_Model_v0.2.html` · `RULINGS.md` · `scripts/rulings_check.py` ·
+`scripts/regression_ledger.py` · `../CityLauncher/emailer/emailer.py` ·
+`../CityLauncher/emailer/wave_runner.py` · `../CityLauncher/emailer/waves_policy.json` ·
+`../Projects/CLAUDE.md`.
+
+## 2026-08-30 — ZOOM: the category view becomes a narrowing funnel (design ratified, RUL-076)
+
+**ZOOM-HMI-1 · design only — nothing shipped, nothing deployed, flag not created yet.**
+
+David asked how to simplify the category UX at scale: "a maximum of 4 boxes to zoom in".
+Answer built rather than drafted — two live prototypes over 5 200 synthetic listings, then
+ratified: the filter PANEL is replaced by a FUNNEL that asks one question at a time — the facet
+with the highest measured information gain — as large tap targets each carrying its true count.
+Zero-count options are removed, so a dead end is unreachable. Geography is one chip that deepens.
+Typing is a shortcut through the funnel. A saved path is a standing interest — which is what
+"For You" becomes: your saved paths run fresh, not a black box.
+
+Measured tap budgets: rental in a named street 3 · gardener in your street 3 · a specific MtG
+card 3 · used BMW at mileage and budget 4 · tour 4 / stay 5 / local guide 4 in a destination.
+
+**Three engine rules were found by BUILDING it, and none would have survived a paper design:**
+- Information gain ALONE asks incoherent questions ("which model?" before "which make?";
+  "budget?" before "rent or buy?"). Facets therefore carry a dependency graph, and dropping a
+  parent chip drops its children.
+- Geography must never OPEN the funnel — suburb is the highest-entropy field in the data, so raw
+  gain made "which part of town?" the first question in all four categories. Suppressed until
+  intent exists.
+- Geographic DEPTH matches how far a buyer travels for the thing: property and services reach
+  STREET, cars SUBURB, collectables CITY only. It asked "which street?" for a trading card.
+
+**Travel (tours / stays / guides) inverts the geometry** and is now a fifth lane in both
+prototypes: the user is by definition not local, so geography stops being proximity and becomes
+DESTINATION, opening a level higher at country.
+
+Phone build separately verified in a real renderer (headless Chrome, 378×800): the question moves
+to a bottom sheet in the thumb zone, results stay visible above, chips scroll on one line, never
+more than 6 options, arrival collapses the sheet and gives the screen back. Two bugs the render
+caught that logic tests could not — result cards collapsing to 7px slivers (grid rows stretching
+instead of sizing to content) and the desktop design notes pushing the whole UI off a phone
+screen — both fixed.
+
+Supersedes the unapproved chip-row FEA direction in SEARCH_DIALIN_HMI_DESIGN.docx (6 Jul) for
+SEARCH-HMI-1. The 6 Jul SERVER work — same-set facet counts on /listings — is untouched and is
+the foundation this builds on.
+
+**David's binding constraint, recorded:** *"I would actually like to see it on the actual app
+first, not the live one that is in the field now."* So the build is flag-dark in the REAL app
+(default OFF, existing view untouched), viewed locally and then in the gated sandbox RUL-075
+already schedules for 30 Oct — shared, not duplicated — and **arming the flag in the field is
+David's act.** Build window: first post-launch, riding with the RUL-065 listing-friction batch.
+
+Files: `ZOOM_HMI_SPEC.md` (build spec) · `ZOOM_HMI_PROTOTYPE_2026-08-30.html` ·
+`ZOOM_HMI_PHONE_2026-08-30.html` · `zoom_shots/` (rendered evidence) · both prototypes indexed
+in `Projects\Visuals` · RULINGS.md RUL-076 · regression ledger RG-0221 (OPEN) ·
+scripts/rulings_check.py RUL-076.
+
+## 2026-08-30 — SQUIRE-1: the Pro subscriber's personal agent (RULED, unbuilt)
+
+David asked what would make the $20 tier wanted "above all else, without detracting from the $5",
+sketching a PA that watches for the cards he collects, finds the best local maths tutor, and
+approaches them with his child's requirements. Ruled the same session (RUL-077) and named by him:
+**Squire** — "I love the new word SQUIRE".
+
+**The load-bearing idea — the tiers sit on different axes, so they cannot cannibalise:**
+$5 Global buys **REACH** (where you may look). $20 Pro buys **REPRESENTATION** (something that
+acts while you are not looking). Reach is never moved up into $20, so no $5 subscriber loses
+anything — David's binding condition. Squire attaches to the EXISTING Pro subscription; **no new
+tier is created** (David corrected his own wording from "$20 buyers tier" to "$20 subscriber").
+
+**Why it is not a bolt-on:** anonymity is load-bearing, so a TrustSquare buyer cannot go and ask
+around the way they would in any other marketplace. Squire fills a hole the product's own
+anonymity creates — the missing half of the model.
+
+**What it does that a Watch cannot:** specifies (plain words → a Zoom path plus a written brief,
+and asks the questions you forgot), watches continuously, shortlists WITH REASONS, and prepares
+the approach so an introduction starts with the seller understanding the need. That last one makes
+a Squire lead materially better for the SELLER too — worth something to both sides of a market
+still thickening.
+
+**The cap and the "token", answered (CTO, RUL-037):** David's instinct was right, but the currency
+already exists — **the top-up is Tuppence; no second currency is created anywhere in the code.**
+A parallel token fragments the money model and breaks the one-currency legibility Tuppence
+depends on. The metering line is **observe vs act**: standing briefs, watching and shortlist
+reports are included; the **Approach** (a drafted brief to a seller plus its pre-introduction
+Q&A) is the expensive unit and the only thing the monthly cap counts. Ceiling behaviour is
+RUL-066 applied verbatim — the offer arrives with the limit, no charge on a rejected attempt, the
+user is warned before spending effort, a drafted brief never dies to a ceiling, every hit logs
+telemetry.
+
+**Hard boundaries recorded:** Squire never touches money or negotiates price; introductions still
+burn 1T at every tier and Squire may PREPARE one but never GRANT one (PRICING_CANON §3); seller
+identity never enters Squire's context; Watches and For You stay free on every tier or Zoom's
+fifth rule collapses; and a brief about a minor is held under the parent as account holder,
+minimised, and never transmitted in identifying form (POPIA — a build requirement, not a note).
+
+**Commercial trigger:** Pro is priced for sellers only today, which is why the contagion model
+reads 9 632 free / 61 Starter / **1 Pro** at week 52. Squire makes Pro valuable to anyone who
+buys, and unlike Auctions (RUL-067, ~31 Aug 2027) it works in a THIN market — it needs one good
+match, not a crowd. Squire becomes the first Pro lure; Auctions the second.
+
+**Build order: Zoom first, Squire second** — a brief IS a Zoom path plus prose, so building
+Squire first would write the matching engine twice.
+
+**Still David's:** whether Pro includes the $5 Global buyer reach. Without it a Pro subscriber's
+Squire is stuck in one city, which blunts its best cases. CTO recommendation is to include it
+(reach is a query filter, not a cost) — but bundling is a pricing call.
+
+**Machinery note:** the new ledger entry first claimed RG-0222, which was already taken. The
+LEDGER-DUP-1 guard (19 Aug) refused it loudly at import rather than letting two entries share an
+id — the entry moved to RG-0224 (OPEN newcomer moves; LOCKED entries never do). The guard worked
+exactly as designed.
+
+Files: `SQUIRE_SPEC.md` · RULINGS.md RUL-077 · regression ledger RG-0224 (OPEN) ·
+scripts/rulings_check.py RUL-077.
+
+## 2026-08-30 — REACH-SURFACE-1: the buyer reach gate is enforced on the wishlist feed, not on /listings
+
+David, on the Zoom design: "the local searcher should only see local items and services, for stays
+and travel we do allow global but then searchable. Originally the local view was restricted for the
+$5 subscriptions, and the $20 subscribers has global view." PROBED against disk:
+
+- **Buyer reach is its own two-tier axis** (PRICING_CANON §2): **Free $0 = local city · Global $5 =
+  national + global**. `_buyer_tier()` returns exactly `free` | `global`.
+- **The $5/$20 pair is the SELLER slot ladder** — Starter $5 (10 slots, 2T), Pro $20 (30 slots,
+  10T). Two different axes; David's recollection merged them. **Global buyer reach costs $5, not
+  $20** — corrected against canon, nothing on disk needs changing.
+- **Travel and stays are exempt and borderless on any tier** (§2a: adventures, experiences,
+  accommodation, tours, heritage) — so "global but searchable" is exactly canon. **Online-mode
+  listings are exempt too** (§2b, tutors + online-capable services), which is the same class and
+  was not mentioned.
+- **The gate is enforced ONLY on `/wishlist/feed`.** `GET /listings` — the endpoint every category
+  view uses, and the one Zoom builds on — **takes no buyer identity at all.** Local-only behaviour
+  is a client convention: the FEA asks for `activeCity.name` and gets it. `/listings?city=Cape Town`
+  answers anyone.
+
+**Why it surfaced now:** the current list view hides the hole because it never offers another city.
+Zoom puts geography on screen as a COUNTED QUESTION — the moment it offers "Cape Town · 37" to a
+local buyer, either the count is a lie or the buyer taps into something they cannot open. Rule 2
+("counts never lie, dead ends unreachable") breaks. The funnel does not create the gap; it makes it
+impossible to ignore.
+
+**CTO decisions (RUL-037), recorded in ZOOM_HMI_SPEC.md §6.2:**
+1. The reach gate moves into `/listings`, server-side from the buyer token, applied INSIDE the same
+   filtered set the facet counts come from — never a post-filter. Prerequisite of the Zoom build,
+   alongside the `listings.quality_score` column from RANK-SURFACE-1.
+2. Geography is tier-shaped: a Free buyer's geography question opens at suburb-within-my-city and
+   city is not an askable level; a Global buyer gets city as a level. Travel and online-mode ignore
+   this — they are borderless, and the destination funnel IS the "searchable" half David asked for.
+3. **Empty and locked are different, and only one is hidden.** A zero-count option is removed. An
+   out-of-reach option is real inventory behind a $5 tier, so per the ceiling doctrine (RUL-066
+   rung 1) it is shown with its true count and an explicit lock. This makes the funnel the most
+   honest upgrade surface in the product — the buyer sees exactly what $5 buys, counted, at the
+   moment they want it.
+4. Locked-geography taps log as ceiling events (RUL-066 rung 3) — demand telemetry for which
+   cities to open next.
+
+Acceptance criteria 10 and 11 added. RG-0221 scope extended to assert both the reach prerequisite
+and the locked-vs-empty distinction. No new ruling — RUL-076 covers Zoom, RUL-066 already sets the
+ceiling doctrine this applies, and PRICING_CANON §2/§2a/§2b is unchanged and still correct.
+
+## 2026-08-30 — RANK-SURFACE-1: the Ranking Score ranks agents, not listings (gap found, closed in the Zoom spec)
+
+David asked whether properties are always ranked by the Ranking Score — "our important method to
+promote listing quality and trust score, originally designed for Real Estate Agencies, but since
+also for all agencies". PROBED against disk rather than answered from memory. Findings:
+
+- **The formula is a straight 50/50, no further divide.** `estate_agents.py::_rank_agents`:
+  `rank = round(0.5 * avg_listing_quality + 0.5 * trust_score, 1)`, self-described as "listing
+  quality never weighs less than half" and asserted by `test_estate_agents.py` across three
+  verticals (79.0 property · 75.0 cars · 73.0 travel). David's recalled version carried a stray
+  extra `/2` (which would total 0.75 weight) — corrected against canon, no change on disk needed.
+- **It did generalise beyond estate agencies** — `VERTICALS` now carries seven: property, cars,
+  travel, collector, institution, service_company, placement.
+- **But it ranks AGENTS, never listings.** It orders `agent_profiles` for `/agents/nearby`.
+  The listing feed's `_sort_map` in `bea_main.py` offers newest (default), price, trust, and
+  "smart" = trust 60% + freshness 40% — **no listing-quality term anywhere.** `super_example`
+  stays pinned first in every variant (SUPER-PIN-1, David 20 Jul).
+
+**Consequence:** the method meant to promote listing quality and trust does not touch the results
+a buyer actually browses. A seller can raise their listing quality and see no movement in the one
+place it would be felt.
+
+**CTO decision (RUL-037), executing David's stated intent rather than handing the fork back:**
+Zoom's default result order becomes the Ranking Score at LISTING level — 0.5 × listing quality +
+0.5 × seller trust, the same 50/50 as the agent formula, so one method governs both surfaces.
+Freshness drops from a 40% headline dial to a tiebreak; SUPER-PIN-1 pinning is unchanged.
+
+**Prerequisite named, not hidden:** listing quality is computed per row (`_import_quality_score`)
+and is NOT stored, so SQL cannot order by it. A maintained `listings.quality_score` column
+(written on create/edit, backfilled once) is part of the Zoom build.
+
+Both prototypes updated the same session: results now sort by the Ranking Score and print it on
+each card. Verified descending in both builds (97,97,96,95,95,95), zero JS errors.
+
+Recorded in `ZOOM_HMI_SPEC.md` §6.1 + acceptance criterion 9, and in the RG-0221 scope, which now
+asserts the ordering rule and the stored-quality prerequisite. No ruling needed — RUL-076 already
+covers Zoom and this executes David's stated purpose for the score.
+
+## 2026-08-30 — RUL-078: Pro includes Global reach; Squire's build shape and acceptance criteria approved
+
+David resolved the question RUL-077 had reserved to him, and closed two sections of the Squire spec.
+
+**(a) Bundling.** The **$20 Pro subscription carries the $5 Global buyer reach automatically.**
+Reason accepted: reach is a query filter, not a cost, and Squire watches across the reach its
+subscriber holds — an unbundled Pro would confine the agent to one city and kill its two best cases
+(a collector hunting nationally, a parent comparing tutors across a metro).
+
+*Naming corrected against canon in passing:* David's message said "the local $5 reach". On the buyer
+axis **Free is the local tier; Global ($5) is national + global.** The ruling reads: Pro includes
+Global reach. Nothing on disk needed changing.
+
+**(b) This is a CODE fact, not a pricing sentence.** `_buyer_tier()` reads `wishlist_subscriptions`
+alone and returns `free` | `global`. It must **also** return `global` when the account holds a live
+**Pro** seller subscription. Until that lands, a Pro subscriber is silently treated as local — the
+product would under-serve the people paying most, invisibly, with nothing on screen to reveal it.
+Recorded as PRICING_CANON §2c and as acceptance criterion 9 on RG-0224.
+
+**(c) Approved and closed to re-litigation.** SQUIRE_SPEC.md §6 (build shape — server-side and
+scheduled per RUL-070; cheap model for nightly matching with the Sonnet-class call reserved for brief
+drafting and Q&A, which is exactly what the cap counts; flag-dark on arrival; **Zoom first, Squire
+second**) and §7 (now nine acceptance criteria). A build session implements these; it does not reopen
+them.
+
+**(d) Pricing-page hazard logged — David's call, not a blocker.** There are now **two distinct $5
+products**: *Starter* ($5, 10 seller slots) and *Global* ($5, buyer reach) — and **Starter does not
+include Global reach.** Someone paying "$5" could reasonably assume they get both. The two axes must
+read as visually separate on the pricing page. The $5 tier keeps the name *Global*; Pro simply
+includes it, the ordinary way a higher plan includes a lower one.
+
+Files: PRICING_CANON.md §2c · SQUIRE_SPEC.md §5/§6/§7 · RULINGS.md RUL-078 · regression ledger
+RG-0224 (scope + criterion 9) · scripts/rulings_check.py RUL-078. Rulings check: 78 checked, 0 FAIL.
+
+## 2026-08-30 — RUL-075: localisation frozen 2 months; dry-run readiness by Fri 30 Oct
+
+David: build nothing for two months, be 100% dry-run test ready at the end, extensive
+sandbox testing before any rollout. Registered RUL-075 + I18N_READINESS.md (the canon
+checklist: inventory extractor, rendered-text parity harness, pseudo-locale test,
+gated staging environment, dictionary pipeline ES→PT→FR then diaspora-Mandarin, flags
+wiring, planned ledger entries). rulings_check wired; all side-artifacts, zero live-app
+interference by construction. Language ranking measured earlier this session (24-seed
+ensembles, model v1.3): ES +15.5%, PT +7.5%, JA +7.0%, AR +5.5%, FR +5.3%; ES+PT+FR
++28.4%; Mandarin +0 with the China barrier ON (RUL-071), +14.2% in the barriers-off
+sizing counterfactual — the diaspora case for Mandarin stands apart from China itself.
+
 SHIPPED: David deployed (Release 7b68a93). Live-verified in-gate: title v1.3, all four
 A-plan waves present (20/7/6/14 cities), defaults ring2W=1/3W=4/4W=8/5W=12 scrapeWk=30,
 live page computes wk12=173 (matches Node), zero console errors, no post-deploy 503 this
