@@ -28,6 +28,13 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- **OSM-ONLY-1 (RUL-083, 31 Aug):** scraper engine RESUMED on David's word, OSM-only — all
+  74 duckduckgo/bing source_health rows dead_permanent (most-specific-wins precedence caught:
+  wildcard alone would not have killed the per-category alive rows), services enabled+active,
+  queue resumed from the S131 freeze. Probes at decision: DDG/Bing answer in <0.6s (block
+  symptom gone), load 0.07, 6.5GB free. Refill rate for the 4 Sep ladder is now a measurement
+  (keyword_yield / scraped_prospects), not a promise — check it before the global-three roll.
+
 - **GATE 1 GREEN (RUL-082, 31 Aug):** David's verdict on the holistic board — go for the
   1 Sep global launch day. All 13 launch cities armed+green in waves_policy.json (the 9
   lagged SA cities had NO entries — absent = blocked — found and fixed at arming). Board at
