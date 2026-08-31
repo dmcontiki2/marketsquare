@@ -12726,5 +12726,48 @@ def rg_sandbox_ssh_selfheal():
     return out
 
 
+@entry("RG-0231", "Every Overpass caller reads OVERPASS_URL from the env -- a blocked "
+       "instance is a .env change + restart, never a code hunt (OSM-MIRROR-1)",
+       LOCKED, scope="CityLauncher repo, both overpass callers", fixed_on="2026-08-31",
+       ref="Launch eve: the OSM-only resume (RUL-083) at pool=10 drained the frozen queue "
+           "into overpass-api.de and tripped its IP protection (probed 200 in 0.08s before "
+           "the burst, connection-refused after; DDG/Bing unaffected). The first fix patched "
+           "scraper/sources/openstreetmap.py -- and changed NOTHING, because "
+           "orchestration/scraper_worker.py._run_osm carries its OWN hardcoded copy, the one "
+           "the engine actually runs. Both are now env-driven with the main instance as "
+           "default; server .env points at overpass.openstreetmap.fr (planet-verified) with "
+           "OSM_CONCURRENCY=2. This asserts BOTH callers stay env-driven -- a third hardcoded "
+           "overpass URL anywhere in CityLauncher trips red.")
+def rg_overpass_env_driven():
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not os.path.isdir(cl):
+        return [(INFO, "CityLauncher not present -- skipped")]
+    out = []
+    for rel in (os.path.join("orchestration", "scraper_worker.py"),
+                os.path.join("scraper", "sources", "openstreetmap.py")):
+        p = os.path.join(cl, rel)
+        if not os.path.exists(p):
+            out.append((FAIL, rel + " is GONE"))
+            continue
+        t = open(p, encoding="utf-8", errors="replace").read()
+        if "os.environ.get(\"OVERPASS_URL\"" not in t and "os.environ.get('OVERPASS_URL'" not in t:
+            out.append((FAIL, rel + " lost the env-driven OVERPASS_URL -- a blocked instance "
+                              "is a code hunt again (OSM-MIRROR-1 regressed)"))
+    import glob as _g
+    for p in _g.glob(os.path.join(cl, "**", "*.py"), recursive=True):
+        if ".bak" in p or "__pycache__" in p or "_to_delete" in p:
+            continue
+        t = open(p, encoding="utf-8", errors="replace").read()
+        for ln in t.splitlines():
+            s = ln.strip()
+            if ("overpass-api.de/api/interpreter" in s and "environ" not in s
+                    and not s.startswith("#")):
+                out.append((FAIL, os.path.relpath(p, cl) + " hardcodes the overpass "
+                                  "interpreter URL outside an env default: " + s[:80]))
+    if not out:
+        out.append((INFO, "both callers env-driven, no stray hardcoded interpreter URLs"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
