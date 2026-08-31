@@ -11891,5 +11891,58 @@ def rg_sync_pulldown():
     return out
 
 
+@entry("RG-0221", "ZOOM, the narrowing funnel, keeps the properties that make it work: one "
+       "question at a time, no zero-count option ever offered, no facet asked before its "
+       "parent, geography never opening the funnel, and the flag DARK until David arms it",
+       OPEN,
+       scope="repo: ZOOM_HMI_SPEC.md is the build spec (RUL-076). While OPEN this entry "
+             "asserts only that the SPEC survives intact -- the design is ratified but "
+             "unbuilt, and a spec that quietly loses its engine rules is how the next "
+             "session re-derives them wrongly. WHEN BUILT, promote to LOCKED and extend the "
+             "assertion to the shipped code: (1) no rendered option carries count 0; "
+             "(2) facet counts and the result count come from ONE query and can never "
+             "disagree; (3) dep/depVal respected and dropping a parent drops its children; "
+             "(4) geography is never the first question in any category; (5) 'which street?' "
+             "is never asked for Collectables and travel geography opens at COUNTRY; "
+             "(6) at <=420px: <=6 options, >=44px tall, question in the lower half, no "
+             "horizontal overflow; (7) the flag defaults OFF and the pre-Zoom view still "
+             "renders when it is off. CLASS: this is the front door of every category -- "
+             "the assertion is per-category, never proven on Property alone.",
+       ref="ZOOM-HMI-1 (30 Aug 2026). David ratified the design after tapping both "
+           "prototypes and set one binding constraint: 'I would actually like to see it on "
+           "the actual app first, not the live one that is in the field now.' So the build "
+           "is flag-dark in the REAL app, viewed locally and then in the RUL-075 sandbox "
+           "(shared, not duplicated), and ARMING IS DAVID'S ACT. Build window: first "
+           "post-launch, riding with the RUL-065 listing-friction batch "
+           "(RG-0205/0206/0207). Supersedes the unapproved 6 Jul chip-row FEA direction; "
+           "the 6 Jul server-side same-set facet counts are the foundation it builds on.")
+def rg_zoom_funnel():
+    out = []
+    sp = os.path.join(REPO, "ZOOM_HMI_SPEC.md")
+    if not os.path.exists(sp):
+        return [(FAIL, "ZOOM_HMI_SPEC.md is GONE -- the ratified funnel design (RUL-076) "
+                       "exists only in a chat transcript again (ZOOM-HMI-1)")]
+    s = open(sp, encoding="utf-8").read()
+    for needle, why in (
+            ("flag-dark", "the flag-dark build rule"),
+            ("the flag in the field is David", "David's reserved arming act"),
+            ("RUL-075", "the shared sandbox (no second preview mechanism)"),
+            ("dependency graph", "the coherence rule that gain alone violates"),
+            ("never the first question", "geography never opening the funnel"),
+            ("GEO_START", "travel's inverted geography"),
+            ("Zero-count options are removed", "the unreachable-dead-end rule")):
+        if needle not in s:
+            out.append((FAIL, "ZOOM_HMI_SPEC.md lost %r -- %s is gone (ZOOM-HMI-1)"
+                              % (needle, why)))
+    for proto in ("ZOOM_HMI_PROTOTYPE_2026-08-30.html", "ZOOM_HMI_PHONE_2026-08-30.html"):
+        if not os.path.exists(os.path.join(REPO, proto)):
+            out.append((FAIL, "%s is missing -- the spec's measured tap budgets can no "
+                              "longer be re-run (ZOOM-HMI-1)" % proto))
+    if not out:
+        out.append((INFO, "spec intact, both prototypes present -- design ratified, build "
+                          "pending (OPEN by design until ZOOM-HMI-1 ships)"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

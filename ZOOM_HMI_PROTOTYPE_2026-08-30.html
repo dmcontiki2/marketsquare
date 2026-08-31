@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zoom — the narrowing funnel · TrustSquare HMI prototype</title>
+<style>
+:root{
+  --bg:#0E1420; --panel:#161E2E; --panel2:#1C2739; --line:#233047;
+  --tx:#E6EDF7; --mut:#8FA3BF; --dim:#5E7291;
+  --gold:#F2C14E; --ok:#2FBF71; --warn:#F2724B;
+  --property:#4F8EF7; --services:#2FBF71; --collectables:#B06CF0; --cars:#F2724B; --travel:#38C6D9;
+  --cat:var(--property);
+  --r:14px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:-.3px}
+h2{font-size:15px;margin:0 0 10px;color:var(--mut);font-weight:600;
+   text-transform:uppercase;letter-spacing:.09em}
+.sub{color:var(--mut);margin:0 0 22px;font-size:14px}
+.sub b{color:var(--tx);font-weight:600}
+
+/* ---------- category rail ---------- */
+.cats{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}
+.cat{flex:1 1 150px;min-width:140px;text-align:left;cursor:pointer;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:12px 14px;color:var(--tx);font:inherit;transition:.15s;position:relative;overflow:hidden}
+.cat:hover{border-color:var(--dim)}
+.cat .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:8px}
+.cat .nm{font-weight:600;font-size:14px}
+.cat .ct{display:block;color:var(--mut);font-size:12px;margin-top:3px}
+.cat.on{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c),0 0 22px -12px var(--c)}
+.cat.on .nm{color:var(--c)}
+
+/* ---------- layout ---------- */
+.grid{display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+
+/* ---------- breadcrumb rail ---------- */
+.rail{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:4px;min-height:34px}
+.chip{display:inline-flex;align-items:center;gap:7px;background:var(--panel2);
+  border:1px solid var(--line);border-radius:999px;padding:5px 8px 5px 12px;
+  font-size:13px;color:var(--tx);cursor:default}
+.chip .k{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.chip b{font-weight:600}
+.chip.geo{border-color:var(--cat);color:var(--tx)}
+.chip .x{border:0;background:transparent;color:var(--dim);cursor:pointer;
+  font-size:15px;line-height:1;padding:2px 4px;border-radius:50%}
+.chip .x:hover{color:var(--warn);background:rgba(242,114,75,.12)}
+.rail .start{color:var(--dim);font-size:13px;font-style:italic}
+
+/* ---------- the question ---------- */
+.qbox{border:1px solid var(--line);border-radius:var(--r);
+  background:linear-gradient(180deg,var(--panel2),var(--panel));padding:16px 16px 14px;margin-top:12px}
+.qhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+.q{font-size:17px;font-weight:600;letter-spacing:-.2px}
+.qmeta{font-size:12px;color:var(--dim);white-space:nowrap}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opt{cursor:pointer;background:var(--panel2);border:1px solid var(--line);
+  border-radius:11px;padding:11px 14px;color:var(--tx);font:inherit;text-align:left;
+  transition:.12s;min-width:96px;display:flex;flex-direction:column;gap:3px}
+.opt:hover{border-color:var(--cat);transform:translateY(-1px)}
+.opt .v{font-weight:600;font-size:14px}
+.opt .n{font-size:12px;color:var(--gold);font-variant-numeric:tabular-nums}
+.opt.wide{flex:1 1 100%}
+.hidden-note{margin-top:10px;font-size:12px;color:var(--dim)}
+.hidden-note b{color:var(--mut)}
+.skip{margin-top:11px;display:flex;gap:8px;flex-wrap:wrap}
+.lnk{background:transparent;border:1px dashed var(--line);color:var(--mut);
+  border-radius:9px;padding:7px 11px;font:inherit;font-size:12.5px;cursor:pointer}
+.lnk:hover{color:var(--tx);border-color:var(--dim)}
+
+/* ---------- arrived ---------- */
+.arrived{border:1px solid var(--ok);background:rgba(47,191,113,.07);
+  border-radius:var(--r);padding:14px 16px;margin-top:12px}
+.arrived .t{font-weight:600;color:var(--ok);margin-bottom:4px}
+.arrived .d{font-size:13.5px;color:var(--mut)}
+.relax{border-color:var(--warn);background:rgba(242,114,75,.07)}
+.relax .t{color:var(--warn)}
+
+/* ---------- counter ---------- */
+.counter{display:flex;align-items:baseline;gap:10px;margin:2px 0 0}
+.counter .big{font-size:34px;font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.counter .lb{color:var(--mut);font-size:13px}
+.counter .cut{color:var(--dim);font-size:12px;margin-left:auto;font-variant-numeric:tabular-nums}
+.bar{height:5px;border-radius:3px;background:var(--panel2);overflow:hidden;margin:9px 0 0}
+.bar i{display:block;height:100%;background:var(--cat);transition:width .35s cubic-bezier(.4,0,.2,1)}
+
+/* ---------- results ---------- */
+.res{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:9px;
+  max-height:330px;overflow:auto}
+.li{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 11px;font-size:12.5px}
+.li .tt{font-weight:600;font-size:13px;margin-bottom:3px;line-height:1.3}
+.li .mm{color:var(--dim);font-size:11.5px}
+.li .pp{color:var(--gold);font-weight:600;margin-top:5px;font-size:13px}
+.res::-webkit-scrollbar{width:8px}
+.res::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+
+/* ---------- side ---------- */
+.side .card+.card{margin-top:14px}
+.type{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  padding:11px 13px;color:var(--tx);font:inherit;font-size:14px}
+.type:focus{outline:0;border-color:var(--cat)}
+.hint{font-size:12px;color:var(--dim);margin-top:8px;line-height:1.6}
+.hint code{background:var(--panel2);padding:1px 6px;border-radius:5px;color:var(--mut);
+  font-size:11.5px;cursor:pointer;border:1px solid var(--line)}
+.hint code:hover{color:var(--tx);border-color:var(--dim)}
+.taps{display:flex;align-items:center;gap:6px;margin-top:2px}
+.tapdot{width:22px;height:22px;border-radius:6px;background:var(--panel2);
+  border:1px solid var(--line);display:grid;place-items:center;font-size:11px;color:var(--dim)}
+.tapdot.on{background:var(--cat);border-color:var(--cat);color:#0E1420;font-weight:700}
+.watch{width:100%;background:var(--cat);border:0;color:#0E1420;font:inherit;font-weight:700;
+  border-radius:10px;padding:11px;cursor:pointer;font-size:14px}
+.watch:disabled{background:var(--panel2);color:var(--dim);cursor:not-allowed}
+.wlist{margin-top:11px;display:flex;flex-direction:column;gap:7px}
+.w{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--c);
+  border-radius:9px;padding:9px 11px;font-size:12.5px}
+.w .p{color:var(--mut);font-size:11.5px;margin-top:2px}
+.w .n{color:var(--gold);font-weight:600}
+
+/* ---------- before/after ---------- */
+.badcard{border-color:#4a2230;background:rgba(242,114,75,.05)}
+.badrow{background:#101725;border:1px solid var(--line);border-radius:9px;padding:11px 13px;
+  display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px;color:#9fb0c9}
+.badrow label{display:flex;gap:6px;align-items:center}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--mut)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:block}
+.princ{counter-reset:p;list-style:none;padding:0;margin:0}
+.princ li{position:relative;padding:0 0 12px 34px;font-size:13.5px;color:var(--mut);line-height:1.6}
+.princ li:before{counter-increment:p;content:counter(p);position:absolute;left:0;top:0;
+  width:22px;height:22px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);
+  color:var(--cat);font-weight:700;font-size:12px;display:grid;place-items:center}
+.princ b{color:var(--tx);font-weight:600}
+.foot{margin-top:26px;color:var(--dim);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Zoom — the narrowing funnel</h1>
+<p class="sub">One question at a time, chosen by how much it cuts. Every option carries its true count.
+Zero-count options never appear. <b>3–4 taps to a street, a gardener, a single card, a specific BMW.</b><br>
+Prototype over <b id="tot">—</b> synthetic listings · 30 August 2026 · tap it, it is fully live</p>
+
+<div class="cats" id="cats"></div>
+
+<div class="grid">
+  <div>
+    <div class="card">
+      <h2>Where you are</h2>
+      <div class="rail" id="rail"></div>
+      <div class="counter">
+        <span class="big" id="cnt">0</span>
+        <span class="lb" id="lb">matches</span>
+        <span class="cut" id="cut"></span>
+      </div>
+      <div class="bar"><i id="barf" style="width:100%"></i></div>
+      <div id="stage"></div>
+      <div class="res" id="res"></div>
+    </div>
+
+    <div class="card badcard" style="margin-top:14px">
+      <h2>What this replaces</h2>
+      <div class="badrow">
+        <b style="color:#c9d6e6">Show:</b>
+        <label><input type="checkbox" checked> green (0)</label>
+        <label><input type="checkbox" checked> blue (0)</label>
+        <label><input type="checkbox" checked> amber (0)</label>
+        <label><input type="checkbox" checked> red (0)</label>
+        <label><input type="checkbox" checked> grey (0)</label>
+      </div>
+      <p class="hint" style="margin-top:11px;line-height:1.65">
+        Five controls, all pre-ticked, every one reading <b>(0)</b>. It occupies the top of the screen,
+        teaches the user nothing, and no tick available to them does any work. This is a <b>form</b> —
+        a flat panel of independent switches the user must hunt through. The funnel above is a <b>path</b>:
+        it asks, it counts, it never offers a tick that leads nowhere.</p>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="card">
+      <h2>Type to jump ahead</h2>
+      <input class="type" id="q" placeholder="e.g. black lotus, gardener, bmw under 250k" autocomplete="off">
+      <div class="hint">Text is a shortcut <i>through</i> the tree, not a separate search.
+        Typing fills the chips so you can see where you landed — and widen from there.<br>
+        Try <code>black lotus</code> <code>gardener menlo park</code> <code>bmw 100k</code> <code>2 bed rent brooklyn</code></div>
+    </div>
+
+    <div class="card">
+      <h2>Taps used</h2>
+      <div class="taps" id="taps"></div>
+      <div class="hint" id="taphint">Every tap must earn its place. Four is the budget.</div>
+    </div>
+
+    <div class="card">
+      <h2>The path is the product</h2>
+      <button class="watch" id="save" disabled>Save this path as a Watch</button>
+      <div class="hint">A saved path is a standing interest. <b style="color:var(--tx)">“For You” is
+        simply your saved paths, run fresh</b> — visible, editable, no black box.</div>
+      <div class="wlist" id="watches"></div>
+    </div>
+
+    <div class="card">
+      <h2>Five rules</h2>
+      <ol class="princ">
+        <li><b>One question at a time.</b> The app asks the facet that splits the remaining set hardest — measured, not hand-ordered.</li>
+        <li><b>Every option shows its true count</b>, from the same query as the list. Zero-count options are removed, so a dead end is unreachable.</li>
+        <li><b>Geography is one chip that deepens</b> — city › suburb › street — not four separate filters.</li>
+        <li><b>Typing is a shortcut through the tree</b>, landing you mid-path with the chips filled in.</li>
+        <li><b>The path is saveable.</b> That is what makes “For You” honest.</li>
+      </ol>
+      <div class="legend">
+        <span><i style="background:var(--property)"></i>Property</span>
+        <span><i style="background:var(--services)"></i>Services</span>
+        <span><i style="background:var(--collectables)"></i>Collectables</span>
+        <span><i style="background:var(--cars)"></i>Cars</span>
+        <span><i style="background:var(--gold)"></i>live count</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="foot">TrustSquare · Zoom narrowing funnel · prototype for David · 30 Aug 2026</p>
+</div>
+<script>
+/* ---------------- seeded PRNG so counts are stable across reloads ------------- */
+let _s=20260830;
+const rnd=()=>{_s=(_s*1664525+1013904223)%4294967296;return _s/4294967296;};
+const pick=a=>a[Math.floor(rnd()*a.length)];
+const wpick=o=>{const e=Object.entries(o);let t=e.reduce((s,[,w])=>s+w,0),r=rnd()*t;
+  for(const[k,w]of e){if((r-=w)<=0)return k;}return e[0][0];};
+const ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
+
+/* ---------------- geography: one hierarchy, three depths --------------------- */
+const SUBURBS={
+ "Brooklyn":["Bronkhorst St","Middel St","Justice Mahomed St","Fehrsen St","Dey St","Charles St"],
+ "Menlo Park":["12th Street","Lawrence St","Marais St","Dely Rd","Thomas Edison St","Rupert St"],
+ "Waterkloof":["Albert St","Milner St","Crown Ave","Bourke St","Anderson St","Hill St"],
+ "Hatfield":["Burnett St","Prospect St","Duncan St","Festival St","Grosvenor St","Hilda St"],
+ "Lynnwood":["Daventry St","Ilkey Rd","Selborne Ave","Kings Hwy","Kirkness St","Elephant Rd"],
+ "Garsfontein":["Rosemary Ave","Jacobson Dr","Bergpad","Klarinet St","Mimosa St","Ridge Rd"],
+ "Faerie Glen":["Aeroleaf St","Zelia St","Glen Manor","Palmiet St","Solomon Mahlangu","Olympus Dr"],
+ "Silver Lakes":["Sunset Blvd","Fairway Ave","Lakeview Cl","Augusta Dr","Muirfield Cl","Turnberry"],
+ "Moreleta Park":["Rubenstein Dr","Wekker St","Garsfontein Rd","Cussonia Ave","Botha Ave","De Villebois"],
+ "Centurion":["Lenchen Ave","Gerhard St","Hendrik Verwoerd","Botha Ave","John Vorster","Rooihuiskraal"]};
+const SUBS=Object.keys(SUBURBS);
+const geoOf=()=>{const s=pick(SUBS);return{l0:"Pretoria",l1:s,l2:pick(SUBURBS[s])};};
+/* Destinations — the travel lane's geography. Not where the user is; where they are going. */
+const DEST={
+ "South Africa":{"Cape Town":["City Bowl","Winelands","Cape Point","Atlantic Seaboard"],
+   "Kruger & Lowveld":["Skukuza","Sabi Sand","Hazyview","Blyde Canyon"],
+   "Drakensberg":["Champagne Valley","Underberg","Royal Natal"],
+   "Garden Route":["Knysna","Plettenberg Bay","Wilderness","Tsitsikamma"]},
+ "Namibia":{"Sossusvlei":["Sesriem","Deadvlei"],"Etosha":["Okaukuejo","Namutoni"],
+   "Swakopmund":["Coast","Dune belt"]},
+ "Botswana":{"Okavango Delta":["Maun","Moremi","Khwai"],"Chobe":["Kasane","Savuti"]},
+ "Tanzania":{"Serengeti":["Seronera","Ndutu"],"Zanzibar":["Stone Town","Nungwi","Paje"],
+   "Kilimanjaro":["Moshi","Marangu"]},
+ "Zimbabwe":{"Victoria Falls":["Falls town","Zambezi"],"Hwange":["Main Camp","Sinamatella"]}};
+const DCOUNTRIES=Object.keys(DEST);
+const destOf=()=>{const c=wpick({"South Africa":44,Namibia:16,Botswana:14,Tanzania:16,Zimbabwe:10});
+  const r=pick(Object.keys(DEST[c])); return{l0:c,l1:r,l2:pick(DEST[c][r])};};
+
+/* ---------------- category data models --------------------------------------- */
+const MODELS={BMW:["3 Series","5 Series","X3","X5","1 Series","M3"],
+ Volkswagen:["Polo","Golf","Tiguan","T-Cross","Amarok"],
+ Toyota:["Hilux","Corolla","Fortuner","RAV4","Starlet"],
+ "Mercedes-Benz":["C-Class","A-Class","GLC","E-Class"],
+ Ford:["Ranger","EcoSport","Everest","Figo"],
+ Audi:["A3","A4","Q5","Q3"], Hyundai:["i20","Tucson","Creta"], Nissan:["Navara","Magnite","X-Trail"]};
+const MTG=["Black Lotus","Mox Sapphire","Time Walk","Tarmogoyf","Force of Will",
+  "Snapcaster Mage","Lightning Bolt","Underground Sea","Ragavan","Jace TMS"];
+const POKE=["Charizard 1st Ed","Pikachu Illustrator","Umbreon VMAX","Lugia Neo","Blastoise Base"];
+const YGO=["Blue-Eyes White Dragon","Dark Magician","Exodia","Red-Eyes B. Dragon"];
+const JOBS={"Home & Garden":["Gardener","Landscaper","Tree felling","Pool service","Paving"],
+ "Trades":["Plumber","Electrician","Painter","Carpenter","Welder","Roofer"],
+ "Tutors & Lessons":["Maths tutor","English tutor","Piano teacher","Driving instructor","Afrikaans tutor"],
+ "Cleaning":["Domestic cleaner","Deep clean","Windows","Carpet cleaning"],
+ "Auto & Mechanical":["Mobile mechanic","Auto electrician","Panel beater","Tyre fitment"],
+ "Tech & Home Office":["PC repair","Wi-Fi install","CCTV install","Solar technician"]};
+
+function band(v,cuts,labels){for(let i=0;i<cuts.length;i++)if(v<cuts[i])return labels[i];return labels[labels.length-1];}
+
+function makeListing(cat){
+  const g=geoOf(), o={cat,geo:g,trust:ri(35,96)};
+  if(cat==="property"){
+    o.mode=wpick({Rent:56,Buy:44});
+    o.ptype=wpick({House:30,Apartment:34,Townhouse:22,Room:8,Cottage:6});
+    o.beds=String(o.ptype==="Room"?1:wpick({1:16,2:30,3:32,4:16,5:6}));
+    const b=+o.beds;
+    o.price=o.mode==="Rent"? ri(4,9)*1000+b*2600+ri(0,2400) : (ri(9,26)*100000+b*180000);
+    o.priceB=o.mode==="Rent"?band(o.price,[8000,15000,25000],["Under R8k","R8k–15k","R15k–25k","R25k+"])
+                            :band(o.price,[1200000,2500000,4500000],["Under R1.2m","R1.2–2.5m","R2.5–4.5m","R4.5m+"]);
+    o.pets=wpick({"Pets welcome":42,"No pets":58});
+    o.title=`${o.beds} bed ${o.ptype.toLowerCase()} · ${g.l1}`;
+  }
+  if(cat==="services"){
+    o.group=pick(Object.keys(JOBS)); o.job=pick(JOBS[o.group]);
+    o.when=wpick({"This week":38,"Next week":29,"Flexible":33});
+    o.rate=ri(140,760); o.rateB=band(o.rate,[250,400,600],["Under R250/hr","R250–400","R400–600","R600+"]);
+    o.title=`${o.job} · ${g.l1}`; o.price=o.rate;
+  }
+  if(cat==="collectables"){
+    o.family=wpick({"Trading cards":40,Coins:20,Comics:14,Stamps:10,Militaria:8,Vinyl:8});
+    if(o.family==="Trading cards"){o.line=wpick({"Magic: The Gathering":42,"Pokémon":34,"Yu-Gi-Oh":14,"Sports cards":10});
+      o.item=o.line==="Magic: The Gathering"?pick(MTG):o.line==="Pokémon"?pick(POKE):o.line==="Yu-Gi-Oh"?pick(YGO):"Panini Prizm";}
+    else{o.line=o.family==="Coins"?wpick({Krugerrand:40,Union:30,Republic:30}):
+         o.family==="Comics"?wpick({Marvel:50,DC:34,"2000AD":16}):o.family;
+         o.item=o.family+" lot";}
+    o.grade=wpick({Mint:11,"Near Mint":28,Excellent:31,Good:20,Played:10});
+    o.price=ri(150,60000); o.priceB=band(o.price,[1000,5000,20000],["Under R1k","R1k–5k","R5k–20k","R20k+"]);
+    o.title=`${o.item}`;
+  }
+  if(cat==="cars"){
+    o.cond=wpick({Used:82,New:18});
+    o.make=wpick({BMW:19,Volkswagen:20,Toyota:21,"Mercedes-Benz":11,Ford:10,Audi:8,Hyundai:6,Nissan:5});
+    o.model=pick(MODELS[o.make]);
+    o.year=o.cond==="New"?2026:ri(2011,2025);
+    o.km=o.cond==="New"?ri(0,60):ri(4000,240000);
+    o.kmB=o.cond==="New"?"Under 20 000 km":band(o.km,[20000,60000,100000,150000],
+      ["Under 20 000 km","20–60 000 km","60–100 000 km","100–150 000 km","150 000 km+"]);
+    o.price=Math.round((o.cond==="New"?ri(45,120):ri(9,85))*10000);
+    o.priceB=band(o.price,[250000,450000,750000],["Under R250k","R250–450k","R450–750k","R750k+"]);
+    o.title=`${o.make} ${o.model} ${o.year}`;
+  }
+  if(cat==="travel"){
+    o.geo=destOf();
+    o.lane=wpick({Tours:42,Stays:38,Guides:20});
+    if(o.lane==="Tours"){
+      o.ttype=wpick({Wildlife:30,Adventure:22,Cultural:18,"Food & Wine":15,Heritage:15});
+      o.dur=wpick({"Half day":34,"Full day":38,"Multi-day":28});
+      o.group=wpick({"Join-in":46,"Small group":34,Private:20});
+      o.price=ri(450,18000); o.title=`${o.ttype} ${o.dur.toLowerCase()} · ${o.geo.l1}`;}
+    if(o.lane==="Stays"){
+      o.stype=wpick({Guesthouse:26,Lodge:24,"Self-catering":22,Hotel:18,Camping:10});
+      o.sleeps=wpick({2:34,4:32,6:20,"8+":14});
+      o.price=ri(600,24000); o.title=`${o.stype} · sleeps ${o.sleeps} · ${o.geo.l2}`;}
+    if(o.lane==="Guides"){
+      o.expert=wpick({Wildlife:28,History:20,Photography:18,Hiking:18,City:16});
+      o.lang=wpick({English:40,Afrikaans:20,German:16,French:12,isiZulu:12});
+      o.price=ri(900,7500); o.title=`${o.expert} guide · ${o.geo.l1}`;}
+    o.priceB=band(o.price,[1500,5000,12000],["Under R1 500","R1 500–5 000","R5 000–12 000","R12 000+"]);
+  }
+  return o;
+}
+const DATA=[];
+[["property",1800],["services",1400],["collectables",1100],["cars",900],["travel",1500]]
+  .forEach(([c,n])=>{for(let i=0;i<n;i++)DATA.push(makeListing(c));});
+
+/* ---------------- facet definitions: what may be asked, and in what spirit ----- */
+/* Geography has three depths, but what they MEAN depends on the category — and for
+   travel it inverts entirely. A buyer of a house or a gardener wants "near me". A
+   person booking a tour, a stay or a local guide is BY DEFINITION not local: geography
+   stops being proximity and becomes destination. Same three levels, different meaning,
+   different labels, different opening question. */
+const GEO_LEVELS=["l0","l1","l2"];
+const GEO_LABELS={
+  property:["City","Suburb","Street"], services:["City","Suburb","Street"],
+  cars:["City","Suburb",""],           collectables:["City","",""],
+  travel:["Country","City","Area"]};
+const GEO_Q={
+  property:["","Which part of town?","Which street?"],
+  services:["","Which part of town?","Which street?"],
+  cars:["","Which part of town?",""],
+  collectables:["","",""],
+  travel:["Which country?","Which city or region?","Whereabouts exactly?"]};
+/* How deep geography is worth asking depends on how far a buyer will travel for the
+   thing. A house IS a street. A gardener comes to your street. A car you will drive
+   across town for. A rare card you will drive across the country for — or have posted.
+   So street-level questions are simply never asked where they are absurd. */
+const GEO_MAX={property:2,services:2,cars:1,collectables:0,travel:2};
+/* Local categories open with the user's own city already known, so geography starts at
+   level 0 = answered. Travel knows nothing — the country IS the first geographic
+   question, so it starts one level earlier. */
+const GEO_START={property:0,services:0,cars:0,collectables:0,travel:-1};
+/* `dep` is the correction that makes the maths behave: information gain alone will
+   happily ask "which model?" before "which make?", or "what is your budget?" before
+   "rent or buy?" — both mathematically excellent, both incoherent to a human. A facet
+   becomes askable only once its parent is answered. Gain picks the question; the
+   dependency graph keeps the question sensible. */
+const FACETS={
+ property:[{k:"mode",q:"Renting or buying?",w:2.8},
+           {k:"ptype",q:"What kind of place?",w:1.0},
+           {k:"beds",q:"How many bedrooms?",w:1.0,fmt:v=>v+" bed"},
+           {k:"priceB",q:"What is your budget?",w:1.3,dep:"mode"},
+           {k:"pets",q:"Do you need pets allowed?",w:.55}],
+ services:[{k:"group",q:"What kind of work?",w:2.0},
+           {k:"job",q:"Which trade exactly?",w:1.9,dep:"group"},
+           {k:"when",q:"When do you need them?",w:.8},
+           {k:"rateB",q:"What rate suits you?",w:.8}],
+ collectables:[{k:"family",q:"What do you collect?",w:2.0},
+           {k:"line",q:"Which line?",w:1.7,dep:"family"},
+           {k:"item",q:"Which piece?",w:1.5,dep:"line"},
+           {k:"grade",q:"Minimum condition?",w:.9,note:"graded from photos — sellers never self-grade"},
+           {k:"priceB",q:"What is your budget?",w:1.0}],
+ travel:[{k:"lane",q:"What are you after?",w:2.6},
+           {k:"ttype",q:"What kind of tour?",w:1.5,dep:"lane",depVal:"Tours"},
+           {k:"dur",q:"How long?",w:1.0,dep:"lane",depVal:"Tours"},
+           {k:"group",q:"Private, small group or join-in?",w:.9,dep:"lane",depVal:"Tours"},
+           {k:"stype",q:"What kind of place?",w:1.5,dep:"lane",depVal:"Stays"},
+           {k:"sleeps",q:"How many people?",w:1.2,dep:"lane",depVal:"Stays",fmt:v=>"Sleeps "+v},
+           {k:"expert",q:"A guide for what?",w:1.6,dep:"lane",depVal:"Guides"},
+           {k:"lang",q:"Which language?",w:1.1,dep:"lane",depVal:"Guides"},
+           {k:"priceB",q:"What is your budget?",w:1.0,dep:"lane"}],
+ cars:[{k:"cond",q:"New or second hand?",w:2.2},
+           {k:"make",q:"Which make?",w:1.7},
+           {k:"model",q:"Which model?",w:1.3,dep:"make"},
+           {k:"kmB",q:"How much mileage is acceptable?",w:1.1},
+           {k:"priceB",q:"What is your budget?",w:1.2}]};
+const CATS=[{k:"property",n:"Property",c:"var(--property)"},
+            {k:"travel",n:"Travel",c:"var(--travel)"},
+            {k:"services",n:"Services",c:"var(--services)"},
+            {k:"collectables",n:"Collectables",c:"var(--collectables)"},
+            {k:"cars",n:"Cars",c:"var(--cars)"}];
+
+/* ---------------- state ------------------------------------------------------- */
+let CAT="property", SEL={}, GEO=GEO_START.property, TAPS=0, WATCH=[];
+const ARRIVED=24;            // stop asking once it fits a screen
+const $=i=>document.getElementById(i);
+
+const matches=(st=SEL,gl=GEO)=>DATA.filter(d=>{
+  if(d.cat!==CAT)return false;
+  for(const k in st){if(k==="_geo")continue;if(d[k]!==st[k])return false;}
+  for(let i=0;i<=gl;i++){const lv=GEO_LEVELS[i];if(st._geo&&st._geo[lv]&&d.geo[lv]!==st._geo[lv])return false;}
+  return true;});
+
+/* entropy of a split — how hard does this question cut? */
+function gain(set,key){
+  const m=new Map();
+  set.forEach(d=>{const v=d[key];if(v==null||v==="")return;m.set(v,(m.get(v)||0)+1);});
+  if(m.size<2)return{h:0,m};
+  let h=0;for(const n of m.values()){const p=n/set.length;h-=p*Math.log2(p);}
+  return{h:h/Math.log2(m.size)*Math.min(1,Math.log2(m.size)/2.6)+h*.22,m};
+}
+function geoGain(set){
+  const lv=GEO_LEVELS[GEO+1]; if(!lv||GEO+1>GEO_MAX[CAT])return{h:0,m:new Map()};
+  const m=new Map(); set.forEach(d=>m.set(d.geo[lv],(m.get(d.geo[lv])||0)+1));
+  if(m.size<2)return{h:0,m};
+  let h=0;for(const n of m.values()){const p=n/set.length;h-=p*Math.log2(p);}
+  // Geography is powerful but must never OPEN the funnel: "which part of town?" before
+  // "what are you looking for?" is the wrong question. It stays suppressed until the user
+  // has declared intent, then becomes the strongest remaining cut.
+  const intent=Object.keys(SEL).filter(k=>k!=="_geo").length>0;
+  return{h:(h*.42)*(intent?1:.18)+(intent?.30:0),m,lv};
+}
+
+/* choose the single best next question */
+function nextQ(set){
+  const cands=[];
+  FACETS[CAT].forEach(f=>{if(SEL[f.k]!=null)return;
+    if(f.dep&&SEL[f.dep]==null)return;              // parent question not answered yet
+    if(f.depVal&&SEL[f.dep]!==f.depVal)return;      // only asked inside the right lane
+    const g=gain(set,f.k); if(g.h<=0)return;
+    cands.push({type:"facet",f,score:g.h*f.w,m:g.m});});
+  const gg=geoGain(set);
+  if(gg.h>0)cands.push({type:"geo",score:gg.h*1.35,m:gg.m,lv:gg.lv,
+    f:{q:GEO_Q[CAT][GEO+1]||"Where?",k:"geo"}});
+  cands.sort((a,b)=>b.score-a.score);
+  return cands[0]||null;
+}
+
+/* ---------------- render ------------------------------------------------------ */
+function fmtR(n){return "R"+n.toLocaleString("en-ZA");}
+/* One geo chip that deepens — never one chip per level. */
+function geoTrail(){
+  const p=[]; if(CAT!=="travel")p.push("Pretoria");
+  for(let i=(CAT==="travel"?0:1);i<=GEO;i++){const v=SEL._geo&&SEL._geo[GEO_LEVELS[i]];if(v)p.push(v);}
+  return p.length>(CAT==="travel"?0:1)?p.join(" › "):"";
+}
+
+function render(){
+  document.body.style.setProperty("--cat",CATS.find(c=>c.k===CAT).c);
+  const set=matches(), all=DATA.filter(d=>d.cat===CAT);
+
+  /* category rail */
+  $("cats").innerHTML=CATS.map(c=>`<button class="cat ${c.k===CAT?"on":""}" style="--c:${c.c}"
+    onclick="setCat('${c.k}')"><span class="dot" style="background:${c.c}"></span>
+    <span class="nm">${c.n}</span><span class="ct">${DATA.filter(d=>d.cat===c.k).length.toLocaleString()} listings</span></button>`).join("");
+
+  /* breadcrumb */
+  const chips=[];
+  const trail=geoTrail();
+  if(trail){chips.push(`<span class="chip geo"><span class="k">${CAT==="travel"?"going to":"where"}</span><b>${trail}</b>
+      <button class="x" onclick="widen()" title="widen">✕</button></span>`);}
+  FACETS[CAT].forEach(f=>{if(SEL[f.k]==null)return;
+    const v=f.fmt?f.fmt(SEL[f.k]):SEL[f.k];
+    chips.push(`<span class="chip"><span class="k">${f.k==="priceB"?"budget":f.k==="kmB"?"mileage":f.k}</span><b>${v}</b>
+      <button class="x" onclick="drop('${f.k}')">✕</button></span>`);});
+  $("rail").innerHTML=chips.length?chips.join(""):
+    `<span class="start">Nothing picked yet — everything in ${CATS.find(c=>c.k===CAT).n} is on view.</span>`;
+
+  /* counter */
+  $("cnt").textContent=set.length.toLocaleString();
+  $("lb").textContent=set.length===1?"match":"matches";
+  const cutPct=all.length?Math.round((1-set.length/all.length)*100):0;
+  $("cut").textContent=chips.length?`${cutPct}% of ${CATS.find(c=>c.k===CAT).n} ruled out`:"";
+  $("barf").style.width=(all.length?Math.max(.6,set.length/all.length*100):0)+"%";
+
+  /* taps */
+  $("taps").innerHTML=[0,1,2,3,4,5].map(i=>i<6?
+    `<span class="tapdot ${i<TAPS?"on":""}">${i+1}</span>`:"").join("");
+  $("taphint").innerHTML=TAPS===0?"Every tap must earn its place. Four is the budget."
+    :TAPS<=4?`<b style="color:var(--ok)">${TAPS} tap${TAPS>1?"s":""}</b> — inside budget.`
+    :`<b style="color:var(--warn)">${TAPS} taps</b> — over budget; the question order needs a look.`;
+
+  /* the one question, or arrival */
+  const q=nextQ(set);
+  let html="";
+  if(set.length===0){
+    html=`<div class="arrived relax"><div class="t">Nothing here — but you were never allowed to get here.</div>
+      <div class="d">In the real build a zero-count option is removed before you can tap it. Drop a chip to step back.</div></div>`;
+  }else if((set.length<=ARRIVED&&!FORCE)||!q){
+    html=`<div class="arrived"><div class="t">You're there — ${set.length} listing${set.length>1?"s":""}, in ${TAPS} tap${TAPS===1?"":"s"}.</div>
+      <div class="d">Small enough to look at. The funnel stops asking rather than filling the screen with controls you no longer need.</div>
+      ${q?`<div class="skip"><button class="lnk" onclick="force()">Keep narrowing anyway — ${q.f.q.toLowerCase()}</button></div>`:""}</div>`;
+    if(set.length<5&&chips.length){
+      const best=relax(); if(best)html+=`<div class="skip"><button class="lnk" onclick="${best.act}">↔ ${best.label}</button></div>`;
+    }
+  }else{
+    const opts=[...q.m.entries()].filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]);
+    const total=q.m.size, shown=opts.slice(0,8), hid=total-shown.length;
+    const zero=[...q.m.entries()].filter(([,n])=>n===0).length;
+    html=`<div class="qbox"><div class="qhead"><span class="q">${q.f.q}</span>
+      <span class="qmeta">${q.type==="geo"?"narrows most":"splits the set hardest"}</span></div>
+      <div class="opts">${shown.map(([v,n])=>{
+        const lbl=q.type==="facet"&&q.f.fmt?q.f.fmt(v):v;
+        const act=q.type==="geo"?`deepen('${String(v).replace(/'/g,"\\'")}')`
+                                :`choose('${q.f.k}','${String(v).replace(/'/g,"\\'")}')`;
+        return `<button class="opt" onclick="${act}"><span class="v">${lbl}</span>
+          <span class="n">${n.toLocaleString()}</span></button>`;}).join("")}</div>
+      ${q.f.note?`<div class="hidden-note">${q.f.note}</div>`:""}
+      ${hid>0?`<div class="hidden-note"><b>${hid}</b> less common option${hid>1?"s":""} folded away — type to reach them.</div>`:""}
+      <div class="skip"><button class="lnk" onclick="skip()">Doesn't matter — ask me something else</button>
+      ${TAPS>0?`<button class="lnk" onclick="reset()">Start over</button>`:""}</div></div>`;
+  }
+  $("stage").innerHTML=html;
+
+  /* results */
+  $("res").innerHTML=set.slice(0,60).map(d=>{
+    const price=d.cat==="services"?fmtR(d.price)+"/hr":fmtR(d.price);
+    const meta=d.cat==="property"?`${d.mode} · ${d.geo.l2}`
+      :d.cat==="services"?`${d.when} · ${d.geo.l2}`
+      :d.cat==="cars"?`${d.kmB} · ${d.geo.l1}`
+      :d.cat==="travel"?`${d.geo.l1}, ${d.geo.l0}`
+      :`${d.grade} · ${d.geo.l1}`;
+    return `<div class="li"><div class="tt">${d.title}</div><div class="mm">${meta}</div>
+      <div class="pp">${price}</div></div>`;}).join("");
+
+  $("save").disabled=!chips.length;
+  $("tot").textContent=DATA.length.toLocaleString();
+}
+
+/* ---------------- actions ----------------------------------------------------- */
+let SKIPPED=[];
+function choose(k,v){SEL[k]=v;TAPS++;render();}
+function deepen(v){const lv=GEO_LEVELS[GEO+1];SEL._geo=SEL._geo||{};SEL._geo[lv]=v;GEO++;TAPS++;render();}
+function widen(){if(GEO>GEO_START[CAT]){delete SEL._geo[GEO_LEVELS[GEO]];GEO--;}render();}
+function drop(k){delete SEL[k];
+  FACETS[CAT].forEach(f=>{if(f.dep===k)delete SEL[f.k];});   // children cannot outlive their parent
+  render();}
+function skip(){const set=matches(),q=nextQ(set);
+  if(q&&q.type==="facet"){const f=FACETS[CAT].find(x=>x.k===q.f.k);
+    const i=FACETS[CAT].indexOf(f);FACETS[CAT].splice(i,1);FACETS[CAT].push(f);f.w*=.35;}
+  render();}
+function reset(){SEL={};GEO=GEO_START[CAT];TAPS=0;FORCE=false;$("q").value="";render();}
+let FORCE=false;
+function force(){FORCE=true;render();FORCE=false;}
+function setCat(c){CAT=c;reset();}
+
+/* the single best relaxation when the set gets too thin */
+function relax(){
+  let best=null;
+  Object.keys(SEL).forEach(k=>{if(k==="_geo")return;
+    const t={...SEL};delete t[k];const n=matches(t,GEO).length-matches().length;
+    if(n>0&&(!best||n>best.n)){const f=FACETS[CAT].find(x=>x.k===k);
+      best={n,label:`Drop “${f.fmt?f.fmt(SEL[k]):SEL[k]}” → ${n} more`,act:`drop('${k}')`};}});
+  if(GEO>GEO_START[CAT]){const n=matches(SEL,GEO-1).length-matches().length;
+    if(n>0&&(!best||n>best.n))best={n,label:`Widen beyond ${SEL._geo[GEO_LEVELS[GEO]]} → ${n} more`,act:"widen()"};}
+  return best;
+}
+
+/* ---------------- typing = a shortcut through the tree ------------------------ */
+function parse(text){
+  const t=text.toLowerCase().trim(); if(!t)return;
+  reset();
+  // which category does the text belong to?
+  const catHit={property:0,services:0,collectables:0,cars:0,travel:0};
+  const probe=(cat,keys)=>DATA.filter(d=>d.cat===cat).some(d=>keys.some(k=>
+    String(d[k]||"").toLowerCase().split(/\s+/).some(w=>t.includes(w)&&w.length>2)));
+  if(/rent|buy|bed|apartment|house|townhouse|cottage/.test(t))catHit.property+=3;
+  if(/bmw|toyota|vw|volkswagen|audi|ford|merc|km|hilux|golf|polo|ranger/.test(t))catHit.cars+=3;
+  if(/gardener|plumber|electrician|tutor|clean|mechanic|paint|tree|pool|painter/.test(t))catHit.services+=3;
+  if(/lotus|mox|charizard|pikachu|card|coin|comic|stamp|magic|pokemon|pokémon|krugerrand|vinyl/.test(t))catHit.collectables+=3;
+  if(/safari|tour|lodge|guide|serengeti|kruger|okavango|zanzibar|victoria falls|sossusvlei|stay|guesthouse|camping/.test(t))catHit.travel+=3;
+  const best=Object.entries(catHit).sort((a,b)=>b[1]-a[1])[0];
+  if(best[1]>0)CAT=best[0];
+
+  // fill every facet the text names, in one go
+  FACETS[CAT].forEach(f=>{
+    const vals=[...new Set(DATA.filter(d=>d.cat===CAT).map(d=>d[f.k]).filter(Boolean))];
+    const hit=vals.find(v=>{const s=String(v).toLowerCase();
+      return s.length>2&&(t.includes(s)||s.split(/[\s:]+/).every(w=>w.length>2&&t.includes(w)));});
+    if(hit!=null){SEL[f.k]=hit;TAPS++;}});
+  // bedrooms written as a number
+  if(CAT==="property"){const m=t.match(/(\d)\s*bed/); if(m){SEL.beds=m[1];TAPS++;}
+    if(/\brent/.test(t))SEL.mode="Rent"; if(/\bbuy|sale\b/.test(t))SEL.mode="Buy";}
+  // "under 250k" style budget
+  const pm=t.match(/(\d{2,4})\s*k\b/); if(pm&&CAT==="cars"){
+    const v=+pm[1]*1000;
+    const f=FACETS.cars.find(x=>x.k=== (t.includes("km")?"kmB":"priceB"));
+    const vals=[...new Set(DATA.filter(d=>d.cat==="cars").map(d=>d[f.k]))];
+    if(t.includes("km")){const b=vals.find(x=>/60–100/.test(x));if(v>=60000&&v<=100000)SEL.kmB=b||SEL.kmB;}
+    else{const lab=v<=250000?"Under R250k":v<=450000?"R250–450k":v<=750000?"R450–750k":"R750k+";
+      if(vals.includes(lab)){SEL.priceB=lab;TAPS++;}}}
+  // suburb named in the text
+  if(CAT==="travel"){
+    DCOUNTRIES.forEach(c=>{if(t.includes(c.toLowerCase())){SEL._geo={l0:c};GEO=0;TAPS++;}});
+    Object.entries(DEST).forEach(([c,rs])=>Object.keys(rs).forEach(r=>{
+      if(t.includes(r.toLowerCase())){SEL._geo={l0:c,l1:r};GEO=1;TAPS++;}}));
+  }else{
+    SUBS.forEach(s=>{if(t.includes(s.toLowerCase())){SEL._geo={l1:s};GEO=1;TAPS++;}});
+  }
+  render();
+}
+$("q").addEventListener("keyup",e=>{if(e.key==="Enter")parse(e.target.value);});
+document.querySelectorAll(".hint code").forEach(c=>c.addEventListener("click",()=>{
+  $("q").value=c.textContent;parse(c.textContent);}));
+
+/* ---------------- watches: the path, saved ------------------------------------ */
+$("save").addEventListener("click",()=>{
+  const parts=[];
+  const gt=geoTrail(); if(gt)parts.push(gt);
+  FACETS[CAT].forEach(f=>{if(SEL[f.k]!=null)parts.push(f.fmt?f.fmt(SEL[f.k]):SEL[f.k]);});
+  WATCH.unshift({cat:CAT,c:CATS.find(c=>c.k===CAT).c,n:matches().length,p:parts.join(" · ")});
+  WATCH=WATCH.slice(0,4);
+  $("watches").innerHTML=WATCH.map(w=>`<div class="w" style="--c:${w.c}">
+    <b>${CATS.find(c=>c.k===w.cat).n}</b> — <span class="n">${w.n}</span> live now
+    <div class="p">${w.p}</div></div>`).join("");
+});
+
+render();
+</script>
+</body>
+</html>

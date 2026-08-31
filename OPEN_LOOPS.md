@@ -120,3 +120,20 @@ same defect class as an undated status assertion (the ONETAP_SETUP.md "(this is 
 
 - **[H1] OPEN 24 Aug 2026 — Swap-harness bench command (the missing gauge).** The AI swap harness exists (ai_provider.py seam: AI_ACTIVE + ADAPTERS{anthropic,openai,scaleway,gemini} + TASK_MODEL; gauges: failover/eval_golden_set.py). Missing: ONE command — scripts/harness_bench.py <provider> <model> — that runs the golden set against a candidate via the seam and prints a champion-vs-candidate scorecard (pass rate, $/Mtok in+out, latency) so a RUL-009 decision takes one command, not a research errand. Trigger example: OpenAI's 21-Aug GPT-5.6 Sol promo cut ($4/$20 through 21 Nov 2026). While building it: verify TASK_MODEL's openai rows are current — the 11-Jul vendor doc flagged them as gpt-4o-era. Selection stays MANUAL per RUL-009; the bench measures and executes only.
 - **[H2] WATCH 24 Aug 2026 — DeepSeek Harness (agent runtime, NOT the app seam).** MIT-licensed plugin-first agent runtime released 13 Aug (deepseek-ai/deepseek-harness, v0.1 dev preview, ~95k stars in 2 days). Different layer from ai_provider.py: it runs AGENTS (control loop, tool registry, sandbox, sessions); our seam is in-app inference plumbing. Ruling context: supplier-fallback doctrine + pre-launch freeze say a 5-day-old v0.1 framework never enters the live money path. Possible POST-LAUNCH fit: ops/auditor-agent runtime, or host for the H1 bench. Re-assess at /housekeep vendor re-scan once it has a stable release + security track record. Bias note recorded: assessed by Claude (Anthropic); Harness is positioned as a Claude Code rival.
+
+---
+
+## 2026-08-30 (appended — append-only, this file has no compiler)
+
+- **[C] ZOOM-HMI-1 — the category view becomes a narrowing funnel. DESIGN RATIFIED, UNBUILT.**
+  David ratified it 30 Aug (RUL-076) after tapping both prototypes. Build rides the FIRST
+  POST-LAUNCH window alongside the RUL-065 listing-friction batch (RG-0205/0206/0207) — same
+  window, same discipline. Spec: `ZOOM_HMI_SPEC.md`. Ledger: RG-0221 (OPEN; prints READY TO LOCK
+  when it ships). **Binding constraint from David: he sees it on the ACTUAL APP before the field
+  does** — flag-dark in the real app, locally first, then the gated sandbox RUL-075 already
+  schedules for 30 Oct (shared, not duplicated).
+- **[D] ZOOM-HMI-1 arming.** Flipping the flag in the field is David's act, not the CTO's — it
+  changes the front door of every category. Nothing to do until the build lands.
+- **[D] Travel funnel endpoint.** The natural conclusion for tours/stays/guides is a PLAN, not a
+  listing — the Expedition Dossier handed to a partnered agency, which IS the Tuppence
+  introduction. Commercial shape, David's call, needed before the travel lane is armed.

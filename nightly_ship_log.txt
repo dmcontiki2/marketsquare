@@ -477,3 +477,41 @@ no pending fragments.
  ABORT: pre-deploy scan flagged a dangerous change - strict mode. See deploy_audit.log.
 Press any key to continue . . . 
 Sun 08/30/2026  2:01:22.67  BLOCKED/FAILED rc=1 — tree untouched live, see log above
+============================================================
+Mon 08/31/2026  2:00:01.81  NIGHTLY SHIP wake
+
+ ============================================================
+  MEDIA PUSH  (hash-gated: only changed files upload)
+  Mon 08/31/2026  2:00:01.87
+ ============================================================
+ [1/7] SUPER exemplar photos (assets\super to /static/super)...
+   [OK] SYNC super: all 375 files already current - upload skipped.
+ [1b] Study & Work Abroad example photos (assets\studywork to /static/studywork)...
+   [OK] SYNC studywork: all 12 files already current - upload skipped.
+   [OK] SYNC studywork: all 2 files already current - upload skipped.
+ [2/7] Feature/tutor videos (videos to /static/videos)...
+   [OK] SYNC videos: all 14 files already current - upload skipped.
+ [3/7] Email images - phone cards + heroes (CityLauncher to /static)...
+   [OK] SYNC assets: all 12 files already current - upload skipped.
+   [OK] SYNC assets: all 4 files already current - upload skipped.
+   [OK] SYNC assets: all 1 files already current - upload skipped.
+ [4/7] Legal must-have cards (PNGs per country)...
+   [OK] SYNC ZA: all 7 files already current - upload skipped.
+   [OK] SYNC US: all 7 files already current - upload skipped.
+   [OK] SYNC UK: all 7 files already current - upload skipped.
+   [OK] SYNC AU: all 7 files already current - upload skipped.
+ [5/7] Agency Playbook PDF...
+   [OK] SYNC MarketSquare: all 1 files already current - upload skipped.
+ [6/7] n8n email templates (untracked HTML)...
+   [OK] SYNC email_templates: all 3 files already current - upload skipped.
+ [7/7] Permissions + CDN purge + video re-warm...
+  [OK] CDN purge requested 
+warmed 11 tutor videos on the CF edge
+  [OK] videos re-warmed 
+
+ ============================================================
+  MEDIA PUSH COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Mon 08/31/2026  2:01:11.80  drift: DEPLOY DRIFT: clean - all 19 tracked files match live
+Mon 08/31/2026  2:01:11.82  IN SYNC — nothing to ship

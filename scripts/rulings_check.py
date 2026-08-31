@@ -57,6 +57,22 @@ REFLECTIONS = {
    ("LAUNCH_EMAILS.md", ["A wrong-city send STANDS"], []),
    ("RULINGS.md", ["RIDE IT OUT, NEVER RECALL"], []),
  ],
+ "RUL-076": [
+   # Zoom narrowing funnel (30 Aug): the spec must exist and must still carry David's
+   # binding viewing constraint (real app, flag-dark, sandbox shared with RUL-075) and
+   # the three engine rules that were found by building it. If the spec loses these the
+   # next build session will re-derive them wrongly -- that is the blind spot this polices.
+   ("ZOOM_HMI_SPEC.md",
+    ["flag-dark", "RUL-075", "the flag in the field is David",
+     "dependency graph", "never the first question", "GEO_START"], []),
+   ("RULINGS.md", ["NARROWING FUNNEL"], []),
+ ],
+ "RUL-075": [
+   # i18n freeze + dry-run readiness (30 Aug): no live-app string extraction before
+   # the readiness date; the canon plan file must exist and carry the target date.
+   ("I18N_READINESS.md", ["Fri 30 Oct 2026", "parity harness", "sandbox"], []),
+   ("RULINGS.md", ["100% DRY-RUN READY"], []),
+ ],
  "RUL-074": [
    # Persistent chain (30 Aug): second ring + persistent scraping are PLAN defaults in
    # the sim. If the model loses the ring/scrape levers or their defaults go dark, the
