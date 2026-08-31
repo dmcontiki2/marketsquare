@@ -41,6 +41,11 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-082": [
+   # Gate 1 green (31 Aug): the 13 launch cities armed in policy; register carries the verdict.
+   ("../CityLauncher/emailer/waves_policy.json", ["RUL-082"], []),
+   ("RULINGS.md", ["GATE 1 IS GREEN"], []),
+ ],
  "RUL-071": [
    # Two-engine doctrine (30 Aug): cities.json carries lane fields (outreach/organic/horizon).
    ("../CityLauncher/data/cities.json", ['"lane"'], []),

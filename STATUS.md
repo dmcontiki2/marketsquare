@@ -28,6 +28,21 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- **GATE 1 GREEN (RUL-082, 31 Aug):** David's verdict on the holistic board — go for the
+  1 Sep global launch day. All 13 launch cities armed+green in waves_policy.json (the 9
+  lagged SA cities had NO entries — absent = blocked — found and fixed at arming). Board at
+  verdict: 125 sent · 6 bounces (wave-1 dirty) · 0 complaints · 3 opt-outs honoured ·
+  **20 clicks live** · 0 signups · BIT 8/8. NLP/KIM/PMB Tutors pools are EMPTY — they skip
+  (RUL-058); scraper engine still stopped (S131) is the refill dependency.
+- **SSH-BOOTSTRAP-1 + RG-0230:** the recurring "no SSH key in the sandbox" class closed —
+  self-heal in CityLauncher/ssh_bootstrap.py, all 6 SSH entry points wired, standing note
+  moved to Projects/CLAUDE.md.
+- **ENV-READ-1:** TS_POSTAL_ADDRESS provisioned (David) + localize.py env read moved to call
+  time (import-order bug would have refused every US send despite a set .env). Proven E2E.
+  New York carries no environmental blocker.
+- **1 Sep morning:** one act remains — the armed launch-day run (`--arm`), Tutors, 10 SA
+  cities + NY/LDN/SYD; global three then hold to 4 Sep (RUL-053/058/074).
+
 - **OPT-OUT LANE LIVE (OPTOUT-LANE-1, RG-0229 5/5).** People could not opt out at all until today: no `/optout` route existed, the send guard failed open, the pull's SQL had never parsed, and the sync bat printed "SYNC COMPLETE — verified" over the failure. All four fixed and proven end-to-end. First clean wave sent the same day: National #1, 20 emails, **0 opted-out addresses mailed** against a live register holding three real opt-outs, 5 privacy desks held. RG-0220 now executes the pull query instead of reading it.
 
 **Maintenance loop, 31 Aug 2026 (T-1 to full launch).** Fault queue empty — 0 new, 0 triaged,
