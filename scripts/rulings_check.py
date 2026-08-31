@@ -57,6 +57,39 @@ REFLECTIONS = {
    ("LAUNCH_EMAILS.md", ["A wrong-city send STANDS"], []),
    ("RULINGS.md", ["RIDE IT OUT, NEVER RECALL"], []),
  ],
+ "RUL-079": [
+   # Agency outreach at week 0 (31 Aug). Three blind spots this polices, in order of cost:
+   # (1) the model lever silently drifting back to 8, which would make the dashboard's own
+   #     "beat the model" arm disagree with the lane that is actually armed;
+   # (2) PRIV-OFFICER-1 being softened back into a note -- it started life as a note naming
+   #     three addresses and a probe found seven;
+   # (3) the ruling being read as "send more", which is exactly what it is not.
+   ("docs/TrustSquare_Contagion_Model_v0.2.html", ["RUL-079 (31 Aug 2026): David moved this to WEEK 0"], []),
+   ("../CityLauncher/emailer/emailer.py",
+    ["def _looks_privacy_officer", "PRIV-OFFICER-1: refusing send"], []),
+   ("../CityLauncher/emailer/wave_runner.py",
+    ["SUPPRESS-GATE-1", "def suppression_state", "PLAN-TRUTH-1"], []),
+   ("RULINGS.md", ["AGENCY OUTREACH OPENS AT WEEK 0", "not a volume increase"], []),
+ ],
+ "RUL-078": [
+   # Pro includes Global reach (30 Aug). The blind spot this polices: the bundle is a
+   # CODE fact (_buyer_tier must consult the seller subscription), not just a pricing
+   # sentence -- if the canon note or the acceptance criterion goes, a build session
+   # ships a Pro subscriber who is silently local.
+   ("PRICING_CANON.md", ["2c", "carries the $5 Global buyer reach automatically",
+                         "_buyer_tier"], []),
+   ("SQUIRE_SPEC.md", ["RESOLVED 30 Aug 2026 (RUL-078)", "APPROVED BY DAVID"], []),
+   ("RULINGS.md", ["PRO INCLUDES GLOBAL REACH"], []),
+ ],
+ "RUL-077": [
+   # Squire (30 Aug): the Pro agent. The three things a future session must not re-derive
+   # wrongly are the AXIS (representation, not reach), the CURRENCY (Tuppence, never a
+   # second token) and the METERING LINE (observe is free, acting meters).
+   ("SQUIRE_SPEC.md",
+    ["representation", "the top-up is TUPPENCE", "no second currency exists anywhere",
+     "observe vs act", "never *grant*", "No new tier is created"], []),
+   ("RULINGS.md", ["THE TOP-UP IS TUPPENCE, NOT A NEW TOKEN"], []),
+ ],
  "RUL-076": [
    # Zoom narrowing funnel (30 Aug): the spec must exist and must still carry David's
    # binding viewing constraint (real app, flag-dark, sandbox shared with RUL-075) and

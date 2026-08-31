@@ -12399,5 +12399,138 @@ def rg_ramp_evidence():
     return out
 
 
+@entry("RG-0226", "A cold outreach email is NEVER addressed to a mailbox whose job is receiving "
+       "complaints -- privacy, compliance and information-officer desks are refused at the same "
+       "chokepoint that refuses placeholders, and the wave PLAN counts only what would actually "
+       "send",
+       LOCKED, fixed_on="2026-08-31",
+       scope="repo: ../CityLauncher/emailer/emailer.py (_looks_privacy_officer + the send "
+             "refusal + the get_prospects filter) and emailer/wave_runner.py "
+             "(sendable_by_category honouring both guards -- PLAN-TRUTH-1). CLASS, by SHAPE and "
+             "not by name: a re-scrape must not be able to reintroduce what a list edit removed, "
+             "which is precisely how the July note failed. DELIBERATE BOUNDARY, and it is half "
+             "the assertion: info@, sales@, support@, enquiries@ and reservations@ are ordinary "
+             "business addresses and MUST keep sending -- a guard that eats legitimate mail "
+             "starves the lane and is as much a defect as one that lets an Information Officer "
+             "be cold-mailed (RG-0217's boundary, applied to this class).",
+       ref="PRIV-OFFICER-1 + PLAN-TRUTH-1, 31 Aug 2026, shipped in the same session as RUL-079 "
+           "(agency outreach at week 0) and BECAUSE of it -- arming the National key-accounts "
+           "lane is what made the July caveat load-bearing. waves_policy's National note had "
+           "said since 27 Jul: 'POPIA-officer addresses (Motus, Bidvest McCarthy, Group 1) are "
+           "FLAGGED in notes - prefer their contact forms for first touch.' A note is not a "
+           "control, and it was also WRONG: a probe found FIVE on that list (Pam Golding's "
+           "compliance@ and Seeff's informationofficer@ had never been flagged) and SEVEN across "
+           "the pool -- including complaints.ir@justice.gov.za sitting on a SUPERSPAR Botshabelo "
+           "row, i.e. the Department of Justice complaints desk about to receive marketing for a "
+           "supermarket. Sending there does not cost one bounce, it costs the sending domain. "
+           "The addresses are HELD, never suppressed and never marked opted-out -- nobody opted "
+           "out, and writing a fake opt-out into the POPIA register to solve an engineering "
+           "problem would be its own offence. Reach them by contact form.")
+def rg_privacy_officer_guard():
+    out = []
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not os.path.isdir(cl):
+        return [(INFO, "CityLauncher not beside this repo -- PRIV-OFFICER-1 unchecked here "
+                       "(live-only run)")]
+    em = os.path.join(cl, "emailer", "emailer.py")
+    wr = os.path.join(cl, "emailer", "wave_runner.py")
+    for fp, nm in ((em, "emailer/emailer.py"), (wr, "emailer/wave_runner.py")):
+        if not os.path.exists(fp):
+            return [(FAIL, "CityLauncher/%s is GONE -- PRIV-OFFICER-1 has no chokepoint" % nm)]
+    esrc = open(em, encoding="utf-8").read()
+    wsrc = open(wr, encoding="utf-8").read()
+    for needle, why in (("def _looks_privacy_officer", "the shape guard itself"),
+                        ("PRIV-OFFICER-1: refusing send", "the send_email chokepoint refusal"),
+                        ("and not _looks_privacy_officer(r.get(", "batch composition filtering")):
+        if needle not in esrc:
+            out.append((FAIL, "emailer.py lost %r -- %s is gone (PRIV-OFFICER-1)"
+                              % (needle, why)))
+    for needle, why in (("PLAN-TRUTH-1", "the plan-counts-what-sends rule"),
+                        ("_looks_privacy_officer(e)", "sendable_by_category honouring the guard")):
+        if needle not in wsrc:
+            out.append((FAIL, "wave_runner.py lost %r -- %s is gone; the plan can promise "
+                              "addresses the chokepoint will refuse" % (needle, why)))
+    if not out:
+        try:
+            ns = {}
+            i = esrc.index("_JUNK_LOCALPARTS"); j = esrc.index("def send_email")
+            exec(esrc[i:j], ns)
+            f = ns["_looks_privacy_officer"]
+            must_block = ("popia@motus.co.za", "popia@mcmotor.co.za", "dpns@grp1.co.za",
+                          "compliance@pamgolding.co.za", "informationofficer@seeff.com",
+                          "complaints.ir@justice.gov.za", "dpo@anything.co.za",
+                          "privacy.team@x.com")
+            must_pass = ("info@rawsonproperties.com", "support@remax.co.za",
+                         "enquiries@jawitz.co.za", "sales@africastay.com",
+                         "reservations@safari.com", "customercare@cmh.co.za",
+                         "ask@moafrikatours.com", "hey@halfway.co.za")
+            leaked = [e for e in must_block if not f(e)]
+            eaten  = [e for e in must_pass if f(e)]
+            if leaked:
+                out.append((FAIL, "the guard no longer catches %s -- a complaints desk is "
+                                  "cold-mailable again" % ", ".join(leaked[:3])))
+            if eaten:
+                out.append((FAIL, "the guard now eats ordinary business addresses (%s) -- "
+                                  "over-widened, the lane will starve" % ", ".join(eaten[:3])))
+            if not leaked and not eaten:
+                out.append((INFO, "guard behaviourally proven: every known privacy/compliance "
+                                  "desk refused, every ordinary business address still sends"))
+        except Exception as e:
+            out.append((INFO, "guard not behaviourally checkable here (%s) -- source halves "
+                              "above still assert the shape" % str(e)[:70]))
+    return out
+
+
+@entry("RG-0227", "No outreach wave may fire while the LOCAL opt-out register is unarmed -- the "
+       "POPIA chokepoint must have something to enforce before a single cold email leaves",
+       LOCKED, fixed_on="2026-08-31",
+       scope="repo: ../CityLauncher/emailer/wave_runner.py (suppression_state + its wiring into "
+             "gate_check). CLASS: any send lane whose legal chokepoint depends on data that a "
+             "SEPARATE, manual step populates. DELIBERATE ASYMMETRY against its sibling RG-0225: "
+             "stale bounce evidence merely holds the batch at base, because volume is a business "
+             "risk -- but an absent opt-out register BLOCKS the send outright, because honouring "
+             "an opt-out is a legal obligation and there is no safe smaller version of it. "
+             "Dry-runs stay allowed at all times: the point is to make the gap visible, not to "
+             "make the tool unusable.",
+       ref="SUPPRESS-GATE-1, 31 Aug 2026, found pre-flighting RUL-079's agency lane. emailer.py "
+           "has carried a SUPPRESS-1 chokepoint that reads a local `suppression` table since the "
+           "opt-out work; that table is CREATED AND FILLED by pull_from_server.py and by nothing "
+           "else. Probed on the eve of the agency wave: `no such table: suppression` -- the pull "
+           "had never run on this machine, so the chokepoint had been enforcing against nothing, "
+           "silently, for the whole of the first outreach fortnight. The 110 sends already made "
+           "were not stopped by it because it had nothing to stop them with. Same root as "
+           "RG-0225 (the pull is manual, unenforced and unwitnessed) and fixed at the same seam, "
+           "but recorded separately because one is about growing and this one is about sending.")
+def rg_suppression_gate():
+    out = []
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not os.path.isdir(cl):
+        return [(INFO, "CityLauncher not beside this repo -- SUPPRESS-GATE-1 unchecked here "
+                       "(live-only run)")]
+    wr = os.path.join(cl, "emailer", "wave_runner.py")
+    if not os.path.exists(wr):
+        return [(FAIL, "CityLauncher/emailer/wave_runner.py is GONE -- SUPPRESS-GATE-1 has no lane")]
+    wsrc = open(wr, encoding="utf-8").read()
+    for needle, why in (("def suppression_state", "the register check itself"),
+                        ("SUPPRESS-GATE-1: {sup_why}", "gate_check appending it as a blocker"),
+                        ("sup_ok, sup_why = suppression_state()", "gate_check calling it")):
+        if needle not in wsrc:
+            out.append((FAIL, "wave_runner.py lost %r -- %s is gone; a wave can fire with no "
+                              "local opt-out register (SUPPRESS-GATE-1)" % (needle, why)))
+    # the check must sit in gate_check (which BLOCKS), never in the ramp (which only holds)
+    try:
+        g = wsrc.index("def gate_check")
+        nxt = wsrc.index("def ", g + 10)
+        if "suppression_state()" not in wsrc[g:nxt]:
+            out.append((FAIL, "suppression_state is no longer called inside gate_check -- the "
+                              "register check has been demoted out of the blocking path"))
+    except ValueError:
+        out.append((FAIL, "gate_check not found in wave_runner.py"))
+    if not out:
+        out.append((INFO, "the opt-out register is a blocking pre-condition of a real send, "
+                          "and dry-runs remain unrestricted"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
