@@ -1490,7 +1490,21 @@ def run():
             # zero fails, and falsely reported READY TO LOCK (RG-0006 was nearly promoted while ms.js
             # still carried 9 Rand price labels). A skip is "unverified here", never "now passing".
             skipped = (not fails) and any(s == INFO and "skip" in m.lower() for s, m in out)
-            status = "OPEN" if (fails or skipped) else "READY TO LOCK"
+            # LEDGER-PENDING-BUILD-1 (31 Aug 2026), sibling of LEDGER-FAULT-1 above and
+            # found the same way -- by the board printing an instruction that was wrong.
+            # Some OPEN entries ratify a DESIGN whose build has not started; while unbuilt
+            # their harness can only assert the pre-build half (the spec is intact, the
+            # prototype is on disk). That half passes on day one, so the board printed
+            # "now passing -- change state to LOCKED" for RG-0221 (ZOOM) every single run,
+            # while RG-0221's own ref says promote only WHEN BUILT and extend the assertion
+            # to the shipped code. Obeying the print would LOCK the weak half and retire the
+            # strong one -- weakening an assertion to make it pass, which the canon forbids.
+            # Ignoring it daily is worse: it teaches sessions that READY TO LOCK is noise,
+            # and the next real one gets skipped (the DW-079 failure, arrived at backwards).
+            # So a harness that can only reach its pre-build half says PENDING BUILD, and
+            # that reads OPEN with its reason -- never an invitation to promote.
+            pending = (not fails) and any(s == INFO and "PENDING BUILD" in m for s, m in out)
+            status = "OPEN" if (fails or skipped or pending) else "READY TO LOCK"
         results.append({**{k: v for k, v in e.items() if k != "fn"},
                         "status": status, "fails": fails, "infos": infos})
     return results, round(time.time() - t0, 1)
@@ -11971,7 +11985,15 @@ def rg_sync_pulldown():
              "this build. GAP THIS CLOSES: the Ranking Score today ranks AGENTS only "
              "(/agents/nearby); the listing feed sorts newest, or 'smart' = trust 60%% + "
              "freshness 40%% with NO quality term -- so the method meant to promote listing "
-             "quality never touched the results a buyer browses.",
+             "quality never touched the results a buyer browses. SECOND PREREQUISITE "
+             "(30 Aug): GET /listings takes NO buyer identity -- the Free/Global reach gate "
+             "(PRICING_CANON 2, buyer axis: Free=local city, Global=$5 national+global; "
+             "travel/stays 2a and online-mode 2b borderless on any tier) is enforced ONLY "
+             "on /wishlist/feed. Zoom puts geography on screen AS A COUNTED QUESTION, so an "
+             "ungated endpoint makes the count either a lie or a dead end -- the gate must "
+             "move into /listings INSIDE the counted set. Locked != empty: an out-of-reach "
+             "option is shown with its true count and the offer (RUL-066 rung 1), only "
+             "zero-count options are removed.",
        ref="ZOOM-HMI-1 (30 Aug 2026). David ratified the design after tapping both "
            "prototypes and set one binding constraint: 'I would actually like to see it on "
            "the actual app first, not the live one that is in the field now.' So the build "
@@ -11996,7 +12018,9 @@ def rg_zoom_funnel():
             ("GEO_START", "travel's inverted geography"),
             ("Zero-count options are removed", "the unreachable-dead-end rule"),
             ("0.5 x listing quality", "the Ranking Score as the result order"),
-            ("quality_score` column", "the stored-quality prerequisite")):
+            ("quality_score` column", "the stored-quality prerequisite"),
+            ("reach gate moves into", "reach-scoped counts (the rule-2 breaker)"),
+            ("Empty\" and \"locked\" are different", "locked != zero-count")):
         if needle not in s:
             out.append((FAIL, "ZOOM_HMI_SPEC.md lost %r -- %s is gone (ZOOM-HMI-1)"
                               % (needle, why)))
@@ -12005,8 +12029,189 @@ def rg_zoom_funnel():
             out.append((FAIL, "%s is missing -- the spec's measured tap budgets can no "
                               "longer be re-run (ZOOM-HMI-1)" % proto))
     if not out:
-        out.append((INFO, "spec intact, both prototypes present -- design ratified, build "
-                          "pending (OPEN by design until ZOOM-HMI-1 ships)"))
+        out.append((INFO, "PENDING BUILD -- spec intact, both prototypes present; design "
+                          "ratified, build not started. This entry can only assert its "
+                          "PRE-BUILD half today, so it is OPEN by design and must NOT be "
+                          "promoted: promoting now would lock the spec-only assertion and "
+                          "retire the 8 shipped-code properties in the ref (LEDGER-PENDING-"
+                          "BUILD-1). Promote when ZOOM-HMI-1 ships AND this harness checks "
+                          "the shipped code."))
+    return out
+
+
+@entry("RG-0222", "An anonymous caller never receives a customer's IDENTITY or the text of "
+       "their message -- the ops email-triage feed serves counts to strangers and rows only "
+       "to the admin credential",
+       OPEN,
+       scope="bea_main.py dashboard_email_triage + the loadEmailTriage loaders in "
+             "dashboard.server.html (ships) and dashboard.html (local operator copy) "
+             "-- DASH-TRIAGE-REDACT-1. CLASS, not instance, and the class is the whole point: "
+             "any UNAUTHENTICATED endpoint that serves a personal identifier (an email "
+             "address, a name, a phone number) or the BODY of a customer's message belongs "
+             "here. RG-0198 owns the internal engineering NARRATIVE and RG-0211 cut "
+             "/dashboard/summary to a heartbeat; this owns PERSONAL DATA, which is a "
+             "different duty (POPIA, and RUL-069's firewall doctrine that customer mail "
+             "lives between the user and the triage AI). Deliberately split rather than "
+             "folded in, because a single assertion over all three would be promoted the "
+             "moment any one half passed. SWEEP RECORDED 31 Aug 2026: every other "
+             "unauthenticated /dashboard/* route (fixed-costs, bit, presence, cost, scan, "
+             "maint) was probed live the same run and none returns an email address -- "
+             "email-triage was the only leaking sibling, and this entry is what keeps a new "
+             "one from being added quietly.",
+       ref="Found by the maintenance loop, 31 Aug 2026 -- the day before full launch "
+           "(RUL-001). The endpoint's own docstring said it 'mirrors /dashboard/summary's "
+           "no-auth posture (security = obscure dashboard URL)', and it did -- until "
+           "DASH-SUMMARY-REDACT-1 tightened that sibling on 30 Aug and left this one behind. "
+           "PROBED anonymously, no cookie, no key: GET /dashboard/email-triage returned "
+           "from_addr, subject and 600 chars of draft_reply for every inbound email. Today "
+           "the queue holds only test rows (David's own address); from launch it is customer "
+           "mail. An obscure URL is not a control for personal data. FIX: counts stay "
+           "anonymous (the page's tiles need nothing more), rows require X-Admin-Token/"
+           "X-Admin-Key via _summary_caller_is_admin -- the credential the dashboard already "
+           "holds (omTok, the RG-0211 loader pattern); the row list degrades to a sign-in "
+           "note rather than breaking (RG-0133). EVIDENCE at fix time: the real function "
+           "source lifted from bea_main.py and exercised over a stub DB carrying "
+           "'angry.customer@example.com' -- anonymous payload contained zero of the three "
+           "PII strings and items==[], admin payload carried the full row. OPEN until the "
+           "change DEPLOYS and the live anonymous probe below goes green -- source half "
+           "passes now, live half is the one that matters, exactly as RG-0211 was held.")
+def rg_triage_pii():
+    out = []
+    src_p = os.path.join(REPO, "bea_main.py")
+    if os.path.exists(src_p):
+        s = open(src_p, encoding="utf-8", errors="replace").read()
+        i = s.find('@app.get("/dashboard/email-triage")')
+        j = s.find("END AI EMAIL TRIAGE", i + 1) if i >= 0 else -1
+        if i < 0:
+            out.append((FAIL, "/dashboard/email-triage route is GONE from bea_main.py -- "
+                              "this assertion cannot see what replaced it"))
+        else:
+            body = s[i:j if j > 0 else i + 6000]
+            if "_summary_caller_is_admin" not in body:
+                out.append((FAIL, "dashboard_email_triage no longer gates on "
+                                  "_summary_caller_is_admin -- the anonymous branch is gone, "
+                                  "so sender addresses and reply bodies are public again "
+                                  "(DASH-TRIAGE-REDACT-1)"))
+            if '"redacted": "counts"' not in body:
+                out.append((FAIL, "the anonymous branch no longer returns redacted='counts' "
+                                  "-- the loaders read that flag to explain the empty list"))
+            if '"items": []' not in body:
+                out.append((FAIL, "the anonymous branch no longer empties items[] -- the "
+                                  "rows carry from_addr, subject and draft_reply"))
+    else:
+        out.append((INFO, "skip: bea_main.py not on this machine (run from the repo for the "
+                          "source half)"))
+    for page, ships in (("dashboard.server.html", True), ("dashboard.html", False)):
+        pp = os.path.join(REPO, page)
+        if not os.path.exists(pp):
+            continue
+        ps = open(pp, encoding="utf-8", errors="replace").read()
+        if "/dashboard/email-triage?limit=20" in ps and "X-Admin-Token" not in ps.split(
+                "loadEmailTriage")[-1][:1500]:
+            out.append((FAIL, "%s loads the triage ROWS without X-Admin-Token -- after the "
+                              "redaction the card silently shows nothing to its own operator "
+                              "(%s)" % (page, "ships" if ships else "local copy")))
+    # LIVE half -- the one that matters. Anonymous, exactly as a stranger would call it.
+    try:
+        d = _json("/dashboard/email-triage?limit=5")
+    except Exception as e:
+        out.append((INFO, "NOT EVALUATED live: %s" % str(e)[:120]))
+        return out
+    if d is None:
+        out.append((INFO, "NOT EVALUATED live: no JSON from /dashboard/email-triage"))
+        return out
+    items = d.get("items")
+    if items:
+        leaked = sorted({k for it in items if isinstance(it, dict) for k in it
+                         if k in ("from_addr", "subject", "draft_reply")})
+        out.append((FAIL, "anonymous GET /dashboard/email-triage returned %d row(s) carrying "
+                          "%s -- a stranger can read who complained and what we wrote back "
+                          "(DASH-TRIAGE-REDACT-1)" % (len(items), ", ".join(leaked) or "rows")))
+    elif d.get("redacted") != "counts":
+        out.append((INFO, "PENDING BUILD -- the live endpoint answers with no rows but does "
+                          "not carry redacted='counts', so this is the OLD build on an empty "
+                          "window, not the fix. Promote after the change deploys and this "
+                          "reads redacted='counts' with the counts intact."))
+    else:
+        out.append((INFO, "anonymous caller gets counts only (redacted='counts', %d total) -- "
+                          "no sender, no subject, no draft body"
+                          % (d.get("total") or 0)))
+    return out
+
+
+@entry("RG-0223", "The maintenance brain reads EVERY LIVE intake lane -- it can never report "
+       "an empty queue because the only door it looks at has been closed",
+       OPEN,
+       scope="scripts/maintenance_agent.py (email_lane_census + the report/heartbeat it "
+             "feeds) and bea_main.py _MAINT_HB_FIELDS -- MAINT-INTAKE-2. CLASS: every "
+             "channel the product opens for complaints must be READ by the loop that exists "
+             "to answer them; a lane that is switched on while the reader points elsewhere "
+             "is a silent outage of the whole maintenance mission (MAINTENANCE_AGENT.md "
+             "stage 1, 'log every complaint'). Deliberately a CENSUS and not a fix lane: "
+             "the agent counts and says, it never drafts or sends -- email replies stay "
+             "behind EMAIL_AUTO_SEND and legal/compliance stay excluded. Counts-only by "
+             "construction, because RG-0222 keeps the rows behind a credential this agent "
+             "does not hold and should not.",
+       ref="Found by the maintenance loop, 31 Aug 2026. The agent's sole intake is GET "
+           "/admin/faults?status=new, fed by the in-app REPORT tab -- and RUL-040 REMOVES "
+           "that tab at soft launch, when customer complaints take over. PROBED live: /flags "
+           "reads fault_report=false (correct -- soft-public opened 29 Aug), so the lane is "
+           "deliberately shut, and every run since has truthfully reported '0 seen' while "
+           "the lane actually carrying customer complaints (inbound mail -> POST "
+           "/email/inbound -> email_triage, 15 rows) was never looked at by the brain at "
+           "all. A loop that reports an empty queue because it is reading a closed door is "
+           "worse than one that reports nothing -- it manufactures a green day. EVIDENCE at "
+           "fix time: the patched agent run at 05:43Z printed 'email lane 15 total, 1 held "
+           "(30d {other:1, support:4})' against the live site. OPEN until the heartbeat half "
+           "deploys (_MAINT_HB_FIELDS whitelists 'email_lane', so the +1 card shows it only "
+           "after the change ships) -- the agent half is live now.")
+def rg_maint_intake_lanes():
+    out = []
+    ap = os.path.join(REPO, "scripts", "maintenance_agent.py")
+    if not os.path.exists(ap):
+        out.append((INFO, "skip: scripts/maintenance_agent.py not on this machine"))
+        return out
+    a = open(ap, encoding="utf-8", errors="replace").read()
+    if "def email_lane_census" not in a:
+        out.append((FAIL, "maintenance_agent.py no longer censuses the email lane -- the "
+                          "brain is back to reading app_faults alone, which RUL-040 shuts at "
+                          "soft launch (MAINT-INTAKE-2)"))
+    if '"email_lane": _email' not in a:
+        out.append((FAIL, "the run report no longer carries intake.email_lane -- a reader of "
+                          "the report cannot tell whether 'seen' covered the customer lane"))
+    if "email lane UNREAD" not in a:
+        out.append((FAIL, "the agent no longer SAYS when the email lane could not be read -- "
+                          "a failed census must be loud, or 'seen' silently means app_faults "
+                          "only"))
+    bp = os.path.join(REPO, "bea_main.py")
+    if os.path.exists(bp):
+        b = open(bp, encoding="utf-8", errors="replace").read()
+        k = b.find("_MAINT_HB_FIELDS = (")
+        if k >= 0 and "email_lane" not in b[k:k + 400]:
+            out.append((FAIL, "_MAINT_HB_FIELDS dropped 'email_lane' -- the POST whitelist "
+                              "silently discards it and the +1 card paints a shut lane as a "
+                              "quiet day"))
+    # LIVE half: the heartbeat the dashboard actually reads.
+    try:
+        hb = _json("/dashboard/maint")
+    except Exception as e:
+        out.append((INFO, "NOT EVALUATED live: %s" % str(e)[:120]))
+        return out
+    if hb is None:
+        out.append((INFO, "NOT EVALUATED live: no JSON from /dashboard/maint"))
+    elif "email_lane" not in hb:
+        out.append((INFO, "PENDING BUILD -- the live heartbeat carries no email_lane field. "
+                          "Expected until the _MAINT_HB_FIELDS change deploys; the agent is "
+                          "already sending it and the server whitelist is dropping it."))
+    else:
+        el = hb.get("email_lane") or {}
+        if el.get("error"):
+            out.append((FAIL, "the last run could NOT read the customer email lane (%s) -- "
+                              "its 'seen' count covered app_faults only"
+                              % str(el["error"])[:90]))
+        else:
+            out.append((INFO, "heartbeat carries the customer lane: %s total, %s held"
+                              % (el.get("total"), el.get("held_30d"))))
     return out
 
 

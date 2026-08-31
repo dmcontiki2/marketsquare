@@ -1674,7 +1674,12 @@ function loadOpsMetrics() {
 
 function loadEmailTriage() {
   const base = window.location.protocol === 'file:' ? 'https://trustsquare.co' : '';
-  fetch(base + '/dashboard/email-triage?limit=20').then(r=>r.json()).then(d=>{
+  // DASH-TRIAGE-REDACT-1 (RG-0222): the rows carry sender addresses and reply bodies,
+  // so the endpoint now serves them only to an admin caller. Same omTok/X-Admin-Token
+  // pattern every other stats loader on this page uses (RG-0211). Counts still answer
+  // anonymously, so the tiles never go blank; the row list says so instead of breaking.
+  const _tHdr = (function(){ try{ var t = sessionStorage.getItem('ms_admin_token'); return t ? {'X-Admin-Token': t} : {}; }catch(e){ return {}; } })();
+  fetch(base + '/dashboard/email-triage?limit=20', {headers:_tHdr}).then(r=>r.json()).then(d=>{
     document.getElementById('triage-updated').textContent = (d.total||0) + ' total';
 
     const catColours = { support:'#3b82f6', billing:'#8b5cf6', legal:'#ef4444',
@@ -1713,7 +1718,11 @@ function loadEmailTriage() {
         + draft
         + '</div>';
     }).join('');
-    document.getElementById('triage-list').innerHTML = rows || '<div style="color:#64748b;font-size:13px;">No triaged emails yet.</div>';
+    const _redacted = (d.redacted === 'counts');
+    document.getElementById('triage-list').innerHTML = rows
+      || (_redacted
+          ? '<div style="color:#64748b;font-size:13px;">Message list hidden \u2014 sign in as admin to read senders and drafts (counts above are live).</div>'
+          : '<div style="color:#64748b;font-size:13px;">No triaged emails yet.</div>');
   }).catch(()=>{
     document.getElementById('triage-updated').textContent = 'fetch failed';
   });

@@ -19038,8 +19038,12 @@ def app_faults_mine(email: str, x_review_token: str = Header(default=None),
 # FACTS ONLY by whitelist: lane NAMES and counters, never key material (RG-0042 rule).
 # The brain key and MAINTENANCE_AGENT_ENABLED remain file/env acts on the machine that
 # runs the loop -- there is deliberately NO write surface here that could arm anything.
+# MAINT-INTAKE-2 (RG-0223, 31 Aug 2026): "email_lane" added. The card used to show
+# seen=0 on a day when app_faults was shut by RUL-040 and every customer complaint was
+# arriving by email instead -- a green-looking quiet day painted over an unread lane.
+# Counts only (RG-0222 keeps the rows behind the admin credential); no sender, no subject.
 _MAINT_HB_FIELDS = ("run", "mode", "phase", "armed", "live", "brain_keyed",
-                    "brain_lane", "seen", "acted", "lanes", "code")
+                    "brain_lane", "seen", "acted", "lanes", "code", "email_lane")
 
 @app.post("/dashboard/maint")
 def dashboard_maint_post(payload: dict = Body(...), _admin=Depends(_require_maint)):
@@ -19242,10 +19246,25 @@ def admin_email_triage(limit: int = 50, offset: int = 0,
 
 
 @app.get("/dashboard/email-triage")
-def dashboard_email_triage(limit: int = 20):
-    """Unauthenticated read-only triage feed for the ops dashboard.
-    Mirrors /dashboard/summary's no-auth posture (security = obscure dashboard URL).
-    Returns recent rows + 30-day category/status counts. Draft text truncated."""
+def dashboard_email_triage(limit: int = 20,
+                           x_admin_key: str = Header(default=None),
+                           x_admin_token: str = Header(default=None)):
+    """Ops triage feed. ADMIN callers get the rows; an anonymous caller gets COUNTS ONLY.
+
+    DASH-TRIAGE-REDACT-1 (RG-0222, 31 Aug 2026). This endpoint's own docstring used to
+    say it "mirrors /dashboard/summary's no-auth posture" -- and it did, right up until
+    DASH-SUMMARY-REDACT-1 (RG-0211) cut that sibling to a heartbeat on 30 Aug and left
+    this one behind. What it was serving to any anonymous caller on the internet was not
+    a posture line: it was every inbound sender's EMAIL ADDRESS, their subject line and
+    600 characters of the reply body. Probed live 31 Aug, the day before full launch, on
+    a queue that still held only test rows -- from launch it is customer mail, which
+    RUL-069's firewall class exists to keep between the user and the triage AI.
+
+    "Security = obscure dashboard URL" is not a control for personal data. Counts carry
+    the ops signal (how much mail, which categories, how much auto-sent) and the dashboard
+    tiles at the top of the page need nothing more; the ROWS need the admin credential the
+    page already holds (omTok / X-Admin-Token, the RG-0211 loader pattern).
+    """
     limit = max(1, min(limit, 50))
     conn = database.get_db()
     try:
@@ -19266,12 +19285,18 @@ def dashboard_email_triage(limit: int = 20):
         ).fetchall()
     finally:
         conn.close()
-    return {
+    _counts = {
         "total": total,
         "by_category_30d": {r["category"]: r["n"] for r in by_cat},
         "by_status_30d": {r["status"]: r["n"] for r in by_status},
-        "items": [dict(r) for r in rows],
     }
+    if not _summary_caller_is_admin(x_admin_key, x_admin_token):
+        # Counts only. No from_addr, no subject, no draft body -- nothing that names a
+        # person or quotes their message. The page's count tiles are unaffected; the row
+        # list degrades to a "sign in" note rather than breaking (RG-0133: a surface with
+        # no data reads NOT MEASURED, never a guessed value).
+        return {**_counts, "items": [], "redacted": "counts"}
+    return {**_counts, "items": [dict(r) for r in rows]}
 
 # ── END AI EMAIL TRIAGE — Session 94 ─────────────────────────────────────────
 

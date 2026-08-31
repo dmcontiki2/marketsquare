@@ -315,6 +315,40 @@ def open_faults(key):
     except Exception as e:
         say("intake FAILED (%s) -- nothing read; failing safe, doing nothing." % e); return None
 
+# ── MAINT-INTAKE-2 (RG-0223, 31 Aug 2026): the loop reads EVERY LIVE intake lane ──
+# The blindness this closes: this agent's only intake is GET /admin/faults?status=new,
+# which is fed by the in-app REPORT tab -- and RUL-040 REMOVES that tab at soft launch,
+# when customer complaints take over. Probed live 31 Aug: /flags says fault_report=false
+# (correct, soft-public opened 29 Aug), so the app_faults lane is deliberately shut and
+# every run since has truthfully reported "0 seen" while the lane that actually carries
+# customer complaints -- inbound email -> POST /email/inbound -> email_triage -- was
+# never looked at by the brain at all. A loop that reports an empty queue because it is
+# reading a closed door is worse than one that reports nothing.
+#
+# Deliberately a CENSUS, not a fix lane: it reads counts and says them. It never drafts,
+# never replies, never touches a customer message -- email replies stay behind
+# EMAIL_AUTO_SEND and legal/compliance stay excluded. What it buys is that the run report
+# and the console can no longer say "0 seen" without also saying what the customer lane
+# holds. Counts-only by construction: DASH-TRIAGE-REDACT-1 (RG-0222) serves rows only to
+# an admin credential, which this agent does not hold and should not.
+def email_lane_census():
+    """Counts from the live customer-email lane. Fail-SOFT: never affects the run."""
+    try:
+        req = urllib.request.Request(BASE + "/dashboard/email-triage?limit=1",
+                                     headers=dict(UA_HEADER))
+        with urllib.request.urlopen(req, timeout=20) as r:
+            d = json.loads(r.read().decode() or "{}")
+        st = d.get("by_status_30d") or {}
+        held = int(st.get("drafted", 0)) + int(st.get("failed", 0))
+        return {"lane": "email_triage", "total": d.get("total", 0),
+                "by_category_30d": d.get("by_category_30d") or {},
+                "by_status_30d": st, "held_30d": held,
+                "note": "counts only (RG-0222); rows need the admin credential"}
+    except Exception as e:
+        return {"lane": "email_triage", "error": "%s: %s" % (type(e).__name__, str(e)[:80]),
+                "note": "customer email lane UNREAD this run -- treat 'seen' as partial"}
+
+
 # ── RUL-013: the PRE-LAUNCH fix lane is Fable ────────────────────────────────────
 # David's ruling 15 Aug 2026: pre-launch, tester reports are DESIGN REQUESTS and Fable resolves
 # them without him. Implemented as a task tier, not a hardcoded model, so the seam stays portable
@@ -724,7 +758,11 @@ def _post_heartbeat(report, mode, key):
           "brain_keyed": bool(keyed),
           "brain_lane": (keyed[0].replace("_API_KEY", "").lower() if keyed else ""),
           "seen": report.get("seen", 0), "acted": len(report.get("actions", [])),
-          "lanes": lanes, "code": _code_stamp()}
+          "lanes": lanes, "code": _code_stamp(),
+          # MAINT-INTAKE-2: the card must never paint an empty app_faults queue as a quiet
+          # day when the customer lane is the one carrying mail. Whitelisted server-side
+          # (_MAINT_HB_FIELDS), so this reaches the dashboard once the change deploys.
+          "email_lane": (report.get("intake") or {}).get("email_lane") or {}}
     try:
         api("POST", "/dashboard/maint", key, hb)
         say("heartbeat -> /dashboard/maint (brain %s, %s)"
@@ -774,7 +812,17 @@ def main():
         faults = [f for f in faults
                   if (f.get("ref") or ("TS-%04d" % f.get("id", 0))).upper() in want]
         say("--only=%s -- %d fault(s) selected" % (_ONLY, len(faults)))
-    report = {"run": now(), "mode": mode, "seen": len(faults), "actions": []}
+    # MAINT-INTAKE-2: name the other live lane before anyone reads "seen" as "the queue".
+    _email = email_lane_census()
+    if _email.get("error"):
+        say("email lane UNREAD (%s) -- 'seen' below counts app_faults ONLY" % _email["error"])
+    else:
+        say("email lane  %d total, %d held (30d %s) -- census only, not a fix lane"
+            % (_email.get("total", 0), _email.get("held_30d", 0),
+               _email.get("by_category_30d") or {}))
+    report = {"run": now(), "mode": mode, "seen": len(faults),
+              "intake": {"app_faults_new": len(faults), "email_lane": _email},
+              "actions": []}
     _t0 = time.time()
     _report_path = os.path.join(STATE,
                                 "run_%s.json" % datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
