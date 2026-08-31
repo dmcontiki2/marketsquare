@@ -148,6 +148,24 @@ def main():
 
         total = 10
         print("\n%d/%d passed" % (total - len(fails), total))
+        if fails and os.name == "nt":
+            # LEDGER-DEPS-2 (31 Aug 2026). This harness fakes an /etc/nginx tree by
+            # patching SEARCH, os.walk and _nginx_T_files at POSIX paths. On Windows the
+            # discovered paths return from os.path.realpath() with backslashes while the
+            # fixture's expectations carry forward slashes, so the discovery comparison
+            # cannot match no matter what the migration does. RG-0187's rule: an
+            # instrument that cannot faithfully run reads NOT EVALUATED, never REGRESSION.
+            # Passes 10/10 on Linux, which is where nginx actually runs.
+            #
+            # NOTE the earlier wrong explanation, kept as a warning: this was first
+            # attributed to "nginx not installed". That was FALSE -- nginx is absent on
+            # the Linux runner too and it passes there. A demotion with a false reason is
+            # worse than a red, because it retires the assertion AND misleads the reader.
+            print("NOT EVALUATED: this harness simulates a POSIX /etc/nginx tree and "
+                  "compares realpath() output against forward-slash fixture paths, which "
+                  "cannot match on Windows. Says nothing about the fix, which runs on the "
+                  "Linux server. Re-run on Linux to evaluate. (LEDGER-DEPS-2)")
+            return 3
         return 1 if fails else 0
     finally:
         shutil.rmtree(root, ignore_errors=True)

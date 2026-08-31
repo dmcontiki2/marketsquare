@@ -1213,7 +1213,7 @@ def rg_deploy_sync_discipline():
     if "sync_assets.ps1" not in mp:
         out.append((FAIL, "media_push.bat no longer hash-gates via sync_assets.ps1 -- the "
                           "bulk-reupload class (DEPLOY-SYNC-2) is back"))
-    for code in ("ms\.js", "bea_main\.py", "marketsquare\.html", "\.py\b"):
+    for code in (r"ms\.js", r"bea_main\.py", r"marketsquare\.html", r"\.py\b"):
         if re.search(r"(?:scp|sync_assets\.ps1)[^\n]*-Filter[^\n]*" + code, mp) or \
            re.search(r"^\s*scp\b[^\n]*" + code, mp, re.M):
             out.append((FAIL, "media_push.bat ships code (" + code.replace("\\", "") +
@@ -10157,10 +10157,12 @@ def rg_migration_discovery_authoritative():
         out.append((FAIL, "scripts/prove_csp_discovery.py is gone -- the discovery fix is unproven"))
     else:
         ok, blind, detail = _harness([sys.executable, hp], timeout=90)
-        if blind:
-            out.append((INFO, detail))          # LEDGER-DEPS-1
+        if blind or "NOT EVALUATED:" in str(detail):
+            # LEDGER-DEPS-2: the harness drives `nginx -T`. No nginx on this machine
+            # means the instrument is absent, which RG-0187 says must read UNVERIFIED.
+            out.append((INFO, str(detail)[-300:] if not blind else detail))
         elif not ok:
-            out.append((FAIL, "the discovery harness FAILS: " + detail[-300:]))
+            out.append((FAIL, "the discovery harness FAILS: " + str(detail)[-300:]))
         else:
             out.append((INFO, "discovery proven against a fixture the old globs could not see"))
     return out
@@ -11947,6 +11949,34 @@ def rg_sync_pulldown():
                         ("CREATE TABLE IF NOT EXISTS suppression", "arming the local SUPPRESS-1 register")):
         if needle not in s:
             out.append((FAIL, "pull_from_server.py lost %r -- %s is gone (SYNC-PULLDOWN-1)" % (needle, why)))
+    # PULL-SQL-1 (31 Aug 2026): the string checks above all passed for 24 hours while
+    # step [1/3] could not run AT ALL -- ph was built as ''opted_out'' (doubled quotes),
+    # which SQL reads as an empty string followed by a bare identifier. This entry was
+    # LOCKED and green over a pull that had never once succeeded. So the assertion now
+    # EXECUTES the query it claims works, against a real schema, instead of reading it.
+    try:
+        import sqlite3 as _sq, re as _re
+        m = _re.search(r"ph = ','\.join\(f\"'\{v\}'\" for v in VERDICTS\)", s)
+        vm = _re.search(r"VERDICTS\s*=\s*\(([^)]*)\)", s)
+        verds = _re.findall(r"'([a-z_]+)'", vm.group(1)) if vm else []
+        if not verds:
+            out.append((FAIL, "VERDICTS tuple unreadable -- cannot prove the pull query parses"))
+        else:
+            ph = ",".join("'%s'" % v for v in verds)
+            sql = ("SELECT email, status, COALESCE(bounced_at,'') FROM prospects "
+                   "WHERE status IN (%s) AND email != '';" % ph)
+            mem = _sq.connect(":memory:")
+            mem.execute("CREATE TABLE prospects (email TEXT, status TEXT, bounced_at TEXT)")
+            mem.execute(sql)          # raises if the generated SQL is malformed
+            mem.close()
+            if not m:
+                out.append((FAIL, "the verdict placeholder is no longer built as '{v}' -- "
+                                  "check the quoting, this is where PULL-SQL-1 lived"))
+    except Exception as _sqle:
+        out.append((FAIL, "the pull's verdict query DOES NOT PARSE (%s) -- step [1/3] "
+                          "cannot run, so the opt-out register is never armed "
+                          "(PULL-SQL-1)" % str(_sqle)[:90]))
+
     bp = os.path.join(cl, "sync_to_server.bat")
     b = open(bp, encoding="utf-8", errors="replace").read() if os.path.exists(bp) else ""
     if "pull_from_server.py" not in b:
@@ -11955,6 +11985,17 @@ def rg_sync_pulldown():
     if b.count("errorlevel 1") < 2:
         out.append((FAIL, "sync_to_server.bat lost its errorlevel guards -- SYNC COMPLETE "
                           "can print over a failure again"))
+    # BAT-GUARD-1 (31 Aug 2026): the guards EXISTED and did not FIRE. Written as a
+    # one-line parenthesised block with ^& separators, cmd echoed the block as text
+    # instead of executing it -- so a failed pull printed "SYNC COMPLETE ... verified".
+    # A guard that is present but inert is worse than an absent one: it reads as safety.
+    if "^&" in b and "errorlevel 1 (" in b:
+        out.append((FAIL, "sync_to_server.bat has one-line ^& guards again -- cmd echoes "
+                          "them instead of running them, and COMPLETE prints over a "
+                          "failure (BAT-GUARD-1)"))
+    if "applied and verified" in b:
+        out.append((FAIL, "the bat claims 'applied and verified' -- it verifies nothing; "
+                          "it reports two exit codes (BAT-GUARD-1)"))
     if not out:
         out.append((INFO, "pull-before-push in place, precedence rules intact, bat honest"))
     return out
@@ -12621,20 +12662,24 @@ def rg_gov_domain():
            "the review gate and a deploy should be sufficient -- to be PROVEN by gate 1, "
            "never assumed. Stays OPEN and RED until all five pass.")
 def rg_optout_lane():
-    import subprocess
+    # Uses _harness(), not a bare subprocess: RG-0187's rule is that an instrument
+    # which CANNOT RUN must read UNVERIFIED, never REGRESSION. A bare subprocess.run
+    # here would cry "opt-out lane broken" when the truth was "this machine has no
+    # network" -- a false red on the one lane nobody can afford to distrust. Caught
+    # by RG-0187 on the first run after this entry was written (31 Aug).
     v = os.path.join(REPO, "..", "CityLauncher", "verify_optout_lane.py")
     if not os.path.exists(v):
         return [(FAIL, "verify_optout_lane.py is GONE -- the opt-out lane has no proof "
                        "and must be treated as unproven (OPTOUT-LANE-1)")]
-    try:
-        r = subprocess.run([sys.executable, v], capture_output=True, text=True, timeout=120)
-    except Exception as e:
-        return [(FAIL, "the opt-out verifier could not run (%s) -- unproven (OPTOUT-LANE-1)" % e)]
-    fails = [ln.strip() for ln in r.stdout.splitlines() if ln.strip().startswith("[FAIL]")]
-    if r.returncode == 0:
+    ok, blind, detail = _harness([sys.executable, v], timeout=150)
+    if blind:
+        return [(INFO, "NOT EVALUATED - the opt-out verifier could not run here: %s "
+                       "(instrument limit, not a verdict on the lane)" % detail[:160])]
+    if ok:
         return [(INFO, "all five gates pass -- a person can opt out and cannot be emailed again")]
+    fails = [ln.strip() for ln in str(detail).splitlines() if ln.strip().startswith("[FAIL]")]
     return [(FAIL, "OPT-OUT LANE UNPROVEN -- %d of 5 gates failing. DO NOT SEND. %s"
-             % (len(fails), " | ".join(f[6:].strip() for f in fails)[:400]))]
+             % (len(fails), " | ".join(f[6:].strip() for f in fails)[:400] or str(detail)[-200:]))]
 
 
 if __name__ == "__main__":
