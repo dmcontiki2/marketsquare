@@ -12682,5 +12682,49 @@ def rg_optout_lane():
              % (len(fails), " | ".join(f[6:].strip() for f in fails)[:400] or str(detail)[-200:]))]
 
 
+@entry("RG-0230", "A cold sandbox can ALWAYS reach the Hetzner server over SSH -- the key "
+       "lives on the mount and every SSH-using tool self-heals (SSH-BOOTSTRAP-1)",
+       LOCKED, scope="repo + CityLauncher + Projects/CLAUDE.md, tooling class", fixed_on="2026-08-31",
+       ref="Recurring fault, latest strike 31 Aug 2026: the Gate 1 board shipped with clicks "
+           "UNREADABLE because the fresh sandbox had no ~/.ssh key -- while load_sandbox_ssh.sh "
+           "and the key sat on the mount, documented only in MarketSquare/CLAUDE.md, which a "
+           "CityLauncher session never loads. Same class as GIT-LOCK: machinery exists, memory "
+           "fails. Fix (SSH-BOOTSTRAP-1): (1) CityLauncher/ssh_bootstrap.py self-heals ~/.ssh "
+           "from the mounted key, idempotent, proven from cold + live probe same session; "
+           "(2) every SSH-using CityLauncher entry point calls ensure_ssh() at entry; "
+           "(3) the standing note moved to Projects/CLAUDE.md -- the ONE file every session "
+           "loads. This asserts all three layers stay present; a new SSH-using script that "
+           "skips the bootstrap trips red instead of stranding a 2 a.m. run.")
+def rg_sandbox_ssh_selfheal():
+    if repo_file("load_sandbox_ssh.sh") is None:
+        return [(INFO, "running outside the repo -- sandbox-SSH tooling check skipped")]
+    out = []
+    if not os.path.exists(os.path.join(REPO, "ssh_hetzner_key")):
+        out.append((FAIL, "ssh_hetzner_key missing from MarketSquare/ -- the mount no longer "
+                          "carries the key; David must re-run setup_sandbox_ssh.ps1 (host-side)"))
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    boot = os.path.join(cl, "ssh_bootstrap.py")
+    if not os.path.exists(boot):
+        out.append((FAIL, "CityLauncher/ssh_bootstrap.py is GONE -- the python lane lost its "
+                          "self-heal (SSH-BOOTSTRAP-1)"))
+    for s in ("pull_from_server.py", "sync_local_to_server.py", "push_estate_agents.py",
+              "push_us_uk_cities.py", "run_local_scraper.py", "run_za_estate_agents.py"):
+        p = os.path.join(cl, s)
+        if not os.path.exists(p):
+            continue  # a retired script is not a regression
+        if "ssh_bootstrap" not in open(p, encoding="utf-8", errors="replace").read():
+            out.append((FAIL, s + " uses SSH but no longer calls ssh_bootstrap.ensure_ssh() -- "
+                              "it will strand on a cold sandbox exactly like the 31 Aug case"))
+    cm = os.path.join(REPO, "..", "CLAUDE.md")
+    if not (os.path.exists(cm) and
+            "SSH-BOOTSTRAP-1" in open(cm, encoding="utf-8", errors="replace").read()):
+        out.append((FAIL, "Projects/CLAUDE.md lost the SSH-BOOTSTRAP-1 section -- the knowledge "
+                          "moved back to a file sessions do not load, which IS the original fault"))
+    if not out:
+        out.append((INFO, "key on mount + python self-heal + all 6 SSH entry points bootstrapped "
+                          "+ CLAUDE.md carries the note"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
