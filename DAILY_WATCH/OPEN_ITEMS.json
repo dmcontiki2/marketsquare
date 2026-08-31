@@ -1,5 +1,5 @@
 {
- "next_id": 86,
+ "next_id": 89,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -80,11 +80,11 @@
   },
   "DW-010": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-24",
+   "last_seen": "2026-08-31",
    "sev": "MEDIUM",
    "source": "cc_age_check (Monday lane)",
    "status": "SCHEDULED",
-   "summary": "CC-002 open 75d vs 7d threshold (cc_age 2026-08-24). FORMALLY DEFERRED by David 21 Aug — SCHEDULED.",
+   "summary": "CC-002 open **82d** vs 7d threshold (cc_age 2026-08-31; was 75d on 24 Aug). FORMALLY DEFERRED by David 21 Aug — SCHEDULED.",
    "disposition": "FORMALLY DEFERRED 2026-08-21 (attended session, reflected here by the watch) — CC-002 is ~10 open product/pricing questions in AWAITING_DAVID.md, several touching the EULA and one a live payment path, against SOFT-to-PUBLIC 29 Aug / FULL LAUNCH 1 Sep (RUL-001). Target: first post-launch week, from Mon 8 Sep 2026. David's veto point: name any single item that must land before launch and it lands on its own."
   },
   "DW-011": {
@@ -591,13 +591,13 @@
   },
   "DW-063": {
    "first_seen": "2026-08-24",
-   "last_seen": "2026-08-30",
+   "last_seen": "2026-08-31",
    "sev": "LOW",
    "source": "scripts/deep_scan.py (Monday lane)",
-   "status": "FIXED-UNVERIFIED",
-   "closed": null,
-   "summary": "FIXED-UNVERIFIED 30 Aug: named F401/F841 findings removed (ruff clean on named files, py_compile green, ledger green); B905/B023/B904 named items already gone.",
-   "next_action": "Closes when Monday's deep-scan re-run (31 Aug) shows the named findings gone."
+   "status": "CLOSED",
+   "closed": "2026-08-31",
+   "summary": "**CLOSED 2026-08-31 — the originating check (Monday deep-scan lane) re-ran and PASSED.** `ruff --select F401,F841` on the named files (bea_main.py auth.py database.py storage.py payments.py): **\"All checks passed!\"**, exit 0. `scripts/deep_scan.py` re-run banked SCAN_REPORT.json 2026-08-31T04:40:28Z — 213 findings, 7 new, 0 crash-class — and **not one of the 7 new is in a named file** (named-file NEW list is empty). The 30 Aug fixes held. **RESIDUAL (coverage-map card, not a live row):** 42 pre-existing lint findings survive on the named files (32 B008, 9 B904, 1 B007) and no ledger entry asserts them — B008 is the FastAPI `Depends()`-in-defaults idiom and is arguably a false-positive class, but nothing on disk records that adjudication, so the next Monday session re-derives it.",
+   "next_action": "None — closed 2026-08-31 on the Monday deep-scan re-run with the named findings gone."
   },
   "DW-064": {
    "first_seen": "2026-08-24",
@@ -816,24 +816,51 @@
   },
   "DW-084": {
    "first_seen": "2026-08-30",
-   "last_seen": "2026-08-30",
+   "last_seen": "2026-08-31",
    "sev": "MEDIUM",
    "source": "root config sweep vs /proc environ (RG-0147 method)",
    "status": "OPEN",
    "summary": "MS_API_KEY in three fingerprints; live value matches no file — restart silently swaps keys. Plus junk file in service.d and stale inline LAUNCH_SPECIAL_DEADLINE (overridden today).",
-   "next_action": "2 Sep attended root window: align sources to live value, clean crud, verify at point of use after planned restart."
+   "next_action": "2 Sep attended root window: align sources to live value, clean crud, verify at point of use after planned restart. || 2026-08-31: **originating check COULD NOT RE-RUN** — it is a root read of /proc/<pid>/environ vs the config surfaces, and this task is forbidden root (msdeploy only; `/etc/systemd/system/marketsquare.service.d/` is not readable as msdeploy). Not closed, not weakened: stays OPEN on the 30 Aug prepared state until the planned restart window re-verifies at point of use."
   },
   "DW-085": {
    "first_seen": "2026-08-30",
-   "last_seen": "2026-08-30",
+   "last_seen": "2026-08-31",
    "sev": "LOW",
    "source": "server login banner (root SSH)",
    "status": "OPEN",
    "summary": "46 pending updates (9 security) + kernel restart required on the production box.",
-   "next_action": "2 Sep: patch + one planned reboot, same window as DW-084, /health watched."
+   "next_action": "RE-PROBED 2026-08-31 (non-root, msdeploy): **`/var/run/reboot-required` still present** and **37 packages upgradable** (unchanged from the 30 Aug re-probe; `apt list --upgradable` reports 0 lines matching 'security' as msdeploy — the 9-security figure came from the root banner and is not re-provable from this lane). Uptime 13w 4d. Window unchanged: `apt upgrade` + reboot + watch /health back up + RG-0147/ops-key re-verify, batched with DW-084. Awaiting David's window."
+  },
+  "DW-086": {
+   "first_seen": "2026-08-31",
+   "last_seen": "2026-08-31",
+   "sev": "MEDIUM",
+   "source": "regression ledger RG-0214 (exit 1) vs direct probe of the asserted property",
+   "status": "OPEN",
+   "summary": "**NEW — the ledger's ONE red is a FALSE RED, and it lands on the eve of full launch (RUL-001, 1 Sep).** RG-0214 prints `REGRESSION: deploy report 2026-08-30T17:04:29Z carries no migration-035 step -- the deploy with MAP-LIVE-1 has not shipped yet`, and the run ends `Do not deploy over this` with exit 1. **The assertion is misreading its evidence, not catching a rot.** It parses `/static/post_deploy_status.json` for a step whose NAME contains \"035\" — but that report aggregates the whole chain into ONE step: probed live, `steps` = `seed=ok, ladder_seed=ok, migrations=ok`. No per-migration step name has ever existed in that format, so this assertion can only ever go red. **The asserted PROPERTY is live — PROBED three ways today:** (a) `/etc/nginx/sites-enabled/marketsquare` carries the `MAP-LIVE-1 30 Aug 2026` block with both exact-match locations `= /orchestrator/defence_map.html` and `= /orchestrator/watch_register.md`, each with `auth_basic \"TrustSquare Orchestrator\"`; (b) from the box, origin `http://127.0.0.1:8000` serves `/orchestrator/defence_map.html` **200, 64,667 B** and `/orchestrator/watch_register.md` **200, 110,819 B**; (c) anonymous over the edge, both return **401**. Migration 035 applied; the gate holds; the documents are live. Per the evidence ladder the PROBE wins and the file is fixed in the same run — but this watch is observe-only and `scripts/regression_ledger.py` is not a watch-owned path, so the correction is named here instead of made.",
+   "next_action": "Attended/CTO session (RUL-037 — this is a technical call, not David's): re-aim RG-0214's live half at the evidence that actually exists — assert `steps.migrations == \"ok\"` on a report generated at/after the MAP-LIVE-1 deploy, or better, assert the property directly (origin 200 for both paths + anonymous 401), and say so in the entry ref per the never-weaken rule. Until then the ledger exits 1 and any gate that reads that exit code will refuse a launch-day deploy."
+  },
+  "DW-087": {
+   "first_seen": "2026-08-31",
+   "last_seen": "2026-08-31",
+   "sev": "LOW",
+   "source": "scripts/deep_scan.py (Monday lane) — delta vs SCAN_REPORT.json baseline 2026-08-24",
+   "status": "OPEN",
+   "summary": "**NEW — 7 new static findings on the Monday deep scan** (213 total, 0 crash-class; 4/4 tools ran: ruff 0.16.5, vulture 2.16, pylint 4.0.8, eslint 9.39.5). None is in app code — all sit in `migrations/` and `scripts/`: F401 `migrations/032_fares_refresh_cron.py:34` (subprocess unused); **F841 (MEDIUM) `migrations/033_csp_verify_served.py:208`** (`last` assigned never used); F401 `scripts/build_eval_set.py:27` (math); B023 `scripts/david_queue.py:48` (function does not bind loop variable `body` — the only one with a plausible behavioural bite); B007 `scripts/david_queue.py:152`; B007 `scripts/no_remote_code_guard.py:217`; vulture DEAD `scripts/regression_ledger.py:9579` (unsatisfiable ternary). Recorded because the register loses nothing, not because it is urgent.",
+   "next_action": "Next Monday lane or an attended tidy pass. Look at `david_queue.py:48` (B023) first — a late-bound loop variable in a closure is the one item here that can produce wrong OUTPUT rather than dead code — and at regression_ledger.py:9579, an unsatisfiable ternary inside the instrument that grades everything else."
+  },
+  "DW-088": {
+   "first_seen": "2026-08-31",
+   "last_seen": "2026-08-31",
+   "sev": "LOW",
+   "source": "fea_integrity_check.py --json (on-box)",
+   "status": "OPEN",
+   "summary": "**NEW — the FEA baseline is one deploy stale again, 1 day after DW-064 closed on a fresh baseline.** Sensor `status: ok`, **`alerts: []`** — so this is a NOTE, not an alert, and DW-064's close condition is not rotted. The notes: ms.js **v552 -> v561** (1,156,049 -> 1,157,186 B) and ms.css **v416 -> v425** (131,924 B, byte-identical), each reading *\"looks like a deploy - confirm against CHANGELOG, then refresh with --update-baseline\"*. Corroborated as deploy-not-tamper by an instrument that shares no cause: `run_daily_checks.py` deploy_drift **clean, all 19 tracked files match live**. Raised because this exact staleness silently accumulated across EIGHT deploys before DW-064 caught it — one deploy is the moment to notice, not the eighth.",
+   "next_action": "Refresh on the box after the next deploy: `update_fea_baseline.bat` (or `fea_integrity_check.py --update-baseline`), then re-probe for `status: ok, alerts: []`. Structural point for the CTO lane: the baseline could be refreshed BY the deploy engine once deploy_drift reads clean, which would retire this recurring row entirely."
   }
  },
- "last_run": "2026-08-30",
+ "last_run": "2026-08-31",
  "last_verdict": "AMBER",
  "recheck_pass_2026_08_20": {
   "requested_by": "David: close all open actions",
@@ -1065,5 +1092,29 @@
    "ledger": "205/186/0 regressed/0 unverified exit 0",
    "rulings": "69/69"
   }
+ },
+ "watch_pass_2026_08_31": {
+  "verdict": "AMBER",
+  "site": "green — /health ok 1.3.1, root 200 in 1.27s, /payment/test ok paystack_connected, TLS 83d (notAfter 22 Nov 2026)",
+  "ledger": "214 entries · 196 holding · 1 REGRESSED (RG-0214, PROVEN FALSE RED — see DW-086) · 16 open · 1 ready to lock (RG-0221) · 0 UNVERIFIED · exit 1",
+  "smoke": "40/40 local (smoke_test.py all-pass); cron sensor 39/39",
+  "cron_parity": "holding — loop_date 2026-08-31, health ok 1.3.1, spend $0.00 today / $1.892566 MTD of $100 ceiling, 322 calls, anomalies []",
+  "closed": [
+   "DW-063"
+  ],
+  "new": [
+   "DW-086",
+   "DW-087",
+   "DW-088"
+  ],
+  "updated": [
+   "DW-010",
+   "DW-084",
+   "DW-085"
+  ],
+  "could_not_run": [
+   "DW-084 originating check (needs root; this task is msdeploy-only by its own rule)"
+  ],
+  "checks_run": "13 of 13 (Monday canon + deep-scan lane included)"
  }
 }
