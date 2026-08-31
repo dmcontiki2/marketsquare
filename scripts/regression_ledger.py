@@ -11565,7 +11565,24 @@ def rg_outreach_ramp_earned():
              "migration itself proves 401-anonymous and refuses success without it.",
        ref="MAP-LIVE-1, 30 Aug 2026 (unattended Batch 1 session). OPEN until a deploy carries "
            "the routes + migration 035 and the deploy report shows 035 ok with its app-half "
-           "and gate proofs. Promote on READY TO LOCK (DW-079 rule).")
+           "and gate proofs. Promote on READY TO LOCK (DW-079 rule). "
+           "ASSERTION RE-AIMED 31 Aug 2026 (DW-086, CTO call under RUL-037) -- NOT a "
+           "weakening, a correction: the old live half searched the deploy report for a "
+           "step whose NAME contained '035', and that report aggregates the whole chain "
+           "into ONE step (probed: seed=ok, ladder_seed=ok, migrations=ok). A per-migration "
+           "step name has never existed in that format, so the check could only ever go "
+           "red -- it produced a FALSE RED on the eve of full launch, and a red ledger "
+           "refuses a deploy. The property itself was PROBED live three ways that day "
+           "(nginx MAP-LIVE-1 block with both exact-match locations under auth_basic; "
+           "origin 127.0.0.1:8000 serving both documents 200 at 64,667 B and 110,819 B; "
+           "401 anonymous at the edge). The live half now asserts what evidence actually "
+           "exists and adds a guard the old one lacked: (a) the migration chain step ran "
+           "and did not fail, (b) migration 035 still carries the self-proof clauses that "
+           "make 'ok' mean 'proven' (both exact-match locations, auth_basic, and its "
+           "refusal path), and (c) NEITHER document answers 200 anonymously -- the leak "
+           "this entry exists to prevent is now asserted directly rather than inferred. "
+           "In-gate 200 stays unprobeable without credentials and is deliberately not "
+           "claimed here.")
 def rg_map_live_lane():
     out = []
     bea = repo_file("bea_main.py")
@@ -11577,27 +11594,65 @@ def rg_map_live_lane():
         if not os.path.exists(mig):
             out.append((FAIL, "migrations/035_orchestrator_live_map.py is gone -- the nginx "
                               "half of MAP-LIVE-1 cannot ship"))
-    # live half: the deploy report must show migration 035 ran ok (the migration
-    # only reports ok after PROVING app 200 + anonymous 401 -- so this one line
-    # carries both proofs; the endpoint itself is Basic-Auth-gated and is
-    # deliberately NOT probed anonymously here).
+    # migration 035's self-proof clauses are what make a plain "migrations = ok"
+    # in the deploy report carry BOTH proofs (app 200 on loopback + anonymous 401).
+    # If the migration ever loses them, "ok" stops meaning anything and this red
+    # is a real one.
+    try:
+        msrc = open(os.path.join(REPO, "migrations", "035_orchestrator_live_map.py"),
+                    encoding="utf-8").read()
+    except Exception:
+        msrc = ""
+    if msrc:
+        for needle, why in (
+            ("= /orchestrator/defence_map.html", "the defence-map exact-match location"),
+            ("= /orchestrator/watch_register.md", "the watch-register exact-match location"),
+            ("auth_basic", "the Basic-Auth realm the two locations must stay inside"),
+            ("NOT claiming success", "the refusal path that makes 'ok' mean 'proven'"),
+        ):
+            if needle not in msrc:
+                out.append((FAIL, "migration 035 lost %s -- a 'migrations = ok' step no "
+                                  "longer carries the MAP-LIVE-1 proofs" % why))
+
+    # live half A -- the deploy report's migration chain ran and did not fail.
+    # NB (31 Aug 2026): the report aggregates the whole chain into ONE step named
+    # "migrations"; a per-migration step name has never existed in that format,
+    # so the old per-035 name check could only ever go red. See the ref.
     st = _status("/static/post_deploy_status.json")
     if st != 200:
         out.append((FAIL, "no deploy report readable (HTTP %s) -- MAP-LIVE-1 live half "
                           "unproven" % st))
-        return out
-    try:
-        doc = _json("/static/post_deploy_status.json")
-        steps = {x.get("step"): x.get("result") for x in doc.get("steps", [])}
-        hit = [k for k in steps if k and "035" in str(k)]
-        if not hit:
-            out.append((FAIL, "deploy report %s carries no migration-035 step -- the deploy "
-                              "with MAP-LIVE-1 has not shipped yet" % doc.get("generated_at")))
-        elif any(steps[k] == "failed" for k in hit):
-            out.append((FAIL, "migration 035 FAILED on the last deploy (%s) -- read its "
-                              "captured output in the report" % doc.get("generated_at")))
-    except Exception as e:
-        out.append((FAIL, "deploy report unreadable (%s)" % str(e)[:60]))
+    else:
+        try:
+            doc = _json("/static/post_deploy_status.json")
+            steps = {x.get("step"): x.get("result") for x in doc.get("steps", [])}
+            hit = [k for k in steps if k and "migration" in str(k).lower()]
+            if not hit:
+                out.append((FAIL, "deploy report %s carries no migration step at all -- the "
+                                  "post-deploy chain did not run" % doc.get("generated_at")))
+            elif any(str(steps[k]).lower() == "failed" for k in hit):
+                out.append((FAIL, "the migration chain FAILED on the last deploy (%s) -- read "
+                                  "its captured output in the report" % doc.get("generated_at")))
+            else:
+                out.append((INFO, "deploy report %s: migration chain %s" % (
+                    doc.get("generated_at"),
+                    ", ".join("%s=%s" % (k, steps[k]) for k in sorted(hit)))))
+        except Exception as e:
+            out.append((FAIL, "deploy report unreadable (%s)" % str(e)[:60]))
+
+    # live half B -- CONFIDENTIALITY, probed directly and anonymously. Serving the
+    # defence map or the watch register to a stranger is the information leak this
+    # entry's scope names; 200 here is the failure that matters most.
+    for path in ("/orchestrator/defence_map.html", "/orchestrator/watch_register.md"):
+        s = _status(path)
+        if s == 200:
+            out.append((FAIL, "%s answers 200 ANONYMOUSLY -- the gated document has fallen "
+                              "OUT of the Basic-Auth realm (information leak)" % path))
+        elif s in (401, 403):
+            out.append((INFO, "%s -> %s anonymous (gate holds)" % (path, s)))
+        else:
+            out.append((INFO, "%s -> %s anonymous -- not 200, so nothing leaks; in-gate 200 "
+                              "is not anonymously probeable" % (path, s)))
     return out
 
 
@@ -11906,8 +11961,17 @@ def rg_sync_pulldown():
              "is never asked for Collectables and travel geography opens at COUNTRY; "
              "(6) at <=420px: <=6 options, >=44px tall, question in the lower half, no "
              "horizontal overflow; (7) the flag defaults OFF and the pre-Zoom view still "
-             "renders when it is off. CLASS: this is the front door of every category -- "
-             "the assertion is per-category, never proven on Property alone.",
+             "renders when it is off; (8) results are ordered by the RANKING SCORE at "
+             "listing level (0.5*quality + 0.5*trust -- the same straight 50/50 as "
+             "estate_agents.py::_rank_agents), super_example still pinned (SUPER-PIN-1). "
+             "CLASS: this is the front door of every category -- the assertion is "
+             "per-category, never proven on Property alone. PREREQUISITE recorded 30 Aug: "
+             "listing quality is computed per-row (_import_quality_score) and NOT stored, so "
+             "SQL cannot order by it -- a maintained listings.quality_score column is part of "
+             "this build. GAP THIS CLOSES: the Ranking Score today ranks AGENTS only "
+             "(/agents/nearby); the listing feed sorts newest, or 'smart' = trust 60%% + "
+             "freshness 40%% with NO quality term -- so the method meant to promote listing "
+             "quality never touched the results a buyer browses.",
        ref="ZOOM-HMI-1 (30 Aug 2026). David ratified the design after tapping both "
            "prototypes and set one binding constraint: 'I would actually like to see it on "
            "the actual app first, not the live one that is in the field now.' So the build "
@@ -11930,7 +11994,9 @@ def rg_zoom_funnel():
             ("dependency graph", "the coherence rule that gain alone violates"),
             ("never the first question", "geography never opening the funnel"),
             ("GEO_START", "travel's inverted geography"),
-            ("Zero-count options are removed", "the unreachable-dead-end rule")):
+            ("Zero-count options are removed", "the unreachable-dead-end rule"),
+            ("0.5 x listing quality", "the Ranking Score as the result order"),
+            ("quality_score` column", "the stored-quality prerequisite")):
         if needle not in s:
             out.append((FAIL, "ZOOM_HMI_SPEC.md lost %r -- %s is gone (ZOOM-HMI-1)"
                               % (needle, why)))
