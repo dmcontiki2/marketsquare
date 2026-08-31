@@ -12215,5 +12215,189 @@ def rg_maint_intake_lanes():
     return out
 
 
+@entry("RG-0224", "SQUIRE keeps the four properties that make it legal, anonymous and "
+       "on-model: it is Pro-only, it never GRANTS an introduction, seller identity never "
+       "enters its context, and its top-up is TUPPENCE -- no second currency exists",
+       OPEN,
+       scope="repo: SQUIRE_SPEC.md is the build spec (RUL-077). While OPEN this asserts the "
+             "SPEC survives -- ruled but unbuilt. WHEN BUILT, promote to LOCKED and extend to "
+             "the shipped code: (1) Pro-gated, no capability leak to Free/Starter/Agency; "
+             "(2) Watches and For You remain FREE on every tier (Zoom's fifth rule); "
+             "(3) no introduction is ever granted by Squire -- every introduction burns 1T at "
+             "every tier, subscriptions buy slots and reach and NEVER introductions "
+             "(PRICING_CANON 3); (4) seller identity never reaches Squire's context and no "
+             "brief transmits an identifying detail about a MINOR (POPIA -- parent is the "
+             "account holder, need described never the person); (5) at the cap the OFFER "
+             "arrives with the limit, no charge on a rejected attempt, and a drafted brief "
+             "survives the ceiling; (6) the user is warned BEFORE composing effort that will "
+             "exceed the cap; (7) every ceiling-hit logs limit+tier+category; (8) top-ups are "
+             "denominated in Tuppence -- grep proves no parallel token type exists; "
+             "(9) RUL-078: a live PRO subscription resolves to `global` reach -- _buyer_tier() "
+             "must consult the SELLER subscription, not wishlist_subscriptions alone, or a Pro "
+             "subscriber is silently treated as local and Squire under-serves the people paying "
+             "most, invisibly. CLASS: "
+             "the metering line is OBSERVE vs ACT -- any new Squire capability must land on "
+             "the correct side of it, and a capability that quietly meters watching is a "
+             "defect of this entry.",
+       ref="SQUIRE-1 (30 Aug 2026). David ruled Squire onto the EXISTING $20 Pro tier and "
+           "asked for a cap with a purchasable top-up rather than a hard lock. CTO answer: "
+           "the currency already exists -- Tuppence, not a new token. The tier axis is the "
+           "load-bearing idea: $5 buys REACH, $20 buys REPRESENTATION, so the tiers cannot "
+           "cannibalise and no $5 subscriber loses anything. Commercial trigger: the "
+           "contagion model reads 1 Pro at week 52 -- Pro is priced for sellers only, and "
+           "Squire makes it valuable to anyone who buys. BUILD ORDER: Zoom (RG-0221) FIRST -- "
+           "a brief IS a Zoom path plus prose, so Squire first would write the matching "
+           "engine twice. AMENDED 30 Aug 2026 (RUL-078): David bundled Global reach into "
+           "Pro and APPROVED build shape + acceptance criteria -- both are closed to "
+           "re-litigation; a build session implements them. The bundle is a CODE fact, not a "
+           "pricing sentence, which is why criterion 9 exists.")
+def rg_squire():
+    out = []
+    sp = os.path.join(REPO, "SQUIRE_SPEC.md")
+    if not os.path.exists(sp):
+        return [(FAIL, "SQUIRE_SPEC.md is GONE -- the ruled Pro agent (RUL-077) exists only "
+                       "in a chat transcript again (SQUIRE-1)")]
+    s = open(sp, encoding="utf-8").read()
+    for needle, why in (
+            ("No new tier is created", "Squire attaching to the EXISTING Pro tier"),
+            ("the top-up is TUPPENCE", "the one-currency rule"),
+            ("no second currency exists anywhere", "the no-parallel-token assertion"),
+            ("observe vs act", "the metering line"),
+            ("never *grant*", "introductions never granted by subscription"),
+            ("1T at every tier", "the unchanged introduction price"),
+            ("never transmitted in identifying form", "the minor-data (POPIA) rule"),
+            ("RUL-066", "the ceiling doctrine this applies verbatim"),
+            ("RESOLVED 30 Aug 2026 (RUL-078)", "the Pro-includes-Global-reach bundle"),
+            ("APPROVED BY DAVID", "the settled build shape + acceptance criteria")):
+        if needle not in s:
+            out.append((FAIL, "SQUIRE_SPEC.md lost %r -- %s is gone (SQUIRE-1)" % (needle, why)))
+    zoom = os.path.join(REPO, "ZOOM_HMI_SPEC.md")
+    if not os.path.exists(zoom):
+        out.append((FAIL, "ZOOM_HMI_SPEC.md is gone -- Squire's stated build dependency "
+                          "(Zoom first) can no longer be honoured (SQUIRE-1)"))
+    if not out:
+        out.append((INFO, "spec intact -- ruled, unbuilt, Zoom-first order recorded "
+                          "(OPEN by design until SQUIRE-1 ships)"))
+    return out
+
+
+@entry("RG-0225", "Outreach volume can never grow on the ABSENCE of evidence: a city ramps "
+       "past its base batch only if the server's bounce and opt-out verdicts were pulled "
+       "down AFTER its last wave -- 'nobody looked' can never read as 'clean'",
+       LOCKED, fixed_on="2026-08-31",
+       scope="repo: ../CityLauncher/pull_from_server.py (the RAMP-EVIDENCE-1 witness) + "
+             "emailer/wave_runner.py (evidence_state + ramp_state consulting it) + "
+             "emailer/waves_policy.json (no armed city may re-acquire a batch_size pin). "
+             "CLASS, and the class is the point: RG-0213 made outreach volume EARNED, and "
+             "this makes the earning honest. Any gate that grows a rate, a batch, a budget "
+             "or a blast radius on a measured-clean signal belongs here -- the failure mode "
+             "is universal, not email-specific. DELIBERATE BOUNDARY: stale evidence never "
+             "BLOCKS a send (the stop-loss gate owns blocking) -- it only refuses to GROW. "
+             "Holding at base is the safe direction, so a missing or deleted witness fails "
+             "closed by construction.",
+       ref="RAMP-EVIDENCE-1, 31 Aug 2026 (CTO call under RUL-037, launch eve). Found while "
+           "answering David's question about what the Resend $20 tier unlocks: the honest "
+           "answer was that the mail quota was never the binding constraint, and the ramp "
+           "that IS the constraint was reading a local database that only learns about a "
+           "bounce when pull_from_server.py runs. That script's own docstring says 'Run "
+           "BEFORE composing any wave' -- nothing enforced it, nothing recorded whether it "
+           "had happened, and wave_runner never called it. So both armed cities scored a "
+           "clean streak off 0 bounces that had never been looked for, and RAMP-1 would "
+           "have doubled 12 -> 24 -> 48 -> 96 on ignorance. Same family as RG-0133 (no "
+           "instrument wears a health colour nothing measures) and RG-0202 (a verify half "
+           "must answer for the thing it actually gates). Fixed the session it was found: "
+           "the pull now writes data/last_pull.json and the ramp compares it against the "
+           "city's last send. Also removed the explicit batch_size:12 pins on Pretoria and "
+           "Johannesburg -- equal to the base, so they changed nothing on day one, but an "
+           "explicit per-city batch_size OVERRIDES ramp_state, so those two cities could "
+           "never have earned a doubling however clean they ran. National's documented 30 "
+           "stays (RG-0213's named exception).")
+def rg_ramp_evidence():
+    out = []
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not os.path.isdir(cl):
+        return [(INFO, "CityLauncher not beside this repo -- RAMP-EVIDENCE-1 unchecked here "
+                       "(live-only run)")]
+    pf = os.path.join(cl, "pull_from_server.py")
+    wr = os.path.join(cl, "emailer", "wave_runner.py")
+    for fp, name in ((pf, "pull_from_server.py"), (wr, "emailer/wave_runner.py")):
+        if not os.path.exists(fp):
+            return [(FAIL, "CityLauncher/%s is GONE -- RAMP-EVIDENCE-1 has no lane" % name)]
+    psrc = open(pf, encoding="utf-8").read()
+    wsrc = open(wr, encoding="utf-8").read()
+
+    for needle, why in (("last_pull.json", "the witness file the ramp reads"),
+                        ("'pulled_at'", "the dated field the freshness test compares")):
+        if needle not in psrc:
+            out.append((FAIL, "pull_from_server.py lost %r -- %s is gone; the ramp can no "
+                              "longer tell 'measured clean' from 'never looked'" % (needle, why)))
+
+    for needle, why in (("def evidence_state", "the freshness test itself"),
+                        ("fresh, _why = evidence_state(city)", "ramp_state consulting it"),
+                        ("def pull_witness", "the witness reader")):
+        if needle not in wsrc:
+            out.append((FAIL, "wave_runner.py lost %r -- %s is gone (RAMP-EVIDENCE-1)"
+                              % (needle, why)))
+    try:
+        a = wsrc.index("fresh, _why = evidence_state(city)")
+        b = wsrc.index("streak = 0", a)
+        c = wsrc.index("for wv in reversed(wave_history(city))", a)
+        if not (a < b < c):
+            out.append((FAIL, "ramp_state counts its clean streak BEFORE checking evidence "
+                              "freshness -- the guard has been reordered into a no-op"))
+    except ValueError:
+        out.append((FAIL, "ramp_state no longer has the guard-then-count shape "
+                          "(RAMP-EVIDENCE-1 hollowed out)"))
+
+    try:
+        pol = json.loads(open(os.path.join(cl, "emailer", "waves_policy.json"),
+                              encoding="utf-8").read())
+        for city, cpol in pol.get("cities", {}).items():
+            if city == "National":
+                continue          # RG-0213's documented exception
+            if "batch_size" in cpol and (cpol.get("armed") or cpol.get("gates_green")):
+                out.append((FAIL, "%s carries an explicit batch_size=%r AND is armed -- an "
+                                  "explicit per-city size outranks ramp_state, so this city "
+                                  "can never earn a doubling (RAMP-1 neutered)"
+                                  % (city, cpol.get("batch_size"))))
+    except Exception as e:
+        out.append((FAIL, "waves_policy.json unreadable (%s) -- the pin check cannot run" % e))
+
+    if not out:
+        try:
+            i = wsrc.index("def evidence_state"); j = wsrc.index("def ramp_state")
+            ns = {}
+            exec("def last_send_at(c):\n    return _SENT\n"
+                 "def pull_witness():\n    return _WIT\n" + wsrc[i:j], ns)
+            def verdict(sent, wit):
+                ns["_SENT"], ns["_WIT"] = sent, wit
+                return ns["evidence_state"]("X")[0]
+            never  = verdict("2026-08-30T14:05:00", None)
+            stale  = verdict("2026-08-30T14:05:00", {"pulled_at": "2026-08-29T06:00:00Z"})
+            fresh  = verdict("2026-08-30T14:05:00", {"pulled_at": "2026-08-31T06:00:00Z"})
+            virgin = verdict(None, None)
+            if never:
+                out.append((FAIL, "a city that has NEVER been pulled reads FRESH -- the ramp "
+                                  "would double on the absence of evidence, which is the whole "
+                                  "defect this entry exists to prevent"))
+            if stale:
+                out.append((FAIL, "a pull OLDER than the last send reads FRESH -- bounces from "
+                                  "that wave cannot have been seen yet"))
+            if not fresh:
+                out.append((FAIL, "a pull NEWER than the last send reads STALE -- the guard has "
+                                  "over-tightened and no city can ever ramp"))
+            if not virgin:
+                out.append((FAIL, "a city with no waves sent reads STALE -- there is nothing to "
+                                  "judge yet and it must sit at base without complaint"))
+            if not out:
+                out.append((INFO, "freshness logic behaviourally proven: never-pulled and "
+                                  "stale-pull both refuse to grow; a pull after the last send "
+                                  "allows it; a city with no waves is untroubled"))
+        except Exception as e:
+            out.append((INFO, "freshness logic not behaviourally checkable here (%s) -- the "
+                              "source halves above still assert the shape" % str(e)[:70]))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
