@@ -1,5 +1,5 @@
 {
- "next_id": 89,
+ "next_id": 90,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -819,10 +819,11 @@
    "last_seen": "2026-09-01",
    "sev": "MEDIUM",
    "source": "root config sweep vs /proc environ (RG-0147 method)",
-   "status": "OPEN",
+   "status": "FIXED-UNVERIFIED",
    "summary": "MS_API_KEY in three fingerprints; live value matches no file \u2014 restart silently swaps keys. Plus junk file in service.d and stale inline LAUNCH_SPECIAL_DEADLINE (overridden today).",
    "next_action": "2 Sep attended root window: align sources to live value, clean crud, verify at point of use after planned restart. || 2026-08-31: **originating check COULD NOT RE-RUN** \u2014 it is a root read of /proc/<pid>/environ vs the config surfaces, and this task is forbidden root (msdeploy only; `/etc/systemd/system/marketsquare.service.d/` is not readable as msdeploy). Not closed, not weakened: stays OPEN on the 30 Aug prepared state until the planned restart window re-verifies at point of use.",
-   "next": " || 2026-09-01: check not re-runnable (root read; watch is msdeploy). Attended root window 2 Sep stands."
+   "next": " || 2026-09-01: check not re-runnable (root read; watch is msdeploy). Attended root window 2 Sep stands.",
+   "fix": "1 Sep root pass: unit inline MS_API_KEY (the ONLY defining surface) aligned to live value, sha c42deee7c24f both sides; backup kept; daemon-reload, no restart; crud asided. Closes on restart proof (tonight deploy)."
   },
   "DW-085": {
    "first_seen": "2026-08-30",
@@ -865,6 +866,15 @@
    "next": " || 2026-09-01: still failing day 2 \u2014 ms.js v552\u2192v564 (1,157,186 B), ms.css v416\u2192v428 byte-identical; alerts [] ; deploy_drift clean 19/19.",
    "closed": "2026-09-01",
    "closure": "Attended map-fix pass: deploy_drift clean 19/19, on-box --update-baseline (index 415200B, ms.js v564, ms.css v428, BEA 1.3.1), re-probe ok / alerts [] / stale notes gone. Structural fix (engine refreshes own baseline) on the CTO list for tonight."
+  },
+  "DW-089": {
+   "first_seen": "2026-09-01",
+   "last_seen": "2026-09-01",
+   "sev": "MEDIUM",
+   "source": "attended map-fix pass \u2014 own systemctl-cat recon (transcript exposure, DW-029 class)",
+   "status": "OPEN",
+   "summary": "Live credentials printed into session transcript: ANTHROPIC_API_KEY, CF_CACHE_TOKEN, MS_DEPLOY_TOKEN (full). Stale MS_API_KEY value also printed, now dead. In SECRETS_REGISTER Still-burnt; RG-0146 red by design until rotated.",
+   "next": "David tonight: rotate Anthropic key (console) + CF cache token (dash); re-mint MS_DEPLOY_TOKEN together. Closes when Still-burnt empty and RG-0146 green."
   }
  },
  "last_run": "2026-09-01",
@@ -1155,7 +1165,8 @@
   "fixed": [
    "DW-088 CLOSED (FEA baseline refreshed on-box, re-probe clean)",
    "RG-0233 NEW LOCKED \u2014 deploy engine placement asserted (incl. published-but-unplaced detection); proven red-capable",
-   "RG-0234 NEW LOCKED \u2014 backup lane refreshed (was 27 days stale; live snapshot md5-matched, archived 2026-09-01_0653.zip, restore-proven ok users=70) + assertion restores the archive every run"
+   "RG-0234 NEW LOCKED \u2014 backup lane refreshed (was 27 days stale; live snapshot md5-matched, archived 2026-09-01_0653.zip, restore-proven ok users=70) + assertion restores the archive every run",
+   "DW-084 FIXED-UNVERIFIED \u2014 unit aligned to live key (sha-matched), restart proof rides tonight"
   ],
   "ledger_after": "227 entries \u00b7 208 holding \u00b7 0 REGRESSED \u00b7 19 open \u00b7 0 READY TO LOCK \u00b7 exit 0",
   "map": "57 green \u00b7 0 blue \u00b7 1 amber \u00b7 0 red \u00b7 10 grey (68 cards) \u2014 zero blue for the first time",
@@ -1164,6 +1175,9 @@
    "DW-084 root window (2 Sep)",
    "DW-085 kernel reboot + updates"
   ],
-  "note": "GitHub mirror push attempted from sandbox: no credential (host lanes carry it); mirror 1 commit behind until next host push."
+  "note": "GitHub mirror push attempted from sandbox: no credential (host lanes carry it); mirror 1 commit behind until next host push.",
+  "new": [
+   "DW-089 transcript credential exposure (my recon) \u2014 rotations are tonight item 1"
+  ]
  }
 }

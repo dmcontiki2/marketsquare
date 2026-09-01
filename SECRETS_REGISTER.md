@@ -12,7 +12,7 @@ STATUS values: `ROTATED` (replaced and probed since exposure) · `BURNT` (expose
 still live, not yet replaced) · `REMOVED` (deliberately unset) · `PUBLIC` (not secret
 by design) · `UNKNOWN` (not yet established — treat as burnt) · `UNROTATABLE-ACCEPTED` (exposed, cannot be replaced by any means the vendor offers; carries a dated decision and its reasoning, never a silent pass).
 
-REGISTER_VERIFIED: 2026-08-22
+REGISTER_VERIFIED: 2026-09-01
 
 ## Rotated and proven — 22 Aug 2026
 
@@ -58,6 +58,11 @@ out about from a customer.
 
 | Credential | Why it matters | Rotate where | Blocked on |
 |---|---|---|---|
+| ANTHROPIC_API_KEY | Metered LLM key for the live AI lanes; printed IN FULL into a session transcript 1 Sep 2026 by a systemctl-cat recon (DW-089 — the DW-029 class, instrument fault). Live but ceilinged: $100 platform ceiling, RG-0080 bars unattended loops | Anthropic console (David) → then the add_secret lane to the server drop-in | David console access — tonight 1 Sep, first item |
+| CF_CACHE_TOKEN | Cloudflare API token (cache-purge scope) printed in full in the same transcript | Cloudflare dashboard (David) → cloudflare.conf drop-in | David console access — tonight 1 Sep |
+| MS_DEPLOY_TOKEN | Deploy/admin-endpoint token printed in full in the same transcript (gates an admin endpoint, not the git deploy lane) | Re-mint BOTH ends: server drop-in + host .secrets via add_deploy_token.bat | Coordinated re-mint with David at keyboard — tonight 1 Sep |
+
+> **1 Sep 2026 (DW-089):** the three rows above were burnt by MY OWN root recon printing `systemctl cat` output into the session transcript — the exact act this register warns about ("every later command parses without echoing"). Also printed: the STALE inline MS_API_KEY value, which is now DEAD — the DW-084 alignment replaced it with the live value minutes later (unit is now the single defining surface, sha-matched to /proc). CF_ZONE_ID also appeared; it is not a secret. Every subsequent command in the pass was fingerprint-only.
 
 ## Removed rather than rotated
 
