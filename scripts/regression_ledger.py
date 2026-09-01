@@ -12769,5 +12769,58 @@ def rg_overpass_env_driven():
     return out
 
 
+@entry("RG-0232", "A network fault is NEVER recorded as zero yield -- the scraper's "
+       "backoff ladders climb only on a genuine queried-fine-found-nothing pass "
+       "(S131-NETFAULT)",
+       LOCKED, scope="CityLauncher repo, OSM lane; class fix -- any source whose errors "
+       "masquerade as empty results re-creates it", fixed_on="2026-09-01",
+       ref="Launch morning: the 31 Aug refusal storm (151 connection-refused in 18 min) was "
+           "recorded as zero yield everywhere it struck, because _overpass_query swallowed "
+           "exceptions and returned [] -- indistinguishable from a genuine empty 200. That "
+           "climbed the durable S131 keyword ladder (6h->168h, survives restarts BY DESIGN), "
+           "demoted 214 source_health rows to dead_temp, and backed off 133 queue jobs -- so "
+           "after the OSM-MIRROR-1 env fix the engine made exactly ONE mirror attempt in 5.5h "
+           "and refill sat frozen at 147 on launch morning. Fix: _overpass_query returns None "
+           "on fault vs [] on genuine-empty; fault passes skip record_keyword_yield AND "
+           "source_memory.record_yield entirely (scrape_keyword returns -1, run_job skips the "
+           "verdict); OVERPASS_URL accepts a comma-separated failover list and OSM_TIMEOUT is "
+           "env-driven (the fr mirror read-timed-out at the hardcoded 40s). Poisoned state was "
+           "cleared server-side same session (2885 keyword rows, 214 sources, 133 jobs, DBs "
+           "backed up first); staged count moved 147->160 within minutes of the restart. "
+           "This asserts the fault/empty distinction stays present in the deployed code.")
+def rg_netfault_not_zero_yield():
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not os.path.isdir(cl):
+        return [(INFO, "CityLauncher not present -- skipped")]
+    out = []
+    sw = os.path.join(cl, "orchestration", "scraper_worker.py")
+    wp = os.path.join(cl, "orchestration", "worker_pool.py")
+    if not os.path.exists(sw):
+        return [(FAIL, "orchestration/scraper_worker.py is GONE")]
+    t = open(sw, encoding="utf-8", errors="replace").read()
+    for needle, why in (
+            ("return None", "_overpass_query no longer distinguishes fault from empty"),
+            ("net_faults", "_run_osm lost the fault counter -- fault passes will record "
+                           "zero yield again"),
+            ("osm_faulted", "scrape_keyword lost the fault sentinel -- run_job cannot "
+                            "skip the yield verdict")):
+        if needle not in t:
+            out.append((FAIL, "scraper_worker.py: '" + needle + "' missing -- " + why +
+                              " (S131-NETFAULT regressed; this is exactly how the 31 Aug "
+                              "storm froze launch-morning refill)"))
+    if os.path.exists(wp):
+        t2 = open(wp, encoding="utf-8", errors="replace").read()
+        if "if w < 0" not in t2:
+            out.append((FAIL, "worker_pool.run_job records a yield verdict on fault passes "
+                              "again ('if w < 0' guard gone) -- the keyword ladder will "
+                              "climb on the next network outage"))
+    else:
+        out.append((FAIL, "orchestration/worker_pool.py is GONE"))
+    if not out:
+        out.append((INFO, "fault/empty distinction present in both files -- an outage can "
+                          "no longer poison the backoff ladders"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

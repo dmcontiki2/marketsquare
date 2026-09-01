@@ -41,6 +41,17 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-085": [
+   # Engine revival (1 Sep): register carries it; fragment carries the execution record.
+   ("RULINGS.md", ["74 SEARCH-ENGINE LANES COME BACK"], []),
+   ("../CityLauncher/changelog_fragment_2026-08-31-launchday-schedule.md", ["ENGINE-REVIVE-1"], []),
+ ],
+ "RUL-084": [
+   # Launch-day wave scheduled (31 Aug): unattended 00:10 runner exists, Tutors priority in policy, National excluded.
+   ("RULINGS.md", ["THE LAUNCH-DAY WAVE FIRES ITSELF"], []),
+   ("../CityLauncher/emailer/waves_policy.json", ["TUTORS-PRIORITY-1"], []),
+   ("../CityLauncher/launch_day_wave.bat", ["RUL-084", "Cape Town"], ["--city \"National\""]),
+ ],
  "RUL-083": [
    # OSM-only scraper resume (31 Aug): register carries it; status carries the operational note.
    ("RULINGS.md", ["THE SCRAPER RESUMES OSM-ONLY"], []),

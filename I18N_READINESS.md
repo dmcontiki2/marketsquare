@@ -40,3 +40,17 @@ only after the readiness date, only sandbox-first, only when David re-opens the 
 Items 1–7 entirely — none are served by the live app. What may NOT happen: any edit to
 marketsquare.html / ms.js strings, any locale file wired into the served bundle, any
 switcher UI. RUL-075(a) freezes those until David re-opens the build.
+
+## Triggers — readiness is measured, not remembered (added 1 Sep 2026)
+- **Executable check:** `python3 scripts/i18n_readiness_check.py` — probes all 7 items
+  (and defines the artifact contract for the unbuilt ones); exit 0 = dry-run ready.
+  Re-runs the inventory extractor each time, so the trend stays alive.
+- **Scheduled trigger 1 — mid-freeze checkpoint:** Thu 1 Oct 2026 09:00 SAST
+  (task `i18n-readiness-midpoint`) — runs the check, reports gaps with a month in hand,
+  progresses the next open item if the session can (side-artifacts only).
+- **Scheduled trigger 2 — readiness-day verdict:** Fri 30 Oct 2026 09:00 SAST
+  (task `i18n-readiness-day`) — READY / NOT-READY verdict. If READY, the one decision
+  handed to David: open extensive sandbox testing. Phase A stays frozen until he
+  re-opens the build after that testing passes (RUL-075 a/e).
+- Build order for open items: 2 parity harness → 3 pseudo-locale → 5 en.json →
+  6 flags plan → 7 ledger drafts → 4 staging (server work, sequenced deliberately).
