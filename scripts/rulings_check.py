@@ -41,6 +41,13 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-088": [
+   # Trust Score is a score, never a verdict (1 Sep): register carries it, ledger polices
+   # the wording, doctrine fragment carries the reasoning.
+   ("RULINGS.md", ["A TRUST SCORE IS A SCORE, NEVER A STATEMENT OF FACT"], []),
+   ("scripts/regression_ledger.py", ["CHILD-SAFETY-WORDING-1"], []),
+   ("changelog.d/2026-09-01-child-safety-screening-doctrine.md", ["a SCORE, never a statement of fact", "named for a quality of the person"], []),
+ ],
  "RUL-087": [
    # Outreach reply lane answered by the agent (1 Sep): register carries the ruling,
    # the code carries the lane split, the ledger carries the open measurement.

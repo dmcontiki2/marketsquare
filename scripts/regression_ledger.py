@@ -13065,7 +13065,7 @@ def rg_outreach_reply_identity():
              "cloudflare_email_worker + /email/inbound + the email_triage table + the "
              "conservative auto-send gate already do all of this for support@ and were "
              "E2E-proven 24 Aug. What is missing is the outreach CLASS and its response "
-             "policy, not the engine.",
+             "policy, not the engine. MARKET GAP, named the day it was built: the FAQ class answers from HARDCODED SOUTH AFRICAN facts (the ZA city list, Rand-free framing). The US teaching-institutions lane and every other non-ZA market will ask the same FAQ questions and get a South Africa answer -- confidently, which is worse than no answer. Before ANY non-ZA outreach wave whose replies reach this lane, the canon block must become market-aware (keyed off the prospect city/country already on the row), or the FAQ class must fall back to outreach_commercial for non-ZA senders. Cheap to fix, expensive to discover from a prospect.",
        ref="OUTREACH-TRIAGE-1, opened 1 Sep 2026 on David's question: 'how would I respond "
            "to 100s of emails a day if we get traction?' -- asked before the volume "
            "arrived rather than after. WHY IT IS OPEN: RUL-069 (30 Aug) deliberately "
@@ -13162,6 +13162,70 @@ def rg_dashboard_signedout_truth():
     elif "heartbeat" not in t:
         out.append((FAIL, "marker present but no heartbeat check near it -- the branch "
                           "cannot be keying off the redacted payload"))
+    return out
+
+
+@entry("RG-0238", "No listing surface ever calls a PERSON safe -- we publish dated, sourced "
+       "FACTS about a credential, never a conclusion about someone's future conduct, and "
+       "never an absence-of-record claim",
+       OPEN,
+       scope="Every seller- and buyer-facing surface that could carry a trust badge: "
+             "marketsquare.html, ms.js, listing card and profile templates, and any future "
+             "verification badge. BANNED as unqualified badge text: 'safe', 'vetted', "
+             "'child-safe', 'background checked', 'screened' -- each is a representation "
+             "about FUTURE CONDUCT, and on a tutor listing that badge becomes the "
+             "plaintiff's first exhibit if a child is harmed. ALSO BANNED: any 'not on the "
+             "register' / 'no record found' badge -- absence of a record is not evidence of "
+             "safety, is unprovable, and invites a defamation claim from anyone we get "
+             "wrong. REQUIRED FORM: the fact, its source, its date -- 'WWCC 1234567E "
+             "verified current with NSW OCG, 1 Sep 2026', or 'qualification certificate "
+             "uploaded -- not independently verified'. Scope is the WORD ON THE SURFACE, "
+             "not the checking: verifying a government clearance is encouraged and is the "
+             "whole point. Describing a human being with an adjective we cannot stand "
+             "behind is what this bars.",
+       ref="CHILD-SAFETY-WORDING-1, opened 1 Sep 2026 from David's own framing -- "
+           "'classifying as safe based on our assessment of what they upload'. The instinct "
+           "(screen tutors against offender registers) is right; mechanism and wording both "
+           "needed correcting. PROBED same session, all four markets: SA's NRSO is CLOSED "
+           "by statute (Kubayi's 3-phase opening still lacked the Chief State Law Adviser's "
+           "constitutionality opinion as at Apr 2026); the UK has NO public register by "
+           "design and Sarah's Law is police-mediated, per-named-child, and refuses general "
+           "enquiries; Australia's ANCOR is police-only (WA's Community Protection site is "
+           "limited disclosure, not screening); the US NSOPW is public but its Conditions "
+           "of Use STRICTLY PROHIBIT automated searching. So no register lane exists "
+           "anywhere we operate. RESOLUTION: the CLEARANCE IS the state's register check -- "
+           "Enhanced DBS with barred list (UK), WWCC/Blue Card (AU, continuously monitored, "
+           "so a post-issue charge revokes it where a one-off lookup would miss it), sector "
+           "clearance (SA) -- holder-consented, lawful to receive, stronger than a scrape. "
+           "Needs to become a RULING (David's act, RUL-037); this entry is the tripwire "
+           "until it is, and stands afterwards. Promote when wired to real listing "
+           "templates and a badge-bearing surface exists to police. NOTE: first written as "
+           "RG-0237 and renumbered -- LEDGER-DUP-1 caught a concurrent session taking that "
+           "id mid-write, which is exactly what that guard is for.")
+def rg_no_safety_adjective():
+    out = []
+    banned = ["child-safe", "child safe", "vetted", "background checked", "safety verified"]
+    seen_any = False
+    for fn in ("marketsquare.html", "ms.js"):
+        f = os.path.join(REPO, fn)
+        if not os.path.isfile(f):
+            continue
+        seen_any = True
+        try:
+            t = open(f, encoding="utf-8", errors="replace").read().lower()
+        except OSError:
+            continue
+        for b in banned:
+            if b in t:
+                out.append((FAIL, "%s contains %r -- a safety adjective on a listing "
+                                  "surface is a representation about a person's future "
+                                  "conduct (CHILD-SAFETY-WORDING-1)" % (fn, b)))
+    if not seen_any:
+        return [(INFO, "SKIPPED -- listing surfaces not present here (outside repo)")]
+    if not out:
+        out.append((INFO, "no banned safety adjective on the listing surfaces scanned."))
+    out.append((INFO, "OPEN: no verification badge ships yet -- this is a tripwire set "
+                      "AHEAD of the feature, not proof the feature is right."))
     return out
 
 

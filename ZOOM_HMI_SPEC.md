@@ -300,3 +300,55 @@ Same window, same discipline, no launch-weekend deploys. Full launch is Mon 1 Se
 
 *Written 30 Aug 2026. Prototypes verified in a real renderer (headless Chrome, 378×800) — geometry
 measured, not asserted; both files indexed in `Projects\Visuals`.*
+
+---
+
+## 10 · Tutors lane — nearby institutions and their subjects (David, 1 Sep 2026 · RUL-089)
+
+David's 3 a.m. direction, quoted: tutors need two more components — *"1. To use our already
+local geo knowledge to identify the close by teaching institutions and to have them as drill
+downs, 2. To have the close by institutions main subjects also as drill downs"* — and each must
+cost **a single click, not a selection of many options**.
+
+### The data is already on hand
+- DBE register: 3,187 geocoded school addresses (Durban/PMB belt), teachers lane.
+- Scraped institutions with coordinate-proven lat/lon (STAYS-GEO-1 discipline).
+- Tutors themselves carry lat/lon. Precompute tutor → nearby-institution edges
+  (Haversine, radius per settlement density) into two derived facets:
+  `near_institution` and `subjects` (an institution's subject profile = DBE phase/curriculum
+  data ∪ what tutors near it actually offer).
+
+### How a drill-down becomes ONE click — three devices, all extensions of the existing engine
+1. **Ask NEAR, not WHICH.** A "which institution?" list of 12 is the many-options failure.
+   The geography chip has already answered *where*; the engine ranks institutions by
+   proximity × listing count and asks a question whose top tile is the user's obvious answer:
+   "**Near Maritzburg College** · 14" with at most 3 runner-ups. One tap. The long tail lives
+   behind the deepening geo chip (rule 3), so an unusual choice is possible but the default
+   journey never pays for it.
+2. **AUTO-COLLAPSE — the singleton rule (new engine rule 3.6).** When an askable facet has
+   exactly ONE non-zero option in the remaining set, it is not asked: the chip is applied
+   silently and appears in the rail. A question with one answer is not a question. In a
+   suburb with one school this makes the institution drill-down ZERO clicks. (General rule —
+   applies to every facet, not only tutors: it can only shorten paths.)
+3. **Subjects inherit the answered institution** (`dep: near_institution`). The institution's
+   subject profile ranks the tiles; zero-count removed; top 4 shown (Maths/Science/English
+   dominate real pools). One tap. If the user skips the institution question, subjects still
+   ask — ranked by the whole area instead.
+
+### Facet-map addition (extends §4; engine still orders by gain)
+| Category | Question chain |
+|---|---|
+| **Tutors** | What subject? *(or first, by gain)* → *(geo: suburb)* → near which institution? **[auto-collapse when 1]** → level/exam board **[dep: subject]** |
+
+Tap budget: subject 1 + institution 1 (or 0) + geo chip = **2–3 taps**, inside the 4-box budget.
+
+### Why this is more than UX
+The institution is the introduction seam: a school is where tutors and students already
+coexist. A buyer who reaches a tutor THROUGH their school's tile has told the seller the
+context that matters most — same doctrine as the travel funnel ending in an agency handoff.
+
+### Build placement
+Rides the RUL-076 build window (flag-dark, sandbox first, David sees it before the field;
+arming is David's act). The edge precompute is a server-side batch job — no live-app touch.
+RG-0221's acceptance criteria extend to: singleton auto-collapse proven, institution tile
+counts true, zero-count institutions unreachable.

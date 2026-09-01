@@ -1,3 +1,181 @@
+## 2026-09-01 — UK/AU credential lanes: the answer is ASYMMETRIC (probed, not assumed)
+
+David: *"We now need a similar Eureka moment in the UK and Australia?"* Searched rather than
+recalled, because RUL-072's FIDE finding only held because it was verified.
+
+**Australia IS the FIDE pattern — three state registers are openly searchable by name, no
+credential, no login:**
+
+- NSW — NESA eTAMS Public Register (`etams.nesa.nsw.edu.au/PublicRegisterSearch`): *"Anyone can
+  search the Public Register"*, first + last name.
+- VIC — VIT (`vit.vic.edu.au/search-the-register`): every teacher registered in Victoria appears.
+- QLD — QCT (`services.qct.edu.au/registersearch`): up-to-the-minute approval-to-teach status.
+
+**The UK is NOT.** The TRA's teacher record is access-controlled — a service for employers and
+agencies — and the self-service route needs TRN + surname + forename + date of birth. It cannot be
+harvested and cannot even be verified without data only the teacher can supply. A session assuming
+UK == AU here would build against a register that isn't open.
+
+**The sharper finding, and the one that matters commercially:** for TUTORING, the load-bearing
+credential in both countries is not the teaching qualification — it is the CHILD-SAFETY CLEARANCE,
+and both have free, instant, holder-consented online verification:
+
+- UK — **DBS Update Service**: free instant status check on a Standard/Enhanced certificate, using
+  the holder's name, DOB and 12-digit certificate number, with their consent.
+- AU — **Working With Children Check**: mandatory before a tutor's first paid lesson with an
+  under-18, every state running its own (WWCC in NSW/VIC/SA, Blue Card QLD, WWVP ACT, RWVP TAS,
+  WWC Card WA, Ochre Card NT), verified online by number. NSW's Children's Guardian publishes
+  guidance aimed at PARENTS verifying a tutor's number — i.e. the demand side already does this
+  by hand.
+
+**Why this fits TrustSquare better than scraping a register:** the seller SUPPLIES the number and
+consents; the platform verifies it. That is RUL-072's evidence-based trust doctrine exactly
+(credential = list membership, never self-claimed), it involves no harvesting — so none of the
+scraping-cost or jurisdiction exposure that killed the Google lane — and it is the single thing
+parents actually screen for. A verified child-safety badge is a REASON TO SUBSCRIBE, not merely a
+data source: it converts, which is the lane David is chasing.
+
+**LEGAL GATE, flagged not waved through — DAVID'S CALL, counsel-class (RUL-037 reserved):** DBS
+status checking carries a condition that the checker be *legally entitled* to make the check and
+hold the holder's consent. TrustSquare is an introduction platform, not an employer. Whether a
+platform may perform DBS status checks, and the equivalent question for WWCC verification by a
+non-employer, must be answered by counsel BEFORE any badge tier is designed around it. Building
+the verification first and asking after would be the wrong order on a child-safety credential.
+
+No ruling recorded — the direction is David's to set. This fragment exists so the next session
+inherits the asymmetry (AU open, UK not) and the legal gate rather than rediscovering both.
+
+## 2026-09-01 — RUL-089: Tutors funnel gains institution + subject drill-downs (design)
+
+David's 3 a.m. direction recorded and designed same session: Zoom's Tutors lane gets
+`near_institution` and `subjects` facets from data already held (3,187 DBE schools,
+coordinate-proven institutions, tutor lat/lon). Single-click mechanics: ask NEAR not
+WHICH (proximity×count ranks, top tile is the obvious school); NEW engine rule 3.6
+singleton auto-collapse (one option = zero clicks, applies to all facets); subjects
+inherit the answered institution. Spec: ZOOM_HMI_SPEC.md §10. Build rides the RUL-076
+window, flag-dark; arming stays David's act. Also this session: register_daily_wave.bat
++ taskscheduler_dailywave_0010.xml automate the RUL-082 daily ladder (guards unchanged,
+min-gap makes double-fire harmless) — David's one elevated click to register.
+
+## 2026-09-01 — Contagion model v1.5 + launch page carries the reply lane
+
+**Model → v1.5 / Email Wave Plan v3.2** (`docs/TrustSquare_Contagion_Model_v0.2.html`):
+
+- **New lever group "Credential lanes (RUL-072)": `fideW` + `fideUp`.** FIDE-TRAINERS-1 already
+  harvested 4,237 unique titled trainers (NI 1,680 · FI 1,126 · DI 1,023 · FT 408; IND 934, ~7x the
+  next federation; RUS 93; RSA 23). **Modelled honestly as a CONVERSION lane, not a supply lane** —
+  the registry holds credentials and identities but **no emails**, so it never enters the wave
+  machine and `fideW` adds zero prospects. It lifts the organic and referral paths only (a tutor
+  arriving under their own steam claims a FIDE ID and wears a verified credential tier). Wiring an
+  emailless registry into outbound would have been a straightforward lie about where growth comes
+  from. `fideUp` defaults to a modest 1.35 and its note says plainly that it is an UNMEASURED
+  assumption until the claim flow ships.
+- **Measured reality replacing estimates in two lever notes.** `scrapeWk`: the pool is **3,784
+  prospects, all with an email**, up from 1,519 on 30 Aug (ZA 2,827 · US 406 · UK 199 · FR 163 ·
+  AU 114 · PT 39). `varsityW`: the US pool already holds **147 `us_university_tutors`** plus Tutors
+  72 and Tutor Institutions 38 — so RUL-059's lane is *fuelled and held*, not empty and held.
+  Leaving it at 157 is a SEND decision, not a scraping one.
+
+**Launch page** (`CityLauncher/citylauncher_launch.html`) — new card **"0 · Before you run a wave —
+where the replies go"**, placed above the wave runner because it is a precondition on pressing those
+buttons:
+
+- The four reply classes with their colours, matching the dashboard card exactly (machine/grey ·
+  FAQ/green · opt-out/red · commercial/gold — "the only tile that wants you").
+- Current true state: deployed 16:09:46Z, machine-silence live, `OUTREACH_AUTO_SEND` unset and
+  verified unset in the live process env, everything else drafting and queuing.
+- **A hard amber gate on non-ZA waves.** The FAQ class answers from hardcoded South African facts,
+  so a US/UK/AU prospect asking which cities we cover would get a confident answer about
+  Johannesburg. Wave 2 (US+GB), Wave 3 (AU/NZ) and later rings must not fire until the canon block
+  is market-aware or FAQ falls back to commercial for non-ZA senders. Tracked as RG-0236.
+
+Verified: every `<script>` block in both files parses (`node --check`); the launch page parses as
+HTML; model levers wired into the existing `L.`/`DEFAULTS` pattern with single-match anchors.
+Backups kept beside both files.
+
+## 2026-09-01 — Child-safety screening: what is actually POSSIBLE, and the word we must never use
+
+David: *"we should also preferably be able to establish if any listing tutor or teacher ... not be
+on any governmental furnished pedophile/child molesters databases?"* Right instinct. Searched, not
+recalled, because a confident wrong answer here would be the most damaging kind.
+
+**The direct answer is NO in three of our four markets — and the "no" is deliberate policy, not an
+oversight we can route around.**
+
+- **South Africa** (launch market): the NRSO is **closed by statute** — confidential, not public.
+  Employers in schools, crèches and hospitals may check; a marketplace may not. Minister Kubayi has
+  a THREE-PHASE plan to widen it (phase 2 = institutions working directly with children, phase 3 =
+  employers generally), but the Chief State Law Adviser's constitutionality opinion on public
+  access had not been obtained as at the Apr 2026 reporting. Direction of travel is favourable;
+  today it is shut. Sibling register: the NCPR under the Children's Act.
+- **UK**: there is **no public sex offender register, by design**. Sarah's Law (Child Sex Offender
+  Disclosure Scheme) is police-mediated, requires a SPECIFIC named person AND a SPECIFIC child, and
+  disclosure goes only to the parent/guardian/carer best placed to protect that child. General
+  enquiries are expressly refused. A platform can never be the applicant.
+- **Australia**: ANCOR is **police-only**; there is no publicly accessible registry. WA's Community
+  Protection Website offers limited disclosure in defined circumstances only — not a screening tool.
+- **United States**: NSOPW **is** genuinely public — and its Conditions of Use **strictly prohibit
+  automated searching**. So no scraper, no API lane, and the commercial-screening restrictions must
+  be read directly before any use at all.
+
+**THE RESOLUTION, and it is better than what was asked for:** we do not need register access,
+because the CLEARANCE IS THE REGISTER CHECK — performed by the state, on our behalf, lawfully.
+
+- UK **Enhanced DBS with barred-list check** = the state has checked the Children's Barred List.
+- AU **WWCC / Blue Card** = state criminal-history check PLUS continuous monitoring — a holder
+  charged after issue has the clearance revoked, which a one-off register lookup could never catch.
+- SA = the sector-clearance route today, widening under the NRSO phases above.
+
+Holder-consented, lawful for us to receive, continuously re-verified, and already the credential
+parents recognise. Strictly better than a scrape, and it needs no register access at all.
+
+**PRODUCT INVARIANT — the word "safe" is banned from any listing surface.** David's framing was
+*"classifying as safe based on our assessment of what they upload."* We must not. "Safe", "vetted",
+"child-safe" and every synonym are representations about a person's FUTURE CONDUCT. If a tutor
+carrying our "safe" badge harms a child, that badge is the plaintiff's first exhibit. The defensible
+pattern is a DATED, SOURCED FACT — never a conclusion:
+
+- CORRECT: "WWCC 1234567E — verified current with NSW Office of the Children's Guardian, 1 Sep 2026"
+- CORRECT: "Teaching qualification certificate uploaded — not independently verified"
+- BANNED:  "Safe" · "Vetted" · "Child-safe verified" · "Background checked" (unqualified)
+
+**Also banned: a "not on the register" badge.** Absence of a record is not evidence of safety; it is
+unprovable, and asserting it invites both a negligence claim and a defamation claim from anyone we
+get wrong. We state what we verified, with its date and its source, and nothing beyond it.
+
+Needs to become a RULING — David's act (RUL-037). Recorded here so no session invents a "safe"
+badge in the meantime; RG-0237 makes it a tripwire.
+
+
+## RUL-088 — a Trust Score is a SCORE, never a statement of fact about a person
+
+David, same session, drawing the line himself: *"a trust score is based on given information, some
+verified and some searched, but never with enough concrete and irrefutable backed up evidence to
+state it as a fact. It is a 'Score' and not a statement of fact."*
+
+Seven consequences, recorded so they are buildable rather than merely agreed:
+
+1. **The score is the artefact** — a number and its inputs, never an adjective about the person.
+2. **It must be decomposable on the surface where it appears.** A score whose inputs are hidden is
+   a verdict wearing a number, which is precisely what this bars.
+3. **Every input carries its evidence grade** — the ladder applied to trust:
+   verified-against-a-named-source-with-a-date · attested-by-seller-unverified ·
+   inferred/searched-unconfirmed · absent. A score mixing grades must show them.
+4. **No band may be named for a quality of the person.** Bands name the EVIDENCE — "ID, phone and
+   address verified" — not the character.
+5. **No threshold unlocks safety language.** A 100 is still not a statement that a person is safe.
+6. **A low score means LITTLE EVIDENCE SUPPLIED, never suspicion**, and is never surfaced to a
+   buyer as an accusation. Absence of evidence reads as absence of evidence — the mirror of the
+   barred "not on the register" badge, and the defamation guard of this ruling.
+7. **A score is a dated snapshot that can go down.** Never "certified", never permanent.
+
+**Found live the same day.** The score itself is built correctly — `trust_score` column, buyer-side
+filtering, 87 references in `ms.js`. But the 90–100 band ships as **"Highly Trusted"**, with copy
+reading *"Highly Trusted sellers have verified ID, phone, and…"*. That is a verdict about people
+sitting on top of an honest score — the exact confusion this ruling separates. The band keeps its
+gold tier, its filter and its "recommended for high-value items" role; it gets **renamed for what
+was evidenced** rather than for a judgement of the human being.
+
 ## 2026-09-01 — Ops-dashboard 'SESSION UNDEFINED': server healthy, viewer signed out; DW-084 CLOSED on the full story
 
 - David reported the ops dashboard reading 'Session —' / 'SESSION UNDEFINED'. PROBED: the authenticated summary is COMPLETE (session 184, all sections); anonymous callers get the deliberate heartbeat redaction (RG-0211). Cause: signed-out browser (sessionStorage JWT gone). Fix: sign in again.

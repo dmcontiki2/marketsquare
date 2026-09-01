@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Contagion Model v1.4 &mdash; Email Wave Plan v3.2</title>
+<title>Contagion Model v1.5 &mdash; Email Wave Plan v3.2</title>
 <style>
 :root{
   --navy:#0d1b2a; --navy2:#11253a; --panel:#132b42; --line:#22405c; --ink:#e8eef4;
@@ -137,7 +137,7 @@ canvas.ch{width:100%;height:78px;display:block}
 <div class="app">
 
   <div class="top">
-    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.4&nbsp;&middot;&nbsp;planners + wave plan v3.2 + RAMP-1 + second ring + PA/auctions</span></div>
+    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.5&nbsp;&middot;&nbsp;planners + wave plan v3.2 + credential lanes + RAMP-1 + second ring + PA/auctions</span></div>
     <div class="clock"><span id="dateOut">1 Sep 2026</span><small id="weekOut">week 0 of 156</small></div>
     <div class="ctrls">
       <button class="primary" id="btnPlay">&#9654;&nbsp; Run</button>
@@ -404,7 +404,7 @@ const PM = {}; PARAMS.forEach(p=>{p.obs=null; p.lock=false; PM[p.k]=p;});
 const DEFAULTS={allure:1,badge:.35,discount:0,referral:0,complaint:0,delay:0,poolX:1,batch:28,
   w2Week:8,w3Week:20,stripeW:0,africaW:157,agPush:1,advPush:1,compW:157,compS:1.5,
   dayCap:30,measured:1,agGateW:8,rollW:157,featW:8,liveKeysW:0,barriers:1,localiseW:157,
-  tpW:0,tpToursW:157,refW:157,varsityW:157,ramp:1,rampCap:96,ring2W:1,ring3W:4,ring4W:8,ring5W:12,scrapeWk:30,aipaW:13,aucW:26};
+  tpW:0,tpToursW:157,refW:157,varsityW:157,ramp:1,rampCap:96,ring2W:1,ring3W:4,ring4W:8,ring5W:12,scrapeWk:30,aipaW:13,aucW:26,fideW:157,fideUp:1.35};
 
 /* -------- scenario levers: things David can actually change -------- */
 const LEVERS = {
@@ -431,7 +431,9 @@ const LEVERS = {
   ring3W:   {v:4,    lo:0,  hi:157, st:1,   l:"A-plan Wave 3 arms (AU/NZ)",           n:"Melbourne, Brisbane, Perth, Adelaide + NZ. Timing is yours - the A-plan fixes the SEQUENCE, not the dates; 4 is a placeholder, not a commitment."},
   ring4W:   {v:8,    lo:0,  hi:157, st:1,   l:"A-plan Wave 4 arms (NA/AR)",           n:"Namibia + Argentina (LOCALIZE-2 country layer built). Placeholder date, sequence per the A-plan."},
   ring5W:   {v:12,   lo:0,  hi:157, st:1,   l:"A-plan Wave 5 arms (FR/PT)",           n:"France + Portugal (GDPR footer + EU representative live per LOCALIZE-2). Placeholder date, sequence per the A-plan."},
-  scrapeWk: {v:30,   lo:0,  hi:300, st:10,  l:"New prospects scraped /armed city/week", n:"RUL-074's fuel - the Gary Player lever: luck is replaced by list depth. CityLauncher's saturation scraper keeps deepening every ARMED city's pool, so waves never starve (the global three's first salvo was 44 emails against a 55-prospect scrape - a coin flip by construction). 0 = today's pools are all there ever is. Bounded by each city's addressable market."},
+  scrapeWk: {v:30,   lo:0,  hi:300, st:10,  l:"New prospects scraped /armed city/week", n:"RUL-074's fuel - the Gary Player lever: luck is replaced by list depth. CityLauncher's saturation scraper keeps deepening every ARMED city's pool, so waves never starve (the global three's first salvo was 44 emails against a 55-prospect scrape - a coin flip by construction). 0 = today's pools are all there ever is. Bounded by each city's addressable market. MEASURED 1 Sep 2026: the pool stands at 3,784 prospects, all with an email - up from 1,519 on 30 Aug, so the lever is not hypothetical, it is running. Split: ZA 2,827 - US 406 - UK 199 - FR 163 - AU 114 - PT 39."},
+  fideW:    {v:157,  lo:0,  hi:157, st:1,   l:"Week the FIDE credential-claim lane ships", n:"FIDE-TRAINERS-1 (30 Aug 2026) already harvested the registry: 4,237 unique titled trainers (NI 1,680 / FI 1,126 / DI 1,023 / FT 408), IND 934 the largest federation by ~7x, RUS 93, RSA 23. HONEST MODELLING NOTE, and it is the whole point of this lever: the registry holds credentials and identities, NOT emails - it never enters the wave machine. So chess is NOT a prospect source and this lever adds NO prospects. What it does is let a tutor who arrives ORGANICALLY claim a FIDE ID, match it against the registry and wear a verified credential tier (RUL-072 evidence doctrine, RUL-088 wording). That is a CONVERSION and RETENTION effect, not a supply effect - it lifts the organic engine RUL-071 calls the real one. 157 = never, which is today's truth: the claim flow is not built. Registry grows by re-running the idempotent harvester."},
+  fideUp:   {v:1.35, lo:1,  hi:2.5, st:.05, l:"Credential-tier conversion uplift", n:"How much better a verified-credential tutor converts and holds, once the claim flow exists. 1.0 = a claimed FIDE title changes nothing. Applied ONLY from fideW onward and ONLY to the organic and referral paths - never to outbound, because the registry supplies no addresses to send to. Deliberately modest by default: this is an UNMEASURED assumption until the claim flow ships and real tutors use it, and it is labelled as such rather than dressed up as a finding."},
   aipaW:    {v:13,   lo:0,  hi:157, st:1,   l:"Week the AI PA switches on",   n:"RUL-081 (David, 30 Aug 2026): ~3 months out - the design/test/baseline window. Lifts $20-Pro upgrades (aipaUp) and burns tokens per active (aipaCost). 157 = never."},
   aucW:     {v:26,   lo:0,  hi:157, st:1,   l:"Week Auctions switch on",      n:"RUL-081: ~6 months out. Every closed auction is a winner-introduction (aucIntro) and live auctions retain sellers (aucKeep). Phase-1 spec exists; the two human gates (Financial + Regulatory) stay David's and are never auto-shipped. 157 = never."},
   measured: {v:1,    lo:0,  hi:1,   st:1,   l:"Use measured inventory in PTA and JHB", n:"26 Aug counts after the STAYS-GEO-1 repair: Tutors 72/82, Services casual 19/32, Services technical 8/17, Experiences 36/3, Collectors 9/6, Stays 6/1. Only Tutors clears 30 in both cities, so the real ladder sends far less than the cap."},
@@ -439,7 +441,7 @@ const LEVERS = {
   tpW:      {v:0,    lo:0,  hi:157, st:1,   l:"Week the Travelpayouts link-out goes live", n:"Flights Data API is live now (partner 758984). The affiliate link-out lane itself is built and DARK by flag - TP-LINKOUT-1, server-side, host allowlist, fails closed. Being dark is deliberate, not a defect."},
   tpToursW: {v:157,  lo:0,  hi:157, st:1,   l:"Week Travelpayouts tours are approved", n:"DECLINED 24 Aug - 'website under development or not yet ready'. 26 programs available, 20 blocked including Booking.com, Viator and GetYourGuide. RUL-041: never resubmit unchanged. 157 = still declined, which is today's truth. Tours pay ~8% against flights' 1.2%, so this one week is worth more than the whole flights lane."},
   refW:     {v:157,  lo:0,  hi:157, st:1,   l:"Week the referral programme ships", n:"157 = never, which is today's truth - there is no referred_by field, no invite code and no inviter_id in the schema. Nothing can be attributed until that column exists."},
-  varsityW: {v:157,  lo:0,  hi:157, st:1,   l:"Week the US university-tutor lane sends", n:"RUL-059(c): NO SEND by default. The domain is days old, the first real email in the product's life goes out 28 Aug, and committing a second geography AND a new vertical before the first market has produced one conversion is a guess. The decision is taken AFTER Gate 2 and ten days of real signal. Move this only to ask what the lane would be worth."},
+  varsityW: {v:157,  lo:0,  hi:157, st:1,   l:"Week the US university-tutor lane sends", n:"RUL-059(c): NO SEND by default. The domain is days old, the first real email in the product's life goes out 28 Aug, and committing a second geography AND a new vertical before the first market has produced one conversion is a guess. The decision is taken AFTER Gate 2 and ten days of real signal. Move this only to ask what the lane would be worth. MEASURED 1 Sep 2026: the US pool already holds 406 prospects, of which 147 are us_university_tutors, plus Tutors 72 and Tutor Institutions 38 - so the lane is FUELLED and held, not empty and held. Turning this off 157 is a send decision, not a scraping one."},
   featW:    {v:8,    lo:0,  hi:157, st:1,   l:"Week the planner lane switches on", n:"planners.heritage / .weekend / .expedition already exist as flags and ship DARK - Phase A is built, you flip the switch. 157 = never, which is what the model assumed until now."},
   rollW:    {v:157,  lo:0,  hi:157, st:1,   l:"Optional later outreach wave", n:"OFF by default. After the launch window the model runs unencumbered by our present development state - no scraped-list ceiling, no batch rate, no per-day cap. Set a week here only to ask what an extra outreach push would add on top."},
   agPush:   {v:1.0,  lo:0,  hi:4,   st:.1,  l:"Agency outreach intensity",     n:"Multiplier on agency conversion. Hubs are the fastest lever you own."},
@@ -1061,12 +1063,16 @@ function simulate(seed, L, sample, keepTrace, v32){
     // unattributable; this is a programme - instrumented, incentivised, and countable.
     // It cannot be switched on until referred_by exists, which is why it defaults to never.
     let refNew=0, refRewardT=0;
+    // OUTREACH-TRIAGE-1 / FIDE-CLAIM lane (1 Sep 2026): a verified credential tier lifts the
+    // ORGANIC and referral paths only. The FIDE registry carries no emails, so it can never
+    // feed outbound - modelling it as prospect supply would be a straightforward lie.
+    const fideX = (w>=L.fideW && L.fideW<157) ? L.fideUp : 1;
     if(w>=L.refW){
       for(let i=0;i<n;i++){
         const at=A0[i]+A5[i]+A20[i]+AG[i];
         const advocates=at+BU[i]*0.5;
         if(advocates<1) continue;
-        const invites=advocates*P.refRate*(1+1.4*L.referral)*(0.5+0.5*Lq[i]);
+        const invites=advocates*P.refRate*(1+1.4*L.referral)*(0.5+0.5*Lq[i])*fideX;
         const took=binom(r,Math.round(invites),Math.min(.6,P.refTake));
         const room=Math.min(took,Math.round(S[i]));
         if(room>0){ S[i]-=room; E[i]+=room; REF[i]+=room; refNew+=room; refSignups+=room; }
@@ -1799,6 +1805,7 @@ function buildPanel(which){
       "Travelpayouts":["tpW","tpToursW"],
       "Referrals":["refW"],
       "University lane (RUL-059)":["varsityW"],
+      "Credential lanes (RUL-072)":["fideW","fideUp"],
       "Money":["discount"],
       "Hostile":["compW","compS"]};
     for(const gname in groups){

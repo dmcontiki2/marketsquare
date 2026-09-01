@@ -473,3 +473,91 @@ in the HOOK (kept by David's choice); the snap clip itself is 100% the male voic
 **Laptop truth:** watching/reporting runs on the server 24/7; only Fable's fix runs need the laptop on with Cowork open, and browser/Higgsfield-dependent fixes still wait for David (per-session grants, JOURNEY_PHOTO_RUNBOOK lesson).
 **Verified:** ops_sweep.py --dry ran clean against the live box (12/12 checks, all green); both new .py files py_compile. NOT yet live — rides the next /tsl (manifest + migration). Fable pickup scheduled task pending David's approval (permission classifier held it, correctly).
 **RUL-013 note:** adds an FYI + opt-in lane at David's request; autonomy and gates unchanged (RUL-017).
+
+---
+
+## CC-005 · Trust Score reads as a SCORE, never a verdict about a person
+**Stage:** 1/8 SPEC WRITTEN — awaiting David's wording sign-off, then copy sweep
+**Opened:** 1 Sep 2026 · **Owner:** David (wording) / Claude (implementation)
+**Source decision:** RUL-088 (this session) · extends RUL-072 · sibling of CHILD-SAFETY-WORDING-1 (RG-0238)
+
+**One-paragraph change:** The Trust Score is correctly built — a real 0–100 computed from
+evidence signals, decomposable via `trust_score_breakdown`, with buyer-side filtering. The
+*labels sitting on it* are not: the 90+ band ships as **"Highly Trusted"** and the 70+ band as
+**"Trusted+"**, which declare a quality of the *person* rather than the strength of the
+*evidence*. RUL-088 bars that. This change renames the bands after evidence strength, adds a
+standing explainer, and adds a new-seller line so an unevidenced seller reads as *new*, not
+*suspect*.
+
+**The finding that shapes the rename (why bands cannot name specific evidence):** the score is a
+SUM over signals (universal ID/profile/referrals + track record + category credentials − penalties,
+base 40). A threshold on a sum guarantees no particular component — a seller can reach 70 by
+several different routes. So a band called "ID verified (70)" would be a straightforward lie for
+some sellers holding it. Bands may therefore only name the *strength* of evidence, never *which*
+evidence. Which evidence a given seller holds belongs in the breakdown panel, where it is true
+per-seller.
+
+**THE WEAKEST-HOLDER TEST (David, 1 Sep — the rule this whole change turns on):** *"Marietjie is
+much more of an exception."* Design the vocabulary from your BEST seller and you will ship labels
+that are true for her and false for everyone else wearing them. Marietjie reached 100 on real
+uploaded certificates, so "Highly Trusted" feels earned on her listing — but the score is a sum,
+and another seller reaches 100 by a route with no certificate in it at all. Both wear the label.
+
+**Standing rule for every band, badge and tier from here on: a label must be true for the WEAKEST
+member of the band, never the strongest.** Test each proposed word against the marginal seller who
+has just crossed the threshold, not against the exemplar who inspired it. "Fullest evidence (90+)"
+survives that test; "Highly Trusted" does not. This is the operational form of RUL-088 principle 4,
+and it is the reason the bands below name evidence strength rather than any quality of a person.
+
+**Term map (DRAFT — needs David's Step-2 confirmation):**
+
+| Where | Old | New |
+| --- | --- | --- |
+| Filter chip, 0 | Any seller | Any seller *(unchanged)* |
+| Filter chip, 40 | Established+ (40) | Some evidence (40+) |
+| Filter chip, 70 | Trusted+ (70) | Strong evidence (70+) |
+| Filter chip, 90 | Highly Trusted (90) | Fullest evidence (90+) |
+| Listing card badge | ✓ Trusted / Highly Trusted | Trust Score 92 *(gold 90+, green 70–89, neutral below; taps to breakdown)* |
+| ms.js band ternary | `trust>=90?'Highly Trusted':trust>=70?'Trusted'` | evidence-strength labels as above |
+
+**New standing copy (David's to approve, Claude's rendition):**
+
+- Explainer, wherever the score is shown or filtered: *"Trust Score reflects the evidence a seller
+  has supplied and the checks we have completed — verified ID, referrals, completed introductions
+  and category credentials. It is a score, not a guarantee, an endorsement, or an assessment of
+  character."*
+- New-seller line (RUL-088 point 6, the defamation guard, made visible): *"A new seller simply has
+  less evidence — not a mark against them. Scores rise as evidence is added."*
+- Breakdown panel heading: *"What this score is made of"*, each row carrying its evidence grade:
+  **✓ Verified by TrustSquare** (with date) · **○ Supplied by the seller, not independently
+  verified** · **– Not yet supplied**.
+
+**In scope:** `ms.js` (band ternary, chip labels, card badge, sell-flow coach copy incl. the two
+live "vetted agent" strings at ~16445 / ~16475), `marketsquare.html` (chips ~1379, filter copy
+~1371 / ~1425).
+
+**OUT of scope — REASSESSED 1 Sep after David's challenge, and he is substantially right:** the
+EULA's Trust Score definition (EULA v1.15 — *"A numeric score (0–100) assigned to each Seller that
+reflects reliability, response rate, and compliance history. Governs listing visibility and
+priority."*) **stands as valid.** Claude's first read called it a character claim needing counsel;
+that was over-cautious and is withdrawn. David's defence holds on four counts: (a) its first four
+words self-identify it as *a numeric score*, satisfying principle 1 at the outset; (b) *response
+rate* and *compliance history* are records of app conduct — David's "disciplined app use" — not
+dispositions; (c) it states its operational function (visibility and priority) and claims nothing
+about the person; (d) it is a DEFINITION in a legal instrument, not a badge shown to a buyer at the
+point of decision, and RUL-088 bites on surfaces where a buyer forms a judgement about a human
+being. The document's own model is already evidence-shaped elsewhere — §7.3 has sellers *"upload
+verifiable credentials to earn a Trust Score bonus"*, and §7.x reserves verification against
+official registers (EAAB).
+
+**One word survives the challenge: "reliability."** It is the only term in that list naming a
+DISPOSITION rather than a RECORD — response rate and compliance history are things that happened;
+reliability is what kind of person someone is. It also does no work, since the sentence names its
+two measurements immediately after. In the operator's own formal definition it would be a worse
+exhibit than any UI string if quoted back. NOT worth a version bump on its own: replace it at the
+NEXT EULA bump, which happens anyway, with wording matching §7.3's actual mechanism — e.g.
+*"reflects verified evidence supplied, response rate, and compliance history."* No counsel needed;
+this is a wording tidy, not a legal question.
+
+**Verification when built:** RG-0238 green on `ms.js` + `marketsquare.html`; `rulings_check.py`
+RUL-088 reflected; visual pass on the filter row and a 90+ card.
