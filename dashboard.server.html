@@ -2334,14 +2334,27 @@ function loadEmailTriage() {
   fetch(base + '/dashboard/email-triage?limit=20', {headers:_tHdr}).then(r=>r.json()).then(d=>{
     document.getElementById('triage-updated').textContent = (d.total||0) + ' total';
 
+    // OUTREACH-TRIAGE-1 (RUL-087, 1 Sep 2026): the outreach lane's four classes are
+    // NOT support categories and must not read as grey 'other' on the one surface
+    // David watches. Colour is tied to the ACTION each class implies:
+    //   machine  = grey   -> silence, nothing to do, it was a robot
+    //   FAQ      = green  -> answered (or answerable) from canon
+    //   opt-out  = red    -> a legal duty was discharged, suppression happened
+    //   commercial = gold -> DAVID'S: a person waiting on human judgement
     const catColours = { support:'#3b82f6', billing:'#8b5cf6', legal:'#ef4444',
-                         compliance:'#f59e0b', spam:'#64748b', other:'#94a3b8' };
+                         compliance:'#f59e0b', spam:'#64748b', other:'#94a3b8',
+                         outreach_machine:'#64748b', outreach_faq:'#4ade80',
+                         outreach_optout:'#f87171', outreach_commercial:'#fbbf24' };
+    const catLabels = { outreach_machine:'outreach · machine (silent)',
+                        outreach_faq:'outreach · FAQ',
+                        outreach_optout:'outreach · opt-out',
+                        outreach_commercial:'outreach · YOURS' };
     const counts = d.by_category_30d || {};
     const sent = (d.by_status_30d && d.by_status_30d.sent) || 0;
     const drafted = (d.by_status_30d && d.by_status_30d.drafted) || 0;
     let tiles = '';
     Object.keys(counts).forEach(cat=>{
-      tiles += '<div class="health-metric"><div class="hm-label" style="color:'+(catColours[cat]||'#94a3b8')+'">'+cat+'</div><div class="hm-value">'+counts[cat]+'</div></div>';
+      tiles += '<div class="health-metric"><div class="hm-label" style="color:'+(catColours[cat]||'#94a3b8')+'">'+(catLabels[cat]||cat)+'</div><div class="hm-value">'+counts[cat]+'</div></div>';
     });
     tiles += '<div class="health-metric"><div class="hm-label" style="color:#4ade80">auto-sent (30d)</div><div class="hm-value">'+sent+'</div></div>';
     tiles += '<div class="health-metric"><div class="hm-label" style="color:#fbbf24">held / drafted</div><div class="hm-value">'+drafted+'</div></div>';
@@ -2351,7 +2364,10 @@ function loadEmailTriage() {
       sent:    'background:#064e3b;color:#4ade80',
       drafted: 'background:#78350f;color:#fbbf24',
       skipped: 'background:#334155;color:#94a3b8',
-      failed:  'background:#7f1d1d;color:#fca5a5'
+      failed:  'background:#7f1d1d;color:#fca5a5',
+      // OUTREACH-TRIAGE-1: machine mail is answered with silence by design. It is a
+      // SUCCESS state, not a skip -- it must not look like something went wrong.
+      logged_silent: 'background:#1e293b;color:#94a3b8'
     };
     const esc = s => (s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
     const rows = (d.items||[]).map(it=>{
