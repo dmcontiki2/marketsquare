@@ -54,3 +54,12 @@ switcher UI. RUL-075(a) freezes those until David re-opens the build.
   re-opens the build after that testing passes (RUL-075 a/e).
 - Build order for open items: 2 parity harness → 3 pseudo-locale → 5 en.json →
   6 flags plan → 7 ledger drafts → 4 staging (server work, sequenced deliberately).
+
+## Lane 2 — UGC / introduction translation (RUL-086, added 1 Sep 2026)
+Dictionaries translate the chrome; the INTRODUCTION is user-authored. Per RUL-086 the
+design for runtime translation of listings, intro messages and dossiers lives in
+i18n/UGC_TRANSLATION_DESIGN.md (store once + lang tag, translate-at-read via swappable
+adapter, pay-once cache, hard monthly cap, machine-translated label with one-tap
+original). **Readiness item 8** = that design present with its anchors (probed by
+i18n_readiness_check.py). Lane-2 BUILD is sandbox-first alongside item 4; ARMING waits
+for Phase C — users must have a language before their content can cross one.

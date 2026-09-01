@@ -41,6 +41,21 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-087": [
+   # Outreach reply lane answered by the agent (1 Sep): register carries the ruling,
+   # the code carries the lane split, the ledger carries the open measurement.
+   ("RULINGS.md", ["THE OUTREACH REPLY LANE IS ANSWERED BY THE AGENT"], []),
+   ("bea_main.py", ["_is_outreach_lane", "OUTREACH-TRIAGE-1", "outreach_machine"], []),
+   ("scripts/regression_ledger.py", ["RG-0236"], []),
+ ],
+ "RUL-086": [
+   # Cross-language introductions translate effortlessly (1 Sep): Lane 2 design in canon,
+   # readiness item 8 probes it, register carries the ruling.
+   ("RULINGS.md", ["CROSS-LANGUAGE INTRODUCTIONS"], []),
+   ("I18N_READINESS.md", ["Lane 2", "UGC_TRANSLATION_DESIGN"], []),
+   ("i18n/UGC_TRANSLATION_DESIGN.md", ["store once", "translate-at-read", "machine-translated"], []),
+   ("scripts/i18n_readiness_check.py", ["UGC_TRANSLATION_DESIGN"], []),
+ ],
  "RUL-085": [
    # Engine revival (1 Sep): register carries it; fragment carries the execution record.
    ("RULINGS.md", ["74 SEARCH-ENGINE LANES COME BACK"], []),

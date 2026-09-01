@@ -18642,6 +18642,36 @@ def get_tuppence_history(email: str, limit: int = 50, offset: int = 0, _key: str
 _TRIAGE_CATEGORIES = ["support", "billing", "legal", "compliance", "spam", "other"]
 _AUTO_SEND_CATEGORIES = {"support", "billing"}
 
+# ── OUTREACH-TRIAGE-1 (1 Sep 2026, RUL-087) ───────────────────────────────
+# The B2B outreach REPLY lane. RUL-069 carved this out of the customer
+# firewall while reply volume was zero; David green-lit closing that gap the
+# day it first cost him an afternoon. A prospect reply is NOT customer support
+# mail -- it carries commercial judgement -- so it gets its own classes, its
+# own prompt and its own send policy. It must NEVER receive the MAINT-B1
+# fault-queue ack ("your report is logged"): a tutor asking whether we cover
+# Johannesburg has not filed a fault.
+_OUTREACH_ADDRESSES = {
+    a.strip().lower()
+    for a in os.getenv("OUTREACH_REPLY_ADDRESSES", "david@trustsquare.co").split(",")
+    if a.strip()
+}
+_OUTREACH_CATEGORIES = ["outreach_machine", "outreach_faq",
+                        "outreach_optout", "outreach_commercial", "spam", "other"]
+# Graduated deliberately, per the sequence David approved: MACHINE mail is
+# silent from day one (never replying to an autoresponder cannot be wrong).
+# Everything else DRAFTS and queues until the classifier is measured against
+# real traffic -- auto-send is earned, not assumed.
+_OUTREACH_AUTO_SEND = os.getenv("OUTREACH_AUTO_SEND", "0") == "1"
+_OUTREACH_AUTO_SEND_CATEGORIES = {"outreach_faq"}
+_OUTREACH_FROM = os.getenv("OUTREACH_FROM_EMAIL",
+                           "David at TrustSquare <david@mail.trustsquare.co>")
+_OUTREACH_REPLY_TO = os.getenv("OUTREACH_REPLY_TO", "david@trustsquare.co")
+
+
+def _is_outreach_lane(to_addr: str) -> bool:
+    """True when this inbound mail is a reply to our own outreach wave."""
+    return (parseaddr(to_addr or "")[1] or "").strip().lower() in _OUTREACH_ADDRESSES
+
 
 class InboundEmail(BaseModel):
     from_addr: str
@@ -18652,7 +18682,9 @@ class InboundEmail(BaseModel):
 
 
 def _smtp_send_reply(to_addr: str, subject: str, body: str,
-                     in_reply_to: Optional[str] = None) -> bool:
+                     in_reply_to: Optional[str] = None,
+                     from_email: Optional[str] = None,
+                     reply_to: Optional[str] = None) -> bool:
     """Send a plain-text support reply. Prefers Resend (domain-aligned From =
     SUPPORT_FROM_EMAIL, Reply-To = SUPPORT_REPLY_TO) — the L3a launch path.
     Falls back to Gmail SMTP if Resend is unset/fails. Never raises."""
@@ -18663,12 +18695,13 @@ def _smtp_send_reply(to_addr: str, subject: str, body: str,
     subj = subject if subject.lower().startswith("re:") else f"Re: {subject}"
     # ── Path 1: Resend (L3a — replies from the trustsquare.co brand, not personal Gmail)
     resend_key = ai_provider.envkey("RESEND_API_KEY") or ""
-    support_from = _safe_from(os.getenv("SUPPORT_FROM_EMAIL"), "TrustSquare Support <support@mail.trustsquare.co>")
+    support_from = _safe_from(from_email or os.getenv("SUPPORT_FROM_EMAIL"),
+                              "TrustSquare Support <support@mail.trustsquare.co>")
     if resend_key:
         try:
             import requests as _rq
             payload = {"from": support_from, "to": [to_clean], "subject": subj, "text": body,
-                       "reply_to": os.getenv("SUPPORT_REPLY_TO", "support@trustsquare.co")}
+                       "reply_to": reply_to or os.getenv("SUPPORT_REPLY_TO", "support@trustsquare.co")}
             if in_reply_to:
                 payload["headers"] = {"In-Reply-To": in_reply_to, "References": in_reply_to}
             r = _rq.post("https://api.resend.com/emails", json=payload,
@@ -18703,10 +18736,12 @@ def _smtp_send_reply(to_addr: str, subject: str, body: str,
         return False
 
 
-async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
+async def _classify_email(from_addr: str, subject: str, body: str,
+                          lane: str = "customer") -> dict:
     """Call Claude to classify an inbound email and draft a reply.
     Returns {category, urgency, draft_reply, auto_safe}. Safe fallback on failure."""
     fallback = {"category": "other", "urgency": "normal", "draft_reply": "", "auto_safe": False, "bin": "MISC"}
+    _cats = _OUTREACH_CATEGORIES if lane == "outreach" else _TRIAGE_CATEGORIES
     if not ai_provider.any_lane_configured():
         return fallback
     # P2 wrapper — ceiling check before the paid call. Inbound mail is an
@@ -18719,7 +18754,54 @@ async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
         return fallback
     body_trim = (body or "")[:4000]
     user_payload = f"From: {from_addr}\nSubject: {subject}\n\n{body_trim}"
-    system = (
+    if lane == "outreach":
+        system = (
+            "You are triaging a REPLY to a business-outreach email that TrustSquare sent "
+            "to a prospective seller (a tutor, estate agent, dealer, tour operator or "
+            "similar). This is NOT customer-support mail: the sender is a business we "
+            "approached, and the reply carries commercial judgement. Return STRICT JSON "
+            "only -- no prose, no markdown fences.\n\n"
+            "JSON shape: {\"category\": one of "
+            "[\"outreach_machine\",\"outreach_faq\",\"outreach_optout\","
+            "\"outreach_commercial\",\"spam\",\"other\"], "
+            "\"urgency\": one of [\"low\",\"normal\",\"high\"], "
+            "\"bin\": always \"MISC\", "
+            "\"draft_reply\": a short, warm, plain-text reply signed 'David' then "
+            "'TrustSquare - trustsquare.co', "
+            "\"auto_safe\": boolean.}\n\n"
+            "CLASSES:\n"
+            "- outreach_machine: an autoresponder, ticket acknowledgement, "
+            "out-of-office, delivery notification or any other machine-generated mail. "
+            "No human wrote it and no human is waiting. Set draft_reply to the empty "
+            "string and auto_safe=false.\n"
+            "- outreach_faq: a real person asking a factual question we can answer from "
+            "what follows -- which cities we cover, what it costs, how introductions "
+            "work, whether listing is free, whether they can list online. auto_safe=true "
+            "ONLY if your draft fully answers it with no commercial judgement needed.\n"
+            "- outreach_optout: not interested, unsubscribe, remove me, stop emailing, or "
+            "hostility about being contacted. Draft a brief courteous close confirming "
+            "we will not contact them again. auto_safe=false.\n"
+            "- outreach_commercial: wants a call or meeting, asks about terms, discounts "
+            "or a bulk/agency arrangement, proposes a partnership, or complains in a way "
+            "needing a human. auto_safe=false ALWAYS -- David answers these himself.\n\n"
+            "FACTS you may state (and nothing beyond them): TrustSquare is national in "
+            "South Africa -- live cities include Johannesburg, Cape Town, Pretoria, "
+            "Durban, Bloemfontein, Port Elizabeth and East London. Listing is FREE and "
+            "stays free. The seller sets their own subjects, rate and schedule. The BUYER "
+            "pays a small introduction fee before they can make contact, so every enquiry "
+            "comes from someone serious. TrustSquare NEVER takes a commission on the "
+            "seller's own fees. The seller stays anonymous until they accept an "
+            "introduction. A listing can be local, online, or both -- an online listing "
+            "reaches the whole country.\n\n"
+            "RULES: Never invent pricing, dates, numbers or features not listed above. "
+            "Never promise refunds (Tuppence is strictly non-refundable). Never reveal "
+            "other sellers' identities or any internal data. If you are unsure which "
+            "class applies, choose outreach_commercial and set auto_safe=false -- a "
+            "human reading it is cheap, a wrong automated answer to a prospect is not. "
+            "Keep replies under 150 words."
+        )
+    else:
+        system = (
         "You are the email triage assistant for TrustSquare, a South African local "
         "marketplace connecting buyers with anonymous, trusted sellers via an "
         "introduction currency called Tuppence. You read one inbound customer email "
@@ -18737,7 +18819,7 @@ async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
         "(Tuppence is strictly non-refundable). For legal, compliance, disputes, threats, "
         "or anything ambiguous set auto_safe=false. For spam set draft_reply to empty "
         "string and auto_safe=false. Keep replies under 120 words."
-    )
+        )
     try:
         _sr = await asyncio.to_thread(
             ai_provider.complete, [{"role": "user", "content": user_payload}],
@@ -18755,7 +18837,7 @@ async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
                 raw = raw[4:].strip()
         parsed = json.loads(raw)
         cat = parsed.get("category", "other")
-        if cat not in _TRIAGE_CATEGORIES:
+        if cat not in _cats:
             cat = "other"
         urg = parsed.get("urgency", "normal")
         if urg not in ("low", "normal", "high"):
@@ -18792,7 +18874,11 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
     if not from_addr:
         raise HTTPException(status_code=400, detail="from_addr is required")
 
-    result = await _classify_email(from_addr, subject, body)
+    # OUTREACH-TRIAGE-1: which lane is this? A reply to our own outreach wave is
+    # a different class of mail from a customer's support request, and mixing them
+    # is what made this lane unscalable (RUL-087).
+    _lane = "outreach" if _is_outreach_lane(req.to_addr or "") else "customer"
+    result = await _classify_email(from_addr, subject, body, lane=_lane)
     # spend logging lives inside _classify_email with real tokens (P2 sweep, 12 Jun 2026)
 
     category = result["category"]
@@ -18807,13 +18893,28 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
     # promise (immediate acknowledgment with reference, David-approved wording
     # 29 Jul 2026) is kept in both branches; MAINT_ACK_SEND=0 still switches it off.
     status = "drafted"
-    can_auto = (
-        EMAIL_AUTO_SEND
-        and (bool(ai_provider.envkey("RESEND_API_KEY")) or bool(GMAIL_APP_PASSWORD))
-        and result["auto_safe"]
-        and category in _AUTO_SEND_CATEGORIES
-        and bool(draft_reply)
-    )
+    _has_sender = bool(ai_provider.envkey("RESEND_API_KEY")) or bool(GMAIL_APP_PASSWORD)
+    if _lane == "outreach":
+        # MACHINE mail is answered with silence, always and from day one -- replying
+        # to an autoresponder can never be right, and it is the class that wasted
+        # David's launch-day afternoon. Everything else DRAFTS and queues until the
+        # classifier has been measured on real traffic; OUTREACH_AUTO_SEND=1 then
+        # graduates the FAQ class only.
+        can_auto = (
+            _OUTREACH_AUTO_SEND
+            and _has_sender
+            and result["auto_safe"]
+            and category in _OUTREACH_AUTO_SEND_CATEGORIES
+            and bool(draft_reply)
+        )
+    else:
+        can_auto = (
+            EMAIL_AUTO_SEND
+            and _has_sender
+            and result["auto_safe"]
+            and category in _AUTO_SEND_CATEGORIES
+            and bool(draft_reply)
+        )
     if category == "spam":
         status = "skipped"
 
@@ -18838,7 +18939,26 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
         _log.error("email_triage persist failed: %s", exc)
 
     ack_sent = False
-    if category != "spam" and can_auto:
+    if _lane == "outreach":
+        # No fault-queue ack on this lane, ever. A tutor asking whether we cover
+        # Johannesburg has not filed a fault, and "your report is logged in our fix
+        # queue" would be nonsense to a prospect. Machine mail gets silence.
+        if category == "outreach_machine":
+            status = "logged_silent"
+            _update_triage_status(fault_code, status)
+        elif can_auto:
+            sent = _smtp_send_reply(from_addr, subject, draft_reply or "",
+                                    req.message_id,
+                                    from_email=_OUTREACH_FROM,
+                                    reply_to=_OUTREACH_REPLY_TO)
+            status = "sent" if sent else "failed"
+            _update_triage_status(fault_code, status)
+        else:
+            # Queued for David in /admin/email-triage -- the admin surface is the
+            # escalation path (RUL-069), never a forward to his personal inbox.
+            status = "drafted"
+            _update_triage_status(fault_code, status)
+    elif category != "spam" and can_auto:
         _ref_line = ""
         if fault_code:
             _ref_line = (

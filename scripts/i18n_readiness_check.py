@@ -17,8 +17,9 @@ also DEFINES the artifact contract a future session must satisfy when building i
                    NOT wired into the served bundle during the freeze)
   6 flags plan  -- i18n/FLAGS_WIRING.md
   7 ledger      -- i18n/ledger_drafts.md (drafted OPEN entries, ready to register)
+  8 UGC design  -- i18n/UGC_TRANSLATION_DESIGN.md with its anchors (RUL-086, Lane 2)
 
-Exit 0 = READY (all 7). Exit 1 = not ready; gaps listed.
+Exit 0 = READY (all items). Exit 1 = not ready; gaps listed.
 Run:  python3 scripts/i18n_readiness_check.py
 """
 import datetime, json, subprocess, sys, urllib.request
@@ -90,14 +91,25 @@ def main():
     ok = (I / "ledger_drafts.md").exists()
     add("7 ledger entry drafts", ok, "present" if ok else "not drafted")
 
+    # 8 UGC/introduction translation design -- Lane 2 (RUL-086)
+    d8 = I / "UGC_TRANSLATION_DESIGN.md"
+    ok, det = False, "design not written"
+    if d8.exists():
+        t = d8.read_text(encoding="utf-8", errors="replace")
+        missing = [n for n in ("store once", "translate-at-read", "machine-translated")
+                   if n not in t]
+        ok = not missing
+        det = "design present, anchors intact" if ok else f"anchors missing: {missing}"
+    add("8 UGC/introduction translation design (Lane 2)", ok, det)
+
     done = sum(1 for _, d, _ in results if d)
     days = (TARGET - datetime.date.today()).days
     for name, d, det in results:
         print(f"  [{'DONE' if d else 'OPEN'}] {name} -- {det}")
     if done == len(results):
-        print(f"I18N DRY-RUN READY ({done}/7) -- target Fri 30 Oct 2026 ({days} days away)")
+        print(f"I18N DRY-RUN READY ({done}/{len(results)}) -- target Fri 30 Oct 2026 ({days} days away)")
         return 0
-    print(f"NOT READY: {done}/7 done, {len(results)-done} open -- {days} days to Fri 30 Oct 2026")
+    print(f"NOT READY: {done}/{len(results)} done, {len(results)-done} open -- {days} days to Fri 30 Oct 2026")
     return 1
 
 if __name__ == "__main__":

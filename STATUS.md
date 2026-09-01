@@ -28,6 +28,14 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- MAP-CARDS-1 (1 Sep, attended): coverage board now 57g/0b/1a/0r/10grey — zero blue for the first time. DW-088 closed (FEA baseline refreshed, re-probe clean); RG-0233 (deploy-engine placement) + RG-0234 (backup restores; lane was 27d stale — refreshed + restore-proven users=70) both LOCKED, proven red-capable. Ledger 227/208/0 regressed, exit 0. Remaining: RG-0075 five gate-script copies (tonight), DW-084 root window 2 Sep, DW-085 reboot.
+
+## 2026-09-01 — maintenance-loop
+
+Daily maintenance run (shadow): queue empty (0 new faults), email-lane census 15/1-held,
+heartbeat probed on /dashboard/maint with email_lane field present. RG-0223 promoted to
+LOCKED on that evidence. Ledger green (209 ok, locked all holding). No escalations.
+
 - **OSM-MIRROR-1 + RG-0231 (launch eve):** the RUL-083 resume at pool=10 tripped
   overpass-api.de's IP protection (probed: 200 pre-burst, connection-refused after; DDG/Bing
   fine). Fixed at class level: OVERPASS_URL env-driven in ALL SIX overpass callers (the first

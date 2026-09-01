@@ -12965,5 +12965,170 @@ def rg_backup_restores():
     return out
 
 
+@entry("RG-0235", "David's PERSONAL address can never ride out on an outreach reply -- the "
+       "prospect lane carries ONE identity in BOTH directions, and inbound aliasing alone "
+       "does not achieve that",
+       LOCKED, fixed_on="2026-09-01",
+       scope="The B2B outreach reply lane (RUL-069's named boundary -- explicitly NOT sealed "
+             "by the customer firewall, which is a different class of mail and still unarmed "
+             "per RG-0212). TWO HALVES, and the split is the whole point: (a) INBOUND -- the "
+             "wave's From/Reply-To must stay trustsquare.co addresses so a prospect replying "
+             "never learns anything but the business identity. This half HELD on 1 Sep and is "
+             "asserted here, red-capable, every run. (b) OUTBOUND -- David's reply must LEAVE "
+             "as david@trustsquare.co, which needs a Gmail 'Send mail as' alias on the "
+             "personal account. That half CANNOT be probed from the sandbox (no Gmail "
+             "credential) and is not closed by anything in this repo, so the entry stays OPEN "
+             "and says so rather than wearing a green it did not earn. Promote to LOCKED only "
+             "when the alias exists AND a probe of the lane confirms an outreach reply left "
+             "under the business address.",
+       ref="OUTREACH-REPLY-IDENTITY-1, 1 Sep 2026. Found the honest way -- David asked how a "
+           "prospect got his personal address after the Alison Tutors reply. She never had "
+           "it: her mail went to Reply-To david@trustsquare.co and forwarded in, half (a) "
+           "working exactly as designed. It leaked on the way OUT -- the reply was drafted "
+           "and sent from the personal Gmail account, which has no send-as alias (probed: "
+           "'in:sent from:david@trustsquare.co' returns zero mail, ever). So the lane was "
+           "one-way-anonymous and nobody had noticed, because nobody had replied before. "
+           "RUL-069 does not cover this: it seals CUSTOMER mail inbound; this is B2B mail "
+           "outbound, a direction and a class the ruling deliberately left open. Four more "
+           "prospect threads (Addico, RE/MAX, Capsicum, IBTC) sat unanswered in that inbox "
+           "at the time of the finding -- the same leak was waiting on each one. "
+           "PROMOTED 1 Sep 2026, same session, on a PROBE not a claim: message "
+           "1a05da1de8aa50f3 at 15:41:24Z left with From: david@trustsquare.co, "
+           "subject 'alias test', delivered, no bounce. Route: root trustsquare.co "
+           "verified in Resend (eu-west-1) + Gmail send-as over smtp.resend.com:587. "
+           "NAMED LIMIT, not hidden: the standing assertion below covers the INBOUND "
+           "half only. The outbound half lives in Gmail account settings, outside this "
+           "repo and unreachable from the sandbox, so it can rot without tripping this "
+           "entry. RG-0236 is the structural answer -- it removes the human from the "
+           "lane entirely, at which point this class stops depending on a setting.")
+def rg_outreach_reply_identity():
+    lane = os.path.normpath(os.path.join(REPO, "..", "CityLauncher", "emailer", "emailer.py"))
+    if not os.path.isfile(lane):
+        return [(INFO, "SKIPPED -- CityLauncher outreach lane not present here (outside repo)")]
+    out = []
+    try:
+        t = open(lane, encoding="utf-8", errors="replace").read()
+    except OSError as e:
+        return [(FAIL, "cannot read the outreach lane (%s)" % str(e)[:60])]
+
+    for const in ("FROM_ADDRESS", "REPLY_TO"):
+        m = re.search(r"^%s\s*=\s*['\"]([^'\"]+)['\"]" % const, t, re.M)
+        if not m:
+            out.append((FAIL, "%s is gone from emailer.py -- the wave's identity is "
+                              "unpinned and a default could be anything" % const))
+            continue
+        val = m.group(1)
+        addr = val.split("<")[-1].rstrip(">").strip().lower()
+        if not addr.endswith("trustsquare.co"):
+            out.append((FAIL, "%s = %r -- an outreach prospect would see a non-business "
+                              "address" % (const, val)))
+        else:
+            out.append((INFO, "%s -> %s (business identity, inbound half holds)" % (const, addr)))
+
+    # No personal-webmail literal anywhere the wave can render it.
+    bad = []
+    for fn in ("emailer.py",):
+        for n, line in enumerate(t.splitlines(), 1):
+            if re.search(r"@(gmail|outlook|yahoo|hotmail)\.com", line, re.I) and \
+               not line.lstrip().startswith("#"):
+                bad.append("%s:%d" % (fn, n))
+    if bad:
+        out.append((FAIL, "personal-webmail address literal in the outreach lane at %s -- "
+                          "the wave must never carry one" % ", ".join(bad[:4])))
+
+    out.append((INFO, "OUTBOUND half UNPROBEABLE from here: whether David's reply leaves as "
+                      "david@trustsquare.co depends on a Gmail send-as alias, not on this "
+                      "repo. Entry stays OPEN by design -- see scope (b)."))
+    return out
+
+
+@entry("RG-0236", "Prospect replies are answered by the TRIAGE AGENT, not by David's inbox -- "
+       "the outreach reply lane is a THIRD mail class with its own policy, and no human "
+       "sits in the delivery path of a routine one",
+       OPEN,
+       scope="david@trustsquare.co (the wave's Reply-To) and any future outreach reply "
+             "address. FOUR CLASSES the classifier must separate, because collapsing them "
+             "is what makes this lane unscalable: (a) MACHINE mail -- autoresponders, "
+             "ticket acks, bounces: NO reply, logged only. David spent launch-day minutes "
+             "answering an Addico autoresponder by hand on 1 Sep; cheapest class to kill "
+             "and pure waste. (b) FAQ -- 'do you cover Johannesburg', pricing, how "
+             "introductions work, is it really free: AI answers from david@trustsquare.co "
+             "off the canon (PRICING_CANON; the model constraint that nothing but Tuppence "
+             "flows through the till). Esther's 1 Sep question was exactly this class and "
+             "it is the MAJORITY at volume. (c) NOT INTERESTED / opt-out / hostile: "
+             "courteous close, suppress in the opt-out register (RG-0227's lane), never "
+             "mailed again -- opt-out is a legal duty, so it can never depend on a human "
+             "reading an inbox. (d) COMMERCIAL -- wants a call, wants terms, an agency "
+             "wanting a bulk arrangement, a complaint about being emailed at all: escalate "
+             "to David through the ADMIN SURFACE (/admin/email-triage, fault queue), never "
+             "by forwarding to his personal inbox. REUSE, DO NOT REBUILD: "
+             "cloudflare_email_worker + /email/inbound + the email_triage table + the "
+             "conservative auto-send gate already do all of this for support@ and were "
+             "E2E-proven 24 Aug. What is missing is the outreach CLASS and its response "
+             "policy, not the engine.",
+       ref="OUTREACH-TRIAGE-1, opened 1 Sep 2026 on David's question: 'how would I respond "
+           "to 100s of emails a day if we get traction?' -- asked before the volume "
+           "arrived rather than after. WHY IT IS OPEN: RUL-069 (30 Aug) deliberately "
+           "carved this lane OUT of the customer firewall -- 'the outreach reply lane is "
+           "B2B recruitment mail David owns personally'. Correct when reply volume was "
+           "zero; a scaling defect the moment the waves land, and 1 Sep is the day it "
+           "started costing real time. Amending that boundary is DAVID'S ACT (RUL-037 "
+           "reserves changing a ruling as opposed to executing one); the build is Claude's "
+           "once the ruling moves. SEQUENCE when it does: classify-and-DRAFT first with "
+           "every draft queued, measure the classifier against real replies, then graduate "
+           "class (a) to silent-log and class (b) to auto-send once accuracy is MEASURED "
+           "-- never on the assumption that it works. Classes (c) and (d) touch legal duty "
+           "and commercial judgment and stay gated longer. Promote when routine prospect "
+           "replies are answered without David's inbox in the path, PROBED on real traffic. "
+           "BUILD LANDED 1 Sep 2026, same session, on David's 'Green light given' -> RUL-087 "
+           "(the ruling was amended by him, the build executed by the CTO, in that order). "
+           "bea_main.py now carries _is_outreach_lane, the four outreach classes, a separate "
+           "classifier prompt fed from canon, a lane-aware auto-send gate, and an outright "
+           "bar on the MAINT-B1 fault-queue ack for this lane. NO LONGER blocked on the "
+           "ruling; now blocked on (1) David's deploy and (2) MEASUREMENT of the classifier "
+           "against real replies -- machine-silence is live on arrival, every other class "
+           "drafts and queues until OUTREACH_AUTO_SEND=1 is earned. Stays OPEN because "
+           "shipped is not measured, which is the whole lesson of the 1 Sep leak.")
+def rg_outreach_triage_lane():
+    out = []
+    w = os.path.join(REPO, "cloudflare_email_worker", "src", "worker.js")
+    if not os.path.isfile(w):
+        return [(INFO, "SKIPPED -- worker source not present here (outside repo)")]
+    try:
+        t = open(w, encoding="utf-8", errors="replace").read()
+    except OSError as e:
+        return [(FAIL, "cannot read the inbound worker (%s)" % str(e)[:60])]
+    if "BEA_INBOUND" not in t:
+        out.append((FAIL, "the inbound worker no longer posts to BEA triage -- the engine "
+                          "RG-0236 reuses has been changed or removed"))
+    if "NEVER sends a reply itself" not in t:
+        out.append((INFO, "worker's no-send guarantee comment is gone -- confirm ALL reply "
+                          "logic still sits behind BEA's auto-send gate"))
+    app = os.path.join(REPO, "bea_main.py")
+    if os.path.isfile(app):
+        try:
+            a = open(app, encoding="utf-8", errors="replace").read()
+        except OSError:
+            a = ""
+        for needle, why in (
+            ("_is_outreach_lane", "the lane split itself"),
+            ("outreach_machine", "the machine-mail class that answers with silence"),
+            ("_OUTREACH_AUTO_SEND_CATEGORIES", "the graduated auto-send gate"),
+        ):
+            if needle not in a:
+                out.append((FAIL, "%s is GONE from bea_main.py -- %s was removed, so "
+                                  "prospect replies fall back into the customer lane "
+                                  "(RUL-087 regression)" % (needle, why)))
+        # The fault-queue ack must never be reachable on the outreach path.
+        if "_is_outreach_lane" in a and "logged_silent" not in a:
+            out.append((FAIL, "the outreach send branch no longer has its silent-log path "
+                              "-- machine mail would be answered, or ack'd as a fault"))
+    out.append((INFO, "OPEN by design: lane is BUILT (RUL-087, 1 Sep) but not yet MEASURED. "
+                      "Machine-silence is live on arrival; FAQ/opt-out/commercial draft and "
+                      "queue until OUTREACH_AUTO_SEND=1 is earned on real traffic. Promote "
+                      "only on measured accuracy, never on the build having shipped."))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

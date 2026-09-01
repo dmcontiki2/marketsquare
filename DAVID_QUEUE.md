@@ -113,7 +113,7 @@ purpose: Google logs free-tier traffic for product improvement — seller photos
 logs is the opposite of what the anonymity lane exists for; paid keys are not logged.
 
 ## D6 · Resend $20/mo 50k tier
-STATE: OPEN
+STATE: DONE 2026-08-31 (RUL-079's own text records it: David activated the Resend $20/50k tier on 31 Aug — the same day he approved the agency-outreach ruling. Grade: READ (dated ruling); the billing tier is not probeable from the sandbox without the key, so no independent probe exists. This row sat OPEN two days after the act — corrected by the 1 Sep final third-party sweep, probe-beats-file class.)
 TIME: 2 minutes
 VERIFY: DAVID
 WHY_DAVID: Spend.

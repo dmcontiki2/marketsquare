@@ -1,3 +1,250 @@
+## 2026-09-01 — RUL-086: cross-language introductions get Lane 2 (UGC translation)
+
+David: introduced parties must translate effortlessly (Mandarin seller ↔ Portuguese
+buyer). Registered RUL-086 + full CTO design in i18n/UGC_TRANSLATION_DESIGN.md: store
+once in author's language + lang tag, translate-at-read via our own swappable adapter
+(MT vendor = RUL-009, David's, at build time), pay-once cache per content-version+
+target, hard monthly cap (pricing-canon compatible), machine-translated label with
+one-tap original, scope listings → messages → dossiers (dossiers generate in target
+language). Readiness item 8 added and probed DONE; rulings_check wired (86/86 green).
+Sequencing: build sandbox-first with item 4, arm only after Phase C. Freeze intact —
+nothing live-served touched. Readiness now 2/8, 59 days to 30 Oct.
+
+## 2026-09-01 — Third-party readiness: FINAL sweep, launch day, GREEN (task self-terminates)
+
+The pre-soft-launch third-party check ran its last scheduled pass on launch morning
+(05:06–05:25 UTC) and ends on a green board.
+
+**Probed green:** /health ok v1.3.1 (db integrity ok) · auth google:true/apple:false with a real
+302 to accounts.google.com · id-verify available:true · payment/test paystack_connected:true ·
+BIT 8/8 · flags (mode live, fault_report:false, data.flights true) · /terms 200 + EULA 3 copies
+in sync (117,749 B) · anon /dashboard/summary heartbeat-only · gated ops docs both 401 · TLS to
+22 Nov · post_deploy_status 2026-08-31T14:14:28Z all-ok. Ledger full board exit 0, 0 regressed,
+0 unverified, 19 open (after the RG-0200 fastapi bootstrap — fifth consecutive day the fresh
+sandbox needed it). Rulings 86/86, 0 FAIL, 0 WARN.
+
+**Corrected (probe/record beat file):** DAVID_QUEUE.md **D6 → DONE 2026-08-31** — RUL-079's own
+text records David activated the Resend $20/50k tier on 31 Aug; the queue row sat OPEN two days.
+Queue now 5 open (D5, D10, D11, D12, D15). Backup kept beside the file.
+
+**Still David's, today:** arm the customer-email firewall (ARMED_RECORD.md probed ABSENT) ·
+Anthropic cancel click if the Fable arrangement auto-renews (RUL-013 ends today) · trademark EFT
+R1,770 AFGGPO. Tomorrow: the 2 Sep attended root window (DW-084 restart + DW-085 reboot, 37
+packages + reboot-required re-confirmed).
+
+**Deploy debt:** 7 commits / 25 paths, no app code; 2 manifest-listed gated operator docs
+(watch register, defence map) ride the next deploy.
+
+THIRD_PARTY_LAUNCH_REGISTER.md rewritten as the launch-state record; from 2 Sep the daily watch,
+regression ledger and rulings check are the standing instruments.
+
+## 2026-09-01 — OUTREACH-TRIAGE-1 (RUL-087): prospect replies leave David's inbox
+
+David, launch day, after one tutor's reply consumed an afternoon: *"these emails should not arrive
+in my inbox for me to respond to. It should be answered by an AI agent. How would i respond to
+100's of emails a day if we get traction?"* — then, on the design: *"Green light given"*.
+
+**RUL-087 recorded**, amending RUL-069 in part. That ruling deliberately excluded this lane
+(*"B2B recruitment mail David owns personally"*) — right while reply volume was zero, a scaling
+defect the moment the waves landed.
+
+**No new mail infrastructure.** The existing `cloudflare_email_worker` → `/email/inbound` →
+`email_triage` engine, E2E-proven 24 Aug for support@, gains a THIRD mail class. Reuse before
+recreate, applied.
+
+**Built in `bea_main.py`:**
+
+- `_is_outreach_lane()` + `_OUTREACH_ADDRESSES` (env `OUTREACH_REPLY_ADDRESSES`, default
+  `david@trustsquare.co`). Six-case unit check passes, including the near-miss
+  `david@mail.trustsquare.co` — the SENDING subdomain, which must NOT be treated as the reply lane.
+- A separate classifier prompt for the lane, fed only from canon (national coverage and the live
+  city list, free listing, seller sets rate, BUYER pays the introduction fee, no commission on the
+  seller's own fees, anonymity until accept, local/online/both). Explicitly barred from inventing
+  pricing, dates or features, and told to fall back to `outreach_commercial` when unsure — a human
+  reading it is cheap, a wrong automated answer to a prospect is not.
+- Four classes: `outreach_machine` · `outreach_faq` · `outreach_optout` · `outreach_commercial`.
+- Lane-aware auto-send gate. `outreach_machine` → **silent log, live from day one** (answering an
+  autoresponder can never be right — an Addico autoresponder is precisely what cost the afternoon).
+  Everything else DRAFTS and queues; `OUTREACH_AUTO_SEND=1` later graduates the FAQ class alone,
+  and only on measured accuracy.
+- `_smtp_send_reply()` gained `from_email` / `reply_to` so this lane answers as
+  `David at TrustSquare <david@mail.trustsquare.co>` with Reply-To `david@trustsquare.co` — the
+  wave's own identity — instead of TrustSquare Support.
+- **The MAINT-B1 fault-queue ack is barred on this lane outright.** A tutor asking whether we cover
+  Johannesburg has not filed a fault, and *"your report is logged in our fix queue"* would be
+  nonsense to a prospect. This was a live hazard: the ack fires for any non-spam mail carrying a
+  fault_code, and this lane routes through the same handler.
+
+**RG-0236 stays OPEN, and its assertion is now red-capable** against regression: ripping
+`_is_outreach_lane`, `outreach_machine` or the graduated gate out of `bea_main.py` produces three
+FAILs (proven against a fixture repo before the green was believed). It promotes only when routine
+prospect replies are answered with David's inbox out of the path, PROBED on real traffic —
+**shipped is not measured**, which is the whole lesson of the leak found the same morning.
+
+**David's acts to finish it:** deploy (publish the `deploy` ref, per ONE-DEPLOY), then let the
+first real replies land and read the classifier's calls in `/admin/email-triage` before anyone
+turns `OUTREACH_AUTO_SEND` on.
+
+Verification this session: `py_compile` clean · lane unit cases 6/6 · `rulings_check.py` 87
+rulings, 0 FAIL, RUL-087 reflected · RG-0236 red-capability proven on a fixture.
+
+## 2026-09-01 — OUTREACH-REPLY-IDENTITY-1: the prospect lane was anonymous INBOUND only
+
+**David's question, and it was the right one:** how did a tutor prospect (Alison Tutors) get his
+personal address, when a firewall was supposed to prevent exactly that.
+
+**She never had it.** Her reply went to `david@trustsquare.co` — `REPLY_TO` in
+`CityLauncher/emailer/emailer.py:81`, with the wave sending as
+`David at TrustSquare <david@mail.trustsquare.co>` (the Resend-verified subdomain). That address
+forwards into the personal Gmail inbox, which is the only reason it appeared there. **The inbound
+half worked exactly as designed.**
+
+**It leaked on the way OUT.** The reply was drafted and sent from the personal Gmail account, so it
+left as `dmcontiki2@gmail.com` — sent message `1a05d4a21cfc4d07`, 14:05Z. Claude drafted it there
+without checking the send identity; that is the proximate cause and it is Claude's error, not a
+tooling surprise.
+
+**But the underlying gap is older and wider than the one draft.** PROBED:
+`in:sent from:david@trustsquare.co` returns **zero mail, ever** — the Gmail account has no
+"Send mail as" alias for the business address, so *any* reply to *any* prospect from that inbox
+leaks the personal address the same way. Four further prospect threads were sitting unanswered in
+that inbox at the time of the finding (Addico Group, RE/MAX, Capsicum Cooking, IBTC), each one
+carrying the same leak on its first reply.
+
+**RUL-069 does not cover this, by its own words.** The customer-email firewall seals *customer*
+mail *inbound* (and is still unarmed — RG-0212 OPEN). Its stated boundary reads: *"the OUTREACH
+reply lane (Reply-To david@trustsquare.co on wave mail to prospects) is B2B recruitment mail David
+owns personally — it is not customer mail and is not sealed by this ruling."* So this is a
+direction and a class the ruling deliberately left open, not a firewall that failed. The lane was
+one-way-anonymous and nobody had noticed, because until today nobody had replied.
+
+**RG-0235 OPEN** added — two halves, split deliberately: (a) INBOUND, asserted red-capable every
+run, that the wave's `FROM_ADDRESS`/`REPLY_TO` stay trustsquare.co addresses and no personal-webmail
+literal appears in the lane; (b) OUTBOUND, which depends on a Gmail send-as alias and **cannot be
+probed from the sandbox** — so the entry stays OPEN and says so rather than wearing an unearned
+green. Red-capability proven before the green was believed (7 Aug rule): a fixture lane carrying a
+gmail.com FROM/REPLY_TO produced three FAILs.
+
+**Closing it is David's act** (account settings + a verification click, RUL-037 reserved class):
+Gmail → Settings → Accounts and Import → "Send mail as" → add `david@trustsquare.co`, verify, and
+set it default *for replies to the address the mail was sent to*. Promote RG-0235 to LOCKED only
+when the alias exists AND an outreach reply is probed leaving under the business address.
+
+**Not doing, per RUL-073:** no correction or apology email to Esther. Sent is sent; one touch stays
+one touch. The remedy is upstream.
+
+
+## UPDATE, same day ~15:30 SAST — the alias is IN, by the root-domain route
+
+Executed with David at the keyboard. The route changed once, mid-flight, and the correction is
+worth recording because the first one looked right and was not:
+
+- **First attempt FAILED and the failure was Claude's call.** Alias registered as
+  `david@mail.trustsquare.co` (Resend-verified, so SMTP authenticated first time) with Reply-To
+  `david@trustsquare.co`. But Gmail sends its confirmation link to the **address being added**, not
+  to the Reply-To — and `mail.trustsquare.co` has no MX and no A record, so nothing can accept mail
+  there. Bounced: `mailer-daemon@googlemail.com` 14:32Z, *"the domain mail.trustsquare.co couldn't
+  be found"*. Claude had probed and cited that missing MX two messages earlier, then failed to
+  carry it forward to the verification step.
+- **Second attempt SUCCEEDED via root verification.** `trustsquare.co` added as a Resend sending
+  domain (region eu-west-1, matching the existing `mail.` lane). Three records added MANUALLY in
+  Cloudflare — auto-configure declined deliberately: it takes standing DNS-write on the zone, and
+  the August breach reversal is the same principle. PROBED live before believing it: DKIM at
+  `resend._domainkey.trustsquare.co` present at 218 chars (identical length to the working `mail.`
+  key, so not truncated), `send.trustsquare.co` TXT `v=spf1 include:amazonses.com ~all` + MX
+  `feedback-smtp.eu-west-1.amazonses.com` pri 10.
+- **Receiving lane untouched, verified after every change**: root MX still
+  `route1/2/3.mx.cloudflare.net` (Cloudflare Email Routing). Resend puts its MX on the `send.`
+  subdomain, never the apex, which is why root verification is safe here. Resend's "Enable
+  Receiving" toggle was deliberately left OFF — arming it would place Resend MX on the apex and
+  displace the routing that delivers prospect replies.
+- Alias: Name `David at TrustSquare`, address `david@trustsquare.co`, treat-as-alias on, no
+  Reply-To needed (the address receives on its own). SMTP `smtp.resend.com:587` TLS, username
+  `resend`, key `gmail-sendas-2026-09-01` (Sending access, scoped to trustsquare.co — NOT the
+  full-access prod key). Gmail confirmation delivered 15:22Z and clicked.
+- **"Reply from the same address the message was sent to"** set — the step that actually closes
+  the leak; the alias existing does not.
+
+**RG-0235 STAYS OPEN.** Nothing has been SENT through the new path yet, so the outbound half is
+still unmeasured — EXECUTED, not PROBED. It promotes only when a real reply is observed leaving as
+`david@trustsquare.co`. The four waiting prospect threads (Addico, RE/MAX, Capsicum, IBTC) are the
+natural first measurement.
+
+**RESIDUAL GAP, named not hidden:** the reply-from setting governs REPLIES only. A brand-new
+compose to a prospect still defaults to the account's default send-as, which is deliberately left
+as the personal address because this mailbox carries personal mail (FNB, CIPC, DebtBusters) as well
+as business. So: manual cold compose to a prospect must have its From switched by hand in the
+compose window. Cold outreach normally goes through the wave, not by hand, so this is a narrow
+edge — but it is the same leak by another door and should not be discovered the hard way twice.
+
+## 2026-09-01 — MAP-CARDS-1: the coverage board's last blues retired (attended map-fix pass)
+
+David's ask: "fix the map coverage cards you can." Three non-green cards fixed, one deferred.
+
+- **DW-088 CLOSED** — FEA baseline refreshed on-box after deploy_drift read clean 19/19; re-probe status ok, alerts [], stale notes gone. Structural fix (deploy engine refreshes its own baseline post-drift-clean) stays on tonight's CTO list.
+- **RG-0233 NEW (LOCKED)** — DEPLOY-ENGINE-ASSERT-1: placement asserted every run — report parses, ref=deploy, no non-ok step, and origin/deploy may never sit >45 min ahead of the report (published-but-unplaced detection). Proven red-capable before green was believed.
+- **RG-0234 NEW (LOCKED)** — BACKUP-RESTORE-ASSERT-1: the ledger itself EXTRACTS the newest backups/*.zip and integrity-checks the restored DB every run, plus freshness (<=8d) and dated RESTORE_PROOF (<=35d). The lane was found 27 days stale; refreshed with a live snapshot (sqlite3 -readonly .backup, md5-matched), archived 2026-09-01_0653.zip, restore-proven (ok, users=70, listings=113), proof logged in Backups/RESTORE_PROOF.md.
+- Coverage map: **57 green · 0 blue · 1 amber · 0 red · 10 grey** — ZERO BLUE for the first time. Remaining amber: RG-0075 (admin-gate script x5 copies — refactor + deploy, tonight's discussion).
+- Ledger after: 227 entries · 208 holding · 0 REGRESSED · exit 0. Mirror push from sandbox failed (no GitHub credential — host lanes carry it); mirror 1 commit behind until the next host push.
+
+## 2026-09-01 — maintenance-loop: quiet queue, RG-0223 promoted to LOCKED
+
+Daily maintenance session (B2b brain, shadow mode). Fault queue empty: 0 new app faults;
+email-lane census 15 total, 1 held 30d ({other:1, support:4}) — counts only per RG-0222.
+Heartbeat PROBED on /dashboard/maint (run 2026-09-01T05:34:03Z, received 05:34:22Z) and it
+now carries the email_lane field — the _MAINT_HB_FIELDS half has deployed. On that evidence
+RG-0223 (MAINT-INTAKE-2: the brain reads every live intake lane) printed READY TO LOCK and
+was promoted to LOCKED same session (DW-079 rule), fixed_on 2026-09-01. No escalations in
+24h (escalation_brief wrote nothing). Ledger green post-run: every locked fix holding,
+209 ok, 18 known OPEN defects unchanged. Sandbox note: fastapi/httpx installed this run,
+which let RG-0181/RG-0182 evaluate (they were NOT EVALUATED on the pre-run). No code fixes
+shipped — nothing to ship; commit carries the ledger promotion + fragments only.
+
+## 2026-09-01 — I18N readiness TRIGGERS wired (RUL-075 lane)
+
+Readiness is now measured, not remembered. New scripts/i18n_readiness_check.py probes
+all 7 I18N_READINESS.md items (1/7 done at first run — inventory; 59 days to target)
+and defines the artifact contract each future build must satisfy. Two one-off scheduled
+tasks created: i18n-readiness-midpoint (Thu 1 Oct 09:00 SAST — gap report + progress
+next item) and i18n-readiness-day (Fri 30 Oct 09:00 SAST — READY/NOT-READY verdict;
+if READY, David's single decision is opening sandbox testing). Triggers section
+appended to I18N_READINESS.md. Freeze intact — nothing live-served touched.
+
+## 2026-09-01 — I18N readiness item 1 BUILT: string inventory extractor
+
+RUL-075 preparation lane (freeze intact — nothing the live app serves was touched).
+New: scripts/i18n_inventory.py (read-only, stdlib) walks marketsquare.html + ms.js +
+ts_fares/ts_report/ts_demo_banner and emits i18n/inventory.json + a trend row per run
+(i18n/inventory_trend.csv). trip_essentials.js excluded by design — generated file,
+localise at its generator. First measured baseline (1 Sep): 4,813 unique strings —
+2,532 high-confidence user-visible, 2,281 js-literal candidates needing Phase-A triage
+— ~40,500 words. Readiness items 2–7 (parity harness, pseudo-locale, staging, dictionary
+pipeline, flags plan, ledger drafts) remain open toward Fri 30 Oct.
+
+## 2026-09-01 — DW-084 defused at root; DW-089 filed (transcript credential exposure, own act)
+
+- **DW-084 FIXED-UNVERIFIED** — root pass found MS_API_KEY defined in exactly ONE surface (unit inline) carrying a stale value matching no live process: any restart would silently swap keys. Unit line aligned to the LIVE value (sha c42deee7c24f both sides, backup marketsquare.service.bak-dw084-20260901-141335), daemon-reload, service untouched/active. 23 crud files asided from service.d (reversible). Closes on tonight's deploy-restart proof.
+- **DW-089 NEW (MEDIUM, own act)** — the DW-084 recon printed live credentials into the session transcript (ANTHROPIC_API_KEY, CF_CACHE_TOKEN, MS_DEPLOY_TOKEN in full; stale MS_API_KEY value, now dead). SECRETS_REGISTER Still-burnt carries all three; RG-0146 reads REGRESSION by design until rotation. David tonight: Anthropic console + CF dash rotations; MS_DEPLOY_TOKEN re-mint together (add_deploy_token.bat). Mitigations while burnt: spend ceilings + RG-0080; CF token cache-purge scope; deploy token gates an admin endpoint only.
+- Coverage map: 57g/0b/1a/1r/10grey (69 cards) — the red is TRUE and points at tonight's first item.
+- Note: a concurrent session moved the ledger to 228 entries with 1 READY TO LOCK during this pass — that promotion belongs to its session, not this one.
+
+## 2026-08-31 — SSH-BOOTSTRAP-1: the recurring "no SSH key in the sandbox" class is closed
+
+The fault that stalled sessions repeatedly (latest strike: this morning's Gate 1 board
+shipped with clicks unreadable) was never a missing key — `ssh_hetzner_key` and
+`load_sandbox_ssh.sh` sat on the mount the whole time. It was knowledge placement: the
+instruction lived in MarketSquare/CLAUDE.md, which a CityLauncher session never loads.
+Same class as GIT-LOCK: machinery existed, memory failed. Fixed at class level:
+(1) `CityLauncher/ssh_bootstrap.py` — `ensure_ssh()` self-heals ~/.ssh from the mounted
+key, idempotent, proven from cold + live server probe in the same session;
+(2) all 6 SSH-using CityLauncher entry points (pull_from_server, sync_local_to_server,
+push_estate_agents, push_us_uk_cities, run_local_scraper, run_za_estate_agents) call it
+at entry, so they work from a cold sandbox with zero setup;
+(3) the standing note moved to Projects/CLAUDE.md — the one file every session loads.
+Ledger RG-0230 (LOCKED) asserts all three layers; a new SSH script that skips the
+bootstrap trips red. Only remaining David-side case: the key file itself vanishing from
+the mount (re-run `setup_sandbox_ssh.ps1`).
+
 ## 2026-08-31 — SIM-PA-AUC-1 + RUL-081: AI PA and Auctions enter the model; v1.4
 
 David's ask: the planned AI PA in the sim, switch-on ~3 months (design/test/baseline

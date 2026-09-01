@@ -248,3 +248,12 @@ Sun 08/30/2026  5:30:02.41  committed 7 change(s)
  create mode 100644 changelog.d/2026-08-30-zoom-narrowing-funnel.md
  create mode 100644 status.d/2026-08-30-zoom-narrowing-funnel.md
 Mon 08/31/2026  5:30:03.42  committed 12 change(s)
+[main 872c3a0] Nightly checkpoint Tue 09/01/2026  5:30:03.08 (auto, no deploy)
+ 11 files changed, 50754 insertions(+)
+ create mode 100644 changelog.d/2026-09-01-i18n-inventory-extractor.md
+ create mode 100644 changelog.d/2026-09-01-i18n-readiness-triggers.md
+ create mode 100644 i18n/inventory.json
+ create mode 100644 i18n/inventory_trend.csv
+ create mode 100644 scripts/i18n_inventory.py
+ create mode 100644 scripts/i18n_readiness_check.py
+Tue 09/01/2026  5:30:03.18  committed 10 change(s)
