@@ -12182,7 +12182,7 @@ def rg_triage_pii():
 
 @entry("RG-0223", "The maintenance brain reads EVERY LIVE intake lane -- it can never report "
        "an empty queue because the only door it looks at has been closed",
-       OPEN,
+       LOCKED, fixed_on="2026-09-01",
        scope="scripts/maintenance_agent.py (email_lane_census + the report/heartbeat it "
              "feeds) and bea_main.py _MAINT_HB_FIELDS -- MAINT-INTAKE-2. CLASS: every "
              "channel the product opens for complaints must be READ by the loop that exists "
@@ -12205,7 +12205,7 @@ def rg_triage_pii():
            "fix time: the patched agent run at 05:43Z printed 'email lane 15 total, 1 held "
            "(30d {other:1, support:4})' against the live site. OPEN until the heartbeat half "
            "deploys (_MAINT_HB_FIELDS whitelists 'email_lane', so the +1 card shows it only "
-           "after the change ships) -- the agent half is live now.")
+           "after the change ships) -- the agent half is live now. PROMOTED 1 Sep 2026, the run it printed READY TO LOCK (maintenance loop): the heartbeat half is deployed and PROBED live -- anonymous GET /dashboard/maint at 05:34:22Z carries email_lane (total 15, held_30d 1, counts only per RG-0222) for run 2026-09-01T05:34:03Z. Both halves now live; promoted same session per the DW-079 rule -- an entry left OPEN after passing cannot trip red when it rots.")
 def rg_maint_intake_lanes():
     out = []
     ap = os.path.join(REPO, "scripts", "maintenance_agent.py")
