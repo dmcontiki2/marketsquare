@@ -12083,7 +12083,7 @@ def rg_zoom_funnel():
 @entry("RG-0222", "An anonymous caller never receives a customer's IDENTITY or the text of "
        "their message -- the ops email-triage feed serves counts to strangers and rows only "
        "to the admin credential",
-       OPEN,
+       LOCKED,  # promoted 2026-09-01 on the ledger's own READY TO LOCK print
        scope="bea_main.py dashboard_email_triage + the loadEmailTriage loaders in "
              "dashboard.server.html (ships) and dashboard.html (local operator copy) "
              "-- DASH-TRIAGE-REDACT-1. CLASS, not instance, and the class is the whole point: "
@@ -12634,7 +12634,7 @@ def rg_gov_domain():
 @entry("RG-0229", "A person CAN opt out and we CANNOT email them again -- proven by the "
        "five gates a real opt-out travels, from the recipient's click to the send "
        "refusal, never by the presence of code that claims to do it",
-       OPEN,
+       LOCKED,  # promoted 2026-09-01 on the ledger's own READY TO LOCK print
        scope="../CityLauncher/verify_optout_lane.py is the assertion; this entry runs it. "
              "FIVE GATES: (1) the unsubscribe URL answers 200 ANONYMOUSLY on the live "
              "site -- a recipient is not logged in; (2) a click INCREASES the server "
@@ -12819,6 +12819,149 @@ def rg_netfault_not_zero_yield():
     if not out:
         out.append((INFO, "fault/empty distinction present in both files -- an outage can "
                           "no longer poison the backoff ladders"))
+    return out
+
+
+@entry("RG-0233", "The ONE deploy engine PLACES what it is handed -- a published deploy ref "
+       "never sits unplaced, and the engine's own report is fresh, readable and clean",
+       LOCKED, fixed_on="2026-09-01",
+       scope="The whole placement lane: publish the `deploy` ref -> the server engine "
+             "(ops/autodeploy/server_deploy.sh) places by manifest, restarts, health-checks, "
+             "writes $LIVE/static/post_deploy_status.json. Retires the coverage map's "
+             "long-standing BLUE card ('ONE deploy engine -- armed, unasserted'). LIVE half "
+             "runs anywhere: the report parses, its ref field is 'deploy' (a second writer "
+             "would be an ONE-DEPLOY violation), and no step finished non-ok (chain HEALTH "
+             "is RG-0125's entry; ENGINE-RAN-AND-FINISHED is this one's). REPO half (skips "
+             "outside the repo): the local origin/deploy commit time may never be AHEAD of "
+             "the report's generated_at by more than 45 minutes -- that state means a deploy "
+             "was PUBLISHED and the engine never placed it, the exact silent failure the "
+             "blue card could not see. Conservative by design: a stale local origin/deploy "
+             "can only under-detect, never false-red (the DW-086/RG-0214 lesson -- assert "
+             "evidence that exists).",
+       ref="DEPLOY-ENGINE-ASSERT-1, 1 Sep 2026 (attended map-fix session, David's ask). "
+           "Proven red-capable before its green was believed (7 Aug rule): a mutated report "
+           "with a failed step and a generated_at predating origin/deploy by a month "
+           "produced both FAILs; the real report then produced none.")
+def rg_deploy_engine_places():
+    out = []
+    st = _status("/static/post_deploy_status.json")
+    if st != 200:
+        out.append((FAIL, "post_deploy_status.json unreadable (HTTP %s) -- the engine's own "
+                          "report is gone; placement is unverifiable" % st))
+        return out
+    try:
+        doc = _json("/static/post_deploy_status.json")
+        gen = str(doc.get("generated_at", ""))
+        gtime = datetime.datetime.strptime(gen, "%Y-%m-%dT%H:%M:%SZ")
+    except Exception as e:
+        out.append((FAIL, "deploy report does not parse (%s)" % str(e)[:80]))
+        return out
+    if str(doc.get("ref", "")) != "deploy":
+        out.append((FAIL, "report ref is %r, not 'deploy' -- something other than the ONE "
+                          "engine is writing the engine's report" % doc.get("ref")))
+    bad = [s for s in doc.get("steps", []) if s.get("result") not in ("ok", "skipped")]
+    if bad:
+        out.append((FAIL, "engine finished with non-ok step(s): " +
+                          "; ".join("%s=%s" % (s.get("step"), s.get("result")) for s in bad)))
+    pub = None
+    if os.path.isdir(os.path.join(REPO, ".git")):
+        try:
+            env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
+            r = subprocess.run(["git", "log", "-1", "--format=%cI", "origin/deploy"],
+                               cwd=REPO, env=env, capture_output=True, text=True, timeout=30)
+            iso = r.stdout.strip()
+            if iso:
+                pub = (datetime.datetime.fromisoformat(iso)
+                       .astimezone(datetime.timezone.utc).replace(tzinfo=None))
+        except Exception:
+            pub = None
+    if pub is not None:
+        lag_min = (pub - gtime).total_seconds() / 60.0
+        if lag_min > 45:
+            out.append((FAIL, "origin/deploy was published %sZ but the engine's report is dated "
+                              "%s (%.0f min earlier) -- a handed deploy sits UNPLACED"
+                              % (pub.isoformat(), gen, lag_min)))
+        else:
+            out.append((INFO, "engine placed what it was handed: report %s covers "
+                              "origin/deploy %sZ" % (gen, pub.isoformat())))
+    else:
+        out.append((INFO, "repo half skipped (no origin/deploy readable here); live half held"))
+    return out
+
+
+@entry("RG-0234", "A backup exists, is FRESH, and provably RESTORES -- this assertion itself "
+       "extracts the newest archive and integrity-checks the restored database on every run, "
+       "so an untested backup can never again wear the word 'backup'",
+       LOCKED, fixed_on="2026-09-01",
+       scope="The local DB-archive lane: backups/YYYY-MM-DD_HHMM.zip (each one marketsquare.db "
+             "snapshot) + Backups/RESTORE_PROOF.md (append-only, dated). Repo-side by nature "
+             "-- SKIPS outside the repo. THREE properties: (a) the newest archive is <= 8 "
+             "days old -- the lane was found 27 days stale on 1 Sep, and that silence is what "
+             "this arm ends; (b) the newest archive EXTRACTS to the OS temp dir here and now "
+             "and the restored DB answers PRAGMA integrity_check == ok with a non-empty users "
+             "table -- an actual restore, performed by the assertion, every run, on any "
+             "machine; (c) RESTORE_PROOF.md carries a dated entry <= 35 days old, so the "
+             "human-readable record cannot rot either. Out of scope, stated not hidden: the "
+             "GitHub code mirror (sandbox holds no GitHub credential -- host-side lanes push "
+             "it), the server-side R2/volume lanes, and host-side retention pruning "
+             "(7 daily / 4 weekly). Retires the coverage map's 'Backups -- UNASSERTED' blue "
+             "card.",
+       ref="BACKUP-RESTORE-ASSERT-1, 1 Sep 2026 (attended map-fix session, David's ask). "
+           "Proven red-capable before its green was believed (7 Aug rule): a garbage .zip "
+           "in a fixture repo produced the did-not-restore FAIL; the real archive "
+           "2026-09-01_0653.zip then restored clean (integrity ok, users=70).")
+def rg_backup_restores():
+    import zipfile, tempfile, glob as _glob
+    bdir = os.path.join(REPO, "backups")
+    if not os.path.isdir(bdir):
+        return [(INFO, "SKIPPED -- backups/ not present here (outside repo)")]
+    out = []
+    zips = sorted(_glob.glob(os.path.join(bdir, "20*.zip")))
+    if not zips:
+        return [(FAIL, "no dated archive in backups/ at all -- the lane is empty")]
+    newest = zips[-1]
+    name = os.path.basename(newest)
+    try:
+        made = datetime.datetime.strptime(name[:15], "%Y-%m-%d_%H%M")
+    except ValueError:
+        made = datetime.datetime.utcfromtimestamp(os.stat(newest).st_mtime)
+    age_days = (datetime.datetime.utcnow() - made).days
+    if age_days > 8:
+        out.append((FAIL, "newest archive %s is %d days old -- the lane has silently stopped "
+                          "(it sat 27 days stale before 1 Sep; 8 is the line)" % (name, age_days)))
+    try:
+        import sqlite3 as _sq
+        with zipfile.ZipFile(newest) as z:
+            with tempfile.TemporaryDirectory() as td:
+                z.extract("marketsquare.db", td)
+                c = _sq.connect(os.path.join(td, "marketsquare.db"))
+                ic = c.execute("PRAGMA integrity_check").fetchone()[0]
+                users = c.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+                c.close()
+        if ic != "ok":
+            out.append((FAIL, "%s restored but integrity_check says %r" % (name, ic)))
+        elif users < 1:
+            out.append((FAIL, "%s restored with an EMPTY users table -- a backup of nothing"
+                              % name))
+        else:
+            out.append((INFO, "restore performed this run: %s -> integrity ok, users=%d"
+                              % (name, users)))
+    except Exception as e:
+        out.append((FAIL, "%s did not restore (%s) -- an archive that cannot extract is a "
+                          "hope, not a backup" % (name, str(e)[:70])))
+    proof = os.path.join(REPO, "Backups", "RESTORE_PROOF.md")
+    try:
+        t = open(proof, encoding="utf-8", errors="replace").read()
+        dates = re.findall(r"^## (\d{4}-\d{2}-\d{2})", t, re.M)
+        if not dates:
+            out.append((FAIL, "RESTORE_PROOF.md has no dated entry -- the record half is empty"))
+        else:
+            page = (datetime.date.today() - datetime.date.fromisoformat(max(dates))).days
+            if page > 35:
+                out.append((FAIL, "newest RESTORE_PROOF entry is %d days old -- the record "
+                                  "half rotted" % page))
+    except OSError:
+        out.append((FAIL, "Backups/RESTORE_PROOF.md missing -- the record half is gone"))
     return out
 
 
