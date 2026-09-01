@@ -819,11 +819,13 @@
    "last_seen": "2026-09-01",
    "sev": "MEDIUM",
    "source": "root config sweep vs /proc environ (RG-0147 method)",
-   "status": "FIXED-UNVERIFIED",
+   "status": "CLOSED",
    "summary": "MS_API_KEY in three fingerprints; live value matches no file \u2014 restart silently swaps keys. Plus junk file in service.d and stale inline LAUNCH_SPECIAL_DEADLINE (overridden today).",
    "next_action": "2 Sep attended root window: align sources to live value, clean crud, verify at point of use after planned restart. || 2026-08-31: **originating check COULD NOT RE-RUN** \u2014 it is a root read of /proc/<pid>/environ vs the config surfaces, and this task is forbidden root (msdeploy only; `/etc/systemd/system/marketsquare.service.d/` is not readable as msdeploy). Not closed, not weakened: stays OPEN on the 30 Aug prepared state until the planned restart window re-verifies at point of use.",
    "next": " || 2026-09-01: check not re-runnable (root read; watch is msdeploy). Attended root window 2 Sep stands.",
-   "fix": "1 Sep root pass: unit inline MS_API_KEY (the ONLY defining surface) aligned to live value, sha c42deee7c24f both sides; backup kept; daemon-reload, no restart; crud asided. Closes on restart proof (tonight deploy)."
+   "fix": "1 Sep root pass: unit inline MS_API_KEY (the ONLY defining surface) aligned to live value, sha c42deee7c24f both sides; backup kept; daemon-reload, no restart; crud asided. Closes on restart proof (tonight deploy).",
+   "closed": "2026-09-01",
+   "closure": "Landmine fired 06:00 UTC (unattended-upgrades restart) but swapped the server BACK to the ms.js-public client key \u2014 coherent by design (rotate_secrets.py: MS_API_KEY public in ms.js, never rotated server-side alone). Unit now single source, live==conf on all 8 credential vars, smoke ALL PASS post-restart."
   },
   "DW-085": {
    "first_seen": "2026-08-30",
@@ -873,7 +875,7 @@
    "sev": "MEDIUM",
    "source": "attended map-fix pass \u2014 own systemctl-cat recon (transcript exposure, DW-029 class)",
    "status": "OPEN",
-   "summary": "Live credentials printed into session transcript: ANTHROPIC_API_KEY, CF_CACHE_TOKEN, MS_DEPLOY_TOKEN (full). Stale MS_API_KEY value also printed, now dead. In SECRETS_REGISTER Still-burnt; RG-0146 red by design until rotated.",
+   "summary": "Live credentials printed into session transcript: ANTHROPIC_API_KEY, CF_CACHE_TOKEN, MS_DEPLOY_TOKEN (full; all three re-verified STILL LIVE 18:0x). MS_API_KEY also printed but is public-by-design in ms.js \u2014 not an exposure. In SECRETS_REGISTER Still-burnt; RG-0146 red by design until rotated.",
    "next": "David tonight: rotate Anthropic key (console) + CF cache token (dash); re-mint MS_DEPLOY_TOKEN together. Closes when Still-burnt empty and RG-0146 green."
   }
  },
@@ -1178,6 +1180,7 @@
   "note": "GitHub mirror push attempted from sandbox: no credential (host lanes carry it); mirror 1 commit behind until next host push.",
   "new": [
    "DW-089 transcript credential exposure (my recon) \u2014 rotations are tonight item 1"
-  ]
+  ],
+  "dashboard_incident": "David reported ops dashboard SESSION UNDEFINED: server healthy (authenticated payload complete, session 184); cause = signed-out browser (sessionStorage JWT gone); 06:00 unattended-upgrades restart was the red herring underneath (DW-084 landmine fired, landed coherent). Fix his side: sign in again. Loader honesty defect filed as RG-0237 OPEN (DASH-SIGNEDOUT-TRUTH-1), ships with tonight deploy. DW-084 CLOSED on the full story."
  }
 }

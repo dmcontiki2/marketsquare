@@ -13130,5 +13130,40 @@ def rg_outreach_triage_lane():
     return out
 
 
+@entry("RG-0237", "A signed-out ops dashboard SAYS it is signed out -- it never paints "
+       "'UNDEFINED' or a blank section over a healthy server",
+       OPEN, scope="dashboard.server.html summary loaders. Born 1 Sep 2026 (launch day): the "
+       "06:00 unattended-upgrades restart plus an evaporated sessionStorage JWT left David's "
+       "dashboard reading 'Session --' / 'LAST COMPLETED -- SESSION UNDEFINED' over a server "
+       "whose authenticated payload was COMPLETE (session 184, every section populated, smoke "
+       "ALL PASS). Cost: David read a healthy system as broken on launch day. This is the "
+       "RG-0133 class one layer up: DASH-SUMMARY-REDACT-1 deliberately answers anonymous "
+       "callers a heartbeat, and the LOADER must name that state -- an explicit "
+       "redacted=='heartbeat' branch that paints a SIGNED OUT / NOT MEASURED banner and "
+       "labelled placeholders, never string-concatenated undefineds wearing section headers.",
+       ref="DASH-SIGNEDOUT-TRUTH-1, found 1 Sep 2026 attended. OPEN until the loader branch "
+           "ships (rides the next deploy); promote on READY TO LOCK. Repo half: the summary "
+           "loader handles redacted=='heartbeat' explicitly and paints a named signed-out "
+           "state.")
+def rg_dashboard_signedout_truth():
+    out = []
+    t = repo_file("dashboard.server.html")
+    if t is None:
+        return [(INFO, "SKIPPED -- dashboard.server.html not readable here (outside repo)")]
+    # The file already says "NOT MEASURED" for OTHER panels (RG-0133 on the +1 page),
+    # so a vocabulary test passes over the live defect -- the check that cannot fail
+    # (header rule + RG-0068). Require the fix's own named marker instead: the summary
+    # loader's signed-out branch must carry DASH-SIGNEDOUT-TRUTH-1, so this entry is
+    # red until the REAL branch ships and cannot be satisfied by neighbouring copy.
+    if "DASH-SIGNEDOUT-TRUTH-1" not in t:
+        out.append((FAIL, "the summary loader has no DASH-SIGNEDOUT-TRUTH-1 signed-out "
+                          "branch -- an anonymous/expired-token view still renders "
+                          "'SESSION UNDEFINED' over a healthy server (1 Sep incident)"))
+    elif "heartbeat" not in t:
+        out.append((FAIL, "marker present but no heartbeat check near it -- the branch "
+                          "cannot be keying off the redacted payload"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

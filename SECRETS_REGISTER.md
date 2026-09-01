@@ -62,7 +62,7 @@ out about from a customer.
 | CF_CACHE_TOKEN | Cloudflare API token (cache-purge scope) printed in full in the same transcript | Cloudflare dashboard (David) → cloudflare.conf drop-in | David console access — tonight 1 Sep |
 | MS_DEPLOY_TOKEN | Deploy/admin-endpoint token printed in full in the same transcript (gates an admin endpoint, not the git deploy lane) | Re-mint BOTH ends: server drop-in + host .secrets via add_deploy_token.bat | Coordinated re-mint with David at keyboard — tonight 1 Sep |
 
-> **1 Sep 2026 (DW-089):** the three rows above were burnt by MY OWN root recon printing `systemctl cat` output into the session transcript — the exact act this register warns about ("every later command parses without echoing"). Also printed: the STALE inline MS_API_KEY value, which is now DEAD — the DW-084 alignment replaced it with the live value minutes later (unit is now the single defining surface, sha-matched to /proc). CF_ZONE_ID also appeared; it is not a secret. Every subsequent command in the pass was fingerprint-only.
+> **1 Sep 2026 (DW-089):** the three rows above were burnt by MY OWN root recon printing `systemctl cat` output into the session transcript — the exact act this register warns about ("every later command parses without echoing"). Also printed: MS_API_KEY — which rotate_secrets.py records as PUBLIC IN MS.JS BY DESIGN (every browser receives it), so it is not a secret and not an exposure; the DW-084 alignment made the unit its single defining surface, sha-matched to /proc and to the ms.js-baked value. CF_ZONE_ID also appeared; it is not a secret. Every subsequent command in the pass was fingerprint-only.
 
 ## Removed rather than rotated
 
