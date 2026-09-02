@@ -832,10 +832,12 @@
    "last_seen": "2026-09-02",
    "sev": "LOW",
    "source": "server login banner (root SSH)",
-   "status": "OPEN",
+   "status": "CLOSED",
    "summary": "46 pending updates (9 security) + kernel restart required on the production box.",
-   "next_action": "RE-PROBED 2026-08-31 (non-root, msdeploy): **`/var/run/reboot-required` still present** and **37 packages upgradable** (unchanged from the 30 Aug re-probe; `apt list --upgradable` reports 0 lines matching 'security' as msdeploy — the 9-security figure came from the root banner and is not re-provable from this lane). Uptime 13w 4d. Window unchanged: `apt upgrade` + reboot + watch /health back up + RG-0147/ops-key re-verify, batched with DW-084. Awaiting David's window. **2026-09-02:** re-probed as msdeploy — /var/run/reboot-required STILL present, 59 packages upgradable (was 37), uptime 97 d. Still failing. Day 4.",
-   "next": " || 2026-09-01: reboot-required still present, 37 upgradable (msdeploy re-probe). Still failing."
+   "next_action": "None — closed 2026-09-02.",
+   "next": " || 2026-09-01: reboot-required still present, 37 upgradable (msdeploy re-probe). Still failing.",
+   "closed": "2026-09-02",
+   "evidence": "Post-reboot root probe 18:5x SAST: kernel 6.8.0-138-generic, /var/run/reboot-required absent, 0 upgradable; 6/6 credential fingerprints identical pre/post; /health ok, /payment/test ok, BIT 8/8, smoke ALL PASS. RG-0246 LOCKED + passing; ops/maintenance/PATCH_LOG.md row 2026-09-02."
   },
   "DW-086": {
    "first_seen": "2026-08-31",
@@ -1210,9 +1212,7 @@
   "new": [
    "DW-090"
   ],
-  "still_failing": [
-   "DW-085"
-  ],
+  "still_failing": [],
   "not_rerunnable": [
    "DW-010 + DW-087 (Monday lane; today Wednesday)"
   ],
@@ -1228,6 +1228,7 @@
   "server": "reboot-required present, 59 upgradable, uptime 97d, disk 45%",
   "ai_watch": "clear; stale \"Sonnet 5 reverts $3/$15 on 1 Sep\" refused a fifth time (RG-0184)",
   "heartbeat": "clean — last_run 2026-09-01, today 2026-09-02",
-  "checks_run": "12/13 (Monday lane not due)"
+  "checks_run": "12/13 (Monday lane not due)",
+  "attended_second_pass": "DW-085 CLOSED (reboot window 18:47 SAST, 34 s down, kernel -117 -> -138, fingerprints pre==post); RG-0246 LOCKED; ledger 239/217/0 exit 0"
  }
 }

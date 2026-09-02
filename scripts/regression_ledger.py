@@ -13739,5 +13739,48 @@ def rg_ssh_allowlist_single_ip():
     return out
 
 
+@entry("RG-0246", "The production box is PATCHED AND REBOOTED on a cadence -- the newest "
+                  "recorded maintenance window is under 45 days old and left no reboot-required flag standing",
+       LOCKED, fixed_on="2026-09-02",
+       scope="ops/maintenance/PATCH_LOG.md, the dated record of every patch/reboot window on the "
+             "Hetzner origin. RECORD-half by nature: the ledger has no SSH transport, so it asserts "
+             "that a window was RUN, VERIFIED and WRITTEN DOWN recently, not the box's live state -- "
+             "the daily watch (msdeploy, /var/run/reboot-required + apt list) is the live half and "
+             "files a DW row the day the flag reappears. CLASS: a kernel installed by "
+             "unattended-upgrades is inert until a reboot; a box that is 'patched' but never "
+             "rebooted (97 days by 2 Sep 2026) runs the old kernel with the old holes. 45 days is "
+             "the cadence: Ubuntu's kernel cadence plus a fortnight of slack for David's window.",
+       ref="PATCH-CADENCE-1, 2 Sep 2026, DW-085 closed. The flag stood from 30 Aug (first seen) "
+           "across four watch passes while the upgradable set grew 37 -> 59; the reboot itself was "
+           "always David's (RUL-027 lockout class) and never had a date. The window ran 18:47 SAST "
+           "with David present: DB .backup + integrity ok, 37 packages, kernel 6.8.0-117 -> -138, "
+           "34 s of 521, all six credential fingerprints identical pre/post (the DW-084 landmine "
+           "class, proven defused), BIT 8/8, smoke ALL PASS. The entry exists so the NEXT flag has "
+           "a deadline instead of a day count.")
+def rg_patch_cadence():
+    txt = repo_file("ops/maintenance/PATCH_LOG.md")
+    if txt is None:
+        return [(FAIL, "ops/maintenance/PATCH_LOG.md is GONE -- the patch/reboot record no longer exists")]
+    import re as _re, datetime as _dt
+    rows = [m for m in _re.finditer(r"^\| (\d{4}-\d{2}-\d{2})[^|]*\| *REBOOT *\|[^\n]*", txt, _re.M)]
+    if not rows:
+        return [(FAIL, "PATCH_LOG.md carries no REBOOT row -- no window has ever been recorded")]
+    last = rows[-1]
+    day = _dt.date.fromisoformat(last.group(1))
+    age = (_dt.date.today() - day).days
+    cells = [c.strip() for c in last.group(0).strip().strip("|").split("|")]
+    flag = cells[5].lower() if len(cells) > 5 else ""
+    out = []
+    if "absent" not in flag:
+        out.append((FAIL, "newest REBOOT row (%s) does not record reboot_required=absent -- a window "
+                          "that leaves the flag standing is a PATCH, not a REBOOT" % day))
+    if age > 45:
+        out.append((FAIL, "newest REBOOT window is %d days old (%s) -- past the 45-day cadence; "
+                          "plan the next one with David (RUL-027)" % (age, day)))
+    if not out:
+        out.append((INFO, "last reboot window %s (%d days ago), flag absent, fingerprints pre==post" % (day, age)))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
