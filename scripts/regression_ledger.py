@@ -13180,7 +13180,12 @@ def rg_outreach_triage_lane():
 
 @entry("RG-0237", "A signed-out ops dashboard SAYS it is signed out -- it never paints "
        "'UNDEFINED' or a blank section over a healthy server",
-       OPEN, scope="dashboard.server.html summary loaders. Born 1 Sep 2026 (launch day): the "
+       LOCKED, fixed_on="2026-09-02",
+       scope="PROMOTED 2 Sep 2026 the run it printed READY TO LOCK: DASH-SIGNEDOUT-TRUTH-1 "
+       "branch added to the main summary loader -- redacted=='heartbeat' now paints a SIGNED "
+       "OUT banner naming server health and NOT MEASURED placeholders, then returns before "
+       "populate(); health/BIT polling (anonymous-safe) still runs. Repo-side check by design; "
+       "the live dashboard carries it from the next deploy. dashboard.server.html summary loaders. Born 1 Sep 2026 (launch day): the "
        "06:00 unattended-upgrades restart plus an evaporated sessionStorage JWT left David's "
        "dashboard reading 'Session --' / 'LAST COMPLETED -- SESSION UNDEFINED' over a server "
        "whose authenticated payload was COMPLETE (session 184, every section populated, smoke "

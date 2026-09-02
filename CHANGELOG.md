@@ -1,3 +1,33 @@
+## 2026-09-02 — Travelpayouts tours review RESUBMITTED (third submission, post-launch)
+
+PROBED 05:58 SAST in David's Chrome (project Trustsquare, ID 758984): still "20 programs
+unavailable — website under development or not yet ready" from the 24 Aug decline. Material
+change since then: SOFT launch 29 Aug + FULL launch 1 Sep (RUL-001), first outreach waves live.
+David's word 2 Sep ("we should again prompt Travelpayouts"); he signed in, Claude clicked
+Submit for review → dashboard now reads "We're reviewing your Project and matching it with
+available programs. This usually takes a few days." 26 available / 20 pending (GYG, Viator,
+Booking.com among them). Aviasales flights Data API unaffected. RUL-041 stance unchanged:
+honesty labelling stays; a third decline is answered in writing via "contact support", never
+by hiding labels. Check outcome ~Mon 7 Sep by PROBE (dashboard), not by their template email.
+
+## 2026-09-02 — GEO-LAUNCH-1: location picker now shows the launch cities, synced from CityLauncher
+
+David: "the cities in the app selections are not updated with what we have started to send emails to."
+Probed live: ZA offered 55 GeoNames towns but not Knysna or Mossel Bay (both emailed); US offered
+Denver/Colorado (never emailed); DE/NA/MZ/BW/KE showed as countries from the super-listing seeds.
+
+- **One source of truth.** `CityLauncher/data/cities.json` (active|prospect = shown, planned = hidden)
+  → `scripts/build_geo_launch_cities.py` → `scripts/geo_launch_cities.json` (37 cities, shipped by manifest).
+- **Idempotent server seed every deploy.** `scripts/seed_geo_launch.py --apply` runs as post_deploy step 1c
+  (same contract as the super seeds): inserts missing launch cities with coords, flips `geo_*.active`,
+  deletes nothing. A city that carries listings is never hidden; regions/countries follow their cities.
+- **Picker UX.** `ms.js` skips the Region step when a country has ≤15 active cities (`GEO_REGION_STEP_ABOVE`);
+  the city row shows its region as a hint; back goes to Countries when no Region step was shown.
+- **Ledger RG-0243 (OPEN → lock after deploy).** Asserts manifest/post_deploy/ms.js wiring, that the shipped
+  JSON is not stale against cities.json, and — live through the gate — that every launch city is selectable,
+  no country is offered empty, and ZA is no longer the GeoNames dump.
+- Dry run on a copy of the live DB: +2 cities, 43 ZA towns hidden, 2 regions hidden. Not yet deployed.
+
 ## 2026-09-02 — DW-089 CLOSED: the three transcript-burnt credentials rotated and proven
 
 David, on being told a rotation was still open: *"we have already done a full comprehensive security rotation."* Correct for 22 Aug; DW-089 was a SECOND exposure (1 Sep, own act — `systemctl cat` printed into a transcript) of the post-rotation values, PROBED live: MS_DEPLOY_TOKEN still carried the 22 Aug fingerprint 76b30e21.

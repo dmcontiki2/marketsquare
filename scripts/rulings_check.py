@@ -41,12 +41,31 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-089": [
+   # Tutors funnel geo drill-downs (David, 1 Sep): spec sec 10 carries the design,
+   # RG-0221's acceptance criteria carry the build gate (singleton auto-collapse +
+   # true institution counts). Spec section or ledger extension vanishing trips here.
+   ("RULINGS.md", ["THE TUTORS FUNNEL GAINS TWO GEO-DERIVED DRILL-DOWNS"], []),
+   ("ZOOM_HMI_SPEC.md", ["RUL-089", "AUTO-COLLAPSE"], []),
+   ("scripts/regression_ledger.py", ["singleton auto-collapse"], []),
+ ],
+ "RUL-090": [
+   # US tutor wave from the main domain with .edu HELD until the subdomain exists;
+   # a fetched unsubscribe link opts nobody out (OPTOUT-CONFIRM-1 / RG-0241).
+   # A session re-suppressing on GET, or unholding .edu without the subdomain, trips here.
+   ("RULINGS.md", ["FETCHED UNSUBSCRIBE LINK OPTS NOBODY OUT"], []),
+   ("../CityLauncher/emailer/emailer.py", ["EDU-HOLD-1", "learn.trustsquare.co"], []),
+   ("../CityLauncher/launch_us_tutors_wave.bat", ["OPTOUT-CONFIRM-1"], []),
+   ("bea_main.py", ["OPTOUT-CONFIRM-1"], []),
+   ("scripts/regression_ledger.py", ["RG-0241"], []),
+ ],
  "RUL-088": [
    # Trust Score is a score, never a verdict (1 Sep): register carries it, ledger polices
    # the wording, doctrine fragment carries the reasoning.
    ("RULINGS.md", ["A TRUST SCORE IS A SCORE, NEVER A STATEMENT OF FACT"], []),
    ("scripts/regression_ledger.py", ["CHILD-SAFETY-WORDING-1"], []),
-   ("changelog.d/2026-09-01-child-safety-screening-doctrine.md", ["a SCORE, never a statement of fact", "named for a quality of the person"], []),
+   # Path fixed 2 Sep 2026: the fragment was folded into CHANGELOG.md; the archived copy is the stable home.
+   ("changelog.d/folded/2026-09-01-child-safety-screening-doctrine.md", ["a SCORE, never a statement of fact", "named for a quality of the person"], []),
  ],
  "RUL-087": [
    # Outreach reply lane answered by the agent (1 Sep): register carries the ruling,
@@ -351,21 +370,24 @@ REFLECTIONS = {
    # global launch day sends Tutors. If a session puts Stays back on day one, the
    # "HOLD on Stays" wording returns and this trips.
    ("RULINGS.md", ["THE SINGLES LADDER IS RE-ORDERED BY MEASURED INVENTORY"], []),
-   ("WAVE_PLAN_LAUNCH_2026.html", ["HOLD<br>on Tutors", "all 4 countries<br>TUTORS"], ["HOLD<br>on Stays"]),
+   # Re-aimed 2 Sep 2026: v3.3 dropped the chip markup; the ladder order lives in prose + an explicit cite.
+   ("WAVE_PLAN_LAUNCH_2026.html", ["all four countries sends Tutors", "ladder ordered by measured inventory (RUL-058)"], ["HOLD<br>on Stays"]),
  ],
  "RUL-057": [
    # Johannesburg is a SECOND PROVING CITY (David, 26 Aug): wave 1, Pretoria's ladder,
    # same start day; the lagged block drops to 9 SA cities. If a session ever puts JHB
    # back in the lagged block, "10 SA cities" reappears and this trips.
    ("RULINGS.md", ["JOHANNESBURG JOINS PRETORIA AS A SECOND PROVING CITY"], []),
-   ("WAVE_PLAN_LAUNCH_2026.html", ["Johannesburg \u00b7 ZA", "9 SA cities", "proving city 2"], ["10 SA cities", "CPT\u00b7JHB"]),
+   # Re-aimed 2 Sep 2026: v3.3 encodes the dot as &middot; -- accept the entity, ban both spellings of the old pair.
+   ("WAVE_PLAN_LAUNCH_2026.html", ["Johannesburg &middot; ZA", "9 SA cities", "proving city 2"], ["10 SA cities", "CPT\u00b7JHB", "CPT&middot;JHB"]),
  ],
  "RUL-056": [
    # The singles property day is REMOVED (David, 24 Aug): off all three singles ladders,
    # board v3; property arrives via the Phase-3 estate-agency waves. A PROPERTY chip
    # reappearing on the wave board, or the ruling row vanishing, trips here.
    ("RULINGS.md", ["THE SINGLES PROPERTY DAY IS REMOVED"], []),
-   ("WAVE_PLAN_LAUNCH_2026.html", ["property day removed from the singles ladders", "(v3)"], ["chip prop"]),
+   # Needles re-aimed 2 Sep 2026: board regenerated as v3.3 with the same substance in new words.
+   ("WAVE_PLAN_LAUNCH_2026.html", ["removed from all three singles ladders", "property via agencies (RUL-056)", "v3"], ["chip prop"]),
  ],
  "RUL-053": [
    # The launch wave plan (David, 24 Aug): Pretoria ladder from Fri 28 Aug, global

@@ -159,3 +159,5 @@ same defect class as an undated status assertion (the ONETAP_SETUP.md "(this is 
   recommendation: fold Global reach into Starter. **Not executed on launch eve** — `wishlist_subscriptions`
   is a live Paystack-backed table. Scheduled: first post-launch pricing pass, before the pricing page
   is next touched.
+
+- **D10 — 3rd resubmit 2 Sep 2026 06:00 SAST** (post-launch, David's word). Dashboard: "We're reviewing your Project… a few days." Outcome check by PROBE ~7 Sep; a decline goes to contact support in writing (RUL-041).

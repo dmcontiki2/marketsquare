@@ -48,9 +48,14 @@ def test_ack_always_sends_except_spam():
     # test anchored on src.find("ONE-REPLY-1") and landed on an unrelated docstring 292,506
     # characters earlier -- the same ambiguity class as the whole 033 family. `can_auto = (`
     # appears exactly once and is the head of the block being asserted.
+    # TRUTH-REVIEW-3 (2 Sep 2026), the THIRD instance of this file's own documented class:
+    # the 1 Sep outreach-triage branch split can_auto into an if/else (two sites) and grew
+    # the block, pushing the bare ack past the old +2500 window -- the guard then sat red on
+    # 5 consecutive scans against CORRECT code. The anchor stays (first site heads the pair);
+    # the window now reaches the ack, and rfind guards against a third site appearing above.
     i = src.find("can_auto = (")
     assert i > 0, "the reply-gating block is gone (can_auto)"
-    blk = src[max(0, i - 1200):i + 2500]
+    blk = src[max(0, i - 1200):i + 4500]
 
     # 1. two branches, and they are MUTUALLY EXCLUSIVE (if / elif, never two sends)
     assert 'if category != "spam" and can_auto:' in blk, \
@@ -82,8 +87,14 @@ def test_auto_reply_gate_not_gmail_only():
     # via the envkey path, with the Gmail fallback -- and the outlawed bare form
     # must stay gone (a red here is a CODE-PATTERN claim, never a runtime one).
     src = _read("bea_main.py")
-    assert 'and (bool(ai_provider.envkey("RESEND_API_KEY")) or bool(GMAIL_APP_PASSWORD))' in src, \
+    # TRUTH-REVIEW-3 (2 Sep 2026): the 1 Sep refactor hoisted the gate into a named
+    # _has_sender variable -- same property, new spelling, and this guard sat red for it.
+    # Assert the PROPERTY: an envkey()-path Resend read OR'd with the Gmail fallback exists,
+    # and the reply gates actually consult it.
+    assert 'bool(ai_provider.envkey("RESEND_API_KEY")) or bool(GMAIL_APP_PASSWORD)' in src, \
         "auto-reply gate regressed: must consult Resend (via envkey, ENVKEY-1) with Gmail fallback"
+    assert "and _has_sender" in src or 'and (bool(ai_provider.envkey("RESEND_API_KEY"))' in src, \
+        "no reply gate consults the sender-availability check any more"
     assert 'and (bool(os.getenv("RESEND_API_KEY")) or bool(GMAIL_APP_PASSWORD))' not in src, \
         "auto-reply gate re-grew a bare os.getenv RESEND read (ENVKEY-1 class: invisible on the server)"
 

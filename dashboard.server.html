@@ -1602,6 +1602,24 @@ async function loadDashboard() {
     const res = await fetch(base + '/dashboard/summary', {headers:(function(){try{var t=sessionStorage.getItem('ms_admin_token')||'';return t?{'X-Admin-Token':t}:{};}catch(e){return {};}})()}); // DASH-SUMMARY-REDACT-1
     if (!res.ok) throw new Error('HTTP ' + res.status);
     DATA = await res.json();
+    /* DASH-SIGNEDOUT-TRUTH-1 (RG-0237, 2 Sep 2026): DASH-SUMMARY-REDACT-1 deliberately answers
+       anonymous callers a heartbeat -- NAME that state. Never paint string-concatenated
+       undefineds over a healthy server (the 1 Sep launch-morning incident). */
+    if (DATA && DATA.redacted === 'heartbeat') {
+      if (genTimeEl) genTimeEl.textContent = 'SIGNED OUT \u2014 heartbeat only \u00b7 server ' + (DATA.bea_version || '?') + ' healthy \u00b7 ' + (DATA.generatedAt || '');
+      var _so = document.getElementById('signedout-banner');
+      if (!_so) {
+        _so = document.createElement('div');
+        _so.id = 'signedout-banner';
+        _so.style.cssText = 'margin:10px 0;padding:10px 14px;border:1px solid #b58900;border-radius:8px;background:rgba(181,137,0,.12);color:#e6c26a;font-size:13px;font-weight:600;';
+        var _mn = document.querySelector('.main');
+        if (_mn) _mn.insertBefore(_so, _mn.firstChild);
+      }
+      _so.textContent = 'SIGNED OUT \u2014 this browser holds no admin token, so the sections below are NOT MEASURED (placeholders, never zeros or undefineds). The server itself answered healthy. Sign in to load real data.';
+      loadHealth(); loadBIT();
+      if (!window._bitTimer) window._bitTimer = setInterval(loadBIT, 60000);
+      return;
+    }
     populate();
     loadHealth(); // Start health polling
     loadBIT(); // BIT self-test status (health panel + ops panel)

@@ -2360,8 +2360,9 @@ def _record_optout(email: str, source: str = "link") -> bool:
             conn.execute("""CREATE TABLE IF NOT EXISTS suppression (
                 email TEXT PRIMARY KEY,
                 source TEXT,
-                created_at TEXT DEFAULT (datetime('now')))""")
-            conn.execute("INSERT OR IGNORE INTO suppression (email, source) VALUES (?,?)",
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP)""")  # portable: pg-ratchet
+            conn.execute("INSERT INTO suppression (email, source) VALUES (?,?) "
+                         "ON CONFLICT(email) DO NOTHING",  # portable: pg-ratchet
                          (addr, source))
             try:
                 conn.execute("UPDATE prospects SET status='opted_out' WHERE LOWER(email)=?",
