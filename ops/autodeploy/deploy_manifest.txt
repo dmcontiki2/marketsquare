@@ -118,6 +118,8 @@ agents_as_a_service.html   | static/agents-as-a-service.html
 assets/legal-must-haves/legal-cards.js | static/legal-must-haves/legal-cards.js
 scripts/seed_super_global.py | seed_super_global.py
 scripts/seed_super_ladder_global.py | seed_super_ladder_global.py
+scripts/seed_geo_launch.py | seed_geo_launch.py
+scripts/geo_launch_cities.json | geo_launch_cities.json
 ops/autodeploy/deploy_router.py | deploy_router.py
 warm_videos.sh             | warm_videos.sh
 

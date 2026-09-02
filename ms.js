@@ -3120,6 +3120,11 @@ async function _loadAndRenderCities() {
   const list  = document.getElementById('loc-list-city');
   if (!list) return;
   if (title) title.textContent = (activeRegion ? activeRegion.name : activeCountry.name) + ' · City';
+  const backBtn = document.getElementById('city-back-btn');
+  if (backBtn) {  // GEO-LAUNCH-1: no Region step was shown -> back goes to Countries
+    backBtn.textContent = activeRegion ? '← Regions' : '← Countries';
+    backBtn.onclick = activeRegion ? () => openLocPanel('region') : () => openLocPanel('country');
+  }
 
   // TODO: REMOVE BEFORE LAUNCH — inject demo cities filtered by active country
   if (DEMO_MODE) {
@@ -3137,7 +3142,7 @@ async function _loadAndRenderCities() {
     : '/geo/cities?country=' + activeCountry.iso2;
   const data = await _geoFetch(path);
   list.innerHTML = (Array.isArray(data) ? data : []).map(c =>
-    `<div class="city-option${activeCity.id === c.id ? ' selected' : ''}" onclick="selectCity(${c.id},'${c.name.replace(/'/g,"\\'")}',${c.lat},${c.lng})">${c.name}${activeCity.id === c.id ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`
+    `<div class="city-option${activeCity.id === c.id ? ' selected' : ''}" onclick="selectCity(${c.id},'${c.name.replace(/'/g,"\\'")}',${c.lat},${c.lng})">${c.name}${c.region_name && !activeRegion ? '<span style="font-size:11px;color:var(--text-3);margin-left:8px;">' + c.region_name + '</span>' : ''}${activeCity.id === c.id ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`
   ).join('') || '<div class="city-option" style="opacity:.5">No cities available</div>';
 }
 
@@ -3172,8 +3177,18 @@ async function selectCountry(iso2, name) {
   activeRegion  = null;
   activeCity    = { id: null, name: '' };
   activeSuburb  = null;
+  // GEO-LAUNCH-1 (2 Sep 2026): the picker now lists only launch cities (see
+  // scripts/seed_geo_launch.py), so most countries hold a dozen cities or fewer.
+  // A Region step in front of 11 cities is a tap that buys nothing -- skip it and
+  // show the country's cities directly; Regions only appear when the list is long.
+  const cities = await _geoFetch('/geo/cities?country=' + iso2);
+  if (Array.isArray(cities) && cities.length > 0 && cities.length <= GEO_REGION_STEP_ABOVE) {
+    await openLocPanel('city');
+    return;
+  }
   await openLocPanel('region');
 }
+const GEO_REGION_STEP_ABOVE = 15; // more active cities than this -> show the Region step
 
 async function selectRegion(id, name) {
   activeRegion = { id, name };

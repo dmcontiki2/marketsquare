@@ -12034,7 +12034,13 @@ def rg_sync_pulldown():
              "ungated endpoint makes the count either a lie or a dead end -- the gate must "
              "move into /listings INSIDE the counted set. Locked != empty: an out-of-reach "
              "option is shown with its true count and the offer (RUL-066 rung 1), only "
-             "zero-count options are removed.",
+             "zero-count options are removed. EXTENDED 1 Sep 2026 (RUL-089, recorded by the "
+             "2 Sep attended session): the Tutors funnel gains two geo-derived drill-downs -- "
+             "nearby institutions and their subjects, one click each (ZOOM_HMI_SPEC.md sec 10). "
+             "Acceptance criteria extend to: singleton auto-collapse proven (engine rule 3.6 -- "
+             "a facet with exactly one non-zero option is never asked, chip applied silently), "
+             "and true institution counts (max 4 tiles, proximity x count, zero-count removed). "
+             "Same promote-when-built discipline; the spec-intact assertion covers sec 10 too.",
        ref="ZOOM-HMI-1 (30 Aug 2026). David ratified the design after tapping both "
            "prototypes and set one binding constraint: 'I would actually like to see it on "
            "the actual app first, not the live one that is in the field now.' So the build "
@@ -13365,21 +13371,24 @@ def _http_head_status(url, timeout=15):
            "proven both ways: pointed at /admin.html it FAILS on legs (a) and (b); pointed at "
            "the real link it passes all three.")
 def rg_journey_front_door():
-    import subprocess
     js = os.path.join(REPO, "scripts", "journey_check.py")
     if not os.path.isfile(js):
         return [(FAIL, "scripts/journey_check.py is GONE -- nobody is standing at the front "
                        "door again (JOURNEY-1)")]
-    try:
-        r = subprocess.run([sys.executable, js, "--json"], capture_output=True,
-                           text=True, timeout=90)
-    except Exception as e:
-        return [(INFO, "SKIPPED -- journey check could not run (%s)" % str(e)[:60])]
+    # Routed through _harness (RG-0187): a missing third-party dependency demotes to
+    # NOT EVALUATED instead of crying REGRESSION. journey_check exits 1 when the
+    # journey is broken, so a non-blind failure IS the finding -- its JSON tail
+    # (indent=1, fails last) survives in the detail.
+    ok, blind, detail = _harness([sys.executable, js, "--json"], timeout=90)
+    if blind:
+        return [(INFO, detail)]
+    if not ok:
+        return [(FAIL, "PROSPECT JOURNEY broken -- %s" % (detail or "no output")[-260:])]
     try:
         import json as _j
-        d = _j.loads(r.stdout or "{}")
+        d = _j.loads(detail or "{}")
     except Exception:
-        return [(FAIL, "journey check produced unreadable output: %s" % (r.stdout or r.stderr)[:80])]
+        return [(FAIL, "journey check produced unreadable output: %s" % (detail or "")[:80])]
     out = []
     for f in d.get("fails", []):
         out.append((FAIL, "PROSPECT JOURNEY: %s" % f))
@@ -13466,6 +13475,150 @@ def rg_optout_get_is_harmless():
         out.append((INFO, "confirmed POST recorded (rows %d -> %d)" % (mid, after)))
     return out
 
+
+
+@entry("RG-0242", "The daily wave gates can be PASSED on an ordinary day -- min-gap counts "
+       "local calendar days, and the stop-loss has a statistical floor so ONE dead address "
+       "on a 12-batch cannot latch a city shut for good",
+       LOCKED, fixed_on="2026-09-02",
+       scope="CityLauncher emailer/wave_runner.py gate_check + city_stats, and "
+             "emailer/waves_policy.json defaults. Two legs. (a) MIN-GAP-1: min_gap_days is "
+             "evaluated on LOCAL calendar dates in defaults.send_timezone (Africa/Johannesburg), "
+             "never as 24h-since-last-timestamp -- the 00:10 SAST task is 22:10 UTC the day "
+             "before, so a strict 24h gap dry-ran 8 of 14 cities on 2 Sep and drifts every day "
+             "a city sends a minute later than the day before. (b) STOP-LOSS-FLOOR-1: the "
+             "bounce stop-loss trips only when bounce% > bounce_stop_pct AND the wave's bounce "
+             "COUNT >= defaults.bounce_stop_min_bounces (3). Source-checked; an offline "
+             "gate_check() call with synthetic stats proves both legs behaviourally.",
+       ref="2 Sep 2026. PROBED from logs/launchday_02Wed09_2026010.log: Cape Town, Durban, "
+           "Bloemfontein, East London, Port Elizabeth latched on EXACTLY ONE bounce each "
+           "(8.3%% of 12 > 5%%), and the latch is permanent because last_wave never advances "
+           "on a blocked city; New York, Sydney, Polokwane, Pretoria dry-ran on 'min gap: next "
+           "allowed 2026-09-02' printed ON 2 Sep. Pretoria (5/59, 8.5%%) stays blocked -- the "
+           "floor keeps the real signal and drops the noise. RAMP-1 already resets the ramp "
+           "streak on a single bounce; the stop-loss is for a dirty LIST, not one dead row.")
+def rg_wave_gates_passable():
+    out = []
+    wr = repo_file(os.path.join("..", "CityLauncher", "emailer", "wave_runner.py"))
+    pol = repo_file(os.path.join("..", "CityLauncher", "emailer", "waves_policy.json"))
+    if wr is None or pol is None:
+        return [(INFO, "CityLauncher not beside this repo -- source legs skipped")]
+    if "bounce_stop_min_bounces" not in wr or "last_wave_bounced" not in wr:
+        out.append((FAIL, "wave_runner stop-loss has no bounce-count floor -- one dead address "
+                          "on a 12-batch latches the city (STOP-LOSS-FLOOR-1)"))
+    if "astimezone(_tz).date()" not in wr:
+        out.append((FAIL, "wave_runner min-gap is not evaluated on local calendar dates -- the "
+                          "00:10 task dry-runs cities sent the previous morning (MIN-GAP-1)"))
+    try:
+        d = json.loads(pol)["defaults"]
+        if int(d.get("bounce_stop_min_bounces", 0)) < 2:
+            out.append((FAIL, "waves_policy.defaults.bounce_stop_min_bounces missing or < 2"))
+    except Exception as e:
+        out.append((FAIL, "waves_policy.json unreadable: %s" % str(e)[:60]))
+    # behavioural leg: import gate_check and drive it with synthetic stats (no DB, no writes)
+    try:
+        import importlib.util as _iu, datetime as _dt
+        cl = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "CityLauncher")
+        sys.path.insert(0, os.path.abspath(cl))
+        spec = _iu.spec_from_file_location("cl_wave_runner", os.path.join(cl, "emailer", "wave_runner.py"))
+        m = _iu.module_from_spec(spec); spec.loader.exec_module(m)
+        m.send_freeze.frozen = lambda: False
+        m.suppression_state = lambda: (True, "stub")
+        polj = json.loads(pol); polj["cities"]["_rg0242"] = {"armed": True, "gates_green": True}
+        base = {"last_wave_bounce_pct": 8.3, "last_wave_bounced": 1, "last_wave_sent": 12,
+                "complaints": 0, "last_emailed_at": None}
+        ok, blocks = m.gate_check("_rg0242", polj, dict(base), True)
+        if any("stop-loss" in b for b in blocks):
+            out.append((FAIL, "one bounce on twelve still trips the stop-loss: %s" % blocks))
+        ok, blocks = m.gate_check("_rg0242", polj, dict(base, last_wave_bounced=5, last_wave_bounce_pct=8.5, last_wave_sent=59), True)
+        if not any("stop-loss" in b for b in blocks):
+            out.append((FAIL, "five bounces on 59 (8.5%%) did NOT trip the stop-loss -- floor weakened"))
+        # yesterday 22:15 UTC = 00:15 SAST today ... wait: pick 20:15 UTC yesterday = 22:15 SAST yesterday -> allowed today
+        y = (_dt.datetime.now(_dt.timezone.utc) - _dt.timedelta(days=1)).replace(hour=20, minute=15, second=0, microsecond=0, tzinfo=None)
+        ok, blocks = m.gate_check("_rg0242", polj, dict(base, last_wave_bounced=0, last_wave_bounce_pct=0.0, last_emailed_at=y.isoformat()), True)
+        if any("min gap" in b for b in blocks):
+            out.append((FAIL, "a city sent YESTERDAY (local) is still min-gap blocked today: %s" % blocks))
+        out.append((INFO, "gate_check behaves: 1/12 passes, 5/59 blocks, yesterday-local passes"))
+    except Exception as e:
+        out.append((INFO, "behavioural leg skipped (%s)" % str(e)[:80]))
+    return out
+
+
+@entry("RG-0243", "The app's location picker shows the cities the outreach waves are "
+       "recruiting in -- no more, no less -- and never drifts from CityLauncher's city list",
+       OPEN, fixed_on="2026-09-02",
+       scope="ALL countries and cities, on the live geo_countries/geo_regions/geo_cities "
+             "tables and the picker in ms.js. ONE source of truth: CityLauncher/data/cities.json "
+             "(status active|prospect = shown, planned = hidden) -> scripts/geo_launch_cities.json "
+             "(generated by scripts/build_geo_launch_cities.py, shipped by manifest) -> "
+             "scripts/seed_geo_launch.py --apply on EVERY deploy (post_deploy.sh step 1c, same "
+             "contract as the super seeds). Flips geo_*.active only, inserts missing launch "
+             "cities with coords, deletes nothing; a city carrying listings is never hidden. "
+             "Regions/countries follow their cities. ms.js skips the Region step when a "
+             "country has <= GEO_REGION_STEP_ABOVE active cities.",
+       ref="GEO-LAUNCH-1, 2 Sep 2026, David: 'the cities in the app selections are not "
+           "updated with what we have started to send emails to'. PROBED on the live DB "
+           "before the fix: ZA showed 55 GeoNames towns (Trompsburg, Qumbu...) but NOT Knysna "
+           "or Mossel Bay, both already emailed; US showed Denver/Colorado (demo listings, "
+           "never emailed); DE/NA/MZ/BW/KE appeared as countries from the super-listing seeds. "
+           "Dry-run on a copy of the live DB: +2 cities, 43 ZA towns hidden, 2 regions hidden, "
+           "visible after = AU:2 BW:1 DE:1 GB:11 KE:1 MZ:1 NA:1 US:12 ZA:14 (the non-launch "
+           "ones survive ONLY because they hold listings -- the rule, not an oversight). "
+           "OPEN until David ships and the live legs below pass -> READY TO LOCK.")
+def rg_geo_launch_cities():
+    out = []
+    # source legs -- machinery must stay wired
+    man = repo_file(os.path.join("ops", "autodeploy", "deploy_manifest.txt")) or ""
+    for line in ("scripts/seed_geo_launch.py", "scripts/geo_launch_cities.json"):
+        if line not in man:
+            out.append((FAIL, "deploy_manifest.txt no longer ships %s -- the geo sync cannot run" % line))
+    pd = repo_file(os.path.join("ops", "autodeploy", "post_deploy.sh")) or ""
+    if pd and "seed_geo_launch.py --apply" not in pd:
+        out.append((FAIL, "post_deploy.sh no longer runs seed_geo_launch.py --apply (step 1c)"))
+    js = repo_file("ms.js") or ""
+    if js and "GEO_REGION_STEP_ABOVE" not in js:
+        out.append((FAIL, "ms.js lost the Region-step skip -- a dozen cities sit behind a needless Region tap again"))
+    # drift leg -- the shipped JSON must equal what cities.json says today
+    try:
+        import importlib.util as _iu
+        bp = os.path.join(REPO, "scripts", "build_geo_launch_cities.py")
+        spec = _iu.spec_from_file_location("_rg0243_build", bp); m = _iu.module_from_spec(spec); spec.loader.exec_module(m)
+        if os.path.exists(m.SRC):
+            want = json.dumps(m.build(), indent=1, ensure_ascii=False) + "\n"
+            have = open(m.OUT, encoding="utf-8").read()
+            if want != have:
+                out.append((FAIL, "scripts/geo_launch_cities.json is STALE against CityLauncher/data/cities.json "
+                                  "-- run python3 scripts/build_geo_launch_cities.py and deploy"))
+            else:
+                out.append((INFO, "geo_launch_cities.json current: %d launch cities" % len(json.loads(have)["cities"])))
+        else:
+            out.append((INFO, "CityLauncher not beside this repo -- drift leg skipped"))
+    except Exception as e:
+        out.append((FAIL, "drift leg broke: %s" % str(e)[:80]))
+    # live legs -- what the picker actually offers, through the gate
+    try:
+        launch = json.loads(repo_file(os.path.join("scripts", "geo_launch_cities.json")) or "{}").get("cities", [])
+        by = {}
+        for c in launch: by.setdefault(c["iso2"], set()).add(c["name"])
+        countries = _json("/geo/countries")
+        for co in countries:
+            live = _json("/geo/cities?country=" + co["iso2"])
+            if not live:
+                out.append((FAIL, "%s is offered as a country but has no active city -- an empty picker" % co["iso2"]))
+            names = {c["name"] for c in live}
+            missing = by.get(co["iso2"], set()) - names
+            if missing:
+                out.append((FAIL, "%s launch cities missing from the live picker: %s" % (co["iso2"], sorted(missing))))
+        za = {c["name"] for c in _json("/geo/cities?country=ZA")}
+        if len(za) > 25:
+            out.append((FAIL, "ZA picker still lists %d towns -- the GeoNames dump is showing, not the launch list" % len(za)))
+        if "Knysna" not in za or "Mossel Bay" not in za:
+            out.append((FAIL, "Knysna / Mossel Bay were emailed but are not selectable in the app"))
+        if not any(r == FAIL for r, _ in out):
+            out.append((INFO, "live picker matches the launch list across %d countries" % len(countries)))
+    except Exception as e:
+        out.append((FAIL, "live leg unreachable: %s" % str(e)[:80]))
+    return out
 
 if __name__ == "__main__":
     sys.exit(main())

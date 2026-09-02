@@ -98,6 +98,21 @@ else
     say "ladder-seed: seed_super_ladder_global.py not on the box (manifest ships it) — skipped"
 fi
 
+# ── 1c. Idempotent LAUNCH-CITIES geo sync (GEO-LAUNCH-1, 2 Sep 2026) ────────
+# The location picker shows exactly the cities the outreach waves are recruiting in
+# (scripts/geo_launch_cities.json, generated from CityLauncher/data/cities.json) plus
+# any city that already carries listings. Flips geo_*.active only; deletes nothing.
+if [ -f "$LIVE/seed_geo_launch.py" ] && [ -f "$LIVE/geo_launch_cities.json" ]; then
+    say "geo-seed: running seed_geo_launch.py --apply (idempotent)"
+    if (cd "$LIVE" && "$MS_PY" seed_geo_launch.py --apply); then
+        say "geo-seed: ok"; step geo_seed ok
+    else
+        say "geo-seed: FAILED (rc=$?) — run by hand: cd $LIVE && python3 seed_geo_launch.py --apply"; step geo_seed failed "run by hand"
+    fi
+else
+    say "geo-seed: seed_geo_launch.py / geo_launch_cities.json not on the box (manifest ships them) — skipped"; step geo_seed skipped "not on the box"
+fi
+
 # ── 2. One-time migrations ───────────────────────────────────────────────────
 DONE_FILE="$LIVE/.migrations_done"
 touch "$DONE_FILE" 2>/dev/null || true
