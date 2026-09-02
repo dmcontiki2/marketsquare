@@ -1,5 +1,5 @@
 {
- "next_id": 90,
+ "next_id": 91,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -16,7 +16,7 @@
    "source": "audit DEMO-PLACEHOLDERS",
    "status": "RECLASSIFIED",
    "closed": "2026-08-14",
-   "disposition": "**DW-002** MERGED 2026-08-14 into DW-040 \u2014 duplicate symptom, not a separate fault. 'Demo-placeholder count not measurable' is caused entirely by the audit's anonymous fetch being 401'd by the armed gate, which IS DW-040. One cause, one row. The placeholder measurement resumes the moment DW-040 teac"
+   "disposition": "**DW-002** MERGED 2026-08-14 into DW-040 — duplicate symptom, not a separate fault. 'Demo-placeholder count not measurable' is caused entirely by the audit's anonymous fetch being 401'd by the armed gate, which IS DW-040. One cause, one row. The placeholder measurement resumes the moment DW-040 teac"
   },
   "DW-003": {
    "first_seen": "2026-08-02",
@@ -25,7 +25,7 @@
    "source": "consolidation",
    "status": "RECLASSIFIED",
    "closed": "2026-08-14",
-   "disposition": "**DW-003** MOVED 2026-08-14 to OPEN_LOOPS.md as loop L8 \u2014 it is a PROJECT, not a fault. 'No external uptime monitor exists' has no failing check behind it; nothing is broken, something is unbuilt. A fault register tracks things that regressed; OPEN_LOOPS tracks things to build, which is where David "
+   "disposition": "**DW-003** MOVED 2026-08-14 to OPEN_LOOPS.md as loop L8 — it is a PROJECT, not a fault. 'No external uptime monitor exists' has no failing check behind it; nothing is broken, something is unbuilt. A fault register tracks things that regressed; OPEN_LOOPS tracks things to build, which is where David "
   },
   "DW-004": {
    "first_seen": "2026-08-02",
@@ -34,7 +34,7 @@
    "source": "consolidation",
    "status": "RECLASSIFIED",
    "closed": "2026-08-14",
-   "disposition": "**DW-004** RECLASSIFIED 2026-08-14 \u2014 not a fault, a POSTURE David chose. The autonomous fixer is paused on his 2 Aug instruction; queue.json and staged.json have read [] every day since. Verifying it daily is right; calling a deliberate decision an open issue is not. It now lives as a GREY 'accepted"
+   "disposition": "**DW-004** RECLASSIFIED 2026-08-14 — not a fault, a POSTURE David chose. The autonomous fixer is paused on his 2 Aug instruction; queue.json and staged.json have read [] every day since. Verifying it daily is right; calling a deliberate decision an open issue is not. It now lives as a GREY 'accepted"
   },
   "DW-005": {
    "first_seen": "2026-08-02",
@@ -84,8 +84,8 @@
    "sev": "MEDIUM",
    "source": "cc_age_check (Monday lane)",
    "status": "SCHEDULED",
-   "summary": "CC-002 open **82d** vs 7d threshold (cc_age 2026-08-31; was 75d on 24 Aug). FORMALLY DEFERRED by David 21 Aug \u2014 SCHEDULED.",
-   "disposition": "FORMALLY DEFERRED 2026-08-21 (attended session, reflected here by the watch) \u2014 CC-002 is ~10 open product/pricing questions in AWAITING_DAVID.md, several touching the EULA and one a live payment path, against SOFT-to-PUBLIC 29 Aug / FULL LAUNCH 1 Sep (RUL-001). Target: first post-launch week, from Mon 8 Sep 2026. David's veto point: name any single item that must land before launch and it lands on its own."
+   "summary": "CC-002 open **82d** vs 7d threshold (cc_age 2026-08-31; was 75d on 24 Aug). FORMALLY DEFERRED by David 21 Aug — SCHEDULED.",
+   "disposition": "FORMALLY DEFERRED 2026-08-21 (attended session, reflected here by the watch) — CC-002 is ~10 open product/pricing questions in AWAITING_DAVID.md, several touching the EULA and one a live payment path, against SOFT-to-PUBLIC 29 Aug / FULL LAUNCH 1 Sep (RUL-001). Target: first post-launch week, from Mon 8 Sep 2026. David's veto point: name any single item that must land before launch and it lands on its own."
   },
   "DW-011": {
    "first_seen": "2026-08-03",
@@ -111,7 +111,7 @@
    "status": "CLOSED",
    "note": "parity HOLDS (both instruments 29/39) but smoke is NO LONGER all-green - caused by DW-038 + DW-039, not a parity break",
    "closed": "2026-08-14",
-   "evidence": "cron smoke **29/39** == sandbox **29 OK / 10 FAIL of 39**; health **ok / v1.3.1** on both; spend **$0.00 today** on both against the $100 ceiling. The 10 failures are NOT this row \u2014 they are tracked as DW-038 (9, edge blocks the instrument) and DW-039 (1, stale assertion), both still OPEN."
+   "evidence": "cron smoke **29/39** == sandbox **29 OK / 10 FAIL of 39**; health **ok / v1.3.1** on both; spend **$0.00 today** on both against the $100 ceiling. The 10 failures are NOT this row — they are tracked as DW-038 (9, edge blocks the instrument) and DW-039 (1, stale assertion), both still OPEN."
   },
   "DW-014": {
    "first_seen": "2026-08-04",
@@ -190,7 +190,7 @@
    "source": "self-heartbeat",
    "status": "RECLASSIFIED",
    "closed": "2026-08-14",
-   "disposition": "**DW-022** MERGED 2026-08-14 into DW-003 \u2014 a property, not a defect. 'The watch is desktop-bound, so a closed app is a blind day' is a true structural statement with no fix of its own; the actual fix is the external uptime monitor, which is DW-003. It stays visible as an AMBER card on the coverage m"
+   "disposition": "**DW-022** MERGED 2026-08-14 into DW-003 — a property, not a defect. 'The watch is desktop-bound, so a closed app is a blind day' is a true structural statement with no fix of its own; the actual fix is the external uptime monitor, which is DW-003. It stays visible as an AMBER card on the coverage m"
   },
   "DW-023": {
    "first_seen": "2026-08-07",
@@ -214,7 +214,7 @@
    "source": "RG-0025 scope gap (Stays session)",
    "status": "CLOSED",
    "closed": "2026-08-14",
-   "evidence": "migration **017_selfhost_demo_images** is APPLIED on the box (present in `/var/www/marketsquare/.migrations_done`) and sibling assertion **RG-0063** \u2014 'every pixel the app serves comes from OUR origin: no unsplash, pexels, picsum, cloudinary, imgur or lookalike' \u2014 is **LOCKED (fixed 2026-08-13) and PASSING** in today's ledger run (exit 0). The 40 third-party refs on /demo-sellers are gone. The ass"
+   "evidence": "migration **017_selfhost_demo_images** is APPLIED on the box (present in `/var/www/marketsquare/.migrations_done`) and sibling assertion **RG-0063** — 'every pixel the app serves comes from OUR origin: no unsplash, pexels, picsum, cloudinary, imgur or lookalike' — is **LOCKED (fixed 2026-08-13) and PASSING** in today's ledger run (exit 0). The 40 third-party refs on /demo-sellers are gone. The ass"
   },
   "DW-026": {
    "first_seen": "2026-08-07",
@@ -236,7 +236,7 @@
    "status": "CLOSED",
    "summary": "Re-verified: RG-0101 gzip probe still 401 at /ops/selfcheck even with the review gate down - the ops key is a separate credential; still no ops API_KEY in .secrets.",
    "closed": "2026-08-21",
-   "disposition": "CLOSED 2026-08-21 (attended session, reflected here by the watch) \u2014 RG-0101 re-pointed off the key-gated /ops/selfcheck stand-in onto /wonders itself and is now LOCKED and passing: '/wonders travels gzipped (160,022 B on the wire)'. Re-verified by this run's ledger, exit 0."
+   "disposition": "CLOSED 2026-08-21 (attended session, reflected here by the watch) — RG-0101 re-pointed off the key-gated /ops/selfcheck stand-in onto /wonders itself and is now LOCKED and passing: '/wonders travels gzipped (160,022 B on the wire)'. Re-verified by this run's ledger, exit 0."
   },
   "DW-027": {
    "first_seen": "2026-08-07",
@@ -246,7 +246,7 @@
    "status": "CLOSED",
    "summary": "Not re-checkable by this read-only task (needs a photo run). Day 14 waiting on a ruling. RG-0047 LOCKED and holding.",
    "closed": "2026-08-21",
-   "disposition": "CLOSED 2026-08-21 (attended session, reflected here by the watch) \u2014 the ruling had already been given and built on 7 Aug: _ANON_MAX_BLUR_FRAC=0.18 measured before the next layer is painted, four call sites return needs-replacement, switch photo_replace_request defaults ON. RG-0047 LOCKED and ok today; PHOTO-REJECT-1 is stricter still while the canary is dark."
+   "disposition": "CLOSED 2026-08-21 (attended session, reflected here by the watch) — the ruling had already been given and built on 7 Aug: _ANON_MAX_BLUR_FRAC=0.18 measured before the next layer is painted, four call sites return needs-replacement, switch photo_replace_request defaults ON. RG-0047 LOCKED and ok today; PHOTO-REJECT-1 is stricter still while the canary is dark."
   },
   "DW-029": {
    "first_seen": "2026-08-07",
@@ -254,8 +254,8 @@
    "sev": "MEDIUM",
    "source": "production secrets exposed in a chat transcript",
    "status": "CLOSED",
-   "summary": "Not re-checked - this task does not read secrets. Day 16. Gate is down, so the site is publicly readable while old credentials are live. CLOSED 23 Aug (register reconciliation): the 22 Aug session finished the set the same day this row was last written \u2014 'last-four-secrets' fragment: MS_DEPLOY_TOKEN reminted, RELAY/EMAIL_INBOUND rotated into their CF Workers, COMMAND_SECRET deleted (nothing consumed it). SECRETS_REGISTER.md 'Still burnt' table is EMPTY and RG-0146 (LOCKED) asserts none BURNT \u2014 green on today's run. The register was updated Friday; this watch row was not. Residual: FOUNDERS_ID_SALT decision pending, tracked by its own open ledger entry.",
-   "next_action": "None \u2014 closed 2026-08-23, evidence: SECRETS_REGISTER.md + RG-0146 green."
+   "summary": "Not re-checked - this task does not read secrets. Day 16. Gate is down, so the site is publicly readable while old credentials are live. CLOSED 23 Aug (register reconciliation): the 22 Aug session finished the set the same day this row was last written — 'last-four-secrets' fragment: MS_DEPLOY_TOKEN reminted, RELAY/EMAIL_INBOUND rotated into their CF Workers, COMMAND_SECRET deleted (nothing consumed it). SECRETS_REGISTER.md 'Still burnt' table is EMPTY and RG-0146 (LOCKED) asserts none BURNT — green on today's run. The register was updated Friday; this watch row was not. Residual: FOUNDERS_ID_SALT decision pending, tracked by its own open ledger entry.",
+   "next_action": "None — closed 2026-08-23, evidence: SECRETS_REGISTER.md + RG-0146 green."
   },
   "DW-030": {
    "first_seen": "2026-08-08",
@@ -276,7 +276,7 @@
    "note": "check passing since 2026-08-09 (4th day) - awaiting David's close",
    "summary": "Condition still unmet on technicality: HEAD 1 ahead by d10d8ac (06:29 maintenance bookkeeping, no deployable files); tree 12 entries watch exhaust; drift substance CLEAN today",
    "closed": "2026-08-16",
-   "disposition": "CLOSED 2026-08-16 (md) \u2014 HEAD == origin/deploy == bd3d958, zero modified tracked files. JSON state repaired 2026-08-19 (bookkeeping drift, no new closure)."
+   "disposition": "CLOSED 2026-08-16 (md) — HEAD == origin/deploy == bd3d958, zero modified tracked files. JSON state repaired 2026-08-19 (bookkeeping drift, no new closure)."
   },
   "DW-032": {
    "first_seen": "2026-08-08",
@@ -286,7 +286,7 @@
    "status": "CLOSED",
    "note": "PREMISE DISSOLVED 2026-08-11 - Anthropic cancelled the 1 Sep increase; $2/$10 is now permanent. Awaiting David's close",
    "closed": "2026-08-14",
-   "evidence": "Anthropic announced **10 Aug 2026** that the 1 Sep increase to $3/$15 will NOT proceed; Claude Sonnet 5's **$2/$10 is the standard price** (gurufocus, BigGo Finance, AI CERTs, techjournal.org, explainx.ai). Two stale tracker pages still print the reversion (digitalapplied.com, benchlm.ai) \u2014 recorded here so the contradiction can never resurface as a scare. Month spend at close: $0.00 today, 0.0% o"
+   "evidence": "Anthropic announced **10 Aug 2026** that the 1 Sep increase to $3/$15 will NOT proceed; Claude Sonnet 5's **$2/$10 is the standard price** (gurufocus, BigGo Finance, AI CERTs, techjournal.org, explainx.ai). Two stale tracker pages still print the reversion (digitalapplied.com, benchlm.ai) — recorded here so the contradiction can never resurface as a scare. Month spend at close: $0.00 today, 0.0% o"
   },
   "DW-033": {
    "first_seen": "2026-08-09",
@@ -295,7 +295,7 @@
    "source": "AI-watch (rival list prices)",
    "status": "RECLASSIFIED",
    "closed": "2026-08-14",
-   "disposition": "**DW-033** RECLASSIFIED 2026-08-14 \u2014 never a fault. 'OpenAI's Luna -80% / Terra -20% list cuts stand; keep the full field on file' is a REFERENCE NOTE with no action and no deadline, retained per David's model-selection rule. Its home is the AI-watch record and CLAUDE.md's model-selection section, b"
+   "disposition": "**DW-033** RECLASSIFIED 2026-08-14 — never a fault. 'OpenAI's Luna -80% / Terra -20% list cuts stand; keep the full field on file' is a REFERENCE NOTE with no action and no deadline, retained per David's model-selection rule. Its home is the AI-watch record and CLAUDE.md's model-selection section, b"
   },
   "DW-034": {
    "first_seen": "2026-08-09",
@@ -323,9 +323,9 @@
    "source": "release state (NEW today)",
    "status": "CLOSED",
    "note": "release SHIPPED (fd3188f, HEAD == origin/deploy); drift now comes from UNCOMMITTED working-tree edits",
-   "summary": "Substance shipped: 3775309 ancestor of origin/deploy; MSJS-DRIFT cleared (v483 byte-identical). Condition fails only on d10d8ac morning bookkeeping commit \u2014 unreachable at 06:30 as written",
+   "summary": "Substance shipped: 3775309 ancestor of origin/deploy; MSJS-DRIFT cleared (v483 byte-identical). Condition fails only on d10d8ac morning bookkeeping commit — unreachable at 06:30 as written",
    "closed": "2026-08-16",
-   "disposition": "CLOSED 2026-08-16 (md) \u2014 HEAD == origin/deploy (release 08:48); MSJS-DRIFT clean; migration chain through 021 recorded done. JSON state repaired 2026-08-19 (bookkeeping drift, no new closure)."
+   "disposition": "CLOSED 2026-08-16 (md) — HEAD == origin/deploy (release 08:48); MSJS-DRIFT clean; migration chain through 021 recorded done. JSON state repaired 2026-08-19 (bookkeeping drift, no new closure)."
   },
   "DW-037": {
    "first_seen": "2026-08-11",
@@ -334,7 +334,7 @@
    "source": "watch output ergonomics",
    "status": "RECLASSIFIED",
    "closed": "2026-08-14",
-   "disposition": "**DW-037** RECLASSIFIED 2026-08-14 \u2014 never a fault. 'Emit the commit block in PowerShell syntax' is a standing PREFERENCE, and it was honoured every single day it sat here. Its correct home is the instruction, not a defect list: it is now written into the trustsquare-daily-watch task prompt (Phase C"
+   "disposition": "**DW-037** RECLASSIFIED 2026-08-14 — never a fault. 'Emit the commit block in PowerShell syntax' is a standing PREFERENCE, and it was honoured every single day it sat here. Its correct home is the instruction, not a defect list: it is now written into the trustsquare-daily-watch task prompt (Phase C"
   },
   "DW-038": {
    "first_seen": "2026-08-12",
@@ -342,7 +342,7 @@
    "sev": "HIGH",
    "source": "smoke_test + server-side edge probe (NEW today)",
    "status": "CLOSED",
-   "summary": "Day 7 \u2014 condition identical. Smoke 30/39, same 9 UA-less-fetch failures. Cron grades the SAME 30/39 (parity holds). Real visitors unaffected.",
+   "summary": "Day 7 — condition identical. Smoke 30/39, same 9 UA-less-fetch failures. Cron grades the SAME 30/39 (parity holds). Real visitors unaffected.",
    "closed": "2026-08-20",
    "evidence": "smoke_test.py from the sandbox: \"[OK] All checks passed -- safe to close session.\" (all sections green, live listing photos 59/59); 01:30 cron sensor independently grades smoke 39/39, all_green true. The 9 UA-less-fetch failures are gone on BOTH instruments; parity holds at 39/39.",
    "disposition": "CLOSED 2026-08-20 - originating check re-ran and PASSES. RESIDUAL: nothing was deliberately changed, so the cause was external (CF rule change or the gate coming down) and could return; a recurrence is a NEW id referencing this one."
@@ -371,7 +371,7 @@
    "last_seen": "2026-08-16",
    "summary": "Day 4 byte-identical: 401 on terms/privacy/eula/login/payment-test/demo-listings/demo-sellers/flags/wonders; 200 on / support static-ms.js health; RG-0081 emailed-link locked, scope unchanged",
    "closed": "2026-08-16",
-   "disposition": "CLOSED 2026-08-16 (md) \u2014 RUL-020 executed: migrations/021 exempts /terms + /privacy at origin; both 200. JSON state repaired 2026-08-19 (bookkeeping drift, no new closure)."
+   "disposition": "CLOSED 2026-08-16 (md) — RUL-020 executed: migrations/021 exempts /terms + /privacy at origin; both 200. JSON state repaired 2026-08-19 (bookkeeping drift, no new closure)."
   },
   "DW-042": {
    "first_seen": "2026-08-13",
@@ -380,7 +380,7 @@
    "source": "deploy engine stall",
    "status": "CLOSED",
    "closed": "2026-08-14",
-   "evidence": "`marketsquare-deploy.timer` live, last fired **04:51 UTC**, **ExecStart exit 0/SUCCESS**, ticking every ~2 min; the box PLACED ref **a6c40c9** at **13:37 UTC 13 Aug** (live index.html mtime and /opt/marketsquare-src refs/heads mtime agree); migration **017 completed** \u2014 the very work the stall interrupted; live ms.js **v468 -> v470**, ms.css **v305 -> v334**."
+   "evidence": "`marketsquare-deploy.timer` live, last fired **04:51 UTC**, **ExecStart exit 0/SUCCESS**, ticking every ~2 min; the box PLACED ref **a6c40c9** at **13:37 UTC 13 Aug** (live index.html mtime and /opt/marketsquare-src refs/heads mtime agree); migration **017 completed** — the very work the stall interrupted; live ms.js **v468 -> v470**, ms.css **v305 -> v334**."
   },
   "DW-043": {
    "first_seen": "2026-08-15",
@@ -388,7 +388,7 @@
    "sev": "MEDIUM",
    "source": "cost sweep",
    "status": "CLOSED",
-   "summary": "WORSE: 5 CRITICAL/13 WARN (was 2/11); sweep now fires CRITICAL at DEFENCE_COVERAGE_MAP.html:31/:90 and DAILY_WATCH/OPEN_ITEMS.json:353 \u2014 the register/map documenting DW-044; self-referential loop; zero new call sites",
+   "summary": "WORSE: 5 CRITICAL/13 WARN (was 2/11); sweep now fires CRITICAL at DEFENCE_COVERAGE_MAP.html:31/:90 and DAILY_WATCH/OPEN_ITEMS.json:353 — the register/map documenting DW-044; self-referential loop; zero new call sites",
    "closed": "2026-08-17",
    "evidence": "sweep 2026-08-17: ZERO CRITICAL at watch files (map + register now WARN-fable); totals 5C/13W -> 3C/16W; residual: exemption unbuilt (DW-044 docs), fable WARNs -> DW-047"
   },
@@ -400,7 +400,7 @@
    "status": "CLOSED",
    "summary": "Unchanged on disk (untouched since 11 Jul): MODEL_RATES:35 claude-opus-4-6 (15/75)/MTok + hardcoded sonnet sites outside the seam. Not spending: $0.00 today, $1.88 MTD / 305 calls.",
    "closed": "2026-08-21",
-   "disposition": "CLOSED 2026-08-21 (attended session, reflected here by the watch) \u2014 cost_compliance_sweep.py reports 0 critical; re-verified by this run's sweep (0 critical, 9 warnings, none of them call sites). Opus rate row struck, AdvertAgent recorded out of perimeter, unpriced models now logged instead of silently priced at the Sonnet rate."
+   "disposition": "CLOSED 2026-08-21 (attended session, reflected here by the watch) — cost_compliance_sweep.py reports 0 critical; re-verified by this run's sweep (0 critical, 9 warnings, none of them call sites). Opus rate row struck, AdvertAgent recorded out of perimeter, unpriced models now logged instead of silently priced at the Sonnet rate."
   },
   "DW-045": {
    "first_seen": "2026-08-15",
@@ -448,9 +448,9 @@
    "sev": "MEDIUM",
    "source": "audit instrument",
    "status": "CLOSED",
-   "summary": "Predicted false CRITICAL did NOT fire \u2014 but only because a REAL deploy is staged (bea_main.py ahead). Instrument still untaught: no CRLF normalization in audit_global_qa.py; raw \u039416,552B \u2248 1 byte/line = pure CRLF (deploy_drift, which normalizes, says ms.js MATCHES live). Will fire falsely again once the staged deploy ships.",
+   "summary": "Predicted false CRITICAL did NOT fire — but only because a REAL deploy is staged (bea_main.py ahead). Instrument still untaught: no CRLF normalization in audit_global_qa.py; raw Δ16,552B ≈ 1 byte/line = pure CRLF (deploy_drift, which normalizes, says ms.js MATCHES live). Will fire falsely again once the staged deploy ships.",
    "closed": "2026-08-19",
-   "disposition": "CLOSED 2026-08-19 \u2014 the predicted post-ship false CRITICAL did not fire. Post-deploy audit recorded VERSION-KEY-BENIGN (repo v453 / live v504, served bytes IDENTICAL, 1,081,905B both sides), MSJS-DRIFT absent, zero CRITICAL. RESIDUAL: audit_global_qa.py still has no CRLF normalization \u2014 it passed because the bytes genuinely match, not because the compare was taught."
+   "disposition": "CLOSED 2026-08-19 — the predicted post-ship false CRITICAL did not fire. Post-deploy audit recorded VERSION-KEY-BENIGN (repo v453 / live v504, served bytes IDENTICAL, 1,081,905B both sides), MSJS-DRIFT absent, zero CRITICAL. RESIDUAL: audit_global_qa.py still has no CRLF normalization — it passed because the bytes genuinely match, not because the compare was taught."
   },
   "DW-050": {
    "first_seen": "2026-08-18",
@@ -458,9 +458,9 @@
    "sev": "LOW",
    "source": "deploy_drift + git status",
    "status": "CLOSED",
-   "summary": "NEW \u2014 deploy staged, not shipped: bea_main.py local-ahead of live (uncommitted M bea_main.py; audit MSJS-DRIFT/VERSION-KEY read the same staging). Normal workflow \u2014 listed so it cannot silently age. Next: attended commit + /ship (or tonight's /TSL).",
+   "summary": "NEW — deploy staged, not shipped: bea_main.py local-ahead of live (uncommitted M bea_main.py; audit MSJS-DRIFT/VERSION-KEY read the same staging). Normal workflow — listed so it cannot silently age. Next: attended commit + /ship (or tonight's /TSL).",
    "closed": "2026-08-19",
-   "disposition": "CLOSED 2026-08-19 \u2014 deploy_drift re-ran and PASSES: 'clean - all 19 tracked files match live'. Release 4a76ad2 shipped 06:35 (MIGRATE-IMPORT-1 + gate-down); live ms.js v498->v504 byte-identical to repo; ONETAP endpoints now answer. RESIDUAL: uncommitted doc changes remain in the tree (listed in the commit block, not a fault)."
+   "disposition": "CLOSED 2026-08-19 — deploy_drift re-ran and PASSES: 'clean - all 19 tracked files match live'. Release 4a76ad2 shipped 06:35 (MIGRATE-IMPORT-1 + gate-down); live ms.js v498->v504 byte-identical to repo; ONETAP endpoints now answer. RESIDUAL: uncommitted doc changes remain in the tree (listed in the commit block, not a fault)."
   },
   "DW-051": {
    "sev": "HIGH",
@@ -471,12 +471,12 @@
    "last_seen": "2026-08-21",
    "status": "CLOSED",
    "closed": "2026-08-20",
-   "disposition": "CLOSED 2026-08-20 in OPEN_ITEMS.md (JSON reconciled 2026-08-21) \u2014 GET /static/post_deploy_status.json reports the chain clean end to end. Re-verified by today's ledger: RG-0124 'last deploy 2026-08-20T15:56:13Z: 7 step(s), none failed' and RG-0125 'chain clean, 7 step(s) all ok', both LOCKED and ok."
+   "disposition": "CLOSED 2026-08-20 in OPEN_ITEMS.md (JSON reconciled 2026-08-21) — GET /static/post_deploy_status.json reports the chain clean end to end. Re-verified by today's ledger: RG-0124 'last deploy 2026-08-20T15:56:13Z: 7 step(s), none failed' and RG-0125 'chain clean, 7 step(s) all ok', both LOCKED and ok."
   },
   "DW-052": {
    "sev": "MEDIUM",
    "source": "regression ledger self-contradiction",
-   "summary": "RG-0108 fails daily with 'CONTAINMENT BREACH: anonymous /listings answered 200' while RG-0115 (LOCKED today) asserts the gate is deliberately DOWN on both halves \u2014 anonymous 200 is now correct. Verified live: / /listings /wonders /flags all 200, /review/verify {valid:true}, /_review_gate 200. Also 4 entries READY TO LOCK (RG-0107/0109/0110/0111).",
+   "summary": "RG-0108 fails daily with 'CONTAINMENT BREACH: anonymous /listings answered 200' while RG-0115 (LOCKED today) asserts the gate is deliberately DOWN on both halves — anonymous 200 is now correct. Verified live: / /listings /wonders /flags all 200, /review/verify {valid:true}, /_review_gate 200. Also 4 entries READY TO LOCK (RG-0107/0109/0110/0111).",
    "next_action": "Attended: rewrite RG-0108's live half to assert the ADMIN DOOR only (gate-state-independent); promote the 4 ready-to-lock entries.",
    "first_seen": "2026-08-19",
    "last_seen": "2026-08-20",
@@ -506,7 +506,7 @@
    "last_seen": "2026-08-21",
    "status": "CLOSED",
    "closed": "2026-08-21",
-   "disposition": "CLOSED 2026-08-21 (attended session, reflected here by the watch) \u2014 RG-0128 written and LOCKED ('the AI breaker fails OVER, not merely open'), 13/13 checks through scripts/prove_ai_failover.py; re-verified ok in this run's ledger. RESIDUAL: the DECISION layer is proven; production lane count is unreadable at /ops/selfcheck (401), so whether failover has anywhere to go is UNSEEN, not assumed \u2014 carried as an amber card on the coverage map."
+   "disposition": "CLOSED 2026-08-21 (attended session, reflected here by the watch) — RG-0128 written and LOCKED ('the AI breaker fails OVER, not merely open'), 13/13 checks through scripts/prove_ai_failover.py; re-verified ok in this run's ledger. RESIDUAL: the DECISION layer is proven; production lane count is unreadable at /ops/selfcheck (401), so whether failover has anywhere to go is UNSEEN, not assumed — carried as an amber card on the coverage map."
   },
   "DW-055": {
    "first_seen": "2026-08-20",
@@ -537,8 +537,8 @@
    "sev": "HIGH",
    "source": "close-all pass, operator error (mine)",
    "status": "CLOSED",
-   "summary": "NEW - the DW-029 class recurred and the watch caused it: `systemctl show marketsquare -p Environment` printed the unit's entire inline environment (MS_API_KEY, PAYSTACK_WEBHOOK_SECRET, RESEND_API_KEY, CF_CACHE_TOKEN, MS_DEPLOY_TOKEN, FOUNDERS_ID_SALT, TRAVELPAYOUTS_TOKEN, Numista/JustTCG) in clear text into a chat transcript. Later commands parse the env into exports without echoing, and the shipped MIGRATE-ENV-1 block does the same, but these values are burnt. CLOSED 23 Aug with DW-029 \u2014 its stated close condition ('when the remaining ten are rotated') was met 22 Aug; see DW-029. The structural half (secrets in 0600 files, verify-at-point-of-use) is RG-0147, LOCKED.",
-   "next_action": "None \u2014 closed 2026-08-23, evidence: SECRETS_REGISTER.md + RG-0146 green."
+   "summary": "NEW - the DW-029 class recurred and the watch caused it: `systemctl show marketsquare -p Environment` printed the unit's entire inline environment (MS_API_KEY, PAYSTACK_WEBHOOK_SECRET, RESEND_API_KEY, CF_CACHE_TOKEN, MS_DEPLOY_TOKEN, FOUNDERS_ID_SALT, TRAVELPAYOUTS_TOKEN, Numista/JustTCG) in clear text into a chat transcript. Later commands parse the env into exports without echoing, and the shipped MIGRATE-ENV-1 block does the same, but these values are burnt. CLOSED 23 Aug with DW-029 — its stated close condition ('when the remaining ten are rotated') was met 22 Aug; see DW-029. The structural half (secrets in 0600 files, verify-at-point-of-use) is RG-0147, LOCKED.",
+   "next_action": "None — closed 2026-08-23, evidence: SECRETS_REGISTER.md + RG-0146 green."
   },
   "DW-058": {
    "first_seen": "2026-08-21",
@@ -546,8 +546,8 @@
    "sev": "MEDIUM",
    "source": "run_daily_checks deploy_drift + audit MSJS-DRIFT/VERSION-KEY",
    "status": "CLOSED",
-   "summary": "Deploy drift \u2014 CLOSED 2026-08-24: deploy_drift clean, all 19 tracked files match live; 04:25Z deploy placed ok (post_deploy_status), RG-0171/RG-0174 promoted on the ride.",
-   "next_action": "None \u2014 closed with probe evidence 2026-08-24.",
+   "summary": "Deploy drift — CLOSED 2026-08-24: deploy_drift clean, all 19 tracked files match live; 04:25Z deploy placed ok (post_deploy_status), RG-0171/RG-0174 promoted on the ride.",
+   "next_action": "None — closed with probe evidence 2026-08-24.",
    "references": "DW-055",
    "closed": "2026-08-24"
   },
@@ -586,8 +586,8 @@
    "status": "CLOSED",
    "closed": null,
    "summary": "CLOSED 30 Aug attended: sample rows repointed to /static images (all probed 200); audit re-run dropped LINKS-DEAD. Residual: live half rides next deploy (MSJS-DRIFT tracks it, CRITICAL if it persists post-deploy).",
-   "next_action": "None \u2014 closed on the audit re-run.",
-   "evidence": "RE-RAN 2026-08-27 and FAILED \u2014 4th consecutive failing pass. audit_global_qa LINKS-DEAD: same 5 example.com image URLs of 11 checked, inside the bulk-import CSV template strings in ms.js."
+   "next_action": "None — closed on the audit re-run.",
+   "evidence": "RE-RAN 2026-08-27 and FAILED — 4th consecutive failing pass. audit_global_qa LINKS-DEAD: same 5 example.com image URLs of 11 checked, inside the bulk-import CSV template strings in ms.js."
   },
   "DW-063": {
    "first_seen": "2026-08-24",
@@ -596,8 +596,8 @@
    "source": "scripts/deep_scan.py (Monday lane)",
    "status": "CLOSED",
    "closed": "2026-08-31",
-   "summary": "**CLOSED 2026-08-31 \u2014 the originating check (Monday deep-scan lane) re-ran and PASSED.** `ruff --select F401,F841` on the named files (bea_main.py auth.py database.py storage.py payments.py): **\"All checks passed!\"**, exit 0. `scripts/deep_scan.py` re-run banked SCAN_REPORT.json 2026-08-31T04:40:28Z \u2014 213 findings, 7 new, 0 crash-class \u2014 and **not one of the 7 new is in a named file** (named-file NEW list is empty). The 30 Aug fixes held. **RESIDUAL (coverage-map card, not a live row):** 42 pre-existing lint findings survive on the named files (32 B008, 9 B904, 1 B007) and no ledger entry asserts them \u2014 B008 is the FastAPI `Depends()`-in-defaults idiom and is arguably a false-positive class, but nothing on disk records that adjudication, so the next Monday session re-derives it.",
-   "next_action": "None \u2014 closed 2026-08-31 on the Monday deep-scan re-run with the named findings gone."
+   "summary": "**CLOSED 2026-08-31 — the originating check (Monday deep-scan lane) re-ran and PASSED.** `ruff --select F401,F841` on the named files (bea_main.py auth.py database.py storage.py payments.py): **\"All checks passed!\"**, exit 0. `scripts/deep_scan.py` re-run banked SCAN_REPORT.json 2026-08-31T04:40:28Z — 213 findings, 7 new, 0 crash-class — and **not one of the 7 new is in a named file** (named-file NEW list is empty). The 30 Aug fixes held. **RESIDUAL (coverage-map card, not a live row):** 42 pre-existing lint findings survive on the named files (32 B008, 9 B904, 1 B007) and no ledger entry asserts them — B008 is the FastAPI `Depends()`-in-defaults idiom and is arguably a false-positive class, but nothing on disk records that adjudication, so the next Monday session re-derives it.",
+   "next_action": "None — closed 2026-08-31 on the Monday deep-scan re-run with the named findings gone."
   },
   "DW-064": {
    "first_seen": "2026-08-24",
@@ -608,9 +608,9 @@
    "closed": null,
    "references": "DW-061",
    "summary": "CLOSED 30 Aug attended: two-instrument byte-proof, baseline refreshed on the box, re-probe status ok / alerts [].",
-   "next_action": "None \u2014 closed on a probed ok.",
-   "note_2026_08_26": "NOT RE-CHECKED \u2014 fea_integrity_check.py is on the box and SSH is down (DW-065). Could neither fail nor close today.",
-   "evidence": "RE-PROBED 2026-08-27 over SSH and FAILED \u2014 fea_integrity_check status: alert, alerts ['index bytes 415388 -> 415200 (delta -188)']; notes ms.js v518->v548, ms.css v382->v412 (moved again with the 02:01 and 05:45 releases). deploy_drift clean + audit VERSION-KEY-BENIGN prove it is a deploy, not a tamper. Baseline stale across six deploys."
+   "next_action": "None — closed on a probed ok.",
+   "note_2026_08_26": "NOT RE-CHECKED — fea_integrity_check.py is on the box and SSH is down (DW-065). Could neither fail nor close today.",
+   "evidence": "RE-PROBED 2026-08-27 over SSH and FAILED — fea_integrity_check status: alert, alerts ['index bytes 415388 -> 415200 (delta -188)']; notes ms.js v518->v548, ms.css v382->v412 (moved again with the 02:01 and 05:45 releases). deploy_drift clean + audit VERSION-KEY-BENIGN prove it is a deploy, not a tamper. Baseline stale across six deploys."
   },
   "DW-065": {
    "first_seen": "2026-08-26",
@@ -618,11 +618,11 @@
    "sev": "HIGH",
    "source": "regression ledger RG-0099 + run_daily_checks + smoke_test",
    "status": "CLOSED",
-   "summary": "SSH-LOCKOUT-1 recurred 04:20; CLOSED same day (attended) \u2014 David added 197.184.106.176 to the TCP 22 rule of trustsquare-origin-lockdown.",
+   "summary": "SSH-LOCKOUT-1 recurred 04:20; CLOSED same day (attended) — David added 197.184.106.176 to the TCP 22 rule of trustsquare-origin-lockdown.",
    "next_action": null,
    "closed": "2026-08-26",
-   "evidence": "Ledger 06:35: [ ok ] RG-0099 \u2014 ssh:22 open and the edge serves this IP, both management lanes clear. Direct probe: ssh msdeploy@178.104.73.239 returned SSH_OK, uptime 90 days.",
-   "residual": "DW-073 \u2014 the RED-alert path shares a transport with the failure it must report; unblocked, not structurally fixed."
+   "evidence": "Ledger 06:35: [ ok ] RG-0099 — ssh:22 open and the edge serves this IP, both management lanes clear. Direct probe: ssh msdeploy@178.104.73.239 returned SSH_OK, uptime 90 days.",
+   "residual": "DW-073 — the RED-alert path shares a transport with the failure it must report; unblocked, not structurally fixed."
   },
   "DW-066": {
    "first_seen": "2026-08-26",
@@ -633,7 +633,7 @@
    "summary": "STILL RED 06:40. post_deploy_status.json still generated_at 2026-08-26T04:05:08Z (box mtime confirms) with migration:033_csp_verify_served.py failed, CHAIN JAMMED HERE. Live headers re-probed after the 06:02 release: still frame-ancestors only. Attended session mid-hunt (7cc3110 CSP-SCRIPT-SRC-4, 97f8168 CSP-SCRIPT-SRC-5).",
    "next_action": "Fix 033 (scripts/prove_csp_discovery.py appears to be the 26 Aug session hunting the emitter) or record it in migrations/DEFERRED.txt; closes when RG-0125 re-runs green.",
    "closed": "2026-08-27",
-   "evidence": "CLOSED 2026-08-27 \u2014 RG-0125 ok: 'last deploy 2026-08-27T03:46:59Z: chain clean, 3 step(s) all ok'; live /static/post_deploy_status.json confirms generated_at 2026-08-27T03:46:59Z, seed/ladder_seed/migrations all ok, migrations 'none pending'."
+   "evidence": "CLOSED 2026-08-27 — RG-0125 ok: 'last deploy 2026-08-27T03:46:59Z: chain clean, 3 step(s) all ok'; live /static/post_deploy_status.json confirms generated_at 2026-08-27T03:46:59Z, seed/ladder_seed/migrations all ok, migrations 'none pending'."
   },
   "DW-067": {
    "first_seen": "2026-08-26",
@@ -642,9 +642,9 @@
    "source": "regression ledger RG-0020 + live /flags",
    "status": "CLOSED",
    "summary": "Funnel snapshot staler than the Model Register, and served that way: ai_price_card.json version 2026-08-26.1 (regenerated 04:09 today) vs ai_funnel_snapshot.json card_version 2026-08-19.1; live GET /flags publishes ai_provider.funnel.card_version 2026-08-19.1. Instrument-truth class (RG-0133).",
-   "next_action": "None \u2014 closed 2026-08-26 on its originating check.",
+   "next_action": "None — closed 2026-08-26 on its originating check.",
    "closed": "2026-08-26",
-   "closed_evidence": "ledger re-run same session: '[  ok  ] RG-0020 \u2014 snapshot current (card 2026-08-26.1)' after a concurrent attended session regenerated ai_funnel_snapshot.json at 04:23 SAST.",
+   "closed_evidence": "ledger re-run same session: '[  ok  ] RG-0020 — snapshot current (card 2026-08-26.1)' after a concurrent attended session regenerated ai_funnel_snapshot.json at 04:23 SAST.",
    "residual": "live GET /flags still publishes ai_provider.funnel.card_version 2026-08-19.1 until a deploy rides; RG-0020's scope is repo-side only and cannot see the served half. Kept on the coverage map, not as a live row."
   },
   "DW-068": {
@@ -656,7 +656,7 @@
    "summary": "GET /launch-api/prospects/list serves prospect PII to an anonymous reader: HTTP 200, 146226 bytes, records carrying name/email/business_name/category/city/country/source AND magic_link pre-authenticated entry URLs (trustsquare.co/admin.html?magic=1&...). POPIA-relevant bulk disclosure, live now, 3 days before soft-public.",
    "next_action": null,
    "closed": "2026-08-26",
-   "evidence": "Anonymous GET /launch-api/prospects/list -> HTTP 401, 34 bytes, {'detail':'X-Launch-Key required'} (was 200 / 146226 bytes of prospect PII + magic links at 04:20). Ledger: RG-0176 '>>> now passing \u2014 change state to LOCKED'.",
+   "evidence": "Anonymous GET /launch-api/prospects/list -> HTTP 401, 34 bytes, {'detail':'X-Launch-Key required'} (was 200 / 146226 bytes of prospect PII + magic links at 04:20). Ledger: RG-0176 '>>> now passing — change state to LOCKED'.",
    "residual": "RG-0176 still marked open in the ledger source (promote to LOCKED); n8n cross-store suppression half still proven only by hand."
   },
   "DW-069": {
@@ -668,7 +668,7 @@
    "summary": "RE-PROBED 06:40, unchanged including after the 06:02 release: / and /terms return content-security-policy 'frame-ancestors self' only; no script-src, no connect-src. XFO/nosniff/referrer-policy/HSTS all present, so the header lane works. no_remote_code_guard.py (RG-0177 passing) is the only remaining barrier to the TP-Drive breach class.",
    "next_action": "Fix with DW-066 (one root cause); closes when RG-0178 re-runs green with script-src on both the index and an app path.",
    "closed": "2026-08-27",
-   "evidence": "CLOSED 2026-08-27 \u2014 RG-0178 ok (fixed 2026-08-27, promoted on a live probe); probed independently: GET / and GET /terms both return script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com. RESIDUAL: connect-src still blanket 'self' https: \u2014 RG-0180 honestly open, coverage-map card not a live row."
+   "evidence": "CLOSED 2026-08-27 — RG-0178 ok (fixed 2026-08-27, promoted on a live probe); probed independently: GET / and GET /terms both return script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com. RESIDUAL: connect-src still blanket 'self' https: — RG-0180 honestly open, coverage-map card not a live row."
   },
   "DW-070": {
    "first_seen": "2026-08-26",
@@ -676,10 +676,10 @@
    "sev": "LOW",
    "source": "self-heartbeat",
    "status": "CLOSED",
-   "summary": "Unchanged. 25 Aug run missed (last_run 08-24 -> 08-26). This 06:30 pass ran the SAME day as the 04:20 one, so the gap it measures is 0 days not 1 \u2014 a same-day re-run cannot satisfy the close condition and is not used to close it.",
+   "summary": "Unchanged. 25 Aug run missed (last_run 08-24 -> 08-26). This 06:30 pass ran the SAME day as the 04:20 one, so the gap it measures is 0 days not 1 — a same-day re-run cannot satisfy the close condition and is not used to close it.",
    "next_action": "Leave the app open at 06:30; closes when a run lands exactly 1 day after the previous last_run.",
    "closed": "2026-08-27",
-   "evidence": "CLOSED 2026-08-27 \u2014 self-heartbeat: previous last_run 2026-08-26, today 2026-08-27, gap exactly 1 day (the row's stated close condition). RESIDUAL: the watch is still desktop-bound \u2014 OPEN_LOOPS L8 / RG-0138."
+   "evidence": "CLOSED 2026-08-27 — self-heartbeat: previous last_run 2026-08-26, today 2026-08-27, gap exactly 1 day (the row's stated close condition). RESIDUAL: the watch is still desktop-bound — OPEN_LOOPS L8 / RG-0138."
   },
   "DW-071": {
    "first_seen": "2026-08-26",
@@ -690,7 +690,7 @@
    "summary": "HALF-FIXED by an attended session: new LOCKED entry RG-0187 teaches the ledger that a missing third-party dependency reads UNVERIFIED, never REGRESSION. PROBED 06:35: RG-0181 and RG-0182 now report [ ???? ] UNVERIFIED and the headline reads 2 REGRESSED / 2 UNVERIFIED. Still blind, not fixed: fastapi absent from the sandbox bootstrap, prove_fares_lane.py still writes a read-only DB. One clean run banked of the two required.",
    "next_action": "Add fastapi to the sandbox bootstrap + give the fares harness a writable temp DB copy, or teach both entries to report UNVERIFIED rather than REGRESSED on a vantage fault (RG-0133 grey-until-measured applied to the ledger). Closes when two consecutive sandbox runs agree with no environment-fault reds.",
    "closed": "2026-08-27",
-   "evidence": "CLOSED 2026-08-27 \u2014 second consecutive sandbox run with 0 environment-fault reds: 190 entries, 174 holding, 0 REGRESSED, 2 UNVERIFIED; RG-0181/RG-0182 read '[ ???? ] NOT EVALUATED \u2014 this machine lacks fastapi' (LEDGER-DEPS-1, RG-0187 holding). RESIDUAL: both harnesses remain BLIND \u2014 fastapi absent from the sandbox bootstrap, prove_fares_lane.py writes to a read-only DB."
+   "evidence": "CLOSED 2026-08-27 — second consecutive sandbox run with 0 environment-fault reds: 190 entries, 174 holding, 0 REGRESSED, 2 UNVERIFIED; RG-0181/RG-0182 read '[ ???? ] NOT EVALUATED — this machine lacks fastapi' (LEDGER-DEPS-1, RG-0187 holding). RESIDUAL: both harnesses remain BLIND — fastapi absent from the sandbox bootstrap, prove_fares_lane.py writes to a read-only DB."
   },
   "DW-072": {
    "first_seen": "2026-08-26",
@@ -701,17 +701,17 @@
    "summary": "Audit drift finding is a CRLF false positive. Audit claimed live ms.js 1156049B != repo 1173438B and 'a real deploy is staged'. Probed: index requests /static/ms.js?v=543; identity-encoded cache-busted fetch content-length 1156049, cf-cache-status MISS (origin); diff of served vs repo after stripping CR = 0 lines; repo has 17389 CR bytes and 1173438-1156049 = 17389. No drift.",
    "next_action": null,
    "closed": "2026-08-26",
-   "evidence": "audit_global_qa re-run 06:34: 3 findings, NO MSJS-DRIFT; drift slot now 'VERSION-KEY-BENIGN \u2014 served bytes are IDENTICAL to the repo'. CRLF normalisation landed."
+   "evidence": "audit_global_qa re-run 06:34: 3 findings, NO MSJS-DRIFT; drift slot now 'VERSION-KEY-BENIGN — served bytes are IDENTICAL to the repo'. CRLF normalisation landed."
   },
   "DW-073": {
    "first_seen": "2026-08-26",
    "last_seen": "2026-08-29",
    "sev": "HIGH",
-   "source": "RED-alert path \u2014 attempted and FAILED this session",
+   "source": "RED-alert path — attempted and FAILED this session",
    "status": "CLOSED",
-   "summary": "CLOSED 2026-08-29 \u2014 the hop this row re-checked daily now PASSES (DW-076's probe returns HTTP 200 from the box, was 400 days 1-3), and the vantage its next-action demanded now EXISTS and is asserted: RG-0193 LOCKED 28 Aug (Worker trustsquare-uptime, cron */5, probed ok:true kv:true). RESIDUAL on the map card: a genuine RED delivery has never been observed end-to-end; the first real RED is that proof (RG-0193's own alert-half caveat says the same).",
-   "next_action": "None \u2014 closed 2026-08-29; residual carried on the coverage-map card.",
-   "evidence": "NOT EXERCISED 2026-08-27 \u2014 today's verdict is AMBER, not RED, so no send was triggered; a green morning is not evidence about the alert path. Structural fault unchanged: the RED path is one SSH command to the box it monitors, and nothing asserts it.",
+   "summary": "CLOSED 2026-08-29 — the hop this row re-checked daily now PASSES (DW-076's probe returns HTTP 200 from the box, was 400 days 1-3), and the vantage its next-action demanded now EXISTS and is asserted: RG-0193 LOCKED 28 Aug (Worker trustsquare-uptime, cron */5, probed ok:true kv:true). RESIDUAL on the map card: a genuine RED delivery has never been observed end-to-end; the first real RED is that proof (RG-0193's own alert-half caveat says the same).",
+   "next_action": "None — closed 2026-08-29; residual carried on the coverage-map card.",
+   "evidence": "NOT EXERCISED 2026-08-27 — today's verdict is AMBER, not RED, so no send was triggered; a green morning is not evidence about the alert path. Structural fault unchanged: the RED path is one SSH command to the box it monitors, and nothing asserts it.",
    "closed": "2026-08-29"
   },
   "DW-074": {
@@ -720,11 +720,11 @@
    "sev": "MEDIUM",
    "source": "regression ledger RG-0154 (appeared mid-pass)",
    "status": "CLOSED",
-   "summary": "Dashboard session badge behind the evidence: live badge Session 178, disk evidence 179 \u2014 1 sitting unrecorded on the server. RG-0154 asserts the mechanism, and its ref notes two previous number-only 'permanent' fixes died within a session. Caveat: appeared between ledger runs in this pass (176 entries at 04:20, 181 at 04:26) while a concurrent attended session was writing STATUS.md/SESSION_COUNTER.json/CHANGELOG.md \u2014 may be mid-write state.",
+   "summary": "Dashboard session badge behind the evidence: live badge Session 178, disk evidence 179 — 1 sitting unrecorded on the server. RG-0154 asserts the mechanism, and its ref notes two previous number-only 'permanent' fixes died within a session. Caveat: appeared between ledger runs in this pass (176 entries at 04:20, 181 at 04:26) while a concurrent attended session was writing STATUS.md/SESSION_COUNTER.json/CHANGELOG.md — may be mid-write state.",
    "next_action": null,
    "closed": "2026-08-26",
-   "evidence": "Ledger 06:35: [ ok ] RG-0154 \u2014 session number is derived (repo 179, live 179, as of 2026-08-26) and the badge dates itself.",
-   "residual": "01:30Z cron sensor snapshot still records current_session 178 \u2014 a frozen record of that moment, not a live disagreement."
+   "evidence": "Ledger 06:35: [ ok ] RG-0154 — session number is derived (repo 179, live 179, as of 2026-08-26) and the badge dates itself.",
+   "residual": "01:30Z cron sensor snapshot still records current_session 178 — a frozen record of that moment, not a live disagreement."
   },
   "DW-075": {
    "first_seen": "2026-08-26",
@@ -732,20 +732,20 @@
    "sev": "HIGH",
    "source": "regression ledger RG-0186 (new entry, REGRESSED on arrival)",
    "status": "CLOSED",
-   "summary": "Second rotted LOCKED fix in today's run and it is the migration-proof method itself. RG-0186 ('a server-side migration can SEE every file it must change \u2014 discovery is what nginx actually reads') REGRESSION: '033 no longer reads the SERVED response after reloading \u2014 it would be declaring success from the write again, which is exactly 031's mistake'. Discovery half passes; verification half regressed. CLASS assertion covering any migration that edits server configuration.",
+   "summary": "Second rotted LOCKED fix in today's run and it is the migration-proof method itself. RG-0186 ('a server-side migration can SEE every file it must change — discovery is what nginx actually reads') REGRESSION: '033 no longer reads the SERVED response after reloading — it would be declaring success from the write again, which is exactly 031's mistake'. Discovery half passes; verification half regressed. CLASS assertion covering any migration that edits server configuration.",
    "next_action": "Attended (in flight): restore the served-response re-read in 033 alongside the port-443/settle fix from 97f8168; closes when RG-0186 re-runs green.",
    "closed": "2026-08-27",
-   "evidence": "CLOSED 2026-08-27 \u2014 RG-0186 ok (fixed 2026-08-26), 'discovery proven against a fixture the old globs could not see'; the verification half restored in the CSP hunt and sibling RG-0191 written and LOCKED alongside it."
+   "evidence": "CLOSED 2026-08-27 — RG-0186 ok (fixed 2026-08-26), 'discovery proven against a fixture the old globs could not see'; the verification half restored in the CSP hunt and sibling RG-0191 written and LOCKED alongside it."
   },
   "DW-076": {
    "first_seen": "2026-08-26",
    "last_seen": "2026-08-29",
    "sev": "HIGH",
-   "source": "RED-alert send attempted 06:42 \u2014 Resend returned 401",
+   "source": "RED-alert send attempted 06:42 — Resend returned 401",
    "status": "CLOSED",
-   "summary": "CLOSED 2026-08-29 \u2014 originating check re-ran and PASSED. Identical read-only probe from the box: key parsed from /etc/marketsquare/resend.watch.conf vs GET https://api.resend.com/domains -> HTTP 200 (was 400 on 26/27/28 Aug). David provisioned the key between passes (RUL-037 reserved item). Cause held at class by RG-0201 (LOCKED 28 Aug: the rotation itself refreshes every out-of-band copy). RESIDUAL: auth-half proof \u2014 a delivered send is still unobserved; only a genuine RED may lawfully exercise it.",
-   "next_action": "None \u2014 closed with probe evidence 2026-08-29.",
-   "evidence": "RE-PROBED 2026-08-27 read-only and STILL DEAD (day 2) \u2014 GET https://api.resend.com/domains with the key from /etc/marketsquare/resend.watch.conf returns HTTP 400 {'statusCode':400,'message':'API key is invalid','name':'validation_error'}. File unchanged: 74 B, -rw-r----- root:msdeploy, mtime 2026-08-05 06:26.",
+   "summary": "CLOSED 2026-08-29 — originating check re-ran and PASSED. Identical read-only probe from the box: key parsed from /etc/marketsquare/resend.watch.conf vs GET https://api.resend.com/domains -> HTTP 200 (was 400 on 26/27/28 Aug). David provisioned the key between passes (RUL-037 reserved item). Cause held at class by RG-0201 (LOCKED 28 Aug: the rotation itself refreshes every out-of-band copy). RESIDUAL: auth-half proof — a delivered send is still unobserved; only a genuine RED may lawfully exercise it.",
+   "next_action": "None — closed with probe evidence 2026-08-29.",
+   "evidence": "RE-PROBED 2026-08-27 read-only and STILL DEAD (day 2) — GET https://api.resend.com/domains with the key from /etc/marketsquare/resend.watch.conf returns HTTP 400 {'statusCode':400,'message':'API key is invalid','name':'validation_error'}. File unchanged: 74 B, -rw-r----- root:msdeploy, mtime 2026-08-05 06:26.",
    "closed": "2026-08-29"
   },
   "DW-077": {
@@ -754,10 +754,10 @@
    "sev": "HIGH",
    "source": "regression ledger RG-0188 (new open entry)",
    "status": "CLOSED",
-   "summary": "The cure for the lockout that fired this morning cannot run. RG-0188: '.secrets/hetzner_token.txt exists but is EMPTY \u2014 the file is a placeholder, not a credential; hetzner_fw_selfheal.py still exits NO TOKEN, nothing changed. A present-but-empty secret file is MORE dangerous than a missing one: it satisfies a presence check and paints the board green over an unarmed remedy.' SSH-LOCKOUT-1 recurred at 04:20 today and cleared only because David was awake to add the IP by hand. CF half also unarmed (no .secrets/cf_waf_token.txt), lower stakes.",
+   "summary": "The cure for the lockout that fired this morning cannot run. RG-0188: '.secrets/hetzner_token.txt exists but is EMPTY — the file is a placeholder, not a credential; hetzner_fw_selfheal.py still exits NO TOKEN, nothing changed. A present-but-empty secret file is MORE dangerous than a missing one: it satisfies a presence check and paints the board green over an unarmed remedy.' SSH-LOCKOUT-1 recurred at 04:20 today and cleared only because David was awake to add the IP by hand. CF half also unarmed (no .secrets/cf_waf_token.txt), lower stakes.",
    "next_action": "DAVID (credential, RUL-037 reserved): paste a Hetzner API token with firewall write scope into .secrets/hetzner_token.txt (gitignored). Closes when RG-0188 re-runs green.",
    "closed": "2026-08-27",
-   "evidence": "CLOSED 2026-08-27 \u2014 RG-0188 ok (fixed 2026-08-26): the lockout self-heal is armed, .secrets/hetzner_token.txt no longer empty. RESIDUAL: Cloudflare half still unarmed (no .secrets/cf_waf_token.txt) \u2014 lower stakes, that gate retires at launch."
+   "evidence": "CLOSED 2026-08-27 — RG-0188 ok (fixed 2026-08-26): the lockout self-heal is armed, .secrets/hetzner_token.txt no longer empty. RESIDUAL: Cloudflare half still unarmed (no .secrets/cf_waf_token.txt) — lower stakes, that gate retires at launch."
   },
   "DW-078": {
    "first_seen": "2026-08-27",
@@ -766,7 +766,7 @@
    "source": "anonymous PROBE of GET /dashboard/summary + ledger RG-0198",
    "status": "CLOSED",
    "summary": "CLOSED 30 Aug: David's 07:48 release carried the fix; live anon probe returns bare heartbeat only; RG-0198+RG-0211 LOCKED and ok.",
-   "next_action": "None \u2014 closed on live probe + LOCKED assertions."
+   "next_action": "None — closed on live probe + LOCKED assertions."
   },
   "DW-079": {
    "first_seen": "2026-08-27",
@@ -774,8 +774,8 @@
    "sev": "MEDIUM",
    "source": "regression ledger RG-0144",
    "status": "CLOSED",
-   "summary": "CLOSED 2026-08-28 \u2014 the originating check re-ran and PASSED. Ledger now reads '[  ok  ] RG-0144  The public dashboard does not tell an anonymous stranger which defences are down' (fixed 2026-08-27), out of the READY TO LOCK set, and its promotion note names this row: 'promoted the SAME session it started passing, because a fix that prints READY TO LOCK and is never promoted cannot trip red when it rots -- DW-079'. Info: 'redaction proven in source (16 checks)' and 'the public summary names no defence posture'. Confirmed live: anonymous payload carries redacted:'posture'. RESIDUAL on its own row, not swallowed: the wider narrative disclosure was deliberately NOT folded in \u2014 it became RG-0198, honestly open, tracked by DW-078.",
-   "next_action": "None \u2014 closed 2026-08-28 on RG-0144 reading LOCKED and passing."
+   "summary": "CLOSED 2026-08-28 — the originating check re-ran and PASSED. Ledger now reads '[  ok  ] RG-0144  The public dashboard does not tell an anonymous stranger which defences are down' (fixed 2026-08-27), out of the READY TO LOCK set, and its promotion note names this row: 'promoted the SAME session it started passing, because a fix that prints READY TO LOCK and is never promoted cannot trip red when it rots -- DW-079'. Info: 'redaction proven in source (16 checks)' and 'the public summary names no defence posture'. Confirmed live: anonymous payload carries redacted:'posture'. RESIDUAL on its own row, not swallowed: the wider narrative disclosure was deliberately NOT folded in — it became RG-0198, honestly open, tracked by DW-078.",
+   "next_action": "None — closed 2026-08-28 on RG-0144 reading LOCKED and passing."
   },
   "DW-080": {
    "first_seen": "2026-08-27",
@@ -783,8 +783,8 @@
    "sev": "LOW",
    "source": "regression ledger RG-0192 (instrument prose)",
    "status": "CLOSED",
-   "summary": "CLOSED 2026-08-28 \u2014 the originating check re-ran and PASSED. RG-0192 reads '[  ok  ] fixed 2026-08-27' with info 'holding -- google_maps.py no longer reads the remaining-count as an absolute cap'; the pre-promotion READY TO LOCK prefix is gone, which was the row's close condition verbatim. The run's READY TO LOCK count is 1 and it is RG-0175, not this entry. RESIDUAL, recorded not raised: the fix was to the string, not to _promote(), so nothing yet stops the class recurring on the next hand promotion \u2014 coverage-map note, not a live row.",
-   "next_action": "None \u2014 closed 2026-08-28 on the ledger printing RG-0192 with no READY TO LOCK text."
+   "summary": "CLOSED 2026-08-28 — the originating check re-ran and PASSED. RG-0192 reads '[  ok  ] fixed 2026-08-27' with info 'holding -- google_maps.py no longer reads the remaining-count as an absolute cap'; the pre-promotion READY TO LOCK prefix is gone, which was the row's close condition verbatim. The run's READY TO LOCK count is 1 and it is RG-0175, not this entry. RESIDUAL, recorded not raised: the fix was to the string, not to _promote(), so nothing yet stops the class recurring on the next hand promotion — coverage-map note, not a live row.",
+   "next_action": "None — closed 2026-08-28 on the ledger printing RG-0192 with no READY TO LOCK text."
   },
   "DW-081": {
    "first_seen": "2026-08-28",
@@ -792,8 +792,8 @@
    "sev": "MEDIUM",
    "status": "CLOSED",
    "source": "regression ledger RG-0175",
-   "summary": "CLOSED 2026-08-28, same session it was raised \u2014 the originating check re-ran and PASSED under LOCKED. Promoted OPEN -> LOCKED in scripts/regression_ledger.py; re-run reads '[  ok  ] RG-0175 ... fixed 2026-08-28', info 'wave hygiene done and witnessed: tags, suppression, intl pass'. Board now 192 entries / 178 holding / 0 REGRESSED / 12 open / 0 READY TO LOCK / 2 UNVERIFIED \u2014 no unasserted-but-passing entry left on the run. Promoted rather than parked because the scope names RUL-053(g), due Fri 28 Aug 2026 (first wave, today) and half of what it guards is a POPIA property; blue across a sending weekend means a suppression rot could not turn the board red.",
-   "next_action": "None \u2014 closed 2026-08-28 on RG-0175 reading LOCKED and passing."
+   "summary": "CLOSED 2026-08-28, same session it was raised — the originating check re-ran and PASSED under LOCKED. Promoted OPEN -> LOCKED in scripts/regression_ledger.py; re-run reads '[  ok  ] RG-0175 ... fixed 2026-08-28', info 'wave hygiene done and witnessed: tags, suppression, intl pass'. Board now 192 entries / 178 holding / 0 REGRESSED / 12 open / 0 READY TO LOCK / 2 UNVERIFIED — no unasserted-but-passing entry left on the run. Promoted rather than parked because the scope names RUL-053(g), due Fri 28 Aug 2026 (first wave, today) and half of what it guards is a POPIA property; blue across a sending weekend means a suppression rot could not turn the board red.",
+   "next_action": "None — closed 2026-08-28 on RG-0175 reading LOCKED and passing."
   },
   "DW-082": {
    "first_seen": "2026-08-29",
@@ -801,8 +801,8 @@
    "sev": "LOW",
    "source": "regression ledger, first invocation of the session (sandbox deps)",
    "status": "CLOSED",
-   "summary": "RAISED AND CLOSED IN THE SAME RUN. First ledger invocation demoted RG-0181/RG-0182 to NOT EVALUATED (fresh sandbox lacked fastapi \u2014 LEDGER-DEPS-1 demotion working as designed). Ran the cure RG-0200 names (scripts/maint_deps.py, installed httpx+fastapi); same-session re-run evaluated the FULL board: 194 entries / 183 holding / 0 REGRESSED / 11 open / 0 READY TO LOCK / 0 UNVERIFIED, exit 0. RESIDUAL (cosmetic): maint_deps' same-process self-check prints FAILED while a fresh interpreter imports both; and the ephemeral sandbox means bootstrap-before-ledger is standing watch routine (RG-0200 step-0 clause).",
-   "next_action": "None \u2014 closed same run on the full-board re-run.",
+   "summary": "RAISED AND CLOSED IN THE SAME RUN. First ledger invocation demoted RG-0181/RG-0182 to NOT EVALUATED (fresh sandbox lacked fastapi — LEDGER-DEPS-1 demotion working as designed). Ran the cure RG-0200 names (scripts/maint_deps.py, installed httpx+fastapi); same-session re-run evaluated the FULL board: 194 entries / 183 holding / 0 REGRESSED / 11 open / 0 READY TO LOCK / 0 UNVERIFIED, exit 0. RESIDUAL (cosmetic): maint_deps' same-process self-check prints FAILED while a fresh interpreter imports both; and the ephemeral sandbox means bootstrap-before-ledger is standing watch routine (RG-0200 step-0 clause).",
+   "next_action": "None — closed same run on the full-board re-run.",
    "closed": "2026-08-29"
   },
   "DW-083": {
@@ -811,8 +811,8 @@
    "sev": "LOW",
    "source": "regression ledger first invocation (fresh sandbox)",
    "status": "CLOSED",
-   "summary": "Raised and closed same run (refs closed DW-082, filed new per never-reopen rule): first ledger invocation 2 UNVERIFIED (RG-0181/RG-0182, missing fastapi, exit 2); after bootstrap the re-run evaluated the FULL board: 205 entries \u00b7 186 holding \u00b7 0 REGRESSED \u00b7 19 open \u00b7 0 READY TO LOCK \u00b7 0 UNVERIFIED \u00b7 exit 0. RESIDUAL: bootstrap-BEFORE-ledger is the standing watch routine (RG-0200 step-0); this run inverted the order.",
-   "next_action": "None \u2014 closed 2026-08-30 on the fully-evaluated re-run."
+   "summary": "Raised and closed same run (refs closed DW-082, filed new per never-reopen rule): first ledger invocation 2 UNVERIFIED (RG-0181/RG-0182, missing fastapi, exit 2); after bootstrap the re-run evaluated the FULL board: 205 entries · 186 holding · 0 REGRESSED · 19 open · 0 READY TO LOCK · 0 UNVERIFIED · exit 0. RESIDUAL: bootstrap-BEFORE-ledger is the standing watch routine (RG-0200 step-0); this run inverted the order.",
+   "next_action": "None — closed 2026-08-30 on the fully-evaluated re-run."
   },
   "DW-084": {
    "first_seen": "2026-08-30",
@@ -820,21 +820,21 @@
    "sev": "MEDIUM",
    "source": "root config sweep vs /proc environ (RG-0147 method)",
    "status": "CLOSED",
-   "summary": "MS_API_KEY in three fingerprints; live value matches no file \u2014 restart silently swaps keys. Plus junk file in service.d and stale inline LAUNCH_SPECIAL_DEADLINE (overridden today).",
-   "next_action": "2 Sep attended root window: align sources to live value, clean crud, verify at point of use after planned restart. || 2026-08-31: **originating check COULD NOT RE-RUN** \u2014 it is a root read of /proc/<pid>/environ vs the config surfaces, and this task is forbidden root (msdeploy only; `/etc/systemd/system/marketsquare.service.d/` is not readable as msdeploy). Not closed, not weakened: stays OPEN on the 30 Aug prepared state until the planned restart window re-verifies at point of use.",
+   "summary": "MS_API_KEY in three fingerprints; live value matches no file — restart silently swaps keys. Plus junk file in service.d and stale inline LAUNCH_SPECIAL_DEADLINE (overridden today).",
+   "next_action": "2 Sep attended root window: align sources to live value, clean crud, verify at point of use after planned restart. || 2026-08-31: **originating check COULD NOT RE-RUN** — it is a root read of /proc/<pid>/environ vs the config surfaces, and this task is forbidden root (msdeploy only; `/etc/systemd/system/marketsquare.service.d/` is not readable as msdeploy). Not closed, not weakened: stays OPEN on the 30 Aug prepared state until the planned restart window re-verifies at point of use.",
    "next": " || 2026-09-01: check not re-runnable (root read; watch is msdeploy). Attended root window 2 Sep stands.",
    "fix": "1 Sep root pass: unit inline MS_API_KEY (the ONLY defining surface) aligned to live value, sha c42deee7c24f both sides; backup kept; daemon-reload, no restart; crud asided. Closes on restart proof (tonight deploy).",
    "closed": "2026-09-01",
-   "closure": "Landmine fired 06:00 UTC (unattended-upgrades restart) but swapped the server BACK to the ms.js-public client key \u2014 coherent by design (rotate_secrets.py: MS_API_KEY public in ms.js, never rotated server-side alone). Unit now single source, live==conf on all 8 credential vars, smoke ALL PASS post-restart."
+   "closure": "Landmine fired 06:00 UTC (unattended-upgrades restart) but swapped the server BACK to the ms.js-public client key — coherent by design (rotate_secrets.py: MS_API_KEY public in ms.js, never rotated server-side alone). Unit now single source, live==conf on all 8 credential vars, smoke ALL PASS post-restart."
   },
   "DW-085": {
    "first_seen": "2026-08-30",
-   "last_seen": "2026-09-01",
+   "last_seen": "2026-09-02",
    "sev": "LOW",
    "source": "server login banner (root SSH)",
    "status": "OPEN",
    "summary": "46 pending updates (9 security) + kernel restart required on the production box.",
-   "next_action": "RE-PROBED 2026-08-31 (non-root, msdeploy): **`/var/run/reboot-required` still present** and **37 packages upgradable** (unchanged from the 30 Aug re-probe; `apt list --upgradable` reports 0 lines matching 'security' as msdeploy \u2014 the 9-security figure came from the root banner and is not re-provable from this lane). Uptime 13w 4d. Window unchanged: `apt upgrade` + reboot + watch /health back up + RG-0147/ops-key re-verify, batched with DW-084. Awaiting David's window.",
+   "next_action": "RE-PROBED 2026-08-31 (non-root, msdeploy): **`/var/run/reboot-required` still present** and **37 packages upgradable** (unchanged from the 30 Aug re-probe; `apt list --upgradable` reports 0 lines matching 'security' as msdeploy — the 9-security figure came from the root banner and is not re-provable from this lane). Uptime 13w 4d. Window unchanged: `apt upgrade` + reboot + watch /health back up + RG-0147/ops-key re-verify, batched with DW-084. Awaiting David's window. **2026-09-02:** re-probed as msdeploy — /var/run/reboot-required STILL present, 59 packages upgradable (was 37), uptime 97 d. Still failing. Day 4.",
    "next": " || 2026-09-01: reboot-required still present, 37 upgradable (msdeploy re-probe). Still failing."
   },
   "DW-086": {
@@ -843,19 +843,19 @@
    "sev": "MEDIUM",
    "source": "regression ledger RG-0214 (exit 1) vs direct probe of the asserted property",
    "status": "CLOSED",
-   "summary": "**NEW \u2014 the ledger's ONE red is a FALSE RED, and it lands on the eve of full launch (RUL-001, 1 Sep).** RG-0214 prints `REGRESSION: deploy report 2026-08-30T17:04:29Z carries no migration-035 step -- the deploy with MAP-LIVE-1 has not shipped yet`, and the run ends `Do not deploy over this` with exit 1. **The assertion is misreading its evidence, not catching a rot.** It parses `/static/post_deploy_status.json` for a step whose NAME contains \"035\" \u2014 but that report aggregates the whole chain into ONE step: probed live, `steps` = `seed=ok, ladder_seed=ok, migrations=ok`. No per-migration step name has ever existed in that format, so this assertion can only ever go red. **The asserted PROPERTY is live \u2014 PROBED three ways today:** (a) `/etc/nginx/sites-enabled/marketsquare` carries the `MAP-LIVE-1 30 Aug 2026` block with both exact-match locations `= /orchestrator/defence_map.html` and `= /orchestrator/watch_register.md`, each with `auth_basic \"TrustSquare Orchestrator\"`; (b) from the box, origin `http://127.0.0.1:8000` serves `/orchestrator/defence_map.html` **200, 64,667 B** and `/orchestrator/watch_register.md` **200, 110,819 B**; (c) anonymous over the edge, both return **401**. Migration 035 applied; the gate holds; the documents are live. Per the evidence ladder the PROBE wins and the file is fixed in the same run \u2014 but this watch is observe-only and `scripts/regression_ledger.py` is not a watch-owned path, so the correction is named here instead of made.",
-   "next_action": "Attended/CTO session (RUL-037 \u2014 this is a technical call, not David's): re-aim RG-0214's live half at the evidence that actually exists \u2014 assert `steps.migrations == \"ok\"` on a report generated at/after the MAP-LIVE-1 deploy, or better, assert the property directly (origin 200 for both paths + anonymous 401), and say so in the entry ref per the never-weaken rule. Until then the ledger exits 1 and any gate that reads that exit code will refuse a launch-day deploy.",
+   "summary": "**NEW — the ledger's ONE red is a FALSE RED, and it lands on the eve of full launch (RUL-001, 1 Sep).** RG-0214 prints `REGRESSION: deploy report 2026-08-30T17:04:29Z carries no migration-035 step -- the deploy with MAP-LIVE-1 has not shipped yet`, and the run ends `Do not deploy over this` with exit 1. **The assertion is misreading its evidence, not catching a rot.** It parses `/static/post_deploy_status.json` for a step whose NAME contains \"035\" — but that report aggregates the whole chain into ONE step: probed live, `steps` = `seed=ok, ladder_seed=ok, migrations=ok`. No per-migration step name has ever existed in that format, so this assertion can only ever go red. **The asserted PROPERTY is live — PROBED three ways today:** (a) `/etc/nginx/sites-enabled/marketsquare` carries the `MAP-LIVE-1 30 Aug 2026` block with both exact-match locations `= /orchestrator/defence_map.html` and `= /orchestrator/watch_register.md`, each with `auth_basic \"TrustSquare Orchestrator\"`; (b) from the box, origin `http://127.0.0.1:8000` serves `/orchestrator/defence_map.html` **200, 64,667 B** and `/orchestrator/watch_register.md` **200, 110,819 B**; (c) anonymous over the edge, both return **401**. Migration 035 applied; the gate holds; the documents are live. Per the evidence ladder the PROBE wins and the file is fixed in the same run — but this watch is observe-only and `scripts/regression_ledger.py` is not a watch-owned path, so the correction is named here instead of made.",
+   "next_action": "Attended/CTO session (RUL-037 — this is a technical call, not David's): re-aim RG-0214's live half at the evidence that actually exists — assert `steps.migrations == \"ok\"` on a report generated at/after the MAP-LIVE-1 deploy, or better, assert the property directly (origin 200 for both paths + anonymous 401), and say so in the entry ref per the never-weaken rule. Until then the ledger exits 1 and any gate that reads that exit code will refuse a launch-day deploy.",
    "closed": "2026-09-01",
-   "closure": "Ledger re-run exit 0: 225 entries \u00b7 206 holding \u00b7 0 REGRESSED \u00b7 0 ready to lock. RG-0214 re-aimed 31 Aug (CTO call, RUL-037; \"NOT a weakening, a correction\") \u2014 live half now asserts steps.migrations ok + migration-035 self-proof clauses + 401-anonymous on both gated documents."
+   "closure": "Ledger re-run exit 0: 225 entries · 206 holding · 0 REGRESSED · 0 ready to lock. RG-0214 re-aimed 31 Aug (CTO call, RUL-037; \"NOT a weakening, a correction\") — live half now asserts steps.migrations ok + migration-035 self-proof clauses + 401-anonymous on both gated documents."
   },
   "DW-087": {
    "first_seen": "2026-08-31",
    "last_seen": "2026-08-31",
    "sev": "LOW",
-   "source": "scripts/deep_scan.py (Monday lane) \u2014 delta vs SCAN_REPORT.json baseline 2026-08-24",
+   "source": "scripts/deep_scan.py (Monday lane) — delta vs SCAN_REPORT.json baseline 2026-08-24",
    "status": "OPEN",
-   "summary": "**NEW \u2014 7 new static findings on the Monday deep scan** (213 total, 0 crash-class; 4/4 tools ran: ruff 0.16.5, vulture 2.16, pylint 4.0.8, eslint 9.39.5). None is in app code \u2014 all sit in `migrations/` and `scripts/`: F401 `migrations/032_fares_refresh_cron.py:34` (subprocess unused); **F841 (MEDIUM) `migrations/033_csp_verify_served.py:208`** (`last` assigned never used); F401 `scripts/build_eval_set.py:27` (math); B023 `scripts/david_queue.py:48` (function does not bind loop variable `body` \u2014 the only one with a plausible behavioural bite); B007 `scripts/david_queue.py:152`; B007 `scripts/no_remote_code_guard.py:217`; vulture DEAD `scripts/regression_ledger.py:9579` (unsatisfiable ternary). Recorded because the register loses nothing, not because it is urgent.",
-   "next_action": "Next Monday lane or an attended tidy pass. Look at `david_queue.py:48` (B023) first \u2014 a late-bound loop variable in a closure is the one item here that can produce wrong OUTPUT rather than dead code \u2014 and at regression_ledger.py:9579, an unsatisfiable ternary inside the instrument that grades everything else."
+   "summary": "**NEW — 7 new static findings on the Monday deep scan** (213 total, 0 crash-class; 4/4 tools ran: ruff 0.16.5, vulture 2.16, pylint 4.0.8, eslint 9.39.5). None is in app code — all sit in `migrations/` and `scripts/`: F401 `migrations/032_fares_refresh_cron.py:34` (subprocess unused); **F841 (MEDIUM) `migrations/033_csp_verify_served.py:208`** (`last` assigned never used); F401 `scripts/build_eval_set.py:27` (math); B023 `scripts/david_queue.py:48` (function does not bind loop variable `body` — the only one with a plausible behavioural bite); B007 `scripts/david_queue.py:152`; B007 `scripts/no_remote_code_guard.py:217`; vulture DEAD `scripts/regression_ledger.py:9579` (unsatisfiable ternary). Recorded because the register loses nothing, not because it is urgent.",
+   "next_action": "Next Monday lane or an attended tidy pass. Look at `david_queue.py:48` (B023) first — a late-bound loop variable in a closure is the one item here that can produce wrong OUTPUT rather than dead code — and at regression_ledger.py:9579, an unsatisfiable ternary inside the instrument that grades everything else."
   },
   "DW-088": {
    "first_seen": "2026-08-31",
@@ -863,23 +863,41 @@
    "sev": "LOW",
    "source": "fea_integrity_check.py --json (on-box)",
    "status": "CLOSED",
-   "summary": "**NEW \u2014 the FEA baseline is one deploy stale again, 1 day after DW-064 closed on a fresh baseline.** Sensor `status: ok`, **`alerts: []`** \u2014 so this is a NOTE, not an alert, and DW-064's close condition is not rotted. The notes: ms.js **v552 -> v561** (1,156,049 -> 1,157,186 B) and ms.css **v416 -> v425** (131,924 B, byte-identical), each reading *\"looks like a deploy - confirm against CHANGELOG, then refresh with --update-baseline\"*. Corroborated as deploy-not-tamper by an instrument that shares no cause: `run_daily_checks.py` deploy_drift **clean, all 19 tracked files match live**. Raised because this exact staleness silently accumulated across EIGHT deploys before DW-064 caught it \u2014 one deploy is the moment to notice, not the eighth.",
+   "summary": "**NEW — the FEA baseline is one deploy stale again, 1 day after DW-064 closed on a fresh baseline.** Sensor `status: ok`, **`alerts: []`** — so this is a NOTE, not an alert, and DW-064's close condition is not rotted. The notes: ms.js **v552 -> v561** (1,156,049 -> 1,157,186 B) and ms.css **v416 -> v425** (131,924 B, byte-identical), each reading *\"looks like a deploy - confirm against CHANGELOG, then refresh with --update-baseline\"*. Corroborated as deploy-not-tamper by an instrument that shares no cause: `run_daily_checks.py` deploy_drift **clean, all 19 tracked files match live**. Raised because this exact staleness silently accumulated across EIGHT deploys before DW-064 caught it — one deploy is the moment to notice, not the eighth.",
    "next_action": "Refresh on the box after the next deploy: `update_fea_baseline.bat` (or `fea_integrity_check.py --update-baseline`), then re-probe for `status: ok, alerts: []`. Structural point for the CTO lane: the baseline could be refreshed BY the deploy engine once deploy_drift reads clean, which would retire this recurring row entirely.",
-   "next": " || 2026-09-01: still failing day 2 \u2014 ms.js v552\u2192v564 (1,157,186 B), ms.css v416\u2192v428 byte-identical; alerts [] ; deploy_drift clean 19/19.",
+   "next": " || 2026-09-01: still failing day 2 — ms.js v552→v564 (1,157,186 B), ms.css v416→v428 byte-identical; alerts [] ; deploy_drift clean 19/19.",
    "closed": "2026-09-01",
    "closure": "Attended map-fix pass: deploy_drift clean 19/19, on-box --update-baseline (index 415200B, ms.js v564, ms.css v428, BEA 1.3.1), re-probe ok / alerts [] / stale notes gone. Structural fix (engine refreshes own baseline) on the CTO list for tonight."
   },
   "DW-089": {
    "first_seen": "2026-09-01",
-   "last_seen": "2026-09-01",
+   "last_seen": "2026-09-02",
    "sev": "MEDIUM",
-   "source": "attended map-fix pass \u2014 own systemctl-cat recon (transcript exposure, DW-029 class)",
+   "source": "attended map-fix pass — own systemctl-cat recon (transcript exposure, DW-029 class)",
+   "status": "CLOSED",
+   "summary": "Live credentials printed into session transcript: ANTHROPIC_API_KEY, CF_CACHE_TOKEN, MS_DEPLOY_TOKEN (full; all three re-verified STILL LIVE 18:0x). MS_API_KEY also printed but is public-by-design in ms.js — not an exposure. In SECRETS_REGISTER Still-burnt; RG-0146 red by design until rotated.",
+   "next": "David tonight: rotate Anthropic key (console) + CF cache token (dash); re-mint MS_DEPLOY_TOKEN together. Closes when Still-burnt empty and RG-0146 green.",
+   "closed": "2026-09-02",
+   "evidence": "RG-0146 [ok] on the 06:38 SAST ledger run (register verified 2026-09-02); SECRETS_REGISTER.md Still-burnt EMPTY; ANTHROPIC_API_KEY/CF_CACHE_TOKEN/MS_DEPLOY_TOKEN rotated 04:1x-04:4x SAST by the attended session with point-of-use proof (fingerprints changed in /proc/<pid>/environ + real authenticated calls).",
+   "residual": ".secrets/deploy_keys.txt.bak-20260902-044021 neutralized in place (FUSE blocks unlink), RG-0190 ok. Coverage-map card.",
+   "next_action": "None — closed 2026-09-02."
+  },
+  "DW-090": {
+   "first_seen": "2026-09-02",
+   "last_seen": "2026-09-02",
+   "sev": "LOW",
+   "source": "fea_integrity_check.py --json (on-box) — recurrence of closed DW-088 (DW-064, DW-061 before it)",
    "status": "OPEN",
-   "summary": "Live credentials printed into session transcript: ANTHROPIC_API_KEY, CF_CACHE_TOKEN, MS_DEPLOY_TOKEN (full; all three re-verified STILL LIVE 18:0x). MS_API_KEY also printed but is public-by-design in ms.js \u2014 not an exposure. In SECRETS_REGISTER Still-burnt; RG-0146 red by design until rotated.",
-   "next": "David tonight: rotate Anthropic key (console) + CF cache token (dash); re-mint MS_DEPLOY_TOKEN together. Closes when Still-burnt empty and RG-0146 green."
+   "summary": "FEA baseline one deploy stale again 16h after DW-088 closed: status ok, alerts [], notes ms.js v564->569 (1157186->1158269 B), ms.css v428->433 — today's 05:19/06:25 SAST releases. deploy_drift clean 19/19 + audit served==repo: a deploy, not a tamper. Fourth instance of the class.",
+   "next_action": "CTO lane (RUL-037): deploy engine (ops/autodeploy/post_deploy.sh) refreshes the baseline itself when deploy_drift reads clean, with a ledger entry. Closes when the on-box notes carry no \"looks like a deploy\" after a deploy has ridden.",
+   "references": [
+    "DW-088",
+    "DW-064",
+    "DW-061"
+   ]
   }
  },
- "last_run": "2026-09-01",
+ "last_run": "2026-09-02",
  "last_verdict": "GREEN",
  "recheck_pass_2026_08_20": {
   "requested_by": "David: close all open actions",
@@ -905,9 +923,9 @@
   "root_load_s": 0.408,
   "tls_days": 33,
   "payment_test": "ok, paystack_connected true",
-  "ledger": "exit 0 \u00b7 121 entries \u00b7 119 holding \u00b7 0 REGRESSED \u00b7 2 open (RG-0075, RG-0121) \u00b7 0 ready to lock",
+  "ledger": "exit 0 · 121 entries · 119 holding · 0 REGRESSED · 2 open (RG-0075, RG-0121) · 0 ready to lock",
   "audit": "3 findings, all INFO",
-  "cost_sweep": "0 critical \u00b7 9 warnings \u00b7 27 ok \u00b7 32 info",
+  "cost_sweep": "0 critical · 9 warnings · 27 ok · 32 info",
   "smoke_sandbox": "all checks passed (40 OK, 0 fail)",
   "smoke_cron": "39/39 all_green",
   "cron_parity": "MATCH on smoke, health, spend",
@@ -915,7 +933,7 @@
   "server": "fea_integrity ok alerts[]; subs 35 UP/15 HELD/1 PLANNED, 0 issues; disk 45% used, 40G free",
   "orchestrator": "queue [] staged [] (fixer paused by design)",
   "ai_watch": "nothing new in 48h affecting our lanes or ZA access",
-  "checks_run": "13 of 13 (Monday canon lane not applicable \u2014 Friday)",
+  "checks_run": "13 of 13 (Monday canon lane not applicable — Friday)",
   "new_findings": [
    "DW-058"
   ],
@@ -949,14 +967,14 @@
   "tls_days": 88,
   "payment_test": "ok, paystack_connected true",
   "bit": "8/8 PASS, ran_at 2026-08-26T02:02:51Z",
-  "ledger": "final run exit 1 \u00b7 181 entries \u00b7 157 holding \u00b7 4 REGRESSED (RG-0099, RG-0125, RG-0154, RG-0182) \u00b7 20 open \u00b7 0 ready to lock",
-  "audit": "4 findings \u2014 1 MEDIUM (LINKS-DEAD/DW-062), 1 INFO by design, 2 INFO CRLF false positive (DW-072)",
-  "cost_sweep": "exit 1 \u00b7 0 critical \u00b7 same WARN set as 24 Aug \u00b7 no new items",
-  "smoke": "COULD NOT RUN \u2014 ssh timeout (DW-065)",
-  "server": "COULD NOT RUN \u2014 ssh timeout (DW-065): fea_integrity, subscription_monitor, orchestrator queue/staged/findings",
-  "deploy_drift": "unreachable \u2014 ssh timeout (DW-065)",
-  "deploy_today": "post_deploy_status.json 2026-08-26T02:07:10Z \u2014 seed ok, ladder_seed ok, migration:033 FAILED (chain jammed)",
-  "ai_watch": "clear. The 'Sonnet 5 reverts to $3/$15 on 1 Sep' search hit is STALE \u2014 Anthropic made $2/$10 permanent 11 Aug. No action, no row.",
+  "ledger": "final run exit 1 · 181 entries · 157 holding · 4 REGRESSED (RG-0099, RG-0125, RG-0154, RG-0182) · 20 open · 0 ready to lock",
+  "audit": "4 findings — 1 MEDIUM (LINKS-DEAD/DW-062), 1 INFO by design, 2 INFO CRLF false positive (DW-072)",
+  "cost_sweep": "exit 1 · 0 critical · same WARN set as 24 Aug · no new items",
+  "smoke": "COULD NOT RUN — ssh timeout (DW-065)",
+  "server": "COULD NOT RUN — ssh timeout (DW-065): fea_integrity, subscription_monitor, orchestrator queue/staged/findings",
+  "deploy_drift": "unreachable — ssh timeout (DW-065)",
+  "deploy_today": "post_deploy_status.json 2026-08-26T02:07:10Z — seed ok, ladder_seed ok, migration:033 FAILED (chain jammed)",
+  "ai_watch": "clear. The 'Sonnet 5 reverts to $3/$15 on 1 Sep' search hit is STALE — Anthropic made $2/$10 permanent 11 Aug. No action, no row.",
   "checks_run": "12 of 13 (Monday canon/deep-scan lane not due); 5 sub-checks blocked by DW-065",
   "new_findings": [
    "DW-065",
@@ -974,9 +992,9 @@
    "DW-067"
   ],
   "closed_reason": "DW-067 closed on RG-0020 re-running green (snapshot current, card 2026-08-26.1); residual = live /flags still serves 2026-08-19.1. DW-062 re-ran and FAILED; DW-064's check could not run (SSH); DW-063/DW-010 Monday-lane, not due.",
-  "heartbeat": "1-day gap \u2014 25 Aug run missed (DW-070)",
+  "heartbeat": "1-day gap — 25 Aug run missed (DW-070)",
   "verdict_reason": "three LOCKED fixes rotted (RG-0020, RG-0099, RG-0125) + live anonymous prospect-PII exposure; site itself green",
-  "red_email": "ATTEMPTED AND FAILED \u2014 ssh: connect to host 178.104.73.239 port 22: Connection timed out. Filed as DW-073.",
+  "red_email": "ATTEMPTED AND FAILED — ssh: connect to host 178.104.73.239 port 22: Connection timed out. Filed as DW-073.",
   "concurrency_note": "A concurrent attended session (gemini-canary-armup) wrote to the repo throughout this pass; ledger grew 176 -> 181 entries and the REGRESSED set changed membership across four runs (5/4/4/4). Final run: RG-0099, RG-0125, RG-0154, RG-0182."
  },
  "watch_pass_2026_08_26_b": {
@@ -988,15 +1006,15 @@
   "payment_test": "ok, paystack_connected true",
   "bit": "8/8 PASS",
   "smoke": "40 OK / 0 FAIL (sandbox); cron sensor 39/39 all_green",
-  "ledger": "exit 1 \u00b7 182 entries \u00b7 160 holding \u00b7 2 REGRESSED (RG-0125, RG-0186) \u00b7 17 open \u00b7 1 ready to lock (RG-0176) \u00b7 2 UNVERIFIED (RG-0181, RG-0182)",
-  "audit": "3 findings \u2014 1 MEDIUM LINKS-DEAD (DW-062), 1 INFO by design, 1 INFO VERSION-KEY-BENIGN (no drift)",
-  "cost_sweep": "exit 1 \u00b7 0 critical \u00b7 identical WARN set to 24 Aug \u00b7 no new items",
-  "spend": "$0.00 today / $1.891453 MTD of $100 ceiling \u00b7 318 calls this month",
+  "ledger": "exit 1 · 182 entries · 160 holding · 2 REGRESSED (RG-0125, RG-0186) · 17 open · 1 ready to lock (RG-0176) · 2 UNVERIFIED (RG-0181, RG-0182)",
+  "audit": "3 findings — 1 MEDIUM LINKS-DEAD (DW-062), 1 INFO by design, 1 INFO VERSION-KEY-BENIGN (no drift)",
+  "cost_sweep": "exit 1 · 0 critical · identical WARN set to 24 Aug · no new items",
+  "spend": "$0.00 today / $1.891453 MTD of $100 ceiling · 318 calls this month",
   "server": "SSH RESTORED. fea_integrity alert (DW-064); subscription_monitor 35 UP / 15 HELD / 1 PLANNED / 0 DOWN; orchestrator queue [] staged []; findings.cron loop_date 2026-08-26, parity holds on smoke/health/spend",
-  "deploy_drift": "clean \u2014 all 19 tracked files match live",
-  "deploy_today": "post_deploy_status.json still 2026-08-26T04:05:08Z \u2014 seed ok, ladder_seed ok, migration:033 FAILED (chain jammed). The 06:02 Release has not placed a new record yet.",
-  "ai_watch": "no action. Claude API elevated errors 24 Aug (transient, no impact here \u2014 breaker + fallback lanes in place). The recurring \"Sonnet 5 reverts to $3/$15 on 1 Sep\" hit remains STALE \u2014 $2/$10 went permanent 11 Aug.",
-  "checks_run": "13 of 13 (Monday canon/deep-scan lane not due \u2014 Wednesday)",
+  "deploy_drift": "clean — all 19 tracked files match live",
+  "deploy_today": "post_deploy_status.json still 2026-08-26T04:05:08Z — seed ok, ladder_seed ok, migration:033 FAILED (chain jammed). The 06:02 Release has not placed a new record yet.",
+  "ai_watch": "no action. Claude API elevated errors 24 Aug (transient, no impact here — breaker + fallback lanes in place). The recurring \"Sonnet 5 reverts to $3/$15 on 1 Sep\" hit remains STALE — $2/$10 went permanent 11 Aug.",
+  "checks_run": "13 of 13 (Monday canon/deep-scan lane not due — Wednesday)",
   "new_findings": [
    "DW-075",
    "DW-076",
@@ -1011,21 +1029,21 @@
    "DW-065",
    "DW-067"
   ],
-  "red_email": "ATTEMPTED AND FAILED AGAIN \u2014 SSH succeeded this time, Resend refused the key: 401 validation_error \"API key is invalid\". Filed as DW-076; DW-073 stays open.",
-  "verdict_reason": "two LOCKED fixes rotted (RG-0125 migration chain jammed, RG-0186 migration verification) \u2014 site itself green on every probe",
+  "red_email": "ATTEMPTED AND FAILED AGAIN — SSH succeeded this time, Resend refused the key: 401 validation_error \"API key is invalid\". Filed as DW-076; DW-073 stays open.",
+  "verdict_reason": "two LOCKED fixes rotted (RG-0125 migration chain jammed, RG-0186 migration verification) — site itself green on every probe",
   "concurrency_note": "An attended session was working the CSP fault throughout (commits 7cc3110 05:52, 97f8168 06:0x, Release 14d927f 06:02)."
  },
  "watch_pass_2026_08_27": {
   "verdict": "AMBER",
-  "site": "GREEN \u2014 /health ok 1.3.1 (db integrity ok), root 200 in 0.54s, /payment/test ok + paystack_connected true, TLS 87d (22 Nov 2026), /dashboard/bit 8/8 PASS",
-  "ledger": "exit 2 \u2014 190 entries, 174 holding, 0 REGRESSED, 13 open, 1 READY TO LOCK (RG-0144), 2 UNVERIFIED (RG-0181/0182, fastapi absent)",
-  "smoke": "sandbox 40/40 all passed; cron 39/39 all_green (box copy one assertion behind repo \u2014 accepted read, not a finding)",
+  "site": "GREEN — /health ok 1.3.1 (db integrity ok), root 200 in 0.54s, /payment/test ok + paystack_connected true, TLS 87d (22 Nov 2026), /dashboard/bit 8/8 PASS",
+  "ledger": "exit 2 — 190 entries, 174 holding, 0 REGRESSED, 13 open, 1 READY TO LOCK (RG-0144), 2 UNVERIFIED (RG-0181/0182, fastapi absent)",
+  "smoke": "sandbox 40/40 all passed; cron 39/39 all_green (box copy one assertion behind repo — accepted read, not a finding)",
   "audit": "3 findings, 0 new (1 MEDIUM LINKS-DEAD = DW-062, 2 INFO by design)",
-  "cost_sweep": "exit 1 \u2014 0 critical, 9 warnings, WARN set byte-identical to 26 Aug",
-  "deploy_drift": "clean \u2014 all 19 tracked files match live",
+  "cost_sweep": "exit 1 — 0 critical, 9 warnings, WARN set byte-identical to 26 Aug",
+  "deploy_drift": "clean — all 19 tracked files match live",
   "sensors": "35 UP / 15 HELD / 1 PLANNED / 0 DOWN / 0 DEGRADED; disk 45% used, 40G free; orchestrator queue [] staged []",
   "cron_parity": "loop_date 2026-08-27, parity holds on smoke/health/spend; spend $0.00 today of $100, MTD $1.89 / 318 calls",
-  "fea_integrity": "alert \u2014 index bytes 415388 -> 415200 (DW-064); the cron sensor HIGH anomaly is the same fact",
+  "fea_integrity": "alert — index bytes 415388 -> 415200 (DW-064); the cron sensor HIGH anomaly is the same fact",
   "closed": [
    "DW-066",
    "DW-069",
@@ -1039,13 +1057,13 @@
    "DW-079",
    "DW-080"
   ],
-  "checks_run": "12 of 13 (Monday canon/deep-scan lane not due \u2014 Thursday)",
+  "checks_run": "12 of 13 (Monday canon/deep-scan lane not due — Thursday)",
   "email_sent": false,
-  "email_reason": "verdict AMBER, not RED \u2014 no email by rule. Alert path re-probed read-only and still broken (DW-076)."
+  "email_reason": "verdict AMBER, not RED — no email by rule. Alert path re-probed read-only and still broken (DW-076)."
  },
  "watch_pass_2026_08_28": {
   "verdict": "AMBER",
-  "ledger": "192 entries / 178 holding / 0 REGRESSED / 12 open / 0 READY TO LOCK / 2 UNVERIFIED (RG-0181, RG-0182 \u2014 fastapi absent, LEDGER-DEPS-1) \u2014 after RG-0175 was promoted to LOCKED",
+  "ledger": "192 entries / 178 holding / 0 REGRESSED / 12 open / 0 READY TO LOCK / 2 UNVERIFIED (RG-0181, RG-0182 — fastapi absent, LEDGER-DEPS-1) — after RG-0175 was promoted to LOCKED",
   "site": {
    "health": "ok 1.3.1",
    "root_http": 200,
@@ -1057,10 +1075,10 @@
   "smoke_sandbox": "40/40",
   "smoke_cron": "39/39",
   "audit": "3 findings, 0 new (MEDIUM LINKS-DEAD = DW-062)",
-  "cost_sweep": "exit 1 \u2014 0 critical, 9 warnings; diff vs 27 Aug = date + scan-root path + one shifted line number only",
+  "cost_sweep": "exit 1 — 0 critical, 9 warnings; diff vs 27 Aug = date + scan-root path + one shifted line number only",
   "deploy": {
    "drift": "clean, 19/19",
-   "post_deploy_status": "2026-08-28T03:08:38Z \u2014 seed ok, ladder_seed ok, migrations none pending"
+   "post_deploy_status": "2026-08-28T03:08:38Z — seed ok, ladder_seed ok, migrations none pending"
   },
   "server": {
    "sensors": "35 UP / 15 HELD / 1 PLANNED / 0 DOWN / 0 DEGRADED",
@@ -1079,12 +1097,12 @@
   "new_today": [
    "DW-081 (raised and closed same session)"
   ],
-  "checks_run": "12 of 13 (Monday canon/deep-scan lane not due \u2014 Friday)",
+  "checks_run": "12 of 13 (Monday canon/deep-scan lane not due — Friday)",
   "heartbeat": "last_run 2026-08-27 -> 2026-08-28, gap exactly 1 day",
-  "ai_watch": "no action, no register row \u2014 field info only (ZA sovereign AI cloud announced 27 Aug; stale pricing trackers resurfacing)",
+  "ai_watch": "no action, no register row — field info only (ZA sovereign AI cloud announced 27 Aug; stale pricing trackers resurfacing)",
   "post_report_action": "RG-0175 promoted OPEN -> LOCKED (CTO lane, RUL-037) on David's question; closes DW-081 the day the first wave fires."
  },
- "watch_pass_2026_08_29": "AMBER (soft-public day). Site green (health ok/1.3.1, 0.37s, payment ok, TLS 85d, BIT 8/8). Ledger exit 0: 194/183 holding/0 regressed/11 open/0 ready/0 unverified \u2014 full board evaluated after RG-0200 bootstrap (DW-082 raised+closed same run). Smoke sandbox all-pass (photos 65/65) + cron 39/39; parity holds; spend $0 today/$1.89 MTD of $100. Sweep 0 critical, WARN set identical to 28 Aug. Sensors 35 UP/15 HELD/1 PLANNED/0 DOWN. CLOSED: DW-076 (Resend watch key HTTP 200 \u2014 David provisioned) + DW-073 (hop passes; RG-0193 worker vantage LOCKED) + DW-082. Still failing: DW-062 (6th), DW-064 (6th), DW-078 (day 3). AI-watch clear (Sonnet-revert claim stale again; sub-plan weekly caps = field note). Open rows 11.",
+ "watch_pass_2026_08_29": "AMBER (soft-public day). Site green (health ok/1.3.1, 0.37s, payment ok, TLS 85d, BIT 8/8). Ledger exit 0: 194/183 holding/0 regressed/11 open/0 ready/0 unverified — full board evaluated after RG-0200 bootstrap (DW-082 raised+closed same run). Smoke sandbox all-pass (photos 65/65) + cron 39/39; parity holds; spend $0 today/$1.89 MTD of $100. Sweep 0 critical, WARN set identical to 28 Aug. Sensors 35 UP/15 HELD/1 PLANNED/0 DOWN. CLOSED: DW-076 (Resend watch key HTTP 200 — David provisioned) + DW-073 (hop passes; RG-0193 worker vantage LOCKED) + DW-082. Still failing: DW-062 (6th), DW-064 (6th), DW-078 (day 3). AI-watch clear (Sonnet-revert claim stale again; sub-plan weekly caps = field note). Open rows 11.",
  "watch_pass_2026_08_30": {
   "verdict": "AMBER",
   "closed": [
@@ -1114,10 +1132,10 @@
  },
  "watch_pass_2026_08_31": {
   "verdict": "AMBER",
-  "site": "green \u2014 /health ok 1.3.1, root 200 in 1.27s, /payment/test ok paystack_connected, TLS 83d (notAfter 22 Nov 2026)",
-  "ledger": "214 entries \u00b7 196 holding \u00b7 1 REGRESSED (RG-0214, PROVEN FALSE RED \u2014 see DW-086) \u00b7 16 open \u00b7 1 ready to lock (RG-0221) \u00b7 0 UNVERIFIED \u00b7 exit 1",
+  "site": "green — /health ok 1.3.1, root 200 in 1.27s, /payment/test ok paystack_connected, TLS 83d (notAfter 22 Nov 2026)",
+  "ledger": "214 entries · 196 holding · 1 REGRESSED (RG-0214, PROVEN FALSE RED — see DW-086) · 16 open · 1 ready to lock (RG-0221) · 0 UNVERIFIED · exit 1",
   "smoke": "40/40 local (smoke_test.py all-pass); cron sensor 39/39",
-  "cron_parity": "holding \u2014 loop_date 2026-08-31, health ok 1.3.1, spend $0.00 today / $1.892566 MTD of $100 ceiling, 322 calls, anomalies []",
+  "cron_parity": "holding — loop_date 2026-08-31, health ok 1.3.1, spend $0.00 today / $1.892566 MTD of $100 ceiling, 322 calls, anomalies []",
   "closed": [
    "DW-063"
   ],
@@ -1152,26 +1170,26 @@
    "DW-010 + DW-087 (Monday lane; today Tuesday)"
   ],
   "site": "health ok 1.3.1 (db integrity ok), root 200 in 0.35s, payment ok + paystack_connected, TLS 82d (expires 22 Nov)",
-  "ledger": "225 entries \u00b7 206 holding \u00b7 0 REGRESSED \u00b7 19 open \u00b7 0 READY TO LOCK \u00b7 0 UNVERIFIED \u00b7 exit 0",
+  "ledger": "225 entries · 206 holding · 0 REGRESSED · 19 open · 0 READY TO LOCK · 0 UNVERIFIED · exit 0",
   "qa_audit": "2 findings, 0 new, both known INFO (DEMO-PLACEHOLDERS, VERSION-KEY-BENIGN)",
   "smoke": "sandbox ALL PASS; cron 39/39 all_green true; parity holds (health ok / spend $0.00 of $100)",
   "cost_sweep": "exit 0 clean; diff vs 31 Aug is line-number drift only",
   "deploy_drift": "clean 19/19",
   "orchestrator": "queue [] staged [] (fixer OFF per DW-004)",
   "subscriptions": "anthropic UP, openai UP; no DOWN/DEGRADED live-critical observed",
-  "ai_watch": "no new findings; the \"Sonnet 5 reverts $3/$15 on 1 Sep\" claim re-confirmed STALE (increase cancelled 10 Aug, $2/$10 permanent \u2014 RG-0184)",
-  "heartbeat": "clean \u2014 last_run 2026-08-31, today 2026-09-01"
+  "ai_watch": "no new findings; the \"Sonnet 5 reverts $3/$15 on 1 Sep\" claim re-confirmed STALE (increase cancelled 10 Aug, $2/$10 permanent — RG-0184)",
+  "heartbeat": "clean — last_run 2026-08-31, today 2026-09-01"
  },
  "attended_pass_2026_09_01": {
   "ask": "David: fix the map coverage cards you can; rest discussed tonight",
   "fixed": [
    "DW-088 CLOSED (FEA baseline refreshed on-box, re-probe clean)",
-   "RG-0233 NEW LOCKED \u2014 deploy engine placement asserted (incl. published-but-unplaced detection); proven red-capable",
-   "RG-0234 NEW LOCKED \u2014 backup lane refreshed (was 27 days stale; live snapshot md5-matched, archived 2026-09-01_0653.zip, restore-proven ok users=70) + assertion restores the archive every run",
-   "DW-084 FIXED-UNVERIFIED \u2014 unit aligned to live key (sha-matched), restart proof rides tonight"
+   "RG-0233 NEW LOCKED — deploy engine placement asserted (incl. published-but-unplaced detection); proven red-capable",
+   "RG-0234 NEW LOCKED — backup lane refreshed (was 27 days stale; live snapshot md5-matched, archived 2026-09-01_0653.zip, restore-proven ok users=70) + assertion restores the archive every run",
+   "DW-084 FIXED-UNVERIFIED — unit aligned to live key (sha-matched), restart proof rides tonight"
   ],
-  "ledger_after": "227 entries \u00b7 208 holding \u00b7 0 REGRESSED \u00b7 19 open \u00b7 0 READY TO LOCK \u00b7 exit 0",
-  "map": "57 green \u00b7 0 blue \u00b7 1 amber \u00b7 0 red \u00b7 10 grey (68 cards) \u2014 zero blue for the first time",
+  "ledger_after": "227 entries · 208 holding · 0 REGRESSED · 19 open · 0 READY TO LOCK · exit 0",
+  "map": "57 green · 0 blue · 1 amber · 0 red · 10 grey (68 cards) — zero blue for the first time",
   "deferred_tonight": [
    "RG-0075 admin-gate script x5 copies (refactor + deploy)",
    "DW-084 root window (2 Sep)",
@@ -1179,8 +1197,37 @@
   ],
   "note": "GitHub mirror push attempted from sandbox: no credential (host lanes carry it); mirror 1 commit behind until next host push.",
   "new": [
-   "DW-089 transcript credential exposure (my recon) \u2014 rotations are tonight item 1"
+   "DW-089 transcript credential exposure (my recon) — rotations are tonight item 1"
   ],
   "dashboard_incident": "David reported ops dashboard SESSION UNDEFINED: server healthy (authenticated payload complete, session 184); cause = signed-out browser (sessionStorage JWT gone); 06:00 unattended-upgrades restart was the red herring underneath (DW-084 landmine fired, landed coherent). Fix his side: sign in again. Loader honesty defect filed as RG-0237 OPEN (DASH-SIGNEDOUT-TRUTH-1), ships with tonight deploy. DW-084 CLOSED on the full story."
+ },
+ "watch_pass_2026_09_02": {
+  "verdict": "GREEN",
+  "occasion": "launch day +1 (Wednesday, unattended)",
+  "closed": [
+   "DW-089"
+  ],
+  "new": [
+   "DW-090"
+  ],
+  "still_failing": [
+   "DW-085"
+  ],
+  "not_rerunnable": [
+   "DW-010 + DW-087 (Monday lane; today Wednesday)"
+  ],
+  "site": "health ok 1.3.1 (db integrity ok), root 200 in 0.36s, payment ok + paystack_connected, TLS 80d (expires 22 Nov), BIT 8/8",
+  "ledger": "FINAL 06:38 SAST: 236 entries · 215 holding · 0 REGRESSED · 20 open · 1 ready to lock (RG-0236, held by design) · 0 UNVERIFIED · exit 0. First invocation 06:34 read 3 REGRESSED/exit 1 mid-edit by a concurrent attended session (edd2f0a 06:32) — stamped, not filed.",
+  "qa_audit": "2 findings, 0 new, both INFO (DEMO-PLACEHOLDERS, VERSION-KEY-BENIGN v569)",
+  "smoke": "sandbox 40/40 ALL PASS; cron 39/39 all_green; parity holds (health ok / spend $0.00 of $100, MTD $0.00 new month)",
+  "cost_sweep": "exit 0 clean; diff vs 1 Sep empty",
+  "deploy_drift": "clean 19/19",
+  "fea": "ok, alerts [] — baseline notes stale = DW-090",
+  "orchestrator": "queue [] staged [] (fixer OFF per DW-004)",
+  "subscriptions": "35 UP / 15 HELD / 1 PLANNED, 0 issues, 0 DOWN",
+  "server": "reboot-required present, 59 upgradable, uptime 97d, disk 45%",
+  "ai_watch": "clear; stale \"Sonnet 5 reverts $3/$15 on 1 Sep\" refused a fifth time (RG-0184)",
+  "heartbeat": "clean — last_run 2026-09-01, today 2026-09-02",
+  "checks_run": "12/13 (Monday lane not due)"
  }
 }
