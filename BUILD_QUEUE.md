@@ -1,5 +1,5 @@
-# BUILD QUEUE - generated 2026-08-30 11:31 UTC - DO NOT HAND-EDIT
-*Derived from regression_ledger.py OPEN entries (18 waiting). The ledger is the single source; edit nothing here - build the item, the ledger prints READY TO LOCK, a session promotes it, and the row vanishes. ledger otherwise green.*
+# BUILD QUEUE - generated 2026-09-02 06:03 UTC - DO NOT HAND-EDIT
+*Derived from regression_ledger.py OPEN entries (21 waiting). The ledger is the single source; edit nothing here - build the item, the ledger prints READY TO LOCK, a session promotes it, and the row vanishes. ledger otherwise green.*
 
 - **RG-0121** [waiting] The photo-anon scan canary is GROUNDING-CLASS, dark by default, and can never be the verifier
     - canary not armed live yet (eval pending) -- expected while OPEN
@@ -13,8 +13,6 @@
     - the object-storage probe performs a signed list (in-scope)
 - **RG-0173** [waiting] The agency funnel is walked END-TO-END by MACHINERY -- a synthetic journey probe (email links -> console -> roster invite -> advert import) runs against live and leaves a fresh witness
     - no journey witness -- the probe has never run
-- **RG-0180** [waiting] connect-src is tightened from 'https:' to a named allowlist
-    - connect-src is still open (['https:'] in "'self' https:") -- a script that executed could exfiltrate. Named origins only
 - **RG-0185** [waiting] The photo-anon eval set is REPRODUCIBLE and every row it scores has a truth label
     - eval set holds 22 photos; the Switch Test Plan calls for ~30 including 3 'inappropriate' samples, which are absent -- the scan prompt's moderation clause is unscored
 - **RG-0196** [waiting] The admin gate script has ONE source -- the consolidation RG-0075 was originally written for
@@ -31,9 +29,17 @@
     - no intro reminder ladder: bea_main.py carries no INTRO-REMIND-1 sweep -- a pending intro is never re-nudged while EULA B3 counts silence against the seller
 - **RG-0212** [waiting] The customer-email firewall: after launch, no customer mail is ever forwarded to a personal inbox -- complaints live between the user and the triage AI, and escalation reaches David through the admin surfaces only
     - worker not yet ARMED -- expected while OPEN: the firewall is code, not yet conduct. At launch: wrangler var CUSTOMER_FIREWALL=1 + worker deploy (David, RUL-027 class), then write cloudflare_email_worker/ARMED_RECORD.md w
-- **RG-0214** [waiting] The gated ops map and watch register are LIVE documents -- served from the repo's fetched origin/main at request time, so the defence map can never again trail reality by a whole deploy
-    - deploy report 2026-08-30T06:45:47Z carries no migration-035 step -- the deploy with MAP-LIVE-1 has not shipped yet
 - **RG-0215** [waiting] The JURISDICTION GATE (RUL-071): no city may be armed for outreach in a country the outreach-law canon does not cover, and a DO-NOT-COLD-EMAIL country (Kenya/Egypt/Botswana, 20 Aug doc verdicts) may never be armed at all -- organic growth is ungated, SENDING is what waits for law
-    - pipeline reaches uncovered countries (AU, BR, CL, CN, CO, ET, FR, GH, IN, MA, NG, PE, RU, RW, TZ, UG, UK, US) and none is armed -- expected while OPEN. Each outreach lane needs a primary-source OUTREACH_LAW section first
+    - San Antonio (US) is armed while OUTREACH_LAW has no UNITED STATES section -- sending into an unresearched jurisdiction (RG-0215)
 - **RG-0216** [waiting] FIDE-CLAIM-1 exists and holds its shape: the credential-claim lane (claim endpoint, CREDENTIAL_CLAIMS flag, seeded registry) is LIVE per the design spec -- verification without identification, badge from a live JOIN, one account per credential
     - /credentials/mine does not answer (404) -- FIDE-CLAIM-1 not built yet. Expected while OPEN. Spec: CREDENTIAL_CLAIMS_DESIGN.md; build order section 9; seed export from CityLauncher fide_trainers (4,237 rows verified on di
+- **RG-0221** [READY TO LOCK] ZOOM, the narrowing funnel, keeps the properties that make it work: one question at a time, no zero-count option ever offered, no facet asked before its parent, geography never opening the funnel, and the flag DARK until David arms it
+    - PENDING BUILD -- spec intact, both prototypes present; design ratified, build not started. This entry can only assert its PRE-BUILD half today, so it is OPEN by design and must NOT be promoted: promoting now would lock t
+- **RG-0224** [READY TO LOCK] SQUIRE keeps the four properties that make it legal, anonymous and on-model: it is Pro-only, it never GRANTS an introduction, seller identity never enters its context, and its top-up is TUPPENCE -- no second currency exists
+    - PENDING BUILD -- spec intact; ruled, unbuilt, Zoom-first order recorded. This entry can only assert its PRE-BUILD half today, so it is OPEN by design and must NOT be promoted: promoting now would lock the spec-only asser
+- **RG-0238** [READY TO LOCK] No listing surface ever calls a PERSON safe -- we publish dated, sourced FACTS about a credential, never a conclusion about someone's future conduct, and never an absence-of-record claim
+    - OPEN: no verification badge ships yet -- this is a tripwire set AHEAD of the feature, not proof the feature is right.
+- **RG-0239** [waiting] The outreach CTA destination ANSWERS AN ANONYMOUS PROSPECT -- the magic link in every wave email must not land on a credential prompt
+    - the CTA response carries WWW-Authenticate -- a prospect gets a browser credential popup instead of the listing form
+- **RG-0244** [waiting] The CityLauncher funnel's ONBOARDED and PUBLISHED counters are FED -- a prospect who registers or goes live on MarketSquare is stamped in prospects.db, not left at 0 forever
+    - live: /prospects/reconcile is 404 -- the CityLauncher deploy has not ridden; the counters are still unfed

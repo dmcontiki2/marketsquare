@@ -13627,5 +13627,57 @@ def rg_geo_launch_cities():
         out.append((FAIL, "live leg unreachable: %s" % str(e)[:80]))
     return out
 
+@entry("RG-0244", "The CityLauncher funnel's ONBOARDED and PUBLISHED counters are FED -- a prospect "
+       "who registers or goes live on MarketSquare is stamped in prospects.db, not left at 0 forever",
+       OPEN,
+       scope="ALL prospects in CityLauncher/data/prospects.db on the server, every status. "
+             "ONE closure: reconcile_conversions() in CityLauncher/api/server.py joins prospects.email "
+             "(case-folded) to marketsquare.db users (-> onboarded_at, status onboarded) and to "
+             "listings with listing_status='live' (-> published_at, status published), writes an "
+             "onboard_events row, runs at startup + every RECONCILE_INTERVAL_SEC (600) and on "
+             "POST /launch-api/prospects/reconcile (key-gated). Suppression states (opted_out, "
+             "bounced, rejected_*) keep their status -- they are the send guard -- but still get "
+             "the timestamps, because the conversion is real. /prospects/stats carries reconcile_last.",
+       ref="CONVERSION-RECONCILE-1, 2 Sep 2026, David: 'Do we know if the onboarded and published "
+           "actually work?' READ on disk: nothing wrote prospects.onboarded_at / published_at -- the "
+           "email-event handler stops at clicked, MarketSquare never called back. The dashboard's 0 / 0 "
+           "was 'we would not know', not 'nobody yet'. Tested on a copy of the live prospects.db "
+           "against a synthetic marketsquare.db: 3 onboarded + 1 published stamped, draft listing "
+           "NOT counted, upper-case email matched, opted_out kept its status, second run 0/0 "
+           "(idempotent), missing MS db reported cleanly. OPEN until deploy_citylauncher.bat rides: "
+           "the live leg turns green when POST /launch-api/prospects/reconcile answers 401 (gate, "
+           "endpoint present) instead of 404 (old server.py) -> READY TO LOCK.")
+def rg_conversion_reconcile():
+    out = []
+    cl = os.path.join(REPO, "..", "CityLauncher", "api", "server.py")
+    if os.path.exists(cl):
+        s = open(cl, encoding="utf-8").read()
+        for needle, why in (("def reconcile_conversions", "the reconcile function is gone"),
+                            ("@app.post('/prospects/reconcile')", "the manual reconcile endpoint is gone"),
+                            ("target=_reconcile_loop", "the periodic reconcile thread is no longer started"),
+                            ("'reconcile_last'", "/prospects/stats no longer reports the last reconcile")):
+            if needle not in s:
+                out.append((FAIL, "CityLauncher/api/server.py: %s" % why))
+    else:
+        out.append((INFO, "CityLauncher not beside this repo -- source leg skipped"))
+    try:
+        import urllib.request as _ur
+        req = _ur.Request("https://trustsquare.co/launch-api/prospects/reconcile", method="POST",
+                          headers={"User-Agent": "TrustSquare-Ledger/1.0"})
+        try:
+            _ur.urlopen(req, timeout=15)
+            out.append((FAIL, "POST /launch-api/prospects/reconcile ran for an ANONYMOUS caller -- gate missing"))
+        except Exception as e:
+            code = getattr(e, "code", None)
+            if code in (401, 403):
+                out.append((INFO, "live: /prospects/reconcile present and key-gated (HTTP %s)" % code))
+            elif code == 404:
+                out.append((FAIL, "live: /prospects/reconcile is 404 -- the CityLauncher deploy has not ridden; the counters are still unfed"))
+            else:
+                out.append((FAIL, "live reconcile probe unexpected: %s" % repr(e)[:60]))
+    except Exception as e:
+        out.append((FAIL, "live leg unreachable: %s" % str(e)[:80]))
+    return out
+
 if __name__ == "__main__":
     sys.exit(main())

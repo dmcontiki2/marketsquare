@@ -28,6 +28,21 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- **Maintenance loop 2 Sep (unattended):** RG-0099 lockout healed (home IP moved → added to
+  Hetzner SSH allowlist, port 22 probed open). Fault queue empty (0 new / 0 fix-shipped /
+  26 verified). Shadow agent heartbeat posted. Ledger 237 entries, 0 regressed, 0 unverified.
+  No escalations. Follow-up for David: prune 4 stale IPs from `trustsquare-origin-lockdown`
+  SSH rule; `.secrets/cf_waf_token.txt` still absent (CF self-heal half unarmed).
+
+- CONVERSION-RECONCILE-1 built + tested, NOT deployed: CityLauncher onboarded/published counters now have a writer (`reconcile_conversions()` in api/server.py). Ships with the next `deploy_citylauncher.bat`. Ledger RG-0244 OPEN → READY TO LOCK once live probe answers 401.
+
+## 2026-09-02 — Boards cleared in attended session
+Ledger exit 1 → 0 (RG-0190 bak neutralized, pg-readiness cause fixed portably, RG-0187 harness
+reroute, maintenance-agent guards re-aimed TRUTH-REVIEW-3). Rulings 5 FAIL/2 WARN → 90/90 clean
+(wave-board v3.3 needles, RUL-088 folded path, RUL-089/090 assertions, RG-0221 extension).
+RG-0237 built (DASH-SIGNEDOUT-TRUTH-1) and LOCKED; RG-0243 LOCKED. bea_main.py +
+dashboard.server.html await David's next deploy.
+
 - **GEO-LAUNCH-1 built, awaiting David's deploy (2 Sep 2026).** Location picker will show only the outreach
   launch cities (ZA 14 · US 11 · GB 11 · AU 1 + any city holding listings), synced from CityLauncher on every
   deploy. Ledger RG-0243 is OPEN and goes READY TO LOCK once the deploy lands.

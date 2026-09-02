@@ -1,3 +1,74 @@
+## 2026-09-02 — Maintenance loop (scheduled, unattended): RG-0099 lockout healed, queue empty
+
+- **RG-0099 REGRESSED → healed (SSH-LOCKOUT-1 class).** Ledger opened red: port 22 unreachable
+  from the session vantage while a control host answered. `hetzner_fw_selfheal.py --check`
+  showed the egress IP had moved to 197.185.137.157 (same ISP range as the 4 existing entries —
+  home router/power reset). Ran the self-heal: added `/32` to the SSH rule, nothing removed
+  (5 sources now — prune the old four with David at a calm moment). PROBED after: port 22 open,
+  RG-0099 green. Cloudflare half still unarmed (no `.secrets/cf_waf_token.txt`) — edge serves
+  this vantage fine, lower stakes post-launch.
+- **Shadow agent run** `run_20260902T053722Z`: 0 new faults, 0 acted. Heartbeat PROBED on
+  `GET /dashboard/maint` (anonymous — migration 018 is on the box). Queue: new 0 /
+  fix-shipped 0 / verified 26. Email lane census: 15 total, 1 held (30d).
+- **Escalation brief:** none in 24h — no brief written.
+- **Ledger before:** 236 entries, 1 REGRESSED, 2 UNVERIFIED (httpx/fastapi missing —
+  `maint_deps.py` installed them). **After:** 237 entries, 215 holding, 0 regressed,
+  0 unverified, exit 0.
+- **RG-0236 prints READY TO LOCK but stays OPEN by design** — its own scope says promote only
+  on MEASURED triage accuracy, not on the build having shipped. Not promoted.
+- Left untouched (another session's live work, not this run's): uncommitted RG-0244 in
+  `regression_ledger.py` and the `attended-red-clear` fragments.
+
+## 2026-09-02 — CONVERSION-RECONCILE-1: the CityLauncher ONBOARDED / PUBLISHED counters are now fed
+
+**Broken:** David asked whether the dashboard's Onboarded 0 / Published 0 "actually work". READ on disk: nothing anywhere wrote `prospects.onboarded_at` / `published_at` — CityLauncher's email-event handler advances only to `opened`/`clicked`, and MarketSquare never calls back. The zeros meant "we would not know", not "nobody yet". With 14 clicks in the pool, the first real conversion would have been invisible.
+
+**Decided (CTO, RUL-037):** a server-side reconcile rather than a MarketSquare→CityLauncher callback — both apps share the Hetzner box, a read-only join cannot lose events when either service is down, and it back-fills anyone who already converted.
+
+**Done:** `CityLauncher/api/server.py` gains `reconcile_conversions()` — joins `prospects.email` (case-folded) to `marketsquare.db` `users` (→ `onboarded_at`, status `onboarded`) and to `listings` with `listing_status='live'` (→ `published_at`, status `published`), writes an `onboard_events` row, runs 20 s after startup and every `RECONCILE_INTERVAL_SEC` (600), plus `POST /prospects/reconcile` (key-gated). Suppression states (opted_out / bounced / rejected_*) keep their status but get the timestamps. `/prospects/stats` now carries `reconcile_last`. Tested on a copy of the live prospects.db against a synthetic marketsquare.db: 3 onboarded + 1 published, draft listing not counted, upper-case email matched, opted_out status preserved, second run 0/0, missing MS db reported cleanly. Ledger **RG-0244 (OPEN)** — live leg goes green when `POST /launch-api/prospects/reconcile` answers 401 instead of 404.
+
+**Not yet live:** ships via `deploy_citylauncher.bat` (David's lane — sandbox SSH port 22 was blocked this session). Backup: `api/server.py.bak-20260902-073510`.
+
+## 2026-09-02 — Attended red-clear: ledger exit 1 → 0, rulings 5 FAIL → 0, RG-0237 built and LOCKED
+
+David asked "what is open and what can you fix" — the answer was executed, not listed.
+
+**Ledger reds cleared (3 → 0):**
+- **RG-0190**: `.secrets/deploy_keys.txt.bak-20260902-044021` held 3 pre-rotation credentials at
+  rest. Neutralized (content replaced with a dated note + pre-wipe fingerprint) — the values were
+  dead post-rotation, so the backup had no restore value.
+- **RG-0114/pg-readiness**: the 31 Aug suppression lane grew the SQLite surface. Cause fixed, not
+  baseline-bumped: `datetime('now')` → `CURRENT_TIMESTAMP`, `INSERT OR IGNORE` →
+  `ON CONFLICT(email) DO NOTHING` in bea_main.py `_record_optout` (behaviourally proven on a
+  temp DB: default lands, dupe ignored). Fresh pre-deploy scan verdict: **ok**.
+- **RG-0187**: rg_journey_front_door's direct subprocess call rerouted through `_harness()` — a
+  missing dependency now demotes to NOT EVALUATED instead of crying REGRESSION.
+
+**Also cleared en route:** the maintenance-agent guard red (5 consecutive scans since the 1 Sep
+triage refactor) was TRUTH-REVIEW-3 — the third instance of the test's own documented class:
+guards pinning spelling/geometry (block window +2500 too small after the outreach branch split
+`can_auto`; gate hoisted into `_has_sender`). Both guards re-aimed at the properties; all 5 pass.
+
+**Rulings 5 FAIL + 2 WARN → 90/90 clean:**
+- RUL-056/057/058 needles re-aimed at the regenerated wave board v3.3 (substance intact, wording
+  moved; `&middot;` entity accepted, old-pair bans kept and extended).
+- RUL-088 reflection path fixed to the folded fragment (changelog_compile had archived it).
+- RUL-089/090 got their missing reflection assertions; **RG-0221 was genuinely un-extended** —
+  the RUL-089 acceptance criteria (singleton auto-collapse, true institution counts) are now in
+  the entry text. That blind spot was real, exactly what rulings_check exists to catch.
+
+**Built and promoted:**
+- **RG-0237 → LOCKED**: DASH-SIGNEDOUT-TRUTH-1 branch added to dashboard.server.html's summary
+  loader — `redacted=='heartbeat'` now paints a SIGNED OUT banner + NOT MEASURED placeholders
+  instead of the launch-morning 'SESSION UNDEFINED' scare. **Live from the next deploy.**
+- **RG-0243 → LOCKED** per its own ref condition (David shipped; live picker matches 37 launch
+  cities across 9 countries).
+- RG-0236 deliberately NOT promoted — its ref requires measured classifier accuracy, not a build.
+
+Backups beside every edited file (.bak-<ts>); py_compile green on all Python; final board:
+**ledger exit 0 · 0 regressed · rulings 90/90 · pre-deploy ok**. Deploy debt now includes
+bea_main.py + dashboard.server.html — they go live on David's next /ship.
+
 ## 2026-09-02 — Travelpayouts tours review RESUBMITTED (third submission, post-launch)
 
 PROBED 05:58 SAST in David's Chrome (project Trustsquare, ID 758984): still "20 programs

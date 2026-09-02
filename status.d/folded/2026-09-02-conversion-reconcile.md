@@ -1,0 +1,1 @@
+- CONVERSION-RECONCILE-1 built + tested, NOT deployed: CityLauncher onboarded/published counters now have a writer (`reconcile_conversions()` in api/server.py). Ships with the next `deploy_citylauncher.bat`. Ledger RG-0244 OPEN → READY TO LOCK once live probe answers 401.

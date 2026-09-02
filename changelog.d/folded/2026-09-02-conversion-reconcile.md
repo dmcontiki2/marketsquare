@@ -1,0 +1,9 @@
+## 2026-09-02 — CONVERSION-RECONCILE-1: the CityLauncher ONBOARDED / PUBLISHED counters are now fed
+
+**Broken:** David asked whether the dashboard's Onboarded 0 / Published 0 "actually work". READ on disk: nothing anywhere wrote `prospects.onboarded_at` / `published_at` — CityLauncher's email-event handler advances only to `opened`/`clicked`, and MarketSquare never calls back. The zeros meant "we would not know", not "nobody yet". With 14 clicks in the pool, the first real conversion would have been invisible.
+
+**Decided (CTO, RUL-037):** a server-side reconcile rather than a MarketSquare→CityLauncher callback — both apps share the Hetzner box, a read-only join cannot lose events when either service is down, and it back-fills anyone who already converted.
+
+**Done:** `CityLauncher/api/server.py` gains `reconcile_conversions()` — joins `prospects.email` (case-folded) to `marketsquare.db` `users` (→ `onboarded_at`, status `onboarded`) and to `listings` with `listing_status='live'` (→ `published_at`, status `published`), writes an `onboard_events` row, runs 20 s after startup and every `RECONCILE_INTERVAL_SEC` (600), plus `POST /prospects/reconcile` (key-gated). Suppression states (opted_out / bounced / rejected_*) keep their status but get the timestamps. `/prospects/stats` now carries `reconcile_last`. Tested on a copy of the live prospects.db against a synthetic marketsquare.db: 3 onboarded + 1 published, draft listing not counted, upper-case email matched, opted_out status preserved, second run 0/0, missing MS db reported cleanly. Ledger **RG-0244 (OPEN)** — live leg goes green when `POST /launch-api/prospects/reconcile` answers 401 instead of 404.
+
+**Not yet live:** ships via `deploy_citylauncher.bat` (David's lane — sandbox SSH port 22 was blocked this session). Backup: `api/server.py.bak-20260902-073510`.
