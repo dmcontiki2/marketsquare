@@ -13551,7 +13551,9 @@ def rg_wave_gates_passable():
 
 @entry("RG-0243", "The app's location picker shows the cities the outreach waves are "
        "recruiting in -- no more, no less -- and never drifts from CityLauncher's city list",
-       OPEN, fixed_on="2026-09-02",
+       LOCKED, fixed_on="2026-09-02",
+       # PROMOTED 2 Sep 2026 per the entry's own ref condition: David shipped (two morning
+       # deploys) and the live legs pass -- picker matches the launch list across 9 countries.
        scope="ALL countries and cities, on the live geo_countries/geo_regions/geo_cities "
              "tables and the picker in ms.js. ONE source of truth: CityLauncher/data/cities.json "
              "(status active|prospect = shown, planned = hidden) -> scripts/geo_launch_cities.json "
