@@ -12,7 +12,7 @@ STATUS values: `ROTATED` (replaced and probed since exposure) · `BURNT` (expose
 still live, not yet replaced) · `REMOVED` (deliberately unset) · `PUBLIC` (not secret
 by design) · `UNKNOWN` (not yet established — treat as burnt) · `UNROTATABLE-ACCEPTED` (exposed, cannot be replaced by any means the vendor offers; carries a dated decision and its reasoning, never a silent pass).
 
-REGISTER_VERIFIED: 2026-09-01
+REGISTER_VERIFIED: 2026-09-02
 
 ## Rotated and proven — 22 Aug 2026
 
@@ -58,11 +58,18 @@ out about from a customer.
 
 | Credential | Why it matters | Rotate where | Blocked on |
 |---|---|---|---|
-| ANTHROPIC_API_KEY | Metered LLM key for the live AI lanes; printed IN FULL into a session transcript 1 Sep 2026 by a systemctl-cat recon (DW-089 — the DW-029 class, instrument fault). Live but ceilinged: $100 platform ceiling, RG-0080 bars unattended loops | Anthropic console (David) → then the add_secret lane to the server drop-in | David console access — tonight 1 Sep, first item |
-| CF_CACHE_TOKEN | Cloudflare API token (cache-purge scope) printed in full in the same transcript | Cloudflare dashboard (David) → cloudflare.conf drop-in | David console access — tonight 1 Sep |
-| MS_DEPLOY_TOKEN | Deploy/admin-endpoint token printed in full in the same transcript (gates an admin endpoint, not the git deploy lane) | Re-mint BOTH ends: server drop-in + host .secrets via add_deploy_token.bat | Coordinated re-mint with David at keyboard — tonight 1 Sep |
 
-> **1 Sep 2026 (DW-089):** the three rows above were burnt by MY OWN root recon printing `systemctl cat` output into the session transcript — the exact act this register warns about ("every later command parses without echoing"). Also printed: MS_API_KEY — which rotate_secrets.py records as PUBLIC IN MS.JS BY DESIGN (every browser receives it), so it is not a secret and not an exposure; the DW-084 alignment made the unit its single defining surface, sha-matched to /proc and to the ms.js-baked value. CF_ZONE_ID also appeared; it is not a secret. Every subsequent command in the pass was fingerprint-only.
+*(empty as of 2 Sep 2026 04:4x SAST — the three DW-089 rows moved to "Rotated and proven — 2 Sep 2026" below)*
+
+> **1 Sep 2026 (DW-089):** the three rows that sat here (ANTHROPIC_API_KEY, CF_CACHE_TOKEN, MS_DEPLOY_TOKEN) were burnt by MY OWN root recon printing `systemctl cat` output into the session transcript — the exact act this register warns about ("every later command parses without echoing"). Also printed: MS_API_KEY — which rotate_secrets.py records as PUBLIC IN MS.JS BY DESIGN (every browser receives it), so it is not a secret and not an exposure; the DW-084 alignment made the unit its single defining surface, sha-matched to /proc and to the ms.js-baked value. CF_ZONE_ID also appeared; it is not a secret. Every subsequent command in the pass was fingerprint-only.
+
+## Rotated and proven — 2 Sep 2026 (DW-089 transcript exposure, second rotation)
+
+| Credential | Holder | Rotated | Verified how |
+|---|---|---|---|
+| ANTHROPIC_API_KEY | anthropic.conf (0600) + local `.secrets/ai_keys.env` | 04:2x SAST | PROBED: fingerprint 8b3b67b5 -> bee0b37f in /proc/<pid>/environ; `/v1/models` 200 (11 models); a real 1-token `/v1/messages` call succeeded through the live process value. NOTE: the console's first offer was an *identity-linked* key (fingerprint 885a5de8) which Anthropic rejects with HTTP 400 "anthropic-workspace-id is required" — our eight `x-api-key` call sites do not send that header. Replaced with a standard workspace key; both old keys to be deleted in the console by David |
+| CF_CACHE_TOKEN | cloudflare.conf (0600) | 04:3x SAST | PROBED: fingerprint bab32e11 -> 2dd0a65e; real purge_cache on zone 92f52b14… `success:true` over BOTH IPv4 and IPv6. New token `trustsquare-2026-09-02b`: one zone (trustsquare.co), Cache Purge only, IP-filtered to 178.104.73.239 AND 2a01:4f8:1c19:e5::1 (the server's IPv6 egress — the first verify failed 401 because the app's client leaves over IPv6). `/user/tokens/verify` answers 1000 for zone-scoped tokens and is not a verdict. Old `trustsquare-cache-purge-2026-08-22` already absent from the dashboard. `trustsquare-2026-08-22` (R2 Bucket Item Write) and `hetzner-backup-rclone` are NOT cache tokens, were NOT exposed, and stay |
+| MS_DEPLOY_TOKEN | deploy-token.conf (0600) + local `.secrets/deploy_keys.txt` | 04:39 SAST | PROBED: fingerprint 76b30e21 -> 85e9e511 live; local copy sha-matched; server pickup file removed. add_deploy_token.bat aborted at its health step on a transient 502 during the restart (service was active 1 s later) — steps 3/4 completed from the sandbox by fingerprint |
 
 ## Removed rather than rotated
 

@@ -2389,14 +2389,47 @@ _OPTOUT_PAGE = ("<!doctype html><meta charset=utf-8>"
                 "further contact planned either way.</p>")
 
 
+_OPTOUT_CONFIRM = ("<!doctype html><meta charset=utf-8>"
+                   "<meta name=viewport content='width=device-width,initial-scale=1'>"
+                   "<title>Unsubscribe - TrustSquare</title>"
+                   "<style>body{font:16px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;"
+                   "max-width:34em;margin:12vh auto;padding:0 1.2em;color:#1b2436}"
+                   "h1{font-size:1.35em;color:#1F3864}p{color:#44536b}"
+                   "button{background:#1F3864;color:#fff;border:0;border-radius:8px;"
+                   "padding:14px 28px;font-size:16px;cursor:pointer}</style>"
+                   "<h1>Unsubscribe from TrustSquare emails?</h1>"
+                   "<p>Confirm and <b>%s</b> will never receive outreach from TrustSquare again.</p>"
+                   "<form method=post action=/optout><input type=hidden name=email value='%s'>"
+                   "<button type=submit>Yes, unsubscribe me</button></form>"
+                   "<p><small>Changed your mind? Just close this page - nothing happens until "
+                   "you confirm.</small></p>")
+
+
 @app.get("/optout")
 def optout_get(email: str = "", src: str = "link"):
-    _record_optout(email, src or "link")
-    return HTMLResponse(_OPTOUT_PAGE)
+    """OPTOUT-CONFIRM-1 (2 Sep 2026): a GET WRITES NOTHING. Corporate link-scanners
+    (Defender Safe Links, Proofpoint, Mimecast) pre-fetch every link in an inbound
+    email; on 1 Sep they opted 11 real prospects out of a lifetime register. The
+    human path is this confirmation page -> POST; RFC 8058 one-click is a POST too."""
+    import html as _h
+    safe = _h.escape((email or "").strip())
+    if not safe:
+        return HTMLResponse("<h2>Invalid opt-out link.</h2>", status_code=400)
+    return HTMLResponse(_OPTOUT_CONFIRM % (safe, safe))
 
 
 @app.post("/optout")
-def optout_post(email: str = "", src: str = "list-unsubscribe"):
+async def optout_post(request: Request, email: str = "", src: str = "list-unsubscribe"):
+    # The confirm form posts urlencoded; one-click posts 'List-Unsubscribe=One-Click'
+    # with the address in the query string. Parse by hand -- no multipart dependency.
+    try:
+        import urllib.parse as _up
+        body = (await request.body()).decode("utf-8", "replace")
+        email = (_up.parse_qs(body).get("email", [email])[0] or email).strip()
+    except Exception:
+        pass
+    if not email or "@" not in email:
+        return HTMLResponse("<h2>Invalid opt-out request.</h2>", status_code=400)
     _record_optout(email, src or "list-unsubscribe")
     return HTMLResponse(_OPTOUT_PAGE)
 
@@ -18668,6 +18701,65 @@ _OUTREACH_FROM = os.getenv("OUTREACH_FROM_EMAIL",
 _OUTREACH_REPLY_TO = os.getenv("OUTREACH_REPLY_TO", "david@trustsquare.co")
 
 
+# ── OUTREACH-MARKETS-1 (1 Sep 2026) — the launch blocker RG-0236 named ──────
+# The FAQ class used to answer every prospect from HARDCODED SOUTH AFRICAN facts.
+# A New York tutor asking "which cities do you cover?" would have been told
+# Johannesburg and Bloemfontein — confidently, which is worse than no answer, and
+# it blocked the 4 Sep global roll for NY/London/Sydney and A-plan Waves 2-5.
+#
+# Generated 1 Sep 2026 from CityLauncher/data/cities.json (122 cities). "live" =
+# state 'active' or already emailed; "next" = the wave-plan queue behind it.
+# RG-0236's assertion re-checks this table against cities.json so it cannot drift
+# silently — if a city is armed there and missing here, the ledger goes red.
+_OUTREACH_MARKETS = {
+    "ZA": {"name": "South Africa", "stage": "established",
+           "live": ["Pretoria", "Johannesburg", "Cape Town", "Durban", "Bloemfontein",
+                    "Port Elizabeth", "East London", "Polokwane"],
+           "next": ["Nelspruit", "Kimberley", "Pietermaritzburg", "George", "Knysna"]},
+    "US": {"name": "the United States", "stage": "opening", "live": ["New York"],
+           "next": ["Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia",
+                    "San Antonio", "San Diego", "Dallas", "San Jose", "Austin"]},
+    "UK": {"name": "the United Kingdom", "stage": "opening", "live": ["London"],
+           "next": ["Manchester", "Birmingham", "Leeds", "Glasgow", "Edinburgh",
+                    "Liverpool", "Bristol", "Cardiff", "Sheffield", "Leicester"]},
+    "AU": {"name": "Australia", "stage": "opening", "live": ["Sydney"],
+           "next": ["Melbourne", "Brisbane", "Perth", "Adelaide", "Canberra"]},
+    "NZ": {"name": "New Zealand", "live": [],
+           "next": ["Auckland", "Wellington", "Christchurch"]},
+    "NA": {"name": "Namibia", "live": [], "next": ["Windhoek", "Swakopmund"]},
+    "AR": {"name": "Argentina", "live": [], "next": ["Buenos Aires", "Cordoba"]},
+    "FR": {"name": "France", "live": [], "next": ["Paris", "Lyon", "Marseille"]},
+    "PT": {"name": "Portugal", "live": [], "next": ["Lisbon", "Porto"]},
+}
+
+
+def _market_facts_block() -> str:
+    """The per-market city truth handed to the outreach classifier."""
+    out = []
+    for code, m in _OUTREACH_MARKETS.items():
+        if m["live"] and m.get("stage") == "established":
+            line = ("%s (%s): OPEN, with tutors already listing in %s."
+                    % (code, m["name"], ", ".join(m["live"])))
+            if m["next"]:
+                line += " Opening next: %s." % ", ".join(m["next"][:5])
+        elif m["live"]:
+            # OPENING, not established. Saying "tutors already listing" of a city
+            # that has had one outreach email and no listings would be the exact
+            # class of untrue-for-the-weakest-case claim RUL-088 bars. Be accurate:
+            # being first is the honest pitch, and a better one.
+            line = ("%s (%s): OPENING NOW in %s - we are signing our FOUNDING tutors "
+                    "there, so they would be among the first, not joining a crowd. Do "
+                    "NOT claim tutors are already listed there. Next: %s."
+                    % (code, m["name"], ", ".join(m["live"]),
+                       ", ".join(m["next"][:4]) or "more cities to follow"))
+        else:
+            line = ("%s (%s): NOT OPEN YET - we are not taking listings there. "
+                    "Planned: %s. Say so plainly; never imply it is live."
+                    % (code, m["name"], ", ".join(m["next"][:3]) or "no date set"))
+        out.append("  - " + line)
+    return "\n".join(out)
+
+
 def _is_outreach_lane(to_addr: str) -> bool:
     """True when this inbound mail is a reply to our own outreach wave."""
     return (parseaddr(to_addr or "")[1] or "").strip().lower() in _OUTREACH_ADDRESSES
@@ -18784,15 +18876,23 @@ async def _classify_email(from_addr: str, subject: str, body: str,
             "- outreach_commercial: wants a call or meeting, asks about terms, discounts "
             "or a bulk/agency arrangement, proposes a partnership, or complains in a way "
             "needing a human. auto_safe=false ALWAYS -- David answers these himself.\n\n"
-            "FACTS you may state (and nothing beyond them): TrustSquare is national in "
-            "South Africa -- live cities include Johannesburg, Cape Town, Pretoria, "
-            "Durban, Bloemfontein, Port Elizabeth and East London. Listing is FREE and "
-            "stays free. The seller sets their own subjects, rate and schedule. The BUYER "
-            "pays a small introduction fee before they can make contact, so every enquiry "
-            "comes from someone serious. TrustSquare NEVER takes a commission on the "
-            "seller's own fees. The seller stays anonymous until they accept an "
-            "introduction. A listing can be local, online, or both -- an online listing "
-            "reaches the whole country.\n\n"
+            "STEP 1 - IDENTIFY THE MARKET BEFORE YOU ANSWER. This sender is NOT necessarily "
+            "South African. Work out which country they are in from: the city named in the "
+            "quoted outreach email below their reply (our mail always names their city), "
+            "their signature, their website, or their email domain. If you CANNOT determine "
+            "the market with confidence, classify as outreach_commercial and let a human "
+            "answer - a confident answer about the wrong country is far worse than a "
+            "handover.\n\n"
+            "STEP 2 - ANSWER ONLY FROM THAT MARKET'S ROW. Never quote another market's "
+            "cities. Never imply a market is open when its row says NOT OPEN YET.\n"
+            + _market_facts_block() + "\n\n"
+            "UNIVERSAL FACTS, true in every market: listing is FREE and stays free. The "
+            "seller sets their own subjects, rate and schedule. The BUYER pays a small "
+            "introduction fee before they can make contact, so every enquiry comes from "
+            "someone serious. TrustSquare NEVER takes a commission on the seller's own "
+            "fees. The seller stays anonymous until they accept an introduction. A listing "
+            "can be local, online, or both - an online listing reaches the whole country "
+            "it is listed in.\n\n"
             "RULES: Never invent pricing, dates, numbers or features not listed above. "
             "Never promise refunds (Tuppence is strictly non-refundable). Never reveal "
             "other sellers' identities or any internal data. If you are unsure which "

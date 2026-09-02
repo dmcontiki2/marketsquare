@@ -1,3 +1,131 @@
+## 2026-09-02 — DW-089 CLOSED: the three transcript-burnt credentials rotated and proven
+
+David, on being told a rotation was still open: *"we have already done a full comprehensive security rotation."* Correct for 22 Aug; DW-089 was a SECOND exposure (1 Sep, own act — `systemctl cat` printed into a transcript) of the post-rotation values, PROBED live: MS_DEPLOY_TOKEN still carried the 22 Aug fingerprint 76b30e21.
+
+Rotated 2 Sep 04:2x–04:4x SAST, David at the keyboard, every step verified at the point of use:
+- **ANTHROPIC_API_KEY** 8b3b67b5 → bee0b37f. Trap found: the console now offers *identity-linked* keys first; one was installed (885a5de8) and Anthropic answered 400 "anthropic-workspace-id is required". Our 8 call sites send plain `x-api-key`. CTO call: standard workspace key, no code change on launch week. Proven with a real 1-token messages call through the live process.
+- **CF_CACHE_TOKEN** bab32e11 → 2dd0a65e. New token: one zone, Cache Purge only, IP-filtered. First verify failed 401 — the server's client egresses over **IPv6** (2a01:4f8:1c19:e5::1), which the v4-only allow-list rejected. Both addresses now allowed; purge `success:true` over v4 AND v6. Identity-federation dialog assessed and declined (needs GCP/AWS/Azure identity; we are a bare Hetzner VPS).
+- **MS_DEPLOY_TOKEN** 76b30e21 → 85e9e511. add_deploy_token.bat aborted at its health step on a transient 502 mid-restart; steps 3/4 finished from the sandbox by fingerprint, server pickup file removed.
+
+SECRETS_REGISTER "Still burnt" is EMPTY; REGISTER_VERIFIED 2026-09-02; RG-0146 function re-run in-process: green. Kept, not deleted: `trustsquare-2026-08-22` (R2 media) and `hetzner-backup-rclone` — not cache tokens, not exposed.
+
+**Containment (CTO item, next):** both exposures had the same shape — a session READ a config surface and the read printed values. Rule-in-a-file failed twice. Build: secrets unreadable from the session user; a fingerprint-only inspector as the ONLY read path; a ledger entry red if any session-reachable surface returns a secret in plaintext. Also for add_deploy_token.bat: retry /health for 15 s before declaring failure.
+
+## 2026-09-02 — CLICK-TRUTH-1: the click instrument was tested positive AND negative; yesterday's "zero clicks" was wrong as stated
+
+David challenged the claim that 0 of ~120 recipients clicked. PROBED (server email_events + nginx + a controlled test):
+
+- **The instrument works.** Positive test: two test emails through the real Resend lane to David's own row (6688); his two clicks were recorded within 1 s each — attributed by recipient, carrying the exact link (`t=CLICKTEST-POS/NEG`), his IP and browser — and nginx shows the landing hit. Negative control (`CLICKTEST-NEG2`, unclicked): 0 clicked rows, 0 nginx hits. Both halves verified 2 Sep 03:5x SAST.
+- **Yesterday's "zero clicks across the campaign" was false as a statement.** The server holds **31 `clicked` events** 30 Aug–1 Sep. Classified: 1020 Pretoria (7 clicks in 7 s) and 1256 (2 in 30 s) = link-scanner bursts; 6683 National (10 clicks/65 min from AWS 3.15.10.36, Edge 114) = scanner-likely; 8 clicks on the **opt-out** link from Azure 4.222.x / 72.145.x / 4.182.x = Microsoft Defender Safe Links; the ONE click on a `magic=1` CTA (prospect 1250) came from Azure 4.222.252.133 = scanner. Two ambiguous ZA-IP clicks (5106 on `?listing=337`, 570 on opt-out) — neither on the CTA. **Substantive finding stands: no human click on the CTA is attributable.** nginx corroborates: only 4 hits on `/admin.html?magic=1` (401) on 29–30 Aug across the whole pool.
+- **Why "it worked under test" for a month:** David's and the testers' rows store NO magic_link, so the emailer built the correct link for them every time; the fault lived only in the 3,526 SCRAPED rows. No test ever used a scraped row — including JOURNEY-1 as written yesterday (synthetic fixture, never calls build_magic_link). **JOURNEY-2:** journey_check.py now pulls a real scraped row still storing `/admin.html` and walks its link through the emailer's own `build_magic_link()`; proven red-capable by stubbing the normaliser (exit 1, four FAILs), green on live (exit 0).
+- **Open, CTO list:** (a) `/webhook/resend` verifies no Svix signature — anyone with the URL can POST a fake `email.clicked`; (b) `opened` is not evidence — Gmail's image proxy fires it on delivery (seen on all three test mails); (c) classify_clicks.py is not deployed on the server; (d) pre-31 Aug click rows carry no meta and can never be classified.
+
+## SAME DAY — OUTREACH-MARKETS-1: the launch blocker, found and closed in one evening
+
+David, on reading the corrected wave plan: *"this is a launch blocker that need to be fixed."* Correct
+— and it was fixed the same evening rather than carried into the 4 Sep roll.
+
+**The blocker:** the FAQ class answered every prospect from hardcoded South African facts. A New York
+or London tutor asking "which cities do you cover?" would have received a confident answer naming
+Johannesburg and Bloemfontein. That gated the global three's 4 Sep roll, NY/London completing their
+pools on 2 Sep, and A-plan Waves 2–5.
+
+**The fix (`bea_main.py`):** `_OUTREACH_MARKETS` — a per-market fact table generated from
+CityLauncher's `cities.json` (122 cities) — plus `_market_facts_block()`, and a two-step instruction
+to the classifier: **identify the market FIRST** (from the city named in the quoted outreach email,
+the signature, or the sender's domain), **then answer only from that market's row**. If the market
+cannot be determined with confidence it falls through to `outreach_commercial` for a human, because a
+confident answer about the wrong country is worse than a handover.
+
+**RUL-088's weakest-holder test, applied to a market claim.** The first cut said "cities with tutors
+already listing: New York" — untrue: New York has had one outreach email and no listings. Markets are
+now staged: ZA is ESTABLISHED (tutors listing in eight cities), while US/UK/AU are OPENING NOW, with
+the classifier explicitly told *not* to claim tutors are already listed there. Being first is the
+honest pitch and the better one.
+
+**Two false greens caught in the assertion itself, both worth recording:**
+1. The cross-check filtered on `state`, but `cities.json` uses `status` — it matched zero cities and
+   printed GREEN while checking nothing. Fixed, plus a self-guard that FAILS if the armed set is ever
+   empty, so the schema cannot silently retire the assertion again.
+2. The needle searched the whole of `bea_main.py` for `"US":`, which occurs in dozens of unrelated
+   dicts — so deleting the US row still reported green. Now scoped to the table itself. Red-capability
+   then proven: removing the US row produces the FAIL.
+
+RG-0236 stays OPEN (shipped is not measured), but the blocker is closed. **Needs a deploy to go live.**
+
+## 2026-09-01 — CTA-URL-1: three days of waves carried a CTA that could never open
+
+David: *"this was not a type of failure i expect from an AI, this is a critical failure."* Correct.
+
+**The fault.** Every scraper wrote `prospects.magic_link` as `https://trustsquare.co/admin.html?magic=1&…`.
+`/admin.html` is the **admin console** — Basic-auth gated, and rightly so: it carries a delete-listing
+control. `emailer.build_magic_link()` prefers the stored value over its own (correct) fallback, so the
+"List as a Tutor" button in the outreach emails pointed at a password prompt. **140 of the 170 emails
+sent carried it. 3,526 rows in the pool still store it.** Zero clicks across the campaign — not
+disinterest: Resend records a click *before* redirecting, so zero means nobody could act.
+
+**Why it survived three days:** nothing asserted the primary conversion path. The ledger had ~230
+entries and not one of them clicked the link the whole campaign depends on. That is the real defect —
+the fault is downstream of it.
+
+**Claude made it worse before making it better.** Diagnosed the 401 correctly, then prescribed an nginx
+split (`?magic=` public, bare `/admin.html` gated) **without ever loading the page**. Applied it, and
+the admin console — ONBOARD/LISTINGS/BILLING plus DELETE — rendered to an anonymous visitor for **76
+seconds**. Rolled back; the access log shows the only client in the window was Claude's own probes
+(one Cloudflare edge IP, six attributable requests). nginx was never the bug, and the Basic auth was
+always right.
+
+**The fixes, all verified:**
+- `emailer.build_magic_link()` normalises `/admin.html?` → `/?` **at read time** — repairing all 3,526
+  stored rows without a DB write. Proven against three real rows. Fixing the code that reads the data
+  beats mutating the data (PRIV-OFFICER-1, 31 Aug).
+- 14 call sites across CityLauncher now build `/?magic=1`; `api/server.py`'s doc comment corrected.
+- PROBED anonymously in a clean browser (no review cookie): `/?magic=1&cat=Tutors&city=…` renders
+  **"STEP 1 OF 6 · TUTORS · Photos"** — the real seller flow, ungated.
+- **RG-0239** asserts both halves every run: the CTA answers 200 with no `WWW-Authenticate`, and no
+  code builds a magic link at `/admin.html`.
+
+**Recovery, built and ready, David's to fire:** `resend_broken_link.bat` — dry run first, sends only on
+typing SEND. Reuses emailer.py wholesale, so the suppression register, junk/government/privacy-officer
+filters and opt-out link all still apply, and it **aborts any row whose link still looks broken**.
+Default cohort is the 18 who opened; `--all-broken` widens to everyone who got a bad link. New template
+`relink_apology_outreach.html` says plainly that the earlier button was broken and ours was the fault.
+
+**Honest nuance, against the worst reading:** 30 of the 170 received a *working* link (rows with an
+empty `magic_link`, where the emailer built it correctly) — and those produced no clicks either. So the
+broken link is the dominant cause of a zero, but not provably the only one.
+
+
+## RECOVERY EXECUTED — 18 re-contacted with a working link
+
+David ran `resend_broken_link.bat` and typed SEND. **18 sent, 0 skipped, 0 failures**, each with a
+Resend message id; 18 entries written to `emailer/sent_log.json` under campaign `CTA-URL-1-relink`.
+Cohort: the prospects who had OPENED a broken-link email — Sydney, London, and the ZA cities, Alison
+Tutors (Esther) among them.
+
+**Two of Claude's own bugs surfaced in the send path, both before any mail moved:**
+1. First run refused with "RESEND_API_KEY not set". Cause: `emailer.py` calls `load_dotenv()` inside
+   `main()`, which the recovery script never invokes — importing it as a module left the key unset.
+   Fixed by loading the same `.env` from the same place, and the script now PRINTS the key state on
+   every run so it cannot fail silently on this again.
+2. The journey check's first version treated the app's dormant admin-gate markup as fatal and cried
+   wolf. Fixed to discriminate on page title. A check that false-alarms gets ignored, and an ignored
+   check is not a check.
+
+**The send was gated on JOURNEY-1 and the gate ran twice** (dry run, then send), passing both times:
+link → HTTP 200 → seller form rendered. That gate is now permanent: `resend_broken_link.py` refuses
+to send if the journey check fails, so this lane can never again email a door nobody can open.
+
+**Standing state after recovery:** local repo clean; the server's CityLauncher deployed and its last
+stale file (`scraper/sources/run.py`, no local counterpart) fixed in place — 0 real occurrences of
+the broken URL anywhere. RG-0239 (CTA reachable) and RG-0240 (JOURNEY-1, LOCKED) both assert it every
+run.
+
+**Open, non-blocking:** the full regression ledger cannot be run from Claude's sandbox (per-call
+timeout; background processes do not survive) — it needs a host-side `.bat` like the other lanes. And
+the two CityLauncher trees have diverged: `scraper/sources/run.py` exists only on the server, so a
+deploy cannot manage it. Both worth closing, neither urgent.
+
 ## 2026-09-01 — UK/AU credential lanes: the answer is ASYMMETRIC (probed, not assumed)
 
 David: *"We now need a similar Eureka moment in the UK and Australia?"* Searched rather than

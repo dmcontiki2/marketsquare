@@ -13114,12 +13114,54 @@ def rg_outreach_triage_lane():
             ("_is_outreach_lane", "the lane split itself"),
             ("outreach_machine", "the machine-mail class that answers with silence"),
             ("_OUTREACH_AUTO_SEND_CATEGORIES", "the graduated auto-send gate"),
+            ("_OUTREACH_MARKETS", "the per-market fact table -- without it the FAQ class "
+                                  "answers every market from South African facts, which is "
+                                  "the launch blocker that gated the 4 Sep global roll"),
         ):
             if needle not in a:
                 out.append((FAIL, "%s is GONE from bea_main.py -- %s was removed, so "
                                   "prospect replies fall back into the customer lane "
                                   "(RUL-087 regression)" % (needle, why)))
         # The fault-queue ack must never be reachable on the outreach path.
+        # ANTI-DRIFT: any country armed for outreach in cities.json must have a row in
+        # _OUTREACH_MARKETS, or the FAQ will answer that market from another market's
+        # cities. Repo-side only -- SKIPS cleanly when CityLauncher is not alongside.
+        cj = os.path.normpath(os.path.join(REPO, "..", "CityLauncher", "data", "cities.json"))
+        if os.path.isfile(cj):
+            try:
+                import json as _j
+                _d = _j.load(open(cj, encoding="utf-8"))
+                _rows = _d if isinstance(_d, list) else _d.get("cities", [])
+                # cities.json uses "status" (not "state") -- checked 1 Sep 2026. The first
+                # cut of this assertion read "state", matched nothing, and printed a GREEN
+                # while checking zero cities. Assert on the real key, and prove it counts.
+                armed = {c.get("country") for c in _rows
+                         if c.get("lane") == "outreach"
+                         and (c.get("status") or c.get("state")) in ("active", "prospect")}
+                if not armed:
+                    out.append((FAIL, "cities.json parsed but ZERO outreach-armed countries "
+                                      "found -- the schema changed under this assertion and "
+                                      "it is now checking nothing"))
+                # Scope the needle to the TABLE, not the whole file: '"US":' occurs in
+                # dozens of unrelated dicts in bea_main.py, so a whole-file search would
+                # report green after the row was deleted. Proven: the first cut did.
+                _ti = a.find("_OUTREACH_MARKETS = {")
+                _tj = a.find("def _market_facts_block", _ti + 1) if _ti >= 0 else -1
+                _tbl = a[_ti:_tj] if (_ti >= 0 and _tj > _ti) else ""
+                if not _tbl:
+                    out.append((FAIL, "_OUTREACH_MARKETS table not found in bea_main.py "
+                                      "-- the per-market FAQ facts are gone"))
+                missing = sorted(x for x in armed if x and ('"%s":' % x) not in _tbl)
+                if missing:
+                    out.append((FAIL, "cities.json arms outreach in %s but _OUTREACH_MARKETS "
+                                      "has no row for %s -- a prospect there would be answered "
+                                      "with another market's cities"
+                                      % (", ".join(missing), "/".join(missing))))
+                else:
+                    out.append((INFO, "market table covers every outreach-armed country in "
+                                      "cities.json (%d checked)" % len(armed)))
+            except Exception as e:
+                out.append((INFO, "cities.json cross-check skipped (%s)" % str(e)[:50]))
         if "_is_outreach_lane" in a and "logged_silent" not in a:
             out.append((FAIL, "the outreach send branch no longer has its silent-log path "
                               "-- machine mail would be answered, or ack'd as a fault"))
@@ -13226,6 +13268,202 @@ def rg_no_safety_adjective():
         out.append((INFO, "no banned safety adjective on the listing surfaces scanned."))
     out.append((INFO, "OPEN: no verification badge ships yet -- this is a tripwire set "
                       "AHEAD of the feature, not proof the feature is right."))
+    return out
+
+
+@entry("RG-0239", "The outreach CTA destination ANSWERS AN ANONYMOUS PROSPECT -- the magic link "
+       "in every wave email must not land on a credential prompt",
+       OPEN,
+       scope="CORRECTED 1 Sep 2026 after the first fix was WRONG. The fault is not nginx: "
+             "it is that the outreach CTA pointed at the ADMIN CONSOLE. Claude opened "
+             "/admin.html?magic=1 publicly, then loaded it in a clean browser and found the "
+             "admin UI -- ONBOARD/LISTINGS/BILLING/ANALYTICS plus a DELETE-LISTING control -- "
+             "rendering to an anonymous visitor. Rolled back inside 76 seconds; the access log "
+             "shows the only client in the window was Claude's own probes (one Cloudflare edge "
+             "IP, 6 requests, all attributable). The REAL fix is CTA-URL-1: 14 call sites in "
+             "CityLauncher built f\"{bea_base}/admin.html?magic=1\"; the seller magic flow "
+             "lives at the APP ROOT, PROBED anonymously as rendering 'STEP 1 OF 6 - TUTORS'. "
+             "This entry now asserts BOTH halves: the console stays gated, AND no code builds "
+             "a magic link at /admin.html. Original scope text follows. "
+             "https://trustsquare.co/admin.html?magic=1... -- the 'List as a Tutor' button in "
+             "EVERY outreach email (marketsquare_admin.html, deployed as admin.html). The "
+             "assertion is the prospect's own view: an anonymous GET of the magic URL must not "
+             "return 401/403 and must not carry a WWW-Authenticate header. Out of scope: bare "
+             "/admin.html with no magic token, which SHOULD stay gated -- the page is titled "
+             "'TrustSquare - Admin' and is an admin console as well as the seller onboarding "
+             "form. The fix is therefore NOT 'remove the auth': it is to let the magic-link "
+             "path through while the console stays shut, with the magic token verified "
+             "server-side.",
+       ref="CTA-401-1, found 1 Sep 2026 ~19:50 SAST, LAUNCH DAY, by David asking whether users "
+           "would see a gate screen. PROBED: GET of the exact CTA URL returns HTTP 401 with "
+           "'www-authenticate: Basic realm=\"TrustSquare Orchestrator\"'. CAUSE: nginx "
+           "'location = /admin.html' includes snippets/internal_auth.conf (satisfy any; allow "
+           "127.0.0.1; deny all; auth_basic orchestrator). So the CTA in every wave email has "
+           "been landing on a browser password popup. CORROBORATION, and it is stark: across "
+           "the whole campaign the prospects DB shows 152 emailed, 18 opened, and ZERO clicks "
+           "-- consistent with a destination nobody can enter. The front page is separately "
+           "showing the app's own 'Enter password or PIN / Pre-launch access only' unlock "
+           "screen while /flags reports mode=live. RESERVED TO DAVID (RUL-037: live access "
+           "control + lockout risk): stripping auth from a page that is also the admin console "
+           "would expose it, so this entry reports and asserts but does not self-heal. Promote "
+           "when an anonymous magic-link GET returns 200 AND bare /admin.html still returns "
+           "401.")
+def rg_cta_reachable():
+    url = ("https://trustsquare.co/admin.html?magic=1&name=Ledger%20Probe"
+           "&email=probe%40example.com&cat=Tutors&city=Bloemfontein")
+    try:
+        code, hdrs = _http_head_status(url)
+    except Exception as e:
+        return [(INFO, "SKIPPED -- could not reach the CTA URL (%s)" % str(e)[:60])]
+    out = []
+    if code in (401, 403):
+        out.append((FAIL, "the outreach CTA returns HTTP %d to an anonymous prospect -- every "
+                          "wave email points at a locked door (CTA-401-1)" % code))
+    elif code >= 400:
+        out.append((FAIL, "the outreach CTA returns HTTP %d -- prospects cannot reach the "
+                          "listing form" % code))
+    else:
+        out.append((INFO, "CTA answers anonymously: HTTP %d" % code))
+    if any(h.lower() == "www-authenticate" for h in hdrs):
+        out.append((FAIL, "the CTA response carries WWW-Authenticate -- a prospect gets a "
+                          "browser credential popup instead of the listing form"))
+    return out
+
+
+def _http_head_status(url, timeout=15):
+    import urllib.request, urllib.error
+    req = urllib.request.Request(url, method="GET",
+                                 headers={"User-Agent": "TrustSquare-ledger/1.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.status, dict(r.headers)
+    except urllib.error.HTTPError as e:
+        return e.code, dict(e.headers)
+
+
+@entry("RG-0240", "Somebody stands at the FRONT DOOR every run -- the prospect's own journey "
+       "is walked end to end as a stranger, because 230 inward-facing assertions did not "
+       "notice that the CTA had never worked",
+       LOCKED, fixed_on="2026-09-01",
+       scope="The outreach conversion path, walked exactly as a prospect meets it: build the "
+             "magic link the way emailer.build_magic_link() builds it, follow it anonymously, "
+             "and read what renders. THREE LEGS: (a) the link must not point at /admin.html -- "
+             "the admin console; (b) an anonymous GET must not return 4xx and must not carry "
+             "WWW-Authenticate; (c) what renders must be the SELLER form (STEP 1 OF 6 / LISTING "
+             "QUALITY / Photos) and must NOT be the admin console (discriminated by title) or "
+             "expose the delete control. Implemented in scripts/journey_check.py, runnable on "
+             "its own (exit 0/1) so the wave runner can gate on it before a send.",
+       ref="JOURNEY-1, 1 Sep 2026, born from CTA-URL-1. Three days of outreach went out behind "
+           "a link nobody had ever clicked -- 140 of 170 emails carried a CTA into a Basic-auth "
+           "prompt, and the campaign's zero clicks were caused, not observed. The defect this "
+           "entry fixes is not the URL: it is that every one of ~230 assertions faced INWARD at "
+           "the machinery and none faced OUTWARD at the customer. LESSON RECORDED IN THE CHECK "
+           "ITSELF: its first version treated the app's dormant admin-gate markup ('Enter "
+           "password or PIN', present in the HTML but never rendered -- PROBED in a clean "
+           "browser) as fatal, and cried wolf. A check that false-alarms gets ignored, and an "
+           "ignored check is not a check. It now discriminates on the page TITLE. Red-capability "
+           "proven both ways: pointed at /admin.html it FAILS on legs (a) and (b); pointed at "
+           "the real link it passes all three.")
+def rg_journey_front_door():
+    import subprocess
+    js = os.path.join(REPO, "scripts", "journey_check.py")
+    if not os.path.isfile(js):
+        return [(FAIL, "scripts/journey_check.py is GONE -- nobody is standing at the front "
+                       "door again (JOURNEY-1)")]
+    try:
+        r = subprocess.run([sys.executable, js, "--json"], capture_output=True,
+                           text=True, timeout=90)
+    except Exception as e:
+        return [(INFO, "SKIPPED -- journey check could not run (%s)" % str(e)[:60])]
+    try:
+        import json as _j
+        d = _j.loads(r.stdout or "{}")
+    except Exception:
+        return [(FAIL, "journey check produced unreadable output: %s" % (r.stdout or r.stderr)[:80])]
+    out = []
+    for f in d.get("fails", []):
+        out.append((FAIL, "PROSPECT JOURNEY: %s" % f))
+    if not out:
+        out.append((INFO, "prospect journey whole: link -> door -> seller form"))
+    return out
+
+
+
+@entry("RG-0241", "An unsubscribe link that is merely FETCHED opts nobody out -- only a "
+       "confirmed POST does -- because corporate link-scanners fetch every link in every "
+       "email and were opting real prospects out on delivery",
+       LOCKED, fixed_on="2026-09-02",
+       scope="BOTH /optout routes the emails can reach: /launch-api/optout (CityLauncher "
+             "api/server.py, the link in every outreach template) and /optout on the root "
+             "(bea_main.py, the relink template). CLASS, not instance: any route that "
+             "suppresses on a GET re-opens this. Live legs: (a) GET /optout?email=<.invalid "
+             "probe> on the ROOT returns 200 and a CONFIRM page (title 'Unsubscribe - ', not "
+             "'Unsubscribed'); (b) /optout/status rows are UNCHANGED after that GET; (c) POST "
+             "/optout with the same probe returns 200 and rows INCREASE by one. Source leg: "
+             "no @app.get('/optout') handler in either file calls the recording function.",
+       ref="OPTOUT-CONFIRM-1, 2 Sep 2026. David's dashboard read 15 opted out, up from 3 on "
+           "31 Aug. PROBED against email_events: 11 of the 12 new suppressions landed within "
+           "one second of a 'click' on the opt-out link from Microsoft Azure ranges (4.222.x, "
+           "72.145.x, 4.182.x -- Defender Safe Links) -- info@ufs.ac.za, both UMP addresses, "
+           "NCUT, Goedgedacht, Emperors Palace, Keystone Tutors. Nobody asked to leave; the "
+           "register barred them for life. Found on the eve of the US tutor wave, whose "
+           "recipients run Microsoft 365 and Proofpoint even more heavily. Fix: GET renders a "
+           "confirmation page and writes nothing; the confirm button POSTs; the emailer now "
+           "sends List-Unsubscribe + List-Unsubscribe-Post (RFC 8058) so Gmail/Yahoo one-click "
+           "-- also a POST -- keeps working. Proven in test on both handlers (GET: no row; form "
+           "POST and one-click POST: row; empty POST: 400). The 11 scanner-induced suppressions "
+           "stay suppressed -- reversing an opt-out is a legal-positioning call reserved to "
+           "David (he chose to leave them, 2 Sep).")
+def rg_optout_get_is_harmless():
+    import json as _j, uuid as _u, urllib.parse as _up, urllib.request as _ur, urllib.error as _ue
+    out = []
+    # source leg (repo half)
+    for rel, label in (("bea_main.py", "root"), (os.path.join("..", "CityLauncher", "api", "server.py"), "launch-api")):
+        txt = repo_file(rel)
+        if txt is None:
+            continue
+        m = re.search(r"@app\.get\(['\"]/optout['\"][^\n]*\)\s*\n(?:async )?def [^\n]+\n((?:[ \t]+[^\n]*\n)+)", txt)
+        if not m:
+            out.append((FAIL, "%s: no GET /optout handler found -- the unsubscribe link is dead" % label))
+        elif "_record_optout(" in m.group(1) or "_optout_apply(" in m.group(1) or "INSERT" in m.group(1):
+            out.append((FAIL, "%s: the GET /optout handler WRITES the register again -- a "
+                              "link-scanner can opt people out (OPTOUT-CONFIRM-1)" % label))
+        else:
+            out.append((INFO, "%s: GET /optout writes nothing in source" % label))
+    # live legs
+    _require_net()
+    probe = "rg0241-%s@example.invalid" % _u.uuid4().hex[:8]
+    def status():
+        try:
+            return _j.loads(_ur.urlopen(_ur.Request(BASE + "/optout/status", headers=UA), timeout=TIMEOUT).read().decode()).get("rows", -1)
+        except Exception:
+            return -1
+    before = status()
+    if before < 0:
+        return out + [(INFO, "SKIPPED live legs -- /optout/status unreadable (deploy pending?)")]
+    try:
+        body = _ur.urlopen(_ur.Request(BASE + "/optout?email=" + _up.quote(probe), headers=UA), timeout=TIMEOUT).read().decode("utf-8", "replace")
+    except _ue.HTTPError as e:
+        return out + [(FAIL, "GET /optout answered HTTP %d to a recipient" % e.code)]
+    if "<title>unsubscribe -" not in body.lower() and "<title>unsubscribe \u2014" not in body.lower():
+        out.append((FAIL, "GET /optout does not show the CONFIRM page (title=%r)" % (re.search(r"<title>([^<]*)", body, re.I).group(1) if re.search(r"<title>", body, re.I) else "?")))
+    mid = status()
+    if mid != before:
+        out.append((FAIL, "a bare GET /optout WROTE the register (%d -> %d) -- scanners can opt "
+                          "people out again" % (before, mid)))
+    else:
+        out.append((INFO, "GET /optout wrote nothing (rows %d)" % before))
+    try:
+        req = _ur.Request(BASE + "/optout", data=("email=" + _up.quote(probe)).encode(), method="POST",
+                          headers=dict(UA, **{"Content-Type": "application/x-www-form-urlencoded"}))
+        _ur.urlopen(req, timeout=TIMEOUT).read()
+    except _ue.HTTPError as e:
+        return out + [(FAIL, "POST /optout (the confirm button) answered HTTP %d" % e.code)]
+    after = status()
+    if after != mid + 1:
+        out.append((FAIL, "a CONFIRMED opt-out was not recorded (rows %d -> %d)" % (mid, after)))
+    else:
+        out.append((INFO, "confirmed POST recorded (rows %d -> %d)" % (mid, after)))
     return out
 
 

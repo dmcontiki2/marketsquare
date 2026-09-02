@@ -1,0 +1,34 @@
+
+
+## SAME DAY — OUTREACH-MARKETS-1: the launch blocker, found and closed in one evening
+
+David, on reading the corrected wave plan: *"this is a launch blocker that need to be fixed."* Correct
+— and it was fixed the same evening rather than carried into the 4 Sep roll.
+
+**The blocker:** the FAQ class answered every prospect from hardcoded South African facts. A New York
+or London tutor asking "which cities do you cover?" would have received a confident answer naming
+Johannesburg and Bloemfontein. That gated the global three's 4 Sep roll, NY/London completing their
+pools on 2 Sep, and A-plan Waves 2–5.
+
+**The fix (`bea_main.py`):** `_OUTREACH_MARKETS` — a per-market fact table generated from
+CityLauncher's `cities.json` (122 cities) — plus `_market_facts_block()`, and a two-step instruction
+to the classifier: **identify the market FIRST** (from the city named in the quoted outreach email,
+the signature, or the sender's domain), **then answer only from that market's row**. If the market
+cannot be determined with confidence it falls through to `outreach_commercial` for a human, because a
+confident answer about the wrong country is worse than a handover.
+
+**RUL-088's weakest-holder test, applied to a market claim.** The first cut said "cities with tutors
+already listing: New York" — untrue: New York has had one outreach email and no listings. Markets are
+now staged: ZA is ESTABLISHED (tutors listing in eight cities), while US/UK/AU are OPENING NOW, with
+the classifier explicitly told *not* to claim tutors are already listed there. Being first is the
+honest pitch and the better one.
+
+**Two false greens caught in the assertion itself, both worth recording:**
+1. The cross-check filtered on `state`, but `cities.json` uses `status` — it matched zero cities and
+   printed GREEN while checking nothing. Fixed, plus a self-guard that FAILS if the armed set is ever
+   empty, so the schema cannot silently retire the assertion again.
+2. The needle searched the whole of `bea_main.py` for `"US":`, which occurs in dozens of unrelated
+   dicts — so deleting the US row still reported green. Now scoped to the table itself. Red-capability
+   then proven: removing the US row produces the FAIL.
+
+RG-0236 stays OPEN (shipped is not measured), but the blocker is closed. **Needs a deploy to go live.**

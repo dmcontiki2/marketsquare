@@ -63,7 +63,7 @@ td.track small{display:block;font-weight:normal;color:#8a7f6d;font-size:10px}
 <td class="measured"><span class="silent">GLOBAL LAUNCH<br>TUTORS<br>57 stamped</span></td>
 <td><span class="gate">Wed 2 Sep<br>NY 20 &middot; LDN 16 &middot; PLK 3<br>complete on min-gap</span></td>
 <td><span class="gate">GATE 2<br>holistic look</span></td>
-<td><span class="blocked">&#9888; NON-ZA GATE<br>RG-0236</span></td>
+<td><span class="act" style="border-color:#538135;color:#2f6b2f">&#10003; GATE CLEARED<br><small>market-aware FAQ</small></span></td>
 <td class="we quiet">&middot;</td><td class="we quiet">&middot;</td><td class="quiet">&middot;</td><td class="quiet">&middot;</td><td class="quiet">&middot;</td><td class="quiet">&middot;</td></tr>
 
 <tr><td class="track">Pretoria &middot; ZA<small>proving city 1</small></td>
@@ -98,9 +98,9 @@ td.track small{display:block;font-weight:normal;color:#8a7f6d;font-size:10px}
 <td class="measured"><span class="act">SYD 12 clean<br><small>NY 1 &middot; LDN 1 &mdash; crashed run</small></span></td>
 <td><span class="gate">NY 20 &middot; LDN 16<br>complete on min-gap</span></td>
 <td><span class="hold">HOLD<br>on Tutors</span></td>
-<td><span class="blocked">&#9888; BLOCKED<br>non-ZA FAQ gate</span></td>
-<td class="we"><span class="blocked">&#9888;</span></td><td class="we"><span class="blocked">&#9888;</span></td><td><span class="blocked">&#9888;</span></td>
-<td><span class="blocked">&#9888;</span></td><td class="quiet">&middot;</td><td class="quiet">&middot;</td></tr>
+<td><span class="chip svc1">SVC casual</span></td>
+<td class="we"><span class="chip svc2">SVC technical</span></td><td class="we"><span class="chip exp">EXPER.</span></td><td><span class="chip coll">COLLECT.</span></td>
+<td><span class="chip stays">STAYS</span></td><td class="quiet">&middot;</td><td class="quiet">&middot;</td></tr>
 
 <tr><td class="track">National &middot; agencies<small>estate &middot; dealers &middot; travel &middot; tours</small></td>
 <td class="quiet">&middot;</td><td class="we quiet">&middot;</td><td class="we quiet">&middot;</td>
@@ -114,8 +114,8 @@ td.track small{display:block;font-weight:normal;color:#8a7f6d;font-size:10px}
 <td class="vol we measured">7 <small>(60)</small></td>
 <td class="vol measured">20 <small>(60)</small></td>
 <td class="vol measured">57 <small>(420)</small></td>
-<td class="vol">&le;330</td><td class="vol">&le;270</td><td class="vol">gated</td><td class="vol we">gated</td><td class="vol we">gated</td><td class="vol">gated</td>
-<td class="vol">gated</td><td class="vol">&mdash;</td><td class="vol">&mdash;</td></tr>
+<td class="vol">&le;330</td><td class="vol">&le;270</td><td class="vol">&le;360</td><td class="vol we">&le;360</td><td class="vol we">&le;360</td><td class="vol">&le;90</td>
+<td class="vol">&le;90</td><td class="vol">&mdash;</td><td class="vol">&mdash;</td></tr>
 </table></div>
 
 <div class="legend">
@@ -158,14 +158,7 @@ London at zero. <b>True cumulative sends to date: 184</b> (either signal). Any f
 <code>emailed_at</code> alone &mdash; including the day row above &mdash; is a floor, not a total. This is a
 measurement defect worth fixing before the numbers are used for a gate decision.</div>
 
-<div class="n"><b>&#9888; NEW HARD GATE &mdash; the global three cannot roll on 4 Sep (RG-0236, 1 Sep):</b> v3.2 had
-New York, London and Sydney resuming their ladder on 4 September. That is now BLOCKED. Prospect replies are answered
-by the triage agent from 1 Sep (RUL-087), and its FAQ class answers from <b>hardcoded South African facts</b> &mdash;
-the ZA city list. A New York or London tutor asking &ldquo;which cities do you cover?&rdquo; would receive a confident
-answer about Johannesburg and Bloemfontein, which is worse than no answer at all. Before ANY non-ZA send whose replies
-reach that lane &mdash; the global three&rsquo;s roll, and A-plan Waves 2 (US+GB), 3 (AU/NZ), 4 and 5 &mdash; the canon
-block must become market-aware, or the FAQ class must fall back to <i>commercial</i> for non-ZA senders. The ZA ladder
-is unaffected and continues.</div>
+<div class="n" style="border-left:4px solid #538135;padding-left:10px"><b>&#10003; GATE CLEARED the same evening &mdash; OUTREACH-MARKETS-1 (1 Sep):</b> for a few hours this WAS a launch blocker: the reply agent's FAQ class answered every prospect from hardcoded South African facts, so a New York or London tutor asking &ldquo;which cities do you cover?&rdquo; would have been told Johannesburg and Bloemfontein. <b>Fixed.</b> The classifier now IDENTIFIES THE MARKET first &mdash; from the city named in the quoted outreach email, the signature, or the sender's domain &mdash; and answers only from that market's row (ZA / US / UK / AU open; NZ, NA, AR, FR, PT answered honestly as not open yet). If the market cannot be determined with confidence it falls through to <i>commercial</i> for a human, because a confident answer about the wrong country is worse than a handover. The market rows also distinguish ESTABLISHED (ZA, tutors already listing) from OPENING NOW (New York, London, Sydney &mdash; founding tutors, and it must not claim tutors are already listed there): RUL-088's weakest-holder test applied to a market claim. RG-0236 now cross-checks the table against cities.json, so arming a new country without a fact row turns the ledger red. <b>The 4 Sep global roll and A-plan Waves 2&ndash;5 are unblocked</b> once this deploys.</div>
 
 <div class="n"><b>Where replies now go (RUL-087, 1 Sep):</b> replies to <code>david@trustsquare.co</code> no longer
 reach David&rsquo;s inbox. They are classified on arrival into four classes &mdash; machine mail (autoresponders,
