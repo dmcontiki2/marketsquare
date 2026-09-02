@@ -10336,12 +10336,11 @@ def rg_lockout_selfheal_armed():
                               "token (%d chars) -- Hetzner Cloud tokens are 64 alphanumeric "
                               "characters. Not asserting the VALUE is right, only that something "
                               "token-shaped is there; a stub cannot heal a lockout." % len(_tv)))
-    cf = os.path.join(REPO, ".secrets", "cf_waf_token.txt")
-    if not os.path.exists(cf):
-        out.append((INFO, "no .secrets/cf_waf_token.txt -- the Cloudflare half of the self-heal is "
-                          "also unarmed. Lower stakes: the CF gate retires at launch, and the edge "
-                          "is currently serving this vantage fine."))
-    return out or [(INFO, "lockout self-heal is armed and add-only")]
+    if "CF_HALF_RETIRED = True" not in sh:
+        out.append((FAIL, "hetzner_fw_selfheal.py no longer marks the Cloudflare half RETIRED -- "
+                          "RUL-034 disabled the PRELAUNCH GATE and the site launched 1 Sep 2026; "
+                          "a re-armed CF half would demand a token nobody needs (NO-STALE-IP-1)"))
+    return out or [(INFO, "lockout self-heal is armed; CF half retired (RUL-034), no token needed")]
 
 
 @entry("RG-0189", "No secret ever needs a GUI to be entered, and no combined secrets dump is "
@@ -13678,6 +13677,67 @@ def rg_conversion_reconcile():
     except Exception as e:
         out.append((FAIL, "live leg unreachable: %s" % str(e)[:80]))
     return out
+
+@entry("RG-0245", "The origin SSH allowlist holds EXACTLY the one live egress IP -- no stale "
+       "address from a past router reset is left as an open door",
+       LOCKED, fixed_on="2026-09-02",
+       scope="Hetzner firewall 11414216 (trustsquare-origin-lockdown), inbound port-22 rule, "
+             "and scripts/hetzner_fw_selfheal.py which owns it. CLASS: there is ONE egress "
+             "(David's PC and the sandbox share it -- server sshd log 2 Sep 2026: "
+             "197.184.106.176 accepted until 04:36Z, then only 197.185.137.157, no overlap), so "
+             "the rule must hold exactly one /32. Two legs: (a) LIVE -- the Hetzner API reports "
+             "the SSH rule with exactly one source_ip; (b) SOURCE -- the self-heal SETS the rule "
+             "rather than appending (the 'prune with David' wording is gone). Needs "
+             ".secrets/hetzner_token.txt (RG-0188) -- without it the live leg is UNVERIFIED, "
+             "not red. Sibling of RG-0099 (detect) and RG-0188 (armed): this one says the "
+             "heal leaves no residue.",
+       ref="David, 2 Sep 2026, on the morning maintenance report's 'prune the 4 stale IPs with "
+           "David at a calm moment': 'there should be no stale IPs'. Root cause: the 17 Aug "
+           "self-heal was written add-only out of caution, so every router reset since left "
+           "its old /32 behind -- five entries by 2 Sep, four of them dead addresses the ISP "
+           "will reassign to strangers. NO-STALE-IP-1: heal = set, not append. The CF half of "
+           "the script retired the same session (RUL-034 disabled the gate 19 Aug; launched "
+           "1 Sep) so the 'no cf_waf_token' INFO stops asking for a token nobody needs.")
+def rg_ssh_allowlist_single_ip():
+    out = []
+    sh = repo_file("scripts/hetzner_fw_selfheal.py")
+    if sh is not None:
+        if "prune with David" in sh or 'ips + [want]' in sh:
+            out.append((FAIL, "hetzner_fw_selfheal.py APPENDS the current IP instead of SETTING the "
+                              "rule -- stale /32s will accumulate again (NO-STALE-IP-1)"))
+        if 'ssh[0]["source_ips"] = [want]' not in sh:
+            out.append((FAIL, "hetzner_fw_selfheal.py no longer sets source_ips to exactly [current IP]"))
+    tokp = os.path.join(REPO, ".secrets", "hetzner_token.txt") if REPO else None
+    tok = os.environ.get("HETZNER_API_TOKEN", "").strip()
+    if not tok and tokp and os.path.exists(tokp):
+        try:
+            tok = open(tokp, encoding="utf-8").read().strip()
+        except OSError:
+            tok = ""
+    if not tok:
+        if out:
+            return out
+        raise ProbeOffline("no Hetzner token here -- live SSH-rule leg not measured (RG-0188 owns the token)")
+    try:
+        import urllib.request as _ur
+        req = _ur.Request("https://api.hetzner.cloud/v1/firewalls/11414216",
+                          headers={"Authorization": "Bearer " + tok, "User-Agent": "trustsquare-ledger/1"})
+        with _ur.urlopen(req, timeout=20) as r:
+            fw = json.loads(r.read().decode())["firewall"]
+        ssh = [x for x in fw["rules"] if x.get("direction") == "in" and str(x.get("port")) == "22"]
+        if not ssh:
+            out.append((FAIL, "no inbound port-22 rule on firewall 11414216 -- layout changed"))
+        else:
+            ips = ssh[0].get("source_ips", [])
+            if len(ips) != 1:
+                out.append((FAIL, "SSH rule holds %d source IPs (%s) -- must be exactly the one live "
+                                  "egress; run scripts/hetzner_fw_selfheal.py" % (len(ips), ips)))
+            else:
+                out.append((INFO, "SSH allowlist is exactly one /32 (%s)" % ips[0]))
+    except Exception as e:
+        raise ProbeOffline("Hetzner API unreachable: %s" % str(e)[:80])
+    return out
+
 
 if __name__ == "__main__":
     sys.exit(main())

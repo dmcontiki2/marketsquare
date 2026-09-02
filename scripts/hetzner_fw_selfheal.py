@@ -7,7 +7,8 @@ home IP. Home power/router resets change that IP (proven 17 Aug: blackout -> new
 
 WHAT: run from David's machine/network (the sandbox shares its egress). Reads the
 current public IP, reads the firewall's SSH rule via the Hetzner Cloud API, and if
-the IP is missing, ADDS it (never removes anything, keeps every other rule intact).
+the rule is not exactly [current IP], SETS it to that (NO-STALE-IP-1, 2 Sep 2026: stale
+entries are pruned, every other rule stays intact).
 Self-healing: the machine that owns the NEW IP is the machine that runs this.
 
 TOKEN: .secrets/hetzner_token.txt (gitignored) or HETZNER_API_TOKEN env — a Hetzner
@@ -61,16 +62,23 @@ def main():
         return 3
     ips = ssh[0].get("source_ips", [])
     want = my_ip + "/32"
-    if want in ips or my_ip in ips:
-        print("[fw-selfheal] ok: %s already allowlisted (%d SSH sources). Nothing to do." % (my_ip, len(ips)))
+    # NO-STALE-IP-1 (David, 2 Sep 2026): the SSH rule holds EXACTLY the current egress IP.
+    # There is ONE egress (David's PC and the sandbox share it -- server sshd log 2 Sep:
+    # 197.184.106.176 until 04:36Z, then only 197.185.137.157). Every entry that is not
+    # the current IP is a dead address left by a router reset, and a dead allowlist entry
+    # is an open door for whoever the ISP hands that IP to next. Heal = set, not append.
+    if ips == [want]:
+        print("[fw-selfheal] ok: SSH rule holds exactly %s. Nothing to do." % want)
         return 0
+    stale = [i for i in ips if i not in (want, my_ip)]
     if CHECK:
-        print("[fw-selfheal] WOULD ADD %s to the SSH rule (currently: %s). Run without --check to heal." % (want, ips))
+        print("[fw-selfheal] WOULD SET the SSH rule to [%s] (currently: %s; stale: %s). "
+              "Run without --check to heal." % (want, ips, stale))
         return 0
-    ssh[0]["source_ips"] = ips + [want]
+    ssh[0]["source_ips"] = [want]
     api("/firewalls/%d/actions/set_rules" % FIREWALL_ID, tok, method="POST", body={"rules": rules})
-    print("[fw-selfheal] HEALED: added %s to the SSH allowlist (now %d sources). "
-          "Old entries kept — prune with David at a calm moment." % (want, len(ips) + 1))
+    print("[fw-selfheal] HEALED: SSH allowlist is now exactly [%s]; pruned %d stale: %s"
+          % (want, len(stale), stale))
     return 0
 
 
@@ -86,7 +94,13 @@ def cf_token():
     except OSError:
         return ""
 
+CF_HALF_RETIRED = True   # RUL-034 (19 Aug 2026): PRELAUNCH GATE rule DISABLED; launched 1 Sep 2026.
+
 def cf_heal(my_ip):
+    if CF_HALF_RETIRED:
+        print("[fw-selfheal] CF: half RETIRED -- the PRELAUNCH GATE rule is disabled (RUL-034) and "
+              "the site launched 1 Sep 2026; nothing at the edge allowlists IPs any more. No token needed.")
+        return 0
     tok = cf_token()
     if not tok:
         print("[fw-selfheal] CF: no token (.secrets/cf_waf_token.txt — zone-scoped, Zone.Firewall "
