@@ -7638,6 +7638,14 @@ def rg_demo_banner_on_demo_maps():
                 out.append((FAIL, SRC + " references an absolute URL -- demo pages are "
                                   "first-party-only (RG-0025)"))
 
+        # DW-091 (3 Sep 2026): LIVE-MAP-1 regenerated 11 maps from journey_template.html,
+        # which never carried this line -- DEMO-BANNER-1 had patched the OUTPUTS by hand.
+        # The class dies only at the root: the TEMPLATE must carry the include (RG-0062 shape).
+        tpl = repo_file(os.path.join("scripts", "journey_template.html"))
+        if tpl is not None and tpl.count('<script src="/static/' + SRC) != 1:
+            out.append((FAIL, "scripts/journey_template.html does not carry exactly one " + SRC +
+                              " include -- the next build_journey.py rebuild ships demo maps "
+                              "with no DEMO tab (DW-091, the 3 Sep 2026 rot)"))
         maps = sorted(glob.glob(os.path.join(REPO, "adventures_*_map.html")))
         if not maps:
             out.append((FAIL, "no adventures_*_map.html demo pages found in the repo"))
@@ -9912,6 +9920,19 @@ def rg_fares_lane_cache_only():
             out.append((FAIL, "a fare is served without its indicative disclaimer"))
     else:
         out.append((FAIL, "/flights/indicative answered %s -- a dark lane must 404, never error" % code))
+    # DW-091 sibling (3 Sep 2026): the same LIVE-MAP-1 rebuild silently dropped ts_fares.js
+    # from 11 maps and nothing here noticed -- the scope names the 15 maps, so assert them,
+    # and the template they are built from.
+    import glob as _glob
+    tpl = repo_file(os.path.join("scripts", "journey_template.html"))
+    if tpl is not None and '<script src="/static/ts_fares.js' not in tpl:
+        out.append((FAIL, "scripts/journey_template.html does not carry the ts_fares.js include -- "
+                          "the next map rebuild ships without the fare card (DW-091 class)"))
+    _maps = sorted(_glob.glob(os.path.join(REPO, "adventures_*_map.html")))
+    _noc = [os.path.basename(m) for m in _maps
+            if "ts_fares.js" not in open(m, encoding="utf-8", errors="replace").read()]
+    if _noc:
+        out.append((FAIL, "demo map(s) with no ts_fares.js include: " + ", ".join(_noc)))
     return out
 
 
