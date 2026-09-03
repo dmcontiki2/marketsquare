@@ -18,6 +18,16 @@ set "CLREQ=%~dp0CL_DEPLOY_REQUEST.flag"
 set "RESULT=%~dp0DEPLOY_RESULT.txt"
 set "CLRESULT=%~dp0CL_DEPLOY_RESULT.txt"
 
+set "HQ=%~dp0host_queue"
+
+:: HOST-QUEUE-1 (RUL-095): permission-backed requests Claude cannot run from the sandbox
+:: (git push with David's credentials, DB-writing bats). Allowlist + permission line enforced
+:: by the worker; results in host_queue\done\. Runs BEFORE deploys so a push lands first.
+if exist "%HQ%\*.req" (
+    call "%~dp0git_unlock.bat" >nul 2>&1
+    python "%~dp0scripts\host_queue_worker.py" >>"%LOG%" 2>&1
+)
+
 if not exist "%REQ%" if not exist "%CLREQ%" exit /b 0
 
 call "%~dp0git_unlock.bat" >nul 2>&1

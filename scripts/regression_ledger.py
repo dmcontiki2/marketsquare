@@ -14396,5 +14396,56 @@ def rg_admin_tuppence_grant_path():
     return out
 
 
+@entry("RG-0257", "No 'David clicks' -- host-side actions Claude cannot do from the sandbox (git push with his "
+       "credentials, DB-writing bats) run through a permission-backed HOST QUEUE on the existing 20-min agent",
+       OPEN,
+       scope="RUL-095 HOST-QUEUE-1. Repo legs: host_queue/ALLOWLIST.txt exists and is non-empty; "
+             "scripts/host_queue_worker.py REFUSES a request without a permission= line and REFUSES an "
+             "action/arg not on the allowlist (both strings present); scripts/request_host_action.py requires "
+             "--permission; autodeploy_agent.bat calls the worker BEFORE the deploy legs and AFTER git_unlock. "
+             "LIVE leg: while a *.req is pending, autodeploy_agent_log.txt must have activity < 40 min old. "
+             "OPEN until the first real request lands DONE in host_queue/done/ -> READY TO LOCK.",
+       ref="RUL-095, 3 Sep 2026, David: 'remove all of these your clicks... self pain inflicting rules, all "
+           "causing delays, throttling mechanisms... don't remove those guardrails but change them to "
+           "permission requests rather than David clicks... keep the auto on full blast but build mechanisms "
+           "to deploy and commit after I have given permission for those type of actions.'")
+def rg_host_queue():
+    out = []
+    al = repo_file(os.path.join("host_queue", "ALLOWLIST.txt")) or ""
+    if not any(l.strip() and not l.strip().startswith("#") for l in al.splitlines()):
+        out.append((FAIL, "host_queue/ALLOWLIST.txt missing or empty"))
+    w = repo_file(os.path.join("scripts", "host_queue_worker.py")) or ""
+    for n in ("no permission= line", "is not on ALLOWLIST.txt", "def allowlist("):
+        if n not in w:
+            out.append((FAIL, "host_queue_worker.py lost '%s'" % n))
+    rq = repo_file(os.path.join("scripts", "request_host_action.py")) or ""
+    if "required=True" not in rq or "--permission" not in rq:
+        out.append((FAIL, "request_host_action.py no longer requires --permission"))
+    ag = repo_file("autodeploy_agent.bat") or ""
+    i_unlock, i_worker, i_tsl = ag.find('git_unlock.bat'), ag.find('host_queue_worker.py'), ag.find('nightly_tsl.bat')
+    if i_worker < 0:
+        out.append((FAIL, "autodeploy_agent.bat does not call host_queue_worker.py"))
+    elif not (i_unlock < i_worker < i_tsl):
+        out.append((FAIL, "autodeploy_agent.bat order wrong: need git_unlock -> host_queue_worker -> deploy legs"))
+    done_dir = os.path.join(REPO, "host_queue", "done")
+    done = [f for f in os.listdir(done_dir)] if os.path.isdir(done_dir) else []
+    if any(f.endswith(".result") and open(os.path.join(done_dir, f), encoding="utf-8", errors="replace").readline().startswith("DONE") for f in done):
+        out.append((INFO, "at least one request completed DONE on the host"))
+    else:
+        out.append((FAIL, "no DONE result in host_queue/done yet -- lane unproven on the host"))
+    qdir = os.path.join(REPO, "host_queue")
+    pending = [f for f in os.listdir(qdir)] if os.path.isdir(qdir) else []
+    pending = [f for f in pending if f.endswith(".req")]
+    log = os.path.join(REPO, "autodeploy_agent_log.txt")
+    if pending and os.path.exists(log):
+        import time as _t
+        age = (_t.time() - os.path.getmtime(log)) / 60
+        if age > 40:
+            out.append((FAIL, "%d request(s) pending %d min with no agent activity" % (len(pending), age)))
+        else:
+            out.append((INFO, "%d request(s) pending, agent active %d min ago" % (len(pending), age)))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

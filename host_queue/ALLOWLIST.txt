@@ -1,0 +1,16 @@
+# HOST-QUEUE-1 (RUL-095, 3 Sep 2026) - the ONLY actions the host agent will run.
+# One per line:  <action>  <argument>      Lines starting with # are ignored.
+# Adding a line here is itself a change David sees in git; the agent refuses anything else.
+git_push   MarketSquare
+git_push   CityLauncher
+run_bat    CityLauncher\exchange_sync.bat
+run_bat    CityLauncher\sync_to_server.bat
+run_bat    CityLauncher\clean_stoploss_cities.bat
+run_bat    CityLauncher\run_stays_refill.bat
+run_bat    CityLauncher\run_teachers_refill.bat
+run_bat    CityLauncher\run_za_estate_agents.bat
+run_bat    CityLauncher\launch_day_wave.bat
+run_bat    MarketSquare\commit.bat
+run_py     CityLauncher\scripts\exchange_import.py
+run_py     CityLauncher\scripts\exchange_export.py
+run_py     CityLauncher\clean_city_list.py

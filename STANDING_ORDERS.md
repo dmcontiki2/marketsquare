@@ -113,3 +113,11 @@ jurisdiction-bearing vendor selection (RUL-009), and changing a ruling rather th
 `scripts/request_deploy.py`, the host-side `autodeploy_agent.bat` gates and ships them on a 20-minute
 tick, and a BLOCKED gate is retried automatically until it clears. READY-TO-LOCK promotions and
 open-action closures are likewise Claude's, never a request to David.
+**No 'David clicks' at all — RUL-095 (3 Sep 2026):** any host-side action Claude cannot do from
+the sandbox (git push with David's credentials, a bat that writes the local DB, a host-only script) is
+asked for as a PERMISSION for that class of action, in one plain sentence, and then executed by the
+machine: `scripts/request_host_action.py` queues it (permission quoted, allowlist enforced), the same
+20-minute `autodeploy_agent.bat` runs `scripts/host_queue_worker.py`, and the result in
+`host_queue/done/` is read before the action is reported done. Commits and pushes of Claude's own work,
+deploys, and the bats on `host_queue/ALLOWLIST.txt` are already permitted. Only a NEW scheduled task
+registration still needs David's hand — which is why the existing agent is reused.
