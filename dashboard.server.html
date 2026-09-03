@@ -283,7 +283,14 @@
       })
       .catch(function(){ showGate(); });
   } else {
-    showGate();
+    /* DEVICE-ENROL-1 (3 Sep 2026): an enrolled phone mints its token silently. */
+    fetch(BEA + '/admin/device-token', {credentials: 'same-origin'})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){
+        if(d && d.token){ sessionStorage.setItem('ms_admin_token', d.token); hideGate(); }
+        else { showGate(); }
+      })
+      .catch(function(){ showGate(); });
   }
 
   window.adminGateSubmit = function(){

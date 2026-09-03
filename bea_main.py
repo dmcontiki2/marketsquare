@@ -15458,6 +15458,156 @@ def admin_verify(x_admin_token: str = Header(default=None)):
     return {"valid": True, "sub": payload.get("sub", "unknown")}
 
 
+# ── DEVICE-ENROL-1 (3 Sep 2026) — David: "make it easy for me... use it at work" ────────────
+# One QR scan enrols a phone: a signed, revocable 180-day `ts_device` cookie (HttpOnly, Secure).
+# With it, /m/dashboard and /m/admin serve the same gated pages the Basic-auth paths serve, the
+# in-page gate mints its 8h JWT silently from /admin/device-token, and CityLauncher's launch-api
+# accepts the cookie in place of X-Launch-Key (it asks /admin/device-ok on localhost). Nothing in
+# nginx changes: the Basic-auth paths stay exactly as they are, so a fault here cannot lock anyone
+# out. Enrol tokens are one-time, 20 min, minted server-side by scripts/mint_enrol_link.py.
+_DEVICE_DAYS = int(os.environ.get("MS_DEVICE_DAYS", "180"))
+_WEB_ROOT = os.environ.get("MS_WEB_ROOT", "/var/www/marketsquare")
+
+
+def _device_tables(conn):
+    conn.execute("""CREATE TABLE IF NOT EXISTS admin_devices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, jti TEXT UNIQUE, label TEXT,
+        created_at TEXT DEFAULT (datetime('now')), expires_at TEXT, last_seen TEXT,
+        revoked INTEGER DEFAULT 0)""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS admin_enrol_tokens (
+        token TEXT PRIMARY KEY, label TEXT, created_at TEXT DEFAULT (datetime('now')),
+        expires_at TEXT, used_at TEXT)""")
+
+
+def _device_from_cookie(ts_device):
+    """Device record for a valid, unrevoked ts_device cookie; else None. Never raises."""
+    if not ts_device or not _JWT_SECRET:
+        return None
+    try:
+        payload = _pyjwt.decode(ts_device, _JWT_SECRET, algorithms=[_JWT_ALGO])
+    except Exception:
+        return None
+    if payload.get("scope") != "device" or not payload.get("jti"):
+        return None
+    conn = _admin_db()
+    try:
+        _device_tables(conn)
+        row = conn.execute("SELECT id, label, revoked FROM admin_devices WHERE jti = ?",
+                           (payload["jti"],)).fetchone()
+        if not row or row["revoked"]:
+            return None
+        conn.execute("UPDATE admin_devices SET last_seen = datetime('now') WHERE id = ?", (row["id"],))
+        conn.commit()
+        return {"label": row["label"], "jti": payload["jti"]}
+    except Exception:
+        return None
+    finally:
+        conn.close()
+
+
+@app.get("/admin/enrol")
+def admin_enrol(t: str = ""):
+    """Burn a one-time enrol token, set the device cookie, land on the mobile dashboard."""
+    from fastapi.responses import RedirectResponse
+    if not t or not _JWT_SECRET:
+        return HTMLResponse("<h2>Invalid enrolment link.</h2>", status_code=400)
+    conn = _admin_db()
+    try:
+        _device_tables(conn)
+        row = conn.execute("SELECT token, label, expires_at, used_at FROM admin_enrol_tokens WHERE token = ?",
+                           (t.strip(),)).fetchone()
+        if not row or row["used_at"] or (row["expires_at"] and row["expires_at"] < datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")):
+            return HTMLResponse("<h2>This enrolment link has expired or was already used.</h2><p>Ask for a fresh one.</p>", status_code=410)
+        jti = uuid.uuid4().hex
+        exp = datetime.now(timezone.utc) + timedelta(days=_DEVICE_DAYS)
+        conn.execute("UPDATE admin_enrol_tokens SET used_at = datetime('now') WHERE token = ?", (row["token"],))
+        conn.execute("INSERT INTO admin_devices (jti, label, expires_at) VALUES (?, ?, ?)",
+                     (jti, row["label"], exp.strftime("%Y-%m-%d %H:%M:%S")))
+        conn.commit()
+    finally:
+        conn.close()
+    token = _pyjwt.encode({"sub": "device/" + (row["label"] or "?"), "scope": "device", "jti": jti,
+                           "iat": datetime.now(timezone.utc), "exp": exp}, _JWT_SECRET, algorithm=_JWT_ALGO)
+    resp = RedirectResponse("/m/dashboard", status_code=302)
+    resp.set_cookie("ts_device", token, max_age=_DEVICE_DAYS * 24 * 3600, httponly=True, secure=True,
+                    samesite="lax", path="/")
+    _log.info("DEVICE-ENROL-1: device enrolled label=%s jti=%s", row["label"], jti[:8])
+    return resp
+
+
+@app.get("/admin/device-ok")
+def admin_device_ok(ts_device: str = Cookie(default=None)):
+    """200 for an enrolled device, 401 otherwise. CityLauncher asks this on localhost."""
+    d = _device_from_cookie(ts_device)
+    if not d:
+        raise HTTPException(status_code=401, detail="Not an enrolled device.")
+    return {"ok": True, "label": d["label"]}
+
+
+@app.get("/admin/device-token")
+def admin_device_token(ts_device: str = Cookie(default=None)):
+    """The page gate calls this first: an enrolled device gets its 8h admin JWT with no typing."""
+    d = _device_from_cookie(ts_device)
+    if not d:
+        raise HTTPException(status_code=401, detail="Not an enrolled device.")
+    return {"token": _make_token("device/" + d["label"]), "expires_hours": _TOKEN_HOURS, "role": "master",
+            "device": d["label"]}
+
+
+def _serve_gated_page(name: str, ts_device):
+    from fastapi.responses import FileResponse
+    if not _device_from_cookie(ts_device):
+        return HTMLResponse("<h2>This phone is not enrolled.</h2><p>Scan a fresh enrolment QR from Claude, then reopen this page.</p>",
+                            status_code=401, headers={"Cache-Control": "no-store"})
+    path = os.path.join(_WEB_ROOT, name)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="page not deployed")
+    return FileResponse(path, media_type="text/html", headers={"Cache-Control": "no-store, no-cache, must-revalidate"})
+
+
+@app.get("/m/dashboard")
+def m_dashboard(ts_device: str = Cookie(default=None)):
+    return _serve_gated_page("dashboard.html", ts_device)
+
+
+@app.get("/m/admin")
+def m_admin(ts_device: str = Cookie(default=None)):
+    return _serve_gated_page("admin.html", ts_device)
+
+
+@app.get("/m")
+def m_index(ts_device: str = Cookie(default=None)):
+    d = _device_from_cookie(ts_device)
+    if not d:
+        return HTMLResponse("<h2>This phone is not enrolled.</h2>", status_code=401, headers={"Cache-Control": "no-store"})
+    return HTMLResponse("""<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><title>TrustSquare · %s</title>
+<style>body{font-family:system-ui;background:#0b1526;color:#eee;margin:0;padding:28px}a{display:block;background:#1b2b45;color:#fff;text-decoration:none;padding:20px;border-radius:14px;margin:14px 0;font-size:20px;font-weight:700}small{color:#9ab}</style>
+<h2>Enrolled: %s</h2><a href="/m/dashboard">Ops Dashboard</a><a href="/m/admin">Admin</a><a href="/launch/">CityLauncher</a><a href="/">TrustSquare app</a><small>Add this page to your home screen.</small>""" % (d["label"], d["label"]))
+
+
+@app.get("/admin/devices")
+def admin_devices(x_admin_token: str = Header(default=None)):
+    admin_verify(x_admin_token)
+    conn = _admin_db()
+    try:
+        _device_tables(conn)
+        return [dict(r) for r in conn.execute("SELECT id, label, created_at, expires_at, last_seen, revoked FROM admin_devices ORDER BY id DESC")]
+    finally:
+        conn.close()
+
+
+@app.post("/admin/devices/{device_id}/revoke")
+def admin_device_revoke(device_id: int, x_admin_token: str = Header(default=None)):
+    admin_verify(x_admin_token)
+    conn = _admin_db()
+    try:
+        _device_tables(conn)
+        conn.execute("UPDATE admin_devices SET revoked = 1 WHERE id = ?", (device_id,)); conn.commit()
+        return {"revoked": device_id}
+    finally:
+        conn.close()
+
+
 # -- Launch Switch flags (free-only <-> verified) --------------------------------
 def _require_admin(x_admin_token: str = Header(default=None)):
     """Admin-token guard — same JWT the dashboard already holds."""

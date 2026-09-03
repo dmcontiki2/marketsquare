@@ -188,3 +188,4 @@ WAVE_PLAN_LAUNCH_2026.html          | static/wave_plan.html
 # Access is enforced server-side at nginx (anonymous GET answers 401); the page
 # itself no longer carries a client-side code.
 orchestrator.html                   | orchestrator.html
+scripts/mint_enrol_link.py | mint_enrol_link.py
