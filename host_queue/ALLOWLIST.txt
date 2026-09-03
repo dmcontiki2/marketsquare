@@ -14,3 +14,4 @@ run_bat    MarketSquare\commit.bat
 run_py     CityLauncher\scripts\exchange_import.py
 run_py     CityLauncher\scripts\exchange_export.py
 run_py     CityLauncher\clean_city_list.py
+run_bat    CityLauncher\send_human_clicks_now.bat
