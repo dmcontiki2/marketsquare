@@ -607,16 +607,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ── END ADMIN LOGIN GATE v2 ── -->
 
 
-<!-- TODO: REMOVE BEFORE LAUNCH — Dev-only demo/live display toggle -->
-<div id="demo-toggle-panel" style="display:none;position:fixed;top:12px;right:12px;z-index:99999;background:rgba(0,0,0,.85);border:1.5px solid #e63946;border-radius:10px;padding:6px 4px;gap:0;display:flex;flex-direction:column;align-items:center;" title="Dev toggle — remove before launch">
-  <div style="font-size:8px;color:#e63946;font-weight:800;letter-spacing:.5px;margin-bottom:4px;text-transform:uppercase;">DEV</div>
-  <div style="display:flex;gap:4px;">
-    <button onclick="setDemoDisplay('demo')" id="dtg-demo" style="font-size:9px;font-weight:700;padding:3px 6px;border-radius:6px;border:none;cursor:pointer;background:#e63946;color:#fff;">DEMO</button>
-    <button onclick="setDemoDisplay('both')" id="dtg-both" style="font-size:9px;font-weight:700;padding:3px 6px;border-radius:6px;border:none;cursor:pointer;background:#444;color:#aaa;">BOTH</button>
-    <button onclick="setDemoDisplay('live')" id="dtg-live" style="font-size:9px;font-weight:700;padding:3px 6px;border-radius:6px;border:none;cursor:pointer;background:#444;color:#aaa;">LIVE</button>
-  </div>
-</div>
-<!-- END TODO -->
+<!-- DEVTOGGLE-REMOVE-1 (3 Sep 2026): dev demo/both/live panel removed post-launch -->
 
 
 <!-- ════════════════════════════════════════════════════════════
@@ -628,12 +619,6 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <div class="home-hero">
     <div class="hero-top">
       <div class="hero-logo"><img src="/static/brand/logo-white-400.png" alt="TrustSquare" style="height:30px;width:auto;display:block;"></div>
-      <!-- TODO: REMOVE BEFORE LAUNCH — dev-only DEMO/LIVE toggle -->
-      <div id="dev-mode-toggle" style="display:none;align-items:center;background:rgba(0,0,0,.35);border-radius:20px;padding:2px;gap:1px;border:1px solid rgba(255,255,255,.12);">
-        <button id="dmt-demo" onclick="devSetMode(true)" style="font-size:10px;font-weight:700;letter-spacing:.5px;padding:4px 10px;border-radius:18px;border:none;cursor:pointer;transition:all .2s;background:#e63946;color:#fff;">DEMO</button>
-        <button id="dmt-live" onclick="devSetMode(false)" style="font-size:10px;font-weight:700;letter-spacing:.5px;padding:4px 10px;border-radius:18px;border:none;cursor:pointer;transition:all .2s;background:transparent;color:rgba(255,255,255,.45);">LIVE</button>
-      </div>
-      <!-- END TODO -->
       <div class="city-badge" id="home-city-badge" onclick="handleCityBadgeClick()"><div class="badge-geo"><span class="cdot"></span>South Africa</div><div class="badge-loc">Pretoria</div></div><button id="hdr-auth-btn" onclick="headerAuthClick()" style="background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;white-space:nowrap;">Sign in</button>
     </div>
     <div class="hero-body"></div>

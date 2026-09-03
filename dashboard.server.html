@@ -252,6 +252,9 @@
        cards (Infrastructure checks, etc.) reload themselves instead of sitting
        on their "Loading…" placeholder until the next 5-minute poll. */
     try{ document.dispatchEvent(new Event('ms-admin-auth')); }catch(e){}
+    /* DEVICE-ENROL-1 (3 Sep 2026): the token can arrive AFTER loadDashboard() already painted the
+       anonymous heartbeat as SIGNED OUT (device token is async; PIN login is later still). Reload. */
+    try{ if (typeof loadDashboard === 'function' && (typeof DATA === 'undefined' || !DATA || DATA.redacted === 'heartbeat')) loadDashboard(); }catch(e){}
   }
   function showLoginError(msg){
     err.textContent = msg; err.style.display = 'block';

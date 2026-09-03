@@ -14310,5 +14310,36 @@ def rg_maps_show_live_stays():
     return out
 
 
+@entry("RG-0255", "No dev-only DEMO/BOTH/LIVE toggle is visible to users -- the fixed top-right "
+                  "demo-toggle-panel and the hero dev-mode-toggle pill are GONE from the served index",
+       OPEN, fixed_on="2026-09-03",
+       scope="marketsquare.html -> served index.html. CLASS: any element tagged 'REMOVE BEFORE LAUNCH' "
+             "that paints a control users can see. The JS (setDemoDisplay/devSetMode in ms.js) is "
+             "null-guarded and may stay; the DOM must not.",
+       ref="DEVTOGGLE-REMOVE-1, 3 Sep 2026. David: 'the Dev demo both live button is still on the phone "
+           "live app? Please remove it, users should not see that.' Root cause: the panel's inline style "
+           "carried display:none AND display:flex (flex won), so it painted until DOMContentLoaded JS "
+           "hid it -- and stayed painted whenever ?demo=1 or devSetMode(true) ran. Two days past FULL "
+           "LAUNCH (RUL-001) is past 'before launch'. OPEN until the deploy ref ships -> READY TO LOCK.")
+def rg_no_dev_toggle_visible():
+    out = []
+    bad = ["demo-toggle-panel", "dev-mode-toggle", 'id="dtg-both"', 'id="dmt-live"']
+    repo = repo_file("marketsquare.html")
+    if repo is not None:
+        hits = [b for b in bad if b in repo]
+        if hits:
+            out.append((FAIL, "repo marketsquare.html still carries dev toggle: %s" % ", ".join(hits)))
+    try:
+        live = _get("/")
+        hits = [b for b in bad if b in live]
+        if hits:
+            out.append((FAIL, "served index still carries dev toggle: %s" % ", ".join(hits)))
+        else:
+            out.append((INFO, "served index: no dev toggle markup"))
+    except ProbeOffline as e:
+        out.append((FAIL, "live index unreachable: %s" % str(e)[:80]))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
