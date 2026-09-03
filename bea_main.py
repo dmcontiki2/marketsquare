@@ -15580,9 +15580,23 @@ def m_index(ts_device: str = Cookie(default=None)):
     d = _device_from_cookie(ts_device)
     if not d:
         return HTMLResponse("<h2>This phone is not enrolled.</h2>", status_code=401, headers={"Cache-Control": "no-store"})
-    return HTMLResponse("""<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><title>TrustSquare · %s</title>
+    return HTMLResponse("""<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><title>TrustSquare Ops</title>
+<link rel="manifest" href="/m/manifest.webmanifest"><link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png?v=3"><link rel="icon" href="/static/brand/icon-32.png?v=3">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="TS Ops"><meta name="theme-color" content="#0b1526">
 <style>body{font-family:system-ui;background:#0b1526;color:#eee;margin:0;padding:28px}a{display:block;background:#1b2b45;color:#fff;text-decoration:none;padding:20px;border-radius:14px;margin:14px 0;font-size:20px;font-weight:700}small{color:#9ab}</style>
 <h2>Enrolled: %s</h2><a href="/m/dashboard">Ops Dashboard</a><a href="/m/admin">Admin</a><a href="/launch/">CityLauncher</a><a href="/">TrustSquare app</a><small>Add this page to your home screen.</small>""" % (d["label"], d["label"]))
+
+
+@app.get("/m/manifest.webmanifest")
+def m_manifest():
+    """Home-screen install for /m: its own name + the brand icons, start_url pinned to /m."""
+    from fastapi.responses import JSONResponse
+    return JSONResponse({"name": "TrustSquare Ops", "short_name": "TS Ops", "start_url": "/m", "scope": "/",
+                         "display": "standalone", "background_color": "#0b1526", "theme_color": "#0b1526",
+                         "icons": [{"src": "/static/brand/icon-192.png", "sizes": "192x192", "type": "image/png"},
+                                   {"src": "/static/brand/icon-512.png", "sizes": "512x512", "type": "image/png"},
+                                   {"src": "/static/brand/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]},
+                        media_type="application/manifest+json")
 
 
 @app.get("/admin/devices")
@@ -21147,3 +21161,30 @@ def listings_coverage():
                                  "real": r["n"] - (r["demo"] or 0)}
     from datetime import datetime as _dt
     return {"cities": cities, "generated_at": _dt.utcnow().isoformat() + "Z"}
+
+
+@app.get("/geo/stays")
+def geo_stays(s: float, w: float, n: float, e: float, limit: int = 60):
+    """LIVE-MAP-1 (3 Sep 2026, David: "are the maps live?"). Journey maps and the
+    reports that link to them must show TODAY's stays, not the stays that existed
+    when the map was built. One cheap query against our own DB (no external cost):
+    live accommodation listings, counted per city, with the city's lat/lng, inside
+    the map's bounding box. Every journey map fetches this on open and draws a
+    "Live stays" layer + an as-of stamp. Listings carry a city but no coordinates,
+    so the pin is the CITY pin with a count — one click deep-links into the app."""
+    conn = database.get_db()
+    try:
+        rows = conn.execute(
+            """SELECT l.city AS city, COUNT(*) AS n, c.lat AS lat, c.lng AS lng
+                 FROM listings l
+                 JOIN geo_cities c ON LOWER(c.name)=LOWER(l.city) AND c.active=1
+                WHERE l.listing_status='live' AND COALESCE(l.is_demo,0)=0
+                  AND l.category='accommodation'
+                  AND c.lat IS NOT NULL AND c.lat BETWEEN ? AND ? AND c.lng BETWEEN ? AND ?
+                GROUP BY l.city, c.lat, c.lng
+                ORDER BY n DESC LIMIT ?""", (s, n, w, e, limit)).fetchall()
+    finally:
+        conn.close()
+    from datetime import datetime as _dt
+    return {"stays": [{"city": r["city"], "n": r["n"], "lat": r["lat"], "lng": r["lng"]} for r in rows],
+            "as_of": _dt.utcnow().isoformat() + "Z"}
