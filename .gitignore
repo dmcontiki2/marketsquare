@@ -178,3 +178,4 @@ autodeploy_agent_log.txt
 *.flag.done-*
 host_queue/*.req
 host_queue/done/
+host_queue/worker_log.txt

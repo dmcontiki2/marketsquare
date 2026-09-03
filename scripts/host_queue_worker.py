@@ -1,4 +1,4 @@
-"""
+r"""
 host_queue_worker.py - HOST-QUEUE-1 (RUL-095, 3 Sep 2026). Runs ON DAVID'S PC, called by
 autodeploy_agent.bat every 20 min. Executes permission-backed requests that Claude's sandbox
 cannot perform itself (git push with David's credentials, bats that write the local DB, ...).
@@ -22,12 +22,15 @@ ROOT   = HERE.parent                                     # Projects
 QDIR   = HERE / 'host_queue'
 DONE   = QDIR / 'done'
 ALLOW  = QDIR / 'ALLOWLIST.txt'
-LOG    = HERE / 'autodeploy_agent_log.txt'
+LOG    = QDIR / 'worker_log.txt'     # own file: the agent redirects stdout to autodeploy_agent_log.txt (two writers = sharing violation)
 
 def log(msg: str):
     line = f'{datetime.now():%Y-%m-%d %H:%M:%S}  [host_queue] {msg}'
-    print(line)
-    with LOG.open('a', encoding='utf-8') as f: f.write(line + '\n')
+    print(line, flush=True)
+    try:
+        with LOG.open('a', encoding='utf-8') as f: f.write(line + '\n')
+    except OSError:
+        pass
 
 def allowlist() -> set[tuple[str, str]]:
     out = set()
