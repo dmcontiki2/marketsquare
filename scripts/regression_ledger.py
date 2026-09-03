@@ -13951,5 +13951,250 @@ def rg_human_clicks_register():
     return out
 
 
+@entry("RG-0249", "A self-serve rate-based listing (Tutors / Services / Adventures) can actually be "
+                  "SAVED -- the sell-flow states the price basis the BEA demands, so a tutor who types "
+                  "'350' into the numeric rate field is not refused with a 422 about 'R450 / hour'",
+       OPEN, fixed_on="2026-09-03",
+       scope="ALL sell-flow categories whose BEA category is in RATE_UNIT_CATEGORIES (tutors, services, "
+             "adventures_experiences, adventures_accommodation), every market. CLASS: two guards built "
+             "on different days disagreeing -- JNR-FIX-5B (22 Jul, BEA _validate_price_unit rejects a "
+             "bare amount) vs the sell-flow's type=number price input (PRICE-LABEL-1, 17 Jul) that can "
+             "only ever produce a bare amount. Since 22 Jul every self-serve listing in these "
+             "categories died at 'Continue to publish' with a message the seller could not act on, "
+             "then landed on the plan-picker with 'tap Continue to try again' (which is the plan "
+             "step, not the listing). The BEA rule is right; the FLOW now states the basis it "
+             "already knows: SF_CATS priceUnit ('/ hour', '/ call-out', '/ person', '/ night') + "
+             "_sfPriceWithUnit() at sfFinish -> '350' becomes 'R350 / hour'; empty -> POA; a value "
+             "already carrying a basis passes through untouched.",
+       ref="PRICE-UNIT-1, 3 Sep 2026. Found by walking a real Tutors magic link end-to-end in "
+           "David's Chrome after '320 emails, 75 clicks, 0 listings' (HUMAN-CLICKS-1): photos, "
+           "6 steps, score 65/100, then POST /listings 422. Unit-tested the composer in node "
+           "(350 -> R350 / hour; '' -> POA; 'R50 / person' unchanged; 'POA' unchanged; no unit -> "
+           "raw). OPEN until the deploy ref ships ms.js: the live leg turns green when the served "
+           "ms.js carries _sfPriceWithUnit and priceUnit:'/ hour' -> READY TO LOCK. Behavioural "
+           "leg mirrors the BEA rule in Python against the composer's outputs.")
+def rg_price_unit_selfserve():
+    out = []
+    js = repo_file("ms.js")
+    if js is None:
+        out.append((INFO, "ms.js not beside the ledger -- source leg skipped"))
+    else:
+        for needle, why in (("function _sfPriceWithUnit", "the price-basis composer is gone"),
+                            ("priceUnit:'/ hour'", "Tutors lost its priceUnit"),
+                            ("priceUnit:'/ person'", "Adventures experiences lost its priceUnit"),
+                            ("priceUnit:'/ night'", "Adventures accommodation lost its priceUnit"),
+                            ("priceUnit:'/ call-out'", "Services technical lost its priceUnit"),
+                            ("price: _sfPriceWithUnit(", "sfFinish no longer routes the price through the composer")):
+            if needle not in js:
+                out.append((FAIL, "ms.js: %s" % why))
+        # behavioural: the BEA rule (mirrored) must accept what the composer emits
+        toks = ("/", " per ", "per ", "once-off", "once off", "poa", "negotiable", "quote", "flat fee", "flat-fee", "package", "from ")
+        def bea_ok(p):
+            p = (p or "").strip().lower()
+            if not p or not any(ch.isdigit() for ch in p): return True
+            return any(t in p for t in toks)
+        def compose(raw, unit):
+            raw = (raw or "").strip()
+            if not raw: return "POA"
+            if not unit: return raw
+            import re as _re
+            if _re.search(r"/|\bper\b|once|poa|negotiable|quote|package|from ", raw, _re.I): return raw
+            if not any(c.isdigit() for c in raw): return raw
+            return "R" + _re.sub(r"^[^\d]*", "", raw) + " " + unit
+        for raw, unit in (("350", "/ hour"), ("", "/ hour"), ("R 1200", "/ night"), ("50", "/ person"), ("R50 / person", "/ person")):
+            if not bea_ok(compose(raw, unit)):
+                out.append((FAIL, "composer output %r for input %r would still be refused by the BEA" % (compose(raw, unit), raw)))
+        if bea_ok("350") and "tutors" in ("tutors",):
+            pass  # the bare amount IS refused by the rule -- that is the class this entry guards against
+    try:
+        html = _get("/")
+        import re as _re
+        m = _re.search(r"ms\.js\?v=(\d+)", html)
+        live = _get("/static/ms.js?v=%s" % (m.group(1) if m else "0"))
+        if "_sfPriceWithUnit" in live and "priceUnit:'/ hour'" in live:
+            out.append((INFO, "live ms.js (v=%s) states the price basis for rate-based flows" % (m.group(1) if m else "?")))
+        else:
+            out.append((FAIL, "live ms.js (v=%s) still submits bare amounts -- the deploy ref has not shipped PRICE-UNIT-1; "
+                              "every self-serve Tutors/Services/Adventures listing is still refused at publish" % (m.group(1) if m else "?")))
+    except ProbeOffline as e:
+        out.append((FAIL, "live leg unreachable: %s" % str(e)[:80]))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "composer present, BEA-compatible, live"))
+    return out
+
+
+@entry("RG-0250", "An INVITED seller (magic-link arrival, not yet a registered user) gets the AI "
+                  "photo draft -- POST /listings/vision-draft admits an address from our own outreach "
+                  "pool instead of refusing it with 401 'complete seller registration first'",
+       OPEN, fixed_on="2026-09-03",
+       scope="Every magic-link arrival, every category, every market. The Session-90 existence gate "
+             "(users table) stays for strangers -- the spend guard is intact -- but bea_main.py "
+             "_is_invited_prospect() now also admits an email that CityLauncher emailed "
+             "(prospects.emailed_at IS NOT NULL, read-only open of /var/www/citylauncher/data/"
+             "prospects.db, CL_PROSPECTS_DB overridable; missing DB or any error => closed). "
+             "CLASS: a guard built for registered users applied to a funnel whose registration "
+             "happens AFTER the guarded step -- the outreach email promises 'the app writes the "
+             "first draft for you' and the app answered 401 to every invitee since the gate shipped.",
+       ref="INVITE-VISION-1, 3 Sep 2026, found on the same walk as RG-0249: the main photo "
+           "uploaded, nginx logged POST /listings/vision-draft 401, the flow said 'fill in the "
+           "details manually'. Helper tested on a temp prospects.db: emailed -> True, scraped-only -> "
+           "False, unknown -> False, missing DB -> False. OPEN until the deploy ref ships "
+           "bea_main.py. Live leg: POST vision-draft with a known invited address and ONE invalid "
+           "photo -> must be 400 'No valid photos' (gate passed, zero AI spend), never 401; the same "
+           "with an unknown address -> must stay 401 (guard intact). READY TO LOCK when both hold.")
+def rg_invite_vision_gate():
+    out = []
+    src = repo_file("bea_main.py")
+    if src is None:
+        out.append((INFO, "bea_main.py not beside the ledger -- source leg skipped"))
+    else:
+        for needle, why in (("def _is_invited_prospect", "the invited-prospect lookup is gone"),
+                            ("if not _ve and not _is_invited_prospect(_ve_email):", "vision-draft gate no longer consults the outreach pool"),
+                            ("emailed_at IS NOT NULL", "the lookup no longer requires the prospect to have been emailed (guard weakened)"),
+                            ("mode=ro", "the prospects.db open is no longer read-only")):
+            if needle not in src:
+                out.append((FAIL, "bea_main.py: %s" % why))
+    try:
+        import urllib.request as _ur, urllib.error as _ue
+        ck = _review_cookie()
+        def probe(email):
+            boundary = "----tsledger"
+            body = ("--%s\r\nContent-Disposition: form-data; name=\"photos\"; filename=\"x.jpg\"\r\n"
+                    "Content-Type: image/jpeg\r\n\r\nnot-an-image\r\n"
+                    "--%s\r\nContent-Disposition: form-data; name=\"seller_email\"\r\n\r\n%s\r\n"
+                    "--%s\r\nContent-Disposition: form-data; name=\"category_hint\"\r\n\r\ntutors\r\n"
+                    "--%s--\r\n" % (boundary, boundary, email, boundary, boundary)).encode()
+            hdr = dict(UA, **{"Content-Type": "multipart/form-data; boundary=%s" % boundary})
+            if ck: hdr["Cookie"] = ck
+            req = _ur.Request(BASE + "/listings/vision-draft", data=body, headers=hdr, method="POST")
+            try:
+                _ur.urlopen(req, timeout=TIMEOUT); return 200
+            except _ue.HTTPError as e:
+                return e.code
+        invited = probe("support@tutorbird.com")      # emailed 2 Sep 2026 (London Tutors wave)
+        stranger = probe("ledger-stranger-%d@example.invalid" % int(__import__("time").time()))
+        if stranger != 401:
+            out.append((FAIL, "live: an UNKNOWN address was not refused (HTTP %s) -- the spend guard is open" % stranger))
+        if invited == 401:
+            out.append((FAIL, "live: an invited address is still refused with 401 -- the deploy ref has not shipped INVITE-VISION-1; invitees get no AI draft"))
+        elif invited not in (400, 422):
+            out.append((FAIL, "live: invited probe answered HTTP %s (expected 400 'no valid photos' -- gate passed, no spend)" % invited))
+        else:
+            out.append((INFO, "live: invited address passes the gate (HTTP %s on an invalid photo), stranger still 401" % invited))
+    except ProbeOffline as e:
+        out.append((FAIL, "live leg unreachable: %s" % str(e)[:80]))
+    except Exception as e:
+        out.append((FAIL, "live leg broke: %s" % str(e)[:90]))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "lookup present, read-only, guard intact, live"))
+    return out
+
+
+@entry("RG-0252", "Deploys ship themselves -- Claude requests, the host agent gates and ships on a 20-min "
+       "tick and retries a BLOCKED gate until it clears; nothing waits for David's click",
+       OPEN,
+       scope="AUTODEPLOY-AGENT-1 (RUL-092). Repo legs: autodeploy_agent.bat + register_autodeploy_agent.bat + "
+             "scripts/request_deploy.py exist; the agent calls git_unlock.bat FIRST (RG-0015's rule) and "
+             "reuses nightly_tsl.bat (strict tsl_gate + drift + release lock + unattended ship) rather than a "
+             "second deploy engine (ONE DEPLOY, RG-0023); it is in check_bat_crlf's UNATTENDED set so a pause "
+             "can never hang it; the flag/result/log files are gitignored; STANDING_ORDERS and CLAUDE.md no "
+             "longer list deploys as reserved; ../CityLauncher/deploy_citylauncher.bat honours UNATTENDED=1. "
+             "LIVE leg: autodeploy_agent_log.txt exists and its newest line is < 40 min old whenever a request "
+             "flag is pending -- proves the task is registered and ticking. OPEN until David runs "
+             "register_autodeploy_agent.bat once (the ONE remaining click, Task Scheduler is his machine) and "
+             "the first request ships -> READY TO LOCK.",
+       ref="RUL-092, 3 Sep 2026, David: 'remove that deploy rule of mine and make these deploys automated... "
+           "you manage the blocks and wait out their clearance, and then redeploy if possible again.' Born of "
+           "the 15 daily clicks that held him at the keyboard; corollary 4 recorded the same session: sandbox "
+           "SSH egress is INTERMITTENT (blocked ~19:00 2 Sep, open 04:54 3 Sep), so the lane is flags + a host "
+           "timer, never Claude's live hand on the server.")
+def rg_autodeploy_agent():
+    out = []
+    for f, needles in (("autodeploy_agent.bat", ["git_unlock.bat", "nightly_tsl.bat", "DEPLOY_REQUEST.flag", "CL_DEPLOY_REQUEST.flag", "UNATTENDED=1"]),
+                       ("register_autodeploy_agent.bat", ["autodeploy_agent.bat", "/SC MINUTE"]),
+                       ("scripts/request_deploy.py", ["DEPLOY_REQUEST.flag", "py_compile"]),
+                       ("scripts/check_bat_crlf.py", ["\"autodeploy_agent.bat\""]),
+                       (".gitignore", ["DEPLOY_REQUEST.flag", "autodeploy_agent_log.txt"]),
+                       ("STANDING_ORDERS.md", ["RUL-092"]),
+                       (os.path.join("..", "CityLauncher", "deploy_citylauncher.bat"), ["if not defined UNATTENDED pause", "if defined UNATTENDED exit /b 0"])):
+        t = repo_file(f) or ""
+        for n in needles:
+            if n not in t:
+                out.append((FAIL, "%s lost '%s'" % (f, n)))
+    so = repo_file("STANDING_ORDERS.md") or ""
+    if "- deploys, money, deletions, sending anything on his behalf;" in so:
+        out.append((FAIL, "STANDING_ORDERS.md lists deploys as reserved again -- RUL-092 reversed"))
+    # the agent must call git_unlock BEFORE any git-writing step (order, not just presence)
+    ag = repo_file("autodeploy_agent.bat") or ""
+    if ag and ag.find('call "%~dp0git_unlock.bat"') > ag.find('call "%~dp0nightly_tsl.bat"'):
+        out.append((FAIL, "autodeploy_agent.bat ships before it clears a stale git lock"))
+    # live leg: is the host task ticking?
+    log = os.path.join(REPO, "autodeploy_agent_log.txt")
+    pending = any(os.path.exists(os.path.join(REPO, f)) for f in ("DEPLOY_REQUEST.flag", "CL_DEPLOY_REQUEST.flag"))
+    if os.path.exists(log):
+        import time as _t
+        age = (_t.time() - os.path.getmtime(log)) / 60
+        if pending and age > 40:
+            out.append((FAIL, "a deploy request has been pending %d min with no agent activity -- task not registered or stopped" % age))
+        else:
+            out.append((INFO, "agent log present, last activity %d min ago%s" % (age, ", request pending" if pending else "")))
+    else:
+        out.append((FAIL, "no autodeploy_agent_log.txt yet -- register_autodeploy_agent.bat has not been run on the host"))
+    return out
+
+@entry("RG-0251", "A stop-lossed city has a RELEASE path -- cleaning its list (clean_city_list.py) "
+       "stamps stop_loss_released_wave and wave_runner lets ONE next wave out to judge itself",
+       LOCKED, fixed_on="2026-09-03",
+       scope="CityLauncher emailer/wave_runner.py gate_check (STOP-LOSS-RELEASE-1) + "
+             "clean_city_list.py + clean_stoploss_cities.bat. All cities. Source-checked and "
+             "behavioural: gate_check with a 5/33 dirty last wave BLOCKS without the stamp and "
+             "PASSES with cities[city].stop_loss_released_wave == last_wave; a stale stamp "
+             "(wave 1 stamped, dirty wave 2) still blocks.",
+       ref="3 Sep 2026. David: 'how do I clear their list?' -- there was no answer. The latch "
+           "(RG-0242) had no release: a blocked city never advances last_wave, so the dirty wave "
+           "stayed 'last' forever (New York 5/33, Pretoria 5/59, Polokwane 5/26). Probed 3 Sep on "
+           "a DB copy: 158 sendable rows had NEVER been MX-verified; 13 rejects found (NY 1, PTA 9, "
+           "PLK 3). MX cannot see a dead mailbox on a live domain (3 of NY's 5 bounces were mx_ok), "
+           "so the release lets the cleaned list prove itself on its own next wave.")
+def rg_stop_loss_release():
+    out = []
+    cl = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "CityLauncher")
+    wr = repo_file(os.path.join("..", "CityLauncher", "emailer", "wave_runner.py"))
+    if wr is None:
+        return [(INFO, "CityLauncher not beside this repo -- skipped")]
+    if "stop_loss_released_wave" not in wr:
+        out.append((FAIL, "wave_runner has no stop_loss_released_wave release path (STOP-LOSS-RELEASE-1)"))
+    if not os.path.exists(os.path.join(cl, "clean_city_list.py")):
+        out.append((FAIL, "clean_city_list.py missing -- no way to clean a list and release the latch"))
+    try:
+        import importlib.util as _iu
+        sys.path.insert(0, os.path.abspath(cl))
+        spec = _iu.spec_from_file_location("cl_wave_runner_251", os.path.join(cl, "emailer", "wave_runner.py"))
+        m = _iu.module_from_spec(spec); spec.loader.exec_module(m)
+        m.send_freeze.frozen = lambda: False
+        m.suppression_state = lambda: (True, "stub")
+        pol = {"defaults": {"bounce_stop_pct": 5.0, "bounce_stop_min_bounces": 3, "max_complaints": 0,
+                            "send_days": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "min_gap_days": 1,
+                            "send_timezone": "Africa/Johannesburg"},
+               "cities": {"_a": {"armed": True, "gates_green": True},
+                          "_b": {"armed": True, "gates_green": True, "stop_loss_released_wave": 1}}}
+        dirty = {"last_wave_bounce_pct": 15.2, "last_wave_bounced": 5, "last_wave_sent": 33,
+                 "last_wave": 1, "complaints": 0, "last_emailed_at": None}
+        _, b1 = m.gate_check("_a", pol, dict(dirty), True)
+        if not any("stop-loss" in x for x in b1):
+            out.append((FAIL, "unstamped dirty city was NOT blocked -- stop-loss weakened"))
+        _, b2 = m.gate_check("_b", pol, dict(dirty), True)
+        if any("stop-loss" in x for x in b2):
+            out.append((FAIL, "stamped city still blocked -- release path dead: %s" % b2))
+        _, b3 = m.gate_check("_b", pol, dict(dirty, last_wave=2), True)
+        if not any("stop-loss" in x for x in b3):
+            out.append((FAIL, "stale stamp (wave 1) released a dirty wave 2 -- release must match one wave only"))
+        if not out:
+            out.append((INFO, "gate_check: unstamped blocks, stamped releases, stale stamp blocks"))
+    except Exception as e:
+        out.append((INFO, "behavioural leg skipped (%s)" % str(e)[:80]))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

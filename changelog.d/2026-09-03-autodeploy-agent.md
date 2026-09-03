@@ -1,0 +1,9 @@
+## 2026-09-03 — AUTODEPLOY-AGENT-1 (RUL-092): deploys are no longer David's click
+
+**Ruling:** David, 3 Sep: *"remove that deploy rule of mine and make these deploys automated, for you to reschedule new deploys based on your assessment of what is possible to deploy and then deploy them, you manage the blocks and wait out their clearance, and then redeploy if possible again."* RUL-092 recorded; STANDING_ORDERS SO-3/SO-4 and CLAUDE.md's RUL-037 reserved list amended; rulings_check reflects it (and RUL-091 gained its missing reflection).
+
+**Mechanism — reuse, not a second engine:** `nightly_tsl.bat` already ships unattended behind the strict gate once a day. `autodeploy_agent.bat` (host, Task Scheduler every 20 min via `register_autodeploy_agent.bat`) runs that same bat whenever `DEPLOY_REQUEST.flag` exists, and `deploy_citylauncher.bat` in a new `UNATTENDED=1` mode whenever `CL_DEPLOY_REQUEST.flag` exists. BLOCKED gate → flag stays, retried next tick. SHIPPED/FAILED → flag becomes `DEPLOY_RESULT.txt`. Claude writes the flag from any session with `python3 scripts/request_deploy.py "reason"` (`--cl` for CityLauncher, `--status` to read back) — it py_compiles changed .py and commits pending work first; the real gate stays on the host. Still ONE DEPLOY (deploy ref, RG-0023). Agent is in check_bat_crlf's UNATTENDED set; calls `git_unlock.bat` first (RG-0015).
+
+**Why flags + a host timer, not Claude's hand:** probed this session — sandbox SSH to the origin was hard-blocked ~19:00 2 Sep and open 04:54 3 Sep from the same sandbox. Intermittent egress cannot be a deploy dependency (RUL-092 corollary 4).
+
+**Ledger:** RG-0252 OPEN — flips READY TO LOCK once David runs `register_autodeploy_agent.bat` once (Task Scheduler on his PC is the one click that cannot be his agent's) and the first request ships. Corollary 2 also recorded: READY-TO-LOCK promotions and open-action closures are Claude's, never a request.

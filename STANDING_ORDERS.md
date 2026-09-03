@@ -90,7 +90,7 @@ at that point."*
 - a defect that contradicts an existing RUL, STANDING_ORDERS or a canon doc.
 
 **Still bring to David** — unchanged by this order:
-- deploys, money, deletions, sending anything on his behalf;
+- money, deletions, sending anything on his behalf (deploys are NO LONGER reserved — RUL-092, 3 Sep 2026: Claude ships via AUTODEPLOY-AGENT-1);
 - anything whose failure mode is locking him out of his own app (RUL-027);
 - anything that would *change* a decision rather than *execute* one.
 
@@ -109,3 +109,7 @@ A technical item that cannot be executed this session becomes an OPEN regression
 never a sentence addressed to David. Reserved to David: money, deploys, deletions, sending on his
 behalf, lockout risk (RUL-027), legal/commercial positioning, launch scope and dates, money- or
 jurisdiction-bearing vendor selection (RUL-009), and changing a ruling rather than executing one.
+**Deploys were removed from this list by RUL-092 (3 Sep 2026):** Claude requests them with
+`scripts/request_deploy.py`, the host-side `autodeploy_agent.bat` gates and ships them on a 20-minute
+tick, and a BLOCKED gate is retried automatically until it clears. READY-TO-LOCK promotions and
+open-action closures are likewise Claude's, never a request to David.

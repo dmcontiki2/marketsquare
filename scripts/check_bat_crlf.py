@@ -38,6 +38,7 @@ WIN_EXT = (".bat", ".cmd", ".ps1")
 # Bats that legitimately never wait for a human: scheduled tasks and lanes called
 # by other scripts. A pause in these would hang an unattended run forever.
 UNATTENDED = {
+    "autodeploy_agent.bat",          # AUTODEPLOY-AGENT-1 (RUL-092): 20-min tick, nobody present
     "nightly_ship.bat", "nightly_tsl.bat", "register_nightly_ship.bat",
     "register_nightly_tsl.bat", "commit_checkpoint.bat", "git_unlock.bat",
     "prune_backups.bat", "refresh_dashboard.bat", "media_push.bat",

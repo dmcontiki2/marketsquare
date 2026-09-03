@@ -170,3 +170,8 @@ private_originals_listing246/
 .wrangler/
 enable_launch_special.bat
 add_gemini_key.bat
+DEPLOY_REQUEST.flag
+CL_DEPLOY_REQUEST.flag
+DEPLOY_RESULT.txt
+CL_DEPLOY_RESULT.txt
+autodeploy_agent_log.txt

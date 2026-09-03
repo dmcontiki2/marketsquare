@@ -82,6 +82,21 @@ REFLECTIONS = {
    ("i18n/UGC_TRANSLATION_DESIGN.md", ["store once", "translate-at-read", "machine-translated"], []),
    ("scripts/i18n_readiness_check.py", ["UGC_TRANSLATION_DESIGN"], []),
  ],
+ "RUL-091": [
+   # No stale IPs on the origin allowlist (2 Sep): register carries it; the self-heal SETS, never appends.
+   ("RULINGS.md", ["NO STALE IPs ON THE ORIGIN SSH ALLOWLIST"], []),
+   ("scripts/hetzner_fw_selfheal.py", ["NO-STALE-IP-1"], []),
+ ],
+ "RUL-092": [
+   # Deploys un-reserved (3 Sep): register carries it; standing orders and CLAUDE.md no longer
+   # list deploys as reserved; the agent, its registrar and the request tool exist.
+   ("RULINGS.md", ["DEPLOYS ARE NO LONGER RESERVED TO DAVID"], []),
+   ("STANDING_ORDERS.md", ["RUL-092", "AUTODEPLOY-AGENT-1"], ["- deploys, money, deletions, sending anything on his behalf;"]),
+   ("../CLAUDE.md", ["DEPLOYS ARE NOT RESERVED since RUL-092"], ["money and spend, deploys, deletions,"]),
+   ("autodeploy_agent.bat", ["DEPLOY_REQUEST.flag", "CL_DEPLOY_REQUEST.flag", "nightly_tsl.bat"], []),
+   ("register_autodeploy_agent.bat", ["autodeploy_agent.bat", "/SC MINUTE"], []),
+   ("scripts/request_deploy.py", ["DEPLOY_REQUEST.flag"], []),
+ ],
  "RUL-085": [
    # Engine revival (1 Sep): register carries it; fragment carries the execution record.
    ("RULINGS.md", ["74 SEARCH-ENGINE LANES COME BACK"], []),
