@@ -13853,5 +13853,103 @@ def rg_one_per_org_ramp_floor():
         out.append((FAIL, "behavioural leg broke: %s" % str(e)[:90]))
     return out
 
+@entry("RG-0248", "Outreach clicks are SCORED per recipient (human_click / human_open / uncertain / "
+                  "machine) into prospects.db click_register, and the follow-up lane can only address "
+                  "the human tiers -- a scanner click can never earn a resend",
+       OPEN, fixed_on="2026-09-03",
+       scope="Every fingerprinted opened/clicked email_events row in CityLauncher/data/prospects.db, "
+             "all waves, all countries. ONE scorer: CityLauncher/click_register.py (classify_clicks.py "
+             "reports from it, api/server.py refreshes it on the reconcile cadence and on "
+             "POST /launch-api/prospects/click-register/refresh; GET /launch-api/prospects/human-clicks "
+             "serves the resend list, key-gated, json or csv). resend_human_clicks.py (host-side, "
+             "via .bat) picks tiers human_click+human_open only, stamps resent_at so nobody is followed "
+             "up twice, and runs every emailer.py guard (suppression, junk, government, privacy "
+             "officer, .edu hold, JOURNEY-1 gate). Test traffic (example.*, CLICKTEST) never enters.",
+       ref="HUMAN-CLICKS-1, 3 Sep 2026, David: '320 emails and 75 clicks hasn't given us a single "
+           "listing -- do we have another fault?' PROBED: 0 users, 0 listings since 29 Aug; of 61 "
+           "click events 33 were the UNSUBSCRIBE link from Azure/Defender ranges, 7 were the CTA and "
+           "3 of those were bots (Ruby UA, Azure IP). The raw click count was the fault, not the app. "
+           "Register written on the server 3 Sep: 117 recipients -> 2 human_click, 48 human_open, "
+           "11 uncertain, 56 machine. Dry run of the follow-up lane on a copy: 48 would send, 2 "
+           "skipped (opted_out). OPEN until deploy_citylauncher.bat rides: the live leg turns green "
+           "when GET /launch-api/prospects/human-clicks answers 401 (present, key-gated) instead of "
+           "404 -> READY TO LOCK.")
+def rg_human_clicks_register():
+    out = []
+    base = os.path.join(REPO, "..", "CityLauncher")
+    if os.path.isdir(base):
+        cr = os.path.join(base, "click_register.py")
+        if not os.path.exists(cr):
+            out.append((FAIL, "CityLauncher/click_register.py is GONE -- the scorer no longer exists"))
+        else:
+            s = open(cr, encoding="utf-8").read()
+            for needle, why in (("def score_events", "the event scorer is gone"),
+                                ("def rollup", "the per-recipient rollup is gone"),
+                                ("click_register", "the register table name has changed"),
+                                ("CLICKTEST", "test traffic is no longer excluded")):
+                if needle not in s:
+                    out.append((FAIL, "click_register.py: %s" % why))
+        sv = os.path.join(base, "api", "server.py")
+        if os.path.exists(sv):
+            s = open(sv, encoding="utf-8").read()
+            for needle, why in (("@app.get('/prospects/human-clicks')", "the human-clicks endpoint is gone"),
+                                ("_refresh_click_register()", "the register is no longer refreshed on the reconcile cadence"),
+                                ("Depends(require_launch_key)", "launch-key gate missing")):
+                if needle not in s:
+                    out.append((FAIL, "api/server.py: %s" % why))
+        rs = os.path.join(base, "resend_human_clicks.py")
+        if not os.path.exists(rs):
+            out.append((FAIL, "resend_human_clicks.py is GONE -- the humans-only lane no longer exists"))
+        else:
+            s = open(rs, encoding="utf-8").read()
+            for needle, why in (('("human_click", "human_open")', "the lane no longer restricts itself to human tiers"),
+                                ("resent_at", "the lane no longer stamps resent_at (repeat sends possible)"),
+                                ("_is_suppressed", "suppression guard bypassed"),
+                                ("journey_check.py", "JOURNEY-1 gate removed")):
+                if needle not in s:
+                    out.append((FAIL, "resend_human_clicks.py: %s" % why))
+        # behavioural: a scanner-shaped click must never reach a human tier
+        try:
+            import importlib.util as _iu, sqlite3 as _s
+            spec = _iu.spec_from_file_location("_cr", cr); m = _iu.module_from_spec(spec); spec.loader.exec_module(m)
+            con = _s.connect(":memory:")
+            con.execute("CREATE TABLE email_events (id INTEGER PRIMARY KEY, prospect_id INTEGER, message_id TEXT, event TEXT, created_at TEXT, meta TEXT)")
+            con.execute("INSERT INTO email_events VALUES (1,1,'m1','sent','2026-09-01T10:00:00',NULL)")
+            con.execute("INSERT INTO email_events VALUES (2,1,'m1','clicked','2026-09-01T10:00:20', ?)",
+                        ('{"ip":"4.222.252.97","ua":"Mozilla/5.0","link":"https://trustsquare.co/launch-api/optout?email=a%40b.co","event_ts":"2026-09-01T10:00:20Z","recipient":"a@b.co"}',))
+            con.execute("INSERT INTO email_events VALUES (3,2,'m2','sent','2026-09-01T10:00:00',NULL)")
+            con.execute("INSERT INTO email_events VALUES (4,2,'m2','clicked','2026-09-01T16:00:00', ?)",
+                        ('{"ip":"197.184.1.1","ua":"Mozilla/5.0 (Windows NT 10.0) Chrome/142","link":"https://trustsquare.co/?magic=1&email=c%40d.co","event_ts":"2026-09-01T16:00:00Z","recipient":"c@d.co"}',))
+            reg = m.rollup(m.score_events(con))
+            if reg.get("a@b.co", {}).get("tier") in ("human_click", "human_open"):
+                out.append((FAIL, "a 20-second Azure opt-out click scored as HUMAN"))
+            if reg.get("c@d.co", {}).get("tier") != "human_click":
+                out.append((FAIL, "a 6-hour-later CTA click from a residential IP did not score human_click (got %s)" % reg.get("c@d.co", {}).get("tier")))
+        except Exception as e:
+            out.append((FAIL, "behavioural leg broke: %s" % str(e)[:90]))
+    else:
+        out.append((INFO, "CityLauncher not beside this repo -- source leg skipped"))
+    try:
+        import urllib.request as _ur
+        req = _ur.Request("https://trustsquare.co/launch-api/prospects/human-clicks",
+                          headers={"User-Agent": "TrustSquare-Ledger/1.0"})
+        try:
+            _ur.urlopen(req, timeout=15)
+            out.append((FAIL, "GET /launch-api/prospects/human-clicks served an ANONYMOUS caller -- gate missing"))
+        except Exception as e:
+            code = getattr(e, "code", None)
+            if code in (401, 403):
+                out.append((INFO, "live: /prospects/human-clicks present and key-gated (HTTP %s)" % code))
+            elif code == 404:
+                out.append((FAIL, "live: /prospects/human-clicks is 404 -- deploy_citylauncher.bat has not ridden"))
+            else:
+                out.append((FAIL, "live human-clicks probe unexpected: %s" % repr(e)[:60]))
+    except Exception as e:
+        out.append((FAIL, "live leg unreachable: %s" % str(e)[:80]))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "scorer, endpoint, lane and live gate all present"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
