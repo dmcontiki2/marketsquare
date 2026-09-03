@@ -28,6 +28,8 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- **HUMAN-CLICKS-1 (3 Sep):** the "75 clicks" were mostly scanners on the unsubscribe link; 0 humans converted, no app fault. Per-recipient `click_register` now on the server (2 human_click / 48 human_open / 11 uncertain / 56 machine). Humans-only follow-up lane ready: `resend_human_clicks.bat` (dry run first). **Deploy debt:** `deploy_citylauncher.bat` (server.py: refresh + `/prospects/human-clicks`) → RG-0248 READY TO LOCK.
+
 ## 2026-09-02 — Origin patched + rebooted (DW-085 closed)
 Kernel 6.8.0-117 -> -138, 37 packages, 34 s down, credential fingerprints identical pre/post.
 RG-0246 (PATCH-CADENCE-1) LOCKED with `ops/maintenance/PATCH_LOG.md`; next reboot due < 45 d.
