@@ -2631,6 +2631,51 @@ function teExpandAll(btn){
   setTimeout(function(){ try { window.print(); } catch(e){} }, 120);
 }
 
+// STAYS-NEARBY-1 (3 Sep 2026, David: "we need the Stays everywhere to be added to our tours
+// as optional listing clicks"). On every Adventures detail: an Experience shows "Stay nearby"
+// (adventures_accommodation in the same city, nearest first when both sides carry coords);
+// a Stay shows "Things to do nearby" (adventures_experiences). Real listings only -- no
+// placeholders, no paused, no examples. Each chip is an ordinary openDetail tap. Renders
+// nothing when there is nothing to show, so an empty city costs no space.
+function advNearbyStrip(l, id){
+  var cat = (l.cat||'')+'';
+  var isExp = cat==='adventures_experiences', isAcc = cat==='adventures_accommodation';
+  if(!isExp && !isAcc) return '';
+  var want = isExp ? 'adventures_accommodation' : 'adventures_experiences';
+  var myCity = (l.city||l.area||activeCity.name||'');
+  var la = l.listing_lat||l.suburb_lat, lo = l.listing_lng||l.suburb_lng;
+  function km(a,b){ var R=6371,dLat=(b.la-a.la)*Math.PI/180,dLo=(b.lo-a.lo)*Math.PI/180,x=Math.sin(dLat/2),y=Math.sin(dLo/2);
+    var h=x*x+Math.cos(a.la*Math.PI/180)*Math.cos(b.la*Math.PI/180)*y*y; return 2*R*Math.asin(Math.sqrt(h)); }
+  var rows = LISTINGS.filter(function(o){
+    if(!o || String(o.id)===String(id)) return false;
+    if((o.cat||'')!==want) return false;
+    if(o.paused || o.super_example || String(o.id).startsWith('ph_')) return false;
+    var oc = (o.city||o.area||''); if(myCity && oc && oc!==myCity) return false;
+    return true;
+  }).map(function(o){
+    var ola=o.listing_lat||o.suburb_lat, olo=o.listing_lng||o.suburb_lng;
+    var d = (la&&lo&&ola&&olo) ? km({la:la,lo:lo},{la:ola,lo:olo}) : null;
+    return {o:o, d:d};
+  }).sort(function(A,B){ if(A.d==null&&B.d==null) return 0; if(A.d==null) return 1; if(B.d==null) return -1; return A.d-B.d; }).slice(0,6);
+  if(!rows.length) return '';
+  var cur = ADV_COUNTRY_CURRENCY[(l.country||'ZA').toUpperCase()]||'R';
+  var chips = rows.map(function(r){
+    var o=r.o, pn=(typeof o.priceNum==='number'&&o.priceNum>0)?o.priceNum:Number(String(o.price||'').replace(/[^0-9.]/g,''));
+    var price = (isFinite(pn)&&pn>0) ? (cur+pn.toLocaleString()+(want==='adventures_accommodation'?'/night':'/pp')) : '';
+    var photo = (o.photos&&o.photos[0])||o.photo||'';
+    var dist = r.d!=null ? (r.d<1?'<1 km':Math.round(r.d)+' km') : ((o.suburb||o.area||'')+'').replace(/</g,'&lt;');
+    var t = (o.title||'').replace(/</g,'&lt;');
+    return '<div onclick="openDetail(\''+String(o.id).replace(/'/g,'')+'\')" style="flex:0 0 150px;cursor:pointer;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;overflow:hidden;">'
+      +(photo?'<img src="'+photo+'" loading="lazy" style="width:100%;height:84px;object-fit:cover;display:block;" onerror="this.style.display=\'none\'">':'<div style="height:84px;display:flex;align-items:center;justify-content:center;font-size:28px;background:'+catCfg(o).bg+';">'+catCfg(o).icon+'</div>')
+      +'<div style="padding:7px 9px 9px;"><div style="font-size:12px;font-weight:700;color:var(--navy);line-height:1.25;max-height:2.5em;overflow:hidden;">'+t+'</div>'
+      +'<div style="display:flex;justify-content:space-between;gap:6px;margin-top:4px;font-size:11px;color:var(--text-3);"><span>'+dist+'</span><span style="font-weight:700;color:var(--accent);">'+price+'</span></div></div></div>';
+  }).join('');
+  var head = isExp ? '🏕 Stay nearby' : '🧭 Things to do nearby';
+  var sub  = isExp ? 'Optional — book your stay with a local host near this experience' : 'Optional — experiences within reach of this stay';
+  return '<div class="dsec" id="adv-nearby-'+id+'"><h3>'+head+'</h3><div style="font-size:11px;color:var(--text-3);margin:-4px 0 8px;">'+sub+'</div>'
+       +'<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;">'+chips+'</div></div>';
+}
+
 function tripEssentialsPanel(l, id){
   var t = tripEssentialsFor(l);
   if(!t) return '';
@@ -4549,6 +4594,7 @@ function openDetail(id){
       </div>` : ''}
       ${l.cat==='Cars' ? vehSpecPanel(l) : ''}
       <div class="dsec"><h3>About this listing</h3>${maskContactInfo(formatDesc(l.desc),_introAccepted)}</div>
+      ${isAdv ? advNearbyStrip(l, id) : ''}
       ${(function(){ if(!(l.super_example && isAdv)) return ''; var _mc=(l.tour&&ADV_TOUR_MAP[l.tour])||ADV_COUNTRY_MAP[(l.country||'ZA').toUpperCase()]; if(!_mc) return ''; var _u='/static/'+_mc.file; var _bs='background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap;'; return '<div class="dsec adv-reserve-map"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px;flex-wrap:wrap;"><h3 style="margin:0;">'+_mc.title+'</h3><div style="display:flex;gap:7px;flex-shrink:0;"><button type="button" data-u="'+_u+'" data-t="'+_mc.title+'" onclick="advMapExpand(this)" style="'+_bs+'">⤢ Expand</button><a href="'+_u+'" target="_blank" rel="noopener" style="'+_bs+'text-decoration:none;display:inline-flex;align-items:center;">Open ↗</a></div></div><div style="font-size:12px;color:var(--text-3);margin:-2px 0 10px;">'+_mc.blurb+'</div><div style="border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border);box-shadow:0 3px 14px rgba(0,0,0,.10);"><iframe src="'+_u+'" title="Interactive tour map" loading="lazy" style="width:100%;height:480px;border:0;display:block;background:#0d1b2e;"></iframe></div></div>'; })()}
       ${(l.super_example && isAdv) ? tripEssentialsPanel(l, id) : ''}
       ${(function(){ if(!(l.super_example && isAdv)) return ''; var _ex=ADV_TOUR_EXTENSIONS[tourKeyOf(l)]; if(!_ex||!_ex.length) return ''; var _rows=_ex.map(function(e){ return '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--border);">'+'<div style="font-size:20px;line-height:1.1;flex-shrink:0;">'+e.icon+'</div>'+'<div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:14px;margin-bottom:2px;">'+e.name+'</div><div style="font-size:12.5px;color:var(--text-3);line-height:1.45;">'+e.detail+'</div></div>'+'<div style="flex-shrink:0;font-weight:800;font-size:13px;color:var(--accent);white-space:nowrap;padding-top:1px;">'+e.price+'</div></div>'; }).join(''); return '<div class="dsec"><h3 style="margin:0 0 2px;">Optional extensions</h3><div style="font-size:12px;color:var(--text-3);margin:0 0 2px;">Add to the journey \u2014 priced per person, on top of the all-inclusive fare above.</div>'+_rows+'</div>'; })()}

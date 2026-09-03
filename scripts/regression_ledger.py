@@ -14096,7 +14096,7 @@ def rg_invite_vision_gate():
 @entry("RG-0252", "Deploys ship themselves -- Claude requests, the host agent gates and ships on a 20-min "
        "tick and retries a BLOCKED gate until it clears; nothing waits for David's click",
        OPEN,
-       scope="AUTODEPLOY-AGENT-1 (RUL-092). Repo legs: autodeploy_agent.bat + register_autodeploy_agent.bat + "
+       scope="RUL-092, two lanes. LANE A RELAY-DEPLOY-1: request_deploy.py relays HEAD through the origin's clone when SSH is open (fast-forward-only) -- proven 3 Sep 03:31Z. LANE B AUTODEPLOY-AGENT-1 (host flag + 20-min task) for closed egress. Repo legs: autodeploy_agent.bat + register_autodeploy_agent.bat + "
              "scripts/request_deploy.py exist; the agent calls git_unlock.bat FIRST (RG-0015's rule) and "
              "reuses nightly_tsl.bat (strict tsl_gate + drift + release lock + unattended ship) rather than a "
              "second deploy engine (ONE DEPLOY, RG-0023); it is in check_bat_crlf's UNATTENDED set so a pause "
@@ -14113,6 +14113,10 @@ def rg_invite_vision_gate():
            "timer, never Claude's live hand on the server.")
 def rg_autodeploy_agent():
     out = []
+    rq = repo_file(os.path.join("scripts", "request_deploy.py")) or ""
+    for n in ("def relay(", "claude-relay:main claude-relay:deploy", "--is-ancestor"):
+        if n not in rq:
+            out.append((FAIL, "request_deploy.py lost the relay lane piece '%s'" % n))
     for f, needles in (("autodeploy_agent.bat", ["git_unlock.bat", "nightly_tsl.bat", "DEPLOY_REQUEST.flag", "CL_DEPLOY_REQUEST.flag", "UNATTENDED=1"]),
                        ("register_autodeploy_agent.bat", ["autodeploy_agent.bat", "/SC MINUTE"]),
                        ("scripts/request_deploy.py", ["DEPLOY_REQUEST.flag", "py_compile"]),
