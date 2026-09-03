@@ -15510,7 +15510,7 @@ Property: { label:'Property', aiCap:'street numbers, signage and faces', priceLa
     ['levies','Levies (R/month)','number','e.g. 1 850'],['rates','Rates (R/month)','number','e.g. 1 200'],
     ['fibre','Fibre available','select','Yes|No'],['security','Security','select','None|Alarm|Security estate|Armed response']]}],
   feats:['Pool','Solar / inverter','Borehole','Fibre','Pet friendly','Security estate','Double garage','Flatlet','Garden cottage','Sea / mountain view','Fireplace','Aircon']},
-Tutors: { label:'Tutors', aiCap:"school names, children's faces and contact details", priceLabel:'Hourly rate',
+Tutors: { label:'Tutors', aiCap:"school names, children's faces and contact details", priceLabel:'Hourly rate', priceUnit:'/ hour',
   slots:[['main','You or your space','You at the board, or your teaching space','🎓'],
          ['board','The board mid-lesson','Real working, not posed','🧮'],
          ['materials','Books & materials','What learners work from','📚'],
@@ -15535,7 +15535,7 @@ Services: { label:'Services',
       ['agents','🤝','Professional Agents','Estate, car sales & tour agents — your ranked service profile + seller leads'],
     ['casual','🧹','Casual & In-home','Garden, cleaning, painting, moving — reliable hands']]},
   sub:{
-  technical:{ label:'Services · Technical', aiCap:'vehicle number plates and phone numbers on signage', priceLabel:'Call-out rate',
+  technical:{ label:'Services · Technical', aiCap:'vehicle number plates and phone numbers on signage', priceLabel:'Call-out rate', priceUnit:'/ call-out',
     slots:[['main','You on the job','Working, in your gear','⚡'],['job1','Completed job 1','Your best recent work','🔧'],
            ['job2','Completed job 2','Different job type if you can','🛠️'],['tools','Tools / workshop','Professional setup','🧰'],
            ['cert','Certification','Trade cert — names are auto-blurred','📜']],
@@ -15551,7 +15551,7 @@ Services: { label:'Services',
       ['hours','Working hours','text','e.g. 07:00–17:00'],['weekends','Weekends','select','Yes|No'],
       ['response','Typical response','select','Same day|Within 24h|This week']]}],
     feats:['COC certificates','Free quotes','Workmanship guarantee','Card payments','After-hours','Maintenance contracts']},
-  casual:{ label:'Services · Casual', aiCap:'faces and contact details', priceLabel:'Rate',
+  casual:{ label:'Services · Casual', aiCap:'faces and contact details', priceLabel:'Rate', priceUnit:'/ hour',
     slots:[['main','You at work','Honest and real beats posed','🧹'],
            ['ex1','Work example 1','Before / after works well','🌿'],['ex2','Work example 2','Another job','🎨']],
     sections:[
@@ -15590,7 +15590,7 @@ Adventures: { label:'Adventures',
     ['experiences','🧗','Experiences','Hikes, tours, water, wildlife — things people do'],
     ['accommodation','🛖','Accommodation','Guest houses, bush camps, self-catering — places people stay']]},
   sub:{
-  experiences:{ label:'Adventures · Experience', aiCap:'faces and vehicle plates', priceLabel:'Price per person',
+  experiences:{ label:'Adventures · Experience', aiCap:'faces and vehicle plates', priceLabel:'Price per person', priceUnit:'/ person',
     slots:[['main','The experience in action','Your money shot — people doing the thing','🧗'],
            ['view','The view / setting',"Why they'll remember it",'🏔️'],
            ['group','Guests enjoying it','Real moments beat staged ones','😄'],
@@ -15608,7 +15608,7 @@ Adventures: { label:'Adventures',
       ['guide','Registered guide','select','Yes — provincial registration|In process|No'],
       ['firstaid','First aid','select','Current|Expired|None'],['insurance','Liability insurance','select','Yes|No']]}],
     feats:['Transport included','Meals included','Kid friendly','Photos included','Private groups','Sunset option','Beginner friendly']},
-  accommodation:{ label:'Adventures · Accommodation', aiCap:'signage and street numbers — the exact location stays private', priceLabel:'Nightly rate',
+  accommodation:{ label:'Adventures · Accommodation', aiCap:'signage and street numbers — the exact location stays private', priceLabel:'Nightly rate', priceUnit:'/ night',
     slots:[['main','Hero shot','Exterior or the view — your best single image','🛖'],
            ['room','Room','Beds made, warm light','🛏️'],['bath','Bathroom','Clean, towels out','🚿'],
            ['common','Common area / deck','Where guests live','🔥'],['view','The view','What they wake up to','🌄']],
@@ -15674,6 +15674,23 @@ var sfState = null;
 // hardcoded "(R)". Source of truth = sfState.country when the flow ever sets it, else the
 // active market (activeCountry), else ZA — resolved through ADV_COUNTRY_CURRENCY, the same
 // table the buyer-side display uses (RG-0002/RG-0005 class).
+/* PRICE-UNIT-1 (3 Sep 2026): the sell-flow price field is type=number, so a tutor
+   could only ever type "350" -- and the BEA (JNR-FIX-5B, 22 Jul) rejects every
+   rate-based amount without a basis with a 422. Every self-serve Tutors / Services /
+   Adventures listing since 22 Jul died at "Continue to publish" with a message about
+   "R450 / hour" the seller had no way to type. The flow KNOWS the basis (its own
+   price label), so it states it: "350" -> "R350 / hour". Non-numeric / empty -> POA. */
+function _sfPriceWithUnit(raw, flow){
+  raw = String(raw||'').trim();
+  if(!raw) return 'POA';
+  var unit = flow && flow.priceUnit;
+  if(!unit) return raw;
+  if(/\/|\bper\b|once|poa|negotiable|quote|package|from /i.test(raw)) return raw;
+  if(!/\d/.test(raw)) return raw;
+  var sym = (typeof _sfCcySym==='function') ? _sfCcySym() : 'R';
+  var n = raw.replace(/^[^\d]*/, '');
+  return sym + n + ' ' + unit;
+}
 function _sfCcySym(){
   var cc='ZA';
   try{ cc=String((sfState&&sfState.country)||(typeof activeCountry!=='undefined'&&activeCountry&&activeCountry.iso2)||'ZA').toUpperCase(); }catch(e){}
@@ -15692,7 +15709,18 @@ function sfInit(){
   var _mlcat = (typeof magicLink!=='undefined' && magicLink.active && magicLink.cat) ? String(magicLink.cat) : '';
   if(_mlcat){
     var _map={cars:'Cars',property:'Property',tutors:'Tutors',services:'Services',
-              collectors:'Collectors',adventures:'Adventures',local_market:'local_market',localmarket:'local_market'};
+              collectors:'Collectors',adventures:'Adventures',local_market:'local_market',localmarket:'local_market',
+              // INVITE-CAT-1 (3 Sep 2026): CityLauncher's scraper categories never matched
+              // these keys, so every invited teacher / dealer / agency / lodge fell to the
+              // generic "what are you selling?" tiles. Map the outreach vocabulary too.
+              teachers_trainers:'Tutors', us_university_tutors:'Tutors', tutor_institutions:'Tutors',
+              'education institutions':'Tutors', 'tutor institutions':'Tutors',
+              'car dealers':'Cars', 'vehicle traders':'Cars',
+              'estate agency':'Property', 'estate agents':'Property', agency:'Property', agencies:'Property',
+              adventures_accommodation:'Adventures', adventures_experiences:'Adventures',
+              'tour guides':'Adventures', 'tour operators':'Adventures', 'travel agencies':'Adventures', 'travel agency':'Adventures',
+              'collector shops':'Collectors', 'collectors dealers':'Collectors', 'card shops':'Collectors',
+              'service companies':'Services', services_technical:'Services', services_casual:'Services'};
     var _k=_map[_mlcat.toLowerCase()] || (SF_CATS[_mlcat] ? _mlcat : null);
     if(_k){ sfStartCat(_k); return; }
   }
@@ -15751,7 +15779,7 @@ function sfFlow(){
   }
   // RENTAL-COSTS-1: To Rent property → tenant-cost section C replaces levies/rates
   if(sfState.cat==='Property' && sfIsRental()){
-    return {label:c.label, aiCap:c.aiCap, priceLabel:c.priceLabel, slots:c.slots,
+    return {label:c.label, aiCap:c.aiCap, priceLabel:c.priceLabel, priceUnit:c.priceUnit, slots:c.slots,
       sections:[c.sections[0], c.sections[1], SF_PROP_RENTAL_SEC_C], feats:c.feats};
   }
   return c;
@@ -16403,7 +16431,7 @@ async function sfFinish(draftOnly){
     }
     var fields={
       title: sfBuildTitle(),
-      price: String(sfState.price||'').trim()||'POA',
+      price: _sfPriceWithUnit(String(sfState.price||'').trim(), f),
       suburb: sfState.area||'',
       description: sfComposeDescription()
     };

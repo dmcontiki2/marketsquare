@@ -13856,7 +13856,10 @@ def rg_one_per_org_ramp_floor():
 @entry("RG-0248", "Outreach clicks are SCORED per recipient (human_click / human_open / uncertain / "
                   "machine) into prospects.db click_register, and the follow-up lane can only address "
                   "the human tiers -- a scanner click can never earn a resend",
-       OPEN, fixed_on="2026-09-03",
+       LOCKED, fixed_on="2026-09-03",
+       # PROMOTED 3 Sep 2026 03:25 SAST, the run after deploy_citylauncher.bat rode:
+       # GET /launch-api/prospects/human-clicks 401 (present, key-gated), register
+       # self-refreshed on the server 20 s after restart (2/52/14/60).
        scope="Every fingerprinted opened/clicked email_events row in CityLauncher/data/prospects.db, "
              "all waves, all countries. ONE scorer: CityLauncher/click_register.py (classify_clicks.py "
              "reports from it, api/server.py refreshes it on the reconcile cadence and on "

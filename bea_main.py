@@ -16760,6 +16760,27 @@ One sentence per tip, maximum 120 characters each. Return [] if the draft alread
 Return ONLY the JSON. No markdown. No explanation."""
 
 
+# INVITE-VISION-1: read-only lookup in CityLauncher's prospects.db (same box).
+# Missing DB / any error => False (gate stays closed, never opens by accident).
+_CL_PROSPECTS_DB = os.getenv("CL_PROSPECTS_DB", "/var/www/citylauncher/data/prospects.db")
+
+def _is_invited_prospect(email: str) -> bool:
+    try:
+        if not email or not os.path.exists(_CL_PROSPECTS_DB):
+            return False
+        import sqlite3 as _sq3i
+        _c = _sq3i.connect(f"file:{_CL_PROSPECTS_DB}?mode=ro", uri=True, timeout=2)
+        try:
+            row = _c.execute(
+                "SELECT 1 FROM prospects WHERE LOWER(email)=? AND emailed_at IS NOT NULL LIMIT 1",
+                (email.strip().lower(),)).fetchone()
+        finally:
+            _c.close()
+        return bool(row)
+    except Exception:
+        return False
+
+
 @app.post("/listings/vision-draft")
 async def vision_draft(
     background_tasks: BackgroundTasks,
@@ -16791,12 +16812,17 @@ async def vision_draft(
         raise HTTPException(status_code=413, detail="Too many photos — maximum 12")
 
     # Existence gate — seller_email must belong to a registered user (Session 90)
+    # INVITE-VISION-1 (3 Sep 2026): ...OR to a prospect WE invited. A magic-link
+    # arrival is not a user yet (registration happens at publish), so every invited
+    # seller was refused here with a 401 and silently fell back to "fill in the
+    # details manually" — the AI draft the outreach email promised never appeared.
+    # The spend guard stays: only addresses in our own outreach pool pass.
     _ve_email = (seller_email or "").strip().lower()
     if _ve_email:
         _vc = database.get_db()
         _ve = _vc.execute("SELECT 1 FROM users WHERE LOWER(email)=? LIMIT 1", (_ve_email,)).fetchone()
         _vc.close()
-        if not _ve:
+        if not _ve and not _is_invited_prospect(_ve_email):
             raise HTTPException(status_code=401, detail="Unrecognised account — please complete seller registration first.")
     _check_cost_ceiling(_ve_email)   # C1 — refuse if daily cost ceiling reached
 
