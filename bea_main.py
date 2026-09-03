@@ -16772,7 +16772,12 @@ def _is_invited_prospect(email: str) -> bool:
         _c = _sq3i.connect(f"file:{_CL_PROSPECTS_DB}?mode=ro", uri=True, timeout=2)
         try:
             row = _c.execute(
-                "SELECT 1 FROM prospects WHERE LOWER(email)=? AND emailed_at IS NOT NULL LIMIT 1",
+                # INVITED = left the scraped pool via a send. emailed_at alone is NOT
+                # the marker: the event handler advances status (opened/clicked) without
+                # stamping it -- 106 of the first 500 emailed rows carry NULL there.
+                "SELECT 1 FROM prospects WHERE LOWER(email)=? AND ("
+                "emailed_at IS NOT NULL OR status IN ('emailed','opened','clicked','onboarded','published')"
+                ") LIMIT 1",
                 (email.strip().lower(),)).fetchone()
         finally:
             _c.close()

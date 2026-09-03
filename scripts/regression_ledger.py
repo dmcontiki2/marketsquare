@@ -14053,7 +14053,7 @@ def rg_invite_vision_gate():
     else:
         for needle, why in (("def _is_invited_prospect", "the invited-prospect lookup is gone"),
                             ("if not _ve and not _is_invited_prospect(_ve_email):", "vision-draft gate no longer consults the outreach pool"),
-                            ("emailed_at IS NOT NULL", "the lookup no longer requires the prospect to have been emailed (guard weakened)"),
+                            ("emailed_at IS NOT NULL OR status IN ('emailed','opened','clicked'", "the lookup no longer requires the prospect to have been emailed (guard weakened)"),
                             ("mode=ro", "the prospects.db open is no longer read-only")):
             if needle not in src:
                 out.append((FAIL, "bea_main.py: %s" % why))
