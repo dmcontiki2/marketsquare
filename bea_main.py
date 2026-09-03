@@ -16382,6 +16382,97 @@ def admin_add_user(user: _AdminUserCreate, _key: str = Depends(auth.require_api_
         conn.close()
     return {"created": True, "name": name, "must_change_pin": True}
 
+# ── TUPPENCE GRANT (+1 page · GRANT-TUPPENCE-1, 3 Sep 2026) ─────────────────
+# The "first lister bonus" ops function specced for the +1 dashboard page. One
+# guarded write path for every manual Tuppence credit (first-lister bonus,
+# tester grant, goodwill) so grants stop being ad-hoc SQLite INSERTs.
+# Ledger rules: type is NEVER `topup` (revenue metrics stay clean) and NEVER
+# `monthly_allocation`/`founders_bonus` (the non-rolling sweep must not expire it).
+_GRANT_KINDS = ("first_lister_bonus", "tester_grant", "goodwill")
+_GRANT_MAX = 500
+
+class _TuppenceGrant(BaseModel):
+    email: str
+    amount: int = 25
+    kind: str = "first_lister_bonus"
+    reason: str = ""
+
+@app.post("/admin/tuppence/grant")
+def admin_tuppence_grant(body: _TuppenceGrant, admin=Depends(_require_admin)):
+    """Credit Tuppence to a user from the +1 page. Guards: user must exist; amount 1..500;
+    kind in _GRANT_KINDS; first_lister_bonus is once per email (idempotent — a repeat
+    returns the existing row, never a second credit). Writes transactions + admin_audit."""
+    email = (body.email or "").strip().lower()
+    kind = (body.kind or "").strip()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="A user email is required.")
+    if kind not in _GRANT_KINDS:
+        raise HTTPException(status_code=400, detail="kind must be one of %s" % ", ".join(_GRANT_KINDS))
+    if not (1 <= int(body.amount) <= _GRANT_MAX):
+        raise HTTPException(status_code=400, detail="amount must be 1..%d" % _GRANT_MAX)
+    actor = (admin or {}).get("sub") or (admin or {}).get("name") or "admin"
+    conn = database.get_db()
+    try:
+        u = conn.execute("SELECT id, name, seller_tier FROM users WHERE lower(email) = ?", (email,)).fetchone()
+        if not u:
+            raise HTTPException(status_code=404, detail="No user with that email — they must have an account first.")
+        if kind == "first_lister_bonus":
+            prior = conn.execute(
+                "SELECT id, amount, created_at FROM transactions WHERE lower(user_email) = ? AND type = ?",
+                (email, kind)).fetchone()
+            if prior:
+                bal = conn.execute("SELECT COALESCE(SUM(amount),0) b FROM transactions WHERE lower(user_email) = ?", (email,)).fetchone()["b"]
+                return {"granted": False, "already": True, "tx_id": prior["id"], "amount": prior["amount"],
+                        "granted_at": prior["created_at"], "balance": int(bal), "email": email}
+        desc = {"first_lister_bonus": "First-lister bonus — %dT, with thanks for listing in launch month",
+                "tester_grant": "Tester grant — %dT to test freely, with thanks",
+                "goodwill": "Goodwill credit — %dT"}[kind] % int(body.amount)
+        if body.reason.strip():
+            desc += " (" + body.reason.strip()[:160] + ")"
+        cur = conn.execute(
+            "INSERT INTO transactions (user_email, type, amount, description, created_at) "
+            "VALUES (?, ?, ?, ?, datetime('now'))", (email, kind, int(body.amount), desc))
+        tx_id = cur.lastrowid
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS admin_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, actor TEXT, "
+            "action TEXT, field TEXT, prior TEXT, new TEXT, reason TEXT)")
+        conn.execute(
+            "INSERT INTO admin_audit (ts, actor, action, field, prior, new, reason) VALUES (datetime('now'),?,?,?,?,?,?)",
+            (str(actor), "tuppence_grant", email, "", "%s:%d" % (kind, int(body.amount)), desc))
+        conn.commit()
+        bal = conn.execute("SELECT COALESCE(SUM(amount),0) b FROM transactions WHERE lower(user_email) = ?", (email,)).fetchone()["b"]
+    finally:
+        conn.close()
+    return {"granted": True, "already": False, "tx_id": tx_id, "amount": int(body.amount), "kind": kind,
+            "email": email, "name": u["name"], "tier": u["seller_tier"], "balance": int(bal)}
+
+@app.get("/admin/tuppence/recent-listers")
+def admin_recent_listers(days: int = 30, admin=Depends(_require_admin)):
+    """Sellers whose FIRST live listing landed in the last N days, excluding demo/seed
+    (@trustsquare.co, example.com) accounts, with whether the first-lister bonus is paid.
+    Feeds the +1 page card so the operator picks from real people, not seed data."""
+    days = max(1, min(int(days), 365))
+    conn = database.get_db()
+    try:
+        rows = conn.execute(
+            "SELECT l.seller_email AS email, MIN(l.created_at) AS first_listing, COUNT(*) AS n, "
+            "MIN(l.title) AS title, MIN(l.category) AS category, MIN(l.city) AS city "
+            "FROM listings l WHERE l.is_demo = 0 AND l.listing_status = 'live' AND l.seller_email IS NOT NULL "
+            "AND l.seller_email NOT LIKE '%@trustsquare.co' AND l.seller_email NOT LIKE '%@example.com' "
+            "GROUP BY l.seller_email HAVING MIN(l.created_at) >= datetime('now', ?) "
+            "ORDER BY first_listing DESC LIMIT 50", ("-%d days" % days,)).fetchall()
+        out = []
+        for r in rows:
+            paid = conn.execute("SELECT amount FROM transactions WHERE lower(user_email)=lower(?) AND type='first_lister_bonus'",
+                                (r["email"],)).fetchone()
+            out.append({"email": r["email"], "first_listing": r["first_listing"], "listings": r["n"],
+                        "title": r["title"], "category": r["category"], "city": r["city"],
+                        "bonus_paid": int(paid["amount"]) if paid else 0})
+    finally:
+        conn.close()
+    return {"days": days, "listers": out}
+
+
 @app.get("/admin/users")
 def admin_list_users(_key: str = Depends(auth.require_api_key)):
     """List all active admin team members. API-key protected."""

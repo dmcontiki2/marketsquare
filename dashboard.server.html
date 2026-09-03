@@ -1050,6 +1050,44 @@ Implication: granular rollout — enable per planner as its data source is prove
 ON: this planner may show Verified (still requires LIVE mode + the global Verified switch).
 Implication: granular rollout — enable per planner as its data source is proven.">🎒 Weekend</div><label class="ls-sw"><input type="checkbox" id="ls_p_wk" onchange="lsRender()"><span class="ls-sl"></span></label></div>
  </div>
+ <div class="ls-card" id="ls-grant">
+   <div class="ls-h">First-lister bonus · Tuppence grant <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(GRANT-TUPPENCE-1)</span></div>
+   <div id="ls-grant-list" style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Loading recent first-time listers…</div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+     <input id="ls-grant-email" type="email" placeholder="seller email" style="flex:1 1 220px;min-width:180px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-family:inherit;font-size:13px">
+     <input id="ls-grant-amt" type="number" value="25" min="1" max="500" style="width:70px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-family:inherit;font-size:13px">
+     <select id="ls-grant-kind" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-family:inherit;font-size:13px">
+       <option value="first_lister_bonus">First-lister bonus (once per email)</option>
+       <option value="tester_grant">Tester grant</option>
+       <option value="goodwill">Goodwill</option>
+     </select>
+     <button onclick="lsGrant()" style="padding:8px 14px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-weight:700;font-family:inherit;font-size:13px;cursor:pointer">Credit Tuppence</button>
+   </div>
+   <div id="ls-grant-out" class="ls-note" style="margin-top:8px;min-height:16px"></div>
+   <div class="ls-note">Writes one <code>transactions</code> row (type = the kind above, never <code>topup</code>, never swept) plus an <code>admin_audit</code> row. Seed/demo accounts (@trustsquare.co, example.com) are filtered out of the list. Pair with <code>onboarding/first_lister_bonus_email.md</code>.</div>
+ </div>
+<script>
+function lsGrantTok(){try{return sessionStorage.getItem('ms_admin_token')||'';}catch(e){return '';}}
+function lsGrantLoad(){
+  var B=(location.protocol==='file:'?'https://trustsquare.co':''), box=document.getElementById('ls-grant-list'); if(!box)return;
+  fetch(B+'/admin/tuppence/recent-listers?days=30',{headers:{'X-Admin-Token':lsGrantTok()}}).then(function(r){ if(r.status===401){box.textContent='Admin session expired — reload and log in.';return null;} return r.json(); }).then(function(d){
+    if(!d)return; if(!d.listers.length){box.textContent='No real first-time listers in the last '+d.days+' days (seed/demo accounts excluded).';return;}
+    box.innerHTML=d.listers.map(function(x){ return '<div class="ls-row" style="padding:6px 0"><div><div class="ls-nm">'+x.email+(x.bonus_paid?' <span class="ls-badge rdy">'+x.bonus_paid+'T paid</span>':' <span class="ls-badge out">no bonus yet</span>')+'</div><div class="ls-ds">'+(x.title||'')+' · '+(x.category||'')+' · '+(x.city||'')+' · first listing '+x.first_listing+'</div></div><button onclick="document.getElementById(\'ls-grant-email\').value=\''+x.email+'\'" style="border:1px solid var(--border);background:none;color:var(--text);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">use</button></div>'; }).join('');
+  }).catch(function(e){ box.textContent='Could not load listers: '+e; });
+}
+function lsGrant(){
+  var B=(location.protocol==='file:'?'https://trustsquare.co':''), out=document.getElementById('ls-grant-out');
+  var email=(document.getElementById('ls-grant-email').value||'').trim(), amt=parseInt(document.getElementById('ls-grant-amt').value,10)||0, kind=document.getElementById('ls-grant-kind').value;
+  if(!email){out.textContent='Enter the seller email.';return;}
+  if(!confirm('Credit '+amt+' Tuppence ('+kind+') to '+email+'?'))return;
+  out.textContent='Crediting…';
+  fetch(B+'/admin/tuppence/grant',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':lsGrantTok()},body:JSON.stringify({email:email,amount:amt,kind:kind})})
+   .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
+   .then(function(x){ if(!x.ok){out.textContent='✗ '+(x.j.detail||('http '+x.status));return;} var j=x.j; out.textContent=(j.already?'Already paid — tx #'+j.tx_id+' on '+j.granted_at:'✓ Credited '+j.amount+'T — tx #'+j.tx_id)+' · balance now '+j.balance+'T'; lsGrantLoad(); })
+   .catch(function(e){ out.textContent='Failed: '+e; });
+}
+document.addEventListener('DOMContentLoaded',function(){ var b=document.getElementById('vtab-launch'); if(b)b.addEventListener('click',function(){setTimeout(lsGrantLoad,50);}); });
+</script>
  <div class="ls-card">
    <div class="ls-h">What buyers see right now</div>
    <div class="ls-prev" id="ls-prev"></div>

@@ -14362,5 +14362,39 @@ def rg_no_dev_toggle_visible():
     return out
 
 
+@entry("RG-0256", "The +1 page can CREDIT Tuppence -- POST /admin/tuppence/grant exists (admin-JWT guarded), "
+                  "its kinds are never `topup`/`monthly_allocation`, and the Launch Switch view carries the "
+                  "first-lister bonus card",
+       OPEN, fixed_on="2026-09-03",
+       scope="bea_main.py + dashboard.server.html. CLASS: every manual Tuppence credit goes through this one "
+             "audited path -- no more ad-hoc sqlite INSERTs (19 Aug tester grant, the 500T dev seeds). "
+             "first_lister_bonus is once-per-email by contract.",
+       ref="GRANT-TUPPENCE-1, 3 Sep 2026. Born of David asking to bonus 'our first outside tutor' -- which "
+           "the probe showed was our own walkthrough test advert (listing 381). The function was specced "
+           "for the +1 page and not built; now built. OPEN until the deploy ref ships -> READY TO LOCK.")
+def rg_admin_tuppence_grant_path():
+    out = []
+    src = repo_file("bea_main.py")
+    if src is not None:
+        if '@app.post("/admin/tuppence/grant")' not in src:
+            out.append((FAIL, "bea_main.py has no /admin/tuppence/grant route"))
+        elif '"topup"' in src.split('_GRANT_KINDS = (')[1].split(')')[0]:
+            out.append((FAIL, "_GRANT_KINDS must never include topup"))
+        dash = repo_file("dashboard.server.html")
+        if dash is not None and 'id="ls-grant"' not in dash:
+            out.append((FAIL, "dashboard.server.html lacks the ls-grant card"))
+    try:
+        code = _post_status("/admin/tuppence/grant", b"{}")
+        if code in (401, 403, 422):
+            out.append((INFO, "live route answers %d without a token (guarded, present)" % code))
+        elif code in (404, 405):
+            out.append((FAIL, "live /admin/tuppence/grant -> %d (not deployed)" % code))
+        else:
+            out.append((INFO, "live route -> %d" % code))
+    except ProbeOffline as e:
+        out.append((FAIL, "live probe offline: %s" % str(e)[:80]))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
