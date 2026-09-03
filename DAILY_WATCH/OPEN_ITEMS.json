@@ -1,5 +1,5 @@
 {
- "next_id": 91,
+ "next_id": 92,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -886,21 +886,36 @@
   },
   "DW-090": {
    "first_seen": "2026-09-02",
-   "last_seen": "2026-09-02",
+   "last_seen": "2026-09-03",
    "sev": "LOW",
    "source": "fea_integrity_check.py --json (on-box) — recurrence of closed DW-088 (DW-064, DW-061 before it)",
    "status": "OPEN",
-   "summary": "FEA baseline one deploy stale again 16h after DW-088 closed: status ok, alerts [], notes ms.js v564->569 (1157186->1158269 B), ms.css v428->433 — today's 05:19/06:25 SAST releases. deploy_drift clean 19/19 + audit served==repo: a deploy, not a tamper. Fourth instance of the class.",
+   "summary": "FEA baseline one deploy stale again 16h after DW-088 closed: status ok, alerts [], notes ms.js v564->569 (1157186->1158269 B), ms.css v428->433 — today's 05:19/06:25 SAST releases. deploy_drift clean 19/19 + audit served==repo: a deploy, not a tamper. Fourth instance of the class. 3 Sep: still failing, now status: alert (index bytes 415200->413316, ms.js 564->581, ms.css 428->445 = 04:26 LIVE-MAP-1 release; deploy_drift clean 19/19, audit served==repo).",
    "next_action": "CTO lane (RUL-037): deploy engine (ops/autodeploy/post_deploy.sh) refreshes the baseline itself when deploy_drift reads clean, with a ledger entry. Closes when the on-box notes carry no \"looks like a deploy\" after a deploy has ridden.",
    "references": [
     "DW-088",
     "DW-064",
     "DW-061"
    ]
+  },
+  "DW-091": {
+   "first_seen": "2026-09-03",
+   "last_seen": "2026-09-03",
+   "sev": "HIGH",
+   "source": "regression ledger RG-0141 (LOCKED) — REGRESSION, exit 1",
+   "status": "OPEN",
+   "summary": "11 of 15 demo journey maps (au, au_rail, bw, c2c, gb, gb_rail, ke, mz, na, us, us_rail) lost the red DEMO tab: LIVE-MAP-1 (2d6bcfd, 06:07 SAST) regenerated them from scripts/journey_template.html, which never carried the ts_demo_banner.js line (DEMO-BANNER-1 patched the built files by hand). Shipped live 06:25 (632bede): /static/adventures_au_map.html 200 with 0 occurrences of ts_demo_banner. Customer-facing honesty label gone on launch week; class recurs on every rebuild until the template carries the line.",
+   "next_action": "CTO lane (RUL-037): add the banner script line to scripts/journey_template.html, rebuild the 11 maps, ship via request_deploy.py; RG-0141 green closes this row. Add a ledger clause asserting the template itself carries the line.",
+   "references": [
+    "RG-0141",
+    "RUL-038",
+    "RUL-040",
+    "DW-090"
+   ]
   }
  },
- "last_run": "2026-09-02",
- "last_verdict": "GREEN",
+ "last_run": "2026-09-03",
+ "last_verdict": "RED",
  "recheck_pass_2026_08_20": {
   "requested_by": "David: close all open actions",
   "items_rechecked": 15,
@@ -1230,5 +1245,32 @@
   "heartbeat": "clean — last_run 2026-09-01, today 2026-09-02",
   "checks_run": "12/13 (Monday lane not due)",
   "attended_second_pass": "DW-085 CLOSED (reboot window 18:47 SAST, 34 s down, kernel -117 -> -138, fingerprints pre==post); RG-0246 LOCKED; ledger 239/217/0 exit 0"
+ },
+ "watch_pass_2026_09_03": {
+  "verdict": "RED",
+  "occasion": "launch day +2 (Thursday, unattended)",
+  "closed": [],
+  "new": [
+   "DW-091"
+  ],
+  "still_failing": [
+   "DW-090"
+  ],
+  "not_rerunnable": [
+   "DW-010 + DW-087 (Monday lane; today Thursday)"
+  ],
+  "site": "health ok 1.3.1 (db integrity ok), root 200 in 0.45s, payment ok + paystack_connected, TLS 80d (expires 22 Nov)",
+  "ledger": "248 entries · 187 holding · 1 REGRESSED (RG-0141) · 12 open · 2 ready to lock (RG-0236, RG-0252) · 0 UNVERIFIED · exit 1 — run in 4 chunks (sandbox call cap), every entry evaluated",
+  "qa_audit": "2 findings, 0 new, both INFO (DEMO-PLACEHOLDERS, VERSION-KEY-BENIGN v581)",
+  "smoke": "on-box --local 40/40 ALL PASS; cron 39/39 all_green; parity holds (health ok / spend $0.00 of $100)",
+  "cost_sweep": "exit 0 clean; diff vs 2 Sep line-number drift only",
+  "deploy_drift": "clean 19/19",
+  "fea": "status: alert (index bytes -1884, v-bumps) = today's deploy; DW-090 still failing",
+  "orchestrator": "queue [] staged [] (fixer OFF per DW-004)",
+  "subscriptions": "35 UP / 15 HELD / 1 PLANNED, 0 issues, 0 DOWN",
+  "server": "disk 46%, post_deploy 04:26:08Z all ok",
+  "ai_watch": "clear; stale Sonnet-5 reprice claim refused (RG-0184)",
+  "heartbeat": "clean — last_run 2026-09-02, today 2026-09-03",
+  "checks_run": "12/13 (Monday lane not due)"
  }
 }
