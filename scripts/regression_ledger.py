@@ -14203,5 +14203,50 @@ def rg_stop_loss_release():
     return out
 
 
+@entry("RG-0253", "A FIRST-TIME seller can publish -- sobGoLive registers the account BEFORE it stamps "
+                  "EULA acceptance, so PUT /listings/<id>/publish is never refused with 403 'EULA not "
+                  "accepted' on a seller's very first listing",
+       OPEN, fixed_on="2026-09-03",
+       scope="Every new seller, every route (magic-link invite AND in-app Sell+), every category. "
+             "CLASS: an idempotent step ordered before the step that makes it possible. The EULA "
+             "stamp POST /users/<email>/eula ran first and 404'd (no account yet), its .catch "
+             "swallowed the miss, POST /users then created the account with eula_accepted_at NULL, "
+             "and publish refused 403. Returning sellers -- every account David ever tested on -- "
+             "already existed, so the fault was invisible to every walk but a stranger's.",
+       ref="EULA-ORDER-1, 3 Sep 2026, WALK-1 second pass (after PRICE-UNIT-1 + INVITE-VISION-1 "
+           "were live): draft 381 saved with 'R350 / hour', photo uploaded, plan chosen, EULA "
+           "scrolled + 3 attestations ticked, Go live -> uvicorn log: GET /users 401, POST "
+           "/users/.../eula 404, PUT /listings/381/publish 403 (x2). Fix: register (idempotent "
+           "INSERT OR IGNORE) then stamp; a failed stamp now logs instead of vanishing. OPEN until "
+           "the deploy ref ships ms.js: live leg = served ms.js carries EULA-ORDER-1 with the "
+           "register call textually BEFORE the eula call inside sobGoLive -> READY TO LOCK; the "
+           "human-observable proof is listing 381 (or its successor) going live on the re-walk.")
+def rg_eula_order_first_seller():
+    out = []
+    def check(js, label):
+        i = js.find("async function sobGoLive")
+        if i < 0:
+            return [(FAIL, "%s: sobGoLive is gone" % label)]
+        body = js[i:i + 6000]
+        if "EULA-ORDER-1" not in body:
+            return [(FAIL, "%s: EULA-ORDER-1 block missing from sobGoLive -- first-time sellers get 403 at publish" % label)]
+        reg = body.find("fetch(BEA_URL + '/users', {")
+        eula = body.find("/eula'")
+        if reg < 0 or eula < 0 or reg > eula:
+            return [(FAIL, "%s: sobGoLive stamps the EULA before registering the account (reg@%d eula@%d)" % (label, reg, eula))]
+        return [(INFO, "%s: register precedes EULA stamp in sobGoLive" % label)]
+    js = repo_file("ms.js")
+    out += check(js, "repo ms.js") if js is not None else [(INFO, "ms.js not beside the ledger -- source leg skipped")]
+    try:
+        html = _get("/")
+        import re as _re
+        m = _re.search(r"ms\.js\?v=(\d+)", html)
+        live = _get("/static/ms.js?v=%s" % (m.group(1) if m else "0"))
+        out += check(live, "live ms.js v=%s" % (m.group(1) if m else "?"))
+    except ProbeOffline as e:
+        out.append((FAIL, "live leg unreachable: %s" % str(e)[:80]))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

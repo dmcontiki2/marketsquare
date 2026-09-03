@@ -6473,11 +6473,23 @@ async function sobGoLive() {
   let successCount = 0;
   let failCount = 0;
 
-  // Stamp EULA acceptance once before processing drafts
+  // Stamp EULA acceptance once before processing drafts.
+  /* EULA-ORDER-1 (3 Sep 2026, WALK-1): this stamp used to run BEFORE the account
+     existed -- POST /users/<email>/eula answered 404 for every FIRST-TIME seller,
+     the error was swallowed, and PUT /listings/<id>/publish then refused with
+     403 "EULA not accepted". Returning sellers (account already there) never saw
+     it, which is why it survived every test on David's own accounts. Register
+     first (idempotent), THEN stamp. */
   if (BEA_ENABLED) {
-    await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/eula', {
-      method: 'POST', headers: { 'X-Api-Key': API_KEY }
+    await fetch(BEA_URL + '/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
+      body: JSON.stringify({ email, name: sobState.name, ai_sessions: 3 })
     }).catch(() => {});
+    const _eu = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/eula', {
+      method: 'POST', headers: { 'X-Api-Key': API_KEY }
+    }).catch(() => null);
+    if (!_eu || !_eu.ok) console.warn('sobGoLive: EULA stamp failed', _eu && _eu.status);
   }
 
   for (const draft of sobState.drafts) {

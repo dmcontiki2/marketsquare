@@ -33,3 +33,20 @@ The walk (photo → 6 steps → score 65/100 → "Continue to publish") proved t
 **03:25 SAST — CityLauncher deployed (David).** PROBED: `/launch-api/prospects/human-clicks` 401, register
 self-refreshed on the server 20 s after restart (2 human_click / 52 human_open / 14 uncertain / 60 machine).
 **RG-0248 → LOCKED.** RG-0249/0250 still wait on the MarketSquare /ship (ms.js + bea_main.py).
+
+## 2026-09-03 — /ship: PRICE-UNIT-1 + INVITE-VISION-1 live, and WALK-1 pass 2 found the THIRD blocker
+
+- 03:35Z the STAYS-NEARBY release (49fb579) already carried ms.js/bea_main.py from the nightly checkpoint;
+  PROBED live ms.js v=574 states the price basis → **RG-0249 READY TO LOCK**. RG-0250 stayed red: 106 of
+  the first 500 emailed prospects carry `emailed_at NULL` (the event handler advances status without
+  stamping it) — the gate now keys on status too (INVITE-VISION-1b), shipped 0a553b3 via the RUL-092 relay
+  lane, DEPLOY OK 03:45Z, rollback tag `ship-20260903-0544`. Live: invited address passes (400 on an
+  invalid photo, zero spend), stranger 401 → **RG-0250 READY TO LOCK**. Smoke: index 200 / 0.5 s, /health ok.
+- **WALK-1 pass 2 (live, v=575):** `cat=teachers_trainers` → Tutors ✓ · photo ✓ · six steps ✓ · draft **#381**
+  saved with `R350 / hour` ✓ · photo uploaded ✓ · plan ✓ · EULA scrolled + 3 attestations ✓ · **Go live →
+  403 "EULA not accepted"**. uvicorn: `POST /users/<email>/eula 404` fired BEFORE `POST /users` created
+  the account; the miss was swallowed. **EULA-ORDER-1 (RG-0253, OPEN):** register first, then stamp;
+  failed stamp now logs. Every FIRST-TIME seller, both routes, has hit this — David's own accounts already
+  existed, so no earlier walk could see it. Listing 381 stays draft until the re-walk after this ships.
+- Seen, not fixed: the "✨ new version just shipped — tap to refresh" pill (bottom:74px) sits ON TOP of the
+  Go live / primary button on the seller-onboard screen.
