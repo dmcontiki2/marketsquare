@@ -1,3 +1,60 @@
+## 2026-09-03 — WAVE-PLAN-V34: the ops-dashboard wave board now carries actuals through the 3 Sep 00:10 run
+
+**Asked:** David, 3 Sep: "update the wave plan inside the ops dashboard to reflect the actuals" (the dashboard's Open-the-wave-board link → `static/wave_plan.html`, source `WAVE_PLAN_LAUNCH_2026.html`).
+
+**Done:** v3.3 → **v3.4**, measured from `email_events` by SAST day: 29 Aug 90 · 30 Aug 15 · 31 Aug 20 · 1 Sep 66 · **2 Sep 257** (three runs: 00:10 task, David's 05:23 US wave across ten new cities, David's 19:03 hand-fired ladder) · 3 Sep 34 (the 00:10 task fired unattended for the first time). Cumulative 482 sent · 34 bounced · 16 opted out · 61 clicks. New rows: US A-plan wave 2 cities; the SA ladder row now shows the roll from Tutors into teachers_trainers. Blocked-this-morning block: Pretoria / Polokwane / New York stop-lossed (5 bounces each); JHB / NLP / KIM / SYD pools empty; the 4 Sep global roll cannot happen as drawn until refill + NY clean-up. Notes carry RG-0247 (RAMP-FLOOR-1 + ONE-PER-ORG-1) and PLAN-TRUTH-2.
+
+**PLAN-TRUTH-2 (3 Sep 04:20):** two small follow-ups to last night's ONE-PER-ORG-1 — (a) `sendable_by_category` now applies GOV-DOMAIN-1 like the chokepoint; (b) `get_prospects` runs the junk/privacy/government guards BEFORE the org collapse, because at 00:12 a junk row (`user@gmail.com`) took Port Elizabeth's and London's only Tutors slot and the real tutor never went out. Verified on the live DB copy: both cities now pick their real tutor. Ledger run green after healing a stranded `.git/HEAD.lock` (18:55, RG-0015's remedy).
+
+**Ships with the next deploy** (manifest line `WAVE_PLAN_LAUNCH_2026.html | static/wave_plan.html`) — David's act. Backup `WAVE_PLAN_LAUNCH_2026.html.bak-v33-*`.
+
+## 2026-09-02 — WAVE-MONITOR-1: hand-fired 19:03 wave watched live; two class fixes; RG-0244 locked
+
+**Wave:** David fired `launch_day_wave.bat` at 19:03 SAST (first wave under MIN-GAP-1 / STOP-LOSS-FLOOR-1). Claude monitored the log live. **90 sent, 0 failed** — Cape Town 12, Durban 12, Bloemfontein 12, East London 12, Port Elizabeth 10, Polokwane 24, Sydney 8; PMB/NY/London gated by min gap (sent earlier today), Pretoria stop-loss 5/59, Nelspruit/Kimberley/JHB pools empty. Server synced. CTA links `/?magic=1…` (PROBED earlier via Resend dashboard for every wave since 29 Aug — the 29–30 Aug and 1 Sep 04:xx waves carried `/admin.html`; 31 Aug and everything after the 20:24 SAST 1 Sep fix carried `/`).
+
+**Two faults the run exposed, fixed the same evening (RG-0247, LOCKED):**
+- **RAMP-FLOOR-1** — Polokwane sent 24 against a 12 cap: RAMP-1 read its 2-email wave #1 as "clean" and doubled. A wave now counts toward the streak only if ≥ `ramp.min_wave_for_streak` (default = base batch); a dirty wave of any size still breaks it.
+- **ONE-PER-ORG-1** — the Polokwane teachers_trainers batch carried six University of Limpopo departments and four Mopani TVET offices. `get_prospects` now collapses to one mailbox per normalised organisation and holds siblings of orgs already emailed in the city; `sendable_by_category` counts organisations the same way (PLAN-TRUTH-1). Targeted `--email` sends bypass.
+
+**RG-0244 LOCKED:** `deploy_citylauncher.bat` rode; `POST /launch-api/prospects/reconcile` answers 401 (was 404). The onboarded/published counters now have a live writer.
+
+Backups: `emailer.py.bak-oneperorg-20260902-191135`, `wave_runner.py.bak-rampfloor-20260902-191135`.
+
+## 2026-09-02 — PATCH-CADENCE-1: origin patched + rebooted (DW-085 closed), RG-0246 LOCKED
+
+David: "lets do it now" on the morning watch's one decision. Window 18:47 SAST, David present:
+DB `.backup` + integrity ok, 37 packages upgraded, kernel 6.8.0-117 -> 6.8.0-138, **34 s** down
+(521 at t+26s, /health 200 at t+34s). All six credential fingerprints identical pre/post in
+`/proc/<MainPID>/environ` — the DW-084 restart landmine proven defused. BIT 8/8, /payment/test ok,
+smoke ALL PASS, subscription monitor 35 UP / 0 issues. Uptime before: 97 days.
+
+Locked: **RG-0246** — newest REBOOT row in `ops/maintenance/PATCH_LOG.md` (new) must be < 45 d old
+with `reboot_required=absent`; the daily watch remains the live half. Ledger after: 239 entries ·
+217 holding · 0 REGRESSED · exit 0. DAILY_WATCH register + coverage map updated (58 green, 0 red).
+
+## 2026-09-02 — NO-STALE-IP-1: origin SSH allowlist pruned 5 → 1, self-heal now sets instead of appends, CF half retired (RUL-091)
+
+David, on the maintenance report's "prune the stale IPs with David at a calm moment": *there should
+be no stale IPs*. Executed, not listed.
+
+- **Evidence first:** server sshd log (21 days) shows ONE egress — 197.184.106.176 accepted until
+  04:36Z on 2 Sep (David's overnight tasks), then only 197.185.137.157 (this session) — no overlap,
+  so PC and sandbox share the address and the other four /32s were dead.
+- **Pruned live:** firewall `trustsquare-origin-lockdown` SSH rule set to exactly
+  `197.185.137.157/32` (was 5). Port 22 PROBED open after. 80/443 rules untouched (22 Cloudflare
+  sources each).
+- **`scripts/hetzner_fw_selfheal.py`:** heal = SET `[current IP]`, never append; "prune with
+  David" wording gone. `CF_HALF_RETIRED = True` — the PRELAUNCH GATE was disabled 19 Aug
+  (RUL-034) and the site launched 1 Sep, so the script no longer asks for `cf_waf_token.txt`.
+- **Ledger:** new **RG-0245** (LOCKED) — live leg reads the Hetzner API and fails on ≠1 source
+  IP; source leg fails if the script ever appends again. **RG-0188** INFO now states the CF half
+  is retired instead of "unarmed, token missing". Both green this run.
+- **RUL-091** recorded; `rulings_check.py` 91 checked, 0 FAIL.
+- **Incidental:** the server REBOOTED at 16:47Z mid-ledger (kernel 6.8.0-117 → 6.8.0-138 after
+  97 days up; initiator not in the journal). Caused a ~60 s 521 window that painted RG-0214/0229/
+  0233 red once; re-run green, `/health` 200, `marketsquare.service` running, disk 45%.
+- Ledger after: 238 entries, 216 holding, 0 regressed, 0 unverified, exit 0.
+
 ## 2026-09-02 — Maintenance loop (scheduled, unattended): RG-0099 lockout healed, queue empty
 
 - **RG-0099 REGRESSED → healed (SSH-LOCKOUT-1 class).** Ledger opened red: port 22 unreachable

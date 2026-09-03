@@ -28,6 +28,14 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+## 2026-09-02 — Origin patched + rebooted (DW-085 closed)
+Kernel 6.8.0-117 -> -138, 37 packages, 34 s down, credential fingerprints identical pre/post.
+RG-0246 (PATCH-CADENCE-1) LOCKED with `ops/maintenance/PATCH_LOG.md`; next reboot due < 45 d.
+
+- **NO-STALE-IP-1 (RUL-091, 2 Sep):** origin SSH allowlist pruned to the one live IP; self-heal
+  now sets-not-appends; CF token request retired. RG-0245 LOCKED. Server rebooted 16:47Z
+  (new kernel) — back up, ledger green (238 / 0 regressed).
+
 - **Maintenance loop 2 Sep (unattended):** RG-0099 lockout healed (home IP moved → added to
   Hetzner SSH allowlist, port 22 probed open). Fault queue empty (0 new / 0 fix-shipped /
   26 verified). Shadow agent heartbeat posted. Ledger 237 entries, 0 regressed, 0 unverified.

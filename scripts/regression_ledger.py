@@ -13628,7 +13628,10 @@ def rg_geo_launch_cities():
 
 @entry("RG-0244", "The CityLauncher funnel's ONBOARDED and PUBLISHED counters are FED -- a prospect "
        "who registers or goes live on MarketSquare is stamped in prospects.db, not left at 0 forever",
-       OPEN,
+       LOCKED, fixed_on="2026-09-02",
+       # PROMOTED 2 Sep 2026 evening, the run it printed READY TO LOCK: David's
+       # deploy_citylauncher.bat rode and POST /launch-api/prospects/reconcile answers 401
+       # (present, key-gated) where it answered 404 that morning.
        scope="ALL prospects in CityLauncher/data/prospects.db on the server, every status. "
              "ONE closure: reconcile_conversions() in CityLauncher/api/server.py joins prospects.email "
              "(case-folded) to marketsquare.db users (-> onboarded_at, status onboarded) and to "
@@ -13781,6 +13784,74 @@ def rg_patch_cadence():
         out.append((INFO, "last reboot window %s (%d days ago), flag absent, fingerprints pre==post" % (day, age)))
     return out
 
+
+@entry("RG-0247", "A wave never sends more than one mailbox per organisation, and the ramp never "
+       "doubles a city's batch on a wave too small to be evidence",
+       LOCKED, fixed_on="2026-09-02",
+       scope="CityLauncher/emailer/emailer.py get_prospects (+ _org_key) and "
+             "emailer/wave_runner.py ramp_state + sendable_by_category. CLASS: every city, every "
+             "category. (a) ONE-PER-ORG-1: get_prospects oversamples then collapses to one row per "
+             "normalised organisation name, and holds sibling mailboxes of any org already emailed "
+             "in that city; the plan (PLAN-TRUTH-1) counts organisations the same way so it never "
+             "promises what the chokepoint refuses. Targeted --email sends bypass (they name one "
+             "row). (b) RAMP-FLOOR-1: a clean wave counts toward the doubling streak only if it was "
+             "at least ramp.min_wave_for_streak (default = defaults.batch_size) sends; a dirty wave "
+             "of any size still breaks the streak. Asserted behaviourally on a copy of prospects.db.",
+       ref="Born of the 2 Sep 2026 19:03 SAST wave David fired by hand and Claude monitored: "
+           "Polokwane sent 24 against a 12 cap because RAMP-1 read its 2-email wave #1 as a clean "
+           "wave and doubled; and the teachers_trainers batch carried SIX University of Limpopo "
+           "departments (studentrecords@, financialaid@, accommodation@...) and four Mopani TVET "
+           "offices -- a complaint magnet with max_complaints=0. Both fixed the same evening; 90 "
+           "sent that wave, 0 failed.")
+def rg_one_per_org_ramp_floor():
+    out = []
+    base = os.path.join(REPO, "..", "CityLauncher")
+    em = os.path.join(base, "emailer", "emailer.py"); wr = os.path.join(base, "emailer", "wave_runner.py")
+    if not (os.path.exists(em) and os.path.exists(wr)):
+        return [(INFO, "CityLauncher not beside this repo -- skipped")]
+    s = open(em, encoding="utf-8").read(); w = open(wr, encoding="utf-8").read()
+    if "def _org_key" not in s or "ONE-PER-ORG-1" not in s:
+        out.append((FAIL, "emailer.py lost ONE-PER-ORG-1 -- a batch can again carry six mailboxes of one organisation"))
+    if "min_wave_for_streak" not in w:
+        out.append((FAIL, "wave_runner.py lost RAMP-FLOOR-1 -- a 2-email wave can double a city's batch again"))
+    if "_org_key" not in w:
+        out.append((FAIL, "wave_runner.sendable_by_category no longer counts organisations -- the plan promises what the chokepoint refuses"))
+    try:
+        import importlib, tempfile, shutil, json as _j
+        sys.path.insert(0, base)
+        import emailer.emailer as _em; import emailer.wave_runner as _wr
+        importlib.reload(_em); importlib.reload(_wr)
+        db = os.path.join(base, "data", "prospects.db")
+        tmp = os.path.join(tempfile.mkdtemp(), "p.db"); shutil.copy(db, tmp)
+        from pathlib import Path as _P
+        _em.DB_PATH = _P(tmp); _wr.DB_PATH = _P(tmp)
+        pol = _j.load(open(os.path.join(base, "emailer", "waves_policy.json"), encoding="utf-8"))
+        # (a) behavioural: no duplicate org in any city's pick, no org already emailed
+        import sqlite3 as _s
+        con = _s.connect(tmp); dup_hits = []
+        for city, in con.execute("SELECT DISTINCT city FROM prospects WHERE status='scraped' LIMIT 12"):
+            for cat in _wr.city_categories(city, pol)[:2]:
+                rows = _em.get_prospects(city, cat, 12)
+                keys = [_em._org_key(r.get("name"), r.get("business_name")) for r in rows]
+                keys = [k for k in keys if k]
+                if len(keys) != len(set(keys)):
+                    dup_hits.append("%s/%s" % (city, cat))
+        if dup_hits:
+            out.append((FAIL, "duplicate organisations in one pick: %s" % dup_hits[:3]))
+        # (b) behavioural: a synthetic 2-send clean wave must not raise the batch
+        class _F(dict): pass
+        orig = _wr.wave_history; orig_ev = _wr.evidence_state
+        _wr.wave_history = lambda c: [{"w": 1, "n": 2, "b": 0}]
+        _wr.evidence_state = lambda c: (True, "test")
+        allowed, streak = _wr.ramp_state("Polokwane", pol)
+        _wr.wave_history = orig; _wr.evidence_state = orig_ev
+        if allowed != pol["defaults"]["batch_size"] or streak != 0:
+            out.append((FAIL, "ramp doubled on a 2-send wave: allowed=%s streak=%s" % (allowed, streak)))
+        if not any(r == FAIL for r, _ in out):
+            out.append((INFO, "one-per-org picks clean across sampled cities; 2-send wave holds ramp at %d" % allowed))
+    except Exception as e:
+        out.append((FAIL, "behavioural leg broke: %s" % str(e)[:90]))
+    return out
 
 if __name__ == "__main__":
     sys.exit(main())
