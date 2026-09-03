@@ -69,4 +69,28 @@ Object.keys(LAYERS).forEach(function(name,i){
   if(i===0)map.addLayer(LAYERS[name]);
 });
 </script><script src="/static/ts_report.js?v=6" defer></script>
+<script>
+/* LIVE-MAP-1 (3 Sep 2026): hand-built map — stays fetched from our own server on every
+   open so linked reports show today's stays, not build-day stays. Fails silent. */
+(function(){setTimeout(function(){
+  if(typeof map==='undefined'||!map.getBounds) return;
+  var b=map.getBounds().pad(0.2);
+  var q='/geo/stays?s='+b.getSouth().toFixed(3)+'&w='+b.getWest().toFixed(3)+'&n='+b.getNorth().toFixed(3)+'&e='+b.getEast().toFixed(3);
+  var base=(location.protocol==='file:')?'https://trustsquare.co':'';
+  fetch(base+q,{credentials:'include'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+    if(!d||!d.stays||!d.stays.length) return;
+    var g=L.layerGroup();
+    d.stays.forEach(function(c){
+      g.addLayer(L.marker([c.lat,c.lng],{icon:L.divIcon({className:'',html:'<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#0e7c5b;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);font-size:15px">🛏️</span></div>',iconSize:[30,30],iconAnchor:[15,29],popupAnchor:[0,-28]})})
+        .bindPopup('<b>🛏️ '+c.city+'</b><br><b>'+c.n+'</b> stay'+(c.n===1?'':'s')+' live in MarketSquare today.<br><a href="https://trustsquare.co/?city='+encodeURIComponent(c.city)+'&cat=accommodation" target="_blank" rel="noopener" style="font-weight:700">See them ↗</a>'));
+    });
+    g.addTo(map);
+    var total=d.stays.reduce(function(a,c){return a+c.n;},0);
+    L.control.layers(null,{['🛏️ Live stays ('+total+')']:g},{collapsed:false,position:'bottomleft'}).addTo(map);
+    var st=L.control({position:'bottomleft'});
+    st.onAdd=function(){var el=L.DomUtil.create('div','');el.style.cssText='font:600 11px/1.2 Helvetica,Arial,sans-serif;color:#fff;background:rgba(14,124,91,.9);border-radius:12px;padding:5px 9px;';el.textContent='Stays live as of '+new Date(d.as_of).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});return el;};
+    st.addTo(map);
+  }).catch(function(){});
+},1200);})();
+</script>
 </body></html>

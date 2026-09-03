@@ -94,7 +94,7 @@ HUNGARY = {
    [190,55,None]),
   ("h2","The surroundings"),
   ("photos",[("sw_hu_4_campus.jpg","The campus courtyard"),("sw_hu_5_city.jpg","Parliament across the water - the free evening"),("sw_hu_6_life.jpg","Great Market Hall - groceries at student prices")]),
-  ("mapshot","sw_hu_mapshot.jpg","The surroundings, mapped - the interactive layered version (journey / campuses / student life / smart alternatives) lives in the app."),
+  ("mapshot","sw_hu_mapshot.jpg","Snapshot for print. The live map (journey / campuses / student life / smart alternatives, plus stays as of the day you open it) is at trustsquare.co/static/studywork_hu_map.html"),
   ("h1","6 - Opportunities beyond the degree"),
   ("p","- <b>Zero tuition debt</b> - you graduate owing nothing.<br/>"
       "- <b>EU mobility:</b> as an enrolled EU-university student, Erasmus+ exchange semesters across Europe open up.<br/>"
@@ -201,7 +201,7 @@ USA_FARM = {
    [190,55,None]),
   ("h2","The surroundings"),
   ("photos",[("sw_us_4_farm.jpg","Row-crop scale - the office"),("sw_us_5_town.jpg","Main street and the elevator"),("sw_us_6_life.jpg","The farmstead evening - rent-free")]),
-  ("mapshot","sw_us_mapshot.jpg","Farm country, mapped - the interactive layered version (journey / farm belt / town life / seasons) lives in the app."),
+  ("mapshot","sw_us_mapshot.jpg","Snapshot for print. The live map (journey / farm belt / town life / seasons, plus stays as of the day you open it) is at trustsquare.co/static/studywork_us_map.html"),
   ("h1","7 - What this year buys your career"),
   ("p","- <b>Large-scale mechanised experience</b> - US row-crop scale is CV gold back home.<br/>"
       "- <b>Capital:</b> free housing on H-2A makes this the rare year abroad you SAVE through.<br/>"

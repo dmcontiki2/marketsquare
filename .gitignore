@@ -175,3 +175,4 @@ CL_DEPLOY_REQUEST.flag
 DEPLOY_RESULT.txt
 CL_DEPLOY_RESULT.txt
 autodeploy_agent_log.txt
+*.flag.done-*

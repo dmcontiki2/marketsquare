@@ -13957,7 +13957,8 @@ def rg_human_clicks_register():
 @entry("RG-0249", "A self-serve rate-based listing (Tutors / Services / Adventures) can actually be "
                   "SAVED -- the sell-flow states the price basis the BEA demands, so a tutor who types "
                   "'350' into the numeric rate field is not refused with a 422 about 'R450 / hour'",
-       OPEN, fixed_on="2026-09-03",
+       LOCKED, fixed_on="2026-09-03",
+       # PROMOTED 3 Sep 2026 06:05 SAST: live ms.js v=574+ carries the composer; draft 381 saved 'R350 / hour' on the re-walk.
        scope="ALL sell-flow categories whose BEA category is in RATE_UNIT_CATEGORIES (tutors, services, "
              "adventures_experiences, adventures_accommodation), every market. CLASS: two guards built "
              "on different days disagreeing -- JNR-FIX-5B (22 Jul, BEA _validate_price_unit rejects a "
@@ -14029,7 +14030,8 @@ def rg_price_unit_selfserve():
 @entry("RG-0250", "An INVITED seller (magic-link arrival, not yet a registered user) gets the AI "
                   "photo draft -- POST /listings/vision-draft admits an address from our own outreach "
                   "pool instead of refusing it with 401 'complete seller registration first'",
-       OPEN, fixed_on="2026-09-03",
+       LOCKED, fixed_on="2026-09-03",
+       # PROMOTED 3 Sep 2026 06:05 SAST after INVITE-VISION-1b (0a553b3): invited address 400 past the gate, stranger 401.
        scope="Every magic-link arrival, every category, every market. The Session-90 existence gate "
              "(users table) stays for strangers -- the spend guard is intact -- but bea_main.py "
              "_is_invited_prospect() now also admits an email that CityLauncher emailed "
@@ -14206,7 +14208,8 @@ def rg_stop_loss_release():
 @entry("RG-0253", "A FIRST-TIME seller can publish -- sobGoLive registers the account BEFORE it stamps "
                   "EULA acceptance, so PUT /listings/<id>/publish is never refused with 403 'EULA not "
                   "accepted' on a seller's very first listing",
-       OPEN, fixed_on="2026-09-03",
+       LOCKED, fixed_on="2026-09-03",
+       # PROMOTED 3 Sep 2026 06:05 SAST: v=577 live; listing 381 published by a brand-new account on the re-walk -- 'You're live'.
        scope="Every new seller, every route (magic-link invite AND in-app Sell+), every category. "
              "CLASS: an idempotent step ordered before the step that makes it possible. The EULA "
              "stamp POST /users/<email>/eula ran first and 404'd (no account yet), its .catch "
@@ -14245,6 +14248,65 @@ def rg_eula_order_first_seller():
         out += check(live, "live ms.js v=%s" % (m.group(1) if m else "?"))
     except ProbeOffline as e:
         out.append((FAIL, "live leg unreachable: %s" % str(e)[:80]))
+    return out
+
+
+@entry("RG-0254", "Every journey / study map shows TODAY's stays -- fetched from our own server on "
+                  "open (GET /geo/stays), never baked in at build time -- so a report that links "
+                  "to a map a month later shows the stays of that day, at zero external cost",
+       OPEN, fixed_on="2026-09-03",
+       scope="All 17 map pages in the deploy manifest (11 spec-built via scripts/journey_template.html "
+             "+ 6 hand-built: za, de, uk, reserve, studywork_hu, studywork_us) and every future map "
+             "rendered from the template (personal /planner/map/<sid> included). CLASS: a report or "
+             "dossier must LINK to the live map, never embed the only copy -- a mapshot in a PDF is "
+             "a print fallback and says so in its caption.",
+       ref="LIVE-MAP-1, 3 Sep 2026. David: 'are the maps live or at the stage they were when a "
+           "Feature was requested? ... a month later there could be more new stays available.' "
+           "Probe of the repo: NO map fetched anything at runtime -- every pin came from the journey "
+           "spec (or hand-typed HTML) at build time, and the two dossier PDFs embedded a JPG "
+           "mapshot with no date and no link. Design decided by FINANCE_CANON's fixed-cost rule "
+           "(own DB, one bbox query per open; no external map/data vendor) and RUL-021's product "
+           "layers (stays = introductions, journey-wide): a 'Live stays' overlay per city with a "
+           "count + deep-link, an 'as of' stamp, and the dossier mapshot re-captioned as a snapshot "
+           "with the live URL. Listings carry a city, not coordinates, so the pin is the city pin. "
+           "OPEN until the deploy ref ships: live leg = GET /geo/stays answers JSON with an as_of, "
+           "and every served map page carries LIVE-MAP-1 -> READY TO LOCK.")
+def rg_maps_show_live_stays():
+    out = []
+    maps = ["adventures_au_map","adventures_au_rail_map","adventures_bw_map","adventures_c2c_map",
+            "adventures_de_map","adventures_gb_map","adventures_gb_rail_map","adventures_ke_map",
+            "adventures_mz_map","adventures_na_map","adventures_reserve_map","adventures_uk_map",
+            "adventures_us_map","adventures_us_rail_map","adventures_za_map",
+            "studywork_hu_map","studywork_us_map"]
+    tpl = repo_file("scripts/journey_template.html")
+    if tpl is not None and "LIVE-MAP-1" not in tpl:
+        out.append((FAIL, "journey_template.html lost the LIVE-MAP-1 block -- every rebuilt map goes static again"))
+    bea = repo_file("bea_main.py")
+    if bea is not None and '@app.get("/geo/stays")' not in bea:
+        out.append((FAIL, "bea_main.py: /geo/stays endpoint missing"))
+    missing = [m for m in maps if (repo_file(m + ".html") or "LIVE-MAP-1") .find("LIVE-MAP-1") < 0]
+    if missing:
+        out.append((FAIL, "repo maps without the live-stays layer: %s" % ", ".join(missing)))
+    try:
+        body = _get("/geo/stays?s=-35&w=16&n=-22&e=33")
+        d = json.loads(body)
+        if "as_of" not in d or "stays" not in d:
+            out.append((FAIL, "live /geo/stays answered without as_of/stays: %s" % body[:80]))
+        else:
+            out.append((INFO, "live /geo/stays: %d ZA cities with stays, as_of %s" % (len(d["stays"]), d["as_of"])))
+        dead = []
+        for m in maps:
+            try:
+                if "LIVE-MAP-1" not in _get("/static/%s.html" % m):
+                    dead.append(m)
+            except ProbeOffline:
+                dead.append(m + "(unreachable)")
+        if dead:
+            out.append((FAIL, "served maps without the live-stays layer: %s" % ", ".join(dead)))
+    except ProbeOffline as e:
+        out.append((FAIL, "live leg unreachable: %s" % str(e)[:80]))
+    except Exception as e:
+        out.append((FAIL, "live /geo/stays not answering JSON yet: %s" % repr(e)[:80]))
     return out
 
 
