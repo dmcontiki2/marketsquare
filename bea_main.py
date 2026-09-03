@@ -15505,19 +15505,34 @@ def _device_from_cookie(ts_device):
         conn.close()
 
 
+_NOT_ENROLLED_HTML = """<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><title>TrustSquare · enrol</title>
+<style>body{font-family:system-ui;background:#0b1526;color:#eee;margin:0;padding:28px}input{font-size:28px;letter-spacing:6px;width:100%%;padding:14px;border-radius:12px;border:0;text-align:center}button{width:100%%;margin-top:14px;padding:18px;font-size:20px;font-weight:700;border:0;border-radius:12px;background:#22c55e;color:#fff}small{color:#9ab}</style>
+<h2>This phone (or this browser) is not enrolled.</h2><p>%s</p>
+<form method="get" action="/admin/enrol"><input name="code" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="6-digit code" autofocus><button type="submit">Enrol this device</button></form>
+<small>Ask Claude for a code. Each code works once and for 20 minutes. Home-screen apps keep their own cookies, so enrol from inside the app you will use.</small>"""
+
+
 @app.get("/admin/enrol")
-def admin_enrol(t: str = ""):
-    """Burn a one-time enrol token, set the device cookie, land on the mobile dashboard."""
+def admin_enrol(t: str = "", code: str = ""):
+    """Burn a one-time enrol token (link ?t= or typed 6-digit ?code=), set the device cookie, land on /m."""
     from fastapi.responses import RedirectResponse
-    if not t or not _JWT_SECRET:
-        return HTMLResponse("<h2>Invalid enrolment link.</h2>", status_code=400)
+    if (not t and not code) or not _JWT_SECRET:
+        return HTMLResponse(_NOT_ENROLLED_HTML % "Type the code Claude gave you.", status_code=401, headers={"Cache-Control": "no-store"})
     conn = _admin_db()
     try:
         _device_tables(conn)
-        row = conn.execute("SELECT token, label, expires_at, used_at FROM admin_enrol_tokens WHERE token = ?",
-                           (t.strip(),)).fetchone()
+        try:
+            conn.execute("ALTER TABLE admin_enrol_tokens ADD COLUMN code TEXT")
+        except Exception:
+            pass
+        if t:
+            row = conn.execute("SELECT token, label, expires_at, used_at FROM admin_enrol_tokens WHERE token = ?",
+                               (t.strip(),)).fetchone()
+        else:
+            row = conn.execute("SELECT token, label, expires_at, used_at FROM admin_enrol_tokens WHERE code = ? AND used_at IS NULL",
+                               (code.strip(),)).fetchone()
         if not row or row["used_at"] or (row["expires_at"] and row["expires_at"] < datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")):
-            return HTMLResponse("<h2>This enrolment link has expired or was already used.</h2><p>Ask for a fresh one.</p>", status_code=410)
+            return HTMLResponse(_NOT_ENROLLED_HTML % "That link or code has expired or was already used — ask for a fresh one.", status_code=410, headers={"Cache-Control": "no-store"})
         jti = uuid.uuid4().hex
         exp = datetime.now(timezone.utc) + timedelta(days=_DEVICE_DAYS)
         conn.execute("UPDATE admin_enrol_tokens SET used_at = datetime('now') WHERE token = ?", (row["token"],))
@@ -15557,8 +15572,7 @@ def admin_device_token(ts_device: str = Cookie(default=None)):
 def _serve_gated_page(name: str, ts_device):
     from fastapi.responses import FileResponse
     if not _device_from_cookie(ts_device):
-        return HTMLResponse("<h2>This phone is not enrolled.</h2><p>Scan a fresh enrolment QR from Claude, then reopen this page.</p>",
-                            status_code=401, headers={"Cache-Control": "no-store"})
+        return HTMLResponse(_NOT_ENROLLED_HTML % "Type the code Claude gave you and this browser will be enrolled.", status_code=401, headers={"Cache-Control": "no-store"})
     path = os.path.join(_WEB_ROOT, name)
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="page not deployed")
@@ -15579,7 +15593,7 @@ def m_admin(ts_device: str = Cookie(default=None)):
 def m_index(ts_device: str = Cookie(default=None)):
     d = _device_from_cookie(ts_device)
     if not d:
-        return HTMLResponse("<h2>This phone is not enrolled.</h2>", status_code=401, headers={"Cache-Control": "no-store"})
+        return HTMLResponse(_NOT_ENROLLED_HTML % "Type the code Claude gave you and this browser will be enrolled.", status_code=401, headers={"Cache-Control": "no-store"})
     return HTMLResponse("""<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><title>TrustSquare Ops</title>
 <link rel="manifest" href="/m/manifest.webmanifest"><link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png?v=3"><link rel="icon" href="/static/brand/icon-32.png?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="TS Ops"><meta name="theme-color" content="#0b1526">

@@ -16,9 +16,15 @@ conn = sqlite3.connect(DB)
 conn.execute("""CREATE TABLE IF NOT EXISTS admin_enrol_tokens (
     token TEXT PRIMARY KEY, label TEXT, created_at TEXT DEFAULT (datetime('now')),
     expires_at TEXT, used_at TEXT)""")
+try:
+    conn.execute("ALTER TABLE admin_enrol_tokens ADD COLUMN code TEXT")
+except Exception:
+    pass
 tok = secrets.token_urlsafe(24)
+code = "%06d" % secrets.randbelow(1000000)
 exp = (datetime.now(timezone.utc) + timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S")
-conn.execute("INSERT INTO admin_enrol_tokens (token, label, expires_at) VALUES (?, ?, ?)", (tok, label, exp))
+conn.execute("INSERT INTO admin_enrol_tokens (token, label, expires_at, code) VALUES (?, ?, ?, ?)", (tok, label, exp, code))
 conn.commit(); conn.close()
 print("https://trustsquare.co/admin/enrol?t=" + tok)
+print("CODE " + code + "  (type it on the not-enrolled screen, or open trustsquare.co/admin/enrol)")
 print("valid until %s UTC, single use, label=%r" % (exp, label))
