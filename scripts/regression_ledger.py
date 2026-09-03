@@ -14398,7 +14398,7 @@ def rg_admin_tuppence_grant_path():
 
 @entry("RG-0257", "No 'David clicks' -- host-side actions Claude cannot do from the sandbox (git push with his "
        "credentials, DB-writing bats) run through a permission-backed HOST QUEUE on the existing 20-min agent",
-       OPEN,
+       LOCKED,   # promoted 3 Sep 2026 21:11 SAST: first two requests DONE on the host (git_push CityLauncher + MarketSquare)
        scope="RUL-095 HOST-QUEUE-1. Repo legs: host_queue/ALLOWLIST.txt exists and is non-empty; "
              "scripts/host_queue_worker.py REFUSES a request without a permission= line and REFUSES an "
              "action/arg not on the allowlist (both strings present); scripts/request_host_action.py requires "
