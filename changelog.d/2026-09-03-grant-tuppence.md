@@ -19,3 +19,9 @@ example.com) or Marietjie. Zero real first-time listers in the last 30 days.
 - Ledger RG-0256 (OPEN → READY TO LOCK on ship). Ships via the deploy ref.
 
 Cost model impact: none — grants are operator-initiated, capped at 500T, audited.
+
+**18:20 SAST — shipped + LOCKED.** Deploy ref 6411bf5 live (/health ok). Probed on the origin with a
+signed admin JWT: grant → 200 tx #200 balance 25 on the walkthrough test account (our own; the only
+account it was safe to prove on); repeat → `already:true`, no second credit; unknown email → 404;
+anonymous → 401. RG-0256 → LOCKED. The walkthrough account now carries 25T of test credit — it goes
+when David deletes listing 381 / user 284 (reserved).

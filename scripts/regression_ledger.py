@@ -14365,13 +14365,13 @@ def rg_no_dev_toggle_visible():
 @entry("RG-0256", "The +1 page can CREDIT Tuppence -- POST /admin/tuppence/grant exists (admin-JWT guarded), "
                   "its kinds are never `topup`/`monthly_allocation`, and the Launch Switch view carries the "
                   "first-lister bonus card",
-       OPEN, fixed_on="2026-09-03",
+       LOCKED, fixed_on="2026-09-03",
        scope="bea_main.py + dashboard.server.html. CLASS: every manual Tuppence credit goes through this one "
              "audited path -- no more ad-hoc sqlite INSERTs (19 Aug tester grant, the 500T dev seeds). "
              "first_lister_bonus is once-per-email by contract.",
        ref="GRANT-TUPPENCE-1, 3 Sep 2026. Born of David asking to bonus 'our first outside tutor' -- which "
            "the probe showed was our own walkthrough test advert (listing 381). The function was specced "
-           "for the +1 page and not built; now built. OPEN until the deploy ref ships -> READY TO LOCK.")
+           "for the +1 page and not built; now built. LOCKED 3 Sep 2026 18:20 SAST: deployed 6411bf5, probed live on the origin -- grant 200 (tx 200, balance 25), repeat 200 already=true (no 2nd credit), unknown user 404, anonymous 401.")
 def rg_admin_tuppence_grant_path():
     out = []
     src = repo_file("bea_main.py")
