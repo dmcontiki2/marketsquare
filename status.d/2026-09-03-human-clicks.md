@@ -1,0 +1,1 @@
+- **/ship 06:05 (3 Sep):** PRICE-UNIT-1 + INVITE-VISION-1(b) + EULA-ORDER-1 live (v=577). A brand-new seller's Tutors listing (#381) published end-to-end — first proof a stranger can list. RG-0249/0250/0253 LOCKED. Test listing 381 awaits David's delete. `resend_human_clicks.bat` is now safe to run (dry run first).
