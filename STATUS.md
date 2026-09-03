@@ -28,6 +28,11 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- LIVE-MAP-1 (3 Sep): all 17 journey/study maps now fetch today's stays from `/geo/stays` on open (own DB, zero external cost) with an as-of stamp; dossier mapshots re-captioned as print snapshots linking the live map. RG-0254 OPEN until the deploy ref ships the maps.
+
+- **WALK-1 (3 Sep):** real magic link walked in Chrome → self-serve Tutors/Services/Adventures listings have been IMPOSSIBLE since 22 Jul (422 price-basis vs numeric field) and invitees never got the AI draft (401 gate). Both fixed on disk — RG-0249 / RG-0250 OPEN until /ship. **Nothing an invitee did could have produced a listing; the 0 is explained.**
+- **HUMAN-CLICKS-1 live (3 Sep 03:25):** CityLauncher deployed; `/launch-api/prospects/human-clicks` 401-gated and the register self-refreshes (2 human_click / 52 human_open / 14 uncertain / 60 machine). RG-0248 LOCKED. Follow-up send (`resend_human_clicks.bat`) waits for the MarketSquare /ship that carries PRICE-UNIT-1 + INVITE-VISION-1.
+
 - **HUMAN-CLICKS-1 (3 Sep):** the "75 clicks" were mostly scanners on the unsubscribe link; 0 humans converted, no app fault. Per-recipient `click_register` now on the server (2 human_click / 48 human_open / 11 uncertain / 56 machine). Humans-only follow-up lane ready: `resend_human_clicks.bat` (dry run first). **Deploy debt:** `deploy_citylauncher.bat` (server.py: refresh + `/prospects/human-clicks`) → RG-0248 READY TO LOCK.
 
 ## 2026-09-02 — Origin patched + rebooted (DW-085 closed)
