@@ -38,7 +38,9 @@ def main() -> int:
     if len(a.permission.strip()) < 15:
         print('REFUSED: --permission must quote David and a date.'); return 1
     QDIR.mkdir(exist_ok=True)
-    name = f'{datetime.now(timezone.utc):%Y%m%d-%H%M%S}_{a.action}_{Path(a.arg).stem}.req'
+    import re
+    stem = re.sub(r'[^A-Za-z0-9_.-]+', '_', a.arg.replace('\\', '/').split('/')[-1].rsplit('.', 1)[0])
+    name = f'{datetime.now(timezone.utc):%Y%m%d-%H%M%S}_{a.action}_{stem}.req'
     (QDIR / name).write_text(
         f'action={a.action}\narg={a.arg}\nrequested_at={datetime.now(timezone.utc):%Y-%m-%dT%H:%M:%SZ}\n'
         f'permission={a.permission}\nreason={a.reason}\n', encoding='utf-8')
