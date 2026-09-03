@@ -15583,8 +15583,29 @@ def m_index(ts_device: str = Cookie(default=None)):
     return HTMLResponse("""<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><title>TrustSquare Ops</title>
 <link rel="manifest" href="/m/manifest.webmanifest"><link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png?v=3"><link rel="icon" href="/static/brand/icon-32.png?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="TS Ops"><meta name="theme-color" content="#0b1526">
-<style>body{font-family:system-ui;background:#0b1526;color:#eee;margin:0;padding:28px}a{display:block;background:#1b2b45;color:#fff;text-decoration:none;padding:20px;border-radius:14px;margin:14px 0;font-size:20px;font-weight:700}small{color:#9ab}</style>
-<h2>Enrolled: %s</h2><a href="/m/dashboard">Ops Dashboard</a><a href="/m/admin">Admin</a><a href="/launch/">CityLauncher</a><a href="/">TrustSquare app</a><small>Add this page to your home screen.</small>""" % (d["label"], d["label"]))
+<style>body{font-family:system-ui;background:#0b1526;color:#eee;margin:0;padding:28px}a{display:block;color:#fff;text-decoration:none;padding:20px;border-radius:14px;margin:14px 0;font-size:20px;font-weight:700}small{color:#9ab;display:block;margin-top:18px}</style>
+<h2>Enrolled: %s</h2><a href="/m/dashboard" style="background:#1e3a8a">Ops Dashboard</a><a href="/m/admin" style="background:#b91c1c">Admin</a><a href="/launch/" style="background:#d97706">CityLauncher</a><a href="/" style="background:#22c55e">TrustSquare app</a><small>Open any of these and use Add to Home Screen — each installs with its own colour.</small>""" % (d["label"], d["label"]))
+
+
+_APP_ICONS = {  # DEVICE-ENROL-1: four apps, four base colours (David, 3 Sep 2026)
+    "ops":    ("TrustSquare Ops Dashboard", "Ops",     "/m/dashboard", "#1e3a8a"),
+    "admin":  ("TrustSquare Admin",         "Admin",   "/m/admin",     "#b91c1c"),
+    "launch": ("CityLauncher",              "Launch",  "/launch/",     "#d97706"),
+}
+
+
+@app.get("/m/manifest-{app}.webmanifest")
+def m_manifest_app(app: str):
+    from fastapi.responses import JSONResponse
+    if app not in _APP_ICONS:
+        raise HTTPException(status_code=404)
+    name, short, start, colour = _APP_ICONS[app]
+    return JSONResponse({"name": name, "short_name": short, "start_url": start, "scope": "/",
+                         "display": "standalone", "background_color": colour, "theme_color": colour,
+                         "icons": [{"src": "/static/brand/icon-192-%s.png" % app, "sizes": "192x192", "type": "image/png"},
+                                   {"src": "/static/brand/icon-512-%s.png" % app, "sizes": "512x512", "type": "image/png"},
+                                   {"src": "/static/brand/maskable-512-%s.png" % app, "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]},
+                        media_type="application/manifest+json")
 
 
 @app.get("/m/manifest.webmanifest")
