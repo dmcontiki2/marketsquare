@@ -50,6 +50,27 @@ Target: **20 by Fri 31 Oct 2026.**
    `timeout.exe`, which dies silently under the host queue's redirected stdin.
 6. Opened RG-0263 — the supply top-up tool is locked out of our own API.
 
+## PHASE 1 — FIRST MEASUREMENT (4 Sep, 21:10 SAST, ~5 hours after the apology went out)
+
+| | |
+|---|---|
+| apology emails sent | 130 |
+| opened or clicked today | 91 people |
+| raw clicks today | 31 |
+| **clicks that are REAL PEOPLE** | **2** (click register, refreshed 19:03 UTC) |
+| published | **0** |
+
+The gap between 31 and 2 is the whole reason the plan says to score by the human tiers.
+18 of today's clickers scored `machine`, 8 `uncertain`. The two real ones:
+southparkmeadows@mathnasium.com (30 min after the send) and greensleeves.el@gmail.com
+(20:45 SAST). Both are new today — before this the register held 2 human clicks in the
+entire campaign's history.
+
+**No wave has sent today. Zero.** The cooling-off rule blocked every city: the last real
+send was 3 Sep 22:15 UTC = 4 Sep 00:15 local, so "one day between waves" ruled out the
+whole of the 4th. The scheduled task fired at 00:16 and dry-ran; the run at 12:51 dry-ran
+too. Next window opens 5 Sep, task fires 00:10 SAST automatically.
+
 ## THE PLAN
 
 `MarketSquare/ONBOARDING_PLAN.md` — the route from 0 to 20, with the arithmetic that

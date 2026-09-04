@@ -15298,5 +15298,80 @@ def rg_club_reader_collects_only():
     return out
 
 
+@entry("RG-0267", "No association page or outreach letter promises a badge we cannot issue -- "
+       "every credential shown is either a LIVE scored signal or is labelled PROPOSED, and the "
+       "two are never blurred",
+       LOCKED, fixed_on="2026-09-04",
+       scope="scripts/assoc_example_page.py + scripts/assoc_specs.json (the worked-example page "
+             "for a membership body) and CityLauncher's club letter template. TWO LEGS. (a) THE "
+             "GENERATOR CANNOT BLUR THEM: it renders a LIVE tag and a PROPOSED tag, and its "
+             "honesty paragraph says outright which credentials are not on our list and that the "
+             "points are an opening suggestion rather than a decision. (b) THE LETTER SHOWS ONLY "
+             "LIVE BADGES: the single mock card inside the cold email names only signals that "
+             "exist in bea_main today. A page may responsibly PROPOSE a badge -- it is a "
+             "proposal, sent to the body that would define it. A cold email may not, because "
+             "nobody is there to read the caveat. CLASS: any surface that paints a credential.",
+       ref="ASSOC-EXAMPLE-1, 4 Sep 2026. David hand-built a worked example for SABIO (bee "
+           "removals) and observed the same page exists for every membership body -- chess "
+           "tutors, judo clubs, dance teachers, plumbers, guides -- so it became a generator "
+           "rather than fifty hand-made pages. The rule asserted here is HIS, taken from his own "
+           "page: it marked DALRRD registration and SABIO membership as 'proposed' and said "
+           "plainly 'they are not on our credential list'. That is the discipline worth keeping, "
+           "because the failure it prevents is expensive and quiet -- an association tells its "
+           "members a badge exists, members list expecting it, and the badge never appears. "
+           "Checked against the live signal tables while writing the specs: plumbers (PIRB "
+           "licence, professional body registration, trade certificate, public liability, CIPC) "
+           "and tour guides (provincial registration, CATHSSETA, first aid, indemnity) need "
+           "NOTHING built -- every credential is already scored. Chess, judo, athletics and "
+           "dance each need one or two additions, and their pages say so.")
+def rg_no_invented_badges():
+    import json as _json, re as _re
+    out = []
+    gen = os.path.join(REPO, "scripts", "assoc_example_page.py")
+    specs = os.path.join(REPO, "scripts", "assoc_specs.json")
+    if not os.path.exists(gen) or not os.path.exists(specs):
+        return [(INFO, "SKIPPED -- the association example generator is not on this disk")]
+
+    g = open(gen, encoding="utf-8", errors="replace").read()
+    for needle, msg in (("tag-live", "the generator lost its LIVE tag"),
+                        ("tag-prop", "the generator lost its PROPOSED tag -- a page can now "
+                                     "present an unbuilt badge as if it existed"),
+                        ("Not built yet", "the generator's honesty paragraph is gone")):
+        if needle not in g:
+            out.append((FAIL, msg + " (ASSOC-EXAMPLE-1)"))
+
+    # every spec must declare both lists, so 'proposed' can never be silently dropped
+    try:
+        sp = _json.load(open(specs, encoding="utf-8"))
+    except Exception as e:
+        return out + [(FAIL, "assoc_specs.json will not parse (%s)" % str(e)[:60])]
+    for key, s in sp.items():
+        if "live" not in s or "proposed" not in s:
+            out.append((FAIL, "spec '%s' is missing its live/proposed split -- the page it "
+                              "generates cannot be honest about what exists" % key))
+
+    # (b) the cold email may name LIVE badges only
+    cl = os.path.dirname(REPO)
+    tmpl = os.path.join(cl, "CityLauncher", "emailer", "emailer.py")
+    if os.path.exists(tmpl):
+        e = open(tmpl, encoding="utf-8", errors="replace").read()
+        i = e.find("_CLUB_EXAMPLES")
+        if i < 0:
+            out.append((INFO, "club example map not present in emailer.py"))
+        else:
+            blk = e[i:i + 3000]
+            banned = [w for w in ("proposed", "PROPOSED", "FIDE Trainer", "JSA coaching",
+                                  "ASA coaching", "DALRRD", "SABIO")
+                      if w in blk]
+            if banned:
+                out.append((FAIL, "the cold email's example card names a PROPOSED badge (%s) -- "
+                                  "a letter has no room for the caveat a page carries"
+                                  % ", ".join(banned[:3])))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "live/proposed split intact in %d specs; letter shows live badges only"
+                          % len(sp)))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

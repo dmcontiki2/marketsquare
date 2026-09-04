@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bee Removals on TrustSquare ? for SABIO</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0c1a2e; --navy2:#16294a; --gold:#C8873A; --honey:#F5B301; --honey2:#FFD75E;
+  --ink:#1f2937; --muted:#6b7280; --line:#e6e2d8; --paper:#FBF7EF; --surf:#fff;
+  --new:#6B7280; --est:#3B82F6; --tru:#10B981; --high:#FBBF24;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;font-size:15px;line-height:1.6}
+h1,h2,h3,.syne{font-family:Syne,Inter,sans-serif;letter-spacing:-.4px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px 70px}
+section{margin-top:46px}
+.eyebrow{font:700 11.5px Inter;letter-spacing:1.6px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+h2{font-size:27px;color:var(--navy);margin:0 0 6px}
+.lede{color:#4b5563;max-width:730px;margin:0 0 20px;font-size:16px}
+
+/* ?? hero ??????????????????????????????????????????? */
+.hero{position:relative;overflow:hidden;background:linear-gradient(155deg,#0c1a2e 0%,#16294a 55%,#22345a 100%);color:#fff;padding:52px 18px 60px;margin-bottom:6px}
+.hero .inner{max-width:1080px;margin:0 auto;position:relative;z-index:2}
+.combs{position:absolute;inset:0;opacity:.13;z-index:1;
+  background-image:
+    linear-gradient(30deg,transparent 47%,#F5B301 47%,#F5B301 53%,transparent 53%),
+    linear-gradient(-30deg,transparent 47%,#F5B301 47%,#F5B301 53%,transparent 53%),
+    linear-gradient(90deg,transparent 47%,#F5B301 47%,#F5B301 53%,transparent 53%);
+  background-size:56px 96px}
+.hero .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(245,179,1,.15);border:1px solid rgba(245,179,1,.45);color:var(--honey2);border-radius:30px;padding:6px 15px;font:700 12px Inter;margin-bottom:16px}
+.hero h1{font-size:44px;line-height:1.08;margin:0 0 14px;max-width:760px}
+.hero h1 em{font-style:normal;color:var(--honey)}
+.hero p{max-width:660px;color:#cfdaea;font-size:17px;margin:0 0 22px}
+.heroquick{display:flex;flex-wrap:wrap;gap:10px}
+.heroquick div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:10px 15px;font:600 13.5px Inter;color:#eaf1fa}
+.heroquick div b{color:var(--honey);font-weight:800}
+@media(max-width:640px){.hero h1{font-size:31px}}
+
+/* ?? flow ??????????????????????????????????????????? */
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;align-items:stretch;margin-top:6px}
+@media(max-width:860px){.flow{grid-template-columns:1fr}}
+.step{position:relative;background:var(--surf);border:1px solid var(--line);padding:20px 18px 22px;border-right:none}
+.step:last-child{border-right:1px solid var(--line)}
+@media(max-width:860px){.step{border-right:1px solid var(--line);border-bottom:none}.step:last-child{border-bottom:1px solid var(--line)}}
+.step:first-child{border-radius:14px 0 0 14px}
+.step:last-child{border-radius:0 14px 14px 0}
+@media(max-width:860px){.step:first-child{border-radius:14px 14px 0 0}.step:last-child{border-radius:0 0 14px 14px}}
+.step .n{position:absolute;top:-13px;left:18px;width:27px;height:27px;border-radius:50%;background:var(--navy);color:var(--honey);display:flex;align-items:center;justify-content:center;font:800 13px Syne;border:2px solid var(--paper)}
+.step .ic{font-size:27px;margin-bottom:8px}
+.step h3{margin:0 0 5px;font-size:15.5px;color:var(--navy)}
+.step p{margin:0;font-size:13.5px;color:#5b6472;line-height:1.5}
+.step .who{margin-top:10px;display:inline-block;background:#FFF6DF;border:1px solid #F3DCA4;color:#8a6414;border-radius:20px;padding:3px 10px;font:700 11px Inter}
+
+/* ?? phone mock ????????????????????????????????????? */
+.split{display:grid;grid-template-columns:340px 1fr;gap:34px;align-items:start}
+@media(max-width:860px){.split{grid-template-columns:1fr}}
+.phone{background:var(--navy);border-radius:32px;padding:9px;box-shadow:0 22px 50px rgba(12,26,46,.28);margin:0 auto;width:100%;max-width:340px}
+.pscreen{background:#f6f7fa;border-radius:25px;overflow:hidden}
+.ptop{background:var(--navy);color:#fff;padding:13px 15px 12px}
+.ptop .b{font:800 15px Syne}
+.ptop .b span{color:var(--gold)}
+.ptop .s{font-size:11px;color:#9fb0c6;margin-top:2px}
+.psearch{margin-top:9px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:8px 10px;color:#cfdae8;font-size:12px}
+.plist{padding:11px 11px 15px}
+.pcard{background:#fff;border:1px solid #e7e9ee;border-radius:13px;padding:11px;margin-bottom:9px;box-shadow:0 1px 3px rgba(12,26,46,.05)}
+.pcard .row1{display:flex;gap:9px;align-items:flex-start}
+.av{width:38px;height:38px;border-radius:11px;background:linear-gradient(140deg,#FFE9A8,#F5B301);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
+.pcard .t{font:700 13px Inter;color:var(--navy);line-height:1.3}
+.pcard .m{font-size:11.5px;color:var(--muted);margin-top:2px}
+.tsbadge{margin-left:auto;flex:0 0 auto;border-radius:20px;padding:3px 9px;font:800 11px Inter;white-space:nowrap}
+.ts-high{background:#FEF3C7;color:#92660b;border:1px solid #FBBF24}
+.ts-tru{background:#DCFCE7;color:#15803d;border:1px solid #86efac}
+.ts-est{background:#DBEAFE;color:#1d4ed8;border:1px solid #93c5fd}
+.creds{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.cred{background:#F4F7FB;border:1px solid #dbe3ee;border-radius:20px;padding:3px 8px;font:700 10.5px Inter;color:#33507a}
+.cred.bee{background:#FFF6DF;border-color:#F3DCA4;color:#8a6414}
+.pcard .foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:9px;border-top:1px dashed #e7e9ee}
+.pcard .price{font:800 13px Inter;color:var(--navy)}
+.pcard .cta{background:var(--navy);color:#fff;border-radius:20px;padding:5px 11px;font:700 11px Inter}
+.privnote{background:#eef2f7;border-radius:11px;padding:9px 11px;font-size:11px;color:#4a5568;margin:2px 0 0;line-height:1.45}
+
+/* ?? two columns: shown / hidden ???????????????????? */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:720px){.cols{grid-template-columns:1fr}}
+.col{background:var(--surf);border:1px solid var(--line);border-radius:15px;padding:19px 20px}
+.col h3{margin:0 0 4px;font-size:16px;color:var(--navy);display:flex;align-items:center;gap:8px}
+.col.shown{border-top:4px solid var(--tru)}
+.col.hidden-c{border-top:4px solid #cbd5e1}
+.col ul{margin:11px 0 0;padding-left:0;list-style:none}
+.col li{padding:7px 0;border-bottom:1px dashed #eceef2;font-size:14px;display:flex;gap:9px;align-items:flex-start}
+.col li:last-child{border-bottom:none}
+.col li b{font-weight:700;color:var(--navy)}
+.tick{color:var(--tru);font-weight:800}
+.cross{color:#94a3b8;font-weight:800}
+.col .after{margin-top:12px;background:#f8fafc;border-left:3px solid var(--gold);padding:9px 11px;font-size:12.5px;color:#475569;border-radius:0 8px 8px 0}
+/* ?? trust score builder ???????????????????????????? */
+.tsbox{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:22px 22px 24px}
+.bands{display:flex;gap:0;border-radius:9px;overflow:hidden;margin:4px 0 20px;font:700 11px Inter;text-align:center;color:#fff}
+.bands div{padding:6px 4px}
+.b1{background:var(--new);flex:39}.b2{background:var(--est);flex:30}.b3{background:var(--tru);flex:20}.b4{background:var(--high);color:#5c4507;flex:11}
+.stack{display:flex;flex-direction:column;gap:9px}
+.srow{display:grid;grid-template-columns:230px 1fr 54px;gap:12px;align-items:center}
+@media(max-width:720px){.srow{grid-template-columns:1fr;gap:3px}}
+.srow .lab{font-size:13.5px;color:#374151}
+.srow .lab b{color:var(--navy)}
+.srow .lab small{display:block;color:var(--muted);font-size:11.5px;line-height:1.35}
+.bar{height:26px;background:#f1f3f7;border-radius:7px;overflow:hidden;position:relative}
+.fill{height:100%;border-radius:7px;display:flex;align-items:center;justify-content:flex-end;padding-right:9px;color:#fff;font:800 11.5px Inter;transition:width .8s ease}
+.f-base{background:linear-gradient(90deg,#94a3b8,#64748b)}
+.f-dal{background:linear-gradient(90deg,#F5B301,#C8873A)}
+.f-sab{background:linear-gradient(90deg,#FFD75E,#F5B301);color:#5c4507}
+.f-ins{background:linear-gradient(90deg,#60a5fa,#3b82f6)}
+.f-id{background:linear-gradient(90deg,#34d399,#10b981)}
+.f-extra{background:linear-gradient(90deg,#a78bfa,#8b5cf6)}
+.srow .tot{text-align:right;font:800 14px Inter;color:var(--navy)}
+.result{margin-top:20px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:linear-gradient(100deg,#FFFBF0,#fff);border:1px solid #F3DCA4;border-radius:13px;padding:15px 18px}
+.result .big{font:800 34px Syne;color:var(--navy);line-height:1}
+.result .lbl{font:800 12px Inter;letter-spacing:.6px;text-transform:uppercase;background:#FEF3C7;color:#92660b;border:1px solid #FBBF24;border-radius:20px;padding:4px 11px}
+.result p{margin:0;font-size:13.5px;color:#4b5563;flex:1;min-width:230px}
+
+/* ?? proposed flag ?????????????????????????????????? */
+.flag{display:inline-block;background:#EEF2FF;border:1px solid #C7D2FE;color:#3730a3;border-radius:6px;padding:2px 7px;font:700 10.5px Inter;vertical-align:2px;margin-left:6px}
+
+/* ?? sabio value cards ?????????????????????????????? */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+@media(max-width:860px){.grid3{grid-template-columns:1fr}}
+.vcard{background:var(--surf);border:1px solid var(--line);border-radius:15px;padding:20px;position:relative;overflow:hidden}
+.vcard:before{content:"";position:absolute;right:-26px;top:-26px;width:88px;height:88px;background:radial-gradient(circle,#FFF0C4,transparent 70%)}
+.vcard .ic{font-size:25px;margin-bottom:9px}
+.vcard h3{margin:0 0 5px;font-size:16px;color:var(--navy)}
+.vcard p{margin:0;font-size:13.5px;color:#5b6472}
+
+/* ?? honest note ???????????????????????????????????? */
+.honest{background:#fff;border:1px solid var(--line);border-left:5px solid var(--gold);border-radius:0 15px 15px 0;padding:20px 22px}
+.honest h3{margin:0 0 8px;font-size:16px;color:var(--navy)}
+.honest ul{margin:8px 0 0;padding-left:19px}
+.honest li{margin:6px 0;font-size:14px}
+.foot{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px;text-align:center}
+.foot b{color:var(--navy)}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="combs"></div>
+  <div class="inner">
+    <div class="badge">? Prepared for SABIO · September 2026</div>
+    <h1>Every registered bee remover in the province, <em>findable</em> ? and their certificates finally worth something.</h1>
+    <p>A free listing on TrustSquare for SABIO members. The public finds them by area. Their DALRRD
+       registration and SABIO membership show as verified badges. And nobody's name, address or phone
+       number is published anywhere.</p>
+    <div class="heroquick">
+      <div>Cost to a remover <b>R0</b></div>
+      <div>Cost to SABIO <b>R0</b></div>
+      <div>Enquiries are <b>paid for before they reach you</b></div>
+      <div>Details shared <b>only when the remover agrees</b></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<section>
+  <div class="eyebrow">How it would reach your members</div>
+  <h2>Four steps, and SABIO only does the first one</h2>
+  <p class="lede">No lists change hands. SABIO never sends us a member's details, and we never ask for
+     them. The word goes out through the channels that already exist, and each remover decides for
+     themselves.</p>
+  <div class="flow">
+    <div class="step"><div class="n">1</div><div class="ic">?</div>
+      <h3>SABIO passes the word</h3>
+      <p>One note down the existing channels ? provincial associations, the members' mailing list,
+         the WhatsApp groups that already run.</p>
+      <span class="who">SABIO · one email</span></div>
+    <div class="step"><div class="n">2</div><div class="ic">?</div>
+      <h3>A remover lists themselves</h3>
+      <p>Free. A few minutes on a phone. What they do, the areas they cover, what they charge, and
+         a photo or two of a real removal.</p>
+      <span class="who">The remover · 5 minutes</span></div>
+    <div class="step"><div class="n">3</div><div class="ic">??</div>
+      <h3>Certificates become badges</h3>
+      <p>They upload their DALRRD registration and SABIO membership. Both are checked, and both
+         lift the Trust Score the public sees.</p>
+      <span class="who">The remover · once a year</span></div>
+    <div class="step"><div class="n">4</div><div class="ic">?</div>
+      <h3>The public finds them</h3>
+      <p>Somebody with a swarm in the wall searches their suburb, pays a small fee to ask for an
+         introduction, and the remover decides whether to take it.</p>
+      <span class="who">Automatic</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">What it looks like on a phone</div>
+  <h2>Someone in Centurion searches ?bee removal?</h2>
+  <p class="lede">This is a mock-up with made-up examples. Notice what is <b>not</b> on the cards: no
+     business name, no address, no phone number. The certificates are visible; the person is not.</p>
+  <div class="split">
+    <div>
+      <div class="phone"><div class="pscreen">
+        <div class="ptop">
+          <div class="b">Trust<span>Square</span></div>
+          <div class="s">Services · Centurion</div>
+          <div class="psearch">? bee removal</div>
+        </div>
+        <div class="plist">
+          <div class="pcard">
+            <div class="row1">
+              <div class="av">?</div>
+              <div><div class="t">Live bee removal &amp; relocation</div>
+                   <div class="m">Services · Centurion · 7+ years</div></div>
+              <div class="tsbadge ts-high">? 94</div>
+            </div>
+            <div class="creds"><span class="cred bee">?? DALRRD registered</span><span class="cred bee">? SABIO member</span><span class="cred">?? Insured</span><span class="cred">? ID verified</span></div>
+            <div class="foot"><span class="price">From R950</span><span class="cta">Request introduction · 1T</span></div>
+          </div>
+          <div class="pcard">
+            <div class="row1">
+              <div class="av">?</div>
+              <div><div class="t">Swarm removal, roofs &amp; wall cavities</div>
+                   <div class="m">Services · Highveld · 3?7 years</div></div>
+              <div class="tsbadge ts-tru">? 77</div>
+            </div>
+            <div class="creds"><span class="cred bee">?? DALRRD registered</span><span class="cred bee">? SABIO member</span><span class="cred">? ID verified</span></div>
+            <div class="foot"><span class="price">From R750</span><span class="cta">Request introduction · 1T</span></div>
+          </div>
+          <div class="pcard">
+            <div class="row1">
+              <div class="av">?</div>
+              <div><div class="t">Bee removal ? after hours</div>
+                   <div class="m">Services · Olievenhoutbosch</div></div>
+              <div class="tsbadge ts-est">? 55</div>
+            </div>
+            <div class="creds"><span class="cred">? ID verified</span></div>
+            <div class="foot"><span class="price">From R600</span><span class="cta">Request introduction · 1T</span></div>
+          </div>
+          <p class="privnote">Ranked by trust and by how complete the advert is ? never by who paid.
+             The two certified removers sit above the uncertified one on merit.</p>
+        </div>
+      </div></div>
+    </div>
+    <div class="cols" style="grid-template-columns:1fr">
+      <div class="col shown">
+        <h3><span class="tick">?</span> What the public sees</h3>
+        <ul>
+          <li><span class="tick">?</span><span>What the remover <b>does</b> ? live removal, relocation, roofs, wall cavities, after hours</span></li>
+          <li><span class="tick">?</span><span>The <b>general area</b> they work in ? suburb or town, never a street address</span></li>
+          <li><span class="tick">?</span><span>Their <b>Trust Score</b> and the badges they have earned</span></li>
+          <li><span class="tick">?</span><span>A <b>price guide</b> and photos of the work</span></li>
+        </ul>
+      </div>
+      <div class="col hidden-c">
+        <h3><span class="cross">?</span> What is never published</h3>
+        <ul>
+          <li><span class="cross">?</span><span>Their <b>name</b> and their <b>business name</b></span></li>
+          <li><span class="cross">?</span><span>Their <b>phone number</b> and <b>email address</b></span></li>
+          <li><span class="cross">?</span><span>Their <b>home or yard address</b></span></li>
+        </ul>
+        <div class="after">These are exchanged at one moment only: when somebody asks for an
+          introduction <b>and</b> the remover accepts it. Then the two of them swap details and deal
+          with each other directly. TrustSquare takes nothing from the job itself.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Why a SABIO member starts ahead</div>
+  <h2>What the certificates are actually worth</h2>
+  <p class="lede">Every seller on TrustSquare starts on 40. Credentials are checked and add points, and
+     the score decides who is seen first. A DALRRD-registered SABIO member is in the green band before
+     they have taken a single job.</p>
+  <div class="tsbox">
+    <div class="bands">
+      <div class="b1">0?39 · New</div><div class="b2">40?69 · Established</div>
+      <div class="b3">70?89 · Trusted</div><div class="b4">90+ · Highly Trusted</div>
+    </div>
+    <div class="stack">
+      <div class="srow">
+        <div class="lab"><b>Everyone starts here</b><small>the base every seller shares</small></div>
+        <div class="bar"><div class="fill f-base" style="width:40%">40</div></div>
+        <div class="tot">40</div>
+      </div>
+      <div class="srow">
+        <div class="lab"><b>DALRRD registration</b> <span class="flag">proposed</span><small>the annual certificate the law already requires</small></div>
+        <div class="bar"><div class="fill f-dal" style="width:52%">+12</div></div>
+        <div class="tot">52</div>
+      </div>
+      <div class="srow">
+        <div class="lab"><b>SABIO membership</b> <span class="flag">proposed</span><small>current, in good standing</small></div>
+        <div class="bar"><div class="fill f-sab" style="width:57%">+5</div></div>
+        <div class="tot">57</div>
+      </div>
+      <div class="srow">
+        <div class="lab"><b>Public liability insurance</b><small>already on our list for trades</small></div>
+        <div class="bar"><div class="fill f-ins" style="width:62%">+5</div></div>
+        <div class="tot">62</div>
+      </div>
+      <div class="srow">
+        <div class="lab"><b>ID verified by TrustSquare</b><small>already on our list, for every category</small></div>
+        <div class="bar"><div class="fill f-id" style="width:77%">+15</div></div>
+        <div class="tot">77</div>
+      </div>
+      <div class="srow">
+        <div class="lab"><b>Years on the job, first aid, buyer referrals</b><small>earned over time, already on our list</small></div>
+        <div class="bar"><div class="fill f-extra" style="width:94%">+17</div></div>
+        <div class="tot">94</div>
+      </div>
+    </div>
+    <div class="result">
+      <div class="big">94</div>
+      <div class="lbl">? Highly Trusted</div>
+      <p>A certified, insured, ID-verified remover with a few years behind them and some happy
+         customers lands in the top band. An uncertified operator advertising the same work sits at
+         40 to 55 ? and sits below them on the page.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">What is in it for SABIO</div>
+  <h2>Membership becomes something the public can see</h2>
+  <div class="grid3">
+    <div class="vcard"><div class="ic">??</div>
+      <h3>The certificate earns its keep</h3>
+      <p>Right now a DALRRD certificate sits in a drawer. Here it is a visible badge that puts a
+         member above an uncertified operator in a public search ? a straight, honest reason to
+         join SABIO and stay registered.</p></div>
+    <div class="vcard"><div class="ic">?</div>
+      <h3>Nobody is exposed</h3>
+      <p>SABIO sends no list and we ask for none. No member's name, number or address is published.
+         A remover who wants nothing to do with it simply does nothing.</p></div>
+    <div class="vcard"><div class="ic">?</div>
+      <h3>Safer removals, fewer cowboys</h3>
+      <p>The public currently phones whoever comes up first. Here the registered, insured operator
+         is the one they see first ? which is the outcome SABIO exists to push.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="honest">
+    <h3>Being straight about what is live and what is not</h3>
+    <ul>
+      <li><b>Live today:</b> free listings, the Trust Score and its four bands, ID verification,
+          public liability insurance and years-of-experience as scored signals, the anonymity, and
+          the paid introduction.</li>
+      <li><b>Not built yet:</b> DALRRD registration and SABIO membership are <b>not</b> on our
+          credential list ? they are marked <span class="flag">proposed</span> above. Adding them is a
+          small change on our side, and the points shown are our opening suggestion, not a decision.
+          What they should be worth is exactly where SABIO's view would carry more weight than ours.</li>
+      <li><b>Bee removal is not a category of its own.</b> It would sit under Services, the same place
+          a plumber or an electrician sits.</li>
+      <li><b>Nothing has been sent to anybody.</b> This is a proposal for SABIO to look at first.</li>
+    </ul>
+  </div>
+</section>
+
+<div class="foot">
+  <b>TrustSquare</b> · trustsquare.co · Prepared for SABIO, 4 September 2026<br>
+  Listings shown are mock-ups with invented examples. No real member or business appears on this page.
+</div>
+
+</div>
+</body>
+</html>
