@@ -6,6 +6,33 @@ ONBOARDING_GOAL.md is the contract. This file is the route between them.*
 
 ---
 
+## 0. HONEST SCORECARD — 4 Sep, first working day
+
+David's challenge, and it is fair: *"i dont know how this brainstorming helps you get to the
+20 listings."*
+
+| | |
+|---|---|
+| the number, start of day | 0 |
+| the number, end of day | **0** |
+| emails that actually went to a stranger | **130** (the apology to people who engaged) |
+| wave emails | 0 — the cooling-off rule blocked every city |
+| artefacts built | 7 association pages, a club letter, a club reader, an importer |
+| artefacts SENT to anyone | **0** |
+
+What the day genuinely bought: the listing floor is fixed and proven, the scoring instrument
+is honest, supply roughly doubled (295 club contacts proven from two pages of one sport), and
+one wasted wave was prevented (the 1,509 "teachers" are schools, not teachers).
+
+What it did NOT buy: a single listing. **All of the association work is PHASE 3 supply. It
+does not produce a publisher this week, and the agent let that thread run for hours without
+saying so.** The discipline this file exists to enforce is: measure first, fix the drop-off,
+THEN spend the list. Building supply is not a substitute for either of the first two.
+
+**Standing correction for future sessions:** when a good idea arrives mid-Phase-1, capture it
+as a spec and say plainly that it is Phase 3 work. Do not follow it to completion while the
+measurement it depends on is still running.
+
 ## 1. THE ARITHMETIC — read this before proposing anything
 
 Everything we know, measured on the live server 4 Sep 2026:
@@ -162,6 +189,28 @@ real data on 4 Sep: one-per-org held 237 sibling mailboxes and the government fi
 45 officers' .gov.za addresses across the two provinces read. A wrong or dead address is
 not a wasted email on this lane, it is a burnt contact — which is exactly why the accuracy
 of the list, not its size, is the thing to protect.
+
+## 5b. THE ONE THING THAT STOPS THE AGENT RUNNING THIS ALONE
+
+Everything in this plan is inside the agent's authority except one recurring act: **a letter
+going out over David's name to strangers.** Code, deploys, commits, scraping, importing,
+measuring, fixing and the gated wave all run unattended today and were proven to on 4 Sep.
+
+But every NEW audience needs a NEW letter, and every letter is commercial positioning —
+reserved under RUL-096(f). That is correct as a principle and wrong as a mechanism: it is a
+per-letter gate, so it stops the agent every single time, which is exactly the "David clicks"
+pattern RUL-095 set out to kill.
+
+**The fix, and it is David's to give or refuse: approve the PATTERN once, not each letter.**
+A standing authority of the shape — an outreach letter may send without individual review if
+it (a) follows the approved structure of the club letter, (b) names only credentials that are
+LIVE in the product (RG-0267), (c) carries the unsubscribe link and the line saying where we
+got the address, (d) passes journey_check before the first send, and (e) is filed to
+`visuals/letters/` at the moment it sends so David can read anything already gone. Anything
+outside that shape still comes to him.
+
+Until that exists, the honest position is: the agent can run the whole route EXCEPT the
+moment of first contact with a new audience, and will stall there every time.
 
 ## 6. WHAT IS NOT THE PLAN
 

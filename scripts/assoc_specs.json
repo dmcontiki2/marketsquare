@@ -1,151 +1,652 @@
 {
   "chess": {
-    "assoc": "CHESSA", "assoc_full": "Chess South Africa",
-    "trade": "Chess coaching", "noun": "coach", "nouns": "coaches",
-    "app_category": "Tutors", "city": "Johannesburg",
+    "assoc": "CHESSA",
+    "assoc_full": "Chess South Africa",
+    "trade": "Chess coaching",
+    "noun": "coach",
+    "nouns": "coaches",
+    "app_category": "Tutors",
+    "city": "Johannesburg",
     "hook": "Every titled chess coach in the country, findable — and their FIDE title finally worth something.",
     "search": "chess coach",
     "cards": [
-      {"title": "FIDE-rated coach — juniors & tournament prep", "meta": "Tutors · Sandton · 7+ years", "score": 92,
-       "badges": ["FIDE Trainer title", "SACE registered", "Police clearance", "ID verified"], "price": "From R450 / hour"},
-      {"title": "Chess coaching, beginner to 1400 Elo", "meta": "Tutors · Randburg · 3–7 years", "score": 74,
-       "badges": ["SACE registered", "Police clearance", "ID verified"], "price": "From R320 / hour"},
-      {"title": "Chess lessons, after school", "meta": "Tutors · Roodepoort", "score": 52,
-       "badges": ["ID verified"], "price": "From R200 / hour"}
+      {
+        "title": "FIDE-rated coach — juniors & tournament prep",
+        "meta": "Tutors · Sandton · 7+ years",
+        "score": 92,
+        "badges": [
+          "FIDE Trainer title",
+          "SACE registered",
+          "Police clearance",
+          "ID verified"
+        ],
+        "price": "From R450 / hour"
+      },
+      {
+        "title": "Chess coaching, beginner to 1400 Elo",
+        "meta": "Tutors · Randburg · 3–7 years",
+        "score": 74,
+        "badges": [
+          "SACE registered",
+          "Police clearance",
+          "ID verified"
+        ],
+        "price": "From R320 / hour"
+      },
+      {
+        "title": "Chess lessons, after school",
+        "meta": "Tutors · Roodepoort",
+        "score": 52,
+        "badges": [
+          "ID verified"
+        ],
+        "price": "From R200 / hour"
+      }
     ],
-    "live": [["Government-issued ID verified", 15], ["SACE registration", 8], ["Police clearance / DBS check", 8],
-             ["Teaching experience 5+ years", 6], ["Safeguarding / child protection cert", 3]],
-    "proposed": [["FIDE Trainer / Instructor title", 12], ["CHESSA membership in good standing", 5]],
+    "live": [
+      [
+        "Government-issued ID verified",
+        15
+      ],
+      [
+        "SACE registration",
+        8
+      ],
+      [
+        "Police clearance / DBS check",
+        8
+      ],
+      [
+        "Teaching experience 5+ years",
+        6
+      ],
+      [
+        "Safeguarding / child protection cert",
+        3
+      ]
+    ],
+    "proposed": [
+      [
+        "FIDE Trainer / Instructor title",
+        12
+      ],
+      [
+        "CHESSA membership in good standing",
+        5
+      ]
+    ],
     "assoc_wins": [
-      ["The title earns its keep", "A FIDE Trainer title currently means something only to other chess players. Here it is a badge the parent of a beginner can see — and a straight reason to keep the title current."],
-      ["Parents can tell a coach from a hobbyist", "A parent searching “chess coach” today has no way to tell them apart. Ranked by credential, the titled coach is the one they see first."],
-      ["Nobody is exposed", "CHESSA sends no list and we ask for none. No coach's name, number or address is published."]
+      [
+        "The title earns its keep",
+        "A FIDE Trainer title currently means something only to other chess players. Here it is a badge the parent of a beginner can see — and a straight reason to keep the title current."
+      ],
+      [
+        "Parents can tell a coach from a hobbyist",
+        "A parent searching “chess coach” today has no way to tell them apart. Ranked by credential, the titled coach is the one they see first."
+      ],
+      [
+        "Nobody is exposed",
+        "CHESSA sends no list and we ask for none. No coach's name, number or address is published."
+      ]
     ],
     "extra": "We already hold a verified public registry of 4,237 FIDE trainers, so the title check is a lookup, not paperwork."
   },
   "judo": {
-    "assoc": "Judo South Africa", "assoc_full": "Judo South Africa",
-    "trade": "Judo coaching", "noun": "coach", "nouns": "coaches",
-    "app_category": "Tutors", "city": "Durban",
+    "assoc": "Judo South Africa",
+    "assoc_full": "Judo South Africa",
+    "trade": "Judo coaching",
+    "noun": "coach",
+    "nouns": "coaches",
+    "app_category": "Tutors",
+    "city": "Durban",
     "hook": "Every graded judo coach in the province, findable — and their dan grade and coaching licence finally worth something.",
     "search": "judo classes",
     "cards": [
-      {"title": "Judo — juniors, gradings and competition squad", "meta": "Tutors · Umhlanga · 7+ years", "score": 90,
-       "badges": ["JSA coach licence", "Dan grade verified", "First aid current", "Police clearance", "ID verified"], "price": "From R380 / month"},
-      {"title": "Judo for beginners, ages 6–12", "meta": "Tutors · Pinetown · 3–7 years", "score": 71,
-       "badges": ["Police clearance", "First aid current", "ID verified"], "price": "From R300 / month"},
-      {"title": "Self-defence and judo basics, adults", "meta": "Tutors · Westville", "score": 48,
-       "badges": ["ID verified"], "price": "From R250 / month"}
+      {
+        "title": "Judo — juniors, gradings and competition squad",
+        "meta": "Tutors · Umhlanga · 7+ years",
+        "score": 90,
+        "badges": [
+          "JSA coach licence",
+          "Dan grade verified",
+          "First aid current",
+          "Police clearance",
+          "ID verified"
+        ],
+        "price": "From R380 / month"
+      },
+      {
+        "title": "Judo for beginners, ages 6–12",
+        "meta": "Tutors · Pinetown · 3–7 years",
+        "score": 71,
+        "badges": [
+          "Police clearance",
+          "First aid current",
+          "ID verified"
+        ],
+        "price": "From R300 / month"
+      },
+      {
+        "title": "Self-defence and judo basics, adults",
+        "meta": "Tutors · Westville",
+        "score": 48,
+        "badges": [
+          "ID verified"
+        ],
+        "price": "From R250 / month"
+      }
     ],
-    "live": [["Government-issued ID verified", 15], ["Police clearance / DBS check", 8],
-             ["Teaching experience 5+ years", 6], ["Safeguarding / child protection cert", 3],
-             ["Certificate or Diploma (NQF5–6)", 6]],
-    "proposed": [["JSA coaching licence, current", 12], ["Dan grade verified against the JSA register", 6]],
+    "live": [
+      [
+        "Government-issued ID verified",
+        15
+      ],
+      [
+        "Police clearance / DBS check",
+        8
+      ],
+      [
+        "Teaching experience 5+ years",
+        6
+      ],
+      [
+        "Safeguarding / child protection cert",
+        3
+      ],
+      [
+        "Certificate or Diploma (NQF5–6)",
+        6
+      ]
+    ],
+    "proposed": [
+      [
+        "JSA coaching licence, current",
+        12
+      ],
+      [
+        "Dan grade verified against the JSA register",
+        6
+      ]
+    ],
     "assoc_wins": [
-      ["A licence a parent can actually see", "A JSA coaching licence sits in a file. Here it is the thing that puts a licensed coach above an unlicensed one in a public search."],
-      ["Safeguarding becomes visible", "Judo is a contact sport taught to children. Police clearance and safeguarding are already scored signals — the coaches who have them are the ones parents find first."],
-      ["Nobody is exposed", "JSA sends no list and we ask for none. A coach who wants nothing to do with it simply does nothing."]
+      [
+        "A licence a parent can actually see",
+        "A JSA coaching licence sits in a file. Here it is the thing that puts a licensed coach above an unlicensed one in a public search."
+      ],
+      [
+        "Safeguarding becomes visible",
+        "Judo is a contact sport taught to children. Police clearance and safeguarding are already scored signals — the coaches who have them are the ones parents find first."
+      ],
+      [
+        "Nobody is exposed",
+        "JSA sends no list and we ask for none. A coach who wants nothing to do with it simply does nothing."
+      ]
     ],
     "extra": ""
   },
   "athletics": {
-    "assoc": "your provincial athletics body", "assoc_full": "Athletics South Africa provincial bodies",
-    "trade": "Running and athletics coaching", "noun": "coach", "nouns": "coaches",
-    "app_category": "Tutors", "city": "Cape Town",
+    "assoc": "your provincial athletics body",
+    "assoc_full": "Athletics South Africa provincial bodies",
+    "trade": "Running and athletics coaching",
+    "noun": "coach",
+    "nouns": "coaches",
+    "app_category": "Tutors",
+    "city": "Cape Town",
     "hook": "Every coach at your affiliated clubs, findable by the runners who are looking for exactly them.",
     "search": "running coach",
     "cards": [
-      {"title": "Road running coaching — 10k to Comrades", "meta": "Tutors · Bellville · 7+ years", "score": 88,
-       "badges": ["ASA coaching licence", "First aid current", "5+ years coaching", "ID verified"], "price": "From R700 / month"},
-      {"title": "Track coaching, sprints and middle distance", "meta": "Tutors · Durbanville · 3–7 years", "score": 69,
-       "badges": ["First aid current", "Police clearance", "ID verified"], "price": "From R550 / month"},
-      {"title": "Beginner running group, couch to 5k", "meta": "Tutors · Milnerton", "score": 47,
-       "badges": ["ID verified"], "price": "From R300 / month"}
+      {
+        "title": "Road running coaching — 10k to Comrades",
+        "meta": "Tutors · Bellville · 7+ years",
+        "score": 88,
+        "badges": [
+          "ASA coaching licence",
+          "First aid current",
+          "5+ years coaching",
+          "ID verified"
+        ],
+        "price": "From R700 / month"
+      },
+      {
+        "title": "Track coaching, sprints and middle distance",
+        "meta": "Tutors · Durbanville · 3–7 years",
+        "score": 69,
+        "badges": [
+          "First aid current",
+          "Police clearance",
+          "ID verified"
+        ],
+        "price": "From R550 / month"
+      },
+      {
+        "title": "Beginner running group, couch to 5k",
+        "meta": "Tutors · Milnerton",
+        "score": 47,
+        "badges": [
+          "ID verified"
+        ],
+        "price": "From R300 / month"
+      }
     ],
-    "live": [["Government-issued ID verified", 15], ["Teaching experience 5+ years", 6],
-             ["Police clearance / DBS check", 8], ["Certificate or Diploma (NQF5–6)", 6]],
-    "proposed": [["ASA coaching licence, current", 12], ["Club affiliation confirmed", 4]],
+    "live": [
+      [
+        "Government-issued ID verified",
+        15
+      ],
+      [
+        "Teaching experience 5+ years",
+        6
+      ],
+      [
+        "Police clearance / DBS check",
+        8
+      ],
+      [
+        "Certificate or Diploma (NQF5–6)",
+        6
+      ]
+    ],
+    "proposed": [
+      [
+        "ASA coaching licence, current",
+        12
+      ],
+      [
+        "Club affiliation confirmed",
+        4
+      ]
+    ],
     "assoc_wins": [
-      ["Clubs get found without paying for it", "A club has no advertising budget and no reason to have one. This costs the club nothing and the province nothing."],
-      ["Better privacy than today", "Your club officers' cell numbers are published on your own website right now — that is how we found them. Nothing of theirs is published with us."],
-      ["The licence becomes a reason to hold it", "A coaching licence that shows up in a public search is a licence worth renewing."]
+      [
+        "Clubs get found without paying for it",
+        "A club has no advertising budget and no reason to have one. This costs the club nothing and the province nothing."
+      ],
+      [
+        "Better privacy than today",
+        "Your club officers' cell numbers are published on your own website right now — that is how we found them. Nothing of theirs is published with us."
+      ],
+      [
+        "The licence becomes a reason to hold it",
+        "A coaching licence that shows up in a public search is a licence worth renewing."
+      ]
     ],
     "extra": ""
   },
   "plumbers": {
-    "assoc": "IOPSA", "assoc_full": "the Institute of Plumbing South Africa",
-    "trade": "Plumbing", "noun": "plumber", "nouns": "plumbers",
-    "app_category": "Services", "city": "Pretoria",
+    "assoc": "IOPSA",
+    "assoc_full": "the Institute of Plumbing South Africa",
+    "trade": "Plumbing",
+    "noun": "plumber",
+    "nouns": "plumbers",
+    "app_category": "Services",
+    "city": "Pretoria",
     "hook": "Every PIRB-licensed plumber in the suburb, findable — and ranked above the cowboys.",
     "search": "emergency plumber",
     "cards": [
-      {"title": "Emergency plumbing, burst pipes & geysers, 24h", "meta": "Services · Centurion · 7+ years", "score": 95,
-       "badges": ["PIRB licensed", "IOPSA member", "Public liability insured", "Trade certificate", "ID verified"], "price": "From R850 call-out"},
-      {"title": "Geyser replacement and CoC issuing", "meta": "Services · Lynnwood · 3–7 years", "score": 78,
-       "badges": ["PIRB licensed", "Trade certificate", "ID verified"], "price": "From R650 call-out"},
-      {"title": "General plumbing repairs", "meta": "Services · Mamelodi", "score": 44,
-       "badges": ["ID verified"], "price": "From R450 call-out"}
+      {
+        "title": "Emergency plumbing, burst pipes & geysers, 24h",
+        "meta": "Services · Centurion · 7+ years",
+        "score": 95,
+        "badges": [
+          "PIRB licensed",
+          "IOPSA member",
+          "Public liability insured",
+          "Trade certificate",
+          "ID verified"
+        ],
+        "price": "From R850 call-out"
+      },
+      {
+        "title": "Geyser replacement and CoC issuing",
+        "meta": "Services · Lynnwood · 3–7 years",
+        "score": 78,
+        "badges": [
+          "PIRB licensed",
+          "Trade certificate",
+          "ID verified"
+        ],
+        "price": "From R650 call-out"
+      },
+      {
+        "title": "General plumbing repairs",
+        "meta": "Services · Mamelodi",
+        "score": 44,
+        "badges": [
+          "ID verified"
+        ],
+        "price": "From R450 call-out"
+      }
     ],
-    "live": [["Government-issued ID verified", 15], ["Trade licence (PIRB / DoEL)", 12],
-             ["Professional body registration", 12], ["Formal trade certificate", 8],
-             ["Public liability insurance", 5], ["Registered company (CIPC)", 5], ["Years in trade 7+", 4]],
+    "live": [
+      [
+        "Government-issued ID verified",
+        15
+      ],
+      [
+        "Trade licence (PIRB / DoEL)",
+        12
+      ],
+      [
+        "Professional body registration",
+        12
+      ],
+      [
+        "Formal trade certificate",
+        8
+      ],
+      [
+        "Public liability insurance",
+        5
+      ],
+      [
+        "Registered company (CIPC)",
+        5
+      ],
+      [
+        "Years in trade 7+",
+        4
+      ]
+    ],
     "proposed": [],
     "assoc_wins": [
-      ["Nothing needs building — it is all live today", "PIRB licence, IOPSA registration, trade certificate and public liability insurance are ALREADY scored signals. An IOPSA member can list tonight and rank above an unlicensed operator immediately."],
-      ["The cowboy problem, addressed by ranking", "The public phones whoever appears first. Here the licensed, insured plumber IS the one who appears first — which is the outcome IOPSA exists to push."],
-      ["Nobody is exposed", "IOPSA sends no list and we ask for none. No member's name, number or address is published."]
+      [
+        "Nothing needs building — it is all live today",
+        "PIRB licence, IOPSA registration, trade certificate and public liability insurance are ALREADY scored signals. An IOPSA member can list tonight and rank above an unlicensed operator immediately."
+      ],
+      [
+        "The cowboy problem, addressed by ranking",
+        "The public phones whoever appears first. Here the licensed, insured plumber IS the one who appears first — which is the outcome IOPSA exists to push."
+      ],
+      [
+        "Nobody is exposed",
+        "IOPSA sends no list and we ask for none. No member's name, number or address is published."
+      ]
     ],
     "extra": "This is the strongest case of the set: every credential IOPSA issues or requires is already on our live scoring list. Nothing has to be added."
   },
   "guides": {
-    "assoc": "your provincial guiding association", "assoc_full": "the registered tourist guide associations",
-    "trade": "Guided tours and experiences", "noun": "guide", "nouns": "guides",
-    "app_category": "Adventures", "city": "Cape Town",
+    "assoc": "your provincial guiding association",
+    "assoc_full": "the registered tourist guide associations",
+    "trade": "Guided tours and experiences",
+    "noun": "guide",
+    "nouns": "guides",
+    "app_category": "Adventures",
+    "city": "Cape Town",
     "hook": "Every registered guide, findable by the traveller — and the registration number doing real work.",
     "search": "table mountain guided hike",
     "cards": [
-      {"title": "Table Mountain guided hikes, all routes", "meta": "Adventures · City Bowl · 7+ years", "score": 93,
-       "badges": ["Registered tourist guide", "CATHSSETA qualified", "First aid current", "Liability insured", "ID verified"], "price": "From R650 / person"},
-      {"title": "Cape Peninsula day tour, small groups", "meta": "Adventures · Sea Point · 3–7 years", "score": 76,
-       "badges": ["Registered tourist guide", "First aid current", "ID verified"], "price": "From R1,450 / person"},
-      {"title": "City walking tour, history and food", "meta": "Adventures · Woodstock", "score": 51,
-       "badges": ["ID verified"], "price": "From R380 / person"}
+      {
+        "title": "Table Mountain guided hikes, all routes",
+        "meta": "Adventures · City Bowl · 7+ years",
+        "score": 93,
+        "badges": [
+          "Registered tourist guide",
+          "CATHSSETA qualified",
+          "First aid current",
+          "Liability insured",
+          "ID verified"
+        ],
+        "price": "From R650 / person"
+      },
+      {
+        "title": "Cape Peninsula day tour, small groups",
+        "meta": "Adventures · Sea Point · 3–7 years",
+        "score": 76,
+        "badges": [
+          "Registered tourist guide",
+          "First aid current",
+          "ID verified"
+        ],
+        "price": "From R1,450 / person"
+      },
+      {
+        "title": "City walking tour, history and food",
+        "meta": "Adventures · Woodstock",
+        "score": 51,
+        "badges": [
+          "ID verified"
+        ],
+        "price": "From R380 / person"
+      }
     ],
-    "live": [["Government-issued ID verified", 15], ["Registered tourist guide (provincial)", 12],
-             ["CATHSSETA guiding qualification", 8], ["Current First Aid / Emergency Response", 6],
-             ["Site / route specialist accreditation", 5], ["Liability / indemnity insurance", 5],
-             ["Guides in 3+ languages", 4]],
+    "live": [
+      [
+        "Government-issued ID verified",
+        15
+      ],
+      [
+        "Registered tourist guide (provincial)",
+        12
+      ],
+      [
+        "CATHSSETA guiding qualification",
+        8
+      ],
+      [
+        "Current First Aid / Emergency Response",
+        6
+      ],
+      [
+        "Site / route specialist accreditation",
+        5
+      ],
+      [
+        "Liability / indemnity insurance",
+        5
+      ],
+      [
+        "Guides in 3+ languages",
+        4
+      ]
+    ],
     "proposed": [],
     "assoc_wins": [
-      ["Also fully live today", "Provincial guide registration, CATHSSETA qualification, first aid and indemnity insurance are ALREADY scored. A registered guide starts in the Trusted band on day one."],
-      ["Unregistered guiding is the sector's problem", "Registration is a legal requirement that the public cannot see. Here it is the first thing they see."],
-      ["Nobody is exposed", "No guide's name, number or address is published. Details are exchanged only when the traveller pays to ask and the guide accepts."]
+      [
+        "Also fully live today",
+        "Provincial guide registration, CATHSSETA qualification, first aid and indemnity insurance are ALREADY scored. A registered guide starts in the Trusted band on day one."
+      ],
+      [
+        "Unregistered guiding is the sector's problem",
+        "Registration is a legal requirement that the public cannot see. Here it is the first thing they see."
+      ],
+      [
+        "Nobody is exposed",
+        "No guide's name, number or address is published. Details are exchanged only when the traveller pays to ask and the guide accepts."
+      ]
     ],
     "extra": ""
   },
   "dance": {
-    "assoc": "your dance teachers' association", "assoc_full": "the dance and ballet teaching associations",
-    "trade": "Dance and ballet teaching", "noun": "teacher", "nouns": "teachers",
-    "app_category": "Tutors", "city": "Johannesburg",
+    "assoc": "your dance teachers' association",
+    "assoc_full": "the dance and ballet teaching associations",
+    "trade": "Dance and ballet teaching",
+    "noun": "teacher",
+    "nouns": "teachers",
+    "app_category": "Tutors",
+    "city": "Johannesburg",
     "hook": "Every qualified dance teacher, findable by the parent — and the teaching diploma finally visible.",
     "search": "ballet classes for kids",
     "cards": [
-      {"title": "Ballet, RAD syllabus, grades 1–5", "meta": "Tutors · Bryanston · 7+ years", "score": 89,
-       "badges": ["Teaching diploma", "Police clearance", "Safeguarding cert", "ID verified"], "price": "From R450 / month"},
-      {"title": "Modern and contemporary, teens", "meta": "Tutors · Rosebank · 3–7 years", "score": 70,
-       "badges": ["Police clearance", "ID verified"], "price": "From R380 / month"},
-      {"title": "Dance classes, all ages", "meta": "Tutors · Fourways", "score": 45,
-       "badges": ["ID verified"], "price": "From R300 / month"}
+      {
+        "title": "Ballet, RAD syllabus, grades 1–5",
+        "meta": "Tutors · Bryanston · 7+ years",
+        "score": 89,
+        "badges": [
+          "Teaching diploma",
+          "Police clearance",
+          "Safeguarding cert",
+          "ID verified"
+        ],
+        "price": "From R450 / month"
+      },
+      {
+        "title": "Modern and contemporary, teens",
+        "meta": "Tutors · Rosebank · 3–7 years",
+        "score": 70,
+        "badges": [
+          "Police clearance",
+          "ID verified"
+        ],
+        "price": "From R380 / month"
+      },
+      {
+        "title": "Dance classes, all ages",
+        "meta": "Tutors · Fourways",
+        "score": 45,
+        "badges": [
+          "ID verified"
+        ],
+        "price": "From R300 / month"
+      }
     ],
-    "live": [["Government-issued ID verified", 15], ["Police clearance / DBS check", 8],
-             ["Certificate or Diploma (NQF5–6)", 6], ["Teaching experience 5+ years", 6],
-             ["Safeguarding / child protection cert", 3]],
-    "proposed": [["Association teaching diploma / examiner grade", 10], ["Association membership, current", 5]],
+    "live": [
+      [
+        "Government-issued ID verified",
+        15
+      ],
+      [
+        "Police clearance / DBS check",
+        8
+      ],
+      [
+        "Certificate or Diploma (NQF5–6)",
+        6
+      ],
+      [
+        "Teaching experience 5+ years",
+        6
+      ],
+      [
+        "Safeguarding / child protection cert",
+        3
+      ]
+    ],
+    "proposed": [
+      [
+        "Association teaching diploma / examiner grade",
+        10
+      ],
+      [
+        "Association membership, current",
+        5
+      ]
+    ],
     "assoc_wins": [
-      ["The diploma becomes visible", "A parent choosing a ballet school cannot tell a qualified teacher from an enthusiastic one. The diploma becomes the badge that separates them."],
-      ["Safeguarding first", "Police clearance and child-protection certificates are already scored. Teachers who hold them rank above teachers who do not."],
-      ["Nobody is exposed", "The association sends no list and we ask for none."]
+      [
+        "The diploma becomes visible",
+        "A parent choosing a ballet school cannot tell a qualified teacher from an enthusiastic one. The diploma becomes the badge that separates them."
+      ],
+      [
+        "Safeguarding first",
+        "Police clearance and child-protection certificates are already scored. Teachers who hold them rank above teachers who do not."
+      ],
+      [
+        "Nobody is exposed",
+        "The association sends no list and we ask for none."
+      ]
     ],
     "extra": ""
+  },
+  "teachers": {
+    "assoc": "your teachers' association",
+    "assoc_full": "the teacher unions and subject associations",
+    "trade": "Specialist tutoring",
+    "noun": "teacher",
+    "nouns": "teachers",
+    "app_category": "Tutors",
+    "city": "Pretoria",
+    "hook": "Your members are already qualified, already registered, already police-cleared. On TrustSquare that paperwork is worth R200 to R500 an hour after school — and it costs them nothing to find out.",
+    "search": "maths tutor grade 11",
+    "cards": [
+      {
+        "title": "Maths & Physical Science, Gr 10–12, exam prep",
+        "meta": "Tutors · Menlo Park · 7+ years",
+        "score": 95,
+        "badges": [
+          "Honours (NQF8+)",
+          "SACE registered",
+          "Police clearance",
+          "Subject specialisation",
+          "Safeguarding cert",
+          "ID verified"
+        ],
+        "price": "From R450 / hour"
+      },
+      {
+        "title": "Foundation phase reading & numeracy support",
+        "meta": "Tutors · Waterkloof · 3–7 years",
+        "score": 82,
+        "badges": [
+          "Bachelor's degree",
+          "SACE registered",
+          "Police clearance",
+          "ID verified"
+        ],
+        "price": "From R320 / hour"
+      },
+      {
+        "title": "Homework help, all subjects",
+        "meta": "Tutors · Sunnyside",
+        "score": 47,
+        "badges": [
+          "ID verified"
+        ],
+        "price": "From R180 / hour"
+      }
+    ],
+    "live": [
+      [
+        "Government-issued ID verified",
+        15
+      ],
+      [
+        "Honours / Postgraduate (NQF8+)",
+        14
+      ],
+      [
+        "SACE registration",
+        8
+      ],
+      [
+        "Police clearance / DBS check",
+        8
+      ],
+      [
+        "Teaching experience 5+ years",
+        6
+      ],
+      [
+        "Subject specialisation certificate",
+        5
+      ],
+      [
+        "Safeguarding / child protection cert",
+        3
+      ]
+    ],
+    "proposed": [],
+    "assoc_wins": [
+      [
+        "It is money in your members' pockets, not ours",
+        "A teacher sets their own rate and keeps every rand of it. We take no commission and no share of the lesson fee — ever. The free account carries two listings at R0, with no card and no trial. The only fee on the platform is paid by the PARENT, once, to be introduced."
+      ],
+      [
+        "The qualification finally pays",
+        "An Honours degree, SACE registration and fifteen years in a classroom currently earn a teacher nothing extra after 3pm. Here they are the badges that put a member at 95 — above every unqualified 'homework helper' charging R180 an hour."
+      ],
+      [
+        "Repeat pupils cost nothing more",
+        "The introduction is a one-off. Once a parent and a teacher are introduced they deal with each other directly, for as many terms as they like. A regular pupil is never charged for twice."
+      ],
+      [
+        "Nothing needs building on our side",
+        "Every credential a teacher holds is ALREADY a scored signal. A member can list tonight and rank correctly in the morning."
+      ],
+      [
+        "Nobody is exposed, and that matters more here",
+        "No teacher's name, school, address or phone number is published. A teacher tutoring privately after hours stays anonymous until they choose to accept an enquiry — which is the difference between this and putting a notice on a Facebook group."
+      ]
+    ],
+    "extra": "Worked illustration, not a promise: a teacher taking four pupils for two hours a week at R350 an hour earns about R2,800 a week, R11,200 a month, and keeps all of it. What they pay us is nothing."
   }
 }
