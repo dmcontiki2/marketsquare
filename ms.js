@@ -15762,7 +15762,8 @@ function sfInit(){
     email: (typeof magicLink!=='undefined' && magicLink.email) || localStorage.getItem('ms_aa_email') || '',
     name:  (typeof magicLink!=='undefined' && magicLink.name)  || localStorage.getItem('ms_aa_name') || '',
     city:  (typeof activeCity!=='undefined' && activeCity.name) || 'Pretoria',
-    visionDraft:null, vehicle:null, _busy:false};
+    visionDraft:null, vehicle:null, _busy:false,
+    coachSid:'', coachAsk:{open:false,q:'',a:'',msg:'',used:0,remaining:null,busy:false,capped:false}};   // SF-COACH-ASK-1
   // Invited arrival with a category on the magic link → skip the tile screen
   var _mlcat = (typeof magicLink!=='undefined' && magicLink.active && magicLink.cat) ? String(magicLink.cat) : '';
   if(_mlcat){
@@ -15784,7 +15785,12 @@ function sfInit(){
   }
   sfRender();
 }
-function sfGo(s){ sfState.screen=s; sfRender(); }
+function sfGo(s){
+  // SF-MULTIVISION-1 (RG-0206): leaving Photos -> one batched vision read of every filled slot.
+  var _from = sfState && sfState.screen;
+  sfState.screen=s; sfRender();
+  if(_from==='photos' && s==='secA' && typeof sfRunMultiVision==='function'){ try{ sfRunMultiVision(); }catch(_e){} }
+}
 function sfToast(t){ if(typeof showToast==='function') showToast(t); }
 
 /* AREA-SUGGEST-1 (16 Jul 2026, David): suburb suggestions for the area input,
@@ -15856,7 +15862,9 @@ function sfPhotoCount(){
 function sfStartCat(cat){
   sfLoadSuburbs();   // AREA-SUGGEST-1: warm the suburb list for the area input
   sfState.cat=cat; sfState.sub=null; sfState.lmType=null;
-  sfState.photos={}; sfState.files={}; sfState.previews={}; sfState.mainPhase=0; sfState.mainMsg='';
+  sfState.photos={}; sfState.files={}; sfState.previews={}; sfState.mainPhase=0; sfState.mainMsg=''; sfState.mvSig=''; sfState.anonFlags={};
+  sfState.coachSid='sf'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);   // SF-COACH-ASK-1: one cap per listing session
+  sfState.coachAsk={open:false,q:'',a:'',msg:'',used:0,remaining:null,busy:false,capped:false};
   sfState.A={}; sfState.B={}; sfState.C={}; sfState.features=[]; sfState.price=''; sfState.area='';
   sfState.visionDraft=null; sfState.vehicle=null;
   var c = SF_CATS[cat];
@@ -15928,7 +15936,89 @@ function sfRender(){
   else if(s==='legal') a.innerHTML=sfLegalS();
   else if(s==='agents') a.innerHTML=sfAgentsS();   // AGENT-SVC-1
   else if(s==='scorecard') a.innerHTML=sfScoreS();
+  if(typeof sfCoachAskDecorate==='function'){ try{ sfCoachAskDecorate(a); }catch(_e){} }   // SF-COACH-ASK-1
   window.scrollTo(0,0);
+}
+/* SF-COACH-ASK-1 (RG-0207, 4 Sep 2026, Batch 2 of the 29 Aug listing audit):
+   the coach bubble on every sell-flow step was static text; interactive AI existed
+   only post-publish (paid). The EULA promises everyday in-app guidance is FREE.
+   Now the coach avatar on every step is tappable -> a small ask box under the
+   bubble -> POST /advert-agent/coach/ask (free lane, Haiku, short answer) with
+   step + category + the seller's current fields as context. The server holds the
+   cap (10 per listing session). CEILING BEHAVIOUR (David, 29 Aug, RUL-066): warn
+   at 8 of 10 ("2 questions left"), the typed question is NEVER lost (it lives in
+   sfState.coachAsk.q across re-renders and through a 429), the cap copy funnels
+   to the paid 1T dashboard coaching session, and the server logs every cap-hit. */
+function sfCoachAskDecorate(root){
+  if(!sfState || !sfState.coachAsk) return;
+  var coach = root.querySelector('.sf-coach'); if(!coach) return;
+  if(sfState.screen==='home') return;                      // no listing session yet
+  var av = coach.querySelector('.sf-av');
+  if(av){ av.style.cursor='pointer'; av.title='Ask me a question'; av.onclick=function(){ sfCoachAskToggle(); }; }
+  var txt = coach.children[1];
+  if(txt && !txt.querySelector('.sf-askline')){
+    txt.insertAdjacentHTML('beforeend',
+      ' <a class="sf-askline" onclick="sfCoachAskToggle()" style="display:inline-block;margin-top:4px;color:#f2b035;cursor:pointer;font-weight:700;text-decoration:none;">'+
+      (sfState.coachAsk.open?'Hide':'Ask me a question')+' &rsaquo;</a>');
+  }
+  if(sfState.coachAsk.open){
+    coach.insertAdjacentHTML('afterend', sfCoachAskBox());
+    var ta=root.querySelector('#sf-ask-q');
+    if(ta && sfState.coachAsk._focus){ sfState.coachAsk._focus=false; ta.focus(); }
+  }
+}
+function sfCoachAskToggle(){
+  sfState.coachAsk.open=!sfState.coachAsk.open;
+  sfState.coachAsk._focus=sfState.coachAsk.open;
+  sfRender();
+}
+function sfCoachAskBox(){
+  var ca=sfState.coachAsk, rem=ca.remaining;
+  var h='<div class="sf-coach sf-askbox" style="flex-direction:column;gap:8px;margin-top:-4px;">';
+  if(ca.a){ h+='<div style="color:rgba(255,255,255,.85);"><b>Coach:</b> '+ca.a.replace(/</g,'&lt;').replace(/\n/g,'<br>')+'</div>'; }
+  if(ca.capped){
+    h+='<div style="color:#fca5a5;">'+ca.msg.replace(/</g,'&lt;')+'</div>';
+    h+='<textarea id="sf-ask-q" rows="2" readonly style="width:100%;box-sizing:border-box;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:rgba(255,255,255,.55);padding:8px;font:inherit;">'+ca.q.replace(/</g,'&lt;')+'</textarea>';
+    h+='<div style="font-size:11px;opacity:.7;">Your question is kept here — the dashboard coach can pick it up after you publish.</div>';
+  } else {
+    h+='<textarea id="sf-ask-q" rows="2" placeholder="Ask anything about this step — e.g. what price should I start at?" '+
+       'oninput="sfState.coachAsk.q=this.value" style="width:100%;box-sizing:border-box;border-radius:10px;border:1px solid rgba(242,176,53,.35);background:rgba(255,255,255,.05);color:#fff;padding:8px;font:inherit;">'+ca.q.replace(/</g,'&lt;')+'</textarea>';
+    h+='<div style="display:flex;align-items:center;gap:10px;">'+
+       '<button class="sf-btn pri" style="padding:8px 14px;font-size:12px;" '+(ca.busy?'disabled':'')+' onclick="sfCoachAskSend()">'+(ca.busy?'<span class="sf-spin"></span> Thinking…':'Ask the coach')+'</button>'+
+       '<span style="font-size:11px;opacity:.75;">'+(ca.msg?ca.msg.replace(/</g,'&lt;'):(rem!==null && rem<=2 ? rem+' question'+(rem===1?'':'s')+' left on this listing' : 'Free · '+(rem!==null?rem+' left':'10 per listing')))+'</span></div>';
+  }
+  h+='</div>';
+  return h;
+}
+async function sfCoachAskSend(){
+  var ca=sfState.coachAsk, q=String(ca.q||'').trim();
+  if(!q || ca.busy) return;
+  if(typeof BEA_ENABLED==='undefined' || !BEA_ENABLED){ ca.msg='The coach is offline right now.'; sfRender(); return; }
+  ca.busy=true; ca.msg=''; sfRender();
+  var fields={};
+  ['A','B','C'].forEach(function(k){ Object.keys(sfState[k]||{}).forEach(function(f){ if(sfState[k][f]) fields[k+'.'+f]=String(sfState[k][f]).slice(0,200); }); });
+  if(sfState.price) fields.price=String(sfState.price);
+  if(sfState.area) fields.area=String(sfState.area);
+  if(sfState.visionDraft && sfState.visionDraft.title) fields.ai_title=String(sfState.visionDraft.title).slice(0,120);
+  fields.photos_filled=String(sfPhotoCount());
+  try{
+    var res=await fetch(BEA_URL+'/advert-agent/coach/ask',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:sfState.email||'', session_id:sfState.coachSid||'', step:sfState.screen,
+        category:(sfState.cat==='local_market'?'local_market':String(sfState.cat||'')), question:q, fields:fields})});
+    var data={}; try{ data=await res.json(); }catch(_e){}
+    if(res.status===429){
+      var d=(data&&data.detail)||{};
+      ca.capped=true; ca.msg=(d.message||'You have used the free questions for this listing.'); ca.remaining=0;
+    } else if(!res.ok){
+      var det=(data&&data.detail); ca.msg=(typeof det==='string'?det:'The coach is busy right now — try again in a moment.');
+    } else {
+      ca.a=data.answer||''; ca.used=data.used||0; ca.remaining=(typeof data.remaining==='number')?data.remaining:null;
+      ca.q='';                                            // answered — clear the box; the answer stays above it
+      ca.msg=data.warn&&data.warn_copy?data.warn_copy:'';
+      if(data.warn&&data.warn_copy) sfToast('Coach: '+data.warn_copy);
+    }
+  }catch(e){ ca.msg='No connection — your question is still here, try again.'; }
+  ca.busy=false; ca._focus=!ca.capped; sfRender();
 }
 function sfHomeS(){
   var tiles=[['Property','🏡'],['Tutors','🎓'],['Services','⚙️'],['Cars','🚗'],['Collectors','🏺'],['Adventures','🧭']];
@@ -15995,7 +16085,7 @@ function sfSlotHtml(sl){
   else if (key==='main' && typeof SF_TILE_IMGS!=='undefined' && SF_TILE_IMGS[sfState.cat])
     thumb = '<img src="'+SF_TILE_IMGS[sfState.cat].own+'" alt="" style="opacity:.9;" onerror="this.style.display=\'none\';this.parentElement.textContent=\'\'+this.dataset.em" data-em="'+sl[3]+'">';
   else thumb = sl[3];
-  var badge = st===2 ? '<span class="sf-st ok">✓ checked</span>' : (st===1 ? '<span class="sf-st chk"><span class="sf-spin"></span>AI check…</span>' :
+  var badge = st===2 ? ((sfState.anonFlags&&sfState.anonFlags[key]) ? '<span class="sf-st ok" title="Identifying details spotted — blurred automatically on upload">✓ checked · will blur</span>' : '<span class="sf-st ok">✓ checked</span>') : (st===1 ? '<span class="sf-st chk"><span class="sf-spin"></span>AI check…</span>' :
     (key==='main' ? '<span class="sf-st req">required</span>' : '<span class="sf-st" style="opacity:.5;">tap to add</span>'));
   // MAROUSHKA-PHOTO-1: a filled slot gets a ✕ so the seller can drop it.
   var clr = st===2 ? '<span class="sf-clr" title="Remove this photo" onclick="event.stopPropagation();sfClearSlot(\''+key+'\')" '+
@@ -16148,6 +16238,77 @@ async function sfRunVision(file){
   }catch(e){
     clearTimeout(toGuard);
     finish('✓ Photo added — fill in the details manually and the anonymity check runs on upload.');
+  }
+}
+/* SF-MULTIVISION-1 (RG-0206, 4 Sep 2026, Batch 2 of the 29 Aug listing audit):
+   sfRunVision reads ONLY the main photo the moment it is chosen (instant draft +
+   the WRONG-TYPE-1 hard stop). /listings/vision-draft accepts 1-12 photos and the
+   AI_BASELINE vision envelope budgets 10 images, yet slots 2+ were never AI-read
+   until upload. When the seller advances from Photos with 2+ photos, every filled
+   slot (main first, then the named slots, then extras; hard cap 10; >5 MB files
+   skipped client-side so server indices stay aligned) goes up in ONE call.
+   Per-photo indices map back to the slot keys sent: off-category -> that photo is
+   dropped with a named toast (same rule WRONG-TYPE-1 applies to main); anonymity
+   -> the slot badge says it will be blurred (the upload-time SELLER-ANON gate
+   still does the blurring). Photos beyond 10 upload as before, nothing is gated,
+   no photo is lost for being 11th (RUL-066 ladder doctrine). Runs in the
+   background — the seller is already on the next step; blanks fill in as they go.
+   A signature of the photo set stops a re-run when the seller merely goes back
+   and forth without changing photos. */
+var SF_MULTIVISION_CAP = 10;
+async function sfRunMultiVision(){
+  if(typeof BEA_ENABLED==='undefined' || !BEA_ENABLED) return;
+  if(!sfState || !sfState.files || !sfState.files.main) return;
+  var f=sfFlow(), keys=['main'];
+  f.slots.slice(1).forEach(function(sl){ if(sfState.files[sl[0]]) keys.push(sl[0]); });
+  Object.keys(sfState.files).forEach(function(k){ if(k.indexOf('extra')===0) keys.push(k); });
+  keys = keys.filter(function(k){ var fl=sfState.files[k]; return fl && (!fl.size || fl.size <= 5*1024*1024); }).slice(0, SF_MULTIVISION_CAP);
+  if(keys.length < 2) return;                       // main alone was already read by sfRunVision
+  var sig = keys.map(function(k){ var fl=sfState.files[k]; return k+':'+(fl.size||0)+':'+(fl.lastModified||0); }).join('|');
+  if(sig === sfState.mvSig) return;                 // same photo set — already read
+  sfState.mvSig = sig;
+  try{
+    var fd=new FormData();
+    keys.forEach(function(k,i){ var fl=sfState.files[k]; fd.append('photos', fl, fl.name||('photo_'+i+'.jpg')); });
+    fd.append('category_hint', (sfState.cat==='local_market'?'local_market':String(sfState.cat||'').toLowerCase()));
+    fd.append('seller_email', sfState.email||'');
+    fd.append('city', sfState.city||'Pretoria');
+    fd.append('country_iso2','ZA');
+    var res=await fetch(BEA_URL+'/listings/vision-draft',{method:'POST',body:fd});
+    if(!res.ok) throw new Error('multivision '+res.status);
+    var data=await res.json();
+    if(!sfState || sfState.mvSig!==sig) return;      // seller changed the set meanwhile
+    var d=data.draft||{};
+    var offc=data.off_category_photo_indices||[], viol=data.violating_photo_indices||[];
+    var dropped=[];
+    offc.forEach(function(i){
+      var k=keys[i]; if(!k || k==='main') return;    // main is judged at pick time (WRONG-TYPE-1)
+      var sl=f.slots.filter(function(s){return s[0]===k;})[0];
+      dropped.push(sl?sl[1]:'an extra photo');
+      delete sfState.files[k]; delete sfState.previews[k];
+      if(k.indexOf('extra')===0) delete sfState.photos[k]; else sfState.photos[k]=0;
+    });
+    sfState.anonFlags = sfState.anonFlags||{};
+    viol.forEach(function(i){ var k=keys[i]; if(k && sfState.files[k]) sfState.anonFlags[k]=1; });
+    // Draft: the multi-photo read is richer — fill blanks; description_draft leads (SF-AIDESC-1)
+    var prev=sfState.visionDraft||{}, merged={};
+    Object.keys(prev).forEach(function(k){merged[k]=prev[k];});
+    Object.keys(d).forEach(function(k){ if(d[k]!==null && d[k]!=='' && !(Array.isArray(d[k])&&!d[k].length)) merged[k]=d[k]; });
+    sfState.visionDraft=merged;
+    sfApplyDraft(d);
+    if(dropped.length){
+      sfToast('⚠ '+dropped.join(', ')+' didn\'t look like a '+sfState.cat+' photo — removed. Add another from the Photos step if you like.');
+    } else if(viol.length){
+      sfToast('✓ All '+keys.length+' photos read — identifying details in '+viol.length+' will be blurred on upload');
+    } else {
+      sfToast('✓ All '+keys.length+' photos read — details filled in where you left blanks');
+    }
+    // Re-paint only when the seller is not mid-keystroke (inputs sync to sfState on
+    // every oninput, so state is never lost — but a re-render would steal focus).
+    var _ae=document.activeElement, _typing=_ae && /^(INPUT|TEXTAREA|SELECT)$/.test(_ae.tagName||'') && _ae.type!=='file';
+    if((sfState.screen==='photos' || sfState.screen==='secA') && !_typing) sfRender();
+  }catch(e){
+    sfState.mvSig='';                               // allow a retry next time the seller advances
   }
 }
 function sfApplyDraft(d){

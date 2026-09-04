@@ -11300,15 +11300,20 @@ def rg_sf_ai_description_used():
 @entry("RG-0206", "The guided sell flow sends ALL chosen photos to vision-draft, not only the "
        "main one -- the endpoint contract (1-12 photos, primary_photo_index, per-photo "
        "anonymity indices) is actually exercised",
-       OPEN,
+       LOCKED, fixed_on="2026-09-04",
        scope="ms.js sfRunVision (SF-MULTIVISION-1). Same 29 Aug audit: sfRunVision() appends "
              "exactly ONE file to the form even though /listings/vision-draft accepts 1-12 and "
              "returns per-photo off-category and anonymity indices. Consequence: secondary "
              "photos are never AI-read at draft time (weaker drafts, and a wrong-type or "
              "identity-revealing photo in slot 2+ is only caught at upload). Fix class: batch "
              "the filled slots into one vision call when the seller advances from Photos.",
-       ref="LISTING-AUDIT-1, 29 Aug 2026. OPEN until a post-freeze deploy carries "
-           "SF-MULTIVISION-1.")
+       ref="LISTING-AUDIT-1, 29 Aug 2026. PROMOTED 4 Sep 2026 (Batch 2 unattended session, "
+           "RUL-065): sfRunMultiVision() batches main + up to 9 more filled slots (cap 10 = the "
+           "AI_BASELINE vision envelope) into ONE /listings/vision-draft call when the seller "
+           "advances from Photos; per-photo indices map back to slot keys (off-category slot 2+ "
+           "dropped with a named toast, anonymity flagged on the slot badge); >5 MB files skipped "
+           "client-side so server indices stay aligned; photos 11+ upload as before, nothing "
+           "gated (RUL-066). Source-half assertion; STAGED, not deployed by that session.")
 def rg_sf_multiphoto_vision():
     out = []
     ms = repo_file("ms.js")
@@ -11322,7 +11327,7 @@ def rg_sf_multiphoto_vision():
 
 @entry("RG-0207", "A FREE ask-the-coach affordance exists INSIDE the guided sell flow -- the "
        "seller can ask a question at any step without leaving the flow or paying",
-       OPEN,
+       LOCKED, fixed_on="2026-09-04",
        scope="ms.js sell flow + POST /advert-agent/coach (SF-COACH-ASK-1). David's 29 Aug "
              "question ('do we need a help button?') answered YES by audit: the in-flow coach "
              "bubbles are STATIC text; interactive AI exists only post-publish (edit screen, "
@@ -11336,8 +11341,14 @@ def rg_sf_multiphoto_vision():
              "cap copy funnels to the existing paid dashboard coaching session (1T), "
              "and every cap-hit logs an event (limit, tier, category) for demand "
              "telemetry.",
-       ref="LISTING-AUDIT-1, 29 Aug 2026. OPEN until a post-freeze deploy carries "
-           "SF-COACH-ASK-1 in ms.js AND the free guidance lane in bea_main.py.")
+       ref="LISTING-AUDIT-1, 29 Aug 2026. PROMOTED 4 Sep 2026 (Batch 2 unattended session, "
+           "RUL-065): tappable coach avatar + 'Ask me a question' line on every sf step -> ask "
+           "box -> POST /advert-agent/coach/ask (NEW free lane beside the paid /advert-agent/coach; "
+           "Haiku, <=3 sentences, step+category+fields context). Server-side cap "
+           "SF_COACH_ASK_CAP=10 per listing session in coach_ask_log; RUL-066 ceiling: warn copy "
+           "from 8 of 10, 429 at the cap with the 1T dashboard-coach funnel copy, the typed "
+           "question kept read-only in the box, every cap-hit rowed with limit/tier/category. "
+           "Assertion STRENGTHENED the same day to require both halves. STAGED, not deployed.")
 def rg_sf_coach_ask():
     out = []
     ms = repo_file("ms.js")
@@ -11348,13 +11359,21 @@ def rg_sf_coach_ask():
         out.append((FAIL, "no in-flow ask-the-coach: SF-COACH-ASK-1 marker absent from ms.js "
                           "(coach bubbles remain static text; free guidance promise of the "
                           "EULA has no in-flow surface)"))
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        if 'SF-COACH-ASK-1' not in bea or '/advert-agent/coach/ask' not in bea:
+            out.append((FAIL, "free guidance lane gone: bea_main.py lacks SF-COACH-ASK-1 / "
+                              "POST /advert-agent/coach/ask (the in-flow ask box would 404)"))
+        if 'SF_COACH_ASK_CAP' not in bea:
+            out.append((FAIL, "coach-ask cap removed from bea_main.py -- the free lane is no longer "
+                              "flat-cost (pricing canon)"))
     return out
 
 
 
 @entry("RG-0208", "A pending INTRO nudges the seller before it rots -- reminder ladder exists "
        "server-side, and the B3 danger zone is warned, never silently entered",
-       OPEN,
+       LOCKED, fixed_on="2026-09-04",
        scope="bea_main.py (INTRO-REMIND-1). David raised 29 Aug (discussed months earlier, "
              "pre-dating the lane flip): sellers must be reminded to accept/reject a pending "
              "intro. Today create_intro fires the n8n new-intro webhook ONCE and nothing ever "
@@ -11365,7 +11384,16 @@ def rg_sf_coach_ask():
              "~72h -> second email + web push where a subscription exists; a seller entering "
              "the B3 danger zone (2 unanswered in the window) gets an explicit warning naming "
              "the consequence. All sends logged; no Tuppence ever charged for a reminder.",
-       ref="INTRO-REMIND-1, 29 Aug 2026. OPEN until a post-freeze deploy carries the marker.")
+       ref="INTRO-REMIND-1, 29 Aug 2026. PROMOTED 4 Sep 2026 (Batch 2 unattended session, "
+           "RUL-065): _intro_reminder_sweep() on an hourly daemon thread (INTRO_REMIND_ENABLED, "
+           "first pass 3 min after boot): ~24h pending -> email #1 naming the 48h penalty; ~72h -> "
+           "email #2 naming the 96h removal + web push via users.buyer_token->wearable_devices; "
+           "B3 zone (>=2 ignored in 30 days) -> explicit paragraph on the reminder, or one "
+           "standalone warning per window. Idempotent on intro_requests.reminder_stage / "
+           "last_reminder_at (conditional UPDATE), every attempt rowed in intro_reminder_log, "
+           "no Tuppence path touched. Harness-proven in a scratch DB (2 reminders, 1 B3, second "
+           "run sends 0). POST /admin/intro-reminder-sweep?dry_run=1 for a manual count. "
+           "STAGED, not deployed.")
 def rg_intro_reminder_ladder():
     out = []
     bea = repo_file("bea_main.py")
@@ -14405,7 +14433,9 @@ def rg_admin_tuppence_grant_path():
              "--permission; autodeploy_agent.bat calls the worker BEFORE the deploy legs and AFTER git_unlock. "
              "LIVE leg: while a *.req is pending, autodeploy_agent_log.txt must have activity < 40 min old. "
              "OPEN until the first real request lands DONE in host_queue/done/ -> READY TO LOCK.",
-       ref="RUL-095, 3 Sep 2026, David: 'remove all of these your clicks... self pain inflicting rules, all "
+       ref="ASSERTION FIXED 4 Sep 2026: the bat-order check read the header comment (line 6 names "
+           "nightly_tsl.bat) and painted a false REGRESSION; it now judges code lines only. "
+           "RUL-095, 3 Sep 2026, David: 'remove all of these your clicks... self pain inflicting rules, all "
            "causing delays, throttling mechanisms... don't remove those guardrails but change them to "
            "permission requests rather than David clicks... keep the auto on full blast but build mechanisms "
            "to deploy and commit after I have given permission for those type of actions.'")
@@ -14422,7 +14452,11 @@ def rg_host_queue():
     if "required=True" not in rq or "--permission" not in rq:
         out.append((FAIL, "request_host_action.py no longer requires --permission"))
     ag = repo_file("autodeploy_agent.bat") or ""
-    i_unlock, i_worker, i_tsl = ag.find('git_unlock.bat'), ag.find('host_queue_worker.py'), ag.find('nightly_tsl.bat')
+    # LEDGER-FIX 4 Sep 2026 (Batch 2 session): the header comment of the bat names
+    # nightly_tsl.bat on line 6, so a plain find() placed the deploy leg BEFORE the
+    # unlock and painted a false REGRESSION. Order is judged on CODE lines only.
+    ag_code = "\n".join(l for l in ag.splitlines() if not l.lstrip().lower().startswith(("::", "rem ")))
+    i_unlock, i_worker, i_tsl = ag_code.find('git_unlock.bat'), ag_code.find('host_queue_worker.py'), ag_code.find('nightly_tsl.bat')
     if i_worker < 0:
         out.append((FAIL, "autodeploy_agent.bat does not call host_queue_worker.py"))
     elif not (i_unlock < i_worker < i_tsl):

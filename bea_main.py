@@ -824,6 +824,39 @@ def run_migrations(conn):
     intro_cols2 = [r[1] for r in conn.execute("PRAGMA table_info(intro_requests)").fetchall()]
     if "intro_type" not in intro_cols2:
         conn.execute("ALTER TABLE intro_requests ADD COLUMN intro_type TEXT NOT NULL DEFAULT 'standard'")
+    # INTRO-REMIND-1 (RG-0208, 4 Sep 2026): reminder ladder state lives ON the intro so a
+    # restart can never re-send (stage 0 -> 1 at ~24h -> 2 at ~72h; last_reminder_at is the
+    # audit stamp). Every send is also rowed in intro_reminder_log.
+    if "reminder_stage" not in intro_cols2:
+        conn.execute("ALTER TABLE intro_requests ADD COLUMN reminder_stage INTEGER NOT NULL DEFAULT 0")
+    if "last_reminder_at" not in intro_cols2:
+        conn.execute("ALTER TABLE intro_requests ADD COLUMN last_reminder_at TEXT")
+    conn.execute("""CREATE TABLE IF NOT EXISTS intro_reminder_log (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        intro_id     INTEGER,
+        seller_email TEXT NOT NULL,
+        kind         TEXT NOT NULL,      -- reminder_24h | reminder_72h | b3_warning
+        channel      TEXT NOT NULL,      -- email | push
+        outcome      TEXT NOT NULL,      -- sent | failed | dry | capped | none
+        sent_at      TEXT NOT NULL DEFAULT (datetime('now'))
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_irl_seller ON intro_reminder_log(seller_email, kind, sent_at)")
+    # SF-COACH-ASK-1 (RG-0207, 4 Sep 2026): the FREE in-flow ask-the-coach lane. One row per
+    # question; cap_hit=1 rows are the demand telemetry David asked for (limit, tier, category).
+    conn.execute("""CREATE TABLE IF NOT EXISTS coach_ask_log (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id   TEXT NOT NULL,
+        email        TEXT,
+        step         TEXT,
+        category     TEXT,
+        tier         TEXT,
+        question     TEXT,
+        answer_chars INTEGER DEFAULT 0,
+        cap_hit      INTEGER NOT NULL DEFAULT 0,
+        cap_limit    INTEGER,
+        created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_cal_session ON coach_ask_log(session_id, cap_hit)")
 
     # Buyer Trust Score — buyers don't have a users row in V1, so a
     # standalone keyed-by-buyer_token table is the cleanest home for it.
@@ -6651,6 +6684,16 @@ class AACoachRequest(BaseModel):
     photo_slots_completed: list
 
 
+class AACoachAskRequest(BaseModel):
+    """SF-COACH-ASK-1 — one free in-flow question."""
+    email: str = ""
+    session_id: str
+    step: str = ""
+    category: str = ""
+    question: str
+    fields: dict = {}
+
+
 class AAPublishRequest(BaseModel):
     email: str
     category: str
@@ -7233,6 +7276,102 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
     background_tasks.add_task(_log_ai_spend, req.email, "/advert-agent/coach", "haiku", _co_in, _co_out,
                               provider=_sr.provider, model=_sr.model)
     return {"coaching_json": coaching_json, "tuppence_remaining": tuppence_remaining, "free_used": free_used}
+
+
+# ── SF-COACH-ASK-1 (RG-0207, 4 Sep 2026 — Batch 2 of the 29 Aug listing audit) ────────
+# The EULA promises "everyday in-app guidance is free", yet the coach bubbles in the guided
+# sell flow were static text and the only interactive coach was the priced post-publish
+# session above. This is the FREE lane: one short answer per question, Haiku tier, with the
+# seller's step + category + current fields as context. Flat-cost by construction (pricing
+# canon: no unbudgetable variable costs): a hard cap of SF_COACH_ASK_CAP questions per
+# listing session, enforced HERE, not in the browser. CEILING BEHAVIOUR (David, 29 Aug,
+# RUL-066): the response carries used/remaining so the client warns at 8 of 10; the cap
+# reply is a 429 with copy that points at the paid 1T dashboard coaching session; nothing
+# the seller typed is ever discarded (the client keeps the question in the box); every
+# cap-hit is logged with limit, tier and category for demand telemetry.
+SF_COACH_ASK_CAP = int(os.getenv("SF_COACH_ASK_CAP", "10"))
+SF_COACH_ASK_WARN_LEFT = 2
+SF_COACH_ASK_CAP_COPY = ("You\u2019ve used your %d free questions for this listing. Finish and publish it \u2014 "
+                         "then the AI Coach on your dashboard can go deeper on this advert for 1 Tuppence a session.")
+
+
+@app.post("/advert-agent/coach/ask")
+async def aa_coach_ask(req: AACoachAskRequest, background_tasks: BackgroundTasks):
+    if not ai_provider.any_lane_configured():
+        raise HTTPException(status_code=503, detail="AI Coach not configured")
+    q = (req.question or "").strip()
+    if not q:
+        raise HTTPException(status_code=400, detail="Ask me something first.")
+    if len(q) > 500:
+        q = q[:500]
+    sid = (req.session_id or "").strip()[:64]
+    if not sid:
+        raise HTTPException(status_code=400, detail="session_id required")
+    email = (req.email or "").strip().lower()
+    conn = database.get_db()
+    try:
+        tier = None
+        if email:
+            u = conn.execute("SELECT seller_tier FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+            if u:
+                tier = u["seller_tier"]
+            elif not _is_invited_prospect(email):
+                raise HTTPException(status_code=401,
+                                    detail="Sign in first and I can answer \u2014 the tips on each step still apply.")
+        else:
+            raise HTTPException(status_code=401,
+                                detail="Sign in first and I can answer \u2014 the tips on each step still apply.")
+        _check_cost_ceiling(email)   # platform daily ceiling — same guard as every AI lane
+        used = conn.execute("SELECT COUNT(*) AS n FROM coach_ask_log WHERE session_id=? AND cap_hit=0",
+                            (sid,)).fetchone()["n"]
+        cat = (req.category or "")[:40]
+        if used >= SF_COACH_ASK_CAP:
+            conn.execute("INSERT INTO coach_ask_log (session_id, email, step, category, tier, question, cap_hit, cap_limit) "
+                         "VALUES (?,?,?,?,?,?,1,?)",
+                         (sid, email, (req.step or "")[:40], cat, tier, q, SF_COACH_ASK_CAP))
+            conn.commit()
+            _log.info("SF-COACH-ASK-1 cap hit: limit=%s tier=%s category=%s", SF_COACH_ASK_CAP, tier, cat)
+            raise HTTPException(status_code=429, detail={
+                "message": SF_COACH_ASK_CAP_COPY % SF_COACH_ASK_CAP,
+                "used": used, "cap": SF_COACH_ASK_CAP, "remaining": 0, "upsell": "dashboard_coach_1T"})
+
+        ctx = "\n".join("  %s: %s" % (k, str(v)[:200]) for k, v in (req.fields or {}).items() if v)[:2500]
+        system_prompt = (
+            "You are the TrustSquare listing coach, helping a seller fill in a classified advert on a "
+            "South African marketplace. Answer the seller's question in plain everyday words, at most three "
+            "short sentences, friendly and direct. Ground the answer in the step and fields they are on. "
+            "Never invent facts about their item. Never suggest putting names, phone numbers, addresses or "
+            "links in the advert (TrustSquare introduces buyers anonymously). If the question is not about "
+            "listing or selling, say so in one sentence and steer back."
+        )
+        user_message = ("Category: %s\nStep: %s\nCurrent fields:\n%s\n\nQuestion: %s"
+                        % (cat or "unknown", req.step or "unknown", ctx or "  (nothing filled in yet)", q))
+        try:
+            _sr = await asyncio.to_thread(
+                ai_provider.complete, [{"role": "user", "content": user_message}],
+                task="haiku", max_tokens=220, system=system_prompt,
+                provider=_ts_active_provider(), timeout=20)
+            answer = (_sr.text or "").strip()
+            if not answer:
+                raise RuntimeError("empty answer")
+        except Exception as exc:
+            _log.error("SF-COACH-ASK-1 AI call failed: %s", exc)
+            raise HTTPException(status_code=502, detail="The coach is busy right now \u2014 try again in a moment.") from exc
+        conn.execute("INSERT INTO coach_ask_log (session_id, email, step, category, tier, question, answer_chars, cap_hit, cap_limit) "
+                     "VALUES (?,?,?,?,?,?,?,0,?)",
+                     (sid, email, (req.step or "")[:40], cat, tier, q, len(answer), SF_COACH_ASK_CAP))
+        conn.commit()
+        used += 1
+        remaining = max(0, SF_COACH_ASK_CAP - used)
+        background_tasks.add_task(_log_ai_spend, email, "/advert-agent/coach/ask", "haiku",
+                                  _sr.in_tokens, _sr.out_tokens, provider=_sr.provider, model=_sr.model)
+        return {"answer": answer, "used": used, "cap": SF_COACH_ASK_CAP, "remaining": remaining,
+                "warn": remaining <= SF_COACH_ASK_WARN_LEFT,
+                "warn_copy": (("That was your last free question on this listing." if remaining == 0 else
+                               "%d question%s left on this listing." % (remaining, "" if remaining == 1 else "s"))
+                              if remaining <= SF_COACH_ASK_WARN_LEFT else None)}
+    finally:
+        conn.close()
 
 
 @app.post("/advert-agent/buy-pack")
@@ -20924,6 +21063,235 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
 def admin_lifecycle_sweep(dry_run: int = 0, _admin=Depends(_require_admin_or_key)):
     """Manual/cron trigger for the daily lifecycle sweep. dry_run=1 counts only."""
     return _lifecycle_sweep(dry_run=bool(dry_run))
+
+
+# ══ INTRO-REMIND-1 (RG-0208, 4 Sep 2026 — Batch 2 of the 29 Aug listing audit) ═══════
+# David, 29 Aug: sellers must be REMINDED to accept or decline a pending intro. Until now
+# create_intro fired the new-intro webhook once and nothing ever re-nudged, while RESP-1
+# above penalised at 48h and removed at 96h and EULA B3 blocks the account at three
+# ignored intros in a rolling 30 days. So a reminder is seller PROTECTION, not spam.
+# Ladder (hourly sweep, same lane class as the heartbeat loops):
+#   ~24h pending -> reminder email #1 (names the 48h penalty)
+#   ~72h pending -> reminder email #2 (names the 96h removal) + web push if the seller
+#                   has a push subscription (users.buyer_token -> wearable_devices)
+#   B3 danger zone: a seller with 2 ignored intros in the rolling 30-day window gets
+#                   ONE explicit warning per window naming the consequence (block +
+#                   60-day cooling-off), on top of any reminder in flight.
+# Idempotent: intro_requests.reminder_stage / last_reminder_at gate every send, the
+# UPDATE is conditional on the stage, and intro_reminder_log rows every attempt.
+# No Tuppence is ever touched here. Fail-open: any error waits for the next tick.
+INTRO_REMIND_1_H = 24
+INTRO_REMIND_2_H = 72
+INTRO_B3_WINDOW_DAYS = 30
+INTRO_B3_WARN_AT = 2          # warn at 2 ignored; the EULA blocks at 3
+
+
+def _push_to_seller(conn, seller_email: str, title: str, body: str) -> int:
+    """Web push to every enabled device registered under the seller's buyer_token.
+    Returns devices delivered (0 when no subscription / push unavailable). Never raises."""
+    if not _PUSH_AVAILABLE or not _vapid_private_pem:
+        return 0
+    try:
+        u = conn.execute("SELECT buyer_token FROM users WHERE LOWER(email)=?",
+                         (seller_email.lower(),)).fetchone()
+        if not u or not u["buyer_token"]:
+            return 0
+        rows = conn.execute("SELECT id, push_endpoint, push_keys FROM wearable_devices "
+                            "WHERE buyer_token=? AND enabled=1", (u["buyer_token"],)).fetchall()
+        if not rows:
+            return 0
+        payload = json.dumps({"title": title, "body": body})
+        n = 0
+        for r in rows:
+            try:
+                _webpush(subscription_info={"endpoint": r["push_endpoint"],
+                                            "keys": json.loads(r["push_keys"])},
+                         data=payload, vapid_private_key=_vapid_private_pem,
+                         vapid_claims={"sub": VAPID_SUBJECT}, timeout=8)
+                conn.execute("UPDATE wearable_devices SET last_ping_at=? WHERE id=?",
+                             (datetime.now(timezone.utc).isoformat(), r["id"]))
+                n += 1
+            except _WebPushException as exc:
+                status = getattr(getattr(exc, "response", None), "status_code", None)
+                if status in (404, 410):
+                    conn.execute("DELETE FROM wearable_devices WHERE id=?", (r["id"],))
+            except Exception as exc:
+                _log.warning("INTRO-REMIND-1 push failed: %s", exc)
+        return n
+    except Exception as exc:
+        _log.warning("INTRO-REMIND-1 push lookup failed: %s", exc)
+        return 0
+
+
+def _b3_ignored_count(conn, seller_email: str) -> int:
+    """Ignored (removed-unanswered) intros for this seller inside the rolling B3 window —
+    the empirical measure EULA 14.5 B3 names. Demo and local-market listings excluded,
+    exactly as RESP-1 excludes them from penalties."""
+    r = conn.execute(
+        """SELECT COUNT(*) AS n FROM intro_requests ir JOIN listings l ON l.id = ir.listing_id
+           WHERE LOWER(l.seller_email) = ? AND ir.status = 'expired'
+             AND ir.created_at >= datetime('now', ?)
+             AND (l.is_demo = 0 OR l.is_demo IS NULL)
+             AND LOWER(COALESCE(l.category,'')) NOT IN ('local_market','local market')""",
+        (seller_email.lower(), "-%d days" % INTRO_B3_WINDOW_DAYS)).fetchone()
+    return int(r["n"] or 0) if r else 0
+
+
+def _b3_paragraph(n_ignored: int) -> str:
+    return ("<p style='border-left:4px solid #ef4444;padding-left:10px'><strong>Please read this part.</strong> "
+            + str(n_ignored) + " introductions on your listings went unanswered in the last "
+            + str(INTRO_B3_WINDOW_DAYS) + " days. Our terms (section 14.5, cause B3) say that a third "
+            "ignored introduction in any rolling " + str(INTRO_B3_WINDOW_DAYS) + "-day window blocks the "
+            "listing and the seller account for a 60-day cooling-off period. Answering this one — accept or "
+            "decline, either is fine — keeps you clear.</p>")
+
+
+def _intro_reminder_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
+    """INTRO-REMIND-1 hourly sweep. Idempotent; own connection; no Tuppence."""
+    if email_cap is None:
+        email_cap = int(os.getenv("INTRO_REMIND_EMAIL_CAP", "100"))
+    now = datetime.now(timezone.utc)
+    now_iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    sent = [0]
+    res = {"reminded_24h": 0, "reminded_72h": 0, "pushed": 0, "b3_warned": 0,
+           "emails_sent": 0, "dry_run": dry_run}
+    conn = database.get_db()
+
+    def _log_row(intro_id, seller, kind, channel, outcome):
+        if dry_run:
+            return
+        conn.execute("INSERT INTO intro_reminder_log (intro_id, seller_email, kind, channel, outcome, sent_at) "
+                     "VALUES (?,?,?,?,?,?)", (intro_id, seller.lower(), kind, channel, outcome, now_iso))
+
+    def _mail(to, subj, html):
+        if dry_run or sent[0] >= email_cap:
+            return "capped" if not dry_run else "dry"
+        out = _send_system_email(to, subj, html)
+        if out == "sent":
+            sent[0] += 1
+        return out
+
+    try:
+        pend = conn.execute(
+            """SELECT ir.id, ir.listing_id, ir.buyer_name, ir.created_at,
+                      COALESCE(ir.reminder_stage, 0) AS stage, l.seller_email, l.title
+               FROM intro_requests ir JOIN listings l ON l.id = ir.listing_id
+               WHERE ir.status = 'pending'
+                 AND ir.created_at < datetime('now', ?)
+                 AND COALESCE(ir.reminder_stage, 0) < 2
+                 AND (l.is_demo = 0 OR l.is_demo IS NULL)
+                 AND LOWER(COALESCE(l.category,'')) NOT IN ('local_market','local market')
+                 AND l.seller_email IS NOT NULL AND l.seller_email != ''""",
+            ("-%d hours" % INTRO_REMIND_1_H,)).fetchall()
+        b3_seen = {}
+        for ir in pend:
+            created = _lc_parse_ts(ir["created_at"])
+            if not created:
+                continue
+            age_h = (now - created).total_seconds() / 3600.0
+            seller = ir["seller_email"]
+            title = ir["title"] or "your listing"
+            stage = int(ir["stage"] or 0)
+            target = 2 if age_h >= INTRO_REMIND_2_H else (1 if age_h >= INTRO_REMIND_1_H else 0)
+            if target <= stage:
+                continue
+            n_ign = b3_seen.get(seller.lower())
+            if n_ign is None:
+                n_ign = _b3_ignored_count(conn, seller)
+                b3_seen[seller.lower()] = n_ign
+            b3_html = _b3_paragraph(n_ign) if n_ign >= INTRO_B3_WARN_AT else ""
+            if target == 1:
+                hrs_left = max(1, int(RESP_PENALTY_AT_H - age_h))
+                subj = "A buyer is waiting on “" + title + "” — please accept or decline"
+                html = _lc_email_html("A buyer asked to be introduced",
+                    "About a day ago a buyer asked to be introduced on “" + title + "”. "
+                    "Nothing has happened yet. Please open TrustSquare and tap <strong>Accept</strong> or "
+                    "<strong>Decline</strong> — either is fine, silence is the only thing that costs you. "
+                    "In about " + str(hrs_left) + " hours an unanswered introduction takes −5 trust points." + b3_html,
+                    "Respond now")
+                kind = "reminder_24h"
+            else:
+                hrs_left = max(1, int(RESP_REMOVE_AT_H - age_h))
+                subj = "Last reminder: the introduction on “" + title + "” is about to be removed"
+                html = _lc_email_html("Last chance to answer this buyer",
+                    "The introduction on “" + title + "” has waited about " + str(int(age_h)) +
+                    " hours. In about " + str(hrs_left) + " hours it is removed, the buyer is told you did not "
+                    "respond, and the −5 trust point penalty stands. One tap — Accept or Decline — closes it." + b3_html,
+                    "Respond now")
+                kind = "reminder_72h"
+            out = _mail(seller, subj, html)
+            _log_row(ir["id"], seller, kind, "email", out)
+            if target == 2:
+                n_push = 0 if dry_run else _push_to_seller(
+                    conn, seller, "A buyer is still waiting",
+                    "Accept or decline the introduction on “" + title[:60] + "” before it is removed.")
+                _log_row(ir["id"], seller, kind, "push", "sent" if n_push else "none")
+                res["pushed"] += 1 if n_push else 0
+            if b3_html:
+                _log_row(ir["id"], seller, "b3_warning", "email", out)
+                res["b3_warned"] += 1
+            if not dry_run:
+                conn.execute("UPDATE intro_requests SET reminder_stage=?, last_reminder_at=? "
+                             "WHERE id=? AND COALESCE(reminder_stage,0) < ?",
+                             (target, now_iso, ir["id"], target))
+            res["reminded_%dh" % (INTRO_REMIND_1_H if target == 1 else INTRO_REMIND_2_H)] += 1
+
+        # B3 danger zone with NO reminder in flight: one standalone warning per window.
+        zone = conn.execute(
+            """SELECT LOWER(l.seller_email) AS seller, COUNT(*) AS n
+               FROM intro_requests ir JOIN listings l ON l.id = ir.listing_id
+               WHERE ir.status = 'expired' AND ir.created_at >= datetime('now', ?)
+                 AND (l.is_demo = 0 OR l.is_demo IS NULL)
+                 AND LOWER(COALESCE(l.category,'')) NOT IN ('local_market','local market')
+                 AND l.seller_email IS NOT NULL AND l.seller_email != ''
+               GROUP BY LOWER(l.seller_email) HAVING COUNT(*) >= ?""",
+            ("-%d days" % INTRO_B3_WINDOW_DAYS, INTRO_B3_WARN_AT)).fetchall()
+        for z in zone:
+            seller = z["seller"]
+            if seller in b3_seen and b3_seen[seller] >= INTRO_B3_WARN_AT:
+                continue   # already carried on a reminder this tick
+            already = conn.execute(
+                "SELECT 1 FROM intro_reminder_log WHERE seller_email=? AND kind='b3_warning' "
+                "AND sent_at >= datetime('now', ?) LIMIT 1",
+                (seller, "-%d days" % INTRO_B3_WINDOW_DAYS)).fetchone()
+            if already:
+                continue
+            out = _mail(seller, "Important: two introductions went unanswered",
+                        _lc_email_html("Two introductions went unanswered",
+                            "Buyers asked to be introduced on your listings and heard nothing back, so those "
+                            "introductions were removed." + _b3_paragraph(int(z["n"])) +
+                            "Turning on notifications in the app means you never miss the next one.",
+                            "Open your dashboard"))
+            _log_row(None, seller, "b3_warning", "email", out)
+            res["b3_warned"] += 1
+
+        if not dry_run:
+            conn.commit()
+    finally:
+        conn.close()
+    res["emails_sent"] = sent[0]
+    return res
+
+
+@app.post("/admin/intro-reminder-sweep")
+def admin_intro_reminder_sweep(dry_run: int = 0, _admin=Depends(_require_admin_or_key)):
+    """Manual trigger for the INTRO-REMIND-1 hourly sweep. dry_run=1 counts only."""
+    return _intro_reminder_sweep(dry_run=bool(dry_run))
+
+
+if os.getenv("INTRO_REMIND_ENABLED", "1") == "1":
+    def _intro_reminder_hourly_loop():
+        import time as _rt
+        _rt.sleep(180)
+        while True:
+            try:
+                _r = _intro_reminder_sweep(dry_run=os.getenv("INTRO_REMIND_DRYRUN", "0") == "1")
+                if any(_r.get(k) for k in ("reminded_24h", "reminded_72h", "b3_warned")):
+                    print("INTRO-REMIND-1: %s" % _r)
+            except Exception as _ie:
+                print("INTRO-REMIND-1 error: %s" % _ie)
+            _rt.sleep(3600)
+    threading.Thread(target=_intro_reminder_hourly_loop, daemon=True).start()
 
 
 class _KeepLiveIn(BaseModel):
