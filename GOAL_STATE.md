@@ -14,94 +14,93 @@ Run it, never recall it: `python3 MarketSquare/scripts/onboarding_number.py`
 |------|----------------------|---------|---------|-------|
 | 2026-09-04 | **0** | 0 | 0 | baseline, set at handover |
 | 2026-09-04 (run 1) | **0** | 0 | 0 | raw query says 2 — both seed rows, barred by §3 |
+| 2026-09-05 (run 2) | **0** | 0 | 0 | raw still 2, same two seeds; no new clicks on the 5th |
 
 Target: **20 by Fri 31 Oct 2026.**
 
-## WHERE THE FUNNEL LEAKS (PROBED 4 Sep 2026, run 1)
+## WHERE THE FUNNEL LEAKS (PROBED 5 Sep 2026, run 2)
 
-- The listing floor is FIXED and locked (price-basis, invitee AI draft, first-time
-  publish — all shipped 3 Sep). The outreach link opens for a stranger: HTTP 200,
-  no password box, PROBED 10:36Z.
-- **The constraint is now SUPPLY.** Fired the gated wave; 0 emails went out. Of 14
-  city lanes: 9 had no sendable prospects, 2 were latched by stop-loss, 1 by min-gap.
-- 542 of 546 emailed people got the OLD broken link. **130 of them — everyone who
-  opened or clicked — now have the working link** (sent 4 Sep). About 310 who never
-  opened remain uncontacted. Before today only 30 people had ever been sent a link
-  that works.
+- The listing floor is fixed and locked. That is not the constraint.
+- **The constraint was never supply — it was reach.** 9 of 14 lanes reported empty
+  yesterday. They were not empty: `Services` (482 rows, 443 never contacted) was
+  missing from `agency_categories`, so the planner could not see the lane at all.
+  Fixed. **13 of 14 lanes now sendable, 93 guard-clean individuals** (was 5).
+- **We had been mailing the wrong kind of recipient.** `Services` and
+  `us_university_tutors` were not person-only, so 11 real emails went to university
+  front desks at 00:13 today. Both are person-only now.
+- `teachers_trainers` (1,509 rows) is **a list of schools, not teachers** — 1,194 of
+  the 1,235 that pass every address guard are named "… Primary School". It stays
+  blocked. Do not reopen this; the measurement is in the policy note.
+- 133 invitations carried the **wrong city** (all "Pretoria"). Row now wins; 114 of
+  the 133 had not been mailed yet, so most are repaired before first contact.
 
-## WHAT THE LAST RUN DID (4 Sep 2026, run 1)
+## WHAT THE LAST RUN DID (5 Sep 2026, run 2)
 
-0. **Sent the apology to 130 people** — everyone who opened or clicked an outreach email
-   and met the password box. David's permission, his words, 4 Sep. New lane:
-   `resend_broken_link_now.bat`. First attempt reached only 18 (wrong column); corrected
-   the same run to 112 more. Nobody was sent it twice. 11 people in the first 18 had also
-   had the human-clicks follow-up — that was before the never-twice guard existed and
-   cannot recur.
+1. SUPPLY-SERVICES-1 + PERSON-ONLY-3 (RG-0272) — opened the Services lane and made
+   both individual lanes person-only. 5 sendable → 93.
+2. ORG-NAME-1 (RG-0270) — organisations held by NAME on person-only lanes. Upheld
+   the teachers block **with** the measurement the 3 Sep note lacked.
+3. MAGICLINK-CITY-1 (RG-0271) — the prospect row beats a scraper's baked-in city.
+4. STOPLOSS-DISCOVER-1 (RG-0273) — the stop-loss cleaner asks which cities are
+   latched instead of naming three that were released two days ago; also removed a
+   waiting prompt that would have hung the unattended agent.
+5. MEASURE-RATE-1 — `batch_size` 12 → 6 for the measurement week, so night one is
+   ~62 not ~93. **Restore to 12 at Phase 3 (18 Sep).**
+6. Queued the stop-loss clean for Cape Town, Durban, Port Elizabeth, Pietermaritzburg.
 
-1. Found the scoring probe reads HIGH — the contract's raw query returns 2 on the live
-   server and both rows are seed records never emailed. Built the honest scorer
-   (`scripts/onboarding_number.py`), locked as RG-0261.
-2. Promoted RG-0239 — its check still probed `/admin.html`, the URL we stopped sending,
-   so it stayed red for a fault fixed on 3 Sep.
-3. Fired the gated wave, read the result, and traced every block.
-4. Released the stop-loss on Pretoria, New York and Polokwane (list cleaned). Polokwane
-   is GREEN; the other two clear on min-gap tomorrow.
-5. Fixed WAIT-REDIR-1 (RG-0262): five allowlisted bats paced themselves with
-   `timeout.exe`, which dies silently under the host queue's redirected stdin.
-6. Opened RG-0263 — the supply top-up tool is locked out of our own API.
-
-## PHASE 1 — FIRST MEASUREMENT (4 Sep, 21:10 SAST, ~5 hours after the apology went out)
+## PHASE 1 MEASUREMENT (the 130 apology recipients)
 
 | | |
 |---|---|
-| apology emails sent | 130 |
-| opened or clicked today | 91 people |
-| raw clicks today | 31 |
-| **clicks that are REAL PEOPLE** | **2** (click register, refreshed 19:03 UTC) |
+| apology emails sent 4 Sep | 130 |
+| opened 4 Sep | 98 |
+| raw click events 4 Sep | 31 |
+| **distinct real people who clicked** | **2** |
+| any events on 5 Sep | none |
 | published | **0** |
 
-The gap between 31 and 2 is the whole reason the plan says to score by the human tiers.
-18 of today's clickers scored `machine`, 8 `uncertain`. The two real ones:
-southparkmeadows@mathnasium.com (30 min after the send) and greensleeves.el@gmail.com
-(20:45 SAST). Both are new today — before this the register held 2 human clicks in the
-entire campaign's history.
-
-**No wave has sent today. Zero.** The cooling-off rule blocked every city: the last real
-send was 3 Sep 22:15 UTC = 4 Sep 00:15 local, so "one day between waves" ruled out the
-whole of the 4th. The scheduled task fired at 00:16 and dry-ran; the run at 12:51 dry-ran
-too. Next window opens 5 Sep, task fires 00:10 SAST automatically.
+Click→publish is still unmeasured. Two clicks is not a sample. **Tonight's ~62 sends
+are the first wave ever aimed at individuals rather than desks and schools — they are
+the real experiment.** Read them in the morning before doing anything else.
 
 ## THE PLAN
 
-`MarketSquare/ONBOARDING_PLAN.md` — the route from 0 to 20, with the arithmetic that
-decides whether 20 is reachable at all. Phase 1 (to 11 Sep) is MEASURE ONLY: the 130
-apology recipients are the experiment. Do not open the tap before the rate is known —
-we have roughly one pass through the list. The decision gate is at the end of Phase 1.
+`MarketSquare/ONBOARDING_PLAN.md`. Phase 1 (to 11 Sep) is MEASURE ONLY. The decision
+gate is at the end of Phase 1. We have roughly one pass through the list.
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
-0. **Read what the 130 apology emails did.** Opens and clicks land in `email_events` via
-   webhook. That is the first real test of a working funnel on a warm audience — measure
-   it before doing anything else, then run the number.
-1. The wave is eligible again from **5 Sep** (min-gap). Fire it and read the result.
-2. RG-0263: `LAUNCH_API_KEY` was never provisioned, so `fill_wave_gaps.py` 401s and the
-   nine empty pools cannot be topped up through the API. Until it is live, supply must
-   come from `run_local_scraper.bat`. Provisioning needs a production restart — do it
-   when someone is watching, and never by weakening the fail-closed gate.
-3. Still unproven as ONE walk: seller form → save listing → publish → visible logged out.
+0. **Read the 00:10 wave log** (`CityLauncher/logs/launchday_06Sun09_*.log`) and the
+   result of the queued stop-loss clean in `MarketSquare/host_queue/done/`. Then run
+   the number. Then read opens/clicks for the ~62.
+1. **The host agent was idle when this run ended** — last tick 00:11 SAST, three
+   requests still queued (stop-loss clean, both commits). No stale lock, no error
+   line; the PC was almost certainly asleep at 01:40 on a Saturday. The queue drains
+   itself on the next tick. RG-0257 is red for exactly this and clears on its own.
+   The 00:10 wave does NOT depend on the agent — it is a separate scheduled task and
+   reads the working tree, which already carries today's changes.
+2. If the four cleaned cities are still latched, the clean failed — read the result
+   file, do not re-queue blind. Until it runs, tonight sends ~41 rather than ~62.
+2. RG-0263 (`LAUNCH_API_KEY`) is **no longer the supply blocker** and should not be
+   treated as urgent. Supply exists; it was reach that was broken.
+3. Still unproven as ONE walk: seller form → save → publish → visible logged out.
    Build it as a composite probe; do not create a listing (§3 bars it).
+4. Tomorrow is Sunday — add the plain-language summary at the top of this file.
 
 ## THINGS ALREADY TRIED THAT DID NOT WORK
 
-- Opening `/admin.html` publicly to fix the CTA (1 Sep) — exposed the admin console and
-  its delete control; rolled back in 76 seconds. The fix is the LINK, never the gate.
-- `fill_wave_gaps.py` via the host queue (4 Sep) — HTTP 401, see RG-0263. Do not retry
+- Opening `/admin.html` publicly to fix the CTA (1 Sep) — exposed the admin console;
+  rolled back in 76 seconds. The fix is the LINK, never the gate.
+- `fill_wave_gaps.py` via the host queue (4 Sep) — HTTP 401, RG-0263. Do not retry
   until the key is provisioned; it will fail the same way.
+- Reading "no sendable prospects" as a supply problem (4 Sep) — it was a reach
+  problem, and a session was spent scraping for supply we already had. Check whether
+  the planner can SEE a lane before concluding the lane is empty.
 
 ## OPEN QUESTIONS FOR DAVID (batched, never dripped)
 
-1. ~~Re-mail the people whose link was broken?~~ **ANSWERED 4 Sep 2026** — David: *"i think
-   we should at least resend the ones that did open their emails?"* Done: 130 sent.
-   The ~310 who only RECEIVED the broken email (never opened it) are still uncontacted;
-   that is a wider send than his words covered, so it stays unasked until there is
-   evidence the warm 130 convert.
+1. ~~Re-mail the people whose link was broken?~~ **ANSWERED 4 Sep** — 130 sent. The
+   ~310 who only received the broken email are still uncontacted; that is a wider
+   send than his words covered, so it stays unasked until the warm 130 show a rate.
+
+**Nothing else is waiting on him.** No clicks, no approvals, no decisions.

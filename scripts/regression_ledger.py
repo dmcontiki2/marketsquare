@@ -15553,5 +15553,301 @@ def rg_no_personal_reply_route():
     return out
 
 
+@entry("RG-0270", "An INDIVIDUAL-seller lane holds ORGANISATIONS by NAME, not just by address "
+       "shape -- because a school's official mailbox is a personal-looking Gmail account and no "
+       "local-part filter can ever tell the two apart",
+       LOCKED, fixed_on="2026-09-05",
+       scope="CityLauncher/emailer/emailer.py _looks_org_name(), wired into the composer "
+             "(get_prospects, both the guards-first block and the final filter) and mirrored in "
+             "wave_runner.sendable_by_category + held_by_guard so the plan cannot promise what "
+             "the chokepoint would refuse (PLAN-TRUTH-1). Applies to every category in "
+             "waves_policy defaults.person_only_categories and to NO other -- the agency lanes "
+             "('Tutor Institutions', 'Education Institutions', 'Service Companies') reach exactly "
+             "these organisations through their desks on purpose, RUL-059. HOLDS, never "
+             "suppresses: the row stays in the pool, nobody opted out. CLASS: any guard that "
+             "judges WHO we are writing to from the shape of the address alone. The address is "
+             "the cheapest signal and the weakest one; where the entity matters, read the name.",
+       ref="ORG-NAME-1, 5 Sep 2026. PERSON-ONLY-1 blocked teachers_trainers on 3 Sep with the "
+           "release condition 'until the person-only scraper filter lands', and the obvious "
+           "reading of that was 'write an address filter'. PROBED 5 Sep and the obvious reading "
+           "is wrong: of 1,509 sendable rows in that pool, 1,235 (81%) already sail past every "
+           "address-shape guard -- 87% of them on gmail.com -- and 1,194 of those 1,235 are named "
+           "'<X> Primary School', '<X> Secondary School', '<X> College'. mdusifo555@gmail.com is "
+           "Maduna Primary School. Only 41 rows survive a NAME test, mostly day-cares and "
+           "training centres. Releasing the block on the strength of an address filter would have "
+           "cold-mailed ~1,200 KZN school principals a 'founding tutor' invitation and spent the "
+           "largest pool in the database on the people least able to accept it. The block stays "
+           "(see the policy note, re-examined and upheld the same day); this entry is the guard "
+           "that makes the same mistake impossible on Tutors, Services and us_university_tutors "
+           "too, where nobody had looked.")
+def rg_org_name_guard():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    em = os.path.join(cl, "emailer", "emailer.py")
+    wr = os.path.join(cl, "emailer", "wave_runner.py")
+    if not os.path.exists(em):
+        return [(INFO, "SKIPPED -- CityLauncher is not on this disk")]
+
+    src = open(em, encoding="utf-8", errors="replace").read()
+    if "_looks_org_name" not in src:
+        return [(FAIL, "_looks_org_name is gone from emailer.py -- an individual-seller lane can "
+                       "be mailed at a school again (ORG-NAME-1)")]
+    # it must actually be WIRED, not merely defined
+    if src.count("_looks_org_name(") < 3:
+        out.append((FAIL, "_looks_org_name is defined but not wired into both composer paths "
+                          "-- a guard nobody calls is not a guard"))
+    if os.path.exists(wr):
+        w = open(wr, encoding="utf-8", errors="replace").read()
+        if "_looks_org_name" not in w:
+            out.append((FAIL, "wave_runner does not apply _looks_org_name -- the PLAN would "
+                              "promise schools the chokepoint refuses (PLAN-TRUTH-1)"))
+
+    # BEHAVIOURAL, on synthetic rows, so it cannot rot quietly when the live pool changes
+    import importlib.util as _ilu
+    spec = _ilu.spec_from_file_location("_ol_emailer", em)
+    try:
+        mod = _ilu.module_from_spec(spec); sys.modules["_ol_emailer"] = mod
+        spec.loader.exec_module(mod)
+    except Exception as e:
+        out.append((INFO, "SKIPPED behavioural leg -- emailer.py not importable here (%s)" % e))
+        return out or [(INFO, "source legs pass")]
+
+    person_only = sorted(mod._person_only_categories())
+    if "Tutors" not in person_only:
+        out.append((FAIL, "Tutors left person_only_categories -- the individual lanes lost both "
+                          "the office-desk guard and this one"))
+    for cat in ("Services", "us_university_tutors"):
+        if cat not in person_only:
+            out.append((FAIL, "%s is not person-only -- office desks and organisations can be "
+                              "cold-mailed on an individual-seller lane again (PERSON-ONLY-3)"
+                        % cat))
+    cases = [
+        ("Maduna Primary School",  None, "teachers_trainers", True,  "a school on a tutor lane"),
+        ("Bongumusa Primary School", "", "teachers_trainers", True,  "a school with a personal gmail"),
+        ("Waterberg College",      None, "teachers_trainers", True,  "a college on a tutor lane"),
+        ("Casey Chiang Yoga",      None, "teachers_trainers", False, "a real individual trainer"),
+        ("Thandi Nkosi",           None, "Tutors",            False, "a person"),
+        ("Maduna Primary School",  None, "Tutor Institutions", False, "the AGENCY lane must still reach schools (RUL-059)"),
+    ]
+    for name, biz, cat, want, why in cases:
+        got = bool(mod._looks_org_name(name, biz, cat))
+        if got != want:
+            out.append((FAIL, "_looks_org_name(%r, %r) on %s returned %s, expected %s -- %s"
+                        % (name, biz, cat, got, want, why)))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "org-name guard holds schools on person-only lanes, leaves people and "
+                          "the agency lanes alone (%d cases, person_only=%s)"
+                    % (len(cases), ",".join(person_only))))
+    return out
+
+
+@entry("RG-0271", "A magic link tells the app the seller's REAL city -- the prospect row wins "
+       "over whatever a scraper baked into the stored link months ago",
+       LOCKED, fixed_on="2026-09-05",
+       scope="CityLauncher/emailer/emailer.py build_magic_link() legacy branch -> "
+             "_row_wins_on_place(). Repaired at the READ, exactly like CTA-URL-1, because sandbox "
+             "SQLite writes to this mount are banned (31 Aug) and mutating 133 rows is the weaker "
+             "fix. city and suburb only: name/email/cat were probed clean (0 mismatches of 3,547 "
+             "stored links) and are left untouched. A link that already agrees comes back "
+             "byte-identical, and the repair is wrapped so that it can never cost a send. CLASS: "
+             "any value we cache at scrape time and then read as truth at send time -- the row is "
+             "what we have since verified, the baked copy is a snapshot of an old belief.",
+       ref="MAGICLINK-CITY-1, 5 Sep 2026. Found by reading the morning wave's own dry-run output: "
+           "three Durban operators (Umkomaas Golf, Monkeyland KZN, a shark-cage dive at Aliwal "
+           "Shoal) were each rendered a link saying city=Pretoria, and Walmer Golf in Port "
+           "Elizabeth the same. PROBED across the whole pool: 133 rows carry a link whose city "
+           "contradicts the row -- 108 adventures_accommodation, 24 adventures_experiences, 1 "
+           "teachers_trainers -- every one of them stamped 'Pretoria' by the adventures scrapers, "
+           "and their suburb field carries a category token ('accommodation_only', "
+           "'wildlife_and_birding') rather than a suburb. 19 had already been mailed; 114 had not, "
+           "so the repair reaches most of them before they are ever contacted. The app reads "
+           "?city= to pre-fill the first listing, so the invitation asked a Durban dive operator "
+           "to publish in Pretoria: they either notice and lose trust at the first screen, or they "
+           "publish where no local buyer will ever look. Either way the funnel ends there.")
+def rg_magic_link_city_truth():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    em = os.path.join(cl, "emailer", "emailer.py")
+    if not os.path.exists(em):
+        return [(INFO, "SKIPPED -- CityLauncher is not on this disk")]
+    src = open(em, encoding="utf-8", errors="replace").read()
+    if "_row_wins_on_place" not in src:
+        return [(FAIL, "_row_wins_on_place is gone -- legacy magic links can send a seller to the "
+                       "wrong city again (MAGICLINK-CITY-1)")]
+
+    import importlib.util as _ilu
+    spec = _ilu.spec_from_file_location("_ol_emailer2", em)
+    try:
+        mod = _ilu.module_from_spec(spec); sys.modules["_ol_emailer2"] = mod
+        spec.loader.exec_module(mod)
+    except Exception as e:
+        return [(INFO, "SKIPPED behavioural leg -- emailer.py not importable here (%s)" % e)]
+
+    row = {"city": "Durban", "suburb": "water_sports", "email": "a@b.co.za", "name": "X",
+           "category": "adventures_experiences",
+           "magic_link": "https://trustsquare.co/admin.html?magic=1&name=X&email=a%40b.co.za"
+                         "&cat=adventures_experiences&city=Pretoria&suburb=wildlife_and_birding"}
+    link = mod.build_magic_link(row, "https://trustsquare.co")
+    if "city=Durban" not in link:
+        out.append((FAIL, "the link still does not carry the row's city -- got %r" % link[:160]))
+    if "Pretoria" in link:
+        out.append((FAIL, "the scraper's wrong city survived the repair -- %r" % link[:160]))
+    if "/admin.html" in link:
+        out.append((FAIL, "CTA-URL-1 regressed: the admin console URL is back in a magic link"))
+    if "src=" not in link:
+        out.append((FAIL, "WAVE-TAG-1 regressed: the link lost its wave source tag"))
+    # a link that already agrees must come back untouched
+    ok_link = ("https://trustsquare.co/?magic=1&name=X&email=a%40b.co.za"
+               "&cat=adventures_experiences&city=Pretoria&suburb=wildlife_and_birding&src=t")
+    row2 = dict(row, city="Pretoria", suburb="wildlife_and_birding", magic_link=ok_link)
+    if mod.build_magic_link(row2, "x") != ok_link:
+        out.append((FAIL, "an already-correct link was rewritten -- the repair must be a no-op "
+                          "when the row and the link agree"))
+    # a row with no city may never blank the link
+    if mod._row_wins_on_place(ok_link, dict(row2, city="")) != ok_link:
+        out.append((FAIL, "a row with no city damaged the link -- absent data is not a correction"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "row wins on city+suburb; agreeing links untouched; CTA-URL-1 and "
+                          "WAVE-TAG-1 intact"))
+    return out
+
+
+@entry("RG-0272", "Every individual-seller lane we HAVE is a lane a wave can actually REACH -- a "
+       "category may not sit in a city's priority list while being invisible to the planner",
+       LOCKED, fixed_on="2026-09-05",
+       scope="CityLauncher/emailer/waves_policy.json -- agency_categories (despite its name, the "
+             "set of every category a wave may draw from) must contain every category named in "
+             "any city's category_priority, minus defaults.blocked_categories. city_categories() "
+             "INTERSECTS the two lists, so a name in one and not the other is silently dropped "
+             "and the lane simply never sends. CLASS: any two lists that must agree, where "
+             "disagreement is silent. Nothing logs 'you asked for Services and I ignored it'; the "
+             "city just reports an empty pool, which reads as 'we need more prospects' and sends "
+             "the next session scraping for supply we already had.",
+       ref="SUPPLY-SERVICES-1, 5 Sep 2026. The 05 Sep 00:10 wave reported 'no sendable agency "
+           "prospects -- top up the pool first' for 9 of 14 cities and sent 5 real emails, while "
+           "482 individual service providers sat in the database unreachable by any wave, 443 of "
+           "them never contacted. 'Services' was in no city's category_priority AND missing from "
+           "agency_categories, so adding it to the first alone changed nothing -- which is how "
+           "the fault hid. PROBED after the fix, plan and chokepoint agreeing exactly: 13 of 14 "
+           "lanes sendable, 93 guard-clean individuals, up from 5. Paired with PERSON-ONLY-3 in "
+           "the same edit, because opening a lane and guarding it are one act: 'Services' and "
+           "'us_university_tutors' were individual-seller lanes that were NOT person-only, so the "
+           "office-desk guard never ran on them -- the 05 Sep 00:13 New York wave really did mail "
+           "admissions@nyadi.edu, reception@lallianceny.org, gsbgraduate@fordham.edu and 8 more "
+           "university front desks a personal tutoring invitation.")
+def rg_wave_lanes_reachable():
+    out = []
+    pol_path = os.path.join(os.path.dirname(REPO), "CityLauncher", "emailer", "waves_policy.json")
+    if not os.path.exists(pol_path):
+        return [(INFO, "SKIPPED -- waves_policy.json is not on this disk")]
+    import json as _json
+    pol = _json.loads(open(pol_path, encoding="utf-8").read())
+    draw = set(pol.get("agency_categories") or [])
+    blocked = set((pol.get("defaults") or {}).get("blocked_categories") or [])
+    person_only = set((pol.get("defaults") or {}).get("person_only_categories") or [])
+
+    # (a) no city may name a category the planner cannot see
+    for city, cfg in (pol.get("cities") or {}).items():
+        for cat in (cfg.get("category_priority") or []):
+            if cat not in draw and cat not in blocked:
+                out.append((FAIL, "%s lists %r in category_priority but it is not in "
+                                  "agency_categories -- the lane is silently dropped and the city "
+                                  "reports an empty pool (SUPPLY-SERVICES-1)" % (city, cat)))
+    # (b) the individual-seller lanes stay person-only
+    for cat in ("Tutors", "Services", "us_university_tutors", "teachers_trainers"):
+        if cat in draw and cat not in person_only:
+            out.append((FAIL, "%r is a drawable individual-seller lane but is not in "
+                              "person_only_categories -- office desks and organisations can be "
+                              "cold-mailed on it (PERSON-ONLY-3)" % cat))
+    # (c) the school pool stays blocked (see RG-0270 for the measurement)
+    if "teachers_trainers" not in blocked:
+        out.append((FAIL, "teachers_trainers left blocked_categories -- 1,194 of its 1,235 "
+                          "guard-clean rows are named schools (PERSON-ONLY-1, upheld 5 Sep)"))
+    # (d) at least one city can actually send, or the whole lane set is dead
+    reachable = [c for c in draw if c not in blocked]
+    if not reachable:
+        out.append((FAIL, "every drawable category is blocked -- no wave can ever send"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "%d drawable categories, %d city priority lists all resolvable, "
+                          "%d person-only, schools still blocked"
+                    % (len(reachable), len(pol.get("cities") or {}), len(person_only))))
+    return out
+
+
+@entry("RG-0273", "The stop-loss cleaner ASKS which cities are latched instead of naming them in "
+       "its own text -- a hardcoded list of a moving state is stale the day after it is written",
+       LOCKED, fixed_on="2026-09-05",
+       scope="CityLauncher/clean_stoploss_cities.bat + CityLauncher/scripts/stoplossed_cities.py. "
+             "THREE LEGS. (a) DISCOVERY: the bat names no city; it runs the helper, which asks "
+             "wave_runner.gate_check and prints the latched ones. (b) CLEAN OUTPUT: the helper "
+             "prints city names and NOTHING else -- gate_check writes its own notes ('stop-loss "
+             "RELEASED for wave #1 ...') to stdout, and a .bat looping over that output would "
+             "read those lines as city names and pass them to clean_city_list.py, so the judging "
+             "pass is captured and only the verdict escapes. (c) UNATTENDED: the bat is on "
+             "host_queue/ALLOWLIST.txt, so it must never wait for a key or use timeout.exe "
+             "(RG-0262's class, and the LOUD half of it -- a waiting prompt hangs the 20-minute "
+             "agent forever). CLASS: any allowlisted script that encodes a snapshot of state a "
+             "later run will re-read as truth.",
+       ref="STOPLOSS-DISCOVER-1, 5 Sep 2026. The bat named 'New York', Pretoria and Polokwane -- "
+           "the three cities latched on 3 Sep. PROBED 5 Sep: all three had since been released, "
+           "and the four actually latched were Cape Town, Durban, Port Elizabeth and "
+           "Pietermaritzburg, none of them in the file. So the designed release path ran and "
+           "released nothing, while three of the four biggest sendable pools stayed shut -- 21 of "
+           "the night's 62 sendable individuals, held back by a list that had been correct for "
+           "about 36 hours. It also carried a waiting prompt at the end while sitting on the "
+           "unattended allowlist, which would have hung the host agent the first time it was "
+           "queued.")
+def rg_stoploss_discovery():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    bat = os.path.join(cl, "clean_stoploss_cities.bat")
+    helper = os.path.join(cl, "scripts", "stoplossed_cities.py")
+    if not os.path.exists(bat):
+        return [(INFO, "SKIPPED -- CityLauncher is not on this disk")]
+    import re as _re
+    b = open(bat, encoding="utf-8", errors="replace").read()
+
+    if not os.path.exists(helper):
+        out.append((FAIL, "scripts/stoplossed_cities.py is gone -- the cleaner has no way to ask "
+                          "which cities are latched (STOPLOSS-DISCOVER-1)"))
+    if "stoplossed_cities.py" not in b:
+        out.append((FAIL, "clean_stoploss_cities.bat no longer calls the discovery helper"))
+    # (a) no city may be named in the bat itself
+    for city in ("New York", "Pretoria", "Polokwane", "Cape Town", "Durban",
+                 "Port Elizabeth", "Pietermaritzburg", "Johannesburg"):
+        if _re.search(r'--city\s+"?%s' % _re.escape(city), b):
+            out.append((FAIL, "clean_stoploss_cities.bat hardcodes --city %r -- the latch set "
+                              "moves every wave and this file was 36 hours out of date the last "
+                              "time it did (STOPLOSS-DISCOVER-1)" % city))
+    # (c) unattended-safe: it sits on the allowlist
+    for line in b.splitlines():
+        s = line.strip().lower()
+        if s == "pause" or s.startswith("pause ") or _re.match(r"^timeout\s+/t", s):
+            out.append((FAIL, "clean_stoploss_cities.bat waits for a key (%r) while on the "
+                              "unattended allowlist -- it would hang the host agent (RG-0262)"
+                        % line.strip()[:40]))
+    allow = os.path.join(REPO, "host_queue", "ALLOWLIST.txt")
+    if os.path.exists(allow):
+        a = open(allow, encoding="utf-8", errors="replace").read().lower()
+        if "clean_stoploss_cities.bat" not in a:
+            out.append((INFO, "clean_stoploss_cities.bat is not on the allowlist -- the "
+                              "unattended leg is moot but harmless"))
+    # (b) the helper must not let gate_check's own chatter escape
+    if os.path.exists(helper):
+        h = open(helper, encoding="utf-8", errors="replace").read()
+        if "redirect_stdout" not in h:
+            out.append((FAIL, "stoplossed_cities.py does not capture gate_check's stdout -- its "
+                              "notes would be read back as city names and handed to "
+                              "clean_city_list.py"))
+        prints = _re.findall(r"^\s*print\((.*)$", h, _re.M)
+        if any("city" not in x for x in prints):
+            out.append((FAIL, "stoplossed_cities.py prints something other than a city name -- "
+                              "its whole contract is one city per line, nothing else"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "cleaner discovers its own latched cities, prints city names only, "
+                          "never waits for a key"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

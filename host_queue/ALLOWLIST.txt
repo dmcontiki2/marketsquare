@@ -35,3 +35,10 @@ run_py     CityLauncher\scripts\clean_junk_emails.py
 # --- The bat pulls the server's verdicts first and fails closed, then dry-runs, then
 # --- sends. Every emailer guard applies; ROSTER-FENCE-1 refuses an oversized roster.
 run_bat    CityLauncher\resend_broken_link_now.bat
+
+# --- Widened 5 Sep 2026 (RUL-095: 'commit and deploy after I have given permission'
+# --- already covers commit+push of Claude's own work). COMMIT-CITYLAUNCHER-1: the queue
+# --- could git_push CityLauncher but had no way to COMMIT it, so work done in that repo
+# --- could only be published if a human committed it first. Mirror of MarketSquare's
+# --- commit.bat: git_unlock, add -A, commit, push. No new sending or spending authority.
+run_bat    CityLauncher\commit.bat
