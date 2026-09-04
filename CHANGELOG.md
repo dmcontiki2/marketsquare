@@ -1,3 +1,186 @@
+## 2026-09-04 — DW-091 closed: the DEMO tab is back on all 15 demo maps, and the ledger that grades it was dark
+
+**The open action, closed with evidence.** `RG-0141` reads `[  ok  ]` on a live run — info
+`15 demo map(s), every one loads ts_demo_banner.js` and `live ts_demo_banner.js serves and mounts the DEMO tab`.
+Probed directly this session rather than inferred: all 15 live pages `GET /static/adventures_<m>_map.html`
+(au, au_rail, bw, c2c, de, gb, gb_rail, ke, mz, na, reserve, uk, us, us_rail, za) each return exactly one
+`<script src="/static/ts_demo_banner.js?v=1" defer>` line, and `/static/ts_demo_banner.js` serves 200 / 5,287 B.
+
+**What actually fixed the product fault** (already on disk when this session started, so recorded not re-done):
+`a7e97d0` DEMO-BANNER-2, 3 Sep 08:01 SAST — the banner line went into `scripts/journey_template.html`, the
+GENERATOR, which is what makes it a class fix; DEMO-BANNER-1 on 22 Aug had patched the eleven built files by hand,
+which is why one rebuild (`2d6bcfd`, LIVE-MAP-1) deleted it again. The same commit added TEMPLATE tripwires to
+RG-0141 and RG-0182. The 3 Sep 16:15Z release placed it (post_deploy_status seed / ladder_seed / geo_seed /
+migrations all ok). The card stayed red a day longer than the fault existed only because the board is a daily
+snapshot and nothing re-graded it after the fix shipped.
+
+**The more serious half, found while closing — LEDGER-DARK-1.** The whole regression ledger had been refusing to
+run since `bc44112` (PERSON-ONLY-2, ~06:0x today): that commit reused id `RG-0254`, already held by LIVE-MAP-1's
+entry, and `LEDGER-DUP-1` raises `SystemExit` at import — by design, loudly — so **none of the 251 assertions were
+being evaluated at all**, and RG-0141 could not have gone green on any run. Resolved by LEDGER-DUP-1's own printed
+rule (LOCKED entries never move, the OPEN newcomer does): the OPEN LIVE-MAP-1 entry is renumbered **RG-0258** with
+the reason written into its own `ref` so the next session reading a 3 Sep CHANGELOG/STATUS line that says RG-0254
+for LIVE-MAP-1 knows where it went; the LOCKED PERSON-ONLY-2 entry keeps RG-0254. `py_compile` green, no duplicate
+ids remain. The refuse-at-import design is deliberately left alone — it worked: the board announced its own
+blindness the first time it was asked, and the fix took minutes.
+
+**Board restored** (live run, 122.5 s): **251 entries · 225 holding · 3 REGRESSED · 17 open · 4 ready to lock ·
+2 UNVERIFIED · exit 1**. The three reds it exposed are pre-existing, each already its own entry, and none is DW-091:
+`RG-0154` (session counter has fallen behind the fragments on disk), `RG-0241` (a bare `GET /optout` WROTE the
+register, 198 → 199 — scanners can opt people out again), `RG-0257` (2 host-queue requests pending 536 min with no
+agent activity — the 20-min host task last ran 3 Sep 21:51, i.e. the PC was off overnight, not a code fault).
+
+**Register and board re-graded:** `DAILY_WATCH/OPEN_ITEMS.md` + `.json` DW-091 → CLOSED with the evidence above;
+`DEFENCE_COVERAGE_MAP.html` red card → green, header and footer counts now **59 green · 0 blue · 2 amber · 0 red ·
+10 grey** (71 cards). Both files are deploy-manifest'd and served gated, so they go live with the pending push.
+
+## 2026-09-04 — Batch 2 of the 29 Aug listing audit (RUL-065) · built unattended, STAGED not shipped
+
+Scheduled 04:00Z build. Precondition checked first: Batch 1 (SF-AIDESC-1 / A2HS-ASK-1, RG-0205/0209)
+was already LIVE — probed on the served ms.js by the 2 Sep run and carried by David's releases.
+
+- **SF-MULTIVISION-1 (RG-0206, ms.js).** `sfRunMultiVision()` — when the seller advances from
+  Photos with 2+ photos, main + up to 9 more filled slots (hard cap 10 = the AI_BASELINE vision
+  envelope) go up in ONE `/listings/vision-draft` call. Per-photo indices map back to the slot keys
+  sent: off-category in slot 2+ drops that photo with a named toast (the WRONG-TYPE-1 rule main
+  already had); anonymity flags the slot badge ("✓ checked · will blur" — the upload-time SELLER-ANON
+  gate still does the blurring). >5 MB files skipped client-side so server indices stay aligned.
+  Photos 11+ upload as before — nothing gated, nothing lost (RUL-066 ladder). Runs in the
+  background; re-paints only when the seller is not mid-keystroke; a photo-set signature stops
+  re-runs on back-and-forth. Hook: `sfGo('secA')` from `photos` (covers the button and the skip link).
+- **INTRO-REMIND-1 (RG-0208, bea_main.py).** Hourly daemon sweep `_intro_reminder_sweep()`
+  (INTRO_REMIND_ENABLED=1 default, first pass 3 min after boot, INTRO_REMIND_EMAIL_CAP=100/run):
+  ~24h pending → email #1 naming the 48h −5 penalty; ~72h → email #2 naming the 96h removal + web
+  push where `users.buyer_token → wearable_devices` has an enabled subscription; B3 danger zone
+  (≥2 ignored intros in the rolling 30-day window, `status='expired'`, demo/local-market excluded
+  exactly as RESP-1) → explicit paragraph naming the block + 60-day cooling-off on the reminder, or
+  ONE standalone warning per window. Idempotent: `intro_requests.reminder_stage` /
+  `last_reminder_at` (new columns, conditional UPDATE) + every attempt rowed in new
+  `intro_reminder_log`. No Tuppence path touched. `POST /admin/intro-reminder-sweep?dry_run=1`
+  for a manual count. Harness-proven on a scratch DB: 2 reminders + 1 B3 first run, 0 on re-run.
+- **SF-COACH-ASK-1 (RG-0207, ms.js + bea_main.py) — built AND verified in test, so it ships with
+  the batch.** Every sell-flow coach avatar is tappable (+ an "Ask me a question ›" line) → small
+  ask box under the bubble → NEW free lane `POST /advert-agent/coach/ask` (Haiku, ≤3 sentences,
+  step + category + current fields as context; same identity gate as vision-draft: registered user
+  or invited prospect). Server-side cap `SF_COACH_ASK_CAP=10` per listing session in new
+  `coach_ask_log`. RUL-066 ceiling behaviour: `warn` from 8 of 10 ("2 questions left"), 429 at the
+  cap with the 1T dashboard-coach funnel copy, the typed question kept read-only in the box (never
+  lost — also survives re-renders and network failure), every cap-hit rowed with limit/tier/category.
+  The paid `/advert-agent/coach` is untouched. Harness: 401 unknown/empty email, 10 answers with
+  warn at 8/9/10, 429 on the 11th, cap row logged.
+- **Ledger.** RG-0206/0207/0208 promoted OPEN → LOCKED (source-half assertions; RG-0207 strengthened
+  to require both halves + the cap constant). RG-0257 assertion FIXED: it read the bat's header
+  comment and painted a false REGRESSION ("order wrong"); it now judges code lines only. Run after:
+  exit 0, no regressions. rulings_check: 92 checked, 0 FAIL.
+- **Schema (applied at startup by run_migrations, no migration file needed):** intro_requests
+  +reminder_stage +last_reminder_at; tables intro_reminder_log, coach_ask_log.
+
+Verify: `py_compile bea_main.py` ok · `node --check ms.js` ok · markers present · live site untouched.
+Deploy is David's word ("ship") — not run by this session.
+
+## 2026-09-03 — PERSON-ONLY-1 (block) · the funnel read, and the duplicate send that did not go out
+
+Funnel read (server prospects.db, 29 Aug–3 Sep): 436 invited · 183 opens · 61 raw clicks · 0 real
+listers. Two kinks: (1) first-time publish was broken until EULA-ORDER-1 shipped 04:00Z today, so
+every click landed on a dead end; (2) ~half the invited addresses are organisations/competitors, not
+people. Action: `teachers_trainers` blocked at plan AND chokepoint via `waves_policy.json
+defaults.blocked_categories` before tonight's 00:10 DailyWave (PMB 535 green). Full note in
+CityLauncher/CHANGELOG.md. A sandbox-queued re-send to the raw 61 clickers was cancelled (33 were
+scanners; the human tiers already got the follow-up at 02:00Z). Next: the person-only scraper filter.
+
+## 2026-09-03 — maintenance-loop: DEMO-BANNER-2 (RG-0141 regression cleared at the root)
+
+**Unattended B2b maintenance run, 07:4x SAST.** Fault queue read via `maintenance_agent.py` (SHADOW,
+foreground): **0 new / 0 fix-shipped / 26 verified**; heartbeat posted to `/dashboard/maint`
+(run 2026-09-03T05:42:02Z). No shadow patches, no PATH_B routes, no escalations (brief: silence).
+
+**Top item — a LOCKED fix had rotted (RG-0141 / DW-091):** LIVE-MAP-1 (2d6bcfd, 06:07 SAST) rebuilt
+the 11 generated demo maps from `scripts/journey_template.html`, which never carried the DEMO-BANNER-1
+include — the 22 Aug fix had patched the 11 OUTPUT files by hand. The same rebuild also dropped
+`ts_fares.js` (TP-FARES-1) and stepped `ts_report.js` back to `?v=5`, and no assertion covered either.
+This is the RG-0062 class (13 Aug: ts_report.js dropped by a rebuild, fixed by moving the line INTO
+the template) recurring for the two lines that were never moved in.
+
+Fix (DEMO-BANNER-2), class-level:
+- `scripts/journey_template.html` now carries `ts_report.js?v=6`, `ts_demo_banner.js?v=1` and the
+  TP-FARES-1 comment + `ts_fares.js?v=1` — the one source every rebuild copies.
+- `python3 scripts/build_journey.py` rebuilt all 11 maps (au, au_rail, bw, c2c, gb, gb_rail, ke, mz,
+  na, us, us_rail). Diff vs. the committed files: exactly the tail script block, +280 B each, nothing else.
+- Ledger: **RG-0141** gains a clause asserting the TEMPLATE carries exactly one `ts_demo_banner.js`
+  include; **RG-0182** gains a clause asserting the template AND every `adventures_*_map.html` carry
+  `ts_fares.js`. Both tripwires proven to bite (negative test with the lines removed → FAIL).
+- Evidence (PROBED): targeted run RG-0141 → `15 demo map(s), every one loads ts_demo_banner.js` +
+  `live ts_demo_banner.js serves and mounts the DEMO tab`; RG-0182 → no fails (after fastapi bootstrap
+  via `maint_deps.py`). Full board via `ledger_resume.py` (sandbox cap ~170 s/call): **248 entries ·
+  224 holding · 0 REGRESSED · 20 open · 4 ready to lock · 0 UNVERIFIED · exit 0**.
+
+Not done here, by contract: no push, no deploy — NIGHTLY-SHIP-1 / the autodeploy agent (RG-0252)
+ships the commit. Until it does, the 11 live maps still serve WITHOUT the DEMO tab (live
+`/static/adventures_au_map.html` has 0 occurrences of `ts_demo_banner`). READY TO LOCK but not
+promoted (attended lane's entries, made today): RG-0252, RG-0254, RG-0255; RG-0236 held by design.
+
+**06:05 SAST — /ship complete.** EULA-ORDER-1 shipped 14308e2 via relay (DEPLOY OK 04:00Z, live ms.js v=577,
+rollback tag `ship-20260903-0558`). Re-walk: `?magic=1&drafted=1` → preview → plan → EULA → **Go live →
+"🎉 You're live"**. Server: listing **381 live, R350 / hour, Tutors, Pretoria**; user
+walkthrough.tutor@trustsquare.co eula_accepted. **RG-0249, RG-0250, RG-0253 → LOCKED** (with RG-0248).
+Smoke: index 200 / 0.53 s, /health ok. Ledger: the sandbox run now exceeds the tool's 178 s cap, so the
+verifying run was executed on the origin (`/opt/marketsquare-src`, 632bede): all four entries green; the 8
+reds there (RG-0028/0141/0163/0188/0194/0229/0230/0234, RG-0245 ???) are vantage artefacts of running ON
+the origin (direct-origin reachability, CityLauncher/.secrets not beside the clone, sandbox-SSH legs) — the
+last sandbox run before this ship (05:2x) was 245 entries · 0 REGRESSED · exit 0. **Walkthrough listing 381
+is a live test advert under a trustsquare.co address — deletion is David's (reserved).**
+
+**The 0-listings question, closed:** three sequential faults meant NO first-time self-serve seller could
+publish a rate-based listing since 22 Jul, and no invitee got the AI draft. All three are live-fixed and
+proven by a stranger's account going live. The humans-only follow-up (`resend_human_clicks.bat`, 48 people)
+is now safe to send.
+
+## 2026-09-03 — HOST-QUEUE-1: no more "David clicks" (RUL-095)
+
+- David: guardrails stay, but as permission requests; the machine does the click. Built on the
+  agent that is ALREADY registered and ticking (autodeploy_agent_log.txt: SHIPPED 06:31 today),
+  so no new Task Scheduler registration was needed.
+- `host_queue/ALLOWLIST.txt` (git push MarketSquare/CityLauncher; the exchange, sync, stop-loss
+  and refill bats; exchange import/export + clean_city_list py). `scripts/host_queue_worker.py`
+  refuses a request without a permission= line or off the allowlist, runs one at a time oldest
+  first, writes `host_queue/done/<name>.result` (verdict + output tail). `scripts/request_host_action.py`
+  is Claude's side (requires --permission, pre-checks the allowlist). autodeploy_agent.bat calls the
+  worker after git_unlock and before the deploy legs (CRLF preserved; backup .bak-hostqueue-*).
+- PROVED worker logic on a temp queue: no-permission → REFUSED, off-allowlist → REFUSED,
+  allowed → DONE, requests moved to done/. Host-side execution unproven until the first tick —
+  RG-0257 OPEN, prints READY TO LOCK on the first DONE result.
+- Reflected: RULINGS RUL-095, STANDING_ORDERS, Projects/CLAUDE.md rule, .gitignore (req/done).
+- First real requests queued under RUL-095/RUL-092: git_push CityLauncher (publish exchange/ for
+  Dave), git_push MarketSquare, run_bat clean_stoploss_cities.bat (the click left from this morning).
+
+## 2026-09-03 — GRANT-TUPPENCE-1: the +1 page first-lister bonus function, built
+
+**Trigger:** David asked to credit "our first tutor outside the Conradie/Marietjie circle" (the
+Waterkloof Maths/Physical Science listing) 25T and email her. Probed the server first: that is
+**listing 381, seller walkthrough.tutor@trustsquare.co, user 284 — the test advert this session's
+06:05 SAST EULA-ORDER-1 walkthrough created** (see 2026-09-03-human-clicks.md). Not a real
+tutor; no email sent, no credit made. Every other Tutors listing is seed (@trustsquare.co /
+example.com) or Marietjie. Zero real first-time listers in the last 30 days.
+
+**Built instead (the specced-not-built +1 function):**
+- `POST /admin/tuppence/grant` — admin-JWT guarded; kinds `first_lister_bonus` (once per email,
+  idempotent) / `tester_grant` / `goodwill`; amount 1..500; user must exist; writes `transactions`
+  (type = kind — NEVER `topup`, NEVER `monthly_allocation`, so revenue metrics stay clean and the
+  non-rolling sweep never expires it) + `admin_audit`; returns the new balance.
+- `GET /admin/tuppence/recent-listers?days=30` — real first-time live listers (seed filtered),
+  with bonus-paid state. Feeds the card.
+- +1 page card "First-lister bonus · Tuppence grant" on dashboard.server.html (Launch Switch view).
+- `onboarding/first_lister_bonus_email.md` — the welcome + 25T email, Free-tier-safe tips only.
+- Ledger RG-0256 (OPEN → READY TO LOCK on ship). Ships via the deploy ref.
+
+Cost model impact: none — grants are operator-initiated, capped at 500T, audited.
+
+**18:20 SAST — shipped + LOCKED.** Deploy ref 6411bf5 live (/health ok). Probed on the origin with a
+signed admin JWT: grant → 200 tx #200 balance 25 on the walkthrough test account (our own; the only
+account it was safe to prove on); repeat → `already:true`, no second credit; unknown email → 404;
+anonymous → 401. RG-0256 → LOCKED. The walkthrough account now carries 25T of test credit — it goes
+when David deletes listing 381 / user 284 (reserved).
+
 ## 2026-09-03 — STOP-LOSS-RELEASE-1: a stop-lossed city can now be cleaned and released
 
 - David, 3 Sep: "How do I clear their list?" — there was no answer on disk. The RG-0242 latch had NO release:

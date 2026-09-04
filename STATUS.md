@@ -28,6 +28,20 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- DW-091 CLOSED (4 Sep): the red DEMO tab is back on all 15 demo journey maps and the fix is in the GENERATOR — `scripts/journey_template.html` carries the `ts_demo_banner.js` line (a7e97d0, shipped 3 Sep 16:15Z), with TEMPLATE tripwires on RG-0141/RG-0182 so a rebuild cannot drop it again. Verified by probe: all 15 live `/static/adventures_*_map.html` carry the line; ledger `RG-0141 [  ok  ]`.
+- LEDGER-DARK-1 (4 Sep): the regression ledger had been refusing to run since `bc44112` reused id RG-0254 — every one of the 251 assertions was unevaluated. Fixed per LEDGER-DUP-1's rule: the OPEN LIVE-MAP-1 entry moved to **RG-0258**, the LOCKED PERSON-ONLY-2 entry keeps RG-0254. Board back: 251 entries · 225 holding · 3 REGRESSED · 17 open · 4 ready to lock · 2 UNVERIFIED.
+- Three reds now visible again, each its own entry, none of them DW-091: RG-0154 (session counter behind the fragments), RG-0241 (a bare `GET /optout` writes the register), RG-0257 (host queue: 2 requests pending, the 20-min host task last ran 3 Sep 21:51).
+
+- **Batch 2 listing improvements (RUL-065) built + staged 4 Sep 04:00Z, NOT deployed.** All three
+  items landed and pass in test: SF-MULTIVISION-1 (all photos read by the AI in one call when the seller
+  leaves Photos), INTRO-REMIND-1 (hourly seller reminders at ~24h/~72h + B3 warning, logged, idempotent,
+  no Tuppence), SF-COACH-ASK-1 (free ask-the-coach box on every sell step, 10 per listing, RUL-066
+  ceiling copy). RG-0206/0207/0208 LOCKED on source-half; ledger exit 0. Say "ship" to deploy Batch 2.
+
+- **maintenance-loop 07:4x (3 Sep, unattended):** DW-091 / RG-0141 rot cleared at the root — `journey_template.html` now carries `ts_demo_banner.js` + `ts_fares.js` (+ `ts_report.js?v=6`), 11 maps rebuilt, RG-0141/RG-0182 gained template tripwires. Committed, NOT deployed (contract) — the 11 live maps lack the DEMO tab until the deploy ref ships this commit. Queue 0 new / 0 fix-shipped / 26 verified. Ledger 248 · 0 REGRESSED · 4 ready to lock (RG-0236 held; RG-0252/0254/0255 are today's attended entries — promotion is that lane's).
+
+- **/ship 06:05 (3 Sep):** PRICE-UNIT-1 + INVITE-VISION-1(b) + EULA-ORDER-1 live (v=577). A brand-new seller's Tutors listing (#381) published end-to-end — first proof a stranger can list. RG-0249/0250/0253 LOCKED. Test listing 381 awaits David's delete. `resend_human_clicks.bat` is now safe to run (dry run first).
+
 - LIVE-MAP-1 (3 Sep): all 17 journey/study maps now fetch today's stays from `/geo/stays` on open (own DB, zero external cost) with an as-of stamp; dossier mapshots re-captioned as print snapshots linking the live map. RG-0254 OPEN until the deploy ref ships the maps.
 
 - **WALK-1 (3 Sep):** real magic link walked in Chrome → self-serve Tutors/Services/Adventures listings have been IMPOSSIBLE since 22 Jul (422 price-basis vs numeric field) and invitees never got the AI draft (401 gate). Both fixed on disk — RG-0249 / RG-0250 OPEN until /ship. **Nothing an invitee did could have produced a listing; the 0 is explained.**

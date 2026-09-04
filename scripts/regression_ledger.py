@@ -14300,7 +14300,7 @@ def rg_eula_order_first_seller():
     return out
 
 
-@entry("RG-0254", "Every journey / study map shows TODAY's stays -- fetched from our own server on "
+@entry("RG-0258", "Every journey / study map shows TODAY's stays -- fetched from our own server on "
                   "open (GET /geo/stays), never baked in at build time -- so a report that links "
                   "to a map a month later shows the stays of that day, at zero external cost",
        OPEN, fixed_on="2026-09-03",
@@ -14309,7 +14309,7 @@ def rg_eula_order_first_seller():
              "rendered from the template (personal /planner/map/<sid> included). CLASS: a report or "
              "dossier must LINK to the live map, never embed the only copy -- a mapshot in a PDF is "
              "a print fallback and says so in its caption.",
-       ref="LIVE-MAP-1, 3 Sep 2026. David: 'are the maps live or at the stage they were when a "
+       ref="RENUMBERED 4 Sep 2026 from RG-0254 under LEDGER-DUP-1: PERSON-ONLY-2 (bc44112) claimed the same id and LOCKED it; LOCKED entries never move, the OPEN newcomer does. Older CHANGELOG/STATUS lines dated 3 Sep that say RG-0254 for LIVE-MAP-1 mean this entry. LIVE-MAP-1, 3 Sep 2026. David: 'are the maps live or at the stage they were when a "
            "Feature was requested? ... a month later there could be more new stays available.' "
            "Probe of the repo: NO map fetched anything at runtime -- every pin came from the journey "
            "spec (or hand-typed HTML) at build time, and the two dossier PDFs embedded a JPG "
