@@ -14891,5 +14891,63 @@ def rg_onboarding_number_honest():
     return out
 
 
+@entry("RG-0262", "An unattended .bat WAITS when it means to wait -- no host-queue-runnable "
+       "script paces itself with timeout.exe, which dies instantly under redirected stdin and "
+       "takes the pause with it, silently",
+       LOCKED, fixed_on="2026-09-04",
+       scope="Every .bat reachable from host_queue/ALLOWLIST.txt -- i.e. every script the "
+             "20-min agent can run with nobody watching. CLASS: a guard that fails OPEN and "
+             "says nothing. `timeout /t N /nobreak` refuses to run at all when stdin is not a "
+             "console ('ERROR: Input redirection is not supported, exiting the process "
+             "immediately') and returns instantly, so the delay it was written to enforce "
+             "simply does not happen -- and because the surrounding bat carries on, the run "
+             "still exits rc=0. The redirection-safe idiom is `ping -n N+1 127.0.0.1 >nul`. "
+             "Sibling of check_bat_crlf's UNATTENDED set, which catches the LOUD version of "
+             "this fault (a `pause` that hangs forever); this catches the QUIET one.",
+       ref="WAIT-REDIR-1, found 4 Sep 2026 on the first unattended onboarding run. The host "
+           "queue ran launch_day_wave.bat and returned rc=0 with a result file consisting of "
+           "fourteen identical lines of 'ERROR: Input redirection is not supported' -- one per "
+           "city, from the `timeout /t 20` meant to pace the sends. The wave itself was fine "
+           "(the python legs ran and logged normally), so this cost pacing, not delivery -- but "
+           "it is the shape that matters: a rc=0 DONE on a run where a guard had been erased. "
+           "Had the pacing mattered to a rate limit, nothing anywhere would have said so. "
+           "Repaired in the five allowlisted bats that used it (exchange_sync, launch_day_wave, "
+           "run_wave2_unattended, sync_to_server, deploy_citylauncher).")
+def rg_unattended_wait_survives_redirection():
+    import re as _re
+    out = []
+    allow = os.path.join(REPO, "host_queue", "ALLOWLIST.txt")
+    if not os.path.exists(allow):
+        return [(INFO, "SKIPPED -- host_queue/ALLOWLIST.txt not on this disk")]
+    projects = os.path.dirname(REPO)
+    names = []
+    for line in open(allow, encoding="utf-8", errors="replace"):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split(None, 1)
+        if len(parts) == 2 and parts[0] == "run_bat":
+            names.append(parts[1].strip().replace("\\", os.sep).replace("\\", "/"))
+    if not names:
+        return [(INFO, "SKIPPED -- no run_bat entries on the allowlist")]
+    checked = 0
+    for rel in names:
+        path = os.path.join(projects, rel.replace("\\", os.sep))
+        if not os.path.exists(path):
+            continue
+        checked += 1
+        body = open(path, encoding="utf-8", errors="replace").read()
+        for m in _re.finditer(r"^\s*timeout\s+/t\s+\d+", body, _re.M | _re.I):
+            out.append((FAIL, "%s paces itself with timeout.exe (%s) -- under the host queue's "
+                              "redirected stdin that fails instantly and the wait vanishes "
+                              "silently (WAIT-REDIR-1)"
+                              % (os.path.basename(path), m.group(0).strip())))
+    if checked == 0:
+        return [(INFO, "SKIPPED -- no allowlisted bats found on this disk")]
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "all %d allowlisted bats use a redirection-safe wait" % checked))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
