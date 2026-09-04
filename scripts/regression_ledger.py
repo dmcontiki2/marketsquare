@@ -15139,7 +15139,19 @@ def rg_outreach_copy_respects_anonymity():
            "local pool as it stood would have quietly mailed the wrong 18 people and reported "
            "success -- the same shape as WAIT-REDIR-1 the same day: a run that completes, "
            "returns 0, and did not do the thing. The order of operations is the fix, and it is "
-           "asserted here rather than remembered.")
+           "asserted here rather than remembered. "
+           "CORRECTED THE SAME DAY, and the correction is the lesson. The first version of "
+           "this lane ran, exited 0, and mailed 18 people when 140 qualified -- because it "
+           "selected on prospects.status. The pull HAD run and HAD worked; status is simply "
+           "not where engagement lives. pull_from_server.py carries opens and clicks into "
+           "email_events and deliberately never writes them back over send history ('never "
+           "rewrite send history, only stop future sends'), so status='opened' held 18 stale "
+           "rows while email_events held 157 engaged people. My own assertion passed on the "
+           "wrong thing: it checked that the pull PRECEDED the pick, which was true, and never "
+           "checked that the pick read what the pull had delivered. An ordering assertion is "
+           "not an outcome assertion. Leg (b) now demands the roster come from email_events, "
+           "and NEVER-TWICE-1 was added at the same time because a follow-up lane with no "
+           "memory, running unattended, apologises to the same people forever.")
 def rg_relink_lane_pulls_before_it_picks():
     out = []
     cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
@@ -15171,10 +15183,26 @@ def rg_relink_lane_pulls_before_it_picks():
         out.append((FAIL, "the relink bat does not fail closed on a failed pull -- it would "
                           "send anyway, possibly to people who bounced or opted out"))
 
-    # (b) scope
-    if "status IN ('opened','clicked')" not in s:
-        out.append((FAIL, "the relink roster is no longer the ENGAGED set (opened or clicked) "
-                          "-- David's permission was scoped to those people"))
+    # (b) SCOPE, and it must read the EVIDENCE not the status column. This is the leg
+    # that would have caught the 4 Sep miss: the lane mailed 18 people when 140
+    # qualified, because prospects.status is a send-state machine and the engagement
+    # facts live in email_events (pull_from_server deliberately never writes opens back
+    # over send history). A roster built from the column is a roster built from a lie.
+    if "email_events" not in s or "e.event IN ('opened','clicked')" not in s:
+        out.append((FAIL, "the relink roster no longer reads engagement from email_events -- "
+                          "prospects.status is stale by design and selecting on it reaches the "
+                          "wrong people (ENGAGED-RESEND-1, the 4 Sep miss)"))
+    if "status IN ('emailed','opened','clicked')" not in s:
+        out.append((FAIL, "the relink roster no longer excludes suppressed/rejected states"))
+
+    # (b2) NEVER-TWICE-1: an unattended follow-up lane with no memory re-apologises to
+    # the same people on every run.
+    if "NEVER-TWICE-1" not in s or "HUMAN-CLICKS-1-followup" not in s:
+        out.append((FAIL, "the never-twice guard is gone -- an unattended run will send a "
+                          "second follow-up to people both lanes have already contacted"))
+    if "NOT SENDING: the never-twice guard could not be loaded" not in s:
+        out.append((FAIL, "the never-twice guard no longer fails CLOSED -- an unreadable sent "
+                          "log would let the lane re-apologise to everyone"))
 
     # (c) the fence
     if "max_roster" not in s or "REFUSING TO SEND" not in s:
