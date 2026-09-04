@@ -352,3 +352,131 @@ Rides the RUL-076 build window (flag-dark, sandbox first, David sees it before t
 arming is David's act). The edge precompute is a server-side batch job — no live-app touch.
 RG-0221's acceptance criteria extend to: singleton auto-collapse proven, institution tile
 counts true, zero-count institutions unreachable.
+
+---
+
+## 11 · The Genie — Zoom's front door and its voice (David, 4 Sep 2026 · RUL-097)
+
+David's proposal, quoted: *"The user clicks an AI floating Genie, then he asks 'what would you
+like to search?', the background can then become a circle with the 7 categories as 3d icon
+representations, then on selecting one, the Genie asks now showing the different type of
+properties in a circle of floating 3d representative icons... at any moment the user can click
+search, but the genie can delve even further than the level; openings, middle game, end game,
+speed chess, personal, online etc. I think this will be too complex for the app."*
+
+He was right that the described shape is too heavy, and right that the instinct behind it is
+good. Ruled the same day, after tapping both shapes in `GENIE_SEARCH_CONCEPT.html`:
+*"Your idea is better Claude, and your reasons are valid. The genie should not cover any of the
+other selectors. Please write this up as a genie filter to be looked at again after we have a
+stable user base."*
+
+### 11.1 · What the genie is
+
+**The genie is a front door, not a second funnel.** Everything below the first tap IS Zoom: the
+gain ranker picks the question (3.1), the dependency graph keeps it coherent (3.2), geography
+behaves per category (3.3/3.4), zero-count options are unreachable (rule 2), a facet with one
+answer auto-collapses (3.6), and arrival/relaxation decide when to stop asking (3.5).
+
+This is the whole reason the genie is cheap. **A genie that runs its own narrowing logic is a
+second search engine**, permanently out of step with the first one, and every future facet has
+to be built twice. That sentence is the one thing that must survive the wait.
+
+### 11.2 · What it adds that Zoom does not have
+
+1. **The pre-category step.** Zoom as specced opens *inside* a category — the user has already
+   chosen from the chip row. The genie answers the question that comes before that one: *what is
+   even in here?* The circle of seven, each ball carrying its true count in the user's city, is
+   the cold-start fix for a marketplace whose seven categories have nothing in common. Seven is
+   also the largest number a ring can hold on a phone, which is why the ring stops there.
+2. **A persona for the question.** §5 already puts the question in a bottom sheet. The genie
+   gives that sheet a face and phrases the facet as a sentence. It is presentation, not logic.
+
+Nothing else. Ordering, counts, depth, stopping and relaxing all come from §3 unchanged.
+
+### 11.3 · DAVID'S RULE — the genie never covers a selector
+
+His words: *"The genie should not cover any of the other selectors."* Made concrete and testable:
+
+1. **The genie band is a row, not a sheet.** It takes its own space in the column and the result
+   list shrinks above it. It does not slide over anything, at any height.
+2. **Every app control stays live while the genie is working** — search field, category chips,
+   filter, sort and trust pills, bottom bar. Tapping one mid-question acts immediately and the
+   genie re-asks against the new state.
+3. **Exactly one full-screen moment is allowed** in the whole flow: the opening circle of seven,
+   and only because nothing has been selected yet, so there is nothing to cover. After a category
+   exists, full-screen is forbidden.
+4. **The orb parks where no control lives** — the gutter above the bottom bar — and hides itself
+   whenever the band or any panel is open. If a control is ever added in that corner, the orb moves.
+5. On arrival the band collapses to the slim bar of §5 — still inline, still taking its own space.
+
+This **strengthens** §5's peek rule. "Results are never hidden by the thing that narrows them"
+becomes: *nothing on screen is hidden by it — results or controls.* A sheet that peeks is no
+longer sufficient.
+
+### 11.4 · What was cut from the original description, and why
+
+| David's original | Call | Reason |
+|---|---|---|
+| Floating genie you tap to start | **Kept** | One friendly door into search, and the charm of the idea. |
+| Circle of the 7 categories | **Kept** | Seven fits a ring; it is the one moment a picture beats a word; it is the step Zoom does not have. |
+| A circle at every level below that | **Cut** | A ring holds seven. Tutors have 8 subjects, Services ~10 trades. Measured at 378px: eight 84px nodes on a 110px radius sit 84px apart centre to centre — the labels touch. Below the top level, chips (§5: ≤6 options, ≥44px, tail behind search). |
+| Real 3D icons | **Cut** | The look is kept, the technology is not — CSS radial gradient, inset shadows, one specular highlight. No models to ship, no library, no per-subject artwork. |
+| Ask city, then suburb | **Cut** | The app knows the city, and §3.3 already handles geography properly — never the opening question, depth per category. Asking again is a wasted screen. |
+| Search available at any moment | **Kept, and stronger** | Results are never hidden, so there is no search button to return to. |
+| Deeper than level — openings, middle game, endgame, speed chess | **Kept, but automatic** | Not a hand-built extra tier. §3.1 only asks a facet that splits the remaining set, and §3.6 skips a facet with one answer, so chess depth appears by itself once there are enough chess tutors and stays silent when there are not. |
+
+### 11.5 · Measured in the prototype (`GENIE_SEARCH_CONCEPT.html`, 812 synthetic listings)
+
+Journey: find a chess tutor.
+
+| | Rejected wizard | Agreed genie |
+|---|---|---|
+| Taps | 7 | 2–4 |
+| Full-screen steps | 5 | 1 |
+| Controls covered while narrowing | all of them | none |
+| Listings on screen before the last answer | none | every step |
+| Lands on | 1 result | 12, then 3 |
+
+The prototype carries a live meter reporting taps, full-screen steps, and whether anything is
+covered — so the rule in 11.3 is demonstrated rather than asserted. jsdom drives both shapes end
+to end; the category chips and filter pills are proven to still act with the genie band open.
+
+### 11.6 · Why it waits, and the trigger to look again
+
+David: *"to be looked at again after we have a stable user base."* Recorded as a **stock trigger,
+never a calendar date** — the genie's entire value is the counts on those seven balls. A ring
+showing 0 on four of seven categories advertises an empty shop to the first person who taps it,
+which is worse than no genie at all.
+
+Revisit when **all three** hold:
+
+1. **Zoom is built and armed in the field** (§7.4 — David's act). The genie has nothing to stand
+   on until the funnel it fronts is live.
+2. **All seven categories return a non-zero count** in a typical user's city.
+3. **About 30 days of live funnel behaviour** exists to compare against, so the genie can be
+   judged on whether it helped rather than on whether it looked good.
+
+Until then it is not on the roadmap and not in a build window. It sits in `BACKLOG.md`'s deferred
+list, and this section is the design of record.
+
+### 11.7 · Build placement and cost
+
+Rides **after** the RUL-076 build window, never inside it — Zoom first, front door second. Built
+on the funnel it is an opening screen, a persona and the covering rule over machinery that already
+exists. Built as its own path it is the second engine named in 11.1, and the estimate stops being
+small. The genie writes into the same facet state the funnel already uses; it never holds its own.
+
+Flag-dark and sandbox-first exactly as §7 requires. Arming is David's act.
+
+### 11.8 · Acceptance criteria (extends §8; RG-0221 asserts these when built)
+
+12. With the genie band open, every control that was hittable before it opened is still hittable,
+    and the page's scroll height is unchanged beneath it — the genie never covers a selector.
+13. Exactly one full-screen genie step exists, it is the opening category ring, and it is
+    unreachable once a category is chosen.
+14. Each of the seven category balls shows a count from the same reach-scoped query as the list
+    (§6.2), and a category with no reachable listings is dimmed with its offer, never hidden.
+15. The genie sets the same facet state as the chip rail; a chip added by the genie is
+    indistinguishable from one added by hand, and is removable the same way.
+
+*Written 4 Sep 2026. Prototype `GENIE_SEARCH_CONCEPT.html`, indexed in `Projects\Visuals`.*

@@ -1,0 +1,20 @@
+PASTE THIS AS THE WHOLE INSTRUCTION. Nothing else.
+------------------------------------------------------------------
+
+Your goal: get 20 people we contacted cold to publish a live listing on
+trustsquare.co by their own hand, by Friday 31 October 2026. It is 0 today.
+
+Read C:\Users\David\Projects\MarketSquare\ONBOARDING_GOAL.md first and
+treat it as the contract - it holds how the number is measured, what would make
+it a lie, what you may do without asking, what is reserved to me, and the cost
+fence. Then read CLAUDE.md, RULINGS.md and STANDING_ORDERS.md in that folder.
+
+Work inside my Claude subscription only. Never enable or spend Usage Credits,
+and never ask me to buy more capacity. If you reach the limit, stop, save your
+state, and carry on when it resets.
+
+Choose your own methods. Do not ask me which one. Do not send me clicks to do.
+Report once a week: the number, what moved it, what is next, in plain language.
+
+Start now.
+------------------------------------------------------------------

@@ -15,3 +15,15 @@ run_py     CityLauncher\scripts\exchange_import.py
 run_py     CityLauncher\scripts\exchange_export.py
 run_py     CityLauncher\clean_city_list.py
 run_bat    CityLauncher\send_human_clicks_now.bat
+
+# --- Widened 4 Sep 2026 (RUL-096). David: "Give Fable all the accesses required and the
+# --- permissions set to auto. No restrictions other than what has been defined in the
+# --- onboarding goal." SUPPLY + HYGIENE + CityLauncher's own deploy lane ONLY.
+# --- NO new sending authority: outreach still goes through launch_day_wave.bat, which is
+# --- fully gated (armed + gates_green + stop-loss + SUPPRESS-GATE-1 + JUNK-GUARD-1 +
+# --- PRIV-OFFICER-1 + EDU-HOLD-1) and already covers all 14 live cities.
+run_bat    CityLauncher\run_wave2_unattended.bat
+run_bat    CityLauncher\run_local_scraper.bat
+run_bat    CityLauncher\deploy_citylauncher.bat
+run_py     CityLauncher\scripts\fill_wave_gaps.py
+run_py     CityLauncher\scripts\clean_junk_emails.py

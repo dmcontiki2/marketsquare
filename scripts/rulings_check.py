@@ -87,6 +87,31 @@ REFLECTIONS = {
    ("RULINGS.md", ["NO STALE IPs ON THE ORIGIN SSH ALLOWLIST"], []),
    ("scripts/hetzner_fw_selfheal.py", ["NO-STALE-IP-1"], []),
  ],
+ "RUL-097": [
+   # The Genie (4 Sep): a front door on Zoom, not a second search, and it may never cover a
+   # selector. Deferred to a STOCK trigger. The three spec needles are the ones a future session
+   # would most easily lose: the "not a second engine" line is the whole cost argument, the
+   # covering rule is David's own, and "never a calendar date" is what stops the deferral being
+   # re-read as "sometime next quarter". The absence needle guards the rejected shape returning.
+   ("RULINGS.md", ["THE GENIE IS ZOOM'S FRONT DOOR, NOT A SECOND SEARCH"], []),
+   ("ZOOM_HMI_SPEC.md", ["front door, not a second funnel",
+                         "the genie never covers a selector",
+                         "never a calendar date"], []),
+   ("scripts/regression_ledger.py", ["EXTENDED 4 Sep 2026 (RUL-097)"], []),
+   ("GENIE_SEARCH_CONCEPT.html", ["Agreed"], []),
+   ("BACKLOG.md", ["Genie filter"], []),
+ ],
+ "RUL-096": [
+   # Onboarding goal handed to a single-goal agent (4 Sep). The contract, the state file and the
+   # schedule exist; and the allowlist widening added NO new sending authority - the absence
+   # needles below are the tripwire if a later session quietly adds a send lane.
+   ("RULINGS.md", ["THE ONBOARDING GOAL IS HANDED TO A FABLE 5.1 AGENT"], []),
+   ("ONBOARDING_GOAL.md", ["publish a live listing on trustsquare.co", "Never enable, request, or consume Usage Credits", "WOULD MAKE THE NUMBER A LIE"], []),
+   ("ONBOARDING_GOAL_COMMAND.txt", ["31 October 2026", "Usage Credits"], []),
+   ("GOAL_STATE.md", ["published by own hand"], []),
+   ("host_queue/ALLOWLIST.txt", ["RUL-096", "launch_day_wave.bat"],
+      ["launch_wave2.bat", "launch_us_tutors_wave.bat", "send_ny_us_tutors_now.bat", "resend_broken_link.bat"]),
+ ],
  "RUL-092": [
    # Deploys un-reserved (3 Sep): register carries it; standing orders and CLAUDE.md no longer
    # list deploys as reserved; the agent, its registrar and the request tool exist.

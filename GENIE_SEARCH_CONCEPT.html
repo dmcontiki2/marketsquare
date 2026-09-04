@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MarketSquare — Genie Search Concept</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0c1a2e; --navy2:#16294a; --gold:#C8873A; --ink:#1f2937; --muted:#6b7280;
+  --line:#e5e7eb; --bg:#eef1f6; --surf:#ffffff; --green:#16a34a; --red:#dc2626;
+  --c-property:#1E3A5F; --c-tutors:#14532D; --c-services:#7C2D12; --c-adventures:#064E3B;
+  --c-collectors:#44403C; --c-cars:#0C1A2E; --c-localmarket:#166534;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;font-size:14px;line-height:1.5}
+h1,h2,h3,.syne{font-family:Syne,Inter,sans-serif}
+a{color:var(--gold)}
+
+/* ---------- page shell ---------- */
+.wrap{max-width:1240px;margin:0 auto;padding:22px 16px 60px}
+.masthead{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+.masthead h1{margin:0;font-size:25px;color:var(--navy);letter-spacing:-.3px}
+.masthead p{margin:4px 0 0;color:var(--muted);max-width:640px}
+.stage{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:26px;align-items:start}
+@media(max-width:900px){.stage{grid-template-columns:1fr}}
+
+/* ---------- mode switch ---------- */
+.modes{display:flex;gap:8px;background:#dfe4ec;padding:5px;border-radius:14px;margin-bottom:14px}
+.modes button{flex:1;border:0;background:transparent;padding:10px 8px;border-radius:10px;font:600 12.5px Inter;color:#54607a;cursor:pointer;line-height:1.25}
+.modes button b{display:block;font:700 13px Syne;color:var(--navy)}
+.modes button.on{background:#fff;box-shadow:0 2px 8px rgba(12,26,46,.13)}
+.modes button.on b{color:var(--gold)}
+
+/* ---------- phone ---------- */
+.phone{width:100%;max-width:400px;margin:0 auto;background:var(--navy);border-radius:34px;padding:9px;box-shadow:0 26px 60px rgba(12,26,46,.34)}
+.screen{position:relative;overflow:hidden;background:#f7f8fb;border-radius:27px;height:720px;display:flex;flex-direction:column}
+.topbar{background:var(--navy);color:#fff;padding:12px 15px 11px;flex:0 0 auto}
+.topbar .brand{font:800 16px Syne;letter-spacing:-.2px}
+.topbar .brand span{color:var(--gold)}
+.topbar .sub{font-size:11.5px;color:#9fb0c6;margin-top:2px}
+.searchrow{margin-top:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:11px;padding:9px 11px;color:#c7d3e2;font-size:12.5px;display:flex;gap:8px;align-items:center}
+
+/* active facet tags */
+.tags{display:flex;flex-wrap:wrap;gap:6px;padding:9px 12px 3px;flex:0 0 auto;background:#f7f8fb}
+.tag{background:#fff;border:1px solid var(--line);border-radius:20px;padding:4px 8px 4px 10px;font-size:11.5px;font-weight:600;display:flex;gap:6px;align-items:center;color:var(--navy)}
+.tag i{font-style:normal;color:#9aa3b2;cursor:pointer;font-weight:700}
+.countline{padding:8px 14px 2px;font:700 12.5px Inter;color:var(--navy);flex:0 0 auto;background:#f7f8fb}
+.countline em{font-style:normal;color:var(--muted);font-weight:500}
+
+/* results */
+.results{flex:1 1 auto;overflow-y:auto;padding:8px 12px 14px;background:#f7f8fb}
+
+/* the app's OWN selectors — these must stay visible and usable at every step */
+.chiprow{display:flex;gap:6px;overflow-x:auto;padding:9px 12px 8px;background:#fff;border-bottom:1px solid var(--line);flex:0 0 auto}
+.chiprow::-webkit-scrollbar{display:none}
+.cchip{flex:0 0 auto;border:1px solid var(--line);border-radius:20px;padding:6px 12px;font:600 12px Inter;color:#41506b;background:#fff;cursor:pointer;white-space:nowrap}
+.cchip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.fbar{display:flex;gap:7px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--line);flex:0 0 auto}
+.fpill{flex:1;border:1px solid var(--line);border-radius:9px;padding:8px;text-align:center;font:600 12px Inter;color:var(--navy);background:#fff;cursor:pointer}
+.navbar{display:flex;flex:0 0 auto;background:#fff;border-top:1px solid var(--line);padding:7px 0 10px;border-radius:0 0 27px 27px}
+.navbar div{flex:1;text-align:center;font:600 10px Inter;color:#8b93a3}
+.navbar div span{display:block;font-size:17px;line-height:1.35}
+.navbar div.on{color:var(--navy)}
+.card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:10px 11px;margin-bottom:8px;display:flex;gap:10px;align-items:center}
+.thumb{width:46px;height:46px;border-radius:10px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:21px;color:#fff}
+.card .t{font-weight:700;font-size:13px;color:var(--navy);line-height:1.25}
+.card .m{font-size:11.5px;color:var(--muted);margin-top:2px}
+.card .p{margin-left:auto;text-align:right;font-weight:800;font-size:12.5px;color:var(--navy);white-space:nowrap}
+.card .p small{display:block;font-weight:600;color:var(--gold);font-size:10.5px}
+.empty{text-align:center;padding:40px 22px;color:var(--muted)}
+.empty .big{font-size:40px;margin-bottom:8px}
+.empty b{color:var(--navy);display:block;margin-bottom:6px;font-family:Syne}
+
+/* ---------- genie orb (floating) ---------- */
+.orb-fab{position:absolute;right:14px;bottom:74px;width:62px;height:62px;border-radius:50%;border:0;cursor:pointer;z-index:40;
+  background:radial-gradient(circle at 32% 26%,#7dd3fc 0%,#3b82f6 40%,#1e3a8a 78%,#0c1a2e 100%);
+  box-shadow:0 10px 22px rgba(12,26,46,.42), inset 0 -6px 12px rgba(0,0,0,.35), inset 0 6px 12px rgba(255,255,255,.4);
+  display:flex;align-items:center;justify-content:center;font-size:27px;animation:bob 3.6s ease-in-out infinite}
+.orb-fab:after{content:"";position:absolute;top:9px;left:14px;width:17px;height:11px;border-radius:50%;background:rgba(255,255,255,.65);filter:blur(2px)}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+/* ---------- overlay ---------- */
+.veil{position:absolute;inset:0;z-index:50;background:rgba(8,16,30,.82);backdrop-filter:blur(3px);display:flex;flex-direction:column;animation:fade .22s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.veil.hidden{display:none}
+.veil-head{padding:18px 18px 4px;color:#fff;flex:0 0 auto}
+.veil-head .ask{font:700 17px Syne;line-height:1.3;display:flex;gap:9px;align-items:flex-start}
+.veil-head .ask .g{font-size:22px;flex:0 0 auto;margin-top:-2px}
+.veil-head .hint{font-size:11.5px;color:#9fb0c6;margin:6px 0 0 32px}
+.veil-body{flex:1 1 auto;display:flex;align-items:center;justify-content:center;position:relative;padding:6px}
+.veil-foot{flex:0 0 auto;padding:12px 16px 18px;display:flex;gap:8px}
+.btn{flex:1;border-radius:11px;padding:12px;font:700 13px Inter;cursor:pointer;border:1px solid rgba(255,255,255,.24);background:transparent;color:#dbe6f4}
+.btn.pri{background:var(--gold);border-color:var(--gold);color:#1b1206}
+.btn:disabled{opacity:.35;cursor:default}
+
+/* ---------- the ring ---------- */
+.ring{position:relative;width:300px;height:300px}
+.ring .hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:78px;height:78px;border-radius:50%;
+  background:radial-gradient(circle at 34% 28%,#fde68a,#C8873A 55%,#6b4416);display:flex;align-items:center;justify-content:center;
+  font-size:31px;box-shadow:0 8px 20px rgba(0,0,0,.45), inset 0 -5px 10px rgba(0,0,0,.3), inset 0 5px 10px rgba(255,255,255,.45);animation:bob 4.2s ease-in-out infinite}
+.node{position:absolute;left:50%;top:50%;width:84px;margin-left:-42px;margin-top:-42px;text-align:center;cursor:pointer;animation:pop .3s backwards}
+@keyframes pop{from{opacity:0;transform:scale(.5)}}
+.node .ball{width:64px;height:64px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;position:relative;
+  box-shadow:0 8px 16px rgba(0,0,0,.4), inset 0 -6px 11px rgba(0,0,0,.34), inset 0 6px 11px rgba(255,255,255,.34);transition:transform .16s}
+.node .ball:after{content:"";position:absolute;top:8px;left:15px;width:19px;height:12px;border-radius:50%;background:rgba(255,255,255,.5);filter:blur(2.5px)}
+.node:active .ball{transform:scale(.9)}
+.node .nm{color:#fff;font:700 11px Inter;margin-top:5px;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.node .ct{font:700 10px Inter;color:#8fd0a4;margin-top:1px}
+.node.dead{opacity:.42}
+.node.dead .ct{color:#e79a9a}
+
+/* ---------- chip grid (what a ring becomes when the list is long) ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;padding:4px 14px;max-height:100%;overflow-y:auto}
+.chip{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.2);border-radius:22px;padding:9px 13px;color:#eaf1fa;font:600 12.5px Inter;cursor:pointer;display:flex;gap:7px;align-items:center}
+.chip b{color:#8fd0a4;font-weight:700;font-size:11px}
+.chip.dead{opacity:.4}
+.chip.dead b{color:#e79a9a}
+.chip:active{transform:scale(.96)}
+
+/* ---------- genie bar (mode A: the sheet that never hides the results) ---------- */
+/* GENIE BAND — an inline row, NOT an overlay. It takes its own space so the
+   results shrink above it and no selector is ever hidden behind it. */
+.gbar{flex:0 0 auto;background:var(--navy);padding:11px 13px 12px;color:#fff;border-top:2px solid var(--gold);animation:up .24s ease;max-height:210px;overflow-y:auto}
+@keyframes up{from{max-height:0;padding-top:0;padding-bottom:0;opacity:0}}
+.gbar.hidden{display:none}
+.gbar .grip{width:36px;height:4px;border-radius:3px;background:rgba(255,255,255,.25);margin:0 auto 10px}
+.gbar .ask{font:700 13.5px Syne;display:flex;gap:8px;align-items:center;margin-bottom:9px}
+.gbar .ask .g{font-size:19px}
+.gbar .chips{justify-content:flex-start;padding:0;max-height:132px}
+.gbar .chip{font-size:12px;padding:8px 12px}
+.gbar .row{display:flex;gap:8px;margin-top:10px}
+.gbar .row button{flex:1;border-radius:10px;padding:9px;font:600 12px Inter;cursor:pointer;background:transparent;border:1px solid rgba(255,255,255,.22);color:#c9d6e6}
+.gbar .row button.pri{background:var(--gold);border-color:var(--gold);color:#1b1206;font-weight:700}
+
+/* ---------- tap meter ---------- */
+.meter{position:absolute;top:0;left:0;right:0;z-index:60;display:flex;gap:0;font:700 10.5px Inter;pointer-events:none}
+.meter div{flex:1;padding:4px 6px;text-align:center;background:rgba(200,135,58,.94);color:#1b1206;border-right:1px solid rgba(0,0,0,.14)}
+.meter div:last-child{border-right:0}
+.meter div.warn{background:#dc2626;color:#fff}
+
+/* ---------- notes column ---------- */
+.notes{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.panel h2{margin:0 0 4px;font-size:16.5px;color:var(--navy)}
+.panel h3{margin:16px 0 6px;font-size:13px;color:var(--navy);text-transform:uppercase;letter-spacing:.6px}
+.panel p{margin:8px 0}
+.panel ul{margin:8px 0;padding-left:19px}
+.panel li{margin:5px 0}
+.verdict{border-left:5px solid var(--gold);background:linear-gradient(100deg,#fffaf3,#fff)}
+.verdict .lede{font-size:15px;font-weight:600;color:var(--navy)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:10px 0 0;font-size:13px}
+.kv b{color:var(--navy)}
+.pill{display:inline-block;border-radius:20px;padding:2px 9px;font:700 11px Inter;vertical-align:1px}
+.pill.keep{background:#dcfce7;color:#15803d}
+.pill.cut{background:#fee2e2;color:#b91c1c}
+.pill.watch{background:#fef3c7;color:#a16207}
+table.cmp{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
+table.cmp th,table.cmp td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+table.cmp th{background:#f3f5f9;color:var(--navy);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+table.cmp td.n{text-align:center;font-weight:700}
+.foot{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="masthead">
+    <div>
+      <h1>The Genie Filter — agreed design, parked</h1>
+      <p>David's idea, settled 4 September 2026. Shape A is what we build. Shape B is the version we
+         rejected, kept so the reason stays visible. Tap the orb in the phone and try both — the amber
+         strip counts taps and says whether anything on screen is being covered.</p>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div>
+      <div class="modes">
+        <button id="mA" class="on" onclick="setMode('A')"><b>A · Agreed</b>Genie helps, covers nothing</button>
+        <button id="mB" onclick="setMode('B')"><b>B · Rejected</b>Full wizard, hides everything</button>
+      </div>
+
+      <div class="phone">
+        <div class="screen" id="screen">
+          <div class="meter" id="meter"></div>
+
+          <div class="topbar">
+            <div class="brand">Trust<span>Square</span></div>
+            <div class="sub" id="subline">Pretoria · everything nearby</div>
+            <div class="searchrow"><span>&#128269;</span><span>Search &mdash; e.g. chess tutor, BMW 1996&hellip;</span></div>
+          </div>
+
+          <div class="chiprow" id="chiprow"></div>
+          <div class="fbar">
+            <div class="fpill" onclick="poke('Filter')">&#9776; Filter</div>
+            <div class="fpill" onclick="poke('Trust')">&#9733; Trust 70+</div>
+            <div class="fpill" onclick="poke('Sort')">&#8645; Sort</div>
+          </div>
+
+          <div class="tags" id="tags"></div>
+          <div class="countline" id="countline"></div>
+          <div class="results" id="results"></div>
+
+          <button class="orb-fab" id="fab" onclick="openGenie()" title="Ask the genie">&#129482;</button>
+
+          <div class="gbar hidden" id="gbar"></div>
+
+          <div class="navbar">
+            <div class="on"><span>&#128269;</span>Browse</div>
+            <div><span>&#10133;</span>Sell</div>
+            <div><span>&#9733;</span>Wishlist</div>
+            <div><span>&#128100;</span>Me</div>
+          </div>
+
+          <div class="veil hidden" id="veil"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <div class="panel verdict">
+        <h2>Settled</h2>
+        <p class="lede">David, 4 September 2026: the helper shape is what we build, the genie may not
+           cover any other selector, and it waits for a stable user base.</p>
+        <p>The genie is <b>not a new search</b>. It is the front door and the voice of the narrowing
+           funnel we already ratified on 30 August (the Zoom spec, ZOOM_HMI_SPEC.md). That funnel already
+           asks one question at a time, already computes true counts, already removes dead ends. The genie
+           adds exactly two things to it: an opening circle of the seven categories for a person who has
+           not chosen one yet, and a face on the question.</p>
+        <p>Written up as section 11 of the Zoom spec. It is <b>not on the roadmap and not in a build
+           window</b> — it is parked behind the trigger below.</p>
+      </div>
+
+      <div class="panel">
+        <h2>The covering rule</h2>
+        <p>David's words: <em>the genie should not cover any of the other selectors.</em> Made concrete:</p>
+        <ul>
+          <li>The genie band is <b>a row, not a sheet</b>. It takes its own space and the results shrink
+              above it. Nothing slides over anything.</li>
+          <li>The search field, the category chips, the filter, sort and trust controls and the bottom
+              bar stay <b>visible and working at every step</b>. Try it: open the genie, then tap a
+              category chip or the filter — they still act.</li>
+          <li><b>One full-screen moment is allowed</b> in the whole flow: the opening circle of seven.
+              It is allowed because nothing has been selected yet, so there is nothing to cover.</li>
+          <li>The floating orb parks in the gutter above the bottom bar, where no control lives, and
+              hides itself whenever the band or a panel is open.</li>
+        </ul>
+        <p>Shape B breaks every one of these, which is what the red strip is reporting.</p>
+      </div>
+
+      <div class="panel">
+        <h2>What was kept, what was cut</h2>
+        <table class="cmp">
+          <tr><th>David's original</th><th>Call</th><th>Why</th></tr>
+          <tr><td>Floating genie you tap to start</td><td><span class="pill keep">Kept</span></td>
+              <td>One friendly door into search, and the charm of the whole idea.</td></tr>
+          <tr><td>Circle of the 7 categories</td><td><span class="pill keep">Kept</span></td>
+              <td>Seven fits a circle, and it is the one moment a picture beats a word. It is also the
+                  step the funnel does not have today — the funnel starts <em>inside</em> a category.</td></tr>
+          <tr><td>Circles at every level below that</td><td><span class="pill cut">Cut</span></td>
+              <td>A circle holds seven. Tutors have eight subjects and Services have dozens — the labels
+                  already touch in shape B. Below the top level: chips, which wrap and scroll.</td></tr>
+          <tr><td>Real 3D icons</td><td><span class="pill cut">Cut</span></td>
+              <td>The look is kept and the technology is not. Every ball here is plain CSS. Real 3D means
+                  an artist drawing a new model each time we add a subject.</td></tr>
+          <tr><td>Ask city, then suburb</td><td><span class="pill cut">Cut</span></td>
+              <td>The app knows the city. The funnel already handles suburb properly — it never opens with
+                  geography, and it goes only as deep as the category deserves.</td></tr>
+          <tr><td>Search available at any moment</td><td><span class="pill keep">Kept</span></td>
+              <td>Better than kept: in shape A the results are never hidden, so there is no search button
+                  to go back to.</td></tr>
+          <tr><td>Deeper than level — openings, endgame, speed chess</td><td><span class="pill watch">Kept, automatic</span></td>
+              <td>The funnel already decides this by itself: it only asks a question that actually splits
+                  the remaining set, and it skips one that has a single answer. So the chess depth appears
+                  on its own when there are enough chess tutors, and stays quiet when there are not.</td></tr>
+        </table>
+      </div>
+
+      <div class="panel">
+        <h2>When we look at it again</h2>
+        <p>Parked deliberately. The genie's whole value is the counts on those seven balls — it is a
+           window into the shop. A ring showing <em>0</em> on four of seven categories advertises an empty
+           shop to the first person who taps it. So the trigger is stock, not calendar:</p>
+        <div class="kv">
+          <b>1</b><div>The narrowing funnel itself is built and switched on in the field. That is David's
+             act, and the genie has nothing to sit on until it happens.</div>
+          <b>2</b><div>All seven categories show a real count in a typical user's city.</div>
+          <b>3</b><div>Roughly a month of live search behaviour to compare against — so we can tell whether
+             the genie helped or merely looked good.</div>
+        </div>
+        <p style="margin-top:12px"><b>Cost when it comes back:</b> small, and only if it is built on the
+           funnel — an opening screen, a persona and the covering rule, on machinery that already exists.
+           Built as its own path it is a second search engine to keep in step with the first one forever,
+           and every future filter has to be built twice. That is the one line that must not be forgotten
+           between now and then.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">Prototype &middot; made-up listings, real category structure &middot; TrustSquare / MarketSquare</div>
+</div>
+<script>
+/* ────────────────────────────────────────────────────────────────
+   Fake catalogue. Facet names deliberately mirror the real app's
+   filterState (subject/level/mode/area, make/year, etc.) — the point
+   being that the genie should FILL these, not replace them.
+   ──────────────────────────────────────────────────────────────── */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+var rng = mulberry32(20260904);
+function pick(w){var tot=0,i;for(i=0;i<w.length;i++)tot+=w[i][1];var r=rng()*tot;for(i=0;i<w.length;i++){r-=w[i][1];if(r<=0)return w[i][0];}return w[w.length-1][0];}
+
+var AREAS=['Centurion','Menlo Park','Waterkloof','Hatfield','Faerie Glen','Brooklyn','Silver Lakes','Mamelodi'];
+var AREAW=AREAS.map(function(a,i){return [a,[22,16,13,12,11,10,9,7][i]];});
+
+var CATS=[
+ {k:'Property',    icon:'🏡', c1:'#4a7fd4', c2:'#0f2340', n:214},
+ {k:'Tutors',      icon:'🎓', c1:'#34c06e', c2:'#0d3a1e', n:140},
+ {k:'Services',    icon:'⚙️',  c1:'#e8933a', c2:'#5c220e', n:143},
+ {k:'Adventures',  icon:'🧭', c1:'#2fd0a6', c2:'#043b2c', n:39},
+ {k:'Collectors',  icon:'🏺', c1:'#b9b2a8', c2:'#3a3733', n:61},
+ {k:'Cars',        icon:'🚗', c1:'#5b93f0', c2:'#0a1526', n:118},
+ {k:'Local Market',icon:'🛒', c1:'#4fd08a', c2:'#104a29', n:97}
+];
+
+var FACETS={
+ 'Property':[
+   {k:'listingType',q:'To rent, or to buy?',opts:['To rent','To buy']},
+   {k:'ptype',      q:'What kind of place?',opts:['House','Apartment','Townhouse','Land','Commercial']},
+   {k:'beds',       q:'How many bedrooms?',opts:['1','2','3','4+']},
+   {k:'area',       q:'Which part of town?',opts:AREAS,minPool:15}
+ ],
+ 'Tutors':[
+   {k:'subject',q:'What are you learning?',opts:['Maths','English','Afrikaans','Science','Chess','Music','Coding','Accounting']},
+   {k:'level',  q:'What level are you at?',opts:['Beginner','Intermediate','Advanced']},
+   {k:'mode',   q:'Online, or face to face?',opts:['Online','In person']},
+   {k:'area',   q:'Which part of town?',opts:AREAS,minPool:15},
+   {k:'focus',  q:'Anything particular in chess?',opts:['Openings','Middle game','Endgame','Speed chess'],only:{subject:'Chess'}}
+ ],
+ 'Services':[
+   {k:'sclass',q:'Which sort of help?',opts:['Technical & trades','Casual & in-home']},
+   {k:'stype', q:'What is the job?',opts:['Plumbing','Electrical','Building','Painting','Garden','Cleaning','Childcare','Moving','Appliance repair','IT & computers']},
+   {k:'when',  q:'How soon?',opts:['Today','This week','Whenever']},
+   {k:'area',  q:'Which part of town?',opts:AREAS,minPool:15}
+ ],
+ 'Adventures':[
+   {k:'atype',q:'What kind of trip?',opts:['Safari','Hiking','Water','Cultural','Road trip']},
+   {k:'nights',q:'How long?',opts:['Day trip','2-3 nights','A week or more']},
+   {k:'who',  q:'Who is going?',opts:['Just me','Couple','Family','Group']}
+ ],
+ 'Collectors':[
+   {k:'ctype',q:'Collecting what?',opts:['Coins','Stamps','Militaria','Art','Books','Vinyl','Ceramics']},
+   {k:'era',  q:'From when?',opts:['Pre-1900','1900-1950','1950-2000','Modern']},
+   {k:'cond', q:'Condition?',opts:['Mint','Excellent','Good','Restorer']}
+ ],
+ 'Cars':[
+   {k:'make', q:'Which make?',opts:['Toyota','VW','BMW','Ford','Mercedes','Hyundai','Mazda','Nissan']},
+   {k:'yr',   q:'How old?',opts:['2020 on','2015-2019','2010-2014','Older']},
+   {k:'trans',q:'Manual or automatic?',opts:['Manual','Automatic']},
+   {k:'area', q:'Which part of town?',opts:AREAS,minPool:15}
+ ],
+ 'Local Market':[
+   {k:'lmtype',q:'What are you after?',opts:['Food & produce','Handmade','Furniture','Instruments','Antiques','General']},
+   {k:'cond',  q:'New or used?',opts:['New','Used']},
+   {k:'area',  q:'Which part of town?',opts:AREAS,minPool:15}
+ ]
+};
+
+var NAMES=['Thandi','Pieter','Naledi','Johan','Zanele','Riaan','Lerato','Danie','Ayanda','Marika','Sipho','Elmarie','Kagiso','Werner','Nomsa','Hendrik'];
+var DATA=[];
+(function build(){
+  CATS.forEach(function(c){
+    for(var i=0;i<c.n;i++){
+      var r={cat:c.k,id:c.k+i,area:pick(AREAW)};
+      if(c.k==='Property'){
+        r.listingType=pick([['To rent',44],['To buy',56]]);
+        r.ptype=pick([['House',38],['Apartment',26],['Townhouse',22],['Land',8],['Commercial',6]]);
+        r.beds=pick([['1',14],['2',30],['3',34],['4+',22]]);
+        r.title=r.beds+'-bed '+r.ptype.toLowerCase()+', '+r.area;
+        r.price=(r.listingType==='To rent'?'R'+(8+Math.floor(rng()*26))+' 000 pm':'R'+(1+Math.floor(rng()*4))+'.'+Math.floor(rng()*9)+'m');
+      } else if(c.k==='Tutors'){
+        r.subject=pick([['Maths',24],['English',15],['Afrikaans',10],['Science',13],['Chess',12],['Music',11],['Coding',9],['Accounting',6]]);
+        r.level=pick([['Beginner',44],['Intermediate',36],['Advanced',20]]);
+        r.mode=pick([['Online',42],['In person',58]]);
+        if(r.subject==='Chess') r.focus=pick([['Openings',30],['Middle game',22],['Endgame',20],['Speed chess',28]]);
+        r.title=r.subject+' tutor · '+r.level;
+        r.price='R'+(180+Math.floor(rng()*22)*10)+'/hr';
+      } else if(c.k==='Services'){
+        r.sclass=pick([['Technical & trades',58],['Casual & in-home',42]]);
+        r.stype=r.sclass==='Technical & trades'
+          ? pick([['Plumbing',22],['Electrical',20],['Building',18],['Painting',14],['Appliance repair',13],['IT & computers',13]])
+          : pick([['Cleaning',30],['Garden',24],['Childcare',20],['Moving',14],['Painting',12]]);
+        r.when=pick([['Today',18],['This week',42],['Whenever',40]]);
+        r.title=r.stype+' · '+r.area;
+        r.price='R'+(250+Math.floor(rng()*45)*10)+' call-out';
+      } else if(c.k==='Adventures'){
+        r.atype=pick([['Safari',26],['Hiking',24],['Water',18],['Cultural',16],['Road trip',16]]);
+        r.nights=pick([['Day trip',34],['2-3 nights',42],['A week or more',24]]);
+        r.who=pick([['Just me',14],['Couple',30],['Family',34],['Group',22]]);
+        r.title=r.atype+' · '+r.nights;
+        r.price='R'+(1+Math.floor(rng()*18))+' '+Math.floor(rng()*9)+'00 pp';
+      } else if(c.k==='Collectors'){
+        r.ctype=pick([['Coins',22],['Stamps',16],['Militaria',14],['Art',14],['Books',12],['Vinyl',12],['Ceramics',10]]);
+        r.era=pick([['Pre-1900',16],['1900-1950',28],['1950-2000',38],['Modern',18]]);
+        r.cond=pick([['Mint',18],['Excellent',34],['Good',34],['Restorer',14]]);
+        r.title=r.ctype+' · '+r.era;
+        r.price='R'+(3+Math.floor(rng()*40))+'00';
+      } else if(c.k==='Cars'){
+        r.make=pick([['Toyota',24],['VW',20],['BMW',13],['Ford',10],['Mercedes',9],['Hyundai',9],['Mazda',8],['Nissan',7]]);
+        r.yr=pick([['2020 on',18],['2015-2019',30],['2010-2014',30],['Older',22]]);
+        r.trans=pick([['Manual',46],['Automatic',54]]);
+        r.title=r.make+' · '+r.yr+' · '+r.trans;
+        r.price='R'+(60+Math.floor(rng()*48)*5)+' 000';
+      } else {
+        r.lmtype=pick([['Food & produce',24],['Handmade',20],['Furniture',18],['Instruments',12],['Antiques',12],['General',14]]);
+        r.cond=pick([['New',44],['Used',56]]);
+        r.title=r.lmtype+' · '+r.cond;
+        r.price='R'+(2+Math.floor(rng()*28))+'50';
+      }
+      r.seller=NAMES[Math.floor(rng()*NAMES.length)];
+      r.trust=52+Math.floor(rng()*46);
+      DATA.push(r);
+    }
+  });
+})();
+/* ── state ─────────────────────────────────────────────────────── */
+var mode='A';
+var st={cat:null,sel:{},skipped:{},taps:0,screens:0,veil:false,done:false};
+function catMeta(k){for(var i=0;i<CATS.length;i++)if(CATS[i].k===k)return CATS[i];return CATS[0];}
+function matches(r,cat,sel){
+  if(cat && r.cat!==cat) return false;
+  for(var k in sel){ if(sel[k]!=null && r[k]!==sel[k]) return false; }
+  return true;
+}
+function rows(extraK,extraV){
+  var sel={},k; for(k in st.sel) sel[k]=st.sel[k];
+  if(extraK) sel[extraK]=extraV;
+  return DATA.filter(function(r){return matches(r,st.cat,sel);});
+}
+function count(k,v){return rows(k,v).length;}
+
+/* the next question worth asking */
+function nextFacet(){
+  var list=FACETS[st.cat]||[],n=rows().length;
+  for(var i=0;i<list.length;i++){
+    var f=list[i];
+    if(st.sel[f.k]!=null) continue;
+    if(st.skipped && st.skipped[f.k]) continue;
+    if(f.only){var ok=true;for(var k in f.only) if(st.sel[k]!==f.only[k]) ok=false; if(!ok) continue;}
+    if(f.minPool && n<f.minPool) continue;          // don't split a tiny list
+    var live=f.opts.filter(function(o){return count(f.k,o)>0;});
+    if(live.length<2) continue;                      // a question with one answer is not a question
+    return f;
+  }
+  return null;
+}
+
+/* ── chrome ────────────────────────────────────────────────────── */
+function setMode(m){mode=m;document.getElementById('mA').className=(m==='A'?'on':'');document.getElementById('mB').className=(m==='B'?'on':'');reset();}
+function reset(){
+  st={cat:null,sel:{},skipped:{},taps:0,screens:0,veil:false,done:false};
+  document.getElementById('veil').className='veil hidden';
+  document.getElementById('gbar').className='gbar hidden';
+  document.getElementById('fab').style.display='';
+  render();
+}
+function render(){
+  var list=rows();
+  var hide=(st.veil && !st.done);          // ANY full-screen step is covering something
+  var opening=(hide && !st.cat);           // ...except the opening circle: nothing is chosen yet
+  document.getElementById('subline').textContent = st.cat ? (st.cat+' · Pretoria') : 'Pretoria · everything nearby';
+
+  var tg='',k;
+  if(st.cat) tg+='<span class="tag">'+catMeta(st.cat).icon+' '+st.cat+' <i onclick="dropAll()">✕</i></span>';
+  for(k in st.sel) tg+='<span class="tag">'+st.sel[k]+' <i onclick="drop(\''+k+'\')">✕</i></span>';
+  document.getElementById('tags').innerHTML=tg;
+
+  document.getElementById('countline').innerHTML = (hide && mode==='B')
+    ? '<em>results hidden until the last question is answered</em>'
+    : '<b>'+list.length+'</b> '+(st.cat?st.cat.toLowerCase():'listings')+' <em>· Pretoria</em>';
+
+  var res=document.getElementById('results');
+  if(hide && mode==='B'){ res.innerHTML='<div class="empty"><div class="big">🫥</div><b>Nothing to see yet</b>The wizard is still asking. The app has not shown you a single thing for sale.</div>'; }
+  else if(!list.length){
+    res.innerHTML='<div class="empty"><div class="big">🕸️</div><b>Nothing matches</b>You answered every question and got an empty shelf. This is the moment people close the app.<br><br>'+
+      '<button class="btn pri" style="max-width:200px;margin:0 auto" onclick="reset()">Start again</button></div>';
+  } else {
+    var h='';
+    list.slice(0,26).forEach(function(r){
+      var m=catMeta(r.cat);
+      h+='<div class="card"><div class="thumb" style="background:linear-gradient(140deg,'+m.c1+','+m.c2+')">'+m.icon+'</div>'+
+         '<div><div class="t">'+r.title+'</div><div class="m">'+r.seller+' · '+r.area+' · ★ '+r.trust+'</div></div>'+
+         '<div class="p">'+r.price+'<small>1 tuppence</small></div></div>';
+    });
+    if(list.length>26) h+='<div style="text-align:center;color:#6b7280;font-size:12px;padding:8px">+ '+(list.length-26)+' more</div>';
+    res.innerHTML=h;
+  }
+  renderChips();
+  renderMeter(hide,opening);
+}
+function renderMeter(hide,opening){
+  var msg = opening ? 'opening circle — nothing chosen yet'
+          : hide    ? 'RESULTS + CONTROLS COVERED'
+                    : 'nothing covered';
+  document.getElementById('meter').innerHTML=
+    '<div>taps: '+st.taps+'</div>'+
+    '<div>full-screen steps: '+st.screens+'</div>'+
+    '<div class="'+(hide&&!opening?'warn':'')+'">'+msg+'</div>';
+}
+/* The app's own category chips. They stay live while the genie is working —
+   that is David's rule made testable: tap one mid-question and it still acts. */
+function renderChips(){
+  var h='<div class="cchip'+(st.cat?'':' on')+'" onclick="chipCat(null)">All</div>';
+  CATS.forEach(function(c){
+    h+='<div class="cchip'+(st.cat===c.k?' on':'')+'" onclick="chipCat(\''+c.k+'\')">'+c.icon+' '+c.k+'</div>';
+  });
+  document.getElementById('chiprow').innerHTML=h;
+}
+function chipCat(v){
+  st.taps++; st.cat=v; st.sel={}; st.skipped={}; st.done=false;
+  if(mode==='A' && v && document.getElementById('gbar').className.indexOf('hidden')===-1) askA();
+  else if(mode==='A' && v) askA();
+  else { document.getElementById('gbar').className='gbar hidden'; document.getElementById('fab').style.display=''; }
+  render();
+}
+function poke(name){ st.taps++; toast(name+' still works — the genie never covered it.'); }
+function drop(k){ st.sel[k]=null; delete st.sel[k]; st.taps++; if(mode==='A'&&st.cat) askA(); render(); }
+function dropAll(){ reset(); }
+
+/* ── the ring of balls ─────────────────────────────────────────── */
+function ringHTML(opts,facetKey,onpick){
+  var n=opts.length, R=(n<=5?96:110), h='';
+  opts.forEach(function(o,i){
+    var c = facetKey ? count(facetKey,o.v) : o.n;
+    var a = (-90 + i*360/n) * Math.PI/180;
+    var x = Math.cos(a)*R, y = Math.sin(a)*R;
+    h+='<div class="node'+(c?'':' dead')+'" style="transform:translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px);animation-delay:'+(i*45)+'ms" '+
+       'onclick="'+onpick+'(\''+String(o.v).replace(/'/g,"\\'")+'\','+c+')">'+
+       '<div class="ball" style="background:radial-gradient(circle at 34% 28%,'+o.c1+' 0%,'+o.c1+' 18%,'+o.c2+' 88%)">'+o.icon+'</div>'+
+       '<div class="nm">'+o.v+'</div><div class="ct">'+(c?c:'none yet')+'</div></div>';
+  });
+  return '<div class="ring">'+h+'<div class="hub">🧞</div></div>';
+}
+function chipsHTML(opts,facetKey,onpick){
+  var h='';
+  opts.forEach(function(v){
+    var c=count(facetKey,v);
+    h+='<div class="chip'+(c?'':' dead')+'" onclick="'+onpick+'(\''+String(v).replace(/'/g,"\\'")+'\','+c+')">'+v+' <b>'+(c?c:'0')+'</b></div>';
+  });
+  return '<div class="chips">'+h+'</div>';
+}
+var SUBICON={'Maths':'∑','English':'📖','Afrikaans':'🗣','Science':'🔬','Chess':'♞','Music':'🎵','Coding':'💻','Accounting':'📊','To rent':'🔑','To buy':'🏦','House':'🏡','Apartment':'🏢','Townhouse':'🏘','Land':'🌾','Commercial':'🏬','Beginner':'🌱','Intermediate':'🌿','Advanced':'🏆','Online':'💻','In person':'🤝','Openings':'♟','Middle game':'♜','Endgame':'♚','Speed chess':'⏱','Technical & trades':'🔧','Casual & in-home':'🧹','Today':'⚡','This week':'📅','Whenever':'😌','Safari':'🦁','Hiking':'🥾','Water':'🌊','Cultural':'🎭','Road trip':'🛻','Day trip':'☀️','2-3 nights':'🏕','A week or more':'🧳','Just me':'🧍','Couple':'💑','Family':'👪','Group':'👥','Coins':'🪙','Stamps':'📮','Militaria':'🎖','Art':'🖼','Books':'📚','Vinyl':'💿','Ceramics':'🏺','Manual':'🎚','Automatic':'⚙️','New':'✨','Used':'♻️','Food & produce':'🍯','Handmade':'🧵','Furniture':'🪑','Instruments':'🎸','Antiques':'⌛','General':'📦','1':'1️⃣','2':'2️⃣','3':'3️⃣','4+':'4️⃣'};
+function optObjs(facet){
+  return facet.opts.map(function(v,i){
+    var pal=[['#7dd3fc','#1e3a8a'],['#fbbf24','#7c2d12'],['#86efac','#14532d'],['#c4b5fd','#4c1d95'],['#fda4af','#881337'],['#5eead4','#134e4a'],['#fcd34d','#78350f'],['#93c5fd','#1e3a5f']][i%8];
+    return {v:v,c1:pal[0],c2:pal[1],icon:SUBICON[v]||'●'};
+  });
+}
+/* ── shared bits ───────────────────────────────────────────────── */
+var catOpts=CATS.map(function(c){return {v:c.k,c1:c.c1,c2:c.c2,icon:c.icon,n:c.n};});
+function toast(msg){
+  var d=document.createElement('div');
+  d.style.cssText='position:absolute;left:14px;right:14px;bottom:96px;z-index:80;background:#fff;border-radius:12px;padding:11px 13px;font:600 12px Inter;color:#0c1a2e;box-shadow:0 8px 24px rgba(0,0,0,.34)';
+  d.innerHTML='🔔 '+msg;
+  document.getElementById('screen').appendChild(d);
+  setTimeout(function(){d.remove();},2900);
+}
+function openGenie(){ st.taps++; (mode==='A'?veilCatsA:veilCatsB)(); }
+
+/* ── MODE A · genie helps, results are never hidden ────────────── */
+function veilCatsA(){
+  st.screens=1; st.veil=true;
+  var v=document.getElementById('veil'); v.className='veil';
+  v.innerHTML=
+    '<div class="veil-head"><div class="ask"><span class="g">🧞</span><span>What are you looking for?</span></div>'+
+    '<div class="hint">The only full-screen moment in the whole flow — nothing is selected yet, so nothing is being covered.</div></div>'+
+    '<div class="veil-body">'+ringHTML(catOpts,null,'pickCatA')+'</div>'+
+    '<div class="veil-foot"><button class="btn" onclick="closeVeil()">Just let me browse</button></div>';
+  render();
+}
+function closeVeil(){ st.taps++; st.veil=false; document.getElementById('veil').className='veil hidden'; render(); }
+function pickCatA(v){
+  st.taps++; st.cat=v; st.sel={}; st.veil=false;
+  document.getElementById('veil').className='veil hidden';
+  render(); askA();
+}
+function askA(){
+  var g=document.getElementById('gbar'), n=rows().length, f=nextFacet();
+  document.getElementById('fab').style.display='none';
+  if(!f || n<=10){
+    g.className='gbar'; 
+    g.innerHTML='<div class="grip"></div><div class="ask"><span class="g">🧞</span>'+
+      (n?'That is a short list now — have a look.':'Nothing left. Let us widen it.')+'</div>'+
+      '<div class="row"><button onclick="closeBar()">Leave me to it</button>'+
+      '<button class="pri" onclick="reset()">Start again</button></div>';
+    return;
+  }
+  st.curF=f;
+  g.className='gbar';
+  g.innerHTML='<div class="grip"></div><div class="ask"><span class="g">🧞</span>'+f.q+'</div>'+
+    chipsHTML(f.opts,f.k,'pickA')+
+    '<div class="row"><button onclick="skipA()">Skip this</button>'+
+    '<button class="pri" onclick="closeBar()">Show me the '+n+'</button></div>';
+}
+function pickA(v,c){
+  st.taps++;
+  if(!c){ toast('No '+v+' yet in this list. I will ping you the day one appears.'); return; }
+  st.sel[st.curF.k]=v; render(); askA();
+}
+function skipA(){ st.taps++; st.skipped=st.skipped||{}; st.skipped[st.curF.k]=1; askA(); }
+function closeBar(){ st.taps++; document.getElementById('gbar').className='gbar hidden'; document.getElementById('fab').style.display=''; render(); }
+
+/* ── MODE B · the full wizard, exactly as described ────────────── */
+function veilCatsB(){
+  st.screens=1; st.veil=true;
+  var v=document.getElementById('veil'); v.className='veil';
+  v.innerHTML=
+    '<div class="veil-head"><div class="ask"><span class="g">🧞</span><span>What would you like to search?</span></div>'+
+    '<div class="hint">Step 1 of about 5.</div></div>'+
+    '<div class="veil-body">'+ringHTML(catOpts,null,'pickCatB')+'</div>'+
+    '<div class="veil-foot"><button class="btn" onclick="finishB()">Search now</button></div>';
+  render();
+}
+function pickCatB(v){ st.taps++; st.cat=v; st.sel={}; stepB(); }
+function stepB(){
+  var f=nextFacet();
+  if(!f){ finishB(); return; }
+  st.curF=f; st.screens++;
+  var v=document.getElementById('veil'); v.className='veil';
+  var body = f.opts.length<=8 ? ringHTML(optObjs(f),f.k,'pickB') : chipsHTML(f.opts,f.k,'pickB');
+  v.innerHTML=
+    '<div class="veil-head"><div class="ask"><span class="g">🧞</span><span>'+f.q+'</span></div>'+
+    '<div class="hint">Step '+st.screens+' · '+st.cat+(Object.keys(st.sel).length?' · '+Object.keys(st.sel).map(function(k){return st.sel[k];}).join(' · '):'')+'</div></div>'+
+    '<div class="veil-body">'+body+'</div>'+
+    '<div class="veil-foot"><button class="btn" onclick="finishB()">Search now</button></div>';
+  render();
+}
+function pickB(v,c){
+  st.taps++;
+  if(!c){ toast('Nothing there yet — I will let you know when there is.'); return; }
+  st.sel[st.curF.k]=v; stepB();
+}
+function finishB(){
+  st.taps++; st.done=true; st.veil=false;
+  document.getElementById('veil').className='veil hidden';
+  document.getElementById('fab').style.display='';
+  render();
+}
+
+reset();
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "run": "2026-09-04T05:48:17Z",
+  "mode": "SHADOW (kill switch OFF \u2014 default, cannot commit)",
+  "seen": 0,
+  "intake": {
+    "app_faults_new": 0,
+    "email_lane": {
+      "lane": "email_triage",
+      "total": 15,
+      "by_category_30d": {
+        "other": 1,
+        "support": 4
+      },
+      "by_status_30d": {
+        "drafted": 1,
+        "sent": 4
+      },
+      "held_30d": 1,
+      "note": "counts only (RG-0222); rows need the admin credential"
+    }
+  },
+  "actions": []
+}

@@ -12135,7 +12135,22 @@ def rg_sync_pulldown():
              "Acceptance criteria extend to: singleton auto-collapse proven (engine rule 3.6 -- "
              "a facet with exactly one non-zero option is never asked, chip applied silently), "
              "and true institution counts (max 4 tiles, proximity x count, zero-count removed). "
-             "Same promote-when-built discipline; the spec-intact assertion covers sec 10 too.",
+             "EXTENDED 4 Sep 2026 (RUL-097): the GENIE is Zoom's front door and voice -- an "
+             "opening circle of the seven categories with true counts, plus a persona on the "
+             "existing question sheet (ZOOM_HMI_SPEC.md sec 11). It is NOT a second funnel: "
+             "every narrowing decision below the first tap stays sec 3. Acceptance criteria "
+             "extend to: (12) with the genie band open every control hittable before it "
+             "opened is still hittable and the scroll height beneath is unchanged -- David's "
+             "covering rule; (13) exactly ONE full-screen genie step exists (the opening ring) "
+             "and it is unreachable once a category is chosen; (14) each category ball carries "
+             "a reach-scoped count from the same query as the list, out-of-reach dimmed with "
+             "its offer, zero removed; (15) the genie writes the SAME facet state as the chip "
+             "rail and its chips are removable identically. DEFERRED BY DAVID to a STOCK "
+             "trigger, never a date: Zoom armed in the field AND all seven categories non-zero "
+             "in a typical city AND ~30 days of funnel behaviour to compare against. So this "
+             "half is spec-intact only, and stays that way longer than the rest of RG-0221. "
+             "Same promote-when-built discipline; the spec-intact assertion covers sec 10 "
+             "and sec 11 too.",
        ref="ZOOM-HMI-1 (30 Aug 2026). David ratified the design after tapping both "
            "prototypes and set one binding constraint: 'I would actually like to see it on "
            "the actual app first, not the live one that is in the field now.' So the build "
@@ -12162,11 +12177,15 @@ def rg_zoom_funnel():
             ("0.5 x listing quality", "the Ranking Score as the result order"),
             ("quality_score` column", "the stored-quality prerequisite"),
             ("reach gate moves into", "reach-scoped counts (the rule-2 breaker)"),
-            ("Empty\" and \"locked\" are different", "locked != zero-count")):
+            ("Empty\" and \"locked\" are different", "locked != zero-count"),
+            ("front door, not a second funnel", "the genie is not a second engine (RUL-097)"),
+            ("the genie never covers a selector", "David's covering rule (RUL-097)"),
+            ("never a calendar date", "the genie's stock trigger, not a date (RUL-097)")):
         if needle not in s:
             out.append((FAIL, "ZOOM_HMI_SPEC.md lost %r -- %s is gone (ZOOM-HMI-1)"
                               % (needle, why)))
-    for proto in ("ZOOM_HMI_PROTOTYPE_2026-08-30.html", "ZOOM_HMI_PHONE_2026-08-30.html"):
+    for proto in ("ZOOM_HMI_PROTOTYPE_2026-08-30.html", "ZOOM_HMI_PHONE_2026-08-30.html",
+                  "GENIE_SEARCH_CONCEPT.html"):
         if not os.path.exists(os.path.join(REPO, proto)):
             out.append((FAIL, "%s is missing -- the spec's measured tap budgets can no "
                               "longer be re-run (ZOOM-HMI-1)" % proto))
