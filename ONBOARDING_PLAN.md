@@ -94,7 +94,76 @@ Never let this arrive as a surprise in the last week.
    clicks are corporate link-scanners. Any rate computed from raw click counts
    will flatter us; use the scored human tiers.
 
-## 5. WHAT IS NOT THE PLAN
+## 5. THE SPORTS CLUBS LANE — the supply answer, with one catch
+
+David's clubs idea (SPORTS_CLUBS_LANE + the provincial-secretary letter, 4 Sep) is
+assessed here because it attacks §1's binding constraint directly, and nothing else on
+the table does.
+
+**Why it matters to this goal — now MEASURED, not estimated (4 Sep).** §1 says we hold
+~2,860 unemailed organisations — one pass — so 20 publishers needs click→publish of about
+5%. Two provincial athletics pages were read live with `CityLauncher/club_reader.py` and
+run through the real send guards:
+
+| province | addresses on the page | sendable after every guard |
+|----------|----------------------|-----------------------------|
+| Western Province | 211 | **98** |
+| Athletics Gauteng North | 366 | **197** |
+
+**295 sendable clubs from two provinces of one sport. Athletics South Africa has 17** —
+about 2,500 from athletics alone, before cycling, judo, karate, boxing, swimming, the 227
+parkruns or the non-profit register. That roughly DOUBLES the list and drops the required
+rate from ~5% to ~2.5% — the difference between "tight" and "comfortable" on §1's table.
+For contrast, the existing search-and-maps scraper had found 40 sport entries in the whole
+3,805-row database. The word list was never the problem; the place we looked was. It also fixes the SHAPE of the gap: the
+4 Sep wave found nine lanes dry in the AGENCY category, and clubs feed Tutors, Services
+and Adventures, which still have room, across every province. Cost is zero — public
+registers, the scraper we already run, the send machinery we already own.
+
+**The catch, and it decides whether the idea scores at all.** The goal counts people
+**we contacted cold**. The letter's current ask is that the secretary forwards a
+paragraph to their clubs *in their own words*. Anyone who arrives that way was never in
+our list and was never emailed by us: `emailed_at` is NULL, so `onboarding_number.py`
+excludes them — correctly, under ONBOARDING_GOAL.md §3. **As written, the federation
+route builds the business and scores ZERO on this goal.**
+
+One sentence fixes it. Change the ask from *"I send you one short paragraph you can pass
+on to your clubs"* to *"may we email your affiliated clubs directly, with your blessing?"*
+Then the clubs enter our list, we contact them, they count — and the same answer supplies
+the POPIA permission the lane needs anyway. That wording is commercial and legal
+positioning, so it is DAVID'S to change, not a session's.
+
+**Timing: the scrape is the fast lane, the letter is the long game.** Volunteers reply
+slowly. Letter → reply (1–3 weeks) → permission → readers → send → convert lands late
+October at best. The athletics scrape could be sending inside a week (one provincial page
+already shows ~110 clubs with addresses in plain text). So: build readers during Phase 1
+as parallel work — it is free and it sends nothing — and treat clubs as Phase 3 supply.
+
+**No counsel gate — RUL-052 / RUL-020.** An earlier version of this section made a lawyer
+a precondition. That was wrong and David corrected it: counsel items ride alongside, they
+never block a wave, and the same applies here. What follows is therefore the operating
+position, not a hold.
+
+**The legal difference the feasibility notes did not name.** Our current ZA sending rests
+on a specific basis: OUTREACH_LAW_WORKING_NOTES_2026-08-20.md records that role-based
+addresses (info@, sales@) directed at the legal entity fall outside POPIA s69's strictest
+consent requirement. Club secretaries are the opposite — **named individuals with
+personal addresses**, the case s69 protects most strongly. So this lane is not "the same
+as what we already do"; it steps outside the basis we currently rely on. Sharpening the
+irony: PERSON-ONLY-2 already HOLDS office desks on the Tutors and teachers lanes because
+a person lists as a tutor and an office does not — so our own deliverability guard pushes
+us toward exactly the addresses the law protects hardest. So the mitigation that carries this
+lane is not a legal opinion, it is the machinery already in place and already binding:
+the suppression register checked at two gates fail-safe (RUL-054, "one rule we can not
+contravene"), an unsubscribe link in every template, the junk / government /
+privacy-officer / competitor filters, one mailbox per organisation, the 12-per-wave ramp,
+the 5%-bounce stop-loss and the no-follow-up-on-silence rule. Those did real work on the
+real data on 4 Sep: one-per-org held 237 sibling mailboxes and the government filter held
+45 officers' .gov.za addresses across the two provinces read. A wrong or dead address is
+not a wasted email on this lane, it is a burnt contact — which is exactly why the accuracy
+of the list, not its size, is the thing to protect.
+
+## 6. WHAT IS NOT THE PLAN
 
 - More outreach before the rate is known. That spends the one pass blind.
 - Mailing the ~310 who received the broken email and never opened it. That is a

@@ -15225,5 +15225,78 @@ def rg_relink_lane_pulls_before_it_picks():
     return out
 
 
+@entry("RG-0266", "The CLUB SUPPLY lane collects paperwork, never adverts -- club_reader.py "
+       "emits candidate rows only, writes to no database, and every scraped roster stays out "
+       "of git, because it is a list of named volunteers and their cell numbers",
+       LOCKED, fixed_on="2026-09-04",
+       scope="CityLauncher/club_reader.py and the club_lists/ working area. THREE LEGS. "
+             "(a) COLLECTOR, NOT SENDER: the reader has no import path and no database "
+             "handle -- it prints and writes CSV. Collecting a row is not permission to "
+             "email it; the suppression register, junk / government / privacy-officer / "
+             "competitor filters, one-per-org and the ramp all live at the ONE send "
+             "chokepoint in emailer.py (RUL-054) and are applied there, for every lane. A "
+             "collector that could send would be a second chokepoint. (b) THE DATA NEVER "
+             "ENTERS GIT: club_lists/ and *.club.csv are gitignored, because a federation "
+             "roster is named volunteers with personal addresses and cell numbers -- RUL-054 "
+             "says the prospect data is never public, and a repo is public enough. The reader "
+             "is code and is committed; what it reads never is. (c) NO SANDBOX DB WRITES -- "
+             "the 31 Aug SQLite ban holds; the host-side importer does the writing.",
+       ref="SPORTS-CLUBS-1, 4 Sep 2026, David's idea, PROVED the same day. His insight: clubs "
+           "never appear in search or maps because advertisers pay to be seen and clubs do "
+           "not -- but a club must file paperwork to affiliate, register as a non-profit, "
+           "enter races and book fields, and that paperwork is published with a secretary's "
+           "address on it. So collect the paperwork, never the adverts. MEASURED, not "
+           "estimated: two provincial athletics pages read live -- Western Province 211 "
+           "addresses -> 98 sendable after every guard, Gauteng North 366 -> 197. 295 "
+           "sendable clubs from TWO provinces of ONE sport; Athletics SA has 17. The existing "
+           "search-and-maps scraper had found 40 sport entries in the whole 3,805-row "
+           "database. The word list was never the problem; the place we looked was. The "
+           "guards did real work on the real data, which is why they are asserted rather than "
+           "assumed: one-per-org held 237 sibling mailboxes and the government filter held 45 "
+           "(.gov.za addresses of officers who happen to work for the state).")
+def rg_club_reader_collects_only():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    reader = os.path.join(cl, "club_reader.py")
+    if not os.path.exists(reader):
+        return [(INFO, "SKIPPED -- club_reader.py is not on this disk")]
+    s = open(reader, encoding="utf-8", errors="replace").read()
+
+    # (a) it must not be able to write the prospect store or send anything
+    for needle, msg in (("sqlite3", "club_reader.py imports sqlite3 -- a collector must not "
+                                    "touch the prospect database (31 Aug SQLite ban, and it "
+                                    "would become a second send chokepoint)"),
+                        ("send_email", "club_reader.py can send email -- collection and "
+                                       "sending must stay separate (RUL-054: ONE chokepoint)"),
+                        ("INSERT INTO", "club_reader.py writes rows directly -- the host-side "
+                                        "importer owns that")):
+        if needle in s:
+            out.append((FAIL, msg))
+
+    # (b) the harvest must be gitignored
+    gi = os.path.join(cl, ".gitignore")
+    if not os.path.exists(gi):
+        out.append((FAIL, "CityLauncher/.gitignore is gone -- scraped club rosters would be "
+                          "committed to the repo"))
+    else:
+        g = open(gi, encoding="utf-8", errors="replace").read()
+        for pat in ("club_lists/", "*.club.csv"):
+            if pat not in g:
+                out.append((FAIL, "%s is no longer gitignored -- a roster of named volunteers "
+                                  "and their cell numbers can reach the repo (RUL-054)" % pat))
+
+    # (c) nothing harvested is actually sitting in the working tree unignored
+    import glob as _g
+    stray = [f for f in _g.glob(os.path.join(cl, "*.csv"))
+             if os.path.basename(f).lower().startswith(("club", "wpa", "agn"))]
+    if stray:
+        out.append((FAIL, "scraped roster(s) sitting loose in CityLauncher/: %s"
+                          % ", ".join(os.path.basename(x) for x in stray[:3])))
+
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "reader collects only, cannot send or write, harvest stays out of git"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
