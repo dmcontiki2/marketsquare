@@ -1,0 +1,5 @@
+action=run_bat
+arg=CityLauncher\send_human_clicks_now.bat
+requested_at=2026-09-03T18:38:22Z
+permission=David, 3 Sep 2026: '3 please' — re-send to the 61 who clicked and hit the broken publish page
+reason=HUMAN-CLICKS-1 follow-up, clicks-only tier, journey_check gate inside the script
