@@ -14949,5 +14949,85 @@ def rg_unattended_wait_survives_redirection():
     return out
 
 
+@entry("RG-0263", "The SUPPLY lane can actually run -- LAUNCH_API_KEY is provisioned, so the "
+       "allowlisted top-up tools that keep city pools full are not locked out of our own API",
+       OPEN,
+       scope="LAUNCH_API_KEY in the origin's environment, and the matching local copy at "
+             "MarketSquare/.secrets/launch_api_key.txt (gitignored) that CityLauncher's ops "
+             "scripts read. Consumers today: scripts/fill_wave_gaps.py (allowlisted under "
+             "RUL-096(d) precisely so an unattended run can top up an empty city pool), plus "
+             "every launch-api PII endpoint behind LAUNCH-API-FAILCLOSED-1. TWO LEGS when it "
+             "promotes: (a) an unauthenticated GET of a launch-api PII endpoint is REFUSED -- "
+             "the fail-closed gate of RG-0176 must not be traded away to fix this; (b) a "
+             "request carrying the provisioned key is ACCEPTED, i.e. our own tooling is inside "
+             "the gate rather than outside it. Both legs together: the door is shut AND we "
+             "have the key. Either alone is a wrong fix.",
+       ref="SUPPLY-KEY-1, found 4 Sep 2026 on the first unattended onboarding run. Queued "
+           "fill_wave_gaps.py through the host queue to refill the nine city pools that had "
+           "just reported 'no sendable agency prospects'; it FAILED rc=1 with HTTP 401. Cause "
+           "is not a bug: LAUNCH_API_KEY has never been set in the server environment, and "
+           "LAUNCH-API-FAILCLOSED-1 (26 Aug, RG-0176) makes an unset key mean CLOSED TO "
+           "EVERYONE -- server.py says so in its own comment: 'until LAUNCH_API_KEY is in the "
+           "server environment, these endpoints answer 403 to EVERYONE including David's own "
+           "tooling.' That was the right call (the 26 Aug probe found 200 prospect records "
+           "with names, emails and phone numbers served anonymously). The unpaid half is that "
+           "nobody then provisioned the key, so the tool RUL-096(d) allowlisted for exactly "
+           "this job cannot reach the API it was written against. NOT DONE THIS SESSION and "
+           "deliberately so: provisioning a secret and restarting the production service "
+           "unattended at 13:15 with nobody watching is the lockout-risk class reserved under "
+           "RUL-027 -- and per RUL-037 an item that cannot be executed this session goes into "
+           "the ledger as OPEN, not into a sentence to David. It promotes itself the moment "
+           "the key is live. Until then supply must come from the scraper lane "
+           "(run_local_scraper.bat) rather than the API lane.")
+def rg_supply_key_provisioned():
+    out = []
+    base = "https://trustsquare.co/launch-api/prospects/list"
+    try:
+        code, _ = _http_head_status(base)
+    except Exception as e:
+        return [(INFO, "SKIPPED -- could not reach the launch-api (%s)" % str(e)[:60])]
+
+    # leg (a): the door stays SHUT to strangers, key or no key. Never trade this away.
+    if code in (401, 403):
+        out.append((INFO, "launch-api PII endpoint refuses an anonymous caller (HTTP %d) -- "
+                          "RG-0176's fail-closed gate intact" % code))
+    else:
+        out.append((FAIL, "launch-api PII endpoint answers HTTP %d anonymously -- prospect "
+                          "names, emails and phone numbers are being served to the public "
+                          "(RG-0176 regressed)" % code))
+
+    # leg (b): OUR tooling is inside the gate.
+    key = ""
+    kf = os.path.join(REPO, ".secrets", "launch_api_key.txt")
+    if os.path.exists(kf):
+        try:
+            key = open(kf, encoding="utf-8").read().strip()
+        except Exception:
+            key = ""
+    key = key or os.environ.get("LAUNCH_API_KEY", "")
+    if not key:
+        out.append((FAIL, "no LAUNCH_API_KEY on this machine (.secrets/launch_api_key.txt "
+                          "absent) -- fill_wave_gaps.py and every launch-api ops tool are "
+                          "locked out of our own API (SUPPLY-KEY-1)"))
+        return out
+    try:
+        import urllib.request as _ur, urllib.error as _ue
+        req = _ur.Request(base, headers={"X-Launch-Key": key,
+                                         "User-Agent": "TrustSquare-ledger/1.0"})
+        try:
+            with _ur.urlopen(req, timeout=20) as r:
+                code2 = r.status
+        except _ue.HTTPError as e:
+            code2 = e.code
+    except Exception as e:
+        return out + [(INFO, "leg (b) SKIPPED (%s)" % str(e)[:60])]
+    if code2 == 200:
+        out.append((INFO, "the provisioned key opens the launch-api -- supply lane can run"))
+    else:
+        out.append((FAIL, "the key on this machine is REFUSED by the launch-api (HTTP %d) -- "
+                          "local copy and server environment disagree" % code2))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
