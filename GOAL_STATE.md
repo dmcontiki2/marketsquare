@@ -24,11 +24,19 @@ Target: **20 by Fri 31 Oct 2026.**
   no password box, PROBED 10:36Z.
 - **The constraint is now SUPPLY.** Fired the gated wave; 0 emails went out. Of 14
   city lanes: 9 had no sendable prospects, 2 were latched by stop-loss, 1 by min-gap.
-- 542 of 546 emailed people got the OLD broken link and none has been re-mailed.
-  Only **30 people have ever been sent a working link**. Of 64 clicks, only **2**
-  score as real humans. The funnel has barely been exercised by people at all.
+- 542 of 546 emailed people got the OLD broken link. **130 of them — everyone who
+  opened or clicked — now have the working link** (sent 4 Sep). About 310 who never
+  opened remain uncontacted. Before today only 30 people had ever been sent a link
+  that works.
 
 ## WHAT THE LAST RUN DID (4 Sep 2026, run 1)
+
+0. **Sent the apology to 130 people** — everyone who opened or clicked an outreach email
+   and met the password box. David's permission, his words, 4 Sep. New lane:
+   `resend_broken_link_now.bat`. First attempt reached only 18 (wrong column); corrected
+   the same run to 112 more. Nobody was sent it twice. 11 people in the first 18 had also
+   had the human-clicks follow-up — that was before the never-twice guard existed and
+   cannot recur.
 
 1. Found the scoring probe reads HIGH — the contract's raw query returns 2 on the live
    server and both rows are seed records never emailed. Built the honest scorer
@@ -44,6 +52,9 @@ Target: **20 by Fri 31 Oct 2026.**
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
+0. **Read what the 130 apology emails did.** Opens and clicks land in `email_events` via
+   webhook. That is the first real test of a working funnel on a warm audience — measure
+   it before doing anything else, then run the number.
 1. The wave is eligible again from **5 Sep** (min-gap). Fire it and read the result.
 2. RG-0263: `LAUNCH_API_KEY` was never provisioned, so `fill_wave_gaps.py` 401s and the
    nine empty pools cannot be topped up through the API. Until it is live, supply must
@@ -61,6 +72,8 @@ Target: **20 by Fri 31 Oct 2026.**
 
 ## OPEN QUESTIONS FOR DAVID (batched, never dripped)
 
-1. **Re-mail the 441 people whose link was broken?** `CityLauncher/resend_broken_link.py`
-   is built, honours every send guard, and defaults to a dry run. It is not on the
-   allowlist, so it needs his word. Asked 4 Sep 2026.
+1. ~~Re-mail the people whose link was broken?~~ **ANSWERED 4 Sep 2026** — David: *"i think
+   we should at least resend the ones that did open their emails?"* Done: 130 sent.
+   The ~310 who only RECEIVED the broken email (never opened it) are still uncontacted;
+   that is a wider send than his words covered, so it stays unasked until there is
+   evidence the warm 130 convert.
