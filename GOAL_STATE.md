@@ -50,6 +50,13 @@ Target: **20 by Fri 31 Oct 2026.**
    `timeout.exe`, which dies silently under the host queue's redirected stdin.
 6. Opened RG-0263 — the supply top-up tool is locked out of our own API.
 
+## THE PLAN
+
+`MarketSquare/ONBOARDING_PLAN.md` — the route from 0 to 20, with the arithmetic that
+decides whether 20 is reachable at all. Phase 1 (to 11 Sep) is MEASURE ONLY: the 130
+apology recipients are the experiment. Do not open the tap before the rate is known —
+we have roughly one pass through the list. The decision gate is at the end of Phase 1.
+
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
 0. **Read what the 130 apology emails did.** Opens and clicks land in `email_events` via
