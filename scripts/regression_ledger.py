@@ -13411,7 +13411,7 @@ def rg_no_safety_adjective():
 
 @entry("RG-0239", "The outreach CTA destination ANSWERS AN ANONYMOUS PROSPECT -- the magic link "
        "in every wave email must not land on a credential prompt",
-       OPEN,
+       LOCKED, fixed_on="2026-09-03",
        scope="CORRECTED 1 Sep 2026 after the first fix was WRONG. The fault is not nginx: "
              "it is that the outreach CTA pointed at the ADMIN CONSOLE. Claude opened "
              "/admin.html?magic=1 publicly, then loaded it in a clean browser and found the "
@@ -13445,27 +13445,99 @@ def rg_no_safety_adjective():
            "control + lockout risk): stripping auth from a page that is also the admin console "
            "would expose it, so this entry reports and asserts but does not self-heal. Promote "
            "when an anonymous magic-link GET returns 200 AND bare /admin.html still returns "
-           "401.")
+           "401. "
+           "ASSERTION CORRECTED AND PROMOTED 4 Sep 2026, first unattended onboarding run. The "
+           "promotion condition above was MET on 3 Sep and nobody noticed, because the check "
+           "body still probed the hardcoded /admin.html URL that CTA-URL-1 had already "
+           "abandoned -- so it stayed red for a fault that was fixed, on the one entry the "
+           "whole funnel hangs from. PROBED 4 Sep 10:36Z: the CTA the emailer actually builds "
+           "-> https://trustsquare.co/?magic=1&... -> HTTP 200, no WWW-Authenticate; bare "
+           "/admin.html -> HTTP 401 (console still shut). The assertion was not weakened to "
+           "make it pass -- it was repointed from a URL we no longer send at the URL we do "
+           "send, which is strictly stronger: a builder regressing to /admin.html now trips "
+           "leg 1, and the wrong fix of 1 Sep (auth stripped from the console) trips leg 2. "
+           "CLAUDE.md: 'if an assertion is wrong, fix the assertion and say so in the entry "
+           "ref.' This is that.")
 def rg_cta_reachable():
-    url = ("https://trustsquare.co/admin.html?magic=1&name=Ledger%20Probe"
-           "&email=probe%40example.com&cat=Tutors&city=Bloemfontein")
-    try:
-        code, hdrs = _http_head_status(url)
-    except Exception as e:
-        return [(INFO, "SKIPPED -- could not reach the CTA URL (%s)" % str(e)[:60])]
+    # ASSERTION CORRECTED 4 Sep 2026 (see ref). The previous body probed a HARDCODED
+    # https://trustsquare.co/admin.html?magic=1... -- the very URL CTA-URL-1 stopped us
+    # sending. So it measured a door we deliberately keep shut and reported the funnel
+    # broken while the real CTA had been working since 3 Sep. A check that cannot go
+    # green when the fault is fixed is not a check; it is noise that teaches sessions to
+    # ignore the board. The honest legs are: (1) the CTA THE BUILDER ACTUALLY PRODUCES
+    # opens for a stranger, and (2) the bare admin console stays gated. Leg 1 is
+    # strictly stronger than the old body -- it tracks the artifact prospects receive,
+    # so a builder regressing to /admin.html trips it, which a fixed URL never could.
     out = []
-    if code in (401, 403):
-        out.append((FAIL, "the outreach CTA returns HTTP %d to an anonymous prospect -- every "
-                          "wave email points at a locked door (CTA-401-1)" % code))
-    elif code >= 400:
-        out.append((FAIL, "the outreach CTA returns HTTP %d -- prospects cannot reach the "
-                          "listing form" % code))
+
+    # ---- leg 1: the link a prospect is actually sent -------------------------------
+    url, how = _built_outreach_cta()
+    if url is None:
+        out.append((INFO, "SKIPPED leg 1 -- could not build the CTA (%s)" % how))
     else:
-        out.append((INFO, "CTA answers anonymously: HTTP %d" % code))
-    if any(h.lower() == "www-authenticate" for h in hdrs):
-        out.append((FAIL, "the CTA response carries WWW-Authenticate -- a prospect gets a "
-                          "browser credential popup instead of the listing form"))
+        if "/admin.html" in url:
+            out.append((FAIL, "the CTA builder still points at the ADMIN CONSOLE (%s) -- "
+                              "CTA-URL-1 has regressed" % url[:90]))
+        try:
+            code, hdrs = _http_head_status(url)
+        except Exception as e:
+            out.append((INFO, "SKIPPED leg 1 -- could not reach the CTA (%s)" % str(e)[:60]))
+            code, hdrs = None, {}
+        if code is not None:
+            if code in (401, 403):
+                out.append((FAIL, "the outreach CTA returns HTTP %d to an anonymous prospect -- "
+                                  "every wave email points at a locked door (CTA-401-1)" % code))
+            elif code >= 400:
+                out.append((FAIL, "the outreach CTA returns HTTP %d -- prospects cannot reach "
+                                  "the listing form" % code))
+            else:
+                out.append((INFO, "CTA (%s) answers a stranger: HTTP %d" % (how, code)))
+            if any(h.lower() == "www-authenticate" for h in hdrs):
+                out.append((FAIL, "the CTA response carries WWW-Authenticate -- a prospect gets "
+                                  "a browser credential popup instead of the listing form"))
+
+    # ---- leg 2: the console it used to point at stays SHUT --------------------------
+    # This is the half that catches the WRONG fix (1 Sep: auth stripped from
+    # /admin.html, admin UI + delete control served to the public, rolled back in 76s).
+    try:
+        code2, _ = _http_head_status("https://trustsquare.co/admin.html")
+        if code2 in (401, 403):
+            out.append((INFO, "bare /admin.html still gated (HTTP %d) -- console shut" % code2))
+        else:
+            out.append((FAIL, "bare /admin.html answers HTTP %d to the public -- the ADMIN "
+                              "CONSOLE (delete-listing control) is exposed" % code2))
+    except Exception as e:
+        out.append((INFO, "SKIPPED leg 2 -- could not reach /admin.html (%s)" % str(e)[:60]))
     return out
+
+
+def _built_outreach_cta():
+    """The CTA exactly as emailer.build_magic_link() makes it for a real prospect row.
+
+    Falls back to the app-root shape if CityLauncher is not importable in this sandbox,
+    and says which it used -- an instrument never hides which leg it actually ran."""
+    import os as _os, sys as _sys
+    cl = _os.path.join(_os.path.dirname(REPO), "CityLauncher")
+    try:
+        if cl and _os.path.isdir(cl):
+            if cl not in _sys.path:
+                _sys.path.insert(0, cl)
+            from emailer.emailer import build_magic_link  # type: ignore
+            row = {
+                "name": "Ledger Probe", "email": "probe@example.com",
+                "category": "Tutors", "city": "Bloemfontein", "country": "South Africa",
+                "source": "ledger_probe",
+                "magic_link": ("https://trustsquare.co/admin.html?magic=1&name=Ledger%20Probe"
+                               "&email=probe%40example.com&cat=Tutors&city=Bloemfontein"),
+            }
+            return build_magic_link(row, "https://trustsquare.co"), "built by emailer"
+    except Exception as e:
+        return (("https://trustsquare.co/?magic=1&name=Ledger%20Probe"
+                 "&email=probe%40example.com&cat=Tutors&city=Bloemfontein"),
+                "app-root shape, emailer unavailable: %s" % str(e)[:40])
+    return (("https://trustsquare.co/?magic=1&name=Ledger%20Probe"
+             "&email=probe%40example.com&cat=Tutors&city=Bloemfontein"),
+            "app-root shape, CityLauncher not on this disk")
 
 
 def _http_head_status(url, timeout=15):
@@ -14715,6 +14787,107 @@ def rg_ledger_self_bootstraps():
         out.append((FAIL, "maint_deps.REQUIRED lost fastapi -- RG-0181/RG-0182 go blind again"))
     if not any(r == FAIL for r, _ in out):
         out.append((INFO, "ledger self-bootstraps from maint_deps before the first assertion runs"))
+    return out
+
+
+@entry("RG-0261", "The ONBOARDING NUMBER cannot be inflated -- the goal is scored by one "
+       "instrument that counts only real people WE COLD-CONTACTED, so a seed row, a staff "
+       "account or David's own family can never be reported as a conversion",
+       LOCKED, fixed_on="2026-09-04",
+       scope="scripts/onboarding_number.py -- THE scorer for RUL-096 / ONBOARDING_GOAL.md, and "
+             "the only number any session may report for the goal. FOUR LEGS. (a) The pure "
+             "filter qualifies() exists and BEHAVES: a row that published but was never "
+             "emailed, or carries a test/seed source tag, is excluded; an emailed row from a "
+             "real scrape source counts. Tested here on synthetic rows, so it cannot rot "
+             "quietly when the live data happens to be empty. (b) The reported number is "
+             "min(probe A, probe B) -- the prospect ledger and the logged-out public's own "
+             "eyes -- per ONBOARDING_GOAL.md section 2, lower wins on disagreement. (c) The "
+             "scorer NEVER defaults to a healthy value: an unreachable server reports "
+             "UNVERIFIED, not 0 and not the last good reading (RG-0133's rule applied to the "
+             "goal's own scoreboard). (d) It always prints the naive count beside the honest "
+             "one, so the gap between them can never go quiet. CLASS: any metric a goal-driven "
+             "agent is scored on. The contract named the raw query as the probe; the raw query "
+             "is gameable; the instrument, not the prose, is what stops it.",
+       ref="NUMBER-TRUTH-1, found 4 Sep 2026 on the FIRST unattended run of the onboarding "
+           "goal, within the first twenty minutes. PROBED on the live origin: "
+           "SELECT COUNT(*) FROM prospects WHERE published_at IS NOT NULL -> 2. That is the "
+           "exact query ONBOARDING_GOAL.md section 2 names as probe A. Both rows are "
+           "source='e2e_test' with emailed_at NULL -- Maroushka Conradie and one hand-added "
+           "contact, neither of whom was ever cold-contacted. ONBOARDING_GOAL.md section 3 "
+           "bars precisely these rows ('not David, not you, not a friend, not a staff account, "
+           "not a seeded or test record'), so the contract's own probe reports 2 where the "
+           "honest number is 0. Left alone, the next session reads 2 off the server in good "
+           "faith and reports 10% of a 20-target reached on day one, having done nothing. "
+           "Note the failure shape: not a lie told, but an instrument that reads HIGH by "
+           "default, on the one number David said he would make real decisions with. The "
+           "local prospects.db read 0 for the same query the same morning (it is a stale "
+           "pull), so the two available answers were 0 and 2 and neither was measured. This "
+           "entry makes the honest count the thing that runs, and makes the exclusion "
+           "testable rather than remembered.")
+def rg_onboarding_number_honest():
+    import importlib.util as _ilu
+    out = []
+    path = os.path.join(REPO, "scripts", "onboarding_number.py")
+    if not os.path.exists(path):
+        return [(FAIL, "scripts/onboarding_number.py is gone -- the goal has no scorer, and "
+                       "the next session falls back to the gameable raw query")]
+    try:
+        spec = _ilu.spec_from_file_location("_onb_ledger", path)
+        mod = _ilu.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+    except Exception as e:
+        return [(FAIL, "scripts/onboarding_number.py will not import (%s) -- the scoreboard is "
+                       "dark" % str(e)[:80])]
+
+    # ---- leg (a): the filter BEHAVES, on rows we make up here -----------------------
+    if not hasattr(mod, "qualifies"):
+        out.append((FAIL, "qualifies() is gone -- the anti-gaming filter is no longer a "
+                          "testable unit and can rot unnoticed"))
+    else:
+        cases = [
+            ({"published_at": "2026-08-03", "emailed_at": None, "source": "e2e_test"},
+             False, "a seed row nobody emailed"),
+            ({"published_at": "2026-08-03", "emailed_at": None, "source": "google_maps"},
+             False, "a published row we never emailed"),
+            ({"published_at": "2026-09-01", "emailed_at": "2026-08-30", "source": "test_import"},
+             False, "an emailed row carrying a test source tag"),
+            ({"published_at": None, "emailed_at": "2026-08-30", "source": "google_maps"},
+             False, "an emailed row that has not published"),
+            ({"published_at": "2026-09-01", "emailed_at": "2026-08-30", "source": "google_maps"},
+             True, "a real cold prospect who published"),
+        ]
+        for row, expected, label in cases:
+            got, _why = mod.qualifies(row)
+            if got != expected:
+                out.append((FAIL, "qualifies() counts %s as %s -- the onboarding number can be "
+                                  "inflated" % (label, "a conversion" if got else "excluded")))
+        if not any(r == FAIL for r, _ in out):
+            out.append((INFO, "anti-gaming filter holds on all %d synthetic rows" % len(cases)))
+
+    # ---- legs (b)(c)(d): the reporting contract, read from the source ---------------
+    body = open(path, encoding="utf-8", errors="replace").read()
+    if "min(a_n, b_n)" not in body:
+        out.append((FAIL, "the scorer no longer takes the LOWER of the two probes -- "
+                          "ONBOARDING_GOAL.md section 2 says the lower one is the truth"))
+    if "UNVERIFIED" not in body:
+        out.append((FAIL, "the scorer lost its UNVERIFIED state -- an unmeasurable number will "
+                          "be reported as a healthy one"))
+    if "naive" not in body:
+        out.append((FAIL, "the scorer no longer prints the naive count beside the honest one -- "
+                          "the gap that started this entry goes quiet again"))
+
+    # ---- live: what does it actually say today? -------------------------------------
+    try:
+        a = mod.probe_a()
+        n = len(a.get("qualifying", [])) if a.get("source") != "UNVERIFIED" else None
+        naive = a.get("naive")
+        if n is None:
+            out.append((INFO, "live reading UNVERIFIED -- could not reach the prospect ledger"))
+        else:
+            out.append((INFO, "live: honest %s vs naive %s (read from %s)"
+                              % (n, naive, a.get("source"))))
+    except Exception as e:
+        out.append((INFO, "live reading skipped (%s)" % str(e)[:60]))
     return out
 
 
