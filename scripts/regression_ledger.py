@@ -15373,5 +15373,75 @@ def rg_no_invented_badges():
     return out
 
 
+@entry("RG-0268", "Any surface that draws a Trust Score ladder draws the score the PRODUCT "
+       "would show -- the group caps are applied, so no page or deck can promise a number the "
+       "seller will never see",
+       LOCKED, fixed_on="2026-09-04",
+       scope="scripts/assoc_example_page.py, and the class of any future collateral that "
+             "renders a Trust Score. The canonical formula lives in bea_main._trust_math() "
+             "whose own docstring calls it THE ONLY PLACE IT MAY LIVE: "
+             "score = min(100, 40 + min(30,Universal) + min(30,Track) + min(40,Category)). "
+             "Where a surface must duplicate it, the duplicate carries the caps and says why. "
+             "TWO LEGS: (a) the generator defines UNIVERSAL_CAP/TRACK_CAP/CATEGORY_CAP at "
+             "30/30/40 and a trust_math() that applies all three plus the 100 ceiling; (b) "
+             "behavioural -- fed the plumbers spec (46 raw category points) it must render 95, "
+             "not 101. RUL-098 depends on this: the ruling's safety argument IS the category "
+             "cap, so a surface that ignores the cap also destroys the argument.",
+       ref="TRUST-LADDER-TRUE-1, 4 Sep 2026, found while checking David's own ruling. He "
+           "directed that task-specific credentials be rated slightly generously to reward "
+           "experience already earned (RUL-098). Verifying that this was safe meant reading "
+           "_trust_math -- which showed it IS safe, because the category group hard-caps at 40 "
+           "and the last 20 points to 100 come only from verified identity and completed "
+           "introductions. The same read caught that the generator built hours earlier was "
+           "summing credentials with NO caps: it published plumbers at 101 (impossible, the "
+           "score ceiling is 100) and chess at 97 where the product shows 95. Nobody had seen "
+           "the pages yet, so the cost was zero -- but the shape is the one RG-0267 exists to "
+           "stop, and I had walked into it myself one message after writing that entry. The "
+           "lesson recorded: a rule against over-promising is not self-executing; the "
+           "arithmetic behind the promise has to be asserted too.")
+def rg_trust_ladder_uses_real_formula():
+    import importlib.util as _ilu
+    out = []
+    gen = os.path.join(REPO, "scripts", "assoc_example_page.py")
+    if not os.path.exists(gen):
+        return [(INFO, "SKIPPED -- the association example generator is not on this disk")]
+    try:
+        spec = _ilu.spec_from_file_location("_assoc_ledger", gen)
+        mod = _ilu.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+    except Exception as e:
+        return [(FAIL, "assoc_example_page.py will not import (%s)" % str(e)[:70])]
+
+    # (a) the caps exist and match canon
+    for attr, want in (("BASE", 40), ("UNIVERSAL_CAP", 30), ("TRACK_CAP", 30),
+                       ("CATEGORY_CAP", 40)):
+        got = getattr(mod, attr, None)
+        if got != want:
+            out.append((FAIL, "%s is %r, canon says %d -- the ladder no longer matches "
+                              "bea_main._trust_math (RUL-098's safety argument is the caps)"
+                              % (attr, got, want)))
+    if not hasattr(mod, "trust_math"):
+        return out + [(FAIL, "trust_math() is gone from the generator -- ladders will sum "
+                             "credentials uncapped again and publish impossible scores")]
+
+    # (b) behavioural: the exact case that was wrong on 4 Sep
+    cases = [
+        ((15, 0, 46), 95, "plumbers: 46 raw category points must cap to 40 -> 95, not 101"),
+        ((15, 0, 42), 95, "chess incl. proposed: 42 raw -> 95, not 97"),
+        ((0, 0, 0), 40, "a brand-new seller sits at the base 40"),
+        ((30, 30, 40), 100, "everything maxed is exactly 100, never more"),
+        ((99, 99, 99), 100, "no combination may exceed the ceiling"),
+    ]
+    for (u, t, c), want, label in cases:
+        got = mod.trust_math(u, t, c)
+        if got != want:
+            out.append((FAIL, "trust_math(%d,%d,%d) = %s, canon says %d -- %s"
+                              % (u, t, c, got, want, label)))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "ladder matches bea_main._trust_math on all %d cases; caps 40/30/30/40"
+                          % len(cases)))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

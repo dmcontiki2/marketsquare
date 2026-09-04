@@ -23,6 +23,23 @@ import argparse, html, json, os, sys
 
 BASE = 40   # every seller starts here (Established) -- AGENT_BRIEFING.md
 
+# THE CANONICAL FORMULA. Mirrors bea_main._trust_math(), which its own docstring calls
+# "THE ONLY PLACE THIS FORMULA MAY LIVE". It is duplicated here for ONE reason: a page
+# that draws a Trust Score ladder must draw the score the product will actually show.
+#   score = min(100, 40 + min(30,universal) + min(30,track) + min(40,category))
+# The group caps are the whole point (TRUST-GENEROUS-1, David 4 Sep 2026): category
+# credentials can carry a seller from 40 to 80 and NO FURTHER. The last 20 points come
+# only from verified identity and completed introductions -- things no certificate buys.
+# That is why rating a task-specific credential generously is SAFE: it lets an
+# experienced person reach the category ceiling with fewer documents, and it can never
+# let a faker past 80.
+UNIVERSAL_CAP, TRACK_CAP, CATEGORY_CAP = 30, 30, 40
+
+
+def trust_math(universal: int, track: int, category: int) -> int:
+    return min(100, BASE + min(UNIVERSAL_CAP, universal)
+               + min(TRACK_CAP, track) + min(CATEGORY_CAP, category))
+
 
 def band(score: int) -> tuple[str, str]:
     if score >= 90: return "Highly Trusted", "#1c7c4a"
@@ -52,28 +69,50 @@ def card(c: str) -> str:
 
 
 def ladder(live, proposed) -> str:
-    rows, running = [], BASE
+    """Draw the ladder the PRODUCT would draw -- group caps and all.
+
+    Signals are split into universal (identity/profile, cap 30) and category
+    credentials (cap 40) by name, because that is how bea_main groups them."""
+    UNIVERSAL_NAMES = ("id verified", "government-issued id", "complete profile", "referral")
+
+    def is_universal(name):
+        n = name.lower()
+        return any(u in n for u in UNIVERSAL_NAMES)
+
+    rows = []
+    uni = cat = 0
     rows.append(f'<tr><td>Everyone starts here</td><td class="c">—</td>'
                 f'<td class="c"><b>{BASE}</b></td><td class="c tag-live">base</td></tr>')
-    # The score is capped at 100 -- show the cap in the ladder, not only in the verdict,
-    # or the page promises a 101 that the product will never display.
-    for name, pts in live:
-        running = min(running + pts, 100)
+    for name, pts, tag in ([(n, p, "live") for n, p in live] +
+                           [(n, p, "prop") for n, p in proposed]):
+        if is_universal(name):
+            uni += pts
+        else:
+            cat += pts
+        running = trust_math(uni, 0, cat)
+        label = "LIVE" if tag == "live" else "PROPOSED"
         rows.append(f'<tr><td>{esc(name)}</td><td class="c">+{pts}</td>'
-                    f'<td class="c"><b>{running}</b></td><td class="c tag-live">LIVE</td></tr>')
-    for name, pts in proposed:
-        running = min(running + pts, 100)
-        rows.append(f'<tr><td>{esc(name)}</td><td class="c">+{pts}</td>'
-                    f'<td class="c"><b>{running}</b></td><td class="c tag-prop">PROPOSED</td></tr>')
-    final_band, col = band(running)
+                    f'<td class="c"><b>{running}</b></td>'
+                    f'<td class="c tag-{tag}">{label}</td></tr>')
+
+    final = trust_math(uni, 0, cat)
+    fb, col = band(final)
+    over = ""
+    if cat > CATEGORY_CAP:
+        over = (f' Their certificates are worth {cat} points on paper; the category group '
+                f'caps at {CATEGORY_CAP}, so the surplus is headroom rather than score — '
+                f'which is exactly why holding more of them is never wasted effort, and '
+                f'why a generous rating costs the ranking nothing.')
     return f"""
       <table class="ladder">
         <tr><th>Signal</th><th>Points</th><th>Running</th><th>Status</th></tr>
         {''.join(rows)}
       </table>
-      <p class="note">A member holding all of the above lands at
-      <b style="color:{col}">{running} — {final_band}</b>. Somebody advertising the same
-      work with nothing verified sits at {BASE}–55, and sits below them on the page.</p>"""
+      <p class="note">A member holding all of the above sits at
+      <b style="color:{col}">{final} — {fb}</b>, before they have taken a single job.{over}
+      The remaining points to 100 come only from a verified identity and a real track
+      record on the platform — completed introductions, none ignored. No certificate buys
+      those, which is why somebody who merely <i>claims</i> the work cannot reach the top.</p>"""
 
 
 PAGE = """<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
