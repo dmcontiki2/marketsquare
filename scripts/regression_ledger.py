@@ -14481,5 +14481,61 @@ def rg_host_queue():
     return out
 
 
+@entry("RG-0254", "Individual-seller lanes are mailed to PEOPLE, not office desks, and no lane is ever "
+                  "mailed to a competitor platform -- held at the composer, the plan and the send "
+                  "chokepoint, so a re-scrape or an imported CSV cannot bring the class back",
+       LOCKED, fixed_on="2026-09-03",
+       scope="CityLauncher/emailer/emailer.py (_looks_competitor: every category, composer + "
+             "send_email; _looks_role_address: categories in waves_policy defaults.person_only_"
+             "categories, composer) and wave_runner.py (plan counts + held_by_guard). Shape guards "
+             "beside JUNK-GUARD-1 / PRIV-OFFICER-1 -- held, never suppressed. Agency / stays / "
+             "institution lanes are deliberately NOT person-only (RUL-059: reached through their "
+             "desks); a change that drops Tutors from person_only_categories, or empties the "
+             "competitor set, trips this red.",
+       ref="PERSON-ONLY-2, 3 Sep 2026, David: 'only keep people, not organisations... never a "
+           "competitor platform' -- after 240 Tutors + 100 teachers emails went largely to info@ / "
+           "admissions@ desks and support@ inboxes of Preply and TutorBird. Tested on a copy of the "
+           "live DB (preply held; jane@gmail Tutors sends; info@ Tutors held; info@ Estate Agents "
+           "sends; admissions@ on the institution lane sends, on teachers_trainers held); plan on "
+           "live data holds CT 78 / DBN 27 / JHB 23 / PTA 13 office desks. Live on the host from "
+           "commit 5c4a10a (the emailer runs from the mount).")
+def rg_person_only_lanes():
+    out = []
+    base = os.path.join(REPO, "..", "CityLauncher", "emailer")
+    if not os.path.isdir(base):
+        return [(INFO, "CityLauncher not beside this repo -- source leg skipped")]
+    em = open(os.path.join(base, "emailer.py"), encoding="utf-8").read()
+    wr = open(os.path.join(base, "wave_runner.py"), encoding="utf-8").read()
+    for needle, why in (("def _looks_competitor", "competitor guard gone"),
+                        ("def _looks_role_address", "office-desk guard gone"),
+                        ("if _looks_competitor(to):", "send_email no longer refuses competitor platforms"),
+                        ("_looks_role_address(r.get('email'), r.get('category'))", "composer no longer holds office desks")):
+        if needle not in em: out.append((FAIL, "emailer.py: %s" % why))
+    for needle, why in (("_looks_role_address(e, r['category'])", "plan counts office desks it will never send"),
+                        ("'office_desk'", "held_by_guard no longer reports office desks")):
+        if needle not in wr: out.append((FAIL, "wave_runner.py: %s" % why))
+    try:
+        import json as _j
+        pol = _j.load(open(os.path.join(base, "waves_policy.json"), encoding="utf-8"))
+        po = set(pol.get("defaults", {}).get("person_only_categories") or [])
+        if "Tutors" not in po:
+            out.append((FAIL, "waves_policy defaults.person_only_categories no longer carries Tutors: %s" % sorted(po)))
+    except Exception as e:
+        out.append((FAIL, "waves_policy.json unreadable: %s" % str(e)[:60]))
+    try:
+        import importlib.util as _iu, sys as _sys
+        _sys.path.insert(0, os.path.join(REPO, "..", "CityLauncher"))
+        spec = _iu.spec_from_file_location("emailer.emailer", os.path.join(base, "emailer.py")); m = _iu.module_from_spec(spec); spec.loader.exec_module(m)
+        if not m._looks_competitor("support@preply.com"): out.append((FAIL, "preply.com is not held as a competitor"))
+        if not m._looks_role_address("info@sunrisetutors.co.za", "Tutors"): out.append((FAIL, "info@ on the Tutors lane is not held"))
+        if m._looks_role_address("info@pamgolding.co.za", "Estate Agents"): out.append((FAIL, "info@ on the agency lane is HELD -- the guard ate an agency (RG-0217 boundary)"))
+        if m._looks_role_address("jane@gmail.com", "Tutors"): out.append((FAIL, "a personal address on the Tutors lane is held"))
+    except Exception as e:
+        out.append((FAIL, "behavioural leg broke: %s" % str(e)[:90]))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "office desks held on Tutors, agencies untouched, competitors refused everywhere"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
