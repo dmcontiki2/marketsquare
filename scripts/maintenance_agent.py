@@ -125,21 +125,34 @@ def _LANE_KEY_NAMES():
 
 
 def _code_stamp():
-    """Which commit is this run actually executing? (STALE-CODE-1)"""
-    try:
-        env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
-        sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=SELF_REPO, env=env,
-                             capture_output=True, text=True, timeout=15).stdout.strip()
-        if not sha:
-            return "unknown (not a git checkout)"
-        dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"],
-                               cwd=SELF_REPO, env=env, capture_output=True, text=True,
-                               timeout=20).stdout.strip()
-        subj = subprocess.run(["git", "log", "-1", "--format=%s"], cwd=SELF_REPO, env=env,
-                              capture_output=True, text=True, timeout=15).stdout.strip()
-        return "%s%s  %s" % (sha, "  DIRTY-WORKTREE" if dirty else "", subj[:64])
-    except Exception as e:
-        return "unknown (%s)" % type(e).__name__
+    """Which commit is this run actually executing? (STALE-CODE-1)
+
+    CODE-STAMP-2 (4 Sep 2026): the three git legs are now INDEPENDENT and the slow one
+    gets a mount-sized timeout. Before this, all three shared one try block, so when
+    `git status --porcelain` took 21 s on the /Projects FUSE mount (measured 4 Sep 2026;
+    the leg's timeout was 20 s) the TimeoutExpired escaped past the SHA that had already
+    been read cleanly in 0.1 s, and the whole stamp collapsed to "unknown (TimeoutExpired)"
+    -- published as such on /dashboard/maint, which is the very surface STALE-CODE-1 exists
+    to make truthful. A slow worktree scan must cost at most the dirty FLAG, never the
+    commit identity. Dirtiness we could not measure now says DIRTY-UNKNOWN rather than
+    silently reading as clean (no instrument defaults to a healthy value)."""
+    env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
+
+    def _git(args, timeout):
+        try:
+            r = subprocess.run(["git"] + args, cwd=SELF_REPO, env=env,
+                               capture_output=True, text=True, timeout=timeout)
+            return r.stdout.strip() if r.returncode == 0 else None
+        except Exception:
+            return None
+
+    sha = _git(["rev-parse", "--short", "HEAD"], 60)
+    if not sha:
+        return "unknown (not a git checkout)"
+    subj = _git(["log", "-1", "--format=%s"], 60) or ""
+    dirty = _git(["status", "--porcelain", "--untracked-files=no"], 300)
+    flag = "  DIRTY-UNKNOWN" if dirty is None else ("  DIRTY-WORKTREE" if dirty else "")
+    return "%s%s  %s" % (sha, flag, subj[:64])
 
 
 def now(): return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
