@@ -15515,6 +15515,29 @@ def rg_no_personal_reply_route():
                               "listing has nowhere to click (BROWSE-LINK-1)"
                               % os.path.basename(f)))
 
+    # LINK-ALIVE-1: every distinct destination a letter offers must ANSWER. A dead link in
+    # a cold email is worse than no link -- it is the first thing the reader learns about
+    # us. Found 4 Sep: the club letter shipped a link to /examples/<sport> before those
+    # pages existed anywhere, then again at a path nginx does not serve. Probed live, so
+    # a page that vanishes from the manifest trips this the same day.
+    seen_urls = set()
+    for f in files:
+        body = open(f, encoding="utf-8", errors="replace").read()
+        for u in _re.findall(r'href="(https://trustsquare\.co[^"{]*)"', body):
+            seen_urls.add(u.split("?")[0].rstrip("/") or u)
+    import urllib.request as _ur, urllib.error as _ue
+    for u in sorted(seen_urls):
+        try:
+            code = _ur.urlopen(_ur.Request(u, headers={"User-Agent": "TrustSquare-ledger/1.0"}),
+                               timeout=15).status
+        except _ue.HTTPError as e:
+            code = e.code
+        except Exception:
+            continue          # transport trouble is not a dead link; stay quiet
+        if code >= 400:
+            out.append((FAIL, "a letter links to %s which answers HTTP %d -- a dead link is the "
+                              "first thing a prospect learns about us (LINK-ALIVE-1)" % (u, code)))
+
     em = os.path.join(os.path.dirname(REPO), "CityLauncher", "emailer", "emailer.py")
     if os.path.exists(em):
         e = open(em, encoding="utf-8", errors="replace").read()
