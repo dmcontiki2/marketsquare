@@ -27,3 +27,11 @@ run_bat    CityLauncher\run_local_scraper.bat
 run_bat    CityLauncher\deploy_citylauncher.bat
 run_py     CityLauncher\scripts\fill_wave_gaps.py
 run_py     CityLauncher\scripts\clean_junk_emails.py
+
+# --- Widened 4 Sep 2026. NEW SENDING AUTHORITY, granted by David in his own words:
+# ---   "i think we should at least resend the ones that did open their emails?"
+# --- ENGAGED-RESEND-1: the CTA-URL-1 apology to the people who OPENED or CLICKED an
+# --- outreach email and met a browser password box. Not the 338 who only received it.
+# --- The bat pulls the server's verdicts first and fails closed, then dry-runs, then
+# --- sends. Every emailer guard applies; ROSTER-FENCE-1 refuses an oversized roster.
+run_bat    CityLauncher\resend_broken_link_now.bat

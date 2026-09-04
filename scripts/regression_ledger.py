@@ -15110,5 +15110,92 @@ def rg_outreach_copy_respects_anonymity():
                           % (checked, substantive)))
     return out
 
+@entry("RG-0265", "The CTA-URL-1 apology lane sends to the RIGHT people -- it pulls the "
+       "server's engagement verdicts BEFORE it chooses a roster, so it can never mail a "
+       "stale local list, and it refuses outright rather than mailing a roster gone wide",
+       LOCKED, fixed_on="2026-09-04",
+       scope="CityLauncher/resend_broken_link_now.bat + resend_broken_link.py, the lane that "
+             "re-contacts prospects whose outreach email carried the broken /admin.html link. "
+             "FOUR LEGS, all source-checked. (a) ORDER: the bat runs pull_from_server.py FIRST "
+             "and exits non-zero if the pull fails -- opens, clicks, bounces and opt-outs are "
+             "recorded server-side, so a roster chosen before the pull is chosen from stale "
+             "data. (b) SCOPE: the default selection is status IN ('opened','clicked') -- the "
+             "people who engaged -- and never widens to the merely-emailed without the "
+             "explicit --all-broken flag. (c) ROSTER-FENCE-1: --send refuses when the roster "
+             "exceeds --max-roster (250 default). A refusal, never a truncation: half a wrong "
+             "wave is still a wrong wave. (d) NON-INTERACTIVE: the bat carries no `pause` and "
+             "no `timeout /t`, so the host queue can run it unattended (RG-0262). The emailer "
+             "guards it inherits -- suppression, junk, government, privacy-officer, opt-out "
+             "link, per-row abort on a still-broken link -- are asserted by RG-0247/RG-0254 "
+             "and not re-tested here.",
+       ref="ENGAGED-RESEND-1, 4 Sep 2026. David, in his own words: 'i think we should at least "
+           "resend the ones that did open their emails?' -- new sending authority, added to "
+           "host_queue/ALLOWLIST.txt with those words. 'At least' read as a floor, so the "
+           "roster is opened OR clicked, not opened alone: the clickers went one step further "
+           "and met the password box, and are owed the apology most. THE TRAP THIS ENTRY "
+           "EXISTS FOR, found while building the lane: the local prospects.db showed 18 "
+           "openers where the live server showed 133 (103 opened + 30 clicked), because "
+           "engagement is recorded where the pixel and the redirect land. Sending from the "
+           "local pool as it stood would have quietly mailed the wrong 18 people and reported "
+           "success -- the same shape as WAIT-REDIR-1 the same day: a run that completes, "
+           "returns 0, and did not do the thing. The order of operations is the fix, and it is "
+           "asserted here rather than remembered.")
+def rg_relink_lane_pulls_before_it_picks():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    bat = os.path.join(cl, "resend_broken_link_now.bat")
+    py = os.path.join(cl, "resend_broken_link.py")
+    if not os.path.exists(bat) or not os.path.exists(py):
+        return [(INFO, "SKIPPED -- the relink lane is not on this disk")]
+    b = open(bat, encoding="utf-8", errors="replace").read()
+    s = open(py, encoding="utf-8", errors="replace").read()
+
+    # (a) pull FIRST, and fail closed. Read the COMMANDS, not the file text: this
+    # bat documents its own ordering in REM comments, and an earlier version of this
+    # assertion matched the comment instead of the command and cried wolf.
+    import re as _re0
+    _cmds = [l.strip() for l in b.splitlines()
+             if l.strip() and not l.strip().upper().startswith("REM")]
+    _cmdtext = "\n".join(_cmds)
+    i_pull = _cmdtext.find("pull_from_server.py")
+    i_send = _cmdtext.find("resend_broken_link.py --send")
+    if i_pull < 0:
+        out.append((FAIL, "the relink bat no longer pulls the server's verdicts -- it will "
+                          "choose a roster from a stale local pool (ENGAGED-RESEND-1)"))
+    elif i_send < 0:
+        out.append((FAIL, "the relink bat no longer sends -- the lane is inert"))
+    elif i_pull > i_send:
+        out.append((FAIL, "the relink bat sends BEFORE it pulls -- the roster is chosen from "
+                          "stale engagement data"))
+    if i_pull >= 0 and "errorlevel 1" not in _cmdtext[i_pull:i_pull + 300]:
+        out.append((FAIL, "the relink bat does not fail closed on a failed pull -- it would "
+                          "send anyway, possibly to people who bounced or opted out"))
+
+    # (b) scope
+    if "status IN ('opened','clicked')" not in s:
+        out.append((FAIL, "the relink roster is no longer the ENGAGED set (opened or clicked) "
+                          "-- David's permission was scoped to those people"))
+
+    # (c) the fence
+    if "max_roster" not in s or "REFUSING TO SEND" not in s:
+        out.append((FAIL, "ROSTER-FENCE-1 is gone -- an unattended run can mail an oversized "
+                          "roster with nobody watching"))
+
+    # (d) unattended-safe
+    import re as _re
+    cmds = [l.strip() for l in b.splitlines()
+            if l.strip() and not l.strip().upper().startswith("REM")]
+    for c in cmds:
+        if _re.match(r"^pause\b", c, _re.I):
+            out.append((FAIL, "the relink bat has a `pause` -- it will hang the host queue"))
+        if _re.match(r"^timeout\s+/t", c, _re.I):
+            out.append((FAIL, "the relink bat paces with timeout.exe -- silently skipped under "
+                              "the host queue (RG-0262)"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "pull precedes pick, fails closed, engaged-only, fenced, "
+                          "unattended-safe"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
