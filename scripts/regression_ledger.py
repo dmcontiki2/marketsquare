@@ -15029,5 +15029,86 @@ def rg_supply_key_provisioned():
     return out
 
 
+@entry("RG-0264", "No outreach copy promises a club, agency or seller a NAMED or BRANDED listing -- "
+       "the platform is anonymity-first, so 'advertise your name here' is a thing we cannot "
+       "sell and must never write",
+       LOCKED,
+       scope="CityLauncher/emailer/templates/* -- EVERY outreach template, not the one that "
+             "was caught. CLASS, and the class is the point: the copy lane and the product "
+             "lane are written by different sessions, and copy is the one that reaches a "
+             "stranger's inbox where an untrue promise is expensive and unretractable. "
+             "AUTHORITY: eula_clean.html sec 3.1 (Mode B -- name, email, BUSINESS NAME, "
+             "contact details and exact location are NOT revealed; the public listing carries "
+             "only avatar, category, Trust Score, general location and any verified badge), "
+             "sec 3.2 (identity exchanged only on BILATERAL acceptance) and sec 3.3 (a seller "
+             "may not put a name, business name, phone or email in listing text or titles). "
+             "The assertion is two-sided on purpose: (a) no template may claim a shareable, "
+             "named or branded listing page, and (b) every SUBSTANTIVE outreach template must "
+             "positively state the anonymity, because silence about it is how the wrong "
+             "picture forms in a reader's head. Utility mail (follow-up, apology, relink) is "
+             "exempt from (b) -- it makes no offer. If Partner Content (EULA sec 6.1B, openly "
+             "branded, outside Mode B, no Introduction charged) is ever sold, this entry gets "
+             "an explicit carve-out naming that template -- it does NOT get weakened.",
+       ref="ANON-COPY-1, 4 Sep 2026. David reviewing the federation outreach letter: 'The "
+           "following statement say we will share clubs info with their members, that is not "
+           "true as we do it anonymous.' He was right, and the miss was mine: the draft said "
+           "'if a club lists, it shares its own link with its own people', which invents a "
+           "branded club page that Mode B forbids. It had already spread into "
+           "SPORTS_CLUBS_LANE.md sec 6 as a business-case 'reframe' (the club as a "
+           "distribution channel to its own members) -- so a copy error was one session away "
+           "from becoming strategy. Corrected in the letter, the forwardable paragraph, the "
+           "lane doc and both .docx deliverables the same session. A sweep of the other 16 "
+           "templates the same run found the house wording already correct everywhere else "
+           "(tutors_outreach: 'You stay anonymous until you decide to accept'), so this locks "
+           "an existing good state rather than claiming a repair -- which is exactly when an "
+           "assertion is cheap to add and worth the most. NOTHING WAS SENT.")
+def rg_outreach_copy_respects_anonymity():
+    out = []
+    tdir = os.path.join(REPO, "..", "CityLauncher", "emailer", "templates")
+    if not os.path.isdir(tdir):
+        return [(INFO, "SKIPPED -- CityLauncher/emailer/templates not on this machine")]
+
+    # Utility mail makes no offer, so it need not restate the anonymity.
+    UTILITY = ("human_followup", "relink_apology")
+    # Phrases that would promise what Mode B forbids.
+    BANNED = (
+        "shares its own link",
+        "share your own link",
+        "your own link with your own",
+        "your club's name will appear",
+        "branded listing",
+        "your logo on your listing",
+        "advertise your name",
+    )
+    names = [f for f in sorted(os.listdir(tdir))
+             if (f.endswith(".html") or f.endswith(".txt")) and ".bak" not in f]
+    if not names:
+        return [(INFO, "SKIPPED -- no outreach templates found")]
+
+    checked = substantive = 0
+    for f in names:
+        try:
+            body = open(os.path.join(tdir, f), encoding="utf-8", errors="replace").read()
+        except Exception as e:
+            out.append((FAIL, "%s unreadable (%s)" % (f, type(e).__name__)))
+            continue
+        checked += 1
+        low = body.lower()
+        for phrase in BANNED:
+            if phrase in low:
+                out.append((FAIL, "%s promises a named/branded listing (%r) -- EULA sec 3.1/3.3 "
+                                  "forbid it (ANON-COPY-1)" % (f, phrase)))
+        if any(u in f for u in UTILITY):
+            continue
+        substantive += 1
+        if "anonym" not in low:
+            out.append((FAIL, "%s makes an offer but never states the anonymity -- silence is "
+                              "how the wrong picture forms (ANON-COPY-1)" % f))
+    if not out:
+        out.append((INFO, "%d outreach templates checked, %d substantive; none promises a named "
+                          "or branded listing and every substantive one states the anonymity"
+                          % (checked, substantive)))
+    return out
+
 if __name__ == "__main__":
     sys.exit(main())
