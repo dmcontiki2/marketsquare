@@ -1,5 +1,5 @@
 {
- "next_id": 92,
+ "next_id": 96,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -886,11 +886,11 @@
   },
   "DW-090": {
    "first_seen": "2026-09-02",
-   "last_seen": "2026-09-03",
+   "last_seen": "2026-09-04",
    "sev": "LOW",
    "source": "fea_integrity_check.py --json (on-box) — recurrence of closed DW-088 (DW-064, DW-061 before it)",
    "status": "OPEN",
-   "summary": "FEA baseline one deploy stale again 16h after DW-088 closed: status ok, alerts [], notes ms.js v564->569 (1157186->1158269 B), ms.css v428->433 — today's 05:19/06:25 SAST releases. deploy_drift clean 19/19 + audit served==repo: a deploy, not a tamper. Fourth instance of the class. 3 Sep: still failing, now status: alert (index bytes 415200->413316, ms.js 564->581, ms.css 428->445 = 04:26 LIVE-MAP-1 release; deploy_drift clean 19/19, audit served==repo).",
+   "summary": "FEA baseline one deploy stale again 16h after DW-088 closed: status ok, alerts [], notes ms.js v564->569 (1157186->1158269 B), ms.css v428->433 — today's 05:19/06:25 SAST releases. deploy_drift clean 19/19 + audit served==repo: a deploy, not a tamper. Fourth instance of the class. 3 Sep: still failing, now status: alert (index bytes 415200->413316, ms.js 564->581, ms.css 428->445 = 04:26 LIVE-MAP-1 release; deploy_drift clean 19/19, audit served==repo). 4 Sep: still failing — status: alert, index bytes 415200->413316, ms.js 564->582, ms.css 428->446 (the 3 Sep 16:15Z release); deploy_drift: only the STAGED Batch 2 local-ahead, audit says deploy-not-tamper.",
    "next_action": "CTO lane (RUL-037): deploy engine (ops/autodeploy/post_deploy.sh) refreshes the baseline itself when deploy_drift reads clean, with a ledger entry. Closes when the on-box notes carry no \"looks like a deploy\" after a deploy has ridden.",
    "references": [
     "DW-088",
@@ -912,10 +912,60 @@
     "RUL-040",
     "DW-090"
    ]
+  },
+  "DW-092": {
+   "first_seen": "2026-09-04",
+   "last_seen": "2026-09-04",
+   "sev": "HIGH",
+   "source": "regression ledger RG-0154 (LOCKED) — REGRESSION on the run of record",
+   "status": "CLOSED",
+   "summary": "**RAISED AND CLOSED IN THE SAME RUN — a LOCKED fix read red, the re-run reads HOLDING.** First reading 06:44 SAST: `RG-0154 REGRESSION — session_counter.py --check fails: counter says 187, evidence on disk says 188 — 1 sitting(s) unrecorded` (the 3 Sep evening / 4 Sep 06:24 sittings ended without the counter being run — FOURTH instance of the class the entry guards, after 139→141, 150→155 and SESSION-COUNTER-1). Honest note on who moved it: the watch's own probe `python3 scripts/session_counter.py --help` (the script has no --help; it recomputes and WRITES on any invocation) refreshed `SESSION_COUNTER.json` 187→188 at 06:48 as a side effect — an unintended write by an observe-only task, disclosed here; the concurrent attended session then banked that file in f3b1e96 (06:53). Re-run 06:55: `RG-0154 HOLDING — session number is derived (repo 188, live 187, as of 2026-09-03) and the badge dates itself`, info `DEPLOY DEBT, not a rotted fix: the counter on disk is correct (Session 188, derived) and the live badge is 187 because the server has not been shipped since`. RESIDUAL (coverage-map card): the live badge says 187 until the next deploy rides; the class still recurs whenever a session ends without the counter — nothing runs it automatically at session end.",
+   "next_action": "None — closed 2026-09-04 on the re-run reading HOLDING. Residual to the CTO lane: run the counter from the deploy/checkpoint lane so no sitting goes unrecorded.",
+   "references": [
+    "RG-0154"
+   ]
+  },
+  "DW-093": {
+   "first_seen": "2026-09-04",
+   "last_seen": "2026-09-04",
+   "sev": "LOW",
+   "source": "regression ledger RG-0241 (LOCKED) — REGRESSION on the run of record, race with a concurrent ledger run",
+   "status": "CLOSED",
+   "summary": "**RAISED AND CLOSED IN THE SAME RUN — a false red from concurrency, not a rotted fix.** First reading 06:44 SAST: `RG-0241 REGRESSION — a bare GET /optout WROTE the register (194 -> 195) — scanners can opt people out again`. PROBED twice by hand at 06:46: `/optout/status` rows 197 → GET `/optout?email=<probe>` 200 with the CONFIRM page (title `Unsubscribe - TrustSquare`) → rows 197, unchanged, twice. Re-run 06:47: `RG-0241 HOLDING — GET /optout wrote nothing (rows 198); confirmed POST recorded (rows 198 -> 199)`. The rows moved 194→199 inside ten minutes because a concurrent session (the one that committed f3b1e96 at 06:53) was running the same ledger at the same time and each run's own confirm-POST leg adds a probe row — the before/after count is not isolated, so two runs racing produce one false red. RESIDUAL (coverage-map card): the assertion is race-prone under concurrent runs; the CTO-lane fix is to probe a UNIQUE address and check only that row, never the total.",
+   "next_action": "None — closed 2026-09-04 on two hand probes + the re-run reading HOLDING. Residual to the CTO lane: make RG-0241 probe-scoped.",
+   "references": [
+    "RG-0241"
+   ]
+  },
+  "DW-094": {
+   "first_seen": "2026-09-04",
+   "last_seen": "2026-09-04",
+   "sev": "HIGH",
+   "source": "regression ledger import (LEDGER-DUP-1 refusal) — the fact board was BLIND",
+   "status": "CLOSED",
+   "summary": "**RAISED AND CLOSED IN THE SAME RUN — the ledger refused to run at all for ~18 minutes.** At 06:35 SAST `python3 scripts/regression_ledger.py` exited at import: `LEDGER-DUP-1: id RG-0254 is already taken by 'Every journey / study map shows TODAY's stays…'` — bc44112 (PERSON-ONLY-2, 06:35:26) and 2d6bcfd (LIVE-MAP-1, 3 Sep) both claimed RG-0254, the SECOND concurrent-claim collision of this class (first: RG-0118/0119, 19 Aug). Every one of the 251 assertions was unevaluable for any session until fixed. The watch evaluated the full board from a gitignored copy with the newcomer renumbered (no repo edit); the concurrent attended session fixed the tree the same way (LIVE-MAP-1 → RG-0258, committed f3b1e96 06:53, 'LEDGER-DARK-1'). Re-check 06:52: the committed `scripts/regression_ledger.py` imports clean — `entries 251`. RESIDUAL (coverage-map card): the import-time refusal is the only guard; nothing stops two sessions picking the same next number — a next-free-id helper (or ids allocated from the register counter) retires the class.",
+   "next_action": "None — closed 2026-09-04 on the committed ledger importing clean (251 entries). Residual to the CTO lane: a next-free-id helper.",
+   "references": [
+    "LEDGER-DUP-1",
+    "f3b1e96",
+    "RG-0258"
+   ]
+  },
+  "DW-095": {
+   "first_seen": "2026-09-04",
+   "last_seen": "2026-09-04",
+   "sev": "LOW",
+   "source": "cost_compliance_sweep.py --quiet (exit 1 = warn)",
+   "status": "OPEN",
+   "summary": "**NEW — the cost sweep exits 1 with 5 WARN lines, and they were already in yesterday's report.** `unknown model family claude-relay — classify` at `scripts/regression_ledger.py:14168` (×2) and `scripts/request_deploy.py:42` / `:46` (×2). Both are instrument/ops scripts naming the relay lane in reference text, not a billable call site (the DW-047 pattern for `claude-fable-5`). Yesterday's COST_SWEEP_2026-09-03.md carries the same 5 lines (at :14119) while the 3 Sep pass recorded 'exit 0 clean' — that reading was wrong; today's exit code is 1. 0 CRITICAL, no new call sites, ceilings/spend-log ✓ on every real call site. Not a spend risk; it is the sweep not knowing a lane name.",
+   "next_action": "CTO lane: add `claude-relay` to the sweep's model-family table as a non-billable relay/reference label, so exit returns to 0 and a real unknown family can be heard again. Closes when the sweep exits 0 with no `claude-relay` WARN.",
+   "references": [
+    "DW-047"
+   ]
   }
  },
- "last_run": "2026-09-03",
- "last_verdict": "RED",
+ "last_run": "2026-09-04",
+ "last_verdict": "AMBER",
  "recheck_pass_2026_08_20": {
   "requested_by": "David: close all open actions",
   "items_rechecked": 15,
@@ -1271,6 +1321,43 @@
   "server": "disk 46%, post_deploy 04:26:08Z all ok",
   "ai_watch": "clear; stale Sonnet-5 reprice claim refused (RG-0184)",
   "heartbeat": "clean — last_run 2026-09-02, today 2026-09-03",
+  "checks_run": "12/13 (Monday lane not due)"
+ },
+ "watch_pass_2026_09_04": {
+  "verdict": "AMBER",
+  "occasion": "launch day +3 (Friday, unattended)",
+  "closed": [
+   "DW-091 (by attended session f3b1e96, confirmed by watch)",
+   "DW-092 (same run)",
+   "DW-093 (same run)",
+   "DW-094 (same run)"
+  ],
+  "new": [
+   "DW-092",
+   "DW-093",
+   "DW-094",
+   "DW-095"
+  ],
+  "still_failing": [
+   "DW-090"
+  ],
+  "not_rerunnable": [
+   "DW-010 + DW-087 (Monday lane; today Friday)"
+  ],
+  "site": "health ok 1.3.1 (db integrity ok), root 200 in 0.63s, payment ok + paystack_connected, TLS 79d (expires 22 Nov)",
+  "ledger": "committed file refused to import 06:35 (RG-0254 duplicate, DW-094); evaluated from renumbered gitignored copy in 4 chunks: 251 entries · 227 holding · 3 REGRESSED on the run of record (RG-0154, RG-0241, RG-0257) · 17 open · 4 ready to lock (RG-0236, RG-0252, RG-0254->0258, RG-0255) · 0 UNVERIFIED; all 3 reds re-ran HOLDING in-session -> 0 regressed standing",
+  "qa_audit": "3 findings, 2 new, all INFO (DEMO-PLACEHOLDERS, MSJS-DRIFT + VERSION-KEY = Batch 2 staged not deployed)",
+  "smoke": "sandbox 40/40 ALL PASS; cron 39/39 all_green; parity holds (health ok / spend $0.00 today, $0.0044 MTD of $100)",
+  "cost_sweep": "exit 1 — 5 WARN unknown model family claude-relay, same 5 as 3 Sep's report (DW-095); 0 critical",
+  "deploy_drift": "bea_main.py + ms.js local-ahead (Batch 2 8970dde STAGED, not deployed)",
+  "fea": "status: alert (index -1884 B, ms.js 564->582, css 428->446) — DW-090 still failing",
+  "host_queue": "2 git_push requests queued 06:35, both DONE rc=0 at 06:51 (agent tick)",
+  "orchestrator": "queue [] staged [] (fixer OFF per DW-004)",
+  "subscriptions": "35 UP / 15 HELD / 1 PLANNED, 0 DOWN",
+  "server": "disk 46%, post_deploy 2026-09-03T16:15:38Z all ok",
+  "ai_watch": "clear; 3 Sep brief multi-provider outages mitigated ~25 min; stale Sonnet-5 reprice claim refused (RG-0184); June Fable/Mythos export suspension old and lifted",
+  "heartbeat": "clean — last_run 2026-09-03, today 2026-09-04",
+  "watch_side_effect": "session_counter.py --help recomputed and wrote SESSION_COUNTER.json 187->188 (script writes on any argv) — disclosed in DW-092; banked by f3b1e96",
   "checks_run": "12/13 (Monday lane not due)"
  }
 }
