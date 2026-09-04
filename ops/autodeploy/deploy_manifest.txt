@@ -189,3 +189,14 @@ WAVE_PLAN_LAUNCH_2026.html          | static/wave_plan.html
 # itself no longer carries a client-side code.
 orchestrator.html                   | orchestrator.html
 scripts/mint_enrol_link.py | mint_enrol_link.py
+
+# --- Association worked-example pages (ASSOC-EXAMPLE-1, 4 Sep 2026) ---
+# The club letter links to these, so they must be PUBLIC or the letter carries a dead
+# link. Static, self-contained, no data, no scripts. Served at /examples/<sport>.html
+visuals/assoc/assoc_athletics.html | examples/athletics.html
+visuals/assoc/assoc_chess.html | examples/chess.html
+visuals/assoc/assoc_judo.html | examples/judo.html
+visuals/assoc/assoc_dance.html | examples/dance.html
+visuals/assoc/assoc_plumbers.html | examples/plumbers.html
+visuals/assoc/assoc_guides.html | examples/guides.html
+visuals/assoc/assoc_teachers.html | examples/teachers.html

@@ -15443,5 +15443,92 @@ def rg_trust_ladder_uses_real_formula():
     return out
 
 
+@entry("RG-0269", "No outreach letter sends a stranger to David -- none carries a phone number "
+       "or invites a personal reply, every one names the in-app route, and REPLY_TO is never a "
+       "person's mailbox",
+       LOCKED, fixed_on="2026-09-04",
+       scope="Every *_outreach.html in CityLauncher/emailer/templates plus emailer.REPLY_TO. "
+             "THREE LEGS. (a) NO PERSONAL CHANNEL: no template may contain a phone number or the "
+             "invitations 'call me', 'phone me', 'reply to this email', 'just reply', 'reaches me "
+             "directly', 'contact me'. (b) A ROUTE THAT EXISTS: every outreach template names "
+             "trustsquare.co/support, which is live and accepts a message from an anonymous "
+             "visitor -- a letter that closes the personal door without opening another one is "
+             "worse than one that does neither. (c) REPLY_TO is support@trustsquare.co and never "
+             "a person. (d) BROWSE-LINK-1: every letter carries a PLAIN link to the marketplace "
+             "root as well as its action link -- the magic link drops the reader into step 1 of "
+             "creating a listing, and a cautious reader who wants to look first must have "
+             "somewhere to click that does not commit them to anything. This is condition (f) of RUL-099's standing letter authority: a letter "
+             "failing any leg does not self-send. The 17-secretary federation letter is the one "
+             "deliberate exception on leg (a) -- it is a permission request where a reply IS the "
+             "point -- and it is a .txt, outside this entry's *_outreach.html scope by "
+             "construction, with its reply landing on support@ like everyone else's.",
+       ref="NO-PERSONAL-REPLY-1, David 4 Sep 2026: 'The letters should not say they can phone me, "
+           "they can respond on the app otherwise i will be flooded and i work during the day.' "
+           "Caught with the club letter written and 313 clubs queued behind it, before a single "
+           "one went. PROBED, and the wording was the smaller half: the two phone numbers a naive "
+           "grep found were false positives (fragments of Unsplash image URLs), but REPLY_TO on "
+           "every outreach send was david@trustsquare.co, and support@ is a Cloudflare catch-all "
+           "that forwards to his Gmail. So EVERY reply route ended at him, whatever the letter "
+           "said. Two templates did invite it outright -- human_followup ('reply to this email. It "
+           "reaches me directly') and relink_apology ('that reaches me directly and I will answer "
+           "it'), the latter already sent to 130 people today, which cannot be undone and is "
+           "exactly why this is asserted now. Both reworded to trustsquare.co/support, the club "
+           "letter gained the same line, REPLY_TO changed. HONEST LIMIT recorded in RUL-100: this "
+           "reduces the flood and lets Gmail's filters label it; it does not stop it. The real fix "
+           "is arming the customer-email firewall (RG-0212 / RUL-069), which is built and waits on "
+           "David as a lockout-risk act.")
+def rg_no_personal_reply_route():
+    import re as _re, glob as _glob
+    out = []
+    tdir = os.path.join(os.path.dirname(REPO), "CityLauncher", "emailer", "templates")
+    if not os.path.isdir(tdir):
+        return [(INFO, "SKIPPED -- outreach templates are not on this disk")]
+
+    BAD = _re.compile(r"call me|phone me|give me a (?:call|ring)|reply to (?:this|me)\b|"
+                      r"just reply|reaches me directly|contact me\b|my (?:cell|mobile)\b|"
+                      r"\b0[678]\d{8}\b", _re.I)
+    files = [f for f in _glob.glob(os.path.join(tdir, "*_outreach.html"))
+             if ".bak" not in os.path.basename(f)]
+    if not files:
+        return [(INFO, "SKIPPED -- no outreach templates found")]
+    for f in files:
+        body = open(f, encoding="utf-8", errors="replace").read()
+        # strip URLs first: image ids and tracking links carry digit runs that are not phones
+        stripped = _re.sub(r"https?://[^\s\"'<>)]+", " ", body)
+        hit = BAD.search(stripped)
+        if hit:
+            out.append((FAIL, "%s invites a personal reply or gives a number (%r) -- David gets "
+                              "flooded and he works during the day (NO-PERSONAL-REPLY-1)"
+                              % (os.path.basename(f), hit.group(0)[:34])))
+        if "trustsquare.co/support" not in body:
+            out.append((FAIL, "%s names no in-app route -- closing the personal door without "
+                              "opening another one leaves a prospect nowhere to go"
+                              % os.path.basename(f)))
+        # BROWSE-LINK-1 (David, 4 Sep 2026): "i hope the letter will have a trustsquare
+        # hyperlink for them to explore and for the people to use". Every action link in
+        # these letters DOES something -- the magic link drops the reader straight into
+        # step 1 of creating a listing. A reader who wants to look before committing had
+        # nowhere to click, which loses exactly the cautious volunteer we are writing to.
+        # A plain link to the marketplace root is now required beside the action.
+        if not _re.search(r'href="https://trustsquare\.co/?"', body):
+            out.append((FAIL, "%s has no plain browse link -- a reader who wants to LOOK before "
+                              "listing has nowhere to click (BROWSE-LINK-1)"
+                              % os.path.basename(f)))
+
+    em = os.path.join(os.path.dirname(REPO), "CityLauncher", "emailer", "emailer.py")
+    if os.path.exists(em):
+        e = open(em, encoding="utf-8", errors="replace").read()
+        m = _re.search(r"^REPLY_TO\s*=\s*['\"]([^'\"]+)['\"]", e, _re.M)
+        if not m:
+            out.append((FAIL, "emailer.REPLY_TO is gone -- replies land wherever Resend defaults"))
+        elif m.group(1).strip().lower() != "support@trustsquare.co":
+            out.append((FAIL, "REPLY_TO is %r -- outreach replies must never address a person "
+                              "(RUL-100)" % m.group(1)))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "%d outreach letters: no personal channel, all name the app route, "
+                          "REPLY_TO is support@" % len(files)))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
