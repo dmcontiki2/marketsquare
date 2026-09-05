@@ -16785,5 +16785,52 @@ def rg_support_form_actually_sends():
     return out
 
 
+@entry("RG-0283", "A message meant to be READ stays on screen long enough to read, and a publish "
+       "failure tells the user where to report it",
+       LOCKED, fixed_on="2026-09-05",
+       scope="ms.js showToast() and the publish-failure call sites. CLASS: any function that "
+             "ACCEPTS an argument and ignores it -- the call sites read as if the behaviour "
+             "exists, so nobody ever looks again.",
+       ref="TOAST-DURATION-1 (5 Sep 2026), found while tracing why 134 visitors reported nothing "
+           "(SUPPORT-FORM-REAL-1). showToast(msg) took ONE parameter and always held for 2600ms, "
+           "yet THIRTEEN call sites passed a second duration argument that was silently dropped "
+           "-- including 'Add TrustSquare to your home screen: tap Share then Add to Home Screen' "
+           "(asked for 6000) and 'Publish failed: <reason>' (asked for 4000). An instruction "
+           "nobody can finish reading is an instruction nobody follows, and a failure message "
+           "that vanishes in 2.6 seconds is a failure the user cannot act on or report. "
+           "Second half: the three hard publish failures were DEAD ENDS -- 'Publishing failed, "
+           "check your connection and try again' with nowhere to go if trying again did not "
+           "work. They now name trustsquare.co/support, which as of today actually receives "
+           "messages (RG-0282). Clamped 1.2s-12s so a bad argument can never pin a toast open.")
+def rg_toast_duration_honoured():
+    out = []
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "ms.js not readable from here -- toast check skipped")]
+    m = re.search(r"function showToast\(([^)]*)\)", js)
+    if not m:
+        return [(FAIL, "showToast() is gone from ms.js -- every toast call site is now dead")]
+    params = [a.strip() for a in m.group(1).split(",") if a.strip()]
+    callers = re.findall(r"showToast\([^;]{0,200}?,\s*\d{3,5}\s*\)", js)
+    if len(params) < 2:
+        out.append((FAIL, "showToast() takes one parameter again while %d call site(s) pass a "
+                          "duration -- the argument is accepted and silently ignored, so a "
+                          "message written to need 6 seconds gets 2.6" % len(callers)))
+    elif "2600)" in js[m.start():m.start() + 700] and "parseInt" not in js[m.start():m.start() + 700]:
+        out.append((FAIL, "showToast() names a duration parameter but still hard-codes the "
+                          "timeout -- the parameter is decoration"))
+    # A publish failure with nowhere to go is how a fault never reaches us.
+    dead = [c for c in re.findall(r"showToast\('Publish(?:ing)? failed[^;]{0,220}", js)
+            if "support" not in c.lower()]
+    if dead:
+        out.append((FAIL, "%d publish-failure message(s) name no way to report it -- a dead-end "
+                          "error is a fault we never hear about (%s)"
+                    % (len(dead), dead[0][:90])))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "toast duration is honoured (%d call sites pass one) and publish "
+                          "failures name the support route" % len(callers)))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

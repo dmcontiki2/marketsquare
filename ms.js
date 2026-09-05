@@ -5319,7 +5319,7 @@ async function sbPublishBatchListings() {
     if (sub) sub.textContent = published + ' collector card' + (published > 1 ? 's' : '') + ' ' + (published > 1 ? 'are' : 'is') + ' now live on TrustSquare.' + (failed > 0 ? ' (' + failed + ' failed — try again.)' : '');
     sbGoStep('batch-success');
   } else {
-    showToast('Publishing failed — check your connection and try again');
+    showToast('Publishing failed — check your connection and try again. If it keeps failing, tell us at trustsquare.co/support and we will fix it.', 7000);
     btn.textContent = 'Publish listings →';
   }
 }
@@ -9333,7 +9333,7 @@ async function dashPublish(listingId){
     const dl=dashState.listings.find(x=>x.beaListingId===listingId);
     if(dl){ dl.status='active'; if(dl._raw) dl._raw.listing_status='live'; }
     if(typeof renderDash==='function') renderDash();
-  }catch(e){ showToast('Publish failed: '+e.message, 4000); }
+  }catch(e){ showToast('Publish failed: '+e.message+' — nothing was lost. If it keeps happening, tell us at trustsquare.co/support.', 7000); }
 }
 
 // ── Wonder auto-link banner actions ────────────────────────────────────────
@@ -10874,11 +10874,18 @@ function _feaLmShowSuccess(title, listingId) {
 }
 
 let toastTimer;
-function showToast(msg){
+function showToast(msg, ms){
+  // TOAST-DURATION-1 (5 Sep 2026): the second argument was ACCEPTED BY 13 CALL SITES AND
+  // SILENTLY IGNORED. Messages written to need reading time got 2.6 s like everything else --
+  // including "Add TrustSquare to your home screen: tap Share then Add to Home Screen" (asked
+  // for 6 s) and "Publish failed: <reason>" (asked for 4 s). An instruction nobody can finish
+  // reading is an instruction nobody follows, and a failure message that vanishes is a failure
+  // the user cannot report. Found while tracing why 134 visitors filed nothing (SUPPORT-FORM-REAL-1).
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+  const hold = Math.min(Math.max(parseInt(ms,10) || 2600, 1200), 12000);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),hold);
 }
 
 // ── FEATURED CAROUSEL desktop scroll ─────────────────────────
@@ -12441,7 +12448,7 @@ async function aaDoPublish() {
     showToast('Listing published! 🎉');
     goTo('aa-home');
   } catch (e) {
-    showToast('Publish failed — please try again');
+    showToast('Publish failed — please try again. If it keeps failing, tell us at trustsquare.co/support.', 7000);
     if (btn) { btn.disabled = false; btn.textContent = 'Publish Listing'; }
   }
 }
