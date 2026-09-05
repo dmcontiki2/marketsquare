@@ -28,6 +28,73 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+## 2026-09-05 — Maintenance loop
+
+- Fault queue EMPTY: 0 new, 26 verified, 7 closed, 2 duplicate (35 total). Shadow agent ran
+  05:45:58Z, heartbeat read back from /dashboard/maint at 05:46:16Z. No escalation brief (none due).
+- Ledger red RG-0099 (SSH lockout) HEALED and fixed as a class: the allowlist held a dead IP;
+  `hetzner_fw_selfheal.py` now runs on every 20-min tick of autodeploy_agent.bat instead of waiting
+  for a human. Asserted by new RG-0274. Port 22 re-probed open 3/3, SSH returns the box.
+- RG-0138 now PROBES the external uptime Worker instead of reading a hand-typed date — which was
+  one day from going red by arithmetic alone.
+- Cost sweep exits 0 again: `claude-relay` (a git branch) classified as a non-model, stopping a
+  WARN count that was feeding on its own output (5 → 13 in a day). Asserted by new RG-0275.
+- Board after: 268 entries · 249 holding · 0 REGRESSED · 18 open · 0 UNVERIFIED. rulings_check 0 FAIL.
+- DAILY_WATCH: DW-095, DW-096, DW-098 CLOSED with named evidence. DW-097 (the watch's alert path
+  travels the same SSH transport as the failures it reports) stays OPEN — needs a Worker deploy.
+- Committed, not deployed: NIGHTLY-SHIP-1 ships this through the gates.
+
+### ALERT-OFFORIGIN-1 — the watch's alarm no longer depends on the origin (5 Sep 2026)
+
+DW-097 closed. The RED alert used to be one ssh command to the box it reports on, so it failed on
+exactly the days it was needed (26 Aug, 5 Sep). The Cloudflare uptime Worker now exposes a
+key-gated `POST /alert` and `scripts/watch_alert.py` calls that lane first, keeping the old ssh
+lane as a fallback. Asserted by ledger **RG-0279**, whose live leg dry-probes the endpoint on every
+run — so the path cannot rot unseen between emergencies.
+
+Earlier the same day, the maintenance loop closed DW-096 (third SSH lockout) and wired
+`hetzner_fw_selfheal.py` into the 20-minute host tick (**RG-0274**).
+
+## 2026-09-04 — Onboarding goal, unattended run 1
+
+The onboarding number is **0** (PROBED, both probes agree). Run it, never recall it:
+`python3 MarketSquare/scripts/onboarding_number.py`.
+
+The contract's raw probe reads **2** — both are seed rows for David's own household that
+were never cold-contacted, and ONBOARDING_GOAL.md section 3 bars them. New honest scorer
+shipped and locked (RG-0261). RG-0239 promoted to LOCKED after correcting an assertion
+that was still probing the URL we stopped sending on 1 Sep.
+
+The listing floor is fixed and green. The constraint has moved to supply: 542 of 546
+emailed prospects got the broken link and none has been re-mailed; only 30 people have
+ever received a working one. Gated wave queued. One question is with David: re-mail the
+441 still-mailable broken-link recipients.
+
+**Maintenance loop (4 Sep 2026, 05:34–06:00Z) — GREEN.** Fault queue empty: 35 rows,
+**0 new / 0 fix-shipped** (26 verified · 7 closed · 2 duplicate), so no tester fix work
+existed. The session's two items were instruments misreporting their own state.
+
+- **RG-0259 (CODE-STAMP-2)** — `/dashboard/maint` was publishing `code: unknown
+  (TimeoutExpired)` every sandbox run. `git status` measured 21.0 s on the FUSE mount
+  against a 20 s timeout, and one shared `try` let that kill a SHA read in 0.1 s. Legs
+  split, slow leg 300 s, unmeasurable dirtiness now says `DIRTY-UNKNOWN`. Live proof: run
+  `2026-09-04T05:48:17Z` publishes `b26ca4d  DIRTY-WORKTREE …`.
+- **RG-0260 (LEDGER-BOOTSTRAP-1)** — the ledger now bootstraps its own dependencies in
+  `main()`. Third time the board read blind on `fastapi` (DW-082, DW-083, today); the cure
+  existed since 28 Aug but its ordering lived only in prose, and the sandbox is ephemeral.
+  Machinery replaces memory, per the standing rule.
+- **RG-0187 corrected** (over-broad harness scanner, carve-out keyed to the installer's
+  name, rationale on the record) and **RG-0236's false READY TO LOCK removed** — its own
+  bar is "measured on real traffic", so it now stays open until
+  `Records/OUTREACH_TRIAGE_MEASURED.md` exists. Not promoted.
+- **Promoted OPEN → LOCKED:** RG-0252 (autodeploy agent live), RG-0255 (dev toggle gone
+  from the served index), RG-0258 (maps read live stays).
+
+**Ledger after: 253 entries · 235 holding · 0 REGRESSED · 18 open · 0 ready to lock ·
+0 UNVERIFIED · exit 0.** Rulings: 93 checked, 0 FAIL, 3 WARN (RUL-093/094/095 have no
+reflection assertions — pre-existing, named not fixed). No escalation brief (none due).
+Committed only — NIGHTLY-SHIP-1 ships it.
+
 - DW-091 CLOSED (4 Sep): the red DEMO tab is back on all 15 demo journey maps and the fix is in the GENERATOR — `scripts/journey_template.html` carries the `ts_demo_banner.js` line (a7e97d0, shipped 3 Sep 16:15Z), with TEMPLATE tripwires on RG-0141/RG-0182 so a rebuild cannot drop it again. Verified by probe: all 15 live `/static/adventures_*_map.html` carry the line; ledger `RG-0141 [  ok  ]`.
 - LEDGER-DARK-1 (4 Sep): the regression ledger had been refusing to run since `bc44112` reused id RG-0254 — every one of the 251 assertions was unevaluated. Fixed per LEDGER-DUP-1's rule: the OPEN LIVE-MAP-1 entry moved to **RG-0258**, the LOCKED PERSON-ONLY-2 entry keeps RG-0254. Board back: 251 entries · 225 holding · 3 REGRESSED · 17 open · 4 ready to lock · 2 UNVERIFIED.
 - Three reds now visible again, each its own entry, none of them DW-091: RG-0154 (session counter behind the fragments), RG-0241 (a bare `GET /optout` writes the register), RG-0257 (host queue: 2 requests pending, the 20-min host task last ran 3 Sep 21:51).

@@ -1,3 +1,860 @@
+## 2026-09-05 — the wave was starving beside a full pantry (SUPPLY-SERVICES-1, ORG-NAME-1, MAGICLINK-CITY-1, PERSON-ONLY-3, STOPLOSS-DISCOVER-1)
+
+**The number is 0.** Probe A 0, probe B 0, read from the live server. Nothing today could
+have moved it; what moved is the machinery that has to move it.
+
+### What was actually wrong
+
+The 05 Sep 00:10 wave reported *"no sendable agency prospects — top up the pool first"* for
+**9 of 14 cities** and sent 5 real emails. Yesterday's session read that as a supply shortage
+and opened RG-0263 to unlock a scraper API. It was not a supply shortage.
+
+- **SUPPLY-SERVICES-1 (RG-0272).** `Services` — 482 individual service providers, 443 never
+  contacted — was in **no city's `category_priority` and missing from `agency_categories`**.
+  `city_categories()` intersects those two lists, so the lane was invisible to the planner and
+  silently dropped. Adding it to one list alone would have changed nothing, which is how it
+  hid. Fixed both. Plan and chokepoint now agree exactly, city by city: **13 of 14 lanes
+  sendable, 93 guard-clean individuals, up from 5.**
+- **PERSON-ONLY-3 (same entry).** `Services` and `us_university_tutors` are individual-seller
+  lanes that were **not** person-only, so the office-desk guard never ran on them. The 00:13
+  New York wave really did send 11 emails to `admissions@nyadi.edu`,
+  `reception@lallianceny.org`, `gsbgraduate@fordham.edu`, `oareda@cuny.edu` and 7 more
+  university front desks, inviting each to publish a personal tutoring listing. Both lanes are
+  person-only now. That send cannot be recalled (RUL-073); it can only stop repeating.
+- **ORG-NAME-1 (RG-0270).** PERSON-ONLY-1 blocked `teachers_trainers` on 3 Sep pending "the
+  person-only scraper filter". Measured today, that condition is **unreachable by an address
+  filter**: 1,235 of 1,509 rows (81%) already pass every address-shape guard, 87% of them on
+  gmail.com — and **1,194 of those 1,235 are named "… Primary School", "… Secondary School",
+  "… College"**. `mdusifo555@gmail.com` is Maduna Primary School. A KZN school's official
+  mailbox *is* a personal Gmail account, so the address is a person while the entity is an
+  institution. Only 41 rows survive a NAME test. **The block stays** — upheld with the
+  measurement written into the policy note so no future session removes it on the strength of
+  an address filter — and `_looks_org_name()` now guards Tutors, Services and
+  us_university_tutors too, where nobody had looked. Agency lanes untouched (RUL-059).
+- **MAGICLINK-CITY-1 (RG-0271).** Three Durban operators and one in Port Elizabeth were each
+  rendered an invitation saying `city=Pretoria`. Probed the pool: **133 rows carry a link whose
+  city contradicts the row**, all stamped "Pretoria" by the adventures scrapers; 19 already
+  mailed, 114 not yet. The app reads `?city=` to pre-fill the first listing, so a Durban dive
+  operator was invited to publish in Pretoria. Repaired at the READ like CTA-URL-1 — the row
+  wins. name/email/category probed clean (0 of 3,547) and left alone.
+- **STOPLOSS-DISCOVER-1 (RG-0273).** `clean_stoploss_cities.bat` named New York, Pretoria and
+  Polokwane — the cities latched on 3 Sep, all since released. The four actually latched today
+  (Cape Town, Durban, Port Elizabeth, Pietermaritzburg) were not in it, so the designed release
+  path ran and released nothing while 21 sendable individuals stayed shut in. It now asks
+  `gate_check` which cities are latched. It also carried a waiting prompt while sitting on the
+  unattended allowlist, which would have hung the host agent the first time it was queued.
+
+### Restraint, deliberately
+
+**MEASURE-RATE-1.** The supply fix takes the nightly wave from 5 sends to ~93. ONBOARDING_PLAN
+Phase 1 says do not open the tap before the click→publish rate is known — we have roughly one
+pass through the list. `batch_size` halved 12 → 6 for the measurement week (restore at Phase 3,
+18 Sep): **up to 62 genuine individuals on night one across 13 cities**, leaving about a third
+of the clean pool unspent. This is a restraint on a lane that just got 19× wider.
+
+### Phase 1 measurement so far
+
+130 apology emails (4 Sep) → 98 opens and 31 click events on the 4th → **2 distinct real
+people** → 0 published. No new events on the 5th. Click→publish remains unmeasured; two clicks
+is not a sample. The 62 going out tonight are the first wave ever aimed at individuals rather
+than office desks and schools, so they are also the first honest test of it.
+
+Ledger: RG-0270, RG-0271, RG-0272, RG-0273 added and green; every locked fix still holding,
+18 open unchanged. Rulings check: 0 fail.
+
+## 2026-09-05 — a permission-backed request vanished without a word (REQ-COLLIDE-1)
+
+Queued two commits a second apart, listed the queue, and found ONE file. `host_queue/*.req`
+names were built from the ARGUMENT'S FILENAME, so `MarketSquare\commit.bat` and
+`CityLauncher\commit.bat` both became `<timestamp>_run_bat_commit` — and the second
+**silently overwrote the first**. No error, no result file, and `request_host_action.py` had
+already printed "queued" to the caller. A permission-backed instruction simply ceased to exist.
+
+Same shape as the 2 Aug CHANGELOG collision — two writers, last one wins, nothing raised.
+There the cure was one file per fragment; here it is a name that cannot collide: the slug
+carries the whole path (`marketsquare-commit` vs `citylauncher-commit`), the timestamp carries
+milliseconds, and an existing name is never reused. Locked as RG-0280.
+
+Found only because the queue was listed by eye straight after. Worth saying plainly: this
+class is invisible unless something checks, which is the argument for the ledger in general.
+
+### Three of my own assertions were wrong before they were right
+
+Recorded because the pattern matters more than the fixes:
+
+- **RG-0276** counted `call :fire "%%C"` — the batch loop variable — as a hardcoded city, and
+  so declared the fix I had just made to be broken.
+- **RG-0278** demanded every category KEY be drawable, when `TEMPLATES` deliberately carries
+  several spellings per letter. The unit is the letter, not the key.
+- **RG-0280's** first draft shelled out to the real `request_host_action.py` — which broke
+  RG-0187's harness rule AND wrote two live requests into the production queue. An assertion
+  must never cause the thing it asserts about. Rewritten pure: it exercises the naming rule
+  in-process and writes nothing.
+
+Twice today an existing assertion caught a new one being sloppy (LEDGER-DUP-1 on a duplicate
+id, twice — a concurrent session was adding entries at the same time). That is the machinery
+working on its author.
+
+### Housekeeping found on the way
+
+- `deploy_uptime_worker.bat`, arriving from a concurrent session, had **LF line endings** —
+  cmd.exe misparses those. Normalised to CRLF, content byte-identical.
+- It was then flagged for having no waiting prompt, but it is on the host-queue allowlist and
+  runs with nobody present, where a prompt would hang the agent forever. Added it and the five
+  other allowlisted scripts to the checker's UNATTENDED set (UNATTENDED-ALLOWLIST-1).
+- `rulings_check.py` failed RUL-084 because it verified the ruling by looking for the literal
+  string "Cape Town" **inside launch_day_wave.bat** — checking a ruling against the hardcoded
+  list that was the fault. Assertion corrected to check where the truth now lives: the city is
+  armed in the policy, and the bat derives its list. Not a weakening; the same fact, checked in
+  the right place, plus the derivation.
+
+Ledger green, 18 open unchanged. Rulings: 0 fail. The number is still **0**.
+
+## 2026-09-05 — Maintenance loop: SSH lockout healed AND scheduled; two instruments stopped lying
+
+**Fault queue: EMPTY.** Shadow agent run 2026-09-05T05:45:58Z — 0 new faults, 0 acted;
+35 rows total (26 verified, 7 closed, 2 duplicate). Heartbeat posted and read back from
+`/dashboard/maint` (`received_at 2026-09-05T05:46:16Z`). No escalations in 24h, so
+`escalation_brief.py` wrote no brief. The session's work therefore came from the ledger red
+and the watch register, which is what those instruments are for.
+
+**RG-0099 red — SSH-LOCKOUT-1 recurred, healed, then FIXED AS A CLASS (FW-SELFHEAL-SCHEDULED-1).**
+Port 22 at the origin timed out on 3/3 probes while a control host answered, so the vantage was
+fine and the origin was not: the Hetzner SSH allowlist still held `197.185.137.157/32` from a
+router reset while the live egress was `197.184.107.115`. `hetzner_fw_selfheal.py` set the rule to
+the live IP and pruned the dead one (NO-STALE-IP-1). PROBED after: TCP :22 open 3/3,
+`ssh root@178.104.73.239` returned `ubuntu-4gb-nbg1-1` / uptime 2d 12:58, RG-0099 and RG-0188 both
+HOLDING. **The recurrence engine was that nothing ran the cure** — it has existed since 17 Aug and
+RG-0188 proved it executable, but a grep across every `.bat` found ZERO schedulers, so all three
+reds (26 Aug, 2 Sep, 5 Sep) waited for a human to notice. The healer now runs on every tick of
+`autodeploy_agent.bat` (20 min, on the host that owns the egress the allowlist must name),
+deliberately ABOVE its no-request early exit so quiet days are covered, with its exit code
+discarded so a Hetzner API hiccup can never block a deploy. It can only ever name the IP of the
+machine that ran it, so it cannot lock anyone out — it is the anti-lockout.
+**New ledger entry RG-0274 (LOCKED)** asserts the wiring and its ordering. Closes DW-096.
+
+**RG-0138's liveness half was a READ wearing a PROBE's colour (WATCHER-LIVE-PROBE-1).**
+The external uptime Worker — the last watcher standing when SSH is down — proved itself alive by a
+`LAST_HEARTBEAT:` date SOMEONE TYPED into a markdown file, failing only when that date was over 7
+days old. Today the age was exactly 7, so **6 Sep would have read REGRESSION by arithmetic alone in
+an unchanged world**. It now GETs the Worker's public endpoint (URL taken from the deploy marker,
+not hardcoded), requires a real check result with KV bound and a timestamp under 15 minutes old,
+and raises `ProbeOffline` → UNVERIFIED (never RED) when this machine cannot reach it. Evidence this
+run: `ran a real check at 2026-09-05 05:53:02 UTC (site ok=True, 200 in 187ms), KV bound`. The typed
+date survives as INFO only — it records the day a heartbeat MAIL was witnessed, which is the ALERT
+half (DW-097), not liveness. Strictly stronger than the date read, never weaker. Closes DW-098.
+
+**The cost sweep was manufacturing its own findings (RELAY-NOT-A-MODEL-1).**
+`cost_compliance_sweep.py --quiet` exited 1 with 13 WARN lines, up from 5 the day before, all of
+them `unknown model family claude-relay`. `claude-relay` is the GIT BRANCH `request_deploy.py`
+pushes to (`HEAD:refs/heads/claude-relay`) — never a model family, never billable. Left
+unclassified it WARNed, and recording each WARN wrote the literal string into
+`DAILY_WATCH/OPEN_ITEMS.json`, the coverage map and the ledger, so the next sweep found it there
+too: a feedback loop, not drift. Classified alongside `mem` in `KNOWN_NON_MODELS`, exactly the
+DW-047 (`claude-fable-5`) precedent — the name is classified, the check is NOT muted, and a genuine
+unknown family still WARNs. Evidence: exit 1 → exit 0 the same minute, 0 CRITICAL, every real call
+site still ceiling ✓ spend-log ✓. **New ledger entry RG-0275 (LOCKED)** asserts the classification
+and reads back the newest sweep report. Closes DW-095.
+
+**Board:** 268 entries · 249 holding · 0 REGRESSED · 18 open · 0 ready to lock · 0 UNVERIFIED.
+`rulings_check.py` 94 rulings, 0 FAIL, 6 WARN (RUL-093/094/095/098/099/100 carry no reflection
+assertions — notes, not guarantees).
+
+**Two honest notes.** (1) The full board reported RG-0229 (opt-out lane) REGRESSED once during the
+post-work run, with self-contradictory text — `0 of 5 gates failing` alongside `RESULT: 5/5 gates
+pass`. Re-probed in isolation four times: HOLDING every time, `all five gates pass`. Treated as a
+false red of the DW-093 class (a stdout capture read under load), not a rotted fix; the assertion
+itself was not touched. (2) This session ran the ledger through a scratch chunked driver in `/tmp`,
+because the Cowork sandbox caps one bash call at ~180 s and reaps background processes at the call
+boundary (BRAIN-DEPS-2), while a full board takes longer than the cap. The driver calls the
+ledger's own `run()` on slices — no assertion logic is re-implemented and no repo file was involved.
+
+**DW-097 stays OPEN and is the one thing worth David's eye:** the daily watch's alert email is sent
+by SSH-ing to the origin, so on a day the origin is unreachable — exactly today — the alarm cannot
+be raised. The watch's RED verdict reached nobody by mail. The fix (an alert path on the Cloudflare
+Worker, which has its own egress and its own Resend key) needs a Worker deploy and is not a
+sandbox-reachable act; it is tracked in the watch register.
+
+## 2026-09-05 — five questions, three of them "no" (GLOBAL-REACH-1, CLUB-LANE-1, WAVE-CITIES-DISCOVER-1, COUNTRY-NAME-ALIAS-1)
+
+David asked whether the goal-driven task is actually working: are the teachers and the
+clubs/unions templates in the waves, are the addresses identified globally and not just
+locally, does the app still work, does the plan adapt. Probed all five. **Three were no.**
+
+### The fault behind all of them
+
+Every gap was **a list that did not match another list, failing silently.** Nothing went red,
+because nothing asserted it — the wave simply never mentioned the missing people, and an
+absent line reads like an absent problem.
+
+- **CLUB-LANE-1.** `sports_club_outreach.html`, the federation letter and `club_reader.py`
+  existed; 577 real club contacts had been harvested into `club_lists/` on 4 Sep. There was
+  **no importer, no 'Sports Clubs' row in the prospect table, and the category was in neither
+  `agency_categories` nor any city's priority list.** Two days of work that could not reach one
+  person. Built `scripts/club_import.py` (host-side only — the 31 Aug SQLite ban), made the
+  category drawable in 43 cities, and queued the import. Deliberately NOT person-only: a club is
+  an organisation reached through its committee (RUL-059), so the desk guards must not fire.
+- **WAVE-CITIES-DISCOVER-1.** `launch_day_wave.bat` named 14 cities in its own text while the
+  policy held 31. Los Angeles, San Jose, Austin, Houston, San Diego, Phoenix and San Antonio
+  were armed, green, and held 33 people no wave could visit. The bat now asks the policy.
+  **43 cities.** Same class as STOPLOSS-DISCOVER-1 earlier the same day.
+- **GLOBAL-REACH-1.** 19 cities across AU, NZ, GB, AR and ZA held 40 guard-clean, law-cleared
+  people the policy had never heard of. Added.
+- **COUNTRY-NAME-ALIAS-1.** 5 rows carried the country as `'South Africa'` rather than `ZA`,
+  which `country_of()` resolves to None — and None means refuse to send. Right behaviour, wrong
+  cause: quietly unmailable in our own home market. Full country names now alias to their codes.
+  The fence is untouched: an *uncleared* country still refuses.
+- **The orphan-letter sweep** that CLUB-LANE-1's new assertion made possible then caught three
+  more letters drawable by nothing: individual collectors, individual property, casual work.
+  Zero rows today, so no send changes — but a future scrape writing 'Property' would have
+  vanished exactly like the clubs did.
+
+### What the app is doing (probed, not recalled)
+
+`/health`, `/flags` and `/auth/providers` all answer under half a second. The three gates that
+were stopping a stranger publishing are green on the live site: the price step saves, an invited
+seller gets the photo draft, a first-time seller can publish.
+
+### The legal fence, held
+
+**179 people in France and Portugal cannot be emailed.** GDPR art.27 requires a named EU
+representative and none is configured, so the code refuses to build those messages. That is a
+fence, not a bug, and it was not coded around. Appointing a representative is David's act. FR
+and PT cities are deliberately absent from the policy.
+
+### Sent
+
+David: *"If there are no blockers and some of these new cities can be emailed now, please do
+it. You don't need to stop based on a previous time schedule as if it is a rule."* The
+measure-only calendar is retired and replaced by a rule: **gates, not calendars.** A send waits
+for a real gate — stop-loss, the day gap, provider limits, a clearance we do not hold — and
+nothing else. Fired a wave of **129 people across 38 cities** (New York correctly held by its
+one-day gap). Batch cap stays at 6 per city; that is the restraint now, and it is a dial.
+
+### The plan
+
+ONBOARDING_PLAN.md rewritten. The old one asserted a supply shortage for a day after the
+shortage was disproved, because nobody edits a plan. New standing rule in it: **when a
+session's measurement contradicts the plan, the plan is edited in that session** — the same
+rule the ledger and the rulings register already have. Real reachable universe: **1,441 people
+today**, and 20 publishers needs click→publish at about 15%.
+
+Ledger: RG-0276, RG-0277, RG-0278 added. Three of my own first drafts were caught by existing
+assertions — a duplicate id, a regex that counted the bat's own loop variable, a bare subprocess
+where RG-0187 requires the harness — and fixed before locking. All green; 18 open unchanged.
+
+The number is still **0**.
+
+## 2026-09-05 — ALERT-OFFORIGIN-1: the RED alarm no longer rides the machine it watches (DW-097)
+
+**The fault.** The daily watch's RED-alert path was one SSH command to the origin: parse
+`RESEND_API_KEY` out of `/etc/marketsquare/resend.watch.conf`, then curl Resend *from the box*.
+So the alarm shared a transport with the entire class of failure it exists to report. Observed
+in anger twice — **26 Aug (DW-073)** and **5 Sep (DW-097)** — where the verdict was RED *because*
+the origin was unreachable, and therefore no alert could be sent. David learned of both only by
+reading a report hours later. A fire alarm wired through the burning room is not an alarm.
+
+**What did not save us:** the independent Cloudflare watcher (RG-0138) probes `/health`, which was
+green on both days. An origin that serves the public fine while refusing SSH is invisible to it by
+design. A second vantage existing was never the same thing as the alarm being reachable.
+
+**The fix.**
+- `ops/cloudflare/uptime_monitor_worker.js` gains **`POST /alert`** — bearer-keyed
+  (`ALERT_INGEST_KEY`), using the Resend key already bound to the Worker (delivery proven
+  end-to-end 29 Aug). Cloudflare egress, no dependency on the origin.
+- **The recipient is never taken from the request** (fixed `ALERT_TO`), subject/lines escaped and
+  capped, `level` clamped, KV rate limit 12/hour that **fails open** — a limiter able to silence an
+  outage alarm is worse than the abuse it prevents.
+- **`dry:true`** authenticates and validates without sending, so the path is probed on every
+  ledger run instead of only during an emergency.
+- `scripts/watch_alert.py` is the watch's single entry point: **Worker lane first**, the old ssh
+  lane kept as a **fallback only** (two independent lanes beat one; a Cloudflare-side failure is
+  real if rarer). Exit 1 = no lane delivered, which is itself a HIGH finding.
+- `deploy_uptime_worker.bat` publishes it via the host queue — **deploy first, `secret put`
+  second**, the 28 Aug placeholder-Worker lesson.
+- Daily-watch task prompt updated to call `watch_alert.py` instead of hand-rolling ssh+curl.
+
+**Locked.** Ledger **RG-0279** — three legs: the Worker has a key-gated `/alert` whose recipient
+comes from config; `watch_alert.py` tries the Worker lane *before* the ssh lane; and a LIVE dry
+probe proves the endpoint is deployed, our key accepted and Resend bound. Stated limit: the
+daily-watch task text lives outside the repo, so the entry asserts the LANE the task calls, not the
+task's wording — which is exactly why the alert logic moved into the repo rather than the prompt.
+
+**Also today, for the record:** DW-096 (the third SSH lockout) was healed and class-fixed by the
+maintenance loop earlier — `hetzner_fw_selfheal.py` now runs on every 20-minute host tick
+(**RG-0274**), so an ISP IP move self-corrects instead of waiting for a human to notice.
+
+## 2026-09-05 — the agent was never broken; the instrument was (AGENT-HEARTBEAT-1)
+
+David, seeing the report: *"The laptop did not go to sleep, it was still up and running when
+i came online just now?"* He is right, and the earlier run was wrong twice over.
+
+**What actually happened.** Three requests were queued at 01:33 SAST. The agent ran all three
+at 01:51 — its very next 20-minute tick, 18 minutes later — and every one returned rc=0. The
+agent was healthy the whole time.
+
+**Why the ledger said otherwise.** `autodeploy_agent.bat` only calls the queue worker when a
+`.req` already exists (`if exist "%HQ%\*.req"`). An idle agent therefore writes **nothing** to
+`autodeploy_agent_log.txt`. Log silence is the normal state of a healthy agent with an empty
+queue. RG-0257's live leg read the age of that log and called anything over 40 minutes a
+REGRESSION — so queueing a request into any quiet stretch fired red instantly, blaming the
+agent for silence that *preceded* the request.
+
+**Why the report was worse than the ledger.** The ledger produced a false alarm; the run then
+explained it away with "the PC was almost certainly asleep" — a guess, dressed as a finding,
+in a message to David. Nothing probed it. RG-0133's rule says no instrument may default to a
+healthy colour; the same rule holds in the other direction, and a guess offered as a cause is
+the ladder's bottom rung (RECALLED) reported as its top one.
+
+**Fix, both halves:**
+- `autodeploy_agent.bat` now stamps `host_queue/agent_heartbeat.txt` on **every** tick, before
+  any work and whether or not there is any. Aliveness is measured, not inferred from work the
+  agent happened to have. Gitignored; one line, overwritten.
+- RG-0257's live leg reads that heartbeat for aliveness, and judges lateness from how long a
+  **request** has waited (a tick plus one tick of grace) — never from log silence. Its scope
+  text carries the correction so the next reader is not misled by the old description.
+
+CLASS: any check that infers a system's health from a side-effect it only produces when busy.
+The cure is to make the thing observable, not to widen the threshold.
+
+**Also confirmed this morning, probed:** the queued stop-loss clean ran and released all four
+latched cities (Cape Town, Durban, Port Elizabeth, Pietermaritzburg). 12 of 14 lanes now pass
+their gates; New York clears its one-day gap at tonight's run. **About 62 genuine individuals
+go out at 00:10 on 6 Sep** — up from 5 real sends yesterday morning.
+
+The number is unchanged: **0**.
+
+## 2026-09-04 — The teachers lane: the pool we hold is schools, not teachers
+
+David: *"teachers get bad and low salaries, they could with their credentials like experience
+and qualifications list as a 'specialist tutor' and earn an additional R200 to R500 per hour."*
+
+**PROBED before agreeing, and the probe changed the plan.** We hold 1,509 rows tagged
+`teachers_trainers`, never emailed — the largest untouched pool in the database. Running them
+through the real send guards: 1,235 would send. But reading the business_name against the
+address shows what they actually are:
+
+- 301 obviously schools (`info@laerskoolfairland.co.za`, `admin@ggps.co.za`)
+- 934 that *look* personal but are not — `stjbcs@mweb.co.za` is St John the Baptist School,
+  `linden@linden.co.za` is Hoërskool Linden, `mpodo1995@gmail.com` is Blue Sea Day Care
+
+**The pool is ~1,500 school offices and not one individual teacher.** A school switchboard will
+never list as a specialist tutor. So the association route is not a nice-to-have here, it is the
+only route: a teacher's personal address cannot be scraped, but SACE registers every teacher in
+the country and the unions and subject associations hold the members.
+
+**The economics check out and are unusually strong for this audience.** Verified against
+PRICING_CANON: free tier is R0 with two listing slots, 1 Tuppence = US$2 fixed, the BUYER pays
+one per introduction, and there is no commission line anywhere in the canon — the teacher keeps
+every rand of the lesson fee. The introduction is one-off, so a pupil who stays for three terms
+is never charged for twice. Worked illustration on the page, clearly labelled as illustration:
+four pupils, two hours a week, R350/hour ≈ R11,200 a month, all of it kept.
+
+**And it is an ALL-LIVE lane — the third one.** Honours +14, SACE +8, police clearance +8,
+teaching experience 5+ +6, subject specialisation +5, safeguarding +3 = 44 raw category points,
+capped at 40; with ID verification a qualified teacher sits at **95 — Highly Trusted** on the day
+they list, above every unqualified "homework helper". Nothing needs building. `assoc_teachers.html`
+generated; seven association pages now.
+
+## 2026-09-04 — SPORTS-CLUBS-1: David's club lane, proved the same day
+
+**The idea, in his words: clubs never advertise, so they never appear in search or maps —
+but a club must file paperwork to affiliate, register as a non-profit, enter races and
+book municipal fields, and that paperwork is published with a secretary's address on it.
+So collect the paperwork, never the adverts.**
+
+Proved, not estimated. `CityLauncher/club_reader.py` was built and run live against two
+provincial athletics pages, then every address pushed through the real send guards:
+
+- Western Province Athletics — 211 addresses on one page → **98 sendable**
+- Athletics Gauteng North — 366 → **197 sendable**
+
+**295 sendable clubs from two provinces of one sport. Athletics SA has 17 provincial
+bodies — roughly 2,500 from athletics alone**, before cycling, judo, karate, boxing,
+swimming, the 227 parkruns or the 270,000-row non-profit register. Our existing
+search-and-maps scraper had found 40 sport entries in the entire 3,805-row database. The
+word list was never the problem; the place we looked was.
+
+Against the onboarding arithmetic this is the single biggest lever available: it roughly
+doubles the list and drops the required click→publish rate from ~5% to ~2.5% — "tight"
+becomes "comfortable". The guards did real work on real data: one-per-org held 237 sibling
+mailboxes, the government filter held 45 officers' .gov.za addresses.
+
+**RG-0266 LOCKED** — the reader is a COLLECTOR: no sqlite3 import, no send path, no
+database handle. Collecting a row is not permission to email it; the one send chokepoint
+in emailer.py keeps that job (RUL-054). And the harvest never enters git — `club_lists/`
+and `*.club.csv` are gitignored, because a federation roster is named volunteers with
+personal addresses and cell numbers. The reader is code and is committed; what it reads
+never is.
+
+**A rule correction on the record.** Two sessions running, this agent put "get a lawyer
+first" in front of the clubs lane. RUL-052 (24 Aug) and RUL-020 already say counsel items
+ride alongside and never gate a wave — David: *"I am now stopping the noise."* The block
+was reflex, not policy, and it has been removed from ONBOARDING_PLAN.md. What carries this
+lane is the machinery that was always going to carry it: suppression checked at two gates
+fail-safe, unsubscribe in every template, the shape filters, one-per-org, the ramp and the
+stop-loss.
+
+## 2026-09-04 — RUL-098: credentials rated generously on purpose, and the cap that makes it safe
+
+**David's ruling:** *"rate the task specific credential initially slightly higher than we judge
+it to make it more accessible to those experienced people, giving them the bonus for their
+already achieved experience. Even if they should be slightly less we then channel true
+'do-ers' to reap the benefits above fakers."*
+
+The principle underneath, written down so future sessions apply it rather than re-derive it:
+**weight a signal by how expensive it is to FAKE, not by our own view of how important the
+skill is.** A credential that took five years and an external examiner is a strong signal even
+where the skill it certifies is only moderately relevant — a faker cannot cheaply obtain it.
+Cheap-to-self-assert signals stay weighted low.
+
+**Verifying the ruling was safe produced the proof, and caught my own error.** The canonical
+formula in `bea_main._trust_math()` is
+`score = min(100, 40 + min(30,Universal) + min(30,Track) + min(40,Category))`. The
+category-credential group is **hard-capped at 40**, so credentials carry a seller from 40 to 80
+and no further. The final 20 points come only from a verified identity and completed
+introductions with none ignored — which no certificate buys. So generosity **cannot** inflate a
+faker past 80. What it actually buys is that an experienced person reaches the category ceiling
+with FEWER documents, which is exactly the accessibility David asked for, and surplus points
+above 40 are headroom rather than score, so over-rating costs the ranking nothing.
+
+**TRUST-LADDER-TRUE-1 / RG-0268 LOCKED.** That same read caught the generator built hours
+earlier summing credentials with no caps at all: it published plumbers at **101** — impossible,
+the ceiling is 100 — and chess at 97 where the product shows 95. Nobody had seen the pages, so
+the cost was zero. But the shape is precisely the one RG-0267 exists to prevent, and I walked
+into it one message after writing that entry. **A rule against over-promising is not
+self-executing; the arithmetic behind the promise has to be asserted too.** The generator now
+carries the caps, states why the duplication of the formula is permitted, and RG-0268 checks it
+behaviourally on the exact failing case. All six pages regenerated: every one now shows 95, the
+number the product would actually display, with a line explaining that certificates worth more
+than 40 on paper are headroom — which is itself the argument for holding more of them.
+
+RG-0267 stands unchanged: generosity never extends to showing a badge that does not exist.
+
+## 2026-09-04 — Onboarding run 1 (later): the supply wall, and a wait that wasn't
+
+**Fired the permitted wave and PROBED the result: zero emails sent, and that is correct.**
+`launch_day_wave.bat` ran through the host queue at 12:51 local. All 14 city lanes dry-ran:
+**9 of 14 reported "no sendable agency prospects — top up the pool first"** (Cape Town,
+Bloemfontein, East London, Polokwane, Nelspruit, Kimberley, Pietermaritzburg, London,
+Sydney, Pretoria, Johannesburg); Durban and Port Elizabeth were latched by stop-loss
+(8.3% and 17.6% bounce); New York was held by min-gap (next allowed 5 Sep). Server
+`email_events` confirms: 0 sent today. So with the listing floor repaired, **the binding
+constraint on the onboarding goal is now SUPPLY, not plumbing.** Queued the two
+allowlisted releases: `clean_stoploss_cities.bat` (STOP-LOSS-RELEASE-1 clears Durban and
+PE) and `fill_wave_gaps.py` (tops up the nine empty pools).
+
+**RG-0262 LOCKED — WAIT-REDIR-1: an unattended wait that silently wasn't.**
+The wave's result file came back `rc=0` with fourteen identical lines of
+`ERROR: Input redirection is not supported, exiting the process immediately` — one per
+city, from the `timeout /t 20` that paces the sends. `timeout.exe` refuses to run when
+stdin is not a console, which it never is under the host queue, so it returns instantly
+and the delay simply does not happen; the bat carries on and still exits 0. Delivery was
+unaffected (the python legs ran and logged normally), so this cost pacing only — but the
+shape is the point: **a DONE with rc=0 on a run where a guard had been erased.** Had the
+pacing mattered to a rate limit, nothing anywhere would have said so. Repaired in all five
+allowlisted bats that used it (exchange_sync, launch_day_wave, run_wave2_unattended,
+sync_to_server, deploy_citylauncher) with the redirection-safe `ping -n N+1 127.0.0.1`
+idiom, and RG-0262 now walks every allowlisted bat so a new one trips red. Sibling of
+check_bat_crlf's UNATTENDED set, which catches the loud version of this fault (a `pause`
+that hangs); this catches the quiet one.
+
+## 2026-09-04 — Onboarding run 1 (close): supply is the wall, and the key to it was never cut
+
+**RG-0263 OPEN — SUPPLY-KEY-1.** `fill_wave_gaps.py`, allowlisted under RUL-096(d)
+precisely so an unattended run can refill an empty city pool, failed rc=1 with HTTP 401.
+Not a bug: `LAUNCH_API_KEY` has never been set in the server environment, and
+LAUNCH-API-FAILCLOSED-1 (RG-0176, 26 Aug) makes an unset key mean CLOSED TO EVERYONE —
+server.py says so in its own comment. That gate was the right call; the 26 Aug probe
+found 200 prospect records with names, emails and phone numbers served anonymously. The
+unpaid half is that nobody then provisioned the key, so our own tooling sits outside our
+own door. Entered as OPEN rather than done, deliberately: provisioning a secret and
+restarting production unattended at 13:15 is the lockout-risk class reserved under
+RUL-027, and RUL-037 says an item that cannot be executed this session goes into the
+ledger, not into a sentence to David. Two legs when it promotes — the door still refuses
+strangers AND the key opens it for us. Either alone is a wrong fix. Until then, supply
+comes from the scraper lane, not the API lane.
+
+**Stop-loss released on three cities.** `clean_stoploss_cities.bat` MX-verified and
+cleaned the pools, stamping the dirty wave number per STOP-LOSS-RELEASE-1. Polokwane is
+now GREEN; Pretoria and New York are blocked only by min-gap and clear on 5 Sep. That
+turns three dead lanes back on for tomorrow's scheduled wave.
+
+**Where the goal actually stands.** The listing floor is repaired and locked, the
+outreach link opens for a stranger, and the number is an honest 0. What is missing is
+people: 542 of the 546 we emailed received the broken link and none has been re-mailed,
+so only 30 human beings have ever been shown a working funnel — and of 64 recorded
+clicks the register scores just 2 as real. The goal needs 20 publishers from a
+population that has, so far, effectively been 30. The one reserved decision with David
+is whether to re-mail the 441 still-mailable broken-link recipients.
+
+## 2026-09-04 — Onboarding goal, run 1: the scoreboard was reading high
+
+**NUMBER-TRUTH-1 — the goal's own probe was gameable, and already wrong.**
+ONBOARDING_GOAL.md §2 names `SELECT COUNT(*) FROM prospects WHERE published_at IS NOT
+NULL` as probe A. PROBED on the live origin 4 Sep: it returns **2**. Both rows are
+`source='e2e_test'`, `emailed_at IS NULL` — seed records for David's own household,
+never cold-contacted. §3 bars exactly those rows, so the contract's probe reported 2
+where the honest number is 0. Left alone, the next session reads 2 in good faith and
+reports 10% of the target reached on day one, having done nothing. New instrument:
+`scripts/onboarding_number.py` — runs both probes, applies the anti-gaming filter as a
+pure testable `qualifies()`, takes `min(A, B)`, reports UNVERIFIED rather than a
+healthy-looking zero when it cannot measure, and always prints the naive count beside
+the honest one so the gap can never go quiet. **RG-0261 LOCKED**, asserting the filter
+behaviourally on synthetic rows so it cannot rot while the live data is empty.
+Live reading: honest **0**, naive 2.
+
+**RG-0239 promoted to LOCKED — the check had outlived its own URL.**
+Its body still probed a hardcoded `https://trustsquare.co/admin.html?magic=1…`, which
+is the URL CTA-URL-1 stopped us sending on 1 Sep. So it measured a door we deliberately
+keep shut and stayed red for a fault fixed on 3 Sep — on the one entry the whole funnel
+hangs from. Repointed at the CTA `emailer.build_magic_link()` actually produces (leg 1)
+and kept "bare /admin.html stays gated" (leg 2). Strictly stronger, not weaker: a
+builder regressing to /admin.html now trips leg 1, and the wrong fix of 1 Sep trips
+leg 2. PROBED 4 Sep 10:36Z — real CTA HTTP 200, no WWW-Authenticate; bare /admin.html
+HTTP 401. Assertion corrected and said so in the ref, per CLAUDE.md.
+
+**Funnel truth, measured not inferred.** 542 of the 546 emailed prospects received the
+broken link and none has ever been re-mailed; only **30 people have ever been sent a
+working one**. Of 64 recorded clicks, the click register scores just **2** as real human
+clicks. The floor fixes (RG-0249 price basis, RG-0250 invitee AI draft, RG-0253
+first-time publish) all shipped 3 Sep and are green, so the constraint has moved from
+plumbing to supply. Queued the gated `launch_day_wave.bat` through the host queue.
+
+**Reserved to David (batched, one question):** re-mailing the 441 still-mailable people
+whose link was broken. `CityLauncher/resend_broken_link.py` exists, honours every send
+guard and defaults to dry-run, but it is not on the allowlist — RUL-096(d) grants no new
+sending authority.
+
+Ledger after: every locked fix holding, 17 open (was 18). Rulings: 94 checked, 0 FAIL.
+
+## 2026-09-04 — The onboarding PLAN, with the arithmetic that decides it
+
+David asked whether there is a follow-up plan. There is now, and it is built on measured
+numbers rather than intent: `MarketSquare/ONBOARDING_PLAN.md`, with a Professional Navy
+Word version for David and a colour-coded board in Visuals.
+
+**The decisive finding is an arithmetic one.** 461 emailed, 155 opened (34%), 48 clicked
+(10%), 0 published — and the 0 is uninformative, because every one of those 48 clicks met
+a locked door. Click→publish has never been observed. Working backwards from 20
+publishers at the observed 10% click rate: a 20% publish rate needs ~1,000 emails, 10%
+needs ~2,000, 5% needs ~3,800, and 2% needs ~9,600. We hold 2,860 unemailed prospects
+(~2,737 organisations). **So we have roughly ONE PASS through the list, and 20 is
+reachable only if click→publish lands at about 5% or better.** Sending capacity is not
+the constraint (~4,000 sends available before the deadline); supply and conversion are.
+
+Hence the shape of the plan: **measure before spending.** Phase 1 (to 11 Sep) treats the
+130 apology recipients as the experiment and adds no volume — the webhook resolves opens
+and clicks by recipient, so their behaviour is captured even though that lane writes no
+'sent' row (denominator is 130, from sent_log.json). Phase 2 (to 18 Sep) fixes whatever
+drop-off Phase 1 exposes, as a class. Phase 3 (to 24 Oct) spends the list only if the
+measured rate justifies it. A reserve week converts whoever is mid-flow.
+
+**A decision gate is written in, at the END of Phase 1 rather than the end of October:**
+under 2,000 implied emails, proceed; 2,000–3,800, proceed but line up more supply now;
+over 3,800, stop and say plainly that 20 is not reachable with this list. Bad news in
+mid-September is useful; bad news on 31 October is not.
+
+**One correction to yesterday's reading, on the record.** The 4 Sep wave's "no sendable
+prospects" on nine lanes was reported here as a supply drought. It was not: the AGENCY
+category was dry in those cities while the list still holds 1,509 teachers/trainers and
+159 tutors untouched. Rotate the category before concluding the list is empty. The plan
+carries that correction so the next session does not act on the wrong constraint.
+
+## 2026-09-04 — The onboarding goal becomes one goal, handed to an agent (RUL-096)
+
+David, after a review of Fable 5.1 on giving a model the whole task as a single Goal
+rather than steering it: *"set this up to start on schedule, Saturday 01:00... Give Fable
+all the accesses required and the permissions set to auto. No restrictions other than what
+has been defined in the onboarding goal."*
+
+- **THE GOAL** — `ONBOARDING_GOAL.md`: 20 people we contacted cold publish a live listing
+  **by their own hand** by Fri 31 Oct 2026. Baseline PROBED 4 Sep = **0**. Method is the
+  agent's and is never put to David.
+- **SCORED BY TWO PROBES** that must agree, never by self-report: `prospects.published_at IS
+  NOT NULL` (read-only) AND the listing visible to a logged-out member of the public.
+  PROBED 4 Sep: the launch gate is DOWN (`/`, `/listings`, `/flags` all 200 anonymously), so
+  both probes run from any sandbox — no SSH, no browser, no David screenshot.
+- **ANTI-GAMING IS PART OF THE GOAL**: real humans from our outreach only; neither Claude nor
+  David may create the listing; no paid ads, incentives or bought traffic; no relabelling of
+  seeded rows. A truthful 4 beats a manufactured 20.
+- **GOAL_STATE.md** — new: the agent's memory between runs, capped at 60 lines, so a fresh
+  session orients for a few hundred tokens instead of thousands. Carries the number, the
+  leaks, what the last run did, and a "things already tried that did not work" list so no
+  future run repeats a dead end.
+- **COST FENCE** (the one hard limit): subscription only; never enable, request or consume
+  Usage Credits; never ask David to buy capacity; on hitting the limit stop cleanly, save
+  state, resume next window. Anything that repeats belongs on the host scheduler or the
+  server, never in a paid session.
+- **ALLOWLIST WIDENED by 5 SUPPLY/HYGIENE entries only** (run_wave2_unattended,
+  run_local_scraper, deploy_citylauncher, fill_wave_gaps, clean_junk_emails). **NO new
+  sending authority** — outreach still goes only through the already-permitted, fully gated
+  `launch_day_wave.bat`, which already covers all 14 live cities, so RUL-095(e) stands intact.
+  `rulings_check.py` RUL-096 now asserts the *absence* of the four unlisted send bats, so a
+  later session cannot quietly widen send power.
+- **SCHEDULE**: `trustsquare-onboarding-goal`, daily 01:00 SAST, first fire Sat 5 Sep 01:08.
+- **The floor is broken and the goal says so**: 546 emailed, 61 clicked, 0 published, because
+  self-serve listing has been impossible since 22 Jul (422 price-basis, RG-0249) and invitees
+  never received the AI draft (401 gate, RG-0250). First act is to ship those and prove one
+  end-to-end pass — not more outreach.
+
+Verified: `rulings_check.py` 93 rulings, 0 FAIL, RUL-096 reflected. `regression_ledger.py`
+no regressions (RG-0181/0182 not evaluated — this sandbox lacks `fastapi`, an environment gap,
+unrelated to this change).
+
+## 2026-09-04 — Maintenance loop: the instruments that were lying about themselves
+
+**Fault queue: empty.** 35 rows, none new, none awaiting a fix (26 verified · 7 closed ·
+2 duplicate). No tester fix work existed, so the session's items were the two instruments
+that were quietly misreporting their own state — the class this loop exists to catch.
+
+### CODE-STAMP-2 — the maintenance run could not say which code it ran (RG-0259, LOCKED)
+`/dashboard/maint` published `"code":"unknown (TimeoutExpired)"` on every sandbox run —
+on the one surface STALE-CODE-1 exists to keep truthful. Cause measured, not guessed:
+`_code_stamp()` ran three git legs inside ONE `try`, and `git status --porcelain` takes
+**21.0 s** on the /Projects FUSE mount against a **20 s** timeout, so the timeout escaped
+past a SHA that had already been read cleanly in 0.1 s. The legs are now independent, the
+slow one carries 300 s, and dirtiness we cannot measure reports `DIRTY-UNKNOWN` rather
+than defaulting to clean.
+*Evidence:* the failing action reproduced clean in-session — live `/dashboard/maint` for
+run `2026-09-04T05:48:17Z` reads `b26ca4d  DIRTY-WORKTREE  Daily watch 2026-09-04…`, where
+the run 13 minutes earlier read `unknown (TimeoutExpired)`.
+
+### LEDGER-BOOTSTRAP-1 — the board can no longer read blind (RG-0260, LOCKED)
+This session's first ledger run demoted RG-0181/RG-0182 to NOT EVALUATED for want of
+`fastapi` — the **third** recorded instance (DW-082 29 Aug, DW-083 30 Aug whose residual
+predicted the repeat, and today). MAINT-DEPS-1 built the cure and MAINTENANCE_AGENT.md
+ordered it "step 0, before the ledger", but that ordering lived only in prose, and the
+sandbox is ephemeral, so prose loses every time the tree is fresh. `main()` now calls
+`_ensure_instrument_deps()` before the first assertion — the same entry-point self-heal as
+`ssh_bootstrap.ensure_ssh()` and `git_unlock`. Never fatal, stderr only, `--no-bootstrap`
+opts out, RG-0187's honest demotion untouched.
+*Evidence:* re-run evaluated both entries with no separate bootstrap step — **0 UNVERIFIED**.
+
+### RG-0187 assertion CORRECTED, not weakened
+The new bootstrap tripped RG-0187 (`harness call site(s) still run a subprocess directly`)
+— its scanner was over-broad. A second carve-out now sits beside the BRAIN-PATH-1 one,
+keyed to the installer script's **name** (the call site was renamed `maint_deps_script` so
+the exception cannot be inherited by pasting a comment). Rationale recorded in the entry's
+ref: that call site is the dependency *installer*, it runs outside every entry so it
+colours no verdict, and it swallows its own failures. Anything that does colour a verdict
+is still caught.
+
+### RG-0236 — a FALSE "ready to lock" removed
+The board offered RG-0236 (outreach reply triage) for promotion while the entry's own ref
+sets the bar at *"PROBED on real traffic … shipped is not measured"*. The source checks
+could only see the lane was BUILT, so the board was nudging each session toward exactly the
+silent green this file exists to prevent. The bar is now machine-visible: absent
+`Records/OUTREACH_TRIAGE_MEASURED.md`, the entry stays honestly open. **Not promoted.**
+
+### Promotions (3) — passing OPEN entries locked per canon
+- **RG-0252** AUTODEPLOY-AGENT-1 — agent registered and ticking (log 2 min old), first request shipped.
+- **RG-0255** DEVTOGGLE-REMOVE-1 — served index carries no dev-toggle markup.
+- **RG-0258** LIVE-MAP-1 — `GET /geo/stays` answers with `as_of` (read 2026-09-04T05:34Z); every served map carries the layer.
+
+**Ledger:** before — 0 regressed but **2 NOT EVALUATED** ("not a green board"). After —
+**253 entries · 235 holding · 0 REGRESSED · 18 open · 0 ready to lock · 0 UNVERIFIED · exit 0**.
+**Rulings:** 93 checked, 0 FAIL, 3 WARN (RUL-093/094/095 carry no reflection assertions — pre-existing).
+**Escalation brief:** none written — no escalations in 24h.
+
+## 2026-09-04 — The Genie: proposed, prototyped, ruled, parked (RUL-097 / GENIE-FILTER-1)
+
+David proposed a floating AI "genie" search: tap it, get a circle of 3D category icons, pick one,
+get another circle of sub-types, then city, suburb, level, then deeper facets (chess: openings /
+middle game / endgame / speed / online). He asked whether it was too complex.
+
+**Built rather than argued.** `GENIE_SEARCH_CONCEPT.html` — both shapes tappable, 812 synthetic
+listings across the real seven categories using the real facet names (`subject`/`level`/`mode`/
+`area`, `make`/`yr`/`trans`, …), with a live meter reporting taps, full-screen steps and whether
+anything on screen is covered. Measured on "find a chess tutor": described wizard = 7 taps,
+5 full-screen steps, nothing for sale on screen until the last answer, lands on 1 result; helper
+shape = 2-4 taps, 1 full-screen step, listings visible throughout, lands on 12 then 3.
+
+**David's ruling (RUL-097):** *"Your idea is better Claude, and your reasons are valid. The genie
+should not cover any of the other selectors. Please write this up as a genie filter to be looked
+at again after we have a stable user base."*
+
+**REUSE-BEFORE-RECREATE CATCH — the important half.** A disk check before writing found
+`ZOOM_HMI_SPEC.md` (RUL-076, ratified 30 Aug, unbuilt, ledger RG-0221): one question at a time,
+true counts, zero-count options removed, singleton auto-collapse, typing as a shortcut through
+the funnel. That is the same design. The genie is therefore NOT a new feature and did NOT get its
+own spec — it is written up as **section 11 of the Zoom spec**: Zoom's front door and voice. It
+contributes exactly two things Zoom lacks — the pre-category circle of seven with true counts
+(Zoom opens *inside* a category) and a persona on the existing question sheet. Everything below
+the first tap stays section 3. A genie with its own narrowing logic would be a second search
+engine and every future facet would be built twice.
+
+**Covering rule (David's, binding):** inline band that takes its own space, never an overlay;
+search / category chips / filter / sort / trust / bottom bar stay live and hittable; exactly ONE
+full-screen moment (the opening ring, allowed only because nothing is selected yet); the orb
+parks where no control lives. This strengthens spec section 5 from "results are never hidden" to
+"nothing on screen is hidden — results or controls".
+
+**Cut:** circles below the top level (eight 84px nodes at 378px touch), real 3D models (CSS
+gradients give the look with no assets), the city/suburb questions (section 3.3 owns geography).
+**Kept automatically:** the chess-depth facets — the gain ranker only asks a facet that splits the
+set and auto-collapse skips one with a single answer, so depth appears when stock supports it.
+
+**Deferred to a STOCK trigger, never a calendar date:** Zoom armed in the field (David's act) AND
+all seven categories non-zero in a typical user's city AND ~30 days of funnel behaviour to compare
+against. A ring showing 0 on four of seven advertises an empty shop. Filed in `BACKLOG.md`'s
+deferred list (surfaced in the morning brief).
+
+**Machinery:** RULINGS.md RUL-097; `rulings_check.py` reflection entry (green, 0 FAIL);
+RG-0221 scope extended with acceptance criteria 12-15, three new spec needles
+("front door, not a second funnel" · "the genie never covers a selector" · "never a calendar
+date") and `GENIE_SEARCH_CONCEPT.html` added to the must-survive prototype list — RG-0221 harness
+re-run in isolation, 0 FAIL, still PENDING BUILD by design.
+
+**Deliverable:** `Genie Filter — nice.docx` (Professional Navy house style).
+
+**Verified:** `node --check` on the extracted script; jsdom drives both shapes end to end —
+ring renders 7 balls with correct counts, chips narrow the grid, a zero-count chip is inert and
+toasts instead, the category chips and filter pills still act with the genie band open, the band
+is proven non-absolute (`position` is not absolute/fixed), tag removal restores — zero console
+errors. `python3 -m py_compile` on both edited scripts. Indexed into `Projects/Visuals`.
+
+**Not done:** nothing wired into `ms.js` / `marketsquare.html` / `bea_main.py`. No flag, no
+deploy. This is a decision and a design only.
+
+## 2026-09-04 — ENGAGED-RESEND-1: the apology lane, and the stale-roster trap
+
+**David granted new sending authority, in his own words:** *"i think we should at least
+resend the ones that did open their emails?"* Added to `host_queue/ALLOWLIST.txt` with
+those words attached, as RUL-095 requires. Read "at least" as a floor, so the roster is
+status **opened OR clicked**, not opened alone — the clickers went one step further and
+met the browser password box, and are owed the apology most. Not the 338 who only
+received it; not the bounced, opted-out or rejected.
+
+**RG-0265 LOCKED — the trap this lane nearly walked into.** Building it, the local
+prospects.db showed **18 openers where the live server showed 133** (103 opened + 30
+clicked). Engagement is recorded server-side, because that is where the tracking pixel
+and the click redirect land. Running the existing script as it stood would have quietly
+mailed the wrong 18 people, printed a success line and returned 0 — the same failure
+shape as WAIT-REDIR-1 earlier the same day: a run that completes, exits clean, and did
+not do the thing. The order of operations IS the fix, so it is asserted rather than
+remembered: `resend_broken_link_now.bat` runs `pull_from_server.py` first and exits
+non-zero if the pull fails, then dry-runs the roster, then sends.
+
+Two guards added for unattended running: the default selection widened to the engaged
+set (`status IN ('opened','clicked')`), and **ROSTER-FENCE-1** — `--send` refuses
+outright if the roster exceeds `--max-roster` (250). A refusal, never a truncation: half
+a wrong wave is still a wrong wave. The bat carries no `pause` and no `timeout /t`, per
+RG-0262. Everything else is inherited unchanged from emailer.py: suppression register,
+junk / government / privacy-officer filters, opt-out link, per-row abort on any link
+still pointing at /admin.html, plus the script's own JOURNEY-1 gate that walks the
+prospect path before it will send at all.
+
+RG-0265's own assertion was wrong on first run and fixed in the same session: it matched
+the bat's REM comment describing the ordering instead of the command performing it, and
+cried wolf. It now reads the command list only.
+
+## 2026-09-04 — ENGAGED-RESEND-1 corrected: the roster came from the wrong column
+
+The apology lane ran, exited 0, and mailed **18 people when 140 qualified**. Nothing
+errored. The pull ran and worked. The lane simply asked the wrong question.
+
+`prospects.status` is a SEND-STATE machine, not an engagement record. `pull_from_server.py`
+carries opens and clicks down into `email_events` and **deliberately never writes them back
+over send history** — its own comment says "never rewrite send history, only stop future
+sends". So `status='opened'` held 18 stale rows from an old wave while `email_events` held
+**157 engaged people**. Selecting on the column reached the wrong 18.
+
+**My own assertion passed on the wrong thing.** RG-0265 leg (a) checked that the pull
+PRECEDED the pick — which was true — and never checked that the pick read what the pull had
+delivered. *An ordering assertion is not an outcome assertion.* That is the transferable
+lesson from today, and it is the second time in one session the same shape appeared: a run
+that completes, returns 0, and did not do the thing (WAIT-REDIR-1 was the first).
+
+Corrected: the roster now comes from `email_events` (opened or clicked), restricted to
+still-mailable states. **NEVER-TWICE-1** added at the same time — the lane had no memory, so
+running unattended it would apologise to the same people on every tick. It now reads the
+sent log and excludes anyone already contacted by *either* follow-up lane
+(`CTA-URL-1-relink`, `HUMAN-CLICKS-1-followup`), and **fails closed** if the log cannot be
+read rather than risk a second apology.
+
+Roster after correction: 140 engaged, minus 29 already followed up, **111 to send**. The 18
+already contacted are excluded by the new guard and will not hear from us twice.
+RG-0265 leg (b) now demands the roster be built from the evidence table, so this exact miss
+trips the board red rather than passing quietly.
+
+## 2026-09-04 — The club letter: built, wired, rendered — and waiting on one word
+
+The club lane now runs end to end, dry. What was missing after SPORTS-CLUBS-1 was not
+permission, it was three artefacts that did not exist yet, and they exist now:
+
+- **`emailer/templates/sports_club_outreach.html`** — the club letter. Registered under a
+  new `Sports Clubs` category in the template and subject maps. PROVED by rendering it
+  through the real `emailer.render()` against a real scraped club row: no merge field left
+  unfilled, magic link at the app root (never /admin.html, RG-0239), unsubscribe present.
+  The localiser correctly REFUSED the first attempt because the test row said country
+  "South Africa" rather than "ZA" — the fail-closed guard doing its job on a dry run.
+- **`club_import.py`** — the harvest into the live pool. Dry by default, `--commit` to
+  write. Applies one-per-club before insert so the pool never carries rows the sender would
+  only hold later. 577 addresses → **313 clubs** (Pretoria 212, Cape Town 101).
+- Both cities are already armed with gates green, so no policy change is needed.
+
+**Nothing is in the database and nothing has been sent.** That ordering is deliberate and
+worth stating: reading a public page costs nothing and is undone by deleting a file, but
+putting 313 named volunteers into the prospect store is real personal-data processing, and
+deletions are reserved to David (RUL-096(f)). So the harvest waits in gitignored CSVs until
+the letter is approved. Code first, data second.
+
+**What is actually blocking the send is the letter, and only the letter.** It goes out over
+David's name to 313 strangers as their first impression of TrustSquare — commercial
+positioning and sending to third parties, both reserved under RUL-096(f). Not a legal gate:
+RUL-052 settled that, and this agent put the counsel blocker up twice by reflex before
+David corrected it. To make the review a read rather than a writing task, the draft is in
+his house style as `Letter to the Clubs — nice.docx`, with every claim tabled against the
+canon that backs it.
+
+**Recommended order, as a technical call:** send the already-reviewed 17 provincial letters
+now, and do NOT wait on their replies before mailing the clubs. Volunteers answer slowly,
+the club preparation takes days anyway, and that natural gap is the courtesy. The federation
+route also scores nothing toward the 20 — anyone arriving via a forwarded paragraph was
+never contacted by us and `onboarding_number.py` will exclude them.
+
+## 2026-09-04 — ASSOC-EXAMPLE-1: David's SABIO page, turned into a generator
+
+David hand-built a worked example page for SABIO — bee removals, mock listing cards, the
+Trust Score ladder, what is shown and what is never published — and then made the
+observation that turns it into machinery: *"There would similar examples for every type of
+club, the chess tutors, the Judo clubs etc."* So it is a generator, not fifty hand-made
+pages.
+
+`scripts/assoc_example_page.py` + `scripts/assoc_specs.json` build a SABIO-shaped page for
+any membership body from a short spec. Six are written and rendered into
+`visuals/assoc/`: chess, judo, athletics, dance, plumbers, tour guides.
+
+**The finding that came out of building it.** Writing the specs meant checking each
+credential against the live signal tables in `bea_main.py`, and two of the six need
+NOTHING built:
+
+- **Plumbers (IOPSA)** — PIRB trade licence +12, professional body registration +12, formal
+  trade certificate +8, public liability +5, CIPC +5 are all ALREADY scored. A member can
+  list tonight and reach 100 — Highly Trusted — with no work on our side.
+- **Tour guides** — provincial registration +12, CATHSSETA +8, first aid +6, indemnity
+  insurance +5, 3+ languages +4. Same story.
+
+Chess, judo, athletics and dance each need one or two additions (FIDE trainer title, JSA
+coaching licence, ASA coaching licence, teaching diploma) and their pages say so plainly.
+Chess is the strongest of those because the registry already exists: 4,237 verified FIDE
+trainer rows sit in CityLauncher awaiting FIDE-CLAIM-1.
+
+**RG-0267 LOCKED — the honesty rule, which is David's, taken from his own page.** His SABIO
+page marked DALRRD and SABIO membership as *proposed* and stated "they are not on our
+credential list". That discipline is now asserted: the generator must keep its LIVE and
+PROPOSED tags and its honesty paragraph, every spec must declare both lists, and the COLD
+EMAIL may name live badges only. A page may responsibly propose a badge — it is a proposal,
+sent to the body that would define it. A letter may not, because nobody is there to read
+the caveat. The failure this prevents is quiet and expensive: an association tells its
+members a badge exists, members list expecting it, and it never appears.
+
+**The letter now carries one card, not a brochure.** The club email gains a single mock
+listing — title, score, three live badges, price — plus a line pointing at the full worked
+page for that sport. Keyed off the federation the row was scraped from. Rendered against a
+real scraped club: no merge field left unfilled.
+
 ## 2026-09-04 — DW-091 closed: the DEMO tab is back on all 15 demo maps, and the ledger that grades it was dark
 
 **The open action, closed with evidence.** `RG-0141` reads `[  ok  ]` on a live run — info
