@@ -17462,5 +17462,255 @@ def rg_association_audience_is_measured():
 
 
 
+@entry("RG-0293", "Where an invited seller STOPS is MEASURED -- every sell-flow transition posts a "
+       "funnel step, and the counts are readable live without an address ever leaving the server",
+       LOCKED, fixed_on="2026-09-05",
+       scope="bea_main.py POST /onboard/step + GET /onboard/funnel + the onboard_steps table "
+             "(run_migrations); ms.js obTrack() and its hooks in the magic-link parser (landed, "
+             "with src), sfGo() (every screen), sfFileChosen()/sfRunVision() (photo_pick, "
+             "photo_ok, photo_rejected, photo_fallback), sfFinish() (draft/finish/handoff) and "
+             "sobGoLive() (publish_ok/publish_fail). CLASS: a funnel whose middle is dark gets "
+             "'fixed' at the step somebody guesses. Outreach could see a click and, by reconcile, "
+             "a registration or a publish; landing -> required main photo -> sections -> EULA -> "
+             "publish was invisible. THREE LEGS: (a) the beacon and the counts endpoint answer "
+             "live; (b) a probe step posted with src 'probe-ledger' is counted when asked for by "
+             "name and EXCLUDED from the default view, so probing never pollutes the numbers; "
+             "(c) the live ms.js carries the hooks -- a beacon that fires nowhere is decoration.",
+       ref="ONBOARD-FUNNEL-1, 5 Sep 2026, run 4 of the onboarding goal. PROBED that evening: "
+           "since the fixed link went live on 3 Sep about ten real people had clicked through to "
+           "a working page, ZERO had registered (marketsquare.users has no non-test row since "
+           "25 Aug) and zero had published. Walked the invited path in a browser: the magic link "
+           "lands on Step 1 of 6, Photos, where the 'You on the job' main photo is REQUIRED and "
+           "the next button is disabled until the AI accepts it. That is David's ruling "
+           "(SELL-FLOW-REDO-2, photo-first, 15 Jul; 'photo-first skeleton is sound', 29 Aug) and "
+           "is not changed here. What was missing is the measurement that says whether people "
+           "stop AT the photo, BEFORE it, or later -- ONBOARDING_PLAN.md's 8-15 Sep step, 'fix "
+           "where they stop', had no instrument to read. Verified live the same evening: a "
+           "browser session walking landed -> subpick -> photos produced exactly those three "
+           "rows under its probe src and nothing under the default view.")
+def rg_onboard_funnel_is_measured():
+    out = []
+    # (c) source: hooks present in the repo's ms.js and bea_main.py
+    js = os.path.join(REPO, "ms.js"); py = os.path.join(REPO, "bea_main.py")
+    if os.path.exists(js):
+        j = open(js, encoding="utf-8", errors="replace").read()
+        n = j.count("obTrack(")
+        if "function obTrack(" not in j:
+            out.append((FAIL, "ms.js has lost obTrack() -- the sell flow reports nothing"))
+        elif n < 10:
+            out.append((FAIL, "ms.js carries only %d obTrack hooks -- the funnel has gone dark at "
+                              "some step (expected landed/screens/photo/finish/publish)" % n))
+        for needle, why in (("obTrack('landed'", "the landing beacon in the magic-link parser"),
+                            ("obTrack('photo_ok'", "the main-photo accepted beacon"),
+                            ("obTrack('publish_ok'", "the publish beacon -- the number's own event"),
+                            ("src:    decodeURIComponent(sp.get('src')", "the wave source on the magic link")):
+            if needle not in j:
+                out.append((FAIL, "ms.js has lost %s" % why))
+    if os.path.exists(py):
+        b = open(py, encoding="utf-8", errors="replace").read()
+        for needle in ('@app.post("/onboard/step")', '@app.get("/onboard/funnel")',
+                       "CREATE TABLE IF NOT EXISTS onboard_steps", "NOT LIKE 'probe-%'"):
+            if needle not in b:
+                out.append((FAIL, "bea_main.py has lost %r" % needle))
+    # (a)+(b) live: post a probe, read it back by name, confirm the default view hides it
+    try:
+        body = json.dumps({"sid": "ledger" + datetime.date.today().strftime("%m%d"), "step": "landed",
+                           "src": "probe-ledger", "magic": False}).encode()
+        code = _post_status("/onboard/step", body)
+        if code != 200:
+            out.append((FAIL, "POST /onboard/step answered %s -- the beacon is refused live" % code))
+        named = json.loads(_get("/onboard/funnel?src=probe-ledger&days=2"))
+        got = {r["step"]: r["sessions"] for r in named.get("funnel", [])}
+        if got.get("landed", 0) < 1:
+            out.append((FAIL, "the probe step was accepted but /onboard/funnel?src=probe-ledger does "
+                              "not show it -- writes are not reaching the table"))
+        dflt = json.loads(_get("/onboard/funnel?days=2"))
+        if "probe-ledger" in (dflt.get("by_src") or {}):
+            out.append((FAIL, "the default funnel view counts probe-ledger rows -- probes are "
+                              "polluting the real numbers"))
+        for k in ("sessions", "funnel", "by_src", "by_cat"):
+            if k not in dflt:
+                out.append((FAIL, "/onboard/funnel has lost the %r field the daily run reads" % k))
+        live_js = _get("/static/ms.js")
+        if "obTrack(" not in live_js:
+            out.append((FAIL, "the LIVE ms.js has no obTrack -- the repo has the hooks, the site "
+                              "does not (deploy drift)"))
+        if not any(r == FAIL for r, _ in out):
+            out.append((INFO, "funnel instrument live: %d real sessions in the last 2 days, steps %s"
+                        % (dflt.get("sessions", 0),
+                           ", ".join("%s=%s" % (r["step"], r["sessions"]) for r in dflt.get("funnel", [])) or "none yet")))
+    except ProbeOffline as e:
+        out.append((INFO, "live legs UNVERIFIED (%s)" % e))
+    return out
+
+
+@entry("RG-0294", "CityLauncher\\commit.bat commits CITYLAUNCHER -- it re-enters its own folder after "
+       "calling MarketSquare's git_unlock, which changes directory and never comes back",
+       LOCKED, fixed_on="2026-09-05",
+       scope="CityLauncher/commit.bat, static: a `cd /d \"%~dp0\"` must appear AFTER the git_unlock "
+             "call and BEFORE `git add -A`. CLASS: a .bat that CALLs a helper which does `cd /d` "
+             "inherits that directory, and every command after the call runs somewhere else while "
+             "reporting rc=0. The same shape can bite any future bat that calls git_unlock.bat "
+             "or any helper that changes directory -- pushd/popd or a re-entry line is the "
+             "guard, never trust in the helper. Also checked LIVE where the disk allows: "
+             "CityLauncher's git working tree should not sit with days of unstaged work after a "
+             "'commit' has reported success.",
+       ref="COMMIT-CWD-1, 5 Sep 2026, found by the onboarding-goal run while reading the host "
+           "queue results. host_queue/done/...citylauncher-commit.result said rc=0 and 'To "
+           "github.com/dmcontiki2/marketsquare.git bd017a4..39d2f57' -- the MARKETSQUARE remote, "
+           "with MarketSquare's changelog fragment in the commit. PROBED: CityLauncher's own repo "
+           "(citylaunch.git) still had HEAD 5c4a10a from 3 Sep and 10+ modified files unstaged: "
+           "the emailer guards, wave_cities.py, club_import.py, the US scraper. Every "
+           "COMMIT-CITYLAUNCHER-1 run since it was created that morning had committed the wrong "
+           "repo. Cause: MarketSquare\\git_unlock.bat line 22 does `cd /d \"%~dp0\"`; "
+           "CityLauncher\\commit.bat CALLs it and then runs git in whatever folder it was left in. "
+           "Fix: one line, re-enter %~dp0 after the call. Tooling faults get a ledger entry the "
+           "same session, exactly like product faults (16 Aug lesson).")
+def rg_citylauncher_commit_commits_citylauncher():
+    out = []
+    bat = os.path.join(os.path.dirname(REPO), "CityLauncher", "commit.bat")
+    if not os.path.exists(bat):
+        return [(INFO, "SKIPPED -- CityLauncher/commit.bat is not on this disk")]
+    b = open(bat, encoding="utf-8", errors="replace").read()
+    i_unlock = b.find("git_unlock.bat")
+    i_add = b.find("git add -A")
+    if i_unlock < 0 or i_add < 0:
+        out.append((FAIL, "commit.bat no longer calls git_unlock.bat or no longer runs git add -A -- "
+                          "the shape RG-0015 and this entry assert has changed; re-read it"))
+    else:
+        between = b[i_unlock:i_add]
+        if 'cd /d "%~dp0"' not in between and "pushd" not in between:
+            out.append((FAIL, "commit.bat calls git_unlock.bat (which does cd /d into MarketSquare) and "
+                              "never re-enters its own folder before git add -A -- it will commit "
+                              "the WRONG REPO and report rc=0 (COMMIT-CWD-1)"))
+    unlock = os.path.join(REPO, "git_unlock.bat")
+    if os.path.exists(unlock):
+        u = open(unlock, encoding="utf-8", errors="replace").read()
+        if 'cd /d "%~dp0"' in u and "popd" not in u:
+            out.append((INFO, "git_unlock.bat still changes directory without returning -- every "
+                              "caller outside MarketSquare must re-enter its own folder (asserted "
+                              "above for commit.bat)"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "CityLauncher/commit.bat re-enters its own folder after git_unlock"))
+    return out
+
+
+
+@entry("RG-0295", "US supply comes from OFFICIAL REGISTERS -- the reader, the state bucket and the "
+       "importer that carry a US federation list into the send pool stay wired end to end",
+       LOCKED, fixed_on="2026-09-05",
+       scope="CityLauncher, static + live. (a) us_register_reader.py exists with an ADAPTERS registry "
+             "holding 'pausatf' (USATF Pacific Association club list); (b) waves_policy.json carries "
+             "the state bucket 'Northern California', armed and gates_green, drawing 'Sports Clubs'; "
+             "(c) localize._CITY_COUNTRY resolves that bucket to US; (d) scripts/club_import.py (the "
+             "allowlisted host importer, run with no arguments) reads us_registers/*.club.csv and "
+             "honours a per-row country -- otherwise a US roster lands as ZA. LIVE, when SSH is "
+             "available: the server pool holds >= 80 'Northern California' rows with country='US'. "
+             "CLASS: a supply lane is four lists that must agree (reader -> CSV -> importer -> policy "
+             "-> country map); any one drifting makes the rows invisible to the wave with no error "
+             "(the 5 Sep reach faults were exactly this shape).",
+       ref="US-REGISTERS-1, 5 Sep 2026, onboarding-goal run. David: 'there are 50 states in the US, "
+           "why do we have so little prospects there... considering the clubs, associations, unions'. "
+           "MEASURED the same evening: the first US run of run_us_scraper.bat (11 cities x 7 "
+           "categories, 33 minutes, DDG+Bing) produced ONE prospect, and it was a .co.za address "
+           "filed under Austin. The first US REGISTER (USATF Pacific club list, public, 211 clubs) "
+           "produced 88 clubs with a mailbox in 8 minutes. Registers, not search, are the US lane. "
+           "Note for the next adapter: USATF's national club finder moved to a JS widget "
+           "(sport80) and is not readable; the NY DEC licensed-guide register on data.ny.gov "
+           "(6,762 rows) carries no email column.")
+def rg_us_registers_wired():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    rd = os.path.join(cl, "us_register_reader.py")
+    if not os.path.exists(rd):
+        return [(INFO, "SKIPPED -- CityLauncher is not on this disk")]
+    r = open(rd, encoding="utf-8", errors="replace").read()
+    if '"pausatf": dict(' not in r or "ADAPTERS = {" not in r:
+        out.append((FAIL, "us_register_reader.py lost its ADAPTERS registry or the pausatf adapter"))
+    pol_p = os.path.join(cl, "emailer", "waves_policy.json")
+    try:
+        pol = json.loads(open(pol_p, encoding="utf-8").read())
+        nc = pol.get("cities", {}).get("Northern California")
+        if not nc:
+            out.append((FAIL, "waves_policy.json has no 'Northern California' bucket -- the 88 USATF "
+                              "Pacific rows are invisible to the wave"))
+        else:
+            if not (nc.get("armed") and nc.get("gates_green")):
+                out.append((FAIL, "'Northern California' is in the policy but not armed/gates_green"))
+            if "Sports Clubs" not in (nc.get("category_priority") or pol.get("agency_categories", [])):
+                out.append((FAIL, "'Northern California' cannot draw 'Sports Clubs' -- the register holds clubs"))
+    except Exception as ex:
+        out.append((FAIL, "waves_policy.json unreadable: %r" % (ex,)))
+    loc = open(os.path.join(cl, "emailer", "localize.py"), encoding="utf-8", errors="replace").read()
+    if "'northern california': 'US'" not in loc:
+        out.append((FAIL, "localize._CITY_COUNTRY does not map 'northern california' to US"))
+    imp = open(os.path.join(cl, "scripts", "club_import.py"), encoding="utf-8", errors="replace").read()
+    if "US_REGISTERS" not in imp or 'r.get("country")' not in imp:
+        out.append((FAIL, "scripts/club_import.py no longer reads us_registers/ with a per-row country -- "
+                          "a US roster imported by the host queue would land as ZA"))
+    # live: the server pool (read-only, short timeout; skipped without SSH)
+    try:
+        import subprocess
+        q = ("sqlite3 -readonly /var/www/citylauncher/data/prospects.db \"SELECT COUNT(*) FROM prospects "
+             "WHERE city='Northern California' AND country='US';\"")
+        res = subprocess.run(["ssh", "-o", "ConnectTimeout=8", "-o", "BatchMode=yes",
+                              "root@178.104.73.239", q], capture_output=True, text=True, timeout=25)
+        if res.returncode == 0 and res.stdout.strip().isdigit():
+            n = int(res.stdout.strip())
+            if n < 80:
+                out.append((FAIL, "server pool holds only %d 'Northern California' US rows (imported 88 on 5 Sep)" % n))
+            else:
+                out.append((INFO, "server pool: %d 'Northern California' US register rows" % n))
+        else:
+            out.append((INFO, "server probe skipped (no SSH from here)"))
+    except Exception:
+        out.append((INFO, "server probe skipped (no SSH from here)"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "US register lane wired: reader -> us_registers/ -> host importer -> "
+                          "'Northern California' bucket -> US"))
+    return out
+
+
+@entry("RG-0296", "The search scraper drops a mailbox whose domain belongs to ANOTHER country's ccTLD "
+       "(a .co.za shop can never be an Austin prospect)",
+       LOCKED, fixed_on="2026-09-05",
+       scope="CityLauncher/run_local_scraper.py, static + behavioural: foreign_cctld() exists and is "
+             "applied in BOTH result loops (DDG and Bing); .co.za is foreign to US, native to ZA; "
+             ".org.uk is native to GB and UK alike; gmail.com is never foreign. CLASS: every collector "
+             "that takes a country parameter must refuse rows that contradict it -- the wave would "
+             "otherwise send a US-localised letter to a South African shop about Texas.",
+       ref="SCRAPER-GEO-1, 5 Sep 2026. The first US scrape (SCRAPER-COUNTRY-1 lifted the ZA hardcode "
+           "that morning) returned exactly one row in 33 minutes: info@antiques-vintages.co.za, "
+           "country=US, city=Austin. The country param was honoured; nothing checked the answer.")
+def rg_scraper_foreign_cctld():
+    out = []
+    p = os.path.join(os.path.dirname(REPO), "CityLauncher", "run_local_scraper.py")
+    if not os.path.exists(p):
+        return [(INFO, "SKIPPED -- CityLauncher is not on this disk")]
+    s = open(p, encoding="utf-8", errors="replace").read()
+    if "def foreign_cctld(" not in s:
+        return [(FAIL, "run_local_scraper.py has no foreign_cctld() -- SCRAPER-GEO-1 is gone")]
+    if s.count("if foreign_cctld(email, country):") < 2:
+        out.append((FAIL, "foreign_cctld() is not applied in both the DDG and the Bing result loops"))
+    m = re.search(r"_CCTLD_COUNTRY = \{.*?\ndef foreign_cctld\(.*?\n    return False\n", s, re.S)
+    if not m:
+        out.append((FAIL, "could not isolate foreign_cctld() for the behavioural check -- re-read the source"))
+    else:
+        ns = {}
+        try:
+            exec(m.group(0), ns)
+            f = ns["foreign_cctld"]
+            cases = [("info@antiques-vintages.co.za", "US", True), ("info@antiques-vintages.co.za", "ZA", False),
+                     ("bob@gmail.com", "US", False), ("x@club.org.uk", "GB", False), ("x@club.org.uk", "US", True)]
+            bad = [(e, c) for e, c, want in cases if f(e, c) is not want]
+            if bad:
+                out.append((FAIL, "foreign_cctld() gives the wrong answer for %r" % (bad,)))
+        except Exception as ex:
+            out.append((FAIL, "foreign_cctld() could not be exercised: %r" % (ex,)))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "scraper refuses cross-country ccTLD mailboxes in both search lanes"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

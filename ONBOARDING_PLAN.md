@@ -79,15 +79,27 @@ and *distinct human clickers* for the previous night. The single question is cli
 Import the clubs, then let Pretoria and Cape Town draw from them.
 
 **8 → 15 Sep. FIX WHERE THEY STOP.**
-By now the funnel has a real denominator. Fix the one step that loses the most people, as a
+By now the funnel has a real denominator — and since 5 Sep evening it has an INSTRUMENT: every
+step of the guided sell flow (landing, sub-choice, the required main photo accepted or rejected,
+each section, draft, publish) is counted live at `GET https://trustsquare.co/onboard/funnel`
+(counts only, no addresses). Read it every morning next to the number. Known before the
+instrument existed: about ten real people clicked a working link between 3 and 5 Sep and none
+registered; the invited path lands on Step 1 of 6 where a photo of yourself at work is required
+before the next button works. Whether they stop there is now a reading, not a guess. Fix the one step that loses the most people, as a
 class and not an instance. If click → publish is above 15%, the arithmetic works and the job is
 volume. If it is below 10%, no amount of sending reaches 20 and the answer is the product, not
 the list.
 
 **15 Sep → 24 Oct. SPEND, THEN REFILL.**
-The 1,441 are gone in about 11 sending nights. From mid-September the binding constraint is
-genuinely supply for the first time, and `run_local_scraper.bat` and the club/federation lanes
-earn their place. Aim scraping at whatever vertical the measured rate says converts.
+The 1,441 are gone in about 11 sending nights at a flat 12 — about 5 at the ramp's own pace
+(measured 5 Sep evening). From around 10 September the binding constraint is genuinely supply
+for the first time. **Refill comes from REGISTERS, not from search scraping — measured, not
+assumed (5 Sep, 19:24):** the first-ever US run of `run_us_scraper.bat` searched 11 cities × 7
+categories for 33 minutes and found **one** address, and that one was a South African shop
+mis-filed under Austin. General search scraping is structurally dead for the US; it stays a
+ZA-only top-up. The club/federation/association lanes (the register reader and the club
+importer) are the supply engine. Aim registers at whatever vertical the measured rate says
+converts.
 
 **24 → 31 Oct. STOP ADDING, START CLOSING.**
 No new lanes. Follow up the people who clicked and did not publish.

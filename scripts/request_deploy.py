@@ -69,6 +69,11 @@ def status():
 def main():
     args = [a for a in sys.argv[1:]]
     if '--status' in args: return status()
+    # HELP-IS-NOT-A-DEPLOY (5 Sep 2026): `--help` used to fall through and SHIP HEAD -- an
+    # unattended run asking for usage advanced the deploy ref (harmless that time: HEAD was
+    # already-committed work, health-checked and auto-rollback). Usage is never an action.
+    if '--help' in args or '-h' in args:
+        print(__doc__.strip()); return 0
     cl = '--cl' in args; args = [a for a in args if a not in ('--cl', '--all')]
     reason = ' '.join(args).strip() or 'no reason given'
     stamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%MZ')
