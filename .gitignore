@@ -180,3 +180,6 @@ fw_selfheal_log.txt
 host_queue/*.req
 host_queue/done/
 host_queue/worker_log.txt
+
+# AGENT-HEARTBEAT-1 (5 Sep 2026): rewritten every 20 min by autodeploy_agent.bat.
+host_queue/agent_heartbeat.txt

@@ -73,14 +73,14 @@ gate is at the end of Phase 1. We have roughly one pass through the list.
 0. **Read the 00:10 wave log** (`CityLauncher/logs/launchday_06Sun09_*.log`) and the
    result of the queued stop-loss clean in `MarketSquare/host_queue/done/`. Then run
    the number. Then read opens/clicks for the ~62.
-1. **The host agent was idle when this run ended** — last tick 00:11 SAST, three
-   requests still queued (stop-loss clean, both commits). No stale lock, no error
-   line; the PC was almost certainly asleep at 01:40 on a Saturday. The queue drains
-   itself on the next tick. RG-0257 is red for exactly this and clears on its own.
-   The 00:10 wave does NOT depend on the agent — it is a separate scheduled task and
-   reads the working tree, which already carries today's changes.
-2. If the four cleaned cities are still latched, the clean failed — read the result
-   file, do not re-queue blind. Until it runs, tonight sends ~41 rather than ~62.
+1. ~~The host agent looked dead at the end of run 2~~ — **it was not, and the
+   instrument was wrong, not the agent.** All three requests ran at 01:51 SAST, rc=0,
+   18 minutes after being queued. The agent only writes to its log when it has work,
+   so silence meant an empty queue. Fixed both halves: the agent now stamps a
+   heartbeat every tick, and the check judges how long a *request* has waited.
+   **Do not read log silence as a dead agent.**
+2. The stop-loss clean ran and **released all four latched cities** (probed 08:50
+   SAST). 12 of 14 lanes pass; New York clears its one-day gap tonight.
 2. RG-0263 (`LAUNCH_API_KEY`) is **no longer the supply blocker** and should not be
    treated as urgent. Supply exists; it was reach that was broken.
 3. Still unproven as ONE walk: seller form → save → publish → visible logged out.

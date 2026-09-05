@@ -20,6 +20,16 @@ set "CLRESULT=%~dp0CL_DEPLOY_RESULT.txt"
 
 set "HQ=%~dp0host_queue"
 
+:: AGENT-HEARTBEAT-1 (5 Sep 2026): stamp EVERY tick, before any work and whether or not
+:: there is any. The worker below is only CALLED when a .req exists, so an idle agent
+:: writes nothing to the log -- and "the log is quiet" was being read as "the agent is
+:: dead". On 5 Sep that misread put a false REGRESSION on the fact board and a wrong
+:: sentence in a report to David: the agent was ticking normally and picked the request
+:: up 18 minutes later, exactly as designed. Aliveness is now MEASURED, not inferred
+:: from work the agent happened to have. One line, overwritten, gitignored.
+if not exist "%HQ%" mkdir "%HQ%" >nul 2>&1
+> "%HQ%\agent_heartbeat.txt" echo %date% %time%
+
 :: HOST-QUEUE-1 (RUL-095): permission-backed requests Claude cannot run from the sandbox
 :: (git push with David's credentials, DB-writing bats). Allowlist + permission line enforced
 :: by the worker; results in host_queue\done\. Runs BEFORE deploys so a push lands first.

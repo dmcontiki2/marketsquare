@@ -14639,8 +14639,15 @@ def rg_admin_tuppence_grant_path():
              "scripts/host_queue_worker.py REFUSES a request without a permission= line and REFUSES an "
              "action/arg not on the allowlist (both strings present); scripts/request_host_action.py requires "
              "--permission; autodeploy_agent.bat calls the worker BEFORE the deploy legs and AFTER git_unlock. "
-             "LIVE leg: while a *.req is pending, autodeploy_agent_log.txt must have activity < 40 min old. "
-             "OPEN until the first real request lands DONE in host_queue/done/ -> READY TO LOCK.",
+             "LIVE leg, CORRECTED 5 Sep 2026 (AGENT-HEARTBEAT-1): aliveness is read from the "
+             "heartbeat autodeploy_agent.bat stamps on EVERY tick, and lateness from how long a "
+             "*.req has waited -- never from silence in autodeploy_agent_log.txt. The agent only "
+             "calls the worker when a .req already exists, so an idle agent logs NOTHING and log "
+             "silence is the normal state of a healthy agent with an empty queue. The old wording "
+             "read that silence as death: three requests queued at 01:33 SAST on 5 Sep were picked "
+             "up at 01:51 on the very next tick, all rc=0, and the board had already painted a "
+             "REGRESSION and a wrong sentence had gone to David in a report. A false alarm costs "
+             "the same trust as a false green -- RG-0133's rule, other direction.",
        ref="ASSERTION FIXED 4 Sep 2026: the bat-order check read the header comment (line 6 names "
            "nightly_tsl.bat) and painted a false REGRESSION; it now judges code lines only. "
            "RUL-095, 3 Sep 2026, David: 'remove all of these your clicks... self pain inflicting rules, all "
@@ -14678,14 +14685,49 @@ def rg_host_queue():
     qdir = os.path.join(REPO, "host_queue")
     pending = [f for f in os.listdir(qdir)] if os.path.isdir(qdir) else []
     pending = [f for f in pending if f.endswith(".req")]
-    log = os.path.join(REPO, "autodeploy_agent_log.txt")
-    if pending and os.path.exists(log):
-        import time as _t
-        age = (_t.time() - os.path.getmtime(log)) / 60
-        if age > 40:
-            out.append((FAIL, "%d request(s) pending %d min with no agent activity" % (len(pending), age)))
+
+    # AGENT-HEARTBEAT-1 (5 Sep 2026) -- THE LIVE LEG, corrected.
+    # It used to read the age of autodeploy_agent_log.txt and call anything over 40
+    # minutes a REGRESSION. That is not what the log measures. autodeploy_agent.bat only
+    # CALLS the worker when a .req already exists (`if exist "%HQ%\*.req"`), so an idle
+    # agent writes nothing at all -- silence is the normal state of a healthy agent with
+    # an empty queue. Queue a request into any quiet stretch and the old check fired red
+    # instantly, blaming the agent for silence that PRECEDED the request. It did exactly
+    # that on 5 Sep: three requests queued at 01:33 SAST, the agent picked them up at
+    # 01:51 on its very next tick, all rc=0 -- and the board had already painted a
+    # regression and a wrong sentence had gone to David. A false alarm costs the same
+    # trust as a false green (RG-0133's rule, other direction).
+    # Now: aliveness comes from the heartbeat the agent stamps EVERY tick, and lateness
+    # is judged against how long the REQUEST has waited, never against log silence.
+    import time as _t
+    beat = os.path.join(qdir, "agent_heartbeat.txt")
+    tick, slack = 20.0, 20.0            # 20-min task + one missed tick of grace
+    if os.path.exists(beat):
+        beat_age = (_t.time() - os.path.getmtime(beat)) / 60
+        if beat_age > tick + slack:
+            out.append((FAIL, "the host agent last ticked %d min ago -- it stamps a heartbeat "
+                              "every %d min whether or not there is work, so this is the agent "
+                              "itself, not an idle queue (AGENT-HEARTBEAT-1)"
+                        % (beat_age, tick)))
         else:
-            out.append((INFO, "%d request(s) pending, agent active %d min ago" % (len(pending), age)))
+            out.append((INFO, "host agent ticked %d min ago (heartbeat)" % beat_age))
+    else:
+        # The bat must at least CARRY the heartbeat, even before its first tick lands.
+        bat = os.path.join(REPO, "autodeploy_agent.bat")
+        carries = os.path.exists(bat) and "agent_heartbeat.txt" in open(
+            bat, encoding="utf-8", errors="replace").read()
+        out.append(((INFO if carries else FAIL),
+                    "no heartbeat file yet -- %s" % ("the agent writes one on its next tick"
+                    if carries else "and autodeploy_agent.bat does not write one, so agent "
+                                    "liveness is unmeasurable (AGENT-HEARTBEAT-1)")))
+    # lateness is a property of the REQUEST, not of the log
+    for f in pending:
+        waited = (_t.time() - os.path.getmtime(os.path.join(qdir, f))) / 60
+        if waited > tick + slack:
+            out.append((FAIL, "%s has waited %d min unclaimed -- longer than a tick plus grace"
+                        % (f, waited)))
+    if pending and not any(r == FAIL for r, _ in out):
+        out.append((INFO, "%d request(s) queued, none older than a tick" % len(pending)))
     return out
 
 
