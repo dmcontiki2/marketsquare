@@ -674,7 +674,28 @@ function formatIntroTime(ts) {
 
 let activeFilter='All', wishlist=new Set(), prevScreen='browse';
 let tuppence=50, pendingIntroId=null, pendingLMIntroId=null; // 🧪 TEST: 50 — reset to 5 before launch
-let magicLink={active:false,name:'',email:'',cat:'',area:''};
+let magicLink={active:false,name:'',email:'',cat:'',area:'',src:''};
+/* ONBOARD-FUNNEL-1 (5 Sep 2026): where invited sellers STOP, measured. Outreach could
+   see a click and (by reconcile) a registration or publish; landing -> main photo ->
+   sections -> publish was dark, and ~10 real people had clicked a working link since
+   3 Sep with 0 publishing. One beacon per transition to POST /onboard/step. Fire-and-
+   forget: never throws, never blocks, never changes what the seller sees. Counts are
+   read back from GET /onboard/funnel (no addresses). */
+var _obSid='';
+function obTrack(step, meta){
+  try{
+    if(!_obSid){
+      try{ _obSid=sessionStorage.getItem('ms_ob_sid')||''; }catch(e){}
+      if(!_obSid){ _obSid='ob'+Date.now().toString(36)+Math.random().toString(36).slice(2,10); try{ sessionStorage.setItem('ms_ob_sid',_obSid); }catch(e){} }
+    }
+    if(typeof BEA_URL==='undefined') return;
+    var st=(typeof sfState!=='undefined'&&sfState)||{};
+    var ml=(typeof magicLink!=='undefined'&&magicLink)||{};
+    var body={sid:_obSid, step:String(step||'').slice(0,40), meta:meta||null, magic:!!ml.active,
+      src:ml.src||'', cat:st.cat||ml.cat||'', sub:st.sub||'', email:st.email||ml.email||''};
+    fetch(BEA_URL+'/onboard/step',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(function(){});
+  }catch(e){}
+}
 
 // ── OFFLINE STATE ─────────────────────────────────────────
 function isOffline(){ return !navigator.onLine; }
@@ -775,10 +796,12 @@ async function _msInit(){
       name:   decodeURIComponent(sp.get('name')  || ''),
       email:  decodeURIComponent(sp.get('email') || ''),
       cat:    decodeURIComponent(sp.get('cat')   || ''),
-      area:   decodeURIComponent(sp.get('city')  || activeCity.name || '')
+      area:   decodeURIComponent(sp.get('city')  || activeCity.name || ''),
+      src:    decodeURIComponent(sp.get('src')   || '')   // ONBOARD-FUNNEL-1: which wave sent them
     };
     // Strip params from URL bar without reloading
     window.history.replaceState({}, '', window.location.pathname);
+    obTrack('landed', {drafted: sp.get('drafted')==='1'});   // ONBOARD-FUNNEL-1
     // drafted=1 means admin already saved listings — skip photo upload, go to tier+EULA
     if(sp.get('drafted')==='1'){
       goTo('seller-onboard');
@@ -6552,6 +6575,7 @@ async function sobGoLive() {
   }
 
   if (successCount === 0) {
+    obTrack('publish_fail',{fail:failCount, drafts:(sobState.drafts||[]).length});   // ONBOARD-FUNNEL-1
     if (errEl) {
       errEl.style.display = 'block';
       errEl.style.color = '#fca5a5';
@@ -6590,6 +6614,7 @@ async function sobGoLive() {
       : `${count} listings are now live on TrustSquare.`;
   }
 
+  obTrack('publish_ok',{n:successCount});   // ONBOARD-FUNNEL-1: the number's own event
   sobGoPhase(4);
   showToast("🎉 You're live on TrustSquare!");
   // Show "View my listing" button if we have a listing id to open
@@ -15796,6 +15821,7 @@ function sfGo(s){
   // SF-MULTIVISION-1 (RG-0206): leaving Photos -> one batched vision read of every filled slot.
   var _from = sfState && sfState.screen;
   sfState.screen=s; sfRender();
+  if(_from!==s) obTrack(s);   // ONBOARD-FUNNEL-1: one row per screen the seller reaches
   if(_from==='photos' && s==='secA' && typeof sfRunMultiVision==='function'){ try{ sfRunMultiVision(); }catch(_e){} }
 }
 function sfToast(t){ if(typeof showToast==='function') showToast(t); }
@@ -16181,7 +16207,7 @@ function sfFileChosen(input){
   rd.onload=function(e){
     sfState.previews[key]=e.target.result;
     sfState.photos[key]=1;
-    if(key==='main'){ sfState.mainPhase=1; sfRender(); sfRunVision(file); }
+    if(key==='main'){ obTrack('photo_pick'); sfState.mainPhase=1; sfRender(); sfRunVision(file); }
     else { sfRender(); setTimeout(function(){ sfState.photos[key]=2; sfRender(); sfToast('✓ Added — the AI anonymity check runs on upload'); }, 500); }
   };
   rd.readAsDataURL(file);
@@ -16210,7 +16236,7 @@ async function sfRunVision(file){
     if(done) return; done=true;
     sfState.photos.main=2; sfState.mainPhase=2; sfState.mainMsg=msg; sfRender();
   };
-  var toGuard=setTimeout(function(){ finish('✓ Photo added. AI was slow to respond — fill in the details and I\'ll catch up.'); }, 40000);
+  var toGuard=setTimeout(function(){ obTrack('photo_fallback',{why:'timeout'}); finish('✓ Photo added. AI was slow to respond — fill in the details and I\'ll catch up.'); }, 40000);
   try{
     if(typeof BEA_ENABLED==='undefined' || !BEA_ENABLED) throw new Error('bea off');
     var fd=new FormData();
@@ -16231,6 +16257,7 @@ async function sfRunVision(file){
       done=true;
       delete sfState.files.main;
       sfState.photos.main=0; sfState.mainPhase=3;
+      obTrack('photo_rejected',{why:'off_category'});   // ONBOARD-FUNNEL-1
       var _itm={Cars:'the vehicle',Property:'the property',Collectors:'the item'}[sfState.cat]||'what you\'re selling';
       sfState.mainMsg='This doesn\'t look like a '+sfState.cat+' photo — your main photo must show '+_itm+'. Tap the photo slot to try another.';
       sfRender(); return;
@@ -16241,9 +16268,11 @@ async function sfRunVision(file){
     if(data.anonymity_scrubbed || (data.violating_photo_indices||[]).length){
       msg='✓ Identifying details spotted — they\'ll be blurred automatically when your photos upload';
     } else if(d.title){ msg='✓ Photo read — I\'ve drafted your listing details below'; }
+    obTrack('photo_ok',{drafted:!!d.title});   // ONBOARD-FUNNEL-1
     finish(msg);
   }catch(e){
     clearTimeout(toGuard);
+    obTrack('photo_fallback',{why:String(e&&e.message||e).slice(0,60)});   // ONBOARD-FUNNEL-1
     finish('✓ Photo added — fill in the details manually and the anonymity check runs on upload.');
   }
 }
@@ -16599,6 +16628,7 @@ function sfBuildTitle(){
 }
 async function sfFinish(draftOnly){
   if(sfState._busy) return; sfState._busy=true;
+  obTrack(draftOnly?'draft':'finish',{score:(function(){try{return sfScore().total;}catch(e){return null;}})()});   // ONBOARD-FUNNEL-1
   var btn=document.getElementById('sf-list-btn'); if(btn){btn.disabled=true;btn.textContent='Preparing…';}
   try{
     var files=[]; var f=sfFlow();
@@ -16682,6 +16712,7 @@ async function sfFinish(draftOnly){
       sfToast('Draft saved — '+(50-sc.total>0?(50-sc.total)+' points to go before it can publish.':'finish any time.'));
     } else {
       await goHandoff();   // routes to seller-onboard (EULA → cars attest → publish)
+      obTrack('handoff');   // ONBOARD-FUNNEL-1: draft saved, EULA/publish screen next
       /* A2HS-ASK-1 (RG-0209, 30 Aug 2026): the seller's invested moment — first
          successful publish handoff. promptAddToHomeScreen() carries its own
          standalone/already-done guards and the iOS fallback; push NOTIFICATIONS

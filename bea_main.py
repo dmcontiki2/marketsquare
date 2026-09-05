@@ -789,6 +789,25 @@ def run_migrations(conn):
         paystack_ref    TEXT
     )""")
 
+    # ONBOARD-FUNNEL-1 (5 Sep 2026): where invited sellers STOP. The magic link's
+    # click was the last thing outreach could see; landing -> photo -> sections ->
+    # publish was dark, so "where do they leak" was guessed. The sell flow now posts
+    # every transition to POST /onboard/step; GET /onboard/funnel reads counts only.
+    conn.execute("""CREATE TABLE IF NOT EXISTS onboard_steps (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        sid         TEXT NOT NULL,
+        email       TEXT,
+        src         TEXT,
+        cat         TEXT,
+        sub         TEXT,
+        step        TEXT NOT NULL,
+        meta        TEXT,
+        magic       INTEGER NOT NULL DEFAULT 0,
+        created_at  TEXT NOT NULL
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS ix_onboard_steps_created ON onboard_steps(created_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS ix_onboard_steps_sid ON onboard_steps(sid)")
+
     # Listing publish timestamp + boost columns for the matching job
     listing_cols2 = [r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()]
     if "published_at" not in listing_cols2:
@@ -12838,6 +12857,105 @@ def dashboard_bit_get():
             return _json.load(fh)
     except Exception:
         return {"state": "unknown", "results": [], "worst": 0, "note": "bit_status.json unreadable"}
+
+
+# ── ONBOARD-FUNNEL-1 (5 Sep 2026): the sell-flow funnel, measured not guessed ──────
+# Outreach could see a click and (via reconcile) a registration or a publish. Everything
+# between -- did they land, did they get past the required main photo, which section
+# lost them -- was invisible, and ~10 real people had clicked a working link since 3 Sep
+# with 0 publishing. Each transition in ms.js sfGo()/sfRunVision()/sfFinish()/sobGoLive()
+# posts one row. Anonymous, fire-and-forget, never blocks the seller. Counts only out.
+_OB_STEP_RE = re.compile(r"^[a-z0-9_:\-]{1,40}$")
+_OB_SID_RE = re.compile(r"^[A-Za-z0-9_\-]{4,40}$")
+_OB_MAX_PER_SID = 300
+_OB_ORDER = ["landed", "subpick", "photos", "photo_pick", "photo_ok", "photo_rejected",
+             "photo_fallback", "secA", "secB", "secC", "features", "legal", "agents",
+             "scorecard", "finish", "draft", "handoff", "publish_ok", "publish_fail"]
+
+
+@app.post("/onboard/step")
+async def onboard_step(request: Request):
+    """Funnel beacon from the guided sell flow. Always answers 200 -- a beacon that can
+    error is a beacon the flow has to care about. Rows are capped per session id."""
+    try:
+        body = await request.json()
+    except Exception:
+        return {"ok": False}
+    if not isinstance(body, dict):
+        return {"ok": False}
+
+    def _s(k, n):
+        v = body.get(k)
+        return str(v)[:n] if v is not None else None
+
+    sid, step = _s("sid", 40), _s("step", 40)
+    if not sid or not step or not _OB_STEP_RE.match(step) or not _OB_SID_RE.match(sid):
+        return {"ok": False}
+    email = (_s("email", 200) or "").strip().lower() or None
+    src, cat, sub = _s("src", 120), _s("cat", 40), _s("sub", 40)
+    meta = body.get("meta")
+    try:
+        meta_s = json.dumps(meta)[:500] if meta is not None else None
+    except Exception:
+        meta_s = None
+    magic = 1 if body.get("magic") else 0
+    conn = database.get_db()
+    try:
+        n = conn.execute("SELECT COUNT(*) FROM onboard_steps WHERE sid=?", (sid,)).fetchone()[0]
+        if n >= _OB_MAX_PER_SID:
+            return {"ok": False, "capped": True}
+        conn.execute("INSERT INTO onboard_steps (sid,email,src,cat,sub,step,meta,magic,created_at) "
+                     "VALUES (?,?,?,?,?,?,?,?,?)",
+                     (sid, email, src, cat, sub, step, meta_s, magic, _utc_now()))
+        conn.commit()
+    except Exception as _e:
+        _log.warning("onboard_step failed: %s", _e)
+        return {"ok": False}
+    finally:
+        conn.close()
+    return {"ok": True}
+
+
+@app.get("/onboard/funnel")
+def onboard_funnel(days: int = 7, src: str = None, magic_only: int = 0):
+    """Counts only, never an address. Distinct sessions per step in the window, split by
+    invite source. src LIKE 'probe-%' rows are excluded unless asked for by name, so the
+    regression ledger can post a probe without polluting the numbers."""
+    days = max(1, min(int(days or 7), 90))
+    since = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    where, args = ["created_at >= ?"], [since]
+    if src:
+        where.append("src = ?"); args.append(str(src)[:120])
+    else:
+        where.append("(src IS NULL OR src NOT LIKE 'probe-%')")
+    if magic_only:
+        where.append("magic = 1")
+    w = " AND ".join(where)
+    conn = database.get_db()
+    try:
+        steps = {}
+        for r in conn.execute(f"SELECT step, COUNT(DISTINCT sid) FROM onboard_steps WHERE {w} GROUP BY step", args):
+            steps[r[0]] = r[1]
+        by_src = {}
+        for r in conn.execute(f"SELECT COALESCE(src,''), step, COUNT(DISTINCT sid) FROM onboard_steps WHERE {w} "
+                              f"GROUP BY 1, 2", args):
+            by_src.setdefault(r[0], {})[r[1]] = r[2]
+        by_cat = {}
+        for r in conn.execute(f"SELECT COALESCE(cat,''), step, COUNT(DISTINCT sid) FROM onboard_steps WHERE {w} "
+                              f"GROUP BY 1, 2", args):
+            by_cat.setdefault(r[0], {})[r[1]] = r[2]
+        sessions = conn.execute(f"SELECT COUNT(DISTINCT sid) FROM onboard_steps WHERE {w}", args).fetchone()[0]
+        with_email = conn.execute(f"SELECT COUNT(DISTINCT email) FROM onboard_steps WHERE {w} AND email IS NOT NULL",
+                                  args).fetchone()[0]
+        rows = conn.execute(f"SELECT COUNT(*) FROM onboard_steps WHERE {w}", args).fetchone()[0]
+    finally:
+        conn.close()
+    ordered = [{"step": s, "sessions": steps.get(s, 0)} for s in _OB_ORDER if s in steps]
+    extra = sorted(s for s in steps if s not in _OB_ORDER)
+    ordered += [{"step": s, "sessions": steps[s]} for s in extra]
+    return {"days": days, "since": since, "sessions": sessions, "distinct_emails": with_email,
+            "rows": rows, "funnel": ordered, "by_src": by_src, "by_cat": by_cat,
+            "note": "counts of distinct browser sessions per step; no addresses are returned"}
 
 
 @app.get("/wonders")
