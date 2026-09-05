@@ -245,8 +245,19 @@ REFLECTIONS = {
    # Persistent chain (30 Aug): second ring + persistent scraping are PLAN defaults in
    # the sim. If the model loses the ring/scrape levers or their defaults go dark, the
    # ruling has drifted out of the one surface David reads it from.
+   #
+   # ASSERTION NARROWED 5 Sep 2026, and the reason is on the record rather than in a
+   # commit message. It used to pin the whole default string including "ring5W:12".
+   # RUL-101 (5 Sep) took France and Portugal out of outreach entirely, so wave 5's
+   # week stopped being a timing placeholder and became a decision -- the model now
+   # defaults it to 157 (never) and the old literal could only be satisfied by
+   # reverting a NEWER ruling. So the pin is split: waves 2-4 and persistent scraping
+   # keep their exact defaults (that IS RUL-074), and wave 5 is asserted OFF with
+   # RUL-101 named beside it. Nothing was weakened -- the FR/PT half moved to the
+   # ruling that now owns it, and both halves are still assertions.
    ("docs/TrustSquare_Contagion_Model_v0.2.html",
-    ["RUL-074", "ring2W:1,ring3W:4,ring4W:8,ring5W:12,scrapeWk:30", "const APLAN_WAVES"], []),
+    ["RUL-074", "ring2W:1,ring3W:4,ring4W:8,", "scrapeWk:30", "const APLAN_WAVES",
+     "ring5W:157,", "RUL-101"], []),
    ("RULINGS.md", ["FOOTHOLD BY MACHINERY, NEVER BY LUCK"], []),
  ],
  "RUL-070": [

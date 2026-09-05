@@ -17033,5 +17033,142 @@ def rg_letters_carry_the_brand_mark():
     return out
 
 
+@entry("RG-0287", "The contagion model and the Ops Dashboard tell the SAME story about the goal and "
+       "the club lane -- one version, one set of numbers, and every number in the dashboard card "
+       "still matches the live database",
+       LOCKED, fixed_on="2026-09-05",
+       scope="docs/TrustSquare_Contagion_Model_v0.2.html (the model, deployed as "
+             "orchestrator/simulation.html) and dashboard.server.html (the deployed dashboard; "
+             "the local dashboard.html is NOT in the manifest and is not checked). Two properties, "
+             "both of which have failed silently before: (1) STRUCTURE -- the model carries the "
+             "goal-agent levers and the association lane, and the dashboard's pinned version "
+             "string matches the model's own; (2) TRUTH -- the club counts written into the "
+             "dashboard card are what the prospect database actually holds today. Property (2) is "
+             "the one that matters: a hand-written number in a dashboard is a claim, and a claim "
+             "with no probe behind it rots.",
+       ref="5 Sep 2026, David: update the contagion model with the goal-oriented scheduled Fable "
+           "5.1 project and the statistics of using the clubs and unions, and update the model in "
+           "the Ops Dashboard. Model v1.6 adds the goal agent's nightly gated draw (RUL-096) and "
+           "the club/union/federation lane (SPORTS-CLUBS-1, CLUB-LANE-1), pins open 21.8% and "
+           "bounce 1.54% as OBSERVED against 712 real sends, and deliberately does NOT pin click "
+           "because the raw reading (0.297) and the human-verified reading (0.013) differ "
+           "twentyfold. WHY THIS IS AN ASSERTION AND NOT A NOTE: the dashboard sat pinned at "
+           "'Contagion Model v1.5, updated 1 Sep' while the model moved underneath it, and "
+           "nothing said so -- the same silent-mismatch class as CLUB-LANE-1 itself. RUL-101 also "
+           "landed in the model here: A-plan wave 5 (FR/PT) now defaults to NEVER rather than "
+           "week 12, because that stopped being a timing placeholder and became a decision.")
+def rg_model_and_dashboard_agree():
+    out = []
+    model = os.path.join(REPO, "docs", "TrustSquare_Contagion_Model_v0.2.html")
+    dash = os.path.join(REPO, "dashboard.server.html")
+    if not (os.path.exists(model) and os.path.exists(dash)):
+        return [(INFO, "SKIPPED -- model or dashboard is not on this disk")]
+    m = open(model, encoding="utf-8", errors="replace").read()
+    d = open(dash, encoding="utf-8", errors="replace").read()
+
+    # (1) structure: the lanes exist in the model
+    for needle, what in [("goalW:", "the goal-agent start lever (RUL-096)"),
+                         ("goalCap:", "the goal-agent nightly cap"),
+                         ("goalCities:", "the armed-city count lever"),
+                         ("clubW:", "the club-letter lever"),
+                         ("fedW:", "the federation-letter lever"),
+                         ("unionW:", "the union/SACE lever"),
+                         ("Association lane", "the association parameter group"),
+                         ("PM.open.obs", "the pinned OBSERVED open rate")]:
+        if needle not in m:
+            out.append((FAIL, "the contagion model has lost %s (%s)" % (what, needle)))
+
+    # (2) one version, said the same way in both places
+    import re as _re
+    mv = _re.search(r"<title>Contagion Model (v[0-9.]+)", m)
+    dv = _re.search(r"pinned: Contagion Model (v[0-9.]+)", d)
+    if not mv:
+        out.append((FAIL, "the model no longer states its own version in its title"))
+    elif not dv:
+        out.append((FAIL, "the dashboard no longer pins a contagion-model version"))
+    elif mv.group(1) != dv.group(1):
+        out.append((FAIL, "the dashboard pins %s but the model is %s -- the dashboard is "
+                          "describing a model that no longer exists (RG-0287)"
+                    % (dv.group(1), mv.group(1))))
+
+    # (3) the dashboard's club numbers against the live database
+    db = os.path.join(os.path.dirname(REPO), "CityLauncher", "data", "prospects.db")
+    if not os.path.exists(db):
+        out.append((INFO, "prospect database is not on this disk -- the number check is skipped, "
+                          "the structure check above still ran"))
+    else:
+        import sqlite3 as _s
+        try:
+            con = _s.connect("file:%s?mode=ro" % db, uri=True)
+            c = con.cursor()
+            rows = c.execute("SELECT COUNT(*) FROM prospects WHERE category='Sports Clubs'").fetchone()[0]
+            clubs = c.execute("SELECT COUNT(DISTINCT business_name) FROM prospects "
+                              "WHERE category='Sports Clubs'").fetchone()[0]
+            con.close()
+        except Exception as e:
+            return out + [(INFO, "prospect database would not open read-only (%s) -- number "
+                                 "check skipped, structure check above still ran" % e)]
+        if rows and ("%d" % rows) not in d:
+            out.append((FAIL, "the dashboard club-contact figure is stale: the database holds %d "
+                              "'Sports Clubs' rows and that number does not appear on the card "
+                              "(ONETAP-DOC-1 -- the probe wins, fix the card in this run)" % rows))
+        if clubs and ("%d" % clubs) not in d:
+            out.append((FAIL, "the dashboard distinct-club figure is stale: the database holds %d "
+                              "distinct clubs and that number does not appear on the card" % clubs))
+        if not any(r == FAIL for r, _ in out):
+            out.append((INFO, "model %s, dashboard pins the same, %d club contacts / %d distinct "
+                              "clubs agree with the database"
+                        % (mv.group(1) if mv else "?", rows, clubs)))
+    return out
+
+
+@entry("RG-0288", "Click -> publish is MEASURED -- at least one real human who clicked one of our "
+       "emails has gone on to publish a listing by their own hand",
+       OPEN,
+       scope="CityLauncher/data/prospects.db, read-only: the join between click_register "
+             "(tier='human_click', the graded reading, not the raw event) and "
+             "prospects.published_at. Deliberately human-graded on both sides -- a scanner fetch "
+             "is not a click and a seeded row is not a publisher (ONBOARDING_GOAL.md section 3). "
+             "This is EXPECTED TO FAIL until it does not: the day it passes, the single "
+             "unmeasured number in the whole onboarding goal has a value, and this entry gets "
+             "promoted to LOCKED with that value written into the contagion model as an observed "
+             "parameter.",
+       ref="RUL-096 and contagion model v1.6, 5 Sep 2026. The goal is 20 people we contacted cold "
+           "publishing by their own hand by Fri 31 Oct 2026. PROBED 5 Sep: 712 sent, 155 opened, "
+           "46 raw clicks of which exactly TWO are graded human, 0 published. The model reaches "
+           "48 publishers by week 8 at the click rate it assumes and 6 at the human-verified "
+           "rate -- the goal lands on one reading and misses on the other, and no amount of "
+           "sending decides which. That is why this is a ledger entry rather than a paragraph: "
+           "the machinery watches for the first real conversion so no session has to remember to "
+           "look, and prints READY TO LOCK the moment it happens.")
+def rg_click_to_publish_is_measured():
+    db = os.path.join(os.path.dirname(REPO), "CityLauncher", "data", "prospects.db")
+    if not os.path.exists(db):
+        return [(INFO, "SKIPPED -- the prospect database is not on this disk")]
+    import sqlite3 as _s
+    try:
+        con = _s.connect("file:%s?mode=ro" % db, uri=True)
+        c = con.cursor()
+        humans = c.execute("SELECT COUNT(*) FROM click_register "
+                           "WHERE n_human_clicks > 0").fetchone()[0]
+        published = c.execute("SELECT COUNT(*) FROM prospects "
+                              "WHERE published_at IS NOT NULL").fetchone()[0]
+        both = c.execute(
+            "SELECT COUNT(*) FROM click_register cr JOIN prospects p ON p.id = cr.prospect_id "
+            "WHERE cr.n_human_clicks > 0 AND p.published_at IS NOT NULL").fetchone()[0]
+        con.close()
+    except Exception as e:
+        return [(INFO, "SKIPPED -- the prospect database would not open read-only (%s)" % e)]
+    if both > 0:
+        rate = 100.0 * both / max(1, humans)
+        return [(INFO, "%d of %d graded human clickers have published -- click->publish is "
+                       "%.0f%%. Write that number into the contagion model as an observed value "
+                       "and promote this entry to LOCKED." % (both, humans, rate))]
+    return [(FAIL, "click->publish is still unmeasured: %d graded human clickers, %d published "
+                   "rows, %d people in both sets. Not a defect in the code -- a fact about the "
+                   "world that has not happened yet." % (humans, published, both))]
+
+
+
 if __name__ == "__main__":
     sys.exit(main())
