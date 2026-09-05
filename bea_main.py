@@ -19162,6 +19162,27 @@ def get_tuppence_history(email: str, limit: int = 50, offset: int = 0, _key: str
 # Gmail App Password is present. Everything else is stored as a draft for David.
 # ════════════════════════════════════════════════════════════════════════════
 
+# ── SELF-REPLY-GUARD-1 (5 Sep 2026) — the AI must never answer our own robot ──
+# support@ is AI-triaged, and it is also where our own SYSTEM mail lands: fault
+# notifications, alerts, anything the app sends to itself. Proven the day the support
+# form was wired up: the form's notification arrived from
+# 010201...@send.mail.trustsquare.co, Claude read it as a customer support message and
+# AUTO-SENT a reply to a bounce address (email_triage row 18, status 'sent'). Harmless
+# that once; the shape is not. Every system email we ever route through this mailbox
+# would cost an AI call, a send, and a chance of answering a customer with a robot's words.
+# A system message is never a customer, so it can never be auto-answered. It is still
+# STORED and visible -- silence would be its own blind spot.
+_OWN_MAIL_DOMAINS = tuple(d.strip().lower() for d in
+                          os.getenv("OWN_MAIL_DOMAINS", "trustsquare.co").split(",") if d.strip())
+
+
+def _is_own_system_mail(addr: str) -> bool:
+    """True when the SENDER is us. Matches the domain and any subdomain of it, because
+    our transactional mail leaves as send.mail.trustsquare.co, not as the friendly From."""
+    dom = (addr or "").strip().lower().rsplit("@", 1)[-1].strip(">").strip()
+    return bool(dom) and any(dom == d or dom.endswith("." + d) for d in _OWN_MAIL_DOMAINS)
+
+
 _TRIAGE_CATEGORIES = ["support", "billing", "legal", "compliance", "spam", "other"]
 _AUTO_SEND_CATEGORIES = {"support", "billing"}
 
@@ -19505,7 +19526,12 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
             and category in _AUTO_SEND_CATEGORIES
             and bool(draft_reply)
         )
-    if category == "spam":
+    # SELF-REPLY-GUARD-1: our own system mail is recorded and never answered.
+    if _is_own_system_mail(from_addr):
+        can_auto = False
+        status = "system"
+        _log.info("email triage: system mail from %s recorded, never auto-answered", from_addr)
+    elif category == "spam":
         status = "skipped"
 
     fault_code = None
@@ -19946,7 +19972,10 @@ async def support_message(
     esc = lambda t: (t or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     try:
         _send_system_email(
-            os.getenv("SUPPORT_NOTIFY_EMAIL", "support@trustsquare.co"),
+            # Deliberately David's inbox and NOT support@: support@ is AI-triaged, so notifying
+            # it fed our own system mail back into the customer lane (SELF-REPLY-GUARD-1).
+            # He still reads it in the same inbox support@ forwards to -- one inbox, no loop.
+            os.getenv("SUPPORT_NOTIFY_EMAIL", "dmcontiki2@gmail.com"),
             "[%s] support message from %s" % (ref, email),
             "<div style='font-family:Inter,Arial,sans-serif;max-width:560px'>"
             "<h3 style='color:#0c1a2e;margin:0 0 8px'>%s &middot; %s</h3>"

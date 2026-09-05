@@ -16915,5 +16915,67 @@ def rg_eu_arrival_tripwire():
     return out
 
 
+@entry("RG-0285", "The support AI never answers OUR OWN robot -- system mail landing on the "
+       "triaged mailbox is recorded and never auto-replied to",
+       LOCKED, fixed_on="2026-09-05",
+       scope="bea_main.py POST /email/inbound (the customer lane's auto-send decision) and the "
+             "address the support form notifies. CLASS: any autonomous responder whose INPUT "
+             "queue can also receive its own OUTPUT. The same shape is a ticket bot CC'd on its "
+             "own tickets, or an alert rule that alerts on its own alerts.",
+       ref="SELF-REPLY-GUARD-1 (5 Sep 2026), found within the hour it was created and while "
+           "answering David's question about who handles complaints. support@trustsquare.co is "
+           "AI-triaged with EMAIL_AUTO_SEND=1 (PROBED from the live process env, not from the "
+           "code): categories 'support' and 'billing' are auto-answered, legal/compliance are "
+           "held for David. SUPPORT-FORM-REAL-1 had just started notifying that same mailbox "
+           "whenever somebody used the support form -- so the app's own notification arrived "
+           "from 010201...@send.mail.trustsquare.co, Claude classified it as a customer support "
+           "message, and AUTO-SENT a reply to a bounce address. Observed, not theorised: "
+           "email_triage row 18, category 'support', status 'sent', draft beginning 'Thanks for "
+           "testing the TrustSquare support form.' "
+           "Harmless that once -- the recipient was a return-path -- but the shape is not: every "
+           "system email routed through that mailbox costs an AI call and a send, and an "
+           "autoresponder that can be fed its own output is one bad classification away from a "
+           "loop. FIXED IN BOTH PLACES, deliberately: (a) the CAUSE -- the support form now "
+           "notifies David's inbox directly rather than the triaged address, so system mail does "
+           "not enter the customer lane at all; (b) the CLASS -- _is_own_system_mail() refuses "
+           "auto-send for any sender on our own domain or a subdomain of it, so the next system "
+           "email routed there is safe by construction rather than by somebody remembering. It "
+           "is still STORED and visible (status 'system'): a guard that silently drops mail is "
+           "its own blind spot. Domain-anchored, not substring: evil-trustsquare.co is NOT us.")
+def rg_ai_never_answers_itself():
+    out = []
+    api = repo_file("bea_main.py")
+    if api is None:
+        return [(INFO, "bea_main.py not readable here -- self-reply guard check skipped")]
+    if "_is_own_system_mail" not in api:
+        return [(FAIL, "the self-reply guard is gone -- our own system mail can be classified as "
+                       "a customer message and auto-answered again (SELF-REPLY-GUARD-1)")]
+    # The guard is worth nothing unless it actually gates the send decision.
+    i_guard = api.find("if _is_own_system_mail(from_addr):")
+    i_auto = api.find("can_auto = (")
+    if i_guard < 0:
+        out.append((FAIL, "_is_own_system_mail exists but is never applied in /email/inbound -- "
+                          "a helper nobody calls is not a guard"))
+    elif i_auto >= 0 and i_guard < i_auto:
+        out.append((FAIL, "the self-reply guard runs BEFORE can_auto is computed, so the later "
+                          "assignment overwrites it"))
+    elif "can_auto = False" not in api[i_guard:i_guard + 400]:
+        out.append((FAIL, "the self-reply guard does not clear can_auto -- it records the mail "
+                          "and still answers it"))
+    # And the cause: the support form must not notify the AI-triaged mailbox.
+    m = re.search(r'os\.getenv\("SUPPORT_NOTIFY_EMAIL",\s*"([^"]+)"\)', api)
+    if m and "support@" in m.group(1):
+        out.append((FAIL, "the support form notifies %s, which is the AI-triaged mailbox -- the "
+                          "app feeds its own output back into the customer lane" % m.group(1)))
+    # Domain-anchored, never substring: a lookalike domain must not read as us.
+    if 'dom == d or dom.endswith("." + d)' not in api:
+        out.append((FAIL, "the own-domain test is no longer anchored -- a lookalike domain such "
+                          "as evil-trustsquare.co could be treated as our own mail"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "system mail is recorded and never auto-answered; the support form "
+                          "notifies outside the triaged mailbox"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
