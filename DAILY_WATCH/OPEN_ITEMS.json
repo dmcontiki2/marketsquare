@@ -886,12 +886,12 @@
   },
   "DW-090": {
    "first_seen": "2026-09-02",
-   "last_seen": "2026-09-04",
+   "last_seen": "2026-09-05",
    "sev": "LOW",
    "source": "fea_integrity_check.py --json (on-box) — recurrence of closed DW-088 (DW-064, DW-061 before it)",
-   "status": "OPEN",
+   "status": "CLOSED",
    "summary": "FEA baseline one deploy stale again 16h after DW-088 closed: status ok, alerts [], notes ms.js v564->569 (1157186->1158269 B), ms.css v428->433 — today's 05:19/06:25 SAST releases. deploy_drift clean 19/19 + audit served==repo: a deploy, not a tamper. Fourth instance of the class. 3 Sep: still failing, now status: alert (index bytes 415200->413316, ms.js 564->581, ms.css 428->445 = 04:26 LIVE-MAP-1 release; deploy_drift clean 19/19, audit served==repo). 4 Sep: still failing — status: alert, index bytes 415200->413316, ms.js 564->582, ms.css 428->446 (the 3 Sep 16:15Z release); deploy_drift: only the STAGED Batch 2 local-ahead, audit says deploy-not-tamper.",
-   "next_action": "CTO lane (RUL-037): deploy engine (ops/autodeploy/post_deploy.sh) refreshes the baseline itself when deploy_drift reads clean, with a ledger entry. Closes when the on-box notes carry no \"looks like a deploy\" after a deploy has ridden.",
+   "next_action": "CLOSED 2026-09-05 (attended) — the originating check re-ran and PASSED, and the CLASS behind four instances is retired. On-box now: `fea_integrity_check.py --json` reads `status: ok, alerts: []` immediately AFTER a deploy that changed all three measured files — which is the property that never held before. STRUCTURAL FIX, the one this row's own next-action named: `ops/autodeploy/post_deploy.sh` now refreshes the baseline itself (FEA-BASELINE-AUTO-1), GATED on each live file being byte-identical to the source that deploy placed (?v= cache-busters normalised, because server_deploy.sh rewrites those in place after placement). If any file differs, the step REFUSES and lets the alert stand — that difference is precisely the tamper case, and we never bless a byte we cannot re-derive from the source tree. PROVEN BY THE FIRST DEPLOY THAT RODE IT, not by reading the script: `/static/post_deploy_status.json` carries `{\"step\":\"fea_baseline\",\"result\":\"ok\",\"detail\":\"refreshed after clean deploy (3/3 files match source)\"}` at 2026-09-05T11:13:49Z. The gate was also EXECUTED on the box before shipping and printed `clean: live matches the source this deploy placed (3/3)`. Asserted by new ledger entry RG-0281 (LOCKED), whose live leg re-reads that status file and goes RED if a later deploy carries no fea_baseline step. WHY IT KEPT COMING BACK (DW-061 21 Aug, DW-064 26 Aug, DW-088 1 Sep, DW-090 today): every deploy legitimately changes all three files, so a human had to re-baseline each time; each hand refresh lasted exactly one deploy, and once the gap ran to eight. The cost was never the chore — it was that a sensor alert on ordinary days cannot report the tamper it exists to catch.",
    "references": [
     "DW-088",
     "DW-064",
