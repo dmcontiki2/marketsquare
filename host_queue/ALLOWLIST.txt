@@ -58,3 +58,10 @@ run_py     CityLauncher\scripts\club_import.py
 # --- RUL-095 ("deploy and commit after I have given permission") and RUL-092. Deploys ONE
 # --- worker from the repo; no app code, no money, no sending authority of its own.
 run_bat    MarketSquare\deploy_uptime_worker.bat
+
+# --- Widened 5 Sep 2026. EMAIL-FIREWALL-1 / RUL-069, on David's explicit word today:
+# --- "Please close that door for me Claude, i appreciate it." Arming the customer-email
+# --- firewall was reserved to him since 30 Aug (RUL-027 lockout class); this is that
+# --- permission. Deploys ONE Cloudflare worker from the repo, with a pre-flight that
+# --- REFUSES to arm unless the app is answering. No money, no sending authority.
+run_bat    MarketSquare\deploy_email_worker.bat

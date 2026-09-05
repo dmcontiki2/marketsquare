@@ -8,6 +8,18 @@ compatibility_date = "2025-05-01"
 [vars]
 BEA_INBOUND_URL = "https://trustsquare.co/email/inbound"
 
+# EMAIL-FIREWALL-1 · RUL-069 (30 Aug 2026), ARMED 5 Sep 2026 on David's word:
+# "Please close that door for me." Kept HERE rather than as a CLI --var so the
+# setting lives in git, is reviewable, and survives every future deploy instead of
+# depending on whoever last typed a command.
+#
+# Armed ("1"): customer mail is triaged and NEVER forwarded to a personal inbox.
+# If triage cannot be reached the message is REJECTED at SMTP time, so the sender's
+# own server tells them it failed -- a bounce is honest, silent loss is not, and this
+# worker has no storage to hold mail in.
+# Unset or "0": the pre-launch dead-letter forward returns.
+CUSTOMER_FIREWALL = "1"
+
 # Email Routing binding is configured in the Cloudflare dashboard
 # (Email → Email Routing → Email Workers), not in wrangler.toml.
 # After `wrangler deploy`, bind the worker to your catch-all / addresses there.
