@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Contagion Model v1.5 &mdash; Email Wave Plan v3.2</title>
+<title>Contagion Model v1.6 &mdash; Goal Agent + Association Lane</title>
 <style>
 :root{
   --navy:#0d1b2a; --navy2:#11253a; --panel:#132b42; --line:#22405c; --ink:#e8eef4;
@@ -137,7 +137,7 @@ canvas.ch{width:100%;height:78px;display:block}
 <div class="app">
 
   <div class="top">
-    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.5&nbsp;&middot;&nbsp;planners + wave plan v3.2 + credential lanes + RAMP-1 + second ring + PA/auctions</span></div>
+    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.6&nbsp;&middot;&nbsp;goal agent (RUL-096) + clubs, unions &amp; federations + measured funnel + planners + wave plan v3.2 + RAMP-1</span></div>
     <div class="clock"><span id="dateOut">1 Sep 2026</span><small id="weekOut">week 0 of 156</small></div>
     <div class="ctrls">
       <button class="primary" id="btnPlay">&#9654;&nbsp; Run</button>
@@ -157,6 +157,8 @@ canvas.ch{width:100%;height:78px;display:block}
       <div class="stat"><b id="sCity">0</b><span>Cities lit</span></div>
       <div class="stat"><b id="sWork">0</b><span>Cities working</span></div>
       <div class="stat"><b id="sCountry">0</b><span>Countries</span></div>
+      <div class="stat" title="RUL-096: people we contacted cold who published a listing by their own hand. The goal is 20 by Fri 31 Oct 2026 (week 8). Organic arrivals, referrals and buyer-crossovers are excluded on purpose - that exclusion IS the goal."><b id="sPub">0</b><span>Self-published</span></div>
+      <div class="stat" title="The 20-by-31-Oct line. Green once the modelled self-published count passes it in the goal week."><b id="sGoal">&mdash;</b><span>Goal 20 by wk 8</span></div>
       <div class="stat"><b id="sR">&mdash;</b><span>R effective</span></div>
       <div class="stat"><b id="sMrr">$0</b><span>Revenue /mo</span></div>
       <div class="stat"><b id="sFizz">&mdash;</b><span>Takes off</span></div>
@@ -306,7 +308,7 @@ const PARAMS = [
  // --- email wave injection ---
  {k:"deliver", g:"Email wave", l:"Delivered / sent", lo:.86, mid:.94, hi:.98, src:"lit", n:"Resend, DKIM+DMARC live. Not measurable today: the webhook never maps email.delivered."},
  {k:"open",    g:"Email wave", l:"Opened / delivered", lo:.14, mid:.28, hi:.44, src:"lit", n:"Cold B2B to a scraped list. Webhook maps email.opened."},
- {k:"click",   g:"Email wave", l:"Clicked / opened", lo:.04, mid:.10, hi:.22, src:"lit", n:"Single magic-link CTA."},
+ {k:"click",   g:"Email wave", l:"Clicked / opened", lo:.013, mid:.10, hi:.22, src:"data", n:"MEASURED 5 Sep 2026, and it is the most consequential measurement in the model because the two available readings disagree by a factor of twenty. RAW: 46 distinct people clicked of the 155 who opened = 0.297, ABOVE the old high end. HUMAN-VERIFIED: the click register grades the same events and finds 2 human clickers - 56 machine, 11 uncertain, 48 open-only - so the human reading is 2/155 = 0.013, BELOW the old low end. Corporate link-scanners fetch every URL in an email and a scanner fetch is indistinguishable from a person unless something grades it (the same class of error that produced 11 phantom opt-outs on 1 Sep). The low bound is moved to the human-verified floor and the range is left wide ON PURPOSE. Two clicks is not a rate, so nothing here is pinned as an observation yet - see the Calibration tab, where open and bounce ARE pinned and this one deliberately is not."},
  {k:"signup",  g:"Email wave", l:"Signed up / clicked", lo:.06, mid:.18, hi:.38, src:"guess", n:"Magic link prefills name/email/category/city, so the form is nearly done. Untested."},
  {k:"fatigue", g:"Email wave", l:"Decay per repeat wave", lo:.35, mid:.55, hi:.75, src:"lit", n:"Multiplier on response for each further wave to the same prospect."},
  {k:"burn",    g:"Email wave", l:"Burned / emailed", lo:.55, mid:.80, hi:.95, src:"guess", n:"Share of non-responders who become permanently immune to re-mailing."},
@@ -391,6 +393,24 @@ const PARAMS = [
  {k:"introRt", g:"Money", l:"Intros per active seller /week", lo:.05, mid:.30, hi:1.0, src:"data", n:"Measurable now from intro_requests.created_at."},
  {k:"introAcc",g:"Money", l:"Intro accept rate", lo:.25, mid:.55, hi:.80, src:"data", n:"Derivable from status + the intro_deduct transaction row."},
 
+ // --- association lane: clubs, unions and federations (SPORTS-CLUBS-1 / CLUB-LANE-1) ---
+ // David's insight, 4 Sep 2026: a club never advertises, so it never appears in search or on a
+ // map - but it MUST file paperwork to affiliate, register as a non-profit, enter races and book
+ // municipal fields, and that paperwork is published with the secretary's address on it. So the
+ // lane collects the paperwork and never the adverts. This is a genuinely different SHAPE of
+ // pathway from everything above it: the unit is an ORGANISATION reached through its committee,
+ // not a person reached at a desk, and the federation branch reaches people we may never lawfully
+ // email ourselves because their own body does the emailing.
+ {k:"clubYield",g:"Association lane", l:"Committee addresses per provincial body", lo:120, mid:289, hi:480, src:"data", n:"MEASURED 4 Sep 2026 against two of Athletics South Africa's seventeen provincial bodies, live: Athletics Gauteng North 366 addresses on one page, Western Province Athletics 211. Mean 289. Not an estimate and not a scrape of adverts - these are officers named on affiliation paperwork, which is administration and is published because it has to be."},
+ {k:"clubOne",  g:"Association lane", l:"Share surviving one-per-club", lo:.40, mid:.542, hi:.75, src:"data", n:"MEASURED: 577 harvested addresses collapse to 313 distinct clubs (Pretoria 212, Cape Town 101) when the one-per-organisation guard runs. 313/577 = 0.542. The guard is not a nicety - mailing five officers of the same club is exactly how a lane earns a spam complaint, and on the first harvest it held 237 sibling mailboxes while the government filter held 45 officers writing from .gov.za."},
+ {k:"clubMult", g:"Association lane", l:"Conversion vs a cold email to an individual", lo:.6, mid:1.6, hi:3.5, src:"guess", n:"UNTESTED - 577 club rows are in the pool and ZERO have been emailed (probed 5 Sep 2026). Two forces pull opposite ways. Up: a club secretary opens committee mail as a duty, the letter is about the club rather than about them, and coaching capacity and equipment sales are things a club genuinely wants found. Down: a volunteer secretary is slower than a business owner and cannot always act alone. The mid is deliberately only modestly above 1.0 until the first club wave produces a real number."},
+ {k:"clubSeats",g:"Association lane", l:"Listings a club carries once it joins", lo:1, mid:3, hi:9, src:"guess", n:"THE REASON THIS LANE IS WORTH MORE THAN ITS HEAD COUNT. An individual who signs up is one seller. A club that signs up can carry its coaches, its junior programme, its events and its second-hand kit on one account - the same capacity argument RUL-059(e) makes for tutoring businesses, which is why this parameter mirrors varSeats rather than inventing a new shape."},
+ {k:"clubProv", g:"Association lane", l:"Provincial bodies there are to read", lo:2, mid:17, hi:60, src:"data", n:"TWO are read and in hand today (that number is hard-wired as BODIES_IN_HAND and does not move); this is how many EXIST to be read, and the lever clubProvW decides when the rest get read. Seventeen is Athletics South Africa alone. TWO today, both athletics, both read live. Athletics South Africa alone has SEVENTEEN provincial bodies - at the measured mean that is about 2,660 clubs from athletics before cycling, judo, karate, boxing, swimming, the 227 parkruns or the 270,000-row non-profit register are touched. The old search-and-maps scraper found 40 sport entries in the entire 3,805-row database: the word list was never the problem, the place we looked was. Raise this lever to ask what more reading is worth - it is the cheapest supply in the model because the pages are public and the reader is built."},
+ {k:"fedYes",   g:"Association lane", l:"Federation secretaries who agree to forward", lo:.03, mid:.20, hi:.55, src:"guess", n:"The permission letter to seventeen provincial secretaries asks them to tell their own members about us. Untested - the letter is written and reviewed, none has been answered. A body that says yes is not doing us a favour it will regret: a ranked-by-credential listing makes its own affiliation visibly worth holding."},
+ {k:"fedReach", g:"Association lane", l:"Members reached per federation that says yes", lo:40, mid:320, hi:1600, src:"guess", n:"An affiliated body writes to its clubs and its licensed members. This is the ONLY pathway in the model that reaches people whose addresses we do not hold and could not lawfully hold - including, exactly, the 65 personal mailboxes in France and Portugal that RUL-101 shut the door on. The body already has the relationship; we never process the data."},
+ {k:"fedMult",  g:"Association lane", l:"Conversion of a member told by their own body", lo:1.5, mid:4.5, hi:14, src:"guess", n:"A warm, permissioned introduction from the organisation whose licence you hold is the strongest channel available to us and the model has never had one. For scale: the cold wave converts at roughly 0.7% end to end, and the model already grants a peer referral pTake 0.12 against pTell. This multiplier sits between those two worlds. It is a guess, it is the largest single guess added in v1.6, and it is flagged as such rather than dressed up."},
+ {k:"unionMemb",g:"Association lane", l:"Individual teachers reachable per union agreement", lo:200, mid:2500, hi:40000, src:"data", n:"PROBED 4 Sep 2026 and the probe killed the plan that preceded it: we hold 1,622 teachers_trainers rows and 1,194 of the 1,235 that would pass the send guards are SCHOOL OFFICES, not teachers - stjbcs@mweb.co.za is St John the Baptist School, linden@linden.co.za is a high school. A switchboard will never list itself as a specialist tutor. A teacher's personal address cannot be scraped at all, which makes the union and SACE route not a nice-to-have but the ONLY route to this audience. The economics are unusually strong for them: free tier, no commission line anywhere in the canon, the buyer pays the single introduction, and a qualified teacher with ID verification sits at 95 - Highly Trusted - on the day they list."},
+
  // --- agencies ---
  {k:"agRate",  g:"Agencies", l:"Agency conversions /city /week", lo:.002, mid:.012, hi:.045, src:"guess", n:"Hub events, scaled by city size. Three agencies already signed up pre-launch, so the floor is not zero."},
  {k:"agSize",  g:"Agencies", l:"Agents per agency", lo:4, mid:14, hi:55, src:"guess", n:"Only 2 agencies / 3 memberships exist so far - too few to measure."},
@@ -401,10 +421,22 @@ const PARAMS = [
  {k:"decay",   g:"Cross-border", l:"Distance half-life (km)", lo:1500, mid:3500, hi:8000, src:"lit", n:"Gravity-model distance decay."}
 ];
 const PM = {}; PARAMS.forEach(p=>{p.obs=null; p.lock=false; PM[p.k]=p;});
+/* ---- OBSERVED, 5 Sep 2026 -------------------------------------------------
+   Probed read-only against CityLauncher/data/prospects.db: 712 distinct people
+   sent, 155 opened, 46 raw clicks, 11 hard bounces, 0 published. PROBED beats
+   READ, so these overwrite the guessed mid in a single deterministic run. The
+   ensemble still samples the full lo-mid-hi range, because one wave in one week
+   is a reading, not a distribution.
+   DELIBERATELY NOT PINNED: click (the raw and human-verified readings differ
+   twentyfold - see its note) and signup (zero observations: nobody has published
+   yet, which is the entire goal). An unmeasured number stays unmeasured here. */
+PM.open.obs   = 0.218;    // 155 opened / 712 sent
+PM.bounce.obs = 0.0154;   // 11 hard bounces / 712 sent, well inside the 5% stop-loss
 const DEFAULTS={allure:1,badge:.35,discount:0,referral:0,complaint:0,delay:0,poolX:1,batch:28,
   w2Week:8,w3Week:20,stripeW:0,africaW:157,agPush:1,advPush:1,compW:157,compS:1.5,
   dayCap:30,measured:1,agGateW:8,rollW:157,featW:8,liveKeysW:0,barriers:1,localiseW:157,
-  tpW:0,tpToursW:157,refW:157,varsityW:157,ramp:1,rampCap:96,ring2W:1,ring3W:4,ring4W:8,ring5W:12,scrapeWk:30,aipaW:13,aucW:26,fideW:157,fideUp:1.35};
+  tpW:0,tpToursW:157,refW:157,varsityW:157,ramp:1,rampCap:96,ring2W:1,ring3W:4,ring4W:8,ring5W:157,scrapeWk:30,aipaW:13,aucW:26,fideW:157,fideUp:1.35,
+  clubW:1,clubProvW:157,fedW:157,unionW:157,goalW:0,goalCap:6,goalCities:43};
 
 /* -------- scenario levers: things David can actually change -------- */
 const LEVERS = {
@@ -430,8 +462,8 @@ const LEVERS = {
   ring2W:   {v:1,    lo:0,  hi:157, st:1,   l:"A-plan Wave 2 arms (US+GB, 'Day 2-3')", n:"RUL-074: the A-plan as built in CityLauncher's Pipeline. Wave 2 = the ten further US cities + ten GB cities, scraped on days 2-3 of launch. Each city runs its own RAMP-1 ramp. 157 = never."},
   ring3W:   {v:4,    lo:0,  hi:157, st:1,   l:"A-plan Wave 3 arms (AU/NZ)",           n:"Melbourne, Brisbane, Perth, Adelaide + NZ. Timing is yours - the A-plan fixes the SEQUENCE, not the dates; 4 is a placeholder, not a commitment."},
   ring4W:   {v:8,    lo:0,  hi:157, st:1,   l:"A-plan Wave 4 arms (NA/AR)",           n:"Namibia + Argentina (LOCALIZE-2 country layer built). Placeholder date, sequence per the A-plan."},
-  ring5W:   {v:12,   lo:0,  hi:157, st:1,   l:"A-plan Wave 5 arms (FR/PT)",           n:"France + Portugal (GDPR footer + EU representative live per LOCALIZE-2). Placeholder date, sequence per the A-plan."},
-  scrapeWk: {v:30,   lo:0,  hi:300, st:10,  l:"New prospects scraped /armed city/week", n:"RUL-074's fuel - the Gary Player lever: luck is replaced by list depth. CityLauncher's saturation scraper keeps deepening every ARMED city's pool, so waves never starve (the global three's first salvo was 44 emails against a 55-prospect scrape - a coin flip by construction). 0 = today's pools are all there ever is. Bounded by each city's addressable market. MEASURED 1 Sep 2026: the pool stands at 3,784 prospects, all with an email - up from 1,519 on 30 Aug, so the lever is not hypothetical, it is running. Split: ZA 2,827 - US 406 - UK 199 - FR 163 - AU 114 - PT 39."},
+  ring5W:   {v:157,  lo:0,  hi:157, st:1,   l:"A-plan Wave 5 arms (FR/PT)",           n:"CHANGED TO NEVER, 5 Sep 2026, by RUL-101 - this is not a timing placeholder any more, it is a decision. 179 French and Portuguese rows sit behind the GDPR art.27 fence; 100 are clean on every other guard; and those 100 split 35 business addresses (lawful to cold-email on an opt-out basis) against 65 personal mailboxes (prior opt-in required, never lawful to cold-mail, representative or not). A representative at 490-1,000 EUR a year would unlock 35 people, about 20 EUR a head before anyone converts, so David ruled: we do not email those two countries. The code REFUSES to build those messages, which is the mechanism rather than the intention. Moving this lever asks a counterfactual the product cannot currently execute. The lawful route to those 65 is the federation lever, which costs nothing. Old note kept for the record: France + Portugal (GDPR footer + EU representative live per LOCALIZE-2). Placeholder date, sequence per the A-plan."},
+  scrapeWk: {v:30,   lo:0,  hi:300, st:10,  l:"New prospects scraped /armed city/week", n:"MEASURED 5 Sep 2026, and the default survives the check but only on the generous reading. Rows added across the fifteen days from 22 Aug to 5 Sep total 2,937, which over 43 armed cities is about 32 per city per week - almost exactly this default. Strip the two bulk events out of that window (the 1,452-row import of 23 Aug and the 577-club harvest of 5 Sep) and the SEARCH scraper alone contributed 908 rows, about 10 per city per week. Read 30 as the harvest-included rate and 10 as the search-only rate, and be clear which one a scenario is leaning on. RUL-074's fuel - the Gary Player lever: luck is replaced by list depth. CityLauncher's saturation scraper keeps deepening every ARMED city's pool, so waves never starve (the global three's first salvo was 44 emails against a 55-prospect scrape - a coin flip by construction). 0 = today's pools are all there ever is. Bounded by each city's addressable market. MEASURED 1 Sep 2026: the pool stands at 3,784 prospects, all with an email - up from 1,519 on 30 Aug, so the lever is not hypothetical, it is running. Split: ZA 2,827 - US 406 - UK 199 - FR 163 - AU 114 - PT 39."},
   fideW:    {v:157,  lo:0,  hi:157, st:1,   l:"Week the FIDE credential-claim lane ships", n:"FIDE-TRAINERS-1 (30 Aug 2026) already harvested the registry: 4,237 unique titled trainers (NI 1,680 / FI 1,126 / DI 1,023 / FT 408), IND 934 the largest federation by ~7x, RUS 93, RSA 23. HONEST MODELLING NOTE, and it is the whole point of this lever: the registry holds credentials and identities, NOT emails - it never enters the wave machine. So chess is NOT a prospect source and this lever adds NO prospects. What it does is let a tutor who arrives ORGANICALLY claim a FIDE ID, match it against the registry and wear a verified credential tier (RUL-072 evidence doctrine, RUL-088 wording). That is a CONVERSION and RETENTION effect, not a supply effect - it lifts the organic engine RUL-071 calls the real one. 157 = never, which is today's truth: the claim flow is not built. Registry grows by re-running the idempotent harvester."},
   fideUp:   {v:1.35, lo:1,  hi:2.5, st:.05, l:"Credential-tier conversion uplift", n:"How much better a verified-credential tutor converts and holds, once the claim flow exists. 1.0 = a claimed FIDE title changes nothing. Applied ONLY from fideW onward and ONLY to the organic and referral paths - never to outbound, because the registry supplies no addresses to send to. Deliberately modest by default: this is an UNMEASURED assumption until the claim flow ships and real tutors use it, and it is labelled as such rather than dressed up as a finding."},
   aipaW:    {v:13,   lo:0,  hi:157, st:1,   l:"Week the AI PA switches on",   n:"RUL-081 (David, 30 Aug 2026): ~3 months out - the design/test/baseline window. Lifts $20-Pro upgrades (aipaUp) and burns tokens per active (aipaCost). 157 = never."},
@@ -442,6 +474,13 @@ const LEVERS = {
   tpToursW: {v:157,  lo:0,  hi:157, st:1,   l:"Week Travelpayouts tours are approved", n:"DECLINED 24 Aug - 'website under development or not yet ready'. 26 programs available, 20 blocked including Booking.com, Viator and GetYourGuide. RUL-041: never resubmit unchanged. 157 = still declined, which is today's truth. Tours pay ~8% against flights' 1.2%, so this one week is worth more than the whole flights lane."},
   refW:     {v:157,  lo:0,  hi:157, st:1,   l:"Week the referral programme ships", n:"157 = never, which is today's truth - there is no referred_by field, no invite code and no inviter_id in the schema. Nothing can be attributed until that column exists."},
   varsityW: {v:157,  lo:0,  hi:157, st:1,   l:"Week the US university-tutor lane sends", n:"RUL-059(c): NO SEND by default. The domain is days old, the first real email in the product's life goes out 28 Aug, and committing a second geography AND a new vertical before the first market has produced one conversion is a guess. The decision is taken AFTER Gate 2 and ten days of real signal. Move this only to ask what the lane would be worth. MEASURED 1 Sep 2026: the US pool already holds 406 prospects, of which 147 are us_university_tutors, plus Tutors 72 and Tutor Institutions 38 - so the lane is FUELLED and held, not empty and held. Turning this off 157 is a send decision, not a scraping one."},
+  clubW:    {v:1,    lo:0,  hi:157, st:1,   l:"Week the club letter goes out",  n:"CLUB-LANE-1. The 577 harvested committee addresses ARE in the live pool and 313 distinct clubs are drawable in Pretoria and Cape Town, both cities armed with green gates - PROBED 5 Sep 2026: zero have been emailed. The letter exists (sports_club_outreach.html), it renders through the real sender with no unfilled merge field, and it meets every condition of RUL-099's standing letter authority, so no fresh approval gates it. Week 1 is the model's honest default: the next wave can draw it. 157 asks the counterfactual - what if the clubs are never written to."},
+  clubProvW:{v:157,  lo:0,  hi:157, st:1,   l:"Week the remaining federations are read", n:"157 = never, which is today's truth: two provincial bodies of seventeen have been read. Set a week and clubProv worth of further bodies enter the pool from then. The reader is built and idempotent, the pages are public and the cost is compute - this is the cheapest supply lever in the model, and the one the sensitivity sweep should be pointed at first."},
+  fedW:     {v:157,  lo:0,  hi:157, st:1,   l:"Week the federation permission letter sends", n:"The seventeen-secretary letter asking a provincial body to tell its OWN members about us. Written, reviewed and unsent. 157 = never. This is the one lane that reaches people we hold no address for and could never lawfully hold one for - including the 65 French and Portuguese personal mailboxes RUL-101(e) explicitly leaves this route open for. It is also the slowest: a committee answers in weeks, not nights."},
+  unionW:   {v:157,  lo:0,  hi:157, st:1,   l:"Week a teachers' union or SACE agreement lands", n:"157 = never, and that is the honest default because nobody has been approached. The teachers pool we actually hold is 1,622 rows of SCHOOL OFFICES - probed, not assumed - so this lever is not an accelerant on an existing lane, it is the ONLY door to individual teachers. Turning it on injects unionMemb people who arrive already told by a body they trust."},
+  goalW:    {v:0,    lo:0,  hi:157, st:1,   l:"Week the goal agent starts its nightly draw", n:"RUL-096: the whole onboarding task was handed to a Fable 5.1 agent as ONE goal on 4 Sep 2026 - get 20 people we contacted cold to publish a listing by their own hand by Fri 31 Oct 2026 - and it began running unattended at 01:00 SAST on Sat 5 Sep. Week 0 is not an assumption, it is a fact on the clock. What changed structurally is not the sending, it is the SHAPE of the sending: the v3.2 ladder was a dated fortnight, and this is a nightly gated draw that keeps going until the reachable pool is empty. 157 asks what the plan looks like without it."},
+  goalCap:  {v:6,    lo:0,  hi:30,  st:1,   l:"Goal agent sends /city /night", n:"The batch cap the agent currently restrains itself with, well under RUL-053's 30. David, 5 Sep: gates, not calendars - a send waits for a REAL gate (bounce stop-loss, the per-city day gap, provider limits, a clearance we do not hold) and for nothing else; a self-imposed measuring week is not a gate. So this cap, not the calendar, is the throttle - and it is a dial."},
+  goalCities:{v:43,  lo:1,  hi:120, st:1,   l:"Cities the agent may visit tonight", n:"43, measured 5 Sep 2026 - it was 14 that morning. The jump was not new scraping: seven armed US cities had no line in the wave script, 19 cities across five countries were absent from the policy the script reads, and five rows carried the country as the words South Africa rather than the code, which resolved to nothing and quietly refused to send. Every gap was one list not matching another, failing silently. At 43 cities and 6 a night the agent can spend the whole reachable universe in about eleven nights."},
   featW:    {v:8,    lo:0,  hi:157, st:1,   l:"Week the planner lane switches on", n:"planners.heritage / .weekend / .expedition already exist as flags and ship DARK - Phase A is built, you flip the switch. 157 = never, which is what the model assumed until now."},
   rollW:    {v:157,  lo:0,  hi:157, st:1,   l:"Optional later outreach wave", n:"OFF by default. After the launch window the model runs unencumbered by our present development state - no scraped-list ceiling, no batch rate, no per-day cap. Set a week here only to ask what an extra outreach push would add on top."},
   agPush:   {v:1.0,  lo:0,  hi:4,   st:.1,  l:"Agency outreach intensity",     n:"Multiplier on agency conversion. Hubs are the fastest lever you own."},
@@ -564,6 +603,12 @@ const PLAN_MISSING=[];
 })();
 /* how many go out on one ladder day: the cap, or the real list if it is shorter */
 const VARSITY_IX=VARSITY_CITIES.map(nm=>CITY_IX[nm]).filter(i=>i!==undefined);
+/* CLUB-LANE-1: the two provinces actually read, in the two cities the harvest landed in.
+   Athletics Gauteng North is a Pretoria body, Western Province Athletics a Cape Town one.
+   Raising clubProv spreads further bodies across the ZA plan cities by population, which is
+   how provincial sport is actually distributed. */
+const CLUB_CITIES=["Pretoria","Cape Town"];
+const CLUB_IX=CLUB_CITIES.map(nm=>CITY_IX[nm]).filter(i=>i!==undefined);
 /* SIM-RING-1 (RUL-074): David's A-PLAN as built in CityLauncher (citylauncher_launch.html
    Pipeline - RUN WAVE): five sequential scrape+send waves. Wave 1 = the v3.2 ladder above.
    Waves 2-5 arm below, each city with its own RAMP-1 ramp; cities already in the ladder
@@ -711,6 +756,13 @@ function simulate(seed, L, sample, keepTrace, v32){
 
   const trace = keepTrace? {A:[],R:[],mix:[],snap:[],arcs:[],events:[]} : null;
   let everAct=0, waveSignups=0, varsitySignups=0, refSignups=0, varsityDecay=1, newListWk=0;
+  // v1.6 lanes: clubs/unions/federations, and the goal agent's own nightly draw.
+  let clubSignups=0, fedSignups=0, unionSignups=0, goalSignups=0, fedBodies=0;
+  // Attribution for the goal's OWN scoreboard. The goal is not sellers, it is people WE
+  // CONTACTED who published by their own hand - so organic arrivals, referrals and
+  // buyer-crossovers must not be allowed to flatter it. outE carries the outreach-origin
+  // share of the registered-not-yet-listed pool; first listings are attributed pro rata.
+  let outE=0, outPub=0;
   const rampStreak={};   // RAMP-1: per-city consecutive-clean-wave count
   // SIM-RAMP-2: the plan's addressable list per city, and its ladder window.
   // The fortnight in the written plan was a duration ESTIMATE at full caps, not a
@@ -725,6 +777,21 @@ function simulate(seed, L, sample, keepTrace, v32){
   // one list per city, sized by the campaign the ruling actually authorises
   const varsityPool=new Float64Array(VARSITY_IX.length);
   for(let vi=0; vi<VARSITY_IX.length; vi++) varsityPool[vi]=P.varCap*P.varDays;
+  // The club list is its OWN pool and must never be drawn from the city pool: those rows are
+  // private individuals scraped from adverts, these are committees named on public paperwork.
+  // clubProv bodies x clubYield addresses x clubOne survival = distinct clubs, spread by city pop.
+  const clubPool=new Float64Array(Math.max(1,CLUB_IX.length));
+  const BODIES_IN_HAND=2;                 // measured: AGN and WPA, read live 4 Sep 2026
+  function clubShare(ci){
+    let popSum=0; for(const i of CLUB_IX) popSum+=CITIES[i].pop;
+    return popSum>0 ? CITIES[CLUB_IX[ci]].pop/popSum : 1/Math.max(1,CLUB_IX.length);
+  }
+  (function(){
+    const inHand=Math.round(BODIES_IN_HAND*P.clubYield*P.clubOne);   // = 313 at the measured mids
+    for(let ci=0; ci<CLUB_IX.length; ci++) clubPool[ci]=inHand*clubShare(ci);
+  })();
+  let moreBodiesRead=false;               // clubProvW: the remaining federations get read
+  let unionPool=0, unionOpen=false;
   let tpAccrued=0;
   const seriesTot=new Float64Array(WEEKS);
   let deliverDecay=1;
@@ -760,7 +827,7 @@ function simulate(seed, L, sample, keepTrace, v32){
       if(send<=0) return;
       const conv=convBase*Math.pow(P.fatigue, reps||0);
       const got=binom(r, send, Math.min(.9,conv));
-      E[i]+=got; waveSignups+=got;
+      E[i]+=got; waveSignups+=got; outE+=got;   // every mail() arrival is outreach-origin, by definition
       const rest=send-got;
       const burned=binom(r,rest,P.burn);
       pool[i]-=send; sent[i]+=send;
@@ -788,8 +855,74 @@ function simulate(seed, L, sample, keepTrace, v32){
         const got=binom(r,send,Math.min(.9,convV));
         // RUL-059(e): the target is tutoring CAPACITY. A learning centre that signs up
         // carries several tutors' worth of listings on one account.
-        E[i]+=got*P.varSeats; waveSignups+=got; varsitySignups+=got;
+        E[i]+=got*P.varSeats; waveSignups+=got; varsitySignups+=got; outE+=got*P.varSeats;
         varsityPool[vi]-=send; sent[i]+=send; S[i]=Math.max(0,S[i]-got);
+      }
+    }
+
+    // ---- CLUB-LANE-1: the club letter -------------------------------------
+    // Its own pool, because these rows are organisations reached through a committee.
+    // One send per CLUB, never per officer - the guard that held 237 sibling mailboxes
+    // on the first harvest is the reason this lane can exist at all without a complaint
+    // rate that would take the whole domain down with it.
+    if(L.clubProvW<157 && w>=L.clubProvW && !moreBodiesRead){
+      moreBodiesRead=true;
+      const extra=Math.max(0, Math.round((P.clubProv-BODIES_IN_HAND)*P.clubYield*P.clubOne));
+      for(let ci=0; ci<CLUB_IX.length; ci++) clubPool[ci]+=extra*clubShare(ci);
+    }
+    if(w>=L.clubW && L.clubW<157 && bounceOK){
+      const convC=convBase*P.clubMult;
+      for(let ci=0; ci<CLUB_IX.length; ci++){
+        const i=CLUB_IX[ci];
+        if(clubPool[ci]<=0) continue;
+        // the goal agent's own nightly cap governs this lane too - same sender, same gates
+        const send=Math.min(Math.round(L.goalCap*7), Math.round(clubPool[ci]));
+        if(send<=0) continue;
+        const got=binom(r,send,Math.min(.9,convC));
+        // a club carries its coaches, its junior programme and its kit on one account
+        E[i]+=got*P.clubSeats; outE+=got*P.clubSeats;
+        waveSignups+=got; clubSignups+=got;
+        clubPool[ci]-=send; sent[i]+=send;
+      }
+    }
+
+    // ---- the federation permission letter ---------------------------------
+    // The only pathway in the model where WE do not send. A provincial body writes to its
+    // own members under a relationship it already has, so it reaches addresses we hold no
+    // copy of and could not lawfully hold - the route RUL-101(e) deliberately leaves open
+    // for France and Portugal after the cold lane was closed there.
+    if(w>=L.fedW && L.fedW<157){
+      if(w===Math.round(L.fedW)) fedBodies=binom(r, 17, Math.min(.95,P.fedYes));
+      if(fedBodies>0 && w<L.fedW+8){
+        // a body's own mailing lands over about two months, not in one night
+        const reached=fedBodies*P.fedReach/8;
+        const convF=Math.min(.9, convBase*P.fedMult);
+        const got=binom(r, Math.round(reached), convF);
+        let popSum=0; for(let i2=0;i2<n;i2++) if(CITIES[i2].c==="ZA") popSum+=CITIES[i2].pop;
+        for(let i2=0;i2<n;i2++) if(CITIES[i2].c==="ZA" && popSum>0){
+          const add=got*CITIES[i2].pop/popSum;
+          E[i2]+=add; outE+=add;
+        }
+        waveSignups+=got; fedSignups+=got;
+      }
+    }
+
+    // ---- the union / SACE door to individual teachers ----------------------
+    // Not an accelerant on a lane we have: the 1,622 teacher rows we hold are school
+    // switchboards, probed and confirmed. This is the only door to the individual, and
+    // it opens from the inside.
+    if(w>=L.unionW && L.unionW<157){
+      if(!unionOpen){ unionOpen=true; unionPool=P.unionMemb; }
+      if(unionPool>0){
+        const reached=Math.min(unionPool, P.unionMemb/12);   // a union newsletter is a quarter, not a night
+        const convU=Math.min(.9, convBase*P.fedMult*0.8);    // warm, but a broadcast rather than a club committee
+        const got=binom(r, Math.round(reached), convU);
+        let popSum=0; for(let i2=0;i2<n;i2++) if(CITIES[i2].c==="ZA") popSum+=CITIES[i2].pop;
+        for(let i2=0;i2<n;i2++) if(CITIES[i2].c==="ZA" && popSum>0){
+          const add=got*CITIES[i2].pop/popSum;
+          E[i2]+=add; outE+=add;
+        }
+        unionPool-=reached; waveSignups+=got; unionSignups+=got;
       }
     }
 
@@ -857,6 +990,27 @@ function simulate(seed, L, sample, keepTrace, v32){
         }
       }
       if(rampOn) for(const k in wkB){ rampStreak[k] = runClean ? (rampStreak[k]||0)+1 : 0; }
+
+      // ---- RUL-096: THE GOAL AGENT'S NIGHTLY GATED DRAW ---------------------
+      // The structural change of v1.6, and it is a change of SHAPE, not of volume.
+      // The v3.2 ladder above is a dated fortnight: it empties fourteen named cities
+      // and then stops because the calendar says so. The goal agent does not have a
+      // calendar. It runs every night at 01:00, asks the policy which cities are armed
+      // (43 today, 14 that morning), and draws goalCap from each until a REAL gate
+      // stops it - the bounce stop-loss, the per-city day gap, a provider limit, or a
+      // legal clearance we do not hold. It shares the same city pool as the ladder, so
+      // nothing is double-counted: it simply keeps going where the ladder stopped.
+      if(w>=L.goalW && L.goalW<157 && bounceOK && gateOK){
+        const before=waveSignups;
+        let visited=0;
+        const perCity=Math.max(0, L.goalCap*7);        // nightly cap x seven nights
+        for(let i=0;i<n && visited<Math.round(L.goalCities);i++){
+          if(pool[i]<=0) continue;
+          visited++;
+          mail(i, Math.min(perCity, pool[i]), 0);
+        }
+        goalSignups += waveSignups-before;
+      }
       // Optional later outreach wave. Default is NEVER: after the launch window the model
       // is deliberately unencumbered by anything about our present development state -
       // no scraped-list ceiling, no waves_policy batch rate, no per-day cap. Growth from
@@ -935,6 +1089,10 @@ function simulate(seed, L, sample, keepTrace, v32){
       Aeff[i]=A0[i]+P.w5*A5[i]+P.w20*A20[i]+P.wAg*AG[i];
     }
     const newAct=new Float64Array(n); newListWk=0;
+    // one global denominator for the goal attribution below - outE is a global scalar,
+    // so it must be weighed against the WHOLE registered-not-yet-listed pool, not one city's
+    let totalE=0; for(let i2=0;i2<n;i2++) totalE+=E[i2];
+    const outShare = totalE>0 ? Math.min(1, outE/totalE) : 0;
     for(let i=0;i<n;i++){
       // force of infection
       const betaHere = beta*proof*(1+P.localProof*Lq[i]);
@@ -963,6 +1121,11 @@ function simulate(seed, L, sample, keepTrace, v32){
       const act=binom(r,Math.round(E[i]),P.pAct*delayPen);
       const lap=binom(r,Math.round(E[i]-act),P.eLapse);
       // A registration that never listed is the warmest list in the app, not a corpse.
+      // The goal's own scoreboard. A first listing is only a GOAL publisher if the
+      // person came from our outreach - organic arrivals, referrals and buyer-crossovers
+      // sit in the same E pool and must not be allowed to flatter the number (the §3
+      // anti-gaming rule in ONBOARDING_GOAL.md, expressed as arithmetic).
+      if(outShare>0){ outPub += act*outShare; outE = Math.max(0, outE-(act+lap)*outShare); }
       E[i]-=act+lap; WARM[i]+=lap; A0[i]+=act; newAct[i]=act; everAct+=act; newListWk+=act;
       // buyers: sellers bring their own customer base
       if(act>0){ const want=binom(r,Math.round(act*P.custPer),P.custJoin);
@@ -1211,6 +1374,10 @@ function simulate(seed, L, sample, keepTrace, v32){
         affRev:affRev, tpClicks:tpClicks*WEEKS_PER_MONTH, tpAccrued:tpAccrued,
         toursOpen:(w>=L.tpToursW?1:0), refCost:refCostMo,
         refSignups:refSignups, refNew:refNew*WEEKS_PER_MONTH, varsitySignups:varsitySignups,
+        clubSignups:clubSignups, fedSignups:fedSignups, unionSignups:unionSignups,
+        goalSignups:goalSignups, fedBodies:fedBodies, outPub:outPub,
+        clubLeft:(function(){let t=0;for(let ci=0;ci<clubPool.length;ci++)t+=clubPool[ci];return t;})(),
+        sentTot:(function(){let t=0;for(let i2=0;i2<n;i2++)t+=sent[i2];return t;})(),
         referred:(function(){let t=0;for(let i=0;i<n;i++)t+=REF[i];return t;})(),
         planRuns:planRuns*WEEKS_PER_MONTH, planSlots:planSlots*WEEKS_PER_MONTH,
         planFilled:planFilled*WEEKS_PER_MONTH, planGaps:planGaps*WEEKS_PER_MONTH,
@@ -1407,6 +1574,20 @@ function draw(){
   if(wk){ wk.textContent=st.working||0;
     wk.style.color=(st.cities>0 && (st.working||0)/st.cities<0.5)?'#f4801a':'var(--ink)'; }
   document.getElementById('sCountry').textContent=st.ctry;
+  /* RUL-096 goal track. GOAL_WEEK 8 = the week of Fri 31 Oct 2026 counting from Tue 1 Sep. */
+  (function(){
+    const GOAL_WEEK=8, GOAL_TARGET=20;
+    const pubEl=document.getElementById('sPub'), gEl=document.getElementById('sGoal');
+    if(!pubEl||!gEl) return;
+    const pub=st.outPub||0;
+    pubEl.textContent=Math.round(pub).toLocaleString();
+    const atGoal=RUN.trace.events.filter(e=>e.t==='stat'&&e.w===GOAL_WEEK)[0];
+    if(!atGoal){ gEl.textContent='\u2014'; gEl.style.color='var(--ink)'; return; }
+    const n8=Math.round(atGoal.outPub||0);
+    gEl.textContent=n8+' / '+GOAL_TARGET;
+    gEl.style.color = n8>=GOAL_TARGET ? 'var(--good)' : (n8>=GOAL_TARGET*0.5 ? '#f4801a' : 'var(--bad)');
+    pubEl.style.color = (week>=GOAL_WEEK && pub>=GOAL_TARGET) ? 'var(--good)' : 'var(--ink)';
+  })();
   const R=RUN.trace.R[week];
   const rEl=document.getElementById('sR'); rEl.textContent=R.toFixed(2);
   rEl.style.color = R>=1?'var(--good)':R>=.7?'#f4801a':'var(--bad)';
@@ -1573,6 +1754,54 @@ function diagnose(st){
     add(1,'No referral programme exists',
       'Word of mouth is in the model as an ambient term, but a referral PROGRAMME - instrumented, incentivised, attributable - is not, because the column it needs does not exist. Airbnb put its own programme at about 25% of new bookings in some markets. One column and one hidden input.');
   }
+  /* ===== RUL-096: THE GOAL, AND WHETHER THE MODEL THINKS IT LANDS ===== */
+  (function(){
+    const GOAL_WEEK=8, GOAL_TARGET=20;
+    const g=RUN.trace.events.filter(e=>e.t==='stat'&&e.w===GOAL_WEEK)[0];
+    const n8=g?Math.round(g.outPub||0):0;
+    const now=Math.round(st.outPub||0);
+    add(n8>=GOAL_TARGET?0:(n8>=GOAL_TARGET/2?1:2),
+      n8>=GOAL_TARGET?'The goal lands':'The goal does not land on this run',
+      'The whole onboarding task was handed to one agent on 4 Sep 2026 as a single goal: get 20 people we contacted cold to publish a listing BY THEIR OWN HAND by Friday 31 October. It has run unattended since 01:00 on Saturday 5 September. On this run the model reaches '+
+      n8+' by week 8 (the week 31 Oct falls in) against a target of 20, and '+now+' by the week on screen. '+
+      'The real number today is ZERO, probed against the live database on 5 Sep - 712 people emailed, 155 opened, and nobody has published yet. '+
+      (n8>=GOAL_TARGET
+        ? 'The model says the arithmetic works, and the arithmetic is not the risk - the single unmeasured step is.'
+        : 'Note what does NOT fix this: sending more. Capacity is not the constraint at 43 cities and 6 a night. The lanes that move this number are the ones that change WHO is being asked, not how many.'));
+
+    if((st.clubSignups||0)>0){
+      add(0,'The club lane is carrying the goal',
+        Math.round(st.clubSignups).toLocaleString()+' clubs have joined, bringing about '+
+        Math.round((st.clubSignups||0)*(PM.clubSeats.obs!==null?PM.clubSeats.obs:PM.clubSeats.mid)).toLocaleString()+
+        ' listings between them, and roughly '+Math.round(st.clubLeft||0).toLocaleString()+' clubs are still unwritten-to. '+
+        'A club never advertises, so it is invisible to search and to maps - but it must file paperwork to affiliate, register as a non-profit, enter races and book municipal fields, and that paperwork is published with the secretary address on it. Two provincial athletics bodies yielded 577 addresses and 313 distinct clubs. Athletics South Africa has seventeen such bodies.');
+    } else if(L.clubW>=157){
+      add(1,'The clubs are in the pool and nobody has written to them',
+        '577 committee addresses and 313 distinct clubs sit in the live prospect store, in two cities that are armed with green gates, and ZERO have been emailed - probed 5 Sep 2026. The letter exists and renders cleanly through the real sender. On this run it is never sent, which is what the lever is asking. For two days these people could not be reached by anything, not because the list was missing but because the category existed in no city priority list and no importer had been written - a list that did not match another list, failing silently.');
+    }
+
+    if((st.fedSignups||0)>0){
+      add(0,'A federation is doing the emailing for us',
+        Math.round(st.fedBodies||0)+' provincial bodies agreed to tell their own members, and '+
+        Math.round(st.fedSignups).toLocaleString()+' people arrived that way. This is the only pathway in the model where we never touch the address: the body already has the relationship, so it reaches people whose details we hold no copy of and could not lawfully hold one for - which is precisely the door left open for France and Portugal after the cold lane was closed there on 5 Sep.');
+    }
+    if((st.unionSignups||0)>0){
+      add(0,'The union door is the only door to a teacher',
+        Math.round(st.unionSignups).toLocaleString()+' individual teachers arrived through their own association. Worth stating why this lane is not optional: we hold 1,622 teacher rows and 1,194 of the clean ones are SCHOOL SWITCHBOARDS, not teachers - probed, not assumed. A school office will never list itself as a specialist tutor. A teacher personal address cannot be scraped at all. With ID verification a qualified teacher sits at 95 on the trust score the day they list, above every unqualified homework helper, and keeps every rand of the lesson fee.');
+    }
+
+    /* The honesty item. This one is not about the model, it is about the instrument. */
+    add(1,'Two of the forty-six clicks were people',
+      'Measured 5 Sep 2026: 712 sent, 155 opened, 46 distinct people recorded a click - and when those same events are graded, 56 are machines, 11 uncertain, and TWO are human. Corporate link-scanners fetch every URL in an email and a fetch is indistinguishable from a person unless something grades it; the same class of error produced eleven phantom opt-outs on 1 September. So the click rate in this model reads 0.297 raw and 0.013 human, a factor of twenty apart, and the range has been widened to hold both rather than picking the flattering one. Two clicks is not a rate. Every number on this screen that depends on click-through should be read with that in mind.');
+
+    /* The other honesty item, and the one most likely to make this screen mislead. */
+    const modelSent=Math.round(st.sentTot||0);
+    if(modelSent>1441){
+      add(1,'The model has sent far more mail than we have',
+        'By the week on screen this run has sent '+modelSent.toLocaleString()+' emails. Reality on 5 Sep 2026: 712 people have ever been emailed, and the measured reachable universe is 1,441 - 864 individuals plus the 577 club contacts. The gap is the persistent-scraping assumption carrying the weight: 30 new prospects per armed city per week is the harvest-included rate, and the search scraper on its own measures about 10. So read the counts here as what the machine WOULD do if supply kept up, not as a forecast of what it will do. Supply rather than sending capacity is what the plan expects to bind from mid-September, and this is the line where that shows.');
+    }
+  })();
+
   if((st.varsitySignups||0)>0) add(0,'The university lane has sent',
     Math.round(st.varsitySignups).toLocaleString()+' signups from the eleven US cities already on the plan, on a separate sending subdomain with its own deliverability - so a bad campaign into .edu cannot touch the domain the South African core depends on (RUL-059(d)). The lane opens no new geography by design: depth first, because the binding constraint is liquidity.');
   if(!(st.featOn)){
@@ -1805,6 +2034,8 @@ function buildPanel(which){
       "Travelpayouts":["tpW","tpToursW"],
       "Referrals":["refW"],
       "University lane (RUL-059)":["varsityW"],
+      "The goal agent (RUL-096)":["goalW","goalCap","goalCities"],
+      "Clubs, unions & federations":["clubW","clubProvW","fedW","unionW"],
       "Credential lanes (RUL-072)":["fideW","fideUp"],
       "Money":["discount"],
       "Hostile":["compW","compS"]};
@@ -1820,6 +2051,13 @@ function buildPanel(which){
           if(k==='tpToursW') return L.v>=157?'still declined':'week '+L.v;
           if(k==='refW') return L.v>=157?'no such field yet':'week '+L.v;
           if(k==='varsityW') return L.v>=157?'no send (RUL-059c)':'week '+L.v;
+          if(k==='goalW')     return L.v>=157?'agent off':'week '+L.v+(L.v===0?'  (running)':'');
+          if(k==='goalCap')   return Math.round(L.v)+' / city / night';
+          if(k==='goalCities')return Math.round(L.v)+' cities';
+          if(k==='clubW')     return L.v>=157?'clubs never written to':'week '+L.v;
+          if(k==='clubProvW') return L.v>=157?'2 of 17 bodies read':'week '+L.v;
+          if(k==='fedW')      return L.v>=157?'letter unsent':'week '+L.v;
+          if(k==='unionW')    return L.v>=157?'no union approached':'week '+L.v;
           if(k==='measured') return L.v>=.5?'measured lists':'at the cap';
           if(k==='dayCap') return Math.round(L.v)+' / cat / city / day';
           if(k==='batch') return Math.round(L.v).toLocaleString();
@@ -1892,6 +2130,14 @@ function buildPanel(which){
       "Planner lane live at launch":{featW:0,allure:1,badge:.35,batch:28,agPush:1,stripeW:0,compW:157,complaint:.002,delay:.1},
       "Tours approved + referrals shipped":{tpToursW:13,refW:13,featW:8,varsityW:157,allure:1,badge:.35,batch:28,agPush:1,complaint:.002,delay:.1},
       "Everything on, university lane too":{tpToursW:8,refW:8,featW:0,varsityW:6,allure:1,badge:.35,batch:28,agPush:1,complaint:.002,delay:.1},
+      "TODAY, but at the HUMAN-verified click rate":{goalW:0,goalCap:6,goalCities:43,clubW:1,clubProvW:157,fedW:157,unionW:157,varsityW:157,tpToursW:157,refW:157,featW:8,allure:1,badge:.35,agPush:1,complaint:.002,delay:.1,__obs:{click:0.013}},
+      "TODAY, as the agent is actually running":{goalW:0,goalCap:6,goalCities:43,clubW:1,clubProvW:157,fedW:157,unionW:157,varsityW:157,tpToursW:157,refW:157,featW:8,allure:1,badge:.35,agPush:1,complaint:.002,delay:.1},
+      "Supply as the SEARCH scraper measures it":{goalW:0,goalCap:6,goalCities:43,clubW:1,clubProvW:157,fedW:157,unionW:157,scrapeWk:10,featW:8,allure:1,badge:.35,agPush:1,complaint:.002,delay:.1},
+      "Goal agent, but the clubs are never written to":{goalW:0,goalCap:6,goalCities:43,clubW:157,clubProvW:157,fedW:157,unionW:157,featW:8,allure:1,badge:.35,agPush:1,complaint:.002,delay:.1},
+      "Clubs + the other 15 athletics bodies read":{goalW:0,goalCap:6,goalCities:43,clubW:1,clubProvW:2,fedW:157,unionW:157,featW:8,allure:1,badge:.35,agPush:1,complaint:.002,delay:.1},
+      "Federations say yes":{goalW:0,goalCap:6,goalCities:43,clubW:1,clubProvW:2,fedW:3,unionW:157,featW:8,allure:1,badge:.35,agPush:1,complaint:.002,delay:.1},
+      "A teachers' union opens its door":{goalW:0,goalCap:6,goalCities:43,clubW:1,clubProvW:2,fedW:3,unionW:6,featW:8,allure:1,badge:.35,agPush:1,complaint:.002,delay:.1},
+      "Every association door open, cap lifted to 20":{goalW:0,goalCap:20,goalCities:60,clubW:1,clubProvW:1,fedW:2,unionW:4,featW:0,allure:1.2,badge:.5,agPush:2,complaint:.002,delay:.05},
       "v3.2 as written":{allure:1,badge:.35,referral:0,batch:28,agPush:1,stripeW:0,compW:157,complaint:.002,delay:.1,dayCap:30,measured:1,agGateW:8,rollW:157},
       "v3.2 at the cap, every list full":{allure:1,badge:.35,batch:28,agPush:1,stripeW:0,compW:157,complaint:.002,delay:.1,dayCap:30,measured:0,agGateW:8,rollW:157},
       "v3.2 with agencies from day one":{allure:1,badge:.35,batch:28,agPush:2.5,stripeW:0,compW:157,complaint:.002,delay:.1,dayCap:30,measured:1,agGateW:0,rollW:157},
@@ -1903,7 +2149,14 @@ function buildPanel(which){
     for(const nm in presets){
       const btn=document.createElement('button'); btn.textContent=nm; btn.style.cssText='width:100%;margin-bottom:5px;text-align:left';
       btn.onclick=()=>{const d=Object.assign({},DEFAULTS);
-        Object.assign(d,presets[nm]); for(const k in d)LEVERS[k].v=d[k]; week=0; rebuild();};
+        Object.assign(d,presets[nm]);
+        // A preset may also pin an OBSERVED parameter value - used by the human-verified
+        // click preset, which is the difference between the goal landing and missing.
+        const pin=d.__obs; delete d.__obs;
+        PARAMS.forEach(p=>{ if(p.__presetPinned){ p.obs=null; p.__presetPinned=false; } });
+        if(pin) for(const pk in pin){ if(PM[pk]){ PM[pk].obs=pin[pk]; PM[pk].__presetPinned=true; } }
+        for(const k in d) if(LEVERS[k]) LEVERS[k].v=d[k];
+        week=0; rebuild();};
       g.appendChild(btn);
     }
     b.appendChild(g);

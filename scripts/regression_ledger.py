@@ -16977,5 +16977,61 @@ def rg_ai_never_answers_itself():
     return out
 
 
+@entry("RG-0286", "Every outreach letter carries the brand mark, and carries it INLINE -- the first "
+       "thing a stranger sees of us is never a blocked-image placeholder",
+       LOCKED, fixed_on="2026-09-05",
+       scope="All 15 *_outreach.html templates in CityLauncher/emailer/templates plus "
+             "emailer/inline_images.py and emailer/assets/trustsquare_icon.png. TWO LEGS, and the "
+             "second is the point. (a) PRESENT: every letter renders the green TrustSquare mark "
+             "above the wordmark, with alt text so a client that strips images still says who we "
+             "are. (b) INLINE: the mark is in INLINE_MAP and its asset is on disk, so inline() "
+             "rewrites it to a cid: reference and attaches the bytes -- mail clients block remote "
+             "images by default and a broken box in the header is a worse first impression than no "
+             "logo at all. The asset is 5.7 KB, so carrying it on every send costs nothing. "
+             "inline() degrades gracefully by design: a missing asset keeps the hosted URL rather "
+             "than breaking the image, which is exactly why leg (b) asserts the ASSET EXISTS and "
+             "not merely that the map mentions it.",
+       ref="BRAND-MARK-1, 5 Sep 2026. David, reviewing the club letter he had just tested: 'I like "
+           "its simplicity, and the links worked. I do miss our green trustsquare icon in the "
+           "header.' The header had been a text wordmark since it was written. The mark itself was "
+           "live on the site (/static/brand/icon-192.png -- the green rounded square with the white "
+           "tick) and had simply never reached the letters. Applied to all 15 rather than the one "
+           "he was looking at: a brand mark on one letter and not the others is the same class of "
+           "drift the orphan-letter sweep caught the same day.")
+def rg_letters_carry_the_brand_mark():
+    import glob as _glob
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    tdir = os.path.join(cl, "emailer", "templates")
+    if not os.path.isdir(tdir):
+        return [(INFO, "SKIPPED -- outreach templates are not on this disk")]
+    ICON = "brand/icon-192.png"
+    files = [f for f in _glob.glob(os.path.join(tdir, "*_outreach.html"))
+             if ".bak" not in os.path.basename(f)]
+    for f in files:
+        body = open(f, encoding="utf-8", errors="replace").read()
+        if ICON not in body:
+            out.append((FAIL, "%s has no brand mark in its header (BRAND-MARK-1)"
+                        % os.path.basename(f)))
+        elif 'alt="TrustSquare"' not in body:
+            out.append((FAIL, "%s shows the mark with no alt text -- a client that strips images "
+                              "then shows nothing at all" % os.path.basename(f)))
+    ii = os.path.join(cl, "emailer", "inline_images.py")
+    asset = os.path.join(cl, "emailer", "assets", "trustsquare_icon.png")
+    if not os.path.exists(ii):
+        out.append((FAIL, "inline_images.py is gone -- every image in every letter reverts to a "
+                          "remote URL that clients block"))
+    elif ICON not in open(ii, encoding="utf-8", errors="replace").read():
+        out.append((FAIL, "the brand mark is not in INLINE_MAP -- it would be sent as a remote "
+                          "image and blocked by default (BRAND-MARK-1)"))
+    if not os.path.exists(asset):
+        out.append((FAIL, "emailer/assets/trustsquare_icon.png is missing -- inline() degrades to "
+                          "the hosted URL, so the mark silently becomes blockable again"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "%d outreach letters carry the mark, inlined from a %d-byte asset"
+                    % (len(files), os.path.getsize(asset))))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
