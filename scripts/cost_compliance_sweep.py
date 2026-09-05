@@ -34,7 +34,17 @@ MODEL_RE = re.compile(r"claude-([a-z]+)[-0-9a-z.]*")
 # "claude-*" tokens that are NOT model families (tools/plugins/filenames that merely start
 # with "claude-"). Skipped in model_discipline() so they don't raise spurious "unknown model
 # family" warnings. e.g. claude-mem (the memory plugin) and its claude-mem.db data file.
-KNOWN_NON_MODELS = {"mem"}
+KNOWN_NON_MODELS = {"mem", "relay"}
+# RELAY-NOT-A-MODEL-1 (5 Sep 2026, maintenance loop; DW-095). `claude-relay` is the GIT
+# BRANCH the deploy request pushes to (request_deploy.py: `HEAD:refs/heads/claude-relay`),
+# not a model family and not a call site -- it can never cost a cent. Left unclassified it
+# WARNed, and the warning FED ITSELF: recording the finding writes the literal string
+# `claude-relay` into DAILY_WATCH/OPEN_ITEMS.json, the coverage map and the ledger, so the
+# next sweep finds it there too. The count went 5 -> 13 in one day for that reason alone,
+# with 0 CRITICAL and every real call site metered. A sweep that grows its own noise
+# teaches everyone to stop reading it, which costs far more than the label it misread.
+# Same shape as DW-047 (claude-fable-5) and `mem` above: classify the name, do not mute
+# the check -- a genuine unknown family still WARNs exactly as before.
 # .maint_agent = the maintenance agent's own run exhaust (JSON transcripts of what it
 # considered). Reading an agent's notes about a model as a call site is the same
 # category error as reading a price card as one -- DW-009, 14 Aug 2026. .lintenv is

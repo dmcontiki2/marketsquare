@@ -1,5 +1,5 @@
 # Cost-Compliance Sweep — 2026-09-05
-_Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sweep is static + $0; scanned 7 repos under `/sessions/gracious-loving-dijkstra/mnt/Projects`._
+_Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sweep is static + $0; scanned 7 repos under `/sessions/busy-vibrant-cori/mnt/Projects`._
 
 ## Wrapper compliance — every AI call ceiling-checked + spend-logged (P2)
 
@@ -42,31 +42,18 @@ _Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sw
 - ℹ️ **INFO** — MarketSquare/bea_main.py:1698 Sonnet in the provider-model registry (TASK_MODEL/fallback) — single-source, Tuppence-metered; keep justified
 - ℹ️ **INFO** — MarketSquare/bea_main.py:17670 model constant `PRICE_CHECK_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
 - ℹ️ **INFO** — MarketSquare/dashboard.server.html:1341 model name inside a UI display label — text on a diagram, not a call site (DW-009)
-- 🟠 **WARN** — MarketSquare/DEFENCE_COVERAGE_MAP.html:136 unknown model family `claude-relay` — classify
 - ℹ️ **INFO** — MarketSquare/DEFENCE_COVERAGE_MAP.html:136 Fable (claude-fable-5) in reference text — not a call site (DW-047)
-- 🟠 **WARN** — MarketSquare/DEFENCE_COVERAGE_MAP.html:136 unknown model family `claude-relay` — classify
-- 🟠 **WARN** — MarketSquare/DEFENCE_COVERAGE_MAP.html:136 unknown model family `claude-relay` — classify
-- 🟠 **WARN** — MarketSquare/DEFENCE_COVERAGE_MAP.html:173 unknown model family `claude-relay` — classify
 - ℹ️ **INFO** — MarketSquare/main.py:966 Sonnet in the provider-model registry (TASK_MODEL/fallback) — single-source, Tuppence-metered; keep justified
 - ℹ️ **INFO** — MarketSquare/main.py:967 Sonnet in the provider-model registry (TASK_MODEL/fallback) — single-source, Tuppence-metered; keep justified
 - ℹ️ **INFO** — MarketSquare/main.py:9698 model constant `VISION_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
 - ℹ️ **INFO** — MarketSquare/main.py:10263 model constant `PRICE_CHECK_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
 - ℹ️ **INFO** — MarketSquare/DAILY_WATCH/OPEN_ITEMS.json:433 Fable (claude-fable-5) in reference text — not a call site (DW-047)
-- 🟠 **WARN** — MarketSquare/DAILY_WATCH/OPEN_ITEMS.json:960 unknown model family `claude-relay` — classify
 - ℹ️ **INFO** — MarketSquare/DAILY_WATCH/OPEN_ITEMS.json:960 Fable (claude-fable-5) in reference text — not a call site (DW-047)
-- 🟠 **WARN** — MarketSquare/DAILY_WATCH/OPEN_ITEMS.json:961 unknown model family `claude-relay` — classify
-- 🟠 **WARN** — MarketSquare/DAILY_WATCH/OPEN_ITEMS.json:961 unknown model family `claude-relay` — classify
-- 🟠 **WARN** — MarketSquare/DAILY_WATCH/OPEN_ITEMS.json:1351 unknown model family `claude-relay` — classify
 - ℹ️ **INFO** — MarketSquare/failover/ai_backends.py:45 model constant `REASON_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
 - ℹ️ **INFO** — MarketSquare/failover/ai_backends.py:46 model constant `REASON_VISION_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
 - ℹ️ **INFO** — MarketSquare/marketing/src/build_set.py:14 model constant `SAMPLE_RUN_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
 - ℹ️ **INFO** — MarketSquare/scripts/maintenance_agent.py:375 Fable (claude-fable-5) in reference text — not a call site (DW-047)
 - ℹ️ **INFO** — MarketSquare/scripts/regression_ledger.py:3586 Fable (claude-fable-5) in reference text — not a call site (DW-047)
-- 🟠 **WARN** — MarketSquare/scripts/regression_ledger.py:14319 unknown model family `claude-relay` — classify
-- 🟠 **WARN** — MarketSquare/scripts/regression_ledger.py:14319 unknown model family `claude-relay` — classify
-- 🟠 **WARN** — MarketSquare/scripts/request_deploy.py:42 unknown model family `claude-relay` — classify
-- 🟠 **WARN** — MarketSquare/scripts/request_deploy.py:46 unknown model family `claude-relay` — classify
-- 🟠 **WARN** — MarketSquare/scripts/request_deploy.py:46 unknown model family `claude-relay` — classify
 - ℹ️ **INFO** — AdvertAgent/service/advert_agent.py:125 Sonnet — allowed: paid Level-2, Tuppence-metered
 - ℹ️ **INFO** — AdvertAgent/service/advert_agent.py:168 Sonnet — allowed: paid Level-2, Tuppence-metered
 - ℹ️ **INFO** — AdvertAgent/service/advert_agent.py:272 Sonnet — allowed: paid Level-2, Tuppence-metered
@@ -114,4 +101,4 @@ _Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sw
 - **Paid data feeds** (66): `MarketSquare/ai_service_tiers.py:19`, `MarketSquare/ai_service_tiers.py:110`, `MarketSquare/ai_service_tiers.py:111`, `MarketSquare/ai_service_tiers.py:113`, `MarketSquare/ai_service_tiers.py:198`, `MarketSquare/ai_service_tiers.py:199`, `MarketSquare/ai_service_tiers.py:206`, `MarketSquare/ai_service_tiers.py:207`, `MarketSquare/ai_service_tiers.py:238`, `MarketSquare/ai_service_tiers.py:239`, `MarketSquare/ai_service_tiers.py:243`, `MarketSquare/ai_service_tiers.py:244` …
 - **Paystack (txn)** (11): `MarketSquare/bea_main.py:12645`, `MarketSquare/bea_main.py:12655`, `MarketSquare/bea_main.py:12659`, `MarketSquare/bea_main.py:12662`, `MarketSquare/bea_main.py:12666`, `MarketSquare/bea_main.py:16012`, `MarketSquare/payments.py:32`, `MarketSquare/subscription_monitor.py:157`, `MarketSquare/scripts/audit_env_file.sh:8`, `MarketSquare/scripts/fix_paystack_env.py:71`, `MarketSquare/scripts/verify_paystack_key.sh:17`
 
-**Totals:** 0 critical · 13 warnings · 28 ok · 42 info
+**Totals:** 0 critical · 0 warnings · 28 ok · 42 info

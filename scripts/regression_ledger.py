@@ -7480,20 +7480,76 @@ def rg_external_uptime_watcher():
                           "deploy marker exists, so nothing outside the box is watching. "
                           "Run ops/cloudflare/UPTIME_MONITOR.md's one command after the "
                           "secret rotation, then write the marker."))
+        return out
+
+    # WATCHER-LIVE-PROBE-1 (5 Sep 2026, maintenance loop; DW-098). The liveness half used to
+    # regex a HAND-TYPED `LAST_HEARTBEAT:` date out of this markdown file and FAIL when it was
+    # more than 7 days old. Two things were wrong with that, and the second is the serious one:
+    #   (a) it was about to go RED BY ARITHMETIC ALONE. The marker read 2026-08-29; on 5 Sep the
+    #       age was exactly 7 and it passed by one day, so 6 Sep would have reported "the monitor
+    #       itself is down" in an unchanged world. A red nobody can act on is how a board gets
+    #       ignored, and the next real red goes with it.
+    #   (b) on the evidence ladder it was a READ wearing a PROBE's colour -- it answered "did
+    #       someone type a date recently", never "is the watcher running". This is the last
+    #       watcher standing when SSH is down (DW-096) and the alert path is broken (DW-097),
+    #       so "we cannot say whether it is running" is the one answer it must never give.
+    # The Worker exposes a public GET that runs one real check and returns its state, so LIVENESS
+    # is now PROBED: it must answer, its KV must bind, and the timestamp must be from this minute.
+    # Strictly stronger than the date read, never weaker. A transport failure raises ProbeOffline
+    # -> UNVERIFIED (blind), never a regression, because this machine being off the net says
+    # nothing about the watcher. The typed date stays as INFO only: it records the day a heartbeat
+    # MAIL was witnessed (the alert half, DW-097's question), which is not this half's business.
+    import re as _re
+    from datetime import datetime as _dt
+
+    m = _re.search(r"^LAST_HEARTBEAT:\s*(\d{4}-\d{2}-\d{2})", dep, _re.M)
+    if m:
+        age = (_dt.utcnow() - _dt.strptime(m.group(1), "%Y-%m-%d")).days
+        out.append((INFO, "alert half: last heartbeat MAIL witnessed %s (%d day(s) ago, "
+                          "hand-recorded -- not a liveness measurement)" % (m.group(1), age)))
     else:
-        import re as _re
-        from datetime import datetime as _dt
-        m = _re.search(r"^LAST_HEARTBEAT:\s*(\d{4}-\d{2}-\d{2})", dep, _re.M)
-        if not m:
-            out.append((FAIL, "deploy marker carries no LAST_HEARTBEAT date"))
-        else:
-            age = (_dt.utcnow() - _dt.strptime(m.group(1), "%Y-%m-%d")).days
-            if age > 7:
-                out.append((FAIL, "the watcher's last heartbeat was %d days ago (%s) -- the "
-                                  "monitor itself is down" % (age, m.group(1))))
-            else:
-                out.append((INFO, "external watcher deployed; heartbeat %s (%d day(s) old)"
-                            % (m.group(1), age)))
+        out.append((INFO, "deploy marker carries no LAST_HEARTBEAT date"))
+
+    u = _re.search(r"https://[a-z0-9.\-]+\.workers\.dev", dep)
+    if not u:
+        out.append((FAIL, "the deploy marker names no workers.dev URL -- the external watcher "
+                          "cannot be probed, so its liveness cannot be asserted at all"))
+        return out
+    url = u.group(0)
+    try:
+        _rq = urllib.request.Request(url, headers=UA)
+        body = urllib.request.urlopen(_rq, timeout=25).read().decode("utf-8", "replace")
+    except Exception as ex:
+        raise ProbeOffline("external watcher %s unreachable from this machine (%s)"
+                           % (url, repr(ex)[:90]))
+    try:
+        st = json.loads(body)
+    except Exception:
+        out.append((FAIL, "the external watcher answered %s with something that is not JSON -- "
+                          "it is not running the check it was deployed to run" % url))
+        return out
+    if not st.get("kv"):
+        out.append((FAIL, "the external watcher answered but its KV state store is NOT bound "
+                          "(kv=%r) -- it cannot count consecutive failures, so it can never "
+                          "decide an outage has begun" % (st.get("kv"),)))
+    at = str(st.get("at") or "")
+    fresh = None
+    try:
+        fresh = abs((_dt.utcnow() - _dt.strptime(at.replace(" UTC", ""),
+                                                 "%Y-%m-%d %H:%M:%S")).total_seconds())
+    except Exception:
+        pass
+    if fresh is None:
+        out.append((FAIL, "the external watcher's reply carries no readable timestamp (at=%r) "
+                          "-- a stale cache cannot be told from a live check" % (at,)))
+    elif fresh > 900:
+        out.append((FAIL, "the external watcher replied with a timestamp %.0f min old (%s) -- "
+                          "it is serving a stale result rather than running the check"
+                          % (fresh / 60.0, at)))
+    if not any(s == FAIL for s, _ in out):
+        out.append((INFO, "external watcher PROBED alive at %s: ran a real check at %s "
+                          "(site ok=%r, %s), KV bound" % (url, at, st.get("ok"),
+                                                          st.get("reason"))))
     return out
 
 
@@ -15846,6 +15902,113 @@ def rg_stoploss_discovery():
     if not any(r == FAIL for r, _ in out):
         out.append((INFO, "cleaner discovers its own latched cities, prints city names only, "
                           "never waits for a key"))
+    return out
+
+
+@entry("RG-0274", "The SSH lockout cure is SCHEDULED, not merely available: the 20-min host "
+       "agent runs hetzner_fw_selfheal.py on every tick, before its no-request early exit",
+       LOCKED, fixed_on="2026-09-05",
+       scope="host lane, autodeploy_agent.bat (every 20 min on David's PC, which shares the "
+             "egress IP the Hetzner SSH allowlist must name). Covers the whole SSH-LOCKOUT-1 "
+             "class, not the one instance that triggered it",
+       ref="FW-SELFHEAL-SCHEDULED-1 (5 Sep 2026, maintenance loop). RG-0099 went red for the "
+           "THIRD time today (26 Aug, 2 Sep, 5 Sep): the allowlist held 197.185.137.157/32 from "
+           "a router reset while the live egress was 197.184.107.115, so port 22 timed out on "
+           "3/3 probes for David and for every session. Each previous red was healed BY HAND by "
+           "whichever session noticed -- the cure (scripts/hetzner_fw_selfheal.py) existed since "
+           "17 Aug and RG-0188 proved it executable, but NOTHING CALLED IT: a grep for the script "
+           "across every .bat found zero schedulers. That is the recurrence engine, not bad luck. "
+           "A remedy only a human remembers is a chore; the ledger rule says fix the class. The "
+           "healer now runs on the tick that was already there, deliberately ABOVE the "
+           "no-request early exit (below it, it would only run on deploy ticks and the lockout "
+           "would survive quiet days), with its exit code discarded so a Hetzner API hiccup can "
+           "never block a deploy. It can only ever name the IP of the machine that ran it, so it "
+           "cannot lock anyone out -- it is the anti-lockout. RG-0099 detects, RG-0188 proves the "
+           "cure runs, this asserts the cure is WIRED.")
+def rg_fw_selfheal_is_scheduled():
+    bat = repo_file("autodeploy_agent.bat")
+    if bat is None:
+        return [(INFO, "running outside the repo -- self-heal scheduling check skipped")]
+    out = []
+    if "hetzner_fw_selfheal.py" not in bat:
+        out.append((FAIL, "autodeploy_agent.bat no longer calls scripts/hetzner_fw_selfheal.py -- "
+                          "the SSH allowlist is back to healing only when a human notices, which "
+                          "is how RG-0099 rotted three times (26 Aug, 2 Sep, 5 Sep)"))
+        return out
+    exit_marker = 'if not exist "%REQ%" if not exist "%CLREQ%" exit /b 0'
+    if exit_marker in bat:
+        if bat.index("hetzner_fw_selfheal.py") > bat.index(exit_marker):
+            out.append((FAIL, "the self-heal call sits BELOW the no-request early exit in "
+                              "autodeploy_agent.bat -- it would only run on ticks that already "
+                              "carry a deploy request, so a lockout on a quiet day survives"))
+    else:
+        out.append((INFO, "the no-request early exit line has changed shape -- ordering could not "
+                          "be asserted; re-read autodeploy_agent.bat by eye"))
+    if not any(s == FAIL for s, _ in out):
+        out.append((INFO, "self-heal wired into the 20-min host tick, above the early exit"))
+    return out
+
+
+@entry("RG-0275", "The cost sweep does not manufacture its own findings: `claude-relay` is "
+       "classified as the git branch it is, so the WARN count cannot feed itself",
+       LOCKED, fixed_on="2026-09-05",
+       scope="scripts/cost_compliance_sweep.py's model_discipline pass, and through it every "
+             "instrument whose findings are written back into files the sweep then scans "
+             "(DAILY_WATCH/OPEN_ITEMS.json, DEFENCE_COVERAGE_MAP.html, this ledger). Class "
+             "property: any unclassified `claude-*` token that appears in the sweep's OWN "
+             "output has this loop, not just this one name",
+       ref="RELAY-NOT-A-MODEL-1 (5 Sep 2026, maintenance loop), closing DW-095. The sweep exited "
+           "1 with 5 WARN lines on 4 Sep and 13 on 5 Sep -- growing daily, 0 CRITICAL, every real "
+           "call site metered. `claude-relay` is the GIT BRANCH request_deploy.py pushes to "
+           "(HEAD:refs/heads/claude-relay); it cannot cost a cent. Unclassified it WARNed, and "
+           "recording the WARN wrote the literal string into the watch register, the coverage map "
+           "and this file, so the next sweep found it THERE too -- the count rises for as long as "
+           "the item stays open. That is a feedback loop, not drift, and its real cost is that a "
+           "sweep which grows its own noise teaches everyone to stop reading it -- the same way a "
+           "board full of stale reds stops being read. Fixed like DW-047 (claude-fable-5) and "
+           "`mem` before it: classify the name, never mute the check -- a genuine unknown family "
+           "still WARNs exactly as before. Evidence: --quiet exit 1 -> exit 0 the same minute.")
+def rg_cost_sweep_classifies_relay():
+    src_ = repo_file("scripts/cost_compliance_sweep.py")
+    if src_ is None:
+        return [(INFO, "running outside the repo -- cost-sweep classification check skipped")]
+    out = []
+    m = re.search(r"KNOWN_NON_MODELS\s*=\s*\{([^}]*)\}", src_)
+    if not m:
+        out.append((FAIL, "cost_compliance_sweep.py no longer defines KNOWN_NON_MODELS -- the "
+                          "classification the sweep needs to tell a branch name from a model "
+                          "family is gone"))
+        return out
+    if '"relay"' not in m.group(1) and "'relay'" not in m.group(1):
+        out.append((FAIL, "`relay` has been dropped from KNOWN_NON_MODELS -- the sweep will WARN "
+                          "on the claude-relay git branch again, and every WARN it records writes "
+                          "that string into files it later scans, so the count grows daily"))
+    if "MODEL_RE" not in src_ or "unknown model family" not in src_:
+        out.append((FAIL, "the unknown-model-family check itself is gone from the sweep -- the "
+                          "fix for DW-095 was to classify one name, never to mute the check"))
+
+    # Read-back half: the newest sweep report must not carry the loop's signature line.
+    import glob as _glob
+    rep = sorted(_glob.glob(os.path.join(REPO, "Records", "COST_SWEEP_*.md")))
+    if rep:
+        try:
+            txt = open(rep[-1], encoding="utf-8", errors="replace").read()
+        except OSError:
+            txt = ""
+        if "claude-relay` \u2014 classify" in txt or "unknown model family `claude-relay`" in txt:
+            out.append((FAIL, "the newest cost sweep report (%s) still carries the "
+                              "`claude-relay` unknown-family WARN -- the classification is not "
+                              "reaching the run that writes the report"
+                        % os.path.basename(rep[-1])))
+        else:
+            out.append((INFO, "newest sweep report %s carries no claude-relay unknown-family WARN"
+                        % os.path.basename(rep[-1])))
+    else:
+        out.append((INFO, "no COST_SWEEP report on disk to read back -- source classification "
+                          "asserted only"))
+    if not any(s == FAIL for s, _ in out):
+        out.append((INFO, "claude-relay classified as a non-model; the unknown-family check is "
+                          "still armed for real families"))
     return out
 
 
