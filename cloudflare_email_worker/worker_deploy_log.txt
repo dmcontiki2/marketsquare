@@ -54,3 +54,93 @@ Scope (Access)
 - email_sending (write)
 - browser (write)
 - challenge-widgets.write 
+ 
+===== deploy_email_worker Sat 09/05/2026 16:31:02.35 ===== 
+--- pre-flight, is the app answering --- 
+health=200 
+--- whoami --- 
+
+ ⛅️ wrangler 3.114.17 (update available 4.129.0)
+------------------------------------------------
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mThe version of Wrangler you are using is now out-of-date.[0m
+
+  Please update to the latest version to prevent critical errors.
+  Run `npm install --save-dev wrangler@4` to update to the latest version.
+  After installation, run Wrangler with `npx wrangler`.
+
+
+Getting User settings...
+👋 You are logged in with an OAuth Token, associated with the email dmcontiki2@gmail.com.
+┌────────────────────────────────┬──────────────────────────────────┐
+│ Account Name                   │ Account ID                       │
+├────────────────────────────────┼──────────────────────────────────┤
+│ Dmcontiki2@gmail.com's Account │ 2026215991ebbdad051b8ef569d622aa │
+└────────────────────────────────┴──────────────────────────────────┘
+🔓 Token Permissions:
+Scope (Access)
+- user (read)
+- offline_access 
+- account (read)
+- workers (write)
+- workers_kv (write)
+- workers_routes (write)
+- workers_scripts (write)
+- workers_tail (read)
+- d1 (write)
+- pages (write)
+- zone (read)
+- ssl_certs (write)
+- ai (write)
+- ai-search (write)
+- ai-search (run)
+- websearch.run 
+- agent-memory (write)
+- queues (write)
+- pipelines (write)
+- secrets_store (write)
+- artifacts (write)
+- flagship (write)
+- containers (write)
+- cloudchamber (write)
+- connectivity (admin)
+- email_routing (write)
+- email_sending (write)
+- browser (write)
+- challenge-widgets.write 
+--- npm install, postal-mime --- 
+npm warn deprecated rollup-plugin-inject@3.0.2: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-inject.
+npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+
+added 59 packages in 17s
+--- deploy --- 
+
+Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
+
+ ⛅️ wrangler 3.114.17 (update available 4.129.0)
+------------------------------------------------
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mThe version of Wrangler you are using is now out-of-date.[0m
+
+  Please update to the latest version to prevent critical errors.
+  Run `npm install --save-dev wrangler@4` to update to the latest version.
+  After installation, run Wrangler with `npx wrangler`.
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mYou are about to publish a Workers Service that was last published via the Cloudflare Dashboard.[0m
+
+  Edits that have been made via the dashboard will be overridden by your local code and config.
+
+
+? Would you like to continue?
+🤖 Using fallback value in non-interactive context: yes
+Total Upload: 109.78 KiB / gzip: 26.63 KiB
+Your worker has access to the following bindings:
+- Vars:
+  - BEA_INBOUND_URL: "https://trustsquare.co/email/inbound"
+  - CUSTOMER_FIREWALL: "1"
+Uploaded trustsquare-email-triage (7.87 sec)
+Deployed trustsquare-email-triage triggers (3.27 sec)
+  https://trustsquare-email-triage.dmcontiki2.workers.dev
+Current Version ID: 7f44030f-d236-4fde-8608-c878d7745dcd
+[OK] email worker deployed with CUSTOMER_FIREWALL=1. 

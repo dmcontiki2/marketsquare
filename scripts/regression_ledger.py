@@ -11677,7 +11677,7 @@ def rg_summary_anon_heartbeat_only():
 @entry("RG-0212", "The customer-email firewall: after launch, no customer mail is ever "
        "forwarded to a personal inbox -- complaints live between the user and the triage "
        "AI, and escalation reaches David through the admin surfaces only",
-       OPEN,
+       LOCKED, fixed_on="2026-09-05",
        scope="RUL-069 (30 Aug 2026) + EMAIL-FIREWALL-1 in cloudflare_email_worker/src/"
              "worker.js. CLASS: any lane that lets a customer's email land in a personal "
              "mailbox belongs here -- today that is the worker's dead-letter forward "
@@ -11693,7 +11693,21 @@ def rg_summary_anon_heartbeat_only():
              "is not customer mail and does not trip this.",
        ref="EMAIL-FIREWALL-1, 30 Aug 2026. Until armed, ONE-INBOX-1's dead-letter still "
            "forwards triage-unreachable and attachment mail to the personal inbox -- "
-           "correct pre-launch, a RUL-069 breach after.")
+           "correct pre-launch, a RUL-069 breach after. "
+           "ARMED 5 Sep 2026 on David's explicit word -- 'Please close that door for me' -- "
+           "worker trustsquare-email-triage version 7f44030f-d236-4fde-8608-c878d7745dcd, "
+           "deployed 16:31:46 SAST through the host queue. The var lives in wrangler.toml, IN "
+           "GIT, rather than as a CLI flag: this morning's LAST_HEARTBEAT lesson applied the same "
+           "day -- a setting that depends on what somebody last typed is not a setting, it is a "
+           "memory. PRE-FLIGHT, because arming can bounce real customers: /email/inbound was "
+           "proven to accept the worker's EXACT payload including the has_attachments field the "
+           "model had never declared (200, extra field ignored -- had it 422'd, arming would have "
+           "bounced every customer email), the deploy bat refuses to arm unless /health answers "
+           "200, and ATTACHMENT-TRUTH-1 shipped first so attachment mail is marked and held "
+           "rather than silently losing the document the forward used to carry. PROVEN AFTER: a "
+           "message to support@ was recorded by the pipeline (email_triage row 24) and did NOT "
+           "appear in David's Gmail -- searched, empty -- where the identical test four hours "
+           "earlier had landed in his inbox.")
 def rg_customer_email_firewall():
     out = []
     wpath = os.path.join(REPO, "cloudflare_email_worker", "src", "worker.js")
@@ -11710,11 +11724,21 @@ def rg_customer_email_firewall():
         out.append((FAIL, "worker.js carries the personal address in %d places -- a "
                           "forward outside the single gated dead-letter branch breaches "
                           "the firewall by construction (RUL-069)" % fwd))
+    # The var belongs in wrangler.toml, not in whatever the last person typed: a deploy
+    # from a clean checkout must come up ARMED. Asserted, because the record file alone
+    # would only prove somebody once typed a command (this morning's LAST_HEARTBEAT lesson).
+    tpath = os.path.join(REPO, "cloudflare_email_worker", "wrangler.toml")
+    if os.path.exists(tpath):
+        tsrc = open(tpath, encoding="utf-8").read()
+        if 'CUSTOMER_FIREWALL = "1"' not in tsrc:
+            out.append((FAIL, "wrangler.toml no longer carries CUSTOMER_FIREWALL = \"1\" -- the "
+                              "next worker deploy would come up UNARMED and start forwarding "
+                              "customer mail to the personal inbox again (RUL-069)"))
     rec = os.path.join(REPO, "cloudflare_email_worker", "ARMED_RECORD.md")
     if os.path.exists(rec) and "CUSTOMER_FIREWALL=1" in open(rec, encoding="utf-8").read():
-        out.append((INFO, "source half holds AND the arming record exists (wrangler var "
-                          "CUSTOMER_FIREWALL=1 + worker version, dated) -- the firewall "
-                          "is live; promote this entry"))
+        out.append((INFO, "ARMED: wrangler.toml carries CUSTOMER_FIREWALL=1, the record "
+                          "names worker version 7f44030f dated 2026-09-05, and the personal "
+                          "forward survives only in the branch that no longer runs"))
     else:
         out.append((FAIL, "worker not yet ARMED -- expected while OPEN: the firewall is "
                           "code, not yet conduct. At launch: wrangler var "
