@@ -15811,7 +15811,17 @@ function sfInit(){
               adventures_accommodation:'Adventures', adventures_experiences:'Adventures',
               'tour guides':'Adventures', 'tour operators':'Adventures', 'travel agencies':'Adventures', 'travel agency':'Adventures',
               'collector shops':'Collectors', 'collectors dealers':'Collectors', 'card shops':'Collectors',
-              'service companies':'Services', services_technical:'Services', services_casual:'Services'};
+              'service companies':'Services', services_technical:'Services', services_casual:'Services',
+              // INVITE-CAT-2 (6 Sep 2026): the club lane (CLUB-LANE-1, 4-5 Sep) came AFTER the map
+              // above, so every club contact who clicked landed on the generic tiles -- PROBED on
+              // /onboard/funnel: 4 of 4 real Sports Clubs landings stopped at 'landed', none reached
+              // 'photos'. The club letter's worked example is a Tutors listing (coaching sits under
+              // Tutors), so that is where a club arrives. RG-0299 asserts every outreach category
+              // the wave can draw has a route here.
+              'sports clubs':'Tutors', 'sports club':'Tutors', sports_clubs:'Tutors',
+              // ...and the remaining template aliases CityLauncher can put on a link (RG-0299 sweep)
+              accommodation:'Adventures', 'tour guide agency':'Adventures',
+              'casual services':'Services', casuals:'Services', 'services (technical)':'Services'};
     var _k=_map[_mlcat.toLowerCase()] || (SF_CATS[_mlcat] ? _mlcat : null);
     if(_k){ sfStartCat(_k); return; }
   }

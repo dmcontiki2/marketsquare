@@ -42,6 +42,14 @@ believed, and it grows when reach is fixed rather than when more scraping is don
 
 So the honest reachable universe is **1,441 people today**, 1,620 if the EU opens.
 
+**Corrected 6 Sep 2026 (measured):** the registers changed the arithmetic within a day. The
+RRCA national running-club register imported **903 US clubs** on 5 Sep 21:30 ('Sports Clubs' is
+now 1,568 rows, 1,301 distinct clubs), and USATF New England adds 268 more (import queued 6 Sep).
+The reachable universe is therefore roughly **2,600 people**, of which about 1,170 are US club
+contacts under 51 state buckets — and the first US club wave (6 Sep 00:10) sent NONE of them,
+because the club letter crashed on a rand price for every non-ZA reader (fixed the same night,
+wave re-queued). The 250-a-day domain cap (DAILY-CAP-1) is now the binding rate, not supply.
+
 **What 20 publishers requires:**
 
 | if click → publish is | publish rate at 10% click | publishers from 1,441 | verdict |
@@ -84,8 +92,12 @@ step of the guided sell flow (landing, sub-choice, the required main photo accep
 each section, draft, publish) is counted live at `GET https://trustsquare.co/onboard/funnel`
 (counts only, no addresses). Read it every morning next to the number. Known before the
 instrument existed: about ten real people clicked a working link between 3 and 5 Sep and none
-registered; the invited path lands on Step 1 of 6 where a photo of yourself at work is required
-before the next button works. Whether they stop there is now a reading, not a guess. Fix the one step that loses the most people, as a
+registered. **The first reading (6 Sep) contradicted the assumption:** a Tutors invite lands on
+Step 1 of 6 (the required photo of yourself at work), but a CLUB invite did not — the app's
+invite map had never heard of 'Sports Clubs', so all four real club landings went to the generic
+"what are you selling?" tiles and stopped there (9 sessions landed, 0 reached the photo step).
+Fixed and shipped 6 Sep (INVITE-CAT-2); from now on a club arrives at the Tutors photo step and
+whether people stop THERE is the reading to take. Fix the one step that loses the most people, as a
 class and not an instance. If click → publish is above 15%, the arithmetic works and the job is
 volume. If it is below 10%, no amount of sending reaches 20 and the answer is the product, not
 the list.

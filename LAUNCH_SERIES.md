@@ -15,7 +15,7 @@ main-feed landscape. A 1080p delivery cut of each also exists in `feature-videos
 
 | # | folder | finished cut | length | status |
 |---|--------|--------------|--------|--------|
-| 1 | 01-collectables | collectables-FINAL-4K-v3-03jul.mp4 | 43s | **on disk, unpublished** |
+| 1 | 01-collectables | collectables-FINAL-4K-v3-03jul.mp4 | 43s | **on disk, unpublished — upload package READY** (6 Sep 2026): `01-collectables/collectables-FINAL-4K-v3-03jul_youtube/` — 3 titles, description with chapters, 14 tags, vertical cover, pinned comment. David picks the title and posts as a Short. |
 | 2 | 02-heritage | heritage-FINAL-4K-v3-03jul.mp4 | 48s | **on disk, unpublished** |
 | 3 | 03-expedition | expedition-FINAL-4K-v5-04jul.mp4 | 45s | **on disk, unpublished** |
 | 4 | 04-property | property-FINAL-4K-v5-04jul.mp4 | 45s | **on disk, unpublished** |

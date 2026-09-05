@@ -17756,5 +17756,176 @@ def rg_us_search_scraping_yields():
 
 
 
+@entry("RG-0298", "Every letter the daily wave can DRAW tonight RENDERS for its country -- the club "
+       "card's rand price never again crashes 51 US state buckets to zero while the log says "
+       "'wave #1 logged'",
+       LOCKED, fixed_on="2026-09-06",
+       scope="CityLauncher, static + behavioural + observed. (a) tests/test_render_intl.py walks the "
+             "SEND PATH (emailer.render + subject_for + localize_subject) for every armed city x every "
+             "category it can draw, with a synthetic prospect, and expects no UnsupportedCountry -- the "
+             "template-only test (RG-0175c) stays green while a Python-side substitution injects rand, "
+             "which is exactly how this one hid. (b) emailer._club_example is country-aware "
+             "(_CLUB_EXAMPLES_INTL) and the South African worked-example link is ZA-ONLY in "
+             "sports_club_outreach.html. (c) WAVE-CRASH-VISIBLE-1: wave_runner reads the emailer's "
+             "returncode, prints one greppable '!! EMAILER CRASHED' line per crashed category, records it "
+             "in wave_log.json and exits nonzero -- a crashed emailer is a failed wave, never rc=0. "
+             "(d) OBSERVED: the newest launchday log written after the fix carries no emailer traceback. "
+             "CLASS, and the fourth instance of it in two days (RG-0295's 'lists that must agree'): a "
+             "letter is template + code + country + policy, and only the real render path checks all four; "
+             "any guard that fails closed must also fail LOUD, or the fail-closed becomes fail-silent.",
+       ref="CLUB-INTL-1, 6 Sep 2026 00:14-00:31 SAST, read off logs/launchday_06Sun09_2026010.log by the "
+           "onboarding-goal run: Pretoria 12, New York 12, Cape Town 12, Durban 9, Port Elizabeth 8, "
+           "Kimberley 1 sent; then all 51 RRCA-1 state buckets (Northern California, Alabama ... Wyoming, "
+           "~450 letters requested) died in emailer.render at localize's INTL-CURRENCY-1 guard: "
+           "'US: 1 rand amount(s) survive localization (e.g. R700 )'. The rand was _CLUB_EXAMPLES "
+           "example_price ('From R700 / month'), substituted in Python AFTER the template test looked. "
+           "wave_runner ignored the subprocess returncode and printed 'wave #1 logged.' The gap gate was "
+           "unaffected (no sent event = no last_emailed_at) so the states were retried the same night "
+           "once fixed. Proof EXECUTED 6 Sep 01:25: `wave_runner --city Texas` dry-run rendered 12 real "
+           "RRCA rows with 'From $45 / month' and no rand.")
+def rg_wave_letters_render_for_their_country():
+    import glob as _g
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    if not os.path.isdir(cl):
+        return [(INFO, "SKIPPED -- CityLauncher is not on this disk")]
+    esrc = open(os.path.join(cl, "emailer", "emailer.py"), encoding="utf-8", errors="replace").read()
+    for needle, why in (("_CLUB_EXAMPLES_INTL", "the per-country club example card"),
+                        ("country = localize.country_of(prospect)", "_club_example resolving the country")):
+        if needle not in esrc:
+            out.append((FAIL, "emailer.py lost %r -- %s is gone (CLUB-INTL-1)" % (needle, why)))
+    tsrc = open(os.path.join(cl, "emailer", "templates", "sports_club_outreach.html"),
+                encoding="utf-8", errors="replace").read()
+    if "<!--ZA-ONLY--><a href=\"{{example_page}}\"" not in tsrc:
+        out.append((FAIL, "sports_club_outreach.html: the South African worked-example link is no longer "
+                          "ZA-ONLY -- a US club is sent to a rand-priced Cape Town page (CLUB-INTL-1)"))
+    wsrc = open(os.path.join(cl, "emailer", "wave_runner.py"), encoding="utf-8", errors="replace").read()
+    for needle, why in ((".returncode", "reading the emailer's exit code"),
+                        ("EMAILER CRASHED", "the greppable crash line"),
+                        ("sys.exit(1 if crashed", "exiting nonzero on a crashed category")):
+        if needle not in wsrc:
+            out.append((FAIL, "wave_runner.py lost %r -- %s is gone (WAVE-CRASH-VISIBLE-1)" % (needle, why)))
+    tp = os.path.join(cl, "tests", "test_render_intl.py")
+    if not os.path.exists(tp):
+        out.append((FAIL, "tests/test_render_intl.py is GONE -- the send-path render witness has no test"))
+    else:
+        env = dict(os.environ)
+        env.setdefault("TS_POSTAL_ADDRESS", "TrustSquare, 1 Example Rd, Pretoria 0181, South Africa")
+        try:
+            r = subprocess.run([sys.executable, "tests/test_render_intl.py"], capture_output=True,
+                               text=True, timeout=240, cwd=cl, env=env)
+            if r.returncode != 0:
+                tail = ((r.stdout or "") + (r.stderr or ""))[-400:]
+                out.append((FAIL, "a letter the wave can draw does NOT render for its country: " + tail))
+            else:
+                n = len(re.findall(r"^  PASS", r.stdout or "", re.M))
+                out.append((INFO, "send-path render test green: %d assertions across every armed city x category" % n))
+        except Exception as ex:
+            out.append((INFO, "send-path render test could not run here: %r" % (ex,)))
+    # (d) observed: the newest launchday log written after the fix
+    logs = sorted(_g.glob(os.path.join(cl, "logs", "launchday_*.log")), key=os.path.getmtime)
+    fix_at = 1788650000  # 2026-09-06 ~01:13 SAST, when the fix landed on disk
+    fresh = [l for l in logs if os.path.getmtime(l) > fix_at]
+    if fresh:
+        txt = open(fresh[-1], encoding="utf-8", errors="replace").read()
+        n_tb = txt.count("UnsupportedCountry:")
+        n_cr = txt.count("EMAILER CRASHED")
+        if n_tb or n_cr:
+            out.append((FAIL, "the newest launchday log (%s) still carries %d UnsupportedCountry traceback(s) / "
+                              "%d crashed categor(ies) -- a letter is failing closed at send time"
+                        % (os.path.basename(fresh[-1]), n_tb, n_cr)))
+        else:
+            out.append((INFO, "newest post-fix launchday log (%s) carries no emailer crash" % os.path.basename(fresh[-1])))
+    else:
+        out.append((INFO, "no launchday log written since the fix yet -- the observed leg waits for the next wave"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "every drawable letter renders for its country; a crashed emailer is loud and rc!=0"))
+    return out
+
+
+
+@entry("RG-0299", "Every outreach category the wave can DRAW has a landing route in the app -- an "
+       "invited seller never falls to the generic 'what are you selling?' tiles because the "
+       "letter's category is a word ms.js has not heard of",
+       LOCKED, fixed_on="2026-09-06",
+       scope="ms.js sfInit _map (the invite-category map) read against CityLauncher: every key of "
+             "emailer.TEMPLATES (the categories a letter exists for) and every category named in "
+             "waves_policy.json (agency_categories + every city's category_priority) must resolve -- "
+             "lower-cased -- to a key in _map, or be a SF_CATS key verbatim. LIVE half: the funnel "
+             "instrument (GET /onboard/funnel?days=14) must not show a real (non-scanner) src whose "
+             "sessions all stop at 'landed' once ten or more have landed for that category -- the "
+             "symptom that found this. CLASS: the outreach vocabulary and the app's invite map are two "
+             "lists that must agree, and INVITE-CAT-1 (3 Sep) fixed the instance ('no ledger entry; "
+             "cosmetic') so the next lane (clubs, 4-5 Sep) reopened it two days later. Same family as "
+             "RG-0295 and RG-0298: a list that drifts from its sibling fails silently, at the one step "
+             "that has to earn the click.",
+       ref="INVITE-CAT-2, 6 Sep 2026 01:25 SAST, onboarding-goal run. PROBED GET /onboard/funnel?days=2: "
+           "9 sessions landed, 0 reached 'photos'; 4 of them carried a real src "
+           "(pretoria-sports-clubs-20260905/06), the other 5 a scanner-mangled one. READ ms.js: "
+           "sfInit's _map had no 'sports clubs' key, so _k was null and sfRender() drew the category "
+           "tiles instead of sfStartCat -> sfGo('photos'). GOAL_STATE.md had described the invited "
+           "path as 'lands on Step 1 of 6, Photos' -- true for Tutors, never true for a club. Fix: "
+           "'sports clubs' / 'sports club' / sports_clubs -> 'Tutors' (the club letter's worked "
+           "example IS a Tutors listing). Shipped via request_deploy the same run.")
+def rg_every_outreach_category_has_a_landing_route():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    ms = open(os.path.join(REPO, "ms.js"), encoding="utf-8", errors="replace").read()
+    i = ms.find("var _map={cars:'Cars'")
+    j = ms.find("var _k=_map[", i)
+    if i < 0 or j < 0:
+        return [(FAIL, "ms.js sfInit no longer carries the invite-category _map -- every invited "
+                       "arrival falls to the generic tiles (INVITE-CAT-1/2)")]
+    block = ms[i:j]
+    keys = set(k.lower() for k in re.findall(r"(?:^|[{,\s])'?([A-Za-z_][A-Za-z_ ()]*?)'?\s*:\s*'", block, re.M))
+    sfcats = set(re.findall(r"^\s*([A-Za-z_]+)\s*:\s*\{", ms[ms.find("var SF_CATS"):ms.find("var SF_CATS")+20000], re.M)) if "var SF_CATS" in ms else set()
+    wanted = set()
+    if os.path.isdir(cl):
+        esrc = open(os.path.join(cl, "emailer", "emailer.py"), encoding="utf-8", errors="replace").read()
+        tb = esrc[esrc.find("TEMPLATES = {"):esrc.find("}", esrc.find("TEMPLATES = {"))]
+        wanted |= set(k for k in re.findall(r"'([^']+)':\s*TMPL_DIR", tb))
+        try:
+            pol = json.load(open(os.path.join(cl, "emailer", "waves_policy.json"), encoding="utf-8"))
+            wanted |= set(pol.get("agency_categories") or [])
+            for c in pol.get("cities", {}).values():
+                wanted |= set(c.get("category_priority") or [])
+        except Exception as ex:
+            out.append((INFO, "waves_policy.json unreadable here (%r) -- template keys only" % (ex,)))
+    else:
+        out.append((INFO, "CityLauncher not on this disk -- the outreach side of the comparison is skipped"))
+    # categories that are David's separate act or gated never reach the invite path as such
+    exempt = {"National", "Property", "Cars", "Collectors", "Adventures", "Tutors", "Services"}
+    missing = sorted(w for w in wanted if w not in exempt and w.lower() not in keys and w not in sfcats)
+    if missing:
+        out.append((FAIL, "outreach categories with NO landing route in ms.js _map: %s -- an invited "
+                          "seller from these letters lands on the generic tiles (INVITE-CAT-2)" % ", ".join(missing[:8])))
+    else:
+        out.append((INFO, "every drawable outreach category (%d) routes to a sell-flow category" % len(wanted)))
+    if "'sports clubs':'Tutors'" not in block:
+        out.append((FAIL, "the club lane lost its route ('sports clubs' -> Tutors) -- INVITE-CAT-2"))
+    # live half: a real src whose sessions all stop at 'landed'
+    try:
+        body = _get("/onboard/funnel?days=14")
+        if body:
+            d = json.loads(body)
+            stuck = []
+            for src, steps in (d.get("by_src") or {}).items():
+                if re.search(r"\d{8}$", src) and not re.search(r"5359\d{4}$", src):   # real, not scanner-mangled
+                    landed = steps.get("landed", 0)
+                    if landed >= 10 and len(steps) == 1:
+                        stuck.append("%s (%d landed, nothing further)" % (src, landed))
+            if stuck:
+                out.append((FAIL, "LIVE: a real outreach src lands people who go NOWHERE: " + "; ".join(stuck[:3])))
+            else:
+                out.append((INFO, "LIVE funnel (14 d): %d sessions, no real src with >=10 landings stuck at 'landed'"
+                            % d.get("sessions", 0)))
+        else:
+            out.append((INFO, "funnel endpoint not readable from here -- live half not evaluated"))
+    except Exception as ex:
+        out.append((INFO, "funnel endpoint not readable from here (%r) -- live half not evaluated" % (ex,)))
+    return out
+
+
+
 if __name__ == "__main__":
     sys.exit(main())
