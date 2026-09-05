@@ -17712,5 +17712,49 @@ def rg_scraper_foreign_cctld():
     return out
 
 
+@entry("RG-0297", "General search scraping WORKS for the United States -- a run of the US supply lane "
+       "finds real in-country addresses, not zero and not a South African shop filed under Austin",
+       OPEN,
+       scope="CityLauncher/run_local_scraper.py via run_us_scraper.bat, judged on the LATEST host-queue "
+             "result for that bat (host_queue/done/*run-us-scraper.result). Passes when the most recent "
+             "run pushed at least 10 prospects across the 11 US cities AND none of the addresses it "
+             "printed carries a foreign ccTLD (.co.za etc.). EXPECTED TO FAIL until the lane is fixed; "
+             "the moment it passes the ledger prints READY TO LOCK and the entry is promoted with the "
+             "measured yield written into its ref. DAVID'S TASK, 5 Sep 2026: 'Make the scrapers failure "
+             "to get US addresses a task for you to improve it to be effective for the US.' This entry "
+             "IS that task -- the machinery watches it so no session has to remember. Sibling of "
+             "RG-0296 (foreign-ccTLD guard) and RG-0295 (registers are the primary US supply).",
+       ref="MEASURED 5 Sep 2026 19:24: first US run, 11 cities x 7 categories, 33 minutes, ONE address "
+           "(info@antiques-vintages.co.za under Austin). Causes, graded: (1) MEASURED -- the engines "
+           "answer from the searcher's location (Pretoria), so US queries returned SA sites; (2)-(4) "
+           "READ from the code and from how US search results behave -- top results are directories "
+           "(Yelp/Angi/Thumbtack) which the block list then discards, US small-business sites hide the "
+           "mailbox behind a form, and one query x ten links per city-category is a thin net. FIRST "
+           "ROUND OF FIXES, same evening, unmeasured until the next host run: SCRAPER-LOCALE-1 (DDG "
+           "kl=us-en, Bing cc=US) and SCRAPER-USQ-1 (US templates that ask for pages which PRINT a "
+           "mailbox -- the quoted @gmail.com term). If the next run still reads under 10, the next moves "
+           "are: search a US directory that prints emails, run the pages' scripts, widen to 3 queries "
+           "per category. Registers remain the primary US supply (RRCA-1) whatever this reads.")
+def rg_us_search_scraping_yields():
+    import glob as _g
+    d = os.path.join(REPO, "host_queue", "done")
+    files = sorted(_g.glob(os.path.join(d, "*run-us-scraper.result")))
+    if not files:
+        return [(FAIL, "no US scrape result on disk yet -- the lane has not been measured")]
+    latest = files[-1]
+    txt = open(latest, encoding="utf-8", errors="replace").read()
+    m = re.search(r"Done in .*?(\d+) prospects pushed", txt)
+    pushed = int(m.group(1)) if m else 0
+    foreign = sorted(set(e for e in re.findall(r"[\w.+-]+@[\w.-]+\.(?:co\.za|org\.za|co\.uk|com\.au|co\.nz|com\.ar)\b", txt)))
+    if pushed >= 10 and not foreign:
+        return [(INFO, "US search scraping yields: %d prospects in the latest run (%s), no foreign "
+                       "addresses. Promote to LOCKED with this number." % (pushed, os.path.basename(latest)))]
+    why = "%d prospect(s) pushed in the latest run (%s)" % (pushed, os.path.basename(latest))
+    if foreign:
+        why += "; foreign-ccTLD rows slipped through: %s" % ", ".join(foreign[:3])
+    return [(FAIL, "US search scraping still does not yield: " + why)]
+
+
+
 if __name__ == "__main__":
     sys.exit(main())

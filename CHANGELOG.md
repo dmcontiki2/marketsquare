@@ -1,3 +1,780 @@
+## 2026-09-05 — David: "I get the feeling we are not being efficient and effective?" He was right (WAVE-SKIP-EMPTY-1)
+
+Probed the live wave plan rather than answering from the design. Three findings, one of them
+embarrassing.
+
+**1. The wave treats 43 cities as equals when two of them hold 91% of the people.**
+Pretoria 197 and Cape Town 104 — both the freshly imported club lists — against 31 people spread
+across the other 41 cities. **36 of 43 armed cities have nobody to send to at all**, and each one
+still got a visit and a 21-second pace: **12.6 minutes of a 15-minute run spent on empty cities**,
+and 36 log lines burying the 7 that mattered.
+
+Fixed. `wave_cities.py --with-people` asks the send chokepoint who actually has someone tonight,
+so the run visits 7 cities and takes 2.5 minutes instead of 15.1. Asked, never hardcoded — a city
+whose pool refills reappears by itself. `rc=2` means "nobody anywhere", a quiet no-op rather than
+a failure, and the wave still runs its sync legs.
+
+**2. The 12-per-city cap is guarding the wrong dimension.** What protects us is sending
+reputation, which depends on *total* daily volume from our domain — not on how that volume is
+divided between cities. Twelve each to 43 cities is the same load as 500 to one. So the cap slows
+the only two cities that have anyone and protects nothing. Recorded, not yet changed: raising
+total throughput is a deliverability judgement worth taking deliberately rather than in the same
+pass as a bug fix.
+
+**3. One wave per city per calendar day is a clock, not a gate.** Pretoria could send, see clean
+bounces within the hour, and go again — instead it waits for tomorrow because the rule counts
+days. Same class as the two brakes retired earlier today.
+
+**What is working and was left alone:** the doubling. Pretoria's 197 club addresses have never
+been mailed; starting at 12 and doubling only after a clean result is prudent, not slow.
+
+**The embarrassing part, recorded because it is the lesson.** The skip-empty filter shipped
+broken for ten minutes. `_has_people()` fails OPEN by design — a city it cannot evaluate is
+visited, since skipping a city that has people is a real loss. But run as a script, `sys.path[0]`
+is `scripts/`, so the emailer package was not importable, every city threw, every city failed
+open, and the filter silently did nothing while reporting success. **A guard that fails open must
+be asserted on its ability to fail CLOSED**, or it is decoration. The ledger leg now checks the
+import path exists and that the flag returns fewer cities than the policy arms.
+
+Visual for David: `Visuals/wave_launch_plan.html`.
+
+## 2026-09-05 — visibility is a co-equal output, and ten finished films were sitting unpublished (RUL-103)
+
+David: *"to finish the current data base prospects is not a problem, we want visibility as much as
+we want to onboard the people. We will be going on youtube soon and then also Twitter (X) and
+after that we will maybe start looking at content creators and digital marketers."*
+
+**This retires an anxiety that had been quietly shaping the work.** The plan carried "we have
+roughly ONE PASS through our list and a wasted pass cannot be bought back", and that sentence
+produced two self-imposed brakes in a single day — the measure-only week, and halving the batch.
+If an email that does not convert still buys awareness, the cost of a send is only the send.
+Running the pool dry, projected around 10 September, is now an expected outcome rather than a
+failure state, and no session may throttle to postpone it.
+
+**Then the inventory, which changes what "going on YouTube" means.**
+
+`LAUNCH_SERIES.md` described every YouTube entry as an **idea**. Probed with ffprobe: there are
+**ten finished 4K films on disk**, cut 2–4 July, 42–69 seconds, h264 + aac, with 1080p delivery
+cuts beside them. Two months old, never published, and the calendar would have sent the next
+session to *produce* them — the reuse-before-recreate failure CLAUDE.md exists to prevent, and the
+same shape as the club letters that were written and never wired.
+
+The calendar now lists what is on disk, verified, with the ten marked "on disk, unpublished".
+
+**One material finding in the same probe: they are vertical, 2160×3840.** That makes them YouTube
+**Shorts**, not main-feed landscape. A fit rather than a problem — Shorts is the discovery surface
+— but it is written down so no future session assumes a landscape channel is stocked because "we
+have videos". A landscape main-feed piece is separate, unbuilt work, and is now listed as such.
+
+**What stands between the ten and being live:** a QC pass, an upload package each, a channel, and
+David's call on running order. Nothing needs producing. Packaging is mine; which film goes first,
+and the channel's positioning, are launch scope and stay his.
+
+The goal is unchanged — 20 publishers by 31 October. Visibility is a second output of the same
+work, never a substitute for the number.
+
+## 2026-09-05 — US-REGISTERS-1: the first US official register is in the send pool; search scraping measured dead for the US
+
+Onboarding-goal run (Fable 5.1, 18:58–19:45 SAST, in parallel with a second goal session — see GOAL_STATE).
+
+**The number: 0** (probe A 0, probe B 0; 5 registered in total, none published; the raw query's 2 are the seeds).
+
+**Measured.** The first ever US run of `run_us_scraper.bat` (SCRAPER-COUNTRY-1, 18:51–19:24, 11 cities × 7
+categories, DDG + Bing) returned **one** address, `info@antiques-vintages.co.za`, filed under Austin. In the
+same hour the first US **register** — the USATF Pacific Association's public club list — yielded **88 clubs
+with a mailbox from 211 in 8 minutes**. David's 5 Sep instinct ("the pattern that produces volume is the
+official register") is now a measurement, not an opinion.
+
+**Built.**
+- `CityLauncher/us_register_reader.py` — US sibling of `club_reader.py`, an ADAPTER REGISTRY (one entry per
+  body; `pausatf` first). Resumable: a `.done` file records every register key and rows are appended as they
+  are read, because a sandbox call is capped at ~3 minutes and a 210-page register does not fit in one.
+  Writes only a gitignored CSV under `us_registers/` — never a database (31 Aug rule).
+- State bucket: rows land as city=`Northern California` (real town in `suburb`), country=US, Sports Clubs.
+  `waves_policy.json` carries the bucket armed + gates_green with `category_priority: ["Sports Clubs"]`;
+  `localize._CITY_COUNTRY` maps it to US. One bucket = one-day-per-city gap and the ramp pace the register.
+- `CityLauncher/club_import.py` (server-side importer) takes `--country/--category/--source-prefix` and
+  carries phone/suburb/source; defaults unchanged for the ZA rosters.
+- `CityLauncher/scripts/club_import.py` (the allowlisted HOST importer, run with no arguments by the queue)
+  now also reads `us_registers/*.club.csv` and honours a per-row `country`/`category`/`suburb`/`phone`/
+  `source`. Without this the US roster would have landed in the local pool as ZA — or not at all, since
+  `pull_from_server.py` carries verdicts down, not rows.
+- SCRAPER-GEO-1: `run_local_scraper.py` gains `foreign_cctld()` and applies it in both the DDG and Bing
+  result loops — a mailbox whose domain carries another country's ccTLD is dropped at the collector.
+
+**Shipped / executed.** 88 rows imported to the server (`club_import.py --country US --commit`, PROBED 88)
+and to the local send pool via the queue (`run_py CityLauncher\scripts\club_import.py`, result: added 88,
+already present 577; local PROBED 88 scraped in 'Northern California'). The 00:10 wave visits the bucket.
+
+**Ledger.** RG-0295 (US register lane wired end to end: reader → CSV → host importer → policy bucket →
+country map, plus a live server count ≥ 80) and RG-0296 (ccTLD guard, static + behavioural). Both LOCKED,
+both pass.
+
+**Lesson, class-level.** A sandbox read of the local `prospects.db` at 19:04, while the host scraper was
+committing, left a hot journal (valid header, 4 pages) and the DB unreadable from the sandbox until the
+host's next open rolled it back at 19:31. Reads are only safe while the host is idle: check
+`host_queue/worker_log.txt` for a RUN without a DONE first, or read the server copy over SSH. Recorded in
+GOAL_STATE as the first pick-up item.
+
+**Dead ends recorded so nobody re-checks them:** USATF national club finder (sport80 JS widget, unreadable);
+NY DEC licensed-guide open dataset on data.ny.gov (6,762 rows, no email column); rrca.org (403).
+
+**Engagement of the day's 141 sends (PROBED 19:35 UTC+2):** 34 opened and 7 clicked of the 129 morning
+sends, but 6 of the 7 clicks were Azure/Defender scanner ranges within 10 minutes — one real human click.
+18 of 141 bounced (12.8%), 1–2 per city across 14 cities: under the 3-bounce stop-loss floor everywhere,
+but every one of those cities' ramp streaks reset to 12. The 19:31 Pretoria club wave: 12 sent, 5 opened,
+3 clicked, 2 bounced in its first five minutes.
+
+## 2026-09-05 — SUPPORT-FORM-REAL-1: the support form was a hole that said "thank you" (DW-100)
+
+**David raised it, from the right question.** 134 people had opened the app, a listing failure was
+live and already fixed, and not one complaint had arrived. He read that as a broken channel rather
+than as good news. He was right.
+
+**What was live.** `support.html`'s `submitForm()` carried, verbatim:
+
+```
+// In production this would POST to the BEA or a form handler
+// For now show success message and send email
+```
+
+It hid the form, showed **"✅ Message sent — we'll be in touch within one business day"**, then set
+`window.location.href` to a `mailto:` link. Nothing was posted. Nothing was stored. On a desktop with
+no mail client registered the mailto did nothing at all; on mobile it opened a draft the visitor still
+had to send themselves — after they had already been thanked. The form's inputs carried **no `name`
+attributes**, so even a real POST would have submitted empty fields.
+
+**Why it was load-bearing.** From 29 Aug (RUL-064) the in-app tester reporter is deliberately off for
+customers and complaints route to this page and to support@. For a week this WAS the customer complaint
+lane. We cannot know how many messages it swallowed, because nothing was recorded — and that
+unknowability is the damage.
+
+**What was already fine, checked rather than assumed.** support@trustsquare.co delivers: a probe sent
+to it landed in David's Gmail 12 seconds later via Cloudflare Email Routing. The mailto links pointed
+somewhere real; the form was the hole. Also confirmed: the last fault anyone filed was **TS-0035 on
+15 Aug**, and all 35 rows come from three internal tester addresses. No public user had ever
+successfully reported anything.
+
+**The fix.** `POST /support/message` stores the message in `app_faults` (source `support-form`, so it
+inherits the existing triage board and close-draft/close-send reply flow rather than becoming a second
+inbox), emails David a copy, and acks the sender with a reference. **Anonymous by design** (RUL-100):
+the person who cannot list, cannot sign in, or never registered is exactly the one most likely to need
+it, so abuse is handled by rate limit + honeypot + length caps, never a login wall. The row commits
+**before** either email is attempted — a mail failure must never lose a customer's message. The page
+now only claims success when the server confirms, prints the reference, and on failure says so and
+**keeps the user's words on screen**.
+
+**Proven, not inferred.** After deploy: anonymous POST accepted · 1-character message refused 400 ·
+missing email refused 400 · honeypot accepted-and-dropped · a real submission returned **TS-0036**,
+the row is in the live table with `source=support-form, ack_sent=1`, and both emails were read back out
+of Gmail at 12:04:29Z — the notification carrying the full message text, and the acknowledgement to the
+sender. Locked as **RG-0282**, whose live leg re-posts an anonymous `.invalid` probe every run and also
+proves the validation is real rather than a rubber stamp.
+
+**Second fault found on the way — TOAST-DURATION-1 (RG-0283).** `showToast(msg, ms)` accepted a
+duration at **13 call sites and silently ignored it**: messages written to need 6 s got 2.6 s, including
+"Add TrustSquare to your home screen: tap Share then Add to Home Screen" and "Publish failed: <reason>".
+An instruction nobody can finish reading is an instruction nobody follows, and a failure message that
+vanishes is a failure the user cannot report. Fixed and clamped 1.2–12 s. The three hard publish
+failures were also dead ends — they now name trustsquare.co/support, which as of today receives.
+
+**Not changed, deliberately.** RUL-064 stands: the tester fault tab stays off for customers. This fixes
+the lane David chose rather than reversing his ruling.
+
+**Residual, stated rather than glossed.** The Support Centre is reachable from the Me tab and the legal
+pages. Discoverability at the moment of failure is improved (the publish toasts) but not solved.
+
+## 2026-09-05 — SUPPORT-AI-LANE-1: both doors into support now share one engine (DW-102, RUL-102)
+
+**David's correction, and he was right twice over.** Told that support-form messages were being emailed
+to him: *"That is a fault, users using the support page should also go to AI and not to me. This was
+discussed before and i mentioned 100000 users with support queries which will clogg my email?"*
+
+The record agrees with him. **RUL-069** (30 Aug): *"there should be a firewall between users and my
+email. After launch no customer emails should be forwarded to my email. All complaints is done between
+the users and the apps complaints AI agent."* **RUL-087** (1 Sep): *"How would i respond to 100's of
+emails a day if we get traction?"*
+
+**Two doors, one building, different service.** An email to support@ was classified and answered by the
+AI. A message typed into /support was filed as a fault and emailed to a human. Same customer, same
+question, and only one of them scales. The second door was wired that way by SUPPORT-FORM-REAL-1 **the
+same morning** — by the session that had already read both rulings. That is the lesson worth keeping: a
+ruling that lives only in a register a session may or may not read is not enforced.
+
+**The fix is subtraction.** The triage engine was lifted out of `/email/inbound` into `_triage_message()`
+and the support form calls the same one — no second classifier, no second auto-send policy, no second
+reply template. The notify-a-human email is deleted outright. It runs in the background, so the row is
+committed before any AI call and a slow lane can neither lose the message nor make a distressed user
+watch a spinner. ONE-REPLY-1 is preserved: one message in, exactly one out, with a plain acknowledgement
+as the fallback if the lane cannot run — silence is the one outcome a complaint must never get.
+
+**Proved live, both branches.**
+- **TS-0039** *"how do I contact a seller?"* → classified **support**, **answered by the AI**: the reply
+  explained the introduction option and Tuppence and gave no phone number, which is correct product
+  behaviour.
+- **TS-0040** — a formal legal complaint naming POPIA and legal action → classified **legal**, **held**
+  as a draft for the admin queue. The customer received only the neutral acknowledgement. No legal
+  answer was auto-sent.
+
+**Recorded as RUL-102**, which closes the ambiguity that allowed the breach: RUL-069 says *customer
+emails*, and a web form is not literally an email. The firewall is now channel-agnostic — by ruling and
+by assertion. Asserted by **RG-0289** (both doors share one engine; legal and compliance may never enter
+the auto-send set; nothing in the support lane may name a human address) and by `rulings_check` RUL-102,
+whose reflection asserts the **absence** of a personal address — the exact shape of the breach.
+
+Also: reply subjects are now capped at ~58 characters. The first cut used the whole first line of the
+message, so a one-paragraph complaint became a subject every mail client truncated mid-word.
+
+Test rows TS-0038/0039/0040 closed; fault queue back to **0 new**.
+
+**Honest limit, unchanged.** Inbound *email* to support@ is still forwarded to David's Gmail by the
+Cloudflare catch-all. RUL-069's worker firewall (RG-0212) is built and still unarmed, and arming it
+remains his act (RUL-027). This sealed the in-app door, which was ours to seal.
+
+## 2026-09-05 — SELF-REPLY-GUARD-1: the support AI was answering our own robot (DW-101)
+
+Found within the hour it was created, while answering David's question about who handles complaints.
+
+**What is actually live** (PROBED from the running process env, not read off the code):
+`support@trustsquare.co` is AI-triaged with `EMAIL_AUTO_SEND=1`. Categories **support** and **billing**
+are auto-answered; **legal** and **compliance** are drafted and held for David. That part of the design
+works and has worked since May — `email_triage` carries a real "Complaint of fraudulent seller" held as
+*legal*, and a "How do I contact a seller?" auto-answered as *support*.
+
+**The fault.** SUPPORT-FORM-REAL-1, shipped 90 minutes earlier, notified that same mailbox whenever
+somebody used the support form. So the app's own notification arrived from
+`010201…@send.mail.trustsquare.co`, Claude classified it as a customer support message, and **auto-sent
+a reply to a bounce address**. Observed, not theorised: `email_triage` row 18 — category `support`,
+status `sent`, draft opening *"Thanks for testing the TrustSquare support form."*
+
+Harmless that once, because the recipient was a return-path. The shape is not: an autoresponder whose
+input queue can receive its own output is one bad classification away from a loop, and every such
+message costs an AI call and a send.
+
+**Fixed in both places, deliberately.**
+- **Cause** — the support form now notifies David's inbox directly rather than the triaged address, so
+  system mail never enters the customer lane. He still reads it in the same inbox `support@` forwards
+  to, so it remains one inbox.
+- **Class** — `_is_own_system_mail()` refuses auto-send for any sender on our own domain or a subdomain
+  of it. Domain-anchored, never substring: `evil-trustsquare.co` is deliberately not us (unit-checked
+  over 7 cases). The mail is still stored and visible with status `system`, because a guard that
+  silently drops mail is its own blind spot.
+
+**Proved after deploy:** a further support-form submission (TS-0038) left `email_triage` unchanged at 19
+rows, where the two earlier ones had each created one. Locked as **RG-0285**, which checks the guard
+actually gates the send decision rather than merely existing.
+
+**Also done:** the three internal test rows (TS-0036/0037/0038) were closed via the maintenance
+credential — no closure letters sent — and the fault queue is back to **0 new**.
+
+**Worth recording for the next session, because it is the honest state of the design:** the AI *email*
+lane is armed and working. The AI *fix-agent* (`scripts/maintenance_agent.py`) is **not** — the live
+heartbeat reads `mode: SHADOW (kill switch OFF — default, cannot commit), armed: false, live: false`.
+That is the deliberate default and arming it is David's single lever. So messages arriving through the
+support FORM land in `app_faults`, where no armed agent works them; they wait for a human.
+
+## 2026-09-05 — All 50 states in one register, a domain-wide daily cap, and the US scraper's fix round (RRCA-1, DAILY-CAP-1, SCRAPER-LOCALE-1, SCRAPER-USQ-1)
+
+David, 20:26: *"are we reading registers for the full 50 states of the US, if yes can you then in
+parallel fill up the database for us to also start emailing them?"* Honest answer at that
+minute: no — one register, one region (USATF Pacific, 88 clubs). By 20:35, yes.
+
+**RRCA-1.** The Road Runners Club of America publishes its member clubs for every state:
+`POST /clubs/` with `drpState=<ST>` returns the whole state as a table, and each `/club/<slug>/`
+page carries the club's website and one mailbox behind Cloudflare's email obfuscation (decoded
+from `data-cfemail`). Verified on Texas (60+ clubs) and Wyoming (5 of 5 with a mailbox:
+windycitystriders@gmail.com, rcrgillette@gmail.com …). New adapter `rrca` in
+`us_register_reader.py`, resumable per club and per state, ~2,500 clubs. The reader now honours
+a row-level city, so a national register buckets **one policy city per state** ("Texas",
+"New York State" …) while a regional one keeps its single bucket. **51 state buckets armed** in
+`waves_policy.json`, Sports Clubs only. `run_us_registers.bat` (allowlisted, RUL-096 supply
+class) harvests every adapter and imports host-side; queued 20:33, about 50 minutes. The 00:10
+wave visits whichever states have people.
+
+**DAILY-CAP-1.** The 16:10 plan said it plainly: reputation depends on total volume from the
+domain, not on how it is split between cities. 51 new buckets at 12 each could mean 600 in one
+night from a domain whose best day is 246. `defaults.daily_send_cap = 250`;
+`wave_runner.gate_check` counts today's sent events (send-timezone calendar day) and blocks a
+city's wave once reached. Probed: 152 sent today, cap 250. A real gate on the real dimension —
+raised on measured clean days, never on a date.
+
+**The scraper's US failure is now a task, as David asked.** `RG-0297` (OPEN) reads the latest
+host result for `run_us_scraper.bat` and fails until a run pushes ≥ 10 in-country addresses
+with no foreign-ccTLD row; it prints READY TO LOCK the day it passes. First fix round, same
+evening: SCRAPER-LOCALE-1 — DuckDuckGo `kl=us-en` and Bing `cc=US` so a search for Austin is
+answered from the US, not from Pretoria (the measured cause of the one wrong row);
+SCRAPER-USQ-1 — US query templates that ask for pages which PRINT a mailbox (the quoted
+`"@gmail.com"` term), because the old '<trade> <city> email contact' returned Yelp/Angi/Thumbtack,
+which the block list then discarded. DuckDuckGo refuses the sandbox, so the fixes are unmeasured
+until the queued host run; if it still reads under 10, the next moves are listed in the entry.
+
+**Today's sends, for the record (server, 5 Sep SAST):** 00:10 — 11 (New York university
+tutors); 09:31 — 129 across 38 cities; 19:31 — 12 (Pretoria clubs, the first club wave).
+Total 152. Against the 16:10 plan's 55 for tonight: Pretoria's 12 went eight hours early and
+Pretoria doubles at 00:10 if its bounces stay clean; the other 43 are still due at 00:10.
+
+## 2026-09-05 — my own brake was worse than slow: it had disconnected the accelerator (MEASURE-RATE-1 retired)
+
+David: *"Are you still sending email waves as soon as is possible or permissible, rather than on a
+planned schedule? We discussed this and want to keep the emails flowing as fast as is possible?"*
+
+He was right to ask. **No.** I had halved `batch_size` from 12 to 6 this morning "for the
+measurement week" — which is exactly the calendar-thinking he had ruled against hours earlier in
+the same session. Retired the same day it was set.
+
+**The brake was worse than it looked.** The ramp only counts a wave as evidence if it is at least
+`min_wave_for_streak` (12). With the base at 6, **every wave was too small to count**, so no city
+could ever earn a clean streak and the rate was frozen at base permanently — silently, with
+nothing going red. The brake did not merely slow the wave; it disconnected the accelerator.
+
+**What actually governs the rate now**, restored: the ramp doubles a city's batch on each clean
+wave (12 → 24 → 48 → 96), and a single dirty wave resets it. Nobody picks a number — "reputation
+is earned, not configured", as RAMP-1's own docstring puts it. Measured: pool 332 across 43
+cities, **exhausted in 5 nights** at the ramp's pace, against 17 at a flat 12.
+
+Real gates, untouched, and the only things that may hold a send: bounce stop-loss, complaint cap,
+suppression register, one-per-org, MX validity, jurisdiction clearance, and one-day-per-city
+spacing — that last one is deliverability, not a schedule, and it stays.
+
+Locked as RG-0290, three legs: the ramp is on, the base is never below the ramp's own evidence
+floor, and the safety gates still exist. The middle leg is the one that would have caught today.
+
+**Fourth near-miss of the day, recorded because the pattern is the point.** I printed
+`defaults.ramp` — which is `null` — and nearly reported the ramp as disabled. It reads the
+TOP-LEVEL `ramp` key, and it was on the whole time. Reading a proxy instead of the path the code
+takes has now produced three wrong readings and one wrong report in a single session.
+
+**Honest forward look:** at this pace the reachable pool is gone in about five nights, and supply
+becomes the binding constraint again around 10 September — earlier than the plan's mid-September
+estimate. Scraping and the federation lane earn their place then.
+
+## 2026-09-05 — Run 4 of the onboarding goal: the funnel gets an instrument, the first club wave goes, and two tooling faults come out (ONBOARD-FUNNEL-1, COMMIT-CWD-1)
+
+Scheduled run, 19:00 SAST, on Fable 5.1 as David asked. The number: **0**, both probes agree,
+raw 2 = the two seed rows the contract bars.
+
+**The finding.** Since the fixed link went live on 3 Sep, about ten real people had clicked
+through to a working page. Zero registered — `marketsquare.users` has no non-test row since
+25 Aug. Zero published. The leak is click → register, before a listing exists. Walked the
+invited path in a browser: the magic link lands on Step 1 of 6, Photos, "You on the job" is
+required and the next button is disabled until the AI accepts the photo. That is David's
+photo-first ruling (SELL-FLOW-REDO-2, 15 Jul; reaffirmed 29 Aug) and it was not touched.
+What was missing was any way to know whether people stop AT the photo, BEFORE it, or later.
+
+**ONBOARD-FUNNEL-1 — built, shipped, probed live at 19:29.** `POST /onboard/step` (anonymous,
+capped per session, always 200) and `GET /onboard/funnel` (distinct sessions per step, split
+by wave source and category — counts only, never an address). `ms.js` posts one beacon per
+transition: landing (with the wave `src` from the magic link, which the parser had been
+dropping), every screen, photo picked / accepted / rejected / fallback, draft, finish,
+handoff, publish ok/fail. Probe sources (`probe-*`) are excluded from the default view so
+the ledger can post one without polluting the numbers. Verified end to end the same evening:
+a browser session walking landed → subpick → photos produced exactly those three rows under
+its probe source and nothing under the default view. **RG-0293** locks all three legs.
+
+**The first-ever club wave.** Pretoria's 197 club contacts had been imported after the
+morning wave found the city empty, and Pretoria had not sent today — its one-day gap was
+clear. Queued `launch_day_wave.bat`; at 19:31 Pretoria sent 12 Sports Clubs emails (real),
+six other cities dry-ran on the gap as designed. The skip-empty filter worked on the host:
+7 cities visited, not 43.
+
+**The first US general scrape, measured.** `run_us_scraper.bat` ran 11 cities × 7 categories
+for 33 minutes and found **one** address — `info@antiques-vintages.co.za`, a South African
+shop filed under Austin. The scraper's browser canary passed; the queries simply return no
+addresses for US cities. General search scraping is structurally dead for the US.
+ONBOARDING_PLAN.md §3 now says so; registers are the supply engine (US-REGISTERS-1, the
+parallel session, imported 88 USATF Pacific clubs the same hour).
+
+**COMMIT-CWD-1.** Reading the queue results: the 18:51 "CityLauncher commit" reported rc=0
+and pushed to `marketsquare.git`. `CityLauncher\commit.bat` CALLs `MarketSquare\git_unlock.bat`,
+which does `cd /d "%~dp0"` and never comes back, so every git command after the call ran in
+MarketSquare. CityLauncher's own repo still sat at 3 Sep with 10+ modified files — the
+emailer guards, wave_cities.py, club_import.py, the US scraper — uncommitted and unpushed
+since the bat was created. One line: re-enter `%~dp0` after the call. **RG-0294** asserts the
+class (a helper that changes directory poisons every caller).
+
+**HELP-IS-NOT-A-DEPLOY.** `request_deploy.py --help` fell through and shipped HEAD. It did,
+once, this run — already-committed work, health-checked, no harm — and now prints usage.
+
+**Recorded for the next run.** A parallel interactive session was live during this run,
+editing the US register files; this run stayed out of them. The sandbox kills background
+processes when a call ends, so the ledger must run in the foreground (~6 min). The local
+`prospects.db` is often mid-write on the host (scraper, importer, wave) and then unreadable
+from the sandbox — read the server copy over SSH instead.
+
+Ledger before/after: 0 regressions, 18 open (RG-0288 click→publish still unmeasured — a fact
+about the world, not a defect). Rulings check: 0 fail.
+
+## 2026-09-05 — the four ambers cleared, each at the class (David: "can you please fix these ambers")
+
+**GATE-ONESOURCE-1 — the admin gate has ONE source (RG-0196 LOCKED, deferred since 27 Aug).**
+`shared/admin_gate.js` is the source; `scripts/sync_admin_gate.py` inlines it verbatim into
+`dashboard.server.html`, `marketsquare_admin.html` and the local `dashboard.html` between
+`ADMIN-GATE-SRC` markers. INLINED rather than `<script src>` because `dashboard.html` is opened over
+`file://`, where origin *null* cannot load `/static/*.js` — the obvious fix would have broken the one
+copy David actually opens (RG-0076). Nothing about how any page is served changed, so no new lockout
+surface (RUL-027). **The diff proved the deferral had a cost:** the copies had drifted a THIRD time —
+DEVICE-ENROL-1 (3 Sep) had reached two of three and not `dashboard.html`, which was still calling a bare
+`showGate()`. RG-0075 passed throughout, because it checks the two messages it knows about; drift does
+not announce which line it will pick next. RG-0075 keeps the drift check independently, so a broken
+generator cannot satisfy both halves at once. PROBED on the live box: `dashboard.html` and `admin.html`
+both carry a gate block hashing `daddd506`, byte-identical to the source; every `<script>` block in all
+three files re-parsed clean under `node --check`.
+
+**FEA-BASELINE-AUTO-1 — the DEPLOY re-baselines the integrity sensor, not a human (new RG-0281, DW-090).**
+Fourth instance of one class (DW-061 21 Aug, DW-064 26 Aug, DW-088 1 Sep, DW-090 today): every deploy
+legitimately changes the three files `fea_integrity_check.py` fingerprints, so every deploy left it in
+`status: alert` until somebody ran `--update-baseline` by hand — each refresh lasting exactly one deploy,
+once running to eight silent ones. `ops/autodeploy/post_deploy.sh` now does it, **gated** on each live file
+being byte-identical to the source that deploy placed (`?v=` cache-busters normalised, since the deploy
+engine rewrites those in place after placement). Any mismatch and the step REFUSES and lets the alert
+stand — that mismatch IS the tamper case. **Proven by the first deploy that rode it:**
+`/static/post_deploy_status.json` carries `fea_baseline: ok — refreshed after clean deploy (3/3 files
+match source)` at 11:13:49Z, and the on-box check reads `status: ok, alerts: []` straight after a deploy
+that changed all three files.
+
+**OPTOUT-PROBE-ISOLATE-1 — RG-0241 measures its own row, not a shared total (DW-093 residual).**
+The entry read `/optout/status`'s global row count before and after its own probe, so it could not tell its
+own write from anybody else's; on 4 Sep a concurrent session made it report REGRESSION about a bug that was
+not there. `/optout/status?email=` now answers for ONE address, and **refuses real addresses with HTTP 400**
+so it can never become an oracle for whether a person is suppressed. A tripwire that fires on concurrency
+gets muted, and the next true red is muted with it.
+
+**DW-095 — cost sweep exits 0 with zero warnings**, on the class fix landed earlier the same day (RG-0275):
+`claude-relay` is the git branch the deploy pushes to and cannot cost a cent. The loop mattered because
+recording the finding wrote the string into the register and the coverage map, which the next sweep scanned
+— 5 → 13 warnings while the item stayed open.
+
+**Board:** DEFENCE_COVERAGE_MAP.html now reads **65 green · 0 blue · 0 amber · 0 red · 10 grey** (75 cards)
+— fully green for the first time. Narrowly: every card is armed AND asserted today; the ten greys are
+accepted postures with stated reasons. Register: 1 item open (DW-087, the Monday static-scan lane, LOW).
+
+## 2026-09-05 — France and Portugal are out of outreach (RUL-101)
+
+David, shown the measurement: *"I agree lets not email those two countries."*
+
+### The measurement that decided it
+
+179 French and Portuguese rows sat behind the GDPR article 27 fence. 100 of them were clean on
+every other guard. Those 100 split on the one thing French and Portuguese law actually cares
+about — **is it a business address or a personal one**:
+
+| | | |
+|---|---|---|
+| **35** | business addresses | lawful to cold-email on an opt-out basis under legitimate interest, provided the message concerns their professional role |
+| **65** | personal mailboxes (gmail, orange.fr, sapo.pt) | require **prior opt-in** — never lawful to cold-email, with or without a representative |
+
+An article 27 representative runs **€490–€1,000 a year** and would have unlocked **35 people** —
+about €20 a head before anyone converts. The 65 we actually want, individual tutors on personal
+addresses, were never reachable by that purchase.
+
+### What this is and is not
+
+It **defers a market**; it does not close one. GDPR article 3(2) bites on *offering services* to
+people in the EU, so a representative is needed to have French sellers **at all**, not merely to
+email them. Revisited as a market decision once click→publish is measured — never again as an
+emailing cost.
+
+**Examined and rejected:** the article 27(2) exemption for "occasional, low-risk" processing. We
+hold a standing prospect database and send repeated waves, which is the opposite of occasional.
+
+**Barred, written down so no future session mistakes them for cleverness:** sending through an EU
+mail provider, an EU-registered domain or any other relay changes nothing — the law follows the
+data subject, not the server. And "legitimate interest" does not rescue a send to a personal
+mailbox in France. Reported enforcement runs €3,000–€600,000, concentrated on senders who ignored
+opt-outs or used scraped data.
+
+**Left open, and free:** the federation route. A European association emails its own members
+about us, under its existing relationship with them, and we never process their data. It is the
+only lawful route to those 65 personal mailboxes, and the machinery already exists.
+
+### The mechanism, not the intention
+
+No FR/PT city enters `waves_policy.json`, and `TS_EU_REPRESENTATIVE` stays unset, so
+`localize_html` keeps **refusing** to build those messages. Setting that variable now requires a
+new ruling — it is not a configuration detail. `rulings_check.py` asserts all three places agree,
+and the ledger's jurisdiction entry asserts the fence still refuses.
+
+Rulings: 95 checked, 0 fail. The number is still **0**.
+
+### Follow-up the same session — David: "how about the other Schengen countries?"
+
+Probed, and the premise does not hold: **there is no per-country pass to find.** Article 27 is
+ONE EU-wide requirement, not per member state. France and Portugal are the only EU countries ever
+cleared, and Spain, Germany, Italy, the Netherlands and the rest sit in exactly the same
+position. There is no neighbour to enter through.
+
+But the question reframes the economics in David's favour, and that is worth recording: **the
+representative is EU-wide, so it never buys 35 French addresses — it buys 27 countries.** We
+simply hold zero prospects in the other 25 today, which is why the trade looked bad.
+
+The spillover reasoning itself is sound **for the outreach step**: a European or UK-based
+cross-border body (a teachers' union, a travel-agent network, a federation) emailing its own
+members reaches EU people lawfully, because they are the controller of their own member list and
+we never touch it. It costs nothing and it is the only route to the 65 personal mailboxes.
+
+**The risk that creates is the one now asserted (EU-ARRIVAL-TRIPWIRE-1).** Article 3(2) bites on
+*offering services* to someone in the Union — so the spillover route works by producing exactly
+the event that makes the representative necessary. A success on that route with nobody watching
+is the bad outcome. The ledger now watches for the first EU or EEA person to sign up, onboard or
+publish, and goes red the day it happens. Red there means "a decision is live", not "something
+broke". Today: nobody has arrived, so the representative stays a market decision.
+
+## 2026-09-05 — EMAIL-FIREWALL-1 ARMED: no customer mail reaches the personal inbox by any route (DW-103, RG-0212)
+
+**David, 5 Sep:** *"Please close that door for me Claude, i appreciate it."* — the explicit
+authorisation RUL-069 had been waiting on since 30 August.
+
+It stayed his act for six days for a good reason: the armed worker **rejects mail it cannot triage**,
+so a mistake here bounces real customers rather than merely inconveniencing us.
+
+**Armed:** worker `trustsquare-email-triage`, version `7f44030f-d236-4fde-8608-c878d7745dcd`, deployed
+16:31:46 SAST through the host queue. `CUSTOMER_FIREWALL = "1"` lives in `wrangler.toml`, **in git** —
+not as a command-line flag. That is this morning's stale-`LAST_HEARTBEAT` lesson applied the same day: a
+setting that depends on what somebody last typed is a memory, not a setting. A deploy from a clean
+checkout now comes up armed.
+
+**Three pre-flights, because arming can bounce real customers.**
+
+1. `/email/inbound` was proven to accept the worker's **exact payload**, including the
+   `has_attachments` field the Pydantic model had never declared. Extra fields are ignored, not
+   rejected — had it returned 422, arming would have bounced **every** customer email.
+2. The deploy bat refuses to arm unless `/health` answers 200. It logged `health=200` before proceeding.
+3. **ATTACHMENT-TRUTH-1 shipped first.** The firewall ends the forward that used to carry attachment
+   mail to a human mailbox. So attachment mail is now marked in the record and **held** for the admin
+   queue rather than auto-answered without the document the sender actually attached. The worker had
+   been sending `has_attachments` since 30 August and the app had been silently dropping it.
+
+**Proven after arming, with a before/after four hours apart.** A message to support@ was recorded by the
+pipeline (`email_triage` row 24) and **did not appear in David's Gmail** — searched, empty. The
+identical test at 11:54 the same morning *did* land in his inbox. Same path, opposite outcome.
+
+**The first attempt failed safely, and that is worth recording.** The bat died `rc=255` on a cmd parse
+error — *"--- was unexpected at this time"* — because an `echo` inside a parenthesised `if` block
+contained literal parentheses, which closes the block early. **Nothing was deployed**, verified by
+grepping the deploy log for any upload, so the failure cost nothing but a cycle. Rewritten with `goto`
+labels, which cannot be broken that way — this bat runs unattended, where a parse error is a silent
+no-op.
+
+**RG-0212 promoted OPEN → LOCKED**, and strengthened while promoting: it now asserts `wrangler.toml`
+carries the var, not merely that a record file says somebody once typed a command.
+
+**Reversal is one line:** set `CUSTOMER_FIREWALL = "0"` and re-run `deploy_email_worker.bat`.
+
+**Both doors are now closed.** The in-app support form goes to the AI lane (SUPPORT-AI-LANE-1, RUL-102,
+earlier today); inbound email to support@ is triaged and never forwarded. Legal and compliance are still
+held for David in `/admin/email-triage` — that gate is not what today relaxed.
+
+## 2026-09-05 — Contagion model v1.6: the goal agent, the association lane, and two numbers that disagree (MODEL-GOAL-1, MODEL-ASSOC-1)
+
+David: *"update the Cantagion model with our latest Goal orientated scheduled Fable 5.1 project,
+including the stistics of us using the clubs, unions, etc. And please update the model in the Ops
+Dashboard."* Both done, and the model came back with an answer worth reading twice.
+
+### What went into the model
+
+**The goal agent (RUL-096) is now a modelled lane, not a footnote.** Three levers — `goalW`
+(week it starts, default 0 because it has been running unattended since 01:00 on 5 Sep),
+`goalCap` (6 per city per night) and `goalCities` (43, measured; it was 14 that morning). The
+structural point is the SHAPE, not the volume: the v3.2 ladder is a dated fortnight that stops
+because the calendar says so, and the goal agent is a nightly gated draw that keeps going until
+a real gate stops it. It shares the city pool with the ladder, so nothing double-counts — it
+simply continues where the ladder stopped.
+
+**The association lane — clubs, unions, federations.** Nine new parameters, three of them
+`data`-tagged from live measurement rather than guessed:
+
+| | measured |
+|---|---|
+| committee addresses per provincial body | **289** (AGN 366, WPA 211, read live 4 Sep) |
+| survival after one-per-club | **0.542** (577 → 313 distinct clubs) |
+| provincial athletics bodies that exist to read | **17**, of which 2 are read |
+| teacher rows that are school switchboards, not teachers | **1,194 of 1,235 clean** |
+
+Three lanes, each with its own conversion shape, because they are not the same pathway:
+the **club letter** (an organisation reached through its committee, carrying `clubSeats`
+listings once it joins), the **federation permission letter** (the only lane where we never
+touch the address — the body emails its own members, which is precisely the route RUL-101(e)
+left open to France and Portugal), and the **union/SACE door** (not an accelerant on a lane we
+have; the only door to an individual teacher, because a school office will never list itself
+as a specialist tutor).
+
+**Two observed values pinned for the first time**, probed against 712 real sends: open **21.8%**
+and hard bounce **1.54%**. Both sit inside the ranges the model already guessed, which is a
+small vote of confidence in the rest of it.
+
+### The finding, and it is the reason to open the model
+
+**Click is deliberately NOT pinned, because the two available readings differ by a factor of
+twenty.** Raw: 46 distinct people clicked of 155 who opened = 0.297, above the model's old high
+end. Human-verified: the click register grades the same events and finds 56 machines, 11
+uncertain and **two humans** — 2/155 = 0.013, below the model's old low end. Corporate
+link-scanners fetch every URL in an email and a fetch is indistinguishable from a person unless
+something grades it; the same class of error produced eleven phantom opt-outs on 1 September.
+
+So the model now says two different things, and the gap between them is the entire risk:
+
+| | self-published by week 8 (the week 31 Oct falls in) |
+|---|---|
+| at the assumed click rate | **48** — the goal lands with room |
+| at the human-verified click rate | **6** — the goal misses |
+| every association door open, human rate | **14** — still misses |
+
+**Sending more does not decide it.** Capacity is not the constraint at 43 cities and 6 a night.
+The number that decides the goal is the one nobody has measured: of the people who click, how
+many publish. That is now `RG-0288`, held OPEN, watching the join between graded human clickers
+and published rows so no session has to remember to look — it prints READY TO LOCK the day the
+first real conversion happens, and the value gets written into the model as an observed
+parameter.
+
+### An honesty line the model now prints about itself
+
+By week 8 a default run has sent **8,869** emails. Reality on 5 Sep: **712** people have ever
+been emailed and the measured reachable universe is **1,441**. The gap is the persistent-scraping
+assumption carrying the weight, so the diagnostic strip now says so out loud. Checked rather
+than assumed: rows added over the fifteen days to 5 Sep total 2,937 ≈ 32 per armed city per week,
+which supports the default — but strip the two bulk events out and the search scraper alone
+contributed 908 rows ≈ 10 per city per week. Both readings are now in the lever note, and there
+is a preset for the pessimistic one.
+
+**RUL-101 landed in the model too.** A-plan wave 5 (France + Portugal) now defaults to **never**
+rather than week 12. That stopped being a timing placeholder the day David ruled those two
+countries out of outreach.
+
+Eight new scenario presets, including *TODAY, as the agent is actually running* and *TODAY, but
+at the HUMAN-verified click rate* — the two runs worth putting side by side.
+
+### The Ops Dashboard
+
+The +1 page's Horizon view pinned "Contagion Model v1.5 · updated 1 Sep" while the model moved
+underneath it, and nothing said so — the same silent-mismatch class as CLUB-LANE-1 itself. Fixed,
+and then asserted: **RG-0287** now checks that the dashboard's pinned version equals the model's
+own AND that the club counts written on the card are what the database actually holds. A new
+GOAL TRACK card carries the goal, the days remaining (arithmetic, computed live), the last probed
+published count with its date, the 48-versus-6 split, and the five association-lane statistics
+with honest state chips — in pool / 0 emailed, reader built / unread, written / unsent, blocked
+correctly, built.
+
+### Verified, not assumed
+
+Both files parse and balance (588/588 and 58/58 divs). The model was rendered headless in a real
+DOM: no page errors, the goal stat reads, the new lever groups and all eight presets render, and
+the goal diagnostic flips from *lands* to *does not land* when the human click rate is pinned.
+Twelve-seed ensemble at week 8: median 74 self-published. Ledger green, every locked fix holding.
+
+`rulings_check.py` went red on RUL-074 and the assertion was narrowed rather than the change
+reverted: it used to pin the literal `ring5W:12`, which only a newer ruling could break, and now
+pins waves 2–4 plus persistent scraping exactly, and asserts wave 5 is OFF with RUL-101 named
+beside it. Both halves are still assertions; the FR/PT half moved to the ruling that owns it.
+
+Ledger: RG-0287 LOCKED, RG-0288 OPEN. The number is still **0**.
+
+## 2026-09-05 — the green mark reaches the letters (BRAND-MARK-1)
+
+David, reviewing the club letter he had just link-tested: *"I like its simplicity, and the links
+worked. I do miss our green trustsquare icon in the header."*
+
+The header had been a text wordmark since it was written. The mark itself was live on the site
+the whole time — `/static/brand/icon-192.png`, the green rounded square with the white tick — and
+had simply never reached the outreach templates.
+
+**Done in all 17 letters, not the one he was looking at.** A brand mark on one letter and not the
+others is the same drift the orphan-letter sweep caught the same day. The 15 that share the navy
+header get it centred above the wordmark at 44px; the two plain utility letters (follow-up and
+the relink apology) get it left-aligned at 40px to match their table layout.
+
+**Inlined, not linked — this is the part that matters.** Mail clients block remote images by
+default, so a hosted logo would show most recipients a broken box exactly where our first
+impression lives. The mark now goes through `inline_images` as a `cid:` attachment: probed on the
+real send path, **1 inline attachment, 0 remote images left**. The asset is 5.7 KB, so carrying
+it on every send costs nothing. Alt text is set, so a client that strips images still reads
+"TrustSquare".
+
+Asserted as RG-0286, two legs — every letter carries it, AND the asset exists on disk. The second
+leg is not redundant: `inline()` degrades gracefully by keeping the hosted URL when an asset is
+missing, so a deleted file would silently turn the mark back into a blockable remote image with
+nothing going red.
+
+Preview regenerated at `Visuals/letters/club_letter_PREVIEW.html` (icon embedded as a data URI so
+it renders when opened in a browser). All five links re-checked and unchanged.
+
+## 2026-09-05 — AUDIENCE-LANE-1: David was right, the model was wrong, and it was wrong in its strongest engine
+
+David, after reading v1.6: *"you mentioned how we will be able to get a wider audience going the
+teachers, clubs etc. route; but the simulation do not show this to be true?"* And the example
+that pins it: *"teachers that want to make some part time money tutoring... will spread the app
+to their current pupils, accelerating the spread faster and onboard much more pupil users and
+their parents as well."*
+
+**Probed before agreeing, and the probe agreed with him.**
+
+The model already had the mechanism — `custPer` (22 contacts an ordinary seller can bring) ×
+`custJoin` (9% of them join). It is the strongest engine in the whole simulation: switch it off
+and week-52 sellers collapse from **131,558 to 35,910**. Roughly two thirds of the entire curve
+is sellers bringing their own people.
+
+But the association lanes added that morning deposited their sellers into the same
+undifferentiated `E` pool as everyone else, so the audience term read the **pool average**. A
+teacher who came in through a union was bringing **2.0 people** — the same as somebody selling a
+second-hand bicycle. Nothing was missing from the code. There was a number there; it was just
+the wrong one, and that is precisely why nobody had noticed.
+
+### The fix
+
+`assocAud` and `assocJoin`, and a per-city pool (`AE`) that the club, federation and union lanes
+feed. At activation the week's first-listers are split by origin, and association-origin sellers
+draw their audience with their own parameters.
+
+- **`assocAud` — 90 (20–350).** A part-time tutor teaches 15–60 pupils and **every pupil comes
+  with a parent who is the one who actually pays**, so the register is roughly double the class.
+  A club is the same shape at organisation scale.
+- **`assocJoin` — 0.25 (0.04–0.60).** Three things are true here and nowhere else: the ask comes
+  from someone you already know and pay and will see next week; it is transactional rather than
+  promotional (if the tutor takes bookings through the app, joining is how you get your lesson);
+  and the person joining is a **buyer**, which carries none of the model's seller-side friction.
+
+Clubs are deliberately under-counted: a club adds `clubSeats` listings to the seller pool but
+only **one** audience-bearing unit, because a club has one membership, not one per listing.
+Under-claiming is the safe direction for a guessed number.
+
+### What it changes, same seed, measured
+
+| | week 8 (the goal week) | week 52 ever-listed | week 52 buyers |
+|---|---|---|---|
+| no association lanes | 43 self-published | 137,407 | 679,043 |
+| clubs + federations + union | **87** | **199,530** | **1,134,559** |
+
+At the human-verified click rate — the pessimistic reading — the goal week goes from **1** to
+**7**. Off only **108** association sellers. And those buyers then feed the buyer-to-seller
+crossover already in the model, which is the second round nobody plans for.
+
+### The honest limit, asserted rather than buried
+
+Both new parameters are **guesses**. Swing them across their stated range and one year's sellers
+move between **160,232 and 264,363** — a hundred thousand sellers on two untested numbers. So
+`RG-0292` is OPEN: measure what an association seller actually brings. Two ordinary things block
+it — there is no referred-by column in the schema, and no association seller exists yet because
+no club letter has been sent. Neither is a decision for David.
+
+### Two more honesty changes to the screen itself
+
+- **WHAT-IS-WORKING-1.** The diagnostic strip only ever showed the three most SEVERE items, so a
+  mechanism that was *working* could never appear on it — which is how the biggest thing the
+  association lane does stayed invisible on a screen built to explain the model. The constraint
+  list is unchanged; a working item now shows beside it, and mechanism items win that slot ahead
+  of level reports.
+- **SHAPE-NOT-FORECAST-1.** Past 20,000 sellers the strip now says so out loud: 64 of the model's
+  90 parameters are stated guesses, the compounding terms multiply, and by that point the output
+  is the product of a dozen assumptions. The model is for COMPARING lanes at the same settings.
+  The first year, where numbers can still be checked against something real, is where it earns
+  its keep.
+
+Model **v1.7**; dashboard pin moved with it and the +1 page card now carries the correction and
+the 22-versus-2 line. Ledger: **RG-0291 LOCKED** (association lanes can never silently fall back
+to the average audience again), **RG-0292 OPEN**. The dup guard did its job on the way in — a
+concurrent session had taken RG-0289/0290, so these moved rather than colliding.
+
+The number is still **0**.
+
 ## 2026-09-05 — the wave was starving beside a full pantry (SUPPLY-SERVICES-1, ORG-NAME-1, MAGICLINK-CITY-1, PERSON-ONLY-3, STOPLOSS-DISCOVER-1)
 
 **The number is 0.** Probe A 0, probe B 0, read from the live server. Nothing today could

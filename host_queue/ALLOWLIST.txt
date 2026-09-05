@@ -72,3 +72,10 @@ run_bat    MarketSquare\deploy_email_worker.bat
 # --- SUPPLY class as run_local_scraper.bat, already permitted under RUL-096. Scrapes only;
 # --- sends nothing.
 run_bat    CityLauncher\run_us_scraper.bat
+
+# --- Widened 5 Sep 2026. David: "are we reading registers for the full 50 states of the US,
+# --- if yes can you then in parallel fill up the database". RRCA-1: the national running-club
+# --- register (all 50 states) + every other adapter in us_register_reader.py, harvested and
+# --- imported host-side. Same SUPPLY class as run_us_scraper.bat (RUL-096). Scrapes only;
+# --- sends nothing.
+run_bat    CityLauncher\run_us_registers.bat

@@ -69,12 +69,22 @@ Target: **20 by Fri 31 Oct 2026.** Model on this run: Fable 5.1 (as David asked)
   reads `us_registers/` too, per-row country). Verify the page CARRIES EMAILS before writing
   an adapter.
 - Dead ends already checked (do not re-check): USATF's national club finder is a JS widget
-  (sport80); NY DEC licensed-guide open data (data.ny.gov, 6,762 rows) has no email column;
-  rrca.org returns 403 to the sandbox.
-- Next registers worth reading: other USATF associations with their own club pages (New
-  England, Southern California, New York, Long Island), state soccer / masters-swimming club
-  lists, state outfitter & guide associations (Idaho IOGA, Montana MOGA, Maine MPGA), US Chess
-  affiliates, ACBL bridge clubs. Search the disk first.
+  (sport80); NY DEC licensed-guide open data (data.ny.gov, 6,762 rows) has no email column.
+- **RRCA — ALL 50 STATES IN ONE ADAPTER (20:30, RRCA-1).** rrca.org answers the sandbox with
+  the reader's own UA: POST /clubs/ with `drpState=<ST>` lists every member club; each
+  /club/<slug>/ page carries one mailbox behind Cloudflare obfuscation (decoded). Verified on
+  TX (60+) and WY (5/5 with a mailbox). `--adapter rrca`, resumable per state, ~2,500 clubs.
+  **51 state buckets armed** in waves_policy (Texas, Florida, "New York State"…). Harvest +
+  import queued as `run_us_registers.bat` (allowlisted) at 20:33, ~50 min on the host.
+- **DAILY-CAP-1: 250 sends/day across the whole domain**, a real gate in gate_check — 51 new
+  buckets × 12 could otherwise mean 600 in one night from a domain whose best day is 246.
+  Raise it on measured clean days, never on a date.
+- US search scraper, first fix round (unmeasured until the host run): search from a US
+  locale (DDG kl=us-en, Bing cc=US) and US queries that ask for pages printing a mailbox.
+  Measurement run queued behind the registers. **RG-0297 (OPEN) is David's task for this.**
+- Next registers worth reading: other USATF associations (New England, Southern California,
+  New York, Long Island), state soccer / masters-swimming club lists, state outfitter & guide
+  associations (Idaho IOGA, Montana MOGA, Maine MPGA), US Chess affiliates, ACBL bridge clubs.
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
@@ -89,8 +99,9 @@ Target: **20 by Fri 31 Oct 2026.** Model on this run: Fable 5.1 (as David asked)
 2. If the funnel shows people landing and stopping at `photos` with no `photo_pick`, that is
    the finding to take to David as a business trade-off (photo-first is his ruling) — with
    the counts, not a guess.
-3. `run_us_scraper.bat` is not a supply engine (see above). Registers are. Extend the
-   adapter registry in `CityLauncher/us_register_reader.py`; import via the queue.
+3. Read `host_queue/done/*run-us-registers.result` (RRCA clubs imported, per state) and the
+   newest `*run-us-scraper.result` (did the US fixes lift it above 10? RG-0297 reads it). Then
+   the 00:10 wave log: which states sent, and whether DAILY-CAP-1 held the total at 250.
 4. Still unproven as ONE walk: seller form → save → publish → visible logged out. The
    instrument will show it the first time a real person does it (publish_ok).
 

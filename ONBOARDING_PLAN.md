@@ -97,9 +97,13 @@ for the first time. **Refill comes from REGISTERS, not from search scraping — 
 assumed (5 Sep, 19:24):** the first-ever US run of `run_us_scraper.bat` searched 11 cities × 7
 categories for 33 minutes and found **one** address, and that one was a South African shop
 mis-filed under Austin. General search scraping is structurally dead for the US; it stays a
-ZA-only top-up. The club/federation/association lanes (the register reader and the club
-importer) are the supply engine. Aim registers at whatever vertical the measured rate says
-converts.
+ZA-only top-up until its US fix round measures otherwise (ledger RG-0297 is that task). The
+club/federation/association lanes (the register reader and the club importer) are the supply
+engine — and since 5 Sep 20:30 they cover **all 50 US states in one adapter** (the RRCA
+running-club register, one policy bucket per state, harvested and imported host-side by
+`run_us_registers.bat`). Total daily volume is now gated at 250 across the domain
+(DAILY-CAP-1), raised on clean days. Aim the next registers at whatever vertical the measured
+rate says converts.
 
 **24 → 31 Oct. STOP ADDING, START CLOSING.**
 No new lanes. Follow up the people who clicked and did not publish.

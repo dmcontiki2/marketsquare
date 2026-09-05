@@ -28,6 +28,73 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+### The support form was a black hole — found on David's question, fixed and proven (5 Sep 2026)
+
+134 visitors, a live listing bug, zero complaints. David asked us to check Support rather than take the
+silence as good news. `support.html` was a placeholder: it showed "✅ Message sent" and posted nothing,
+its inputs had no `name` attributes, and the `mailto:` fallback did nothing on a desktop with no mail
+client. Since 29 Aug (RUL-064) that page was the customer complaint lane.
+
+Fixed: `POST /support/message` stores into `app_faults`, emails David, acks the sender, anonymous by
+design (RUL-100), row committed before either email. The page only says "sent" when the server confirms.
+PROVEN: **TS-0036** submitted live, row present, both emails read back out of Gmail. Locked as **RG-0282**.
+
+Also fixed on the way: `showToast` ignored its duration argument at 13 call sites (**RG-0283**), and the
+publish failures were dead ends — they now name trustsquare.co/support.
+
+Confirmed working and left alone: support@trustsquare.co delivers to David's Gmail in ~12 s.
+Coverage map: 66 green · 0 blue · 0 amber · 0 red · 10 grey (76 cards).
+
+### All four ambers cleared, each at the class (5 Sep 2026, attended)
+
+- **RG-0196 LOCKED** — the admin gate has one source (`shared/admin_gate.js` + `scripts/sync_admin_gate.py`),
+  inlined not linked so the `file://` copy keeps working. Found live drift a third time on the way in.
+- **RG-0281 LOCKED (DW-090)** — `post_deploy.sh` refreshes the FEA baseline behind a source-match gate;
+  proven by the first deploy that rode it. Retires a class that recurred four times.
+- **DW-093 residual discharged** — RG-0241 probes one unique `.invalid` address instead of a global count;
+  real addresses are refused 400.
+- **DW-095** — cost sweep exits 0, no warnings.
+
+Coverage map: 65 green · 0 blue · 0 amber · 0 red · 10 grey. One register item open: DW-087 (LOW).
+
+- **Contagion model v1.6 shipped (MODEL-GOAL-1, MODEL-ASSOC-1).** The goal-oriented Fable 5.1
+  project (RUL-096) is now a modelled lane — nightly gated draw, 6 per city per night, 43 armed
+  cities — alongside a new association lane for clubs, unions and federations with nine
+  parameters, four of them measured live. Open (21.8%) and hard-bounce (1.54%) are pinned as the
+  model's first OBSERVED values, against 712 real sends.
+- **The model's answer splits on one unmeasured number.** Self-published by week 8 (the week
+  31 Oct falls in): **48** at the click rate the model assumes, **6** at the human-verified rate
+  measured 5 Sep, **14** with every association door open at the human rate. Raw clicks read
+  46/155 = 0.297; graded, only **two** of those clicks were human. Click→publish is now RG-0288,
+  held OPEN, and prints READY TO LOCK on the first real conversion.
+- **Ops Dashboard +1 page updated** — version pin corrected from v1.5 to v1.6, plus a new GOAL
+  TRACK card carrying the goal, days remaining, the probed published count with its date, the
+  48-vs-6 split and the five association-lane figures. RG-0287 LOCKED now asserts the dashboard
+  and the model cannot drift apart again, and that the club numbers on the card still match the
+  database.
+- **RUL-101 reflected in the model**: A-plan wave 5 (France + Portugal) defaults to never, not
+  week 12. RUL-074's reflection assertion was narrowed to match — waves 2–4 and persistent
+  scraping pinned exactly, wave 5 asserted OFF with RUL-101 named.
+- Ledger green, every locked fix holding. rulings_check 0 FAIL. The number is still **0**.
+
+- **AUDIENCE-LANE-1 — David caught a real error in the model and it has been fixed.** He asked
+  why the teachers/clubs route did not show the wider audience it obviously reaches. It did not,
+  because association sellers were landing in the same pool as everyone else and inheriting the
+  *average* seller's audience: **2 people**. A tutor arrives holding a register — 15–60 pupils,
+  each with a parent who is the one who pays.
+- **The correction moves the answer a long way.** Same seed, week 8 (the goal week): **43 → 87**
+  self-published with the club, federation and union doors open; at the human-verified click
+  rate, **1 → 7**. At one year: ever-listed **137k → 200k**, buyers **679k → 1.13M**, off only
+  108 association sellers.
+- **Context for how big this mechanism is:** turn the ordinary customer-bring term off and
+  week-52 sellers fall from 131,558 to 35,910. About two thirds of the whole curve is sellers
+  bringing their own people — which is why getting it wrong for the association lane mattered.
+- **Stated honestly:** both new parameters are guesses, and across their range one year's sellers
+  swing between 160k and 264k. RG-0292 is OPEN to replace them with a measurement; it needs a
+  referred-by column and a first association seller, both ordinary work.
+- Model **v1.7**, dashboard pin moved with it, +1 page card carries the correction. Ledger green,
+  every locked fix holding. The number is still **0**.
+
 ## 2026-09-05 — Maintenance loop
 
 - Fault queue EMPTY: 0 new, 26 verified, 7 closed, 2 duplicate (35 total). Shadow agent ran
