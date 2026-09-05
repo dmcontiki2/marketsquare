@@ -19282,6 +19282,13 @@ class InboundEmail(BaseModel):
     subject: str = ""
     body: str = ""
     message_id: Optional[str] = None
+    # ATTACHMENT-TRUTH-1 (5 Sep 2026). The Cloudflare worker has sent has_attachments
+    # since 30 Aug and this model never declared it, so Pydantic dropped it silently and
+    # nothing in the app had ever seen it. That was survivable only while attachment mail
+    # was ALSO forwarded to a human inbox. Arming the customer firewall (RUL-069) ends
+    # that forward -- so without this field a seller replying "here is my stock list" as
+    # a spreadsheet would have the document vanish with nobody aware it existed.
+    has_attachments: bool = False
 
 
 def _smtp_send_reply(to_addr: str, subject: str, body: str,
@@ -19487,7 +19494,8 @@ async def _classify_email(from_addr: str, subject: str, body: str,
 # us (GATE-ONESOURCE-1, the same day).
 async def _triage_message(from_addr_in: str, to_addr: str = "", subject_in: str = "",
                           body_in: str = "", message_id: str = None,
-                          ref_override: str = None, source: str = "email"):
+                          ref_override: str = None, source: str = "email",
+                          has_attachments: bool = False):
     """Classify one customer message, store it, and answer it if that is safe.
 
     ref_override lets a caller that ALREADY has a reference (the support form's TS-nnnn)
@@ -19539,6 +19547,18 @@ async def _triage_message(from_addr_in: str, to_addr: str = "", subject_in: str 
             and category in _AUTO_SEND_CATEGORIES
             and bool(draft_reply)
         )
+    # ATTACHMENT-TRUTH-1: we were sent a document and we cannot read it -- triage only
+    # ever receives a text body. Answering anyway would be a confident reply written
+    # WITHOUT the thing the person actually sent, which is worse than a slower human
+    # answer. So attachment mail is never auto-answered: it is marked and held for
+    # /admin/email-triage, which is the escalation path RUL-069 names. The sender still
+    # gets the plain acknowledgement, so nobody is left in silence.
+    if has_attachments:
+        can_auto = False
+        body = ("[THIS MESSAGE ARRIVED WITH ONE OR MORE ATTACHMENTS. The triage pipeline "
+                "receives text only, so the attachment is NOT in this record -- open the "
+                "original or ask the sender to re-send it through the app.]\n\n") + body
+
     # SELF-REPLY-GUARD-1: our own system mail is recorded and never answered.
     if _is_own_system_mail(from_addr):
         can_auto = False
@@ -19636,7 +19656,8 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
     if x_inbound_secret != EMAIL_INBOUND_SECRET:
         raise HTTPException(status_code=401, detail="Invalid inbound secret")
     return await _triage_message(req.from_addr, req.to_addr or "", req.subject or "",
-                                 req.body or "", message_id=req.message_id, source="email")
+                                 req.body or "", message_id=req.message_id, source="email",
+                                 has_attachments=bool(req.has_attachments))
 
 
 
