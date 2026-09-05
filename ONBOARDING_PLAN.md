@@ -92,18 +92,39 @@ earn their place. Aim scraping at whatever vertical the measured rate says conve
 **24 → 31 Oct. STOP ADDING, START CLOSING.**
 No new lanes. Follow up the people who clicked and did not publish.
 
-## 4. THE ONE THING RESERVED TO DAVID
+## 4. EUROPE — DECIDED, AND CLOSED FOR NOW (RUL-101, 5 Sep 2026)
 
-**179 people in France and Portugal cannot be emailed.** GDPR article 27 requires a named EU
-representative in the message, and none is configured. The code refuses to build those messages
-— correctly; this is a legal fence, not a bug, and it must not be coded around.
+David, shown the measurement: *"I agree lets not email those two countries."*
 
-Appointing an EU representative is a legal and commercial act, so it is David's, not mine. It is
-worth about **179 people, ~12% of the reachable universe**. If click → publish lands near 15%,
-those 179 are roughly 2–3 publishers and the goal probably does not depend on them. If it lands
-near 10%, they matter.
+France and Portugal are **out of outreach**. No EU representative is bought. The code keeps
+refusing to build those messages, which is the mechanism rather than merely the intention.
 
-Nothing else waits on him.
+**Why, in numbers.** 179 FR/PT rows sit behind the fence. 100 are clean on every other count.
+Those 100 split on the one thing French and Portuguese law cares about:
+
+| | | |
+|---|---|---|
+| **35** | business addresses | lawful to cold-email, opt-out basis, message must concern their job |
+| **65** | personal mailboxes (gmail, orange.fr, sapo.pt) | need **prior opt-in** — never lawful to cold-email, representative or not |
+
+A representative costs €490–€1,000 a year and would unlock **35 people**. About €20 a head
+before anyone converts.
+
+**This defers a market, it does not close one.** European law bites on *offering a service* to
+people in the EU, so a representative is needed to have French sellers **at all**, not merely to
+email them. The question is therefore "do we want Europe as a market", and it is revisited once
+click→publish is known — never again as an emailing cost.
+
+**Ruled out, so nobody re-proposes them:** the "occasional processing" exemption (we hold a
+standing database and send repeated waves — the opposite of occasional); and routing through an
+EU mail provider or domain, which changes nothing because the law follows the person, not the
+server.
+
+**Still open, and free:** the federation route — a European association emails its own members
+about us, under its own relationship with them, and we never touch their data. It is the only
+route that reaches those 65 personal mailboxes.
+
+**Nothing else waits on David.**
 
 ## 5. HOW THIS PLAN STAYS HONEST
 

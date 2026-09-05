@@ -127,6 +127,16 @@ REFLECTIONS = {
    ("RULINGS.md", ["74 SEARCH-ENGINE LANES COME BACK"], []),
    ("../CityLauncher/changelog_fragment_2026-08-31-launchday-schedule.md", ["ENGINE-REVIVE-1"], []),
  ],
+ "RUL-101": [
+   # France + Portugal out of outreach (5 Sep). Three places must agree, or the ruling is a note.
+   ("RULINGS.md", ["FRANCE AND PORTUGAL ARE OUT OF OUTREACH"], []),
+   # the FENCE is the mechanism: localize must still REQUIRE an EU rep for FR and PT
+   ("../CityLauncher/emailer/localize.py", ["_EU_REP_REQUIRED", "art.27"], []),
+   # and no FR/PT city may be armed in the wave policy
+   ("../CityLauncher/emailer/waves_policy.json", ["GLOBAL-REACH-1"],
+    ["\"Paris\":", "\"Lyon\":", "\"Marseille\":", "\"Braga\":", "\"Lisbon\":", "\"Porto\":"]),
+   ("ONBOARDING_PLAN.md", ["RUL-101"], []),
+ ],
  "RUL-084": [
    # Launch-day wave scheduled (31 Aug): unattended 00:10 runner exists, Tutors priority in policy, National excluded.
    ("RULINGS.md", ["THE LAUNCH-DAY WAVE FIRES ITSELF"], []),

@@ -27,8 +27,11 @@ Target: **20 by Fri 31 Oct 2026.**
   cities with no line in the wave script, 19 unknown cities, the club lane, and
   4 letters drawable by nothing. **43 cities now, was 14.**
 - **Reachable universe: 1,441 people** — 864 individuals + 577 clubs (imported today).
-- **179 in France and Portugal are blocked on the GDPR EU representative.** A legal
-  fence, not a bug. David's to appoint. Worth ~12% of the universe.
+- **France and Portugal are OUT — David ruled it 5 Sep (RUL-101).** Measured first: of
+  the 179, only 35 are business addresses that could ever be cold-emailed lawfully; the
+  other 65 clean ones are personal mailboxes needing opt-in. A representative costs
+  €490–€1,000/yr to unlock 35 people. Do not re-propose it as an emailing cost — it
+  returns only as a market decision. Do not set TS_EU_REPRESENTATIVE without a ruling.
 - `teachers_trainers` stays blocked: 1,194 of its 1,235 clean rows are named schools.
 
 ## WHAT RUN 3 DID (5 Sep 2026)

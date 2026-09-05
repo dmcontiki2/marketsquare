@@ -1,5 +1,5 @@
 {
- "next_id": 100,
+ "next_id": 101,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -1004,6 +1004,21 @@
    "status": "CLOSED",
    "summary": "RAISED AND CLOSED IN THE SAME RUN — the external-vantage card claimed 'ARMED + ASSERTED . RG-0193', but RG-0193 is the Stays-lane city assertion; the entry that actually asserts the external watcher is RG-0138. A card pointing at an assertion that does not assert it is a green square resting on nothing.",
    "next_action": "CLOSED 2026-09-05 — the check re-ran and PASSED: the card now cites RG-0138 and quotes that entry's own info line. RESIDUAL: nothing cross-checks card-to-entry citations, so the next mis-citation is found by hand. Carried on the map, not as a live row."
+  },
+  "DW-100": {
+   "first_seen": "2026-09-05",
+   "last_seen": "2026-09-05",
+   "sev": "HIGH",
+   "source": "David's own question — support path traced end to end (support.html, /app/fault, support@ routing)",
+   "status": "CLOSED",
+   "refs": [
+    "RUL-064",
+    "RUL-100",
+    "RG-0282",
+    "RG-0283"
+   ],
+   "summary": "NEW — the public support form was a PLACEHOLDER that told people their message had been sent, and sent nothing. Raised by David, from the right question: 134 people had opened the app, a listing failure was live and already fixed, and NOT ONE complaint had arrived — he read that as a broken channel, not as good news. He was right. support.html's submitForm() carried, verbatim: // In production this would POST to the BEA or a form handler // For now show success message and send email. It hid the form, showed “✅ Message sent — we'll be in touch within one business day”, then set window.location.href to a mailto: link. Nothing was posted, nothing stored. On a desktop with no mail client the mailto did NOTHING; on mobile it opened a draft the visitor still had to send — after being thanked. The form's inputs carried no name attributes, so even a real POST would have submitted empty fields. Load-bearing, not cosmetic: since 29 Aug (RUL-064) the in-app tester reporter is deliberately off for customers and complaints route here and to support@ — so for a week this WAS the customer complaint lane. We cannot know how many messages it swallowed, because nothing was recorded, and that unknowability is the damage. What was already fine, checked not assumed: support@trustsquare.co delivers — a probe sent to it landed in David's Gmail 12 s later via Cloudflare Email Routing. The mailto links pointed somewhere real; the FORM was the hole. Last fault filed by anyone: TS-0035, 15 Aug — and all 35 rows are from three internal tester addresses. No public user has ever successfully reported anything.",
+   "next_action": "CLOSED 2026-09-05 (attended, same session it was raised) — built, deployed and PROVEN end to end. `POST /support/message` stores the message in `app_faults` (source `support-form`, so it inherits the triage board and the close-draft/close-send reply flow that already exist rather than becoming a second inbox), emails David a copy, and acks the sender with a reference. ANONYMOUS BY DESIGN (RUL-100): the person who cannot list, cannot sign in or never registered is exactly the one most likely to need it, so abuse is handled by rate limit + honeypot + length caps, never a login wall. The row is committed BEFORE either email is attempted — a mail failure must never lose a customer's message. `support.html` now only shows success when the SERVER confirms, prints the reference, and on failure says so and KEEPS THE USER'S WORDS on screen with support@ offered as a link they choose. PROBED after deploy, not inferred: anonymous POST accepted; a 1-character message refused 400; a missing email refused 400; the honeypot accepted-and-dropped; then a real submission returned **TS-0036**, the row is in the live table with `source=support-form, ack_sent=1`, and BOTH emails were read back out of Gmail at 12:04:29Z — the notification to support@ carrying the full message, and the acknowledgement to the sender. Asserted by new ledger entry **RG-0282 (LOCKED)**, whose live leg re-posts an anonymous `.invalid` probe on every run and also proves the validation is real rather than a rubber stamp. SECOND FAULT FOUND ON THE WAY (RG-0283, LOCKED): `showToast(msg, ms)` accepted a duration at 13 call sites and silently ignored it, so messages written to need 6 s got 2.6 s — including the add-to-home-screen instruction and 'Publish failed'. Fixed, clamped 1.2–12 s, and the three hard publish failures now name trustsquare.co/support instead of being dead ends. RUL-064 IS NOT REVERSED: the tester fault tab stays off for customers. This fixes the lane David chose. RESIDUAL, honest: the Support Centre is reachable only from the Me tab and the terms pages — discoverability at the moment of failure is improved (the publish toasts) but not solved."
   }
  },
  "last_run": "2026-09-05",

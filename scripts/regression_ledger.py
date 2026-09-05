@@ -16832,5 +16832,88 @@ def rg_toast_duration_honoured():
     return out
 
 
+@entry("RG-0284", "If an EU person ever actually ARRIVES -- signs up, onboards or publishes -- we "
+       "find out the same day, because serving them is what triggers the representative "
+       "requirement, and the spillover routes are designed to make exactly that happen",
+       LOCKED, fixed_on="2026-09-05",   # a TRIPWIRE: red here means "a decision is now
+                                        # LIVE", not "something broke" -- the ref says so
+                                        # to whoever reads the red line first.
+       scope="CityLauncher/data/prospects.db, every row whose country resolves inside the EU/EEA. "
+             "The FENCE (RG-0277) stops us MAILING France and Portugal. This is the other half, "
+             "and the half that RUL-101 actually creates the need for: GDPR art.3(2) bites on "
+             "OFFERING SERVICES to a person in the Union, not on emailing them. So the lawful "
+             "routes RUL-101(e) leaves open -- a European federation mailing its own members, "
+             "organic arrivals, a UK-based international body whose membership crosses the "
+             "border -- all work by producing precisely the event that makes art.27 apply to us. "
+             "A success on that route with nobody watching is the bad outcome. Reads onboarded_at "
+             "/ published_at / status, so it fires on the first real arrival, not on a scrape. "
+             "OPEN and expected to pass while no EU person has arrived; the day one does, it goes "
+             "red on purpose and the entry becomes David's decision, not a defect.",
+       ref="EU-ARRIVAL-TRIPWIRE-1, 5 Sep 2026, from David's question: 'how about the other "
+           "Schengen countries around France and Portugal? If we have a pass in some of them then "
+           "we have a route into them as well; via teachers unions, travel agents, schools, clubs "
+           "etc. which will all spill over the borders with no nudging from us'. PROBED: there is "
+           "no per-country pass to find -- art.27 is ONE EU-wide requirement, FR and PT are the "
+           "only EU countries ever cleared, and Spain, Germany, Italy and the rest sit in exactly "
+           "the same position. But the spillover reasoning is sound for the OUTREACH step and it "
+           "is free, so the risk it creates is the one asserted here: the introduction is lawful "
+           "and the ARRIVAL is what needs a representative. Consequence worth stating plainly for "
+           "the decision this eventually forces -- the representative is EU-WIDE, so it never "
+           "buys 35 French addresses, it buys 27 countries. That is a different trade from the "
+           "one RUL-101 declined, and this tripwire is what tells David when it is live rather "
+           "than theoretical.")
+def rg_eu_arrival_tripwire():
+    out = []
+    db = os.path.join(os.path.dirname(REPO), "CityLauncher", "data", "prospects.db")
+    if not os.path.exists(db):
+        return [(INFO, "SKIPPED -- the prospect database is not on this disk")]
+    loc = os.path.join(os.path.dirname(REPO), "CityLauncher", "emailer", "localize.py")
+    EU = {"AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE",
+          "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
+          "NO", "IS", "LI"}                       # EEA: the obligation follows the EEA, not the EU
+    aliases = {}
+    if os.path.exists(loc):
+        import re as _re
+        m = _re.search(r"_ALIASES\s*=\s*\{(.*?)\}", open(loc, encoding="utf-8",
+                                                         errors="replace").read(), _re.S)
+        if m:
+            for k, v in _re.findall(r"'([^']+)'\s*:\s*'([^']+)'", m.group(1)):
+                aliases[k.upper()] = v.upper()
+    import sqlite3 as _sq
+    try:
+        con = _sq.connect("file:%s?mode=ro" % db, uri=True)
+        rows = list(con.execute(
+            "SELECT country, city, email, status, onboarded_at, published_at FROM prospects "
+            "WHERE onboarded_at IS NOT NULL OR published_at IS NOT NULL "
+            "OR status IN ('onboarded','published','registered')"))
+        con.close()
+    except Exception as e:
+        return [(INFO, "NOT EVALUATED -- could not read the prospect database (%s)" % e)]
+
+    arrivals = []
+    for country, city, email, status, onb, pub in rows:
+        cc = (country or "").strip().upper()
+        cc = aliases.get(cc, cc)
+        if cc in EU:
+            arrivals.append((cc, city, (email or "")[:40], status, onb or pub))
+    if arrivals:
+        for cc, city, email, status, when in arrivals[:6]:
+            out.append((FAIL, "an EU/EEA person has ARRIVED -- %s in %s (%s), status %r, %s. "
+                              "Serving them is what triggers GDPR art.27, which RUL-101 declined "
+                              "to buy while it was theoretical. This is now a live decision for "
+                              "David, not a defect (EU-ARRIVAL-TRIPWIRE-1)"
+                        % (cc, city, email, status, when)))
+        if len(arrivals) > 6:
+            out.append((FAIL, "...and %d more EU/EEA arrivals" % (len(arrivals) - 6)))
+    else:
+        out.append((INFO, "no EU/EEA person has signed up, onboarded or published yet -- the "
+                          "representative stays a market decision, not a live obligation "
+                          "(%d EU/EEA prospects held, all uncontacted by ruling)"
+                    % sum(1 for r in [] ) if False else
+                    "no EU/EEA person has signed up, onboarded or published yet -- the "
+                    "representative stays a market decision, not a live obligation"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
