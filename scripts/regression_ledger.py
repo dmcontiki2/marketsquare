@@ -17246,5 +17246,71 @@ def rg_support_doors_share_one_engine():
     return out
 
 
+@entry("RG-0290", "The send rate is governed by EVIDENCE, never by a date -- the ramp is on, and "
+       "the base batch is never set so low that a clean wave stops counting as evidence",
+       LOCKED, fixed_on="2026-09-05",
+       scope="CityLauncher/emailer/waves_policy.json -- defaults.batch_size, ramp.enabled and "
+             "ramp.min_wave_for_streak, read against wave_runner.ramp_state(). THREE LEGS. "
+             "(a) THE ACCELERATOR IS ON: ramp.enabled is true, so a city that sends a clean wave "
+             "earns a bigger next one (12 -> 24 -> 48 -> 96) with nobody choosing a number. "
+             "(b) THE ACCELERATOR CAN ACTUALLY EARN: RAMP-FLOOR-1 ignores any wave smaller than "
+             "min_wave_for_streak (default = batch_size) as evidence, so if base batch is ever set "
+             "BELOW that floor, every wave becomes invisible to the ramp and the rate freezes at "
+             "base forever -- silently, because nothing fails. (c) NO CALENDAR THROTTLE: batch_size "
+             "is at or above the 12 the ramp ladder is built on. The REAL gates are untouched and "
+             "are the only things that may hold a send: bounce stop-loss, the complaint cap, the "
+             "suppression register, one-per-org, MX validity, jurisdiction clearance, and the "
+             "one-day-per-city spacing -- which is deliverability, not a schedule.",
+       ref="MEASURE-RATE-1 RETIRED, 5 Sep 2026, the same day it was set. David: 'Are you still "
+           "sending email waves as soon as is possible or permissible, rather than on a planned "
+           "schedule? We discussed this and want to keep the emails flowing as fast as is "
+           "possible?' He was right, and the fault was worse than a slow setting. Halving "
+           "batch_size 12 -> 6 for a self-declared 'measurement week' was exactly the "
+           "calendar-thinking he had already ruled against hours earlier -- and because "
+           "RAMP-FLOOR-1's evidence floor stayed at 12, every 6-person wave silently stopped "
+           "counting toward a clean streak. The brake did not just slow the wave; it disconnected "
+           "the accelerator, with nothing going red. PROBED after restoring: pool 332 across 43 "
+           "cities, exhausted in 5 nights at the ramp's own pace instead of 17 at a flat 12. "
+           "Also recorded, because it nearly became a fourth wrong report in one day: the ramp "
+           "reads the TOP-LEVEL 'ramp' key, and defaults.ramp is null -- reading the latter says "
+           "'disabled' about a mechanism that is on.")
+def rg_rate_is_earned_not_scheduled():
+    out = []
+    pol_path = os.path.join(os.path.dirname(REPO), "CityLauncher", "emailer", "waves_policy.json")
+    if not os.path.exists(pol_path):
+        return [(INFO, "SKIPPED -- waves_policy.json is not on this disk")]
+    import json as _json
+    pol = _json.loads(open(pol_path, encoding="utf-8").read())
+    d = pol.get("defaults") or {}
+    ramp = pol.get("ramp") or {}                 # TOP-LEVEL, not defaults.ramp
+    base = d.get("batch_size")
+    if not ramp.get("enabled"):
+        out.append((FAIL, "the ramp is OFF -- send volume can then only change by someone picking "
+                          "a number, which is the manual fast-lane RAMP-1 exists to refuse"))
+    floor = ramp.get("min_wave_for_streak", base)
+    if base is None:
+        out.append((FAIL, "defaults.batch_size is missing"))
+    else:
+        if floor and base < floor:
+            out.append((FAIL, "batch_size %s is BELOW the ramp's evidence floor %s -- every wave "
+                              "would be too small to count as a clean streak, so the ramp can "
+                              "never earn and the rate freezes silently (MEASURE-RATE-1)"
+                        % (base, floor)))
+        if base < 12:
+            out.append((FAIL, "batch_size is %s -- below the 12 the ramp ladder (12/24/48/96) is "
+                              "built on. If this was set for a 'measurement week' or any other "
+                              "date-based reason, that is a calendar, not a gate (David, 5 Sep)"
+                        % base))
+    for k in ("bounce_stop_pct", "max_complaints"):
+        if k not in d:
+            out.append((FAIL, "the REAL gate %r is gone from the policy -- speed may never be "
+                              "bought by removing a safety gate" % k))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "rate is earned: base %s, ramp on x%s to cap %s, evidence floor %s, "
+                          "stop-loss and complaint caps intact"
+                    % (base, ramp.get("factor"), ramp.get("max_batch"), floor)))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

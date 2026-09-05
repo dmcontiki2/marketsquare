@@ -19937,13 +19937,24 @@ SUPPORT_TOPIC_BINS = {
 }
 
 
+def _support_subject(ref: str, title: str) -> str:
+    """A reply subject a person can read at a glance. The first cut used the whole first
+    line of the message, so a one-paragraph complaint became a 140-character subject that
+    every mail client truncated mid-word -- the reference, the only part that matters, was
+    still visible but the sentence was gibberish. Cap it and say so with an ellipsis."""
+    t = " ".join((title or "").split())
+    if len(t) > 58:
+        t = t[:57].rstrip() + "\u2026"
+    return "[%s] %s" % (ref, t or "your message")
+
+
 async def _support_followup(ref: str, email: str, title: str, message: str):
     """Run one support-form message through the customer AI lane, and make sure the
     person is answered exactly once (ONE-REPLY-1) even if that lane cannot run."""
     handled = None
     try:
         handled = await _triage_message(
-            email, "support@trustsquare.co", "[%s] %s" % (ref, title), message,
+            email, "support@trustsquare.co", _support_subject(ref, title), message,
             ref_override=ref, source="support-form")
     except Exception as exc:
         _log.error("support triage failed for %s: %s", ref, exc)
