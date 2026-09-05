@@ -1,5 +1,5 @@
 {
- "next_id": 96,
+ "next_id": 100,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -953,19 +953,61 @@
   },
   "DW-095": {
    "first_seen": "2026-09-04",
-   "last_seen": "2026-09-04",
+   "last_seen": "2026-09-05",
    "sev": "LOW",
    "source": "cost_compliance_sweep.py --quiet (exit 1 = warn)",
    "status": "OPEN",
-   "summary": "**NEW — the cost sweep exits 1 with 5 WARN lines, and they were already in yesterday's report.** `unknown model family claude-relay — classify` at `scripts/regression_ledger.py:14168` (×2) and `scripts/request_deploy.py:42` / `:46` (×2). Both are instrument/ops scripts naming the relay lane in reference text, not a billable call site (the DW-047 pattern for `claude-fable-5`). Yesterday's COST_SWEEP_2026-09-03.md carries the same 5 lines (at :14119) while the 3 Sep pass recorded 'exit 0 clean' — that reading was wrong; today's exit code is 1. 0 CRITICAL, no new call sites, ceilings/spend-log ✓ on every real call site. Not a spend risk; it is the sweep not knowing a lane name.",
-   "next_action": "CTO lane: add `claude-relay` to the sweep's model-family table as a non-billable relay/reference label, so exit returns to 0 and a real unknown family can be heard again. Closes when the sweep exits 0 with no `claude-relay` WARN.",
+   "summary": "**NEW — the cost sweep exits 1 with 5 WARN lines, and they were already in yesterday's report.** `unknown model family claude-relay — classify` at `scripts/regression_ledger.py:14168` (×2) and `scripts/request_deploy.py:42` / `:46` (×2). Both are instrument/ops scripts naming the relay lane in reference text, not a billable call site (the DW-047 pattern for `claude-fable-5`). Yesterday's COST_SWEEP_2026-09-03.md carries the same 5 lines (at :14119) while the 3 Sep pass recorded 'exit 0 clean' — that reading was wrong; today's exit code is 1. 0 CRITICAL, no new call sites, ceilings/spend-log ✓ on every real call site. Not a spend risk; it is the sweep not knowing a lane name. STILL FAILING 2026-09-05 and GROWING: exit 1 with 13 WARN lines, up from 5. The eight new ones are the watch's OWN artifacts (DEFENCE_COVERAGE_MAP.html:136 x2, :173; DAILY_WATCH/OPEN_ITEMS.json:960 x2, :961, :1351) plus scripts/regression_ledger.py:14319. That is a feedback loop, not drift: recording the finding writes the literal string claude-relay into the register and the map, which the next sweep then scans. The count rises every day the item stays open. 0 CRITICAL again; every real call site still ceiling+spend-log.",
+   "next_action": "CTO lane: add `claude-relay` to the sweep's model-family table as a non-billable relay/reference label, so exit returns to 0 and a real unknown family can be heard again. Closes when the sweep exits 0 with no `claude-relay` WARN. Re-confirmed 2026-09-05 — no check passed, so no close.",
    "references": [
     "DW-047"
    ]
+  },
+  "DW-096": {
+   "first_seen": "2026-09-05",
+   "last_seen": "2026-09-05",
+   "sev": "HIGH",
+   "source": "regression ledger RG-0099 (LOCKED) — REGRESSION; plus run_daily_checks.py, smoke_test.py and every on-box sensor",
+   "status": "OPEN",
+   "refs": [
+    "DW-065 (closed 2026-08-26)"
+   ],
+   "summary": "SSH-LOCKOUT-1 has RECURRED. Port 22 at 178.104.73.239 unreachable from this vantage (ssh times out; raw TCP :22 refused/timed out on 3 tries) WHILE the ledger's control host answered on :22 in the same seconds — so the vantage is fine and the origin is not. Session egress PROBED as 197.184.107.115; the address David added by hand on 26 Aug was 197.184.106.176, so the ISP moved the line again inside the same /16. Blast radius, six checks blind: on-box fea_integrity_check.py and subscription_monitor.py, smoke_test.py (crashed on the ssh timeout), run_daily_checks.py deploy_drift (unreachable), orchestrator queue.json + staged.json, findings.cron.json cron-parity. The site itself is unaffected and green. This is David's own management lane too: if the origin needed hands today, nobody could reach it.",
+   "next_action": "Run python3 scripts/hetzner_fw_selfheal.py — the cure named in RG-0099's own failure message, and RG-0188 confirms it is armed today (CF half retired, no token needed). Manual equivalent: add 197.184.107.115 as a source on the TCP 22 rule of the trustsquare-origin-lockdown firewall at Hetzner, leaving the older sources in place (RUL-027). This task is observe-only and may not run the remedy. Closes when RG-0099 reads ok again."
+  },
+  "DW-097": {
+   "first_seen": "2026-09-05",
+   "last_seen": "2026-09-05",
+   "sev": "HIGH",
+   "source": "the watch's own RED-alert path, exercised for real today",
+   "status": "OPEN",
+   "refs": [
+    "DW-073 (closed 2026-08-29)"
+   ],
+   "summary": "Today's verdict is RED and the alert email could NOT be sent. The task's alert path is one SSH command to the origin (parse RESEND_API_KEY out of /etc/marketsquare/resend.watch.conf, then curl Resend from the box). SSH is exactly what is down (DW-096), so the alerting channel shares a transport with the class of failure it exists to report — the circular dependency DW-073 carried as a residual, now observed in anger for the second time. The independent Cloudflare vantage does not cover this: it probes /health, which is green, so it would not have fired either. ALERT PATH BROKEN — David learns of today's RED only by reading this report.",
+   "next_action": "CTO lane (RUL-037): give the watch a send path that does not traverse the origin. The Cloudflare Worker already has egress and a schedule, so the smallest fix is a POST /alert on ops/cloudflare/uptime_monitor_worker.js holding its own Resend key, then a ledger entry asserting the watch can raise an alarm with the origin unreachable. Closes when a RED alert is observed delivered while SSH is down."
+  },
+  "DW-098": {
+   "first_seen": "2026-09-05",
+   "last_seen": "2026-09-05",
+   "sev": "MEDIUM",
+   "source": "regression ledger RG-0138 — read of its harness source vs ops/cloudflare/UPTIME_DEPLOYED.md",
+   "status": "OPEN",
+   "summary": "The only independent watcher proves it is alive with a date someone typed, and that date is 7 days old. RG-0138 reads HOLDING today, but its liveness half does not probe the Cloudflare Worker at all — it regex-reads 'LAST_HEARTBEAT: 2026-08-29' out of a repo markdown file and fails only when age > 7. Today age is exactly 7, so it passes by one day; on 2026-09-06 the same unchanged world reads REGRESSION by arithmetic alone. Nothing refreshes that marker automatically; the file's own text says it is rolled forward by hand when a delivery is witnessed. On the evidence ladder this is a READ wearing a PROBE's colour. It matters today: with SSH down (DW-096) and the alert path broken (DW-097), that Worker is the last watcher standing and we cannot say whether it is running.",
+   "next_action": "CTO lane (RUL-037): make RG-0138's liveness half a live read of the Worker (heartbeat KV or a public endpoint) instead of a hand-rolled date. Coverage-map card re-graded GREEN -> BLUE today. Closes when RG-0138 asserts the Worker from a live probe and passes."
+  },
+  "DW-099": {
+   "first_seen": "2026-09-05",
+   "last_seen": "2026-09-05",
+   "sev": "LOW",
+   "source": "coverage-map audit against the ledger's entry table",
+   "status": "CLOSED",
+   "summary": "RAISED AND CLOSED IN THE SAME RUN — the external-vantage card claimed 'ARMED + ASSERTED . RG-0193', but RG-0193 is the Stays-lane city assertion; the entry that actually asserts the external watcher is RG-0138. A card pointing at an assertion that does not assert it is a green square resting on nothing.",
+   "next_action": "CLOSED 2026-09-05 — the check re-ran and PASSED: the card now cites RG-0138 and quotes that entry's own info line. RESIDUAL: nothing cross-checks card-to-entry citations, so the next mis-citation is found by hand. Carried on the map, not as a live row."
   }
  },
- "last_run": "2026-09-04",
- "last_verdict": "AMBER",
+ "last_run": "2026-09-05",
+ "last_verdict": "RED",
  "recheck_pass_2026_08_20": {
   "requested_by": "David: close all open actions",
   "items_rechecked": 15,
@@ -1359,5 +1401,36 @@
   "heartbeat": "clean — last_run 2026-09-03, today 2026-09-04",
   "watch_side_effect": "session_counter.py --help recomputed and wrote SESSION_COUNTER.json 187->188 (script writes on any argv) — disclosed in DW-092; banked by f3b1e96",
   "checks_run": "12/13 (Monday lane not due)"
+ },
+ "watch_pass_2026_09_05": {
+  "verdict": "RED",
+  "occasion": "launch day +4 (Saturday, unattended)",
+  "closed": [
+   "DW-099 (raised and closed in the same run)"
+  ],
+  "new": [
+   "DW-096",
+   "DW-097",
+   "DW-098",
+   "DW-099"
+  ],
+  "still_failing": [
+   "DW-095 (worse: 5 -> 13 WARN, self-amplifying)"
+  ],
+  "not_rerunnable": [
+   "DW-090 (on-box, blinded by DW-096)",
+   "DW-087 (Monday lane; today Saturday)"
+  ],
+  "site": "GREEN - /health ok 1.3.1 (db integrity ok), root 200 in 0.43s, /payment/test ok + paystack_connected, TLS 78d (22 Nov 2026), /dashboard/bit 8/8 PASS ran_at 2026-09-05T04:38:41Z, post_deploy_status all steps ok, migrations none pending",
+  "ledger": "266 entries / 247 holding / 1 REGRESSED (RG-0099) / 18 open / 0 ready to lock / 0 unverified",
+  "ledger_method": "driven entry-by-entry through the harness's own run() with a disk checkpoint - the full board needs 194.6s and the sandbox call cap is ~178s. No harness edit; same status logic.",
+  "audit": "2 findings, both INFO (demo placeholders by design; VERSION-KEY-BENIGN = DW-001 monotonic ?v= bump, served bytes identical to repo)",
+  "cost_sweep": "exit 1 - 0 critical, 13 warnings (up from 5), 28 ok, 42 info; all 13 are the DW-095 claude-relay label, now amplified by the watch's own artifacts",
+  "ssh": "SHUT - port 22 unreachable from egress 197.184.107.115 while the ledger's control host answered; six on-box checks blind",
+  "alert_path": "BROKEN - RED email rides SSH to the origin, which is the failure being reported (DW-097)",
+  "ai_watch": "clear - 3 Sep multi-provider outage resolved 4 Sep; 'Sonnet 5 reverts to $3/$15' still STALE (RG-0184), no row",
+  "heartbeat": "no gap (last_run was 2026-09-04)",
+  "checks_run": "11/13 - not run: server-side sensors + orchestrator + on-box smoke (SSH shut, no root fallback), Monday canon/deep-scan lane (not due Saturday)",
+  "coverage_map": "58 green / 1 blue / 4 amber / 2 red / 10 grey (75 cards). Changes: SSH lane GREEN->RED (DW-096); RED-alert path GREEN->RED (DW-097); external uptime monitor GREEN->BLUE (DW-098). The one BLUE is the external uptime monitor - armed, deployed, not asserted by any live measurement."
  }
 }
