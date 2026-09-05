@@ -67,6 +67,16 @@ REFLECTIONS = {
    # Path fixed 2 Sep 2026: the fragment was folded into CHANGELOG.md; the archived copy is the stable home.
    ("changelog.d/folded/2026-09-01-child-safety-screening-doctrine.md", ["a SCORE, never a statement of fact", "named for a quality of the person"], []),
  ],
+ "RUL-102": [
+   # The firewall covers EVERY door, not just email (5 Sep). The ruling exists because a
+   # session that had read RUL-069 still wired the support form to David's inbox: "customer
+   # emails" did not obviously cover a web form. So the reflection asserts the ABSENCE too --
+   # a named human address inside the support lane is the exact shape of the breach.
+   ("RULINGS.md", ["THE SUPPORT PAGE IS A CUSTOMER CHANNEL"], []),
+   ("bea_main.py", ["SUPPORT-AI-LANE-1", "_triage_message", "_support_followup"],
+    ["SUPPORT_NOTIFY_EMAIL"]),
+   ("scripts/regression_ledger.py", ["RG-0289"], []),
+ ],
  "RUL-087": [
    # Outreach reply lane answered by the agent (1 Sep): register carries the ruling,
    # the code carries the lane split, the ledger carries the open measurement.

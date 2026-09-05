@@ -16962,11 +16962,16 @@ def rg_ai_never_answers_itself():
     elif "can_auto = False" not in api[i_guard:i_guard + 400]:
         out.append((FAIL, "the self-reply guard does not clear can_auto -- it records the mail "
                           "and still answers it"))
-    # And the cause: the support form must not notify the AI-triaged mailbox.
-    m = re.search(r'os\.getenv\("SUPPORT_NOTIFY_EMAIL",\s*"([^"]+)"\)', api)
-    if m and "support@" in m.group(1):
-        out.append((FAIL, "the support form notifies %s, which is the AI-triaged mailbox -- the "
-                          "app feeds its own output back into the customer lane" % m.group(1)))
+    # And the cause. SUPERSEDED-IN-PART 5 Sep by SUPPORT-AI-LANE-1, which is strictly
+    # stronger: the support route no longer emails ANY fixed address. It hands the message
+    # to the shared triage lane, so there is nothing left to point at the wrong mailbox.
+    i_sup = api.find("async def _support_followup")
+    if i_sup >= 0:
+        blk = api[i_sup:i_sup + 3000]
+        if "dmcontiki2" in blk or "SUPPORT_NOTIFY_EMAIL" in blk:
+            out.append((FAIL, "the support route emails a fixed personal address again -- RUL-069 "
+                              "says no customer message reaches David's inbox, and RUL-087 says "
+                              "the reason: it cannot scale"))
     # Domain-anchored, never substring: a lookalike domain must not read as us.
     if 'dom == d or dom.endswith("." + d)' not in api:
         out.append((FAIL, "the own-domain test is no longer anchored -- a lookalike domain such "
@@ -17168,6 +17173,77 @@ def rg_click_to_publish_is_measured():
                    "rows, %d people in both sets. Not a defect in the code -- a fact about the "
                    "world that has not happened yet." % (humans, published, both))]
 
+
+
+@entry("RG-0289", "BOTH doors into support are answered by the SAME engine -- a message "
+       "typed into the app is triaged and answered by the AI, never forwarded to David",
+       LOCKED, fixed_on="2026-09-05",
+       scope="bea_main.py _triage_message() and its two callers: POST /email/inbound and "
+             "POST /support/message via _support_followup(). CLASS: any product with two "
+             "entrances to the same service. The entrances WILL diverge unless they share an "
+             "implementation -- the admin gate proved that over five copies and a month "
+             "(GATE-ONESOURCE-1, the same day as this).",
+       ref="SUPPORT-AI-LANE-1 (5 Sep 2026), on David's correction, and it is his ruling twice "
+           "over. RUL-069 (30 Aug): 'there should be a firewall between users and my email. "
+           "After launch no customer emails should be forwarded to my email. All complaints is "
+           "done between the users and the apps complaints AI agent.' RUL-087 (1 Sep), on the "
+           "reason: 'How would i respond to 100's of emails a day if we get traction?' He has "
+           "named 100,000 users as the design target. "
+           "WHAT WAS WRONG, and it was introduced the same morning: SUPPORT-FORM-REAL-1 fixed a "
+           "support form that sent nothing -- and wired it to EMAIL DAVID every message. That is "
+           "a breach of both rulings, and it was written by the session that had just read them. "
+           "The lesson is not 'be careful': a ruling that lives only in a register a session may "
+           "or may not read is not enforced. This entry is the enforcement. "
+           "Two doors, one building: an email to support@ was classified and answered by the AI, "
+           "while a message typed into /support was filed and posted to a human. Same customer, "
+           "same question, different service, and only one of them scaled. "
+           "THE FIX IS SUBTRACTION: the triage engine was lifted out of /email/inbound into "
+           "_triage_message() and the support form now calls it. No second classifier, no second "
+           "auto-send policy, no second reply template -- the thing that made the admin gate rot "
+           "five times was having five copies. Legal and compliance still HOLD for the admin "
+           "queue, support and billing are still answered, ONE-REPLY-1 still yields exactly one "
+           "outbound message per inbound one, and a lane failure still falls back to a plain "
+           "acknowledgement because silence is the one thing a complaint must never get. Run in "
+           "the BACKGROUND: the row is committed first, so a slow AI call can never cost the "
+           "message or make a distressed user watch a spinner. "
+           "SOURCE-HALF BY NECESSITY, stated rather than glossed: this asserts the two callers "
+           "share one engine, which is the property that rots. Reachability is RG-0282's live "
+           "leg; the lane's behaviour was proven end-to-end by hand this session.")
+def rg_support_doors_share_one_engine():
+    out = []
+    api = repo_file("bea_main.py")
+    if api is None:
+        return [(INFO, "bea_main.py not readable here -- support-lane check skipped")]
+    if "async def _triage_message" not in api:
+        return [(FAIL, "_triage_message() is gone -- the two support doors no longer share an "
+                       "engine, which is how they diverged in the first place")]
+    if api.count("async def _triage_message") > 1:
+        out.append((FAIL, "there is more than one _triage_message -- a second engine is exactly "
+                          "the duplication this entry exists to prevent"))
+    # Both callers must actually use it.
+    for caller, marker in (("/email/inbound", "return await _triage_message("),
+                           ("the support form", "await _triage_message(")):
+        if marker not in api:
+            out.append((FAIL, "%s no longer calls the shared triage engine" % caller))
+    if "_support_followup" not in api or "background_tasks.add_task(_support_followup" not in api:
+        out.append((FAIL, "the support form no longer hands its message to the AI lane -- it is "
+                          "back to filing and hoping a human looks (RUL-069/RUL-087)"))
+    # The firewall property itself: the support lane may not mail a person.
+    i = api.find("async def _support_followup")
+    if i >= 0 and re.search(r"dmcontiki2|david@|SUPPORT_NOTIFY_EMAIL", api[i:i + 3000]):
+        out.append((FAIL, "the support lane emails a named human again -- RUL-069 forbids it and "
+                          "RUL-087 gives the reason: it cannot scale"))
+    # Holding legal for a human must survive: auto-answering a legal complaint is worse
+    # than the flood this fixed.
+    if "_AUTO_SEND_CATEGORIES" in api:
+        m = re.search(r"_AUTO_SEND_CATEGORIES\s*=\s*\{([^}]*)\}", api)
+        if m and ("legal" in m.group(1) or "compliance" in m.group(1)):
+            out.append((FAIL, "legal or compliance has been added to the auto-send set -- those "
+                              "must always be HELD for David (RUL-069 names the admin queue)"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "one triage engine, two callers (inbound email + support form); legal "
+                          "and compliance still held; nothing mailed to a person"))
+    return out
 
 
 if __name__ == "__main__":

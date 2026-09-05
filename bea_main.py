@@ -19468,27 +19468,40 @@ async def _classify_email(from_addr: str, subject: str, body: str,
         return fallback
 
 
-@app.post("/email/inbound")
-async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
-                        x_inbound_secret: str = Header(default="")):
-    """Receive an inbound email (from the Cloudflare Email Worker), triage with
-    Claude, store the result, optionally auto-reply via Gmail SMTP.
-    Auth: X-Inbound-Secret header (EMAIL_INBOUND_SECRET)."""
-    if not EMAIL_INBOUND_SECRET:
-        raise HTTPException(status_code=503, detail="Email triage not configured")
-    if x_inbound_secret != EMAIL_INBOUND_SECRET:
-        raise HTTPException(status_code=401, detail="Invalid inbound secret")
+# ── SUPPORT-AI-LANE-1 (5 Sep 2026, RUL-069 / RUL-087) ────────────────────────
+# The triage engine, lifted out of /email/inbound so the SUPPORT FORM can use the
+# very same one. David, 30 Aug (RUL-069): "there should be a firewall between users
+# and my email. After launch no customer emails should be forwarded to my email. All
+# complaints is done between the users and the apps complaints AI agent." And again
+# 1 Sep (RUL-087): "How would i respond to 100's of emails a day if we get traction?"
+#
+# Until today a message typed into /support did NOT come here. It was filed as a fault
+# and EMAILED TO DAVID -- which is precisely the flood those two rulings exist to stop,
+# and it does not scale past a few users a day, never mind the hundred thousand he has
+# named as the design target. Two doors into the same building behaved differently.
+#
+# ONE ENGINE, not a second one: the same classifier, the same auto-send policy
+# (support/billing answered; legal + compliance HELD for the admin queue), the same
+# ONE-REPLY-1 discipline of one inbound message earning exactly one outbound reply.
+# Duplicating it would have re-created the fault the admin gate spent a month teaching
+# us (GATE-ONESOURCE-1, the same day).
+async def _triage_message(from_addr_in: str, to_addr: str = "", subject_in: str = "",
+                          body_in: str = "", message_id: str = None,
+                          ref_override: str = None, source: str = "email"):
+    """Classify one customer message, store it, and answer it if that is safe.
 
-    from_addr = (req.from_addr or "").strip()
-    subject = (req.subject or "").strip()
-    body = req.body or ""
+    ref_override lets a caller that ALREADY has a reference (the support form's TS-nnnn)
+    keep it, so one message never carries two different reference numbers."""
+    from_addr = (from_addr_in or "").strip()
+    subject = (subject_in or "").strip()
+    body = body_in or ""
     if not from_addr:
         raise HTTPException(status_code=400, detail="from_addr is required")
 
     # OUTREACH-TRIAGE-1: which lane is this? A reply to our own outreach wave is
     # a different class of mail from a customer's support request, and mixing them
     # is what made this lane unscalable (RUL-087).
-    _lane = "outreach" if _is_outreach_lane(req.to_addr or "") else "customer"
+    _lane = "outreach" if _is_outreach_lane(to_addr or "") else "customer"
     result = await _classify_email(from_addr, subject, body, lane=_lane)
     # spend logging lives inside _classify_email with real tokens (P2 sweep, 12 Jun 2026)
 
@@ -19542,8 +19555,8 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
                 "INSERT INTO email_triage "
                 "(from_addr, to_addr, subject, body_preview, category, urgency, "
                 " draft_reply, status, message_id) VALUES (?,?,?,?,?,?,?,?,?)",
-                (from_addr, (req.to_addr or "").strip(), subject, body[:500],
-                 category, urgency, draft_reply, status, req.message_id),
+                (from_addr, (to_addr or "").strip(), subject, body[:500],
+                 category, urgency, draft_reply, status, message_id),
             )
             _rowid = _cur.lastrowid
             fault_code = f"{result.get('bin', 'MISC')}-{_rowid}"
@@ -19564,7 +19577,7 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
             _update_triage_status(fault_code, status)
         elif can_auto:
             sent = _smtp_send_reply(from_addr, subject, draft_reply or "",
-                                    req.message_id,
+                                    message_id,
                                     from_email=_OUTREACH_FROM,
                                     reply_to=_OUTREACH_REPLY_TO)
             status = "sent" if sent else "failed"
@@ -19576,13 +19589,14 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
             _update_triage_status(fault_code, status)
     elif category != "spam" and can_auto:
         _ref_line = ""
-        if fault_code:
+        _ref = ref_override or fault_code
+        if _ref:
             _ref_line = (
-                f"\n\nYour reference is {fault_code} -- your report is logged in our "
+                f"\n\nYour reference is {_ref} -- your report is logged in our "
                 "fix queue. If our fix needs anything from you, we'll write to this "
                 "address."
             )
-        sent = _smtp_send_reply(from_addr, subject, (draft_reply or "") + _ref_line, req.message_id)
+        sent = _smtp_send_reply(from_addr, subject, (draft_reply or "") + _ref_line, message_id)
         status = "sent" if sent else "failed"
         ack_sent = bool(sent and fault_code)
         _update_triage_status(fault_code, status)
@@ -19590,12 +19604,12 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
         _ack = (
             "Hi there,\n\n"
             "Thank you \u2014 your report is logged and already in our fix queue with "
-            f"reference {fault_code}. You don't need to do anything further; if our "
+            f"reference {ref_override or fault_code}. You don't need to do anything further; if our "
             "fix needs anything from you, we'll write to this address.\n\n"
             "\u2014 TrustSquare Support"
         )
         try:
-            ack_sent = _smtp_send_reply(from_addr, subject or "your report", _ack, req.message_id)
+            ack_sent = _smtp_send_reply(from_addr, subject or "your report", _ack, message_id)
         except Exception as exc:
             _log.error("MAINT-B1 ack send failed: %s", exc)
 
@@ -19603,11 +19617,27 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
         "category": category,
         "urgency": urgency,
         "status": status,
-        "fault_code": fault_code,
+        "fault_code": ref_override or fault_code,
+        "source": source,
         "ack_sent": bool(ack_sent),
         "auto_send_enabled": EMAIL_AUTO_SEND,
         "reply_drafted": bool(draft_reply),
     }
+
+
+@app.post("/email/inbound")
+async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
+                        x_inbound_secret: str = Header(default="")):
+    """Receive an inbound email (from the Cloudflare Email Worker) and triage it.
+    Auth: X-Inbound-Secret header (EMAIL_INBOUND_SECRET). The work itself lives in
+    _triage_message so the support form runs the identical lane (SUPPORT-AI-LANE-1)."""
+    if not EMAIL_INBOUND_SECRET:
+        raise HTTPException(status_code=503, detail="Email triage not configured")
+    if x_inbound_secret != EMAIL_INBOUND_SECRET:
+        raise HTTPException(status_code=401, detail="Invalid inbound secret")
+    return await _triage_message(req.from_addr, req.to_addr or "", req.subject or "",
+                                 req.body or "", message_id=req.message_id, source="email")
+
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -19907,9 +19937,48 @@ SUPPORT_TOPIC_BINS = {
 }
 
 
+async def _support_followup(ref: str, email: str, title: str, message: str):
+    """Run one support-form message through the customer AI lane, and make sure the
+    person is answered exactly once (ONE-REPLY-1) even if that lane cannot run."""
+    handled = None
+    try:
+        handled = await _triage_message(
+            email, "support@trustsquare.co", "[%s] %s" % (ref, title), message,
+            ref_override=ref, source="support-form")
+    except Exception as exc:
+        _log.error("support triage failed for %s: %s", ref, exc)
+
+    # The lane sends exactly one message of its own -- the AI's answer, or the bare
+    # acknowledgement when no answer is safe. We only write ourselves when it could not
+    # run at all, because silence is the one outcome a complaint must never get.
+    acked = bool(handled and (handled.get("ack_sent") or handled.get("status") == "sent"))
+    if not acked:
+        try:
+            acked = _send_system_email(
+                email, "TrustSquare " + ref + " - we have your message",
+                _lc_email_html(
+                    "Thank you - we have your message",
+                    "Your message is logged as <b>" + ref + "</b> and we are looking at it."
+                    "<br><br>You don&rsquo;t need to do anything further. We will reply to "
+                    "this address.", "Back to TrustSquare")) == "sent"
+        except Exception as exc:
+            _log.error("support fallback ack failed for %s: %s", ref, exc)
+    if acked:
+        try:
+            conn = database.get_db()
+            try:
+                conn.execute("UPDATE app_faults SET ack_sent = 1 WHERE ref = ?", (ref,))
+                conn.commit()
+            finally:
+                conn.close()
+        except Exception:
+            pass
+
+
 @app.post("/support/message")
 async def support_message(
     request: Request,
+    background_tasks: BackgroundTasks,
     message: str = Form(...),
     email: str = Form(""),
     name: str = Form(""),
@@ -19967,49 +20036,24 @@ async def support_message(
     finally:
         conn.close()
 
-    # The row is safe before either email is attempted. A mail failure must never lose a
-    # customer's message -- that is the whole fault this route exists to end.
-    esc = lambda t: (t or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    try:
-        _send_system_email(
-            # Deliberately David's inbox and NOT support@: support@ is AI-triaged, so notifying
-            # it fed our own system mail back into the customer lane (SELF-REPLY-GUARD-1).
-            # He still reads it in the same inbox support@ forwards to -- one inbox, no loop.
-            os.getenv("SUPPORT_NOTIFY_EMAIL", "dmcontiki2@gmail.com"),
-            "[%s] support message from %s" % (ref, email),
-            "<div style='font-family:Inter,Arial,sans-serif;max-width:560px'>"
-            "<h3 style='color:#0c1a2e;margin:0 0 8px'>%s &middot; %s</h3>"
-            "<p style='margin:2px 0'><b>From:</b> %s &lt;%s&gt;</p>"
-            "<p style='margin:2px 0'><b>Topic:</b> %s &nbsp;<b>Page:</b> %s</p>"
-            "<pre style='white-space:pre-wrap;font-family:inherit;background:#f6f8fa;"
-            "padding:12px;border-radius:8px'>%s</pre></div>"
-            % (esc(ref), esc(bin_), esc(name) or "(no name)", esc(email),
-               esc(topic) or "(none)", esc(page_url) or "(none)", esc(message)))
-    except Exception as exc:
-        _log.error("support notify send failed for %s: %s", ref, exc)
-
-    ack_sent = False
-    try:
-        ack_sent = _send_system_email(
-            email, "TrustSquare " + ref + " - we have your message",
-            _lc_email_html(
-                "Thank you - we have your message",
-                "Your message is logged as <b>" + ref + "</b> and a person will read it.<br><br>"
-                "<i>&ldquo;" + esc(title) + "&rdquo;</i><br><br>"
-                "You don&rsquo;t need to do anything further. If we need more detail we will "
-                "reply to this address.",
-                "Back to TrustSquare")) == "sent"
-        if ack_sent:
-            conn = database.get_db()
-            try:
-                conn.execute("UPDATE app_faults SET ack_sent = 1 WHERE id = ?", (fid,))
-                conn.commit()
-            finally:
-                conn.close()
-    except Exception as exc:
-        _log.error("support ACK send failed for %s: %s", ref, exc)
-
-    return {"ok": True, "ref": ref, "ack_sent": bool(ack_sent)}
+    # ── SUPPORT-AI-LANE-1 (5 Sep 2026) — RUL-069 and RUL-087, in David's words ──
+    # RUL-069, 30 Aug: "there should be a firewall between users and my email. After
+    # launch no customer emails should be forwarded to my email. All complaints is done
+    # between the users and the apps complaints AI agent."
+    # RUL-087, 1 Sep: "How would i respond to 100's of emails a day if we get traction?"
+    #
+    # Earlier today this route EMAILED HIM every message. That was a breach of both, and
+    # it does not survive contact with the volume he has named as the design target. The
+    # message now goes to the SAME lane an inbound email goes to: classified, answered
+    # where answering is safe (support/billing), HELD in /admin/email-triage where it is
+    # not (legal, compliance, anything the classifier is unsure of). Nothing is forwarded
+    # to a personal inbox; the admin queue is the escalation path the ruling names.
+    #
+    # IN THE BACKGROUND on purpose: triage is an AI call, and a support form that makes a
+    # distressed user watch a spinner for eight seconds is its own fault. The row is
+    # already committed, so nothing can be lost by answering the browser first.
+    background_tasks.add_task(_support_followup, ref, email, title, message)
+    return {"ok": True, "ref": ref, "queued": True}
 
 
 @app.get("/app/faults/mine")
