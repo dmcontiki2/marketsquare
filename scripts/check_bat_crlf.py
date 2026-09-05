@@ -46,6 +46,13 @@ UNATTENDED = {
     # writes only to its own log file, no console output at all -- a pause would
     # hang it forever with nobody there to press a key
     "publish_whitepaper_auto.bat",
+    # UNATTENDED-ALLOWLIST-1 (5 Sep 2026): anything on host_queue/ALLOWLIST.txt is run by
+    # the 20-minute agent with nobody present, so a waiting prompt would hang it forever --
+    # the opposite of the flicker this file guards against. Added when deploy_uptime_worker
+    # .bat arrived allowlisted and was flagged for lacking a pause it must never have.
+    "deploy_uptime_worker.bat",
+    "clean_stoploss_cities.bat", "launch_day_wave.bat", "club_import.py",
+    "resend_broken_link_now.bat", "send_human_clicks_now.bat",
 }
 
 

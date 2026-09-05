@@ -39,8 +39,19 @@ def main() -> int:
         print('REFUSED: --permission must quote David and a date.'); return 1
     QDIR.mkdir(exist_ok=True)
     import re
-    stem = re.sub(r'[^A-Za-z0-9_.-]+', '_', a.arg.replace('\\', '/').split('/')[-1].rsplit('.', 1)[0])
-    name = f'{datetime.now(timezone.utc):%Y%m%d-%H%M%S}_{a.action}_{stem}.req'
+    # REQ-COLLIDE-1 (5 Sep 2026): the name used only the FILENAME of the argument, so
+    # MarketSquare\commit.bat and CityLauncher\commit.bat both became "..._run_bat_commit"
+    # -- and two requests queued in the same second silently OVERWROTE each other. That is
+    # exactly what happened: a permission-backed MarketSquare commit vanished with no error
+    # and no result file, and only the CityLauncher one survived. A queue that loses a
+    # request without saying so is worse than one that refuses it. The slug now carries the
+    # whole path, the timestamp carries milliseconds, and an existing name is never reused.
+    slug = re.sub(r'[^A-Za-z0-9]+', '-', a.arg.replace('\\', '/').rsplit('.', 1)[0]).strip('-').lower()
+    base = f'{datetime.now(timezone.utc):%Y%m%d-%H%M%S-%f}'[:-3] + f'_{a.action}_{slug}'
+    name, n = base + '.req', 0
+    while (QDIR / name).exists():                 # never clobber, whatever the clock says
+        n += 1
+        name = f'{base}-{n}.req'
     (QDIR / name).write_text(
         f'action={a.action}\narg={a.arg}\nrequested_at={datetime.now(timezone.utc):%Y-%m-%dT%H:%M:%SZ}\n'
         f'permission={a.permission}\nreason={a.reason}\n', encoding='utf-8')

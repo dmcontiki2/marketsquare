@@ -1,0 +1,75 @@
+ 
+===== deploy_uptime_worker Sat 09/05/2026  9:51:02.22 ===== 
+--- whoami --- 
+
+ ⛅️ wrangler 4.129.0
+────────────────────
+Getting User settings...
+👋 You are logged in with an OAuth Token, associated with the email dmcontiki2@gmail.com.
+🔐 Credentials are stored in: C:\Users\David\AppData\Roaming\xdg.config\.wrangler\config\default.toml
+┌────────────────────────────────┬──────────────────────────────────┐
+│ Account Name                   │ Account ID                       │
+├────────────────────────────────┼──────────────────────────────────┤
+│ Dmcontiki2@gmail.com's Account │ 2026215991ebbdad051b8ef569d622aa │
+└────────────────────────────────┴──────────────────────────────────┘
+🔓 Token Permissions:
+Scope (Access)
+- user (read)
+- offline_access 
+- account (read)
+- workers (write)
+- workers_kv (write)
+- workers_routes (write)
+- workers_scripts (write)
+- workers_tail (read)
+- d1 (write)
+- pages (write)
+- zone (read)
+- ssl_certs (write)
+- ai (write)
+- ai-search (write)
+- ai-search (run)
+- websearch.run 
+- agent-memory (write)
+- queues (write)
+- pipelines (write)
+- secrets_store (write)
+- artifacts (write)
+- flagship (write)
+- containers (write)
+- cloudchamber (write)
+- connectivity (admin)
+- email_routing (write)
+- email_sending (write)
+- browser (write)
+- challenge-widgets.write 
+--- deploy --- 
+
+ ⛅️ wrangler 4.129.0
+────────────────────
+
+Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
+Total Upload: 10.71 KiB / gzip: 3.94 KiB
+Your Worker has access to the following bindings:
+Binding                                                                    Resource                  
+env.UPTIME_STATE (d8a9733e29ca47c290208855cbbef690)                        KV Namespace              
+env.TARGET_URL ("https://trustsquare.co/health")                           Environment Variable      
+env.EXPECT_JSON_STATUS ("ok")                                              Environment Variable      
+env.FAILS_BEFORE_ALERT ("2")                                               Environment Variable      
+env.REPEAT_ALERT_MINUTES ("30")                                            Environment Variable      
+env.HEARTBEAT_UTC_HOUR ("6")                                               Environment Variable      
+env.ALERT_TO ("dmcontiki2@gmail.com")                                      Environment Variable      
+env.ALERT_FROM ("TrustSquare Uptime <hello@mail.trusts...")                Environment Variable      
+
+Uploaded trustsquare-uptime (9.02 sec)
+Deployed trustsquare-uptime triggers (6.73 sec)
+  https://trustsquare-uptime.dmcontiki2.workers.dev
+  schedule: */5 * * * *
+Current Version ID: 7515277e-3b10-430c-9398-9aa9b2f175a8
+--- secret put ALERT_INGEST_KEY (after the deploy, on purpose) --- 
+
+ ⛅️ wrangler 4.129.0
+────────────────────
+🌀 Creating the secret for the Worker "trustsquare-uptime"
+✨ Success! Uploaded secret ALERT_INGEST_KEY
+[OK] worker deployed and ALERT_INGEST_KEY bound. 

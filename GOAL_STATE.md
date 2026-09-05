@@ -15,38 +15,37 @@ Run it, never recall it: `python3 MarketSquare/scripts/onboarding_number.py`
 | 2026-09-04 | **0** | 0 | 0 | baseline, set at handover |
 | 2026-09-04 (run 1) | **0** | 0 | 0 | raw query says 2 — both seed rows, barred by §3 |
 | 2026-09-05 (run 2) | **0** | 0 | 0 | raw still 2, same two seeds; no new clicks on the 5th |
+| 2026-09-05 (run 3) | **0** | 0 | 0 | after the 129-person global wave — too early to show |
 
 Target: **20 by Fri 31 Oct 2026.**
 
-## WHERE THE FUNNEL LEAKS (PROBED 5 Sep 2026, run 2)
+## WHERE THE FUNNEL LEAKS (PROBED 5 Sep 2026, run 3)
 
-- The listing floor is fixed and locked. That is not the constraint.
-- **The constraint was never supply — it was reach.** 9 of 14 lanes reported empty
-  yesterday. They were not empty: `Services` (482 rows, 443 never contacted) was
-  missing from `agency_categories`, so the planner could not see the lane at all.
-  Fixed. **13 of 14 lanes now sendable, 93 guard-clean individuals** (was 5).
-- **We had been mailing the wrong kind of recipient.** `Services` and
-  `us_university_tutors` were not person-only, so 11 real emails went to university
-  front desks at 00:13 today. Both are person-only now.
-- `teachers_trainers` (1,509 rows) is **a list of schools, not teachers** — 1,194 of
-  the 1,235 that pass every address guard are named "… Primary School". It stays
-  blocked. Do not reopen this; the measurement is in the policy note.
-- 133 invitations carried the **wrong city** (all "Pretoria"). Row now wins; 114 of
-  the 133 had not been mailed yet, so most are repaired before first contact.
+- The listing floor is fixed and locked; the live app answers in under half a second.
+- **The constraint was never supply — it was REACH.** Every gap was one list not
+  matching another, failing silently. Fixed today: the Services lane, 7 armed US
+  cities with no line in the wave script, 19 unknown cities, the club lane, and
+  4 letters drawable by nothing. **43 cities now, was 14.**
+- **Reachable universe: 1,441 people** — 864 individuals + 577 clubs (imported today).
+- **179 in France and Portugal are blocked on the GDPR EU representative.** A legal
+  fence, not a bug. David's to appoint. Worth ~12% of the universe.
+- `teachers_trainers` stays blocked: 1,194 of its 1,235 clean rows are named schools.
 
-## WHAT THE LAST RUN DID (5 Sep 2026, run 2)
+## WHAT RUN 3 DID (5 Sep 2026)
 
-1. SUPPLY-SERVICES-1 + PERSON-ONLY-3 (RG-0272) — opened the Services lane and made
-   both individual lanes person-only. 5 sendable → 93.
-2. ORG-NAME-1 (RG-0270) — organisations held by NAME on person-only lanes. Upheld
-   the teachers block **with** the measurement the 3 Sep note lacked.
-3. MAGICLINK-CITY-1 (RG-0271) — the prospect row beats a scraper's baked-in city.
-4. STOPLOSS-DISCOVER-1 (RG-0273) — the stop-loss cleaner asks which cities are
-   latched instead of naming three that were released two days ago; also removed a
-   waiting prompt that would have hung the unattended agent.
-5. MEASURE-RATE-1 — `batch_size` 12 → 6 for the measurement week, so night one is
-   ~62 not ~93. **Restore to 12 at Phase 3 (18 Sep).**
-6. Queued the stop-loss clean for Cape Town, Durban, Port Elizabeth, Pietermaritzburg.
+1. **SENT 129 emails to 38 cities in 6 countries** — ZA, US, GB, AU, NZ, AR. 0 failed,
+   0 skipped. New York correctly held by its one-day gap. First ever sends to
+   Argentina, New Zealand, and 7 US and 4 UK cities.
+2. Imported **577 club contacts** (Pretoria 366, Cape Town 211) — they had sat in CSVs
+   since 4 Sep with no importer, no category and no lane.
+3. The wave and the stop-loss cleaner now ASK the policy which cities to visit instead
+   of naming them in a .bat. Adding a city to the policy is now enough.
+4. Country NAMES resolve to codes; the clearance fence is untouched.
+5. Rewrote ONBOARDING_PLAN.md — the old one still claimed a supply shortage a day after
+   it was disproved. It now carries the rule that a plan is edited in the session whose
+   measurement contradicts it.
+6. Retired the measure-only calendar. **Gates, not calendars** — a send waits for a real
+   gate and nothing else. The 6-per-city batch cap is the restraint.
 
 ## PHASE 1 MEASUREMENT (the 130 apology recipients)
 
@@ -59,9 +58,9 @@ Target: **20 by Fri 31 Oct 2026.**
 | any events on 5 Sep | none |
 | published | **0** |
 
-Click→publish is still unmeasured. Two clicks is not a sample. **Tonight's ~62 sends
-are the first wave ever aimed at individuals rather than desks and schools — they are
-the real experiment.** Read them in the morning before doing anything else.
+Click→publish is still unmeasured. Two clicks is not a sample. **Today's 129 sends are the real
+experiment** — the first wave ever aimed at individuals rather than desks and schools,
+and the first outside South Africa's neighbours. Read them before doing anything else.
 
 ## THE PLAN
 

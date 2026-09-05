@@ -100,10 +100,124 @@ async function sendMail(env, subject, lines) {
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({ from: cfg(env, "ALERT_FROM"), to: [cfg(env, "ALERT_TO")], subject, html }),
     });
-    return { sent: r.ok, why: r.ok ? "" : `Resend HTTP ${r.status}` };
+    let id = "", errText = "";
+    try {
+      const j = await r.json();
+      if (j && j.id) id = String(j.id);
+      else if (j && j.message) errText = String(j.message).slice(0, 160);
+    } catch (e) { /* body not JSON — status alone decides */ }
+    return { sent: r.ok, id, why: r.ok ? "" : `Resend HTTP ${r.status}${errText ? " — " + errText : ""}` };
   } catch (e) {
-    return { sent: false, why: String(e).slice(0, 120) };
+    return { sent: false, id: "", why: String(e).slice(0, 120) };
   }
+}
+
+// ── ALERT INGEST — POST /alert (ALERT-OFFORIGIN-1, 5 Sep 2026, DW-097) ──────
+//
+// WHY THIS EXISTS. The daily watch's RED alert used to be one SSH command to the
+// origin: parse RESEND_API_KEY out of /etc/marketsquare/resend.watch.conf, then curl
+// Resend from the box. That makes the alarm share a transport with the whole class of
+// failure it exists to report. Observed twice in anger (DW-073 26 Aug, DW-097 5 Sep):
+// the origin was unreachable, so the verdict was RED and the email could not be sent —
+// David learned of it only by reading a report hours later.
+//
+// This Worker already owns everything the alarm needs and owes the origin nothing: its
+// own Resend key (bound as a Worker secret, delivery proven end-to-end 29 Aug), its own
+// egress at Cloudflare's edge, its own schedule. It was missing only a way to be ASKED.
+//
+// SAFETY, because this is a public URL that can send mail:
+//   - bearer key (ALERT_INGEST_KEY), its own secret, useless for anything else;
+//   - the RECIPIENT IS NEVER TAKEN FROM THE REQUEST — it is ALERT_TO, fixed in config,
+//     so a leaked key can wake David but can never mail anyone else;
+//   - subject and body are escaped and length-capped; the caller supplies a reason, not markup;
+//   - a KV rate limit (12/hour) caps inbox and quota damage from a leaked key or a loop;
+//   - dry:true authenticates and validates but sends NOTHING, so the regression ledger can
+//     probe this whole path on every run for free, which is what stops it rotting unseen.
+const ALERT_MAX_PER_HOUR = 12;
+
+const esc = (s) => String(s == null ? "" : s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
+// Length-equalised compare: never let response time leak how much of the key matched.
+function keyMatches(given, want) {
+  if (typeof given !== "string" || typeof want !== "string" || !want) return false;
+  if (given.length !== want.length) return false;
+  let diff = 0;
+  for (let i = 0; i < want.length; i++) diff |= given.charCodeAt(i) ^ want.charCodeAt(i);
+  return diff === 0;
+}
+
+async function rateLimit(env, now) {
+  // Fails OPEN by design: if KV is unavailable the alert still goes. A rate limiter that
+  // can silence an outage alarm is worse than the abuse it prevents.
+  if (!env.UPTIME_STATE) return { allowed: true, note: "no KV — rate limit not enforced" };
+  const hour = new Date(now).toISOString().slice(0, 13);
+  const k = "alertcount:" + hour;
+  try {
+    const n = parseInt((await env.UPTIME_STATE.get(k)) || "0", 10) + 1;
+    await env.UPTIME_STATE.put(k, String(n), { expirationTtl: 7200 });
+    return n > ALERT_MAX_PER_HOUR
+      ? { allowed: false, note: `rate limit: ${ALERT_MAX_PER_HOUR}/hour already sent this hour` }
+      : { allowed: true, note: `${n}/${ALERT_MAX_PER_HOUR} this hour` };
+  } catch (e) {
+    return { allowed: true, note: "KV error — rate limit not enforced" };
+  }
+}
+
+const jsonRes = (obj, status) => new Response(JSON.stringify(obj, null, 2), {
+  status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+});
+
+async function handleAlert(request, env, now) {
+  const want = env.ALERT_INGEST_KEY;
+  if (!want) {
+    // Loud, never silent: a caller must be able to tell "refused" from "not wired up".
+    return jsonRes({ ok: false, why: "ALERT_INGEST_KEY not bound on this Worker" }, 503);
+  }
+  const auth = request.headers.get("authorization") || "";
+  const given = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!keyMatches(given, want)) return jsonRes({ ok: false, why: "unauthorized" }, 401);
+
+  let body;
+  try {
+    const raw = await request.text();
+    if (raw.length > 16000) return jsonRes({ ok: false, why: "body too large" }, 413);
+    body = JSON.parse(raw || "{}");
+  } catch (e) {
+    return jsonRes({ ok: false, why: "body must be JSON" }, 400);
+  }
+
+  const level = ["RED", "AMBER", "TEST"].includes(String(body.level || "").toUpperCase())
+    ? String(body.level).toUpperCase() : "RED";
+  const reason = String(body.reason || "unspecified").slice(0, 160);
+  const lines = Array.isArray(body.lines) ? body.lines.slice(0, 30).map((l) => String(l).slice(0, 500)) : [];
+  const to = cfg(env, "ALERT_TO");                    // fixed in config — NEVER from the request
+  const subject = `WATCH ${level}: ${reason}`;
+  const stamp = new Date(now).toISOString().replace("T", " ").slice(0, 19) + " UTC";
+
+  if (body.dry === true) {
+    // Authenticated and validated, sends nothing. The ledger's every-run probe.
+    return jsonRes({
+      ok: true, dry: true, would_send: true, to, subject,
+      resend_key_bound: !!env.RESEND_API_KEY, kv: !!env.UPTIME_STATE, at: stamp,
+    }, 200);
+  }
+
+  const rl = await rateLimit(env, now);
+  if (!rl.allowed) return jsonRes({ ok: false, why: rl.note }, 429);
+
+  const m = await sendMail(env, subject, [
+    `<b>${esc(reason)}</b>`,
+    ...lines.map((l) => esc(l)),
+    `Raised at ${stamp} by the TrustSquare watch.`,
+    `<b>This alert did not touch the origin server.</b> It was sent from Cloudflare's edge, ` +
+    `so it still arrives when 178.104.73.239 is unreachable — which is exactly when it matters (DW-097).`,
+  ]);
+  return jsonRes(
+    { ok: m.sent, sent: m.sent, id: m.id || "", why: m.why || "", to, subject, at: stamp, rate: rl.note },
+    m.sent ? 200 : 502,
+  );
 }
 
 const mins = (a, b) => Math.round((a - b) / 60000);
@@ -178,6 +292,15 @@ export default {
   // Manual vantage: `curl https://<worker>.workers.dev/` runs one check and shows the state.
   // Useful for proving the watcher works without waiting for an outage.
   async fetch(request, env) {
+    const url = new URL(request.url);
+    // POST /alert — the off-origin alarm trigger (DW-097). Everything else keeps the
+    // original behaviour: GET / runs one check, which is the liveness probe RG-0138 reads.
+    if (url.pathname === "/alert") {
+      if (request.method !== "POST") {
+        return jsonRes({ ok: false, why: "POST only" }, 405);
+      }
+      return handleAlert(request, env, Date.now());
+    }
     const out = await runCheck(env, Date.now());
     return new Response(JSON.stringify(out, null, 2), {
       headers: { "content-type": "application/json; charset=utf-8" },

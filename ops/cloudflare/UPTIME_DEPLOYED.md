@@ -4,8 +4,14 @@
 
 ```
 DEPLOYED_ON: 2026-08-28
-LAST_HEARTBEAT: 2026-08-29
+LAST_HEARTBEAT: 2026-09-05
 ```
+
+*Rolled forward 5 Sep 2026 on witnessed mail, not assumption: heartbeats read back out of Gmail for
+3, 4 and 5 Sep (today's at 06:00:26Z, "UP — 200 in 39ms"). It had sat at 2026-08-29 for seven days
+while the mail was arriving daily — nobody was rolling it, which is exactly the hand-maintained-marker
+weakness DW-098 fixed on the liveness side. This half stays hand-recorded by design (only a witnessed
+INBOX read proves the alert half), so it will drift again unless a session looks.*
 
 ## What is deployed
 
@@ -56,8 +62,52 @@ re-probed the same run at 08:36 UTC: `ok:true, 200 in 190ms, kv:true, consecutiv
 path Worker → Resend → inbox is proven end-to-end on soft-launch morning, exactly as this file
 said it would or would not be. LAST_HEARTBEAT rolled forward on that evidence, not on assumption.
 
+## 5 Sep 2026 — the Worker gained an EAR: `POST /alert` (ALERT-OFFORIGIN-1, DW-097)
+
+Until today this Worker could only speak when *it* noticed something. The daily watch had no
+way to ask it for anything, so the watch's own RED alert was one SSH command to the origin —
+and on **26 Aug and again 5 Sep** the origin was unreachable, which is *why* the verdict was
+RED, so no alarm could be raised at all. The alarm shared a transport with the fault it reports.
+
+Worth being clear about what did NOT cover this: **this Worker probes `/health`, which was green
+on both days.** An origin that serves the public perfectly while refusing SSH is invisible to it
+by design. Having a second vantage was never the same thing as having a reachable alarm.
+
+```
+POST https://trustsquare-uptime.dmcontiki2.workers.dev/alert
+Authorization: Bearer <ALERT_INGEST_KEY>        # Worker secret; local copy .secrets/watch_alert_key.txt
+{"level":"RED","reason":"...","lines":["..."],"dry":false}
+```
+
+- **The recipient is NEVER taken from the request** — it is `ALERT_TO` in the config. A leaked
+  ingest key can wake David; it can never mail anybody else.
+- Subject and lines are HTML-escaped and length-capped; `level` is clamped to RED/AMBER/TEST.
+- KV rate limit **12/hour**, and it **fails open** on purpose: a limiter that can silence an
+  outage alarm is worse than the abuse it prevents.
+- **`dry:true`** authenticates and validates and sends nothing — which is how ledger **RG-0279**
+  probes this path on *every run*, for free. An alert path exercised only by a real emergency is
+  an alert path nobody knows is broken until the emergency.
+- Callers use `scripts/watch_alert.py` (Worker lane first, the old ssh lane as fallback only).
+**PROVEN 5 Sep 2026 07:52 UTC — an alert reached the inbox without the origin.** Deployed via the
+host queue (rc=0, 09:52:08 SAST). Dry probe: `would_send:true, resend_key_bound:true, kv:true`. Then a
+real send with `--no-fallback`, so the ssh lane was not even available to it: Resend id
+`e83298f3-2b98-4673-8cad-080dfb0e883f`, and the message was read back out of Gmail at **07:52:27Z**,
+one second later, from `hello@mail.trustsquare.co`. Resend *accepting* is not delivery — the inbox read
+is the evidence, which is this file's own 28-29 Aug lesson applied again.
+
+- Redeploy: `deploy_uptime_worker.bat` — **deploy FIRST, `secret put` SECOND**, the 28 Aug lesson
+  recorded above.
+
 ## Keeping this marker honest
 
-RG-0138 fails if `LAST_HEARTBEAT` goes more than **7 days** stale, which catches a Worker that
-dies quietly. That check is only as good as this date, so roll it forward when a heartbeat is
-actually seen — never on the assumption that one was sent.
+**Superseded 5 Sep 2026 (WATCHER-LIVE-PROBE-1, DW-098) — read this before trusting the date below.**
+RG-0138 used to FAIL when `LAST_HEARTBEAT` went more than 7 days stale. It no longer reads this
+date for liveness at all: it now GETs the Worker's public endpoint, requires a real check result
+with KV bound and a timestamp under 15 minutes old, and reports UNVERIFIED (never RED) if the
+machine running it cannot reach the net. The old check was a READ wearing a PROBE's colour — it
+answered "did somebody type a date recently", not "is the watcher running" — and it was one day
+from going red by arithmetic alone.
+
+`LAST_HEARTBEAT` survives as **INFO only**: it records the day a heartbeat *mail* was witnessed,
+which is the ALERT half (see `/alert` above), not liveness. Roll it forward only when a heartbeat
+email is actually seen — never on the assumption that one was sent.

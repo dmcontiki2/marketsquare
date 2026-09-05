@@ -42,3 +42,19 @@ run_bat    CityLauncher\resend_broken_link_now.bat
 # --- could only be published if a human committed it first. Mirror of MarketSquare's
 # --- commit.bat: git_unlock, add -A, commit, push. No new sending or spending authority.
 run_bat    CityLauncher\commit.bat
+
+# --- Widened 5 Sep 2026. David: "have you incorporated our teachers and the clubs/unions
+# --- etc. new email templates into the waves". CLUB-LANE-1: the collector had run since
+# --- 4 Sep and 577 contacts sat in CSVs no importer read. Writes SQLite, so it must run
+# --- host-side (the 31 Aug sandbox-write ban). Imports only; sends nothing - every guard
+# --- still lives at the one send chokepoint.
+run_py     CityLauncher\scripts\club_import.py
+
+# --- Widened 5 Sep 2026. ALERT-OFFORIGIN-1 (DW-097): the watch's RED alert rode one SSH
+# --- command to the origin, so the alarm died with the thing it was meant to report --
+# --- twice in anger (26 Aug, 5 Sep). The fix is a POST /alert on the Cloudflare uptime
+# --- worker, which has its own egress and its own Resend key. Publishing a Worker needs
+# --- wrangler's credentials, which live on David's PC and not in the sandbox. Covered by
+# --- RUL-095 ("deploy and commit after I have given permission") and RUL-092. Deploys ONE
+# --- worker from the repo; no app code, no money, no sending authority of its own.
+run_bat    MarketSquare\deploy_uptime_worker.bat

@@ -131,7 +131,17 @@ REFLECTIONS = {
    # Launch-day wave scheduled (31 Aug): unattended 00:10 runner exists, Tutors priority in policy, National excluded.
    ("RULINGS.md", ["THE LAUNCH-DAY WAVE FIRES ITSELF"], []),
    ("../CityLauncher/emailer/waves_policy.json", ["TUTORS-PRIORITY-1"], []),
-   ("../CityLauncher/launch_day_wave.bat", ["RUL-084", "Cape Town"], ["--city \"National\""]),
+   # ASSERTION CORRECTED 5 Sep 2026 (WAVE-CITIES-DISCOVER-1). This used to require the
+   # literal string "Cape Town" inside launch_day_wave.bat. That checked the ruling
+   # against a HARDCODED CITY LIST -- the very thing that stranded 33 reachable people
+   # in 7 armed US cities the bat had never been told about. The bat now asks
+   # waves_policy.json which cities to visit, so the ruling is reflected where the
+   # truth actually lives: the city must be ARMED IN THE POLICY, and the bat must
+   # derive its list rather than carry one. Not a weakening -- the same fact, checked
+   # where it is now true, plus the derivation itself.
+   ("../CityLauncher/launch_day_wave.bat", ["RUL-084", "wave_cities.py"], ["call :fire \"Cape Town\""]),
+   ("../CityLauncher/emailer/waves_policy.json", ["Cape Town"], []),
+   ("../CityLauncher/scripts/wave_cities.py", ["armed", "gates_green"], []),
  ],
  "RUL-083": [
    # OSM-only scraper resume (31 Aug): register carries it; status carries the operational note.

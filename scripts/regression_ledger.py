@@ -16054,5 +16054,416 @@ def rg_cost_sweep_classifies_relay():
     return out
 
 
+@entry("RG-0276", "The nightly wave ASKS the policy which cities to visit -- a city added to the "
+       "policy is reached, and a hardcoded list in a .bat can never again strand people the "
+       "planner can already see",
+       LOCKED, fixed_on="2026-09-05",
+       scope="CityLauncher/launch_day_wave.bat + CityLauncher/scripts/wave_cities.py. A city is "
+             "visited when it is armed AND gates_green in waves_policy.json; 'National' is "
+             "excluded by construction (agency sends are David's separate act, RUL-053f). This "
+             "decides which cities are ASKED, never which may send -- stop-loss, min-gap, ramp, "
+             "SUPPRESS-GATE-1 and every chokepoint guard are untouched. The bat restores the "
+             "console codepage after reading UTF-8 city names (Cordoba), and fires NOTHING at all "
+             "if the list cannot be read -- a wave that cannot name its cities must not guess. "
+             "CLASS: identical to STOPLOSS-DISCOVER-1 the same day -- a list of a moving state "
+             "kept somewhere the state does not live.",
+       ref="WAVE-CITIES-DISCOVER-1, 5 Sep 2026, found by David asking 'have you identified the "
+           "necessary addresses to send them to for global and not just local'. The bat named 14 "
+           "cities while the policy held 31: Los Angeles, San Jose, Austin, Houston, San Diego, "
+           "Phoenix and San Antonio were armed, gates_green, and held 33 guard-clean people that "
+           "no wave could ever visit. Nothing reported this -- the wave simply never mentioned "
+           "those cities, and absence of a line reads like absence of a problem. Now 43 cities.")
+def rg_wave_cities_discovered():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    bat = os.path.join(cl, "launch_day_wave.bat")
+    helper = os.path.join(cl, "scripts", "wave_cities.py")
+    pol_path = os.path.join(cl, "emailer", "waves_policy.json")
+    if not os.path.exists(bat):
+        return [(INFO, "SKIPPED -- CityLauncher is not on this disk")]
+    import re as _re, json as _json
+    b = open(bat, encoding="utf-8", errors="replace").read()
+    if not os.path.exists(helper):
+        out.append((FAIL, "scripts/wave_cities.py is gone -- the wave has no way to ask which "
+                          "cities to visit (WAVE-CITIES-DISCOVER-1)"))
+    if "wave_cities.py" not in b:
+        out.append((FAIL, "launch_day_wave.bat no longer asks for its city list"))
+    # "%%C" is the for-loop variable, not a hardcoded city -- the whole point of the fix
+    hard = [c for c in _re.findall(r'call :fire\s+"([^"]+)"', b) if "%" not in c]
+    if hard:
+        out.append((FAIL, "launch_day_wave.bat hardcodes %d city name(s) again (%s...) -- the "
+                          "policy grew past the last such list and stranded 33 people "
+                          "(WAVE-CITIES-DISCOVER-1)" % (len(hard), hard[0])))
+    for line in b.splitlines():
+        s = line.strip().lower()
+        if s == "pause" or s.startswith("pause ") or _re.match(r"^timeout\s+/t", s):
+            out.append((FAIL, "launch_day_wave.bat waits for a key (%r) -- it runs unattended "
+                              "from Task Scheduler and the host queue (RG-0262)"
+                        % line.strip()[:40]))
+    # behavioural: the helper's answer must equal the policy's armed+green set
+    if os.path.exists(helper) and os.path.exists(pol_path):
+        # RG-0187's rule: a proof runs through _harness(), so a missing dependency reads
+        # NOT EVALUATED instead of crying REGRESSION about the app.
+        ok, blind, detail = _harness([sys.executable, helper], timeout=60)
+        if blind:
+            out.append((INFO, "NOT EVALUATED -- %s" % detail))
+        elif not ok:
+            out.append((FAIL, "wave_cities.py exits non-zero -- the wave would fire nothing: %s"
+                        % detail[:120]))
+        else:
+            listed = [l.strip() for l in detail.splitlines() if l.strip()
+                      and not l.startswith(("Traceback", "  ", "ERROR"))]
+            pol = _json.loads(open(pol_path, encoding="utf-8").read())
+            want = [c for c, cfg in (pol.get("cities") or {}).items()
+                    if c != "National" and cfg.get("armed") and cfg.get("gates_green")]
+            if sorted(listed) != sorted(want):
+                out.append((FAIL, "wave_cities.py lists %d cities but the policy arms %d -- the "
+                                  "wave and the policy disagree" % (len(listed), len(want))))
+            else:
+                out.append((INFO, "wave asks the policy: %d armed cities, list matches"
+                            % len(listed)))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "city list derived from the policy, never typed into the bat"))
+    return out
+
+
+@entry("RG-0277", "Nobody is unmailable for want of a country CODE, and nobody is mailed into a "
+       "country we are not cleared for -- the jurisdiction layer decides, and it fails closed",
+       LOCKED, fixed_on="2026-09-05",
+       scope="CityLauncher/emailer/localize.py _ALIASES + country_of() + localize_html/"
+             "localize_subject. TWO SIDES, and both matter. (a) RESOLUTION: a country written as "
+             "a NAME ('South Africa', 'United Kingdom') must resolve to its code, because "
+             "country_of() returning None means REFUSE TO SEND -- right behaviour, wrong cause, "
+             "and it made 5 rows quietly unmailable in our own home market. (b) THE FENCE HOLDS: "
+             "an uncleared country still resolves to None and still refuses; FR and PT still "
+             "refuse without a named EU representative (GDPR art.27) and the US/AR/NZ/PT/FR "
+             "postal-address requirement is unchanged. Widening (a) must never widen (b) -- an "
+             "alias makes a country KNOWN, not CLEARED.",
+       ref="COUNTRY-NAME-ALIAS-1, 5 Sep 2026. Two lessons on one day. First, the probe: reading "
+           "SUPPORTED directly said 'UK is not cleared' and nearly went into a report as a fault "
+           "-- but _ALIASES already maps UK->GB and the real path was fine. Test the path the "
+           "code takes, not a proxy for it. Second, the real fault the same probe found: 5 rows "
+           "carrying the literal string 'South Africa'. PROBED after the fix: US, GB, AU, NZ, AR "
+           "and ZA all build a lawful message; FR (163 rows) and PT (39) still refuse, correctly, "
+           "and stay out of the wave until David appoints an EU representative -- that is his "
+           "call, not a defect to code around.")
+def rg_country_resolution_and_fence():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    loc = os.path.join(cl, "emailer", "localize.py")
+    if not os.path.exists(loc):
+        return [(INFO, "SKIPPED -- CityLauncher is not on this disk")]
+    import importlib.util as _ilu
+    spec = _ilu.spec_from_file_location("_ol_localize", loc)
+    try:
+        L = _ilu.module_from_spec(spec); sys.modules["_ol_localize"] = L
+        spec.loader.exec_module(L)
+    except Exception as e:
+        return [(INFO, "SKIPPED -- localize.py not importable here (%s)" % e)]
+
+    # (a) names resolve like codes
+    for name, code in (("South Africa", "ZA"), ("United Kingdom", "GB"),
+                       ("united states", "US"), ("Australia", "AU")):
+        got = L.country_of({"country": name})
+        if got != code:
+            out.append((FAIL, "country_of(%r) = %r, expected %r -- rows written with a country "
+                              "NAME are silently unmailable (COUNTRY-NAME-ALIAS-1)"
+                        % (name, got, code)))
+    # (b) the fence still refuses
+    if L.country_of({"country": "Germany"}) is not None:
+        out.append((FAIL, "an UNCLEARED country resolved instead of refusing -- the alias table "
+                          "must make a country known, never cleared"))
+    if L.country_of({"country": ""}) is not None and not L._CITY_COUNTRY:
+        out.append((FAIL, "an empty country resolved -- LOCALIZE-2 says never default"))
+    for eu in ("FR", "PT"):
+        if eu not in L._EU_REP_REQUIRED:
+            out.append((FAIL, "%s no longer requires an EU representative -- GDPR art.27 is not "
+                              "optional and 202 prospects wait behind it" % eu))
+    try:
+        L.EU_REP = ""
+        os.environ.pop("TS_EU_REPRESENTATIVE", None)
+        L.localize_html("<p>x</p>", "FR", source="OpenStreetMap")
+        out.append((FAIL, "FR built a message with no EU representative named"))
+    except Exception:
+        pass                                    # refusing is the correct outcome
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "country names resolve; uncleared countries and the EU-rep "
+                          "requirement still refuse (cleared: %s)" % ",".join(sorted(L.SUPPORTED))))
+    return out
+
+
+@entry("RG-0278", "A collected list can be MAILED -- every outreach template on disk belongs to a "
+       "category that a wave can actually draw, so no letter is ever written to an audience "
+       "nothing can reach",
+       LOCKED, fixed_on="2026-09-05",
+       scope="CityLauncher/emailer/waves_policy.json (agency_categories + city category_priority) "
+             "measured against emailer.TEMPLATES. Every category with a template must be drawable "
+             "or explicitly blocked with a reason -- silence is the failure mode this catches. "
+             "'Sports Clubs' is deliberately NOT person-only: a club is an organisation reached "
+             "through its committee (RUL-059), so the office-desk and organisation-name guards "
+             "must not fire on it. The importer (scripts/club_import.py) is host-side only, "
+             "writes no email, and importing a row is not permission to send it -- every guard "
+             "stays at the one chokepoint (RUL-054).",
+       ref="CLUB-LANE-1, 5 Sep 2026, and David's question is the entry: 'have you incorporated "
+           "our teachers and the clubs/unions etc. new email templates into the waves'. No. "
+           "sports_club_outreach.html and federation_intro_outreach.txt had been written, "
+           "club_reader.py had harvested 577 real contacts into club_lists/ on 4 Sep, and there "
+           "was NO importer, NO 'Sports Clubs' row in the prospect table, and the category was in "
+           "neither agency_categories nor any city's category_priority. Two days of work that "
+           "could not reach one person, and nothing anywhere said so -- the wave just never "
+           "mentioned clubs. This assertion makes that silence audible: a template without a "
+           "lane is now a red line, not an absence.")
+def rg_every_template_has_a_lane():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    em = os.path.join(cl, "emailer", "emailer.py")
+    pol_path = os.path.join(cl, "emailer", "waves_policy.json")
+    if not (os.path.exists(em) and os.path.exists(pol_path)):
+        return [(INFO, "SKIPPED -- CityLauncher is not on this disk")]
+    import json as _json, re as _re
+    pol = _json.loads(open(pol_path, encoding="utf-8").read())
+    draw = set(pol.get("agency_categories") or [])
+    blocked = set((pol.get("defaults") or {}).get("blocked_categories") or [])
+    person_only = set((pol.get("defaults") or {}).get("person_only_categories") or [])
+    src = open(em, encoding="utf-8", errors="replace").read()
+    # the template map: "'<Category>': TMPL_DIR / '<file>'"
+    mapped = dict(_re.findall(r"'([^']+)':\s*TMPL_DIR\s*/\s*'([^']+)'", src))
+    # utility mail (apology, follow-up, federation) makes no offer and needs no wave lane
+    UTILITY = {"human_followup_outreach.html", "relink_apology_outreach.html",
+               "federation_intro_outreach.txt"}
+    # The unit is the LETTER, not the category key. TEMPLATES carries several spellings of
+    # the same lane ('Adventures' and 'adventures_experiences', 'Casuals' and 'Casual
+    # Services') so a scraper writing either name still finds its letter. A letter is
+    # reachable when ANY of its categories is drawable; only a letter with no drawable
+    # category at all is an audience nothing can reach.
+    by_letter = {}
+    for c, f in mapped.items():
+        by_letter.setdefault(f, []).append(c)
+    for f, cats in sorted(by_letter.items()):
+        if f in UTILITY:
+            continue
+        if any(c in draw for c in cats):
+            continue
+        if all(c in blocked for c in cats):
+            continue                    # deliberately shut, with a reason in the policy note
+        out.append((FAIL, "letter %s can never reach anybody -- none of its categories (%s) is "
+                          "drawable by a wave (CLUB-LANE-1)" % (f, ", ".join(sorted(cats)))))
+    if "Sports Clubs" in draw:
+        if "Sports Clubs" in person_only:
+            out.append((FAIL, "'Sports Clubs' is person-only -- a club IS reached at its "
+                              "committee desk (RUL-059); this would hold the whole lane"))
+        if not any("Sports Clubs" in (cfg.get("category_priority") or [])
+                   for cfg in (pol.get("cities") or {}).values()):
+            out.append((FAIL, "'Sports Clubs' is drawable but in no city's priority list -- "
+                              "drawable and reachable are different things"))
+        imp = os.path.join(cl, "scripts", "club_import.py")
+        if not os.path.exists(imp):
+            out.append((FAIL, "club_import.py is gone -- the harvest cannot enter the pool"))
+        else:
+            i = open(imp, encoding="utf-8", errors="replace").read()
+            if "send" in i and _re.search(r"\bsend_email\b|resend|smtp", i, _re.I):
+                out.append((FAIL, "club_import.py can send -- a collector that sends is a second "
+                                  "chokepoint (RUL-054)"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "%d templates mapped, every offer-making one has a drawable lane"
+                    % len(mapped)))
+    return out
+
+
+@entry("RG-0279", "The watch can raise an alarm while the ORIGIN IS UNREACHABLE -- the RED-alert "
+       "path does not run through the machine it exists to report on",
+       LOCKED, fixed_on="2026-09-05",
+       scope="scripts/watch_alert.py (the watch's only alert entry point) + "
+             "ops/cloudflare/uptime_monitor_worker.js POST /alert + the live Worker endpoint. "
+             "CLASS, not this one alarm: any alerting channel that shares a transport with the "
+             "class of failure it reports. The same shape would be a disk-full alert written to "
+             "the full disk, or a DNS-failure alert that must resolve a name.",
+       ref="ALERT-OFFORIGIN-1 (5 Sep 2026), closing DW-097 and the residual DW-073 carried since "
+           "26 Aug. The watch's RED alert was ONE SSH COMMAND TO THE ORIGIN: parse RESEND_API_KEY "
+           "out of /etc/marketsquare/resend.watch.conf, then curl Resend from the box. Twice in "
+           "anger -- 26 Aug and again 5 Sep -- the verdict was RED *because* the origin was "
+           "unreachable, so the alert could not be sent and David learned of it only by reading a "
+           "report hours later. A fire alarm wired through the burning room is not an alarm. "
+           "Note what did NOT save us either time: the independent Cloudflare watcher (RG-0138) "
+           "probes /health, which was green on both days -- an origin that serves the public "
+           "fine while refusing SSH is invisible to it BY DESIGN. So the second vantage existing "
+           "was never the same thing as the alarm being reachable. Fixed by giving the Worker an "
+           "ear: POST /alert, bearer-keyed with its own secret, using the Resend key already "
+           "bound to it (delivery proven end-to-end 29 Aug). The RECIPIENT IS NEVER TAKEN FROM "
+           "THE REQUEST -- it is ALERT_TO in config -- so a leaked ingest key can wake David but "
+           "can never mail anybody else; subject and lines are escaped and capped, and a KV "
+           "rate limit (12/hour) bounds the damage. The limiter FAILS OPEN on purpose: a rate "
+           "limiter that can silence an outage alarm is worse than the abuse it prevents. "
+           "The old ssh lane is kept as a FALLBACK, never first -- two independent lanes beat "
+           "one, and a Cloudflare-side failure is real if rarer. LIMIT OF THIS ASSERTION, stated "
+           "rather than glossed: the daily-watch task text lives outside this repo "
+           "(C:\\Users\\David\\Documents\\Claude\\Scheduled\\trustsquare-daily-watch\\SKILL.md) "
+           "and cannot be read from here, so this asserts the LANE the task calls, not the "
+           "task's own wording. That is why the alert logic was moved into the repo as "
+           "watch_alert.py instead of living in the task prompt: what the ledger cannot see, it "
+           "cannot defend. PROVEN END TO END the same session, not inferred: the Worker was published via the host queue (deploy_uptime_worker.bat, rc=0 09:52:08 SAST), the dry probe returned would_send:true / resend_key_bound:true / kv:true, and a REAL alert was then raised with --no-fallback -- the ssh lane deliberately unavailable to it -- returning Resend id e83298f3-2b98-4673-8cad-080dfb0e883f and landing in David's inbox at 07:52:27Z, one second later, from hello@mail.trustsquare.co. Resend ACCEPTING is not delivery; the inbox read is the evidence, which is the 29 Aug lesson (a monitor believed to work and silently unable to deliver is worse than no monitor).")
+def rg_alert_path_is_off_origin():
+    out = []
+    js = repo_file("ops/cloudflare/uptime_monitor_worker.js")
+    py = repo_file("scripts/watch_alert.py")
+
+    # -- leg (a): the Worker actually has an ear, and it is a safe one ------------------
+    if js is None:
+        out.append((FAIL, "the uptime Worker source is gone -- there is no off-origin alert path"))
+    else:
+        if '"/alert"' not in js:
+            out.append((FAIL, "the Worker has no /alert route -- the watch has no way to ask it "
+                              "for an alarm, so the only lane left is ssh to the origin"))
+        if "ALERT_INGEST_KEY" not in js:
+            out.append((FAIL, "the /alert route is not key-gated -- a public URL that sends mail "
+                              "on request"))
+        if "cfg(env, \"ALERT_TO\")" not in js:
+            out.append((FAIL, "the alert recipient is no longer taken from config -- if a request "
+                              "can choose the recipient, a leaked ingest key becomes a mailer"))
+
+    # -- leg (b): the watch's entry point tries the off-origin lane FIRST ---------------
+    if py is None:
+        out.append((FAIL, "scripts/watch_alert.py is gone -- the watch is back to a single "
+                          "ssh-to-the-origin alert path (DW-073 / DW-097)"))
+    else:
+        if "def via_worker" not in py or "def via_origin" not in py:
+            out.append((FAIL, "watch_alert.py no longer carries both lanes"))
+        elif py.index("ok, detail = via_worker(") > py.index("ok2, detail2 = via_origin("):
+            out.append((FAIL, "watch_alert.py tries the ORIGIN lane before the Worker lane -- on "
+                              "the day that matters the first lane is the dead one"))
+
+    if any(s == FAIL for s, _ in out):
+        return out
+
+    # -- leg (c): LIVE. The endpoint is deployed, the key is right, Resend is bound. -----
+    # dry:true authenticates and validates and sends NOTHING, so this runs on every ledger
+    # pass for free. That is the point: an alert path only exercised by a real emergency is
+    # an alert path nobody knows is broken until the emergency (the 26 Aug/5 Sep lesson).
+    import json as _json, re as _re
+    dep = repo_file("ops/cloudflare/UPTIME_DEPLOYED.md") or ""
+    u = _re.search(r"https://[a-z0-9.\-]+\.workers\.dev", dep)
+    if not u:
+        out.append((FAIL, "the deploy marker names no workers.dev URL -- the alert endpoint "
+                          "cannot be probed"))
+        return out
+    keyfile = os.path.join(REPO, ".secrets", "watch_alert_key.txt")
+    key = os.environ.get("WATCH_ALERT_KEY", "").strip()
+    if not key:
+        try:
+            key = open(keyfile, encoding="utf-8").read().strip()
+        except OSError:
+            key = ""
+    if not key:
+        # Same posture as RG-0188: a machine without the secret cannot judge the live half.
+        out.append((INFO, "no ingest key on this machine (.secrets/watch_alert_key.txt) -- the "
+                          "live half is UNVERIFIED here, not failing"))
+        raise ProbeOffline("watch alert ingest key not present on this machine")
+    req = urllib.request.Request(
+        u.group(0).rstrip("/") + "/alert",
+        data=_json.dumps({"level": "TEST", "reason": "ledger dry probe", "dry": True}).encode(),
+        method="POST",
+        headers={"Authorization": "Bearer " + key, "Content-Type": "application/json", **UA})
+    try:
+        with urllib.request.urlopen(req, timeout=25) as r:
+            live = _json.loads(r.read().decode() or "{}")
+    except urllib.error.HTTPError as ex:
+        detail = ""
+        try:
+            detail = ex.read().decode(errors="replace")[:160]
+        except Exception:
+            pass
+        if ex.code in (401, 403):
+            out.append((FAIL, "the alert endpoint REFUSES our key (HTTP %s) -- the watch cannot "
+                              "raise an alarm through it. %s" % (ex.code, detail)))
+        elif ex.code == 503:
+            out.append((FAIL, "the Worker is deployed but ALERT_INGEST_KEY is not bound to it -- "
+                              "/alert answers 503 and every alarm falls back to ssh. Re-run "
+                              "deploy_uptime_worker.bat (deploy FIRST, secret SECOND)"))
+        else:
+            out.append((FAIL, "the alert endpoint answered HTTP %s: %s" % (ex.code, detail)))
+        return out
+    except Exception as ex:
+        raise ProbeOffline(repr(ex)[:140])
+
+    if not live.get("would_send"):
+        out.append((FAIL, "the alert endpoint authenticated but will not send: %s"
+                    % _json.dumps(live)[:200]))
+        return out
+    if not live.get("resend_key_bound"):
+        out.append((FAIL, "the alert endpoint has no Resend key bound -- it would accept the "
+                          "alarm and deliver nothing, which is the worst of both"))
+        return out
+    out.append((INFO, "off-origin alert path PROBED ready: %s answers /alert, our key is "
+                      "accepted, Resend key bound, recipient fixed at %s"
+                % (u.group(0), live.get("to", "?"))))
+    if not live.get("kv"):
+        out.append((INFO, "KV not bound on the Worker -- alerts still send, the 12/hour limit "
+                          "is simply not enforced"))
+    return out
+
+
+@entry("RG-0280", "A queued host request can never be silently OVERWRITTEN -- two permission-backed "
+       "requests are two files, whatever their argument's filename or the clock says",
+       LOCKED, fixed_on="2026-09-05",
+       scope="MarketSquare/scripts/request_host_action.py, the naming of host_queue/*.req. The "
+             "slug carries the WHOLE argument path (marketsquare-commit vs citylauncher-commit), "
+             "the timestamp carries milliseconds, and an existing name is never reused -- the "
+             "writer counts up rather than clobbering. CLASS: any queue whose item names are "
+             "derived from user data rather than guaranteed unique. The failure is silent by "
+             "construction, which is what makes it dangerous: no error, no result file, and the "
+             "requester's own 'queued ...' line still prints success.",
+       ref="REQ-COLLIDE-1, 5 Sep 2026, hit for real. The name used only the FILENAME of the "
+           "argument, so MarketSquare\\commit.bat and CityLauncher\\commit.bat both became "
+           "'<ts>_run_bat_commit'. Two commits queued in the same second: the second overwrote "
+           "the first, `ls host_queue/*.req` showed ONE file, and a permission-backed request to "
+           "commit MarketSquare had simply ceased to exist -- no error raised, nothing in "
+           "done/, and the tool had already told the caller it was queued. Found only because "
+           "the queue was listed by eye straight afterwards. Same shape as the 2 Aug CHANGELOG "
+           "collision (two writers, last one wins, no error) -- there the cure was one-file-per-"
+           "fragment; here it is a name that cannot collide.")
+def rg_host_request_names_cannot_collide():
+    out = []
+    req = os.path.join(REPO, "scripts", "request_host_action.py")
+    if not os.path.exists(req):
+        return [(FAIL, "request_host_action.py is gone -- Claude cannot queue host work")]
+    src = open(req, encoding="utf-8", errors="replace").read()
+    if ".exists()" not in src or "while" not in src:
+        out.append((FAIL, "request_host_action.py no longer guards against reusing an existing "
+                          "request name -- a second request can overwrite the first silently "
+                          "(REQ-COLLIDE-1)"))
+    if "%f" not in src:
+        out.append((FAIL, "request names no longer carry sub-second precision -- two requests in "
+                          "one second collide again"))
+
+    # BEHAVIOURAL, and PURE. An earlier draft of this leg shelled out to the real
+    # request_host_action.py and its self-test requests landed in the LIVE host queue --
+    # a ledger assertion must never cause the thing it is asserting about. It also broke
+    # RG-0187's rule by running a bare subprocess. Both fixed by testing the naming rule
+    # in-process, writing nothing: the slug is what has to differ, so exercise the slug.
+    import re as _re
+    m = _re.search(r"^\s*slug\s*=\s*(.+)$", src, _re.M)
+    if not m:
+        out.append((FAIL, "the request-name slug is gone from request_host_action.py"))
+    else:
+        expr = m.group(1)
+        if ".rsplit('.', 1)[0]" not in expr or "replace" not in expr:
+            out.append((INFO, "slug expression changed shape -- reading it literally: %s"
+                        % expr[:90]))
+        # the fault was taking only the FILENAME: both commit.bats collapsed to "commit"
+        def slug_of(arg):
+            return _re.sub(r"[^A-Za-z0-9]+", "-",
+                           arg.replace("\\", "/").rsplit(".", 1)[0]).strip("-").lower()
+        a, b = slug_of("MarketSquare\\commit.bat"), slug_of("CityLauncher\\commit.bat")
+        if a == b:
+            out.append((FAIL, "two repos' commit.bat still slug to the same name (%r) -- one "
+                              "request would overwrite the other (REQ-COLLIDE-1)" % a))
+        elif "marketsquare" not in a or "citylauncher" not in b:
+            out.append((FAIL, "the slug no longer carries the repo (%r / %r)" % (a, b)))
+        else:
+            out.append((INFO, "slug carries the whole path: %r vs %r" % (a, b)))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "request names carry the full path, milliseconds, and never clobber"))
+    return out
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -1,221 +1,113 @@
 # THE ONBOARDING PLAN — how 0 becomes 20 by 31 October 2026
 
-*Written 4 Sep 2026, run 1, after the first honest measurement of the funnel.
-This is the plan every session works to. GOAL_STATE.md is the running state;
-ONBOARDING_GOAL.md is the contract. This file is the route between them.*
+*Rewritten 5 Sep 2026 after David asked the five questions this file had no honest answer to.
+GOAL_STATE.md is the running state; ONBOARDING_GOAL.md is the contract. This is the route.*
 
 ---
 
-## 0. HONEST SCORECARD — 4 Sep, first working day
+## 0. WHAT CHANGED, AND WHY THE OLD PLAN WAS WRONG
 
-David's challenge, and it is fair: *"i dont know how this brainstorming helps you get to the
-20 listings."*
+The plan written 4 Sep said the constraint was **supply** — too few prospects — and set a
+measure-only week before spending "our one pass through the list". Both halves were wrong.
 
-| | |
+**The constraint was never supply. It was REACH.** Measured 5 Sep:
+
+| what was actually broken | people it stranded |
 |---|---|
-| the number, start of day | 0 |
-| the number, end of day | **0** |
-| emails that actually went to a stranger | **130** (the apology to people who engaged) |
-| wave emails | 0 — the cooling-off rule blocked every city |
-| artefacts built | 7 association pages, a club letter, a club reader, an importer |
-| artefacts SENT to anyone | **0** |
+| `Services` missing from `agency_categories` — the planner could not see the lane | 482 |
+| 7 US cities armed in the policy with no line in the wave script | 33 |
+| 19 cities across AU, NZ, GB, AR, ZA that the policy had never heard of | 40 |
+| `Sports Clubs` had a letter, a collector and 577 contacts — and no category, no lane, no importer | 577 |
+| 3 more letters (individual collectors, individual property, casual work) drawable by nothing | 0 today |
 
-What the day genuinely bought: the listing floor is fixed and proven, the scoring instrument
-is honest, supply roughly doubled (295 club contacts proven from two pages of one sport), and
-one wasted wave was prevented (the 1,509 "teachers" are schools, not teachers).
+None of these was a shortage. Every one was a list that did not match another list, failing
+**silently** — the wave simply never mentioned those people, and an absent line reads like an
+absent problem. Nothing on the board went red, because nothing was asserting it.
 
-What it did NOT buy: a single listing. **All of the association work is PHASE 3 supply. It
-does not produce a publisher this week, and the agent let that thread run for hours without
-saying so.** The discipline this file exists to enforce is: measure first, fix the drop-off,
-THEN spend the list. Building supply is not a substitute for either of the first two.
+**The one-pass fear was also wrong.** The reachable pool is far larger than the old plan
+believed, and it grows when reach is fixed rather than when more scraping is done.
 
-**Standing correction for future sessions:** when a good idea arrives mid-Phase-1, capture it
-as a spec and say plainly that it is Phase 3 work. Do not follow it to completion while the
-measurement it depends on is still running.
+## 1. THE ARITHMETIC — measured 5 Sep 2026, not assumed
 
-## 1. THE ARITHMETIC — read this before proposing anything
+**Every live row, sorted by what actually stops it:**
 
-Everything we know, measured on the live server 4 Sep 2026:
+| | rows | |
+|---|---|---|
+| **reachable now** — guard-clean, law-cleared, in a wave city | **864** | the working pool |
+| club contacts, import queued | **577** | Pretoria 366, Cape Town 211 |
+| schools and other blocked categories | 1,366 | correctly shut — they are not tutors |
+| already contacted or rejected | 930 | spent |
+| held by a guard (office desks, government, junk) | 259 | correctly held |
+| **France + Portugal** | **179** | **waiting on David — see §4** |
 
-| stage | number | rate |
-|-------|--------|------|
-| prospects on the list | 3,805 | — |
-| emailed so far | 461 | — |
-| opened | 155 | **34% of emailed** |
-| clicked | 48 | **10% of emailed** (31% of openers) |
-| published | **0** | unknown — every click so far hit a locked door |
-| never emailed yet | 2,860 (≈2,737 organisations after one-per-org) | — |
+So the honest reachable universe is **1,441 people today**, 1,620 if the EU opens.
 
-The decisive unknown is **click → publish**. We have never observed it, because
-until 3 Sep the link was broken and until 22 Jul the listing form was broken.
-Zero out of 48 tells us nothing.
+**What 20 publishers requires:**
 
-**What each possible rate would demand, to reach 20 publishers:**
+| if click → publish is | publish rate at 10% click | publishers from 1,441 | verdict |
+|---|---|---|---|
+| 25% | 2.5% | 36 | comfortable |
+| 15% | 1.5% | 21 | **just enough — this is the line** |
+| 10% | 1.0% | 14 | short; needs the EU or new scraping |
+| 5% | 0.5% | 7 | not reachable without much more supply |
 
-| if click → publish is | clicks needed | emails needed (at 10% click) | verdict |
-|----------------------|---------------|------------------------------|---------|
-| 20% | 100 | ~1,000 | comfortable — one third of the list |
-| 10% | 200 | ~2,000 | achievable — two thirds of the list |
-| 5% | 400 | ~3,800 | tight — the whole list, one pass, no waste |
-| 2% | 1,000 | ~9,600 | **not reachable** — 3× more supply than exists |
+**The whole goal turns on one unmeasured number: click → publish.** It has never been observed,
+because until 3 Sep the link was broken and until 22 Jul the listing form was. Everything else
+is arithmetic around it.
 
-**So: we have roughly ONE PASS through our list.** Sending capacity is not the
-constraint (14 armed cities × ~12 per wave × daily ≈ 4,000 sends before the
-deadline). Supply and conversion are. That is why the order below is measure
-first, spend second — a wasted pass cannot be bought back.
+**Capacity is not the constraint.** 43 armed cities at 6 per city is ~130 sends a night, so the
+1,441 are spent in roughly 11 nights. There are 56 days left. Supply becomes the constraint
+again in mid-September — which is when scraping earns its place, and not before.
 
-## 2. THE PLAN
+## 2. THE RULE THAT REPLACES THE CALENDAR
 
-### Phase 1 — MEASURE (4–11 Sep). Get the first real conversion number.
+David, 5 Sep: *"You don't need to stop based on a previous time schedule as if it is a rule. If
+we are stopped due to google rules or to-be-released email stops then it is understood... but if
+we can target other countries or cities then we should do it."*
 
-The 130 people sent the apology on 4 Sep are the experiment: a warm audience,
-a working link, a repaired listing flow. The webhook resolves opens and clicks
-by recipient, so their behaviour is captured even though the apology lane does
-not write a 'sent' row — the denominator is 130, from emailer/sent_log.json.
+**So: gates, not calendars.** A send waits for a REAL gate — bounce stop-loss, the per-city
+day gap, provider limits, a legal clearance we do not hold — and for nothing else. A
+self-imposed measuring week is not a gate. The old "do not open the tap during Phase 1" line is
+retired; the batch cap (6 per city) is the restraint now, and it is a dial, not a date.
 
-Every session, in order: run `scripts/onboarding_number.py`, then read opens and
-clicks for those 130, then record both in GOAL_STATE.md. Nothing else matters
-this week. **Do not open the tap during Phase 1** beyond the already-scheduled
-daily wave — a bigger send before we know the rate spends the pass blind.
+## 3. THE ROUTE
 
-### Phase 2 — FIX THE BIGGEST DROP-OFF (11–18 Sep).
+**Now → 8 Sep. SEND, AND WATCH ONE NUMBER.**
+The 129-person wave across 38 cities is the first ever aimed at individuals rather than office
+desks and schools. Every morning: run `scripts/onboarding_number.py`, then read opens, clicks
+and *distinct human clickers* for the previous night. The single question is click → publish.
+Import the clubs, then let Pretoria and Cape Town draw from them.
 
-Phase 1 says where people stop. Fix that one thing, prove it, then move on.
-Likely candidates, in the order they appear in the journey: the sign-in step,
-the photo/AI-draft step, the plan picker, the publish button. The three gates
-that were breaking publish are already fixed and locked; whatever Phase 1 finds
-will be a fourth, and it should be treated as a class, not an instance.
+**8 → 15 Sep. FIX WHERE THEY STOP.**
+By now the funnel has a real denominator. Fix the one step that loses the most people, as a
+class and not an instance. If click → publish is above 15%, the arithmetic works and the job is
+volume. If it is below 10%, no amount of sending reaches 20 and the answer is the product, not
+the list.
 
-### Phase 3 — SPEND THE LIST (18 Sep–24 Oct).
+**15 Sep → 24 Oct. SPEND, THEN REFILL.**
+The 1,441 are gone in about 11 sending nights. From mid-September the binding constraint is
+genuinely supply for the first time, and `run_local_scraper.bat` and the club/federation lanes
+earn their place. Aim scraping at whatever vertical the measured rate says converts.
 
-Only once the measured rate says 20 is reachable. Top up the empty category
-pools, run the wave daily across every armed lane, hold the ramp discipline.
-Roughly 2,860 organisations, ~5 weeks, well inside sending capacity.
+**24 → 31 Oct. STOP ADDING, START CLOSING.**
+No new lanes. Follow up the people who clicked and did not publish.
 
-### Reserve (24–31 Oct). No new sending. Convert whoever is mid-flow.
+## 4. THE ONE THING RESERVED TO DAVID
 
-## 3. THE DECISION GATE — say it early, not on 31 October
+**179 people in France and Portugal cannot be emailed.** GDPR article 27 requires a named EU
+representative in the message, and none is configured. The code refuses to build those messages
+— correctly; this is a legal fence, not a bug, and it must not be coded around.
 
-At the end of Phase 1, compute the implied emails-needed from the measured rate:
+Appointing an EU representative is a legal and commercial act, so it is David's, not mine. It is
+worth about **179 people, ~12% of the reachable universe**. If click → publish lands near 15%,
+those 179 are roughly 2–3 publishers and the goal probably does not depend on them. If it lands
+near 10%, they matter.
 
-- **implies under 2,000 emails** → proceed to Phase 3 as planned.
-- **implies 2,000–3,800** → proceed, but flag to David that it needs the whole
-  list with no waste, and that a second supply source should be lined up now.
-- **implies over 3,800** → **STOP AND SAY SO.** 20 is not reachable with this
-  list. Report the true number, the measured rate, and the one thing that would
-  change it (more supply, a warmer channel, or a different vertical). A truthful
-  4 is worth more than a manufactured 20 — ONBOARDING_GOAL.md §3.
+Nothing else waits on him.
 
-Never let this arrive as a surprise in the last week.
+## 5. HOW THIS PLAN STAYS HONEST
 
-## 4. WHAT IS IN THE WAY
-
-1. **Supply top-up is locked out.** The tool that refills empty category pools
-   cannot reach our own API because the key was never provisioned. Until then
-   supply comes from the scraper lane. Tracked as an open ledger entry.
-2. **Category pools, not total supply.** The 4 Sep wave reported "no sendable
-   prospects" for nine lanes, but that was the AGENCY category being dry — the
-   list holds 1,509 teachers/trainers and 159 tutors untouched. Rotate the
-   category, do not conclude the list is empty.
-3. **Only ~2 real human clicks in the whole campaign to date.** Most recorded
-   clicks are corporate link-scanners. Any rate computed from raw click counts
-   will flatter us; use the scored human tiers.
-
-## 5. THE SPORTS CLUBS LANE — the supply answer, with one catch
-
-David's clubs idea (SPORTS_CLUBS_LANE + the provincial-secretary letter, 4 Sep) is
-assessed here because it attacks §1's binding constraint directly, and nothing else on
-the table does.
-
-**Why it matters to this goal — now MEASURED, not estimated (4 Sep).** §1 says we hold
-~2,860 unemailed organisations — one pass — so 20 publishers needs click→publish of about
-5%. Two provincial athletics pages were read live with `CityLauncher/club_reader.py` and
-run through the real send guards:
-
-| province | addresses on the page | sendable after every guard |
-|----------|----------------------|-----------------------------|
-| Western Province | 211 | **98** |
-| Athletics Gauteng North | 366 | **197** |
-
-**295 sendable clubs from two provinces of one sport. Athletics South Africa has 17** —
-about 2,500 from athletics alone, before cycling, judo, karate, boxing, swimming, the 227
-parkruns or the non-profit register. That roughly DOUBLES the list and drops the required
-rate from ~5% to ~2.5% — the difference between "tight" and "comfortable" on §1's table.
-For contrast, the existing search-and-maps scraper had found 40 sport entries in the whole
-3,805-row database. The word list was never the problem; the place we looked was. It also fixes the SHAPE of the gap: the
-4 Sep wave found nine lanes dry in the AGENCY category, and clubs feed Tutors, Services
-and Adventures, which still have room, across every province. Cost is zero — public
-registers, the scraper we already run, the send machinery we already own.
-
-**The catch, and it decides whether the idea scores at all.** The goal counts people
-**we contacted cold**. The letter's current ask is that the secretary forwards a
-paragraph to their clubs *in their own words*. Anyone who arrives that way was never in
-our list and was never emailed by us: `emailed_at` is NULL, so `onboarding_number.py`
-excludes them — correctly, under ONBOARDING_GOAL.md §3. **As written, the federation
-route builds the business and scores ZERO on this goal.**
-
-One sentence fixes it. Change the ask from *"I send you one short paragraph you can pass
-on to your clubs"* to *"may we email your affiliated clubs directly, with your blessing?"*
-Then the clubs enter our list, we contact them, they count — and the same answer supplies
-the POPIA permission the lane needs anyway. That wording is commercial and legal
-positioning, so it is DAVID'S to change, not a session's.
-
-**Timing: the scrape is the fast lane, the letter is the long game.** Volunteers reply
-slowly. Letter → reply (1–3 weeks) → permission → readers → send → convert lands late
-October at best. The athletics scrape could be sending inside a week (one provincial page
-already shows ~110 clubs with addresses in plain text). So: build readers during Phase 1
-as parallel work — it is free and it sends nothing — and treat clubs as Phase 3 supply.
-
-**No counsel gate — RUL-052 / RUL-020.** An earlier version of this section made a lawyer
-a precondition. That was wrong and David corrected it: counsel items ride alongside, they
-never block a wave, and the same applies here. What follows is therefore the operating
-position, not a hold.
-
-**The legal difference the feasibility notes did not name.** Our current ZA sending rests
-on a specific basis: OUTREACH_LAW_WORKING_NOTES_2026-08-20.md records that role-based
-addresses (info@, sales@) directed at the legal entity fall outside POPIA s69's strictest
-consent requirement. Club secretaries are the opposite — **named individuals with
-personal addresses**, the case s69 protects most strongly. So this lane is not "the same
-as what we already do"; it steps outside the basis we currently rely on. Sharpening the
-irony: PERSON-ONLY-2 already HOLDS office desks on the Tutors and teachers lanes because
-a person lists as a tutor and an office does not — so our own deliverability guard pushes
-us toward exactly the addresses the law protects hardest. So the mitigation that carries this
-lane is not a legal opinion, it is the machinery already in place and already binding:
-the suppression register checked at two gates fail-safe (RUL-054, "one rule we can not
-contravene"), an unsubscribe link in every template, the junk / government /
-privacy-officer / competitor filters, one mailbox per organisation, the 12-per-wave ramp,
-the 5%-bounce stop-loss and the no-follow-up-on-silence rule. Those did real work on the
-real data on 4 Sep: one-per-org held 237 sibling mailboxes and the government filter held
-45 officers' .gov.za addresses across the two provinces read. A wrong or dead address is
-not a wasted email on this lane, it is a burnt contact — which is exactly why the accuracy
-of the list, not its size, is the thing to protect.
-
-## 5b. THE ONE THING THAT STOPS THE AGENT RUNNING THIS ALONE
-
-Everything in this plan is inside the agent's authority except one recurring act: **a letter
-going out over David's name to strangers.** Code, deploys, commits, scraping, importing,
-measuring, fixing and the gated wave all run unattended today and were proven to on 4 Sep.
-
-But every NEW audience needs a NEW letter, and every letter is commercial positioning —
-reserved under RUL-096(f). That is correct as a principle and wrong as a mechanism: it is a
-per-letter gate, so it stops the agent every single time, which is exactly the "David clicks"
-pattern RUL-095 set out to kill.
-
-**The fix, and it is David's to give or refuse: approve the PATTERN once, not each letter.**
-A standing authority of the shape — an outreach letter may send without individual review if
-it (a) follows the approved structure of the club letter, (b) names only credentials that are
-LIVE in the product (RG-0267), (c) carries the unsubscribe link and the line saying where we
-got the address, (d) passes journey_check before the first send, and (e) is filed to
-`visuals/letters/` at the moment it sends so David can read anything already gone. Anything
-outside that shape still comes to him.
-
-Until that exists, the honest position is: the agent can run the whole route EXCEPT the
-moment of first contact with a new audience, and will stall there every time.
-
-## 6. WHAT IS NOT THE PLAN
-
-- More outreach before the rate is known. That spends the one pass blind.
-- Mailing the ~310 who received the broken email and never opened it. That is a
-  wider send than David authorised, and a cold re-send to non-openers is the
-  weakest lever we have. Revisit only if Phase 1 shows a strong rate.
-- Anything that makes the number look better without a real person publishing.
+The old plan was written once and never revisited, so it went on asserting a supply shortage for
+a day after the shortage was disproved. Standing rule now: **when a session's measurement
+contradicts this file, this file is edited in that session** — same rule as the ledger and the
+rulings register. A plan nobody updates is just an old opinion with a filename.

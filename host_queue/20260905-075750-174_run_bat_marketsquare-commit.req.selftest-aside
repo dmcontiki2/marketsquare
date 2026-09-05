@@ -1,0 +1,5 @@
+action=run_bat
+arg=MarketSquare\commit.bat
+requested_at=2026-09-05T07:57:50Z
+permission=ledger self-test 5 Sep 2026 REQ-COLLIDE-1
+reason=ledger self-test
