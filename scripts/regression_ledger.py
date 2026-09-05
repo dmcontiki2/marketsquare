@@ -16645,5 +16645,145 @@ def rg_fea_baseline_auto_refresh():
     return out
 
 
+@entry("RG-0282", "A message typed into the PUBLIC support form actually reaches us -- and the "
+       "page never says 'sent' unless the server said so",
+       LOCKED, fixed_on="2026-09-05",
+       scope="support.html (served at /support) + POST /support/message in bea_main.py + the "
+             "live route. CLASS, and it is the one worth remembering: any UI that reports "
+             "SUCCESS from the client's own optimism rather than from a server answer. The same "
+             "shape is a 'saved' toast fired before the PUT returns, or a 'sent' confirmation on "
+             "an email that queued and died.",
+       ref="SUPPORT-FORM-REAL-1 (5 Sep 2026), found because David asked the right question: "
+           "134 people had opened the app, a listing failure was live and already fixed, and NOT "
+           "ONE complaint had arrived. He did not read that as good news. Zero complaints is "
+           "ambiguous between 'nothing is wrong' and 'the complaint channel is broken', and it "
+           "was the second. "
+           "WHAT WAS LIVE. support.html's submitForm() carried, verbatim: `// In production this "
+           "would POST to the BEA or a form handler // For now show success message and send "
+           "email`. It hid the form, showed *Message sent - we'll be in touch within one "
+           "business day*, then set window.location.href to a mailto: link. Nothing was posted. "
+           "Nothing was stored. On a desktop with no mail client registered the mailto did "
+           "NOTHING AT ALL; on mobile it opened a draft the visitor still had to send themselves "
+           "-- after they had already been thanked. The form's inputs carried no name attributes "
+           "either, so even a real POST would have submitted empty fields. "
+           "WHY IT WAS LOAD-BEARING RATHER THAN COSMETIC: from 29 Aug (RUL-064) the in-app "
+           "tester reporter was deliberately retired for customers and complaints were routed "
+           "here and to support@. So for a week this WAS the customer complaint lane, and it was "
+           "a hole that said thank you. We cannot know how many people it swallowed -- nothing "
+           "was recorded -- and that unknowability is the damage. "
+           "WHAT WAS ALREADY FINE, checked rather than assumed: support@trustsquare.co delivers. "
+           "PROBED 5 Sep -- a message sent to it arrived in David's Gmail inbox 12 seconds later "
+           "via Cloudflare Email Routing. The mailto links were pointing somewhere real; the "
+           "FORM was the hole. "
+           "THE FIX: POST /support/message stores the message in app_faults (source "
+           "'support-form', so it inherits the triage board and the close-draft/close-send reply "
+           "flow that already exist -- not a second inbox), emails David a copy, and acks the "
+           "sender with a reference. ANONYMOUS BY DESIGN (RUL-100): the person who cannot list, "
+           "cannot sign in, or never registered is exactly the one most likely to need it, so "
+           "abuse is handled by rate limit + honeypot + length caps, never by a login wall. The "
+           "row is committed BEFORE either email is attempted, because a mail failure must never "
+           "lose a customer's message. On failure the page now says so and KEEPS THEIR WORDS on "
+           "the screen. "
+           "NOT CHANGED, deliberately: RUL-064 stands -- the tester fault tab stays off for "
+           "customers. That was David's ruling and this fixes the lane he chose, rather than "
+           "reversing it.")
+def rg_support_form_actually_sends():
+    out = []
+    html = repo_file("support.html")
+    api = repo_file("bea_main.py")
+    if html is None:
+        return [(FAIL, "support.html is gone -- /support is the published customer complaint "
+                       "lane (RUL-100) and it has no page")]
+
+    # -- (a) the page posts, and its fields can carry a value ------------------------
+    if "In production this would POST" in html:
+        out.append((FAIL, "support.html is back to the PLACEHOLDER that thanked people and sent "
+                          "nothing (SUPPORT-FORM-REAL-1)"))
+    if "fetch('/support/message'" not in html and 'fetch("/support/message"' not in html:
+        out.append((FAIL, "the support form no longer posts to /support/message -- whatever it "
+                          "does now, it is not sending the message to us"))
+    for field in ('name="message"', 'name="email"'):
+        if field not in html:
+            out.append((FAIL, "support.html has no input with %s -- a form whose fields carry no "
+                              "name attribute submits EMPTY, which is how this shipped" % field))
+
+    # -- (b) success may only be declared AFTER the server answers -------------------
+    i_fetch = html.find("/support/message")
+    i_ok = html.find("form-success')")
+    if i_fetch >= 0 and i_ok >= 0 and i_ok < i_fetch:
+        out.append((FAIL, "support.html shows the success message BEFORE the fetch -- the page "
+                          "is telling people 'sent' out of its own optimism again"))
+
+    # -- (c) the server side stores before it mails ----------------------------------
+    if api is not None:
+        if '@app.post("/support/message")' not in api:
+            out.append((FAIL, "POST /support/message is gone from bea_main.py -- the form posts "
+                              "into a 404 and every message is lost"))
+        else:
+            i_ins = api.find("'support-form'")
+            i_mail = api.find("SUPPORT_NOTIFY_EMAIL")
+            if i_ins < 0:
+                out.append((FAIL, "the support route no longer writes a row -- a message that is "
+                                  "only emailed is lost the day the mail fails"))
+            elif 0 <= i_mail < i_ins:
+                out.append((FAIL, "the support route mails before it stores -- a mail failure "
+                                  "would lose the customer's message"))
+    if any(r == FAIL for r, _ in out):
+        return out
+
+    # -- (d) LIVE, anonymously, on every run. Probe mode writes no row and mails nobody.
+    import json as _j, urllib.parse as _up
+    _require_net()
+    probe = {"message": "regression ledger probe -- this route must stay open to anonymous "
+                        "visitors and must validate, RG-0282",
+             "email": "rg0282-probe@example.invalid", "name": "ledger", "topic": "other"}
+    try:
+        r = urllib.request.urlopen(urllib.request.Request(
+            BASE + "/support/message", data=_up.urlencode(probe).encode(), method="POST",
+            headers=dict(UA, **{"Content-Type": "application/x-www-form-urlencoded"})),
+            timeout=TIMEOUT)
+        live = _j.loads(r.read().decode() or "{}")
+    except urllib.error.HTTPError as ex:
+        body = ""
+        try:
+            body = ex.read().decode(errors="replace")[:160]
+        except Exception:
+            pass
+        if ex.code in (401, 403):
+            out.append((FAIL, "the support form REFUSES an anonymous visitor (HTTP %s) -- the "
+                              "people most likely to need it are the ones who cannot sign in "
+                              "(RUL-100). %s" % (ex.code, body)))
+        else:
+            out.append((FAIL, "POST /support/message answered HTTP %s: %s" % (ex.code, body)))
+        return out
+    except Exception as ex:
+        raise ProbeOffline(repr(ex)[:140])
+    if not live.get("ok"):
+        out.append((FAIL, "the support route accepted the request but did not confirm: %s"
+                    % _j.dumps(live)[:200]))
+        return out
+
+    # Validation must be REAL, not a rubber stamp that returns ok to anything: an empty
+    # message has to be refused, or the page would happily "send" a blank complaint.
+    try:
+        urllib.request.urlopen(urllib.request.Request(
+            BASE + "/support/message",
+            data=_up.urlencode({"message": "x", "email": "rg0282@example.invalid"}).encode(),
+            method="POST",
+            headers=dict(UA, **{"Content-Type": "application/x-www-form-urlencoded"})),
+            timeout=TIMEOUT)
+        out.append((FAIL, "a one-character message was ACCEPTED -- the route's validation is a "
+                          "rubber stamp, so the page can report success on nothing"))
+    except urllib.error.HTTPError as ex:
+        if ex.code != 400:
+            out.append((INFO, "short-message check answered HTTP %s (expected 400)" % ex.code))
+    except Exception:
+        pass
+
+    out.append((INFO, "the public support form posts to a live route that accepts an anonymous "
+                      "visitor, validates, and confirms before the page says 'sent'"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

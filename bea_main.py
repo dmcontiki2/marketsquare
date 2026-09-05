@@ -19849,6 +19849,140 @@ async def app_fault_file(
     return {"ref": ref, "id": fid, "status": "new", "ack_sent": bool(ack_sent)}
 
 
+# ── SUPPORT-FORM-REAL-1 (5 Sep 2026) — the public support form actually sends ──
+#
+# WHAT WAS THERE. support.html's submitForm() carried this, live, since 11 Aug:
+#     // In production this would POST to the BEA or a form handler
+#     // For now show success message and send email
+# It hid the form, showed "Message sent - we'll be in touch within one business day",
+# and then set window.location.href to a mailto: link. So the visitor was TOLD their
+# message had been sent while nothing left the browser; on a desktop with no mail client
+# registered the mailto did nothing at all, and on mobile it opened a draft the visitor
+# still had to send themselves -- after they had already been thanked.
+#
+# WHY IT MATTERED MORE THAN AN ORDINARY BUG. From 29 Aug (RUL-064) the in-app tester
+# reporter was deliberately retired for customers and complaints were routed to this page
+# and to support@. So for a week this WAS the customer complaint lane, and it was a hole
+# that said thank you. 134 people opened the app, a listing failure was live, and not one
+# complaint arrived. Zero complaints is ambiguous between "nothing is wrong" and "the
+# complaint channel is broken" -- and it was the second one.
+#
+# ANONYMOUS BY DESIGN (RUL-100): a visitor who cannot list, cannot sign in, or never
+# registered is exactly the person most likely to need this. Requiring an account here
+# would silence the reports we most need. Abuse is handled by rate limit + honeypot +
+# length caps, never by a login wall.
+#
+# STORED IN app_faults on purpose: it inherits the triage board, the close-draft/close-send
+# reply flow and the register that already exists, instead of inventing a second inbox.
+SUPPORT_TOPIC_BINS = {
+    "listing": "LIST", "account": "AUTH", "billing": "MISC", "payment": "MISC",
+    "trust": "TRUST", "intro": "INTRO", "browse": "BROWSE", "advert": "ADV",
+    "technical": "MISC", "other": "MISC",
+}
+
+
+@app.post("/support/message")
+async def support_message(
+    request: Request,
+    message: str = Form(...),
+    email: str = Form(""),
+    name: str = Form(""),
+    topic: str = Form(""),
+    page_url: str = Form(""),
+    website: str = Form(""),        # HONEYPOT: humans never see it, bots fill it in
+):
+    """A visitor writes to us from /support. Anonymous, always open.
+
+    Returns {"ok": true, "ref": "TS-0123"}. The page may only say 'sent' on this."""
+    ip = (request.headers.get("x-forwarded-for")
+          or (request.client.host if request.client else "?")).split(",")[0].strip()
+    if website.strip():
+        # Silently accept and drop: telling a bot it was caught teaches it to try again.
+        return {"ok": True, "ref": "TS-0000"}
+    if not _fault_ip_ok(ip):
+        raise HTTPException(status_code=429,
+                            detail="That is a lot of messages at once. Please wait a few minutes "
+                                   "and try again - nothing you typed is lost.")
+
+    message = (message or "").strip()[:4000]
+    if len(message) < 10:
+        raise HTTPException(status_code=400,
+                            detail="Please tell us a little more about what went wrong.")
+    email = (email or "").strip().lower()[:200]
+    if "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(status_code=400,
+                            detail="Please give us an email address so we can write back.")
+    name = (name or "").strip()[:120]
+    topic = (topic or "").strip().lower()[:40]
+    bin_ = SUPPORT_TOPIC_BINS.get(topic, "MISC")
+
+    # PROBE MODE, same convention as the opt-out lane: the reserved .invalid TLD (RFC 2606)
+    # can never be a real person, so an instrument can prove this route is alive, anonymous
+    # and validating on every run WITHOUT writing a row or mailing anybody. An alert path
+    # only exercised by a real emergency is one nobody knows is broken (RG-0279's lesson).
+    if email.endswith(".invalid"):
+        return {"ok": True, "probe": True, "would_store": True, "bin": bin_}
+
+    title = message.splitlines()[0].strip()[:140] or "Support message"
+    conn = database.get_db()
+    try:
+        cur = conn.execute(
+            "INSERT INTO app_faults (ref, bin, reporter_email, reporter_name, source, severity, "
+            " title, detail, page_url, app_version, user_agent, viewport, console_tail, "
+            " screenshot_url, filed_at, updated_at) "
+            "VALUES ('',?,?,?,'support-form','major',?,?,?,'','','','',NULL,?,?)",
+            (bin_, email, name, title, message, (page_url or "")[:500],
+             _fault_now(), _fault_now()))
+        fid = cur.lastrowid
+        ref = "TS-%04d" % fid
+        conn.execute("UPDATE app_faults SET ref = ?, user_agent = ? WHERE id = ?",
+                     (ref, (request.headers.get("user-agent") or "")[:300], fid))
+        conn.commit()
+    finally:
+        conn.close()
+
+    # The row is safe before either email is attempted. A mail failure must never lose a
+    # customer's message -- that is the whole fault this route exists to end.
+    esc = lambda t: (t or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    try:
+        _send_system_email(
+            os.getenv("SUPPORT_NOTIFY_EMAIL", "support@trustsquare.co"),
+            "[%s] support message from %s" % (ref, email),
+            "<div style='font-family:Inter,Arial,sans-serif;max-width:560px'>"
+            "<h3 style='color:#0c1a2e;margin:0 0 8px'>%s &middot; %s</h3>"
+            "<p style='margin:2px 0'><b>From:</b> %s &lt;%s&gt;</p>"
+            "<p style='margin:2px 0'><b>Topic:</b> %s &nbsp;<b>Page:</b> %s</p>"
+            "<pre style='white-space:pre-wrap;font-family:inherit;background:#f6f8fa;"
+            "padding:12px;border-radius:8px'>%s</pre></div>"
+            % (esc(ref), esc(bin_), esc(name) or "(no name)", esc(email),
+               esc(topic) or "(none)", esc(page_url) or "(none)", esc(message)))
+    except Exception as exc:
+        _log.error("support notify send failed for %s: %s", ref, exc)
+
+    ack_sent = False
+    try:
+        ack_sent = _send_system_email(
+            email, "TrustSquare " + ref + " - we have your message",
+            _lc_email_html(
+                "Thank you - we have your message",
+                "Your message is logged as <b>" + ref + "</b> and a person will read it.<br><br>"
+                "<i>&ldquo;" + esc(title) + "&rdquo;</i><br><br>"
+                "You don&rsquo;t need to do anything further. If we need more detail we will "
+                "reply to this address.",
+                "Back to TrustSquare")) == "sent"
+        if ack_sent:
+            conn = database.get_db()
+            try:
+                conn.execute("UPDATE app_faults SET ack_sent = 1 WHERE id = ?", (fid,))
+                conn.commit()
+            finally:
+                conn.close()
+    except Exception as exc:
+        _log.error("support ACK send failed for %s: %s", ref, exc)
+
+    return {"ok": True, "ref": ref, "ack_sent": bool(ack_sent)}
+
+
 @app.get("/app/faults/mine")
 def app_faults_mine(email: str, x_review_token: str = Header(default=None),
                     ts_review: str = Cookie(default=None),

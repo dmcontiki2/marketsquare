@@ -403,16 +403,16 @@
       <div class="form-row">
         <div class="form-field">
           <label>Your Name</label>
-          <input type="text" placeholder="David Maurice" required>
+          <input type="text" name="name" placeholder="David Maurice" required>
         </div>
         <div class="form-field">
           <label>Email Address</label>
-          <input type="email" placeholder="you@email.com" required>
+          <input type="email" name="email" placeholder="you@email.com" required>
         </div>
       </div>
       <div class="form-field">
         <label>I am a…</label>
-        <select required>
+        <select name="who" required>
           <option value="">Select one</option>
           <option>Buyer</option>
           <option>Seller</option>
@@ -422,7 +422,7 @@
       </div>
       <div class="form-field">
         <label>Topic</label>
-        <select required>
+        <select name="topic" required>
           <option value="">Select a topic</option>
           <option>Account access</option>
           <option>Payment or billing</option>
@@ -435,9 +435,18 @@
       </div>
       <div class="form-field">
         <label>Message</label>
-        <textarea placeholder="Describe your issue or question in as much detail as possible…" required></textarea>
+        <textarea name="message" placeholder="Describe your issue or question in as much detail as possible…" required></textarea>
       </div>
-      <button type="submit" class="form-submit">Send Message →</button>
+      <!-- Honeypot: off-screen and aria-hidden, so no human ever fills it in. A bot that
+           fills every field is accepted and silently dropped - telling it that it was caught
+           only teaches it to try again. -->
+      <div style="position:absolute;left:-9999px;" aria-hidden="true">
+        <label>Leave this empty</label>
+        <input type="text" name="website" tabindex="-1" autocomplete="off">
+      </div>
+      <div id="form-error" style="display:none;background:#fdf2f2;border:1px solid #f0c2c2;
+           color:#8a1c1c;padding:12px 14px;border-radius:8px;font-size:14px;margin-bottom:12px;"></div>
+      <button type="submit" class="form-submit" id="support-send">Send Message →</button>
     </form>
 
     <div class="form-success" id="form-success">
@@ -479,19 +488,63 @@
     if (!isOpen) item.classList.add('open');
   }
 
+  /* SUPPORT-FORM-REAL-1 (5 Sep 2026). What was here before hid the form, showed
+     "Message sent - we'll be in touch within one business day", and then set
+     window.location.href to a mailto: link. So the visitor was THANKED while nothing left
+     the browser: on a desktop with no mail client the mailto did nothing at all, and on
+     mobile it opened a draft they still had to send themselves - after they had already
+     been told it was done. From 29 Aug (RUL-064) this page was the customer complaint
+     lane. 134 people opened the app, a listing bug was live, and not one complaint
+     arrived - because this is where they came.
+
+     THE RULE THIS NOW FOLLOWS: the page may only say "sent" when the SERVER has said so.
+     Anything else tells the visitor the truth and keeps their words on the screen. */
   function submitForm(e) {
     e.preventDefault();
-    // In production this would POST to the BEA or a form handler
-    // For now show success message and send email
-    document.getElementById('support-form').style.display = 'none';
-    document.getElementById('form-success').style.display = 'block';
-    // mailto fallback
-    const form = e.target;
-    const name = form.querySelector('input[type=text]').value;
-    const email = form.querySelector('input[type=email]').value;
-    const msg = form.querySelector('textarea').value;
-    const topic = form.querySelectorAll('select')[1].value;
-    window.location.href = `mailto:support@trustsquare.co?subject=${encodeURIComponent('[Support] ' + topic)}&body=${encodeURIComponent('From: ' + name + ' <' + email + '>\n\n' + msg)}`;
+    var form = e.target;
+    var btn = document.getElementById('support-send');
+    var errBox = document.getElementById('form-error');
+    errBox.style.display = 'none';
+    btn.disabled = true;
+    var original = btn.textContent;
+    btn.textContent = 'Sending\u2026';
+
+    var fd = new FormData(form);
+    fd.append('page_url', window.location.href);
+
+    function fail(msg) {
+      btn.disabled = false;
+      btn.textContent = original;
+      /* Never clear the message box on failure - their words are the one thing we must not
+         lose. The mailto is offered as a LINK they choose, never an automatic navigation
+         they cannot see happen. */
+      errBox.innerHTML = msg + ' You can also email us directly at ' +
+        '<a href="mailto:support@trustsquare.co">support@trustsquare.co</a> \u2014 ' +
+        'your message is still in the box above, so you can copy it across.';
+      errBox.style.display = 'block';
+    }
+
+    fetch('/support/message', { method: 'POST', body: fd })
+      .then(function (r) {
+        return r.text().then(function (t) {
+          var d = null; try { d = JSON.parse(t); } catch (err) {}
+          if (r.ok && d && d.ok) {
+            document.getElementById('support-form').style.display = 'none';
+            var ok = document.getElementById('form-success');
+            if (d.ref) {
+              ok.textContent = '\u2705 Message sent \u2014 your reference is ' + d.ref +
+                '. We have emailed you a copy and a person will read it.';
+            }
+            ok.style.display = 'block';
+            return;
+          }
+          /* Show the server's own words where it gave them - they say what to fix. */
+          fail((d && d.detail) ? d.detail : ('Sorry \u2014 we could not send that (' + r.status + ').'));
+        });
+      })
+      .catch(function () {
+        fail('Sorry \u2014 your message did not reach us. Please check your connection and try again.');
+      });
   }
 </script>
 
