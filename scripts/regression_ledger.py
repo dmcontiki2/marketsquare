@@ -17312,5 +17312,100 @@ def rg_rate_is_earned_not_scheduled():
     return out
 
 
+@entry("RG-0291", "A seller who arrives through a club, a union or a federation brings THEIR OWN "
+       "audience in the model -- the association lanes never again inherit the average seller's "
+       "two customers",
+       LOCKED, fixed_on="2026-09-05",
+       scope="docs/TrustSquare_Contagion_Model_v0.2.html: the assocAud / assocJoin parameters, "
+             "the per-city AE pool the three association lanes feed, and the activation split "
+             "that draws an association seller's audience with its own parameters instead of "
+             "custPer/custJoin. CLASS, and this is the part worth keeping: any model that pools "
+             "differently-shaped arrivals into one undifferentiated population silently applies "
+             "the AVERAGE to all of them, and the averaging is invisible because nothing is "
+             "missing -- there is a number there, it is just the wrong one. Guard against the "
+             "class by asserting that a lane with a distinct mechanism has distinct parameters.",
+       ref="DAVID'S CORRECTION, 5 Sep 2026, and the model was wrong until he made it. He asked "
+           "why the association route did not show the wider audience it obviously reaches, and "
+           "gave the example: teachers who want part-time tutoring money will spread the app to "
+           "their current pupils, onboarding the pupils AND their parents. PROBED before "
+           "agreeing: a union-lane teacher was bringing custPer 22 x custJoin 0.09 = 2.0 people, "
+           "identical to someone selling a second-hand bicycle, because the lane deposited "
+           "sellers into the shared E pool and the audience term read the pool average. Measured "
+           "consequence of the fix at week 52, same seed: ever-listed 137,407 -> 199,530 and "
+           "buyers 679,043 -> 1,134,559, from 108 association sellers. At week 8 the goal week "
+           "goes 43 -> 87 self-published, and at the human-verified click rate 1 -> 7. HONEST "
+           "LIMIT, asserted rather than buried: both new parameters are GUESSES and the model "
+           "swings between 160k and 264k sellers across their stated range, so RG-0292 exists to "
+           "replace them with a measurement.")
+def rg_association_sellers_have_their_own_audience():
+    out = []
+    p = os.path.join(REPO, "docs", "TrustSquare_Contagion_Model_v0.2.html")
+    if not os.path.exists(p):
+        return [(INFO, "SKIPPED -- the contagion model is not on this disk")]
+    m = open(p, encoding="utf-8", errors="replace").read()
+    for needle, what in [
+            ('{k:"assocAud"', "the association audience-size parameter"),
+            ('{k:"assocJoin"', "the association join-rate parameter"),
+            ("const AE=new Float64Array(n)", "the per-city association-origin pool"),
+            ("P.assocAud", "the audience draw actually using its own parameter"),
+            ("assocBuyers", "the counter that reports what the lane brought in")]:
+        if needle not in m:
+            out.append((FAIL, "the model has lost %s (%s) -- association sellers are back on the "
+                              "average audience and the lane is understated again" % (what, needle)))
+    # the whole point: the association draw must NOT be the ordinary one
+    if "P.assocAud" in m and "binom(r,Math.round(actA*P.assocAud),P.assocJoin)" not in m:
+        out.append((FAIL, "the association audience draw no longer uses assocAud/assocJoin "
+                          "together -- check the activation split has not been rewired"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "association sellers draw their audience with assocAud/assocJoin, "
+                          "separately from custPer/custJoin"))
+    return out
+
+
+@entry("RG-0292", "How many people an association seller actually brings is MEASURED, not guessed "
+       "-- the highest-value number in the model that nobody is collecting",
+       OPEN,
+       scope="Needs a referral or joined-via attribution that does not exist yet. The model "
+             "currently guesses assocAud (90 people) x assocJoin (0.25) for a club, union or "
+             "federation seller against custPer (22) x custJoin (0.09) for an ordinary one. "
+             "Swinging those two across their stated range moves one year's sellers between "
+             "160k and 264k -- a hundred thousand sellers on two numbers nobody has tested. "
+             "This entry passes when a real association-origin seller exists AND the app can say "
+             "how many people arrived because of them.",
+       ref="AUDIENCE-LANE-1, 5 Sep 2026, David's own example: a teacher tutoring part-time "
+           "spreads the app to their current pupils and onboards the pupils and their parents. "
+           "It is the strongest single mechanism in the model -- switching the ordinary "
+           "customer-bring term off drops week-52 sellers from 131,558 to 35,910, so roughly "
+           "two thirds of the whole curve is sellers bringing their own people. A mechanism that "
+           "large should not rest on a guess for longer than it has to. TWO THINGS BLOCK THE "
+           "MEASUREMENT and both are ordinary work: there is no referred_by / inviter_id column "
+           "in the schema (the same gap RG's referral entries name), and no association-origin "
+           "seller exists yet because no club letter has been sent. Neither is a decision for "
+           "David; both are on the technical path.")
+def rg_association_audience_is_measured():
+    db = os.path.join(os.path.dirname(REPO), "CityLauncher", "data", "prospects.db")
+    if not os.path.exists(db):
+        return [(INFO, "SKIPPED -- the prospect database is not on this disk")]
+    import sqlite3 as _s
+    try:
+        con = _s.connect("file:%s?mode=ro" % db, uri=True)
+        c = con.cursor()
+        clubs_mailed = c.execute("SELECT COUNT(*) FROM prospects WHERE category='Sports Clubs' "
+                                 "AND emailed_at IS NOT NULL").fetchone()[0]
+        clubs_published = c.execute("SELECT COUNT(*) FROM prospects WHERE category='Sports Clubs' "
+                                    "AND published_at IS NOT NULL").fetchone()[0]
+        con.close()
+    except Exception as e:
+        return [(INFO, "SKIPPED -- the prospect database would not open read-only (%s)" % e)]
+    if clubs_published > 0:
+        return [(INFO, "%d association sellers have published. The audience they brought is now "
+                       "measurable -- attribute it and replace assocAud/assocJoin with the real "
+                       "numbers, then promote this entry to LOCKED." % clubs_published)]
+    return [(FAIL, "the association audience is still a guess: %d club contacts emailed, %d "
+                   "published. Nothing to measure against yet -- not a defect, a sequence."
+             % (clubs_mailed, clubs_published))]
+
+
+
 if __name__ == "__main__":
     sys.exit(main())

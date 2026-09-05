@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Contagion Model v1.6 &mdash; Goal Agent + Association Lane</title>
+<title>Contagion Model v1.7 &mdash; Goal Agent + Association Lane + Audience</title>
 <style>
 :root{
   --navy:#0d1b2a; --navy2:#11253a; --panel:#132b42; --line:#22405c; --ink:#e8eef4;
@@ -137,7 +137,7 @@ canvas.ch{width:100%;height:78px;display:block}
 <div class="app">
 
   <div class="top">
-    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.6&nbsp;&middot;&nbsp;goal agent (RUL-096) + clubs, unions &amp; federations + measured funnel + planners + wave plan v3.2 + RAMP-1</span></div>
+    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.7&nbsp;&middot;&nbsp;goal agent (RUL-096) + clubs, unions &amp; federations WITH their own audience + measured funnel + planners + wave plan v3.2 + RAMP-1</span></div>
     <div class="clock"><span id="dateOut">1 Sep 2026</span><small id="weekOut">week 0 of 156</small></div>
     <div class="ctrls">
       <button class="primary" id="btnPlay">&#9654;&nbsp; Run</button>
@@ -409,6 +409,17 @@ const PARAMS = [
  {k:"fedYes",   g:"Association lane", l:"Federation secretaries who agree to forward", lo:.03, mid:.20, hi:.55, src:"guess", n:"The permission letter to seventeen provincial secretaries asks them to tell their own members about us. Untested - the letter is written and reviewed, none has been answered. A body that says yes is not doing us a favour it will regret: a ranked-by-credential listing makes its own affiliation visibly worth holding."},
  {k:"fedReach", g:"Association lane", l:"Members reached per federation that says yes", lo:40, mid:320, hi:1600, src:"guess", n:"An affiliated body writes to its clubs and its licensed members. This is the ONLY pathway in the model that reaches people whose addresses we do not hold and could not lawfully hold - including, exactly, the 65 personal mailboxes in France and Portugal that RUL-101 shut the door on. The body already has the relationship; we never process the data."},
  {k:"fedMult",  g:"Association lane", l:"Conversion of a member told by their own body", lo:1.5, mid:4.5, hi:14, src:"guess", n:"A warm, permissioned introduction from the organisation whose licence you hold is the strongest channel available to us and the model has never had one. For scale: the cold wave converts at roughly 0.7% end to end, and the model already grants a peer referral pTake 0.12 against pTell. This multiplier sits between those two worlds. It is a guess, it is the largest single guess added in v1.6, and it is flagged as such rather than dressed up."},
+ // THE CORRECTION OF 5 Sep 2026, and it is David's, not the model's. He asked why the
+ // association route did not show the wider audience it obviously reaches, and the answer was
+ // that it did not have one: a teacher who joined through the union lane arrived in the same
+ // undifferentiated seller pool as everyone else and therefore inherited the AVERAGE audience -
+ // custPer 22 contacts at custJoin 9%, about two people. That is the right number for someone
+ // selling a second-hand bicycle and plainly the wrong one for a tutor, who arrives holding a
+ // register. His example, in his words: teachers who want part-time tutoring money will spread
+ // the app to their current pupils, onboarding the pupils AND their parents. The parameters
+ // below exist so that the association lanes stop borrowing the average.
+ {k:"assocAud", g:"Association lane", l:"People an association seller ALREADY has", lo:20, mid:90, hi:350, src:"guess", n:"The audience an association-origin seller arrives holding, which is the entire structural difference between this lane and a cold list. A part-time tutor teaches somewhere between 15 and 60 pupils across a year and EACH PUPIL COMES WITH AT LEAST ONE PARENT who is the actual payer and decision-maker - so the reachable count is roughly double the class register. A sports club is the same shape at organisation scale: 30 to 400 members and, for junior sections, their families. Compare custPer, the ordinary seller's audience: 22 people. This is not a bigger version of that number, it is a different kind of number - a named, listed, weekly-contact relationship rather than a vague count of past customers. UNTESTED, and the range is wide on purpose."},
+ {k:"assocJoin",g:"Association lane", l:"Of those, the share who join when their own teacher or club asks", lo:.04, mid:.25, hi:.60, src:"guess", n:"Why this is not custJoin's 9%. Three things are true here that are true nowhere else in the model. (1) The ask comes from someone the person already knows, already pays and will see again next week - not from a stranger's email. (2) It is TRANSACTIONAL rather than promotional: if the tutor takes bookings through the app then using the app is how you get your lesson, which converts far above being told about something. (3) The person joining is a BUYER, which is a much smaller commitment than listing something for sale - most of the model's friction is on the seller side and none of it applies. Against all that: a volunteer club secretary may never actually send the message, an optional ask converts far worse than a required one, and nobody has tested any of this. Hence lo 0.04 - the case where it is announced once and ignored."},
  {k:"unionMemb",g:"Association lane", l:"Individual teachers reachable per union agreement", lo:200, mid:2500, hi:40000, src:"data", n:"PROBED 4 Sep 2026 and the probe killed the plan that preceded it: we hold 1,622 teachers_trainers rows and 1,194 of the 1,235 that would pass the send guards are SCHOOL OFFICES, not teachers - stjbcs@mweb.co.za is St John the Baptist School, linden@linden.co.za is a high school. A switchboard will never list itself as a specialist tutor. A teacher's personal address cannot be scraped at all, which makes the union and SACE route not a nice-to-have but the ONLY route to this audience. The economics are unusually strong for them: free tier, no commission line anywhere in the canon, the buyer pays the single introduction, and a qualified teacher with ID verification sits at 95 - Highly Trusted - on the day they list."},
 
  // --- agencies ---
@@ -763,6 +774,13 @@ function simulate(seed, L, sample, keepTrace, v32){
   // buyer-crossovers must not be allowed to flatter it. outE carries the outreach-origin
   // share of the registered-not-yet-listed pool; first listings are attributed pro rata.
   let outE=0, outPub=0;
+  // AUDIENCE-LANE-1 (5 Sep 2026): association-origin registrations, tracked per city so that
+  // when they list they bring THEIR OWN audience instead of the model's average one. Held in
+  // the same units as E, and deliberately under-counted for clubs: a club that joins adds
+  // clubSeats listings to E but only ONE audience-bearing unit here, because the club has one
+  // membership, not one per listing. Under-claiming is the safe direction for a guessed number.
+  const AE=new Float64Array(n);
+  let assocActives=0, assocBuyers=0;
   const rampStreak={};   // RAMP-1: per-city consecutive-clean-wave count
   // SIM-RAMP-2: the plan's addressable list per city, and its ladder window.
   // The fortnight in the written plan was a duration ESTIMATE at full caps, not a
@@ -881,6 +899,7 @@ function simulate(seed, L, sample, keepTrace, v32){
         const got=binom(r,send,Math.min(.9,convC));
         // a club carries its coaches, its junior programme and its kit on one account
         E[i]+=got*P.clubSeats; outE+=got*P.clubSeats;
+        AE[i]+=got;                       // one club = one membership to tell, not one per listing
         waveSignups+=got; clubSignups+=got;
         clubPool[ci]-=send; sent[i]+=send;
       }
@@ -901,7 +920,7 @@ function simulate(seed, L, sample, keepTrace, v32){
         let popSum=0; for(let i2=0;i2<n;i2++) if(CITIES[i2].c==="ZA") popSum+=CITIES[i2].pop;
         for(let i2=0;i2<n;i2++) if(CITIES[i2].c==="ZA" && popSum>0){
           const add=got*CITIES[i2].pop/popSum;
-          E[i2]+=add; outE+=add;
+          E[i2]+=add; outE+=add; AE[i2]+=add;
         }
         waveSignups+=got; fedSignups+=got;
       }
@@ -920,7 +939,7 @@ function simulate(seed, L, sample, keepTrace, v32){
         let popSum=0; for(let i2=0;i2<n;i2++) if(CITIES[i2].c==="ZA") popSum+=CITIES[i2].pop;
         for(let i2=0;i2<n;i2++) if(CITIES[i2].c==="ZA" && popSum>0){
           const add=got*CITIES[i2].pop/popSum;
-          E[i2]+=add; outE+=add;
+          E[i2]+=add; outE+=add; AE[i2]+=add;
         }
         unionPool-=reached; waveSignups+=got; unionSignups+=got;
       }
@@ -1126,10 +1145,23 @@ function simulate(seed, L, sample, keepTrace, v32){
       // sit in the same E pool and must not be allowed to flatter the number (the §3
       // anti-gaming rule in ONBOARDING_GOAL.md, expressed as arithmetic).
       if(outShare>0){ outPub += act*outShare; outE = Math.max(0, outE-(act+lap)*outShare); }
+      // AUDIENCE-LANE-1: which of this week's first listings came in through an association?
+      // Those people did not arrive alone - a tutor arrives with a register, a club with a
+      // membership - so their audience is drawn with their own parameters, not the average.
+      const aShare = (E[i]>0 && AE[i]>0) ? Math.min(1, AE[i]/E[i]) : 0;
+      const actA = act*aShare, actO = act-actA;
       E[i]-=act+lap; WARM[i]+=lap; A0[i]+=act; newAct[i]=act; everAct+=act; newListWk+=act;
+      if(aShare>0){ AE[i]=Math.max(0, AE[i]-(act+lap)*aShare); assocActives+=actA; }
       // buyers: sellers bring their own customer base
-      if(act>0){ const want=binom(r,Math.round(act*P.custPer),P.custJoin);
-                 const got=Math.min(want,Math.round(GS[i])); GS[i]-=got; BU[i]+=got; }
+      if(act>0){
+        let want=binom(r,Math.round(actO*P.custPer),P.custJoin);
+        if(actA>0){
+          // The pupils and their parents. This is the whole reason the association route is
+          // worth more than its head count, and until 5 Sep 2026 the model did not have it.
+          const wa=binom(r,Math.round(actA*P.assocAud),P.assocJoin);
+          want+=wa; assocBuyers+=wa;
+        }
+        const got=Math.min(want,Math.round(GS[i])); GS[i]-=got; BU[i]+=got; }
       BU[i]*= 0.97;
     }
 
@@ -1375,6 +1407,7 @@ function simulate(seed, L, sample, keepTrace, v32){
         toursOpen:(w>=L.tpToursW?1:0), refCost:refCostMo,
         refSignups:refSignups, refNew:refNew*WEEKS_PER_MONTH, varsitySignups:varsitySignups,
         clubSignups:clubSignups, fedSignups:fedSignups, unionSignups:unionSignups,
+        assocActives:assocActives, assocBuyers:assocBuyers,
         goalSignups:goalSignups, fedBodies:fedBodies, outPub:outPub,
         clubLeft:(function(){let t=0;for(let ci=0;ci<clubPool.length;ci++)t+=clubPool[ci];return t;})(),
         sentTot:(function(){let t=0;for(let i2=0;i2<n;i2++)t+=sent[i2];return t;})(),
@@ -1666,12 +1699,13 @@ function drawCharts(){
 
 
 /* ---- name the binding constraint, and separate caught from kept ---- */
+const MDASH=String.fromCharCode(8212);
 function diagnose(st){
   const el=document.getElementById('diag'); if(!el)return;
   const L=leverVals(), R=RUN.trace.R[week], tot=RUN.trace.A[week];
   const ever=st.ever||0, kept=ever>0? tot/ever : 0;
   const items=[];
-  const add=(sev,label,detail)=>items.push({sev:sev,label:label,detail:detail});
+  const add=(sev,label,detail,key)=>items.push({sev:sev,label:label,detail:detail,key:key||''});
 
   if(ever>0){
     const dorm=st.dormant||0, warm=st.warm||0, gone=st.lostFor||0;
@@ -1794,6 +1828,32 @@ function diagnose(st){
     add(1,'Two of the forty-six clicks were people',
       'Measured 5 Sep 2026: 712 sent, 155 opened, 46 distinct people recorded a click - and when those same events are graded, 56 are machines, 11 uncertain, and TWO are human. Corporate link-scanners fetch every URL in an email and a fetch is indistinguishable from a person unless something grades it; the same class of error produced eleven phantom opt-outs on 1 September. So the click rate in this model reads 0.297 raw and 0.013 human, a factor of twenty apart, and the range has been widened to hold both rather than picking the flattering one. Two clicks is not a rate. Every number on this screen that depends on click-through should be read with that in mind.');
 
+    /* AUDIENCE-LANE-1: the thing an association seller brings that a cold seller does not. */
+    if((st.assocActives||0)>0){
+      const sellers=Math.round(st.assocActives||0), brought=Math.round(st.assocBuyers||0);
+      const each = sellers>0 ? brought/sellers : 0;
+      const ordinary = (PM.custPer.obs!==null?PM.custPer.obs:PM.custPer.mid) *
+                       (PM.custJoin.obs!==null?PM.custJoin.obs:PM.custJoin.mid);
+      add(0,'Association sellers arrive holding an audience',
+        sellers.toLocaleString()+' sellers have come in through a club, a federation or a union, and they have brought '+
+        brought.toLocaleString()+' people onto the app with them '+MDASH+' about '+each.toFixed(0)+
+        ' each, against '+ordinary.toFixed(1)+' for an ordinary seller. '+
+        'That ratio IS the argument for the lane, and until 5 Sep 2026 this model did not have it: a teacher who joined arrived in the same undifferentiated pool as someone selling a bicycle and inherited the same average audience of two. A part-time tutor teaches 15 to 60 pupils and every pupil comes with a parent who is the one who actually pays, so the register is the audience. If the tutor takes bookings through the app then joining is not a favour being asked, it is how you get your lesson. '+
+        'Those people are counted here as BUYERS, and the buyer-to-seller crossover already in the model then turns a slow trickle of them into sellers of their own '+MDASH+' which is the second round nobody plans for.',
+        'audience');
+    }
+
+    /* SHAPE-NOT-FORECAST-1 (5 Sep 2026). David asked how good the simulation actually is.
+       The most useful answer the model can give is to say when it has left the range where it
+       means anything, and it has to say it on the screen rather than in a document nobody
+       opens. 64 of its 90 parameters are guesses; the compounding terms (critical mass, public
+       exposure, the audience fan-out) multiply, so late weeks are the product of a dozen
+       guesses and land wherever the guesses point. */
+    if(tot>20000){
+      add(1,'Past here this is a SHAPE, not a forecast',
+        'The run has passed '+Math.round(tot).toLocaleString()+' active sellers. Treat that as the model saying the curve compounds, not as a number to plan with. Sixty-four of the ninety parameters are stated guesses and the compounding ones multiply, so by this point the output is the product of a dozen assumptions and lands wherever they point. What the model is genuinely good for is COMPARISON '+MDASH+' this lane against that lane, this week against that week, run at the same settings. The first year, where every number can still be checked against something real, is where it earns its keep.');
+    }
+
     /* The other honesty item, and the one most likely to make this screen mislead. */
     const modelSent=Math.round(st.sentTot||0);
     if(modelSent>1441){
@@ -1864,8 +1924,20 @@ function diagnose(st){
   items.sort((a,b)=>b.sev-a.sev);
   const worst=items[0];
   el.className='diag sev'+(worst?worst.sev:0);
-  el.innerHTML='<b>Binding constraint</b>'+items.slice(0,3).map(i=>
-    '<span class="d s'+i.sev+'"><em>'+i.label+'</em> '+i.detail+'</span>').join('');
+  // WHAT-IS-WORKING-1 (5 Sep 2026). The strip showed the three most SEVERE items and nothing
+  // else, so a mechanism that was working could never appear on it - which is how the single
+  // biggest thing the association lane does stayed invisible on a screen built to explain the
+  // model. The constraint list is unchanged; a working item is now shown beside it, and only
+  // when one actually exists.
+  const shown=items.slice(0,3);
+  const pos=items.filter(i=>i.sev===0 && shown.indexOf(i)<0);
+  // a tagged item wins the slot: these explain a MECHANISM rather than report a level, and
+  // they are the reason someone opens a model instead of looking at a chart
+  const good=pos.filter(i=>i.key).concat(pos.filter(i=>!i.key)).slice(0,2);
+  el.innerHTML='<b>Binding constraint</b>'+shown.map(i=>
+    '<span class="d s'+i.sev+'"><em>'+i.label+'</em> '+i.detail+'</span>').join('')+
+    (good.length? '<b>What is working</b>'+good.map(i=>
+    '<span class="d s0"><em>'+i.label+'</em> '+i.detail+'</span>').join('') : '');
   const bq=document.getElementById('sBuy');
   if(bq) bq.textContent=Math.round(st.buyers||0).toLocaleString();
   const dm=document.getElementById('sDorm');
@@ -2136,6 +2208,7 @@ function buildPanel(which){
       "Goal agent, but the clubs are never written to":{goalW:0,goalCap:6,goalCities:43,clubW:157,clubProvW:157,fedW:157,unionW:157,featW:8,allure:1,badge:.35,agPush:1,complaint:.002,delay:.1},
       "Clubs + the other 15 athletics bodies read":{goalW:0,goalCap:6,goalCities:43,clubW:1,clubProvW:2,fedW:157,unionW:157,featW:8,allure:1,badge:.35,agPush:1,complaint:.002,delay:.1},
       "Federations say yes":{goalW:0,goalCap:6,goalCities:43,clubW:1,clubProvW:2,fedW:3,unionW:157,featW:8,allure:1,badge:.35,agPush:1,complaint:.002,delay:.1},
+      "Teachers bring their pupils (David, 5 Sep)":{goalW:0,goalCap:6,goalCities:43,clubW:1,clubProvW:2,fedW:3,unionW:4,featW:8,allure:1,badge:.35,agPush:1,complaint:.002,delay:.1},
       "A teachers' union opens its door":{goalW:0,goalCap:6,goalCities:43,clubW:1,clubProvW:2,fedW:3,unionW:6,featW:8,allure:1,badge:.35,agPush:1,complaint:.002,delay:.1},
       "Every association door open, cap lifted to 20":{goalW:0,goalCap:20,goalCities:60,clubW:1,clubProvW:1,fedW:2,unionW:4,featW:0,allure:1.2,badge:.5,agPush:2,complaint:.002,delay:.05},
       "v3.2 as written":{allure:1,badge:.35,referral:0,batch:28,agPush:1,stripeW:0,compW:157,complaint:.002,delay:.1,dayCap:30,measured:1,agGateW:8,rollW:157},
