@@ -147,6 +147,13 @@ REFLECTIONS = {
     ["\"Paris\":", "\"Lyon\":", "\"Marseille\":", "\"Braga\":", "\"Lisbon\":", "\"Porto\":"]),
    ("ONBOARDING_PLAN.md", ["RUL-101"], []),
  ],
+ "RUL-103": [
+   # Visibility co-equal + the video calendar must describe what is ON DISK (5 Sep).
+   ("RULINGS.md", ["VISIBILITY IS A CO-EQUAL OUTPUT"], []),
+   # the calendar may never call a finished film an "idea" again
+   ("LAUNCH_SERIES.md", ["on disk, unpublished", "Shorts"], []),
+   ("ONBOARDING_PLAN.md", ["gates, not calendars"], []),
+ ],
  "RUL-084": [
    # Launch-day wave scheduled (31 Aug): unattended 00:10 runner exists, Tutors priority in policy, National excluded.
    ("RULINGS.md", ["THE LAUNCH-DAY WAVE FIRES ITSELF"], []),

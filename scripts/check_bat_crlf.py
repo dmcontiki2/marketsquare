@@ -56,6 +56,31 @@ UNATTENDED = {
 }
 
 
+def _allowlisted_scripts() -> set:
+    """UNATTENDED-ALLOWLIST-2 (5 Sep 2026): DERIVE the exemption from the allowlist instead
+    of retyping it. Anything on host_queue/ALLOWLIST.txt is run by the 20-minute agent with
+    nobody present, so a waiting prompt would hang it forever -- the opposite of the flicker
+    this file guards against. The hand-kept set above went stale twice in one day as a
+    concurrent session added deploy_uptime_worker.bat and then deploy_email_worker.bat; a
+    list of a moving state, kept somewhere the state does not live, is the same fault as
+    STOPLOSS-DISCOVER-1 and WAVE-CITIES-DISCOVER-1. The literal set stays as a floor for
+    scripts that run unattended WITHOUT being queued (the scheduled tasks)."""
+    out = set()
+    allow = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "host_queue", "ALLOWLIST.txt")
+    try:
+        for line in open(allow, encoding="utf-8").read().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split(None, 1)
+            if len(parts) == 2:
+                out.add(parts[1].strip().replace("\\", "/").split("/")[-1].lower())
+    except Exception:
+        pass                      # a missing allowlist must not make every bat fail
+    return out
+
+
 def win_scripts():
     for root, dirs, names in os.walk(REPO):
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
@@ -99,7 +124,7 @@ def main():
             warns.append("%s uses %d caret line-continuation(s) -- they work only while the "
                          "file stays CRLF; a single long line cannot be broken by line endings"
                          % (rel, carets))
-        if base in UNATTENDED:
+        if base in UNATTENDED or base.lower() in _allowlisted_scripts():
             continue
         # An interactive bat must not be able to exit without saying why.
         exits = len(re.findall(r"^\s*exit /b [1-9]", text, re.M | re.I))
