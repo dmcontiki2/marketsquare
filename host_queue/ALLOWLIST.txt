@@ -65,3 +65,10 @@ run_bat    MarketSquare\deploy_uptime_worker.bat
 # --- permission. Deploys ONE Cloudflare worker from the repo, with a pre-flight that
 # --- REFUSES to arm unless the app is answering. No money, no sending authority.
 run_bat    MarketSquare\deploy_email_worker.bat
+
+# --- Widened 5 Sep 2026. David: "there are 50 states in the US, why do we have so little
+# --- prospects there, why have you not taken the initiative". SCRAPER-COUNTRY-1: the only
+# --- supply engine that runs without LAUNCH_API_KEY was hardcoded to South Africa. Same
+# --- SUPPLY class as run_local_scraper.bat, already permitted under RUL-096. Scrapes only;
+# --- sends nothing.
+run_bat    CityLauncher\run_us_scraper.bat

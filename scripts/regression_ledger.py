@@ -16241,6 +16241,37 @@ def rg_wave_cities_discovered():
             else:
                 out.append((INFO, "wave asks the policy: %d armed cities, list matches"
                             % len(listed)))
+    # WAVE-SKIP-EMPTY-1 (5 Sep 2026): the bat must ask for cities that HAVE someone, and the
+    # flag must really narrow the list. Measured that day: 36 of 43 armed cities were empty and
+    # each cost a visit plus a 21-second pace -- 12.6 min of a 15-min run. The bare call still
+    # returns the policy set (asserted above); --with-people is the operational one.
+    if "--with-people" not in b:
+        out.append((FAIL, "launch_day_wave.bat no longer asks --with-people -- it would visit "
+                          "every armed city including the empty ones (WAVE-SKIP-EMPTY-1)"))
+    if os.path.exists(helper):
+        h = open(helper, encoding="utf-8", errors="replace").read()
+        if "--with-people" not in h:
+            out.append((FAIL, "wave_cities.py has lost --with-people, so the bat's flag is a "
+                              "silent no-op"))
+        # the fail-open guard is deliberate, but it must not be the ONLY path: the emailer
+        # package has to be importable from the script, or every city passes the filter and
+        # nothing is skipped. That is exactly how this shipped broken for ten minutes.
+        if "sys.path.insert" not in h:
+            out.append((FAIL, "wave_cities.py cannot import the emailer package when run as a "
+                              "script, so _has_people() fails OPEN on every city and the filter "
+                              "does nothing (WAVE-SKIP-EMPTY-1)"))
+        ok2, blind2, detail2 = _harness([sys.executable, helper, "--with-people"], timeout=180)
+        if blind2:
+            out.append((INFO, "NOT EVALUATED (--with-people) -- %s" % detail2))
+        elif ok2:
+            picked = [l.strip() for l in detail2.splitlines() if l.strip()
+                      and not l.startswith(("Traceback", "  ", "ERROR"))]
+            if len(picked) > len(listed):
+                out.append((FAIL, "--with-people returned MORE cities (%d) than the policy arms "
+                                  "(%d) -- it is not filtering" % (len(picked), len(listed))))
+            else:
+                out.append((INFO, "tonight %d of %d armed cities have anyone to send to"
+                            % (len(picked), len(listed))))
     if not any(r == FAIL for r, _ in out):
         out.append((INFO, "city list derived from the policy, never typed into the bat"))
     return out
