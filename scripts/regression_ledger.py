@@ -3907,14 +3907,17 @@ def rg_gate_script_single_source():
         out.append((INFO, "no drift: all %d admin gate copies carry the same corrected messages"
                     % len(copies)))
 
-    # HALF 1 -- CONSOLIDATION. Still the real fix; still open.
+    # HALF 1 -- CONSOLIDATION. Done 5 Sep 2026 (GATE-ONESOURCE-1) and now owned by RG-0196,
+    # which compares every copy to shared/admin_gate.js byte for byte. This entry keeps the
+    # DRIFT half deliberately: it checks the two specific messages independently of the
+    # generator, so a broken sync cannot silently satisfy both halves at once.
     if len(copies) > 1:
-        out.append((INFO, "still %d hand-maintained copies (%s) -- consolidation is tracked "
-                          "separately as RG-0196; THIS entry asserts the property that actually "
-                          "causes harm, which is drift"
+        out.append((INFO, "%d copies, GENERATED from shared/admin_gate.js since 5 Sep (%s) -- "
+                          "consolidation is asserted by RG-0196; THIS entry independently checks "
+                          "the property that actually caused harm, which is drift"
                     % (len(copies), ", ".join(copies))))
     else:
-        out.append((INFO, "READY TO LOCK -- the gate script has a single source"))
+        out.append((INFO, "the gate script has a single source and a single copy"))
     return out
 
 
@@ -10765,9 +10768,13 @@ def rg_windows_scripts_crlf_and_readable():
 
 @entry("RG-0196", "The admin gate script has ONE source -- the consolidation RG-0075 was "
        "originally written for",
-       OPEN, scope="dashboard.server.html (ships), dashboard.html and marketsquare_admin.html "
-                   "(local operator copies). Split out of RG-0075 on 27 Aug 2026.",
-       fixed_on="",
+       LOCKED, scope="shared/admin_gate.js (THE source) inlined into dashboard.server.html "
+                   "(ships as dashboard.html), marketsquare_admin.html (ships as admin.html) "
+                   "and the local dashboard.html, by scripts/sync_admin_gate.py. Split out of "
+                   "RG-0075 on 27 Aug 2026, closed 5 Sep 2026. CLASS: any code kept as "
+                   "hand-maintained copies across surfaces -- the copies ARE the defect, and "
+                   "counting them is not fixing them.",
+       fixed_on="2026-09-05",
        ref="RG-0075 was retitled that day to assert DRIFT, because drift is the property that "
            "actually hurt -- and because a title claiming 'ONE source, not five copies' while the "
            "assertion only measured drift is the same wording-vs-behaviour mistake this file has "
@@ -10782,15 +10789,71 @@ def rg_windows_scripts_crlf_and_readable():
            "time, or dropping the file:// habit. Both are post-launch changes to the ADMIN ENTRY "
            "PATH, and doing that on the last ship day before a public launch carries lockout risk "
            "(RUL-027, reserved to David). Deliberately deferred, with the drift tripwire holding "
-           "the line until then.")
+           "the line until then. "
+           "CLOSED 5 Sep 2026 (GATE-ONESOURCE-1), four days after launch, with the INLINE option "
+           "-- the one that answers the file:// constraint instead of arguing with it. "
+           "shared/admin_gate.js is the source; scripts/sync_admin_gate.py writes it verbatim "
+           "into every copy between ADMIN-GATE-SRC markers; nothing about how any page is SERVED "
+           "changed, so the file:// habit keeps working and no new lockout surface is created. "
+           "WHAT THE DIFF PROVED, and it is why this was worth doing rather than deferring again: "
+           "THE COPIES HAD DRIFTED A THIRD TIME. DEVICE-ENROL-1 (3 Sep) had reached "
+           "dashboard.server.html and marketsquare_admin.html and NOT dashboard.html -- the copy "
+           "RG-0076 records as the one David actually opens, still calling a bare showGate(). "
+           "RG-0075 passed throughout, because it checks the two messages it knows about, and "
+           "drift does not announce which line it will pick next. Counting copies cannot catch "
+           "that; having one copy makes it unrepresentable. "
+           "SAFETY OF THE CHANGE ITSELF: the source was taken from dashboard.server.html, the "
+           "copy live and proven since 3 Sep, so the two SHIPPING surfaces gained only marker "
+           "comments -- zero behaviour change -- and dashboard.html gained the device-token "
+           "branch, which fails closed to showGate() on any error. Verified before commit: every "
+           "<script> block in all three files re-parsed clean under node --check, and the sync "
+           "re-read each file to prove the write landed (this mount has truncated large writes "
+           "before).")
 def rg_gate_script_consolidated():
     ADMIN = ("dashboard.server.html", "dashboard.html", "marketsquare_admin.html")
-    copies = [r for r in ADMIN if "adminGateSubmit" in (repo_file(r) or "")]
-    if len(copies) > 1:
-        return [(FAIL, "the admin gate is still %d hand-maintained copies (%s) -- EXPECTED while "
-                       "OPEN; RG-0075 holds the drift line meanwhile"
-                 % (len(copies), ", ".join(copies)))]
-    return [(INFO, "READY TO LOCK -- the admin gate script has a single source")]
+    BEGIN, END = "/* ADMIN-GATE-SRC:BEGIN", "/* ADMIN-GATE-SRC:END */"
+    out = []
+    src = repo_file(os.path.join("shared", "admin_gate.js"))
+    if src is None:
+        return [(FAIL, "shared/admin_gate.js is gone -- the gate has no single source again, so "
+                       "the next fix lands in whichever copy is in front of whoever is fixing it")]
+    if repo_file(os.path.join("scripts", "sync_admin_gate.py")) is None:
+        out.append((FAIL, "scripts/sync_admin_gate.py is gone -- the source can no longer be "
+                          "written into the copies, so 'one source' is a claim, not a mechanism"))
+    # The source file's own banner is documentation for a human; the BODY is what gets inlined.
+    mark = "   " + "\u2550" * 75 + " */\n"
+    body = src.split(mark, 1)[1].rstrip("\n") if mark in src else src.rstrip("\n")
+    if "window.adminGateSubmit" not in body:
+        return out + [(FAIL, "shared/admin_gate.js no longer contains the gate itself -- this "
+                             "assertion would pass vacuously against an empty source (RG-0068)")]
+
+    checked = 0
+    for rel in ADMIN:
+        c = repo_file(rel)
+        if c is None:
+            continue
+        checked += 1
+        b, e = c.find(BEGIN), c.find(END)
+        if b < 0 or e < 0 or e < b:
+            out.append((FAIL, "%s carries no ADMIN-GATE-SRC block -- it is a hand-maintained copy "
+                              "again (GATE-ONESOURCE-1)" % rel))
+            continue
+        inner = c[c.find("\n", b) + 1:e].rstrip("\n")
+        if inner != body:
+            out.append((FAIL, "%s has DIVERGED from shared/admin_gate.js -- somebody edited the "
+                              "copy instead of the source. Fix the source, then run "
+                              "`python3 scripts/sync_admin_gate.py`" % rel))
+        # A second gate outside the block would re-create the duplication this entry closes.
+        if c.count("window.adminGateSubmit") > 1:
+            out.append((FAIL, "%s defines window.adminGateSubmit more than once -- a second copy "
+                              "has appeared outside the generated block" % rel))
+    if checked == 0:
+        return out + [(FAIL, "no admin-gate surface found at all -- this assertion has lost its "
+                             "subject and would pass vacuously (RG-0068)")]
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "the admin gate has ONE source (shared/admin_gate.js); all %d copies "
+                          "are byte-identical to it" % checked))
+    return out
 
 
 @entry("RG-0199", "David's hand-off queue RE-VERIFIES itself against evidence -- an item cannot sit "
@@ -13667,9 +13730,11 @@ def rg_journey_front_door():
              "(bea_main.py, the relink template). CLASS, not instance: any route that "
              "suppresses on a GET re-opens this. Live legs: (a) GET /optout?email=<.invalid "
              "probe> on the ROOT returns 200 and a CONFIRM page (title 'Unsubscribe - ', not "
-             "'Unsubscribed'); (b) /optout/status rows are UNCHANGED after that GET; (c) POST "
-             "/optout with the same probe returns 200 and rows INCREASE by one. Source leg: "
-             "no @app.get('/optout') handler in either file calls the recording function.",
+             "'Unsubscribed'); (b) OUR PROBE ROW is still absent after that GET; (c) after a "
+             "POST with the same probe, OUR PROBE ROW is present. Source leg: no "
+             "@app.get('/optout') handler in either file calls the recording function. "
+             "ISOLATED 5 Sep 2026 (OPTOUT-PROBE-ISOLATE-1): the live legs address ONE unique "
+             "row, never the global total.",
        ref="OPTOUT-CONFIRM-1, 2 Sep 2026. David's dashboard read 15 opted out, up from 3 on "
            "31 Aug. PROBED against email_events: 11 of the 12 new suppressions landed within "
            "one second of a 'click' on the opt-out link from Microsoft Azure ranges (4.222.x, "
@@ -13682,7 +13747,22 @@ def rg_journey_front_door():
            "-- also a POST -- keeps working. Proven in test on both handlers (GET: no row; form "
            "POST and one-click POST: row; empty POST: 400). The 11 scanner-induced suppressions "
            "stay suppressed -- reversing an opt-out is a legal-positioning call reserved to "
-           "David (he chose to leave them, 2 Sep).")
+           "David (he chose to leave them, 2 Sep). "
+           "OPTOUT-PROBE-ISOLATE-1, 5 Sep 2026 -- the assertion was fixed, not the app. This "
+           "entry read /optout/status's GLOBAL ROW COUNT before and after its own probe, so it "
+           "could not tell its own write from anybody else's. On 4 Sep a second session ran the "
+           "same lane verifier in the same minutes; the total climbed underneath this one and it "
+           "reported REGRESSION -- 'a bare GET WROTE the register (194 -> 195)' -- about a bug "
+           "that was not there. Two hand probes at 06:46 and a clean re-run at 06:47 showed the "
+           "property HOLDING all along. That is the cry-wolf failure RG-0068 exists to prevent, "
+           "and it is worse than a missing check: a board that cries wolf gets muted, and the "
+           "next TRUE red is muted with it. The endpoint now answers ?email=<probe>.invalid for "
+           "ONE address, so the legs are concurrency-proof by construction rather than by hoping "
+           "nobody else runs. Deliberately .invalid-only (RFC 2606, never deliverable), so it can "
+           "never become an oracle for whether a real person is suppressed -- the same reason the "
+           "counts return no addresses. CLASS, and the reason this is worth writing down: ANY "
+           "assertion that measures a shared global total is measuring other sessions too. Give "
+           "the probe its own unique subject and check only that.")
 def rg_optout_get_is_harmless():
     import json as _j, uuid as _u, urllib.parse as _up, urllib.request as _ur, urllib.error as _ue
     out = []
@@ -13702,37 +13782,52 @@ def rg_optout_get_is_harmless():
     # live legs
     _require_net()
     probe = "rg0241-%s@example.invalid" % _u.uuid4().hex[:8]
-    def status():
+
+    def mine():
+        """OPTOUT-PROBE-ISOLATE-1: is OUR OWN probe row present? Returns True/False, or
+        None when this cannot be answered in isolation. NEVER falls back to the global
+        count -- the whole point is that a shared total measures other sessions too."""
         try:
-            return _j.loads(_ur.urlopen(_ur.Request(BASE + "/optout/status", headers=UA), timeout=TIMEOUT).read().decode()).get("rows", -1)
+            r = _j.loads(_ur.urlopen(_ur.Request(
+                BASE + "/optout/status?email=" + _up.quote(probe), headers=UA),
+                timeout=TIMEOUT).read().decode())
         except Exception:
-            return -1
-    before = status()
-    if before < 0:
-        return out + [(INFO, "SKIPPED live legs -- /optout/status unreadable (deploy pending?)")]
+            return None
+        return r.get("suppressed") if "suppressed" in r else None
+
+    before = mine()
+    if before is None:
+        return out + [(INFO, "SKIPPED live legs -- /optout/status cannot answer for a single "
+                             "probe address yet (deploy pending). Not falling back to the "
+                             "global row count: that is the race this leg was fixed to remove")]
+    if before:
+        return out + [(INFO, "SKIPPED live legs -- the fresh probe address is somehow already "
+                             "suppressed; refusing to draw a conclusion from it")]
     try:
         body = _ur.urlopen(_ur.Request(BASE + "/optout?email=" + _up.quote(probe), headers=UA), timeout=TIMEOUT).read().decode("utf-8", "replace")
     except _ue.HTTPError as e:
         return out + [(FAIL, "GET /optout answered HTTP %d to a recipient" % e.code)]
     if "<title>unsubscribe -" not in body.lower() and "<title>unsubscribe \u2014" not in body.lower():
         out.append((FAIL, "GET /optout does not show the CONFIRM page (title=%r)" % (re.search(r"<title>([^<]*)", body, re.I).group(1) if re.search(r"<title>", body, re.I) else "?")))
-    mid = status()
-    if mid != before:
-        out.append((FAIL, "a bare GET /optout WROTE the register (%d -> %d) -- scanners can opt "
-                          "people out again" % (before, mid)))
+    mid = mine()
+    if mid:
+        out.append((FAIL, "a bare GET /optout SUPPRESSED our probe address -- link-scanners can "
+                          "opt people out again (OPTOUT-CONFIRM-1)"))
     else:
-        out.append((INFO, "GET /optout wrote nothing (rows %d)" % before))
+        out.append((INFO, "GET /optout left our probe address un-suppressed"))
     try:
         req = _ur.Request(BASE + "/optout", data=("email=" + _up.quote(probe)).encode(), method="POST",
                           headers=dict(UA, **{"Content-Type": "application/x-www-form-urlencoded"}))
         _ur.urlopen(req, timeout=TIMEOUT).read()
     except _ue.HTTPError as e:
         return out + [(FAIL, "POST /optout (the confirm button) answered HTTP %d" % e.code)]
-    after = status()
-    if after != mid + 1:
-        out.append((FAIL, "a CONFIRMED opt-out was not recorded (rows %d -> %d)" % (mid, after)))
+    after = mine()
+    if not after:
+        out.append((FAIL, "a CONFIRMED opt-out was NOT recorded -- the confirm button does "
+                          "nothing, so nobody can actually unsubscribe"))
     else:
-        out.append((INFO, "confirmed POST recorded (rows %d -> %d)" % (mid, after)))
+        out.append((INFO, "confirmed POST recorded our probe address, and only that row was "
+                          "measured -- concurrency-proof (OPTOUT-PROBE-ISOLATE-1)"))
     return out
 
 
@@ -16464,6 +16559,91 @@ def rg_host_request_names_cannot_collide():
     if not any(r == FAIL for r, _ in out):
         out.append((INFO, "request names carry the full path, milliseconds, and never clobber"))
     return out
+
+@entry("RG-0281", "The DEPLOY refreshes the integrity baseline, not a human -- and it refuses to "
+       "when a served file is not the one it placed",
+       LOCKED, fixed_on="2026-09-05",
+       scope="ops/autodeploy/post_deploy.sh (runs on the box after every healthy deploy) and the "
+             "three files fea_integrity_check.py measures: index.html, static/ms.js, "
+             "static/ms.css. CLASS, not this sensor: ANY tripwire whose expected value changes on "
+             "every ordinary deploy must be re-baselined by the deploy itself. If a human has to "
+             "do it, the instrument is alert on ordinary days, and an instrument that is alert on "
+             "ordinary days is an instrument nobody reads.",
+       ref="FEA-BASELINE-AUTO-1 (5 Sep 2026), closing DW-090 and retiring a class that came back "
+           "FOUR times: DW-061 (21 Aug), DW-064 (26 Aug), DW-088 (1 Sep), DW-090 (5 Sep). Every "
+           "deploy legitimately changes all three measured files, so every deploy left "
+           "fea_integrity_check.py reading `status: alert` until somebody remembered to run "
+           "--update-baseline by hand. Each hand refresh lasted exactly ONE deploy; once the gap "
+           "ran to EIGHT silent deploys. The cost is not the chore, it is that the sensor could no "
+           "longer tell a deploy from a tamper -- the one thing it exists to do. "
+           "THE SAFETY ARGUMENT, because auto-blessing a fingerprint is exactly how you would "
+           "build a sensor that hides an attack: the refresh is GATED on each live file being "
+           "byte-identical to the source THIS DEPLOY PLACED (/opt/marketsquare-src), with `?v=NNN` "
+           "cache-busters normalised out because server_deploy.sh rewrites those in place after "
+           "placement -- an engine edit, not a content change. If any file differs, something "
+           "altered it after placement; that IS the tamper case, so the step refuses and lets the "
+           "alert stand. We never bless a byte we cannot re-derive from the source tree. "
+           "The normalisation is asserted below in its own right: without it index.html could "
+           "never match, the gate would refuse forever, and the whole step would be a silent no-op "
+           "wearing a fix's name -- the wording-vs-behaviour trap this file has fallen into before "
+           "(CSP-VERIFY-GUARD-1/2/3). Verified before shipping: the gate was EXECUTED on the box "
+           "and printed `clean: live matches the source this deploy placed (3/3)`, and the "
+           "baseline was refreshed once by hand the same session so the sensor reads "
+           "`status: ok, alerts: []` today rather than waiting for the next deploy.")
+def rg_fea_baseline_auto_refresh():
+    out = []
+    sh = repo_file("ops/autodeploy/post_deploy.sh")
+    if sh is None:
+        return [(FAIL, "ops/autodeploy/post_deploy.sh is gone -- the deploy no longer runs any "
+                       "post-steps at all")]
+    if "--update-baseline" not in sh:
+        out.append((FAIL, "post_deploy.sh no longer refreshes the FEA baseline -- every deploy is "
+                          "back to leaving the integrity sensor in `alert` until a human runs it, "
+                          "which is the DW-061/064/088/090 class"))
+        return out
+    # The gate is the safety property. An UNGATED refresh would bless a tampered file.
+    if "PYGATE" not in sh or "sha256" not in sh:
+        out.append((FAIL, "the baseline refresh is no longer gated on the live files matching the "
+                          "placed source -- an unconditional refresh would rubber-stamp a tamper, "
+                          "turning the sensor into its own blind spot"))
+    if r'\?v=\d+' not in sh:
+        out.append((FAIL, "the gate no longer normalises ?v= cache-busters -- the deploy engine "
+                          "rewrites those in index.html after placement, so the gate could never "
+                          "match, would refuse forever, and the step would be a silent no-op "
+                          "wearing a fix's name"))
+    if any(r == FAIL for r, _ in out):
+        return out
+
+    # LIVE half, self-arming: once a deploy has run SINCE this was fixed, its status file
+    # must carry the step. Before that it simply has not been exercised yet, which is an
+    # INFO -- not a pass dressed up as proof, and not a red for a deploy that has not happened.
+    import json as _j
+    from datetime import datetime as _dt
+    try:
+        raw = urllib.request.urlopen(
+            urllib.request.Request(BASE + "/static/post_deploy_status.json", headers=UA),
+            timeout=TIMEOUT).read().decode()
+        st = _j.loads(raw)
+    except Exception as ex:
+        raise ProbeOffline(repr(ex)[:140])
+    steps = {d.get("step"): d for d in (st.get("steps") or [])}
+    gen = (st.get("generated_at") or "")[:10]
+    if "fea_baseline" in steps:
+        d = steps["fea_baseline"]
+        if d.get("result") == "failed":
+            out.append((FAIL, "the deploy's baseline step FAILED: %s" % (d.get("detail") or "")[:160]))
+        else:
+            out.append((INFO, "last deploy ran the baseline step: %s%s"
+                        % (d.get("result"), (" -- " + d["detail"]) if d.get("detail") else "")))
+    elif gen and gen > "2026-09-05":
+        out.append((FAIL, "a deploy ran on %s with NO fea_baseline step in its status file -- the "
+                          "step was dropped from post_deploy.sh on the box, so the baseline is "
+                          "back to going stale on every deploy" % gen))
+    else:
+        out.append((INFO, "not exercised yet -- last deploy was %s, before this shipped; the next "
+                          "deploy is the proof and this leg arms itself then" % (gen or "unknown")))
+    return out
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -742,6 +742,7 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
       if (typeof loadRegionsForStep1 === 'function') loadRegionsForStep1();
     }, 50);
   }
+/* ADMIN-GATE-SRC:BEGIN -- generated from shared/admin_gate.js by scripts/sync_admin_gate.py. DO NOT EDIT BELOW; edit the source and re-run. (GATE-ONESOURCE-1) */
   function showLoginError(msg){
     err.textContent = msg; err.style.display = 'block';
     inp.value = ''; inp.focus();
@@ -810,11 +811,7 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
              itself, so the dashboard no longer needs the reviewer code first. A 401
              here therefore means the password/PIN really is wrong — the old message
              sent David to perform a step that was impossible and told him his correct
-             password was an incorrect reviewer code.
-             GATE-DRIFT-1 (27 Aug 2026): this correction landed in dashboard.server.html
-             on 19 Aug and NOT here, for eight days — and this is the copy David actually
-             opens (RG-0076's own ref says so). That is precisely the harm RG-0075 was
-             written about, caught by measuring the copies instead of trusting them. */
+             password was an incorrect reviewer code. */
           showLoginError('Password or PIN not accepted. If this box is new, open ' +
                          'https://trustsquare.co/ once and unlock it there first.');
         }
@@ -862,9 +859,6 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
           /* GATE-TRUTH-2: the change-PIN path was left blind by GATE-TRUTH-1, which only
              patched the login path in this file. Same origin gate, same blind parse. */
           /* GATE-NOLOCK-1: /admin/change-pin is exempt at the origin too (migrations/025). */
-          /* GATE-DRIFT-1 (27 Aug 2026): synced from dashboard.server.html, where this had been
-             correct since 19 Aug. The SECOND wrong message in this file — the login path was
-             the first. One fault, two paths, three files: exactly why RG-0075 wants one source. */
           changeErr.textContent = 'Current PIN not accepted. If this box is new, open https://trustsquare.co/ once and unlock it there first.';
           changeErr.style.display = 'block';
         } else {
@@ -878,6 +872,7 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
       changeErr.style.display = 'block';
     });
   };
+/* ADMIN-GATE-SRC:END */
 })();
 </script>
 <!-- ── END ADMIN LOGIN GATE v2 ── -->

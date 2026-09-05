@@ -2469,11 +2469,20 @@ async def optout_post(request: Request, email: str = "", src: str = "list-unsubs
 
 
 @app.get("/optout/status")
-def optout_status():
+def optout_status(email: str = ""):
     """PROOF endpoint for OPTOUT-LANE-1: says whether the register EXISTS and how
     many rows it holds. Deliberately returns no addresses - a count is enough to
     prove the lane is armed, and an address list here would be the leak this
-    whole entry exists to prevent."""
+    whole entry exists to prevent.
+
+    ?email=<probe>.invalid answers for ONE address instead of a global count --
+    see OPTOUT-PROBE-ISOLATE-1 below. The refusal lives HERE, above the try, because
+    the broad `except Exception` underneath would otherwise swallow the 400 and
+    answer 200 "unreadable" to a bad request."""
+    if email and not email.strip().lower().endswith(".invalid"):
+        raise HTTPException(status_code=400, detail=(
+            "probe addresses only: this lookup answers for the reserved .invalid TLD "
+            "(RFC 2606), never for real recipients (OPTOUT-PROBE-ISOLATE-1)"))
     try:
         import sqlite3 as _sq
         conn = _sq.connect("file:%s?mode=ro" % _OPTOUT_DB, uri=True, timeout=10)
@@ -2491,6 +2500,25 @@ def optout_status():
             # so they are separable by construction rather than by naming convention.
             real = conn.execute("SELECT COUNT(*) FROM suppression "
                                 "WHERE email NOT LIKE '%.invalid'").fetchone()[0]
+            # OPTOUT-PROBE-ISOLATE-1 (5 Sep 2026, DW-093/RG-0241). An instrument that
+            # measures a GLOBAL COUNT cannot tell its own write from a concurrent one.
+            # RG-0241 read rows before/after its probe; on 4 Sep a second session ran the
+            # same lane verifier in the same minutes, the total climbed underneath it, and
+            # the entry cried REGRESSION -- "a bare GET wrote the register" -- about a bug
+            # that was not there. A tripwire that fires on concurrency gets muted, and the
+            # next real red goes with it. So the caller may ask about ONE address instead.
+            #
+            # DELIBERATELY PROBE-ONLY: this answers only for the reserved .invalid TLD
+            # (RFC 2606 -- can never be deliverable), so it can never become an oracle for
+            # "is this real person suppressed". That is the same reason the counts above
+            # return no addresses. Widening this to real addresses re-opens the leak this
+            # endpoint's own docstring exists to prevent.
+            if email:
+                addr = email.strip().lower()
+                hit = conn.execute("SELECT 1 FROM suppression WHERE lower(email)=? LIMIT 1",
+                                   (addr,)).fetchone()
+                return {"register": "present", "email": addr,
+                        "suppressed": bool(hit), "armed": True}
             return {"register": "present", "rows": n, "real": real,
                     "probes": n - real, "armed": True}
         finally:

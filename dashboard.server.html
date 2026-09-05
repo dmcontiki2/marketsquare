@@ -256,6 +256,7 @@
        anonymous heartbeat as SIGNED OUT (device token is async; PIN login is later still). Reload. */
     try{ if (typeof loadDashboard === 'function' && (typeof DATA === 'undefined' || !DATA || DATA.redacted === 'heartbeat')) loadDashboard(); }catch(e){}
   }
+/* ADMIN-GATE-SRC:BEGIN -- generated from shared/admin_gate.js by scripts/sync_admin_gate.py. DO NOT EDIT BELOW; edit the source and re-run. (GATE-ONESOURCE-1) */
   function showLoginError(msg){
     err.textContent = msg; err.style.display = 'block';
     inp.value = ''; inp.focus();
@@ -385,6 +386,7 @@
       changeErr.style.display = 'block';
     });
   };
+/* ADMIN-GATE-SRC:END */
 })();
 </script>
 <!-- ── END ADMIN LOGIN GATE v2 ── -->

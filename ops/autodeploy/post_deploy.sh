@@ -176,4 +176,62 @@ else
         rm -f "$MOUT" 2>/dev/null || true
     done
 fi
+
+# ── FEA-BASELINE-AUTO-1 (5 Sep 2026) — DW-090, the fourth instance of one class ──
+# fea_integrity_check.py fingerprints three served files against fea_baseline.json.
+# Every deploy legitimately changes all three, so every deploy left the sensor in
+# `status: alert` until a HUMAN ran --update-baseline. That happened on 21 Aug
+# (DW-061), 26 Aug (DW-064), 1 Sep (DW-088) and again today — each hand refresh
+# lasting exactly one deploy, and once running to EIGHT silent deploys because
+# nobody got round to it. A sensor that is alert on every ordinary day teaches
+# everyone to ignore it, and then it cannot report the tamper it exists to catch.
+#
+# The deploy is the ONLY actor that knows a change was intentional, so the refresh
+# belongs here — not in a human's memory.
+#
+# THE GATE, and it is the whole safety argument: refresh ONLY if each live file is
+# byte-identical to the source this deploy placed. Cache-buster query strings are
+# normalised out (?v=NNN) because server_deploy.sh rewrites them in place AFTER
+# placement — that is a deploy-engine edit, not a content change. If ANY file
+# differs, something altered it after placement: that is precisely the tamper case,
+# so we refuse to refresh and let the alert stand. We never bless what we cannot
+# re-derive from the source tree.
+FEA="$LIVE/fea_integrity_check.py"
+if [ ! -f "$FEA" ]; then
+    say "fea-baseline: fea_integrity_check.py not on the box — skipped"
+    step fea_baseline skipped "sensor not present"
+elif "$MS_PY" - "$LIVE" "$SRC" <<'PYGATE'
+import hashlib, re, sys
+live, src = sys.argv[1], sys.argv[2]
+PAIRS = (("index.html", "marketsquare.html"), ("static/ms.js", "ms.js"), ("static/ms.css", "ms.css"))
+def fp(path):
+    with open(path, "rb") as fh:
+        return hashlib.sha256(re.sub(rb"\?v=\d+", b"?v=X", fh.read())).hexdigest()
+bad = []
+for l, s in PAIRS:
+    try:
+        if fp(live + "/" + l) != fp(src + "/" + s):
+            bad.append(l)
+    except OSError as e:
+        bad.append("%s (%s)" % (l, e.__class__.__name__))
+if bad:
+    print("DRIFT: " + ", ".join(bad))
+    sys.exit(1)
+print("clean: live matches the source this deploy placed (3/3)")
+sys.exit(0)
+PYGATE
+then
+    if (cd "$LIVE" && "$MS_PY" fea_integrity_check.py --update-baseline) >/dev/null 2>&1; then
+        say "fea-baseline: refreshed (live matches placed source 3/3)"
+        step fea_baseline ok "refreshed after clean deploy (3/3 files match source)"
+    else
+        say "fea-baseline: gate passed but --update-baseline FAILED"
+        step fea_baseline failed "update-baseline returned non-zero"
+    fi
+else
+    say "fea-baseline: NOT refreshed — a served file does not match the source this deploy"
+    say "fea-baseline: placed. That is the tamper signal; the alert is left standing on purpose."
+    step fea_baseline skipped "served file differs from placed source - refusing to bless it"
+fi
+
 exit 0
