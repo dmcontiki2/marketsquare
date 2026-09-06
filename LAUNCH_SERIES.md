@@ -100,8 +100,10 @@ applies to every film in this series).
 
 Two things stay open on that video, and on every one after it:
 
-1. **The custom cover image** needs the Windows file picker, which Claude cannot drive. Everything
-   else on the upload form Claude can fill.
+1. **The custom cover image** needs the Windows file picker, which Claude cannot drive (and the
+   file-upload tool caps at 10 MB, so the video itself is the same story). Everything else on the
+   upload form Claude can fill. It is NOT behind the verification gate -- film 01's cover was
+   uploaded and saved on 6 Sep and is live, PROBED on the video details page.
 2. **Channel verification gates BOTH the clickable link and pinning a comment.** Phone
    verification is not enough -- YouTube's "advanced features" gate wants a six-second video of the
    owner, a photo of an ID, or about two months of channel history. David submitted the six-second
