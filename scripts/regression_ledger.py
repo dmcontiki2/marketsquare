@@ -18515,5 +18515,77 @@ def rg_ai_prompts_not_hardcoded_south_african():
     return [(INFO, "no AI prompt hard-codes the marketplace as South African")]
 
 
+@entry("RG-0308", "A rotation KNOWS every place a credential lives -- discovered by looking, "
+       "never recalled from a table somebody has to remember to update",
+       OPEN,
+       scope="scripts/secret_consumers.py + ROTATE_SECRETS.bat's discovery step + "
+             "SECRETS_REGISTER.md's out-of-band table. CLASS: any operation whose "
+             "correctness depends on a hand-maintained list of the things it must reach.",
+       fixed_on="",
+       ref="ROTATION-DISCOVERY-1 (6 Sep 2026), on David's own words: 'rotation is one of those "
+           "things i battle with... it takes me some times many hours.' The hours are not the "
+           "vendor console -- minting a key is five minutes and is irreducibly his. The hours go "
+           "on a question nobody could answer: WHICH PLACES HOLD A COPY. That was answered from "
+           "memory, and memory was wrong twice, both times silently and both times discovered "
+           "only by breakage: the Resend alert key orphaned for six days (DW-076) and the "
+           "database-backup credentials orphaned for two weeks (DW-105). "
+           "The tool replaces remembering with looking: for each credential NAME it searches "
+           "every place a copy is known to be able to live -- systemd drop-ins, /etc/environment, "
+           "/etc/marketsquare, both apps' .env files, the crontabs and the cron scripts -- and "
+           "reports WHERE the name appears. It never prints a value, by construction rather than "
+           "by care: the item that prompted it exists because a masking command was written by "
+           "hand and got it wrong (DW-106). A tool that cannot leak beats a habit of being "
+           "careful. ROTATE_SECRETS.bat now runs it as step 0, before anything is touched. "
+           "FIRST RUN, and it is why this entry is OPEN rather than LOCKED: 13 of 22 credentials "
+           "have copies the register does not list -- including RESEND_API_KEY in CityLauncher's "
+           ".env, a THIRD copy nobody knew about, and LAUNCH_CODE_SECRET in five places. Every "
+           "one of those is a rotation that would half-succeed. This closes when a run reports "
+           "no surprises; the register is the thing that must catch up with reality, not the "
+           "other way round.")
+def rg_rotation_knows_its_consumers():
+    tool = repo_file(os.path.join("scripts", "secret_consumers.py"))
+    if tool is None:
+        return [(FAIL, "scripts/secret_consumers.py is gone -- a rotation is back to being told "
+                       "where copies live by a table somebody has to remember to update")]
+    bat = repo_file("ROTATE_SECRETS.bat") or ""
+    out = []
+    if "secret_consumers.py" not in bat:
+        out.append((FAIL, "ROTATE_SECRETS.bat no longer runs the discovery step -- the tool "
+                          "exists and the rotation does not consult it, which is the same as "
+                          "not having it"))
+    # Run it directly rather than through _harness: the harness keeps only a tail of the
+    # output, and the line this entry needs -- the tool's own count -- is the FIRST line of
+    # a long list. An assertion that reports a number must read the number, not a fragment
+    # of the page it was printed on. (First cut said "1" while the tool said 13.)
+    import subprocess as _sp
+    try:
+        pr = _sp.run([sys.executable, os.path.join(REPO, "scripts", "secret_consumers.py"),
+                      "--check"], stdin=_sp.DEVNULL, stdout=_sp.PIPE, stderr=_sp.DEVNULL,
+                     text=True, timeout=240)
+    except Exception as ex:
+        out.append((INFO, "discovery could not run here (%s) -- server half not judged"
+                    % repr(ex)[:80]))
+        return out
+    detail = pr.stdout or ""
+    if "SKIPPED" in detail:
+        out.append((INFO, "the server is unreachable from here, so consumers cannot be "
+                          "discovered -- not judged"))
+        return out
+    ok = pr.returncode == 0
+    if ok:
+        out.append((INFO, "every credential with more than one copy on the box is named in the "
+                          "register's out-of-band table -- READY TO LOCK"))
+    else:
+        # Read the count the tool itself printed rather than re-deriving it from the
+        # layout of its output -- a number counted a second way is a number that can
+        # disagree with the first, and this board is read for its numbers.
+        _m = re.search(r"SURPRISE:\s*(\d+)\s*credential", detail)
+        n = int(_m.group(1)) if _m else 0
+        out.append((FAIL, "%d credential(s) have copies the register does not list -- EXPECTED "
+                          "while OPEN; each one is a rotation that would half-succeed and go "
+                          "quiet, which is how DW-076 and DW-105 happened" % (n or 1)))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

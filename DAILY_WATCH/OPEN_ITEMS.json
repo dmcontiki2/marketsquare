@@ -1,5 +1,5 @@
 {
- "next_id": 107,
+ "next_id": 108,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -1106,6 +1106,21 @@
    ],
    "summary": "NEW - I EXPOSED TWO LIVE CREDENTIALS. While diagnosing the backup failure I displayed the systemd drop-in with a sed intended to mask the values; the expression was wrong and the full HETZNER_S3_ACCESS_KEY and HETZNER_S3_SECRET_KEY (which despite the name are CLOUDFLARE R2 credentials, per SECRETS_REGISTER) were printed into the session. Scope: David's own stored transcript, not a public location. No evidence of misuse. The rule I broke is my own standing one - never print a key - and the safe assumption after any exposure is that the credential is burned.",
    "next_action": "OPEN - rotation is David's act (credentials, RUL-027 class). WHAT TO DO: Cloudflare dashboard > R2 > Manage API tokens > roll the token behind HETZNER_S3_ACCESS_KEY/SECRET, then re-run the 22 Aug installer pattern so the new pair lands in the service drop-in. The backup lane reads the drop-in first, so it follows the rotation automatically now - that is the one silver lining of today's fix. RG-0306 will go RED within 48 hours if the rotation breaks the backup, which is the check that did not exist before. NOT urgent-critical: the token's blast radius is the marketsquare-media R2 bucket (photo storage + database backups), not the app or the server. But it should not wait long."
+  },
+  "DW-107": {
+   "first_seen": "2026-09-06",
+   "last_seen": "2026-09-06",
+   "sev": "MEDIUM",
+   "source": "David's own account of the rotation cost, checked against DW-076 and DW-105",
+   "status": "CLOSED",
+   "refs": [
+    "DW-076",
+    "DW-105",
+    "DW-106",
+    "RG-0308"
+   ],
+   "summary": "NEW - ROTATIONS COST DAVID HOURS BECAUSE NOTHING KNOWS WHERE A CREDENTIAL LIVES. His words: 'rotation is one of those things i battle with... it takes me some times many hours.' Diagnosed from the record, not from sympathy: minting the new value at the vendor is five minutes and is irreducibly his. The hours go on a question nobody could answer - WHICH PLACES HOLD A COPY. That was answered from a hand-maintained table with ONE row in it, and it was wrong twice, both times silently, both times found only by breakage: the Resend alert key orphaned six days (DW-076) and the database-backup credentials orphaned two weeks (DW-105). FIRST RUN OF THE NEW TOOL: 13 of 22 credentials have copies the register does not list - including RESEND_API_KEY in CityLauncher's .env, a THIRD copy nobody knew about, and LAUNCH_CODE_SECRET in five places. Every one is a rotation that would half-succeed and go quiet.",
+   "next_action": "PARTLY CLOSED 2026-09-06 - the tool is built, wired and proving itself; the register is what must now catch up. scripts/secret_consumers.py searches every place a copy is known to be able to live - systemd drop-ins, /etc/environment, /etc/marketsquare, both apps' .env files, the crontabs and the cron scripts - and reports WHERE each credential name appears. It NEVER prints a value, by construction rather than by care: the item that prompted it exists because a masking command was hand-written and got it wrong (DW-106). A tool that cannot leak beats a habit of being careful. ROTATE_SECRETS.bat now runs it as step 0, before anything is touched, and pauses if there are copies the register does not know about. Tracked by new ledger entry RG-0308, deliberately OPEN: it fails today with the count of 13 and closes when a run reports no surprises. The register is the thing that must catch up with reality, not the reverse. TWO BUGS IN MY OWN ASSERTION, both fixed and worth recording because both were the same shape - reporting a number I had not actually read: it first re-derived the count from the layout of the tool's output and said '2', then read a truncated tail and said '1', while the tool said 13. It now runs the tool directly and reads the tool's own count. A board that is read for its numbers may not invent them. ALSO SURFACED, not fixed, because deletions are David's: stale *.bak copies of secrets.env are sitting on the box from the 22 Aug rotation - dead files holding live-shaped values."
   }
  },
  "last_run": "2026-09-05",

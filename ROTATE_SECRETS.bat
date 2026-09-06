@@ -28,6 +28,23 @@ echo   TrustSquare secret rotation
 echo   Nothing secret is ever printed to this window.
 echo ============================================================
 echo.
+REM --- ROTATION-DISCOVERY-1 (6 Sep 2026) -----------------------------------
+REM A rotation is only as good as its list of consumers, and that list was a
+REM hand-maintained table with ONE row. It was wrong twice, silently: the Resend
+REM alert key (dead 6 days, DW-076) and the database backup credentials (dead 2
+REM weeks, DW-105). This step replaces remembering with looking -- it prints every
+REM place each credential actually lives, BEFORE anything is touched. It never
+REM prints a value; paths and counts only.
+echo [0/6] Where does everything live? (discovery, nothing changed yet)
+python "%~dp0scripts\secret_consumers.py" --check
+if errorlevel 1 (
+  echo.
+  echo   ^>^> Copies exist that the register does not list. They are printed above.
+  echo   ^>^> Rotating now would refresh some copies and leave those stale.
+  echo   ^>^> Continue only if you have read the list.
+  pause
+)
+echo.
 echo [1/6] Uploading the rotation script...
 scp scripts\rotate_secrets.py %SRV%:/tmp/rotate_secrets.py
 if errorlevel 1 goto :fail

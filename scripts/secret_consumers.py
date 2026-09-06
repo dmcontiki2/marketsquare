@@ -104,7 +104,25 @@ def server_consumers(name):
                            stderr=subprocess.DEVNULL, text=True, timeout=60)
     except Exception:
         return None
-    return sorted({ln.strip() for ln in (r.stdout or "").splitlines() if ln.strip()})
+    # Two kinds of hit are not consumers and must not be reported as if a rotation had to
+    # reach them: compiled bytecode, which holds only the variable NAME, and *.bak-* files,
+    # which are dead copies. The .bak files are their own hazard -- a stale secret sitting
+    # on the box -- but that is a DELETION question, not a rotation one, so it is counted
+    # separately rather than smuggled into this answer.
+    hits, stale = [], []
+    for ln in (r.stdout or "").splitlines():
+        ln = ln.strip()
+        if not ln:
+            continue
+        if ln.endswith(".pyc") or "__pycache__" in ln:
+            continue
+        if ".bak-" in ln or ln.endswith(".bak"):
+            stale.append(ln); continue
+        hits.append(ln)
+    out = sorted(set(hits))
+    if stale:
+        out.append("(+%d stale .bak copy/copies on the box)" % len(set(stale)))
+    return out
 
 
 def repo_consumers(name):
