@@ -5,24 +5,6 @@ diary — the changelog is the diary.*
 
 ---
 
-## SUNDAY SUMMARY (6 Sep 2026, plain language)
-
-**The number is still 0.** Nobody we emailed has published a listing yet.
-What moved this week: the emails started reaching real people (the broken link was fixed on
-3 Sep), the club lists arrived (577 South African clubs, then 903 US running clubs from a
-national register), and we can now see where people stop after they click.
-What we found this run: (1) last night's wave sent 0 of the ~450 US club letters — the letter
-crashed on a rand price for every reader outside South Africa, and the log still said "done".
-Fixed, and the wave was re-sent the same night: 203 US club letters went out across 22 states
-before the 250-a-day limit stopped it; the other 29 states go on Monday night. (2) Every club contact who clicked our link
-landed on a generic "what are you selling?" screen instead of the listing steps, because the app
-did not recognise the word "Sports Clubs". Fixed and live. So far 9 people have reached the
-site from the club letters; none went past the first screen. Whether they now go further is the
-thing to watch this week.
-Next: keep the waves flowing every night (250 a day is the limit now), read the funnel every
-morning, add the next club register. The YouTube package for the first film is ready; David
-picks the title.
-
 ## THE NUMBER
 
 Run it, never recall it: `python3 MarketSquare/scripts/onboarding_number.py`
@@ -32,88 +14,84 @@ Run it, never recall it: `python3 MarketSquare/scripts/onboarding_number.py`
 | 2026-09-04 | **0** | 0 | 0 | baseline |
 | 2026-09-05 (runs 3–4b) | **0** | 0 | 0 | raw 2 = e2e_test seeds, barred by §3 |
 | 2026-09-06 (run 5, 01:05) | **0** | 0 | 0 | 4,470 on the list · 570 emailed · 5 registered |
+| 2026-09-07 (run 6, 01:05) | **0** | 0 | 0 | 5,639 on the list · 845 emailed · 5 registered |
 
-Target: **20 by Fri 31 Oct 2026.** Model on this run: Fable 5.1 (as David asked, RUL-096h).
+Target: **20 by Fri 31 Oct 2026.** Model on runs 5–6: Fable 5.1 (as David asked, RUL-096h).
 
-## WHERE THE FUNNEL LEAKS (PROBED 6 Sep 2026)
+## WHERE THE FUNNEL LEAKS (PROBED 7 Sep 2026 — and the instrument was wrong until tonight)
 
-- `GET https://trustsquare.co/onboard/funnel?days=2`: **9 sessions landed, 0 reached `photos`.**
-  4 carry a real src (pretoria-sports-clubs-20260905/06); 5 carry a scanner-mangled src (letters
-  rot13'd, digits +3 — a link scanner, not a person). So: 4 real club landings, none went on.
-- **Cause found and shipped (INVITE-CAT-2):** the app's invite map had no 'Sports Clubs' key,
-  so clubs landed on the generic category tiles, not Step 1 (photo). Now routed to Tutors (the
-  letter's worked example is a Tutors listing). RG-0299 asserts every outreach category routes.
-- From now on the question is the one the plan asked: do people stop at the required photo?
-  That reading starts with tonight's wave. Take it to David only with counts (n ≥ 10).
-- 5 Sep 09:31 wave (129): 16 bounced (12%), 44 opened, 7 real clicks, 0 published. Sydney is
-  held by stop-loss (3 bounces, 11.5%). France and Portugal stay OUT (RUL-101).
+- **Every funnel reading before 7 Sep 01:30 SAST was link scanners, not people.** The 9 "clubs at
+  the photo step" (6 Sep) were created 20–40 s after their wave's send, 4 at a time within 8 s, by
+  Google-Safety (nginx-confirmed). The `yt-*` landings are the same class. Humans at the photo
+  step: **0**. Humans landed from club letters: **unknown** — the instrument could not tell.
+- Fixed and live (FUNNEL-HUMAN-1): `/onboard/step` stores UA + bot flag; `/onboard/funnel` hides
+  bot and ungraded rows unless `bots=1`; `humans` = sessions that fired `dwell` (12 s + a real
+  input). **The click→publish measurement starts 7 Sep.** Read `GET /onboard/funnel?days=2` and
+  use `humans` as the denominator; take it to David only with n ≥ 10 humans.
+- Email side (server, graded): 981 sent to 6 Sep · 15–21% human opens · **0.44% human clicks**.
+  People open and do nothing — the ASK is the bottleneck. EMAIL-VARIANT-1 arm 'b' (shorter ask,
+  no money) is armed for Tutors + teachers_trainers and rides the next wave that draws them.
 
-## WHAT RUN 5 DID (6 Sep 2026, 01:00–02:30 SAST)
+## WHAT RUN 6 DID (7 Sep 2026, 01:00–02:10 SAST)
 
-1. **Found the 00:10 wave sent 55 (Pretoria 12 clubs, NY 12, Cape Town 12 clubs, Durban 9, PE 8,
-   Kimberley 1) and then crashed in all 51 US state buckets** — `UnsupportedCountry: R700` from
-   the club example card (Python-side, invisible to the template test). Fixed (CLUB-INTL-1: per-
-   country card, ZA-only example link, send-path test with 34 assertions), made crashes loud and
-   rc≠0 (WAVE-CRASH-VISIBLE-1), **re-queued the wave at 01:15. It ran 01:31–01:55: 203 US club
-   letters sent across 22 states (Northern California → Maryland, alphabetical), 0 crashes; the
-   250-a-day cap then held at 257 and the other 29 states dry-ran — they go at the 00:10 wave
-   on Mon 7 Sep.** RG-0298 LOCKED (observed leg: the post-fix log is clean).
-2. INVITE-CAT-2 above; shipped with `request_deploy` (b8b8594). RG-0299 LOCKED.
-3. RG-0287 was red (dashboard club card 577 → 313 vs DB 1,568 / 1,301) — card corrected.
-4. Third US register: **USATF New England, 268 clubs** (`--adapter usatfne`, one static page),
-   imported host-side 01:55 (+266; Sports Clubs now 1,834 rows / 1,550 distinct clubs). Probed and rejected: USATF Mid-Atlantic, Three
-   Rivers (no club emails). RRCA result read: +903 imported 5 Sep 21:30.
-5. youtube-pack for film #1 → `feature-videos/01-collectables/…_youtube/`. LAUNCH_SERIES updated.
-6. US search scraper measurement run (RG-0297) never searched: DDG reset the connection at
-   preflight. Not re-queued — registers are the supply.
+1. Read the 00:10 wave: **251 real sends, 0 crashes**; Cape Town 12 + 23 US states; ramp doubled
+   to 24 in N. California / California / Illinois; 12 states got wave #1; 17 states (North
+   Carolina → Wyoming, 166 letters) dry-ran on the 250 cap → they go tonight. US club bounces:
+   6 Sep wave 0/203; tonight 7/251 so far (2.8%). Domain gate now has its 50 post-clean sends.
+2. FUNNEL-HUMAN-1 above, shipped twice via relay (RG-0315 LOCKED; RG-0293 read moved to bots=1).
+3. LEDGER-SLICES-1: `scripts/ledger_slices.py` — the ledger in 6 slices, because the sandbox call
+   cap is now ~178 s and a background run dies with the call. Board after: **311 entries · 0
+   REGRESSED · 22 open**. Cleared 3 stale reds (session counter, harness call site, .ps1 CRLF).
+4. MOGA-1: **199 Montana licensed outfitters** harvested (`--adapter moga`, one page, embedded
+   JSON) → category adventures_experiences, bucket Montana; import queued. Caught: the register
+   CSV had no category column → would have imported as Sports Clubs and got the CLUB letter.
+   Fixed + RG-0316 LOCKED. Lane is collected, NOT drawn (letter lacks the source line) — RG-0317
+   OPEN says exactly what unlocks it.
+5. RUL-103 check re-pinned; LAUNCH_SERIES.md now says nine films are LIVE (only 07 on disk).
 
-## SUPPLY (measured)
+## SUPPLY (measured 7 Sep)
 
-- Sports Clubs: **1,834 rows / 1,550 distinct clubs** (ZA 577, US 1,257; 239 emailed so far).
-  51 US state buckets armed; 22 have had wave #1 (6 Sep), 29 are waiting on the daily cap.
-- Adding a register = ~30 lines in `ADAPTERS` (`us_register_reader.py`), verify the page CARRIES
-  EMAILS first, run `--csv` from the sandbox (CSV only, never SQLite), add the name to
-  `run_us_registers.bat`, queue that bat. Next candidates: US Chess affiliates (JS directory —
-  check `uschess.org/msa/AffLst.php` from the host, 403 from the sandbox), ACBL bridge clubs,
-  state music-teacher associations (Tutors!), chambers of commerce member lists (Services),
-  outfitter/guide associations (Idaho IOGA, Montana MOGA, Maine MPGA).
-- Dead ends (do not re-check): USATF national club finder (sport80 widget); NY DEC guide data (no
-  email column); USATF Mid-Atlantic / Three Rivers pages; US general search scraping (33 min, 1
-  wrong row; then DDG blocked the home IP).
+- US Sports Clubs uncontacted: **815** (MA 213, TX 57, CA 55, N.CA 52, NY 44, PA 39, FL 38…) ≈
+  3–4 nights at 250/day. **The US club lane runs dry ~10–11 Sep. Next register must land first.**
+- ZA: Pretoria 342 club:agn uncontacted but the city drew nothing tonight (club:agn now 4 bounces
+  in 24 → source gate, most likely; the planner prints "-" without naming the gate — fix that
+  print). Durban 588 + PMB 525 teachers (dbe_emis) are the big ZA pool; Tutors arm-b rides them.
+- Montana outfitters 199 banked (undrawn). Adding a register = ~30 lines in `ADAPTERS`
+  (`us_register_reader.py`), verify the page CARRIES EMAILS first (curl + grep from the sandbox
+  works for most sites), `--csv` from the sandbox, add to `run_us_registers.bat`, queue that bat.
+  Next candidates: other state outfitter/guide associations (Idaho IOGA members page 404 — find
+  the new URL; Wyoming WYOGA; Colorado COA; Alaska APHA), ACBL bridge, US Chess (host only).
+- Dead ends (do not re-check): USATF national finder; NY DEC guides; USATF Mid-Atlantic / Three
+  Rivers / MN / OR / GA / NJ / IN; US general search scraping; orienteeringusa; skifederation;
+  americancanoe; americanhiking; adventurecycling.
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
-0. Check `host_queue/worker_log.txt` for a RUN without a DONE before opening the local
-   prospects.db from the sandbox (a sandbox read during a host write left it unreadable, 5 Sep).
-1. Run the number. Read the newest `logs/launchday_*.log` (Mon 00:10): grep `EMAILER CRASHED`
-   (must be 0), count real sends, confirm the remaining 29 states went and DAILY-CAP-1 held.
-   Then read opens / clicks / bounces for the 203 US club letters off the server (read-only) —
-   the first US bounce reading decides whether the ramp doubles or the stop-loss trips.
-2. `GET /onboard/funnel?days=2` — first reading with clubs landing on the photo step.
-3. RG-0298's observed leg reads the newest post-fix wave log; RG-0299's live leg reads the funnel.
-4. Still unproven as ONE walk: seller form → save → publish → visible logged out (publish_ok).
-5. FILM 01 IS LIVE (youtube.com/shorts/oULMIsCAPnk, published 6 Sep). Read `GET
-   /onboard/funnel?days=7` for `yt-01-collectables`. Also: YouTube channel verification was
-   submitted 6 Sep (six-second video, in review). The moment it clears, PIN the comment already
-   posted on that video and confirm the description link renders as a clickable link -- until then
-   the link is plain text and any funnel count from YouTube is a FLOOR, not the true number.
-   Read `GET /onboard/funnel?days=7` for any `yt-*` src. Films start posting once the channel
-   exists (LAUNCH_SERIES.md: Tue/Fri 18:00 SAST, order set). A film that sends people who all
-   stop at `landed` is the RG-0299 fault class and gets the same treatment.
+0. Check `host_queue/worker_log.txt` for a RUN without a DONE before opening prospects.db.
+   Read `host_queue/done/*run-us-registers.result` — did the 199 Montana rows import (+199)?
+1. Run the number. Newest `logs/launchday_*.log`: `EMAILER CRASHED` must be 0; confirm the 17
+   remaining states went and the ramp doubled where wave #1 was clean. Bounces off the server.
+2. `GET /onboard/funnel?days=2` — FIRST graded reading: `humans`, and which step they reach.
+   If humans ≥ 10 and none pass `photo_pick`, the required photo is the leak — fix as a class.
+3. Ledger: `python3 scripts/ledger_slices.py --slice N --of 6 --run <name>` ×6 then `--report`.
+4. Letter work that unlocks supply: bring `adventures_experiences_outreach.html` into RUL-099
+   shape (source line; consider dropping the $20 ask like arm 'b'), then add
+   adventures_experiences to Montana's category_priority → RG-0317 prints READY TO LOCK.
+5. Still unproven as ONE walk: seller form → save → publish → visible logged out (publish_ok).
+6. YouTube: nine films live, links clickable since 00:19 7 Sep. Read `yt-*` humans off the
+   funnel (graded from now). Film 07 Liquidation is the one not yet posted — David's click.
 
 ## THINGS ALREADY TRIED THAT DID NOT WORK
 
-- Opening `/admin.html` publicly (1 Sep) — rolled back in 76 s. `fill_wave_gaps.py` via the host
-  queue (4 Sep) — HTTP 401, RG-0263 open. Reading "no sendable prospects" as supply (4 Sep) — it
-  was reach. Halving the batch for a "measurement week" (5 Sep) — disconnected the ramp, RG-0290.
-- US general search scraping (5 Sep): 1 wrong row, then blocked. Registers only.
-- Reading log silence as a dead host agent (5 Sep) — it logs only when it has work.
-- Two goal sessions at once (5 Sep) — one overwrote the other's GOAL_STATE. Check for a live one.
-- Running the ledger in the background from the sandbox — killed when the call ends. Foreground,
-  ~6 min, timeout 560 s.
-- Trusting "wave #N logged" (6 Sep) — it was printed over 51 crashed categories. Grep the log.
-- Assuming the invited path is the same for every category (6 Sep) — it was not for clubs.
+- Opening `/admin.html` publicly (1 Sep). `fill_wave_gaps.py` via the queue (401, RG-0263).
+  Reading "no sendable prospects" as supply (4 Sep). Halving the batch for a "measurement week"
+  (5 Sep, RG-0290). US general search scraping (5 Sep). Trusting "wave #N logged" (6 Sep).
+- Reading the funnel without grading it (6 Sep) — scanners run our JS. Grade first.
+- Running the ledger in one call (7 Sep): the call cap is ~178 s. Running it on the server: 45
+  false reds. Use the slices.
+- Two sessions at once: David was interactive at 01:32 tonight and saw my two deploy restarts
+  as "everything red" on the +1 page. Space deploys; one is better than two.
 
 ## OPEN QUESTIONS FOR DAVID (batched, never dripped)
 
-**One thing, and it is small: the YouTube channel does not exist.** All ten films are QC'd, packaged and tracked, and the posting order and dates are set (LAUNCH_SERIES.md). Creating the account is his act -- Claude may not create accounts, no YouTube connector exists to automate posting (registry searched 6 Sep), and the channel's name and positioning are launch scope, his under RUL-103(f). Posting one film is then a two-minute paste from its `metadata.md`.
+None this run. Film 07 (Liquidation) is the only unpublished film — his click, when he chooses.

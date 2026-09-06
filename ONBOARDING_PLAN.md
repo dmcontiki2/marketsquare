@@ -98,7 +98,17 @@ invite map had never heard of 'Sports Clubs', so all four real club landings wen
 "what are you selling?" tiles and stopped there (9 sessions landed, 0 reached the photo step).
 Fixed and shipped 6 Sep (INVITE-CAT-2); from now on a club arrives at the Tutors photo step and
 whether people stop THERE is the reading to take. Fix the one step that loses the most people, as a
-class and not an instance. If click → publish is above 15%, the arithmetic works and the job is
+class and not an instance.
+
+**Corrected 7 Sep 2026 (measured): the 6 Sep readings were not people.** Every session the funnel
+showed at the photo step (9 across Kansas and California) was created 20–40 seconds after its wave's
+send time, four at a time within eight seconds, and the web server log showed the poster was
+Google-Safety — a link scanner that renders the page and runs our code. So the honest reading on the
+evening of 6 Sep was: **humans at the photo step 0; humans landed from the club letters — unknown, the
+instrument could not tell.** Fixed the same night: the funnel now flags scanner sessions and hides
+them by default, and counts a person only after 12 seconds on the page plus a real touch, key or
+scroll. **The click → publish measurement therefore starts on 7 Sep, not 6 Sep.** Anything read off
+the funnel before 7 Sep 01:30 SAST is ungraded and must not be used as a rate. If click → publish is above 15%, the arithmetic works and the job is
 volume. If it is below 10%, no amount of sending reaches 20 and the answer is the product, not
 the list.
 
@@ -116,6 +126,18 @@ running-club register, one policy bucket per state, harvested and imported host-
 `run_us_registers.bat`). Total daily volume is now gated at 250 across the domain
 (DAILY-CAP-1), raised on clean days. Aim the next registers at whatever vertical the measured
 rate says converts.
+
+**Supply reading, 7 Sep 2026:** the US club pool has 815 uncontacted addresses left (Massachusetts
+213, Texas 57, California 55, Northern California 52, New York 44 …) — about three to four sending
+nights at 250 a day. **The US club lane runs dry around 10–11 Sep; the next register must be imported
+before then, not after.** One is banked: 199 Montana licensed outfitters (Montana Outfitters & Guides
+Association directory), category adventures, bucket Montana — collected but not yet drawn, because the
+adventures letter does not yet say where we got the address (the club letter does, and that line is a
+condition of sending without David's review). Bringing that letter into the approved shape unlocks the
+lane; the ledger prints the moment both halves are true. Register pages probed and found empty of
+addresses on 7 Sep (do not re-check): Orienteering USA, National Ski Council Federation, American Canoe
+Association, American Hiking Society, Idaho IOGA, USATF Minnesota / Oregon / Georgia / New Jersey /
+Indiana, Adventure Cycling.
 
 **24 → 31 Oct. STOP ADDING, START CLOSING.**
 No new lanes. Follow up the people who clicked and did not publish.
