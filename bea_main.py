@@ -16348,6 +16348,38 @@ async def admin_services_status(service: str = None, _admin=Depends(_require_adm
                                         % _st.get("provider"))
             else:
                 _stat, _det = "nokey", "lane DARK — set ID_VERIFY_PROVIDER + ID_VERIFY_API_KEY"
+
+            # IDV-PANEL-TRUTH-1 (6 Sep 2026, David: "Can you also add the Didit switch...
+            # i am very aware of the switches which are off"). It was already here -- and it
+            # was GREEN, because everything above judges CONFIGURATION: provider named, key
+            # set. The comment above says so plainly ("green here means provider named and
+            # key present, never that a check works") and the dot said OK anyway. David reads
+            # the dot. On 6 Sep a real check came back HTTP 403 from Didit -- an unfunded
+            # prepaid wallet -- and this panel had been calling the lane healthy throughout.
+            # Same fault as /id-verify/status the same morning (IDV-STATUS-TRUTH-1): a READ
+            # of our own intentions wearing a PROBE's colour.
+            # The fix costs nothing and spends nothing: the ledger already records every real
+            # attempt, so the last ACTUAL outcome overrides the config guess. The presence-only
+            # rule is untouched -- this panel still never fires a billable query to refresh.
+            try:
+                _c = database.get_db()
+                try:
+                    _la = _c.execute("SELECT outcome, reason, created_at FROM "
+                                     "id_verification_ledger ORDER BY id DESC LIMIT 1").fetchone()
+                finally:
+                    _c.close()
+            except Exception:
+                _la = None
+            if _la is not None and _la["outcome"] == "unavailable":
+                _stat = "warn"
+                _det = ("lane NOT USABLE — last real attempt %s: %s. Config is fine; the "
+                        "supplier is refusing us. Green here would mean a check has "
+                        "succeeded, not that a key is set."
+                        % ((_la["created_at"] or "")[:16], (_la["reason"] or "")[:110]))
+            elif _la is not None and _stat == "ok":
+                _det += " · last real attempt %s: %s" % ((_la["created_at"] or "")[:16],
+                                                         _la["outcome"])
+
             out.append({"id": "id_verify", "label": "ID verification",
                         "kind": "Home Affairs ID check (DHA) · seller green tick",
                         "status": _stat, "detail": _det, "key": _infra_mask(_key)})
