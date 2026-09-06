@@ -18671,5 +18671,133 @@ def rg_idv_status_tells_truth():
              % (st.get("last_outcome") or "no attempts yet", st.get("note", "")[:60]))]
 
 
+@entry("RG-0311", "The ops panel's ID-verification row is GREEN only when a check has actually "
+       "SUCCEEDED -- not when a key happens to be set",
+       LOCKED, fixed_on="2026-09-06",
+       scope="bea_main.py GET /admin/services-status, the id_verify row that feeds the Launch "
+             "Switch (+1) page's Infrastructure card. Sibling of RG-0310, which fixed the same "
+             "fault on the public /id-verify/status the same morning. CLASS: a panel a human "
+             "reads for GO/NO-GO that is wired to configuration instead of outcome.",
+       ref="IDV-PANEL-TRUTH-1 (6 Sep 2026), on David's ask: 'Can you also add the Didit switch in "
+           "our Ops App Launch Switch page... i am very aware of the switches which are off.' "
+           "IT WAS ALREADY THERE -- and it was GREEN. The row judged provider-named plus "
+           "key-present, and its own comment admitted the limit: 'green here means provider named "
+           "and key present, never that a check works'. An honest comment does not help: DAVID "
+           "READS THE DOT. He asked for the switch precisely because the panel had never told him "
+           "this lane was unusable. "
+           "Meanwhile the lane had never once succeeded. A real check on 6 Sep returned HTTP 403 "
+           "from Didit -- a prepaid wallet at $0.00 -- correctly unbilled, and the panel went on "
+           "showing OK. The presence-only design was deliberate and defensible (a live probe here "
+           "would be a billable query, and this panel must never spend money to refresh) but it "
+           "was solving the wrong half: it avoided spending and paid for that with a false green. "
+           "The fix spends nothing. Every real attempt is already in id_verification_ledger, so "
+           "the LAST ACTUAL OUTCOME now overrides the configuration guess: `unavailable` turns the "
+           "row amber and names the supplier's reason. Evidence we already own beats a probe we "
+           "would have to buy. "
+           "SOURCE-HALF BY NECESSITY: /admin/services-status needs a PIN-derived admin token, so "
+           "this asserts the wiring; the row itself is confirmed by David opening the page.")
+def rg_idv_panel_reads_outcome():
+    api = repo_file("bea_main.py")
+    if api is None:
+        return [(INFO, "bea_main.py not readable here -- skipped")]
+    i = api.find('if service in (None, "id_verify"):')
+    if i < 0:
+        return [(FAIL, "the ID-verification row is gone from /admin/services-status -- the lane is "
+                       "invisible on the panel David reads for GO/NO-GO (ID-NPR-6's own fault, "
+                       "which he caught once already)")]
+    blk = api[i:i + 4200]
+    if "IDV-PANEL-TRUTH-1" not in blk or "id_verification_ledger" not in blk:
+        return [(FAIL, "the ID-verification row no longer consults the ledger -- it is back to "
+                       "reporting GREEN because a key is set, while the supplier may be refusing "
+                       "every call (IDV-PANEL-TRUTH-1)")]
+    if 'outcome"] == "unavailable"' not in blk:
+        return [(FAIL, "the row reads the ledger but no longer downgrades on an 'unavailable' "
+                       "outcome -- the evidence is fetched and then ignored")]
+    return [(INFO, "the panel's ID row is driven by the lane's last real outcome, not by whether "
+                   "a key is present")]
+
+
+@entry("RG-0312", "The email stop-loss judges the SENDING DOMAIN, not just one city's last wave -- "
+       "reputation is scored per domain, so a rate that is safe in every small city bucket "
+       "and unsafe in aggregate must still stop the sending",
+       LOCKED, fixed_on="2026-09-06",
+       scope="CityLauncher/emailer/wave_runner.py: gate_check must carry a DOMAIN-BOUNCE-1 block "
+             "that reads domain_bounce_state() -- a rolling all-cities window -- and appends a "
+             "block when the sample is large enough and the rate exceeds defaults.bounce_stop_pct. "
+             "waves_policy.json defaults must carry domain_bounce_window_days and "
+             "domain_bounce_min_sample. The bounce count must come from prospects.bounced_at, NOT "
+             "from email_events, because those two disagree on the sending machine. "
+             "CLASS: the same dimension error DAILY-CAP-1 (5 Sep) fixed for VOLUME, left unfixed "
+             "for BOUNCES one day later -- a per-city gate guarding a per-domain property. The "
+             "city-scoped stop-loss stays; this is an additional gate, not a replacement.",
+       ref="DOMAIN-BOUNCE-1, 6 Sep 2026, viability review. PROBED the live prospect DB: every day "
+           "since the soft launch ran above the 5% limit -- 29 Aug 5.6%, 1 Sep 7.2%, 2 Sep 8.5%, "
+           "3 Sep 15.3%, 5 Sep 7.8% -- 86 bounces on 981 sends (8.8%), and no city-scoped gate "
+           "ever fired, because ~12 sends per city against a 3-bounce floor needs 25% in a batch "
+           "to trip. Reputation on mail.trustsquare.co was being spent daily with nothing "
+           "watching the total. ALSO PROBED, and the reason the first cut of this fix read zero: "
+           "the sending machine's copy of prospects.db held 11 'bounced' EVENTS against the "
+           "server's 86, while the per-prospect bounced_at flag had synced 66 -- so the event log "
+           "is not a safe bounce source on the send side and the flag is. VERIFIED after the fix: "
+           "wave_runner --plan blocks every armed city with 'DOMAIN-BOUNCE-1: domain hard-bounce "
+           "5.47% over last 3d (24/439) > 5.0%'.")
+def rg_domain_wide_bounce_gate():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    wr = os.path.join(cl, "emailer", "wave_runner.py")
+    pol = os.path.join(cl, "emailer", "waves_policy.json")
+    if not os.path.exists(wr):
+        return [(INFO, "CityLauncher/emailer/wave_runner.py not readable here -- skipped")]
+    src = open(wr, encoding="utf-8", errors="replace").read()
+
+    if "def domain_bounce_state(" not in src:
+        out.append((FAIL, "domain_bounce_state() is gone from wave_runner.py -- the sending domain's "
+                          "own bounce rate is no longer measured, and only the per-city stop-loss "
+                          "remains, which is the gate that let 8.8% through for nine days"))
+    if "DOMAIN-BOUNCE-1" not in src:
+        out.append((FAIL, "gate_check no longer carries the DOMAIN-BOUNCE-1 block -- a domain-wide "
+                          "bounce rate over the limit would not stop a send"))
+    # the gate must sit INSIDE gate_check, not merely be defined
+    g = src.find("def gate_check(")
+    if g >= 0:
+        body = src[g:src.find("\ndef ", g + 10)]
+        if "DOMAIN-BOUNCE-1" not in body:
+            out.append((FAIL, "domain_bounce_state exists but gate_check does not consult it -- the "
+                              "measurement is taken and then ignored"))
+        if "bounce_stop_pct" not in body:
+            out.append((FAIL, "the domain gate no longer compares against defaults.bounce_stop_pct"))
+    # bounce source: the flag, not the event log
+    d = src.find("def domain_bounce_state(")
+    if d >= 0:
+        fn = src[d:src.find("\ndef ", d + 10)]
+        if "bounced_at" not in fn:
+            out.append((FAIL, "domain_bounce_state no longer counts bounces off prospects.bounced_at "
+                              "-- on the sending machine the email_events bounce rows are incomplete "
+                              "(11 local against 86 on the server), so an event-log count reads near "
+                              "zero and the gate silently stops guarding"))
+        if "event='bounced'" in fn:
+            out.append((FAIL, "domain_bounce_state is counting bounce EVENTS again -- that source is "
+                              "not synced to the send side; use the bounced_at flag"))
+    if os.path.exists(pol):
+        try:
+            import json as _json
+            defaults = _json.load(open(pol, encoding="utf-8")).get("defaults", {})
+        except Exception as e:
+            out.append((FAIL, "waves_policy.json will not parse (%s)" % e))
+            defaults = {}
+        for k in ("domain_bounce_window_days", "domain_bounce_min_sample"):
+            if not defaults.get(k):
+                out.append((FAIL, "waves_policy.json defaults has lost %s -- the domain gate is "
+                                  "configured off and never speaks" % k))
+        if float(defaults.get("bounce_stop_pct") or 0) > 5.0:
+            out.append((FAIL, "bounce_stop_pct has been raised above 5%% (now %s) -- weakening the "
+                              "limit to make the gate pass is exactly the move the standing rule "
+                              "forbids" % defaults.get("bounce_stop_pct")))
+    if out:
+        return out
+    return [(INFO, "the domain-wide bounce gate is present, wired into gate_check, and reading the "
+                   "bounce flag that actually syncs to the sending machine")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -1,0 +1,141 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Post-launch timeline — failures, nonconformances, observations</title>
+<style>
+:root{--bg:#0b1220;--panel:#111c2f;--panel2:#16233a;--line:#22334f;--text:#e8eef7;--muted:#8ea3c0;
+      --red:#ef4444;--orange:#f59e0b;--blue:#38bdf8;--green:#22c55e;--gold:#C8873A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 Inter,Segoe UI,system-ui,Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:26px 18px 60px}
+h1{font-size:23px;margin:0 0 6px;letter-spacing:.2px}
+.sub{color:var(--muted);font-size:13.5px;margin-bottom:20px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 18px}
+.lg{flex:1 1 300px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px 14px}
+.lg b{display:block;font-size:13px;margin-bottom:3px}
+.lg span{color:var(--muted);font-size:12.2px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.counts{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 22px}
+.ct{flex:1 1 150px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px 15px}
+.ct .n{font-size:26px;font-weight:700;line-height:1.1}
+.ct .l{color:var(--muted);font-size:12px;margin-top:2px}
+.day{display:flex;gap:14px;align-items:flex-start;margin:0 0 4px}
+.daylab{flex:0 0 108px;text-align:right;padding-top:12px;color:var(--muted);font-size:12.5px;font-weight:600}
+.daylab .big{display:block;color:var(--text);font-size:15px}
+.spine{flex:0 0 14px;position:relative;align-self:stretch}
+.spine:before{content:"";position:absolute;left:6px;top:0;bottom:0;width:2px;background:var(--line)}
+.items{flex:1;padding:8px 0 14px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-left-width:4px;border-radius:9px;
+      padding:10px 13px;margin:0 0 8px}
+.card.red{border-left-color:var(--red)} .card.orange{border-left-color:var(--orange)}
+.card.blue{border-left-color:var(--blue)}
+.card h3{margin:0 0 3px;font-size:14px;font-weight:650;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.card p{margin:0;color:var(--muted);font-size:12.7px}
+.chip{font-size:10px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:20px;
+      border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.open{color:var(--orange);border-color:#5a4415}
+.chip.fast{color:var(--green);border-color:#1e4a2e}
+.milestone{background:linear-gradient(90deg,rgba(200,135,58,.18),transparent);border:1px solid #3d2f18;
+           border-radius:9px;padding:9px 13px;margin:0 0 8px;font-size:13px;color:var(--gold);font-weight:600}
+.note{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:15px 17px;margin-top:26px}
+.note b{color:var(--text)} .note p{margin:0 0 9px;color:var(--muted);font-size:13.2px}
+.note p:last-child{margin:0}
+@media(max-width:640px){.daylab{flex:0 0 62px;font-size:11px}.daylab .big{font-size:13px}.wrap{padding:18px 12px 40px}}
+</style></head><body><div class="wrap">
+
+<h1>What has gone wrong since soft launch — and what it was</h1>
+<div class="sub">29 August to 6 September 2026 · every item raised in the daily watch register and the regression ledger,
+placed on the day it was found. Built from the registers on disk, not from memory.</div>
+
+<div class="legend">
+  <div class="lg"><b><span class="dot" style="background:var(--red)"></span>Failure</b>
+    <span>Something did not work. The product, a customer's path through it, or the safety net that
+    watches it was actually broken.</span></div>
+  <div class="lg"><b><span class="dot" style="background:var(--orange)"></span>Nonconformance</b>
+    <span>A departure from our own rules or design. Usually an instrument reporting the wrong thing,
+    or a ruling not followed. The product mostly still worked.</span></div>
+  <div class="lg"><b><span class="dot" style="background:var(--blue)"></span>Observation</b>
+    <span>Noticed and written down. Not a defect yet — environment noise, debt, or something that
+    will matter later.</span></div>
+</div>
+
+<div class="counts" id="counts"></div>
+<div id="tl"></div>
+
+<div class="note">
+  <p><b>How to read the shape of this.</b> Thirty-two items in nine days looks alarming until you
+  separate them. Half are orange — instruments telling us the wrong thing rather than the product
+  failing. That is a finding about the watchers, not about the app.</p>
+  <p><b>Almost all of it was found by us, not by users.</b> One item came from a customer path at all,
+  and that one — the support form — is the exception that matters: it was swallowing messages silently,
+  which is precisely why nobody complained about it.</p>
+  <p><b>The dangerous pattern is not the count, it is the repetition.</b> The integrity baseline went
+  stale four times. A locked check read a false red four times. Three separate surfaces reported
+  "configured" as though it meant "working". Each was fixed at the class in the end, which is why the
+  repeats stop rather than continue.</p>
+  <p><b>The classification is mine, not a field in the data.</b> The registers record severity, not
+  category. Where an item could sit in two colours I have put it in the more serious one — a credential
+  exposure is red even though nothing broke, because the remediation is real.</p>
+</div>
+</div>
+
+<script>
+const D = [
+ ["2026-08-29","DW-082","blue","Ledger ran blind on a fresh sandbox","Two checks demoted to NOT EVALUATED because the sandbox was missing dependencies.","same"],
+ ["2026-08-30","DW-083","blue","The same blindness, a second time","Two checks unverified again on first run.","same"],
+ ["2026-08-30","DW-084","orange","One key, three different values","The app key held three fingerprints and the live value matched no file — a restart could silently swap keys.","closed"],
+ ["2026-08-30","DW-085","blue","46 pending updates on the production box","Nine of them security; a kernel restart outstanding.","closed"],
+ ["2026-08-31","DW-086","orange","The board's one red was a false red","On the eve of full launch.","closed"],
+ ["2026-08-31","DW-087","blue","Seven new static-analysis findings","None in app code — migrations and helper scripts.","open"],
+ ["2026-08-31","DW-088","orange","Integrity baseline stale again","One deploy after the previous refresh.","closed"],
+ ["2026-09-01","DW-089","red","Three live credentials printed into a transcript","Anthropic, Cloudflare and deploy tokens — all still live when found. Forced a rotation.","closed"],
+ ["2026-09-02","DW-090","orange","Integrity baseline stale again","Sixteen hours after the last one was closed.","closed"],
+ ["2026-09-03","DW-091","orange","A locked check read red, then passed","Demo-banner assertion; clean on re-run.","closed"],
+ ["2026-09-04","DW-092","orange","Another locked check read red, then held","Same shape as the day before.","same"],
+ ["2026-09-04","DW-093","orange","False red caused by two checks running at once","The assertion counted a shared total.","same"],
+ ["2026-09-04","DW-094","red","The whole check-board refused to run for 18 minutes","A duplicate entry id stopped it at startup — no safety net at all in that window.","same"],
+ ["2026-09-04","DW-095","orange","The cost sweep grew its own warnings","Recording a finding put the text where the next sweep would find it again.","closed"],
+ ["2026-09-05","DW-096","red","SSH lockout — six on-box sensors blind","Third recurrence. The broadband IP moved and the allowlist did not follow.","same"],
+ ["2026-09-05","DW-097","red","The RED alert could not be sent","The alarm travelled over the connection that was down. Second time in anger.","same"],
+ ["2026-09-05","DW-098","orange","The independent watcher proved itself with a typed date","Seven days old, one day from turning red by arithmetic alone.","same"],
+ ["2026-09-05","DW-099","orange","The coverage map cited the wrong assertion","Named a Stays-lane check as its evidence.","same"],
+ ["2026-09-05","DW-100","red","The support form said \"sent\" and sent nothing","The customer complaint lane, silently swallowing messages. 134 visitors, zero complaints — because of this.","same"],
+ ["2026-09-05","DW-101","orange","The support AI answered our own robot","A system notification landed in the customer lane and was auto-replied to.","same"],
+ ["2026-09-05","DW-102","orange","Support messages routed to David's inbox","Breached his own firewall ruling, written by the session that had read it.","same"],
+ ["2026-09-05","DW-103","orange","The customer-email firewall sat unarmed for six days","Built 30 Aug, waiting on a decision nobody had asked for.","same"],
+ ["2026-09-06","DW-104","red","The single daily monitor was switched off","No record of why. Nothing was sweeping, nothing was closing, nothing would have reported.","same"],
+ ["2026-09-06","DW-105","red","The nightly database backup had been dead for two weeks","Fifteen consecutive failures into a log nobody read. Newest copy anywhere was 30 August.","same"],
+ ["2026-09-06","DW-106","red","Two live credentials printed while masking a file","Mine. A bad masking command put an R2 key and secret on screen.","same"],
+ ["2026-09-06","DW-107","orange","Nothing knew where a credential lives","13 of 22 credentials had copies the register did not list — every one a rotation that half-succeeds.","same"],
+ ["2026-09-06","DW-108","red","New credentials pasted into a tracked script","One automatic commit away from GitHub. Caught before it committed.","same"],
+ ["2026-09-06","RG-0309","red","The paid ID check had no button","It was drawn only for people who could not buy it. Nobody could ever press it.","same"],
+ ["2026-09-06","RG-0310","orange","Lane status said READY while the supplier refused","It judged our configuration, not whether a check works.","same"],
+ ["2026-09-06","RG-0311","orange","The ops panel showed the dead lane as green","Same fault, third surface, same day.","same"],
+ ["2026-09-06","DIDIT","red","The identity lane has never once worked","The supplier refuses us — a prepaid wallet at $0. Parked by decision; $50 minimum.","open"],
+ ["2026-09-06","DW-109","red","An ID upload succeeds and the app says \"No ID on file\"","The seller is told the opposite of what just happened, so they upload again.","open"]
+];
+const MILE = {"2026-08-29":"Soft launch — the public arrives","2026-09-01":"Full launch"};
+const NAME = d => new Date(d+"T00:00:00Z").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"});
+const days = [...new Set(D.map(r=>r[0]))].sort();
+document.getElementById("tl").innerHTML = days.map(day=>{
+  const its = D.filter(r=>r[0]===day);
+  const parts = NAME(day).split(" ");
+  return '<div class="day"><div class="daylab">'+parts[0]+'<span class="big">'+parts.slice(1).join(" ")+'</span></div>'
+   +'<div class="spine"></div><div class="items">'
+   +(MILE[day]?'<div class="milestone">'+MILE[day]+'</div>':'')
+   +its.map(r=>{
+      const chip = r[5]==="open" ? '<span class="chip open">STILL OPEN</span>'
+                 : r[5]==="same" ? '<span class="chip fast">closed same day</span>'
+                 : '<span class="chip">closed</span>';
+      return '<div class="card '+r[2]+'"><h3>'+r[3]+' '+chip+'</h3><p>'+r[4]+'</p></div>';
+   }).join("")+'</div></div>';
+}).join("");
+const c = t => D.filter(r=>r[2]===t).length;
+const open = D.filter(r=>r[5]==="open").length;
+const same = D.filter(r=>r[5]==="same").length;
+document.getElementById("counts").innerHTML =
+  '<div class="ct"><div class="n" style="color:var(--red)">'+c("red")+'</div><div class="l">Failures</div></div>'
+ +'<div class="ct"><div class="n" style="color:var(--orange)">'+c("orange")+'</div><div class="l">Nonconformances</div></div>'
+ +'<div class="ct"><div class="n" style="color:var(--blue)">'+c("blue")+'</div><div class="l">Observations</div></div>'
+ +'<div class="ct"><div class="n" style="color:var(--green)">'+same+'</div><div class="l">Closed the same day</div></div>'
+ +'<div class="ct"><div class="n">'+open+'</div><div class="l">Still open now</div></div>';
+</script></body></html>
