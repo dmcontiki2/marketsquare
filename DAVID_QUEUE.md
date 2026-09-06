@@ -171,29 +171,24 @@ the credit landed. Reply `D9 done` with what you saw.
 CONTEXT: Closes the detached-credit end-to-end — the case where a buyer's browser dies between
 Paystack taking the money and us crediting it. That path has never been exercised with real money.
 
-## D10 · One real Didit ID check — RUN, and it exposed a dead supplier lane
-STATE: OPEN — but the question changed: it is no longer "does it bill", it is "why does Didit refuse us"
-TIME: a look at the Didit account
+## D10 · One real Didit ID check — RUN, then PARKED by David. Not waiting on him.
+STATE: DONE 2026-09-06 — decided, and recorded as RUL-105
+TIME: 0
 VERIFY: DAVID
-WHY_DAVID: Vendor account — entitlement, billing status, key validity.
-WHAT HAPPENED 2026-09-06 12:31Z: David ran the check on his own account. It reached the server,
-returned 200, and the ledger recorded: outcome `unavailable`, **charged_t 0**, reason
-"Verification service returned HTTP 403. No charge." So the SAFETY property held exactly as
-designed — a provider failure never charges — and no money moved, in Tuppence or dollars.
-THE REAL FINDING: **Didit refuses us with HTTP 403.** Either the API key has been revoked or
-expired, or the account is not entitled to the South African national-ID service. The lane has
-therefore never worked, which had been read for weeks as "nobody has run one yet".
-ALSO FIXED THE SAME MINUTE (IDV-STATUS-TRUTH-1): /id-verify/status was reporting
-"READY — sellers can buy a check" while the supplier was refusing us, because `available` was
-computed from OUR OWN CONFIG (key present, provider known) rather than from anything the lane
-had done. It now reports the last real outcome from the ledger, so the card correctly reads
-"Temporarily unavailable. Nothing has been charged" — which is what David sees now.
-NEXT: check the Didit account — is the key live, is the account funded, is ZAF national-ID
-enabled on it. If the key needs replacing, `.secrets/r2_new_keys.txt`-style transit applies:
-never paste a key into a script file.
-CONTEXT: The original question — whether Database Validation is covered by the 500 free monthly
-verifications or bills ~$1.10 from call one — is STILL unanswered, and cannot be answered until
-the supplier accepts a call at all.
+OUTCOME: The check was run (6 Sep 12:31Z). It reached Didit and returned HTTP 403 with
+**charged_t 0** — "Verification service returned HTTP 403. No charge." The safety property held:
+a provider failure never charges. The original question was answered differently than expected —
+**Didit is prepaid only** (no postpaid billing; 500 free checks/month cover standard features;
+premium government-registry lookups are chargeable) and the wallet is at $0.00.
+DAVID'S RULING: *"This is excessive for now, i was expecting to pay no more than $10."* Their
+top-up presets start at $50. So the wallet is not funded, the green tick stays dark, and $50
+would be a NEW decision — not an implied one. Closed rather than left in his column implying he
+still owes something.
+WHAT MOVED TO US INSTEAD: the FREE half. The +15 "Government-issued ID verified" trust point is
+awarded by our own vision check, not by Didit — but DW-109 found an upload returns 200 while the
+app still says "No ID on file", with nothing triggering the check. That is the priority precisely
+BECAUSE the paid half is parked: it is the trust point a seller can actually earn, and it costs
+nothing to make work.
 
 ## D11 · Travelpayouts tours — resubmit? — ALREADY DONE, nothing to decide
 STATE: DONE 2026-09-06 — SUPERSEDED, the decision was taken and acted on 2 Sep
