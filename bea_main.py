@@ -5985,6 +5985,35 @@ def id_verify_status():
                 "error": f"{type(e).__name__}: the provider module is missing "
                          f"on this server (check the deploy manifest)"}
     st["price_t"] = ID_NPR_PRICE_T
+
+    # IDV-STATUS-TRUTH-1 (6 Sep 2026). This said "READY - sellers can buy a check"
+    # while the supplier was refusing us outright: `available` is computed from our own
+    # CONFIGURATION (key present, provider known), which answers "did we set it up",
+    # never "does it work". David bought a check on 6 Sep and got HTTP 403 from Didit --
+    # correctly unbilled, but the board had called the lane READY right up to the moment
+    # it failed. That is a READ wearing a PROBE's colour, the fault this project keeps
+    # meeting, and the docstring above already quotes the doctrine it broke.
+    # The honest, free fix: report what the lane LAST ACTUALLY DID. The ledger records
+    # every attempt with its outcome, so a supplier failure is visible without paying for
+    # a fresh probe on every page load.
+    _last = None
+    try:
+        _c = database.get_db()
+        try:
+            _last = _c.execute(
+                "SELECT outcome, reason, created_at FROM id_verification_ledger "
+                "ORDER BY id DESC LIMIT 1").fetchone()
+        finally:
+            _c.close()
+    except Exception:
+        _last = None
+    if _last is not None:
+        st["last_outcome"] = _last["outcome"]
+        st["last_attempt_at"] = _last["created_at"]
+        if _last["outcome"] == "unavailable":
+            st["available"] = False
+            st["degraded_reason"] = (_last["reason"] or "")[:160]
+
     st["note"] = ("READY — sellers can buy a check." if st.get("available")
                   else "DARK — no seller can buy a check and nothing can be "
                        "charged. Set ID_VERIFY_PROVIDER and ID_VERIFY_API_KEY.")
