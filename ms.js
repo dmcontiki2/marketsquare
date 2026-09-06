@@ -14304,11 +14304,20 @@ function msRenderLiveSignals(signals){
       if(sig.key === 'id_verified'){
         actionBtn = '<button class="ms-sig-action" data-action="upload-id">Upload ID →</button>';
       }
-      // ID-NPR-5: the paid Home Affairs check lives in its own card so it is
-      // never mistaken for the free document upload above it.
-      if(sig.key === 'id_verified' && typeof msRenderIdVerifyCard === 'function'){
-        setTimeout(()=>msRenderIdVerifyCard('ms-id-verify-card'), 0);
-      }
+    }
+    // ID-NPR-5: the paid Home Affairs check lives in its own card so it is never
+    // mistaken for the free document upload above it.
+    // IDV-CARD-REACHABLE-1 (6 Sep 2026): this call used to sit INSIDE the !earned
+    // block above, which made the paid check unreachable for exactly the people who
+    // could buy it. Earning the free document signal made the card vanish; not
+    // earning it made the card appear and say "upload your ID first". So the buy
+    // button existed for nobody, and the lane had never billed once -- which had been
+    // read for weeks as "David has not got round to it" rather than "the UI cannot
+    // reach it". Found because he tried to run it on his phone and there was nothing
+    // to press. The card decides its OWN state from /id-status; it does not need this
+    // caller to pre-judge whether it is relevant.
+    if(sig.key === 'id_verified' && typeof msRenderIdVerifyCard === 'function'){
+      setTimeout(()=>msRenderIdVerifyCard('ms-id-verify-card'), 0);
     }
 
     return '<div class="ms-signal-row">'

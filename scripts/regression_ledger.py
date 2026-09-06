@@ -18587,5 +18587,48 @@ def rg_rotation_knows_its_consumers():
     return out
 
 
+@entry("RG-0309", "The PAID Home Affairs check is reachable by the only people who can buy "
+       "it -- earning the free ID-document signal must not delete the buy button",
+       LOCKED, fixed_on="2026-09-06",
+       scope="ms.js msRenderLiveSignals -> msRenderIdVerifyCard. CLASS: a caller that "
+             "pre-judges whether a self-rendering component is relevant. The card already "
+             "decides its own state from /id-status; the caller second-guessing it is what "
+             "made the state unreachable.",
+       ref="IDV-CARD-REACHABLE-1 (6 Sep 2026). The call that renders the paid Home Affairs "
+           "card sat INSIDE `if(!earned)` on the id_verified signal. Follow it through: a "
+           "seller who has NOT uploaded an ID sees the card, and it says 'upload your ID "
+           "first'. A seller who HAS uploaded one -- the only person who can actually buy the "
+           "check -- earns the signal, so the card is never rendered at all. THE BUY BUTTON "
+           "EXISTED FOR NOBODY. "
+           "It had been live since the lane was built and the lane had never billed once, "
+           "which was read for weeks as 'David has not got round to running one' and sat in "
+           "his queue as a job waiting on him (D10). It was not waiting on him. It could not "
+           "be pressed. Found only because he tried it on his phone, saw his 15 points already "
+           "awarded and no button, and said so -- the account state that hides the bug on a "
+           "desktop demo login is the exact state every real verified seller is in. "
+           "THE LESSON IS THE DIAGNOSIS, not the one-line move: 'nobody has used this feature' "
+           "was treated as a fact about David's attention when it was evidence about the "
+           "product. A lane that has never once been exercised deserves the question 'can it "
+           "be?' before the question 'why has nobody?'.")
+def rg_idv_card_reachable():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "ms.js not readable here -- ID-verify card check skipped")]
+    i = js.find("msRenderIdVerifyCard('ms-id-verify-card')")
+    if i < 0:
+        return [(FAIL, "nothing renders the paid Home Affairs card any more -- the check "
+                       "cannot be bought from the app at all")]
+    # The call must NOT be nested in the unearned branch: that is the whole bug.
+    window = js[max(0, i - 900):i]
+    last_unearned = window.rfind("if(!earned){")
+    last_close = window.rfind("    }")
+    if last_unearned > last_close:
+        return [(FAIL, "the paid Home Affairs card is rendered only when the free ID-document "
+                       "signal is UNEARNED -- so the one person who can buy the check (the one "
+                       "who already uploaded an ID) cannot see the button (IDV-CARD-REACHABLE-1)")]
+    return [(INFO, "the paid Home Affairs card renders regardless of the free signal's state; "
+                   "the card decides its own state from /id-status")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
