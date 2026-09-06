@@ -201,26 +201,22 @@ CONTEXT: Declined 5 Aug and again 24 Aug (*"website under development or not yet
 RUL-041 bars resubmitting unchanged; soft launch was the material change that justified the
 third attempt. 26 programs available / 20 blocked, including Booking.com, Viator, GetYourGuide.
 
-## D12 · Delete ONE superseded Cloudflare token — now proven safe
-STATE: OPEN — 30 seconds, no comparison needed any more
-TIME: 30 seconds
+## D12 · Delete ONE superseded Cloudflare token — DONE
+STATE: DONE 2026-09-06 — deleted by David, and the deletion was VERIFIED not assumed
+TIME: 0 — finished
 VERIFY: DAVID
-WHY_DAVID: Deletions are reserved to you (RUL-037).
-DO: Cloudflare dashboard → My Profile → API Tokens → delete the USER token `trustsquare-cache`.
-    Then reply `D12 done`.
-PROVED 2026-09-06, so you do not have to compare anything:
-  - the LIVE cache-purge token the app actually uses is an ACCOUNT token — id
-    `584a5a5bc53be19132f35da9d42b493e`, status active, read straight from the running
-    process on the server;
-  - the same token FAILS the USER-token verify endpoint ("Invalid API Token"), which is
-    only possible if it is not a user token at all;
-  - `trustsquare-cache` is a USER token (dashboard, 28 Aug). Different kind, different id.
-    It therefore CANNOT be the live purge lane, so deleting it cannot break CDN purge.
-  The original step 1 asked you to run a command and compare two ids by eye. That comparison
-  is done and recorded here; nothing is left but the click.
-CONTEXT: Rotation residue from 22 Aug. The title said "two" — the other one was already gone
-when the dashboard was read on 28 Aug. Not blocking anything, but a live token nobody uses is
-a credential nobody is watching.
+EVIDENCE 2026-09-06, after the deletion rather than before it:
+  - the user token `trustsquare-cache` (Zone.Cache Rules, last used 22 Aug) is gone;
+  - CDN purge still WORKS — a real single-URL purge against zone trustsquare.co returned
+    success on the live account token, run on the server so the token never left the box;
+  - site healthy, root 200.
+  Nothing was leaning on the deleted token, which is what the pre-work predicted and what
+  the risk in the original steps was about.
+CONTEXT: Rotation residue from 22 Aug. The item said "two" — the other was already gone when
+the dashboard was read on 28 Aug. The original instructions asked David to compare two token
+ids by eye before deleting, because deleting the live purge token would have killed CDN purge
+silently. That comparison was settled by probe on 6 Sep (the live token is an ACCOUNT token;
+this was a USER token — different kinds, cannot be the same), so the job reduced to one click.
 
 ## D13 · Publish the deploy ref — closes the red card
 STATE: DONE 2026-08-30 (David's 07:48 release — verified live: anon /dashboard/summary returns the bare heartbeat; RG-0198/RG-0211 LOCKED and passing)

@@ -1099,13 +1099,13 @@
    "last_seen": "2026-09-06",
    "sev": "MEDIUM",
    "source": "my own terminal output while diagnosing DW-105",
-   "status": "OPEN",
+   "status": "CLOSED",
    "refs": [
     "DW-105",
     "SECRETS_REGISTER.md"
    ],
    "summary": "NEW - I EXPOSED TWO LIVE CREDENTIALS. While diagnosing the backup failure I displayed the systemd drop-in with a sed intended to mask the values; the expression was wrong and the full HETZNER_S3_ACCESS_KEY and HETZNER_S3_SECRET_KEY (which despite the name are CLOUDFLARE R2 credentials, per SECRETS_REGISTER) were printed into the session. Scope: David's own stored transcript, not a public location. No evidence of misuse. The rule I broke is my own standing one - never print a key - and the safe assumption after any exposure is that the credential is burned.",
-   "next_action": "OPEN - rotation is David's act (credentials, RUL-027 class). WHAT TO DO: Cloudflare dashboard > R2 > Manage API tokens > roll the token behind HETZNER_S3_ACCESS_KEY/SECRET, then re-run the 22 Aug installer pattern so the new pair lands in the service drop-in. The backup lane reads the drop-in first, so it follows the rotation automatically now - that is the one silver lining of today's fix. RG-0306 will go RED within 48 hours if the rotation breaks the backup, which is the check that did not exist before. NOT urgent-critical: the token's blast radius is the marketsquare-media R2 bucket (photo storage + database backups), not the app or the server. But it should not wait long."
+   "next_action": "CLOSED 2026-09-06 - rotated and PROVEN, in three attempts. The exposed pair is dead; the live R2 credentials are new (fingerprint 3d15a6c5b1, installed 11:58Z, drop-in rewritten 0600). VERIFIED at the point of use, not assumed: the installer's own S3 call listed the bucket; the app is active; and the nightly database backup was re-run exactly as cron runs it - empty environment - and uploaded both databases on the NEW key, with /static/backup_status.json reading ok. THE ROTATION REACHED EVERY CONSUMER BY ITSELF, which is the whole point of the morning's work: before today the backup held its own copy and a rotation would have broken it silently for weeks (DW-105). It now reads the same drop-in the installer writes, so it followed the new key with nobody remembering it existed. Attempts 1 and 2 were burned by exposure - mine in terminal output, then the pair pasted into the installer script itself (DW-108). Attempt 3 used the gitignored transit file, which the installer consumed and deleted. David deletes the old August token at Cloudflare once he is ready; the site ran on it throughout, so there was no window without working photo storage."
   },
   "DW-107": {
    "first_seen": "2026-09-06",
