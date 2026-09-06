@@ -814,6 +814,26 @@ async function _msInit(){
   }
   // ── END MAGIC LINK PARSER ─────────────────────────────────
 
+  // -- CAMPAIGN ARRIVAL (CAMPAIGN-SRC-1, 6 Sep 2026) --------------------------
+  // Someone arriving from a video, a post or any campaign link carries ?src=
+  // but NOT magic=1, so the parser above never saw them and the funnel counted
+  // nothing at all. Ten finished films were about to be posted with plain
+  // trustsquare.co links, which would have made YouTube's contribution to the
+  // onboarding number unmeasurable -- guessed, and RUL-096(b) scores the goal by
+  // probes, never by guesses. One 'landed' beacon, tagged with the source, so
+  // GET /onboard/funnel?src=yt-01 answers "did that film send anyone".
+  // magicLink.active STAYS FALSE: no routing, flow or UI change of any kind, and
+  // cat is deliberately NOT set (pre-selecting a category for a stranger is a
+  // product change, not measurement -- it waits for evidence).
+  if(!magicLink.active && sp.get('src')){
+    try{
+      magicLink.src = decodeURIComponent(sp.get('src')||'').slice(0,120);
+      window.history.replaceState({}, '', window.location.pathname);
+    }catch(e){}
+    obTrack('landed', {campaign:1});
+  }
+  // -- END CAMPAIGN ARRIVAL ---------------------------------------------------
+
   // ── LISTING DEEP LINK: ?listing=<id> from email showcase cards (28 Jul 2026) ──
   // Opens that advert's detail view once listings have loaded. Unknown or
   // missing ids degrade silently to normal browse (supers pinned first).

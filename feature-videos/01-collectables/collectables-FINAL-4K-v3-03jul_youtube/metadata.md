@@ -4,6 +4,10 @@ Video: `collectables-FINAL-4K-v3-03jul.mp4` · 43 s · 2160×3840 vertical · h2
 Format: **YouTube Short** (vertical). Shorts take their cover from a frame you pick in the
 upload screen on the phone; `thumbnail.jpg` (1080×1920) is that frame with the overlay,
 for use where a custom cover is accepted (Shorts on mobile, X, Instagram).
+**The link is tracked on purpose.** `?src=yt-01-collectables` is how GET /onboard/funnel?src=yt-01-collectables
+answers "did this film send anyone" -- the goal is scored by probes, never by guesses (RUL-096b).
+Do not paste a bare trustsquare.co link in its place.
+
 Built 6 Sep 2026 by the onboarding-goal run (youtube-pack); chapters read off a 2-second frame strip. WHICH film goes first and the
 channel's positioning are David's (RUL-103f) — this is the package for #1 in LAUNCH_SERIES.md.
 
@@ -24,7 +28,7 @@ listed as one collection — R42,500, with Gaea's Cradle alone at R24,860.
 0:22 "Twenty-four thousand for one card"
 0:32 Listed as one collection — live
 
-List your collection free at https://trustsquare.co
+List your collection free at https://trustsquare.co/?src=yt-01-collectables
 
 TrustSquare is a South African marketplace where the seller stays anonymous until they accept an
 introduction. Buyers see the item, the price and the seller's trust score — never a name, address

@@ -256,31 +256,30 @@ live); this grant lets the ledger SEE the lane count every run instead of trusti
 OPTIONAL SIBLING, same trip: a push-scoped GitHub PAT for the sandbox (fixes D13's class
 permanently — sessions could then ship end-to-end when you say "close it for me").
 
-## D15 · Push-scoped GitHub PAT for the sandbox — kills the stale-map lag AND the "Claude can't ship" class
-STATE: OPEN (added 2026-08-30, attended session — David: "Add it please")
-TIME: 5 minutes
-VERIFY: DAVID
-WHY_DAVID: Creating a credential is your act (RUL-027 class). CTO note on WHY THIS over the
-2 Sep "serve from repo" idea I first floated: the real lag is LOCAL-COMMIT -> PUSH, not
-deploy placement — the server already fetches the deploy ref every ~2 min and auto-deploys.
-One push credential for the sandbox makes the map, the register, and every future "clean and
-close it for me" ship end-to-end the moment it's committed. Today's red card would have
-closed hours earlier with this in place.
-STEPS:
-  1. github.com → Settings → Developer settings → Fine-grained personal access tokens →
-     Generate: repository access ONLY `dmcontiki2/marketsquare`, permission Contents:
-     Read and write, expiry 90 days. Name it `cowork-sandbox-push`.
-  2. Paste the token (one line) into `C:\Users\David\Projects\MarketSquare\.secrets\github_push_token.txt`
-     — gitignored folder, never into chat.
-  3. Reply `D15 done` — the next session wires git to use it, pushes a no-op to prove the
-     lane, and records the token in SECRETS_REGISTER.md with its expiry.
-CONTEXT: Declining is fine — the fallback is the 2 Sep batch item (serve defence_map +
-watch_register from the server's repo checkout at request time), which fixes only the map
-lag, not the shipping class.
-NOTE 2026-08-30 (unattended Batch 1 session): no token file found, so the FALLBACK is now
-BUILT and staged — bea_main.py MAP-LIVE-1 routes + migration 035 serve the defence map and
-watch register from origin/main at request time (rides the next deploy; ledger RG-0214).
-D15 stays OPEN and still worth doing: the PAT fixes the SHIPPING class, which the fallback
-does not touch. When you do it, the next session wires git, pushes the no-op proof, and
-records it in SECRETS_REGISTER.md as originally written.
+## D15 · Push-scoped GitHub PAT for the sandbox — NO LONGER NEEDED
+STATE: SUPERSEDED 2026-09-05 — the capability exists without the credential
+TIME: 0 minutes — nothing for you to do
+VERIFY: LEDGER:RG-0300
+WHY_NOT_DAVID: This asked you to mint a fine-grained GitHub token so the sandbox could
+publish. It was the right ask when written on 30 Aug. It was overtaken three days later
+by the deploy relay (AUTODEPLOY-AGENT-1, 3 Sep): the sandbox pushes over SSH to the
+server's checkout, and the SERVER pushes to GitHub with the credential it already holds.
+No token in the sandbox, and your PC is not in the loop.
+EVIDENCE 2026-09-05, probed not argued:
+  - two commits sitting unpushed went `b099067..4a79b3c  claude-relay -> main` straight
+    from the sandbox, with no token file present (`.secrets/github_push_token.txt` does
+    not exist and never did);
+  - six deploys rode the same lane earlier the same day;
+  - the server authenticates to GitHub as a writer (`git ls-remote` over its own key).
+WHY IT WAS NOT MINTED ANYWAY, since David offered: a second write credential to the code
+repo, living in a file, expiring every 90 days, is a standing chore and a standing risk —
+and 5 Sep was spent removing exactly that class of thing (a hand-typed heartbeat date, a
+hand-remembered firewall flag, five hand-maintained copies of one script). The only window
+a PAT would cover is SSH being down while David's PC is awake, and the host queue's
+`git_push` already covers that window — while the SSH lockout class itself became
+self-healing that morning (RG-0274). Redundancy that overlaps an existing path is not free.
+CLOSES WHEN: it already has — RG-0300 asserts the publish lane is live on every ledger run,
+so "Claude cannot ship" can never be re-derived from memory the way this item was.
+IF YOU EVER WANT IT ANYWAY: the original steps are in git history; it would be a third,
+independent path, not a fix for a missing one.
 

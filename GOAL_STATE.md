@@ -92,6 +92,9 @@ Target: **20 by Fri 31 Oct 2026.** Model on this run: Fable 5.1 (as David asked,
 2. `GET /onboard/funnel?days=2` — first reading with clubs landing on the photo step.
 3. RG-0298's observed leg reads the newest post-fix wave log; RG-0299's live leg reads the funnel.
 4. Still unproven as ONE walk: seller form → save → publish → visible logged out (publish_ok).
+5. Read `GET /onboard/funnel?days=7` for any `yt-*` src. Films start posting once the channel
+   exists (LAUNCH_SERIES.md: Tue/Fri 18:00 SAST, order set). A film that sends people who all
+   stop at `landed` is the RG-0299 fault class and gets the same treatment.
 
 ## THINGS ALREADY TRIED THAT DID NOT WORK
 
@@ -108,5 +111,4 @@ Target: **20 by Fri 31 Oct 2026.** Model on this run: Fable 5.1 (as David asked,
 
 ## OPEN QUESTIONS FOR DAVID (batched, never dripped)
 
-**Nothing is waiting on him.** The YouTube package for film #1 is ready whenever he wants to
-post; choosing the film and the title is his call, not a blocker.
+**One thing, and it is small: the YouTube channel does not exist.** All ten films are QC'd, packaged and tracked, and the posting order and dates are set (LAUNCH_SERIES.md). Creating the account is his act -- Claude may not create accounts, no YouTube connector exists to automate posting (registry searched 6 Sep), and the channel's name and positioning are launch scope, his under RUL-103(f). Posting one film is then a two-minute paste from its `metadata.md`.

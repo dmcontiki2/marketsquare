@@ -10910,9 +10910,21 @@ def rg_david_queue_self_verifies():
         vv = v.group(1).strip()
         if not (vv.startswith("LEDGER:") or vv.startswith("FIELD:") or vv == "DAVID"):
             missing.append(iid)
-        # An item may not claim DONE on a machine-checkable method -- the METHOD closes it.
+        # An item may not claim DONE on a machine-checkable method unless THE METHOD IS
+        # SATISFIED. Corrected 5 Sep 2026: the first cut fired on ANY DONE that carried a
+        # LEDGER:/FIELD: verify, which made the rule unsatisfiable -- an item whose method
+        # genuinely passes could not be marked done (rule 2), and not marking it left it
+        # counted as open (the still_open line below). Four items had been sitting in that
+        # contradiction, which is not a queue problem, it is an assertion problem.
+        # The test now: does the named entry exist and is it LOCKED? A LOCKED entry that
+        # rots turns THAT entry red, which is where the failure belongs -- not here.
         if st and st.group(1).strip().upper().startswith("DONE") and vv != "DAVID":
-            unverified_done.append(iid)
+            _rid = vv.split(":", 1)[1].strip() if vv.startswith("LEDGER:") else ""
+            _proved = bool(_rid) and bool(_re.search(
+                r'@entry\(\s*"%s"[^)]*?\n\s*LOCKED' % _re.escape(_rid),
+                open(__file__, encoding="utf-8").read(), _re.S))
+            if not _proved:
+                unverified_done.append(iid)
     if missing:
         out.append((FAIL, "%d queue item(s) carry no usable VERIFY method (%s) -- they can only "
                           "be closed by someone asserting it, which is the stale-list fault"
@@ -17933,6 +17945,168 @@ def rg_every_outreach_category_has_a_landing_route():
         out.append((INFO, "funnel endpoint not readable from here (%r) -- live half not evaluated" % (ex,)))
     return out
 
+
+
+@entry("RG-0300", "Claude can PUBLISH its own work without David and without a credential "
+       "in the sandbox -- the shipping lane exists, and it is not his PC",
+       LOCKED, fixed_on="2026-09-05",
+       scope="scripts/request_deploy.py relay() + host_queue/ALLOWLIST.txt git_push. CLASS: any "
+             "capability we believe we have because it worked once. 'Claude cannot ship' was a "
+             "real constraint for months, was quietly solved on 3 Sep, and the queue still asked "
+             "David for a credential to solve it a second time three days later.",
+       ref="SHIP-LANE-PROVEN-1 (5 Sep 2026), closing DAVID_QUEUE D15. That item, written 30 Aug, "
+           "asked David to mint a fine-grained GitHub token so the sandbox could push -- 'kills "
+           "the stale-map lag AND the Claude-cannot-ship class'. It was right when written. It "
+           "was overtaken on 3 Sep by AUTODEPLOY-AGENT-1's relay: the sandbox pushes over SSH to "
+           "the server's checkout, and the SERVER pushes to GitHub with the credential it already "
+           "holds. No token in the sandbox, no PC in the loop. PROVED rather than argued, this "
+           "session: two commits sitting unpushed went b099067..4a79b3c claude-relay -> main "
+           "straight from the sandbox, and six deploys rode the same lane earlier today. "
+           "WHY NOT MINT IT ANYWAY, since it was offered: a second write credential to the code "
+           "repo, living in a file, expiring every 90 days, is a standing chore and a standing "
+           "risk -- and today was spent deleting exactly that kind of thing (a hand-typed "
+           "heartbeat date, a hand-remembered firewall flag, five hand-maintained copies of one "
+           "script). The only window it would have covered is SSH being down while David's PC is "
+           "awake, and the host queue's git_push already covers that window -- while SSH lockout "
+           "itself became self-healing this morning (RG-0274). Redundancy that overlaps an "
+           "existing path is not free. "
+           "THE REASON THIS IS AN ENTRY AND NOT JUST A CLOSED QUEUE ITEM: a capability nobody "
+           "asserts is one the next session re-asks for. This says the lane is live, so 'Claude "
+           "cannot ship' can never be re-derived from memory.")
+def rg_ship_lane_exists():
+    out = []
+    rd = repo_file(os.path.join("scripts", "request_deploy.py"))
+    al = repo_file(os.path.join("host_queue", "ALLOWLIST.txt"))
+    if rd is None:
+        return [(FAIL, "scripts/request_deploy.py is gone -- the sandbox has no way to publish "
+                       "except through David's PC again")]
+    if "def relay(" not in rd or "claude-relay" not in rd:
+        out.append((FAIL, "request_deploy.py no longer carries the relay -- publishing is back to "
+                          "waiting on the 20-minute host agent"))
+    # The relay must push THROUGH the server, which is what removes the need for a sandbox
+    # credential. A direct push to github from here would need the token D15 asked for.
+    if "ssh://%s%s" not in rd:
+        out.append((INFO, "the relay's push target has changed shape -- check it still goes via "
+                          "the server rather than straight to GitHub"))
+    if al is None or not re.search(r"^\s*git_push\s+MarketSquare\s*$", al, re.M):
+        out.append((FAIL, "the host queue can no longer git_push MarketSquare -- the relay's only "
+                          "fallback is gone, so an SSH outage would strand every commit"))
+    if any(r == FAIL for r, _ in out):
+        return out
+
+    # LIVE: is the lane usable from this machine right now? SSH unavailable says nothing
+    # about the lane, so that is UNVERIFIED, never a regression.
+    import subprocess as _sp
+    try:
+        _sp.run(["bash", os.path.join(REPO, "load_sandbox_ssh.sh")], capture_output=True, timeout=40)
+        pr = _sp.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8",
+                      "root@178.104.73.239",
+                      "cd /opt/marketsquare-src && git ls-remote --heads origin main >/dev/null 2>&1 "
+                      "&& echo AUTH_OK || echo AUTH_FAIL"],
+                     capture_output=True, text=True, timeout=60)
+    except Exception as ex:
+        raise ProbeOffline("cannot reach the relay host from here: %s" % repr(ex)[:100])
+    got = (pr.stdout or "").strip()
+    if "AUTH_OK" in got:
+        out.append((INFO, "publish lane live: the sandbox reaches the server and the server "
+                          "authenticates to GitHub as a writer -- no token needed here"))
+    elif "AUTH_FAIL" in got:
+        out.append((FAIL, "the server can no longer authenticate to GitHub -- the relay would "
+                          "fail and publishing falls back to the host queue alone"))
+    else:
+        raise ProbeOffline("relay host unreachable (ssh returned %r)" % got[:60])
+    return out
+
+
+@entry("RG-0301", "A video we publish can be MEASURED -- the app records a campaign src on a "
+       "public arrival, and no upload package ever ships a bare trustsquare.co link",
+       LOCKED, fixed_on="2026-09-06",
+       scope="TWO HALVES, both needed, because either alone measures nothing. APP: ms.js must carry "
+             "the CAMPAIGN-SRC-1 block -- an arrival with ?src= and NO magic=1 records the source "
+             "and fires one 'landed' beacon; until 6 Sep the whole src parser sat inside "
+             "if(sp.get('magic')==='1'), so a viewer arriving from a film was invisible. PACKAGES: "
+             "every feature-videos/*/*_youtube/metadata.md must link trustsquare.co/?src=yt-... and "
+             "must NOT carry a bare trustsquare.co call-to-action, because a bare link looks fine "
+             "and attributes nothing. CLASS: the RG-0299 family -- two things that must agree (what "
+             "we publish, and what the instrument can see), drifting silently. NOT asserted: that "
+             "anyone clicks. That is the funnel's job to report, not the ledger's to demand.",
+       ref="CAMPAIGN-SRC-1 + the ten upload packages, 6 Sep 2026, onboarding-goal session. PROBED: "
+           "ten finished films on disk (ffprobe: 2160x3840 h264+aac, 42-69 s, mean -20.8..-21.7 dB, "
+           "no mid-film black). READ ms.js: the ?src= capture was gated on magic=1, so YouTube "
+           "traffic could never have reached /onboard/funnel. Nine packages built by "
+           "scripts/youtube_pack_build.py; film 01's hand-built package retro-fitted with its "
+           "tracked link. RUL-096(b) scores the goal by probes -- a bare link would have made the "
+           "whole YouTube lane unscoreable, which is how 'visibility' becomes a story instead of a "
+           "number (RUL-103a).")
+def rg_video_links_are_measurable():
+    out = []
+    ms = open(os.path.join(REPO, "ms.js"), encoding="utf-8", errors="replace").read()
+    i = ms.find("CAMPAIGN-SRC-1")
+    if i < 0:
+        out.append((FAIL, "ms.js lost the CAMPAIGN-SRC-1 block -- an arrival from a video, a post "
+                          "or any campaign link is invisible to /onboard/funnel again"))
+    else:
+        block = ms[i:i + 1600]
+        if "!magicLink.active && sp.get('src')" not in block:
+            out.append((FAIL, "CAMPAIGN-SRC-1 no longer guards on (!magicLink.active && ?src) -- it "
+                              "either stopped firing, or now fires on invited arrivals too and "
+                              "double-counts them"))
+        elif "obTrack('landed'" not in block:
+            out.append((FAIL, "CAMPAIGN-SRC-1 records the src but no longer fires the 'landed' "
+                              "beacon -- the funnel sees nothing"))
+        else:
+            out.append((INFO, "ms.js records a campaign src on a public arrival and beacons once"))
+
+    fv = os.path.join(REPO, "feature-videos")
+    packs, bare, tracked = [], [], []
+    if os.path.isdir(fv):
+        for film in sorted(os.listdir(fv)):
+            d = os.path.join(fv, film)
+            if not os.path.isdir(d):
+                continue
+            for sub in sorted(os.listdir(d)):
+                if not sub.endswith("_youtube"):
+                    continue
+                md = os.path.join(d, sub, "metadata.md")
+                if not os.path.isfile(md):
+                    continue
+                packs.append(film)
+                body = open(md, encoding="utf-8", errors="replace").read()
+                if re.search(r"trustsquare\.co/\?src=yt-", body):
+                    tracked.append(film)
+                for m in re.finditer(r"https://trustsquare\.co/?(?!\?src=)", body):
+                    line = body[body.rfind("\n", 0, m.start()) + 1:m.start()]
+                    if line.lower().lstrip().startswith("list"):   # the call-to-action link
+                        bare.append(film)
+                        break
+    if not packs:
+        out.append((INFO, "no upload packages on this disk -- package half not evaluated"))
+    else:
+        if bare:
+            out.append((FAIL, "upload package(s) whose call-to-action link is UNTRACKED: %s -- that "
+                              "film's traffic cannot be attributed to it" % ", ".join(sorted(set(bare))[:6])))
+        missing = sorted(set(packs) - set(tracked))
+        if missing:
+            out.append((FAIL, "upload package(s) with no tracked link at all: %s" % ", ".join(missing[:6])))
+        if not bare and not missing:
+            out.append((INFO, "all %d upload package(s) carry a tracked ?src=yt- link" % len(packs)))
+
+    try:
+        body = _get("/onboard/funnel?days=30")
+        if body:
+            d = json.loads(body)
+            yt = dict((k, v) for k, v in (d.get("by_src") or {}).items() if k.startswith("yt-"))
+            if yt:
+                out.append((INFO, "LIVE funnel (30 d): %d film src(s) seen -- %s"
+                            % (len(yt), "; ".join("%s %s" % (k, v) for k, v in sorted(yt.items())[:4]))))
+            else:
+                out.append((INFO, "LIVE funnel (30 d): no yt-* src yet -- nothing posted yet, or "
+                                  "posted with the tracked link stripped"))
+        else:
+            out.append((INFO, "funnel endpoint not readable from here -- live half not evaluated"))
+    except Exception as ex:
+        out.append((INFO, "funnel endpoint not readable from here (%r) -- live half not evaluated" % (ex,)))
+    return out
 
 
 if __name__ == "__main__":
