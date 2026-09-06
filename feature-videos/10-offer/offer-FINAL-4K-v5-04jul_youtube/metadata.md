@@ -53,6 +53,23 @@ List yours free: https://trustsquare.co/?src=yt-10-offer
 
 On-screen text over the last 3 seconds: **trustsquare.co — list it free**.
 
+## Captions — paste this into Subtitles > Auto-sync
+
+YouTube's automatic captions get the brand name wrong ("truss square") and, on the films where
+someone says a rand amount out loud, they leave a global viewer reading rand while the title and
+cover say dollars. Fix both in one step: Studio > Subtitles > English (video language) > pencil >
+**Auto-sync**, paste the block below, Publish. YouTube times it against the audio; nothing here
+changes what was said, the dollar figures are bracketed annotations, which is normal captioning.
+
+```
+I really want this amp, but is R4,500 [about $270] fair? And what do I even open with?
+Two Tuppence. TrustSquare checks the price and gives you the play.
+I point it at the listing before I commit my introduction.
+Fair-price check, then a negotiation brief: opening offer, target, walk-away number.
+Here's the offer brief. The verdict on that four-and-a-half-thousand-rand [about $270] asking price.
+Value confirmed, opening offer set, walk-away ready. Now I'll meet the seller. Thanks TrustSquare.
+```
+
 ## Publish slot
 
 Shorts are discovered, not scheduled, so the slot matters less than for long-form; if a slot is

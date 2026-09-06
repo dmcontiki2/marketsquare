@@ -53,6 +53,23 @@ List yours free: https://trustsquare.co/?src=yt-05-car
 
 On-screen text over the last 3 seconds: **trustsquare.co — list it free**.
 
+## Captions — paste this into Subtitles > Auto-sync
+
+YouTube's automatic captions get the brand name wrong ("truss square") and, on the films where
+someone says a rand amount out loud, they leave a global viewer reading rand while the title and
+cover say dollars. Fix both in one step: Studio > Subtitles > English (video language) > pencil >
+**Auto-sync**, paste the block below, Publish. YouTube times it against the audio; nothing here
+changes what was said, the dollar figures are bracketed annotations, which is normal captioning.
+
+```
+Found a 2019 Hilux on TrustSquare, but is the price right? And what actually goes wrong with them?
+TrustSquare car dossier, before you even meet the seller.
+Model, year, mileage, their asking price. That's all it needs.
+Market price for exactly this spec, the known faults for this model-year, and a test-drive checklist written for this car.
+Here's the car dossier. The market price for exactly this Hilux.
+Price checked, weak spots known, checklist loaded. I'm walking in prepared. Thanks TrustSquare.
+```
+
 ## Publish slot
 
 Shorts are discovered, not scheduled, so the slot matters less than for long-form; if a slot is

@@ -53,6 +53,23 @@ List yours free: https://trustsquare.co/?src=yt-04-property
 
 On-screen text over the last 3 seconds: **trustsquare.co — list it free**.
 
+## Captions — paste this into Subtitles > Auto-sync
+
+YouTube's automatic captions get the brand name wrong ("truss square") and, on the films where
+someone says a rand amount out loud, they leave a global viewer reading rand while the title and
+cover say dollars. Fix both in one step: Studio > Subtitles > English (video language) > pencil >
+**Auto-sync**, paste the block below, Publish. YouTube times it against the audio; nothing here
+changes what was said, the dollar figures are bracketed annotations, which is normal captioning.
+
+```
+This house in Centurion looks perfect, but what's the area actually like? Schools, commute, is the price even fair?
+Run a TrustSquare area dossier first. It'll tell us everything about the area.
+I paste the listing, my work address for the commute, and what matters to us. Schools and fibre.
+And it shows me two similar homes nearby for less, right there in the dossier.
+This is the area dossier for that Centurion house. Sales, schools, commutes.
+We know more than we did. Now we can approach an agent with real information. Thank you, TrustSquare.
+```
+
 ## Publish slot
 
 Shorts are discovered, not scheduled, so the slot matters less than for long-form; if a slot is

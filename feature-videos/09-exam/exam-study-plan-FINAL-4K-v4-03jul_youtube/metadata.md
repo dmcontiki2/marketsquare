@@ -53,6 +53,23 @@ List yours free: https://trustsquare.co/?src=yt-09-exam
 
 On-screen text over the last 3 seconds: **trustsquare.co — list it free**.
 
+## Captions — paste this into Subtitles > Auto-sync
+
+YouTube's automatic captions get the brand name wrong ("truss square") and, on the films where
+someone says a rand amount out loud, they leave a global viewer reading rand while the title and
+cover say dollars. Fix both in one step: Studio > Subtitles > English (video language) > pencil >
+**Auto-sync**, paste the block below, Publish. YouTube times it against the audio; nothing here
+changes what was said, the dollar figures are bracketed annotations, which is normal captioning.
+
+```
+Finals in six weeks, Ma. Six. I don't even know where to start.
+Let TrustSquare build your plan. Tonight.
+My subjects, my syllabus, CAPS Maths and Physical Science, and my exam dates.
+It knows the official topic weightings, my prescribed books, free past papers, and builds it week by week.
+This is the study plan. Six weeks, weighted the way the real exam is weighted.
+Six weeks, week by week, weighted like the real exam, and a trig tutor in week three. Thanks TrustSquare!
+```
+
 ## Publish slot
 
 Shorts are discovered, not scheduled, so the slot matters less than for long-form; if a slot is

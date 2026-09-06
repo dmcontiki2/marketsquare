@@ -31,6 +31,8 @@ BOILER = (
 
 # Everything below is READ OFF THE FILM (frame strip + the on-screen form) or off its
 # script/VO on disk. No claim here that the film does not make.
+CAPTIONS = {'01-collectables': "I've got six old Magic cards to sell, but I need real prices, not guesses.\nI just snap each one and TrustSquare checks the real market price for every card.\nAnd there's the report. The whole collection. Every card identified and valued.\nTwenty-four thousand rand [about $1,505] for one card. And it priced and listed all six cards. Real prices, all listed.\nThat's exactly how it looks.\nI'll list all six together as one collection. And done, it's live.\nAnd that's it. The collection is live. Now I just wait for interested introductions, on my price.", '02-heritage': "We need a proper tour. I want to see the Kruger National Park. Properly, this time.\nNo problem. Let's use TrustSquare for the planning.\nI've picked my heritage sites, Kruger first, set our dates and budget, from Cape Town.\nI can even add a waypoint, Graskop, and look, every overnight stop has lodging links built in.\nHere's the tour, mapped out. The full route, Cape Town up to Kruger, day by day.\nThat was easy. Map, planned days, budget, every stay arranged. Thank you TrustSquare.", '03-expedition': "Siberia, the once-in-a-lifetime trip. Visas, agencies, costs, where do I even start?\nBreathe. A TrustSquare dossier sorts all of it in ten minutes.\nI give it the dream, destination, month, budget, and my passport. That matters for the visa rules.\nTen minutes later: visa rules for my passport, vetted agencies, route options, everything I'd never have thought to ask.\nThe dossier covers the whole dream. Visas, agencies, routes and costs.\nEverything known. Now I can approach a travel agency and give them my dream to help with the scheduling.", '04-property': "This house in Centurion looks perfect, but what's the area actually like? Schools, commute, is the price even fair?\nRun a TrustSquare area dossier first. It'll tell us everything about the area.\nI paste the listing, my work address for the commute, and what matters to us. Schools and fibre.\nAnd it shows me two similar homes nearby for less, right there in the dossier.\nThis is the area dossier for that Centurion house. Sales, schools, commutes.\nWe know more than we did. Now we can approach an agent with real information. Thank you, TrustSquare.", '05-car': "Found a 2019 Hilux on TrustSquare, but is the price right? And what actually goes wrong with them?\nTrustSquare car dossier, before you even meet the seller.\nModel, year, mileage, their asking price. That's all it needs.\nMarket price for exactly this spec, the known faults for this model-year, and a test-drive checklist written for this car.\nHere's the car dossier. The market price for exactly this Hilux.\nPrice checked, weak spots known, checklist loaded. I'm walking in prepared. Thanks TrustSquare.", '06-retirement': "Pensions, visas, healthcare, it's a maze.\nWhat we'd want in a home, that's what it asks.\nVisa and pension reality for South Africans, what our money actually buys there. Healthcare, community, safety, and real matched listings.\nThis is the relocation planner for Portugal. Visa path, healthcare, pension.\nWhat if we actually do it?", '07-liquidation': "Dad's entire collection. I don't even know what's here, never mind what it's worth.\nTrustSquare can help to determine prices, and then you can list it in groups of up to twelve per listing.\nLet TrustSquare advertise the ones you want to sell.\nWe get realistic prices, a realistic prospect to sell, for both local and global.\nAnd then I can advertise the collection in groups of up to twelve per listing, and wait for interested prospective buyers, and I decide, based on their trust score, if I want to be introduced.\nHere's the liquidation plan. Realistic prices and a realistic prospect to sell.\nFive selected groups of twelve listings, all listed and advertised, ready, with actual prices as I selected based on TrustSquare's estimates.\nAnd now I can sit back and wait for real, live, interested introductions. That is great. Thank you, TrustSquare.", '08-weekend': "It's Friday night and we have absolutely no plan for the weekend. Again.\nTrustSquare builds one, from real Adventures listings, right here in Pretoria.\nCity, vibe, budget. I said outdoorsy, two of us, under a thousand rand [about $60].\nA full weekend built from real TrustSquare Adventures listings. Every stop is one introduction away.\nAnd there's the weekend, planned from real Adventures listings.\nSaturday: hike, market, sunset paddle. Sunday's sorted too. Thank you TrustSquare.", '09-exam': "Finals in six weeks, Ma. Six. I don't even know where to start.\nLet TrustSquare build your plan. Tonight.\nMy subjects, my syllabus, CAPS Maths and Physical Science, and my exam dates.\nIt knows the official topic weightings, my prescribed books, free past papers, and builds it week by week.\nThis is the study plan. Six weeks, weighted the way the real exam is weighted.\nSix weeks, week by week, weighted like the real exam, and a trig tutor in week three. Thanks TrustSquare!", '10-offer': "I really want this amp, but is R4,500 [about $270] fair? And what do I even open with?\nTwo Tuppence. TrustSquare checks the price and gives you the play.\nI point it at the listing before I commit my introduction.\nFair-price check, then a negotiation brief: opening offer, target, walk-away number.\nHere's the offer brief. The verdict on that four-and-a-half-thousand-rand [about $270] asking price.\nValue confirmed, opening offer set, walk-away ready. Now I'll meet the seller. Thanks TrustSquare."}
+
 FILMS = [
  # 01 was hand-packaged 6 Sep before this script existed; folded in here so all ten rebuild
  # from one place. Its report insert ALREADY shows both currencies (R42,500 · ~$2,574, and
@@ -323,6 +325,18 @@ List yours free: {link}
 
 On-screen text over the last 3 seconds: **trustsquare.co — list it free**.
 
+## Captions — paste this into Subtitles > Auto-sync
+
+YouTube's automatic captions get the brand name wrong ("truss square") and, on the films where
+someone says a rand amount out loud, they leave a global viewer reading rand while the title and
+cover say dollars. Fix both in one step: Studio > Subtitles > English (video language) > pencil >
+**Auto-sync**, paste the block below, Publish. YouTube times it against the audio; nothing here
+changes what was said, the dollar figures are bracketed annotations, which is normal captioning.
+
+```
+{captions}
+```
+
 ## Publish slot
 
 Shorts are discovered, not scheduled, so the slot matters less than for long-form; if a slot is
@@ -331,7 +345,8 @@ wanted: Tuesday 18:00 SAST (evening phone time in ZA; Tuesday morning in the US 
            dursec=int(round(film["dur"])),
            built="6 Sep 2026", src=src_tag, titles=titles, hook=film["hook"], beats=beats,
            link=link, boiler=BOILER, hashtags=film["hashtags"],
-           ntags=len(film["tags"]), tags=", ".join(film["tags"]), pinned=film["pinned"])
+           ntags=len(film["tags"]), tags=", ".join(film["tags"]), pinned=film["pinned"],
+           captions=CAPTIONS.get(film["folder"], "(no transcript on file)"))
 
 def main():
     only = None

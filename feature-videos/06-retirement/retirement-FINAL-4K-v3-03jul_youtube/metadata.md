@@ -53,6 +53,22 @@ List yours free: https://trustsquare.co/?src=yt-06-retirement
 
 On-screen text over the last 3 seconds: **trustsquare.co — list it free**.
 
+## Captions — paste this into Subtitles > Auto-sync
+
+YouTube's automatic captions get the brand name wrong ("truss square") and, on the films where
+someone says a rand amount out loud, they leave a global viewer reading rand while the title and
+cover say dollars. Fix both in one step: Studio > Subtitles > English (video language) > pencil >
+**Auto-sync**, paste the block below, Publish. YouTube times it against the audio; nothing here
+changes what was said, the dollar figures are bracketed annotations, which is normal captioning.
+
+```
+Pensions, visas, healthcare, it's a maze.
+What we'd want in a home, that's what it asks.
+Visa and pension reality for South Africans, what our money actually buys there. Healthcare, community, safety, and real matched listings.
+This is the relocation planner for Portugal. Visa path, healthcare, pension.
+What if we actually do it?
+```
+
 ## Publish slot
 
 Shorts are discovered, not scheduled, so the slot matters less than for long-form; if a slot is

@@ -79,6 +79,23 @@ Ledger RG-0302 asserts every package names its dual-currency cut.
 Titles, thumbnails and descriptions are in dollars throughout, and the ZA-narrow search tags were
 broadened (the genuinely South African ones — Kruger, CAPS, matric, the D7 visa — stay).
 
+## CAPTIONS — the fourth place the currency shows up (6 Sep 2026)
+
+David, watching film 01 live: *"the video subscript still says Rands while the video shows
+Dollars"*. He was right, and it is a place nobody had looked. YouTube's automatic captions
+transcribe the SPOKEN words, and three films say a rand amount out loud (01, 08, 10). They also get
+the brand name wrong — "truss square".
+
+The fix is not to make the caption say something that was not said. Captions exist for people who
+cannot hear the audio, so they must match it. What was done instead: a hand-written caption track
+per film, with the dollar figure as a **bracketed annotation** next to the spoken rand amount —
+normal captioning practice — and the brand name spelled properly.
+
+**How, in two minutes per film:** Studio → Subtitles → English (video language) → pencil →
+**Auto-sync** → paste the caption block from that film's `metadata.md` → Publish. YouTube times it
+against the audio itself; no per-line timing work. Done for film 01 on 6 Sep; the block for every
+other film is already written and sits in its package.
+
 ## THE PACKAGES — all ten ready
 
 Each film's folder carries `<cut>_youtube/` with `metadata.md` — its first line names the file

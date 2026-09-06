@@ -53,6 +53,24 @@ List yours free: https://trustsquare.co/?src=yt-01-collectables
 
 On-screen text over the last 3 seconds: **trustsquare.co — list it free**.
 
+## Captions — paste this into Subtitles > Auto-sync
+
+YouTube's automatic captions get the brand name wrong ("truss square") and, on the films where
+someone says a rand amount out loud, they leave a global viewer reading rand while the title and
+cover say dollars. Fix both in one step: Studio > Subtitles > English (video language) > pencil >
+**Auto-sync**, paste the block below, Publish. YouTube times it against the audio; nothing here
+changes what was said, the dollar figures are bracketed annotations, which is normal captioning.
+
+```
+I've got six old Magic cards to sell, but I need real prices, not guesses.
+I just snap each one and TrustSquare checks the real market price for every card.
+And there's the report. The whole collection. Every card identified and valued.
+Twenty-four thousand rand [about $1,505] for one card. And it priced and listed all six cards. Real prices, all listed.
+That's exactly how it looks.
+I'll list all six together as one collection. And done, it's live.
+And that's it. The collection is live. Now I just wait for interested introductions, on my price.
+```
+
 ## Publish slot
 
 Shorts are discovered, not scheduled, so the slot matters less than for long-form; if a slot is

@@ -53,6 +53,25 @@ List yours free: https://trustsquare.co/?src=yt-07-liquidation
 
 On-screen text over the last 3 seconds: **trustsquare.co — list it free**.
 
+## Captions — paste this into Subtitles > Auto-sync
+
+YouTube's automatic captions get the brand name wrong ("truss square") and, on the films where
+someone says a rand amount out loud, they leave a global viewer reading rand while the title and
+cover say dollars. Fix both in one step: Studio > Subtitles > English (video language) > pencil >
+**Auto-sync**, paste the block below, Publish. YouTube times it against the audio; nothing here
+changes what was said, the dollar figures are bracketed annotations, which is normal captioning.
+
+```
+Dad's entire collection. I don't even know what's here, never mind what it's worth.
+TrustSquare can help to determine prices, and then you can list it in groups of up to twelve per listing.
+Let TrustSquare advertise the ones you want to sell.
+We get realistic prices, a realistic prospect to sell, for both local and global.
+And then I can advertise the collection in groups of up to twelve per listing, and wait for interested prospective buyers, and I decide, based on their trust score, if I want to be introduced.
+Here's the liquidation plan. Realistic prices and a realistic prospect to sell.
+Five selected groups of twelve listings, all listed and advertised, ready, with actual prices as I selected based on TrustSquare's estimates.
+And now I can sit back and wait for real, live, interested introductions. That is great. Thank you, TrustSquare.
+```
+
 ## Publish slot
 
 Shorts are discovered, not scheduled, so the slot matters less than for long-form; if a slot is

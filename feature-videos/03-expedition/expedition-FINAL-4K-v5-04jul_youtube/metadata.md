@@ -53,6 +53,23 @@ List yours free: https://trustsquare.co/?src=yt-03-expedition
 
 On-screen text over the last 3 seconds: **trustsquare.co — list it free**.
 
+## Captions — paste this into Subtitles > Auto-sync
+
+YouTube's automatic captions get the brand name wrong ("truss square") and, on the films where
+someone says a rand amount out loud, they leave a global viewer reading rand while the title and
+cover say dollars. Fix both in one step: Studio > Subtitles > English (video language) > pencil >
+**Auto-sync**, paste the block below, Publish. YouTube times it against the audio; nothing here
+changes what was said, the dollar figures are bracketed annotations, which is normal captioning.
+
+```
+Siberia, the once-in-a-lifetime trip. Visas, agencies, costs, where do I even start?
+Breathe. A TrustSquare dossier sorts all of it in ten minutes.
+I give it the dream, destination, month, budget, and my passport. That matters for the visa rules.
+Ten minutes later: visa rules for my passport, vetted agencies, route options, everything I'd never have thought to ask.
+The dossier covers the whole dream. Visas, agencies, routes and costs.
+Everything known. Now I can approach a travel agency and give them my dream to help with the scheduling.
+```
+
 ## Publish slot
 
 Shorts are discovered, not scheduled, so the slot matters less than for long-form; if a slot is

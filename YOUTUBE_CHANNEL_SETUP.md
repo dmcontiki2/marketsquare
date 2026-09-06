@@ -129,3 +129,17 @@ lifted from `feature-videos/production-kit/logo-sting-1.6s.mp4`) and sit in
    for kids?" → **No, set this channel as not made for kids**.
 7. First upload: film 01 · Collectables, pack at
    `feature-videos/01-collectables/collectables-FINAL-4K-v3-03jul_youtube/metadata.md`.
+
+---
+
+# OUTCOME — channel live 6 Sep 2026
+
+`youtube.com/@TrustSquareApp` · channel id `UCUEzFTL7JgmwMTxtM0QFfGA` · Brand Account.
+
+Done: name, handle, description, tracked link, contact email, country, keywords, and the
+not-made-for-kids declaration. Outstanding: profile picture and banner — the upload buttons open
+a native file picker that browser tooling cannot drive, so those two uploads are David's.
+
+Watch item: a personal channel "david conradie" (@davidconradie-m8x) also exists on this Google
+account from the same day. It is his own identity and must NOT be renamed or re-pictured — doing
+so changes his Gmail name and photo. TrustSquare is the separate Brand Account.
