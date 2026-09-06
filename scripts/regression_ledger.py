@@ -17782,7 +17782,13 @@ def rg_us_search_scraping_yields():
            "wave_runner ignored the subprocess returncode and printed 'wave #1 logged.' The gap gate was "
            "unaffected (no sent event = no last_emailed_at) so the states were retried the same night "
            "once fixed. Proof EXECUTED 6 Sep 01:25: `wave_runner --city Texas` dry-run rendered 12 real "
-           "RRCA rows with 'From $45 / month' and no rand.")
+           "RRCA rows with 'From $45 / month' and no rand. AMENDED the same run, 02:00: the ledger's "
+           "first run of this test inherited LAUNCH_SPECIAL_ENABLED=1 from its environment, so "
+           "render() -> _apply_launch_special() -> launch_codes.get_or_create_code() COMMITTED to the "
+           "local prospects.db from the sandbox and left a hot rollback journal (the 31 Aug class). "
+           "The test now forces the special OFF before importing emailer and refuses to run if it is "
+           "on; the ledger runs it through _harness() (RG-0187). Rollback queued host-side "
+           "(club_import.py opens the DB read-write and imports nothing new).")
 def rg_wave_letters_render_for_their_country():
     import glob as _g
     out = []
@@ -17809,19 +17815,21 @@ def rg_wave_letters_render_for_their_country():
     if not os.path.exists(tp):
         out.append((FAIL, "tests/test_render_intl.py is GONE -- the send-path render witness has no test"))
     else:
-        env = dict(os.environ)
-        env.setdefault("TS_POSTAL_ADDRESS", "TrustSquare, 1 Example Rd, Pretoria 0181, South Africa")
-        try:
-            r = subprocess.run([sys.executable, "tests/test_render_intl.py"], capture_output=True,
-                               text=True, timeout=240, cwd=cl, env=env)
-            if r.returncode != 0:
-                tail = ((r.stdout or "") + (r.stderr or ""))[-400:]
-                out.append((FAIL, "a letter the wave can draw does NOT render for its country: " + tail))
-            else:
-                n = len(re.findall(r"^  PASS", r.stdout or "", re.M))
-                out.append((INFO, "send-path render test green: %d assertions across every armed city x category" % n))
-        except Exception as ex:
-            out.append((INFO, "send-path render test could not run here: %r" % (ex,)))
+        tsrc2 = open(tp, encoding="utf-8", errors="replace").read()
+        if "os.environ['LAUNCH_SPECIAL_ENABLED'] = '0'" not in tsrc2 or "if LC.enabled():" not in tsrc2:
+            out.append((FAIL, "tests/test_render_intl.py no longer forces the launch special OFF -- rendering "
+                              "would WRITE prospects.db from whatever process runs it (6 Sep hot-journal "
+                              "incident; sandbox SQLite writes are banned)"))
+        # the test sets its own postal-address default and forces the launch special OFF
+        # (a render test must never write the prospect database -- 6 Sep 2026 hot-journal lesson)
+        ok, blind, detail = _harness([sys.executable, "tests/test_render_intl.py"], timeout=240, cwd=cl)
+        if blind:
+            out.append((INFO, detail))
+        elif not ok:
+            out.append((FAIL, "a letter the wave can draw does NOT render for its country: " + detail[-400:]))
+        else:
+            n = len(re.findall(r"^  PASS", detail or "", re.M))
+            out.append((INFO, "send-path render test green: %d assertions across every armed city x category" % n))
     # (d) observed: the newest launchday log written after the fix
     logs = sorted(_g.glob(os.path.join(cl, "logs", "launchday_*.log")), key=os.path.getmtime)
     fix_at = 1788650000  # 2026-09-06 ~01:13 SAST, when the fix landed on disk

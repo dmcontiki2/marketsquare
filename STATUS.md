@@ -28,6 +28,16 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- **Goal run 5 (Sun 6 Sep 01:00, Fable 5.1): the number is 0.** The 00:10 wave sent 55
+  (ZA + New York) and then crashed in all 51 US state buckets on a rand price in the club
+  example card — 0 US club letters went out while the log said "logged". Fixed (CLUB-INTL-1),
+  crashes now loud and rc≠0 (WAVE-CRASH-VISIBLE-1), wave re-queued the same night. RG-0298.
+- **Club contacts were landing on the generic tiles, not the photo step** — the invite map had
+  no 'sports clubs' key (INVITE-CAT-2, RG-0299). Funnel: 9 landed, 0 further. Shipped.
+- Supply: RRCA +903 imported (Sports Clubs 1,568 rows); USATF New England adapter +268
+  queued. Dashboard club card corrected (RG-0287 back to green).
+- Visibility: YouTube package ready for film #1 (collectables); David picks the title.
+
 ### The support form was a black hole — found on David's question, fixed and proven (5 Sep 2026)
 
 134 visitors, a live listing bug, zero complaints. David asked us to check Support rather than take the

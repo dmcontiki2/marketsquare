@@ -18,7 +18,9 @@ through `emailer.render` (34 assertions, green). **WAVE-CRASH-VISIBLE-1:** `wave
 the emailer's rc, prints one greppable `!! EMAILER CRASHED` line per category, records it in
 `wave_log.json` and exits nonzero. Proven by a dry-run on 12 real Texas rows (`From $45 / month`,
 no rand). The gap gate was unaffected (no sent event = no `last_emailed_at`), so the states were
-re-queued the same night via `launch_day_wave.bat` (55 of 250 daily cap used). **RG-0298** LOCKED.
+re-queued the same night via `launch_day_wave.bat`. **Outcome (01:31–01:55): 203 US club letters
+sent across 22 states, 0 crashes; DAILY-CAP-1 then held the day at 257 and the remaining 29 states
+dry-ran until the next night.** **RG-0298** LOCKED.
 
 **INVITE-CAT-2 — every club contact who clicked landed on the generic "what are you selling?"
 tiles.** PROBED `GET /onboard/funnel?days=2`: 9 sessions landed, 0 reached `photos`; 4 carried a
@@ -35,13 +37,14 @@ nothing further. Shipped via `request_deploy`.
 **USATFNE-1 — third US register.** USATF New England publishes every registered club on one
 static page (`usatfne.org/member/clubs.html`), mailbox obfuscated as `javascript:email('domain;
 local')`. New adapter `usatfne`: 268 clubs with a mailbox (MA 187, NH 31, RI 29, VT 17, ME 2),
-bucketed into the existing state buckets. CSV written from the sandbox; import queued via
-`run_us_registers.bat` (now `pausatf rrca usatfne`). Probed and rejected this run: USATF
+bucketed into the existing state buckets. CSV written from the sandbox; imported host-side at
+01:55 via `run_us_registers.bat` (now `pausatf rrca usatfne`): +266, 'Sports Clubs' 1,834 rows /
+1,550 distinct clubs (US 1,257, ZA 577). Probed and rejected this run: USATF
 Mid-Atlantic and Three Rivers publish no club emails. RRCA result read: **+903 clubs imported
 5 Sep 21:30**, 'Sports Clubs' now 1,568 rows / 1,301 distinct clubs.
 
 **RG-0287 regression fixed the same run:** the dashboard club card said 577 → 313; the database
-holds 1,568 / 1,301. Card rewritten with today's probe (36 ZA clubs emailed).
+holds 1,568 / 1,301. Card rewritten with the 02:00 probe (1,834 / 1,550, 239 clubs emailed).
 
 **Visibility (RUL-103):** youtube-pack for film #1 — `feature-videos/01-collectables/
 collectables-FINAL-4K-v3-03jul_youtube/` (3 titles, description with chapters read off a

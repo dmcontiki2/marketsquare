@@ -736,3 +736,75 @@ warmed 11 tutor videos on the CF edge
 Press any key to continue . . . 
 Sat 09/05/2026  2:01:20.06  drift: DEPLOY DRIFT: clean - all 19 tracked files match live
 Sat 09/05/2026  2:01:20.08  IN SYNC — nothing to ship
+============================================================
+Sun 09/06/2026  2:00:01.60  NIGHTLY SHIP wake
+
+ ============================================================
+  MEDIA PUSH  (hash-gated: only changed files upload)
+  Sun 09/06/2026  2:00:01.67
+ ============================================================
+ [1/7] SUPER exemplar photos (assets\super to /static/super)...
+   [OK] SYNC super: all 375 files already current - upload skipped.
+ [1b] Study & Work Abroad example photos (assets\studywork to /static/studywork)...
+   [OK] SYNC studywork: all 12 files already current - upload skipped.
+   [OK] SYNC studywork: all 2 files already current - upload skipped.
+ [2/7] Feature/tutor videos (videos to /static/videos)...
+   [OK] SYNC videos: all 14 files already current - upload skipped.
+ [3/7] Email images - phone cards + heroes (CityLauncher to /static)...
+   [OK] SYNC assets: all 12 files already current - upload skipped.
+   [OK] SYNC assets: all 4 files already current - upload skipped.
+   [OK] SYNC assets: all 1 files already current - upload skipped.
+ [4/7] Legal must-have cards (PNGs per country)...
+   [OK] SYNC ZA: all 7 files already current - upload skipped.
+   [OK] SYNC US: all 7 files already current - upload skipped.
+   [OK] SYNC UK: all 7 files already current - upload skipped.
+   [OK] SYNC AU: all 7 files already current - upload skipped.
+ [5/7] Agency Playbook PDF...
+   [OK] SYNC MarketSquare: all 1 files already current - upload skipped.
+ [6/7] n8n email templates (untracked HTML)...
+   [OK] SYNC email_templates: all 3 files already current - upload skipped.
+ [7/7] Permissions + CDN purge + video re-warm...
+  [OK] CDN purge requested 
+warmed 11 tutor videos on the CF edge
+  [OK] videos re-warmed 
+
+ ============================================================
+  MEDIA PUSH COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Sun 09/06/2026  2:01:14.64  drift: DEPLOY DRIFT: 1 file(s) local-ahead of live - run /ship: dashboard.server.html
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Sun 09/06/2026  2:01:14.72
+ ============================================================
+
+  [autobump] ms.js changed -> marketsquare.html ref ?v=484
+  [autobump] 1 reference(s) bumped
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 60 honestly not-wired, 2 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  OK -- every health colour on the page is fed, honestly dashed, or registered with a live review date.
+folded 1, skipped 0 (already present) � verify OK
+folded 1, skipped 0 (already present) - verify OK
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-09-06T00:01:17Z   mode=strict
+  Working tree: 13 file(s) uncommitted; 1 deploy target(s) changed.
+    - marketsquare.html                  417801 B      0 min ago  [modified, RECENT(<25m)]
+  >> HEADS-UP: 1 target(s) changed in the last 25 min - could be another session:
+     marketsquare.html
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  !! PG-READINESS: SQLite-ism count grew:
+       FAIL  SQLite-specific surface GREW {'datetime_now': (49, 62)} - write it portably (helpers/portable SQL) so the Postgres move stays cheap
+  !! MAINTENANCE: complaint-pipeline guard FAILED:
+       FAIL  test_ack_always_sends_except_spam - the bare ack no longer quotes the fault reference
+  !! TESTER INTAKE: fault-report guard FAILED:
+       FAIL  test_widget_is_wired_into_every_tester_page - a tester could land on these pages with no way to report a fault: visuals/assoc/assoc_athletics.html, visuals/assoc/assoc_chess.html, visuals/assoc/assoc_judo.html, visuals/assoc/assoc_dance.html, visuals/assoc/assoc_plumbers.html, visuals/assoc/assoc_guides.html, visuals/assoc/assoc_teachers.html
+  Verdict: DANGER   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+ ABORT: pre-deploy scan flagged a dangerous change - strict mode. See deploy_audit.log.
+Press any key to continue . . . 
+Sun 09/06/2026  2:01:19.04  BLOCKED/FAILED rc=1 — tree untouched live, see log above
