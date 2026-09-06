@@ -17949,26 +17949,26 @@ def rg_every_outreach_category_has_a_landing_route():
 
 @entry("RG-0300", "Claude can PUBLISH its own work without David and without a credential "
        "in the sandbox -- the shipping lane exists, and it is not his PC",
-       LOCKED, fixed_on="2026-09-05",
+       LOCKED, fixed_on="2026-09-06",
        scope="scripts/request_deploy.py relay() + host_queue/ALLOWLIST.txt git_push. CLASS: any "
              "capability we believe we have because it worked once. 'Claude cannot ship' was a "
              "real constraint for months, was quietly solved on 3 Sep, and the queue still asked "
              "David for a credential to solve it a second time three days later.",
-       ref="SHIP-LANE-PROVEN-1 (5 Sep 2026), closing DAVID_QUEUE D15. That item, written 30 Aug, "
+       ref="SHIP-LANE-PROVEN-1 (6 Sep 2026), closing DAVID_QUEUE D15. That item, written 30 Aug, "
            "asked David to mint a fine-grained GitHub token so the sandbox could push -- 'kills "
            "the stale-map lag AND the Claude-cannot-ship class'. It was right when written. It "
            "was overtaken on 3 Sep by AUTODEPLOY-AGENT-1's relay: the sandbox pushes over SSH to "
            "the server's checkout, and the SERVER pushes to GitHub with the credential it already "
            "holds. No token in the sandbox, no PC in the loop. PROVED rather than argued, this "
            "session: two commits sitting unpushed went b099067..4a79b3c claude-relay -> main "
-           "straight from the sandbox, and six deploys rode the same lane earlier today. "
+           "straight from the sandbox, and six deploys rode the same lane the day before. "
            "WHY NOT MINT IT ANYWAY, since it was offered: a second write credential to the code "
            "repo, living in a file, expiring every 90 days, is a standing chore and a standing "
            "risk -- and today was spent deleting exactly that kind of thing (a hand-typed "
            "heartbeat date, a hand-remembered firewall flag, five hand-maintained copies of one "
            "script). The only window it would have covered is SSH being down while David's PC is "
            "awake, and the host queue's git_push already covers that window -- while SSH lockout "
-           "itself became self-healing this morning (RG-0274). Redundancy that overlaps an "
+           "itself became self-healing the previous morning (RG-0274). Redundancy that overlaps an "
            "existing path is not free. "
            "THE REASON THIS IS AN ENTRY AND NOT JUST A CLOSED QUEUE ITEM: a capability nobody "
            "asserts is one the next session re-asks for. This says the lane is live, so 'Claude "

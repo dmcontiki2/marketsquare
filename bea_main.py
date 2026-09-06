@@ -19468,7 +19468,8 @@ async def _classify_email(from_addr: str, subject: str, body: str,
                           lane: str = "customer") -> dict:
     """Call Claude to classify an inbound email and draft a reply.
     Returns {category, urgency, draft_reply, auto_safe}. Safe fallback on failure."""
-    fallback = {"category": "other", "urgency": "normal", "draft_reply": "", "auto_safe": False, "bin": "MISC"}
+    fallback = {"category": "other", "urgency": "normal", "draft_reply": "", "auto_safe": False,
+                "bin": "MISC", "is_report": False}
     _cats = _OUTREACH_CATEGORIES if lane == "outreach" else _TRIAGE_CATEGORIES
     if not ai_provider.any_lane_configured():
         return fallback
@@ -19550,9 +19551,46 @@ async def _classify_email(from_addr: str, subject: str, body: str,
         "\"draft_reply\": a short, warm, professional plain-text reply signed "
         "'The TrustSquare Team', "
         "\"auto_safe\": boolean — true ONLY if a routine support or billing question "
-        "the draft can fully answer with no human judgement.}\n\n"
+        "the draft can fully answer with no human judgement, "
+        "\"is_report\": boolean — true ONLY if the sender is REPORTING SOMETHING BROKEN "
+        "(a bug, a failure, something that did not work). A person ASKING HOW TO DO "
+        "something, or asking a question about how TrustSquare works, is NOT a report: "
+        "set is_report=false. This decides whether we tell them their message is in the "
+        "fix queue, and we must never promise a fix to someone who only asked a question.}\n\n"
+        # SUPPORT-FACTS-1 (6 Sep 2026). The outreach lane was given a facts block and
+        # the CUSTOMER lane -- the one answering actual users -- was given one sentence.
+        # So it guessed. TS-0039 asked how to contact a seller and was told to "follow the
+        # prompts to spend Tuppence", when the app itself promises "1 Tuppence deducted
+        # only on seller acceptance" and "if seller declines or ignores, you pay nothing".
+        # Being wrong about a charge in our own favour is the worst direction to be wrong in.
+        "HOW AN INTRODUCTION ACTUALLY WORKS -- answer from THESE facts, never from "
+        "your own assumptions:\n"
+        "- Sellers are anonymous by design. TrustSquare NEVER shows a seller's phone "
+        "number, email or exact address on a listing. This is the product working, not "
+        "a missing feature, and it protects the seller and the buyer equally.\n"
+        "- To contact a seller the buyer opens the listing and taps the button at the "
+        "bottom of the screen reading 'Request Introduction \u00b7 1T on acceptance' "
+        "(in some categories it reads 'Join Queue'). Name the button when you answer -- "
+        "telling someone an option exists without saying where it is is not an answer.\n"
+        "- THE CHARGE, stated correctly: 1 Tuppence (about $2) is HELD when the buyer "
+        "sends the request and is deducted ONLY IF the seller accepts. If the seller "
+        "declines, or does not answer within 48 hours, the hold is released in full and "
+        "the buyer pays NOTHING. Never tell a buyer they must spend or pay Tuppence to "
+        "contact a seller -- they pay only when the introduction is actually delivered.\n"
+        "- When the seller accepts, both sides' contact details are revealed to each "
+        "other. That exchange is the service, and it is the only event that spends "
+        "Tuppence.\n"
+        "- A seller who ignores introduction requests takes a Trust Score penalty.\n"
+        "- Listing on TrustSquare is FREE, and TrustSquare takes no commission on what "
+        "the seller charges.\n"
+        "- A buyer may withdraw a request before the seller accepts by emailing "
+        "support@trustsquare.co with the subject 'WITHDRAW: [Introduction ID]'. Only a "
+        "hold was placed, so it is released in full.\n\n"
         "Rules: Never reveal seller identities or internal data. Never promise refunds "
-        "(Tuppence is strictly non-refundable). For legal, compliance, disputes, threats, "
+        "(Tuppence already spent on a delivered introduction is strictly non-refundable -- "
+        "but a released HOLD is not a refund, and you may always say a hold is released). "
+        "Never invent a fact that is not above; if the answer is not there, set "
+        "auto_safe=false and let a human answer. For legal, compliance, disputes, threats, "
         "or anything ambiguous set auto_safe=false. For spam set draft_reply to empty "
         "string and auto_safe=false. Keep replies under 120 words."
         )
@@ -19587,10 +19625,39 @@ async def _classify_email(from_addr: str, subject: str, body: str,
             "draft_reply": (parsed.get("draft_reply") or "").strip(),
             "auto_safe": bool(parsed.get("auto_safe", False)),
             "bin": _bin,
+            "is_report": bool(parsed.get("is_report", False)),
         }
     except Exception as exc:
         _log.error("_classify_email failed: %s", exc)
         return fallback
+
+
+# ── REF-HONESTY-1 (6 Sep 2026) ────────────────────────────────
+# Every auto-sent customer reply ended with "your report is logged in our fix queue.
+# If our fix needs anything from you, we'll write to this address." TS-0039 asked how
+# to contact a seller, was answered correctly, and was then told a fix was coming.
+# Nothing was broken, nothing was being fixed, and nobody was ever going to write.
+#
+# The reasoning already existed one lane over: OUTREACH-TRIAGE-1 carved this same
+# footer out on 1 Sep because "a tutor asking whether we cover Johannesburg has not
+# filed a fault". A customer asking how introductions work has not filed one either.
+# A promise we are not keeping invites the follow-up email that asks what happened to
+# the fix -- the exact inbox load RUL-087 exists to prevent.
+#
+# The reference is KEPT in both cases (MAINT-B1's promise), only the sentence after it
+# changes. Fails safe: no is_report signal means the neutral wording, because the
+# failure mode of the neutral line is that it is merely plain, and the failure mode of
+# the other is a lie.
+def _ref_footer(ref: str, is_report: bool) -> str:
+    """The reference line that closes an auto-sent reply. Promises a fix ONLY to
+    someone who actually reported something broken."""
+    if not ref:
+        return ""
+    if is_report:
+        return (f"\n\nYour reference is {ref} -- your report is logged in our fix "
+                "queue. If our fix needs anything from you, we'll write to this address.")
+    return (f"\n\nYour reference is {ref}, in case you need to come back to us on this. "
+            "Just reply to this email and it stays on the same thread.")
 
 
 # ── SUPPORT-AI-LANE-1 (5 Sep 2026, RUL-069 / RUL-087) ────────────────────────
@@ -19634,6 +19701,10 @@ async def _triage_message(from_addr_in: str, to_addr: str = "", subject_in: str 
     category = result["category"]
     urgency = result["urgency"]
     draft_reply = result["draft_reply"]
+    # REF-HONESTY-1: did this person report something BROKEN, or ask a question?
+    # Only the first earns the fix-queue promise. Defaults False on the outreach
+    # lane and on any classifier failure -- the safe direction.
+    _is_report = bool(result.get("is_report", False))
 
     # ONE-REPLY-1 (24 Aug 2026, found by live E2E routing test: one complaint got TWO
     # conflicting auto-replies in the same second -- the classifier's draft AND the
@@ -19726,25 +19797,28 @@ async def _triage_message(from_addr_in: str, to_addr: str = "", subject_in: str 
             status = "drafted"
             _update_triage_status(fault_code, status)
     elif category != "spam" and can_auto:
-        _ref_line = ""
-        _ref = ref_override or fault_code
-        if _ref:
-            _ref_line = (
-                f"\n\nYour reference is {_ref} -- your report is logged in our "
-                "fix queue. If our fix needs anything from you, we'll write to this "
-                "address."
-            )
+        _ref_line = _ref_footer(ref_override or fault_code, _is_report)
         sent = _smtp_send_reply(from_addr, subject, (draft_reply or "") + _ref_line, message_id)
         status = "sent" if sent else "failed"
         ack_sent = bool(sent and fault_code)
         _update_triage_status(fault_code, status)
     elif category != "spam" and fault_code and os.getenv("MAINT_ACK_SEND", "1") == "1":
+        # REF-HONESTY-1: this ack rides alone when nothing could be auto-answered --
+        # including a held legal complaint, which is not a "report in our fix queue"
+        # either. Someone is reading it; say that, and say nothing we will not do.
+        if _is_report:
+            _ack_body = ("Thank you \u2014 your report is logged and already in our fix "
+                         f"queue with reference {ref_override or fault_code}. You don't need to do "
+                         "anything further; if our fix needs anything from you, we'll "
+                         "write to this address.")
+        else:
+            _ack_body = ("Thank you \u2014 we have your message, with reference "
+                         f"{ref_override or fault_code}. One of our team is reading it and will "
+                         "come back to you at this address.")
         _ack = (
             "Hi there,\n\n"
-            "Thank you \u2014 your report is logged and already in our fix queue with "
-            f"reference {ref_override or fault_code}. You don't need to do anything further; if our "
-            "fix needs anything from you, we'll write to this address.\n\n"
-            "\u2014 TrustSquare Support"
+            + _ack_body +
+            "\n\n\u2014 TrustSquare Support"
         )
         try:
             ack_sent = _smtp_send_reply(from_addr, subject or "your report", _ack, message_id)
