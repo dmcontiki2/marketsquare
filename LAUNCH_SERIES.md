@@ -31,7 +31,7 @@ column shifts by the same number of days — the ORDER is what matters.
 
 | slot | date (18:00 SAST) | film | why here | tracked link |
 |------|-------------------|------|----------|--------------|
-| 1 | Tue 8 Sep  | 01 · Collectables | strongest single number in the set (R24,860 for one card) | `?src=yt-01-collectables` |
+| 1 | **PUBLISHED Sun 6 Sep** | 01 · Collectables | strongest single number in the set ($1,505 for one card) | `?src=yt-01-collectables` · [live](https://youtube.com/shorts/oULMIsCAPnk) |
 | 2 | Fri 11 Sep | 05 · Car | biggest ZA search volume — Hilux, price check, known faults | `?src=yt-05-car` |
 | 3 | Tue 15 Sep | 09 · Exam study plan | **seasonal** — "six weeks to finals" only lands before finals | `?src=yt-09-exam` |
 | 4 | Fri 18 Sep | 08 · Weekend | cheapest, most shareable, most local | `?src=yt-08-weekend` |
@@ -90,7 +90,24 @@ description with beats, tracked link, 14 tags, pinned comment, end-screen line, 
 Posting one is: open `metadata.md`, pick a title, upload the mp4 as a Short, paste the description,
 paste the tags, post the pinned comment. Two minutes.
 
-## THE ONE BLOCKER — the channel
+## THE CHANNEL EXISTS — first film live 6 Sep 2026
+
+David created the TrustSquare channel himself on 6 Sep and published film 01 the same afternoon:
+**https://youtube.com/shorts/oULMIsCAPnk** — title "Six old Magic cards. $2,574. Priced and listed
+in a minute", tracked link in the description, 14 tags, not-made-for-kids, and the AI-use disclosure
+set to YES (the films use AI-generated people who look real; that is what the setting is for, and it
+applies to every film in this series).
+
+Two things stay open on that video, and on every one after it:
+
+1. **The custom cover image** needs the Windows file picker, which Claude cannot drive. Everything
+   else on the upload form Claude can fill.
+2. **External links are not clickable** until YouTube's one-off channel verification is done. Until
+   then the link in the description is plain text and the funnel will under-count.
+
+Publishing itself is always David's click — Claude sets the whole form up and stops there.
+
+## WHAT WAS THE BLOCKER — the channel (closed 6 Sep 2026)
 
 There is **no YouTube channel on record anywhere on disk**, and no YouTube connector exists in the
 registry (searched 6 Sep 2026), so posting cannot be automated even in principle today. Creating
