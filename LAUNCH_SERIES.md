@@ -121,12 +121,23 @@ Two things stay open on that video, and on every one after it:
    file-upload tool caps at 10 MB, so the video itself is the same story). Everything else on the
    upload form Claude can fill. It is NOT behind the verification gate -- film 01's cover was
    uploaded and saved on 6 Sep and is live, PROBED on the video details page.
-2. **Channel verification gates BOTH the clickable link and pinning a comment.** Phone
-   verification is not enough -- YouTube's "advanced features" gate wants a six-second video of the
-   owner, a photo of an ID, or about two months of channel history. David submitted the six-second
-   video on 6 Sep; **it is in review, a few hours**. Until it clears, the link in the description is
-   plain text and the funnel under-counts, and the pinned comment (posted 6 Sep, not yet pinned)
-   cannot be pinned. First thing to do once it clears: pin that comment and confirm the link is live.
+2. **Channel verification is APPROVED and this gate is CLOSED (7 Sep 2026).** YouTube emailed
+   approval of the six-second video verification at 00:19 SAST 7 Sep, to BOTH identities -- the
+   TrustSquare brand channel and david conradie's own account. PROBED the same night in Studio ->
+   Settings -> Channel -> Feature eligibility: **"3. Advanced features -- Enabled"** (levels 1 and 2
+   also Enabled). Two things were checked and fixed on film 01 immediately:
+   * The tracked link in the description now renders as a real clickable anchor
+     (`https://trustsquare.co/?src=yt-01-collectables`) -- PROBED on the public watch page, both in
+     the description and inside the comment. The funnel stops under-counting from here on.
+   * The pinned comment is **PINNED** -- done 7 Sep, page now reads "Pinned by @TrustSquareApp".
+     Pinning requires acting AS the brand channel: YouTube's own account switcher (avatar ->
+     Switch account -> TrustSquare) -- from the personal account the comment menu offers only
+     "Report", which is what makes it look like the feature is missing.
+   What advanced features also unlock, now available for the remaining nine films and anything after
+   them: clickable links in descriptions and comments, pinned comments, uploads longer than 15
+   minutes (the landscape main-feed piece is no longer blocked on this), live streaming, more than
+   15 uploads a day, and Content ID claim appeals. Custom thumbnails were NOT behind this gate and
+   already worked.
 
 Publishing itself is always David's click — Claude sets the whole form up and stops there.
 

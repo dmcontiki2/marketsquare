@@ -807,6 +807,15 @@ def run_migrations(conn):
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS ix_onboard_steps_created ON onboard_steps(created_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS ix_onboard_steps_sid ON onboard_steps(sid)")
+    # FUNNEL-HUMAN-1 (7 Sep 2026): the instrument counted link scanners as sellers. Google-
+    # Safety renders the page, runs the JS and posts 'landed' + 'photos' within 30 s of a send
+    # -- every "club reached the photo step" on 6-7 Sep was one of these. Each row now carries
+    # the user agent and a bot verdict, and the funnel excludes bots unless asked (bots=1).
+    _ob_cols = [r[1] for r in conn.execute("PRAGMA table_info(onboard_steps)").fetchall()]
+    if "ua" not in _ob_cols:
+        conn.execute("ALTER TABLE onboard_steps ADD COLUMN ua TEXT")
+    if "bot" not in _ob_cols:
+        conn.execute("ALTER TABLE onboard_steps ADD COLUMN bot INTEGER NOT NULL DEFAULT 0")
 
     # Listing publish timestamp + boost columns for the matching job
     listing_cols2 = [r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()]
@@ -12897,7 +12906,24 @@ def dashboard_bit_get():
 _OB_STEP_RE = re.compile(r"^[a-z0-9_:\-]{1,40}$")
 _OB_SID_RE = re.compile(r"^[A-Za-z0-9_\-]{4,40}$")
 _OB_MAX_PER_SID = 300
-_OB_ORDER = ["landed", "subpick", "photos", "photo_pick", "photo_ok", "photo_rejected",
+# FUNNEL-HUMAN-1: the same scanner vocabulary CityLauncher/click_register.py grades email
+# clicks with, plus the two that PROBED as running our JS (nginx, 5-7 Sep): Google-Safety
+# (8 + 7 posts to /onboard/step) and headless renderers. A row from one of these is stored,
+# flagged bot=1, and left out of every count unless the reader asks for bots=1.
+_OB_MACHINE_UA = ('google-safety', 'proofpoint', 'mimecast', 'barracuda', 'safelinks', 'symantec',
+                  'forcepoint', 'sophos', 'trendmicro', 'bitdefender', 'cloudmark', 'urldefense',
+                  'headlesschrome', 'phantomjs', 'python-requests', 'python-urllib', 'curl/',
+                  'wget/', 'go-http-client', 'java/', 'bot', 'crawler', 'spider', 'virustotal',
+                  'appengine-google', 'okhttp', 'axios', 'lighthouse', 'preview', 'scanner',
+                  'regressionledger')
+
+
+def _ob_is_bot(ua: str) -> bool:
+    u = (ua or "").lower()
+    return any(t in u for t in _OB_MACHINE_UA)
+
+
+_OB_ORDER = ["landed", "dwell", "subpick", "photos", "photo_pick", "photo_ok", "photo_rejected",
              "photo_fallback", "secA", "secB", "secC", "features", "legal", "agents",
              "scorecard", "finish", "draft", "handoff", "publish_ok", "publish_fail"]
 
@@ -12928,14 +12954,16 @@ async def onboard_step(request: Request):
     except Exception:
         meta_s = None
     magic = 1 if body.get("magic") else 0
+    ua = (request.headers.get("user-agent") or "")[:200]          # FUNNEL-HUMAN-1
+    bot = 1 if _ob_is_bot(ua) else 0
     conn = database.get_db()
     try:
         n = conn.execute("SELECT COUNT(*) FROM onboard_steps WHERE sid=?", (sid,)).fetchone()[0]
         if n >= _OB_MAX_PER_SID:
             return {"ok": False, "capped": True}
-        conn.execute("INSERT INTO onboard_steps (sid,email,src,cat,sub,step,meta,magic,created_at) "
-                     "VALUES (?,?,?,?,?,?,?,?,?)",
-                     (sid, email, src, cat, sub, step, meta_s, magic, _utc_now()))
+        conn.execute("INSERT INTO onboard_steps (sid,email,src,cat,sub,step,meta,magic,created_at,ua,bot) "
+                     "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                     (sid, email, src, cat, sub, step, meta_s, magic, _utc_now(), ua, bot))
         conn.commit()
     except Exception as _e:
         _log.warning("onboard_step failed: %s", _e)
@@ -12946,13 +12974,18 @@ async def onboard_step(request: Request):
 
 
 @app.get("/onboard/funnel")
-def onboard_funnel(days: int = 7, src: str = None, magic_only: int = 0):
+def onboard_funnel(days: int = 7, src: str = None, magic_only: int = 0, bots: int = 0):
     """Counts only, never an address. Distinct sessions per step in the window, split by
     invite source. src LIKE 'probe-%' rows are excluded unless asked for by name, so the
-    regression ledger can post a probe without polluting the numbers."""
+    regression ledger can post a probe without polluting the numbers.
+    FUNNEL-HUMAN-1: rows posted by a link scanner (bot=1) are excluded unless bots=1; 'humans'
+    is the count of sessions that fired the 'dwell' beacon (12 s on the page AND a real
+    pointer/key/scroll event) -- the denominator a conversion rate may be built on."""
     days = max(1, min(int(days or 7), 90))
     since = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
     where, args = ["created_at >= ?"], [since]
+    if not bots:
+        where.append("bot = 0")
     if src:
         where.append("src = ?"); args.append(str(src)[:120])
     else:
@@ -12977,14 +13010,23 @@ def onboard_funnel(days: int = 7, src: str = None, magic_only: int = 0):
         with_email = conn.execute(f"SELECT COUNT(DISTINCT email) FROM onboard_steps WHERE {w} AND email IS NOT NULL",
                                   args).fetchone()[0]
         rows = conn.execute(f"SELECT COUNT(*) FROM onboard_steps WHERE {w}", args).fetchone()[0]
+        humans = conn.execute(f"SELECT COUNT(DISTINCT sid) FROM onboard_steps WHERE {w} AND step='dwell' AND bot=0",
+                              args).fetchone()[0]
+        bot_w = " AND ".join(x for x in where if x != "bot = 0")
+        bot_sessions = conn.execute(f"SELECT COUNT(DISTINCT sid) FROM onboard_steps WHERE {bot_w} AND bot=1",
+                                    args).fetchone()[0]
     finally:
         conn.close()
     ordered = [{"step": s, "sessions": steps.get(s, 0)} for s in _OB_ORDER if s in steps]
     extra = sorted(s for s in steps if s not in _OB_ORDER)
     ordered += [{"step": s, "sessions": steps[s]} for s in extra]
-    return {"days": days, "since": since, "sessions": sessions, "distinct_emails": with_email,
+    return {"days": days, "since": since, "sessions": sessions, "humans": humans,
+            "bot_sessions": bot_sessions, "bots_included": bool(bots),
+            "distinct_emails": with_email,
             "rows": rows, "funnel": ordered, "by_src": by_src, "by_cat": by_cat,
-            "note": "counts of distinct browser sessions per step; no addresses are returned"}
+            "note": "counts of distinct browser sessions per step; no addresses are returned; "
+                    "scanner sessions excluded unless bots=1 (FUNNEL-HUMAN-1); humans = sessions "
+                    "that stayed 12 s and touched the page"}
 
 
 @app.get("/wonders")

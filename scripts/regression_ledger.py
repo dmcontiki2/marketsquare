@@ -18981,5 +18981,74 @@ def rg_source_quality_gate():
                    "floor, and a cleaned pool is judged on what it sends next")]
 
 
+@entry("RG-0315", "The onboarding funnel counts PEOPLE, not link scanners -- a session posted by a "
+       "security pre-fetch (Google-Safety, Defender, a headless renderer) is flagged and left out "
+       "of every count, and 'humans' is built on a beacon a scanner cannot fire",
+       LOCKED, fixed_on="2026-09-07",
+       scope="bea_main.py POST /onboard/step must store the user agent and a bot verdict "
+             "(_OB_MACHINE_UA, the same vocabulary click_register.py grades email clicks with); "
+             "GET /onboard/funnel must exclude bot rows unless bots=1 and must return 'humans' = "
+             "sessions that fired 'dwell'; ms.js must fire obTrack('dwell') only after 12 s on the "
+             "page AND a real pointer/key/touch/scroll event. LIVE: a probe posted with a "
+             "Google-Safety user agent is absent from the funnel and present with bots=1. CLASS: "
+             "the RG-0299 / HUMAN-CLICKS-1 family -- an instrument that cannot tell a machine from a "
+             "person reports the machine's behaviour as the person's. Email clicks got this grading "
+             "on 3 Sep; the app-side funnel, built 5 Sep, did not, and reported 9 clubs 'at the "
+             "photo step' that were all scanners.",
+       ref="FUNNEL-HUMAN-1, 7 Sep 2026 01:20 SAST, onboarding-goal run 6. PROBED: every "
+           "'photos' session in GET /onboard/funnel?days=2 (kansas 4, northern-california 4, "
+           "california 1) was created 20-40 s after its wave's send time, in bursts of 4 within "
+           "8 s; nginx showed 15 POST /onboard/step from 'Google-Safety' UAs in the window. The "
+           "true count of humans at the photo step was 0, not 9 -- and GOAL_STATE/PLAN had been "
+           "about to read 'they stop at the required photo' off it.")
+def rg_funnel_counts_people_not_scanners():
+    out = []
+    bm = open(os.path.join(REPO, "bea_main.py"), encoding="utf-8", errors="replace").read()
+    ms = open(os.path.join(REPO, "ms.js"), encoding="utf-8", errors="replace").read()
+    for tok, why in (
+        ("_OB_MACHINE_UA", "the scanner vocabulary is gone from bea_main.py"),
+        ("'google-safety'", "Google-Safety -- the scanner that PROBED as running our JS -- is no "
+                            "longer in the vocabulary"),
+        ("ua = (request.headers.get(\"user-agent\")", "POST /onboard/step no longer records the user agent"),
+        ("where.append(\"bot = 0\")", "GET /onboard/funnel no longer excludes bot rows by default"),
+        ("step='dwell' AND bot=0", "'humans' is no longer built on the dwell beacon"),
+    ):
+        if tok not in bm:
+            out.append((FAIL, why + " (FUNNEL-HUMAN-1)"))
+    if "obTrack('dwell')" not in ms or "_obDwellArmed" not in ms or "12000" not in ms:
+        out.append((FAIL, "ms.js no longer fires the 12-second dwell beacon -- 'humans' will read 0 "
+                          "for everyone, scanners and people alike (FUNNEL-HUMAN-1)"))
+    # live half: a scanner-UA probe must be invisible unless asked for
+    try:
+        _require_net()
+        sid = "probe" + str(int(time.time()))[-9:]
+        body = json.dumps({"sid": sid, "step": "landed", "src": "probe-funnel-human"}).encode()
+        req = urllib.request.Request(BASE + "/onboard/step", data=body, method="POST",
+                                     headers={"User-Agent": "Mozilla/5.0 (compatible; Google-Safety; "
+                                              "+http://www.google.com/bot.html)",
+                                              "Content-Type": "application/json"})
+        urllib.request.urlopen(req, timeout=TIMEOUT).read()
+        hid = json.loads(urllib.request.urlopen(urllib.request.Request(
+            BASE + "/onboard/funnel?days=1&src=probe-funnel-human", headers=UA), timeout=TIMEOUT).read())
+        shown = json.loads(urllib.request.urlopen(urllib.request.Request(
+            BASE + "/onboard/funnel?days=1&src=probe-funnel-human&bots=1", headers=UA), timeout=TIMEOUT).read())
+        if "humans" not in hid:
+            out.append((FAIL, "live GET /onboard/funnel returns no 'humans' field -- the deploy did not "
+                              "land or the field was dropped (FUNNEL-HUMAN-1)"))
+        if hid.get("sessions", 0) != 0:
+            out.append((FAIL, "a Google-Safety probe session is COUNTED in the funnel (%s sessions) -- "
+                              "scanner rows are back in the numbers (FUNNEL-HUMAN-1)" % hid.get("sessions")))
+        if shown.get("sessions", 0) < 1:
+            out.append((FAIL, "the same probe is missing even with bots=1 -- rows are being dropped, "
+                              "not flagged (FUNNEL-HUMAN-1)"))
+        if not out:
+            out.append((INFO, "live: scanner probe hidden by default, visible with bots=1; humans field present"))
+    except ProbeOffline as ex:
+        out.append((INFO, "live half not evaluated: %s" % ex))
+    except Exception as ex:
+        out.append((FAIL, "live probe of /onboard/step + /onboard/funnel failed: %r" % (ex,)))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

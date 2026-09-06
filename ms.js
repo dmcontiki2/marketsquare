@@ -696,6 +696,19 @@ function obTrack(step, meta){
     fetch(BEA_URL+'/onboard/step',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(function(){});
   }catch(e){}
 }
+/* FUNNEL-HUMAN-1 (7 Sep 2026): a link scanner (Google-Safety, Defender) renders this page,
+   runs the JS and posts 'landed' and 'photos' within 30 s of the email going out -- every
+   "club reached the photo step" on 6-7 Sep was one. A scanner does not stay 12 s AND move a
+   pointer / press a key / scroll. One 'dwell' beacon when both have happened; the server's
+   'humans' count is built on it. Never throws, never blocks. */
+var _obDwellSent=false,_obDwellArmed=false,_obDwellInput=false;
+function _obDwellFire(){ if(_obDwellSent||!_obDwellArmed||!_obDwellInput) return; _obDwellSent=true; obTrack('dwell'); }
+try{
+  setTimeout(function(){ _obDwellArmed=true; _obDwellFire(); },12000);
+  ['pointerdown','keydown','touchstart','wheel','scroll'].forEach(function(ev){
+    window.addEventListener(ev,function(){ _obDwellInput=true; _obDwellFire(); },{passive:true});
+  });
+}catch(e){}
 
 // ── OFFLINE STATE ─────────────────────────────────────────
 function isOffline(){ return !navigator.onLine; }
