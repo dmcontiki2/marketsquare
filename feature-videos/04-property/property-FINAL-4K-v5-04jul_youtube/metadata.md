@@ -32,7 +32,7 @@ school ratings, the commute to work — and the report found two similar homes f
 
 List free at https://trustsquare.co/?src=yt-04-property
 
-TrustSquare is a South African marketplace where the seller stays anonymous until they accept an
+TrustSquare is a global marketplace where the seller stays anonymous until they accept an
 introduction. Buyers see the item, the price and the seller's trust score — never a name, address
 or phone number. Listing is free; the only fee is a small introduction fee paid by the person who
 asks to be put in touch.
@@ -43,9 +43,11 @@ asks to be put in touch.
 
 trustsquare, buying a house, centurion property, property area research, is the asking price fair, neighbourhood report, school ratings suburb, commute times pretoria, first time home buyer, property comps, house hunting tips, property marketplace, area dossier, before you buy checklist
 
-## Pinned comment
+## Pinned comment  (post it, then pin it — a link here is far more visible than one in the description)
 
 What would you most want to know about a suburb before you put in an offer?
+
+List yours free: https://trustsquare.co/?src=yt-04-property
 
 ## End-screen / closing line
 

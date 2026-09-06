@@ -32,7 +32,7 @@ D7 passive income visa, what their pension is worth in euros, healthcare, and ho
 
 List free at https://trustsquare.co/?src=yt-06-retirement
 
-TrustSquare is a South African marketplace where the seller stays anonymous until they accept an
+TrustSquare is a global marketplace where the seller stays anonymous until they accept an
 introduction. Buyers see the item, the price and the seller's trust score — never a name, address
 or phone number. Listing is free; the only fee is a small introduction fee paid by the person who
 asks to be put in touch.
@@ -43,9 +43,11 @@ asks to be put in touch.
 
 trustsquare, retire to portugal, d7 visa south africans, emigrate from south africa, portugal retirement visa, pension abroad, cost of living portugal, algarve retirement, healthcare portugal expats, retirement planning, relocation planner, pension exchange rate, retire abroad, cascais living
 
-## Pinned comment
+## Pinned comment  (post it, then pin it — a link here is far more visible than one in the description)
 
 If you could retire anywhere tomorrow, where would it be — and what is stopping you?
+
+List yours free: https://trustsquare.co/?src=yt-06-retirement
 
 ## End-screen / closing line
 

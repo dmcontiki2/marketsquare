@@ -32,7 +32,7 @@ a negotiation brief: opening offer, target, walk-away number.
 
 List free at https://trustsquare.co/?src=yt-10-offer
 
-TrustSquare is a South African marketplace where the seller stays anonymous until they accept an
+TrustSquare is a global marketplace where the seller stays anonymous until they accept an
 introduction. Buyers see the item, the price and the seller's trust score — never a name, address
 or phone number. Listing is free; the only fee is a small introduction fee paid by the person who
 asks to be put in touch.
@@ -43,9 +43,11 @@ asks to be put in touch.
 
 trustsquare, negotiation tips, is this a fair price, guitar amp price, how to negotiate a price, buying second hand, fair value check, opening offer strategy, haggling tips, online marketplace, price check tool, second hand deals, walk away price, buyer tips
 
-## Pinned comment
+## Pinned comment  (post it, then pin it — a link here is far more visible than one in the description)
 
 What is the best deal you have ever talked someone down to? Opening offer and final price — go.
+
+List yours free: https://trustsquare.co/?src=yt-10-offer
 
 ## End-screen / closing line
 

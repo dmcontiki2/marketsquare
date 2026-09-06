@@ -32,7 +32,7 @@ that spec, the known faults for that model-year, and a test-drive checklist writ
 
 List free at https://trustsquare.co/?src=yt-05-car
 
-TrustSquare is a South African marketplace where the seller stays anonymous until they accept an
+TrustSquare is a global marketplace where the seller stays anonymous until they accept an
 introduction. Buyers see the item, the price and the seller's trust score — never a name, address
 or phone number. Listing is free; the only fee is a small introduction fee paid by the person who
 asks to be put in touch.
@@ -43,9 +43,11 @@ asks to be put in touch.
 
 trustsquare, 2019 toyota hilux, hilux 2.8 gd6 problems, used car price check, buying a used pickup, car inspection checklist, what is my car worth, second hand car, test drive checklist, used car buying tips, car dossier, vehicle marketplace, hilux review, avoid a bad used car
 
-## Pinned comment
+## Pinned comment  (post it, then pin it — a link here is far more visible than one in the description)
 
 What is the one thing you always check first on a used bakkie?
+
+List yours free: https://trustsquare.co/?src=yt-05-car
 
 ## End-screen / closing line
 

@@ -32,7 +32,7 @@ honest valuations, what to sell as lots versus singly, and a drafted advert for 
 
 List free at https://trustsquare.co/?src=yt-07-liquidation
 
-TrustSquare is a South African marketplace where the seller stays anonymous until they accept an
+TrustSquare is a global marketplace where the seller stays anonymous until they accept an
 introduction. Buyers see the item, the price and the seller's trust score — never a name, address
 or phone number. Listing is free; the only fee is a small introduction fee paid by the person who
 asks to be put in touch.
@@ -43,9 +43,11 @@ asks to be put in touch.
 
 trustsquare, selling inherited collection, stamp collection value, coin collection valuation, union of south africa coins, first day covers value, deceased estate collection, how to sell a collection, selling collectables, estate clearance, stamp albums worth, selling collectables online, lot splitting, collectors marketplace
 
-## Pinned comment
+## Pinned comment  (post it, then pin it — a link here is far more visible than one in the description)
 
 Has a collection ever landed in your lap with no idea what it was worth? What was in it?
+
+List yours free: https://trustsquare.co/?src=yt-07-liquidation
 
 ## End-screen / closing line
 

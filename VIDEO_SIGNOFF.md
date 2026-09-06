@@ -6,7 +6,8 @@ please remind me then."*
 This file is the reminder's trigger. A scheduled check reads the STATUS line below every morning
 and stays SILENT until it says READY. Nobody has to remember anything.
 
-STATUS: NOT-READY
+STATUS: READY-REMINDED   # David created the channel himself on 6 Sep and started uploading;
+# the morning check has nothing left to tell him, so it stays silent.
 
 ## What READY means (all four true)
 

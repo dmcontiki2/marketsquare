@@ -32,7 +32,7 @@ Adventures listings in Pretoria — every stop one introduction away.
 
 List free at https://trustsquare.co/?src=yt-08-weekend
 
-TrustSquare is a South African marketplace where the seller stays anonymous until they accept an
+TrustSquare is a global marketplace where the seller stays anonymous until they accept an
 introduction. Buyers see the item, the price and the seller's trust score — never a name, address
 or phone number. Listing is free; the only fee is a small introduction fee paid by the person who
 asks to be put in touch.
@@ -43,9 +43,11 @@ asks to be put in touch.
 
 trustsquare, things to do in pretoria, weekend ideas, cheap weekend pretoria, hiking near pretoria, weekend itinerary planner, budget weekend, adventures pretoria, what to do this weekend, day trips gauteng, local experiences, affordable outings, weekend plans, pretoria markets
 
-## Pinned comment
+## Pinned comment  (post it, then pin it — a link here is far more visible than one in the description)
 
 Best thing you have ever done in your city for under $30? Drop it below — we are collecting.
+
+List yours free: https://trustsquare.co/?src=yt-08-weekend
 
 ## End-screen / closing line
 

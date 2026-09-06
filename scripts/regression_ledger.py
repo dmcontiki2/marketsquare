@@ -18485,5 +18485,35 @@ def rg_films_read_in_dollars():
     return out
 
 
+@entry("RG-0307", "The app's AI is not told the marketplace is South African -- a US seller is "
+       "priced and advised for the market the LISTING is in",
+       OPEN, scope="bea_main.py AI system prompts. Every prompt that names the marketplace must not "
+             "hard-code 'a South African marketplace'; where the market matters (pricing, local "
+             "market notes, advert copy) the prompt must carry the listing's own country. The app "
+             "already knows it -- ADV_COUNTRY_CURRENCY and listing.country, asserted by RG-0001. "
+             "WHY OPEN AND NOT FIXED ON THE SPOT: found while publishing the first YouTube video, "
+             "and the honest fix threads the listing's country through seven call sites and changes "
+             "PRICING behaviour, which is not something to rush in a session doing something else. "
+             "CLASS: a fact hard-coded into a prompt at a time when it was true, left behind when the "
+             "product moved -- the same family as LAUNCH_SERIES describing finished films as ideas.",
+       ref="RUL-104, David 6 Sep 2026: 'it should rather say Global Marketsquare'. Outward-facing "
+           "copy was corrected the same minute (video description + all ten upload packages). The "
+           "seven prompts were found by grepping for the phrase we had just corrected -- 6778 local "
+           "market expert, 6901 advert slots, 6968 one-sentence seller helper, 7388 seller Q&A, "
+           "10888 and 11105 Trust Score coaches, 18668 pricing analyst. This matters NOW, not "
+           "later: the US club letters going out nightly land people on an app whose pricing analyst "
+           "has been told the market is South African.")
+def rg_ai_prompts_not_hardcoded_south_african():
+    src = os.path.join(REPO, "bea_main.py")
+    if not os.path.isfile(src):
+        return [(INFO, "bea_main.py not on this disk -- not evaluated")]
+    body = open(src, encoding="utf-8", errors="replace").read()
+    hits = body.count("South African marketplace")
+    if hits:
+        return [(FAIL, str(hits) + " AI system prompt(s) still hard-code 'a South African "
+                       "marketplace' -- a seller outside ZA is priced and advised for the wrong market")]
+    return [(INFO, "no AI prompt hard-codes the marketplace as South African")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

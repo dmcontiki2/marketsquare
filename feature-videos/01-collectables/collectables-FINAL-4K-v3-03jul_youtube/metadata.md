@@ -32,7 +32,7 @@ listed as one collection — $2,574, with Gaea's Cradle alone at $1,505.
 
 List free at https://trustsquare.co/?src=yt-01-collectables
 
-TrustSquare is a South African marketplace where the seller stays anonymous until they accept an
+TrustSquare is a global marketplace where the seller stays anonymous until they accept an
 introduction. Buyers see the item, the price and the seller's trust score — never a name, address
 or phone number. Listing is free; the only fee is a small introduction fee paid by the person who
 asks to be put in touch.
@@ -43,9 +43,11 @@ asks to be put in touch.
 
 trustsquare, sell trading cards, magic the gathering value, mtg card prices, sell collectables online, online marketplace, vintage cards worth, gaea's cradle price, collectors marketplace, anonymous selling, trusted sellers, how much are my cards worth, sell mtg collection, card collection valuation
 
-## Pinned comment
+## Pinned comment  (post it, then pin it — a link here is far more visible than one in the description)
 
 What is the one collectable you have kept "just in case it is worth something"? Tell us what it is and we will tell you what the market says.
+
+List yours free: https://trustsquare.co/?src=yt-01-collectables
 
 ## End-screen / closing line
 

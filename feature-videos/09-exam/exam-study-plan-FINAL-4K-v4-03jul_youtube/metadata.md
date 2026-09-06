@@ -32,7 +32,7 @@ exam is weighted — week by week, with official past papers and a trig tutor sl
 
 List free at https://trustsquare.co/?src=yt-09-exam
 
-TrustSquare is a South African marketplace where the seller stays anonymous until they accept an
+TrustSquare is a global marketplace where the seller stays anonymous until they accept an
 introduction. Buyers see the item, the price and the seller's trust score — never a name, address
 or phone number. Listing is free; the only fee is a small introduction fee paid by the person who
 asks to be put in touch.
@@ -43,9 +43,11 @@ asks to be put in touch.
 
 trustsquare, matric study plan, caps maths grade 12, physical sciences matric, nsc exam preparation, matric finals 2026, past papers south africa, study timetable, matric tutor south africa, exam study tips, grade 12 revision, how to study for finals, topic weightings caps, maths tutor pretoria
 
-## Pinned comment
+## Pinned comment  (post it, then pin it — a link here is far more visible than one in the description)
 
 Matrics — which subject is the one keeping you up at night? We will point you at the right help.
+
+List yours free: https://trustsquare.co/?src=yt-09-exam
 
 ## End-screen / closing line
 

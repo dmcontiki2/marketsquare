@@ -24,7 +24,7 @@ FONT_B = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 FONT_I = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"
 
 BOILER = (
-"TrustSquare is a South African marketplace where the seller stays anonymous until they accept an\n"
+"TrustSquare is a global marketplace where the seller stays anonymous until they accept an\n"
 "introduction. Buyers see the item, the price and the seller's trust score — never a name, address\n"
 "or phone number. Listing is free; the only fee is a small introduction fee paid by the person who\n"
 "asks to be put in touch.")
@@ -313,9 +313,11 @@ List free at {link}
 
 {tags}
 
-## Pinned comment
+## Pinned comment  (post it, then pin it — a link here is far more visible than one in the description)
 
 {pinned}
+
+List yours free: {link}
 
 ## End-screen / closing line
 
