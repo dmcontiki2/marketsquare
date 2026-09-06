@@ -17658,7 +17658,7 @@ async function msRenderIdVerifyCard(containerId){
   if(!lane || !lane.available){
     host.innerHTML = '<div class="ms-idv"><div class="ms-idv-body">'
       + '<strong>Home Affairs verification</strong>'
-      + '<p>Temporarily unavailable. Nothing has been charged — try again later.</p>'
+      + '<p>Not available at the moment. Nothing has been charged.</p>'
       + '</div></div>';
     return;
   }
