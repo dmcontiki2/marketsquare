@@ -257,7 +257,7 @@ OPTIONAL SIBLING, same trip: a push-scoped GitHub PAT for the sandbox (fixes D13
 permanently — sessions could then ship end-to-end when you say "close it for me").
 
 ## D15 · Push-scoped GitHub PAT for the sandbox — NO LONGER NEEDED
-STATE: SUPERSEDED 2026-09-05 — the capability exists without the credential
+STATE: DONE 2026-09-06 — SUPERSEDED, the capability exists without the credential
 TIME: 0 minutes — nothing for you to do
 VERIFY: LEDGER:RG-0300
 WHY_NOT_DAVID: This asked you to mint a fine-grained GitHub token so the sandbox could
@@ -265,7 +265,7 @@ publish. It was the right ask when written on 30 Aug. It was overtaken three day
 by the deploy relay (AUTODEPLOY-AGENT-1, 3 Sep): the sandbox pushes over SSH to the
 server's checkout, and the SERVER pushes to GitHub with the credential it already holds.
 No token in the sandbox, and your PC is not in the loop.
-EVIDENCE 2026-09-05, probed not argued:
+EVIDENCE 2026-09-06, probed not argued:
   - two commits sitting unpushed went `b099067..4a79b3c  claude-relay -> main` straight
     from the sandbox, with no token file present (`.secrets/github_push_token.txt` does
     not exist and never did);
