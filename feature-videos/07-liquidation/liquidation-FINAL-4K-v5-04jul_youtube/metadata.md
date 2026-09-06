@@ -41,7 +41,7 @@ asks to be put in touch.
 
 ## Tags (comma-separated, 14)
 
-trustsquare, selling inherited collection, stamp collection value south africa, coin collection valuation, union of south africa coins, first day covers value, deceased estate collection, how to sell a collection, collectables south africa, estate clearance, stamp albums worth, selling collectables online, lot splitting, collectors marketplace south africa
+trustsquare, selling inherited collection, stamp collection value, coin collection valuation, union of south africa coins, first day covers value, deceased estate collection, how to sell a collection, selling collectables, estate clearance, stamp albums worth, selling collectables online, lot splitting, collectors marketplace
 
 ## Pinned comment
 

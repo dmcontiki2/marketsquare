@@ -25,7 +25,7 @@ that passport, vetted agencies, the route through Istanbul to Irkutsk, and what 
 
 0:00 the dream on the wall map
 0:09 he opens the Expedition Dossier
-0:17 destination, month, passport, budget — R80,000
+0:17 destination, month, passport, budget — $5,000
 0:25 the route map: Pretoria → Irkutsk, legs pinned
 0:33 visas, agencies, kit, safety, medical — the things you would never think to ask
 0:40 “sorted”
@@ -41,7 +41,7 @@ asks to be put in touch.
 
 ## Tags (comma-separated, 14)
 
-trustsquare, travel dossier, siberia travel, lake baikal trip, south african passport visa, expedition planning, adventure travel south africa, visa requirements south africans, trip planning ai, travel research tool, once in a lifetime trip, independent travel planning, russia travel south africa, travel costs breakdown
+trustsquare, travel dossier, siberia travel, lake baikal trip, south african passport visa, expedition planning, adventure travel, visa requirements south africans, trip planning ai, travel research tool, once in a lifetime trip, independent travel planning, travel to russia, travel costs breakdown
 
 ## Pinned comment
 

@@ -25,7 +25,7 @@ Graskop — every overnight stop, every lodging link, the whole trip costed.
 
 0:00 the ask — “we need a proper tour”
 0:10 he opens the Heritage Tour Planner
-0:19 sites, dates, travellers, budget — R25,000 for two, 7 days
+0:19 sites, dates, travellers, budget — $1,600 for two, 7 days
 0:27 the route: Cape Town → Kruger via Graskop
 0:35 every stay arranged, full cost estimate
 0:43 “that was easy”
@@ -41,7 +41,7 @@ asks to be put in touch.
 
 ## Tags (comma-separated, 14)
 
-trustsquare, kruger national park trip, plan a trip south africa, panorama route graskop, cape town to kruger, road trip planner south africa, heritage sites south africa, holiday planning app, travel itinerary planner, south africa marketplace, trip cost estimate, self drive kruger, tour planning ai, trusted sellers south africa
+trustsquare, kruger national park trip, how to plan a trip, panorama route graskop, cape town to kruger, road trip planner, heritage sites south africa, holiday planning app, travel itinerary planner, online marketplace, trip cost estimate, self drive kruger, tour planning ai, trusted sellers
 
 ## Pinned comment
 

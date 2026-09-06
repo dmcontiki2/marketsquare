@@ -17997,13 +17997,21 @@ def rg_ship_lane_exists():
     # LIVE: is the lane usable from this machine right now? SSH unavailable says nothing
     # about the lane, so that is UNVERIFIED, never a regression.
     import subprocess as _sp
+    # DELIBERATELY NOT calling load_sandbox_ssh.sh here, and deliberately NOT capturing
+    # stderr. That first cut HUNG THE WHOLE BOARD: the loader starts an ssh ControlMaster
+    # in the background, the master inherits the captured pipes, and subprocess.run waits
+    # on those pipes forever -- the timeout kills the child, not the pipe. A probe that can
+    # stall the instrument is worse than a probe that reports UNVERIFIED, so this one runs
+    # ssh directly with stdin closed and only stdout captured, and treats anything that is
+    # not a clean answer as "cannot see from here".
     try:
-        _sp.run(["bash", os.path.join(REPO, "load_sandbox_ssh.sh")], capture_output=True, timeout=40)
-        pr = _sp.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8",
+        pr = _sp.run(["ssh", "-n", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8",
+                      "-o", "StrictHostKeyChecking=accept-new",
                       "root@178.104.73.239",
                       "cd /opt/marketsquare-src && git ls-remote --heads origin main >/dev/null 2>&1 "
                       "&& echo AUTH_OK || echo AUTH_FAIL"],
-                     capture_output=True, text=True, timeout=60)
+                     stdin=_sp.DEVNULL, stdout=_sp.PIPE, stderr=_sp.DEVNULL,
+                     text=True, timeout=45)
     except Exception as ex:
         raise ProbeOffline("cannot reach the relay host from here: %s" % repr(ex)[:100])
     got = (pr.stdout or "").strip()
@@ -18116,50 +18124,72 @@ def rg_video_links_are_measurable():
 @entry("RG-0305", "Every subdomain that SENDS our outreach reports its DMARC results back to US -- "
        "a sending domain whose aggregate reports go to a third party or nowhere is a domain we "
        "cannot see being spoofed",
-       OPEN,
+       LOCKED, fixed_on="2026-09-06",
        scope="DNS, all outreach sending subdomains of trustsquare.co (learn.* for the .edu lane, "
              "mail.* for every other lane -- emailer.py _sender_identity()). Asserts each has its OWN "
              "_dmarc TXT record whose rua names dmarc@trustsquare.co, the mailbox David actually reads. "
-             "MEASURED 6 Sep 2026 by DNS probe: learn.trustsquare.co PASSES (v=DMARC1; p=none; "
-             "rua=mailto:dmarc@trustsquare.co, added per US_TUTOR_LANE_RUNBOOK). mail.trustsquare.co "
-             "FAILS -- it publishes no _dmarc record at all, so it inherits the parent zone whose rua "
-             "is rua@dmarc.brevo.com. Brevo sees those reports; we do not. EXPECTED TO FAIL until the "
-             "Cloudflare record is added; the moment it passes the ledger prints READY TO LOCK. "
-             "CANNOT BE EXECUTED FROM A SESSION -- the sandbox has no Cloudflare credential and "
-             "entering one is barred, so this entry is the machinery that remembers it. The fix is one "
-             "additive, monitor-only record (TXT _dmarc.mail = 'v=DMARC1; p=none; "
-             "rua=mailto:dmarc@trustsquare.co'), DNS-only/grey cloud: p=none blocks nothing, so it "
-             "cannot cost a delivery.",
-       ref="ORIGIN: the 6 Sep 2026 Microsoft aggregate report for learn.trustsquare.co (3 messages, "
-           "all DKIM+SPF pass) proved the .edu lane authenticates -- and, by its absence, that no "
-           "equivalent report exists for mail.trustsquare.co, the lane that carries every non-.edu "
-           "letter. The 5 Sep report (14 messages) carried one FAIL from 35.174.145.124 with our own "
-           "envelope-from and both DKIM signatures broken -- a forwarder re-injecting the message, not "
-           "a spoof, and the reason this entry does NOT propose p=reject. Policy stays p=none on both "
-           "until enough days of reports show every legitimate path aligning; tightening blind, with "
-           "no reports for the busier subdomain, is how a live outreach lane gets silently quarantined.")
+             "Probed live over DNS-over-HTTPS so any session can run it with no resolver setup. CLASS, "
+             "and the reason this is not a one-record entry: EVERY new sending subdomain inherits the "
+             "parent zone silently, and the parent's rua is a third party. A sender added tomorrow is "
+             "invisible the same way mail.* was, and this entry is what catches it. NOTE for whoever "
+             "runs this next: the sandbox resolver negative-caches, so a freshly added record can read "
+             "FAIL for a minute or two after it is live -- confirm against dns.google before believing "
+             "a red.",
+       ref="ORIGIN: the 6 Sep 2026 Microsoft aggregate reports for learn.trustsquare.co, opened because "
+           "David asked whether they needed an action. They did not -- 5 Sep window: 3 messages, all "
+           "DKIM+SPF pass; 4 Sep window: 11 messages, 10 pass and ONE fail from 35.174.145.124 carrying "
+           "our own envelope-from with both DKIM signatures broken, i.e. a forwarder re-injecting our "
+           "message, not a spoof. What the reports revealed by their ABSENCE was the finding: "
+           "mail.trustsquare.co, the busier lane, published no _dmarc record at all and inherited the "
+           "parent zone whose rua is rua@dmarc.brevo.com -- Brevo saw those reports, we never did. "
+           "FIXED 6 Sep 2026: David logged into Cloudflare and Claude added TXT _dmarc.mail = "
+           "'v=DMARC1; p=none; rua=mailto:dmarc@trustsquare.co' (TTL auto/300). VERIFIED same run by "
+           "live DoH: both subdomains now answer with our own rua. Policy stays p=none on BOTH "
+           "deliberately -- the forwarder fail above is exactly the traffic that p=quarantine would "
+           "start eating, and mail.* has no report history yet at all. Revisit tightening only after "
+           "several weeks of reports show every legitimate path aligning on the busier lane.")
 def rg_sending_subdomains_report_dmarc_to_us():
+    # Queried across SEVERAL public resolvers and PASSES IF ANY of them answers. That is not a
+    # weakened assertion -- the fact asserted is "the record is published", and one anycast node
+    # holding a stale NEGATIVE cache is not evidence that it is not. Measured 6 Sep 2026, minutes
+    # after the record went live: cloudflare-dns.com answered FOUND on every try while
+    # dns.google answered MISSING on every try, for a record that was demonstrably live. A
+    # single-resolver probe would have reported a red that was not real, every day, until
+    # Google's negative TTL expired. Only a clean sweep -- no resolver anywhere sees it -- fails.
     import urllib.request as _u
+    resolvers = ("https://cloudflare-dns.com/dns-query",
+                 "https://dns.google/resolve",
+                 "https://dns.quad9.net:5053/dns-query")
     out = []
     for sub in ("learn", "mail"):
         host = "_dmarc.%s.trustsquare.co" % sub
-        try:
-            req = _u.Request("https://dns.google/resolve?name=%s&type=TXT" % host,
-                             headers={"Accept": "application/json"})
-            data = json.loads(_u.urlopen(req, timeout=12).read().decode("utf-8", "replace"))
-        except Exception as ex:
-            out.append((INFO, "%s not resolvable from here (%r) -- not evaluated" % (host, ex)))
-            continue
-        txts = " ".join(a.get("data", "") for a in (data.get("Answer") or []))
-        if "v=DMARC1" not in txts:
-            out.append((FAIL, "%s publishes NO DMARC record -- %s.trustsquare.co inherits the parent "
-                              "zone, whose reports go to Brevo, so we never see it being spoofed"
-                        % (host, sub)))
-        elif "dmarc@trustsquare.co" not in txts:
-            out.append((FAIL, "%s exists but its rua does not name dmarc@trustsquare.co -- reports "
-                              "land somewhere we do not read: %s" % (host, txts.strip()[:120])))
-        else:
+        seen, reached, wrong_rua = False, 0, None
+        for base in resolvers:
+            try:
+                req = _u.Request("%s?name=%s&type=TXT" % (base, host),
+                                 headers={"Accept": "application/dns-json"})
+                data = json.loads(_u.urlopen(req, timeout=10).read().decode("utf-8", "replace"))
+            except Exception:
+                continue
+            reached += 1
+            txts = " ".join(a.get("data", "") for a in (data.get("Answer") or []))
+            if "v=DMARC1" not in txts:
+                continue
+            if "dmarc@trustsquare.co" in txts:
+                seen = True
+                break
+            wrong_rua = txts.strip()[:120]
+        if not reached:
+            out.append((INFO, "%s: no resolver reachable from here -- not evaluated" % host))
+        elif seen:
             out.append((INFO, "%s reports to dmarc@trustsquare.co" % host))
+        elif wrong_rua:
+            out.append((FAIL, "%s exists but its rua does not name dmarc@trustsquare.co -- reports "
+                              "land somewhere we do not read: %s" % (host, wrong_rua)))
+        else:
+            out.append((FAIL, "%s publishes NO DMARC record on any resolver (%d reached) -- "
+                              "%s.trustsquare.co inherits the parent zone, whose reports go to Brevo, "
+                              "so we never see it being spoofed" % (host, reached, sub)))
     return out
 
 

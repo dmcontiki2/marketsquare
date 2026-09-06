@@ -15,12 +15,12 @@ paste a bare trustsquare.co link in its place.
 ## Title — pick one (all ≤ 60 characters)
 
 1. Benefit-led:  `Check the price and known faults before you view it`  (51)
-2. Curiosity-led: `“R420,000 for a 2019 Hilux — is that right?”`  (44)
+2. Curiosity-led: `“$26,000 for a 2019 Hilux — is that right?”`  (43)
 3. Search-led:   `2019 Toyota Hilux 2.8 GD-6 — fair price and known faults`  (56)
 
 ## Description (first two lines are the only part most people see)
 
-A 2019 Hilux 2.8 GD-6 on 120,000 km, asking R420,000. The dossier gave the market band for exactly
+A 2019 Hilux 2.8 GD-6 on 120,000 km, asking $26,000. The dossier gave the market band for exactly
 that spec, the known faults for that model-year, and a test-drive checklist written for that car.
 
 0:00 “is the price right? what goes wrong with these?”
@@ -41,7 +41,7 @@ asks to be put in touch.
 
 ## Tags (comma-separated, 14)
 
-trustsquare, 2019 toyota hilux, hilux 2.8 gd6 problems, used car price check south africa, buying a used bakkie, car inspection checklist, what is my car worth south africa, second hand car south africa, test drive checklist, used car buying tips, car dossier, vehicle marketplace south africa, hilux review, avoid a bad used car
+trustsquare, 2019 toyota hilux, hilux 2.8 gd6 problems, used car price check, buying a used pickup, car inspection checklist, what is my car worth, second hand car, test drive checklist, used car buying tips, car dossier, vehicle marketplace, hilux review, avoid a bad used car
 
 ## Pinned comment
 

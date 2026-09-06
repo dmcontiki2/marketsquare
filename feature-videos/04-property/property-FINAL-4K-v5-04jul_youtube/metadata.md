@@ -41,7 +41,7 @@ asks to be put in touch.
 
 ## Tags (comma-separated, 14)
 
-trustsquare, buying a house south africa, centurion property, property area research, is the asking price fair, suburb report south africa, school ratings suburb, commute times pretoria, first time home buyer south africa, property comps, house hunting tips, property marketplace south africa, area dossier, before you buy checklist
+trustsquare, buying a house, centurion property, property area research, is the asking price fair, neighbourhood report, school ratings suburb, commute times pretoria, first time home buyer, property comps, house hunting tips, property marketplace, area dossier, before you buy checklist
 
 ## Pinned comment
 

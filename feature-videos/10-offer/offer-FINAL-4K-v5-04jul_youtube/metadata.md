@@ -15,15 +15,15 @@ paste a bare trustsquare.co link in its place.
 ## Title — pick one (all ≤ 60 characters)
 
 1. Benefit-led:  `Price checked and an opening offer, before you message`  (54)
-2. Curiosity-led: `“Is R4,500 fair — and what do I even open with?”`  (48)
-3. Search-led:   `Is R4,500 fair? A value check and a negotiation brief`  (53)
+2. Curiosity-led: `“Is $280 fair — and what do I even open with?”`  (46)
+3. Search-led:   `Is $280 fair? A value check and a negotiation brief`  (51)
 
 ## Description (first two lines are the only part most people see)
 
-A guitar amp listed at R4,500. Before committing to an introduction he got a fair-value verdict and
+A guitar amp listed at $280. Before committing to an introduction he got a fair-value verdict and
 a negotiation brief: opening offer, target, walk-away number.
 
-0:00 “is R4,500 fair? what do I open with?”
+0:00 “is $280 fair? what do I open with?”
 0:09 he points it at the listing
 0:16 the item and the question — fair price?
 0:24 the fair-value verdict on that asking price
@@ -41,7 +41,7 @@ asks to be put in touch.
 
 ## Tags (comma-separated, 14)
 
-trustsquare, negotiation tips, is this a fair price, guitar amp price, how to negotiate a price, buying second hand south africa, fair value check, opening offer strategy, haggling tips, marketplace south africa, price check tool, second hand deals, walk away price, buyer tips
+trustsquare, negotiation tips, is this a fair price, guitar amp price, how to negotiate a price, buying second hand, fair value check, opening offer strategy, haggling tips, online marketplace, price check tool, second hand deals, walk away price, buyer tips
 
 ## Pinned comment
 

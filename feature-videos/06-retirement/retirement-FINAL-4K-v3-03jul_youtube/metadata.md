@@ -27,7 +27,7 @@ D7 passive income visa, what their pension is worth in euros, healthcare, and ho
 0:09 he opens the Retirement Relocation Planner
 0:18 citizenship, pension, capital, what they want — coast and healthcare
 0:26 verdict: can this retirement work?
-0:34 the D7 visa, the rand-euro reality, property rules
+0:34 the D7 visa, what the pension is worth in euros, property rules
 0:42 the two of them, sea view, decided
 
 List free at https://trustsquare.co/?src=yt-06-retirement
@@ -41,7 +41,7 @@ asks to be put in touch.
 
 ## Tags (comma-separated, 14)
 
-trustsquare, retire to portugal, d7 visa south africans, emigrate from south africa, portugal retirement visa, pension abroad south africa, cost of living portugal, algarve retirement, healthcare portugal expats, retirement planning south africa, relocation planner, rand euro exchange, retire abroad, cascais living
+trustsquare, retire to portugal, d7 visa south africans, emigrate from south africa, portugal retirement visa, pension abroad, cost of living portugal, algarve retirement, healthcare portugal expats, retirement planning, relocation planner, pension exchange rate, retire abroad, cascais living
 
 ## Pinned comment
 

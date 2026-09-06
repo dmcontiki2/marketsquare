@@ -14,18 +14,18 @@ paste a bare trustsquare.co link in its place.
 
 ## Title — pick one (all ≤ 60 characters)
 
-1. Benefit-led:  `A whole Pretoria weekend planned for under R1,000 for two`  (57)
+1. Benefit-led:  `A whole Pretoria weekend planned for under $60 for two`  (54)
 2. Curiosity-led: `“It is Friday night and we have no plan. Again.”`  (48)
-3. Search-led:   `Things to do in Pretoria this weekend — under R1,000 for two`  (60)
+3. Search-led:   `Things to do in Pretoria this weekend — under $60 for two`  (57)
 
 ## Description (first two lines are the only part most people see)
 
-Friday night, no plan, under a thousand rand for two. The itinerary came back built from real
+Friday night, no plan, under sixty dollars for two. The itinerary came back built from real
 Adventures listings in Pretoria — every stop one introduction away.
 
 0:00 “no plan for the weekend. again.”
 0:08 she opens the Weekend Adventure planner
-0:16 city, vibe, budget — outdoorsy, two of us, under R1,000
+0:16 city, vibe, budget — outdoorsy, two of us, under $60
 0:23 Saturday: hike and market, timed and costed
 0:31 the rest of the weekend, from real listings
 0:37 daypacks on, out the door
@@ -41,11 +41,11 @@ asks to be put in touch.
 
 ## Tags (comma-separated, 14)
 
-trustsquare, things to do in pretoria, weekend ideas south africa, cheap weekend pretoria, hiking near pretoria, weekend itinerary planner, budget weekend south africa, adventures pretoria, what to do this weekend, day trips gauteng, local experiences south africa, affordable outings, weekend plans, pretoria markets
+trustsquare, things to do in pretoria, weekend ideas, cheap weekend pretoria, hiking near pretoria, weekend itinerary planner, budget weekend, adventures pretoria, what to do this weekend, day trips gauteng, local experiences, affordable outings, weekend plans, pretoria markets
 
 ## Pinned comment
 
-Best thing you have ever done in Pretoria for under R500? Drop it below — we are collecting.
+Best thing you have ever done in your city for under $30? Drop it below — we are collecting.
 
 ## End-screen / closing line
 
