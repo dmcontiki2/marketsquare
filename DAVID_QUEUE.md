@@ -186,39 +186,41 @@ READ 28 Aug (didit.me pricing + product pages): Database Validation is listed wi
 SA Home Affairs is almost certainly a premium source, so EXPECT the check to bill (the $1.10
 class) despite the free-tier headline. The one real check stays decisive; docs are READ-grade.
 
-## D11 · Travelpayouts tours — resubmit?
-STATE: OPEN
-TIME: a decision
+## D11 · Travelpayouts tours — resubmit? — ALREADY DONE, nothing to decide
+STATE: DONE 2026-09-06 — SUPERSEDED, the decision was taken and acted on 2 Sep
+TIME: 0 minutes
 VERIFY: DAVID
-WHY_DAVID: Commercial timing.
-STEPS: Say when, and I prepare the submission.
-CONTEXT: Declined twice — most recently 24 Aug, *"website under development or not yet ready"*.
-26 programs available / 20 blocked, including Booking.com, Viator and GetYourGuide. RUL-041 says
-never resubmit unchanged; **Friday's soft launch is the first materially changed face** we have had.
+WHY_NOT_DAVID: This asked "say when and I prepare the submission". It was written against the
+24 Aug decline. The THIRD resubmission has since gone in — 2 Sep 2026 — and the scheduled task
+`travelpayouts-review-check-sep7` fires 7 Sep 09:00 to probe the outcome and record it. There is
+no decision left to make; the answer arrives tomorrow.
+NOTE 2026-09-06: found stale while answering David's "which is easy to fix next?" — the same
+shape as D15. An item that asks for a decision already taken is worse than no item: it spends
+his attention twice on the same thing.
+CONTEXT: Declined 5 Aug and again 24 Aug (*"website under development or not yet ready"*).
+RUL-041 bars resubmitting unchanged; soft launch was the material change that justified the
+third attempt. 26 programs available / 20 blocked, including Booking.com, Viator, GetYourGuide.
 
-## D12 · Delete two superseded Cloudflare tokens
-STATE: OPEN
-TIME: 2 minutes
+## D12 · Delete ONE superseded Cloudflare token — now proven safe
+STATE: OPEN — 30 seconds, no comparison needed any more
+TIME: 30 seconds
 VERIFY: DAVID
 WHY_DAVID: Deletions are reserved to you (RUL-037).
-STEPS: (after Mon 1 Sep — deliberately parked past launch weekend, see CONTEXT)
-  1. From your machine:
-     `ssh root@178.104.73.239 "tr '\0' '\n' < /proc/$(systemctl show -p MainPID --value marketsquare)/environ | grep '^CF_CACHE_TOKEN=' | cut -d= -f2- | xargs -I{} curl -s -H 'Authorization: Bearer {}' https://api.cloudflare.com/client/v4/user/tokens/verify"`
-     → prints the LIVE purge token's `"id"` (PROBED-grade: read from the running process).
-  2. Dashboard → My Profile → API Tokens → `trustsquare-cache` → Actions → **Edit** → the id is
-     in the page URL. **Ids differ → delete `trustsquare-cache`, reply `D12 done`. Ids match →
-     it IS the live token: keep it, reply `D12 keep`** and Claude corrects the register.
-CONTEXT: Rotation residue from 22 Aug. Not blocking anything — but a live token nobody uses is a
-credential nobody is watching.
-**PROBED 28 Aug (dashboard, via your Chrome): half of this item was already true.** User R2
-tokens: NONE — old `MarketSquare Media` is ALREADY GONE. Account tokens: exactly the three
-keepers (`trustsquare-cache-purge-2026-08-22`, `trustsquare-2026-08-22`, `hetzner-backup-rclone`).
-Neither register-named old token exists. The ONE deletion candidate left is user token
-`trustsquare-cache` (zone trustsquare.co: Cache Rules:Edit, Zone:Read, Cache Purge:Purge; last
-used 22 Aug) — but it FAILS the register's fingerprint of the old token (no DNS Write), so it
-was NOT deleted on a name-guess the day before soft-public: if it is somehow the live purge
-lane, deleting it kills CDN purge silently over launch weekend. Step 1's probe settles it
-conclusively in 30 seconds, after the weekend.
+DO: Cloudflare dashboard → My Profile → API Tokens → delete the USER token `trustsquare-cache`.
+    Then reply `D12 done`.
+PROVED 2026-09-06, so you do not have to compare anything:
+  - the LIVE cache-purge token the app actually uses is an ACCOUNT token — id
+    `584a5a5bc53be19132f35da9d42b493e`, status active, read straight from the running
+    process on the server;
+  - the same token FAILS the USER-token verify endpoint ("Invalid API Token"), which is
+    only possible if it is not a user token at all;
+  - `trustsquare-cache` is a USER token (dashboard, 28 Aug). Different kind, different id.
+    It therefore CANNOT be the live purge lane, so deleting it cannot break CDN purge.
+  The original step 1 asked you to run a command and compare two ids by eye. That comparison
+  is done and recorded here; nothing is left but the click.
+CONTEXT: Rotation residue from 22 Aug. The title said "two" — the other one was already gone
+when the dashboard was read on 28 Aug. Not blocking anything, but a live token nobody uses is
+a credential nobody is watching.
 
 ## D13 · Publish the deploy ref — closes the red card
 STATE: DONE 2026-08-30 (David's 07:48 release — verified live: anon /dashboard/summary returns the bare heartbeat; RG-0198/RG-0211 LOCKED and passing)
