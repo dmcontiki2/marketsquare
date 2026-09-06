@@ -18074,10 +18074,14 @@ def rg_video_links_are_measurable():
                 body = open(md, encoding="utf-8", errors="replace").read()
                 if re.search(r"trustsquare\.co/\?src=yt-", body):
                     tracked.append(film)
-                for m in re.finditer(r"https://trustsquare\.co/?(?!\?src=)", body):
-                    line = body[body.rfind("\n", 0, m.start()) + 1:m.start()]
-                    if line.lower().lstrip().startswith("list"):   # the call-to-action link
-                        bare.append(film)
+                # the call-to-action line is the one that must carry the tag. Checked line by
+                # line, not by one clever regex: the first attempt used a lookahead after an
+                # optional slash, which backtracked and flagged every tracked link as bare.
+                for line in body.split("\n"):
+                    low = line.lower().lstrip()
+                    if "trustsquare.co" in low and (low.startswith("list") or low.startswith("- list")):
+                        if "?src=yt-" not in line:
+                            bare.append(film)
                         break
     if not packs:
         out.append((INFO, "no upload packages on this disk -- package half not evaluated"))
@@ -18106,6 +18110,203 @@ def rg_video_links_are_measurable():
             out.append((INFO, "funnel endpoint not readable from here -- live half not evaluated"))
     except Exception as ex:
         out.append((INFO, "funnel endpoint not readable from here (%r) -- live half not evaluated" % (ex,)))
+    return out
+
+
+@entry("RG-0305", "Every subdomain that SENDS our outreach reports its DMARC results back to US -- "
+       "a sending domain whose aggregate reports go to a third party or nowhere is a domain we "
+       "cannot see being spoofed",
+       OPEN,
+       scope="DNS, all outreach sending subdomains of trustsquare.co (learn.* for the .edu lane, "
+             "mail.* for every other lane -- emailer.py _sender_identity()). Asserts each has its OWN "
+             "_dmarc TXT record whose rua names dmarc@trustsquare.co, the mailbox David actually reads. "
+             "MEASURED 6 Sep 2026 by DNS probe: learn.trustsquare.co PASSES (v=DMARC1; p=none; "
+             "rua=mailto:dmarc@trustsquare.co, added per US_TUTOR_LANE_RUNBOOK). mail.trustsquare.co "
+             "FAILS -- it publishes no _dmarc record at all, so it inherits the parent zone whose rua "
+             "is rua@dmarc.brevo.com. Brevo sees those reports; we do not. EXPECTED TO FAIL until the "
+             "Cloudflare record is added; the moment it passes the ledger prints READY TO LOCK. "
+             "CANNOT BE EXECUTED FROM A SESSION -- the sandbox has no Cloudflare credential and "
+             "entering one is barred, so this entry is the machinery that remembers it. The fix is one "
+             "additive, monitor-only record (TXT _dmarc.mail = 'v=DMARC1; p=none; "
+             "rua=mailto:dmarc@trustsquare.co'), DNS-only/grey cloud: p=none blocks nothing, so it "
+             "cannot cost a delivery.",
+       ref="ORIGIN: the 6 Sep 2026 Microsoft aggregate report for learn.trustsquare.co (3 messages, "
+           "all DKIM+SPF pass) proved the .edu lane authenticates -- and, by its absence, that no "
+           "equivalent report exists for mail.trustsquare.co, the lane that carries every non-.edu "
+           "letter. The 5 Sep report (14 messages) carried one FAIL from 35.174.145.124 with our own "
+           "envelope-from and both DKIM signatures broken -- a forwarder re-injecting the message, not "
+           "a spoof, and the reason this entry does NOT propose p=reject. Policy stays p=none on both "
+           "until enough days of reports show every legitimate path aligning; tightening blind, with "
+           "no reports for the busier subdomain, is how a live outreach lane gets silently quarantined.")
+def rg_sending_subdomains_report_dmarc_to_us():
+    import urllib.request as _u
+    out = []
+    for sub in ("learn", "mail"):
+        host = "_dmarc.%s.trustsquare.co" % sub
+        try:
+            req = _u.Request("https://dns.google/resolve?name=%s&type=TXT" % host,
+                             headers={"Accept": "application/json"})
+            data = json.loads(_u.urlopen(req, timeout=12).read().decode("utf-8", "replace"))
+        except Exception as ex:
+            out.append((INFO, "%s not resolvable from here (%r) -- not evaluated" % (host, ex)))
+            continue
+        txts = " ".join(a.get("data", "") for a in (data.get("Answer") or []))
+        if "v=DMARC1" not in txts:
+            out.append((FAIL, "%s publishes NO DMARC record -- %s.trustsquare.co inherits the parent "
+                              "zone, whose reports go to Brevo, so we never see it being spoofed"
+                        % (host, sub)))
+        elif "dmarc@trustsquare.co" not in txts:
+            out.append((FAIL, "%s exists but its rua does not name dmarc@trustsquare.co -- reports "
+                              "land somewhere we do not read: %s" % (host, txts.strip()[:120])))
+        else:
+            out.append((INFO, "%s reports to dmarc@trustsquare.co" % host))
+    return out
+
+
+@entry("RG-0303", "The customer support AI answers from the REAL introduction rules -- above all "
+       "that the buyer's 1 Tuppence is HELD and charged only if the seller accepts",
+       LOCKED, fixed_on="2026-09-06",
+       scope="bea_main.py _classify_email(), the CUSTOMER lane system prompt (lane != outreach). "
+             "CLASS: any AI lane that speaks to users about money. The outreach lane was given a "
+             "facts block on 1 Sep; the customer lane -- the one answering actual customers -- "
+             "was left with one sentence of context and told to answer support questions. An AI "
+             "with no facts does not decline, it guesses, and the guess reads as fluent as a "
+             "fact. Every lane that can state a charge needs the charge written down for it.",
+       ref="SUPPORT-FACTS-1 (6 Sep 2026), from the reply actually sent on TS-0039. A customer "
+           "asked how to contact a seller. The AI answered: use the introduction option and "
+           "'follow the prompts to spend Tuppence'. The app's own screen, two taps away, says "
+           "'1 Tuppence ($2) deducted only on seller acceptance' and 'If seller declines or "
+           "ignores, you pay nothing', and EULA 5.4 says the same in law: the Tuppence is HELD "
+           "on request and BURNED only on delivery. So the reply told a buyer they must pay to "
+           "make contact, when they pay only if the contact succeeds. "
+           "IT IS WRONG IN OUR OWN FAVOUR, which is the direction that matters. A buyer told the "
+           "charge is unconditional may not send the request at all, and we would never hear "
+           "about it. The pricing is the kindest thing about the product and the robot made it "
+           "sound worse than it is. "
+           "The 5 Sep record called this reply 'correct product behaviour' because it withheld "
+           "the phone number -- which it did. The phone-number half was right and the money half "
+           "was wrong, and reading one as proof of the other is how a wrong answer gets logged "
+           "as a passing test. "
+           "THE FIX: the customer lane now carries the introduction facts -- anonymity by design, "
+           "the button's real name, hold-not-charge, release on decline or 48-hour silence, free "
+           "listing, the withdraw route -- plus a standing instruction never to tell a buyer they "
+           "must spend Tuppence to make contact, and to set auto_safe=false rather than invent a "
+           "fact that is not there. "
+           "SOURCE-HALF BY NECESSITY: what rots here is the prompt, and a live probe would cost "
+           "an AI call and a real email per run.")
+def rg_support_ai_knows_the_charge():
+    out = []
+    api = repo_file("bea_main.py")
+    if api is None:
+        return [(INFO, "bea_main.py not readable here -- support-facts check skipped")]
+    i = api.find('"You are the email triage assistant for TrustSquare')
+    if i < 0:
+        return [(FAIL, "the customer triage prompt is gone -- the support lane no longer has a "
+                       "system prompt this entry can check")]
+    j = api.find("Keep replies under 120 words", i)
+    if j < 0:
+        return [(FAIL, "the customer triage prompt no longer ends where it did -- re-read it "
+                       "before trusting this assertion")]
+    prompt = api[i:j]
+    # The prompt is built from adjacent string literals, so a sentence that reads as one
+    # line in the model's input is split across two in the source. Join them before
+    # asserting -- the first cut of this entry checked raw source and failed on its own
+    # fix, which is a false RED and just as expensive as a missed one.
+    prompt = re.sub(r'"\s*\n\s*"', "", prompt)
+
+    # The one fact a wrong answer costs us a customer over.
+    if "HELD when the buyer sends the request" not in prompt:
+        out.append((FAIL, "the prompt no longer states that the Tuppence is HELD, not spent, "
+                          "when the request is sent -- this is the fact TS-0039 got wrong"))
+    if "deducted ONLY IF the seller accepts" not in prompt:
+        out.append((FAIL, "the prompt no longer states the charge lands ONLY on seller "
+                          "acceptance"))
+    if "the buyer pays NOTHING" not in prompt:
+        out.append((FAIL, "the prompt no longer states the buyer pays nothing when the seller "
+                          "declines or goes silent -- EULA 5.4 and the app screen both do"))
+    if "Never tell a buyer they must spend or pay Tuppence to contact a seller" not in prompt:
+        out.append((FAIL, "the standing instruction against the TS-0039 wording is gone"))
+    # The other half of that reply, which WAS right and must stay right.
+    if "NEVER shows a seller" not in prompt:
+        out.append((FAIL, "the prompt no longer states that seller contact details are never "
+                          "shown -- withholding the phone number is the product, and the AI "
+                          "must know it rather than infer it"))
+    if "Request Introduction" not in prompt:
+        out.append((FAIL, "the prompt no longer names the actual button, so the AI can point a "
+                          "customer at an 'option' without saying where it is"))
+    # Guessing must remain forbidden.
+    if "Never invent a fact that is not above" not in prompt:
+        out.append((FAIL, "the prompt no longer forbids inventing facts -- the failure mode is "
+                          "not silence, it is a fluent guess"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "customer lane carries the introduction facts: hold-not-charge, "
+                          "release on decline, anonymity by design, the button named, no "
+                          "inventing"))
+    return out
+
+
+@entry("RG-0304", "We promise a FIX only to someone who reported something broken -- a customer "
+       "who merely asked a question is never told their message is in the fix queue",
+       LOCKED, fixed_on="2026-09-06",
+       scope="bea_main.py _ref_footer() and its two callers inside _triage_message(): the "
+             "auto-sent reply and the bare MAINT-B1 acknowledgement. CLASS: any template "
+             "appended unconditionally to messages of more than one kind. A sentence that is "
+             "true for the case it was written for becomes a lie the first time the template "
+             "widens, and nothing in the code notices, because the sentence still renders.",
+       ref="REF-HONESTY-1 (6 Sep 2026), from the live reply to TS-0039. The customer asked how "
+           "to contact a seller. They were answered, and then told: 'your report is logged in "
+           "our fix queue. If our fix needs anything from you, we will write to this address.' "
+           "There was no report. Nothing was broken. No fix was queued and nobody was ever going "
+           "to write. "
+           "THE REASONING ALREADY EXISTED ONE LANE OVER. OUTREACH-TRIAGE-1 carved this exact "
+           "footer out of the outreach lane on 1 Sep, in a comment that reads: 'a tutor asking "
+           "whether we cover Johannesburg has not filed a fault'. A customer asking how "
+           "introductions work has not filed one either. The insight was five days old and one "
+           "branch away -- the fault is that it was written as a special case for one lane "
+           "instead of as the rule. "
+           "IT ALSO COSTS THE THING RUL-087 PROTECTS: a promised fix invites the follow-up email "
+           "asking what happened to it, so a false promise manufactures the inbox load. "
+           "THE FIX: the classifier now returns is_report, true only when the sender reports "
+           "something broken, and _ref_footer picks the wording. The reference is kept in both "
+           "cases -- MAINT-B1's promise is a REFERENCE, not a fix pledge. Fails safe: no signal "
+           "means the neutral line, because its failure mode is that it is plain and the other's "
+           "failure mode is a lie. The bare acknowledgement is covered too, since a held legal "
+           "complaint is not a fix-queue item either.")
+def rg_fix_promise_only_to_reporters():
+    out = []
+    api = repo_file("bea_main.py")
+    if api is None:
+        return [(INFO, "bea_main.py not readable here -- fix-promise check skipped")]
+    if "def _ref_footer(" not in api:
+        return [(FAIL, "_ref_footer() is gone -- the fix-queue promise is unconditional again, "
+                       "which is what TS-0039 was told")]
+    # The promise must be gated, not merely present.
+    i = api.find("def _ref_footer(")
+    body = api[i:i + 1200]
+    if "if is_report:" not in body:
+        out.append((FAIL, "_ref_footer no longer branches on is_report -- every customer is "
+                          "being promised a fix again"))
+    if "your report is logged in our fix" not in body:
+        out.append((INFO, "the fix-queue wording has moved or changed -- re-read _ref_footer"))
+    # The classifier must actually supply the signal.
+    if '"is_report"' not in api:
+        out.append((FAIL, "the classifier no longer returns is_report, so the footer has no "
+                          "signal to branch on and falls back for every message"))
+    if "_is_report = bool(result.get(" not in api:
+        out.append((FAIL, "_triage_message no longer reads is_report off the classifier result"))
+    # And no caller may go back to appending the promise inline.
+    j = api.find("async def _triage_message")
+    if j >= 0:
+        lane = api[j:j + 12000]
+        if "your report is logged in our " in lane and "_ref_footer(" not in lane:
+            out.append((FAIL, "the fix-queue sentence is being appended inline again, bypassing "
+                              "_ref_footer -- this is the original defect"))
+        if "_ref_line = _ref_footer(" not in lane:
+            out.append((FAIL, "the auto-sent reply no longer builds its footer through "
+                              "_ref_footer"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "fix-queue promise is gated on is_report; reference still given to "
+                          "everyone; neutral wording is the safe default"))
     return out
 
 
