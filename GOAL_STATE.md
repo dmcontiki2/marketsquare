@@ -92,7 +92,12 @@ Target: **20 by Fri 31 Oct 2026.** Model on this run: Fable 5.1 (as David asked,
 2. `GET /onboard/funnel?days=2` — first reading with clubs landing on the photo step.
 3. RG-0298's observed leg reads the newest post-fix wave log; RG-0299's live leg reads the funnel.
 4. Still unproven as ONE walk: seller form → save → publish → visible logged out (publish_ok).
-5. Read `GET /onboard/funnel?days=7` for any `yt-*` src. Films start posting once the channel
+5. FILM 01 IS LIVE (youtube.com/shorts/oULMIsCAPnk, published 6 Sep). Read `GET
+   /onboard/funnel?days=7` for `yt-01-collectables`. Also: YouTube channel verification was
+   submitted 6 Sep (six-second video, in review). The moment it clears, PIN the comment already
+   posted on that video and confirm the description link renders as a clickable link -- until then
+   the link is plain text and any funnel count from YouTube is a FLOOR, not the true number.
+   Read `GET /onboard/funnel?days=7` for any `yt-*` src. Films start posting once the channel
    exists (LAUNCH_SERIES.md: Tue/Fri 18:00 SAST, order set). A film that sends people who all
    stop at `landed` is the RG-0299 fault class and gets the same treatment.
 

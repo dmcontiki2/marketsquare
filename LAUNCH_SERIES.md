@@ -102,8 +102,12 @@ Two things stay open on that video, and on every one after it:
 
 1. **The custom cover image** needs the Windows file picker, which Claude cannot drive. Everything
    else on the upload form Claude can fill.
-2. **External links are not clickable** until YouTube's one-off channel verification is done. Until
-   then the link in the description is plain text and the funnel will under-count.
+2. **Channel verification gates BOTH the clickable link and pinning a comment.** Phone
+   verification is not enough -- YouTube's "advanced features" gate wants a six-second video of the
+   owner, a photo of an ID, or about two months of channel history. David submitted the six-second
+   video on 6 Sep; **it is in review, a few hours**. Until it clears, the link in the description is
+   plain text and the funnel under-counts, and the pinned comment (posted 6 Sep, not yet pinned)
+   cannot be pinned. First thing to do once it clears: pin that comment and confirm the link is live.
 
 Publishing itself is always David's click — Claude sets the whole form up and stops there.
 
