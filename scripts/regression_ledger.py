@@ -18630,5 +18630,46 @@ def rg_idv_card_reachable():
                    "the card decides its own state from /id-status")]
 
 
+@entry("RG-0310", "The ID-verification lane reports what it LAST DID, not what we configured "
+       "-- a supplier refusing us may not read as READY",
+       LOCKED, fixed_on="2026-09-06",
+       scope="bea_main.py GET /id-verify/status. CLASS: every status surface that answers 'did we "
+             "set it up' while appearing to answer 'does it work'. The same shape as the "
+             "hand-typed heartbeat date and the hand-written dashboard verdicts.",
+       ref="IDV-STATUS-TRUTH-1 (6 Sep 2026). The endpoint returned 'READY - sellers can buy a "
+           "check' while Didit was answering HTTP 403 to every attempt. `available` came from our "
+           "own configuration -- key present, provider known -- which answers whether we set it "
+           "up, never whether it works. Its own docstring quotes the supplier doctrine it broke: "
+           "'a dead feed must turn RED, never go silent'. "
+           "Found the only way it could be: David bought a check, the lane returned `unavailable` "
+           "with charged_t 0 and 'Verification service returned HTTP 403', and the status endpoint "
+           "went on saying READY. The safety half worked perfectly -- no charge on a provider "
+           "failure -- but the board was green over a lane that has never once succeeded, which is "
+           "why 'nobody has run one yet' was believed for weeks. "
+           "Fixed WITHOUT paying for a probe on every page load: the ledger already records every "
+           "attempt and its outcome, so the endpoint now reports the last real one and flips to "
+           "DARK when it was `unavailable`. Evidence beats configuration, and here the evidence "
+           "was already on disk.")
+def rg_idv_status_tells_truth():
+    api = repo_file("bea_main.py")
+    if api is None:
+        return [(INFO, "bea_main.py not readable here -- skipped")]
+    if "IDV-STATUS-TRUTH-1" not in api or "last_outcome" not in api:
+        return [(FAIL, "/id-verify/status no longer reports the lane's last real outcome -- it is "
+                       "back to calling a lane READY because the config is present")]
+    import json as _j
+    try:
+        st = _j.loads(urllib.request.urlopen(
+            urllib.request.Request(BASE + "/id-verify/status", headers=UA),
+            timeout=TIMEOUT).read().decode())
+    except Exception as ex:
+        raise ProbeOffline(repr(ex)[:140])
+    if st.get("last_outcome") == "unavailable" and st.get("available"):
+        return [(FAIL, "the lane's last attempt was 'unavailable' and the status still says "
+                       "available -- the endpoint is painting a refusing supplier green again")]
+    return [(INFO, "status reflects the lane's last real outcome (%s, %s)"
+             % (st.get("last_outcome") or "no attempts yet", st.get("note", "")[:60]))]
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -171,20 +171,29 @@ the credit landed. Reply `D9 done` with what you saw.
 CONTEXT: Closes the detached-credit end-to-end — the case where a buyer's browser dies between
 Paystack taking the money and us crediting it. That path has never been exercised with real money.
 
-## D10 · One real Didit ID check
-STATE: OPEN
-TIME: 5 minutes
+## D10 · One real Didit ID check — RUN, and it exposed a dead supplier lane
+STATE: OPEN — but the question changed: it is no longer "does it bill", it is "why does Didit refuse us"
+TIME: a look at the Didit account
 VERIFY: DAVID
-WHY_DAVID: Real money (possibly $1.10).
-STEPS: Run one real Home Affairs check on a real ID, reply `D10 done` with whether it billed.
-CONTEXT: The lane is ARMED and its SAFETY properties are asserted and passing (a partial match
-never passes, a provider failure never charges, the tick never gates an introduction). What is
-unknown is **billing shape**: whether the 500 free monthly verifications cover Database Validation
-or it bills $1.10 from call one. One check settles it.
-READ 28 Aug (didit.me pricing + product pages): Database Validation is listed with its own
-"500 free / month" tier, "from $0.05", with premium government registries at $0.20+/check —
-SA Home Affairs is almost certainly a premium source, so EXPECT the check to bill (the $1.10
-class) despite the free-tier headline. The one real check stays decisive; docs are READ-grade.
+WHY_DAVID: Vendor account — entitlement, billing status, key validity.
+WHAT HAPPENED 2026-09-06 12:31Z: David ran the check on his own account. It reached the server,
+returned 200, and the ledger recorded: outcome `unavailable`, **charged_t 0**, reason
+"Verification service returned HTTP 403. No charge." So the SAFETY property held exactly as
+designed — a provider failure never charges — and no money moved, in Tuppence or dollars.
+THE REAL FINDING: **Didit refuses us with HTTP 403.** Either the API key has been revoked or
+expired, or the account is not entitled to the South African national-ID service. The lane has
+therefore never worked, which had been read for weeks as "nobody has run one yet".
+ALSO FIXED THE SAME MINUTE (IDV-STATUS-TRUTH-1): /id-verify/status was reporting
+"READY — sellers can buy a check" while the supplier was refusing us, because `available` was
+computed from OUR OWN CONFIG (key present, provider known) rather than from anything the lane
+had done. It now reports the last real outcome from the ledger, so the card correctly reads
+"Temporarily unavailable. Nothing has been charged" — which is what David sees now.
+NEXT: check the Didit account — is the key live, is the account funded, is ZAF national-ID
+enabled on it. If the key needs replacing, `.secrets/r2_new_keys.txt`-style transit applies:
+never paste a key into a script file.
+CONTEXT: The original question — whether Database Validation is covered by the 500 free monthly
+verifications or bills ~$1.10 from call one — is STILL unanswered, and cannot be answered until
+the supplier accepts a call at all.
 
 ## D11 · Travelpayouts tours — resubmit? — ALREADY DONE, nothing to decide
 STATE: DONE 2026-09-06 — SUPERSEDED, the decision was taken and acted on 2 Sep
