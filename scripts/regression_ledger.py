@@ -18890,5 +18890,96 @@ def rg_outreach_ab_test_is_readable():
                    "refuses to call a winner on too little data")]
 
 
+@entry("RG-0314", "The wave is held back by the SOURCE that bounces, not by whether an address "
+       "happens to be mx-checked -- and a source is never condemned on two bounces",
+       LOCKED, fixed_on="2026-09-06",
+       scope="CityLauncher/emailer/wave_runner.py must carry source_bounce_rates() + "
+             "blocked_sources(), the draw must apply _source_clause(), and blocked_sources must "
+             "require BOTH a send floor (source_min_sample) AND a bounce floor "
+             "(bounce_stop_min_bounces) before holding a source. waves_policy defaults must carry "
+             "source_quality_gate and source_min_sample. ASSERTED AGAINST: any return of an "
+             "mx_status='mx_ok' requirement in either draw -- that rule was written first and "
+             "removed before it shipped. Also asserts DOMAIN-BOUNCE-RELEASE-1: "
+             "domain_bounce_state must honour defaults.domain_bounce_release_at so a cleaned pool "
+             "is not held for the dirty pool's history, the domain twin of STOP-LOSS-RELEASE-1.",
+       ref="SOURCE-QUALITY-1 + DOMAIN-BOUNCE-RELEASE-1, 6 Sep 2026, answering David's question "
+           "'when does the next email go out'. The answer was 'Wednesday, because the gate I "
+           "added this morning holds it' -- three days lost for addresses the clean had already "
+           "quarantined, so the release path was built. THE NEAR-MISS THIS ENTRY EXISTS FOR: the "
+           "quality rule was first written as mx_status='mx_ok'. PROBED THE POOL BEFORE TRUSTING "
+           "IT and found every register source is mx-UNCHECKED while the registers are the only "
+           "sources that do not bounce -- register:rrca 0/191 (0.0%%), club:agn 1/24, national key "
+           "accounts 0/19 -- against mx_ok scraped sources at 7.8-10.9%% (google_maps 22/282, "
+           "openstreetmap 13/119, dbe_emis 2/20). The mx rule would have blocked the 1,595 best "
+           "addresses we own and waved through the worst. MX proves a DOMAIN runs a mail server, "
+           "never that a MAILBOX exists. Replaced with a per-source gate measured off our own "
+           "send history; the bounce floor was then added because 2 bounces in 20 sends reads as "
+           "10%% and would have held dbe_emis, 1,114 addresses, on no evidence. Result: 6 sources "
+           "held, every register lane through, 2,872 of 4,125 retained (70%%).")
+def rg_source_quality_gate():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    wr = os.path.join(cl, "emailer", "wave_runner.py")
+    em = os.path.join(cl, "emailer", "emailer.py")
+    pol = os.path.join(cl, "emailer", "waves_policy.json")
+    if not os.path.exists(wr):
+        return [(INFO, "CityLauncher/emailer/wave_runner.py not readable here -- skipped")]
+    src = open(wr, encoding="utf-8", errors="replace").read()
+
+    for tok, why in (
+        ("def source_bounce_rates(", "per-source deliverability is no longer measured"),
+        ("def blocked_sources(", "the source gate is gone -- the wave draws from the sources that "
+                                 "bounce at 8-16%% again"),
+        ("_source_clause(", "the draw no longer applies the source gate, so measuring it changes "
+                            "nothing"),
+    ):
+        if tok not in src:
+            out.append((FAIL, why))
+
+    b = src.find("def blocked_sources(")
+    if b >= 0:
+        fn = src[b:src.find("\ndef ", b + 10)]
+        if "bounce_stop_min_bounces" not in fn:
+            out.append((FAIL, "blocked_sources has lost its BOUNCE floor -- 2 bounces in 20 sends "
+                              "reads as 10%% and would hold dbe_emis (1,114 addresses, the largest "
+                              "teacher lane) on a sample too small to mean anything"))
+        if "source_min_sample" not in fn:
+            out.append((FAIL, "blocked_sources has lost its SEND floor"))
+
+    # the rule that was removed before it shipped must not come back
+    for f, label in ((wr, "wave_runner.py"), (em, "emailer.py")):
+        if os.path.exists(f):
+            t = open(f, encoding="utf-8", errors="replace").read()
+            for pat in ("mx_status='mx_ok'", 'mx_status="mx_ok"'):
+                # a mention inside a comment or docstring is the explanation, not the rule;
+                # what must never return is the SQL clause
+                if ("AND " + pat) in t:
+                    out.append((FAIL, "%s requires mx_ok in the draw again. Every register source "
+                                      "is mx-unchecked and the registers are the ONLY sources that "
+                                      "do not bounce -- this blocks the 1,595 best addresses we own "
+                                      "and lets through scraped rows that bounce at 8-11%%" % label))
+
+    if "domain_bounce_release_at" not in src:
+        out.append((FAIL, "domain_bounce_state no longer honours the release stamp -- a cleaned "
+                          "pool is held for the full window on the dirty pool's bounces, which is "
+                          "the gap STOP-LOSS-RELEASE-1 had to close for cities"))
+
+    if os.path.exists(pol):
+        try:
+            import json as _json
+            d = _json.load(open(pol, encoding="utf-8")).get("defaults", {})
+        except Exception as e:
+            out.append((FAIL, "waves_policy.json will not parse (%s)" % e)); d = {}
+        if not d.get("source_quality_gate"):
+            out.append((FAIL, "source_quality_gate is switched off in policy -- the gate exists in "
+                              "code and does nothing"))
+        if not d.get("source_min_sample"):
+            out.append((FAIL, "source_min_sample is gone from policy"))
+    if out:
+        return out
+    return [(INFO, "the wave is gated on measured source quality, with both a send and a bounce "
+                   "floor, and a cleaned pool is judged on what it sends next")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
