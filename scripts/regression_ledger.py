@@ -18799,5 +18799,96 @@ def rg_domain_wide_bounce_gate():
                    "bounce flag that actually syncs to the sending machine")]
 
 
+@entry("RG-0313", "The outreach letter can be A/B tested, the arms actually SPLIT, and the result is "
+       "read off graded human clicks rather than raw ones -- so an experiment cannot be won by "
+       "security scanners or by a split that never split",
+       LOCKED, fixed_on="2026-09-06",
+       scope="CityLauncher/emailer/emailer.py must carry active_variants() + pick_variant(), "
+             "load_template(category, variant) must fall back to the base letter when the variant "
+             "file is absent (an armed category can never stop a wave), wave_source_tag must append "
+             "the arm so signups attribute themselves through the EXISTING src plumbing, and "
+             "mark_emailed must record the arm on the send event. pick_variant must HASH the id -- "
+             "a bare 'pid %% len(arms)' is asserted against. emailer/funnel_report.py must exist, "
+             "must read human counts from click_register (never raw event counts), must take "
+             "bounces from prospects.bounced_at (never email_events -- see RG-0312), and must "
+             "carry the small-sample guard that refuses to name a winner. "
+             "CLASS: an instrument that can be read the wrong way is worse than no instrument. "
+             "The 6 Sep review found 115 click EVENTS grading down to 4 real people; anyone "
+             "reading the raw column would have concluded the letter was working.",
+       ref="EMAIL-VARIANT-1 + FUNNEL-READ-1, 6 Sep 2026, after the viability review. Built because "
+           "the measured funnel (981 sent, 20.8%% human opens, 0.45%% human clicks) says people READ "
+           "the letter and do not act -- the ask is the bottleneck, and it cannot be improved "
+           "without comparing two asks on one audience. THE BUG THIS ENTRY EXISTS TO PREVENT was "
+           "caught in test the same hour: 'pid %% len(arms)' put four consecutive Durban prospects "
+           "(2127, 2129, 2131, 2133) all in arm 'b', because the scraped ids are all odd -- a "
+           "two-arm split that silently sends everyone the same letter and then reports a "
+           "confident result. After hashing: 294/306 across 600 real rows, stable per prospect. "
+           "First experiment armed: Tutors + teachers_trainers, arm 'b' = tutors_outreach.b.html, "
+           "which shortens the ask to 'your listing is written, check it', drops the $20 Pro and "
+           "Founders Badge money ask out of a first cold email, and says plainly that the "
+           "marketplace is a week old and thin.")
+def rg_outreach_ab_test_is_readable():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    em = os.path.join(cl, "emailer", "emailer.py")
+    fr = os.path.join(cl, "emailer", "funnel_report.py")
+    if not os.path.exists(em):
+        return [(INFO, "CityLauncher/emailer/emailer.py not readable here -- skipped")]
+    src = open(em, encoding="utf-8", errors="replace").read()
+
+    for tok, why in (
+        ("def active_variants(", "the per-category arm list is gone -- nothing can be split"),
+        ("def pick_variant(", "arm assignment is gone -- every prospect gets the base letter"),
+        ("def load_template(category: str, variant", "load_template no longer takes a variant, so a "
+                                                    "declared arm silently sends the base letter"),
+    ):
+        if tok not in src:
+            out.append((FAIL, why))
+
+    d = src.find("def pick_variant(")
+    if d >= 0:
+        fn = src[d:src.find("\ndef ", d + 10)]
+        if "hashlib" not in fn:
+            out.append((FAIL, "pick_variant no longer hashes the id. A bare modulus does not split "
+                              "structured ids -- four consecutive Durban prospects landed in one arm "
+                              "when this was last written that way, and the experiment would have "
+                              "reported a confident result off a single letter"))
+        if "arms[pid %" in fn:
+            out.append((FAIL, "pick_variant is back to 'arms[pid % len(arms)]' -- the exact bug this "
+                              "entry was written for"))
+
+    # the arm must ride the src tag, and be recorded on the send
+    t = src.find("def wave_source_tag(")
+    if t >= 0 and "variant" not in src[t:src.find("\ndef ", t + 10)]:
+        out.append((FAIL, "wave_source_tag no longer carries the arm -- a variant's signups become "
+                          "unattributable, which is the whole point of running one"))
+    m = src.find("def mark_emailed(")
+    if m >= 0 and "variant" not in src[m:src.find("\ndef ", m + 10)]:
+        out.append((FAIL, "mark_emailed no longer records the arm on the send event -- opens and "
+                          "clicks can no longer be split by arm, which at a 0.45%% click rate is "
+                          "the only signal there is"))
+
+    # the instrument
+    if not os.path.exists(fr):
+        out.append((FAIL, "emailer/funnel_report.py is gone -- the funnel goes back to being "
+                          "reconstructed by hand across a dozen queries, which is how it stayed "
+                          "unread until 6 Sep"))
+    else:
+        rep = open(fr, encoding="utf-8", errors="replace").read()
+        if "click_register" not in rep or "n_human_clicks" not in rep:
+            out.append((FAIL, "funnel_report no longer reads GRADED human clicks -- raw click counts "
+                              "are ~94%% security scanners and would call any experiment a winner"))
+        if "bounced_at" not in rep:
+            out.append((FAIL, "funnel_report no longer takes bounces from prospects.bounced_at -- on "
+                              "the sending machine the event rows are incomplete (RG-0312)"))
+        if "too few to be a rate" not in rep:
+            out.append((FAIL, "funnel_report has lost its small-sample guard -- it will let a "
+                              "difference between two handfuls of clicks be read as a result"))
+    if out:
+        return out
+    return [(INFO, "the letter can be split, the split is real, and the readout grades humans and "
+                   "refuses to call a winner on too little data")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
