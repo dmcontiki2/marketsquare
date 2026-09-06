@@ -17537,7 +17537,10 @@ def rg_onboard_funnel_is_measured():
         code = _post_status("/onboard/step", body)
         if code != 200:
             out.append((FAIL, "POST /onboard/step answered %s -- the beacon is refused live" % code))
-        named = json.loads(_get("/onboard/funnel?src=probe-ledger&days=2"))
+        # FUNNEL-HUMAN-1 (7 Sep 2026): the ledger's own UA is a machine and is now flagged bot=1,
+        # so a probe row is hidden from the default read BY DESIGN. Ask for bots=1 -- the assertion
+        # here is that WRITES REACH THE TABLE, and RG-0315 owns the hidden-by-default property.
+        named = json.loads(_get("/onboard/funnel?src=probe-ledger&days=2&bots=1"))
         got = {r["step"]: r["sessions"] for r in named.get("funnel", [])}
         if got.get("landed", 0) < 1:
             out.append((FAIL, "the probe step was accepted but /onboard/funnel?src=probe-ledger does "
@@ -19051,6 +19054,123 @@ def rg_funnel_counts_people_not_scanners():
         out.append((INFO, "live half not evaluated: %s" % ex))
     except Exception as ex:
         out.append((FAIL, "live probe of /onboard/step + /onboard/funnel failed: %r" % (ex,)))
+    return out
+
+
+@entry("RG-0316", "A US register row carries its own CATEGORY into the prospect table -- a hunting "
+       "outfitter harvested from an association directory can never be imported as a 'Sports Club' "
+       "and drawn by the club letter",
+       LOCKED, fixed_on="2026-09-07",
+       scope="CityLauncher/us_register_reader.py: the CSV column set must include 'category' and each "
+             "row must be stamped from the adapter; CityLauncher/scripts/club_import.py must read "
+             "r['category'] and only DEFAULT to Sports Clubs when the column is absent. CLASS: the "
+             "importer was built for federation club rosters and hard-defaulted the category; the "
+             "first non-club register (MOGA-1, Montana outfitters, adventures_experiences) would "
+             "have gone out as 'I found your club on your federation's own published club list'.",
+       ref="MOGA-1, 7 Sep 2026 01:55 SAST, onboarding-goal run 6. Found by reading club_import.py "
+           "before queueing the import, not after a letter went out.")
+def rg_register_row_carries_its_category():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    rr = os.path.join(cl, "us_register_reader.py"); ci = os.path.join(cl, "scripts", "club_import.py")
+    if not (os.path.exists(rr) and os.path.exists(ci)):
+        return [(INFO, "CityLauncher not readable here -- skipped")]
+    a = open(rr, encoding="utf-8", errors="replace").read()
+    b = open(ci, encoding="utf-8", errors="replace").read()
+    if '"source", "category"]' not in a:
+        out.append((FAIL, "us_register_reader.py no longer writes a 'category' column -- every register "
+                          "row imports as Sports Clubs (MOGA-1)"))
+    if 'r["category"] = r.get("category") or ad.get("category"' not in a:
+        out.append((FAIL, "us_register_reader.py no longer stamps the adapter's category on each row (MOGA-1)"))
+    if '(r.get("category") or "").strip() or CATEGORY' not in b:
+        out.append((FAIL, "club_import.py no longer honours a roster row's own category (MOGA-1)"))
+    if not out:
+        out.append((INFO, "register CSVs carry 'category'; the importer honours it"))
+    return out
+
+
+@entry("RG-0317", "The Montana outfitter register (199 adventure providers, harvested 7 Sep) is DRAWN by "
+       "a wave only once its letter is in the RUL-099 shape -- it names where we got the address "
+       "-- and the Montana bucket lists the category",
+       OPEN,
+       scope="Two things must both be true before adventures_experiences rows in a US state bucket "
+             "may be emailed: (1) CityLauncher/emailer/templates/adventures_experiences_outreach.html "
+             "carries the 'where we got your address' line (RUL-099 condition c -- the club letter's "
+             "'I found your club on your federation's own published club list'); (2) waves_policy.json "
+             "Montana.category_priority includes adventures_experiences. Until then the rows sit in "
+             "the pool and no letter reaches them, which is the intended state. CLASS: supply is "
+             "banked ahead of its letter; the letter is the gate, not the calendar.",
+       ref="MOGA-1, 7 Sep 2026. us_registers/moga.club.csv: 199 rows, source register:moga, category "
+           "adventures_experiences, bucket Montana; import queued via run_us_registers.bat. The "
+           "adventures letter predates RUL-099 (4 Sep) and lacks the source line, and still carries "
+           "the $20 Pro money ask the EMAIL-VARIANT-1 arm 'b' test is measuring. Bringing it into shape "
+           "is the next session's letter work; when both halves pass this prints READY TO LOCK.")
+def rg_outfitter_lane_waits_for_its_letter():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    tpl = os.path.join(cl, "emailer", "templates", "adventures_experiences_outreach.html")
+    pol = os.path.join(cl, "emailer", "waves_policy.json")
+    csvp = os.path.join(cl, "us_registers", "moga.club.csv")
+    if not os.path.exists(tpl):
+        return [(INFO, "CityLauncher not readable here -- skipped")]
+    if not os.path.exists(csvp):
+        out.append((INFO, "us_registers/moga.club.csv not on this disk (gitignored) -- the harvest half is not judged here"))
+    t = open(tpl, encoding="utf-8", errors="replace").read().lower()
+    if not re.search(r"found your (outfit|business|details|company|listing|name)|where we got|got your address|"
+                     r"published (member )?(directory|list)|association'?s? (own )?(member )?directory", t):
+        out.append((FAIL, "adventures_experiences_outreach.html does not say where we got the address "
+                          "(RUL-099 c) -- the outfitter lane stays undrawn"))
+    try:
+        p = json.load(open(pol, encoding="utf-8"))
+        pri = (p.get("cities", {}).get("Montana") or {}).get("category_priority") or []
+        if "adventures_experiences" not in pri:
+            out.append((FAIL, "waves_policy.json Montana.category_priority does not list "
+                              "adventures_experiences -- by design until the letter passes"))
+    except Exception as ex:
+        out.append((INFO, "waves_policy.json unreadable (%r)" % (ex,)))
+    if not out:
+        out.append((INFO, "letter carries the source line and Montana draws the category -- READY TO LOCK"))
+    return out
+
+
+@entry("RG-0318", "A BEA restart does not paint the ops map red -- every live dashboard feed retries "
+       "once, quietly, 2.5s after a network/5xx failure before any chip is called offline",
+       LOCKED, fixed_on="2026-09-07",
+       scope="dashboard.server.html must define rfetch() and route the polled read feeds through it "
+             "(health/resources, presence, summary, cost, bit, email-triage, flags, fixed-costs, "
+             "admin/services-status, admin/faults) plus the Server Health and BIT panels. A deploy "
+             "stops and restarts marketsquare.service in about one second (journal 06 Sep 23:29:16 "
+             "-> startup complete 23:29:17); any 60s refresh landing inside that second had EVERY "
+             "feed reject at once and the whole map flashed 'offline' red with the health panel "
+             "reading 'server may be restarting'. Honest per PROVENANCE-1 but indistinguishable "
+             "from a real outage. CLASS: this is the deploy window, not one endpoint -- the retry "
+             "belongs on every polled feed, not on the one David happened to be looking at. 401/403/"
+             "404 are real answers and are deliberately NOT retried; a second failure still goes red, "
+             "so nothing is ever invented.",
+       ref="RESTART-REDFLASH-1, 7 Sep 2026. David: 'Claude, why are everything red?' -- screenshot "
+           "stamped 01:32 SAST (23:32 UTC), three minutes after the 23:29:16 UTC restart. Server was "
+           "healthy throughout: NRestarts=0, zero errors in the journal since startup.")
+def rg_restart_does_not_redflash_the_map():
+    out = []
+    src = os.path.join(REPO, "dashboard.server.html")
+    if not os.path.exists(src):
+        return [(INFO, "dashboard.server.html not on this disk -- source half skipped")]
+    t = open(src, encoding="utf-8", errors="replace").read()
+    if "function rfetch(" not in t or "window.rfetch = rfetch" not in t:
+        out.append((FAIL, "dashboard.server.html no longer defines rfetch() -- a one-second deploy "
+                          "restart paints the whole ops map red again (RESTART-REDFLASH-1)"))
+    for ep in ("/health/resources", "/dashboard/presence", "/dashboard/summary", "/dashboard/cost",
+               "/dashboard/bit", "/dashboard/email-triage?limit=1", "/flags",
+               "/dashboard/fixed-costs", "/admin/faults?limit=500"):
+        if ("rfetch(B + '%s'" % ep) not in t and ("rfetch(B + '%s'," % ep) not in t and \
+           ("rfetch(B + '%s')" % ep) not in t and ("rfetch(B + '%s'" % ep) not in t:
+            out.append((FAIL, "ops map feed %s is not routed through rfetch() -- it will flash red "
+                              "on the next deploy restart (RESTART-REDFLASH-1)" % ep))
+    if "(window.rfetch||window.fetch.bind(window))" not in t:
+        out.append((FAIL, "the Server Health / BIT panels no longer retry -- 'Health check failed -- "
+                          "server may be restarting' returns on every deploy (RESTART-REDFLASH-1)"))
+    if not out:
+        out.append((INFO, "every polled dashboard feed retries once before painting a chip offline"))
     return out
 
 

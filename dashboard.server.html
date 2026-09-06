@@ -1789,7 +1789,7 @@ function switchView(view) {
   // and was served to nobody. Both surfaces now read the same endpoint, so the
   // two panels can no longer disagree.
   function loadFixedCosts(){
-    fetch(B + '/dashboard/fixed-costs').then(function(r){ return r.json(); }).then(function(c){
+    rfetch(B + '/dashboard/fixed-costs').then(function(r){ return r.json(); }).then(function(c){
       if(!c || !c.sourced_ok){ throw new Error('canon.yml unreadable'); }
       fill('om-cost', c.label, 'g', c.breakdown + ' \u00b7 source: ' + c.source);
       var hero = document.getElementById('om-cost-hero');
@@ -1807,6 +1807,25 @@ function switchView(view) {
       if(n){ n.textContent = 'cost feed offline \u2014 canon.yml did not answer'; }
     });
   }
+
+  /* RESTART-REDFLASH-1 (7 Sep 2026, Claude as CTO). A deploy restarts the BEA for
+     about one second (systemd log 06 Sep 23:29:16 -> startup complete 23:29:17).
+     Any 60s refresh landing in that second had EVERY live feed reject, so the whole
+     map flashed red "offline" and the health panel said "server may be restarting"
+     -- honest per PROVENANCE-1, but indistinguishable from a real outage, and David
+     read it as one. A single quiet retry 2.5s later covers the restart window without
+     ever inventing a number: if the second attempt also fails, the chip still goes red.
+     Only network/5xx are retried -- 401/403/404 are real answers and are NOT retried. */
+  function rfetch(u, o){
+    var again = function(){ return fetch(u, o); };
+    return fetch(u, o).then(function(r){
+      if(r.status >= 500){ return new Promise(function(res){ setTimeout(function(){ res(again()); }, 2500); }); }
+      return r;
+    }).catch(function(){
+      return new Promise(function(res, rej){ setTimeout(function(){ again().then(res, rej); }, 2500); });
+    });
+  }
+  window.rfetch = rfetch;
 
   function fail(ids, ep, err){ ids.forEach(function(id){ fill(id, 'offline', 'r', (ep||'feed') + ' failed just now' + (err ? ' — ' + err : '') + '. The map never invents a number; retry in 60s.'); }); }
   function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -1843,7 +1862,7 @@ function switchView(view) {
     var upd = document.getElementById('om-upd');
     if(upd) upd.textContent = 'refreshing…';
 
-    fetch(B + '/health/resources').then(function(r){return r.json();}).then(function(d){
+    rfetch(B + '/health/resources').then(function(r){return r.json();}).then(function(d){
       fill('om-cpu', d.cpu.pct + '%', d.cpu.pct >= 75 ? 'a' : 'g');
       fill('om-ram', d.ram.pct + '%', d.ram.pct >= 80 ? 'a' : 'g');
       fill('om-disk', d.disk.pct + '%', d.disk.pct >= 75 ? 'a' : 'g');
@@ -1859,7 +1878,7 @@ function switchView(view) {
       fill('om-db', (db.marketsquare_mb||0) + ' MB', 'g');
     }).catch(function(e){ fail(['om-cpu','om-ram','om-disk','om-resp','om-bw','om-db'], '/health/resources', String(e).slice(0,60)); });
 
-    fetch(B + '/dashboard/presence').then(function(r){return r.json();}).then(function(d){
+    rfetch(B + '/dashboard/presence').then(function(r){return r.json();}).then(function(d){
       var c = d.counters || {};
       var on = (c.online_total !== undefined) ? c.online_total : (d.online||[]).length;
       fill('om-livenow', String(on), 'g', 'users seen in the last ~2.5 minutes');
@@ -1872,13 +1891,13 @@ function switchView(view) {
       }
     }).catch(function(e){ fail(['om-livenow','om-users'], '/dashboard/presence', String(e).slice(0,60)); });
 
-    fetch(B + '/dashboard/summary', {headers:(function(){try{var t=sessionStorage.getItem('ms_admin_token')||'';return t?{'X-Admin-Token':t}:{};}catch(e){return {};}})()}).then(function(r){return r.json();}).then(function(d){
+    rfetch(B + '/dashboard/summary', {headers:(function(){try{var t=sessionStorage.getItem('ms_admin_token')||'';return t?{'X-Admin-Token':t}:{};}catch(e){return {};}})()}).then(function(r){return r.json();}).then(function(d){
       var st = d.stats || {};
       if(st.liveListings !== undefined) fill('om-listings', String(st.liveListings), 'g', 'live listings on the marketplace');
       if(st.tuppenceTopup !== undefined) fill('om-tuppence', String(st.tuppenceTopup), 'g', 'Tuppence top-ups from /dashboard/summary — amounts (rand) land with B-OPS3 Paystack wiring');
     }).catch(function(e){ fail(['om-listings'], '/dashboard/summary', String(e).slice(0,60)); });
 
-    fetch(B + '/dashboard/cost').then(function(r){return r.json();}).then(function(d){
+    rfetch(B + '/dashboard/cost').then(function(r){return r.json();}).then(function(d){
       var usd = function(v){ return '$' + (Number(v)||0).toFixed(2); };
       fill('om-ai-mtd', usd(d.month_cost_usd), 'g');
       fill('om-money-out', usd(d.month_cost_usd));
@@ -1895,7 +1914,7 @@ function switchView(view) {
       fill('om-ai-calls', String(d.calls_this_month||0), 'g', 'AI calls this month');
     }).catch(function(e){ fail(['om-ai-mtd','om-ai-today','om-ai-calls','om-ai-ceil'], '/dashboard/cost', String(e).slice(0,60)); });
 
-    fetch(B + '/dashboard/bit').then(function(r){return r.json();}).then(function(b){
+    rfetch(B + '/dashboard/bit').then(function(r){return r.json();}).then(function(b){
       var st = b.state || 'unknown';
       var cls = st === 'pass' ? 'g' : (st === 'critical' ? 'r' : 'a');
       var when = (b.ran_at||'').replace('T',' ').slice(0,16);
@@ -1912,7 +1931,7 @@ function switchView(view) {
       }
     }).catch(function(e){ fail(['om-bit','om-bit2','om-bitfail'], '/dashboard/bit', String(e).slice(0,60)); });
 
-    fetch(B + '/dashboard/email-triage?limit=1').then(function(r){return r.json();}).then(function(d){
+    rfetch(B + '/dashboard/email-triage?limit=1').then(function(r){return r.json();}).then(function(d){
       fill('om-mailtotal', String(d.total||0), 'g');
       var bc = d.by_category_30d || {};
       fill('om-mailspam', String(bc.spam||0), 'g');
@@ -1920,7 +1939,7 @@ function switchView(view) {
       fill('om-mailsent', String(bs.sent||0), 'g');
     }).catch(function(e){ fail(['om-mailtotal','om-mailspam','om-mailsent'], '/dashboard/email-triage', String(e).slice(0,60)); });
 
-    fetch(B + '/flags').then(function(r){return r.json();}).then(function(f){
+    rfetch(B + '/flags').then(function(r){return r.json();}).then(function(f){
       var fc = document.getElementById('om-flagchips');
       if(fc){
         var chip = function(label, on){ return '<span class="om-chip ' + (on ? 'g' : 'o') + '"><span class="om-dot"></span>' + esc(label) + ' ' + (on ? 'ON' : 'OFF') + '</span>'; };
@@ -1956,7 +1975,7 @@ function switchView(view) {
 
     var tok = omTok();
     if(tok){
-      fetch(B + '/admin/services-status', {headers:{'X-Admin-Token': tok}}).then(function(r){
+      rfetch(B + '/admin/services-status', {headers:{'X-Admin-Token': tok}}).then(function(r){
         if(r.status === 401) throw new Error('401'); return r.json();
       }).then(function(d){
         var sc = document.getElementById('om-svcchips');
@@ -2043,7 +2062,7 @@ function switchView(view) {
         if(sc) sc.innerHTML = '<span class="om-chip r" title="/admin/services-status failed just now — ' + esc(String(e).slice(0,60)) + '"><span class="om-dot"></span>service checks offline</span>';
       });
 
-      fetch(B + '/admin/faults?limit=500', {headers:{'X-Admin-Token': tok}}).then(function(r){
+      rfetch(B + '/admin/faults?limit=500', {headers:{'X-Admin-Token': tok}}).then(function(r){
         if(r.status === 401) throw new Error('401'); return r.json();
       }).then(function(d){
         var rows = d.faults || d.items || (Array.isArray(d) ? d : []);
@@ -2139,7 +2158,7 @@ function renderBIT(b){
 }
 
 function loadBIT(){
-  fetch((window.location.protocol === 'file:' ? 'https://trustsquare.co' : '') + '/dashboard/bit')
+  (window.rfetch||window.fetch.bind(window))((window.location.protocol === 'file:' ? 'https://trustsquare.co' : '') + '/dashboard/bit')
     .then(function(r){ return r.json(); })
     .then(function(b){ renderBIT(b); })
     .catch(function(){
@@ -2149,7 +2168,7 @@ function loadBIT(){
 }
 
 function loadHealth() {
-  fetch((window.location.protocol === 'file:' ? 'https://trustsquare.co' : '') + '/health/resources')
+  (window.rfetch||window.fetch.bind(window))((window.location.protocol === 'file:' ? 'https://trustsquare.co' : '') + '/health/resources')
     .then(r => r.json())
     .then(h => renderHealth(h))
     .catch(() => {
