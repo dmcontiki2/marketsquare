@@ -170,15 +170,19 @@ def _missing_third_party(text):
     return mod
 
 
-def _harness(argv, timeout=90, cwd=None):
+def _harness(argv, timeout=90, cwd=None, full=False):
     """Run a proof in a subprocess. Returns (ok, blind, detail).
 
     blind=True means the harness NEVER RAN -- a missing third-party import killed
     it before its first assertion -- which says nothing whatsoever about the app.
     Callers must turn blind into a 'NOT EVALUATED' INFO (-> UNVERIFIED), never a FAIL.
+    full=True returns the WHOLE stdout on failure too (LEDGER-HARNESS-FULL-1, 7 Sep 2026):
+    RG-0308 needs the tool's own count, printed on the FIRST line of a long failing report,
+    and had hand-rolled subprocess.run to get it -- which re-opened RG-0187 for itself.
     """
     try:
-        r = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, cwd=cwd)
+        r = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, cwd=cwd,
+                           stdin=subprocess.DEVNULL)
     except Exception as ex:
         return False, True, "could not run the harness here: " + repr(ex)[:80]
     blob = (r.stdout or "") + (r.stderr or "")
@@ -190,6 +194,8 @@ def _harness(argv, timeout=90, cwd=None):
                 "died at its import line and ran ZERO assertions. An instrument limit, not a "
                 "verdict on the app (LEDGER-DEPS-1). Install it and re-run before trusting "
                 "this board." % mod)
+        if full:
+            return False, False, (r.stdout or r.stderr or "")
         return False, False, (r.stdout or r.stderr or "")[-300:]
     return True, False, (r.stdout or "")
 
@@ -18553,25 +18559,21 @@ def rg_rotation_knows_its_consumers():
         out.append((FAIL, "ROTATE_SECRETS.bat no longer runs the discovery step -- the tool "
                           "exists and the rotation does not consult it, which is the same as "
                           "not having it"))
-    # Run it directly rather than through _harness: the harness keeps only a tail of the
-    # output, and the line this entry needs -- the tool's own count -- is the FIRST line of
-    # a long list. An assertion that reports a number must read the number, not a fragment
-    # of the page it was printed on. (First cut said "1" while the tool said 13.)
-    import subprocess as _sp
-    try:
-        pr = _sp.run([sys.executable, os.path.join(REPO, "scripts", "secret_consumers.py"),
-                      "--check"], stdin=_sp.DEVNULL, stdout=_sp.PIPE, stderr=_sp.DEVNULL,
-                     text=True, timeout=240)
-    except Exception as ex:
+    # Through _harness (RG-0187 -- a hand-rolled subprocess.run here tripped that entry red
+    # on 7 Sep), with full=True so the line this entry needs -- the tool's own count, the
+    # FIRST line of a long list -- survives. An assertion that reports a number must read
+    # the number, not a fragment of the page it was printed on. (First cut said "1" while
+    # the tool said 13.)
+    ok, blind, detail = _harness([sys.executable, os.path.join(REPO, "scripts", "secret_consumers.py"),
+                                  "--check"], timeout=240, full=True)
+    if blind:
         out.append((INFO, "discovery could not run here (%s) -- server half not judged"
-                    % repr(ex)[:80]))
+                    % detail[:80]))
         return out
-    detail = pr.stdout or ""
     if "SKIPPED" in detail:
         out.append((INFO, "the server is unreachable from here, so consumers cannot be "
                           "discovered -- not judged"))
         return out
-    ok = pr.returncode == 0
     if ok:
         out.append((INFO, "every credential with more than one copy on the box is named in the "
                           "register's out-of-band table -- READY TO LOCK"))
@@ -19010,7 +19012,8 @@ def rg_funnel_counts_people_not_scanners():
         ("'google-safety'", "Google-Safety -- the scanner that PROBED as running our JS -- is no "
                             "longer in the vocabulary"),
         ("ua = (request.headers.get(\"user-agent\")", "POST /onboard/step no longer records the user agent"),
-        ("where.append(\"bot = 0\")", "GET /onboard/funnel no longer excludes bot rows by default"),
+        ("where.append(\"bot = 0 AND ua IS NOT NULL\")", "GET /onboard/funnel no longer excludes bot and "
+                                                          "ungraded rows by default"),
         ("step='dwell' AND bot=0", "'humans' is no longer built on the dwell beacon"),
     ):
         if tok not in bm:
@@ -19022,16 +19025,17 @@ def rg_funnel_counts_people_not_scanners():
     try:
         _require_net()
         sid = "probe" + str(int(time.time()))[-9:]
-        body = json.dumps({"sid": sid, "step": "landed", "src": "probe-funnel-human"}).encode()
+        psrc = "probe-fh-" + sid[-9:]      # unique per run: an older probe row can never answer for this one
+        body = json.dumps({"sid": sid, "step": "landed", "src": psrc}).encode()
         req = urllib.request.Request(BASE + "/onboard/step", data=body, method="POST",
                                      headers={"User-Agent": "Mozilla/5.0 (compatible; Google-Safety; "
                                               "+http://www.google.com/bot.html)",
                                               "Content-Type": "application/json"})
         urllib.request.urlopen(req, timeout=TIMEOUT).read()
         hid = json.loads(urllib.request.urlopen(urllib.request.Request(
-            BASE + "/onboard/funnel?days=1&src=probe-funnel-human", headers=UA), timeout=TIMEOUT).read())
+            BASE + "/onboard/funnel?days=1&src=" + psrc, headers=UA), timeout=TIMEOUT).read())
         shown = json.loads(urllib.request.urlopen(urllib.request.Request(
-            BASE + "/onboard/funnel?days=1&src=probe-funnel-human&bots=1", headers=UA), timeout=TIMEOUT).read())
+            BASE + "/onboard/funnel?days=1&src=" + psrc + "&bots=1", headers=UA), timeout=TIMEOUT).read())
         if "humans" not in hid:
             out.append((FAIL, "live GET /onboard/funnel returns no 'humans' field -- the deploy did not "
                               "land or the field was dropped (FUNNEL-HUMAN-1)"))

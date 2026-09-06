@@ -29,18 +29,20 @@ not contribute at all. Two a week also gives a new Shorts channel something to t
 video a week does not. Dates assume the channel exists by Tue 8 Sep; if it lands later, the whole
 column shifts by the same number of days — the ORDER is what matters.
 
+**CORRECTED 7 Sep 2026 (PROBED 6 Sep by David and again via the funnel's `yt-*` sources): NINE of the ten films are already LIVE on youtube.com/@TrustSquareApp — David published them all on 6 Sep, not one. Only 07 · Liquidation is still on disk, unpublished. The two-a-week calendar below is therefore history, kept so the ORDER and the reasons survive; the tracked links stay valid. Individual video URLs for 02–10 are not on disk — read them off the channel. Since 7 Sep 00:19 the channel has advanced features, so the description links are clickable and the funnel can attribute a real YouTube visit.**
+
 | slot | date (18:00 SAST) | film | why here | tracked link |
 |------|-------------------|------|----------|--------------|
 | 1 | **PUBLISHED Sun 6 Sep** | 01 · Collectables | strongest single number in the set ($1,505 for one card) | `?src=yt-01-collectables` · [live](https://youtube.com/shorts/oULMIsCAPnk) |
-| 2 | Fri 11 Sep | 05 · Car | biggest ZA search volume — Hilux, price check, known faults | `?src=yt-05-car` |
-| 3 | Tue 15 Sep | 09 · Exam study plan | **seasonal** — "six weeks to finals" only lands before finals | `?src=yt-09-exam` |
-| 4 | Fri 18 Sep | 08 · Weekend | cheapest, most shareable, most local | `?src=yt-08-weekend` |
-| 5 | Tue 22 Sep | 04 · Property | high-intent audience, biggest ticket | `?src=yt-04-property` |
-| 6 | Fri 25 Sep | 10 · Offer strategy | shortest and punchiest; good re-cut source | `?src=yt-10-offer` |
-| 7 | Tue 29 Sep | 07 · Liquidation | the seller-side film — closest to the onboarding number | `?src=yt-07-liquidation` |
-| 8 | Fri 2 Oct  | 02 · Heritage tour | travel block starts | `?src=yt-02-heritage` |
-| 9 | Tue 6 Oct  | 06 · Retirement | narrow audience, high intent | `?src=yt-06-retirement` |
-| 10 | Fri 9 Oct | 03 · Expedition | most aspirational — good note to end the first run on | `?src=yt-03-expedition` |
+| 2 | **LIVE since 6 Sep** (was Fri 11 Sep) | 05 · Car | biggest ZA search volume — Hilux, price check, known faults | `?src=yt-05-car` |
+| 3 | **LIVE since 6 Sep** (was Tue 15 Sep) | 09 · Exam study plan | **seasonal** — "six weeks to finals" only lands before finals | `?src=yt-09-exam` |
+| 4 | **LIVE since 6 Sep** (was Fri 18 Sep) | 08 · Weekend | cheapest, most shareable, most local | `?src=yt-08-weekend` |
+| 5 | **LIVE since 6 Sep** (was Tue 22 Sep) | 04 · Property | high-intent audience, biggest ticket | `?src=yt-04-property` |
+| 6 | **LIVE since 6 Sep** (was Fri 25 Sep) | 10 · Offer strategy | shortest and punchiest; good re-cut source | `?src=yt-10-offer` |
+| 7 | **NOT YET PUBLISHED** — the one film still on disk only (was Tue 29 Sep) | 07 · Liquidation | the seller-side film — closest to the onboarding number | `?src=yt-07-liquidation` |
+| 8 | **LIVE since 6 Sep** (was Fri 2 Oct) | 02 · Heritage tour | travel block starts | `?src=yt-02-heritage` |
+| 9 | **LIVE since 6 Sep** (was Tue 6 Oct) | 06 · Retirement | narrow audience, high intent | `?src=yt-06-retirement` |
+| 10 | **LIVE since 6 Sep** (was Fri 9 Oct) | 03 · Expedition | most aspirational — good note to end the first run on | `?src=yt-03-expedition` |
 
 After 9 Oct the shelf is empty. What keeps the channel alive: **11 · Aunty Ester tutor spotlight**
 (script + prompts ready, not shot) and **UGC shorts wave 1, S1–S7** (`shorts/SHORTS_WAVE1.md`,

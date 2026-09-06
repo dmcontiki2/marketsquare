@@ -12985,7 +12985,10 @@ def onboard_funnel(days: int = 7, src: str = None, magic_only: int = 0, bots: in
     since = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
     where, args = ["created_at >= ?"], [since]
     if not bots:
-        where.append("bot = 0")
+        # bot=0 alone would keep every row written BEFORE the ua/bot columns existed (7 Sep
+        # 01:30 SAST) -- those are ungraded, and the ones we inspected were scanners. An
+        # ungraded row is not evidence of a person; it shows only with bots=1.
+        where.append("bot = 0 AND ua IS NOT NULL")
     if src:
         where.append("src = ?"); args.append(str(src)[:120])
     else:
@@ -13012,16 +13015,18 @@ def onboard_funnel(days: int = 7, src: str = None, magic_only: int = 0, bots: in
         rows = conn.execute(f"SELECT COUNT(*) FROM onboard_steps WHERE {w}", args).fetchone()[0]
         humans = conn.execute(f"SELECT COUNT(DISTINCT sid) FROM onboard_steps WHERE {w} AND step='dwell' AND bot=0",
                               args).fetchone()[0]
-        bot_w = " AND ".join(x for x in where if x != "bot = 0")
+        bot_w = " AND ".join(x for x in where if not x.startswith("bot = 0"))
         bot_sessions = conn.execute(f"SELECT COUNT(DISTINCT sid) FROM onboard_steps WHERE {bot_w} AND bot=1",
                                     args).fetchone()[0]
+        ungraded = conn.execute(f"SELECT COUNT(DISTINCT sid) FROM onboard_steps WHERE {bot_w} AND ua IS NULL",
+                                args).fetchone()[0]
     finally:
         conn.close()
     ordered = [{"step": s, "sessions": steps.get(s, 0)} for s in _OB_ORDER if s in steps]
     extra = sorted(s for s in steps if s not in _OB_ORDER)
     ordered += [{"step": s, "sessions": steps[s]} for s in extra]
     return {"days": days, "since": since, "sessions": sessions, "humans": humans,
-            "bot_sessions": bot_sessions, "bots_included": bool(bots),
+            "bot_sessions": bot_sessions, "ungraded_sessions": ungraded, "bots_included": bool(bots),
             "distinct_emails": with_email,
             "rows": rows, "funnel": ordered, "by_src": by_src, "by_cat": by_cat,
             "note": "counts of distinct browser sessions per step; no addresses are returned; "

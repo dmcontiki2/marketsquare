@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrustSquare — The Genie: "What is your wish, master?"</title>
+<style>
+:root{
+  --ink:#e9edf7; --dim:#9aa6c4; --navy:#070c1c; --navy2:#0d1430; --card:#111a38;
+  --line:#22305c; --blue:#4a7fd4; --violet:#8b5cf6; --cyan:#38d6ff;
+  --gold:#e0ae4e; --green:#34c06e; --amber:#e8a33a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--navy);color:var(--ink);
+  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--cyan)}
+.wrap{max-width:1420px;margin:0 auto;padding:26px 20px 60px}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:-.3px}
+h2{font-size:17px;margin:26px 0 10px;color:#fff}
+h3{font-size:14px;margin:18px 0 6px;color:#cfd8f0;text-transform:uppercase;letter-spacing:.08em}
+.lede{color:var(--dim);margin:0 0 20px;max-width:900px}
+.stage{display:grid;grid-template-columns:400px 1fr;gap:30px;align-items:start}
+@media(max-width:1000px){.stage{grid-template-columns:1fr}}
+
+/* ---------------- phone ---------------- */
+.phonecol{position:sticky;top:20px}
+.phone{position:relative;width:378px;height:770px;border-radius:38px;overflow:hidden;
+  background:#f4f6fb;border:11px solid #05080f;box-shadow:0 30px 80px rgba(0,0,0,.65);}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:22px;
+  background:#05080f;border-radius:0 0 14px 14px;z-index:60}
+
+/* the ordinary app underneath — this is what the genie must never cover */
+.app{position:absolute;inset:0;display:flex;flex-direction:column;background:#f4f6fb;color:#16203a}
+.appbar{padding:30px 12px 8px;background:#fff;border-bottom:1px solid #e3e8f3}
+.brand{font-weight:800;font-size:15px;color:#12306b;display:flex;align-items:center;gap:6px}
+.brand small{font-weight:500;color:#7b88a8;font-size:11px}
+.searchbox{margin-top:8px;display:flex;align-items:center;gap:7px;background:#eef2fa;
+  border:1px solid #dde4f2;border-radius:11px;padding:8px 10px;font-size:12.5px;color:#7b88a8;cursor:pointer}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;background:#fff;border-bottom:1px solid #e3e8f3;
+  scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.cchip{flex:0 0 auto;font-size:11.5px;padding:5px 10px;border-radius:999px;background:#eef2fa;
+  border:1px solid #dde4f2;white-space:nowrap;cursor:pointer;color:#3b4a70}
+.cchip.on{background:#12306b;border-color:#12306b;color:#fff;font-weight:600}
+.pills{display:flex;gap:6px;padding:8px 12px 4px;background:#fff}
+.pill{font-size:11px;padding:4px 9px;border-radius:8px;border:1px solid #dde4f2;background:#fff;
+  color:#3b4a70;cursor:pointer}
+.tagrow{display:flex;flex-wrap:wrap;gap:5px;padding:6px 12px 2px;background:#fff;min-height:6px}
+.tag{font-size:10.5px;background:#e8f0ff;border:1px solid #c6d8fb;color:#12306b;border-radius:7px;
+  padding:3px 6px;display:flex;align-items:center;gap:5px;animation:pop .28s ease}
+.tag i{cursor:pointer;font-style:normal;color:#7b88a8}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.count{padding:6px 12px;font-size:11px;color:#7b88a8;background:#fff;border-bottom:1px solid #e3e8f3}
+.results{flex:1;overflow:auto;padding:9px;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start}
+.card{background:#fff;border:1px solid #e3e8f3;border-radius:11px;overflow:hidden}
+.thumb{height:62px;display:flex;align-items:center;justify-content:center;font-size:23px}
+.cbody{padding:6px 7px 8px}
+.ctitle{font-size:11px;font-weight:700;line-height:1.25;color:#16203a}
+.cmeta{font-size:9.5px;color:#8a95b2;margin-top:2px}
+.cprice{font-size:11.5px;font-weight:800;color:#12306b;margin-top:3px}
+.trust{display:inline-block;font-size:8.5px;background:#e7f7ee;color:#12703f;border-radius:5px;
+  padding:1px 4px;margin-top:3px;font-weight:700}
+.bottombar{display:flex;background:#fff;border-top:1px solid #e3e8f3;padding:6px 0 9px}
+.bb{flex:1;text-align:center;font-size:9px;color:#8a95b2;cursor:pointer}
+.bb b{display:block;font-size:16px;line-height:1.2}
+.bb.on{color:#12306b;font-weight:700}
+
+/* ---------------- the genie band (inline, never an overlay) ---------------- */
+.band{background:linear-gradient(180deg,#131c3f,#0d1430);border-top:1px solid #2a3congress;
+  border-bottom:1px solid #26325e;color:#e9edf7;padding:9px 10px}
+.band{border-top:1px solid #26325e}
+.bandhead{display:flex;align-items:center;gap:7px;font-size:11px;color:#a9b6d8}
+.miniorb{width:19px;height:19px;border-radius:50%;flex:0 0 auto;
+  background:radial-gradient(circle at 32% 30%,#a7e8ff,#4a7fd4 45%,#6d3ff0);
+  box-shadow:0 0 11px rgba(90,140,255,.85)}
+.said{font-size:12px;margin:6px 0 7px;color:#fff;line-height:1.4}
+.said em{color:var(--cyan);font-style:normal}
+.opts{display:flex;flex-wrap:wrap;gap:5px}
+.opt{font-size:11px;padding:5px 9px;border-radius:8px;cursor:pointer;
+  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);color:#e9edf7}
+.opt:hover{background:rgba(120,170,255,.25)}
+.opt.go{background:linear-gradient(135deg,#3aa76d,#1d7a4b);border-color:#2f9b64;font-weight:700}
+.opt.skip{opacity:.6}
+.askrow{display:flex;gap:6px;margin-top:8px}
+.askrow input{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
+  border-radius:9px;color:#fff;font-size:12px;padding:7px 9px;outline:none}
+.askrow input::placeholder{color:#8494bd}
+.askrow button{background:linear-gradient(135deg,#4a7fd4,#7b5cff);border:0;color:#fff;font-weight:700;
+  border-radius:9px;padding:0 12px;font-size:12px;cursor:pointer}
+
+/* draft listing card the genie writes for you */
+.draft{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:10px;
+  padding:8px;margin-top:7px}
+.draft .dt{font-size:12px;font-weight:800;color:#fff}
+.draft .dd{font-size:10.5px;color:#b9c5e4;margin-top:3px;line-height:1.45}
+.kv{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.kv span{font-size:9.5px;background:rgba(120,170,255,.18);border:1px solid rgba(120,170,255,.35);
+  border-radius:6px;padding:2px 5px;color:#cfe0ff}
+.kv span.miss{background:rgba(232,163,58,.16);border-color:rgba(232,163,58,.45);color:#f3cf95}
+
+/* ---------------- the cinematic ---------------- */
+.cinema{position:absolute;inset:0;z-index:50;pointer-events:none}
+.veil{position:absolute;inset:0;background:radial-gradient(120% 90% at 60% 40%,#1a1350 0%,#070a1e 70%);
+  opacity:0;transition:opacity 1.1s ease}
+.veil.on{opacity:1}
+.smoke{position:absolute;border-radius:50%;filter:blur(26px);mix-blend-mode:screen;opacity:0;
+  will-change:transform,opacity}
+.s1{width:420px;height:420px;left:-70px;top:120px;background:radial-gradient(circle,#4f7cff 0%,rgba(79,124,255,0) 68%)}
+.s2{width:380px;height:380px;left:110px;top:250px;background:radial-gradient(circle,#8b3ff0 0%,rgba(139,63,240,0) 68%)}
+.s3{width:340px;height:340px;left:40px;top:420px;background:radial-gradient(circle,#38d6ff 0%,rgba(56,214,255,0) 66%)}
+.s4{width:300px;height:300px;left:180px;top:60px;background:radial-gradient(circle,#6d5cff 0%,rgba(109,92,255,0) 70%)}
+@keyframes swirlA{0%{transform:translate(0,0) rotate(0) scale(1)}50%{transform:translate(46px,-40px) rotate(180deg) scale(1.22)}100%{transform:translate(0,0) rotate(360deg) scale(1)}}
+@keyframes swirlB{0%{transform:translate(0,0) rotate(0) scale(1.1)}50%{transform:translate(-52px,34px) rotate(-180deg) scale(.86)}100%{transform:translate(0,0) rotate(-360deg) scale(1.1)}}
+.smoke.run{opacity:.95}
+.s1.run{animation:swirlA 13s ease-in-out infinite}
+.s2.run{animation:swirlB 11s ease-in-out infinite}
+.s3.run{animation:swirlA 15s ease-in-out infinite reverse}
+.s4.run{animation:swirlB 17s ease-in-out infinite}
+.smoke.fade{opacity:.16;transition:opacity 2.2s ease}
+
+.lamp{position:absolute;right:14px;bottom:74px;width:112px;height:78px;opacity:0;transform:translateY(16px);
+  transition:opacity .9s ease,transform .9s ease;z-index:52}
+.lamp.on{opacity:1;transform:translateY(0)}
+.genie{position:absolute;right:2px;top:22px;width:250px;height:400px;opacity:0;transform:translateY(60px) scale(.6);
+  transform-origin:88% 100%;transition:opacity 1.2s ease,transform 1.4s cubic-bezier(.2,.9,.25,1.05);z-index:53}
+.genie.on{opacity:1;transform:translateY(0) scale(1)}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.genie.on .bobber{animation:bob 4.6s ease-in-out infinite}
+
+.bubble{position:absolute;left:12px;top:238px;max-width:196px;background:rgba(255,255,255,.96);
+  color:#0d1430;border-radius:14px;padding:10px 12px;font-size:13.5px;font-weight:700;line-height:1.35;
+  box-shadow:0 12px 34px rgba(0,0,0,.5);opacity:0;transform:translateY(10px);
+  transition:opacity .6s ease,transform .6s ease;z-index:54}
+.bubble:after{content:"";position:absolute;right:-8px;top:20px;border:8px solid transparent;
+  border-left-color:rgba(255,255,255,.96);border-right:0}
+.bubble.on{opacity:1;transform:translateY(0)}
+.bubble .sub{font-weight:500;font-size:11.5px;color:#5a6party}
+.bubble .sub{color:#5a6688}
+
+.wishbar{position:absolute;left:14px;right:14px;bottom:86px;z-index:55;display:flex;gap:7px;
+  opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+.wishbar.on{opacity:1;transform:translateY(0);pointer-events:auto}
+.wishbar input{flex:1;background:rgba(10,16,40,.82);border:1px solid rgba(140,170,255,.45);
+  border-radius:12px;color:#fff;font-size:12.5px;padding:10px 11px;outline:none;
+  box-shadow:0 0 26px rgba(80,120,255,.35)}
+.wishbar input::placeholder{color:#8fa0cf}
+.wishbar button{background:linear-gradient(135deg,#4a7fd4,#8b5cf6);border:0;color:#fff;font-weight:800;
+  border-radius:12px;padding:0 13px;font-size:12.5px;cursor:pointer}
+.hints{position:absolute;left:14px;right:14px;bottom:44px;z-index:55;display:flex;flex-wrap:wrap;gap:5px;
+  opacity:0;transition:opacity .6s ease}
+.hints.on{opacity:1;pointer-events:auto}
+.hints b{font-size:10.5px;font-weight:600;padding:5px 8px;border-radius:8px;cursor:pointer;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#dfe7fb}
+.hints b:hover{background:rgba(120,170,255,.3)}
+
+/* the resting orb — after the first run, this is all you see */
+.orb{position:absolute;right:13px;bottom:76px;width:58px;height:58px;border-radius:50%;border:0;
+  cursor:pointer;z-index:45;display:none;
+  background:radial-gradient(circle at 32% 28%,#bdf0ff,#4a7fd4 42%,#6d3ff0 100%);
+  box-shadow:0 0 26px rgba(90,140,255,.75),0 8px 20px rgba(0,0,0,.4);
+  font-size:26px;line-height:58px;text-align:center}
+.orb.show{display:block;pointer-events:auto}
+@keyframes pulse{0%,100%{box-shadow:0 0 22px rgba(90,140,255,.6),0 8px 20px rgba(0,0,0,.4)}
+                 50%{box-shadow:0 0 40px rgba(140,110,255,.95),0 8px 20px rgba(0,0,0,.4)}}
+.orb.show{animation:pulse 3.4s ease-in-out infinite}
+
+.toast{position:absolute;left:50%;bottom:150px;transform:translateX(-50%);background:rgba(8,12,30,.94);
+  color:#fff;font-size:11.5px;padding:7px 12px;border-radius:9px;z-index:70;opacity:0;
+  transition:opacity .25s;border:1px solid rgba(140,170,255,.35);max-width:300px;text-align:center}
+.toast.on{opacity:1}
+
+/* ---------------- notes column ---------------- */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:16px}
+.panel p{margin:0 0 11px;color:#c4cee6}
+.panel p:last-child{margin-bottom:0}
+.panel ul{margin:0 0 11px;padding-left:19px;color:#c4cee6}
+.panel li{margin-bottom:6px}
+.small{font-size:12.5px;color:var(--dim)}
+.badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:3px 8px;border-radius:6px;margin-right:6px}
+.b-new{background:rgba(52,192,110,.18);color:#6ee7a0;border:1px solid rgba(52,192,110,.4)}
+.b-old{background:rgba(155,170,210,.14);color:#b9c5e4;border:1px solid rgba(155,170,210,.3)}
+.b-rule{background:rgba(232,163,58,.16);color:#f3cf95;border:1px solid rgba(232,163,58,.42)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 12px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:#9fb0d8;font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
+td b{color:#fff}
+.meter{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.mbox{flex:1;min-width:120px;background:rgba(255,255,255,.05);border:1px solid var(--line);
+  border-radius:10px;padding:9px 11px}
+.mbox b{display:block;font-size:21px;color:#fff;line-height:1.2}
+.mbox span{font-size:11px;color:var(--dim)}
+.ctrls{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.ctrls button{background:#182247;border:1px solid var(--line);color:#dbe3f7;border-radius:9px;
+  padding:8px 12px;font-size:12.5px;cursor:pointer}
+.ctrls button:hover{border-color:#4a7fd4}
+.ctrls button.primary{background:linear-gradient(135deg,#4a7fd4,#7b5cff);border:0;font-weight:700}
+.foot{margin-top:26px;font-size:12px;color:#6e7b9c;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The Genie — <span style="color:#8b5cf6">&ldquo;What is your wish, master?&rdquo;</span></h1>
+  <p class="lede">David's problem, in his words: the variety is what we want, the complexity is a bad side effect.
+     This is that idea built and running — the lamp, the smoke, the genie, and a talking helper that does the
+     two jobs that actually matter: <b>put something up for sale from a sentence</b>, and <b>find something
+     without touching a single menu</b>. Everything below the phone explains what was decided and why.</p>
+
+  <div class="stage">
+    <div class="phonecol">
+      <div class="phone" id="phone">
+        <div class="notch"></div>
+
+        <!-- ============ the ordinary app. The genie must never cover any of this ============ -->
+        <div class="app">
+          <div class="appbar">
+            <div class="brand">TrustSquare <small>· Pretoria</small></div>
+            <div class="searchbox" onclick="poke('Search')">&#128269; Search everything…</div>
+          </div>
+          <div class="chips" id="chips"></div>
+          <div class="pills">
+            <div class="pill" onclick="poke('Filter')">&#9776; Filter</div>
+            <div class="pill" onclick="poke('Sort')">&#8645; Sort</div>
+            <div class="pill" onclick="poke('Trust score')">&#9733; Trust 80+</div>
+          </div>
+          <div class="tagrow" id="tagrow"></div>
+
+          <!-- the genie band lives HERE: an inline row that takes its own space -->
+          <div id="bandslot"></div>
+
+          <div class="count" id="count">214 nearby</div>
+          <div class="results" id="results"></div>
+          <div class="bottombar">
+            <div class="bb on" onclick="poke('Home')"><b>&#127968;</b>Home</div>
+            <div class="bb" onclick="poke('Saved')"><b>&#9825;</b>Saved</div>
+            <div class="bb" onclick="poke('Sell')"><b>&#10133;</b>Sell</div>
+            <div class="bb" onclick="poke('Messages')"><b>&#128172;</b>Chats</div>
+            <div class="bb" onclick="poke('Account')"><b>&#128100;</b>Me</div>
+          </div>
+        </div>
+
+        <button class="orb" id="orb" onclick="wake()">&#129482;</button>
+
+        <!-- ============ the cinematic ============ -->
+        <div class="cinema" id="cinema">
+          <div class="veil" id="veil"></div>
+          <div class="smoke s1" id="sm1"></div>
+          <div class="smoke s2" id="sm2"></div>
+          <div class="smoke s3" id="sm3"></div>
+          <div class="smoke s4" id="sm4"></div>
+
+          <!-- the lamp, bottom right -->
+          <div class="lamp" id="lamp">
+            <svg viewBox="0 0 200 140" width="112" height="78">
+              <defs>
+                <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#f6d98d"/><stop offset="45%" stop-color="#d09a34"/>
+                  <stop offset="100%" stop-color="#7a5410"/>
+                </linearGradient>
+                <radialGradient id="spoutglow"><stop offset="0%" stop-color="#bfe6ff" stop-opacity=".95"/>
+                  <stop offset="100%" stop-color="#6d5cff" stop-opacity="0"/></radialGradient>
+                <filter id="lampglow"><feGaussianBlur stdDeviation="3.2" result="b"/>
+                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              </defs>
+              <ellipse cx="100" cy="128" rx="62" ry="7" fill="#000" opacity=".35"/>
+              <path d="M40 108 Q34 78 66 70 L142 62 Q176 58 178 76 Q180 96 150 106 Q100 120 40 108 Z"
+                    fill="url(#brass)" filter="url(#lampglow)"/>
+              <path d="M60 74 Q96 62 140 66" stroke="#ffeab6" stroke-width="4" fill="none" opacity=".7"/>
+              <path d="M36 104 Q6 96 14 74 Q20 58 40 66" stroke="url(#brass)" stroke-width="9" fill="none"/>
+              <path d="M150 64 L196 44 Q202 40 198 34 L176 40 Q158 46 150 56 Z" fill="url(#brass)"/>
+              <circle cx="120" cy="52" r="9" fill="url(#brass)"/>
+              <circle cx="196" cy="38" r="26" fill="url(#spoutglow)"/>
+            </svg>
+          </div>
+
+          <!-- the genie: upper torso, folded arms, smoke tail into the lamp -->
+          <div class="genie" id="genie">
+            <div class="bobber">
+            <svg viewBox="0 0 250 400" width="250" height="400">
+              <defs>
+                <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#9fd4ff" stop-opacity=".97"/>
+                  <stop offset="55%" stop-color="#5b7bf0" stop-opacity=".93"/>
+                  <stop offset="100%" stop-color="#7b3fe4" stop-opacity=".8"/>
+                </linearGradient>
+                <linearGradient id="tail" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#6d7ff0" stop-opacity=".8"/>
+                  <stop offset="70%" stop-color="#7b3fe4" stop-opacity=".35"/>
+                  <stop offset="100%" stop-color="#38d6ff" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient id="gold2" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#ffe9a8"/><stop offset="100%" stop-color="#c8912a"/>
+                </linearGradient>
+                <filter id="soft"><feGaussianBlur stdDeviation="6" result="b"/>
+                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                <filter id="edge"><feGaussianBlur stdDeviation="1.4"/></filter>
+              </defs>
+
+              <!-- smoke tail down to the lamp spout -->
+              <path d="M118 250 Q92 300 120 330 Q150 356 150 392 L188 392 Q186 350 160 326 Q140 306 152 268 Z"
+                    fill="url(#tail)" filter="url(#soft)" opacity=".85"/>
+
+              <!-- torso: broad shoulders, tapering to the smoke -->
+              <path d="M125 118 Q186 128 202 186 Q214 232 196 262 Q160 282 122 280 Q84 282 52 260
+                       Q34 230 46 184 Q62 128 125 118 Z" fill="url(#skin)" filter="url(#soft)"/>
+              <!-- chest shading -->
+              <path d="M125 150 Q150 176 148 214 Q125 226 102 214 Q100 176 125 150 Z"
+                    fill="#2c3fa8" opacity=".22"/>
+              <path d="M125 152 L125 214" stroke="#1d2a7a" stroke-width="3" opacity=".35"/>
+
+              <!-- folded arms -->
+              <path d="M56 214 Q124 196 194 214 Q198 238 190 250 Q124 232 60 250 Q52 238 56 214 Z"
+                    fill="url(#skin)"/>
+              <path d="M60 246 Q124 228 190 246 Q186 258 178 262 Q124 246 72 262 Q64 258 60 246 Z"
+                    fill="#3550c9" opacity=".35"/>
+              <!-- forearm crease + fists tucked -->
+              <ellipse cx="184" cy="230" rx="18" ry="15" fill="url(#skin)"/>
+              <ellipse cx="66" cy="230" rx="18" ry="15" fill="url(#skin)"/>
+              <!-- gold armbands -->
+              <rect x="168" y="196" width="30" height="12" rx="6" fill="url(#gold2)"/>
+              <rect x="52" y="196" width="30" height="12" rx="6" fill="url(#gold2)"/>
+
+              <!-- neck + head -->
+              <path d="M108 104 L142 104 L142 128 L108 128 Z" fill="url(#skin)"/>
+              <ellipse cx="125" cy="76" rx="40" ry="44" fill="url(#skin)" filter="url(#soft)"/>
+              <!-- brow + eyes -->
+              <path d="M104 66 Q112 60 122 65" stroke="#0e1a5a" stroke-width="4" fill="none" stroke-linecap="round"/>
+              <path d="M128 65 Q138 60 146 66" stroke="#0e1a5a" stroke-width="4" fill="none" stroke-linecap="round"/>
+              <ellipse cx="112" cy="76" rx="5.5" ry="4" fill="#0b1240"/>
+              <ellipse cx="138" cy="76" rx="5.5" ry="4" fill="#0b1240"/>
+              <circle cx="113.6" cy="74.6" r="1.7" fill="#dff3ff"/>
+              <circle cx="139.6" cy="74.6" r="1.7" fill="#dff3ff"/>
+              <!-- beard -->
+              <path d="M100 92 Q125 106 150 92 Q152 124 125 136 Q98 124 100 92 Z" fill="#243aa8" opacity=".55"/>
+              <path d="M118 132 Q125 150 132 132 Q126 142 118 132 Z" fill="#243aa8" opacity=".55"/>
+              <!-- topknot + gold band -->
+              <rect x="99" y="30" width="52" height="13" rx="6" fill="url(#gold2)"/>
+              <path d="M112 30 Q118 8 132 14 Q140 18 134 30 Z" fill="#243aa8" opacity=".75"/>
+              <circle cx="125" cy="24" r="5" fill="url(#gold2)"/>
+              <!-- earring -->
+              <circle cx="164" cy="82" r="7" fill="none" stroke="url(#gold2)" stroke-width="3"/>
+            </svg>
+            </div>
+          </div>
+
+          <div class="bubble" id="bubble">
+            <span id="bubbletext">What is your wish, master?</span>
+            <div class="sub" id="bubblesub">Tell me in your own words. I will do the rest.</div>
+          </div>
+
+          <div class="wishbar" id="wishbar">
+            <input id="wish" placeholder="Say it plainly…" autocomplete="off">
+            <button onclick="grant()">Wish</button>
+          </div>
+          <div class="hints" id="hints"></div>
+          <div class="toast" id="toast"></div>
+        </div>
+      </div>
+
+      <div class="ctrls">
+        <button class="primary" onclick="replay()">&#9654; Replay the arrival</button>
+        <button onclick="speakToggle()" id="sndbtn">&#128266; Voice: on</button>
+        <button onclick="resetAll()">Reset</button>
+      </div>
+      <div class="meter">
+        <div class="mbox"><b id="mTaps">0</b><span>taps you made</span></div>
+        <div class="mbox"><b id="mSaved">0</b><span>taps the genie saved</span></div>
+        <div class="mbox"><b id="mCover">no</b><span>anything covered?</span></div>
+      </div>
+    </div>
+
+    <div class="notescol">
+      <div class="panel">
+        <h2 style="margin-top:0">Try it — these are the two wishes that matter</h2>
+        <p class="small">Tap a line and watch the phone. Both are typed into the same box; the genie works out
+           which one you meant.</p>
+        <h3>&ldquo;I want to find…&rdquo;</h3>
+        <ul class="small">
+          <li><a href="#" onclick="demo('my son needs a chess coach, he is 12 and a beginner');return false">
+              my son needs a chess coach, he is 12 and a beginner</a></li>
+          <li><a href="#" onclick="demo('looking for a 3 bedroom house to rent in Waterkloof');return false">
+              looking for a 3 bedroom house to rent in Waterkloof</a></li>
+          <li><a href="#" onclick="demo('my geyser is leaking, I need a plumber today');return false">
+              my geyser is leaking, I need a plumber today</a></li>
+        </ul>
+        <h3>&ldquo;I want to sell…&rdquo;</h3>
+        <ul class="small">
+          <li><a href="#" onclick="demo('I want to sell my 2016 Toyota Hilux automatic, 180000 km, R320000');return false">
+              I want to sell my 2016 Toyota Hilux automatic, 180000 km, R320000</a></li>
+          <li><a href="#" onclick="demo('I teach maths to high school kids online, R350 an hour');return false">
+              I teach maths to high school kids online, R350 an hour</a></li>
+          <li><a href="#" onclick="demo('selling my late fathers coin collection, mostly pre-1900, excellent condition');return false">
+              selling my late father&rsquo;s coin collection, mostly pre-1900, excellent condition</a></li>
+        </ul>
+        <p class="small" style="margin-bottom:0">Every control in the app stays alive while the genie works —
+           tap Filter, Sort, a category chip or the bottom bar at any point and see for yourself.</p>
+      </div>
+
+      <div class="panel">
+        <h2 style="margin-top:0">What is new here, and what already existed</h2>
+        <p>Checked on disk before building anything. This is not a fresh idea — it is the second half of one
+           you already ruled on.</p>
+        <table>
+          <tr><th>Piece</th><th>Status</th></tr>
+          <tr><td><b>A genie that helps you narrow a search</b><br>
+                  <span class="small">Ring of seven categories, one question at a time, never covers a
+                  selector</span></td>
+              <td><span class="badge b-old">Already decided</span><br>
+                  <span class="small">RUL-097, 4 Sep. Built, measured, parked until the shelves are full.</span></td></tr>
+          <tr><td><b>A genie that writes the whole advert for you from one sentence</b><br>
+                  <span class="small">You describe the thing; it picks the category, fills the fields, writes
+                  the title and the description, and hands you a Publish button</span></td>
+              <td><span class="badge b-new">New</span><br>
+                  <span class="small">This is the part that answers the complaint. Nobody has ruled on it.</span></td></tr>
+          <tr><td><b>The lamp, the smoke, the arrival, the voice</b></td>
+              <td><span class="badge b-new">New</span><br>
+                  <span class="small">A character, not a chrome widget.</span></td></tr>
+          <tr><td><b>The narrowing logic underneath</b></td>
+              <td><span class="badge b-old">Untouched</span><br>
+                  <span class="small">Still the Zoom engine. The genie speaks; it does not think for itself.</span></td></tr>
+        </table>
+      </div>
+
+      <div class="panel">
+        <h2 style="margin-top:0">The decisions I made building it (yours to overrule)</h2>
+
+        <p><span class="badge b-rule">1</span><b>The full ceremony plays once, not every time.</b>
+           Smoke, lamp, genie rising, the line spoken — that is the first time a person ever opens the app,
+           and it is wonderful exactly once. After that the lamp sits quietly in the corner and glows.
+           Tap it and the genie leans in without the theatre. A three-second film in front of a shop you
+           visit daily becomes a locked door by the fourth day.</p>
+
+        <p><span class="badge b-rule">2</span><b>He greets you, then gets out of the way.</b>
+           The arrival is the one full-screen moment your own covering rule allows, and only because nothing
+           is chosen yet. The instant you say your wish, the genie shrinks to the corner and everything he
+           says appears in a band that <em>pushes the results down</em> rather than sitting on top of them.
+           Search, chips, Filter, Sort, Trust and the bottom bar stay live throughout. The meter under the
+           phone is watching for exactly this and says <b>no</b>.</p>
+
+        <p><span class="badge b-rule">3</span><b>Selling is the wish worth granting first.</b>
+           Finding things has a fallback — people scroll, and browsing is pleasant. Filling in a form has no
+           fallback: they abandon it and you get nothing. 546 people were emailed, 61 clicked, 0 published.
+           A genie that turns one sentence into a finished advert attacks the number that is actually zero.
+           The search genie stays parked where you left it.</p>
+
+        <p><span class="badge b-rule">4</span><b>He never publishes anything on his own.</b>
+           He drafts. You read it and press Publish. Anything he could not work out he shows in amber and asks
+           for — he never invents a price, a year or a condition. A confident wrong advert costs a seller more
+           than an empty form.</p>
+
+        <p><span class="badge b-rule">5</span><b>Voice out, typing in — for now.</b>
+           He speaks his greeting aloud (your phone's own voice, nothing bought). Listening to speech is a
+           different bill and a permissions prompt, so version one reads what you type. The wish box is one
+           line and takes a scruffy sentence.</p>
+
+        <p style="margin-bottom:0"><span class="badge b-rule">6</span><b>He is drawn, not filmed.</b>
+           Everything you see is code — no video file, no image, nothing to download. It costs the app nothing
+           to load and it looks the same on a cheap phone.</p>
+      </div>
+
+      <div class="panel">
+        <h2 style="margin-top:0">What this would cost to run</h2>
+        <p>One short AI call per wish. The sentence in, a structured answer out. Roughly the same size as the
+           advert-writing call the app already makes today, so it sits inside the daily AI ceiling you already
+           set rather than needing a new one.</p>
+        <p style="margin-bottom:0" class="small">The honest limits: he can only offer categories that actually
+           have stock, or the ring advertises an empty shop — that was the reason for parking the search half,
+           and it still holds. Selling has no such problem: a person listing a bakkie does not care how many
+           bakkies are already there.</p>
+      </div>
+
+      <div class="panel">
+        <h2 style="margin-top:0">If you like it, the next step</h2>
+        <p>This is a picture, not a feature. Nothing is wired into the app, no flag, no deploy. To make it real:
+           the wish box calls the AI with the category list and the field names, the answer fills the existing
+           listing form, and the person presses Publish. The form already exists and already validates —
+           the genie just arrives with it filled in.</p>
+        <p style="margin-bottom:0" class="small">Say the word and I write it up against the Zoom spec the way
+           the search half was written up, so the two halves stay one design and not two.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">Prototype &middot; invented listings, real category and field names &middot; TrustSquare / MarketSquare &middot; 7 Sep 2026</div>
+</div>
+
+<script>
+/* ============================================================================
+   Real category + field names, lifted from GENIE_SEARCH_CONCEPT.html so the two
+   prototypes describe the same product. Listings are invented.
+   ========================================================================== */
+var AREAS=['Waterkloof','Brooklyn','Menlyn','Hatfield','Centurion','Lynnwood','Faerie Glen','Garsfontein'];
+var CATS=[
+ {k:'Property',    icon:'🏡', n:214},
+ {k:'Tutors',      icon:'🎓', n:140},
+ {k:'Services',    icon:'⚙️', n:143},
+ {k:'Adventures',  icon:'🧭', n:39},
+ {k:'Collectors',  icon:'🏺', n:61},
+ {k:'Cars',        icon:'🚗', n:118},
+ {k:'Local Market',icon:'🛒', n:97}
+];
+var FACETS={
+ 'Property':[
+   {k:'listingType',q:'To rent, or to buy?',opts:['To rent','To buy']},
+   {k:'ptype',q:'What kind of place?',opts:['House','Apartment','Townhouse','Land','Commercial']},
+   {k:'beds',q:'How many bedrooms?',opts:['1','2','3','4+']},
+   {k:'area',q:'Which part of town?',opts:AREAS}],
+ 'Tutors':[
+   {k:'subject',q:'What are you learning?',opts:['Maths','English','Afrikaans','Science','Chess','Music','Coding','Accounting']},
+   {k:'level',q:'What level are you at?',opts:['Beginner','Intermediate','Advanced']},
+   {k:'mode',q:'Online, or face to face?',opts:['Online','In person']},
+   {k:'area',q:'Which part of town?',opts:AREAS},
+   {k:'focus',q:'Anything particular in chess?',opts:['Openings','Middle game','Endgame','Speed chess'],only:{subject:'Chess'}}],
+ 'Services':[
+   {k:'stype',q:'What is the job?',opts:['Plumbing','Electrical','Building','Painting','Garden','Cleaning','Childcare','Moving','Appliance repair','IT & computers']},
+   {k:'when',q:'How soon?',opts:['Today','This week','Whenever']},
+   {k:'area',q:'Which part of town?',opts:AREAS}],
+ 'Adventures':[
+   {k:'atype',q:'What kind of trip?',opts:['Safari','Hiking','Water','Cultural','Road trip']},
+   {k:'nights',q:'How long?',opts:['Day trip','2-3 nights','A week or more']},
+   {k:'who',q:'Who is going?',opts:['Just me','Couple','Family','Group']}],
+ 'Collectors':[
+   {k:'ctype',q:'Collecting what?',opts:['Coins','Stamps','Militaria','Art','Books','Vinyl','Ceramics']},
+   {k:'era',q:'From when?',opts:['Pre-1900','1900-1950','1950-2000','Modern']},
+   {k:'cond',q:'Condition?',opts:['Mint','Excellent','Good','Restorer']}],
+ 'Cars':[
+   {k:'make',q:'Which make?',opts:['Toyota','VW','BMW','Ford','Mercedes','Hyundai','Mazda','Nissan']},
+   {k:'yr',q:'How old?',opts:['2020 on','2015-2019','2010-2014','Older']},
+   {k:'trans',q:'Manual or automatic?',opts:['Manual','Automatic']},
+   {k:'area',q:'Which part of town?',opts:AREAS}],
+ 'Local Market':[
+   {k:'lmtype',q:'What are you after?',opts:['Food & produce','Handmade','Furniture','Instruments','Antiques','General']},
+   {k:'cond',q:'New or used?',opts:['New','Used']},
+   {k:'area',q:'Which part of town?',opts:AREAS}]
+};
+var ICONS={'Property':'🏡','Tutors':'🎓','Services':'🔧','Adventures':'🧭',
+           'Collectors':'🏺','Cars':'🚗','Local Market':'🛒'};
+var NAMES=['Thandi','Pieter','Naledi','Johan','Zanele','Riaan','Lerato','Danie','Ayanda','Marika','Sipho','Elmarie'];
+
+/* ---- invented stock over the real structure ---- */
+var DATA=[],seed=7;
+function rnd(){seed=(seed*1103515245+12345)%2147483648;return seed/2147483648;}
+function pick(a){return a[Math.floor(rnd()*a.length)];}
+(function(){
+  CATS.forEach(function(c){
+    for(var i=0;i<c.n;i++){
+      var r={cat:c.k,id:c.k+i,name:pick(NAMES),trust:70+Math.floor(rnd()*28)};
+      (FACETS[c.k]||[]).forEach(function(f){ r[f.k]=pick(f.opts); });
+      r.price = c.k==='Property' ? (r.listingType==='To rent'? 'R'+(8+Math.floor(rnd()*26))+' 000 pm' : 'R'+(1+Math.floor(rnd()*4))+'.'+Math.floor(rnd()*9)+'m')
+              : c.k==='Cars' ? 'R'+(120+Math.floor(rnd()*480))+' 000'
+              : c.k==='Tutors'||c.k==='Services' ? 'R'+(180+Math.floor(rnd()*420))+'/hr'
+              : 'R'+(300+Math.floor(rnd()*9000));
+      DATA.push(r);
+    }
+  });
+})();
+
+/* ---- state ---- */
+var st={cat:null,sel:{},taps:0,saved:0,covered:false,band:null,draft:null,voice:true,firstRun:true};
+
+function $(id){return document.getElementById(id);}
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('on');
+  clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('on');},2100);}
+function poke(name){ st.taps++; meter();
+  toast(name+' still works — the genie never covered it.'); }
+function meter(){ $('mTaps').textContent=st.taps; $('mSaved').textContent=st.saved;
+  $('mCover').textContent=st.covered?'YES':'no';
+  $('mCover').style.color=st.covered?'#ff8f8f':'#6ee7a0'; }
+
+/* ---- rendering the ordinary app ---- */
+function rows(){
+  return DATA.filter(function(r){
+    if(st.cat && r.cat!==st.cat) return false;
+    for(var k in st.sel){ if(st.sel[k] && r[k]!==st.sel[k]) return false; }
+    return true;
+  });
+}
+function renderChips(){
+  var h='<div class="cchip'+(st.cat?'':' on')+'" onclick="chipCat(null)">All</div>';
+  CATS.forEach(function(c){
+    h+='<div class="cchip'+(st.cat===c.k?' on':'')+'" onclick="chipCat(\''+c.k+'\')">'+c.icon+' '+c.k+'</div>';
+  });
+  $('chips').innerHTML=h;
+}
+function chipCat(v){ st.taps++; st.cat=v; st.sel={}; render(); toast(v?('Category chip → '+v):'Showing everything'); }
+function render(){
+  renderChips();
+  var tg='';
+  if(st.cat) tg+='<span class="tag">'+ICONS[st.cat]+' '+st.cat+' <i onclick="dropAll()">✕</i></span>';
+  for(var k in st.sel){ if(st.sel[k]) tg+='<span class="tag">'+st.sel[k]+' <i onclick="drop(\''+k+'\')">✕</i></span>'; }
+  $('tagrow').innerHTML=tg;
+  var rs=rows();
+  $('count').textContent = rs.length + ' ' + (st.cat? st.cat.toLowerCase() : 'listings') + ' nearby';
+  var h='';
+  rs.slice(0,24).forEach(function(r){
+    var bits=[];
+    (FACETS[r.cat]||[]).slice(0,2).forEach(function(f){ if(r[f.k]) bits.push(r[f.k]); });
+    h+='<div class="card"><div class="thumb" style="background:linear-gradient(135deg,#dfe8fb,#eef3fc)">'+ICONS[r.cat]+'</div>'+
+       '<div class="cbody"><div class="ctitle">'+bits.join(' · ')+'</div>'+
+       '<div class="cmeta">'+r.name+' · '+(r.area||'Pretoria')+'</div>'+
+       '<div class="cprice">'+r.price+'</div>'+
+       '<div class="trust">Trust '+r.trust+'</div></div></div>';
+  });
+  $('results').innerHTML = h || '<div style="grid-column:1/-1;padding:22px;text-align:center;color:#8a95b2;font-size:12px">Nothing matches yet.</div>';
+  $('bandslot').innerHTML = st.band || '';
+  meter();
+}
+function dropAll(){ st.taps++; st.cat=null; st.sel={}; render(); }
+function drop(k){ st.taps++; delete st.sel[k]; render(); }
+
+/* ============================================================================
+   THE WISH PARSER
+   In the real app this is one AI call: the sentence goes in with the category
+   list and the field names, a structured answer comes back. Here it is plain
+   keyword matching so the page runs with nothing behind it — the SHAPE of the
+   answer is what matters, and it is the same shape either way.
+   ========================================================================== */
+var SELLWORDS=/\b(sell|selling|list|listing|advertise|advert|rent out|i (have|teach|offer|do|make|fix|build)|my .* for sale|get rid of)\b/i;
+var FINDWORDS=/\b(find|looking for|need|want a|want to buy|searching|show me|where can|my son|my daughter|help me find)\b/i;
+
+var CATHINT={
+ 'Cars':/\b(car|bakkie|hilux|toyota|vw|bmw|ford|mercedes|hyundai|mazda|nissan|polo|ranger|sedan|suv|vehicle|automatic|manual|km\b)/i,
+ 'Property':/\b(house|home|flat|apartment|townhouse|bedroom|bed\b|rent|to let|property|land|plot|garden cottage|commercial)/i,
+ 'Tutors':/\b(tutor|coach|teach|teacher|lesson|lessons|maths|math|english|afrikaans|science|chess|music|coding|accounting|extra classes|matric|grade)/i,
+ 'Services':/\b(plumb|geyser|electric|sparky|build|paint|garden|clean|childcare|nanny|moving|appliance|fridge|it |computer|handyman|repair|leak)/i,
+ 'Collectors':/\b(collect|coin|stamp|militaria|medal|art\b|painting|book|vinyl|record|ceramic|antique|memorabilia|card)/i,
+ 'Adventures':/\b(safari|hike|hiking|trip|tour|kruger|weekend away|camping|road trip|adventure|holiday)/i,
+ 'Local Market':/\b(furniture|couch|table|handmade|produce|vegetables|guitar|instrument|second hand|used |market)/i
+};
+var VALHINT=[
+ ['Cars','make',[['toyota','Toyota'],['hilux','Toyota'],['vw','VW'],['volkswagen','VW'],['polo','VW'],['bmw','BMW'],['ford','Ford'],['ranger','Ford'],['mercedes','Mercedes'],['merc','Mercedes'],['hyundai','Hyundai'],['mazda','Mazda'],['nissan','Nissan']]],
+ ['Cars','trans',[['automatic','Automatic'],['auto','Automatic'],['manual','Manual']]],
+ ['Property','listingType',[['to rent','To rent'],['rent','To rent'],['buy','To buy'],['for sale','To buy'],['purchase','To buy']]],
+ ['Property','ptype',[['house','House'],['apartment','Apartment'],['flat','Apartment'],['townhouse','Townhouse'],['land','Land'],['plot','Land'],['commercial','Commercial']]],
+ ['Tutors','subject',[['chess','Chess'],['maths','Maths'],['math','Maths'],['english','English'],['afrikaans','Afrikaans'],['science','Science'],['music','Music'],['guitar','Music'],['piano','Music'],['coding','Coding'],['programming','Coding'],['accounting','Accounting']]],
+ ['Tutors','level',[['beginner','Beginner'],['starting','Beginner'],['never played','Beginner'],['intermediate','Intermediate'],['advanced','Advanced'],['high school','Intermediate'],['matric','Advanced']]],
+ ['Tutors','mode',[['online','Online'],['zoom','Online'],['in person','In person'],['face to face','In person'],['at my house','In person'],['come to','In person']]],
+ ['Tutors','focus',[['opening','Openings'],['middle game','Middle game'],['endgame','Endgame'],['speed chess','Speed chess'],['blitz','Speed chess']]],
+ ['Services','stype',[['plumb','Plumbing'],['geyser','Plumbing'],['leak','Plumbing'],['electric','Electrical'],['sparky','Electrical'],['build','Building'],['paint','Painting'],['garden','Garden'],['clean','Cleaning'],['childcare','Childcare'],['nanny','Childcare'],['moving','Moving'],['appliance','Appliance repair'],['fridge','Appliance repair'],['computer','IT & computers'],['it support','IT & computers']]],
+ ['Services','when',[['today','Today'],['urgent','Today'],['now','Today'],['this week','This week'],['whenever','Whenever'],['no rush','Whenever']]],
+ ['Collectors','ctype',[['coin','Coins'],['stamp','Stamps'],['militaria','Militaria'],['medal','Militaria'],['art','Art'],['painting','Art'],['book','Books'],['vinyl','Vinyl'],['record','Vinyl'],['ceramic','Ceramics']]],
+ ['Collectors','era',[['pre-1900','Pre-1900'],['pre 1900','Pre-1900'],['1900','1900-1950'],['victorian','Pre-1900'],['modern','Modern']]],
+ ['Collectors','cond',[['mint','Mint'],['excellent','Excellent'],['good','Good'],['restor','Restorer']]],
+ ['Adventures','atype',[['safari','Safari'],['kruger','Safari'],['hik','Hiking'],['water','Water'],['cultural','Cultural'],['road trip','Road trip']]],
+ ['Local Market','lmtype',[['produce','Food & produce'],['vegetable','Food & produce'],['handmade','Handmade'],['furniture','Furniture'],['couch','Furniture'],['table','Furniture'],['guitar','Instruments'],['instrument','Instruments'],['antique','Antiques']]],
+ ['Local Market','cond',[['new','New'],['used','Used'],['second hand','Used']]]
+];
+
+function parseWish(text){
+  var t=' '+text.toLowerCase()+' ';
+  var out={intent:'find',cat:null,sel:{},extra:{},raw:text};
+
+  /* intent: selling wins if a selling word appears and no finding word does */
+  var s=SELLWORDS.test(t), f=FINDWORDS.test(t);
+  out.intent = (s && !f) ? 'list' : (s && f ? 'list' : 'find');
+  if(/\b(i want to sell|i am selling|i'm selling|selling my|list my|advertise my)\b/.test(t)) out.intent='list';
+
+  /* category */
+  var best=null,bestn=0;
+  for(var c in CATHINT){ var m=t.match(new RegExp(CATHINT[c].source,'gi')); if(m && m.length>bestn){bestn=m.length;best=c;} }
+  out.cat=best;
+
+  /* field values */
+  VALHINT.forEach(function(row){
+    if(row[0]!==out.cat) return;
+    for(var i=0;i<row[2].length;i++){
+      if(t.indexOf(row[2][i][0])>=0 && !out.sel[row[1]]){ out.sel[row[1]]=row[2][i][1]; }
+    }
+  });
+
+  /* area */
+  AREAS.forEach(function(a){ if(t.indexOf(a.toLowerCase())>=0) out.sel.area=a; });
+
+  /* bedrooms */
+  var bm=t.match(/(\d)\s*(bed|bedroom|slaapkamer)/);
+  if(bm && out.cat==='Property'){ out.sel.beds = (+bm[1]>=4)?'4+':bm[1]; }
+
+  /* year → age band */
+  var ym=t.match(/\b(19[89]\d|20[0-2]\d)\b/);
+  if(ym && out.cat==='Cars'){ var y=+ym[1]; out.extra.year=y;
+    out.sel.yr = y>=2020?'2020 on' : y>=2015?'2015-2019' : y>=2010?'2010-2014' : 'Older'; }
+  if(ym && out.cat==='Collectors'){ var y2=+ym[1]; out.extra.year=y2; }
+
+  /* price */
+  var pm=t.match(/r\s?([\d][\d\s,\.]{2,})/);
+  if(pm){ var n=parseFloat(pm[1].replace(/[\s,]/g,'')); if(n>0) out.extra.price=n; }
+  var hm=t.match(/r\s?(\d+)\s*(an hour|per hour|\/hr|ph\b)/);
+  if(hm){ out.extra.price=+hm[1]; out.extra.perHour=true; }
+
+  /* mileage */
+  var km=t.match(/([\d][\d\s,]{2,})\s*(km|kilometre|kilometer)/);
+  if(km) out.extra.km=parseInt(km[1].replace(/[\s,]/g,''),10);
+
+  /* age of a child → level nudge */
+  if(/\b(he|she) is (\d{1,2})\b/.test(t) || /\b(\d{1,2}) years old\b/.test(t)){
+    if(out.cat==='Tutors' && !out.sel.level) out.sel.level='Beginner';
+  }
+  return out;
+}
+
+/* ============================================================================
+   GRANTING THE WISH — what the genie does with the parsed answer
+   ========================================================================== */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function money(n){ return 'R'+String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+
+function bandFind(p,askFacet){
+  var said = p.cat
+    ? 'You want <em>'+esc(p.cat.toLowerCase())+'</em>'+(Object.keys(p.sel).length?' — '+Object.keys(p.sel).map(function(k){return '<em>'+esc(p.sel[k])+'</em>';}).join(', '):'')+'. Done.'
+    : 'I am not sure which shelf that lives on. Point me.';
+  var opts='';
+  if(askFacet){
+    said += ' <span style="color:#a9b6d8">'+esc(askFacet.q)+'</span>';
+    askFacet.opts.forEach(function(o){
+      var n=DATA.filter(function(r){ if(r.cat!==st.cat) return false;
+        for(var k in st.sel){ if(st.sel[k] && r[k]!==st.sel[k]) return false; }
+        return r[askFacet.k]===o; }).length;
+      if(n>0) opts+='<div class="opt" onclick="chooseFacet(\''+askFacet.k+'\',\''+esc(o)+'\')">'+esc(o)+' <span style="opacity:.6">'+n+'</span></div>';
+    });
+    opts+='<div class="opt skip" onclick="skipFacet(\''+askFacet.k+'\')">Doesn\'t matter</div>';
+  } else if(!p.cat){
+    CATS.forEach(function(c){ opts+='<div class="opt" onclick="chooseCat(\''+c.k+'\')">'+c.icon+' '+c.k+'</div>'; });
+  } else {
+    opts='<div class="opt go" onclick="dismiss()">Perfect — leave me to browse</div>';
+  }
+  return '<div class="band"><div class="bandhead"><span class="miniorb"></span> Genie</div>'+
+         '<div class="said">'+said+'</div><div class="opts">'+opts+'</div>'+
+         '<div class="askrow"><input id="wish2" placeholder="…or just tell me more" onkeydown="if(event.key===\'Enter\')grant2()">'+
+         '<button onclick="grant2()">Wish</button></div></div>';
+}
+
+function bandList(p){
+  var cat=p.cat||'Local Market';
+  var fields=FACETS[cat]||[];
+  var kv='',missing=[];
+  fields.forEach(function(f){
+    if(f.only) return;
+    if(p.sel[f.k]) kv+='<span>'+esc(f.k)+': '+esc(p.sel[f.k])+'</span>';
+    else { kv+='<span class="miss">'+esc(f.k)+': ?</span>'; missing.push(f); }
+  });
+  if(p.extra.price) kv+='<span>price: '+esc(p.extra.perHour?money(p.extra.price)+'/hr':money(p.extra.price))+'</span>';
+  else { kv+='<span class="miss">price: ?</span>'; }
+  if(p.extra.km) kv+='<span>km: '+esc(String(p.extra.km))+'</span>';
+  if(p.extra.year) kv+='<span>year: '+esc(String(p.extra.year))+'</span>';
+
+  /* the genie writes the advert */
+  var title,desc;
+  if(cat==='Cars'){
+    title=[p.extra.year||'',p.sel.make||'',p.sel.trans||''].filter(Boolean).join(' ')||'Car for sale';
+    desc='Well looked after'+(p.extra.km?', '+p.extra.km.toLocaleString()+' km on the clock':'')+
+         (p.sel.trans?', '+p.sel.trans.toLowerCase():'')+'. Service history available on request. '+
+         'Viewing in Pretoria by arrangement.';
+  } else if(cat==='Tutors'){
+    title=(p.sel.subject||'Tutoring')+' lessons'+(p.sel.mode?' · '+p.sel.mode:'');
+    desc='Patient, structured lessons'+(p.sel.level?' pitched at '+p.sel.level.toLowerCase()+' level':'')+
+         (p.sel.mode==='Online'?', taught online so you can learn from anywhere':'')+
+         '. First session is a short chat to see where you are.';
+  } else if(cat==='Collectors'){
+    title=(p.sel.ctype||'Collection')+(p.sel.era?' · '+p.sel.era:'')+(p.sel.cond?' · '+p.sel.cond:'');
+    desc='A family collection built up over many years'+(p.sel.cond?', kept in '+p.sel.cond.toLowerCase()+' condition':'')+
+         '. Happy to sell as one lot or in parts. Photographs of every piece on request.';
+  } else if(cat==='Property'){
+    title=[p.sel.beds?p.sel.beds+' bedroom':'',p.sel.ptype||'Property',p.sel.listingType||''].filter(Boolean).join(' ');
+    desc='Bright and well kept, in a quiet street'+(p.sel.area?' in '+p.sel.area:'')+'. Available immediately.';
+  } else if(cat==='Services'){
+    title=(p.sel.stype||'Service')+' — Pretoria';
+    desc='Reliable work, quoted before I start, no surprises on the bill.';
+  } else {
+    title=p.raw.replace(/^(i want to sell|selling|i am selling)\s*/i,'').slice(0,52);
+    desc='In good order. Collection in Pretoria, or I can arrange delivery nearby.';
+  }
+
+  var ask = missing.length
+    ? 'Two things I will not guess: <em>'+missing.slice(0,2).map(function(f){return esc(f.k);}).join('</em> and <em>')+'</em>'+(p.extra.price?'':' and the <em>price</em>')+'.'
+    : (p.extra.price? 'That is everything I need.' : 'Only the <em>price</em> is missing.');
+
+  var opts='';
+  if(missing.length){
+    var f0=missing[0];
+    f0.opts.slice(0,6).forEach(function(o){
+      opts+='<div class="opt" onclick="fillDraft(\''+f0.k+'\',\''+esc(o)+'\')">'+esc(o)+'</div>';
+    });
+  }
+  opts+='<div class="opt go" onclick="publish()">&#10003; Publish it</div>';
+
+  return '<div class="band"><div class="bandhead"><span class="miniorb"></span> Genie · writing your advert</div>'+
+    '<div class="said">I put this in <em>'+esc(cat)+'</em>. '+ask+'</div>'+
+    '<div class="draft"><div class="dt">'+esc(title)+'</div><div class="dd">'+esc(desc)+'</div>'+
+    '<div class="kv">'+kv+'</div></div>'+
+    '<div class="opts" style="margin-top:7px">'+opts+'</div>'+
+    '<div class="askrow"><input id="wish2" placeholder="…anything I got wrong?" onkeydown="if(event.key===\'Enter\')grant2()">'+
+    '<button onclick="grant2()">Wish</button></div></div>';
+}
+
+/* ---- wish flow ---- */
+function nextFacet(){
+  var list=FACETS[st.cat]||[];
+  for(var i=0;i<list.length;i++){
+    var f=list[i];
+    if(st.sel[f.k]!==undefined) continue;
+    if(f.only){ var ok=true; for(var k in f.only) if(st.sel[k]!==f.only[k]) ok=false; if(!ok) continue; }
+    /* only ask if it actually splits what is left */
+    var vals={},rs=rows();
+    rs.forEach(function(r){ vals[r[f.k]]=1; });
+    if(Object.keys(vals).length>1) return f;
+  }
+  return null;
+}
+function grantText(text){
+  if(!text || !text.trim()) return;
+  var p=parseWish(text);
+  st.parsed=p;
+  st.taps++;
+  /* count what a person would have tapped by hand to reach the same place */
+  var manual = 1 + Object.keys(p.sel).length*2 + (p.intent==='list'?6:0);
+  st.saved += Math.max(0,manual-1);
+  landGenie();
+  if(p.intent==='list'){
+    st.cat=p.cat; st.sel={}; st.band=bandList(p); render();
+    say('Consider it written, master.');
+  } else {
+    st.cat=p.cat; st.sel={};
+    for(var k in p.sel) st.sel[k]=p.sel[k];
+    var f = st.cat? nextFacet() : null;
+    st.band=bandFind(p,f); render();
+    say(p.cat? 'Your wish is granted.' : 'Which shelf, master?');
+  }
+}
+function grant(){ var v=$('wish').value; $('wish').value=''; grantText(v); }
+function grant2(){ var el=$('wish2'); if(!el) return; var v=el.value; el.value='';
+  var p=parseWish(v); var merged=st.parsed||{sel:{},extra:{},intent:'find',cat:st.cat,raw:v};
+  if(p.cat) merged.cat=p.cat;
+  for(var k in p.sel) merged.sel[k]=p.sel[k];
+  for(var k2 in p.extra) merged.extra[k2]=p.extra[k2];
+  merged.raw = v || merged.raw;
+  st.parsed=merged; st.taps++;
+  if(merged.intent==='list'){ st.cat=merged.cat; st.band=bandList(merged); }
+  else { st.cat=merged.cat; st.sel={}; for(var k3 in merged.sel) st.sel[k3]=merged.sel[k3];
+         st.band=bandFind(merged,st.cat?nextFacet():null); }
+  render();
+}
+function chooseCat(c){ st.taps++; st.cat=c; st.sel={};
+  if(st.parsed) st.parsed.cat=c;
+  st.band=bandFind(st.parsed||{cat:c,sel:{},raw:''},nextFacet()); render(); }
+function chooseFacet(k,v){ st.taps++; st.sel[k]=v;
+  st.band=bandFind(st.parsed||{cat:st.cat,sel:st.sel,raw:''},nextFacet()); render(); }
+function skipFacet(k){ st.taps++; st.sel[k]=undefined;
+  st.band=bandFind(st.parsed||{cat:st.cat,sel:st.sel,raw:''},nextFacet()); render(); }
+function fillDraft(k,v){ st.taps++; st.parsed.sel[k]=v; st.band=bandList(st.parsed); render(); }
+function publish(){ st.taps++; st.band=null; render();
+  toast('Nothing was really published — this is a picture.');
+  say('It is done, master.'); }
+function dismiss(){ st.taps++; st.band=null; render(); }

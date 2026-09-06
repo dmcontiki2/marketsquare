@@ -150,8 +150,13 @@ REFLECTIONS = {
  "RUL-103": [
    # Visibility co-equal + the video calendar must describe what is ON DISK (5 Sep).
    ("RULINGS.md", ["VISIBILITY IS A CO-EQUAL OUTPUT"], []),
-   # the calendar may never call a finished film an "idea" again
-   ("LAUNCH_SERIES.md", ["on disk, unpublished", "Shorts"], []),
+   # the calendar may never call a finished film an "idea" again.
+   # ASSERTION CORRECTED 7 Sep 2026: it required the literal "on disk, unpublished", which was
+   # TRUE on 5 Sep and FALSE from 6 Sep (David published nine of the ten films). A check that
+   # pins a status word pins a moment; the ruling is that the file states what is ON DISK and
+   # what is PUBLISHED, verified, and calls a finished film a film. Same fact, checked where it
+   # is now true -- and the word the ruling actually retired ("idea" for a made film) is forbidden.
+   ("LAUNCH_SERIES.md", ["Status here means what is ON DISK", "Shorts", "LIVE since 6 Sep"], ["| idea |"]),
    ("ONBOARDING_PLAN.md", ["gates, not calendars"], []),
  ],
  "RUL-084": [
