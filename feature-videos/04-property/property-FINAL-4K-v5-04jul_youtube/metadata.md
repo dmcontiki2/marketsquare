@@ -1,6 +1,6 @@
 # YouTube upload package — 04 · Property Area Dossier (Short)
 
-Video: `property-FINAL-4K-v5-04jul.mp4` · 45 s · 2160×3840 vertical · h264 + aac
+Upload this file: `property-FINAL-4K-v5-04jul-USD.mp4` · 45 s · 2160×3840 vertical · h264 + aac
 Format: **YouTube Short** (vertical). Shorts take their cover from a frame you pick in the upload
 screen on the phone; `thumbnail.jpg` (1080×1920) is that frame with the overlay, for use where a
 custom cover is accepted (Shorts on mobile, X, Instagram).

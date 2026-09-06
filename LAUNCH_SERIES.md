@@ -46,9 +46,43 @@ After 9 Oct the shelf is empty. What keeps the channel alive: **11 · Aunty Este
 (script + prompts ready, not shot) and **UGC shorts wave 1, S1–S7** (`shorts/SHORTS_WAVE1.md`,
 spiel-ready). Neither is made; both are cheap next to a new feature film.
 
+## CURRENCY — the films read in dollars as well as rand (David, 6 Sep 2026)
+
+The YouTube audience is global, so the money has to be legible to someone who does not think in
+rand — and none of it could be re-done in Higgsfield. David chose **show both**.
+
+What was measured before anything was changed: all ten films were transcribed. **Three of them say
+a rand amount out loud** — film 01 ("twenty-four thousand rand for one card"), film 08 ("under a
+thousand rand") and film 10 ("is R4,500 fair", and again in the narration). In those three,
+*replacing* rand with dollars would have made the picture argue with the soundtrack. Showing both
+cannot.
+
+What changed, and only this:
+
+- **The input screen** of six films now reads `R420,000 · $25,400` (and equivalents). The field is
+  static for the whole window, so the patch is drawn in the insert's own font and field colour,
+  inside the field border. Films 04 and 07 have no money on their input screen.
+- **The report screen** scrolls rand figures for about ten seconds and cannot be re-typed without
+  rebuilding the film, so a line sits in the empty navy band beneath the phone:
+  `prices in rand · $1 = R16.5`. Every figure on screen then converts.
+- **Nothing else.** The audio is stream-copied — decoded audio of each new cut is byte-identical to
+  its master, which is the proof no seam was introduced.
+- **Rate: R16.52 = $1**, which is the rate film 01's own report already prints. The app shows both
+  currencies in its reports, so the films now match the product rather than contradicting it.
+- **Film 01 needed nothing** (its report already prints R and $ side by side with the rate) and
+  **film 09 has no money on screen at all**.
+
+The cuts to post are the `-USD.mp4` files; each package's first line names the exact file. Rebuild
+them with `python3 scripts/usd_dual_patch.py --only 05-car`. Originals are never modified.
+Ledger RG-0302 asserts every package names its dual-currency cut.
+
+Titles, thumbnails and descriptions are in dollars throughout, and the ZA-narrow search tags were
+broadened (the genuinely South African ones — Kruger, CAPS, matric, the D7 visa — stay).
+
 ## THE PACKAGES — all ten ready
 
-Each film's folder carries `<cut>_youtube/` with `metadata.md` (three titles ≤ 60 characters,
+Each film's folder carries `<cut>_youtube/` with `metadata.md` — its first line names the file
+to upload — plus (three titles ≤ 60 characters,
 description with beats, tracked link, 14 tags, pinned comment, end-screen line, publish slot) and
 `thumbnail.jpg` (1080×1920 cover). Rebuild any of them with
 `python3 scripts/youtube_pack_build.py --only 05-car`.

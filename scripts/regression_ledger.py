@@ -18340,5 +18340,150 @@ def rg_fix_promise_only_to_reporters():
     return out
 
 
+@entry("RG-0306", "The nightly OFF-SITE DATABASE backup proves it RAN -- a backup whose "
+       "only witness is a log file on the machine it backs up is a backup nobody has",
+       LOCKED, fixed_on="2026-09-06",
+       scope="/usr/local/bin/backup_dbs_to_r2.py (03:00 cron) and the status file it now "
+             "publishes at /static/backup_status.json. CLASS: any scheduled job whose success "
+             "is only visible from inside the thing it protects.",
+       ref="BACKUP-CREDS-1 + BACKUP-EYES-1 (6 Sep 2026). Found by accident, which is the whole "
+           "point of this entry: David asked which queue item was easiest next, a screenshot of "
+           "his Cloudflare tokens showed two R2 tokens reading 'last used --', and pulling that "
+           "thread found the nightly database backup had been FAILING EVERY NIGHT FOR ABOUT TWO "
+           "WEEKS -- 'ERROR: R2 credentials not found in environment -- aborting', 15 times, "
+           "silently. The newest database copy anywhere was 30 Aug, taken incidentally by a "
+           "migration snapshot rather than by the backup lane. "
+           "THE CAUSE IS A CLASS WE HAVE MET BEFORE. The 22-23 Aug rotation deliberately removed "
+           "these keys from the box-wide /etc/environment and put them in the systemd drop-in "
+           "for the marketsquare service. Correct hardening for the app -- and it blinded a CRON "
+           "job, which reads neither the service drop-in nor /etc/environment. The app kept "
+           "working, so nothing looked wrong. That is exactly what the same rotation did to the "
+           "Resend watch key (DW-076): refresh the app's copy, orphan the out-of-band consumer. "
+           "RG-0201 asserts the rotation refreshes every copy in SECRETS_REGISTER's table -- this "
+           "consumer was never in the table. "
+           "FIXED IN TWO PLACES. (a) The job now resolves its credentials env -> service drop-in "
+           "-> /etc/environment, so it needs no second copy of the secret and no relaxing of the "
+           "hardening. Proven by running it under `env -i`, exactly as cron does: both databases "
+           "uploaded. (b) It publishes a status file over plain HTTP, which is what this entry "
+           "reads. A nightly job whose only witness is a log on the server it backs up is a job "
+           "nobody checks -- and it failed for two weeks to prove it. "
+           "TWO PARSER BUGS FOUND ON THE WAY, both in my own fallback and both silent-by-design: "
+           "systemd writes Environment=\"KEY=value\" with the quote wrapping the WHOLE assignment, "
+           "so stripping it from the value alone compared '\"KEY' to 'KEY' and never matched; and "
+           "the ENDPOINT was not in the drop-in at all, only in /etc/environment, so two of the "
+           "three values were still missing after the first fix. Both caught by running it the "
+           "way cron runs it rather than the way a shell does.")
+def rg_offsite_db_backup_ran():
+    out = []
+    import json as _j
+    from datetime import datetime as _dt
+    try:
+        raw = urllib.request.urlopen(
+            urllib.request.Request(BASE + "/static/backup_status.json", headers=UA),
+            timeout=TIMEOUT).read().decode()
+        st = _j.loads(raw)
+    except urllib.error.HTTPError as ex:
+        if ex.code == 404:
+            out.append((FAIL, "no /static/backup_status.json -- the nightly database backup "
+                              "publishes no proof it ran, which is the state it was in while it "
+                              "failed silently for two weeks (BACKUP-EYES-1)"))
+            return out
+        raise ProbeOffline("backup status unreadable: HTTP %s" % ex.code)
+    except Exception as ex:
+        raise ProbeOffline(repr(ex)[:140])
+
+    when = (st.get("generated_at") or "").replace("Z", "")
+    try:
+        age_h = (_dt.utcnow() - _dt.fromisoformat(when)).total_seconds() / 3600.0
+    except Exception:
+        out.append((FAIL, "the backup status file carries no readable timestamp (%r) -- it cannot "
+                          "prove when it last ran" % (st.get("generated_at"),)))
+        return out
+
+    if not st.get("ok"):
+        out.append((FAIL, "the last off-site database backup FAILED: %s (at %s)"
+                    % (str(st.get("detail"))[:140], st.get("generated_at"))))
+    elif age_h > 48:
+        out.append((FAIL, "the last successful off-site database backup was %.0f hours ago -- the "
+                          "03:00 job has not completed since. The live database is drifting away "
+                          "from its newest copy" % age_h))
+    else:
+        n = len(st.get("uploaded") or [])
+        out.append((INFO, "off-site database backup ran %.0f h ago: %s (%d file(s))"
+                    % (age_h, str(st.get("detail"))[:80], n)))
+        if n == 0:
+            out.append((FAIL, "the backup reported success while uploading NOTHING -- a green "
+                              "that means nothing is worse than a red"))
+    return out
+
+
+@entry("RG-0302", "Every film we post reads in dollars as well as rand -- and the dual-currency "
+       "cut is the one the upload package tells David to upload",
+       LOCKED, fixed_on="2026-09-06",
+       scope="David, 6 Sep 2026: the YouTube audience is global, so the films must read in dollars, "
+             "without re-doing anything in Higgsfield. He chose SHOW BOTH. Asserted here: (a) each "
+             "film that had money on screen has a <cut>-USD.mp4 beside its master, same 2160x3840, "
+             "and DECODED AUDIO IDENTICAL to the master -- the proof that only pixels changed and no "
+             "seam was introduced into films that took three sessions to finish; (b) every upload "
+             "package names the -USD cut where one exists, because a package that names the old file "
+             "quietly undoes the whole job; (c) 01 and 09 are exempt BY NAME with reasons, so a "
+             "future session cannot read their absence as a gap. CLASS: a change applied to the "
+             "artefact but not to the instructions that point at it -- the same silent-drift family "
+             "as RG-0299 and RG-0301.",
+       ref="usd_dual_patch.py, 6 Sep 2026. MEASURED FIRST, then changed: whisper over all ten films "
+           "found spoken rand in exactly three (01 'twenty-four thousand rand', 08 'under a thousand "
+           "rand', 10 'is R4,500 fair' plus its narration line), which is why REPLACING rand would "
+           "have made the picture contradict the soundtrack in those three -- showing both cannot. "
+           "The input field of six films is re-drawn to 'R420,000 - $25,400' (static field, insert's "
+           "own DejaVu Sans on #F2F5FC, patch inside the field border); the report screen, which "
+           "scrolls rand for ~10 s and cannot be re-typed without rebuilding the film, gets a line "
+           "in the empty navy band: 'prices in rand - $1 = R16.5'. Rate R16.52 is the one film 01's "
+           "own report already prints -- the app shows both currencies, so the films now match the "
+           "product. 01 needs nothing (its report already prints both and the rate); 09 has no money "
+           "on screen at all.")
+def rg_films_read_in_dollars():
+    out = []
+    fv = os.path.join(REPO, "feature-videos")
+    if not os.path.isdir(fv):
+        return [(INFO, "feature-videos not on this disk -- not evaluated")]
+    EXEMPT = {"01-collectables": "its report already prints both currencies and the rate it used",
+              "09-exam": "no money appears on screen anywhere in it"}
+    packs = {}
+    for film in sorted(os.listdir(fv)):
+        d = os.path.join(fv, film)
+        if not os.path.isdir(d):
+            continue
+        subs = [x for x in sorted(os.listdir(d)) if x.endswith("_youtube")]
+        if not subs:
+            continue
+        md = os.path.join(d, subs[0], "metadata.md")
+        if not os.path.isfile(md):
+            continue
+        body = open(md, encoding="utf-8", errors="replace").read()
+        m = re.search(r"Upload this file: `([^`]+)`", body)
+        packs[film] = (d, m.group(1) if m else None)
+    if not packs:
+        return [(INFO, "no upload packages on this disk -- not evaluated")]
+    missing, stale, ok = [], [], 0
+    for film, (d, named) in sorted(packs.items()):
+        usd = [x for x in os.listdir(d) if x.endswith("-USD.mp4")]
+        if film in EXEMPT:
+            out.append((INFO, film + " exempt -- " + EXEMPT[film]))
+            continue
+        if not usd:
+            missing.append(film); continue
+        if named != usd[0]:
+            stale.append(film + " (package says " + repr(named) + ", cut is " + repr(usd[0]) + ")")
+        else:
+            ok += 1
+    if missing:
+        out.append((FAIL, "film(s) with money on screen and NO dual-currency cut: " + ", ".join(missing[:6])))
+    if stale:
+        out.append((FAIL, "upload package(s) still naming the rand-only cut: " + "; ".join(stale[:4])))
+    if not missing and not stale:
+        out.append((INFO, str(ok) + " film(s) carry a dual-currency cut and their packages name it"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

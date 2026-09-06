@@ -1,6 +1,6 @@
 # YouTube upload package — 05 · Car Purchase Dossier (Short)
 
-Video: `car-FINAL-4K-v3-03jul.mp4` · 42 s · 2160×3840 vertical · h264 + aac
+Upload this file: `car-FINAL-4K-v3-03jul-USD.mp4` · 42 s · 2160×3840 vertical · h264 + aac
 Format: **YouTube Short** (vertical). Shorts take their cover from a frame you pick in the upload
 screen on the phone; `thumbnail.jpg` (1080×1920) is that frame with the overlay, for use where a
 custom cover is accepted (Shorts on mobile, X, Instagram).

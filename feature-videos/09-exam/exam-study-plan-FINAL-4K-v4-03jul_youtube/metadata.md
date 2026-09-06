@@ -1,6 +1,6 @@
 # YouTube upload package — 09 · Exam Study Plan (Short)
 
-Video: `exam-study-plan-FINAL-4K-v4-03jul.mp4` · 50 s · 2160×3840 vertical · h264 + aac
+Upload this file: `exam-study-plan-FINAL-4K-v4-03jul.mp4` · 50 s · 2160×3840 vertical · h264 + aac
 Format: **YouTube Short** (vertical). Shorts take their cover from a frame you pick in the upload
 screen on the phone; `thumbnail.jpg` (1080×1920) is that frame with the overlay, for use where a
 custom cover is accepted (Shorts on mobile, X, Instagram).

@@ -18,11 +18,13 @@ STATUS: NOT-READY
 ## Where it stands (6 Sep 2026)
 
 - 1 QC: DONE, all ten pass (probed).
-- 2 Currency: packaging is in dollars; what happens inside the films is waiting on David.
+- 2 Currency: DONE. David chose show-both on 6 Sep. Packaging is in dollars; eight films now
+  carry a dual-currency cut (`-USD.mp4`); films 01 and 09 needed nothing. Only David's own
+  eyeball on the result is left — when he says he is happy, change STATUS above to READY.
 - 3 Packages: DONE, all ten, every link tracked.
 - 4 Schedule: DONE.
 
-So only item 2 is open. When it closes, change STATUS to READY and the reminder fires once.
+Everything Claude can do is done. What is left is David watching them and saying so.
 
 ## What the reminder should say
 

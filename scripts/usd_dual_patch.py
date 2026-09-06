@@ -44,7 +44,7 @@ CHIP_LINE = u"prices in rand  ·  $1 = R16.5"
 # 4K encodes are wall-clock bound in this sandbox: 10 s of 2160x3840 takes ~29 s at
 # veryfast, so a 45 s film is ~150 s and preset "fast" overran a call and left a
 # truncated file. veryfast at CRF17 is visually transparent for this content.
-PRESET = "veryfast"
+PRESET = "veryfast"   # --preset overrides it; 07 is 69 s and needs "superfast" to fit a call
 
 FILMS = [
  dict(folder="02-heritage", cut="heritage-FINAL-4K-v3-03jul.mp4",
@@ -159,6 +159,9 @@ def build(film, tmpd, make1080=True):
 
 def main():
     only = sys.argv[sys.argv.index("--only") + 1] if "--only" in sys.argv else None
+    global PRESET
+    if "--preset" in sys.argv:
+        PRESET = sys.argv[sys.argv.index("--preset") + 1]
     make1080 = "--no1080" not in sys.argv
     tmpd = tempfile.mkdtemp(prefix="usdpatch_")
     for film in FILMS:

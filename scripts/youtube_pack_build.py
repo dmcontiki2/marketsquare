@@ -281,7 +281,7 @@ def metadata(film, src_tag):
     link = "https://trustsquare.co/?src=%s" % src_tag
     return u"""# YouTube upload package — {n} · {feature} (Short)
 
-Video: `{cut}` · {dursec} s · 2160×3840 vertical · h264 + aac
+Upload this file: `{upload}` · {dursec} s · 2160×3840 vertical · h264 + aac
 Format: **YouTube Short** (vertical). Shorts take their cover from a frame you pick in the upload
 screen on the phone; `thumbnail.jpg` (1080×1920) is that frame with the overlay, for use where a
 custom cover is accepted (Shorts on mobile, X, Instagram).
@@ -325,7 +325,8 @@ On-screen text over the last 3 seconds: **trustsquare.co — list it free**.
 
 Shorts are discovered, not scheduled, so the slot matters less than for long-form; if a slot is
 wanted: Tuesday 18:00 SAST (evening phone time in ZA; Tuesday morning in the US eastern time).
-""".format(n=film["n"], feature=film["feature"], cut=film["cut"], dursec=int(round(film["dur"])),
+""".format(n=film["n"], feature=film["feature"], upload=film.get("upload_name", film["cut"]),
+           dursec=int(round(film["dur"])),
            built="6 Sep 2026", src=src_tag, titles=titles, hook=film["hook"], beats=beats,
            link=link, boiler=BOILER, hashtags=film["hashtags"],
            ntags=len(film["tags"]), tags=", ".join(film["tags"]), pinned=film["pinned"])
@@ -341,6 +342,15 @@ def main():
         srcvid = os.path.join(FV, film["folder"], film["cut"])
         if not os.path.isfile(srcvid):
             print("MISSING film: %s" % srcvid); continue
+        # DUAL-CURRENCY CUT (6 Sep 2026): where a -USD cut exists it IS the film we post --
+        # same picture with the dollar figures added (scripts/usd_dual_patch.py). Package the
+        # file that will actually be uploaded, so the cover frame comes from the real thing.
+        usd = srcvid.replace(".mp4", "-USD.mp4")
+        upload_name = os.path.basename(srcvid)
+        if os.path.isfile(usd):
+            srcvid = usd
+            upload_name = os.path.basename(usd)
+        film = dict(film, upload_name=upload_name)
         outdir = os.path.join(FV, film["folder"], film["cut"].replace(".mp4", "") + "_youtube")
         os.makedirs(os.path.join(outdir, "frames"), exist_ok=True)
         build_frames(srcvid, film["dur"], outdir)
