@@ -19993,5 +19993,58 @@ def rg_wave_visits_longest_waiting_city_first():
     return out
 
 
+
+@entry("RG-0338", "A seller who publishes WITHOUT a photo is offered the way back -- the success "
+       "screen says photos may be added and takes them straight to the edit screen",
+       LOCKED, fixed_on="2026-09-07",
+       scope="marketsquare.html #sob-photo-nudge (the offer) + ms.js sobGoLive() PHOTO-BRIDGE-1 "
+             "(reveal + wire to openEditListing). CLASS, not instance: any gate we REMOVE from the "
+             "front of a flow must leave a route back, or we have swapped a wall the seller can see "
+             "for one they cannot. INVITE-GATE-1 opened the photo door on David's ruling ('there "
+             "should be no resistance at all'); this asserts the return journey exists. Three legs: "
+             "(a) the offer is in the shipped HTML, (b) the shipped JS reveals it and wires the "
+             "button to openEditListing, (c) it FAILS CLOSED -- the reveal is inside a try/catch and "
+             "a publish can never be broken by a nudge, and a seller who DID upload is never nagged.",
+       ref="David, 7 Sep 2026: 'let them list without a photo first, there should be no resistance "
+           "at all, mistakes can be fixed afterwards and so can photos be added. But we need to be "
+           "sure that they can modify, because Maroushka could not and we fixed that a few times. "
+           "She still haven't tried again due to frustration.' PROBED the same session: INVITE-GATE-1 "
+           "was ALREADY live (walked the invited path in a browser with src=probe-ledger and reached "
+           "Step 2 of 6 with zero photos), but the success screen then congratulated the seller and "
+           "stopped -- no mention of photos, no route to the edit screen. RG-0120 (LOCKED 20 Aug) "
+           "already proves the EDIT machinery works for Maroushka's exact fault; what was missing was "
+           "the bridge between the two. Note the funnel probe used src=probe-ledger, which "
+           "RG-0293(b) EXCLUDES from the default view by design -- so this does NOT satisfy RG-0326, "
+           "which still waits for a real arrival.")
+def rg_photo_bridge():
+    out = []
+    html = repo_file("marketsquare.html")
+    js   = repo_file("ms.js")
+    if html is None or js is None:
+        return [(INFO, "repo not present -- source legs skipped (live-only run)")]
+    if 'id="sob-photo-nudge"' not in html:
+        out.append((FAIL, "marketsquare.html: the success screen no longer offers photos -- a seller "
+                          "who published without one is told nothing (PHOTO-BRIDGE-1)"))
+    if 'sob-photo-nudge-btn' not in html:
+        out.append((FAIL, "marketsquare.html: the 'Add photos now' button is gone -- the offer has no "
+                          "route (PHOTO-BRIDGE-1)"))
+    if "PHOTO-BRIDGE-1" not in js:
+        out.append((FAIL, "ms.js: the publish path no longer reveals the photo offer -- the markup is "
+                          "present but nothing ever shows it (PHOTO-BRIDGE-1)"))
+    if "openEditListing(_pbFirst.id)" not in js:
+        out.append((FAIL, "ms.js: the photo offer no longer opens the EDIT screen -- the seller is "
+                          "sent hunting, which is how Maroushka gave up (RG-0120)"))
+    if "catch(e) { /* a nudge may never break a successful publish */ }" not in js:
+        out.append((FAIL, "ms.js: PHOTO-BRIDGE-1 lost its try/catch -- a nudge can now break a "
+                          "successful publish, which is worse than no nudge at all"))
+    if "sfPhotoCount() === 0" not in js:
+        out.append((FAIL, "ms.js: PHOTO-BRIDGE-1 no longer proves the listing has no photos before "
+                          "nagging -- fail-closed is gone"))
+    if not out:
+        out.append((INFO, "the door opens and the way back exists: offer in the HTML, revealed by the "
+                          "publish path, wired to the edit screen, fail-closed"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

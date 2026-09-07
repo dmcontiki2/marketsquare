@@ -6670,6 +6670,38 @@ async function sobGoLive() {
   if (viewBtn && sobState.drafts && sobState.drafts.length) viewBtn.style.display = 'block';
   loadLiveListings(); // refresh buyer feed
 
+  /* PHOTO-BRIDGE-1 (7 Sep 2026, David: "mistakes can be fixed afterwards and so can photos
+     be added"). INVITE-GATE-1 opened the door; this is the way back. Fails CLOSED — if we
+     cannot prove the listing has no photos we say nothing, because nagging a seller who
+     already uploaded is worse than staying quiet. The button goes straight to the edit
+     screen the seller would otherwise have to hunt for (Maroushka gave up looking, RG-0120). */
+  try {
+    var _pbFirst = sobState.drafts && sobState.drafts[0];
+    var _pbNone  = false;
+    if (typeof sfState !== 'undefined' && sfState && sfState.files &&
+        typeof sfPhotoCount === 'function') {
+      _pbNone = (sfPhotoCount() === 0);
+    } else if (_pbFirst && Object.prototype.hasOwnProperty.call(_pbFirst, 'photo_urls')) {
+      var _pu = _pbFirst.photo_urls;
+      if (typeof _pu === 'string') { try { _pu = JSON.parse(_pu); } catch(e) { _pu = null; } }
+      _pbNone = Array.isArray(_pu) && _pu.length === 0;
+    }
+    var _pbEl = document.getElementById('sob-photo-nudge');
+    if (_pbNone && _pbEl && _pbFirst && _pbFirst.id) {
+      _pbEl.style.display = 'flex';
+      var _pbBtn = document.getElementById('sob-photo-nudge-btn');
+      if (_pbBtn) _pbBtn.onclick = function(){
+        if (typeof obTrack === 'function') obTrack('photo_bridge_open');
+        if (typeof sobDone === 'function') sobDone();
+        setTimeout(function(){
+          if (typeof openEditListing === 'function') openEditListing(_pbFirst.id);
+          else if (typeof showToast === 'function') showToast('Open My Space to add photos');
+        }, 350);
+      };
+      if (typeof obTrack === 'function') obTrack('published_without_photo');
+    }
+  } catch(e) { /* a nudge may never break a successful publish */ }
+
   // Show banking nudge if seller has no banking details yet
   if (!sobState._hasBanking) {
     const nudge = document.getElementById('sob-banking-nudge');

@@ -2910,6 +2910,20 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔔</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Introduction requests go to your email</div><div style="font-size:12px;color:rgba(255,255,255,.45);">No commission — buyers connect directly</div></div></div>
         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">✨</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Free AI listing coach included</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Improve your listing from your dashboard</div></div></div>
         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔒</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Your identity is protected</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Name &amp; contact only revealed on mutual acceptance</div></div></div>
+        <!-- PHOTO-BRIDGE-1 (7 Sep 2026, David): INVITE-GATE-1 lets a seller publish with no
+             photo — correctly, "there should be no resistance at all". But the success screen then
+             congratulated them and left: nothing said photos could be added, and there was no route
+             to the edit screen. A door you may walk through and never come back to is half a fix.
+             Shown ONLY when the listing really has no photos; fails closed. -->
+        <div id="sob-photo-nudge" style="display:none;background:rgba(52,211,153,.10);border:1.5px solid rgba(52,211,153,.38);border-radius:12px;padding:14px 16px;gap:12px;align-items:flex-start;">
+          <div style="font-size:20px;flex-shrink:0;">📷</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:#34d399;margin-bottom:4px;">Add a photo when you have one</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">Your listing is live without one — that is fine. Listings with photos get roughly <b>3&times; more buyer contact</b>, and you can add, change or remove them any time.</div>
+            <button id="sob-photo-nudge-btn" style="background:#34d399;color:#052012;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Add photos now &rarr;</button>
+            <button onclick="document.getElementById('sob-photo-nudge').style.display='none';" style="background:none;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.8);border-radius:50px;padding:6px 14px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;margin-left:8px;">Later</button>
+          </div>
+        </div>
         <div id="sob-banking-nudge" style="display:none;background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.35);border-radius:12px;padding:14px 16px;display:none;gap:12px;align-items:flex-start;">
           <div style="font-size:20px;flex-shrink:0;">🏦</div>
           <div style="flex:1;">
