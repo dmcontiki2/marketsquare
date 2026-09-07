@@ -18658,7 +18658,17 @@ def rg_ai_prompts_not_hardcoded_south_african():
              "SECRETS_REGISTER.md's out-of-band table. CLASS: any operation whose "
              "correctness depends on a hand-maintained list of the things it must reach.",
        fixed_on="",
-       ref="ROTATION-DISCOVERY-1 (6 Sep 2026), on David's own words: 'rotation is one of those "
+       ref="STILL OPEN. 7 Sep 2026, maintenance loop: this entry printed READY TO LOCK in shard "
+           "3/3 and was promoted for eleven minutes before the promotion was REVERTED -- the "
+           "tool had answered 'no surprises' from a sandbox that had not yet loaded its ssh key, "
+           "so every ssh call failed silently with empty output and empty output read as 'this "
+           "name lives nowhere on the box'. Run again with ssh working: 13 surprises, exactly as "
+           "on 6 Sep. A blind instrument reported a clean box; the ledger believed it. Fixed at "
+           "the instrument (OFFLINE-IS-NOT-ABSENT-1, RG-0333: a remote sentinel proves the "
+           "script ran on the box, and the tool self-heals ssh at entry) and TIGHTENED here: the "
+           "READY TO LOCK branch now requires the tool's own 'OK:' verdict line, never a bare "
+           "exit 0. Promote only when the box says OK with ssh proven up. "
+           "ROTATION-DISCOVERY-1 (6 Sep 2026), on David's own words: 'rotation is one of those "
            "things i battle with... it takes me some times many hours.' The hours are not the "
            "vendor console -- minting a key is five minutes and is irreducibly his. The hours go "
            "on a question nobody could answer: WHICH PLACES HOLD A COPY. That was answered from "
@@ -18704,7 +18714,12 @@ def rg_rotation_knows_its_consumers():
         out.append((INFO, "the server is unreachable from here, so consumers cannot be "
                           "discovered -- not judged"))
         return out
-    if ok:
+    if ok and "OK:" not in detail:
+        # Exit 0 without the verdict line is how the 7 Sep false green happened (an
+        # ssh failure that produced no output at all). Not a pass; not judged.
+        out.append((INFO, "the tool exited 0 without printing its OK verdict -- an answer "
+                          "with no evidence behind it is not judged (OFFLINE-IS-NOT-ABSENT-1)"))
+    elif ok:
         out.append((INFO, "every credential with more than one copy on the box is named in the "
                           "register's out-of-band table -- READY TO LOCK"))
     else:
@@ -18717,6 +18732,75 @@ def rg_rotation_knows_its_consumers():
                           "while OPEN; each one is a rotation that would half-succeed and go "
                           "quiet, which is how DW-076 and DW-105 happened" % (n or 1)))
     return out
+
+
+@entry("RG-0333", "An instrument that cannot reach the box SAYS SO -- a failed ssh is never read "
+       "as 'nothing found there', and a ledger entry never turns green on a silence",
+       LOCKED, fixed_on="2026-09-07",
+       scope="scripts/secret_consumers.py server_consumers() + its _ensure_ssh() entry step, and "
+             "RG-0308's harness branch. CLASS: any probe that asks a remote machine a question "
+             "and treats an empty reply as an answer. A remote grep that finds nothing and a "
+             "remote grep that never ran both come back as empty stdout; only a sentinel echoed "
+             "BY THE REMOTE SHELL tells them apart (the ssh exit code cannot -- it is the last "
+             "grep's, and a grep with no match exits 1). Sibling of SSH-BOOTSTRAP-1 (RG-0187 "
+             "family): every ssh-using entry point loads the key itself. Filed here, beside "
+             "RG-0308, rather than at the tail: a concurrent session was appending entries at "
+             "the tail the same minute (RG-0325..RG-0332), and two writers on one hunk is how "
+             "CHANGELOG-COLLISION-1 happened.",
+       ref="OFFLINE-IS-NOT-ABSENT-1 (7 Sep 2026, maintenance loop). What happened: the "
+           "regression ledger's shard 3/3 ran RG-0308 before any entry had loaded the sandbox's "
+           "ssh key (~/.ssh appeared at 07:35:03 local; the shard finished at 07:35:31). Each of "
+           "the tool's 22 ssh calls failed with rc 255 and empty output; the tool read empty as "
+           "'not present', found no credential with more than one copy, exited 0 and the board "
+           "printed READY TO LOCK. The loop promoted RG-0308 to LOCKED, then re-ran the entry "
+           "alone as a check and got 13 surprises -- the same 13 as 6 Sep. Reverted within the "
+           "same run. PROVED BEFORE THE FIX: server_consumers() against root@localhost returned "
+           "[] (the false 'clean'); AFTER: None (offline), and the real box still 5 places for "
+           "LAUNCH_CODE_SECRET. Three properties asserted: (a) the tool carries a remote "
+           "sentinel and returns None when it is missing or rc is 255; (b) the tool self-heals "
+           "ssh at entry; (c) BEHAVIOURAL -- server_consumers() against an unreachable host "
+           "answers None, never []. The lesson is the evidence ladder one layer down: a PROBE "
+           "that cannot see is not a probe, and must say NOT MEASURED rather than 'nothing "
+           "there'. The same silence-as-answer pattern killed the Resend alert channel for six "
+           "days (DW-076) and the database backup for two weeks (DW-105); this is the same "
+           "class inside the very tool built to end it.")
+def rg_offline_is_not_absent():
+    tool = repo_file(os.path.join("scripts", "secret_consumers.py"))
+    if tool is None:
+        return [(INFO, "scripts/secret_consumers.py not readable here -- RG-0308 covers its absence")]
+    out = []
+    if "_REACHED" not in tool or 'echo %s" % _REACHED' not in tool:
+        out.append((FAIL, "secret_consumers.py no longer echoes a remote sentinel -- an ssh that "
+                          "never ran is indistinguishable from a grep that found nothing "
+                          "(OFFLINE-IS-NOT-ABSENT-1)"))
+    if "_REACHED not in (r.stdout" not in tool:
+        out.append((FAIL, "secret_consumers.py no longer returns None when the sentinel is missing "
+                          "-- a silent box reads as a clean box again (OFFLINE-IS-NOT-ABSENT-1)"))
+    if "def _ensure_ssh" not in tool or "\n    _ensure_ssh()" not in tool:
+        out.append((FAIL, "secret_consumers.py no longer self-heals ssh at entry -- a fresh sandbox "
+                          "asks the box 22 questions with no key (SSH-BOOTSTRAP-1)"))
+    led = repo_file(os.path.join("scripts", "regression_ledger.py")) or ""
+    if 'if ok and "OK:" not in detail' not in led:
+        out.append((FAIL, "RG-0308's harness accepts a bare exit 0 again without the tool's OK "
+                          "verdict line -- the 7 Sep false green can recur"))
+    if out:
+        return out
+    # (c) BEHAVIOURAL: an unreachable host must answer None. localhost has no sshd in the
+    # sandbox and refuses instantly, so this costs well under a second; on a machine that
+    # DOES run sshd it would answer 255/no-sentinel just the same.
+    ok, blind, detail = _harness([sys.executable, "-c",
+        "import sys; sys.path.insert(0, %r); import secret_consumers as sc; "
+        "sc.SERVER = 'nobody@localhost'; r = sc.server_consumers('RG_0333_PROBE'); "
+        "print('RESULT=' + repr(r)); sys.exit(0 if r is None else 1)"
+        % os.path.join(REPO, "scripts")], timeout=40)
+    if blind:
+        return [(INFO, "behavioural half could not run here (%s) -- static half holds" % detail[:60])]
+    if not ok:
+        return [(FAIL, "server_consumers() against an unreachable host answered %s instead of None "
+                       "-- the box's silence is being read as an answer (OFFLINE-IS-NOT-ABSENT-1)"
+                 % (detail.strip().splitlines()[-1:] or ["?"])[0][:60])]
+    return [(INFO, "an unreachable box answers None, the sentinel is in place, ssh self-heals at "
+                   "entry, and RG-0308 demands the tool's own OK line")]
 
 
 @entry("RG-0309", "The PAID Home Affairs check is reachable by the only people who can buy "

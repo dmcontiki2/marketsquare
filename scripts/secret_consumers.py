@@ -94,15 +94,31 @@ def register_out_of_band():
     return set(re.findall(r"^\|\s*([A-Z][A-Z0-9_]{3,})", m.group(0), re.M)) if m else set()
 
 
+_REACHED = "__SECRET_CONSUMERS_REACHED__"
+
+
 def server_consumers(name):
-    """Ask the box where this NAME appears. Returns a list of (place, path)."""
-    script = "\n".join(cmd % name for _label, cmd in SERVER_PLACES)
+    """Ask the box where this NAME appears. Returns a list of (place, path), or None when
+    the box could not be reached.
+
+    OFFLINE-IS-NOT-ABSENT-1 (7 Sep 2026). The first cut returned [] whenever ssh FAILED
+    (no key loaded yet, connection refused, rc 255) because the failure raised nothing --
+    it just produced empty output -- and empty output read as 'this name lives nowhere on
+    the box'. Zero copies means zero surprises means the --check exit was 0, and the ledger
+    printed READY TO LOCK on RG-0308 in a sandbox that had not yet loaded its ssh key. A
+    blind instrument reported a clean box. The sentinel below is echoed by the REMOTE
+    shell as the last line; if it is missing, the script did not run there, whatever the
+    exit code says (the exit code is the last grep's, and a grep with no match exits 1,
+    so rc alone cannot tell 'no match' from 'never ran')."""
+    script = "\n".join(cmd % name for _label, cmd in SERVER_PLACES) + "\necho %s" % _REACHED
     try:
         r = subprocess.run(["ssh", "-n", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8",
                             SERVER, script],
                            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                            stderr=subprocess.DEVNULL, text=True, timeout=60)
     except Exception:
+        return None
+    if r.returncode == 255 or _REACHED not in (r.stdout or ""):
         return None
     # Two kinds of hit are not consumers and must not be reported as if a rotation had to
     # reach them: compiled bytecode, which holds only the variable NAME, and *.bak-* files,
@@ -112,7 +128,7 @@ def server_consumers(name):
     hits, stale = [], []
     for ln in (r.stdout or "").splitlines():
         ln = ln.strip()
-        if not ln:
+        if not ln or ln == _REACHED:
             continue
         if ln.endswith(".pyc") or "__pycache__" in ln:
             continue
@@ -153,6 +169,21 @@ def repo_consumers(name):
     return sorted(out)
 
 
+def _ensure_ssh():
+    """SSH-BOOTSTRAP-1: the key is on the mount; load it rather than reporting a blocker.
+    Without this, a fresh sandbox asked the box 22 questions with no key and, before
+    OFFLINE-IS-NOT-ABSENT-1, read every silence as an answer."""
+    if (Path.home() / ".ssh" / "id_ed25519").exists():
+        return
+    loader = REPO / "load_sandbox_ssh.sh"
+    if loader.exists():
+        try:
+            subprocess.run(["bash", str(loader)], stdin=subprocess.DEVNULL,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=90)
+        except Exception:
+            pass
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("name", nargs="?", help="one credential name; default is all of them")
@@ -165,6 +196,7 @@ def main():
     if not names:
         print("no credential names found in SECRETS_REGISTER.md"); return 2
     claimed = register_out_of_band()
+    _ensure_ssh()
 
     offline, surprises = False, []
     for n in names:
