@@ -61,3 +61,14 @@ real ZA Services prospect left `prospects.db` byte-identical with no journal; `s
 the newest emailed address refused before any network call. Backups beside every file
 (`*.bak-invitegate-*`, `*.bak-renderpure-*`, `*.bak-hrefshield-*`, `*.bak-recontact-*`,
 `*.bak-letteragree-*`, `*.bak-blank-*`, `*.bak-rg0330-*`, `*.bak-rul106-*`).
+
+**Live verification (7 Sep 2026, after deploy c4d7da4, PROBED from David's Chrome inside the gate):**
+the real Maine club link (src=probe-invitegate so the funnel ignores it) arrived with
+`sfState.city='Maine'`, `country='US'` (inferred — this link pre-dates the country parameter),
+`area='Lewiston'`, currency `$`; the Photos step's forward button was enabled with no photo and
+one click reached "Step 2 of 6 · Tutoring Details" with the Suburb/area box pre-filled
+"Lewiston". Live `/static/ms.js` carries INVITE-PLACE-1 and INVITE-GATE-1 and no hard-coded ZA.
+`/support` and all five worked-example pages read clean. Ledger: RG-0325/0327/0328/0329 promoted
+to LOCKED (fixed_on 2026-09-07); RG-0326 stays OPEN by design until a real arrival passes.
+Follow-up in the same session: the main photo slot's badge said "required" — now "recommended";
+the chess/judo/plumbers example pages lose the now-false "Nothing has been sent to anybody" line.

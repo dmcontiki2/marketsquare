@@ -16190,7 +16190,7 @@ function sfSlotHtml(sl){
     thumb = '<img src="'+SF_TILE_IMGS[sfState.cat].own+'" alt="" style="opacity:.9;" onerror="this.style.display=\'none\';this.parentElement.textContent=\'\'+this.dataset.em" data-em="'+sl[3]+'">';
   else thumb = sl[3];
   var badge = st===2 ? ((sfState.anonFlags&&sfState.anonFlags[key]) ? '<span class="sf-st ok" title="Identifying details spotted — blurred automatically on upload">✓ checked · will blur</span>' : '<span class="sf-st ok">✓ checked</span>') : (st===1 ? '<span class="sf-st chk"><span class="sf-spin"></span>AI check…</span>' :
-    (key==='main' ? '<span class="sf-st req">required</span>' : '<span class="sf-st" style="opacity:.5;">tap to add</span>'));
+    (key==='main' ? '<span class="sf-st req">recommended</span>' : '<span class="sf-st" style="opacity:.5;">tap to add</span>'));   // INVITE-GATE-1: no longer required
   // MAROUSHKA-PHOTO-1: a filled slot gets a ✕ so the seller can drop it.
   var clr = st===2 ? '<span class="sf-clr" title="Remove this photo" onclick="event.stopPropagation();sfClearSlot(\''+key+'\')" '+
     'style="margin-left:8px;flex-shrink:0;width:26px;height:26px;line-height:24px;text-align:center;border-radius:50%;'+

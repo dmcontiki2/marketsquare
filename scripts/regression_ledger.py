@@ -19401,7 +19401,7 @@ def rg_restart_does_not_redflash_the_map():
 
 @entry("RG-0325", "An invited seller's own CITY reaches the listing they create -- the letter says "
        "'it already knows who you are', so the app must not file a Maine club's advert in Pretoria",
-       OPEN,
+       LOCKED, fixed_on="2026-09-07",   # INVITE-PLACE-1 shipped c4d7da4; PROBED live 7 Sep 2026 after deploy -- passes
        scope="static/ms.js sfInit(). The magic-link parser already stores the invited place as "
              "magicLink.area, and the OLDER flows (goInit, sobInit) seed from it. The LIVE flow "
              "(SF_ENABLED=true -> sfInit) seeds sfState.city from activeCity.name || 'Pretoria' and "
@@ -19465,7 +19465,7 @@ def rg_invited_seller_can_pass_screen_one():
 
 @entry("RG-0327", "Every parameter the outreach link CARRIES is a parameter the app READS -- a link "
        "that ships a value nothing consumes is a promise the product does not keep",
-       OPEN,
+       LOCKED, fixed_on="2026-09-07",   # INVITE-PLACE-1 + HREF-SHIELD-1 shipped (app reads suburb/neighborhood; draft_id emit removed; country added and read); PROBED live 7 Sep 2026 after deploy -- passes
        scope="CityLauncher/emailer/emailer.py build_magic_link() emits magic, name, email, cat, city, "
              "src, suburb and (when present) draft_id. Live static/ms.js reads magic, name, email, "
              "cat, city, src and drafted -- it reads NEITHER suburb NOR draft_id. Worse, localize.py "
@@ -19504,7 +19504,7 @@ def rg_outreach_link_params_are_read():
 
 @entry("RG-0328", "The public support page AGREES with the letter that sends people to it -- a "
        "prospect promised 'free, no card' must not read 'you must have an active subscription'",
-       OPEN,
+       LOCKED, fixed_on="2026-09-07",   # support.html rewritten from PRICING_CANON, shipped c4d7da4; PROBED live 7 Sep 2026 after deploy -- passes
        scope="The live /support FAQ, which every outreach template links as 'Questions are answered "
              "in the app, at trustsquare.co/support'. Three statements contradict the letters going "
              "out tonight: (a) 'You must have an active subscription to publish listings' against "
@@ -19538,7 +19538,7 @@ def rg_support_page_agrees_with_the_letter():
 
 @entry("RG-0329", "A worked-example page LINKED FROM A LETTER is finished -- it never shows the "
        "reader an unfilled merge placeholder where a name should be",
-       OPEN,
+       LOCKED, fixed_on="2026-09-07",   # assoc_athletics/guides/dance/teachers re-addressed to the reader; chess/judo/plumbers lose the false 'Nothing has been sent' line; PROBED live 7 Sep 2026 after deploy -- passes
        scope="static/examples/*.html, reachable from the ZA club letter's 'See the full worked "
              "example for your sport' link. athletics.html renders the literal string 'your "
              "provincial athletics body' as though it were the body's name, in the title, the "
