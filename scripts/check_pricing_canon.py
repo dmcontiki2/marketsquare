@@ -57,7 +57,42 @@ check("canon: Starter $5 / 10 / 2T", all(x in canon for x in ["$5", "10", "2T"])
 check("canon: buyer Global $5 / R90", "Global" in canon and "$5" in canon and "R90" in canon)
 check("canon: badge on $20 Pro", '$20 Pro' in canon and 'QUALIFYING_TIERS = ("pro",)' in canon)
 
-print("\n3. Derived docs in line (current present, retired absent):")
+# TIER-PURGE-1 (7 Sep 2026). This script passed "ALL IN LINE" every day for ~3 months while the
+# retired five-tier model was still live in seven places -- because every check above asks only
+# whether the CURRENT numbers are PRESENT. A guard that never asks what should be ABSENT cannot
+# see a remnant. It cost a payable retired tier and a Pro seller refused a feature they pay for.
+RETIRED_TIERS = ("standard", "professional", "business", "elite", "premium")
+AUTHORITIES = (("bea_main.py", bea, ("_SELLER_SUB_TIERS", "paid_tiers", "_PAID_TIERS", "_FADE_WINDOWS")),
+               ("launch_redemption.py", lr, ("TIER_TUPPENCE_MONTHLY", "_TIER_LABELS", "_DEFAULT_VELOCITY")),
+               ("ai_service_tiers.py", read(os.path.join(ROOT, "ai_service_tiers.py")) or "",
+                ("PAID_FEED_ALLOWED_TIERS",)))
+
+print("\n3. Retired five-tier model is ABSENT from the code authorities:")
+for fname, text, consts in AUTHORITIES:
+    for const in consts:
+        i = text.find(const + " =")
+        if i < 0: i = text.find(const + "=")
+        if i < 0:
+            check(f"{fname}: {const} present", False, "constant not found")
+            continue
+        seg = text[i:i + 900]
+        for end in ("}", ")"):
+            j = seg.find(end)
+            if j > 0:
+                seg = seg[:j + 1]; break
+        hits = [t for t in RETIRED_TIERS if f'"{t}"' in seg or f"'{t}'" in seg]
+        check(f"{fname}: {const} free of retired tiers", not hits, f"carries {hits}")
+# and the mirror image -- the canon paid tier must be IN the gates that decide paid access
+for fname, text, const, needle in (("bea_main.py", bea, "_PAID_TIERS", '"pro"'),
+                                   ("ai_service_tiers.py",
+                                    read(os.path.join(ROOT, "ai_service_tiers.py")) or "",
+                                    "PAID_FEED_ALLOWED_TIERS", '"pro"')):
+    i = text.find(const)
+    seg = text[i:text.find("}", i) + 1] if i >= 0 else ""
+    check(f"{fname}: {const} includes the canon Pro tier", needle in seg,
+          "pro missing -- a paid tier is being refused a paid feature")
+
+print("\n4. Derived docs in line (current present, retired absent):")
 a7 = [os.path.join(ROOT, "docs/PRINCIPLE_REQUIREMENTS.md"),
       os.path.join(PROJ, "Codices/PRINCIPLE_REQUIREMENTS.md"),
       os.path.join(PROJ, "AdvertAgent/PRINCIPLE_REQUIREMENTS.md"),

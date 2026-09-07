@@ -49,22 +49,25 @@ router = APIRouter()
 # Simpler Model (adopted 9-10 Jun 2026): Starter $5 → 2T/mo, Pro $20 → 10T/mo.
 # Legacy tiers retained for existing users until migration.
 # PRICING AUTHORITY — see MarketSquare/PRICING_CANON.md; run scripts/check_pricing_canon.py after any change.
-TIER_TUPPENCE_MONTHLY = {"starter": 2, "pro": 10,
-                         "standard": 6, "professional": 10, "business": 20, "elite": 50}
-# NOTE: "starter" was once a legacy alias for "standard" (6T). It is now the canon
-# $5 Starter tier (2T). Any pre-Simpler-Model user whose DB row says 'starter'
-# must be migrated to 'standard' BEFORE this grants — see existing-user migration map.
-_LEGACY_TIER_MAP = {"premium": "professional"}  # legacy keys → canon
-_TIER_LABELS = {"starter": "Starter", "pro": "Pro",
-                "standard": "Standard", "professional": "Professional",
-                "business": "Business", "elite": "Elite"}
+TIER_TUPPENCE_MONTHLY = {"starter": 2, "pro": 10}
+# TIER-PURGE-1 (7 Sep 2026, David: "we don't want the old tier process to resurface again").
+# This map used to grant the retired five-tier model as well (standard 6T / professional 10T /
+# business 20T / elite 50T). PROBED before removal: ZERO live users on any of them.
+# THE NOTE THAT STOOD HERE WAS A LANDMINE AND IS DELETED, NOT MOVED. It instructed that any
+# user whose row said 'starter' be moved onto the retired $12 tier before granting — written when
+# 'starter' was a pre-Simpler-Model alias for the $12 Standard tier. Acting on it TODAY would
+# have taken the 17 live canon-Starter sellers and moved them ONTO a retired tier — the exact
+# resurfacing this purge exists to prevent. Every lookup below is .get(..., 0/label), so a row
+# carrying a retired name grants nothing rather than raising.
+_TIER_LABELS = {"starter": "Starter", "pro": "Pro"}
 QUALIFYING_TIERS = ("pro",)  # the ONLY minting tier ($20 Pro) — rev 3, supersedes rev 2 Business/Elite
 
 # Crockford base32 — no I, L, O, U. Mirror of CityLauncher emailer/launch_codes.py.
 _ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
-_DEFAULT_VELOCITY = {"free": 2, "starter": 5, "standard": 5, "premium": 10,
-                     "professional": 10, "business": 20, "elite": 50}
+# TIER-PURGE-1 (7 Sep 2026): carried five retired tier names AND was missing "pro" entirely,
+# so the canon $20 tier fell through to whatever the caller defaulted to. Canon four only now.
+_DEFAULT_VELOCITY = {"free": 2, "starter": 5, "pro": 10, "agency": 10}
 
 
 # ── env helpers ──────────────────────────────────────────────────────────────
@@ -180,7 +183,7 @@ def _salted_id_hash(id_number_hash: str) -> str:
 # ── allocation maths (canon: ×1.2 rounded UP — 6→8, 10→12, 20→24, 50→60) ─────
 
 def monthly_allocation(tier: str, has_badge: bool) -> int:
-    t = _LEGACY_TIER_MAP.get(tier, tier)
+    t = tier                      # TIER-PURGE-1: no legacy aliases remain
     base = TIER_TUPPENCE_MONTHLY.get(t, 0)
     if base and has_badge:
         return (base * 12 + 9) // 10  # integer ceil(base × 1.2)
@@ -229,7 +232,7 @@ def grant_monthly_tuppence(conn, email: str, tier: str, period: str = None):
     if not _flag("TUPPENCE_MONTHLY_ENABLED"):
         return None
     email = (email or "").lower().strip()
-    canon_tier = _LEGACY_TIER_MAP.get(tier, tier)
+    canon_tier = tier              # TIER-PURGE-1: no legacy aliases remain
     base = TIER_TUPPENCE_MONTHLY.get(canon_tier, 0)
     if not email or base <= 0:
         return None  # free tier: no allocation — the badge waits (canon)

@@ -147,6 +147,18 @@ REFLECTIONS = {
     ["\"Paris\":", "\"Lyon\":", "\"Marseille\":", "\"Braga\":", "\"Lisbon\":", "\"Porto\":"]),
    ("ONBOARDING_PLAN.md", ["RUL-101"], []),
  ],
+ "RUL-107": [
+   # TIER-PURGE-1 (7 Sep) -- the retired five-tier model is gone from the CODE, not just the docs.
+   ("RULINGS.md", ["THE RETIRED FIVE-TIER PRICING MODEL IS PURGED FROM THE CODE"], []),
+   # the reflection that matters is the ABSENCE, checked where the tiers actually lived.
+   ("bea_main.py", ["_PAID_TIERS = {\"starter\", \"pro\"}", 'paid_tiers = ("starter", "pro")'],
+                   ['"elite":', '"business":', '{"starter", "premium"}']),
+   ("launch_redemption.py", ['TIER_TUPPENCE_MONTHLY = {"starter": 2, "pro": 10}'],
+                            ["must be migrated to 'standard' BEFORE this grants"]),
+   ("ai_service_tiers.py", ["PAID_FEED_ALLOWED_TIERS"], ['"professional", "business", "elite"']),
+   # and the guard that could not see it before must now be able to.
+   ("scripts/check_pricing_canon.py", ["RETIRED_TIERS", "free of retired tiers"], []),
+ ],
  "RUL-103": [
    # Visibility co-equal + the video calendar must describe what is ON DISK (5 Sep).
    ("RULINGS.md", ["VISIBILITY IS A CO-EQUAL OUTPUT"], []),

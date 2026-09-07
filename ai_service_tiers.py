@@ -57,10 +57,14 @@ PAID_FEED_FUNCTIONS = frozenset({
                            # from when the stub predated the class. Canon §5 logic decides it.
 })
 
-# Seller tiers permitted to fire the paid-feed class. Pro only (+ legacy paid tiers
-# for existing users until migration). PRICING AUTHORITY: see PRICING_CANON.md §5.
+# Seller tiers permitted to fire the paid-feed class. Pro only.
+# TIER-PURGE-1 (7 Sep 2026): the retired five-tier names professional/business/elite were
+# carried here "for existing users until migration". PROBED before removal: zero live users
+# on any of them. Leaving them meant a row carrying a retired name could fire the paid-feed
+# class — the most expensive AI in the product — on a tier nobody can legitimately hold.
+# PRICING AUTHORITY: see PRICING_CANON.md §5.
 PAID_FEED_ALLOWED_TIERS = frozenset({
-    "pro", "professional", "business", "elite",
+    "pro",
 })
 
 

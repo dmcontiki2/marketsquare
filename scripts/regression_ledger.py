@@ -19790,5 +19790,94 @@ def rg_mformat_arity():
     return out
 
 
+@entry("RG-0335", "The RETIRED five-tier pricing model cannot come back -- its names appear in no "
+       "pricing authority, and the canon $20 Pro tier is present everywhere a paid tier is checked",
+       LOCKED, fixed_on="2026-09-07",
+       scope="bea_main.py (_SELLER_SUB_TIERS, paid_tiers, _PAID_TIERS, _FADE_WINDOWS), "
+             "launch_redemption.py (TIER_TUPPENCE_MONTHLY, _TIER_LABELS, _DEFAULT_VELOCITY), "
+             "ai_service_tiers.py (PAID_FEED_ALLOWED_TIERS). ALL markets. CLASS: a retired "
+             "pricing model left in code 'for existing users until migration' when there are no "
+             "such users -- and the mirror-image fault, a canon tier MISSING from a set that "
+             "gates a paid feature. Static, so it runs anywhere the repo is.",
+       ref="TIER-PURGE-1 (7 Sep 2026). David: 'we don't want the old tier process to resurface "
+           "again. I actually thought we removed all remnants of them?' He was right to ask and "
+           "the honest answer was NO. The five-tier model (Standard $12 / Professional $20 / "
+           "Business $40 / Elite $100 / Premium $15) was retired 9-15 Jun 2026 and pinned out by "
+           "PRICING_CANON.md, but it was still live in SEVEN places. Two were not inert: "
+           "(a) bea_main.py's paid_tiers still made standard/professional/business/elite PAYABLE, "
+           "so anyone could POST /payment/seller-subscription/initialize?tier=elite and be charged "
+           "R1,800/month for a tier nobody may hold -- the docstring said 'existing users only' "
+           "and NOTHING in the code enforced it; (b) _PAID_TIERS, the multi-city reach gate, read "
+           "{'starter','premium'} -- the retired name was in and the canon $20 'pro' was OUT, so a "
+           "Pro seller was refused 402 'requires a Starter subscription ($5/month)', told to buy a "
+           "cheaper plan than the one they had. PROBED on the live database first: 71 users, 54 "
+           "free + 17 starter, ZERO on any retired tier and zero pending downgrades -- so the "
+           "'existing users' the exemption protected did not exist, and the Pro bug was latent "
+           "rather than historic. Also deleted, and it was the most dangerous line of the set: a "
+           "NOTE in launch_redemption.py instructing that any user whose row says 'starter' be "
+           "migrated to 'standard' BEFORE granting -- written when 'starter' meant the $12 tier, "
+           "it would today move all 17 canon Starter sellers ONTO a retired tier. WHY NOBODY "
+           "NOTICED: check_pricing_canon.py passed ALL IN LINE every single day, because it only "
+           "ever asserted that the CURRENT numbers are present -- it never asked whether the "
+           "RETIRED ones were gone from the code (it checked that in the derived docs only). A "
+           "guard that looks only for what should be there cannot see what should not. That gap "
+           "is closed in the same commit, and this entry is its independent second opinion.")
+def rg_retired_tiers_gone():
+    RETIRED = ("standard", "professional", "business", "elite", "premium")
+    AUTHORITIES = {
+        "bea_main.py": ("_SELLER_SUB_TIERS", "paid_tiers", "_PAID_TIERS", "_FADE_WINDOWS"),
+        "launch_redemption.py": ("TIER_TUPPENCE_MONTHLY", "_TIER_LABELS", "_DEFAULT_VELOCITY"),
+        "ai_service_tiers.py": ("PAID_FEED_ALLOWED_TIERS",),
+    }
+    out, checked = [], 0
+    for fname, names in AUTHORITIES.items():
+        src = repo_file(fname)
+        if src is None:
+            out.append((INFO, "%s not readable here -- static entry, skipped outside the repo" % fname))
+            continue
+        for const in names:
+            i = src.find(const + " =")
+            if i < 0:
+                i = src.find(const + "=")
+            if i < 0:
+                out.append((FAIL, "%s: the pricing authority %s has GONE -- this entry can no "
+                                  "longer see the thing it guards" % (fname, const)))
+                continue
+            # the literal that follows, to its closing brace/paren -- not the whole file, so a
+            # comment elsewhere describing the old model can never trip this.
+            seg = src[i:i + 900]
+            for end in ("}", ")"):
+                j = seg.find(end)
+                if j > 0:
+                    seg = seg[:j + 1]
+                    break
+            checked += 1
+            for name in RETIRED:
+                if '"%s"' % name in seg or "'%s'" % name in seg:
+                    out.append((FAIL, "%s: %s carries the RETIRED tier %r -- the five-tier model is "
+                                      "back in a pricing authority (TIER-PURGE-1)" % (fname, const, name)))
+    # The mirror-image half: the canon paid tier must be PRESENT where paid access is decided.
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        k = bea.find("_PAID_TIERS =")
+        if k < 0:
+            out.append((FAIL, "bea_main.py: _PAID_TIERS (the multi-city reach gate) has gone"))
+        else:
+            seg = bea[k:bea.find("}", k) + 1]
+            if '"pro"' not in seg:
+                out.append((FAIL, "bea_main.py: _PAID_TIERS does not contain 'pro' -- the $20 canon "
+                                  "tier is being refused a paid feature it pays for (TIER-PURGE-1)"))
+    ats = repo_file("ai_service_tiers.py")
+    if ats is not None and "PAID_FEED_ALLOWED_TIERS" in ats:
+        seg = ats[ats.find("PAID_FEED_ALLOWED_TIERS"):]
+        seg = seg[:seg.find("})") + 2] if "})" in seg else seg[:400]
+        if '"pro"' not in seg:
+            out.append((FAIL, "ai_service_tiers.py: PAID_FEED_ALLOWED_TIERS does not contain 'pro'"))
+    if not out:
+        out.append((INFO, "%d pricing authorities checked; no retired five-tier name in any of them, "
+                          "and 'pro' is present in both paid-access gates" % checked))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

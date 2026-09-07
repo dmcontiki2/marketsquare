@@ -6499,7 +6499,7 @@ async def paystack_webhook(request: Request):
     return {"status": "ok"}
 
 # ── SELLER SUBSCRIPTION PAYMENTS ────────────────────────────
-# 5-tier design (Session 91). USD → ZAR at R18/$ conservative rate.
+# Simpler Model (9-10 Jun 2026). USD → ZAR at R18/$ conservative rate.
 # Downgrades: pending until billing_period_end, then applied by worker.
 # Reference prefixes: ms_sub_{tier}_xxx
 
@@ -6512,12 +6512,13 @@ _SELLER_SUB_TIERS = {
     "agency":  {"amount_rands": 0.0,   "label": "Agency",  "slot_limit": 10, "usd": 0},
     # ^ Agency is FREE + verified; slot_limit here is the BASE — the trust-graduated cap
     #   (10 new -> 100 verified -> 500 established + review) is applied separately, category-aware.
-    # Legacy 5-tier (retained for existing users until migration; NOT offered to new sellers)
-    "standard":     {"amount_rands": 216.0,  "label": "Standard (legacy)",     "slot_limit": 10,  "usd": 12},
-    "professional": {"amount_rands": 360.0,  "label": "Professional (legacy)", "slot_limit": 25,  "usd": 20},
-    "business":     {"amount_rands": 720.0,  "label": "Business (legacy)",     "slot_limit": 60,  "usd": 40},
-    "elite":        {"amount_rands": 1800.0, "label": "Elite (legacy)",        "slot_limit": 500, "usd": 100},
-    "premium":      {"amount_rands": 270.0,  "label": "Professional (legacy)", "slot_limit": 25,  "usd": 15},
+    # TIER-PURGE-1 (7 Sep 2026, David: "we don't want the old tier process to resurface again").
+    # The retired five-tier model (Standard $12 / Professional $20 / Business $40 / Elite $100 /
+    # Premium $15) USED TO BE CARRIED HERE "for existing users until migration". PROBED on the
+    # live database before removal: 71 users, 54 free + 17 starter, ZERO on any retired tier and
+    # zero pending downgrades -- the exemption protected nobody while leaving those tiers payable.
+    # This dict is the choke point every tier path keys off, so the names are gone from all of
+    # them at once. Asserted by RG-0335: they may never reappear here.
 }
 
 def _tier_slot_limit(tier: str) -> int:
@@ -6543,8 +6544,7 @@ def list_subscription_tiers():
 @app.post("/payment/seller-subscription/initialize")
 def init_seller_subscription(email: str, tier: str, callback_url: str = ""):
     """Initialize a Paystack payment for a seller subscription tier change.
-    tier: starter | pro  (Simpler Model, Jun 2026)
-          + legacy standard | professional | business | elite (existing users only)
+    tier: starter | pro  (Simpler Model, Jun 2026 -- the only payable tiers)
     Upgrades: charged immediately.
     Downgrades: scheduled for billing_period_end (pending_downgrade_tier set, not yet applied).
     Free tier: no payment needed — handled by PUT /users/{email}/seller-tier directly.
@@ -6556,8 +6556,10 @@ def init_seller_subscription(email: str, tier: str, callback_url: str = ""):
         raise HTTPException(status_code=400,
                             detail="The Agency plan is free — no payment needed. "
                                    "Apply via agency verification instead.")
-    # Simpler Model tiers first; legacy tiers kept payable for existing users until migration
-    paid_tiers = ("starter", "pro", "standard", "professional", "business", "elite")
+    # TIER-PURGE-1: only the Simpler Model tiers are payable. The retired five-tier names were
+    # in this tuple until 7 Sep 2026, so a caller could be charged R1,800/mo for "Elite (legacy)"
+    # -- the "existing users only" in the docstring was never enforced anywhere in the code.
+    paid_tiers = ("starter", "pro")
     if tier not in paid_tiers:
         raise HTTPException(status_code=400, detail=f"tier must be one of: {', '.join(paid_tiers)}")
     plan = _SELLER_SUB_TIERS[tier]
@@ -12073,11 +12075,20 @@ def identity_status(email: str, _key: str = Depends(auth.require_api_key)):
 
 # ── MULTI-CITY REACH ─────────────────────────────────────────────────────────
 # Free sellers: home city only.
-# Starter/Premium sellers: can extend a listing to any city in their country
+# Starter/Pro sellers: can extend a listing to any city in their country
 # by confirming they can service buyers there.
 # Buyers always see listings as "local" — they never see the seller's home city.
 
-_PAID_TIERS = {"starter", "premium"}
+# TIER-PURGE-1 (7 Sep 2026) — THIS WAS A LIVE BUG, not just a stale name. The set held
+# starter plus the RETIRED five-tier name Premium, while "pro" — the $20 canon
+# tier, the most expensive one a seller can buy — was MISSING. A Pro seller extending a
+# listing was refused 402 "requires a Starter subscription ($5/month)", i.e. told to buy a
+# cheaper plan than the one they were already paying for. Latent, not historic: PROBED on the
+# live database the same day, there are 0 Pro sellers (54 free, 17 starter), so nobody has
+# been turned away yet. Written in the five-tier era, never migrated with the rest.
+# Agency is deliberately NOT added here — it is out of this set today and this is a repair,
+# not a reach decision; whether a free+verified agency gets national reach is David's call.
+_PAID_TIERS = {"starter", "pro"}
 
 @app.get("/listings/{listing_id}/cities")
 def get_listing_cities(listing_id: int):
@@ -12181,7 +12192,7 @@ def remove_listing_city(listing_id: int, city_id: int, email: str):
 @app.put("/users/{email}/seller-tier")
 def set_seller_tier(email: str, tier: str, _key: str = Depends(auth.require_api_key)):
     """Admin: set seller subscription tier immediately (bypasses Paystack).
-    tier must be: free | standard | professional | business | elite | starter | premium
+    tier must be: free | starter | pro | agency  (the Simpler Model set -- PRICING_CANON.md)
     Also applies pending downgrades — call with tier=free for immediate free downgrade.
     Enforces slot guard: if active listings > new slot_limit, returns 409 with count.
     """
@@ -21382,8 +21393,9 @@ def tuppence_ai_settle(payload: dict, _key: str = Depends(auth.require_api_key))
 # David's rulings 23 Jul 2026: fade windows 30/60/90 (agency 90); responsiveness
 # = gentle model: −5 at 48h unanswered, intro removed at 96h, both parties told.
 
-_FADE_WINDOWS = {"free": 30, "starter": 60, "pro": 90, "agency": 90,
-                 "standard": 90, "professional": 90, "business": 90, "elite": 90}
+# TIER-PURGE-1: the retired five-tier names (standard/professional/business/elite, all 90)
+# were carried here too. The canon four are unchanged; an unknown tier already falls back.
+_FADE_WINDOWS = {"free": 30, "starter": 60, "pro": 90, "agency": 90}
 _FADE_WARN_LEAD_DAYS = 7      # nudge email this many days BEFORE the window closes
 _FADE_GRACE_DAYS = 14         # faded → archived after this many days, per locked spec
 RESP_PENALTY_AT_H = 48        # unanswered intro → −5 at this age
