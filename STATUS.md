@@ -28,6 +28,44 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- **Stale secret backups on the server deleted (7 Sep, David's permission):** the seven files RG-0308's
+  probe surfaced are gone; live files untouched, `/health` 200, `secret_consumers.py --check` OK.
+  Two July `.env.bak-*` files and one `resend.watch.conf.bak` remain (outside the permission).
+
+- **Server secret folders are clean (7 Sep):** the last three stale `.bak` files deleted on David's
+  second permission; live twins verified untouched, `/health` 200, credential check OK.
+
+- **RG-0308 CLOSED (7 Sep, second maintenance pass):** SECRETS_REGISTER.md's out-of-band table now
+  lists all 10 credentials with more than one live copy on the box, written from a live probe.
+  `secret_consumers.py` no longer counts a `.bak` as a consumer (STALE-IS-NOT-A-CONSUMER-1).
+  `/var/www/marketsquare/.env` 644→640 and its seven `.env.bak-*` 644→600 on the server; nothing
+  deleted. Ledger after: 322 entries, 0 regressed, 23 open. Awaiting David: delete the seven stale
+  backup files on the server (listed in the register).
+
+- **Maintenance loop 7 Sep (05:31–05:55 UTC):** queue empty (new 0 / fix-shipped 0 / verified 26 / closed 12);
+  shadow agent 0 seen 0 acted, heartbeat on `/dashboard/maint` at 05:36:50Z; no escalation brief.
+  Ledger before: green, but RG-0308 printed a FALSE READY TO LOCK — `secret_consumers.py` read a
+  failed ssh (no key loaded yet in that shard) as "no copies on the box". Fixed at the instrument
+  (remote sentinel + self-heal ssh, OFFLINE-IS-NOT-ABSENT-1) and asserted as RG-0333 (LOCKED);
+  RG-0308 reverted to OPEN with its pass branch tightened to the tool's own `OK:` line. Ledger
+  after: 321 entries, 1 REGRESSED — RG-0271, tripped by the concurrent EMAIL-FORENSIC-1 session's
+  uncommitted `emailer.py` change (country appended to legacy links); owned by that session.
+  Committed, not pushed (NIGHTLY-SHIP-1).
+
+- **LEDGER-SHARD-1 (RG-0319).** The self-check board is runnable again from a capped session:
+  `--shard=1/3 .. 3/3` then `--combine=3` (83s/57s/75s). `--combine` refuses a missing, stale or
+  wrong-sized set rather than assembling a board nobody measured. Board is GREEN: 312 entries,
+  0 regressed, 0 unverified, 22 open.
+- **Measured cost of the board:** 250.7s total, median entry 0.023s, but 7 entries carry 62% of
+  it (live page downloads + subprocess launches). Cost tracks heavy checks, not entry count.
+
+- **EMAIL-FORENSIC-1 fixes shipped (7 Sep).** Invited city/country/suburb now reach the listing
+  (INVITE-PLACE-1); the photo screen no longer blocks (INVITE-GATE-1); /support agrees with the
+  letter; worked-example blanks filled; letter render never writes the DB (RENDER-PURE-1, RG-0330
+  LOCKED); 60-day re-contact floor at send_email (RUL-106 / RECONTACT-1, RG-0332 LOCKED).
+  RG-0325/0327/0328/0329 lock on live verification after deploy; RG-0326 locks only when a real
+  invited arrival passes screen 1. RG-0331 OPEN: listings carry no country server-side.
+
 - **RESTART-REDFLASH-1 fixed and locked (RG-0318).** The ops map flashing all-red was a
   one-second deploy restart (23:24:56 and 23:29:16 UTC, 6 Sep), not an outage — server probed
   healthy throughout, `NRestarts=0`, zero journal errors. Every polled dashboard feed now retries

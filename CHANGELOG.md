@@ -1,3 +1,815 @@
+## 2026-09-07 — WAVE-ORDER-1: the wave visits the longest-waiting city first
+
+The plan for 8 Sep showed the head of the alphabet doubling (ramp 12 → 24) and the 250 cap falling at
+Utah — the same 17-state tail (North Carolina → Wyoming) would have been pushed out a THIRD night in a
+row, because `wave_cities.py` printed the policy's order and the cap is shared. Now: never-sent cities
+first, then the oldest last-send, then policy order (`--policy-order` restores the old list). Verified:
+the list opens with North Carolina … Wyoming. RG-0337 LOCKED. Retired: `scripts/ledger_slices.py`
+(01:17) is now a pointer to the ledger's own `--shard`/`--combine` (LEDGER-SHARD-1, 06:56) — one engine.
+
+## 2026-09-07 — Travelpayouts tours review: DECLINED a third time, and a NEW reason appeared (D10, RUL-041)
+
+Scheduled probe of the Travelpayouts dashboard (project "Trustsquare", partner ID 758984), run 07:00 SAST
+in David's Chrome. Evidence grade: PROBED — the GetYourGuide program page banner, not their email.
+
+**Outcome:** the 2 Sep resubmit was declined. Banner verbatim: *"20 programs are currently unavailable for
+Trustsquare"* with TWO reasons listed — (1) *"Your website is currently under development or not yet
+ready"* (the same reason as 5 Aug and 24 Aug), and (2) **NEW:** *"Your website doesn't currently have
+enough traffic. Submit for review once it has stable monthly traffic for at least three consecutive
+months."* The "Submit for review" button is active again, so the review has concluded — this is not a
+pending state. GetYourGuide, Viator and Booking.com remain blocked. Aviasales flights Data API unaffected.
+
+**What the new reason means:** a traffic gate is a calendar, not a fix. If it is the deciding reason, the
+earliest sensible resubmit is ~December 2026 (three full months of post-launch traffic from 1 Sep). If
+"not ready" is the deciding reason, we need them to name the item. The two reasons call for different
+responses, which is exactly why the next step is a written question, not a fourth submit.
+
+**Done this run:** per RUL-041, NOT resubmitted. Drafted (not sent) a short note to Travelpayouts support —
+states the 1 Sep launch, that the site is live with real listings, and asks specifically which reason is
+deciding and what "not ready" refers to. Saved as `TRAVELPAYOUTS_SUPPORT_NOTE_2026-09-07.md`. OPEN_LOOPS
+D10 carries the dated outcome line. The scheduled task was a one-shot; not rescheduled (nothing to poll
+until support answers or the traffic clock runs).
+
+**Reserved to David:** sending the note (sending on his behalf is reserved). tp_tours panel row stays amber.
+
+## 2026-09-07 — TIER-PURGE-1: the retired five-tier pricing model is out of the code (RUL-107, RG-0335)
+
+David asked whether we had removed all remnants of the old tier process. We had not. The five-tier
+model (Standard $12 / Professional $20 / Business $40 / Elite $100 / Premium $15) was retired in
+June 2026 and pinned out by PRICING_CANON.md, but it was still live in seven places, two of which
+were not inert.
+
+**A retired tier was still payable.** `paid_tiers` accepted standard/professional/business/elite,
+so a POST to `/payment/seller-subscription/initialize?tier=elite` would charge R1,800/month for a
+tier nobody may hold. The docstring said "existing users only"; nothing in the code enforced it.
+
+**The canon Pro tier was refused a feature it pays for.** `_PAID_TIERS`, the multi-city reach gate,
+held starter plus the retired Premium name and did **not** contain `pro`, so a Pro seller extending
+a listing got 402 "requires a Starter subscription ($5/month)" — told to buy a cheaper plan than
+the one they were on. Latent: probed the same day, there are 0 Pro sellers.
+
+**Probed before touching anything:** 71 users — 54 free, 17 starter, zero on any retired tier, zero
+pending downgrades. The "existing users" the exemption protected did not exist.
+
+**The most dangerous line was a comment**, deleted rather than moved: a NOTE in
+`launch_redemption.py` instructing that any user whose row said `starter` be moved onto the retired
+$12 tier before granting. Acted on today it would have taken all 17 live canon Starter sellers onto
+a retired tier — the resurfacing itself, written down as an instruction.
+
+**Why nothing caught it:** `check_pricing_canon.py` printed ALL IN LINE every day for three months
+because every check asked only whether the CURRENT numbers were present. A guard that never asks
+what should be ABSENT cannot see a remnant. Closed in the same commit (§3, retired-absent in code)
+and given an independent second opinion as ledger **RG-0335 (LOCKED)**, which was proven to go red
+by reintroducing both faults on a scratch copy.
+
+Also corrected: `Codices/SOLAR_COUNCIL_MASTER_INDEX.md` stated the five-tier model as the current
+seller model in three places — a session reading it would have taken it as canon.
+
+Changed: bea_main.py (`_SELLER_SUB_TIERS`, `paid_tiers`, `_PAID_TIERS`, `_FADE_WINDOWS`),
+launch_redemption.py (`TIER_TUPPENCE_MONTHLY`, `_TIER_LABELS`, `_DEFAULT_VELOCITY`, the NOTE),
+ai_service_tiers.py (`PAID_FEED_ALLOWED_TIERS`), scripts/check_pricing_canon.py,
+scripts/regression_ledger.py (RG-0335), scripts/rulings_check.py (RUL-107), RULINGS.md,
+Codices/SOLAR_COUNCIL_MASTER_INDEX.md. PRICING_CANON.md unchanged — it was right all along.
+
+## 2026-09-07 — Seven stale secret backups deleted from the server (David's permission, same day)
+
+David, after RG-0308 closed: "Please delete any of the files you asked permission for to delete."
+Deleted over ssh, each name pattern-checked as a stamped `.bak-YYYYMMDD-HHMMSS` before `rm`:
+`/etc/marketsquare/secrets.env.bak-20260822-062621`, five `/var/www/marketsquare/.env.bak-*`
+(22 Aug ×4, 2 Sep ×1), `/usr/local/bin/backup_dbs_to_r2.py.bak-20260906-084230`.
+Verified after: all seven gone; the three live files they backed up untouched (sizes and modes
+unchanged); `/health` 200; `secret_consumers.py --check` OK with no STALE line.
+Not in the permission and still on the box: two July `.env.bak-*` files (600, two credential lines
+each) and `resend.watch.conf.bak-20260828` — named in SECRETS_REGISTER.md.
+
+## 2026-09-07 — The last three stale secret backups deleted from the server ("Yes please")
+
+Second permission, same day. Deleted: `/var/www/marketsquare/.env.bak-20260718-onemodel`,
+`/var/www/marketsquare/.env.bak-cf-20260722-174900`, `/etc/marketsquare/resend.watch.conf.bak-20260828`.
+Guard: each was removed only if its live twin existed under the un-stamped name; twins verified
+unchanged afterwards (`.env` 1620 B, `resend.watch.conf` 74 B — the RED-alert key copy, intact).
+`/health` 200. No `.bak` remains in `/etc/marketsquare/` or beside the app `.env`.
+`secret_consumers.py --check` OK. Register carries the rule going forward: a rotation's `.bak` is
+deleted by the next session once the new value is proven.
+
+## 2026-09-07 — RG-0308 CLOSED: the secrets register now knows every place a credential lives (ROTATION-DISCOVERY-1 complete)
+
+David asked what was needed to close RG-0308. Answer: the register had to catch up with the box.
+Done this session, from the live server, not from memory.
+
+**Probed (read-only ssh):** for each of the 13 flagged credentials, which files hold a VALUE, which
+merely name it, who owns/reads each file (`systemctl` units, EnvironmentFile lines, `envkey()`'s
+fallback order, the 03:00 backup cron's own parser, PAM for `/etc/environment`).
+
+**Two tool corrections, `scripts/secret_consumers.py`:**
+- STALE-IS-NOT-A-CONSUMER-1: a `.bak` beside a live file no longer counts as a second "place" —
+  the tool's own docstring already called that a deletion question. 13 surprises became the 10
+  real ones (MS_ADMIN_KEY, MS_DEPLOY_KEY, MS_ADMIN_PASSWORD each had ONE live copy + one .bak).
+  `--check` now prints a separate non-failing `STALE:` line naming them.
+- (from the morning run) OFFLINE-IS-NOT-ABSENT-1 / RG-0333 — an unreachable box is `None`, not "clean".
+
+**Register, `SECRETS_REGISTER.md` out-of-band table:** 10 new rows — MS_MAINT_KEY,
+LAUNCH_CODE_SECRET (4 live files, incl. CityLauncher's `.env` that MINTS the codes the app redeems),
+PAYSTACK_SECRET_KEY + PAYSTACK_WEBHOOK_SECRET (`/etc/environment` + drop-in), ANTHROPIC_API_KEY
+(live drop-in + a commented-out dead value in CityLauncher's `.env`), HETZNER_S3_ACCESS_KEY (one
+value, a second READER — the backup cron parses the drop-in file), CF_CACHE_TOKEN,
+EMAIL_INBOUND_SECRET (3 files + the CF worker), RELAY_INBOUND_SECRET, FOUNDERS_ID_SALT ("do not
+rotate" policy recorded). Each row names the consumer and the rotation rule for that shape.
+
+**Hardening done on the box (reversible, nothing deleted):** `/var/www/marketsquare/.env` was
+world-readable (644) holding six live values → 640 (msdeploy:msdeploy; app runs as root, `/health`
+200 after). Seven `/var/www/marketsquare/.env.bak-*` files holding pre-rotation values were 644 →
+600.
+
+**Ledger:** `secret_consumers.py --check` → OK against the live box; RG-0308 printed READY TO LOCK
+on the tool's own OK line with ssh proven up → PROMOTED to LOCKED. Full board after: 322 entries ·
+299 holding · 0 REGRESSED · 23 open. (The morning's RG-0271 red cleared — the concurrent session
+reconciled its own change.)
+
+**Left for David (deletion is his):** seven stale backup files on the server still hold old
+values — `/etc/marketsquare/secrets.env.bak-20260822-062621`, five `/var/www/marketsquare/.env.bak-*`,
+`/usr/local/bin/backup_dbs_to_r2.py.bak-20260906-084230`. Named in the register; not deleted.
+
+## 7 Sep 2026 — PHOTO-BRIDGE-1: the way back from a photoless listing (RG-0338 LOCKED)
+
+David: *"Yes, let them list without a photo first, there should be no resistance at all, mistakes can
+be fixed afterwards and so can photos be added. But we need to be sure that they can modify, because
+Maroushka could not and we fixed that a few times. She still haven't tried again due to frustration.
+Please design it and make it live, we don't want the new prospects to fail again."*
+
+**REUSE-BEFORE-RECREATE CAUGHT THE FIRST HALF: the photo gate was ALREADY OPEN.** INVITE-GATE-1 shipped
+earlier the same day (commits c4d7da4 / 1ebcfff) and is LIVE — PROBED on `/static/ms.js`: `INVITE-GATE-1`
+present, "No photo handy? Continue and add one later" present, the old disabled-button gate gone. Then
+WALKED it in a browser with `src=probe-ledger`: the invited path reaches **Step 2 of 6 · Tutoring
+Details with zero photos**, suburb pre-filled from the invite. Building it again would have been the
+exact waste CLAUDE.md warns about.
+
+**WHAT WAS ACTUALLY MISSING — the return journey.** The success screen congratulated the seller
+("X is now live on TrustSquare") and stopped. No mention that photos may be added, no Listing Rating,
+no route to the edit screen. A door you may walk through and never come back to is half a fix, and it
+is precisely how Maroushka was lost: the edit machinery worked (RG-0120 LOCKED, 20 Aug, her exact
+fault) but she gave up looking for it.
+
+**BUILT — PHOTO-BRIDGE-1:**
+- `marketsquare.html` `#sob-photo-nudge` — a green card on the success screen: *"Add a photo when you
+  have one. Your listing is live without one — that is fine. Listings with photos get roughly 3x more
+  buyer contact, and you can add, change or remove them any time."* with **Add photos now →** and a
+  **Later** dismiss. Hidden by default.
+- `ms.js` `sobGoLive()` — reveals it ONLY when the listing genuinely has no photos, and wires the
+  button straight to `openEditListing(id)` so the seller never hunts. Emits `published_without_photo`
+  and `photo_bridge_open` so the funnel can measure how often this path is used.
+- **Fails closed on purpose:** the whole block is in a try/catch (a nudge may never break a successful
+  publish) and a seller who DID upload is never nagged.
+
+**LEDGER: RG-0338 LOCKED**, asserting the class — *any gate we remove from the front of a flow must
+leave a route back, or we have swapped a wall the seller can see for one they cannot.* Six legs
+checked; run in isolation: green.
+
+**A REAL MISTAKE MADE AND CAUGHT IN THE SAME RUN:** the first write to `marketsquare.html` converted
+all **4,485 CRLF line endings to LF** — a whole-file diff masquerading as a 14-line change, and the
+file SHRANK by 2,723 bytes while gaining content. Caught by comparing sizes against the backup before
+any deploy. Restored from the `.bak` and redone with `newline=''` on BOTH read and write. Final
+`git diff --stat`: **46 insertions, 0 deletions.** Note for future sessions: `marketsquare.html` is
+CRLF, `ms.js` is LF — a Python rewrite must preserve each file's own endings.
+
+**Honest limit:** the browser walk used `src=probe-ledger`, which RG-0293(b) EXCLUDES from the funnel's
+default view by design. So this does **not** satisfy RG-0326, which correctly still waits for a real
+invited person to reach a step beyond photos. The instrument is watching; nobody has to remember to look.
+
+## 2026-09-07 — maintenance-loop: a false READY TO LOCK caught and fixed at the instrument (OFFLINE-IS-NOT-ABSENT-1, RG-0333)
+
+Daily B2b maintenance run, 05:31–05:55 UTC, unattended.
+
+**Queue.** `GET /admin/faults`: new 0 · fix-shipped 0 · verified 26 · closed 12. Shadow agent
+(`maintenance_agent.py`, foreground, SHADOW mode, kill switch OFF): 0 seen, 0 acted, no patches.
+Heartbeat posted — `GET /dashboard/maint` shows run `2026-09-07T05:36:50Z`, received 05:37:10Z.
+Escalation brief: nothing in 24 h, no brief written.
+
+**Ledger BEFORE.** 318 entries, exit 0, no regressions — and RG-0308 (rotation discovery) printed
+READY TO LOCK. The loop promoted it to LOCKED, per the DW-079 rule, then re-ran the single entry
+as a check: **13 surprises** — the same 13 as 6 Sep. The READY TO LOCK was false.
+
+**Why.** Shard 3/3 ran RG-0308 before any entry had loaded the sandbox's ssh key (`~/.ssh`
+appeared 07:35:03 local; the shard ended 07:35:31). `secret_consumers.py` asked the box 22
+questions with no key; each ssh call failed (rc 255) with empty output, and the tool read empty
+output as "this name lives nowhere on the box" — zero copies, zero surprises, exit 0, READY TO
+LOCK. A blind instrument reported a clean box. Proven before the fix: `server_consumers()`
+against `root@localhost` returned `[]`; after the fix, `None`.
+
+**Fixed (both halves, same session).**
+- `scripts/secret_consumers.py`: the remote script now echoes a sentinel as its last line; if the
+  sentinel is missing or rc is 255 the box is OFFLINE (`None`), never "not present". The tool
+  self-heals ssh at entry (`_ensure_ssh()`, SSH-BOOTSTRAP-1 pattern) so a fresh sandbox loads the
+  key before asking. Reachable box still reports the same 13 surprises (LAUNCH_CODE_SECRET 5 places,
+  etc.).
+- `scripts/regression_ledger.py`: RG-0308 REVERTED to OPEN (promotion was live for eleven
+  minutes, never committed); its READY TO LOCK branch now requires the tool's own `OK:` verdict
+  line, never a bare exit 0. NEW **RG-0333** (LOCKED): sentinel present, `None` on missing
+  sentinel, self-heal at entry, RG-0308 demands the OK line, and a BEHAVIOURAL probe —
+  `server_consumers()` against an unreachable host must answer `None`. Filed beside RG-0308 rather
+  than at the tail because a concurrent session was appending at the tail the same minute.
+
+**Ledger AFTER.** 321 entries · 291 holding · **1 REGRESSED** · 29 open. RG-0333 HOLDING,
+RG-0308 OPEN (13 surprises, expected). The one red is **RG-0271** ("an already-correct link was
+rewritten"), tripped by the concurrent EMAIL-FORENSIC-1 session's *uncommitted* change in
+`CityLauncher/emailer/emailer.py` (INVITE-PLACE-1 appends `&country=` to legacy links, which
+RG-0271's no-op fixture does not carry). Not caused by this run and not this run's to reconcile —
+the session that owns both the change and the fixture resolves it. RG-0308 stays OPEN until
+SECRETS_REGISTER.md's out-of-band table lists the 13.
+
+**Commit.** Only this run's files: `scripts/secret_consumers.py`, the RG-0308/RG-0333 hunk of
+`scripts/regression_ledger.py` (staged by hunk — the other session's RG-0325..RG-0332 tail stays
+theirs to commit), the shadow report, these fragments. No push, no deploy (NIGHTLY-SHIP-1).
+
+## 2026-09-07 — LEDGER-SHARD-1: the self-check board runs to a verdict again, in pieces
+
+**David's question:** "can we now determine why the timing per full self check has changed, and what is?"
+
+**Measured, not estimated.** Every entry timed individually (311 at the time of measuring):
+
+| | |
+|---|---|
+| total check time | **250.7 s** (4.2 min) |
+| median entry | **0.023 s** |
+| entries under 0.5 s | **250 of 311** |
+| entries over 5 s | 8 |
+| slowest 7 entries | **155 s — 62% of the whole run** |
+
+The seven: **RG-0025 52 s** (downloads the live index plus ten adventures map pages — ~20 MB
+over the wire), **RG-0258 24 s** and **RG-0012 12 s** (live fetches), **RG-0259 22 s**,
+**RG-0276 20 s**, **RG-0308 10 s** (each spawns a subprocess on the FUSE mount), **RG-0028 16 s**
+(a connection that must time out to prove the origin refuses direct traffic).
+
+**Why it changed.** The board grew from 13 entries (26 Jul) to 311 (7 Sep) — but that is *not*
+the cause, and it matters that it isn't. 250 entries cost under half a second each; adding
+cheap checks is free. Four of the seven heavy entries were added **4–6 Sep** (RG-0258/0259 on
+the 4th, RG-0276 on the 5th, RG-0308 on the 6th), together ~76 s. That is when the run crossed
+the ~180 s ceiling on a Cowork command and became unfinishable from this kind of session.
+
+**CLASS:** run cost tracks the *heavy* checks, never the entry count. A check that downloads a
+live page or spawns a process costs 10–50 s of every future run, forever.
+
+**Fix — `--shard=k/n` and `--combine=n`.** Entries are split round-robin (`i % n`) so the heavy
+ones spread across slices instead of stacking. Three shards measured **83 s / 57 s / 75 s** —
+each comfortably inside the ceiling. `--combine` prints the verdict and carries the exit code.
+
+Two properties, because a sharded board that lies is worse than no board:
+
+* **One judging path.** `_judge()` was split out of `run()` and is used by both, so a shard and
+  a full run cannot reach different verdicts.
+* **Refuse, never warn.** `--combine` exits non-zero on a missing shard, a stale set, or a shard
+  measured against a different ledger size. Proven both ways this session: a 311-entry shard set
+  was refused the moment the ledger reached 312, and `--combine=4` refused with no shards run.
+
+**First complete run in this session, through shards: 312 entries · 290 holding · 0 REGRESSED ·
+0 UNVERIFIED · 22 open.** Locked as **RG-0319**.
+
+## 2026-09-07 — EMAIL-FORENSIC-1: end-to-end audit of the prospect letter, its links, and the road to a published listing
+
+David asked for a forensic, from-scratch walk of the outreach letter as a reader receives it —
+every click, and the app flow behind each one, all the way to a published listing. Nothing was
+taken from an earlier check; every statement below was PROBED live on 7 Sep 2026.
+
+**What was walked.** The live Sports Clubs lane (251 letters sent 6 Sep, the only lane sending
+that night): `emailer/templates/sports_club_outreach.html` rendered through the real
+`emailer.render()` for a real emailed prospect (PR Racing Team, Lewiston, Maine), every anchor
+extracted, every destination fetched anonymously, then the landing page driven in two independent
+browsers (David's Chrome and a clean-profile browser) and the sell-flow read in the live
+`/static/ms.js`, the publish gates read in `bea_main.py`, and the outcome measured on
+`/onboard/funnel`.
+
+**Headline measurement.** 1,206 letters sent; 0 prospects onboarded; 0 published. Over 30 days
+the funnel shows 62 sessions `landed`, 15 reached `photos`, and **zero reached any later step**.
+
+**Six new OPEN ledger entries** (each runs live and prints READY TO LOCK when fixed):
+
+- **RG-0325** — the invited seller's city is dropped. `sfInit()` seeds `sfState.city` from
+  `activeCity.name || 'Pretoria'` and never reads `magicLink.area`, and that value is what
+  `goHandoff()` posts as the listing's city. PROBED: `magicLink.area='Maine'` while
+  `sfState.city='Pretoria'`. Same function hard-codes `country_iso2='ZA'`. 1,132 of 1,206
+  prospects emailed (94%) are not in Pretoria. Sibling of MAGICLINK-CITY-1, which repaired the
+  link while the app kept ignoring it.
+- **RG-0326** — the opening photo gate is a wall. The forward button renders `disabled` until
+  `sfState.photos.main===2`, and "Skip the rest of the photos" only appears after the main photo
+  is accepted. No arrival has ever passed it.
+- **RG-0327** — the CTA carries parameters the app never reads: `suburb` (shipped as
+  `neighborhood=` on US/AU/GB letters because localize.py rewrites the word) and `draft_id`.
+- **RG-0328** — the live `/support` page, linked from every letter, contradicts the letter:
+  "You must have an active subscription to publish listings", "create a seller account via the
+  TrustSquare admin panel" (Basic-auth gated), and "currently live in Pretoria" while letters go
+  to Maine, New York, Illinois and California.
+- **RG-0329** — `static/examples/athletics.html`, linked from the ZA club letter, renders the
+  literal placeholder "your provincial athletics body" as though it were the body's name.
+- **RG-0330** — rendering a letter WRITES to `prospects.db` (`_apply_launch_special` →
+  `launch_codes.get_or_create_code`). Hit during this audit: the write failed mid-transaction on
+  the FUSE mount and left a hot journal that made the database unreadable to every opener,
+  read-only included. Recovered the same run (journal rolled back on a sandbox-local copy,
+  `integrity_check` ok, 5,838 rows, 1,111 emailed). Backup kept at
+  `CityLauncher/data/prospects.db.bak-hotjournal-20260907-050133`.
+
+**Confirmed working**, so it is on record: all five links in the letter answer 200 anonymously;
+the CID-inlined logo needs no remote image load; the unsubscribe link is a correct two-step
+(GET shows a confirmation, POST performs it) with RFC 8058 one-click headers on the message;
+the Sports Clubs → Tutors category mapping (INVITE-CAT-2) works; and the funnel beacon fires.
+
+Files: `scripts/regression_ledger.py` (+6 entries, backup
+`scripts/regression_ledger.py.bak-emailforensic-20260907-050708`).
+
+## 2026-09-07 — EMAIL-FORENSIC-1 fixes: the road behind the click is open (INVITE-PLACE-1, INVITE-GATE-1, RENDER-PURE-1, HREF-SHIELD-1, RECONTACT-1)
+
+The forensic walk-through of the same morning (EMAIL-FORENSIC-1) found the letter fine and the
+app behind it blocked: 1,206 letters sent, 62 arrivals in 30 days, 15 reached the photo screen,
+nobody ever passed it; the invited city was dropped at the last hop; the support page contradicted
+the letter; a worked-example page shipped with a blank; two link parameters nothing read; and a
+preview could take the prospect database offline. All six are fixed in this change; the six ledger
+entries opened this morning flip as the live probes pass (RG-0330 locked in-session; RG-0325/0327/
+0328/0329 on live verification after deploy; RG-0326 is behavioural and locks only when a REAL
+invited arrival passes screen 1 — a probe session is excluded by design).
+
+- **INVITE-PLACE-1 (RG-0325, RG-0327) — the invited seller's place reaches the listing.**
+  `ms.js sfInit()` now seeds `sfState.city` from `magicLink.area` (the link's `?city=`) instead of
+  the browse default, and `sfState.country` from a new `?country=` parameter — with a client-side
+  inference (`_mlCountryFor`: launch cities + US state names + a few extra cities) for the 1,206
+  links already in the wild that carry no country. Both `/listings/vision-draft` calls send
+  `sfState.country` instead of a hard-coded `'ZA'`. The parser also reads `?suburb=` (and the
+  localized `neighborhood`/`neighbourhood` names older US/AU/GB letters carried) into
+  `magicLink.suburb`, and `sfStartCat()` seeds the "Suburb / area" box from it. On the builder
+  side `build_magic_link()` emits `country=<ISO2>` (also appended to legacy stored links) and
+  stops emitting `draft_id` — `prospects` has never had that column; the app's own name for a
+  pre-seeded draft is `drafted=1`.
+- **INVITE-GATE-1 (RG-0326) — screen 1 is no longer a wall.** The forward button on the Photos
+  step is never disabled. With a photo accepted it goes straight on; without one it goes through
+  `sfSkip()` (one warning line, then on) — "No photo handy? Continue and add one later →". The
+  coach line says so too. Publishing needs no photo server-side; `sfRunMultiVision()` already
+  guards for none.
+- **HREF-SHIELD-1 (RG-0327) — prose maps never touch a URL.** `localize.localize_html()` stashes
+  every `href="…"` before the per-country term substitutions and restores it after, so `suburb=`
+  no longer ships as `neighborhood=`. `test_localize.py`'s ZA-identity assertion was stale
+  (compared raw template to unwrapped output) — now compares against `_unwrap_za_only()`; green.
+- **RG-0328 — /support agrees with the letter.** Three answers rewritten from PRICING_CANON:
+  free account = 2 listings, no card/trial/registration fee; you list by tapping Sell in the app
+  (never "the admin panel" — gone from all four answers; sellers use their dashboard); TrustSquare
+  started in Pretoria and takes listings from ZA, US, UK, AU, NZ, AR, NA, FR, PT.
+- **RG-0329 — the worked-example pages address the reader who clicks.** `assoc_athletics.html`
+  (letter-linked) and `assoc_guides.html` no longer say "your provincial … body/association";
+  they are prepared for "athletics clubs and their coaches" / "tour guides and their
+  associations", and the "Nothing has been sent to anybody… proposal" line — false once letters
+  went out — reads "This is a worked example… Every listing on it is invented." The same generic
+  blank was fixed on `assoc_dance.html` and `assoc_teachers.html` (same class).
+- **RENDER-PURE-1 (RG-0330, LOCKED) — a render never writes.** `_apply_launch_special()` reads
+  `prospect['launch_code']`; `emailer.main()` issues it on the send lane via
+  `launch_codes.issue_for_send()` immediately before `send_email`, and a dry run renders
+  `launch_codes.sample_code()` (never stored — the DB is the only authority). The ledger
+  assertion was refined the same day: it now reads the render lane's own bodies (code, not
+  docstrings) AND asserts the send lane still issues, so the special cannot be silently dropped.
+- **RECONTACT-1 (RUL-106, RG-0332 LOCKED) — 60-day re-contact floor.** David: "not re-email the
+  people we have, even those that did not opt-out, at least for a two month period."
+  `send_email()` now refuses any address contacted inside 60 days per BOTH records
+  (`prospects.emailed_at` and `sent_log.json`); the only door is `TS_RECONTACT_PERMISSION` (his
+  words + date, printed to the log). The GB/NZ footers' "We will not email you again" is now true.
+- **RG-0331 (OPEN) — the server half of place.** `listings` has no country column and
+  `class Listing` no country field; `_listing_country_iso2()` therefore reads every row as ZA.
+  Fix shape recorded in the entry (migration + model + create + read). Tracked, not lobbed.
+
+Verification: `node --check ms.js` clean; `py_compile` clean on emailer.py, launch_codes.py,
+localize.py, regression_ledger.py, rulings_check.py; `test_render_intl.py` ALL PASS;
+`test_localize.py` GREEN (14×4); `test_wave_hygiene.py` ALL PASS; render of a real US club and a
+real ZA Services prospect left `prospects.db` byte-identical with no journal; `send_email()` for
+the newest emailed address refused before any network call. Backups beside every file
+(`*.bak-invitegate-*`, `*.bak-renderpure-*`, `*.bak-hrefshield-*`, `*.bak-recontact-*`,
+`*.bak-letteragree-*`, `*.bak-blank-*`, `*.bak-rg0330-*`, `*.bak-rul106-*`).
+
+**Live verification (7 Sep 2026, after deploy c4d7da4, PROBED from David's Chrome inside the gate):**
+the real Maine club link (src=probe-invitegate so the funnel ignores it) arrived with
+`sfState.city='Maine'`, `country='US'` (inferred — this link pre-dates the country parameter),
+`area='Lewiston'`, currency `$`; the Photos step's forward button was enabled with no photo and
+one click reached "Step 2 of 6 · Tutoring Details" with the Suburb/area box pre-filled
+"Lewiston". Live `/static/ms.js` carries INVITE-PLACE-1 and INVITE-GATE-1 and no hard-coded ZA.
+`/support` and all five worked-example pages read clean. Ledger: RG-0325/0327/0328/0329 promoted
+to LOCKED (fixed_on 2026-09-07); RG-0326 stays OPEN by design until a real arrival passes.
+Follow-up in the same session: the main photo slot's badge said "required" — now "recommended";
+the chess/judo/plumbers example pages lose the now-false "Nothing has been sent to anybody" line.
+
+## 7 Sep 2026 — David's diagnosis of the outreach numbers, tested against the data (DIAG-1)
+
+David: *"i don't see the bad statistics we have regarding emails of 814 sent, 252 opened, 48 clicked as
+a valid reflection of the app, i see three causes 1. Physical app blocks preventing people to list,
+2. Complexity of the listing flow/process and 3. Semi blind group of a population. If we can provide a
+chatting genie to list for people, and if the app works end to end, then we will have much better
+statistics."*
+
+**He is right, and the machinery already proves it — but two of his numbers need correcting, and the
+correction makes his case STRONGER.**
+
+**1 · The real email numbers** (PROBED, `CityLauncher/data/prospects.db`, read-only, 7 Sep):
+1,232 people emailed · 297 opened (**24.1%**) · 64 raw clicks (5.2%) · **0 published**.
+But `click_register` grades every click: **56 machine · 48 human_open · 11 uncertain · 2 human_click.**
+So the "48 clicked" is **48 human OPENS**; the real human click count is **TWO**. A 24% open rate on
+cold outreach is normal-to-good — **the email is not the broken part.**
+
+**2 · The app IS the wall, and it is measured** (PROBED live `/onboard/funnel?days=30&bots=1`, 7 Sep):
+**landed 65 → dwell 1 → subpick 1 → photos 17 → ZERO past photos.** Not one arrival in 30 days has
+reached any step beyond the photo screen. Already carried as ledger **RG-0326 (OPEN)**, raised this
+morning by EMAIL-FORENSIC-1 at 62/15; tonight's re-probe refreshes it to 65/17 and the answer is
+unchanged.
+
+**3 · The wall is exactly one gate.** `ms.js sfPhotosS()`: the forward button is rendered **disabled**
+until `sfState.photos.main===2` — a main photo uploaded AND passed by the AI check — and the "Skip the
+rest of the photos" link only appears AFTER that photo is accepted. **There is no way past screen 1
+without a photograph the machine approves.** WRONG-TYPE-1 can also hard-reject exactly what a club
+would reach for (a logo, a team shot) on a Tutors-shaped flow. **481 of the 1,232 emailed are Sports
+Clubs.**
+
+**4 · The detail that settles it, found the same night in the BOT work:** `_import_quality_score()`
+publishes a listing at **60/100 with ZERO photos** (facts 50 + price 6 + suburb 4). **The scorer does
+not require a photograph. The flow demands one before a seller may take a single step.** Those two
+facts contradict each other and the flow is winning.
+
+**HIS THREE CAUSES, GRADED:**
+- **(1) Physical app blocks — CONFIRMED, and now specific.** The historic blocks are fixed and LOCKED
+  (RG-0249 self-serve rate listings, RG-0250 invited seller gets the AI draft, RG-0253 first-time
+  seller can publish). RG-0326 is the one still open, and it is the binding one.
+- **(2) Complexity — CONFIRMED, and it is the SAME defect.** RG-0326's own class line: *a quality gate
+  placed before the seller has invested anything, on a flow reached from cold outreach.*
+- **(3) Semi-blind population — PARTLY, and unproven either way.** 481/1,232 are sports clubs (an
+  organisation is not a person with a thing to sell) and 657 are US against 396 ZA. But the audience
+  cannot yet be blamed: they never got the chance to fail, because they were stopped at screen 1.
+
+**5 · The measurement gap behind all of it:** `onboard_events` in prospects.db is **completely empty**
+(0 rows) — the click→app join has never been fed. `/onboard/funnel` (RG-0293, LOCKED 5 Sep) is the
+working instrument and is what every number above comes from.
+
+**CLAUDE'S RECOMMENDATION, and why it is NOT "build the genie first":** let a seller past screen 1
+without a photo — offer it, do not require it — and keep the Listing Rating visible so the photo is
+sold as a gain rather than demanded as a toll. That is days of work, not weeks, and it TESTS David's
+hypothesis: if arrivals start reaching step 2 next week, the diagnosis is proven and the genie is worth
+building on top of it. If they still stop, the genie would not have saved it either. Do not spend the
+big build to fix something a small change can measure first.
+
+**RESERVED TO DAVID:** whether a listing may exist without a photograph is a product decision about
+what a TrustSquare listing *is* — it touches listing quality, which is the marketplace's proposition —
+and it changes the publish flow during launch month. Not touched. Nothing changed this session.
+
+## 7 Sep 2026 — BOTs (Bolted On Terminals): the idea checked, costed and BOT #1 built (BOT-1, proposal)
+
+David, ~02:30: *"Could we have the TrustSquare app downloaded onto a user's phone, and then have what
+I want to call a BOT (Bolted On Terminal)... an on phone remote-console stand alone micro app, with a
+singular modified function."* Own icon, own colour, brand at the top, the genie comes out of the lamp
+and asks how TrustSquare can help — then a Siri-like conversation drives the real app underneath.
+
+**PROBED FIRST, on the live site, before answering (evidence ladder).** The answer is much better than
+"we could build that":
+
+- `GET /static/brand/site.webmanifest` -> **200, `application/manifest+json`**, `display: standalone`.
+- `icon-192.png` **200** (5,777 B) · `icon-512.png` **200** (18,714 B) · `maskable-512.png` **200** (16,888 B).
+- => **TrustSquare is ALREADY an installable app.** The home-screen icon works today.
+- **So a BOT is one more manifest file** — same code, same server, same login, same Trust Score;
+  different `name`, `theme_color` and `start_url`. Not a new product. `location.search` is already
+  parsed twice in the live page, so `?bot=` is a branch, not an engine.
+
+**TWO REAL GAPS FOUND, both worth fixing whether or not BOTs ever ship** (filed, not fixed — launch month):
+1. **No `apple-mobile-web-app-capable` meta** — on iPhone the home-screen icon opens INSIDE Safari with
+   the browser bars. Two lines. This is the one that matters: the whole point is that it stops looking
+   like a website.
+2. **No service worker registered on the live page** (`serviceWorker.register` absent) — Android Chrome
+   therefore never OFFERS "Install app"; the user must dig in the browser menu. ~half a day, and
+   `APP_PREVIEW.html` already carries working SW + push code to lift from.
+
+**VOICE IS FREE — this is the material finding.** `webkitSpeechRecognition` (listening) and
+`speechSynthesis` (speaking) are built into the phone: Android Chrome and iOS Safari 14.5+, no licence,
+no per-minute bill (searched 7 Sep 2026). Last night's cost paper assumed voice-in was a real bill; it
+is not. A spoken conversation costs only the thinking — 3-4 short AI calls, **~3 cents per whole
+conversation** at the pessimistic $0.01/call figure. `Genie Cost & Profit Impact — nice.docx` stands
+unchanged; a BOT conversation is a handful of wishes, not a new class of spend.
+**UNVERIFIED and flagged, do not design around it until tested on David's phone:** whether the mic
+works in STANDALONE (installed) mode on iOS, historically flakier than in Safari itself.
+
+**BUILT: `genie/bots/collector/BOT_COLLECTOR.html`** — BOT #1, running, with a REAL microphone.
+Brand bar + bronze accent, the genie art, and a live "What I have so far" slot panel so the user
+watches himself being understood. David's exact scripted exchange runs on a button:
+Serra Angel -> "any particular edition — Alpha, Beta, 4th?" -> Alpha + at least near mint ->
+Trust above 60 -> results, best trust first. He only asks a question that actually splits what is left.
+
+**Three CTO push-backs written into the page (RUL-037):**
+1. An icon is expensive real estate — BOTs are OFFERED to a person once we know what they are
+   (the collector who searched cards four times gets the bronze icon), not shipped as a menu.
+   That is David's "pre-tailored" instinct done properly.
+2. "Shall I search online?" is a lovely moment but MarketSquare introduces, it is never the shop
+   (1 Aug core-model constraint). Handing a buyer out earns nothing. Better: it becomes a **want** —
+   he watches and tells you the day a seller lists one. Value stays in the marketplace. Built that way.
+3. The genie may never invent stock. No match = "Nobody on TrustSquare has one. I will not pretend
+   otherwise." Softening a no is how people stop trusting a conversational interface, and trust is
+   the product.
+
+**Build order argued for: Collector proves it, Seller banks it.** The number that is zero is people
+publishing a listing; a green "Sell it" icon that turns 90 seconds of talking into a live advert is
+the one that moves the business. `seller.webmanifest` written alongside `collector.webmanifest`.
+
+**Verified:** `node --check`; jsdom drives the whole BOT — greeting, slot filling across David's three
+turns, results filtered to Alpha + Near-Mint-or-better + trust>60 and sorted by trust, the no-stock
+path refusing to invent stock, and the watch path — 19/19 behaviours PASS, 0 console errors. Two real
+bugs found and fixed in the same run (a run-on speech line, a double greeting on fast reset).
+
+**Not done:** nothing wired, no flag, no deploy, nothing in `deploy_manifest.txt`, not launch scope.
+Manifests are written and ready; icons in each BOT colour are still to be made.
+
+### BOT #2 — Sell It: the genie as a listing COACH, on the app's own scorer (BOT-2)
+
+David, correcting the build order argument with a better one: *"there is currently no products... but,
+this is because we are complex. This genie not only search items, it lists them as well, in a
+conversational mode — you should have two more photos to improve your Listing Rating score... we need
+the cars model to get the specifications John... do you plans for the house?"*
+
+**READ THE CODE FIRST, and the code already agrees with him.** `_import_quality_score()` in
+`bea_main.py` (IMPORT-QUALITY-1, 17 Jul 2026) is a real 100-point Listing Rating with a real 50-point
+publish bar, and it ALREADY returns `missing[]` ordered "biggest win first". Nobody has ever shown it
+to a seller conversationally. That is the whole opportunity.
+
+The exact rules, now mirrored faithfully in the prototype and asserted against a reimplementation of
+the Python in the test:
+- **Photos <= 40**: first 10, then **+8 each**, capped. So David's "two more photos" is literally **+16**.
+- **Category fields = 50**, split evenly across the required set + a 15-word description.
+  cars = 6 slots @ 8.33 (make, model, vehicle_year, mileage_km, transmission, desc);
+  property = 5 @ 10; tutors = 4 @ 12.5; services = 2 @ 25.
+- **Price 6** (POA scores 0) · **suburb 4**.
+- And `ms.js` `SB_PHOTO_SLOTS` already carries room-by-room coaching prompts per category — the BOT
+  reads them out verbatim ("Dashboard close-up — odometer visible", "Kitchen photos sell houses").
+- Listing quality is also **half an agent's rank** (`rank = 50% Trust Score + 50% avg_listing_quality`),
+  so coaching the rating up is directly commercial for agents.
+
+**His three examples, adjudicated:** photos = REAL (+16 exactly) · car model = REAL (8.33 points AND
+the key that unlocks the spec lookup — it does double duty, as he guessed) · **house plans = FINDS A
+HOLE.** Plans score nothing today. But the wizard already asks Collectors for an authentication
+certificate and Services for a trade certificate — **the wizard believes in proof documents; the score
+ignores them.** Recommended NOT to squeeze plans into the Listing Rating: photos show what a thing
+looks like, documents prove what it is, so they belong beside the Trust Score. That touches what the
+Trust Score means, so it is written up for David, not quietly changed.
+
+**DEFECT FOUND BY THE TEST, flagged not fixed:** answer every car question, give price, suburb and a
+15-word description, attach **zero photographs** — the listing scores **60/100 and publishes**. The
+arithmetic is correct (50+6+4); nothing requires a single photo. A photoless listing helps nobody.
+Recommendation: a floor of at least one photo before publish. NOT changed — it is the publish gate,
+and moving a gate in launch month needs David's word.
+
+**Built:** `genie/bots/seller/BOT_SELLER.html` — green BOT, live Listing Rating ring with the 50 bar
+marked, photo slot chips, real microphone, and every answer scored out loud with its point value.
+Design rule built in and defended in the page: **above 50 it never blocks you** — it says "you can
+publish now, and three more photos takes you to 76" — because a coach that will not let you finish is
+a form with a voice.
+
+**Verified:** `node --check`; jsdom drives the full conversation (bakkie -> Hilux -> 2016 -> 180000 km
+-> automatic -> R320000 -> Centurion -> description -> photos -> publish) and **asserts the prototype's
+score equals an independent reimplementation of the Python formula at every step** — 18/18 PASS,
+0 console errors. First photo +10, second +8, cap at 5 photos, publish locked below 50, final 100/100.
+
+**Not done:** nothing wired, no flag, no deploy, not launch scope.
+
+### Pricing RULED the same night — RUL-108 (BOT-PRICE-1)
+
+David: *"i want this function of the BOT's to be a $20 feature? What do you think?"* Pricing is
+commercial positioning, reserved to him (RUL-037/RUL-096(f)), so this is a recommendation on record in
+`genie/bots/README.md`, not a change. Summary: **free to sell, and do not add a new $20 line.**
+(a) never charge to list — 65% of sellers are Free and the zero number is listings;
+(b) the watch already monetises at the introduction (1T), so charging $20 as well double-dips the same
+event and is off-model; (c) a $20 Pro tier already exists and `ai_service_tiers.PAID_FEED_FUNCTIONS`
+already gates the paid class to it — make BOTs the REASON to be Pro rather than a second charge;
+(d) what does deserve paying for is the no-introduction work: portfolio valuation, bulk listing,
+cross-market price intelligence. Measured prize: Pro 8% -> 15% = +$10,906/mo (+49% on subscriptions)
+against $935/mo to serve — about 12:1. The single reserved call: bundle into Pro (recommended) or sell
+a separate $20 BOT subscription; if separate, buyer tiers top out at $5 today so it is a new axis
+needing PRICING_CANON §2 + `_buyer_tier` amended together (the check script enforces no drift).
+
+
+**David ruled it in one line, and it was the recommendation:** *"i dont want to charge $20 for the
+function, i want to add it to the $20 tier as a free function there."* Claude had buried that answer
+inside a longer argument about splitting free-to-sell from paid-to-hunt — the plain-language rule
+(3 Sep) says lead with the single fact that matters, and this is a case where it did not.
+
+**RUL-108 written and reflected the same session** (the rulings rule, 15 Aug): `RULINGS.md` RUL-108 ·
+`PRICING_CANON.md` §1 carries a "DECIDED, NOT YET BUILT" note that changes **no price** (Pro stays
+$20 / 30 slots; `check_pricing_canon.py` re-run: ALL IN LINE) · `genie/bots/README.md` open question
+closed and replaced with the ruling · `BACKLOG.md` gains the BOT row · `scripts/rulings_check.py`
+RUL-108 with an ABSENCE tripwire on "$20 BOT" / "BOT subscription" / "BOT tier" so a future session
+cannot quietly reintroduce a separate price. PROVED: `rulings_check.py` -> **100 rulings, 0 FAIL**,
+RUL-108 reflected.
+
+### The PA tier — direction recorded, three findings that change the design (BOT-PA-1)
+
+David gave the direction for what the $20 tier's BOTs actually do: personal-assistant errands, not
+searches — *"i want to buy a home as an investment... i will be in London the 23rd, what sites can i
+visit that weekend... i need to sell my BMW on short notice... i need a plumber urgently (free), but
+he must first give me a quote and have a TS of better than 85."* Recorded in `genie/bots/README.md`;
+nothing built, nothing wired. Three findings, all measured:
+
+**1 · His four examples are not equal — PROBED live, Pretoria, 7 Sep.** Two need NO supply and work
+today ("sell my BMW" is a plan; "London on the 23rd" is a trip brief handed to an agency, which IS
+the introduction under the 1 Aug travel positioning). Two are gated on stock: property has 19
+listings at **median trust 45**, and **services has 2 listings with ZERO above trust 85** — so his
+own plumber example returns nothing today. Marketplace-wide Pretoria: 65 listings, 36 of them the
+seeded Adventures content. Recommendation: launch the PA tier on the two errands that need no stock,
+the same discipline RUL-097 applied to the category ring.
+
+**2 · The existing AI ceilings BREAK on errands, and cannot simply be raised.** An errand is 30-300x
+a wish: a dossier-grade one is 14 calls / **$0.295** (AI_BASELINE worst cases) against a wish at
+$0.001. The **$0.50/day per-user cap allows 1.7 dossiers a day** — a PAYING Pro customer cut off on
+their second. The **$100/day platform cap** is exceeded at 138% by 1,169 Pro users doing 12 errands a
+month. And raising the daily dollar cap is worse: a $20/mo customer is worth $0.667/day, so a
+$1.50/day ceiling permits $45/mo of AI against $20 of revenue — **negative margin**.
+
+**3 · The fix is Tuppence, not a bigger ceiling.** Meter errands in the currency that already exists:
+Pro already includes **10T/month** (`TIER_TUPPENCE_MONTHLY`), so the existing allowance becomes the PA
+allowance. Honours RUL-108 (included in the $20, not charged extra), honours the 1 Aug fixed-price
+rule (never ad-valorem), is self-limiting by design (1,169 Pro x 10 errands = ~$3,390/mo against
+$23,380/mo revenue = 14.5%, and it cannot run away), and adds no new meter or price.
+
+**RESERVED, flagged not touched (RUL-105 precedent — raising an AI ceiling is spending money):** the
+$100/day platform cap likely has to move before a PA tier ships, and the $0.50/day per-user cap should
+become tier-aware instead of one number for Free and Pro alike.
+
+**Product idea found inside his fourth example:** *"he must first give me a quote"* is a **quote
+before the introduction** — possible under the anonymity model, and it makes the introduction worth
+more because it arrives qualified. That is marketplace machinery serving everyone, not a BOT feature,
+and deserves its own spec if David wants it.
+
+### The financial model, decided first — and my own Tuppence recommendation reversed (BOT-FIN-1)
+
+David: *"We need to first decide on the financial model before we proceed... i don't want it to become
+another expensive looking, money guzzling app. If the free BOT's cost us nothing extra... then the $20
+functions need to be really good for us to make them Token usage functions?"* Right instinct, and
+checking it **reversed the recommendation I gave an hour earlier.**
+
+**TUPPENCE METERING IS WRONG AND IS WITHDRAWN.** PROBED: `TIER_TUPPENCE_MONTHLY = {"starter":2,"pro":10}`
+and 1T = $2, so **Pro's 10T allowance is worth $20 — the entire subscription price**. An errand billed
+at 1T therefore consumes $2.00 of INTRODUCTION currency to deliver $0.012-$0.295 of compute: **7x to
+169x its own cost**. Worse, it is rivalrous — every errand a Pro user spends a Tuppence on is an
+introduction they do not make, and introductions are 33% of revenue and the engine of the whole model.
+At Pro 15% that is 11,680T/mo in play; half of it diverted = **$11,680/mo of introduction volume
+displaced to save a few hundred dollars of compute.** The cure costs 17x the disease.
+
+**RECOMMENDED INSTEAD: a plain errand allowance — "10 assistant errands a month, included in Pro."**
+Counted in errands, not money, not Tuppence. Worst case (every errand a full dossier, every month)
+**$2.95/customer = 85.3% gross margin**; realistic blend ~$1.00 = 5%. Cannot overspend by construction,
+needs no new price, honours RUL-108 (included in the $20), and leaves the introduction currency alone.
+
+**Whole-business, Year-1 end** (revenue $45,593/mo + $10,906 Pro uplift = $56,499/mo):
+free BOTs $319 + errands $351 realistic / $3,444 worst = **$670 (1.2% of revenue) realistic,
+$3,763 (6.7%) worst**. Net on the uplift alone: **+$10,556/mo realistic, +$7,463/mo worst**. It cannot
+become a money guzzler — the allowance is a hard ceiling and the arithmetic survives every dial turned
+against us.
+
+**Answered his actual question: the risk is NOT cost.** The cost is safe by construction. The
+assumption at risk is that these features move Pro adoption from 8% to 15%. At 11% it is still clearly
+worth it (+$4,674/mo); if Pro does not move at all we spent ~$670/mo on something nobody upgraded for.
+So: measure Pro adoption monthly against the existing 8% baseline, checkpoint at three months, and the
+off-ramp is turning errands off while keeping the free BOTs — nothing else depends on them.
+
+**RESERVED, flagged not touched:** the $100/day platform cap needs $125/day in the worst case, and the
+$0.50/day per-user cap should stop being one number for a free user and a $20 customer (it allows a
+paying Pro customer only 1.7 dossiers before cut-off). Raising a ceiling is spending money (RUL-105).
+
+Deliverable: `genie/bots/BOT Financial Model — nice.docx` (Professional Navy, 9 tables, every figure
+traced). `genie/bots/README.md` §3 corrected in place with the superseded reasoning kept visible.
+
+## 7 Sep 2026 — AI model and stand-in allocation, read from canon and PROBED live (AI-ALLOC-1)
+
+David: *"Next i will need to see the AI model/redundancy allocations, what models will we need, which
+ones are stand ins for them?"* Answered from `AI_BASELINE.json` + `ai_price_card.json` and then
+checked against the running server, per the evidence ladder. Deliverable:
+`genie/bots/AI Models & Stand-ins — nice.docx`.
+
+**The structure (unchanged, and sound):** openai BASE · anthropic AUTO-FAILOVER · scaleway SAFETY NET
+(EU, cost-exempt, alert-on-use) · gemini CANARY for photo box coordinates only. Failover tolerance 6.0x
+base; the safety net is deliberately exempt because it is reached when the alternative is being down or
+banned. Per-tier chains with worst-case prices are tabled in the doc (triage/haiku/vision/sonnet/design).
+
+**Every BOT and genie job maps to a size that already exists** — triage for a wish, haiku for a coaching
+turn or an advert, vision for reading a seller's photos, sonnet+haiku for a plan, design for a dossier.
+No new tier is needed, which is why the cost model in `BOT Financial Model — nice.docx` holds.
+
+**FOUR FINDINGS, all from probing rather than reading:**
+
+1. **The DESIGN tier has NO auto-failover.** `AI_BASELINE.json` gives it openai BASE and scaleway
+   SAFETY NET and nothing between. A dossier — the flagship PA errand — falls straight to the EU
+   emergency lane (a 37% capability drop per the card's own capability_note) on any OpenAI dropout.
+   This sits directly under the feature David is planning. RECOMMENDED: rebuild the dossier out of
+   sonnet+haiku pieces that DO have stand-ins, rather than contracting a second design-class supplier —
+   it costs nothing and removes a dependency instead of adding one.
+2. **The serving lane has not passed its own gate.** PROBED `/flags` 7 Sep: `ai_provider.active=openai`,
+   `standing=openai`, `override=null` — and the funnel labels openai **`pending-golden-set` on ALL FOUR
+   live tiers**, with anthropic the only lane at `production`. `ai_price_card.json` on disk marks the
+   same model `golden-set-passed`. Both cannot be operative; the server serves customers, so the server
+   is the truth. This is precondition P2/P3 of David's own 14 Aug decision, still NOT DONE 24 days later
+   while the lane was moved anyway.
+3. **Post-failover cost figures are wrong by construction** (baseline known-drift D3): `_log_ai_spend`
+   records the INTENDED lane, not the lane that answered, and `_token_cost` is keyed on tier not model.
+   The moment a stand-in takes over — exactly when the cost matters — the numbers stop being true.
+4. **Small drifts that move money with the model id untouched:** D1 `_MODEL_PRICE['haiku']`=(0.80,4.00)
+   vs card (1.00,5.00), so every haiku row is logged 20-25% low and the daily rails are that much
+   looser than set; D2 a failed `import ai_provider` silently upgrades every vision call to Sonnet (3x);
+   and `AI_BASELINE.json` is pinned to price card `2026-08-19.1` while the live card is `2026-08-26.1`.
+
+**Full field presented, nothing pre-filtered (RUL-009):** luna 51.24 / terra 54.95 / sol 61.0 (OpenAI),
+sonnet-4-6 47.21 / haiku-4-5 29.58 (Anthropic), mistral-medium-3.5 29.95 (Scaleway, the ONLY one scored
+effort-matched), gemini-3.7-flash (eval pending). Scores are not like-for-like — most are max-effort
+while the app runs default — so any procurement re-scores at production effort.
+
+**Claude's one-line pick, David's call:** keep the structure exactly as it is and spend the effort on
+the outstanding sign-off instead of on choosing a different model — an unexamined lane is a bigger risk
+than a lane scoring two points lower.
+
+**Split of work:** model/vendor/lane changes and whether the design tier gets a paid stand-in are
+David's (RUL-009/RUL-037). The four items above are FAULTS, not choices, and are Claude's to fix:
+run the outstanding golden set, correct `_MODEL_PRICE`, make the spend log record the lane that
+answered, and close the silent vision upgrade. **None touched this session** — nothing was changed.
+
+### Re-costed with DeepSeek (4th) and Mistral (5th), on one honest scale (AI-ALLOC-2)
+
+David: *"please redo the costing with a fourth AI being Deepseek and a fifth Mistral... each replacement
+equivalent need to be functionally and effort equal... we want to use the open ones from Scaleway and if
+there are cheaper ones then from there. No hidden weights on the scale."*
+
+**Method, made auditable because he asked for no thumb on the scale:**
+- Every model priced on the SAME five envelopes from `AI_BASELINE.json` (triage 2500/400, haiku
+  4000/1800, sonnet 4000/1400+1img, vision 2000/2000+10img, design 12000/4000).
+- Image cost DERIVED, not assumed: **1,806 input tokens per image** is the only value that makes six
+  existing baseline figures come out exactly right, so every lane is charged on David's own accounting.
+- **My first pass GUESSED gpt-5.6-terra and sol prices — that is precisely the hidden weight he warned
+  about, so it was thrown away.** Both were instead SOLVED from the file's own worst-case figures:
+  terra = $2.00/$12.00 per Mtok, sol = $5.00/$30.00. METHOD PROVEN: six independent recomputations
+  (luna@haiku, luna@vision, terra@sonnet, sol@design, haiku-4-5@vision, mistral-medium@sonnet) all EXACT.
+- Scaleway Paris serverless list fetched live 7 Sep 2026; converted at the file's own FX (1.155).
+
+**FINDINGS, several against expectation:**
+- **DeepSeek V4 Flash is NOT the cheap option on list price** — 1.19x base on haiku, 1.56x on triage,
+  and it has **no vision at all**, so it cannot serve 2 of the 5 tiers. BUT its cached input is €0.08 vs
+  €0.40, and our prompts are ~90% repeated system text: at 90% caching it is **0.74x base — 26% cheaper**.
+  It is the only model on the list whose answer depends on how we BUILD rather than what we buy.
+- **Mistral Medium 3.5 — the incumbent safety net — is the DEAREST open model on the shelf** (7.61x base
+  haiku, 8.12x vision). Correct as insurance, but it is not the cheap Mistral.
+- **The actual find: `mistral-small-3.2-24b` beats the incumbent base on EVERY tier it can serve**
+  (0.48x haiku, 0.67x vision, 0.06x sonnet, 0.02x design) **and it has vision.** `pixtral-12b` is
+  similar. `gpt-oss-120b` is 0.66x haiku but text-only.
+- **The biggest single number found: the DESIGN tier.** gpt-5.6-sol costs $0.18/call and every
+  alternative is between 2% and 31% of that — even staying inside OpenAI and using luna is a 96% saving.
+  This is the tier the PA dossier errand uses, so it matters before that feature is built, not after.
+
+**WHAT WAS REFUSED, deliberately:** capability. There is **no effort-matched score** for DeepSeek,
+Mistral Small, gpt-oss or any Qwen, and the scores already on the register are not comparable either
+(most are max-effort while the app runs default; `mistral-medium` is the ONLY `effort_matched: true`
+entry). Filling that in from a leaderboard would be the hidden weight David barred. The gap is cheap to
+close with machinery already owned: the 5-part equivalence test in `AI_BASELINE.json`, golden set run at
+production effort. Scaleway's first 1M tokens/month are free and batch work is -50%, so the audition
+costs nothing.
+
+**Claude's one-line pick (David's call, RUL-009):** audition `mistral-small-3.2-24b` and
+`deepseek-v4-flash` on the existing golden set at production effort before choosing anything — a cheap
+model that fails the golden set costs more than a dear one that passes, and neither has taken the test.
+
+**Jurisdiction, stated once and factually because he asked for no lecture:** hosting decides
+jurisdiction, and every non-OpenAI/Anthropic model here runs on Scaleway's machines in Paris. Where
+weights were trained does not change where customer data is processed — a fact that works in favour of
+what he asked for.
+
+Deliverable: `genie/bots/Five Lanes One Scale — nice.docx`. Nothing changed, no lane moved.
+
+## 2026-09-07 — AGENCY-REACH-1: verified agencies get multi-city reach, and the tier now follows verification (RUL-109, RG-0336)
+
+David: *"Agencies should get national reach, do you see an issue if this is true?"* — then, shown that the
+code has no notion of a national boundary, *"let sellers reach abroad"*.
+
+**The grant was the easy half.** `agency` joins Starter and Pro in `_PAID_TIERS`, and no country boundary
+is enforced for anyone: a qualifying seller may extend a listing to any active city, including across a
+border. The old comment claimed "any city in their country" while the code never compared countries — the
+claim was what was wrong, not the behaviour, and the claim is now corrected to match the ruling.
+
+**The finding that mattered more: it would have landed on an empty set.** AGENCY-TIER-1 (3 Aug) declared
+that a member of a verified agency carries the `agency` tier, but only ever stamped it inside
+`invite_agent` — so it held only for agents invited *after* verification. Probed on the live database:
+**8 agencies, all verified, 25 members between them, not one on the `agency` tier** (8 free, 17 starter).
+A declared benefit with zero holders for five weeks, and no instrument said so, because nothing asserted
+the relationship between the flag and the tier. Both halves were individually fine.
+
+**The tier is now a derived property with one writer.** `_sync_agency_member_tiers()` is called from the
+invite path and from a new ops-gated `POST /agencies/{id}/verify`, which moves verification in **both**
+directions — previously `verified` could only be set at INSERT, so it was one-way and invisible. A member
+who bought their own seat (RUL-048 `seat_paid`) or holds a live subscription is never touched, so the
+writer cannot overwrite a tier somebody paid for.
+
+**Proven before shipping, not after.** The writer was exercised on a throwaway replica (free and starter
+lift to agency; un-verify returns them; a paying member and one with live billing are untouched; second run
+moves 0). `migrations/036_agency_tier_resync.py` was dry-run **and applied against a copy of the real live
+database**: 25 moved, re-run moved 0.
+
+Safe to grant free because agency status is never self-served — every agency route is ops-key gated.
+
+**Honest consequence, recorded not buried:** a seller can now appear "local" in a city on another continent
+on their own say-so. The self-declaration is the only guard, which is thin for physical goods —
+BACKLOG REACH-SHIP-1 (a "ships nationwide" toggle) is the honest fix and is David's to schedule.
+
+Also corrected the same day: RUL-107's own reflection assertion pinned the literal
+`_PAID_TIERS = {"starter", "pro"}`, which this ruling legitimately widened hours later, so a true
+reflection read FAIL. Re-expressed as the property (no retired names present, canon `pro` present).
+
 ## 7 Sep 2026 — YouTube advanced features approved; film 01 link live and comment pinned
 
 YouTube approved the six-second video verification at 00:19 SAST, for both the TrustSquare brand
