@@ -1204,6 +1204,22 @@
    "source": "David's question, then a code + live-database probe",
    "summary": "RAISED AND CLOSED THE SAME SESSION - the retired five-tier pricing model was still live in seven code sites and two were not inert: (a) paid_tiers still made standard/professional/business/elite PAYABLE (R1,800/mo for Elite) with 'existing users only' unenforced; (b) _PAID_TIERS, the multi-city reach gate, held the retired Premium name and omitted the canon 'pro', so a $20 Pro seller was refused 402 'requires a Starter subscription ($5/month)'; (c) a NOTE in launch_redemption.py would have moved all 17 live canon Starter sellers onto a retired tier. Probed first: 71 users, 54 free + 17 starter, ZERO on any retired tier. The daily check_pricing_canon.py passed ALL IN LINE throughout because it only ever asserted the CURRENT numbers were present, never that the retired ones were gone.",
    "next_action": "None - closed 2026-09-07. Purged, shipped (f757819, post-deploy 07:00:29Z all five steps ok) and verified on the deployed main.py: all four authorities read retired-names=NONE. Asserted by RG-0335 (LOCKED, proven to go red on a mutated copy) and by a new retired-ABSENT section in check_pricing_canon.py. RUL-107. RESIDUAL: Agency stays outside the multi-city reach gate - David's call, unchanged by this repair."
+  },
+  "DW-114": {
+   "first_seen": "2026-09-07",
+   "last_seen": "2026-09-07",
+   "sev": "MEDIUM",
+   "status": "CLOSED",
+   "closed": "2026-09-07",
+   "refs": [
+    "RUL-109",
+    "RG-0336",
+    "1f81572",
+    "migrations/036_agency_tier_resync.py"
+   ],
+   "source": "David's reach question, then a live-database probe of the agency tables",
+   "summary": "RAISED AND CLOSED THE SAME SESSION - a declared benefit had ZERO holders for five weeks. AGENCY-TIER-1 (3 Aug) said a member of a VERIFIED agency carries the 'agency' tier, but only stamped it inside invite_agent, so it held only for agents invited after verification and nothing re-read it. PROBED: 8 agencies all verified, 25 memberships across 19 people, NOT ONE on the agency tier (8 free, 17 starter). agencies.verified could only be set at INSERT, so verification was one-way and invisible. CLASS: an entitlement stamped when a condition happens to be true, with nothing re-reading it when the condition changes; no instrument caught it because nothing asserted the RELATIONSHIP between flag and tier. BUSINESS FACT: the 17 'starter' users were these mis-stamped agents, not subscribers - paying subscribers on the platform is ZERO.",
+   "next_action": "None - closed 2026-09-07. Tier is now derived by ONE writer called from invite and from a new ops-gated POST /agencies/{id}/verify that moves verification both ways; paying members never touched. agency added to _PAID_TIERS; no country boundary for any tier (RUL-109). Proven on a replica and on a COPY of the live database before shipping; after shipping, post-deploy 09:06:47Z ran migration 036 'member tiers now -> agency=25' and the live DB reads 52 free / 19 agency. RG-0336 LOCKED. RESIDUAL: a seller may appear 'local' abroad on their own say-so - BACKLOG REACH-SHIP-1 is the honest fix, David's to schedule."
   }
  },
  "last_run": "2026-09-07",
@@ -1721,7 +1737,8 @@
   },
   "closed": [
    "DW-110",
-   "DW-113"
+   "DW-113",
+   "DW-114"
   ],
   "still_open": [
    "DW-010 (SCHEDULED, David's deferred change-control batch, target 8 Sep)",
@@ -1741,6 +1758,24 @@
    "ledger_after": {
     "entries": 323,
     "holding": 300,
+    "regressed": 0,
+    "open": 23
+   }
+  },
+  "agency_reach": {
+   "ruling": "RUL-109",
+   "ledger": "RG-0336",
+   "commit": "1f81572",
+   "post_deploy_utc": "2026-09-07T09:06:47Z",
+   "migration": "036_agency_tier_resync.py -> agency=25",
+   "live_tiers_after": {
+    "free": 52,
+    "agency": 19
+   },
+   "paying_subscribers": 0,
+   "ledger_after": {
+    "entries": 324,
+    "holding": 301,
     "regressed": 0,
     "open": 23
    }
