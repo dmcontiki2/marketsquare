@@ -808,6 +808,14 @@ REFLECTIONS = {
  "RUL-010": [
    ("EU_HARNESS_REDUNDANCY_2026-08-15.md", ["HARNESS-PILOT-1", "OUT"], []),
  ],
+ "RUL-104": [
+   # Global marketplace, never 'a South African marketplace' (David, 6 Sep). The club letter went
+   # to ~1,000 US readers with the old wording for four days after the ruling; asserted now.
+   ("RULINGS.md", ["GLOBAL MARKETPLACE, NOT A SOUTH AFRICAN ONE"], []),
+   ("../CityLauncher/emailer/templates/sports_club_outreach.html", ["global marketplace"], ["South African marketplace"]),
+   ("../CityLauncher/emailer/templates/adventures_outfitter_outreach.html", ["global marketplace"], ["South African marketplace"]),
+   ("scripts/youtube_pack_build.py", ["global marketplace"], ["South African marketplace"]),
+ ],
  "RUL-106": [
    # 60-day re-contact floor (David, 7 Sep): enforced at send_email, fed by both records.
    # A session removing the guard, shortening the floor, or adding a second door trips here.

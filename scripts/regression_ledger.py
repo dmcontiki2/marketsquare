@@ -16546,7 +16546,10 @@ def rg_every_template_has_a_lane():
     # category at all is an audience nothing can reach.
     by_letter = {}
     for c, f in mapped.items():
-        by_letter.setdefault(f, []).append(c)
+        # REGISTER-LETTER-1 (8 Sep 2026): '<category>:register' is a ROUTING key, not a
+        # category -- the wave draws the base category and emailer.template_key_for() picks
+        # the register letter off prospects.source. Judge reachability on the base category.
+        by_letter.setdefault(f, []).append(c.split(":register")[0])
     for f, cats in sorted(by_letter.items()):
         if f in UTILITY:
             continue
@@ -18052,7 +18055,10 @@ def rg_every_outreach_category_has_a_landing_route():
     if os.path.isdir(cl):
         esrc = open(os.path.join(cl, "emailer", "emailer.py"), encoding="utf-8", errors="replace").read()
         tb = esrc[esrc.find("TEMPLATES = {"):esrc.find("}", esrc.find("TEMPLATES = {"))]
-        wanted |= set(k for k in re.findall(r"'([^']+)':\s*TMPL_DIR", tb))
+        # REGISTER-LETTER-1 (8 Sep 2026): '<category>:register' keys route a register row to
+        # its letter; the magic link still carries cat=<category>, so the landing route is
+        # judged on the base category.
+        wanted |= set(k.split(":register")[0] for k in re.findall(r"'([^']+)':\s*TMPL_DIR", tb))
         try:
             pol = json.load(open(os.path.join(cl, "emailer", "waves_policy.json"), encoding="utf-8"))
             wanted |= set(pol.get("agency_categories") or [])
@@ -19327,7 +19333,7 @@ def rg_register_row_carries_its_category():
 @entry("RG-0317", "The Montana outfitter register (199 adventure providers, harvested 7 Sep) is DRAWN by "
        "a wave only once its letter is in the RUL-099 shape -- it names where we got the address "
        "-- and the Montana bucket lists the category",
-       OPEN,
+       LOCKED, fixed_on="2026-09-08",   # REGISTER-LETTER-1: adventures_outfitter_outreach.html (RUL-099 shape) chosen by emailer.template_key_for() for register rows; Montana priority carries the category; rendered from a real row 8 Sep 01:30 SAST
        scope="Two things must both be true before adventures_experiences rows in a US state bucket "
              "may be emailed: (1) CityLauncher/emailer/templates/adventures_experiences_outreach.html "
              "carries the 'where we got your address' line (RUL-099 condition c -- the club letter's "
@@ -19339,32 +19345,53 @@ def rg_register_row_carries_its_category():
            "adventures_experiences, bucket Montana; import queued via run_us_registers.bat. The "
            "adventures letter predates RUL-099 (4 Sep) and lacks the source line, and still carries "
            "the $20 Pro money ask the EMAIL-VARIANT-1 arm 'b' test is measuring. Bringing it into shape "
-           "is the next session's letter work; when both halves pass this prints READY TO LOCK.")
+           "is the next session's letter work; when both halves pass this prints READY TO LOCK. ASSERTION CORRECTED 8 Sep 2026: the letter a register row draws is NOT adventures_experiences_outreach.html -- REGISTER-LETTER-1 routes register:* rows to TEMPLATES['<category>:register'] via emailer.template_key_for(), so this entry now checks the template that path resolves to (adventures_outfitter_outreach.html) and that the router exists. The scraped ZA adventures rows keep the old letter, which is still not RUL-099 shape and is not drawn by any register bucket.")
 def rg_outfitter_lane_waits_for_its_letter():
     out = []
     cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
-    tpl = os.path.join(cl, "emailer", "templates", "adventures_experiences_outreach.html")
+    em = os.path.join(cl, "emailer", "emailer.py")
+    tpl = os.path.join(cl, "emailer", "templates", "adventures_outfitter_outreach.html")
     pol = os.path.join(cl, "emailer", "waves_policy.json")
     csvp = os.path.join(cl, "us_registers", "moga.club.csv")
-    if not os.path.exists(tpl):
+    if not os.path.exists(em):
         return [(INFO, "CityLauncher not readable here -- skipped")]
     if not os.path.exists(csvp):
         out.append((INFO, "us_registers/moga.club.csv not on this disk (gitignored) -- the harvest half is not judged here"))
-    t = open(tpl, encoding="utf-8", errors="replace").read().lower()
-    if not re.search(r"found your (outfit|business|details|company|listing|name)|where we got|got your address|"
-                     r"published (member )?(directory|list)|association'?s? (own )?(member )?directory", t):
-        out.append((FAIL, "adventures_experiences_outreach.html does not say where we got the address "
-                          "(RUL-099 c) -- the outfitter lane stays undrawn"))
+    body = open(em, encoding="utf-8", errors="replace").read()
+    if "def template_key_for(" not in body or "'adventures_experiences:register'" not in body:
+        out.append((FAIL, "emailer.py no longer routes register rows to the register letter "
+                          "(template_key_for / 'adventures_experiences:register') -- a Montana outfitter "
+                          "would draw the old rand-priced, money-ask letter (REGISTER-LETTER-1)"))
+    if "load_template(tkey, variant)" not in body or "subject_for(tkey, p['city'])" not in body:
+        out.append((FAIL, "the send loop does not use template_key_for() for BOTH the letter and the "
+                          "subject -- the two can disagree (REGISTER-LETTER-1)"))
+    if not os.path.exists(tpl):
+        out.append((FAIL, "adventures_outfitter_outreach.html is missing -- the outfitter lane has no letter"))
+    else:
+        t = open(tpl, encoding="utf-8", errors="replace").read().lower()
+        if not re.search(r"found your (outfit|business|details|company|listing|name)|where we got|got your address|"
+                         r"published (member )?(directory|list)|association'?s? (own )?(member )?directory", t):
+            out.append((FAIL, "adventures_outfitter_outreach.html does not say where we got the address "
+                              "(RUL-099 c) -- the outfitter lane stays undrawn"))
+        for needle, why in (("{{unsubscribe_link}}", "no unsubscribe link (RUL-099 c)"),
+                            ("trustsquare.co/support", "no in-app reply route (RUL-100)"),
+                            ("{{magic_link}}", "no personalised link")):
+            if needle not in t:
+                out.append((FAIL, "adventures_outfitter_outreach.html: %s" % why))
+        if re.search(r"\$20|pro subscription|founders badge|launch special", t):
+            out.append((FAIL, "adventures_outfitter_outreach.html carries a money ask -- outside the "
+                              "approved shape (RUL-099 a; arm 'b' finding)"))
     try:
         p = json.load(open(pol, encoding="utf-8"))
         pri = (p.get("cities", {}).get("Montana") or {}).get("category_priority") or []
         if "adventures_experiences" not in pri:
             out.append((FAIL, "waves_policy.json Montana.category_priority does not list "
-                              "adventures_experiences -- by design until the letter passes"))
+                              "adventures_experiences -- the 199 outfitters are banked, not drawn"))
     except Exception as ex:
         out.append((INFO, "waves_policy.json unreadable (%r)" % (ex,)))
-    if not out:
-        out.append((INFO, "letter carries the source line and Montana draws the category -- READY TO LOCK"))
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "register rows route to the outfitter letter, which carries the source line, "
+                          "unsubscribe, support route and no money ask; Montana draws the category"))
     return out
 
 
@@ -19447,7 +19474,7 @@ def rg_invited_seller_city_reaches_listing():
 
 @entry("RG-0326", "Somebody invited by letter can get PAST the first screen -- the sell flow's opening "
        "gate is not a wall that every single arrival stops at",
-       OPEN,
+       LOCKED, fixed_on="2026-09-08",   # INVITE-GATE-1 opened the photo door 7 Sep; PROBED 8 Sep 01:40 SAST (ledger run 6): a session reached subpick -- promoted per RUL-092 corollary (2)
        scope="static/ms.js sfPhotosS(): the forward button is rendered disabled until "
              "sfState.photos.main===2, and the 'Skip the rest of the photos' link only appears AFTER "
              "the main photo is accepted, so there is no way past screen 1 without uploading and "
@@ -20043,6 +20070,138 @@ def rg_photo_bridge():
     if not out:
         out.append((INFO, "the door opens and the way back exists: offer in the HTML, revealed by the "
                           "publish path, wired to the edit screen, fail-closed"))
+    return out
+
+
+@entry("RG-0339", "The micro-wave counter ADVANCES -- a city that has sent on N days has N waves, so "
+       "the ramp can earn its second doubling and a stop-loss release is spent by ONE wave",
+       LOCKED, fixed_on="2026-09-08",
+       scope="CityLauncher/emailer/wave_runner.py wave_history() / city_stats() / the post-send stamp, "
+             "and CityLauncher/clean_city_list.py last_wave() (the release stamp). CLASS: every gate "
+             "that says 'last wave' -- RAMP-1 (12->24->48->96), STOP-LOSS-FLOOR-1, STOP-LOSS-RELEASE-1 "
+             "-- reads the counter; a counter stuck at 1 disconnects the accelerator (RG-0290's class) "
+             "AND makes a one-wave release permanent. Three legs: (a) SOURCE -- no reader takes the "
+             "wave number from MAX(email_events.wave_number) and the stamp has no 'wave_number IS NULL' "
+             "guard; (b) BEHAVIOUR on the real local prospects.db, read-only -- every city with sends on "
+             "two or more send-days reports two or more waves; (c) the release stamp and the runner use "
+             "the SAME counter (clean_city_list imports wave_runner.city_stats).",
+       ref="WAVE-COUNTER-1, PROBED 8 Sep 2026 01:20 SAST: migrate_db.py added email_events.wave_number "
+           "with DEFAULT 1, so every 'sent' row was born wave 1 and the runner's stamp (WHERE wave_number "
+           "IS NULL) matched nothing for the life of the column -- 1,486 sent events, ALL wave 1; Cape "
+           "Town had sent on nine days and printed 'wave #2' every night since 2 Sep. Massachusetts, "
+           "Florida, Illinois and Michigan were due 48 and sent 24 or 12; Cape Town's 6.9% cumulative "
+           "bounce sat behind a 'wave 1' release that matched for ever. Fix: a wave is one city's sends "
+           "on one send-timezone day (what MIN-GAP-1 enforces), derived from created_at -- history "
+           "corrected for every send already made with no write to the database.")
+def rg_wave_counter_advances():
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    wr = os.path.join(cl, "emailer", "wave_runner.py")
+    cc = os.path.join(cl, "clean_city_list.py")
+    if not os.path.isfile(wr):
+        return [(INFO, "CityLauncher not readable here -- not evaluated")]
+    out = []
+    body = open(wr, encoding="utf-8", errors="replace").read()
+    # (a) source: the counter is derived, the stamp is unconditional
+    m = re.search(r"^def city_stats\(.*?(?=^def |\Z)", body, re.S | re.M)
+    cs = m.group(0) if m else ""
+    if "MAX(e.wave_number)" in cs:
+        out.append((FAIL, "city_stats() reads MAX(email_events.wave_number) again -- the column is "
+                          "born 1 (DEFAULT 1), so every city is 'wave 1' for ever (WAVE-COUNTER-1)"))
+    if "hist = wave_history(city)" not in cs:
+        out.append((FAIL, "city_stats() no longer takes the last wave from wave_history() -- the "
+                          "ramp and the stop-loss are judging a different counter (WAVE-COUNTER-1)"))
+    m = re.search(r"^def wave_history\(.*?(?=^def |\Z)", body, re.S | re.M)
+    wh = m.group(0) if m else ""
+    if "GROUP BY e.wave_number" in wh or "send_day(" not in wh:
+        out.append((FAIL, "wave_history() groups by email_events.wave_number instead of the send-day "
+                          "-- nine days of sends collapse into one wave again (WAVE-COUNTER-1)"))
+    if re.search(r"UPDATE email_events SET wave_number=\?\s*WHERE wave_number IS NULL", body):
+        out.append((FAIL, "the post-send stamp is guarded by 'wave_number IS NULL' again -- with a "
+                          "DEFAULT 1 column that stamp matches no row (WAVE-COUNTER-1)"))
+    # (c) the release stamp uses the same counter
+    if os.path.isfile(cc):
+        cb = open(cc, encoding="utf-8", errors="replace").read()
+        if "MAX(e.wave_number)" in cb or "W.city_stats(city)" not in cb:
+            out.append((FAIL, "clean_city_list.last_wave() does not use wave_runner.city_stats -- the "
+                              "release stamp and the runner count waves differently, so a release "
+                              "either never matches or matches for ever (WAVE-COUNTER-1)"))
+    # (b) behaviour on the real local database, read-only
+    db = os.path.join(cl, "data", "prospects.db")
+    if os.path.isfile(db):
+        try:
+            import sqlite3
+            con = sqlite3.connect("file:%s?mode=ro" % db.replace("\\", "/"), uri=True)
+            rows = con.execute(
+                "SELECT p.city, e.created_at FROM email_events e JOIN prospects p ON p.id=e.prospect_id "
+                "WHERE e.event='sent'").fetchall()
+            con.close()
+            days = {}
+            for city, ts in rows:
+                d = (ts or "")[:10]
+                days.setdefault(city, set()).add(d)
+            multi = sorted(c for c, s in days.items() if len(s) >= 3)
+            if multi:
+                sys.path.insert(0, cl)
+                import importlib
+                W = importlib.import_module("emailer.wave_runner")
+                probe = multi[:3]
+                flat = [c for c in probe if len(W.wave_history(c)) < 2]
+                if flat:
+                    out.append((FAIL, "wave_history() reports fewer than 2 waves for %s, which has sent "
+                                      "on 3+ UTC days -- the counter is flat again (WAVE-COUNTER-1)"
+                                      % ", ".join(flat)))
+                else:
+                    out.append((INFO, "counter advances: %s report %s waves" % (
+                        ", ".join(probe), "/".join(str(len(W.wave_history(c))) for c in probe))))
+        except Exception as ex:
+            out.append((INFO, "local prospects.db not readable (%s) -- behaviour leg skipped" % repr(ex)[:70]))
+    if not out:
+        out.append((INFO, "the wave counter is the send-day history; stamp unconditional; release uses the same counter"))
+    return out
+
+
+@entry("RG-0340", "Every letter shape that SENDS is filed where David can read it -- RUL-099(e) is a "
+       "mechanism in the send lane, not a sentence in a ruling",
+       LOCKED, fixed_on="2026-09-08",
+       scope="CityLauncher/emailer/emailer.py _file_letter(), called from the real-send branch of "
+             "main() after send_email() succeeds (never on a dry run), writing ONE file per letter "
+             "shape (template key x country) per send day into MarketSquare/visuals/letters/. Two "
+             "legs: (a) SOURCE -- the filer exists and the send branch calls it; (b) BEHAVIOUR -- for "
+             "any send in sent_log.json dated on/after 2026-09-09, a letter file whose name carries "
+             "that UTC day exists. CLASS: a condition of the standing letter authority that nothing "
+             "implemented and nothing asserted -- four days and ~1,000 letters went by with the folder "
+             "holding only its README.",
+       ref="LETTER-FILE-1, PROBED 8 Sep 2026 01:35 SAST: MarketSquare/visuals/letters/ contained "
+           "README.txt and nothing else; the emailer had no reference to the folder. RUL-099(e) "
+           "(David, 4 Sep): 'filed where you can read anything already sent'.")
+def rg_letters_are_filed_when_sent():
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    e = os.path.join(cl, "emailer", "emailer.py")
+    if not os.path.isfile(e):
+        return [(INFO, "CityLauncher not readable here -- not evaluated")]
+    out = []
+    body = open(e, encoding="utf-8", errors="replace").read()
+    if "def _file_letter(" not in body:
+        out.append((FAIL, "emailer.py has no _file_letter() -- RUL-099(e) is a sentence again (LETTER-FILE-1)"))
+    m = re.search(r"if message_id:\s*\n\s*mark_emailed\(.*?\n\s*_file_letter\(tkey", body, re.S)
+    if not m:
+        out.append((FAIL, "the real-send branch no longer files the letter right after mark_emailed() "
+                          "-- letters go out that David cannot read (LETTER-FILE-1)"))
+    ldir = os.path.join(REPO, "visuals", "letters")
+    log = os.path.join(cl, "emailer", "sent_log.json")
+    try:
+        ents = json.loads(open(log, encoding="utf-8").read() or "[]")
+        days = sorted({str(x.get("sent_at") or "")[:10] for x in ents if str(x.get("sent_at") or "")[:10] >= "2026-09-09"})
+        have = set(os.listdir(ldir)) if os.path.isdir(ldir) else set()
+        missing = [d for d in days if not any(f.startswith(d + "_") for f in have)]
+        if missing:
+            out.append((FAIL, "sends on %s have no filed letter in visuals/letters/ (LETTER-FILE-1)" % ", ".join(missing[:3])))
+        elif days:
+            out.append((INFO, "every send day since 9 Sep has a filed letter (%d day(s))" % len(days)))
+    except Exception as ex:
+        out.append((INFO, "sent_log.json not readable (%s) -- behaviour leg skipped" % repr(ex)[:60]))
+    if not out:
+        out.append((INFO, "the filer is in the send lane; no post-9-Sep send yet to judge"))
     return out
 
 

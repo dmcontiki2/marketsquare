@@ -139,6 +139,19 @@ addresses on 7 Sep (do not re-check): Orienteering USA, National Ski Council Fed
 Association, American Hiking Society, Idaho IOGA, USATF Minnesota / Oregon / Georgia / New Jersey /
 Indiana, Adventure Cycling.
 
+**Corrected 8 Sep 2026 (measured): the ramp never worked, and one register is dead.** Two things this
+file assumed were false. (1) "About 5 nights at the ramp's own pace" assumed 12 → 24 → 48 → 96. The wave
+counter in the database was stuck at 1 from the first send (a column default nobody noticed), so the ramp
+could never see a second clean wave and no city ever exceeded 24 — the accelerator was disconnected in a
+second way, one RG-0290 could not see. Fixed 8 Sep (RG-0339); the first real doubling to 48 is tomorrow's
+wave, in Massachusetts, Florida, Michigan and Illinois. (2) The USATF New England register is not supply:
+25 sent, 7 bounced (28%), personal mailboxes on live domains, so no cleaning rescues it; the source gate
+holds all 241 remaining rows including Massachusetts' 213. So the US club lane is rrca 292 + Pacific 40 ≈
+330 and runs dry **9–10 Sep**, a day earlier than the 7 Sep reading. The replacement is outfitters:
+Montana's 199 are drawn from tonight (their letter is now in the approved shape) and Wyoming's ~95 are
+being harvested. Next registers must be the same kind — state outfitter and guide associations that
+publish members with mailboxes — not athletics lists, which are the oldest data on the internet.
+
 **24 → 31 Oct. STOP ADDING, START CLOSING.**
 No new lanes. Follow up the people who clicked and did not publish.
 
