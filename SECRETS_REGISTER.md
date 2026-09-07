@@ -69,6 +69,12 @@ values — `/etc/marketsquare/secrets.env.bak-20260822-062621`, five `/var/www/m
 (22 Aug ×4, 2 Sep ×1) and `/usr/local/bin/backup_dbs_to_r2.py.bak-20260906-084230`. The `.env.bak-*`
 files were world-readable (644) until this session set them 600, and `/var/www/marketsquare/.env`
 itself was 644 and is now 640 (msdeploy:msdeploy; the app runs as root, `/health` 200 after).
+**DELETED 7 Sep 2026** — all seven, on David's permission the same day ("Please delete any of the
+files you asked permission for to delete"); each name was pattern-checked as a stamped `.bak` before
+`rm`, the three live files they backed up were verified untouched afterwards, `/health` 200, and
+`secret_consumers.py --check` now prints OK with no STALE line. Still on the box, NOT in that
+permission: `/var/www/marketsquare/.env.bak-20260718-onemodel` and `.env.bak-cf-20260722-174900`
+(July, 600, two credential lines each) and `/etc/marketsquare/resend.watch.conf.bak-20260828`.
 
 **Rotation rule from here on:** rotating a credential is not finished until every row in this table
 carrying that credential has been updated and re-probed. The alert path in particular is exercised
