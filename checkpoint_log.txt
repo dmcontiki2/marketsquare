@@ -275,3 +275,9 @@ Fri 09/04/2026  5:30:04.28  committed 4 change(s)
  1 file changed, 38 insertions(+)
 Sat 09/05/2026  5:30:02.34  committed 1 change(s)
 Sun 09/06/2026  5:30:02.94  clean - nothing to commit 
+[main 698f78d] Nightly checkpoint Mon 09/07/2026  5:30:02.19 (auto, no deploy)
+ 9 files changed, 237 insertions(+), 31 deletions(-)
+ create mode 100644 genie/README.md
+ rename GENIE_SEARCH_CONCEPT.html => genie/SEARCH_CONCEPT.html (100%)
+ rename GENIE_WISH_CONCEPT.html => genie/WISH_CONCEPT.html (97%)
+Mon 09/07/2026  5:30:02.31  committed 9 change(s)

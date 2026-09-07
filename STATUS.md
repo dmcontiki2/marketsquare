@@ -28,6 +28,148 @@ _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20
 
 ## Current Session
 
+- **RESTART-REDFLASH-1 fixed and locked (RG-0318).** The ops map flashing all-red was a
+  one-second deploy restart (23:24:56 and 23:29:16 UTC, 6 Sep), not an outage — server probed
+  healthy throughout, `NRestarts=0`, zero journal errors. Every polled dashboard feed now retries
+  once at 2.5s before a chip is called offline; 401/403/404 still go red immediately.
+
+- **The video lane is ready to post, and now measurable (VIDEO-LAUNCH-1, CAMPAIGN-SRC-1).** All
+  ten finished films QC'd by probe (2160x3840, h264+aac, 42-69 s, audio present, no mid-film
+  black), all ten packaged for upload, every link tracked per film (`?src=yt-NN-name`). Found and
+  fixed the reason none of it could have been counted: ms.js only recorded `?src=` on invite links
+  (`magic=1`), so a viewer arriving from a Short was invisible to the funnel. Schedule set in
+  LAUNCH_SERIES.md -- two a week, Tue and Fri 18:00 SAST, shelf empty by 9 Oct, three weeks inside
+  the 31 Oct goal date. RG-0301 LOCKED. **The only thing outstanding is the YouTube channel
+  itself** -- none exists on disk, no connector exists to automate posting, and the account and its
+  positioning are David's (RUL-103f).
+
+- **Viability review run on David's question ("do we have a viable model, what are our chances").**
+  Everything probed live, nothing quoted from a status file. **Day 9: 0 real signups, 0 real listings,
+  0 real introductions, $0 revenue.** 103 live listings, 85 of them our own showcase examples; the only
+  non-showcase seller is the beekeeper David recruited by hand in July. ~1,541 homepage visits since
+  29 Aug converted to nothing. Product itself is fine — health green, 8/8 BIT, Google sign-in live,
+  listings + city + category filters all serve an anonymous visitor correctly.
+- **The funnel, graded:** 981 sent · 86 undelivered (8.8%) · 186 human opens (20.8% of delivered — a
+  healthy rate) · **4 human clicks** (0.45%) · 0 signups. Two of the four opted out on the spot and one
+  was a competitor's support desk. Opens are fine and clicks are not, so the failure is the ASK, not
+  the delivery or the subject line.
+- **Economics stand up; the channel does not.** Actual burn ~$486/mo (the $1,690 ops line has not
+  started); ~$2.20/active seller/mo; break-even ~220 sellers today, ~990 on the full plan. But at the
+  measured click rate 220 sellers needs ~270,000 emails against a 5,373 pool — and ~12,200 even on the
+  model's optimistic 10%. **Cold email cannot reach break-even, short by 2x to 50x.**
+- **The simulation is NOT contradicted** — it expects 0–1 sellers by now and we have 0. But both
+  numbers it flagged as decisive are now measured and both landed low: click 10% assumed vs **0.45%**,
+  bounce 2% assumed vs **8.8%**. That is the 87-by-October arm against the 7-by-October arm.
+- **The untested load-bearing assumption:** not one stranger has ever paid $2 for an introduction. All
+  115 intro_requests are seeded and pre-launch. Recommended next proof is ten paid introductions in
+  Pretoria tutors, not more sellers and not more cities.
+- **DOMAIN-BOUNCE-1 fixed + RG-0312 LOCKED** (see changelog fragment) — the stop-loss now watches the
+  sending domain, and currently HOLDS all sending at 5.47%. Deliverable:
+  `VIABILITY_REVIEW_2026-09-06 — nice.docx`.
+
+- **The films read in dollars as well as rand (USD-DUAL-1).** David: the YouTube audience is
+  global. All ten films were transcribed first - three SAY a rand amount out loud, inside
+  lip-synced clips, so replacing rand would have made the picture argue with the soundtrack.
+  He chose show-both. Eight films now have a `-USD.mp4` cut: the input screen reads
+  `R420,000 - $25,400`, and a `prices in rand - $1 = R16.5` line sits under the phone during the
+  report scroll. Audio stream-copied and byte-identical, so nothing else moved. Films 01 and 09
+  needed nothing. All ten packages are in dollars and each names the file to upload. RG-0302
+  LOCKED. A scheduled check will remind David about YouTube access the moment the videos are
+  signed off.
+
+## 2026-09-06 — support AI: facts added, false fix-promise removed
+
+The customer support lane was answering money questions from a guess. TS-0039 was told to "spend
+Tuppence" to contact a seller; the truth is 1T is held and charged only if the seller accepts, and
+released in full if they decline or go quiet. The customer prompt now carries the introduction facts
+(RG-0303 LOCKED). Separately, every auto-reply promised a fix from our "fix queue" — including to
+people who had only asked a question. That promise is now gated on the message actually reporting
+something broken, and defaults to the neutral wording when unsure (RG-0304 LOCKED).
+
+The listing page itself was checked and is fine: the sticky "Request Introduction · 1T on
+acceptance" button and the "Identity protected until introduction" block are both present.
+
+- **CORRECTION, and it was David who caught it: NINE videos are live on YouTube, not one.** PROBED
+  6 Sep 2026 by opening `youtube.com/@TrustSquareApp` — the channel header reads **"2 subscribers ·
+  9 videos"** and the Shorts grid lists them with view counts (Kruger heritage 3 · Portugal D7 16 ·
+  Siberia expedition 5 · price check 8 · property 4 · weekend Pretoria 11, plus three not yet
+  rendered by the lazy grid). The status fragment written earlier the same day said *"the first
+  TrustSquare video is live"* and named one URL. That line was true when it was written and false a
+  few hours later, and it was about to send the next session hunting for nine unpublished films that
+  are already up. This is the undated-status-assertion defect the evidence ladder exists for — a
+  READ beat a PROBE, and the probe won.
+- **The correction changes a claim made to David in the same session.** I told him the tracker's
+  `yt-01..yt-10` landings were crawlers *because only one video was published*. That reason was
+  wrong. The conclusion probably still holds, for a better reason: those nine videos have roughly
+  50–70 views between them, the tracker shows about 36 landings tagged to them, and the description
+  links are **not yet clickable** (YouTube channel verification is still outstanding — see
+  `changelog.d/2026-09-06-youtube-publishing-requirements.md`). A ~60% view-to-visit rate through a
+  link nobody can click is not human behaviour. Stated as an inference, not a fact.
+- **Still open on the video lane:** channel verification (until it lands, no clickable link, so the
+  funnel cannot attribute a real YouTube visit at all), and the custom cover images. One of the ten
+  packages is not yet published.
+
+- **Next email wave: 00:10 SAST Mon 7 Sep**, and it will actually send — verified by running the planner.
+  The only gates still showing are the daily volume cap and the one-day per-city gap, both of which clear
+  at midnight. It draws Sports Clubs from the register lanes (rrca / usatf / agn), which have a measured
+  **0% bounce rate over 191 sends**.
+- **Two fixes to get there.** DOMAIN-BOUNCE-RELEASE-1 lets the domain gate judge the CLEANED pool instead
+  of serving a full window for the dirty pool's history (the domain twin of the per-city
+  STOP-LOSS-RELEASE-1, which had exactly this gap). SOURCE-QUALITY-1 holds the sources that actually
+  bounce, measured off our own history, with both a send floor and a bounce floor.
+- **Near-miss worth remembering:** the quality rule was first written as `mx_status='mx_ok'` and probing
+  the pool before trusting it showed that would have blocked the 1,595 BEST addresses we own — every
+  register source is mx-unchecked, and the registers are the only sources that do not bounce — while
+  waving through mx_ok scraped rows bouncing at 8-11%. MX proves a domain runs a mail server, not that a
+  mailbox exists. Asserted so the rule cannot return.
+- Pool after the gate: 2,872 of 4,125 (70% retained). RG-0314 LOCKED, verified in isolation.
+
+## 2026-09-06 — Maintenance loop
+
+- Fault queue EMPTY: 0 new, 26 verified, 12 closed, 2 duplicate (40 total). The 5 rows added
+  since yesterday are internal support-form/AI-lane tests, closed the same hour. Shadow agent ran
+  05:41:46Z, heartbeat read back from /dashboard/maint at 05:42:06Z. No escalation brief (none due).
+- Board GREEN before and after: 292 entries · 273 holding · 0 REGRESSED · 19 open · 0 UNVERIFIED.
+  rulings_check 97 rulings, 0 FAIL, 6 WARN (unchanged). Yesterday's RG-0229 false red did not recur.
+- No fixes this run, so no fault row moved and no ledger entry added. DW-087 (LOW static findings)
+  stays with the Monday deep-scan lane per its own next_action.
+- Ledger run via scripts/ledger_resume.py (checkpointed slices) because a full board exceeds the
+  sandbox's per-call cap. Nightly TSL 05:45 IN SYNC, 19/19 tracked files match live.
+- Committed, not deployed: NIGHTLY-SHIP-1 ships this through the gates.
+
+- **First YouTube video is set up and waiting on David's Publish click.** Channel created by David;
+  Claude filled title, description, tags, audience and the AI-use disclosure (YES - the films use
+  AI-generated people). **RUL-104: we describe ourselves as a global marketplace, not a South
+  African one** - David caught it in the live description. Corrected there and in all ten packages.
+  The same grep found seven AI prompts in bea_main.py still telling the model the marketplace is
+  South African, which mis-prices for every US seller we are emailing - **RG-0307 OPEN**, to be
+  fixed by passing the listing's own country rather than swapping a word.
+
+- **First TrustSquare video is LIVE** - https://youtube.com/shorts/oULMIsCAPnk (film 01,
+  collectables, published 6 Sep). Ten finished films had been sitting unpublished since July; one is
+  out and its link is tracked, so the funnel can now answer whether YouTube sends anyone who lists.
+  Next: read `?src=yt-01-collectables` in the funnel from tomorrow. Open: custom cover image (file
+  picker, David's click) and YouTube's channel verification, without which the description link is
+  not clickable.
+
+- **The experiment loop is built, because the low cost base is only an advantage if experiments are
+  cheap to run AND cheap to read.** The letter can now be A/B split per category
+  (`defaults.email_variants` in waves_policy), the arm rides the existing `?src=` tag so signups
+  attribute themselves with no app change, and `emailer/funnel_report.py --by variant --server` reads
+  the result off GRADED human clicks with a guard that refuses to call a winner under ~30 per arm.
+- **Caught before it shipped:** the first cut assigned arms with `pid % len(arms)`, which put four
+  consecutive Durban prospects in the same arm because the scraped ids are all odd — a split that
+  silently does not split and then reports a confident result. Hashed instead; 294/306 over 600 real
+  rows. Asserted so it cannot return.
+- **The local mirror understates engagement about fourfold** (48 human opens / 2 clicks locally against
+  186 / 4 on the server) because pull_from_server carries verdicts down but not engagement. Hence
+  `--server` on the readout. Worth closing properly in the sync at some point.
+- **First experiment armed and waiting on the queue:** tutors arm 'b' drops the money ask out of a first
+  cold email and shortens the request to "your listing is written, check it". It ships with the next
+  wave, which the domain bounce gate is holding until the address list is cleaned.
+- RG-0313 LOCKED alongside RG-0312. Both verified in isolation; the full board run did not finish inside
+  the session.
+
 - **Goal run 5 (Sun 6 Sep 01:00, Fable 5.1): the number is 0.** The 00:10 wave sent 55
   (ZA + New York) and then crashed in all 51 US state buckets on a rand price in the club
   example card — 0 US club letters went out while the log said "logged". Fixed (CLUB-INTL-1),

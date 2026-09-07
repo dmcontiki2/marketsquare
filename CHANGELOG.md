@@ -1,3 +1,875 @@
+## 7 Sep 2026 — YouTube advanced features approved; film 01 link live and comment pinned
+
+YouTube approved the six-second video verification at 00:19 SAST, for both the TrustSquare brand
+channel and David's own account.
+
+- PROBED in Studio → Settings → Channel → Feature eligibility: "3. Advanced features — Enabled".
+- Film 01 (https://youtube.com/shorts/oULMIsCAPnk): the tracked link
+  `https://trustsquare.co/?src=yt-01-collectables` now renders as a clickable anchor in the
+  description AND in the comment — PROBED on the public watch page. The funnel stops under-counting.
+- The pinned comment is now actually pinned ("Pinned by @TrustSquareApp"). Pinning is only offered
+  while acting as the brand channel (avatar → Switch account → TrustSquare); from the personal
+  account the comment menu shows only "Report".
+- LAUNCH_SERIES.md blocker item 2 rewritten from "in review" to CLOSED, with the full list of what
+  advanced features unlock (clickable links, pinned comments, >15-minute uploads, live streaming,
+  >15 uploads/day, Content ID appeals). Custom thumbnails were never behind this gate.
+
+## 2026-09-07 — RESTART-REDFLASH-1: a one-second deploy restart no longer paints the ops map red
+
+**Reported by David:** "Claude, why are everything red?" — screenshot of the +1 page ops map,
+NCR & Feedback tab, stamped 01:32 SAST, every live chip reading `offline`, and the Server Health
+panel reading *"Health check failed — server may be restarting"*.
+
+**Finding — the server was never down.** Probed live: `/health`, `/health/resources`,
+`/dashboard/bit`, `/dashboard/presence`, `/dashboard/summary`, `/dashboard/cost`,
+`/dashboard/email-triage`, `/flags` all 200, twice, including a 14-request burst (no rate
+limiting). `systemd` reports `NRestarts=0` (nothing ever crashed) and the journal carries zero
+errors since startup. The service was stopped and restarted at **23:24:56** and **23:29:16 UTC**
+— deploy restarts — each completing startup in about **one second**. David's screenshot is
+stamped 23:32 UTC, i.e. the refresh round that landed inside the second restart window.
+
+**Cause.** `omLoad()` polls ~11 feeds every 60s. During the restart second every one of them
+rejects at once, and each `.catch` calls `fail()`, which paints its chips red `offline`. That is
+PROVENANCE-1 working as designed — the map never invents a number — but a whole-map red flash is
+indistinguishable from a real outage, and it read as one.
+
+**Fix.** New `rfetch()` in `dashboard.server.html`: on a network failure or 5xx it waits 2.5s and
+tries once more before the failure reaches `.catch`. Every polled read feed now goes through it
+(health/resources, presence, summary, cost, bit, email-triage, flags, fixed-costs,
+admin/services-status, admin/faults) plus the Server Health and BIT panels. `401/403/404` are real
+answers and are **not** retried; a second failure still goes red, so nothing is invented and no
+chip shows a stale number. The user-initiated click-to-retest path is untouched.
+
+**Locked.** Regression ledger **RG-0318** asserts `rfetch()` exists and that every polled feed is
+routed through it — a new feed added straight to `fetch()` trips it red.
+
+Scope note: the class is *the deploy window*, not one endpoint. Every polled feed got the retry,
+not only the ones on the tab David happened to be looking at.
+
+## 2026-09-07 — FUNNEL-HUMAN-1 + LEDGER-SLICES-1 + MOGA-1 (onboarding-goal run 6, 01:00–02:10 SAST)
+
+**The number: 0** (probe A 0, probe B 0; raw 2 are the e2e seeds, barred). Model: Fable 5.1.
+
+**The wave went, cleanly.** 00:10 SAST: 251 real sends, 0 crashes, across Cape Town (12) and 23 US
+state buckets; the ramp doubled to 24 for the three buckets with a clean wave #1 (Northern California,
+California, Illinois). 12 more states had their first wave; 17 states (North Carolina → Wyoming, 166
+letters) dry-ran on the 250/day cap and go tonight. Bounces so far on the 6 Sep US club wave (203): **0**.
+On tonight's 251: 7 so far (2.8%). The domain gate now has its 50 post-clean sends and reads under 5%.
+Pretoria, Durban, PE, Kimberley, New York, Sydney drew nothing: the planner prints "-" for their pool
+without saying why (Pretoria's club:agn is now 4 bounces in 24 — the source gate, most likely). The
+plan output should name the source-gate verdict; it does not yet.
+
+**FUNNEL-HUMAN-1 — the funnel was counting link scanners as sellers.** Yesterday's reading "9 clubs
+reached the photo step, none picked a photo" was about to become "they stop at the required photo" in
+GOAL_STATE and the plan. PROBED on the server: every one of those 9 sessions was created 20–40 s after
+its wave's send time, in bursts of 4 within 8 s (kansas 23:42:20–56Z; northern-california 22:11:29–37Z
+against a 22:10:58Z send), and nginx showed 15 `POST /onboard/step` from **Google-Safety** user agents
+in the window — a scanner that renders the page, runs our JS and posts `landed` + `photos`. The `yt-*`
+"landings" (3–4 per film within seconds of each posting) are the same class. **True humans at the photo
+step: 0. True humans landed from the club letters: unknown — the instrument could not tell.**
+Fix, shipped twice tonight (relay → live, health-checked): `/onboard/step` stores the user agent and a
+bot verdict (same vocabulary `click_register.py` grades email clicks with, plus google-safety); `GET
+/onboard/funnel` excludes bot rows AND ungraded pre-column rows unless `bots=1`, and returns `humans` =
+sessions that fired the new `dwell` beacon (ms.js: 12 s on the page AND a real pointer/key/touch/scroll
+event — a scanner does neither). Live now: `sessions 0 · humans 0 · ungraded 60`. From tonight's wave
+on, the funnel's denominator is people. RG-0315 LOCKED (live probe with a Google-Safety UA must be
+hidden by default and visible with bots=1); RG-0293's read adjusted to `bots=1` (its own probe is a
+machine, correctly flagged).
+
+**LEDGER-SLICES-1 — the ledger could not be run from the sandbox at all.** The bash call cap is now
+~178 s (GOAL_STATE said "foreground, ~6 min, timeout 560 s"); a backgrounded run dies with the call;
+running it on the server produced 45 false reds (different environment). `scripts/ledger_slices.py`
+runs the same LEDGER in N slices (state in the outputs dir), `--report` merges them with the ledger's
+own exit codes and names any missing slice. Before: 308 entries, 4 REGRESSED (RG-0154 counter behind,
+RG-0187 a hand-rolled subprocess in RG-0308, RG-0194 LF-only .ps1, and the new RG-0315 pre-deploy).
+After: **311 entries · 289 holding · 0 REGRESSED · 22 open · 0 unverified.** Fixes: session counter
+written (191); `_harness(full=True)` so RG-0308 reads the tool's first-line count through the
+dependency-aware path (LEDGER-HARNESS-FULL-1); `install_hetzner_s3.ps1` → CRLF. rulings_check: 0 FAIL.
+
+**RUL-103 check re-pinned.** It required the literal "on disk, unpublished", true on 5 Sep and false
+from 6 Sep (David published nine films). LAUNCH_SERIES.md now says so (nine LIVE since 6 Sep, only 07
+Liquidation on disk; advanced features approved 00:19 7 Sep so links are clickable); the assertion
+checks the standing fact and forbids "| idea |" for a made film.
+
+**MOGA-1 — supply, US, a register.** Probed 14 candidate register pages from the sandbox; one carried
+addresses: the **Montana Outfitters & Guides Association** member directory — 199 licensed outfitters
+with a mailbox on one page (embedded JSON). Adapter `moga` added to `us_register_reader.py`, harvested
+to `us_registers/moga.club.csv` (199 rows, source `register:moga`, category `adventures_experiences`,
+bucket Montana, town in suburb); `run_us_registers.bat` carries it; import queued. **Caught before it
+mattered:** the CSV had no category column and `club_import.py` defaults to Sports Clubs — the club
+letter ("I found your club on your federation's club list") would have gone to hunting outfitters. The
+CSV now names its category; RG-0316 LOCKED. The lane is COLLECTED, NOT DRAWN: the adventures letter
+predates RUL-099 and lacks the "where we got your address" line, so Montana's priority stays Sports
+Clubs — RG-0317 OPEN prints READY TO LOCK when the letter is in shape and the bucket lists the category.
+Dead ends this run (do not re-check): orienteeringusa, skifederation, americancanoe, americanhiking,
+ioga.org/members (404), usatfmn/usatf-oregon/adventurecycling (no emails), usatf GA/NJ/IN (dead).
+
+**Pool after tonight:** US Sports Clubs uncontacted 815 (Massachusetts 213, Texas 57, California 55…)
+≈ 3–4 sending nights at 250/day. Then the US club lane is dry and the next register must already be in.
+
+## 7 Sep 2026 — The wish genie: the SELLING half of RUL-097, built (GENIE-WISH-1, proposal)
+
+David, 01:00: *"It is overwhelming and most people don't get past the multiple options and busy graphics.
+This variety is what we want, the complexity is a side effect; a bad one."* He described the arrival —
+swirling blue and purple smoke, an Arabic lamp bottom right, a genie rising with folded arms saying
+"What is your wish, master?" — and a Siri-like helper that from a few clues either lists something
+without the manual flow, or acts as a very clever filter.
+
+**Reuse-before-recreate check first.** RUL-097 (4 Sep) already ruled on a genie: the SEARCH half, built
+as `GENIE_SEARCH_CONCEPT.html`, agreed as Zoom's front door, and parked on a stock trigger. What David
+described tonight contains a second capability that ruling does not cover: **listing from a sentence**.
+That is new and is what was built.
+
+**Deliverable:** `GENIE_WISH_CONCEPT.html` — press-and-hold the lamp, the genie arrives and speaks
+(browser speech synthesis), then one sentence in the wish box goes down one of two lanes:
+- FIND: "my son needs a chess coach, he is 12 and a beginner" → Tutors · Chess · Beginner, tags filled,
+  results on screen, the next splitting facet offered with true counts.
+- LIST: "I want to sell my 2016 Toyota Hilux automatic, 180000 km, R320000" → category chosen, fields
+  filled, title and description written, unknowns flagged amber, a Publish button. He drafts, never publishes.
+Real category and facet names lifted from the 4 Sep prototype so the two describe one product.
+
+**RUL-097(c) covering rule honoured and instrumented:** the genie's band is an inline row in `#bandslot`
+that pushes results down; search, category chips, Filter/Sort/Trust and the bottom bar stay live; the
+live meter under the phone reports "anything covered? no". The arrival is the one permitted full-screen
+moment (nothing is selected yet).
+
+**CTO decisions taken (RUL-037), all overrulable:** ceremony plays once then the lamp rests as an orb ·
+selling is the wish worth granting first (the number that is actually 0) · he drafts, never publishes ·
+voice out, typing in · hold shortened to 700 ms · `#summon` deep-link skips the wait.
+
+**ART — David's correction, and the real blocker.** First cut drew the genie in SVG; David: *"the two
+examples I pasted in is the quality I need. They were generated by Grok from a simple single prompt."*
+Correct — hand-drawn shapes cannot reach it. The page now cross-fades **two full-frame paintings**
+(~45 KB each, base64-embedded, no external requests) instead of SVG. Placeholder art is David's own
+Grok pair, cropped to `genie_art/scene_lamp.jpg` + `scene_genie.jpg` + `lamp_orb.jpg`.
+**Our own art is BLOCKED on money, which is David's:** higgsfield.ai shows *"Payment failed. We couldn't
+charge your subscription. Unlimited generations are paused."* — PROBED 7 Sep 01:45 in his Chrome. Not
+touched. The two ready-to-run prompts are written into the page.
+
+**Verified:** `node --check` on the extracted script; jsdom drives the whole thing — arrival sequence
+(short press does NOT summon, 700 ms hold does), both wish lanes across five sentences, tags, draft
+fields, amber unknowns, publish, band non-overlay, chips/bottom bar still live, orb re-wake — 24/24 PASS,
+0 console errors. Rendered and eyeballed live.
+
+**Not done:** nothing wired into `ms.js` / `marketsquare.html` / `bea_main.py`. No flag, no deploy. A
+proposal awaiting David's ruling; if he takes it, it is written up against `ZOOM_HMI_SPEC.md` sec 11
+alongside the search half so the two stay one design.
+
+### Same night, after David saw it — three changes and a folder (GENIE-WISH-2)
+
+David: *"I like it Claude, obviously we can't build it now in our launch month but i would like to
+work towards it."* Then three specifics, all actioned:
+
+1. **It is a sub-project now: `MarketSquare/genie/`.** Both halves moved in together —
+   `WISH_CONCEPT.html` (new) and `SEARCH_CONCEPT.html` (was `GENIE_SEARCH_CONCEPT.html`), plus
+   `Genie Filter — nice.docx` and the artwork in `genie/art/`. `README.md` written as the charter.
+   They share a folder deliberately: RUL-097(b) says the genie is one design, and separating the
+   halves is how a thing gets built twice.
+   **Two live checkers pointed at the old path and were updated in the same session** —
+   `regression_ledger.py` RG-0221 and `rulings_check.py` RUL-097 — plus 3 references in
+   `ZOOM_HMI_SPEC.md` and 1 in `BACKLOG.md`. PROVED after the move: `rulings_check.py` 97 rulings,
+   **0 FAIL**; RG-0221's own check run in isolation returns "spec intact, both prototypes present".
+   History (RULINGS.md, CHANGELOG.md, folded fragments) is append-only and was NOT rewritten — the
+   old path is recorded in the README so a future session can follow it.
+2. **The voice was tinny — my fault, and fixed.** The first cut set pitch to 0.45 to make him sound
+   deep; browsers resample badly below ~0.8 and what you hear is the artefacts. Pitch is now 0.9,
+   rate 0.86, and `bestVoice()` picks the best natural English voice the device has from a stated
+   preference order, re-picking on `onvoiceschanged`. The page now prints which voice it got.
+   HONEST LIMIT recorded in the page: the free browser voice will never sound like a genie. He says
+   ONE line, so the shipped answer is **one recorded audio file** generated once from a proper voice
+   service — no per-use cost. Vendor bears money, so it is David's (RUL-009).
+3. **The speech bubble is gone.** David: *"the speech bubble covers the screen and blocks out too
+   much, maybe only the voice without script?"* Nothing is now drawn over the painting during the
+   arrival — he simply speaks. A single small caption appears ONLY when the voice is off or the
+   device cannot speak, which is the accessibility floor, not a hedge on his instruction.
+
+Still design-only. Nothing wired, no flag, no deploy, not in the launch month.
+
+### Costed against the actual plan (GENIE-COST-1)
+
+David asked what the genie does to the cost budget and the profit target. Answered from the files,
+not from memory — `Cost_Breakdown_GlobalLaunch.xlsx`, `AI_BASELINE.json`,
+`MarketSquare_FreeTier_AI_Cost_Risk_Model.xlsx`, `TrustSquare_Revenue_Bridge.docx`,
+`PRICING_CANON.md`, `FINANCE_CANON.md`, and the `ai_spend_config` defaults in `bea_main.py`.
+
+- **Running cost is one cheap AI call per wish.** Bracketed by two on-disk figures: $0.00296
+  (AI_BASELINE pinned haiku envelope) and $0.01 (the in-house pessimistic cheap-class figure).
+  The paper uses $0.01 throughout — 3.4x the pinned number — so nothing flatters.
+- **End of Year 1 (52 cities, 7,790 sellers, 38,952 buyers): $319/mo pessimistic, $95/mo pinned.**
+  0.70% of the $45,593/mo revenue run rate. Year 1 margin 96.2% -> 95.6%. Year 3 97.2% -> 96.9%.
+  The cost shrinks as a share of the business because revenue grows faster than users.
+- **Break-even: 3.1 extra introductions per city per month**, or 64 free sellers upgrading once.
+  RUL-103's own logic applies — the Revenue Bridge says supply is the one variable that decides the
+  model, and the genie is a supply instrument.
+- **No new ceiling needed.** End-of-Year-1 volume is 10.6% of the existing $100/day platform cap; a
+  user would need 169 wishes in one day to trip the $0.50/day per-user cap. Both already in code.
+- **One-offs:** artwork = 4 Higgsfield credits inside the existing Ultra plan ($0 marginal, blocked
+  on the failed payment); the voice = ONE recorded line of 26 characters, free on ElevenLabs' 10,000
+  char/month tier, ~$6 once for a month of Starter to get the commercial licence. Supplier choice is
+  David's (RUL-009).
+- **Named risk:** the genie is free and unpaid by design, so it is pure cost against the 65% free
+  base. The per-user daily ceiling is the control and it already exists. Distinct from — and two
+  orders of magnitude smaller than — the $2.06/run paid-data class the Free-Tier Risk Model covers.
+
+Deliverable: `genie/Genie Cost & Profit Impact — nice.docx` (Professional Navy house style, 13 tables,
+every figure traced to its source file, the three volume assumptions stated plainly as assumptions).
+
+## 6 Sep 2026 — YouTube publishing requirements settled and written down
+
+David asked what publishing the launch films actually needs and whether a subscription is
+required. Answer researched against YouTube's own help pages and written to
+`YOUTUBE_CHANNEL_SETUP.md` so no session re-researches it:
+
+- Publishing is free. No subscription, no upload fee, no subscriber minimum. The Partner
+  Program thresholds govern earning, not posting; YouTube Premium is a viewer product.
+- Only blocker remains the channel itself (already stated in LAUNCH_SERIES.md) — account
+  creation is David's act and the name/handle are launch positioning (RUL-103(f)).
+- Phone verification (youtube.com/verify) is free and unlocks >15-min uploads, live streaming
+  and custom thumbnails. All ten films are 42-69 s, so it is not needed to post them; custom
+  thumbnails for Shorts are Partner-Program-gated since 24 Jul 2026 and may not be available
+  on a new channel at all. The packs' thumbnail.jpg is therefore optional, not required.
+- Per-upload obligations recorded: compulsory made-for-kids declaration, synthetic-content
+  disclosure for any film with an AI presenter, paid-promotion checkbox only once an affiliate
+  link appears in a description.
+
+## 6 Sep 2026 — TrustSquare YouTube channel created and configured
+
+The one blocker named in LAUNCH_SERIES.md is cleared. Channel is live at
+`youtube.com/@TrustSquareApp` (channel id UCUEzFTL7JgmwMTxtM0QFfGA).
+
+**Brand Account, deliberately.** A personal channel ("david conradie", @davidconradie-m8x) had
+been created first. PROBED via youtube.com/account_advanced: it offered "move channel to a brand
+account", proving it was a personal channel whose name and picture ARE David's Google identity —
+renaming it would have changed his Gmail sender name and photo everywhere, and moving it would
+have dragged his personal subscriptions onto the business channel. So a SEPARATE Brand Account
+channel was created instead; Studio confirms on screen that "changes made to your name and
+picture are only visible on YouTube and not on other Google services". His personal channel is
+untouched.
+
+Configured and saved this session (all PROBED on screen, "Changes published" / "Settings saved"):
+- Name TrustSquare · handle @TrustSquareApp (@trustsquare is taken by a Swiss fintech hub)
+- Description, tracked website link `https://trustsquare.co/?src=yt-channel`, contact
+  support@trustsquare.co (not the personal Gmail)
+- Country South Africa · 10 channel keywords
+- Audience: **not made for kids** set at channel level (COPPA declaration)
+
+NOT done — needs David: the profile picture and banner. `file_upload` is unavailable in this
+session and the Studio Upload buttons open a native Windows file picker, which browser tooling
+cannot drive. Files are built and waiting in `assets/brand-youtube/`.
+
+## 2026-09-06 — the daily watch was switched off, with no record (DW-104)
+
+Found while answering David's question about which queue item was easiest to do next — not by any
+instrument, because the instrument that would have noticed is the one that was off.
+
+**The scheduler reports `trustsquare-daily-watch` enabled = false**, last run 5 Sep 04:33Z. The
+register's newest pass is 5 Sep, so it ran yesterday and was disabled some time after. Nothing in
+RULINGS.md, OPEN_LOOPS.md, the changelog or the status files records a decision to stop it.
+
+That is the single consolidated monitor: it runs every check daily, maintains the watch register,
+closes items on their own re-passing evidence, and reports the real issues. While it is off, nothing
+sweeps, nothing closes, and a new fault waits for a human to notice.
+
+**It also made something we told David false.** Earlier in the same session he was told *"your morning
+watch runs the full board on its own schedule"* — offered as reassurance when a full board run would not
+finish in the sandbox. That was RECALLED, not probed, and it was wrong. This is the
+READ-wearing-a-PROBE's-colour fault the evidence ladder exists to prevent, made about the very
+instrument that enforces the evidence ladder.
+
+**Re-enabled the same session**, and reported to David in the same message so he can reverse it if the
+silence was deliberate. Restoring a monitor to its documented schedule is CTO lane (RUL-037): no money,
+no deletion, no sending, no lockout risk, and one click to undo.
+
+**Residual, stated because it is the real gap.** Nothing asserts that the scheduled tasks which matter
+are *enabled*. The register is maintained BY the watch, so a watch that is off cannot file its own
+absence — the same circularity as an alarm riding the transport it monitors (DW-097, yesterday). A
+liveness check for the schedule itself belongs in the ledger. It is not written yet.
+
+## 2026-09-06 - The ten films get a posting plan, and a way to tell if it worked (VIDEO-LAUNCH-1, CAMPAIGN-SRC-1)
+
+David asked what the plan is for launching the videos against the onboarding goal. There was not
+one: RUL-103 (5 Sep) had found ten finished 4K films unpublished and set the channel order, and a
+session had packaged film 01 the same night, but nine films had no package, nothing was scheduled,
+and -- the part that mattered -- **nothing could have been measured**.
+
+**The measurement fault, found by reading the code.** ms.js captured `?src=` and fired the
+`landed` beacon inside `if(sp.get('magic')==='1')`. That gate is the invite link. A person
+arriving from a YouTube Short carries a src but no magic, so the whole block skipped them: the
+funnel would have shown nothing, and "did YouTube work" would have been answered by opinion.
+RUL-096(b) scores the goal by probes that must agree, never by self-report -- so an unmeasurable
+channel is not a channel, it is a story. **CAMPAIGN-SRC-1**: a public arrival carrying `?src=` now
+records the source and beacons once. `magicLink.active` stays false -- no routing, flow or UI
+change, and `cat` is deliberately not set, because pre-selecting a category for a stranger is a
+product change rather than measurement and should wait for evidence.
+
+**The packages.** `scripts/youtube_pack_build.py` (new, reusable) builds the upload package for
+each film: three titles at 60 characters or under, a description with beats read off a frame strip
+of the finished cut, 14 tags, a pinned comment, an end-screen line, and a 1080x1920 cover. Nine
+built; film 01's hand-built package retro-fitted with its tracked link. Two faults caught by
+looking at the output rather than trusting it: eleven titles ran 61-68 characters (fixed), and
+ffmpeg drawtext cropped five covers because it cannot measure text -- the cover is now drawn with
+PIL, which can, and auto-fits (verified by eye at thumbnail size).
+
+**Every link is tracked.** `https://trustsquare.co/?src=yt-05-car` and so on, one tag per film, so
+`GET /onboard/funnel?days=7` answers per film: how many landed, how many went further.
+
+**QC, all ten (PROBED).** 2160x3840 h264 + aac 44.1 kHz stereo, 42-69 s, mean volume -20.8 to
+-21.7 dB with peaks near 0, no mid-film black. Six fade to black over the last ~0.9 s, four end
+hard -- cosmetic, nothing blocks posting.
+
+**The schedule** is in LAUNCH_SERIES.md: two a week, Tuesday and Friday 18:00 SAST, strongest hook
+first, the matric study-plan film pulled early because "six weeks to finals" only lands before
+finals. That empties the shelf by 9 Oct, three weeks inside the 31 Oct goal date -- deliberate,
+because a film posted in the last fortnight cannot compound. The earlier "one a week" line was a
+session's editorial, not David's ruling; ten weekly films would have run to 10 Nov, past the goal.
+
+**What is NOT done, and it is the only thing:** there is no YouTube channel on record anywhere on
+disk, and the connector registry has no YouTube connector (searched today), so posting cannot be
+automated even in principle. Creating the account is David's act; the channel's name, handle and
+positioning are launch scope, his under RUL-103(f).
+
+Ledger: **RG-0301** LOCKED -- the app records a campaign src on a public arrival, and no upload
+package ever ships a bare trustsquare.co link. Same family as RG-0299: two lists that must agree,
+failing silently when they drift.
+
+## 2026-09-06 - The films read in dollars as well as rand (USD-DUAL-1)
+
+David, same day as the launch plan: *"when we created these examples our target group were South
+Africa, for Youtube our target group is global. Can you change all references to Rand to rather
+show Dollars? I don't want to do it in Higgsfield as that will be much too complicated."*
+
+**Measured before changing anything, because the answer depended on it.** All ten films were
+transcribed (faster-whisper). **Three speak a rand amount out loud** — 01 "twenty-four thousand
+rand for one card", 08 "under a thousand rand", 10 "is R4,500 fair" and again in its narration.
+Those lines are inside lip-synced clips; changing them means regenerating clips, which is the
+Higgsfield work David ruled out. So a straight *replacement* of rand with dollars would have made
+the picture contradict the soundtrack in three of ten films. That is the fact that decided the
+approach, and it was only knowable by listening.
+
+**Put to David as one question with the cost of each answer. He chose SHOW BOTH.**
+
+**What changed (`scripts/usd_dual_patch.py`, new and reusable):**
+- The input screen of six films now reads `R420,000 - $25,400` and equivalents. That field is
+  static for its whole window, so the patch is drawn in the insert's own DejaVu Sans on its own
+  #F2F5FC field colour, inside the field border - it reads as native, verified by eye at full res.
+- The report screen scrolls rand for ~10 s and cannot be re-typed without rebuilding the film, so
+  a line sits in the empty navy band under the phone: `prices in rand - $1 = R16.5`. Every figure
+  on screen then converts. Placed per film against a measured clean-navy band, never over content.
+- Audio is stream-copied. **Decoded audio of every new cut is byte-identical to its master** - the
+  proof that only pixels moved and no seam entered films that took three sessions to finish.
+- Rate R16.52 = $1, which is the rate film 01's own report already prints: the app shows both
+  currencies in its reports, so the films now match the product instead of contradicting it.
+- Film 01 needed nothing (its report already prints R and $ with the rate). Film 09 has no money
+  on screen at all. Both are exempt BY NAME in the ledger so a later session cannot read their
+  absence as a gap.
+
+**Packaging:** all ten packages are now in dollars, the ZA-narrow search tags were broadened (the
+genuinely South African ones - Kruger, CAPS, matric, the D7 visa - stay), film 01 was folded into
+`youtube_pack_build.py` so all ten rebuild from one place, and every package's first line now names
+the exact file to upload.
+
+**Two faults caught by looking rather than trusting:** preset "fast" overran a tool call and left a
+truncated 4K file (measured: 10 s of 2160x3840 costs ~29 s of wall clock here, so the encode is
+pinned to veryfast, superfast for the 69 s film); and a first attempt at the report line was
+cropped by the phone on three films until the clean-navy band was measured per film.
+
+Ledger: **RG-0302** LOCKED - every film with money on screen has a dual-currency cut, and every
+upload package names it. Same silent-drift family as RG-0299/RG-0301: a change made to the artefact
+but not to the instructions that point at it.
+
+**Also today:** a scheduled check now watches `VIDEO_SIGNOFF.md` and stays silent every morning
+until it says READY, then reminds David once to sort YouTube access. He asked to be reminded when
+we are happy with the videos; nobody has to remember.
+
+## 2026-09-06 — SUPPORT-FACTS-1 + REF-HONESTY-1: the support AI was answering a money question from a guess
+
+**Found by reading the reply we actually sent.** TS-0039 asked: *"how do I contact a seller about a
+listing I am interested in? I cannot find a phone number anywhere on the listing page."* The AI
+answered, and yesterday's record called that answer *"correct product behaviour"*. Half of it was.
+
+**The half that was right.** It withheld the phone number and explained that sellers are anonymous.
+That is the product working, and the listing page agrees: the detail screen carries a sticky
+`Request Introduction · 1T on acceptance` button and a lock block reading *"Identity protected until
+introduction"*. Nothing is missing from that page.
+
+**The half that was wrong, and it was wrong about money.** It told the buyer to *"follow the prompts
+to spend Tuppence"*. The app's own modal, two taps away, says **"1 Tuppence ($2) deducted only on
+seller acceptance"** and **"If seller declines or ignores, you pay nothing"** — and EULA §5.4 says the
+same in law: the Tuppence is HELD on request, BURNED only on delivery. So a buyer asking how to make
+contact was told the charge is unconditional when it is not.
+
+**It is wrong in our own favour, which is the direction that matters.** A buyer who believes they
+must pay before anyone answers may simply not send the request, and we would never hear about it.
+The pricing is the kindest thing about this product and the robot made it sound worse than it is.
+
+**Why it guessed: the customer lane had no facts.** OUTREACH-TRIAGE-1 gave the *outreach* lane a
+market-facts block and a set of universal facts on 1 Sep. The **customer** lane — the one answering
+actual customers — got one sentence of context and was told to answer support questions. An AI with
+no facts does not decline; it produces something fluent. Fixed: the customer prompt now carries the
+introduction mechanics (anonymity by design, the button's real name, hold-not-charge, release on
+decline or 48-hour silence, free listing, the withdraw route), a standing instruction never to tell
+a buyer they must spend Tuppence to make contact, and an order to set `auto_safe=false` rather than
+invent a fact that is not there. Asserted by **RG-0303 (LOCKED)**.
+
+**Second fault in the same email — we promised a fix to someone who reported nothing.** Every
+auto-sent reply ended with *"your report is logged in our fix queue. If our fix needs anything from
+you, we'll write to this address."* TS-0039 filed no report. Nothing was broken, no fix was queued,
+and nobody was ever going to write.
+
+**The reasoning was already five days old and one branch away.** OUTREACH-TRIAGE-1 carved this exact
+footer out of the outreach lane on 1 Sep with the comment *"a tutor asking whether we cover
+Johannesburg has not filed a fault"*. A customer asking how introductions work has not filed one
+either — it was written as a special case for one lane instead of as the rule. It also manufactures
+the load RUL-087 exists to prevent: a promised fix invites the email asking what happened to it.
+
+Fixed by `_ref_footer()`: the classifier now returns `is_report`, true only when someone reports
+something broken, and the footer picks its wording. The reference is kept either way — MAINT-B1
+promised a *reference*, not a fix pledge. **Fails safe**: no signal means the neutral line, because
+its failure mode is being plain and the other's is a lie. The bare acknowledgement is covered too,
+since a held legal complaint is not a fix-queue item. Asserted by **RG-0304 (LOCKED)**.
+
+**Ledger note, recorded rather than tidied away.** RG-0303's first cut failed on its own fix: it
+read raw source, where a sentence spanning two adjacent string literals is not one string. A false
+RED costs a session exactly what a missed one does. The assertion now joins the literals before
+checking, and the entry says so.
+
+**The reading lesson.** Yesterday's proof read the phone-number half, found it right, and logged the
+whole reply as correct. One half of an answer being right is not evidence about the other half —
+especially when the other half states a price.
+
+## 2026-09-06 — SOURCE-QUALITY-1 + DOMAIN-BOUNCE-RELEASE-1 (the wave can go again, from the lanes that work)
+
+**Asked:** when does the next email go out. **First honest answer:** Wednesday 9 Sep, because
+DOMAIN-BOUNCE-1 (shipped this morning) reads 6.61% over its rolling window and holds every wave until
+2 and 5 Sep age out. Three days lost punishing a pool for bounces from addresses the clean had already
+quarantined. Two fixes, and one near-miss worth recording.
+
+**DOMAIN-BOUNCE-RELEASE-1 — the domain twin of STOP-LOSS-RELEASE-1.** `domain_bounce_state()` now honours
+`defaults.domain_bounce_release_at`: the window start moves to the clean, so the gate judges only what we
+send from the cleaned list. It never lowers the 5% limit — once 50 post-clean sends exist it rules again
+on fresh evidence, and blocks just as hard. `clean_city_list.py` stamps it; today's stamp is back-dated to
+the 19:16 SAST run that predates the code (that clean genuinely happened: `rejected_invalid` 256 → 267,
+city latches released, DB and policy backups on disk).
+
+**SOURCE-QUALITY-1 — and the rule that was written first and thrown away.** The quality gate was drafted
+as `mx_status='mx_ok'`. Probing the pool before trusting it killed it:
+
+| source | sent | bounced | rate | mx state | the mx rule would have… |
+|---|---|---|---|---|---|
+| register:rrca | 191 | 0 | **0.0%** | unchecked | **BLOCKED** (712 in pool) |
+| national key accounts | 19 | 0 | 0.0% | unchecked | **BLOCKED** |
+| club:agn | 24 | 1 | 4.2% | unchecked | **BLOCKED** (342 in pool) |
+| google_maps | 282 | 22 | 7.8% | mx_ok | allowed |
+| openstreetmap | 119 | 13 | 10.9% | mx_ok | allowed |
+| teachers_trainers:site | 37 | 6 | 16.2% | mx_ok | allowed |
+
+**MX proves a DOMAIN runs a mail server. It does not prove a MAILBOX exists** — which is exactly what our
+8.8% is made of. The rule would have blocked the 1,595 best addresses we own (712 rrca + 342 agn + 266
+usatf-ne + 199 wpa + 76 usatf-pacific) and waved through the worst. Replaced with a per-source gate
+measured off our own send history: a source with ≥ `source_min_sample` sends **and** ≥
+`bounce_stop_min_bounces` bounces **and** a rate over the limit is held; an unmeasured source is allowed,
+so a new register lane can prove itself.
+
+**The bounce floor exists for the same reason the city stop-loss has one.** Without it, 2 bounces in 20
+sends reads as 10% and holds `teachers_trainers:dbe_emis` — 1,114 addresses, the largest teacher lane we
+own — on no evidence. Two bounces is not a rate, for a source exactly as for a city.
+
+**Result:** 6 sources held (site 16.2%, osm 10.9%, adventures 11.8%, teachers:osm 9.8%, google_maps 7.8%,
+us_university_tutors 5.8%), every register lane through, **2,872 of 4,125 retained (70%)**. Plan verified:
+the only remaining blocks are the daily volume cap and the one-day city gap, both of which clear at
+midnight. **The wave goes 00:10 SAST Mon 7 Sep**, drawing Sports Clubs from the 0%-bounce register lanes.
+**RG-0314 LOCKED.**
+
+## 2026-09-06 — SHIP-LANE-PROVEN-1: the publish credential was never needed (D15 closed, RG-0300)
+
+David: *"lets fix this — one access token so I can publish code without routing everything through
+your PC."*
+
+**Fixed by not creating it.** The queue item was written 30 Aug and was right then. It was overtaken
+three days later by the deploy relay (AUTODEPLOY-AGENT-1, 3 Sep): the sandbox pushes over SSH to the
+server's own checkout, and **the server** pushes to GitHub with the credential it already holds. No
+token in the sandbox, and David's PC is not in the loop.
+
+**Proved rather than argued.** Two commits sitting unpushed went `b099067..4a79b3c  claude-relay ->
+main` straight from the sandbox, with no token file present — `.secrets/github_push_token.txt` does not
+exist and never did. Six deploys rode the same lane the day before. The server authenticates to GitHub
+as a writer over its own key.
+
+**Why it was not minted anyway, since it was offered.** A second write credential to the code repo,
+living in a file, expiring every 90 days, is a standing chore and a standing risk — and 5 Sep was spent
+removing exactly that class of thing: a hand-typed heartbeat date, a hand-remembered firewall flag, five
+hand-maintained copies of one script. The only window a token would cover is SSH being down while
+David's PC is awake, and the host queue's `git_push` already covers that window — while the SSH lockout
+class itself became self-healing on 5 Sep (RG-0274). Redundancy that overlaps an existing path is not
+free.
+
+**Why this is a ledger entry and not just a closed queue item.** A capability nobody asserts is one the
+next session asks for again — which is exactly what happened here. **RG-0300** now checks on every run
+that the publish lane is live, so "Claude cannot ship" can never be re-derived from memory.
+
+**Two faults found and fixed on the way.**
+
+1. **My own probe could hang the entire board.** RG-0300's first cut called `load_sandbox_ssh.sh` with
+   output captured. That loader starts an ssh ControlMaster in the background; the master inherits the
+   captured pipes, and `subprocess.run` waits on the pipes forever — the timeout kills the child, not
+   the pipe. The board sat at two lines for fifteen minutes. Rewritten to run ssh directly with stdin
+   closed and stderr discarded: **4.2 seconds**. A probe that can stall the instrument is worse than one
+   that reports UNVERIFIED.
+2. **The queue checker had an unsatisfiable rule.** RG-0199 failed any item marked DONE that carried a
+   machine-checkable verification — but not marking it left it counted as still open. Four items had
+   been sitting in that contradiction. It now checks whether the named ledger entry exists and is
+   LOCKED; if that entry ever rots, *it* goes red, which is where the failure belongs. Two of the four
+   cleared immediately; the remaining two are claiming done against entries that are still open, which
+   is the rule working correctly.
+
+**David's queue is now four items**, all genuinely his: two that spend money, one commercial timing
+call, and two Cloudflare tokens to delete.
+
+## 2026-09-06 — ROTATION-DISCOVERY-1: a rotation now knows where the copies are (DW-107, RG-0308)
+
+David: *"rotation is one of those things i battle with as you know well... it takes me some times many
+hours to fix rotations."*
+
+**Where the hours actually go.** Minting the new value at the vendor is five minutes, and it is
+irreducibly his. The hours go on a question nobody could answer: **which places hold a copy?** That has
+been answered from a hand-maintained table with **one row** in it — and it was wrong twice, both times
+silently, both times found only when something broke:
+
+- the Resend alert key, orphaned for six days (DW-076);
+- the database-backup credentials, orphaned for two weeks (DW-105, found this morning).
+
+**`scripts/secret_consumers.py`** replaces remembering with looking. For each credential name it searches
+every place a copy is known to be able to live — systemd drop-ins, `/etc/environment`,
+`/etc/marketsquare`, both apps' `.env` files, the crontabs, the cron scripts — and reports where the name
+appears. `ROTATE_SECRETS.bat` runs it as **step 0**, before anything is touched, and pauses if copies
+exist the register does not know about.
+
+**It never prints a value — by construction, not by care.** The item that prompted this tool exists
+because a masking command was hand-written and got it wrong, putting two live keys on screen (DW-106).
+A tool that cannot leak beats a habit of being careful.
+
+**First run, and it earned its keep immediately: 13 of 22 credentials have copies the register does not
+list.** `RESEND_API_KEY` has a **third** copy in CityLauncher's `.env` that nobody knew about.
+`LAUNCH_CODE_SECRET` is in five places. Every one of those is a rotation that would half-succeed and go
+quiet.
+
+Tracked by **RG-0308**, deliberately OPEN: it fails today with the count and closes when a run reports no
+surprises. The register must catch up with reality, not the reverse.
+
+**Two bugs in my own assertion, both the same shape — reporting a number I had not actually read.** It
+first re-derived the count from the layout of the tool's output and said "2"; then read a truncated tail
+and said "1"; the tool said 13. It now runs the tool directly and reads the tool's own count. A board
+that is read for its numbers may not invent them.
+
+**Also surfaced, not fixed, because deletions are David's:** stale `*.bak` copies of `secrets.env` are
+sitting on the server from the 22 August rotation — dead files holding live-shaped values.
+
+## 2026-09-06 — Maintenance loop: quiet day — empty queue, green board, nothing to fix
+
+**Fault queue: EMPTY.** Shadow agent run 2026-09-06T05:41:46Z — 0 new faults, 0 acted; 40 rows
+total (26 verified, 12 closed, 2 duplicate). The five rows added since yesterday (TS-0036 … TS-0040)
+are all internal end-to-end tests of the repaired support form and the AI support lane
+(SUPPORT-FORM-REAL-1 / SELF-REPLY-GUARD-1 / SUPPORT-AI-LANE-1, 5 Sep), each closed the same hour by
+the session that filed it — not customer reports. Heartbeat posted and read back from
+`/dashboard/maint` (`received_at 2026-09-06T05:42:06Z`, brain KEYED:anthropic, shadow, kill switch
+OFF). Email lane census: 24 total, 6 held in 30d (legal 1 · other 5 · spam 1 · support 7) — counts
+only, not a fix lane. No escalations in 24h, so `escalation_brief.py` wrote no brief.
+
+**Board: GREEN before and after.** 292 entries · 273 holding · 0 REGRESSED · 19 open · 0 ready to
+lock · 0 UNVERIFIED. Yesterday's one-off RG-0229 false red (DW-093 class, stdout capture under load)
+did not recur — HOLDING on a clean run today. `rulings_check.py` 97 rulings, 0 FAIL, 6 WARN
+(RUL-093/094/095/098/099/100 carry no reflection assertions — notes, not guarantees; unchanged).
+
+**Nothing was fixed, so no fault row moved and no ledger entry was added** — the AIK-VERIFY-1 rule
+cuts both ways: no fix, no entry. The 19 open entries are all OPEN by design (pending builds,
+unmeasured lanes, David-reserved credentials/jurisdiction) — none is in the maintenance lane's
+Path A remit. The single open watch item, DW-087 (7 LOW static findings in `scripts/` and
+`migrations/`), is addressed to the Monday deep-scan lane by its own next_action and was left there.
+
+**Method note.** The full board again exceeds the sandbox's ~180 s per-call cap; this run used the
+repo's own `scripts/ledger_resume.py` (checkpointed slices, `--reset` then one continuation) rather
+than a scratch driver — it calls `regression_ledger.run()` one entry at a time, so there is still one
+source of truth for verdicts. Nightly TSL log shows 06 Sep 05:45 IN SYNC — all 19 tracked files match
+live. Worktree before this commit was clean apart from two host-written logs.
+
+Committed, not pushed, not deployed — NIGHTLY-SHIP-1 carries committed work through the gates.
+
+## 2026-09-06 — Goal run 5, part 2: a render test wrote the prospect database, the club card re-probed, session counter (RENDER-TEST-NOWRITE-1)
+
+**Tooling fault (02:00):** the ledger's first run of the new send-path test
+(`CityLauncher/tests/test_render_intl.py`, RG-0298) inherited `LAUNCH_SPECIAL_ENABLED=1` from its
+environment, so `render()` → `_apply_launch_special()` → `launch_codes.get_or_create_code()`
+COMMITTED to the local `prospects.db` from the sandbox and left a hot rollback journal — the 31 Aug
+class; the DB was unreadable from the sandbox until a host-side open rolled it back (queued:
+`run_py CityLauncher\scripts\club_import.py`, allowlisted, opens read-write, imports nothing new).
+Fix at the class: the test forces the launch special OFF before importing `emailer` and refuses to
+run if it is somehow on; RG-0298 asserts that line stays; the ledger runs the test through
+`_harness()` (RG-0187 had flagged the bare `subprocess.run`). Re-run: RG-0298 green with 34
+assertions, and its observed leg reads the post-fix wave log clean.
+
+**Wave outcome, read off `logs/launchday_06Sun09_2026131.log`:** 203 US club letters sent across
+22 states (Northern California → Maryland), 0 crashes; DAILY-CAP-1 then held the day at 257 and the
+remaining 29 states dry-ran — they go at Monday's 00:10 wave. USATF New England imported host-side
+at 01:55: +266, 'Sports Clubs' 1,834 rows / 1,550 distinct (US 1,257, ZA 577), 239 emailed.
+Dashboard club card re-probed to those numbers (RG-0287). `session_counter.py` recomputed to 190
+after the new fragments; RG-0154 reads DEPLOY DEBT until this ship carries it.
+
+## 2026-09-06 - First video published, and "global" replaces "South African" (RUL-104)
+
+David created the TrustSquare YouTube channel and asked Claude to set up the first upload. Done in
+his browser: film 01 (collectables), title, description, 14 tags, audience set to not-made-for-kids,
+and **the AI-use disclosure set to YES** - the films use AI-generated people who look real, which is
+exactly what YouTube's altered-content disclosure is for, so it was the honest setting and it was
+taken without asking. Visibility set to Public; the Publish click itself is David's, as publishing
+public content always is.
+
+**Mid-upload, David caught a positioning error** in the description - "TrustSquare is a South African
+marketplace" - and ruled it should say **global**. RUL-104. Corrected in the live description and in
+all ten upload packages the same minute.
+
+**Grepping for the phrase we had just corrected found something worse.** Seven AI system prompts in
+`bea_main.py` tell the model *"TrustSquare, a South African marketplace"*: the pricing analyst, the
+local market expert, the advert slot writer, the one-sentence seller helper and two Trust Score
+coaches. Every US club we are emailing nightly lands on an app whose pricing analyst has been told
+the market is South African. That is behaviour, not wording, and the honest fix threads the
+listing's own country through seven call sites - which the app already knows (ADV_COUNTRY_CURRENCY,
+RG-0001). Logged as **RG-0307 OPEN** rather than half-done in a session that was publishing a video.
+
+**Two limits hit, recorded so the next session does not rediscover them:**
+- `file_upload` is unavailable in this session, and the video is 61 MB against a 10 MB cap either
+  way, so the file-picker steps (the video, and the custom cover image) are David's to click. Every
+  other field can be filled by Claude.
+- Pressing Escape inside the YouTube upload dialog closes the whole dialog. It saves a draft, so
+  nothing was lost, but do not use Escape to dismiss the hashtag autocomplete - click a neutral spot.
+
+Still open on the video itself: the custom cover image (needs the file picker) and clickable
+external links, which YouTube gates behind a one-off channel verification.
+
+## 2026-09-06 - The first TrustSquare video is live
+
+**https://youtube.com/shorts/oULMIsCAPnk** - film 01, collectables, 44 s, published 6 Sep 2026.
+Title "Six old Magic cards. $2,574. Priced and listed in a minute". Nine months of finished films
+sat unpublished; the first one is out.
+
+The channel was created by David the same afternoon (RUL-103f - the channel and its positioning were
+always his). Claude filled the whole upload form in his browser and stopped at Publish, which is his
+click and always will be for public content.
+
+Open on this video and every one after it: the custom cover image needs the Windows file picker
+(Claude cannot drive it), and external links stay unclickable until YouTube's one-off channel
+verification - until that is done the tracked link is plain text and the funnel under-counts.
+
+The measurement now has something to measure. `GET /onboard/funnel?days=7` carries
+`yt-01-collectables` the moment anyone arrives from it.
+
+## 2026-09-06 — DOMAIN-BOUNCE-1 (the email stop-loss now watches the sending domain)
+
+**Found during the viability review David asked for, by probing rather than reading.** Every day since
+the soft launch, the outreach lane exceeded its own 5% hard-bounce limit and nothing stopped it:
+29 Aug 5.6% · 1 Sep 7.2% · 2 Sep 8.5% · 3 Sep 15.3% · 5 Sep 7.8% — **86 bounces on 981 sends (8.8%)**.
+
+**Why no gate fired.** `gate_check`'s stop-loss judges ONE CITY'S LAST WAVE. A wave is ~12 sends and
+the floor is 3 bounces, so a city needs 25% in a batch to trip. Reputation, however, is scored on the
+SENDING DOMAIN. This is the identical dimension error `DAILY-CAP-1` corrected for VOLUME on 5 Sep —
+its own comment says reputation "depends on TOTAL volume from our domain per day, not on how it is
+split between cities" — left uncorrected for BOUNCES one day later.
+
+**Fixed.** New `domain_bounce_state()` in `emailer/wave_runner.py` reads a rolling all-cities window;
+`gate_check` blocks on it against the same `bounce_stop_pct`. New defaults in `waves_policy.json`:
+`domain_bounce_window_days` (3) and `domain_bounce_min_sample` (50, so a tiny sample cannot latch).
+The city-scoped stop-loss is untouched — this is an additional gate, not a replacement.
+
+**A second fault found while verifying it.** The first cut read 0.0% because it counted `email_events`
+bounce rows, and **the sending machine's copy of `prospects.db` holds 11 of those against the server's
+86** — while the per-prospect `bounced_at` flag had synced 66. Sends sync cleanly (981 both sides);
+bounce EVENTS do not. The gate now counts off `bounced_at`, which is also what `wave_history` trusts.
+Asserted, so an event-log count cannot creep back in.
+
+**VERIFIED:** `wave_runner.py --plan` blocks every armed city —
+`DOMAIN-BOUNCE-1: domain hard-bounce 5.47% over last 3d (24/439) > 5.0% -- clean the pool before
+sending again`. Sending stays held until the pool is cleaned. **RG-0312 LOCKED.**
+
+## 2026-09-06 — DMARC reports reviewed, and the blind sending lane closed (RG-0305 LOCKED)
+
+**Trigger.** Microsoft DMARC aggregate report received 03:21 SAST for `learn.trustsquare.co`.
+David asked whether it needed an action.
+
+**What the reports actually say** (PROBED — attachments fetched, decompressed and parsed
+in-session, not inferred from the covering email):
+
+- 5–6 Sep window: 3 messages, all Amazon SES / Resend (54.240.48.48, 54.240.11.35,
+  54.240.48.65) to `ucedaschool.edu`, `pace.edu`, `nysid.edu`. DKIM (`resend` +
+  `amazonses.com` selectors) **pass**, SPF on `send.learn.trustsquare.co` **pass**,
+  disposition `none`.
+- 3–4 Sep window: 11 records / 11 messages. 10 full pass. **1 fail** — source
+  35.174.145.124 (AWS EC2, not SES) to `lbc.edu`, both DKIM signatures broken, SPF
+  softfail, envelope-from still `send.learn.trustsquare.co`. Reading: a **forwarder or
+  inbound scanner re-injecting our own message**, not a spoof — a spoofer carries no SES
+  DKIM header and does not reuse our envelope-from. Disposition `none`; nothing affected.
+
+**No action was needed on the `.edu` lane.** LEARN-LANE-1 (RUL-059d) authenticates
+correctly in the wild.
+
+**The finding was what the reports revealed by their ABSENCE.**
+`mail.trustsquare.co` — the sender for every non-`.edu` outreach letter
+(`emailer.py _sender_identity()`), and the busier lane — published **no `_dmarc` record
+of its own**. It inherited the parent zone `trustsquare.co`, whose `rua` is
+`rua@dmarc.brevo.com`. Brevo received those aggregate reports; we never did.
+
+**FIXED, same session.** David logged into Cloudflare and Claude added, via the dashboard:
+
+```
+TXT   _dmarc.mail   v=DMARC1; p=none; rua=mailto:dmarc@trustsquare.co   (TTL auto/300)
+```
+
+Additive and monitor-only: `p=none` blocks nothing, so it cannot cost a delivery.
+VERIFIED live by DoH in the same run — both sending subdomains now report to a mailbox
+we read.
+
+**RG-0305 LOCKED** in `scripts/regression_ledger.py`. It asserts the property as a
+CLASS, not a single record: every outreach sending subdomain must publish its own
+`_dmarc` naming our own `rua`. Any sender added later inherits the parent silently the
+same way `mail.*` did — this entry is what catches it.
+
+**Policy stays `p=none` on both lanes, deliberately.** The forwarder fail above is
+exactly the traffic `p=quarantine` would start eating, and `mail.*` has no report
+history at all yet. Revisit tightening only after several weeks of reports show every
+legitimate path aligning on the busier lane.
+
+**Two tooling lessons paid for here, both written into the entry:**
+
+1. *Resolver negative-caching produces false reds.* Minutes after the record went live,
+   `cloudflare-dns.com` answered FOUND on every probe while `dns.google` answered MISSING
+   on every probe, for a record that was demonstrably published. The first version of the
+   assertion queried one resolver and would have printed a red that was not real, daily,
+   until Google's negative TTL expired. The probe now sweeps three resolvers and passes if
+   any confirms — the fact asserted is "the record is published", and one anycast node's
+   stale negative cache is not evidence against it. Verified stable across three
+   consecutive runs.
+2. *Ledger id collisions under concurrent sessions.* Another session appended
+   RG-0302/0303/0304 while this entry was being written; the id had to be re-taken twice.
+   Resolved per the LOCKED-never-moves rule by re-reading and taking the next free id.
+   The ledger has no fragment-compiler equivalent to `changelog.d/` — worth one if this
+   recurs.
+
+## 2026-09-06 - Captions were the fourth place the currency showed up
+
+David, watching the live video: *"the video subscript still says Rands while the video shows
+Dollars"*. Correct, and it was a place nobody had looked. YouTube auto-captions transcribe the
+SPOKEN words - and the whisper pass earlier the same day had already established that three of the
+ten films say a rand amount out loud (01, 08, 10). The auto-captions also render the brand as
+"truss square".
+
+**What was NOT done, and why:** the caption was not changed to say dollars. Captions are what a deaf
+viewer reads instead of hearing the audio; making them say something that was not said is not a
+translation, it is a fabrication. The rule held even though the ask was David's.
+
+**What was done:** a hand-written English caption track for film 01, published the same minute, with
+the brand name correct and the dollar figure as a bracketed annotation beside the spoken rand
+amount - standard captioning practice. Entered through Studio's **Auto-sync**, which times a pasted
+transcript against the audio, so there was no per-line timing work.
+
+**And made repeatable:** a corrected transcript for ALL TEN films is now written into
+`scripts/youtube_pack_build.py` and emitted in every package's `metadata.md` under "Captions - paste
+this into Subtitles > Auto-sync". Every future upload is a paste, not a discovery. The two other
+films that speak rand (08 weekend, 10 offer) already carry their bracketed conversion.
+
+Four places the currency had to be handled, all now closed: the title and cover, the description,
+the picture inside the film, and the captions.
+
+## 2026-09-06 — the nightly database backup had been dead for two weeks (DW-105, RG-0306)
+
+Found by accident, and the accident is the point. David asked which of his queue items was easiest
+to do next; his screenshot of the Cloudflare token list showed two R2 tokens reading *last used —*;
+pulling that thread reached `/var/log/r2_backup.log`.
+
+**Fifteen consecutive nights of `ERROR: R2 credentials not found in environment — aborting`.** The
+newest database copy anywhere was **30 August**, and even that was incidental — a snapshot a migration
+happens to take, not the backup lane doing its job.
+
+**What made it look fine.** A second job at 03:17 ran nightly and logged START then DONE three seconds
+later. Genuinely successful — and meaningless: it syncs a **July baseline folder that never changes**,
+so the off-site copy was a two-month-old snapshot the entire time. A green that means nothing.
+
+**The cause is a class we have met before.** The 22–23 August rotation deliberately removed these keys
+from the box-wide `/etc/environment` and placed them in the systemd drop-in for the marketsquare
+service. Correct hardening for the app — and it blinded a **cron** job, which reads neither the service
+drop-in nor `/etc/environment`. The app kept working, so nothing looked wrong. That is the same shape as
+DW-076, where the same rotation orphaned the Resend watch key. RG-0201 asserts the rotation refreshes
+every copy listed in SECRETS_REGISTER's table; this consumer was never in the table.
+
+**Fixed in two places.**
+
+1. The job resolves credentials `env → service drop-in → /etc/environment`. No second copy of the
+   secret, no relaxing of the hardening. **Proven by running it under `env -i`, exactly as cron does** —
+   both databases uploaded, and the objects are in the bucket (marketsquare.db 2.9 MB,
+   citylauncher-prospects.db 4.5 MB).
+2. It now publishes `/static/backup_status.json` over plain HTTP, so the backup is observable from
+   outside the machine it protects.
+
+**The actual fix is the second one.** New ledger entry **RG-0306** reads that file every run and goes red
+if the last success is over 48 hours old, if it reports failure, or if it claims success having uploaded
+nothing. The credentials broke in one night; the *silence* lasted two weeks.
+
+**Two bugs in my own fallback, both caught by running it the way cron runs it rather than the way a
+shell does.** systemd writes `Environment="KEY=value"` with the quote around the *whole* assignment, so
+stripping it from the value alone compared `"KEY` with `KEY` and never matched. And the endpoint was
+never in the drop-in at all — only in `/etc/environment` — so two of the three values were still missing
+after the first attempt.
+
+**Separately, and it is mine: I exposed two live credentials (DW-106).** Masking a config file for
+display, my `sed` was wrong and the full R2 access key and secret printed into the session. Scope is
+David's own stored transcript, not a public place, and there is no sign of misuse — but the safe
+assumption after any exposure is that the credential is burned. Rotation is his act; raised as its own
+item rather than buried inside a backup story. The backup lane now reads the drop-in first, so it will
+follow the rotation automatically — and RG-0306 will go red within 48 hours if it does not.
+
+## 2026-09-06 — EMAIL-VARIANT-1 + FUNNEL-READ-1 (the letter can now be tested, and the test can be read)
+
+**David's framing after the viability review:** *"Our best weapon is the running cost which is super
+low, it allows us the freedom of changing and if needed experimenting."* Correct — and that freedom was
+theoretical, because there was no way to run an experiment on the letter and no cheap way to read one.
+Both now exist.
+
+**Why the letter is the right target.** The review measured 981 sent, **20.8% human opens** (healthy —
+subject line and deliverability are fine) and **0.45% human clicks**. People read it and do nothing. The
+bottleneck is the ASK, and the current ask is large: fill a listing form, add subjects, rate, bio and up
+to ten photos, accept terms, create an account — then consider a $20/mo Pro subscription and a Founders
+Badge. That is asked of a stranger, for a marketplace with no buyers on it yet.
+
+**EMAIL-VARIANT-1 — A/B on the letter.** `active_variants()` reads arms per category from
+`waves_policy.json` (`defaults.email_variants`); absent or single-armed means no split, so nothing
+changes for any category nobody has armed. `pick_variant()` assigns deterministically so a re-send never
+moves someone between arms and a dry-run shows exactly what a real run sends. `load_template(cat, arm)`
+resolves `<base>.<arm>.html` and **falls back to the base letter when the file is absent** — arming a
+category can never stop a wave. The arm rides the EXISTING `?src=` tag (WAVE-TAG-1's one builder), so a
+variant's signups attribute themselves with no app change at all, and is recorded on the send event so
+opens and clicks split by arm even with zero signups — which at 0.45% is the case we will mostly read.
+
+**The bug this nearly shipped with, caught in test the same hour.** `arms[pid % len(arms)]` put four
+consecutive Durban prospects (2127, 2129, 2131, 2133) all in arm 'b' — the scraped ids are all odd. A
+two-arm split on a modulus of structured ids is not a split: it sends everyone one letter and then
+reports a confident, meaningless result. Now hashed. Verified **294/306 across 600 real rows**, stable
+per prospect. Asserted, so the modulus cannot come back.
+
+**FUNNEL-READ-1 — `emailer/funnel_report.py`.** The funnel in one command, graded, with `--by category
+| city | country | variant` and `--server`. It enforces the evidence rules the review had to discover by
+hand: bounces off `prospects.bounced_at` (never `email_events` — RG-0312), opens and clicks from
+`click_register`'s **human** counts with the raw numbers printed beside them so the gap stays visible,
+and a guard that refuses to name a winner under ~30 human clicks per arm. Reading the live board today:
+976 sent · 71 undelivered · 139 human opens (15.4%) · **4 human clicks (0.44%)** · 62 raw click events.
+
+**`--server` exists because the local mirror lies.** `pull_from_server.py` brings verdicts down but not
+engagement: the local copy reported **48 human opens and 2 human clicks where the server held 186 and 4**.
+An experiment judged on the mirror is judged on a quarter of its evidence.
+
+**First experiment armed:** Tutors + teachers_trainers. Arm 'b' (`tutors_outreach.b.html`) shortens the
+ask to *"I have written your listing — check whether it is right"*, removes the $20 Pro and Founders
+Badge money ask from a first cold email entirely, and says plainly that the marketplace launched a week
+ago and is thin. Same visual shell as arm 'a', so the test measures the ask and not the design. It goes
+out with the next wave — which is currently held by the domain bounce gate until the address list is
+cleaned. **RG-0313 LOCKED.**
+
 ## 2026-09-06 — Goal run 5 (Sunday 01:00): the first US club wave crashed to zero and nobody saw it; club contacts were landing on the wrong screen; a third US register (CLUB-INTL-1, WAVE-CRASH-VISIBLE-1, INVITE-CAT-2, USATFNE-1)
 
 Model: Fable 5.1, as David asked (RUL-096h). The number is **0** (probe A 0, probe B 0; the
