@@ -19879,5 +19879,76 @@ def rg_retired_tiers_gone():
     return out
 
 
+@entry("RG-0336", "The agency tier FOLLOWS verification and carries multi-city reach -- it is a "
+       "derived property with one writer, never a stamp taken once at invite time",
+       LOCKED, fixed_on="2026-09-07",
+       scope="bea_main.py (_PAID_TIERS, _sync_agency_member_tiers, POST /agencies/{id}/verify, "
+             "invite_agent) + migrations/036_agency_tier_resync.py. ALL markets. CLASS: any "
+             "entitlement stamped onto a row at the moment a CONDITION happens to be true, with "
+             "nothing re-reading it when the condition changes. Static source assertions, so it "
+             "runs anywhere the repo is.",
+       ref="AGENCY-REACH-1 (7 Sep 2026, RUL-108). David: 'Agencies should get national reach' and, "
+           "on whether to bound it by country, 'let sellers reach abroad'. Granting it was the easy "
+           "half. THE FINDING was that it would have landed on an EMPTY SET: AGENCY-TIER-1 (3 Aug) "
+           "declared that 'a member of a VERIFIED agency now carries it', but only ever stamped the "
+           "tier inside invite_agent, so the sentence held only for agents invited AFTER their "
+           "agency was verified. PROBED on the live database 7 Sep: 8 agencies, ALL verified, 25 "
+           "members between them, and NOT ONE carried `agency` -- 8 on free, 17 on starter. The "
+           "declared benefit had zero holders for five weeks and no instrument said so, because "
+           "nothing asserted the RELATIONSHIP between the flag and the tier; both halves were "
+           "individually fine. Also fixed here: `agencies.verified` could previously only be set at "
+           "INSERT (1 by create_agency, 0 by agency_wave_prep), so verification was one-way and "
+           "invisible -- POST /agencies/{id}/verify now moves it in both directions and re-syncs "
+           "members through the SAME writer the invite path uses, so invite-then-verify and "
+           "verify-then-invite end in the same place. PROVEN BEFORE SHIPPING on a throwaway replica "
+           "(free+starter lift to agency, un-verify returns them to starter, a seat_paid member and "
+           "one with a live billing_period_end are untouched, second run moves 0) and the catch-up "
+           "migration was dry-run AND applied against a COPY of the real live database: 25 moved, "
+           "re-run moved 0. Safe to grant free reach because agency status is never self-served -- "
+           "every agency route is ops-key gated. NOTE the deliberate absence: no country boundary "
+           "is asserted anywhere, because RUL-108 ruled sellers may reach abroad.")
+def rg_agency_tier_follows_verification():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "bea_main.py not readable here -- static entry, skipped outside the repo")]
+    out = []
+    k = src.find("_PAID_TIERS =")
+    seg = src[k:src.find("}", k) + 1] if k >= 0 else ""
+    if '"agency"' not in seg:
+        out.append((FAIL, "_PAID_TIERS no longer contains 'agency' -- verified agencies have lost "
+                          "the multi-city reach RUL-108 granted them"))
+    if "def _sync_agency_member_tiers(" not in src:
+        out.append((FAIL, "_sync_agency_member_tiers() is gone -- the agency tier is a stamp again, "
+                          "so verifying an agency no longer reaches its existing members"))
+    if '@app.post("/agencies/{agency_id}/verify")' not in src:
+        out.append((FAIL, "POST /agencies/{id}/verify is gone -- verification is one-way again and "
+                          "an un-verified agency keeps free reach"))
+    # the paying-member guard is the part that makes the writer safe to call from anywhere
+    i = src.find("def _sync_agency_member_tiers(")
+    body = src[i:i + 2600] if i >= 0 else ""
+    if 'seat_paid' not in body or 'billing_period_end' not in body:
+        out.append((FAIL, "the tier sync no longer skips paying members (seat_paid / "
+                          "billing_period_end) -- it can now overwrite a tier somebody bought"))
+    # invite must NOT carry its own second copy of the rule (the AGENCY-TIER-1 shape)
+    j = src.find("def invite_agent(")
+    inv = src[j:j + 2600] if j >= 0 else ""
+    if '_tier = "agency" if' in inv:
+        out.append((FAIL, "invite_agent has its own copy of the verified->tier rule again -- two "
+                          "writers, and the second one is a stamp (AGENCY-REACH-1)"))
+    if j >= 0 and "_sync_agency_member_tiers(conn, agency_id)" not in inv:
+        out.append((FAIL, "invite_agent no longer calls the tier writer, so a member invited into an "
+                          "already-verified agency lands on the wrong tier"))
+    mig = repo_file(os.path.join("migrations", "036_agency_tier_resync.py"))
+    if mig is None:
+        out.append((INFO, "migrations/036_agency_tier_resync.py absent here -- the one-time catch-up "
+                          "for members stamped before the fix"))
+    elif "seat_paid" not in mig or "billing_period_end" not in mig:
+        out.append((FAIL, "migration 036 no longer carries the paying-member guard"))
+    if not out:
+        out.append((INFO, "agency is in the reach gate; the tier is derived by one writer that skips "
+                          "paying members; verify moves it both ways; invite defers to the writer"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

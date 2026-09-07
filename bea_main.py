@@ -12075,8 +12075,8 @@ def identity_status(email: str, _key: str = Depends(auth.require_api_key)):
 
 # ── MULTI-CITY REACH ─────────────────────────────────────────────────────────
 # Free sellers: home city only.
-# Starter/Pro sellers: can extend a listing to any city in their country
-# by confirming they can service buyers there.
+# Starter, Pro and Agency sellers: can extend a listing to any active city —
+# including abroad (RUL-108) — by confirming they can service buyers there.
 # Buyers always see listings as "local" — they never see the seller's home city.
 
 # TIER-PURGE-1 (7 Sep 2026) — THIS WAS A LIVE BUG, not just a stale name. The set held
@@ -12086,9 +12086,16 @@ def identity_status(email: str, _key: str = Depends(auth.require_api_key)):
 # cheaper plan than the one they were already paying for. Latent, not historic: PROBED on the
 # live database the same day, there are 0 Pro sellers (54 free, 17 starter), so nobody has
 # been turned away yet. Written in the five-tier era, never migrated with the rest.
-# Agency is deliberately NOT added here — it is out of this set today and this is a repair,
-# not a reach decision; whether a free+verified agency gets national reach is David's call.
-_PAID_TIERS = {"starter", "pro"}
+#
+# AGENCY-REACH-1 (7 Sep 2026, RUL-108). David: "Agencies should get national reach" and, on
+# whether to bound it by country, "let sellers reach abroad". So `agency` joins the gate and
+# NO country boundary is enforced for anyone: a seller on any qualifying tier may extend to
+# any ACTIVE city, including across a border. That is a deliberate ruling, not an oversight —
+# the docstring below used to claim "any city in their country" while the code never compared
+# countries, and the claim is what was wrong, not the behaviour. Safe to grant free: `agency`
+# is never self-served (every agency endpoint is ops-key gated) and is carried only by a
+# member of a VERIFIED agency (_sync_agency_member_tiers, AGENCY-TIER-1/AGENCY-REACH-1).
+_PAID_TIERS = {"starter", "pro", "agency"}
 
 @app.get("/listings/{listing_id}/cities")
 def get_listing_cities(listing_id: int):
@@ -12114,7 +12121,8 @@ class ListingCityIn(BaseModel):
 @app.post("/listings/{listing_id}/cities")
 def add_listing_city(listing_id: int, payload: ListingCityIn):
     """Seller extends their listing to an additional city.
-    Requires Starter or Premium tier. Seller authenticates by email
+    Requires Starter, Pro or Agency (AGENCY-REACH-1). No country boundary — a
+    seller may reach abroad (RUL-108). Seller authenticates by email
     (same pattern as edit-after-publish: email must match listing.seller_email).
     """
     email = payload.email.lower().strip()
@@ -12138,7 +12146,7 @@ def add_listing_city(listing_id: int, payload: ListingCityIn):
         if tier not in _PAID_TIERS:
             raise HTTPException(
                 status_code=402,
-                detail="Multi-city reach requires a Starter subscription ($5/month). Upgrade at trustsquare.co/admin.html"
+                detail="Multi-city reach is included with Starter ($5/month), Pro, and verified Agency accounts. Upgrade at trustsquare.co/admin.html"
             )
 
         # Verify city exists
@@ -14504,6 +14512,70 @@ def get_agency(agency_id: int, _key: str = Depends(auth.require_api_key)):
     finally:
         conn.close()
 
+def _sync_agency_member_tiers(conn, agency_id: int) -> dict:
+    """AGENCY-REACH-1 (7 Sep 2026, RUL-108) — the agency tier FOLLOWS verification.
+
+    AGENCY-TIER-1 (3 Aug) said "a member of a VERIFIED agency now carries it", but it only
+    ever stamped the tier at INVITE time, so the sentence was true only for agents invited
+    after their agency was already verified. PROBED 7 Sep: 8 agencies, ALL verified, 25
+    members between them, and NOT ONE carried `agency` (8 free, 17 starter). A tier that is
+    a snapshot of a condition is wrong the moment the condition changes, and nothing ever
+    re-read it. This makes it a derived property with one writer, called from every place
+    that can change the condition.
+
+    NEVER TOUCHES A PAYING MEMBER: an agent who bought their own seat (RUL-048 seat_paid)
+    or who holds a live subscription (billing_period_end) keeps whatever tier they paid for.
+    Only the free-by-default population moves, and only between `starter` and `agency` —
+    the two tiers that differ by nothing a member paid for.
+    """
+    row = conn.execute("SELECT verified FROM agencies WHERE id=?", (agency_id,)).fetchone()
+    if row is None:
+        return {"agency_id": agency_id, "moved": 0, "skipped_paying": 0, "target": None}
+    target = "agency" if row["verified"] else "starter"
+    members = conn.execute(
+        """SELECT m.agent_email, m.seat_paid, u.seller_tier, u.billing_period_end
+             FROM agency_members m
+             LEFT JOIN users u ON LOWER(u.email) = LOWER(m.agent_email)
+            WHERE m.agency_id = ?""", (agency_id,)).fetchall()
+    moved = skipped = 0
+    for m in members:
+        if (m["seat_paid"] or 0) or m["billing_period_end"]:
+            skipped += 1
+            continue
+        current = (m["seller_tier"] or "free")
+        if current in ("free", "starter", "agency") and current != target:
+            conn.execute("UPDATE users SET seller_tier=? WHERE LOWER(email)=?",
+                         (target, (m["agent_email"] or "").lower()))
+            moved += 1
+    return {"agency_id": agency_id, "moved": moved, "skipped_paying": skipped, "target": target}
+
+
+class _AgencyVerify(BaseModel):
+    verified: bool
+
+
+@app.post("/agencies/{agency_id}/verify")
+def set_agency_verified(agency_id: int, req: _AgencyVerify, _key: str = Depends(auth.require_api_key)):
+    """AGENCY-REACH-1: verify or un-verify an agency, and move its members' tier with it.
+
+    This endpoint is the reason the tier can now follow the condition in BOTH directions.
+    Before it, `agencies.verified` could only ever be set at INSERT (1 by create_agency,
+    0 by agency_wave_prep) and nothing re-read it, so verification was effectively one-way
+    and invisible to the tier. Ops-key gated like every other agency route — agency status
+    is never self-served, which is what makes it safe to carry free multi-city reach.
+    """
+    conn = database.get_db()
+    try:
+        if not conn.execute("SELECT id FROM agencies WHERE id=?", (agency_id,)).fetchone():
+            raise HTTPException(status_code=404, detail="Agency not found")
+        conn.execute("UPDATE agencies SET verified=? WHERE id=?", (1 if req.verified else 0, agency_id))
+        result = _sync_agency_member_tiers(conn, agency_id)
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True, "agency_id": agency_id, "verified": bool(req.verified), **result}
+
+
 @app.post("/agencies/{agency_id}/agents")
 def invite_agent(agency_id: int, req: _AgentInvite, _key: str = Depends(auth.require_api_key)):
     """Add an agent: membership + cap mirrored into slot_limit + magic sign-in link."""
@@ -14522,14 +14594,16 @@ def invite_agent(agency_id: int, req: _AgentInvite, _key: str = Depends(auth.req
         # and the tier was a price card with no runtime identity. A member of a
         # VERIFIED agency now carries it; unverified agencies stay on starter until
         # the agency itself is verified.
-        _ag_verified = conn.execute("SELECT verified FROM agencies WHERE id=?", (agency_id,)).fetchone()
-        _tier = "agency" if (_ag_verified and _ag_verified["verified"]) else "starter"
-        conn.execute("UPDATE users SET slot_limit=?, seller_tier=? WHERE LOWER(email)=?", (cap, _tier, email))
+        # AGENCY-REACH-1: the cap is this invite's business; the TIER is not. It is derived
+        # from the agency's verification by the one writer below, after the membership row
+        # exists — so invite-then-verify and verify-then-invite end in the same place.
+        conn.execute("UPDATE users SET slot_limit=? WHERE LOWER(email)=?", (cap, email))
         conn.execute("INSERT INTO agency_members (agency_id, agent_email, listing_cap, status, agent_name, city, country) VALUES (?,?,?, 'invited', ?,?,?) "
                      "ON CONFLICT(agency_id, agent_email) DO UPDATE SET listing_cap=excluded.listing_cap, "
                      "agent_name=COALESCE(excluded.agent_name, agent_name), city=COALESCE(excluded.city, city), country=COALESCE(excluded.country, country)",
                      (agency_id, email, cap,
                       (req.name or "").strip() or None, (req.city or "").strip() or None, (req.country or "").strip().upper() or None))
+        _sync_agency_member_tiers(conn, agency_id)
         conn.commit()
     finally:
         conn.close()

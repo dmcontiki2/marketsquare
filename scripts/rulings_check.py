@@ -97,6 +97,19 @@ REFLECTIONS = {
    ("RULINGS.md", ["NO STALE IPs ON THE ORIGIN SSH ALLOWLIST"], []),
    ("scripts/hetzner_fw_selfheal.py", ["NO-STALE-IP-1"], []),
  ],
+ "RUL-108": [
+   # BOTs are a Pro INCLUSION, not a new price (7 Sep). The three needles are the ones a future
+   # session would most easily lose: that no price changes, that the SELLING half stays free to
+   # every tier, and that a watch is not a priced feature because it already earns 1T at the
+   # introduction. The absence needle is the tripwire: if anyone ever writes a BOT price into the
+   # canon, this ruling has been broken rather than amended.
+   ("RULINGS.md", ["BOTs ARE A PRO-TIER INCLUSION, NOT A NEW PRICE"], []),
+   ("PRICING_CANON.md", ["DECIDED, NOT YET BUILT (RUL-108",
+                         "included in Pro at the price above"],
+                        ["$20 BOT", "BOT subscription", "BOT tier"]),
+   ("genie/bots/README.md", ["RULED (RUL-108"], []),
+   ("BACKLOG.md", ["RUL-108"], []),
+ ],
  "RUL-097": [
    # The Genie (4 Sep): a front door on Zoom, not a second search, and it may never cover a
    # selector. Deferred to a STOCK trigger. The three spec needles are the ones a future session
@@ -147,11 +160,25 @@ REFLECTIONS = {
     ["\"Paris\":", "\"Lyon\":", "\"Marseille\":", "\"Braga\":", "\"Lisbon\":", "\"Porto\":"]),
    ("ONBOARDING_PLAN.md", ["RUL-101"], []),
  ],
+ "RUL-109": [
+   # AGENCY-REACH-1 (7 Sep) -- agency gets reach; the tier follows verification; no country boundary.
+   ("RULINGS.md", ["VERIFIED AGENCIES GET MULTI-CITY REACH"], []),
+   ("bea_main.py", ['_PAID_TIERS = {"starter", "pro", "agency"}',
+                    "def _sync_agency_member_tiers(",
+                    '@app.post("/agencies/{agency_id}/verify")'],
+                   ['_tier = "agency" if']),
+   ("migrations/036_agency_tier_resync.py", ["seat_paid", "billing_period_end"], []),
+ ],
  "RUL-107": [
    # TIER-PURGE-1 (7 Sep) -- the retired five-tier model is gone from the CODE, not just the docs.
    ("RULINGS.md", ["THE RETIRED FIVE-TIER PRICING MODEL IS PURGED FROM THE CODE"], []),
    # the reflection that matters is the ABSENCE, checked where the tiers actually lived.
-   ("bea_main.py", ["_PAID_TIERS = {\"starter\", \"pro\"}", 'paid_tiers = ("starter", "pro")'],
+   # ASSERTION CORRECTED 7 Sep 2026, same day it was written: it pinned the literal
+   # _PAID_TIERS = {"starter", "pro"}, which RUL-109 legitimately widened to include "agency"
+   # hours later -- so a TRUE reflection read FAIL. A check that pins a moment pins a moment;
+   # the ruling is that no RETIRED name is in the gates and the canon Pro tier IS. Same fact,
+   # asserted as a property. (The RUL-103 lesson, met again in one day.)
+   ("bea_main.py", ['"pro"', 'paid_tiers = ("starter", "pro")'],
                    ['"elite":', '"business":', '{"starter", "premium"}']),
    ("launch_redemption.py", ['TIER_TUPPENCE_MONTHLY = {"starter": 2, "pro": 10}'],
                             ["must be migrated to 'standard' BEFORE this grants"]),
