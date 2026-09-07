@@ -72,9 +72,13 @@ itself was 644 and is now 640 (msdeploy:msdeploy; the app runs as root, `/health
 **DELETED 7 Sep 2026** — all seven, on David's permission the same day ("Please delete any of the
 files you asked permission for to delete"); each name was pattern-checked as a stamped `.bak` before
 `rm`, the three live files they backed up were verified untouched afterwards, `/health` 200, and
-`secret_consumers.py --check` now prints OK with no STALE line. Still on the box, NOT in that
-permission: `/var/www/marketsquare/.env.bak-20260718-onemodel` and `.env.bak-cf-20260722-174900`
-(July, 600, two credential lines each) and `/etc/marketsquare/resend.watch.conf.bak-20260828`.
+`secret_consumers.py --check` now prints OK with no STALE line. The three that were outside that
+permission — `/var/www/marketsquare/.env.bak-20260718-onemodel`, `.env.bak-cf-20260722-174900`
+and `/etc/marketsquare/resend.watch.conf.bak-20260828` — were **deleted the same day on a second
+"Yes please"**; each was refused unless its live twin existed, and the twins were verified untouched
+(`.env` 1620 B / 640, `resend.watch.conf` 74 B / 640). **No `.bak` remains in either secrets
+folder.** Rule from here: a rotation may leave a stamped `.bak` beside the file it changes, and the
+NEXT session deletes it once the new value is proven — a backup of a secret is a secret.
 
 **Rotation rule from here on:** rotating a credential is not finished until every row in this table
 carrying that credential has been updated and re-probed. The alert path in particular is exercised
