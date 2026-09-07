@@ -1,7 +1,7 @@
 {
  "schema_version": 2,
  "report_type": "deep_static_scan",
- "generated_at": "2026-08-31T04:40:28Z",
+ "generated_at": "2026-09-07T04:46:32Z",
  "generated_by": "scripts/deep_scan.py (DW-012/DW-035 fix, 14 Aug 2026)",
  "scan_scope": {
   "python": [
@@ -20,19 +20,19 @@
   ]
  },
  "tools": [
-  "ruff ruff 0.16.5",
+  "ruff ruff 0.16.6",
   "vulture vulture 2.16",
   "pylint pylint 4.0.8",
   "eslint v9.39.5"
  ],
  "tools_unavailable": [],
  "totals": {
-  "found": 213,
-  "new_since_last": 7,
+  "found": 241,
+  "new_since_last": 15,
   "crash_class": 0
  },
  "severity_breakdown": {
-  "LOW": 203,
+  "LOW": 231,
   "MEDIUM": 10
  },
  "findings": [
@@ -95,7 +95,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 3722,
+   "line": 3980,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -104,7 +104,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 4217,
+   "line": 4475,
    "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -113,7 +113,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 4368,
+   "line": 4626,
    "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -122,7 +122,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 4950,
+   "line": 5208,
    "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -131,115 +131,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 5006,
-   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
-   "new": false
-  },
-  {
-   "tool": "ruff",
-   "code": "B904",
-   "sev": "LOW",
-   "file": "bea_main.py",
-   "line": 5035,
-   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
-   "new": false
-  },
-  {
-   "tool": "ruff",
-   "code": "B904",
-   "sev": "LOW",
-   "file": "bea_main.py",
-   "line": 5114,
-   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
-   "new": false
-  },
-  {
-   "tool": "ruff",
-   "code": "B904",
-   "sev": "LOW",
-   "file": "bea_main.py",
-   "line": 5116,
-   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
-   "new": false
-  },
-  {
-   "tool": "ruff",
-   "code": "B904",
-   "sev": "LOW",
-   "file": "bea_main.py",
-   "line": 5954,
-   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
-   "new": false
-  },
-  {
-   "tool": "ruff",
-   "code": "B008",
-   "sev": "LOW",
-   "file": "bea_main.py",
-   "line": 6394,
-   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
-   "new": false
-  },
-  {
-   "tool": "ruff",
-   "code": "B008",
-   "sev": "LOW",
-   "file": "bea_main.py",
-   "line": 6428,
-   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
-   "new": false
-  },
-  {
-   "tool": "ruff",
-   "code": "B008",
-   "sev": "LOW",
-   "file": "bea_main.py",
-   "line": 7087,
-   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
-   "new": false
-  },
-  {
-   "tool": "ruff",
-   "code": "B008",
-   "sev": "LOW",
-   "file": "bea_main.py",
-   "line": 9414,
-   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
-   "new": false
-  },
-  {
-   "tool": "ruff",
-   "code": "B008",
-   "sev": "LOW",
-   "file": "bea_main.py",
-   "line": 9460,
-   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
-   "new": false
-  },
-  {
-   "tool": "ruff",
-   "code": "B008",
-   "sev": "LOW",
-   "file": "bea_main.py",
-   "line": 9478,
-   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
-   "new": false
-  },
-  {
-   "tool": "ruff",
-   "code": "B008",
-   "sev": "LOW",
-   "file": "bea_main.py",
-   "line": 10420,
-   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
-   "new": false
-  },
-  {
-   "tool": "ruff",
-   "code": "B008",
-   "sev": "LOW",
-   "file": "bea_main.py",
-   "line": 10847,
+   "line": 5264,
    "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -248,7 +140,34 @@
    "code": "B904",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 10904,
+   "line": 5293,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 5372,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 5374,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 6241,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -257,7 +176,88 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 12262,
+   "line": 6681,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 6715,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 7480,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 9807,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 9853,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 9871,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 10813,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 11240,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 11297,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 12655,
    "msg": "Do not perform function call `Body` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -266,7 +266,25 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 12304,
+   "line": 12697,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F507",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 15959,
+   "msg": "`%`-format string has 1 placeholder(s) but 2 substitution(s)",
+   "new": true
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 16036,
    "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -275,7 +293,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 15306,
+   "line": 16108,
    "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -284,7 +302,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 15378,
+   "line": 16126,
    "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -293,7 +311,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 15396,
+   "line": 16302,
    "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -302,16 +320,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 15572,
-   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
-   "new": false
-  },
-  {
-   "tool": "ruff",
-   "code": "B008",
-   "sev": "LOW",
-   "file": "bea_main.py",
-   "line": 15749,
+   "line": 16511,
    "msg": "Do not perform function call `Body` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -320,7 +329,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 15749,
+   "line": 16511,
    "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -329,7 +338,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 15765,
+   "line": 16527,
    "msg": "Do not perform function call `Body` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -338,7 +347,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 15765,
+   "line": 16527,
    "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -347,7 +356,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 15904,
+   "line": 16666,
    "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -356,7 +365,25 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 16597,
+   "line": 16794,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 16843,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 17476,
    "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -365,7 +392,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 18891,
+   "line": 20113,
    "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -374,7 +401,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 19045,
+   "line": 20433,
    "msg": "Do not perform function call `Body` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -383,7 +410,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 19045,
+   "line": 20433,
    "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -392,7 +419,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 19080,
+   "line": 20468,
    "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -401,7 +428,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 19112,
+   "line": 20500,
    "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -410,7 +437,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 19173,
+   "line": 20561,
    "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -419,7 +446,7 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 19186,
+   "line": 20574,
    "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -428,7 +455,16 @@
    "code": "B008",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 20221,
+   "line": 21630,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 21844,
    "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
    "new": false
   },
@@ -437,7 +473,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 20304,
+   "line": 21942,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -446,7 +482,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 20320,
+   "line": 21958,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -455,7 +491,7 @@
    "code": "B007",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 20509,
+   "line": 22147,
    "msg": "Loop control variable `attempt` not used within loop body",
    "new": false
   },
@@ -464,7 +500,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 20561,
+   "line": 22199,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -745,7 +781,7 @@
    "file": "migrations/032_fares_refresh_cron.py",
    "line": 34,
    "msg": "`subprocess` imported but unused",
-   "new": true
+   "new": false
   },
   {
    "tool": "ruff",
@@ -754,7 +790,7 @@
    "file": "migrations/033_csp_verify_served.py",
    "line": 208,
    "msg": "Local variable `last` is assigned to but never used",
-   "new": true
+   "new": false
   },
   {
    "tool": "ruff",
@@ -830,6 +866,33 @@
   },
   {
    "tool": "ruff",
+   "code": "F541",
+   "sev": "LOW",
+   "file": "scripts/assoc_example_page.py",
+   "line": 216,
+   "msg": "f-string without any placeholders",
+   "new": true
+  },
+  {
+   "tool": "ruff",
+   "code": "F541",
+   "sev": "LOW",
+   "file": "scripts/assoc_example_page.py",
+   "line": 217,
+   "msg": "f-string without any placeholders",
+   "new": true
+  },
+  {
+   "tool": "ruff",
+   "code": "F541",
+   "sev": "LOW",
+   "file": "scripts/assoc_example_page.py",
+   "line": 219,
+   "msg": "f-string without any placeholders",
+   "new": true
+  },
+  {
+   "tool": "ruff",
    "code": "F401",
    "sev": "LOW",
    "file": "scripts/audit_global_qa.py",
@@ -871,7 +934,7 @@
    "file": "scripts/build_eval_set.py",
    "line": 27,
    "msg": "`math` imported but unused",
-   "new": true
+   "new": false
   },
   {
    "tool": "ruff",
@@ -923,7 +986,7 @@
    "code": "F841",
    "sev": "MEDIUM",
    "file": "scripts/cost_compliance_sweep.py",
-   "line": 431,
+   "line": 441,
    "msg": "Local variable `sanctioned` is assigned to but never used",
    "new": false
   },
@@ -943,7 +1006,7 @@
    "file": "scripts/david_queue.py",
    "line": 48,
    "msg": "Function definition does not bind loop variable `body`",
-   "new": true
+   "new": false
   },
   {
    "tool": "ruff",
@@ -952,7 +1015,7 @@
    "file": "scripts/david_queue.py",
    "line": 152,
    "msg": "Loop control variable `why` not used within loop body",
-   "new": true
+   "new": false
   },
   {
    "tool": "ruff",
@@ -1193,7 +1256,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/maintenance_agent.py",
-   "line": 305,
+   "line": 318,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -1222,6 +1285,24 @@
    "file": "scripts/no_remote_code_guard.py",
    "line": 217,
    "msg": "Loop control variable `w` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "scripts/onboarding_number.py",
+   "line": 44,
+   "msg": "`re` imported but unused",
+   "new": true
+  },
+  {
+   "tool": "ruff",
+   "code": "B905",
+   "sev": "LOW",
+   "file": "scripts/onboarding_number.py",
+   "line": 170,
+   "msg": "`zip()` without an explicit `strict=` parameter",
    "new": true
   },
   {
@@ -1238,7 +1319,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 302,
+   "line": 308,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -1247,7 +1328,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 311,
+   "line": 317,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -1256,7 +1337,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 313,
+   "line": 319,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -1265,7 +1346,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 315,
+   "line": 321,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -1274,7 +1355,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 337,
+   "line": 343,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -1283,7 +1364,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 352,
+   "line": 358,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -1292,7 +1373,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 365,
+   "line": 371,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -1301,7 +1382,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 421,
+   "line": 427,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -1310,7 +1391,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 423,
+   "line": 429,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -1319,7 +1400,7 @@
    "code": "F541",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 1537,
+   "line": 1590,
    "msg": "f-string without any placeholders",
    "new": false
   },
@@ -1328,7 +1409,7 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 2588,
+   "line": 2641,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -1337,7 +1418,115 @@
    "code": "B904",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 2993,
+   "line": 3046,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 7532,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 14134,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 15403,
+   "msg": "`re` imported but unused",
+   "new": true
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 15563,
+   "msg": "`re` imported but unused",
+   "new": true
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 16554,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 16694,
+   "msg": "`datetime.datetime` imported but unused",
+   "new": true
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 16701,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 16833,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 18025,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 18400,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 18402,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 18671,
    "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
    "new": false
   },
@@ -1349,6 +1538,24 @@
    "line": 24,
    "msg": "`json` imported but unused",
    "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "scripts/secret_consumers.py",
+   "line": 39,
+   "msg": "`os` imported but unused",
+   "new": true
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_geo_launch.py",
+   "line": 79,
+   "msg": "Loop control variable `iso` not used within loop body",
+   "new": true
   },
   {
    "tool": "ruff",
@@ -1786,6 +1993,33 @@
    "tool": "ruff",
    "code": "F401",
    "sev": "LOW",
+   "file": "scripts/youtube_pack_build.py",
+   "line": 19,
+   "msg": "`json` imported but unused",
+   "new": true
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "scripts/youtube_pack_build.py",
+   "line": 19,
+   "msg": "`textwrap` imported but unused",
+   "new": true
+  },
+  {
+   "tool": "ruff",
+   "code": "B905",
+   "sev": "LOW",
+   "file": "scripts/youtube_pack_build.py",
+   "line": 280,
+   "msg": "`zip()` without an explicit `strict=` parameter",
+   "new": true
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
    "file": "test_ai_breaker.py",
    "line": 3,
    "msg": "`importlib` imported but unused",
@@ -1859,7 +2093,7 @@
    "code": "DEAD",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 5590,
+   "line": 5848,
    "msg": "unused variable 'x_actor_email'",
    "new": false
   },
@@ -1868,7 +2102,7 @@
    "code": "DEAD",
    "sev": "LOW",
    "file": "bea_main.py",
-   "line": 11312,
+   "line": 11705,
    "msg": "unused variable 'newurl'",
    "new": false
   },
@@ -1940,9 +2174,27 @@
    "code": "DEAD",
    "sev": "LOW",
    "file": "scripts/regression_ledger.py",
-   "line": 9579,
+   "line": 9699,
    "msg": "unsatisfiable 'ternary' condition",
+   "new": false
+  },
+  {
+   "tool": "vulture",
+   "code": "DEAD",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 15403,
+   "msg": "unused import '_re0'",
    "new": true
+  },
+  {
+   "tool": "vulture",
+   "code": "DEAD",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 16982,
+   "msg": "unsatisfiable 'ternary' condition",
+   "new": false
   },
   {
    "tool": "vulture",

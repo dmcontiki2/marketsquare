@@ -1,5 +1,5 @@
 {
- "next_id": 110,
+ "next_id": 113,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -80,11 +80,11 @@
   },
   "DW-010": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-31",
+   "last_seen": "2026-09-07",
    "sev": "MEDIUM",
    "source": "cc_age_check (Monday lane)",
    "status": "SCHEDULED",
-   "summary": "CC-002 open **82d** vs 7d threshold (cc_age 2026-08-31; was 75d on 24 Aug). FORMALLY DEFERRED by David 21 Aug — SCHEDULED.",
+   "summary": "cc_age 2026-09-07: CC-002 open 89d vs the 7d threshold (was 82d on 31 Aug). Still SCHEDULED - David formally deferred it on 21 Aug to the first post-launch week, from Mon 8 Sep 2026, which is tomorrow. Arriving on its own target date; nothing needed from this pass.",
    "disposition": "FORMALLY DEFERRED 2026-08-21 (attended session, reflected here by the watch) — CC-002 is ~10 open product/pricing questions in AWAITING_DAVID.md, several touching the EULA and one a live payment path, against SOFT-to-PUBLIC 29 Aug / FULL LAUNCH 1 Sep (RUL-001). Target: first post-launch week, from Mon 8 Sep 2026. David's veto point: name any single item that must land before launch and it lands on its own."
   },
   "DW-011": {
@@ -852,11 +852,11 @@
   },
   "DW-087": {
    "first_seen": "2026-08-31",
-   "last_seen": "2026-08-31",
+   "last_seen": "2026-09-07",
    "sev": "LOW",
    "source": "scripts/deep_scan.py (Monday lane) — delta vs SCAN_REPORT.json baseline 2026-08-24",
    "status": "OPEN",
-   "summary": "**NEW — 7 new static findings on the Monday deep scan** (213 total, 0 crash-class; 4/4 tools ran: ruff 0.16.5, vulture 2.16, pylint 4.0.8, eslint 9.39.5). None is in app code — all sit in `migrations/` and `scripts/`: F401 `migrations/032_fares_refresh_cron.py:34` (subprocess unused); **F841 (MEDIUM) `migrations/033_csp_verify_served.py:208`** (`last` assigned never used); F401 `scripts/build_eval_set.py:27` (math); B023 `scripts/david_queue.py:48` (function does not bind loop variable `body` — the only one with a plausible behavioural bite); B007 `scripts/david_queue.py:152`; B007 `scripts/no_remote_code_guard.py:217`; vulture DEAD `scripts/regression_ledger.py:9579` (unsatisfiable ternary). Recorded because the register loses nothing, not because it is urgent.",
+   "summary": "STILL FAILING 2026-09-07 - the Monday deep-scan lane re-ran and all seven findings are still present, each reading new=false (SCAN_REPORT.json 2026-09-07T04:46:32Z, 4/4 tools, 241 findings, 15 new, 0 crash-class). Not closed: no check passed. **NEW — 7 new static findings on the Monday deep scan** (213 total, 0 crash-class; 4/4 tools ran: ruff 0.16.5, vulture 2.16, pylint 4.0.8, eslint 9.39.5). None is in app code — all sit in `migrations/` and `scripts/`: F401 `migrations/032_fares_refresh_cron.py:34` (subprocess unused); **F841 (MEDIUM) `migrations/033_csp_verify_served.py:208`** (`last` assigned never used); F401 `scripts/build_eval_set.py:27` (math); B023 `scripts/david_queue.py:48` (function does not bind loop variable `body` — the only one with a plausible behavioural bite); B007 `scripts/david_queue.py:152`; B007 `scripts/no_remote_code_guard.py:217`; vulture DEAD `scripts/regression_ledger.py:9579` (unsatisfiable ternary). Recorded because the register loses nothing, not because it is urgent.",
    "next_action": "Next Monday lane or an attended tidy pass. Look at `david_queue.py:48` (B023) first — a late-bound loop variable in a closure is the one item here that can produce wrong OUTPUT rather than dead code — and at regression_ledger.py:9579, an unsatisfiable ternary inside the instrument that grades everything else."
   },
   "DW-088": {
@@ -1138,7 +1138,7 @@
   },
   "DW-109": {
    "first_seen": "2026-09-06",
-   "last_seen": "2026-09-06",
+   "last_seen": "2026-09-07",
    "sev": "MEDIUM",
    "source": "nginx access log + /id-status, watched live while David tried to verify his ID",
    "status": "OPEN",
@@ -1146,12 +1146,50 @@
     "RG-0309",
     "D10"
    ],
-   "summary": "NEW - A SUCCESSFUL ID UPLOAD LEAVES THE APP SAYING 'No ID on file'. Found live: David uploaded an ID document twice on the walkthrough account (nginx 12:24:34 and 12:25:51, both HTTP 200) and /id-status still returns state 'none', label 'No ID on file'. He was left watching a screen that had not changed, which is why he uploaded a second time. IT IS HALF BY DESIGN AND HALF A GAP. By design (C2 audit fix, 16 Jul 2026) upload-id stores the document and grants NO trust - identity is only awarded by the vision-checked path or admin review, which closed an instant self-grant of +15. Correct. THE GAP: the handler writes nothing to the user row at all, so there is no PENDING state for the UI to show, nothing calls the vision check afterwards, and the seller is told the opposite of what just happened. A person who uploads their ID and is told there is no ID on file will upload again, then give up.",
+   "summary": "STILL OPEN 2026-09-07 - re-read on disk: bea_main.py:6032 id_status() still resolves only npr_verified/ai_checked/submitted/none with no PENDING branch, so an upload that writes nothing to the user row still returns state 'none', label 'No ID on file'. The originating observation needs an authenticated upload, which an unattended pass cannot reproduce, so it is not closeable today either. The Resend 422 loop it recorded alongside is now its own row, DW-111. NEW - A SUCCESSFUL ID UPLOAD LEAVES THE APP SAYING 'No ID on file'. Found live: David uploaded an ID document twice on the walkthrough account (nginx 12:24:34 and 12:25:51, both HTTP 200) and /id-status still returns state 'none', label 'No ID on file'. He was left watching a screen that had not changed, which is why he uploaded a second time. IT IS HALF BY DESIGN AND HALF A GAP. By design (C2 audit fix, 16 Jul 2026) upload-id stores the document and grants NO trust - identity is only awarded by the vision-checked path or admin review, which closed an instant self-grant of +15. Correct. THE GAP: the handler writes nothing to the user row at all, so there is no PENDING state for the UI to show, nothing calls the vision check afterwards, and the seller is told the opposite of what just happened. A person who uploads their ID and is told there is no ID on file will upload again, then give up.",
    "next_action": "OPEN - CTO lane, not David's, and deliberately NOT started at the end of a long session rather than half-built. WHAT IS NEEDED: (a) /id-status gains a 'pending' state when a document is on file but unreviewed, so the Trust card can say 'Document received - we are checking it' instead of 'No ID on file'; (b) either the upload triggers the vision check, or the pending queue is visibly worked, so the seller's next step exists rather than being implied; (c) an assertion that an upload which returns 200 always changes what the seller is told - the property that failed here. NOT BLOCKING TODAY'S TEST: David's own account is already past this point (state 'ai_checked', can_buy true), so the Home Affairs billing question can be settled there without waiting for this. SEEN ALONGSIDE, unrelated and also open: the app log shows POST api.resend.com/emails returning 422 every 5 minutes (12:19:28, 12:24:28) - a repeating email failure nobody is watching. Raised here so it is not lost; it deserves its own diagnosis."
+  },
+  "DW-110": {
+   "first_seen": "2026-09-07",
+   "last_seen": "2026-09-07",
+   "sev": "MEDIUM",
+   "source": "scripts/deep_scan.py (Monday lane) ruff F507, then PROVEN by executing the format expression",
+   "status": "OPEN",
+   "refs": [
+    "DW-087"
+   ],
+   "summary": "NEW - THE OPS HOME PAGE /m CRASHES FOR ANY ENROLLED DEVICE. bea_main.py:15959 formats a template carrying ONE %s with a TWO-value tuple (d['label'], d['label']), so Python raises TypeError: not all arguments converted during string formatting and the route returns 500. Proven, not inferred: ruff flagged it new today and the exact expression was then executed in isolation and raised that TypeError. Live probe agrees as far as it reaches - GET /m with no device cookie returns 401, the not-enrolled branch, whose string is correctly paired, so only the ENROLLED branch is broken and nothing has reported it. /m is the home of David's ops PWA (DEVICE-ENROL-1) and the only route to /m/dashboard, /m/admin and /launch/.",
+   "next_action": "OPEN - CTO lane. Fix is to drop the duplicate substitution or add the second %s the heading was meant to have. Needs an assertion too: nothing proves every HTMLResponse(... % ...) in bea_main.py has matching placeholders and arguments, and a %-format arity error is invisible until the branch executes. This task is observe-only and did not change the code."
+  },
+  "DW-111": {
+   "first_seen": "2026-09-07",
+   "last_seen": "2026-09-07",
+   "sev": "MEDIUM",
+   "source": "split out of DW-109 at that row's own request; re-check attempted from the sandbox today",
+   "status": "OPEN",
+   "refs": [
+    "DW-109",
+    "DW-105"
+   ],
+   "summary": "CARRIED FORWARD, NOT VERIFIED TODAY - the repeating Resend 422. DW-109 recorded that the app log showed POST api.resend.com/emails returning 422 every five minutes (12:19:28 and 12:24:28 on 6 Sep) and said it deserved its own diagnosis; this is that row. A 422 is the API refusing the request, so this lane has not sent successfully in that window and nothing is watching it. COULD NOT BE RE-RUN TODAY: journalctl -u marketsquare returns 'No entries' for msdeploy (that user is in neither adm nor systemd-journal) and grep -i resend over /var/www/marketsquare/*.log returns 0 hits. Absence of a hit here is an instrument limit, not a clean bill.",
+   "next_action": "OPEN - CTO lane. (a) Identify the caller: which lane posts to Resend on a 5-minute cadence, and read the 422 body (usually an unverified or mismatched from-domain, a missing to, or a malformed payload). (b) Give the watch a way to see the outcome - journal access, or have the lane record its own result to a readable file. A send lane whose only evidence lives where the watch cannot look is the DW-105 shape, where a silent failure ran a fortnight."
+  },
+  "DW-112": {
+   "first_seen": "2026-09-07",
+   "last_seen": "2026-09-07",
+   "sev": "LOW",
+   "source": "self-heartbeat (register last_run vs today)",
+   "status": "OPEN",
+   "refs": [
+    "DW-104",
+    "DW-070"
+   ],
+   "summary": "NEW - THE WATCH MISSED 6 SEPTEMBER. Register last_run reads 2026-09-05 and today is 2026-09-07, so exactly one scheduled run did not happen; there is no watch_pass_2026_09_06 key and no 6 Sep section in OPEN_ITEMS.md. Cause already on record: DW-104 (6 Sep) found the scheduled task itself switched off (enabled=false, last run 2026-09-05 04:33Z) and an attended session re-enabled it the same day. The 6 Sep register entries DW-104..DW-109 were written by that attended session, not by the watch.",
+   "next_action": "Closes on a clean 1-day heartbeat - tomorrow's run finding last_run = 2026-09-07 (the DW-070 precedent). RESIDUAL, DW-104's own and still true: nothing asserts that the scheduled tasks which matter are ENABLED, so a watch that is off cannot file its own absence. That belongs in the ledger and is not written yet."
   }
  },
- "last_run": "2026-09-05",
- "last_verdict": "RED",
+ "last_run": "2026-09-07",
+ "last_verdict": "AMBER",
  "recheck_pass_2026_08_20": {
   "requested_by": "David: close all open actions",
   "items_rechecked": 15,
@@ -1576,5 +1614,76 @@
   "heartbeat": "no gap (last_run was 2026-09-04)",
   "checks_run": "11/13 - not run: server-side sensors + orchestrator + on-box smoke (SSH shut, no root fallback), Monday canon/deep-scan lane (not due Saturday)",
   "coverage_map": "58 green / 1 blue / 4 amber / 2 red / 10 grey (75 cards). Changes: SSH lane GREEN->RED (DW-096); RED-alert path GREEN->RED (DW-097); external uptime monitor GREEN->BLUE (DW-098). The one BLUE is the external uptime monitor - armed, deployed, not asserted by any live measurement."
+ },
+ "watch_pass_2026_09_07": {
+  "verdict": "AMBER",
+  "site": {
+   "health": "ok 1.3.1",
+   "root_http": 200,
+   "root_seconds": 1.07,
+   "payment_test": "ok, paystack_connected true",
+   "tls_days": 76,
+   "bit": "8/8 PASS ran_at 2026-09-07T04:39:54Z",
+   "post_deploy": "all 5 steps ok (migrations none pending; fea_baseline refreshed, 3/3 match source)"
+  },
+  "ledger": {
+   "entries": 311,
+   "holding": 289,
+   "regressed": 0,
+   "open": 22,
+   "ready_to_lock": 0,
+   "unverified": 0,
+   "exit": 0,
+   "method": "driven through the harness's own run() in 8 slices of LEDGER, checkpointed and merged - same status logic, no harness edit; a backgrounded run does not survive between sandbox calls"
+  },
+  "audit": {
+   "findings": 2,
+   "new": 0,
+   "note": "both INFO - demo placeholders + VERSION-KEY-BENIGN (repo v484 / live v608, served bytes identical)"
+  },
+  "cost_sweep": {
+   "exit": 0,
+   "critical": 0,
+   "warnings": 0,
+   "ok": 28,
+   "info": 44
+  },
+  "daily_checks": {
+   "deploy_drift": "clean - all 19 tracked files match live"
+  },
+  "server": {
+   "fea_integrity": "ok, alerts []",
+   "subscription_monitor": "35 UP / 15 HELD / 1 PLANNED / 0 DOWN / 0 DEGRADED",
+   "tls_days": 75,
+   "disk_free_pct": 52.2,
+   "orchestrator_queue": [],
+   "orchestrator_staged": []
+  },
+  "cron_parity": {
+   "loop_date": "2026-09-07",
+   "smoke": "39/39 all_green",
+   "health": "ok 1.3.1",
+   "spend_today_usd": 0.0,
+   "ceiling_usd": 100.0,
+   "result": "parity OK on all three core fields"
+  },
+  "smoke_sandbox": "all checks passed",
+  "monday_lane": {
+   "canon_pointers": "ALL IN LINE",
+   "pricing_canon": "ALL IN LINE",
+   "cc_age": "CC-002 89d (DW-010, deferred to 8 Sep)",
+   "deep_scan": "241 findings, 15 new, 0 crash-class, 4/4 tools - one new is app-code (DW-110)"
+  },
+  "ai_watch": "clear - no ban/outage/rate-limit/pricing change affecting ZA; the '$3/$15 on 1 Sep' line is still stale",
+  "heartbeat": "GAP - last_run was 2026-09-05, 6 Sep missed (DW-112); cause DW-104",
+  "new_items": [
+   "DW-110",
+   "DW-111",
+   "DW-112"
+  ],
+  "closed": [],
+  "closed_note": "none - no previously-failing check passed today. DW-087 and DW-109 both re-ran and still fail; DW-010 is SCHEDULED, not failing. Nothing closed for looking stale.",
+  "checks_run": "13/13",
+  "email": "none - AMBER; scripts/watch_alert.py is RED-only and is present"
  }
 }
