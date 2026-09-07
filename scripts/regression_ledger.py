@@ -19715,5 +19715,69 @@ def rg_recontact_floor_holds():
     return out
 
 
+@entry("RG-0334", "Every %-format string literal in bea_main.py is given the number of values it "
+       "asks for -- a page cannot 500 on its own heading",
+       LOCKED, fixed_on="2026-09-07",
+       scope="bea_main.py, ALL routes and ALL markets. CLASS, not the instance: any "
+             "`\"...%s...\" % (a, b)` whose placeholder count does not match its tuple. Python "
+             "raises TypeError at FORMAT time, so the branch returns 500 the first time a real "
+             "user reaches it -- and only that branch. Deliberately static (ast, no import), so "
+             "it runs in any sandbox with the repo and never needs the app up.",
+       ref="MFORMAT-ARITY-1 (7 Sep 2026). FOUND by the Monday deep-scan lane (ruff F507) and "
+           "raised as DAILY_WATCH DW-110: `/m`, the home of David's ops PWA, formatted a template "
+           "carrying ONE %s with a TWO-value tuple `(d[\"label\"], d[\"label\"])`, so every "
+           "ENROLLED device got a 500 while an anonymous GET correctly returned the 401 "
+           "not-enrolled page -- which is exactly why nothing reported it: the healthy-looking "
+           "branch was the one strangers hit. PROVEN BEFORE THE FIX by executing the expression "
+           "in isolation (TypeError: not all arguments converted during string formatting), not "
+           "by trusting the linter. FIXED by dropping the duplicate substitution, so the rendered "
+           "heading is unchanged. The sibling call sites were checked in the same pass and were "
+           "already correct: _NOT_ENROLLED_HTML carries 2 placeholders and all four of its "
+           "callers pass 2. Why an assertion and not just a fix: an arity error is invisible to "
+           "every test that does not execute that exact branch, and this file has 22k lines of "
+           "them. The whole-file scan found exactly ONE mismatch, so the entry starts green and "
+           "any new one turns it red the same day.")
+def rg_mformat_arity():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "bea_main.py not readable here -- static entry, skipped outside the repo")]
+    import ast as _ast, re as _re
+    _SPEC = _re.compile(r"%(?:\((?P<key>[^)]*)\))?[-#0 +]*(?:\*|\d+)?"
+                        r"(?:\.(?:\*|\d+))?[hlL]?(?P<conv>[diouxXeEfFgGcrsa%])")
+    try:
+        tree = _ast.parse(src)
+    except SyntaxError as ex:
+        return [(FAIL, "bea_main.py does not parse (%s) -- arity cannot be judged" % repr(ex)[:80])]
+    out, bad = [], []
+    for node in _ast.walk(tree):
+        if not (isinstance(node, _ast.BinOp) and isinstance(node.op, _ast.Mod)):
+            continue
+        if not (isinstance(node.left, _ast.Constant) and isinstance(node.left.value, str)):
+            continue
+        specs = [m for m in _SPEC.finditer(node.left.value) if m.group("conv") != "%"]
+        if any(m.group("key") for m in specs):
+            continue                      # mapping form -- needs a dict, not a tuple
+        rhs = node.right
+        if not isinstance(rhs, _ast.Tuple):
+            continue                      # single value / runtime object -- not statically judgeable
+        if any(isinstance(e, _ast.Starred) for e in rhs.elts):
+            continue
+        if len(rhs.elts) != len(specs):
+            bad.append("bea_main.py:%d asks for %d value(s) and is given %d"
+                       % (node.lineno, len(specs), len(rhs.elts)))
+    if bad:
+        out.append((FAIL, "%-format arity mismatch -- that branch raises TypeError and returns "
+                          "500 the first time anyone reaches it: " + "; ".join(bad[:4])
+                          + (" (+%d more)" % (len(bad) - 4) if len(bad) > 4 else "")))
+    # The instance this entry was born from, named so a regression is recognisable.
+    if '</small>""" % (d["label"], d["label"]))' in src:
+        out.append((FAIL, "the /m enrolled-device heading is back to ONE placeholder with TWO "
+                          "values -- DW-110 has returned (MFORMAT-ARITY-1)"))
+    if not out:
+        out.append((INFO, "every literal %-format with a tuple in bea_main.py has matching arity; "
+                          "the /m enrolled branch formats cleanly"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

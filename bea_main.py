@@ -15960,7 +15960,7 @@ def m_index(ts_device: str = Cookie(default=None)):
 <link rel="manifest" href="/m/manifest.webmanifest"><link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png?v=3"><link rel="icon" href="/static/brand/icon-32.png?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="TS Ops"><meta name="theme-color" content="#0b1526">
 <style>body{font-family:system-ui;background:#0b1526;color:#eee;margin:0;padding:28px}a{display:block;color:#fff;text-decoration:none;padding:20px;border-radius:14px;margin:14px 0;font-size:20px;font-weight:700}small{color:#9ab;display:block;margin-top:18px}</style>
-<h2>Enrolled: %s</h2><a href="/m/dashboard" style="background:#1e3a8a">Ops Dashboard</a><a href="/m/admin" style="background:#b91c1c">Admin</a><a href="/launch/" style="background:#d97706">CityLauncher</a><a href="/" style="background:#22c55e">TrustSquare app</a><small>Open any of these and use Add to Home Screen — each installs with its own colour.</small>""" % (d["label"], d["label"]))
+<h2>Enrolled: %s</h2><a href="/m/dashboard" style="background:#1e3a8a">Ops Dashboard</a><a href="/m/admin" style="background:#b91c1c">Admin</a><a href="/launch/" style="background:#d97706">CityLauncher</a><a href="/" style="background:#22c55e">TrustSquare app</a><small>Open any of these and use Add to Home Screen — each installs with its own colour.</small>""" % (d["label"],))
 
 
 _APP_ICONS = {  # DEVICE-ENROL-1: four apps, four base colours (David, 3 Sep 2026)
