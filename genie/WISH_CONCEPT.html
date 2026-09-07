@@ -126,14 +126,13 @@ h3{font-size:14px;margin:18px 0 6px;color:#cfd8f0;text-transform:uppercase;lette
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
 .genie.on .bobber{animation:bob 4.6s ease-in-out infinite}
 
-.bubble{position:absolute;left:12px;top:392px;max-width:206px;z-index:56;background:rgba(255,255,255,.96);
-  color:#0d1430;border-radius:14px;padding:10px 12px;font-size:13.5px;font-weight:700;line-height:1.35;
-  box-shadow:0 12px 34px rgba(0,0,0,.5);opacity:0;transform:translateY(10px);
-  transition:opacity .6s ease,transform .6s ease}
-.bubble:after{content:"";position:absolute;right:-8px;top:20px;border:8px solid transparent;
-  border-left-color:rgba(255,255,255,.96);border-right:0}
-.bubble.on{opacity:1;transform:translateY(0)}
-.bubble .sub{font-weight:500;font-size:11.5px;color:#5a6688}
+/* Voice only — nothing is drawn over the painting (David, 7 Sep). This caption is the
+   silent fallback: it shows when the voice is off or the device cannot speak. */
+.caption{position:absolute;left:16px;right:16px;bottom:176px;z-index:56;text-align:center;
+  font-size:13px;font-weight:700;color:#fff;letter-spacing:.01em;
+  text-shadow:0 2px 14px rgba(0,0,0,.95),0 0 30px rgba(0,0,0,.8);
+  opacity:0;transition:opacity .5s ease;pointer-events:none}
+.caption.on{opacity:1}
 
 .wishbar{position:absolute;left:14px;right:14px;bottom:86px;z-index:57;display:flex;gap:7px;
   opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
@@ -310,10 +309,7 @@ td b{color:#fff}
           </div>
           <div class="holdlabel" id="holdlabel">PRESS AND HOLD THE LAMP</div>
 
-          <div class="bubble" id="bubble">
-            <span id="bubbletext">What is your wish, master?</span>
-            <div class="sub" id="bubblesub">Tell me in your own words. I will do the rest.</div>
-          </div>
+          <div class="caption" id="caption"></div>
 
           <div class="wishbar" id="wishbar">
             <input id="wish" placeholder="Say it plainly…" autocomplete="off">
@@ -334,6 +330,9 @@ td b{color:#fff}
         <div class="mbox"><b id="mSaved">0</b><span>taps the genie saved</span></div>
         <div class="mbox"><b id="mCover">no</b><span>anything covered?</span></div>
       </div>
+      <p class="small" style="margin-top:10px">Speaking with: <b id="voicename">—</b>
+         <span style="color:#6e7b9c">· your device&rsquo;s own voice, which is why it differs between
+         phone and laptop</span></p>
     </div>
 
     <div class="notescol">
@@ -401,6 +400,9 @@ td b{color:#fff}
            The arrival is the one full-screen moment your own covering rule allows, and only because nothing
            is chosen yet. The instant you say your wish, the genie shrinks to the corner and everything he
            says appears in a band that <em>pushes the results down</em> rather than sitting on top of them.
+           And during the arrival itself he simply <em>speaks</em> — no speech bubble, nothing written over
+           the painting (your call, 7 September). Text appears only if the sound is off, so a person who
+           cannot hear is still told what to do.
            Search, chips, Filter, Sort, Trust and the bottom bar stay live throughout. The meter under the
            phone is watching for exactly this and says <b>no</b>.</p>
 
@@ -415,10 +417,15 @@ td b{color:#fff}
            for — he never invents a price, a year or a condition. A confident wrong advert costs a seller more
            than an empty form.</p>
 
-        <p><span class="badge b-rule">5</span><b>Voice out, typing in — for now.</b>
-           He speaks his greeting aloud (your phone's own voice, nothing bought). Listening to speech is a
-           different bill and a permissions prompt, so version one reads what you type. The wish box is one
-           line and takes a scruffy sentence.</p>
+        <p><span class="badge b-rule">5</span><b>Voice out, typing in — and the voice needs buying.</b>
+           You said he sounded tin-like. You were hearing a mistake of mine: I had dropped the pitch to make
+           him deep, and browsers resample badly that low, so what came out was the artefacts. Pitch is back
+           near normal and he now picks the best natural voice your device has — which is why he sounds
+           different on your phone and your laptop. <b>That is still the free voice, and it will never sound
+           like a genie.</b> The real answer is cheap: he says one line, so it is <em>one recorded audio
+           file</em>, generated once from a proper voice service and shipped with the app. No per-use cost,
+           no monthly bill, and it sounds the same on every device. Listening to speech is a different
+           matter — a real bill and a microphone permission — so version one reads what you type.</p>
 
         <p style="margin-bottom:0"><span class="badge b-rule">6</span><b>Two paintings, not a film.</b>
            The night and the arrival are two still images that cross-fade — about 45KB each, which is less
@@ -463,6 +470,17 @@ td b{color:#fff}
            folded across his chest, gold armbands and hoop earrings, magenta and gold embroidered turban
            with a sapphire brooch, neat dark beard, a confident half smile. Waist down he dissolves into
            the coloured smoke. Same palette, same night, same city on the horizon. No text, no watermark.</p>
+      </div>
+
+      <div class="panel">
+        <h2 style="margin-top:0">Where this lives now</h2>
+        <p>It is its own sub-project: <code>MarketSquare\genie\</code>. Both halves sit together —
+           <code>WISH_CONCEPT.html</code> (this one, selling and finding from a sentence) and
+           <code>SEARCH_CONCEPT.html</code> (the 4 September one you already ruled on), plus the artwork
+           in <code>genie\art\</code>. They belong in one folder because they are one design; splitting
+           them is how a thing gets built twice.</p>
+        <p style="margin-bottom:0" class="small">Nothing about the launch changes. This is not in the
+           launch month and is not on the roadmap — it is a folder that is ready when you are.</p>
       </div>
 
       <div class="panel">
@@ -857,22 +875,48 @@ var HINTS=[
  '3 bedroom house to rent in Waterkloof',
  'my geyser is leaking, I need a plumber today'
 ];
+/* David, 7 Sep: the speech bubble covered too much of the screen — "maybe only the voice
+   without script?". So the line is SPOKEN and nothing is drawn over the painting. A single
+   small caption appears only when it has to: voice switched off, or a device with no speech
+   at all. That is not a compromise on his instruction, it is the accessibility floor — a
+   person who cannot hear must still be told what to do. */
 function say(line,sub){
-  $('bubbletext').textContent=line;
-  if(sub!==undefined) $('bubblesub').textContent=sub;
-  $('bubble').classList.add('on');
   speak(line);
+  var cap=$('caption'), silent=(!voiceOn || !window.speechSynthesis);
+  if(!cap) return;
+  if(silent){ cap.textContent=line; cap.classList.add('on'); }
+  else { cap.classList.remove('on'); }
 }
 var voiceOn=true;
+/* Pitch was dropped to 0.45 in the first cut and that is exactly what made him sound
+   tinny — the browser resamples hard below about 0.8 and you hear the artefacts, not a
+   deep voice. Depth has to come from the VOICE, not from bending the pitch. So: pick the
+   best natural voice the device actually has, in a stated order of preference, and leave
+   the pitch nearly alone. */
+var VOICE_ORDER=[
+  /google uk english male/i, /microsoft (guy|davis|ryan|george|tony)/i,
+  /daniel/i, /arthur/i, /alex/i, /google us english/i, /rishi/i, /male/i
+];
+var pickedVoice=null;
+function bestVoice(){
+  if(pickedVoice) return pickedVoice;
+  var vs=(window.speechSynthesis.getVoices()||[]).filter(function(v){return /^en/i.test(v.lang||'');});
+  if(!vs.length) return null;
+  for(var i=0;i<VOICE_ORDER.length;i++){
+    for(var j=0;j<vs.length;j++){ if(VOICE_ORDER[i].test(vs[j].name)){ pickedVoice=vs[j]; return pickedVoice; } }
+  }
+  pickedVoice=vs[0]; return pickedVoice;
+}
 function speak(line){
   if(!voiceOn || !window.speechSynthesis) return;
   try{
     window.speechSynthesis.cancel();
     var u=new SpeechSynthesisUtterance(line);
-    u.pitch=0.45; u.rate=0.88; u.volume=0.95;
-    var vs=window.speechSynthesis.getVoices()||[];
-    for(var i=0;i<vs.length;i++){ if(/male|daniel|alex|george|fred/i.test(vs[i].name)){u.voice=vs[i];break;} }
+    var v=bestVoice(); if(v) u.voice=v;
+    u.pitch=0.9; u.rate=0.86; u.volume=1;
     window.speechSynthesis.speak(u);
+    var nm=document.getElementById('voicename');
+    if(nm) nm.textContent = v? v.name : 'device default';
   }catch(e){}
 }
 function speakToggle(){ voiceOn=!voiceOn; $('sndbtn').innerHTML=(voiceOn?'&#128266; Voice: on':'&#128263; Voice: off');
@@ -905,7 +949,7 @@ function stageNight(){
   $('sceneGenie').classList.remove('on');
   $('lamp').classList.add('on');
   $('holdlabel').classList.add('on');
-  $('bubble').classList.remove('on');
+  var _c=$('caption'); if(_c) _c.classList.remove('on');
   $('wishbar').classList.remove('on');
   $('hints').classList.remove('on');
   $('orb').classList.remove('show');
@@ -937,7 +981,7 @@ function landGenie(){
   $('sceneLamp').classList.remove('on');
   $('sceneGenie').classList.remove('on');
   $('lamp').classList.remove('on');
-  $('bubble').classList.remove('on');
+  var _c=$('caption'); if(_c) _c.classList.remove('on');
   $('wishbar').classList.remove('on');
   $('hints').classList.remove('on');
   $('cinema').style.pointerEvents='none';
@@ -979,7 +1023,10 @@ document.addEventListener('DOMContentLoaded',function(){
   document.addEventListener('touchend',endHold);
   var w=$('wish');
   if(w) w.addEventListener('keydown',function(e){ if(e.key==='Enter') grant(); });
-  if(window.speechSynthesis) window.speechSynthesis.getVoices();
+  if(window.speechSynthesis){
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged=function(){ pickedVoice=null; bestVoice(); };
+  }
   if(location.hash==='#summon'){ stageNight(); setTimeout(summon,340); }
   else setTimeout(stageNight,320);
 });

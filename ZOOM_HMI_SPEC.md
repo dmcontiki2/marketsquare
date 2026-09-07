@@ -365,7 +365,7 @@ search, but the genie can delve even further than the level; openings, middle ga
 speed chess, personal, online etc. I think this will be too complex for the app."*
 
 He was right that the described shape is too heavy, and right that the instinct behind it is
-good. Ruled the same day, after tapping both shapes in `GENIE_SEARCH_CONCEPT.html`:
+good. Ruled the same day, after tapping both shapes in `genie/SEARCH_CONCEPT.html`:
 *"Your idea is better Claude, and your reasons are valid. The genie should not cover any of the
 other selectors. Please write this up as a genie filter to be looked at again after we have a
 stable user base."*
@@ -425,7 +425,7 @@ longer sufficient.
 | Search available at any moment | **Kept, and stronger** | Results are never hidden, so there is no search button to return to. |
 | Deeper than level — openings, middle game, endgame, speed chess | **Kept, but automatic** | Not a hand-built extra tier. §3.1 only asks a facet that splits the remaining set, and §3.6 skips a facet with one answer, so chess depth appears by itself once there are enough chess tutors and stays silent when there are not. |
 
-### 11.5 · Measured in the prototype (`GENIE_SEARCH_CONCEPT.html`, 812 synthetic listings)
+### 11.5 · Measured in the prototype (`genie/SEARCH_CONCEPT.html`, 812 synthetic listings)
 
 Journey: find a chess tutor.
 
@@ -479,4 +479,4 @@ Flag-dark and sandbox-first exactly as §7 requires. Arming is David's act.
 15. The genie sets the same facet state as the chip rail; a chip added by the genie is
     indistinguishable from one added by hand, and is removable the same way.
 
-*Written 4 Sep 2026. Prototype `GENIE_SEARCH_CONCEPT.html`, indexed in `Projects\Visuals`.*
+*Written 4 Sep 2026. Prototype `genie/SEARCH_CONCEPT.html`, indexed in `Projects\Visuals`.*

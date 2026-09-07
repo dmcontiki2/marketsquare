@@ -45,3 +45,62 @@ fields, amber unknowns, publish, band non-overlay, chips/bottom bar still live, 
 **Not done:** nothing wired into `ms.js` / `marketsquare.html` / `bea_main.py`. No flag, no deploy. A
 proposal awaiting David's ruling; if he takes it, it is written up against `ZOOM_HMI_SPEC.md` sec 11
 alongside the search half so the two stay one design.
+
+### Same night, after David saw it — three changes and a folder (GENIE-WISH-2)
+
+David: *"I like it Claude, obviously we can't build it now in our launch month but i would like to
+work towards it."* Then three specifics, all actioned:
+
+1. **It is a sub-project now: `MarketSquare/genie/`.** Both halves moved in together —
+   `WISH_CONCEPT.html` (new) and `SEARCH_CONCEPT.html` (was `GENIE_SEARCH_CONCEPT.html`), plus
+   `Genie Filter — nice.docx` and the artwork in `genie/art/`. `README.md` written as the charter.
+   They share a folder deliberately: RUL-097(b) says the genie is one design, and separating the
+   halves is how a thing gets built twice.
+   **Two live checkers pointed at the old path and were updated in the same session** —
+   `regression_ledger.py` RG-0221 and `rulings_check.py` RUL-097 — plus 3 references in
+   `ZOOM_HMI_SPEC.md` and 1 in `BACKLOG.md`. PROVED after the move: `rulings_check.py` 97 rulings,
+   **0 FAIL**; RG-0221's own check run in isolation returns "spec intact, both prototypes present".
+   History (RULINGS.md, CHANGELOG.md, folded fragments) is append-only and was NOT rewritten — the
+   old path is recorded in the README so a future session can follow it.
+2. **The voice was tinny — my fault, and fixed.** The first cut set pitch to 0.45 to make him sound
+   deep; browsers resample badly below ~0.8 and what you hear is the artefacts. Pitch is now 0.9,
+   rate 0.86, and `bestVoice()` picks the best natural English voice the device has from a stated
+   preference order, re-picking on `onvoiceschanged`. The page now prints which voice it got.
+   HONEST LIMIT recorded in the page: the free browser voice will never sound like a genie. He says
+   ONE line, so the shipped answer is **one recorded audio file** generated once from a proper voice
+   service — no per-use cost. Vendor bears money, so it is David's (RUL-009).
+3. **The speech bubble is gone.** David: *"the speech bubble covers the screen and blocks out too
+   much, maybe only the voice without script?"* Nothing is now drawn over the painting during the
+   arrival — he simply speaks. A single small caption appears ONLY when the voice is off or the
+   device cannot speak, which is the accessibility floor, not a hedge on his instruction.
+
+Still design-only. Nothing wired, no flag, no deploy, not in the launch month.
+
+### Costed against the actual plan (GENIE-COST-1)
+
+David asked what the genie does to the cost budget and the profit target. Answered from the files,
+not from memory — `Cost_Breakdown_GlobalLaunch.xlsx`, `AI_BASELINE.json`,
+`MarketSquare_FreeTier_AI_Cost_Risk_Model.xlsx`, `TrustSquare_Revenue_Bridge.docx`,
+`PRICING_CANON.md`, `FINANCE_CANON.md`, and the `ai_spend_config` defaults in `bea_main.py`.
+
+- **Running cost is one cheap AI call per wish.** Bracketed by two on-disk figures: $0.00296
+  (AI_BASELINE pinned haiku envelope) and $0.01 (the in-house pessimistic cheap-class figure).
+  The paper uses $0.01 throughout — 3.4x the pinned number — so nothing flatters.
+- **End of Year 1 (52 cities, 7,790 sellers, 38,952 buyers): $319/mo pessimistic, $95/mo pinned.**
+  0.70% of the $45,593/mo revenue run rate. Year 1 margin 96.2% -> 95.6%. Year 3 97.2% -> 96.9%.
+  The cost shrinks as a share of the business because revenue grows faster than users.
+- **Break-even: 3.1 extra introductions per city per month**, or 64 free sellers upgrading once.
+  RUL-103's own logic applies — the Revenue Bridge says supply is the one variable that decides the
+  model, and the genie is a supply instrument.
+- **No new ceiling needed.** End-of-Year-1 volume is 10.6% of the existing $100/day platform cap; a
+  user would need 169 wishes in one day to trip the $0.50/day per-user cap. Both already in code.
+- **One-offs:** artwork = 4 Higgsfield credits inside the existing Ultra plan ($0 marginal, blocked
+  on the failed payment); the voice = ONE recorded line of 26 characters, free on ElevenLabs' 10,000
+  char/month tier, ~$6 once for a month of Starter to get the commercial licence. Supplier choice is
+  David's (RUL-009).
+- **Named risk:** the genie is free and unpaid by design, so it is pure cost against the 65% free
+  base. The per-user daily ceiling is the control and it already exists. Distinct from — and two
+  orders of magnitude smaller than — the $2.06/run paid-data class the Free-Tier Risk Model covers.
+
+Deliverable: `genie/Genie Cost & Profit Impact — nice.docx` (Professional Navy house style, 13 tables,
+every figure traced to its source file, the three volume assumptions stated plainly as assumptions).

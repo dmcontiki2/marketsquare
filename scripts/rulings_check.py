@@ -108,7 +108,7 @@ REFLECTIONS = {
                          "the genie never covers a selector",
                          "never a calendar date"], []),
    ("scripts/regression_ledger.py", ["EXTENDED 4 Sep 2026 (RUL-097)"], []),
-   ("GENIE_SEARCH_CONCEPT.html", ["Agreed"], []),
+   ("genie/SEARCH_CONCEPT.html", ["Agreed"], []),
    ("BACKLOG.md", ["Genie filter"], []),
  ],
  "RUL-096": [

@@ -12346,7 +12346,7 @@ def rg_zoom_funnel():
             out.append((FAIL, "ZOOM_HMI_SPEC.md lost %r -- %s is gone (ZOOM-HMI-1)"
                               % (needle, why)))
     for proto in ("ZOOM_HMI_PROTOTYPE_2026-08-30.html", "ZOOM_HMI_PHONE_2026-08-30.html",
-                  "GENIE_SEARCH_CONCEPT.html"):
+                  "genie/SEARCH_CONCEPT.html"):
         if not os.path.exists(os.path.join(REPO, proto)):
             out.append((FAIL, "%s is missing -- the spec's measured tap budgets can no "
                               "longer be re-run (ZOOM-HMI-1)" % proto))
