@@ -183,3 +183,6 @@ host_queue/worker_log.txt
 
 # AGENT-HEARTBEAT-1 (5 Sep 2026): rewritten every 20 min by autodeploy_agent.bat.
 host_queue/agent_heartbeat.txt
+
+# LEDGER-SHARD-1: per-shard run artefacts are measurements, not source
+ledger_runs/

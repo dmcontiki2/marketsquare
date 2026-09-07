@@ -1458,61 +1458,66 @@ def rg_drift_monitor_normalises_crlf():
     return out
 
 
-def run():
+def _judge(e):
+    """One entry, judged. Split out of run() by LEDGER-SHARD-1 (7 Sep 2026) so a shard
+    and a whole run reach a verdict through EXACTLY the same code -- a sharded board that
+    judged differently from a full one would be worse than no board at all."""
+    try:
+        out = e["fn"]() or []
+    except ProbeOffline as ex:
+        out = [(INFO, f"NOT EVALUATED - this machine cannot reach {BASE} ({ex}). "
+                      "An instrument limit, not a verdict on the app. Re-run where "
+                      "the site is reachable before trusting a green board.")]
+    except Exception as ex:
+        out = [(FAIL, f"check crashed (ledger fault, not necessarily the app): {ex!r}")]
+    fails = [m for s, m in out if s == FAIL]
+    infos = [m for s, m in out if s == INFO]
+    # LEDGER-OFFLINE-1: several checks catch their own transport errors and turn
+    # them into FAIL text, so they never reach the ProbeOffline handler above.
+    # Reclassify those ONLY when the preflight has PROVEN this machine is blind -
+    # when the site is reachable, every FAIL is treated as real, exactly as before.
+    # Nothing is hidden: the messages still print, and UNVERIFIED still exits non-zero.
+    if fails and _NET["ok"] is False and any(
+            k in m for m in fails
+            for k in ("ProbeOffline", "Tunnel connection failed", "URLError",
+                      "Connection refused", "Name or service not known",
+                      "Temporary failure in name resolution")):
+        infos = infos + ["NOT EVALUATED - evidence for this entry depends on reaching "
+                         + BASE + ", which this machine cannot do. The messages below are "
+                         "the instrument failing, not proof about the app."] + fails
+        fails = []
+        status = "UNVERIFIED"
+    elif (not fails) and any(s == INFO and "NOT EVALUATED" in m for s, m in out):
+        status = "UNVERIFIED"          # never counted as a pass
+    elif e["state"] == LOCKED:
+        status = "REGRESSION" if fails else "HOLDING"
+    else:
+        # LEDGER-FAULT-1 (31 Jul 2026): outside the repo a repo-only OPEN check skips, produced
+        # zero fails, and falsely reported READY TO LOCK (RG-0006 was nearly promoted while ms.js
+        # still carried 9 Rand price labels). A skip is "unverified here", never "now passing".
+        skipped = (not fails) and any(s == INFO and "skip" in m.lower() for s, m in out)
+        # LEDGER-PENDING-BUILD-1 (31 Aug 2026), sibling of LEDGER-FAULT-1 above and
+        # found the same way -- by the board printing an instruction that was wrong.
+        # Some OPEN entries ratify a DESIGN whose build has not started; while unbuilt
+        # their harness can only assert the pre-build half (the spec is intact, the
+        # prototype is on disk). That half passes on day one, so the board printed
+        # "now passing -- change state to LOCKED" for RG-0221 (ZOOM) every single run,
+        # while RG-0221's own ref says promote only WHEN BUILT and extend the assertion
+        # to the shipped code. Obeying the print would LOCK the weak half and retire the
+        # strong one -- weakening an assertion to make it pass, which the canon forbids.
+        # Ignoring it daily is worse: it teaches sessions that READY TO LOCK is noise,
+        # and the next real one gets skipped (the DW-079 failure, arrived at backwards).
+        # So a harness that can only reach its pre-build half says PENDING BUILD, and
+        # that reads OPEN with its reason -- never an invitation to promote.
+        pending = (not fails) and any(s == INFO and "PENDING BUILD" in m for s, m in out)
+        status = "OPEN" if (fails or skipped or pending) else "READY TO LOCK"
+    return {**{k: v for k, v in e.items() if k != "fn"},
+            "status": status, "fails": fails, "infos": infos}
+
+
+def run(subset=None):
     t0 = time.time()
-    results = []
-    for e in LEDGER:
-        try:
-            out = e["fn"]() or []
-        except ProbeOffline as ex:
-            out = [(INFO, f"NOT EVALUATED - this machine cannot reach {BASE} ({ex}). "
-                          "An instrument limit, not a verdict on the app. Re-run where "
-                          "the site is reachable before trusting a green board.")]
-        except Exception as ex:
-            out = [(FAIL, f"check crashed (ledger fault, not necessarily the app): {ex!r}")]
-        fails = [m for s, m in out if s == FAIL]
-        infos = [m for s, m in out if s == INFO]
-        # LEDGER-OFFLINE-1: several checks catch their own transport errors and turn
-        # them into FAIL text, so they never reach the ProbeOffline handler above.
-        # Reclassify those ONLY when the preflight has PROVEN this machine is blind -
-        # when the site is reachable, every FAIL is treated as real, exactly as before.
-        # Nothing is hidden: the messages still print, and UNVERIFIED still exits non-zero.
-        if fails and _NET["ok"] is False and any(
-                k in m for m in fails
-                for k in ("ProbeOffline", "Tunnel connection failed", "URLError",
-                          "Connection refused", "Name or service not known",
-                          "Temporary failure in name resolution")):
-            infos = infos + ["NOT EVALUATED - evidence for this entry depends on reaching "
-                             + BASE + ", which this machine cannot do. The messages below are "
-                             "the instrument failing, not proof about the app."] + fails
-            fails = []
-            status = "UNVERIFIED"
-        elif (not fails) and any(s == INFO and "NOT EVALUATED" in m for s, m in out):
-            status = "UNVERIFIED"          # never counted as a pass
-        elif e["state"] == LOCKED:
-            status = "REGRESSION" if fails else "HOLDING"
-        else:
-            # LEDGER-FAULT-1 (31 Jul 2026): outside the repo a repo-only OPEN check skips, produced
-            # zero fails, and falsely reported READY TO LOCK (RG-0006 was nearly promoted while ms.js
-            # still carried 9 Rand price labels). A skip is "unverified here", never "now passing".
-            skipped = (not fails) and any(s == INFO and "skip" in m.lower() for s, m in out)
-            # LEDGER-PENDING-BUILD-1 (31 Aug 2026), sibling of LEDGER-FAULT-1 above and
-            # found the same way -- by the board printing an instruction that was wrong.
-            # Some OPEN entries ratify a DESIGN whose build has not started; while unbuilt
-            # their harness can only assert the pre-build half (the spec is intact, the
-            # prototype is on disk). That half passes on day one, so the board printed
-            # "now passing -- change state to LOCKED" for RG-0221 (ZOOM) every single run,
-            # while RG-0221's own ref says promote only WHEN BUILT and extend the assertion
-            # to the shipped code. Obeying the print would LOCK the weak half and retire the
-            # strong one -- weakening an assertion to make it pass, which the canon forbids.
-            # Ignoring it daily is worse: it teaches sessions that READY TO LOCK is noise,
-            # and the next real one gets skipped (the DW-079 failure, arrived at backwards).
-            # So a harness that can only reach its pre-build half says PENDING BUILD, and
-            # that reads OPEN with its reason -- never an invitation to promote.
-            pending = (not fails) and any(s == INFO and "PENDING BUILD" in m for s, m in out)
-            status = "OPEN" if (fails or skipped or pending) else "READY TO LOCK"
-        results.append({**{k: v for k, v in e.items() if k != "fn"},
-                        "status": status, "fails": fails, "infos": infos})
+    results = [_judge(e) for e in (LEDGER if subset is None else subset)]
     return results, round(time.time() - t0, 1)
 
 
@@ -1548,10 +1553,132 @@ def _ensure_instrument_deps():
               "third-party module" % type(exc).__name__, file=sys.stderr)
 
 
+@entry("RG-0319", "The whole board can be run to a verdict from a session whose commands are "
+       "killed at ~180s -- the ledger shards, and a verdict is refused unless every shard is "
+       "present, fresh, and judged by the same code as a full run",
+       LOCKED, fixed_on="2026-09-07",
+       scope="regression_ledger.py must expose --shard=k/n and --combine=n; _judge() must be the "
+             "single judging path used by both run() and a shard; _load_shards must REFUSE (never "
+             "warn) on a missing shard, a shard sized against a different ledger, or a stale set. "
+             "MEASURED 7 Sep 2026: 311 entries, 250.7s of check time, median entry 0.023s, 250 of "
+             "311 under 0.5s -- but SEVEN entries carry 155s (62%) of it: RG-0025 52s (downloads "
+             "the live index + 10 adventures map pages), RG-0258 24s and RG-0012 12s (live fetches), "
+             "RG-0259 22s / RG-0276 20s / RG-0308 10s (subprocess launches on the FUSE mount), "
+             "RG-0028 16s (a connection that must time out). Four of those seven were added 4-6 Sep, "
+             "which is when the run crossed the sandbox's ~180s command ceiling. CLASS: the cost "
+             "does NOT track the entry count -- adding cheap entries is free; adding a live page "
+             "download or a subprocess is not. Sharding is round-robin (i %% n) so the heavy "
+             "entries spread across slices instead of stacking in one.",
+       ref="LEDGER-SHARD-1, 7 Sep 2026. David: 'can we now determine why the timing per full self "
+           "check has changed, and what is'. Before this, a Cowork session could only check pieces "
+           "of the board and guess about the rest -- which is the exact failure this file exists to "
+           "prevent, one layer up. First full green run through shards the same session: 311 "
+           "entries, 0 regressed, 0 unverified, 214.7s across 3 shards of 83s/57s/75s.")
+def rg_ledger_runs_in_shards():
+    src = __file__ if os.path.exists(__file__) else os.path.join(REPO, "scripts", "regression_ledger.py")
+    try:
+        t = open(src, encoding="utf-8", errors="replace").read()
+    except Exception as ex:
+        return [(INFO, "cannot read own source (%r) -- skipped" % (ex,))]
+    out = []
+    for need, why in (
+            ("def _judge(e):", "the single judging path is gone -- a shard could judge differently "
+                               "from a full run, which is worse than no board"),
+            ("def _run_shard(", "--shard is gone -- the board is unrunnable from a session with a "
+                                "~180s command ceiling"),
+            ("def _load_shards(", "--combine is gone -- shards can be run but never assembled")):
+        if need not in t:
+            out.append((FAIL, "regression_ledger.py: %s (%s)" % (why, need)))
+    if "raise SystemExit(\"LEDGER-SHARD-1: shard %d of %d has not been run" not in t:
+        out.append((FAIL, "a missing shard no longer REFUSES the verdict -- a board assembled from "
+                          "a missing piece is a green light nobody measured"))
+    if "total_entries\") != len(LEDGER)" not in t:
+        out.append((FAIL, "shards are no longer checked against the ledger size -- a board could be "
+                          "assembled from pieces measured against different trees"))
+    if not out:
+        out.append((INFO, "the board shards, refuses partial or stale sets, and judges shard and "
+                          "full runs through one code path"))
+    return out
+
+
+SHARD_DIR = os.path.join(REPO, "ledger_runs")
+
+
+def _shard_path(n, k):
+    return os.path.join(SHARD_DIR, "shard-%02d-of-%02d.json" % (k, n))
+
+
+def _argval(flag):
+    """--flag=value, or '--flag value'. Returns None when absent."""
+    for i, a in enumerate(sys.argv):
+        if a.startswith(flag + "="):
+            return a.split("=", 1)[1]
+        if a == flag and i + 1 < len(sys.argv):
+            return sys.argv[i + 1]
+    return None
+
+
+def _run_shard(k, n):
+    """LEDGER-SHARD-1 (7 Sep 2026). A full run is ~250s of check time and every command
+    in the Cowork sandbox is killed at about 180s, so NO session running that way could
+    finish the board -- it could only check pieces and guess about the rest. Measured the
+    same day: 311 entries, median 0.023s, but seven entries (live page downloads and
+    subprocess launches) carry 155s of the total. Sharding round-robin (i % n) spreads
+    those heavy entries evenly instead of stacking them in one slice.
+
+    A shard NEVER prints a verdict -- only --combine does, and only when every shard is
+    present and fresh. A board assembled from a missing piece would be a green light
+    nobody measured, which is the one thing this file exists to prevent."""
+    os.makedirs(SHARD_DIR, exist_ok=True)
+    subset = [e for i, e in enumerate(LEDGER) if i % n == (k - 1)]
+    results, took = run(subset)
+    json.dump({"k": k, "n": n, "took_s": took, "at": time.time(),
+               "total_entries": len(LEDGER), "results": results},
+              open(_shard_path(n, k), "w", encoding="utf-8"), indent=1)
+    print("shard %d/%d: %d entries in %ss -> %s" % (k, n, len(results), took, _shard_path(n, k)))
+    print("run the remaining shards, then: python3 scripts/regression_ledger.py --combine=%d" % n)
+    return 0
+
+
+def _load_shards(n, max_age_s=5400):
+    """Every shard must exist, agree on the ledger size, and be recent. Anything else
+    raises -- a stale or partial board is refused, never quietly patched over."""
+    got, oldest = {}, time.time()
+    for k in range(1, n + 1):
+        path = _shard_path(n, k)
+        if not os.path.exists(path):
+            raise SystemExit("LEDGER-SHARD-1: shard %d of %d has not been run "
+                             "(%s missing). Run it, then combine." % (k, n, path))
+        d = json.load(open(path, encoding="utf-8"))
+        if d.get("total_entries") != len(LEDGER):
+            raise SystemExit("LEDGER-SHARD-1: shard %d was run against %s entries, this tree has "
+                             "%d. The ledger changed mid-run -- re-run every shard."
+                             % (k, d.get("total_entries"), len(LEDGER)))
+        oldest = min(oldest, d.get("at", 0))
+        got[k] = d
+    age = time.time() - oldest
+    if age > max_age_s:
+        raise SystemExit("LEDGER-SHARD-1: the oldest shard is %d minutes old. A board is a "
+                         "measurement, not an archive -- re-run the shards." % int(age / 60))
+    order = {e["id"]: i for i, e in enumerate(LEDGER)}
+    merged = [r for k in got for r in got[k]["results"]]
+    merged.sort(key=lambda r: order.get(r["id"], 10 ** 6))
+    return merged, round(sum(got[k]["took_s"] for k in got), 1), int(age)
+
+
 def main():
     _ensure_instrument_deps()
     _fp_before = _source_fingerprint()
-    results, took = run()
+    _shard = _argval("--shard")
+    _combine = _argval("--combine")
+    if _shard:
+        _k, _n = [int(x) for x in _shard.replace(":", "/").split("/")]
+        return _run_shard(_k, _n)
+    if _combine:
+        results, took, _age = _load_shards(int(_combine))
+        print("# assembled from %s shards, oldest piece %ds old" % (_combine, _age), file=sys.stderr)
+    else:
+        results, took = run()
     _moved = _sources_changed(_fp_before, _source_fingerprint())
     n = lambda s: sum(1 for r in results if r["status"] == s)
     regressed, holding, open_, ready = n("REGRESSION"), n("HOLDING"), n("OPEN"), n("READY TO LOCK")
