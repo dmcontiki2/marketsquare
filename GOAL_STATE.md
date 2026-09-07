@@ -39,9 +39,11 @@ Target: **20 by Fri 31 Oct 2026.** Model on runs 5–6: Fable 5.1 (as David aske
    Carolina → Wyoming, 166 letters) dry-ran on the 250 cap → they go tonight. US club bounces:
    6 Sep wave 0/203; tonight 7/251 so far (2.8%). Domain gate now has its 50 post-clean sends.
 2. FUNNEL-HUMAN-1 above, shipped twice via relay (RG-0315 LOCKED; RG-0293 read moved to bots=1).
-3. LEDGER-SLICES-1: `scripts/ledger_slices.py` — the ledger in 6 slices, because the sandbox call
-   cap is now ~178 s and a background run dies with the call. Board after: **311 entries · 0
-   REGRESSED · 22 open**. Cleared 3 stale reds (session counter, harness call site, .ps1 CRLF).
+3. Ran the ledger in pieces (the sandbox call cap is ~178 s; a background run dies with the
+   call). Board after: **311 entries · 0 REGRESSED · 22 open**. Cleared 3 stale reds (session
+   counter, harness call site, .ps1 CRLF). NOTE: the canonical way is now the ledger's own
+   `--shard=k/n` + `--combine=n` (LEDGER-SHARD-1, built 06:56 the same morning); my 01:17
+   `ledger_slices.py` is retired to a pointer.
 4. MOGA-1: **199 Montana licensed outfitters** harvested (`--adapter moga`, one page, embedded
    JSON) → category adventures_experiences, bucket Montana; import queued. Caught: the register
    CSV had no category column → would have imported as Sports Clubs and got the CLUB letter.
@@ -73,7 +75,7 @@ Target: **20 by Fri 31 Oct 2026.** Model on runs 5–6: Fable 5.1 (as David aske
    remaining states went and the ramp doubled where wave #1 was clean. Bounces off the server.
 2. `GET /onboard/funnel?days=2` — FIRST graded reading: `humans`, and which step they reach.
    If humans ≥ 10 and none pass `photo_pick`, the required photo is the leak — fix as a class.
-3. Ledger: `python3 scripts/ledger_slices.py --slice N --of 6 --run <name>` ×6 then `--report`.
+3. Ledger: `python3 scripts/regression_ledger.py --shard=1/3` (then 2/3, 3/3) and `--combine=3`.
 4. Letter work that unlocks supply: bring `adventures_experiences_outreach.html` into RUL-099
    shape (source line; consider dropping the $20 ask like arm 'b'), then add
    adventures_experiences to Montana's category_priority → RG-0317 prints READY TO LOCK.

@@ -1,0 +1,17 @@
+{
+  "_comment": "BOT · Seller — NOT DEPLOYED. The one that moves the number that is currently zero: a person talks for ninety seconds and ends with a live advert.",
+  "name": "TrustSquare Seller",
+  "short_name": "Sell it",
+  "description": "Describe what you are selling. The genie writes the advert; you press Publish.",
+  "start_url": "/?bot=seller",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#2F8D5C",
+  "background_color": "#07120C",
+  "icons": [
+    { "src": "/static/brand/bots/seller/icon-192.png",     "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/brand/bots/seller/icon-512.png",     "sizes": "512x512", "type": "image/png" },
+    { "src": "/static/brand/bots/seller/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

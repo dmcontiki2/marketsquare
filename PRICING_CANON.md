@@ -27,6 +27,8 @@ This doc mirrors these constants for humans; the **code is the final word**, and
 | Pro | $20 | R360 | 30 | 10T |
 | Agency | free + verified | R0 | 10 base (grows with Trust Score) | 0 |
 
+**BOTs — DECIDED, NOT YET BUILT (RUL-108, 7 Sep 2026):** BOTs (Bolted On Terminals — a per-purpose home-screen icon opening a voice-first genie into the app) carry **no price of their own**. When built they are **included in Pro at the price above** — no new tier, no add-on, nothing here changes. Two parts of it are free to EVERY tier including Free and must stay that way: **listing conversationally** (the number that is zero is people publishing, and 65% of sellers are Free) and **keeping a watch** (it already earns 1T when it fires and the buyer asks for the introduction — charging as well would take money twice for one event). What Pro buys is the work with no introduction at the end: portfolio valuation, bulk listing, cross-market price intelligence — already gated to Pro by `ai_service_tiers.PAID_FEED_FUNCTIONS`. **No BOT exists today**; no seller-facing surface may advertise one until it does (RG-0267). Design lives in `genie/bots/`.
+
 **Agency Pro seat (RUL-048, 23 Aug 2026):** an agency agent lifts 10 → 20 slots + the Pro AI suite by taking their **own $5/month seat subscription** — EULA acceptance and payment by the agent through the subscription machinery. The console can invite the upgrade, never grant it; no tier or cap changes hands without the subscription. (Purchasable flow tracked as RG-0167 until live.)
 
 

@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BOT · Sell It — TrustSquare</title>
+<style>
+:root{
+  --ink:#eaf3ec; --dim:#8fa697; --bg:#060d09; --card:#101a14; --line:#1e3327;
+  --green:#2f8d5c; --green2:#6fd6a0; --gold:#e0ae4e; --warn:#d98b3a; --bad:#c9584f;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1360px;margin:0 auto;padding:24px 18px 60px}
+h1{font-size:25px;margin:0 0 5px;letter-spacing:-.3px}
+h1 span{color:var(--green2)}
+.lede{color:var(--dim);max-width:900px;margin:0 0 20px}
+.stage{display:grid;grid-template-columns:400px 1fr;gap:28px;align-items:start}
+@media(max-width:1020px){.stage{grid-template-columns:1fr}}
+.phonecol{position:sticky;top:18px}
+
+.phone{position:relative;width:378px;height:790px;border-radius:38px;overflow:hidden;
+  background:#060d09;border:11px solid #030604;box-shadow:0 30px 80px rgba(0,0,0,.72)}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:22px;
+  background:#030604;border-radius:0 0 14px 14px;z-index:80}
+.bot{position:absolute;inset:0;display:flex;flex-direction:column}
+
+.brandbar{padding:32px 14px 10px;display:flex;align-items:center;gap:9px;
+  background:linear-gradient(180deg,#0f1a13,#0a120d);border-bottom:1px solid var(--line)}
+.mark{width:26px;height:26px;border-radius:7px;flex:0 0 auto;
+  background:linear-gradient(135deg,var(--green2),var(--green));
+  display:flex;align-items:center;justify-content:center;font-size:14px;color:#052012;font-weight:900}
+.bname{font-size:13px;font-weight:800}
+.bname small{display:block;font-size:10px;font-weight:600;color:var(--green2);
+  letter-spacing:.14em;text-transform:uppercase}
+.link{margin-left:auto;font-size:9.5px;color:var(--dim);text-align:right;line-height:1.3}
+
+/* the rating — the whole point of this BOT */
+.rate{display:flex;align-items:center;gap:12px;padding:10px 13px;background:#0b130e;
+  border-bottom:1px solid var(--line)}
+.ring{position:relative;width:64px;height:64px;flex:0 0 auto}
+.ring svg{transform:rotate(-90deg)}
+.ring .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;font-size:19px;font-weight:900;line-height:1}
+.ring .val i{font-style:normal;font-size:8px;font-weight:700;color:var(--dim);letter-spacing:.1em;
+  margin-top:1px}
+.rmeta{flex:1;min-width:0}
+.rmeta h4{margin:0 0 2px;font-size:11px;letter-spacing:.02em}
+.rmeta p{margin:0;font-size:10.5px;color:var(--dim);line-height:1.4}
+.rmeta .gate{font-weight:800}
+.gate.no{color:var(--warn)} .gate.yes{color:var(--green2)}
+.bar{height:5px;background:#16241b;border-radius:3px;margin-top:6px;position:relative;overflow:hidden}
+.bar i{display:block;height:5px;border-radius:3px;background:linear-gradient(90deg,#2f8d5c,#6fd6a0);
+  transition:width .7s cubic-bezier(.3,.9,.3,1)}
+.bar b{position:absolute;left:50%;top:-3px;width:2px;height:11px;background:#e0ae4e;border-radius:1px}
+
+/* photo slots */
+.pslots{padding:8px 13px 4px;background:#0a120d;border-bottom:1px solid var(--line)}
+.pslots h4{margin:0 0 6px;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);font-weight:700}
+.prow{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.prow::-webkit-scrollbar{display:none}
+.pchip{flex:0 0 auto;font-size:9.5px;padding:4px 7px;border-radius:6px;border:1px dashed #26402f;
+  color:#5f7568;white-space:nowrap;transition:all .3s}
+.pchip.on{border-style:solid;border-color:var(--green);background:rgba(47,141,92,.2);
+  color:var(--green2);font-weight:700;animation:snap .3s ease}
+@keyframes snap{from{transform:scale(.8);opacity:.4}to{transform:scale(1);opacity:1}}
+
+.talk{flex:1;overflow-y:auto;padding:10px 13px;display:flex;flex-direction:column;gap:8px}
+.talk::-webkit-scrollbar{width:0}
+.bub{max-width:84%;font-size:12.5px;line-height:1.45;padding:8px 11px;border-radius:14px;
+  animation:rise .3s ease}
+@keyframes rise{from{transform:translateY(7px);opacity:0}to{transform:translateY(0);opacity:1}}
+.bub.g{align-self:flex-start;background:#132018;border:1px solid #24382b;border-bottom-left-radius:4px}
+.bub.u{align-self:flex-end;background:linear-gradient(135deg,#2f8d5c,#1d6942);color:#fff;
+  border-bottom-right-radius:4px;font-weight:600}
+.pts{display:inline-block;font-size:9.5px;font-weight:900;background:rgba(111,214,160,.18);
+  color:var(--green2);border-radius:5px;padding:1px 5px;margin-left:5px}
+.pts.warn{background:rgba(217,139,58,.18);color:#e8b071}
+
+.draft{align-self:stretch;background:#0d160f;border:1px solid var(--line);border-radius:11px;
+  padding:9px 10px;animation:rise .35s ease}
+.draft .dt{font-size:12.5px;font-weight:800}
+.draft .dd{font-size:10.5px;color:#a9bfb0;margin-top:3px;line-height:1.45}
+.kv{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.kv span{font-size:9.5px;background:rgba(47,141,92,.16);border:1px solid rgba(47,141,92,.4);
+  border-radius:6px;padding:2px 5px;color:#b6e6cb}
+.kv span.miss{background:rgba(217,139,58,.14);border-color:rgba(217,139,58,.45);color:#e8b071}
+
+.mic{padding:9px 13px 14px;background:#0a120d;border-top:1px solid var(--line)}
+.microw{display:flex;align-items:center;gap:9px}
+.micbtn{width:56px;height:56px;flex:0 0 auto;border-radius:50%;border:0;cursor:pointer;
+  background:linear-gradient(135deg,var(--green2),#1d6942);color:#052012;font-size:23px}
+.micbtn.listening{animation:ring2 1.4s ease-out infinite}
+@keyframes ring2{0%{box-shadow:0 0 0 0 rgba(47,141,92,.65)}100%{box-shadow:0 0 0 26px rgba(47,141,92,0)}}
+.micbtn:disabled{opacity:.45;cursor:not-allowed}
+.typed{flex:1;background:#101a14;border:1px solid #26402f;border-radius:12px;color:#fff;
+  font-size:12.5px;padding:10px 11px;outline:none}
+.typed::placeholder{color:#5f7568}
+.pub{width:100%;margin-top:9px;padding:11px;border:0;border-radius:12px;font-size:13.5px;
+  font-weight:900;cursor:pointer;background:#1a2a20;color:#5f7568}
+.pub.ready{background:linear-gradient(135deg,var(--green2),#1d6942);color:#052012;cursor:pointer}
+.state{font-size:10px;color:var(--dim);margin-top:7px;text-align:center;min-height:13px}
+
+/* notes */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:15px}
+.panel h2{font-size:17px;margin:0 0 10px;color:#fff}
+.panel h3{font-size:12px;margin:16px 0 6px;color:var(--green2);text-transform:uppercase;letter-spacing:.1em}
+.panel p{margin:0 0 11px;color:#c2d4c8}
+.panel p:last-child{margin-bottom:0}
+.panel ul{margin:0 0 11px;padding-left:19px;color:#c2d4c8}
+.panel li{margin-bottom:6px}
+.small{font-size:12.5px;color:var(--dim)}
+code{background:#16241b;border:1px solid var(--line);border-radius:4px;padding:1px 5px;
+  font-size:12px;color:var(--green2)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 12px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--green2);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+td b{color:#fff}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.badge{display:inline-block;font-size:10px;font-weight:800;text-transform:uppercase;padding:3px 8px;
+  border-radius:6px;letter-spacing:.05em}
+.b-real{background:rgba(47,141,92,.18);color:#7ddcaa;border:1px solid rgba(47,141,92,.45)}
+.b-gap{background:rgba(217,139,58,.16);color:#e8b071;border:1px solid rgba(217,139,58,.42)}
+.ctrls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.ctrls button{background:#16241b;border:1px solid var(--line);color:#dcece1;border-radius:9px;
+  padding:8px 12px;font-size:12.5px;cursor:pointer}
+.ctrls button:hover{border-color:var(--green)}
+.ctrls button.primary{background:linear-gradient(135deg,var(--green2),#1d6942);border:0;
+  color:#052012;font-weight:800}
+.foot{margin-top:24px;font-size:12px;color:#5f7568;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>BOT · <span>Sell It</span></h1>
+  <p class="lede">David, 7 September 2026: <em>&ldquo;this genie not only searches items, it lists them
+     as well, in a conversational mode — you should have two more photos to improve your Listing Rating
+     score… we need the car&rsquo;s model to get the specifications, John… do you have plans for the
+     house?&rdquo;</em> That is the right idea and it is the one that fills the empty shelves.
+     <b>Every number this BOT says is the real one</b> — the scoring you see is
+     <code>_import_quality_score()</code> out of <code>bea_main.py</code>, reimplemented exactly, and
+     the photo coaching is the wizard&rsquo;s own <code>SB_PHOTO_SLOTS</code> prompts, word for word.</p>
+
+  <div class="stage">
+    <div class="phonecol">
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="bot">
+          <div class="brandbar">
+            <div class="mark">TS</div>
+            <div class="bname">TrustSquare<small>Sell it</small></div>
+            <div class="link">John&rsquo;s account<br>Starter · 10 slots</div>
+          </div>
+
+          <div class="rate">
+            <div class="ring">
+              <svg viewBox="0 0 64 64" width="64" height="64">
+                <circle cx="32" cy="32" r="27" fill="none" stroke="#16241b" stroke-width="7"/>
+                <circle id="ringArc" cx="32" cy="32" r="27" fill="none" stroke="#6fd6a0" stroke-width="7"
+                        stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="169.6"
+                        style="transition:stroke-dashoffset .7s cubic-bezier(.3,.9,.3,1),stroke .5s"/>
+              </svg>
+              <div class="val"><span id="ringNum">0</span><i>RATING</i></div>
+            </div>
+            <div class="rmeta">
+              <h4>Listing Rating</h4>
+              <p id="rateMsg">Publishing needs <b>50</b>. Let&rsquo;s get you there.</p>
+              <div class="bar"><i id="rateBar" style="width:0%"></i><b title="publish bar"></b></div>
+            </div>
+          </div>
+
+          <div class="pslots">
+            <h4>Photos <span id="pcount" style="color:#6fd6a0">0 of 10</span></h4>
+            <div class="prow" id="prow"></div>
+          </div>
+
+          <div class="talk" id="talk"></div>
+
+          <div class="mic">
+            <div class="microw">
+              <button class="micbtn" id="micbtn" title="Talk to it">&#127908;</button>
+              <input class="typed" id="typed" placeholder="…or type it" autocomplete="off">
+            </div>
+            <button class="pub" id="pub" disabled>Publish &mdash; needs 50</button>
+            <div class="state" id="state">Tap the microphone and say what you want to sell</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ctrls">
+        <button class="primary" onclick="runScript()">&#9654; Play the whole conversation</button>
+        <button onclick="addPhoto()">&#128247; Add a photo</button>
+        <button onclick="resetBot()">Start again</button>
+        <button onclick="toggleVoice()" id="vbtn">&#128266; Voice: on</button>
+      </div>
+    </div>
+
+    <div class="notescol">
+
+      <div class="panel">
+        <h2>You are right, and the code already agrees with you</h2>
+        <p>I went and read the app before building this. There is already a <b>Listing Rating</b> in
+           TrustSquare — a real 100-point score with a real 50-point publish bar — and it already
+           returns a list of what to fix, <em>biggest win first</em>. Nobody ever shows it to a seller
+           conversationally. That is the whole opportunity in one sentence.</p>
+        <h3>What the score is actually made of</h3>
+        <table>
+          <tr><th>What</th><th class="n">Points</th><th>The rule, exactly as the code has it</th></tr>
+          <tr><td><b>Photos</b></td><td class="n">up to 40</td>
+              <td>First photo 10, then <b>+8 each</b>, capped at 40. So five photos maxes it — and
+                  &ldquo;two more photos&rdquo; is literally <b>+16</b>.</td></tr>
+          <tr><td><b>The facts about the thing</b></td><td class="n">50</td>
+              <td>Split evenly across the fields that category needs, plus a description of 15+ words.
+                  A car needs make, model, year, mileage, transmission — six slots, so <b>8.3 each</b>.
+                  A house needs type, beds, baths, to-let-or-sell — five slots, <b>10 each</b>.</td></tr>
+          <tr><td><b>A real price</b></td><td class="n">6</td>
+              <td>&ldquo;POA&rdquo; scores zero. Naming a number is worth 6 points.</td></tr>
+          <tr><td><b>Suburb</b></td><td class="n">4</td><td>Where the thing is.</td></tr>
+        </table>
+        <p class="small">Source: <code>_import_quality_score()</code> in <code>bea_main.py</code>.
+           The BOT beside this text runs the same arithmetic — the numbers it quotes are not invented.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Your three examples, checked against the code</h2>
+        <table>
+          <tr><th>What you said the genie should say</th><th>Verdict</th></tr>
+          <tr><td><b>&ldquo;You should have two more photos to improve your Listing Rating score&rdquo;</b></td>
+              <td><span class="badge b-real">Real</span><br><span class="small">Exactly +16. And the app
+                  already has room-by-room prompts — for a car it wants front, rear, both sides,
+                  interior, dashboard with the odometer visible, engine bay, boot, and
+                  <em>any damage</em>. The genie can just read those out.</span></td></tr>
+          <tr><td><b>&ldquo;We need the car&rsquo;s model to get the specifications, John&rdquo;</b></td>
+              <td><span class="badge b-real">Real</span><br><span class="small">Model is one of the six
+                  required car fields, worth 8.3 on its own — and it is the key that unlocks the
+                  specifications the app already fetches. Your instinct that it does double duty is right.</span></td></tr>
+          <tr><td><b>&ldquo;Do you have plans for the house?&rdquo;</b></td>
+              <td><span class="badge b-gap">Finds a hole</span><br><span class="small">Plans score
+                  <b>nothing</b> today. But look at what the app already asks collectors for: an
+                  authentication certificate. And sellers: a trade certificate. <b>The wizard already
+                  believes in proof documents — the score just ignores them.</b> That is a gap your
+                  question found, and it is the most valuable of the three.</span></td></tr>
+        </table>
+        <h3>What I would do about the third one</h3>
+        <p>Not squeeze plans into the rating. Documents are a different animal: photos show what a thing
+           <em>looks</em> like, documents prove what it <em>is</em>. Approved building plans, a service
+           history, a certificate of authenticity — those belong next to the Trust Score, not the
+           Listing Rating, because they are evidence about the seller&rsquo;s claim.</p>
+        <p style="margin-bottom:0" class="small">That is a decision for you rather than me — it touches
+           what the Trust Score means, which is the heart of the product. I have written it up rather
+           than quietly changing it.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Something the test found, which you should know about</h2>
+        <p>Running the conversation end to end threw up a real one. Answer every question about the car,
+           give a price, a suburb and a decent description — and <b>add no photographs at all</b> — and
+           the listing scores <b>60 out of 100</b> and is allowed to publish.</p>
+        <p>The arithmetic is right: the facts are worth 50, the price 6, the suburb 4. Photos are worth
+           40, and nothing says you must have any of them. So a listing with no picture clears a bar set
+           at 50, comfortably.</p>
+        <p>A listing with no photograph helps nobody — not the buyer, not the seller, and not the
+           marketplace that has to look worth visiting. I would put a floor under it: <b>at least one
+           photo before anything publishes</b>, which the guided wizard effectively achieves by asking
+           for pictures first, but the score alone does not require.</p>
+        <p style="margin-bottom:0" class="small">Flagged, not changed. It touches the publish gate, and
+           quietly moving a gate during launch month is not a thing I will do without you saying so.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Why this BOT and not the Collector</h2>
+        <p>Last night I argued Collector proves it and Seller banks it. You have made the better version
+           of that argument: <em>there are no products because we are complex</em>. The rating is the
+           proof — a seller who abandons the form leaves at maybe 20 out of 100, and a listing at 20
+           helps nobody.</p>
+        <p>A form asks you to fill in fields. This asks one question at a time, in the order that gains
+           the most points, tells you what each answer is worth, and stops the moment you can publish —
+           then offers you more if you want a better listing rather than demanding it.</p>
+        <p style="margin-bottom:0"><b>One rule I built in and would defend:</b> it tells you the truth
+           about where you are. At 52 it says &ldquo;you can publish now&rdquo; even though three more
+           photos would take you to 76. A coach that will not let you finish is just a form with a
+           voice.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Where this stands</h2>
+        <p>Nothing wired, no flag, no deploy, not launch scope. Two BOTs now exist as working pictures:
+           the Collector and this one.</p>
+        <p style="margin-bottom:0" class="small">The scoring here is a faithful copy for the prototype.
+           If this gets built, the BOT calls the server for the score rather than keeping its own —
+           one scorer, not two, the same rule that keeps the genie from becoming a second search engine.</p>
+      </div>
+
+    </div>
+  </div>
+  <div class="foot">Prototype &middot; real scoring rules, invented seller &middot; TrustSquare / MarketSquare &middot; 7 Sep 2026</div>
+</div>
+
+<script>
+/* ===========================================================================
+   BOT · Sell It
+   The scorer below is a faithful reimplementation of _import_quality_score()
+   from bea_main.py. If this ships, the BOT asks the SERVER for the score
+   instead — one scorer, never two.
+   ========================================================================= */
+function $(id){return document.getElementById(id);}
+
+/* --- the real required fields, per category (bea_main.py) --- */
+var REQ={
+  cars:     ['make','model','vehicle_year','mileage_km','transmission'],
+  property: ['prop_type','beds','baths','listing_type'],
+  tutors:   ['subject','level','mode'],
+  services: ['service_type']
+};
+/* --- the wizard's own photo prompts (ms.js SB_PHOTO_SLOTS), word for word --- */
+var SLOTS={
+  cars:[
+   ['front',"Front of the vehicle — centred, standing back."],
+   ['rear',"Rear of the vehicle."],
+   ['driver side',"Driver's side profile."],
+   ['passenger side',"Passenger side profile."],
+   ['interior front',"Interior — dashboard and front seats."],
+   ['interior rear',"Rear seats."],
+   ['dashboard',"Dashboard close-up — odometer visible."],
+   ['engine bay',"Engine bay — open bonnet."],
+   ['boot',"Boot / load area."],
+   ['damage',"Any dents, scratches, or wear — buyers respect honesty and it reduces disputes."]],
+  property:[
+   ['exterior',"Step back to get the whole house in frame. Late afternoon light is flattering."],
+   ['lounge',"Shoot from the corner to show the whole room."],
+   ['kitchen',"Kitchen photos sell houses. Natural light works best."],
+   ['bedroom 1',"Show the bed and the window if you can — buyers want to picture themselves here."],
+   ['bathroom',"Clean and tidy before shooting — tile and fixture quality matters to buyers."],
+   ['garden',"Garden / outdoor area: show the space and any features."],
+   ['street view',"Optional — helps buyers confirm the neighbourhood."]],
+  tutors:[
+   ['workspace',"Add a photo of you in your element — at a desk, whiteboard, or with learning materials."],
+   ['qualifications',"Photograph your qualifications or certificates on display."],
+   ['materials',"Show your study materials or resources — it signals preparation."]],
+  services:[
+   ['job completed',"Show a completed job — before/after pairs are very effective."],
+   ['tools',"Your tools and equipment tell buyers about your professionalism."],
+   ['certificate',"Photograph your trade certificate or registration on display."]]
+};
+var LABEL={make:'make',model:'model',vehicle_year:'year',mileage_km:'mileage',transmission:'transmission',
+ prop_type:'property type',beds:'bedrooms',baths:'bathrooms',listing_type:'to rent or to sell',
+ subject:'subject',level:'level',mode:'online or in person',service_type:'what the job is'};
+
+var st={cat:null,f:{},photos:0,desc:'',price:null,suburb:null,voice:true,busy:false,
+        published:false,asked:null,offeredMore:false};
+
+/* --- the scorer, exactly --- */
+function score(){
+  var s=0, missing=[];
+  var ph = st.photos ? Math.min(40, 10 + 8*(st.photos-1)) : 0;
+  s += ph;
+  if(ph<40) missing.push({k:'photos', gain: Math.min(8, 40-ph),
+     txt:'photos: '+st.photos+' attached — add '+Math.max(1,Math.ceil((40-ph)/8))+'+ more'});
+  var req = REQ[st.cat]||[];
+  var fields = req.length+1;                 // + the 15-word description
+  var per = 50/fields;
+  req.forEach(function(f){
+    if(st.f[f]) s += per; else missing.push({k:f, gain:per, txt:LABEL[f]+' missing'});
+  });
+  var words = (st.desc.trim().match(/\S+/g)||[]).length;
+  if(words>=15) s += per; else missing.push({k:'_desc15', gain:per,
+     txt:'description too thin ('+words+' words, need 15+)'});
+  if(st.price) s += 6; else missing.push({k:'price', gain:6, txt:'price missing (POA scores 0)'});
+  if(st.suburb) s += 4; else missing.push({k:'suburb', gain:4, txt:'suburb missing'});
+  missing.sort(function(a,b){ return b.gain-a.gain; });     // biggest win first, like the server
+  return {score: Math.round(s), missing: missing};
+}
+
+function paint(){
+  var r=score(), pct=Math.max(0,Math.min(100,r.score));
+  $('ringNum').textContent=r.score;
+  $('ringArc').style.strokeDashoffset = 169.6*(1-pct/100);
+  $('ringArc').style.stroke = r.score>=50 ? '#6fd6a0' : (r.score>=30 ? '#e0ae4e' : '#c9584f');
+  $('rateBar').style.width = pct+'%';
+  $('rateMsg').innerHTML = r.score>=50
+    ? 'Good to publish. <span class="gate yes">'+r.score+'/100</span> — every point above 50 is a better listing.'
+    : 'Publishing needs <b>50</b>. You are at <span class="gate no">'+r.score+'</span>.';
+  var slots=SLOTS[st.cat]||[];
+  $('pcount').textContent = st.photos+' of '+slots.length;
+  $('prow').innerHTML = slots.map(function(s,i){
+    return '<div class="pchip'+(i<st.photos?' on':'')+'">'+s[0]+'</div>'; }).join('');
+  var ok=r.score>=50 && !st.published;
+  $('pub').className='pub'+(ok?' ready':'');
+  $('pub').disabled=!ok;
+  $('pub').textContent = st.published ? '✓ Published' : (ok? 'Publish it — '+r.score+'/100' : 'Publish — needs 50');
+  return r;
+}
+
+/* ---- voice: the phone does both, free ---- */
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition||null, rec=null, listening=false;
+var picked=null;
+function bestVoice(){
+  if(picked) return picked;
+  var vs=(window.speechSynthesis?window.speechSynthesis.getVoices():[]).filter(function(v){return /^en/i.test(v.lang||'');});
+  if(!vs.length) return null;
+  var order=[/google uk english male/i,/microsoft (guy|ryan|george)/i,/daniel/i,/arthur/i,/alex/i,/male/i];
+  for(var i=0;i<order.length;i++) for(var j=0;j<vs.length;j++) if(order[i].test(vs[j].name)){picked=vs[j];return picked;}
+  picked=vs[0]; return picked;
+}
+function speak(t){
+  if(!st.voice||!window.speechSynthesis) return;
+  try{ window.speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(t); var v=bestVoice(); if(v)u.voice=v;
+    u.pitch=0.9; u.rate=0.9; window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+function toggleVoice(){ st.voice=!st.voice; $('vbtn').innerHTML=st.voice?'&#128266; Voice: on':'&#128263; Voice: off';
+  if(!st.voice&&window.speechSynthesis) window.speechSynthesis.cancel(); }
+function setState(t){ $('state').textContent=t; }
+function startListening(){
+  if(!SR){ setState('This browser cannot listen — type instead.'); return; }
+  if(listening){ try{rec.stop();}catch(e){} return; }
+  try{
+    rec=new SR(); rec.lang='en-ZA'; rec.interimResults=true; rec.continuous=false;
+    var fin='';
+    rec.onstart=function(){ listening=true; $('micbtn').classList.add('listening'); setState('Listening…'); };
+    rec.onresult=function(e){ var it='';
+      for(var i=e.resultIndex;i<e.results.length;i++){
+        if(e.results[i].isFinal) fin+=e.results[i][0].transcript; else it+=e.results[i][0].transcript; }
+      setState(it?'“'+it+'”':'Listening…'); };
+    rec.onerror=function(e){ listening=false; $('micbtn').classList.remove('listening');
+      setState(e.error==='not-allowed'?'Microphone blocked — allow it, or type instead.':'Did not catch that.'); };
+    rec.onend=function(){ listening=false; $('micbtn').classList.remove('listening');
+      if(fin.trim()) hear(fin.trim()); else setState('Nothing heard. Tap and speak, or type.'); };
+    rec.start();
+  }catch(e){ setState('Could not start the microphone — type instead.'); }
+}
+
+/* ---- transcript ---- */
+function bubble(who,html){
+  var d=document.createElement('div'); d.className=(who==='draft')?'draft':('bub '+who);
+  d.innerHTML=html; $('talk').appendChild(d); $('talk').scrollTop=$('talk').scrollHeight; return d;
+}
+function says(text,pts){
+  var badge = pts ? ' <span class="pts'+(pts<0?' warn':'')+'">'+(pts>0?'+':'')+(Math.round(pts*10)/10)+'</span>' : '';
+  bubble('g', text+badge); speak(text);
+}
+
+/* ---- understanding ---- */
+var MAKES=['toyota','vw','volkswagen','bmw','ford','mercedes','hyundai','mazda','nissan','isuzu','kia'];
+var MODELS=['hilux','ranger','polo','corolla','fortuner','golf','amarok','triton','x-trail','ranger'];
+function understand(t0){
+  var t=' '+t0.toLowerCase().replace(/[.,!?]/g,'')+' ', got=[];
+  if(!st.cat){
+    if(/\b(car|bakkie|vehicle|hilux|ranger|polo|corolla|sedan|suv)\b/.test(t)) st.cat='cars';
+    else if(/\b(house|home|flat|apartment|townhouse|property|plot)\b/.test(t)) st.cat='property';
+    else if(/\b(tutor|teach|lessons|coaching)\b/.test(t)) st.cat='tutors';
+    else if(/\b(plumb|electric|paint|garden|clean|service|handyman|repair)\b/.test(t)) st.cat='services';
+    if(st.cat) got.push('cat');
+  }
+  if(st.cat==='cars'){
+    MAKES.forEach(function(m){ if(t.indexOf(' '+m)>=0 && !st.f.make){ st.f.make = m==='vw'?'VW':m.replace(/\b\w/g,function(c){return c.toUpperCase();}); got.push('make'); } });
+    MODELS.forEach(function(m){ if(t.indexOf(' '+m)>=0 && !st.f.model){ st.f.model=m.replace(/\b\w/g,function(c){return c.toUpperCase();}); got.push('model'); } });
+    var y=t.match(/\b(19[89]\d|20[0-2]\d)\b/); if(y&&!st.f.vehicle_year){ st.f.vehicle_year=y[1]; got.push('vehicle_year'); }
+    var km=t.match(/([\d][\d\s,]{2,})\s*(km|kays|kilometres|kilometers)/); if(km&&!st.f.mileage_km){ st.f.mileage_km=km[1].replace(/[\s,]/g,''); got.push('mileage_km'); }
+    if(/\bautomatic|\bauto\b/.test(t)&&!st.f.transmission){ st.f.transmission='Automatic'; got.push('transmission'); }
+    else if(/\bmanual\b/.test(t)&&!st.f.transmission){ st.f.transmission='Manual'; got.push('transmission'); }
+  }
+  if(st.cat==='property'){
+    var b=t.match(/(\d)\s*(bed|bedroom)/); if(b&&!st.f.beds){ st.f.beds=b[1]; got.push('beds'); }
+    var ba=t.match(/(\d)\s*(bath|bathroom)/); if(ba&&!st.f.baths){ st.f.baths=ba[1]; got.push('baths'); }
+    if(/\bhouse\b/.test(t)&&!st.f.prop_type){ st.f.prop_type='House'; got.push('prop_type'); }
+    else if(/\bflat|apartment\b/.test(t)&&!st.f.prop_type){ st.f.prop_type='Apartment'; got.push('prop_type'); }
+    if(/\bto rent|rent(ing)? out|to let\b/.test(t)&&!st.f.listing_type){ st.f.listing_type='To rent'; got.push('listing_type'); }
+    else if(/\bsell|for sale\b/.test(t)&&!st.f.listing_type){ st.f.listing_type='To sell'; got.push('listing_type'); }
+  }
+  var p=t.match(/r\s?([\d][\d\s,]{2,})/); if(p&&!st.price){ var n=parseInt(p[1].replace(/[\s,]/g,''),10); if(n>500){ st.price=n; got.push('price'); } }
+  var AREAS=['waterkloof','brooklyn','menlyn','hatfield','centurion','lynnwood','faerie glen','garsfontein'];
+  AREAS.forEach(function(a){ if(t.indexOf(a)>=0 && !st.suburb){ st.suburb=a.replace(/\b\w/g,function(c){return c.toUpperCase();}); got.push('suburb'); } });
+  if((t0.trim().match(/\S+/g)||[]).length>=15 && st.asked==='_desc15'){ st.desc=t0.trim(); got.push('_desc15'); }
+  return got;
+}
+
+/* ---- the coaching turn ---- */
+var QUESTION={
+ make:"Which make is it?",
+ model:"And the model? I need that one to pull the specifications.",
+ vehicle_year:"What year?",
+ mileage_km:"How many kilometres on the clock?",
+ transmission:"Manual or automatic?",
+ prop_type:"What kind of place is it — house, apartment, townhouse?",
+ beds:"How many bedrooms?",
+ baths:"And bathrooms?",
+ listing_type:"Are you selling it, or letting it?",
+ subject:"What do you teach?",
+ level:"What level — beginner, high school, matric?",
+ mode:"Online, in person, or both?",
+ service_type:"What is the job — plumbing, electrical, painting?",
+ price:"What are you asking for it? A real number scores; “POA” scores nothing.",
+ suburb:"Which suburb?",
+ _desc15:"Tell me about it in your own words — a sentence or two is plenty."
+};
+
+function addPhoto(){
+  if(!st.cat){ setState('Tell me what you are selling first.'); return; }
+  var slots=SLOTS[st.cat]||[];
+  if(st.photos>=slots.length){ setState('That is every angle the app asks for.'); return; }
+  var before=score().score;
+  st.photos++;
+  var after=paint().score;
+  bubble('u','📷 '+slots[st.photos-1][0]);
+  var gain=after-before;
+  if(st.photos<5) says('Got it. '+slots[st.photos][1], gain);
+  else if(gain>0) says('Good. That is the photos maxed out.', gain);
+  else says('Lovely, though photos are already full at 40 — this one is for the buyer, not the score.');
+  nudge();
+}
+
+function nudge(){
+  var r=score();
+  if(r.score>=50 && !st.offeredMore && !st.published){
+    st.offeredMore=true;
+    var head=r.missing[0];
+    setTimeout(function(){
+      says('You can publish right now — you are at '+r.score+'. If you want a stronger listing, '
+        +(head?('the next best thing is '+head.txt.replace(/:.*—/,':')+'.'):'add another photo.')
+        +' Your call.');
+      setState('It never blocks you above 50. A coach that will not let you finish is a form with a voice.');
+    },520);
+  }
+}
+
+function ask(){
+  var r=paint();
+  if(r.missing.length===0){ says('That is a perfect hundred. Nothing left to add.'); return; }
+  var head=r.missing[0];
+  if(head.k==='photos'){
+    var slots=SLOTS[st.cat]||[];
+    var next=slots[st.photos]||slots[slots.length-1];
+    st.asked='photos';
+    var need=Math.max(1,Math.ceil((40-Math.min(40,st.photos?10+8*(st.photos-1):0))/8));
+    says((st.photos===0 ? 'Let us start with photos — they are worth the most. '
+                        : 'You have '+st.photos+'. '+ (need>=2? need+' more photos would add '+Math.min(40-(10+8*(st.photos-1)),need*8)+' to your rating. ':'One more adds 8. '))
+         + next[1]);
+    setState('Tap “Add a photo” to see the rating move.');
+    return;
+  }
+  st.asked=head.k;
+  says(QUESTION[head.k]||head.txt, head.gain);
+}
+
+function hear(text){
+  if(st.busy) return;
+  bubble('u',text); setState('Thinking…'); st.busy=true;
+  var before=score().score;
+  var got=understand(text);
+  setTimeout(function(){
+    st.busy=false;
+    var r=paint(), gained=r.score-before;
+    if(got.indexOf('cat')>=0){
+      var noun={cars:'a vehicle',property:'a property',tutors:'tutoring',services:'a service'}[st.cat];
+      says('Right — '+noun+'. I will keep score as we go; you need 50 to publish.');
+      setTimeout(ask,900); return;
+    }
+    if(!st.cat){ says('What are you selling? A car, a house, tutoring, or a service?'); return; }
+    if(got.length===0){
+      says('I did not catch that. '+(QUESTION[st.asked]||'Tell me a bit more.'));
+      return;
+    }
+    if(gained>0) says('Noted.', gained);
+    if(r.score>=50) nudge();
+    setTimeout(ask, r.score>=50?1400:750);
+  },520);
+}
+
+function publish(){
+  if(score().score<50 || st.published) return;
+  st.published=true; paint();
+  says('Done. Your listing is live at '+score().score+' out of 100.');
+  bubble('draft','<div class="dt">'+[st.f.vehicle_year,st.f.make,st.f.model].filter(Boolean).join(' ')
+    +(st.cat==='property'?[st.f.beds+' bed',st.f.prop_type,st.f.listing_type].filter(Boolean).join(' '):'')
+    +'</div><div class="dd">'+(st.desc||'—')+'</div><div class="kv">'
+    +(REQ[st.cat]||[]).map(function(f){ return '<span'+(st.f[f]?'':' class="miss"')+'>'+LABEL[f]+': '+(st.f[f]||'?')+'</span>'; }).join('')
+    +'<span>price: R'+(st.price||0).toLocaleString()+'</span><span>'+(st.suburb||'?')+'</span>'
+    +'<span>'+st.photos+' photos</span></div>');
+  setState('Nothing was really published — this is a picture.');
+}
+
+/* ---- the whole conversation, played ---- */
+var SCRIPT=[
+ "I want to sell my bakkie",
+ "It's a Toyota Hilux",
+ "2016",
+ "about 180000 km",
+ "automatic",
+ "R320000",
+ "Centurion",
+ "Full service history, one owner from new, never used off road. Towbar and canopy included, tyres are good."
+];
+function runScript(){
+  resetBot(true);
+  var i=0;
+  (function next(){
+    if(i>=SCRIPT.length){ setTimeout(function(){ addPhoto(); setTimeout(addPhoto,1500); },1200); return; }
+    var line=SCRIPT[i++];
+    setTimeout(function(){ hear(line); setTimeout(next,2500); },1000);
+  })();
+}
+
+function greet(){
+  var h=new Date().getHours();
+  says((h<12?'Good morning':h<18?'Good afternoon':'Good evening')+', John. What are we selling today?');
+}
+var greetTimer=null;
+function resetBot(quiet){
+  st={cat:null,f:{},photos:0,desc:'',price:null,suburb:null,voice:st.voice,busy:false,
+      published:false,asked:null,offeredMore:false};
+  $('talk').innerHTML=''; paint();
+  setState(SR?'Tap the microphone and say what you want to sell':'This browser cannot listen — type instead');
+  clearTimeout(greetTimer); greetTimer=setTimeout(greet,350);
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  paint();
+  $('micbtn').addEventListener('click',startListening);
+  if(!SR) $('micbtn').disabled=true;
+  $('pub').addEventListener('click',publish);
+  $('typed').addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&this.value.trim()){ var v=this.value.trim(); this.value=''; hear(v); } });
+  if(window.speechSynthesis){ window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged=function(){ picked=null; bestVoice(); }; }
+  greetTimer=setTimeout(greet,700);
+});
+</script>
+</body>
+</html>

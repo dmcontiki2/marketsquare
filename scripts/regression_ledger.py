@@ -19950,5 +19950,48 @@ def rg_agency_tier_follows_verification():
     return out
 
 
+@entry("RG-0337", "The nightly wave visits the LONGEST-WAITING city first -- under a daily cap, "
+       "alphabetical order plus a doubling ramp would starve the same tail of states every night",
+       LOCKED, fixed_on="2026-09-07",
+       scope="CityLauncher/scripts/wave_cities.py must sort its output by last send (never-sent "
+             "first, then oldest send) before the policy's own order; the printed list must be "
+             "non-decreasing in last-send time. CLASS: any ordered visit under a shared budget "
+             "(DAILY-CAP-1) must be fair by construction -- the order is state, and state is asked "
+             "for, never typed (same family as WAVE-CITIES-DISCOVER-1).",
+       ref="WAVE-ORDER-1, 7 Sep 2026 02:05 SAST. Measured: the 7 Sep 00:10 wave hit the 250 cap at "
+           "North Carolina; the 17 states from there to Wyoming (166 letters) dry-ran, as 29 of them "
+           "had the night before. The plan for 8 Sep showed the head of the alphabet doubling to 24, "
+           "which would have pushed the same tail out a third time.")
+def rg_wave_visits_longest_waiting_city_first():
+    out = []
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    wc = os.path.join(cl, "scripts", "wave_cities.py")
+    if not os.path.exists(wc):
+        return [(INFO, "CityLauncher not readable here -- skipped")]
+    src = open(wc, encoding="utf-8", errors="replace").read()
+    if "def _last_send(" not in src or "out.sort(key=lambda c: (_last_send(c)" not in src:
+        out.append((FAIL, "wave_cities.py no longer orders cities by last send -- the daily cap starves "
+                          "the alphabetical tail again (WAVE-ORDER-1)"))
+        return out
+    ok, blind, detail = _harness([sys.executable, wc], timeout=120, cwd=cl, full=True)
+    if blind:
+        return out + [(INFO, "wave_cities.py could not run here: %s" % detail[:120])]
+    if not ok:
+        return out + [(INFO, "wave_cities.py exited non-zero here (%s) -- order not judged" % detail[-120:])]
+    cities = [c for c in detail.splitlines() if c.strip()]
+    try:
+        sys.path.insert(0, os.path.join(cl, "scripts")); sys.path.insert(0, cl)
+        import importlib
+        wcm = importlib.import_module("wave_cities")
+        stamps = [wcm._last_send(c) for c in cities[:12]]
+        if stamps != sorted(stamps):
+            out.append((FAIL, "the first 12 cities printed are not in last-send order: %s" % list(zip(cities[:12], stamps))[:4]))
+        else:
+            out.append((INFO, "%d cities listed; first is %r (last send %r)" % (len(cities), cities[0], stamps[0] or "never")))
+    except Exception as ex:
+        out.append((INFO, "order check could not import wave_cities (%r) -- source check only" % (ex,)))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -1,0 +1,17 @@
+{
+  "_comment": "BOT · Collector — NOT DEPLOYED. This is the whole trick: same app, same server, same login. A different name, a different colour, a different starting point. Deploying it means one line in ops/autodeploy/deploy_manifest.txt and three bronze icons in /static/brand/bots/collector/.",
+  "name": "TrustSquare Collector",
+  "short_name": "Collector",
+  "description": "Talk to the genie. Find, value and watch for collectables on TrustSquare.",
+  "start_url": "/?bot=collector",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#C98A2E",
+  "background_color": "#0B0A08",
+  "icons": [
+    { "src": "/static/brand/bots/collector/icon-192.png",     "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/brand/bots/collector/icon-512.png",     "sizes": "512x512", "type": "image/png" },
+    { "src": "/static/brand/bots/collector/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
