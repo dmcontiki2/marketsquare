@@ -1189,6 +1189,21 @@
    ],
    "summary": "NEW - THE WATCH MISSED 6 SEPTEMBER. Register last_run reads 2026-09-05 and today is 2026-09-07, so exactly one scheduled run did not happen; there is no watch_pass_2026_09_06 key and no 6 Sep section in OPEN_ITEMS.md. Cause already on record: DW-104 (6 Sep) found the scheduled task itself switched off (enabled=false, last run 2026-09-05 04:33Z) and an attended session re-enabled it the same day. The 6 Sep register entries DW-104..DW-109 were written by that attended session, not by the watch.",
    "next_action": "Closes on a clean 1-day heartbeat - tomorrow's run finding last_run = 2026-09-07 (the DW-070 precedent). RESIDUAL, DW-104's own and still true: nothing asserts that the scheduled tasks which matter are ENABLED, so a watch that is off cannot file its own absence. That belongs in the ledger and is not written yet."
+  },
+  "DW-113": {
+   "first_seen": "2026-09-07",
+   "last_seen": "2026-09-07",
+   "sev": "HIGH",
+   "status": "CLOSED",
+   "closed": "2026-09-07",
+   "refs": [
+    "RUL-107",
+    "RG-0335",
+    "f757819"
+   ],
+   "source": "David's question, then a code + live-database probe",
+   "summary": "RAISED AND CLOSED THE SAME SESSION - the retired five-tier pricing model was still live in seven code sites and two were not inert: (a) paid_tiers still made standard/professional/business/elite PAYABLE (R1,800/mo for Elite) with 'existing users only' unenforced; (b) _PAID_TIERS, the multi-city reach gate, held the retired Premium name and omitted the canon 'pro', so a $20 Pro seller was refused 402 'requires a Starter subscription ($5/month)'; (c) a NOTE in launch_redemption.py would have moved all 17 live canon Starter sellers onto a retired tier. Probed first: 71 users, 54 free + 17 starter, ZERO on any retired tier. The daily check_pricing_canon.py passed ALL IN LINE throughout because it only ever asserted the CURRENT numbers were present, never that the retired ones were gone.",
+   "next_action": "None - closed 2026-09-07. Purged, shipped (f757819, post-deploy 07:00:29Z all five steps ok) and verified on the deployed main.py: all four authorities read retired-names=NONE. Asserted by RG-0335 (LOCKED, proven to go red on a mutated copy) and by a new retired-ABSENT section in check_pricing_canon.py. RUL-107. RESIDUAL: Agency stays outside the multi-city reach gate - David's call, unchanged by this repair."
   }
  },
  "last_run": "2026-09-07",
@@ -1705,7 +1720,8 @@
    "unverified": 0
   },
   "closed": [
-   "DW-110"
+   "DW-110",
+   "DW-113"
   ],
   "still_open": [
    "DW-010 (SCHEDULED, David's deferred change-control batch, target 8 Sep)",
@@ -1714,6 +1730,20 @@
    "DW-111 (Resend 422, not readable from the sandbox)",
    "DW-112 (closes on tomorrow's clean heartbeat)"
   ],
-  "note": "Not touched: DW-010 is David's own deferred decision batch and CC-002's staged edits were built on the RETIRED five-tier model, so landing them is a canon call, not a fix."
+  "note": "Not touched: DW-010 is David's own deferred decision batch and CC-002's staged edits were built on the RETIRED five-tier model, so landing them is a canon call, not a fix.",
+  "tier_purge": {
+   "ruling": "RUL-107",
+   "ledger": "RG-0335",
+   "commit": "f757819",
+   "post_deploy_utc": "2026-09-07T07:00:29Z",
+   "sites_cleared": 7,
+   "live_users_on_retired_tiers": 0,
+   "ledger_after": {
+    "entries": 323,
+    "holding": 300,
+    "regressed": 0,
+    "open": 23
+   }
+  }
  }
 }
