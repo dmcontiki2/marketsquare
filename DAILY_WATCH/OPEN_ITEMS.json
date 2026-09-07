@@ -1154,12 +1154,15 @@
    "last_seen": "2026-09-07",
    "sev": "MEDIUM",
    "source": "scripts/deep_scan.py (Monday lane) ruff F507, then PROVEN by executing the format expression",
-   "status": "OPEN",
+   "status": "CLOSED",
    "refs": [
-    "DW-087"
+    "1b79f74",
+    "DW-087",
+    "RG-0334"
    ],
-   "summary": "NEW - THE OPS HOME PAGE /m CRASHES FOR ANY ENROLLED DEVICE. bea_main.py:15959 formats a template carrying ONE %s with a TWO-value tuple (d['label'], d['label']), so Python raises TypeError: not all arguments converted during string formatting and the route returns 500. Proven, not inferred: ruff flagged it new today and the exact expression was then executed in isolation and raised that TypeError. Live probe agrees as far as it reaches - GET /m with no device cookie returns 401, the not-enrolled branch, whose string is correctly paired, so only the ENROLLED branch is broken and nothing has reported it. /m is the home of David's ops PWA (DEVICE-ENROL-1) and the only route to /m/dashboard, /m/admin and /launch/.",
-   "next_action": "OPEN - CTO lane. Fix is to drop the duplicate substitution or add the second %s the heading was meant to have. Needs an assertion too: nothing proves every HTMLResponse(... % ...) in bea_main.py has matching placeholders and arguments, and a %-format arity error is invisible until the branch executes. This task is observe-only and did not change the code."
+   "summary": "CLOSED 2026-09-07 - fixed, shipped and proven on the deployed bytes. One substitution dropped (% (d['label'], d['label']) -> % (d['label'],)), so the rendered heading is exactly what the single %s intended. Commit 1b79f74, deploy ref 1ebcfff..1b79f74, service restart 2026-09-07 06:24:16 UTC, post-deploy all five steps ok. PROVEN against the file the server runs (the manifest maps bea_main.py -> main.py on the box): formatting that template out of /var/www/marketsquare/main.py after the restart returns 1085 chars with <h2>Enrolled: David-Phone</h2>, where the same operation raised TypeError before. Anonymous GET /m still 401s correctly. Asserted at the CLASS by RG-0334 (LOCKED): a static ast scan failing on ANY literal %-format with mismatched tuple arity in bea_main.py, plus a named tripwire for this line. Ledger after the fix: 322 entries, 299 holding, 0 REGRESSED, 23 open, 0 ready to lock, 0 unverified. RESIDUAL: none. NEW - THE OPS HOME PAGE /m CRASHES FOR ANY ENROLLED DEVICE. bea_main.py:15959 formats a template carrying ONE %s with a TWO-value tuple (d['label'], d['label']), so Python raises TypeError: not all arguments converted during string formatting and the route returns 500. Proven, not inferred: ruff flagged it new today and the exact expression was then executed in isolation and raised that TypeError. Live probe agrees as far as it reaches - GET /m with no device cookie returns 401, the not-enrolled branch, whose string is correctly paired, so only the ENROLLED branch is broken and nothing has reported it. /m is the home of David's ops PWA (DEVICE-ENROL-1) and the only route to /m/dashboard, /m/admin and /launch/.",
+   "next_action": "None - closed 2026-09-07 on a behavioural probe of the DEPLOYED file after the 06:24:16 UTC restart, with RG-0334 LOCKED asserting the class.",
+   "closed": "2026-09-07"
   },
   "DW-111": {
    "first_seen": "2026-09-07",
@@ -1685,5 +1688,32 @@
   "closed_note": "none - no previously-failing check passed today. DW-087 and DW-109 both re-ran and still fail; DW-010 is SCHEDULED, not failing. Nothing closed for looking stale.",
   "checks_run": "13/13",
   "email": "none - AMBER; scripts/watch_alert.py is RED-only and is present"
+ },
+ "attended_pass_2026_09_07": {
+  "trigger": "David: 'Claude, please close the open action for me.'",
+  "action": "DW-110 fixed, deployed and closed; RG-0334 added LOCKED",
+  "commit": "1b79f74",
+  "deploy_ref": "1ebcfff..1b79f74",
+  "restart_utc": "2026-09-07T06:24:16Z",
+  "proof": "formatting the template out of the live /var/www/marketsquare/main.py returns 1085 chars with <h2>Enrolled: David-Phone</h2>; anonymous GET /m still 401",
+  "ledger_after": {
+   "entries": 322,
+   "holding": 299,
+   "regressed": 0,
+   "open": 23,
+   "ready_to_lock": 0,
+   "unverified": 0
+  },
+  "closed": [
+   "DW-110"
+  ],
+  "still_open": [
+   "DW-010 (SCHEDULED, David's deferred change-control batch, target 8 Sep)",
+   "DW-087 (lint debt)",
+   "DW-109 (ID upload pending-state, bigger build)",
+   "DW-111 (Resend 422, not readable from the sandbox)",
+   "DW-112 (closes on tomorrow's clean heartbeat)"
+  ],
+  "note": "Not touched: DW-010 is David's own deferred decision batch and CC-002's staged edits were built on the RETIRED five-tier model, so landing them is a canon call, not a fix."
  }
 }
