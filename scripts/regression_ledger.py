@@ -16025,7 +16025,11 @@ def rg_org_name_guard():
            "so the repair reaches most of them before they are ever contacted. The app reads "
            "?city= to pre-fill the first listing, so the invitation asked a Durban dive operator "
            "to publish in Pretoria: they either notice and lose trust at the first screen, or they "
-           "publish where no local buyer will ever look. Either way the funnel ends there.")
+           "publish where no local buyer will ever look. Either way the funnel ends there. "
+           "ASSERTION AMENDED 7 Sep 2026 (INVITE-PLACE-1): the no-op fixture now carries "
+           "&country=ZA, because a legacy link that lacks a country is MEANT to gain one -- the "
+           "concurrent maintenance run read the old fixture as a regression; it was the fixture "
+           "that lagged the design, and the entry now asserts the append explicitly.")
 def rg_magic_link_city_truth():
     out = []
     cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
@@ -16058,10 +16062,19 @@ def rg_magic_link_city_truth():
         out.append((FAIL, "CTA-URL-1 regressed: the admin console URL is back in a magic link"))
     if "src=" not in link:
         out.append((FAIL, "WAVE-TAG-1 regressed: the link lost its wave source tag"))
-    # a link that already agrees must come back untouched
+    # a link that already agrees -- and already carries every parameter the app reads,
+    # INVITE-PLACE-1's country included -- must come back untouched
     ok_link = ("https://trustsquare.co/?magic=1&name=X&email=a%40b.co.za"
-               "&cat=adventures_experiences&city=Pretoria&suburb=wildlife_and_birding&src=t")
+               "&cat=adventures_experiences&city=Pretoria&suburb=wildlife_and_birding&src=t"
+               "&country=ZA")
     row2 = dict(row, city="Pretoria", suburb="wildlife_and_birding", magic_link=ok_link)
+    # INVITE-PLACE-1 (7 Sep 2026): a legacy link WITHOUT a country gains exactly one
+    # (from the row), appended -- never re-encoded, never anything else touched
+    no_ctry = ok_link[:-len("&country=ZA")]
+    got = mod.build_magic_link(dict(row2, magic_link=no_ctry), "x")
+    if got != ok_link:
+        out.append((FAIL, "a legacy link without a country did not gain exactly '&country=ZA' -- "
+                          "got %r (INVITE-PLACE-1 / RG-0271)" % got[:160]))
     if mod.build_magic_link(row2, "x") != ok_link:
         out.append((FAIL, "an already-correct link was rewritten -- the repair must be a no-op "
                           "when the row and the link agree"))
@@ -19382,6 +19395,323 @@ def rg_restart_does_not_redflash_the_map():
                           "server may be restarting' returns on every deploy (RESTART-REDFLASH-1)"))
     if not out:
         out.append((INFO, "every polled dashboard feed retries once before painting a chip offline"))
+    return out
+
+
+
+@entry("RG-0325", "An invited seller's own CITY reaches the listing they create -- the letter says "
+       "'it already knows who you are', so the app must not file a Maine club's advert in Pretoria",
+       OPEN,
+       scope="static/ms.js sfInit(). The magic-link parser already stores the invited place as "
+             "magicLink.area, and the OLDER flows (goInit, sobInit) seed from it. The LIVE flow "
+             "(SF_ENABLED=true -> sfInit) seeds sfState.city from activeCity.name || 'Pretoria' and "
+             "never reads magicLink.area, and sfState.city is what goHandoff posts as the listing's "
+             "city. Same function hard-codes country_iso2='ZA' on both /listings/vision-draft calls. "
+             "CLASS: a value carried correctly all the way down the chain and dropped at the last "
+             "hop -- the sibling of MAGICLINK-CITY-1, which repaired the LINK while the APP kept "
+             "ignoring it. SCOPE IS GLOBAL, not one market: 1,132 of the 1,206 prospects emailed to "
+             "date (94%) are not in Pretoria.",
+       ref="EMAIL-FORENSIC-1, 7 Sep 2026. PROBED live in two independent browsers on "
+           "?magic=1&city=Maine: magicLink.area='Maine' while sfState.city='Pretoria'.")
+def rg_invited_seller_city_reaches_listing():
+    try:
+        js = _get("/static/ms.js")
+    except Exception as ex:
+        return [(INFO, "live ms.js not readable (%s) -- not evaluated" % repr(ex)[:80])]
+    out = []
+    i = js.find("function sfInit(")
+    if i < 0:
+        return [(INFO, "sfInit() not found in live ms.js -- flow renamed, re-scope this entry")]
+    seed = js[i:i + 1200]
+    if "magicLink.area" not in seed:
+        out.append((FAIL, "sfInit() still seeds sfState.city without magicLink.area -- an invited "
+                          "seller outside the default city publishes into the wrong city (RG-0325)"))
+    if "country_iso2','ZA'" in js or 'country_iso2","ZA"' in js:
+        out.append((FAIL, "ms.js still hard-codes country_iso2='ZA' on the vision-draft call -- a "
+                          "seller outside ZA is read and priced for South Africa (RG-0325)"))
+    if not out:
+        out.append((INFO, "the invited seller's city and country reach the listing"))
+    return out
+
+
+@entry("RG-0326", "Somebody invited by letter can get PAST the first screen -- the sell flow's opening "
+       "gate is not a wall that every single arrival stops at",
+       OPEN,
+       scope="static/ms.js sfPhotosS(): the forward button is rendered disabled until "
+             "sfState.photos.main===2, and the 'Skip the rest of the photos' link only appears AFTER "
+             "the main photo is accepted, so there is no way past screen 1 without uploading and "
+             "passing AI review of a photograph. WRONG-TYPE-1 can also hard-reject the photo a club "
+             "would naturally reach for (a logo or a team shot on a Tutors-shaped flow). ASSERTION IS "
+             "BEHAVIOURAL, not cosmetic: /onboard/funnel must show at least one session reaching a "
+             "step BEYOND 'photos'. CLASS: a quality gate placed before the seller has invested "
+             "anything, on a flow reached from cold outreach.",
+       ref="EMAIL-FORENSIC-1, 7 Sep 2026. PROBED /onboard/funnel?days=30&bots=1: 62 sessions "
+           "'landed', 15 reached 'photos', ZERO reached any later step; 1,206 letters sent, 0 "
+           "prospects onboarded, 0 published. PROBED live: the forward button is disabled on arrival.")
+def rg_invited_seller_can_pass_screen_one():
+    try:
+        f = json.loads(_get("/onboard/funnel?days=30&bots=1"))
+    except Exception as ex:
+        return [(INFO, "funnel not readable (%s) -- not evaluated" % repr(ex)[:80])]
+    steps = [r.get("step") for r in (f.get("funnel") or [])]
+    early = {"landed", "dwell", "photos", "photo_ok", "photo_fallback", "photo_rejected"}
+    beyond = [s for s in steps if s and s not in early]
+    if not beyond:
+        return [(FAIL, "in 30 days no session has reached any step beyond 'photos' (%d landed) -- "
+                       "the opening photo gate is where every invited arrival stops (RG-0326)"
+                 % max([r.get("sessions", 0) for r in (f.get("funnel") or [])] or [0]))]
+    return [(INFO, "sessions reach beyond the photo screen: " + ", ".join(sorted(beyond)))]
+
+
+@entry("RG-0327", "Every parameter the outreach link CARRIES is a parameter the app READS -- a link "
+       "that ships a value nothing consumes is a promise the product does not keep",
+       OPEN,
+       scope="CityLauncher/emailer/emailer.py build_magic_link() emits magic, name, email, cat, city, "
+             "src, suburb and (when present) draft_id. Live static/ms.js reads magic, name, email, "
+             "cat, city, src and drafted -- it reads NEITHER suburb NOR draft_id. Worse, localize.py "
+             "rewrites the word 'suburb' for US/AU/GB destinations, so the parameter itself ships as "
+             "'neighborhood='. Either the app reads them or the builder stops emitting them. CLASS: "
+             "two files that must agree, with nothing asserting that they do.",
+       ref="EMAIL-FORENSIC-1, 7 Sep 2026. PROBED a rendered US club letter: CTA carried "
+           "'&neighborhood=Lewiston'; live ms.js contains no read of 'suburb' or 'neighborhood' as a "
+           "URL parameter and zero occurrences of draft_id.")
+def rg_outreach_link_params_are_read():
+    try:
+        js = _get("/static/ms.js")
+    except Exception as ex:
+        return [(INFO, "live ms.js not readable (%s) -- not evaluated" % repr(ex)[:80])]
+    out = []
+    reads_suburb = ("get('suburb')" in js or 'get("suburb")' in js
+                    or "get('neighborhood')" in js or 'get("neighborhood")' in js)
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher", "emailer", "emailer.py")
+    emits_suburb = emits_draft = None
+    if os.path.isfile(cl):
+        e = open(cl, encoding="utf-8", errors="replace").read()
+        emits_suburb = "params['suburb'] = suburb" in e
+        emits_draft = "params['draft_id']" in e
+    if emits_suburb and not reads_suburb:
+        out.append((FAIL, "the outreach CTA still carries a suburb/neighborhood parameter the app "
+                          "never reads -- the invited seller's area is silently dropped (RG-0327)"))
+    if emits_draft and "draft_id" not in js:
+        out.append((FAIL, "the outreach CTA can still carry draft_id and live ms.js never reads it "
+                          "-- a pre-seeded draft listing would be invisible to its owner (RG-0327)"))
+    if emits_suburb is None:
+        out.append((INFO, "CityLauncher not readable here -- builder half skipped"))
+    if not out:
+        out.append((INFO, "every parameter the outreach link carries is read by the app"))
+    return out
+
+
+@entry("RG-0328", "The public support page AGREES with the letter that sends people to it -- a "
+       "prospect promised 'free, no card' must not read 'you must have an active subscription'",
+       OPEN,
+       scope="The live /support FAQ, which every outreach template links as 'Questions are answered "
+             "in the app, at trustsquare.co/support'. Three statements contradict the letters going "
+             "out tonight: (a) 'You must have an active subscription to publish listings' against "
+             "'A free account carries two listings. No card'; (b) 'Create a seller account via the "
+             "TrustSquare admin panel', which is the Basic-auth console a prospect cannot open (the "
+             "CTA-URL-1 fault, still alive in the copy); (c) 'TrustSquare is currently live in "
+             "Pretoria' while letters are being sent to Maine, New York, Illinois and California. "
+             "CLASS: help copy written for one moment of the product and never re-read against the "
+             "outreach it now backs.",
+       ref="EMAIL-FORENSIC-1, 7 Sep 2026. PROBED https://trustsquare.co/support, 200, 110 lines.")
+def rg_support_page_agrees_with_the_letter():
+    try:
+        s = _get("/support")
+    except Exception as ex:
+        return [(INFO, "/support not readable (%s) -- not evaluated" % repr(ex)[:80])]
+    low = s.lower()
+    out = []
+    if "active subscription to publish" in low:
+        out.append((FAIL, "/support still says an active subscription is required to publish -- the "
+                          "letters promise two free listings with no card (RG-0328)"))
+    if "admin panel" in low:
+        out.append((FAIL, "/support still tells sellers to create an account via the admin panel -- "
+                          "that console is Basic-auth gated and a prospect cannot open it (RG-0328)"))
+    if "currently live in pretoria" in low:
+        out.append((FAIL, "/support still says the marketplace is live in Pretoria only, while "
+                          "outreach is being sent to US and other cities (RG-0328)"))
+    if not out:
+        out.append((INFO, "/support carries no statement that contradicts the outreach letters"))
+    return out
+
+
+@entry("RG-0329", "A worked-example page LINKED FROM A LETTER is finished -- it never shows the "
+       "reader an unfilled merge placeholder where a name should be",
+       OPEN,
+       scope="static/examples/*.html, reachable from the ZA club letter's 'See the full worked "
+             "example for your sport' link. athletics.html renders the literal string 'your "
+             "provincial athletics body' as though it were the body's name, in the title, the "
+             "dateline and three steps. CLASS: a template shipped as a finished page.",
+       ref="EMAIL-FORENSIC-1, 7 Sep 2026. PROBED https://trustsquare.co/static/examples/athletics.html, "
+           "200: 'Prepared for your provincial athletics body - 4 September 2026'.")
+def rg_example_pages_have_no_unfilled_placeholders():
+    bad = ("your provincial", "your federation's name", "{{", "your national body")
+    out = []
+    for page in ("athletics", "chess", "cycling", "swimming", "tennis"):
+        try:
+            s = _get("/static/examples/%s.html" % page)
+        except Exception:
+            continue
+        low = s.lower()
+        for b in bad:
+            if b in low:
+                out.append((FAIL, "examples/%s.html shows the unfilled placeholder %r to a reader "
+                                  "who clicked it from a letter (RG-0329)" % (page, b)))
+                break
+    if not out:
+        out.append((INFO, "no linked worked-example page carries an unfilled placeholder"))
+    return out
+
+
+@entry("RG-0330", "Rendering an outreach letter never WRITES to the prospect database -- previewing "
+       "what we are about to send cannot take the send pool offline",
+       LOCKED,   # 7 Sep 2026: RENDER-PURE-1 -- READY TO LOCK the same session it was opened
+       scope="CityLauncher/emailer/emailer.py _apply_launch_special() -> launch_codes."
+             "get_or_create_code(), which INSERTs and commits into data/prospects.db during a plain "
+             "render. On the FUSE mount a sandbox write raises 'disk I/O error' mid-transaction and "
+             "leaves a hot rollback journal that makes the database unreadable to EVERY later opener, "
+             "read-only ones included. A render must be side-effect free; issue the code at SEND "
+             "time, or read a pre-issued one. CLASS: the 31 Aug sandbox-SQLite ban, met again from a "
+             "code path nobody thought of as a write.",
+       ref="EMAIL-FORENSIC-1, 7 Sep 2026. Hit while rendering a Services letter for inspection; "
+           "prospects.db went unreadable and was recovered (journal rolled back on a sandbox-local "
+           "copy, integrity ok, 5,838 rows). Backups: data/prospects.db.bak-hotjournal-20260907-050133. "
+           "RENDER-PURE-1, 7 Sep 2026: the write moved to the send lane (launch_codes.issue_for_send, "
+           "called from emailer.main() right before send_email); render() reads prospect['launch_code'] "
+           "and a dry run renders a never-stored sample_code(). Assertion refined the same day: the "
+           "ORIGINAL only grepped the whole file, which the fix could satisfy by renaming the call -- "
+           "it now reads the render lane's own bodies AND asserts the send lane still issues, so the "
+           "special cannot be silently dropped to make the entry pass.")
+def rg_letter_render_does_not_write_the_db():
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher", "emailer")
+    e = os.path.join(cl, "emailer.py"); k = os.path.join(cl, "launch_codes.py")
+    if not (os.path.isfile(e) and os.path.isfile(k)):
+        return [(INFO, "CityLauncher not readable here -- not evaluated")]
+    body = open(e, encoding="utf-8", errors="replace").read()
+    codes = open(k, encoding="utf-8", errors="replace").read()
+    out = []
+    def _fn(name):
+        m = re.search(r"^def %s\(.*?(?=^def |^# \u2500|\Z)" % re.escape(name), body, re.S | re.M)
+        src = m.group(0) if m else ""
+        # judge CODE, not prose: drop docstrings and # comments before looking for calls
+        src = re.sub(r'"""[\s\S]*?"""', "", src)
+        src = re.sub(r"'''[\s\S]*?'''", "", src)
+        return "\n".join(l.split("#", 1)[0] for l in src.splitlines())
+    render_lane = _fn("render") + _fn("_apply_launch_special") + _fn("build_magic_link")
+    if "get_or_create_code" in body and "conn.commit()" in codes:
+        out.append((FAIL, "emailer.py still calls get_or_create_code(), which commits to prospects.db "
+                          "-- a preview can strand the send pool behind a hot journal (RG-0330)"))
+    for w in ("issue_for_send", "get_or_create_code", "conn.commit", "executescript", "INSERT INTO"):
+        if w in render_lane:
+            out.append((FAIL, "the render lane (render/_apply_launch_special/build_magic_link) still "
+                              "reaches %r -- rendering must be side-effect free (RG-0330)" % w))
+            break
+    if "issue_for_send" not in _fn("main"):
+        out.append((FAIL, "emailer.main() no longer issues a launch number before sending -- the "
+                          "write was moved OUT of render but not INTO the send lane (RG-0330)"))
+    if "def issue_for_send(" not in codes or "def sample_code(" not in codes:
+        out.append((FAIL, "launch_codes.py lacks issue_for_send()/sample_code() -- the send lane and "
+                          "the preview lane have no separate doors (RG-0330)"))
+    if not out:
+        out.append((INFO, "letter rendering performs no database write; the send lane issues the number"))
+    return out
+
+
+@entry("RG-0331", "A listing created by a seller OUTSIDE South Africa carries its own country on the "
+       "server -- the app now sends the invited seller's country (INVITE-PLACE-1), and the server "
+       "must not quietly file it as ZA",
+       OPEN,
+       scope="bea_main.py: the listings table has NO country column and class Listing(BaseModel) has "
+             "no country field. _listing_country_iso2() reads listing['country'] which a listings row "
+             "never carries, so every pricing/tier/currency decision it feeds treats the row as ZA. "
+             "geo_city_id is resolved by exact city-name match at create time, so a state-named "
+             "outreach 'city' (Maine, Illinois, California -- 300+ US prospects) never resolves and "
+             "leaves nothing the server could infer a country from. CLASS: the last hop of RG-0325, "
+             "one layer down -- the client now says where the seller is; the server has nowhere to "
+             "keep it. FIX SHAPE: migrations/NNN_listing_country.py adds listings.country_iso2 "
+             "(default 'ZA'); Listing gets country_iso2: Optional[str]; POST /listings stores it "
+             "(falling back to geo_cities.country_iso2 via geo_city_id); _listing_country_iso2() "
+             "reads the column. ms.js goHandoff already posts city -- add country_iso2 from sfState.",
+       ref="EMAIL-FORENSIC-1 follow-through, 7 Sep 2026 (INVITE-PLACE-1 shipped the client half). "
+           "Source-checked, not yet live-probable: a listing's country is not exposed on any read "
+           "endpoint, which is itself the symptom.")
+def rg_listing_carries_own_country_server_side():
+    bm = os.path.join(REPO, "bea_main.py")
+    if not os.path.isfile(bm):
+        return [(INFO, "bea_main.py not readable here -- not evaluated")]
+    src = open(bm, encoding="utf-8", errors="replace").read()
+    m = re.search(r"^class Listing\(BaseModel\):.*?(?=^class )", src, re.S | re.M)
+    model = m.group(0) if m else ""
+    out = []
+    if "country" not in model:
+        out.append((FAIL, "class Listing(BaseModel) has no country field -- a US/GB/AU seller's "
+                          "listing is stored with no country and read as ZA (RG-0331)"))
+    if not re.search(r"ADD COLUMN country_iso2|listings\s*\(.*?country_iso2", src, re.S):
+        out.append((FAIL, "the listings table has no country_iso2 column (RG-0331)"))
+    if not out:
+        out.append((INFO, "listings carry their own country server-side"))
+    return out
+
+
+@entry("RG-0332", "Nobody we have already written to is written to again inside 60 days -- opted out "
+       "or not -- and the guard sits at the ONE place every send passes",
+       LOCKED,
+       scope="CityLauncher/emailer/emailer.py send_email() -> _recontact_blocked() -> _last_contacted(), "
+             "fed by BOTH records (prospects.emailed_at and sent_log.json) so a resend script that "
+             "never touched the wave lane is still seen. Two halves: (1) SOURCE -- the guard exists, "
+             "the floor is 60, the only door is TS_RECONTACT_PERMISSION; (2) BEHAVIOUR -- sent_log.json "
+             "shows no address mailed twice inside 60 days for any send dated on/after 2026-09-07 "
+             "(the HUMAN-CLICKS-1 re-send of 3 Sep predates the ruling and is excluded by date). "
+             "CLASS: the GB/NZ compliance footers promise 'We will not email you again' to every "
+             "reader; a second letter is a broken promise, not a nuisance.",
+       ref="RUL-106 (David, 7 Sep 2026): 'not re-email the people we have, even those that did not "
+           "opt-out, at least for a two month period'. RECONTACT-1 shipped the same session; probed "
+           "in-session: the newest emailed address is refused by send_email() before any network call.")
+def rg_recontact_floor_holds():
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher", "emailer")
+    e = os.path.join(cl, "emailer.py")
+    if not os.path.isfile(e):
+        return [(INFO, "CityLauncher not readable here -- not evaluated")]
+    body = open(e, encoding="utf-8", errors="replace").read()
+    out = []
+    if "RECONTACT_DAYS = 60" not in body:
+        out.append((FAIL, "RECONTACT_DAYS is not 60 -- the two-month floor David set has been "
+                          "shortened or removed (RG-0332 / RUL-106)"))
+    m = re.search(r"^def send_email\(.*?(?=^def |\Z)", body, re.S | re.M)
+    se = m.group(0) if m else ""
+    if "_recontact_blocked(to)" not in se:
+        out.append((FAIL, "send_email() no longer consults _recontact_blocked() -- a lane can "
+                          "re-mail inside the floor (RG-0332)"))
+    if body.count("TS_RECONTACT_PERMISSION") < 1:
+        out.append((FAIL, "the explicit-permission door is gone -- an approved re-send would now have "
+                          "to weaken the guard itself (RG-0332)"))
+    # behaviour: the log must show no repeat inside the floor since the ruling
+    log = os.path.join(cl, "sent_log.json")
+    try:
+        ents = json.loads(open(log, encoding="utf-8").read() or "[]")
+        seen = {}
+        reps = []
+        for ent in sorted(ents, key=lambda x: str(x.get("sent_at") or "")):
+            em = (ent.get("email") or "").strip().lower(); at = str(ent.get("sent_at") or "")[:19]
+            if not em or not at:
+                continue
+            prev = seen.get(em)
+            if prev and at >= "2026-09-07":
+                try:
+                    d = (datetime.datetime.fromisoformat(at) - datetime.datetime.fromisoformat(prev)).days
+                except Exception:
+                    d = 0
+                if d < 60:
+                    reps.append("%s (%s after %s)" % (em, at[:10], prev[:10]))
+            seen[em] = at
+        if reps:
+            out.append((FAIL, "sent_log shows %d address(es) mailed twice inside 60 days since the "
+                              "ruling, e.g. %s (RG-0332 / RUL-106)" % (len(reps), reps[0])))
+    except Exception as ex:
+        out.append((INFO, "sent_log.json not readable (%s) -- behaviour half skipped" % repr(ex)[:60]))
+    if not out:
+        out.append((INFO, "the 60-day re-contact floor is enforced at send_email and the log shows no repeat"))
     return out
 
 

@@ -769,6 +769,14 @@ REFLECTIONS = {
  "RUL-010": [
    ("EU_HARNESS_REDUNDANCY_2026-08-15.md", ["HARNESS-PILOT-1", "OUT"], []),
  ],
+ "RUL-106": [
+   # 60-day re-contact floor (David, 7 Sep): enforced at send_email, fed by both records.
+   # A session removing the guard, shortening the floor, or adding a second door trips here.
+   ("RULINGS.md", ["NOBODY WE HAVE ALREADY WRITTEN TO IS WRITTEN TO AGAIN"], []),
+   ("../CityLauncher/emailer/emailer.py", ["RECONTACT-1", "RECONTACT_DAYS = 60", "_recontact_blocked(to)", "TS_RECONTACT_PERMISSION"], []),
+   ("../CityLauncher/emailer/localize.py", ["We will not email you again"], []),
+   ("scripts/regression_ledger.py", ["RG-0332"], []),
+ ],
  "RUL-011": [
    (os.path.join(PROJECTS, "CLAUDE.md"), ["LOCKED in the ledger"], []),
    ("scripts/regression_ledger.py", ["LOCKED"], []),

@@ -674,7 +674,19 @@ function formatIntroTime(ts) {
 
 let activeFilter='All', wishlist=new Set(), prevScreen='browse';
 let tuppence=50, pendingIntroId=null, pendingLMIntroId=null; // 🧪 TEST: 50 — reset to 5 before launch
-let magicLink={active:false,name:'',email:'',cat:'',area:'',src:''};
+let magicLink={active:false,name:'',email:'',cat:'',area:'',src:'',country:'',suburb:''};
+/* INVITE-PLACE-1 (7 Sep 2026, EMAIL-FORENSIC-1 / RG-0325, RG-0327): the invited seller's
+   country and suburb ride on the link too. Letters sent before today carry no country,
+   so _mlCountryFor() infers it from the city for those 1,206 links (US states included).
+   Unknown place -> '' and the app keeps today's behaviour (ZA). */
+var _ML_US_STATES=['alabama','alaska','arizona','arkansas','california','northern california','southern california','colorado','connecticut','delaware','florida','georgia','hawaii','idaho','illinois','indiana','iowa','kansas','kentucky','louisiana','maine','maryland','massachusetts','michigan','minnesota','mississippi','missouri','montana','nebraska','nevada','new hampshire','new jersey','new mexico','new york','new york state','north carolina','north dakota','ohio','oklahoma','oregon','pennsylvania','rhode island','south carolina','south dakota','tennessee','texas','utah','vermont','virginia','washington','washington dc','west virginia','wisconsin','wyoming'];
+var _ML_EXTRA_CITIES={'melbourne':'AU','brisbane':'AU','adelaide':'AU','perth':'AU','auckland':'NZ','wellington':'NZ','christchurch':'NZ','hamilton':'NZ','nelson':'NZ','napier':'NZ','buenos aires':'AR','santa fe':'AR','san juan':'AR','córdoba':'AR','cordoba':'AR','windhoek':'NA','lisbon':'PT','porto':'PT','paris':'FR','lyon':'FR'};
+function _mlCountryFor(city){
+  var c=String(city||'').trim().toLowerCase(); if(!c) return '';
+  try{ for(var k in DEMO_COUNTRY_CITIES){ if(DEMO_COUNTRY_CITIES[k].some(function(x){return String(x.name||'').toLowerCase()===c;})) return k; } }catch(e){}
+  if(_ML_US_STATES.indexOf(c)>=0) return 'US';
+  return _ML_EXTRA_CITIES[c]||'';
+}
 /* ONBOARD-FUNNEL-1 (5 Sep 2026): where invited sellers STOP, measured. Outreach could
    see a click and (by reconcile) a registration or publish; landing -> main photo ->
    sections -> publish was dark, and ~10 real people had clicked a working link since
@@ -810,6 +822,9 @@ async function _msInit(){
       email:  decodeURIComponent(sp.get('email') || ''),
       cat:    decodeURIComponent(sp.get('cat')   || ''),
       area:   decodeURIComponent(sp.get('city')  || activeCity.name || ''),
+      // INVITE-PLACE-1: country from the link, else inferred from the city (legacy links)
+      country: String(decodeURIComponent(sp.get('country')||'')||_mlCountryFor(sp.get('city')||'')).toUpperCase().slice(0,2),
+      suburb:  decodeURIComponent(sp.get('suburb') || sp.get('neighborhood') || sp.get('neighbourhood') || ''),
       src:    decodeURIComponent(sp.get('src')   || '')   // ONBOARD-FUNNEL-1: which wave sent them
     };
     // Strip params from URL bar without reloading
@@ -5449,7 +5464,7 @@ function renderMagicBanner(){
     },100);
   } else {area.innerHTML='';}
 }
-function clearMagic(){magicLink={active:false,name:'',email:'',cat:'',area:''};renderMagicBanner();showToast('Invitation data cleared');}
+function clearMagic(){magicLink={active:false,name:'',email:'',cat:'',area:'',src:'',country:'',suburb:''};renderMagicBanner();showToast('Invitation data cleared');}
 
 let obModel = '';
 function obSelectModel(m){
@@ -15835,7 +15850,10 @@ function sfInit(){
     A:{}, B:{}, C:{}, features:[], price:'', area:'',
     email: (typeof magicLink!=='undefined' && magicLink.email) || localStorage.getItem('ms_aa_email') || '',
     name:  (typeof magicLink!=='undefined' && magicLink.name)  || localStorage.getItem('ms_aa_name') || '',
-    city:  (typeof activeCity!=='undefined' && activeCity.name) || 'Pretoria',
+    // INVITE-PLACE-1 (RG-0325): the invited seller's own city wins over the browse default.
+    // MAGICLINK-CITY-1 repaired the LINK; this is the last hop that kept ignoring it.
+    city:  (typeof magicLink!=='undefined' && magicLink.active && magicLink.area) || (typeof activeCity!=='undefined' && activeCity.name) || 'Pretoria',
+    country: (typeof magicLink!=='undefined' && magicLink.active && magicLink.country) || (typeof activeCountry!=='undefined' && activeCountry && activeCountry.iso2) || 'ZA',
     visionDraft:null, vehicle:null, _busy:false,
     coachSid:'', coachAsk:{open:false,q:'',a:'',msg:'',used:0,remaining:null,busy:false,capped:false}};   // SF-COACH-ASK-1
   // Invited arrival with a category on the magic link → skip the tile screen
@@ -15950,7 +15968,8 @@ function sfStartCat(cat){
   sfState.photos={}; sfState.files={}; sfState.previews={}; sfState.mainPhase=0; sfState.mainMsg=''; sfState.mvSig=''; sfState.anonFlags={};
   sfState.coachSid='sf'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);   // SF-COACH-ASK-1: one cap per listing session
   sfState.coachAsk={open:false,q:'',a:'',msg:'',used:0,remaining:null,busy:false,capped:false};
-  sfState.A={}; sfState.B={}; sfState.C={}; sfState.features=[]; sfState.price=''; sfState.area='';
+  sfState.A={}; sfState.B={}; sfState.C={}; sfState.features=[]; sfState.price='';
+  sfState.area=(typeof magicLink!=='undefined' && magicLink.active && magicLink.suburb) ? String(magicLink.suburb).slice(0,80) : '';   // INVITE-PLACE-1
   sfState.visionDraft=null; sfState.vehicle=null;
   var c = SF_CATS[cat];
   if(c.subPick){ sfGo('subpick'); return; }
@@ -16182,7 +16201,7 @@ function sfSlotHtml(sl){
 function sfPhotosS(){
   var f=sfFlow();
   var h='<div class="sf-hdr"><div class="sf-step">Step 1 of 6 · '+f.label+'</div><h2>Photos</h2></div>'+sfMeter()+
-  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Start with your main photo.</b> I check every photo and blur '+f.aiCap+' before anyone sees it.</div></div>';
+  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Start with your main photo, or continue and add it later.</b> I check every photo and blur '+f.aiCap+' before anyone sees it.</div></div>';
   if(sfState.mainPhase===1){
     h+='<div class="sf-aipanel">'+(sfState.previews.main?'<img src="'+sfState.previews.main+'">':'')+
        '<div class="sf-cap"><span class="sf-spin"></span>AI is reading your photo — checking for '+f.aiCap+'…</div></div>';
@@ -16220,13 +16239,18 @@ function sfPhotosS(){
       });
       h+='</div>';
     }
-    h+='<div class="sf-skipline"><a onclick="sfSkip(\'photos\',\'secA\')">Skip the rest of the photos →</a></div>'+
-       '<div class="sf-skipwarn" id="sf-warn-photos">Skipping photos lowers your Quality Score — full photo sets get roughly 3× more buyer contact. You can add them later.</div>';
   }
+  /* INVITE-GATE-1 (7 Sep 2026, EMAIL-FORENSIC-1 / RG-0326): the forward button used to be
+     disabled until a photo was uploaded AND passed AI review, and the skip link only
+     appeared after that -- a wall. PROBED: 1,206 letters, 62 arrivals in 30 days, 15 reached
+     this screen, 0 ever passed it. A photo raises quality; it is not the price of entry.
+     No photo -> the seller continues (warned once, sfSkip) and adds photos later. */
+  h+='<div class="sf-skipline"><a onclick="sfSkip(\'photos\',\'secA\')">'+(sfState.photos.main===2?'Skip the rest of the photos →':'No photo handy? Continue and add one later →')+'</a></div>'+
+     '<div class="sf-skipwarn" id="sf-warn-photos">'+(sfState.photos.main===2?'Skipping photos lowers your Quality Score — full photo sets get roughly 3× more buyer contact. You can add them later.':'You can add photos later — listings with photos get roughly 3× more buyer contact.')+'</div>';
   h+='<input type="file" id="sf-file" accept="image/*" style="display:none;" onchange="sfFileChosen(this)">';
   h+='<input type="file" id="sf-file-extra" accept="image/*" multiple style="display:none;" onchange="sfExtraChosen(this)">';
-  h+='<div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'home\')">←</button><button class="sf-btn pri" '+
-     (sfState.photos.main===2?'':'disabled')+' onclick="sfGo(\'secA\')">'+f.sections[0].title+' →</button></div>';
+  h+='<div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'home\')">←</button><button class="sf-btn pri" onclick="'+
+     (sfState.photos.main===2?'sfGo(\'secA\')':'sfSkip(\'photos\',\'secA\')')+'">'+f.sections[0].title+' →</button></div>';   // INVITE-GATE-1: never disabled
   return h;
 }
 var _sfPickKey = null;
@@ -16296,7 +16320,7 @@ async function sfRunVision(file){
     fd.append('category_hint', (sfState.cat==='local_market'?'local_market':String(sfState.cat||'').toLowerCase()));
     fd.append('seller_email', sfState.email||'');
     fd.append('city', sfState.city||'Pretoria');
-    fd.append('country_iso2','ZA');
+    fd.append('country_iso2', String(sfState.country||'ZA'));   // INVITE-PLACE-1: the seller's market, not ZA
     var res=await fetch(BEA_URL+'/listings/vision-draft',{method:'POST',body:fd});
     clearTimeout(toGuard);
     if(!res.ok) throw new Error('vision '+res.status);
@@ -16361,7 +16385,7 @@ async function sfRunMultiVision(){
     fd.append('category_hint', (sfState.cat==='local_market'?'local_market':String(sfState.cat||'').toLowerCase()));
     fd.append('seller_email', sfState.email||'');
     fd.append('city', sfState.city||'Pretoria');
-    fd.append('country_iso2','ZA');
+    fd.append('country_iso2', String(sfState.country||'ZA'));   // INVITE-PLACE-1: the seller's market, not ZA
     var res=await fetch(BEA_URL+'/listings/vision-draft',{method:'POST',body:fd});
     if(!res.ok) throw new Error('multivision '+res.status);
     var data=await res.json();
