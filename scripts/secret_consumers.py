@@ -141,6 +141,15 @@ def server_consumers(name):
     return out
 
 
+def live_places(srv):
+    """The consumers a rotation must reach: the real files, minus the stale-.bak note.
+    STALE-IS-NOT-A-CONSUMER-1 (7 Sep 2026): the first cut counted the note as a place, so a
+    credential with ONE live copy and one .bak beside it read as 'two places' and demanded a
+    register row for a file no rotation should touch -- the docstring above already said .bak
+    files are a deletion question, and the count now agrees with it."""
+    return [s for s in (srv or []) if not s.startswith("(+")]
+
+
 def repo_consumers(name):
     """grep, not a Python walk: this repo is large and on a FUSE mount, where reading every
     file took minutes. .secrets/ is excluded on purpose -- it holds values, and this tool
@@ -198,18 +207,21 @@ def main():
     claimed = register_out_of_band()
     _ensure_ssh()
 
-    offline, surprises = False, []
+    offline, surprises, stale_notes = False, [], []
     for n in names:
         srv = server_consumers(n)
         if srv is None:
             offline = True
             srv = []
         rep = repo_consumers(n) if not a.check else []
-        # A credential living in MORE than one place on the box has out-of-band copies,
+        # A credential living in MORE than one LIVE place on the box has out-of-band copies,
         # and every one of them must be refreshed by the rotation or it goes stale silently.
-        multi = len(srv) > 1
+        live = live_places(srv)
+        multi = len(live) > 1
         if multi and n not in claimed:
             surprises.append((n, srv))
+        if len(srv) > len(live):
+            stale_notes.append((n, srv[-1]))
         if a.check:
             continue
         print("\n%s" % n)
@@ -224,8 +236,8 @@ def main():
         if len(rep) > 6:
             print("   repo   : ... and %d more" % (len(rep) - 6))
         if multi:
-            print("   NOTE   : %d copies on the box -- a rotation must reach ALL of them%s"
-                  % (len(srv), "" if n in claimed else "  << NOT in the register's out-of-band table"))
+            print("   NOTE   : %d live copies on the box -- a rotation must reach ALL of them%s"
+                  % (len(live), "" if n in claimed else "  << NOT in the register's out-of-band table"))
 
     if a.check:
         if offline:
@@ -239,6 +251,12 @@ def main():
             return 1
         print("OK: every credential with more than one copy on the box is named in the "
               "register's out-of-band table")
+        if stale_notes:
+            # Not a failure and not this tool's question -- deleting is David's call -- but
+            # a stale secret on disk is worth one line a rotation will read.
+            print("STALE: %d credential(s) also have dead .bak copies on the box (a deletion "
+                  "question, not a rotation one): %s"
+                  % (len(stale_notes), ", ".join(n for n, _ in stale_notes)))
     return 0
 
 

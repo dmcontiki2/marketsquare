@@ -18666,12 +18666,23 @@ def rg_ai_prompts_not_hardcoded_south_african():
 
 @entry("RG-0308", "A rotation KNOWS every place a credential lives -- discovered by looking, "
        "never recalled from a table somebody has to remember to update",
-       OPEN,
+       LOCKED,
        scope="scripts/secret_consumers.py + ROTATE_SECRETS.bat's discovery step + "
              "SECRETS_REGISTER.md's out-of-band table. CLASS: any operation whose "
              "correctness depends on a hand-maintained list of the things it must reach.",
-       fixed_on="",
-       ref="STILL OPEN. 7 Sep 2026, maintenance loop: this entry printed READY TO LOCK in shard "
+       fixed_on="2026-09-07",
+       ref="PROMOTED 7 Sep 2026 (second pass, same day) on the tool's own OK line against the live "
+           "box with ssh PROVED up: the register's out-of-band table now names all 10 credentials "
+           "that hold more than one live copy (MS_MAINT_KEY, LAUNCH_CODE_SECRET x4 files, both "
+           "PAYSTACK secrets, ANTHROPIC_API_KEY, HETZNER_S3_ACCESS_KEY's second reader, "
+           "CF_CACHE_TOKEN, EMAIL_INBOUND_SECRET x3, RELAY_INBOUND_SECRET, FOUNDERS_ID_SALT), each "
+           "row written from the probe, naming the consumer and the rotation rule for that shape. "
+           "Two tool corrections rode with it: OFFLINE-IS-NOT-ABSENT-1 (RG-0333) and "
+           "STALE-IS-NOT-A-CONSUMER-1 -- a .bak beside a live file is a deletion question and no "
+           "longer counts as a second place (13 'surprises' became the 10 real ones). The stale "
+           "files are listed in the register, not deleted: deleting is David's call. From here a "
+           "new unlisted live copy of any credential on the box is a REGRESSION. "
+           "EARLIER THE SAME DAY: this entry printed READY TO LOCK in shard "
            "3/3 and was promoted for eleven minutes before the promotion was REVERTED -- the "
            "tool had answered 'no surprises' from a sandbox that had not yet loaded its ssh key, "
            "so every ssh call failed silently with empty output and empty output read as 'this "
