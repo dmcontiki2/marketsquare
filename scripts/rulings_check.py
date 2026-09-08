@@ -811,10 +811,21 @@ REFLECTIONS = {
  "RUL-104": [
    # Global marketplace, never 'a South African marketplace' (David, 6 Sep). The club letter went
    # to ~1,000 US readers with the old wording for four days after the ruling; asserted now.
+   # RUL-110 (8 Sep) sharpened it: no country of origin as a qualifier either.
    ("RULINGS.md", ["GLOBAL MARKETPLACE, NOT A SOUTH AFRICAN ONE"], []),
-   ("../CityLauncher/emailer/templates/sports_club_outreach.html", ["global marketplace"], ["South African marketplace"]),
-   ("../CityLauncher/emailer/templates/adventures_outfitter_outreach.html", ["global marketplace"], ["South African marketplace"]),
-   ("scripts/youtube_pack_build.py", ["global marketplace"], ["South African marketplace"]),
+   ("../CityLauncher/emailer/templates/sports_club_outreach.html", ["a global marketplace that opened"], ["South African marketplace", "founded in South Africa"]),
+   ("../CityLauncher/emailer/templates/adventures_outfitter_outreach.html", ["a global marketplace that opened"], ["South African marketplace", "founded in South Africa"]),
+   ("../CityLauncher/emailer/templates/federation_intro_outreach.txt", ["a global marketplace"], ["South African marketplace", "founded in South Africa"]),
+   ("scripts/youtube_pack_build.py", ["global marketplace"], ["South African marketplace", "founded in South Africa"]),
+ ],
+ "RUL-110": [
+   # The opening line is 'a global marketplace' with NO country of origin (David, 8 Sep): a qualifier
+   # like 'founded in South Africa' is the bias RUL-104 removed, back through another door.
+   ("RULINGS.md", ["NO COUNTRY OF ORIGIN, NOWHERE, IN OUTWARD-FACING COPY"], []),
+   ("../CityLauncher/emailer/templates/sports_club_outreach.html", [], ["founded in", "based in South Africa", "from South Africa"]),
+   ("../CityLauncher/emailer/templates/adventures_outfitter_outreach.html", [], ["founded in", "based in South Africa", "from South Africa"]),
+   ("../CityLauncher/emailer/templates/federation_intro_outreach.txt", [], ["founded in", "based in South Africa", "from South Africa"]),
+   ("scripts/youtube_pack_build.py", [], ["founded in South Africa", "based in South Africa"]),
  ],
  "RUL-106": [
    # 60-day re-contact floor (David, 7 Sep): enforced at send_email, fed by both records.

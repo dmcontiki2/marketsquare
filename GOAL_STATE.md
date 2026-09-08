@@ -45,8 +45,8 @@ Target: **20 by Fri 31 Oct 2026.** Model on runs 5–7: Fable 5.1 (as David aske
    and subject; Montana + Wyoming draw adventures_experiences. Montana composes 12 tonight.
 4. **LETTER-FILE-1 (RG-0340):** RUL-099(e) was never built — `visuals/letters/` held only a README.
    The send lane now files one copy per letter shape × country per day. Preview filed.
-5. RUL-104 finally in the club letter ("a global marketplace, founded in South Africa"); rulings_check
-   asserts it. RG-0326 promoted (a session passed the photo screen).
+5. RUL-104 finally in the club letter; David then ruled the origin out too (RUL-110): all three
+   letters open with "a global marketplace" and rulings_check asserts the absence. RG-0326 promoted (a session passed the photo screen).
 6. **WYOGA-1:** Wyoming outfitters adapter written; host run 01:51 SAST read 95 listings, 94 with a
    mailbox, **+90 imported** (result file read). wyoga.org is NOT reachable from the sandbox — host-side only.
 7. Commits pushed via the queue at 01:51 (both repos, rc=0). Ledger after: 328 · 0 regressed · 21 open.
