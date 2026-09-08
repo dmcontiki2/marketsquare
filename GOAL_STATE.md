@@ -15,7 +15,7 @@ Run it, never recall it: `python3 MarketSquare/scripts/onboarding_number.py`
 | 2026-09-05 (runs 3–4b) | **0** | 0 | 0 | raw 2 = e2e_test seeds, barred by §3 |
 | 2026-09-06 (run 5) | **0** | 0 | 0 | 4,470 on the list · 570 emailed · 5 registered |
 | 2026-09-07 (run 6) | **0** | 0 | 0 | 5,639 on the list · 845 emailed · 5 registered |
-| 2026-09-08 (run 7, 01:03) | **0** | 0 | 0 | 5,838 on the list · 1,076 emailed · 5 registered |
+| 2026-09-08 (run 7, 01:03) | **0** | 0 | 0 | 5,838 on the list (5,928 after the Wyoming import) · 1,076 emailed · 5 registered |
 
 Target: **20 by Fri 31 Oct 2026.** Model on runs 5–7: Fable 5.1 (as David asked, RUL-096h).
 
@@ -47,8 +47,9 @@ Target: **20 by Fri 31 Oct 2026.** Model on runs 5–7: Fable 5.1 (as David aske
    The send lane now files one copy per letter shape × country per day. Preview filed.
 5. RUL-104 finally in the club letter ("a global marketplace, founded in South Africa"); rulings_check
    asserts it. RG-0326 promoted (a session passed the photo screen).
-6. **WYOGA-1:** Wyoming outfitters adapter (95 members) written + fixture-tested; `run_us_registers.bat`
-   queued 01:31 SAST. wyoga.org is NOT reachable from the sandbox (proxy 403) — host-side only.
+6. **WYOGA-1:** Wyoming outfitters adapter written; host run 01:51 SAST read 95 listings, 94 with a
+   mailbox, **+90 imported** (result file read). wyoga.org is NOT reachable from the sandbox — host-side only.
+7. Commits pushed via the queue at 01:51 (both repos, rc=0). Ledger after: 328 · 0 regressed · 21 open.
 
 ## SUPPLY (measured 8 Sep, server)
 
@@ -56,7 +57,7 @@ Target: **20 by Fri 31 Oct 2026.** Model on runs 5–7: Fable 5.1 (as David aske
   (cox.net, aol, yahoo) — MX cleaning cannot rescue it. SOURCE-QUALITY-1 holds the source from
   tomorrow, parking Massachusetts' 213. Correct. Do not build a release for it.
 - US club lane left: rrca 292 (2.1% bounce) + usatf-pacific 40 ≈ 330 → **dry ~9–10 Sep**.
-- Outfitters: Montana 199 (drawn from tonight), Wyoming ~95 (harvest queued). Same pattern next:
+- Outfitters: Montana 199 (drawn from tonight), Wyoming 90 (imported 01:51, drawn from tonight). Same pattern next:
   state outfitter/guide associations that publish members WITH mailboxes. Probe them with
   `web_fetch` (sandbox curl is proxy-blocked for most .org sites); write the adapter text-based
   like `_wyoga`; harvest host-side via the bat; read the `.result` before claiming an import.
@@ -69,8 +70,7 @@ Target: **20 by Fri 31 Oct 2026.** Model on runs 5–7: Fable 5.1 (as David aske
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
-0. `host_queue/done/*run-us-registers.result` — did wyoga harvest (+~90) and import? If the fetch
-   failed (WAF), the adapter did NOT mark itself done; read the stderr line and fix the UA/URL.
+0. Check `host_queue/worker_log.txt` for a RUN without a DONE before opening prospects.db.
 1. Run the number. Newest `logs/launchday_*.log`: `EMAILER CRASHED` = 0; confirm the doublings to 48
    happened where days were clean (MA/FL/MI/IL) — the first proof the ramp works; confirm Montana
    drew adventures_experiences under the outfitter letter and `visuals/letters/` gained a file.
