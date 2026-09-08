@@ -20389,5 +20389,57 @@ def rg_sending_agency_letters_carry_agency_story():
     return out or [(INFO, "sending agency letters carry the agency story and the lane mints console links")]
 
 
+@entry("RG-0342", "ONE LOGIN -- an enrolled device passes the ops Basic-auth gate, and the gate still "
+       "fronts every ops page for everyone else; an outage falls back to Basic, never a 500",
+       LOCKED, fixed_on="2026-09-08",
+       scope="nginx (migration 037): internal `location = /_device_ok` sub-requesting the app's "
+             "GET /admin/device-ok, `auth_request /_device_ok` in snippets/internal_auth.conf beside its "
+             "existing `satisfy any` Basic auth, and `satisfy any; auth_request` on the six inline "
+             "'TrustSquare Orchestrator' blocks. Auctions (own secret) and the AdvertAgent dev realm are "
+             "deliberately outside this. Legs: (a) LIVE, anonymous -- /dashboard.html, /admin.html, "
+             "/command.html and /orchestrator/v2/cockpit.html answer 401 WITH a Basic challenge (the gate "
+             "still fronts them; a 200 here is a leak, a 500 is the fail-safe gone); (b) LIVE -- "
+             "/admin/device-ok answers 401 anonymously (the sub-request target is alive and fail-closed; "
+             "a 404 means the app half was removed and every enrolled device silently meets the prompt "
+             "again); (c) SOURCE -- migrations/037_device_auth.py still carries the error_page->401 "
+             "fail-safe and never touches the Auctions realm. CLASS: any nginx-fronted ops page -- new "
+             "ops pages must use snippets/internal_auth.conf, not a bare auth_basic pair.",
+       ref="DEVICE-AUTH-1, PROBED 8 Sep 2026 03:58-04:00 UTC: enrolled browser (cookie only, no Basic "
+           "credential) -> 200 on all six ops pages; anonymous curl from the sandbox -> 401 + Basic on "
+           "all six; with /_device_ok pointed at a dead port for 60 s the same pages answered 401 + Basic "
+           "(not 500), then restored. David: 'is this really necessary, please remove it, we only need "
+           "the first login?' The migration's first-run proof wrongly probed /dashboard.html from "
+           "loopback (that snippet carries `allow 127.0.0.1` by design) -- corrected the same hour.")
+def rg_one_login_device_passes_ops_gate():
+    out = []
+    for path in ("/dashboard.html", "/admin.html", "/command.html", "/orchestrator/v2/cockpit.html"):
+        st = _status(path)
+        www = _headers(path).get("www-authenticate", "")
+        if st == 401 and "Basic" in www:
+            continue
+        if st == 200:
+            out.append((FAIL, "%s answers 200 to an ANONYMOUS request -- the ops gate is open (DEVICE-AUTH-1)" % path))
+        elif st >= 500:
+            out.append((FAIL, "%s answers %d anonymously -- the /_device_ok fail-safe (error_page -> 401) is gone "
+                              "and an app outage now takes the ops pages down with it (DEVICE-AUTH-1)" % (path, st)))
+        else:
+            out.append((FAIL, "%s answers %d (WWW-Authenticate=%r) anonymously -- expected 401 + Basic (DEVICE-AUTH-1)"
+                        % (path, st, www[:40])))
+    st = _status("/admin/device-ok")
+    if st != 401:
+        out.append((FAIL, "/admin/device-ok answers %d anonymously -- expected 401; the enrolled-device check is "
+                          "%s (DEVICE-AUTH-1)" % (st, "gone -- every phone meets the password box again" if st == 404 else "not fail-closed")))
+    m = os.path.join(REPO, "migrations", "037_device_auth.py")
+    if os.path.isfile(m):
+        body = open(m, encoding="utf-8", errors="replace").read()
+        if "error_page 500 502 503 504 =401 @device_deny;" not in body or "proxy_intercept_errors on;" not in body:
+            out.append((FAIL, "migration 037 no longer carries the error_page -> 401 fail-safe (DEVICE-AUTH-1)"))
+        if "TrustSquare Auctions" in body.replace("Auctions (its own", "").replace("Auctions realm", ""):
+            out.append((FAIL, "migration 037 now touches the Auctions realm -- that secret was deliberately outside this (DEVICE-AUTH-1)"))
+    if not out:
+        out.append((INFO, "ops gate fronts all four pages (401 + Basic); device check alive and fail-closed; fail-safe in source"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

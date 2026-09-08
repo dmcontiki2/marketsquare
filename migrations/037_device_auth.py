@@ -182,18 +182,26 @@ def main():
         say("rollback: cp %s %s && cp %s %s && nginx -t && nginx -s reload" % (bsite, site, bsnip, snip))
 
     # PROVE: the gate still fronts the pages anonymously, and the sub-request target is alive + fail-closed.
+    # NOTE (first run, 8 Sep 03:57 UTC): /dashboard.html is NOT probed here -- its snippet carries
+    # `allow 127.0.0.1;` by design, so a loopback probe answers 200 whatever the gate does. It was
+    # PROVEN from outside the same minute (curl from the sandbox: 401 + Basic on all six ops pages).
+    # The inline Orchestrator blocks have no loopback allow, so cockpit is the honest loopback probe.
     ok = True
-    for path in ("/dashboard.html", "/orchestrator/v2/cockpit.html"):
+    for path in ("/orchestrator/v2/cockpit.html",):
         try:
             st, www = _probe_public(path)
             if st == 401 and "Basic" in www:
                 say("gate PROVEN   %s -> 401 + Basic challenge anonymously" % path)
-            elif st == 404 and path != "/dashboard.html":
+            elif st == 404:
                 say("gate CHECK    %s -> 404 (file not deployed here; gate ran first or not -- not judged)" % path)
             else:
                 say("gate CHECK    %s -> %s (WWW-Authenticate=%r) -- expected 401 + Basic. Investigate." % (path, st, www)); ok = False
         except Exception as ex:
             say("gate probe error %s: %s" % (path, repr(ex)[:80])); ok = False
+    if "auth_request /_device_ok;" not in _read(snip):
+        say("snippet CHECK  internal_auth.conf carries no auth_request /_device_ok -- snippet half missing"); ok = False
+    else:
+        say("snippet PROVEN internal_auth.conf carries auth_request /_device_ok (dashboard/admin/command/rental)")
     try:
         st = _probe_app("/admin/device-ok")
         if st == 401:

@@ -818,6 +818,13 @@ REFLECTIONS = {
    ("../CityLauncher/emailer/templates/federation_intro_outreach.txt", ["a global marketplace"], ["South African marketplace", "founded in South Africa"]),
    ("scripts/youtube_pack_build.py", ["global marketplace"], ["South African marketplace", "founded in South Africa"]),
  ],
+ "RUL-112": [
+   # An enrolled device logs in once (David, 8 Sep): nginx honours the enrolment cookie beside
+   # Basic auth. The migration must keep the fail-safe and the ledger must keep the live assertion.
+   ("RULINGS.md", ["AN ENROLLED DEVICE LOGS IN ONCE"], []),
+   ("migrations/037_device_auth.py", ["auth_request /_device_ok", "error_page 500 502 503 504 =401 @device_deny", "satisfy any"], []),
+   ("scripts/regression_ledger.py", ["RG-0342"], []),
+ ],
  "RUL-111": [
    # The daily cap is not pushed (David, 8 Sep): the gate exists, is non-zero, and its note still
    # says it is raised on evidence and never on a date or to let a wave out.
