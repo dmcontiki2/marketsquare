@@ -4898,6 +4898,17 @@ def seller_public_credentials(listing_id: int):
         uni = []
         if user.get("id_verified_at"):
             uni.append({"name": _TRUST_SIGNALS["universal.id_verified"]["name"], "points": _TRUST_SIGNALS["universal.id_verified"]["points"]})
+        else:
+            # ID-UPLOAD-INTERIM-1 (RUL-113): the interim points count in the score, so
+            # they must appear in the list that sums to it — named as what they are.
+            _idd = conn.execute(
+                """SELECT d.points_awarded FROM user_declarations d
+                     JOIN user_credentials c ON LOWER(c.email)=LOWER(d.email) AND c.signal_id=d.signal_id
+                    WHERE LOWER(d.email)=? AND d.signal_id='universal.id_verified' AND c.status='declared'""",
+                (email,)).fetchone()
+            if _idd and int(_idd["points_awarded"] or 0) > 0:
+                uni.append({"name": "Government-issued ID uploaded \u2014 confirmation pending",
+                            "points": int(_idd["points_awarded"])})
         has_listing = conn.execute("SELECT 1 FROM listings WHERE LOWER(seller_email)=? LIMIT 1", (email,)).fetchone()
         if user.get("name") and user.get("country") and user.get("photo_url") and has_listing:
             uni.append({"name": _TRUST_SIGNALS["universal.profile_complete"]["name"], "points": _TRUST_SIGNALS["universal.profile_complete"]["points"]})
@@ -5108,6 +5119,22 @@ def get_user_trust(email: str):
         (email,)
     ).fetchone()[0]
 
+    # ID-UPLOAD-INTERIM-1 (RUL-113): a declared (uploaded, unconfirmed) ID carries
+    # its interim points on this surface too, so the visible list still sums to the
+    # headline (EVIDENCE-TRUE) and the seller sees the upload counted.
+    id_partial = 0
+    try:
+        _dc = conn.execute(
+            """SELECT c.status, d.points_awarded
+                 FROM user_credentials c
+                 LEFT JOIN user_declarations d
+                        ON LOWER(d.email)=LOWER(c.email) AND d.signal_id=c.signal_id
+                WHERE LOWER(c.email)=LOWER(?) AND c.signal_id='universal.id_verified'""",
+            (email,)).fetchone()
+        if _dc and _dc["status"] == "declared" and not user.get("id_verified_at"):
+            id_partial = int(_dc["points_awarded"] or 0)
+    except Exception:
+        id_partial = 0
     conn.close()
 
     has_photo    = bool(user["photo_url"])
@@ -5136,6 +5163,9 @@ def get_user_trust(email: str):
             "name": "Government-issued ID verified",
             "points": 15,
             "earned": id_verified,
+            "partial_points": (id_partial if not id_verified else 0),
+            "pending_points": ((15 - id_partial) if (id_partial and not id_verified) else 0),
+            "note": (ID_UPLOAD_INTERIM_NOTE if (id_partial and not id_verified) else None),
             "how_to_earn": "Upload your ID or passport in your profile.",
         },
         {
@@ -5182,15 +5212,16 @@ def get_user_trust(email: str):
         },
     ]
 
-    earned_pts  = sum(s["points"] for s in signals if s["earned"])
-    available_pts = sum(s["points"] for s in signals if not s["earned"])
+    earned_pts  = sum(s["points"] if s["earned"] else int(s.get("partial_points") or 0) for s in signals)
+    available_pts = sum((s["points"] - int(s.get("partial_points") or 0)) for s in signals if not s["earned"])
     # EVIDENCE-TRUE (24 Jul 2026): the headline score IS the sum of the earned
     # signals shown below it - never the stored users.trust_score, which other
     # paths (seed 40, id-verify, subscription) mutate independently and which
     # drifted above the visible list (the same 87-over-50 class the buyer card
     # hit). _assert_evidence_true returns that sum and logs any drift it heals.
     score = _assert_evidence_true(user.get("trust_score"),
-                                  [s["points"] for s in signals if s["earned"]],
+                                  [s["points"] if s["earned"] else int(s.get("partial_points") or 0)
+                                   for s in signals],
                                   "get_user_trust")
     tier = _trust_tier(score)
 
@@ -5339,13 +5370,55 @@ async def upload_user_id(email: str, file: UploadFile = File(...), _key: str = D
                VALUES (?, 'id_doc', 'Government-issued ID', ?, 'private', 'category.lm.id_uploaded')""",
             (email, id_url)
         )
+        if ID_UPLOAD_INTERIM_POINTS > 0:
+            # ID-UPLOAD-INTERIM-1 (RUL-113): the upload itself is worth 12 of the 15,
+            # now, through the SAME 'declared' machinery every other partial credential
+            # uses — never a hand-added number on users.trust_score.
+            _grant_id_upload_interim(conn, email)
+            conn.commit()
+            conn.close(); conn = None
+            try:
+                new_score = int(trust_score_breakdown(email)["score"])
+            except Exception:
+                new_score = current_score
+            return {"verified": False, "status": "interim", "trust_score": new_score,
+                    "points_awarded": ID_UPLOAD_INTERIM_POINTS,
+                    "points_pending": 15 - ID_UPLOAD_INTERIM_POINTS,
+                    "already_verified": False,
+                    "message": "ID received \u2014 %d points added. %s"
+                               % (ID_UPLOAD_INTERIM_POINTS, ID_UPLOAD_INTERIM_NOTE)}
         _upsert_credential(conn, email, "universal.id_verified", "pending")
         conn.commit()
         return {"verified": False, "status": "pending", "trust_score": current_score,
                 "points_awarded": 0, "already_verified": False,
                 "message": "ID received \u2014 verification in progress."}
     finally:
-        conn.close()
+        if conn is not None:
+            conn.close()
+
+
+def _grant_id_upload_interim(conn, email: str) -> bool:
+    """ID-UPLOAD-INTERIM-1 (RUL-113). Mark universal.id_verified 'declared' with
+    ID_UPLOAD_INTERIM_POINTS awarded, unless it is already earned. Idempotent — the
+    declaration row is upserted, so a second upload never doubles the points. Used
+    by the upload handler and by migration 038 for rows uploaded before this shipped.
+    Returns True when the row was (re)written, False when the credential is earned."""
+    em = (email or "").lower().strip()
+    cur = conn.execute(
+        "SELECT status FROM user_credentials WHERE LOWER(email)=? AND signal_id='universal.id_verified'",
+        (em,)).fetchone()
+    if cur and cur["status"] == "earned":
+        return False
+    _upsert_credential(conn, em, "universal.id_verified", "declared")
+    conn.execute(
+        """INSERT INTO user_declarations (email, signal_id, declaration, points_awarded)
+           VALUES (?, 'universal.id_verified', ?, ?)
+           ON CONFLICT(email, signal_id) DO UPDATE SET
+               points_awarded = excluded.points_awarded,
+               declaration    = excluded.declaration""",
+        (em, "ID document uploaded (ID-UPLOAD-INTERIM-1). " + ID_UPLOAD_INTERIM_NOTE,
+         ID_UPLOAD_INTERIM_POINTS))
+    return True
 
 # ══ ACCOUNT-CLOSE-1 (21 Aug 2026) — EULA SS14.1/14.2/14.3 in code ══════════
 # This endpoint used to be `DELETE FROM users` — a hard delete that said nothing
@@ -6045,12 +6118,28 @@ def id_status(email: str):
         ).fetchone()
         if r is None:
             raise HTTPException(status_code=404, detail="User not found")
+        # ID-UPLOAD-INTERIM-1 (RUL-113, DW-109): a document that is on file but not
+        # yet confirmed is a state of its own. Before this, an upload that returned
+        # 200 left this route saying "No ID on file" — the seller uploaded again.
+        cred = conn.execute(
+            """SELECT c.status, d.points_awarded
+                 FROM user_credentials c
+                 LEFT JOIN user_declarations d
+                        ON LOWER(d.email)=LOWER(c.email) AND d.signal_id=c.signal_id
+                WHERE LOWER(c.email)=? AND c.signal_id='universal.id_verified'""", (em,)
+        ).fetchone()
+        interim_pts = 0
         if r["id_npr_verified_at"]:
             state, label = "npr_verified", "ID verified with Home Affairs"
         elif r["id_verified_at"]:
             state, label = "ai_checked", "ID document on file"
         elif r["id_number_hash"]:
             state, label = "submitted", "ID submitted"
+        elif cred and cred["status"] in ("declared", "pending"):
+            state = "pending"
+            interim_pts = int(cred["points_awarded"] or 0) if cred["status"] == "declared" else 0
+            label = ("ID received \u2014 %d points added. %s" % (interim_pts, ID_UPLOAD_INTERIM_NOTE)
+                     if interim_pts else "ID received \u2014 waiting confirmation")
         else:
             state, label = "none", "No ID on file"
         return {
@@ -6059,6 +6148,9 @@ def id_status(email: str):
             "npr_verified_at": r["id_npr_verified_at"],
             "price_t": ID_NPR_PRICE_T,
             "can_buy": state != "npr_verified",
+            "interim_points": interim_pts,
+            "pending_points": (15 - interim_pts) if state == "pending" and interim_pts else 0,
+            "pending_note": ID_UPLOAD_INTERIM_NOTE if (state == "pending" and interim_pts) else None,
         }
     finally:
         try:
@@ -10011,6 +10103,18 @@ def _trust_tier(score: int) -> dict:
 # product must not buy a trust halo. Listing quality lives on the separate Quality/SPS
 # axis (Rank = 50% TS + 50% SPS). Do NOT add any listing-quality signal to this catalog.
 # (Guarded by test_trust_evidence_true.py -> predeploy_check.py.)
+# ID-UPLOAD-INTERIM-1 (RUL-113, David 8 Sep 2026): while the Home Affairs lane is
+# parked (RUL-105 — Didit unfunded), an ID upload awards ID_UPLOAD_INTERIM_POINTS of
+# the 15 identity points AT ONCE (recorded as a 'declared' credential with a
+# user_declarations row, so the one scorer counts it) and the remainder waits for
+# confirmation — the vision check, admin review, or the Home Affairs check once it
+# is funded. Before this, an upload that returned 200 changed nothing the seller
+# could see (DW-109: David uploaded twice and was told "No ID on file"). Set the env
+# to 0 to restore the C2 no-grant-until-verified behaviour; that reversal is David's
+# call, not a code default.
+ID_UPLOAD_INTERIM_POINTS = max(0, min(15, int(os.environ.get("ID_UPLOAD_INTERIM_POINTS", "12") or 0)))
+ID_UPLOAD_INTERIM_NOTE = "Waiting confirmation to add an extra %d points." % (15 - ID_UPLOAD_INTERIM_POINTS)
+
 _TRUST_SIGNALS = {
     # ── Group 1 · Universal (max 30) ─────────────────────────
     "universal.id_verified": {
@@ -10449,7 +10553,10 @@ def _build_breakdown_items(conn, email: str, signals_dict: dict, computed: dict)
         evidence_pts_remaining = 0
         if status == "declared":
             awarded_pts = decl_pts.get(sig_id, sig.get("declaration_points", sig["points"]))
-            evidence_pts_remaining = sig.get("evidence_points", 0)
+            # ID-UPLOAD-INTERIM-1: a declared signal with no evidence split (the ID) still
+            # has a remainder — what confirmation will add.
+            evidence_pts_remaining = (sig["evidence_points"] if sig.get("evidence_points") is not None
+                                      else max(0, int(sig["points"]) - int(awarded_pts or 0)))
 
         items.append({
             "signal_id":                 sig_id,
@@ -10671,6 +10778,13 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
     pending_signals = [
         {"signal_id": it["signal_id"], "name": it["name"], "points": it["points"]}
         for it in all_items if it["status"] == "pending"
+    ] + [
+        # ID-UPLOAD-INTERIM-1: the unconfirmed remainder of a declared ID is pending too
+        {"signal_id": it["signal_id"], "name": it["name"] + " \u2014 confirmation pending",
+         "points": int(it.get("evidence_points_remaining") or 0)}
+        for it in all_items
+        if it["status"] == "declared" and it["signal_id"] == "universal.id_verified"
+        and int(it.get("evidence_points_remaining") or 0) > 0
     ]
     pending_pts = sum(it["points"] for it in pending_signals)
 
@@ -10878,6 +10992,13 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     for sig_id, sig in universal_signals.items():
         if earned_map.get(sig_id) == "earned":
             universal_earned_pts += sig["points"]
+        elif earned_map.get(sig_id) == "declared" and sig_id == "universal.id_verified":
+            # ID-UPLOAD-INTERIM-1: uploaded, unconfirmed — the ask is the remainder
+            universal_earned_pts += ID_UPLOAD_INTERIM_POINTS
+            universal_missing.append({
+                "id": sig_id, "name": sig["name"],
+                "points": sig["points"] - ID_UPLOAD_INTERIM_POINTS, "how": ID_UPLOAD_INTERIM_NOTE
+            })
         else:
             universal_missing.append({
                 "id": sig_id, "name": sig["name"], "points": sig["points"], "how": sig["how_to_earn"]

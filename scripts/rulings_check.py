@@ -818,6 +818,15 @@ REFLECTIONS = {
    ("../CityLauncher/emailer/templates/federation_intro_outreach.txt", ["a global marketplace"], ["South African marketplace", "founded in South Africa"]),
    ("scripts/youtube_pack_build.py", ["global marketplace"], ["South African marketplace", "founded in South Africa"]),
  ],
+ "RUL-113": [
+   # An ID upload earns 12 of 15 at once, the last 3 named as waiting (David, 8 Sep, DW-109). The
+   # default must stay 12, the pending branch must stay, the note must stay, the ledger must keep it.
+   ("RULINGS.md", ["AN ID UPLOAD EARNS 12 OF THE 15 IDENTITY POINTS AT ONCE"], []),
+   ("bea_main.py", ['os.environ.get("ID_UPLOAD_INTERIM_POINTS", "12")', "def _grant_id_upload_interim(", "Waiting confirmation to add an extra %d points."], []),
+   ("ms.js", ["data.status === 'interim'", "sig.partial_points"], []),
+   ("migrations/038_id_upload_interim.py", ["universal.id_verified", "--apply"], []),
+   ("scripts/regression_ledger.py", ["RG-0347"], []),
+ ],
  "RUL-112": [
    # An enrolled device logs in once (David, 8 Sep): nginx honours the enrolment cookie beside
    # Basic auth. The migration must keep the fail-safe and the ledger must keep the live assertion.

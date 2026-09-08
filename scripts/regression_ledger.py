@@ -20441,5 +20441,99 @@ def rg_one_login_device_passes_ops_gate():
     return out
 
 
+@entry("RG-0347", "An ID upload that returns 200 CHANGES WHAT THE SELLER IS TOLD -- 12 of the 15 identity "
+       "points land at once and the last 3 are named as waiting, while the Home Affairs lane is parked",
+       LOCKED, fixed_on="2026-09-08",
+       scope="bea_main.py POST /users/{email}/upload-id (-> _grant_id_upload_interim), GET "
+             "/users/{email}/id-status (the new 'pending' state), GET /users/{email}/trust "
+             "(partial_points + note on the id_verified row, and the visible list still sums to the "
+             "headline), GET /sellers/credentials/{listing_id} (the interim points appear in the buyer-"
+             "facing list that sums to the score), /trust-score/breakdown (declared remainder counted as "
+             "pending), migrations/038_id_upload_interim.py (the two uploads made before this shipped), "
+             "and ms.js (the 'interim' upload response + the partial row + the ID-verify card line). "
+             "Legs: (a) SOURCE -- the upload handler calls the grant and the constant is 12 unless the env "
+             "says otherwise; id_status carries a pending branch; the two read surfaces carry the partial "
+             "points; ms.js handles status 'interim' and never re-offers 'Upload ID' over a document on "
+             "file. (b) LIVE, anonymous -- the walkthrough account that uploaded twice on 6 Sep (the DW-109 "
+             "evidence) must never again read state 'none': it reads 'pending' with interim_points > 0 "
+             "until it is confirmed, then 'ai_checked' or 'npr_verified'. CLASS: any upload path that "
+             "returns 200 and leaves every seller-facing surface unchanged -- the property that failed "
+             "here, not the ID lane alone. Turning the interim OFF (ID_UPLOAD_INTERIM_POINTS=0) is David's "
+             "call and must arrive with an amendment to this entry, never a silent env change.",
+       ref="ID-UPLOAD-INTERIM-1, RUL-113, 8 Sep 2026, closes DW-109. David, on the daily watch's REAL ISSUES "
+           "line: 'lets fix this temporarily allowing the upload without a verification; at least until i "
+           "add credits to Didit. Until then allow the user 12 points for the upload with a note saying "
+           "waiting confirmation to add an extra 3 points.' The C2 no-grant rule (16 Jul) was right about "
+           "the +15 self-grant and wrong about the seller: with Didit unfunded (RUL-105) nothing was ever "
+           "going to confirm an upload, so 'No ID on file' after a 200 was permanent. Built on the "
+           "EXISTING declared/points_awarded machinery (user_declarations), so the one scorer counts it "
+           "and no surface hand-adds a number; the vision path or a Home Affairs pass upgrades the "
+           "credential to earned (never downgrades), which retires the note by itself. PROVEN before "
+           "shipping on the server's own interpreter against a copy of the live database: both pending "
+           "uploads -> declared/12, id-status 'pending' with the note, /trust visible sum == headline, "
+           "breakdown pending_points 3, public list carries the 12 named as confirmation-pending, grant "
+           "idempotent, earned never touched, a user with no upload still reads 'none'.")
+def rg_id_upload_interim_changes_what_seller_is_told():
+    out = []
+    bm = repo_file("bea_main.py")
+    js = repo_file("ms.js")
+    if bm is not None:
+        if "def _grant_id_upload_interim(" not in bm:
+            out.append((FAIL, "_grant_id_upload_interim is gone -- an upload can no longer award the interim points"))
+        h = bm.find('@app.post("/users/{email}/upload-id")')
+        body = bm[h:h + 9000] if h >= 0 else ""
+        if "_grant_id_upload_interim(conn, email)" not in body:
+            out.append((FAIL, "the upload handler no longer calls the interim grant -- a 200 upload changes nothing again (DW-109)"))
+        if 'os.environ.get("ID_UPLOAD_INTERIM_POINTS", "12")' not in bm:
+            out.append((FAIL, "ID_UPLOAD_INTERIM_POINTS no longer defaults to 12 -- RUL-113's number has drifted"))
+        i = bm.find("def id_status(")
+        if i < 0 or 'state = "pending"' not in bm[i:i + 4000]:
+            out.append((FAIL, "id_status has lost its 'pending' branch -- a document on file reads 'No ID on file' again"))
+        t = bm.find('@app.get("/users/{email}/trust")')
+        if t < 0 or '"partial_points"' not in bm[t:t + 9000]:
+            out.append((FAIL, "/users/{email}/trust no longer carries partial_points on the ID row -- the visible list cannot sum to the headline"))
+        if "confirmation pending" not in bm[bm.find("def seller_public_credentials("):bm.find("def seller_public_credentials(") + 4000]:
+            out.append((FAIL, "the buyer-facing credentials list no longer names the interim points -- the list stops summing to the score (SUPER-CRED-1)"))
+    else:
+        out.append((INFO, "bea_main.py not readable here -- source half skipped"))
+    if js is not None:
+        if "data.status === 'interim'" not in js:
+            out.append((FAIL, "ms.js no longer handles the 'interim' upload response -- the seller sees no points and no note"))
+        if "sig.partial_points" not in js:
+            out.append((FAIL, "ms.js no longer renders partial points on the ID row -- the list shown does not sum to the score"))
+        if "if(!earned && !partial){" not in js:
+            out.append((FAIL, "ms.js offers 'Upload ID' over a document already on file -- the double-upload loop is back"))
+    if not os.path.isfile(os.path.join(REPO, "migrations", "038_id_upload_interim.py")):
+        out.append((FAIL, "migrations/038_id_upload_interim.py is gone -- the pre-fix uploads are unconverted on a fresh box"))
+    # LIVE leg: the walkthrough account that uploaded twice on 6 Sep (DW-109) must never read 'none' again.
+    try:
+        st = _status("/users/walkthrough.tutor%40trustsquare.co/id-status")
+        if st == 404:
+            out.append((INFO, "walkthrough account no longer exists -- live leg not evaluable this run"))
+        elif st != 200:
+            out.append((FAIL, "GET /users/<walkthrough>/id-status answers %d anonymously -- the seller's own status is unreadable" % st))
+        else:
+            d = _json("/users/walkthrough.tutor%40trustsquare.co/id-status")
+            state = d.get("state")
+            if state == "none":
+                out.append((FAIL, "the walkthrough account has two ID documents on file (6 Sep) and /id-status STILL reads "
+                                  "'No ID on file' -- the DW-109 fault is back"))
+            elif state == "pending":
+                if int(d.get("interim_points") or 0) <= 0:
+                    out.append((FAIL, "id-status reads 'pending' with interim_points 0 -- the upload counted for nothing (RUL-113 says 12)"))
+                elif "extra" not in (d.get("label") or ""):
+                    out.append((FAIL, "id-status 'pending' label no longer names the points waiting on confirmation"))
+                else:
+                    out.append((INFO, "live: walkthrough id-status 'pending', interim %s pts, label names the %s waiting"
+                                      % (d.get("interim_points"), d.get("pending_points"))))
+            elif state in ("ai_checked", "npr_verified", "submitted"):
+                out.append((INFO, "live: walkthrough id-status '%s' -- confirmed past the interim state" % state))
+            else:
+                out.append((FAIL, "id-status returned an unknown state %r" % state))
+    except ProbeOffline as ex:
+        raise ex
+    return out or [(INFO, "ID upload grants the interim points, every surface says so, and the live account reads its true state")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

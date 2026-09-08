@@ -14353,14 +14353,21 @@ function msRenderLiveSignals(signals){
 
   el.innerHTML = signals.map(sig => {
     const earned = sig.earned;
-    const iconClass = earned ? 'ms-sig-done' : 'ms-sig-miss';
-    const icon = earned ? '✓' : '✗';
-    const ptsClass = earned ? 'ms-pts-earned' : 'ms-pts-avail';
-    const ptsLabel = earned ? '+'+sig.points : '+'+sig.points+' available';
+    // ID-UPLOAD-INTERIM-1 (RUL-113): an uploaded, unconfirmed ID carries partial points
+    // and a note — it is neither ✓ nor ✗, and it must not offer "Upload ID" again.
+    const partial = (!earned && sig.partial_points > 0) ? sig.partial_points : 0;
+    const iconClass = earned ? 'ms-sig-done' : (partial ? 'ms-sig-done' : 'ms-sig-miss');
+    const icon = earned ? '✓' : (partial ? '◐' : '✗');
+    const ptsClass = (earned || partial) ? 'ms-pts-earned' : 'ms-pts-avail';
+    const ptsLabel = earned ? '+'+sig.points
+                   : (partial ? '+'+partial+' · '+(sig.pending_points||(sig.points-partial))+' pending'
+                              : '+'+sig.points+' available');
+    const noteHtml = (partial && sig.note)
+      ? '<div style="font-size:11px;color:#92400e;margin-top:2px;">⏳ '+sig.note+'</div>' : '';
 
     // Action button for actionable unearned signals
     let actionBtn = '';
-    if(!earned){
+    if(!earned && !partial){
       if(sig.key === 'id_verified'){
         actionBtn = '<button class="ms-sig-action" data-action="upload-id">Upload ID →</button>';
       }
@@ -14382,7 +14389,7 @@ function msRenderLiveSignals(signals){
 
     return '<div class="ms-signal-row">'
       +'<div class="ms-sig-icon '+iconClass+'">'+icon+'</div>'
-      +'<div class="ms-signal-text" title="'+sig.how_to_earn+'">'+sig.name+'</div>'
+      +'<div class="ms-signal-text" title="'+sig.how_to_earn+'">'+sig.name+noteHtml+'</div>'
       +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">'
       +actionBtn
       +'<span class="ms-signal-pts '+ptsClass+'">'+ptsLabel+'</span>'
@@ -14424,6 +14431,22 @@ async function msUploadIdDoc(e){
       // for the vision-checked verify-identity path. Show an honest pending state.
       showToast('ID received — we\'ll verify it shortly.');
       if(btn){ btn.textContent = 'ID under review'; btn.disabled = true; }
+    } else if(data.status === 'interim'){
+      // ID-UPLOAD-INTERIM-1 (RUL-113, 8 Sep 2026): while the Home Affairs lane is
+      // parked, the upload itself is worth 12 of the 15 now; the last 3 wait for
+      // confirmation. The row re-renders from /trust so the list sums to the score.
+      showToast(data.message || ('ID received — +' + data.points_awarded + ' pts. Waiting confirmation to add an extra ' + (data.points_pending || 3) + ' points.'));
+      if(btn){ btn.textContent = 'ID received'; btn.disabled = true; }
+      if(typeof MS_ID_STATE !== 'undefined' && MS_ID_STATE.cache){ MS_ID_STATE.cache = {}; }
+      fetch(BEA_URL+'/users/'+encodeURIComponent(email)+'/trust')
+        .then(r=>r.ok?r.json():null)
+        .then(td=>{
+          if(!td) return;
+          localStorage.setItem('ms_trust_score', td.score);
+          msRenderTrust(parseInt(td.score)||0);
+          if(td.signals && td.signals.length) msRenderLiveSignals(td.signals);
+        }).catch(()=>{});
+      if(typeof loadLiveListings === 'function') loadLiveListings(0);
     } else if(data.already_verified){
       showToast('Your ID is already verified ✓');
     } else {
@@ -17723,9 +17746,16 @@ async function msRenderIdVerifyCard(containerId){
       + '<p>Buyers see the green tick on your listings.</p></div></div>';
     return;
   }
+  /* ID-UPLOAD-INTERIM-1 (RUL-113): a document on file, not yet confirmed. Say what
+     it earned and what is waiting — the state that used to read "No ID on file". */
+  const interimLine = (st.state === 'pending' && st.interim_points > 0)
+    ? '<p><strong>ID received — ' + st.interim_points + ' points added.</strong> '
+      + (st.pending_note || 'Waiting confirmation to add an extra ' + (st.pending_points||3) + ' points.') + '</p>'
+    : (st.state === 'pending' ? '<p><strong>ID received — waiting confirmation.</strong></p>' : '');
   /* Lane down, or no ID on file yet — say so honestly, offer nothing to click. */
   if(!lane || !lane.available){
     host.innerHTML = '<div class="ms-idv"><div class="ms-idv-body">'
+      + interimLine
       + '<strong>Home Affairs verification</strong>'
       + '<p>Not available at the moment. Nothing has been charged.</p>'
       + '</div></div>';
@@ -17741,6 +17771,7 @@ async function msRenderIdVerifyCard(containerId){
 
   const price = (lane.price_t || 1);
   host.innerHTML = '<div class="ms-idv"><div class="ms-idv-body">'
+    + interimLine
     + '<strong>Get the green tick — ' + price + ' Tuppence</strong>'
     + '<p>We check your ID number against the Home Affairs population register. '
     + 'Buyers see a verified badge on your listings. This is optional — your '
