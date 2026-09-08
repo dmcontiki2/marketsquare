@@ -254,7 +254,11 @@
     try{ document.dispatchEvent(new Event('ms-admin-auth')); }catch(e){}
     /* DEVICE-ENROL-1 (3 Sep 2026): the token can arrive AFTER loadDashboard() already painted the
        anonymous heartbeat as SIGNED OUT (device token is async; PIN login is later still). Reload. */
-    try{ if (typeof loadDashboard === 'function' && (typeof DATA === 'undefined' || !DATA || DATA.redacted === 'heartbeat')) loadDashboard(); }catch(e){}
+    /* DEVICE-ENROL-2 (8 Sep 2026): `let DATA = {}` is TRUTHY, so the guard above never fired while the
+       first /dashboard/summary fetch was still in flight -- the phone's device token landed first, the
+       tokenless summary landed second and painted SIGNED OUT with nobody left to reload. Reload unless a
+       TOKEN-BEARING summary has already been painted. */
+    try{ if (typeof loadDashboard === 'function' && !window._dashAuthedPaint) loadDashboard(); }catch(e){}
   }
 /* ADMIN-GATE-SRC:BEGIN -- generated from shared/admin_gate.js by scripts/sync_admin_gate.py. DO NOT EDIT BELOW; edit the source and re-run. (GATE-ONESOURCE-1) */
   function showLoginError(msg){
@@ -1690,9 +1694,23 @@ async function loadDashboard() {
 
   try {
     const base = window.location.protocol === 'file:' ? 'https://trustsquare.co' : '';
-    const res = await fetch(base + '/dashboard/summary', {headers:(function(){try{var t=sessionStorage.getItem('ms_admin_token')||'';return t?{'X-Admin-Token':t}:{};}catch(e){return {};}})()}); // DASH-SUMMARY-REDACT-1
+    var _tok = ''; try{ _tok = sessionStorage.getItem('ms_admin_token') || ''; }catch(e){}
+    if (_tok) window._dashTokenLoad = true;   /* DEVICE-ENROL-2: a token-bearing load is in flight */
+    const res = await fetch(base + '/dashboard/summary', {headers: _tok ? {'X-Admin-Token': _tok} : {}}); // DASH-SUMMARY-REDACT-1
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    DATA = await res.json();
+    var _fresh = await res.json();
+    /* DEVICE-ENROL-2 (8 Sep 2026): /dashboard/summary parses STATUS+BACKLOG+CHANGELOG server-side, so
+       the first, tokenless call is SLOW -- slow enough for the phone's silent device token, or David's
+       PIN on the laptop, to land while it is still in flight. Its heartbeat is then stale on arrival:
+       DROP it if a token-bearing load has already started or painted, else fetch once more WITH the
+       token. Never paint SIGNED OUT over a browser that has since signed in. Bounded: the retry
+       carries _tok, so it cannot loop. */
+    if (_fresh && _fresh.redacted === 'heartbeat' && !_tok) {
+      if (window._dashTokenLoad || window._dashAuthedPaint) { return; }
+      var _now = ''; try{ _now = sessionStorage.getItem('ms_admin_token') || ''; }catch(e){}
+      if (_now) { return loadDashboard(); }
+    }
+    DATA = _fresh;
     /* DASH-SIGNEDOUT-TRUTH-1 (RG-0237, 2 Sep 2026): DASH-SUMMARY-REDACT-1 deliberately answers
        anonymous callers a heartbeat -- NAME that state. Never paint string-concatenated
        undefineds over a healthy server (the 1 Sep launch-morning incident). */
@@ -1711,11 +1729,16 @@ async function loadDashboard() {
       if (!window._bitTimer) window._bitTimer = setInterval(loadBIT, 60000);
       return;
     }
+    /* DEVICE-ENROL-2: remember that a token-bearing summary was painted, and take the SIGNED OUT
+       banner down -- it was inserted once and nothing removed it after a real sign-in. */
+    window._dashAuthedPaint = !!_tok;
+    try{ var _sob = document.getElementById('signedout-banner'); if (_sob && _sob.parentNode) _sob.parentNode.removeChild(_sob); }catch(e){}
     populate();
     loadHealth(); // Start health polling
     loadBIT(); // BIT self-test status (health panel + ops panel)
     if(!window._bitTimer) window._bitTimer=setInterval(loadBIT, 60000);
   } catch (err) {
+    window._dashTokenLoad = false;   /* DEVICE-ENROL-2: this load failed; a stale heartbeat may paint again */
     if (genTimeEl) genTimeEl.textContent = 'Error loading data — ' + err.message;
     console.error('Dashboard fetch failed:', err);
     // Retry after 5s

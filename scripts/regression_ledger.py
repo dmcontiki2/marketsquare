@@ -9267,11 +9267,16 @@ def rg_agency_signin_console_chain():
        ref="AGENCY-AUDIT-1, 23 Aug 2026. FIXED AGENCY-WAVE-1 same day: all three recruited-vertical templates "
            "(agency, travel_agency, cars_dealer) now carry the three-lane block -- concierge reply / console "
            "self-serve / IT import guide -- plus the drafts+quality-gate safety line and the Agents-as-a-Service "
-           "link. The check asserts the import-guide/AaaS links stay present.")
+           "link. The check asserts the import-guide/AaaS links stay present. "
+           "ASSERTION CORRECTED 8 Sep 2026 (EMAIL-PAGE-TRUTH-1): the file this checks was never the copy the "
+           "wave runner sends -- it is the agency-lane DESIGN, and it now lives at "
+           "orchestration_v2/templates/agency_lane_design/agency_outreach.html because orchestration_v2/templates/ "
+           "became a byte-faithful mirror of the SENDING copies (CityLauncher/emailer/templates). Same needles, "
+           "new path. The sending-copy requirement this entry was read as proving is RG-0346 (OPEN).")
 def rg_agency_outreach_tells_agency_story():
     out = []
     import os as _os
-    fp = _os.path.join(REPO, "orchestration_v2", "templates", "agency_outreach.html")
+    fp = _os.path.join(REPO, "orchestration_v2", "templates", "agency_lane_design", "agency_outreach.html")
     if not _os.path.exists(fp):
         out.append((FAIL, "agency_outreach.html missing from repo"))
     else:
@@ -20203,6 +20208,191 @@ def rg_letters_are_filed_when_sent():
     if not out:
         out.append((INFO, "the filer is in the send lane; no post-9-Sep send yet to judge"))
     return out
+
+
+@entry("RG-0341", "An ENROLLED PHONE never sees SIGNED OUT -- the dashboard re-fetches its summary "
+       "once the silent device token lands, whatever order the two fetches finish in",
+       LOCKED, fixed_on="2026-09-08",
+       scope="dashboard.server.html (deployed as dashboard.html, served to enrolled devices at "
+             "/m/dashboard). Two fetches race on load: the gate's /admin/device-token and "
+             "loadDashboard()'s tokenless /dashboard/summary. Three legs, all SOURCE: (a) hideGate()'s "
+             "reload guard no longer keys on `!DATA` (DATA is initialised to `{}`, which is truthy, so "
+             "the guard was dead while the summary was in flight) -- it keys on window._dashAuthedPaint; "
+             "(b) loadDashboard() re-fetches when a heartbeat arrives for a tokenless request but a token "
+             "now sits in sessionStorage (bounded: the retry carries the token); (c) a real paint removes "
+             "the signedout-banner. CLASS: any page whose gate mints a token asynchronously AND paints "
+             "anonymous data on load -- admin.html has no summary paint, so the dashboard is the only "
+             "instance today.",
+       ref="DEVICE-ENROL-2, PROBED 8 Sep 2026 05:40 SAST: nginx access.log showed the iPhone's "
+           "/admin/device-token 200 at 03:30:25 followed by /dashboard/summary answering 87 bytes (the "
+           "anonymous heartbeat) in the same second; the page then read SIGNED OUT although the server "
+           "had enrolled the phone and minted its token. David: 'it now opens but then say signed out?'")
+def rg_enrolled_phone_never_signed_out():
+    p = os.path.join(REPO, "dashboard.server.html")
+    if not os.path.isfile(p):
+        return [(INFO, "dashboard.server.html not readable here -- not evaluated")]
+    body = open(p, encoding="utf-8", errors="replace").read()
+    out = []
+    if "typeof DATA === 'undefined' || !DATA || DATA.redacted === 'heartbeat')) loadDashboard()" in body:
+        out.append((FAIL, "hideGate() reload guard keys on `!DATA` again -- dead while the summary is in "
+                          "flight because DATA starts as {} (DEVICE-ENROL-2)"))
+    if "!window._dashAuthedPaint) loadDashboard()" not in body:
+        out.append((FAIL, "hideGate() no longer reloads on `!window._dashAuthedPaint` -- a token that lands "
+                          "mid-fetch leaves SIGNED OUT painted (DEVICE-ENROL-2)"))
+    if not re.search(r"_fresh\.redacted === 'heartbeat' && !_tok\)\s*\{.*?return loadDashboard\(\);", body, re.S) \
+            or "if (window._dashTokenLoad || window._dashAuthedPaint) { return; }" not in body:
+        out.append((FAIL, "loadDashboard() no longer re-fetches when a heartbeat lands after a token appeared "
+                          "-- or no longer DROPS a stale heartbeat once a token-bearing load is in flight "
+                          "(DEVICE-ENROL-2)"))
+    if "window._dashAuthedPaint = !!_tok;" not in body or "getElementById('signedout-banner'); if (_sob" not in body:
+        out.append((FAIL, "a real (token-bearing) paint no longer records itself / removes the SIGNED OUT "
+                          "banner (DEVICE-ENROL-2)"))
+    if not out:
+        out.append((INFO, "device token and summary may finish in either order; the token-bearing fetch always wins"))
+    return out
+
+
+@entry("RG-0344", "The Ops Dashboard's Email Templates view shows the letters that SEND -- every preview under "
+                  "orchestration_v2/templates/ is the as-sent form of its CityLauncher sending copy, and the page "
+                  "references every letter in the send lane",
+       LOCKED, fixed_on="2026-09-08",
+       scope="orchestration_v2/email_templates.html + orchestration_v2/templates/<every letter emailer.py's "
+             "TEMPLATES map, its A/B arms and the resend/permission letters draw from CityLauncher/emailer/"
+             "templates>. As-sent = the LAUNCH_SPECIAL block stripped whenever launch_codes.enabled() would "
+             "strip it (flag+secret+deadline+date gate). Judged by scripts/build_email_templates_page.py --check, "
+             "the page's ONE writer. CLASS: a dashboard that says 'exactly as the machinery sends them' over a "
+             "hand-copied snapshot -- the snapshot was 16 days and four letter passes behind by the time David "
+             "asked, and it did not show four letters that had joined the lane at all.",
+       ref="EMAIL-PAGE-TRUTH-1, 8 Sep 2026. David: 'please ensure that these email templates are the latest ones, "
+           "in the Ops Dashboard. If not please update them.' They were not: the page was built 23 Aug from a "
+           "folder nothing sends from; the sending copies had moved on 28 Aug, 4/5/6/8 Sep, and "
+           "sports_club, adventures_outfitter, tutors arm-B, human_followup, relink_apology and the federation "
+           "letter were absent. Fixed by making the folder a mirror written by one script, and this check.")
+def rg_email_page_mirrors_send_lane():
+    import subprocess as _sp
+    script = os.path.join(REPO, "scripts", "build_email_templates_page.py")
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher", "emailer", "templates")
+    if not os.path.isfile(script):
+        return [(FAIL, "scripts/build_email_templates_page.py is gone -- the page has no writer again")]
+    if not os.path.isdir(cl):
+        return [(INFO, "CityLauncher not readable here -- mirror not evaluated")]
+    try:
+        r = _sp.run([sys.executable, script, "--check"], capture_output=True, text=True, timeout=60)
+    except Exception as ex:
+        return [(FAIL, "build_email_templates_page.py --check could not run: %s" % repr(ex)[:80])]
+    tail = " | ".join(l for l in r.stdout.splitlines() if "--check" in l or "MANIFEST" in l)[:300]
+    if r.returncode != 0:
+        return [(FAIL, "Email Templates view is STALE against the sending copies (rebuild: python3 scripts/"
+                       "build_email_templates_page.py) -- " + tail)]
+    if "MANIFEST rows missing" in r.stdout:
+        return [(FAIL, "a letter in the send lane has a preview with no deploy-manifest row (RG-0095 class) -- " + tail)]
+    return [(INFO, "mirror == as-sent for every letter in the send lane; page references all of them")]
+
+
+@entry("RG-0345", "The launch special cannot render after its hard close -- launch_codes.enabled() carries a DATE "
+                  "gate, and nothing is minted while the special is off",
+       LOCKED, fixed_on="2026-09-08",
+       scope="CityLauncher/emailer/launch_codes.py enabled()/window_open()/issue_for_send() + CityLauncher/.env. "
+             "Three legs: (a) SOURCE -- window_open() exists and enabled() calls it; (b) EXECUTED -- with the "
+             "env armed and a deadline of yesterday, enabled() is False and issue_for_send() returns None without "
+             "touching a database; with a deadline of tomorrow, enabled() is True; (c) CONFIG -- the host .env "
+             "may not sit ARMED past its own deadline. CLASS: a window whose close depended on a person remembering "
+             "to flip a flag (RUL-060(a) called un-arming 'ordinary hygiene'); nobody did, so the close never "
+             "happened.",
+       ref="SPECIAL-CLOSE-1, PROBED 8 Sep 2026 while rebuilding the Email Templates view: CityLauncher/.env "
+           "LAUNCH_SPECIAL_ENABLED=1, LAUNCH_SPECIAL_DEADLINE=2026-09-01, secret present -> enabled() True on "
+           "8 Sep; prospects.db launch_codes shows 645 numbers issued 2-7 Sep with expires_at 2026-09-01; sends "
+           "2-5 Sep in block-carrying categories (Tutors 131, Services 127, us_university_tutors 138, "
+           "teachers_trainers 79, adventures 26) went out saying 'valid until 1 September 2026'. Fixed: date gate "
+           "in enabled(), issue_for_send() no-ops when off, .env un-armed.")
+def rg_launch_special_date_gate():
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    lc = os.path.join(cl, "emailer", "launch_codes.py")
+    if not os.path.isfile(lc):
+        return [(INFO, "CityLauncher not readable here -- not evaluated")]
+    out = []
+    body = open(lc, encoding="utf-8", errors="replace").read()
+    if "def window_open(" not in body or "window_open()" not in body.split("def enabled(")[-1][:600]:
+        out.append((FAIL, "launch_codes.enabled() no longer consults window_open() -- the close is a memory again (SPECIAL-CLOSE-1)"))
+    # EXECUTED leg: import in a subprocess with a controlled env, no DB path involved
+    import subprocess as _sp
+    from datetime import date as _d, timedelta as _td
+    # The probe NEVER touches the real send pool: _DB is repointed at a throwaway temp file
+    # before anything is called, so even a regressed guard writes there and fails the assertion
+    # instead of stranding prospects.db behind a hot journal (RG-0330 class -- this very leg
+    # did that on 8 Sep 2026 in its first draft; recovered from the rolled-back copy).
+    import tempfile as _tf, pathlib as _pl
+    code = ("import sys,os,pathlib; sys.path.insert(0, %r); import launch_codes as L; "
+            "L._DB = pathlib.Path(%r) / 'ledger_probe.db'; "
+            "print(L.enabled(), L.issue_for_send({'email':'x@y'}, 'individual') if not L.enabled() else 'skip')"
+            ) % (os.path.join(cl, "emailer"), _tf.mkdtemp(prefix="rg0345-"))
+    base = dict(os.environ, LAUNCH_SPECIAL_ENABLED="1", LAUNCH_CODE_SECRET="ledger-probe-secret")
+    try:
+        past = _sp.run([sys.executable, "-c", code], env=dict(base, LAUNCH_SPECIAL_DEADLINE=(_d.today() - _td(days=1)).isoformat()),
+                       capture_output=True, text=True, timeout=30).stdout.strip()
+        fut = _sp.run([sys.executable, "-c", code], env=dict(base, LAUNCH_SPECIAL_DEADLINE=(_d.today() + _td(days=3)).isoformat()),
+                      capture_output=True, text=True, timeout=30).stdout.strip()
+        if past != "False None":
+            out.append((FAIL, "armed env + deadline yesterday -> enabled()/issue_for_send() gave %r, expected 'False None'" % past[:60]))
+        if fut != "True skip":
+            out.append((FAIL, "armed env + deadline in 3 days -> enabled() gave %r, expected True (the gate must not close early)" % fut[:60]))
+    except Exception as ex:
+        out.append((FAIL, "executed leg could not run: %s" % repr(ex)[:80]))
+    # CONFIG leg: the host .env may not be armed past its own deadline
+    envp = os.path.join(cl, ".env")
+    if os.path.isfile(envp):
+        kv = {}
+        for line in open(envp, encoding="utf-8", errors="replace"):
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1); kv[k.strip()] = v.strip()
+        armed = kv.get("LAUNCH_SPECIAL_ENABLED", "").lower() in ("1", "true", "yes", "on")
+        dl = kv.get("LAUNCH_SPECIAL_DEADLINE", "")
+        if armed and dl and dl < _d.today().isoformat():
+            out.append((FAIL, ".env is ARMED with a deadline of %s, already past -- un-arm it (RUL-060(a))" % dl))
+    return out or [(INFO, "date gate present and proven both ways; host .env not armed past its deadline")]
+
+
+@entry("RG-0346", "The agency letters the machinery SENDS tell the agency story with a console CTA -- not only the "
+                  "design drafts nobody sends",
+       OPEN, scope="CityLauncher/emailer/templates/{agency,travel_agency,cars_dealer}_outreach.html (the copies "
+                   "the wave runner draws for Estate Agents / Travel Agencies / Car Dealers) + the CityLauncher "
+                   "send lane. Two legs: (a) each of the three carries the three-lane block (agency-import-guide "
+                   "or agents-as-a-service link) as RG-0165's design does -- with lane 1 routed through "
+                   "trustsquare.co/support, never 'reply to this email' (RUL-100); (b) the CityLauncher lane mints "
+                   "the agency CTA through POST /agencies/wave-prep so {{magic_link}} opens the console the block "
+                   "promises. CLASS: a fix applied to a preview copy and asserted there, while the sending copy "
+                   "kept the old story (RG-0117 class, applied to email).",
+       ref="EMAIL-PAGE-TRUTH-1, 8 Sep 2026. Found while mirroring the sending copies into the Email Templates "
+           "view: AGENCY-WAVE-1 (23 Aug) put the three-lane block into orchestration_v2/templates/ only; "
+           "CityLauncher's agency_outreach.html still carries the four-step solo flow, its CTA is the solo magic "
+           "link, and the n8n lane that AGENCY-WAVE-1 wired reads /var/www/marketsquare/n8n/email_templates/ on "
+           "the server, which holds seven letters dated 10 May 2026 and no agency letter at all. Agency sends are "
+           "David's act (RUL-053(f)), so nothing wrong has gone out -- but the letter he would send today is the "
+           "solo one. Design drafts kept at orchestration_v2/templates/agency_lane_design/.")
+def rg_sending_agency_letters_carry_agency_story():
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher")
+    td = os.path.join(cl, "emailer", "templates")
+    if not os.path.isdir(td):
+        return [(INFO, "CityLauncher not readable here -- not evaluated")]
+    out = []
+    for fn in ("agency_outreach.html", "travel_agency_outreach.html", "cars_dealer_outreach.html"):
+        fp = os.path.join(td, fn)
+        if not os.path.isfile(fp):
+            out.append((FAIL, fn + " missing from the sending folder")); continue
+        txt = open(fp, encoding="utf-8", errors="replace").read()
+        if "agency-import-guide" not in txt and "agents-as-a-service" not in txt:
+            out.append((FAIL, fn + " (sending copy) has no three-lane block -- still the solo-seller story"))
+        if re.search(r"reply to this email", txt, re.I):
+            out.append((FAIL, fn + " (sending copy) invites 'reply to this email' -- RUL-100 forbids a personal channel"))
+    lane = ""
+    for f in ("emailer/emailer.py", "wave_runner.py"):
+        fp = os.path.join(cl, f)
+        if os.path.isfile(fp):
+            lane += open(fp, encoding="utf-8", errors="replace").read()
+    if "wave-prep" not in lane:
+        out.append((FAIL, "CityLauncher send lane never calls /agencies/wave-prep -- an agency CTA cannot open a console"))
+    return out or [(INFO, "sending agency letters carry the agency story and the lane mints console links")]
 
 
 if __name__ == "__main__":
