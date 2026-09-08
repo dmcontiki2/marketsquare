@@ -202,7 +202,12 @@ def badges_for(fn, raw, sent, special):
     if hit:
         b.append(badge("PERSONAL CHANNEL: “%s”" % hit.group(0)[:28], "red"))
     b.append(badge("browse link", "green") if BROWSE_RE.search(raw) else badge("no plain browse link", "grey"))
-    b.append(badge("wave source tag", "green") if WAVE_TAG_RE.search(raw) else badge("no ?src= tag", "grey"))
+    # WAVE-TAG-1 / RG-0175(a): the ?src=<wave> tag rides on {{magic_link}}, built by emailer.build_magic_link
+    # at send time -- so a letter with the magic-link CTA carries the tag even though the file does not.
+    if "{{magic_link}}" in raw or WAVE_TAG_RE.search(raw):
+        b.append(badge("wave tag on the CTA (added at send)", "green"))
+    else:
+        b.append(badge("no wave tag", "grey"))
     # BRAND-MARK-1: the letter references the hosted mark; inline_images.INLINE_MAP rewrites it to a
     # cid: attachment at send time -- so the presence test is the URL the map keys on.
     b.append(badge("TrustSquare mark (inlined at send)", "green") if "static/brand/icon-192.png" in raw else badge("no brand mark", "grey"))
