@@ -1,5 +1,5 @@
 {
- "next_id": 115,
+ "next_id": 116,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -1141,13 +1141,16 @@
    "last_seen": "2026-09-08",
    "sev": "MEDIUM",
    "source": "nginx access log + /id-status, watched live while David tried to verify his ID",
-   "status": "OPEN",
+   "status": "CLOSED",
    "refs": [
     "RG-0309",
     "D10"
    ],
-   "summary": "STILL OPEN 2026-09-08 - re-read on disk: bea_main.py:6033 id_status() still resolves only npr_verified/ai_checked/submitted/none, no PENDING branch. RUL-105 (6 Sep) parked the Home Affairs green tick (/id-verify/status available:false by ruling) - unrelated to this row, which is about the UPLOAD path. STILL OPEN 2026-09-07 - re-read on disk: bea_main.py:6032 id_status() still resolves only npr_verified/ai_checked/submitted/none with no PENDING branch, so an upload that writes nothing to the user row still returns state 'none', label 'No ID on file'. The originating observation needs an authenticated upload, which an unattended pass cannot reproduce, so it is not closeable today either. The Resend 422 loop it recorded alongside is now its own row, DW-111. NEW - A SUCCESSFUL ID UPLOAD LEAVES THE APP SAYING 'No ID on file'. Found live: David uploaded an ID document twice on the walkthrough account (nginx 12:24:34 and 12:25:51, both HTTP 200) and /id-status still returns state 'none', label 'No ID on file'. He was left watching a screen that had not changed, which is why he uploaded a second time. IT IS HALF BY DESIGN AND HALF A GAP. By design (C2 audit fix, 16 Jul 2026) upload-id stores the document and grants NO trust - identity is only awarded by the vision-checked path or admin review, which closed an instant self-grant of +15. Correct. THE GAP: the handler writes nothing to the user row at all, so there is no PENDING state for the UI to show, nothing calls the vision check afterwards, and the seller is told the opposite of what just happened. A person who uploads their ID and is told there is no ID on file will upload again, then give up.",
-   "next_action": "OPEN - CTO lane, not David's, and deliberately NOT started at the end of a long session rather than half-built. WHAT IS NEEDED: (a) /id-status gains a 'pending' state when a document is on file but unreviewed, so the Trust card can say 'Document received - we are checking it' instead of 'No ID on file'; (b) either the upload triggers the vision check, or the pending queue is visibly worked, so the seller's next step exists rather than being implied; (c) an assertion that an upload which returns 200 always changes what the seller is told - the property that failed here. NOT BLOCKING TODAY'S TEST: David's own account is already past this point (state 'ai_checked', can_buy true), so the Home Affairs billing question can be settled there without waiting for this. SEEN ALONGSIDE, unrelated and also open: the app log shows POST api.resend.com/emails returning 422 every 5 minutes (12:19:28, 12:24:28) - a repeating email failure nobody is watching. Raised here so it is not lost; it deserves its own diagnosis."
+   "summary": "CLOSED 2026-09-08 (attended, RUL-113, RG-0347). STILL OPEN 2026-09-08 - re-read on disk: bea_main.py:6033 id_status() still resolves only npr_verified/ai_checked/submitted/none, no PENDING branch. RUL-105 (6 Sep) parked the Home Affairs green tick (/id-verify/status available:false by ruling) - unrelated to this row, which is about the UPLOAD path. STILL OPEN 2026-09-07 - re-read on disk: bea_main.py:6032 id_status() still resolves only npr_verified/ai_checked/submitted/none with no PENDING branch, so an upload that writes nothing to the user row still returns state 'none', label 'No ID on file'. The originating observation needs an authenticated upload, which an unattended pass cannot reproduce, so it is not closeable today either. The Resend 422 loop it recorded alongside is now its own row, DW-111. NEW - A SUCCESSFUL ID UPLOAD LEAVES THE APP SAYING 'No ID on file'. Found live: David uploaded an ID document twice on the walkthrough account (nginx 12:24:34 and 12:25:51, both HTTP 200) and /id-status still returns state 'none', label 'No ID on file'. He was left watching a screen that had not changed, which is why he uploaded a second time. IT IS HALF BY DESIGN AND HALF A GAP. By design (C2 audit fix, 16 Jul 2026) upload-id stores the document and grants NO trust - identity is only awarded by the vision-checked path or admin review, which closed an instant self-grant of +15. Correct. THE GAP: the handler writes nothing to the user row at all, so there is no PENDING state for the UI to show, nothing calls the vision check afterwards, and the seller is told the opposite of what just happened. A person who uploads their ID and is told there is no ID on file will upload again, then give up.",
+   "next_action": "None - closed 2026-09-08.",
+   "closed": "2026-09-08",
+   "evidence": "ID-UPLOAD-INTERIM-1 / RUL-113 shipped d7618db, deploy 2026-09-08T15:01:39Z with migration 038 ok (earned=6, declared=2). Live anonymous probes after deploy: /users/<walkthrough>/id-status state=pending, label 'ID received - 12 points added. Waiting confirmation to add an extra 3 points.', interim_points 12, pending_points 3; /trust id row partial_points 12 + note, visible sum == headline (27); /sellers/credentials/324 lists 'Government-issued ID uploaded - confirmation pending: 12', trust_score 57 == computed 57; breakdown declared 12 / 3 pending; served ms.js v625 md5-identical to repo. RG-0347 LOCKED, HOLDING.",
+   "residual": "Interim until David funds Didit or rules otherwise: ID_UPLOAD_INTERIM_POINTS=0 is the one-line reversal, his call (RUL-113(c))."
   },
   "DW-110": {
    "first_seen": "2026-09-07",
@@ -1223,6 +1226,18 @@
    "source": "David's reach question, then a live-database probe of the agency tables",
    "summary": "RAISED AND CLOSED THE SAME SESSION - a declared benefit had ZERO holders for five weeks. AGENCY-TIER-1 (3 Aug) said a member of a VERIFIED agency carries the 'agency' tier, but only stamped it inside invite_agent, so it held only for agents invited after verification and nothing re-read it. PROBED: 8 agencies all verified, 25 memberships across 19 people, NOT ONE on the agency tier (8 free, 17 starter). agencies.verified could only be set at INSERT, so verification was one-way and invisible. CLASS: an entitlement stamped when a condition happens to be true, with nothing re-reading it when the condition changes; no instrument caught it because nothing asserted the RELATIONSHIP between flag and tier. BUSINESS FACT: the 17 'starter' users were these mis-stamped agents, not subscribers - paying subscribers on the platform is ZERO.",
    "next_action": "None - closed 2026-09-07. Tier is now derived by ONE writer called from invite and from a new ops-gated POST /agencies/{id}/verify that moves verification both ways; paying members never touched. agency added to _PAID_TIERS; no country boundary for any tier (RUL-109). Proven on a replica and on a COPY of the live database before shipping; after shipping, post-deploy 09:06:47Z ran migration 036 'member tiers now -> agency=25' and the live DB reads 52 free / 19 agency. RG-0336 LOCKED. RESIDUAL: a seller may appear 'local' abroad on their own say-so - BACKLOG REACH-SHIP-1 is the honest fix, David's to schedule."
+  },
+  "DW-115": {
+   "first_seen": "2026-09-08",
+   "last_seen": "2026-09-08",
+   "sev": "LOW",
+   "source": "predeploy_check.py (run before shipping ID-UPLOAD-INTERIM-1; not a watch check, filed so it is not lost)",
+   "status": "OPEN",
+   "refs": [
+    "deploy_audit.log"
+   ],
+   "summary": "NEW - predeploy_check.py has said verdict=DANGER on every run since 2026-09-05 for the same three reasons and deploys ride anyway (mode=warn): pg-readiness (datetime_now ratchet 49 -> 62 vs scripts/pg_readiness_baseline.json; not from today's change), maintenance-agent (test_ack_always_sends_except_spam: the bare ack no longer quotes the fault reference), tester-intake (test_widget_is_wired_into_every_tester_page: seven visuals/assoc/assoc_*.html pages carry no fault-report widget). None is a live user-facing fault; a DANGER repeated for four days stops meaning anything (RG-0133 class applied to a gate).",
+   "next_action": "CTO lane, next attended tidy: fix the three or give predeploy_check a dated, named allowance."
   }
  },
  "last_run": "2026-09-08",
@@ -1860,5 +1875,26 @@
   ],
   "checks_run": "13/13",
   "email": "none - GREEN; scripts/watch_alert.py present"
+ },
+ "attended_pass_2026_09_08": {
+  "trigger": "David: 'lets fix this temporarily allowing the upload without a verification; at least until i add credits to Didit. Until then allow the user 12 points for the upload with a note saying waiting confirmation to add an extra 3 points.'",
+  "action": "DW-109 fixed (ID-UPLOAD-INTERIM-1), deployed, closed on live probe; RUL-113 recorded; RG-0347 LOCKED; migration 038",
+  "commit": "d7618db",
+  "post_deploy_utc": "2026-09-08T15:01:39Z",
+  "migration": "038_id_upload_interim.py ok -> universal.id_verified earned=6, declared=2",
+  "live_proof": {
+   "id_status": "pending / 12 added / 3 waiting",
+   "trust_visible_sum_equals_headline": true,
+   "public_credentials_324": "ID uploaded - confirmation pending: 12; trust 57 == computed 57",
+   "breakdown": "declared 12, pending 3",
+   "ms_js": "v625 md5-identical to repo"
+  },
+  "closed": [
+   "DW-109"
+  ],
+  "new_items": [
+   "DW-115"
+  ],
+  "reserved_to_david": "switching the interim off when Didit is funded (ID_UPLOAD_INTERIM_POINTS=0), RUL-113(c)"
  }
 }
