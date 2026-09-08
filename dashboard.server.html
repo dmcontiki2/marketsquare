@@ -99,6 +99,26 @@
   .view-toggle { display: flex; gap: 6px; }
   .vtab { padding: 5px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1.5px solid var(--border); color: var(--muted); background: transparent; transition: all 0.15s; }
   .vtab.active { border-color: var(--accent); color: #fff; background: #1a2232; }
+  /* PHONE-HEADER-1 (8 Sep 2026, David: "for the phone to view the pages sideways, the top bar takes up
+     too much of the viewing area"): on a phone the header wrapped into four rows (badge, timestamp and
+     every tab broke over two lines) and ate a third of a landscape screen. Below 1024px it is ONE
+     compact row that swipes sideways; on a short (landscape) screen it also stops being sticky, so it
+     scrolls away and the page gets the full height. Desktop untouched. */
+  @media (max-width: 1024px) {
+    .header { padding: 6px 10px; gap: 10px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .header::-webkit-scrollbar { display: none; }
+    .header-left { gap: 8px; flex-shrink: 0; }
+    .logo img { height: 16px !important; }
+    .session-badge { white-space: nowrap; font-size: 10px; padding: 2px 8px; }
+    .gen-time { white-space: nowrap; font-size: 10px; }
+    .header-left > div:last-child { white-space: nowrap; }
+    .view-toggle { gap: 4px; flex-shrink: 0; }
+    .vtab { white-space: nowrap; padding: 4px 8px; font-size: 10px; }
+    #orch-cockpit-link { white-space: nowrap; padding: 4px 8px !important; font-size: 11px !important; margin-left: 4px !important; }
+  }
+  @media (max-height: 560px) {
+    .header { position: static; }
+  }
 
   /* ── Server Health Panel ── */
   .health-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; margin-bottom: 20px; }
