@@ -1,0 +1,129 @@
+FEDERATION INTRODUCTION — provincial secretaries (SPORTS-CLUBS-1)
+Drafted 4 Sep 2026 · AWAITING DAVID'S REVIEW · nothing sent
+
+SEND AS PLAIN TEXT, NOT AS AN HTML TEMPLATE. Deliberate: the recipient is a volunteer
+secretary, not a business buying visibility. A glossy branded mailer reads as a campaign
+and gets deleted. A plain note from a named person reads as a person and gets answered.
+
+Merge fields: {{first_name}} {{province_body}} {{unsubscribe_link}}
+({{province_body}} is NEW — the existing templates do not have it.)
+
+ANONYMITY NOTE (correction, David 4 Sep 2026): the first draft said a club "shares its own
+link with its own people". WRONG, and wrong in a way that matters -- the platform is
+anonymity-first (EULA sec 3.1 Mode B). A club cannot advertise itself by name here, so no
+outreach copy may ever imply a named or branded club page. What a club actually gets is an
+anonymous listing plus pre-paid enquiries it can decline. Asserted by regression ledger
+RG-0264.
+
+POPIA NOTE: this is the ONE approach permitted to a non-customer. It asks permission, it
+states plainly where the address came from, and it offers an immediate stop. Do not follow
+up a silence. A no, or a silence, is the end of it.
+
+═══════════════════════════════════════════════════════════════════════════════
+SUBJECT (pick one)
+  1. May we offer your affiliated clubs a free listing?        <- recommended
+  2. A free listing for every club affiliated to {{province_body}}
+  3. Asking your permission before we approach your clubs
+═══════════════════════════════════════════════════════════════════════════════
+
+Dear {{first_name}},
+
+I run TrustSquare, a global marketplace that opened on 1 September. Coaches, clubs
+and instructors list what they offer, and people in their area find them by sport, by
+suburb and by level.
+
+I would like to offer that listing, free, to every club affiliated to {{province_body}} --
+and I would rather ask you first than email your clubs out of the blue.
+
+Three things, plainly:
+
+  * It costs a club nothing. A free account carries two listings. No card, no trial, no
+    registration fee, and the free listings stay free.
+
+  * A club stays anonymous. People see the sport, the level, the area and the price --
+    never the club's name, its address, or a volunteer's phone number. Those are exchanged
+    only if the club accepts an enquiry, and only with the one person who asked.
+
+  * A club that also coaches online is visible across the country, not only in its own town.
+
+We earn only when someone asks a club for an introduction: the enquirer pays a small
+introduction fee (US$2) to make contact, and the club decides whether to accept. The club
+pays nothing, keeps whatever it charges, and we never take a share of coaching or
+membership fees.
+
+I am not asking for your club list or your members' details, and I do not want either. If
+this is useful, the simplest next step is that I send you one short paragraph you can pass
+on to your clubs in your own words -- you stay in control of who hears from us.
+
+If it is not useful, just say so and that is the end of it -- or use the link below and I
+will not write again.
+
+Kind regards,
+
+David Conradie
+TrustSquare
+trustsquare.co
+
+---
+You are receiving this because {{province_body}}'s contact details are published on its
+own website. Unsubscribe -- don't email me again: {{unsubscribe_link}}
+
+═══════════════════════════════════════════════════════════════════════════════
+ASSET 2 — THE FORWARDABLE PARAGRAPH
+Send this only to a secretary who says yes. It is written to be pasted into THEIR
+newsletter or WhatsApp group under their own name, so keep it short and unbranded in tone.
+═══════════════════════════════════════════════════════════════════════════════
+
+  TrustSquare is a global marketplace where clubs, coaches and instructors can
+  list what they offer at no charge. People searching your area find you by sport,
+  suburb and level -- and your club stays anonymous: they see what you offer, not your
+  name, your address or anyone's phone number. Details are exchanged only if you accept
+  an enquiry. It is free to list, there is no card and no registration fee, and you keep
+  whatever you charge; the person enquiring pays a small fee to be put in touch with you.
+  If you coach online you are visible nationwide.
+
+  Set your club up here: https://trustsquare.co
+
+═══════════════════════════════════════════════════════════════════════════════
+RECIPIENTS — Athletics South Africa provincial member bodies (17)
+Addresses are NOT yet collected. Each body publishes its own; collect by hand, verify MX
+before sending, and put every address through the existing suppression check first.
+═══════════════════════════════════════════════════════════════════════════════
+
+   1. Athletics Central North West
+   2. Athletics Free State
+   3. Athletics Gauteng North
+   4. Athletics Griqualand West
+   5. Athletics Mpumalanga
+   6. Athletics North West North
+   7. Athletics South Western Districts
+   8. Athletics Transkei
+   9. Athletics Vaal Triangle
+  10. Boland Athletics
+  11. Border Athletics
+  12. Central Gauteng Athletics
+  13. Eastern Province Athletics
+  14. KwaZulu-Natal Athletics
+  15. Limpopo Athletics
+  16. North Western Cape Athletics
+  17. Western Province Athletics
+
+═══════════════════════════════════════════════════════════════════════════════
+FACTS USED, AND WHERE THEY COME FROM — check these if the offer ever changes
+═══════════════════════════════════════════════════════════════════════════════
+  "opened on 1 September"      RUL-001; GET /health probed 4 Sep 2026, v1.3.1, db ok
+  "two listings, free"         PRICING_CANON sec 1 -- Free tier, $0/R0, 2 slots
+  "US$2 introduction fee"      PRICING_CANON sec 3 -- 1 Tuppence = USD $2, fixed;
+                               buyers pay 1T per introduction on every tier
+  "online = nationwide"        PRICING_CANON sec 2b -- listings with mode Online/Both are
+                               borderless on any tier
+  "a club stays anonymous"     EULA sec 3.1 Mode B -- name, EMAIL, BUSINESS NAME, contact
+                               details and exact location are NOT revealed; the public
+                               listing carries only avatar, category, Trust Score, general
+                               location and any verified badge. Sec 3.2: identity is
+                               exchanged only on BILATERAL acceptance. Sec 3.3 FORBIDS a
+                               seller putting a name, business name, phone or email in the
+                               listing text -- so "advertise your club by name" is not a
+                               thing we can offer at all.
+  No ZAR figure is quoted for the introduction fee: none is canon, and inventing one
+  would be the first thing a secretary could catch us out on.

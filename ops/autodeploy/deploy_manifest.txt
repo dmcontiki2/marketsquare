@@ -158,6 +158,18 @@ orchestration_v2/templates/tour_guide_outreach.html | orchestrator/v2/templates/
 orchestration_v2/templates/travel_agency_outreach.html | orchestrator/v2/templates/travel_agency_outreach.html
 orchestration_v2/templates/tutor_institution_outreach.html | orchestrator/v2/templates/tutor_institution_outreach.html
 orchestration_v2/templates/tutors_outreach.html | orchestrator/v2/templates/tutors_outreach.html
+# ── EMAIL-PAGE-TRUTH-1 (8 Sep 2026): the Email Templates view mirrors the SENDING copies
+#    (CityLauncher/emailer/templates) -- these joined the send lane after the 23 Aug snapshot,
+#    plus the 23 Aug agency-lane design drafts, relocated so the page can still open them. ──
+orchestration_v2/templates/sports_club_outreach.html | orchestrator/v2/templates/sports_club_outreach.html
+orchestration_v2/templates/adventures_outfitter_outreach.html | orchestrator/v2/templates/adventures_outfitter_outreach.html
+orchestration_v2/templates/tutors_outreach.b.html | orchestrator/v2/templates/tutors_outreach.b.html
+orchestration_v2/templates/human_followup_outreach.html | orchestrator/v2/templates/human_followup_outreach.html
+orchestration_v2/templates/relink_apology_outreach.html | orchestrator/v2/templates/relink_apology_outreach.html
+orchestration_v2/templates/federation_intro_outreach.txt | orchestrator/v2/templates/federation_intro_outreach.txt
+orchestration_v2/templates/agency_lane_design/agency_outreach.html | orchestrator/v2/templates/agency_lane_design/agency_outreach.html
+orchestration_v2/templates/agency_lane_design/travel_agency_outreach.html | orchestrator/v2/templates/agency_lane_design/travel_agency_outreach.html
+orchestration_v2/templates/agency_lane_design/cars_dealer_outreach.html | orchestrator/v2/templates/agency_lane_design/cars_dealer_outreach.html
 
 # ── DW-045 (16 Aug 2026): the smoke instrument rides the SAME deploy as the app,
 #    so the 01:30 cron sensor can never again grade with a retired assertion. ──

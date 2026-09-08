@@ -20269,22 +20269,20 @@ def rg_enrolled_phone_never_signed_out():
            "sports_club, adventures_outfitter, tutors arm-B, human_followup, relink_apology and the federation "
            "letter were absent. Fixed by making the folder a mirror written by one script, and this check.")
 def rg_email_page_mirrors_send_lane():
-    import subprocess as _sp
     script = os.path.join(REPO, "scripts", "build_email_templates_page.py")
     cl = os.path.join(os.path.dirname(REPO), "CityLauncher", "emailer", "templates")
     if not os.path.isfile(script):
         return [(FAIL, "scripts/build_email_templates_page.py is gone -- the page has no writer again")]
     if not os.path.isdir(cl):
         return [(INFO, "CityLauncher not readable here -- mirror not evaluated")]
-    try:
-        r = _sp.run([sys.executable, script, "--check"], capture_output=True, text=True, timeout=60)
-    except Exception as ex:
-        return [(FAIL, "build_email_templates_page.py --check could not run: %s" % repr(ex)[:80])]
-    tail = " | ".join(l for l in r.stdout.splitlines() if "--check" in l or "MANIFEST" in l)[:300]
-    if r.returncode != 0:
+    ok, blind, detail = _harness([sys.executable, script, "--check"], timeout=60, cwd=REPO, full=True)
+    if blind:
+        return [(INFO, detail)]
+    tail = " | ".join(l for l in detail.splitlines() if "--check" in l or "MANIFEST" in l)[:300]
+    if not ok:
         return [(FAIL, "Email Templates view is STALE against the sending copies (rebuild: python3 scripts/"
-                       "build_email_templates_page.py) -- " + tail)]
-    if "MANIFEST rows missing" in r.stdout:
+                       "build_email_templates_page.py) -- " + (tail or detail[-200:]))]
+    if "MANIFEST rows missing" in detail:
         return [(FAIL, "a letter in the send lane has a preview with no deploy-manifest row (RG-0095 class) -- " + tail)]
     return [(INFO, "mirror == as-sent for every letter in the send lane; page references all of them")]
 
@@ -20315,29 +20313,25 @@ def rg_launch_special_date_gate():
     if "def window_open(" not in body or "window_open()" not in body.split("def enabled(")[-1][:600]:
         out.append((FAIL, "launch_codes.enabled() no longer consults window_open() -- the close is a memory again (SPECIAL-CLOSE-1)"))
     # EXECUTED leg: import in a subprocess with a controlled env, no DB path involved
-    import subprocess as _sp
     from datetime import date as _d, timedelta as _td
     # The probe NEVER touches the real send pool: _DB is repointed at a throwaway temp file
     # before anything is called, so even a regressed guard writes there and fails the assertion
     # instead of stranding prospects.db behind a hot journal (RG-0330 class -- this very leg
     # did that on 8 Sep 2026 in its first draft; recovered from the rolled-back copy).
-    import tempfile as _tf, pathlib as _pl
-    code = ("import sys,os,pathlib; sys.path.insert(0, %r); import launch_codes as L; "
+    import tempfile as _tf
+    code = ("import sys,os,pathlib; os.environ.update(LAUNCH_SPECIAL_ENABLED='1', LAUNCH_CODE_SECRET='ledger-probe-secret', "
+            "LAUNCH_SPECIAL_DEADLINE=sys.argv[1]); sys.path.insert(0, %r); import launch_codes as L; "
             "L._DB = pathlib.Path(%r) / 'ledger_probe.db'; "
             "print(L.enabled(), L.issue_for_send({'email':'x@y'}, 'individual') if not L.enabled() else 'skip')"
             ) % (os.path.join(cl, "emailer"), _tf.mkdtemp(prefix="rg0345-"))
-    base = dict(os.environ, LAUNCH_SPECIAL_ENABLED="1", LAUNCH_CODE_SECRET="ledger-probe-secret")
-    try:
-        past = _sp.run([sys.executable, "-c", code], env=dict(base, LAUNCH_SPECIAL_DEADLINE=(_d.today() - _td(days=1)).isoformat()),
-                       capture_output=True, text=True, timeout=30).stdout.strip()
-        fut = _sp.run([sys.executable, "-c", code], env=dict(base, LAUNCH_SPECIAL_DEADLINE=(_d.today() + _td(days=3)).isoformat()),
-                      capture_output=True, text=True, timeout=30).stdout.strip()
-        if past != "False None":
-            out.append((FAIL, "armed env + deadline yesterday -> enabled()/issue_for_send() gave %r, expected 'False None'" % past[:60]))
-        if fut != "True skip":
-            out.append((FAIL, "armed env + deadline in 3 days -> enabled() gave %r, expected True (the gate must not close early)" % fut[:60]))
-    except Exception as ex:
-        out.append((FAIL, "executed leg could not run: %s" % repr(ex)[:80]))
+    for label, when, want in (("deadline yesterday", _d.today() - _td(days=1), "False None"),
+                              ("deadline in 3 days", _d.today() + _td(days=3), "True skip")):
+        ok, blind, detail = _harness([sys.executable, "-c", code, when.isoformat()], timeout=30)
+        if blind:
+            out.append((INFO, detail)); continue
+        got = (detail or "").strip().splitlines()[-1] if detail.strip() else ""
+        if not ok or got != want:
+            out.append((FAIL, "armed env + %s -> enabled()/issue_for_send() gave %r, expected %r" % (label, got[:60], want)))
     # CONFIG leg: the host .env may not be armed past its own deadline
     envp = os.path.join(cl, ".env")
     if os.path.isfile(envp):
