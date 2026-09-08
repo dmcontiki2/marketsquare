@@ -818,6 +818,13 @@ REFLECTIONS = {
    ("../CityLauncher/emailer/templates/federation_intro_outreach.txt", ["a global marketplace"], ["South African marketplace", "founded in South Africa"]),
    ("scripts/youtube_pack_build.py", ["global marketplace"], ["South African marketplace", "founded in South Africa"]),
  ],
+ "RUL-111": [
+   # The daily cap is not pushed (David, 8 Sep): the gate exists, is non-zero, and its note still
+   # says it is raised on evidence and never on a date or to let a wave out.
+   ("RULINGS.md", ["THE DAILY SEND LIMIT IS NOT PUSHED"], []),
+   ("../CityLauncher/emailer/wave_runner.py", ["DAILY-CAP-1", "daily_send_cap"], []),
+   ("../CityLauncher/emailer/waves_policy.json", ['"daily_send_cap": 250', "Raise it on measured evidence"], ['"daily_send_cap": 0']),
+ ],
  "RUL-110": [
    # The opening line is 'a global marketplace' with NO country of origin (David, 8 Sep): a qualifier
    # like 'founded in South Africa' is the bias RUL-104 removed, back through another door.
