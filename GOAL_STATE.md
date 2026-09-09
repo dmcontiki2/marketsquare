@@ -16,8 +16,9 @@ Run it, never recall it: `python3 MarketSquare/scripts/onboarding_number.py`
 | 2026-09-06 (run 5) | **0** | 0 | 0 | 4,470 on the list · 570 emailed · 5 registered |
 | 2026-09-07 (run 6) | **0** | 0 | 0 | 5,639 on the list · 845 emailed · 5 registered |
 | 2026-09-08 (run 7, 01:03) | **0** | 0 | 0 | 5,838 on the list (5,928 after the Wyoming import) · 1,076 emailed · 5 registered |
+| 2026-09-09 (run 8, 06:15) | **unknown** | — | — | NOT MEASURED: sandbox shell failed to mount, no probe possible. Last probed 0 (8 Sep). |
 
-Target: **20 by Fri 31 Oct 2026.** Model on runs 5–7: Fable 5.1 (as David asked, RUL-096h).
+Target: **20 by Fri 31 Oct 2026.** Model on runs 5–8: Fable 5.1 (as David asked, RUL-096h).
 
 ## WHERE THE FUNNEL LEAKS (PROBED 8 Sep 2026)
 
@@ -29,27 +30,20 @@ Target: **20 by Fri 31 Oct 2026.** Model on runs 5–7: Fable 5.1 (as David aske
   clicks (0.23%)** · 0 signed. People open and do nothing — the ASK is the bottleneck. Arm 'b'
   (shorter ask, no money) is armed for Tutors; the new outfitter letter carries no money ask either.
 
-## WHAT RUN 7 DID (8 Sep 2026, 01:03–02:15 SAST)
+## WHAT RUN 8 DID (9 Sep 2026, 06:15–07:00 SAST — a crippled run; run 7 detail is in the changelog)
 
-1. Read the 00:10 wave: **254 real sends, 0 crashes**. All 17 remaining states got wave #1; Cape
-   Town + N.Cal/Cal/FL/GA/IL/MA/MI wave #2; cap hit at 254 (47 dry-ran). Bounces on tonight's 254 so
-   far: 14 (5.5%); domain since the 6 Sep clean 22/505 = 4.36% (gate 5%).
-2. **WAVE-COUNTER-1 (RG-0339 LOCKED):** `email_events.wave_number` has DEFAULT 1, so the runner's
-   `IS NULL` stamp never matched — 1,486 sent events, ALL wave 1, every city "wave #2" for ever.
-   Ramp structurally capped at 24; stop-loss judged cumulative bounces; Cape Town's release for
-   "wave 1" matched permanently. Fixed: a wave = one city's sends on one send-day (derived from
-   created_at, no DB write); stamp unconditional; clean_city_list uses the same counter. Tomorrow:
-   MA/FL/MI/IL earn 48; Pretoria (12/3), Rhode Island (4/12), Vermont (3/12) hold on their own data.
-3. **REGISTER-LETTER-1 (RG-0317 LOCKED):** `adventures_outfitter_outreach.html` in the club letter's
-   RUL-099 shape; `template_key_for()` routes `register:*` rows to `<category>:register` for letter
-   and subject; Montana + Wyoming draw adventures_experiences. Montana composes 12 tonight.
-4. **LETTER-FILE-1 (RG-0340):** RUL-099(e) was never built — `visuals/letters/` held only a README.
-   The send lane now files one copy per letter shape × country per day. Preview filed.
-5. RUL-104 finally in the club letter; David then ruled the origin out too (RUL-110): all three
-   letters open with "a global marketplace" and rulings_check asserts the absence. RG-0326 promoted (a session passed the photo screen).
-6. **WYOGA-1:** Wyoming outfitters adapter written; host run 01:51 SAST read 95 listings, 94 with a
-   mailbox, **+90 imported** (result file read). wyoga.org is NOT reachable from the sandbox — host-side only.
-7. Commits pushed via the queue at 01:51 (both repos, rc=0). Ledger after: 328 · 0 regressed · 21 open.
+1. **The PC slept through the night.** The host 00:10 DailyWave left NO `launchday_09Wed09_*.log`, and
+   this session fired at 06:15 instead of 01:03. Two misses, one cause. Not yet a ledger entry (no shell).
+2. **No sandbox shell** (mount failed 3×, identical). No number, no ledger, no rulings_check, no
+   heredoc writes. Only file reads, tiny verified Writes, web_fetch (provenance-limited) and Chrome.
+3. **Re-queued the wave by hand:** `host_queue/20260909-042000-000_…launch-day-wave.req` and
+   `…-042100-000_…run-us-registers.req` (five-line format, allowlisted, read back complete). Worker
+   was alive at 8 Sep 17:51. Result files were NOT in when this run ended — next run reads them first.
+4. **COA-1 found, drafted, not wired:** Colorado Outfitters Association = open register, 92 profiles
+   via `/wp-json/wp/v2/outfitter?per_page=100`, mailbox on each profile page (`Email:` label).
+   Adapter draft: `CityLauncher/us_registers/coa_adapter_DRAFT.py` (Wyoming shape, splice notes inside).
+5. Run 7 (8 Sep) for the record: 254 real sends · WAVE-COUNTER-1 fixed the wave numbering (ramp can
+   now reach 48) · outfitter letter live · Wyoming +90 imported · ledger 328 / 0 regressed / 21 open.
 
 ## SUPPLY (measured 8 Sep, server)
 
@@ -70,14 +64,18 @@ Target: **20 by Fri 31 Oct 2026.** Model on runs 5–7: Fable 5.1 (as David aske
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
-0. Check `host_queue/worker_log.txt` for a RUN without a DONE before opening prospects.db.
+0. Read `host_queue/done/20260909-042000-000_*.result` and `…042100-000_*.result` (the hand-queued
+   9 Sep wave + register run). If the wave never ran, the 9 Sep send-day was lost — queue it again.
 1. Run the number. Newest `logs/launchday_*.log`: `EMAILER CRASHED` = 0; confirm the doublings to 48
    happened where days were clean (MA/FL/MI/IL) — the first proof the ramp works; confirm Montana
    drew adventures_experiences under the outfitter letter and `visuals/letters/` gained a file.
 2. `GET /onboard/funnel?days=2` — humans, and which step. Still n<10 → no rate claim.
-3. Ledger in shards (`--shard=k/3`, `--combine=3`); rulings_check.
-4. Next register: Colorado Outfitters (`/find-your-outfitter/`), Alaska APHA, New Mexico NMCOG,
-   Oregon OGA, Utah — via web_fetch; one adapter per run is enough.
+3. Ledger in shards (`--shard=k/3`, `--combine=3`); rulings_check. Add: OPEN entry "DailyWave did not
+   fire while the PC slept (9 Sep)" — check the Task Scheduler wake setting and last-run result host-side.
+4. **Wire COA-1** from `us_registers/coa_adapter_DRAFT.py` (heredoc into `us_register_reader.py` +
+   `run_us_registers.bat`), py_compile, queue the bat, read the result, ledger entry. Then next
+   register: Alaska APHA, New Mexico NMCOG, Oregon OGA, Utah — probe via David's Chrome (JSON
+   endpoints often sit under `/wp-json/wp/v2/types` on WordPress directories).
 5. Still unproven as ONE walk: seller form → save → publish → visible logged out (publish_ok).
 6. YouTube: nine films live. Film 07 Liquidation unpublished — David's click, when he chooses.
 
@@ -92,6 +90,8 @@ Target: **20 by Fri 31 Oct 2026.** Model on runs 5–7: Fable 5.1 (as David aske
   call `city_stats`/`ramp_state` for named cities instead.
 - Probing register sites with sandbox curl (8 Sep): most .org hosts return a 143-byte proxy 404.
 - Two sessions at once: space deploys; one is better than two.
+- Retrying a dead sandbox mount more than twice (9 Sep): identical error each time. Fall back to file
+  reads + Chrome + hand-written `.req` files; put the ledger/number work on the next run.
 
 ## OPEN QUESTIONS FOR DAVID (batched, never dripped)
 
