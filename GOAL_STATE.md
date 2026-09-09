@@ -38,7 +38,10 @@ Target: **20 by Fri 31 Oct 2026.** Model on runs 5–8: Fable 5.1 (as David aske
    heredoc writes. Only file reads, tiny verified Writes, web_fetch (provenance-limited) and Chrome.
 3. **Re-queued the wave by hand:** `host_queue/20260909-042000-000_…launch-day-wave.req` and
    `…-042100-000_…run-us-registers.req` (five-line format, allowlisted, read back complete). Worker
-   was alive at 8 Sep 17:51. Result files were NOT in when this run ended — next run reads them first.
+   ran the wave at 06:31 (rc=0): **0 real sends — all 18 cities DRY-RAN** on DOMAIN-BOUNCE-1
+   (28/505 = 5.54% > 5% since the 6 Sep clean; the 8 Sep 254 sends bounced in overnight). Queued
+   `clean_stoploss_cities.bat` (the defined release) then a second `launch_day_wave.bat` behind it
+   (`…050000…` / `…050100…`). Next run: read both results + `launchday_09Wed09_*` for REAL SEND.
 4. **COA-1 found, drafted, not wired:** Colorado Outfitters Association = open register, 92 profiles
    via `/wp-json/wp/v2/outfitter?per_page=100`, mailbox on each profile page (`Email:` label).
    Adapter draft: `CityLauncher/us_registers/coa_adapter_DRAFT.py` (Wyoming shape, splice notes inside).

@@ -45,7 +45,12 @@ figures stand — a BOT conversation is a handful of wishes, not a new class of 
 
 - `collector/BOT_COLLECTOR.html` — BOT #1, running. Real microphone, real slot-filling, David's
   exact Serra Angel conversation on a button.
-- `collector/collector.webmanifest`, `seller/seller.webmanifest` — ready, not deployed.
+- `seller/BOT_SELLER.html` — BOT #2, running. The real Listing Rating out of `bea_main.py`,
+  coached one question at a time.
+- `homehelp/BOT_HOMEHELP.html` — BOT #3, running. Housekeeping registration: the green circle,
+  the spoken sign-up, the weekly openings, her area, and the employer link. See the section below.
+- `collector/collector.webmanifest`, `seller/seller.webmanifest`, `homehelp/homehelp.webmanifest`
+  — ready, not deployed.
 
 ## The build order I would argue for
 
@@ -220,3 +225,224 @@ better than what exists: the buyer knows the price before deciding to meet, and 
 worth more because it is qualified. That is new machinery (a quote request, a quote reply, a
 comparison), not a BOT feature, and it would serve the whole marketplace rather than just the PA
 tier. Worth a spec of its own if David wants it.
+
+
+---
+
+## BOT #3 — HOME HELP · housekeeping registration (David's direction, 9 Sep 2026, BUILT as a prototype)
+
+David: *"a Click - register a service - list Listing for the South African huge house cleaning
+market. Again a single Service icon with a similar Round (maybe Green) circle with a hotel room
+being cleaned AI photo (also randomly changed)... she can also on a weekly schedule give her
+openings for other people needing houskeeping, and her area should be clearly visisble."*
+
+Built the same night as a working picture: `homehelp/BOT_HOMEHELP.html`.
+Design only — nothing wired, no flag, no line in `deploy_manifest.txt`, not launch scope.
+
+### The probe that decides whether this works
+
+**PROBED live 9 Sep 2026**, before building anything: `GET /listings?category=services` returns
+**two** listings for the whole country — a certified electrician and a garden service, both in
+Pretoria, both seeded examples, both trust 85. **There is not one cleaner, housekeeper, laundry or
+ironing listing on TrustSquare.**
+
+| Measured | Number | Source |
+|---|---|---|
+| Domestic workers employed in South Africa | **831,000** | Stats SA, QLFS Q2 2026 |
+| Before the pandemic (Q4 2019) | ~1,000,000 | ~150,000 posts never came back |
+| Listed on TrustSquare | **0** | Probed 9 Sep 2026 |
+
+### Why this beats both earlier BOTs, and it supersedes my own 7 Sep recommendation
+
+I argued "Collector proves it, Seller banks it" on 7 Sep. Housekeeping beats both, for one reason
+neither of them has: **the supply already exists, already has a phone, and already has somebody
+who will vouch for her.** A person selling a bakkie arrives with no evidence. A housekeeper arrives
+with an employer of three years who can confirm her in one tap.
+
+### The employer link is the mechanism, not the convenience
+
+David framed it as a convenience — she gives her employer a link so they can book her. It does
+three jobs:
+
+1. **It solves the cold start.** The Trust Score has to be built out of something. Here the
+   evidence walks in with the worker: a real person outside the platform standing behind her
+   claim. That is the Verified Evidence Ladder working as designed.
+2. **It recruits the demand side free.** Her employer taps the link and lands on a marketplace
+   where they could also find a gardener, a tutor, an electrician. Every worker who registers
+   brings one to three middle-class households in, warm, at no acquisition cost.
+3. **It fits the money model with nothing new to build.** Listing is free (RUL-108 un-gated the
+   listing BOT for every tier). Her existing employer books her **free** — there is nothing to
+   introduce, they already know each other. A **stranger** asking for her open Wednesday is a real
+   introduction and costs **1 Tuppence**, fixed, not a percentage. Nothing but Tuppence goes
+   through the till, and wages are settled between them exactly as they are today. The moment a
+   platform touches a domestic worker's wages it becomes an employment agency; an introduction
+   service does not.
+
+### What the app already gives her, measured
+
+`_import_quality_score()` on the services branch: the trade is worth **25**, a description of
+15+ words another **25**, a real price **6**, a suburb **4**, first photo **10** then +8 each.
+So **she is listed at 60/100 after four spoken answers and no photograph at all** — and the
+fifteen-word description, the single thing most likely to make somebody abandon a listing and
+worth a quarter of the score, is written FOR her out of what she said. Scorer in the prototype is
+a faithful copy; if it ships the BOT asks the server. One scorer, never two.
+
+### Two gaps this BOT found — flagged, not changed
+
+| David asked for | Today |
+|---|---|
+| **Her openings on a weekly schedule** | Nothing there. Listings have no concept of a recurring free day; the two seeded service listings say "weekday availability" in their *description text*, which no filter can read. For a housekeeper the free day **is** the product. |
+| **Her area clearly visible** | One suburb, worth 4 points. She has two geographies that both matter: where she *lives* and the five suburbs her taxi route *reaches*. A buyer in Faerie Glen cannot find her by searching Mamelodi. |
+
+The fix is small and it is the difference between beautiful listings and findable ones: two fields
+on a service listing — `open_days` (seven booleans) and `serves_suburbs` (a list) — and one search
+filter, *"housekeeping, Menlyn, Wednesday"*, which is the only search anybody looking for a cleaner
+ever runs. Touches the listing schema and the search filter, so not in launch month.
+
+### The one thing I would gate, and would argue hard for
+
+Letting a stranger into your empty house is the highest-trust transaction this marketplace will
+ever carry. **A housekeeper is listed immediately, but until one employer confirmation or an ID
+check lands, only people she has sent her own link to can contact her.** She loses nothing — her
+existing employers are exactly who she wants on day one. It also protects her, which matters more
+and is easier to forget: publishing a woman's open days and her suburb to anybody at all, with no
+accountability on the other side, is not a service to her. Built into the prototype.
+
+### The wage floor, checked out loud
+
+From **1 March 2026** the national minimum wage is **R30.23 per ordinary hour** and it applies to
+domestic workers on the same footing as everyone else; the BCEA four-hour rule makes the practical
+floor for a short day **R120.92**. The BOT does the arithmetic in front of her — "R350 for eight
+hours is R43.75 an hour, that is above the minimum" — and **refuses to publish a rate below it**,
+offering the legal number instead. Verified in the rendered prototype: R150/day is refused with
+"shall we put it at R242?". This is not a compliance chore; it is the clearest possible signal
+about what kind of marketplace this is, and it costs one comparison.
+
+### Cost
+
+| Job | AI calls | Cost |
+|---|---|---|
+| One wish (measured 7 Sep) | 1 | $0.001 |
+| **Register a housekeeper** | 4 | **$0.04** |
+| A travel dossier errand | 14 | $0.295 |
+
+A thousand housekeepers registered costs about **forty dollars** at the pessimistic penny-a-call
+price, inside the existing daily ceiling without touching it. The cheapest supply the platform can buy.
+
+### Decisions taken rather than handed back (RUL-037)
+
+- **Colour.** David asked for green; green was already spoken for by Sell It (`#2F8D5C`). Home Help
+  takes a brighter jade `#16A97C` — reads as clean rather than as money. **Sell It moves to
+  TrustSquare gold when it gets built**; it has no icons yet, so that costs nothing.
+- **Where the circle lives.** Both places, same circle: the BOT's own home-screen icon, and one
+  green circle inside the app's Services category.
+- **Language.** en-ZA / af-ZA / zu-ZA selectable, because the phone does recognition free.
+  UNVERIFIED and worth twenty minutes on a real handset: Sepedi, Xitsonga and isiXhosa are not
+  reliably offered, and the microphone in installed (standalone) mode on iPhone has always been
+  the flaky one.
+
+### Art — SUPERSEDED, see the second pass below
+
+*(First pass used four drawn placeholder scenes. David rejected them the same night. Replaced with
+our own AI photographs — see "SECOND PASS" at the end of this file.)*
+
+### Verified
+
+Rendered in a real browser and driven end to end on 9 Sep 2026, not merely written: the scripted
+conversation reaches 60/100 and publishes; Mon/Tue read as taken and Wed/Fri as open out of one
+sentence carrying both; the employer confirmation lifts trust 38 → 85; the wage floor refuses
+R150/day. Console clean.
+
+### Reserved to David
+
+Whether housekeeping goes **ahead of** the Collector and Sell It BOTs in the build order. My answer
+is yes, and the reason is the probe at the top of this section.
+
+
+---
+
+## BOT #3 — SECOND PASS, same night (9 Sep 2026). Two faults David found, both fixed.
+
+David, on the first prototype: *"The idea is good, the photos can again be the AI generated photos
+we have for the current services, no none photos please. And the AI did not understand Moreleta
+Park, written or spoken."*
+
+### Fault 1 — the drawn art, and the answer that was already on disk
+
+The first pass drew four flat SVG scenes. Wrong: we own a real AI photo library and the whole
+project's look comes from it.
+
+First correction reached for `static/super/` — the electrician and garden photos behind the two
+live service listings. Right library, **wrong trade**: a distribution board under a heading that
+says "Housekeeping" is worse than a drawing of a bed.
+
+The right answer was one folder further on, in **`assets/super/`**, and it reframes the product:
+
+> **A housekeeper does not sell the cleaning. She sells the room afterwards.**
+
+So the circle now carries five of our own photographs of South African rooms — a lodge room made up
+at sunset, a bedroom, a bathroom, a lounge with jacarandas through the window, a kitchen. Every one
+is a room *after it has been done*. Embedded as data URIs, so the file needs no network and nothing
+is ever blank. Random on open, a new one every five seconds.
+
+**Nothing needs generating and nothing needs paying for.** The Higgsfield prompts stay written down
+for the day somebody wants a person in frame, but they are no longer on the path.
+
+### Fault 2 — "the AI did not understand Moreleta Park, written or spoken"
+
+Reproduced in a browser. Worse than it looked — three defects, not one:
+
+| Defect | What David saw |
+|---|---|
+| It never said the name back | The suburb WAS stored, but the BOT went straight to the next question. Indistinguishable from being ignored. |
+| A hard list of 15 suburbs | Moreleta Park was on it; Mabopane, Midrand, Olievenhoutbosch were not, and failed silently. A list can never be long enough. |
+| Exact matching vs speech | The phone hears "Morelia Park" and an exact match fails — the spoken version of the same bug. |
+
+**Fixed at class level, not instance level.** The list is now only a *spelling aid*, never the gate:
+
+- Anything after **stay in / live in / work in / from / near** is accepted as a place, known or not.
+- A near-miss is **snapped to the closest known name** (Levenshtein, tolerance by length) — so
+  "Morelia Park" resolves to Moreleta Park.
+- The **verb decides the meaning**: *stay* → her home, *work* → a suburb she travels to, both in one
+  sentence if she says both.
+- The bare name on its own works: typing just "Moreleta Park" is understood.
+- A place must sit behind a preposition — without that rule "I work **for** Mrs van Wyk" turned a
+  person into a suburb, which it did on the first run and now does not.
+- It **says the name back**: *"Moreleta Park. Got it — that is your area on the listing."*
+
+Nine cases pass, written and spoken-style, in a rendered browser.
+
+### And a finding worth more than the bug: the suburb seed has no townships
+
+The spelling aid is now the app's own **`assets/suburbs_seed.json`** — 119 suburbs across twelve
+cities. Reading it exposed something that matters well beyond this BOT:
+
+**It contains almost no townships.** Arcadia, Brooklyn, Waterkloof, Centurion — but not Mamelodi,
+Soshanguve, Mabopane, Tembisa, Khayelitsha, Umlazi, Chatsworth, Mdantsane.
+
+The seed lists **where the work is, not where she lives**. Every housekeeper on the platform would
+have hit it. The prototype carries the townships in its own list; **the real fix is the seed file
+itself**, and it reaches search, CityLauncher, and anything else that reads it. Flagged, not
+changed — it is a data file that other lanes consume, and this is launch month.
+
+### RUL-114 — "no none photos" is now a ruling
+
+David's four words closed a hole Claude had flagged on the Sell It BOT on 7 Sep and left with him:
+`_import_quality_score()` lets a listing with **zero photographs** clear the 50-point publish bar at
+60/100, because the facts alone are worth 60.
+
+**One photo is now a floor under publishing**, not merely worth ten points. Built into this BOT: at
+60/100 with no picture the button reads *"One photo first — then you are listed"* and stays
+disabled. It binds hardest here — nobody lets a stranger into an empty house off a listing with no
+picture — but it is a **class ruling**: every category, every BOT, and the publish gate itself.
+Drawn or placeholder artwork does not satisfy it.
+
+The live publish gate is NOT moved in launch month. Written to RULINGS.md so the next session builds
+to it instead of re-deciding it.
+
+### Verified, second pass
+
+Rendered browser, end to end: nine place cases pass; the BOT says the suburb back by name; the
+scripted conversation reaches 70/100 with one photo attached and publishes; at 60/100 with no photo
+the publish button is disabled and says so; employer confirmation lifts trust 38 → 85; the wage
+floor still refuses R150/day and offers R242. Console clean.

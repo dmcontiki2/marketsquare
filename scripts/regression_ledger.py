@@ -20535,5 +20535,87 @@ def rg_id_upload_interim_changes_what_seller_is_told():
     return out or [(INFO, "ID upload grants the interim points, every surface says so, and the live account reads its true state")]
 
 
+@entry("RG-0348", "A dead Cowork sandbox is DIAGNOSED and QUEUED, never reported unfixable -- a session with "
+                  "no shell can still read the cause off David's PC, run the fact boards host-side, and the "
+                  "standing method is written where the next session reads",
+       LOCKED, fixed_on="2026-09-09",
+       scope="MarketSquare\\sandbox_repair.bat (read-only diagnose: Windows build + KBs, VM processes, elevation, "
+             "the Cowork logs' last Plan9 lines), sandbox_repair_diag.ps1, sandbox_repair_sess.ps1 (session "
+             "guard), sandbox_repair_restart_app.bat (the app restart -- the #30164-class remedy only; guard -> "
+             "diagnostics -> taskkill claude.exe -> start claude: -> re-list), host_queue/ALLOWLIST.txt (both "
+             "run_bat lines + run_py scripts/regression_ledger.py + run_py scripts/rulings_check.py), and the "
+             "SANDBOX-REPAIR-1 block in Projects\\CLAUDE.md. Legs: (a) every file present; (b) the restart bat "
+             "carries the guard, the kill, the protocol launch and NO `timeout /t` (proven 9 Sep 20:51: the host "
+             "agent runs bats with no stdin, so `timeout` exits at once and every wait around the kill collapses "
+             "to zero); (c) all four allow-list rows present; (d) CLAUDE.md carries the method (INFO when "
+             "Projects\\CLAUDE.md is not readable here). CLASS: a tooling fault whose remedy was assumed to be a "
+             "human click -- the run reported 'nothing was checked, nothing was fixed, tomorrow will pick it up' "
+             "and the assumed remedy (restart the app) turned out not to work at all. Any other tooling fault "
+             "takes the same shape: probe the cause host-side, act on the class, keep working without the shell.",
+       ref="SANDBOX-REPAIR-1, 9 Sep 2026. David: 'i can not accept that we have a failure which cant be fixed'. "
+           "Fault: every sandbox command fails at start with 'sandbox-helper: no Plan9 drive shares mounted "
+           "under /mnt/.virtiofs-root/shared' (goal run 8 saw the same as 'Plan9 share \"c\" not mounted'); "
+           "it persisted across every session from 06:15 SAST. PROBED 9 Sep, all through the host queue "
+           "because terminals are click-only for computer use: WSL is NOT installed on the PC (so the sandbox "
+           "is the app's own Hyper-V HCS VM -- vmcompute/vmwp/vmmem -- and `wsl --shutdown` is no lever); the "
+           "host agent runs as David in his desktop session; a FULL app restart at 21:11 (16 processes closed, "
+           "relaunched, session relinked) left the sandbox exactly as dead -- the VM outlives the app. Cause: "
+           "the Windows update class -- KB5124008 (24H2 build 26200.9445) makes the host report the shares "
+           "attached while the VM mounts 0 of them; claude-code #92984, same app version 1.49585.0, same VM "
+           "bundle, reported the same day (ARM64 twin #92958). Only removing the KB restores it -- David's "
+           "call, put to him in the session. Stage 1 (WSL restart) was written on the wrong assumption and is "
+           "now diagnose-only; that evidence is what changed the design.")
+def rg_sandbox_repair_is_queued_not_clicked():
+    out = []
+    need = {"sandbox_repair_restart_app.bat": "stage 2 (restart the app) is gone -- the remedy is a David click again",
+            "sandbox_repair_sess.ps1": "the session guard is gone -- stage 2 could restart the app onto an invisible desktop",
+            "sandbox_repair_diag.ps1": "the read-only diagnostics are gone -- the next repair learns nothing about the VM",
+            "sandbox_repair.bat": "stage 1 (diagnose) is gone"}
+    for fn, why in need.items():
+        if not os.path.isfile(os.path.join(REPO, fn)):
+            out.append((FAIL, fn + " missing -- " + why))
+    bat = repo_file("sandbox_repair_restart_app.bat")
+    if bat is not None:
+        if "sandbox_repair_sess.ps1" not in bat or 'if "%MYSESS%"=="0"' not in bat:
+            out.append((FAIL, "stage 2 no longer checks it is on David's visible desktop before restarting the app"))
+        if "taskkill /IM claude.exe /F" not in bat:
+            out.append((FAIL, "stage 2 no longer closes the Claude app -- the sandbox VM is never recreated"))
+        if 'start "" "claude:"' not in bat:
+            out.append((FAIL, "stage 2 no longer relaunches the app the way start_session.bat does"))
+        if "timeout /t" in bat:
+            out.append((FAIL, "stage 2 uses `timeout /t` -- it exits at once under the host agent (no stdin), "
+                              "so the wait between kill and relaunch is zero"))
+        if "sandbox_repair_diag.ps1" not in bat:
+            out.append((FAIL, "stage 2 no longer records what the VM is made of before killing it"))
+    allow = repo_file(os.path.join("host_queue", "ALLOWLIST.txt"))
+    if allow is None:
+        out.append((FAIL, "host_queue/ALLOWLIST.txt is gone -- the host agent refuses everything"))
+    else:
+        rows = set()
+        for l in allow.splitlines():
+            l = l.strip()
+            if l and not l.startswith("#"):
+                p = l.split(None, 1)
+                if len(p) == 2:
+                    rows.add((p[0].lower(), p[1].strip().lower()))
+        for act, arg in (("run_bat", "MarketSquare\\sandbox_repair.bat"),
+                         ("run_bat", "MarketSquare\\sandbox_repair_restart_app.bat"),
+                         ("run_py", "MarketSquare\\scripts\\regression_ledger.py"),
+                         ("run_py", "MarketSquare\\scripts\\rulings_check.py")):
+            if (act, arg.lower()) not in rows:
+                out.append((FAIL, act + " " + arg + " is not on ALLOWLIST.txt -- the host agent will REFUSE it, "
+                                  "and a shell-less session loses that lane"))
+    cm = os.path.join(os.path.dirname(REPO), "CLAUDE.md")
+    if os.path.isfile(cm):
+        with open(cm, encoding="utf-8", errors="replace") as fh:
+            txt = fh.read()
+        if "SANDBOX-REPAIR-1" not in txt or "sandbox_repair_restart_app.bat" not in txt:
+            out.append((FAIL, "Projects/CLAUDE.md no longer carries the SANDBOX-REPAIR-1 method -- the next "
+                              "shell-less session will report the fault as unfixable again"))
+    else:
+        out.append((INFO, "Projects/CLAUDE.md not readable here -- the method leg is not evaluated"))
+    return out or [(INFO, "a dead sandbox has a queued, guarded, allowlisted repair and the next session knows how to call it")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

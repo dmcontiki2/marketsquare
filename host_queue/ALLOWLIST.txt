@@ -79,3 +79,21 @@ run_bat    CityLauncher\run_us_scraper.bat
 # --- imported host-side. Same SUPPLY class as run_us_scraper.bat (RUL-096). Scrapes only;
 # --- sends nothing.
 run_bat    CityLauncher\run_us_registers.bat
+
+# --- Widened 9 Sep 2026. SANDBOX-REPAIR-1. David: "i can not accept that we have a failure
+# --- which cant be fixed" - the Cowork Linux sandbox failed to start on every 9 Sep run
+# --- ("no Plan9 drive shares mounted"). sandbox_repair.bat = read-only DIAGNOSE (what the VM
+# --- is, Windows build + KBs, the Cowork logs' last Plan9 lines). sandbox_repair_restart_app.bat
+# --- = restart the Claude desktop app (refuses outside David's desktop session). PROVEN 9 Sep
+# --- 21:11: the app restart does NOT cure the KB5124008 class (claude-code #92984) - the VM is
+# --- a Hyper-V HCS VM that outlives the app. Claude tooling only: no money, no sending,
+# --- no deletion, no repo/DB/server change.
+run_bat    MarketSquare\sandbox_repair.bat
+run_bat    MarketSquare\sandbox_repair_restart_app.bat
+
+# --- Widened 9 Sep 2026. SANDBOX-REPAIR-1 fallback: while the sandbox is dead, the two
+# --- read-only fact boards can still run - HOST-SIDE, on David's own Python, no 180 s cap.
+# --- regression_ledger.py probes the live site + the working tree and writes only its own
+# --- shard/state files; rulings_check.py reads canon files. Neither commits, sends or spends.
+run_py     MarketSquare\scripts\regression_ledger.py
+run_py     MarketSquare\scripts\rulings_check.py

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>What the Genie actually costs — on David's model setup</title>
+<style>
+:root{
+  --bg:#f4f5f7;--surface:#fff;--surface-2:#eef0f3;--line:#e2e5ea;
+  --ink:#111827;--ink-2:#4b5563;--ink-3:#6b7280;--navy:#111827;
+  /* validated categorical order — blue, amber, purple (CVD-checked) */
+  --s1:#3b5ba5;--s2:#b45309;--s3:#6d28d9;
+  --ok:#15803d;--no:#be123c;--warnc:#b45309;
+  --r:12px;--sh:0 1px 2px rgba(0,0,0,.05),0 6px 22px rgba(0,0,0,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:Syne,Inter,sans-serif;letter-spacing:-.3px}
+.head{background:var(--navy);color:#fff;padding:24px 26px}
+.head .eyebrow{font-size:10px;letter-spacing:2.4px;text-transform:uppercase;color:rgba(255,255,255,.45);font-weight:600}
+.head h1{font-size:26px;font-weight:800;margin:8px 0 6px}
+.head p{color:rgba(255,255,255,.62);font-size:13.5px;max-width:860px}
+.head p b{color:#fff}
+.stampr{margin-top:13px;display:flex;gap:8px;flex-wrap:wrap}
+.stampr span{font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.82)}
+.wrap{max-width:1120px;margin:0 auto;padding:22px 20px 60px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:18px;overflow:hidden}
+.panel>h2{font-size:15px;font-weight:800;padding:15px 20px;border-bottom:1px solid var(--line);background:var(--surface-2);display:flex;align-items:center;gap:9px}
+.panel>h2 .sq{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+.in{padding:18px 20px}
+p{color:var(--ink-2);margin-bottom:11px}
+p:last-child{margin-bottom:0}
+p b,li b{color:var(--ink)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:18px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;border-top:4px solid}
+.tile .lab{font-size:10.5px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--ink-3);margin-bottom:9px}
+.tile .num{font-family:Syne,Inter,sans-serif;font-size:38px;font-weight:800;line-height:1;letter-spacing:-1px}
+.tile .sub{font-size:12.5px;color:var(--ink-2);margin-top:8px;line-height:1.5}
+.prop{margin:6px 0 4px}
+.propbar{height:34px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);position:relative;overflow:hidden}
+.propbar i{position:absolute;left:0;top:0;bottom:0;display:block}
+.propbar .a{background:var(--s1)}
+.propbar .b{background:var(--s2)}
+.propkey{display:flex;gap:18px;flex-wrap:wrap;margin-top:11px;font-size:12.5px;color:var(--ink-2)}
+.propkey div{display:flex;align-items:center;gap:7px}
+.propkey i{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+figure{margin:0}
+figcaption{font-size:12px;color:var(--ink-3);padding:0 20px 16px;line-height:1.55}
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:14px 20px 4px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.legend div{display:flex;align-items:center;gap:7px}
+.legend i{width:14px;height:3px;border-radius:2px;flex:0 0 auto}
+svg{display:block;width:100%;height:auto}
+.tipbox{position:fixed;pointer-events:none;background:#111827;color:#fff;border-radius:8px;padding:8px 11px;font-size:12px;line-height:1.5;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;transition:opacity .1s;z-index:50;max-width:240px}
+.tipbox b{display:block;font-size:12.5px;margin-bottom:3px}
+.tipbox span{display:flex;justify-content:space-between;gap:14px}
+.tipbox em{font-style:normal;color:rgba(255,255,255,.6)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-3);padding:10px 20px;border-bottom:1px solid var(--line);font-weight:800}
+td{padding:11px 20px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+tr:last-child td{border-bottom:0}
+td b{color:var(--ink)}
+td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.st{font-size:9.5px;font-weight:800;letter-spacing:.7px;padding:3px 8px;border-radius:20px;color:#fff;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.st.y{background:var(--ok)}.st.n{background:var(--no)}.st.w{background:var(--warnc)}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;padding:16px 20px}
+.fb{flex:1 1 130px;border-radius:10px;padding:12px 13px;color:#fff;min-width:130px}
+.fb b{display:block;font-size:12.5px;margin-bottom:3px}
+.fb span{font-size:10.5px;opacity:.85;line-height:1.45;display:block}
+.far{flex:0 0 26px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:17px;font-weight:700}
+.rule{font-size:13px;padding:12px 20px;border-bottom:1px solid var(--line);color:var(--ink-2);display:flex;gap:11px}
+.rule:last-child{border-bottom:0}
+.rule .k{flex:0 0 6px;border-radius:3px;align-self:stretch}
+.foot{font-size:11.5px;color:var(--ink-3);line-height:1.6;padding-top:6px}
+.foot a{color:var(--s1)}
+details.tbl{border-top:1px solid var(--line)}
+details.tbl summary{cursor:pointer;font-size:12px;color:var(--ink-3);padding:11px 20px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="head">
+  <div class="eyebrow">MarketSquare · Genie / BOTs · cost model · rev 3</div>
+  <h1>What the Genie actually costs — on David's own model setup</h1>
+  <p>David's design, in his words: a harness installed <b>on the Hetzner server</b>, whose plug-ins are actual
+     API models, with the DeepSeek API as the expensive fallback and every option capped. His three
+     subscriptions are a separate thing — his own bench, not app plumbing. Rev 1 of this page assumed
+     "open source" meant renting a graphics card, and rev 2 assumed the harness lived on his PC and drove the
+     subscriptions. Both were my assumptions and both are gone. What survives is the arithmetic, and it is
+     better on his design than on the lane the app runs today.</p>
+  <div class="stampr">
+    <span>Rev 3 — 9 Sep 2026</span>
+    <span>Costs from AI_BASELINE.json v2.0 envelopes</span>
+    <span>1 Tuppence = US$2 fixed — PRICING_CANON §4</span>
+    <span>DeepSeek rates published 31 Jul 2026</span>
+    <span>Worst-case envelopes, not averages</span>
+  </div>
+</div>
+<div class="wrap">
+
+<div class="tiles">
+  <div class="tile" style="border-top-color:var(--s2)">
+    <div class="lab">A paid dossier, on DeepSeek V4 Flash</div>
+    <div class="num" style="color:var(--s2)">0.08%</div>
+    <div class="sub">Under <b>one US cent</b> of AI against the <b>$10</b> a 5&nbsp;Tuppence dossier earns.
+      On your current base lane the same job is 19½ cents — still only 2%, but this is 24 times cheaper.</div>
+  </div>
+  <div class="tile" style="border-top-color:var(--s3)">
+    <div class="lab">A free conversation</div>
+    <div class="num" style="color:var(--s3)">$0.002</div>
+    <div class="sub">A fifth of a cent on DeepSeek, or <b>nothing</b> on a free lane up to about 740 a day.
+      A thousand free conversations a day costs <b>$160 a month</b>, against $444 on the base lane.</div>
+  </div>
+  <div class="tile" style="border-top-color:var(--s1)">
+    <div class="lab">Work that never needs a live call</div>
+    <div class="num" style="color:var(--s1)">most<span style="font-size:20px"> of it</span></div>
+    <div class="sub">The expensive call is writing a trip. Trips can be written <b>ahead of time</b>, in
+      batches, on a queue. Then the app serves data, not inference, and nobody waits for it.</div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2><span class="sq" style="background:var(--navy)"></span>Where everything actually runs</h2>
+  <div class="flow">
+    <div class="fb" style="background:var(--navy)"><b>Hetzner — the harness</b><span>Routing software. Picks a plug-in per job, applies the cap, logs the spend. Holds no model itself.</span></div>
+    <div class="far">→</div>
+    <div class="fb" style="background:var(--s2)"><b>The plug-ins — API models</b><span>DeepSeek and the free lanes. This is what answers users, and the only thing with a bill attached.</span></div>
+    <div class="far">→</div>
+    <div class="fb" style="background:var(--s1)"><b>Ahead-of-time work</b><span>Journeys and templates written in batches by the same harness, on a queue, and served afterwards as plain data.</span></div>
+  </div>
+  <div class="in" style="border-top:1px solid var(--line);padding-bottom:4px">
+    <p style="font-size:13px"><b>Separate from all of it — your own bench.</b> Claude as the backbone,
+      OpenAI as an independent test ground and auditor, Grok for video, graphics and security. Those are the
+      tools you work with. They never sit in a visitor's request path, so they carry no per-user cost and
+      appear nowhere in the figures on this page.</p>
+  </div>
+  <div class="in" style="border-top:1px solid var(--line)">
+    <p><b>This is the part I had wrong, and it is the best thing about your design.</b> I costed the Genie as
+       if every trip had to be written while somebody watched a spinner. Most of it does not. There are only
+       so many trips. Twelve are already built. A hundred, written in batches by the harness on a queue when
+       nothing is waiting, would answer almost anything anyone asks in the first year — and the live call
+       shrinks to the small one that reads the sentence and picks the right answer.</p>
+    <p>That call costs <b>a fifth of a cent</b> on DeepSeek, or nothing on a free lane. The bill you were
+       protecting against largely stops existing.</p>
+  </div>
+</div>
+
+<div class="panel">
+  <h2><span class="sq" style="background:var(--s2)"></span>What each lane costs per call — same envelopes, four options</h2>
+  <table>
+    <tr><th>The job</th><th class="n">Your base lane</th><th class="n">DeepSeek V4 Flash</th><th class="n">DeepSeek V4 Pro</th><th class="n">Saving, Flash vs base</th></tr>
+    <tr><td><b>Read the sentence</b><br>work out what they want (triage)</td>
+        <td class="n">$0.00098</td><td class="n"><b>$0.00046</b></td><td class="n">$0.00144</td><td class="n">53%</td></tr>
+    <tr><td><b>Ask the next question</b><br>pick and phrase it (haiku)</td>
+        <td class="n">$0.00296</td><td class="n"><b>$0.00106</b></td><td class="n">$0.00331</td><td class="n">64%</td></tr>
+    <tr><td><b>Write the trip up</b><br>the whole dossier (design)</td>
+        <td class="n">$0.18000</td><td class="n"><b>$0.00280</b></td><td class="n">$0.00870</td><td class="n"><b>98%</b></td></tr>
+    <tr><td><b>A whole free conversation</b><br>read + four questions</td>
+        <td class="n">$0.0148</td><td class="n"><b>$0.0053</b></td><td class="n">$0.0166</td><td class="n">64%</td></tr>
+    <tr><td><b>A paid 5T dossier</b><br>conversation + write-up · earns $10.00</td>
+        <td class="n">$0.1948</td><td class="n"><b>$0.0081</b></td><td class="n">$0.0253</td><td class="n">96%</td></tr>
+  </table>
+  <div class="in" style="border-top:1px solid var(--line)">
+    <p>The row that matters is the write-up. Your base lane uses a premium model for it at 18 cents a go;
+       DeepSeek Flash does the same envelope for under a third of a cent. <b>That single row is the whole
+       cost worry</b>, and it is the row that either gets 98% cheaper, or disappears from the live path
+       entirely if the trips are written ahead of time.</p>
+  </div>
+</div>
+
+<div class="panel">
+  <h2><span class="sq" style="background:var(--s3)"></span>What free conversations cost as volume grows</h2>
+  <figure>
+    <div class="legend">
+      <div><i style="background:var(--s1)"></i>Your base lane today</div>
+      <div><i style="background:var(--s2)"></i>DeepSeek V4 Flash, capped</div>
+      <div><i style="background:var(--s3)"></i>Free hosted lanes</div>
+    </div>
+    <div id="chart"></div>
+    <figcaption>Monthly cost of people who ask, get an answer, and buy nothing — the only part that has no
+      revenue against it. Free lanes carry roughly the first 740 a day at nothing. After that DeepSeek Flash
+      keeps it in the low hundreds where the base lane runs into the thousands. Hover any line for the
+      figure at that volume.</figcaption>
+    <details class="tbl"><summary>Show the numbers as a table</summary>
+      <table><tr><th>Free conversations / day</th><th class="n">Base lane</th><th class="n">DeepSeek Flash</th><th class="n">Free lanes</th></tr>
+        <tr><td>100</td><td class="n">$44/mo</td><td class="n">$16/mo</td><td class="n">$0</td></tr>
+        <tr><td>500</td><td class="n">$222/mo</td><td class="n">$80/mo</td><td class="n">$0</td></tr>
+        <tr><td>740 <em style="color:var(--s3);font-style:normal">— free ceiling</em></td><td class="n">$329/mo</td><td class="n">$118/mo</td><td class="n">$0</td></tr>
+        <tr><td>1 000</td><td class="n">$444/mo</td><td class="n">$160/mo</td><td class="n">—</td></tr>
+        <tr><td>2 000</td><td class="n">$888/mo</td><td class="n">$319/mo</td><td class="n">—</td></tr>
+        <tr><td>3 000</td><td class="n">$1 332/mo</td><td class="n">$479/mo</td><td class="n">—</td></tr>
+      </table></details>
+  </figure>
+</div>
+
+<div class="panel">
+  <h2><span class="sq" style="background:var(--warnc)"></span>What is still worth watching</h2>
+  <div class="rule"><span class="k" style="background:var(--warnc)"></span>
+    <span><b>I could not confirm that Scaleway carries DeepSeek.</b> Their model-list page did not render for
+    me, and a provider comparison describes Scaleway as hosting Llama 3.3 and other open-weight models with no
+    DeepSeek mentioned. The prices in the table above are <b>DeepSeek's own published rates</b>, not
+    Scaleway's. You hold that account — quicker for you to look than for me to guess. It matters beyond
+    price: you picked Scaleway for European hosting, and DeepSeek's own API is not that. The input here is
+    sentences people type about their own lives.</span></div>
+  <div class="rule"><span class="k" style="background:var(--s1)"></span>
+    <span><b>You already run a harness on that box — n8n.</b> Self-hosted, in Docker, on the same server.
+    Before a second orchestration layer goes on, the question worth asking once is whether the plug-in
+    routing belongs in n8n or beside it. Two schedulers on one small VPS is the kind of thing that is
+    invisible until the day both are busy.</span></div>
+  <div class="rule"><span class="k" style="background:var(--s2)"></span>
+    <span><b>Ahead-of-time work and live requests share the same CPUs.</b> The harness holds no model, so it
+    is light — but a queue of a hundred trip write-ups is a hundred outbound calls with retries, on the box
+    that is also serving the site. Give the batch queue a lower priority and a window when nobody is
+    browsing, and this never becomes a symptom.</span></div>
+  <div class="rule"><span class="k" style="background:var(--s3)"></span>
+    <span><b>The cap belongs in one place, not per plug-in.</b> Capping is your stated condition, and a
+    ceiling set inside each plug-in cannot see the others — three lanes each under their own limit can still
+    add up past yours. The seam already meters every call in one place; the harness should spend through it
+    rather than around it.</span></div>
+</div>
+
+<div class="panel">
+  <h2><span class="sq" style="background:var(--s1)"></span>Where it plugs in — already designed</h2>
+  <div class="flow">
+    <div class="fb" style="background:var(--navy)"><b>The app</b><span>asks for a task tier — "triage", "haiku", "design" — never a model name.</span></div>
+    <div class="far">→</div>
+    <div class="fb" style="background:var(--s1)"><b>The seam</b><span>ai_provider.py maps tier → model for whichever lane is active, and logs the spend.</span></div>
+    <div class="far">→</div>
+    <div class="fb" style="background:var(--s2)"><b>The lanes</b><span>openai → anthropic → scaleway today. DeepSeek is one more adapter and one registry line.</span></div>
+  </div>
+  <div class="in" style="border-top:1px solid var(--line)">
+    <p>Your 14 August ruling sorted the lanes by <b>role</b> rather than by vendor — base, auto-failover,
+       safety net — and the seam already maps an abstract task tier onto whatever the active lane uses. So
+       putting a cheap capped lane at the base is the same shape of change as the three already there, and
+       every cap and spend log you already built keeps working through it.</p>
+    <p><b>Two additions I would make to that ruling</b>, both small and both about caps, since capping is
+       your stated condition: a free lane is base for the <b>free conversation only</b> and fails over
+       <b>to</b> a paid lane, never the other way round — a capped lane must never stand between a paying
+       customer and the thing they paid for. And the <b>design tier gets its own monthly ceiling</b>, separate
+       from the rest, because it is the only tier where one call can cost more than a hundred of the others.</p>
+  </div>
+</div>
+
+<div class="panel">
+  <h2><span class="sq" style="background:var(--s3)"></span>What this does to the stage order</h2>
+  <div class="rule"><span class="k" style="background:var(--s1)"></span>
+    <span><b>The narrow front door costs nothing per question at all.</b> The prototype built today routes a
+    sentence with plain code and makes no AI call. Zero, at any volume, with no lane and no ceiling.</span></div>
+  <div class="rule"><span class="k" style="background:var(--s2)"></span>
+    <span><b>The wide version, on your setup, is cents.</b> Under a cent for anyone who buys; a fifth of a
+    cent for anyone who does not; nothing at all for the first 740 a day.</span></div>
+  <div class="rule"><span class="k" style="background:var(--s3)"></span>
+    <span><b>Your instinct on models was right and mine was wrong.</b> You said the free and open route would
+    make it not more expensive. On the numbers it does — it takes the one genuinely expensive call and makes
+    it 98% cheaper, or removes it from the live path entirely.</span></div>
+  <div class="in" style="border-top:1px solid var(--line)">
+    <p><b>My call, in one line:</b> cost is no longer a reason to hold this to Stage 5 — but that only removes
+       a reason, it does not make the case for moving it. Stages 1 and 2 are about whether anyone lists at
+       all, which is a different question from what a feature costs, and the stage order is yours.</p>
+  </div>
+</div>
+
+<div class="foot">
+  <b>How these numbers were reached.</b> Per-call costs use the app's own worst-case envelopes from
+  <code>AI_BASELINE.json</code> v2.0 — triage 2 500 in / 400 out, haiku 4 000 / 1 800, design 12 000 / 4 000 —
+  priced on each lane. Base lane figures are the card's own: triage $0.00098, haiku $0.00296, design $0.18.
+  DeepSeek is priced at its published 31 July 2026 rates: V4 Flash $0.14 in / $0.28 out per million tokens,
+  V4 Pro $0.435 / $0.87. DeepSeek has signalled a broader price rise without publishing replacement rates, so
+  these should be re-checked before anything depends on them. A conversation is five calls; a dossier adds one
+  design-tier call. Tuppence is $2 fixed (PRICING_CANON §4), so 5T is $10. Free-lane allowances — Groq 1 000
+  requests a day, Cerebras ~1M tokens a day, OpenRouter 1 000 a day after a one-off $10 — were read from
+  published comparisons on 9 Sep 2026; Google AI Studio and Mistral's free tiers are excluded because both use
+  prompts for training. Chart palette validated for colour-blind separation before use.
+  <br><br>
+  <b>Rev 3 supersedes revs 1 and 2</b>, both corrected by David the same day. Rev 1 costed a rented A100 at
+  $785/month on my assumption that "open source" meant self-hosting a model. Rev 2 then placed the harness on
+  his PC and had it driving his three subscriptions. Neither was his plan: the harness runs on the Hetzner
+  server, its plug-ins are API models, and the subscriptions are his own bench and never touch a user request.
+  Both wrong sections are removed rather than amended; the per-call arithmetic is unchanged by either correction.
+  <br><br>
+  <b>Sources:</b>
+  <a href="https://benchlm.ai/deepseek/api-pricing">BenchLM — DeepSeek API pricing, September 2026</a> ·
+  <a href="https://openrouter.ai/blog/tutorials/free-llm-apis-compared/">OpenRouter — Free LLM APIs compared, 2026</a> ·
+  <a href="https://www.computecomparison.com/compare-two-llm-providers/deepseek-vs-scaleway">ComputeComparison — DeepSeek vs Scaleway</a> ·
+  <a href="https://www.scaleway.com/en/docs/generative-apis/reference-content/supported-models/">Scaleway — Generative APIs supported models</a>
+</div>
+</div>
+<div class="tipbox" id="tip"></div>
+<script>
+(function(){
+const W=1040,H=392,ML=70,MR=150,MT=30,MB=46;
+const X0=0,X1=3000,Y0=0,Y1=1400;
+const PW=W-ML-MR, PH=H-MT-MB;
+const x=v=>ML+(v-X0)/(X1-X0)*PW, y=v=>MT+PH-(v-Y0)/(Y1-Y0)*PH;
+const BASE=0.0148*30, FLASH=0.00532*30, FREECAP=744;   // $/month per conversation-per-day
+const S=[
+ {k:'base', n:'Your base lane',    c:'#3b5ba5', f:v=>v*BASE,  end:X1,      lab:'Your base lane'},
+ {k:'ds',   n:'DeepSeek V4 Flash', c:'#b45309', f:v=>v*FLASH, end:X1,      lab:'DeepSeek V4 Flash'},
+ {k:'free', n:'Free hosted lanes', c:'#6d28d9', f:_=>0,       end:FREECAP, lab:'Free lanes'}
+];
+const money=v=>'$'+Math.round(v).toLocaleString('en-US')+'/mo';
+let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Monthly cost of free conversations by daily volume, three lanes">';
+for(let v=0;v<=Y1;v+=350){
+  s+='<line x1="'+ML+'" y1="'+y(v)+'" x2="'+(ML+PW)+'" y2="'+y(v)+'" stroke="#e2e5ea" stroke-width="1"/>';
+  s+='<text x="'+(ML-12)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="11.5" fill="#6b7280">$'+v.toLocaleString('en-US')+'</text>';
+}
+for(let v=0;v<=X1;v+=500){
+  s+='<text x="'+x(v)+'" y="'+(MT+PH+22)+'" text-anchor="middle" font-size="11.5" fill="#6b7280">'+v.toLocaleString('en-US')+'</text>';
+}
+s+='<text x="'+(ML+PW/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="11.5" font-weight="600" fill="#4b5563">free conversations per day</text>';
+s+='<text x="4" y="14" text-anchor="start" font-size="10.5" font-weight="700" fill="#6b7280">US$ / month</text>';
+S.forEach(se=>{
+  s+='<line x1="'+x(X0)+'" y1="'+y(se.f(X0))+'" x2="'+x(se.end)+'" y2="'+y(se.f(se.end))+'" stroke="'+se.c+'" stroke-width="2" stroke-linecap="round"/>';
+  if(se.k==='free'){
+    s+='<circle cx="'+x(FREECAP)+'" cy="'+y(0)+'" r="4.5" fill="'+se.c+'" stroke="#fff" stroke-width="2"/>';
+    s+='<text x="'+(x(FREECAP)+9)+'" y="'+(y(0)-10)+'" font-size="11.5" font-weight="700" fill="'+se.c+'">'+se.lab+' — ceiling '+FREECAP+'/day</text>';
+  }else{
+    s+='<text x="'+(x(se.end)+10)+'" y="'+(y(se.f(se.end))+4)+'" font-size="12" font-weight="700" fill="'+se.c+'">'+se.lab+'</text>';
+  }
+});
+s+='<line id="cross" x1="0" y1="'+MT+'" x2="0" y2="'+(MT+PH)+'" stroke="#9ca3af" stroke-width="1" opacity="0"/>';
+S.forEach(se=>{ s+='<circle id="d-'+se.k+'" r="5" fill="'+se.c+'" stroke="#fff" stroke-width="2" opacity="0"/>'; });
+s+='<rect id="hit" x="'+ML+'" y="'+MT+'" width="'+PW+'" height="'+PH+'" fill="transparent"/></svg>';
+document.getElementById('chart').innerHTML=s;
+const svg=document.querySelector('#chart svg'), tip=document.getElementById('tip'),
+      cross=document.getElementById('cross'), hit=document.getElementById('hit');
+function move(ev){
+  const r=svg.getBoundingClientRect(), sx=(ev.clientX-r.left)/r.width*W;
+  let v=Math.round((sx-ML)/PW*(X1-X0)); v=Math.max(X0,Math.min(X1,v));
+  cross.setAttribute('x1',x(v)); cross.setAttribute('x2',x(v)); cross.setAttribute('opacity','.7');
+  let rows='';
+  S.forEach(se=>{
+    const d=document.getElementById('d-'+se.k), on=v<=se.end;
+    d.setAttribute('opacity',on?'1':'0');
+    if(on){ d.setAttribute('cx',x(v)); d.setAttribute('cy',y(se.f(v))); }
+    rows+='<span><em>'+se.n+'</em>'+(on?money(se.f(v)):'over ceiling')+'</span>';
+  });
+  tip.innerHTML='<b>'+v.toLocaleString('en-US')+' conversations a day</b>'+rows;
+  tip.style.opacity='1';
+  tip.style.left=Math.min(ev.clientX+16,innerWidth-256)+'px';
+  tip.style.top=(ev.clientY-14)+'px';
+}
+function out(){ tip.style.opacity='0'; cross.setAttribute('opacity','0');
+  S.forEach(se=>document.getElementById('d-'+se.k).setAttribute('opacity','0')); }
+hit.addEventListener('mousemove',move); hit.addEventListener('mouseleave',out);
+svg.addEventListener('touchmove',e=>{ if(e.touches[0]) move(e.touches[0]); },{passive:true});
+})();
+</script>
+</body>
+</html>

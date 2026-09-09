@@ -1,0 +1,18 @@
+{
+  "_comment": "BOT · Home Help — NOT DEPLOYED. The housekeeping registration BOT. She taps a green circle, talks for two minutes, and is listed — then sends one link to the employer she already has, who confirms her and can book her free. 831,000 domestic workers in South Africa (Stats SA, Q2 2026); zero on TrustSquare (probed 9 Sep 2026).",
+  "name": "TrustSquare Home Help",
+  "short_name": "Get work",
+  "description": "Say what work you do. You are listed in two minutes, with your open days and your area.",
+  "start_url": "/?bot=homehelp",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "en-ZA",
+  "theme_color": "#16A97C",
+  "background_color": "#050D0A",
+  "icons": [
+    { "src": "/static/brand/bots/homehelp/icon-192.png",     "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/brand/bots/homehelp/icon-512.png",     "sizes": "512x512", "type": "image/png" },
+    { "src": "/static/brand/bots/homehelp/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

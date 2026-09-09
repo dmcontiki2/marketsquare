@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Porthole — one question in front of the whole app</title>
+<style>
+:root{
+  --bg:#f4f5f7;--surface:#fff;--surface-2:#eef0f3;--border:#e2e5ea;
+  --text:#111827;--text-2:#4b5563;--text-3:#6b7280;
+  --navy:#111827;--accent:#1e3a5f;
+  /* category / function colour code — same four as the journey map legend */
+  --c-route:#3b5ba5;      /* travel & route            */
+  --c-heritage:#d4a017;   /* heritage · free pre-info   */
+  --c-stay:#1e7d34;       /* stays & introductions (1T) */
+  --c-partner:#6d28d9;    /* partner referral · link-out*/
+  --c-ai:#b45309;         /* priced AI feature (5T)     */
+  --c-app:#64748b;        /* the main app               */
+  --ok:#16a34a;--warn:#d97706;--new:#be123c;
+  --r:12px;--sh:0 1px 2px rgba(0,0,0,.05),0 6px 22px rgba(0,0,0,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.syne{font-family:'Syne','Inter',sans-serif;letter-spacing:-.3px}
+
+/* ── page shell ───────────────────────────────────────────── */
+.pagehead{background:var(--navy);color:#fff;padding:22px 24px 20px}
+.pagehead .eyebrow{font-size:10px;letter-spacing:2.4px;text-transform:uppercase;color:rgba(255,255,255,.45);font-weight:600}
+.pagehead h1{font-size:26px;font-weight:800;margin:8px 0 6px}
+.pagehead p{color:rgba(255,255,255,.62);font-size:13.5px;max-width:760px}
+.stamp{margin-top:12px;display:inline-flex;gap:8px;flex-wrap:wrap}
+.stamp span{font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:20px;
+  background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.8)}
+.wrap{max-width:1280px;margin:0 auto;padding:22px 20px 60px;display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap}
+.col-phone{flex:0 0 430px;position:sticky;top:18px}
+.col-note{flex:1 1 460px;min-width:330px}
+@media(max-width:960px){.col-phone{position:static;flex:1 1 100%;margin:0 auto}.wrap{padding:16px 12px 40px}}
+
+/* ── the phone ────────────────────────────────────────────── */
+.phone{width:430px;max-width:100%;background:var(--surface);border-radius:26px;overflow:hidden;
+  box-shadow:var(--sh);border:1px solid var(--border);min-height:780px;display:flex;flex-direction:column}
+.ph-head{background:var(--navy);padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+.ph-logo{color:#fff;font-weight:700;font-size:14px;font-family:'Syne','Inter',sans-serif}
+.ph-chip{font-size:10px;font-weight:600;color:rgba(255,255,255,.75);background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 10px;cursor:pointer}
+.ph-chip:hover{background:rgba(255,255,255,.2)}
+.ph-body{flex:1;padding:0 0 18px}
+
+/* ── the porthole ─────────────────────────────────────────── */
+.porthole-stage{padding:26px 20px 4px;text-align:center}
+.porthole{position:relative;width:290px;height:290px;margin:0 auto;border-radius:50%;overflow:hidden;background:#000}
+.porthole img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;
+  transition:opacity 1.1s ease;transform:scale(1.06)}
+.porthole img.on{opacity:1}
+.porthole .vig{position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  box-shadow:inset 0 0 44px 30px #000, inset 0 0 12px 4px #000}
+.porthole .cap{position:absolute;left:0;right:0;bottom:34px;color:rgba(255,255,255,.92);
+  font-size:11.5px;font-weight:600;letter-spacing:.3px;text-shadow:0 2px 10px #000;padding:0 46px;
+  transition:opacity .5s ease}
+.porthole .dotrow{position:absolute;left:0;right:0;bottom:20px;display:flex;gap:5px;justify-content:center}
+.porthole .dotrow i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.28)}
+.porthole .dotrow i.on{background:rgba(255,255,255,.9)}
+
+/* ── the one question ─────────────────────────────────────── */
+.askbox{padding:20px 22px 6px}
+.ask-lead{font-size:13px;color:var(--text-3);font-weight:500;margin-bottom:6px}
+.ask-q{font-family:'Syne','Inter',sans-serif;font-size:21px;font-weight:800;margin-bottom:14px;line-height:1.25}
+.ask-in{display:flex;gap:8px;align-items:center;border:1.5px solid var(--border);border-radius:14px;
+  padding:11px 12px;background:var(--surface-2);transition:border-color .15s}
+.ask-in:focus-within{border-color:var(--c-route);background:#fff}
+.ask-in input{flex:1;border:0;background:transparent;font:inherit;font-size:14.5px;outline:0;color:var(--text)}
+.ask-in button{border:0;background:var(--navy);color:#fff;border-radius:10px;width:38px;height:34px;
+  cursor:pointer;font-size:15px;flex:0 0 auto}
+.ask-in button:hover{background:var(--c-route)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.chip{border:1px solid var(--border);background:#fff;border-radius:20px;padding:7px 12px;font-size:12.5px;
+  font-weight:600;color:var(--text-2);cursor:pointer;transition:.14s;font-family:inherit}
+.chip:hover{border-color:var(--c-route);color:var(--c-route);transform:translateY(-1px)}
+.chip.sel{background:var(--navy);border-color:var(--navy);color:#fff}
+.chip.ghost{background:transparent;border-style:dashed;color:var(--text-3)}
+.hint{font-size:11.5px;color:var(--text-3);margin-top:11px;line-height:1.5}
+
+/* ── the funnel ───────────────────────────────────────────── */
+.step{padding:18px 22px 6px}
+.stepbar{display:flex;gap:5px;margin-bottom:16px;align-items:center}
+.stepbar i{height:4px;border-radius:3px;background:var(--border);flex:1;transition:background .25s}
+.stepbar i.done{background:var(--c-route)}
+.stepbar i.now{background:var(--navy)}
+.steplabel{font-size:10px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--text-3);margin-bottom:7px}
+.read{background:var(--surface-2);border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-2)}
+.read b{color:var(--text)}
+.read .tagrow{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.tag{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:14px;background:#fff;border:1px solid var(--border)}
+.backlink{font-size:12px;color:var(--text-3);cursor:pointer;display:inline-block;margin-top:14px;font-weight:600}
+.backlink:hover{color:var(--c-route)}
+
+/* ── the result ───────────────────────────────────────────── */
+.res{padding:16px 20px 8px}
+.res-pill{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  padding:5px 10px;border-radius:20px;color:#fff;background:var(--c-route);margin-bottom:10px}
+.res h2{font-size:20px;font-weight:800;line-height:1.2;margin-bottom:6px}
+.res .sub{font-size:13px;color:var(--text-2);margin-bottom:14px}
+.legstrip{display:flex;height:9px;border-radius:6px;overflow:hidden;margin-bottom:6px}
+.legstrip span{flex:1}
+.legnums{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text-3);font-weight:700;margin-bottom:16px}
+.card{border:1px solid var(--border);border-radius:var(--r);background:#fff;margin-bottom:14px;overflow:hidden}
+.card-h{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border);
+  background:var(--surface-2)}
+.card-h .t{font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:7px}
+.card-h .n{font-size:10.5px;color:var(--text-3);font-weight:700}
+.leg{display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.leg:last-child{border-bottom:0}
+.leg .lb{flex:0 0 46px;font-size:9.5px;font-weight:800;letter-spacing:.6px;padding-top:2px}
+.leg .lt{flex:1}
+.leg .lt b{font-size:13.5px;display:block;margin-bottom:3px;font-weight:700}
+.leg .lt p{font-size:12px;color:var(--text-2);line-height:1.45}
+.leg .ld{flex:0 0 auto;font-size:11.5px;color:var(--text-3);font-weight:700;padding-top:2px;white-space:nowrap}
+.hl{display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);align-items:flex-start;font-size:12.5px}
+.hl:last-child{border-bottom:0}
+.hl .ic{flex:0 0 20px;font-size:14px}
+.hl b{font-weight:700}
+.hl span{color:var(--text-2)}
+.money{display:flex;justify-content:space-between;padding:11px 14px;font-size:12.5px;border-bottom:1px solid var(--border)}
+.money:last-child{border-bottom:0}
+.money b{font-weight:800}
+.cta{display:block;width:100%;text-align:left;border:0;border-radius:12px;padding:13px 15px;margin-bottom:9px;
+  cursor:pointer;font:inherit;color:#fff;transition:.15s;text-decoration:none}
+.cta:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.cta .ct{font-size:13.5px;font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.cta .cs{font-size:11.5px;opacity:.82;margin-top:3px;line-height:1.45;font-weight:500}
+.cta .price{font-size:11px;font-weight:800;background:rgba(255,255,255,.22);padding:3px 9px;border-radius:20px;white-space:nowrap}
+.cta.route{background:var(--c-route)}.cta.stay{background:var(--c-stay)}
+.cta.ai{background:var(--c-ai)}.cta.heritage{background:#a37a0d}
+.cta.partner{background:var(--c-partner)}.cta.app{background:var(--c-app)}
+.note{font-size:11px;color:var(--text-3);line-height:1.55;padding:2px 2px 10px}
+.demo{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.8px;color:#92400e;background:#fef3c7;
+  border:1px solid #fde68a;border-radius:5px;padding:2px 6px}
+.legend{display:flex;flex-wrap:wrap;gap:9px;padding:12px 14px;background:var(--surface-2);border-radius:10px;margin-top:4px}
+.legend div{font-size:10.5px;font-weight:600;color:var(--text-2);display:flex;align-items:center;gap:5px}
+.legend i{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.hidden{display:none}
+
+/* ── explainer column ─────────────────────────────────────── */
+.panel{background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:18px;overflow:hidden}
+.panel > h3{font-size:14px;font-weight:800;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface-2);
+  display:flex;align-items:center;gap:9px}
+.panel > h3 .sq{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+.panel .in{padding:16px 18px}
+.panel p{font-size:13.5px;color:var(--text-2);margin-bottom:11px;line-height:1.6}
+.panel p:last-child{margin-bottom:0}
+.panel p b{color:var(--text)}
+.verdict{background:#052e16;color:#dcfce7;border-radius:var(--r);padding:18px 20px;margin-bottom:18px;box-shadow:var(--sh)}
+.verdict h3{font-size:17px;font-weight:800;margin-bottom:8px;color:#fff}
+.verdict p{font-size:13.5px;line-height:1.6;color:rgba(220,252,231,.85)}
+.verdict p b{color:#fff}
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;padding:16px 18px}
+.fbox{flex:1 1 120px;border-radius:10px;padding:11px 12px;color:#fff;min-width:120px}
+.fbox b{display:block;font-size:12.5px;font-weight:800;margin-bottom:3px}
+.fbox span{font-size:10.5px;opacity:.85;line-height:1.4;display:block}
+.farrow{flex:0 0 26px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:17px;font-weight:700}
+table.build{width:100%;border-collapse:collapse;font-size:12.5px}
+table.build th{text-align:left;font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-3);
+  padding:9px 18px;border-bottom:1px solid var(--border);font-weight:800}
+table.build td{padding:9px 18px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text-2)}
+table.build tr:last-child td{border-bottom:0}
+table.build td.s{width:1%;white-space:nowrap}
+table.build td b{color:var(--text);font-weight:700}
+table.build td code{font-size:11px;background:var(--surface-2);padding:1px 5px;border-radius:4px;color:var(--text-3)}
+.pillst{font-size:9.5px;font-weight:800;letter-spacing:.7px;padding:3px 8px;border-radius:20px;color:#fff;white-space:nowrap}
+.pillst.have{background:var(--ok)}.pillst.wire{background:var(--warn)}.pillst.newx{background:var(--new)}
+.rule{font-size:12.5px;padding:11px 18px;border-bottom:1px solid var(--border);color:var(--text-2);display:flex;gap:10px}
+.rule:last-child{border-bottom:0}
+.rule .k{flex:0 0 6px;border-radius:3px;align-self:stretch}
+.rule b{color:var(--text)}
+.foot{max-width:1280px;margin:0 auto;padding:0 20px 40px;font-size:11.5px;color:var(--text-3);line-height:1.6}
+</style>
+</head>
+<body>
+
+<div class="pagehead">
+  <div class="eyebrow">MarketSquare · Adventures · interface concept</div>
+  <h1>The Porthole — one question in front of the whole app</h1>
+  <p>A working prototype of David's idea: the complex app stays exactly as it is, and a single round window with one
+     question sits in front of it. Ask in your own words, answer up to four short questions, and land on something real —
+     a journey laid out in legs, a guided listing, a free heritage read, or an introduction. Type a real sentence below and it will branch.</p>
+  <div class="stamp">
+    <span>Built 9 Sep 2026</span><span>Real journey data — journeys/cape_cairo.json</span>
+    <span>Real photos — assets/journey/</span><span>Prototype, not deployed</span>
+  </div>
+</div>
+
+<div class="wrap">
+<!-- ══════════════ THE PHONE ══════════════ -->
+<div class="col-phone">
+ <div class="phone">
+  <div class="ph-head">
+    <div class="ph-logo">◫ TrustSquare</div>
+    <div class="ph-chip" onclick="restart()">↺ Start again</div>
+  </div>
+  <div class="ph-body">
+
+    <!-- STAGE 0 — the porthole + the one question -->
+    <div id="s0">
+      <div class="porthole-stage">
+        <div class="porthole" id="ph">
+          <div class="vig"></div>
+          <div class="cap" id="phcap"></div>
+          <div class="dotrow" id="phdots"></div>
+        </div>
+      </div>
+      <div class="askbox">
+        <div class="ask-lead">Adventures</div>
+        <div class="ask-q">What would you like&hellip;</div>
+        <div class="ask-in">
+          <input id="q0" placeholder="Say it in your own words" autocomplete="off"
+                 onkeydown="if(event.key==='Enter')go()">
+          <button onclick="go()" title="Ask">→</button>
+        </div>
+        <div class="chips" id="seeds"></div>
+        <div class="hint">One window. Everything else in the app stays where it is —
+          this only decides where you land.</div>
+      </div>
+    </div>
+
+    <!-- STAGE 1 — the funnel -->
+    <div id="s1" class="hidden">
+      <div class="step">
+        <div class="stepbar" id="bar"></div>
+        <div class="read" id="read"></div>
+        <div class="steplabel" id="qlabel">Question 1</div>
+        <div class="ask-q" id="qtext" style="font-size:18px"></div>
+        <div class="chips" id="qchips"></div>
+        <div class="ask-in" id="qfreewrap" style="margin-top:12px">
+          <input id="qfree" placeholder="or type your own" autocomplete="off"
+                 onkeydown="if(event.key==='Enter')answerFree()">
+          <button onclick="answerFree()">→</button>
+        </div>
+        <div class="backlink" onclick="restart()">← ask something else</div>
+      </div>
+    </div>
+
+    <!-- STAGE 2 — the result -->
+    <div id="s2" class="hidden"><div class="res" id="out"></div></div>
+
+  </div>
+ </div>
+ <div class="note" style="width:430px;max-width:100%;padding-top:10px">
+   Photos are the real AI stills already on disk from the twelve built journeys. If a picture does not appear,
+   the file is being opened from a folder that is not next to <code>MarketSquare/assets/</code> — the layout still works.
+ </div>
+</div>
+
+<!-- ══════════════ THE ANSWER ══════════════ -->
+<div class="col-note">
+
+  <div class="verdict">
+    <h3>Yes — and most of it is already built.</h3>
+    <p>The window itself is the cheap part; you are looking at it working. The real work is the <b>router</b> — turning
+       one free sentence into one of a handful of destinations — and making sure every destination lands on something real
+       instead of a dead end. <b>Nine of the twelve landing points already exist on your disk.</b> The honest new work is
+       one server call for sentences outside the known set, and a cap on what that call may cost.</p>
+  </div>
+
+  <div class="panel">
+    <h3><span class="sq" style="background:var(--c-route)"></span>How it fits together</h3>
+    <div class="flow">
+      <div class="fbox" style="background:var(--navy)"><b>The Porthole</b><span>One picture. One question. Up to four follow-ups.</span></div>
+      <div class="farrow">→</div>
+      <div class="fbox" style="background:var(--c-route)"><b>The router</b><span>Reads the sentence, picks the lane, keeps the answers.</span></div>
+      <div class="farrow">→</div>
+      <div class="fbox" style="background:var(--c-app)"><b>The app you already have</b><span>Journeys, adverts, heritage, guided listing, Tuppence.</span></div>
+    </div>
+    <div class="in" style="padding-top:0">
+      <p>The red block in your picture does not move. The porthole is a <b>doorway in front of it</b>, not a replacement —
+         every outcome ends by handing the person into a screen the app already has.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3><span class="sq" style="background:var(--ok)"></span>What it needs — measured against what is on disk</h3>
+    <table class="build">
+      <tr><th>Piece</th><th>Where it is</th><th class="s">State</th></tr>
+      <tr><td><b>Journey data model</b><br>legs, stops, food, viewpoints, overnights</td>
+          <td><code>journeys/cape_cairo.json</code> + 11 more</td><td class="s"><span class="pillst have">HAVE</span></td></tr>
+      <tr><td><b>Rendered leg maps</b><br>the maps in your picture</td>
+          <td><code>adventures_c2c_map.html</code> &amp; 11 siblings</td><td class="s"><span class="pillst have">HAVE</span></td></tr>
+      <tr><td><b>Journey renderer</b><br>data in, page out</td>
+          <td><code>journey_render.py</code></td><td class="s"><span class="pillst have">HAVE</span></td></tr>
+      <tr><td><b>The itinerary card</b><br>legs, titles, distances</td>
+          <td>built by the renderer, shown left</td><td class="s"><span class="pillst have">HAVE</span></td></tr>
+      <tr><td><b>Adventure photo library</b><br>12 journeys of stills</td>
+          <td><code>assets/journey/</code></td><td class="s"><span class="pillst have">HAVE</span></td></tr>
+      <tr><td><b>Guided listing</b><br>photo &rarr; draft advert &rarr; publish</td>
+          <td>the guided flow in <code>ms.js</code></td><td class="s"><span class="pillst have">HAVE</span></td></tr>
+      <tr><td><b>Advert publish flow</b></td>
+          <td>the sell wizard in <code>ms.js</code></td><td class="s"><span class="pillst have">HAVE</span></td></tr>
+      <tr><td><b>Heritage layer</b><br>free pre-information</td>
+          <td>heritage list inside each journey file</td><td class="s"><span class="pillst have">HAVE</span></td></tr>
+      <tr><td><b>Tuppence prices</b><br>Free / 2T / 3T / 5T, shown before you confirm</td>
+          <td>pricing canon, already in the terms</td><td class="s"><span class="pillst have">HAVE</span></td></tr>
+      <tr><td><b>The porthole screen</b><br>rotating picture, one question</td>
+          <td>this file — a day to fold into the app</td><td class="s"><span class="pillst wire">WIRE UP</span></td></tr>
+      <tr><td><b>The router</b><br>sentence &rarr; lane &rarr; questions</td>
+          <td>one function; eight lanes cover the examples you listed</td><td class="s"><span class="pillst wire">WIRE UP</span></td></tr>
+      <tr><td><b>Answers &rarr; journey</b><br>picking legs by time, interest and budget</td>
+          <td>working left — reads the real leg data</td><td class="s"><span class="pillst wire">WIRE UP</span></td></tr>
+      <tr><td><b>Free-text outside the known set</b><br>"a hot spring in Iceland in November"</td>
+          <td>needs a server-side AI call</td><td class="s"><span class="pillst newx">NEW</span></td></tr>
+      <tr><td><b>Composing a journey we do not have</b><br>a 13th route, written on the spot</td>
+          <td>renderer exists; the writing does not</td><td class="s"><span class="pillst newx">NEW</span></td></tr>
+      <tr><td><b>A hard cap on that AI call</b><br>so a busy day cannot surprise you</td>
+          <td>fixed price per use, capped monthly</td><td class="s"><span class="pillst newx">NEW</span></td></tr>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h3><span class="sq" style="background:var(--c-partner)"></span>The rules it must not break</h3>
+    <div class="rule"><span class="k" style="background:var(--c-route)"></span>
+      <span><b>No money for the trip passes through us.</b> The porthole ends by handing the plan to a travel agency.
+      That handover is the introduction — it is the whole business, not a step towards booking.</span></div>
+    <div class="rule"><span class="k" style="background:var(--c-ai)"></span>
+      <span><b>Fixed prices only.</b> The dossier is 5 Tuppence whether the trip costs R20 000 or R2 million,
+      and the price is on the button before anyone presses it.</span></div>
+    <div class="rule"><span class="k" style="background:var(--c-heritage)"></span>
+      <span><b>Pre-information stays free.</b> Heritage, routes, distances and what a thing roughly costs are free to read.
+      Only the AI work that produces something is priced.</span></div>
+    <div class="rule"><span class="k" style="background:var(--c-stay)"></span>
+      <span><b>Selling stays free to try.</b> Listing a B&amp;B or a tour costs nothing; the Tuppence is paid when
+      somebody actually asks to be introduced.</span></div>
+    <div class="rule"><span class="k" style="background:var(--c-app)"></span>
+      <span><b>The app does not shrink.</b> Anyone who wants the categories, the filters and the browse grid
+      taps once and is back in them.</span></div>
+  </div>
+
+  <div class="panel">
+    <h3><span class="sq" style="background:var(--navy)"></span>The one thing worth deciding early</h3>
+    <div class="in">
+      <p><b>How far the porthole may go before it hands over.</b> Everything else follows from it. Two honest options:</p>
+      <p><b>Narrow.</b> The porthole only routes — it reads the sentence and drops the person into an existing screen with
+         the answers already filled in. Cheap, fast, no AI cost per use, and it can ship in days. It cannot answer a
+         sentence about a place we have not built.</p>
+      <p><b>Wide.</b> The porthole also composes — it writes a route we do not have, on the spot. That is the version that
+         answers anything, and it is the one that costs money per question and needs the cap.</p>
+      <p>My call as it stands: <b>build narrow first</b>, because the narrow version already covers every example you
+         listed except "anything" — a train trip, a B&amp;B, a tour, a heritage site, shark diving, a holiday — and it
+         proves whether people actually use the window before you pay per question for the version that answers anything.
+         Wide is a switch you flip later on the same screen, not a rebuild.</p>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="foot">
+  Prototype — nothing here is deployed and nothing was changed in the live app. Journey legs, distances, stops and
+  heritage sites are read from the real Cape&nbsp;to&nbsp;Cairo journey file. Providers, prices in rand and match counts on the
+  introduction cards are illustrative and marked as samples. Colour code is the same one the journey maps already use:
+  blue&nbsp;=&nbsp;route, gold&nbsp;=&nbsp;heritage and free pre-information, green&nbsp;=&nbsp;stays and introductions,
+  purple&nbsp;=&nbsp;partner link-out, amber&nbsp;=&nbsp;priced AI, grey&nbsp;=&nbsp;the main app.
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   THE PORTHOLE — working prototype
+   Journey legs, stops and heritage below are read verbatim from
+   MarketSquare/journeys/cape_cairo.json. Nothing invented.
+   ══════════════════════════════════════════════════════════════ */
+const LEGS=[{"n":1,"title":"Table Mountain to the Karoo","dist":"1 100 km","time":"18 hr","color":"#C8873A","sum":"Out of the Cape through the winelands and up onto a high, dry plateau of endless sky.","stops":[{"t":"start","i":"🚩","n":"Cape Town · the platform","b":"Table Mountain filling the window, brass, teak and a station clock — the journey starts formally."},{"t":"food","i":"🍮","n":"Cape Malay farewell lunch","b":"Spiced mince baked under savoury custard with yellow rice, then syrup-soaked plaited doughnuts with coconut."},{"t":"view","i":"🍇","n":"Through the winelands","b":"Whitewashed gables, vineyards in rows, and a wall of blue mountains the train has to find a way through."},{"t":"sight","i":"🚂","n":"Victorian halt on the plateau","b":"A perfectly preserved railway village on the empty Karoo — gaslamps, a double-storey verandah, one street."},{"t":"over","i":"🛏️","n":"First night in the sleeper","b":"Berth made up while you dine; the rhythm of rail joints and a lit lamp somewhere far out on the plain."},{"t":"food","i":"🍞","n":"Roosterkoek at the halt","b":"Griddle bread off the coals at a Victorian siding — split, buttered and eaten hot with apricot jam."}]},{"n":2,"title":"Karoo to the diamond city","dist":"700 km","time":"12 hr","color":"#3f9d78","sum":"Across the great dry interior to the city built beside the largest hand-dug hole on earth.","stops":[{"t":"start","i":"🚂","n":"Dawn on the Karoo","b":"Pink light on flat-topped hills, windmills, sheep, and not one other vehicle."},{"t":"food","i":"🐑","n":"Karoo lamb, slow-roasted","b":"Lamb raised on wild aromatic scrub, so the meat arrives pre-seasoned — served pink with pumpkin fritters."},{"t":"sight","i":"💎","n":"The Big Hole","b":"A 200 m crater dug by hand by fifty thousand men with picks and buckets, now filled with green water."},{"t":"view","i":"🌾","n":"Highveld grassland","b":"Grass to the horizon in every direction, thunderheads stacking up in the afternoon."},{"t":"over","i":"🛏️","n":"Second night, rolling north","b":"Dinner in the dining car under lamplight, then the long climb onto the highveld in the dark."},{"t":"food","i":"🍲","n":"Potjie under the stars","b":"Lamb, potatoes and sweet wine simmered for hours in a three-legged pot beside the line, under a sky thick with stars."}]},{"n":3,"title":"Highveld to the great falls","dist":"1 400 km","time":"24 hr","color":"#3b5bff","sum":"North through the jacaranda capital, over the border, to the largest curtain of falling water on earth.","stops":[{"t":"start","i":"🌳","n":"Jacaranda capital","b":"Purple streets in spring, union buildings on the ridge, and the last big-city platform for a while."},{"t":"food","i":"🥩","n":"Biltong & braai on board","b":"Air-dried spiced beef sliced thin as a snack, then flame-grilled steak and coiled farm sausage for dinner."},{"t":"sight","i":"💦","n":"The smoke that thunders","b":"A kilometre-wide curtain dropping 100 m into a gorge; the spray column is visible 50 km away."},{"t":"view","i":"🌈","n":"The bridge over the gorge","b":"A 1905 steel arch spanning the chasm — the original dream of this whole railway, and the point it stalled."},{"t":"over","i":"🛏️","n":"Colonial hotel by the falls","b":"Verandahs, ceiling fans, high tea, warthogs on the lawn and permanent thunder in the background."},{"t":"food","i":"🐟","n":"Zambezi bream by the river","b":"Whole bream off the coals at the water's edge, lemon-buttered, with the spray of the falls drifting over."}]},{"n":4,"title":"Across the plateau to the ocean","dist":"1 900 km","time":"46 hr","color":"#9b59b6","sum":"The long haul east — miombo woodland, escarpment and a game park the line runs straight through. Journey's end for the rails: no railway runs north of Dar es Salaam.","stops":[{"t":"start","i":"🚂","n":"Onto the long line","b":"The famous cross-continental service: two nights, one train, minimal fuss."},{"t":"view","i":"🦒","n":"Game from the window","b":"The line runs through a national park — giraffe, elephant and buffalo from the dining-car window at walking pace."},{"t":"food","i":"🔥","n":"Grilled meat & maize","b":"Charcoal-grilled goat and beef with stiff maize porridge and a fierce tomato-chilli relish, eaten with hands."},{"t":"sight","i":"🌶️","n":"Spice port on the ocean","b":"Indian Ocean harbour thick with the smell of clove, cardamom and cinnamon from the islands offshore."},{"t":"over","i":"🛏️","n":"Harbour-side rooms","b":"Carved doors, a courtyard, call to prayer at dusk and dhows on the water at first light."},{"t":"food","i":"🫖","n":"Chai na mandazi at dawn","b":"Sweet, gingery tea and warm fried dough as the miombo woodland slides past — Tanzania's answer to breakfast in bed."}]},{"n":5,"title":"Where the rails end — by air","dist":"5 500 km","time":"6 flights","color":"#e0574a","sum":"The railway stops at the Indian Ocean, so the journey grows wings — over the crater highlands, the Great Migration, a gorilla forest and the roof of Ethiopia, landing back on the Nile at Aswan. Sudan is overflown, as on every real departure.","stops":[{"t":"view","i":"🌋","n":"Ngorongoro Crater rim","b":"Sundowners on the lip of the world's largest unbroken caldera, the game grazing two thousand feet below."},{"t":"sight","i":"🦓","n":"Serengeti · the Great Migration","b":"A million wildebeest and zebra on the move — often called the greatest show on earth."},{"t":"sight","i":"🦍","n":"Gorillas of the Volcanoes","b":"One quiet hour with a mountain gorilla family in the bamboo forests of Rwanda."},{"t":"food","i":"🫓","n":"Injera in Addis Ababa","b":"Sour flatbread piled with spiced stews and lentils, eaten by hand from one shared platter."},{"t":"food","i":"☕","n":"Coffee, born in Ethiopia","b":"The ceremony: green beans roasted at your feet, pounded, brewed three times — coffee in the country that gave it to the world."},{"t":"sight","i":"⛪","n":"Lalibela, carved from rock","b":"Eleven medieval churches chiselled straight down into the mountain, still in daily use."},{"t":"sight","i":"🏛️","n":"Abu Simbel colossi","b":"Ramses II at twenty metres, rescued stone by stone above Lake Nasser."}]},{"n":6,"title":"Aswan to the Pyramids","dist":"900 km","time":"4 days","color":"#0e7490","sum":"A slow cruise between temple banks from Aswan to Luxor, then the night sleeper into Cairo and the oldest tourist attraction on earth.","stops":[{"t":"start","i":"🛳️","n":"Casting off at Aswan","b":"Three slow nights on the river — dinner on deck as the palms slide by and the banks turn copper."},{"t":"sight","i":"🏛️","n":"Temple city at dawn","b":"Avenues of stone rams, hypostyle halls of vast painted columns, cut sharp by early light."},{"t":"food","i":"🍚","n":"Rice, lentils & fried onion","b":"The great street dish — rice, lentils and macaroni under spiced tomato sauce, vinegar and crisp onions."},{"t":"view","i":"🌾","n":"The green Nile valley","b":"A ribbon of intense green a few kilometres wide with hard desert on both edges — the whole country in one view."},{"t":"food","i":"🍵","n":"Mint tea in sight of the tombs","b":"Sweet mint tea on a rooftop with the three pyramids filling the skyline behind the cups."},{"t":"over","i":"🚂","n":"The night sleeper to Cairo","b":"Boarding at dusk with the river turning copper — dinner served in the cabin as the palms slide by."},{"t":"finish","i":"🏁","n":"Journey's end · Cairo","b":"Ten thousand kilometres, one continent, and a last look back down the line from the Giza plateau."}]}];
+const HERITAGE=[{"n":"Robben Island (UNESCO)","b":"The island prison where Nelson Mandela spent 18 years."},{"n":"Victoria Falls (UNESCO)","b":"Mosi-oa-Tunya — the smoke that thunders."},{"n":"Abu Simbel (UNESCO)","b":"Ramses II's rock temples, moved block by block above the rising lake."},{"n":"Karnak & Luxor (UNESCO)","b":"The greatest temple complex of the ancient world."},{"n":"Pyramids of Giza (UNESCO)","b":"The last surviving wonder of the ancient world, at the end of the line."}];
+/* which leg each heritage site sits on */
+const HER_LEG=[1,3,5,6,6];
+
+/* Where the app folder sits, relative to wherever this file was opened from.
+   Tried in order; the first picture that loads settles it for the links too. */
+const CANDS=['','../MarketSquare/','../../MarketSquare/','../Projects/MarketSquare/'];
+let BASE = location.pathname.replace(/\\/g,'/').indexOf('/MarketSquare/')>-1 ? '' : '../MarketSquare/';
+let baseFixed=false;
+
+/* ── the rotating window ─────────────────────────────────── */
+const PHOTOS=[
+ ['c2c/l1_start.jpg',      'Cape Town · the platform'],
+ ['ken/d4_view.jpg',       'The Rift, from the escarpment'],
+ ['c2c/l5_migration.jpg',  'The Great Migration'],
+ ['moz/d2_view.jpg',       'The Indian Ocean coast'],
+ ['nam/d3_view.jpg',       'Desert, all the way to the horizon'],
+ ['c2c/l5_gorilla.jpg',    'Gorillas of the Volcanoes'],
+ ['bwa/d3_sight.jpg',      'The delta at first light'],
+ ['c2c/l6_cruise.jpg',     'Down the Nile, slowly'],
+ ['gbrail/l2_view.jpg',    'A different country, same window'],
+ ['bav/d2_castle.jpg',     'Somewhere with a castle'],
+ ['aurail/l2_view.jpg',    'Two days of nothing but sky'],
+ ['usrail/l3_view.jpg',    'Across a continent by rail']
+];
+let pi=0, phTimer=null;
+function buildPorthole(){
+  const ph=document.getElementById('ph'), dots=document.getElementById('phdots');
+  PHOTOS.forEach((p,i)=>{
+    const img=new Image();
+    img.dataset.c=Math.max(0,CANDS.indexOf(BASE));
+    img.dataset.p=p[0];
+    img.onerror=function(){
+      const n=parseInt(this.dataset.c,10)+1;
+      if(n<CANDS.length){ this.dataset.c=n; this.src=CANDS[n]+'assets/journey/'+this.dataset.p; }
+    };
+    img.onload=function(){
+      if(!baseFixed){ baseFixed=true; BASE=CANDS[parseInt(this.dataset.c,10)]; }
+    };
+    img.src=CANDS[img.dataset.c]+'assets/journey/'+p[0];
+    img.alt=p[1]; if(i===0)img.className='on';
+    ph.insertBefore(img, ph.firstChild);
+    const d=document.createElement('i'); if(i===0)d.className='on'; dots.appendChild(d);
+  });
+  document.getElementById('phcap').textContent=PHOTOS[0][1];
+  phTimer=setInterval(nextPhoto,4800);
+}
+function nextPhoto(){
+  const imgs=document.querySelectorAll('#ph img'), dots=document.querySelectorAll('#phdots i');
+  imgs[pi].classList.remove('on'); dots[pi].classList.remove('on');
+  pi=(pi+1)%PHOTOS.length;
+  imgs[pi].classList.add('on'); dots[pi].classList.add('on');
+  const c=document.getElementById('phcap');
+  c.style.opacity=0; setTimeout(()=>{c.textContent=PHOTOS[pi][1];c.style.opacity=1;},420);
+}
+
+/* ── the seed chips ──────────────────────────────────────── */
+const SEEDS=['I want to go on a train journey in Africa','I want to list my B&B',
+ 'I sell guided tours','Take me somewhere with real history','I want to go shark cage diving',
+ 'I need to take leave and I have no idea where'];
+
+/* ══ THE ROUTER ══════════════════════════════════════════════
+   One sentence in, one lane out. Eight lanes cover every example
+   David listed. Anything it cannot place asks one question first
+   rather than guessing.                                         */
+const LANES={
+ journey:{
+   kw:['train','rail','journey','trip','travel','africa','cape','cairo','holiday','leave','vacation','tour of','see the world','get away'],
+   pill:'THE JOURNEY', colour:'var(--c-route)',
+   qs:[
+    {l:'How long have you got?',           k:'time',   c:['A long weekend','About two weeks','A month or more','Not fixed yet']},
+    {l:'What do you most want out of it?', k:'want',   c:['The scenery','Wildlife','History &amp; heritage','The food','To be looked after']},
+    {l:'Who is travelling?',               k:'who',    c:['Just me','Two of us','Family','A group of friends']},
+    {l:'And roughly what per person?',     k:'budget', c:['Keep it modest','Mid-range','Once in a lifetime','Show me the range first']}
+   ]},
+ stay:{
+   kw:['list','b&b','bnb','bed and breakfast','guesthouse','guest house','my place','my house','rent out','host','lodge','airbnb','rooms','accommodation','stay'],
+   pill:'LIST A PLACE TO STAY', colour:'var(--c-stay)',
+   qs:[
+    {l:'What are you listing?',       k:'kind',  c:['A B&amp;B or guesthouse','Self-catering','A single room','A whole lodge']},
+    {l:'Where is it?',                k:'where', c:['Pretoria','Cape Town','Somewhere else in South Africa','Outside South Africa']},
+    {l:'How many photos do you have?',k:'pics',  c:['A few on my phone','A full set','None yet']}
+   ]},
+ tour:{
+   kw:['sell','sell a tour','guided tour','tours','operator','my tour','i guide','take people','my business','safari company','charter','excursion'],
+   pill:'SELL AN EXPERIENCE', colour:'var(--c-partner)',
+   qs:[
+    {l:'What do you run?',                  k:'kind', c:['Tours','Safari','Diving','Adventure','Cultural']},
+    {l:'How long is it?',                   k:'len',  c:['A few hours','A full day','Several days']},
+    {l:'Is the route written down anywhere?',k:'doc', c:['Yes, fully','Roughly','No — help me write it']}
+   ]},
+ heritage:{
+   kw:['heritage','history','historic','unesco','museum','ruins','culture','cultural','monument','ancient','battlefield'],
+   pill:'HERITAGE · FREE TO READ', colour:'var(--c-heritage)',
+   qs:[
+    {l:'Whereabouts?',        k:'where', c:['South Africa','Southern Africa','Anywhere in Africa']},
+    {l:'Reading, or going?',  k:'mode',  c:['Just reading for now','Part of a trip I am planning']}
+   ]},
+ experience:{
+   kw:['shark','dive','diving','cage','balloon','skydive','bungee','once in a lifetime','bucket','adrenaline','abseil','kite','surf','climb'],
+   pill:'ONE EXPERIENCE', colour:'var(--c-stay)',
+   qs:[
+    {l:'Which one?',       k:'kind', c:['Shark cage diving','Hot-air balloon','Scuba','Something else']},
+    {l:'When?',            k:'when', c:['This month','In the next six months','Just dreaming']},
+    {l:'Where are you?',   k:'from', c:['Pretoria','Cape Town','Somewhere else']}
+   ]},
+ unknown:{
+   kw:[], pill:'LET ME PLACE THAT', colour:'var(--c-app)',
+   qs:[
+    {l:'Which of these is closest?', k:'lane',
+     c:['I want to go somewhere','I want to do something','I want to sell or list something','I am just looking']}
+   ]}
+};
+function route(text){
+  const t=(text||'').toLowerCase();
+  let best='unknown', hits=0;
+  for(const k in LANES){
+    let n=0; LANES[k].kw.forEach(w=>{ if(t.indexOf(w)>-1) n+= w.length>6?2:1; });
+    if(n>hits){hits=n;best=k;}
+  }
+  return hits?best:'unknown';
+}
+
+/* ── state ───────────────────────────────────────────────── */
+let S={text:'',lane:'unknown',ans:{},qi:0};
+const $=id=>document.getElementById(id);
+const show=id=>{['s0','s1','s2'].forEach(x=>$(x).classList.toggle('hidden',x!==id));};
+const strip=h=>h.replace(/&amp;/g,'&').replace(/<[^>]+>/g,'');
+
+function go(txt){
+  const t=(typeof txt==='string'?txt:$('q0').value).trim();
+  if(!t) return;
+  S={text:t,lane:route(t),ans:{},qi:0};
+  clearInterval(phTimer);
+  show('s1'); ask(0);
+}
+function ask(i){
+  const L=LANES[S.lane]; S.qi=i;
+  const bar=$('bar'); bar.innerHTML='';
+  L.qs.forEach((q,n)=>{const e=document.createElement('i');
+    e.className = n<i?'done':(n===i?'now':''); bar.appendChild(e);});
+  let tags=Object.keys(S.ans).map(k=>'<span class="tag">'+S.ans[k]+'</span>').join('');
+  $('read').innerHTML='<b>&ldquo;'+S.text.replace(/</g,'&lt;')+'&rdquo;</b>'+
+    (tags?'<div class="tagrow">'+tags+'</div>':'');
+  $('qlabel').textContent='Question '+(i+1)+' of '+L.qs.length;
+  $('qtext').innerHTML=L.qs[i].l;
+  const box=$('qchips'); box.innerHTML='';
+  L.qs[i].c.forEach(c=>{
+    const b=document.createElement('button'); b.className='chip'; b.innerHTML=c;
+    b.onclick=()=>pick(strip(c)); box.appendChild(b);
+  });
+  $('qfree').value=''; $('qfree').placeholder = i===0?'or say it your own way':'or type your own';
+}
+function answerFree(){ const v=$('qfree').value.trim(); if(v) pick(v); }
+function pick(v){
+  const L=LANES[S.lane];
+  /* the disambiguating lane re-routes instead of guessing */
+  if(S.lane==='unknown'){
+    const m={'I want to go somewhere':'journey','I want to do something':'experience',
+             'I want to sell or list something':'stay','I am just looking':'journey'};
+    S.lane=m[v]||route(v); S.ans={}; ask(0); return;
+  }
+  S.ans[L.qs[S.qi].k]=v;
+  if(S.qi+1<L.qs.length) ask(S.qi+1); else finish();
+}
+function restart(){ S={text:'',lane:'unknown',ans:{},qi:0}; $('q0').value='';
+  show('s0'); clearInterval(phTimer); phTimer=setInterval(nextPhoto,4800); window.scrollTo(0,0); }
+
+/* ── shared bits ─────────────────────────────────────────── */
+function head(lane,title,sub){
+  const L=LANES[lane];
+  return '<div class="res-pill" style="background:'+L.colour+'">'+L.pill+'</div>'+
+         '<h2>'+title+'</h2><div class="sub">'+sub+'</div>';
+}
+function readback(){
+  const t=Object.keys(S.ans).map(k=>'<span class="tag">'+S.ans[k]+'</span>').join('');
+  return '<div class="read"><b>&ldquo;'+S.text.replace(/</g,'&lt;')+'&rdquo;</b>'+
+         (t?'<div class="tagrow">'+t+'</div>':'')+'</div>';
+}
+function cta(cls,title,sub,price,href){
+  const tag=href?'a':'button', extra=href?' href="'+href+'" target="_blank"':'';
+  return '<'+tag+' class="cta '+cls+'"'+extra+'><div class="ct"><span>'+title+'</span>'+
+    (price?'<span class="price">'+price+'</span>':'')+'</div><div class="cs">'+sub+'</div></'+tag+'>';
+}
+const backCta = cta('app','← Back to the full app','Categories, filters, browse — everything exactly where it was.','');
+const LEGEND='<div class="legend">'+
+ '<div><i style="background:var(--c-route)"></i>Route</div>'+
+ '<div><i style="background:var(--c-heritage)"></i>Free pre-info</div>'+
+ '<div><i style="background:var(--c-stay)"></i>Introduction</div>'+
+ '<div><i style="background:var(--c-partner)"></i>Partner link-out</div>'+
+ '<div><i style="background:var(--c-ai)"></i>Priced AI</div>'+
+ '<div><i style="background:var(--c-app)"></i>Main app</div></div>';
+
+function finish(){
+  const f={journey:outJourney,stay:outStay,tour:outTour,heritage:outHeritage,experience:outExperience};
+  $('out').innerHTML=(f[S.lane]||outJourney)()+LEGEND;
+  show('s2'); $('out').scrollIntoView({block:'start',behavior:'smooth'});
+}
+
+/* ══ OUTCOME · a journey, composed from the real leg data ══ */
+function outJourney(){
+  const t=S.ans.time||'', n = /weekend/i.test(t)?2 : /two weeks/i.test(t)?4 : 6;
+  const legs=LEGS.slice(0,n);
+  const km=legs.reduce((a,l)=>a+parseInt(l.dist.replace(/[^0-9]/g,''),10),0);
+  const kmTxt=km.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  const title = n===2?'Cape Town to the diamond city'
+              : n===4?'Cape Town to the Indian Ocean, all of it by rail'
+              : 'Cape to Cairo — rails, wings and the Nile';
+  const sub   = n===2?'Two legs. Out of the Cape, over the Karoo, to the city beside the big hole.'
+              : n===4?'Four legs on the rails, ending where the railway itself ends at the ocean.'
+              : 'Six legs, one continent. The train to the Indian Ocean, flights where no rails run, a cruise down the Nile.';
+
+  let bars='<div class="legstrip">', nums='<div class="legnums">';
+  legs.forEach(l=>{ bars+='<span style="background:'+l.color+'"></span>';
+    nums+='<span>LEG '+l.n+'</span>'; });
+  bars+='</div>'; nums+='</div>';
+
+  let it='<div class="card"><div class="card-h"><div class="t">🗒 The itinerary</div><div class="n">'+n+' legs · '+kmTxt+' km</div></div>';
+  legs.forEach(l=>{ it+='<div class="leg"><div class="lb" style="color:'+l.color+'">LEG '+l.n+'</div>'+
+    '<div class="lt"><b>'+l.title+'</b><p>'+l.sum+'</p></div><div class="ld">'+l.dist+'</div></div>'; });
+  it+='</div>';
+
+  /* what you said you wanted, pulled from the real stops on those legs */
+  const w=(S.ans.want||'').toLowerCase();
+  let picks=[], label='On the way';
+  const all=[]; legs.forEach(l=>l.stops.forEach(s=>all.push(Object.assign({leg:l.n,col:l.color},s))));
+  if(/food/.test(w)){ label='Eating on the line'; picks=all.filter(s=>s.t==='food'); }
+  else if(/wildlife/.test(w)){ label='Wildlife on the way';
+    picks=all.filter(s=>/game|migration|gorilla|delta|crater|serengeti|park/i.test(s.n+s.b)); }
+  else if(/history|heritage/.test(w)){ label='Heritage on the route';
+    picks=HERITAGE.map((h,i)=>({n:h.n,b:h.b,i:'🏛',leg:HER_LEG[i],col:(LEGS[HER_LEG[i]-1]||LEGS[0]).color}))
+                  .filter(h=>h.leg<=n); }
+  else if(/looked after/.test(w)){ label='Where you sleep'; picks=all.filter(s=>s.t==='over'); }
+  else { label='The views you came for'; picks=all.filter(s=>s.t==='view'||s.t==='sight'); }
+  if(!picks.length) picks=all.filter(s=>s.t==='sight');
+  picks=picks.slice(0,5);
+  let hi='<div class="card"><div class="card-h"><div class="t">✦ '+label+'</div>'+
+         '<div class="n">because you said &ldquo;'+(S.ans.want||'—')+'&rdquo;</div></div>';
+  picks.forEach(s=>{ hi+='<div class="hl"><div class="ic">'+(s.i||'•')+'</div><div><b>'+s.n+'</b><br>'+
+    '<span>'+s.b+'</span></div></div>'; });
+  hi+='</div>';
+
+  const b=(S.ans.budget||'').toLowerCase();
+  const bLine = /modest/.test(b)  ? 'You said keep it modest — the same route exists on scheduled trains and guesthouses, at a fraction of the luxury departures.'
+              : /once/.test(b)    ? 'You said once in a lifetime — that is the luxury departure the benchmark below is taken from.'
+              : /mid/.test(b)     ? 'Mid-range sits between the scheduled trains and the luxury departures; the agency prices your version.'
+              : 'Here is the published benchmark to measure any quote against.';
+  let money='<div class="card"><div class="card-h"><div class="t">💰 What it costs</div><div class="n">indicative</div></div>'+
+    '<div class="money"><span>Legs on this plan</span><b>'+n+' of 6 · '+kmTxt+' km</b></div>'+
+    '<div class="money"><span>Travelling</span><b>'+(S.ans.who||'—')+'</b></div>'+
+    '<div class="money"><span>Full-route benchmark</span><b>32 days · from ±US$50 000 pp</b></div>'+
+    '<div class="money"><span>What this page costs you</span><b style="color:var(--c-stay)">Nothing</b></div>'+
+    '</div><div class="note">'+bLine+' The real Cape-to-Cairo luxury departure runs 32 days; the train alone starts near US$16 500. '+
+    'We do not sell the trip and never take your travel money — the agency quotes and books.</div>';
+
+  return head('journey',title,sub)+readback()+bars+nums+it+hi+money+
+    cta('ai','Build the full Expedition Dossier','Day by day, what to book, what it roughly costs, written up and ready to hand over.','5T')+
+    cta('route','Open the leg map','The route drawn out, with every stop, viewpoint and dish on the line.','Free',BASE+'adventures_c2c_map.html')+
+    cta('partner','Hand this to a travel agency','They quote it, they book it, they carry the risk. That handover is the introduction.','The introduction')+
+    backCta+
+    '<div class="note">Price is shown before you confirm and never changes with the value of the trip — 5 Tuppence whether this costs R20 000 or R2 million.</div>';
+}
+
+/* ══ OUTCOME · list a place to stay ═══════════════════════ */
+function outStay(){
+  const kind=S.ans.kind||'your place', where=S.ans.where||'—', pics=S.ans.pics||'—';
+  const ready = /full set/i.test(pics)?3 : /few/i.test(pics)?3 : 4;
+  let known='<div class="card"><div class="card-h"><div class="t">✎ What your advert already knows</div>'+
+    '<div class="n">from four taps</div></div>'+
+    '<div class="money"><span>Category</span><b>Stays · '+kind+'</b></div>'+
+    '<div class="money"><span>Where</span><b>'+where+'</b></div>'+
+    '<div class="money"><span>Photos</span><b>'+pics+'</b></div>'+
+    '<div class="money"><span>Still to answer</span><b>'+ready+' questions</b></div></div>';
+  const photoLine = /none/i.test(pics)
+    ? 'You said you have no photos yet. Take three on your phone — the front, one bedroom, and whatever people actually come for — and the guided listing writes the advert around them.'
+    : 'The guided listing reads your photos, drafts the advert and the description, and you correct anything it got wrong before it goes up.';
+  return head('stay','Let us get it listed','A guesthouse advert is '+ready+' more questions away — the photos do most of the work.')+
+    readback()+known+
+    '<div class="card"><div class="card-h"><div class="t">▸ How the guided listing goes</div><div class="n">already built</div></div>'+
+    '<div class="hl"><div class="ic">1</div><div><b>Your photos go in</b><br><span>'+photoLine+'</span></div></div>'+
+    '<div class="hl"><div class="ic">2</div><div><b>It drafts the advert</b><br><span>Title, description, the things guests ask before they book. You edit anything you do not like.</span></div></div>'+
+    '<div class="hl"><div class="ic">3</div><div><b>You publish</b><br><span>It goes live in Stays for '+where+'. Nothing to pay to be listed.</span></div></div></div>'+
+    cta('stay','Open the guided listing','Carries these four answers straight in — you do not repeat yourself.','Free')+
+    cta('route','See how other stays are written first','The Stays shelf, so you can see what a good advert looks like before you write yours.','Free')+
+    backCta+
+    '<div class="note">Listing costs nothing and stays free. An introduction — a guest asking to be put in touch — costs 1&nbsp;Tuppence. No commission on what you charge them, ever.</div>';
+}
+
+/* ══ OUTCOME · sell an experience ════════════════════════ */
+function outTour(){
+  const kind=S.ans.kind||'your experience', len=S.ans.len||'—', doc=S.ans.doc||'—';
+  const helpWrite=/no|help/i.test(doc);
+  return head('tour','Your tour, laid out the way that one was',
+    'The Cape to Cairo page you were just looking at is a demo. A real operator can claim a page like it and put their own product in it.')+
+    readback()+
+    '<div class="card"><div class="card-h"><div class="t">▸ What you would end up with</div><div class="n">'+kind+' · '+len+'</div></div>'+
+    '<div class="hl"><div class="ic">🗺</div><div><b>A page with your route on a map</b><br><span>Legs, stops, what people see and eat on each one — the same layout, your content.</span></div></div>'+
+    '<div class="hl"><div class="ic">🧾</div><div><b>An itinerary people can read before they ask</b><br><span>'+
+      (helpWrite?'You said the route is not written down. Talk it through once and it gets written up from what you say.'
+                :'You already have the route written — it goes straight in.')+'</span></div></div>'+
+    '<div class="hl"><div class="ic">🤝</div><div><b>An enquiry button that is an introduction</b><br><span>They ask, you are introduced, you take it from there. We never touch the booking or the money.</span></div></div></div>'+
+    cta('partner','Claim a journey page','Take one of the twelve built demo journeys and replace it with your own product.','Free to claim')+
+    cta('stay','List the experience as an advert','The quicker route — photos in, advert drafted, live in Adventures today.','Free')+
+    cta('ai','Have the itinerary written up for you','Your route turned into legs, stops and a readable day-by-day.','5T')+
+    backCta+
+    '<div class="note">You keep your price and your customer. MarketSquare charges for the introduction only — never a percentage of what you sell.</div>';
+}
+
+/* ══ OUTCOME · heritage, free ════════════════════════════ */
+function outHeritage(){
+  const mode=S.ans.mode||'', trip=/trip/i.test(mode);
+  let list='<div class="card"><div class="card-h"><div class="t">🏛 On the Cape-to-Cairo route</div><div class="n">'+HERITAGE.length+' world heritage sites</div></div>';
+  HERITAGE.forEach((h,i)=>{ list+='<div class="hl"><div class="ic">🏛</div><div><b>'+h.n+'</b><br><span>'+h.b+
+    '</span><br><span style="color:'+(LEGS[HER_LEG[i]-1]||LEGS[0]).color+';font-weight:700">Leg '+HER_LEG[i]+'</span></div></div>'; });
+  list+='</div>';
+  return head('heritage','History, free to read',
+    'Heritage is pre-information. It costs nothing here and it never will — reading is not the thing we charge for.')+
+    readback()+list+
+    (trip? cta('route','Build a trip around these','Turn the sites you care about into legs, in order, with the distances between them.','Free')
+         : cta('route','See them on the map','Every site pinned on the route, with what is worth stopping for nearby.','Free',BASE+'adventures_c2c_map.html'))+
+    cta('heritage','Read the rest of the heritage layer','Sites across all twelve built journeys, not only this route.','Free')+
+    cta('ai','Turn this into a proper trip plan','Sites in order, days, distances, where to sleep — written up to hand to an agency.','5T')+
+    backCta+
+    '<div class="note">Free means free — no account, no Tuppence, no gate. It is the part of the app that has to earn trust before anything is charged for.</div>';
+}
+
+/* ══ OUTCOME · one experience, an introduction ═══════════ */
+function outExperience(){
+  const kind=S.ans.kind||'that', when=S.ans.when||'—', from=S.ans.from||'—';
+  const soon=/this month/i.test(when);
+  return head('experience',kind==='Something else'?'Tell me which one and I will find it':kind,
+    soon?'You want it this month — so here is who can actually take you, not a brochure.'
+        :'No rush. Here is who does it, so you know what you are aiming at.')+
+    readback()+
+    '<div class="card"><div class="card-h"><div class="t">◎ Who could take you</div>'+
+      '<div class="n"><span class="demo">SAMPLE</span></div></div>'+
+    '<div class="hl"><div class="ic">🦈</div><div><b>Three operators match</b><br><span>Verified, reviewed, and near enough to '+from+' to be practical.</span></div></div>'+
+    '<div class="hl"><div class="ic">📅</div><div><b>Availability comes from them, not us</b><br><span>We introduce you. They confirm the date, the price and the boat.</span></div></div>'+
+    '<div class="hl"><div class="ic">🪙</div><div><b>One Tuppence to be introduced</b><br><span>You get their details, they get yours. Nothing else passes through us.</span></div></div></div>'+
+    cta('stay','Introduce me','One Tuppence. You see the price before you confirm.','1T')+
+    cta('route','Show me all of them first','The Adventures shelf, filtered to '+kind.toLowerCase()+'.','Free')+
+    cta('ai','Plan a few days around it','Getting there, where to stay, what else is worth doing while you are down there.','3T')+
+    backCta+
+    '<div class="note">Operator names, counts and availability on this card are illustrative in the prototype. The live app reads real verified listings.</div>';
+}
+
+/* ── boot ────────────────────────────────────────────────── */
+(function(){
+  buildPorthole();
+  const box=document.getElementById('seeds');
+  SEEDS.forEach(s=>{ const b=document.createElement('button');
+    b.className='chip ghost'; b.textContent=s; b.onclick=()=>{document.getElementById('q0').value=s; go(s);};
+    box.appendChild(b); });
+})();
+</script>
+</body>
+</html>
