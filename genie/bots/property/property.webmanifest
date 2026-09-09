@@ -1,0 +1,31 @@
+{
+  "_comment": "BOT \u00b7 Find it \u2014 NOT DEPLOYED. One manifest, three icons, same app. Colour is the category hue from BRAND_ASSETS.md, pulled to icon strength; all seven clear CIEDE2000 20.",
+  "name": "TrustSquare Property",
+  "short_name": "Find it",
+  "description": "A house, a flat, a plot \u2014 to buy or to rent. Say what you are looking for.",
+  "start_url": "/?bot=property",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "en-ZA",
+  "theme_color": "#2E86E0",
+  "background_color": "#05080A",
+  "icons": [
+    {
+      "src": "/static/brand/bots/property/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/brand/bots/property/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/brand/bots/property/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

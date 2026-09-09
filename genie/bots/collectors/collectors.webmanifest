@@ -1,0 +1,31 @@
+{
+  "_comment": "BOT \u00b7 Collector \u2014 NOT DEPLOYED. One manifest, three icons, same app. Colour is the category hue from BRAND_ASSETS.md, pulled to icon strength; all seven clear CIEDE2000 20.",
+  "name": "TrustSquare Collector",
+  "short_name": "Collector",
+  "description": "Value it, watch for it, be told the day it is listed.",
+  "start_url": "/?bot=collectors",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "en-ZA",
+  "theme_color": "#C98A2E",
+  "background_color": "#05080A",
+  "icons": [
+    {
+      "src": "/static/brand/bots/collectors/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/brand/bots/collectors/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/brand/bots/collectors/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -78,16 +78,17 @@ details.tbl summary{cursor:pointer;font-size:12px;color:var(--ink-3);padding:11p
 </head>
 <body>
 <div class="head">
-  <div class="eyebrow">MarketSquare · Genie / BOTs · cost model · rev 3</div>
+  <div class="eyebrow">MarketSquare · Genie / BOTs · cost model · rev 4</div>
   <h1>What the Genie actually costs — on David's own model setup</h1>
-  <p>David's design, in his words: a harness installed <b>on the Hetzner server</b>, whose plug-ins are actual
-     API models, with the DeepSeek API as the expensive fallback and every option capped. His three
-     subscriptions are a separate thing — his own bench, not app plumbing. Rev 1 of this page assumed
-     "open source" meant renting a graphics card, and rev 2 assumed the harness lived on his PC and drove the
-     subscriptions. Both were my assumptions and both are gone. What survives is the arithmetic, and it is
-     better on his design than on the lane the app runs today.</p>
+  <p>The harness is now chosen. After his own investigation across many harness courses, David picked
+     <b>DeepSeek Harness</b> — plug and play, no foundation bias, anything that does not work gets replaced,
+     free and MIT. It installs <b>on the Hetzner server</b> and its plug-ins are <b>actual API models</b>. His
+     three subscriptions are a separate thing — his own bench, not app plumbing. Rev 1 of this page assumed
+     "open source" meant renting a graphics card and rev 2 assumed the harness lived on his PC; both were my
+     assumptions and both are gone. The arithmetic survived every correction, and it is better on his design
+     than on the lane the app runs today.</p>
   <div class="stampr">
-    <span>Rev 3 — 9 Sep 2026</span>
+    <span>Rev 4 — harness selected: DeepSeek Harness (MIT)</span>
     <span>Costs from AI_BASELINE.json v2.0 envelopes</span>
     <span>1 Tuppence = US$2 fixed — PRICING_CANON §4</span>
     <span>DeepSeek rates published 31 Jul 2026</span>
@@ -120,7 +121,7 @@ details.tbl summary{cursor:pointer;font-size:12px;color:var(--ink-3);padding:11p
 <div class="panel">
   <h2><span class="sq" style="background:var(--navy)"></span>Where everything actually runs</h2>
   <div class="flow">
-    <div class="fb" style="background:var(--navy)"><b>Hetzner — the harness</b><span>Routing software. Picks a plug-in per job, applies the cap, logs the spend. Holds no model itself.</span></div>
+    <div class="fb" style="background:var(--navy)"><b>Hetzner — DeepSeek Harness</b><span>MIT, micro-kernel, everything a plugin. Picks a model per job by config, not code. Holds no model itself.</span></div>
     <div class="far">→</div>
     <div class="fb" style="background:var(--s2)"><b>The plug-ins — API models</b><span>DeepSeek and the free lanes. This is what answers users, and the only thing with a bill attached.</span></div>
     <div class="far">→</div>
@@ -201,20 +202,28 @@ details.tbl summary{cursor:pointer;font-size:12px;color:var(--ink-3);padding:11p
     price: you picked Scaleway for European hosting, and DeepSeek's own API is not that. The input here is
     sentences people type about their own lives.</span></div>
   <div class="rule"><span class="k" style="background:var(--s1)"></span>
-    <span><b>You already run a harness on that box — n8n.</b> Self-hosted, in Docker, on the same server.
-    Before a second orchestration layer goes on, the question worth asking once is whether the plug-in
-    routing belongs in n8n or beside it. Two schedulers on one small VPS is the kind of thing that is
-    invisible until the day both are busy.</span></div>
+    <span><b>The harness goes behind the seam, not instead of it.</b> The app keeps asking
+    <code>ai_provider</code> for a task tier; DeepSeek Harness becomes one more adapter beside the three
+    already there. That is the whole reason your cap keeps working — one place that meters, one spend log,
+    one price card. A harness metering its own plug-ins would give you three ceilings that cannot see each
+    other, and three lanes each inside their own limit can still total past yours.</span></div>
+  <div class="rule"><span class="k" style="background:var(--s3)"></span>
+    <span><b>Its event log is a free second opinion on cost.</b> The harness keeps an append-only record of
+    every call including token counts. The app's own spend log records the lane it <i>meant</i> to use, which
+    is a known weak spot; the harness records the one that actually answered. Cross-check the two and that
+    gap closes without new code.</span></div>
+  <div class="rule"><span class="k" style="background:var(--warnc)"></span>
+    <span><b>Pin the version.</b> It is at v0.1. Interfaces at that number move, and a harness that updates
+    itself in the live path is a lane change nobody reviewed. Pin it, read the notes, move on purpose.</span></div>
+  <div class="rule"><span class="k" style="background:var(--s2)"></span>
+    <span><b>n8n stays what it is.</b> Workflow automation, in Docker, on the same box. It does not become
+    the model router and the two do not merge — but they do share the CPUs, so the batch queue still wants a
+    quiet window.</span></div>
   <div class="rule"><span class="k" style="background:var(--s2)"></span>
     <span><b>Ahead-of-time work and live requests share the same CPUs.</b> The harness holds no model, so it
     is light — but a queue of a hundred trip write-ups is a hundred outbound calls with retries, on the box
     that is also serving the site. Give the batch queue a lower priority and a window when nobody is
     browsing, and this never becomes a symptom.</span></div>
-  <div class="rule"><span class="k" style="background:var(--s3)"></span>
-    <span><b>The cap belongs in one place, not per plug-in.</b> Capping is your stated condition, and a
-    ceiling set inside each plug-in cannot see the others — three lanes each under their own limit can still
-    add up past yours. The seam already meters every call in one place; the harness should spend through it
-    rather than around it.</span></div>
 </div>
 
 <div class="panel">

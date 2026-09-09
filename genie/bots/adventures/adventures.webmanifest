@@ -1,0 +1,31 @@
+{
+  "_comment": "BOT \u00b7 Go \u2014 NOT DEPLOYED. One manifest, three icons, same app. Colour is the category hue from BRAND_ASSETS.md, pulled to icon strength; all seven clear CIEDE2000 20.",
+  "name": "TrustSquare Adventures",
+  "short_name": "Go",
+  "description": "A trip brief, handed to a real travel agency.",
+  "start_url": "/?bot=adventures",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "en-ZA",
+  "theme_color": "#12A5A5",
+  "background_color": "#05080A",
+  "icons": [
+    {
+      "src": "/static/brand/bots/adventures/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/brand/bots/adventures/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/brand/bots/adventures/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

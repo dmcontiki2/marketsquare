@@ -154,6 +154,7 @@ h1 span{color:var(--jade2)}
   display:flex;align-items:center;justify-content:center;font-size:9px;color:#3d5a4c}
 .rung.on{border-color:#2a5f49;background:rgba(22,169,124,.13)}
 .rung.on .tick{background:var(--jade);border-color:var(--jade);color:#04201e}
+.rung.ghosted{border-style:dashed;background:none;padding:3px 8px;margin-top:-2px}
 .rung small{margin-left:auto;font-size:9px;color:#6d8579}
 .rung.on small{color:var(--jade2)}
 .shots{display:flex;gap:4px;margin-top:11px;overflow-x:auto;scrollbar-width:none}
@@ -166,6 +167,33 @@ h1 span{color:var(--jade2)}
 .rate2{margin-top:10px;padding:9px 10px;border-radius:10px;background:#0d1813;border:1px solid var(--line)}
 .rate2 b{font-size:17px}
 .rate2 small{display:block;font-size:9.5px;color:#6d8579;margin-top:2px}
+
+/* ---------- stranger view ---------- */
+.locked{border:1px solid rgba(224,174,78,.42);background:rgba(224,174,78,.09);border-radius:12px;
+  padding:16px 14px;text-align:center}
+.lockmark{font-size:26px;line-height:1;margin-bottom:8px;filter:grayscale(.2)}
+.locked h3{margin:0 0 6px;font-size:14px;color:#f0cc8a}
+.locked p{margin:0;font-size:11.5px;color:#c6b391;line-height:1.5}
+.whynot{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#0d1813}
+.whynot h4{margin:0 0 7px;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);font-weight:700}
+.whynot p{margin:0 0 8px;font-size:11.5px;color:#bdd3c6;line-height:1.55}
+.whynot p:last-child{margin-bottom:0}
+.whynot .hard{color:var(--jade2);border-left:2px solid var(--jade);padding-left:9px}
+.vouch{margin-top:10px;padding:8px 10px;border-radius:9px;font-size:11.5px;font-weight:700;
+  border:1px solid #2a5f49;background:rgba(22,169,124,.14);color:var(--jade2)}
+.vouch small{float:right;font-weight:600;color:#6d8579;font-size:9.5px;padding-top:2px}
+.tiers{margin-top:12px}
+.tiers h4{margin:0 0 7px;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);font-weight:700}
+.tier{display:flex;gap:8px;align-items:flex-start;font-size:11px;line-height:1.45;
+  padding:6px 9px;border-radius:8px;margin-bottom:4px;border:1px solid #1d3329;background:#0d1813}
+.tier i{width:9px;height:9px;border-radius:3px;flex:0 0 auto;margin-top:3px}
+.tier.dim{opacity:.62}
+.t-pub i{background:var(--jade2)} .t-pub{border-color:#2a5f49}
+.t-int i{background:var(--gold)}  .t-int{border-color:rgba(224,174,78,.4)}
+.t-nev i{background:#41504a}
+.tier span{color:#bdd3c6}
 
 /* ---------- employer view ---------- */
 .emp{flex:1;padding:16px 15px;overflow-y:auto;background:#f6f5f1;color:#1b2420}
@@ -231,7 +259,8 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .ctrls button:hover{border-color:var(--jade)}
 .ctrls button.primary{background:linear-gradient(135deg,var(--jade2),#0d6349);border:0;color:#04201e;font-weight:800}
 .tabs{display:flex;gap:6px;margin-top:10px}
-.tabs button{flex:1;font-size:11.5px;padding:7px 0;border-radius:8px;cursor:pointer;
+.tabs{flex-wrap:wrap}
+.tabs button{flex:1 1 30%;font-size:11px;padding:7px 2px;border-radius:8px;cursor:pointer;
   border:1px solid var(--line);background:#15241d;color:#8fa89b}
 .tabs button.on{border-color:var(--jade);background:rgba(22,169,124,.16);color:var(--jade2);font-weight:800}
 .foot{margin-top:24px;font-size:12px;color:#5c7267;text-align:center}
@@ -247,8 +276,8 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
      (maybe Green) circle with a hotel room being cleaned AI photo (also randomly changed)&hellip; she can
      also on a weekly schedule give her openings for other people needing housekeeping, and her area
      should be clearly visible.&rdquo;</em> Built. Tap the circle, then press
-     <b>Play the whole conversation</b> &mdash; and then <b>Her employer</b>, which is the part of your
-     idea that does the most work.</p>
+     <b>Play the whole conversation</b>, then <b>Her employer</b> &mdash; and then <b>A stranger</b>,
+     which is the vouching gate seen from the other side, before and after somebody confirms her.</p>
 
   <div class="stage">
     <div class="phonecol">
@@ -368,18 +397,31 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
               <div class="rung on" id="r1"><span class="tick">&#10003;</span> Phone number confirmed <small>+8</small></div>
               <div class="rung on" id="r2"><span class="tick">&#10003;</span> Listing complete <small>+30</small></div>
               <div class="rung" id="r3"><span class="tick"></span> Employer confirms her <small>+35</small></div>
+          <div class="rung ghosted" id="r3b"><span class="tick" style="border:0"></span>
+            <span style="font-size:10px;color:#6d8579">their name is never published &mdash; only that it happened</span></div>
               <div class="rung" id="r4"><span class="tick"></span> 3 years with that employer <small>+12</small></div>
               <div class="rung" id="r5"><span class="tick"></span> ID checked <small>+15</small></div>
             </div>
 
             <p class="small" style="margin-top:11px;font-size:11px;line-height:1.5">
-              Until one employer confirms her, only people she has sent her own link to can contact
-              her. That is deliberate &mdash; see the note on the right.</p>
+              Until one employer confirms her, or her ID is checked, only people she has sent her own
+              link to can reach her. Tap <b>A stranger</b> below to see what that looks like from the
+              other side.</p>
           </div>
           <div class="mic">
             <button class="pub ready" id="sendLink">Send my link to Mrs van Wyk</button>
             <div class="state" id="state2">She types one number. Nothing is really sent &mdash; this is a picture.</div>
           </div>
+        </div>
+
+        <!-- ===== screen 4 : what a stranger sees ===== -->
+        <div class="bot" id="scStranger" style="display:none">
+          <div class="brandbar">
+            <div class="mark">TS</div>
+            <div class="bname">TrustSquare<small>Browse</small></div>
+            <div class="link">Housekeeping &middot; Menlyn<br>Wednesday</div>
+          </div>
+          <div class="card" id="strangerBody"></div>
         </div>
 
         <!-- ===== screen 3 : what her employer sees ===== -->
@@ -420,6 +462,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
         <button id="tabTalk" onclick="show('talk')">Register</button>
         <button id="tabCard" onclick="show('card')">Her listing</button>
         <button id="tabEmp" onclick="show('emp')">Her employer</button>
+        <button id="tabStr" onclick="show('str')">A stranger</button>
       </div>
       <div class="ctrls">
         <button class="primary" onclick="runScript()">&#9654; Play the whole conversation</button>
@@ -539,19 +582,56 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       </div>
 
       <div class="panel">
-        <h2>The one thing I would gate, and I would argue hard for it</h2>
-        <p>Letting a stranger into your empty house is the highest-trust transaction this marketplace
-           will ever carry. It is not a bakkie. If TrustSquare gets this wrong once, in public, the
-           damage is not to a listing &mdash; it is to the name.</p>
-        <p><b>The rule I built into the prototype:</b> a housekeeper is listed immediately, but until at
-           least one employer confirmation or an ID check lands, <b>only people she has sent her own link
-           to can contact her</b>. She loses nothing &mdash; her existing employers are exactly who she wants
-           to reach on day one. Strangers see her only once somebody real has vouched.</p>
-        <p>This also protects her, which matters more and is easier to forget. A listing that puts a
-           woman&rsquo;s open days and her suburb in front of anybody at all, with no accountability on the
-           other side, is not a service to her.</p>
-        <p style="margin-bottom:0" class="small">It is the same shape as the publish floor I flagged on the
-           Sell It BOT &mdash; a score alone should not be the only gate &mdash; but here the argument is much stronger.</p>
+        <h2>The vouching gate &mdash; now built, and it decides three things</h2>
+        <p>It was a sentence on her listing. You backed it, so it is machinery now: tap
+           <b>A stranger</b> under the phone and you are looking at the marketplace from the other
+           side, before and after somebody vouches for her.</p>
+        <p><b>Before:</b> a buyer searching &ldquo;housekeeping, Menlyn, Wednesday&rdquo; does not see her
+           at all. Not a greyed-out card, not a locked profile &mdash; <b>absent</b>. A listing that is
+           visible but useless still leaks her days and her area to anybody who looks, which is the
+           exact harm the gate exists to prevent.</p>
+        <p><b>After one employer confirms her:</b> she appears, at 85, bookable, with an introduction
+           worth 1 Tuppence.</p>
+
+        <h3>Working on it turned two tiers into three</h3>
+        <p>Your sentence made me look at <em>which</em> facts should ever be public, and the honest
+           answer is not &ldquo;all of them once vouched&rdquo;.</p>
+        <table>
+          <tr><th>Tier</th><th>What</th><th>Why</th></tr>
+          <tr><td><span class="badge b-real">Public</span></td>
+              <td>The trade, <b>the suburbs she travels to</b>, her rate, her free days, her rating,
+                  her photos</td>
+              <td class="small">Everything a buyer needs to decide. Nothing that locates her.</td></tr>
+          <tr><td><span class="badge b-gap">On acceptance</span></td>
+              <td>Her full name, her phone number, <b>the area she lives in</b></td>
+              <td class="small">This is the introduction itself &mdash; the thing the Tuppence buys, and
+                  the thing she can refuse.</td></tr>
+          <tr><td><span class="badge">Never</span></td>
+              <td>Her ID document, and <b>the identity of the employer who vouched</b></td>
+              <td class="small">See below. This one is load-bearing.</td></tr>
+        </table>
+
+        <h3>1 &middot; Publish where she works, not where she lives</h3>
+        <p>A buyer in Menlyn needs to know she can <em>get to</em> Menlyn on a Wednesday. They do not
+           need to know she lives in Mamelodi, and the first version published it as her main area.
+           Her travel-to suburbs are the useful fact; her home suburb mostly just tells a stranger
+           where to find her. It is used for matching, shown to her, and released only when she
+           accepts an introduction.</p>
+
+        <h3>2 &middot; The employer who vouches is never named</h3>
+        <p>The listing says <em>&ldquo;confirmed by an employer of 3 years&rdquo;</em> &mdash; not
+           <em>&ldquo;confirmed by Mrs van Wyk&rdquo;</em>. If vouching cost her employer their own privacy,
+           far fewer would do it, and the cold start dies with it. The confirmation is evidence; the
+           voucher&rsquo;s identity is not part of the evidence a buyer needs.</p>
+
+        <h3>3 &middot; Her taken days show as unavailable, never as whose house</h3>
+        <p>A stranger sees Wednesday and Friday free. Monday and Tuesday show as unavailable and
+           nothing more. Which household employs her on a Monday is not a fact the marketplace
+           publishes.</p>
+
+        <p style="margin-bottom:0"><b>What this costs her: nothing.</b> Day one, the people she wants
+           are her own employers, and they are exactly who her link goes to. The gate only holds back
+           the strangers &mdash; and one tap from somebody who already knows her opens it.</p>
       </div>
 
       <div class="panel">
@@ -828,6 +908,86 @@ function addPhoto(){
   else says('Lovely, though the photos are already full at forty.');
   nudge();
 }
+/* ---------------------------------------------------------------------------
+   WHAT A STRANGER SEES. David, 9 Sep 2026, on the vouching gate: "This also
+   protects her... A listing that puts a woman's open days and her suburb in
+   front of anybody at all, with no accountability on the other side, is not a
+   service to her."
+   So the gate is not a sentence on her listing any more — it is built, and it
+   decides what a stranger is shown at all. Three tiers, not two:
+     PUBLIC once vouched  - the trade, the suburbs she TRAVELS TO, her rate,
+                            her open days, her trust score, her photos
+     AFTER AN INTRODUCTION - her full name, her phone, WHERE SHE LIVES
+     NEVER PUBLISHED      - her ID document, and the identity of the employer
+                            who vouched for her
+   The third tier matters more than it looks. If vouching cost her employer
+   their own privacy, nobody would vouch — and the whole cold start dies.
+   --------------------------------------------------------------------------- */
+function paintStranger(){
+  var open=DAYS.filter(function(d){return st.days[d]==='open';}).map(function(d){return LONG[d];});
+  var b=$('strangerBody');
+  if(!st.confirmed){
+    b.innerHTML =
+      '<div class="locked">'
+      + '<div class="lockmark">&#128274;</div>'
+      + '<h3>No housekeeper here yet for a Wednesday</h3>'
+      + '<p>Somebody <b>is</b> listed and free that day. She is not being shown, because nobody outside '
+      + 'TrustSquare has vouched for her yet.</p>'
+      + '</div>'
+      + '<div class="whynot">'
+      + '<h4>Why she is not here</h4>'
+      + '<p>A housekeeper is listed the moment she finishes talking &mdash; but she stays off strangers&rsquo; '
+      + 'screens until <b>one employer confirms her</b> or <b>her ID is checked</b>. Until then only the '
+      + 'people she has sent her own link to can reach her.</p>'
+      + '<p>She loses nothing by that. The people she wants on day one are her own employers, and they '
+      + 'are exactly who the link goes to.</p>'
+      + '<p class="hard">And it protects her. Putting a woman&rsquo;s open days and the area she lives in '
+      + 'in front of anybody at all, with no accountability on the other side, is not a service to her.</p>'
+      + '</div>'
+      + '<div class="tiers"><h4>What a stranger would be given, once she is vouched</h4>'
+      + tierRows(true) + '</div>';
+    return;
+  }
+  b.innerHTML =
+    '<div class="who">'
+    + '<div class="avatar"><div class="inner"><img class="ph" src="'+PHOTOS[st.shots.length?st.shots[0]:0]+'" alt=""></div></div>'
+    + '<div><h3>Thandi M.</h3><p>Housekeeping'+(st.years?' &middot; '+st.years+' years':'')+'</p></div>'
+    + '<div class="tscore"><b>85</b><i>TRUST</i></div>'
+    + '</div>'
+    + '<div class="vouch">&#10003; Confirmed by an employer of 3 years <small>name not shown</small></div>'
+    + '<div class="doesit">'+(st.does.length?st.does:['Cleaning']).map(function(x){return '<span>'+x+'</span>';}).join('')+'</div>'
+    + '<div class="area" style="border:1px solid #1d3329;border-radius:10px;margin-top:10px;background:#0d1813">'
+    + '<h4>Works in</h4><div class="chips">'
+    + (st.serves.length?st.serves:['Menlyn']).map(function(x){return '<span>'+x+'</span>';}).join('')
+    + '</div><p class="travel">Where she lives is not shown &mdash; you get that when she accepts.</p></div>'
+    + '<div class="week" style="border:1px solid #1d3329;border-radius:10px;margin-top:10px;background:#0d1813">'
+    + '<h4>Free this week <b>'+(open.length?open.length+' day'+(open.length>1?'s':''):'')+'</b></h4>'
+    + '<p class="travel" style="margin:0 0 6px">Her other days show as unavailable. Whose house she is at is not your business, and not shown.</p>'
+    + '<div class="wgrid">'+DAYS.map(function(d){
+        var o=st.days[d]==='open';
+        return '<div class="wd '+(o?'open':'')+'"><div class="dn">'+d.toUpperCase()+'</div>'
+             + '<div class="ds">'+(o?'FREE':'&mdash;')+'</div></div>'; }).join('')+'</div></div>'
+    + '<div class="rate2"><b>R'+(st.price||350)+' <span style="font-size:11px;color:#8fa89b">a day</span></b>'
+    + '<small>Paid to her, not to us. Nothing but the introduction goes through TrustSquare.</small></div>'
+    + '<div class="tiers"><h4>What you get, and when</h4>'+tierRows(false)+'</div>'
+    + '<button class="pub ready" id="askIntro" style="margin-top:12px">Ask to be introduced &mdash; 1 Tuppence</button>'
+    + '<div class="state" id="introState">Her employer pays nothing for the same day. You pay one Tuppence, because you have not met.</div>';
+  var ai=$('askIntro');
+  if(ai) ai.onclick=function(){
+    $('introState').innerHTML='Asked. If she says yes you get her number and where she lives &mdash; '
+      + 'and not before. <b>Nothing was really sent; this is a picture.</b>';
+    ai.textContent='\u2713 Introduction asked for'; ai.className='pub';
+  };
+}
+function tierRows(dim){
+  var rows=[
+    ['pub','What she does, where she works, her rate, her free days, her rating'],
+    ['int','Her full name, her phone number, the area she lives in &mdash; when she accepts'],
+    ['nev','Her ID document, and who vouched for her &mdash; never published']
+  ];
+  return rows.map(function(r){
+    return '<div class="tier t-'+r[0]+(dim?' dim':'')+'"><i></i><span>'+r[1]+'</span></div>'; }).join('');
+}
 function paintCard(){
   var taken=DAYS.filter(function(d){return st.days[d]==='taken';}).map(function(d){return LONG[d]+'s';});
   var open =DAYS.filter(function(d){return st.days[d]==='open';}).map(function(d){return LONG[d];});
@@ -863,7 +1023,7 @@ function paint(){
   $('pub').textContent = st.published ? '✓ You are listed'
       : ok ? 'List me — '+r.score+'/100'
       : (r.score>=50 ? 'One photo first — then you are listed' : 'List me — needs 50');
-  paintArea(); paintWeek(); paintShots(); paintCard();
+  paintArea(); paintWeek(); paintShots(); paintCard(); paintStranger();
   return r;
 }
 
@@ -1217,9 +1377,9 @@ function publish(){
 
 /* ---------- screens ---------- */
 function show(which){
-  var m={door:'scDoor',talk:'scTalk',card:'scCard',emp:'scEmp'};
+  var m={door:'scDoor',talk:'scTalk',card:'scCard',emp:'scEmp',str:'scStranger'};
   for(var k in m) $(m[k]).style.display=(k===which?'flex':'none');
-  var t={door:'tabDoor',talk:'tabTalk',card:'tabCard',emp:'tabEmp'};
+  var t={door:'tabDoor',talk:'tabTalk',card:'tabCard',emp:'tabEmp',str:'tabStr'};
   for(var k2 in t) $(t[k2]).className=(k2===which?'on':'');
   if(which==='talk' && !$('talk').innerHTML) greet();
 }
@@ -1238,6 +1398,7 @@ function confirmEmployer(){
     if(p<1) requestAnimationFrame(step);
   })();
   $('empOk').className='empok show';
+  paintStranger();
 }
 
 /* ---------- the whole conversation, played ---------- */

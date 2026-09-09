@@ -20617,5 +20617,63 @@ def rg_sandbox_repair_is_queued_not_clicked():
     return out or [(INFO, "a dead sandbox has a queued, guarded, allowlisted repair and the next session knows how to call it")]
 
 
+@entry("RG-0349", "The host agent reads a deploy's REAL exit code -- a CityLauncher deploy that completed is "
+                  "closed as SHIPPED, never re-run every 20 minutes as 'FAILED rc= '",
+       LOCKED, fixed_on="2026-09-09",
+       scope="MarketSquare\\autodeploy_agent.bat, both deploy blocks. Legs: (a) SOURCE -- the bat enables "
+             "delayed expansion and reads !errorlevel! / !CLRC! / !RC! inside its parenthesised blocks; the "
+             "parse-time forms `set \"CLRC=%errorlevel%\"` and `if \"%CLRC%\"==\"0\"` are gone. (b) HOST -- "
+             "when autodeploy_agent_log.txt is readable, the LAST 'CL REQUEST seen' is followed by a verdict "
+             "that is not 'CL FAILED rc= ' (an empty rc is the parse-time bug, not a deploy failure); and "
+             "CL_DEPLOY_REQUEST.flag, if present, is younger than 90 minutes -- a CityLauncher flag has no "
+             "BLOCKED state, so one that outlives four ticks is looping. CLASS: any cmd.exe block that sets a "
+             "variable and reads it back with %var% in the same block -- the read sees the value from before "
+             "the block ran. The MarketSquare block carried the same defect (its rc was cosmetic because "
+             "TSL_READY.flag carries the verdict); both blocks are fixed, timestamps included.",
+       ref="AGENT-RC-1, 9 Sep 2026, found while reading the agent log for SANDBOX-REPAIR-1. The CityLauncher "
+           "deploy requested 2026-09-08T03:52Z (SPECIAL-CLOSE-1) completed on its first tick at 06:11 SAST, "
+           "was logged 'CL FAILED rc= ' because %CLRC% had expanded to an empty string when the block was "
+           "parsed, kept its flag, and re-deployed + restarted citylauncher.service on every tick since -- "
+           "73 times by 21:48 on 9 Sep. Every timestamp inside the block was parse-time too, which is why the "
+           "'seen' and 'FAILED' lines always carried the same second. Fix: setlocal enabledelayedexpansion "
+           "and !var! reads. Written host-side by the app's file tools; the next tick is the proof.")
+def rg_host_agent_reads_real_exit_code():
+    out = []
+    bat = repo_file("autodeploy_agent.bat")
+    if bat is None:
+        return [(FAIL, "autodeploy_agent.bat is gone -- nothing ships unattended")]
+    if "enabledelayedexpansion" not in bat.lower():
+        out.append((FAIL, "autodeploy_agent.bat no longer enables delayed expansion -- every %var% inside its "
+                          "deploy blocks reads the pre-block value again"))
+    for bad in ('set "CLRC=%errorlevel%"', 'if "%CLRC%"=="0"', 'set "RC=%errorlevel%"', "rc=%CLRC%", "rc=%RC%"):
+        if bad in bat:
+            out.append((FAIL, "parse-time read is back in autodeploy_agent.bat: %s -- the deploy loop returns" % bad))
+    if 'set "CLRC=!errorlevel!"' not in bat or 'if "!CLRC!"=="0"' not in bat:
+        out.append((FAIL, "the CityLauncher block no longer reads its exit code with delayed expansion"))
+    log_p = os.path.join(REPO, "autodeploy_agent_log.txt")
+    if os.path.isfile(log_p):
+        try:
+            with open(log_p, encoding="utf-8", errors="replace") as fh:
+                lines = fh.read().splitlines()
+            seen = [i for i, l in enumerate(lines) if "CL REQUEST seen" in l]
+            if seen:
+                after = "\n".join(lines[seen[-1]:seen[-1] + 60])
+                if "CL FAILED rc= " in after or "CL FAILED rc=  " in after:
+                    out.append((FAIL, "the last CityLauncher deploy in autodeploy_agent_log.txt was logged "
+                                      "'CL FAILED rc= ' (empty rc) -- the parse-time bug is live again"))
+        except OSError:
+            out.append((INFO, "autodeploy_agent_log.txt unreadable -- host leg skipped"))
+    else:
+        out.append((INFO, "autodeploy_agent_log.txt not present here -- host leg not evaluated"))
+    flag = os.path.join(REPO, "CL_DEPLOY_REQUEST.flag")
+    if os.path.isfile(flag):
+        import time as _t
+        age_min = (_t.time() - os.path.getmtime(flag)) / 60.0
+        if age_min > 90:
+            out.append((FAIL, "CL_DEPLOY_REQUEST.flag is %.0f minutes old -- a CityLauncher deploy flag has no "
+                              "BLOCKED state, so this one is looping or the deploy is failing every tick" % age_min))
+    return out or [(INFO, "the agent reads real exit codes; no CityLauncher deploy is looping")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

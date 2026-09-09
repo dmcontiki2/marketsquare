@@ -97,3 +97,8 @@ run_bat    MarketSquare\sandbox_repair_restart_app.bat
 # --- shard/state files; rulings_check.py reads canon files. Neither commits, sends or spends.
 run_py     MarketSquare\scripts\regression_ledger.py
 run_py     MarketSquare\scripts\rulings_check.py
+# --- Same two boards through wrapper bats that keep the FULL output on disk
+# --- (host_queue\done\ledger_host_<stamp>.txt / rulings_host_<stamp>.txt): the queue's
+# --- 4000-char tail cut the three regression names off the 21:48 run. Prefer these.
+run_bat    MarketSquare\ledger_host.bat
+run_bat    MarketSquare\rulings_host.bat

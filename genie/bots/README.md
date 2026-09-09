@@ -446,3 +446,135 @@ Rendered browser, end to end: nine place cases pass; the BOT says the suburb bac
 scripted conversation reaches 70/100 with one photo attached and publishes; at 60/100 with no photo
 the publish button is disabled and says so; employer confirmation lifts trust 38 → 85; the wage
 floor still refuses R150/day and offers R242. Console clean.
+
+
+---
+
+## BOT #3 — THIRD PASS, same night (9 Sep 2026). The vouching gate, built.
+
+David, on the safety rule Claude had put in as a single sentence: *"This is a great idea... This
+also protects her, which matters more and is easier to forget. A listing that puts a woman's open
+days and her suburb in front of anybody at all, with no accountability on the other side, is not a
+service to her."*
+
+So it stopped being a sentence. There is now a fifth screen — **A stranger** — which is the
+marketplace seen from the other side, before and after somebody vouches.
+
+### Absent, not greyed out
+
+**Before any vouching:** a buyer searching *"housekeeping, Menlyn, Wednesday"* does not see her.
+Not a locked card, not a blurred profile — **not there**. A visible-but-useless listing still leaks
+her free days and her area to anybody who looks, which is the exact harm the gate exists to stop.
+
+**After one employer confirms her:** she appears, at 85, with an introduction worth 1 Tuppence.
+
+### Building it turned two tiers into three
+
+Asking *which* facts should ever be public produced an answer that is not "all of them, once vouched".
+
+| Tier | What | Why |
+|---|---|---|
+| **Public** once vouched | The trade, **the suburbs she travels to**, her rate, her free days, her rating, her photos | Everything a buyer needs to decide. Nothing that locates her. |
+| **On acceptance** of an introduction | Her full name, her phone number, **the area she lives in** | This release IS what the Tuppence buys — and she can refuse it. |
+| **Never published** | Her ID document, and **the identity of the employer who vouched** | Load-bearing. See below. |
+
+**1 · Publish where she works, not where she lives.** A buyer in Menlyn needs to know she can *get
+to* Menlyn on a Wednesday. They do not need to know she lives in Mamelodi — and the first version
+published exactly that as her main area. Home suburb is now used for matching, shown to her, and
+released only on acceptance.
+
+**2 · The employer who vouches is never named.** The listing reads *"confirmed by an employer of 3
+years"*, not *"confirmed by Mrs van Wyk"*. If vouching cost the employer their own privacy, far
+fewer would do it — and the cold start dies with it. The confirmation is the evidence; the
+voucher's identity is not part of what a buyer needs.
+
+**3 · Taken days show as unavailable, never as whose house.** Which household employs her on a
+Monday is not something the marketplace publishes.
+
+### What it costs her: nothing
+
+Day one the people she wants are her own employers, and they are precisely who her link goes to.
+The gate holds back only strangers, and one tap from somebody who already knows her opens it.
+
+### Ruled
+
+**RUL-115.** Written as a class ruling, not a Home Help feature: any category where a seller admits
+a stranger into their home, or is themselves exposed by their own listing, inherits it.
+
+### Verified, third pass
+
+Rendered browser: before vouching the stranger view shows the locked state and the DOM contains
+neither her home suburb nor the voucher's name; after vouching she appears with her travel-to
+suburbs, her free days and the introduction button, and the DOM still contains neither her home
+suburb nor the voucher's name. Everything from passes one and two still passes — nine place cases,
+70/100 with one photo, the photo floor at 60/100, the wage floor refusing R150. Console clean.
+
+---
+
+## FOURTH PASS (9 Sep 2026) — the colour system, for all seven categories
+
+David: *"i also love the green full phone screen, this can also be done with the other categories,
+but different colors for each?"*
+
+Board: **`BOT_FAMILY.html`** — all seven as full colour-washed phone screens, each with a real
+photograph from `assets/super/`, plus the measurement behind the palette and a toggle on the eighth.
+
+### The colours were already decided — and they fail as icons
+
+`BRAND_ASSETS.md` carries seven app tile colours from the `CATS` config. Reused, not re-invented.
+But those tiles sit *behind a photograph inside the app*, so they are deliberately dark and
+recessive. As icons on a home screen, measured with **CIEDE2000**:
+
+| Pair | ΔE | Reads as |
+|---|---|---|
+| Tutors / LocalMarket | **6.1** | the same colour |
+| Tutors / Adventures | 6.7 | the same colour |
+| Adventures / LocalMarket | 11.1 | too close |
+| Property / Cars | 11.3 | too close |
+
+**6 of 21 pairs collide.** Three of the seven are green; two are near-black navy; lightness runs
+L* 9–37, so on a dark home screen they are seven dark squares.
+
+### The sibling palette — 0 of 21 collide, closest pair ΔE 22.8
+
+Each BOT keeps the hue its category already owns (hue assignments taken from the explainer video's
+pastel set — David's own pick, which had already separated blue/green/peach/teal/sand/periwinkle/
+pink), pulled to icon strength.
+
+| BOT | Icon colour |
+|---|---|
+| Property | #2E86E0 |
+| Cars | #5B4BD6 |
+| Tutors | #4FA83F |
+| Services | #B4441F |
+| Collectors | #C98A2E *(as set 7 Sep)* |
+| Adventures | #12A5A5 |
+| LocalMarket | #D8447E |
+
+The app tiles do not change. This is a second palette, for icons and BOT screens only.
+
+### The rule — so no BOT colour is argued about again
+
+- **Hue** comes from the category. Canon, never taste.
+- **Shade** belongs to the BOT. A trade inside a category takes a lighter or deeper shade of its
+  family — never a hue of its own. A plumbing BOT is a deeper rust; a maths-tutor BOT a deeper
+  green. Neither needs a decision.
+- **Ring**: a sub-trade BOT wears its family hue as a thin ring, so it reads as its category at a glance.
+
+Recorded in `BRAND_ASSETS.md`, which is the file that says fix it here and everything follows.
+
+### Reserved to David — the one colour I did not change
+
+Home Help is a Services BOT, so the system puts it at clay **#C96B4A**: ΔE 12.0 from its Services
+parent (family resemblance, intended) and 18.8 from its nearest outsider. His jade **#16A97C**
+measures ΔE 13.4 from Tutors and 15.0 from Adventures — two *other categories*, so beside them it
+is a third green.
+
+He said he loves the green the same night, so the prototype and its manifest **stay jade** until he
+rules. The board toggles between the two with the numbers on screen. One line changes it either way.
+
+### Files added
+
+`BOT_FAMILY.html`, and one manifest each for property, cars, tutors, services, collectors,
+adventures, localmarket. Still to make if any of this is built: three PNG icons per BOT in its
+colour under `/static/brand/bots/<bot>/` — a drawing job, not a decision.

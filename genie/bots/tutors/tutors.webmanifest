@@ -1,0 +1,31 @@
+{
+  "_comment": "BOT \u00b7 Learn \u2014 NOT DEPLOYED. One manifest, three icons, same app. Colour is the category hue from BRAND_ASSETS.md, pulled to icon strength; all seven clear CIEDE2000 20.",
+  "name": "TrustSquare Tutors",
+  "short_name": "Learn",
+  "description": "Maths on a Tuesday, an hour from here. Say what you need.",
+  "start_url": "/?bot=tutors",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "en-ZA",
+  "theme_color": "#4FA83F",
+  "background_color": "#05080A",
+  "icons": [
+    {
+      "src": "/static/brand/bots/tutors/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/brand/bots/tutors/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/brand/bots/tutors/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
