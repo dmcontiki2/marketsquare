@@ -262,6 +262,34 @@ Until (a) and (b) exist, PRE-LAUNCH behaviour in practice is: the agent fixes th
 autonomously and silently as ruled, and the ESCALATE class accumulates for the next fix session.
 That is a real improvement on David reading every report — but it is not yet "AI fixes it without me".
 
+## BACKUP-UNATTENDED-1 — the daily loop MAKES the backup, it does not merely check it (10 Sep 2026)
+
+RG-0234 asserts the newest DB archive is at most 8 days old and provably restores. Nothing
+produced one. `backup_marketsquare.bat` is native-Windows, is on no schedule, and is on no
+allowlist, so the lane ran only when a human remembered: 27 days stale before 1 Sep, 9 days
+stale by 10 Sep, with the board red the whole time. A freshness assertion with no producer
+behind it can only ever report the same failure again — the class here is a GUARD WITHOUT A
+PRODUCER, not a missed backup.
+
+The producer now runs where the loop runs. **Step 2a of every maintenance run, straight after
+the shadow agent:**
+
+    python3 scripts/backup_db_sandbox.py
+
+It needs no host click and no allowlist row: it snapshots the live DB on the box with
+`sqlite3 .backup` (consistent, read-only), pulls it, md5-matches both ends, writes
+`backups/YYYY-MM-DD_HHMM.zip` in exactly the shape RG-0234 restores, re-extracts that archive
+and integrity-checks it, then appends the dated proof to `backups/RESTORE_PROOF.md`. Skip it
+only when the newest archive is younger than a day; a second archive the same day is waste,
+not safety.
+
+It **deletes nothing**. Retention (7 daily / 4 weekly) stays with the host bat, because
+deletions are David's alone (RUL-095). Archives will therefore accumulate until he runs it —
+that is the correct trade: a spare archive costs disk, a missing one costs the business.
+
+Asserted by RG-0350 (the producer exists, is wired here, and the lane is fresh) alongside
+RG-0234 (the archive restores).
+
 ## MAINT-DEPS-1 — the lane installs what its INSTRUMENTS need, not just what CRASHES (28 Aug 2026)
 
 **Step 0 of every maintenance run, before the ledger:** `python3 scripts/maint_deps.py`

@@ -55,7 +55,11 @@ def test_ack_always_sends_except_spam():
     # the window now reaches the ack, and rfind guards against a third site appearing above.
     i = src.find("can_auto = (")
     assert i > 0, "the reply-gating block is gone (can_auto)"
-    blk = src[max(0, i - 1200):i + 4500]
+    # TRUTH-REVIEW-4 (10 Sep 2026), the FOURTH instance of this file's own documented class,
+    # and the second time the WINDOW specifically was the fault: the bare-ack branch now begins
+    # at +3817 and runs ~900 chars, so +4500 cut the branch in half and the guard read only the
+    # first of its two bodies. Reach past the whole branch instead of trimming to fit it.
+    blk = src[max(0, i - 1200):i + 6500]
 
     # 1. two branches, and they are MUTUALLY EXCLUSIVE (if / elif, never two sends)
     assert 'if category != "spam" and can_auto:' in blk, \
@@ -67,8 +71,21 @@ def test_ack_always_sends_except_spam():
     # 2. the reference reaches the reporter on BOTH branches
     assert "_ref_line" in blk and "fault_code" in blk, \
         "the auto-reply no longer carries the fault reference"
-    assert "reference {fault_code}" in blk, \
-        "the bare ack no longer quotes the fault reference"
+    # TRUTH-REVIEW-4 (10 Sep 2026): this pinned the literal "reference {fault_code}" -- a
+    # SPELLING, which is the very fault the three corrections above this line record. The bare
+    # ack has read "reference {ref_override or fault_code}" since REF-HONESTY-1, because a
+    # support form supplies its own ref; the behaviour was never lost, and this guard sat red
+    # on 8 consecutive pre-deploy scans against CORRECT code until RG-0114 escalated the
+    # sitting. Assert the PROPERTY on BOTH bodies the branch can send -- the reporter is told a
+    # reference, whatever the sentence around it says.
+    _bare = blk[blk.find('elif category != "spam" and fault_code'):]
+    assert _bare, "the bare-ack branch is gone"
+    _refs = re.findall(r"\{[^{}]*fault_code[^{}]*\}", _bare)
+    assert len(_refs) >= 2, \
+        ("the bare ack no longer quotes the fault reference on both of its bodies (report and "
+         "non-report) -- found %d interpolation(s): %r" % (len(_refs), _refs))
+    assert "reference" in _bare, \
+        "the bare ack no longer calls the code a reference -- the reporter cannot quote it back"
 
     # 3. spam is never acknowledged
     assert blk.count('category != "spam"') >= 2, \

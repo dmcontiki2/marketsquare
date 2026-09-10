@@ -290,7 +290,7 @@ def run_migrations(conn):
             city TEXT NOT NULL,
             country TEXT NOT NULL DEFAULT 'ZA',
             active INTEGER NOT NULL DEFAULT 1,
-            created_at TEXT DEFAULT (datetime('now'))
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_suburbs_city ON suburbs(city, active)")
@@ -569,7 +569,7 @@ def run_migrations(conn):
         listing_id INTEGER NOT NULL,
         version_num INTEGER NOT NULL DEFAULT 1,
         changed_by TEXT,
-        changed_at TEXT DEFAULT (datetime('now')),
+        changed_at TEXT DEFAULT CURRENT_TIMESTAMP,
         snapshot_json TEXT NOT NULL
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_lv_listing ON listing_versions(listing_id, version_num)")
@@ -614,7 +614,7 @@ def run_migrations(conn):
         min_trust_score INTEGER NOT NULL DEFAULT 0,
         weight          REAL NOT NULL DEFAULT 1.0,
         ping_enabled    INTEGER NOT NULL DEFAULT 1,
-        created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+        created_at      TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         expires_at      TEXT NOT NULL
     )""")
     # DEMAND-LOOP-1 groundwork (6 Jul 2026): how many results the search returned
@@ -631,7 +631,7 @@ def run_migrations(conn):
         params_json TEXT NOT NULL,
         model       TEXT,
         cost_usd    REAL NOT NULL DEFAULT 0,
-        created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+        created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )""")
     # DEMAND-LOOP-1 (David ruling 6 Jul 2026): the demand loop is a STANDARD automated
     # BEA process (CityLauncher stays manual campaign artillery). Capture/score/ticket
@@ -646,8 +646,8 @@ def run_migrations(conn):
         state TEXT NOT NULL DEFAULT 'open',
         matched_prospect TEXT, matched_item TEXT, invite_code TEXT,
         priority_expires_at TEXT,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_demand_state ON demand_tickets(state, score DESC)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_demand_query ON demand_tickets(query_norm, city_id)")
@@ -655,7 +655,7 @@ def run_migrations(conn):
     # (RM-5 waves + demand invites). Checked before ANY send; seed from CityLauncher at flip-on.
     conn.execute("""CREATE TABLE IF NOT EXISTS outreach_ledger (
         email_hash TEXT NOT NULL, channel TEXT NOT NULL, campaign TEXT,
-        sent_at TEXT NOT NULL DEFAULT (datetime('now')),
+        sent_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         suppressed INTEGER NOT NULL DEFAULT 0
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_outreach_email ON outreach_ledger(email_hash, sent_at DESC)")
@@ -663,7 +663,7 @@ def run_migrations(conn):
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email_hash TEXT NOT NULL, email_enc TEXT,
         category TEXT, city_id INTEGER, scraped_item TEXT, source TEXT,
-        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )""")
     _dp_cols = {r[1] for r in conn.execute("PRAGMA table_info(demand_prospects)").fetchall()}
     if "app_category" not in _dp_cols:
@@ -680,7 +680,7 @@ def run_migrations(conn):
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         ticket_id INTEGER NOT NULL, email_hash TEXT,
         subject TEXT, body TEXT, dry_run INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )""")
     # RM-5 pool auto-import (one-time, idempotent): set DEMAND_RM5_DB=/path/to/prospects.db
     # on the server and restart - runs only while demand_prospects is EMPTY. Copies the
@@ -745,7 +745,7 @@ def run_migrations(conn):
         signal_id       INTEGER,
         match_score     REAL NOT NULL,
         seller_trust    INTEGER NOT NULL DEFAULT 0,
-        matched_at      TEXT NOT NULL DEFAULT (datetime('now')),
+        matched_at      TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         seen            INTEGER NOT NULL DEFAULT 0,
         pinged          INTEGER NOT NULL DEFAULT 0,
         boost_rank      INTEGER NOT NULL DEFAULT 0,
@@ -763,7 +763,7 @@ def run_migrations(conn):
         platform        TEXT NOT NULL,
         device_label    TEXT,
         enabled         INTEGER NOT NULL DEFAULT 1,
-        created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+        created_at      TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         last_ping_at    TEXT,
         UNIQUE(buyer_token, push_endpoint)
     )""")
@@ -774,7 +774,7 @@ def run_migrations(conn):
         id              INTEGER PRIMARY KEY AUTOINCREMENT,
         listing_id      INTEGER NOT NULL UNIQUE,
         sort_order      INTEGER NOT NULL DEFAULT 0,
-        added_at        TEXT NOT NULL DEFAULT (datetime('now')),
+        added_at        TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         added_by        TEXT NOT NULL DEFAULT 'admin'
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_show_order ON wishlist_showcase(sort_order)")
@@ -821,7 +821,7 @@ def run_migrations(conn):
     listing_cols2 = [r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()]
     if "published_at" not in listing_cols2:
         conn.execute("ALTER TABLE listings ADD COLUMN published_at TEXT")
-        conn.execute("UPDATE listings SET published_at = COALESCE(created_at, datetime('now')) WHERE published_at IS NULL")
+        conn.execute("UPDATE listings SET published_at = COALESCE(created_at, CURRENT_TIMESTAMP) WHERE published_at IS NULL")
     if "boost_until" not in listing_cols2:
         conn.execute("ALTER TABLE listings ADD COLUMN boost_until TEXT")
     if "view_count" not in listing_cols2:
@@ -866,7 +866,7 @@ def run_migrations(conn):
         kind         TEXT NOT NULL,      -- reminder_24h | reminder_72h | b3_warning
         channel      TEXT NOT NULL,      -- email | push
         outcome      TEXT NOT NULL,      -- sent | failed | dry | capped | none
-        sent_at      TEXT NOT NULL DEFAULT (datetime('now'))
+        sent_at      TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_irl_seller ON intro_reminder_log(seller_email, kind, sent_at)")
     # SF-COACH-ASK-1 (RG-0207, 4 Sep 2026): the FREE in-flow ask-the-coach lane. One row per
@@ -882,7 +882,7 @@ def run_migrations(conn):
         answer_chars INTEGER DEFAULT 0,
         cap_hit      INTEGER NOT NULL DEFAULT 0,
         cap_limit    INTEGER,
-        created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+        created_at   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_cal_session ON coach_ask_log(session_id, cap_hit)")
 
@@ -891,7 +891,7 @@ def run_migrations(conn):
     conn.execute("""CREATE TABLE IF NOT EXISTS buyer_trust (
         buyer_token     TEXT PRIMARY KEY,
         score           INTEGER NOT NULL DEFAULT 0,
-        last_changed_at TEXT NOT NULL DEFAULT (datetime('now'))
+        last_changed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )""")
 
     # Local Market no-show complaints — manual review by ops (LM-T3)
@@ -903,7 +903,7 @@ def run_migrations(conn):
         intro_id        INTEGER NOT NULL,
         reason          TEXT,
         status          TEXT NOT NULL DEFAULT 'pending',
-        filed_at        TEXT NOT NULL DEFAULT (datetime('now')),
+        filed_at        TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         resolved_at     TEXT,
         credit_issued   INTEGER NOT NULL DEFAULT 0
     )""")
@@ -917,7 +917,7 @@ def run_migrations(conn):
     conn.execute("""CREATE TABLE IF NOT EXISTS lm_suspensions (
         id              INTEGER PRIMARY KEY AUTOINCREMENT,
         seller_email    TEXT NOT NULL,
-        suspended_at    TEXT NOT NULL DEFAULT (datetime('now')),
+        suspended_at    TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         restored_at     TEXT,
         reason          TEXT NOT NULL DEFAULT 'trust_score_below_30',
         cooling_off_until TEXT,
@@ -967,7 +967,7 @@ def run_migrations(conn):
         endpoint      TEXT    NOT NULL,
         model         TEXT    NOT NULL,
         est_cost_usd  REAL    NOT NULL DEFAULT 0.0,
-        logged_at     TEXT    NOT NULL DEFAULT (datetime('now'))
+        logged_at     TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_ai_spend_month ON ai_spend_log(logged_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_ai_spend_email ON ai_spend_log(email, logged_at DESC)")
@@ -1062,7 +1062,7 @@ def run_migrations(conn):
         -- PHOTO-REPLACE-1 (7 Aug 2026): ON = ask for a different photo rather than
         -- blur it into ruin. OFF = the old never-reject behaviour.
         photo_replace_request INTEGER NOT NULL DEFAULT 1,
-        updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+        updated_at    TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
     )""")
     conn.execute("INSERT OR IGNORE INTO launch_switches (id) VALUES (1)")
     # BIT safe-state flags — add to pre-existing launch_switches rows (idempotent).
@@ -1107,7 +1107,7 @@ def run_migrations(conn):
         draft_reply   TEXT    NOT NULL DEFAULT '',
         status        TEXT    NOT NULL DEFAULT 'drafted',
         message_id    TEXT,
-        received_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+        received_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_email_triage_recv ON email_triage(received_at DESC)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_email_triage_cat  ON email_triage(category, received_at DESC)")
@@ -1168,7 +1168,7 @@ def run_migrations(conn):
         points          INTEGER NOT NULL DEFAULT 0,
         evidence_url    TEXT,
         notes           TEXT,
-        submitted_at    TEXT NOT NULL DEFAULT (datetime('now')),
+        submitted_at    TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         verified_at     TEXT,
         verified_by     TEXT,
         UNIQUE(email, signal_id)
@@ -1193,7 +1193,7 @@ def run_migrations(conn):
         reason_code     TEXT NOT NULL,
         notes           TEXT,
         status          TEXT NOT NULL DEFAULT 'pending',
-        filed_at        TEXT NOT NULL DEFAULT (datetime('now')),
+        filed_at        TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         resolved_at     TEXT,
         points_deducted INTEGER NOT NULL DEFAULT 0
     )""")
@@ -1563,7 +1563,7 @@ def _apply_pending_downgrades():
         rows = conn.execute(
             "SELECT email, pending_downgrade_tier FROM users "
             "WHERE pending_downgrade_tier IS NOT NULL "
-            "AND billing_period_end <= datetime('now')"
+            "AND billing_period_end <= CURRENT_TIMESTAMP"
         ).fetchall()
         for row in rows:
             new_tier = row["pending_downgrade_tier"]
@@ -3653,7 +3653,7 @@ def publish_listing(listing_id: int, email: str, attested: int = 0):
     conn.execute(
         """UPDATE listings
            SET listing_status = 'live',
-               published_at   = datetime('now'),
+               published_at   = CURRENT_TIMESTAMP,
                seller_email   = COALESCE(seller_email, ?),
                trust_score    = COALESCE(trust_score, ?)
            WHERE id = ?""",
@@ -3662,7 +3662,7 @@ def publish_listing(listing_id: int, email: str, attested: int = 0):
     if _is_cars and int(attested or 0):
         # CARS-SPEC-1: stamp the liability attestation (C4) — publish-only write
         conn.execute(
-            "UPDATE listings SET attested_at = datetime('now'), attested_email = ? WHERE id = ?",
+            "UPDATE listings SET attested_at = CURRENT_TIMESTAMP, attested_email = ? WHERE id = ?",
             (email, listing_id)
         )
     conn.commit()
@@ -3917,7 +3917,7 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
     sets = ", ".join(f"{k} = ?" for k in d.keys())
     vals = list(d.values())
     conn.execute(
-        f"UPDATE listings SET {sets}, updated_at = datetime('now') WHERE id = ?",
+        f"UPDATE listings SET {sets}, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         vals + [listing_id]
     )
     conn.commit()
@@ -7770,7 +7770,7 @@ async def aa_publish(
         """INSERT INTO listings
            (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class, seller_email, trust_score, ai_suggested_price, scryfall_id, published_at,
             make, model, variant, vehicle_year, mileage_km, transmission, fuel_type, body_type, colour, vehicle_specs, spec_confirmed, attested_at, attested_email)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, datetime('now'),?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, CURRENT_TIMESTAMP,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (title, price, category, city, suburb, suburb, desc, thumb_url, medium_url, service_class, email, seller_trust, ai_price_anchor, scryfall_id,
          _veh_cols["make"], _veh_cols["model"], _veh_cols["variant"], _veh_cols["vehicle_year"],
          _veh_cols["mileage_km"], _veh_cols["transmission"], _veh_cols["fuel_type"], _veh_cols["body_type"],
@@ -8438,7 +8438,7 @@ def _demand_open_ticket(conn, sig, signal_id, seen_count):
             "AND state IN ('open','matched','invited') LIMIT 1",
             (qn, sig.city_id)).fetchone()
         if row:
-            conn.execute("UPDATE demand_tickets SET score=MAX(score,?), updated_at=datetime('now') WHERE id=?",
+            conn.execute("UPDATE demand_tickets SET score=MAX(score,?), updated_at=CURRENT_TIMESTAMP WHERE id=?",
                          (score, row["id"]))
             return row["id"]
         cur = conn.execute(
@@ -9464,7 +9464,7 @@ def _set_buyer_trust(conn, buyer_token: str, delta: int):
     conn.execute(
         """INSERT INTO buyer_trust (buyer_token, score) VALUES (?, ?)
            ON CONFLICT(buyer_token) DO UPDATE SET
-               score = ?, last_changed_at = datetime('now')""",
+               score = ?, last_changed_at = CURRENT_TIMESTAMP""",
         (buyer_token, new, new)
     )
 
@@ -9547,7 +9547,7 @@ def _lm_apply_suspension(conn, seller_email: str, reason: str = "trust_score_bel
         # This will be the third strike — permanent LM ban (LM-14e third clause)
         permanent = 1
         conn.execute(
-            "UPDATE users SET lm_banned_at = datetime('now') WHERE email = ?", (seller_email,)
+            "UPDATE users SET lm_banned_at = CURRENT_TIMESTAMP WHERE email = ?", (seller_email,)
         )
     elif count_recent >= 1:
         # Second suspension within 90 days — 30-day cooling-off (LM-14e middle clause)
@@ -9587,7 +9587,7 @@ def _lm_try_restore(conn, seller_email: str):
         return
     # Restore
     conn.execute(
-        "UPDATE lm_suspensions SET restored_at = datetime('now') WHERE id = ?",
+        "UPDATE lm_suspensions SET restored_at = CURRENT_TIMESTAMP WHERE id = ?",
         (susp["id"],)
     )
     conn.execute(
@@ -9644,7 +9644,7 @@ def lm_create_listing(listing: LMListingIn, background_tasks: BackgroundTasks,
         """INSERT INTO listings
            (title, price, category, city, area, suburb, description,
             thumb_url, medium_url, photo_urls, geo_city_id, seller_email, published_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?, datetime('now'))""",
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?, CURRENT_TIMESTAMP)""",
         (listing.title, listing.price, LM_CATEGORY, listing.city, listing.suburb,
          listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
          listing.photo_urls, listing.geo_city_id, listing.seller_email)
@@ -9930,7 +9930,7 @@ def lm_uphold_complaint(complaint_id: int, _admin=Depends(_require_admin_or_key)
 
     conn.execute(
         """UPDATE lm_complaints
-           SET status = 'upheld', resolved_at = datetime('now'), credit_issued = ?
+           SET status = 'upheld', resolved_at = CURRENT_TIMESTAMP, credit_issued = ?
            WHERE id = ?""",
         (1 if credit_amount else 0, complaint_id)
     )
@@ -9949,7 +9949,7 @@ def lm_dismiss_complaint(complaint_id: int, _admin=Depends(_require_admin_or_key
     conn = database.get_db()
     res = conn.execute(
         """UPDATE lm_complaints
-           SET status = 'dismissed', resolved_at = datetime('now')
+           SET status = 'dismissed', resolved_at = CURRENT_TIMESTAMP
            WHERE id = ? AND status = 'pending'""",
         (complaint_id,)
     )
@@ -10023,7 +10023,7 @@ def lm_accept_eula(email: str, _key: str = Depends(auth.require_api_key)):
     Local Market (§11). Required once on first LM activation (LM-14f)."""
     conn = database.get_db()
     conn.execute(
-        "UPDATE users SET lm_eula_accepted_at = datetime('now') WHERE email = ?",
+        "UPDATE users SET lm_eula_accepted_at = CURRENT_TIMESTAMP WHERE email = ?",
         (email,)
     )
     conn.commit()
@@ -10044,7 +10044,7 @@ def accept_main_eula(email: str, _key: str = Depends(auth.require_api_key)):
         conn.close()
         raise HTTPException(status_code=404, detail="User not found")
     conn.execute(
-        "UPDATE users SET eula_accepted_at = COALESCE(eula_accepted_at, datetime('now')) WHERE email = ?",
+        "UPDATE users SET eula_accepted_at = COALESCE(eula_accepted_at, CURRENT_TIMESTAMP) WHERE email = ?",
         (email,)
     )
     conn.commit()
@@ -16039,10 +16039,10 @@ _WEB_ROOT = os.environ.get("MS_WEB_ROOT", "/var/www/marketsquare")
 def _device_tables(conn):
     conn.execute("""CREATE TABLE IF NOT EXISTS admin_devices (
         id INTEGER PRIMARY KEY AUTOINCREMENT, jti TEXT UNIQUE, label TEXT,
-        created_at TEXT DEFAULT (datetime('now')), expires_at TEXT, last_seen TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP, expires_at TEXT, last_seen TEXT,
         revoked INTEGER DEFAULT 0)""")
     conn.execute("""CREATE TABLE IF NOT EXISTS admin_enrol_tokens (
-        token TEXT PRIMARY KEY, label TEXT, created_at TEXT DEFAULT (datetime('now')),
+        token TEXT PRIMARY KEY, label TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         expires_at TEXT, used_at TEXT)""")
 
 
@@ -16063,7 +16063,7 @@ def _device_from_cookie(ts_device):
                            (payload["jti"],)).fetchone()
         if not row or row["revoked"]:
             return None
-        conn.execute("UPDATE admin_devices SET last_seen = datetime('now') WHERE id = ?", (row["id"],))
+        conn.execute("UPDATE admin_devices SET last_seen = CURRENT_TIMESTAMP WHERE id = ?", (row["id"],))
         conn.commit()
         return {"label": row["label"], "jti": payload["jti"]}
     except Exception:
@@ -16102,7 +16102,7 @@ def admin_enrol(t: str = "", code: str = "", next: str = ""):
             return HTMLResponse(_NOT_ENROLLED_HTML % ("That link or code has expired or was already used — ask for a fresh one.", next or "/m"), status_code=410, headers={"Cache-Control": "no-store"})
         jti = uuid.uuid4().hex
         exp = datetime.now(timezone.utc) + timedelta(days=_DEVICE_DAYS)
-        conn.execute("UPDATE admin_enrol_tokens SET used_at = datetime('now') WHERE token = ?", (row["token"],))
+        conn.execute("UPDATE admin_enrol_tokens SET used_at = CURRENT_TIMESTAMP WHERE token = ?", (row["token"],))
         conn.execute("INSERT INTO admin_devices (jti, label, expires_at) VALUES (?, ?, ?)",
                      (jti, row["label"], exp.strftime("%Y-%m-%d %H:%M:%S")))
         conn.commit()
@@ -16317,7 +16317,7 @@ def demand_sweep(_admin=Depends(_require_admin)):
     conn = database.get_db()
     try:
         expired = conn.execute(
-            "UPDATE demand_tickets SET state='expired', updated_at=datetime('now') "
+            "UPDATE demand_tickets SET state='expired', updated_at=CURRENT_TIMESTAMP "
             "WHERE state='open' AND created_at < datetime('now','-30 days')").rowcount
         res = _demand_match_and_compose(conn)
         conn.commit()
@@ -16911,7 +16911,7 @@ def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
         prior = conn.execute("SELECT * FROM launch_switches WHERE id = 1").fetchone()
         prior = dict(prior) if prior else {}
         if sets:
-            sets.append("updated_at = datetime('now')")
+            sets.append("updated_at = CURRENT_TIMESTAMP")
             conn.execute("UPDATE launch_switches SET " + ", ".join(sets) + " WHERE id = 1", vals)
             conn.commit()
         row = conn.execute("SELECT * FROM launch_switches WHERE id = 1").fetchone()
@@ -17030,13 +17030,13 @@ def admin_tuppence_grant(body: _TuppenceGrant, admin=Depends(_require_admin)):
             desc += " (" + body.reason.strip()[:160] + ")"
         cur = conn.execute(
             "INSERT INTO transactions (user_email, type, amount, description, created_at) "
-            "VALUES (?, ?, ?, ?, datetime('now'))", (email, kind, int(body.amount), desc))
+            "VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)", (email, kind, int(body.amount), desc))
         tx_id = cur.lastrowid
         conn.execute(
             "CREATE TABLE IF NOT EXISTS admin_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, actor TEXT, "
             "action TEXT, field TEXT, prior TEXT, new TEXT, reason TEXT)")
         conn.execute(
-            "INSERT INTO admin_audit (ts, actor, action, field, prior, new, reason) VALUES (datetime('now'),?,?,?,?,?,?)",
+            "INSERT INTO admin_audit (ts, actor, action, field, prior, new, reason) VALUES (CURRENT_TIMESTAMP,?,?,?,?,?,?)",
             (str(actor), "tuppence_grant", email, "", "%s:%d" % (kind, int(body.amount)), desc))
         conn.commit()
         bal = conn.execute("SELECT COALESCE(SUM(amount),0) b FROM transactions WHERE lower(user_email) = ?", (email,)).fetchone()["b"]

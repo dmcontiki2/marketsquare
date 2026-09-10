@@ -20708,5 +20708,196 @@ def rg_host_agent_reads_real_exit_code():
     return out or [(INFO, "the agent reads real exit codes; no CityLauncher deploy is looping")]
 
 
+@entry("RG-0350", "The DB-archive lane has a PRODUCER, not only a guard -- the daily loop MAKES a "
+                  "restorable backup with no host click, so the lane cannot silently stop again",
+       LOCKED, scope="scripts/backup_db_sandbox.py (the unattended producer) + the "
+                     "BACKUP-UNATTENDED-1 section of MAINTENANCE_AGENT.md (its wiring into "
+                     "step 2a of every maintenance run) + backups/RESTORE_PROOF.md. CLASS, not "
+                     "instance: a GUARD WITHOUT A PRODUCER. RG-0234 asserted freshness from "
+                     "1 Sep and nothing on disk made an archive, so the board reported the same "
+                     "red for 9 days running and the only cure anyone had was a human "
+                     "remembering. Any future assertion of the form 'X must be fresh' needs the "
+                     "thing that makes X to run somewhere unattended, or it is decoration. "
+                     "Deliberately NOT in scope: retention/pruning, which deletes and is "
+                     "therefore David's alone (RUL-095) -- archives accumulate until he prunes, "
+                     "and that is the correct trade.",
+       fixed_on="10 Sep 2026",
+       ref="BACKUP-UNATTENDED-1. Found by the daily maintenance loop with RG-0234 red at 9 days "
+           "(the lane had also sat 27 days stale before 1 Sep). backup_marketsquare.bat is "
+           "native-Windows, on no schedule and on no allowlist, so it ran only when asked. The "
+           "producer now runs where the loop runs: sqlite3 .backup on the box (consistent, "
+           "read-only), scp, md5 matched both ends, zipped to the exact shape RG-0234 restores, "
+           "the ARCHIVE re-extracted and integrity-checked, proof appended. Occurrence closed "
+           "the same run: archive 2026-09-10_1356.zip, restores clean, users=71 listings=113.")
+def rg_backup_has_a_producer():
+    out = []
+    prod = repo_file(os.path.join("scripts", "backup_db_sandbox.py"))
+    if prod is None:
+        out.append((FAIL, "scripts/backup_db_sandbox.py is GONE -- the archive lane is back to "
+                          "a guard with nothing behind it (BACKUP-UNATTENDED-1 lost)"))
+    else:
+        # It must still PRODUCE and still PROVE -- and must still never delete.
+        for needle, why in ((".backup", "no consistent server-side snapshot"),
+                            ("zipfile", "writes no archive"),
+                            ("integrity_check", "never proves the archive restores"),
+                            ("RESTORE_PROOF.md", "leaves no dated proof")):
+            if needle not in prod:
+                out.append((FAIL, "backup_db_sandbox.py %s (missing %r)" % (why, needle)))
+        import re as _re
+        if _re.search(r"shutil\.rmtree\(\s*bdir|os\.remove\(.*backups|unlink\(.*backups", prod):
+            out.append((FAIL, "the producer has grown a DELETE against backups/ -- retention is "
+                              "David's alone (RUL-095), never the unattended lane's"))
+    canon = repo_file("MAINTENANCE_AGENT.md")
+    if canon is None:
+        out.append((INFO, "MAINTENANCE_AGENT.md not readable here -- wiring leg skipped"))
+    elif "BACKUP-UNATTENDED-1" not in canon or "backup_db_sandbox.py" not in canon:
+        out.append((FAIL, "MAINTENANCE_AGENT.md no longer wires the producer into the daily run "
+                          "-- the loop will stop making archives and only report on them again"))
+    # The proof log must actually be growing: a producer that runs but never proves is the
+    # same defect one layer down.
+    proof = repo_file(os.path.join("backups", "RESTORE_PROOF.md"))
+    if proof is not None and "backup_db_sandbox.py" not in proof:
+        out.append((FAIL, "RESTORE_PROOF.md carries no entry from the unattended producer -- it "
+                          "has never actually run, so the wiring is a sentence, not a mechanism"))
+    return out or [(INFO, "the archive lane has an unattended producer, it proves its own "
+                          "restore, and it deletes nothing")]
+
+
+@entry("RG-0351", "The plain SQLite clock is GONE from bea_main.py -- every datetime('now') with no "
+                  "modifier is the portable CURRENT_TIMESTAMP, so the Postgres move stays cheap",
+       LOCKED, scope="bea_main.py, every no-modifier datetime('now') -- 45 of them: DDL column "
+                     "defaults, UPDATE ... SET x = <now>, and INSERT ... VALUES (..., <now>, ...). "
+                     "Modifier forms (datetime('now','-30 days'), datetime('now', ?)) are OUT of "
+                     "scope here: those need a caller-supplied UTC stamp, the PG-PORTABLE-1 "
+                     "treatment, and 17 remain. CLASS: the ratchet's own direction of travel -- "
+                     "the count may only fall. Value shape is unchanged ('YYYY-MM-DD HH:MM:SS', "
+                     "UTC), proven identical in SQLite for both DDL defaults and expressions, so "
+                     "every stored row still compares against every new one.",
+       fixed_on="10 Sep 2026",
+       ref="PG-PORTABLE-2. Found by the daily maintenance loop: RG-0114 red because pg-readiness "
+           "had sat DANGER on 8 consecutive pre-deploy scans, the ratchet reading 62 against a "
+           "baseline of 49. The growth was real, not a false positive. Fixed the way "
+           "PG-PORTABLE-1 was (19 Aug), never by re-baselining upward -- the baseline "
+           "auto-TIGHTENED 49 -> 17. Evidence: test_pg_readiness.py PASS; py_compile clean; and "
+           "a behavioural proof in :memory: -- CURRENT_TIMESTAMP and datetime('now') return the "
+           "identical string as a DDL default, in an INSERT and in an UPDATE, and all 14 "
+           "rewritten CREATE TABLE statements execute clean.")
+def rg_pg_plain_clock_is_portable():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "not run from the repo -- source half skipped")]
+    # Count on CODE only: an explanation of the old form must never read as a use of it
+    # (PG-RATCHET-PRECISION-2, 26 Aug -- this repo has paid for that mistake already).
+    import io as _io, re as _re, tokenize as _tok
+    try:
+        toks = list(_tok.generate_tokens(_io.StringIO(bea).readline))
+        code = "\n".join(t.string for t in toks if t.type != _tok.COMMENT)
+    except Exception:
+        code = bea
+    plain = len(_re.findall(r"datetime\('now'\)", code))
+    if plain:
+        out.append((FAIL, "%d plain datetime('now') call(s) are back in bea_main.py -- the "
+                          "SQLite clock re-entered the code that was made portable" % plain))
+    if "CURRENT_TIMESTAMP" not in code:
+        out.append((FAIL, "bea_main.py carries no CURRENT_TIMESTAMP at all -- the PG-PORTABLE-2 "
+                          "rewrite has been reverted wholesale"))
+    base = repo_file(os.path.join("scripts", "pg_readiness_baseline.json"))
+    try:
+        n = json.loads(base).get("datetime_now", 10 ** 6) if base else None
+        if n is None:
+            out.append((INFO, "baseline not readable here"))
+        elif n > 17:
+            out.append((FAIL, "the pg baseline was re-baselined UPWARD to %d (was 17 after "
+                              "PG-PORTABLE-2) -- that is weakening the assertion to make it "
+                              "pass" % n))
+        else:
+            out.append((INFO, "pg baseline datetime_now=%d; %d modifier form(s) left to convert"
+                              % (n, len(_re.findall(r"datetime\('now'\s*,", code)))))
+    except Exception as ex:
+        out.append((FAIL, "pg baseline unreadable (%r)" % ex))
+    return out
+
+
+@entry("RG-0352", "The pre-deploy scan reaches a CLEAN verdict -- every association page a tester can "
+                  "land on carries the fault widget, and the ack guard asserts the PROPERTY, not a "
+                  "spelling",
+       LOCKED, scope="Two halves of one sitting. (a) visuals/assoc/assoc_*.html -- all seven "
+                     "deployed association pages carry /static/ts_report.js (first-party, so "
+                     "RG-0025's no-third-party-script rule is untouched). (b) "
+                     "test_maintenance_agent.py::test_ack_always_sends_except_spam -- the bare-ack "
+                     "assertion reads the property (the reporter is told a reference, on BOTH the "
+                     "report and non-report bodies) and its window reaches the whole branch. "
+                     "CLASS for (b): a guard that pins a SPELLING goes red against correct code, "
+                     "and a red that is wrong trains the eye to scroll past every other red. This "
+                     "file already documents three instances of exactly that; this is the fourth, "
+                     "and the SECOND where the +N character window, not the needle, was the fault.",
+       fixed_on="10 Sep 2026",
+       ref="TRUTH-REVIEW-4 + the assoc widget wiring. Found by the daily maintenance loop while "
+           "clearing RG-0114: with pg-readiness fixed, 'maintenance-agent' and 'tester-intake' "
+           "were still on the same DANGER line and would have gone chronic in turn. The ack code "
+           "was CORRECT throughout -- it has read \"reference {ref_override or fault_code}\" "
+           "since REF-HONESTY-1, because a support form supplies its own ref -- so the guard was "
+           "fixed, not the behaviour. The seven assoc pages were a real gap: a tester could land "
+           "on them with no way to report a fault. Evidence: test_maintenance_agent.py and "
+           "test_tester_intake.py both all-PASS, and predeploy_check.py logged "
+           "'danger=- verdict=ok' at 2026-09-10T14:10:42Z -- the first clean scan since 2 Sep.")
+def rg_predeploy_scan_reaches_clean():
+    out = []
+    import re as _re
+    # (a) every association page a tester can land on offers the way to report a fault
+    adir = os.path.join(REPO, "visuals", "assoc")
+    if not os.path.isdir(adir):
+        out.append((INFO, "visuals/assoc not present here -- page leg skipped"))
+    else:
+        pages = sorted(f for f in os.listdir(adir)
+                       if f.startswith("assoc_") and f.endswith(".html"))
+        if len(pages) < 7:
+            out.append((FAIL, "only %d assoc_*.html page(s) found -- the set has shrunk and the "
+                              "leg below would pass vacuously" % len(pages)))
+        bare = []
+        for f in pages:
+            try:
+                with open(os.path.join(adir, f), encoding="utf-8", errors="replace") as fh:
+                    if "ts_report.js" not in fh.read():
+                        bare.append(f)
+            except OSError:
+                pass
+        if bare:
+            out.append((FAIL, "a tester can land on these association pages with no way to "
+                              "report a fault: " + ", ".join(bare)))
+    # (b) the ack guard must assert the property, never the spelling it sat red on
+    t = repo_file("test_maintenance_agent.py")
+    if t is None:
+        out.append((INFO, "test_maintenance_agent.py not readable here -- guard leg skipped"))
+    else:
+        if '"reference {fault_code}" in blk' in t:
+            out.append((FAIL, "the ack guard has re-pinned the literal spelling "
+                              "\"reference {fault_code}\" -- it will sit red against correct "
+                              "code again (TRUTH-REVIEW class, 4th instance)"))
+        if "fault_code[^{}]*" not in t:
+            out.append((FAIL, "the ack guard no longer reads the reference as a PROPERTY "
+                              "(the interpolation search is gone)"))
+        m = _re.search(r"blk = src\[max\(0, i - 1200\):i \+ (\d+)\]", t)
+        if m and int(m.group(1)) < 6000:
+            out.append((FAIL, "the ack guard's window shrank back to +%s -- it stops short of "
+                              "the bare-ack branch, which begins near +3817 and runs past "
+                              "+4700" % m.group(1)))
+    # (c) the scan itself must have actually REACHED clean -- the point of the entry
+    log = repo_file("deploy_audit.log")
+    if log is None:
+        out.append((INFO, "deploy_audit.log not present here -- verdict leg skipped"))
+    else:
+        lines = [l for l in log.splitlines() if "verdict=" in l]
+        if not lines:
+            out.append((INFO, "no scans logged yet"))
+        elif not any("verdict=ok" in l for l in lines[-12:]):
+            out.append((FAIL, "not one of the last 12 pre-deploy scans reached a clean verdict "
+                              "-- the scan is back to permanent DANGER, which is the state "
+                              "RG-0114 exists to end"))
+    return out or [(INFO, "every assoc page offers the fault widget; the ack guard reads the "
+                          "property; the scan reaches clean")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
