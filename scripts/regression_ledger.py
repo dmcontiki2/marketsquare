@@ -8780,9 +8780,23 @@ def rg_session_number_derived():
                                   "hand-set number is back" % d.get("basis")))
             sc = os.path.join(REPO, "scripts", "session_counter.py")
             if os.path.exists(sc):
-                rc = os.system('"%s" "%s" --check >%s 2>&1'
-                               % (sys.executable, sc, os.devnull))
-                if rc != 0:
+                # OS-SYSTEM-QUOTES-1 (10 Sep 2026). This was os.system('"%s" "%s" --check ...'),
+                # which on Windows goes through cmd.exe -- and cmd strips the outer quote pair of
+                # a command that BEGINS with one, so the interpreter path and the script path ran
+                # together into a syntax error and rc was never 0. PROVEN 10 Sep 05:11: boards_host
+                # .bat ran `python scripts\session_counter.py --check` in the same second, same cwd,
+                # same interpreter -> "OK: session 194" rc=0, while this line reported the counter
+                # had fallen behind. Worse, that false FAIL flipped counter_is_current below, so
+                # genuine deploy debt was voiced as a REGRESSION and the board printed "do not
+                # deploy over this" -- the instrument arguing against its own remedy, which is the
+                # exact fault DEPLOY-DEBT-VOICE-1 was written to end. _harness() is list-based (no
+                # shell, no quoting) and reports a harness that could not run as blind, never as a
+                # verdict. The sandbox never saw this: os.system is fine on Linux, and the
+                # host-side lane is new tonight (SANDBOX-REPAIR-1).
+                ok, blind, detail = _harness([sys.executable, sc, "--check"], timeout=120, cwd=REPO)
+                if blind:
+                    out.append((INFO, detail))
+                elif not ok:
                     out.append((FAIL, "session_counter.py --check fails -- the counter has "
                                       "fallen behind the fragments on disk (run it to see by "
                                       "how many sittings)"))
@@ -8883,8 +8897,14 @@ def rg_dashboard_provenance():
                                   "declaration with no expiry is a permanent hiding place"
                                   % e.get("asserts", e.get("slug"))))
 
-    rc = os.system('"%s" "%s" --check >%s 2>&1' % (sys.executable, aud, os.devnull))
-    if rc != 0:
+    # OS-SYSTEM-QUOTES-1 (10 Sep 2026): was os.system with a leading-quote command, which cmd.exe
+    # mangles on Windows -- a guaranteed non-zero rc regardless of what the auditor found. PROVEN
+    # the same second by boards_host.bat: "0 unfed health chip(s), 0 orphaned id(s) ... OK", rc=0,
+    # while this line called the page unfed. See the twin fix in RG-0154.
+    ok, blind, detail = _harness([sys.executable, aud, "--check"], timeout=120, cwd=REPO)
+    if blind:
+        out.append((INFO, detail))
+    elif not ok:
         out.append((FAIL, "dashboard_provenance --check fails -- at least one chip paints a "
                           "health colour nothing measures, or a registered static surface has "
                           "passed its review date (run the script for the list)"))

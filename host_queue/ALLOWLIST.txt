@@ -110,3 +110,11 @@ run_bat    MarketSquare\rulings_host.bat
 # --- --check, which is why this is a bat. Writes SESSION_COUNTER.json only; no money, no
 # --- sending, no deletion, no server change.
 run_bat    MarketSquare\boards_host.bat
+
+# --- Widened 10 Sep 2026 (run 10). GOAL-NUMBER-HOST-1: the goal is scored by
+# --- onboarding_number.py and the sandbox that used to run it has been dead since the
+# --- 8 Sep Windows update, so runs 8 and 9 reported the number as UNKNOWN. The scorer
+# --- reads the two databases over SSH and one public page; it writes nothing anywhere,
+# --- sends nothing and spends nothing. Without this line the goal cannot be measured at
+# --- all, which is worse than any risk the line carries.
+run_py     MarketSquare\scripts\onboarding_number.py
