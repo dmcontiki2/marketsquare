@@ -13,8 +13,8 @@ setlocal
 ::                                       static surface past its review date. Changes nothing.
 :: Full output -> host_queue\done\boards_host_<stamp>.txt; the queue tail carries the verdicts.
 :: No money, no sending, no deletion, no server change.
-set STAMP=%DATE:~-4%%DATE:~-7,2%%DATE:~-10,2%-%TIME:~0,2%%TIME:~3,2%%TIME:~6,2%
-set STAMP=%STAMP: =0%
+set STAMP=
+for /f %%S in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmmss"') do set STAMP=%%S
 set OUT=%~dp0host_queue\done\boards_host_%STAMP%.txt
 cd /d "%~dp0"
 echo === boards_host  %DATE% %TIME%   full output: %OUT%

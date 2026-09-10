@@ -4,8 +4,8 @@ setlocal
 :: when the Cowork sandbox cannot. Full output -> host_queue\done\rulings_host_<stamp>.txt
 :: (git-ignored); the queue tail carries the whole report when it fits, else its end.
 :: Read-only: reads RULINGS.md and the canon files it points at, writes nothing else.
-set STAMP=%DATE:~-4%%DATE:~-7,2%%DATE:~-10,2%-%TIME:~0,2%%TIME:~3,2%%TIME:~6,2%
-set STAMP=%STAMP: =0%
+set STAMP=
+for /f %%S in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmmss"') do set STAMP=%%S
 set OUT=%~dp0host_queue\done\rulings_host_%STAMP%.txt
 cd /d "%~dp0"
 echo === rulings_host  %DATE% %TIME%   full report: %OUT%
