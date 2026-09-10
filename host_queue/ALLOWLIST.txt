@@ -102,3 +102,11 @@ run_py     MarketSquare\scripts\rulings_check.py
 # --- 4000-char tail cut the three regression names off the 21:48 run. Prefer these.
 run_bat    MarketSquare\ledger_host.bat
 run_bat    MarketSquare\rulings_host.bat
+
+# --- Widened 10 Sep 2026. SANDBOX-REPAIR-1 lane. boards_host.bat runs the two dashboard-truth
+# --- boards on David's PC while the sandbox is dead: session_counter.py (RG-0154's own designed
+# --- remedy - re-derives the session number and self-verifies its write) and
+# --- dashboard_provenance.py --check (read-only auditor, RG-0155). The run_py lane cannot pass
+# --- --check, which is why this is a bat. Writes SESSION_COUNTER.json only; no money, no
+# --- sending, no deletion, no server change.
+run_bat    MarketSquare\boards_host.bat

@@ -20636,7 +20636,11 @@ def rg_sandbox_repair_is_queued_not_clicked():
            "parsed, kept its flag, and re-deployed + restarted citylauncher.service on every tick since -- "
            "73 times by 21:48 on 9 Sep. Every timestamp inside the block was parse-time too, which is why the "
            "'seen' and 'FAILED' lines always carried the same second. Fix: setlocal enabledelayedexpansion "
-           "and !var! reads. Written host-side by the app's file tools; the next tick is the proof.")
+           "and !var! reads. Written host-side by the app's file tools; the next tick is the proof. "
+           "ASSERTION CORRECTED the same night (ASSERTION-COMMENT-1): the first version of this check scanned "
+           "the whole file and went red on the header comment that QUOTES the old buggy line to explain it -- "
+           "the fix was already on disk and correct. The scan now skips :: and rem lines. Recorded here rather "
+           "than quietly edited, per the ledger rule: if an assertion is wrong, fix the assertion and say so.")
 def rg_host_agent_reads_real_exit_code():
     out = []
     bat = repo_file("autodeploy_agent.bat")
@@ -20645,10 +20649,19 @@ def rg_host_agent_reads_real_exit_code():
     if "enabledelayedexpansion" not in bat.lower():
         out.append((FAIL, "autodeploy_agent.bat no longer enables delayed expansion -- every %var% inside its "
                           "deploy blocks reads the pre-block value again"))
+    # ASSERTION-COMMENT-1 (9 Sep 2026, same night): the first version of this check ran the
+    # substring scan over the WHOLE file and went red on its own documentation -- the header
+    # comment quotes `set "CLRC=%errorlevel%"` verbatim to explain the bug it fixed. A guard
+    # that cannot tell code from the comment describing it reports a fault that is not there,
+    # which is the RG-0117 class (a CODE-PATTERN red is never evidence on its own). Scan the
+    # EXECUTABLE lines only: cmd comments are `::` or `rem`, at any indentation.
+    code = "\n".join(l for l in bat.splitlines()
+                     if not l.lstrip().startswith("::")
+                     and not l.lstrip().lower().startswith("rem "))
     for bad in ('set "CLRC=%errorlevel%"', 'if "%CLRC%"=="0"', 'set "RC=%errorlevel%"', "rc=%CLRC%", "rc=%RC%"):
-        if bad in bat:
+        if bad in code:
             out.append((FAIL, "parse-time read is back in autodeploy_agent.bat: %s -- the deploy loop returns" % bad))
-    if 'set "CLRC=!errorlevel!"' not in bat or 'if "!CLRC!"=="0"' not in bat:
+    if 'set "CLRC=!errorlevel!"' not in code or 'if "!CLRC!"=="0"' not in code:
         out.append((FAIL, "the CityLauncher block no longer reads its exit code with delayed expansion"))
     log_p = os.path.join(REPO, "autodeploy_agent_log.txt")
     if os.path.isfile(log_p):
