@@ -84,6 +84,51 @@ Rules (David, 2 Aug 2026):
 
 | DW-114 | 2026-09-07 | 2026-09-07 | MEDIUM | David's reach question, then a live-database probe of the agency tables | **RAISED AND CLOSED THE SAME SESSION — A DECLARED BENEFIT HAD ZERO HOLDERS FOR FIVE WEEKS, AND NOTHING SAID SO.** David asked whether verified agencies should get multi-city reach. Granting it was trivial; the finding was that it would have landed on an **empty set**. AGENCY-TIER-1 (3 Aug 2026) declared *“a member of a VERIFIED agency now carries it”*, but only ever stamped `seller_tier` inside `invite_agent`, so the sentence held only for agents invited AFTER their agency was verified — and nothing ever re-read it. **PROBED: 8 agencies, ALL verified, 25 memberships across 19 people, and NOT ONE on the `agency` tier** (8 memberships free, 17 starter). Compounding it, `agencies.verified` could only ever be set at INSERT (1 by `create_agency`, 0 by `agency_wave_prep`), so verification was **one-way and invisible** — there was no route to un-verify, and no route by which verifying an agency reached its existing members. **The class:** an entitlement stamped onto a row at the moment a condition happens to be true, with nothing re-reading it when the condition changes. No instrument caught it because nothing asserted the RELATIONSHIP between the flag and the tier — both halves were individually fine. **A BUSINESS FACT FELL OUT OF IT, and it corrects something reported earlier today:** the 17 users counted as “starter” were these mis-stamped agency agents, not Starter subscribers. None of the 25 has a paid seat or a billing period. **Paying subscribers on the platform: zero.** | CLOSED | **CLOSED 2026-09-07 — fixed at the class, shipped and PROVEN ON THE LIVE BOX.** The tier is now a DERIVED property with ONE writer (`_sync_agency_member_tiers`), called from the invite path and from a new ops-gated `POST /agencies/{id}/verify` that moves verification **both** ways; a member who bought their own seat (RUL-048 `seat_paid`) or holds a live subscription is never touched, so it cannot overwrite a tier somebody paid for. `agency` also joined `_PAID_TIERS`, and no country boundary is enforced for any tier (RUL-109 — David: *“let sellers reach abroad”*). **PROVEN BEFORE SHIPPING:** the writer was exercised on a throwaway replica (free+starter lift, un-verify returns them, paying members untouched, second run moves 0) and `migrations/036_agency_tier_resync.py` was dry-run AND applied against a **copy of the real live database** (25 moved, re-run 0). **PROVEN AFTER SHIPPING:** commit `1f81572`, post-deploy 09:06:47Z carries `migration:036_agency_tier_resync.py — ok — member tiers now -> agency=25`; the live database reads **52 free / 19 agency**, every agency member on the right tier, and the live `main.py` carries `_PAID_TIERS = {"starter", "pro", "agency"}` plus the writer and the verify route. Asserted by **RG-0336 (LOCKED)**, which fails if the tier becomes a stamp again, if invite grows its own second copy of the rule, if the paying-member guard is dropped, or if the verify route disappears. Recorded as **RUL-109** (rulings_check green). Ledger after: **324 entries · 301 holding · 0 REGRESSED · 23 open · 0 ready to lock · 0 unverified.** RESIDUAL, recorded not buried: a seller may now appear “local” in a city on another continent on their own say-so — the self-declaration is the only guard, and BACKLOG REACH-SHIP-1 (a “ships nationwide” toggle) is the honest fix, David's to schedule. |
 | DW-115 | 2026-09-08 | 2026-09-08 | LOW | `predeploy_check.py` (run before shipping ID-UPLOAD-INTERIM-1; not one of the watch's 13 checks, filed so it is not lost) | **NEW — the pre-deploy audit has said DANGER on every run since 5 Sep for the same three reasons, and deploys ride anyway (mode=warn).** `deploy_audit.log`: every entry from 2026-09-05T11:14Z to today 14:58Z reads `verdict=DANGER` with `danger=pg-readiness|maintenance-agent|tester-intake`. (a) **PG-READINESS**: the SQLite-ism ratchet grew `datetime_now 49 → 62` against `scripts/pg_readiness_baseline.json` — not from today's change (bea_main.py `'now'` count identical before and after, 81); (b) **MAINTENANCE**: `test_ack_always_sends_except_spam` — *the bare ack no longer quotes the fault reference*; (c) **TESTER INTAKE**: `test_widget_is_wired_into_every_tester_page` — seven `visuals/assoc/assoc_*.html` pages carry no fault-report widget. None of the three is a live fault a user hits today; the point is that a DANGER verdict repeated for four days stops meaning anything, which is the RG-0133 no-default-colour class applied to a gate. | OPEN | CTO lane, next attended tidy: either fix the three (re-baseline pg_readiness only if the 13 new `'now'` uses are genuinely portable-wrapped; restore the fault-reference line in the bare ack; wire the widget into the seven assoc pages) or have predeploy_check carry a dated, named allowance — a DANGER nobody acts on is a green painted red. |
+| DW-116 | 2026-09-10 | 2026-09-10 | MEDIUM | self-heartbeat (register `last_run` vs today) + the sandbox's own first command | **NEW AND CLOSED THE SAME DAY — 9 September was a blind day: the watch ran but the Cowork Linux sandbox was dead, so not one of the thirteen checks could execute and no register entry was written.** Evidence of the gap: register `last_run` read **2026-09-08** against today **2026-09-10**, there is no `watch_pass_2026_09_09` key and no `Records/COST_SWEEP_2026-09-09.md` — the sweep files jump 09-08 → 09-10. The cause is the class named in CLAUDE.md SANDBOX-REPAIR-1 (the Windows drive share never attaches into the VM; `no Plan9 drive shares mounted`). **CLOSED 2026-09-10 — the originating check re-ran and PASSED:** the sandbox answered on the first command of this run (`ls -d /sessions/*/mnt/Projects` → mounted, 04:33:23Z) and all thirteen checks ran to completion, so the fault has cleared. **RESIDUAL, recorded not carried as a row:** a one-day gap is still a gap, and nothing in the ledger asserts that the scheduled task itself is ENABLED — that is DW-104's residual and it lives as the board's one BLUE card, not here. RG-0348 (LOCKED, holding today) asserts only that a dead sandbox is diagnosable and queueable, which is what it did not have on 9 Sep. | CLOSED | None — closed on the passing re-run. A future blind day is a NEW row referencing this one. |
+
+### Watch pass — 2026-09-10 (Thursday, unattended — launch day +9)
+
+Verdict **GREEN** — the sandbox is back after a blind 9 September, every instrument ran, and **nothing rotted**.
+Site by probe (04:33Z): `/health` **ok 1.3.1**, db integrity ok; root **200 in 0.37 s**; `/payment/test` **ok,
+paystack_connected true**; TLS **73 days** (expires 22 Nov 2026). Ledger, three shards + combine:
+**336 entries · 314 holding · 0 REGRESSED · 22 open · 0 ready to lock · 0 UNVERIFIED**, exit 0 — and 0 entries
+printed READY TO LOCK. Global QA audit: **2 findings, both INFO, 0 new** (DEMO-PLACEHOLDERS, VERSION-KEY-BENIGN —
+repo pins ms.js v486, live v625, served bytes identical, the known monotonic bump, DW-001). Cost sweep exit **0**
+(report `Records/COST_SWEEP_2026-09-10.md`; no new items vs 8 Sep). Daily checks: **deploy drift clean, 19/19
+tracked files match live**. `smoke_test.py`: **ALL PASS**. Server sensors as msdeploy: FEA integrity **ok,
+alerts []** (one standing Cloudflare-injection note); subscription monitor **35 UP / 15 HELD / 1 PLANNED / 0 DOWN**,
+0 issues; disk **46% used, 39G free**; orchestrator `queue.json` and `staged.json` both empty (the fixer is paused
+by David's 2 Aug instruction, DW-004). Cron parity: `findings.cron.json` loop_date **2026-09-10**, smoke **39/39**,
+health **ok 1.3.1**, spend **$0.00 of the $100 ceiling** — parity holds on all three core fields. Monday lane
+(canon drift + deep scan) not in scope; today is Thursday.
+
+- **NEW: DW-116 (MEDIUM), raised and CLOSED the same day** — 9 September was a blind day. The Linux sandbox was
+  dead (`no Plan9 drive shares mounted`, the SANDBOX-REPAIR-1 class), so no check ran and no entry was written;
+  `last_run` read 2026-09-08 and the cost-sweep files jump 09-08 → 09-10. Closed on the passing re-run: the
+  sandbox answered on this run's first command and all thirteen checks completed.
+
+- **Not closed, and why.** DW-111 re-attempted and **still unverifiable**: `journalctl -u marketsquare --since
+  '24 hours ago'` as `msdeploy` returns *No entries* (`id -nG` = `msdeploy` only — still in neither `adm` nor
+  `systemd-journal`) and `/var/www/marketsquare/*.log` does not exist. Absence from a blind instrument is not a
+  clean bill. DW-115 re-ran and **still fails, unchanged**: `predeploy_check.py` prints `Verdict: DANGER` for the
+  same three causes (pg-readiness `datetime_now 49 → 62`; the bare complaint ack no longer quotes the fault
+  reference; seven `visuals/assoc/assoc_*.html` pages carry no fault-report widget) — logged to `deploy_audit.log`
+  again today. DW-010 re-ran and **still fails**: `cc_age_check.py` reads **CC-002 open 92 d** (and CC-005 at 9 d)
+  against the 7-day threshold — SCHEDULED, formally deferred by David. DW-087 **did not re-run** — the deep scan is
+  a Monday-only lane and today is Thursday. No check, no close.
+
+- **AI-watch:** clear. No provider ban, export control, outage or rate-limit change touching South African users in
+  the last 48 h. Pricing note only, no action: Anthropic's cancelled $3/$15 reversion still holds (Sonnet 5 at
+  $2/$10 is permanent — the "reverts 1 Sep" claim remains STALE and is refused on sight), and OpenAI's GPT-5.4 has
+  moved to $5/$22.50 — recorded for David's model-selection rule (RUL-009), not proposed as a change. The app pins
+  its own models regardless.
+
+- **Coverage map** updated to today: **71 green · 1 blue · 2 amber · 0 red · 10 grey** (84 cards). One new card,
+  no colour changes: a GREEN card for the dead-sandbox class (RG-0348). The one BLUE remains DW-112 / DW-104 —
+  the watch's own liveness is armed but unasserted, and 9 September is precisely the blind day that card predicts.
+
+- Register: next_id → 117; non-closed rows now 4 (DW-010 SCHEDULED · DW-087 · DW-111 · DW-115) plus the 6
+  long-standing RECLASSIFIED.
 
 ### Watch pass — 2026-09-08 (Tuesday, unattended — launch day +7)
 
