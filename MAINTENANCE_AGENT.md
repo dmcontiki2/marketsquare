@@ -290,6 +290,32 @@ that is the correct trade: a spare archive costs disk, a missing one costs the b
 Asserted by RG-0350 (the producer exists, is wired here, and the lane is fresh) alongside
 RG-0234 (the archive restores).
 
+## WAVE-WITNESS-1 — the wave-hygiene witness has a PRODUCER too (11 Sep 2026)
+
+Second instance of the BACKUP-UNATTENDED-1 class, found the very next day. RG-0175 asserts
+three wave-hygiene properties AND that the witness proving them is under 14 days old. On
+11 Sep the board went red with "wave-hygiene witness stale (>14 days)". Nothing was broken:
+both proof suites still passed that morning. `wave_hygiene_status.json` had simply been
+written BY HAND on 28 Aug and nothing on disk ever wrote it again.
+
+**Step 2b of every maintenance run, beside the backup producer:**
+
+    python3 scripts/wave_hygiene_witness.py
+
+It re-runs `CityLauncher/tests/test_wave_hygiene.py` (source tags + cross-wave suppression)
+and `CityLauncher/tests/test_intl_templates.py` (international pass), attributes the real
+PASS/FAIL lines to the three witness items, and rewrites the witness with those verdicts.
+
+It **never bumps a timestamp**. A failing suite writes `not_ok` and exits non-zero, so
+RG-0175 goes red on the FACT rather than the clock — proven 11 Sep by a sabotage run that
+forced both suites to fail and confirmed no `ok` could be written.
+
+The general rule, now twice paid for: **any assertion of the form "X must be fresh" needs the
+thing that MAKES X to run unattended in this loop, or the red is decoration and the only cure
+is a human remembering.** Before locking the next freshness guard, name its producer.
+
+Asserted by RG-0353.
+
 ## MAINT-DEPS-1 — the lane installs what its INSTRUMENTS need, not just what CRASHES (28 Aug 2026)
 
 **Step 0 of every maintenance run, before the ledger:** `python3 scripts/maint_deps.py`

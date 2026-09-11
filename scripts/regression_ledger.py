@@ -20899,5 +20899,104 @@ def rg_predeploy_scan_reaches_clean():
                           "property; the scan reaches clean")]
 
 
+@entry("RG-0353", "The wave-hygiene witness has a PRODUCER -- the daily loop RE-PROVES source tags, "
+                  "suppression and the intl pass, so the lane cannot rot into a red by the clock alone",
+       LOCKED, fixed_on="11 Sep 2026",
+       scope="scripts/wave_hygiene_witness.py (the producer) + the WAVE-WITNESS-1 section of "
+             "MAINTENANCE_AGENT.md (its wiring into step 2b of every maintenance run) + "
+             "wave_hygiene_status.json (the artefact). SECOND instance of the RG-0350 class -- a "
+             "GUARD WITHOUT A PRODUCER -- found the day after the first. RG-0175 asserts three "
+             "properties AND a 14-day freshness window; the witness was hand-written on 28 Aug and "
+             "nothing on disk ever wrote it again, so on 11 Sep the board went red while both proof "
+             "suites still passed. The producer RE-RUNS CityLauncher/tests/test_wave_hygiene.py and "
+             "tests/test_intl_templates.py and writes their REAL verdicts: a failing suite writes "
+             "not_ok and exits non-zero, so RG-0175 goes red on the fact, never on the clock. "
+             "Proven 11 Sep by a sabotage run that forced both suites to fail and confirmed no 'ok' "
+             "could be written. CLASS RULE, twice paid for: any assertion of the form 'X must be "
+             "fresh' needs the thing that MAKES X running unattended in this loop, or the red is "
+             "decoration and the only cure is a human remembering.",
+       ref="WAVE-WITNESS-1, 11 Sep 2026 maintenance loop. Sibling of RG-0350 (BACKUP-UNATTENDED-1).")
+def rg_wave_hygiene_producer():
+    out = []
+    prod = repo_file("scripts/wave_hygiene_witness.py")
+    if prod is None:
+        out.append((INFO, "outside the repo -- producer source not checked here"))
+    else:
+        if "def run_suite" not in prod or "SUITES" not in prod:
+            out.append((FAIL, "wave_hygiene_witness.py no longer RUNS the proof suites -- it can "
+                              "only be bumping a timestamp, which is the fault it was built to end"))
+        if "not_ok" not in prod:
+            out.append((FAIL, "the producer has lost its not_ok path -- a failing suite would "
+                              "silently produce a green witness"))
+        if "test_wave_hygiene.py" not in prod or "test_intl_templates.py" not in prod:
+            out.append((FAIL, "the producer no longer names both proof suites -- one of the three "
+                              "witness items would be asserted by nothing"))
+    doc = repo_file("MAINTENANCE_AGENT.md")
+    if doc is None:
+        out.append((INFO, "MAINTENANCE_AGENT.md not readable here -- wiring leg skipped"))
+    elif "wave_hygiene_witness.py" not in doc:
+        out.append((FAIL, "MAINTENANCE_AGENT.md no longer wires the producer into the daily run "
+                          "-- it will stop being called and the witness rots again"))
+    return out or [(INFO, "the wave-hygiene lane re-proves itself every run and cannot fake "
+                          "freshness")]
+
+
+@entry("RG-0354", "The dashboard-feed section has a PRODUCER -- folding a status fragment also "
+                  "re-points /dashboard/summary at it, so diligent sessions cannot feed a panel "
+                  "nobody reads",
+       LOCKED, fixed_on="11 Sep 2026",
+       scope="scripts/status_compile.py -- the managed DASH-FEED-1 block (FEED_BEGIN/FEED_END "
+             "markers, refresh_feed_block(), _fragment_title()) placed ABOVE the first existing "
+             "'## Last Completed' heading, rewritten wholesale on every fold so it can never "
+             "accumulate. THIRD instance of the guard-without-a-producer class in two days. "
+             "RG-0127 asserts the section /dashboard/summary reads is under 21 days old; the "
+             "endpoint takes the FIRST '## Last Completed' in a 300 KB append-only file, while "
+             "status_compile folds every fragment under '## Current Session'. So for 22 days "
+             "sessions wrote diligently and the dashboard faithfully rendered 2026-08-20. Seven "
+             "fragments were also sitting unfolded because the compiler only ran from a deploy and "
+             "none had run since 8 Sep. Both halves are the same shape: the thing that keeps the "
+             "assertion true ran only when something else happened to run it. CLASS: a read path "
+             "and a write path that address the same file by DIFFERENT anchors will drift silently "
+             "and forever -- the fold now maintains the anchor the reader uses.",
+       ref="DASH-FEED-1 producer, 11 Sep 2026 maintenance loop. Sibling of RG-0350 / RG-0353.")
+def rg_dashboard_feed_producer():
+    out = []
+    sc = repo_file("scripts/status_compile.py")
+    if sc is None:
+        out.append((INFO, "outside the repo -- compiler source not checked here"))
+        return out
+    for needle, why in (
+        ("FEED_BEGIN", "the managed feed block markers are gone"),
+        ("def refresh_feed_block", "the feed-block writer is gone"),
+        ("refresh_feed_block(merged", "the fold no longer CALLS the feed-block writer -- the "
+                                      "dashboard will drift back to a stale section"),
+        ("## Last Completed", "the compiler no longer writes the heading the endpoint matches"),
+    ):
+        if needle not in sc:
+            out.append((FAIL, "status_compile.py: %s (%s missing)" % (why, needle)))
+
+    status = repo_file("STATUS.md")
+    if status is None:
+        out.append((INFO, "STATUS.md not readable here -- artefact leg skipped"))
+    else:
+        if "DASH-FEED-1:BEGIN" not in status:
+            out.append((FAIL, "STATUS.md carries no managed feed block -- the next fold's work "
+                              "will again be invisible to /dashboard/summary"))
+        elif status.count("DASH-FEED-1:BEGIN") != 1:
+            out.append((FAIL, "STATUS.md carries %d managed feed blocks -- the block is supposed "
+                              "to be rewritten wholesale, not accumulated"
+                              % status.count("DASH-FEED-1:BEGIN")))
+        else:
+            i = status.find("DASH-FEED-1:BEGIN")
+            j = status.find("## Last Completed")
+            if j >= 0 and i > j:
+                out.append((FAIL, "the managed block sits BELOW an unmanaged '## Last Completed' "
+                                  "-- the endpoint matches the first heading, so the managed one "
+                                  "no longer wins"))
+    return out or [(INFO, "a folded fragment re-points the dashboard at itself; exactly one "
+                          "managed block, and it wins the endpoint's match")]
+
+
+
 if __name__ == "__main__":
     sys.exit(main())

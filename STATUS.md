@@ -6,6 +6,33 @@
 ## Live State
 BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · **104 live listings · 59 sellers · 115 introductions (1 pending)** · World Heritage layer 332 sites · 8 showcase supers live and immortal (RUL-035 / SUPER-IMMORTAL-2) · every-deploy self-heal now heals super STATE, not just absence (SUPER-HEAL-1) · post-deploy report readable at `/static/post_deploy_status.json` (POSTDEPLOY-EYES-1/2) · migration chain unjammed through 027 (MIGRATE-ENV-1: app's own interpreter + environment) · AI cost guardrails LIVE with ceiling + spend log on the planner and breaker-heartbeat lanes (PLANNER-COST-1 / HEARTBEAT-CEILING-1) · regression ledger 118 entries, 114 holding, **0 REGRESSED**, exit 0, with a mid-run instability detector (LEDGER-STABLE-1) · pre-launch: Cloudflare WAF allowlist DISABLED (WAF-OPEN-1), origin gate GATE-ENFORCE-1 the only guard · **SOFT-to-PUBLIC Fri 29 Aug 2026 · FULL LAUNCH Mon 1 Sep 2026 (RUL-001)**
 
+<!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
+
+## Last Completed (2026-09-11 - Maintenance loop — 11 Sep 2026 (unattended))
+
+### Maintenance loop — 11 Sep 2026 (unattended)
+
+Ledger started at **2 regressed**, ends **green**. Both reds were the same class, named the
+day before: a freshness guard with nothing that produces the evidence it checks.
+
+- **Wave-hygiene witness had no producer.** Both proof suites still passed; the witness file
+  had been hand-written on 28 Aug and never rewritten. `scripts/wave_hygiene_witness.py` now
+  re-runs both suites every loop and writes their real verdicts — a failing suite writes
+  `not_ok`, so the board goes red on the fact, never on the clock. Sabotage-proven. RG-0353.
+- **The ops dashboard was reading a section 22 days old.** The endpoint matches the first
+  `## Last Completed` heading; sessions fold under `## Current Session`. Seven fragments were
+  also unfolded, because the compiler only ran from a deploy and none had run since 8 Sep.
+  The fold now maintains the heading the reader actually matches. RG-0354.
+- Fault queue empty (0 new, 0 acted). Heartbeat posted and read back live at 06:32:40Z.
+- Backup `2026-09-11_0633.zip` produced and restore-proven: users=71, listings=113.
+- No escalations in 24h. Rulings: 106 checked, 0 FAIL.
+
+Not fixed, deliberately: **RG-0346 stays open** — the three agency letters the sending lane
+draws still carry the solo-seller story, and the lane never mints the agency console link.
+That is a copy-and-flow change to live outreach, not a mechanical fix.
+
+<!-- DASH-FEED-1:END -->
+
 ## Last Completed (2026-08-20 — supers restored, migration chain unjammed)
 - **Supers back on the shelves, verified live.** The 06:58 release carried SUPER-HEAL-1; listings 265-272 all read `listing_status=live` with `fade_nudge_sent_at NULL`, and `/listings?city=Pretoria&category=Collectors` returns 269, `&category=Services` returns 267, in both letter-cases. **RG-0123 + RG-0124 LOCKED**, DW-056 closed with evidence. The seed lane did it, not migration 027 — which is the whole point of healing STATE on every deploy instead of trusting a one-shot.
 - **MIGRATE-ENV-1 — the migration jam fixed at the class.** Two faults, both required: post_deploy ran migrations with a bare env (main.py refuses without MS_API_KEY, which lives inline in the systemd unit, not secrets.env) AND with system `python3` instead of `$LIVE/venv/bin/python3` (no python-multipart, so `import main` died). Rule now: any script importing the app runs in the app's own interpreter and environment. Proven on the box — **023 rc=0** (84/104 listings relinked, stranded since 18 Aug), **024 rc=0**, **027 rc=0**.
@@ -27,6 +54,82 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+### Maintenance loop — 11 Sep 2026 (unattended)
+
+Ledger started at **2 regressed**, ends **green**. Both reds were the same class, named the
+day before: a freshness guard with nothing that produces the evidence it checks.
+
+- **Wave-hygiene witness had no producer.** Both proof suites still passed; the witness file
+  had been hand-written on 28 Aug and never rewritten. `scripts/wave_hygiene_witness.py` now
+  re-runs both suites every loop and writes their real verdicts — a failing suite writes
+  `not_ok`, so the board goes red on the fact, never on the clock. Sabotage-proven. RG-0353.
+- **The ops dashboard was reading a section 22 days old.** The endpoint matches the first
+  `## Last Completed` heading; sessions fold under `## Current Session`. Seven fragments were
+  also unfolded, because the compiler only ran from a deploy and none had run since 8 Sep.
+  The fold now maintains the heading the reader actually matches. RG-0354.
+- Fault queue empty (0 new, 0 acted). Heartbeat posted and read back live at 06:32:40Z.
+- Backup `2026-09-11_0633.zip` produced and restore-proven: users=71, listings=113.
+- No escalations in 24h. Rulings: 106 checked, 0 FAIL.
+
+Not fixed, deliberately: **RG-0346 stays open** — the three agency letters the sending lane
+draws still carry the solo-seller story, and the lane never mints the agency console link.
+That is a copy-and-flow change to live outreach, not a mechanical fix.
+
+### Maintenance loop — 10 Sep 2026 (unattended)
+
+Ledger **green**: 339 entries, 317 holding, **0 regressed**, 22 open. Started the run at 5 regressed.
+
+- Fault queue empty (0 new, 0 acted). Shadow-agent heartbeat posted and read back live at 13:52:46Z.
+- Three of the five reds were one event: the PC was off overnight, the 20-minute host agent missed
+  558 minutes of ticks, a git `HEAD.lock` sat stranded 544 minutes. The agent resumed at 15:51 SAST
+  and cleared it itself. No code change needed.
+- **pg-readiness fixed** (PG-PORTABLE-2): 45 no-modifier `datetime('now')` calls in `bea_main.py`
+  are now the portable `CURRENT_TIMESTAMP`. Ratchet baseline tightened 49 → 17, never re-baselined
+  upward. 17 modifier forms still to convert — tracked in RG-0351, not a blocker.
+- **Backup lane fixed at class level**: it had a freshness guard and nothing that made a backup.
+  `scripts/backup_db_sandbox.py` now produces one unattended and proves it restores; wired into
+  step 2a of the daily run. Fresh archive today: `2026-09-10_1356.zip`, users=71, listings=113.
+  It deletes nothing — retention stays David's.
+- Seven association pages a tester can land on had no fault-report widget; all seven wired.
+- The ack guard was red against correct code (it pinned a spelling); guard fixed, not the code.
+- `predeploy_check.py` reaches `verdict=ok` — first clean scan since 2 Sep.
+
+New ledger entries: RG-0350, RG-0351, RG-0352. Committed, not deployed — the 05:45 nightly ships it.
+
+- **SANDBOX-REPAIR-1 (9 Sep, 23:00 SAST):** the Cowork Linux sandbox is dead on David's PC since
+  ~06:15 — cause is Windows update KB5124008 (claude-code #92984), not the app: a full app restart
+  via the host queue at 21:11 changed nothing (PROBED). Decision put to David: remove the KB
+  (admin + reboot) or wait for Anthropic's fix. Until then every session works shell-less by the
+  CLAUDE.md SANDBOX-REPAIR-1 method: file tools, web probes, queued host actions, and the ledger +
+  rulings boards run HOST-SIDE via `run_py` (allow-listed 9 Sep). Ledger RG-0348 locks the machinery.
+
+- **Maintenance loop 8 Sep (14:14–14:30 UTC, late slot):** queue empty (new 0 / fix-shipped 0 /
+  verified 26 / closed 12 / duplicate 2); shadow agent 0 seen 0 acted, heartbeat on
+  `/dashboard/maint` at 14:19:13Z (probed through the review gate); no escalation brief (nothing in
+  24 h). Ledger: 333 entries · 311 holding · 0 REGRESSED · 22 open · 0 ready to lock · 0
+  UNVERIFIED — green before, unchanged after (no fix made). Sandbox deps (httpx, fastapi) were
+  missing and installed by `maint_deps.py` before the ledger ran. Committed, not pushed
+  (NIGHTLY-SHIP-1).
+
+- **ID-UPLOAD-INTERIM-1 (8 Sep, RUL-113, closes DW-109):** an ID upload now earns **12 of the 15**
+  identity points the moment the document is stored, and every seller-facing surface says *"ID
+  received — 12 points added. Waiting confirmation to add an extra 3 points."* — the state that used
+  to read "No ID on file". Built on the existing declared/points_awarded machinery (one scorer, no
+  hand-added numbers); the vision check, admin review or a funded Home Affairs check upgrades it to
+  the full 15. Migration 038 converted the two pre-fix uploads. Interim until David says otherwise:
+  `ID_UPLOAD_INTERIM_POINTS=0` is the one-line reversal and it is his call. Asserted by RG-0347.
+
+- **DEVICE-ENROL-2 (8 Sep):** the ops dashboard said SIGNED OUT to David's enrolled phone (and to the
+  laptop on first PIN login) because the slow tokenless summary call landed AFTER the token and the
+  reload guard was dead (`DATA` starts as `{}`, truthy). Fixed in dashboard.server.html — stale
+  heartbeat dropped, token-bearing fetch always wins, banner removed on a real paint. RG-0341 LOCKED.
+
+- **DEVICE-AUTH-1 (8 Sep, David: "we only need the first login"):** an enrolled phone now passes the
+  nginx Basic-auth gate on every ops page (migration 037: `auth_request /_device_ok` beside the
+  existing `satisfy any` Basic auth; upstream errors map to 401 so an outage falls back to Basic, never
+  500). Basic credentials unchanged. PHONE-HEADER-1 the same day: the dashboard header is one compact
+  row on a phone and scrolls away in landscape.
 
 - **Stale secret backups on the server deleted (7 Sep, David's permission):** the seven files RG-0308's
   probe surfaced are gone; live files untouched, `/health` 200, `secret_consumers.py --check` OK.
