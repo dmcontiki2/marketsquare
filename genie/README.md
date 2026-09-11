@@ -40,6 +40,87 @@ What does not survive: the microphone, the browser voice, the free-text box, and
 one-question-at-a-time conversation. The Search half's category ring (RUL-097) is unaffected —
 the harness IS the narrowing funnel it always pointed at.
 
+### THE BRAND ON THE DOOR, AND NOWHERE ELSE (David, 11 Sep 2026)
+
+David: *"We should have the TrustSquare logo displayed across all of the category first screens at
+the top, not the follow up screens; lets keep them as uncluttered and simple as possible."*
+
+Done. The lockup sits at the top of **every category door** and disappears the moment a flow starts;
+the step dots take its place in the same bar, so nothing shifts and the bar never changes height.
+
+**The mark is a greeting, not furniture.** A logo on every screen is what a brochure does; an app
+says its name once, at the door, and gets out of the way.
+
+**The asset:** `Marketsqaure logo/TrustSquare_BrandLogo_transparent.png`, derived from
+`TrustSquare_BrandLogo_TM.jpeg` (alpha from luminance, colour un-premultiplied) — the same drawing,
+not a redraw. The original is white-and-green on a **solid black square** and cannot sit on any of
+the eight coloured washes without showing a black box. **Use the transparent file anywhere the
+background is not black.**
+
+### WHERE YOU ARE, AND WHAT ORDERS THE SHELF (David, 11 Sep 2026)
+
+David: *"we dont want geo location complexity, but it should have a starting point and the starting
+point should be the users current location... presented data should be from local first sources and
+in the absence thereof further out. The listed items should be in order of our three ranking
+scores, first the RS, then the TS and then the LS; with the trust-score TS being the only one
+displayed. Is this possible for all of the categories?"*
+
+**Yes, for all eight — because all three scores already exist and none of them is category-specific.**
+
+| | What it is | Where it lives today |
+|---|---|---|
+| **LS** | Listing quality, 0-100 | `_import_quality_score()` in `bea_main.py` — works on every category branch |
+| **TS** | Seller trust, 0-100 | the Trust Score / VEL ladder; per seller, not per category |
+| **RS** | Ranking score | `0.5 × LS + 0.5 × TS` — the same 50/50 as `estate_agents.py::_rank_agents`, extended to listing level by RANK-SURFACE-1 (30 Aug) |
+
+**The tiebreaks are the right way round.** RS is built out of the other two, so ordering RS → TS → LS
+means equal ranking is settled by trust first and listing quality second. **Only TS is printed** —
+a star and a number, coloured by the four canon bands. RS and LS do the work and stay invisible.
+
+**Location without geo machinery.** No map, no radius, no permission prompt. The app already passes
+`city=` on every listing call, so the signed-in profile's city IS the starting point and it costs
+the user **zero taps**. Everything is then ordered **local first**: her own suburb, then the rest of
+the city, then further out — labelled as bands in the shelf, and only reaching wider when the local
+band runs short. Local-first is a *source* rule; RS → TS → LS is the order *inside* each band, so
+the two never fight.
+
+**One prerequisite, named not hidden:** listing quality is computed per row and is **not stored**, so
+SQL cannot `ORDER BY` it. A maintained `listings.quality_score` column (written on create/edit,
+backfilled once) is required before the real feed can do this. Already recorded in
+`ZOOM_HMI_SPEC.md` and the RG-0221 scope — the prototype computes it in the page.
+
+### WHAT THE HARNESS IS FOR — and the one way to ruin it (David, 10 Sep 2026)
+
+David: *"i like it for its simplicity. This is a first and quick interface, to capture the interest,
+and i think it is working well."*
+
+**The harness is the capture layer, not the product.** Its only job is to take a stranger from
+curiosity to something real — a draft advert, or a shelf of five — before they lose interest. It is
+measured in taps and seconds, not in features.
+
+**The way to ruin it is to add good things to it.** Every future idea will feel like it belongs on
+the first screen, because that is where everyone looks. The rule that protects it:
+
+> **Depth goes BEHIND the fifth tap, never in front of it.**
+
+Filters, trust detail, quotes, the employer link, the vouching gate, availability, pricing
+intelligence — all real, and all of it belongs *after* the harness has already given the person
+something. Nothing is added to the door, and no step gains a second question.
+
+The tripwire is a count that stops being true: **5 taps to a draft, 4 + 3 to five items.** If a
+change makes either number grow, the change is wrong, not the number.
+
+### README-COLLISION-1 — this file has no compiler, so it loses writes
+
+`CHANGELOG.md` and `STATUS.md` both have fragment compilers because two sessions doing whole-file
+read-modify-write destroyed each other's entries. **`genie/README.md` has the same hazard and no
+compiler.** Proven here: the "what the harness is for" section was written and committed on 10 Sep
+and was **gone by 11 Sep** — no error, no conflict, last writer wins, silently. Restored above.
+
+Until it gets the same machinery: **re-stage this file immediately before writing it, never write
+from a copy staged earlier in the session, and always commit with the mtime guard.** If a section
+you expect is missing, it was overwritten — restore it rather than assuming it was never there.
+
 ## Files
 
 - `WISH_CONCEPT.html` — the working prototype. Press and hold the lamp; try a sentence.
