@@ -21,6 +21,25 @@ and voice, never a second search engine — every narrowing decision below the f
 the Zoom spec. A genie with its own narrowing logic means every future facet gets built twice.
 That is also why both halves live in this one folder.
 
+## THE HARNESS — supersedes the talking half (RUL-117, David, 10 Sep 2026)
+
+David tested the conversational prototype and ruled the interaction model out: *"the chat sounds
+very bad — about a 2 against Siri... it does not accept and goes into a loop from which i could not
+recover... there was no way to go back or restart... we don't want any talking."*
+
+**`HARNESS.html` is the front door now.** One tap-only engine, driven by per-category data, for all
+eight categories and both directions. **5 taps to a draft advert; 4 taps to a shelf + 3 narrowing
+taps to 5 items.** Back and Restart on every screen. Photo tiles at every step, a trail of
+thumbnails to keep track, swipe left and right to change category. Zero speech APIs.
+
+What survives from the talking work: the **employer link** and the **vouching gate** (RUL-115) —
+David's own idea and the thing that solves the cold start. Those are design, not interaction, and
+they plug into the harness at the end of the selling flow.
+
+What does not survive: the microphone, the browser voice, the free-text box, and the
+one-question-at-a-time conversation. The Search half's category ring (RUL-097) is unaffected —
+the harness IS the narrowing funnel it always pointed at.
+
 ## Files
 
 - `WISH_CONCEPT.html` — the working prototype. Press and hold the lamp; try a sentence.

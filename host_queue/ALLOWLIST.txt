@@ -118,3 +118,43 @@ run_bat    MarketSquare\boards_host.bat
 # --- sends nothing and spends nothing. Without this line the goal cannot be measured at
 # --- all, which is worse than any risk the line carries.
 run_py     MarketSquare\scripts\onboarding_number.py
+
+# --- Widened 11 Sep 2026. MAINT-HOST-1. The KB5124008 Windows-update class came back on
+# --- 10 Sep (Windows Update REINSTALLED the KB it had removed that morning) and killed the
+# --- sandbox again on the 11 Sep maintenance run. The two fact boards had a host-side lane;
+# --- the maintenance agent itself did not, so the daily loop could not read its own fault
+# --- queue at all. maint_host.bat runs the agent in SHADOW mode only - the kill switch
+# --- MAINTENANCE_AGENT_ENABLED is never set by it, so the agent cannot commit. It classifies,
+# --- gates, writes .maint_agent\ reports and posts the heartbeat. No deploy, no sending, no
+# --- deletion, no money beyond the brain call the daily loop already makes every day.
+run_bat    MarketSquare\maint_host.bat
+
+# --- Widened 10 Sep 2026. LID-OFFLINE-1. David's laptop never sleeps, yet the desktop link
+# --- died at 06:50 when he closed the lid and left. READ-ONLY: records sleep states, the lid
+# --- action, adapter power management and the power/network events around that minute.
+# --- Changes no setting; it only reads. No money, no sending, no deletion.
+run_bat    MarketSquare\power_check.bat
+
+# --- Widened 11 Sep 2026. UNCHECKED-DISCOVER-1. David, asked whether to add this line and
+# --- told the reasoning, answered "Please proceed". clean_city_list.py requires --city and
+# --- run_py passes no arguments, so the 21 cities holding 934 sendable rows that no MX check
+# --- has ever seen had NO route through this queue at all -- the wave reached 64 of those rows
+# --- first on 11 Sep. This wrapper asks wave_runner.uncleaned_sendable_cities() for the city
+# --- list rather than carrying one (the house rule STOPLOSS-DISCOVER-1 and
+# --- WAVE-CITIES-DISCOVER-1 both exist to enforce), so it cannot go stale. Same HYGIENE class
+# --- as clean_stoploss_cities.bat and clean_city_list.py, already allow-listed under RUL-096.
+# --- Sends nothing, deletes nothing; quarantines to status only, and clean_city_list.py takes
+# --- a DB backup before it writes. Verified by --dry-run over the bridge first.
+run_py     CityLauncher\scripts\clean_unchecked_cities.py
+
+# --- Widened 11 Sep 2026. ASSOC-NAME-1, under David's 11 Sep "Please proceed" for the
+# --- register work. club_import.py is idempotent on email BY DESIGN, so it can never
+# --- correct a row it has already inserted - and the first apha harvest inserted rows whose
+# --- business_name was the page <title>, "Member Profile". This is the missing half: the
+# --- roster CSV is the authority for a roster row's name. NARROW BY CONSTRUCTION - only
+# --- source LIKE 'register:%' or 'club:%', only status='scraped' (never a row already
+# --- emailed, because the name we used is part of what was sent), keyed by (source, email)
+# --- so a mailbox in two rosters is only ever corrected from its own, and a blank column in
+# --- the roster writes nothing. Never touches email, city, category or status. Backs the DB
+# --- up beside itself first. Sends nothing, deletes nothing.
+run_py     CityLauncher\scripts\refresh_roster_names.py
