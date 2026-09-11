@@ -1,3 +1,1008 @@
+## 2026-09-11 — Maintenance loop: two freshness guards given producers (RG-0353, RG-0354)
+
+Ledger started the run at **2 REGRESSED** (339 entries, 315 holding, 22 open). Both reds
+were the same class, one day after the first instance of it was named: **a guard without a
+producer**. Nothing was broken in either case — the things being asserted were still true.
+What had stopped was the thing that keeps the evidence current.
+
+- **RG-0175 — wave-hygiene witness stale (>14 days).** Both proof suites still passed that
+  morning (`CityLauncher/tests/test_wave_hygiene.py`, `tests/test_intl_templates.py`, all
+  assertions PASS). `wave_hygiene_status.json` had been written **by hand on 28 Aug** and
+  nothing on disk ever wrote it again. Fixed with `scripts/wave_hygiene_witness.py`
+  (WAVE-WITNESS-1): it re-runs both suites, attributes their real PASS/FAIL lines to the
+  three witness items, and writes those verdicts. It never bumps a timestamp — a failing
+  suite writes `not_ok` and exits non-zero, so RG-0175 goes red on the fact, not the clock.
+  Proven by a sabotage run that forced both suites to fail and confirmed no `ok` could be
+  written. Wired into step 2b of every maintenance run. **New entry RG-0353.**
+
+- **RG-0127 — the dashboard read a section 22 days old.** `GET /dashboard/summary` matches
+  the FIRST `## Last Completed` heading in a 300 KB append-only file; `status_compile.py`
+  folds every fragment under `## Current Session`. So sessions wrote diligently for 22 days
+  and the dashboard faithfully rendered 2026-08-20. Two halves, same shape: **seven status
+  fragments were also sitting unfolded**, because the compiler only ran from a deploy and
+  none had run since 8 Sep. Fixed by making the fold maintain a marker-delimited
+  `DASH-FEED-1` block placed above the first unmanaged heading and rewritten wholesale each
+  run, so it can never accumulate and the reader's anchor is the one the writer maintains.
+  Seven fragments folded; winning section now 1 day old. **New entry RG-0354.**
+
+- **Fault queue empty** — 0 new, 0 acted. Shadow agent ran clean; heartbeat posted and read
+  back live at `06:32:40Z`. Email lane census: 24 total, 6 held over 30 days.
+- **Backup produced**: `backups/2026-09-11_0633.zip`, restores clean, users=71, listings=113.
+- **No escalations** in the last 24h — no brief written. Rulings check: 106 checked, 0 FAIL.
+
+The general rule, now paid for three times in two days: **any assertion of the form "X must
+be fresh" needs the thing that MAKES X running unattended in this loop, or the red is
+decoration and the only cure is a human remembering.** Before locking the next freshness
+guard, name its producer.
+
+## 2026-09-10 — The Harness: voice is out, the front door is one tap-only frame for every category
+
+David tested the Home Help conversational prototype and ruled against the whole interaction model:
+*"the chat sounds very bad — about a 2 against Siri... the response is also bad — it does not accept
+and goes into a loop from which i could not recover... there was no way to go back or restart...
+we don't want any talking."* And the framing that matters: *"Our success live and die with this
+first screen, for all categories and products or services."*
+
+**Built: `genie/HARNESS.html`** — one engine, driven by per-category data, serving all eight
+categories in both directions. Design only; nothing wired, nothing deployed.
+
+**The click budget is the spec (RUL-117), and it is met exactly:**
+- **5 taps** from the door to a **draft advert** — a prototype the seller then finishes.
+- **4 taps** to a shelf of adverts, then **3 narrowing taps**: 18 → 12 → 8 → **5**.
+
+**What changed on the door:** kept the green wash, the round photo, the rounded buttons. Removed the
+tap instruction and the bottom explanation — no instructional text at all. The category is chosen by
+**swiping** left and right. Two rounded buttons, worded per category (*Find help / Get work*,
+*Find a car / Sell a car*).
+
+**Back and Restart on every screen, always.** The unrecoverable loop was the defect that caused the
+ruling, so it is now structurally impossible: Back steps one pick backwards, Restart returns to the
+door, and both are visible on every screen after the door.
+
+**The photos are the feedback.** Every step is photo tiles drawn from `assets/super/`; the picture
+set changes with each tap and the chosen tiles stack as a trail of thumbnails across the top. That
+trail is how the user keeps track of where they are — no breadcrumbs, no text.
+
+**Narrowing ranks, it never lies.** A price answer re-ranks by price, anything else by rating, and
+the count line says "best match". A shelf never shows R400 under a heading that says under R300.
+
+**Voice is gone** — zero speech APIs in the file, asserted in the test. The conversational BOTs
+(Collector, Sell It, Home Help) are superseded as an interaction model and survive as the record of
+the employer-link and vouching-gate design (RUL-115), which David endorsed and which still stands.
+
+Verified in a rendered mobile browser: 5 taps to draft, 4+3 to five, all eight categories swipe,
+Back and Restart both return correctly, console clean.
+
+## 2026-09-10 — SANDBOX-REPAIR-1 corrections: AGENT-RC-1 proven, two of my own defects fixed
+
+Follow-up pass, 05:00–05:30 SAST, still shell-less (the sandbox is dead — KB5124008, see the 9 Sep entry).
+
+**AGENT-RC-1 is PROVEN on the host.** The last two CityLauncher lines in `autodeploy_agent_log.txt`
+say it exactly: `21:48:21.89 CL REQUEST seen` / `21:48:21.89 CL FAILED rc=` (old code — same second,
+empty rc, flag kept, 74th consecutive re-deploy), then `22:20:53 CL REQUEST seen` /
+`22:24:45 CL SHIPPED - request closed` (fixed code — real elapsed time, real verdict).
+`CL_DEPLOY_RESULT.txt` carries the SHIPPED line. The 40-hour loop is closed.
+
+**Two defects of mine, both caught by the fact board within ten minutes of my writing them:**
+
+- *RG-0194 (line endings).* Three of the six scripts I added last night were LF-only on disk —
+  `sandbox_repair_diag.ps1`, `sandbox_repair_sess.ps1` and `sandbox_repair_restart_app.bat`. The
+  two `.ps1` files I never converted; the `.bat` I did convert, but the CRLF bytes did not reach
+  the disk and I reported it done without re-reading them. Now CRLF, and this time **verified by
+  re-staging the files and reading the bytes back** (2610 / 6883 / 425), not by trusting the write.
+- *RG-0349 (my own new assertion).* It scanned the whole of `autodeploy_agent.bat` for the
+  parse-time reads it forbids — and went red on the header comment that QUOTES those exact lines to
+  explain the bug they caused. The fix on disk was correct the whole time. The scan now skips `::`
+  and `rem` lines, and the entry's ref records the correction rather than hiding it (ledger rule:
+  if an assertion is wrong, fix the assertion and say so). Proven both ways against the real file:
+  the corrected scan finds no parse-time read in the code, and the old scan is shown to have matched
+  only the comment. Class note: a CODE-PATTERN red that cannot tell code from the comment describing
+  it is the RG-0117 mistake wearing a new hat.
+
+**A third mistake, caught before it landed:** rebuilding `host_queue/ALLOWLIST.txt` I copied from a
+staging snapshot taken hours earlier, which would have silently deleted every row added last night.
+Nothing was committed — the fresh file was re-staged and the rebuild verified row by row (33 entries,
+each of last night's present) before writing. The lesson is the one already in CLAUDE.md for SQLite
+and CHANGELOG: on this bridge, re-read immediately before writing, every time.
+
+**Also new:** `boards_host.bat` (allow-listed) runs `session_counter.py` — RG-0154's own designed
+remedy — and `dashboard_provenance.py --check` on David's PC, because the queue's `run_py` lane
+cannot pass a `--check` flag. Those two reds (RG-0154, RG-0155) are pre-existing and untouched by
+this work; the run names what is actually wrong instead of quoting the ledger back at David.
+
+## 2026-09-10 — OS-SYSTEM-QUOTES-1: two fact-board checks were lying on Windows, and one told us not to deploy
+
+Found by running the same two checks two ways in the same second (05:11:01 SAST), while the sandbox
+is dead and the boards run host-side.
+
+**The contradiction.** `boards_host.bat` ran the scripts directly on David's PC:
+`session_counter.py --check` → *"OK: session 194, 39 sitting(s) since anchor"*, rc=0.
+`dashboard_provenance.py --check` → *"0 unfed health chip(s), 0 orphaned id(s) … OK"*, rc=0.
+One second later the ledger reported BOTH as regressions — same machine, same cwd, same interpreter.
+
+**Cause.** Both entries invoked their script as
+`os.system('"%s" "%s" --check >%s 2>&1' % (sys.executable, path, os.devnull))`.
+On Windows `os.system` goes through `cmd.exe`, which strips the outer quote pair of a command that
+*begins* with a quote — so the interpreter path and the script path ran together into a syntax error
+and the return code was never 0, whatever the script found. On Linux the same line is correct, which
+is why the sandbox never saw it; the host-side lane is one night old (SANDBOX-REPAIR-1).
+
+**Why it mattered more than a wrong colour.** RG-0154 derives `counter_is_current` from the absence
+of the "fallen behind the fragments" FAIL. The false FAIL flipped it, so *genuine deploy debt* — the
+live badge serves Session 192 while the disk correctly says 194 — was voiced as a REGRESSION and the
+board printed **"Do not deploy over this."** DEPLOY-DEBT-VOICE-1 (27 Aug) exists precisely to stop
+the instrument arguing against its own remedy, and a quoting bug walked straight around it.
+
+**Fix.** Both sites now use the ledger's own `_harness()` — a list-based `subprocess.run`, no shell
+and no quoting — which also reports a harness that *could not run* as blind (INFO → UNVERIFIED)
+rather than as a verdict, the RG-0187 contract. No `os.system` remains in the ledger; the single
+surviving mention is the comment explaining this.
+
+**Standing.** The real state of those two entries: the session counter is CURRENT on disk (194,
+derived, re-derived by its own script this run) and the only outstanding item is deploy debt of two
+sittings, which clears on the next ship. The dashboard provenance board is clean — 70 chips, 0 unfed.
+
+Class, and the third instance in one night: a check that reports a failure the thing it checks does
+not have. The other two were mine (RG-0349 matching its own comment; three LF-only scripts I wrote).
+An instrument gets the same standard of proof as the product — run it two ways before believing a red.
+
+## 2026-09-10 — maintenance loop: five ledger regressions cleared, backup lane given a producer
+
+**Board:** 339 entries, 0 regressed, 22 open (was 336 · 5 regressed at the start of the run).
+Fault queue empty — 0 new app faults, 0 acted; the shadow agent's heartbeat posted and was read
+back live off `/dashboard/maint` at 13:52:46Z.
+
+### RG-0015 / RG-0197 / RG-0257 — one cause, self-healed
+All three reds were the same event: David's PC was off overnight, so the 20-minute host agent did
+not tick for 558 minutes, so the host-side `git_unlock.bat` never ran and a `HEAD.lock` sat
+stranded for 544 minutes. The agent resumed at 15:51 SAST and cleared it. Probed after the fact:
+no lock file in either repo, `git_unlock.py` reports nothing to sweep, heartbeat current. No code
+change — the machinery did what it was built to do once the machine was awake.
+
+### RG-0114 + RG-0112 — pg-readiness (PG-PORTABLE-2)
+The ratchet read 62 against a baseline of 49 and had put DANGER on 8 consecutive pre-deploy scans.
+Real growth, not a false positive. Every no-modifier `datetime('now')` in `bea_main.py` — 45 of
+them, across DDL column defaults, `UPDATE ... SET`, and `INSERT ... VALUES` — is now the portable
+`CURRENT_TIMESTAMP`. Baseline auto-**tightened** 49 → 17; it was never re-baselined upward. The 17
+modifier forms (`datetime('now', ?)`) need the PG-PORTABLE-1 caller-supplied-stamp treatment and
+are recorded as out of scope in RG-0351.
+
+Evidence: `test_pg_readiness.py` PASS · `py_compile` clean · behavioural proof in `:memory:` that
+`CURRENT_TIMESTAMP` and `datetime('now')` return the identical string as a DDL default, in an
+INSERT and in an UPDATE, and that all 14 rewritten `CREATE TABLE` statements execute clean.
+
+### RG-0234 — the backup lane had a guard and no producer (BACKUP-UNATTENDED-1)
+The newest archive was 9 days old; it had sat 27 days stale before 1 Sep. `backup_marketsquare.bat`
+is native-Windows, on no schedule and on no allowlist, so the lane ran only when a human remembered.
+A freshness assertion with no producer behind it can only ever report the same failure again.
+
+New `scripts/backup_db_sandbox.py` produces the archive with no host click: `sqlite3 .backup` on the
+box (consistent, read-only), scp, md5 matched both ends, zipped to the exact shape RG-0234 restores,
+the archive re-extracted and integrity-checked, proof appended to `backups/RESTORE_PROOF.md`. Wired
+into step 2a of every maintenance run via the BACKUP-UNATTENDED-1 section of `MAINTENANCE_AGENT.md`.
+It **deletes nothing** — retention stays with the host bat, because deletions are David's (RUL-095).
+
+Occurrence closed the same run: `backups/2026-09-10_1356.zip`, restores clean, users=71 listings=113.
+
+### The rest of the DANGER line (TRUTH-REVIEW-4)
+With pg-readiness cleared, `maintenance-agent` and `tester-intake` were still on the same scan line
+and would have gone chronic in turn.
+
+- **tester-intake** was a real gap: seven `visuals/assoc/assoc_*.html` pages a tester can land on
+  carried no fault-report widget. All seven now load `/static/ts_report.js` (first-party, so
+  RG-0025's no-third-party-script rule is untouched).
+- **maintenance-agent** was a wrong red. The ack guard pinned the literal `reference {fault_code}`;
+  the code has read `reference {ref_override or fault_code}` since REF-HONESTY-1, because a support
+  form supplies its own ref. The behaviour was never lost. The guard was fixed, not the code: it now
+  asserts the property on both bodies the branch can send, and its window reaches the whole branch
+  (it began at +3817 and ran past the old +4500 cut). Fourth instance of this file's own documented
+  class, second time the window rather than the needle was the fault.
+
+`predeploy_check.py` now logs `danger=- verdict=ok` — the first clean scan since 2 Sep.
+
+### New ledger entries
+- **RG-0350** — the archive lane has an unattended producer, proves its own restore, deletes nothing.
+- **RG-0351** — the plain SQLite clock is gone from `bea_main.py`; baseline may only fall.
+- **RG-0352** — every assoc page offers the fault widget; the ack guard reads the property; the
+  pre-deploy scan reaches clean.
+
+Escalation brief: none written — no escalations in 24h. `rulings_check.py`: 106 rulings, 0 FAIL.
+Not deployed — NIGHTLY-SHIP-1 ships committed work through the gates.
+
+## 2026-09-10 — Goal run 10: the sandbox fault escalated to a decision, COA supply wired, number lane restored
+
+Run 10 of the onboarding goal, ~05:30–06:30 SAST. Model: **Opus 5, not Fable 5.1** — the app's
+model selector still governs scheduled runs (RUL-096h), and the drift is reported to David rather
+than worked around. Third consecutive run without a Linux shell.
+
+**The sandbox fault is now David's decision, not an open defect.** SANDBOX-REPAIR-1's diagnosis
+held up on re-probe: the mount fails identically (2 retries, then stop), the 9 Sep host diagnostic
+confirms KB5124008 installed 8 Sep on build 26200.9445, and a web search of the upstream issue
+(anthropics/claude-code#92984) confirms there is still no vendor fix and that uninstalling the KB
+is the only known remedy — plus a second instance of the same class on ARM64 (#92958, KB5124012).
+David asked plainly why a thing that worked cannot be fixed; the answer given to him in plain
+language was that the broken part is in Windows, not in anything reachable from inside the
+sandbox. **He then ruled: remove the update until Anthropic fixes it.**
+
+`MarketSquare\remove_kb5124008.bat` was written for that purpose (self-elevating `wusa /uninstall
+/kb:5124008 /norestart`, with the Settings path documented in the header as the fallback).
+**Claude did not execute it**: removing a Windows *security* update is a system/security change
+barred to the agent even when the user asks for it, and the host queue's agent has no admin token
+(`admin token=False`, 9 Sep diagnostic), so no queued lane could have carried it either. The one
+action left to David is named once, in one sentence, and it is genuinely his.
+
+**RULING TO RECORD (not yet in RULINGS.md).** David, 10 Sep 2026: *"please proceed and remove that
+update until Anthropic has fixed the issue."* RULINGS.md has no fragment compiler and is too large
+to rewrite safely with the truncating Write tool, so this entry is the ruling's only home until a
+run with a shell appends it. **Next run with a working sandbox must append it and add the
+reflection assertion to `rulings_check.py`.** Recorded here so the decision cannot go quiet, per
+the rulings-register rule.
+
+**Supply — COA-1 shipped, without touching the 486-line reader.** The 9 Sep draft adapter was to be
+spliced into `us_register_reader.py`; splicing needs a heredoc, and there is no shell. Instead the
+Colorado Outfitters Association harvester runs as its own file, `CityLauncher/us_register_coa.py`
+(self-contained fetch/strip/clean, resumable off its own CSV), writing the same
+`us_registers/coa.club.csv` that `club_import.py` already globs — so the pipe is reused and no
+existing file was rewritten. `run_us_registers.bat` gained one line calling it. Both files
+re-read after writing and confirmed complete. Not yet executed: queued, result unread at
+write time.
+
+**Sending — gates, never calendars.** The host DailyWave fired on time at 00:10 (the 9 Sep sleep
+miss did not repeat) and sent **86 real emails** across seven states at wave #3 (Montana 24,
+Texas 24, New York 12, Wyoming 12, Virginia 10, Pennsylvania 3, Tennessee 1) — the ramp's first
+doubling holding at 24. California dry-ran on the stop-loss gate (last wave 12.5% bounce). Queued
+today, in order: the scorer, `clean_stoploss_cities.bat` (the defined release for a stop-loss
+hold), a second `launch_day_wave.bat`, and `run_us_registers.bat`.
+
+**The pool is drying up, as expected.** The 00:10 wave visited **8 cities; yesterday's visited 18**.
+Ten states produced no sendable prospect at all. Under RUL-103 that is an expected outcome and not
+a reason to throttle — it is a reason for supply. Leads probed and recorded for the next adapter:
+IOGA's public Adventure Finder (~250 Idaho outfitters; the members.ioga.org directory is
+login-gated), and Oregon OOGA's member list (script-rendered, Cloudflare-obfuscated mailboxes —
+not a quick win, do not re-probe blind).
+
+**Measurement lane restored.** `run_py MarketSquare\scripts\onboarding_number.py` was added to the
+host queue allowlist (GOAL-NUMBER-HOST-1). Runs 8 and 9 could not measure the goal at all and had
+to record it as unknown; the scorer reads two databases over SSH and one public page and writes
+nothing. The allowlist was rebuilt with all 33 prior rows verified present before the write —
+the 10 Sep 05:00 near-miss (a stale snapshot that would have deleted a night's rows) is the
+reason that check is now done every time.
+
+**Fact board at 05:11–05:14 (host-side, sandbox dead):** 336 entries · 311 holding · 2 regressed ·
+22 open. Both reds are dashboard-truth, not goal-funnel: the session badge on the live server says
+192 while the evidence on disk says 194, and the provenance auditor reds on the live page. Both
+local remedies pass clean (`session_counter --check` OK, `dashboard_provenance --check` 0 defects),
+which places the fault in the gap between disk and server — a deploy, not a code fix. Not deployed
+this run: the ledger's own rule is not to deploy over a red board.
+
+## 2026-09-10 — The KB-removal script was itself LF-only, and the board that found it was hiding the line
+
+Two faults, both in the machinery rather than the product, both found in the 05:54 host-side board.
+
+**`remove_kb5124008.bat` had LF-only line endings (RG-0194).** The script written this morning to
+remove the Windows update that killed the sandbox — the one thing standing between David and a
+working shell — carried the exact defect RG-0194 exists to catch. It has no caret continuations, so
+it would probably have run; "probably" is the whole reason that guard is a class rule and not a
+per-file one. Converted to CRLF, contents untouched (verified: still elevates via
+`Start-Process -Verb RunAs`, still `/norestart`, still `pause`, still prints the Settings fallback),
+and the bytes re-read from disk afterwards rather than assumed.
+
+**The wrapper was truncating its own evidence.** `ledger_host.bat` summarised the board with
+`findstr /C:"           REGRESSION:"`, which matches line by line — so a multi-line fail printed only
+its FIRST line. On this board that first line was a caret *warning* about ROTATE_SECRETS.bat, and the
+line underneath it — `FAIL remove_kb5124008.bat has LF-only line endings` — was dropped. The queue
+tail therefore reported a red whose visible text described something harmless. An instrument that
+truncates its own evidence hides the fault it was built to surface; that is the same family as the
+two corrected yesterday, and it nearly worked. Replaced by `ledger_rows.ps1`, which prints each
+flagged row with its whole detail, proven against the 05:54 board before shipping.
+
+**Also fixed:** the three host wrappers built their output file names by slicing `%DATE%`, which on
+this machine is MM/DD/YYYY — so files written on 10 Sep were named `20261009`. They now ask
+PowerShell for `yyyyMMdd-HHmmss`.
+
+**Board after yesterday's corrections:** 336 entries · 312 holding · 22 open, with RG-0154, RG-0155
+and RG-0349 all back to green and the session counter current at 194 on disk. The only outstanding
+live item is two sittings of deploy debt (badge serves 192), which clears on the next ship — voiced
+as INFO again, not as "do not deploy", now that OS-SYSTEM-QUOTES-1 is fixed.
+
+## 2026-09-09 — SANDBOX-REPAIR-1: the dead Cowork sandbox is diagnosed and queued, never "unfixable"
+
+David, on the 9 Sep maintenance run's report ("nothing was checked, no faults were read, no fixes were
+made ... tomorrow's scheduled run will pick everything up"): *"i can not accept that we have a failure
+which cant be fixed."* Session 21:30–23:00 SAST, no shell at any point.
+
+**The fault.** Every sandbox command fails at start: `sandbox-helper: no Plan9 drive shares mounted
+under /mnt/.virtiofs-root/shared` (goal run 8 saw it as `Plan9 share "c" not mounted`). Persisted
+across every session from 06:15 SAST; retries change nothing.
+
+**What was PROBED, in order, all through the host queue (RUL-095) because terminals are click-only
+for computer use:**
+- 20:51 stage 1 — WSL is **not installed** on David's PC, so the sandbox is the Claude app's own
+  Hyper-V (HCS) VM and `wsl --shutdown` was the wrong lever (written on an untested assumption,
+  now diagnose-only). Also proven: the host agent runs as David in his desktop session, and
+  `timeout /t` exits at once under the agent (no stdin) — waits now go through Start-Sleep.
+- 21:11 stage 2 — full Claude desktop restart (16 processes closed, relaunched with `claude:`,
+  session relinked, window un-pinned). **Sandbox still dead.** The VM (vmcompute / vmwp / vmmem)
+  belongs to a Windows service and outlives the app. "Restart the app and it comes back" — the
+  previous run's closing line — had never been tested and is false for this class.
+- 21:31 diagnosis — Windows build and KB list, VM process ages, elevation, the Cowork logs' last
+  Plan9 lines (result in `host_queue/done/20260909-191600-*.result`).
+- Cause identified from the field: **Windows 11 KB5124008 (24H2 build 26200.9445)** makes the host
+  report the shares attached while the VM mounts 0 of them — claude-code issue #92984, same app
+  version (1.49585.0), same VM bundle, reported the same day; ARM64 twin #92958. Reboots,
+  re-adding folders, restarting CoworkVMService and a fresh 8 GB VM bundle all do nothing there;
+  only removing the KB restores it. That removal is an admin action on David's PC plus a reboot —
+  reserved to him — and was put to him in this session, not parked.
+
+**Built (all host-side, all allow-listed, all read-only except the app restart):**
+`MarketSquare\sandbox_repair.bat` (diagnose) · `sandbox_repair_diag.ps1` · `sandbox_repair_sess.ps1`
+(session guard) · `sandbox_repair_restart_app.bat` (the #30164-class remedy, refuses off-desktop) ·
+`host_queue/ALLOWLIST.txt` widened with those two bats plus **host-side runs of
+`scripts/regression_ledger.py` and `scripts/rulings_check.py`** (`run_py`), so the fact boards can be
+read on David's own Python — no 180 s cap — while the shell is down. First host-side ledger run queued
+this session; read its tail for Windows-only noise before trusting a red.
+
+**Standing method** written to `Projects\CLAUDE.md` (SANDBOX-REPAIR-1 block): retry once → queue the
+diagnosis by writing the `.req` with the app's file tools → act on the cause the result shows (KB
+family → David's call, stated in one sentence; #30164 family → queue the app restart; else report
+the evidence) → keep working through file tools, web probes, queued host actions and host-side
+boards → re-test every run and say when the sandbox is back. Ledger **RG-0348** (LOCKED) asserts the
+scripts, the guard, the allow-list rows and the CLAUDE.md block all still exist.
+
+Not done this session (needs the shell or David): the sandbox itself is still dead at the time of
+writing — the fix is the KB decision, above.
+
+## 09 September 2026 — Harness selected: DeepSeek Harness (dsh). RUL-116 recorded.
+
+David closed his own investigation — many harness courses and videos — and made the call:
+*"My conclusion is that Deepseek is currently the best, it is totally plug and play, no bias foundation as
+with the other harnesses, and when something doesn't work it gets replaced. It is also free and MIT safe."*
+
+**Verified against the sources, 9 Sep 2026** — all three of his reasons check out:
+- **MIT licensed.** Confirmed.
+- **No foundation bias.** Model-agnostic by design: switching between remote API providers and local runtime
+  servers is a YAML/JSON config change, not a code change.
+- **Plug and play / replaceable parts.** Micro-kernel architecture where model adapters, tool registries,
+  sandboxes, session state handlers, event dispatchers and UIs are all isolated, interchangeable plugins.
+- Also carries an **append-only event log** recording user messages, tool invocations, reasoning states and
+  **token metrics**. v0.1 ships Standard / Code / Minimal / Creator configurations.
+
+**Recorded as RUL-116** (append-only, RULINGS.md, 116 rows). Consequences written into the ruling:
+
+- **(b) Claude's technical call under RUL-037:** dsh sits **behind** `ai_provider.py`, never instead of it.
+  The app keeps calling `ai_provider.complete(task=...)`; dsh becomes one more adapter alongside
+  anthropic / openai / scaleway. One chokepoint keeps the cost ceiling, `_log_ai_spend`, the price card and
+  RG-0019 working unchanged. A harness metering its own plug-ins would give three ceilings blind to each
+  other — three lanes each inside their own limit can still total past David's, and capping everything is his
+  stated condition.
+- **(c)** dsh's token log becomes the independent cross-check against `ai_spend_log`, closing drift item
+  **D3** in AI_BASELINE.json (the app records the *intended* lane; dsh records the one that answered).
+- **(d)** Version **pinned** — v0.1 interfaces move, and a self-updating harness in the live path is an
+  unreviewed lane change.
+- **(e)** Ahead-of-time work runs on the same harness on a low-priority off-peak queue.
+- **(f)** n8n stays workflow automation and does not become the model router; the two are not merged.
+- **(g)** Still unconfirmed and David's: whether Scaleway carries DeepSeek models.
+
+`genie/GENIE_COST_MODEL.html` updated to rev 4 — harness named in the architecture band, watch list rewritten
+around the decision. Per-call arithmetic unchanged from rev 2 onwards.
+
+**Sources:** InfoQ (DeepSeek Harness open-sourcing, Aug 2026) · The New Stack · DataCamp tutorial.
+
+## 2026-09-09 — Goal run 8 (Fable 5.1): no shell, missed 00:10 wave re-queued, Colorado register found
+
+- **Session fired at 06:15 SAST instead of 01:03** (task `lastRunAt` 04:15Z) and the host DailyWave left
+  no `logs/launchday_09Wed09_*.log` — the PC was asleep/off overnight. Two independent misses, one cause.
+- **Sandbox shell never mounted** (3 identical `failed to mount ... Plan9 share "c" not mounted` errors;
+  stopped retrying as instructed). Consequences this run: `onboarding_number.py`, the regression ledger,
+  `rulings_check.py`, `request_host_action.py` and all heredoc writes were impossible. Number this run:
+  **UNKNOWN (not measured)** — last PROBED value 0 on 8 Sep. Ledger/rulings: NOT RUN this session.
+- **WAVE-REQUEUE-1:** queued `CityLauncher\launch_day_wave.bat` and `CityLauncher\run_us_registers.bat`
+  by writing the `.req` files directly (`host_queue/20260909-042000-000_…` and `…-042100-000_…`), same
+  five-line format `request_host_action.py` emits, both allowlisted, both read back complete. Permission
+  quoted: David 5 Sep ("keep the emails flowing as fast as is possible") and RUL-095/096. Small-file
+  Write was used because the shell was down; every write was verified by re-reading the last line.
+- **COA-1 (draft, not wired):** Colorado Outfitters Association is an open register — public WP REST
+  index `/wp-json/wp/v2/outfitter?per_page=100` returns **92** profiles; each profile page carries
+  `Email:`, `Phone:`, `Website:`, `Address:` (PROBED via David's Chrome, e.g. Jackson Outfitters →
+  roy@jacksonoutfitters.com). The `/find-your-outfitter/` HTML is script-rendered (filters only).
+  Adapter written to `CityLauncher/us_registers/coa_adapter_DRAFT.py` in the `_wyoga` shape; needs
+  splicing into `us_register_reader.py` + `run_us_registers.bat` via heredoc next run (needs shell).
+- Not done this run (needs shell): ledger shards, rulings_check, funnel probe (`/onboard/funnel` is
+  gated; web_fetch provenance-blocked), reading the 9 Sep wave outcome (queued, result not yet in).
+- Ledger entries owed next run: (a) COA-1 adapter → LOCKED once the `.result` shows an import;
+  (b) an OPEN entry for "DailyWave skipped when the PC is asleep at 00:10" — the task is registered
+  with wake-from-sleep, and it still did not fire; the goal task also slipped 5 h. Class, not instance.
+
+## 09 September 2026 — Genie / Porthole cost model: the AI-cost objection, measured
+
+David placed the one-question front door at Stage 5 (running as Stage 3 if Stages 1–2 succeed) partly
+because it implies extra AI cost, and said the answer would be open-source or free models. This puts
+numbers against that, built from `AI_BASELINE.json` v2.0 worst-case envelopes and `PRICING_CANON` §4.
+
+**Built:** `MarketSquare/genie/GENIE_COST_MODEL.html` (indexed in Visuals).
+
+Findings, all on the base lane (`gpt-5.6-luna` / `gpt-5.6-terra`, worst-case envelope per call):
+
+- **Free conversation** (route + 4 follow-ups) = 5 triage-tier calls = **$0.0049**; priced
+  pessimistically at the haiku tier, **$0.0148**. Headline figure uses the pessimistic one.
+- **Paid 5T dossier** = that conversation + one **design-tier** call ($0.18, the app's most expensive
+  envelope) = **$0.195** against **$10.00** earned (1T = $2 fixed). Compute is **1.9% of the sale**.
+  At ten times the write-up tokens it is still under a fifth.
+- **Free conversations that never buy** are the only real exposure: 1 000/day = **$444/month**.
+- **Free hosted lanes** carry ~**744 conversations/day at $0** — Groq (1 000 req/day), Cerebras
+  (~1M tok/day), OpenRouter (1 000/day after a one-off $10). Google AI Studio and Mistral's free tiers
+  are **disqualified**: both use prompts for training, and the input here is a user's own sentence.
+  Cohere is non-commercial only.
+- **Open weights ≠ free.** Smallest currently useful open model needs an 80GB card; cheapest tracked
+  on-demand A100 80GB is $1.09/hr = **$785/month** flat. Break-even vs pay-per-call is **1 768 free
+  conversations/day** (~53 000/month). At pre-launch volume, self-hosting is ~2 orders of magnitude
+  the wrong side of that. The Hetzner CPX22 cannot run these models at all.
+
+**Architecture conclusion:** a free lane is one adapter plus one registry line behind the existing
+`ai_provider.py` seam (AI_PROVIDER_SEAM.md / AI_SWAP_ARCHITECTURE.md) — the 14 Aug lane-role ruling
+already separates lanes by role, not vendor. Proposed addition to that ruling: the free lane is base
+for the **free conversation only** and fails over **to** the paid base lane, never the reverse — a
+capped lane must never stand between a paying customer and their dossier.
+
+**Stage-order note:** the narrow Porthole (`ai_pa_porthole_CONCEPT.html`, built today) routes with plain
+code and makes **no AI call at all**, so the cost argument does not apply to it. Stage order is David's
+and is a scope decision; this only removes one stated reason for the placement.
+
+Chart palette validated for colour-blind separation before use (blue/amber/purple, adjacent-pair ΔE ≥ 21.9).
+Free-tier allowances read from published comparisons on 9 Sep 2026 — re-check before depending on them.
+
+## 09 September 2026 — Genie cost model REV 3: two more of my assumptions corrected
+
+David, same evening: *"I used my PC as an example, it will reside on Hetzner server, and the three
+subscriptions are not the plug ins, the plug ins will be actual API AI's. The three subscriptions is Claude
+the backbone, Open AI an independent test ground and auditor, and Grok which i may use for video's and
+Graphics as well as for security."*
+
+Two errors of mine, both removed from `MarketSquare/genie/GENIE_COST_MODEL.html` rather than amended:
+
+1. **Rev 1** costed a rented A100 at $785/month, assuming "open source" meant self-hosting a model.
+2. **Rev 2** placed the harness on his PC and had it driving his three subscriptions, then spent a whole
+   panel explaining why consumer subscriptions cannot serve app users and why his PC cannot be in the live
+   path. Neither objection applied — the harness runs on the **Hetzner server**, its **plug-ins are API
+   models**, and the three subscriptions are **his own bench**, never in a visitor's request path.
+
+**The corrected architecture, as recorded on the page:**
+- Hetzner runs the **harness** — routing software only. It holds no model, so it is light on the box.
+- The **plug-ins are API models** (DeepSeek, the free lanes). This is the only thing with a bill attached.
+- **Ahead-of-time work** (journeys, templates) runs on the same harness on a queue, served afterwards as
+  plain data — the pre-computation point from rev 2 survives, it just runs server-side, not on his PC.
+- **His bench, separate:** Claude the backbone; OpenAI an independent test ground and auditor; Grok for
+  video, graphics and security. No per-user cost; appears nowhere in the figures.
+
+**The per-call arithmetic is unchanged by either correction** — envelopes from `AI_BASELINE.json` v2.0,
+DeepSeek published rates. Design tier $0.18 → $0.0028 (98% cheaper) remains the whole cost story.
+
+**Rev 3's watch list replaces rev 2's two dead objections:**
+- Scaleway/DeepSeek still **UNCONFIRMED** (unchanged from rev 2; David holds the account).
+- **n8n is already a harness on that box**, self-hosted in Docker. Worth deciding once whether plug-in
+  routing belongs inside it or beside it — two schedulers on one small VPS is invisible until both are busy.
+- Batch write-ups and live requests share the same CPUs; the batch queue needs a lower priority and an
+  off-peak window.
+- **Caps must live in the seam, not per plug-in.** Three lanes each under their own ceiling can still total
+  past his. Capping everything is his stated condition, so this one matters.
+
+## 09 September 2026 — Genie cost model REV 2: my "open source = rent a GPU" assumption was wrong
+
+David corrected rev 1 the same day: *"whenever i refer to open source you immidietly think of renting a GPU
+server. I wont do that, it will be as simple as installing a Harness like Deepseeks, which runs on the PC,
+with plug ins, with a Claude Pro, Open AI and Grok subscription, using deepseek API from Scaleway, and that
+would be the expensive option, all options to be capped."*
+
+Rev 1's whole GPU comparison ($785/month A100, 1 768/day crossover) rested on an assumption I made and he
+never stated. It is **removed, not amended**. `MarketSquare/genie/GENIE_COST_MODEL.html` is now rev 2.
+
+**Re-costed on his actual setup**, same `AI_BASELINE.json` v2.0 envelopes, DeepSeek published rates
+(31 Jul 2026: V4 Flash $0.14/$0.28 per Mtok, V4 Pro $0.435/$0.87):
+
+| Job (envelope) | Base lane | DS V4 Flash | Saving |
+|---|---|---|---|
+| triage 2 500/400 | $0.00098 | $0.00046 | 53% |
+| haiku 4 000/1 800 | $0.00296 | $0.00106 | 64% |
+| **design 12 000/4 000** | **$0.18000** | **$0.00280** | **98%** |
+| free conversation (5 calls) | $0.0148 | $0.0053 | 64% |
+| paid 5T dossier (earns $10) | $0.1948 (1.95%) | **$0.0081 (0.08%)** | 96% |
+
+**The design tier is the entire cost story.** The base lane uses a premium model for the write-up at 18c;
+Flash does the same envelope for under a third of a cent.
+
+**The architecture point his correction unlocked, which rev 1 missed entirely:** the expensive call does not
+have to be live. Journeys, question sets, dossier templates and advert drafts can be batch-written on his PC
+via the harness + subscriptions he already holds, and shipped as data. Twelve journeys already exist; ~100
+would cover most first-year requests. The live call then shrinks to the small routing one.
+
+**Two constraints stated plainly in the page:**
+1. Consumer subscriptions (Claude Pro / OpenAI / Grok) cannot serve trustsquare.co's users — they are for the
+   holder's own use and there is no supported path. They belong on the **build** side, where they are correct
+   and already paid for.
+2. His PC cannot sit in the live request path (uptime). Hence: harness produces ahead of time, never answers
+   a user.
+3. **UNCONFIRMED:** could not verify Scaleway carries DeepSeek. Their supported-models page did not render;
+   a provider comparison describes Scaleway as hosting Llama 3.3 and other open-weight models with no DeepSeek.
+   Prices quoted are DeepSeek's own, not Scaleway's. Flagged to David — he holds that account. Matters beyond
+   price: Scaleway was chosen for EU hosting; DeepSeek's own API is not that.
+
+**Proposed additions to the 14 Aug lane ruling** (not applied — a ruling change is David's): a free lane is
+base for the free conversation only and fails over *to* a paid lane, never the reverse; and the design tier
+gets its own monthly ceiling, separate from the rest, since one call there can cost more than a hundred others.
+
+## 2026-09-09 — BOT #3 Home Help: housekeeping registration, built as a working prototype
+
+David's direction, 9 Sep 2026: a click, register a service, get listed — for the South African
+house cleaning market. A green circle with a rotating photo of a room being cleaned; she talks,
+gives the minimum, and is listed; she sends her employer a link so they can book her; she marks
+her open days on a weekly schedule; her area is visible.
+
+**Built:** `genie/bots/homehelp/BOT_HOMEHELP.html` + `homehelp.webmanifest`.
+Design only — nothing wired, no flag, no line in `ops/autodeploy/deploy_manifest.txt`, not
+launch scope. Same footing as BOT #1 Collector and BOT #2 Sell It.
+
+**PROBED live before building** (`GET /listings?category=services`, 9 Sep 2026): the entire
+Services category is two seeded listings nationwide — an electrician and a garden service, both
+Pretoria, both trust 85. No cleaner, housekeeper, laundry or ironing listing exists. Against
+831,000 domestic workers employed in South Africa (Stats SA QLFS Q2 2026, down from ~1,000,000
+in Q4 2019).
+
+**What the prototype does, verified in a rendered browser end to end:**
+- The green circle (`#16A97C`) with four drawn placeholder scenes, random start, rotating every 5s.
+- Spoken registration in en-ZA / af-ZA / zu-ZA using the phone's own free recognition.
+- The REAL `_import_quality_score()` services branch: trade 25, 15-word description 25, price 6,
+  suburb 4, photos 10+8. She reaches 60/100 on four spoken answers and no photo — because the BOT
+  writes the description for her.
+- One sentence carrying both states ("I work for Mrs van Wyk Monday and Tuesday, and I am free
+  Wednesday and Friday") parses to Mon/Tue TAKEN, Wed/Fri OPEN.
+- Employer link: confirmation lifts trust 38 → 85; the existing employer books her FREE (nothing
+  to introduce); a stranger booking the same open day pays 1 Tuppence. Nothing but Tuppence
+  through the till — model-correct.
+- Wage floor: NMW R30.23/ordinary hour from 1 Mar 2026 applies to domestic workers; the BOT does
+  the arithmetic aloud and REFUSES a rate below it (R150/day refused, R242 offered).
+
+**Gaps found in the app, flagged not changed:** service listings have no `open_days` and no
+`serves_suburbs`, so a recurring free day and a travel-to area cannot be stored, scored or
+searched — and "housekeeping, Menlyn, Wednesday" is the only search anyone looking for a cleaner
+runs. Schema + search filter, so not in launch month.
+
+**Guard proposed, built into the prototype:** until one employer confirmation or an ID check
+lands, only people she has sent her own link to can contact her. Highest-trust transaction on the
+platform; it protects the buyer and it protects her.
+
+**Decisions taken (RUL-037):** jade `#16A97C` for Home Help, Sell It moves to TrustSquare gold
+when built (no icons exist yet). The circle lives both as the BOT's home-screen icon and as one
+green circle in the app's Services category.
+
+**Reserved to David:** whether housekeeping goes ahead of Collector and Sell It in the build order.
+Claude's answer is yes — it is the only one of the three whose supply already exists, already has a
+phone, and arrives with somebody willing to vouch for her.
+
+## 2026-09-09 — Home Help BOT, third pass: the vouching gate built, and visibility split into three tiers
+
+David endorsed the safety rule and named the reason that matters most: *"This also protects her,
+which matters more and is easier to forget. A listing that puts a woman's open days and her suburb
+in front of anybody at all, with no accountability on the other side, is not a service to her."*
+It was one sentence on her listing. It is now machinery, with a fifth screen — **A stranger** —
+showing the marketplace from the other side before and after somebody vouches.
+
+**Absent, not greyed out.** Before any vouching a buyer searching "housekeeping, Menlyn, Wednesday"
+does not see her at all. A visible-but-locked card still leaks her free days and her area to anyone
+who looks, which is the harm the gate exists to prevent. After one employer confirmation she appears
+at 85 with an introduction worth 1 Tuppence.
+
+**Three tiers, not two** (RUL-115):
+- PUBLIC once vouched — the trade, **the suburbs she travels to**, her rate, her free days, her
+  rating, her photos.
+- ON ACCEPTANCE — her full name, her phone number, **the area she lives in**. That release is what
+  the Tuppence buys, and she can refuse it.
+- NEVER PUBLISHED — her ID document, and **the identity of the employer who vouched**.
+
+**Publish where she works, not where she lives.** The first version published Mamelodi as her main
+area. A buyer in Menlyn needs to know she can get to Menlyn; they do not need to know where to find
+her. Home suburb now matches internally, shows to her, and releases only on acceptance.
+
+**The voucher is never named** — "confirmed by an employer of 3 years", not "confirmed by Mrs van
+Wyk". If vouching cost the employer their own privacy, far fewer would vouch and the cold start dies
+with it. **Taken days** show to strangers as unavailable only; whose house she is at is not published.
+
+Class ruling, not a Home Help feature: any category where a seller admits a stranger to their home,
+or is exposed by their own listing, inherits it.
+
+Verified in a rendered browser: pre-vouch DOM contains neither her home suburb nor the voucher's
+name; post-vouch DOM shows her travel-to suburbs and free days and still contains neither. Passes
+one and two still green. Console clean.
+
+Files: `genie/bots/homehelp/BOT_HOMEHELP.html`, `genie/bots/README.md` (THIRD PASS), `RULINGS.md`
+(RUL-115). Design only — nothing wired, no flag, no deploy manifest line.
+
+## 2026-09-09 — Home Help BOT, second pass: real room photos, and place understanding fixed at class level
+
+David on the first prototype: *"the photos can again be the AI generated photos we have for the
+current services, no none photos please. And the AI did not understand Moreleta Park, written or
+spoken."* Both fixed the same session, verified in a rendered browser.
+
+**Photos.** The first pass drew four SVG scenes — wrong, we own a real AI photo library. First
+correction used `static/super/` (the electrician and garden photos): right library, wrong trade.
+The answer was in **`assets/super/`**: five of our own photographs of South African rooms — a lodge
+room made up at sunset, a bedroom, a bathroom, a lounge, a kitchen. Every one is a room AFTER it has
+been done, which reframes the product: **a housekeeper does not sell the cleaning, she sells the
+room afterwards.** Embedded as data URIs; no network needed, nothing ever blank. Nothing to generate
+and nothing to pay for — the Higgsfield prompts stay recorded but are off the path.
+
+**RUL-114 — no listing publishes without a photograph.** David's "no none photos" closes the hole
+Claude flagged on the Sell It BOT on 7 Sep: `_import_quality_score()` lets a listing with zero
+photos clear the 50-point bar at 60/100. One photo is now a floor, not ten points. Built into the
+BOT (button reads "One photo first" and stays disabled at 60/100). Class ruling — every category,
+every BOT, and the publish gate itself. Live gate NOT moved in launch month.
+
+**Place understanding — three defects, not one.** Reproduced: (a) the suburb was stored but never
+said back, so it looked ignored; (b) a hard list of 15 suburbs meant Mabopane, Midrand and
+Olievenhoutbosch failed silently; (c) exact matching meant a spoken "Morelia Park" failed. Fixed at
+class level: the list is now only a spelling aid, anything after stay in / live in / work in / from
+/ near is accepted whether known or not, a near-miss is snapped to the closest known name by edit
+distance, the verb decides home-vs-travels-to, the bare name on its own works, and a place must sit
+behind a preposition (without that "I work FOR Mrs van Wyk" made a person into a suburb). It now
+says the name back. Nine cases pass, written and spoken-style.
+
+**Finding worth more than the bug: `assets/suburbs_seed.json` has no townships.** 119 suburbs across
+twelve cities — Arcadia, Brooklyn, Waterkloof, Centurion — but not Mamelodi, Soshanguve, Mabopane,
+Tembisa, Khayelitsha, Umlazi, Chatsworth, Mdantsane. **The seed lists where the work is, not where
+she lives**, so every housekeeper on the platform would have hit it. The prototype carries the
+townships in its own list; the real fix is the seed file, which search and CityLauncher also read.
+Flagged, not changed — launch month.
+
+Files: `genie/bots/homehelp/BOT_HOMEHELP.html`, `genie/bots/README.md` (SECOND PASS section),
+`RULINGS.md` (RUL-114). Still design only — nothing wired, no flag, no deploy manifest line.
+
+## 2026-09-09 — The BOT colour system: the app's own seven tile colours fail as icons, measured
+
+David: *"i also love the green full phone screen, this can also be done with the other categories,
+but different colors for each?"*
+
+Built: `genie/bots/BOT_FAMILY.html` — all seven category BOTs as full colour-washed phone screens,
+each carrying a real photograph from `assets/super/`, plus the measurement behind the palette.
+Eight webmanifests written to `genie/bots/*/`. Design only, nothing deployed.
+
+**The colours were already decided** — `BRAND_ASSETS.md` carries seven app tile colours from the
+`CATS` config. Reused rather than re-invented. But as ICONS they fail, and it is measurable
+(CIEDE2000; under ~20 too close for two icons, under 10 the same colour to the eye):
+
+- **6 of 21 pairs collide.** Tutors vs LocalMarket **ΔE 6.1**; Tutors vs Adventures 6.7; Adventures
+  vs LocalMarket 11.1; Property vs Cars 11.3. Three of the seven are green, two are near-black navy.
+- Lightness L* 9–37 across all seven, so on a dark home screen they are seven dark squares.
+
+**The sibling palette** keeps the hue each category already owns (hues come from the explainer
+video's pastel set, David's own pick) and pulls it to icon strength: Property #2E86E0, Cars #5B4BD6,
+Tutors #4FA83F, Services #B4441F, Collectors #C98A2E, Adventures #12A5A5, LocalMarket #D8447E.
+**0 of 21 pairs collide; closest pair ΔE 22.8.** The app tiles are unchanged — this is a second
+palette for icons and BOT screens only.
+
+**The rule, recorded in BRAND_ASSETS.md so no BOT colour is argued about again:** hue = the category
+(canon, never taste); shade = the individual BOT, a trade inside a category taking a lighter or
+deeper shade of its family and never a hue of its own; ring = the family hue on a sub-trade BOT.
+
+**One thing reserved to David.** Home Help is a Services BOT, so the system puts it at clay #C96B4A
+(ΔE 12.0 from its Services parent — intended family resemblance — and 18.8 from its nearest
+outsider). His jade #16A97C measures ΔE 13.4 from Tutors and 15.0 from Adventures, two *other
+categories*, so on a home screen it is a third green. The board toggles between the two and shows
+the numbers. Until he rules, the prototype stays jade.
+
+Files: `genie/bots/BOT_FAMILY.html`, `genie/bots/{property,cars,tutors,services,collectors,adventures,localmarket}/*.webmanifest`,
+`BRAND_ASSETS.md` (BOT icon palette section), `genie/bots/README.md` (FOURTH PASS).
+
+## 09 September 2026 — AI PA "Porthole" interface concept, working prototype
+
+David's idea, from a hand-assembled picture: keep the full app (categories, sell wizard,
+browse grid) exactly as it is, and put a **single round window with one open question** in
+front of the Adventures entry point. Rotating AI adventure stills inside a black circle,
+one free-text question ("What would you like…"), then up to four short follow-ups that
+branch to anything adventure-shaped — a train trip, a B&B listing, selling a tour, a
+heritage read, shark diving, taking leave — landing on a summarised visual result with a
+live link into the 5T activation or the guided listing.
+
+**Built:** `MarketSquare/ai_pa_porthole_CONCEPT.html` — self-contained, no external JS.
+
+- Porthole rotates 12 real stills from `assets/journey/` (path resolves from either
+  `MarketSquare/` or the `Visuals/MarketSquare/` copy, via a candidate-prefix retry chain).
+- Router: 8 lanes, keyword-weighted, with an explicit disambiguating question for anything
+  it cannot place — it asks rather than guesses.
+- Journey outcome is COMPOSED from real leg data in `journeys/cape_cairo.json`: the
+  duration answer selects legs 1–2 / 1–4 / 1–6, distance is summed from the real `dist`
+  fields, and the highlights block is filtered from the real stops by the "what do you
+  want" answer (scenery → view, wildlife → matched sights, heritage → the 5 UNESCO
+  entries mapped to legs, food → food stops, comfort → overnights). Nothing invented.
+- "Open the leg map" deep-links to the existing `adventures_c2c_map.html`.
+- Other outcomes: guided-listing handoff (stays), claim-a-journey-page (tour operators —
+  uses the positioning already in the cape_cairo `cap` string), free heritage read,
+  1T introduction (experience).
+- Canon respected on every card: no money for the trip through the till, fixed Tuppence
+  prices never ad-valorem, price shown before confirm, pre-information free, main app intact.
+- Right-hand column answers "is this doable": a 15-row build table graded HAVE / WIRE UP /
+  NEW against what is actually on disk, plus the narrow-vs-wide scope call.
+
+**Verified in the rendered page** (headless Chromium, both file locations): porthole photo
+paints, all 6 lanes route correctly, 6-leg and 4-leg journey variants produce different
+itineraries and different highlight sets, all CTAs render, unknown input falls to the
+disambiguator, JS console clean apart from the photos absent from the test sandbox.
+
+**Not done:** nothing deployed, no app code touched. `Visuals/index.html` was hand-patched
+with the tile (330 items, MarketSquare group to the top) because the Cowork sandbox mount
+to /Projects is down this session and `refresh_visuals.py` could not be run — the next
+normal run regenerates the same entry.
+
+## 2026-09-09 — AGENT-RC-1: the host agent re-deployed CityLauncher every 20 minutes for 40 hours
+
+Found while reading `autodeploy_agent_log.txt` for SANDBOX-REPAIR-1. The CityLauncher deploy requested
+2026-09-08T03:52Z (SPECIAL-CLOSE-1) completed on its first tick at 06:11 SAST on 8 Sep — and on every
+tick after it: **73 deploys and 73 `citylauncher.service` restarts** by 21:48 on 9 Sep, each logged
+`CL FAILED rc= ` with an empty rc, the flag kept, "retry next tick".
+
+**Cause.** In `autodeploy_agent.bat`, `set "CLRC=%errorlevel%"` and `if "%CLRC%"=="0"` sit in the same
+parenthesised block. cmd.exe expands every `%var%` in a block when it PARSES the block, so the `if`
+compared the pre-block value of CLRC — an empty string — to `"0"`, every time. The MarketSquare block
+carried the same defect (harmless there only because `TSL_READY.flag` carries the verdict), and every
+`%date% %time%` inside both blocks was parse-time too, which is why the "seen" and "FAILED" lines always
+shared a second.
+
+**Fix.** `setlocal enabledelayedexpansion` and `!errorlevel!` / `!CLRC!` / `!RC!` / `!date! !time!` inside
+the blocks. Backup: `autodeploy_agent.bat.bak-agentrc-20260909-2205`. Written from the app's file tools
+(the sandbox is dead — see SANDBOX-REPAIR-1) between ticks, so the running agent never read a
+half-written file. Ledger **RG-0349** (LOCKED): source legs for the delayed-expansion reads, a host leg
+that reads the agent log's last CityLauncher verdict, and a red for any `CL_DEPLOY_REQUEST.flag` older
+than 90 minutes. The 22:11 tick is the proof: one more deploy, then `CL SHIPPED - request closed`.
+
+## 8 Sep 2026 — PHONE-HEADER-1: the ops dashboard's top bar is one compact row on a phone
+
+David, from the phone: *"for the phone to view the pages sideways, the top bar takes up too much of the
+viewing area."* The header wrapped into four rows (session badge, timestamp and every tab broke over two
+lines) and took a third of a landscape screen.
+
+`dashboard.server.html`: below 1024px the header is one compact row that swipes sideways (smaller logo,
+nowrap badge/timestamp/tabs, tighter padding); on a screen shorter than 560px (a phone held sideways) it
+also stops being sticky, so it scrolls away and the page gets the full height. Desktop is untouched.
+
+## 2026-09-08 — maintenance-loop: quiet run — empty queue, green board, nothing to fix
+
+Daily B2b maintenance run, 14:14–14:30 UTC (later than the usual 05:30 slot), unattended.
+
+**Deps (MAINT-DEPS-1).** `maint_deps.py` found httpx and fastapi absent from the fresh sandbox
+and installed both before the ledger ran — no instrument blind this run.
+
+**Ledger BEFORE.** Run in three shards (LEDGER-SHARD-1) + `--combine=3`: **333 entries · 311
+holding · 0 REGRESSED · 22 open · 0 ready to lock · 0 UNVERIFIED**, exit 0. Every locked fix is
+holding. No open entry started passing, so nothing to promote.
+
+**Queue.** `GET /admin/faults`: new 0 · triaged 0 · fix-shipped 0 · verified 26 · closed 12 ·
+duplicate 2 (40 total). Shadow agent (`maintenance_agent.py`, foreground, SHADOW mode, kill
+switch OFF, brain KEYED:anthropic): 0 seen, 0 acted, no patches, no escalations, no PATH_B
+routes. Email lane census: 24 total, 6 held in 30 d (support 7, other 5, legal 1, spam 1) —
+counts only, not a fix lane. Heartbeat PROBED — `GET /dashboard/maint` (through the review gate)
+shows run `2026-09-08T14:19:13Z`, received 14:19:34Z.
+
+**Escalation brief.** `escalation_brief.py`: no escalations in the last 24 h, no brief written.
+
+**Fixes.** None — the register carried no rows, so the contract (register rows in →
+gate-passing commits out, nothing else) produced no code change this run. The 22 open ledger
+entries are the fix-session backlog, tracked by the ledger, not this loop's remit.
+
+**Ledger AFTER.** No file under assertion changed, so the BEFORE board stands: 333 / 311 / 0
+REGRESSED / 22 open. (The final `--combine=3` re-judged the same shards, <5 min old, same verdict.)
+
+Committed (fragments only), not pushed — NIGHTLY-SHIP-1 ships committed work.
+
+## 8 Sep 2026 — ID-UPLOAD-INTERIM-1 (RUL-113): an ID upload earns 12 of 15 at once, the last 3 named as waiting
+
+David, on the daily watch's one REAL ISSUES line (DW-109): *"lets fix this temporarily allowing the
+upload without a verification; at least until i add credits to Didit. Until then allow the user 12
+points for the upload with a note saying 'waiting confirmation to add an extra 3 points'."*
+
+**Fault (DW-109, found 6 Sep):** the C2 rule of 16 Jul made an ID upload store the document, write a
+`pending` credential and grant nothing — correct against the old +15 self-grant, but with the Home
+Affairs lane parked (RUL-105, Didit unfunded) nothing was ever going to confirm an upload. So a 200
+upload left `/id-status` reading **"No ID on file"** and the Trust card still offering **Upload ID →**.
+David uploaded twice and was told the same thing twice.
+
+**Fix (`bea_main.py`, `ms.js`, `migrations/038_id_upload_interim.py`):**
+- `POST /users/{email}/upload-id` now calls `_grant_id_upload_interim`: the credential becomes
+  `declared` with a `user_declarations` row of **12** points — the EXISTING partial-credit machinery,
+  so the ONE scorer counts it and no surface hand-adds a number (EVIDENCE-TRUE). Idempotent: a second
+  upload never doubles it; an `earned` credential is never touched. Response `status: "interim"`,
+  `points_awarded 12`, `points_pending 3`, message *"ID received — 12 points added. Waiting
+  confirmation to add an extra 3 points."*
+- `GET /users/{email}/id-status` gains the **`pending`** state (document on file, unconfirmed) with
+  `interim_points`, `pending_points` and `pending_note` — the branch that did not exist.
+- `GET /users/{email}/trust` carries `partial_points 12` + the note on the ID row and the visible list
+  still sums to the headline; `GET /sellers/credentials/{id}` lists the 12 as *"Government-issued ID
+  uploaded — confirmation pending"*; `/trust-score/breakdown` counts the remaining 3 as pending.
+- `ms.js`: the upload handler shows the note and re-renders from `/trust`; the Trust card row renders
+  ◐ `+12 · 3 pending` with the note and stops offering **Upload ID →** over a document already on file;
+  the Home Affairs card leads with the same line.
+- Migration 038 converts the two uploads made before this shipped (the walkthrough account and one
+  tester) from `pending` to `declared/12`. Dry-run + apply proven on a copy of the live database:
+  2 converted, re-run 0.
+- `ID_UPLOAD_INTERIM_POINTS` (env, default 12) is the ONE switch; `0` restores the C2 no-grant
+  behaviour. Reversing it is David's call (RUL-113(c)), never a session's reading of "temporary".
+
+**Proven before shipping** on the server's own interpreter against a copy of the live database:
+id-status `pending` with the note for both accounts; `/trust` visible sum == headline; breakdown
+`pending_points 3`; public list carries the 12; grant idempotent; earned untouched; a seller with no
+upload still reads `none`. Asserted by **RG-0347 (LOCKED)** — source legs for every surface plus a
+live anonymous read of the walkthrough account, which must never again read `none`.
+
+## 8 Sep 2026 — Onboarding goal, run 7 (Fable 5.1, 01:03–02:20 SAST): the wave counter never advanced; register letter; letters filed
+
+**The number: 0** (probe A 0, probe B 0; raw 2 = the two e2e_test seeds, barred by §3). 5,838 on the
+list · 1,076 emailed · 5 registered. Tonight's 00:10 wave: **254 real sends, 0 crashes** — all 17
+remaining US states got wave #1, Cape Town + 7 states wave #2, cap reached at 254, 47 letters dry-ran.
+
+### WAVE-COUNTER-1 — every wave since day one was stamped "wave 1" (CityLauncher, RG-0339 LOCKED)
+- PROBED: `email_events.wave_number` was added by `migrate_db.py` with `DEFAULT 1`, so every 'sent'
+  row is born wave 1 and the runner's stamp (`WHERE wave_number IS NULL`) matched nothing, ever.
+  1,486 sent events, ALL wave 1. Cape Town had sent on nine days and printed "wave #2" every night
+  since 2 Sep.
+- Consequences, all measured on the real local DB: the ramp could never see a second clean wave
+  (structurally capped at 24 — Massachusetts, Florida, Illinois, Michigan were due 48 and sent 24 or
+  12); the stop-loss judged the CUMULATIVE bounce rate instead of the last wave's; and a
+  STOP-LOSS-RELEASE-1 stamp for "wave 1" matched for ever, so Cape Town (6.9% cumulative, 6 bounces)
+  sent nightly with its stop-loss permanently released.
+- Fix: a wave is one city's sends on one send-timezone calendar day — exactly what MIN-GAP-1 already
+  enforces — derived from `created_at` in `wave_history()`; `city_stats()` takes the last wave from it;
+  the post-send stamp drops the IS NULL guard; `clean_city_list.last_wave()` uses the same counter.
+  History is right for every send already made with NO database write. Tomorrow's wave: Massachusetts
+  / Florida / Michigan / Illinois earn 48 where their days were clean; Pretoria (last wave 12/3 = 25%)
+  is correctly held by its own stop-loss until cleaned; Rhode Island (4/12) and Vermont (3/12) hold.
+
+### REGISTER-LETTER-1 — the outfitter lane is drawn (RG-0317 → LOCKED, RG-0267 still green)
+- New `adventures_outfitter_outreach.html` in the club letter's approved structure (RUL-099):
+  source line ("your state association's own published member directory"), unsubscribe, support
+  route, NO money ask (arm-b finding), US price on the example card, live badges only.
+- `emailer.template_key_for()` routes any `register:*` row to `TEMPLATES['<category>:register']`
+  for both the letter and the subject ("A free listing for your outfit in Montana"). Scraped ZA
+  adventures rows keep their old letter. Rendered from a real Montana row: no placeholder, no rand,
+  US compliance footer. Montana `category_priority` += adventures_experiences → composes 12 tonight.
+- RG-0317's assertion corrected to the path the code actually takes (it checked the old template).
+
+### LETTER-FILE-1 — RUL-099(e) had never been implemented (RG-0340 LOCKED)
+- `visuals/letters/` held only its README after ~1,000 club letters. `_file_letter()` now writes one
+  file per letter shape × country per send day from the real-send branch; never on a dry run; can
+  never break a send. A dry-rendered PREVIEW of the outfitter letter is filed there now.
+
+### RUL-104 reflected at last
+- The club letter said "a South African marketplace" to ~1,000 US readers for four days after the
+  ruling. Now "a global marketplace, founded in South Africa". `rulings_check.py` RUL-104 asserts it
+  in both letters and the YouTube boilerplate.
+
+### Supply, measured on the server
+- `register:usatf-new-england` is DEAD supply: 25 sent, 7 bounced (28%) — personal mailboxes on live
+  domains (cox.net, aol, yahoo), so an MX clean cannot rescue it; SOURCE-QUALITY-1 holds the whole
+  source from tomorrow, which parks the 213 Massachusetts rows. Correct, no release path wanted.
+- Domain since the 6 Sep clean: 505 sent, 22 bounced = 4.36% (gate 5%). rrca runs 2.1%.
+- US club lane left: rrca 292 + usatf-pacific 40 ≈ 330 → dry ~9–10 Sep. Outfitters: Montana 199
+  (drawn from tonight) + Wyoming ~95 (WYOGA-1 adapter written, parser proven on a fixture,
+  `run_us_registers.bat` queued 02:06; wyoga.org is not reachable from the sandbox, host-side only).
+- Funnel, graded (`/onboard/funnel?days=2`): 21 sessions, **1 human** (no src — organic), 0 humans
+  from any letter; the 10 "photos" hits are the scanner pattern. n=1 — no rate yet. Email side, 4
+  days: 914 sent · 13.2% human opens · **2 human clicks (0.23%)** · 0 signed.
+
+Ledger before: 327 · 0 regressed · 22 open · RG-0326 READY TO LOCK (promoted). After: see run 7 tail
+in GOAL_STATE.md. rulings_check: 102 checked, 0 FAIL.
+
+## 8 Sep 2026 — RUL-110: "a global marketplace", no country of origin in the opening line
+
+David, on run 7's wording *"a global marketplace, founded in South Africa"*: *"just change it to say a
+global marketplace. Companies don't say they are from a specific company in the statement they open up
+with, it is unnecessary and will immediately biase many people."*
+
+- Club letter, outfitter letter and the federation letter (which still said "South African marketplace"
+  twice — missed by RUL-104) now open with "a global marketplace that opened on 1 September".
+- The legal footer (registered company, number, postal address) is unchanged — the law requires it and
+  it is not positioning (RUL-110 b).
+- `rulings_check.py`: RUL-104's must-not lists widened; RUL-110 added as NEGATIVE assertions ("founded
+  in", "based in South Africa", "from South Africa") on all three letters and the YouTube boilerplate —
+  RUL-104 had only a positive assertion, which is how the qualifier slipped past it.
+
+## 2026-09-08 — EMAIL-PAGE-TRUTH-1: the Ops Dashboard Email Templates view now shows the letters that SEND; SPECIAL-CLOSE-1: the expired launch special is closed
+
+David: *"please ensure that these email templates are the latest ones, in the Ops Dashboard. If not
+please update them."* They were not.
+
+- **What was wrong.** The page (orchestration_v2/email_templates.html, deployed at /orchestrator/v2/)
+  was hand-built on 23 Aug from a snapshot folder (orchestration_v2/templates/) that NOTHING sends
+  from, while saying "exactly as the wave machinery sends them". The wave runner (launch_day_wave.bat
+  on David's PC → wave_runner → emailer.py) sends from CityLauncher/emailer/templates/, and those
+  copies moved on 28 Aug (international pass), 4 Sep (support route + browse link, RUL-100), 5 Sep
+  (inline TrustSquare mark), 6 Sep (Tutors A/B arm) and 8 Sep (register letter). Four letters that
+  joined the lane were not on the page at all (sports_club, adventures_outfitter, tutors arm B, the
+  federation permission letter) nor were the two resend letters (human_followup, relink_apology).
+- **Fix, mechanical.** NEW `scripts/build_email_templates_page.py` — the ONE writer. It reads the
+  emailer's own TEMPLATES map, subject lines, sender/reply-to and waves_policy.json, mirrors every
+  letter in the send lane into orchestration_v2/templates/ in its AS-SENT form (launch-special block
+  stripped exactly when launch_codes.enabled() would strip it), and rebuilds the page with every badge
+  computed from the sending file (unsubscribe · special state · magic-link CTA · support route ·
+  personal-channel scan · browse link · wave tag · inline mark · source line). `--check` exits 1 on
+  drift. 20 letters in the lane (7 organisations, 2 clubs/registers, 7 individuals, 4 other), plus
+  the placement lane (David's reserved send, unchanged) and the three 23 Aug agency-lane design
+  drafts, relocated to orchestration_v2/templates/agency_lane_design/ and shown in their own section
+  marked NOT what sends today. Nine deploy-manifest rows added. RG-0344 LOCKED.
+- **Found on the way — SPECIAL-CLOSE-1.** CityLauncher/.env was still LAUNCH_SPECIAL_ENABLED=1 with
+  LAUNCH_SPECIAL_DEADLINE=2026-09-01, and `launch_codes.enabled()` had no date check, so the window
+  RUL-060 closed on 1 Sep never closed: prospects.db shows 645 launch numbers issued 2–7 Sep with
+  expires_at 2026-09-01, and the 2–5 Sep sends in block-carrying categories (Tutors 131, Services 127,
+  us_university_tutors 138, teachers_trainers 79, adventures 26) went out saying "valid until
+  1 September 2026". Fixed at class level: `window_open()` date gate inside `enabled()` (deadline
+  day inside, day after out, SAST clock), `issue_for_send()` no-ops when off, .env un-armed with a
+  dated note. Proven both ways in a subprocess against a throwaway DB path. RG-0345 LOCKED.
+- **Found on the way — the agency letters that SEND still tell the solo-seller story.** AGENCY-WAVE-1
+  (23 Aug) put the three-lane block into the preview folder only; RG-0165 asserted it there and read
+  green for 16 days. CityLauncher's agency/travel_agency/cars_dealer letters carry the four-step solo
+  flow, their CTA is the solo magic link (no wave-prep call in the lane), and the n8n lane reads
+  /var/www/marketsquare/n8n/email_templates/ on the server — seven letters dated 10 May 2026, no
+  agency letter. Nothing wrong went out (agency sends are David's act, RUL-053(f)); the letter he would
+  send today is the solo one. RG-0165's path corrected with a dated note; RG-0346 OPEN carries the gap
+  and prints READY TO LOCK when the sending copies carry the agency story with a console link.
+- **Own-goal, recovered.** The first draft of RG-0345's executed leg called issue_for_send() in the
+  window-open case, which wrote prospects.db from the sandbox — the 31 Aug / RG-0330 hazard — and
+  stranded a hot journal. Recovered the same minute by the documented method (rolled back on a
+  sandbox-local copy, integrity ok, 5,928 rows / 1,460 emailed / 812 codes, no probe row, journal
+  moved aside as `prospects.db-journal.aside-20260908-054001`, backup
+  `prospects.db.bak-hotjournal-20260908-054001`). The leg now repoints `_DB` at a temp file BEFORE any
+  call and only calls issue_for_send when enabled() is False.
+- Ledger: 3 shards + combine green (every locked fix holding; 22 open). rulings_check 0 FAIL.
+  Files: scripts/build_email_templates_page.py (new), orchestration_v2/email_templates.html (rebuilt,
+  backup .bak-truth-20260908), orchestration_v2/templates/* (20 mirrored + agency_lane_design/),
+  ops/autodeploy/deploy_manifest.txt (+9 rows), scripts/regression_ledger.py (+RG-0344/0345/0346,
+  RG-0165 ref), CityLauncher/emailer/launch_codes.py (+window_open, backup
+  .bak-special-close-20260908-053237), CityLauncher/.env (flag 1→0, backup kept).
+
+## 8 Sep 2026 — DEVICE-ENROL-2: the ops dashboard no longer says SIGNED OUT to a signed-in browser
+
+David, from his enrolled phone: *"it now opens but then say signed out?"* — and: *"it also does this on
+the laptop for the first login, then i just log in again and it is gone."*
+
+**Fault (PROBED, nginx access.log 03:30:25 UTC):** the phone WAS enrolled and the server DID mint its
+admin token (`/admin/device-token` 200), but `/dashboard/summary` answered 87 bytes — the anonymous
+heartbeat — in the same second, and the page painted SIGNED OUT. Two fetches race on load: the gate's
+silent device token and `loadDashboard()`'s first, tokenless summary call. The summary is SLOW (the
+server parses STATUS + BACKLOG + CHANGELOG before it redacts), so the token — from the phone's cookie,
+or from David's PIN on the laptop — routinely lands while the tokenless call is still in flight.
+`hideGate()` then tried to reload, but its guard was `!DATA || DATA.redacted === 'heartbeat'` and
+`DATA` starts life as `{}` — truthy, no `redacted` — so the guard was dead exactly when it mattered.
+The stale heartbeat landed second and nobody reloaded. A second login worked only because by then
+`DATA.redacted === 'heartbeat'` was true.
+
+**Fix (`dashboard.server.html`, three legs):** (a) `hideGate()` reloads unless a TOKEN-BEARING summary
+has already painted (`window._dashAuthedPaint`); (b) `loadDashboard()` DROPS a heartbeat that arrives
+for a tokenless call once a token-bearing load has started or painted, and otherwise re-fetches once
+with the token that appeared mid-flight (bounded — the retry carries the token); (c) a real paint
+removes the SIGNED OUT banner, which was inserted once and never taken down. Every `<script>` block
+parses (`node --check`, 18/18).
+
+**Locked:** RG-0341 (source, three legs; trips red on the pre-fix file, verified). Scope: the ops
+dashboard is the only page today that both mints a token asynchronously and paints anonymous data
+on load; admin.html has no summary paint.
+
+## 8 Sep 2026 — DEVICE-AUTH-1: one login — an enrolled phone passes the ops Basic-auth gate
+
+David, from the phone: *"when i want to view things inside the ops dashboard it asks for a new
+password, is this really necessary, please remove it, we only need the first login?"*
+
+**Fault:** DEVICE-ENROL-1 (3 Sep) enrolled the phone with a signed, revocable 180-day cookie, but only
+the app honoured it (/m, /m/dashboard, /m/admin, CityLauncher). Every link out of the ops dashboard to
+a page nginx fronts with Basic auth — /dashboard.html, /admin.html, /command.html, the Orchestration
+cockpit, simulation, defence map, watch register — threw the browser's "Sign in to trustsquare.co"
+box: a second password for a device the server had already recognised.
+
+**Fix (`migrations/037_device_auth.py`, nginx only — the app side `GET /admin/device-ok` already
+existed):** an internal `/_device_ok` location sub-requests the app with the visitor's cookies;
+`snippets/internal_auth.conf` (already `satisfy any` + Basic) gains `auth_request /_device_ok;`, and
+the six inline "TrustSquare Orchestrator" blocks gain `satisfy any; auth_request /_device_ok;`. Any
+upstream ERROR (app down, timeout, 5xx) is mapped to 401 (`proxy_intercept_errors` + `error_page … =401
+@device_deny`), so an outage falls back to Basic auth exactly as before — never a 500 on the ops pages.
+Nothing is removed: the Basic credential works everywhere it did. Auctions (its own secret) and the
+AdvertAgent dev realm untouched. The migration proves, after reload, that anonymous /dashboard.html
+still answers 401 with a Basic challenge and that /admin/device-ok is alive and fail-closed.
+
 ## 2026-09-07 — WAVE-ORDER-1: the wave visits the longest-waiting city first
 
 The plan for 8 Sep showed the head of the alphabet doubling (ramp 12 → 24) and the 250 cap falling at

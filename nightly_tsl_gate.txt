@@ -1,0 +1,15 @@
+  ------------------------------------------------------------
+  TSL PRE-DEPLOY GATE   2026-09-11T11:51:09Z   mode=strict
+  [CM] change-management docs
+    - STATUS.md            [ok]
+    - CHANGELOG.md         [ok]
+    - CHANGE_REGISTER.md   [ok]
+    - STATUS newest date : 2026-09-11 (0 days ago)
+    - CHANGELOG newest    : 2026-09-07
+    - Ship pending        : none detected (working tree clean)
+  [DB] live databases (read-only, msdeploy@178.104.73.239)
+    - primary db        [ok, 2977792 bytes, integrity ok] (cached)
+    - redis             [not readable - not gated]
+    -- proved over HTTPS /health (no credentials needed)
+  Verdict: CM=ok  DB=ok  ->  ok   (logged -> tsl_audit.log)
+  ------------------------------------------------------------
