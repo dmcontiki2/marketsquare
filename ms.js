@@ -673,7 +673,10 @@ function formatIntroTime(ts) {
 }
 
 let activeFilter='All', wishlist=new Set(), prevScreen='browse';
-let tuppence=50, pendingIntroId=null, pendingLMIntroId=null; // 🧪 TEST: 50 — reset to 5 before launch
+let tuppence=0, pendingIntroId=null, pendingLMIntroId=null;  // TUPPENCE-TRUTH-1 (11 Sep 2026):
+// was 50, a Session-74 test value (22 May) whose own rollback note (a TEST marker comment) was
+// never actioned; it shipped on 1 Sep and showed every visitor a wallet of 50T for ten days.
+// The client does not invent a balance. 0 until the SERVER says otherwise.
 let magicLink={active:false,name:'',email:'',cat:'',area:'',src:'',country:'',suburb:''};
 /* INVITE-PLACE-1 (7 Sep 2026, EMAIL-FORENSIC-1 / RG-0325, RG-0327): the invited seller's
    country and suburb ride on the link too. Letters sent before today carry no country,
@@ -1023,11 +1026,15 @@ async function _msInit(){
       const res = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(buyerEmail), {headers:{'X-Api-Key':API_KEY}});
       if (!res.ok) return;
       const data = await res.json();
-      if (data.balance > tuppence) {
+      // TUPPENCE-TRUTH-1: the server is authoritative in BOTH directions. This used to be
+      // `if (data.balance > tuppence)`, which could only ever RAISE the number -- so a client
+      // default acted as a floor the ledger could not correct, which is how a test value of 50
+      // survived being wrong for ten days. Take what the ledger says, always.
+      if (typeof data.balance === 'number' && data.balance !== tuppence) {
         tuppence = data.balance;
         updateTuppenceUI();
       }
-    } catch(_) { /* silent — hardcoded default remains */ }
+    } catch(_) { /* silent — the honest 0 default stands */ }
   })();
 
   // ── RESTORE PROFILE PHOTO from BEA if localStorage is empty ─
@@ -12720,7 +12727,7 @@ async function aaLoadWalletSessions() {
   const drafts = await aaDB.getAll();
   const email  = drafts.find(d => d.email)?.email || '';
   if (!email) {
-    el.textContent = '50'; // 🧪 TEST: show 50 when no email — reset to '—' before launch
+    el.textContent = '—';   // TUPPENCE-TRUTH-1: no account, no balance to show (was a '50' test value)
     return;
   }
   try {

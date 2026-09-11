@@ -1500,7 +1500,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div style="margin-top:14px;">
       <div style="background:rgba(255,255,255,.12);border-radius:12px;padding:16px 10px;text-align:center;">
         <div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px;">Balance</div>
-        <div id="tn-balance-display" style="font-size:42px;font-weight:800;color:#fff;line-height:1;">50</div>
+        <div id="tn-balance-display" style="font-size:42px;font-weight:800;color:#fff;line-height:1;">0</div>
         <div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:5px;">Tuppence · used for introductions &amp; AI services</div>
       </div>
     </div>
@@ -3858,7 +3858,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div id="ms-tab-overview" class="ms-tab-content active">
       <div class="ms-section-lbl">Wallet</div>
       <div class="ms-card" style="margin-bottom:12px;">
-        <div class="ms-wallet-big"><span id="ms-wallet-balance">50</span> <span style="font-size:16px;color:var(--text-3);font-weight:400;">Tuppence</span></div>
+        <div class="ms-wallet-big"><span id="ms-wallet-balance">0</span> <span style="font-size:16px;color:var(--text-3);font-weight:400;">Tuppence</span></div>
         <div class="ms-wallet-sub">Introduction currency · earn by completing deals</div>
         <div class="ms-wallet-btns">
           <button class="ms-wallet-btn" onclick="goTo('tuppence')">📥 History</button>
@@ -4246,7 +4246,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Sell
   </button>
   <button class="nb tn-widget" id="nav-tuppence" onclick="goTo('tuppence')">
-    <div class="tn-badge" id="nav-tn-badge">5</div>
+    <div class="tn-badge" id="nav-tn-badge">0</div>
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Wallet
   </button>
   <button class="nb" id="nav-myspace" onclick="(SELLERS&&SELLERS[0]&&SELLERS[0]._email)?goTo('dashboard'):goTo('myspace')">
