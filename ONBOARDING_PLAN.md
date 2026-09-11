@@ -152,6 +152,8 @@ Montana's 199 are drawn from tonight (their letter is now in the approved shape)
 being harvested. Next registers must be the same kind — state outfitter and guide associations that
 publish members with mailboxes — not athletics lists, which are the oldest data on the internet.
 
+**Corrected 12 Sep 2026 (measured): the state outfitter-association lane is nearly exhausted, and the next register must be a different KIND.** Harvested and drawn: Montana, Wyoming, Colorado, Alaska and Maine (register bounce rate stays the best we have — 0% on Montana over 48 sends). Probed and NOT harvestable, do not re-check: Idaho (contact form), New Mexico (Airtable widget), Utah (Wix site, directory is a Guidefitter app), New York NYSOGA (mailboxes hidden by Cloudflare anti-bot obfuscation — we do not decode that), Oregon (same), Washington (no public directory), Colorado state licence lookup (search form, no list). The 12 Sep 00:10 wave found sendable people in only four states (Alaska 12, Colorado 24, Maine 12, Montana 24 = 72 sent). The volume that is left sits in OFFICIAL STATE LICENCE FILES, not associations: Texas publishes its whole real-estate licensee register as free bulk downloads (150,000+ rows, by statute) — an estate-agent lane, drawn by the agency letter once RG-0346 gives that letter its console CTA. The sandbox cannot reach trec.texas.gov; the file must be fetched host-side and its columns checked for a mailbox before anything is built on it.
+
 **24 → 31 Oct. STOP ADDING, START CLOSING.**
 No new lanes. Follow up the people who clicked and did not publish.
 

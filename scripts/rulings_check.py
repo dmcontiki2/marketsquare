@@ -875,6 +875,18 @@ REFLECTIONS = {
    # would read RUL-013 as standing policy and keep routing design work at Fable.
    ("RULINGS.md", ["ENDS 1 Sep 2026", "SPEND-GUARD-1"], []),
  ],
+ "RUL-119": [
+   # KB5124008 removal (David, 10 Sep): the ruling reached RULINGS.md only on 12 Sep because no
+   # shell was alive to append it -- exactly the blind spot the register exists to close. The
+   # remedy stays STANDING (Windows Update will put the KB back), so the method block, the KB
+   # number and the removal bat are all asserted. A session deleting the bat or purging the
+   # KB number from CLAUDE.md as "resolved, so tidy it" trips here.
+   ("RULINGS.md", ["REMOVE WINDOWS UPDATE KB5124008 UNTIL ANTHROPIC HAS FIXED"], []),
+   (os.path.join(PROJECTS, "CLAUDE.md"), ["KB5124008", "SANDBOX-REPAIR-1", "RESOLVED 10 Sep 2026"], []),
+   ("remove_kb5124008.bat", ["KB5124008"], []),
+   ("sandbox_repair.bat", [], []),
+   ("scripts/regression_ledger.py", ["RG-0348"], []),
+ ],
 }
 
 

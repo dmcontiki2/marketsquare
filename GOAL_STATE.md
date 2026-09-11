@@ -8,7 +8,7 @@ diary — the changelog is the diary.*
 ## THE NUMBER
 
 Run it, never recall it: `python3 MarketSquare/scripts/onboarding_number.py`
-While the sandbox is dead, run it host-side: queue `run_py MarketSquare\scripts\onboarding_number.py`.
+If the sandbox is dead, run it host-side: queue `run_py MarketSquare\scripts\onboarding_number.py`.
 
 | date | published by own hand | probe A | probe B | notes |
 |------|----------------------|---------|---------|-------|
@@ -17,86 +17,73 @@ While the sandbox is dead, run it host-side: queue `run_py MarketSquare\scripts\
 | 2026-09-06 (run 5) | **0** | 0 | 0 | 4,470 on the list · 570 emailed · 5 registered |
 | 2026-09-07 (run 6) | **0** | 0 | 0 | 5,639 on the list · 845 emailed · 5 registered |
 | 2026-09-08 (run 7) | **0** | 0 | 0 | 5,838 on the list · 1,076 emailed · 5 registered |
-| 2026-09-09 (run 8) | **unknown** | — | — | NOT MEASURED: no shell, no probe possible |
-| 2026-09-10 (run 9, 03:15) | **unknown** | — | — | NOT MEASURED: no shell; run spent on the sandbox fault |
-| 2026-09-10 (run 10, 05:40) | **queued** | — | — | scorer allow-listed + queued host-side; result unread at write time — READ IT FIRST |
+| 2026-09-09/10 (runs 8–10) | **unknown** | — | — | NOT MEASURED: sandbox dead (KB5124008) |
+| 2026-09-12 (run 11, 01:00 SAST) | **0** | 0 | 0 | 6,748 on the list · 1,482 emailed · 5 registered · sandbox alive |
 
-Target: **20 by Fri 31 Oct 2026.** Model: runs 5–8 Fable 5.1; runs 9–10 **Opus 5** (drift, RUL-096h).
+Target: **20 by Fri 31 Oct 2026.** Model: runs 5–8 and 11 Fable 5.1; runs 9–10 Opus 5 (drift, RUL-096h).
 
-## THE SANDBOX IS DEAD — AND IT IS NOW DAVID'S DECISION, NOT A DEFECT
+## SANDBOX: ALIVE since 10 Sep ~06:20 SAST (David removed KB5124008 — now RUL-119)
 
-Windows update **KB5124008** (installed 8 Sep, build 26200.9445) broke the Plan9 share between the
-Cowork VM and the disk. Upstream issue anthropics/claude-code#92984: **no vendor fix; uninstalling
-the KB is the only known remedy.** Same class on ARM64 (#92958 / KB5124012). App restart proven
-useless 9 Sep — the HCS VM outlives the app. Retry the mount ONCE per run, then stop.
+Windows Update will put the KB back unless paused. If every command dies with `no Plan9 drive
+shares mounted`: retry ONCE, then follow SANDBOX-REPAIR-1 in Projects\CLAUDE.md (diagnose via the
+host queue, boards host-side, .req files by hand). Never report it unfixable.
 
-**David ruled, 10 Sep 2026: "please proceed and remove that update until Anthropic has fixed the
-issue."** `MarketSquare\remove_kb5124008.bat` is written and ready. Claude may NOT execute it —
-removing a security update is a system/security change barred to the agent even on request, and the
-queue agent has no admin token. It is David's one action. **This ruling is not yet in RULINGS.md**
-(no fragment compiler, file too large to rewrite safely without a shell): the next run with a
-working sandbox must append it and add the assertion to `rulings_check.py`.
+## WHAT RUN 11 DID (12 Sep 2026, 01:00–01:45 SAST, Fable 5.1)
 
-Without a shell: file reads, small verified Writes, WebSearch (web_fetch is provenance-limited),
-Chrome, and hand-written `.req` files into `host_queue\`. Both fact boards run host-side
-(`ledger_host.bat`, `rulings_host.bat`, `boards_host.bat`).
+1. **Measured.** Number 0, both probes agree. Fact board green (every locked fix holding, 22 open);
+   rulings 0 fail. The two dashboard reds from run 10 are gone (11 Sep sessions deployed).
+2. **Sends are flowing.** The host wave fired at 00:10 and sent **72 real emails** in 4 states —
+   Alaska 12 (wave 2) · Colorado 24 (wave 3) · Maine 12 (wave 3) · Montana 24 (wave 5). Alaska and
+   Maine are the 11 Sep registers (APHA 150, MPGA 564) already being drawn. No other state had anyone
+   left. Emailed rose 1,076 → 1,482 since 8 Sep. A second wave tonight would hit the one-day-per-city
+   gate, so none was queued.
+3. **The missing 10 Sep ruling is on record** — RUL-119 in RULINGS.md with assertions in
+   rulings_check.py (it was a debt from the no-shell days).
+4. **Supply probed, seven sites, no new adapter** — see SUPPLY below. Plan corrected (12 Sep para).
+5. No product code changed; nothing deployed.
 
-## WHAT RUN 10 DID (10 Sep 2026, 05:30–06:30 SAST)
+## WHERE THE FUNNEL LEAKS (PROBED 12 Sep 2026, /onboard/funnel?days=4)
 
-1. **Sends are happening.** The host DailyWave fired on time at 00:10 and sent **86 real emails**
-   across 7 states at wave #3 — Montana 24 · Texas 24 · New York 12 · Wyoming 12 · Virginia 10 ·
-   Pennsylvania 3 · Tennessee 1. The ramp's first doubling is holding at 24. California dry-ran on
-   the stop-loss gate (last wave 12.5% bounce). The 9 Sep overnight-sleep miss did not repeat.
-2. **Queued today, in order:** the scorer · `clean_stoploss_cities.bat` · a second
-   `launch_day_wave.bat` · `run_us_registers.bat`. **READ ALL FOUR `.result` FILES FIRST.**
-3. **COA-1 shipped without touching the 486-line reader.** `CityLauncher/us_register_coa.py` is a
-   standalone, self-contained, resumable harvester for the Colorado Outfitters Association (92
-   licensed members, mailbox on each profile page). It writes the same `us_registers/coa.club.csv`
-   that `club_import.py` globs. One line added to `run_us_registers.bat`. Delete
-   `us_registers/coa_adapter_DRAFT.py` once the first harvest is confirmed in a `.result`.
-4. **Measurement lane restored:** `onboarding_number.py` added to the queue allowlist. The
-   allowlist rebuild verified all 33 prior rows present before writing (the 05:00 near-miss rule).
-5. **Fact board 05:11 (host-side):** 336 entries · 311 holding · 2 regressed · 22 open. Both reds
-   are dashboard-truth, not the goal funnel: live badge says session 192, disk says 194; the
-   provenance auditor reds on the live page. Both local remedies pass clean — so the fault is the
-   gap between disk and server, i.e. a deploy. Not deployed: never deploy over a red board.
+- 34 sessions · **9 humans** (dwell) · **8 of the 9 carry no source** (direct/own visits) · the 9th is
+  `coa-cold-20260911`, a same-day verification pass, not an outfitter. **0 humans from any letter.**
+- Montana 9 Sep letter: 14 landed → 14 subpick → 0 dwell → 0 photos. Landing without dwelling is the
+  scanner signature; treat as machines.
+- The n ≥ 10 humans-from-letters threshold for taking the click→publish rate to David is NOT met.
+  People open and do nothing — **the ASK is the bottleneck**, not the send count. Letter changes
+  without evidence are guesswork; the A/B arms already in the send lane are the instrument.
 
-## WHERE THE FUNNEL LEAKS (PROBED 8 Sep 2026 — not re-probed since; no shell)
+## SUPPLY — THE ASSOCIATION LANE IS NEARLY DONE; NEXT KIND IS OFFICIAL LICENCE FILES
 
-- Graded funnel: 21 sessions, **1 human**, **0 humans from any letter**. n=1 — no click→publish
-  rate exists. Take it to David only at n ≥ 10 humans.
-- Email side (4 days): 914 sent · 5.3% bounced · 13.2% human opens · **2 human clicks (0.23%)** ·
-  0 signed. People open and do nothing — **the ASK is the bottleneck**, not the send count.
-
-## SUPPLY — THE POOL IS DRYING UP, WHICH IS EXPECTED (RUL-103)
-
-**The 00:10 wave visited 8 cities; the 9 Sep wave visited 18.** Ten states produced no sendable
-prospect at all. Never throttle to postpone this — answer it with supply.
-
-- Next adapters, in order of promise: **IOGA Adventure Finder** (~250 Idaho outfitters, public;
-  members.ioga.org is login-gated) · Alaska APHA · New Mexico NMCOG · Utah UGOA · Maine
-  Professional Guides Association. Same shape as `_wyoga`/`coa`: text-based, harvested host-side.
-- **Oregon OOGA member list is NOT a quick win** — script-rendered and Cloudflare-obfuscated
-  mailboxes. Do not re-probe blind.
-- US club lane left: rrca 292 + usatf-pacific 40. `usatf-new-england` is dead supply (28% bounce,
-  personal mailboxes) and is source-held — correct, do not build a release for it.
+- Harvested + drawn: rrca, pacific, moga (MT), wyoga (WY), coa (CO), apha (AK), mpga (ME). Adapter
+  shape for a new association: one dict entry in `CityLauncher/us_register_assoc.py` (list pages →
+  profile regex → plain mailbox on the profile). Run via `run_us_registers.bat` (allow-listed).
+- **NOT harvestable, do not re-probe:** Idaho IOGA (form) · New Mexico NMCOG (Airtable) · Utah UOGA
+  (Wix; directory = Guidefitter JS app) · New York NYSOGA (Cloudflare-obfuscated mailboxes — we do not
+  decode anti-bot measures) · Oregon OOGA (same) · Washington WOGA (no directory) · Colorado DPO
+  licence lookup (search form) · Vermont VOGA (site down, 525) · Nevada (one contact mailbox).
+- **NEXT LEAD (host-side, unverified):** Texas TREC "High Value Data Sets" — the whole real-estate
+  licensee register as free bulk text files (150,000+ rows, by statute). Category estate agents,
+  drawn by the agency letter. Two things must be true first: the file's columns carry a mailbox
+  (check host-side — trec.texas.gov does not answer the sandbox), and RG-0346 (agency letter with a
+  console CTA) is closed so the letter tells the agency story. Note TREC said its licence system is
+  offline "until December 15" (portal migration) — the bulk files may or may not still publish.
 - ZA: Durban 588 + PMB 525 teachers (dbe_emis) are the big pool; Tutors arm-b rides them.
-- Dead ends (do not re-check): USATF national finder · NY DEC guides · USATF Mid-Atlantic / Three
-  Rivers / MN / OR / GA / NJ / IN · US general search scraping · orienteeringusa · skifederation ·
+- Dead ends from earlier runs still stand: USATF national finder · NY DEC guides · USATF Mid-Atlantic /
+  Three Rivers / MN / OR / GA / NJ / IN · US general search scraping · orienteeringusa · skifederation ·
   americancanoe · americanhiking · adventurecycling · coloradooutfitters.org/find-an-outfitter.
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
-0. Re-test the sandbox ONCE. If David removed KB5124008 and it is alive: say so with the date,
-   resume normal method, and **append the 10 Sep ruling to RULINGS.md with its assertion**.
-1. Read the four queued `.result` files (scorer, stop-loss clean, wave, registers). Confirm the
-   COA harvest actually wrote rows before believing it.
-2. Run the number. Then `GET /onboard/funnel?days=2` — humans, and which step.
-3. Ledger in shards (`--shard=k/3`, `--combine=3`) or `ledger_host.bat`; then `rulings_host.bat`.
-4. The two dashboard reds need a **deploy**, not a code fix — ship once the board is otherwise green.
-5. Build the next register adapter (IOGA Adventure Finder first).
-6. Still unproven as ONE walk: seller form → save → publish → visible logged out.
-7. YouTube: nine films live; film 07 (Liquidation) unpublished — David's click, when he chooses.
+0. Sunday: put the plain-language weekly summary at the top of this file (number, what moved it, next).
+1. Run the number. Read the 00:10 wave log (`CityLauncher/logs/launchday_<date>010.log`) — how
+   many states still had anyone. Expect the pool to run dry within days; that is expected (RUL-103).
+2. Ledger in shards + rulings check. Both were green at the end of run 11.
+3. **Close RG-0346** (three agency sending letters lack the console CTA block; the send lane never
+   calls /agencies/wave-prep). It is the gate on the only large register kind left (licence files).
+4. Queue host-side: fetch the TREC bulk file and print its header row (a small `run_py` is fine —
+   read the `.result`). Build the licence-file importer only if a mailbox column exists.
+5. Still unproven as ONE walk: seller form → save → publish → visible logged out.
+6. YouTube: nine films live; film 07 (Liquidation) unpublished — David's click, when he chooses.
 
 ## THINGS ALREADY TRIED THAT DID NOT WORK
 
@@ -104,10 +91,11 @@ prospect at all. Never throttle to postpone this — answer it with supply.
   prospects" as supply. Halving the batch for a "measurement week" (RG-0290). US general search
   scraping. Trusting "wave #N logged", and trusting the wave NUMBER itself.
 - Reading the funnel without grading it. Running the ledger in one call — use shards or the host bat.
-- Probing register sites with sandbox curl: most .org hosts return a 143-byte proxy 404.
+- Probing register sites blind: many .org hosts do not answer the sandbox at all (000). Probe with
+  curl first; web_fetch reaches some the sandbox cannot.
 - Retrying a dead sandbox mount more than twice. Restarting the app to cure it (proven useless).
 - Two sessions at once: space deploys; one is better than two.
 
 ## OPEN QUESTIONS FOR DAVID (batched, never dripped)
 
-One, already asked and answered: remove KB5124008 (granted). Film 07 is his click, when he chooses.
+None new. Film 07 is his click, when he chooses.
