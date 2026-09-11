@@ -23,7 +23,13 @@ if exist "%FLAG%" del /f "%FLAG%"
 :: (1) Anything to ship? (read-only content compare; RG-0026 CRLF-aware)
 set "DRIFTLINE="
 for /f "delims=" %%D in ('%PYEXE% "%~dp0check_deploy_drift.py" 2^>nul') do if not defined DRIFTLINE set "DRIFTLINE=%%D"
-echo %DRIFTLINE% | find /i "clean" >nul
+:: DRIFT-PIPE-1 (11 Sep 2026): this was `echo %DRIFTLINE% | find /i "clean"`. DRIFTLINE reads
+:: "DEPLOY DRIFT: 2 file(s) local-ahead of live - ..." and cmd re-parses BOTH sides of a pipe in
+:: a fresh context, so the unquoted "file(s)" made it a syntax error -- "local-ahead was
+:: unexpected at this time" -- and the agent died mid-tick, leaving the request PENDING forever.
+:: It only ever fired when there WAS something to ship, i.e. exactly the case this lane exists
+:: for; an in-sync tick prints no parentheses and passed happily. Quoting makes them literal.
+echo "%DRIFTLINE%" | find /i "clean" >nul
 if not errorlevel 1 (
     echo %date% %time%  IN SYNC - %DRIFTLINE%>>"%LOG%"
     exit /b 0
