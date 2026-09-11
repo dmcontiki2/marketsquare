@@ -14,3 +14,80 @@ Mon 09/07/2026  5:45:05.32  IN SYNC - DEPLOY DRIFT: clean - all 19 tracked files
 Tue 09/08/2026  5:45:07.05  IN SYNC - DEPLOY DRIFT: clean - all 19 tracked files match live
 Thu 09/10/2026  5:45:05.61  IN SYNC - DEPLOY DRIFT: clean - all 19 tracked files match live
 Fri 09/11/2026 13:51:11.45  SHIPPING - DEPLOY DRIFT: 3 file(s) local-ahead of live - run /ship: bea_main.py, marketsquare.html, ms.js | gate green, releasing unattended
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Fri 09/11/2026 13:51:11.51
+ ============================================================
+
+  [autobump] ms.js changed -> marketsquare.html ref ?v=487
+  [autobump] 1 reference(s) bumped
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 60 honestly not-wired, 2 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  OK -- every health colour on the page is fed, honestly dashed, or registered with a live review date.
+folded 27, skipped 0 (already present) · verify OK
+no pending fragments.
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-09-11T11:51:13Z   mode=strict
+  Working tree: 60 file(s) uncommitted; 1 deploy target(s) changed.
+    - marketsquare.html                  419575 B      0 min ago  [modified, RECENT(<25m)]
+  >> HEADS-UP: 1 target(s) changed in the last 25 min - could be another session:
+     marketsquare.html
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 17, 'strftime': 15, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  Verdict: REVIEW   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+  [LOCK] acquired by LAPTOP-S0AC8CVC (pid 11188), TTL 30 min.
+  ------------------------------------------------------------
+  TSL PRE-DEPLOY GATE   2026-09-11T11:51:14Z   mode=strict
+  [CM] change-management docs
+    - STATUS.md            [ok]
+    - CHANGELOG.md         [ok]
+    - CHANGE_REGISTER.md   [ok]
+    - STATUS newest date : 2026-09-11 (0 days ago)
+    - CHANGELOG newest    : 2026-09-11
+    - Ship pending        : marketsquare.html
+  [DB] live databases (read-only, msdeploy@178.104.73.239)
+    - primary db        [ok, 2977792 bytes, integrity ok] (cached)
+    - redis             [not readable - not gated]
+    -- proved over HTTPS /health (no credentials needed)
+  Verdict: CM=ok  DB=ok  ->  ok   (logged -> tsl_audit.log)
+  ------------------------------------------------------------
+warning: in the working copy of 'SESSION_COUNTER.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'marketsquare.html', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_tsl_log.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'scripts/static_versions.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_tsl_gate.txt', CRLF will be replaced by LF the next time Git touches it
+ [4/6] Committed the working tree.
+f9477a7 Release Fri 09/11/2026 13:51:15.37
+ [5/6] Pushing to the mirror - backup ref main...
+To https://github.com/dmcontiki2/marketsquare.git
+   88a6fb8..f9477a7  HEAD -> main
+ [5/6] Publishing the deploy ref - THIS is the deploy...
+To https://github.com/dmcontiki2/marketsquare.git
+   d7618db..f9477a7  HEAD -> deploy
+
+  PUBLISHED. The server deploys it within ~2 minutes - with health check,
+  monotonic cache-buster, auto-rollback, then seed + migrations hook.
+
+ [6/6] Waiting ~3 minutes for the server to apply and settle...
+ERROR: Input redirection is not supported, exiting the process immediately.
+  [OK] /health answers ok 
+  DEPLOY DRIFT: 3 file(s) local-ahead of live - run /ship: bea_main.py, marketsquare.html, ms.js
+  [WAIT] Not clean yet - one more 2-minute server tick...
+ERROR: Input redirection is not supported, exiting the process immediately.
+DEPLOY DRIFT: 3 file(s) local-ahead of live - run /ship: bea_main.py, marketsquare.html, ms.js
+  If still ahead: watch  ssh root@178.104.73.239 "tail -20 /var/log/marketsquare-deploy.log"
+  [LOCK] released.
+
+ ============================================================
+  RELEASE COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Fri 09/11/2026 13:51:30.21  SHIPPED rc=0 - server now runs migrations + health itself
