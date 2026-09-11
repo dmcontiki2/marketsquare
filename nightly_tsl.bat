@@ -7,6 +7,13 @@
 :: the gates pass STRICT, this now SHIPS through the ONE deploy engine.
 :: The git push key stays on this machine (Codex B3). Nothing half-clean ships
 :: unattended: strict mode means any gate finding BLOCKS and flags instead.
+:: DRIFT-PIPE-1 (11 Sep 2026, part 2): DRIFTLINE carries "N file(s) local-ahead ...".
+:: cmd parses a whole parenthesised block BEFORE running any of it, expanding %VAR%
+:: at that moment, so those brackets closed the block early and the tick died with
+:: "local-ahead was unexpected at this time" -- every time there was something to
+:: ship, which is the only time this lane matters. Delayed expansion evaluates
+:: !DRIFTLINE! at run time instead, where the brackets are just text.
+setlocal EnableDelayedExpansion
 cd /d "%~dp0"
 set "LOG=%~dp0nightly_tsl_log.txt"
 set "FLAG=%~dp0TSL_READY.flag"
@@ -29,9 +36,9 @@ for /f "delims=" %%D in ('%PYEXE% "%~dp0check_deploy_drift.py" 2^>nul') do if no
 :: unexpected at this time" -- and the agent died mid-tick, leaving the request PENDING forever.
 :: It only ever fired when there WAS something to ship, i.e. exactly the case this lane exists
 :: for; an in-sync tick prints no parentheses and passed happily. Quoting makes them literal.
-echo "%DRIFTLINE%" | find /i "clean" >nul
+echo "!DRIFTLINE!" | find /i "clean" >nul
 if not errorlevel 1 (
-    echo %date% %time%  IN SYNC - %DRIFTLINE%>>"%LOG%"
+    echo %date% %time%  IN SYNC - !DRIFTLINE!>>"%LOG%"
     exit /b 0
 )
 
@@ -43,15 +50,15 @@ set "GATERC=%errorlevel%"
 if not "%GATERC%"=="0" (
     set "TSL_MODE="
     > "%FLAG%" echo BLOCKED %date% %time%
-    >> "%FLAG%" echo %DRIFTLINE%
+    >> "%FLAG%" echo !DRIFTLINE!
     >> "%FLAG%" echo Gate not clean ^(rc=%GATERC%^) - NOT shipped. See nightly_tsl_gate.txt.
-    echo %date% %time%  BLOCKED - gate rc=%GATERC% ^| %DRIFTLINE% ^| ship withheld>>"%LOG%"
+    echo %date% %time%  BLOCKED - gate rc=!GATERC! ^| !DRIFTLINE! ^| ship withheld>>"%LOG%"
     exit /b 0
 )
 
 :: (3) Gates green -> SHIP, unattended. <nul feeds every pause; strict predeploy too.
 set "PREDEPLOY_MODE=strict"
-echo %date% %time%  SHIPPING - %DRIFTLINE% ^| gate green, releasing unattended>>"%LOG%"
+echo %date% %time%  SHIPPING - !DRIFTLINE! ^| gate green, releasing unattended>>"%LOG%"
 call "%~dp0deploy_marketsquare.bat" <nul >>"%LOG%" 2>&1
 set "RC=%errorlevel%"
 set "TSL_MODE="
