@@ -285,3 +285,7 @@ Mon 09/07/2026  5:30:02.31  committed 9 change(s)
  2 files changed, 8 insertions(+)
 Tue 09/08/2026  5:30:02.23  committed 2 change(s)
 Thu 09/10/2026  5:30:02.17  clean - nothing to commit 
+[main cb6be1c] Nightly checkpoint Sat 09/12/2026  5:30:02.40 (auto, no deploy)
+ 4 files changed, 156 insertions(+), 36 deletions(-)
+ create mode 100644 changelog.d/2026-09-12-rs-stays-hidden.md
+Sat 09/12/2026  5:30:02.49  committed 4 change(s)

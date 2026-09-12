@@ -1,3 +1,270 @@
+## 2026-09-12 — RUL-120: the Ranking Score stays hidden, and the scrambled star column is correct
+
+David, confirming the order after seeing trust scores run 76, 84, 92, 61 down the shelf:
+*"I was expecting the TS to be scrambled, but because i don't see the RS i just wanted to confirm.
+And i prefer the this because it doesnt show our way of working to be too obvious, where people will
+start tuning for the listing order rather than for the two other actual ratings."*
+
+**The composite RS is never displayed — anywhere.** Not on a card, not in a filter, not in a seller's
+dashboard, not in an explainer. The reason is anti-manipulation: a visible composite becomes the thing
+sellers optimise, and they would tune for position rather than for the two real inputs. Hidden, the only
+way up is to genuinely raise trust or genuinely raise listing quality.
+
+**So the odd-looking star column is correct and must not be 'fixed'.** TS is a badge, not a rank
+position. A future session that reads the non-monotonic order as a bug and proposes printing the rank
+number — or re-sorting by TS to tidy the column — would be quietly removing a control. Recorded so that
+does not happen.
+
+**The one exception, so the door stays open:** a seller may see **their own TS and their own LS**,
+separately, never combined. That keeps "cannot be gamed" from turning into "cannot be improved".
+
+## 2026-09-12 — RUL-121: a lister sees all three of their own scores, with coaching
+
+David, correcting an over-strict line Claude wrote into RUL-120: *"a lister should be able to see all
+three of their own scores and even be told how to use it to improve their viewable listings, the purpose
+is not to keep it a secret but not to 1. clutter a viewing, 2. to prevent obvious tuning for the purpose
+of views rather than quality."*
+
+**Claude had it wrong.** RUL-120 said the composite RS is never displayed to anyone, including in a
+seller's own dashboard. That treated the score as a secret. It is not a secret — it is kept off the
+public card for two plain reasons, and neither is concealment:
+
+1. **It would clutter a viewing.** The shelf is a glance, not a report card.
+2. **It would invite tuning for position** rather than for the two things that actually matter.
+
+**So: on their own listing a seller sees RS, TS and LS — all three — and is told how to raise them.**
+RS may be named and explained openly, in help and in onboarding, because a seller who understands that
+ranking is half trust and half listing quality is being pushed toward exactly what we want raised. What
+is withheld from a public card is a number on a tile, not the method.
+
+**The coaching already exists.** `_import_quality_score()` already returns what is missing, sorted
+biggest-win-first — the same list the Sell It BOT read out. It needs surfacing on the seller's own
+listing, not building.
+
+RUL-120's anti-gaming intent stands for the public surface, and its ruling that the non-monotonic star
+column is correct and must not be 'fixed' stands in full.
+
+## 2026-09-12 — Jurisdiction gate enforced: 72 armed entries disarmed, US/UK/AU outreach stopped
+
+David approved fixing three outstanding items. Probing them first changed the picture: **two were
+already fixed and the list Claude quoted was ten days stale.**
+
+- **Outreach link landing on a password box — ALREADY FIXED 3 Sep** (CTA-URL-1). Probed today:
+  the magic link the emailer builds returns HTTP 200 with no credential header, and the bare admin
+  console still returns 401. Both legs hold.
+- **Customer-email firewall — ALREADY ARMED 5 Sep** on David's word, worker version recorded in the
+  ledger ref. Verified today: the gate is in the worker, `CUSTOMER_FIREWALL="1"` is in wrangler.toml
+  and in git, the personal address survives only in the unarmed pre-launch branch.
+- **Jurisdiction gate — GENUINELY OPEN, and far bigger than the one city reported.**
+
+### What was actually wrong
+
+**96 cities were armed for outreach.** The outreach-law notes cover **nine jurisdictions at heading
+level** (New Zealand, Argentina, Portugal, Namibia, Kenya, Egypt, Zimbabwe, Botswana, Mozambique),
+plus South Africa hard-coded as the home market under RUL-063. Armed but **not covered**:
+
+| | Entries | Why |
+|---|---|---|
+| United States | 11 cities | no UNITED STATES section |
+| United Kingdom | 5 cities | no UNITED KINGDOM section |
+| Australia | 4 cities | no AUSTRALIA section |
+| US state rows | 52 | not in cities.json at all — the gate cannot even map them to a country |
+
+The US and UK **are** researched — but in the APPENDIX, not as ruled sections, and RG-0215 requires
+heading level deliberately: *"it opens the gate for a human LOCK decision, it does not make it."*
+
+That matters because of what the appendix itself records: CAN-SPAM penalties up to **$53,088 per
+email**, and California B&P 17529.5 carrying a **private right of action at up to $1,000 per email**
+which CAN-SPAM does not preempt. Fifty-two unmappable US rows were armed against that.
+
+### What was done
+
+Every armed entry in an uncovered or unmappable jurisdiction was **disarmed** — `armed=false`,
+`gates_green=false`, stamped with `disarmed_by`/`disarmed_why`. Backup kept beside the file. This
+executes RUL-071 (*"SENDING is what waits for law"*); it makes no new legal judgement, which is not
+Claude's to make. **Still armed: 24 — ZA 15, NZ 5, AR 4**, all covered.
+
+### Validated separately, after the fix
+
+A validation pass run as its own step, not as part of the edit: outreach link 200/no credential
+header and console still 401; zero armed cities in an uncovered or unmappable jurisdiction; firewall
+gate present and armed in git. **All three hold.**
+
+### Reserved to David
+
+Re-arming the United States, United Kingdom and Australia needs the appendix research promoted into
+**ruled OUTREACH_LAW sections** — a legal-positioning call, possibly with counsel. Until then those
+72 entries stay dark. That is 20 of 96 cities and the entire US state lane.
+
+### The lesson, and it needs no new machinery
+
+Claude reported "three outstanding items" from `BUILD_QUEUE.md`, a **generated file dated 2 Sep**,
+and ranked two already-fixed items as live faults. CLAUDE.md's evidence ladder already forbids this:
+READ-grade evidence "MUST be probed before it reaches David". The rule existed; it was not followed.
+
+## 2026-09-12 — Goal run 11 (Fable 5.1): number 0, wave 72, the association lane is nearly mined out, RUL-119 recorded
+
+**The number is 0** (both probes agree; 6,748 on the list, 1,482 emailed, 5 registered). First run
+with a live sandbox since 8 Sep — the model was Fable 5.1 as David asked.
+
+**Sends:** the 00:10 host wave sent 72 real letters — Alaska 12, Colorado 24, Maine 12, Montana 24.
+Only four states had anyone left. Alaska and Maine are the 11 Sep association registers (APHA, MPGA)
+now being drawn. No second wave queued: it would only meet the one-day-per-city spacing gate.
+
+**Funnel (PROBED, 4 days):** 34 sessions, 9 humans, 8 of them with no source and the 9th a
+verification pass — still 0 humans from any letter. The Montana 9 Sep cohort is 14 landed / 0 dwell:
+scanners. The ask remains the bottleneck; n<10 so no rate goes to David yet.
+
+**Supply:** seven candidate registers probed, none harvestable — Utah (Wix + Guidefitter app), New
+York NYSOGA (Cloudflare email obfuscation, which we do not decode: it is an anti-bot measure),
+Washington (no directory), Colorado DPO (search form), Vermont (down), Nevada (one mailbox), plus the
+Texas TREC bulk licensee file as the next lead, to be fetched host-side. ONBOARDING_PLAN.md carries a
+12 Sep correction: the state outfitter-association lane is nearly exhausted and the next register kind
+is official licence files.
+
+**Debt paid:** RUL-119 (David, 10 Sep: remove KB5124008 until Anthropic fixes the sandbox fault) is now
+in RULINGS.md with reflection assertions in rulings_check.py — it had lived only in GOAL_STATE.md
+because no shell was alive to append it. Boards: ledger green (every locked fix holding, 22 open),
+rulings 107 checked / 0 fail, before and after.
+
+No product code changed. Nothing deployed. Cost: one session, inside the subscription.
+
+## 2026-09-11 — TUPPENCE-TRUTH-1: the app stops inventing a wallet balance · DRIFT-PIPE-1: the unattended deploy lane has never shipped
+
+### What was wrong
+
+Every visitor to trustsquare.co was shown a wallet holding **50 Tuppence**. Nobody granted it.
+At the rate in our own terms (1T = USD $2.00 fixed) the app was telling a cold stranger they
+held $100 of stored value before they had done anything.
+
+Origin: Session 74, 22 May 2026, a Claude session. Its own CHANGELOG entry (line 17093) reads
+*"`tuppence` JS variable init: 5 → 50 (marked with 🧪 TEST comment for launch rollback) … grep
+🧪 TEST to find all rollback points before launch."* The grep was never run. It shipped on
+1 September and stood for ten days. Not David's change and never David's instruction — the
+commit carries his name only because the commit lane signs with his credentials.
+
+**No outreach email ever promised a starting balance.** All 18 live templates were checked: the
+string "50" does not appear in any of them, nor "start with", "starting balance", "already in
+your wallet", or any welcome credit. The letters mention Tuppence only as the 1T introduction
+fee a buyer pays and the 20% bonus on a paid plan. The false number existed only in the app.
+
+### Fixed
+
+- `ms.js:676` `let tuppence=50` → `0`. The client does not invent a balance.
+- `ms.js:12723` no-account wallet `'50'` → `'—'`.
+- `marketsquare.html` `tn-balance-display` 50 → 0, `ms-wallet-balance` 50 → 0, `nav-tn-badge`
+  5 → 0 (the badge used to render 5 and get overwritten with 50 a moment later).
+- `ms.js:1026` was `if (data.balance > tuppence)` — the server could only ever RAISE the number,
+  so a client default acted as a floor the ledger could not correct. **That is why a test value
+  survived being wrong for ten days.** Now the ledger is authoritative in both directions.
+- Both remaining `🧪 TEST` rollback markers are gone from the shipped files.
+
+`node --check` clean. `marketsquare.html` edited via the str.replace driver only (truncation
+rule): 414,425 → 414,423 bytes. **VERIFIED LIVE** in a clean browser profile (localStorage
+length 2, `ms_superuser` null): cache-buster 626, served `ms.js` carries `let tuppence=0`, and
+all three wallet surfaces render **0**.
+
+### DRIFT-PIPE-1 — found while shipping the above, and bigger
+
+The deploy would not go out. `nightly_tsl.bat` builds
+`DRIFTLINE = "DEPLOY DRIFT: 3 file(s) local-ahead of live - ..."` and uses `%DRIFTLINE%` inside
+`if ( … )` blocks. **cmd parses an entire bracket block before executing any of it and expands
+`%VAR%` at that moment**, so the `(s)` closed the block early and the tick died with
+`local-ahead was unexpected at this time`.
+
+It only ever fired when DRIFTLINE contained brackets — that is, **only when there was something
+to ship**. An in-sync tick prints no brackets and passed happily. The evidence is in the lane's
+own log: every entry from 6 Sep onward reads `IN SYNC`, and in the whole of
+`autodeploy_agent_log.txt` there is exactly **one** MarketSquare `SHIPPED` line (3 Sep) against
+two parse deaths. Deploys have been reaching the server on the SSH relay instead; that relay was
+closed today, which is the only reason this surfaced.
+
+Fixed with `setlocal EnableDelayedExpansion` and `!DRIFTLINE!` at every use site, so the
+brackets are read at run time as text. **PROVEN, not asserted:** `Fri 09/11/2026 13:51:30
+SHIPPED rc=0` — the first time that lane has shipped MarketSquare unattended since 3 Sep — and
+the change is live on the server.
+
+### Two things left flagged, not changed
+
+- `marketsquare.html:2933` and `:3561` render a button labelled **"🧪 Skip for testing"** to real
+  sellers, to dismiss the banking nudge. Same class as the above; it is a flow decision, so it
+  is named here rather than quietly altered.
+- The release script ends in `pause` — `Press any key to continue . . .` in an unattended run.
+  It survives only because stdin redirection makes it fail through (`ERROR: Input redirection is
+  not supported`). It is a human-in-the-loop landmine that happens to be disarmed by accident.
+
+### The lesson, and why no audit caught it
+
+The 21 Aug launch-readiness forensic audit was real and thorough — three cycles, a second
+vendor, a HOLD verdict. It found a non-idempotent intro charge that could double-debit a wallet
+and a pre-auth balance oracle. It never found this, and could not have: its ten dimensions are
+all properties of the SYSTEM — viability, economics, server capability, robustness, reliability,
+maintainability, scalability, hardening, hack-proofness. None of them asks whether what the
+screen tells a stranger is TRUE. The code here was correct throughout: the variable initialised,
+the badge repainted, nothing threw, no endpoint misbehaved. Static analysis is clean on that
+line. Three cycles audited the till, the ledger and the locks; none read the price tag.
+
+A note is not a gate. `🧪 TEST — reset before launch` was correct, inert, and cost ten days.
+
+## 2026-09-11 — Local-first shelf and the RS/TS/LS order, built across all eight categories
+
+David: *"we dont want geo location complexity, but it should have a starting point and the starting
+point should be the users current location... presented data should be from local first sources and
+in the absence thereof further out. The listed items should be in order of our three ranking
+scores, first the RS, then the TS and then the LS; with the trust-score TS being the only one
+displayed. Is this possible for all of the categories?"*
+
+**Yes — and it is built.** RUL-118. All eight categories, verified in a rendered mobile browser.
+
+**Location without geo machinery.** No map, no radius, no permission prompt. The app already passes
+`city=` on every listing call, so the profile's city IS the starting point and it costs zero taps.
+The prototype seeds it from the phone's own timezone, which needs no permission.
+
+**Local first is a SOURCE rule, the scores are the ORDER inside it** — so the two never fight. The
+shelf fills from the user's own suburb, then the rest of the city, then further out, with a band
+label on each group, reaching wider only when the local band runs short.
+
+**The three scores, all of which already existed:**
+- **LS** — listing quality 0–100, `_import_quality_score()`, works on every category branch.
+- **TS** — seller trust 0–100, the Trust Score / VEL ladder, per seller not per category.
+- **RS** — `0.5 × LS + 0.5 × TS`, the same 50/50 as `estate_agents.py::_rank_agents`, extended to
+  listing level by RANK-SURFACE-1 (30 Aug).
+
+Ordering RS → TS → LS is coherent precisely because RS is built from the other two: equal ranking is
+settled by trust first and listing quality second. **Only TS is printed** — a star and a number
+coloured by the four canon bands (grey / blue / green / gold). RS and LS never appear on a card.
+
+**Prerequisite named, not hidden:** listing quality is computed per row and is NOT stored, so SQL
+cannot `ORDER BY` it. A maintained `listings.quality_score` column is required before the live feed
+can do this — already recorded in `ZOOM_HMI_SPEC.md` and the RG-0221 scope. The prototype computes
+it in the page.
+
+Verified: all eight categories put the local band first, zero ordering violations against
+RS → TS → LS within every band, 18 cards each, and no card prints anything but TS. Console clean.
+
+## 2026-09-11 — The TrustSquare lockup on every category door, and nowhere after it
+
+David: *"We should have the TrustSquare logo displayed across all of the category first screens at
+the top, not the follow up screens; lets keep them as uncluttered and simple as possible."*
+
+Built into `genie/HARNESS.html`. The lockup sits at the top of all eight category doors and
+disappears the moment a flow starts — the step dots take its place in the same bar, so nothing
+shifts and the bar never changes height. Verified: logo on the door, gone on step one, gone on the
+draft, back on return.
+
+**New asset: `Marketsqaure logo/TrustSquare_BrandLogo_transparent.png`.** The existing
+`TrustSquare_BrandLogo_TM.jpeg` is white-and-green on a **solid black square**, so it cannot sit on
+any of the eight coloured washes without showing a black box. The transparent version was derived
+from that exact artwork — alpha from luminance, colour un-premultiplied — so it is the same drawing,
+not a redraw. Use it anywhere the background is not black.
+
+**A write was lost, and it is a class problem.** The "what the harness is for" section committed on
+10 Sep was gone from `genie/README.md` by the 11th — no error, no conflict, last writer wins. That
+is exactly the failure `CHANGELOG.md` and `STATUS.md` have fragment compilers to prevent, and this
+file has neither. Restored, and recorded in the file itself as README-COLLISION-1: re-stage
+immediately before writing, never write from a copy staged earlier in the session, always commit
+with the mtime guard.
+
 ## 2026-09-11 — Maintenance loop: two freshness guards given producers (RG-0353, RG-0354)
 
 Ledger started the run at **2 REGRESSED** (339 entries, 315 holding, 22 open). Both reds
