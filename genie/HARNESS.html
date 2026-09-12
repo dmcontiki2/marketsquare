@@ -321,14 +321,9 @@ function drawDraft(){
   };
 }
 function drawAds(){
-  var c=cat(), all=c.ads(picks);
-  /* Ranking, not a fake filter. A price answer re-ranks by price, anything else by
-     rating - so the shelf never shows R400 under a heading that says "under R300". */
-  if(narrow.length){
-    var last=narrow[narrow.length-1].label;
-    if(/R\s?\d|Under|Over|budget|pay/i.test(last)) all.sort(function(a,b){return a.num-b.num;});
-    else all.sort(function(a,b){return b.trust-a.trust;});
-  }
+  var c=cat(), all=c.ads(picks,narrow);
+  /* No re-ranking any more: every card in the pool already satisfies every tap
+     and every narrowing chip, so the order stays RS -> TS -> LS throughout. */
   var keep = narrow.length ? all.slice(0, [12,8,5][narrow.length-1]) : all;
   var nstep = c.narrow[narrow.length];
   var lastBand=-1, cards='';
@@ -340,7 +335,7 @@ function drawAds(){
     var tb=trustBand(a.ts);
     cards+='<div class="ad" style="animation-delay:'+(i*25)+'ms"><img src="'+PH[a.p]+'" alt="">'
      +'<div class="p"><div class="t">'+a.t+'</div>'
-     +'<div class="sub">'+a.sub+'</div>'
+     +'<div class="sub">'+a.sub+(a.note?' &middot; '+a.note:'')+'</div>'
      +'<div class="m"><b>'+a.price+'</b>'
      +'<span class="ts" style="color:'+tb.c+';border-color:'+tb.c+'55" title="'+tb.n+'">'
      +'&#9733; '+a.ts+'</span></div></div></div>';
@@ -391,22 +386,101 @@ document.addEventListener('keydown',function(e){
 });
 
 
+/* ===========================================================================
+   THE SHELF IS BUILT FROM THE TAPS. (David, 11 Sep 2026: "i selected Maths at
+   the start and it is showing me other subjects. That should not happen?")
+   It should not, and it did: the old builder drew titles from a fixed list per
+   category and never read the picks at all. Now every card is composed FROM
+   the answers - the subject, the level, the area, the price band - so a card
+   that contradicts a tap cannot be generated in the first place.
+   ------------------------------------------------------------------------- */
+function pickBy(picks,key){ for(var i=0;i<picks.length;i++) if(picks[i].key===key) return picks[i]; return null; }
+function numOf(tok){
+  var m=String(tok).replace(/\s/g,'').match(/([\d.]+)\s*([km])?/i);
+  if(!m) return null;
+  var v=parseFloat(m[1]);
+  if(m[2]){ var u=m[2].toLowerCase(); v*= (u==='k'?1000:1000000); }
+  return v;
+}
+/* "Under R200" / "R200-R300" / "Over R300" / "R350" -> [lo,hi] */
+function bandOf(label){
+  if(!label || /quote|ask|free/i.test(label)) return null;
+  var nums=(label.match(/R\s?[\d][\d\s.]*[km]?/gi)||[]).map(numOf).filter(function(v){return v!=null;});
+  if(!nums.length) return null;
+  if(/under|less|below/i.test(label)) return [Math.round(nums[0]*0.55), nums[0]];
+  if(/over|more|above|\+/i.test(label)) return [nums[0], Math.round(nums[0]*1.55)];
+  if(nums.length>=2) return [nums[0], nums[1]];
+  return [nums[0], nums[0]];
+}
+function tsFloorOf(label){
+  if(!label) return 0;
+  if(/top rated/i.test(label)) return 90;
+  var m=String(label).match(/(\d{2})\s*\+/);
+  return m?parseInt(m[1],10):0;
+}
+function money(v){
+  v=Math.round(v);
+  if(v>=1000000) return 'R'+(Math.round(v/10000)/100).toFixed(2).replace(/\.?0+$/,'')+'m';
+  return 'R'+String(v).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+}
+
+var DETAIL={
+ homehelp:['%y years','own transport','references on file','police cleared','weekends too','contactable today'],
+ property:['north facing','secure estate','quiet street','close to schools','recently renovated','big garden'],
+ cars:['full service history','one owner','%y years old','low mileage','warranty left','spotless inside'],
+ tutors:['%y years teaching','small groups','results on file','online or in person','exam prep','homework help'],
+ services:['%y years on the tools','free quote first','after-hours available','police cleared','certified','same-week'],
+ collectors:['graded','certificate on file','from a private collection','held %y years','mint','scarce'],
+ adventures:['max %y guests','fully guided','all meals','self-drive friendly','sunrise start','family friendly'],
+ localmarket:['handmade','collect or delivered','%y in stock','locally made','limited run','gift wrapped']
+};
+var UNIT={homehelp:' a day',tutors:' an hour',services:'',collectors:'',property:'',cars:'',
+          adventures:' pp',localmarket:''};
+var FALLBACK_BAND={homehelp:[250,450],tutors:[150,350],services:[350,700],collectors:[900,20000],
+  property:[850000,3400000],cars:[120000,550000],adventures:[1200,6000],localmarket:[80,1500]};
+
 CATS.forEach(function(c){
-  c.ads=function(picks){
-    var out=[], n=18, seed=0;
-    picks.forEach(function(p){ for(var i=0;i<p.label.length;i++) seed+=p.label.charCodeAt(i); });
-    for(var i=0;i<n;i++){
-      var t=c._adt[(i+seed)%c._adt.length].replace('%d', 2+((i*7+seed)%12));
-      var pr=c.priceOf((i*13+seed)%100);
-      var ts=52+((i*17+seed)%48), ls=44+((i*23+seed+7)%56);
-      var band=(i%7===0||i%7===1||i%7===2)?0:((i%7===3||i%7===4)?1:2);
-      var sub=band===0?LOC.suburb:(band===1?NEARBY[(i+seed)%NEARBY.length]:FURTHER[(i+seed)%FURTHER.length]);
-      out.push({p:c._adp[(i+seed)%c._adp.length], t:t, price:pr,
-                num:parseInt(String(pr).replace(/[^0-9]/g,''),10)||0,
-                ts:ts, ls:ls, rs:rsOf(ls,ts), band:band, sub:sub, trust:ts});
+  c.ads=function(picks,narrow){
+    narrow=narrow||[];
+    var what=pickBy(picks,'what'), where=pickBy(picks,'where');
+    var subject=what?what.label:c.name;
+    var anchor=where?where.label:LOC.suburb;          /* an explicit area beats the default */
+
+    /* every other tap becomes part of what the card must say */
+    var quals=picks.filter(function(p){
+      return p.key!=='what' && p.key!=='where' && !bandOf(p.label); }).map(function(p){return p.label;});
+    var notes=narrow.filter(function(p){
+      return !bandOf(p.label) && !tsFloorOf(p.label); }).map(function(p){return p.label;});
+
+    /* price and trust constraints, from a tap or from a narrowing chip */
+    var band=null, floor=0;
+    picks.concat(narrow).forEach(function(p){
+      var b=bandOf(p.label); if(b) band=b;
+      var f=tsFloorOf(p.label); if(f) floor=Math.max(floor,f);
+    });
+    if(!band) band=FALLBACK_BAND[c.key]||[100,1000];
+
+    var seed=0, all=picks.concat(narrow);
+    all.forEach(function(p){ for(var k=0;k<p.label.length;k++) seed+=p.label.charCodeAt(k); });
+
+    var det=DETAIL[c.key]||['well kept'];
+    var pool=[what&&what.photo?what.photo:c._adp[0]].concat(c._adp);
+    var out=[];
+    for(var i=0;i<18;i++){
+      var y=3+((i*7+seed)%12);
+      var d=det[(i+seed)%det.length].replace('%y',y);
+      var title=subject+(quals.length?', '+quals[0]:'')+' — '+d;
+      var price=band[0]+((band[1]-band[0])*(((i*13+seed)%9)/8));
+      var ts=Math.min(99, Math.max(floor||52, (floor||52)+((i*17+seed)%(99-(floor||52)))));
+      var ls=44+((i*23+seed+7)%56);
+      var bnd=(i%7<3)?0:((i%7<5)?1:2);
+      var sub=bnd===0?anchor:(bnd===1?NEARBY[(i+seed)%NEARBY.length]:FURTHER[(i+seed)%FURTHER.length]);
+      out.push({p:(i%3===0||i%3===1)?pool[0]:pool[1+((i+seed)%(pool.length-1))],
+                t:title, note:notes.join(' · '),
+                price:money(price)+(UNIT[c.key]||''), num:price,
+                ts:ts, ls:ls, rs:rsOf(ls,ts), band:bnd, sub:sub, trust:ts});
     }
-    /* LOCAL FIRST is a source rule; RS -> TS -> LS is the order inside it.
-       Fill from her own suburb, then the city, then further out - never mixed. */
+    /* LOCAL FIRST is a source rule; RS -> TS -> LS is the order inside it. */
     out.sort(function(a,b){
       if(a.band!==b.band) return a.band-b.band;
       if(b.rs!==a.rs) return b.rs-a.rs;
@@ -415,22 +489,10 @@ CATS.forEach(function(c){
     });
     return out;
   };
-  c.draftTitle=function(picks){ return picks[0].label+' \u2014 '+(picks[1]?picks[1].label:c.name); };
+  c.draftTitle=function(picks){ return picks[0].label+' — '+(picks[1]?picks[1].label:c.name); };
   c.draftBody=function(picks){
     return 'Written from your '+picks.length+' taps. '+picks.map(function(p){return p.label;}).join(', ')
       +'. Change any word of it before it goes up.'; };
-});
-
-CATS.forEach(function(c){
-  var B={homehelp:['R250 a day','R300 a day','R350 a day','R400 a day'],
-   property:['R1 450 000','R2 195 000','R3 400 000','R895 000'],
-   cars:['R129 900','R249 500','R385 000','R549 000'],
-   tutors:['R200 an hour','R250 an hour','R300 an hour','R180 an hour'],
-   services:['R450 call-out','R650 call-out','Free quote','R380 an hour'],
-   collectors:['R1 250','R4 800','R18 500','R950'],
-   adventures:['R1 900 pp','R3 400 pp','R5 950 pp','R1 250 pp'],
-   localmarket:['R85','R240','R1 450','R620']}[c.key];
-  c.priceOf=function(n){ return B[n%B.length]; };
 });
 
 drawDoor();
