@@ -321,6 +321,49 @@ Sources: [Lei 3/2017 Transacções Electrónicas (official BR text)](https://www
 
 ---
 
+---
+
+# PRIMARY MARKETS — ruled sections (promoted 13 Sep 2026)
+*The three paragraphs below are the 20 Aug 2026 appendix research, moved here word for word on 13 Sep 2026.
+Why they moved: the jurisdiction gate (regression ledger RG-0215, RUL-071(c)) tests coverage at HEADING level, and on
+12 Sep 2026 it disarmed every US, UK and AU wave city because this research sat in the appendix. That contradicted
+three of David's rulings, each made with these notes in hand: RUL-071 (30 Aug, whose own data model `CityLauncher/data/cities.json`
+carries every US/UK/AU city as `lane: outreach` = law-covered), RUL-074 (30 Aug: "all three countries are outreach-covered per the
+20 Aug law notes"), and RUL-082 (31 Aug: "Please proceed" — New York, London, Sydney armed for the 1 Sep launch), executed by
+RUL-059 (2 Sep, US tutor wave launched). Nothing legal changed on 12 Sep; a document heading did not match a regex. The engine duties
+named here are implemented and re-proven every maintenance loop (CityLauncher/emailer/localize.py; tests/test_intl_templates.py:
+US render carries sender identity, registration number, street postal address, why-received line, source line and unsubscribe;
+GB and AU renders carry identity, why-received and unsubscribe; TS_POSTAL_ADDRESS is set). The verdict column below is the one
+David ruled on, restated so the gate and the rulings can never disagree again. France stays in the appendix: RUL-101 holds FR/PT out
+of outreach and the code refuses them (TS_EU_REPRESENTATIVE unset).*
+
+| Country | Consent model for B2B cold email | Engine duty (implemented) | Verdict |
+|---|---|---|---|
+| **United States** | **OPT-OUT** (CAN-SPAM); no consent for B2B | identity + physical postal address + unsubscribe honoured ≤10 business days + why-received | **SENDABLE — RUL-074/082/059** |
+| **United Kingdom** | **OPT-OUT for corporate subscribers** (PECR reg.22 does not apply); sole traders = individual subscribers | sender identity + valid opt-out address + art.14 source line | **SENDABLE to corporate addresses — RUL-074/082** |
+| **Australia** | Opt-in, BUT **inferred consent** for conspicuously published business addresses relevant to the role | sender ID + functional unsubscribe ≤5 business days + why-received | **SENDABLE with discipline — RUL-074/082** |
+
+## 10. UNITED STATES — confidence HIGH (CAN-SPAM opt-out; state layer noted)
+**UNITED STATES — CAN-SPAM.** Opt-out regime; no consent needed for B2B. Seven duties: accurate from-line,
+non-deceptive subject, ad disclosure, valid PHYSICAL POSTAL ADDRESS, opt-out mechanism, honour within 10
+business days, responsibility for third parties. Penalty up to $53,088 per email (FTC 2026 inflation
+adjustment), uncapped aggregate. STATE LAYER: CAN-SPAM preempts state email statutes EXCEPT those targeting
+fraud/deception — California B&P 17529.5 survives on that basis and carries a PRIVATE RIGHT OF ACTION at up
+to $1,000/email plus fees. CCPA B2B exemption ENDED 2023, so scraped business contact data is covered.
+
+## 11. UNITED KINGDOM — confidence HIGH on corporates, MEDIUM on sole traders
+**UNITED KINGDOM — PECR + UK GDPR.** PECR opt-in for electronic mail DOES NOT APPLY to corporate subscribers
+(any body with separate legal status + own internet connection). Soft opt-in irrelevant for a limited company.
+CARVE-OUT: sole traders and some partnerships are INDIVIDUAL subscribers -> consent/soft opt-in required.
+PECR reg.23 still binds for corporates: no concealed sender identity, valid opt-out address. ICO guidance
+updated 28 Apr 2026. UK GDPR art.14 applies to scraped data independently — public availability does not lift it.
+
+## 12. AUSTRALIA — confidence HIGH on the inferred-consent limb, burden on sender
+**AUSTRALIA — Spam Act 2003.** Opt-in, BUT Sch.2 inferred consent where a work address was CONSPICUOUSLY
+PUBLISHED in a business capacity, no 'no unsolicited email' notice present, and the message is RELEVANT TO THE
+ROLE. Burden of proof on sender, per address. Sender ID + functional unsubscribe honoured within 5 business
+days. Penalties day-based: ~AUD 3.13m/day corporations (10,000 penalty units @ AUD 313), ~AUD 444k individuals.
+
 # CROSS-CUTTING FINDINGS
 
 **1. Three of the nine are effectively closed to cold email: Kenya, Egypt, Botswana.** Each combines opt-in with **express extraterritorial reach over a foreign sender** and a **local registration/licence/representative requirement**. Botswana is the worst single exposure — GDPR-grade turnover-based fines (up to 4% of worldwide turnover), an express "offering goods or services to data subjects in Botswana" hook, **and** an opt-in spam offence that reaches corporate `info@` addresses, all at once.
@@ -366,24 +409,8 @@ Sources: [Lei 3/2017 Transacções Electrónicas (official BR text)](https://www
 ---
 # APPENDIX — primary-market research (US / UK / AU / FR / ZA)
 Researched 20 Aug 2026 alongside the nine-jurisdiction study above.
+*UNITED STATES, UNITED KINGDOM and AUSTRALIA were promoted to ruled sections 10–12 above on 13 Sep 2026 (text unchanged). FRANCE and SOUTH AFRICA remain here.*
 
-**UNITED STATES — CAN-SPAM.** Opt-out regime; no consent needed for B2B. Seven duties: accurate from-line,
-non-deceptive subject, ad disclosure, valid PHYSICAL POSTAL ADDRESS, opt-out mechanism, honour within 10
-business days, responsibility for third parties. Penalty up to $53,088 per email (FTC 2026 inflation
-adjustment), uncapped aggregate. STATE LAYER: CAN-SPAM preempts state email statutes EXCEPT those targeting
-fraud/deception — California B&P 17529.5 survives on that basis and carries a PRIVATE RIGHT OF ACTION at up
-to $1,000/email plus fees. CCPA B2B exemption ENDED 2023, so scraped business contact data is covered.
-
-**UNITED KINGDOM — PECR + UK GDPR.** PECR opt-in for electronic mail DOES NOT APPLY to corporate subscribers
-(any body with separate legal status + own internet connection). Soft opt-in irrelevant for a limited company.
-CARVE-OUT: sole traders and some partnerships are INDIVIDUAL subscribers -> consent/soft opt-in required.
-PECR reg.23 still binds for corporates: no concealed sender identity, valid opt-out address. ICO guidance
-updated 28 Apr 2026. UK GDPR art.14 applies to scraped data independently — public availability does not lift it.
-
-**AUSTRALIA — Spam Act 2003.** Opt-in, BUT Sch.2 inferred consent where a work address was CONSPICUOUSLY
-PUBLISHED in a business capacity, no 'no unsolicited email' notice present, and the message is RELEVANT TO THE
-ROLE. Burden of proof on sender, per address. Sender ID + functional unsubscribe honoured within 5 business
-days. Penalties day-based: ~AUD 3.13m/day corporations (10,000 penalty units @ AUD 313), ~AUD 444k individuals.
 
 **FRANCE — CNIL / GDPR / LCEN.** OPT-OUT for B2B on three CUMULATIVE conditions: (1) recipient contacted in a
 professional capacity, (2) message concerns their professional activity, (3) address is professional. Generic

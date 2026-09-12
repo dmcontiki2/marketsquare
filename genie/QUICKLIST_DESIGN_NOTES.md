@@ -156,3 +156,35 @@ already hire. That is the single highest-leverage screen in the whole product.
 1. What is this category called?
 3. WhatsApp notifications — worth the per-conversation cost, or push-and-SMS only to start?
 (Question 5 — separate app or front door — ANSWERED above: a front door into the same standards.)
+
+## 12 Sep 2026 (evening) — David's two questions, NOTHING RULED
+
+1. **Is the spreader unique to Services?** David: "this was the easy category in my mind. For the
+   other categories, what would we be able to use there? … can the other categories also be
+   spreaders in disguise?" Claude's read (for discussion): the ingredient is not the category, it
+   is a lister who already holds a book of repeat, trusting counterparties plus a free daily use
+   for both sides before any Tuppence. That ingredient exists in every category but is held by
+   different people (agents/landlords/body corporates for Property; mechanics/dealers/clubs for
+   Cars; operators/guides/group bookings for Adventures; clubs and trading partners for
+   Collectors; group admins — complex, school, church, stokvel — for Local Market). Once-off
+   private sellers (a car, a house) have no book and are spread BY the pros around them.
+2. **Careers.** David: people "listing themselves as opportunities to improve their career paths…
+   a new ballgame and should be thought through." Same shape at its purest — the person is the
+   listing, past employers are the book, references are the vouching gate — but it is
+   recruitment, with its own rules and a CV-grade data load. Parked for its own session.
+
+3. **Careers, sharpened (David, same evening):** not a recruitment agency or broker — "we don't
+   want to invest into an extensive CV folder and worker vetting, we just want to be a head
+   hunter type search function; the prospective searching companies can then see local 'card'
+   experiences and do their own interview style investments after an intro." I.e. the person is
+   the listing, the card carries vouched experience (past employers confirming — the same
+   vouching gate), the company pays the intro Tuppence, the seeker never pays, and everything
+   after the intro (interviews, checks, offers) is the company's own work. NOT RULED.
+
+4. **Placement — David's direction (12 Sep, evening), not yet a formal ruling:** no new category
+   for now. "I am hesitant to create a whole new category at this point, I do agree that it
+   should be one. Let us rather at this stage still resort it under Services" — as a fourth
+   sub-pick beside Technical, Agents and Casual (working name: Work · looking for a position).
+   Reason he gave: it supports "an introductory service only", and one Tuppence for an intro to
+   a candidate is a bargain against agency placement fees. Candidate always accepts before the
+   intro is delivered (hold model), so the low price cannot become a spray of unwanted intros.

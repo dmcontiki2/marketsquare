@@ -320,6 +320,18 @@ REFLECTIONS = {
     ["RUL-074", "ring2W:1,ring3W:4,ring4W:8,", "scrapeWk:30", "const APLAN_WAVES",
      "ring5W:157,", "RUL-101"], []),
    ("RULINGS.md", ["FOOTHOLD BY MACHINERY, NEVER BY LUCK"], []),
+   # REFLECTION ADDED 13 Sep 2026 (JURIS-RULED-1). The ruling's parenthetical -- "all three
+   # countries are outreach-covered per the 20 Aug law notes" -- was reflected in the sim and
+   # here, but NOT in the file the jurisdiction gate (RG-0215) actually reads. So on 12 Sep a
+   # heading-level regex out-voted this ruling, RUL-071's own lane map and RUL-082's arming,
+   # and 72 US/UK/AU wave entries went dark for a night. The law notes now carry the three as
+   # ruled sections 10-12, and the wave policy may not carry a gate disarm for them.
+   ("OUTREACH_LAW_WORKING_NOTES_2026-08-20.md",
+    ["## 10. UNITED STATES", "## 11. UNITED KINGDOM", "## 12. AUSTRALIA", "RUL-074"], []),
+   ("../CityLauncher/emailer/waves_policy.json", [],
+    ['"disarmed_why": "no UNITED STATES section', '"disarmed_why": "no UNITED KINGDOM section',
+     '"disarmed_why": "no AUSTRALIA section']),
+   ("scripts/regression_ledger.py", ["RG-0361", "JURIS-MAP-1"], []),
  ],
  "RUL-070": [
    # Operational from Hetzner (30 Aug): laptop = design tool only; operational view

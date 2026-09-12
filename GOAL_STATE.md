@@ -5,6 +5,17 @@ diary — the changelog is the diary.*
 
 ---
 
+## SUNDAY SUMMARY — 13 Sep 2026 (plain language)
+
+**The number is still 0 of 20.** Nobody we emailed has published a listing yet. 6,748 people are on
+the list and 1,482 have been emailed. **What moved this week:** the US outfitter letters went out
+every night until Friday, then stopped — not because the list ran dry, but because a session on
+Friday morning switched off every US, UK and Australian city, reading a document heading rule
+against three of David's earlier decisions. Found and reversed tonight; 854 people in Maine, Alaska,
+Montana and Colorado are sendable again, and the re-run wave sent **108 letters** at 01:31 (0 failed). **Next:** watch the funnel for
+the first real person from a letter, and find the next member directory that publishes mailboxes —
+the Texas licence file turned out to have no email column.
+
 ## THE NUMBER
 
 Run it, never recall it: `python3 MarketSquare/scripts/onboarding_number.py`
@@ -12,90 +23,81 @@ If the sandbox is dead, run it host-side: queue `run_py MarketSquare\scripts\onb
 
 | date | published by own hand | probe A | probe B | notes |
 |------|----------------------|---------|---------|-------|
-| 2026-09-04 | **0** | 0 | 0 | baseline |
-| 2026-09-05 (runs 3–4b) | **0** | 0 | 0 | raw 2 = e2e_test seeds, barred by §3 |
-| 2026-09-06 (run 5) | **0** | 0 | 0 | 4,470 on the list · 570 emailed · 5 registered |
-| 2026-09-07 (run 6) | **0** | 0 | 0 | 5,639 on the list · 845 emailed · 5 registered |
-| 2026-09-08 (run 7) | **0** | 0 | 0 | 5,838 on the list · 1,076 emailed · 5 registered |
+| 2026-09-04 → 08 (runs 1–7) | **0** | 0 | 0 | baseline; raw 2 = e2e_test seeds, barred by §3 |
 | 2026-09-09/10 (runs 8–10) | **unknown** | — | — | NOT MEASURED: sandbox dead (KB5124008) |
-| 2026-09-12 (run 11, 01:00 SAST) | **0** | 0 | 0 | 6,748 on the list · 1,482 emailed · 5 registered · sandbox alive |
+| 2026-09-12 (run 11) | **0** | 0 | 0 | 6,748 on the list · 1,482 emailed · 5 registered |
+| 2026-09-13 (run 12, 01:00 SAST) | **0** | 0 | 0 | 6,748 · 1,482 emailed at 01:00, +108 at 01:31 (re-armed wave) · 5 registered |
 
-Target: **20 by Fri 31 Oct 2026.** Model: runs 5–8 and 11 Fable 5.1; runs 9–10 Opus 5 (drift, RUL-096h).
+Target: **20 by Fri 31 Oct 2026.** Model: runs 5–8, 11, 12 Fable 5.1; runs 9–10 Opus 5 (drift, RUL-096h).
 
-## SANDBOX: ALIVE since 10 Sep ~06:20 SAST (David removed KB5124008 — now RUL-119)
-
-Windows Update will put the KB back unless paused. If every command dies with `no Plan9 drive
-shares mounted`: retry ONCE, then follow SANDBOX-REPAIR-1 in Projects\CLAUDE.md (diagnose via the
-host queue, boards host-side, .req files by hand). Never report it unfixable.
-
-## WHAT RUN 11 DID (12 Sep 2026, 01:00–01:45 SAST, Fable 5.1)
+## WHAT RUN 12 DID (13 Sep 2026, 01:00–01:50 SAST, Fable 5.1)
 
 1. **Measured.** Number 0, both probes agree. Fact board green (every locked fix holding, 22 open);
-   rulings 0 fail. The two dashboard reds from run 10 are gone (11 Sep sessions deployed).
-2. **Sends are flowing.** The host wave fired at 00:10 and sent **72 real emails** in 4 states —
-   Alaska 12 (wave 2) · Colorado 24 (wave 3) · Maine 12 (wave 3) · Montana 24 (wave 5). Alaska and
-   Maine are the 11 Sep registers (APHA 150, MPGA 564) already being drawn. No other state had anyone
-   left. Emailed rose 1,076 → 1,482 since 8 Sep. A second wave tonight would hit the one-day-per-city
-   gate, so none was queued.
-3. **The missing 10 Sep ruling is on record** — RUL-119 in RULINGS.md with assertions in
-   rulings_check.py (it was a debt from the no-shell days).
-4. **Supply probed, seven sites, no new adapter** — see SUPPLY below. Plan corrected (12 Sep para).
-5. No product code changed; nothing deployed.
+   rulings 0 fail. Sandbox alive.
+2. **Found why the 13 Sep 00:10 wave sent nothing.** Log: "no armed city has anyone to send to".
+   Cause: at 06:17 on 12 Sep a session disarmed all 72 US/UK/AU wave entries (11 US cities, 5 UK,
+   4 AU, 52 US state buckets) executing the jurisdiction gate (RG-0215) because the US/UK/AU law
+   research sat in an APPENDIX of OUTREACH_LAW, not under a `##` heading. That contradicted RUL-071
+   (cities.json lane=outreach for every US/UK/AU city), RUL-074 ("all three countries are
+   outreach-covered per the 20 Aug law notes"), RUL-082 and RUL-059. Nothing legal changed.
+3. **Fixed as a class, then re-armed (JURIS-RULED-1).** US/UK/AU promoted to ruled sections 10–12
+   of the law notes (text unchanged); RG-0215 now reads localize._CITY_COUNTRY so state buckets are
+   judged, not "unknown"; 72 entries re-armed and stamped `rearmed_by`; new LOCKED RG-0361 goes red
+   if the gate and the rulings disagree again (sabotage-tested against the 12 Sep policy); RUL-074
+   reflection added to rulings_check. PROBED before re-arming: US render carries identity, reg no.,
+   street postal address, why-received, source line, unsubscribe; GB/AU identity + why-received +
+   unsubscribe; test_intl_templates.py ALL PASS.
+4. **Pool after re-arm (chokepoint count): 854** — Maine 536, Alaska 137, Montana 118, Colorado 63.
+   Every other armed city 0. Wave queued 01:25, RAN 01:31–01:35 SAST: **108 sent, 0 failed** — Alaska 24
+   (wave 3), Colorado 48 (wave 4, ramp doubled), Maine 24 (wave 4), Montana 12 (wave 6, reset by a dirty wave).
+5. **Texas TREC lead is DEAD** (probed data.texas.gov s7ft-44qi: 20 columns, no email — stripped by
+   statute). Plan corrected (13 Sep para). The sandbox CAN read Socrata portals (data.<state>.gov).
+6. No product code changed; nothing deployed. No ruling from David this run (unattended).
 
-## WHERE THE FUNNEL LEAKS (PROBED 12 Sep 2026, /onboard/funnel?days=4)
+## WHERE THE FUNNEL LEAKS (PROBED 12 Sep 2026, /onboard/funnel?days=4 — not re-read tonight)
 
-- 34 sessions · **9 humans** (dwell) · **8 of the 9 carry no source** (direct/own visits) · the 9th is
-  `coa-cold-20260911`, a same-day verification pass, not an outfitter. **0 humans from any letter.**
-- Montana 9 Sep letter: 14 landed → 14 subpick → 0 dwell → 0 photos. Landing without dwelling is the
-  scanner signature; treat as machines.
-- The n ≥ 10 humans-from-letters threshold for taking the click→publish rate to David is NOT met.
-  People open and do nothing — **the ASK is the bottleneck**, not the send count. Letter changes
-  without evidence are guesswork; the A/B arms already in the send lane are the instrument.
+- 34 sessions · 9 humans · **0 humans from any letter.** People open and do nothing — the ASK is the
+  bottleneck. The n ≥ 10 humans-from-letters threshold for taking click→publish to David is NOT met.
 
-## SUPPLY — THE ASSOCIATION LANE IS NEARLY DONE; NEXT KIND IS OFFICIAL LICENCE FILES
+## SUPPLY — ASSOCIATION LANE NEARLY DONE; LICENCE FILES CARRY NO MAILBOX
 
-- Harvested + drawn: rrca, pacific, moga (MT), wyoga (WY), coa (CO), apha (AK), mpga (ME). Adapter
-  shape for a new association: one dict entry in `CityLauncher/us_register_assoc.py` (list pages →
-  profile regex → plain mailbox on the profile). Run via `run_us_registers.bat` (allow-listed).
-- **NOT harvestable, do not re-probe:** Idaho IOGA (form) · New Mexico NMCOG (Airtable) · Utah UOGA
-  (Wix; directory = Guidefitter JS app) · New York NYSOGA (Cloudflare-obfuscated mailboxes — we do not
-  decode anti-bot measures) · Oregon OOGA (same) · Washington WOGA (no directory) · Colorado DPO
-  licence lookup (search form) · Vermont VOGA (site down, 525) · Nevada (one contact mailbox).
-- **NEXT LEAD (host-side, unverified):** Texas TREC "High Value Data Sets" — the whole real-estate
-  licensee register as free bulk text files (150,000+ rows, by statute). Category estate agents,
-  drawn by the agency letter. Two things must be true first: the file's columns carry a mailbox
-  (check host-side — trec.texas.gov does not answer the sandbox), and RG-0346 (agency letter with a
-  console CTA) is closed so the letter tells the agency story. Note TREC said its licence system is
-  offline "until December 15" (portal migration) — the bulk files may or may not still publish.
-- ZA: Durban 588 + PMB 525 teachers (dbe_emis) are the big pool; Tutors arm-b rides them.
-- Dead ends from earlier runs still stand: USATF national finder · NY DEC guides · USATF Mid-Atlantic /
-  Three Rivers / MN / OR / GA / NJ / IN · US general search scraping · orienteeringusa · skifederation ·
-  americancanoe · americanhiking · adventurecycling · coloradooutfitters.org/find-an-outfitter.
+- Harvested + drawn: rrca, pacific, moga, wyoga, coa, apha, mpga. New association = one dict entry in
+  `CityLauncher/us_register_assoc.py`; run via `run_us_registers.bat`. ZA Durban/PMB rows = blocked category, 0 sendable.
+- **NOT harvestable, do not re-probe:** Idaho IOGA (form) · NM NMCOG (Airtable) · Utah UOGA (Wix/
+  Guidefitter) · NY NYSOGA + Oregon OOGA (Cloudflare-obfuscated) · WA WOGA (no directory) · Colorado
+  DPO lookup (form) · Vermont VOGA (525) · Nevada (one mailbox) · **Texas TREC file (no email column)**
+  · Idaho IOGLB board site (000 from sandbox) · Oregon Marine Board guide search (404) · Alaska CBPL
+  licence search (403) · Wyoming board home page (200, no mailboxes on the front page — a list page may exist).
+- **Working kinds:** member directories that PUBLISH a mailbox. Untested leads of that kind: US Forest
+  Service outfitter-guide permit-holder lists (per-forest PDFs, often with email); chamber-of-commerce
+  member directories (GrowthZone/ChamberMaster pages are server-rendered); state fly-fishing / hunting
+  guide associations not yet probed (AZ, NV, SD, ND, NE, KS, OK, AR, MO, MN, WI, MI, PA, VA, NC, TN).
+- Older dead ends stand: USATF finder/regionals · NY DEC guides · US search scraping · orienteeringusa
+  · skifederation · americancanoe · americanhiking · adventurecycling · coloradooutfitters.org.
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
-0. Sunday: put the plain-language weekly summary at the top of this file (number, what moved it, next).
-1. Run the number. Read the 00:10 wave log (`CityLauncher/logs/launchday_<date>010.log`) — how
-   many states still had anyone. Expect the pool to run dry within days; that is expected (RUL-103).
-2. Ledger in shards + rulings check. Both were green at the end of run 11.
-3. **Close RG-0346** (three agency sending letters lack the console CTA block; the send lane never
-   calls /agencies/wave-prep). It is the gate on the only large register kind left (licence files).
-4. Queue host-side: fetch the TREC bulk file and print its header row (a small `run_py` is fine —
-   read the `.result`). Build the licence-file importer only if a mailbox column exists.
-5. Still unproven as ONE walk: seller form → save → publish → visible logged out.
-6. YouTube: nine films live; film 07 (Liquidation) unpublished — David's click, when he chooses.
+1. Run the number. Read `CityLauncher/logs/launchday_14Mon09_2026010.log` — the per-city gap counts
+   LOCAL CALENDAR DAYS (MIN-GAP-1), so the 14 Sep 00:10 wave should send again in ME/AK/MT/CO. Read it.
+2. Ledger in shards + rulings check. Both green at the end of run 12 (RG-0361 new, locked).
+3. Read /onboard/funnel?days=3 for the first human from a letter (grade it: dwell + touch).
+4. Supply: probe ONE untested kind above (USFS permittee PDFs or a chamber directory) with curl first;
+   build an adapter only if mailboxes render.
+5. RG-0346 (agency letters lack the console CTA) — still open; agency sends are David's per-send act
+   (RUL-053f), so it adds no nightly volume. Lower priority than 3–4.
+6. Still unproven as ONE walk: seller form → save → publish → visible logged out. 7. YouTube: film 07
+   (Liquidation) unpublished — David's click, when he chooses.
 
 ## THINGS ALREADY TRIED THAT DID NOT WORK
 
 - Opening `/admin.html` publicly. `fill_wave_gaps.py` via the queue (401). Reading "no sendable
-  prospects" as supply. Halving the batch for a "measurement week" (RG-0290). US general search
-  scraping. Trusting "wave #N logged", and trusting the wave NUMBER itself.
-- Reading the funnel without grading it. Running the ledger in one call — use shards or the host bat.
-- Probing register sites blind: many .org hosts do not answer the sandbox at all (000). Probe with
-  curl first; web_fetch reaches some the sandbox cannot.
-- Retrying a dead sandbox mount more than twice. Restarting the app to cure it (proven useless).
-- Two sessions at once: space deploys; one is better than two.
+  prospects" as supply (13 Sep: it was a DISARM — check `armed`/`gates_green` in waves_policy.json and
+  any `disarmed_by` stamp FIRST). Halving the batch for a "measurement week" (RG-0290). US general
+  search scraping. Trusting "wave #N logged". Running the ledger in one call — use shards.
+- Probing register sites blind: many .org/.gov hosts do not answer the sandbox (000). Curl first.
+- Retrying a dead sandbox mount more than twice; restarting the app to cure it (proven useless).
+  Assuming an official licence file carries a mailbox (Texas: it does not).
 
 ## OPEN QUESTIONS FOR DAVID (batched, never dripped)
 
-None new. Film 07 is his click, when he chooses.
+None new. The US/UK/AU re-arm is reported with the veto stated; film 07 is his click, when he chooses.

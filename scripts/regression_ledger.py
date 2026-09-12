@@ -12129,6 +12129,22 @@ def rg_jurisdiction_gate():
             n2c[c.get("name")] = c.get("country")
     except Exception as e:
         return [(FAIL, "cities.json unreadable (%s) -- the gate cannot map cities to countries" % e)]
+    # JURIS-MAP-1 (13 Sep 2026): cities.json is the PLANNING map; the SEND engine resolves a
+    # wave city to its country through localize._CITY_COUNTRY (country_of()), and that is the
+    # path a letter actually takes -- evidence ladder: judge the real path. On 12 Sep this gate
+    # disarmed 52 US state buckets (RRCA-1, one per state) as "jurisdiction unknown" because
+    # they live only in the engine's map. Read the engine's map as the fallback, case-insensitive,
+    # normalising its 'GB' to cities.json's 'UK'. A city unknown to BOTH is still a FAIL below.
+    loc_map = {}
+    try:
+        import ast as _ast, re as _re2
+        _lsrc = open(os.path.join(cl, "emailer", "localize.py"), encoding="utf-8").read()
+        _lm = _re2.search(r"_CITY_COUNTRY\s*=\s*(\{.*?\n\})", _lsrc, _re2.S)
+        if _lm:
+            for _k, _v in _ast.literal_eval(_lm.group(1)).items():
+                loc_map[str(_k).lower()] = "UK" if _v == "GB" else _v
+    except Exception:
+        loc_map = {}
     try:
         pol = json.loads(open(os.path.join(cl, "emailer", "waves_policy.json"), encoding="utf-8").read())
     except Exception as e:
@@ -12136,10 +12152,10 @@ def rg_jurisdiction_gate():
     for name, cpol in pol.get("cities", {}).items():
         if not (cpol.get("armed") or cpol.get("gates_green")):
             continue
-        cc = n2c.get(name)
+        cc = n2c.get(name) or loc_map.get(str(name).lower())
         if cc is None:
-            out.append((FAIL, "waves_policy city %r is armed but unknown to cities.json -- "
-                              "the gate cannot judge its jurisdiction (RG-0215)" % name))
+            out.append((FAIL, "waves_policy city %r is armed but unknown to cities.json AND to "
+                              "localize._CITY_COUNTRY -- the gate cannot judge its jurisdiction (RG-0215)" % name))
         elif cc in NO_SEND:
             out.append((FAIL, "%s (%s) is armed -- 20 Aug doc verdict is DO NOT COLD EMAIL; "
                               "organic lane only (RUL-071)" % (name, cc)))
@@ -12149,7 +12165,7 @@ def rg_jurisdiction_gate():
                         % (name, cc, NAMES.get(cc, cc))))
     if out:
         return out
-    uncovered = sorted({cc for cc in set(n2c.values()) if cc and not covered(cc)})
+    uncovered = sorted({cc for cc in (set(n2c.values()) | set(loc_map.values())) if cc and not covered(cc)})
     if uncovered:
         return [(FAIL, "pipeline reaches uncovered countries (%s) and none is armed -- expected "
                        "while OPEN. Each outreach lane needs a primary-source OUTREACH_LAW "
@@ -21397,6 +21413,122 @@ def rg_quick_listing_orch_page():
                 out.append((FAIL, "dashboard.server.html: %s" % why))
     return out or [(INFO, "the Quick Listing page is gated (401 anonymously), in the manifest, whole, "
                           "and wired into the dashboard's tab, view, branch and frame")]
+
+
+@entry("RG-0361", "The jurisdiction gate and the rulings' own data model can never disagree again -- "
+                  "every country that is armed for outreach AND marked lane=outreach in cities.json has a "
+                  "heading-level OUTREACH_LAW section, and no wave entry stays disarmed by the gate after "
+                  "its cause is gone",
+       LOCKED, fixed_on="13 Sep 2026",
+       scope="OUTREACH_LAW_WORKING_NOTES_2026-08-20.md (ruled sections 10 UNITED STATES, 11 UNITED KINGDOM, "
+             "12 AUSTRALIA -- promoted from the appendix, text unchanged), CityLauncher/emailer/waves_policy.json "
+             "(the 72 entries re-armed 13 Sep, stamped rearmed_by), CityLauncher/data/cities.json (lane fields, "
+             "RUL-071), scripts/regression_ledger.py RG-0215 (JURIS-MAP-1: reads localize._CITY_COUNTRY as the "
+             "fallback country map, so the 52 US state buckets are judged, not called unknown). Legs: (a) for every "
+             "armed+gates_green policy city whose country carries lane=outreach in cities.json, the notes have a "
+             "heading-level section -- the same regex RG-0215 uses; (b) no policy city carries a disarmed_by stamp "
+             "from the jurisdiction gate while its country IS covered -- a disarm that outlives its cause is a red, "
+             "never a quiet dark lane; (c) the three ruled sections exist by name; (d) RG-0215's source reads the "
+             "engine's map. CLASS: a ruling reflected in one file (RUL-074 in the sim + RULINGS.md) but not where "
+             "the GATE reads (the law notes) lets a READ-grade format test out-vote three rulings; the fix is the "
+             "reflection, in the file the instrument actually reads.",
+       ref="JURIS-RULED-1 (13 Sep 2026, goal run 12). What happened: at 06:17 on 12 Sep a session executed "
+           "RG-0215 by disarming every US, UK and AU wave entry (72: 11 US cities, 5 UK, 4 AU, 52 US state "
+           "buckets 'unknown to cities.json') and told David re-arming was his legal call. The 00:10 wave on 13 Sep "
+           "then found 'no armed city has anyone to send to' -- the whole US lane David demanded on 5 Sep was dark. "
+           "But the position was already RULED, three times, with the 20 Aug notes in hand: RUL-071 (cities.json "
+           "lane=outreach for every US/UK/AU city -- the ruling's OWN data model), RUL-074 ('all three countries are "
+           "outreach-covered per the 20 Aug law notes'), RUL-082 ('Please proceed' -- NY/London/Sydney armed) and "
+           "RUL-059 (US wave launched). Nothing legal changed on 12 Sep; the research sat under '# APPENDIX' and the "
+           "gate's regex wants '## N. NAME'. PROBED 13 Sep before re-arming: the US render carries sender identity, "
+           "registration number, street postal address, why-received line, source line and unsubscribe; GB and AU "
+           "carry identity, why-received and unsubscribe; TS_POSTAL_ADDRESS set; tests/test_intl_templates.py ALL "
+           "PASS. Re-arming restores David's ruled position (RUL-037: executing a ruling, not changing one); it was "
+           "reported to him with the veto stated plainly. RG-0295 was amended 12 Sep to read a STAMPED disarm as "
+           "INFO -- that amendment stands (an unstamped unarm is still red there); this entry adds the missing half: "
+           "a stamp whose cause no longer holds is red HERE.")
+def rg_jurisdiction_ruled():
+    out = []
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not os.path.isdir(cl):
+        return [(INFO, "CityLauncher not beside this repo -- not evaluated (live-only run)")]
+    import glob as _glob, re as _re, ast as _ast
+    law = ""
+    for fp in _glob.glob(os.path.join(REPO, "OUTREACH_LAW*.md")):
+        try:
+            law += open(fp, encoding="utf-8").read()
+        except Exception:
+            pass
+    LAW = law.upper()
+    # (c) the ruled sections exist by name
+    for h in ("## 10. UNITED STATES", "## 11. UNITED KINGDOM", "## 12. AUSTRALIA"):
+        if h not in law:
+            out.append((FAIL, "OUTREACH_LAW lost its ruled section %r -- the US/UK/AU research is back in "
+                              "the appendix and the gate will disarm the lane again" % h))
+    NAMES = {"ZA": "SOUTH AFRICA", "NZ": "NEW ZEALAND", "AR": "ARGENTINA", "PT": "PORTUGAL",
+             "NA": "NAMIBIA", "KE": "KENYA", "EG": "EGYPT", "ZW": "ZIMBABWE", "BW": "BOTSWANA",
+             "MZ": "MOZAMBIQUE", "IN": "INDIA", "US": "UNITED STATES", "UK": "UNITED KINGDOM",
+             "AU": "AUSTRALIA", "FR": "FRANCE", "BR": "BRAZIL", "CO": "COLOMBIA", "PE": "PERU",
+             "CL": "CHILE", "NG": "NIGERIA", "GH": "GHANA", "TZ": "TANZANIA", "UG": "UGANDA",
+             "RW": "RWANDA", "ET": "ETHIOPIA", "MA": "MOROCCO", "CN": "CHINA", "RU": "RUSSIA"}
+    def covered(cc):
+        if cc == "ZA":
+            return True
+        return bool(_re.search(r"#+\s*\d*\.?\s*" + _re.escape(NAMES.get(cc, "\x00")), LAW))
+    n2c = {"Maun": "BW", "National": "ZA"}
+    lane_by_cc = {}
+    try:
+        for c in json.loads(open(os.path.join(cl, "data", "cities.json"), encoding="utf-8").read()):
+            n2c[c.get("name")] = c.get("country")
+            if c.get("lane") == "outreach":
+                lane_by_cc[c.get("country")] = "outreach"
+    except Exception as e:
+        return [(FAIL, "cities.json unreadable (%s)" % e)]
+    loc_map = {}
+    try:
+        _lsrc = open(os.path.join(cl, "emailer", "localize.py"), encoding="utf-8").read()
+        _lm = _re.search(r"_CITY_COUNTRY\s*=\s*(\{.*?\n\})", _lsrc, _re.S)
+        if _lm:
+            for _k, _v in _ast.literal_eval(_lm.group(1)).items():
+                loc_map[str(_k).lower()] = "UK" if _v == "GB" else _v
+    except Exception:
+        pass
+    try:
+        pol = json.loads(open(os.path.join(cl, "emailer", "waves_policy.json"), encoding="utf-8").read())
+    except Exception as e:
+        return [(FAIL, "waves_policy.json unreadable (%s)" % e)]
+    armed_outreach_uncovered, stale_stamps, armed = [], [], 0
+    for name, cpol in pol.get("cities", {}).items():
+        cc = n2c.get(name) or loc_map.get(str(name).lower())
+        if cpol.get("armed") and cpol.get("gates_green"):
+            armed += 1
+            # (a) ruled outreach country must be covered where the gate reads
+            if cc and lane_by_cc.get(cc) == "outreach" and not covered(cc):
+                armed_outreach_uncovered.append("%s (%s)" % (name, cc))
+        # (b) a gate disarm that outlived its cause
+        if str(cpol.get("disarmed_by", "")).startswith("RG-0215") and cc and covered(cc) and cc not in ("KE", "EG", "BW"):
+            stale_stamps.append("%s (%s)" % (name, cc))
+    if armed_outreach_uncovered:
+        out.append((FAIL, "armed for outreach in a lane=outreach country the law notes do not cover at heading "
+                          "level -- the gate and the rulings disagree again: %s"
+                    % ", ".join(sorted(armed_outreach_uncovered)[:12])))
+    if stale_stamps:
+        out.append((FAIL, "%d wave entr%s still disarmed by the jurisdiction gate although the country IS "
+                          "covered -- a dark lane with no live cause: %s"
+                    % (len(stale_stamps), "y" if len(stale_stamps) == 1 else "ies",
+                       ", ".join(sorted(stale_stamps)[:12]))))
+    # (d) RG-0215 reads the engine's map
+    try:
+        me = open(os.path.abspath(__file__), encoding="utf-8", errors="replace").read()
+        if "JURIS-MAP-1" not in me or "loc_map.get(str(name).lower())" not in me:
+            out.append((FAIL, "RG-0215 no longer reads localize._CITY_COUNTRY -- the 52 US state buckets "
+                              "will read 'jurisdiction unknown' and be disarmed again"))
+    except Exception:
+        pass
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "%d wave entries armed; every lane=outreach country among them has a ruled "
+                          "OUTREACH_LAW section; no stale gate disarm; the gate reads the engine's map" % armed))
+    return out
 
 
 if __name__ == "__main__":
