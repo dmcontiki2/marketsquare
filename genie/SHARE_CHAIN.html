@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>The Share Chain</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#0b0d10; --bg2:#12151a; --ink:#ececec; --ink2:#a9b0ba; --line:#2a2f37;
+  --brand:#22C55E; --svc:#B4441F; --home:#16A97C; --tsq:#EAE3D2; --tsqink:#0b0d10;
+  --bea:#6E86A6; --pull:#3BC2D9; --gold:#E0B04A; --hire:#EAE3D2; --hireink:#0b0d10;
+  --lblbg:#0b0d10;
+}
+:root:not([data-theme="dark"]){}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f6f4ee; --bg2:#ffffff; --ink:#151719; --ink2:#5a6270; --line:#d9d4c8;
+    --tsq:#2b2f36; --tsqink:#ffffff; --hire:#2b2f36; --hireink:#ffffff; --bea:#4d6483; --pull:#0e8ea3; --lblbg:#f6f4ee;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f6f4ee; --bg2:#ffffff; --ink:#151719; --ink2:#5a6270; --line:#d9d4c8;
+  --tsq:#2b2f36; --tsqink:#ffffff; --hire:#2b2f36; --hireink:#ffffff; --bea:#4d6483; --pull:#0e8ea3; --lblbg:#f6f4ee;
+}
+:root[data-theme="dark"]{
+  --bg:#0b0d10; --bg2:#12151a; --ink:#ececec; --ink2:#a9b0ba; --line:#2a2f37;
+  --tsq:#EAE3D2; --tsqink:#0b0d10; --hire:#EAE3D2; --hireink:#0b0d10; --bea:#6E86A6; --pull:#3BC2D9; --lblbg:#0b0d10;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Barlow,"Segoe UI",Roboto,sans-serif;padding:20px 16px 40px}
+h1{font:600 34px/1.05 "Barlow Condensed",Barlow,sans-serif;letter-spacing:.01em;margin:0 0 6px;text-wrap:balance}
+.eyebrow{font:600 12px/1 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);margin:0 0 10px}
+.lede{max-width:70ch;color:var(--ink2);margin:0 0 18px}
+figure{margin:0}
+.wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:10px}
+svg{display:block;width:100%;height:auto;min-width:1100px;color:var(--ink);font-family:Barlow,"Segoe UI",Roboto,sans-serif}
+figcaption{color:var(--ink2);font-size:13px;margin:10px 4px 0;max-width:90ch}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:13px;color:var(--ink2)}
+.legend li{display:flex;align-items:center;gap:8px}
+.sw{width:26px;height:0;border-top:3px solid;border-radius:2px}
+.sw.dash{border-top-style:dashed}
+.hint{font-size:12px;color:var(--ink2);margin:8px 4px 0}
+@media (max-width:640px){h1{font-size:28px} body{padding:16px 16px 32px}}
+
+/* SVG classes (styled from the page, never inside the svg) */
+.lane{fill:none;stroke:var(--line);stroke-width:1.5}
+.lane-svc{stroke:var(--svc);fill:rgba(180,68,31,.07)}
+.lane-quick{stroke:var(--brand);fill:rgba(34,197,94,.06)}
+.lane-tsq{stroke:var(--tsq);fill:rgba(234,227,210,.05)}
+.lane-bea{stroke:var(--bea);fill:rgba(110,134,166,.08)}
+.lt{font:600 20px "Barlow Condensed",Barlow,sans-serif;letter-spacing:.02em}
+.lt-svc{fill:var(--svc)} .lt-quick{fill:var(--brand)} .lt-tsq{fill:var(--tsq)} .lt-bea{fill:var(--bea)} .lt-home{fill:var(--home)}
+.sub{font:500 11px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;fill:var(--ink2)}
+.box{fill:var(--bg2);stroke:var(--line);stroke-width:1.2}
+.box-svc{stroke:var(--svc)} .box-quick{stroke:var(--brand)} .box-tsq{stroke:var(--tsq)} .box-bea{stroke:var(--bea)} .box-home{stroke:var(--home);stroke-width:2}
+.box-gold{stroke:var(--gold)}
+.bt{font:600 13.5px Barlow,sans-serif;fill:var(--ink)}
+.tt{font:600 12.5px Barlow,sans-serif;fill:var(--ink)}
+.bs{font:400 11.5px Barlow,sans-serif;fill:var(--ink2)}
+.bm{font:400 10.5px "IBM Plex Mono",ui-monospace,monospace;fill:var(--ink2)}
+.chip{fill:var(--bg2);stroke:var(--line);stroke-width:1}
+.chip-home{stroke:var(--home);stroke-width:2;fill:rgba(22,169,124,.14)}
+.ct{font:500 11.5px Barlow,sans-serif;fill:var(--ink)}
+.gt{font:600 11px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;fill:var(--svc)}
+.tap{fill:var(--brand)} .tapn{font:700 12px "Barlow Condensed",sans-serif;fill:#04210f}
+.a-hand{stroke:var(--brand);stroke-width:2.6}
+.a-pull{stroke:var(--pull);stroke-width:2;stroke-dasharray:7 5}
+.a-api{stroke:var(--bea);stroke-width:2.2}
+.a-vouch{stroke:var(--gold);stroke-width:2}
+.a-tap{stroke:var(--svc);stroke-width:2}
+.a-back{stroke:var(--brand);stroke-width:1.6;stroke-dasharray:2 4}
+.a-share{stroke:var(--svc);stroke-width:2;stroke-dasharray:6 5}
+.a-link{stroke:var(--brand);stroke-width:2.4}
+.a-intro{stroke:var(--gold);stroke-width:2.2}
+.lbl{font:600 10.5px "IBM Plex Mono",ui-monospace,monospace;fill:var(--ink)}
+.lblbg{fill:var(--lblbg);stroke:var(--line);stroke-width:1}
+.gain{fill:var(--bg2);stroke:var(--brand);stroke-width:1.4}
+.gn{font:700 26px "Barlow Condensed",sans-serif;fill:var(--brand)}
+.note{font:italic 11.5px Barlow,sans-serif;fill:var(--ink2)}
+.person{fill:var(--bg2);stroke-width:2}
+.p-work{stroke:var(--svc)} .p-home{stroke:var(--home)} .p-hire{stroke:var(--hire);fill:var(--hire)} .p-new{stroke:var(--brand)}
+.pt{font:600 12.5px Barlow,sans-serif;fill:var(--ink)} .pt-hire{fill:var(--hireink)}
+.ps{font:400 10.5px Barlow,sans-serif;fill:var(--ink2)}
+.ps-hire{fill:var(--hireink);opacity:.72}
+.a-dup{stroke:var(--ink2);stroke-width:1.8;stroke-dasharray:3 5}
+.gen{font:600 12px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;fill:var(--ink2)}
+.genline{stroke:var(--line);stroke-width:1;stroke-dasharray:3 6}
+.coin{fill:var(--gold)} .coint{font:800 9px "Barlow Condensed",sans-serif;fill:#3a2a05}
+.rule{fill:var(--bg2);stroke:var(--line);stroke-width:1.2}
+.rt{font:600 13px Barlow,sans-serif;fill:var(--ink)} .rs{font:400 11.5px Barlow,sans-serif;fill:var(--ink2)}
+</style>
+</head>
+<body>
+<main>
+<p class="eyebrow">TrustSquare · Services · 12 Sep 2026</p>
+<h1>One housekeeper, many doors</h1>
+<p class="lede">The second thing the Quick Intro app buys us. Her personal link is a door for the people who already hire her; a conversation with another worker is a door for that worker, who then opens her own. Nobody is paid to refer, nobody is counted twice, and the first Tuppence only changes hands when a hirer actually uses the app.</p>
+<figure>
+<div class="wrap"><svg viewBox="0 0 1600 930" role="img" aria-label="How one housekeeper&#x27;s shareable link spreads: her employers join free through her personal link, workers she tells join for nothing and bring their own employers, a hirer already on the app is never counted twice, and a hirer who then searches and pays one Tuppence for an intro creates the next lister" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/></marker></defs><text x="60" y="40" class="gen" text-anchor="start" >G0 · THE FIRST LISTER</text><text x="60" y="58" class="ps" text-anchor="start" >came in through the Quick Intro app</text><text x="470" y="40" class="gen" text-anchor="start" >G1 · HER PEOPLE</text><text x="470" y="58" class="ps" text-anchor="start" >her employers, and workers she tells</text><path d="M448 24 L448 600" class="genline" fill="none" /><text x="880" y="40" class="gen" text-anchor="start" >G2 · THEIR PEOPLE</text><text x="880" y="58" class="ps" text-anchor="start" >each worker brings her own employers</text><path d="M858 24 L858 600" class="genline" fill="none" /><text x="1290" y="40" class="gen" text-anchor="start" >G3 · THE APP WORKING</text><text x="1290" y="58" class="ps" text-anchor="start" >a hirer searches, pays once, makes a lister</text><path d="M1268 24 L1268 600" class="genline" fill="none" /><rect x="60" y="300" width="196" height="54" rx="10" class="person p-home" /><text x="74" y="322" class="pt" text-anchor="start" >Housekeeper · Moreleta Park</text><text x="74" y="340" class="ps" text-anchor="start" >listed in five taps · trust band New</text><text x="60" y="380" class="note" text-anchor="start" >Her link is the whole referral</text><text x="60" y="395" class="note" text-anchor="start" >programme. No code, no reward.</text><rect x="470" y="130" width="196" height="54" rx="10" class="person p-hire" /><text x="484" y="152" class="pt pt-hire" text-anchor="start" >Hirer 1 · her Tuesday house</text><text x="484" y="170" class="ps ps-hire" text-anchor="start" >joins free · books her · buzzes</text><rect x="470" y="200" width="196" height="54" rx="10" class="person p-hire" /><text x="484" y="222" class="pt pt-hire" text-anchor="start" >Hirer 2 · her Thursday house</text><text x="484" y="240" class="ps ps-hire" text-anchor="start" >joins free · then searches</text><rect x="470" y="270" width="196" height="54" rx="10" class="person p-hire" /><text x="484" y="292" class="pt pt-hire" text-anchor="start" >Hirer 3 · her weekend house</text><text x="484" y="310" class="ps ps-hire" text-anchor="start" >joins free · confirms her → TS</text><rect x="470" y="400" width="196" height="54" rx="10" class="person p-work" /><text x="484" y="422" class="pt" text-anchor="start" >Gardener · Faerie Glen</text><text x="484" y="440" class="ps" text-anchor="start" >she told him · lists himself, free</text><rect x="470" y="470" width="196" height="54" rx="10" class="person p-work" /><text x="484" y="492" class="pt" text-anchor="start" >Chef · Menlyn</text><text x="484" y="510" class="ps" text-anchor="start" >she told her · lists herself, free</text><rect x="880" y="200" width="196" height="54" rx="10" class="person p-new" /><text x="894" y="222" class="pt" text-anchor="start" >Plumber · Garsfontein</text><text x="894" y="240" class="ps" text-anchor="start" >found by Hirer 2 · NEW lister</text><rect x="880" y="400" width="196" height="54" rx="10" class="person p-hire" /><text x="894" y="422" class="pt pt-hire" text-anchor="start" >Hirer 4 · gardener&#x27;s client</text><text x="894" y="440" class="ps ps-hire" text-anchor="start" >joins free through HIS link</text><rect x="880" y="470" width="196" height="54" rx="10" class="person p-hire" /><text x="894" y="492" class="pt pt-hire" text-anchor="start" >Hirer 5 · chef&#x27;s client</text><text x="894" y="510" class="ps ps-hire" text-anchor="start" >joins free through HER link</text><rect x="880" y="540" width="196" height="54" rx="10" class="person p-hire" /><text x="894" y="562" class="pt pt-hire" text-anchor="start" >Hirer 6 · chef&#x27;s client</text><text x="894" y="580" class="ps ps-hire" text-anchor="start" >joins free through HER link</text><rect x="1290" y="130" width="196" height="54" rx="10" class="person p-hire" /><text x="1304" y="152" class="pt pt-hire" text-anchor="start" >Hirer 7 · plumber&#x27;s client</text><text x="1304" y="170" class="ps ps-hire" text-anchor="start" >joins free through his link</text><rect x="1290" y="200" width="196" height="54" rx="10" class="person p-hire" /><text x="1304" y="222" class="pt pt-hire" text-anchor="start" >Hirer 8 · plumber&#x27;s client</text><text x="1304" y="240" class="ps ps-hire" text-anchor="start" >joins free through his link</text><rect x="1290" y="300" width="196" height="54" rx="10" class="person p-work" /><text x="1304" y="322" class="pt" text-anchor="start" >Painter · Silverton</text><text x="1304" y="340" class="ps" text-anchor="start" >plumber told him · and so on</text><text x="1494" y="327" class="gn" text-anchor="start" >…</text><path d="M256 327.0 C 363.0 327.0, 363.0 157.0, 470 157.0" class="a-link" fill="none" marker-end="url(#arr)" /><rect x="276.4" y="194" width="173" height="16" rx="8" class="lblbg"/><text x="363.0" y="206" class="lbl" text-anchor="middle" >personal link · joins free</text><path d="M256 327.0 C 363.0 327.0, 363.0 227.0, 470 227.0" class="a-link" fill="none" marker-end="url(#arr)" /><path d="M256 327.0 C 363.0 327.0, 363.0 297.0, 470 297.0" class="a-link" fill="none" marker-end="url(#arr)" /><path d="M256 327.0 C 363.0 327.0, 363.0 427.0, 470 427.0" class="a-share" fill="none" marker-end="url(#arr)" /><rect x="248.5" y="375" width="229" height="16" rx="8" class="lblbg"/><text x="363.0" y="387" class="lbl" text-anchor="middle" >tells him about the app · no credit</text><path d="M256 327.0 C 363.0 327.0, 363.0 497.0, 470 497.0" class="a-share" fill="none" marker-end="url(#arr)" /><path d="M666 427.0 C 773.0 427.0, 773.0 427.0, 880 427.0" class="a-link" fill="none" marker-end="url(#arr)" /><rect x="729.8" y="409" width="86" height="16" rx="8" class="lblbg"/><text x="773.0" y="421" class="lbl" text-anchor="middle" >his own link</text><path d="M666 497.0 C 773.0 497.0, 773.0 497.0, 880 497.0" class="a-link" fill="none" marker-end="url(#arr)" /><rect x="729.8" y="479" width="86" height="16" rx="8" class="lblbg"/><text x="773.0" y="491" class="lbl" text-anchor="middle" >her own link</text><path d="M666 497.0 C 773.0 497.0, 773.0 567.0, 880 567.0" class="a-link" fill="none" marker-end="url(#arr)" /><path d="M666 412 C 736 412, 736 318, 666 318" class="a-dup" fill="none" marker-end="url(#arr)" /><rect x="748" y="345" width="353" height="16" rx="8" class="lblbg"/><text x="748" y="357" class="lbl" text-anchor="start" >also his client — already on the app, not counted twice</text><path d="M666 227.0 C 773.0 227.0, 773.0 227.0, 880 227.0" class="a-intro" fill="none" marker-end="url(#arr)" /><circle cx="773.0" cy="219" r="11" class="coin" /><text x="773.0" y="222" class="coint" text-anchor="middle" >1T</text><rect x="670.9" y="190" width="204" height="16" rx="8" class="lblbg"/><text x="773.0" y="202" class="lbl" text-anchor="middle" >searches · Intro · one Tuppence</text><path d="M1076 227.0 C 1183.0 227.0, 1183.0 157.0, 1290 157.0" class="a-link" fill="none" marker-end="url(#arr)" /><rect x="1139.8" y="149" width="86" height="16" rx="8" class="lblbg"/><text x="1183.0" y="161" class="lbl" text-anchor="middle" >his own link</text><path d="M1076 227.0 C 1183.0 227.0, 1183.0 227.0, 1290 227.0" class="a-link" fill="none" marker-end="url(#arr)" /><path d="M1076 227.0 C 1183.0 227.0, 1183.0 327.0, 1290 327.0" class="a-share" fill="none" marker-end="url(#arr)" /><rect x="1111.9" y="279" width="142" height="16" rx="8" class="lblbg"/><text x="1183.0" y="291" class="lbl" text-anchor="middle" >tells him · no credit</text><rect x="60" y="640" width="370" height="118" rx="12" class="rule" /><text x="76" y="668" class="rt" text-anchor="start" >Worker → hirer is the only referral that counts.</text><text x="76" y="690" class="rs" text-anchor="start" >Her personal link goes to the people who already trust</text><text x="76" y="705" class="rs" text-anchor="start" >her. That is the entire programme.</text><rect x="445" y="640" width="370" height="118" rx="12" class="rule" /><text x="461" y="668" class="rt" text-anchor="start" >Worker → worker is free spread, and earns nothing.</text><text x="461" y="690" class="rs" text-anchor="start" >She can tell anyone about the app. No reward, no code</text><text x="461" y="705" class="rs" text-anchor="start" >— by ruling, for simplicity and to avoid complaints.</text><rect x="830" y="640" width="370" height="118" rx="12" class="rule" /><text x="846" y="668" class="rt" text-anchor="start" >A hirer is onboarded once.</text><text x="846" y="690" class="rs" text-anchor="start" >A second link to the same household is not a second</text><text x="846" y="705" class="rs" text-anchor="start" >referral. The app remembers who is already in.</text><rect x="1215" y="640" width="370" height="118" rx="12" class="rule" /><text x="1231" y="668" class="rt" text-anchor="start" >Joining is free. Only using it costs.</text><text x="1231" y="690" class="rs" text-anchor="start" >A hirer pays nothing until a Tuppence scenario — an</text><text x="1231" y="705" class="rs" text-anchor="start" >intro, a boost. Every lister still faces the same</text><text x="1231" y="720" class="rs" text-anchor="start" >three scores.</text><text x="60" y="624" class="gt" text-anchor="start" >THE RULES THAT MAKE IT SAFE TO LET LOOSE</text><rect x="60" y="790" width="1480" height="110" rx="14" class="gain" /><text x="80" y="826" class="gt" text-anchor="start" >FROM ONE HOUSEKEEPER</text><text x="80" y="868" class="gn" text-anchor="start" >1</text><text x="114" y="868" class="bt" text-anchor="start" >lister</text><text x="224.4" y="868" class="gn" text-anchor="start" >6</text><text x="258.4" y="868" class="bt" text-anchor="start" >people on the app after her link and two conversations</text><text x="724.0" y="868" class="gn" text-anchor="start" >9</text><text x="758.0" y="868" class="bt" text-anchor="start" >after the two workers send their own links</text><text x="1134.8" y="868" class="gn" text-anchor="start" >12</text><text x="1180.8" y="868" class="bt" text-anchor="start" >after one hirer searches and pays a single Tuppence</text><text x="80" y="890" class="bs" text-anchor="start" >Rewards paid out: R0. Tuppence collected: one. Everyone who joined already knew the person who brought them.</text></svg></div>
+<figcaption>Read left to right by generation. Solid green is a personal link from a worker to someone who already hires her — the only referral that counts, and it costs the hirer nothing to join. Dashed rust is a worker telling another worker about the app — free spread with no credit attached. Gold is the app doing its job: a hirer who is now a user searches, pays one Tuppence for an intro, and the plumber she finds becomes the next lister with his own link. The dotted arrow is the dedupe rule: a household already on the app is not onboarded again.</figcaption>
+</figure>
+<ul class="legend"><li><span class="sw " style="border-color:var(--brand)"></span>personal link · joins free</li><li><span class="sw dash" style="border-color:var(--svc)"></span>worker tells worker · no credit</li><li><span class="sw " style="border-color:var(--gold)"></span>search → Intro · one Tuppence</li><li><span class="sw dash" style="border-color:var(--ink2)"></span>already on the app · not counted twice</li></ul>
+<p class="hint">On a phone, drag the picture sideways — it is drawn wide on purpose.</p>
+</main>

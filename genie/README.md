@@ -160,3 +160,17 @@ is reserved to David (RUL-037). The two prompts to run are written into `WISH_CO
 4. **The search half's stock trigger still governs the ring** (RUL-097(e)): Zoom armed in the field,
    all seven categories non-zero in a typical city, ~30 days of funnel behaviour. The selling half
    has no such dependency — a person listing a bakkie does not care how many bakkies are already there.
+
+## Two visuals for the Quick Listing design discussion (12 Sep 2026)
+
+- **QUICK_INTRO_FLOW.html** — the one holistic picture: the Services variety (forty-odd worker
+  types, housekeeper built first) → the Quick Intro app's five taps and internal engines → what it
+  borrows read-only from TrustSquare and the one thing it hands over → the TrustSquare app's own
+  groups (onboarding, LS, TS, RS, Zoom, intros, push, her own scores) → the BEA on the server.
+  Ends with what it buys us: 5 taps · + her hirers · 1 rulebook · R0 per message.
+- **SHARE_CHAIN.html** — the micro shareable link: her personal link brings her employers in free
+  (the only referral that counts), a worker telling another worker is free spread with no credit,
+  a household already on the app is never counted twice, and one Tuppence intro makes the next
+  lister. Rules and a tally at the bottom.
+
+Both are tiled in the Visuals gallery (`Visuals/refresh_visuals.py`) and published as artifacts.

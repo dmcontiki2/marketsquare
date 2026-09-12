@@ -21341,5 +21341,63 @@ def rg_vapid_key_form():
                           "bootstrap paths, at both send sites, behind guards that test it")]
 
 
+
+@entry("RG-0360", "the Quick Listing orchestrator page stays gated under /orchestrator/ and stays "
+                  "reachable from the dashboard's Quick Listing tab -- lose either and David's "
+                  "design board is either public or invisible",
+       LOCKED, fixed_on="12 Sep 2026",
+       scope="genie/QUICK_LISTING_ORCH.html (the page: both design visuals + ruled/built/next), the "
+             "deploy-manifest row that lands it at orchestrator/quick_listing.html, and the "
+             "dashboard.server.html wiring (vtab-quicklist, quicklist-view, the switchView branch, "
+             "the framed src). Live leg: the path answers 401 anonymously -- the whole prefix is "
+             "the Orchestrator realm and this page carries the wave-adjacent design board, so it "
+             "must never be served open. Source legs: manifest row present; page present with both "
+             "figures; dashboard carries the tab, the view, the branch and the gated src.",
+       ref="QL-ORCH-1 (12 Sep 2026). David: \"add both of these to the Ops Dashboard as a separate new "
+           "Orchestrator page we will be using for the Quick Listing.\" Same precedent as SIM-DASH-2: "
+           "dest under /orchestrator/ inherits the Basic-auth realm (probed: 401 anonymously at origin "
+           "and at the edge). The dashboard frames the page in place and points at the local original "
+           "in file:// mode. Rendered proof before deploy: the tab shows the view, hides the others, "
+           "the frame loads the page with both SVGs, switching away hides it and switching back shows "
+           "it, zero page errors. Proven red before believed green: run with the manifest row and the "
+           "tab removed, both source legs failed.")
+def rg_quick_listing_orch_page():
+    out = []
+    st = _status("/orchestrator/quick_listing.html")
+    if st == 200:
+        out.append((FAIL, "/orchestrator/quick_listing.html answers 200 to an anonymous request -- "
+                          "the design board is PUBLIC; the Orchestrator realm no longer covers it"))
+    elif st not in (401, 403):
+        out.append((FAIL, "/orchestrator/quick_listing.html answers HTTP %d anonymously -- expected the "
+                          "realm's 401; the page or the gate has moved" % st))
+    man = repo_file(os.path.join("ops", "autodeploy", "deploy_manifest.txt"))
+    if man is None:
+        out.append((INFO, "deploy manifest not readable here -- manifest leg skipped"))
+    elif "genie/QUICK_LISTING_ORCH.html | orchestrator/quick_listing.html" not in man:
+        out.append((FAIL, "the deploy manifest no longer lands genie/QUICK_LISTING_ORCH.html at "
+                          "orchestrator/quick_listing.html -- the next deploy drops the page"))
+    pg = repo_file(os.path.join("genie", "QUICK_LISTING_ORCH.html"))
+    if pg is None:
+        out.append((FAIL, "genie/QUICK_LISTING_ORCH.html is gone -- nothing to deploy"))
+    elif pg.count("<svg") < 2:
+        out.append((FAIL, "genie/QUICK_LISTING_ORCH.html carries %d figure(s), expected both visuals"
+                    % pg.count("<svg")))
+    dash = repo_file("dashboard.server.html")
+    if dash is None:
+        out.append((INFO, "dashboard.server.html not readable here -- wiring leg skipped"))
+    else:
+        for needle, why in (
+            ('id="vtab-quicklist"', "the Quick Listing tab is gone from the dashboard"),
+            ('id="quicklist-view"', "the Quick Listing view container is gone"),
+            ("view==='quicklist'", "switchView() no longer has a Quick Listing branch -- the tab "
+                                  "would do nothing"),
+            ("/orchestrator/quick_listing.html", "the dashboard no longer points at the gated page"),
+        ):
+            if needle not in dash:
+                out.append((FAIL, "dashboard.server.html: %s" % why))
+    return out or [(INFO, "the Quick Listing page is gated (401 anonymously), in the manifest, whole, "
+                          "and wired into the dashboard's tab, view, branch and frame")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -43,6 +43,10 @@ assets/service-worker.js   | service-worker.js
 docs/TrustSquare_Contagion_Model_v0.2.html | orchestrator/simulation.html
 DEFENCE_COVERAGE_MAP.html | orchestrator/defence_map.html
 DAILY_WATCH/OPEN_ITEMS.md | orchestrator/watch_register.md
+# QL-ORCH-1 (12 Sep 2026, David): the Quick Listing orchestrator page -- both design
+# visuals (the whole path, the share chain) plus ruled / built / next. Same gated prefix
+# as the simulation; the dashboard's "Quick Listing" tab frames it in place.
+genie/QUICK_LISTING_ORCH.html | orchestrator/quick_listing.html
 
 # ── Legal / support pages ────────────────────────────────────────────────────
 privacy.html               | privacy.html
