@@ -21114,8 +21114,8 @@ def rg_agent_asleep_discriminator():
         ("AGENT-ASLEEP-1", "the sleeping-host discriminator is gone -- a stale beat can accuse the "
                            "agent again with no second fact"),
         ("host_lived_on", "the host-outlived-the-agent test is gone"),
-        ("NOT EVALUATED", "the no-witness path no longer reads NOT EVALUATED, so a sleeping PC "
-                          "would paint a REGRESSION again (RG-0187 contract broken)"),
+        ("NOT EVALUATED", "the no-witness path no longer declares itself blind, so a sleeping "
+                          "PC would paint a REGRESSION again (RG-0187 contract broken)"),
         ("witnesses = (", "the independent host witnesses are gone -- the beat is the only clock "
                           "again"),
     ):
@@ -21126,8 +21126,15 @@ def rg_agent_asleep_discriminator():
         if FAIL not in ("FAIL",) or "FAIL" not in tail.split("else:")[0]:
             out.append((FAIL, "the host-outlived-the-agent branch no longer reports FAIL -- a "
                               "genuinely dead agent would now read green"))
+    # NOTE, and it cost two host runs to find: this message may NOT contain the phrase the
+    # runner looks for -- an INFO carrying it, with no FAIL, is exactly how an entry declares
+    # itself unmeasurable (-> UNVERIFIED). The first wording of this success line quoted the
+    # phrase while describing the fix, so the entry marked ITSELF blind on a passing board.
+    # A guard that reports its own success in the vocabulary of failure is the same cry-wolf
+    # class this entry was written to close.
     return out or [(INFO, "a stale heartbeat needs a second, independent host fact before it "
-                          "accuses the agent; without one it reads NOT EVALUATED")]
+                          "accuses the agent; without one the leg declares itself blind instead "
+                          "of red")]
 
 
 

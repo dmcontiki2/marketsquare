@@ -65,3 +65,21 @@ writer) and keeps the file only as a fallback. Both paths proven.
 
 That concurrent session is also why the 18:11 run came back UNSTABLE (rc=3) with `bea_main.py`
 changing underneath it — the ledger's own LEDGER-STABLE-1 guard doing its job.
+
+### The new entry blinded itself, twice, and that is worth writing down
+
+RG-0355 read NOT EVALUATED on two consecutive host runs. The first diagnosis (a concurrent session
+rewriting the ledger file mid-read) was wrong, and the real cause was simpler and more embarrassing:
+**the entry's own success message quoted the phrase `NOT EVALUATED`** while describing what the fix
+does. The runner's rule is that an INFO carrying that phrase, with no FAIL, means the entry declares
+itself unmeasurable -- so a passing check marked itself blind and cost the board its green. A guard
+that reports its own success in the vocabulary of failure is the same cry-wolf class the entry was
+written to close. Message reworded; the check now asserts it never emits the marker on a pass.
+
+The `inspect.getsource()` change made for the wrong reason was kept: judging the code that is
+actually loaded is better evidence than re-reading a file that a concurrent session may be rewriting.
+
+One instrument observation for whoever next touches the runner: when several entries read
+NOT EVALUATED, the closing RESULT line prints ONE entry's reason for all of them -- here RG-0186's
+Windows path-fixture reason was printed as if it explained RG-0355 too, which sent the first
+diagnosis down the wrong path.
