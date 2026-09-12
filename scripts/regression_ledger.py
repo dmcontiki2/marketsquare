@@ -21091,15 +21091,25 @@ def rg_dashboard_feed_producer():
            "beat -> NOT EVALUATED. RG-0187's contract, applied to a clock instead of an import.")
 def rg_agent_asleep_discriminator():
     out = []
-    led = repo_file(os.path.join("scripts", "regression_ledger.py"))
-    if led is None:
-        return [(INFO, "NOT EVALUATED - the ledger source is not readable from here")]
-    i = led.find("def rg_host_queue(")
-    j = led.find("\n@entry(", i + 1) if i >= 0 else -1
-    if i < 0 or j < 0:
-        out.append((FAIL, "rg_host_queue() is gone -- RG-0257's live leg cannot be judged"))
-        return out
-    leg = led[i:j]
+    # Read the code that is RUNNING, not the file on disk. The first host-side run of this
+    # entry (12 Sep 18:31) came back NOT EVALUATED because a concurrent session was rewriting
+    # scripts/regression_ledger.py underneath it -- the file momentarily unreadable, while the
+    # function being judged was loaded in memory all along. inspect.getsource() cannot race a
+    # writer and judges the actual behaviour; the file is only a fallback.
+    try:
+        import inspect as _inspect
+        leg = _inspect.getsource(rg_host_queue)
+    except Exception:
+        led = repo_file(os.path.join("scripts", "regression_ledger.py"))
+        if led is None:
+            return [(INFO, "NOT EVALUATED - neither the running function nor the ledger source "
+                           "could be read here")]
+        i = led.find("def rg_host_queue(")
+        j = led.find("\n@entry(", i + 1) if i >= 0 else -1
+        if i < 0 or j < 0:
+            out.append((FAIL, "rg_host_queue() is gone -- RG-0257's live leg cannot be judged"))
+            return out
+        leg = led[i:j]
     for needle, why in (
         ("AGENT-ASLEEP-1", "the sleeping-host discriminator is gone -- a stale beat can accuse the "
                            "agent again with no second fact"),

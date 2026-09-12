@@ -52,3 +52,16 @@ over SSH the same run: the server pool holds **88** 'Northern California' rows w
 - `rulings_check.py`: 107 rulings, **0 FAIL**, 15 WARN (rulings with no reflection assertions yet).
 - Ledger shards no longer fit a sandbox bash call (two of three exceeded ~180s), so the closing run
   was taken host-side through the permitted queue instead.
+
+### Closing board, and one self-inflicted race fixed on the spot
+
+Closing run (host-side, 18:31): **no regressions** — both opening reds cleared. Two entries read
+NOT EVALUATED: RG-0186 (a long-standing POSIX-path harness that cannot match on Windows) and, on its
+very first host run, the new RG-0355 itself. Cause found immediately: a **concurrent session was
+rewriting `scripts/regression_ledger.py`** while the run read it, so the file was momentarily
+unreadable — while the function being judged sat loaded in memory the whole time. RG-0355 now reads
+its evidence with `inspect.getsource()` (the code that is actually running, which cannot race a
+writer) and keeps the file only as a fallback. Both paths proven.
+
+That concurrent session is also why the 18:11 run came back UNSTABLE (rc=3) with `bea_main.py`
+changing underneath it — the ledger's own LEDGER-STABLE-1 guard doing its job.
