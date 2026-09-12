@@ -9197,6 +9197,26 @@ VAPID_SUBJECT  = os.getenv("MS_VAPID_SUBJECT", "mailto:dmcontiki2@gmail.com")
 
 _vapid_private_pem: Optional[str] = None
 _vapid_public_b64: Optional[str] = None
+# VAPID-KEYFORM-1 (12 Sep 2026): pywebpush 2.3.0 hands a STRING key to
+# py_vapid.Vapid.from_string(), which strips newlines and base64url-decodes the whole
+# thing -- header line included. A PEM string therefore never parses and every send
+# died on "Could not deserialize key data" inside a bare `except Exception`, so push
+# returned 0 delivered and said nothing. from_string() only works on a RAW key: the
+# 32-byte private scalar, base64url, no padding. That is what we now hand it.
+_vapid_private_arg: Optional[str] = None
+
+
+def _vapid_arg_from_pem(pem: str) -> Optional[str]:
+    """PEM -> the raw base64url private scalar py_vapid.from_string() can actually read."""
+    try:
+        import base64 as _b64
+        from cryptography.hazmat.primitives import serialization as _ser
+        k = _ser.load_pem_private_key(pem.encode(), password=None)
+        raw = k.private_numbers().private_value.to_bytes(32, "big")
+        return _b64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+    except Exception as exc:
+        _log.error("VAPID-KEYFORM-1: could not derive the raw key from the PEM: %s", exc)
+        return None
 _PUSH_AVAILABLE = False
 
 try:
@@ -9210,7 +9230,7 @@ except Exception as _exc:
 def _bootstrap_vapid_keys():
     """Load VAPID keypair from disk; generate if missing. ZERO cost — pure
     elliptic-curve crypto from the cryptography stdlib. Safe to call repeatedly."""
-    global _vapid_private_pem, _vapid_public_b64
+    global _vapid_private_pem, _vapid_public_b64, _vapid_private_arg
     if not _PUSH_AVAILABLE:
         return
     if os.path.exists(VAPID_KEY_PATH):
@@ -9220,7 +9240,9 @@ def _bootstrap_vapid_keys():
             _vapid_private_pem = cfg.get("private_pem")
             _vapid_public_b64  = cfg.get("public_b64")
             if _vapid_private_pem and _vapid_public_b64:
-                _log.info("VAPID keys loaded from %s", VAPID_KEY_PATH)
+                _vapid_private_arg = _vapid_arg_from_pem(_vapid_private_pem)
+                _log.info("VAPID keys loaded from %s (sendable=%s)",
+                          VAPID_KEY_PATH, bool(_vapid_private_arg))
                 return
         except Exception as exc:
             _log.warning("Could not load VAPID keys from %s: %s — regenerating", VAPID_KEY_PATH, exc)
@@ -9248,6 +9270,7 @@ def _bootstrap_vapid_keys():
             _log.warning("Could not persist VAPID keys to %s: %s — keeping in-memory only", VAPID_KEY_PATH, exc)
         _vapid_private_pem = pem
         _vapid_public_b64  = pub_b64
+        _vapid_private_arg = _vapid_arg_from_pem(pem)
         _log.info("VAPID keypair generated · public_b64=%s…", pub_b64[:16])
     except Exception as exc:
         _log.error("VAPID bootstrap failed: %s", exc)
@@ -9338,7 +9361,7 @@ def _send_push_for_match(buyer_token: str, match_id: int, listing: dict):
     NO seller identity, NO price, NO listing_id (PR-35). Listing_id is fetched
     when the buyer opens the app via the standard feed flow.
     Never raises: failures are logged. Disabled devices (410 Gone) are auto-removed."""
-    if not _PUSH_AVAILABLE or not _vapid_private_pem:
+    if not _PUSH_AVAILABLE or not _vapid_private_arg:
         return
     try:
         conn = database.get_db()
@@ -9369,7 +9392,7 @@ def _send_push_for_match(buyer_token: str, match_id: int, listing: dict):
                         "keys": json.loads(r["push_keys"]),
                     },
                     data=payload,
-                    vapid_private_key=_vapid_private_pem,
+                    vapid_private_key=_vapid_private_arg,
                     vapid_claims={"sub": VAPID_SUBJECT},
                     timeout=8,
                 )
@@ -21863,7 +21886,7 @@ INTRO_B3_WARN_AT = 2          # warn at 2 ignored; the EULA blocks at 3
 def _push_to_seller(conn, seller_email: str, title: str, body: str) -> int:
     """Web push to every enabled device registered under the seller's buyer_token.
     Returns devices delivered (0 when no subscription / push unavailable). Never raises."""
-    if not _PUSH_AVAILABLE or not _vapid_private_pem:
+    if not _PUSH_AVAILABLE or not _vapid_private_arg:
         return 0
     try:
         u = conn.execute("SELECT buyer_token FROM users WHERE LOWER(email)=?",
@@ -21880,7 +21903,7 @@ def _push_to_seller(conn, seller_email: str, title: str, body: str) -> int:
             try:
                 _webpush(subscription_info={"endpoint": r["push_endpoint"],
                                             "keys": json.loads(r["push_keys"])},
-                         data=payload, vapid_private_key=_vapid_private_pem,
+                         data=payload, vapid_private_key=_vapid_private_arg,
                          vapid_claims={"sub": VAPID_SUBJECT}, timeout=8)
                 conn.execute("UPDATE wearable_devices SET last_ping_at=? WHERE id=?",
                              (datetime.now(timezone.utc).isoformat(), r["id"]))

@@ -21159,9 +21159,20 @@ def rg_service_worker_at_root():
         if "push" not in body.lower():
             out.append((FAIL, "the body served at /service-worker.js carries no push handler -- "
                               "something other than the worker is answering the path"))
-        if "<html" in body.lower():
-            out.append((FAIL, "/service-worker.js is serving HTML -- an index fallback, not the "
-                              "worker"))
+        # Only the START of the body can tell us an HTML page is being served instead of
+        # the worker. Searching the whole body matched the worker's own offline-card
+        # markup and painted a false REGRESSION -- the check being wrong, not the app.
+        if body.lstrip()[:200].lower().startswith(("<!doctype", "<html")):
+            out.append((FAIL, "/service-worker.js is serving an HTML document -- an index "
+                              "fallback, not the worker"))
+        # SW-ICON-1: the notification icon must actually resolve. It pointed at
+        # /icon-192.png, which 404s, so every push would have shown a blank bell.
+        import re as _re
+        for m in _re.finditer(r"(?:icon|badge):\s*'([^']+)'", body):
+            src = m.group(1)
+            if src.startswith("/") and _status(src) != 200:
+                out.append((FAIL, "the worker's notification icon %s does not load -- every push "
+                                  "would show a blank generic bell" % src))
     conf = repo_file(os.path.join("assets", "nginx_marketsquare.conf"))
     if conf is None:
         out.append((INFO, "the repo nginx copy is not readable here -- the drift leg is skipped"))
@@ -21241,7 +21252,7 @@ def rg_manifest_installable():
 @entry("RG-0358", "the service worker has no fetch handler, so Chrome never fires "
                   "beforeinstallprompt -- there is no one-tap 'add to home screen', and on a phone "
                   "that is where push notifications live",
-       OPEN,
+       LOCKED, fixed_on="12 Sep 2026",
        scope="/service-worker.js. The worker handles install, activate, push and notificationclick "
              "but never fetch. Chrome dropped the fetch-handler requirement for installing from the "
              "browser MENU (v108 mobile / v112 desktop) but KEPT it for the automatic install "
@@ -21262,8 +21273,55 @@ def rg_sw_fetch_handler():
     if "addEventListener('fetch'" in body or 'addEventListener("fetch"' in body:
         return [(INFO, "the worker now handles fetch -- beforeinstallprompt can fire, so the "
                        "one-tap install is unblocked and this can be LOCKED")]
-    return [(FAIL, "the worker handles install/activate/push but not fetch -- Chrome will not fire "
-                   "beforeinstallprompt, so nobody is ever offered the one-tap install")]
+    return [(FAIL, "the worker no longer handles fetch -- Chrome stops firing "
+                   "beforeinstallprompt, so nobody is offered the one-tap install any more")]
+
+
+
+@entry("RG-0359", "the app hands pywebpush a key form it can actually read -- hand it the PEM again "
+                  "and every push dies inside a bare except and reports zero delivered, in silence",
+       LOCKED, fixed_on="12 Sep 2026",
+       scope="bea_main.py: _vapid_arg_from_pem(), _vapid_private_arg, the two _webpush() call sites "
+             "and the two guards in front of them. Source-only by design -- the live leg would need "
+             "the VAPID private key, which never leaves the server. Legs: the derivation helper and "
+             "the derived variable still exist; the bootstrap sets the derived variable on BOTH the "
+             "load path and the generate path; NO _webpush call passes the PEM; and the guards test "
+             "the sendable key, not merely that a PEM was found on disk.",
+       ref="VAPID-KEYFORM-1 (12 Sep 2026). pywebpush 2.3.0 passes a string key to "
+           "py_vapid.Vapid.from_string(), which strips newlines and base64url-decodes the WHOLE "
+           "string -- '-----BEGIN PRIVATE KEY-----' included -- so a PEM never parses. The app "
+           "passed the PEM, every send raised ValueError('Could not deserialize key data') inside "
+           "`except Exception`, and _push_to_seller/_send_push_for_match returned 0 delivered with "
+           "nothing in the log above WARNING. Push was dead twice over: the worker was 404ing AND "
+           "the sender could not sign. Proven on the server: with the PEM the call never reaches the "
+           "network; with the derived raw key the SAME call reaches Google and returns HTTP 410 "
+           "'push subscription has unsubscribed or expired' for a deliberately fake device -- which "
+           "is the push service ACCEPTING the VAPID signature and the encrypted payload. Verified "
+           "again through the running app's own module after deploy: sendable=True, key 43 chars, "
+           "not a PEM, send -> HTTP 410.")
+def rg_vapid_key_form():
+    out = []
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py is not readable from here")]
+    if "_vapid_arg_from_pem" not in src or "_vapid_private_arg" not in src:
+        out.append((FAIL, "the raw-key derivation is gone -- whatever replaced it, a PEM string "
+                          "cannot be signed with and push goes silently dead again"))
+        return out
+    if src.count("_vapid_private_arg = _vapid_arg_from_pem(") < 2:
+        out.append((FAIL, "the bootstrap no longer derives the sendable key on BOTH the load and the "
+                          "generate path -- a freshly generated keypair would be unsendable"))
+    if "vapid_private_key=_vapid_private_pem" in src:
+        out.append((FAIL, "a _webpush() call passes the PEM again -- py_vapid cannot parse it and "
+                          "that send dies inside a bare except, reporting zero delivered"))
+    if src.count("vapid_private_key=_vapid_private_arg") < 2:
+        out.append((FAIL, "a _webpush() call no longer passes the derived key -- expected both the "
+                          "wishlist-match sender and the seller sender to use it"))
+    if "if not _PUSH_AVAILABLE or not _vapid_private_pem:" in src:
+        out.append((FAIL, "a push guard tests the PEM again -- it would wave through a key the "
+                          "signer cannot read and fail one device at a time, quietly"))
+    return out or [(INFO, "the sender is handed the raw base64url key py_vapid can read, on both "
+                          "bootstrap paths, at both send sites, behind guards that test it")]
 
 
 if __name__ == "__main__":

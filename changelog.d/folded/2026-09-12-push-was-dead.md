@@ -78,3 +78,91 @@ exposed. The fall-through that broke push is the same behaviour that keeps those
 `assets/nginx_marketsquare.conf` in the repo was a **stale 6 July snapshot**, 3 586 bytes against
 the live config's 14 kB. It was refreshed straight from the server and headed with a note saying so,
 after checking it carries no credentials — it references `.htpasswd` files but contains no secrets.
+
+---
+
+## Same day, second pass — David: *"I see open actions pushed for future David"*
+
+He was right, and pushing them was wrong: the next thousand outreach emails would have landed on
+the same dead functions. Both open items were closed in the same session, and closing them exposed a
+worse fault than either.
+
+### The service worker now has a fetch handler
+
+The smallest handler that is honest work and **caches nothing**: only top-level page loads are
+intercepted, they go straight to the network, and the worker only answers for itself when the
+network has already failed — where the browser would have shown its own error page anyway. Every
+other request (app bundle, API, images, POSTs) is untouched.
+
+It was proven in a real headless Chromium **before** it went near the live site: registers and takes
+control; navigation, a 302 redirect, a POST and an image all behave exactly as before; with the
+server killed dead a navigation returns a proper offline card (503) instead of a browser error; with
+the server back the real page returns and nothing is stale. Then verified again on the live site in
+a real browser — the worker is active, controls the page, and a genuine navigation to `/privacy`
+loads its full content through it.
+
+A caching worker decides which version of the app a phone runs. This one deliberately does not, and
+that is written into the file so nobody "improves" it into a cache without a ruling.
+
+### The notification icon pointed at a 404
+
+The worker asked for `/icon-192.png` for both the icon and the badge. That path 404s — the icons live
+under `/static/brand/`. Every push that ever fired would have shown a blank generic bell instead of
+the TrustSquare mark. Fixed, and the ledger now checks that whatever icon the worker names actually
+loads.
+
+### And then the real one: the server could not sign a push at all
+
+Testing the send path end to end turned up a fault that had nothing to do with the web server.
+
+`pywebpush` hands the private key to `py_vapid.Vapid.from_string()`, which strips newlines and
+base64url-decodes **the whole string** — the `-----BEGIN PRIVATE KEY-----` header included. A PEM
+therefore never parses. The app was passing exactly that. Every send raised
+`ValueError: Could not deserialize key data` inside a bare `except Exception`, and the push
+functions returned **zero delivered** with nothing above WARNING in the log.
+
+So push was dead **twice over**: the worker was never being served, and even when it was, the server
+could not sign a single message. Fixing only the first would have looked like a fix and changed
+nothing.
+
+The fix derives what the signer can actually read — the 32-byte private scalar, base64url, no
+padding — once at bootstrap, on both the load path and the generate path, and hands that to both
+send sites. The guards now test the sendable key rather than merely that a PEM was found on disk.
+
+**Proven against Google's push service, not asserted:**
+
+| | Result |
+|---|---|
+| PEM string (what the app was passing) | crashes before any network call |
+| derived raw key | **HTTP 410** — *"push subscription has unsubscribed or expired"* |
+| a `Vapid` object built from the PEM | HTTP 410 (the alternative fix; not taken) |
+
+A 410 for a deliberately fake device is the push service **accepting the VAPID signature and the
+encrypted payload** and simply not knowing that device. Everything upstream of the phone works.
+
+After deploying, the same check was run again through the **running app's own module**: push library
+available, sendable key present (43 characters, not a PEM), send → HTTP 410. The service's own
+startup line now reads `VAPID keys loaded … (sendable=True)`.
+
+### A deploy trap worth remembering
+
+The first attempt to deploy this fix went nowhere. The repo file `bea_main.py` deploys to the server
+as **`main.py`** — the server also carries a `bea_main.py`, which nothing runs. The file was copied,
+the service restarted, and the startup line still showed the old wording. That mismatch is the only
+reason it was caught; a report that stopped at "deployed and restarted" would have been false.
+
+### Ledger
+
+- **RG-0356 — LOCKED**, extended with a leg that the worker's notification icon actually loads. Its
+  HTML-fallback leg was rewritten after it false-alarmed on the worker's own offline-card markup —
+  the check being wrong, not the app, exactly as this file's header warns.
+- **RG-0358 — now LOCKED.** The worker handles fetch.
+- **RG-0359 — LOCKED.** The sender is handed a key form the signer can read, on both bootstrap
+  paths, at both send sites, behind guards that test it. Proven red against the pre-fix source.
+
+### The one decision left, and it is David's
+
+The add-to-home-screen offer already exists and is wired to fire at the **first successful publish
+handoff** — the seller's invested moment, ruled on 30 August. David's words were *"right at the
+starting point of a user accepting it."* Those are two different moments. Nothing is being changed
+without him: the offer now *works*, and where it fires is his call.
