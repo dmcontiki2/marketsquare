@@ -34,54 +34,106 @@ class, not a housekeeping feature.
 **Naming — David's call.** "Services" is wrong (that is trades and companies). Candidates: *People*,
 *Hands*, *Hire a person*, *Day work*. It wants to sound like a person, not a category.
 
-### The one thing that must NOT be uniform: how much proof is required
+### Proof requirement — SETTLED by David, 12 Sep. One mechanism, no special cases.
 
-A dog walker and a child carer are not the same trust problem, and treating them alike is either
-insulting to one or dangerous to the other. **The evidence should scale with who is exposed:**
+Claude proposed a risk tier that would require a **police clearance** for child and elder care.
+**David ruled against it, and was right on canon Claude should have checked first:**
 
-| Exposure | Examples | Proposed floor |
-|---|---|---|
-| Low | dog walker, porter, waiter, griller | one employer confirmation |
-| Medium | housekeeper, chef, driver, chauffeur | employer confirmation + ID |
-| High — a vulnerable person, alone | child carer, old-age carer, bodyguard | ID + employer confirmation + the platform states plainly what it has NOT checked |
+*"we use the Quick Listing app to get listers, it does not clear them from still adhering to our
+three scores, that is where the other type of workers will be judged correctly for the viewers to
+determine if they want to trust them with an Intro request."*
 
-**The honest bit we must not dodge:** TrustSquare does not run criminal record checks. For a child
-carer or an elder carer that absence has to be said out loud on the listing, not buried. Whether to
-require a police clearance for those two categories is **David's call** — it raises the bar and
-lowers supply, and it is a real trade-off, not a technicality.
+Why his answer is the better one:
 
----
+- **RG-0238 already forbids Claude's version.** *No listing surface ever calls a PERSON safe — we
+  publish dated, sourced FACTS about a credential, never a conclusion about someone.* Mandating a
+  clearance makes the platform the vetter, which is that line crossed and liability imported.
+- **It would kill the category before it started.** Clearances cost money and take weeks in SA.
+- **One mechanism stays meaningful.** A special gate per category is what makes a score mushy.
 
-## B. Number 6 — the communication link. This is the one that decides whether it works.
+The three scores do the work. A carer with an ID check and two confirmed employers carries a high
+TS; one without carries a low TS; **the viewer decides** whether to send an Intro request.
 
-It also collides head-on with the business model, so it needs care: **MarketSquare introduces, it
-does not intermediate.** If a hirer and a worker can talk freely before an introduction, nobody ever
-pays a Tuppence. If they cannot talk at all, nobody books.
+**Claude's one refinement inside the ruling, not against it:** the same number carries different
+consequence for a dog walker and a child carer. Not a gate — a *fact*. At the moment someone asks
+for an introduction in a high-exposure category, state plainly what has and has not been checked:
+*"Confirmed by two employers since 2023. No criminal record check — TrustSquare does not run them."*
+A fact, never a conclusion; gates nothing; costs nothing.
 
-### The resolution, and it falls straight out of what is already ruled (RUL-121 tiers)
+### And this settles question 5 without it being asked
 
-- **Before the introduction — an anonymous question relay.** The hirer asks a short question
-  ("free on Wednesday?"), the worker answers. Neither sees the other's number. Cheap, useful,
-  no bypass.
-- **The introduction IS the moment identities are exchanged.** One Tuppence, exactly as ruled.
-- **After the introduction — direct contact.** Phone, WhatsApp, whatever they like. The platform
-  steps out. That is the model working, not a gap in it.
-
-### The buzzes and alarms are load-bearing, not decoration
-
-If a hirer asks "Wednesday?" and the worker sees it two days later, the booking is gone. So:
-
-- **WhatsApp is the real channel in South Africa, not email.** Most of this workforce has WhatsApp
-  and many have no working email at all. It costs money per conversation through the Business API —
-  **a vendor and spend decision, David's.**
-- **Push through the installed app is free** — but the app registers no service worker today, which
-  the BOTs work already flagged. Until that is fixed there is no push at all.
-- **SMS as last resort**, costs money, but arrives on any phone.
-- It must **degrade**: the worker may have no data for a day. A missed push cannot mean a lost job.
-- The worker's reply must be **one tap** — *Yes / No / Ask me later* — not a form. Typing on a cheap
-  phone with bad data is where these loops die.
+*"we use the Quick Listing app to get listers, it does not clear them from still adhering to our
+three scores"* — **Quick List is a lighter FRONT DOOR into the same standards, not a parallel
+system.** No duplicate scoring, no second rulebook, no separate trust model. Just a faster way in.
 
 ---
+
+## B. Number 6 — the communication link. SMALLER than Claude first wrote it.
+
+**Claude's first framing was wrong and David corrected it.** The note said an open channel would let
+people dodge the Tuppence. David, 12 Sep: *"the users already know the hirers they are onboarding,
+there we don't expect any tuppence, we are actually using their already known connection to become a
+real app user. therefore we lose nothing."*
+
+Correct. **There is no introduction to sell here.** Charging to introduce a housekeeper to her own
+employer would be absurd, and that relationship never earned us anything anyway. Converting both
+into app users is pure gain.
+
+### The rule, in one line
+
+> **Connections the WORKER brings are free. Connections the PLATFORM makes cost a Tuppence.**
+
+It is hard to abuse because of the **direction**. She sends the link; a stranger cannot declare
+himself her employer to get free contact. The free lane only ever opens the way the worker opens it.
+The shelf — a hirer finding someone they have never met — is untouched and still a Tuppence.
+
+The hirer joining costs nothing, ever. They pay only when they later use the app for something that
+genuinely costs Tuppence: an introduction to someone they do not know.
+
+### So what number 6 actually needs — and it is much less
+
+No anonymous relay in the Quick List app. These two already have each other's numbers. What is
+needed is only:
+
+- **notifications that actually arrive** — WhatsApp is the real channel in South Africa, not email;
+  push through the installed app is free but **no service worker is registered today**, so there is
+  no push at all yet; SMS as last resort
+- **one-tap replies** — *Yes / No / Ask me later*. Not a form. Typing on a cheap phone with bad data
+  is where these loops die
+- **graceful degrading** — a worker with no data for a day must not lose the job
+
+The anonymous relay still matters, but LATER and ELSEWHERE: in the real app, for stranger
+introductions. It is not a Quick List problem.
+
+### The colleague question — SETTLED by David, 12 Sep (mechanism still to confirm)
+
+David: *"That is not designed to be free, we wont regulate it to death though, but the referral only
+works from worker to hirer and not from worker to other worker. We could maybe prevent a second
+referral of the same task to a hirer to prevent this?"*
+
+**Settled: worker to hirer only. Never worker to worker.** Beyond anti-gaming, this protects the
+Trust Score itself: the employer link is worth something *because the vouching comes from outside the
+worker's own side of the market*. A worker confirming a worker is not evidence, it is a reference
+circle, and allowing it would hollow out the trust half quietly.
+
+**Claude's amendment to the mechanism — "same task" leaves a hole.** Thandi could not refer Grace
+the housekeeper to Mrs van Wyk, but could refer Joseph the gardener, who is equally a stranger to
+Mrs van Wyk. In this workforce the cross-trade referral is the *most* common one there is
+("my husband does gardens", "my cousin drives"). Proposed instead, one rule rather than two:
+
+> **The free lane is the PAIR, not the person.** One worker, one hirer, created by the worker's own
+> link. Anyone else arriving at that hirer — any trade — is an introduction.
+
+**And it needs no policing, which is what David asked for.** Do not PREVENT the second referral —
+simply do not EXEMPT it. Thandi can still tell Mrs van Wyk about Joseph; it just is not free. It
+lands as an ordinary introduction and the till applies at the normal moment, when the hirer wants
+the contact details. Nothing blocked, nobody accused, no second rule to enforce. The default is
+already a Tuppence; the free lane is the exception, and the exception is defined once.
+
+**SETTLED, David 12 Sep: NO referral rewards.** *"No rewards for these type of referrals. Simply for
+design complexity and customer complaints."* Reward schemes breed disputes — *"I referred him, where
+is my money?"* — and every one of those is a support ticket and a rule to adjudicate. The free lane
+is already the reward: her own hirer, onboarded at no cost.
 
 ## C. Number 3 gets much stronger with the wider list — and this is the flywheel
 
@@ -102,8 +154,5 @@ already hire. That is the single highest-leverage screen in the whole product.
 ## D. Questions I want answered tonight, not assumed
 
 1. What is this category called?
-2. Do child care and elder care require a police clearance, or a plain statement of what is not checked?
 3. WhatsApp notifications — worth the per-conversation cost, or push-and-SMS only to start?
-4. Does the anonymous question relay open before the introduction, or is even that reserved?
-5. Number 4 — the Advert Card before TrustSquare: is the Quick List app a **separate app** that hands
-   over, or the same app with a lighter front door? That decides how much is duplicated.
+(Question 5 — separate app or front door — ANSWERED above: a front door into the same standards.)

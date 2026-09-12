@@ -14936,7 +14936,15 @@ def rg_admin_tuppence_grant_path():
              "read that silence as death: three requests queued at 01:33 SAST on 5 Sep were picked "
              "up at 01:51 on the very next tick, all rc=0, and the board had already painted a "
              "REGRESSION and a wrong sentence had gone to David in a report. A false alarm costs "
-             "the same trust as a false green -- RG-0133's rule, other direction.",
+             "the same trust as a false green -- RG-0133's rule, other direction. AMENDED 12 Sep 2026 "
+             "(AGENT-ASLEEP-1), the same fault in the other direction: a 20-min Windows task "
+             "cannot tick while the PC sleeps, so 654 minutes of silence after the machine "
+             "stopped at 06:41 was painted a REGRESSION. The stale-heartbeat leg now needs a "
+             "SECOND fact before it accuses the agent -- an independent host writer (nightly "
+             "TSL / checkpoint / self-heal / audit logs / DAILY_WATCH) dated more than a tick "
+             "plus grace AFTER the last beat, proving the host outlived the agent. With no such "
+             "witness the host itself was down and the leg reads NOT EVALUATED -> UNVERIFIED "
+             "(exit 2, loudly not a pass), per RG-0187's contract.",
        ref="ASSERTION FIXED 4 Sep 2026: the bat-order check read the header comment (line 6 names "
            "nightly_tsl.bat) and painted a false REGRESSION; it now judges code lines only. "
            "RUL-095, 3 Sep 2026, David: 'remove all of these your clicks... self pain inflicting rules, all "
@@ -14994,10 +15002,45 @@ def rg_host_queue():
     if os.path.exists(beat):
         beat_age = (_t.time() - os.path.getmtime(beat)) / 60
         if beat_age > tick + slack:
-            out.append((FAIL, "the host agent last ticked %d min ago -- it stamps a heartbeat "
-                              "every %d min whether or not there is work, so this is the agent "
-                              "itself, not an idle queue (AGENT-HEARTBEAT-1)"
-                        % (beat_age, tick)))
+            # AGENT-ASLEEP-1 (12 Sep 2026) -- the OTHER direction of AGENT-HEARTBEAT-1.
+            # A stale heartbeat has two causes and this leg could only name one of them.
+            # The agent is a 20-minute Windows scheduled task: it cannot tick while the PC
+            # is asleep or off, and Task Scheduler does not backfill the missed ticks. On
+            # 12 Sep the machine stopped at 06:41 SAST and the board painted a REGRESSION
+            # at 17:28 for 654 minutes of silence that no agent could have filled. That is
+            # the instrument reading the machine's sleep as a broken lane -- exactly what
+            # RG-0187's contract forbids: an instrument limit reads NOT EVALUATED, never RED.
+            # The discriminator is cheap and needs no shell: the agent is not the only thing
+            # that writes to this disk from the host. If ANY independent host writer produced
+            # a file meaningfully AFTER the last heartbeat, the host outlived the agent and the
+            # agent really is dead (RED). If nothing did, the host itself stopped (UNVERIFIED,
+            # exit 2 -- loudly not a pass, and never a sentence to David blaming the agent).
+            witnesses = ("nightly_tsl_log.txt", "nightly_ship_log.txt", "checkpoint_log.txt",
+                         "fw_selfheal_log.txt", "tsl_audit.log", "deploy_audit.log",
+                         os.path.join("DAILY_WATCH", "OPEN_ITEMS.md"))
+            newest, who = 0.0, None
+            for w in witnesses:
+                wp = os.path.join(REPO, w)
+                try:
+                    m = os.path.getmtime(wp)
+                except OSError:
+                    continue
+                if m > newest:
+                    newest, who = m, w
+            host_lived_on = newest > (os.path.getmtime(beat) + (tick + slack) * 60)
+            if host_lived_on:
+                out.append((FAIL, "the host agent last ticked %d min ago while the host itself kept "
+                                  "working (%s was written %d min later) -- it stamps a heartbeat every "
+                                  "%d min whether or not there is work, so this is the agent itself, "
+                                  "not an idle queue and not a sleeping PC (AGENT-HEARTBEAT-1)"
+                            % (beat_age, who, (newest - os.path.getmtime(beat)) / 60, tick)))
+            else:
+                out.append((INFO, "NOT EVALUATED - the host agent last ticked %d min ago and NO "
+                                  "independent host writer produced anything after it either, so this "
+                                  "machine was asleep or off, not the agent broken. A 20-min scheduled "
+                                  "task cannot tick through sleep and Task Scheduler does not backfill. "
+                                  "Agent liveness is unmeasurable from here until the host runs again "
+                                  "(AGENT-ASLEEP-1)." % beat_age))
         else:
             out.append((INFO, "host agent ticked %d min ago (heartbeat)" % beat_age))
     else:
@@ -17790,7 +17833,14 @@ def rg_citylauncher_commit_commits_citylauncher():
        LOCKED, fixed_on="2026-09-05",
        scope="CityLauncher, static + live. (a) us_register_reader.py exists with an ADAPTERS registry "
              "holding 'pausatf' (USATF Pacific Association club list); (b) waves_policy.json carries "
-             "the state bucket 'Northern California', armed and gates_green, drawing 'Sports Clubs'; "
+             "the state bucket 'Northern California' drawing 'Sports Clubs' -- AMENDED 12 Sep 2026 "
+             "(JURIS-SUPPLY-SPLIT-1): this leg demanded armed+gates_green until the RG-0215 "
+             "jurisdiction gate disarmed every entry in a jurisdiction the outreach-law notes do "
+             "not cover at heading level (11 US cities, this bucket among them -- the US research "
+             "sits in an appendix). That is RUL-071 executed and re-arming the US is David's "
+             "legal call, so a disarm STAMPED with disarmed_by reads INFO (wired, deliberately "
+             "dark) while an UNSTAMPED unarm still reads RED. The assertion was wrong, not the "
+             "code: this entry asserts the supply lane is WIRED, never that a wave is armed; "
              "(c) localize._CITY_COUNTRY resolves that bucket to US; (d) scripts/club_import.py (the "
              "allowlisted host importer, run with no arguments) reads us_registers/*.club.csv and "
              "honours a per-row country -- otherwise a US roster lands as ZA. LIVE, when SSH is "
@@ -17825,7 +17875,26 @@ def rg_us_registers_wired():
                               "Pacific rows are invisible to the wave"))
         else:
             if not (nc.get("armed") and nc.get("gates_green")):
-                out.append((FAIL, "'Northern California' is in the policy but not armed/gates_green"))
+                # AMENDED 12 Sep 2026 (JURIS-SUPPLY-SPLIT-1) -- the assertion was wrong, not the code.
+                # This leg demanded armed+gates_green. On 12 Sep the jurisdiction gate (RG-0215)
+                # disarmed every entry in a jurisdiction the outreach-law notes do not cover at
+                # heading level -- 11 US cities, this bucket among them, because the US research
+                # sits in an APPENDIX rather than a ruled section. That disarm is RUL-071 executed
+                # ("SENDING is what waits for law") and re-arming the US is a legal-positioning
+                # call reserved to David, never Claude's to flip to make a board go green. So a
+                # disarm STAMPED by the gate reads INFO: the lane is wired and deliberately dark.
+                # An UNSTAMPED unarm still reads RED -- that is the silent drift this entry exists
+                # to catch. The CLASS is unchanged: this entry asserts the supply lane is WIRED
+                # end to end (reader -> CSV -> importer -> policy -> country map), never that a
+                # wave is armed. Conflating the two made a legal safety act look like a rotted fix.
+                if nc.get("disarmed_by"):
+                    out.append((INFO, "'Northern California' is wired but held dark by %s (%s) -- "
+                                      "arming is David's call (RUL-071), so this is not drift"
+                                % (nc.get("disarmed_by"), nc.get("disarmed_why") or "no reason stamped")))
+                else:
+                    out.append((FAIL, "'Northern California' is in the policy but not armed/gates_green "
+                                      "and nothing stamped disarmed_by -- an unexplained unarm is the "
+                                      "silent drift this entry guards"))
             if "Sports Clubs" not in (nc.get("category_priority") or pol.get("agency_categories", [])):
                 out.append((FAIL, "'Northern California' cannot draw 'Sports Clubs' -- the register holds clubs"))
     except Exception as ex:
@@ -20996,6 +21065,205 @@ def rg_dashboard_feed_producer():
     return out or [(INFO, "a folded fragment re-points the dashboard at itself; exactly one "
                           "managed block, and it wins the endpoint's match")]
 
+
+@entry("RG-0355", "A stale heartbeat from a 20-minute host task is not an accusation -- the ledger "
+                  "proves the HOST outlived the agent before it calls the lane broken, so a "
+                  "sleeping PC reads NOT EVALUATED and never a REGRESSION",
+       LOCKED, fixed_on="12 Sep 2026",
+       scope="scripts/regression_ledger.py, the AGENT-ASLEEP-1 branch of rg_host_queue() (RG-0257's "
+             "live leg). Two legs, source-only by design (it costs nothing and the fault it guards "
+             "is a wording fault): (a) the stale-heartbeat path computes a newest INDEPENDENT host "
+             "witness and only accuses the agent when that witness is dated more than a tick plus "
+             "grace after the last beat; (b) the no-witness path emits NOT EVALUATED, which the "
+             "runner turns into UNVERIFIED (exit 2, loudly not a pass), never FAIL. CLASS, not "
+             "instance: every liveness check in this file that reads a stamp written by a Windows "
+             "scheduled task inherits the same limit -- such a task cannot tick while the machine "
+             "sleeps and Task Scheduler does not backfill the missed ticks, so silence alone can "
+             "never separate a dead lane from a closed lid. A second, independent host writer is "
+             "the only evidence that distinguishes them.",
+       ref="AGENT-ASLEEP-1, 12 Sep 2026 maintenance loop. Born the same way as AGENT-HEARTBEAT-1 "
+           "(5 Sep) and in the same direction of travel: the board painted a REGRESSION at 17:28 "
+           "because the host agent had not ticked for 654 minutes, when every other host writer on "
+           "the disk had also stopped at 06:41 -- the PC was asleep, and by the time the fix was "
+           "proven the agent had ticked again 1 minute earlier, unaided. Third false alarm from "
+           "this one leg. Proven by running rg_host_queue() against a faked stale beat in both "
+           "directions: witness 3h AFTER the beat -> FAIL naming the witness; no witness after the "
+           "beat -> NOT EVALUATED. RG-0187's contract, applied to a clock instead of an import.")
+def rg_agent_asleep_discriminator():
+    out = []
+    led = repo_file(os.path.join("scripts", "regression_ledger.py"))
+    if led is None:
+        return [(INFO, "NOT EVALUATED - the ledger source is not readable from here")]
+    i = led.find("def rg_host_queue(")
+    j = led.find("\n@entry(", i + 1) if i >= 0 else -1
+    if i < 0 or j < 0:
+        out.append((FAIL, "rg_host_queue() is gone -- RG-0257's live leg cannot be judged"))
+        return out
+    leg = led[i:j]
+    for needle, why in (
+        ("AGENT-ASLEEP-1", "the sleeping-host discriminator is gone -- a stale beat can accuse the "
+                           "agent again with no second fact"),
+        ("host_lived_on", "the host-outlived-the-agent test is gone"),
+        ("NOT EVALUATED", "the no-witness path no longer reads NOT EVALUATED, so a sleeping PC "
+                          "would paint a REGRESSION again (RG-0187 contract broken)"),
+        ("witnesses = (", "the independent host witnesses are gone -- the beat is the only clock "
+                          "again"),
+    ):
+        if needle not in leg:
+            out.append((FAIL, "rg_host_queue(): %s" % why))
+    if "if host_lived_on:" in leg:
+        tail = leg[leg.find("if host_lived_on:"):]
+        if FAIL not in ("FAIL",) or "FAIL" not in tail.split("else:")[0]:
+            out.append((FAIL, "the host-outlived-the-agent branch no longer reports FAIL -- a "
+                              "genuinely dead agent would now read green"))
+    return out or [(INFO, "a stale heartbeat needs a second, independent host fact before it "
+                          "accuses the agent; without one it reads NOT EVALUATED")]
+
+
+
+
+@entry("RG-0356", "/service-worker.js is served by nginx from the site ROOT, not swallowed by the "
+                  "FastAPI proxy -- when it 404s every push registration dies silently and nobody "
+                  "gets a buzz",
+       LOCKED, fixed_on="12 Sep 2026",
+       scope="/etc/nginx/sites-enabled/marketsquare (the SW-ROOT-1 location block), its repo copy "
+             "assets/nginx_marketsquare.conf, and the live path /service-worker.js. Three legs: "
+             "(a) the live path answers 200 with a JavaScript content-type -- an application/json "
+             "body is FastAPI's {\"detail\":\"Not Found\"} and means the request fell through the "
+             "static blocks again; (b) the body served is the real worker (it carries a push "
+             "handler and is not HTML), not an index fallback; (c) the repo copy still carries the "
+             "SW-ROOT-1 block, so a server rebuilt from the repo comes back with the fix.",
+       ref="SW-ROOT-1 (12 Sep 2026). The nginx config serves every root-level static file through "
+           "its own explicit `location = /file` block. service-worker.js never had one, so the path "
+           "proxied to the app and returned a JSON 404, content-length 22. ms.js registers the "
+           "worker at the root and PushManager needs that registration, so push was dead for anyone "
+           "whose browser had not cached an older copy -- silently, because a failed registration "
+           "lands in a .catch and the user sees nothing at all. Proven RED before it was believed "
+           "green: the same legs run against a deliberately absent root path returned the 404 + "
+           "application/json signature and failed (a) and (b).")
+def rg_service_worker_at_root():
+    out = []
+    st = _status("/service-worker.js")
+    if st != 200:
+        out.append((FAIL, "/service-worker.js answers HTTP %d -- the root static block is gone and "
+                          "every push registration now fails silently" % st))
+    ct = (_headers("/service-worker.js").get("content-type") or "").lower()
+    if "json" in ct:
+        out.append((FAIL, "/service-worker.js is answered with content-type %s -- that is the "
+                          "FastAPI 404 body, so the path fell through the static blocks again" % ct))
+    elif "javascript" not in ct:
+        out.append((FAIL, "/service-worker.js is served as %s -- a browser refuses to register a "
+                          "worker that is not JavaScript" % (ct or "(no content-type)")))
+    if st == 200:
+        body = _get("/service-worker.js")
+        if "push" not in body.lower():
+            out.append((FAIL, "the body served at /service-worker.js carries no push handler -- "
+                              "something other than the worker is answering the path"))
+        if "<html" in body.lower():
+            out.append((FAIL, "/service-worker.js is serving HTML -- an index fallback, not the "
+                              "worker"))
+    conf = repo_file(os.path.join("assets", "nginx_marketsquare.conf"))
+    if conf is None:
+        out.append((INFO, "the repo nginx copy is not readable here -- the drift leg is skipped"))
+    elif "SW-ROOT-1" not in conf or "location = /service-worker.js" not in conf:
+        out.append((FAIL, "the repo copy assets/nginx_marketsquare.conf no longer carries the "
+                          "SW-ROOT-1 block -- a server rebuilt from the repo would come back with "
+                          "push dead"))
+    return out or [(INFO, "the service worker is served from the site root as JavaScript, and the "
+                          "repo copy still carries the block that does it")]
+
+
+@entry("RG-0357", "the web app manifest still carries every field Chrome's install prompt needs -- "
+                  "strip one and the phone quietly stops offering to add TrustSquare to the home "
+                  "screen, which is where push lives",
+       LOCKED, fixed_on="12 Sep 2026",
+       scope="/static/brand/site.webmanifest on the server, its repo copy assets/brand/site.webmanifest, "
+             "and the <link rel=manifest> in marketsquare.html. Legs: the manifest answers 200 as "
+             "manifest+json; it carries name, short_name, start_url, scope, display=standalone; it "
+             "lists a 192 and a 512 icon and both of those icons actually answer 200 as images; and "
+             "the front page still links a manifest at all.",
+       ref="INSTALL-MANIFEST-1 (12 Sep 2026). Found while answering David's add-to-home-screen "
+           "question. The manifest had NO start_url and no scope -- Chrome's install prompt wants "
+           "them, so the one-tap install David has been asking for could not fire even once the "
+           "worker was fixed. Added start_url, scope and id, saved a repo copy (there was none -- "
+           "the file lived only on the server), and bumped the ?v= cache-buster to 5 so the "
+           "immutable one-year browser cache on the old URL could not keep serving the old file. "
+           "Proven RED before it was believed green: the same legs run against the pre-fix manifest "
+           "text failed on start_url and scope.")
+def rg_manifest_installable():
+    out = []
+    path = "/static/brand/site.webmanifest"
+    st = _status(path)
+    if st != 200:
+        return [(FAIL, "%s answers HTTP %d -- with no manifest there is no install prompt on any "
+                       "phone" % (path, st))]
+    ct = (_headers(path).get("content-type") or "").lower()
+    if "manifest" not in ct and "json" not in ct:
+        out.append((FAIL, "the manifest is served as %s -- browsers ignore it" % (ct or "(none)")))
+    try:
+        man = json.loads(_get(path))
+    except Exception as ex:
+        return out + [(FAIL, "the manifest is not parseable JSON (%s) -- an unreadable manifest is "
+                             "the same as no manifest" % repr(ex)[:80])]
+    for field in ("name", "short_name", "start_url", "scope"):
+        if not man.get(field):
+            out.append((FAIL, "the manifest has no %s -- Chrome's install prompt needs it, so the "
+                              "one-tap add-to-home-screen stops being offered" % field))
+    if man.get("display") not in ("standalone", "fullscreen", "minimal-ui"):
+        out.append((FAIL, "manifest display is %r -- an installed app must not open in a browser "
+                          "tab" % man.get("display")))
+    icons = man.get("icons") or []
+    sizes = set()
+    for ic in icons:
+        for sz in str(ic.get("sizes", "")).split():
+            sizes.add(sz)
+    for need in ("192x192", "512x512"):
+        if need not in sizes:
+            out.append((FAIL, "the manifest lists no %s icon -- Chrome refuses to offer the install"
+                        % need))
+    for ic in icons:
+        src = ic.get("src", "")
+        if not src.startswith("/"):
+            continue
+        if _status(src) != 200:
+            out.append((FAIL, "manifest icon %s does not load -- a broken icon blocks the install "
+                              "prompt" % src))
+    home = repo_file("marketsquare.html")
+    if home is None:
+        out.append((INFO, "marketsquare.html is not readable here -- the link leg is skipped"))
+    elif 'rel="manifest"' not in home:
+        out.append((FAIL, "the front page no longer links a manifest -- nothing else can make the "
+                          "app installable"))
+    return out or [(INFO, "the manifest is served, parseable, and carries every field and icon the "
+                          "install prompt asks for")]
+
+
+@entry("RG-0358", "the service worker has no fetch handler, so Chrome never fires "
+                  "beforeinstallprompt -- there is no one-tap 'add to home screen', and on a phone "
+                  "that is where push notifications live",
+       OPEN,
+       scope="/service-worker.js. The worker handles install, activate, push and notificationclick "
+             "but never fetch. Chrome dropped the fetch-handler requirement for installing from the "
+             "browser MENU (v108 mobile / v112 desktop) but KEPT it for the automatic install "
+             "prompt, and the prompt is the whole point: it is what lets us offer the install at a "
+             "moment we choose with a single tap. Fix = add a fetch handler to the worker. It does "
+             "not need to cache anything clever; a pass-through that falls back to the network is "
+             "enough to satisfy the criterion, and anything more is a caching decision that has to "
+             "be designed, not slipped in.",
+       ref="INSTALL-PROMPT-1 (12 Sep 2026). Raised while answering David's standing question about "
+           "an automatic add-to-home-screen. There is no true auto-install on either platform; the "
+           "closest thing on Android is beforeinstallprompt, which we can capture and fire at a "
+           "moment of our choosing, and this is what blocks it today. iOS has no install API at "
+           "all and is a separate, taught Share -> Add to Home Screen card.")
+def rg_sw_fetch_handler():
+    if _status("/service-worker.js") != 200:
+        return [(FAIL, "the worker does not load at all -- see RG-0356")]
+    body = _get("/service-worker.js")
+    if "addEventListener('fetch'" in body or 'addEventListener("fetch"' in body:
+        return [(INFO, "the worker now handles fetch -- beforeinstallprompt can fire, so the "
+                       "one-tap install is unblocked and this can be LOCKED")]
+    return [(FAIL, "the worker handles install/activate/push but not fetch -- Chrome will not fire "
+                   "beforeinstallprompt, so nobody is ever offered the one-tap install")]
 
 
 if __name__ == "__main__":

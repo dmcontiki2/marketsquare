@@ -18,3 +18,9 @@ Each entry: a dated proof that a specific archive was EXTRACTED and the restored
 - rows: users=71, listings=113
 - source: live DB snapshot via sqlite3 .backup on the box, md5-matched after scp
 - made by: scripts/backup_db_sandbox.py (unattended, maintenance loop)
+
+## 2026-09-12 — archive 2026-09-12_1553.zip
+- restored from archive to temp, PRAGMA integrity_check: ok
+- rows: users=71, listings=114
+- source: live DB snapshot via sqlite3 .backup on the box, md5-matched after scp
+- made by: scripts/backup_db_sandbox.py (unattended, maintenance loop)
