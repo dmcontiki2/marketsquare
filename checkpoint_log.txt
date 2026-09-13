@@ -289,3 +289,6 @@ Thu 09/10/2026  5:30:02.17  clean - nothing to commit
  4 files changed, 156 insertions(+), 36 deletions(-)
  create mode 100644 changelog.d/2026-09-12-rs-stays-hidden.md
 Sat 09/12/2026  5:30:02.49  committed 4 change(s)
+[main 7312cb1] Nightly checkpoint Sun 09/13/2026  5:30:02.41 (auto, no deploy)
+ 1 file changed, 38 insertions(+)
+Sun 09/13/2026  5:30:02.49  committed 1 change(s)
