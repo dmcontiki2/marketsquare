@@ -1,5 +1,5 @@
 {
-  "next_id": 117,
+  "next_id": 120,
   "items": {
     "DW-001": {
       "first_seen": "2026-08-02",
@@ -80,13 +80,13 @@
     },
     "DW-010": {
       "first_seen": "2026-08-03",
-      "last_seen": "2026-09-10",
+      "last_seen": "2026-09-13",
       "sev": "MEDIUM",
       "source": "cc_age_check (Monday lane)",
       "status": "SCHEDULED",
       "summary": "cc_age 2026-09-08: CC-002 open 90d vs the 7d threshold. Still SCHEDULED - today is the target week David deferred it to (from Mon 8 Sep 2026). The one decision that is his: land, re-defer, or retire CC-002 (its staged edits were built on the RETIRED five-tier model, so landing them is a canon call). cc_age 2026-09-07: CC-002 open 89d vs the 7d threshold (was 82d on 31 Aug). Still SCHEDULED - David formally deferred it on 21 Aug to the first post-launch week, from Mon 8 Sep 2026, which is tomorrow. Arriving on its own target date; nothing needed from this pass.",
       "disposition": "FORMALLY DEFERRED 2026-08-21 (attended session, reflected here by the watch) — CC-002 is ~10 open product/pricing questions in AWAITING_DAVID.md, several touching the EULA and one a live payment path, against SOFT-to-PUBLIC 29 Aug / FULL LAUNCH 1 Sep (RUL-001). Target: first post-launch week, from Mon 8 Sep 2026. David's veto point: name any single item that must land before launch and it lands on its own.",
-      "last_note": "2026-09-10: cc_age_check.py - CC-002 open 92d vs 7d threshold; SCHEDULED, deferred by David"
+      "last_note": "2026-09-13: cc_age_check.py re-run - CC-002 open 95d AND CC-005 open 12d vs the 7d threshold. CC-005 has now crossed too (9d on 10 Sep). Still SCHEDULED, formally deferred by David; the decision remains his."
     },
     "DW-011": {
       "first_seen": "2026-08-03",
@@ -853,13 +853,13 @@
     },
     "DW-087": {
       "first_seen": "2026-08-31",
-      "last_seen": "2026-09-10",
+      "last_seen": "2026-09-13",
       "sev": "LOW",
       "source": "scripts/deep_scan.py (Monday lane) — delta vs SCAN_REPORT.json baseline 2026-08-24",
       "status": "OPEN",
       "summary": "NOT RE-RUN 2026-09-08 (Tuesday, Monday-only lane) - still OPEN on the 7 Sep reading. STILL FAILING 2026-09-07 - the Monday deep-scan lane re-ran and all seven findings are still present, each reading new=false (SCAN_REPORT.json 2026-09-07T04:46:32Z, 4/4 tools, 241 findings, 15 new, 0 crash-class). Not closed: no check passed. **NEW — 7 new static findings on the Monday deep scan** (213 total, 0 crash-class; 4/4 tools ran: ruff 0.16.5, vulture 2.16, pylint 4.0.8, eslint 9.39.5). None is in app code — all sit in `migrations/` and `scripts/`: F401 `migrations/032_fares_refresh_cron.py:34` (subprocess unused); **F841 (MEDIUM) `migrations/033_csp_verify_served.py:208`** (`last` assigned never used); F401 `scripts/build_eval_set.py:27` (math); B023 `scripts/david_queue.py:48` (function does not bind loop variable `body` — the only one with a plausible behavioural bite); B007 `scripts/david_queue.py:152`; B007 `scripts/no_remote_code_guard.py:217`; vulture DEAD `scripts/regression_ledger.py:9579` (unsatisfiable ternary). Recorded because the register loses nothing, not because it is urgent.",
       "next_action": "Next Monday lane or an attended tidy pass. Look at `david_queue.py:48` (B023) first — a late-bound loop variable in a closure is the one item here that can produce wrong OUTPUT rather than dead code — and at regression_ledger.py:9579, an unsatisfiable ternary inside the instrument that grades everything else.",
-      "last_note": "2026-09-10: NOT re-run - deep scan is a Monday-only lane, today is Thursday"
+      "last_note": "2026-09-13: NOT re-run - deep_scan is a Monday-only lane and today is Sunday. No check, no close."
     },
     "DW-088": {
       "first_seen": "2026-08-31",
@@ -1171,7 +1171,7 @@
     },
     "DW-111": {
       "first_seen": "2026-09-07",
-      "last_seen": "2026-09-10",
+      "last_seen": "2026-09-13",
       "sev": "MEDIUM",
       "source": "split out of DW-109 at that row's own request; re-check attempted from the sandbox today",
       "status": "OPEN",
@@ -1181,7 +1181,7 @@
       ],
       "summary": "CARRIED FORWARD 2026-09-08, STILL NOT VERIFIABLE - journalctl as msdeploy returns 0 lines (not in adm/systemd-journal); no app log file under /var/www/marketsquare. Narrowing facts: subscription_monitor reads Resend UP (HTTP 200, key ok, 100% over 31 samples) so the key authenticates and the 422 is a payload refusal from one caller; bea_main.py has eight POST api.resend.com/emails call sites (5552, 8239, 10797, 13654, 13889, 16302, 19628, 21488) with no visible 5-minute timer, so the cadence is a loop outside the request path. CARRIED FORWARD, NOT VERIFIED TODAY - the repeating Resend 422. DW-109 recorded that the app log showed POST api.resend.com/emails returning 422 every five minutes (12:19:28 and 12:24:28 on 6 Sep) and said it deserved its own diagnosis; this is that row. A 422 is the API refusing the request, so this lane has not sent successfully in that window and nothing is watching it. COULD NOT BE RE-RUN TODAY: journalctl -u marketsquare returns 'No entries' for msdeploy (that user is in neither adm nor systemd-journal) and grep -i resend over /var/www/marketsquare/*.log returns 0 hits. Absence of a hit here is an instrument limit, not a clean bill.",
       "next_action": "OPEN - CTO lane. (a) Identify the caller: which lane posts to Resend on a 5-minute cadence, and read the 422 body (usually an unverified or mismatched from-domain, a missing to, or a malformed payload). (b) Give the watch a way to see the outcome - journal access, or have the lane record its own result to a readable file. A send lane whose only evidence lives where the watch cannot look is the DW-105 shape, where a silent failure ran a fortnight.",
-      "last_note": "2026-09-10: journalctl as msdeploy still returns No entries (id -nG = msdeploy only); no app log on disk - still unverifiable"
+      "last_note": "2026-09-13: still unverifiable. journalctl -u marketsquare as msdeploy returns 'No entries' (id -nG = msdeploy only, still in neither adm nor systemd-journal); no *.log under /var/www/marketsquare. Cross-checks that do answer: subscription_monitor reads Resend UP, and email_triage holds 24 rows (drafted/sent/skipped/system) with no failure rows - so the failing 5-minute lane leaves no trace we can read. Absence from a blind instrument is not a clean bill."
     },
     "DW-112": {
       "first_seen": "2026-09-07",
@@ -1232,16 +1232,19 @@
     },
     "DW-115": {
       "first_seen": "2026-09-08",
-      "last_seen": "2026-09-10",
+      "last_seen": "2026-09-13",
       "sev": "LOW",
       "source": "predeploy_check.py (run before shipping ID-UPLOAD-INTERIM-1; not a watch check, filed so it is not lost)",
-      "status": "OPEN",
+      "status": "CLOSED",
       "refs": [
         "deploy_audit.log"
       ],
       "summary": "NEW - predeploy_check.py has said verdict=DANGER on every run since 2026-09-05 for the same three reasons and deploys ride anyway (mode=warn): pg-readiness (datetime_now ratchet 49 -> 62 vs scripts/pg_readiness_baseline.json; not from today's change), maintenance-agent (test_ack_always_sends_except_spam: the bare ack no longer quotes the fault reference), tester-intake (test_widget_is_wired_into_every_tester_page: seven visuals/assoc/assoc_*.html pages carry no fault-report widget). None is a live user-facing fault; a DANGER repeated for four days stops meaning anything (RG-0133 class applied to a gate).",
       "next_action": "CTO lane, next attended tidy: fix the three or give predeploy_check a dated, named allowance.",
-      "last_note": "2026-09-10: predeploy_check.py re-run - Verdict DANGER, same three causes, logged to deploy_audit.log"
+      "last_note": "2026-09-13: CLOSED on the passing re-run.",
+      "closed": "2026-09-13",
+      "evidence": "predeploy_check.py re-run and PROBED 2026-09-13T04:41:24Z: 'Verdict: ok'. All three former DANGER causes read ok - PG-readiness ratchet ok (datetime_now 17/strftime 15/julianday 2/insert_or 12, the 49->62 drift reversed by RG-0351), Maintenance-agent guards ok (RG-0352b), Tester fault-intake guards ok (RG-0352a). deploy_audit.log corroborates: danger=- verdict=ok on every run since 2026-09-10T14:10:42Z.",
+      "residual": "none of its own - both halves are asserted (RG-0351, RG-0352), so a relapse trips the ledger."
     },
     "DW-116": {
       "first_seen": "2026-09-10",
@@ -1253,9 +1256,50 @@
       "closed": "2026-09-10",
       "evidence": "sandbox answered on this run's first command 04:33:23Z and all thirteen checks ran to completion",
       "residual": "a one-day gap is still a gap; nothing asserts the scheduled task is ENABLED - DW-104 residual, the board's one BLUE card"
+    },
+    "DW-117": {
+      "first_seen": "2026-09-12",
+      "last_seen": "2026-09-13",
+      "sev": "HIGH",
+      "source": "regression ledger RG-0295 (combine of 3 shards)",
+      "summary": "Raised 2026-09-12: RG-0295 read REGRESSION - 'Northern California' in waves_policy.json but not armed/gates_green, so US official-register rows were invisible to the wave with no error. CityLauncher outbound supply lane; never a trustsquare.co user-facing fault.",
+      "status": "CLOSED",
+      "closed": "2026-09-13",
+      "evidence": "2026-09-13 ledger (3 shards + combine, exit 0): [ ok ] RG-0295, board reports 0 REGRESSED. Two causes cleared in order: (a) the ASSERTION was wrong, not the code - amended 12 Sep (JURIS-SUPPLY-SPLIT-1) to assert the supply lane is WIRED rather than that a wave is armed, with a disarmed_by-stamped disarm reading INFO and an unstamped one still RED; (b) the policy drift itself cleared 13 Sep by RG-0361 - 72 entries re-armed and stamped, 96 armed, every lane=outreach country carrying a heading-level OUTREACH_LAW section, no stale gate disarm. Today's leg: 'US register lane wired: reader -> us_registers/ -> host importer -> Northern California bucket -> US'.",
+      "residual": "the live leg printed 'server probe skipped (no SSH from here)', so the wiring is proven from source and the server-pool row count is not; RG-0297 stays OPEN and expected to fail (US search scraping yields 0 prospects). Neither belongs to this row.",
+      "last_note": "2026-09-13: CLOSED on the passing re-run."
+    },
+    "DW-118": {
+      "first_seen": "2026-09-12",
+      "last_seen": "2026-09-13",
+      "sev": "MEDIUM",
+      "source": "self-heartbeat (register last_run vs today)",
+      "summary": "STILL FAILING 2026-09-13. OPEN_ITEMS.json read last_run 2026-09-10 against today 2026-09-13 (3-day gap) while the markdown carried rows stamped 2026-09-12. So 12 Sep was NOT a missed day - findings-2026-09-12.json (06:35) and COST_SWEEP_2026-09-12.md (06:37) exist and the rows landed; what did not land was the rest of Phase B (split out as DW-119). 11 Sep remains a genuine blind day: no findings file, no cost sweep, no rows. Four gappy days in a fortnight (6, 9, 11 Sep missed; 12 Sep half-written). Raised 2026-09-12 as 'the watch missed 11 September'.",
+      "status": "OPEN",
+      "refs": [
+        "DW-104",
+        "DW-112",
+        "DW-116",
+        "DW-119"
+      ],
+      "next_action": "DW-104's standing residual - a ledger entry asserting the scheduled tasks that matter are ENABLED. Until that exists every missed day is found by eye. CTO lane.",
+      "last_note": "2026-09-13: re-run, still failing; cause of 11 Sep still not established from here."
+    },
+    "DW-119": {
+      "first_seen": "2026-09-13",
+      "last_seen": "2026-09-13",
+      "sev": "MEDIUM",
+      "source": "register reconciliation (markdown rows vs OPEN_ITEMS.json machine state)",
+      "summary": "NEW - the register can half-commit, and on 12 September it did. The 12 Sep watch ran its checks and wrote two table rows into OPEN_ITEMS.md (DW-117, DW-118), then stopped: OPEN_ITEMS.json was never updated, so next_id still read 117 while DW-117 and DW-118 both existed in the markdown - the next allocation would have MINTED A DUPLICATE ID - last_run still read 2026-09-10, and no watch_pass_2026_09_12 key or narrative section was ever written. The disagreement is silent: the heartbeat check reads the JSON, so it reported a 3-day gap over a day that had in fact run. Reconciled by hand in this pass (JSON now carries DW-117/118/119; next_id -> 120), which fixes the occurrence, not the class. Not a live-site fault.",
+      "status": "OPEN",
+      "refs": [
+        "DW-118"
+      ],
+      "next_action": "CTO lane: make Phase B atomic or self-checking - write both files in one step, and add a ledger assertion that next_id exceeds the highest DW-id present in the markdown and that last_run matches the newest watch-pass section. Same shape as RG-0354: a read path and a write path addressing one file by different anchors.",
+      "last_note": "2026-09-13: raised and reconciled in the same pass; the class is the open item."
     }
   },
-  "last_run": "2026-09-10",
+  "last_run": "2026-09-13",
   "last_verdict": "GREEN",
   "recheck_pass_2026_08_20": {
     "requested_by": "David: close all open actions",
@@ -1930,5 +1974,86 @@
     ],
     "coverage_map": "71 green / 1 blue / 2 amber / 0 red / 10 grey (84 cards); 1 new green card RG-0348 dead-sandbox class",
     "note": "9 Sep was a blind day - sandbox dead; recovered today"
+  },
+  "watch_pass_2026_09_13": {
+    "verdict": "GREEN",
+    "site": {
+      "health": "ok 1.3.1",
+      "root_ms": 447,
+      "payment_test": "ok, paystack_connected true",
+      "tls_days": 69,
+      "tls_expiry": "2026-11-22"
+    },
+    "ledger": {
+      "entries": 348,
+      "holding": 326,
+      "regressed": 0,
+      "open": 22,
+      "ready_to_lock": 0,
+      "unverified": 0,
+      "exit": 0,
+      "method": "3 shards + combine"
+    },
+    "audit": {
+      "findings": 2,
+      "new": 0,
+      "severities": [
+        "INFO",
+        "INFO"
+      ]
+    },
+    "cost_sweep": {
+      "exit": 1,
+      "new_items": 0,
+      "report": "Records/COST_SWEEP_2026-09-13.md",
+      "note": "diff vs 12 Sep is line numbers + mount name only"
+    },
+    "daily_checks": {
+      "deploy_drift": "clean 19/19"
+    },
+    "smoke": "ALL PASS",
+    "server": {
+      "fea": "ok, alerts []",
+      "subs": "35 UP / 15 HELD / 1 PLANNED / 0 DOWN",
+      "disk_free_pct": 51.7,
+      "bit": "8/8 pass 04:40Z",
+      "orchestrator_queue": "[] / [] (fixer paused, DW-004)"
+    },
+    "cron_parity": {
+      "loop_date": "2026-09-13",
+      "smoke": "39/39",
+      "health": "ok 1.3.1",
+      "spend_usd": 0.0,
+      "ceiling_usd": 100.0,
+      "parity": "holds on all three core fields"
+    },
+    "monday_lane": "not in scope (Sunday); cc_age + canon pointers + pricing canon run anyway - pointers and pricing ALL IN LINE",
+    "closed": [
+      "DW-115",
+      "DW-117"
+    ],
+    "new": [
+      "DW-119"
+    ],
+    "still_open": [
+      "DW-010",
+      "DW-087",
+      "DW-111",
+      "DW-118",
+      "DW-119"
+    ],
+    "ai_watch": "clear - no ban, outage, rate-limit or export-control change touching ZA users or our shortlist in 48h",
+    "coverage_map": {
+      "green": 73,
+      "blue": 2,
+      "amber": 1,
+      "red": 0,
+      "grey": 10,
+      "cards": 86,
+      "changes": "AMBER -> GREEN (DW-115); 2 new cards - GREEN (DW-117 / RG-0295 / RG-0361) and BLUE (DW-119)",
+      "blue_named": "DW-112 / DW-104 - the watch's own liveness, armed but unasserted; DW-119 - the register's two halves, reconciled by hand and unasserted",
+      "amber_named": "DW-111 - the Resend 422 nobody can see"
+    },
+    "checks_run": "12 of 13 (deep scan + canon drift is the Monday lane; canon pointers and pricing run anyway)"
   }
 }
