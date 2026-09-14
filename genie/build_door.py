@@ -60,6 +60,22 @@ drawDoor();
 </script>"""
 s = s.replace(old_boot, new_boot, 1)
 
+# ---- 2b. nothing invented is ever shown to the public --------------------------
+# The harness's "find" side draws a shelf of EXAMPLE adverts, which is fine in a
+# prototype and wrong on a public page - a visitor must never be shown a listing
+# that does not exist. On the door, Find sends them to the real app instead, so the
+# only thing the door ever renders is the visitor's own answers.
+old_find = "  $('bFind').onclick=function(){start('find');};"
+assert s.count(old_find) == 1, 'find button anchor'
+s = s.replace(old_find, "  $('bFind').onclick=function(){ location.href='/'; };   /* DOOR: real listings live in the app */", 1)
+
+# Buzz is designed and not built, so the door says so plainly rather than letting
+# someone find the example panel and think it is a feature.
+s = s.replace("<button class=\"btn ghost\" id=\"bzgo\" style=\"width:100%;padding:13px\">See how it works</button>",
+              "<button class=\"btn ghost\" id=\"bzgo\" style=\"width:100%;padding:13px\">See how it will work</button>", 1)
+s = s.replace("'<div class=\"buzzcard\"><b>Buzz &mdash; one line to the other phone</b>'",
+              "'<div class=\"buzzcard\"><b>Buzz &mdash; one line to the other phone <i style=\"font-style:normal;color:#f0cc8a\">&middot; coming</i></b>'", 1)
+
 # ---- 3. Publish does a real thing -------------------------------------------
 old_pub = s[s.index('  function doPublish(btn){'):s.index("  /* THE ONE ASK, AND IT IS THE LAST THING")]
 new_pub = """  function doPublish(btn){

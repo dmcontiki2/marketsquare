@@ -429,7 +429,7 @@ function drawDoor(){
   clearInterval(heroTimer); heroTimer=setInterval(cycleHero,4000);
   $('prev').onclick=function(){swipe(-1);};
   $('next').onclick=function(){swipe(1);};
-  $('bFind').onclick=function(){start('find');};
+  $('bFind').onclick=function(){ location.href='/'; };   /* DOOR: real listings live in the app */
   $('bSell').onclick=function(){start('sell');};
 
 }
@@ -823,10 +823,10 @@ function drawDraft(){
    +scores
    +'<div class="todolab">Each of these adds to your listing score</div>'
    +'<div class="todo" id="todo">'+jobs+'</div>'
-   +'<div class="buzzcard"><b>Buzz &mdash; one line to the other phone</b>'
+   +'<div class="buzzcard"><b>Buzz &mdash; one line to the other phone <i style="font-style:normal;color:#f0cc8a">&middot; coming</i></b>'
    +'<p>'+comms().card+' They have exactly the same button for you. One line each way, no '
    +'thread to scroll, and email catches it if their push is off.</p>'
-   +'<button class="btn ghost" id="bzgo" style="width:100%;padding:13px">See how it works</button>'
+   +'<button class="btn ghost" id="bzgo" style="width:100%;padding:13px">See how it will work</button>'
    +'</div>'
    +'<div id="jslot"></div>'
    +'<div class="hres" id="hres" style="display:none"></div>'
