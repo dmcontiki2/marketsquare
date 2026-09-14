@@ -32,13 +32,13 @@ S = {
    heading='Four taps, and you have an advert',
    c1='Tap what you do, where you work, which days you are open and what you charge.',
    c2='You see your own advert, with your own score on it, before anything is published.',
-   c3='Send your link to an employer you already have. They confirm you in one tap, free.',
+   c3='Someone who needs you asks for an introduction - they pay, you accept or decline.',
    a1='Screen one: the question "What work do you do?" with six photo tiles - cleaning, laundry and '
       'ironing, cooking, childminding, office cleaning, garden help.',
    a2='Screen two: the finished advert - "Cleaning, Menlyn", the days open, R350 a day - marked draft, '
       'with a listing score of 60 out of 100.',
-   a3='Screen three: an employer being asked "Thandi asks you to confirm her", with a Yes button. '
-      'Confirming is free and takes her trust score from 38 to 85.'),
+   a3='Screen three: your public card as a client sees it - what you do, the days you are free, '
+      'your day rate and your trust star, with an Ask to be introduced button that costs them, not you.'),
  'property': dict(
    cta='Show the agencies',
    heading='Four taps, and the agencies can see it',
@@ -80,13 +80,13 @@ S = {
    heading='Four taps, and your trade is on the board',
    c1='Tap your trade, where you work, how you charge and what the call-out is.',
    c2='You see your card, with your own score, before anything is published.',
-   c3='Strangers pay to be introduced to you. Your own regulars stay free, for ever.',
+   c3='A stranger pays to be introduced to you; you accept or decline every one.',
    a1='Screen one: the question "What is your trade?" with photo tiles - electrician, plumber, '
       'gardener, painter, handyman, pool care.',
    a2='Screen two: the finished card - "Electrician, Menlyn" with the call-out fee - marked draft, '
       'with its listing score.',
-   a3='Screen three: a customer asking to be introduced, with Accept and Not now. A stranger pays; '
-      'the people you already work for do not.'),
+   a3='Screen three: your public card as a customer sees it - your trade, your area, your call-out '
+      'fee and your trust star, with an Ask to be introduced button that costs them, not you.'),
  'collectors': dict(
    cta='Ask the board',
    heading='One question, five answers, or a straight no',

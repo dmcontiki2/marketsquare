@@ -116,7 +116,7 @@ s = s.replace("var QUICK={member:false, name:'', city:''};",
 
 # ---- honest wording where the harness talked about a hand-over ---------------
 s = s.replace('Draft &mdash; publish now, polish it in the app', 'Draft &mdash; finish it in the app')
-s = s.replace('<title>The Harness</title>', '<title>TrustSquare \\u2014 put it on the board</title>')
+s = s.replace('<title>The Harness</title>', '<title>TrustSquare \u2014 put it on the board</title>')
 
 out = os.path.join(HERE, 'q_index.html')
 io.open(out, 'w', encoding='utf-8').write(s)
