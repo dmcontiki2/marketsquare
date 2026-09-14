@@ -6463,7 +6463,7 @@ def rg_ledger_stability_guard():
        "the current one silently re-points the dashboard at it. Not specific to today's "
        "sections -- it asserts freshness of whichever section wins.",
        fixed_on="2026-08-20",
-       ref="AMENDED 30 Aug 2026 (LEDGER-ADMINREAD-1): the live half now reads /dashboard/summary with the admin key -- DASH-SUMMARY-REDACT-1 made the anonymous payload heartbeat-only by design (RG-0211), so the anonymous probe had begun failing on the app behaving CORRECTLY. Assertion fixed, not weakened: the same panel checks run on the credentialed payload; no key on the machine reads blind, never red. LOCKED 20 Aug 2026: winning section 0 days old and the live panels answer. DASH-FEED-1, 20 Aug 2026. David asked for the ops dashboard to be brought current; "
+       ref="AMENDED 14 Sep 2026 (FEED-BODY-DEMOTE-1): this went RED with the heading 0 days old, the compiler run and the fragment folded. The managed block's FIRST body line was a level-2 heading, which ends the endpoint's capture -- the section was correctly placed, correctly dated and empty. Producer fixed in scripts/status_compile.py (_demote_headings); the ARTEFACT is now judged by RG-0365, which any session can run with no key and no deploy, because this entry's live leg needs both and so could not catch it before it shipped. The live leg also learned DEPLOY-DEBT-VOICE-1: an empty panel whose repo section parses fine is UNSHIPPED, not rotted, and must not print 'do not deploy' over the deploy that cures it. AMENDED 30 Aug 2026 (LEDGER-ADMINREAD-1): the live half now reads /dashboard/summary with the admin key -- DASH-SUMMARY-REDACT-1 made the anonymous payload heartbeat-only by design (RG-0211), so the anonymous probe had begun failing on the app behaving CORRECTLY. Assertion fixed, not weakened: the same panel checks run on the credentialed payload; no key on the machine reads blind, never red. LOCKED 20 Aug 2026: winning section 0 days old and the live panels answer. DASH-FEED-1, 20 Aug 2026. David asked for the ops dashboard to be brought current; "
            "the docs pushed and the Last-done and Next-up panels still showed Session 155 and "
            "Session 139's June work. Cause: /dashboard/summary does NOT read the "
            "'## Current Session' block every session writes -- it parses '## Live State', "
@@ -6522,8 +6522,30 @@ def rg_dashboard_feed_current():
         out.append((INFO, "/dashboard/summary unreadable (%s)" % str(e)[:60]))
         return out
 
+    # DEPLOY-DEBT-VOICE-1 applied here (14 Sep 2026, FEED-BODY-DEMOTE-1). An empty panel has
+    # TWO causes and they call for opposite actions: the artefact on disk is wrong (a real rot,
+    # and RG-0365 is the entry that judges it), or the artefact is RIGHT and the box has not
+    # been shipped since -- deploy debt, whose only remedy IS the deploy this run would
+    # otherwise forbid. The repo's own parse, with the endpoint's regex, is what separates them.
+    def _repo_section_ok(key):
+        if status is None:
+            return None
+        heading = {"liveState": r"## Live State",
+                   "lastDone": r"## Last Completed[^\n]*",
+                   "nextGoals": r"## Next Session[^\n]*"}[key]
+        m2 = re.search(heading + r"\n(.*?)(?=\n## |\Z)", status, re.DOTALL | re.I)
+        return bool(m2 and m2.group(1).strip())
+
     for key in ("liveState", "lastDone", "nextGoals"):
-        if not (doc.get(key) or "").strip():
+        if (doc.get(key) or "").strip():
+            continue
+        if _repo_section_ok(key):
+            out.append((INFO, "DEPLOY DEBT, not a rotted fix: /dashboard/summary serves an empty "
+                              "%s, but STATUS.md on disk parses a real one with the endpoint's own "
+                              "regex -- the server is running an older copy of the file. The "
+                              "remedy is the next deploy, so this must not read as 'do not "
+                              "deploy' (DEPLOY-DEBT-VOICE-1)" % key))
+        else:
             out.append((FAIL, "/dashboard/summary returns an EMPTY %s -- that panel is blank on "
                               "David's dashboard" % key))
 
@@ -21594,7 +21616,7 @@ def rg_secret_one_value():
 @entry("RG-0363", "the offline banner can never LATCH -- it is raised only by a probe that actually "
                   "failed, it clears itself when the network answers without waiting for an "
                   "'online' event, and it never promises cached content the app does not hold",
-       OPEN,
+       LOCKED, fixed_on="2026-09-14",
        scope="ms.js: OFFLINE-TRUTH-1. Four legs, all source-side: _obReachable() exists and probes "
              "a same-origin URL; showOfflineBanner() returns early when that probe succeeds, so the "
              "banner cannot assert a state just disproved; a retract probe (_obProbeTimer) runs "
@@ -21634,7 +21656,7 @@ def rg_offline_banner_no_latch():
 @entry("RG-0364", "the service worker is REGISTERED on every page load, not only for whoever opts "
                   "into push -- without that nothing controls the page, and both the install offer "
                   "and web push are built and unreachable",
-       OPEN,
+       LOCKED, fixed_on="2026-09-14",
        scope="ms.js: SW-REGISTER-1. _msRegisterSW() exists, is called from _msInit(), and wraps "
              "register() so a failure can never break app start. The push opt-in keeps its own "
              "register() call; register() is idempotent, so both paths coexist.",
@@ -21664,6 +21686,60 @@ def rg_sw_registered_on_load():
                           "served from the site root so its scope covers the whole app"))
     return out or [(INFO, "the worker is registered at app start, independently of push consent, "
                           "and a failed registration cannot break the app")]
+
+
+@entry("RG-0365", "the managed dashboard-feed block is READABLE by the endpoint that consumes it "
+                  "-- the section /dashboard/summary captures is not emptied by the very body the "
+                  "compiler just wrote into it",
+       LOCKED, fixed_on="2026-09-14",
+       scope="scripts/status_compile.py _demote_headings() + refresh_feed_block(), and the shape of "
+             "STATUS.md's managed DASH-FEED-1 block as parsed with the endpoint's OWN regex. "
+             "Two legs, both source-side because the repo file is what the deploy ships: (a) the "
+             "compiler still demotes headings on the way into the block; (b) parsing STATUS.md with "
+             "bea_main's own '## Last Completed[^\\n]*\\n(.*?)(?=\\n## |\\Z)' yields a NON-EMPTY "
+             "body. Leg (b) is the one that matters -- it judges the artefact the consumer reads, "
+             "not the intention of the producer.",
+       ref="FEED-BODY-DEMOTE-1 (14 Sep 2026). RG-0127 went RED on a day when every visible sign "
+           "said the lane was healthy: the winning '## Last Completed' heading was 0 days old, the "
+           "compiler had run, the fragment was folded, and the dashboard panel was still blank. "
+           "Cause: status fragments are written as '## <date> - <title>', and the endpoint's capture "
+           "stops at the next level-2 heading -- so the block's FIRST body line terminated the "
+           "section it existed to fill. Every fold since DASH-FEED-1 landed (11 Sep) produced a "
+           "correctly-placed, correctly-dated, EMPTY section. CLASS, and the third instance of this "
+           "shape in four days (RG-0354, RG-0127, this): a producer and a consumer that address the "
+           "same file with DIFFERENT rules will agree on placement and disagree on content, and "
+           "every freshness check in between will read green. RG-0354 asserted the block is written; "
+           "RG-0127 asserts the panel is not empty LIVE, which needs the admin key and a deploy; "
+           "this asserts the repo artefact parses -- the one leg any session can run, before "
+           "anything ships.")
+def rg_feed_block_body_readable():
+    out = []
+    comp = repo_file("scripts/status_compile.py")
+    if comp is None:
+        out.append((INFO, "NOT EVALUATED - scripts/status_compile.py is not readable from here"))
+    elif "_demote_headings" not in comp or "_demote_headings(body.decode" not in comp:
+        out.append((FAIL, "status_compile no longer demotes headings into the managed block -- the "
+                          "next fold writes a level-2 heading as the first body line and the "
+                          "dashboard's Last-done panel goes blank again (FEED-BODY-DEMOTE-1)"))
+
+    status = repo_file("STATUS.md")
+    if status is None:
+        out.append((INFO, "NOT EVALUATED - STATUS.md is not readable from here"))
+        return out
+    m = re.search(r"## Last Completed[^\n]*\n(.*?)(?=\n## |\Z)", status, re.DOTALL | re.I)
+    if not m:
+        out.append((FAIL, "STATUS.md has no '## Last Completed' section at all -- RG-0127's "
+                          "source leg covers the heading; this one covers the body"))
+    elif not m.group(1).strip():
+        out.append((FAIL, "the winning '## Last Completed' section parses EMPTY with the endpoint's "
+                          "own regex -- a level-2 heading inside the managed block is ending the "
+                          "capture, so David's Last-done panel renders blank however fresh the "
+                          "heading is (FEED-BODY-DEMOTE-1)"))
+    else:
+        body = m.group(1).strip()
+        out.append((INFO, "the section the endpoint captures carries %d characters; first line: %s"
+                          % (len(body), body.splitlines()[0][:70])))
+    return out
 
 
 if __name__ == "__main__":

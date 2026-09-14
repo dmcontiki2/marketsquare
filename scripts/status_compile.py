@@ -88,13 +88,27 @@ def _fragment_title(fname, body_text):
     return slug.replace("-", " ")
 
 
+def _demote_headings(text):
+    """FEED-BODY-DEMOTE-1 (14 Sep 2026). The reader stops at the NEXT level-2 heading.
+
+    GET /dashboard/summary captures a section with `## Last Completed[^\n]*\n(.*?)(?=\n## |\Z)`,
+    so ANY line starting '## ' inside the managed body ends the capture at once and the panel
+    renders EMPTY -- which is exactly what happened: fragments are written as
+    '## <date> - <title>', so the block's first body line terminated the section it was
+    supposed to fill. RG-0354 built the producer; this makes what it produces READABLE by the
+    consumer. CLASS, not instance: every heading in the body is pushed one level down, so no
+    fragment written in any future shape can truncate the block.
+    """
+    return re.sub(r"(?m)^(#{2,5})(\s)", r"#\1\2", text)
+
+
 def refresh_feed_block(raw, nl, iso_date, title, body):
     """Return raw with the managed feed block rewritten. Placement: immediately above the
     FIRST unmanaged '## Last Completed' heading, which is the one the endpoint matches."""
     flat = raw.replace(b"\r\n", b"\n").decode("utf-8", "replace")
     block_txt = "%s%s## Last Completed (%s - %s)%s%s%s%s%s" % (
         FEED_BEGIN, "\n\n", iso_date, title, "\n\n",
-        body.decode("utf-8", "replace").strip(), "\n\n", FEED_END, "\n\n")
+        _demote_headings(body.decode("utf-8", "replace").strip()), "\n\n", FEED_END, "\n\n")
     block = block_txt.replace("\n", nl.decode()).encode("utf-8")
 
     b = raw.find(FEED_BEGIN.encode())

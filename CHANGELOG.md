@@ -1,3 +1,36 @@
+## 2026-09-14 — maintenance-loop: the dashboard's Last-done panel was blank by construction
+
+**RG-0127 RED, and the fault was in the fix that was meant to end it.** The 11 Sep DASH-FEED-1
+work (RG-0354) gave the dashboard-feed section a producer: every status fold now rewrites one
+managed block above the first `## Last Completed` heading, so whatever a session folds is what
+`GET /dashboard/summary` reads. Placement correct, date correct, panel still blank.
+
+Cause: status fragments are written as `## <date> — <title>`, and the endpoint captures its
+section with `## Last Completed[^\n]*\n(.*?)(?=\n## |\Z)` — the capture stops at the next
+level-2 heading. The block's **first body line** was a level-2 heading, so it terminated the
+section it existed to fill. Every fold since 11 Sep produced a correctly-placed, correctly-dated,
+empty section. Reproduced against the repo file with the endpoint's own regex before touching
+anything; confirmed live through the admin door (`lastDone` empty while `liveState` and
+`nextGoals` answered).
+
+- **FEED-BODY-DEMOTE-1** — `scripts/status_compile.py` gains `_demote_headings()`, applied to the
+  body on the way into the managed block. Every heading is pushed one level down, so no fragment
+  written in any future shape can truncate the block. Class fix, not a re-word of one fragment.
+- **RG-0365 (new, LOCKED)** — asserts the artefact, not the intention: parsing STATUS.md with
+  bea_main's own regex must yield a NON-EMPTY body, and the compiler must still demote. This is
+  the leg any session can run before anything ships — RG-0127's live leg needs the admin key and
+  a deploy, which is why three green boards sat on top of a blank panel.
+- **RG-0363 and RG-0364 promoted OPEN → LOCKED** — the offline banner's anti-latch properties and
+  service-worker registration at app start both passed; the board printed READY TO LOCK.
+
+Third instance in four days of one class: a producer and a consumer that address the same file by
+different rules agree on placement, disagree on content, and every freshness check between them
+reads green.
+
+**Maintenance agent:** shadow run clean — 0 faults in the queue, 0 acted, heartbeat posted to
+`/dashboard/maint`. Email lane census only: 24 total, 6 held over 30 days. Sandbox SSH to the
+origin restored via `load_sandbox_ssh.sh`, which un-blinds RG-0362's secret-divergence probe.
+
 ## 2026-09-14 — The Maintenance agent was armed and 401'ing for three weeks
 
 **What was broken.** The agent woke three times a day, could not read its own fault queue,
@@ -22515,3 +22548,183 @@ have put the record and the code at odds.
 
 Re-verified after the rename: the harness and the live Buzz screen both render and drive correctly,
 zero page errors.
+
+### Deploy verified live — 14 Sep 2026, 04:23 UTC
+
+David deployed. Probed, not assumed:
+
+- **The four routes are registered on the live server** — `/buzz/pair`, `/buzz/allow`, `/buzz/pairs`
+  and `/buzz` all appear in the live OpenAPI document, and all answer **401 without a key**.
+- **The screen and its styles are served** — `screen-buzz` is in the live page, the My Space entry
+  point is there, and 13 `.bz-` rules are in the live `ms.css` (cache stamps now 628 / 492; the
+  server bumps these itself, monotonically, so the repo numbers are only a floor).
+- **Rendered and driven, the way a user sees it.** The bytes now served by trustsquare.co were
+  pulled and rendered in a real browser (the headless browser cannot reach the host through the
+  sandbox proxy, so the live bytes were served locally — same code, same page). The Buzz screen
+  opens from My Space, lists a connected person, shows both switches and the one-line box, and
+  issues exactly one call: `GET /buzz/pairs`. **Zero page errors.**
+- Buzz API calls were intercepted during the render, so **nothing was written to the production
+  database**. What is not yet proven against production is one real buzz between two real accounts —
+  that needs two accounts and writes rows, so it is David's call.
+
+**Noticed in the same deploy, from another lane:** `_msRegisterSW()` now registers the service
+worker on EVERY page load rather than only inside the push opt-in. That is the piece that makes push
+actually reachable — `navigator.serviceWorker.controller` was null for every visitor before it, so
+nothing controlled the page and neither RUL-122's push nor RUL-123's install prompt could ever fire.
+The Buzz build and that fix landed together, which is why "push first" is now true in practice and
+not only on paper.
+
+## 2026-09-14 — Private sellers reaching agencies: captured, and one ruling
+
+David, banking an idea: *"This same message mechanism may be required for property sellers who want
+to sell their own properties, but with a slight change. We need to give them a mechanism to contact
+our local listed agencies or agents, then to have a similar mechanism for comms between them."*
+
+Captured in `genie/PRIVATE_SELLER_TO_AGENT_NOTES.md`. The short of it: **the mechanism splits at the
+pair, and that split is already canon.** After a pair exists, Buzz transfers with NO change. Before
+it exists, a seller reaching an agency he has never met is not a buzz — it is an introduction, the
+platform-made connection that has always cost a Tuppence. So the comms half is not a change, and the
+contact half is not Buzz.
+
+**RULED — the agency pays.** A seller with a property is a lead, and the side that gains the mandate
+is the side consuming the service; a seller charged to ask for help mostly does not ask, and the
+supply side of the loop dies before it starts. This **inverts CC-001's default payer** (payer = the
+party requesting the introduction) for this lane, so CC-001 needs an explicit carve-out rather than
+a quiet exception. Not settled: the direction of the hold (agency commits on requesting the seller's
+details, burns on delivery, released if the seller declines), and the abuse gate that free-for-the-
+seller now requires — a fake listing costs its author nothing and costs agencies real Tuppence.
+
+Also flagged before anything is built: `CHANGE_REGISTER` CC-001 carries the parenthetical "claims
+C10–C13 (reverse-auction = lead)", which AD-14 closed in June as "not important — on hold for future
+design". What David has just described is that shape arriving, and the launch freeze exists so that
+nothing is published before the patent position is settled. Worth checking while it is still cheap.
+
+### RULED the same session — RUL-131
+
+David: *"I agree, your reasoning is good. Please make it the design decision."*
+
+The agency pays; **one agency holds the seller's lead at a time**; the window ends on the seller's
+word or on silence, never only on a clock; queue order is the three scores, never payment; the hold
+releases in full if the seller declines or the window lapses.
+
+**Free-then-pay is rejected** on David's own instinct that it was an exception-type requirement. The
+reframe that made it unnecessary: what is scarce is not the seller's requests but who HOLDS his
+lead — so the rule limits the lead, not the seller, and no exception is needed.
+
+**What it touches.** In TrustSquare: Buzz needs nothing, the pair is one call at the existing
+intro-delivery point, the queue is existing ranking, the hold is the existing model pointed at the
+agency; genuinely new are the seller's request front and the window. In Quick Listing: the tap
+engine, the per-category steps and the Buzz panel all need nothing — but the app would gain a
+**second hand-over target** (an introduction request, not a draft listing), which amends RUL-125(b)
+and should be ruled rather than slipped in.
+
+## 2026-09-14 — RUL-132: the user's ease outranks our tidiness
+
+David, overruling Claude: *"Please change the rule for us to rather make it easier for the users,
+even if it does mean the commonality of a single comms mechanism dont hold; let there then be
+exceptions, we can design for them, we may still need it for the guides, tour agents, B&B's etc.
+Let the users benefit at our 'common and simple' expense?"*
+
+He is right, and the reason is a pricing error Claude had been making. **An exception in OUR design
+costs us maintenance once; an exception in the USER'S experience costs every user every time.**
+Those are not the same price, and arguing for one uniform mechanism was quietly charging the second
+to avoid the first.
+
+**The line, which is the whole ruling: vary the FLOW freely, never fork the CONSENT MODEL.** A flow
+is what the user taps, and ten of them are ten things to maintain. Consent is who is allowed to
+reach whom, and two models of that is a hole somebody eventually falls through — in a product whose
+whole promise is trust, that is the one place cheapness is not available.
+
+**The invariants, true in every category however the flow differs:** a buzz travels only between two
+connected parties; each side holds its own switch and consent is never transitive; the sender's name
+is on every buzz and every answer; a decline costs the declining party nothing; no per-message-cost
+channel enters the path.
+
+**And the user sees one thing called Buzz.** Whether the connection behind it was brought by the
+user (free) or made by the platform (a Tuppence) is a billing fact, not a second product to learn.
+
+**Two rulings amended in consequence.** RUL-131(d) — one-agency-at-a-time — is now explicitly a
+PROPERTY rule, because there the lead has resale value and exclusivity is what makes it worth
+buying; a traveller who wants three B&B quotes gets three. RUL-125(b) — Quick Listing may hand over
+to more than one target, a draft listing or an introduction request, which was never what "one
+server, one rulebook" meant: that was one rulebook and one database, never one destination.
+
+**The cost is named rather than hidden:** every extra flow lands on a solo founder's maintenance, so
+each new one has to be earned by a real difference in what the user is trying to do — not by a
+category merely existing.
+
+### The strategic takeaway, in David's words — 14 Sep 2026
+
+David: *"this surfaces our initial goal of getting the sellers and users to have an easy
+interaction, route to contact whilst we still keep the anonymity but now increase the possible
+amount of new tuppence introductions."*
+
+Sharpened rather than echoed: **this adds a second DIRECTION of origination, not more volume.** Every
+Tuppence until now began with somebody searching; a private seller pulling agencies to him begins
+with somebody asking to be found, and a private seller who was previously a dead end becomes an
+origin. Each category variation RUL-132 releases adds another origin, not another copy.
+
+**Anonymity in this lane is structural, not a promise** — the seller's identity and address ARE the
+thing being purchased, so they cannot leak before the charge without the product ceasing to exist.
+
+**Two caveats carried, not smoothed over.** The free lane grows at the same time, so more pairs means
+more of both and the net is positive only while paid origins keep pace — measurable, not arguable.
+And pairs are a leak as well as an asset: once two people can Buzz, they have less reason to come
+back through a paid introduction for the next thing, which is correct and intended, and means the
+growth engine is pair CREATION rather than messaging volume. Any dashboard celebrating buzz counts
+would be measuring the wrong thing.
+
+**Already measurable, by accident of the build:** `buzz_pairs` carries `source`, `created_by` and
+`created_at`, so pairs-per-period split by origin — user-brought versus platform introduction — is a
+query rather than a build.
+
+## 2026-09-14 — Buzz: closing is symmetric, told, and the closer reopens
+
+David: *"should a single parties block then also send a message as such to the other party and the
+also block the second party? ... We don't intent to provide a comms service, just a convenient in
+app service."* Then, on the drafts: *"I agree."*
+
+### The flaw his question found
+
+Claude built the switch PER SIDE, for consent purity. That produces a one-way megaphone: if the
+employer switched off, the worker could no longer reach him — but he could still reach her. In a
+pair with a power gradient that is worse than no channel at all. **Closing is now symmetric.**
+
+The per-side allow flags stay, because they are a different thing: they are the onboarding consent
+David ruled this morning. Closing sits above them and overrides both.
+
+### What was built
+
+- `POST /buzz/close` — close, or reopen what you closed. `buzz_pairs` gained `closed_at` and
+  `closed_by`.
+- **Only the closer can reopen.** Otherwise the other party flips it straight back and the close
+  meant nothing.
+- **The other side is told, without blame** — not "she blocked you" but *"Buzz is closed between you
+  and Mrs Nkosi. You still have each other's number."* Silence would have generated the exact
+  support ticket this design is trying to avoid, and worse: somebody waiting for an answer that will
+  never come can lose a day's work. The usual safety case for silent blocking is a stranger network;
+  it does not apply to two people who already know each other and already have each other's numbers.
+- Sending into a closed pair is refused with *"use their number"*, in both directions.
+
+### The terms, where the choice is made
+
+The as-is wording now appears at the top of the Buzz screen and again beside each switch
+("Switching this on accepts the terms above, for this person only"), and the same words are drafted
+for the EULA. That placement is not decoration: **CPA s49 requires a term limiting liability to be
+conspicuous, plain-language and acknowledged**, and *Van Wyk v UPS* (2020, WCC) is the case showing
+a buried clause fails. The harness carries the identical wording so the example cannot teach
+something the app does not do.
+
+**The EULA clause is drafted, NOT applied** — `EULA_CLAUSE_BUZZ_DRAFT_2026-09-14.md`, routed to the
+revision track because that document has external review. Three corrections are in it: voetstoots is
+a sale-of-goods term that does not reach a service (and CPA s55/s56 cannot be contracted out of);
+"no complaints allowed" cannot be written at all; and the limitation must be drawn to attention.
+
+### Verified
+
+**34 endpoint checks green** against a temp database, including: the pair reads closed; the other
+side is told; the notice names no fault; neither party can send; the refusal says to use the number;
+the other party cannot reopen; the closer can; closing twice is harmless. **Rendered and driven** in
+a browser: the close link posts, the card collapses to the plain statement, the reopen button appears
+only for the closer, a pair closed by the other side offers no reopen and no send box. Zero page
+errors.
