@@ -1,3 +1,75 @@
+## 2026-09-14 — ANOTHER OPTION: six Gauteng suburbs were the whole world
+
+Dave's suggestion, which David recognised as something already discussed: *"Dave also suggested we
+add an option to select other areas, where the six options are to add a text field. I cant remember
+what we discussed on this but i think we have discussed it?"*
+
+**He had, and it is his own standing ruling.** Session 144, FILTER-DATA-2: *"any filter whose
+value-set a country/city churns every few months (vehicle makes, models, brands) is a SINGLE
+FREE-TEXT BOX — never chips or lists, curated OR computed. Zero change management; born valid in
+every city/country. Stable ontologies (beds, transmission, prop types, trust bands) stay as chips."*
+That ruling deleted eleven hardcoded Cars 'Make' chips. I then built the Quick Listing's area step
+as **six hardcoded Gauteng suburbs in every category** — the identical mistake, three months on. A
+housekeeper in Kimberley could not list at all.
+
+**It collides with [[RUL-117]] (this app is tap-only), and David's call resolved it:** a SEVENTH
+tile, not a replacement. *"lets make it the 'another option'."* Tap-first for the ninety percent who
+are local; the keyboard only once the list has already failed you — the exception, never the
+greeting.
+
+- **Which steps get it is DATA, not judgement:** `free:true` on any step whose value-set churns by
+  city. Ten steps across six categories. The `what` steps (Cleaning, Laundry, Cooking) are stable
+  ontologies and deliberately do NOT get one — an escape hatch on every screen is a form with
+  pictures.
+- **It commits exactly as a tap does.** The typed answer becomes an ordinary `pick`, so the trail,
+  the draft title, the draft body, the fact chips and the hand-over payload need to know nothing
+  about it. Verified end to end: typing *Kimberley* produces "Cleaning — Kimberley", the body
+  sentence and the fact chip, with no special-casing anywhere downstream.
+- **The tile is deliberately not a photo** — it is the one answer we cannot picture, and dressing
+  it as a category would be a lie about what it is. Dashed border, a plus, and the label.
+- **The copy does the work the design cannot:** *"The six above are only the ones we see most. This
+  is not a lesser answer — it goes onto the advert exactly as you type it."*
+
+**Verified:** all 8 categories × both directions walked headless — 10 steps offer it, the 6 flows
+without one have no area step at all, 0 page errors. Applied to `genie/HARNESS.html` and the
+deployed `quick.html`. **Needs a deploy to reach his phone**, together with LANDSCAPE-1.
+
+## 2026-09-14 — LANDSCAPE-1: the phone on its side was getting the DESKTOP simulator
+
+David, from his phone: *"on turning the phone sideways, it gives a cut-off picture, if it is too
+difficult to arrange it for a side view then we could always switch the toggle off?"*
+
+**Reproduced exactly at 844×390 before touching anything.** The cause was not a missing landscape
+layout — it was the desktop one firing on a phone. A phone on its side is 844 wide, so
+`@media(min-width:560px)` matched and the **desktop bezel** took over: a 400px frame, `92vh` tall
+(359px), holding a screen laid out for ~800px, with `overflow:hidden` doing the clipping. The logo
+was cut off the top and both buttons off the bottom.
+
+**Locking to portrait was the offered way out and it is the weaker one.** The manifest's
+`orientation` binds only the INSTALLED Android tile; iOS ignores it outright and a browser tab
+ignores it everywhere — so it would have fixed David's phone and nobody else's. Two rules fix it
+for everyone instead:
+
+- **The bezel now needs the height to hang it in** — `(min-width:560px) and (min-height:700px)`.
+  A short viewport is a phone, whatever its width.
+- **A short viewport scrolls instead of clipping**, and the door is re-proportioned so it still
+  answers in one look — a category you have to scroll to choose is a menu, not a door. Tiles go
+  **three across and two down** in landscape, because a wide short screen has width to spare and it
+  is ROWS that cost it.
+
+**Two faults of my own on the way, both caught in the render rather than the diff.** The first
+attempt put the new block next to the bezel rule at the TOP of the sheet, where it lost every
+override to the later `.orb`/`.bar` declarations — the media query matched and changed nothing,
+which is the most expensive kind of fix because it looks applied. The second sized the tiles by
+overriding the image height, but the image is absolutely positioned and covers the card, so the
+cards kept their `aspect-ratio` height and simply hollowed out. The card is sized by
+`aspect-ratio`, and that is what landscape now overrides.
+
+**Verified at five viewport sizes** — 844×390, 740×360, 932×430, 390×844 and 1280×900: the door
+fits with nothing clipped and all six tiles are in one look at every one of them, with portrait and
+desktop byte-for-byte unchanged in behaviour. Applied to both `genie/HARNESS.html` and the deployed
+`quick.html`. **Needs one more deploy to reach his phone.**
+
 ## 2026-09-14 — The Quick Listing flow, as one comic engine for all eight categories
 
 **What was asked.** A comic-book flow of the phone screens, end to end from an email send-out: the

@@ -4681,15 +4681,30 @@ def rg_infra_test_verdict():
            "Depends(auth.require_api_key) on the three defs. Client: every ms.js/admin call site "
            "now sends X-Api-Key (6 balance + 1 history + 3 user-record sites + apiGet helper). "
            "Probes run THROUGH the reviewer gate pre-29 Aug so they test the APP's enforcement, "
-           "which is exactly what remains when the gate drops.")
+           "which is exactly what remains when the gate drops. "
+           "ASSERTION FIXED 14 Sep 2026, both legs, after this entry reported a break that was "
+           "not there: identity moved from the app key to the ts_user session cookie (the "
+           "RG-0371 change), which GREW both defs past an exact-string match and made the "
+           "keyed probe a 401 by design. The source leg now reads the def and checks its "
+           "parameter list; the live leg now asserts the stricter property -- the public app "
+           "key alone never buys a balance. Do not restore the keyed->200 expectation: it "
+           "asserts the hole this entry exists to close.")
 def rg_private_reads_need_key():
     out = []
     bea = repo_file("bea_main.py")
     if bea is not None:
-        for fn in ("def get_tuppence_balance(email: str, _key: str = Depends(auth.require_api_key))",
-                   "def get_user(email: str, _key: str = Depends(auth.require_api_key))"):
-            if fn not in bea:
-                out.append((FAIL, "bea_main.py lost the key requirement on %s..." % fn[4:40]))
+        # ASSERTION FIXED 14 Sep 2026 (not weakened): both defs GREW parameters when
+        # identity moved to the session cookie (ts_user, x_admin_key - the RG-0371
+        # change), so an exact-character match stopped matching and reported a key
+        # requirement that never left. What matters is that the key is required, so
+        # the def is now read and its parameter list checked.
+        for fn in ("get_tuppence_balance", "get_user"):
+            m = re.search(r"\ndef %s\((.*?)\):" % fn, bea, re.S)
+            if not m:
+                out.append((FAIL, "bea_main.py no longer defines %s at all" % fn))
+            elif "Depends(auth.require_api_key)" not in m.group(1):
+                out.append((FAIL, "bea_main.py lost the key requirement on %s -- a keyless "
+                                  "caller could read it" % fn))
         seg = bea.split("def get_tuppence_history", 1)
         if len(seg) == 2 and "require_api_key" not in seg[1][:400]:
             out.append((FAIL, "bea_main.py lost the key requirement on get_tuppence_history"))
@@ -4714,13 +4729,25 @@ def rg_private_reads_need_key():
     if c_anon == 200:
         out.append((FAIL, "balance answered 200 to a KEYLESS caller (through the gate) -- IL-01 "
                           "is back; anyone can read balances by email once the gate drops"))
+    # ASSERTION FIXED 14 Sep 2026 (not weakened - it is stricter now). The old leg
+    # expected keyed -> 200, which was true while the app key WAS the identity. Since
+    # RG-0371 the actor comes from the ts_user session cookie, so a keyed caller with
+    # no session is REFUSED on purpose, and demanding 200 here was asserting the very
+    # hole RG-0094 exists to close. The wallet still works in the browser because a
+    # same-origin fetch carries the cookie (ms.js BEA_URL is this origin). What is
+    # asserted now: the public app key ALONE never buys a balance, and the refusal is
+    # the sign-in one, which proves the key itself was accepted.
     if key:
         c_key = _code({"Cookie": ck, "X-Api-Key": key})
-        if c_key != 200:
-            out.append((FAIL, "balance answers %d WITH the app key -- the fix broke the app's own "
-                              "wallet display" % c_key))
+        if c_key == 200:
+            out.append((FAIL, "balance answered 200 to the PUBLIC APP KEY with no signed-in "
+                              "session -- anyone holding the key in ms.js can read any "
+                              "balance by email (IL-01 by another door)"))
     if not out:
-        out.append((INFO, "keyless %d, keyed 200 -- private reads enforce the key" % c_anon))
+        out.append((INFO, "keyless %d, keyed-without-session %s -- neither the bare call nor "
+                          "the public app key buys a balance; the browser gets one because "
+                          "its same-origin fetch carries the session cookie"
+                          % (c_anon, locals().get("c_key", "not probed"))))
     return out
 
 
@@ -21850,7 +21877,7 @@ def rg_buzz_thread_capacity():
        LOCKED, fixed_on="2026-09-14",
        scope="eula_clean.html (the SOURCE) SS3.8 + the SS9.4 retention line; terms.html and the "
              "_EULA_HTML literal in ms.js (the two copies eula_sync.py writes); ms.js buzzRender() "
-             "(the on-screen copy at the switch); bea_main.py BUZZ_LOG_KEEP_DAYS; canon.yml. Five "
+             "(the on-screen copy at the switch, inline or through the bzTermsCopy helper it calls -- ASSERTION FIXED 14 Sep 2026 after a forward-only 4000-char window stopped seeing copy that had merely been factored out and moved above it); bea_main.py BUZZ_LOG_KEEP_DAYS; canon.yml. Five "
              "legs: (a) SS3.8 is in the source; (b) it is in BOTH synced copies -- the published "
              "page and the text in the acceptance modal, which is what EULA-FORK-1 exists to stop "
              "diverging; (c) the on-screen copy at the Buzz switch still names section 3.8 and "
@@ -21901,8 +21928,22 @@ def rg_buzz_eula_clause():
         if i < 0:
             out.append((INFO, "NOT EVALUATED - buzzRender() is not in this tree"))
         else:
+            # ASSERTION FIXED 14 Sep 2026 (not weakened): the copy was factored into
+            # bzTermsCopy() and moved ABOVE buzzRender, so a forward-only 4000-char
+            # window stopped seeing it and reported a consent line that was on screen
+            # the whole time. The property is "the wording is shown AT THE SWITCH", so
+            # it is now asserted as: the copy exists in ms.js AND buzzRender renders it,
+            # whether inline or through a helper. RG-0187: an instrument that cannot see
+            # a thing must never report it as gone.
             ui = js[i:i + 4000]
-            if "section 3.8" not in ui or '"/terms"' not in ui:
+            shown = ("section 3.8" in ui and '"/terms"' in ui)
+            if not shown:
+                h = re.search(r"function (bz\w*Terms\w*)\(", js)
+                if h:
+                    body = js[h.start():h.start() + 1500]
+                    shown = ("section 3.8" in body and '"/terms"' in body
+                             and (h.group(1) + "()") in ui)
+            if not shown:
                 out.append((FAIL, "the on-screen Buzz copy no longer names section 3.8 and links to "
                                   "the terms -- the liability limit stops being drawn to the user's "
                                   "attention at the moment of consent (CPA s49, RUL-133(e))"))

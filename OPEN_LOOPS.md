@@ -238,6 +238,12 @@ same defect class as an undated status assertion (the ONETAP_SETUP.md "(this is 
   coloured tile) point at different icons. Claude's read, built into the explainer not the code:
   the LISTER gets the Quick tile at first publish, the person she SENT it to gets the full
   TrustSquare tile. `genie/QUICK_SPREADER.html`. **One icon cannot serve both — David's call.**
+- **[D] 14 Sep — the Quick app needs ONE more deploy.** LANDSCAPE-1 (the sideways cut-off) and
+  ANOTHER OPTION (the free-text area tile, [[RUL-135]]'s sibling — FILTER-DATA-2 applied to the
+  spreader) are in `quick.html` and `genie/HARNESS.html` and verified, but not live.
+- **[C] NOTE for any concurrent session, 14 Sep:** this session holds `quick.html`,
+  `genie/HARNESS.html`, `scripts/regression_ledger.py` and the top of `CHANGELOG.md`.
+  Nothing else in the tree is modified — re-read before editing those four.
 - **[C] DONE 14 Sep — identity is proven everywhere it is acted on, and it enforces by default.**
   Twenty-three endpoints behind the public app key took a person's identity from the request — Buzz,
   account closure, banking, KYC documents, ID upload, identity verification, Tuppence balance and
