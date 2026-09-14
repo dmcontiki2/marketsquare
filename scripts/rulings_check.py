@@ -899,6 +899,22 @@ REFLECTIONS = {
    ("sandbox_repair.bat", [], []),
    ("scripts/regression_ledger.py", ["RG-0348"], []),
  ],
+ "RUL-133": [
+   # The Buzz clause was adopted while the platform still had no onboarded listers -- the window
+   # that made it an edit rather than a migration. Four surfaces must agree or the agreement is a
+   # misstatement: the EULA source, the two copies eula_sync.py writes, and the words on screen at
+   # the switch (which eula_sync does NOT cover, because it is ordinary UI copy). The forbidden
+   # string is the draft's own status line: if the clause is ever reverted to a parked draft while
+   # the feature is live, this trips rather than going quiet.
+   ("eula_clean.html", ["3.8 Buzz", "Buzz delivery records", "v1.16"], []),
+   ("terms.html", ["3.8 Buzz"], []),
+   ("ms.js", ["3.8 Buzz", "section 3.8"], []),
+   ("canon.yml", ["v1.16"], []),
+   ("LEGAL_VERSIONS.md", ["v1.16 (14 September 2026)"], []),
+   ("EULA_CLAUSE_BUZZ_DRAFT_2026-09-14.md", ["SUPERSEDED"], []),
+   ("scripts/regression_ledger.py", ["RG-0367"], []),
+   ("RULINGS.md", ["THE BUZZ TERMS GO IN NOW"], []),
+ ],
 }
 
 

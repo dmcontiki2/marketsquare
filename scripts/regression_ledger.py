@@ -21812,5 +21812,92 @@ def rg_buzz_thread_capacity():
                           "buzz_log aged out -- one buzz cannot hold a listing-page thread"
                           % (m.group(1) if m else "?"))]
 
+@entry("RG-0367", "the Buzz terms exist in the agreement users actually accept, say the same thing on "
+                  "screen at the switch, and state the same retention the code enforces",
+       LOCKED, fixed_on="2026-09-14",
+       scope="eula_clean.html (the SOURCE) SS3.8 + the SS9.4 retention line; terms.html and the "
+             "_EULA_HTML literal in ms.js (the two copies eula_sync.py writes); ms.js buzzRender() "
+             "(the on-screen copy at the switch); bea_main.py BUZZ_LOG_KEEP_DAYS; canon.yml. Five "
+             "legs: (a) SS3.8 is in the source; (b) it is in BOTH synced copies -- the published "
+             "page and the text in the acceptance modal, which is what EULA-FORK-1 exists to stop "
+             "diverging; (c) the on-screen copy at the Buzz switch still names section 3.8 and "
+             "links to the terms, which is what makes the CPA s49 acknowledgement real rather than "
+             "nominal; (d) the retention days stated in SS9.4 equal BUZZ_LOG_KEEP_DAYS in the code; "
+             "(e) canon.yml's eula pointer is at least v1.16. Source-side throughout: the EULA the "
+             "user accepts is shipped FROM these files, so judging the repo is judging the artefact.",
+       ref="RUL-133 (14 Sep 2026). Buzz was built, and its clause was written as a DRAFT parked on "
+           "the counsel track, so a live one-line messaging feature would have run against terms "
+           "that did not describe it -- which is why the 14 Sep deploy was held. David ruled it in "
+           "while the platform still has no onboarded listers: with nobody to re-obtain acceptance "
+           "from, a terms change that becomes a project later is an edit today. CLASS, and the "
+           "reason this is an assertion rather than a note: THREE copies of the EULA drift (that is "
+           "EULA-FORK-1, 14 Aug 2026, when users were accepting v1.11 while the site published "
+           "v1.12) and a FOURTH surface -- the words on screen at the moment of consent -- is not "
+           "covered by eula_sync.py at all, because it is ordinary UI copy. A limitation of "
+           "liability that is conspicuous at the switch but absent from the agreement, or present "
+           "in the agreement but silently dropped from the switch, fails CPA s49 either way, and "
+           "nothing else compares those two. Leg (d) closes the same shape between prose and code: "
+           "SS9.4 promises 90 days because BUZZ_LOG_KEEP_DAYS says 90, and a change to one without "
+           "the other makes the EULA a misstatement. NOTE on the same run: the document HEADER read "
+           "'Version 1.14 · Last updated 20 August 2026' while the footer read v1.15 -- eula_sync "
+           "compares the three copies to EACH OTHER, never the header to the footer, so a version "
+           "line can rot in place and every instrument stays green. Both now read v1.16.")
+def rg_buzz_eula_clause():
+    out = []
+    NEEDLE  = "3.8 Buzz"
+    src_eula = repo_file("eula_clean.html")
+    if src_eula is None:
+        out.append((INFO, "NOT EVALUATED - eula_clean.html is not readable from here"))
+        return out
+    if NEEDLE not in src_eula:
+        out.append((FAIL, "the Buzz clause is gone from the EULA SOURCE -- a live messaging feature "
+                          "would be running against terms that do not describe it (RUL-133)"))
+
+    for name in ("terms.html", "ms.js"):
+        cp = repo_file(name)
+        if cp is None:
+            out.append((INFO, "NOT EVALUATED - %s is not readable from here" % name))
+        elif NEEDLE not in cp:
+            out.append((FAIL, "%s no longer carries the Buzz clause -- the published page and the "
+                              "acceptance modal have forked from the source again (EULA-FORK-1 "
+                              "class); run scripts/eula_sync.py" % name))
+
+    js = repo_file("ms.js")
+    if js is not None:
+        i = js.find("async function buzzRender()")
+        if i < 0:
+            out.append((INFO, "NOT EVALUATED - buzzRender() is not in this tree"))
+        else:
+            ui = js[i:i + 4000]
+            if "section 3.8" not in ui or '"/terms"' not in ui:
+                out.append((FAIL, "the on-screen Buzz copy no longer names section 3.8 and links to "
+                                  "the terms -- the liability limit stops being drawn to the user's "
+                                  "attention at the moment of consent (CPA s49, RUL-133(e))"))
+
+    api = repo_file("bea_main.py")
+    if api is None:
+        out.append((INFO, "NOT EVALUATED - bea_main.py is not readable from here"))
+    else:
+        m = re.search(r"^BUZZ_LOG_KEEP_DAYS\s*=\s*(\d+)", api, re.M)
+        n = re.search(r"Buzz delivery records:\s*(\d+)\s*days", src_eula)
+        if not m or not n:
+            out.append((FAIL, "cannot compare the EULA's stated Buzz retention with the code's -- "
+                              "one of the two is gone (RUL-133(g))"))
+        elif m.group(1) != n.group(1):
+            out.append((FAIL, "the EULA promises %s days of Buzz delivery records and the code keeps "
+                              "%s -- the agreement is a misstatement until they agree"
+                              % (n.group(1), m.group(1))))
+
+    canon = repo_file("canon.yml")
+    if canon is not None:
+        c = re.search(r'eula:\s*"v1\.(\d+)"', canon)
+        if not c or int(c.group(1)) < 16:
+            out.append((FAIL, "canon.yml's eula pointer is behind v1.16 -- the register and the "
+                              "shipped agreement disagree about which version is current"))
+
+    return out or [(INFO, "SS3.8 is in the source, both synced copies and the version register; the "
+                          "switch names it and links to it; and the EULA's retention matches the "
+                          "code")]
+
 if __name__ == "__main__":
     sys.exit(main())
