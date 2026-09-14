@@ -431,6 +431,7 @@
     <button class="vtab" id="vtab-future" onclick="switchView('future')">🔭 Horizon</button>
     <button class="vtab" id="vtab-launch" onclick="switchView('launch')">🚀 Launch Switch</button>
     <button class="vtab" id="vtab-liveusers" onclick="switchView('liveusers')">🌆 Live Users</button>
+    <button class="vtab" id="vtab-comms" onclick="switchView('comms')" title="Buzz and outreach - what went out, what arrived, and how much sending is left">✉️ Comms</button>
     <button class="vtab" id="vtab-quicklist" onclick="switchView('quicklist')" title="Quick Listing — the design visuals and the ruled / built / next board for the quick front door">⚡ Quick Listing</button>
     <a id="orch-cockpit-link" href="/orchestrator/v2/cockpit.html" title="Orchestration v2 — Control Room" style="margin-left:8px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:linear-gradient(135deg,#0f6e56,#1d9e75);color:#fff;border-radius:8px;padding:7px 13px;font-size:13px;font-weight:700;">🛰️ Orchestration</a>
   </div>
@@ -802,6 +803,45 @@
   </div>
   <div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:12px;">Both design visuals — the whole path from five taps to a live listing, and the share chain — with what is ruled, built and next. Gated under the Orchestrator sign-in.</div>
   <iframe id="ql-frame" title="Quick Listing orchestrator page" style="width:100%;height:calc(100vh - 170px);min-height:720px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:#0b0d10;" loading="lazy"></iframe>
+</div>
+
+<!-- ── COMMS VIEW — COMMS-VIEW-1 (14 Sep 2026, David's request): "what visibility do I have
+     on the buzz and comms, status, impact, some form of metrics". Two lanes, each with its own
+     validated hue AND its own written label, because identity is never carried by colour alone.
+     Palette checked with the dataviz validator against this page's #0b0d10 surface: Buzz #2E93D9
+     / Outreach #C98420 - lightness band, chroma, CVD separation (dE 24.6 protan), normal-vision
+     separation and contrast all pass. Green/red are STATUS and are never reused as a lane hue.
+     Anything the server did not measure this call paints grey and says NOT MEASURED (RG-0133):
+     a metric never defaults to a health colour. ── -->
+<div id="comms-view" style="display:none;padding:14px 12px 20px;">
+  <style>
+    #comms-view .cm-lane{margin:0 0 22px;}
+    #comms-view .cm-lanehd{display:flex;align-items:center;gap:9px;margin:0 0 4px;}
+    #comms-view .cm-chip{width:11px;height:11px;border-radius:3px;flex:0 0 auto;}
+    #comms-view .cm-lanehd h3{margin:0;font-size:15.5px;letter-spacing:.2px;}
+    #comms-view .cm-sub{font-size:11.5px;color:rgba(255,255,255,.42);margin:0 0 11px;max-width:70ch;line-height:1.5;}
+    #comms-view .cm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px;}
+    #comms-view .cm-tile{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);
+      border-radius:11px;padding:11px 12px 12px;border-left-width:3px;border-left-style:solid;}
+    #comms-view .cm-lbl{font-size:11px;color:rgba(255,255,255,.5);line-height:1.35;margin:0 0 5px;}
+    #comms-view .cm-val{font-size:25px;font-weight:700;line-height:1.05;letter-spacing:-.5px;font-variant-numeric:tabular-nums;}
+    #comms-view .cm-unm{font-size:12.5px;font-weight:700;color:rgba(255,255,255,.34);letter-spacing:.4px;}
+    #comms-view .cm-note{font-size:10.5px;color:rgba(255,255,255,.36);margin-top:6px;line-height:1.45;}
+    #comms-view .cm-bars{display:flex;align-items:flex-end;gap:2px;height:84px;margin:10px 0 5px;}
+    #comms-view .cm-bar{flex:1 1 0;min-width:0;border-radius:4px 4px 0 0;background:#C98420;position:relative;}
+    #comms-view .cm-bar.zero{background:rgba(255,255,255,.13);}
+    #comms-view .cm-bar:hover{outline:2px solid rgba(255,255,255,.5);outline-offset:1px;}
+    #comms-view .cm-axis{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.32);}
+    #comms-view .cm-badge{font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 6px;border-radius:5px;margin-left:7px;}
+  </style>
+  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 4px;">
+    <h2 style="margin:0;font-size:22px;">✉️ Comms — Buzz and outreach</h2>
+    <span id="cm-stamp" style="font-size:11.5px;color:rgba(255,255,255,.4);"></span>
+  </div>
+  <div class="cm-sub">Every number here was measured when this page was loaded. A number the server
+    could not measure says <b>NOT MEASURED</b> in grey rather than showing a zero — no sends and no
+    sight of the sends look the same in a chart and mean opposite things.</div>
+  <div id="cm-body"><div style="color:rgba(255,255,255,.4);font-size:13px;padding:20px 0;">Loading…</div></div>
 </div>
 
 <!-- ── HORIZON VIEW (page 4) — PAGE4-HORIZON-1 + SIM-DASH-1 (29 Aug 2026, David) ── -->
@@ -1791,6 +1831,22 @@ function switchView(view) {
   var _fu=document.getElementById('future-view');
   if(_fu)_fu.style.display='none';
   var _fb0=document.getElementById('vtab-future'); if(_fb0)_fb0.classList.remove('active');
+  /* COMMS-VIEW-1 (14 Sep 2026): the Buzz + outreach panel */
+  var _cm=document.getElementById('comms-view'); if(_cm)_cm.style.display='none';
+  var _cb=document.getElementById('vtab-comms'); if(_cb)_cb.classList.remove('active');
+  if(view==='comms'){
+    dash.style.display='none';
+    if(map){map.style.display='none'; if(window.omStop)omStop();}
+    if(ops)ops.style.display='none';
+    if(_ls)_ls.style.display='none';
+    if(_fu)_fu.style.display='none';
+    var _luC=document.getElementById('liveusers-view'); if(_luC)_luC.style.display='none'; if(window.luStop)luStop();
+    var _qlC=document.getElementById('quicklist-view'); if(_qlC)_qlC.style.display='none';
+    ['vtab-dashboard','vtab-map','vtab-ops','vtab-launch','vtab-liveusers','vtab-future','vtab-quicklist'].forEach(function(i){var b=document.getElementById(i); if(b)b.classList.remove('active');});
+    if(_cb)_cb.classList.add('active');
+    if(_cm){_cm.style.display='block'; if(window.cmLoad)cmLoad();}
+    return;
+  }
   /* QL-ORCH-1 (12 Sep 2026): the Quick Listing page — hidden by default, shown by its own branch */
   var _ql=document.getElementById('quicklist-view'); if(_ql)_ql.style.display='none';
   var _qb=document.getElementById('vtab-quicklist'); if(_qb)_qb.classList.remove('active');
@@ -3122,6 +3178,109 @@ try{ window.apv3Load(); setInterval(window.apv3Load, 60000); }catch(e){}
   setInterval(loadLaunchMetrics, 60000);
   window.loadLaunchMetrics = loadLaunchMetrics;
 })();
+
+/* ── COMMS-VIEW-1 (14 Sep 2026) ─ renderer for the Buzz + outreach panel.
+   Lane hues are the validated pair for this page's dark surface; STATUS green/red are
+   separate and never used as a lane colour. Grey + the words NOT MEASURED is the only
+   thing an unmeasured metric may ever show (RG-0133) - it must not be mistaken for a
+   measured zero, which is why the words are there and not just the colour. ── */
+var CM_LANE = {buzz:'#2E93D9', outreach:'#C98420'};
+var CM_UNMEASURED = 'rgba(255,255,255,.22)';
+function cmTok(){ try{ return sessionStorage.getItem('ms_admin_token')||''; }catch(e){ return ''; } }
+function cmEsc(t){ return String(t==null?'':t).replace(/[&<>"]/g,function(c){
+  return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
+
+function cmTile(m){
+  var lane = CM_LANE[m.lane] || 'rgba(255,255,255,.2)';
+  var edge = m.measured ? lane : CM_UNMEASURED;
+  var val  = m.measured
+    ? '<div class="cm-val" style="color:#fff;">' + cmEsc(m.value)
+        + (m.unit && m.unit!=='series' ? '<span style="font-size:13px;font-weight:600;color:rgba(255,255,255,.45);margin-left:3px;">'+cmEsc(m.unit)+'</span>' : '')
+        + '</div>'
+    : '<div class="cm-unm">NOT MEASURED</div>';
+  return '<div class="cm-tile" style="border-left-color:'+edge+';">'
+       + '<div class="cm-lbl">'+cmEsc(m.label)+'</div>' + val
+       + (m.note ? '<div class="cm-note">'+cmEsc(m.note)+'</div>' : '')
+       + '</div>';
+}
+
+function cmSeries(m){
+  var rows = (m && m.measured && Array.isArray(m.value)) ? m.value : [];
+  if(!rows.length){
+    return '<div class="cm-tile" style="border-left-color:'+CM_UNMEASURED+';grid-column:1/-1;">'
+         + '<div class="cm-lbl">Emails per day, last 14 days</div><div class="cm-unm">NOT MEASURED</div></div>';
+  }
+  var max = rows.reduce(function(a,r){ return Math.max(a, r.sent||0); }, 0) || 1;
+  var bars = rows.map(function(r){
+    var h = Math.max(2, Math.round((r.sent/max)*80));
+    var z = (r.sent ? '' : ' zero');
+    return '<div class="cm-bar'+z+'" style="height:'+h+'px;" title="'+cmEsc(r.day)+' · '+cmEsc(r.sent)+' sent"></div>';
+  }).join('');
+  return '<div class="cm-tile" style="border-left-color:'+CM_LANE.outreach+';grid-column:1/-1;">'
+       + '<div class="cm-lbl">Emails per day, last 14 days — peak '+max+' in a night</div>'
+       + '<div class="cm-bars">'+bars+'</div>'
+       + '<div class="cm-axis"><span>'+cmEsc(rows[0].day)+'</span><span>'+cmEsc(rows[rows.length-1].day)+'</span></div>'
+       + '<div class="cm-note">Hover a bar for its date and count. A night with nothing sent shows as a flat grey stub, not a gap.</div>'
+       + '</div>';
+}
+
+/* The runway number is the one that changes what David does, so it gets a spoken verdict
+   as well as a colour - and the verdict words carry it for anyone who cannot see the hue. */
+function cmRunway(m){
+  if(!m || !m.measured) return '';
+  var n = m.value, tone, word;
+  if(n===null||n===undefined) return '';
+  if(n <= 7){ tone='#EF4444'; word='RUNNING OUT'; }
+  else if(n <= 21){ tone='#C98420'; word='THIN'; }
+  else { tone='#22C55E'; word='HEALTHY'; }
+  return '<div class="cm-tile" style="border-left-color:'+tone+';grid-column:1/-1;background:rgba(255,255,255,.055);">'
+       + '<div class="cm-lbl">Nights of outreach left'
+       + '<span class="cm-badge" style="background:'+tone+'22;color:'+tone+';border:1px solid '+tone+'55;">'+word+'</span></div>'
+       + '<div class="cm-val" style="color:'+tone+';">'+cmEsc(n)+'<span style="font-size:13px;font-weight:600;color:rgba(255,255,255,.45);margin-left:4px;">nights</span></div>'
+       + '<div class="cm-note">'+cmEsc(m.note||'')+'</div></div>';
+}
+
+function cmLoad(){
+  var box = document.getElementById('cm-body');
+  if(!box) return;
+  var B = (typeof BEA !== 'undefined' && BEA) ? BEA : '';
+  var tok = cmTok();
+  fetch(B + '/dashboard/comms', {headers: tok ? {'X-Admin-Token': tok} : {}})
+    .then(function(r){
+      if(r.status===401||r.status===403) throw new Error('Admin session expired — reload the dashboard and log in.');
+      if(!r.ok) throw new Error('the server answered ' + r.status);
+      return r.json();
+    })
+    .then(function(d){
+      var ms = (d && d.metrics) || [];
+      var st = document.getElementById('cm-stamp');
+      if(st) st.textContent = (d.generatedAt||'') + ' · ' + d.measured + ' of ' + d.total + ' measured';
+      function lane(key){ return ms.filter(function(m){ return m.lane===key && m.unit!=='series'
+                                 && m.id!=='outreach_runway'; }); }
+      var h = '';
+      h += '<div class="cm-lane"><div class="cm-lanehd"><span class="cm-chip" style="background:'+CM_LANE.buzz+';"></span>'
+         + '<h3>Buzz</h3></div>'
+         + '<div class="cm-sub">One line between two people who are already connected. What matters here is '
+         + 'whether it <i>arrived</i>: a buzz that fell back to email was slower than promised, and one that '
+         + 'reached nobody is a promise not kept.</div>'
+         + '<div class="cm-grid">' + lane('buzz').map(cmTile).join('') + '</div></div>';
+      var series = ms.filter(function(m){ return m.unit==='series'; })[0];
+      var runway = ms.filter(function(m){ return m.id==='outreach_runway'; })[0];
+      h += '<div class="cm-lane"><div class="cm-lanehd"><span class="cm-chip" style="background:'+CM_LANE.outreach+';"></span>'
+         + '<h3>Outreach</h3></div>'
+         + '<div class="cm-sub">The nightly wave to people who have not joined yet. Sending is only half the '
+         + 'story — the other half is how much sending is still <i>possible</i>, which is the runway below.</div>'
+         + '<div class="cm-grid">' + cmRunway(runway) + cmSeries(series)
+         + lane('outreach').map(cmTile).join('') + '</div></div>';
+      box.innerHTML = h;
+    })
+    .catch(function(e){
+      box.innerHTML = '<div class="cm-tile" style="border-left-color:#EF4444;">'
+        + '<div class="cm-lbl">Comms panel</div><div class="cm-unm" style="color:#EF4444;">COULD NOT READ</div>'
+        + '<div class="cm-note">' + cmEsc(e.message) + '</div></div>';
+    });
+}
+window.cmLoad = cmLoad;
 </script>
 </body>
 </html>

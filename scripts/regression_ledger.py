@@ -21899,5 +21899,66 @@ def rg_buzz_eula_clause():
                           "switch names it and links to it; and the EULA's retention matches the "
                           "code")]
 
+@entry("RG-0368", "a city's category priority ORDERS the ladder, it never EXCLUDES -- a pool with a "
+                  "letter, a scraper and law clearance can never become unreachable just by not "
+                  "being typed into one city's list",
+       LOCKED, fixed_on="2026-09-14",
+       scope="CityLauncher/emailer/wave_runner.py city_categories(). Two legs, source-side: (a) the "
+             "function still appends the remaining allowed categories after the city's priority "
+             "head, rather than returning the head alone; (b) the two REAL exclusion mechanisms are "
+             "still in force -- defaults.blocked_categories is still read and applied (PERSON-ONLY-1 "
+             "holds teachers_trainers), and the source-quality gate is still consulted by the "
+             "sendable query. CLASS: any per-city list that silently subsets a global set.",
+       ref="CATPRIO-2 (14 Sep 2026). CATPRIO-1 let a city carry a category_priority to 'reorder or "
+           "subset' the global list, and the subset half quietly became an exclusion: any allowed "
+           "category a city had not typed out was invisible to every wave for ever. This is the "
+           "fault class FOUR earlier fixes have already paid for, each by typing one more name into "
+           "one more list -- TUTORS-PRIORITY-1 (Tutors, launch eve), TEACHERS-VISIBLE-1 "
+           "(teachers_trainers, 1 Sep: Pietermaritzburg reported empty with 641 teachers in pool), "
+           "CLUB-LANE-1 (Sports Clubs, 5 Sep: 577 contacts and a letter, drawable by nothing) and "
+           "SUPPLY-SERVICES-1 (Services, 5 Sep: 9 of 14 lanes dry while 259 guard-clean sellers sat "
+           "unmailed). A remedy that has to be remembered per city is a chore, not a fix. MEASURED "
+           "14 Sep before the change: 718 guard-clean, never-contacted people stranded across 15 "
+           "armed cities -- Estate Agents 288, Collector Shops 98, Tutor Institutions 87, Car "
+           "Dealers 86, Service Companies 66, Travel Agencies 58, Tour Operators 35 -- while the "
+           "nightly wave printed 'nobody to send to' for those same cities. AFTER: cities with "
+           "anyone sendable went 3 -> 9 and the sendable pool 659 -> 724, which restored six South "
+           "African cities (Pretoria, Johannesburg, Cape Town, Durban, Port Elizabeth, "
+           "Bloemfontein) to a ladder that had gone all-US, single-category. The modest headline "
+           "number is itself the finding: most of the 718 are ALSO held by the source-quality gate, "
+           "so the binding constraint is address QUALITY, not category plumbing -- but a pool held "
+           "by a measured bounce rate is held on purpose, and one held by a missing line in a JSON "
+           "file is held by accident. Only the accident is fixed here.")
+def rg_category_priority_orders_only():
+    out = []
+    wr = repo_file("../CityLauncher/emailer/wave_runner.py")
+    if wr is None:
+        out.append((INFO, "NOT EVALUATED - CityLauncher/emailer/wave_runner.py is not readable from "
+                          "here (separate repo)"))
+        return out
+
+    i = wr.find("def city_categories")
+    if i < 0:
+        out.append((FAIL, "city_categories() is gone from wave_runner -- the ladder's category "
+                          "selection has moved and this assertion no longer judges it"))
+        return out
+    body = wr[i:i + 2600]
+
+    if "return head + [c for c in allowed if c not in head]" not in body:
+        out.append((FAIL, "city_categories() no longer appends the remaining allowed categories "
+                          "after the city's priority head -- a category missing from one city's "
+                          "list is invisible to every wave there again, which is how 718 "
+                          "guard-clean people were stranded on 14 Sep (CATPRIO-2)"))
+    if "blocked_categories" not in body:
+        out.append((FAIL, "the blocked-categories filter is gone from city_categories() -- "
+                          "PERSON-ONLY-1's hold on teachers_trainers is the thing standing between "
+                          "us and ~1,200 school offices, and it is no longer applied"))
+    if "_source_clause" not in wr:
+        out.append((FAIL, "the source-quality clause is gone from wave_runner -- sources measured "
+                          "to bounce above the stop threshold are no longer held (SOURCE-QUALITY-1)"))
+
+    return out or [(INFO, "priority orders the ladder and never excludes; blocked categories and "
+                          "the source-quality gate both still hold")]
+
 if __name__ == "__main__":
     sys.exit(main())

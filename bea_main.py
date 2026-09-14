@@ -13030,6 +13030,182 @@ async def dashboard_launch_metrics(_admin=Depends(_require_admin_or_key)):
     }
 
 
+@app.get("/dashboard/comms")
+def dashboard_comms(_admin=Depends(_require_admin_or_key)):
+    """COMMS-VIEW-1 (14 Sep 2026, David's request): one place that answers "what is
+    happening on Buzz and on outreach, and is it working".
+
+    GATED behind the same admin guard the Ops Dashboard already satisfies -- it reads
+    counts over user pairs and prospect rows, which is operational data about real
+    people even though no address or message body leaves this endpoint.
+
+    RG-0133 CONTRACT, applied to every number here: a metric is reported ONLY when it
+    was measured in this call. Anything unmeasured returns value=None, measured=False
+    and says why, so the panel paints NOT MEASURED rather than a health colour. The
+    outreach half lives in a SEPARATE database written by CityLauncher's nightly sync;
+    when that file is absent this endpoint says so instead of reporting zero, because
+    "no sends" and "cannot see the send log" look identical in a chart and mean
+    opposite things.
+    """
+    import datetime as _dt, sqlite3 as _sq3c
+
+    def _m(mid, label, value, measured, source, note=None, unit=None, lane=None):
+        return {"id": mid, "label": label, "value": value, "measured": bool(measured),
+                "source": source, "note": note, "unit": unit, "lane": lane}
+
+    out = []
+
+    # ── BUZZ ─ the app's own database ────────────────────────────────────
+    try:
+        _c = database.get_db()
+        def _n(sql, args=()):
+            r = _c.execute(sql, args).fetchone()
+            return int((r[0] if r else 0) or 0)
+
+        pairs_total  = _n("SELECT COUNT(*) FROM buzz_pairs")
+        pairs_closed = _n("SELECT COUNT(*) FROM buzz_pairs WHERE COALESCE(closed_by,'') <> ''")
+        pairs_live   = _n("SELECT COUNT(*) FROM buzz_pairs WHERE COALESCE(closed_by,'') = '' "
+                          "AND a_allows = 1 AND b_allows = 1")
+        pairs_half   = _n("SELECT COUNT(*) FROM buzz_pairs WHERE COALESCE(closed_by,'') = '' "
+                          "AND (a_allows + b_allows) = 1")
+        out.append(_m("buzz_pairs", "Connections", pairs_total, True, "buzz_pairs", None, None, "buzz"))
+        out.append(_m("buzz_pairs_live", "Both switches on", pairs_live, True, "buzz_pairs",
+                      "a buzz can travel in both directions", None, "buzz"))
+        out.append(_m("buzz_pairs_half", "One switch on", pairs_half, True, "buzz_pairs",
+                      "one side has not opened Buzz yet, so the other side's buzzes do not arrive",
+                      None, "buzz"))
+        out.append(_m("buzz_pairs_closed", "Closed", pairs_closed, True, "buzz_pairs",
+                      "closed by one of the two; only that person can reopen it", None, "buzz"))
+
+        sent_total = _n("SELECT COUNT(*) FROM buzz_log")
+        sent_7d    = _n("SELECT COUNT(*) FROM buzz_log WHERE created_at >= datetime('now','-7 days')")
+        sent_24h   = _n("SELECT COUNT(*) FROM buzz_log WHERE created_at >= datetime('now','-1 day')")
+        out.append(_m("buzz_sent_total", "Buzzes sent (all time)", sent_total, True, "buzz_log",
+                      "the log keeps %d days, so this is the window, not history" % BUZZ_LOG_KEEP_DAYS,
+                      None, "buzz"))
+        out.append(_m("buzz_sent_7d", "Buzzes, last 7 days", sent_7d, True, "buzz_log", None, None, "buzz"))
+        out.append(_m("buzz_sent_24h", "Buzzes, last 24 hours", sent_24h, True, "buzz_log", None, None, "buzz"))
+
+        by_ch = {r[0] or "none": int(r[1] or 0) for r in _c.execute(
+            "SELECT channel, COUNT(*) FROM buzz_log WHERE created_at >= datetime('now','-30 days') "
+            "GROUP BY channel")}
+        out.append(_m("buzz_push_30d", "Arrived by push (30d)", by_ch.get("push", 0), True,
+                      "buzz_log.channel", None, None, "buzz"))
+        out.append(_m("buzz_email_30d", "Fell back to email (30d)", by_ch.get("email", 0), True,
+                      "buzz_log.channel",
+                      "no device was reachable -- a high share here means push registration is failing",
+                      None, "buzz"))
+        out.append(_m("buzz_nowhere_30d", "Reached nobody (30d)", by_ch.get("none", 0), True,
+                      "buzz_log.channel",
+                      "neither push nor email went out -- every one of these is a promise not kept",
+                      None, "buzz"))
+        _c.close()
+    except Exception as _bexc:
+        out.append(_m("buzz_pairs", "Connections", None, False, "buzz_pairs",
+                      "Buzz tables unreadable: %s" % str(_bexc)[:120], None, "buzz"))
+
+    # ── OUTREACH ─ CityLauncher's prospect database, synced up nightly ───
+    _cl = _CL_PROSPECTS_DB
+    if not os.path.exists(_cl):
+        out.append(_m("outreach_emailed_7d", "Outreach emails, last 7 days", None, False,
+                      _cl, "the prospect database is not on this server -- this is NOT zero sends, "
+                           "it is no visibility of sends", None, "outreach"))
+    else:
+        try:
+            _p = _sq3c.connect("file:%s?mode=ro" % _cl, uri=True, timeout=3)
+            def _pn(sql, args=()):
+                r = _p.execute(sql, args).fetchone()
+                return int((r[0] if r else 0) or 0)
+
+            emailed_total = _pn("SELECT COUNT(*) FROM prospects WHERE emailed_at IS NOT NULL")
+            emailed_7d    = _pn("SELECT COUNT(*) FROM prospects WHERE emailed_at >= datetime('now','-7 days')")
+            emailed_24h   = _pn("SELECT COUNT(*) FROM prospects WHERE emailed_at >= datetime('now','-1 day')")
+            out.append(_m("outreach_emailed_total", "People emailed (all time)", emailed_total, True,
+                          "prospects.emailed_at", None, None, "outreach"))
+            out.append(_m("outreach_emailed_7d", "Emailed, last 7 days", emailed_7d, True,
+                          "prospects.emailed_at", None, None, "outreach"))
+            out.append(_m("outreach_emailed_24h", "Emailed, last 24 hours", emailed_24h, True,
+                          "prospects.emailed_at",
+                          "the nightly wave runs at 00:10 South African time", None, "outreach"))
+
+            # Per-day shape, so a decline is visible as a slope and not just a number.
+            days = []
+            for _r in _p.execute(
+                    "SELECT substr(emailed_at,1,10) d, COUNT(*) n FROM prospects "
+                    "WHERE emailed_at >= datetime('now','-14 days') GROUP BY d ORDER BY d"):
+                days.append({"day": _r[0], "sent": int(_r[1] or 0)})
+            out.append(_m("outreach_by_day", "Emails per day (14d)", days, True,
+                          "prospects.emailed_at", None, "series", "outreach"))
+
+            bounced = _pn("SELECT COUNT(*) FROM prospects WHERE bounced_at IS NOT NULL")
+            out.append(_m("outreach_bounced", "Bounced (all time)", bounced, True,
+                          "prospects.bounced_at", None, None, "outreach"))
+            out.append(_m("outreach_bounce_pct", "Bounce rate",
+                          round(100.0 * bounced / emailed_total, 2) if emailed_total else None,
+                          bool(emailed_total), "prospects",
+                          "sending reputation suffers above about 5%", "%", "outreach"))
+
+            out.append(_m("outreach_opened", "Opened", _pn(
+                "SELECT COUNT(*) FROM prospects WHERE status='opened'"), True, "prospects.status",
+                None, None, "outreach"))
+            out.append(_m("outreach_onboarded", "Onboarded", _pn(
+                "SELECT COUNT(*) FROM prospects WHERE onboarded_at IS NOT NULL"), True,
+                "prospects.onboarded_at", None, None, "outreach"))
+            out.append(_m("outreach_published", "Published a listing", _pn(
+                "SELECT COUNT(*) FROM prospects WHERE published_at IS NOT NULL"), True,
+                "prospects.published_at", "this is the goal; everything above it is a step toward it",
+                None, "outreach"))
+            out.append(_m("outreach_optout", "Opted out", _pn(
+                "SELECT COUNT(*) FROM prospects WHERE status='opted_out'"), True, "prospects.status",
+                None, None, "outreach"))
+
+            # SUPPLY. Deliberately labelled RAW: the send chokepoint's guards and the
+            # source-quality gate live in CityLauncher and cut this number down hard
+            # (measured 14 Sep: 3,941 raw -> 724 actually sendable). Reporting raw as
+            # though it were runway would be exactly the false-green RG-0133 forbids.
+            raw_pool = _pn("SELECT COUNT(*) FROM prospects WHERE status='scraped' "
+                           "AND email IS NOT NULL AND email <> ''")
+            out.append(_m("outreach_pool_raw", "Never contacted (raw pool)", raw_pool, True,
+                          "prospects.status='scraped'",
+                          "RAW. Most of these are held on purpose -- by the blocked-category rule "
+                          "and by the source-quality gate. Read the sendable figure below for the "
+                          "number that can actually go out.", None, "outreach"))
+
+            _p.close()
+        except Exception as _pexc:
+            out.append(_m("outreach_emailed_7d", "Outreach emails, last 7 days", None, False, _cl,
+                          "prospect database unreadable: %s" % str(_pexc)[:120], None, "outreach"))
+
+    # ── SENDABLE ─ published by the nightly wave, which owns the guards ──
+    _sp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "comms_sendable.json")
+    if not os.path.exists(_sp):
+        out.append(_m("outreach_sendable", "Sendable tonight", None, False, "comms_sendable.json",
+                      "the nightly wave has not published a sendable count yet", None, "outreach"))
+    else:
+        try:
+            with open(_sp, encoding="utf-8") as _fh:
+                _sd = json.load(_fh)
+            _age_note = "measured by the wave at %s" % _sd.get("measured_at", "?")
+            out.append(_m("outreach_sendable", "Sendable tonight", _sd.get("sendable"), True,
+                          "comms_sendable.json", _age_note, None, "outreach"))
+            out.append(_m("outreach_cities_live", "Cities with anyone to send to",
+                          _sd.get("cities_with_people"), True, "comms_sendable.json",
+                          "out of %s armed" % _sd.get("cities_armed"), None, "outreach"))
+            out.append(_m("outreach_runway", "Nights of outreach left", _sd.get("runway_nights"),
+                          _sd.get("runway_nights") is not None, "comms_sendable.json",
+                          "sendable pool divided by the recent nightly send rate -- when this "
+                          "reaches zero the outreach machine goes quiet with nothing broken",
+                          "nights", "outreach"))
+        except Exception as _sexc:
+            out.append(_m("outreach_sendable", "Sendable tonight", None, False, "comms_sendable.json",
+                          "unreadable: %s" % str(_sexc)[:120], None, "outreach"))
+
+    return {"generatedAt": _dt.datetime.utcnow().strftime("%d %b %Y · %H:%M UTC"),
+            "metrics": out,
+            "measured": sum(1 for m in out if m["measured"]),
+            "total": len(out)}
+
+
 @app.get("/dashboard/presence")
 def dashboard_presence(city: str = "", window: int = 150):
     """Live users (last_seen within `window` seconds) + subscriber counters for the
