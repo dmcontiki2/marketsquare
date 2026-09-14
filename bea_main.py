@@ -13118,10 +13118,26 @@ def dashboard_comms(_admin=Depends(_require_admin_or_key)):
                 return int((r[0] if r else 0) or 0)
 
             emailed_total = _pn("SELECT COUNT(*) FROM prospects WHERE emailed_at IS NOT NULL")
+            # FUNNEL-RECONCILE-1 (14 Sep 2026): David put the two panels side by side and
+            # they disagreed -- 1,569 against 1,671 emailed, 3 against 5 onboarded. Neither
+            # was wrong. The CityLauncher Overview counts prospects.status, which is WHERE
+            # SOMEBODY IS NOW and empties as they progress; this panel counts the timestamp
+            # columns, which are WHAT HAS EVER HAPPENED and never move backwards. Two true
+            # numbers under one word is how a dashboard loses its authority, so each tile
+            # below now names the other panel's figure and says why it differs.
+            _still_emailed = _pn("SELECT COUNT(*) FROM prospects WHERE status='emailed'")
+            _onb_ever = _pn("SELECT COUNT(*) FROM prospects WHERE onboarded_at IS NOT NULL")
+            _onb_pub  = _pn("SELECT COUNT(*) FROM prospects WHERE onboarded_at IS NOT NULL "
+                            "AND published_at IS NOT NULL")
             emailed_7d    = _pn("SELECT COUNT(*) FROM prospects WHERE emailed_at >= datetime('now','-7 days')")
             emailed_24h   = _pn("SELECT COUNT(*) FROM prospects WHERE emailed_at >= datetime('now','-1 day')")
-            out.append(_m("outreach_emailed_total", "People emailed (all time)", emailed_total, True,
-                          "prospects.emailed_at", None, None, "outreach"))
+            out.append(_m("outreach_emailed_total", "People emailed — ever", emailed_total, True,
+                          "prospects.emailed_at",
+                          "Everyone who has ever been sent one. The CityLauncher Overview tile "
+                          "reads lower (%d) because it counts who is STILL at that step: the "
+                          "moment somebody opens, clicks, bounces or opts out they move on, and "
+                          "this number never moves backwards. Both are right." % _still_emailed,
+                          None, "outreach"))
             out.append(_m("outreach_emailed_7d", "Emailed, last 7 days", emailed_7d, True,
                           "prospects.emailed_at", None, None, "outreach"))
             out.append(_m("outreach_emailed_24h", "Emailed, last 24 hours", emailed_24h, True,
@@ -13145,12 +13161,14 @@ def dashboard_comms(_admin=Depends(_require_admin_or_key)):
                           bool(emailed_total), "prospects",
                           "sending reputation suffers above about 5%", "%", "outreach"))
 
-            out.append(_m("outreach_opened", "Opened", _pn(
+            out.append(_m("outreach_opened", "Opened (still at this step)", _pn(
                 "SELECT COUNT(*) FROM prospects WHERE status='opened'"), True, "prospects.status",
-                None, None, "outreach"))
-            out.append(_m("outreach_onboarded", "Onboarded", _pn(
-                "SELECT COUNT(*) FROM prospects WHERE onboarded_at IS NOT NULL"), True,
-                "prospects.onboarded_at", None, None, "outreach"))
+                "this one IS a current-state count, the same as the Overview tile -- there is no "
+                "opened_at column to count cumulatively", None, "outreach"))
+            out.append(_m("outreach_onboarded", "Onboarded — ever", _onb_ever, True,
+                "prospects.onboarded_at",
+                "%d of them went on to publish, so the Overview tile shows %d still sitting at "
+                "'onboarded'." % (_onb_pub, _onb_ever - _onb_pub), None, "outreach"))
             out.append(_m("outreach_published", "Published a listing", _pn(
                 "SELECT COUNT(*) FROM prospects WHERE published_at IS NOT NULL"), True,
                 "prospects.published_at", "this is the goal; everything above it is a step toward it",
@@ -13165,11 +13183,17 @@ def dashboard_comms(_admin=Depends(_require_admin_or_key)):
             # though it were runway would be exactly the false-green RG-0133 forbids.
             raw_pool = _pn("SELECT COUNT(*) FROM prospects WHERE status='scraped' "
                            "AND email IS NOT NULL AND email <> ''")
+            try:
+                _gum = _pn("SELECT COUNT(*) FROM gumtree_prospects")
+            except Exception:
+                _gum = 0
             out.append(_m("outreach_pool_raw", "Never contacted (raw pool)", raw_pool, True,
                           "prospects.status='scraped'",
-                          "RAW. Most of these are held on purpose -- by the blocked-category rule "
-                          "and by the source-quality gate. Read the sendable figure below for the "
-                          "number that can actually go out.", None, "outreach"))
+                          "RAW, and EMAIL ONLY. Most of these are held on purpose -- by the "
+                          "blocked-category rule and by the source-quality gate. The Overview tile "
+                          "reads %d because it adds %d phone-only Gumtree contacts, which no email "
+                          "wave can ever reach. Read the sendable figure below for what can "
+                          "actually go out." % (raw_pool + _gum, _gum), None, "outreach"))
 
             _p.close()
         except Exception as _pexc:

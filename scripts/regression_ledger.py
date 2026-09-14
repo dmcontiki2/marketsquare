@@ -21960,5 +21960,65 @@ def rg_category_priority_orders_only():
     return out or [(INFO, "priority orders the ladder and never excludes; blocked categories and "
                           "the source-quality gate both still hold")]
 
+@entry("RG-0369", "the two funnels on the dashboard explain their own difference -- the comms panel "
+                  "names the Overview panel's figure and why it is lower, so two true numbers under "
+                  "one word can never read as a contradiction",
+       LOCKED, fixed_on="2026-09-14",
+       scope="bea_main.py dashboard_comms(): the FUNNEL-RECONCILE-1 block and the four tiles whose "
+             "wording depends on it. Three legs, all source-side: (a) the reconciliation counts are "
+             "computed (_still_emailed, _onb_ever, _onb_pub); (b) the emailed and onboarded tiles "
+             "are labelled 'ever' rather than bare, so a cumulative count is never mistaken for a "
+             "current-state one; (c) the raw-pool tile still names the phone-only Gumtree rows, "
+             "which the Overview tile adds to SCRAPED and which no email wave can reach. CLASS: any "
+             "second surface that reports the same noun off a different column.",
+       ref="FUNNEL-RECONCILE-1 (14 Sep 2026). David put the CityLauncher Overview tiles beside the "
+           "new comms panel and asked why they differed: 1,569 vs 1,671 emailed, 3 vs 5 onboarded, "
+           "5,052 vs 3,941 scraped. NEITHER WAS WRONG, which is what made it dangerous. The "
+           "Overview counts prospects.status -- where somebody is NOW -- so its buckets EMPTY as "
+           "people progress: the 102 difference on emailed is people who have since opened, "
+           "clicked, bounced or opted out, and the 2 difference on onboarded is the two who went "
+           "on to publish. This panel counts the timestamp columns, which never move backwards. "
+           "The scraped gap is different again: the Overview adds 1,111 phone-only Gumtree "
+           "contacts that no email wave can ever reach, so quoting 5,052 as outreach supply "
+           "overstates it by 28%. Every figure reconciled exactly on probe (3,941 + 1,111 = 5,052; "
+           "status buckets summing to 6,748). The fix is not to pick a winner -- both questions are "
+           "worth asking -- it is that each number must say which question it answers and name the "
+           "other. A dashboard that shows two different numbers for one word without explaining "
+           "itself spends its authority, and the whole point of the RG-0133 instrument-honesty line "
+           "is that a reader must never have to guess which surface to believe.")
+def rg_funnel_reconciled():
+    out = []
+    src_api = repo_file("bea_main.py")
+    if src_api is None:
+        out.append((INFO, "NOT EVALUATED - bea_main.py is not readable from here"))
+        return out
+    i = src_api.find("def dashboard_comms")
+    if i < 0:
+        out.append((FAIL, "dashboard_comms() is gone -- the comms panel has no server side"))
+        return out
+    body = src_api[i:i + 14000]
+
+    for needle, why in (
+        ("FUNNEL-RECONCILE-1", "the reconciliation note is gone -- the next session will not know "
+                               "the two panels differ on purpose"),
+        ("_still_emailed", "the current-state emailed count is no longer computed, so the emailed "
+                           "tile can no longer name the Overview figure"),
+        ("_onb_pub", "the onboarded-who-published count is gone, so the onboarded tile can no "
+                     "longer explain why the Overview reads lower"),
+        ("People emailed \u2014 ever",
+         "the emailed tile is no longer labelled 'ever' -- a cumulative count wearing a bare "
+         "label reads as a contradiction of the Overview tile"),
+        ("Onboarded \u2014 ever",
+         "the onboarded tile is no longer labelled 'ever'"),
+        ("gumtree_prospects", "the raw-pool tile no longer accounts for the phone-only contacts "
+                              "the Overview adds to SCRAPED -- the two pool figures diverge with "
+                              "nothing explaining the 1,111"),
+    ):
+        if needle not in body:
+            out.append((FAIL, why))
+
+    return out or [(INFO, "both funnels are labelled for the question they answer, and each tile "
+                          "that differs from the Overview names that figure and the reason")]
+
 if __name__ == "__main__":
     sys.exit(main())
