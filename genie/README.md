@@ -174,3 +174,36 @@ is reserved to David (RUL-037). The two prompts to run are written into `WISH_CO
   lister. Rules and a tally at the bottom.
 
 Both are tiled in the Visuals gallery (`Visuals/refresh_visuals.py`) and published as artifacts.
+
+
+## The comic — one engine, eight stories (14 Sep 2026)
+
+David asked for a comic-book flow of the phone screens, end to end from an email send-out, and then
+asked whether we should build one per email type. We should, but not by drawing eight comics.
+
+- **`build_comic.py`** reads `HARNESS.html` itself — its CATS table (categories, steps, tiles,
+  photographs), its COMMS table (who, how you met, who paid, how many) and a faithful port of its
+  listing scorer — and writes **`EMAIL_TO_TWO_USERS.html`** (standalone, for the Visuals gallery) plus
+  `comic_body.html` (the artifact form). Sixteen panels per category, eight categories, one renderer.
+  A ninth category is a data row, not a new page. Styling lives in `comic.css`; nothing is hand-drawn.
+- The only invented screen is the **email**. Waves 2–5 have no date and `LAUNCH_EMAILS.md` rule 3 says
+  an email is built when its wave has one, so every email panel is marked *wave shape · not built*.
+- The six COMMS rows that are **not ruled** say so on the panel. That is the point: argue with a
+  screen, change the row, re-run the build.
+
+## The strip that actually goes in an email
+
+**`build_email_strip.py`** renders three phone screens per category to JPEG and wraps them in
+table-based, inline-styled HTML — the same 600px / 176px shape `agency_outreach.html` already uses.
+
+- Output in **`email_strip/`**: `<cat>_strip.html` (paste-ready block) plus three images each, and
+  `PREVIEW.html`, which shows every block **as sent** and **with images blocked** side by side.
+- Images-off is the column that matters: most first-time recipients have images off, so the alt text
+  carries the whole message on its own.
+- Images are hosted, never inlined — Gmail clips a body over ~102 KB. They deploy to
+  `/static/qstrip/` the day a wave gets a date; nothing is wired up before that.
+
+**The comic does not go in the email.** It is the blueprint; the email carries three panels and a
+button. A twenty-panel page inside an email is the sign-up wall in a different costume, and the
+numbers already say where the loss is: 1,671 emailed, 354 opened, 63 clicked, 0 onboarded (14 Sep).
+The gap is on the far side of the click, which is exactly what the comic specifies.

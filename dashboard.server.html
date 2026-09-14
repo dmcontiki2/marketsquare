@@ -801,7 +801,22 @@
     <h2 style="margin:0;font-size:22px;">⚡ Quick Listing — the front door</h2>
     <a id="ql-open" href="/orchestrator/quick_listing.html" target="_blank" style="font-size:12.5px;color:#22C55E;text-decoration:none;font-weight:700;">open full page ↗</a>
   </div>
-  <div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:12px;">Both design visuals — the whole path from five taps to a live listing, and the share chain — with what is ruled, built and next. Gated under the Orchestrator sign-in.</div>
+  <!-- QL-COMIC-1 (14 Sep 2026, David): "add these two visuals inside the Ops Dashboard in the
+       Orchestrator tab as a separate 2 pages." Three pages share this view; each is a real
+       standalone page under /orchestrator/ and each keeps its own open-full-page link. -->
+  <div id="ql-rail" style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px;">
+    <button class="qlp on" data-p="board"  onclick="qlPage('board')">&#9889; Flow board</button>
+    <button class="qlp"    data-p="comic"  onclick="qlPage('comic')">&#128241; The comic &mdash; all eight categories</button>
+    <button class="qlp"    data-p="emails" onclick="qlPage('emails')">&#9993;&#65039; The emails &mdash; three panels each</button>
+  </div>
+  <style>
+    #ql-rail button.qlp{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);
+      color:rgba(255,255,255,.72);font:inherit;font-size:12.5px;font-weight:700;padding:8px 13px;
+      border-radius:9px;cursor:pointer;}
+    #ql-rail button.qlp:hover{background:rgba(255,255,255,.1);}
+    #ql-rail button.qlp.on{background:#22C55E;border-color:#22C55E;color:#07160f;}
+  </style>
+  <div id="ql-blurb" style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:12px;">Both design visuals &mdash; the whole path from five taps to a live listing, and the share chain &mdash; with what is ruled, built and next. Gated under the Orchestrator sign-in.</div>
   <iframe id="ql-frame" title="Quick Listing orchestrator page" style="width:100%;height:calc(100vh - 170px);min-height:720px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:#0b0d10;" loading="lazy"></iframe>
 </div>
 
@@ -1822,6 +1837,35 @@ async function loadDashboard() {
 }
 
 // ── View switcher ────────────────────────────────────────────
+/* QL-COMIC-1 (14 Sep 2026): three pages behind one view. Each entry names a REAL page under
+   /orchestrator/ (deploy_manifest rows QL-ORCH-1 and QL-COMIC-1) and its local original, so the
+   view works the same from the server or from the file:// copy. */
+window._qlPage='board';
+var QL_PAGES={
+  board:{t:'⚡ Quick Listing — the front door',
+         live:'/orchestrator/quick_listing.html', local:'genie/QUICK_LISTING_ORCH.html',
+         b:'Both design visuals — the whole path from five taps to a live listing, and the share chain — with what is ruled, built and next.'},
+  comic:{t:'📱 One email, two users — the whole loop',
+         live:'/orchestrator/quick_comic.html', local:'genie/EMAIL_TO_TWO_USERS.html',
+         b:'Sixteen panels per category, for all eight — the email, four taps, the advert, onboarding, the pair, two streams and the buzz. Generated from the app’s own tables, so the screens are the real ones.'},
+  emails:{t:'✉️ The three panels that go in an email',
+         live:'/orchestrator/quick_emails.html', local:'genie/email_strip/PREVIEW.html',
+         b:'What an email can actually carry, per category — shown as it arrives and with images blocked, which is how most first-time readers see it.'}
+};
+function qlPage(k){
+  var d=QL_PAGES[k]||QL_PAGES.board; window._qlPage=k;
+  var src=(window.location.protocol==='file:')?d.local:d.live;
+  var fr=document.getElementById('ql-frame'), op=document.getElementById('ql-open');
+  if(fr && fr.getAttribute('src')!==src) fr.setAttribute('src',src);
+  if(op) op.setAttribute('href',src);
+  var h=document.querySelector('#quicklist-view h2'); if(h) h.textContent=d.t;
+  var b=document.getElementById('ql-blurb');
+  if(b) b.innerHTML=d.b+' Gated under the Orchestrator sign-in.';
+  var rail=document.querySelectorAll('#ql-rail button.qlp');
+  for(var i=0;i<rail.length;i++)
+    rail[i].className='qlp'+(rail[i].getAttribute('data-p')===k?' on':'');
+}
+
 function switchView(view) {
   const dash = document.querySelector('.main');
   const map = document.getElementById('opsmap-view');
@@ -1859,10 +1903,7 @@ function switchView(view) {
     ['vtab-dashboard','vtab-map','vtab-ops','vtab-launch','vtab-liveusers','vtab-future'].forEach(function(i){var b=document.getElementById(i); if(b)b.classList.remove('active');});
     if(_qb)_qb.classList.add('active');
     if(_ql){
-      var _fr=document.getElementById('ql-frame'), _op=document.getElementById('ql-open');
-      var _src=(window.location.protocol==='file:')?'genie/QUICK_LISTING_ORCH.html':'/orchestrator/quick_listing.html';
-      if(_fr && _fr.getAttribute('src')!==_src) _fr.setAttribute('src',_src);
-      if(_op) _op.setAttribute('href',_src);
+      qlPage(window._qlPage||'board');
       _ql.style.display='block';
     }
     return;

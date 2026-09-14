@@ -216,3 +216,33 @@ visuals/assoc/assoc_dance.html | static/examples/dance.html
 visuals/assoc/assoc_plumbers.html | static/examples/plumbers.html
 visuals/assoc/assoc_guides.html | static/examples/guides.html
 visuals/assoc/assoc_teachers.html | static/examples/teachers.html
+
+# QL-COMIC-1 (14 Sep 2026, David): "add these two visuals inside the Ops Dashboard in the
+# Orchestrator tab as a separate 2 pages." Both are framed by the Quick Listing view in
+# dashboard.server.html and open standalone. Gated under /orchestrator/ like quick_listing.html.
+genie/EMAIL_TO_TWO_USERS.html | orchestrator/quick_comic.html
+genie/email_strip/ORCH_PREVIEW.html | orchestrator/quick_emails.html
+genie/email_strip/adventures_advert.jpg | orchestrator/qstrip/adventures_advert.jpg
+genie/email_strip/adventures_other.jpg | orchestrator/qstrip/adventures_other.jpg
+genie/email_strip/adventures_taps.jpg | orchestrator/qstrip/adventures_taps.jpg
+genie/email_strip/cars_advert.jpg | orchestrator/qstrip/cars_advert.jpg
+genie/email_strip/cars_other.jpg | orchestrator/qstrip/cars_other.jpg
+genie/email_strip/cars_taps.jpg | orchestrator/qstrip/cars_taps.jpg
+genie/email_strip/collectors_advert.jpg | orchestrator/qstrip/collectors_advert.jpg
+genie/email_strip/collectors_other.jpg | orchestrator/qstrip/collectors_other.jpg
+genie/email_strip/collectors_taps.jpg | orchestrator/qstrip/collectors_taps.jpg
+genie/email_strip/homehelp_advert.jpg | orchestrator/qstrip/homehelp_advert.jpg
+genie/email_strip/homehelp_other.jpg | orchestrator/qstrip/homehelp_other.jpg
+genie/email_strip/homehelp_taps.jpg | orchestrator/qstrip/homehelp_taps.jpg
+genie/email_strip/localmarket_advert.jpg | orchestrator/qstrip/localmarket_advert.jpg
+genie/email_strip/localmarket_other.jpg | orchestrator/qstrip/localmarket_other.jpg
+genie/email_strip/localmarket_taps.jpg | orchestrator/qstrip/localmarket_taps.jpg
+genie/email_strip/property_advert.jpg | orchestrator/qstrip/property_advert.jpg
+genie/email_strip/property_other.jpg | orchestrator/qstrip/property_other.jpg
+genie/email_strip/property_taps.jpg | orchestrator/qstrip/property_taps.jpg
+genie/email_strip/services_advert.jpg | orchestrator/qstrip/services_advert.jpg
+genie/email_strip/services_other.jpg | orchestrator/qstrip/services_other.jpg
+genie/email_strip/services_taps.jpg | orchestrator/qstrip/services_taps.jpg
+genie/email_strip/tutors_advert.jpg | orchestrator/qstrip/tutors_advert.jpg
+genie/email_strip/tutors_other.jpg | orchestrator/qstrip/tutors_other.jpg
+genie/email_strip/tutors_taps.jpg | orchestrator/qstrip/tutors_taps.jpg
