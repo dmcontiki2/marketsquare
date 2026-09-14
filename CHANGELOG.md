@@ -1,3 +1,106 @@
+## 2026-09-14 — The Quick Listing flow, as one comic engine for all eight categories
+
+**What was asked.** A comic-book flow of the phone screens, end to end from an email send-out: the
+email arriving, choosing housekeeping, onboarding her employer, the two streams, her listing, and
+both sides using the comms. Then: should there be one per email type, and does it go in the email?
+
+**What was built.**
+- `genie/build_comic.py` — reads `genie/HARNESS.html` directly (CATS, COMMS, and a faithful port of
+  the listing scorer) and writes `genie/EMAIL_TO_TWO_USERS.html`, sixteen panels for each of the eight
+  categories from one renderer. Styling in `genie/comic.css`. Verified on David's own Python: the
+  rebuild reproduces the page exactly (990,130 bytes).
+- `genie/build_email_strip.py` + `genie/email_strip/` — three phone screens per category as JPEGs,
+  wrapped in table-based inline-styled HTML on the same 600px / 176px pattern as
+  `agency_outreach.html`, with `PREVIEW.html` showing each block as sent and with images blocked.
+
+**Decisions taken (CTO, RUL-037).**
+- One comic per email type: yes in effect, no as eight pages. The screens do not differ; four lines
+  do (who the other person is, how they met, who paid, how many pairs). Those four already live in one
+  table, so the comic is generated from it and a ninth category is a data row.
+- The comic does NOT go in an email. Email renders in Word and clips over ~102 KB, and a twenty-panel
+  page is the sign-up wall in another costume. The email carries three panels, alt text that reads with
+  images off, and one button to the spreader.
+- Nothing is wired into a wave. `LAUNCH_EMAILS.md` rule 3 stands: an email is built when its wave has
+  a date. The strip images are ready to deploy to `/static/qstrip/` on that day and not before.
+
+**Standing context.** Today's funnel reading was 1,671 emailed, 354 opened, 63 clicked, 0 onboarded,
+0 published. The loss is on the far side of the click, which is the exact stretch these screens specify.
+
+**Names.** Every worked pair keeps both names in one naming tradition (14 Sep rule) — the COMMS table
+already satisfies this and the generator uses it verbatim.
+
+## 2026-09-14 — The comic and the email strip as two Orchestrator pages, and the email switch
+
+**David:** "add these two visuals inside the Ops Dashboard in the Orchestrator tab as a separate
+2 pages" and "update the emails for all of the categories".
+
+**Dashboard — done and shipped.** The Quick Listing view now carries a three-page rail, each page a
+real standalone page under the Orchestrator sign-in:
+
+| page | served | source |
+|---|---|---|
+| Flow board | /orchestrator/quick_listing.html | genie/QUICK_LISTING_ORCH.html |
+| The comic, all eight categories | /orchestrator/quick_comic.html | genie/EMAIL_TO_TWO_USERS.html |
+| The emails, three panels each | /orchestrator/quick_emails.html | genie/email_strip/ORCH_PREVIEW.html |
+
+`qlPage()` sits at top level (the first attempt nested it inside `switchView`, where the inline
+`onclick` could not see it — caught by driving the rendered page, not by reading the diff). The
+heading, the blurb and the open-full-page link follow the chosen page, and the view remembers which
+page you were on. 26 manifest rows added: the two pages plus the 24 strip images to
+`orchestrator/qstrip/`.
+
+**Emails — built, and deliberately NOT armed.** `CityLauncher/emailer/apply_qstrip.py` inserts the
+three-panel strip into 14 letters across all seven lettered categories, keeping a timestamped backup
+of each, with `--off` to revert. It REFUSES to arm while the front door is missing, and today it is:
+
+    trustsquare.co/q/homehelp … /q/adventures  →  404, all seven (PROBED 14 Sep, browser UA)
+
+The strip shows the Quick Listing screens and its button points at `/q/<category>`. The Quick Listing
+is harness-only — not deployed, phase two, deferred. Putting those pictures in a live letter would
+spend our one click on a door that is not there, so the guard is machinery rather than a note: the day
+`/q/` answers 200, `python3 apply_qstrip.py --on` arms all fourteen.
+
+**The decision that is David's:** ship the Quick Listing front door. Everything else is ready for it.
+
+## 2026-09-14 — The door is open at /q/<category>, and the letters are switched on
+
+**David:** "please add the missing door so that nobody gets a page not found, and also switch it on...
+i am just worried of finding out tomorrow that it has some blocks or static pages."
+
+**The door.** `genie/build_door.py` turns HARNESS.html into the public page, and nginx serves that one
+file for `/q/` and every `/q/<category>` — an unknown or mistyped category opens on Housekeeping rather
+than 404ing. All eight categories plus a nonsense one PROBED 200 from outside, no cookie.
+
+Three changes the door makes to the harness, so nothing on it is a prop:
+
+- **Publish does a real thing** — it posts the address to the app's own live `/auth/request-link`, which
+  emails a genuine sign-in code and link, and the four answers are kept in localStorage so the advert is
+  waiting. It no longer claims a draft was filed, because a public page cannot carry an API key.
+- **Nothing invented is shown** — the harness's "find" side draws example adverts, so on the door the
+  Find button goes to the real app instead. The only thing the door renders is the visitor's own answers.
+- **Buzz is labelled "coming"** on the card, because the panel behind it is an example.
+
+**The letters.** `apply_qstrip.py --on` put the strip into 14 letters across seven categories, wrapped in
+`<!--ZA-ONLY-->` — the screens are Menlyn and a rand day rate, and INTL-COPY-1 drops the block for every
+other country rather than showing a reader a price that means nothing to them.
+
+**The strip's third panel changed.** It showed the employer-confirmation screen, which is designed and
+not built; it now shows the public card and the introduction request, which is live. The vouch line on it
+reads "verified on the evidence ladder" rather than naming an employer confirmation.
+
+**Two faults found by checking, both fixed:**
+
+- `quick.html` (QUICK-TILE-1, another session, same day) shipped by manifest but nothing served it — it
+  answered 404. nginx now serves it, and its `<link rel="manifest">` was absolute to trustsquare.co, which
+  is why RG-0025 read red; it is same-origin now.
+- RG-0298: the strip's alt text carried a rand figure into US, GB, AU, NZ and AR letters. The ZA-ONLY
+  wrapper clears it — `tests/test_render_intl.py` is ALL PASS again.
+
+**Still red, and NOT from this work** (bea_main.py and ms.js were not touched by any commit here):
+
+- **RG-0094 — the wallet is broken live:** `/tuppence/balance` answers 401 *with* the app key.
+- **RG-0367 — the on-screen Buzz consent copy** no longer names section 3.8 or links to /terms.
+
 ## 2026-09-14 — The sweep: eighteen more endpoints let the caller say who he was
 
 David asked one question about the spreader and it opened a class: *"i would only expect
