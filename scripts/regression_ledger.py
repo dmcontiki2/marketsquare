@@ -22020,5 +22020,71 @@ def rg_funnel_reconciled():
     return out or [(INFO, "both funnels are labelled for the question they answer, and each tile "
                           "that differs from the Overview names that figure and the reason")]
 
+@entry("RG-0370", "our own test accounts cannot score on the funnel -- onboarded and published "
+                  "count real people only, and the fixtures are reported under their own name",
+       LOCKED, fixed_on="2026-09-14",
+       scope="bea_main.py dashboard_comms() and CityLauncher/api/server.py prospects_stats() -- "
+             "BOTH boards, because a fixture excluded from one and counted on the other is the "
+             "same lie with a second opinion. Three legs, source-side: (a) the comms panel builds "
+             "a test-fixture clause and uses it for the onboarded and published tiles; (b) it "
+             "still reports the fixture count openly rather than hiding it; (c) the CityLauncher "
+             "stats endpoint applies the same exclusion to every funnel stage. CLASS: any seeded, "
+             "demo or test row that shares a table with real customers.",
+       ref="TEST-FIXTURE-EXCLUDE-1 (14 Sep 2026). David asked the best question anyone has asked "
+           "of this board: 'where are the two that published -- they are the most important ones I "
+           "want to verify'. BOTH were end-to-end test fixtures: source 'e2e_test', channel "
+           "'test', notes 'E2E-TEST-2026-07-28'. So were all five 'onboarded' -- David Conradie, "
+           "David Conradie Jnr, Maroushka Conradie, Maurice Conradie, Marietjie Marais. Not one of "
+           "the five has an emailed_at value: none of them came through the outreach funnel this "
+           "board exists to measure, and their dates are fixture dates that do not even order "
+           "(published 2026-07-20 on a row scraped 2026-08-29). The true figures from cold "
+           "outreach are ZERO onboarded and ZERO published against 1,671 emailed, 354 opened and "
+           "63 clicked. This is the RG-0133 fault at its worst: not an instrument defaulting to a "
+           "health colour, but a real measurement of the wrong population, reading as success for "
+           "six weeks on the one number that decides whether the business works. The fixtures are "
+           "NOT deleted -- they are the end-to-end path and they must keep working, and the "
+           "listings those two accounts hold on the live site are real content -- they are counted "
+           "separately, labelled as test accounts, on both boards. A test row that scores is worse "
+           "than no scoreboard, because it answers the question nobody then re-asks.")
+def rg_test_fixtures_do_not_score():
+    out = []
+    api = repo_file("bea_main.py")
+    if api is None:
+        out.append((INFO, "NOT EVALUATED - bea_main.py is not readable from here"))
+    else:
+        i = api.find("def dashboard_comms")
+        body = api[i:i + 16000] if i >= 0 else ""
+        if not body:
+            out.append((FAIL, "dashboard_comms() is gone -- the comms funnel has no server side"))
+        else:
+            if "TEST-FIXTURE-EXCLUDE-1" not in body or "_TEST = (" not in body:
+                out.append((FAIL, "the test-fixture clause is gone from the comms panel -- our own "
+                                  "e2e accounts can score as customers again, which is how 0 "
+                                  "conversions read as 2 published for six weeks"))
+            if "_real_pub" not in body or "_real_onb" not in body:
+                out.append((FAIL, "the comms panel no longer separates real people from test "
+                                  "fixtures on the onboarded/published tiles"))
+            if "outreach_test_fixtures" not in body:
+                out.append((FAIL, "the fixture count is no longer reported -- excluding them "
+                                  "quietly is its own dishonesty; they must be visible under "
+                                  "their own name"))
+
+    cl = repo_file("../CityLauncher/api/server.py")
+    if cl is None:
+        out.append((INFO, "NOT EVALUATED - CityLauncher/api/server.py is not readable from here "
+                          "(separate repo)"))
+    else:
+        j = cl.find("def prospects_stats")
+        cbody = cl[j:j + 4000] if j >= 0 else ""
+        if not cbody:
+            out.append((FAIL, "prospects_stats() is gone from the CityLauncher API"))
+        elif "TEST_CLAUSE" not in cbody or "NOT \" + TEST_CLAUSE" not in cbody:
+            out.append((FAIL, "the Overview board's stage counts no longer exclude test fixtures "
+                              "-- the two boards would disagree about what a customer is, and the "
+                              "one David reads first is the one that would be wrong"))
+
+    return out or [(INFO, "test fixtures are excluded from the funnel on both boards and reported "
+                          "separately under their own name")]
+
 if __name__ == "__main__":
     sys.exit(main())

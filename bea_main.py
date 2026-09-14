@@ -13125,6 +13125,23 @@ def dashboard_comms(_admin=Depends(_require_admin_or_key)):
             # columns, which are WHAT HAS EVER HAPPENED and never move backwards. Two true
             # numbers under one word is how a dashboard loses its authority, so each tile
             # below now names the other panel's figure and says why it differs.
+            # TEST-FIXTURE-EXCLUDE-1 (14 Sep 2026). David asked to see the two who PUBLISHED.
+            # Both are end-to-end test fixtures -- source 'e2e_test', channel 'test' -- and so
+            # are all five 'onboarded'. Not one of the five has an emailed_at: none came
+            # through the funnel. The honest figures from outreach are ZERO and ZERO. The
+            # fixtures stay in the database (they are the end-to-end path) but they no longer
+            # score, and they are reported under their own name so nobody has to rediscover
+            # this. A number that counts our own tests as customers is not a metric.
+            _TEST = ("(COALESCE(source,'') LIKE '%test%' OR COALESCE(channel,'') = 'test' "
+                     "OR COALESCE(notes,'') LIKE '%E2E-TEST%')")
+            _real_onb = _pn("SELECT COUNT(*) FROM prospects WHERE onboarded_at IS NOT NULL "
+                            "AND NOT " + _TEST)
+            _real_pub = _pn("SELECT COUNT(*) FROM prospects WHERE published_at IS NOT NULL "
+                            "AND NOT " + _TEST)
+            _fix_onb  = _pn("SELECT COUNT(*) FROM prospects WHERE onboarded_at IS NOT NULL "
+                            "AND " + _TEST)
+            _fix_pub  = _pn("SELECT COUNT(*) FROM prospects WHERE published_at IS NOT NULL "
+                            "AND " + _TEST)
             _still_emailed = _pn("SELECT COUNT(*) FROM prospects WHERE status='emailed'")
             _onb_ever = _pn("SELECT COUNT(*) FROM prospects WHERE onboarded_at IS NOT NULL")
             _onb_pub  = _pn("SELECT COUNT(*) FROM prospects WHERE onboarded_at IS NOT NULL "
@@ -13165,14 +13182,20 @@ def dashboard_comms(_admin=Depends(_require_admin_or_key)):
                 "SELECT COUNT(*) FROM prospects WHERE status='opened'"), True, "prospects.status",
                 "this one IS a current-state count, the same as the Overview tile -- there is no "
                 "opened_at column to count cumulatively", None, "outreach"))
-            out.append(_m("outreach_onboarded", "Onboarded — ever", _onb_ever, True,
+            out.append(_m("outreach_onboarded", "Onboarded — real people", _real_onb, True,
                 "prospects.onboarded_at",
-                "%d of them went on to publish, so the Overview tile shows %d still sitting at "
-                "'onboarded'." % (_onb_pub, _onb_ever - _onb_pub), None, "outreach"))
-            out.append(_m("outreach_published", "Published a listing", _pn(
-                "SELECT COUNT(*) FROM prospects WHERE published_at IS NOT NULL"), True,
-                "prospects.published_at", "this is the goal; everything above it is a step toward it",
-                None, "outreach"))
+                "Test fixtures excluded. %d more rows show as onboarded and every one of them is "
+                "an end-to-end test account that was never emailed." % _fix_onb, None, "outreach"))
+            out.append(_m("outreach_published", "Published — real people", _real_pub, True,
+                "prospects.published_at",
+                "THE GOAL, and it counts nobody we know. Test fixtures excluded: %d more rows "
+                "show as published and both are end-to-end test accounts that were never "
+                "emailed." % _fix_pub, None, "outreach"))
+            out.append(_m("outreach_test_fixtures", "Test accounts (not customers)",
+                _fix_onb, True, "prospects.source/channel",
+                "End-to-end test rows that used to score on this board. They are kept because "
+                "they prove the signup path still works; they are counted here so they can "
+                "never be mistaken for conversions again.", None, "outreach"))
             out.append(_m("outreach_optout", "Opted out", _pn(
                 "SELECT COUNT(*) FROM prospects WHERE status='opted_out'"), True, "prospects.status",
                 None, None, "outreach"))
