@@ -22728,3 +22728,35 @@ the other party cannot reopen; the closer can; closing twice is harmless. **Rend
 a browser: the close link posts, the card collapses to the plain statement, the reopen button appears
 only for the closer, a pair closed by the other side offers no reopen and no send box. Zero page
 errors.
+
+## 2026-09-14 — Buzz capacity: a real fault found by asking the right question
+
+David: *"How much resources could it need if it escalates? What could the traffic become and how
+will it then effect the apps traffic?"* Full working in `BUZZ_CAPACITY_2026-09-14.md`.
+
+**Bandwidth and CPU are not the question.** At 500 000 active pairs Buzz uses 37 GB/month against
+the 20 TB included — under 0.2%. Whatever strains that box, it will not be this.
+
+**The ceiling is worker threads, and that is precisely how it would have hurt the app.** `/buzz` is
+a sync endpoint on the ~40-slot shared threadpool — the same threads that serve listing pages. The
+email fallback could hold one for 20 s and a slow push vendor for 8 s, so **2–5 buzzes a second
+would have saturated the site**, which is inside the peak for a modest userbase. That was a real
+fault in the first build. Fixed: the push is capped at `BUZZ_PUSH_TIMEOUT = 2` (the intro-reminder
+lane keeps its 8 s default — the timeout became a parameter, not a global change), and the email
+fallback is queued with `BackgroundTasks` instead of awaited. The same endpoint now takes 20/sec
+capped, 160/sec healthy.
+
+**The one thing that grew without a ceiling was `buzz_log`** — 23 GB/year at that size, on an 80 GB
+disk shared with the database. It is operational data, never a conversation, so
+`BUZZ_LOG_KEEP_DAYS = 90` with a lazy prune on ~1 send in 500, following the pattern the wishlist
+signals already use instead of a cron.
+
+**Triggers written down rather than assumed:** sustained >10 buzzes/sec means move the push off the
+request path too; `buzz_log` >2 GB means shorten retention, not the feature. Also noted honestly:
+`database.py` sets no `busy_timeout`, so write contention surfaces as an immediate "database is
+locked" — pre-existing and app-wide, not caused by Buzz, worth one line whenever that file is next
+touched.
+
+**40 endpoint checks green**, including that the push is capped at 2 s, that the intro lane keeps 8 s,
+that the email is queued rather than awaited, and that retention drops rows past 90 days while
+keeping recent ones.

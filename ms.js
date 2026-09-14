@@ -12884,7 +12884,12 @@ async function buzzRender(){
   catch(e){ box.innerHTML = '<div class="ms-card"><div class="bz-said bad">'+e.message+'</div></div>'; return; }
 
   let h = '<div class="bz-lede">One line, straight to the other phone, with your name on it. '
-        + 'No thread and nothing to scroll — say the one thing and it is said.</div>';
+        + 'No thread and nothing to scroll — say the one thing and it is said.</div>'
+        + '<div class="bz-terms">Buzz is a convenience, not a guarantee. It usually arrives in '
+        + 'seconds — but phones go flat and networks fail, so <b>if it matters, phone</b>. '
+        + 'Either of you can close it at any time. Closing it closes it for both, we tell the '
+        + 'other person plainly, and whoever closed it can open it again. You already have each '
+        + 'other\u2019s numbers; Buzz is only the easy version of a call you could always make.</div>';
 
   h += '<div class="ms-section-lbl">This phone</div><div class="ms-card">'
      + '<div class="bz-row"><div class="bz-lbl"><b>Let TrustSquare buzz this phone</b>'
@@ -12903,9 +12908,19 @@ async function buzzRender(){
     _bzPairs.forEach(function(p, i){
       h += '<div class="ms-card" id="bz-card-'+i+'">'
         + '<div class="bz-who"><div class="bz-av">'+bzInitials(p.other_name)+'</div>'
-        + '<div class="bz-nm">'+p.other_name+'<span>'+p.other_email+'</span></div></div>'
-        + '<div class="bz-row"><div class="bz-lbl">Let <b>'+p.other_name+'</b> buzz me'
-        + '<span>Your switch, for this person only.</span></div>'
+        + '<div class="bz-nm">'+p.other_name+'<span>'+p.other_email+'</span></div></div>';
+      if(p.closed){
+        h += '<div class="bz-closed">Buzz is closed between you and '+p.other_name+'. '
+           + 'You still have each other\u2019s number.'
+           + (p.closed_by_me
+               ? '<button class="bz-reopen" data-open="'+i+'">Open it again</button>'
+               : '<span class="bz-fine">'+p.other_name+' closed it, so only they can open it '
+                 + 'again.</span>')
+           + '</div></div>';
+        return;
+      }
+      h += '<div class="bz-row"><div class="bz-lbl">Let <b>'+p.other_name+'</b> buzz me'
+        + '<span>Switching this on accepts the terms above, for this person only.</span></div>'
         + '<div class="bz-sw'+(p.i_allow_them?' on':'')+'" data-allow="'+i+'"></div></div>'
         + '<div class="bz-send"><input id="bz-in-'+i+'" type="text" maxlength="120" '
         + 'autocomplete="off" placeholder="Say it in one line" data-i="'+i+'">'
@@ -12913,7 +12928,10 @@ async function buzzRender(){
         + '<div class="bz-left" id="bz-left-'+i+'"></div>'
         + (p.they_allow_me ? '' : '<div class="bz-blocked">'+p.other_name+' has not switched '
             + 'buzzes on for you yet, so yours will not arrive. Ask them to open Buzz once.</div>')
-        + '<div id="bz-said-'+i+'"></div></div>';
+        + '<div id="bz-said-'+i+'"></div>'
+        + '<div class="bz-close-row"><a data-close="'+i+'">Close Buzz with '+p.other_name+'</a>'
+        + '<span>Closes it both ways. They are told, without blame.</span></div>'
+        + '</div>';
     });
   }
   box.innerHTML = h;
@@ -12950,6 +12968,29 @@ async function buzzRender(){
       left.textContent = inp.value.length ? (120 - inp.value.length) + ' left' : '';
     };
     inp.onkeydown = function(e){ if(e.key==='Enter'){ e.preventDefault(); go.click(); } };
+  });
+  box.querySelectorAll('[data-close]').forEach(function(el){
+    el.onclick = async function(){
+      const p = _bzPairs[+el.getAttribute('data-close')];
+      el.textContent = 'Closing…';
+      try{
+        await bzApi('/buzz/close', 'POST',
+          {email: bzEmail(), other_email: p.other_email, close: true});
+        showToast('Closed. ' + p.other_name + ' has been told.');
+      }catch(e){ showToast(e.message); }
+      buzzRender();
+    };
+  });
+  box.querySelectorAll('[data-open]').forEach(function(el){
+    el.onclick = async function(){
+      const p = _bzPairs[+el.getAttribute('data-open')];
+      el.textContent = 'Opening…';
+      try{
+        await bzApi('/buzz/close', 'POST',
+          {email: bzEmail(), other_email: p.other_email, close: false});
+      }catch(e){ showToast(e.message); }
+      buzzRender();
+    };
   });
   box.querySelectorAll('[data-send]').forEach(function(btn){
     btn.onclick = async function(){

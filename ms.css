@@ -1421,3 +1421,18 @@ details.te-sec[open] > summary .te-chev { transform: rotate(180deg); }
 .bz-said.bad{background:#fdeceb;color:#8a2c22;}
 .bz-said b{color:var(--text);}
 .bz-blocked{font-size:12px;color:var(--text-3);margin-top:9px;line-height:1.5;}
+
+/* Buzz — the terms, said where the choice is made (CPA s49 wants a limitation
+   drawn to attention and acknowledged, not buried), and the close/reopen row. */
+.bz-terms{font-size:12px;line-height:1.55;color:var(--text-3);margin:0 0 14px;padding:11px 13px;
+ border-radius:12px;background:var(--surface-2);border:1px solid var(--border);}
+.bz-terms b{color:var(--text);}
+.bz-close-row{margin-top:12px;padding-top:11px;border-top:0.5px solid var(--border);}
+.bz-close-row a{font-size:12.5px;font-weight:700;color:#991b1b;cursor:pointer;}
+.bz-close-row span{display:block;font-size:11.5px;color:var(--text-3);margin-top:3px;}
+.bz-closed{font-size:13px;line-height:1.55;color:var(--text-2);padding:12px;border-radius:12px;
+ background:var(--surface-2);border:1px solid var(--border);}
+.bz-closed .bz-fine{display:block;font-size:11.5px;color:var(--text-3);margin-top:6px;}
+.bz-reopen{display:block;margin-top:10px;padding:9px 14px;border:1px solid var(--border);
+ border-radius:50px;background:transparent;color:var(--accent);font:inherit;font-size:12.5px;
+ font-weight:700;cursor:pointer;}

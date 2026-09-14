@@ -21742,5 +21742,75 @@ def rg_feed_block_body_readable():
     return out
 
 
+@entry("RG-0366", "one buzz can never hold a shared worker thread long enough to slow the SITE -- "
+                  "the push is capped, the email fallback is off the request path, and buzz_log "
+                  "does not grow without a ceiling",
+       LOCKED, fixed_on="2026-09-14",
+       scope="bea_main.py: BUZZ_PUSH_TIMEOUT, BUZZ_LOG_KEEP_DAYS, the /buzz handler and _buzz_prune. "
+             "Four source legs, because the fault is a latency property of the request path and no "
+             "live probe can distinguish a fast vendor from a capped one: (a) BUZZ_PUSH_TIMEOUT is "
+             "defined and is <= 2 seconds; (b) the /buzz push call passes that timeout explicitly, "
+             "so it cannot silently inherit the 8s default again; (c) the email fallback is queued "
+             "with background_tasks.add_task and is NOT awaited inline; (d) BUZZ_LOG_KEEP_DAYS is "
+             "defined and _buzz_prune is actually called from the send path. SCOPE IS THE CLASS, "
+             "not this endpoint: any NEW sync endpoint that blocks on an outside vendor reopens "
+             "the same hole, which is why the numbers live in named constants.",
+       ref="BUZZ-CAP-1 (14 Sep 2026). David asked what Buzz costs if it escalates and what that "
+           "would do to the app's traffic; the modelling answered the second half and found a real "
+           "fault in Claude's own build. Bandwidth and storage are rounding errors -- 37 GB/month "
+           "at 500k active pairs against 20 TB included. THREADS are the ceiling: /buzz is a sync "
+           "endpoint on the ~40-slot shared threadpool that also serves listing pages, so a slow "
+           "push vendor would not have made Buzz slow, it would have made the SITE slow. As built, "
+           "the email fallback sat on the request path at 20s worst case -- all 40 threads saturate "
+           "at TWO buzzes a second, which is inside the peak for a modest userbase. Capped push "
+           "(2s) plus the email moved to BackgroundTasks lifts that to 20/sec, and ~160/sec on a "
+           "healthy push. buzz_log was the only unbounded part (23 GB/year at 500k pairs on an "
+           "80 GB disk shared with the database), so it ages out at 90 days, pruned lazily on "
+           "roughly one send in five hundred -- the pattern the wishlist signals already use "
+           "instead of a cron. See BUZZ_CAPACITY_2026-09-14.md for the stated inputs and the "
+           "watch triggers (sustained >10 buzzes/sec moves the push off the request path too; "
+           "buzz_log >2 GB shortens retention, never the feature).")
+def rg_buzz_thread_capacity():
+    out = []
+    src = repo_file("bea_main.py")
+    if src is None:
+        out.append((INFO, "NOT EVALUATED - bea_main.py is not readable from here"))
+        return out
+
+    m = re.search(r"^BUZZ_PUSH_TIMEOUT\s*=\s*(\d+)", src, re.M)
+    if not m:
+        out.append((FAIL, "BUZZ_PUSH_TIMEOUT is gone -- the buzz push falls back to the 8s default "
+                          "and ~40 shared worker threads saturate at 5 buzzes/sec, which slows the "
+                          "whole site and not just Buzz (BUZZ-CAP-1)"))
+    elif int(m.group(1)) > 2:
+        out.append((FAIL, "BUZZ_PUSH_TIMEOUT has been raised to %ss -- every extra second is a "
+                          "worker thread held off the listing pages (BUZZ-CAP-1)" % m.group(1)))
+
+    i = src.find('@app.post("/buzz")')
+    if i < 0:
+        out.append((INFO, "NOT EVALUATED - no /buzz endpoint in this tree"))
+        return out
+    j = src.find("\ndef _b3_ignored_count", i)
+    body = src[i:j if j > i else i + 6000]
+
+    if "timeout=BUZZ_PUSH_TIMEOUT" not in body:
+        out.append((FAIL, "the /buzz push no longer passes timeout=BUZZ_PUSH_TIMEOUT -- it has "
+                          "silently inherited the 8s default again (BUZZ-CAP-1)"))
+    if "background_tasks.add_task" not in body:
+        out.append((FAIL, "the buzz email fallback is back ON the request path -- a 20s mail "
+                          "provider saturates all 40 worker threads at TWO buzzes a second and the "
+                          "SITE goes slow, not just Buzz (BUZZ-CAP-1)"))
+    if "_buzz_prune(" not in body:
+        out.append((FAIL, "_buzz_prune is no longer called from the send path -- buzz_log grows "
+                          "without a ceiling (23 GB/year at 500k pairs, on the same 80 GB disk as "
+                          "the database) (BUZZ-CAP-1)"))
+    if not re.search(r"^BUZZ_LOG_KEEP_DAYS\s*=\s*\d+", src, re.M):
+        out.append((FAIL, "BUZZ_LOG_KEEP_DAYS is gone -- retention is the only thing keeping "
+                          "buzz_log bounded (BUZZ-CAP-1)"))
+
+    return out or [(INFO, "push capped at %ss, email fallback queued off the request path, "
+                          "buzz_log aged out -- one buzz cannot hold a listing-page thread"
+                          % (m.group(1) if m else "?"))]
+
 if __name__ == "__main__":
     sys.exit(main())

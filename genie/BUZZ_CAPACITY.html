@@ -1,0 +1,85 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Buzz — what it costs if it escalates</title><style>
+*{box-sizing:border-box}
+body{margin:0;background:#04100c;color:#eaf3ee;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:34px 20px 70px}
+h1{font-size:29px;letter-spacing:-.6px;margin:0 0 6px}
+.date{color:#84a396;font-size:13px;margin:0 0 24px}
+.verdict{font-size:15.5px;line-height:1.65;color:#cfe6db;padding:15px 17px;border-radius:14px;
+ background:rgba(22,169,124,.10);border:1px solid #16A97C;margin:0 0 14px}
+.verdict b{color:#8ff0c8}
+.alarm{font-size:15.5px;line-height:1.65;padding:15px 17px;border-radius:14px;
+ background:rgba(194,86,74,.10);border:1px solid #C2564A;color:#f7c9c1;margin:0 0 28px}
+.alarm b{color:#ffb3a6}
+h2{font-size:19px;margin:30px 0 12px;letter-spacing:-.3px}
+h2 small{display:block;font-size:13px;font-weight:400;color:#84a396;margin-top:3px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:right;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#84a396;
+ font-weight:800;padding:0 10px 8px;border-bottom:1px solid #163128}
+th:first-child{text-align:left}
+td{padding:10px;border-bottom:1px solid rgba(22,49,40,.7);text-align:right}
+td:first-child{text-align:left;font-weight:700}
+td.pk{color:#f0cc8a;font-weight:700}
+tbody tr:last-child td{color:#eaf3ee}
+.bar{display:flex;align-items:center;gap:12px;margin-bottom:9px;font-size:13px}
+.bar .lbl{flex:0 0 260px;color:#cfe6db}
+.bar .track{flex:1;height:16px;border-radius:8px;background:rgba(255,255,255,.05);
+ border:1px solid #163128;overflow:hidden}
+.bar .track i{display:block;height:100%}
+.bar.bad .track i{background:#C2564A}
+.bar.ok .track i{background:#16A97C}
+.bar .num{flex:0 0 80px;text-align:right;font-weight:800}
+.bar.bad .num{color:#f0a79b} .bar.ok .num{color:#8ff0c8}
+.scale{font-size:11.5px;color:#84a396;margin:6px 0 0}
+.fixed{margin-top:22px;border-radius:16px;border:1px solid #163128;background:rgba(255,255,255,.04);padding:16px 18px}
+.fixed h3{margin:0 0 10px;font-size:15px;color:#8ff0c8}
+.fixed p{margin:0 0 9px;font-size:13.5px;line-height:1.6;color:#cfe6db}
+.fixed code{background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px;font-size:12.5px}
+.trig{margin-top:18px;border-radius:16px;padding:15px 17px;background:rgba(224,174,78,.09);
+ border:1px solid rgba(224,174,78,.35);color:#f0cc8a;font-size:13.5px;line-height:1.65}
+.trig>b:first-child{display:block;margin-bottom:6px}
+@media(max-width:700px){.bar .lbl{flex:0 0 150px;font-size:12px}.bar .num{flex:0 0 64px}}
+@media(max-width:560px){.wrap{padding:22px 14px 50px}h1{font-size:23px}td,th{padding:8px 5px;font-size:12px}}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tw table{min-width:440px}
+code{word-break:break-word}
+</style></head><body><div class="wrap">
+<h1>Buzz — what it costs if it escalates</h1>
+<p class="date">MarketSquare &middot; 14 September 2026 &middot; Hetzner CPX22: 3 vCPU, 4&nbsp;GB, 80&nbsp;GB disk, 20&nbsp;TB traffic</p>
+
+<div class="verdict"><b>Bandwidth and CPU are not the question.</b> At half a million active pairs
+Buzz uses <b>37&nbsp;GB a month against 20&nbsp;000&nbsp;GB included — under 0.2%</b>. A buzz is a few
+hundred bytes in and one small encrypted payload out: no page render, no image, no query of any size.</div>
+
+<div class="alarm"><b>The ceiling is worker threads — and that is exactly how it would have hurt the app.</b>
+<code style="background:rgba(0,0,0,.25);padding:1px 6px;border-radius:5px">/buzz</code> runs on the
+same ~40 shared threads that serve listing pages. A slow push vendor would not have made Buzz slow;
+it would have made <b>the site</b> slow. That was a real fault, found by asking this question, and it
+is fixed.</div>
+
+<h2>What the traffic becomes<small>Assumes a pair buzzes ~4×/week, and that 35% of a day lands in the 06:00–08:00 window — "running late" is a correlated event.</small></h2>
+<div class="tw"><table><thead><tr><th>active pairs</th><th>buzzes/day</th><th>peak/sec</th><th>traffic/month</th><th>log/year</th></tr></thead><tbody><tr><td>1 000</td><td>571</td><td class="pk">0.0</td><td>0.07 GB</td><td>0.0 GB</td></tr><tr><td>10 000</td><td>5 714</td><td class="pk">0.3</td><td>0.75 GB</td><td>0.5 GB</td></tr><tr><td>50 000</td><td>28 571</td><td class="pk">1.4</td><td>3.73 GB</td><td>2.3 GB</td></tr><tr><td>100 000</td><td>57 143</td><td class="pk">2.8</td><td>7.46 GB</td><td>4.6 GB</td></tr><tr><td>500 000</td><td>285 714</td><td class="pk">13.9</td><td>37.29 GB</td><td>22.9 GB</td></tr></tbody></table></div>
+
+<h2>How many buzzes a second saturate the whole app<small>Log scale. The two red rows are what the first build would have done.</small></h2>
+<div class="bar bad"><span class="lbl">email fallback on the request · 20s</span><span class="track"><i style="width:21.6%"></i></span><span class="num">2/sec</span></div><div class="bar bad"><span class="lbl">a slow push vendor · 8s</span><span class="track"><i style="width:35.3%"></i></span><span class="num">5/sec</span></div><div class="bar ok"><span class="lbl">now: push capped · 2s</span><span class="track"><i style="width:59.9%"></i></span><span class="num">20/sec</span></div><div class="bar ok"><span class="lbl">now: healthy push · 0.25s</span><span class="track"><i style="width:100.0%"></i></span><span class="num">160/sec</span></div>
+<p class="scale">Two a second is inside the peak for a modest userbase — which is why this was worth fixing before anyone used it.</p>
+
+<div class="fixed"><h3>The three changes</h3>
+<p><b>Push capped</b> — <code>BUZZ_PUSH_TIMEOUT = 2</code>: a buzz may hold a worker thread for two
+seconds, not eight. The intro-reminder lane keeps its 8&nbsp;s default; the timeout became a
+parameter rather than a global change.</p>
+<p><b>Email off the request path</b> — queued with <code>BackgroundTasks</code>. The sender is told
+immediately that it is going by email; the request never waits on a mail provider.</p>
+<p><b>Retention on the only unbounded thing</b> — <code>BUZZ_LOG_KEEP_DAYS = 90</code>, pruned lazily
+on ~1 send in 500. The log is operational — rate limiting and did-it-arrive — never a conversation,
+so ageing it out costs nothing. Without it: 23&nbsp;GB a year on an 80&nbsp;GB disk.</p></div>
+
+<div class="trig"><b>Watched, not assumed</b>
+Sustained above <b>~10 buzzes/sec</b> (roughly 350&nbsp;000 active pairs) → move the push off the
+request path too, exactly as the email now is; cheap when needed, unnecessary before.
+<b>buzz_log above ~2&nbsp;GB</b> → shorten the retention, not the feature.
+And noted honestly: <code>database.py</code> sets no <code>busy_timeout</code>, so write contention
+surfaces as an immediate "database is locked" rather than a short wait — pre-existing and app-wide,
+not caused by Buzz, but it adds writes, and it is a one-line hardening whenever that file is next open.</div>
+</div></body></html>

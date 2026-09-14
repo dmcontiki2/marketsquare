@@ -186,3 +186,50 @@ same defect class as an undated status assertion (the ONETAP_SETUP.md "(this is 
 - **CORRECTION to the 2 Sep BUILD_QUEUE:** RG-0205/0206/0207 (listing-friction batch) shipped
   4 Sep and RG-0208 (intro reminder ladder) is in `bea_main.py` — all four were being carried as
   open work by a generated file that had gone stale. Verified in source, not recalled.
+
+### 2026-09-14 (appended) — the repair lane SHIPPED, and the Wednesday build is scheduled
+
+- **[C] CLOSED — OFFLINE-TRUTH-1 + SW-REGISTER-1 are LIVE on trustsquare.co.** Deploy ref advanced
+  to ceba06b via the RUL-092 relay; `ms.js?v=628` serving. VERIFIED IN DAVID'S OWN CHROME, not from
+  the API: one service-worker registration at scope `https://trustsquare.co/`, state `activated`,
+  **`navigator.serviceWorker.controller` true** (it was null on 13 Sep) · no banner while online ·
+  copy reads "You're offline — some things won't load" · a spurious `offline` event fired at the
+  live page did NOT raise the banner, which is the exact latch that put the false message in front
+  of David. Zero console errors. Ledger RG-0363 + RG-0364 green.
+- **This unblocks RUL-122 (web push) and RUL-123 (add-to-home-screen at first publish)** — both were
+  built and unreachable because nothing controlled the page.
+- **[C] SCHEDULED — the RUL-126 baseline batch build, Wed 17 Sep 2026 18:00 SAST** (trigger
+  `trig_015ezDrj6JKMhnLc2u2Rt2Rr`, bound to David's PC, push + email on completion). Brief carries
+  the build order, the rendered-app proof standard, and the working rules (mount str-replace, git
+  unlock, diff-against-server, ?v= bump, request_deploy.py).
+- **[D] ONE CLICK, AND IT IS THE ONLY ONE:** the task was created on `claude-opus-5`. David asked
+  for **Fable 5.1 at Extra effort**. A device-bound task's model CANNOT be patched through the API
+  — the server refuses it ("set the model inside the signed session_request edit"), because the
+  binding signs the prompt to that machine. **David sets model = Fable 5.1 and effort = Extra in
+  the task's settings in the Claude desktop app.** Stated rather than left to be discovered at
+  18:00 on Wednesday.
+
+- **[D] NEW 14 Sep — Buzz EULA clause drafted, NOT applied.** David asked for Buzz to be provided
+  as-is with a both-sides off switch, written into the EULA. Drafted at
+  `EULA_CLAUSE_BUZZ_DRAFT_2026-09-14.md` and routed to the EULA revision track rather than edited
+  in, because that document has an external review track. Three corrections are in the draft:
+  "voetstoots" is a sale-of-goods term and does not reach a service (and CPA s55/s56 cannot be
+  contracted out of); "no complaints allowed" cannot be written at all; and CPA s49 requires the
+  limitation to be conspicuous and acknowledged, not buried — which is why the same words already
+  appear on screen where the switch is (built and live-bound 14 Sep). **David's call: adopt, amend,
+  or send to counsel.**
+- **[C] DONE 14 Sep — Buzz closing is symmetric.** One close ends it both ways, the other party is
+  told without blame, and only the closer can reopen. Fixes a real flaw in Claude's first build: a
+  per-side switch let the party who switched off keep buzzing the other — a one-way megaphone, and
+  in an employer/worker pair that is worse than no channel. 34 endpoint checks green; close and
+  reopen driven in a rendered browser.
+- **[C] DONE 14 Sep — Buzz capacity fault found and fixed.** David asked what it costs if it
+  escalates. Bandwidth is a rounding error (37 GB/month at 500k pairs against 20 TB), but `/buzz`
+  was a sync endpoint holding one of ~40 shared worker threads for up to 8s (slow push) or 20s
+  (email) — **the same threads that serve listing pages**, so 2–5 buzzes/sec would have saturated
+  the SITE. Push now capped at 2s (intro lane keeps its 8s default), email queued off the request,
+  and `buzz_log` given 90-day retention — it was the only part growing without a ceiling (23 GB/yr
+  at that size on an 80 GB disk). Working: `BUZZ_CAPACITY_2026-09-14.md`. 40 endpoint checks green.
+- **[C] NOTED, not caused by Buzz:** `database.py` sets no `busy_timeout`, so SQLite write
+  contention surfaces as an immediate "database is locked" rather than a short wait. App-wide and
+  pre-existing; one line whenever that file is next open.

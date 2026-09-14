@@ -794,6 +794,19 @@ def run_migrations(conn):
         created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(a_email, b_email)
     )""")
+    # CLOSING IS SYMMETRIC (David, 14 Sep 2026). The per-side allow flags above are
+    # the ONBOARDING consent and stay per-side; closing is different and belongs to
+    # the PAIR. Claude's first build let one side switch off while still being able
+    # to buzz the other - a one-way megaphone, and in a pair with a power gradient
+    # (an employer and a domestic worker) that is worse than no channel at all.
+    # One close ends it in both directions, and only whoever closed it may reopen it,
+    # or the close would mean nothing the moment the other party flipped it back.
+    for _bz_col in ("ALTER TABLE buzz_pairs ADD COLUMN closed_at TEXT",
+                    "ALTER TABLE buzz_pairs ADD COLUMN closed_by TEXT"):
+        try:
+            conn.execute(_bz_col)
+        except Exception:
+            pass  # column already exists
     conn.execute("CREATE INDEX IF NOT EXISTS idx_buzz_pairs_a ON buzz_pairs(a_email)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_buzz_pairs_b ON buzz_pairs(b_email)")
     # The log is OPERATIONAL, not a conversation: it exists to rate-limit a
@@ -21926,9 +21939,15 @@ INTRO_B3_WINDOW_DAYS = 30
 INTRO_B3_WARN_AT = 2          # warn at 2 ignored; the EULA blocks at 3
 
 
-def _push_to_seller(conn, seller_email: str, title: str, body: str) -> int:
+def _push_to_seller(conn, seller_email: str, title: str, body: str, timeout: int = 8) -> int:
     """Web push to every enabled device registered under the seller's buyer_token.
-    Returns devices delivered (0 when no subscription / push unavailable). Never raises."""
+    Returns devices delivered (0 when no subscription / push unavailable). Never raises.
+
+    CAPACITY (14 Sep 2026): `timeout` is how long ONE device may hold the calling
+    worker thread. The default stays 8s for the intro-reminder lane, which is a
+    background job and does not care. Buzz passes a much shorter one, because a
+    buzz is on a user request path and a slow push vendor there does not slow the
+    buzz - it slows the whole app, by occupying threads that serve listing pages."""
     if not _PUSH_AVAILABLE or not _vapid_private_arg:
         return 0
     try:
@@ -21947,7 +21966,7 @@ def _push_to_seller(conn, seller_email: str, title: str, body: str) -> int:
                 _webpush(subscription_info={"endpoint": r["push_endpoint"],
                                             "keys": json.loads(r["push_keys"])},
                          data=payload, vapid_private_key=_vapid_private_arg,
-                         vapid_claims={"sub": VAPID_SUBJECT}, timeout=8)
+                         vapid_claims={"sub": VAPID_SUBJECT}, timeout=timeout)
                 conn.execute("UPDATE wearable_devices SET last_ping_at=? WHERE id=?",
                              (datetime.now(timezone.utc).isoformat(), r["id"]))
                 n += 1
@@ -21979,6 +21998,8 @@ def _push_to_seller(conn, seller_email: str, title: str, body: str) -> int:
 # the backup, and nothing with a per-message cost, which is why there is no SMS
 # path here and must not be one added later without David reopening that ruling.
 # ════════════════════════════════════════════════════════════════════════════
+BUZZ_PUSH_TIMEOUT = 2       # seconds ONE buzz may hold a worker thread (see below)
+BUZZ_LOG_KEEP_DAYS = 90     # buzz_log is operational, not a conversation - see _buzz_prune
 BUZZ_MAX_CHARS    = 120     # one sentence, not a paragraph
 BUZZ_MAX_PER_HOUR = 30      # CLAUDE'S TECHNICAL CALL, not a ruling: a doorbell
                             # with no limit is a doorbell somebody can lean on.
@@ -22027,8 +22048,12 @@ def _buzz_pair_view(row, me: str):
     other = row["b_email"] if row["a_email"] == me else row["a_email"]
     i_allow    = row["a_allows"] if row["a_email"] == me else row["b_allows"]
     they_allow = row["b_allows"] if row["a_email"] == me else row["a_allows"]
+    closed_by = (row["closed_by"] or "") if "closed_by" in row.keys() else ""
     return {"pair_id": row["id"], "other_email": other,
             "i_allow_them": bool(i_allow), "they_allow_me": bool(they_allow),
+            "closed": bool(closed_by),
+            "closed_by_me": bool(closed_by) and closed_by == me,
+            "closed_by_them": bool(closed_by) and closed_by != me,
             "source": row["source"], "created_at": row["created_at"]}
 
 
@@ -22094,6 +22119,66 @@ def buzz_allow(req: BuzzAllowReq, _key: str = Depends(auth.require_api_key)):
     return out
 
 
+class BuzzCloseReq(BaseModel):
+    email:       str
+    other_email: str
+    close:       bool = True
+
+
+@app.post("/buzz/close")
+def buzz_close(req: BuzzCloseReq, _key: str = Depends(auth.require_api_key)):
+    """Close Buzz with somebody, or reopen what you closed.
+
+    Closing is SYMMETRIC and it is TOLD. Symmetric because a channel one party can
+    use and the other cannot is a megaphone, not a conversation. Told because a
+    channel that silently stops working is a lie by omission, and because the
+    person left guessing waits for an answer that will never come - which in this
+    workforce can cost somebody a day's pay. The notice names no fault: it states
+    that Buzz is closed and that they still have each other's number, which they
+    always did. Only the closer can reopen, or the close means nothing."""
+    a, b = _buzz_key(req.email, req.other_email)
+    me = (req.email or "").strip().lower()
+    conn = database.get_db()
+    row = _buzz_pair(conn, a, b)
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="no pair between these two")
+    closed_by = (row["closed_by"] or "")
+    if req.close:
+        if closed_by:
+            out = _buzz_pair_view(_buzz_pair(conn, a, b), me); conn.close(); return out
+        conn.execute("UPDATE buzz_pairs SET closed_by=?, closed_at=? WHERE id=?",
+                     (me, datetime.now(timezone.utc).isoformat(), row["id"]))
+        conn.commit()
+        other = row["b_email"] if row["a_email"] == me else row["a_email"]
+        mine  = _buzz_name(conn, me)
+        # One last notice, then the channel is quiet. Not a buzz FROM them - a fact.
+        try:
+            if not _push_to_seller(conn, other, "Buzz closed",
+                                   "Buzz is closed between you and " + mine
+                                   + ". You still have each other’s number.",
+                                   timeout=BUZZ_PUSH_TIMEOUT):
+                _send_html_email(other, "Buzz closed",
+                    "<p style=\"font:16px/1.5 system-ui,sans-serif\">Buzz is closed between you and <b>"
+                    + _buzz_esc(mine) + "</b>. You still have each other\u2019s number.</p>",
+                    "Buzz is closed between you and " + mine + ". You still have each other's number.")
+        except Exception as exc:
+            _log.warning("BUZZ-CLOSE-1 notice failed: %s", exc)
+    else:
+        if not closed_by:
+            out = _buzz_pair_view(row, me); conn.close(); return out
+        if closed_by != me:
+            conn.close()
+            raise HTTPException(status_code=403,
+                                detail="only the person who closed it can open it again")
+        conn.execute("UPDATE buzz_pairs SET closed_by=NULL, closed_at=NULL WHERE id=?",
+                     (row["id"],))
+        conn.commit()
+    out = _buzz_pair_view(_buzz_pair(conn, a, b), me)
+    conn.close()
+    return out
+
+
 @app.get("/buzz/pairs")
 def buzz_pairs(email: str, _key: str = Depends(auth.require_api_key)):
     """Everyone this person can buzz, with both switches as they stand."""
@@ -22110,8 +22195,22 @@ def buzz_pairs(email: str, _key: str = Depends(auth.require_api_key)):
     return out
 
 
+def _buzz_prune(conn):
+    """Lazy retention, the same pattern as _purge_expired_signals: keep the table
+    small without a cron. buzz_log exists to rate-limit and to answer did-it-arrive,
+    NOT to be a conversation, so nothing of value is lost by ageing it out - and an
+    unbounded log is the only part of Buzz that grows without a ceiling on an 80 GB
+    disk."""
+    try:
+        conn.execute("DELETE FROM buzz_log WHERE created_at < datetime('now', ?)",
+                     ("-%d days" % BUZZ_LOG_KEEP_DAYS,))
+    except Exception as exc:
+        _log.warning("BUZZ-PRUNE-1 skipped: %s", exc)
+
+
 @app.post("/buzz")
-def buzz_send(req: BuzzSendReq, _key: str = Depends(auth.require_api_key)):
+def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
+              _key: str = Depends(auth.require_api_key)):
     """Send one line, with the sender's name on it.
 
     Refuses, in this order and for a stated reason every time: an empty line, no
@@ -22128,6 +22227,10 @@ def buzz_send(req: BuzzSendReq, _key: str = Depends(auth.require_api_key)):
         raise HTTPException(status_code=404, detail="you are not connected to this person")
     sender   = (req.from_email or "").strip().lower()
     receiver = (req.to_email or "").strip().lower()
+    if (row["closed_by"] or ""):
+        conn.close()
+        raise HTTPException(status_code=403,
+                            detail="Buzz is closed between you two \u2014 use their number")
     view = _buzz_pair_view(row, receiver)          # the RECEIVER's own switch
     if not view["i_allow_them"]:
         conn.close()
@@ -22142,25 +22245,31 @@ def buzz_send(req: BuzzSendReq, _key: str = Depends(auth.require_api_key)):
         raise HTTPException(status_code=429,
                             detail="that is a lot of buzzes in an hour — try again shortly")
     name = _buzz_name(conn, sender)
-    devices = _push_to_seller(conn, receiver, name, text)      # title = the NAME
+    # CAPACITY, and it is the whole story for this endpoint. Bandwidth and storage are
+    # rounding errors at any volume this app will see; THREADS are the ceiling. A sync
+    # endpoint holds one of the ~40 shared worker threads for as long as it blocks, and
+    # those same threads serve the rest of the site - so a slow push vendor would not
+    # make Buzz slow, it would make the APP slow. Two consequences, both here:
+    #   (a) the push is capped at BUZZ_PUSH_TIMEOUT, not the 8s default;
+    #   (b) the email fallback - 20s worst case - is moved OFF the request entirely.
+    devices = _push_to_seller(conn, receiver, name, text, timeout=BUZZ_PUSH_TIMEOUT)
     channel = "push" if devices else ""
     if not devices:
-        # RUL-122's backup. Never SMS.
-        try:
-            sent = _send_html_email(
-                receiver, "Buzz from " + name,
-                "<p style=\"font:16px/1.5 system-ui,sans-serif\"><b>" + _buzz_esc(name)
-                + "</b> buzzed you:</p><p style=\"font:20px/1.4 system-ui,sans-serif\">"
-                + _buzz_esc(text) + "</p>",
-                name + " buzzed you: " + text)
-            channel = "email" if sent in ("sent", "dry") else ""
-        except Exception as exc:
-            _log.warning("BUZZ-1 email backup failed: %s", exc)
+        # RUL-122's backup. Never SMS. Queued, not awaited: the sender is told it is
+        # going by email and the request returns without waiting for a mail provider.
+        channel = "email"
+        _bz_html = ("<p style=\"font:16px/1.5 system-ui,sans-serif\"><b>" + _buzz_esc(name)
+                    + "</b> buzzed you:</p><p style=\"font:20px/1.4 system-ui,sans-serif\">"
+                    + _buzz_esc(text) + "</p>")
+        background_tasks.add_task(_send_html_email, receiver, "Buzz from " + name,
+                                  _bz_html, name + " buzzed you: " + text)
     conn.execute("""INSERT INTO buzz_log (pair_id, from_email, to_email, body, channel, devices)
                     VALUES (?, ?, ?, ?, ?, ?)""",
                  (row["id"], sender, receiver, text, channel or "none", devices))
     conn.commit()
     bid = conn.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
+    if bid % 500 == 0:            # roughly one send in five hundred pays for retention
+        _buzz_prune(conn); conn.commit()
     conn.close()
     return {"id": bid, "from_name": name, "text": text,
             "delivered": channel or "none", "devices": devices}
