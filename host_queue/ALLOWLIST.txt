@@ -158,3 +158,8 @@ run_py     CityLauncher\scripts\clean_unchecked_cities.py
 # --- the roster writes nothing. Never touches email, city, category or status. Backs the DB
 # --- up beside itself first. Sends nothing, deletes nothing.
 run_py     CityLauncher\scripts\refresh_roster_names.py
+
+# --- Widened 14 Sep 2026 (QL-COMIC-1). The media lane itself, so the Quick Listing
+# --- email-strip screens (and any future photo refresh) ship without a session scp.
+# --- Media only by construction: media_push.bat refuses code, RG-0023 watches it.
+run_bat    MarketSquare\media_push.bat

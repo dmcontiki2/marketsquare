@@ -35,6 +35,9 @@ echo  ============================================================
 echo  [1/7] SUPER exemplar photos (assets\super to /static/super)...
 %SYNC% -LocalDir "%PROJECT%\assets\super" -Filter *.jpg -RemoteDir %REMOTE%/static/super -Server %SERVER%
 
+echo  [1c] Quick Listing email-strip screens (genie\email_strip to /orchestrator/qstrip)...
+if exist "%PROJECT%\genie\email_strip" %SYNC% -LocalDir "%PROJECT%\genie\email_strip" -Filter *.jpg -RemoteDir %REMOTE%/orchestrator/qstrip -Server %SERVER%
+
 echo  [1b] Study ^& Work Abroad example photos (assets\studywork to /static/studywork)...
 if exist "%PROJECT%\assets\studywork" %SYNC% -LocalDir "%PROJECT%\assets\studywork" -Filter *.jpg -RemoteDir %REMOTE%/static/studywork -Server %SERVER%
 if exist "%PROJECT%\assets\studywork" %SYNC% -LocalDir "%PROJECT%\assets\studywork" -Filter *.pdf -RemoteDir %REMOTE%/static/studywork -Server %SERVER%
