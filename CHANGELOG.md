@@ -1,3 +1,125 @@
+## 2026-09-14 — The sweep: eighteen more endpoints let the caller say who he was
+
+David asked one question about the spreader and it opened a class: *"i would only expect
+subscribers to be able to use the comms... Even a free trustsquare subscriber is still a subscriber
+- he read the eula and accepted it and we may already hhave a TS for him."* Then, on being handed
+choices: *"Please close all of these open actions, there are wau too many for my small mind to keep
+track off, i accept the design to proceed. Please - no open actions for David to first check."*
+
+So this entry closes three things at once. [[RUL-135]] carries the decisions.
+
+### 1. Signed in was not the same as bound (BUZZ-ACCEPT-1)
+BUZZ-BIND-1 proved WHO. It did not prove that the who had ever agreed to anything:
+`eula_accepted_at` is written in exactly ONE place — the seller flow, at first publish — so a
+person who clicked a magic link and never listed had it at NULL, and Buzz would have admitted the
+precise person §3.8 was written to bind. Buzz now needs a proven identity **and** the tick, and
+**first switching Buzz on is the acceptance moment** for anybody who never published.
+
+**It asks for no ID, and David's worry about that was mine to have caused** — I had put
+"acceptance" and "KYC" in the same answer. Three separate rungs: the magic link proves the inbox,
+the tick makes the terms bind, the ID check opens the trust score. Buzz needs the first two.
+
+**Gating the ACTOR gates both sides exactly once**, because a receiver only becomes reachable by
+calling `/buzz/allow` himself — the switch IS the acceptance. `GET /buzz/me` is the one endpoint
+deliberately exempt: the screen asks it BEFORE the tick to know whether to show the tick, and a gate
+that blocks the page carrying the gate is a locked door with the key inside. The on-screen wording
+and §3.8 now come from ONE function (`bzTermsCopy`), because [[RUL-133]](e) says they may never
+drift and two string literals drift the first time somebody edits one.
+
+### 2. Shadow-first was superseded by the instruction that ordered the closing
+A shadow stage IS an open action — its whole purpose is that somebody reads a log later and
+decides. [[RUL-133]](a)'s clean state settles it on facts rather than taste: no onboarded listers,
+nothing to observe, nobody to lock out, and ms.js is the only caller (same origin, so the cookie
+already rides every fetch). **The class enforces by default.** `BUZZ_BIND=0` in the server .env
+drops the whole class back to logging-only without a deploy — the escape hatch, not the resting
+state.
+
+### 3. The sweep, and Buzz was never the worst of it (IDENTITY-BIND-1)
+A walk of all 230 routes found **eighteen more** behind the same public app key taking a person's
+identity out of the request: account closure, banking details, KYC document upload/list/delete, ID
+upload, identity verification (which awards trust signals), Tuppence balance and history, the
+Local Market EULA acceptance, the personal journey map marked "Owner-only" whose owner was whoever
+typed the email. **All bound. Zero remain**, and the ledger now sweeps every route rather than
+re-checking the ones I happened to fix.
+
+Three shapes, because one shape would have been wrong:
+- **`_actor()`** — endpoints acting on one named person's own data: the session decides.
+- **`_admin_only()`** — endpoints that are OURS (`/admin/email-triage`, `PUT .../seller-tier`):
+  `MS_ADMIN_KEY`, which is env-only and was never shipped to a browser. Fail-closed when unset.
+- **`_agency_admin_or_refuse()`** — agency seats: **the agent whose row is being changed is the
+  SUBJECT, never the actor.** Binding to him would have been the wrong fix wearing the right shape.
+
+### Verified, not asserted
+**43 checks** against a temp SQLite database running the **real patched source** lifted out of
+`bea_main.py` — 43 pass. They cover impersonation, the public key with no session, another
+person's switch / pairs / close / pair-creation, the acceptance gate and its exemption, the
+fail-closed reads, the admin key, the fail-closed *unset* admin key, the agency lane, and the escape
+hatch in both directions. The acceptance screen was driven in a **rendered browser** (tick disabled
+→ enabled → accepted → the normal panel), with every API call intercepted so nothing touched
+production. **RG-0371** now carries eight legs including the route sweep, and was proved to FAIL on
+six separate mutations — a guard that cannot fail is not a guard.
+
+### One cliff, closed
+A bound endpoint answering 401 would have shown "API error 401". The three shared fetch helpers now
+say, in words, that the sign-in on this device has lapsed. The cookie runs 180 days, so this is rare
+— but rare and silent is the combination that wastes somebody's evening.
+
+**Not deployed.** The tree is patched and green; the deploy is David's double-click, which it has
+always physically been.
+
+## 2026-09-14 — Buzz was gated on rules, not on people. David asked; it was not.
+
+David, on the spreader: **"Is the security of the app an issue? Can a none subscriber do things in
+it which only subscribers should be able? Is the comms gated in that way as well? Even a free
+trustsquare subscriber is still a subscriber - he read the eula and accepted it and we may already
+hhave a TS for him."**
+
+**The spreader is not a security boundary at all** — same origin, same server, same rulebook
+(RUL-125(a)), so it can be neither safer nor less safe than the app. The answer to the real question
+was worse: **the comms was not gated on identity in any way.**
+
+- `ms.js` line 71 ships `API_KEY` to every browser that loads the site, so the key is **public**, and
+  the code already said so in ACCOUNT-BIND-1's own comment: *"never from a caller-typed email behind
+  the public app key."*
+- Every Buzz endpoint took its actor from the request **body**. The caller declared who he was.
+- The chain ran end to end: `/buzz/pair` connects any two addresses, `/buzz/allow` switches **the
+  victim's own permission on** because it believes the body, and `/buzz` then delivers in his name.
+  The 30-an-hour limit was the only brake.
+- **Verified against production, read-only, with a non-existent address:** `GET /buzz/pairs` answered
+  **200** with the public key and **401** without it. No real person's data was touched.
+
+**The rules were never wrong. WHO was wrong.** The pair, the two switches, the symmetric close and
+the rate limit are all correct and are untouched by this change.
+
+**BUZZ-BIND-1.** ACCOUNT-BIND-1's doctrine (5 Aug) applied where it should have been applied when
+Buzz was built last week — my omission, not an unknown. `_buzz_who()` derives the actor from the
+`ts_user` cookie (magic-link proof of inbox possession) on all five endpoints; the body email is now
+only ever checked against it, and works when absent entirely.
+
+**David's gate, and it is the right one: a PROVEN identity, not a paid one.** A free TrustSquare
+member — EULA read, email proven, TS on file — passes. A stranger holding the public key does not.
+Nothing in this code asks what anybody pays.
+
+**David's ruling on how it lands: shadow first, then enforce.** Dark by default and following
+`launch_switches.account_binding`, with `BUZZ_BIND` in the environment as a Buzz-only override so the
+shadow run can happen on Buzz ahead of the charging lane rather than behind it. While dark, every
+mismatch and every session-less call is logged (`BUZZ-BIND-1 shadow`), so the flip is informed rather
+than hopeful.
+
+**Nothing is expected to break.** The only caller of these endpoints in the whole tree is `ms.js`,
+and `BEA_URL` is the same origin, so the cookie already rides on every one of those fetches.
+
+**Verified, not asserted.** 21 checks against a temp SQLite database running the **real** patched
+source lifted out of `bea_main.py`: impersonation still works while dark **and is logged** (A3/A4);
+enforced, it refuses buzzing as somebody else (403), refuses the public key with no session (401),
+refuses flipping another person's switch, reading another person's pair list, closing another
+person's Buzz, and creating a pair in another person's name; the real sender still gets through, with
+or without an email in the body; and the pair, close, reopen-by-closer and receiver's-switch rules all
+still behave exactly as before. **RG-0371** locks all four legs and was proved to FAIL when the fix
+is reverted.
+
+**Not deployed.** The tree is patched and green; the deploy is David's double-click.
+
 ## 2026-09-14 — TEST-FIXTURE-EXCLUDE-1: the two who "published" were our own test accounts (RG-0370)
 
 David asked to see the two people who had published — the one number that says whether any of this

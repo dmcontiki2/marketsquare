@@ -1,0 +1,194 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Buzz was gated on rules, not on people</title><style>
+*{box-sizing:border-box}
+body{margin:0;background:#04100c;color:#eaf3ee;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1140px;margin:0 auto;padding:34px 20px 70px}
+h1{font-size:28px;letter-spacing:-.6px;margin:0 0 6px}
+.date{color:#84a396;font-size:13px;margin:0 0 22px}
+.q{padding:16px 18px;border-radius:14px;margin:0 0 18px;font-size:15px;line-height:1.7;
+ background:rgba(59,130,246,.10);border:1px solid rgba(59,130,246,.45);color:#cfe6db}
+.q b{color:#9ec9ff}
+h2{font-size:19px;margin:34px 0 12px;letter-spacing:-.3px}
+h2 small{display:block;font-size:13px;font-weight:400;color:#84a396;margin-top:3px}
+code{background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px;font-size:12.5px}
+/* the chain */
+.chain{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.lnk{border-radius:16px;padding:14px 15px;border:1.5px solid rgba(194,86,74,.55);
+ background:rgba(194,86,74,.10);position:relative}
+.lnk .n{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:#ffb3a6;margin-bottom:6px}
+.lnk h3{margin:0 0 6px;font-size:14.5px;color:#f7c9c1}
+.lnk p{margin:0;font-size:12.5px;line-height:1.55;color:#e4bdb6}
+.lnk:after{content:'\2192';position:absolute;right:-13px;top:50%;transform:translateY(-50%);
+ color:#c2564a;font-size:19px;font-weight:900;z-index:2}
+.lnk:last-child:after{content:''}
+.proof{margin-top:12px;border-radius:14px;padding:13px 15px;background:rgba(194,86,74,.14);
+ border:1px solid rgba(194,86,74,.5);font-size:13.5px;line-height:1.7;color:#f7c9c1}
+.proof b{color:#ffb3a6}
+.proof pre{margin:8px 0 0;font:12.5px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;color:#ffd9d2;
+ white-space:pre-wrap}
+/* the two halves */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.half{border-radius:16px;padding:15px 17px;border:1.5px solid}
+.half.ok{border-color:#16A97C;background:rgba(22,169,124,.10)}
+.half.bad{border-color:rgba(194,86,74,.55);background:rgba(194,86,74,.09)}
+.half h3{margin:0 0 8px;font-size:15px}
+.half.ok h3{color:#8ff0c8}.half.bad h3{color:#ffb3a6}
+.half ul{margin:0;padding-left:19px;font-size:13px;line-height:1.7}
+.half.ok ul{color:#cfe6db}.half.bad ul{color:#e4bdb6}
+/* gate */
+.gate{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:4px}
+.g{border-radius:16px;padding:14px 15px;border:1.5px solid;background:rgba(255,255,255,.03)}
+.g.pass{border-color:#16A97C}.g.pass h3{color:#8ff0c8}
+.g.fail{border-color:rgba(194,86,74,.55)}.g.fail h3{color:#ffb3a6}
+.g h3{margin:0 0 4px;font-size:14.5px}
+.g .v{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;margin-bottom:8px}
+.g.pass .v{color:#8ff0c8}.g.fail .v{color:#ffb3a6}
+.g p{margin:0;font-size:12.5px;line-height:1.55;color:#cfe6db}
+/* stages */
+.stage{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.st{border-radius:16px;padding:14px 15px;border:1.5px solid;position:relative}
+.st.now{border-color:#E0AE4E;background:rgba(224,174,78,.10)}
+.st.next{border-color:#2E86E0;background:rgba(46,134,224,.09)}
+.st.done{border-color:#16A97C;background:rgba(22,169,124,.10)}
+.st .w{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;margin-bottom:6px}
+.st.done .w{color:#8ff0c8}.st.now .w{color:#f0cc8a}.st.next .w{color:#a1c9f1}
+.st h3{margin:0 0 5px;font-size:14.5px;color:#eaf3ee}
+.st p{margin:0;font-size:12.5px;line-height:1.55;color:#cfe6db}
+.st .who{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.10);
+ font-size:11.5px;font-weight:700}
+.st.done .who{color:#8ff0c8}.st.now .who{color:#f0cc8a}.st.next .who{color:#a1c9f1}
+.ver{margin-top:12px;border-radius:16px;padding:15px 17px;background:rgba(22,169,124,.09);
+ border:1px solid #16A97C;color:#cfe6db;font-size:13.5px;line-height:1.7}
+.ver>b:first-child{display:block;margin-bottom:7px;color:#8ff0c8}
+.ver ul{margin:6px 0 0;padding-left:20px}
+.note{margin-top:12px;border-radius:16px;padding:15px 17px;background:rgba(224,174,78,.09);
+ border:1px solid rgba(224,174,78,.42);color:#f0cc8a;font-size:13.5px;line-height:1.7}
+.note>b:first-child{display:block;margin-bottom:7px}
+@media(max-width:900px){.chain,.stage,.gate{grid-template-columns:1fr}.two{grid-template-columns:1fr}
+ .lnk:after{content:'\2193';right:auto;left:50%;top:auto;bottom:-15px;transform:translateX(-50%)}}
+@media(max-width:620px){.wrap{padding:22px 14px 50px}h1{font-size:21px}}
+</style></head><body><div class="wrap">
+<h1>Buzz was gated on rules, not on people</h1>
+<p class="date">MarketSquare &middot; 14 September 2026 &middot; BUZZ-BIND-1 + BUZZ-ACCEPT-1 + IDENTITY-BIND-1 &middot; RUL-135 &middot; enforced in the tree, awaiting the deploy</p>
+
+<div class="q"><b>David asked:</b> &ldquo;Is the security of the app an issue? Can a none subscriber do
+things in it which only subscribers should be able? Is the comms gated in that way as well? Even a
+free trustsquare subscriber is still a subscriber &mdash; he read the eula and accepted it and we may
+already have a TS for him.&rdquo;<br><br>
+<b>The spreader was never the question.</b> Same origin, same server, same rulebook (RUL-125(a)) &mdash;
+it can be neither safer nor less safe than the app. The answer to the real question was worse:
+<b>the comms was not gated on identity at all.</b></div>
+
+<h2>The chain, as it stood <small>Four links, each one trusting an email typed into the request body.</small></h2>
+<div class="chain">
+ <div class="lnk"><div class="n">Link 1 &middot; the key</div><h3>The key is public</h3>
+  <p><code>API_KEY</code> sits in <code>ms.js</code> line 71, served to every browser that loads the
+  site. It is an app string, not a secret &mdash; the code's own comment said so a month ago.</p></div>
+ <div class="lnk"><div class="n">Link 2 &middot; the pair</div><h3>Connect any two people</h3>
+  <p><code>/buzz/pair</code> takes both addresses from the body and records the connection. Neither
+  of them has to be you.</p></div>
+ <div class="lnk"><div class="n">Link 3 &middot; the switch</div><h3>Flip the victim's own consent</h3>
+  <p><code>/buzz/allow</code> believes the <code>email</code> field, so a stranger could switch
+  <b>somebody else's</b> permission on for them. This is the link that matters.</p></div>
+ <div class="lnk"><div class="n">Link 4 &middot; the buzz</div><h3>Buzz in his name</h3>
+  <p><code>/buzz</code> sends with <code>from_email</code>'s name on it. The 30-an-hour limit was the
+  only brake in the whole chain.</p></div>
+</div>
+<div class="proof"><b>Proved on production, read-only, with an address that does not exist.</b>
+No real person's data was touched &mdash; this is the key deciding an identity-scoped read:
+<pre>curl  "…/buzz/pairs?email=nobody@example.invalid"                        &rarr; 401
+curl -H "X-Api-Key: &lt;the string in ms.js&gt;"  "…/buzz/pairs?email=…"   &rarr; 200  []</pre></div>
+
+<h2>What was wrong, and what was not</h2>
+<div class="two">
+ <div class="half ok"><h3>Right, and untouched by this change</h3>
+  <ul><li>The pair is the unit of consent, never a global switch.</li>
+  <li>Each side's allow flag belongs to the <b>receiver</b>.</li>
+  <li>Closing is symmetric, told, and only the closer reopens.</li>
+  <li>One line, 120 characters, 30 an hour, 90-day retention.</li>
+  <li>Push first, email backup, never SMS (RUL-122).</li></ul></div>
+ <div class="half bad"><h3>Wrong, and it was only ever one thing</h3>
+  <ul><li><b>WHO.</b> Every endpoint let the caller declare his own identity.</li>
+  <li>The rules were then enforced perfectly &mdash; against the wrong person.</li>
+  <li>Known class: ACCOUNT-BIND-1 named it on 5 Aug and fixed it for charging.</li>
+  <li>Buzz was built last week and simply never wired to it &mdash; my omission.</li></ul></div>
+</div>
+
+<h2>The gate David named <small>A proven identity <b>plus an acceptance</b>, not a paid one. Nothing in this code asks what anybody pays.</small></h2>
+<div class="proof" style="background:rgba(59,130,246,.10);border-color:rgba(59,130,246,.45);color:#cfe6db;margin-bottom:12px">
+<b style="color:#9ec9ff">The second half, which the first fix did not cover.</b> Proving WHO does not prove
+that the who ever agreed to anything. <code>eula_accepted_at</code> is written in exactly one place &mdash;
+the seller flow, at first publish &mdash; so somebody who clicked a magic link and never listed had it at
+NULL, and Buzz would have admitted the precise person &sect;3.8 was written to bind. <b style="color:#9ec9ff">First
+switching Buzz on is now the acceptance moment.</b> It asks for no ID: the magic link proves the inbox, the
+tick makes the terms bind, the ID check opens the trust score &mdash; three rungs, and Buzz needs the first two.
+</div>
+<div class="gate">
+ <div class="g pass"><div class="v">Passes</div><h3>Free member</h3>
+  <p>Email proven by the magic link, &sect;3.8 ticked once. He is a subscriber, and he gets the full
+  comms. One tick, thirty seconds, no document.</p></div>
+ <div class="g pass"><div class="v">Passes</div><h3>Paying member</h3>
+  <p>Identical treatment. The gate never looks at the plan &mdash; that is a different question and it
+  is not asked here.</p></div>
+ <div class="g fail"><div class="v">Refused</div><h3>Stranger with the public key</h3>
+  <p>No session, no proof of any inbox. <b>401</b> on every Buzz endpoint whatever he types in the body,
+  <b>403</b> if he signs in and types somebody else's address, and <b>403</b> if he signs in and has
+  never ticked.</p></div>
+</div>
+
+<h2>Where it stands <small>Every stage but one is closed. The one that is left is the double-click, which was always yours.</small></h2>
+<div class="stage">
+ <div class="st done"><div class="w">Done &middot; in the tree</div><h3>Identity is proven</h3>
+  <p><b>Twenty-three endpoints</b>, not five. <code>_actor()</code> for a person's own data,
+  <code>_admin_only()</code> for ours, <code>_agency_admin_or_refuse()</code> for agency seats. The
+  body email is now only ever checked against the session.</p>
+  <div class="who">Claude &middot; 43 checks green</div></div>
+ <div class="st done"><div class="w">Done &middot; in the tree</div><h3>Enforced by default</h3>
+  <p>The shadow stage was itself an open action. With no onboarded listers there is nothing to
+  observe and nobody to lock out, so it enforces from the first deploy. <code>BUZZ_BIND=0</code>
+  reverses the whole class <b>without a deploy</b>.</p>
+  <div class="who">David's ruling &middot; RUL-135(j)</div></div>
+ <div class="st now"><div class="w">Left &middot; and only this</div><h3>The deploy</h3>
+  <p>Nothing else waits on you. Nothing is live until <code>deploy_marketsquare.bat</code> runs,
+  which is physically your double-click and always has been.</p>
+  <div class="who">David &middot; one click</div></div>
+</div>
+
+<h2>The sweep <small>Buzz was never the worst of it &mdash; only the one that got asked about.</small></h2>
+<table>
+<tr><th>What was reachable with a string from ms.js</th><th>Endpoint</th><th>Now</th></tr>
+<tr><td>Close anybody's account</td><td><code>DELETE /users/{email}</code></td><td class="yes">session or admin key</td></tr>
+<tr><td>Add banking details to anybody's account</td><td><code>POST /users/{email}/banking</code></td><td class="yes">session or admin key</td></tr>
+<tr><td>Upload, list or delete anybody's KYC documents</td><td><code>/users/{email}/documents</code></td><td class="yes">session or admin key</td></tr>
+<tr><td>Upload an ID, and run the verification that awards trust</td><td><code>/upload-id</code> &middot; <code>/verify-identity</code></td><td class="yes">session or admin key</td></tr>
+<tr><td>Read anybody's Tuppence balance and history</td><td><code>GET /tuppence/balance</code> &middot; <code>/history</code></td><td class="yes">session or admin key</td></tr>
+<tr><td>Read a journey map marked &ldquo;Owner-only&rdquo;</td><td><code>GET /planner/map/{sid}</code></td><td class="yes">session or admin key</td></tr>
+<tr><td>Set anybody's seller tier &middot; read the ops email triage</td><td><code>PUT .../seller-tier</code> &middot; <code>/admin/email-triage</code></td><td class="yes">admin key only</td></tr>
+<tr><td>Change or remove an agency's seats</td><td><code>/agencies/{id}/agents/{email}</code></td><td class="yes">that agency's admin</td></tr>
+</table>
+<div class="engine"><b>Why three shapes and not one.</b> A single rule would have got the agency lane
+wrong: the agent whose row is being changed is the <b>subject</b>, never the actor, so binding to him
+would have been the wrong fix wearing the right shape. And the admin lane is safe to keep open only
+because <code>MS_ADMIN_KEY</code> is a <b>different key</b> &mdash; env-only, never shipped to a
+browser &mdash; which is what lets the Document Hub keep working for somebody else's documents while
+the same endpoint called from the app is pinned to the signed-in account.</div>
+
+<div class="ver"><b>Verified, not asserted</b>
+<ul>
+<li><b>43 checks</b> against a temp SQLite database running the <b>real patched source</b> lifted out of <code>bea_main.py</code> &mdash; all 43 pass.</li>
+<li>The acceptance screen driven in a <b>rendered browser</b>: tick disabled &rarr; enabled &rarr; accepted &rarr; the normal panel, with every API call intercepted so nothing touched production.</li>
+<li>Fail-closed twice over: a missing user row is not acceptance, and an <b>unset</b> admin key refuses everybody rather than admitting everybody.</li>
+<li>While dark: impersonation still works <b>and every instance is logged</b> &mdash; both halves tested, because a shadow that logs nothing is worse than no shadow.</li>
+<li>Enforced: refuses buzzing as somebody else, the public key with no session, flipping another person's switch, reading another person's pairs, closing another person's Buzz, and pairing in another person's name.</li>
+<li>The real sender still gets through, and the pair / close / reopen-by-closer / receiver's-switch rules all still behave exactly as before.</li>
+<li><b>RG-0371</b> now carries eight legs including a sweep of <b>every route in the file</b>, and was proved to FAIL on <b>six separate mutations</b> &mdash; a guard that cannot fail is not a guard.</li>
+<li>Only caller in the tree is <code>ms.js</code>, and <code>BEA_URL</code> is the same origin, so the cookie already rides every one of those fetches. <b>Nothing is expected to break.</b></li>
+</ul></div>
+
+<div class="note"><b>One cliff, closed rather than left</b>
+A bound endpoint answering 401 would have shown &ldquo;API error 401&rdquo;. The three shared fetch
+helpers now say, in words, that the sign-in on this device has lapsed. The cookie runs 180 days so
+this is rare &mdash; but rare and silent is the combination that wastes somebody&rsquo;s evening.</div>
+
+</div></body></html>

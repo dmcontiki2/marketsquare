@@ -257,10 +257,26 @@ async function apiGet(path) {
 
 // Authenticated GET — sends the X-Api-Key header. Use for protected GET endpoints
 // (e.g. seller documents). Key travels in the header, never the query string (S3).
+// IDENTITY-BIND-1 (14 Sep 2026): endpoints that act on your own data are now pinned to
+// the ts_user cookie, so a 401 no longer means "broken" — it means the sign-in behind
+// this device has lapsed (the cookie runs 180 days). Say that in words rather than
+// showing a raw API error, because "API error 401" teaches nobody anything.
+let _authCliffShown = false;
+function _authCliff(status){
+  if(status !== 401) return false;
+  if(!_authCliffShown){
+    _authCliffShown = true;
+    try{ showToast('Please sign in again \u2014 your sign-in on this device has lapsed.'); }
+    catch(e){ console.warn('sign-in lapsed'); }
+    setTimeout(()=>{ _authCliffShown = false; }, 8000);
+  }
+  return true;
+}
+
 async function apiGetAuth(path) {
   try {
     const res = await fetch(BEA_URL + path, { headers: { 'X-Api-Key': API_KEY } });
-    if (!res.ok) throw new Error('API error ' + res.status);
+    if (!res.ok) { _authCliff(res.status); throw new Error('API error ' + res.status); }
     return await res.json();
   } catch(e) {
     console.warn('BEA GET (auth) failed:', path, e);
@@ -10428,7 +10444,7 @@ async function apiPostAuth(path, body) {
       headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
       body: JSON.stringify(body)
     });
-    if (!r.ok) throw new Error('API ' + r.status);
+    if (!r.ok) { _authCliff(r.status); throw new Error('API ' + r.status); }
     return r.json();
   } catch(e) {
     console.warn('BEA POST (auth) failed:', path, e);
@@ -12844,7 +12860,7 @@ async function bzApi(path, method, body){
   if(body){ opt.headers['Content-Type']='application/json'; opt.body=JSON.stringify(body); }
   const r = await fetch(BEA_URL + path, opt);
   let j = null; try{ j = await r.json(); }catch(e){}
-  if(!r.ok) throw new Error((j && j.detail) || ('Buzz error ' + r.status));
+  if(!r.ok){ _authCliff(r.status); throw new Error((j && j.detail) || ('Buzz error ' + r.status)); }
   return j;
 }
 
@@ -12869,6 +12885,59 @@ function bzPushOn(){
       && typeof Notification !== 'undefined' && Notification.permission === 'granted';
 }
 
+// BUZZ-ACCEPT-1 (14 Sep 2026) — ONE copy of the on-screen terms, used by the tick and by
+// the panel. RUL-133(e) says the screen and §3.8 may never drift; two string literals would
+// drift the first time somebody edited one of them, so there is only ever one.
+function bzTermsCopy(){
+  return '<div class="bz-terms">Buzz is a convenience, not a guarantee. It usually arrives in '
+        + 'seconds — but phones go flat and networks fail, so <b>if it matters, phone</b>. '
+        + 'Either of you can close it at any time. Closing it closes it for both, we tell the '
+        + 'other person plainly, and whoever closed it can open it again. You already have each '
+        + 'other\u2019s numbers; Buzz is only the easy version of a call you could always make. '
+        + '<b>We do not read what you two say, and we do not settle arguments about it.</b> '
+        + 'The full wording is section 3.8 of the '
+        + '<a href="/terms" target="_blank" rel="noopener">terms</a>.</div>';
+}
+
+// David, 14 Sep: "i would only expect subscribers to be able to use the comms... an incentive
+// to at least subscribe even as a free subscriber to give us some legal security as well as
+// KYC security." Signing in proves an inbox; it does not make §3.8 bind anybody. So this is
+// the acceptance MOMENT, and it is deliberately the smallest thing on the platform: scroll,
+// tick, one button. NO ID, no document, no camera — the ID check is a different rung and it
+// opens the trust score, not this. It appears once, for anyone who has not already accepted
+// at first publish, and never again on any device he is signed in on.
+async function bzAcceptShow(box, email){
+  box.innerHTML =
+      '<div class="bz-lede">Buzz needs one thing from you first, and it takes a moment.</div>'
+    + bzTermsCopy()
+    + '<div class="ms-card"><div class="bz-row"><div class="bz-lbl">'
+    + '<b>I have read section 3.8 and accept it</b>'
+    + '<span>No ID and no documents — this is the agreement, not a verification.</span></div>'
+    + '<div class="bz-sw" id="bz-acc-sw"></div></div>'
+    + '<button class="ms-btn" id="bz-acc-go" disabled style="width:100%;margin-top:10px">'
+    + 'Accept and open Buzz</button>'
+    + '<div class="bz-note" style="margin-top:10px">Accepting costs nothing and does not change '
+    + 'your plan. It is what lets us say plainly, to you and to the other person, what Buzz is '
+    + 'and what it is not.</div></div>';
+  let ticked = false;
+  const sw = document.getElementById('bz-acc-sw');
+  const go = document.getElementById('bz-acc-go');
+  sw.onclick = () => { ticked = !ticked; sw.className = 'bz-sw' + (ticked ? ' on' : '');
+                       go.disabled = !ticked; };
+  go.onclick = async () => {
+    go.disabled = true; go.textContent = 'Opening\u2026';
+    try{
+      await bzApi('/users/' + encodeURIComponent(email) + '/eula', 'POST');
+    }catch(e){
+      go.disabled = false; go.textContent = 'Accept and open Buzz';
+      box.insertAdjacentHTML('beforeend',
+        '<div class="bz-said bad">' + e.message + '</div>');
+      return;
+    }
+    buzzRender();
+  };
+}
+
 let _bzPairs = [];
 async function buzzRender(){
   const box = document.getElementById('bz-content');
@@ -12880,19 +12949,18 @@ async function buzzRender(){
     return;
   }
   box.innerHTML = '<div class="bz-lede">Loading…</div>';
+  // Ask first, because /buzz/me is the one Buzz call that does NOT require acceptance — a
+  // gate that blocks the page carrying the gate is a locked door with the key inside.
+  try{
+    const me = await bzApi('/buzz/me');
+    if(me && me.signed_in && !me.accepted){ return bzAcceptShow(box, me.email || email); }
+  }catch(e){ /* older server, or not signed in: fall through to the pairs call below */ }
   try{ _bzPairs = await bzApi('/buzz/pairs?email=' + encodeURIComponent(email)); }
   catch(e){ box.innerHTML = '<div class="ms-card"><div class="bz-said bad">'+e.message+'</div></div>'; return; }
 
   let h = '<div class="bz-lede">One line, straight to the other phone, with your name on it. '
         + 'No thread and nothing to scroll — say the one thing and it is said.</div>'
-        + '<div class="bz-terms">Buzz is a convenience, not a guarantee. It usually arrives in '
-        + 'seconds — but phones go flat and networks fail, so <b>if it matters, phone</b>. '
-        + 'Either of you can close it at any time. Closing it closes it for both, we tell the '
-        + 'other person plainly, and whoever closed it can open it again. You already have each '
-        + 'other\u2019s numbers; Buzz is only the easy version of a call you could always make. '
-        + '<b>We do not read what you two say, and we do not settle arguments about it.</b> '
-        + 'The full wording is section 3.8 of the '
-        + '<a href="/terms" target="_blank" rel="noopener">terms</a>.</div>';
+        + bzTermsCopy();
 
   h += '<div class="ms-section-lbl">This phone</div><div class="ms-card">'
      + '<div class="bz-row"><div class="bz-lbl"><b>Let TrustSquare buzz this phone</b>'

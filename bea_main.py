@@ -4878,7 +4878,10 @@ def create_user(user: User, _key: str = Depends(auth.require_api_key)):
     return out
 
 @app.get("/users/{email}")
-def get_user(email: str, _key: str = Depends(auth.require_api_key)):
+def get_user(email: str, _key: str = Depends(auth.require_api_key),
+             ts_user: str = Cookie(default=None),
+             x_admin_key: str = Header(default=None)):
+    email = _actor(ts_user, email, "get-user", x_admin_key)
     conn = database.get_db()
     row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
     conn.close()
@@ -5348,12 +5351,16 @@ async def upload_user_photo(email: str, file: UploadFile = File(...)):
 
 
 @app.post("/users/{email}/upload-id")
-async def upload_user_id(email: str, file: UploadFile = File(...), _key: str = Depends(auth.require_api_key)):
+async def upload_user_id(email: str, file: UploadFile = File(...),
+                         _key: str = Depends(auth.require_api_key),
+                         ts_user: str = Cookie(default=None),
+                         x_admin_key: str = Header(default=None)):
     """Self-serve ID upload. Requires the app key (parity with all writes).
     Accepts photo of SA ID / passport / drivers licence.
     C2 fix (audit 16 Jul 2026): stores the document as PENDING and grants NO
     trust — identity is only awarded by the vision-checked verify-identity path
     (or admin review). This closes the instant self-grant of +15 trust."""
+    email = _actor(ts_user, email, "upload-id", x_admin_key)
     # PHOTO-TYPE-1 (TS-0025): the bytes decide, not the browser's guess.
     content_type = (file.content_type or "").strip()
     if not _photo_type_ok(content_type, getattr(file, "filename", "") or ""):
@@ -5488,9 +5495,12 @@ def _grant_id_upload_interim(conn, email: str) -> bool:
 def close_user_account(email: str,
                        closure_type: str = "user",
                        cause: str = None,
-                       _key: str = Depends(auth.require_api_key)):
+                       _key: str = Depends(auth.require_api_key),
+                       ts_user: str = Cookie(default=None),
+                       x_admin_key: str = Header(default=None)):
     """Close an account per EULA SS14. closure_type: user | breach | convenience.
     `cause` is B1..B6 for breach closures; only B5/B6 forfeit."""
+    email = _actor(ts_user, email, "close-account", x_admin_key)
     if closure_type not in ("user", "breach", "convenience"):
         raise HTTPException(status_code=400,
                             detail="closure_type must be user, breach or convenience")
@@ -5603,6 +5613,128 @@ def _bind_charged_email(passed_email, ts_user, ctx=""):
     if not sess:
         raise HTTPException(status_code=401, detail="Please sign in to use this feature.")
     if passed and passed != sess:
+        raise HTTPException(status_code=403,
+                            detail="This action can only be performed on your own account.")
+    return sess
+
+
+# ══ IDENTITY-BIND-1 (14 Sep 2026) — the same hole, swept beyond Buzz ══
+# BUZZ-BIND-1 closed five endpoints. The sweep that followed found EIGHTEEN more behind the
+# same public app key that took a person's identity out of the request: account closure,
+# banking details, KYC documents, Tuppence balance and history among them. Buzz was never
+# the worst of it - it was just the one David happened to ask about.
+#
+# _actor() is what _buzz_who() is built on, minus the acceptance gate: identity for any
+# endpoint that acts on ONE NAMED PERSON'S OWN data. Same switch, same escape hatch.
+#
+# THE ADMIN LANE IS A DIFFERENT KEY, and that distinction is the whole reason this can be
+# swept safely: MS_ADMIN_KEY is env-only and was never shipped to a browser, so an endpoint
+# the Document Hub legitimately calls for somebody else stays working by presenting it,
+# while the same endpoint called from the app is pinned to the signed-in account.
+
+def _identity_bind_enabled() -> bool:
+    """ON by default, and that default is David's, made twice.
+
+    The shadow lane below was built first, on his 14 Sep ruling to shadow-log before
+    enforcing. He then said: "Please close all of these open actions... no open actions
+    for David to first check." A shadow stage IS an open action - its entire purpose is
+    that somebody reads the log later and decides. So it cannot be both.
+
+    The clean state settles it rather than taste. [[RUL-133]](a): there are no onboarded
+    listers, so there is no existing behaviour to observe, nothing to migrate and nobody
+    to lock out - a shadow run here would watch an empty road. The only caller of these
+    endpoints in the whole tree is ms.js, same origin, so the cookie already rides every
+    one of those fetches. Enforcing on the first deploy costs nothing that shadowing
+    would have saved.
+
+    The shadow lane stays, because it is what makes this reversible without a deploy:
+    BUZZ_BIND=0 in the server .env drops straight back to logging-only. That is the
+    escape hatch, not the default."""
+    v = (os.getenv("BUZZ_BIND") or "").strip().lower()
+    if v in ("0", "off", "false", "no"):
+        return False
+    if v in ("1", "on", "true", "yes"):
+        return True
+    return True
+
+
+# ══ BUZZ-ACCEPT-1 (14 Sep 2026) — signed in is not the same as bound ══
+# David, 14 Sep, after BUZZ-BIND-1: "i would only expect subscribers to be able to use the
+# comms... an incentive to at least subscribe even as a free subscriber to give us some
+# legal security as well as KYC security?" BUZZ-BIND-1 proved WHO; it did not prove that
+# the who had ever agreed to anything. eula_accepted_at is written in exactly one place -
+# the seller flow, the first time somebody publishes - so a person who clicked a magic
+# link and never listed had it sitting at NULL, and Buzz would have admitted the precise
+# person SS3.8 was written to bind.
+#
+# A limitation of liability binds only the person who accepted it, and CPA s49 wants it
+# conspicuous AND acknowledged - acknowledgement needs a named account that did the
+# acknowledging. So this gate is what makes RUL-133's clause enforceable at all, which is
+# a larger gain than the accountability one David named.
+#
+# It asks for NO ID. Three separate rungs, and only the middle one is this: the magic link
+# proves the inbox, the tick makes the terms bind, the ID check opens the trust score.
+# Buzz needs the first two and must never need the third.
+#
+# THE ACTOR IS ENOUGH, and that is not a shortcut. A receiver only ever becomes reachable
+# by calling /buzz/allow himself, and that call is an actor call - so the switch IS the
+# acceptance moment, and gating every actor gates both sides exactly once.
+
+
+
+def _admin_only(admin_key, ctx=""):
+    """For endpoints that are OURS, not a user's. The public app key is in ms.js and can
+    never stand for an admin; MS_ADMIN_KEY is env-only and was never shipped anywhere.
+    Fail-closed: an unset MS_ADMIN_KEY refuses everybody rather than admitting everybody."""
+    if not MS_ADMIN_KEY or not admin_key or admin_key != MS_ADMIN_KEY:
+        _log.warning("IDENTITY-BIND-1 admin refusal (ctx=%s)", ctx)
+        raise HTTPException(status_code=403, detail="Not found")
+    return True
+
+
+def _agency_admin_or_refuse(agency_id, ts_user, admin_key, ctx=""):
+    """An agency's seats are managed by THAT agency's admin. The agent whose row is being
+    changed is the SUBJECT, never the actor - binding to him would have been the wrong
+    fix wearing the right shape."""
+    if admin_key and MS_ADMIN_KEY and admin_key == MS_ADMIN_KEY:
+        return True
+    if not _identity_bind_enabled():
+        _log.info("IDENTITY-BIND-1 shadow: agency lane unbound (ctx=%s agency=%s)", ctx, agency_id)
+        return True
+    sess = _session_email(ts_user)
+    if not sess:
+        raise HTTPException(status_code=401, detail="Please sign in to do that.")
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT 1 FROM agencies WHERE id=? AND LOWER(admin_email)=?",
+                           (agency_id, sess)).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        raise HTTPException(status_code=403, detail="Only this agency's admin can do that.")
+    return True
+
+
+def _actor(ts_user, passed, ctx="", admin_key=None):
+    """The person this call is acting AS. Enforced by default; BUZZ_BIND=0 drops the whole
+    class back to logging-only without a deploy.
+
+    Returns the proven session email. An admin presenting MS_ADMIN_KEY gets the passed
+    email back unchanged - that lane is authenticated by a key the public never had."""
+    p = (passed or "").strip().lower()
+    if admin_key and MS_ADMIN_KEY and admin_key == MS_ADMIN_KEY:
+        return p
+    sess = _session_email(ts_user)
+    if not _identity_bind_enabled():
+        if not sess:
+            _log.info("IDENTITY-BIND-1 shadow: no session (ctx=%s passed=%s)", ctx, p)
+        elif p and sess != p:
+            _log.warning("IDENTITY-BIND-1 shadow MISMATCH (ctx=%s): session=%s passed=%s",
+                         ctx, sess, p)
+        return p
+    if not sess:
+        raise HTTPException(status_code=401, detail="Please sign in to do that.")
+    if p and p != sess:
         raise HTTPException(status_code=403,
                             detail="This action can only be performed on your own account.")
     return sess
@@ -7850,10 +7982,13 @@ async def aa_publish(
 # ── TUPPENCE BALANCE (public read) ───────────────────────────
 
 @app.get("/tuppence/balance")
-def get_tuppence_balance(email: str, _key: str = Depends(auth.require_api_key)):
+def get_tuppence_balance(email: str, _key: str = Depends(auth.require_api_key),
+                         ts_user: str = Cookie(default=None),
+                         x_admin_key: str = Header(default=None)):
     """Return Tuppence balance for an email — sum of all transaction amounts.
     Used by the buyer app to sync dev-seeded balances without Paystack.
     """
+    email = _actor(ts_user, email, "tuppence-balance", x_admin_key)
     conn = database.get_db()
     row = conn.execute(
         "SELECT COALESCE(SUM(amount), 0) as balance FROM transactions WHERE user_email = ?",
@@ -10097,9 +10232,12 @@ def lm_suspension_check(email: str):
 
 
 @app.post("/local-market/eula/accept")
-def lm_accept_eula(email: str, _key: str = Depends(auth.require_api_key)):
+def lm_accept_eula(email: str, _key: str = Depends(auth.require_api_key),
+                   ts_user: str = Cookie(default=None),
+                   x_admin_key: str = Header(default=None)):
     """Records that the seller has read and accepted the EULA clauses for
     Local Market (§11). Required once on first LM activation (LM-14f)."""
+    email = _actor(ts_user, email, "lm-eula", x_admin_key)
     conn = database.get_db()
     conn.execute(
         "UPDATE users SET lm_eula_accepted_at = CURRENT_TIMESTAMP WHERE email = ?",
@@ -10111,12 +10249,15 @@ def lm_accept_eula(email: str, _key: str = Depends(auth.require_api_key)):
 
 
 @app.post("/users/{email}/eula")
-def accept_main_eula(email: str, _key: str = Depends(auth.require_api_key)):
+def accept_main_eula(email: str, _key: str = Depends(auth.require_api_key),
+                     ts_user: str = Cookie(default=None)):
     """Record that a seller has accepted the main TrustSquare EULA.
     Called by the FEA sell-b flow when an existing seller publishes for the
     first time (or whenever eula_accepted_at is NULL on their account).
     Idempotent — safe to call multiple times."""
-    email = email.lower().strip()
+    # BUZZ-ACCEPT-1: once acceptance is a GATE, the write that records it is worth as much
+    # as the gate is - a stranger who can tick your box for you has defeated both.
+    email = _buzz_who(ts_user, email, "eula-accept", require_accept=False) or email.lower().strip()
     conn = database.get_db()
     row = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
     if not row:
@@ -11443,6 +11584,8 @@ async def upload_seller_document(
     doc_type: str = Form("other"),
     label: str = Form(""),
     visibility: str = Form("private"),
+    ts_user: str = Cookie(default=None),
+    x_admin_key: str = Header(default=None),
     signal_id: str = Form(None),
     listing_id: int = Form(None),
     _key: str = Depends(auth.require_api_key),
@@ -11450,6 +11593,7 @@ async def upload_seller_document(
     """Upload a document for a seller. Stores to R2, records in seller_documents.
     Non-ID doc types are auto-earned immediately (self-attestation model).
     ID documents trigger Sonnet vision verification and auto-earn on confidence >= 0.60."""
+    email = _actor(ts_user, email, "docs-upload", x_admin_key)
     email = email.lower().strip()
     if doc_type not in ALLOWED_DOC_TYPES:
         doc_type = "other"
@@ -11601,10 +11745,13 @@ def list_seller_documents(
     email: str,
     category: Optional[str] = None,
     _key: str = Depends(auth.require_api_key),
+    ts_user: str = Cookie(default=None),
+    x_admin_key: str = Header(default=None),
 ):
     """List documents for a seller. If category is provided, returns only docs
     whose signal_id matches that category prefix, plus universal/track_record docs
     and docs with no signal_id. Without category, returns all docs."""
+    email = _actor(ts_user, email, "docs-list", x_admin_key)
     email = email.lower().strip()
     conn = database.get_db()
     _cat_prefix_map = {
@@ -11676,8 +11823,11 @@ def delete_seller_document(
     email: str,
     doc_id: int,
     _key: str = Depends(auth.require_api_key),
+    ts_user: str = Cookie(default=None),
+    x_admin_key: str = Header(default=None),
 ):
     """Delete a document record (does not delete from R2 — orphan cleanup runs separately)."""
+    email = _actor(ts_user, email, "docs-delete", x_admin_key)
     email = email.lower().strip()
     conn = database.get_db()
     row = conn.execute(
@@ -11703,6 +11853,8 @@ def declare_credential(
     email: str,
     payload: DeclarationIn,
     _key: str = Depends(auth.require_api_key),
+    ts_user: str = Cookie(default=None),
+    x_admin_key: str = Header(default=None),
 ):
     """Record a free-text declaration for a declarable signal.
 
@@ -11716,6 +11868,7 @@ def declare_credential(
         next_step_message   — human-readable prompt for what to upload
         total_possible      — full signal value (declaration + evidence)
     """
+    email = _actor(ts_user, email, "declare", x_admin_key)
     email = email.lower().strip()
 
     # Resolve signal definition
@@ -12062,9 +12215,12 @@ async def verify_identity(
     email: str,
     payload: IdentityVerifyIn,
     _key: str = Depends(auth.require_api_key),
+    ts_user: str = Cookie(default=None),
+    x_admin_key: str = Header(default=None),
 ):
     """Step 1: Validate format. Step 2: Sonnet vision cross-check.
     Step 3: Award trust signals based on confidence. Never store raw ID number."""
+    email = _actor(ts_user, email, "verify-identity", x_admin_key)
     email = email.lower().strip()
     conn = database.get_db()
     user = conn.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
@@ -12212,9 +12368,12 @@ def add_banking(
     email: str,
     payload: BankingIn,
     _key: str = Depends(auth.require_api_key),
+    ts_user: str = Cookie(default=None),
+    x_admin_key: str = Header(default=None),
 ):
     """Store bank details (last 4 digits only). Cross-check account holder name
     against verified ID name on file. Award trust signals."""
+    email = _actor(ts_user, email, "banking", x_admin_key)
     email = email.lower().strip()
     conn = database.get_db()
     user = conn.execute("SELECT id_name FROM users WHERE email=?", (email,)).fetchone()
@@ -12258,8 +12417,11 @@ def add_banking(
 
 
 @app.get("/users/{email}/identity-status")
-def identity_status(email: str, _key: str = Depends(auth.require_api_key)):
+def identity_status(email: str, _key: str = Depends(auth.require_api_key),
+                    ts_user: str = Cookie(default=None),
+                    x_admin_key: str = Header(default=None)):
     """Return KYC status for a seller — used by admin Document Hub."""
+    email = _actor(ts_user, email, "identity-status", x_admin_key)
     email = email.lower().strip()
     conn = database.get_db()
     row = conn.execute(
@@ -12398,12 +12560,14 @@ def remove_listing_city(listing_id: int, city_id: int, email: str):
 
 
 @app.put("/users/{email}/seller-tier")
-def set_seller_tier(email: str, tier: str, _key: str = Depends(auth.require_api_key)):
+def set_seller_tier(email: str, tier: str, _key: str = Depends(auth.require_api_key),
+                    x_admin_key: str = Header(default=None)):
     """Admin: set seller subscription tier immediately (bypasses Paystack).
     tier must be: free | starter | pro | agency  (the Simpler Model set -- PRICING_CANON.md)
     Also applies pending downgrades — call with tier=free for immediate free downgrade.
     Enforces slot guard: if active listings > new slot_limit, returns 409 with count.
     """
+    _admin_only(x_admin_key, "seller-tier")
     email = email.lower().strip()
     valid_tiers = set(_SELLER_SUB_TIERS.keys())
     if tier not in valid_tiers:
@@ -15044,7 +15208,11 @@ def invite_agent(agency_id: int, req: _AgentInvite, _key: str = Depends(auth.req
     return {"ok": True, "email": email, "listing_cap": cap, "status": "invited", "link": _link_status}
 
 @app.put("/agencies/{agency_id}/agents/{email}")
-def update_agent_cap(agency_id: int, email: str, req: _AgentCapUpdate, _key: str = Depends(auth.require_api_key)):
+def update_agent_cap(agency_id: int, email: str, req: _AgentCapUpdate,
+                     _key: str = Depends(auth.require_api_key),
+                     ts_user: str = Cookie(default=None),
+                     x_admin_key: str = Header(default=None)):
+    _agency_admin_or_refuse(agency_id, ts_user, x_admin_key, "agent-cap")
     email = (email or "").strip().lower()
     conn = database.get_db()
     try:
@@ -15065,7 +15233,10 @@ def update_agent_cap(agency_id: int, email: str, req: _AgentCapUpdate, _key: str
     return {"ok": True, "email": email, "listing_cap": cap, "seat_paid": bool(paid)}
 
 @app.delete("/agencies/{agency_id}/agents/{email}")
-def remove_agent(agency_id: int, email: str, _key: str = Depends(auth.require_api_key)):
+def remove_agent(agency_id: int, email: str, _key: str = Depends(auth.require_api_key),
+                 ts_user: str = Cookie(default=None),
+                 x_admin_key: str = Header(default=None)):
+    _agency_admin_or_refuse(agency_id, ts_user, x_admin_key, "agent-remove")
     email = (email or "").strip().lower()
     conn = database.get_db()
     try:
@@ -15076,8 +15247,11 @@ def remove_agent(agency_id: int, email: str, _key: str = Depends(auth.require_ap
     return {"ok": True, "email": email, "status": "removed"}
 
 @app.get("/agencies/by-admin/{email}")
-def agency_by_admin(email: str, _key: str = Depends(auth.require_api_key)):
+def agency_by_admin(email: str, _key: str = Depends(auth.require_api_key),
+                    ts_user: str = Cookie(default=None),
+                    x_admin_key: str = Header(default=None)):
     """Resolve the agency an admin manages (for the console entry). 404 if none."""
+    email = _actor(ts_user, email, "agency-by-admin", x_admin_key)
     email = (email or "").strip().lower()
     conn = database.get_db()
     try:
@@ -19824,8 +19998,12 @@ async def ai_batch_card_listings(req: BatchCardRequest, ts_user: str = Cookie(de
 
 
 @app.get("/tuppence/history")
-def get_tuppence_history(email: str, limit: int = 50, offset: int = 0, _key: str = Depends(auth.require_api_key)):
+def get_tuppence_history(email: str, limit: int = 50, offset: int = 0,
+                         _key: str = Depends(auth.require_api_key),
+                         ts_user: str = Cookie(default=None),
+                         x_admin_key: str = Header(default=None)):
     """Return paginated tuppence transaction history with running balance."""
+    email = _actor(ts_user, email, "tuppence-history", x_admin_key)
     conn = database.get_db()
     try:
         # Verify user exists
@@ -21109,8 +21287,10 @@ def admin_fault_close_send(fid: int, _admin=Depends(_require_maint)):
 
 @app.get("/admin/email-triage")
 def admin_email_triage(limit: int = 50, offset: int = 0,
-                       _key: str = Depends(auth.require_api_key)):
+                       _key: str = Depends(auth.require_api_key),
+                       x_admin_key: str = Header(default=None)):
     """List recent triaged emails for the ops dashboard. API-key gated."""
+    _admin_only(x_admin_key, "email-triage")
     limit = max(1, min(limit, 200))
     conn = database.get_db()
     try:
@@ -22298,12 +22478,87 @@ class BuzzSendReq(BaseModel):
     text:       str
 
 
+# ══ BUZZ-BIND-1 (14 Sep 2026) — a buzz is sent BY somebody, and that somebody is proven ══
+# David, 14 Sep: "Can a none subscriber do things in it which only subscribers should?
+# Is the comms gated in that way as well?" It was not. Every Buzz endpoint took the
+# identity from the request BODY behind the public app key (ms.js line 71 ships that key
+# to every browser), so the caller declared who he was. The chain ran end to end: pair any
+# two addresses, switch the VICTIM'S OWN permission on for him, then buzz in his name.
+# Verified against production on 14 Sep, read-only, with a non-existent address:
+# GET /buzz/pairs returned 200 with the public key and 401 without it.
+#
+# The rules were never the problem - the pair, the two switches, the closed state and the
+# hourly limit are all correct. WHO was the problem. So this is ACCOUNT-BIND-1's doctrine
+# applied where it should have been applied when Buzz was built: the identity comes from
+# the ts_user cookie (magic-link proof of inbox possession), never from a typed email.
+#
+# David's gate, in his words: "Even a free trustsquare subscriber is still a subscriber -
+# he read the eula and accepted it and we may already hhave a TS for him." So the test is
+# a PROVEN identity, not a paid one. A free member passes; a stranger holding the public
+# key does not. Nothing here asks what anybody pays.
+#
+# ENFORCED BY DEFAULT ([[RUL-135]](j)). An earlier draft of this comment said "dark by
+# default and it follows account_binding" - that was true for about an hour and is not
+# true now, so it is corrected here rather than left to mislead the next session. The
+# shadow lane still exists as the escape hatch, one env var away (BUZZ_BIND=0), and it
+# lives in _actor() next to ACCOUNT-BIND-1 - NOT in this block - because the sweep
+# generalised it beyond Buzz. Its log lines say IDENTITY-BIND-1, not BUZZ-BIND-1.
+
+def _buzz_accepted(email: str) -> bool:
+    """Has this account accepted the main EULA? Its own short connection, and only on
+    the enforced path, so the dark lane costs nothing."""
+    try:
+        conn = database.get_db()
+        try:
+            row = conn.execute("SELECT eula_accepted_at FROM users WHERE email = ?",
+                               ((email or "").strip().lower(),)).fetchone()
+        finally:
+            conn.close()
+        return bool(row and row["eula_accepted_at"])
+    except Exception as exc:
+        _log.error("BUZZ-ACCEPT-1 flag read failed: %s", exc)
+        return False          # fail-closed: no proof of acceptance is not acceptance
+
+
+def _buzz_who(ts_user, passed, ctx="", require_accept=True):
+    """The proven email for this call, or - while dark - the passed one with every
+    mismatch logged so the flip is informed rather than hopeful. Same shape as
+    _bind_charged_email on purpose: one pattern, not two.
+
+    require_accept=False exists for exactly one caller: GET /buzz/me, which the screen
+    asks BEFORE the tick in order to know whether to show the tick. A gate that blocks
+    the page carrying the gate is a locked door with the key inside."""
+    me = _actor(ts_user, passed, ctx)          # identity, shared with every other lane
+    if not _identity_bind_enabled():
+        sess = _session_email(ts_user)
+        if require_accept and sess and not _buzz_accepted(sess):
+            _log.warning("BUZZ-ACCEPT-1 shadow NOT-ACCEPTED (ctx=%s): %s", ctx, sess)
+        return me
+    if require_accept and not _buzz_accepted(me):
+        raise HTTPException(status_code=403,
+                            detail="Accept the Buzz terms (§3.8) to use it — one tick, no ID.")
+    return me
+
+
+@app.get("/buzz/me")
+def buzz_me(_key: str = Depends(auth.require_api_key),
+            ts_user: str = Cookie(default=None)):
+    """Who the screen is talking to, and whether he has ticked yet. Deliberately the one
+    Buzz endpoint that does NOT require acceptance - see _buzz_who's docstring."""
+    me = _buzz_who(ts_user, None, "me", require_accept=False)
+    return {"email": me or "", "signed_in": bool(_session_email(ts_user)),
+            "accepted": _buzz_accepted(me) if me else False,
+            "enforced": _identity_bind_enabled()}
+
+
 @app.post("/buzz/pair")
-def buzz_pair_create(req: BuzzPairReq, _key: str = Depends(auth.require_api_key)):
+def buzz_pair_create(req: BuzzPairReq, _key: str = Depends(auth.require_api_key),
+                     ts_user: str = Cookie(default=None)):
     """Connect two people. This is what the worker's own link does when the
     hirer joins: it does NOT grant permission, it only records that these two
     are connected. Each side still has to allow the other. Idempotent."""
-    a, b = _buzz_key(req.from_email, req.to_email)
+    me = _buzz_who(ts_user, req.from_email, "pair")
+    a, b = _buzz_key(me, req.to_email)
     if not a or not b or "@" not in a or "@" not in b:
         raise HTTPException(status_code=400, detail="two valid emails required")
     if a == b:
@@ -22312,32 +22567,33 @@ def buzz_pair_create(req: BuzzPairReq, _key: str = Depends(auth.require_api_key)
     conn.execute("""INSERT INTO buzz_pairs (a_email, b_email, created_by, source)
                     VALUES (?, ?, ?, ?)
                     ON CONFLICT(a_email, b_email) DO NOTHING""",
-                 (a, b, (req.from_email or "").strip().lower(), req.source or "link"))
+                 (a, b, me, req.source or "link"))
     conn.commit()
     row = _buzz_pair(conn, a, b)
-    out = _buzz_pair_view(row, req.from_email)
+    out = _buzz_pair_view(row, me)
     conn.close()
     return out
 
 
 @app.post("/buzz/allow")
-def buzz_allow(req: BuzzAllowReq, _key: str = Depends(auth.require_api_key)):
+def buzz_allow(req: BuzzAllowReq, _key: str = Depends(auth.require_api_key),
+               ts_user: str = Cookie(default=None)):
     """One side's switch: 'let this person buzz me'. This is the permission the
     onboarding asks for, and it is per PERSON, never global — the pair is the
     unit of consent. Turning it off stops their buzzes and nothing else."""
-    a, b = _buzz_key(req.email, req.other_email)
+    me = _buzz_who(ts_user, req.email, "allow")
+    a, b = _buzz_key(me, req.other_email)
     conn = database.get_db()
     row = _buzz_pair(conn, a, b)
     if not row:
         conn.close()
         raise HTTPException(status_code=404, detail="no pair between these two")
-    me = (req.email or "").strip().lower()
     # a_allows means "a lets b buzz a" — the flag belongs to the RECEIVER.
     col = "a_allows" if row["a_email"] == me else "b_allows"
     conn.execute("UPDATE buzz_pairs SET " + col + "=? WHERE id=?",
                  (1 if req.allow else 0, row["id"]))
     conn.commit()
-    out = _buzz_pair_view(_buzz_pair(conn, a, b), req.email)
+    out = _buzz_pair_view(_buzz_pair(conn, a, b), me)
     conn.close()
     return out
 
@@ -22349,7 +22605,8 @@ class BuzzCloseReq(BaseModel):
 
 
 @app.post("/buzz/close")
-def buzz_close(req: BuzzCloseReq, _key: str = Depends(auth.require_api_key)):
+def buzz_close(req: BuzzCloseReq, _key: str = Depends(auth.require_api_key),
+               ts_user: str = Cookie(default=None)):
     """Close Buzz with somebody, or reopen what you closed.
 
     Closing is SYMMETRIC and it is TOLD. Symmetric because a channel one party can
@@ -22359,8 +22616,8 @@ def buzz_close(req: BuzzCloseReq, _key: str = Depends(auth.require_api_key)):
     workforce can cost somebody a day's pay. The notice names no fault: it states
     that Buzz is closed and that they still have each other's number, which they
     always did. Only the closer can reopen, or the close means nothing."""
-    a, b = _buzz_key(req.email, req.other_email)
-    me = (req.email or "").strip().lower()
+    me = _buzz_who(ts_user, req.email, "close")
+    a, b = _buzz_key(me, req.other_email)
     conn = database.get_db()
     row = _buzz_pair(conn, a, b)
     if not row:
@@ -22403,9 +22660,10 @@ def buzz_close(req: BuzzCloseReq, _key: str = Depends(auth.require_api_key)):
 
 
 @app.get("/buzz/pairs")
-def buzz_pairs(email: str, _key: str = Depends(auth.require_api_key)):
+def buzz_pairs(email: str, _key: str = Depends(auth.require_api_key),
+               ts_user: str = Cookie(default=None)):
     """Everyone this person can buzz, with both switches as they stand."""
-    me = (email or "").strip().lower()
+    me = _buzz_who(ts_user, email, "pairs")
     conn = database.get_db()
     rows = conn.execute("""SELECT * FROM buzz_pairs WHERE a_email=? OR b_email=?
                            ORDER BY created_at DESC""", (me, me)).fetchall()
@@ -22433,7 +22691,8 @@ def _buzz_prune(conn):
 
 @app.post("/buzz")
 def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
-              _key: str = Depends(auth.require_api_key)):
+              _key: str = Depends(auth.require_api_key),
+              ts_user: str = Cookie(default=None)):
     """Send one line, with the sender's name on it.
 
     Refuses, in this order and for a stated reason every time: an empty line, no
@@ -22443,12 +22702,12 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
     text = _buzz_norm(req.text)
     if not text:
         raise HTTPException(status_code=400, detail="a buzz needs one line of text")
+    sender = _buzz_who(ts_user, req.from_email, "send")
     conn = database.get_db()
-    row = _buzz_pair(conn, req.from_email, req.to_email)
+    row = _buzz_pair(conn, sender, req.to_email)
     if not row:
         conn.close()
         raise HTTPException(status_code=404, detail="you are not connected to this person")
-    sender   = (req.from_email or "").strip().lower()
     receiver = (req.to_email or "").strip().lower()
     if (row["closed_by"] or ""):
         conn.close()
@@ -22988,8 +23247,11 @@ def planner_heritage_compose(req: PlannerComposeReq, _key: str = Depends(auth.re
 
 
 @app.get("/planner/map/{sid}")
-def planner_map(sid: int, email: str, _key: str = Depends(auth.require_api_key)):
+def planner_map(sid: int, email: str, _key: str = Depends(auth.require_api_key),
+                ts_user: str = Cookie(default=None),
+                x_admin_key: str = Header(default=None)):
     """Serve a personal journey map (media-as-URL — phone-light). Owner-only."""
+    email = _actor(ts_user, email, "planner-map", x_admin_key)
     if not _planner_flag_on("p_heritage"):
         raise HTTPException(status_code=404, detail="Not found")
     conn = database.get_db()

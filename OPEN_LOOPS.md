@@ -238,6 +238,14 @@ same defect class as an undated status assertion (the ONETAP_SETUP.md "(this is 
   coloured tile) point at different icons. Claude's read, built into the explainer not the code:
   the LISTER gets the Quick tile at first publish, the person she SENT it to gets the full
   TrustSquare tile. `genie/QUICK_SPREADER.html`. **One icon cannot serve both — David's call.**
+- **[C] DONE 14 Sep — identity is proven everywhere it is acted on, and it enforces by default.**
+  Twenty-three endpoints behind the public app key took a person's identity from the request — Buzz,
+  account closure, banking, KYC documents, ID upload, identity verification, Tuppence balance and
+  history among them. All bound (`_actor` / `_admin_only` / `_agency_admin_or_refuse`); Buzz also
+  needs the §3.8 tick, with first switching it on as the acceptance moment. 43 checks green, the
+  acceptance screen driven in a rendered browser, RG-0371 sweeps every route and fails on six
+  mutations. Zero identity endpoints remain unbound. [[RUL-135]] · `genie/BUZZ_SECURITY.html`.
+  **Nothing waits on David except the deploy itself**; `BUZZ_BIND=0` reverses the lot without one.
 - **[C] DONE 14 Sep — the spreader's three modes are built.** One engine, and exactly one place that
   knows a mode exists (`finish()`): stranger-listing keeps the full coaching and carries the ONE ask,
   at the end; member-listing re-asks nothing and shows one score line; looking answers "is it there"

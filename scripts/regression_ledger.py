@@ -22127,5 +22127,178 @@ def rg_test_fixtures_do_not_score():
     return out or [(INFO, "test fixtures are excluded from the funnel on both boards and reported "
                           "separately under their own name")]
 
+@entry("RG-0371", "a buzz is sent BY somebody and that somebody is PROVEN -- identity comes from the "
+                  "session cookie, never from an email typed into the request body behind the "
+                  "public app key",
+       LOCKED, fixed_on="2026-09-14",
+       scope="bea_main.py -- all five Buzz endpoints (/buzz, /buzz/pair, /buzz/allow, /buzz/close, "
+             "GET /buzz/pairs). Four legs, source-side: (a) _buzz_who exists and reads "
+             "_session_email; (b) every one of the five endpoints accepts the ts_user cookie; "
+             "(c) not one of them still derives its actor from the request body; (d) the switch "
+             "follows account_binding with a Buzz-only override. CLASS: ANY endpoint that acts on "
+             "behalf of a named person while authenticating only the public app key.",
+       ref="BUZZ-BIND-1 (14 Sep 2026). David asked whether the spreader is a security problem and "
+           "whether the comms is gated -- 'Even a free trustsquare subscriber is still a subscriber "
+           "- he read the eula and accepted it and we may already hhave a TS for him.' It was not "
+           "gated at all. ms.js line 71 ships API_KEY to every browser, so the key is public, and "
+           "every Buzz endpoint took its actor from the request BODY. The chain ran end to end: "
+           "pair any two addresses, switch the VICTIM'S OWN permission on for him, then buzz in his "
+           "name; the 30/hour limit was the only brake. Verified live on production, read-only, "
+           "with a non-existent address -- GET /buzz/pairs answered 200 with the public key and 401 "
+           "without it. The RULES were never wrong (pair, two switches, closed state, rate limit); "
+           "WHO was wrong. Fixed by applying ACCOUNT-BIND-1's doctrine where it should have been "
+           "applied when Buzz was built. The gate is a PROVEN identity, not a paid one: a free "
+           "member passes, a stranger holding the public key does not. The spreader inherits it "
+           "for free because it is the same origin (RUL-125(a)) -- which is also why the spreader "
+           "was never the problem.")
+def rg_buzz_identity_is_proven():
+    out = []
+    src = repo_file("bea_main.py")
+    if src is None:
+        out.append((INFO, "NOT EVALUATED - bea_main.py is not readable from here"))
+        return out
+
+    if "def _buzz_who(" not in src:
+        out.append((FAIL, "_buzz_who is gone -- Buzz is back to trusting an email typed into the "
+                          "request body behind a key that every browser already has (BUZZ-BIND-1)"))
+        return out
+
+    i = src.find("def _buzz_who(")
+    who = src[i:i + 1200]
+    if "_session_email(" not in who:
+        out.append((FAIL, "_buzz_who no longer reads the session -- it is proving nothing "
+                          "(BUZZ-BIND-1)"))
+    if "_identity_bind_enabled()" not in who and "_actor(" not in who:
+        out.append((FAIL, "_buzz_who no longer reads the switch -- it can never be flipped on "
+                          "(BUZZ-BIND-1)"))
+    if "def _identity_bind_enabled(" not in src:
+        out.append((FAIL, "the identity switch is gone -- there is nothing left to enforce or to "
+                          "fall back on (IDENTITY-BIND-1)"))
+
+    lanes = [('@app.post("/buzz")',       "def buzz_send",        'req.from_email, req.to_email'),
+             ('@app.post("/buzz/pair")',  "def buzz_pair_create", '_buzz_key(req.from_email'),
+             ('@app.post("/buzz/allow")', "def buzz_allow",       '(req.email or "").strip().lower()'),
+             ('@app.post("/buzz/close")', "def buzz_close",       '(req.email or "").strip().lower()'),
+             ('@app.get("/buzz/pairs")',  "def buzz_pairs",       '(email or "").strip().lower()')]
+    for route, fn, body_actor in lanes:
+        k = src.find(route)
+        if k < 0:
+            out.append((INFO, "NOT EVALUATED - %s is not in this tree" % route))
+            continue
+        seg = src[k:k + 2600]
+        if "ts_user" not in seg:
+            out.append((FAIL, "%s does not take the session cookie -- it cannot know who is "
+                              "calling it (BUZZ-BIND-1)" % route))
+        if "_buzz_who(" not in seg:
+            out.append((FAIL, "%s no longer binds its actor to the proven session (BUZZ-BIND-1)"
+                              % route))
+        if body_actor in seg:
+            out.append((FAIL, "%s is deriving its actor from the request body again -- that is the "
+                              "exact line the hole was made of (BUZZ-BIND-1)" % route))
+
+    # BUZZ-ACCEPT-1: signed in is not the same as bound.
+    if "def _buzz_accepted(" not in src:
+        out.append((FAIL, "_buzz_accepted is gone -- Buzz would admit somebody who proved an "
+                          "inbox but never accepted anything, which is the exact person SS3.8 "
+                          "was written to bind (BUZZ-ACCEPT-1)"))
+    elif "eula_accepted_at" not in src[src.find("def _buzz_accepted("):
+                                       src.find("def _buzz_accepted(") + 900]:
+        out.append((FAIL, "_buzz_accepted no longer reads eula_accepted_at -- it is checking "
+                          "nothing (BUZZ-ACCEPT-1)"))
+    if "require_accept" not in who:
+        out.append((FAIL, "_buzz_who no longer gates on acceptance -- the tick has stopped "
+                          "mattering (BUZZ-ACCEPT-1)"))
+    acc = src.find("def accept_main_eula")
+    if acc < 0:
+        out.append((INFO, "NOT EVALUATED - accept_main_eula is not in this tree"))
+    else:
+        seg = src[acc:acc + 1100]
+        if "ts_user" not in seg or "_buzz_who(" not in seg:
+            out.append((FAIL, "the acceptance WRITE is unbound again -- a stranger who can tick "
+                              "your box for you has defeated the gate that reads it "
+                              "(BUZZ-ACCEPT-1)"))
+    bm = src.find('@app.get("/buzz/me")')
+    if bm < 0:
+        out.append((FAIL, "/buzz/me is gone -- the screen cannot find out whether to show the "
+                          "tick, so the gate blocks the page carrying the gate (BUZZ-ACCEPT-1)"))
+    elif "require_accept=False" not in src[bm:bm + 900]:
+        out.append((FAIL, "/buzz/me now requires acceptance -- a locked door with the key "
+                          "inside (BUZZ-ACCEPT-1)"))
+
+    # The default must be ON. Dark is the escape hatch, never the resting state.
+    be = src.find("def _identity_bind_enabled(")
+    if be < 0:
+        out.append((FAIL, "_identity_bind_enabled is gone (IDENTITY-BIND-1)"))
+    else:
+        tail = src[be:be + 8000]
+        keep = [tail.splitlines()[0]]
+        for ln in tail.splitlines()[1:]:
+            if ln and not ln[0].isspace():
+                break
+            keep.append(ln)
+        fn_src = "\n".join(keep)
+        body = [ln.strip() for ln in keep if ln.strip()]
+        last = body[-1] if body else ""
+        if last != "return True":
+            out.append((FAIL, "Buzz identity no longer enforces BY DEFAULT -- it has drifted back "
+                              "to a shadow lane, which is an open action wearing a switch "
+                              "(BUZZ-BIND-1, RUL-134)"))
+        if '"0", "off", "false", "no"' not in fn_src:
+            out.append((FAIL, "BUZZ_BIND=0 no longer drops back to logging-only -- the fix stops "
+                              "being reversible without a deploy (BUZZ-BIND-1)"))
+
+    # THE CLASS LEG, and it is the one that matters most: Buzz was never the worst of
+    # these -- the sweep that followed it found account closure, banking, KYC documents
+    # and Tuppence history behind the same public key. This walks EVERY route and fails
+    # on any that takes a person's identity with neither a session cookie nor the
+    # admin key. It is written to catch the NEXT one, not to re-check this one.
+    try:
+        routes = []
+        lines = src.splitlines()
+        for i, ln in enumerate(lines):
+            m = re.match(r'@app\.(get|post|put|patch|delete)\("([^"]+)"', ln.strip())
+            if not m:
+                continue
+            j = i + 1
+            while j < len(lines) and not lines[j].lstrip().startswith(("def ", "async def ")):
+                j += 1
+            if j >= len(lines):
+                continue
+            sig, k = [], j
+            while k < len(lines):
+                sig.append(lines[k])
+                joined = "".join(sig)
+                if joined.count("(") <= joined.count(")") and joined.rstrip().endswith(":"):
+                    break
+                k += 1
+            end = k + 1
+            while end < len(lines) and not re.match(r"^(@app\.|def |async def |class |# )", lines[end]):
+                end += 1
+            routes.append((m.group(1), m.group(2), i + 1,
+                           " ".join(x.strip() for x in sig), "\n".join(lines[k + 1:end])))
+        ident = re.compile(r"\b(email|seller_email|buyer_email|user_email|agent_email|owner_email)\b")
+        unbound = [r for r in routes
+                   if "require_api_key" in r[3] and "ts_user" not in r[3]
+                   and "x_admin_key" not in r[3]
+                   and (ident.search(r[3]) or ident.search(r[1]))]
+        if unbound:
+            for meth, path, line, _sig, _b in unbound[:6]:
+                out.append((FAIL, "%s %s (line %d) takes a person's identity from the request "
+                                  "behind the PUBLIC app key, with no session and no admin key -- "
+                                  "the caller declares who he is (IDENTITY-BIND-1)"
+                                  % (meth.upper(), path, line)))
+            if len(unbound) > 6:
+                out.append((FAIL, "...and %d more unbound identity endpoints (IDENTITY-BIND-1)"
+                                  % (len(unbound) - 6)))
+    except Exception as exc:
+        out.append((INFO, "NOT EVALUATED - route sweep failed to parse: %s" % exc))
+
+    return out or [(INFO, "all five Buzz endpoints take the session cookie and bind their actor "
+                          "through _buzz_who; acceptance is required and its write is bound; "
+                          "/buzz/me is the one exception and is exempt on purpose; enforced by "
+                          "default with BUZZ_BIND=0 as the escape hatch; and NO route behind the "
+                          "public app key takes a person's identity unbound")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
