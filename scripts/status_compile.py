@@ -37,6 +37,27 @@ FOLDED = os.path.join(FRAG_DIR, "folded")
 STATUS = os.path.join(ROOT, "STATUS.md")
 ANCHOR = b"## Current Session"
 
+
+def _heading_positions(blob, anchor, nl=b"\n"):
+    """Offsets where `anchor` STARTS A LINE -- a real heading, never prose quoting one."""
+    out, i = [], 0
+    while True:
+        i = blob.find(anchor, i)
+        if i < 0:
+            return out
+        if i == 0 or blob[i - 1:i] == b"\n" or blob[i - len(nl):i] == nl:
+            out.append(i)
+        i += 1
+
+
+def _count_headings(blob, anchor):
+    return len(_heading_positions(blob, anchor))
+
+
+def _find_heading(blob, anchor, nl=b"\n"):
+    pos = _heading_positions(blob, anchor, nl)
+    return pos[0] if pos else -1
+
 # DASH-FEED-1 (11 Sep 2026) -- the managed dashboard-feed block.
 # GET /dashboard/summary reads the FIRST "## Last Completed" heading anywhere in this
 # 300 KB append-only file. Sessions write under "## Current Session", so for 22 days the
@@ -122,11 +143,18 @@ def main():
     nl = b"\r\n" if b"\r\n" in raw[:4096] else b"\n"
 
     flat = raw.replace(b"\r\n", b"\n")
-    if flat.count(ANCHOR) != 1:
+    # STATUS-ANCHOR-LINE-1 (14 Sep 2026): count the HEADING, not the string. A plain
+    # substring count also matched the 11 Sep note that DESCRIBES this machinery -- its
+    # prose quotes `## Current Session` in backticks twice -- so the compiler read three
+    # headings, refused, and seven fragments piled up behind it for three days while the
+    # dashboard and the session counter drifted. A document explaining the mechanism must
+    # never be able to jam the mechanism. Headings start a line; nothing else counts.
+    n_anchor = _count_headings(flat, ANCHOR)
+    if n_anchor != 1:
         # Refuse rather than guess. A wrong insertion point in STATUS.md breaks the
         # dashboard's session-counter parse, which reads the FIRST match in the file.
         print("REFUSED: '%s' appears %d times in STATUS.md - expected exactly 1."
-              % (ANCHOR.decode(), flat.count(ANCHOR)))
+              % (ANCHOR.decode(), n_anchor))
         return 2
 
     parts, folded_names = [], []
@@ -149,9 +177,9 @@ def main():
 
     if parts:
         block = (nl + nl).join(parts) + nl + nl
-        i = raw.find(ANCHOR.replace(b"\n", nl))
+        i = _find_heading(raw, ANCHOR.replace(b"\n", nl), nl)
         if i < 0:
-            i = raw.find(ANCHOR)
+            i = _find_heading(raw, ANCHOR, nl)
         j = raw.find(nl, i)
         if j < 0:
             print("REFUSED: could not find the end of the anchor line.")

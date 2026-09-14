@@ -95,9 +95,13 @@ genuinely costs Tuppence: an introduction to someone they do not know.
 No anonymous relay in the Quick List app. These two already have each other's numbers. What is
 needed is only:
 
-- **notifications that actually arrive** — WhatsApp is the real channel in South Africa, not email;
-  push through the installed app is free but **no service worker is registered today**, so there is
-  no push at all yet; SMS as last resort
+- **notifications that actually arrive** — SUPERSEDED THE SAME DAY, and this line must not be read
+  again as written: the service worker fault was found and fixed on 12 Sep (nginx had no
+  `location = /service-worker.js` block), and **RUL-122 then ruled the channels: web push first,
+  email as the backup, SMS not on the plans** because R0.15–R0.30 a message is a per-message cost
+  that breaks the zero-cost rule. Push is live, free and self-hosted (VAPID + pywebpush), and
+  `_push_to_seller()` already delivers to every device a user has registered. WhatsApp is out for
+  the same reason as SMS — per-conversation cost — until David reopens it
 - **one-tap replies** — *Yes / No / Ask me later*. Not a form. Typing on a cheap phone with bad data
   is where these loops die
 - **graceful degrading** — a worker with no data for a day must not lose the job
@@ -117,15 +121,15 @@ worker's own side of the market*. A worker confirming a worker is not evidence, 
 circle, and allowing it would hollow out the trust half quietly.
 
 **Claude's amendment to the mechanism — "same task" leaves a hole.** Thandi could not refer Grace
-the housekeeper to Mrs van Wyk, but could refer Joseph the gardener, who is equally a stranger to
-Mrs van Wyk. In this workforce the cross-trade referral is the *most* common one there is
+the housekeeper to Mrs Nkosi, but could refer Joseph the gardener, who is equally a stranger to
+Mrs Nkosi. In this workforce the cross-trade referral is the *most* common one there is
 ("my husband does gardens", "my cousin drives"). Proposed instead, one rule rather than two:
 
 > **The free lane is the PAIR, not the person.** One worker, one hirer, created by the worker's own
 > link. Anyone else arriving at that hirer — any trade — is an introduction.
 
 **And it needs no policing, which is what David asked for.** Do not PREVENT the second referral —
-simply do not EXEMPT it. Thandi can still tell Mrs van Wyk about Joseph; it just is not free. It
+simply do not EXEMPT it. Thandi can still tell Mrs Nkosi about Joseph; it just is not free. It
 lands as an ordinary introduction and the till applies at the normal moment, when the hirer wants
 the contact details. Nothing blocked, nobody accused, no second rule to enforce. The default is
 already a Tuppence; the free lane is the exception, and the exception is defined once.

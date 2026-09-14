@@ -21531,5 +21531,140 @@ def rg_jurisdiction_ruled():
     return out
 
 
+@entry("RG-0362", "No secret has TWO live values -- the files the app and its agent lanes read hold "
+                  "the same value for every name they share, the Maintenance agent's own key file "
+                  "matches the running app, and the agent reads its queue instead of 401'ing into "
+                  "a silence that looks exactly like a quiet day",
+       LOCKED, fixed_on="14 Sep 2026",
+       scope="/etc/marketsquare/secrets.env (authoritative) and /var/www/marketsquare/.env (the legacy "
+             "copy every agent-side fallback still reads) on the origin; /opt/marketsquare-src/.secrets/"
+             "ms_maint_key.txt (the agent's own first-choice key source); CityLauncher/.env "
+             "(LAUNCH_CODE_SECRET, the issuing half of the launch-code HMAC); and the maintenance-agent "
+             "journal. Harness: scripts/secret_divergence_probe.py -- it compares 12-character SHA-256 "
+             "FINGERPRINTS only and never prints or transports a secret value. Legs: (a) every name both "
+             "env files carry holds one value; (b) the agent's key file exists and matches the key the "
+             "app process is actually running on; (c) no 'intake FAILED' in the agent journal SINCE the "
+             "key file was installed -- scoped deliberately, because counting the whole journal would "
+             "read the three-week outage this entry commemorates and report history as a present fault; "
+             "(d) the key CityLauncher signs launch codes with equals the key the live app verifies with. "
+             "CLASS, not instance: any secret with more than one live copy will drift at the next "
+             "rotation, and the lane that reads the stale copy fails CLOSED and SILENTLY -- it does not "
+             "crash, it reports nothing to do.",
+       ref="SECRET-ONE-VALUE-1 (14 Sep 2026). What happened: the Maintenance agent was armed and running "
+           "LIVE three times a day and ended EVERY run on 'intake FAILED (HTTP Error 401) -- nothing read; "
+           "failing safe, doing nothing'. Not Cloudflare and not the origin gate: reproduced on localhost "
+           "as {\"detail\":\"Admin credentials required.\"}. The app runs on MS_MAINT_KEY from "
+           "/etc/marketsquare/secrets.env; the agent falls back to /var/www/marketsquare/.env; the 22 Aug "
+           "rotation updated one file and not the other, and the agent's own key file was simply missing. "
+           "Proven by fingerprint (4b5a53175fa4 vs 8997edd37072) and by the same request with the running "
+           "value returning 200. LAUNCH_CODE_SECRET had THREE values in play -- CityLauncher signing "
+           "launch codes with a key the live app does not verify with, redemption enabled; cost was nil "
+           "only because no code had ever been issued (both tables 0 rows). Two lessons, both paid for: "
+           "(1) the hazard was ALREADY NAMED in this file -- 'files that hold more than one live copy "
+           "(MS_MAINT_KEY, LAUNCH_CODE_SECRET x4 files)' and 'a THIRD copy nobody knew about' -- and "
+           "nothing asserted it, so it happened anyway; a named hazard with no assertion is not a control. "
+           "(2) the first fix in this sitting was a PATCH on one consumer (write the agent's key file) and "
+           "this probe, written straight after, immediately reported the two files still diverged -- the "
+           "class fix is that no name has two values, and the instrument caught its own author taking the "
+           "cheaper half. /dashboard/maint meanwhile read 'armed:false, SHADOW' throughout, from a stale "
+           "ad-hoc heartbeat, while systemd had the timer enabled, active and passing --live: the same "
+           "instrument-lying class as RG-0353/RG-0354.")
+def rg_secret_one_value():
+    ok, blind, detail = _harness(
+        [sys.executable, os.path.join(REPO, "scripts", "secret_divergence_probe.py")], timeout=120)
+    if blind:
+        return [(INFO, "NOT EVALUATED - " + detail)]
+    text = (detail or "").strip()
+    if text.startswith("NOT EVALUATED"):
+        return [(INFO, text)]
+    if ok:
+        return [(INFO, text.replace("OK: ", "", 1) or "no secret holds two live values")]
+    out = []
+    for ln in text.splitlines():
+        ln = ln.strip()
+        if ln.startswith("FAIL: "):
+            out.append((FAIL, ln[6:]))
+        elif ln.startswith("INFO: "):
+            out.append((INFO, ln[6:]))
+    if not out:
+        out.append((FAIL, "the secret-divergence probe failed without naming a leg: " + text[-200:]))
+    return out
+
+
+@entry("RG-0363", "the offline banner can never LATCH -- it is raised only by a probe that actually "
+                  "failed, it clears itself when the network answers without waiting for an "
+                  "'online' event, and it never promises cached content the app does not hold",
+       OPEN,
+       scope="ms.js: OFFLINE-TRUTH-1. Four legs, all source-side: _obReachable() exists and probes "
+             "a same-origin URL; showOfflineBanner() returns early when that probe succeeds, so the "
+             "banner cannot assert a state just disproved; a retract probe (_obProbeTimer) runs "
+             "while the banner is up; and the banner copy does not claim 'cached content' while the "
+             "service worker caches nothing by design (RG-0358's worker is deliberately cache-free).",
+       ref="OFFLINE-TRUTH-1 (14 Sep 2026). Found live by David on 13 Sep: the app showed "
+           "\"You're offline -- browsing cached content\" while navigator.onLine was true and "
+           "same-origin fetches returned 200, on the very screen where his listings looked empty. "
+           "The old code raised the banner on a bare 'offline' event and only ever lowered it on an "
+           "'online' event -- so one spurious event pinned a false statement to the top of the app "
+           "indefinitely, and it sends sellers to their router instead of their account. Proven in "
+           "headless Chromium before it shipped: a spurious 'offline' event while online no longer "
+           "raises it; a real outage does; and with the network restored and NO 'online' event ever "
+           "dispatched the probe cleared it within 4s.")
+def rg_offline_banner_no_latch():
+    src = repo_file("ms.js")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - ms.js is not readable from here")]
+    out = []
+    if "OFFLINE-TRUTH-1" not in src or "_obReachable" not in src:
+        return [(FAIL, "OFFLINE-TRUTH-1 is gone from ms.js -- the banner is back to latching on a "
+                       "single spurious event and telling sellers they are offline when they are not")]
+    if "if(await _obReachable()) return;" not in src:
+        out.append((FAIL, "showOfflineBanner no longer re-proves the outage before it speaks -- it "
+                          "can assert offline while a same-origin fetch is returning 200"))
+    if "_obProbeTimer = setInterval" not in src:
+        out.append((FAIL, "the retract probe is gone -- the banner again depends on an 'online' "
+                          "event that may never arrive, which is exactly how it latched"))
+    if "browsing cached content" in src:
+        out.append((FAIL, "the banner promises cached content again -- nothing is cached, the "
+                          "service worker caches by design nothing (RG-0358)"))
+    return out or [(INFO, "the banner proves the outage before it speaks, clears itself on a probe "
+                          "rather than an event, and promises no cache it does not have")]
+
+
+
+@entry("RG-0364", "the service worker is REGISTERED on every page load, not only for whoever opts "
+                  "into push -- without that nothing controls the page, and both the install offer "
+                  "and web push are built and unreachable",
+       OPEN,
+       scope="ms.js: SW-REGISTER-1. _msRegisterSW() exists, is called from _msInit(), and wraps "
+             "register() so a failure can never break app start. The push opt-in keeps its own "
+             "register() call; register() is idempotent, so both paths coexist.",
+       ref="SW-REGISTER-1 (14 Sep 2026). Probed live 13 Sep from David's own browser: "
+           "navigator.serviceWorker.controller was null. The worker was served (RG-0356), had a "
+           "fetch handler (RG-0358) and could sign pushes (RG-0359) -- but the ONLY register() call "
+           "sat inside the push opt-in, so for every visitor who had not opted in there was no "
+           "controller at all. Chrome will not fire beforeinstallprompt without one, so RUL-123's "
+           "add-to-home-screen offer at first publish and RUL-122's web push were both finished and "
+           "both unreachable. Three separate ledger entries were green while the feature they exist "
+           "for could not happen -- the gap was that none of them asserted REGISTRATION. Proven in "
+           "headless Chromium: one registration after a plain page load, and the worker controls "
+           "the page on the next navigation.")
+def rg_sw_registered_on_load():
+    src = repo_file("ms.js")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - ms.js is not readable from here")]
+    out = []
+    if "SW-REGISTER-1" not in src or "_msRegisterSW" not in src:
+        return [(FAIL, "SW-REGISTER-1 is gone -- the worker is registered only for push opt-ins "
+                       "again, so nothing controls the page and the install prompt cannot fire")]
+    if "_msRegisterSW();" not in src:
+        out.append((FAIL, "_msRegisterSW is defined but never called from app start -- a defined "
+                          "function that nobody runs is the same as no registration"))
+    if "navigator.serviceWorker.register('/service-worker.js')" not in src:
+        out.append((FAIL, "the registration no longer points at /service-worker.js -- the worker is "
+                          "served from the site root so its scope covers the whole app"))
+    return out or [(INFO, "the worker is registered at app start, independently of push consent, "
+                          "and a failed registration cannot break the app")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

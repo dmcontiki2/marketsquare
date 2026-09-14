@@ -1,3 +1,749 @@
+## 2026-09-14 — The Maintenance agent was armed and 401'ing for three weeks
+
+**What was broken.** The agent woke three times a day, could not read its own fault queue,
+and did nothing. Every run ended on `intake FAILED (HTTP Error 401) -- nothing read; failing
+safe, doing nothing.` The ops dashboard meanwhile said the agent was disarmed and in shadow,
+which was also untrue: the timer was enabled, active, and passing `--live` the whole time.
+Two separate instruments, both wrong, in opposite directions.
+
+**Root cause.** One secret with two live values. The app runs on `MS_MAINT_KEY` from
+`/etc/marketsquare/secrets.env`; the agent falls back to `/var/www/marketsquare/.env`; the
+22 Aug rotation updated one file and not the other, and the agent's own first-choice key
+file was missing entirely. Reproduced on localhost as `{"detail":"Admin credentials
+required."}` — not Cloudflare, not the origin gate — and proven by fingerprint
+(`4b5a53175fa4` vs `8997edd37072`) plus the same request returning 200 with the app's value.
+
+**Third victim, found on the way.** `LAUNCH_CODE_SECRET` had THREE values in play.
+CityLauncher signed launch codes with a key the live app does not verify with, while
+redemption was enabled. Nothing was ever issued (`launch_codes` and `launch_redeem_attempts`
+both 0 rows), so the cost was nil — a landmine, not a wound.
+
+**Fixed.**
+- `.secrets/ms_maint_key.txt` written 0600 from the app's own running value; intake proven
+  clean on a shadow run and a systemd `--live` run.
+- **Both env files aligned** so no shared name holds two values. The first attempt at this
+  fix wrote only the agent's key file — a patch on one consumer — and the new probe, written
+  minutes later, immediately reported the two files still diverged. The instrument caught its
+  own author taking the cheaper half.
+- `CityLauncher/.env` aligned to the key the app verifies with.
+- `MAINT_PHASE` moved `prelaunch` → `postlaunch`, thirteen days after the runbook said to.
+- `fault_report` switched ON (David's tick): `/flags` reads true and `POST /app/fault`
+  answers 422 instead of fail-closing 503.
+- The daily stand-up scheduled task re-enabled (David's tick), next fire 19:03Z.
+
+**Asserted, so it cannot come back quietly.** New ledger entry RG-0362 with a harness,
+`scripts/secret_divergence_probe.py`: no shared name holds two values; the agent's key file
+matches the running app; no intake failure since the key file was installed; CityLauncher
+signs with the key the app verifies with. Fingerprints only — no secret value is ever printed
+or transported.
+
+**The lesson, and it is not a new one.** This hazard was ALREADY NAMED in the ledger —
+*"files that hold more than one live copy (MS_MAINT_KEY, LAUNCH_CODE_SECRET x4 files)"* and
+*"a THIRD copy nobody knew about"* — and nothing asserted it, so it happened anyway. A named
+hazard with no assertion behind it is not a control.
+
+## 2026-09-14 — The status compiler was jammed by a note describing the status compiler
+
+`status_compile.py` refused for three days with *"'## Current Session' appears 3 times in
+STATUS.md - expected exactly 1."* There is only ONE such heading. The other two matches were
+PROSE — the 11 Sep maintenance note that explains this very machinery quotes the heading name
+in backticks twice. `ANCHOR` was matched as a plain substring, so a document describing the
+mechanism jammed the mechanism.
+
+Seven fragments piled up behind the refusal while the session counter and the dashboard's
+session badge drifted a sitting behind the evidence on disk (the regression ledger's RG-0154,
+red on today's board).
+
+Fixed at the class: `_heading_positions()` / `_count_headings()` / `_find_heading()` count a
+match only where it STARTS A LINE. Prose quoting a heading can never be mistaken for one
+again. The seven fragments then folded cleanly (`folded 7, skipped 0 - verify OK`) and the
+session counter reads OK.
+
+## 2026-09-14 — The repair lane: the banner stops lying, and the worker is finally registered
+
+Both faults were found on the live site on 13 Sep and neither was actioned then. They are repaired
+now and deliberately NOT held by the baseline batch — [[RUL-126]] governs design, not repair.
+
+### OFFLINE-TRUTH-1 — the banner could never be talked down
+
+The old code raised the banner on a bare `offline` event and lowered it only on an `online` event.
+One spurious event pinned *"You're offline — browsing cached content"* to the top of the app for
+good, which is exactly what David read while `navigator.onLine` was true and same-origin fetches
+returned 200 — on the screen where his listings looked empty, so the app was pointing him at his
+router instead of at his account.
+
+Fixed at the class rather than at the symptom: **the banner re-proves itself.** It rises only after
+a real same-origin probe fails, and while it is up a probe runs every four seconds and takes it
+down the moment the network answers — no event required. The copy is corrected too: the service
+worker caches nothing by design (RG-0358), so the banner no longer promises cached content that does
+not exist. It now reads *"You're offline — some things won't load"*, in `ms.js` and in the static
+markup.
+
+### SW-REGISTER-1 — three green entries, and the feature still could not happen
+
+`navigator.serviceWorker.controller` was **null** for every visitor. The worker was served
+(RG-0356), had a fetch handler (RG-0358) and could sign a push (RG-0359) — but the only
+`register()` call in the app sat inside the push opt-in. Anyone who had not opted into push had no
+controller at all, so Chrome could never fire `beforeinstallprompt`, and **RUL-123's
+add-to-home-screen offer and RUL-122's web push were both finished and both unreachable.**
+
+Three ledger entries were green while the thing they exist for was impossible. The gap: not one of
+them asserted REGISTRATION. `_msRegisterSW()` now runs from `_msInit()` on every page load, wrapped
+so a failed registration can never break app start; the push lane keeps its own call, and
+`register()` is idempotent.
+
+### Proven in a rendered browser, not read off disk
+
+Headless Chromium at 412×915 against the edited files:
+
+- one registration after a plain page load; the worker **controls** the page on the next navigation;
+- no banner while online; a **spurious** `offline` event while online no longer raises it;
+- a real outage does raise it, with the corrected copy;
+- with the network restored and **no `online` event ever dispatched**, the probe flipped it to
+  "Back online ✓" within 4s and it retracted on its own.
+
+New ledger entries **RG-0363** (banner cannot latch) and **RG-0364** (worker registered at app
+start) both run green. `node --check ms.js` clean. `ms.js?v=` bumped 488 → 489.
+
+### Not deployed
+
+`git status` carries another session's in-flight work today — `bea_main.py` (+246), `ms.css` (+38)
+and `genie/HARNESS.html` — and a deploy would carry it. Stated rather than assumed: the deploy is
+David's to time.
+
+## 2026-09-14 — The open-days step becomes a week, and requirement 6 gets built
+
+### 1 — Which days are you open?
+
+David, 14 Sep: *"It should show a full week, and allow for selection of any days where there are
+openings and they are available."*
+
+The step was `kind:'chip'`, Mon–Sat plus "Any day", single choice, auto-advancing on the first tap.
+Three faults in one row: a housekeeper free on Monday, Wednesday and Friday could record exactly
+one of them; Sunday did not exist at all; and "Any day" was doing duty as "more than one day",
+which is not what it means.
+
+Now `kind:'week'` — a new step kind in the harness engine, not a patch on the chip renderer:
+
+- seven cells, Mon–Sun, each one a toggle; the weekend is drawn dashed because it is priced and
+  staffed differently, and a chosen day says **open** where an unchosen one asks **free?**
+- an **Every day** toggle for the worker who is simply available; it reads back onto the card as
+  "Any day", so the old shorthand survives where it is actually true
+- the step cannot auto-advance — the second day could never be added — so it ends with one button
+  that also counts back what it is about to commit: *"Next — 4 days open"*, disabled until at
+  least one day is on
+- the pick keeps the day array on it (`days:[...]`) as well as the printed label, so the hand-over
+  can carry structured days the moment the server has a field for them
+
+Because one pick now costs several taps, the *"n taps to get here"* line stopped counting picks and
+started counting taps. It was only ever honest by accident before.
+
+The find side keeps its single choice — a hirer wants one day — but now offers Sunday.
+
+### 2 — Buzz: one line, both ways, a name on it
+
+David's four: a buzzer to the owner (late, sick, whatever); the exact same function in reverse
+(an extra day, anything else); the name of whoever pressed it; and permission from both parties at
+onboarding.
+
+Built as `drawBuzz()`, reached from a card on the advert screen — the example the prospective
+housekeeper sees before she refers anyone.
+
+**Three rulings from David the same hour, after seeing the first build:**
+
+1. **The switch lives in TrustSquare onboarding.** Each party grants the two permissions once, as
+   they onboard; Quick Listing only shows them so she knows what is coming. One rulebook, one
+   place, and both identities already exist there.
+2. **No canned messages — a single free line.** The first build offered six one-tap reasons each
+   way (running late, sick today, can you come an extra day). They are gone. One text field, one
+   sentence, capped at 120 characters, send disabled until something is typed. This overrides the
+   note in QUICKLIST_DESIGN_NOTES section B that argued one-tap beats typing on a cheap phone; a
+   fixed menu cannot say the thing that actually happened, and half-fitting canned lines are worse
+   than a short sentence in her own words.
+3. **The panel is universal.** It takes two named parties and a length cap and knows nothing about
+   housekeeping, so the same component can be dropped anywhere the platform needs a direct line
+   between two paired people.
+
+What it is, then: `BUZZ.parties[0]` and `[1]`, a direction toggle, one input, one button. The buzz
+renders on the other party's phone with initials, full name and the time; the answer is the same
+component flipped — **Buzz back** swaps the direction, clears the line and focuses it. The reply
+carries the answering name the same way. Enter sends. Press send with either permission off and
+nothing goes: the screen says why.
+
+Still **no relay, no inbox, no thread**. These two already have each other's numbers; the free lane
+exists *because* the worker brought the connection. The anonymous relay still belongs to stranger
+introductions in the real app.
+
+### Verified before it was called done
+
+Rendered headless at 400×860 and tapped through, not read: the week cells are Mon–Sun; the button
+is disabled on entry; four days select, one untoggles, "Every day" turns all seven on and off; the
+advert card comes out reading *"Cleaning, Menlyn, Mon, Wed, Fri, R400"* with the days in the fact
+chips; the Buzz refuses to fire without both permissions, then fires with the right name on the
+right phone in both directions; the reply receipt names the replier; back returns to the advert.
+**Zero page errors.** Eleven screenshots kept; eight of them are the visual page.
+
+### Ledger
+
+Nothing locked in the regression ledger — the week and the Buzz are builds in a local prototype,
+not deployed surface. The three rulings above ARE decisions and are recorded as such; no open
+action was left hanging.
+
+### Correction, same session — the channel was never the open question
+
+Claude reported that no service worker is registered and no push leaves a phone, and wrote an SMS
+fallback into the Buzz copy. David: *"Did we not rule the SMS out because it has a cost associated?
+I believe so."* He is right, and both claims were wrong:
+
+- **RUL-122 (12 Sep) rules SMS out.** Web push first, email as the backup, and no channel enters
+  the path unless it is free at the margin. SA SMS at R0.15–R0.30 a message breaks that outright.
+  WhatsApp falls to the same rule — per-conversation cost — until David reopens it.
+- **Push is not dead.** The service worker was 404ing at the root because nginx had no
+  `location = /service-worker.js` block; that was found and fixed the same 12 Sep (SW-ROOT-1), and
+  the rest was already there: self-hosted VAPID keypair, pywebpush, `_wlRegisterPush()` in ms.js,
+  `/wishlist/vapid-public-key`, `wearable_devices`, and `_push_to_seller()`.
+
+The bad sentence came from QUICKLIST_DESIGN_NOTES section B, which was written hours before the fix
+and still said "no service worker is registered today; SMS as last resort". That line has been
+corrected in place rather than left to re-infect the next session, and the harness copy now reads:
+push, free and self-hosted, email if her push is off, no SMS.
+
+**What this means for the build.** `_push_to_seller(conn, seller_email, title, body)` resolves a
+user to every device they have registered and pushes to all of them; its `title` and `body` are
+exactly the sender's name and the one line. So the Buzz needs no new delivery machinery at all —
+only a pair record (who may buzz whom, created when the hirer joins from her link), the two
+onboarding switches, and one endpoint that checks the pair and calls that function.
+
+---
+
+## Buzz, built for both apps (same day)
+
+David: *"This looks good, please implement for both apps."*
+
+### The shape
+
+The pair is the unit of consent, and consent is not transitive. A row in `buzz_pairs` means two
+people are connected — created when a hirer joins from the worker's own link — and each side carries
+its OWN allow flag, because her letting him buzz her says nothing about him letting her buzz him.
+Emails are stored lower-cased and ordered so a pair is exactly one row however it is asked for.
+A stranger cannot appear in anyone's list: the free lane only ever opens the way the worker opens it,
+which is the direction argument from QUICKLIST_DESIGN_NOTES section B, now enforced in a table.
+
+`buzz_log` exists for two operational jobs only — rate limiting and "did it arrive, and how". It is
+never read back to a user as a thread. A buzz has no history by design.
+
+### The endpoints
+
+| | |
+|---|---|
+| `POST /buzz/pair` | connect two people; grants no permission |
+| `POST /buzz/allow` | one side's switch, per person, never global |
+| `GET /buzz/pairs` | who you can buzz, with both switches |
+| `POST /buzz` | one line, with the sender's name on it |
+
+`POST /buzz` refuses, in order and with a stated reason every time: an empty line (400), not
+connected (404), their switch is off (403), too many in an hour (429). Silence is the one outcome
+that teaches nobody anything, so there is none.
+
+Delivery adds no machinery: `_push_to_seller(conn, receiver, name, text)` — its title is the NAME
+and its body is the LINE, which is requirements 2 and 3 met by the function that already existed.
+Zero devices registered falls to `_send_html_email`. There is no SMS path and one must not be added
+without David reopening RUL-122.
+
+### The live app
+
+`#screen-buzz`, reached from My Space → Buzz. One switch for the phone ("let TrustSquare buzz this
+phone" — which binds the account to its buyer_token and runs the existing push registration), then
+one card per connected person: name, initials, their switch, one line, one button, and a plain note
+when the other side has not switched you on yet, because a buzz that cannot arrive should say so
+before it is typed rather than after.
+
+### The Quick Listing harness
+
+The same panel, pointed at the same contract. `buzzLive()` is true only when `HANDOVER.url` and both
+emails are set; then it POSTs `/buzz` and prints what the server said — "Delivered to her phone",
+"No push on that account, it went to her email", or the refusal verbatim. Without them it is the
+example it was this morning, and the screen says which mode it is in. One server, one rulebook.
+
+### Verified before it was called done
+
+- **22 endpoint checks, all green**, run against a temp SQLite database — and run against the REAL
+  source text lifted verbatim out of `bea_main.py`, with only the app's dependencies stubbed, so
+  nothing here tests a re-implementation. Among them: pairing grants nothing; pairing is idempotent
+  either way round; consent is not transitive; a 400-character paragraph is cut to one line; newlines
+  cannot make it a thread; a stranger is refused; switching off stops it again; the limit trips; a
+  user with no name still buzzes with a name.
+- **Both UIs rendered headless and driven.** The live screen posts the right body, shows the right
+  receipt, surfaces the server's 403 verbatim, and clears the input; the harness posts the identical
+  contract when wired and stays dry when not. **Zero page errors in either.**
+- **One real fault found in the render pass and fixed:** `--accent-bright` is used in the app's
+  inline styles but is not defined as a token anywhere in `ms.css` or the HTML, so the avatar, the
+  switch and the Buzz button all rendered invisible on a white card. The new CSS uses `--accent`.
+  Worth knowing beyond this feature: any other inline style reaching for that token is painting
+  nothing.
+
+### Deploy
+
+One double-click of `deploy_marketsquare.bat`. All four changed files are already in
+`ops/autodeploy/deploy_manifest.txt`, the `?v=` stamps are bumped (288 / 488), and the two tables are
+created by `run_migrations()` on the restart the deploy already performs.
+
+## 2026-09-14 — The baseline changes once: four rulings taken, the batch written, production cleaned
+
+David, reading the open-actions list: *"all of them please, we want the baseline to change once only
+for a longer period than to have short changes?"* Every open design item is in, and they ship as ONE
+baseline change. **RUL-126.**
+
+### The list was checked against the code, not against the build queue
+
+`BUILD_QUEUE.md` is generated 2 Sep and had gone stale. Probed instead: `SF-AIDESC-1`,
+`SF-MULTIVISION-1` and `SF-COACH-ASK-1` are all present in `ms.js` (built 4 Sep), and
+`INTRO-REMIND-1` is in `bea_main.py`. So **RG-0205/0206/0207 and RG-0208 are done** and were
+struck off the list before it was shown to him. Confirmed unbuilt by the same method: no `ZOOM`
+string in `ms.js`, no `SQUIRE` anywhere, `/credentials/mine` absent from both app files, no
+`/quick` route.
+
+### Four decisions taken, none of them parked
+
+- **RUL-127 — DCB-001 approved.** The GATE line in `DESIGN_BACKLOG.md` has been empty since
+  11 Aug; it now carries his name and date. Batch-upload any order, tap one as cover, AI orders
+  the rest, drag to adjust.
+- **RUL-128 — one $5 tier.** Global buyer reach folds into Starter: Free · Starter $5 (10 slots +
+  reach) · Pro $20. He took the consequence with it — a pure buyer now buys a seller plan to get
+  reach. The Agency Pro seat (RUL-048) was NOT folded; he chose the two-product fold.
+- **RUL-129 — the trust ladder gains private-seller credentials.** Property and Local Market stop
+  being silent. Every new entry must be a dated, sourced fact, checkable by somebody outside
+  TrustSquare, added once and counting on every listing after.
+- **Listings 383 and 384 deleted.** The two hand-over proof drafts are gone from production, by
+  the seller-authenticated route so no API key crossed the wire. Re-probed: both `GET /listings/{id}`
+  return **404**.
+
+### The batch itself
+
+`BASELINE_BATCH_2026Q4.md` is the plan of record — nine build items ordered by dependency (Zoom
+first, Squire after it by ruling, the Quick app after the service worker), what each must prove in
+the RENDERED app, and the arming sequence that stays David's.
+
+**Two live faults are explicitly NOT in the batch** and are repaired on their own, because RUL-126
+governs design and not repair: the false offline banner, and the missing service worker that keeps
+both web push (RUL-122) and the install offer (RUL-123) from ever firing.
+
+### Reserved, and stated rather than buried
+
+The travel funnel endpoint (the Expedition Dossier as the introduction) is a commercial shape and
+is his; it blocks arming the travel lane, not building Zoom. The designer-role binding (D14) is his.
+The Agency $5 seat is his.
+
+## 2026-09-13 — Why the draft was invisible, and two faults found doing it
+
+David: *"I don't see it, and truthfully i don't know where to look."* Claude's earlier directions
+were wrong because they were read out of `ms.js` instead of looked at in the running app — the
+screen is not called "Dashboard" anywhere a user can see.
+
+### The cause: the browser was signed in as somebody else
+
+Read from the live page in David's own Chrome: `localStorage.ms_aa_email` =
+**`walkthrough.tutor@trustsquare.co`**. The Seller Hub was faithfully showing that account's
+listings, which are none. Fetching `/listings/mine` from inside the same page for
+`dmcontiki2@gmail.com` returns **1 row — listing 384, Cleaning — Pretoria East, draft**. Nothing was
+wrong with the hand-over or the hub; the session belonged to a walkthrough account.
+
+### Where it actually is, in the words on the screen
+
+**My Hub** (top right) — or **My Space** (bottom bar) — opens **My Seller Hub**, which has the tabs
+**My Listings · My Requests · My Profile**. There is no "Dashboard" label in the interface.
+
+### Fault 1 — a false offline banner
+
+The page shows *"You're offline — browsing cached content"* while `navigator.onLine` is **true** and
+same-origin fetches return 200. The banner is not telling the truth, and it is the first thing a
+seller reads when their listings look empty — it will send people to their router instead of their
+account.
+
+### Fault 2 — no service worker is controlling the page
+
+`navigator.serviceWorker.controller` is **null** on the live site. That matches the known push gap
+(RUL-122 needs web push; RUL-123 puts the install offer at first publish) — neither can fire while
+nothing is registered. It also means the "cached content" the banner claims is not coming from a
+service worker at all.
+
+Neither fault was actioned — both are live-app behaviour outside the Quick Listing track.
+
+## 2026-09-13 — A category that asks for more is headroom, not a bad score
+
+David, 13 Sep 2026: *"Could we for cars, being a type limitation, not say that x amount of score
+points can be added for model, mileage or transmission?"*
+
+Yes, and the arithmetic did not have to move to do it. `lsOf()` is still a faithful mirror of
+`_import_quality_score()`, so the number the seller reads is still the number the server will
+compute on hand-over. What changed is what she is told about it.
+
+- The LS tile now carries **"+69 available"** under the number, so the score is read as a position
+  on a climb rather than a mark out of ten.
+- The checklist is headed **"Each of these adds to your listing score"**, and Cars now reads
+  *+8 add the model · +8 add the mileage · +8 add the transmission* instead of three silent gaps.
+- Categories that require four or more fields (Cars, Property) carry one line explaining why they
+  start lower: *"Cars listings ask for more than most — 5 details rather than one — so they start
+  lower and climb further. Every one you add below is worth points; none of them is a penalty for
+  what the quick form did not ask."*
+
+Verified rendered: Cars 31 with +69 available and the three fields named; Housekeeping 60 with +40
+available and no note (it requires no structured fields, so there is nothing to explain). All eight
+categories still hold 5 taps to a draft and 4+3 to five items, zero duplicates, zero page errors.
+
+**The click budget was not touched.** Asking for model, mileage and transmission inside the quick
+form would break RUL-117(c). They stay where they belong — added in TrustSquare, where the score
+rises as they land.
+
+## 2026-09-13 — Quick Listing: the card fix verified, the three scores surfaced, the hand-over built
+
+Three of the open harness items closed in one pass, all verified in a rendered browser at 412×915
+rather than read in the source.
+
+### 1 — the card-building fix was correct, and it is now proven
+
+The fix written on 12 Sep (cards composed FROM the taps instead of drawn from a fixed list per
+category) had never been run. It was run: Tutors → Maths → Primary → Pretoria East, then the three
+narrowing chips. **18 cards before narrowing, 5 after, zero titles that contradict a tap**, the
+price band honoured (R121–R200 against an "Under R200" chip), zero page errors.
+
+One real fault was found while proving it: **two of the five cards read identically**
+("Maths, Primary — homework help" twice). Six detail strings across eighteen cards means repeats
+survive into any five. Fixed by rotating the descriptive tail to the next unused one *after*
+sorting, so the ORDER is untouched — RS → TS → LS still decides every position, and RUL-120(c)
+still holds: the non-monotonic star column is correct and was not touched.
+
+### 3 — the lister sees all three of her own scores, with coaching (RUL-121)
+
+`lsOf()` is a faithful mirror of `bea_main.py::_import_quality_score()`: the same 40 photo points,
+the same per-category required fields, the same 15-word description bar, the same 6 for price and
+4 for area. So the number she reads in the Quick app is the number the server will compute on
+hand-over — nothing new was invented, the existing scorer was surfaced, which is what RUL-121(d)
+asked for.
+
+The draft screen now carries **RS, TS and LS**, labelled *"Only you see these. Buyers see the star
+alone."* The public card is unchanged and still shows TS only (RUL-120(b)). The scorer's `missing[]`
+list — already sorted biggest-win-first — IS the coaching: the top item is the headline, and the
+rest become the checklist, each with its points. The old hardcoded three-item checklist is gone; it
+was saying the same thing twice.
+
+TS starts at 0 with the gate named on screen: *"Your trust score opens when one employer confirms
+you, or you pass an ID check"* (RUL-115).
+
+### 5 — the hand-over exists
+
+`handoverPayload()` composes the exact `Listing` model from the taps and `handOver()` POSTs it to
+`/listings`. Contract mirrored from `bea_main.py::create_listing`: suburb is required, the server
+always stores `listing_status='draft'` whatever is sent, unknown keys are dropped by the model, the
+reply is `{id, message}`. Verified against a server enforcing those rules: a draft id came back, and
+the payload posted without a suburb was correctly refused with **400 "suburb is required"**.
+
+This is RUL-125(b) by construction — the Quick app has no database and no scorer, it hands the card
+into the same listings the live app reads, and the seller finishes onboarding and the EULA inside
+TrustSquare to go live.
+
+### Regression sweep
+
+All eight categories, both directions: **5 taps to a draft and 4+3 to five items held everywhere**
+(RUL-117(c)), three scores rendered on every sell flow, zero duplicate cards, zero page errors.
+
+### Two observations, neither of them a requirement
+
+- **Cars scores lowest (LS 31).** Its sell flow asks make and year but never model, mileage or
+  transmission — three of the five fields the server requires — so a Cars listing cannot reach a
+  good score through the Quick app as it stands. Tutors and Housekeeping reach 56–60.
+- **The API key is in the page.** `ms.js` line 71 carries `API_KEY` client-side and the hand-over
+  follows that same existing pattern. Rotation is already deferred to near-launch by David's 2 Jun
+  decision, so nothing was actioned — but the Quick app adds a second public surface carrying it.
+
+## 2026-09-13 — maintenance-loop (daily B2b run)
+
+- **Fact board, before and after:** regression ledger run in three shards plus `--combine=3`,
+  both ends of the session. Both runs: **every locked fix is holding, 22 known defects still
+  open, exit 0.** No LOCKED entry went red, so the session had no forced top item.
+- **Fault queue: empty.** `GET /admin/faults?status=new` = 0 rows. Whole register census:
+  40 rows — 26 verified, 12 closed, 2 duplicate. Nothing in a fixable state.
+- **Shadow agent ran clean** (`scripts/maintenance_agent.py`, MS_BEA_URL=https://trustsquare.co,
+  foreground per BRAIN-DEPS-2): mode SHADOW (kill switch OFF — arming is David's act alone),
+  phase postlaunch, brain KEYED:anthropic, **0 seen / 0 acted**. Report:
+  `.maint_agent/run_20260913T053717Z.json`. Heartbeat PROBED live at `GET /dashboard/maint`
+  — it carries this run's stamp `2026-09-13T05:37:17Z` (received 05:37:39Z), so the
+  dashboard's B2b readiness row is fed by today's run, not a stale one.
+- **Email lane census (not a fix lane):** 24 rows total; 30d by category legal 1 / other 5 /
+  spam 1 / support 7; 30d by status drafted 6 / sent 6 / skipped 1 / system 1; 6 held.
+- **Step 2a (BACKUP-UNATTENDED-1): skipped by its own rule.** Newest archive
+  `backups/2026-09-12_1553.zip` is 13.7 h old — younger than a day, so a second archive today
+  is waste, not safety. The producer was not run; the lane is fresh.
+- **Step 2b (WAVE-WITNESS-1): producer run.** `scripts/wave_hygiene_witness.py` re-ran both
+  proof suites and rewrote `wave_hygiene_status.json` with their real verdicts —
+  intl_pass ok, source_tags ok, suppression ok, stamped 2026-09-13T05:38:34Z, exit 0. RG-0175
+  is green on the fact, not on the clock.
+- **Escalation brief: none.** `scripts/escalation_brief.py` — no escalations in the last 24 h,
+  so no `Records/ESCALATION_BRIEF_2026-09-13.md` was written. Nothing for David to read.
+- **No code changed.** No fault reached "gates GREEN, patch ready", so nothing was patched,
+  no fault row moved, and no new ledger entry is owed (AIK-VERIFY-1 unaffected — there was
+  nothing to verify).
+- Instrument note: `GET /health` answers 403 to a bare stdlib `urllib` User-Agent and 200 with
+  an ordinary browser UA. The agent, the ledger and this run's probes all set a UA, so nothing
+  is broken — but a new probe written with default `urllib` headers will read a false red.
+
+## 2026-09-13 — The hand-over is proven on the live server
+
+David, 13 Sep 2026: *"I authorize one draft listing on trustsquare.co under Dave Junior's tester
+account."* Done, once, exactly as authorised.
+
+The payload was composed by the harness itself — `handoverPayload()` run in the page against a real
+five-tap Housekeeping journey (Cleaning → Pretoria East → Mon → R250), not hand-written — and posted
+to the live `POST /listings`.
+
+**Result: `{"id":383,"message":"Listing saved as draft — seller must complete onboarding to go live"}`,
+HTTP 200.**
+
+Verified afterwards by reading it back:
+
+- `GET /listings/383` → title *Cleaning — Pretoria East*, category Housekeeping, suburb Pretoria East,
+  price R250, `listing_status: "draft"`, `published_at: null`, `seller_email: davidconradie1234@gmail.com`.
+- The server did its own half correctly — `geo_city_id` resolved to **47** (Pretoria) from the city
+  name, and `safety_score` was computed at 25. Neither was sent; both are the server's.
+- `GET /listings/mine?email=…` for Dave Junior returns exactly one row, id 383.
+
+**This closes the last unproven link in the chain.** Taps → advert card → real listing → the seller
+finishes onboarding and the EULA in TrustSquare to go live. One server, one rulebook (RUL-125(b)),
+and the draft gate means nothing the Quick app creates can reach the public shelf on its own.
+
+### Where it is visible
+
+Signed in as Dave Junior: **Dashboard → Listings tab**, shown with a draft badge (`loadLiveDash()`
+maps `listing_status==='draft'` to a draft status, so drafts do appear there). It is NOT on the
+public shelf and cannot be — draft listings are excluded until published.
+
+### One thing left open for David
+
+Listing 383 is a test row sitting in the production database. It is invisible to the public and
+harmless, but it is real. **Leave it as the reference specimen, or delete it — David's call.**
+
+### Second draft, under David's own account
+
+David could not sign in as Dave Junior — TrustSquare sign-in is passwordless (`/auth/request-link`,
+`/auth/verify-code`), so the code goes to that account's own inbox. `seller_email` is not a field on
+`ListingUpdate`, so listing 383 could not be re-pointed; a second draft was authorised and created
+instead.
+
+**Listing 384** — same payload, `seller_email: dmcontiki2@gmail.com`, status draft.
+`GET /listings/mine` for that account returns exactly one row, id 384.
+
+Two test rows now exist in production: **383** (Dave Junior) and **384** (David). Both are drafts,
+both invisible to the public. Keeping or deleting them is David's call; `DELETE /listings/{id}`
+exists for it.
+
+## 2026-09-13 — Goal run 12: the US lane was not dry, it was switched off — re-armed on the rulings, class fixed (JURIS-RULED-1)
+
+**Number: 0 of 20** (probes agree). 6,748 on the list · 1,482 emailed · 5 registered. Fact board green
+(22 open); rulings 0 fail. Sandbox alive. Model: Fable 5.1.
+
+### What was broken
+
+The 13 Sep 00:10 wave sent nothing: *"no armed city has anyone to send to right now"*. GOAL_STATE warns
+against reading that as supply, so the gates were checked one by one. The policy showed every US, UK and
+Australian city — and all 52 US state buckets — at `armed=false, gates_green=false`, stamped
+`disarmed_by: "RG-0215 jurisdiction gate, 2026-09-12"`. Git: 72 entries flipped at 06:17 on 12 Sep,
+five hours after run 11 had sent 72 letters into four of them.
+
+The gate's coverage test is a heading-level regex over `OUTREACH_LAW*.md`. The US/UK/AU research has
+been in that file since 20 Aug — under `# APPENDIX — primary-market research`, not `## N. NAME`. The
+12 Sep session read the regex as a legal gap and told David re-arming was his call.
+
+### What was decided, and why
+
+The position was already ruled, three times, with the 20 Aug notes in hand:
+
+- **RUL-071** (30 Aug) — its own data model, `CityLauncher/data/cities.json`, carries every US/UK/AU
+  city as `lane: outreach` = "law-covered, wave machine". Kenya/Egypt/Botswana are `organic`, as the
+  notes say. The ruling's map and the gate's regex disagreed; the map is the ruling.
+- **RUL-074** (30 Aug) — "all three countries are outreach-covered per the 20 Aug law notes".
+- **RUL-082** (31 Aug, "Please proceed") and **RUL-059** (2 Sep, US wave launched).
+
+No ruling on 12 Sep says otherwise (RUL-121–125 are product rulings). Under RUL-037 the specs answer
+the question; restoring them is executing a ruling, not changing one. PROBED before acting: the US
+render carries sender identity, registration number, street postal address, why-received line, source
+line and unsubscribe; GB and AU carry identity, why-received and unsubscribe; `TS_POSTAL_ADDRESS` is
+set; `tests/test_intl_templates.py` ALL PASS. Nothing legal changed on 12 Sep.
+
+### What was done
+
+1. `OUTREACH_LAW_WORKING_NOTES_2026-08-20.md`: US, UK, AU promoted from the appendix to ruled sections
+   **10, 11, 12** — text unchanged, with a verdict table citing the rulings. France stays in the
+   appendix (RUL-101 holds FR/PT out; the code refuses them).
+2. `regression_ledger.py` RG-0215 (**JURIS-MAP-1**): reads `localize._CITY_COUNTRY` — the map the
+   send engine actually uses — as the fallback, so the 52 state buckets are judged, never "unknown".
+   'GB' normalised to cities.json's 'UK'.
+3. `waves_policy.json`: 72 entries re-armed, `disarmed_by` replaced by `rearmed_by`/`rearmed_why`.
+   Verified: all 72 were armed+green before 06:17 on 12 Sep; no other field differs. 96 armed now.
+4. New **RG-0361** (LOCKED): every armed lane=outreach country has a heading-level section; no gate
+   disarm survives its cause; the three sections exist; RG-0215 reads the engine's map. Sabotage-tested
+   against the 12 Sep policy — reads FAIL naming all 72 — then the file restored byte-identical.
+5. `rulings_check.py` RUL-074: reflection added (the three headings; no `disarmed_why: no … section`
+   stamps in the policy; RG-0361 + JURIS-MAP-1 present). 107 rulings, 0 fail.
+6. Pool after re-arm, through the chokepoint's own count: **854** — Maine 536, Alaska 137, Montana 118,
+   Colorado 63; every other armed city 0. Per-city gap open (last sent 12 Sep 00:10) → the wave was
+   queued at 01:25 SAST on the allow-listed lane, per "gates, not calendars", and **ran 01:31–01:35:
+   108 sent, 0 failed** — Alaska 24 (wave 3), Colorado 48 (wave 4, first ramp doubling), Maine 24
+   (wave 4), Montana 12 (wave 6, reset by a dirty wave). Read from the .result and the launchday log.
+
+### Supply
+
+- **Texas TREC is dead.** `data.texas.gov` dataset s7ft-44qi: 20 columns, no email — Texas stripped
+  addresses, phones and mailboxes by statute. ONBOARDING_PLAN corrected (13 Sep paragraph). The
+  sandbox CAN read Socrata portals directly.
+- Probed and empty: Idaho IOGLB (000), Oregon Marine Board guide search (404), Alaska CBPL (403),
+  Wyoming board front page (no mailboxes). Leads for the next run: USFS outfitter-guide permittee PDFs,
+  chamber member directories (GrowthZone/ChamberMaster), unprobed state guide associations.
+
+### What David may veto
+
+If he wants the US, UK or Australia dark for a legal reason, that is one sentence and it is a ruling;
+the policy re-disarms in one command and RG-0361's stamp leg accepts a ruling-stamped disarm. Until
+then the ruled position stands and the waves run.
+
+### Google's August 2026 spam update — no effect on us, one trap recorded (David asked, 13 Sep)
+
+Probed: trustsquare.co is one indexable document (the 65 listings and 319 wonders load by script; no
+sitemap; no meta description). Nothing on the site resembles the page farms Google demoted ("scaled
+content abuse": thousands of programmatic/AI pages built to rank). **Standing note for future sessions:**
+do NOT build per-wonder pages of generated text or programmatic per-route fare pages with affiliate
+links as an "SEO win" — that is exactly the pattern punished. If listings ever get their own URLs, each
+is a real seller's service with their photo and words (RUL-114 already requires the photo). The
+search-visibility gap (one page) is a separate question, not acted on.
+
+## 2026-09-13 — The coaching spoke with a housekeeper's voice in every category
+
+David, testing Collectors on his phone, 13 Sep 2026: *"why is 'say which area you work in'
+applicable here? I would rather expect card collectors type relationships"* — and a second
+question about the price on a collectible.
+
+### The area question was wrong words, not a wrong field
+
+The FIELD is right: the server scores suburb/area 4 points on every category, and the shelf fills
+local-first (RUL-118), so a listing with no area cannot be placed in a band at all. What was wrong
+was one hardcoded housekeeper sentence wearing all eight categories' clothes. Now each category
+asks in its own words — *"Say where it can be collected"* for Collectors, *"Say where the car can
+be seen"* for Cars, *"Say where the trip starts"* for Adventures. The same fault was in the trust
+gate line, which told a coin collector her score opens *"when one employer confirms you"*; it now
+reads *"when somebody outside vouches for you"*, which is what RUL-115 actually says.
+
+### The collector relationships he expected DO exist — on the other half of RS
+
+They were invisible because they are not listing quality. Grading partners, third-party
+authentication certificates, provenance documents and association membership are all in the VEL
+credential catalogue in `bea_main.py` and they raise the **TRUST** score. So the draft screen now
+carries one small block, taken verbatim from that catalogue — names and points are the ladder's
+own, nothing invented — saying plainly that these raise TS rather than LS, and that they are added
+once and count on every listing afterwards.
+
+Collectors: authentication certificate **+8**, provenance **+8**, association membership **+3**.
+Also wired for Cars, Tutors, Housekeeping, Services and Adventures.
+
+**Property and Local Market are deliberately left out.** Their top catalogue entries are
+PPRA/EAAB registration and named association office-bearer roles — agent and committee
+credentials, not something a private seller listing one house or one batch of jam can hold. Telling
+them to get those would be worse than silence. **This is a real gap in the private-seller lane of
+the ladder and it is David's to rule on, not Claude's to paper over.**
+
+### The price is an asking price, and for collectibles we can say more for free
+
+Every draft now carries one line: *"This is your asking price — buyers see it as asked, not as a
+valuation."* For Collectors it says more, because the app already has the data: Scryfall (cards),
+Numista (coins) and BrickLink (LEGO) are all marked live and **unpaid** in `ai_service_tiers.py`,
+and `bea_main.py` already resolves `scryfall_id` at listing creation. So the line tells the lister
+a verified market price can be looked up from free public sources *and that it never changes what
+they asked*. No new cost, no new complexity, no new tap.
+
+## 2026-09-12 — Maintenance loop: both reds were the instrument, not the app
+
+Opening ledger: 341 entries, 317 holding, **2 REGRESSED**, 22 open, 0 UNVERIFIED. Fault queue:
+**0 new app faults** (`/admin/faults?status=new`), so the session's work was the two reds. Both
+turned out to be assertions that were wrong, not fixes that had rotted — and both were wrong in
+the same direction: they turned something the system did CORRECTLY into an accusation.
+
+### RG-0257 — a sleeping PC was being reported as a broken lane (AGENT-ASLEEP-1)
+
+The board said *"the host agent last ticked 654 min ago … so this is the agent itself, not an idle
+queue"*. It was not the agent. Every other host writer on the disk — nightly TSL, the checkpoint
+task, the self-heal log, the deploy audit, DAILY_WATCH — also stopped within ten minutes of the
+last heartbeat, at 06:41 SAST. The machine was asleep. A 20-minute Windows scheduled task cannot
+tick through sleep and Task Scheduler does not backfill the missed ticks, so silence alone can
+never separate a dead lane from a closed lid. By the time the fix was proven, the agent had ticked
+again unaided, 1 minute earlier.
+
+This is the **third** false alarm from this one leg (AGENT-HEARTBEAT-1, 5 Sep, was the second), and
+it breaks the contract RG-0187 exists to hold: an instrument limit reads NOT EVALUATED, never RED.
+
+Fixed by giving the stale-heartbeat path a **second fact** before it accuses anything: the newest
+independent host witness. If a host writer is dated more than a tick plus grace AFTER the last beat,
+the host outlived the agent and the lane really is dead → FAIL, naming the witness and the gap. If
+nothing is, the host itself was down → NOT EVALUATED → UNVERIFIED (exit 2, loudly not a pass).
+Proven by running the real check against a faked stale beat in both directions.
+
+New entry **RG-0355** locks the discriminator in place, as the class: every liveness check that
+reads a stamp written by a Windows scheduled task inherits the same limit.
+
+### RG-0295 — the assertion demanded an act reserved to David (JURIS-SUPPLY-SPLIT-1)
+
+The red read *"'Northern California' is in the policy but not armed/gates_green"*. What had actually
+happened is in this same changelog, five hours earlier: the RG-0215 jurisdiction gate disarmed every
+armed entry in a jurisdiction the outreach-law notes do not cover at heading level — 72 entries,
+11 US cities, this register bucket among them. That is RUL-071 executed (*sending is what waits for
+law*), and re-arming the US is a legal-positioning call reserved to David.
+
+So the entry was demanding, to go green, exactly the act Claude may not take. The assertion was
+wrong, not the code. Amended per the standing rule (fix the assertion, say so in the ref, never
+weaken it): a disarm **stamped** with `disarmed_by` now reads INFO — the lane is wired and
+deliberately dark — while an **unstamped** unarm still reads RED, which is the silent drift the
+entry was built to catch. The supply CLASS is untouched: it asserts the lane is WIRED end to end
+(reader → CSV → importer → policy → country map), never that a wave is armed. Live leg re-probed
+over SSH the same run: the server pool holds **88** 'Northern California' rows with country='US'.
+
+### Also this run
+
+- Shadow maintenance agent ran clean: 0 faults seen, 0 acted, brain keyed, heartbeat posted to
+  `/dashboard/maint` at 15:33:52Z (probed back, matches this run).
+- Email lane census: 24 total, 6 held in 30 days (7 support, 5 other, 1 legal, 1 spam) — counts only.
+- Escalation brief: nothing in 24h, no brief written.
+- `rulings_check.py`: 107 rulings, **0 FAIL**, 15 WARN (rulings with no reflection assertions yet).
+- Ledger shards no longer fit a sandbox bash call (two of three exceeded ~180s), so the closing run
+  was taken host-side through the permitted queue instead.
+
+### Closing board, and one self-inflicted race fixed on the spot
+
+Closing run (host-side, 18:31): **no regressions** — both opening reds cleared. Two entries read
+NOT EVALUATED: RG-0186 (a long-standing POSIX-path harness that cannot match on Windows) and, on its
+very first host run, the new RG-0355 itself. Cause found immediately: a **concurrent session was
+rewriting `scripts/regression_ledger.py`** while the run read it, so the file was momentarily
+unreadable — while the function being judged sat loaded in memory the whole time. RG-0355 now reads
+its evidence with `inspect.getsource()` (the code that is actually running, which cannot race a
+writer) and keeps the file only as a fallback. Both paths proven.
+
+That concurrent session is also why the 18:11 run came back UNSTABLE (rc=3) with `bea_main.py`
+changing underneath it — the ledger's own LEDGER-STABLE-1 guard doing its job.
+
+### The new entry blinded itself, twice, and that is worth writing down
+
+RG-0355 read NOT EVALUATED on two consecutive host runs. The first diagnosis (a concurrent session
+rewriting the ledger file mid-read) was wrong, and the real cause was simpler and more embarrassing:
+**the entry's own success message quoted the phrase `NOT EVALUATED`** while describing what the fix
+does. The runner's rule is that an INFO carrying that phrase, with no FAIL, means the entry declares
+itself unmeasurable -- so a passing check marked itself blind and cost the board its green. A guard
+that reports its own success in the vocabulary of failure is the same cry-wolf class the entry was
+written to close. Message reworded; the check now asserts it never emits the marker on a pass.
+
+The `inspect.getsource()` change made for the wrong reason was kept: judging the code that is
+actually loaded is better evidence than re-reading a file that a concurrent session may be rewriting.
+
+One instrument observation for whoever next touches the runner: when several entries read
+NOT EVALUATED, the closing RESULT line prints ONE entry's reason for all of them -- here RG-0186's
+Windows path-fixture reason was printed as if it explained RG-0355 too, which sent the first
+diagnosis down the wrong path.
+
 ## 2026-09-12 — RUL-120: the Ranking Score stays hidden, and the scrambled star column is correct
 
 David, confirming the order after seeing trust scores run 76, 84, 92, 61 down the shelf:
@@ -820,7 +1566,7 @@ in Q4 2019).
 - The REAL `_import_quality_score()` services branch: trade 25, 15-word description 25, price 6,
   suburb 4, photos 10+8. She reaches 60/100 on four spoken answers and no photo — because the BOT
   writes the description for her.
-- One sentence carrying both states ("I work for Mrs van Wyk Monday and Tuesday, and I am free
+- One sentence carrying both states ("I work for Mrs Nkosi Monday and Tuesday, and I am free
   Wednesday and Friday") parses to Mon/Tue TAKEN, Wed/Fri OPEN.
 - Employer link: confirmation lifts trust 38 → 85; the existing employer books her FREE (nothing
   to introduce); a stranger booking the same open day pays 1 Tuppence. Nothing but Tuppence
@@ -909,7 +1655,7 @@ Olievenhoutbosch failed silently; (c) exact matching meant a spoken "Morelia Par
 class level: the list is now only a spelling aid, anything after stay in / live in / work in / from
 / near is accepted whether known or not, a near-miss is snapped to the closest known name by edit
 distance, the verb decides home-vs-travels-to, the bare name on its own works, and a place must sit
-behind a preposition (without that "I work FOR Mrs van Wyk" made a person into a suburb). It now
+behind a preposition (without that "I work FOR Mrs Nkosi" made a person into a suburb). It now
 says the name back. Nine cases pass, written and spoken-style.
 
 **Finding worth more than the bug: `assets/suburbs_seed.json` has no townships.** 119 suburbs across
@@ -21738,3 +22484,34 @@ David-assisted photo-generation session, then Claude wires it end-to-end on the 
 David deploying tonight's staged work (migrations 003+004) - verification handed to the next session
 (expectations documented in Addenda 2-3: specs visible on 318-320, duplicates 312-314 archived).
 Cost model impact: none.
+
+## 2026-09-14 — Naming rule: both sides of a pair share a naming tradition
+
+David, on seeing the Buzz examples: *"Dont name the employer as one race and then the employee as
+another, always use the same race type of names for both please — this is an important trigger in
+some countries."*
+
+He is right, and it was a pattern rather than a slip. Every housekeeper across the examples was
+Thandi, Grace or Joseph; every employer was Mrs van Wyk. Nobody wrote that down as a decision — it
+accumulated one example at a time, which is exactly how a product ends up making a statement it
+never meant to make.
+
+**RULED and written to `genie/NAMING_RULE.md`:** both sides of any relationship in an example,
+mock-up, demo or test fixture take names from the SAME naming tradition — worker and employer, buyer
+and seller, tenant and landlord, candidate and company. The rule is about PAIRS with a power
+gradient between them.
+
+**What it does not mean:** a set of PEERS should stay as varied as the country is. The agency
+bulk-import examples in `ms.js` — Pieter, Nomsa, Themba, Sipho, Thandi, Lisa, Ann — are seven
+business owners of equal standing, and that variety is right and was left alone.
+
+**Changed:** the employer became **Mrs Nkosi** in `genie/HARNESS.html`,
+`genie/bots/homehelp/BOT_HOMEHELP.html`, `genie/bots/README.md`, `genie/QUICKLIST_DESIGN_NOTES.md`
+and the two lines above in this file that quote the same example sentence — worker names were left
+alone, so both sides now sit in one tradition. **Two older changelog lines (9 Sep) were edited**,
+which is a change to the record and is named here rather than done quietly: they carry the example
+sentence "I work for Mrs van Wyk", the same sentence that is live in the bot, and leaving them would
+have put the record and the code at odds.
+
+Re-verified after the rename: the harness and the live Buzz screen both render and drive correctly,
+zero page errors.

@@ -143,7 +143,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=287">
+<link rel="stylesheet" href="/static/ms.css?v=289">
 <style id="sf-styles">
 /* ── SELL-FLOW-REDO-2 (15 Jul 2026) — scoped to #screen-sell-flow ── */
 #screen-sell-flow{background:#0b1220;min-height:100vh;color:#f2f5f9;font-family:'Inter',sans-serif;padding-bottom:80px;}
@@ -1341,6 +1341,15 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div id="screen-saved" class="screen">
   <div class="page-hdr"><button class="back-btn" onclick="goTo('browse')" aria-label="Back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><h1>Saved</h1><div class="sub">Your shortlisted listings</div></div>
   <div id="saved-content"></div>
+</div>
+
+<!-- ══ BUZZ (14 Sep 2026) ══════════════════════════════════════
+     One line to somebody you are already connected to. The pair is the
+     permission; each side switches the other on for themselves. Push first,
+     email as the backup, never SMS (RUL-122). -->
+<div id="screen-buzz" class="screen">
+  <div class="page-hdr"><button class="back-btn" onclick="goTo('myspace')" aria-label="Back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><h1>Buzz</h1><div class="sub">One line, straight to their phone</div></div>
+  <div class="bz-wrap" id="bz-content"></div>
 </div>
 
 <!-- ══ LOCAL MARKET (LM-01 dedicated page) ═════════════════════ -->
@@ -3871,6 +3880,12 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <div class="ms-empty">No pending actions</div>
       </div>
 
+      <div class="ms-section-lbl">Buzz</div>
+      <div class="ms-card" id="ms-buzz-card" style="margin-bottom:12px;">
+        <div style="font-size:13px;line-height:1.5;color:var(--text-2);" id="ms-buzz-line">One line, straight to the phone of somebody you already work with — with your name on it.</div>
+        <div class="ms-wallet-btns"><button class="ms-wallet-btn" onclick="goTo('buzz')">Open Buzz</button></div>
+      </div>
+
       <div class="ms-section-lbl">Summary</div>
       <div class="ms-metric-row">
         <div class="ms-metric"><div class="ms-metric-val" id="ms-stat-recv">–</div><div class="ms-metric-lbl">Intros received</div></div>
@@ -4384,7 +4399,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 
 <div class="offline-banner" id="offline-banner">
   <div class="ob-dot"></div>
-  <span id="offline-msg">You're offline — browsing cached content</span>
+  <span id="offline-msg">You're offline — some things won't load</span>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -4489,7 +4504,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ════════════════════════════════════════════════════════════ -->
 <script src="/static/legal-must-haves/legal-cards.js?v=1"></script>
 <script src="/static/trip_essentials.js?v=1"></script>
-<script src="/static/ms.js?v=487"></script>
+<script src="/static/ms.js?v=490"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

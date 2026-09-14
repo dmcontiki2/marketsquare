@@ -406,7 +406,7 @@ Reproduced in a browser. Worse than it looked — three defects, not one:
 - The **verb decides the meaning**: *stay* → her home, *work* → a suburb she travels to, both in one
   sentence if she says both.
 - The bare name on its own works: typing just "Moreleta Park" is understood.
-- A place must sit behind a preposition — without that rule "I work **for** Mrs van Wyk" turned a
+- A place must sit behind a preposition — without that rule "I work **for** Mrs Nkosi" turned a
   person into a suburb, which it did on the first run and now does not.
 - It **says the name back**: *"Moreleta Park. Got it — that is your area on the listing."*
 
@@ -484,7 +484,7 @@ published exactly that as her main area. Home suburb is now used for matching, s
 released only on acceptance.
 
 **2 · The employer who vouches is never named.** The listing reads *"confirmed by an employer of 3
-years"*, not *"confirmed by Mrs van Wyk"*. If vouching cost the employer their own privacy, far
+years"*, not *"confirmed by Mrs Nkosi"*. If vouching cost the employer their own privacy, far
 fewer would do it — and the cold start dies with it. The confirmation is the evidence; the
 voucher's identity is not part of what a buyer needs.
 

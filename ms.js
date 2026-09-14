@@ -732,16 +732,54 @@ function isOffline(){ return !navigator.onLine; }
 // Core team bypass — all gates disabled until launch day.
 function isSuperuser(){ return localStorage.getItem('ms_superuser') === '1'; }
 
-function showOfflineBanner(){
+/* OFFLINE-TRUTH-1 (14 Sep 2026) — the banner may never LATCH.
+   A single spurious 'offline' event used to pin it up until an 'online' event arrived,
+   and when that event never came the app told the seller it was offline while
+   navigator.onLine was true and same-origin fetches returned 200. Found live by David
+   on 13 Sep, on the screen where his listings looked empty — it sends people to their
+   router instead of their account.
+   Fix, at the class: the banner re-proves itself. It rises only after a real
+   same-origin probe fails, and while it is up a probe runs every few seconds and takes
+   it down the moment the network answers — no 'online' event required.
+   Copy also corrected: nothing is cached while no service worker is registered, so the
+   banner no longer promises "cached content" it does not have. */
+let _obProbeTimer = null;
+
+async function _obReachable(){
+  if(!navigator.onLine) return false;
+  try{
+    await fetch('/static/post_deploy_status.json?ob=' + Date.now(),
+                {method:'HEAD', cache:'no-store'});
+    return true;              // any HTTP answer at all means the network is there
+  }catch(_e){ return false; }
+}
+
+function _obStopProbe(){
+  if(_obProbeTimer){ clearInterval(_obProbeTimer); _obProbeTimer = null; }
+}
+
+function hideOfflineBanner(){
+  _obStopProbe();
+  const b=document.getElementById('offline-banner');
+  if(b) b.classList.remove('show','back-online');
+}
+
+async function showOfflineBanner(){
   const b=document.getElementById('offline-banner');
   const m=document.getElementById('offline-msg');
   if(!b) return;
+  if(await _obReachable()) return;      // never assert a state we have just disproved
   b.classList.remove('back-online');
-  if(m) m.textContent="You're offline — browsing cached content";
+  if(m) m.textContent="You're offline — some things won't load";
   b.classList.add('show');
+  _obStopProbe();
+  _obProbeTimer = setInterval(async ()=>{
+    if(await _obReachable()) showBackOnlineBanner();
+  }, 4000);
 }
 
 function showBackOnlineBanner(){
+  _obStopProbe();
   const b=document.getElementById('offline-banner');
   const m=document.getElementById('offline-msg');
   if(!b) return;
@@ -754,7 +792,22 @@ window.addEventListener('offline', ()=>{ showOfflineBanner(); });
 window.addEventListener('online',  ()=>{ showBackOnlineBanner(); });
 
 // Check on load in case app opened while already offline
+/* SW-REGISTER-1 (14 Sep 2026) — the worker is registered on EVERY page load, not only
+   when somebody opts into push. Probed live on 13 Sep: navigator.serviceWorker.controller
+   was null for every visitor, because the only register() call sat inside the push
+   opt-in. Nothing was controlling the page, so Chrome could never fire
+   beforeinstallprompt — which means RUL-123's add-to-home-screen offer at first publish
+   and RUL-122's web push were both built and both unreachable.
+   register() is idempotent, so the push lane's own call still works unchanged. */
+async function _msRegisterSW(){
+  if(!('serviceWorker' in navigator)) return;
+  try{
+    await navigator.serviceWorker.register('/service-worker.js');
+  }catch(_e){ /* a failed registration must never break the app */ }
+}
+
 async function _msInit(){
+  _msRegisterSW();
   if(isOffline()) showOfflineBanner();
 
   // ── DEMO MODE ACTIVATION ─────────────────────────────────
@@ -1911,6 +1964,7 @@ function goTo(name){
   const bnav = document.querySelector('.bnav');
   if(bnav) bnav.style.display = name.startsWith('aa-') ? 'none' : '';
   if(name==='home'){ loadHomeWonders(); }
+  if(name==='buzz'){ buzzRender(); }
   if(name==='browse'){ renderFilterBar(); renderGrid(); }
   if(name==='local-market') lmLoadGrid();
   if(name==='saved')renderSaved();
@@ -12765,6 +12819,163 @@ async function aaSavePhotosAndNext() {
   await aaDB.put(updated);
   aaRenderPublishScreen();
   goTo('aa-publish');
+}
+
+// ════════════════════════════════════════════════════════════
+// ■ BUZZ (14 Sep 2026)
+// David's requirement 6, ruled on the same day: one free line, no canned
+// messages, the sender's name on every buzz, and a permission each side grants
+// once. The pair is the unit of consent — she lets him buzz her, which says
+// nothing about him letting her buzz him.
+//
+// Channel is settled by RUL-122 and not re-opened here: free web push first,
+// email as the backup, never anything with a per-message cost. The push half
+// is the lane that already exists — this screen only points a person at it.
+// ════════════════════════════════════════════════════════════
+function bzEmail(){
+  return (localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || '').trim();
+}
+function bzInitials(n){
+  return String(n||'').replace(/[^A-Za-z ]/g,'').split(' ').filter(Boolean)
+    .slice(0,2).map(function(w){return w[0].toUpperCase();}).join('') || '?';
+}
+async function bzApi(path, method, body){
+  const opt = {method: method||'GET', headers:{'X-Api-Key':API_KEY}};
+  if(body){ opt.headers['Content-Type']='application/json'; opt.body=JSON.stringify(body); }
+  const r = await fetch(BEA_URL + path, opt);
+  let j = null; try{ j = await r.json(); }catch(e){}
+  if(!r.ok) throw new Error((j && j.detail) || ('Buzz error ' + r.status));
+  return j;
+}
+
+// Switch 1 — "let TrustSquare buzz this phone". Two steps, both already built:
+// bind the account to its buyer_token, then register this device for push.
+async function bzEnablePush(){
+  const email = bzEmail();
+  if(!email){ showToast('Sign in first.'); return false; }
+  const r = await fetch(BEA_URL + '/buyer-token', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email: email})
+  });
+  if(!r.ok) throw new Error('Could not link this account to push');
+  const j = await r.json();
+  if(j.buyer_token){ localStorage.setItem(WL_TOKEN_KEY, j.buyer_token); _wlToken = j.buyer_token; }
+  await _wlRegisterPush();
+  localStorage.setItem('ms_buzz_push', '1');
+  return true;
+}
+function bzPushOn(){
+  return localStorage.getItem('ms_buzz_push')==='1'
+      && typeof Notification !== 'undefined' && Notification.permission === 'granted';
+}
+
+let _bzPairs = [];
+async function buzzRender(){
+  const box = document.getElementById('bz-content');
+  if(!box) return;
+  const email = bzEmail();
+  if(!email){
+    box.innerHTML = '<div class="ms-card"><div class="bz-lede">Sign in to use Buzz. It only ever '
+      + 'works between two people who are already connected.</div></div>';
+    return;
+  }
+  box.innerHTML = '<div class="bz-lede">Loading…</div>';
+  try{ _bzPairs = await bzApi('/buzz/pairs?email=' + encodeURIComponent(email)); }
+  catch(e){ box.innerHTML = '<div class="ms-card"><div class="bz-said bad">'+e.message+'</div></div>'; return; }
+
+  let h = '<div class="bz-lede">One line, straight to the other phone, with your name on it. '
+        + 'No thread and nothing to scroll — say the one thing and it is said.</div>';
+
+  h += '<div class="ms-section-lbl">This phone</div><div class="ms-card">'
+     + '<div class="bz-row"><div class="bz-lbl"><b>Let TrustSquare buzz this phone</b>'
+     + '<span>Asked once. Without it a buzz still reaches you, by email.</span></div>'
+     + '<div class="bz-sw' + (bzPushOn()?' on':'') + '" id="bz-push-sw"></div></div>'
+     + '<div class="bz-note">It arrives as a push — free and self-hosted, the same push the app '
+     + 'already uses. Email is the backup when a phone has no push. No SMS: a per-message cost is '
+     + 'out.</div></div>';
+
+  h += '<div class="ms-section-lbl">People you are connected to</div>';
+  if(!_bzPairs.length){
+    h += '<div class="ms-card"><div class="ms-empty">Nobody yet. A connection is made when '
+       + 'somebody you work with joins from your own link — a stranger can never add themselves '
+       + 'here.</div></div>';
+  } else {
+    _bzPairs.forEach(function(p, i){
+      h += '<div class="ms-card" id="bz-card-'+i+'">'
+        + '<div class="bz-who"><div class="bz-av">'+bzInitials(p.other_name)+'</div>'
+        + '<div class="bz-nm">'+p.other_name+'<span>'+p.other_email+'</span></div></div>'
+        + '<div class="bz-row"><div class="bz-lbl">Let <b>'+p.other_name+'</b> buzz me'
+        + '<span>Your switch, for this person only.</span></div>'
+        + '<div class="bz-sw'+(p.i_allow_them?' on':'')+'" data-allow="'+i+'"></div></div>'
+        + '<div class="bz-send"><input id="bz-in-'+i+'" type="text" maxlength="120" '
+        + 'autocomplete="off" placeholder="Say it in one line" data-i="'+i+'">'
+        + '<button id="bz-go-'+i+'" data-send="'+i+'" disabled>Buzz</button></div>'
+        + '<div class="bz-left" id="bz-left-'+i+'"></div>'
+        + (p.they_allow_me ? '' : '<div class="bz-blocked">'+p.other_name+' has not switched '
+            + 'buzzes on for you yet, so yours will not arrive. Ask them to open Buzz once.</div>')
+        + '<div id="bz-said-'+i+'"></div></div>';
+    });
+  }
+  box.innerHTML = h;
+
+  const sw = document.getElementById('bz-push-sw');
+  if(sw) sw.onclick = async function(){
+    if(bzPushOn()){
+      localStorage.removeItem('ms_buzz_push'); buzzRender();
+      showToast('Buzzes will come by email instead.');
+      return;
+    }
+    sw.className = 'bz-sw busy';
+    try{ await bzEnablePush(); showToast('This phone will buzz.'); }
+    catch(e){ showToast(e.message || 'Could not switch push on.'); }
+    buzzRender();
+  };
+  box.querySelectorAll('[data-allow]').forEach(function(el){
+    el.onclick = async function(){
+      const p = _bzPairs[+el.getAttribute('data-allow')];
+      el.className = 'bz-sw busy';
+      try{
+        await bzApi('/buzz/allow', 'POST',
+          {email: bzEmail(), other_email: p.other_email, allow: !p.i_allow_them});
+      }catch(e){ showToast(e.message); }
+      buzzRender();
+    };
+  });
+  box.querySelectorAll('[data-i]').forEach(function(inp){
+    const i = inp.getAttribute('data-i');
+    const go = document.getElementById('bz-go-'+i);
+    const left = document.getElementById('bz-left-'+i);
+    inp.oninput = function(){
+      go.disabled = !inp.value.trim();
+      left.textContent = inp.value.length ? (120 - inp.value.length) + ' left' : '';
+    };
+    inp.onkeydown = function(e){ if(e.key==='Enter'){ e.preventDefault(); go.click(); } };
+  });
+  box.querySelectorAll('[data-send]').forEach(function(btn){
+    btn.onclick = async function(){
+      const i = btn.getAttribute('data-send');
+      const p = _bzPairs[+i];
+      const inp = document.getElementById('bz-in-'+i);
+      const said = document.getElementById('bz-said-'+i);
+      const text = inp.value.trim();
+      if(!text) return;
+      btn.disabled = true; btn.textContent = '…';
+      try{
+        const j = await bzApi('/buzz', 'POST',
+          {from_email: bzEmail(), to_email: p.other_email, text: text});
+        inp.value = ''; document.getElementById('bz-left-'+i).textContent = '';
+        said.innerHTML = '<div class="bz-said">Sent as <b>' + j.from_name + '</b> — '
+          + (j.delivered==='push' ? ('it buzzed ' + p.other_name + '’s phone.')
+            : j.delivered==='email' ? (p.other_name + ' has no push on this account, so it went to '
+                + 'their email.')
+            : 'nothing could carry it — check with them directly.')
+          + '</div>';
+      }catch(e){
+        said.innerHTML = '<div class="bz-said bad">' + e.message + '</div>';
+      }
+      btn.disabled = false; btn.textContent = 'Buzz';
+    };
+  });
 }
 
 // ════════════════════════════════════════════════════════════

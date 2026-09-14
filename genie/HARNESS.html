@@ -112,7 +112,9 @@ body{background:#04070a;color:#eaf3ee;
 .wkline{text-align:center;font-size:12.5px;color:var(--dim);padding:14px 6px 12px;
  min-height:42px;line-height:1.5}
 .wkline b{color:var(--bright)}
-.wkall{display:block;margin:0 auto}
+.wkall{display:block;margin:0 auto;flex:0 0 auto}
+.body.mid{display:flex;flex-direction:column;justify-content:center}
+.body.mid>*{flex:0 0 auto}
 .wkall.on{background:var(--c);color:#04140e;border-color:var(--c)}
 .btn.solid:disabled{opacity:.35;cursor:default}
 
@@ -141,13 +143,16 @@ body{background:#04070a;color:#eaf3ee;
  background:var(--panel);color:var(--dim);font:inherit;font-size:11.5px;font-weight:800;
  cursor:pointer;line-height:1.3}
 .dirs button.on{border-color:var(--c);color:var(--bright);background:rgba(255,255,255,.07)}
-.reasons{display:flex;flex-direction:column;gap:7px}
-.reasons button{display:flex;align-items:center;gap:10px;text-align:left;font:inherit;
- font-size:13.5px;font-weight:700;padding:12px;border-radius:14px;background:rgba(255,255,255,.04);
- border:1px solid var(--line);color:#eaf3ee;cursor:pointer;transition:transform .12s}
-.reasons button:active{transform:scale(.98)}
-.reasons button i{font-style:normal;font-size:11.5px;font-weight:400;color:var(--dim);
- margin-left:auto;text-align:right}
+.bzin{display:flex;gap:8px;align-items:stretch}
+.bzin input{flex:1;min-width:0;font:inherit;font-size:14.5px;color:#eaf3ee;padding:13px 14px;
+ border-radius:14px;border:1.5px solid var(--line);background:rgba(255,255,255,.05);outline:none}
+.bzin input::placeholder{color:var(--dim)}
+.bzin input:focus{border-color:var(--c)}
+.bzin button{flex:0 0 auto;padding:0 18px;border-radius:14px;border:0;background:var(--c);
+ color:#04140e;font:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:transform .12s}
+.bzin button:active{transform:scale(.96)}
+.bzin button:disabled{opacity:.35;cursor:default}
+.bzleft{font-size:11px;color:var(--dim);text-align:right;padding:7px 2px 0}
 .onphone{font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;font-weight:800;
  color:var(--dim);padding:0 2px 6px}
 .push{border-radius:16px;border:1px solid var(--c);background:rgba(255,255,255,.07);
@@ -266,7 +271,9 @@ var CATS = [{"key": "homehelp", "name": "Housekeeping", "c": "#16A97C", "bg": "#
 function $(i){return document.getElementById(i);}
 function el(h){var d=document.createElement('div');d.innerHTML=h.trim();return d.firstChild;}
 
-var ci=0, mode=null, step=0, picks=[], narrow=[], heroTimer=null, heroIx=0;
+var ci=0, mode=null, step=0, picks=[], narrow=[], heroTimer=null, heroIx=0, taps=0;
+/* taps counts real taps, not picks. The week step takes several taps for one
+   pick, so 'n taps to get here' had to stop counting picks. */
 
 /* ===========================================================================
    WHERE YOU ARE — a starting point, not a geo feature.
@@ -339,7 +346,7 @@ function setNav(){
 
 /* ---------------- door ---------------- */
 function drawDoor(){
-  mode=null; step=0; picks=[]; narrow=[];
+  mode=null; step=0; picks=[]; narrow=[]; taps=0; atBuzz=false;
   paintTheme(); setNav();
   var c=cat();
   var imgs=c.hero.map(function(k){return '<img src="'+PH[k]+'" alt="">';}).join('');
@@ -374,7 +381,7 @@ function swipe(d){
 }
 
 /* ---------------- steps ---------------- */
-function start(m){ mode=m; step=0; picks=[]; narrow=[]; clearInterval(heroTimer); drawStep(); }
+function start(m){ mode=m; step=0; picks=[]; narrow=[]; taps=0; clearInterval(heroTimer); drawStep(); }
 function drawStep(){
   setNav();
   var f=flow();
@@ -382,6 +389,7 @@ function drawStep(){
   var s=f.steps[step];
   var trail=picks.map(function(p){
     return p.photo?'<img src="'+PH[p.photo]+'" alt="">':'<span>'+p.label+'</span>'; }).join('');
+  if(s.kind==='week'){ drawWeek(s,trail); return; }
   var items;
   if(s.kind==='chip'){
     items='<div class="chips">'+s.tiles.map(function(t,i){
@@ -399,9 +407,84 @@ function drawStep(){
   var nodes=$('screen').querySelectorAll('[data-i]');
   for(var k=0;k<nodes.length;k++) nodes[k].onclick=function(){
     var t=s.tiles[+this.getAttribute('data-i')];
+    taps++;
     picks.push({label:t.t,photo:t.p||null,key:s.key});
     step++; drawStep();
   };
+}
+
+/* ===========================================================================
+   THE WEEK. (David, 14 Sep 2026: "It should show a full week, and allow for
+   selection of any days where there are openings and they are available.")
+
+   The old step was one chip row, Mon to Sat, single choice - so a housekeeper
+   with Monday, Wednesday and Friday free had to pick one of them and let the
+   advert lie about the other two, and Sunday did not exist at all. What is
+   being listed here is TIME (QUICKLIST_DESIGN_NOTES section A), so the week is
+   the product, not a detail: seven cells, any number of them on, the weekend
+   drawn differently because it is priced and staffed differently, and one
+   'Every day' toggle for the person who is simply available.
+
+   It is still tap-only. Nothing is typed, nothing is a form, and the step does
+   not advance on the first tap the way the single chips do - it cannot, or the
+   second day could never be added - so it ends with one button that also states
+   the count back to her before she commits it.
+   ------------------------------------------------------------------------- */
+function drawWeek(s,trail){
+  var order=s.tiles.map(function(t){return t.t;});
+  var sel={};
+  function isWend(d){ return d==='Sat'||d==='Sun'; }
+  function chosen(){ return order.filter(function(d){ return sel[d]; }); }
+  $('screen').className='screen';
+  $('screen').innerHTML='<div class="q">'+s.q+'</div>'
+    +(trail?'<div class="trail">'+trail+'</div>':'')
+    +'<div class="body mid">'
+    +'<div class="week" id="wk">'+order.map(function(d,i){
+        return '<div class="wd'+(isWend(d)?' wend':'')+'" data-d="'+i+'" '
+          +'style="animation-delay:'+(i*35)+'ms"><b>'+d+'</b><i></i></div>'; }).join('')+'</div>'
+    +'<div class="wkline" id="wkline"></div>'
+    +'<button class="chip wkall" id="wkall">Every day</button>'
+    +'</div>'
+    +'<div class="foot"><button class="btn solid" id="wkgo" style="width:100%"></button></div>';
+  function paint(){
+    var g=$('wk');
+    for(var i=0;i<order.length;i++){
+      var d=order[i], on=!!sel[d];
+      g.children[i].className='wd'+(isWend(d)?' wend':'')+(on?' on':'');
+      g.children[i].getElementsByTagName('i')[0].textContent =
+        on ? 'open' : (isWend(d)?'weekend':'free?');
+    }
+    var ch=chosen();
+    $('wkall').className='chip wkall'+(ch.length===order.length?' on':'');
+    $('wkline').innerHTML = ch.length
+      ? (ch.length===order.length
+          ? 'Open <b>every day of the week</b>.'
+          : 'Open <b>'+ch.join(' &middot; ')+'</b>.')
+      : 'Tap every day you are free. Tap one again to take it back.';
+    var b=$('wkgo');
+    b.disabled=!ch.length;
+    b.textContent = ch.length
+      ? 'Next \u2014 '+ch.length+(ch.length===1?' day open':' days open')
+      : 'Pick your open days';
+  }
+  var cells=$('wk').children;
+  for(var k=0;k<cells.length;k++) cells[k].onclick=function(){
+    var d=order[+this.getAttribute('data-d')];
+    sel[d]=!sel[d]; taps++; paint();
+  };
+  $('wkall').onclick=function(){
+    var all=chosen().length===order.length;
+    for(var i=0;i<order.length;i++) sel[order[i]]=!all;
+    taps++; paint();
+  };
+  $('wkgo').onclick=function(){
+    var ch=chosen(); if(!ch.length) return;
+    taps++;
+    picks.push({label: ch.length===order.length ? 'Any day' : ch.join(', '),
+                photo:null, key:s.key, days:ch});
+    step++; drawStep();
+  };
+  paint();
 }
 
 /* ---------------- result ---------------- */
@@ -627,10 +710,17 @@ function drawDraft(){
    +'</div></div>'
    +'<div class="todolab">Each of these adds to your listing score</div>'
    +'<div class="todo" id="todo">'+jobs+'</div>'
+   +'<div class="buzzcard"><b>Buzz &mdash; one line to the other phone</b>'
+   +'<p>Type one line, press Buzz, and it lands on your employer&rsquo;s phone with your name on '
+   +'it. She has exactly the same button for you. One line each way, no thread to scroll, '
+   +'and email catches it if her push is off.</p>'
+   +'<button class="btn ghost" id="bzgo" style="width:100%;padding:13px">See how it works</button>'
+   +'</div>'
    +'<div class="hres" id="hres" style="display:none"></div>'
    +'</div>'
    +'<div class="foot"><button class="btn solid" id="pub" style="width:100%">Publish it</button>'
-   +'<div class="hint" id="pubhint">'+(picks.length+1)+' taps to get here</div></div>';
+   +'<div class="hint" id="pubhint">'+taps+' taps to get here</div></div>';
+  $('bzgo').onclick=function(){ drawBuzz(); };
   var tds=$('todo').children;
   for(var i=0;i<tds.length;i++) tds[i].onclick=function(){ this.className=this.className?'':'did'; };
   $('pub').onclick=function(){
@@ -648,7 +738,7 @@ function drawDraft(){
       if(res.dry){
         box.textContent='DRY RUN — no server is wired to this prototype. This is exactly '
           +'what would be posted to /listings:\n\n'+JSON.stringify(res.body,null,1);
-        $('pubhint').textContent='Draft composed from '+picks.length+' taps.';
+        $('pubhint').textContent='Draft composed from '+taps+' taps.';
       } else {
         box.textContent='Draft #'+res.id+' is in TrustSquare. Finish onboarding there to go live.';
         $('pubhint').textContent='Draft #'+res.id+' — one server, one rulebook.';
@@ -699,8 +789,175 @@ function drawAds(){
   }
 }
 
+/* ===========================================================================
+   BUZZ - requirement 6, and no bigger than requirement 6.
+
+   David, 14 Sep 2026: a push notice / buzzer to get the owner's attention (late,
+   sick, whatever), the EXACT same function the other way for the employer (an
+   extra day, anything else), it must at least carry the name of whoever pressed
+   it, and both sides grant the permission for it during onboarding.
+
+   What it is NOT (QUICKLIST_DESIGN_NOTES section B): not an anonymous relay, not
+   a chat, not an inbox. These two already have each other's numbers - the whole
+   free lane exists because the worker brought the connection herself. So there
+   is nothing to protect and nothing to charge for, and the only real problem is
+   the one the notes name: typing on a cheap phone with bad data is where these
+   loops die. Hence one tap out, one tap back, and a name on every buzz.
+
+   Where it lives: shown here inside the Quick Listing as an EXAMPLE, on the
+   advert screen, so the housekeeper sees the tool before she ever refers anyone.
+   Where it is switched on for real is not ruled yet - the onboarding panel below
+   is the shape of that ask, not its final home.
+   ------------------------------------------------------------------------- */
+var BUZZ={
+  /* Two parties and a length cap - nothing in here knows what a housekeeper is.
+     Point it at any two people and the panel is the same panel.
+     Give the parties real EMAILS and set HANDOVER.url, and the same panel stops
+     being an example and posts to the real /buzz on the same server the live app
+     uses - one server, one rulebook (RUL-125(b)). Without both, it is a dry run
+     and says so. */
+  parties:[{name:'Thandi Mokoena', email:'', mine:true},
+           {name:'Mrs Nkosi',    email:'', mine:false}],
+  limit:120
+};
+function buzzLive(){
+  return !!(HANDOVER.url && BUZZ.parties[0].email && BUZZ.parties[1].email);
+}
+/* The contract, mirrored from bea_main.py::buzz_send (POST /buzz):
+   {from_email, to_email, text} -> {id, from_name, text, delivered, devices}.
+   delivered is 'push' | 'email' | 'none'. 403 means the receiver has not
+   switched this sender on; 404 means they are not connected at all. */
+function buzzPost(fromP, toP, text, done){
+  if(!buzzLive()){ done({dry:true, from_name:fromP.name, text:text}); return; }
+  fetch(HANDOVER.url+'/buzz',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Api-Key':HANDOVER.key},
+    body:JSON.stringify({from_email:fromP.email, to_email:toP.email, text:text})
+  }).then(function(r){
+    return r.json().then(function(j){ return {ok:r.ok, j:j}; });
+  }).then(function(res){
+    done(res.ok ? res.j : {err:(res.j && res.j.detail) || 'Buzz failed'});
+  }).catch(function(e){ done({err:String(e && e.message || e)}); });
+}
+var atBuzz=false;
+function initialsOf(n){
+  return n.replace(/[^A-Za-z ]/g,'').split(' ').filter(function(w){return w;})
+          .slice(0,2).map(function(w){return w.charAt(0).toUpperCase();}).join('');
+}
+function clockNow(){
+  var d=new Date();
+  return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+}
+function drawBuzz(){
+  atBuzz=true;
+  var A=BUZZ.parties[0], B=BUZZ.parties[1];
+  var from=0;                        /* index of whoever is pressing the button */
+  var perm={mine:false, theirs:false};
+  function other(){ return from===0?B:A; }
+  function sender(){ return from===0?A:B; }
+  function phoneOf(p){ return p.mine ? 'your phone' : p.name+'&rsquo;s phone'; }
+  $('back').className='ic'; $('home').className='ic';
+  $('logo').style.display='none';
+  $('steps').innerHTML=''; $('steps').style.display='flex';
+  $('screen').className='screen';
+  $('screen').innerHTML='<div class="q">Buzz</div>'
+   +'<div class="body">'
+   +'<div class="bzlede">One line, straight to the other phone, with your name on it. '
+   +'No thread, no history, nothing to scroll &mdash; say the one thing and it is said.</div>'
+   +'<div class="bzsec"><h5>Switched on in TrustSquare onboarding &mdash; once, by each of you</h5>'
+   +'<div class="perm"><span>Let TrustSquare buzz <b>this</b> phone</span>'
+   +'<div class="sw" id="p1"></div></div>'
+   +'<div class="perm"><span>Let <b>'+B.name+'</b> buzz me</span>'
+   +'<div class="sw" id="p2"></div></div>'
+   +'<p class="fine">She answers the same two when she onboards from your link. Only the people '
+   +'you are paired with can buzz you &mdash; a buzz is never open to strangers. '
+   +'(Shown here so you can see it; the real switch lives in onboarding.)</p></div>'
+   +'<div id="live"></div>'
+   +'<div class="bzsec"><h5>Send a buzz</h5>'
+   +'<div class="dirs"><button id="d0">You &rarr; '+B.name+'</button>'
+   +'<button id="d1">'+B.name+' &rarr; you</button></div>'
+   +'<div class="bzin"><input id="bztxt" type="text" maxlength="'+BUZZ.limit+'" '
+   +'autocomplete="off" placeholder="Say it in one line"><button id="bzsend">Buzz</button></div>'
+   +'<div class="bzleft" id="bzleft"></div></div>'
+   +'<div class="bznote">It arrives as a push on the phone, free and self-hosted &mdash; the same '
+   +'push the live app already uses. If her phone has no push switched on, it goes to her email '
+   +'instead. No SMS: per-message cost is out (RUL-122).</div>'
+   +'<div class="bzwarn" id="bzmode"></div>'
+   +'</div>'
+   +'<div class="foot"><button class="btn solid" id="bzback" style="width:100%">'
+   +'Back to my advert</button></div>';
+
+  function paintPerm(){
+    $('p1').className='sw'+(perm.mine?' on':'');
+    $('p2').className='sw'+(perm.theirs?' on':'');
+  }
+  function paintDirs(){
+    $('d0').className=(from===0?'on':'');
+    $('d1').className=(from===1?'on':'');
+    $('bztxt').placeholder = from===0 ? 'Say it in one line'
+                                      : 'What '+B.name+' would say, in one line';
+  }
+  function paintLeft(){
+    var n=$('bztxt').value.length;
+    $('bzleft').textContent = n ? (BUZZ.limit-n)+' left' : '';
+    $('bzsend').disabled = !$('bztxt').value.trim();
+  }
+  function send(){
+    var txt=$('bztxt').value.trim().replace(/\s+/g,' ');
+    if(!txt) return;
+    var box=$('live');
+    if(!perm.mine || !perm.theirs){
+      box.innerHTML='<div class="bzwarn">Switch both permissions on first &mdash; a buzz that was '
+        +'never allowed is a buzz that never arrives.</div>';
+      return;
+    }
+    var f=sender(), t=other();
+    var safe=txt.replace(/[<>&]/g,function(c){
+      return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c]; });
+    function paint(rec){
+      box.innerHTML='<div class="onphone">On '+phoneOf(t)+', right now</div>'
+       +'<div class="push"><div class="who"><div class="av">'+initialsOf(f.name)+'</div>'
+       +f.name+'<u>now &middot; '+clockNow()+'</u></div>'
+       +'<div class="msg">'+safe+'</div>'
+       +'<div class="rep" id="rep"><button id="bzagain">Buzz '+f.name.split(' ')[0]
+       +' back</button></div>'
+       +'<div class="rec">'+rec+'</div></div>';
+      $('bzagain').onclick=function(){
+        from=from?0:1; paintDirs();
+        $('bztxt').value=''; paintLeft(); $('bztxt').focus();
+        $('live').innerHTML='';
+      };
+    }
+    paint(buzzLive() ? 'Sending\u2026' : 'One line each way. Whoever answers, their name is on it too.');
+    buzzPost(f, t, txt, function(res){
+      if(res.dry) return;                      /* the example already reads right */
+      if(res.err){
+        box.innerHTML='<div class="bzwarn">Not sent: '+res.err+'</div>';
+        return;
+      }
+      paint(res.delivered==='push' ? 'Delivered to '+t.name+'\u2019s phone.'
+          : res.delivered==='email' ? 'No push on that account \u2014 it went to '+t.name+'\u2019s email.'
+          : 'Nothing could carry it. Check with '+t.name+' directly.');
+    });
+    $('bztxt').value=''; paintLeft();
+  }
+  $('bzmode').innerHTML = buzzLive()
+    ? 'Live &mdash; this panel is posting to the same /buzz the app uses.'
+    : 'Example only &mdash; nothing leaves this screen until the two accounts are wired in.';
+  $('p1').onclick=function(){ perm.mine=!perm.mine; paintPerm(); };
+  $('p2').onclick=function(){ perm.theirs=!perm.theirs; paintPerm(); };
+  $('d0').onclick=function(){ from=0; $('live').innerHTML=''; paintDirs(); };
+  $('d1').onclick=function(){ from=1; $('live').innerHTML=''; paintDirs(); };
+  $('bztxt').oninput=paintLeft;
+  $('bztxt').onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); send(); } };
+  $('bzsend').onclick=send;
+  $('bzback').onclick=function(){ atBuzz=false; drawDraft(); };
+  paintPerm(); paintDirs(); paintLeft();
+}
+
 /* ---------------- nav ---------------- */
 $('back').onclick=function(){
+  if(atBuzz){ atBuzz=false; drawDraft(); return; }
   if(mode==='find' && narrow.length){ narrow.pop(); drawAds(); return; }
   if(step>0){ step--; picks.pop(); drawStep(); return; }
   drawDoor();

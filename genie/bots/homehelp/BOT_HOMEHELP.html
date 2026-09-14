@@ -409,7 +409,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
               other side.</p>
           </div>
           <div class="mic">
-            <button class="pub ready" id="sendLink">Send my link to Mrs van Wyk</button>
+            <button class="pub ready" id="sendLink">Send my link to Mrs Nkosi</button>
             <div class="state" id="state2">She types one number. Nothing is really sent &mdash; this is a picture.</div>
           </div>
         </div>
@@ -620,7 +620,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 
         <h3>2 &middot; The employer who vouches is never named</h3>
         <p>The listing says <em>&ldquo;confirmed by an employer of 3 years&rdquo;</em> &mdash; not
-           <em>&ldquo;confirmed by Mrs van Wyk&rdquo;</em>. If vouching cost her employer their own privacy,
+           <em>&ldquo;confirmed by Mrs Nkosi&rdquo;</em>. If vouching cost her employer their own privacy,
            far fewer would do it, and the cold start dies with it. The confirmation is evidence; the
            voucher&rsquo;s identity is not part of the evidence a buyer needs.</p>
 
@@ -1174,7 +1174,7 @@ function readPlaces(t,got){
     if(ix>=0) found.push({ix:ix+1,name:KNOWN[i]});
   }
   /* A place always sits behind a preposition. Without that rule "I work for Mrs
-     van Wyk" turns a person into a suburb, which it did on the first run. */
+     Nkosi" turns a person into a suburb, which it did on the first run. */
   var pats=[
     /\b(?:stay|staying|stays|live|living|lives|based|work|working|works|clean|cleaning|serve|serving|servicing|travel|travelling|go|goes)\s+(?:in|at|around|near|to)\s+([a-z][a-z'\-]*(?:\s+[a-z][a-z'\-]*){0,2})/g,
     /\b(?:from|around|near|in)\s+([a-z][a-z'\-]*(?:\s+[a-z][a-z'\-]*){0,2})/g
@@ -1226,7 +1226,7 @@ function understand(t0){
        && (st.asked==='suburb' || !st.suburb)) addPlace(snapPlace(bare),'home',got);
   }
 
-  /* "I work for Mrs van Wyk Monday and Tuesday, and I am free Wednesday and Friday"
+  /* "I work for Mrs Nkosi Monday and Tuesday, and I am free Wednesday and Friday"
      is ONE sentence carrying both states. Whichever marker most recently precedes the
      day name wins, so the clause decides, not the sentence. */
   var workIx=t.search(/\b(work for|working for|i work|employer|mrs|mr|miss|madam)\b/);
@@ -1405,7 +1405,7 @@ function confirmEmployer(){
 var SCRIPT=[
  'I want to work, I do cleaning in the houses',
  'I stay in Mamelodi but I work in Menlyn and Faerie Glen',
- 'I work for Mrs van Wyk on Monday and Tuesday, and I am free Wednesday and Friday',
+ 'I work for Mrs Nkosi on Monday and Tuesday, and I am free Wednesday and Friday',
  'I have been doing this for 9 years',
  'R350 for a day'
 ];

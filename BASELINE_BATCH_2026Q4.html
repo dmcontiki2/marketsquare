@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Baseline Batch 2026-Q4 — TrustSquare</title>
+<style>
+:root{
+  --bg:#0e1117; --panel:#161b24; --panel2:#1c2230; --ink:#e8edf5; --dim:#94a3b8; --line:#2a3344;
+  --discovery:#4f9cf9;   /* front door / discovery */
+  --selling:#f2a33c;     /* the selling flow */
+  --trust:#37c99a;       /* trust & credentials */
+  --money:#c77dff;       /* money & pricing */
+  --ops:#6ee7f2;         /* ops instruments */
+  --outreach:#f4739a;    /* outreach */
+  --repair:#ff6b5e;      /* live faults, outside the batch */
+  --david:#ffd166;       /* reserved to David */
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif;padding:0 0 56px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 18px}
+header{padding:34px 0 22px;border-bottom:1px solid var(--line);margin-bottom:26px}
+h1{margin:0 0 6px;font-size:30px;letter-spacing:-.4px}
+.sub{color:var(--dim);font-size:15px;margin:0}
+.rule{display:inline-block;margin-top:14px;padding:6px 12px;border-radius:999px;
+  background:#1d2740;border:1px solid #2f4468;color:#bcd3f7;font-size:13px;font-weight:600}
+h2{font-size:13px;letter-spacing:1.6px;text-transform:uppercase;color:var(--dim);
+  margin:34px 0 14px;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.lg{display:flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;padding:5px 11px;font-size:12.5px;color:var(--dim)}
+.dot{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+.grid{display:grid;gap:14px}
+.phases{grid-template-columns:repeat(auto-fit,minmax(255px,1fr))}
+.phase{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.phase h3{margin:0 0 4px;font-size:14px;letter-spacing:.4px}
+.phase .when{color:var(--dim);font-size:12px;margin:0 0 12px}
+.card{border-left:4px solid var(--line);background:var(--panel2);border-radius:9px;
+  padding:11px 13px;margin-bottom:10px}
+.card:last-child{margin-bottom:0}
+.card .t{font-weight:700;font-size:14.5px;margin-bottom:3px}
+.card .m{color:var(--dim);font-size:12.5px}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.5px;
+  padding:2px 7px;border-radius:5px;margin:7px 6px 0 0;background:#0c1018;color:var(--dim);
+  border:1px solid var(--line)}
+.dep{color:#8aa0bd;font-size:11.5px;margin-top:7px;font-style:italic}
+.c-discovery{border-left-color:var(--discovery)} .c-discovery .t{color:var(--discovery)}
+.c-selling{border-left-color:var(--selling)}     .c-selling .t{color:var(--selling)}
+.c-trust{border-left-color:var(--trust)}         .c-trust .t{color:var(--trust)}
+.c-money{border-left-color:var(--money)}         .c-money .t{color:var(--money)}
+.c-ops{border-left-color:var(--ops)}             .c-ops .t{color:var(--ops)}
+.c-outreach{border-left-color:var(--outreach)}   .c-outreach .t{color:var(--outreach)}
+.c-repair{border-left-color:var(--repair)}       .c-repair .t{color:var(--repair)}
+.c-david{border-left-color:var(--david)}         .c-david .t{color:var(--david)}
+.banner{background:#22161a;border:1px solid #4a2730;border-radius:14px;padding:14px 16px}
+.banner .h{color:var(--repair);font-weight:700;font-size:14px;margin-bottom:8px;
+  letter-spacing:.3px}
+.two{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+ol.rail{list-style:none;counter-reset:s;margin:0;padding:0}
+ol.rail li{counter-increment:s;position:relative;padding:0 0 16px 42px;
+  border-left:2px solid var(--line);margin-left:14px}
+ol.rail li:last-child{border-left-color:transparent;padding-bottom:0}
+ol.rail li::before{content:counter(s);position:absolute;left:-15px;top:-2px;width:28px;height:28px;
+  border-radius:50%;background:#1d2740;border:1px solid #35507d;color:#bcd3f7;
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+ol.rail li.you::before{background:#3a2f13;border-color:#7a6320;color:var(--david)}
+ol.rail b{display:block;font-size:14.5px;margin-bottom:2px}
+ol.rail span{color:var(--dim);font-size:12.5px}
+.done{background:#12211a;border:1px solid #234536;border-radius:14px;padding:14px 16px}
+.done .h{color:var(--trust);font-weight:700;font-size:14px;margin-bottom:8px}
+ul.tight{margin:0;padding-left:18px} ul.tight li{margin-bottom:5px;font-size:13.5px;color:#c7d3e4}
+footer{color:#64748b;font-size:12px;margin-top:34px;border-top:1px solid var(--line);padding-top:14px}
+@media(max-width:640px){h1{font-size:24px}.wrap{padding:0 14px}}
+</style></head><body><div class="wrap">
+
+<header>
+  <h1>Baseline Batch 2026&#8209;Q4</h1>
+  <p class="sub">One baseline change, for a longer period &mdash; not a drip of short changes.</p>
+  <div class="rule">RUL&#8209;126 &middot; 14 Sep 2026 &middot; built flag&#8209;dark &middot; arming is David&rsquo;s act</div>
+  <div class="legend">
+    <span class="lg"><i class="dot" style="background:var(--discovery)"></i>Discovery &amp; front door</span>
+    <span class="lg"><i class="dot" style="background:var(--selling)"></i>Selling flow</span>
+    <span class="lg"><i class="dot" style="background:var(--trust)"></i>Trust &amp; credentials</span>
+    <span class="lg"><i class="dot" style="background:var(--money)"></i>Money &amp; pricing</span>
+    <span class="lg"><i class="dot" style="background:var(--ops)"></i>Ops instruments</span>
+    <span class="lg"><i class="dot" style="background:var(--outreach)"></i>Outreach</span>
+    <span class="lg"><i class="dot" style="background:var(--repair)"></i>Live fault &mdash; outside the batch (both fixed)</span>
+    <span class="lg"><i class="dot" style="background:var(--david)"></i>Reserved to David</span>
+  </div>
+</header>
+
+<h2>Repair lane &mdash; both repaired today, 14 Sep</h2>
+<div class="banner">
+  <div class="h" style="color:var(--trust)">RUL&#8209;126 governs DESIGN, not repair &mdash; so both were fixed today, proven in a rendered browser, and are NOT waiting for the batch. Ledger RG&#8209;0363 and RG&#8209;0364 green. Not yet deployed: another session's work is in the tree.</div>
+  <div class="grid two">
+    <div class="card c-repair"><div class="t" style="color:var(--trust)">R1 &middot; The false offline banner &mdash; FIXED</div>
+      <div class="m">&ldquo;You&rsquo;re offline &mdash; browsing cached content&rdquo; shows while the browser is online and fetches return 200. It is the first thing a seller reads when their listings look empty, and it sent them to their router instead of their account. <b>OFFLINE&#8209;TRUTH&#8209;1:</b> the banner now re&#8209;proves itself &mdash; it rises only after a real probe fails and clears itself when the network answers, with no promise of a cache the app does not hold.</div></div>
+    <div class="card c-repair"><div class="t" style="color:var(--trust)">R2 &middot; No service worker controls the page &mdash; FIXED</div>
+      <div class="m">Nothing is registered, so web push (RUL&#8209;122) and the add&#8209;to&#8209;home&#8209;screen offer (RUL&#8209;123) can never fire. The Quick app shares this worker &mdash; so this was also a dependency. <b>SW&#8209;REGISTER&#8209;1:</b> the worker is now registered on every page load, not only for push opt&#8209;ins, and controls the page on the next navigation.</div>
+      <div class="dep">Was blocking build item 6 &mdash; cleared</div></div>
+  </div>
+</div>
+
+<h2>Build order &mdash; by dependency, not by size</h2>
+<div class="grid phases">
+
+  <div class="phase"><h3>Phase 1 &mdash; the front door</h3><p class="when">Nothing below it can be judged until this exists</p>
+    <div class="card c-discovery"><div class="t">1 &middot; ZOOM</div>
+      <div class="m">The filter panel becomes a funnel that asks one question at a time. Dependency graph on the facets, zero&#8209;count options removed, geography never opens, travel starts at country.</div>
+      <span class="tag">RG&#8209;0221</span><span class="tag">RUL&#8209;076</span><span class="tag">ZOOM_HMI_SPEC.md</span></div>
+  </div>
+
+  <div class="phase"><h3>Phase 2 &mdash; in parallel with Zoom</h3><p class="when">Neither touches the funnel</p>
+    <div class="card c-selling"><div class="t">2 &middot; DCB&#8209;001 photo pipeline</div>
+      <div class="m">Upload in any order, tap one as cover, AI orders the rest, drag to adjust. Consistency enforced at output, never at input. No schema change.</div>
+      <span class="tag">RUL&#8209;127</span><span class="tag">ms.js + BEA</span></div>
+    <div class="card c-trust"><div class="t">3 &middot; Credential claims</div>
+      <div class="m">/credentials/mine answers, claim endpoint and flag, seeded registry of 4&nbsp;237 verified rows. Verification without identification.</div>
+      <span class="tag">RG&#8209;0216</span></div>
+    <div class="card c-trust"><div class="t">4 &middot; Private&#8209;seller ladder entries</div>
+      <div class="m">Property and Local Market stop being silent. Every entry a dated, sourced fact, checkable from outside, added once and counting on every listing after.</div>
+      <span class="tag">RUL&#8209;129</span><div class="dep">After 3 &mdash; same lane</div></div>
+  </div>
+
+  <div class="phase"><h3>Phase 3 &mdash; on top of the funnel</h3><p class="when">Zoom must exist first</p>
+    <div class="card c-discovery"><div class="t">5 &middot; SQUIRE</div>
+      <div class="m">The Pro subscriber&rsquo;s agent. Pro&#8209;only, never grants an introduction, seller identity never enters its context, tops up in Tuppence.</div>
+      <span class="tag">RG&#8209;0224</span><span class="tag">RUL&#8209;077</span>
+      <div class="dep">After 1 &mdash; a brief is a Zoom path plus prose</div></div>
+    <div class="card c-discovery"><div class="t">6 &middot; Quick app at /quick/</div>
+      <div class="m">Same origin, sub&#8209;path, own manifest and tile. The harness is built and the hand&#8209;over is proven live; what is missing is the ship and its readiness checks.</div>
+      <span class="tag">RUL&#8209;124</span><span class="tag">RUL&#8209;125</span>
+      <div class="dep">After R2 and 1</div></div>
+  </div>
+
+  <div class="phase"><h3>Phase 4 &mdash; independent, cheap, last</h3><p class="when">No dependencies either way</p>
+    <div class="card c-money"><div class="t">7 &middot; One $5 tier</div>
+      <div class="m">Global reach folds into Starter: Free &middot; Starter $5 (10 slots + reach) &middot; Pro $20. Live subscribers migrate at the same price &mdash; never cancelled and re&#8209;sold. The pricing page is rewritten in the same change.</div>
+      <span class="tag">RUL&#8209;128</span><span class="tag">RUL&#8209;080</span></div>
+    <div class="card c-ops"><div class="t">8 &middot; AI funds gauge</div>
+      <div class="m">The +1 card answers &ldquo;can this AI function stop?&rdquo; per feature &mdash; funds per lane with auto&#8209;top&#8209;up state.</div>
+      <span class="tag">RG&#8209;0203</span></div>
+    <div class="card c-outreach"><div class="t">9 &middot; Agency letters</div>
+      <div class="m">The three letters still tell the solo&#8209;seller story and never mint the agency console link. Copy and flow, not mechanics.</div>
+      <span class="tag">RG&#8209;0346</span></div>
+  </div>
+
+</div>
+
+<h2>Arming &mdash; how the one baseline actually moves</h2>
+<div class="grid two">
+  <div class="phase">
+    <ol class="rail">
+      <li><b>Built flag&#8209;dark</b><span>The existing app is untouched for every user while the batch is written.</span></li>
+      <li><b>David sees it on the actual app, locally</b><span>RUL&#8209;076&rsquo;s binding constraint &mdash; before the field, not after.</span></li>
+      <li><b>The gated sandbox, 30 Oct</b><span>RUL&#8209;075 already schedules it. Zoom shares it; no second preview mechanism is built.</span></li>
+      <li class="you"><b>David arms the flag</b><span>It changes the front door of every category, so it is his act and nobody else&rsquo;s.</span></li>
+      <li class="you"><b>One baseline moves</b><span>Nothing in it is hotfixed out alone &mdash; a partial revert is the drip this plan exists to prevent.</span></li>
+    </ol>
+  </div>
+  <div>
+    <div class="phase" style="margin-bottom:14px">
+      <h3 style="color:var(--david)">Still reserved to David &mdash; none of it blocks the build</h3>
+      <div class="card c-david"><div class="t">Travel funnel endpoint</div>
+        <div class="m">The funnel&rsquo;s conclusion for tours, stays and guides is a plan &mdash; the Expedition Dossier handed to a partnered agency, which IS the introduction. Blocks arming the travel lane, not building Zoom.</div></div>
+      <div class="card c-david"><div class="t">Designer&#8209;role binding</div>
+        <div class="m">You, a design agent, or both. You are the gate by default until you say.</div></div>
+      <div class="card c-david"><div class="t">The Agency $5 seat</div>
+        <div class="m">RUL&#8209;128 folded two $5 products, not three. The agency seat stays its own price point until you say otherwise.</div></div>
+    </div>
+    <div class="done">
+      <div class="h">Closed today, 14 Sep 2026</div>
+      <ul class="tight">
+        <li>Listings <b>383</b> and <b>384</b> deleted from production &mdash; both re&#8209;probed, 404.</li>
+        <li>DCB&#8209;001&rsquo;s GATE line filled after eleven weeks empty (RUL&#8209;127).</li>
+        <li>RUL&#8209;080&rsquo;s reserved mechanism chosen (RUL&#8209;128).</li>
+        <li>The Property / Local Market credential gap ruled (RUL&#8209;129).</li>
+        <li>Four stale &ldquo;open&rdquo; items struck &mdash; RG&#8209;0205/0206/0207 shipped 4 Sep, RG&#8209;0208 is in the code.</li>
+        <li>Both repair&#8209;lane faults fixed and proven in a rendered browser &mdash; RG&#8209;0363, RG&#8209;0364.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<footer>Plan of record: BASELINE_BATCH_2026Q4.md &middot; rulings RUL&#8209;126 to RUL&#8209;129 &middot; TrustSquare (Pty) Ltd</footer>
+</div></body></html>

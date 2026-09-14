@@ -292,3 +292,16 @@ Sat 09/12/2026  5:30:02.49  committed 4 change(s)
 [main 7312cb1] Nightly checkpoint Sun 09/13/2026  5:30:02.41 (auto, no deploy)
  1 file changed, 38 insertions(+)
 Sun 09/13/2026  5:30:02.49  committed 1 change(s)
+[main 8a0f809] Nightly checkpoint Mon 09/14/2026  5:30:02.33 (auto, no deploy)
+ 12 files changed, 856 insertions(+), 9 deletions(-)
+ create mode 100644 changelog.d/2026-09-13-category-voice.md
+ create mode 100644 changelog.d/2026-09-13-handover-live-proof.md
+ create mode 100644 changelog.d/2026-09-13-quicklist-1-3-5.md
+ create mode 100644 changelog.d/2026-09-13-quicklist-headroom.md
+ create mode 100644 changelog.d/2026-09-13-seller-hub-findings.md
+ create mode 100644 genie/QUICKLIST_1_3_5_VERIFIED.html
+ create mode 100644 hide_autodeploy_window.bat
+ create mode 100644 run_hidden.vbs
+ create mode 100644 status.d/2026-09-13-quicklist-progress.md
+ create mode 100644 visuals/letters/2026-09-13_adventures_experiences_register_us.html
+Mon 09/14/2026  5:30:02.56  committed 12 change(s)

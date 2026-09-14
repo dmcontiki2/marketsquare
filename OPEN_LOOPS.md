@@ -162,3 +162,27 @@ same defect class as an undated status assertion (the ONETAP_SETUP.md "(this is 
 
 - **D10 — 3rd resubmit 2 Sep 2026 06:00 SAST** (post-launch, David's word). Dashboard: "We're reviewing your Project… a few days." Outcome check by PROBE ~7 Sep; a decline goes to contact support in writing (RUL-041).
 - **D10 — OUTCOME READ 7 Sep 2026 07:00 SAST: DECLINED a 3rd time (PROBED, dashboard banner).** "20 programs are currently unavailable" — two reasons now: the old "under development or not yet ready" PLUS a NEW one: "doesn't currently have enough traffic… stable monthly traffic for at least three consecutive months." Submit button active again (review concluded). GYG/Viator/Booking.com still blocked; Aviasales flights unaffected. Per RUL-041 NOT resubmitted; support note DRAFTED at TRAVELPAYOUTS_SUPPORT_NOTE_2026-09-07.md asking which reason is deciding and what "not ready" means. If traffic is deciding, earliest resubmit ~Dec 2026. **Reserved to David: send the note.** Ref: changelog.d/2026-09-07-tours-review-outcome.md
+
+## 2026-09-14 (appended — append-only, this file has no compiler)
+
+- **[C]+[D] RUL-126 — THE BASELINE CHANGES ONCE.** All open post-launch design work is now ONE
+  batch, plan of record `BASELINE_BATCH_2026Q4.md`. Build order: Zoom (RG-0221) → DCB-001
+  (RUL-127) ∥ credential claims (RG-0216) + private-seller VEL entries (RUL-129) → Squire
+  (RG-0224) → Quick app /quick/ (RUL-124/125) → $5 fold (RUL-128) → funds gauge (RG-0203) →
+  agency letters (RG-0346). Flag-dark throughout; **arming is David's act.**
+- **[C] REPAIR LANE, not in the batch:** the false "You're offline" banner, and no service worker
+  controlling the live page — the second blocks web push (RUL-122) and the install offer
+  (RUL-123), and the Quick app shares that worker. Fixed on their own schedule per RUL-126(c).
+- **[C] CLOSED 14 Sep — listings 383 and 384 deleted** from production via the
+  seller-authenticated route; both re-probed 404. The "keep or delete" row is answered.
+- **[C] CLOSED 14 Sep — DCB-001 gate filled** (RUL-127), eleven weeks after the dossier was scored.
+- **[D] CLOSED 14 Sep — RUL-080's reserved mechanism chosen** (RUL-128): fold Global into Starter.
+  Residue is a build task, not a decision: migrate live `wishlist_subscriptions` rows at the same
+  price, never cancel-and-re-sell.
+- **[D] CLOSED 14 Sep — the Property / Local Market credential gap ruled** (RUL-129).
+- **[D] STILL RESERVED:** the travel funnel endpoint (Expedition Dossier as the introduction —
+  blocks ARMING the travel lane, not building Zoom) · designer-role binding (D14) · the Agency
+  Pro $5 seat (RUL-048), which RUL-128 deliberately did not fold.
+- **CORRECTION to the 2 Sep BUILD_QUEUE:** RG-0205/0206/0207 (listing-friction batch) shipped
+  4 Sep and RG-0208 (intro reminder ladder) is in `bea_main.py` — all four were being carried as
+  open work by a generated file that had gone stale. Verified in source, not recalled.

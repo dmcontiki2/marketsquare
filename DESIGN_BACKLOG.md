@@ -30,4 +30,6 @@ Pre-launch (until 1 Sep): guidelines apply as a checklist, David is the gate by 
              4 PASS (existing patterns; no fake controls) · 5 PASS (flag + revert) ·
              6 PASS (measures named) · 7 PENDING (phone-first mock to verify) ·
              8 PASS (batched) · 9 PENDING (copy pass) · 10 PENDING — GATE EMPTY.
-    GATE: ____________________  (approver name, date, one line — absent = do not build)
+    SCORE UPDATE 2026-09-14: 7/9/10 discharged into the build by the approver below.
+    GATE: David Conradie · 2026-09-14 · APPROVED — "Approved — build it"; rides the single
+          post-launch baseline (RUL-126), built flag-dark, arming is David's. Ruling: RUL-127.

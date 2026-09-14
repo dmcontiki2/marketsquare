@@ -769,6 +769,49 @@ def run_migrations(conn):
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_wd_buyer ON wearable_devices(buyer_token, enabled)")
 
+    # ── BUZZ (14 Sep 2026) — the direct line between two people who already
+    #    know each other. David's requirement 6 for the Quick Listing app, built
+    #    here because there is ONE server and ONE rulebook (RUL-125(b)).
+    #
+    #    A buzz is NOT a chat: one line, one direction, no thread, no history
+    #    surfaced to anyone. It rides the free web-push lane that already exists
+    #    (RUL-122: push first, email backup, never a per-message cost).
+    #
+    #    THE PAIR IS THE PERMISSION. A row here means these two are connected —
+    #    created when a hirer joins from the worker's own link — and each side
+    #    carries its OWN allow flag, because consent is not transitive: her
+    #    letting him buzz her says nothing about him letting her buzz him.
+    #    Emails are stored lower-cased and ORDERED, so a pair is exactly one row
+    #    however it is asked for.
+    conn.execute("""CREATE TABLE IF NOT EXISTS buzz_pairs (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        a_email     TEXT NOT NULL,
+        b_email     TEXT NOT NULL,
+        a_allows    INTEGER NOT NULL DEFAULT 0,
+        b_allows    INTEGER NOT NULL DEFAULT 0,
+        created_by  TEXT NOT NULL DEFAULT '',
+        source      TEXT NOT NULL DEFAULT 'link',
+        created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(a_email, b_email)
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_buzz_pairs_a ON buzz_pairs(a_email)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_buzz_pairs_b ON buzz_pairs(b_email)")
+    # The log is OPERATIONAL, not a conversation: it exists to rate-limit a
+    # doorbell someone could lean on, and to answer "did it arrive, and how".
+    # Nothing in the app reads it back to a user as a thread.
+    conn.execute("""CREATE TABLE IF NOT EXISTS buzz_log (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        pair_id     INTEGER NOT NULL,
+        from_email  TEXT NOT NULL,
+        to_email    TEXT NOT NULL,
+        body        TEXT NOT NULL,
+        channel     TEXT NOT NULL DEFAULT '',
+        devices     INTEGER NOT NULL DEFAULT 0,
+        created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_buzz_log_from ON buzz_log(from_email, created_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_buzz_log_pair ON buzz_log(pair_id, created_at)")
+
     # Editorially curated showcase scroll for empty-state buyers
     conn.execute("""CREATE TABLE IF NOT EXISTS wishlist_showcase (
         id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21918,6 +21961,209 @@ def _push_to_seller(conn, seller_email: str, title: str, body: str) -> int:
     except Exception as exc:
         _log.warning("INTRO-REMIND-1 push lookup failed: %s", exc)
         return 0
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# BUZZ — one line to somebody you are already connected to.
+#
+# David, 14 Sep 2026: a buzzer to get the other person's attention, the EXACT
+# same function in reverse, the name of whoever pressed it on every buzz, and
+# permission granted by BOTH parties during onboarding. Then, after seeing it:
+# no canned messages, one sentence only, and keep it universal so it can be
+# pointed at any two paired people.
+#
+# It carries no delivery machinery of its own. _push_to_seller() already
+# resolves a person to every device they have registered and pushes to all of
+# them, and its title/body are exactly the two things required: the sender's
+# NAME and the one LINE. RUL-122 fixes the channels — web push first, email as
+# the backup, and nothing with a per-message cost, which is why there is no SMS
+# path here and must not be one added later without David reopening that ruling.
+# ════════════════════════════════════════════════════════════════════════════
+BUZZ_MAX_CHARS    = 120     # one sentence, not a paragraph
+BUZZ_MAX_PER_HOUR = 30      # CLAUDE'S TECHNICAL CALL, not a ruling: a doorbell
+                            # with no limit is a doorbell somebody can lean on.
+                            # Change the number freely; it gates nothing else.
+
+def _buzz_norm(text: str) -> str:
+    """One line. Newlines and runs of whitespace collapse to single spaces, so
+    'a single sentence or message' cannot quietly become a paragraph."""
+    return " ".join((text or "").split())[:BUZZ_MAX_CHARS].strip()
+
+
+def _buzz_esc(t: str) -> str:
+    """Escape for the email backup. The `html` module is not imported at the top
+    of this file and one function does not justify adding it."""
+    return (t or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _buzz_key(x: str, y: str):
+    """A pair is one row however it is asked for: lower-cased and ordered."""
+    a, b = (x or "").strip().lower(), (y or "").strip().lower()
+    return (a, b) if a <= b else (b, a)
+
+
+def _buzz_name(conn, email: str) -> str:
+    """The name that rides on the buzz. Falls back to the local part of the
+    address rather than to nothing — a buzz with no name breaks requirement 3."""
+    try:
+        r = conn.execute("SELECT name FROM users WHERE LOWER(email)=?",
+                         ((email or "").lower(),)).fetchone()
+        if r and (r["name"] or "").strip():
+            return (r["name"] or "").strip()
+    except Exception:
+        pass
+    return (email or "").split("@")[0] or "Somebody"
+
+
+def _buzz_pair(conn, x: str, y: str):
+    a, b = _buzz_key(x, y)
+    return conn.execute(
+        "SELECT * FROM buzz_pairs WHERE a_email=? AND b_email=?", (a, b)).fetchone()
+
+
+def _buzz_pair_view(row, me: str):
+    """The pair as ONE side sees it — never the raw a/b columns."""
+    me = (me or "").strip().lower()
+    other = row["b_email"] if row["a_email"] == me else row["a_email"]
+    i_allow    = row["a_allows"] if row["a_email"] == me else row["b_allows"]
+    they_allow = row["b_allows"] if row["a_email"] == me else row["a_allows"]
+    return {"pair_id": row["id"], "other_email": other,
+            "i_allow_them": bool(i_allow), "they_allow_me": bool(they_allow),
+            "source": row["source"], "created_at": row["created_at"]}
+
+
+class BuzzPairReq(BaseModel):
+    from_email: str
+    to_email:   str
+    source:     str = "link"
+
+
+class BuzzAllowReq(BaseModel):
+    email:       str
+    other_email: str
+    allow:       bool = True
+
+
+class BuzzSendReq(BaseModel):
+    from_email: str
+    to_email:   str
+    text:       str
+
+
+@app.post("/buzz/pair")
+def buzz_pair_create(req: BuzzPairReq, _key: str = Depends(auth.require_api_key)):
+    """Connect two people. This is what the worker's own link does when the
+    hirer joins: it does NOT grant permission, it only records that these two
+    are connected. Each side still has to allow the other. Idempotent."""
+    a, b = _buzz_key(req.from_email, req.to_email)
+    if not a or not b or "@" not in a or "@" not in b:
+        raise HTTPException(status_code=400, detail="two valid emails required")
+    if a == b:
+        raise HTTPException(status_code=400, detail="cannot pair somebody with themselves")
+    conn = database.get_db()
+    conn.execute("""INSERT INTO buzz_pairs (a_email, b_email, created_by, source)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(a_email, b_email) DO NOTHING""",
+                 (a, b, (req.from_email or "").strip().lower(), req.source or "link"))
+    conn.commit()
+    row = _buzz_pair(conn, a, b)
+    out = _buzz_pair_view(row, req.from_email)
+    conn.close()
+    return out
+
+
+@app.post("/buzz/allow")
+def buzz_allow(req: BuzzAllowReq, _key: str = Depends(auth.require_api_key)):
+    """One side's switch: 'let this person buzz me'. This is the permission the
+    onboarding asks for, and it is per PERSON, never global — the pair is the
+    unit of consent. Turning it off stops their buzzes and nothing else."""
+    a, b = _buzz_key(req.email, req.other_email)
+    conn = database.get_db()
+    row = _buzz_pair(conn, a, b)
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="no pair between these two")
+    me = (req.email or "").strip().lower()
+    # a_allows means "a lets b buzz a" — the flag belongs to the RECEIVER.
+    col = "a_allows" if row["a_email"] == me else "b_allows"
+    conn.execute("UPDATE buzz_pairs SET " + col + "=? WHERE id=?",
+                 (1 if req.allow else 0, row["id"]))
+    conn.commit()
+    out = _buzz_pair_view(_buzz_pair(conn, a, b), req.email)
+    conn.close()
+    return out
+
+
+@app.get("/buzz/pairs")
+def buzz_pairs(email: str, _key: str = Depends(auth.require_api_key)):
+    """Everyone this person can buzz, with both switches as they stand."""
+    me = (email or "").strip().lower()
+    conn = database.get_db()
+    rows = conn.execute("""SELECT * FROM buzz_pairs WHERE a_email=? OR b_email=?
+                           ORDER BY created_at DESC""", (me, me)).fetchall()
+    out = []
+    for r in rows:
+        v = _buzz_pair_view(r, me)
+        v["other_name"] = _buzz_name(conn, v["other_email"])
+        out.append(v)
+    conn.close()
+    return out
+
+
+@app.post("/buzz")
+def buzz_send(req: BuzzSendReq, _key: str = Depends(auth.require_api_key)):
+    """Send one line, with the sender's name on it.
+
+    Refuses, in this order and for a stated reason every time: an empty line, no
+    pair, the receiver's switch off, or the hourly limit. A buzz that was never
+    allowed is a buzz that never arrives, and the sender is told which it was —
+    silence is the one outcome that teaches nobody anything."""
+    text = _buzz_norm(req.text)
+    if not text:
+        raise HTTPException(status_code=400, detail="a buzz needs one line of text")
+    conn = database.get_db()
+    row = _buzz_pair(conn, req.from_email, req.to_email)
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="you are not connected to this person")
+    sender   = (req.from_email or "").strip().lower()
+    receiver = (req.to_email or "").strip().lower()
+    view = _buzz_pair_view(row, receiver)          # the RECEIVER's own switch
+    if not view["i_allow_them"]:
+        conn.close()
+        raise HTTPException(status_code=403,
+                            detail="they have not switched buzzes on for you yet")
+    n_recent = conn.execute(
+        """SELECT COUNT(*) AS n FROM buzz_log
+           WHERE from_email=? AND created_at >= datetime('now','-1 hour')""",
+        (sender,)).fetchone()["n"]
+    if n_recent >= BUZZ_MAX_PER_HOUR:
+        conn.close()
+        raise HTTPException(status_code=429,
+                            detail="that is a lot of buzzes in an hour — try again shortly")
+    name = _buzz_name(conn, sender)
+    devices = _push_to_seller(conn, receiver, name, text)      # title = the NAME
+    channel = "push" if devices else ""
+    if not devices:
+        # RUL-122's backup. Never SMS.
+        try:
+            sent = _send_html_email(
+                receiver, "Buzz from " + name,
+                "<p style=\"font:16px/1.5 system-ui,sans-serif\"><b>" + _buzz_esc(name)
+                + "</b> buzzed you:</p><p style=\"font:20px/1.4 system-ui,sans-serif\">"
+                + _buzz_esc(text) + "</p>",
+                name + " buzzed you: " + text)
+            channel = "email" if sent in ("sent", "dry") else ""
+        except Exception as exc:
+            _log.warning("BUZZ-1 email backup failed: %s", exc)
+    conn.execute("""INSERT INTO buzz_log (pair_id, from_email, to_email, body, channel, devices)
+                    VALUES (?, ?, ?, ?, ?, ?)""",
+                 (row["id"], sender, receiver, text, channel or "none", devices))
+    conn.commit()
+    bid = conn.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
+    conn.close()
+    return {"id": bid, "from_name": name, "text": text,
+            "delivered": channel or "none", "devices": devices}
 
 
 def _b3_ignored_count(conn, seller_email: str) -> int:

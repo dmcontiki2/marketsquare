@@ -1,0 +1,268 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent Status — 14 Sep 2026</title>
+<style>
+:root{
+ --bg:#0e1420; --panel:#161f30; --panel2:#1c2740; --line:#2a3852;
+ --ink:#e8eef8; --dim:#8fa3c0;
+ --green:#2fbf71; --amber:#f0a500; --red:#e5484d; --grey:#6b7c99; --blue:#4c8dff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:14px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif;padding:24px 16px 48px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px;letter-spacing:.2px}
+.sub{color:var(--dim);font-size:13px;margin:0 0 6px}
+.stamp{color:var(--dim);font-size:12px;margin:0 0 22px}
+.stamp b{color:var(--ink)}
+
+.verdict{display:flex;gap:14px;align-items:center;background:var(--panel);
+ border:1px solid var(--line);border-left:5px solid var(--green);
+ border-radius:10px;padding:14px 18px;margin-bottom:26px}
+.verdict .big{font-size:15px;font-weight:600}
+.verdict .small{color:var(--dim);font-size:13px}
+
+.key{display:flex;flex-wrap:wrap;gap:16px;margin:0 0 18px;font-size:12px;color:var(--dim)}
+.key span{display:flex;align-items:center;gap:6px}
+.k{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+h2{font-size:13px;letter-spacing:1.4px;text-transform:uppercase;color:var(--dim);
+ margin:30px 0 12px;font-weight:600}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+ padding:14px 15px;border-top:3px solid var(--grey);position:relative}
+.card.g{border-top-color:var(--green)} .card.a{border-top-color:var(--amber)}
+.card.r{border-top-color:var(--red)}   .card.x{border-top-color:var(--grey)}
+.card h3{margin:0 0 2px;font-size:15px}
+.role{color:var(--dim);font-size:12px;margin:0 0 10px;min-height:32px}
+.state{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
+ letter-spacing:.8px;padding:3px 9px;border-radius:20px;margin-bottom:10px}
+.state.g{background:rgba(47,191,113,.15);color:var(--green)}
+.state.a{background:rgba(240,165,0,.15);color:var(--amber)}
+.state.r{background:rgba(229,72,77,.15);color:var(--red)}
+.state.x{background:rgba(107,124,153,.18);color:var(--grey)}
+.ev{border-top:1px solid var(--line);padding-top:9px;margin-top:4px}
+.ev div{font-size:12px;color:var(--dim);margin-bottom:5px;padding-left:12px;position:relative}
+.ev div:before{content:"";position:absolute;left:0;top:6px;width:5px;height:5px;
+ border-radius:50%;background:var(--grey)}
+.ev div.ok:before{background:var(--green)} .ev div.no:before{background:var(--red)}
+.ev div.mid:before{background:var(--amber)}
+.ev code{color:#cfe0ff;background:rgba(76,141,255,.10);padding:1px 5px;border-radius:4px;
+ font-size:11px;font-family:ui-monospace,Consolas,monospace}
+
+.band{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.imp{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+ border-left:4px solid var(--green)}
+.imp.loss{border-left-color:var(--red)} .imp.blind{border-left-color:var(--amber)}
+.imp h4{margin:0 0 8px;font-size:13px;letter-spacing:.3px}
+.imp p{margin:0;color:var(--dim);font-size:12.5px}
+
+table{width:100%;border-collapse:collapse;background:var(--panel);
+ border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th{text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;
+ color:var(--dim);padding:10px 14px;background:var(--panel2);border-bottom:1px solid var(--line)}
+td{padding:11px 14px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.n{width:34px;color:var(--dim);font-weight:700}
+.sev{font-size:10px;font-weight:700;letter-spacing:.8px;padding:2px 8px;border-radius:20px;
+ white-space:nowrap}
+.sev.r{background:rgba(229,72,77,.15);color:var(--red)}
+.sev.a{background:rgba(240,165,0,.15);color:var(--amber)}
+.who{font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.who.d{background:rgba(240,165,0,.16);color:var(--amber)}
+.who.c{background:rgba(76,141,255,.16);color:var(--blue)}
+.fine{color:var(--dim);font-size:12px;margin-top:12px}
+.okstrip{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--green);
+ border-radius:10px;padding:13px 16px;color:var(--dim);font-size:12.5px}
+.okstrip b{color:var(--ink)}
+@media(max-width:560px){body{padding:16px 12px 36px}h1{font-size:19px}}
+</style></head><body><div class="wrap">
+
+<h1>MarketSquare — Agent Status</h1>
+<p class="sub">What each agent is actually doing, and what that costs the live app.</p>
+<p class="stamp">Measured live <b>Mon 14 Sep 2026, 05:30 SAST</b> · sources: <code>/flags</code> · <code>/dashboard/maint</code> · <code>/dashboard/bit</code> · scheduled-task list · <code>host_queue</code> · uptime worker</p>
+
+<div class="verdict">
+  <div>
+    <div class="big">Fixed, and now proven by the board rather than by my word.</div>
+    <div class="small">Maintenance was never disarmed — it ran LIVE three times a day and failed on a 401 at the first step for three weeks. My first fix was a patch on one consumer; the assertion I wrote straight after caught that and the real cause is now closed. Full board: 351 entries, 0 regressed, 0 unverified.</div>
+  </div>
+</div>
+
+<div class="key">
+  <span><i class="k" style="background:var(--green)"></i>measured &amp; working</span>
+  <span><i class="k" style="background:var(--amber)"></i>running, named gap</span>
+  <span><i class="k" style="background:var(--red)"></i>not running / switched off</span>
+  <span><i class="k" style="background:var(--grey)"></i>by design — session-invoked</span>
+</div>
+
+<h2>The six agents</h2>
+<div class="grid">
+
+  <div class="card g">
+    <h3>Maintenance</h3>
+    <p class="role">Fault lane: adjudicate → fix → verify → harden</p>
+    <span class="state g">ARMED · INTAKE RESTORED</span>
+    <div class="ev">
+      <div class="ok">Timer enabled + active, <code>--live</code> passed — 05:20/11:20/17:20 UTC</div>
+      <div class="ok">401 root-caused &amp; fixed — queue now reads <code>200 []</code></div>
+      <div class="ok">Phase corrected <code>prelaunch</code> → <code>postlaunch</code></div>
+      <div class="ok">REPORT tab switched ON — lane answers 422, not 503</div>
+    </div>
+  </div>
+
+  <div class="card g">
+    <h3>Pulse / Monitor</h3>
+    <p class="role">Daily heartbeat, amber/red alerts</p>
+    <span class="state g">RE-ENABLED</span>
+    <div class="ev">
+      <div class="ok">Stand-up back ON — next fire tonight 19:03Z, model Opus 5</div>
+      <div class="mid"><code>PULSE_LOG.md</code> had gone 43 days unwritten</div>
+      <div class="no">Daily watch still has no schedule — last ran 13 Sep 04:48</div>
+      <div class="ok">Cloudflare uptime worker still probing — 0 fails</div>
+    </div>
+  </div>
+
+  <div class="card g">
+    <h3>BIT Tester</h3>
+    <p class="role">Self-test each deploy + live probe</p>
+    <span class="state g">LIVE &amp; GREEN</span>
+    <div class="ev">
+      <div class="ok"><code>state:"pass"</code> — 8 of 8, <code>failing:[]</code></div>
+      <div class="ok">Deterministic engine, server heartbeat every 10 min</div>
+      <div class="ok">Negative tests included — auth 401, demo-bleed clean</div>
+    </div>
+  </div>
+
+  <div class="card a">
+    <h3>Outreach / Emailer</h3>
+    <p class="role">Wave sends, founding sellers</p>
+    <span class="state a">GATED — WRONG LETTER</span>
+    <div class="ev">
+      <div class="mid">RG-0346 open: agency letters still tell the <b>solo-seller</b> story</div>
+      <div class="no">The lane never mints the agency console link</div>
+      <div class="mid">Blocks the Texas estate-agent register (150k+ rows)</div>
+      <div class="ok">Send machinery itself works — <code>--no-ai</code> default</div>
+    </div>
+  </div>
+
+  <div class="card g">
+    <h3>Feedback-Triage</h3>
+    <p class="role">Voice of customer: synthesize → route</p>
+    <span class="state g">INBOUND RESTORED</span>
+    <div class="ev">
+      <div class="ok">In-app inbound reopened — REPORT tab switched back on</div>
+      <div class="ok">Email lane still live alongside it — 24 rows, 6 held</div>
+      <div class="mid">Session-invoked only — nothing calls it on a schedule</div>
+    </div>
+  </div>
+
+  <div class="card x">
+    <h3>Video Pipeline</h3>
+    <p class="role">Launch clips: generate → QC → pack</p>
+    <span class="state x">IDLE BY DESIGN</span>
+    <div class="ev">
+      <div class="ok">Nothing broken — invoked when you ask</div>
+      <div>Skills present: /launch-series · /video-qc · /youtube-pack</div>
+    </div>
+  </div>
+
+</div>
+
+<h2>What this costs the live app</h2>
+<div class="band">
+  <div class="imp">
+    <h4>✅ The product itself is fine</h4>
+    <p><code>/health</code> ok · BEA v1.3.1 · db integrity ok · BIT 8/8 · intro rail ready · account binding ON · external uptime probe <code>200 in 329ms</code>, zero consecutive fails. No user is seeing a broken site today.</p>
+  </div>
+  <div class="imp loss">
+    <h4>✖ Users cannot report a fault</h4>
+    <p>The in-app REPORT tab is hidden and its endpoint 503s, so a user who hits a problem has no route to you inside the app. Every complaint must arrive by email or not at all — and you only find out when someone bothers to write.</p>
+  </div>
+  <div class="imp blind">
+    <h4>⚠ You are flying on UP/DOWN alone</h4>
+    <p>The Cloudflare worker proves the site answers. It cannot tell you a regression shipped, a queue jammed, a ledger went red or a seller is stuck — that was the stand-up's job, and the stand-up is off.</p>
+  </div>
+</div>
+
+<h2>What is actually broken — ranked</h2>
+<table>
+  <tr><th class="n">#</th><th>What</th><th>Evidence</th><th>Sev</th><th>Whose</th></tr>
+  <tr>
+    <td class="n">1</td>
+    <td><b>The secret files have diverged — one root cause, two victims.</b><br><span style="color:var(--dim);font-size:12px">The app reads <code>/etc/marketsquare/secrets.env</code>; the agent lane falls back to <code>/var/www/marketsquare/.env</code>. The 22 Aug rotation updated one and not the other.</span></td>
+    <td>both files aligned — <b>no shared name holds two values</b><br>now asserted on every board run</td>
+    <td><span class="sev a">CLOSED</span></td>
+    <td><span class="who c">DONE</span></td>
+  </tr>
+  <tr>
+    <td class="n">2</td>
+    <td><b>In-app fault intake is switched off in the live DB.</b><br><span style="color:var(--dim);font-size:12px">Maintenance is now armed and reading cleanly — into an empty queue, because no user can file anything.</span></td>
+    <td><code>/flags → fault_report:<b>true</b></code><br>503 → 422 on the live edge</td>
+    <td><span class="sev a">CLOSED</span></td>
+    <td><span class="who c">DONE</span></td>
+  </tr>
+  <tr>
+    <td class="n">3</td>
+    <td><b>Daily Agent Stand-up is disabled.</b><br><span style="color:var(--dim);font-size:12px">Turned off 13 Sep — its model is correctly stored as Opus 5, so re-enabling will not re-run that fight.</span></td>
+    <td><code>enabled:<b>true</b></code><br>next fire 19:03Z tonight</td>
+    <td><span class="sev a">CLOSED</span></td>
+    <td><span class="who c">DONE</span></td>
+  </tr>
+  <tr>
+    <td class="n">4</td>
+    <td><b>The status compiler was jammed by a note describing the status compiler.</b><br><span style="color:var(--dim);font-size:12px">It matched the heading name as plain text, so prose quoting it in backticks read as extra headings. Seven sittings piled up behind the refusal. Now it only counts a match that starts a line.</span></td>
+    <td>refused 3 days<br>7 fragments folded clean</td>
+    <td><span class="sev a">CLOSED</span></td>
+    <td><span class="who c">DONE</span></td>
+  </tr>
+  <tr>
+    <td class="n">5</td>
+    <td><b>Daily watch stopped.</b><br><span style="color:var(--dim);font-size:12px">Ran every morning through 13 Sep 04:48, then nothing — no scheduled task remains for it.</span></td>
+    <td><code>OPEN_ITEMS.md</code> mtime<br>13 Sep 04:48</td>
+    <td><span class="sev a">AMBER</span></td>
+    <td><span class="who c">CLAUDE</span></td>
+  </tr>
+  <tr>
+    <td class="n">6</td>
+    <td><b>The "brain keyed" chip lies.</b><br><span style="color:var(--dim);font-size:12px">The check reads <code>os.environ</code> only; the brain itself resolves keys through <code>envkey()</code>. It reports KEYLESS while able to think. One-line fix, not made — the nightly ship would auto-deploy it tonight.</span></td>
+    <td>OPENAI / GEMINI / FAILOVER<br>all resolve; none exported</td>
+    <td><span class="sev a">AMBER</span></td>
+    <td><span class="who c">CLAUDE</span></td>
+  </tr>
+  <tr>
+    <td class="n">7</td>
+    <td><b>RG-0346 — the agency letter is wrong on the wire.</b><br><span style="color:var(--dim);font-size:12px">Live outreach copy + flow change, deliberately not treated as a mechanical fix.</span></td>
+    <td>open since 8 Sep<br>blocks the TREC lane</td>
+    <td><span class="sev a">AMBER</span></td>
+    <td><span class="who c">CLAUDE</span></td>
+  </tr>
+</table>
+
+<p class="fine">Ranked by what it costs you if left alone, not by how hard it is to fix.</p>
+
+<h2>Fixed and verified this session</h2>
+<div class="okstrip">
+  <b>Maintenance intake restored</b> — <code>.secrets/ms_maint_key.txt</code> written 0600 from the running app's own value, so the agent can no longer fall through to the stale file; proven by a shadow run and a systemd <code>--live</code> run, both reading the queue with no 401. ·
+  <b>Phase corrected</b> — <code>MAINT_PHASE</code> moved <code>prelaunch</code> → <code>postlaunch</code>, 13 days late, restoring the stricter guard. ·
+  <b>Launch-code landmine defused</b> — CityLauncher was signing codes with a different HMAC key than the app verifies with; aligned, and nothing was lost because no code had ever been issued. ·
+  <b>REPORT tab back on</b> and <b>stand-up re-enabled</b> on your word. ·
+  Recorded at <code>MarketSquare\status.d\2026-09-14-maintenance-intake-401.md</code>.
+</div>
+
+<h2>The board, run properly this time</h2>
+<div class="okstrip">
+  <b>351 checks · 327 holding · 0 come back · 0 unverified</b> — and the rulings check reads 107 checked, 0 fail. ·
+  The one red when I started (the session badge a sitting behind the evidence) is closed. ·
+  A new check now fails the whole board if any secret ever holds two live values again, if the agent's key file stops matching the app, or if the agent logs a single failed queue read.
+</div>
+
+<h2>Not broken — do not chase these</h2>
+<div class="okstrip">
+  <b>BIT</b> 8/8 green · <b>uptime worker</b> probing every 5 min, 0 fails · <b>host-queue agent</b> ticked 05:15 today ·
+  <b>nightly ship</b> ran 02:01, deploy drift clean, all 19 tracked files match live · <b>checkpoint commit</b> 05:30, 12 changes ·
+  <b>intro rail</b> ready · <b>account binding</b> ON · <b>Paystack</b> connected · <b>post-deploy</b> all 5 steps ok.
+</div>
+
+</div></body></html>

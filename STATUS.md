@@ -8,28 +8,94 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-09-11 - Maintenance loop — 11 Sep 2026 (unattended))
+## Last Completed (2026-09-14 - 2026-09-14 — Quick Listing: the open week, and the Buzz)
 
-### Maintenance loop — 11 Sep 2026 (unattended)
+## 2026-09-14 — Quick Listing: the open week, and the Buzz
 
-Ledger started at **2 regressed**, ends **green**. Both reds were the same class, named the
-day before: a freshness guard with nothing that produces the evidence it checks.
+David: *"For today i would like to set the communication and scheduling, starting at the open days
+page."* Both are in the harness (`genie/HARNESS.html`) and both were verified in a rendered browser,
+not read off disk.
 
-- **Wave-hygiene witness had no producer.** Both proof suites still passed; the witness file
-  had been hand-written on 28 Aug and never rewritten. `scripts/wave_hygiene_witness.py` now
-  re-runs both suites every loop and writes their real verdicts — a failing suite writes
-  `not_ok`, so the board goes red on the fact, never on the clock. Sabotage-proven. RG-0353.
-- **The ops dashboard was reading a section 22 days old.** The endpoint matches the first
-  `## Last Completed` heading; sessions fold under `## Current Session`. Seven fragments were
-  also unfolded, because the compiler only ran from a deploy and none had run since 8 Sep.
-  The fold now maintains the heading the reader actually matches. RG-0354.
-- Fault queue empty (0 new, 0 acted). Heartbeat posted and read back live at 06:32:40Z.
-- Backup `2026-09-11_0633.zip` produced and restore-proven: users=71, listings=113.
-- No escalations in 24h. Rulings: 106 checked, 0 FAIL.
+- **Open days — DONE.** A full Mon–Sun week, any number of days on, an "Every day" toggle, and a
+  Next button that states the count back before she commits it. The old step was one chip row,
+  Mon–Sat, single choice — a worker with three open days had to pick one and let the advert lie
+  about the other two, and Sunday did not exist. The find side now offers Sunday too.
+- **Buzz — DONE, and ruled.** One typed line to the other phone with the sender's name on it, the
+  identical button in the other direction, and the two permission switches shown as part of the
+  tool. Reached from the advert screen ("See how it works"), which is where the prospective
+  housekeeper meets it before she refers anyone.
 
-Not fixed, deliberately: **RG-0346 stays open** — the three agency letters the sending lane
-draws still carry the solo-seller story, and the lane never mints the agency console link.
-That is a copy-and-flow change to live outreach, not a mechanical fix.
+### David's three rulings, 14 Sep
+
+1. **The switch lives in TrustSquare onboarding** — each party grants the two permissions once, as
+   they onboard. Quick Listing only shows them.
+2. **No canned messages.** The six-item pick list on each side is gone: a single free line, one
+   sentence, and the send button stays dead until something is typed.
+3. **The panel is universal.** Nothing in it knows what a housekeeper is — it takes two named
+   parties and a length cap, so it can be pointed anywhere it is needed later.
+
+`genie/HARNESS.html` is still a local prototype — it is in no deploy manifest and nothing was pushed
+to the server today. The visual record is `genie/QUICK_WEEK_BUZZ.html`, tiled in the Visuals gallery.
+
+### One correction, owned
+
+Claude wrote earlier today that no service worker is registered and no push leaves a phone, and put
+an SMS fallback in the Buzz copy. **Both were wrong.** The service-worker fault was fixed on 12 Sep
+(nginx `location = /service-worker.js`, SW-ROOT-1) and push is live: self-hosted VAPID keys,
+pywebpush, `_wlRegisterPush()` in ms.js, `_push_to_seller()` in bea_main.py. And RUL-122 rules SMS
+OUT — web push first, email backup, nothing with a per-message cost. The stale sentence came from
+QUICKLIST_DESIGN_NOTES section B, written hours before the fix; that line has now been corrected in
+place so it cannot mislead another session. The Buzz copy now says push, with email as the backup.
+
+**So the channel question is already answered and already built.** A Buzz is
+`_push_to_seller(conn, other_party_email, sender_name, the_line)` — the function's title and body
+map exactly onto the two things David required: the name of whoever pressed it, and the one line.
+What is missing is not a channel: it is the pair record (who may buzz whom), the two onboarding
+switches, and one endpoint.
+
+The onboarding screens that carry the two switches are the next real piece of work, and they are on
+the TrustSquare side.
+
+---
+
+## Later the same day — BUZZ IS BUILT, IN BOTH APPS
+
+David: *"This looks good, please implement for both apps."*
+
+**Live TrustSquare app**
+- `POST /buzz/pair` connects two people (what the worker's own link does) — connecting grants no
+  permission by itself.
+- `POST /buzz/allow` is one side's switch: *let this person buzz me*. Per person, never global.
+- `GET /buzz/pairs` lists who you can buzz and both switches as they stand.
+- `POST /buzz` sends one line: it refuses an empty line (400), a stranger (404), a receiver whose
+  switch is off (403) and a leaned-on doorbell (429), and every refusal says which.
+- Delivery is the push lane that already exists — `_push_to_seller()`, whose title is the sender's
+  NAME and whose body is the line. No devices registered → email. Never SMS (RUL-122).
+- Two tables: `buzz_pairs` (the pair is the unit of consent, one row per pair, a flag per side) and
+  `buzz_log` (operational only — rate limiting and did-it-arrive; never read back as a thread).
+- Screen `#screen-buzz` in the app, reached from My Space → Buzz, carrying the phone switch and one
+  card per person: their name, their switch, one line, one button.
+
+**Quick Listing harness** — the same panel now POSTs the same `/buzz` contract the moment the two
+accounts and `HANDOVER.url` are wired in, and says so on screen ("Live — posting to the same /buzz
+the app uses"). Without them it stays the example. One server, one rulebook (RUL-125(b)).
+
+**Verified before being called done:** 22 endpoint checks green against a temp database, exercising
+the real source text lifted out of `bea_main.py` — including that consent is not transitive, that a
+paragraph is cut to one line, that newlines cannot make it a thread, and that a nameless account
+still buzzes with a name. Both UIs rendered headless and driven: the live screen posts the right
+body, shows the right receipt, and surfaces the server's refusal verbatim; zero page errors in
+either. One real fault was found and fixed in the render pass — `--accent-bright` is used in the
+app's inline styles but is not a defined token anywhere, so the avatar, switch and button rendered
+invisible; the new CSS uses `--accent`.
+
+**One deploy, David's double-click:** `deploy_marketsquare.bat`. All four changed files
+(`bea_main.py`, `marketsquare.html`, `ms.js`, `ms.css`) are already in the allowlist manifest, the
+cache stamps are bumped, and the buzz tables are created by `run_migrations()` on the restart the
+deploy performs. Nothing else is needed.
+
+**Claude's one technical call, easily undone:** `BUZZ_MAX_PER_HOUR = 30` in `bea_main.py`. It is not
+a ruling and gates nothing else — a doorbell with no limit is a doorbell somebody can lean on.
 
 <!-- DASH-FEED-1:END -->
 
@@ -54,6 +120,272 @@ That is a copy-and-flow change to live outreach, not a mechanical fix.
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+## 2026-09-14 — Quick Listing: the open week, and the Buzz
+
+David: *"For today i would like to set the communication and scheduling, starting at the open days
+page."* Both are in the harness (`genie/HARNESS.html`) and both were verified in a rendered browser,
+not read off disk.
+
+- **Open days — DONE.** A full Mon–Sun week, any number of days on, an "Every day" toggle, and a
+  Next button that states the count back before she commits it. The old step was one chip row,
+  Mon–Sat, single choice — a worker with three open days had to pick one and let the advert lie
+  about the other two, and Sunday did not exist. The find side now offers Sunday too.
+- **Buzz — DONE, and ruled.** One typed line to the other phone with the sender's name on it, the
+  identical button in the other direction, and the two permission switches shown as part of the
+  tool. Reached from the advert screen ("See how it works"), which is where the prospective
+  housekeeper meets it before she refers anyone.
+
+### David's three rulings, 14 Sep
+
+1. **The switch lives in TrustSquare onboarding** — each party grants the two permissions once, as
+   they onboard. Quick Listing only shows them.
+2. **No canned messages.** The six-item pick list on each side is gone: a single free line, one
+   sentence, and the send button stays dead until something is typed.
+3. **The panel is universal.** Nothing in it knows what a housekeeper is — it takes two named
+   parties and a length cap, so it can be pointed anywhere it is needed later.
+
+`genie/HARNESS.html` is still a local prototype — it is in no deploy manifest and nothing was pushed
+to the server today. The visual record is `genie/QUICK_WEEK_BUZZ.html`, tiled in the Visuals gallery.
+
+### One correction, owned
+
+Claude wrote earlier today that no service worker is registered and no push leaves a phone, and put
+an SMS fallback in the Buzz copy. **Both were wrong.** The service-worker fault was fixed on 12 Sep
+(nginx `location = /service-worker.js`, SW-ROOT-1) and push is live: self-hosted VAPID keys,
+pywebpush, `_wlRegisterPush()` in ms.js, `_push_to_seller()` in bea_main.py. And RUL-122 rules SMS
+OUT — web push first, email backup, nothing with a per-message cost. The stale sentence came from
+QUICKLIST_DESIGN_NOTES section B, written hours before the fix; that line has now been corrected in
+place so it cannot mislead another session. The Buzz copy now says push, with email as the backup.
+
+**So the channel question is already answered and already built.** A Buzz is
+`_push_to_seller(conn, other_party_email, sender_name, the_line)` — the function's title and body
+map exactly onto the two things David required: the name of whoever pressed it, and the one line.
+What is missing is not a channel: it is the pair record (who may buzz whom), the two onboarding
+switches, and one endpoint.
+
+The onboarding screens that carry the two switches are the next real piece of work, and they are on
+the TrustSquare side.
+
+---
+
+## Later the same day — BUZZ IS BUILT, IN BOTH APPS
+
+David: *"This looks good, please implement for both apps."*
+
+**Live TrustSquare app**
+- `POST /buzz/pair` connects two people (what the worker's own link does) — connecting grants no
+  permission by itself.
+- `POST /buzz/allow` is one side's switch: *let this person buzz me*. Per person, never global.
+- `GET /buzz/pairs` lists who you can buzz and both switches as they stand.
+- `POST /buzz` sends one line: it refuses an empty line (400), a stranger (404), a receiver whose
+  switch is off (403) and a leaned-on doorbell (429), and every refusal says which.
+- Delivery is the push lane that already exists — `_push_to_seller()`, whose title is the sender's
+  NAME and whose body is the line. No devices registered → email. Never SMS (RUL-122).
+- Two tables: `buzz_pairs` (the pair is the unit of consent, one row per pair, a flag per side) and
+  `buzz_log` (operational only — rate limiting and did-it-arrive; never read back as a thread).
+- Screen `#screen-buzz` in the app, reached from My Space → Buzz, carrying the phone switch and one
+  card per person: their name, their switch, one line, one button.
+
+**Quick Listing harness** — the same panel now POSTs the same `/buzz` contract the moment the two
+accounts and `HANDOVER.url` are wired in, and says so on screen ("Live — posting to the same /buzz
+the app uses"). Without them it stays the example. One server, one rulebook (RUL-125(b)).
+
+**Verified before being called done:** 22 endpoint checks green against a temp database, exercising
+the real source text lifted out of `bea_main.py` — including that consent is not transitive, that a
+paragraph is cut to one line, that newlines cannot make it a thread, and that a nameless account
+still buzzes with a name. Both UIs rendered headless and driven: the live screen posts the right
+body, shows the right receipt, and surfaces the server's refusal verbatim; zero page errors in
+either. One real fault was found and fixed in the render pass — `--accent-bright` is used in the
+app's inline styles but is not a defined token anywhere, so the avatar, switch and button rendered
+invisible; the new CSS uses `--accent`.
+
+**One deploy, David's double-click:** `deploy_marketsquare.bat`. All four changed files
+(`bea_main.py`, `marketsquare.html`, `ms.js`, `ms.css`) are already in the allowlist manifest, the
+cache stamps are bumped, and the buzz tables are created by `run_migrations()` on the restart the
+deploy performs. Nothing else is needed.
+
+**Claude's one technical call, easily undone:** `BUZZ_MAX_PER_HOUR = 30` in `bea_main.py`. It is not
+a ruling and gates nothing else — a doorbell with no limit is a doorbell somebody can lean on.
+
+# MAINT-KEY-DRIFT-1 — the Maintenance agent was armed and 401'ing on every run
+**14 Sep 2026 · attended (David: "We need it armed because we are live")**
+
+Written as a NEW fragment, not an edit of the large registers (standing Edit/Write ban on
+this mount). Fold into FAULT_REGISTER.md / OPEN_LOOPS.md from a session with a working shell.
+
+## What the instruments said vs what was true
+`/dashboard/maint` reported `armed:false live:false` and "SHADOW (kill switch OFF)".
+**Both were stale.** On the box: `maintenance-agent.timer` enabled + active, drop-in carried
+`MAINTENANCE_AGENT_ENABLED=1`, and `ExecStart` passes `--live`. The agent has been running
+LIVE 3x/day (05:20 / 11:20 / 17:20 UTC) the whole time. The dashboard was showing a stale
+heartbeat from an ad-hoc shadow invocation, not the systemd one. Same defect class as the
+22-day-old dashboard section (RG-0354) and the wave-hygiene witness (RG-0353): an instrument
+asserting a state nothing was producing.
+
+## The actual fault — ROOT CAUSE PROVEN
+Every live run ended at the first step:
+`[maint] intake FAILED (HTTP Error 401: Unauthorized) -- nothing read; failing safe, doing nothing.`
+
+Not the origin gate (GATE-COOKIE-1) and not Cloudflare (UA-EDGE-1). The 401 came from the
+app itself, reproducible on **localhost**: `{"detail":"Admin credentials required."}`.
+
+`_require_maint` accepts `X-Maint-Key` when it matches `MS_MAINT_KEY`, else falls through to
+`_require_admin_or_key`, which 401s. The agent's key did not match the app's:
+
+| source | who reads it | MS_MAINT_KEY fingerprint |
+|---|---|---|
+| `/etc/marketsquare/secrets.env` | the running app | `8997edd37072` |
+| `/var/www/marketsquare/.env`    | the agent's fallback | `4b5a53175fa4` |
+
+`.secrets/ms_maint_key.txt` — the agent's FIRST-choice source — was **missing**, so it fell
+through to the stale `.env`. Proof of cause: the same request with the running value returns
+**200 `[]`**.
+
+The divergence is almost certainly the 22 Aug rotation (20 credentials, RG-0146): the app's
+copy was rotated, the legacy `.env` the agent lane still reads was not.
+
+## Fixed this session (both verified on the box)
+1. **`.secrets/ms_maint_key.txt` written (0600)** from the running process's own value —
+   the agent's designated first source, so it can no longer fall through to the stale file.
+   Verified: shadow run and systemd `--live` run both read the queue, no 401.
+2. **`MAINT_PHASE` prelaunch -> postlaunch.** The runbook says change it after 1 Sep; it was
+   still `prelaunch` on day 13 of being live, i.e. running under the LOOSER guard.
+   `armed.conf` rewritten, `daemon-reload` done.
+
+Verified run, 14 Sep 03:42:36Z:
+`mode=LIVE phase=postlaunch trust-core=GUARDED rate<=3/h ... (0 seen, 0 acted)`
+
+`0 seen` is now TRUE rather than blind: `GET /admin/faults?status=new` returns `[]` because
+the queue is genuinely empty — see the next item for why it must be.
+
+## STILL OPEN — named, not parked
+- **[D] `fault_report` is OFF** (`/flags -> fault_report:false`). The armed agent's only
+  in-app intake does not exist; the REPORT tab is hidden and the lane fail-closes. An armed
+  agent with no queue is an expensive no-op. David's flag.
+- **[D] `LAUNCH_CODE_SECRET` has the SAME divergence** between the two files (fingerprints
+  differ). Second victim of one root cause. Whichever component reads the stale copy will
+  mis-handle launch-code redemption. Needs David's call on which file is authoritative.
+- **[C] The brain-keyed chip lies.** `keyed = [n for n in names if os.environ.get(n)]`
+  (maintenance_agent.py ~L765) reads `os.environ` ONLY, while the brain itself resolves keys
+  through `ai_provider.envkey()`, which also reads `/var/www/marketsquare/.env`. On the box
+  OPENAI / GEMINI / FAILOVER all resolve via envkey but none are exported to systemd, so the
+  agent reports KEYLESS while being able to think. One-line class fix (use `envkey`), NOT
+  made this session: the nightly ship auto-commits, so an unrequested source edit would
+  deploy itself tonight.
+- **[C] Class fix for the root cause:** one authoritative secret file, or the agent reading
+  `/etc/marketsquare/secrets.env`. Until then any future rotation re-breaks this the same way.
+
+## THIRD VICTIM — found and closed, same session
+`LAUNCH_CODE_SECRET` had **three** live values, not two:
+
+| holder | role | fingerprint |
+|---|---|---|
+| `/etc/marketsquare/secrets.env` → app process | **verifies** codes | `da36086d6891` |
+| `/var/www/marketsquare/.env` | stale copy | `b8aab96a9aff` |
+| `CityLauncher/.env` | **issues** codes | `b8aab96a9aff` |
+
+CityLauncher was signing with one HMAC key and the live app verifying with another, while
+`LAUNCH_REDEMPTION_ENABLED=1`. Every launch-special code issued would have been rejected.
+
+Cost so far: **nil** — `launch_codes` 0 rows, `launch_redeem_attempts` 0 rows. Nothing was
+ever issued, so no customer was turned away. It was a landmine, not a live wound.
+
+**FIXED:** `CityLauncher/.env` aligned to the app's value (backup written alongside as
+`.env.bak-launchsecret-<ts>`). Both now `da36086d6891`. No app-side change; the rotated
+value stays authoritative.
+
+## The standing lesson
+`scripts/regression_ledger.py` ALREADY names this hazard — "files that hold more than one
+live copy (MS_MAINT_KEY, LAUNCH_CODE_SECRET x4 files)" and "a THIRD copy nobody knew about".
+The ledger described the trap and nothing enforced it, so MS_MAINT_KEY drifted at the 22 Aug
+rotation and silently disarmed the Maintenance lane for three weeks. A named hazard with no
+enforcing assertion is not a control. The class fix is one authoritative secret file with
+every consumer reading it — until that exists, the next rotation breaks this again.
+
+## Closed with David's word, same session
+- **`fault_report` ON.** `POST /admin/flags {"fault_report":true}` with a minted admin token
+  (the route is JWT-only; `X-Admin-Key` 401s there) + an audit reason. Verified on the public
+  edge: `/flags -> fault_report:true`, and `POST /app/fault` now answers **422 (validation)**
+  where it previously fail-closed with **503**. The lane is open.
+  *Not yet eyeballed:* the REPORT tab itself renders behind sign-in, so this is verified at
+  the API layer only — the 9 Aug "done means RENDERED" rule is not satisfied until someone
+  signed in looks at the tab.
+- **Daily Agent Stand-up re-enabled**, `0 19 * * *`, next fire 2026-09-14T19:03:58Z,
+  model `claude-opus-5` confirmed stored. Pulse resumes tonight.
+
+## 2026-09-13 — Quick Listing: items 1, 3 and 5 closed
+
+Against the three items opened on 12 Sep:
+
+1. **Card-building fix — VERIFIED** in a rendered browser, not just on disk. A duplicate-title fault
+   found in the same pass and fixed without touching the RS → TS → LS order.
+2. **Embedded photos — still open**, and now has a design: three photo types, none of them
+   hardcoded stock (David, 13 Sep). Next job on the harness.
+3. **Seller's three scores with coaching — DONE** (RUL-121), mirroring `_import_quality_score()`.
+5. **Hand-over to real listings — BUILT, verified, and PROVEN LIVE.** David authorised one draft
+   on trustsquare.co under Dave Junior's tester account; it came back as listing **383**, status
+   draft, and reads back correctly. Visible at Dashboard → Listings for that account.
+
+Still outstanding towards a final app: the photo refactor, the `/quick/` sub-path and its own
+manifest and coloured tile (RUL-125(a)), push registration (no service worker is registered yet,
+RUL-122), the six baseline-readiness checks written into the regression ledger (RUL-125(c)), the
+name for the wider worker category, and the hirer's side of the communication link.
+
+### maintenance-loop — 2026-09-13 (daily B2b run, unattended)
+
+Quiet day, and quiet is the verdict, not an absence of one.
+
+- Regression ledger, before AND after: **green both times** — every locked fix holding,
+  22 known defects open, exit 0. No regression to chase.
+- Fault queue: **0 new**. Register census 40 rows (26 verified, 12 closed, 2 duplicate).
+- Shadow agent: ran foreground, SHADOW mode, brain keyed (anthropic), 0 seen / 0 acted;
+  heartbeat PROBED on `/dashboard/maint` carrying this run's stamp 2026-09-13T05:37:17Z.
+- Wave-hygiene witness re-proved itself (intl_pass / source_tags / suppression all ok).
+- DB archive lane fresh (13.7 h old) — producer correctly skipped.
+- Escalation brief: none written; no escalations in 24 h.
+- Nothing shipped: no fault was patch-ready, so no code changed and nothing is queued for
+  the nightly deploy beyond this record.
+
+## 2026-09-13 — Goal run 12 (JURIS-RULED-1)
+
+Number 0/20 (probes agree). The 13 Sep wave sent 0 because a 12 Sep session disarmed all 72 US/UK/AU wave
+entries on a heading-regex reading of the law notes, against RUL-071/074/082/059. Fixed as a class: law
+notes carry US/UK/AU as ruled sections 10–12; RG-0215 reads the engine's state map; 72 entries re-armed;
+RG-0361 LOCKED guards the class. 854 sendable (ME/AK/MT/CO); wave re-run 01:31 SAST: 108 sent, 0 failed. Texas TREC file has
+no email column — lead dead, plan corrected. Board green, rulings 0 fail.
+
+### Maintenance loop — 12 Sep 2026 (unattended)
+
+Fault queue empty (0 new). Both ledger reds were instrument faults and both are fixed at class level.
+
+- **RG-0257 / AGENT-ASLEEP-1** — a stale agent heartbeat no longer accuses the agent on its own. It
+  now needs a second fact: an independent host writer dated after the last beat. No witness = the PC
+  was asleep = NOT EVALUATED (exit 2), never REGRESSION. Third false alarm from that leg; proven in
+  both directions against the real check. Locked by new entry **RG-0355**.
+- **RG-0295 / JURIS-SUPPLY-SPLIT-1** — the entry demanded `armed+gates_green` on a bucket the
+  jurisdiction gate had deliberately disarmed this morning under RUL-071. Re-arming the US is
+  David's legal call, so the assertion was demanding a reserved act. Amended: a gate-stamped disarm
+  reads INFO, an unstamped one still reads RED. Live: 88 'Northern California' US rows in the pool.
+- Shadow maintenance agent clean (0 seen / 0 acted); heartbeat posted and probed back at 15:33:52Z.
+- `rulings_check.py` 0 FAIL. No escalation brief (nothing in 24h).
+- Operational note: ledger shards at 1/3 no longer fit the sandbox's ~180s command cap — run the
+  board host-side (queued `run_py`) or at finer shard counts.
+
+## 2026-09-12 — Focus shifts to the Quick Listing entry app
+
+David: *"the trustsquare app is now in a good stead. The Quick Listing entry app is also starting to
+take on a reality and this is where i will be focusing more time on for the immediate future."*
+
+The Quick Listing entry app is the harness (`genie/HARNESS.html`) — the tap-only front door, RUL-117.
+It is now the active workstream; TrustSquare itself is in maintenance rather than build.
+
+Open on the harness, in order:
+1. **Unverified:** the fix that builds each result card from the taps (the Maths-showing-English fault).
+   Written and on disk, not yet run.
+2. Strip the embedded photographs out of the working file — 750KB of the 850KB is base64 images, which
+   makes every edit and every verification pass far more expensive than the change warrants.
+3. Surface the seller's own three scores with coaching (RUL-121).
 
 ### Maintenance loop — 11 Sep 2026 (unattended)
 
