@@ -29,3 +29,18 @@ that decides whether the business works.
 - **They are reported openly**, under their own name — "Test accounts (not customers)". Quietly
   removing them would be its own dishonesty.
 - **RG-0370 LOCKED** across both boards.
+
+### Two board faults found by the same run, both fixed
+
+- **AGENT-HEARTBEAT-2.** The deploy-pending check aged `autodeploy_agent_log.txt` and called a
+  pending flag with a quiet log a dead task. The agent writes to that log only when it has queue
+  work, but stamps its heartbeat on *every* tick. A CityLauncher deploy flag raised 8 minutes
+  earlier painted "pending 125 min — task not registered or stopped" while the heartbeat was 8
+  minutes old. This is the identical misread AGENT-HEARTBEAT-1 corrected on 5 Sep and AGENT-ASLEEP-1
+  refined on 12 Sep — it was simply never applied to this leg. It now reads the heartbeat for
+  aliveness and the flag's own age for lateness, and distinguishes "agent stopped" from "gate is
+  blocking it".
+- **RG-0369's onboarded needle superseded, not deleted.** It fired correctly when the tile was
+  renamed hours after it was written. The newer wording is better — the honest distinction on that
+  tile is real-vs-test, not ever-vs-now — so the assertion moved to RG-0370 and the reason is
+  recorded in place rather than the needle quietly vanishing.

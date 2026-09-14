@@ -22760,3 +22760,28 @@ touched.
 **40 endpoint checks green**, including that the push is capped at 2 s, that the intro lane keeps 8 s,
 that the email is queued rather than awaited, and that retention drops rows past 90 days while
 keeping recent ones.
+
+## 2026-09-14 — The eight categories, taps and comms, side by side
+
+David asked to see how the option selections and the comms differ per category.
+`genie/QUICK_CATEGORIES.html` (tiled in the gallery). Taps lifted verbatim from `HARNESS.html`, each
+category in its own colour; RULED and NOT-RULED marked per row so Claude's reads are not mistaken
+for canon.
+
+**What the picture shows:** the taps differ everywhere — photo tiles, word chips, and the week grid
+which is the only multi-select in the whole app — and the consent model is identical in all eight.
+That is RUL-132 made visible.
+
+**Three differences worth arguing about, all NOT RULED:**
+- **Cars is the only category where the pair is MEANT to die** — the car sells and the channel has no
+  further purpose. Closing there is the normal ending, not a fault, and the copy should not treat it
+  as one.
+- **Services will carry the highest buzz volume of any category** — a plumber has dozens of standing
+  customers and a working day full of "on my way". The per-pair switch and the hourly limit do their
+  real work here, not in housekeeping.
+- **Tutors has a third party in the room** — the child. Everywhere else a pair is two adults who chose
+  each other; this one is worth thinking about before it is built.
+
+Also noted: **Local Market's pairs may not be worth an introduction at all** — the amounts are small
+and the neighbours usually already know each other, so the question there is whether the Tuppence
+applies rather than how comms behave.

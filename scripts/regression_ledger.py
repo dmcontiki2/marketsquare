@@ -14721,17 +14721,50 @@ def rg_autodeploy_agent():
     if ag and ag.find('call "%~dp0git_unlock.bat"') > ag.find('call "%~dp0nightly_tsl.bat"'):
         out.append((FAIL, "autodeploy_agent.bat ships before it clears a stale git lock"))
     # live leg: is the host task ticking?
+    # AGENT-HEARTBEAT-2 (14 Sep 2026): this leg used to age autodeploy_agent_log.txt and
+    # call a pending flag with a quiet log a dead task. That is the SAME misread
+    # AGENT-HEARTBEAT-1 corrected on RG-0257's own live leg on 5 Sep and AGENT-ASLEEP-1
+    # refined on 12 Sep -- it was simply never applied here. The agent writes to the LOG
+    # only when it has queue work; it stamps the HEARTBEAT on every tick, work or none.
+    # PROVED 14 Sep: a CityLauncher deploy flag raised 8 minutes earlier painted a
+    # REGRESSION reading "pending 125 min ... task not registered or stopped" while the
+    # heartbeat was 8 minutes old and the log's last line was a completed queue job. A
+    # false alarm costs the same trust as a false green (RG-0133, other direction), and
+    # this one fired on a board David reads. Aliveness is now read from the heartbeat,
+    # and lateness from the FLAG's own age rather than the log's.
     log = os.path.join(REPO, "autodeploy_agent_log.txt")
-    pending = any(os.path.exists(os.path.join(REPO, f)) for f in ("DEPLOY_REQUEST.flag", "CL_DEPLOY_REQUEST.flag"))
-    if os.path.exists(log):
-        import time as _t
-        age = (_t.time() - os.path.getmtime(log)) / 60
-        if pending and age > 40:
-            out.append((FAIL, "a deploy request has been pending %d min with no agent activity -- task not registered or stopped" % age))
+    beat = os.path.join(REPO, "host_queue", "agent_heartbeat.txt")
+    import time as _t
+    flags = [os.path.join(REPO, f) for f in ("DEPLOY_REQUEST.flag", "CL_DEPLOY_REQUEST.flag")]
+    flags = [f for f in flags if os.path.exists(f)]
+    if not os.path.exists(log):
+        out.append((FAIL, "no autodeploy_agent_log.txt yet -- register_autodeploy_agent.bat has "
+                          "not been run on the host"))
+        return out
+    if not os.path.exists(beat):
+        out.append((INFO, "NOT EVALUATED - no agent heartbeat file, so a quiet log cannot be told "
+                          "apart from a stopped task (AGENT-HEARTBEAT-2)"))
+        return out
+    beat_age = (_t.time() - os.path.getmtime(beat)) / 60
+    if flags:
+        flag_age = min((_t.time() - os.path.getmtime(f)) / 60 for f in flags)
+        if beat_age > 40:
+            out.append((FAIL, "a deploy request has been pending %d min and the agent has not "
+                              "ticked for %d min -- the task is not registered, stopped, or the "
+                              "host is asleep" % (flag_age, beat_age)))
+        elif flag_age > 90:
+            out.append((FAIL, "a deploy request has been pending %d min while the agent is ticking "
+                              "(last beat %d min ago) -- the gate is blocking it, read "
+                              "DEPLOY_RESULT.txt / nightly_tsl_gate.txt for the reason"
+                              % (flag_age, beat_age)))
         else:
-            out.append((INFO, "agent log present, last activity %d min ago%s" % (age, ", request pending" if pending else "")))
+            out.append((INFO, "request pending %d min, agent ticked %d min ago -- within the "
+                              "20-minute cycle" % (flag_age, beat_age)))
+    elif beat_age > 40:
+        out.append((FAIL, "the deploy agent has not ticked for %d min -- nothing is pending right "
+                          "now, but the next deploy request would sit unread" % beat_age))
     else:
-        out.append((FAIL, "no autodeploy_agent_log.txt yet -- register_autodeploy_agent.bat has not been run on the host"))
+        out.append((INFO, "agent ticked %d min ago, nothing pending" % beat_age))
     return out
 
 @entry("RG-0251", "A stop-lossed city has a RELEASE path -- cleaning its list (clean_city_list.py) "
@@ -22008,8 +22041,16 @@ def rg_funnel_reconciled():
         ("People emailed \u2014 ever",
          "the emailed tile is no longer labelled 'ever' -- a cumulative count wearing a bare "
          "label reads as a contradiction of the Overview tile"),
-        ("Onboarded \u2014 ever",
-         "the onboarded tile is no longer labelled 'ever'"),
+        # SUPERSEDED 14 Sep 2026, hours after this entry was written: TEST-FIXTURE-EXCLUDE-1
+        # renamed the onboarded tile to "Onboarded - real people", because the honest
+        # distinction there turned out to be real-vs-test, not ever-vs-now (all five
+        # "onboarded" were our own e2e fixtures). The assertion was RIGHT to fire and the
+        # newer wording is BETTER, so the assertion moves rather than the code: RG-0370 now
+        # owns that tile's honesty, and this entry keeps the emailed tile, which is still a
+        # cumulative-vs-current distinction. Recorded here rather than deleted, because a
+        # needle that vanishes without explanation is how a guard quietly stops guarding.
+        ("_onb_ever", "the onboarded reconciliation count is gone, so nothing computes the "
+                      "difference between the two boards on that tile"),
         ("gumtree_prospects", "the raw-pool tile no longer accounts for the phone-only contacts "
                               "the Overview adds to SCRAPED -- the two pool figures diverge with "
                               "nothing explaining the 1,111"),

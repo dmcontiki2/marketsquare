@@ -1,0 +1,190 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quick Listing — the taps and the comms, per category</title><style>
+*{box-sizing:border-box}
+body{margin:0;background:#04100c;color:#eaf3ee;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:34px 20px 70px}
+h1{font-size:29px;letter-spacing:-.6px;margin:0 0 6px}
+.date{color:#84a396;font-size:13px;margin:0 0 22px}
+.rule{font-size:15px;line-height:1.65;color:#cfe6db;padding:15px 17px;border-radius:14px;
+ background:rgba(59,130,246,.10);border:1px solid #3B82F6;margin:0 0 12px}
+.rule b{color:#9ec9ff}
+.key{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 26px;font-size:11.5px}
+.key span{padding:6px 12px;border-radius:999px;border:1.5px solid;font-weight:700}
+.k-ph{color:#8ff0c8;border-color:#16A97C}.k-ch{color:#f0cc8a;border-color:#E0AE4E}
+.k-wk{color:#9ec9ff;border-color:#3B82F6}.k-ru{color:#8ff0c8;border-color:#16A97C;background:rgba(22,169,124,.12)}
+.k-op{color:#f0cc8a;border-color:#E0AE4E;background:rgba(224,174,78,.12)}
+.cat{border-radius:18px;border:1px solid #163128;border-left:5px solid var(--k);
+ background:rgba(255,255,255,.03);padding:16px 18px;margin-bottom:14px}
+.cat header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.cat h3{margin:0;font-size:19px;color:var(--kb);letter-spacing:-.3px}
+.sl{font-size:11.5px;color:#84a396;border:1px solid #163128;border-radius:999px;padding:3px 10px}
+.bg{margin-left:auto;font-size:10.5px;font-weight:800;letter-spacing:.04em;padding:4px 11px;
+ border-radius:999px;border:1.5px solid}
+.bg.ruled{color:#8ff0c8;border-color:#16A97C;background:rgba(22,169,124,.12)}
+.bg.open{color:#f0cc8a;border-color:#E0AE4E;background:rgba(224,174,78,.12)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+h4{margin:0 0 10px;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:#84a396}
+.st{display:flex;gap:10px;margin-bottom:9px}
+.st .n{flex:0 0 22px;height:22px;border-radius:50%;background:var(--k);color:#04140e;
+ display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900}
+.st b{font-size:13.5px;font-weight:700;display:inline}
+.st em{font-style:normal;font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+ padding:1px 7px;border-radius:999px;border:1px solid;margin-left:7px;white-space:nowrap}
+.st em.photos{color:#8ff0c8;border-color:#16A97C}
+.st em.chips{color:#f0cc8a;border-color:#E0AE4E}
+.st em.week{color:#9ec9ff;border-color:#3B82F6}
+.st span{display:block;font-size:11.5px;color:#84a396;margin-top:2px;line-height:1.45}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12.5px}
+dt{color:#84a396;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;font-weight:800;
+ padding-top:3px;white-space:nowrap}
+dd{margin:0;color:#cfe6db;line-height:1.5}
+dd.pay{color:var(--kb);font-weight:700}
+dd.q{color:#84a396;font-style:italic}
+.note{margin:11px 0 0;font-size:11.5px;line-height:1.5;color:#84a396;padding-left:10px;
+ border-left:2px solid var(--k)}
+.inv{margin-top:26px;border-radius:16px;padding:16px 18px;background:rgba(22,169,124,.09);
+ border:1px solid #16A97C;font-size:13.5px;line-height:1.7;color:#cfe6db}
+.inv>b{display:block;margin-bottom:8px;color:#8ff0c8;font-size:15px}
+.inv ul{margin:0;padding-left:20px}.inv li{margin:3px 0}
+@media(max-width:820px){.cols{grid-template-columns:1fr;gap:16px}}
+@media(max-width:560px){.wrap{padding:22px 14px 50px}h1{font-size:22px}
+ dl{grid-template-columns:1fr;gap:1px 0}dt{padding-top:8px}}
+</style></head><body><div class="wrap">
+<h1>Quick Listing — what differs per category, and what never does</h1>
+<p class="date">MarketSquare &middot; 14 September 2026 &middot; taps lifted verbatim from genie/HARNESS.html</p>
+
+<div class="rule"><b>RUL-132 in one picture.</b> Every category asks four different questions in a
+different shape, and every category shares one consent model. <b>Vary the flow freely; never fork the
+consent.</b> Ten flows are ten things to maintain — two consent models are a hole somebody falls through.</div>
+
+<div class="key">
+ <span class="k-ph">PHOTOS — tap a picture</span>
+ <span class="k-ch">CHIPS — tap a word</span>
+ <span class="k-wk">WEEK — the only multi-select</span>
+ <span class="k-ru">RULED</span>
+ <span class="k-op">NOT RULED — Claude's read, argue with it</span>
+</div>
+<section class="cat" style="--k:#16A97C;--kb:#96d8c4">
+ <header><h3>Housekeeping</h3><span class="sl">Get work</span><span class="bg ruled">RULED</span></header>
+ <div class="cols">
+  <div class="taps"><h4>The four taps</h4><div class="st"><span class="n">1</span><div><b>What work do you do?</b><em class="k photos">photos</em><span>Cleaning · Laundry · Cooking · Childminding …</span></div></div><div class="st"><span class="n">2</span><div><b>Where can you work?</b><em class="k photos">photos</em><span>Pretoria East · Centurion · Mamelodi · Menlyn …</span></div></div><div class="st"><span class="n">3</span><div><b>Which days are you open?</b><em class="k week">WEEK</em><span>Mon–Sun, any number of them</span></div></div><div class="st"><span class="n">4</span><div><b>What do you charge a day?</b><em class="k chips">chips</em><span>R250 · R300 · R350 · R400 · R450 · Ask me</span></div></div></div>
+  <div class="comms"><h4>The comms</h4>
+    <dl>
+     <dt>Who talks</dt><dd>Worker ↔ her employer</dd>
+     <dt>How they met</dt><dd>She brings him</dd>
+     <dt>Who pays</dt><dd class="pay">FREE — she brought the connection</dd>
+     <dt>How many at once</dt><dd>One pair at a time, as many pairs as she has jobs</dd>
+     <dt>A buzz sounds like</dt><dd class="q">&quot;Running late.&quot; &quot;Sick today.&quot; &quot;Can you do Saturday?&quot;</dd>
+    </dl>
+    <p class="note">The original case. The free lane exists because she brought him.</p>
+  </div>
+ </div></section><section class="cat" style="--k:#2E86E0;--kb:#a1c9f1">
+ <header><h3>Property</h3><span class="sl">List a place</span><span class="bg ruled">RULED</span></header>
+ <div class="cols">
+  <div class="taps"><h4>The four taps</h4><div class="st"><span class="n">1</span><div><b>What are you listing?</b><em class="k photos">photos</em><span>House · Flat · Townhouse · Plot · Farm …</span></div></div><div class="st"><span class="n">2</span><div><b>To sell, or to let?</b><em class="k chips">chips</em><span>To sell · To let</span></div></div><div class="st"><span class="n">3</span><div><b>How many bedrooms?</b><em class="k chips">chips</em><span>1 · 2 · 3 · 4 · 5+</span></div></div><div class="st"><span class="n">4</span><div><b>Where is it?</b><em class="k photos">photos</em><span>Pretoria East · Centurion · Menlyn …</span></div></div></div>
+  <div class="comms"><h4>The comms</h4>
+    <dl>
+     <dt>Who talks</dt><dd>Private seller ↔ one agency</dd>
+     <dt>How they met</dt><dd>The platform introduces</dd>
+     <dt>Who pays</dt><dd class="pay">The AGENCY pays — he is the lead</dd>
+     <dt>How many at once</dt><dd>ONE agency holds the lead at a time; he may ask again whenever he likes</dd>
+     <dt>A buzz sounds like</dt><dd class="q">&quot;Can I come at 4?&quot; &quot;Offer in, call me.&quot; &quot;Show day Saturday?&quot;</dd>
+    </dl>
+    <p class="note">RUL-131 + RUL-132. The window ends on his word or on silence.</p>
+  </div>
+ </div></section><section class="cat" style="--k:#12A5A5;--kb:#94d6d6">
+ <header><h3>Adventures</h3><span class="sl">List a trip</span><span class="bg open">NOT RULED — Claude's read</span></header>
+ <div class="cols">
+  <div class="taps"><h4>The four taps</h4><div class="st"><span class="n">1</span><div><b>What are you offering?</b><em class="k photos">photos</em><span>Game lodge · Safari · Guided tour · Rail …</span></div></div><div class="st"><span class="n">2</span><div><b>How long?</b><em class="k chips">chips</em><span>Day trip · 2–3 nights · A week · Longer</span></div></div><div class="st"><span class="n">3</span><div><b>Per person, per night?</b><em class="k chips">chips</em><span>Under R1 500 · R1 500–R3 000 · …</span></div></div><div class="st"><span class="n">4</span><div><b>Best season?</b><em class="k chips">chips</em><span>Summer · Winter · All year</span></div></div></div>
+  <div class="comms"><h4>The comms</h4>
+    <dl>
+     <dt>Who talks</dt><dd>Traveller ↔ guides, tour agents, B&amp;Bs</dd>
+     <dt>How they met</dt><dd>The platform introduces</dd>
+     <dt>Who pays</dt><dd class="pay">Traveller pays the intro (unchanged)</dd>
+     <dt>How many at once</dt><dd>MANY at once — three quotes is the point; exclusivity would be absurd here</dd>
+     <dt>A buzz sounds like</dt><dd class="q">&quot;Room still free for the 14th?&quot; &quot;We land at 6, is that too late?&quot;</dd>
+    </dl>
+    <p class="note">RUL-132 releases this shape. The flow is not designed yet.</p>
+  </div>
+ </div></section><section class="cat" style="--k:#B4441F;--kb:#ddab9a">
+ <header><h3>Services</h3><span class="sl">Offer a service</span><span class="bg open">NOT RULED — Claude's read</span></header>
+ <div class="cols">
+  <div class="taps"><h4>The four taps</h4><div class="st"><span class="n">1</span><div><b>What is your trade?</b><em class="k photos">photos</em><span>Electrician · Plumber · Gardener · Painter …</span></div></div><div class="st"><span class="n">2</span><div><b>Where do you work?</b><em class="k photos">photos</em><span>Pretoria East · Centurion · Mamelodi …</span></div></div><div class="st"><span class="n">3</span><div><b>How do you charge?</b><em class="k chips">chips</em><span>Per call-out · Per hour · Per job · Quote first</span></div></div><div class="st"><span class="n">4</span><div><b>What is the call-out?</b><em class="k chips">chips</em><span>R350 · R450 · R550 · R650 · Free quote</span></div></div></div>
+  <div class="comms"><h4>The comms</h4>
+    <dl>
+     <dt>Who talks</dt><dd>Householder ↔ tradesman</dd>
+     <dt>How they met</dt><dd>Either — he may bring his own regulars</dd>
+     <dt>Who pays</dt><dd class="pay">Platform intro = Tuppence · his own client = free</dd>
+     <dt>How many at once</dt><dd>Many, and repeat — a plumber has dozens of standing customers</dd>
+     <dt>A buzz sounds like</dt><dd class="q">&quot;On my way.&quot; &quot;Need to fetch a part.&quot; &quot;Job done, invoice sent.&quot;</dd>
+    </dl>
+    <p class="note">Highest buzz volume of any category. Watch the per-pair switch here.</p>
+  </div>
+ </div></section><section class="cat" style="--k:#4FA83F;--kb:#b0d8a9">
+ <header><h3>Tutors</h3><span class="sl">Offer tutoring</span><span class="bg open">NOT RULED — Claude's read</span></header>
+ <div class="cols">
+  <div class="taps"><h4>The four taps</h4><div class="st"><span class="n">1</span><div><b>What do you teach?</b><em class="k photos">photos</em><span>Maths · Science · English · Accounting …</span></div></div><div class="st"><span class="n">2</span><div><b>Which level?</b><em class="k chips">chips</em><span>Primary · High school · Matric · University</span></div></div><div class="st"><span class="n">3</span><div><b>Online or in person?</b><em class="k chips">chips</em><span>Online · In person · Both</span></div></div><div class="st"><span class="n">4</span><div><b>What do you charge an hour?</b><em class="k chips">chips</em><span>R150 · R200 · R250 · R300 · R350+</span></div></div></div>
+  <div class="comms"><h4>The comms</h4>
+    <dl>
+     <dt>Who talks</dt><dd>Parent ↔ tutor</dd>
+     <dt>How they met</dt><dd>The platform introduces, then it repeats weekly</dd>
+     <dt>Who pays</dt><dd class="pay">Parent pays the intro; the weekly rhythm after it is free</dd>
+     <dt>How many at once</dt><dd>One pair per child, standing for a school term</dd>
+     <dt>A buzz sounds like</dt><dd class="q">&quot;Can we move to Thursday?&quot; &quot;She has exams, skip this week.&quot;</dd>
+    </dl>
+    <p class="note">A third party — the child — is in the room. Worth thinking about.</p>
+  </div>
+ </div></section><section class="cat" style="--k:#5B4BD6;--kb:#b5aeed">
+ <header><h3>Cars</h3><span class="sl">Sell a car</span><span class="bg open">NOT RULED — Claude's read</span></header>
+ <div class="cols">
+  <div class="taps"><h4>The four taps</h4><div class="st"><span class="n">1</span><div><b>What are you selling?</b><em class="k photos">photos</em><span>Bakkie · Sedan · SUV · Hatchback · Bike</span></div></div><div class="st"><span class="n">2</span><div><b>Which make?</b><em class="k chips">chips</em><span>Toyota · VW · Ford · BMW · Isuzu · Other</span></div></div><div class="st"><span class="n">3</span><div><b>Roughly what year?</b><em class="k chips">chips</em><span>2020+ · 2015–2019 · 2010–2014 · Older</span></div></div><div class="st"><span class="n">4</span><div><b>What are you asking?</b><em class="k chips">chips</em><span>Under R150k · R150k–R300k · …</span></div></div></div>
+  <div class="comms"><h4>The comms</h4>
+    <dl>
+     <dt>Who talks</dt><dd>Buyer ↔ seller</dd>
+     <dt>How they met</dt><dd>The platform introduces</dd>
+     <dt>Who pays</dt><dd class="pay">Buyer pays the intro (unchanged)</dd>
+     <dt>How many at once</dt><dd>Many buyers, one car — and it ENDS when the car sells</dd>
+     <dt>A buzz sounds like</dt><dd class="q">&quot;Still available?&quot; &quot;I can view at 5.&quot; &quot;Bringing cash Saturday.&quot;</dd>
+    </dl>
+    <p class="note">The only category where the pair is meant to die. Closing is the norm, not a fault.</p>
+  </div>
+ </div></section><section class="cat" style="--k:#C98A2E;--kb:#e7caa1">
+ <header><h3>Collectors</h3><span class="sl">Sell a piece</span><span class="bg open">NOT RULED — Claude's read</span></header>
+ <div class="cols">
+  <div class="taps"><h4>The four taps</h4><div class="st"><span class="n">1</span><div><b>What are you selling?</b><em class="k photos">photos</em><span>Coins · Stamps · Cards · Militaria · Art</span></div></div><div class="st"><span class="n">2</span><div><b>What condition?</b><em class="k chips">chips</em><span>Mint · Near mint · Good · Played · Ungraded</span></div></div><div class="st"><span class="n">3</span><div><b>Authenticated?</b><em class="k chips">chips</em><span>Graded · Certificate · Not yet</span></div></div><div class="st"><span class="n">4</span><div><b>What are you asking?</b><em class="k chips">chips</em><span>Under R1 000 · R1 000–R5 000 · …</span></div></div></div>
+  <div class="comms"><h4>The comms</h4>
+    <dl>
+     <dt>Who talks</dt><dd>Collector ↔ collector</dd>
+     <dt>How they met</dt><dd>The platform introduces, then they keep trading</dd>
+     <dt>Who pays</dt><dd class="pay">Buyer pays the intro; the friendship after it is theirs</dd>
+     <dt>How many at once</dt><dd>Many, and long-lived — collectors trade with the same people for years</dd>
+     <dt>A buzz sounds like</dt><dd class="q">&quot;Got the 1947 penny.&quot; &quot;Swap for your duplicate?&quot;</dd>
+    </dl>
+    <p class="note">The pair outlives the deal here. Free comms is pure retention.</p>
+  </div>
+ </div></section><section class="cat" style="--k:#D8447E;--kb:#edabc5">
+ <header><h3>Local Market</h3><span class="sl">Sell something</span><span class="bg open">NOT RULED — Claude's read</span></header>
+ <div class="cols">
+  <div class="taps"><h4>The four taps</h4><div class="st"><span class="n">1</span><div><b>What are you selling?</b><em class="k photos">photos</em><span>Food &amp; preserves · Crafts · Furniture · Plants</span></div></div><div class="st"><span class="n">2</span><div><b>Where are you?</b><em class="k photos">photos</em><span>Pretoria East · Centurion · Mamelodi …</span></div></div><div class="st"><span class="n">3</span><div><b>How much?</b><em class="k chips">chips</em><span>Under R100 · R100–R500 · R500–R2 000 …</span></div></div><div class="st"><span class="n">4</span><div><b>How do they get it?</b><em class="k chips">chips</em><span>Collect · I deliver · Post it · Market day</span></div></div></div>
+  <div class="comms"><h4>The comms</h4>
+    <dl>
+     <dt>Who talks</dt><dd>Neighbour ↔ neighbour</dd>
+     <dt>How they met</dt><dd>Mostly they already know each other</dd>
+     <dt>Who pays</dt><dd class="pay">Small amounts — the intro often is not worth a Tuppence</dd>
+     <dt>How many at once</dt><dd>Many, casual, short</dd>
+     <dt>A buzz sounds like</dt><dd class="q">&quot;At the gate.&quot; &quot;Bring change.&quot; &quot;Sold out, sorry.&quot;</dd>
+    </dl>
+    <p class="note">Lowest value per pair. The question here is whether an intro applies at all.</p>
+  </div>
+ </div></section>
+<div class="inv"><b>The five things that are identical in all eight</b>
+<ul>
+<li>A buzz only ever travels between two parties who are already <b>connected</b> — a stranger can never appear.</li>
+<li>Each side holds its <b>own switch</b>, and consent is never transitive.</li>
+<li>The <b>sender's name</b> is on every buzz and on every answer.</li>
+<li>One close ends it <b>both ways</b>, the other person is told without blame, and only the closer reopens.</li>
+<li>Push first, email as the backup, and <b>never a per-message cost</b>.</li>
+</ul>
+That list is the whole of what may not vary. Everything above it is free to differ, and should.</div>
+</div></body></html>
