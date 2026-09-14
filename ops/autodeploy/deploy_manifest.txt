@@ -246,3 +246,9 @@ genie/email_strip/services_taps.jpg | orchestrator/qstrip/services_taps.jpg
 genie/email_strip/tutors_advert.jpg | orchestrator/qstrip/tutors_advert.jpg
 genie/email_strip/tutors_other.jpg | orchestrator/qstrip/tutors_other.jpg
 genie/email_strip/tutors_taps.jpg | orchestrator/qstrip/tutors_taps.jpg
+
+# DOOR-1 (14 Sep 2026, David): "please add the missing door so that nobody gets a page not
+# found, and also switch it on." Built from HARNESS.html by genie/build_door.py. nginx serves
+# this one file for /q/ and every /q/<category>, so an unknown or mistyped category still
+# opens on a real screen. Publish posts the email to the app's own live /auth/request-link.
+genie/q_index.html | q/index.html
