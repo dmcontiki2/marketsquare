@@ -1,0 +1,237 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Baseline Readiness — Redundancy, Independence, Accountability</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!--
+  RIA-DISCUSSION-1 (14 Sep 2026). The visual companion to the discussion paper
+  "Baseline Readiness - Redundancy, Independence, Accountability - Discussion Input".
+
+  COLOUR IS TIED TO FUNCTION, not decoration:
+    · the three PILLARS carry a validated categorical palette - Redundancy #2F5496
+      (the house navy-blue, so the page ties to the .docx), Independence #00A0B0,
+      Accountability #9B3FC4. Checked with the dataviz validator on a white surface:
+      lightness band, chroma floor, CVD separation (deutan dE 13.1, tritan 20.8),
+      normal-vision separation (dE 21.7) and contrast all PASS.
+    · STATUS colours are reserved and never reused as a pillar hue: pass, fail,
+      untested. Every status also carries a WORD, so nothing is read by colour alone.
+-->
+<style>
+  :root{
+    --redundancy:#2F5496; --independence:#00A0B0; --accountability:#9B3FC4;
+    --pass:#2E7D32; --fail:#C62828; --untested:#6B7280;
+    --ink:#262626; --muted:#595959; --line:#E3E6EC; --bg:#FFFFFF; --panel:#F7F8FA;
+    --navy:#1F3864;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 Calibri,"Segoe UI",system-ui,-apple-system,sans-serif;}
+  .wrap{max-width:1120px;margin:0 auto;padding-block:34px;padding-left:20px;padding-right:20px;}
+  h1{font-size:30px;margin:0 0 4px;color:var(--navy);letter-spacing:-.4px;}
+  .sub{font-size:16px;color:var(--redundancy);margin:0 0 2px;font-weight:600;}
+  .meta{font-size:12.5px;color:var(--muted);font-style:italic;margin:0 0 22px;}
+  .rule{height:3px;background:var(--navy);border-radius:2px;margin:8px 0 18px;}
+  h2{font-size:18px;color:var(--redundancy);margin:34px 0 4px;}
+  h2 .bar{color:var(--redundancy);}
+  .lede{font-size:13.5px;color:var(--muted);margin:0 0 14px;max-width:82ch;}
+
+  .oneline{border-left:5px solid var(--navy);background:#EAF0FA;padding:15px 18px;
+    border-radius:0 10px 10px 0;margin:0 0 26px;font-size:15.5px;}
+  .oneline b{color:var(--navy);}
+
+  .pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
+  .pillar{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--bg);}
+  .pillar .cap{padding:11px 15px;color:#fff;font-weight:700;font-size:15.5px;
+    display:flex;align-items:baseline;gap:9px;}
+  .pillar .cap span{font-weight:400;font-size:12px;opacity:.9;}
+  .pillar .in{padding:14px 15px 16px;}
+  .pillar .q{font-size:13px;color:var(--muted);font-style:italic;margin:0 0 11px;}
+  .pillar dt{font-size:10.5px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);
+    margin:11px 0 3px;font-weight:700;}
+  .pillar dd{margin:0;font-size:13.5px;}
+  .pillar dl{margin:0}
+
+  table{border-collapse:collapse;width:100%;font-size:13px;}
+  caption{text-align:left;font-size:12.5px;color:var(--muted);padding:0 0 7px;}
+  th{background:var(--navy);color:#fff;text-align:left;padding:8px 10px;font-size:12px;
+    font-weight:700;}
+  td{padding:8px 10px;border:1px solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even) td{background:#F4F7FC;}
+
+  .chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;
+    font-weight:700;white-space:nowrap;border:1px solid;}
+  .c-self{color:var(--redundancy);border-color:var(--redundancy);background:#2F549612;}
+  .c-shared{color:var(--independence);border-color:var(--independence);background:#00A0B012;}
+  .c-absence{color:var(--accountability);border-color:var(--accountability);background:#9B3FC412;}
+
+  .st{display:inline-block;padding:1px 8px;border-radius:5px;font-size:11px;font-weight:700;
+    border:1px solid;white-space:nowrap;}
+  .s-pass{color:var(--pass);border-color:var(--pass);background:#2E7D3212;}
+  .s-fail{color:var(--fail);border-color:var(--fail);background:#C6282812;}
+  .s-unt{color:var(--untested);border-color:var(--untested);background:#6B728012;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 13px;font-size:11.5px;}
+  .scroll{overflow-x:auto;}
+  .note{border-left:5px solid #C55A11;background:#FFF4E5;padding:13px 16px;
+    border-radius:0 10px 10px 0;margin:20px 0;font-size:13.5px;}
+  .next{border-left:5px solid var(--pass);background:#E7F2E3;padding:13px 16px;
+    border-radius:0 10px 10px 0;margin:24px 0 10px;font-size:14px;}
+  footer{margin-top:26px;font-size:12px;color:var(--muted);font-style:italic;}
+  @media print{body{font-size:12px} .wrap{padding-block:0}}
+</style>
+
+<div class="wrap">
+  <h1>Baseline Readiness</h1>
+  <div class="sub">Designing redundancy, independence and accountability into TrustSquare</div>
+  <div class="rule"></div>
+  <p class="meta">Claude's input to the Council discussion · 14 September 2026 · discussion paper, not a decision</p>
+
+  <div class="oneline">
+    <b>The one sentence.</b> Every instrument we built measured our own machinery rather than a
+    stranger's experience — a test our code passes proves the code ran, it never proves a
+    stranger succeeded, and that is why a green board and a blocked launch were both true at the
+    same time.
+  </div>
+
+  <h2><span class="bar">▍</span> The three words, made testable</h2>
+  <p class="lede">They are not three names for reliability. They answer three different questions,
+    and the project fails each one in a different way.</p>
+  <div class="pillars">
+    <div class="pillar">
+      <div class="cap" style="background:var(--redundancy)">Redundancy <span>second path</span></div>
+      <div class="in">
+        <p class="q">Is there a second path, and has it been driven?</p>
+        <dl>
+          <dt>Today</dt>
+          <dd>One outreach category with five nights of supply, one server, one sending provider,
+            one payment provider, one deploy lane, one founder.</dd>
+          <dt>Proposed test</dt>
+          <dd>Every load-bearing capability has a named second path, a drill and a recorded drill
+            result — <b>undrilled counts as absent</b>.</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="pillar">
+      <div class="cap" style="background:var(--independence)">Independence <span>second opinion</span></div>
+      <div class="in">
+        <p class="q">Does the second opinion share any input with the first?</p>
+        <dl>
+          <dt>Today</dt>
+          <dd>Our documents were green all through the bad launch, so an auditor reading them
+            inherits the blind spot exactly.</dd>
+          <dt>Proposed test</dt>
+          <dd>The auditor forms its verdict from <b>outside evidence only</b> — live site, fresh
+            account, public interface — and writes its own test data.</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="pillar">
+      <div class="cap" style="background:var(--accountability)">Accountability <span>a name and a cost</span></div>
+      <div class="in">
+        <p class="q">Whose name is on the verdict, and what happens when it is wrong?</p>
+        <dl>
+          <dt>Today</dt>
+          <dd>The reports that said “ready” carried no author, no evidence date and no
+            consequence.</dd>
+          <dt>Proposed test</dt>
+          <dd>Every verdict names who, what evidence and when — and a blocker after a green
+            verdict <b>fixes the instrument that missed it, same session</b>.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <h2><span class="bar">▍</span> What actually happened — eight findings, three patterns</h2>
+  <div class="legend">
+    <span class="chip c-self">Self-reference</span>
+    <span class="chip c-shared">Shared assumption</span>
+    <span class="chip c-absence">Absence read as health</span>
+    <span style="color:var(--muted)">— the chip names the pattern, so the colour is never doing the work alone.</span>
+  </div>
+  <div class="scroll">
+  <table>
+    <caption>All measured on 14 September 2026 against the live system, or taken from the project's own registers.</caption>
+    <thead><tr><th style="width:24%">Finding</th><th style="width:14%">Pattern</th><th style="width:29%">What the board said</th><th>What was true</th></tr></thead>
+    <tbody>
+      <tr><td>Test accounts scored as customers</td><td><span class="chip c-self">Self-reference</span></td><td>5 onboarded, 2 published</td><td>All five were our own end-to-end fixtures; none was ever emailed; <b>zero real conversions, for six weeks</b></td></tr>
+      <tr><td>Two dashboards disagreed</td><td><span class="chip c-shared">Shared assumption</span></td><td>1,569 emailed / 1,671 emailed</td><td>Two correct answers to different questions, and neither surface knew the other existed</td></tr>
+      <tr><td>Liveness check called a live agent dead</td><td><span class="chip c-shared">Shared assumption</span></td><td>“pending 125 min, task not registered or stopped”</td><td>The agent had ticked 8 minutes earlier; the check was reading the wrong file</td></tr>
+      <tr><td>Fact board depends on where it runs</td><td><span class="chip c-absence">Absence read as health</span></td><td>52 regressions from a clone</td><td>Every one was “I cannot see this file” printed as “this fix has come back”</td></tr>
+      <tr><td>Status panel blank by construction</td><td><span class="chip c-absence">Absence read as health</span></td><td>Heading fresh, compiler ran, fold succeeded</td><td>Empty since 11 September; the block's own first line ended the section it filled</td></tr>
+      <tr><td>Agreement document self-contradicting</td><td><span class="chip c-shared">Shared assumption</span></td><td>Sync tool green for three weeks</td><td>Header read v1.14 while the footer read v1.15 — the tool compared the copies to each other, never the header to the footer</td></tr>
+      <tr><td>Outreach decayed in silence</td><td><span class="chip c-self">Self-reference</span></td><td>The wave ran every night</td><td>398 sends a night fell to 87 with 3,941 people in the pool, and no instrument reported the slope</td></tr>
+      <tr><td>718 people unreachable by accident</td><td><span class="chip c-self">Self-reference</span></td><td>“Nobody to send to” in 15 cities</td><td>Their category was never typed into their city's list — fifth instance of a class four earlier fixes each closed by hand</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <b>⚠ Why more auditing would not have helped.</b> The audits and end-to-end reports existed and
+    were run. They failed because they shared the three patterns above, not because there were too
+    few of them — a fourth audit of the same kind buys a fourth confirmation of the same blind spot.
+  </div>
+
+  <h2><span class="bar">▍</span> A proposed gate — what “baseline ready” would have to mean</h2>
+  <p class="lede">Six conditions. The common property is that none of them can be satisfied by our
+    own machinery agreeing with itself.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th style="width:4%">#</th><th style="width:48%">Condition</th><th style="width:14%">Today</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>A stranger completes the journey end to end on the live site, with data we did not seed, and is not us.</td><td><span class="st s-fail">FAILS</span></td><td>Zero real signups from 1,671 emails</td></tr>
+      <tr><td>2</td><td>Every single point of failure has a named second path, drilled within an agreed window.</td><td><span class="st s-fail">FAILS</span></td><td>No register of them exists yet</td></tr>
+      <tr><td>3</td><td>The independent auditor returns green without reading our documents.</td><td><span class="st s-unt">UNTESTED</span></td><td>The auditor has always read our documents</td></tr>
+      <tr><td>4</td><td>The adversarial pass finds nothing unmitigated above an agreed severity.</td><td><span class="st s-unt">UNTESTED</span></td><td>No adversarial pass is defined</td></tr>
+      <tr><td>5</td><td>Every instrument that must fire has been proven to fire against a deliberately broken case.</td><td><span class="st s-unt">PARTLY</span></td><td>Done on a few checks, never required</td></tr>
+      <tr><td>6</td><td>No number on the readiness board counts our own test data.</td><td><span class="st s-pass">PASSES</span></td><td>Fixed today — this was the six-week lie</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="oneline" style="border-left-color:var(--pass);background:#E7F2E3;">
+    <b>★ The cheapest change in this paper is condition 5.</b> It already exists in the project's
+    own practice — one check was deliberately broken first and proven red before it was believed
+    green. Making that universal would have caught most of the eight findings above.
+  </div>
+
+  <h2><span class="bar">▍</span> The Council — separated by what each may see</h2>
+  <p class="lede">Four opinions that all read the same repository is a chorus, not independence.
+    What makes these genuinely different voices is the access column, not the vendor.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th style="width:19%">Member</th><th style="width:45%">Role</th><th>What it may see</th></tr></thead>
+    <tbody>
+      <tr><td>Deepseek Harness</td><td>Worker APIs — the repetitive verification labour: run the drills, repeat journeys from clean accounts, diff the outputs.</td><td>Only the task and the live product; never our conclusions</td></tr>
+      <tr><td>Design team</td><td>Owns the stranger's experience and defines the journeys the gate is tested against.</td><td>The product as a user meets it</td></tr>
+      <tr><td>OpenAI — Peer Auditor</td><td>Forms the independent readiness verdict.</td><td><b>Outside evidence only</b> — live site, fresh account, public interface</td></tr>
+      <tr><td>Grok — Risk &amp; Security</td><td>Adversarial pass: tries to break it, not to confirm it.</td><td>Full access, because attack needs it</td></tr>
+      <tr><td>Claude — CTO</td><td>The specification, the instruments, the registers, and the memory that carries them between sessions.</td><td>Everything — which is exactly why Claude may not also be the auditor</td></tr>
+      <tr><td>David — +1</td><td>Decides what the three words mean and what a red verdict does.</td><td>Everything</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2><span class="bar">▍</span> Reserved to David — the discussion agenda</h2>
+  <p class="lede">Deliberately unanswered: these set the specification that delegates technical
+    authority, so answering them myself would put my guess into canon.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th style="width:18%">Decision</th><th>The question</th></tr></thead>
+    <tbody>
+      <tr><td>Scope</td><td>Does the gate apply to every deploy, or only to a baseline or major release?</td></tr>
+      <tr><td>Force</td><td>Does a red verdict from the auditor <b>stop</b> a release, or advise against it?</td></tr>
+      <tr><td>Drill window</td><td>How recently must a second path have been exercised to count, and which failures are we content to leave undrilled?</td></tr>
+      <tr><td>Budget</td><td>What hard monthly ceiling do the worker APIs get, and who is told when it is reached?</td></tr>
+      <tr><td>Human stranger</td><td>Must one real person outside the project complete the journey per baseline? My view is yes — it is the only fully independent evidence — but it is a cost decision.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="next">
+    <b>→ Next step.</b> Take this to the Council as the opening position, let the Peer Auditor and
+    Risk attack it <i>before</i> it is refined, and make the agenda above the meeting. Settle that
+    agenda and the rest becomes a build — the instruments can then be written against it.
+  </div>
+
+  <footer>Companion to the Word paper of the same name. Every figure was measured on 14 September
+    2026 against the live system, not recalled. Colour is tied to function: three pillar hues from a
+    validated categorical palette, status colours reserved and always carrying a word.</footer>
+</div>

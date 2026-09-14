@@ -22785,3 +22785,68 @@ That is RUL-132 made visible.
 Also noted: **Local Market's pairs may not be worth an introduction at all** — the amounts are small
 and the neighbours usually already know each other, so the question there is whether the Tuppence
 applies rather than how comms behave.
+
+## 2026-09-14 — Per-category comms built into Quick Listing; the spreader explained
+
+David: *"can you please implement it as per your read? I would like to have it completed in the
+Quick listing side, and then we can as a second phase port it to the app."*
+
+### Built — phase one, the Quick Listing side
+
+RUL-132 is now **data, not branches**. A `COMMS` table in `genie/HARNESS.html` carries the four
+things a category may change — who the two people are, how they met, who paid, and how many at once,
+plus the line a buzz actually sounds like there — and the Buzz panel reads its row. Everything that
+protects people stays in the code, once, for all eight.
+
+Each row says on screen whether it is **RULED** (housekeeping, property) or **NOT RULED — Claude's
+read**, so an argument can be had with a screen instead of a paragraph. The three reads David
+approved are in: **cars** carries a note that closing is the normal ending there, not a fault;
+**services** is described as the high-volume one; **tutors** names the third person in the room.
+
+**Two faults found by walking all eight categories rather than by reading the code:**
+- the sender's name cached the first one it ever saw, so a property seller was still called the
+  housekeeper;
+- the counterparty's role line rendered `undefined` because it was read off the party object instead
+  of the category row.
+
+Both fixed and re-driven. Every pair also now takes names from ONE naming tradition, per the 14 Sep
+rule: Anna Pretorius ↔ Bekker Properties, Lerato Mokoena ↔ Sipho Dlamini, Hannes Roux ↔ Piet Grobler,
+and so on.
+
+**Verified:** all eight categories driven end to end in a rendered browser — the facts change per
+category, the five invariants are present in every one, cars carries its extra note, zero page errors.
+
+### The spreader — David's requirement and RUL-125(a) are the same thing
+
+`genie/QUICK_SPREADER.html`. "Separate app" has two meanings and only one was ever ruled on. RUL-125(a)
+chose a separate **APP** — own link, own name, own colour, own icon, TrustSquare's interface never
+appears — while keeping one **ORIGIN**, so the sign-in, the push subscription and the service worker
+are shared. `trustsquare.co/quick/` **is** the link that goes in every email instead of the app link.
+A subdomain would buy none of what he asked for and would charge the user twice for the two
+permissions the whole thing depends on — a second sign-in and a second push prompt, which she will
+refuse.
+
+**One genuine fork, flagged rather than assumed**, because his sentence and RUL-124(d) point at
+different icons: the **lister** gets the Quick tile at her first publish (RUL-123's moment, RUL-124(d)'s
+logo), and the **person she sent it to** gets the full TrustSquare tile, because he wants the shelf,
+introductions and Tuppence, none of which Quick has. One icon cannot be right for both. **David's call.**
+
+## 2026-09-14 — Spreader design put up for review
+
+David asked for guidance on the complexity and then a design to check.
+`genie/QUICK_SPREADER_DESIGN.html`, notes in `PRIVATE_SELLER_TO_AGENT_NOTES.md` §J. **Nothing built.**
+
+The opinion: the complexity is in KNOWLEDGE, not features — three facts (who you are, what you have
+accepted, what exists), and the danger is branches, not size. Three modes decided once at load, one
+tap engine, one `finish()` that is the only place a mode exists.
+
+**One new endpoint in the whole design** — `GET /quick/me`. Publishing, buzzing and the lookup all
+ride endpoints the spreader already calls, and recognition is free because one origin means the
+`ts_user` cookie arrives on its own. That is RUL-125(a) paying for itself.
+
+**Measured for the budget:** the spreader is **26 KB gzipped** with placeholder photos stripped; the
+871 KB file is 90% photos. Proposed ceiling 40 KB, enforced by the monthly sweep rather than by
+discipline.
+
+Proposed CUT, not an addition: full score coaching for a first publish, one line for a returning
+member.

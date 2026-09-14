@@ -233,3 +233,11 @@ same defect class as an undated status assertion (the ONETAP_SETUP.md "(this is 
 - **[C] NOTED, not caused by Buzz:** `database.py` sets no `busy_timeout`, so SQLite write
   contention surfaces as an immediate "database is locked" rather than a short wait. App-wide and
   pre-existing; one line whenever that file is next open.
+- **[D] NEW 14 Sep — which icon installs, and for whom.** David's requirement ("it will link to the
+  trustsquare app to then download and create an icon") and RUL-124(d) (the Quick app has its own
+  coloured tile) point at different icons. Claude's read, built into the explainer not the code:
+  the LISTER gets the Quick tile at first publish, the person she SENT it to gets the full
+  TrustSquare tile. `genie/QUICK_SPREADER.html`. **One icon cannot serve both — David's call.**
+- **[C] DONE 14 Sep — per-category comms live in the Quick Listing.** RUL-132 as a data table, not
+  branches; each row badged ruled / not-ruled on screen. All eight categories driven in a browser,
+  two real faults found and fixed in the process. Phase two — porting it to the app — is not started.

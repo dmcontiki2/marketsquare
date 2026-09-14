@@ -1,0 +1,104 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The spreader — how the Quick link and the icons actually work</title><style>
+*{box-sizing:border-box}
+body{margin:0;background:#04100c;color:#eaf3ee;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:34px 20px 70px}
+h1{font-size:28px;letter-spacing:-.6px;margin:0 0 6px}
+.date{color:#84a396;font-size:13px;margin:0 0 22px}
+.box{padding:15px 17px;border-radius:14px;margin:0 0 14px;font-size:15px;line-height:1.65}
+.good{background:rgba(22,169,124,.10);border:1px solid #16A97C;color:#cfe6db}
+.good b{color:#8ff0c8}
+.warn{background:rgba(224,174,78,.09);border:1px solid rgba(224,174,78,.4);color:#f0cc8a}
+.warn>b{display:block;margin-bottom:6px}
+h2{font-size:19px;margin:32px 0 12px;letter-spacing:-.3px}
+h2 small{display:block;font-size:13px;font-weight:400;color:#84a396;margin-top:3px}
+.chain{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin-bottom:8px}
+.node{flex:1 1 150px;min-width:150px;border-radius:16px;padding:13px 14px;border:1.5px solid #163128;background:#0a1a14}
+.node.hot{border-color:#16A97C;background:rgba(22,169,124,.09)}
+.node.app{border-color:#2E86E0;background:rgba(46,134,224,.09)}
+.node b{display:block;font-size:13px;margin-bottom:5px}
+.node.hot b{color:#8ff0c8}.node.app b{color:#a1c9f1}
+.node span{display:block;font-size:11.5px;color:#84a396;line-height:1.5}
+.arw{align-self:center;color:#84a396;font-size:18px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
+th{text-align:left;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:#84a396;
+ font-weight:800;padding:0 10px 8px;border-bottom:1px solid #163128}
+td{padding:11px 10px;border-bottom:1px solid rgba(22,49,40,.7);vertical-align:top;line-height:1.5}
+td:first-child{font-weight:700;width:30%}
+.yes{color:#8ff0c8;font-weight:700}.no{color:#f0a79b;font-weight:700}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:6px}
+.card{border-radius:16px;border:1px solid #163128;background:rgba(255,255,255,.03);padding:15px 17px}
+.card h3{margin:0 0 4px;font-size:16px}
+.card .who{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#84a396;font-weight:800;margin-bottom:9px}
+.card p{margin:0 0 8px;font-size:13px;line-height:1.6;color:#cfe6db}
+.card .tile{display:inline-flex;align-items:center;gap:9px;padding:7px 13px;border-radius:12px;
+ font-size:12.5px;font-weight:700;border:1.5px solid}
+.q .tile{color:#8ff0c8;border-color:#16A97C;background:rgba(22,169,124,.10)}
+.t .tile{color:#a1c9f1;border-color:#2E86E0;background:rgba(46,134,224,.10)}
+.card .dot{width:16px;height:16px;border-radius:5px;display:inline-block}
+.q .dot{background:#16A97C}.t .dot{background:#2E86E0}
+@media(max-width:760px){.two{grid-template-columns:1fr}}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tw table{min-width:520px}
+@media(max-width:560px){.wrap{padding:22px 14px 50px}h1{font-size:22px}td:first-child{width:40%}}
+</style></head><body><div class="wrap">
+<h1>The spreader — the Quick link, and which icon lands on the phone</h1>
+<p class="date">MarketSquare &middot; 14 September 2026 &middot; reconciling David's requirement with RUL-125(a)</p>
+
+<div class="box good"><b>Your requirement and the ruling are the same thing.</b> "Separate app" has two
+meanings and only one of them was ever ruled on. RUL-125(a) chose a separate <b>APP</b> — its own link,
+its own name, its own colour, its own icon, and the TrustSquare interface never appears — while keeping
+one <b>ORIGIN</b>, so the sign-in, the push subscription and the service worker are shared for free.
+<b>trustsquare.co/quick/ is the link you put in every email instead of the app link.</b> It is the spreader.</div>
+
+<h2>What the shared link does<small>One link in every email, every WhatsApp, every poster.</small></h2>
+<div class="chain">
+ <div class="node hot"><b>The link goes out</b><span>In your emails, in her WhatsApp, on a card at the gate. It replaces the app link.</span></div>
+ <div class="arw">&rarr;</div>
+ <div class="node hot"><b>Four taps</b><span>No sign-up wall, no app store, no download. It just opens and works.</span></div>
+ <div class="arw">&rarr;</div>
+ <div class="node hot"><b>She publishes</b><span>The advert hands over to the same listings the real app reads.</span></div>
+ <div class="arw">&rarr;</div>
+ <div class="node app"><b>The icon is offered</b><span>At the first successful publish — RUL-123's moment, not before.</span></div>
+ <div class="arw">&rarr;</div>
+ <div class="node app"><b>She shares it on</b><span>And the person she shares it with starts at the beginning of this row.</span></div>
+</div>
+
+<h2>Why the sub-path, and what a subdomain would cost<small>The part that is a technical choice, not a product one.</small></h2>
+<div class="tw"><table>
+<tr><th>&nbsp;</th><th>trustsquare.co/quick/ &mdash; ruled</th><th>quick.trustsquare.co &mdash; a separate origin</th></tr>
+<tr><td>A link you can put in every email</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+<tr><td>Never shows the TrustSquare interface</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+<tr><td>Its own name, colour and home-screen icon</td><td class="yes">yes — its own manifest</td><td class="yes">yes</td></tr>
+<tr><td>Signing in</td><td class="yes">once — same cookie</td><td class="no">twice — separate origin</td></tr>
+<tr><td>Allowing push</td><td class="yes">once — same subscription</td><td class="no">twice, and she will refuse the second</td></tr>
+<tr><td>Service workers to maintain</td><td class="yes">one</td><td class="no">two</td></tr>
+<tr><td>Buzz across both</td><td class="yes">works — the pair is server-side</td><td>works, but the phone switch is per origin</td></tr>
+</table></div>
+<p style="font-size:13px;color:#84a396;margin-top:10px">A subdomain buys nothing you asked for and
+charges the user twice for the two permissions that make the whole thing work. The separateness you
+want is the <b style="color:#8ff0c8">manifest</b>, not the domain.</p>
+
+<h2>The one genuine fork — which icon, for whom<small>Your sentence and RUL-124(d) point at different icons, so this is Claude's read, not canon.</small></h2>
+<div class="two">
+<div class="card q"><div class="who">The person who listed something</div>
+ <h3>Gets the Quick tile</h3>
+ <p class="tile"><span class="dot"></span> Quick Listing &mdash; its own colour</p>
+ <p style="margin-top:10px">She used the link, published in four taps, and will be back to list again.
+ The full marketplace is not what she came for, and RUL-124(d) already gives this app its own coloured
+ TrustSquare logo.</p></div>
+<div class="card t"><div class="who">The person she sent it to</div>
+ <h3>Gets the full TrustSquare tile</h3>
+ <p class="tile"><span class="dot"></span> TrustSquare &mdash; the marketplace</p>
+ <p style="margin-top:10px">He wants the shelf, introductions and Tuppence, none of which Quick has.
+ This is the half of your sentence that says the link "will link to the trustsquare app to then create
+ an icon" — and it is the hirer, not the lister, for whom that is true.</p></div>
+</div>
+
+<div class="box warn" style="margin-top:20px"><b>Why two icons and not one</b>
+One icon forces a choice that cannot be right for both: give everyone the Quick tile and the hirer has
+no route to the marketplace he actually wants; give everyone the full app and you have thrown away the
+lightness that made the spreader spread. Two tiles, two moments, one account behind both — and because
+it is one origin, the second install costs the user no second sign-in and no second permission.</div>
+</div></body></html>

@@ -1,0 +1,117 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The spreader — three modes, one engine</title><style>
+*{box-sizing:border-box}
+body{margin:0;background:#04100c;color:#eaf3ee;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1140px;margin:0 auto;padding:34px 20px 70px}
+h1{font-size:28px;letter-spacing:-.6px;margin:0 0 6px}
+.date{color:#84a396;font-size:13px;margin:0 0 22px}
+.op{padding:16px 18px;border-radius:14px;margin:0 0 12px;font-size:15px;line-height:1.7;
+ background:rgba(22,169,124,.10);border:1px solid #16A97C;color:#cfe6db}
+.op b{color:#8ff0c8}
+h2{font-size:19px;margin:32px 0 12px;letter-spacing:-.3px}
+h2 small{display:block;font-size:13px;font-weight:400;color:#84a396;margin-top:3px}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.m{border-radius:16px;padding:15px 16px;border:1.5px solid;background:rgba(255,255,255,.03)}
+.m.s{border-color:#E0AE4E}.m.f{border-color:#16A97C}.m.l{border-color:#2E86E0}
+.m h3{margin:0 0 3px;font-size:16px}
+.m.s h3{color:#f0cc8a}.m.f h3{color:#8ff0c8}.m.l h3{color:#a1c9f1}
+.m .who{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#84a396;font-weight:800;margin-bottom:10px}
+.m ol{margin:0;padding-left:18px;font-size:12.5px;line-height:1.7;color:#cfe6db}
+.m .cnt{margin-top:11px;padding-top:9px;border-top:1px solid #163128;font-size:12px;color:#84a396}
+.m .cnt b{font-size:18px;display:block}
+.m.s .cnt b{color:#f0cc8a}.m.f .cnt b{color:#8ff0c8}.m.l .cnt b{color:#a1c9f1}
+.engine{margin-top:14px;border-radius:16px;border:1px dashed #163128;padding:15px 17px;
+ background:rgba(255,255,255,.02);font-size:13.5px;line-height:1.65;color:#cfe6db}
+.engine b{color:#8ff0c8}
+code{background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px;font-size:12.5px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:#84a396;
+ font-weight:800;padding:0 10px 8px;border-bottom:1px solid #163128}
+td{padding:10px;border-bottom:1px solid rgba(22,49,40,.7);vertical-align:top;line-height:1.5}
+td:first-child{font-weight:700;width:32%}
+.have{color:#8ff0c8;font-weight:700}.need{color:#f0cc8a;font-weight:700}
+.caps{margin-top:12px;border-radius:16px;padding:15px 17px;background:rgba(194,86,74,.09);
+ border:1px solid rgba(194,86,74,.4);color:#f7c9c1;font-size:13.5px;line-height:1.7}
+.caps>b:first-child{display:block;margin-bottom:7px;color:#ffb3a6}
+.caps ul{margin:0;padding-left:20px}
+.budget{margin-top:12px;border-radius:16px;padding:15px 17px;background:rgba(59,130,246,.09);
+ border:1px solid rgba(59,130,246,.4);color:#cfe6db;font-size:13.5px;line-height:1.7}
+.budget>b:first-child{display:block;margin-bottom:7px;color:#9ec9ff}
+.bar{display:flex;align-items:center;gap:11px;margin:9px 0 4px}
+.bar .t{flex:1;height:18px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid #163128;overflow:hidden;position:relative}
+.bar .t i{display:block;height:100%;background:#16A97C}
+.bar .t u{position:absolute;top:-3px;bottom:-3px;width:2px;background:#f0cc8a;text-decoration:none}
+.bar span{font-size:12px;color:#84a396;flex:0 0 auto}
+.cut{margin-top:12px;border-radius:16px;padding:15px 17px;background:rgba(224,174,78,.09);
+ border:1px solid rgba(224,174,78,.4);color:#f0cc8a;font-size:13.5px;line-height:1.7}
+.cut>b:first-child{display:block;margin-bottom:7px}
+@media(max-width:860px){.modes{grid-template-columns:1fr}}
+@media(max-width:560px){.wrap{padding:22px 14px 50px}h1{font-size:22px}td:first-child{width:42%}}
+</style></head><body><div class="wrap">
+<h1>The spreader — three modes, one engine</h1>
+<p class="date">MarketSquare &middot; 14 September 2026 &middot; design for review, nothing built</p>
+
+<div class="op"><b>My opinion, plainly.</b> The complexity you are sensing is real, but it is not in the
+number of features — it is in <b>knowledge</b>. A stateless snippet stays simple at any size; the moment
+it has to KNOW things it stops behaving like a snippet even while it stays small. So the question is
+not "how many features" but "how many facts must it hold". The answer is <b>three</b>: who you are,
+what you have already accepted, and what exists on the shelf. Three facts is not complexity.
+<b>Branches are.</b> Eight categories × two directions × three modes is forty-eight screens if you
+write it as branches, and it is one screen if you write it as data — which is exactly what the COMMS
+table already proved this morning. Keep doing that and this does not get complicated.</div>
+
+<h2>Three modes, and there are only ever three<small>Decided once at load by two questions: do I know you, and are you here to list or to look?</small></h2>
+<div class="modes">
+ <div class="m s"><div class="who">Stranger, listing</div><h3>The front door</h3>
+  <ol><li>Four taps</li><li>Advert appears</li><li>Photo, if it is an object</li>
+  <li>Join — EULA and email</li><li>Publish</li></ol>
+  <div class="cnt"><b>7–8 steps</b>the only path that asks anything</div></div>
+ <div class="m f"><div class="who">Member, listing</div><h3>The fast lane</h3>
+  <ol><li>Four taps</li><li>Advert appears</li><li>Photo, if it is an object</li>
+  <li>Publish</li></ol>
+  <div class="cnt"><b>5–6 steps</b>nothing re-asked, ever</div></div>
+ <div class="m l"><div class="who">Anyone, looking</div><h3>The lookup</h3>
+  <ol><li>Four taps — what, which, where, price</li><li>Up to five answers</li>
+  <li>Tap one &rarr; hand to the app</li><li>Or nothing found &rarr; it becomes a want</li></ol>
+  <div class="cnt"><b>4–5 steps</b>answers "is it there", never "get it"</div></div>
+</div>
+
+<div class="engine"><b>One tap engine underneath all three.</b> The same renderer, the same category
+table, the same four taps. The ONLY thing that differs is what happens after the last tap, and that
+lives in one function — <code>finish()</code> — which is the single place in the whole app that knows
+a mode exists. If a future change needs a second place to know, that change is wrong.</div>
+
+<h2>What the server has to give it<small>The reassuring part: almost all of it already exists and the spreader already talks to it.</small></h2>
+<table>
+<tr><th>What</th><th>Endpoint</th><th>State</th></tr>
+<tr><td>Publish a draft</td><td><code>POST /listings</code></td><td class="have">already wired</td></tr>
+<tr><td>Buzz</td><td><code>POST /buzz</code></td><td class="have">already wired</td></tr>
+<tr><td>The lookup</td><td><code>GET /listings?q=</code> — FTS5, live since July</td><td class="have">exists; the spreader just reads what it already posts to</td></tr>
+<tr><td>Recognise you</td><td>the <code>ts_user</code> cookie, already set by sign-in</td><td class="have">free — same origin, so the browser sends it</td></tr>
+<tr><td>The four facts</td><td><code>GET /quick/me</code> → name, city, <code>eula_accepted_at</code>, email</td><td class="need">the ONE new thing — a dozen lines over machinery that exists</td></tr>
+</table>
+
+<div class="caps"><b>The caps that stop the lookup becoming a second shelf</b>
+<ul>
+<li>No narrowing chips, no sort, no paging, no map, no favourites.</li>
+<li>At most five answers. If the right one is not in five, the question was wrong, not the list.</li>
+<li>It may READ listings and WRITE nothing but a draft and a buzz — never a wallet, a score, an
+introduction or a profile. One line, and a script can check it by grepping the fetch calls.</li>
+<li>An introduction is always a hand-over to the app. The spreader never holds Tuppence.</li>
+</ul></div>
+
+<div class="budget"><b>Turn "keep it small" into a number, so it is not a judgement call</b>
+Measured today: <b>26 KB gzipped</b> with the placeholder photos stripped — the 871 KB file is 90%
+photos. Proposed budget: <b>40 KB</b>. Any feature that breaks it belongs in the app, not here. One
+line in the monthly sweep checks it, and the rule enforces itself instead of depending on discipline.
+<div class="bar"><span>now 26</span><div class="t"><i style="width:65%"></i><u style="left:100%"></u></div><span>budget 40 KB</span></div>
+</div>
+
+<div class="cut"><b>And one thing I would CUT, not add</b>
+The spreader currently shows all three scores with full coaching (RUL-121). For a first-timer that is
+the most valuable screen in the product. For a member on the fast lane it is clutter he has read
+fifty times. Proposed: <b>full coaching for a first publish, one line for a member</b> — "listing
+score 60, +40 available" with a tap to see why. Same rule as everything else: the screen does not
+change, the data does.</div>
+</div></body></html>

@@ -209,3 +209,78 @@ messaging volume. Any dashboard that celebrates buzz counts will be measuring th
 **What is already in place to measure it, by accident of the build.** `buzz_pairs` carries `source`
 and `created_at` (and `created_by`), so pairs-per-period-split-by-origin — free lane versus platform
 introduction — is a query, not a build. That is the number that says whether the flywheel is turning.
+
+---
+
+## I. 14 Sep, DISCUSSED NOT RULED — the spreader as a fast lane for members
+
+David: *"the spreader may be the first 4%, but the trustsquare app need to be a 100%… 2 tiles does
+have a separate reason to stay alive — when a collector wants to quickly sell or buy, then he can use
+the spreader rather than the app, and the spreader need to recognize that the user is an already
+onboarded (Eula read, email given) user so that he isnt again asked to repeat anything."*
+
+**This changes what the Quick app is, and for the better.** It was the front door for strangers; it is
+now ALSO the fast lane for members. Those are the same four taps with a different TAIL:
+- **Stranger:** taps → draft → join (EULA + email) → publish.
+- **Member:** taps → publish. Nothing re-asked.
+
+**It is free because of RUL-125(a).** Recognising the returning user needs no work at all — one origin
+means the sign-in cookie is already there. Had the Quick app been put on a subdomain, "recognise me"
+would have been a second sign-in, which is precisely the thing he wants removed.
+
+**Claude's guidance, for argument:**
+1. **Photos are the step that cannot be removed for OBJECT categories.** `lsOf()` gives 40 of 100
+   points to photos. A housekeeper's four taps are complete without one — her service is the product.
+   A collector's coin is not: the object IS the product. So member + service = 5 steps; member +
+   object = 6 (four taps, one photo, publish); stranger = 7–8. His "4 to 7" is right for members.
+2. **The line that stops the spreader becoming a second app: it does the START, the app does the
+   REST.** Listing it can finish. Anything needing the wallet, the shelf, a score or an introduction
+   hands over. Without that line, "quickly buy" drags the whole marketplace across and we maintain
+   two apps doing one job — the duplication he said he does not want.
+3. **"Quickly buy" is the half to question.** Selling in four taps works because the user supplies the
+   facts; buying is search-and-choose — shelf, ranking, trust, an intro, a hold. The spreader's buy
+   side should be a WANT (four taps saying what you are after) handed to the demand loop, not a
+   second shelf.
+4. **Recognition must not be silent.** One line before publishing — "Publishing as David, Pretoria" —
+   with a way to switch. Shared phones and the family tester accounts make silent account selection a
+   bug that is cheap now and expensive later.
+5. **His reason for two tiles is better than Claude's.** Claude justified the second tile by the
+   hirer needing the marketplace; his is the returning member's fast lane, which justifies it for
+   someone who already has the app — a stronger case.
+
+---
+
+## J. 14 Sep — the spreader design, FOR REVIEW (nothing built)
+
+David: *"i recognize it as added complexity… please give me your opinion and then design it to be
+checked and reviewed."* Rendered as `genie/QUICK_SPREADER_DESIGN.html`.
+
+**Claude's opinion.** The complexity is real but it is not in the number of features — it is in
+KNOWLEDGE. A stateless snippet stays simple at any size; the moment it must KNOW things it stops
+behaving like a snippet even while it stays small. The spreader needs exactly three facts: who you
+are, what you have already accepted, and what exists. Three facts is not complexity. **Branches
+are** — eight categories × two directions × three modes is forty-eight screens written as branches
+and one screen written as data, which is what the COMMS table proved this morning.
+
+**Three modes, decided once at load.** Stranger listing (7–8 steps, the only path that asks
+anything), member listing (5–6, nothing re-asked), anyone looking (4–5, answers "is it there" and
+never "get it"). One tap engine underneath all three; the only difference is what happens after the
+last tap, and it lives in one function — `finish()` — the single place that knows a mode exists.
+
+**What the server must give it — and this is the reassuring part.** Publishing, buzzing and the
+lookup all use endpoints the spreader already talks to (`POST /listings`, `POST /buzz`,
+`GET /listings?q=` with FTS5, live since July). Recognition is free because RUL-125(a) kept one
+origin: the `ts_user` cookie is already set by sign-in and the browser sends it. **One new endpoint
+in total** — `GET /quick/me` returning name, city, `eula_accepted_at`, email — a dozen lines over
+machinery that exists.
+
+**Caps that stop the lookup becoming a second shelf:** no narrowing, no sort, no paging, no map, no
+favourites; five answers at most; it may read listings and write nothing but a draft and a buzz;
+every introduction is a hand-over. That last one is grep-checkable.
+
+**A budget instead of discipline.** Measured: 26 KB gzipped with the placeholder photos stripped —
+the 871 KB file is 90% photos. Proposed ceiling 40 KB, checked in the monthly sweep. Anything that
+breaks it belongs in the app.
+
+**And one CUT rather than an addition:** full score coaching for a first publish, one line for a
+member who has read it fifty times. The screen does not change; the data does.

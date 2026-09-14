@@ -128,6 +128,17 @@ body{background:#04070a;color:#eaf3ee;
 .bzsec h5{margin:0 0 8px;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;
  font-weight:800;color:var(--bright)}
 .bzsec p.fine{margin:9px 0 0;font-size:11.5px;line-height:1.5;color:var(--dim)}
+.bzsec h5 u{float:right;text-decoration:none;font-size:9px;letter-spacing:.05em;
+ padding:2px 8px;border-radius:999px;border:1px solid;text-transform:uppercase}
+.bzsec h5 u.rl{color:#8ff0c8;border-color:#16A97C}
+.bzsec h5 u.op{color:#f0cc8a;border-color:#E0AE4E}
+.bzfacts{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 11px;font-size:12px}
+.bzfacts dt{color:var(--dim);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;
+ font-weight:800;padding-top:2px;white-space:nowrap}
+.bzfacts dd{margin:0;line-height:1.45;color:#cfe6db}
+.bzfacts dd span{display:block;font-size:10.5px;color:var(--dim);margin-top:1px}
+.bzfacts dd.pay{color:var(--bright);font-weight:700}
+
 .perm{display:flex;align-items:center;gap:10px;font-size:12.5px;padding:9px 0;line-height:1.4}
 .perm+.perm{border-top:1px solid var(--line)}
 .perm span{flex:1}
@@ -253,6 +264,54 @@ body{background:#04070a;color:#eaf3ee;
 .count b{color:var(--bright)}
 .foot{flex:0 0 auto;padding:10px 16px calc(env(safe-area-inset-bottom) + 14px)}
 .hint{text-align:center;font-size:12px;color:var(--dim);padding-bottom:8px}
+/* ---- the lookup: five answers, a hand-over note, and the valuable empty ---- */
+.lknote{margin-top:12px;font-size:11.5px;line-height:1.55;color:var(--dim);padding:9px 10px;
+ border-radius:12px;background:rgba(255,255,255,.04);border-left:3px solid var(--c)}
+.lkempty{font-size:13px;line-height:1.6;color:var(--dim);padding:18px 14px;border-radius:16px;
+ border:1px dashed var(--line);background:rgba(255,255,255,.03);text-align:center}
+.lkempty>b:first-child{display:block;font-size:15px;color:var(--bright);margin-bottom:6px}
+.lkask{margin-top:14px;text-align:center}
+.lkask span{display:block;font-size:11px;color:var(--dim);padding-top:7px;line-height:1.5}
+/* ---- ask your traders: a phone-around, five at most, never a group ---- */
+.trd{display:flex;flex-direction:column;gap:7px}
+.tr{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:14px;
+ border:1px solid var(--line);background:rgba(255,255,255,.04);cursor:pointer}
+.tr.on{border-color:var(--c);background:rgba(255,255,255,.09)}
+.tr .av{width:30px;height:30px;border-radius:50%;background:var(--c);color:#04140e;
+ display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:900;flex:0 0 auto}
+.tr .nm{flex:1;min-width:0;font-size:13.5px;font-weight:700;color:var(--bright);line-height:1.25}
+.tr .nm span{display:block;font-size:11px;font-weight:500;color:var(--dim)}
+.tr i{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);flex:0 0 auto}
+.tr.on i{border-color:var(--c);background:var(--c)}
+.bzsaid{margin-top:11px;font-size:12.5px;line-height:1.55;color:var(--bright);padding:10px 11px;
+ border-radius:12px;border:1px solid var(--c);background:rgba(255,255,255,.06);animation:pop .28s ease}
+/* ---- the two listing tails ---- */
+.whoami{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:14px;
+ border:1px solid var(--c);background:rgba(255,255,255,.06);margin-bottom:12px}
+.whoami .av{width:30px;height:30px;border-radius:50%;background:var(--c);color:#04140e;
+ display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:900;flex:0 0 auto}
+.whoami .nm{flex:1;min-width:0;font-size:13px;font-weight:800;color:var(--bright);line-height:1.25}
+.whoami .nm span{display:block;font-size:11px;font-weight:500;color:var(--dim)}
+.whoami u{text-decoration:none;font-size:11px;color:var(--dim);flex:0 0 auto;cursor:pointer}
+.msline{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:12px 13px;margin-bottom:14px;
+ border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.msline b{font-size:24px;font-weight:900;color:var(--c);line-height:1}
+.msline i{font-style:normal;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;
+ color:var(--dim);font-weight:800}
+.msline u{text-decoration:none;margin-left:auto;font-size:11px;color:var(--dim)}
+.msline span{flex:1 0 100%;font-size:11.5px;color:var(--dim);line-height:1.5;padding-top:7px}
+.joinbox{margin-top:12px;padding:12px;border-radius:16px;border:1px solid var(--c);
+ background:rgba(255,255,255,.05);animation:pop .28s ease}
+.joinbox>b:first-child{display:block;font-size:13.5px;color:var(--bright);margin-bottom:9px}
+.joinbox p{margin:10px 0 0;font-size:11.5px;line-height:1.55;color:var(--dim)}
+.dswitch{display:flex;align-items:center;gap:9px;justify-content:center;margin-top:15px;
+ font-size:11px;color:var(--dim);cursor:pointer}
+.dswitch i{width:32px;height:18px;border-radius:999px;background:rgba(255,255,255,.14);
+ border:1px solid var(--line);position:relative;flex:0 0 auto}
+.dswitch i:after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;
+ border-radius:50%;background:var(--dim);transition:.18s}
+.dswitch.on i{background:var(--c);border-color:var(--c)}
+.dswitch.on i:after{left:16px;background:#04140e}
 </style>
 </head>
 <body>
@@ -361,6 +420,14 @@ function drawDoor(){
    +'<div class="acts">'
    +'<button class="btn ghost" id="bFind">'+c.findLabel+'</button>'
    +'<button class="btn solid" id="bSell">'+c.sellLabel+'</button></div>';
+  /* DEMO ONLY. In the live spreader QUICK comes from GET /quick/me, answered from the
+     ts_user cookie the browser already has - same origin, RUL-125(a). There is no
+     switch and no sign-in screen; the door simply already knows. */
+  $('screen').innerHTML +=
+    '<div class="dswitch'+(QUICK.member?' on':'')+'" id="dsw"><i></i><span>'
+   +(QUICK.member
+      ? 'Demo: returning member &mdash; nothing is re-asked'
+      : 'Demo: new here &mdash; asked once, at the very end')+'</span></div>';
   heroIx=Math.floor(Math.random()*c.hero.length);
   cycleHero(true);
   clearInterval(heroTimer); heroTimer=setInterval(cycleHero,4000);
@@ -368,6 +435,11 @@ function drawDoor(){
   $('next').onclick=function(){swipe(1);};
   $('bFind').onclick=function(){start('find');};
   $('bSell').onclick=function(){start('sell');};
+  $('dsw').onclick=function(){
+    QUICK.member=!QUICK.member;
+    QUICK.name=QUICK.member?'Kobus Venter':''; QUICK.city=QUICK.member?LOC.suburb:'';
+    drawDoor();
+  };
 }
 function cycleHero(first){
   var o=$('orb'); if(!o) return;
@@ -487,16 +559,40 @@ function drawWeek(s,trail){
   paint();
 }
 
+/* ===========================================================================
+   THREE MODES, ONE ENGINE  (design reviewed by David, 14 Sep 2026)
+
+   The spreader holds exactly three facts - who you are, what you have already
+   accepted, and what exists - and it has exactly three modes:
+
+     stranger + listing   7-8 steps   the only path that asks anything
+     member   + listing   5-6 steps   nothing re-asked, ever
+     anyone   + looking   4-5 steps   answers "is it there", never "get it"
+
+   The tap engine does not know any of that. The same renderer, the same category
+   table, the same four taps serve all three, and the ONLY thing that differs is
+   what happens after the last tap. That lives in finish() below and nowhere else.
+   If a change ever needs a SECOND place to know a mode exists, the change is
+   wrong - that is the rule that keeps forty-eight screens down to one.
+
+   In the live app QUICK is filled from GET /quick/me, which the browser can ask
+   for because the ts_user cookie is already there - same origin, RUL-125(a). Here
+   it is a switch on the door so both tails can be seen.
+   ------------------------------------------------------------------------- */
+var QUICK={member:false, name:'', city:''};
+function finish(){
+  setNav();
+  if(mode==='find'){ drawLookup(); return; }   /* is it there */
+  drawDraft();                                 /* list it - the tail differs inside */
+}
+
 /* ---------------- result ---------------- */
 function pickOf(k){ for(var i=0;i<picks.length;i++) if(picks[i].key===k) return picks[i]; return null; }
 function heroPhoto(){
   for(var i=picks.length-1;i>=0;i--) if(picks[i].photo) return picks[i].photo;
   return cat().hero[0];
 }
-function drawResult(){
-  setNav();
-  if(mode==='sell') drawDraft(); else drawAds();
-}
+function drawResult(){ finish(); }
 /* ===========================================================================
    THE LISTER SEES ALL THREE OF HIS OWN SCORES AND IS TOLD WHAT TO DO NEXT.
    (RUL-121, David 12 Sep 2026, amending RUL-120(a)+(d).) The hiding was never
@@ -664,6 +760,16 @@ function drawDraft(){
   var facts=picks.map(function(p){return '<span>'+p.label+'</span>';}).join('');
   var q=lsOf(picks,0), ts=SELLER.ts, rs=rsOf(q.score,ts), tb=trustBand(ts);
   var top=q.missing[0];
+  /* THE ONLY PLACE A MODE EXISTS ON THE LISTING SIDE. Everything above this line
+     ran identically for both. A returning member is not re-asked, not re-taught
+     and not re-consented; a stranger gets the coaching AND the one ask, once. */
+  var mem=QUICK.member;
+  var who = mem
+    ? '<div class="whoami"><div class="av">'+initialsOf(QUICK.name)+'</div>'
+      +'<div class="nm">Publishing as '+QUICK.name
+      +'<span>'+QUICK.city+' &middot; terms already accepted &middot; nothing to re-enter</span></div>'
+      +'<u id="msch">change</u></div>'
+    : '';
   /* ONE list, not two. The checklist and the coaching were the same thing said
      twice; now every line that carries points shows them, and the two that carry
      none (wording, number) sit below. */
@@ -671,13 +777,7 @@ function drawDraft(){
       return '<div><span class="plus">+</span>'+m.t+'<b>+'+Math.round(m.pts)+'</b></div>'; })
     .concat(['<div><span class="plus">+</span>Check the wording</div>',
              '<div><span class="plus">+</span>Confirm your number</div>']).join('');
-  $('screen').className='screen';
-  $('screen').innerHTML='<div class="q">Here is your advert</div>'
-   +'<div class="body">'
-   +'<div class="draftflag"><span>&#9998;</span> Draft &mdash; '+(q.missing.length+2)+' things left to finish</div>'
-   +'<div class="card"><img class="hero" src="'+PH[heroPhoto()]+'" alt="">'
-   +'<div class="pad"><h3>'+title+'</h3><p>'+c.draftBody(picks)+'</p>'
-   +'<div class="facts">'+facts+'</div></div></div>'
+  var full=''
    +'<div class="scores">'
    +'<h4>Your three scores</h4>'
    +'<p class="yours">Only you see these. Buyers see the star alone.</p>'
@@ -708,14 +808,35 @@ function drawDraft(){
    +'the other two does, never on its own.'
    +(SELLER.vouched?'':' Your trust score opens when somebody outside vouches for you, or you pass an ID check.')
    +'</div></div>'
+   ;
+  /* The member has met all of that before. He gets the one number that moved and
+     the one number still on the table - and the app, not the spreader, is where
+     he goes to collect it. Teaching a man twice is how you lose him. */
+  var scores = mem
+    ? '<div class="msline"><b>'+q.score+'</b><i>listing score</i>'
+      +'<u>&#9733; '+ts+' trust</u>'
+      +'<span>+'+q.headroom+' still on the table &mdash; the app shows you where, and your '
+      +'trust score follows you onto every listing you ever make.</span></div>'
+    : full;
+  $('screen').className='screen';
+  $('screen').innerHTML='<div class="q">Here is your advert</div>'
+   +'<div class="body">'
+   +who
+   +(mem
+      ? '<div class="draftflag"><span>&#9998;</span> Draft &mdash; publish now, polish it in the app</div>'
+      : '<div class="draftflag"><span>&#9998;</span> Draft &mdash; '+(q.missing.length+2)+' things left to finish</div>')
+   +'<div class="card"><img class="hero" src="'+PH[heroPhoto()]+'" alt="">'
+   +'<div class="pad"><h3>'+title+'</h3><p>'+c.draftBody(picks)+'</p>'
+   +'<div class="facts">'+facts+'</div></div></div>'
+   +scores
    +'<div class="todolab">Each of these adds to your listing score</div>'
    +'<div class="todo" id="todo">'+jobs+'</div>'
    +'<div class="buzzcard"><b>Buzz &mdash; one line to the other phone</b>'
-   +'<p>Type one line, press Buzz, and it lands on your employer&rsquo;s phone with your name on '
-   +'it. She has exactly the same button for you. One line each way, no thread to scroll, '
-   +'and email catches it if her push is off.</p>'
+   +'<p>'+comms().card+' They have exactly the same button for you. One line each way, no '
+   +'thread to scroll, and email catches it if their push is off.</p>'
    +'<button class="btn ghost" id="bzgo" style="width:100%;padding:13px">See how it works</button>'
    +'</div>'
+   +'<div id="jslot"></div>'
    +'<div class="hres" id="hres" style="display:none"></div>'
    +'</div>'
    +'<div class="foot"><button class="btn solid" id="pub" style="width:100%">Publish it</button>'
@@ -723,8 +844,11 @@ function drawDraft(){
   $('bzgo').onclick=function(){ drawBuzz(); };
   var tds=$('todo').children;
   for(var i=0;i<tds.length;i++) tds[i].onclick=function(){ this.className=this.className?'':'did'; };
-  $('pub').onclick=function(){
-    var btn=this; btn.disabled=true; btn.textContent='Handing over…';
+  if($('msch')) $('msch').onclick=function(){
+    this.textContent='in TrustSquare';
+  };
+  function doPublish(btn){
+    btn.disabled=true; btn.textContent='Handing over…';
     handOver(function(res){
       var box=$('hres'); box.style.display='block';
       if(res.err){
@@ -744,8 +868,86 @@ function drawDraft(){
         $('pubhint').textContent='Draft #'+res.id+' — one server, one rulebook.';
       }
     });
+  }
+  /* THE ONE ASK, AND IT IS THE LAST THING THAT HAPPENS. Nothing is collected on the
+     way in, because a stranger who is made to sign up before he has seen anything
+     leaves. He types four taps, sees his own advert, and only then is asked for the
+     one thing publishing genuinely needs. A member is never shown this at all - and
+     once a stranger has been through it once, neither is he, ever again. */
+  function joinThen(btn){
+    var slot=$('jslot');
+    slot.innerHTML='<div class="joinbox"><b>One thing, once.</b>'
+      +'<div class="bzin"><input id="jmail" type="email" autocomplete="email" '
+      +'placeholder="you@example.com"><button id="jgo" disabled>Publish</button></div>'
+      +'<p>Publishing accepts the TrustSquare terms, including Buzz exactly as it is '
+      +'\u2014 a doorbell between two people, not a messaging service, with an off '
+      +'switch on both sides. This is the only thing this screen ever asks you, and '
+      +'it will not ask you again on any device you are signed in on.</p></div>';
+    $('jmail').oninput=function(){ $('jgo').disabled = !/.+@.+\..+/.test(this.value); };
+    $('jgo').onclick=function(){
+      var m=$('jmail').value.trim();
+      QUICK.member=true; QUICK.name=nameFromMail(m); QUICK.city=LOC.suburb;
+      slot.innerHTML='';
+      doPublish(btn);
+    };
+    try{ $('jmail').focus(); }catch(e){}
+  }
+  $('pub').onclick=function(){
+    var btn=this;
+    if(QUICK.member){ doPublish(btn); return; }
+    joinThen(btn);
   };
 }
+function nameFromMail(m){
+  var n=(m.split('@')[0]||'you').replace(/[^a-zA-Z]+/g,' ').trim().split(' ')[0]||'You';
+  return n.charAt(0).toUpperCase()+n.slice(1).toLowerCase();
+}
+/* ===========================================================================
+   THE LOOKUP. David, 14 Sep: a collector at a competition wants to know whether a
+   card is available - one question, one answer. That is NOT the shelf, and the
+   caps are what keep it from becoming one: five answers, no narrowing, no sort,
+   no paging, no map. If the right one is not in five the QUESTION was wrong, not
+   the list. An introduction is always a hand-over to the app; the spreader never
+   holds Tuppence.
+
+   The empty answer is the valuable one. Nothing listed means two things at once:
+   the demand loop gets a real signal (search-miss -> prospect pool, 6 Jul 2026),
+   and the person in front of us gets the move Maurice actually makes - phone the
+   three people who would know. That is "ask your traders" below.
+   ------------------------------------------------------------------------- */
+function drawLookup(){
+  var c=cat(), all=c.ads(picks,[]);
+  var five=all.slice(0,5);
+  var trail=picks.map(function(p){
+    return p.photo?'<img src="'+PH[p.photo]+'" alt="">':'<span>'+p.label+'</span>'; }).join('');
+  var cards=five.map(function(a,i){
+    var tb=trustBand(a.ts);
+    return '<div class="ad" style="animation-delay:'+(i*25)+'ms"><img src="'+PH[a.p]+'" alt="">'
+     +'<div class="p"><div class="t">'+a.t+'</div>'
+     +'<div class="sub">'+a.sub+'</div>'
+     +'<div class="m"><b>'+a.price+'</b>'
+     +'<span class="ts" style="color:'+tb.c+';border-color:'+tb.c+'55">&#9733; '+a.ts+'</span>'
+     +'</div></div></div>'; }).join('');
+  $('screen').className='screen';
+  $('screen').innerHTML=
+    '<div class="q" style="font-size:19px">'+(five.length?'Yes &mdash; '+five.length+' near you':'Not listed right now')+'</div>'
+   +'<div class="trail">'+trail+'</div>'
+   +'<div class="body">'
+   +(five.length
+      ? '<div class="count"><span style="font-size:11.5px">'+LOC.suburb
+        +' first &middot; &#9733; is trust</span></div><div class="grid">'+cards+'</div>'
+        +'<div class="lknote">Tap one to ask for an introduction &mdash; that opens the '
+        +'TrustSquare app, where the introduction and the Tuppence live. This screen only '
+        +'ever answers whether it is there.</div>'
+      : '<div class="lkempty"><b>Nobody has one listed.</b>That is worth knowing in itself &mdash; '
+        +'it goes into the wanted list, and the next person who lists one gets told you asked.</div>')
+   +'<div class="lkask"><button class="btn ghost" id="lkask" style="width:100%">'
+   +'Ask your traders instead</button>'
+   +'<span>The people you have dealt with before. One line, to each of them.</span></div>'
+   +'</div>';
+  $('lkask').onclick=drawTraders;
+}
+
 function drawAds(){
   var c=cat(), all=c.ads(picks,narrow);
   /* No re-ranking any more: every card in the pool already satisfies every tap
@@ -809,17 +1011,116 @@ function drawAds(){
    Where it is switched on for real is not ruled yet - the onboarding panel below
    is the shape of that ask, not its final home.
    ------------------------------------------------------------------------- */
+/* ===========================================================================
+   COMMS PER CATEGORY - RUL-132 made into data rather than into branches.
+
+   David, 14 Sep 2026: "vary the flow freely; never fork the consent model", then
+   "implement it as per your read". So everything a CATEGORY can change lives in
+   this table - who the two people are, how they met, who pays, how many at once,
+   and what a buzz is actually for - and everything that protects them lives in
+   the code below, once, identically, for all eight.
+
+   What may never move, whatever a row here says: a buzz travels only between two
+   CONNECTED parties; each side holds its own switch; the sender's NAME is on the
+   buzz and on the answer; one close ends it BOTH ways and only the closer reopens;
+   push first, email backup, never a per-message cost.
+
+   RULED rows: homehelp (the original free lane) and property (RUL-131/132).
+   The rest are Claude's read, built so David can argue with a screen instead of
+   a paragraph. Every row says which it is, on screen.
+   ------------------------------------------------------------------------- */
+var COMMS={
+  homehelp:{
+    ruled:true,
+    a:'Thandi Mokoena', b:'Mrs Nkosi', bRole:'your employer, Menlyn',
+    met:'You brought her - she joined from your own link.',
+    pay:'Free, always. You brought this connection, so there is nothing to sell.',
+    many:'One pair per job. As many pairs as you have employers.',
+    sample:'Running late, the taxi is stuck at Solomon Mahlangu',
+    card:'One tap on your phone buzzes your employer, with your name on it.'},
+  property:{
+    ruled:true,
+    a:'Anna Pretorius', b:'Bekker Properties', bRole:'the agency holding your listing',
+    met:'They asked for your details and paid for the introduction.',
+    pay:'The AGENCY paid. You never pay to be found - you are the lead.',
+    many:'ONE agency at a time. Close it and the next one may take a turn.',
+    sample:'Can you come at 4? The gate code is 1180',
+    card:'One line to the agency holding your place - viewings, offers, show days.'},
+  adventures:{
+    a:'Kagiso Sithole', b:'Kruger Gate Lodge', bRole:'one of the places you asked',
+    met:'You asked several places at once - they all answered.',
+    pay:'You paid one introduction. Talking to all of them is included.',
+    many:'MANY at once. Three quotes is the point - exclusivity would be absurd.',
+    sample:'We land at 6, is that too late to check in?',
+    card:'One line to every place you asked - dates, late arrivals, one more bed.'},
+  services:{
+    a:'Hannes Roux', b:'Piet Grobler', bRole:'the plumber you called',
+    met:'Either - the platform found him, or he was already your man.',
+    pay:'A stranger cost a Tuppence. Your own regulars are free.',
+    many:'Many, and repeating. A tradesman carries dozens of standing customers.',
+    sample:'On my way, need to fetch a part first',
+    card:'One line to the trade you use - on my way, running late, job done.'},
+  tutors:{
+    a:'Nomsa Khumalo', b:'Mr Ncube', bRole:'your child\u2019s tutor',
+    met:'The platform introduced you, and then it repeats every week.',
+    pay:'You paid the introduction. The weekly rhythm after it is free.',
+    many:'One pair per child, standing for a school term.',
+    sample:'Can we move to Thursday? She has exams',
+    card:'One line to the tutor - a moved lesson, an exam week, a late child.',
+    note:'A third person is in this one - the child. Nothing about her goes '
+        +'through a buzz; this is the two adults arranging their own diary.'},
+  cars:{
+    a:'Lerato Mokoena', b:'Sipho Dlamini', bRole:'the buyer who asked',
+    met:'He paid for the introduction to your car.',
+    pay:'He paid. Answering him costs you nothing.',
+    many:'Many buyers, one car - and it ENDS the day it sells.',
+    sample:'Still available? I can view at 5',
+    card:'One line to the people asking about your car - until it is sold.',
+    ends:true,
+    note:'This is the one category where closing is the normal ending, not a '
+        +'complaint. When the car is sold, close them all - that is the feature '
+        +'working, not failing.'},
+  collectors:{
+    a:'Johan de Wet', b:'Marie Fourie', bRole:'a collector you dealt with',
+    met:'One introduction, years ago. You have traded ever since.',
+    pay:'Paid once, at the first introduction. Everything after is yours.',
+    many:'Many, and long-lived - collectors keep the same people for decades.',
+    sample:'Got the 1947 penny. Swap for your duplicate?',
+    card:'One line to the collectors you trade with.'},
+  localmarket:{
+    a:'Grace Sibanda', b:'Zanele Dube', bRole:'two streets over',
+    met:'She lives around the corner. You probably already knew her.',
+    pay:'Usually nothing - at these amounts an introduction rarely applies.',
+    many:'Many, casual, short.',
+    sample:'At the gate, bring change if you can',
+    card:'One line to your neighbour - at the gate, sold out, bring change.'}
+};
+function comms(){
+  var c=COMMS[cat().key];
+  return c || {a:'You', b:'Them', bRole:'the other person',
+               met:'You are connected.', pay:'', many:'',
+               sample:'Say it in one line', card:'One line to the other phone.'};
+}
 var BUZZ={
-  /* Two parties and a length cap - nothing in here knows what a housekeeper is.
-     Point it at any two people and the panel is the same panel.
-     Give the parties real EMAILS and set HANDOVER.url, and the same panel stops
-     being an example and posts to the real /buzz on the same server the live app
-     uses - one server, one rulebook (RUL-125(b)). Without both, it is a dry run
-     and says so. */
-  parties:[{name:'Thandi Mokoena', email:'', mine:true},
-           {name:'Mrs Nkosi',    email:'', mine:false}],
+  me:'',            /* the host page sets this when a real user is signed in */
+  /* The two parties are filled from COMMS for whichever category the user is in.
+     Give them real EMAILS and set HANDOVER.url, and the same panel stops being an
+     example and posts to the real /buzz on the server the live app uses - one
+     server, one rulebook (RUL-125(b)). Without both, it is a dry run and says so. */
+  parties:[{name:'', email:'', mine:true},
+           {name:'', email:'', mine:false}],
   limit:120
 };
+function buzzParties(){
+  /* Party A is the CATEGORY's person unless a real signed-in user is supplied by
+     the host page (BUZZ.me). The first build cached the first name it ever saw,
+     so a property seller was still called the housekeeper - found by walking all
+     eight categories rather than by reading the code. */
+  var k=comms();
+  BUZZ.parties[0].name = BUZZ.me || k.a;
+  BUZZ.parties[1].name = k.b;
+  return BUZZ.parties;
+}
 function buzzLive(){
   return !!(HANDOVER.url && BUZZ.parties[0].email && BUZZ.parties[1].email);
 }
@@ -850,7 +1151,8 @@ function clockNow(){
 }
 function drawBuzz(){
   atBuzz=true;
-  var A=BUZZ.parties[0], B=BUZZ.parties[1];
+  var K=comms();
+  var P=buzzParties(), A=P[0], B=P[1];
   var from=0;                        /* index of whoever is pressing the button */
   var perm={mine:false, theirs:false};
   function other(){ return from===0?B:A; }
@@ -864,6 +1166,16 @@ function drawBuzz(){
    +'<div class="body">'
    +'<div class="bzlede">One line, straight to the other phone, with your name on it. '
    +'No thread, no history, nothing to scroll &mdash; say the one thing and it is said.</div>'
+   /* WHAT THIS CATEGORY CHANGES - and it is only ever these four lines. */
+   +'<div class="bzsec"><h5>'+cat().name+' &mdash; how it works here'
+   +(K.ruled?'<u class="rl">ruled</u>':'<u class="op">not ruled yet</u>')+'</h5>'
+   +'<dl class="bzfacts">'
+   +'<dt>Who</dt><dd>'+A.name+' &harr; '+B.name+'<span>'+K.bRole+'</span></dd>'
+   +'<dt>How you met</dt><dd>'+K.met+'</dd>'
+   +'<dt>Who paid</dt><dd class="pay">'+K.pay+'</dd>'
+   +'<dt>How many</dt><dd>'+K.many+'</dd>'
+   +'</dl>'
+   +(K.note?'<p class="fine">'+K.note+'</p>':'')+'</div>'
    +'<div class="bzsec"><h5>Switched on in TrustSquare onboarding &mdash; once, by each of you</h5>'
    +'<div class="perm"><span>Let TrustSquare buzz <b>this</b> phone</span>'
    +'<div class="sw" id="p1"></div></div>'
@@ -877,7 +1189,7 @@ function drawBuzz(){
    +'<div class="dirs"><button id="d0">You &rarr; '+B.name+'</button>'
    +'<button id="d1">'+B.name+' &rarr; you</button></div>'
    +'<div class="bzin"><input id="bztxt" type="text" maxlength="'+BUZZ.limit+'" '
-   +'autocomplete="off" placeholder="Say it in one line"><button id="bzsend">Buzz</button></div>'
+   +'autocomplete="off" placeholder="'+K.sample+'"><button id="bzsend">Buzz</button></div>'
    +'<div class="bzleft" id="bzleft"></div></div>'
    +'<div class="bznote">It arrives as a push on the phone, free and self-hosted &mdash; the same '
    +'push the live app already uses. If her phone has no push switched on, it goes to her email '
@@ -886,6 +1198,11 @@ function drawBuzz(){
    +'&mdash; phones go flat and networks fail, so if it matters, phone. Either of you can close it '
    +'at any time: closing it closes it for both, the other person is told plainly, and whoever '
    +'closed it can open it again. You already have each other\u2019s numbers.</div>'
+   +(comms().ends
+       ? '<div class="bznote" style="border-left-color:#5B4BD6">When the car is sold, '
+         +'close every one of them. Here that is the feature working, not failing &mdash; '
+         +'the pair was always meant to end.</div>'
+       : '')
    +'<div class="bzwarn" id="bzmode"></div>'
    +'</div>'
    +'<div class="foot"><button class="btn solid" id="bzback" style="width:100%">'
@@ -898,7 +1215,7 @@ function drawBuzz(){
   function paintDirs(){
     $('d0').className=(from===0?'on':'');
     $('d1').className=(from===1?'on':'');
-    $('bztxt').placeholder = from===0 ? 'Say it in one line'
+    $('bztxt').placeholder = from===0 ? K.sample
                                       : 'What '+B.name+' would say, in one line';
   }
   function paintLeft(){
@@ -957,6 +1274,82 @@ function drawBuzz(){
   $('bzsend').onclick=send;
   $('bzback').onclick=function(){ atBuzz=false; drawDraft(); };
   paintPerm(); paintDirs(); paintLeft();
+}
+
+/* ===========================================================================
+   ASK YOUR TRADERS. David, 14 Sep: "Maurice has fixed sources he has to phone in
+   a hurry to find out, do you have this or that. They sometimes know who could
+   have what."
+
+   That is a real move and Buzz already almost is it - but Buzz is strictly a PAIR,
+   and a broadcast would break the one thing that must never fork. So this is NOT
+   a broadcast: it is one typing that sends N INDIVIDUAL buzzes, each one still
+   governed by that pair's own switch, that pair's closed state and the sender's
+   hourly limit. Nothing about consent changes; only the compose step does.
+
+   Capped at five, because Maurice phones three or four people, not thirty - the
+   cap is what keeps this a phone-around rather than a mailing list.
+
+   THE LINE CLAUDE WOULD NOT CROSS: replies come back as ordinary one-to-one
+   buzzes, never a group thread. A group thread is where moderation, support load
+   and "who said that" begin, and none of those belong in a doorbell.
+   ------------------------------------------------------------------------- */
+var TRADERS=[
+  {name:'Marie Fourie',  last:'coins, last year'},
+  {name:'Johan de Wet',  last:'stamps, March'},
+  {name:'Anna Pretorius',last:'militaria, twice'},
+  {name:'Pieter Nel',    last:'watches, 2024'},
+  {name:'Elsa Joubert',  last:'art, once'},
+  {name:'Kobus Venter',  last:'cards, last month'}
+];
+var TRADER_CAP=5;
+function drawTraders(){
+  var picked={};
+  $('screen').className='screen';
+  $('screen').innerHTML='<div class="q" style="font-size:19px">Ask the people who would know</div>'
+   +'<div class="body">'
+   +'<div class="bzlede">One line, to each of them separately. They never see each other &mdash; '
+   +'this is the phone-around, not a group.</div>'
+   +'<div class="trd" id="trd">'+TRADERS.map(function(t,i){
+      return '<div class="tr" data-t="'+i+'"><div class="av">'+initialsOf(t.name)+'</div>'
+        +'<div class="nm">'+t.name+'<span>'+t.last+'</span></div><i></i></div>'; }).join('')+'</div>'
+   +'<div class="bzin" style="margin-top:12px"><input id="trtxt" type="text" maxlength="120" '
+   +'autocomplete="off" placeholder="Anyone got a 1947 penny?"><button id="trgo" disabled>Ask</button></div>'
+   +'<div class="bzleft" id="trleft">Pick up to '+TRADER_CAP+'.</div>'
+   +'<div id="trsaid"></div>'
+   +'<div class="bznote">Each one is an ordinary buzz, with your name on it, and each of them can '
+   +'switch you off on their own. There is no group and no thread &mdash; whoever knows something '
+   +'buzzes you back.</div>'
+   +'</div>'
+   +'<div class="foot"><button class="btn solid" id="trback" style="width:100%">Back</button></div>';
+  function count(){ var n=0; for(var k in picked) if(picked[k]) n++; return n; }
+  function paint(){
+    var rows=$('trd').children;
+    for(var i=0;i<rows.length;i++) rows[i].className='tr'+(picked[i]?' on':'');
+    var n=count(), txt=$('trtxt').value.trim();
+    $('trgo').disabled = !(n && txt);
+    $('trleft').textContent = n ? (n+' of '+TRADER_CAP+' picked') : ('Pick up to '+TRADER_CAP+'.');
+  }
+  var rows=$('trd').children;
+  for(var i=0;i<rows.length;i++) rows[i].onclick=function(){
+    var i=+this.getAttribute('data-t');
+    if(!picked[i] && count()>=TRADER_CAP){
+      $('trleft').textContent='Five is the cap \u2014 this is a phone-around, not a mailing list.';
+      return;
+    }
+    picked[i]=!picked[i]; paint();
+  };
+  $('trtxt').oninput=paint;
+  $('trgo').onclick=function(){
+    var who=[]; for(var k in picked) if(picked[k]) who.push(TRADERS[k].name);
+    var txt=$('trtxt').value.trim();
+    $('trsaid').innerHTML='<div class="bzsaid">Asked <b>'+who.join('</b>, <b>')+'</b> \u2014 '
+      +who.length+' separate buzz'+(who.length>1?'es':'')+', each with your name on it. '
+      +'Whoever knows something buzzes you back.</div>';
+    $('trtxt').value=''; paint();
+  };
+  $('trback').onclick=function(){ drawLookup(); };
+  paint();
 }
 
 /* ---------------- nav ---------------- */
