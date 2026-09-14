@@ -1,5 +1,5 @@
 {
-  "next_id": 123,
+  "next_id": 124,
   "items": {
     "DW-001": {
       "first_seen": "2026-08-02",
@@ -1326,6 +1326,15 @@
       "status": "OPEN",
       "summary": "NEW - two OPEN ledger entries have been passing and nobody promoted them, so their red would not be believed if it came. RG-0363 (the offline banner cannot LATCH - it proves the outage before it speaks, clears itself on a probe rather than an 'online' event, and promises no cache the worker does not hold) and RG-0364 (the service worker is REGISTERED on every page load, not only for whoever opts into push - without it nothing controls the page and both the install offer and web push are built and unreachable). Both printed READY TO LOCK today. An OPEN entry is EXPECTED to fail, so while they sit OPEN a genuine break in either lane reads as business as usual and the run still exits 0 on their account. Armed, verdict not yet trusted - the armed-unasserted shape, hence a BLUE card.",
       "next_action": "CTO lane, one line each: promote RG-0363 and RG-0364 from OPEN to LOCKED in scripts/regression_ledger.py so a future break reads as a REGRESSION. Never weaken either assertion to make the promotion easy."
+    },
+    "DW-123": {
+      "first_seen": "2026-09-14",
+      "last_seen": "2026-09-14",
+      "sev": "MEDIUM",
+      "source": "Phase D self-commit - git commit refused, then scripts/git_unlock.py re-run",
+      "status": "OPEN",
+      "summary": "NEW - the watch's own commit was blocked by a stranded git lock that git_unlock.py does not cover, and the gap is a whole lock CLASS. Phase D failed with \"cannot lock ref 'HEAD': Unable to create '.git/refs/heads/main.lock': File exists\". Measured: main.lock was 0 bytes, mtime 06:21:20 - 32 minutes older than the 06:53 commit that hit it - and pgrep git found no git process, so it was stranded, not live. HEAD sits at ceba06b 'Release Mon 09/14/2026 6:20:50', naming the writer that left it. git_unlock.py ran first as GIT-LOCK-3 requires and reported 'no stale locks': it sweeps index/HEAD/packed-refs/next-index but NOT refs/heads/*.lock, so the one lock blocking the commit was invisible to the tool written to clear it. Cleared by the sanctioned method (renamed into .git/stale_locks/, never unlinked) and the commit then succeeded as a6d3290. Also observed: on this mount every sandbox git write fails to unlink its own index.lock, so each command strands a lock for the next. MEDIUM because RG-0015 only tripwires a stranded lock after 60 minutes, so a 32-minute ref lock is blocking and below the alarm line.",
+      "next_action": "CTO lane: add refs/heads/*.lock (ref locks generally) to git_unlock.py's lock class to match git_unlock.bat host-side, and consider dropping RG-0015's 60-minute threshold for ref locks, which block the next writer immediately rather than eventually."
     }
   },
   "last_run": "2026-09-14",
@@ -2172,7 +2181,8 @@
     "opened": [
       "DW-120",
       "DW-121",
-      "DW-122"
+      "DW-122",
+      "DW-123"
     ],
     "closed": [
       "DW-118",
@@ -2190,6 +2200,11 @@
       "red": 1,
       "grey": 10,
       "cards": 88
+    },
+    "phase_d": {
+      "commit": "a6d3290",
+      "files": 8,
+      "note": "blocked once by a stranded refs/heads/main.lock from the 06:20 release; cleared by rename, filed as DW-123"
     }
   }
 }
