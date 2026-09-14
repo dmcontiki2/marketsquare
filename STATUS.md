@@ -8,23 +8,15 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-09-14 - 2026-09-14 — Maintenance loop: the Last-done panel was blank by construction)
+## Last Completed (2026-09-14 - 2026-09-14 — Zero real conversions: the funnel was counting our own test accounts)
 
-### 2026-09-14 — Maintenance loop: the Last-done panel was blank by construction
+### 2026-09-14 — Zero real conversions: the funnel was counting our own test accounts
 
-The ops dashboard's Last-done panel has been empty since 11 September, and every instrument
-around it read green — the heading was fresh, the compiler had run, the fragment was folded.
-The block's own first line was a level-2 heading, and the endpoint that reads the section stops
-at the next level-2 heading. So the fold wrote the content into a section that ended before it
-began.
-
-- Fixed at the producer: `scripts/status_compile.py` now pushes every heading in the block one
-  level down, so no fragment shape can truncate the section again.
-- New ledger entry RG-0365 judges the file the consumer actually reads, not the compiler's
-  intention — it fails the moment the section parses empty, without needing a deploy or a key.
-- RG-0363 (offline banner cannot latch) and RG-0364 (service worker registered at app start)
-  promoted to LOCKED — both were passing.
-- Maintenance agent shadow run: fault queue empty, nothing to fix, heartbeat posted.
+David asked where the two published sellers were. Both are e2e test fixtures, as are all five
+"onboarded" — none was ever emailed. Real figures from outreach: 1,671 emailed, 354 opened,
+63 clicked, 0 onboarded, 0 published. Both boards now exclude test rows from every funnel stage and
+report them separately as test accounts; the fixtures stay because they prove the signup path works.
+RG-0370 locked over both. This was a real measurement of the wrong population, green for six weeks.
 
 <!-- DASH-FEED-1:END -->
 
@@ -49,6 +41,59 @@ began.
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+## 2026-09-14 — Zero real conversions: the funnel was counting our own test accounts
+
+David asked where the two published sellers were. Both are e2e test fixtures, as are all five
+"onboarded" — none was ever emailed. Real figures from outreach: 1,671 emailed, 354 opened,
+63 clicked, 0 onboarded, 0 published. Both boards now exclude test rows from every funnel stage and
+report them separately as test accounts; the fixtures stay because they prove the signup path works.
+RG-0370 locked over both. This was a real measurement of the wrong population, green for six weeks.
+
+## 2026-09-14 — Redundancy / independence / accountability: discussion paper delivered
+
+Built David's requested discussion input as a Professional Navy Word paper plus a colour-coded
+visual in the gallery, both regenerable from scripts. Sets out eight measured findings, the three
+patterns behind them, testable definitions for the three words, a six-condition readiness gate
+scored honestly today (2 fail, 3 untested, 1 pass), the Council separated by access rather than
+vendor, the risks in the design, and five decisions reserved to David as the meeting agenda.
+RUL-134 records the direction; nothing here is a requirement until David makes it one.
+
+## 2026-09-14 — The two funnels reconciled
+
+David spotted the Overview tiles and the new comms panel disagreeing. Probed: both correct, counting
+different things — current status (empties as people progress, and adds 1,111 phone-only Gumtree
+rows to scraped) versus cumulative timestamps. Every figure reconciles exactly. Each tile now names
+the other panel's number and why it differs; RG-0369 locked so the labels cannot quietly revert.
+
+## 2026-09-14 — EULA v1.16 adopted: Buzz has terms, while there is still nobody to migrate
+
+David ruled the Buzz clause in rather than leave it a draft: with no onboarded listers, a terms
+change that becomes a project later is an edit today. Added SS3.8 (convenience not a guarantee; we
+do not read or mediate; receiver-held consent, closable both ways; liability limit preserving the
+CPA) and a 90-day Buzz retention line in SS9.4 matching the code. Synced to the published page and
+the acceptance modal, on-screen copy at the switch now names and links the section, version
+registers moved to v1.16, and a stale v1.14 header repaired. RG-0367 locked, RUL-133 recorded.
+The deploy itself is still a separate act and has not been done.
+
+## 2026-09-14 — Comms tab built; the outreach decay measured and half of it fixed
+
+The nightly emailer never stopped, but it had narrowed to one category in three US states while
+3,941 uncontacted people sat in the pool. Measured the cause: 1,354 held on purpose (schools),
+718 stranded by a per-city category list that excluded instead of ordering, the rest held by the
+source-quality gate. CATPRIO-2 fixed the stranding — sendable cities 3 to 9, pool 659 to 724, six
+South African cities back on the ladder. RG-0368 locked. New Comms tab and /dashboard/comms endpoint
+show Buzz (connections, switches, delivery split) and outreach (runway, sends per day, bounce,
+onboarded, published), with a validated two-lane palette and an explicit NOT MEASURED state.
+Runway now reads 5 nights — supply quality is the binding constraint, not plumbing.
+
+## 2026-09-14 — Buzz capacity work closed out and locked
+
+The session that built the Buzz capacity fixes ended before its work was asserted or committed.
+Picked it up from disk and finished it: RG-0366 written and LOCKED (push capped, email fallback
+off the request path, buzz_log aged out — all four legs source-side), both new visuals indexed
+into the gallery, and both fact boards run from David's working tree. Ledger 353 entries, 331
+holding, 0 regressed, 0 unverified, exit 0; rulings check 107 checked, 0 fail.
 
 ## 2026-09-14 — Maintenance loop: the Last-done panel was blank by construction
 

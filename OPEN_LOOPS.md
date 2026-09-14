@@ -238,6 +238,16 @@ same defect class as an undated status assertion (the ONETAP_SETUP.md "(this is 
   coloured tile) point at different icons. Claude's read, built into the explainer not the code:
   the LISTER gets the Quick tile at first publish, the person she SENT it to gets the full
   TrustSquare tile. `genie/QUICK_SPREADER.html`. **One icon cannot serve both — David's call.**
+- **[C] DONE 14 Sep — the spreader's three modes are built.** One engine, and exactly one place that
+  knows a mode exists (`finish()`): stranger-listing keeps the full coaching and carries the ONE ask,
+  at the end; member-listing re-asks nothing and shows one score line; looking answers "is it there"
+  in five, then stops. 8 categories × both tails walked headless — 16/16 correct, 0 errors.
+  `genie/QUICK_THREE_MODES_BUILT.html`. Local only, not deployed.
+- **[D] NEW 14 Sep — the traders phone-around is built and is NOT ruled.** David said he was "just
+  wondering" about the Maurice case; Claude built it capped at five, as N individual buzzes (never a
+  broadcast, never a group thread), each still under that pair's own switch and closed state. It is
+  the one genuinely new behaviour rather than a re-dressing of Buzz. **Keep, cap differently, or pull
+  it until the app side is ported — David's call.** Removal is one line.
 - **[C] DONE 14 Sep — per-category comms live in the Quick Listing.** RUL-132 as a data table, not
   branches; each row badged ruled / not-ruled on screen. All eight categories driven in a browser,
   two real faults found and fixed in the process. Phase two — porting it to the app — is not started.

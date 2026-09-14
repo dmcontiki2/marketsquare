@@ -437,7 +437,7 @@ function drawDoor(){
   $('bSell').onclick=function(){start('sell');};
   $('dsw').onclick=function(){
     QUICK.member=!QUICK.member;
-    QUICK.name=QUICK.member?'Kobus Venter':''; QUICK.city=QUICK.member?LOC.suburb:'';
+    QUICK.name=QUICK.member?'Hannes Roux':''; QUICK.city=QUICK.member?LOC.suburb:'';
     drawDoor();
   };
 }
@@ -767,7 +767,7 @@ function drawDraft(){
   var who = mem
     ? '<div class="whoami"><div class="av">'+initialsOf(QUICK.name)+'</div>'
       +'<div class="nm">Publishing as '+QUICK.name
-      +'<span>'+QUICK.city+' &middot; terms already accepted &middot; nothing to re-enter</span></div>'
+      +'<span>'+QUICK.city+' &middot; terms accepted &middot; nothing re-asked</span></div>'
       +'<u id="msch">change</u></div>'
     : '';
   /* ONE list, not two. The checklist and the coaching were the same thing said
@@ -814,7 +814,7 @@ function drawDraft(){
      he goes to collect it. Teaching a man twice is how you lose him. */
   var scores = mem
     ? '<div class="msline"><b>'+q.score+'</b><i>listing score</i>'
-      +'<u>&#9733; '+ts+' trust</u>'
+      +(ts ? '<u>&#9733; '+ts+' trust</u>' : '<u>trust not opened yet</u>')
       +'<span>+'+q.headroom+' still on the table &mdash; the app shows you where, and your '
       +'trust score follows you onto every listing you ever make.</span></div>'
     : full;

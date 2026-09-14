@@ -192,3 +192,59 @@ already hire. That is the single highest-leverage screen in the whole product.
    Reason he gave: it supports "an introductory service only", and one Tuppence for an intro to
    a candidate is a bargain against agency placement fees. Candidate always accepts before the
    intro is delivered (hold model), so the low price cannot become a spray of unwanted intros.
+
+## 14 Sep 2026 — THE SPREADER: three modes, one engine (BUILT, harness only)
+
+David's requirement, verbatim: the Quick Listing is **"a separate app which can be listed in all of
+our emails instead of the trustsquare app, it replaces it"** — the spreader — and using it links to
+TrustSquare to create the icon. Plus: two tiles stay alive because **"when a collector wants to
+quickly sell or buy, then he can use the spreader rather than the app"**, and the spreader must
+**"recognize that the user is an already onboarded (Eula read, email given) user so that he isnt
+again asked to repeat anyrhing"**, in 4 to 7 steps.
+
+### The rule that keeps this from becoming a second app
+`finish()` is the **only** function in HARNESS.html that asks which mode it is in. Five lines.
+Everything before it — door, four taps, category table, week grid, COMMS table — is mode-blind.
+**If a change ever needs a second place to know a mode exists, the change is wrong.** That is what
+keeps 8 categories × 2 directions × 3 modes at one renderer instead of forty-eight screens.
+
+### The three modes
+
+| | steps | asks anything? | tail |
+|---|---|---|---|
+| stranger + listing | 7–8 | **yes, once, at the very end** | full coaching, three own scores, credentials, price note, then the join line |
+| member + listing | 5–6 | **never** | "Publishing as … · terms accepted · nothing re-asked" + one score line |
+| anyone + looking | 4–5 | never | five answers, then stop |
+
+The three facts the spreader is allowed to hold — **who you are, what you have accepted, what
+exists** — come from one `GET /quick/me`, which the browser can make because it is the same origin
+carrying the `ts_user` cookie (RUL-125(a)). A stateless snippet stays simple at any size; the moment
+it must KNOW things it stops behaving like one, so the cap is on *knowledge*, not on features.
+
+### Why the ask is last and not first
+A stranger made to sign up before he has seen anything leaves. He taps four times, sees his own
+advert with his own scores on it, and only then is asked for the one thing publishing genuinely
+needs. Going through it **promotes him to a member in the same session** — his next listing skips it.
+
+### The lookup ("is it there")
+David's competition case. One question, one answer: **five, then stop** — no narrowing, no sort, no
+paging, no map. If the right one is not in five, the question was wrong, not the list. An
+introduction is always a hand-over to the app; the spreader never holds an introduction or a
+Tuppence. **The empty answer is the valuable one**: it feeds the wanted list, the next lister is told
+somebody asked, and the person in front of us gets Maurice's move instead of a dead end.
+
+### Ask your traders — BUILT, NOT RULED (David: "i am just wondering on that one")
+The people he has dealt with before, **five at most**, one line typed once.
+
+- It is **not a broadcast.** It sends N **individual** buzzes. Each is still governed by that pair's
+  own switch, that pair's closed state and the sender's hourly limit. **Consent does not fork.**
+- Five, because Maurice phones three or four people, not thirty. Six is a mailing list.
+- **The line not crossed:** replies come back as ordinary one-to-one buzzes, **never a group thread.**
+  A group thread is where moderation, support load and "who said that" begin, and none of those
+  belong in a doorbell. If David wants a thread, that is a ruling, not an implementation detail.
+
+Removal, if he decides against it, is one line (`$('lkask').onclick`).
+
+### Status
+Harness only. Not deployed, not ported to the TrustSquare app — phase two, deferred by David.
+Visual: `genie/QUICK_THREE_MODES_BUILT.html`.
