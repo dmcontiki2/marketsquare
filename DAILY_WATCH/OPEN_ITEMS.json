@@ -1,5 +1,5 @@
 {
-  "next_id": 120,
+  "next_id": 123,
   "items": {
     "DW-001": {
       "first_seen": "2026-08-02",
@@ -80,11 +80,11 @@
     },
     "DW-010": {
       "first_seen": "2026-08-03",
-      "last_seen": "2026-09-13",
+      "last_seen": "2026-09-14",
       "sev": "MEDIUM",
       "source": "cc_age_check (Monday lane)",
       "status": "SCHEDULED",
-      "summary": "cc_age 2026-09-08: CC-002 open 90d vs the 7d threshold. Still SCHEDULED - today is the target week David deferred it to (from Mon 8 Sep 2026). The one decision that is his: land, re-defer, or retire CC-002 (its staged edits were built on the RETIRED five-tier model, so landing them is a canon call). cc_age 2026-09-07: CC-002 open 89d vs the 7d threshold (was 82d on 31 Aug). Still SCHEDULED - David formally deferred it on 21 Aug to the first post-launch week, from Mon 8 Sep 2026, which is tomorrow. Arriving on its own target date; nothing needed from this pass.",
+      "summary": "cc_age 2026-09-14: CC-002 open 96d and CC-005 open 13d against the 7d threshold - both past it, CC-002 now a day past the week David deferred it to. Stays SCHEDULED: landing CC-002 is a canon call (its staged edits were built on the RETIRED five-tier model), and that call is David's.",
       "disposition": "FORMALLY DEFERRED 2026-08-21 (attended session, reflected here by the watch) — CC-002 is ~10 open product/pricing questions in AWAITING_DAVID.md, several touching the EULA and one a live payment path, against SOFT-to-PUBLIC 29 Aug / FULL LAUNCH 1 Sep (RUL-001). Target: first post-launch week, from Mon 8 Sep 2026. David's veto point: name any single item that must land before launch and it lands on its own.",
       "last_note": "2026-09-13: cc_age_check.py re-run - CC-002 open 95d AND CC-005 open 12d vs the 7d threshold. CC-005 has now crossed too (9d on 10 Sep). Still SCHEDULED, formally deferred by David; the decision remains his."
     },
@@ -853,11 +853,11 @@
     },
     "DW-087": {
       "first_seen": "2026-08-31",
-      "last_seen": "2026-09-13",
+      "last_seen": "2026-09-14",
       "sev": "LOW",
       "source": "scripts/deep_scan.py (Monday lane) — delta vs SCAN_REPORT.json baseline 2026-08-24",
       "status": "OPEN",
-      "summary": "NOT RE-RUN 2026-09-08 (Tuesday, Monday-only lane) - still OPEN on the 7 Sep reading. STILL FAILING 2026-09-07 - the Monday deep-scan lane re-ran and all seven findings are still present, each reading new=false (SCAN_REPORT.json 2026-09-07T04:46:32Z, 4/4 tools, 241 findings, 15 new, 0 crash-class). Not closed: no check passed. **NEW — 7 new static findings on the Monday deep scan** (213 total, 0 crash-class; 4/4 tools ran: ruff 0.16.5, vulture 2.16, pylint 4.0.8, eslint 9.39.5). None is in app code — all sit in `migrations/` and `scripts/`: F401 `migrations/032_fares_refresh_cron.py:34` (subprocess unused); **F841 (MEDIUM) `migrations/033_csp_verify_served.py:208`** (`last` assigned never used); F401 `scripts/build_eval_set.py:27` (math); B023 `scripts/david_queue.py:48` (function does not bind loop variable `body` — the only one with a plausible behavioural bite); B007 `scripts/david_queue.py:152`; B007 `scripts/no_remote_code_guard.py:217`; vulture DEAD `scripts/regression_ledger.py:9579` (unsatisfiable ternary). Recorded because the register loses nothing, not because it is urgent.",
+      "summary": "STILL FAILING 2026-09-14 - Monday deep-scan lane re-ran, all seven present. SCAN_REPORT.json 2026-09-14T04:44:02Z, 4/4 tools, 244 findings / 4 new / 0 crash-class. Six match file+line with new=false; the seventh (vulture DEAD ternary in scripts/regression_ledger.py) drifted 9579 -> 9851 as the file grew and was matched on message, not line, so drift cannot be mistaken for a fix. No close.",
       "next_action": "Next Monday lane or an attended tidy pass. Look at `david_queue.py:48` (B023) first — a late-bound loop variable in a closure is the one item here that can produce wrong OUTPUT rather than dead code — and at regression_ledger.py:9579, an unsatisfiable ternary inside the instrument that grades everything else.",
       "last_note": "2026-09-13: NOT re-run - deep_scan is a Monday-only lane and today is Sunday. No check, no close."
     },
@@ -1171,7 +1171,7 @@
     },
     "DW-111": {
       "first_seen": "2026-09-07",
-      "last_seen": "2026-09-13",
+      "last_seen": "2026-09-14",
       "sev": "MEDIUM",
       "source": "split out of DW-109 at that row's own request; re-check attempted from the sandbox today",
       "status": "OPEN",
@@ -1179,7 +1179,7 @@
         "DW-109",
         "DW-105"
       ],
-      "summary": "CARRIED FORWARD 2026-09-08, STILL NOT VERIFIABLE - journalctl as msdeploy returns 0 lines (not in adm/systemd-journal); no app log file under /var/www/marketsquare. Narrowing facts: subscription_monitor reads Resend UP (HTTP 200, key ok, 100% over 31 samples) so the key authenticates and the 422 is a payload refusal from one caller; bea_main.py has eight POST api.resend.com/emails call sites (5552, 8239, 10797, 13654, 13889, 16302, 19628, 21488) with no visible 5-minute timer, so the cadence is a loop outside the request path. CARRIED FORWARD, NOT VERIFIED TODAY - the repeating Resend 422. DW-109 recorded that the app log showed POST api.resend.com/emails returning 422 every five minutes (12:19:28 and 12:24:28 on 6 Sep) and said it deserved its own diagnosis; this is that row. A 422 is the API refusing the request, so this lane has not sent successfully in that window and nothing is watching it. COULD NOT BE RE-RUN TODAY: journalctl -u marketsquare returns 'No entries' for msdeploy (that user is in neither adm nor systemd-journal) and grep -i resend over /var/www/marketsquare/*.log returns 0 hits. Absence of a hit here is an instrument limit, not a clean bill.",
+      "summary": "CARRIED FORWARD 2026-09-14, STILL NOT VERIFIABLE - third attempt, same wall. msdeploy is in neither adm nor systemd-journal (id shows groups=1000(msdeploy) only); journalctl -u marketsquare returns 4 lines of permission hint and 0 resend matches; no *.log under /var/www/marketsquare. subscription_monitor reads Resend UP with issues: [] - the key authenticates, the 422 is one caller's payload. Absence from a blind instrument is not a clean bill.",
       "next_action": "OPEN - CTO lane. (a) Identify the caller: which lane posts to Resend on a 5-minute cadence, and read the 422 body (usually an unverified or mismatched from-domain, a missing to, or a malformed payload). (b) Give the watch a way to see the outcome - journal access, or have the lane record its own result to a readable file. A send lane whose only evidence lives where the watch cannot look is the DW-105 shape, where a silent failure ran a fortnight.",
       "last_note": "2026-09-13: still unverifiable. journalctl -u marketsquare as msdeploy returns 'No entries' (id -nG = msdeploy only, still in neither adm nor systemd-journal); no *.log under /var/www/marketsquare. Cross-checks that do answer: subscription_monitor reads Resend UP, and email_triage holds 24 rows (drafted/sent/skipped/system) with no failure rows - so the failing 5-minute lane leaves no trace we can read. Absence from a blind instrument is not a clean bill."
     },
@@ -1271,11 +1271,11 @@
     },
     "DW-118": {
       "first_seen": "2026-09-12",
-      "last_seen": "2026-09-13",
+      "last_seen": "2026-09-14",
       "sev": "MEDIUM",
       "source": "self-heartbeat (register last_run vs today)",
-      "summary": "STILL FAILING 2026-09-13. OPEN_ITEMS.json read last_run 2026-09-10 against today 2026-09-13 (3-day gap) while the markdown carried rows stamped 2026-09-12. So 12 Sep was NOT a missed day - findings-2026-09-12.json (06:35) and COST_SWEEP_2026-09-12.md (06:37) exist and the rows landed; what did not land was the rest of Phase B (split out as DW-119). 11 Sep remains a genuine blind day: no findings file, no cost sweep, no rows. Four gappy days in a fortnight (6, 9, 11 Sep missed; 12 Sep half-written). Raised 2026-09-12 as 'the watch missed 11 September'.",
-      "status": "OPEN",
+      "summary": "CLOSED 2026-09-14 - originating check re-ran and PASSED. Self-heartbeat: last_run 2026-09-13 vs today 2026-09-14, a 1-day gap (DW-070/DW-112 precedent). The 13 Sep pass is whole on disk: watch_pass_2026_09_13 key present, findings-2026-09-13.json and COST_SWEEP_2026-09-13.md both on disk, markdown and JSON agree. RESIDUAL: nothing in the ledger asserts the scheduled tasks are ENABLED (DW-104's standing residual) - keeps its BLUE coverage-map card, leaves the register.",
+      "status": "CLOSED",
       "refs": [
         "DW-104",
         "DW-112",
@@ -1283,24 +1283,53 @@
         "DW-119"
       ],
       "next_action": "DW-104's standing residual - a ledger entry asserting the scheduled tasks that matter are ENABLED. Until that exists every missed day is found by eye. CTO lane.",
-      "last_note": "2026-09-13: re-run, still failing; cause of 11 Sep still not established from here."
+      "last_note": "2026-09-13: re-run, still failing; cause of 11 Sep still not established from here.",
+      "closed": "2026-09-14"
     },
     "DW-119": {
       "first_seen": "2026-09-13",
-      "last_seen": "2026-09-13",
+      "last_seen": "2026-09-14",
       "sev": "MEDIUM",
       "source": "register reconciliation (markdown rows vs OPEN_ITEMS.json machine state)",
-      "summary": "NEW - the register can half-commit, and on 12 September it did. The 12 Sep watch ran its checks and wrote two table rows into OPEN_ITEMS.md (DW-117, DW-118), then stopped: OPEN_ITEMS.json was never updated, so next_id still read 117 while DW-117 and DW-118 both existed in the markdown - the next allocation would have MINTED A DUPLICATE ID - last_run still read 2026-09-10, and no watch_pass_2026_09_12 key or narrative section was ever written. The disagreement is silent: the heartbeat check reads the JSON, so it reported a 3-day gap over a day that had in fact run. Reconciled by hand in this pass (JSON now carries DW-117/118/119; next_id -> 120), which fixes the occurrence, not the class. Not a live-site fault.",
-      "status": "OPEN",
+      "summary": "CLOSED 2026-09-14 - originating check re-ran and PASSED. Register parity measured: highest DW id is DW-119 in BOTH OPEN_ITEMS.md and OPEN_ITEMS.json; next_id 120 is exactly one past the highest id present, so no duplicate could be minted; last_run 2026-09-13 matches both the newest watch_pass key and the newest '### Watch pass' section. The 13 Sep hand reconciliation held overnight. RESIDUAL: no ledger entry asserts these properties, so the card stays BLUE until an assertion exists and Phase B writes both files as one step.",
+      "status": "CLOSED",
       "refs": [
         "DW-118"
       ],
       "next_action": "CTO lane: make Phase B atomic or self-checking - write both files in one step, and add a ledger assertion that next_id exceeds the highest DW-id present in the markdown and that last_run matches the newest watch-pass section. Same shape as RG-0354: a read path and a write path addressing one file by different anchors.",
-      "last_note": "2026-09-13: raised and reconciled in the same pass; the class is the open item."
+      "last_note": "2026-09-13: raised and reconciled in the same pass; the class is the open item.",
+      "closed": "2026-09-14"
+    },
+    "DW-120": {
+      "first_seen": "2026-09-14",
+      "last_seen": "2026-09-14",
+      "sev": "HIGH",
+      "source": "regression ledger RG-0127 (LOCKED) - REGRESSION, combine exit 1",
+      "status": "OPEN",
+      "summary": "NEW - the Last-done panel on David's ops dashboard is BLANK, for a structural reason that will repeat. PROBED, not taken from the ledger's word: the credentialed read of /dashboard/summary (LEDGER-ADMINREAD-1 door) returns liveState 1044 chars and nextGoals 2681 chars but lastDone length 0 - so the admin read succeeded and only that one panel is empty. Not the anonymous-gate blindness of DW-040 and not a stale server copy. CAUSE on disk: STATUS.md line 11 carries the managed DASH-FEED-1 heading '## Last Completed (2026-09-14 - ...)' and the very next non-blank line is the folded fragment's OWN '## 2026-09-14 - ...' heading. The endpoint reads a section from its heading to the next '##', so the matched section is empty by construction. status_compile.refresh_feed_block() copies the fragment body in verbatim, so any fragment opening with a '## ' heading always yields an empty panel. RG-0127's repo leg missed it because it grades the heading DATE only (logged 'winning Last-Completed section is 0 day(s) old') and never asks whether the section has a BODY. Same class as RG-0354 one layer down: writer and reader addressing one record by different anchors. Not user-facing; it is David's own status surface reporting nothing while sessions write diligently.",
+      "next_action": "CTO lane, two parts. (a) Occurrence: make refresh_feed_block() demote or strip a leading '## ' heading in the fragment body so the managed section carries its body. (b) Class: extend RG-0127's repo leg to assert the winning section has a non-empty BODY, not merely a fresh DATE."
+    },
+    "DW-121": {
+      "first_seen": "2026-09-14",
+      "last_seen": "2026-09-14",
+      "sev": "LOW",
+      "source": "scripts/deep_scan.py (Monday lane) - NEW delta vs SCAN_REPORT.json, baseline 2026-09-07",
+      "status": "OPEN",
+      "summary": "NEW - 4 new static findings, none in app code, none crash-class (244 total, 234 LOW / 10 MEDIUM, 4/4 tools). THREE of the four are one artefact counted twice: they sit in ledger_runs/committed_ledger.py, the committed snapshot of scripts/regression_ledger.py, and each mirrors a finding already carried against the original (DEAD ternary :9826 and :17109, unused import _re0 :15530, vs :9851, :17209, :15614 live). The scan double-counts, inflating the delta every time the snapshot refreshes. ONE is genuinely new and in the instrument itself: ruff B905 at scripts/regression_ledger.py:20125 - a zip() without strict=, which truncates silently instead of raising. In the file that grades everything else that is worth more than its LOW grade.",
+      "next_action": "CTO lane, cheapest first: add strict= at regression_ledger.py:20125, and decide whether ledger_runs/ belongs in the scan scope at all - a generated snapshot that duplicates every finding in its source makes the delta mean less each week. Then the DW-087 backlog."
+    },
+    "DW-122": {
+      "first_seen": "2026-09-14",
+      "last_seen": "2026-09-14",
+      "sev": "LOW",
+      "source": "regression ledger combine - entries printing '>>> now passing - change state to LOCKED'",
+      "status": "OPEN",
+      "summary": "NEW - two OPEN ledger entries have been passing and nobody promoted them, so their red would not be believed if it came. RG-0363 (the offline banner cannot LATCH - it proves the outage before it speaks, clears itself on a probe rather than an 'online' event, and promises no cache the worker does not hold) and RG-0364 (the service worker is REGISTERED on every page load, not only for whoever opts into push - without it nothing controls the page and both the install offer and web push are built and unreachable). Both printed READY TO LOCK today. An OPEN entry is EXPECTED to fail, so while they sit OPEN a genuine break in either lane reads as business as usual and the run still exits 0 on their account. Armed, verdict not yet trusted - the armed-unasserted shape, hence a BLUE card.",
+      "next_action": "CTO lane, one line each: promote RG-0363 and RG-0364 from OPEN to LOCKED in scripts/regression_ledger.py so a future break reads as a REGRESSION. Never weaken either assertion to make the promotion easy."
     }
   },
-  "last_run": "2026-09-13",
-  "last_verdict": "GREEN",
+  "last_run": "2026-09-14",
+  "last_verdict": "RED",
   "recheck_pass_2026_08_20": {
     "requested_by": "David: close all open actions",
     "items_rechecked": 15,
@@ -2055,5 +2084,112 @@
       "amber_named": "DW-111 - the Resend 422 nobody can see"
     },
     "checks_run": "12 of 13 (deep scan + canon drift is the Monday lane; canon pointers and pricing run anyway)"
+  },
+  "watch_pass_2026_09_14": {
+    "verdict": "RED",
+    "reason": "LOCKED fix ROTTED - RG-0127 REGRESSION, combine exit 1",
+    "ledger": {
+      "entries": 352,
+      "holding": 326,
+      "regressed": 1,
+      "open": 22,
+      "ready_to_lock": 2,
+      "exit": 1
+    },
+    "site": {
+      "health": "ok",
+      "version": "1.3.1",
+      "db_integrity": "ok",
+      "root_seconds": 0.313,
+      "payment_test": "ok",
+      "paystack_connected": true,
+      "tls_days": 69,
+      "tls_expires": "2026-11-22"
+    },
+    "audit": {
+      "findings": 2,
+      "new": 0,
+      "all_info": true
+    },
+    "cost_sweep": {
+      "exit": 1,
+      "critical": 0,
+      "warn": 7,
+      "new_vs_previous": 0
+    },
+    "smoke": {
+      "passed": 40,
+      "failed": 0
+    },
+    "deploy_drift": "clean 19/19",
+    "server": {
+      "up": 35,
+      "held": 15,
+      "planned": 1,
+      "down": 0,
+      "disk_free_pct": 51.6,
+      "fea_status": "ok",
+      "fea_alerts": 0,
+      "submon_issues": 0
+    },
+    "bit": {
+      "pass": 8,
+      "total": 8
+    },
+    "cron_parity": {
+      "loop_date": "2026-09-14",
+      "health": "ok",
+      "fea_integrity": "ok",
+      "cost_tokens": 0,
+      "mismatch": false
+    },
+    "orchestrator": {
+      "queue": 0,
+      "staged": 0,
+      "note": "fixer paused, DW-004"
+    },
+    "heartbeat": {
+      "last_run_before": "2026-09-13",
+      "gap_days": 1,
+      "clean": true
+    },
+    "monday_canon": {
+      "check_canon_pointers": "ALL IN LINE",
+      "check_pricing_canon": "ALL IN LINE",
+      "cc_age": {
+        "CC-002": 96,
+        "CC-005": 13,
+        "threshold": 7
+      }
+    },
+    "deep_scan": {
+      "total": 244,
+      "new": 4,
+      "crash_class": 0,
+      "tools": 4
+    },
+    "ai_watch": "clear; the 'Sonnet 5 reverts to $3/$15 on 1 Sep' claim resurfaced in a search result and was refused on sight per the 27 Aug adjudication (RG-0184)",
+    "opened": [
+      "DW-120",
+      "DW-121",
+      "DW-122"
+    ],
+    "closed": [
+      "DW-118",
+      "DW-119"
+    ],
+    "still_failing": [
+      "DW-010",
+      "DW-087",
+      "DW-111"
+    ],
+    "coverage_map": {
+      "green": 73,
+      "blue": 3,
+      "amber": 1,
+      "red": 1,
+      "grey": 10,
+      "cards": 88
+    }
   }
 }
