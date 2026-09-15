@@ -5350,7 +5350,13 @@ def get_user_trust(email: str):
 
     earned_pts    = sum(s["awarded"] for s in signals)
     available_pts = sum(max(0, s["points"] - s["awarded"]) for s in signals)
-    score         = int(canon["score"])
+    # EVIDENCE-TRUE still owns the headline, and now it has a list that genuinely
+    # reconciles: the canonical score goes in as the claim and the visible rows go in
+    # as the evidence, so the two agreeing is PROVEN on every call rather than assumed,
+    # and any future drift between the ladder and this list is logged loudly.
+    score         = _assert_evidence_true(int(canon["score"]),
+                                          [s["awarded"] for s in signals],
+                                          "get_user_trust")
     tier          = _trust_tier(score)
 
     return {
