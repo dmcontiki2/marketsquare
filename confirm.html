@@ -6,10 +6,18 @@
 <title>Confirm someone you have worked with — TrustSquare</title>
 <!--
   RUL-136 (David, 15 Sep 2026): "A previous employer is a good addition."
-  The page an employer opens. It asks ONE question and stores no fact about the person
-  answering it - not their name, not their email. What is recorded is only that a
-  confirmation happened, which is the whole of the evidence and none of their privacy.
+  The page an employer opens. The CONFIRMATION asks ONE question and stores no fact about
+  the person answering it - not their name, not their email. What is recorded is only that
+  a confirmation happened, which is the whole of the evidence and none of their privacy.
   The link is the permission: the worker sends it to someone she has worked for.
+
+  RUL-137 (David, 15 Sep 2026): "the whole purpose is to actually get referrals with the
+  people opening a free account, even if they never use it. I would not add 'No account'."
+  So this page NEVER advertises the absence of an account. The confirmation stays one tap
+  and carries no condition - that is what makes it honest - and the free account is OFFERED
+  AFTERWARDS, on every exit from this page, including the ones where they said no. The two
+  are kept separate on purpose: the account they open is their own and is never linked to
+  the confirmation, so the privacy promise above stays true word for word.
 -->
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -37,6 +45,8 @@
   .yrs{width:100%;font:inherit;font-size:15px;padding:13px 14px;border:1.5px solid #cbd5e1;
        border-radius:12px;margin-top:4px}
   label{display:block;font-size:13px;font-weight:600;color:#334155;margin-top:14px}
+  .off{border-top:1px solid #e2e8f0;margin-top:20px;padding-top:18px}
+  .off h2{font-size:16.5px;margin:0 0 9px;letter-spacing:-.2px}
 </style>
 </head>
 <body>
@@ -46,9 +56,8 @@
 
   <div id="ask" class="hide">
     <h1><span id="who">Someone</span> has asked you to confirm that they worked for you.</h1>
-    <p>You are <b>not signing anything</b> and you are <b>not paying anything</b>. You are only
-       saying that this person did work for you, which is the one thing a stranger cannot say
-       for them.</p>
+    <p>This costs you <b>nothing</b> and takes one tap. You are only saying that this person
+       did work for you, which is the one thing a stranger cannot say for them.</p>
     <label for="yrs">From roughly when? (optional)</label>
     <input id="yrs" class="yrs" type="text" inputmode="numeric" placeholder="e.g. 2019" maxlength="20">
     <button class="yes" id="yes">Yes, they worked for me</button>
@@ -59,13 +68,31 @@
 
   <div id="done" class="hide">
     <div class="ok"><b>Thank you.</b> <span id="donetxt">That is recorded.</span></div>
-    <p class="fine">Nothing else is needed from you, and you will not be emailed about this.</p>
   </div>
 
   <div id="nope" class="hide">
     <p><b>Nothing has been recorded.</b> Their listing is exactly as it was, and they are not
        told that you opened this.</p>
-    <p class="fine">You can close this page.</p>
+  </div>
+
+  <!-- RUL-137: the offer. Shown after a yes AND after a no - somebody who declined to vouch
+       for one person is still welcome here, and treating them as a lost cause is how you lose
+       them twice. Placed AFTER the decision so it can never read as a price for it. -->
+  <div id="offer" class="hide">
+    <div class="off">
+      <h2>While you are here — TrustSquare is free.</h2>
+      <p>You have just seen what it does. Buying, selling, or finding somebody you can check on
+         first — it costs nothing to have one.</p>
+      <div id="offerform">
+        <input id="mail" class="yrs" type="email" inputmode="email" autocomplete="email"
+               placeholder="your@email.com">
+        <button class="yes" id="join">Send me my free link</button>
+      </div>
+      <div id="offerdone" class="hide"><p><b>Sent.</b> Tap the link in that email and your free
+         account is open. Nothing to fill in.</p></div>
+      <p class="fine" id="offerfine">One email with your link. Your address is not attached to
+         the confirmation you just made — that stays anonymous either way.</p>
+    </div>
   </div>
 
   <div id="bad" class="hide"><div class="err" id="baderr">That link is not valid.</div></div>
@@ -73,8 +100,12 @@
 
 <script>
 (function(){
+  /* RUL-137: 'done' and 'nope' are both EXITS, and every exit carries the free-account
+     offer. 'bad' does not - a broken link is not the moment to sell anything. */
   var show = function(id){ ['load','ask','done','nope','bad'].forEach(function(k){
-      document.getElementById(k).className = (k===id ? '' : 'hide'); }); };
+      document.getElementById(k).className = (k===id ? '' : 'hide'); });
+    document.getElementById('offer').className =
+      (id === 'done' || id === 'nope') ? '' : 'hide'; };
   var token = (location.pathname.replace(/\/+$/,'').split('/').pop() || '').trim();
   if(!token || token === 'confirm'){
     document.getElementById('baderr').textContent =
@@ -100,6 +131,34 @@
         'No connection just now — please open the link again in a moment.'; show('bad'); });
 
   document.getElementById('no').onclick = function(){ show('nope'); };
+
+  /* RUL-137: the free account. Same door the public Quick Listing page uses, so there is
+     one sign-in lane and no second account model to keep in step. */
+  document.getElementById('join').onclick = function(){
+    var b = this, m = (document.getElementById('mail').value || '').trim();
+    if(m.indexOf('@') < 1 || m.indexOf('.') < 0){
+      document.getElementById('offerfine').textContent =
+        'That address does not look right \u2014 please check it.'; return;
+    }
+    b.disabled = true; b.textContent = 'Sending\u2026';
+    fetch('/auth/request-link', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email: m})})
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+      .then(function(res){
+        if(!res.ok){
+          document.getElementById('offerfine').textContent =
+            (res.j && res.j.detail) || 'That did not go through \u2014 please try again.';
+          b.disabled = false; b.textContent = 'Send me my free link'; return;
+        }
+        document.getElementById('offerform').className = 'hide';
+        document.getElementById('offerdone').className = '';
+        document.getElementById('offerfine').textContent =
+          'If it is not there in a minute, check your spam folder.';
+      })
+      .catch(function(){
+        document.getElementById('offerfine').textContent = 'No connection just now.';
+        b.disabled = false; b.textContent = 'Send me my free link'; });
+  };
   document.getElementById('yes').onclick = function(){
     var b = this; b.disabled = true; b.textContent = 'Recording…';
     fetch('/trust/employer-confirm', {method:'POST', headers:{'Content-Type':'application/json'},

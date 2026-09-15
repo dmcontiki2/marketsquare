@@ -11699,7 +11699,7 @@ _SIGNAL_HOWTO = {
     "universal.experience_stated":    ("Say how long you have been doing this",
                                        "Tap the button and type a number of years — that is the whole step"),
     "universal.employer_confirmed":   ("Ask someone you have worked for to confirm you",
-                                       "Tap the button, send the link by WhatsApp — they tap Yes, nothing to sign up for"),
+                                       "Tap the button, send the link by WhatsApp — they tap Yes, and they can open their own free TrustSquare while they are there"),
     "universal.email_verified":       ("Verify your email address",
                                        "Automatically earned when you accept the TrustSquare Terms of Service"),
     "universal.profile_complete":     ("Complete your seller profile",

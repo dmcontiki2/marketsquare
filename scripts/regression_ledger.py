@@ -4668,6 +4668,82 @@ def rg_infra_test_verdict():
 
 
 
+_re_comments = re.compile(r"<!--.*?-->", re.S)
+
+
+@entry("RG-0375", "the employer who confirms somebody is offered a free account on the way out - "
+       "and no surface anywhere sells the absence of one",
+       LOCKED, fixed_on="2026-09-15",
+       scope="confirm.html (the live public page), ms.js (the WhatsApp message the seller sends) and "
+             "bea_main.py _SIGNAL_HOWTO (the words the coach uses). CLASS: any page a NON-USER lands "
+             "on because one of our users sent them there. Those pages are the cheapest acquisition "
+             "we have and the easiest to waste, and the way they get wasted is copy that reassures "
+             "the visitor they need not join. Four legs: (a) the live page carries the offer and "
+             "posts it to the one sign-in lane; (b) the offer is shown on the DECLINE exit too; "
+             "(c) no 'no account / nothing to sign up for' phrasing survives on any of the three "
+             "surfaces; (d) the confirmation itself is still one tap with no account required, "
+             "because an offer that becomes a condition is a different product and a dishonest one.",
+       ref="RUL-137. David, 15 Sep 2026, reading 'they tap Yes. No account, nothing to sign': 'the "
+           "whole purpose is to actually get referrals with the people opening a free account, even "
+           "if they never use it. I would not add No account there?' He is right and it was the same "
+           "instinct twice: the page had been written to remove every reason to hesitate, and one of "
+           "the things it removed was the reason to stay.")
+def rg_confirm_page_offers_an_account():
+    _require_net()
+    out = []
+    BANNED = ("no account", "nothing to sign up for", "nothing to sign",
+              "you will not be emailed", "not signing anything")
+    # (a)(b)(c) the LIVE page, because that is what the employer actually opens
+    try:
+        page = urllib.request.urlopen(
+            urllib.request.Request(BASE + "/confirm/probe", headers=UA), timeout=TIMEOUT
+        ).read().decode("utf-8", "replace")
+    except Exception as e:
+        return [(INFO, "NOT EVALUATED - /confirm/ did not answer: %s" % e)]
+    low = page.lower()
+    if "/auth/request-link" not in page:
+        out.append((FAIL, "the confirm page does not offer an account at all -- the one thing this "
+                          "page is for besides the confirmation itself"))
+    if 'id="offer"' not in page:
+        out.append((FAIL, "the offer block is gone from the confirm page"))
+    if "id === 'nope'" not in page and 'id === "nope"' not in page:
+        out.append((FAIL, "the offer is not shown on the decline exit -- somebody who said no to "
+                          "vouching is still welcome to an account"))
+    if "employer-confirm" not in page:
+        out.append((FAIL, "the confirmation itself is gone from the page"))
+    # (d) one tap, no account required: the confirm endpoint takes a token and nothing else
+    _src = repo_file("bea_main.py")
+    _i = _src.find("class EmployerConfirmReq(BaseModel):")
+    if _i < 0:
+        out.append((FAIL, "EmployerConfirmReq is gone -- cannot judge whether confirming still "
+                          "needs an account"))
+    elif "email" in _src[_i:_i + 260]:
+        out.append((FAIL, "confirming now asks the employer for an identity -- the offer has become "
+                          "a condition, which is a different and dishonest product"))
+    # (c) across all three surfaces. AIMED, not broad: each surface is narrowed to the copy
+    # the RULING is about, because both other files legitimately carry these words elsewhere
+    # (ms.js says "nothing to sign again" about the accepted EULA, and this page's own source
+    # comment QUOTES David's sentence). A whole-file scan would red on that and teach the next
+    # session to delete the quote rather than keep the promise.
+    def _region(txt, start, span):
+        _k = txt.find(start)
+        return txt[_k:_k + span].lower() if _k >= 0 else ""
+    _msjs = repo_file("ms.js")
+    for _name, _txt in (
+            ("the live confirm page", _re_comments.sub(" ", page).lower()),
+            ("the seller's WhatsApp message", _region(_msjs, "employer_link'", 3000)),
+            ("the coach's own words",
+             _region(_src, '"universal.employer_confirmed":   (', 400))):
+        for _b in BANNED:
+            if _b in _txt:
+                out.append((FAIL, "%s still sells the absence of an account (%r) -- RUL-137"
+                                  % (_name, _b)))
+    if not out:
+        out.append((INFO, "the confirm page offers a free account on both exits, through the one "
+                          "sign-in lane, and confirming still needs nothing but the tap"))
+    return out
+
+
 @entry("RG-0374", "a seller with NO certificates has a real route to a real score - a photo, "
        "years of experience and a previous employer are on the ladder, are offered by the coach, "
        "and each one ends in a button that works",

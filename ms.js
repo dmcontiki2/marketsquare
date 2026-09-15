@@ -15368,8 +15368,12 @@ async function msAskAI(){
                                   + encodeURIComponent(email), {credentials:'include'});
               var j = await r.json();
               if(!r.ok) throw new Error(j.detail || ('HTTP ' + r.status));
-              var msg = 'Hi, I am setting up my profile on TrustSquare. Could you confirm I worked for you? '
-                      + 'It is one tap, nothing to sign up for: ' + j.url;
+              /* RUL-137 (David): never sell the absence of an account - the person who opens
+                 this link is somebody we want ON TrustSquare, and the page offers them a free
+                 one after they have confirmed. The message says what it costs them (nothing)
+                 and what it takes (one tap), and stops there. */
+              var msg = 'Hi, I am setting up my profile on TrustSquare. Could you confirm that I worked '
+                      + 'for you? It is one tap and it costs you nothing: ' + j.url;
               var host = db.parentNode;
               db.style.display = 'none';
               var box = document.createElement('div');
