@@ -11459,12 +11459,28 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
         "universal.referral_3":       "referral",
         "universal.referral_5plus":   "referral",
     }
+    # Match each written step back to the signal it came from by POINTS, not by position:
+    # the model drops, merges and re-words steps, and a step matched by index alone gets the
+    # wrong button (probed 15 Sep: a postgraduate-qualification step carrying the referral
+    # action). An unmatched step simply gets no button, which is the safe end of the trade.
     _steps = guidance.get("steps") or []
+    _pool = list(all_missing)
     for _i, _st in enumerate(_steps):
         if not isinstance(_st, dict):
             continue
-        _src = all_missing[_i] if _i < len(all_missing) else None
+        _src = None
+        try:
+            _want = int(_st.get("points") or 0)
+            for _c in _pool:
+                if int(_c["points"]) == _want:
+                    _src = _c
+                    break
+        except Exception:
+            _src = None
+        if _src is None and _i < len(_pool):
+            _src = _pool[_i]
         if _src:
+            _pool = [_c for _c in _pool if _c is not _src]
             _st.setdefault("signal_id", _src["id"])
             _st.setdefault("do", _DO.get(_src["id"], "credential"
                                          if _src["id"].startswith("category.") else "wait"))
