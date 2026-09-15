@@ -15292,6 +15292,9 @@ async function msAskAI(){
           <div style="font-size:12px;color:#16a34a;font-weight:600;margin-top:10px;">${data.closing||''}</div>
         </div>`;
       resultEl.style.display = 'block';
+      /* The Next/Back/Do buttons carry no inline onclick, so without this call they are
+         drawn and dead - which is the exact complaint this whole change answers. */
+      if (window._tnWire) window._tnWire();
     }
     if (btn) { btn.disabled = false; btn.textContent = '✨ Ask AI how to improve my score →'; }
   } catch(e) {
