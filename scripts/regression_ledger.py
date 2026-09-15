@@ -4668,6 +4668,60 @@ def rg_infra_test_verdict():
 
 
 
+@entry("RG-0373", "The AI trust plan opens with something an ordinary person can actually do - "
+       "never a professional credential, and never a step whose button points at a screen that "
+       "does not exist",
+       LOCKED, fixed_on="2026-09-15",
+       scope="POST /trust-score/guidance, probed live for a real seller in a credential-heavy "
+             "category (Tutors, whose signal set is SACE, PCC, DBS, degrees). CLASS: any coach, "
+             "tip or next-best-action that ranks by POINTS will always surface the specialist "
+             "items first, because that is where the big numbers are. Two legs: (a) step one is "
+             "not a category credential; (b) every step carries a 'do' that matches its own "
+             "signal, so a re-worded step cannot inherit another step's button.",
+       ref="David, 15 Sep 2026, with the screen in front of him: 'Even the request to add degrees, "
+           "SACE, PCC, DBS... all of these are some specialists type credentials and not related to "
+           "a normal person?' The plan he was shown was five upload-a-certificate steps and nothing "
+           "else. Cause: one sort, key=points reverse=True, plus a prompt that said 'order steps by "
+           "impact (most points first)'. Ordering is now by what the person can do today - profile, "
+           "then ID, then referrals, then track record, then credentials - and the prompt is told to "
+           "keep that order and to word a credential as an 'if you have one'. TS-0011 still holds: "
+           "credentials are not dropped, they are placed after the steps anyone can take.")
+def rg_trust_plan_starts_doable():
+    _require_net()
+    key = _ops_key()
+    body = json.dumps({"email": "walkthrough.tutor@trustsquare.co", "category": "Tutors"}).encode()
+    hdrs = dict(UA, **{"Content-Type": "application/json"})
+    if key:
+        hdrs["X-Api-Key"] = key
+    try:
+        req = urllib.request.Request(BASE + "/trust-score/guidance", data=body,
+                                     headers=hdrs, method="POST")
+        plan = json.loads(urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8"))
+    except Exception as e:
+        return [(INFO, "NOT EVALUATED - guidance did not answer: %s" % e)]
+    steps = plan.get("steps") or []
+    if not steps:
+        return [(INFO, "NOT EVALUATED - the plan came back with no steps")]
+    out = []
+    first = steps[0] or {}
+    if (first.get("do") or "") == "credential":
+        out.append((FAIL, "step one of the plan is a professional credential (%s) -- a seller with "
+                          "no certificates opens this and can do nothing on it"
+                          % (first.get("action") or "")[:90]))
+    for _n, _s in enumerate(steps, 1):
+        if not isinstance(_s, dict):
+            continue
+        _a = (_s.get("action") or "").lower()
+        if _s.get("do") == "referral" and ("qualification" in _a or "certificate" in _a
+                                           or "degree" in _a or "clearance" in _a):
+            out.append((FAIL, "step %d asks for a document but carries the referral button -- the "
+                              "step was matched to the wrong signal" % _n))
+    if not out:
+        out.append((INFO, "plan opens with '%s' (+%s) -- doable-first order holding"
+                          % ((first.get("action") or "")[:60], first.get("points"))))
+    return out
+
+
 @entry("RG-0372", "ONE SCORE: the seller's trust number is the SAME on every surface that shows "
        "it, it never sits below the 40 base without a penalty, and the list under it adds up to it",
        LOCKED, fixed_on="2026-09-15",
