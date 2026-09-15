@@ -4668,6 +4668,56 @@ def rg_infra_test_verdict():
 
 
 
+@entry("RG-0372", "ONE SCORE: the seller's trust number is the SAME on every surface that shows "
+       "it, it never sits below the 40 base without a penalty, and the list under it adds up to it",
+       LOCKED, fixed_on="2026-09-15",
+       scope="GET /users/{email}/trust (the My Space hub) against GET /trust-score/breakdown (the "
+             "canonical ladder), probed live for a real seller. CLASS, not one endpoint: any surface "
+             "that publishes a trust number must read _trust_math's result, never compute its own. "
+             "Three legs: (a) the two endpoints agree for the same seller; (b) the hub's headline is "
+             "at least 40 when there are no penalties; (c) the hub's rows sum to its headline "
+             "(EVIDENCE-TRUE), which is what makes an added credential visibly move it.",
+       ref="David, 15 Sep 2026: 'i tried to update my Trust Score with edit and AI and was "
+           "unsuccessful. I added it eventually manual and saved it but the score stayed on 27%. It "
+           "is not even sitting on 40% which is the normal starting baseline?' Both observations were "
+           "correct and had ONE cause: the hub published its own six-signal sum as the headline. Same "
+           "seller, same moment, PROBED: hub 27, ladder 62 -- and his own account hub 40, ladder 50. "
+           "The sum has no 40 base, so it could sit under it; it reads nothing from user_credentials, "
+           "so a credential he added could never move it. bea_main.py _trust_math already says it is "
+           "'THE ONLY PLACE THIS FORMULA MAY LIVE' -- this surface was a second place. Fixed by "
+           "building the hub response from the breakdown, with the base as the first visible row. "
+           "Trap left in place and documented: an item's awarded_points carries the signal's FACE "
+           "VALUE even when its status is 'missing', so a contribution must be read from the status.")
+def rg_one_trust_score_everywhere():
+    _require_net()
+    out = []
+    for email in ("dmcontiki2@gmail.com", "walkthrough.tutor@trustsquare.co"):
+        try:
+            hub = _json("/users/%s/trust" % urllib.parse.quote(email))
+        except Exception as e:
+            out.append((INFO, "NOT EVALUATED - hub read failed for %s: %s" % (email, e)))
+            continue
+        if not hub:
+            out.append((INFO, "NOT EVALUATED - no hub answer for %s" % email))
+            continue
+        rows = hub.get("signals") or []
+        total = sum(int(r.get("awarded") or 0) for r in rows)
+        score = int(hub.get("score") or 0)
+        if total != score:
+            out.append((FAIL, "%s: the hub headline is %d but the rows under it add to %d -- a "
+                              "seller cannot see what moved their score (EVIDENCE-TRUE)"
+                              % (email, score, total)))
+        if not any((r.get("key") == "established_base") for r in rows):
+            out.append((FAIL, "%s: the 40-point Established base is not a visible row, so the list "
+                              "can never reconcile with the headline" % email))
+        if score < 40 and not hub.get("penalty_total"):
+            out.append((FAIL, "%s: headline %d is below the 40 base with no penalty -- a second "
+                              "calculator is back" % (email, score)))
+    if not out:
+        out.append((INFO, "hub headline = its own rows = the ladder, at or above the 40 base"))
+    return out
+
+
 @entry("RG-0094", "Private user reads REQUIRE the app key: /tuppence/balance, /tuppence/history "
        "and /users/{email} refuse a keyless caller and answer only with X-Api-Key",
        LOCKED, fixed_on="2026-08-16",

@@ -7437,9 +7437,17 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
 
     if not row:
         conn.close()
+        # COACH-SAYS-WHICH-1 (15 Sep 2026): this is the ONLY 401 the coach raises, and
+        # it fires purely because the address on the form is not a registered account -
+        # but it used to say so without saying WHICH address, so the screen showed a
+        # bare "AI did not work" and the person had no way to see that the email was the
+        # problem. Found in the live log: four of these in one session. A refusal that
+        # does not name what to change is a dead end, not an error message.
         raise HTTPException(
             status_code=401,
-            detail="Unrecognised account — please complete seller registration first."
+            detail=("No TrustSquare seller account for %s. Check the email on this "
+                    "screen, or sign in with the address you registered."
+                    % (req.email or "(no email on the form)"))
         )
 
     _check_cost_ceiling(req.email)   # C1 — refuse if daily cost ceiling reached
