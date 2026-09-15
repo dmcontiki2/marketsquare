@@ -52,6 +52,38 @@ ASIDE = os.path.join(GITDIR, "stale_locks")
 STALE_SECONDS = 15 * 60          # generous: host git is invisible from here
 BLOCKING = ("index.lock", "HEAD.lock", "packed-refs.lock")
 
+# GIT-LOCK-5 (16 Sep 2026, DW-123). REF LOCKS were the hole. On 14 Sep a Phase D commit
+# died with "cannot lock ref 'HEAD': Unable to create '.git/refs/heads/main.lock':
+# File exists" -- a 0-byte lock, 32 minutes old, no git process behind it, left by the
+# 06:20 release lane. This script had run FIRST, exactly as GIT-LOCK-3 requires, and
+# reported "no stale locks, nothing to sweep": it swept .git/index.lock, .git/HEAD.lock,
+# .git/packed-refs.lock and .git/next-index-*.lock, and a ref lock lives at
+# .git/refs/heads/<branch>.lock -- one directory down, matching none of them. The tool
+# written to clear the blocker could not see the blocker.
+#
+# CLASS, not instance: git takes a lock next to EVERY ref it updates, so tags and remote
+# refs strand the same way branches do. The glob is therefore recursive over .git/refs,
+# not a list of branch names -- a list would need a human to remember every new branch.
+#
+# Ref locks are BLOCKING in the strongest sense: index.lock stops the next INDEX write,
+# but a stranded refs/heads/<branch>.lock stops every commit on that branch immediately
+# and forever. They are swept under the same safety rules as everything else -- only when
+# pgrep proves no git is running, and only by RENAME into .git/stale_locks/, never unlink
+# (FUSE blocks unlink on this mount, which is how these strand in the first place).
+REF_LOCK_GLOB = os.path.join("refs", "**", "*.lock")
+
+
+def _ref_locks(gitdir):
+    """Every .git/refs/**/*.lock -- branches, tags, remotes, any depth."""
+    return sorted(glob.glob(os.path.join(gitdir, REF_LOCK_GLOB), recursive=True))
+
+
+def _aside_name(gitdir, path):
+    """Flatten .git/refs/heads/main.lock -> refs_heads_main.lock so two branches of the
+    same name under different prefixes cannot collide in the aside folder."""
+    rel = os.path.relpath(path, gitdir)
+    return rel.replace(os.sep, "_").replace("/", "_")
+
 
 def git_running():
     try:
@@ -101,17 +133,23 @@ def sweep(repo, check_only):
         return 0
     targets = [os.path.join(GITDIR, n) for n in BLOCKING]
     targets += sorted(glob.glob(os.path.join(GITDIR, "next-index-*.lock")))
+    ref_locks = _ref_locks(GITDIR)          # GIT-LOCK-5 (DW-123)
+    targets += ref_locks
     asides  = sorted(glob.glob(os.path.join(GITDIR, "HEAD.lock.stale-*")))
     present = [p for p in targets if os.path.exists(p)]
-    stale_blocking = [p for p in present if os.path.basename(p) in BLOCKING and stale(p)]
+    # A ref lock blocks the next writer on that ref immediately, so it is blocking by
+    # nature even though its basename is a branch name and never appears in BLOCKING.
+    _blocking = set(os.path.join(GITDIR, n) for n in BLOCKING) | set(ref_locks)
+    stale_blocking = [p for p in present if p in _blocking and stale(p)]
     stale_all = [p for p in present if stale(p)]
     fresh = [p for p in present if not stale(p)]
 
     for p in fresh:
-        print("  [%s] fresh lock left in place (<%d min): .git/%s" % (label, STALE_SECONDS // 60, os.path.basename(p)))
+        print("  [%s] fresh lock left in place (<%d min): .git/%s"
+              % (label, STALE_SECONDS // 60, os.path.relpath(p, GITDIR)))
     if check_only:
         for p in stale_all:
-            print("  [%s] STALE: .git/%s" % (label, os.path.basename(p)))
+            print("  [%s] STALE: .git/%s" % (label, os.path.relpath(p, GITDIR)))
         if asides:
             print("  [%s] %d HEAD.lock.stale-* asides await the host sweep" % (label, len(asides)))
         return 1 if stale_blocking else 0
@@ -125,13 +163,13 @@ def sweep(repo, check_only):
     ts = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
     healed = 0
     for p in stale_all + asides:
-        dest = os.path.join(ASIDE, "%s.%s" % (os.path.basename(p), ts))
+        dest = os.path.join(ASIDE, "%s.%s" % (_aside_name(GITDIR, p), ts))
         try:
             os.rename(p, dest)                 # rename works where unlink is blocked
             healed += 1
-            print("  [%s] healed: .git/%s -> stale_locks/" % (label, os.path.basename(p)))
+            print("  [%s] healed: .git/%s -> stale_locks/" % (label, os.path.relpath(p, GITDIR)))
         except OSError as e:
-            print("  [%s] FAILED to aside .git/%s (%s)" % (label, os.path.basename(p), e))
+            print("  [%s] FAILED to aside .git/%s (%s)" % (label, os.path.relpath(p, GITDIR), e))
     orphans = len(glob.glob(os.path.join(GITDIR, "objects", "*", "tmp_obj_*")))
     if orphans:
         print("  note: %d orphaned tmp_obj files in .git/objects (host sweep deletes them)" % orphans)

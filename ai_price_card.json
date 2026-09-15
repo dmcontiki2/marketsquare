@@ -1,7 +1,7 @@
 {
  "_doc": "THE MODEL REGISTER — single source of AI price AND capability truth (Live-Values Doctrine Addendum 7 + Decision-Gate Process Addendum 8, David 31 Jul 2026). No document, decision or tool may cite an AI price or capability score that is not on this card. Update = re-verify against live sources, bump verified_at, note the source. RG-0018 (freshness/coverage) and RG-0019 (live-switch match) enforce it. Prices per MILLION tokens. v3: the seven Peer validation corrections adopted (Addendum 9) — effort-matched capability, gate tuples per tier, first-party sources, EUR-native budgeting, absolute materiality floor, executable rails specified for P2a.",
- "version": "2026-08-26.1",
- "verified_at": "2026-08-01",
+ "version": "2026-09-16.1",
+ "verified_at": "2026-09-16",
  "active_lane": "openai",
  "policy": {
   "funnel": [
@@ -293,10 +293,10 @@
      }
     },
     "gpt-5.6-sol": {
-     "in": 5.0,
-     "out": 30.0,
+     "in": 4.0,
+     "out": 20.0,
      "ccy": "USD",
-     "source": "developers.openai.com model pricing via openrouter.ai/openai/gpt-5.6-sol + layer3labs.io/guides/gpt-5-6-pricing (web-verified 15 Aug 2026: '$5 / MTok in, $30 / MTok out'; unchanged in the 30 Jul Terra/Luna price cut). Matches STATUS.md Addendum 10 capture (14 Aug: 'GPT-5.6 Sol at $5/$30').",
+     "source": "openai.com/index/advancing-the-price-performance-frontier-with-gpt-5-6 + vendor pricing round-up, RE-VERIFIED 16 Sep 2026. PRICE MOVED: the card carried $5/$30 from the 30 Jul cuts; Sol was cut again on 21 Aug 2026 to $4/$20 per MTok. OpenAI states this rate holds 'at least through 21 Nov 2026', so it is PROMOTIONAL, not a new floor -- re-check before that date and do not build a fixed Tuppence price on it (PRICING_CANON: feature prices are fixed, so a promotional input cost is a margin risk, never a pricing input). One round-up still lists $5 input; the dated 21 Aug cut is the more specific claim and is recorded as such.",
      "aa_index": {
       "score": 61.0,
       "variant": "GPT-5.6 Sol",
@@ -325,7 +325,8 @@
        "effort": "api-default",
        "date": "2026-08-15"
       }
-     }
+     },
+     "price_review_by": "2026-11-21"
     }
    }
   },
@@ -335,7 +336,7 @@
      "in": 0.75,
      "out": 3.75,
      "ccy": "USD",
-     "source": "ai.google.dev/gemini-api/docs/pricing captured 26 Aug 2026 (first-party, STANDARD tier — the tier the _gemini adapter's synchronous chat/completions call bills at): $0.75 in / $3.75 out per 1M through 31 Dec 2026. CORRECTION: the 19 Aug row carried $0.375/$1.50 from an OpenRouter capture — $0.375 is Google's BATCH/FLEX input rate, not the standard rate, and $1.50 was an explicit estimate. Standard input is 2x and standard output 2.5x what the card claimed. Model id gemini-3.7-flash verified GA/stable first-party at ai.google.dev/gemini-api/docs/models/gemini-3.7-flash (image+PDF input, structured outputs, 1,048,576 in / 65,536 out).",
+     "source": "ai.google.dev/gemini-api/docs/pricing captured 26 Aug 2026 (first-party, STANDARD tier — the tier the _gemini adapter's synchronous chat/completions call bills at): $0.75 in / $3.75 out per 1M through 31 Dec 2026. CORRECTION: the 19 Aug row carried $0.375/$1.50 from an OpenRouter capture — $0.375 is Google's BATCH/FLEX input rate, not the standard rate, and $1.50 was an explicit estimate. Standard input is 2x and standard output 2.5x what the card claimed. Model id gemini-3.7-flash verified GA/stable first-party at ai.google.dev/gemini-api/docs/models/gemini-3.7-flash (image+PDF input, structured outputs, 1,048,576 in / 65,536 out). | RE-VERIFIED 16 Sep 2026: $0.75/$3.75 standard UNCHANGED. NEW, dated: Google marks this rate effective through 31 Dec 2026 and it DOUBLES to $1.50/$7.50 on 1 Jan 2027. Recorded now so the increase is a diary entry and not a surprise on a January invoice.",
      "golden_set": {
       "status": "eval-pending",
       "detail": "RUL-032 photo-anon canary: 100% plate recall on the eval set required before ANY traffic (Switch Test Plan step 1); scripts/eval_photo_anon.py | 26 Aug 2026: model id and first-party price VERIFIED; eval still NOT RUN — no GEMINI_API_KEY.",
@@ -353,9 +354,29 @@
       "in": 0.375,
       "out": 1.875,
       "note": "Batch and Flex tiers, through 31 Dec 2026. NOT what the adapter calls today (ai_provider._gemini posts to the synchronous OpenAI-compat endpoint). Available saving if the agency-import lane ever goes async."
-     }
+     },
+     "price_review_by": "2026-12-15"
     }
    }
   }
+ },
+ "last_verification": {
+  "on": "2026-09-16",
+  "by": "daily-watch re-verification, executing RG-0018 (card had aged to 46d against a 45d max)",
+  "method": "first-party pages and dated vendor round-ups per model; no price taken from memory",
+  "unchanged": [
+   "claude-haiku-4-5-20251001 $1/$5",
+   "claude-sonnet-4-6 $3/$15",
+   "gpt-5.6-luna $0.20/$1.20",
+   "gpt-5.6-terra $2/$12",
+   "gemini-3.7-flash $0.75/$3.75"
+  ],
+  "moved": [
+   "gpt-5.6-sol $5/$30 -> $4/$20 (cut 21 Aug 2026, promotional at least to 21 Nov 2026)"
+  ],
+  "not_verifiable_here": [
+   "mistral-medium-3.5-128b EUR 1.5/7.5 -- Scaleway console rate is unobservable without the account; the entry's own source already says so and the recorded value STANDS rather than being guessed"
+  ],
+  "note": "Prices were corrected to match the vendors. NO model choice was changed: RUL-009 reserves vendor and model selection to David, and the Sol cut is reported to him as information that could change a decision, not acted on."
  }
 }

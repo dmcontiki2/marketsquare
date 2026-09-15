@@ -20485,7 +20485,7 @@ def rg_wave_visits_longest_waiting_city_first():
         wcm = importlib.import_module("wave_cities")
         stamps = [wcm._last_send(c) for c in cities[:12]]
         if stamps != sorted(stamps):
-            out.append((FAIL, "the first 12 cities printed are not in last-send order: %s" % list(zip(cities[:12], stamps))[:4]))
+            out.append((FAIL, "the first 12 cities printed are not in last-send order: %s" % list(zip(cities[:12], stamps, strict=True))[:4]))
         else:
             out.append((INFO, "%d cities listed; first is %r (last send %r)" % (len(cities), cities[0], stamps[0] or "never")))
     except Exception as ex:
@@ -20960,8 +20960,47 @@ def rg_id_upload_interim_changes_what_seller_is_told():
         t = bm.find('@app.get("/users/{email}/trust")')
         if t < 0 or '"partial_points"' not in bm[t:t + 9000]:
             out.append((FAIL, "/users/{email}/trust no longer carries partial_points on the ID row -- the visible list cannot sum to the headline"))
-        if "confirmation pending" not in bm[bm.find("def seller_public_credentials("):bm.find("def seller_public_credentials(") + 4000]:
-            out.append((FAIL, "the buyer-facing credentials list no longer names the interim points -- the list stops summing to the score (SUPER-CRED-1)"))
+        # SUPER-CRED-1: the buyer-facing panel must NAME the interim points, or the visible
+        # list stops summing to the headline score.
+        #
+        # ASSERTION FIXED 16 Sep 2026 (CRED-REACH-1). This leg used to grep for the literal
+        # "confirmation pending" inside a forward-only 4000-char window from the def of
+        # seller_public_credentials. On 15 Sep TRUST-ONE-SET-1 correctly factored the panel
+        # onto the one shared evidence set -- the naming moved into _earned_display(), the
+        # formatter BOTH the buyer panel and the seller's own breakdown now call -- and the
+        # window went red over a refactor that improved the code. SECOND instance of the
+        # RG-0367 class, which cost a session on 14 Sep for the same reason: a lexical window
+        # judges WHERE text sits, and correct refactoring moves text.
+        #
+        # This replacement is STRONGER, not weaker. A window can pass on dead copy sitting in
+        # the function while the panel renders its rows from somewhere else entirely; a
+        # reachability check cannot. Three legs: the formatter still appends the naming, the
+        # buyer panel actually builds its rows THROUGH that formatter, and the panel and the
+        # seller's own view share it -- which is what stops the two surfaces drifting apart.
+        _fmt = "_earned_display"
+        _fi = bm.find("def %s(" % _fmt)
+        _fn = bm[_fi:_fi + 3000] if _fi >= 0 else ""
+        if _fi < 0:
+            out.append((FAIL, "%s is gone -- the shared formatter that names the interim points "
+                              "no longer exists, so nothing can append it" % _fmt))
+        elif "confirmation pending" not in _fn:
+            out.append((FAIL, "%s no longer appends 'confirmation pending' -- the interim points "
+                              "are unnamed wherever it is used, and the visible list stops "
+                              "summing to the score (SUPER-CRED-1)" % _fmt))
+        _ci = bm.find("def seller_public_credentials(")
+        _cend = bm.find("\ndef ", _ci + 10)
+        _cfn = bm[_ci:_cend if _cend > 0 else _ci + 14000]
+        if _fmt + "(" not in _cfn:
+            out.append((FAIL, "the buyer-facing credentials panel no longer builds its rows "
+                              "through %s -- whatever it renders now, the interim naming cannot "
+                              "reach a buyer (SUPER-CRED-1)" % _fmt))
+        _bi = bm.find("def trust_score_breakdown(")
+        _bend = bm.find("\ndef ", _bi + 10)
+        _bfn = bm[_bi:_bend if _bend > 0 else _bi + 14000]
+        if _bi >= 0 and _fmt + "(" not in _bfn and "confirmation pending" not in _bfn:
+            out.append((FAIL, "the seller's own breakdown no longer shares the buyer panel's "
+                              "formatter or naming -- the two surfaces can now show the same "
+                              "seller different lists, which is the drift TRUST-ONE-SET-1 closed"))
     else:
         out.append((INFO, "bea_main.py not readable here -- source half skipped"))
     if js is not None:
@@ -22800,6 +22839,97 @@ def rg_predeploy_scan_is_not_blind():
     return out or [(INFO, "the scan runs git lock-free, says plainly when it cannot see the tree "
                           "instead of printing a clean count, stamps dirty=? in the log, and never "
                           "turns its own blindness into a deploy-blocking danger")]
+
+
+@entry("RG-0379", "the tools that clear stale git locks can SEE a ref lock -- the one lock class "
+                  "that blocks the very next commit and hid from both sweepers for a month",
+       LOCKED, fixed_on="2026-09-16",
+       scope="scripts/git_unlock.py (REF_LOCK_GLOB, _ref_locks(), _aside_name(), the _blocking "
+             "set in sweep()) AND git_unlock.bat (the recursive .git\\refs sweep) -- BOTH lanes, "
+             "because a class fixed on one lane and not the other is the same hole with a "
+             "second opinion. Source-only by nature: the subject IS the instrument, and a live "
+             "probe cannot prove a sweeper sees a lock that is not currently stranded. CLASS, "
+             "not instance: git takes a lock beside EVERY ref it updates, so tags and remote "
+             "refs strand exactly like branches -- the glob is recursive over .git/refs rather "
+             "than a list of branch names, because a list is a thing somebody forgets to "
+             "extend. Sibling of RG-0015, which owns index.lock and the callers.",
+       ref="GIT-LOCK-5 (16 Sep 2026), executing DW-123. On 14 Sep the daily watch's own Phase D "
+           "commit died with `fatal: cannot lock ref 'HEAD': Unable to create "
+           "'.git/refs/heads/main.lock': File exists`. Measured then: 0 bytes, mtime 32 minutes "
+           "older than the commit that hit it, and pgrep found no git process -- stranded, not "
+           "live, left by the 06:20 release lane. The part that makes this a class fault rather "
+           "than a bad morning: scripts/git_unlock.py had run FIRST, exactly as GIT-LOCK-3 "
+           "requires, and printed `no stale locks, nothing to sweep`. It swept .git/index.lock, "
+           ".git/HEAD.lock, .git/packed-refs.lock and .git/next-index-*.lock; a ref lock lives "
+           "one directory down at .git/refs/heads/<branch>.lock and matched none of them. The "
+           "tool written to clear the blocker could not see the blocker, and git_unlock.bat was "
+           "blind the same way -- so the host lane could not have healed it either. A stranded "
+           "ref lock is also WORSE than the locks that were covered: index.lock stops the next "
+           "index write, while refs/heads/<branch>.lock stops every commit on that branch, "
+           "immediately and permanently, and RG-0015's 60-minute tripwire cannot see it inside "
+           "the window where it is already blocking. PROVEN 16 Sep by sabotage, not by reading "
+           "the diff: a 0-byte .git/refs/heads/main.lock was planted, a commit was confirmed to "
+           "fail with the exact 14 Sep message, --check then exited 1 naming "
+           "`.git/refs/heads/main.lock`, the sweep renamed it to stale_locks/ as "
+           "`refs_heads_main.lock.<ts>` (flattened so two same-named refs under different "
+           "prefixes cannot collide), and the identical commit then succeeded. Safety rules "
+           "unchanged and deliberately so: nothing is swept while pgrep sees a live git, and "
+           "nothing is ever unlinked from the sandbox -- rename is the only move FUSE allows, "
+           "which is why these strand in the first place.")
+def rg_ref_lock_sweep():
+    """Both unlock lanes must cover the ref-lock class, and neither may start unlinking."""
+    out = []
+
+    def _slurp(rel):
+        try:
+            with open(os.path.join(REPO, rel), encoding="utf-8", errors="replace") as f:
+                return f.read()
+        except OSError:
+            return None
+
+    py = _slurp(os.path.join("scripts", "git_unlock.py"))
+    bat = _slurp("git_unlock.bat")
+    if py is None or bat is None:
+        # VANTAGE-1: a clone or a run from outside the working tree cannot see these files.
+        # An instrument limit reads NOT EVALUATED, never a FAIL and never a silent pass.
+        return [(INFO, "NOT EVALUATED -- git_unlock.py/.bat not readable from this vantage "
+                       "(run the board from the working tree)")]
+
+    # (a) the sandbox lane globs .git/refs recursively
+    if "REF_LOCK_GLOB" not in py or "refs" not in py.split("REF_LOCK_GLOB", 1)[1][:200]:
+        out.append((FAIL, "scripts/git_unlock.py has lost REF_LOCK_GLOB -- ref locks are invisible "
+                          "to the sandbox sweeper again, which is the exact 14 Sep fault"))
+    if "recursive=True" not in py:
+        out.append((FAIL, "the ref-lock glob is no longer recursive -- tags and nested refs strand "
+                          "the same way branches do, and a shallow glob misses them"))
+
+    # (b) a ref lock must count as BLOCKING, or --check exits 0 over a lock that blocks commits
+    if "_blocking" not in py or "set(ref_locks)" not in py:
+        out.append((FAIL, "ref locks are collected but no longer counted as blocking -- "
+                          "git_unlock.py --check would exit 0 while a commit is impossible"))
+
+    # (c) the host lane must cover the same class
+    low = bat.lower().replace("/", "\\")
+    if ".git\\refs" not in low or "*.lock" not in low:
+        out.append((FAIL, "git_unlock.bat does not sweep .git\\refs\\**\\*.lock -- the host lane is "
+                          "blind to the class the sandbox lane now covers, and the host is the "
+                          "only lane that can actually DELETE"))
+
+    # (d) the sandbox must never unlink: rename-aside is the only FUSE-safe move
+    if "os.remove" in py or "os.unlink" in py:
+        out.append((FAIL, "scripts/git_unlock.py has gained an unlink -- FUSE blocks it and a "
+                          "half-removed lock is worse than a stranded one; rename only"))
+    if "os.rename" not in py:
+        out.append((FAIL, "the rename-aside path is gone from scripts/git_unlock.py"))
+
+    # (e) the live-git guard must still gate the sweep
+    if "git_running()" not in py:
+        out.append((FAIL, "the live-git guard is gone -- the sweep could yank a lock out from "
+                          "under a running commit"))
+
+    return out or [(INFO, "both lanes sweep the ref-lock class recursively, ref locks count as "
+                          "blocking, the sandbox renames rather than unlinks, and the live-git "
+                          "guard still gates the sweep")]
 
 
 if __name__ == "__main__":

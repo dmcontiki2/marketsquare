@@ -53,8 +53,13 @@ TASK_MODEL = {
     # explicitly accepting per-token billing for autonomous runs.
     "anthropic": {"haiku":"claude-haiku-4-5-20251001","sonnet":"claude-sonnet-4-6",
                   "vision":"claude-haiku-4-5-20251001","triage":"claude-haiku-4-5-20251001"},
-    # GPT-5.6 family (verified 31 Jul 2026 vs developers.openai.com/api/docs/models): Luna $0.20/$1.20,
-    # Terra $2/$12, Sol $5/$30 per Mtok after the 30 Jul cuts; all three take image input, so Luna covers
+    # GPT-5.6 family. Prices RE-VERIFIED 16 Sep 2026 (RG-0018 re-verification): Luna $0.20/$1.20 and
+    # Terra $2/$12 UNCHANGED since 31 Jul; Sol is now $4/$20, cut again on 21 Aug 2026 from the $5/$30
+    # this comment used to state -- and OpenAI calls that 'at least through 21 Nov 2026', so it is
+    # PROMOTIONAL. The authoritative figures live in ai_price_card.json (the Live-Values Doctrine
+    # forbids citing a price from anywhere else, including this comment); repeated here only because a
+    # stale comment beside the routing table is how a decision runs on a remembered price. All three
+    # take image input, so Luna covers
     # the vision tier too. Luna = cheap tiers, Terra = reasoning rung ("gpt-5.6-sol" exists as flagship).
     # Vendor-doc gate UNCHANGED: golden-set eval before production traffic; OPENAI_API_KEY still
     # unprovisioned (David-only) — dashboard shows the lane DISABLED until the key lands. RG-0016.

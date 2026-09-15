@@ -1,5 +1,5 @@
 {
- "next_id": 126,
+ "next_id": 128,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -1319,7 +1319,7 @@
    "status": "OPEN",
    "summary": "NEW - 4 new static findings, none in app code, none crash-class (244 total, 234 LOW / 10 MEDIUM, 4/4 tools). THREE of the four are one artefact counted twice: they sit in ledger_runs/committed_ledger.py, the committed snapshot of scripts/regression_ledger.py, and each mirrors a finding already carried against the original (DEAD ternary :9826 and :17109, unused import _re0 :15530, vs :9851, :17209, :15614 live). The scan double-counts, inflating the delta every time the snapshot refreshes. ONE is genuinely new and in the instrument itself: ruff B905 at scripts/regression_ledger.py:20125 - a zip() without strict=, which truncates silently instead of raising. In the file that grades everything else that is worth more than its LOW grade.",
    "next_action": "CTO lane, cheapest first: add strict= at regression_ledger.py:20125, and decide whether ledger_runs/ belongs in the scan scope at all - a generated snapshot that duplicates every finding in its source makes the delta mean less each week. Then the DW-087 backlog.",
-   "last_note": "2026-09-15: NOT re-run - Monday deep-scan lane, today is Tuesday. Deliberately not run off-lane: deep_scan.py rewrites SCAN_REPORT.json, the baseline next Monday's delta is measured against. No check, no close. last_seen deliberately NOT bumped."
+   "last_note": "2026-09-16: HALF FIXED, deliberately NOT closed. The genuinely-new finding is fixed - regression_ledger.py now reads list(zip(cities[:12], stamps, strict=True)); a file-wide grep confirms no other bare zip( remains. NOT closed because its originating check is the Monday deep-scan lane and today is Wednesday: running deep_scan.py off-lane would rewrite SCAN_REPORT.json, the baseline Monday's delta is measured against. No check, no close. The remaining half - whether ledger_runs/ (a generated snapshot duplicating every finding in its source) belongs in the scan scope - is for that run to settle."
   },
   "DW-122": {
    "first_seen": "2026-09-14",
@@ -1334,38 +1334,69 @@
   },
   "DW-123": {
    "first_seen": "2026-09-14",
-   "last_seen": "2026-09-15",
+   "last_seen": "2026-09-16",
    "sev": "MEDIUM",
    "source": "Phase D self-commit - git commit refused, then scripts/git_unlock.py re-run",
-   "status": "OPEN",
+   "status": "CLOSED",
    "summary": "NEW - the watch's own commit was blocked by a stranded git lock that git_unlock.py does not cover, and the gap is a whole lock CLASS. Phase D failed with \"cannot lock ref 'HEAD': Unable to create '.git/refs/heads/main.lock': File exists\". Measured: main.lock was 0 bytes, mtime 06:21:20 - 32 minutes older than the 06:53 commit that hit it - and pgrep git found no git process, so it was stranded, not live. HEAD sits at ceba06b 'Release Mon 09/14/2026 6:20:50', naming the writer that left it. git_unlock.py ran first as GIT-LOCK-3 requires and reported 'no stale locks': it sweeps index/HEAD/packed-refs/next-index but NOT refs/heads/*.lock, so the one lock blocking the commit was invisible to the tool written to clear it. Cleared by the sanctioned method (renamed into .git/stale_locks/, never unlinked) and the commit then succeeded as a6d3290. Also observed: on this mount every sandbox git write fails to unlink its own index.lock, so each command strands a lock for the next. MEDIUM because RG-0015 only tripwires a stranded lock after 60 minutes, so a 32-minute ref lock is blocking and below the alarm line.",
    "next_action": "CTO lane: add refs/heads/*.lock (ref locks generally) to git_unlock.py's lock class to match git_unlock.bat host-side, and consider dropping RG-0015's 60-minute threshold for ref locks, which block the next writer immediately rather than eventually.",
-   "last_note": "2026-09-15: class gap unchanged, read from source. scripts/git_unlock.py line 53 still declares BLOCKING = ('index.lock','HEAD.lock','packed-refs.lock'); its only other target is the next-index-*.lock glob at line 103. No refs/heads/*.lock sweep of any kind. Yesterday's occurrence was cleared by hand; the class is untouched."
+   "last_note": "2026-09-15: class gap unchanged, read from source. scripts/git_unlock.py line 53 still declares BLOCKING = ('index.lock','HEAD.lock','packed-refs.lock'); its only other target is the next-index-*.lock glob at line 103. No refs/heads/*.lock sweep of any kind. Yesterday's occurrence was cleared by hand; the class is untouched.",
+   "closed": "2026-09-16",
+   "closed_evidence": "2026-09-16: FIXED HERE on both lanes (GIT-LOCK-5). git_unlock.py gained REF_LOCK_GLOB (recursive over .git/refs, so tags and remote refs are covered), _ref_locks(), _aside_name() flattening refs/heads/main.lock -> refs_heads_main.lock, and a _blocking set that counts ref locks as blocking - without which --check would exit 0 over a lock that makes commits impossible. git_unlock.bat gained the matching host sweep. CORRECTION to this row's own text: the .bat did NOT already cover ref locks; both sweepers were blind. PROVEN BY SABOTAGE: planted a 0-byte .git/refs/heads/main.lock, confirmed a commit fails with the exact 14 Sep message, confirmed the old rule was blind to it, --check then exited 1 naming the file, the sweep renamed it into stale_locks/, and the same commit succeeded. Safety unchanged: no sweep while pgrep sees a live git, rename only, never unlink. Asserted by RG-0379 (LOCKED), itself sabotage-tested - four FAILs against the pre-fix copies. No residual."
   },
   "DW-124": {
    "first_seen": "2026-09-15",
-   "last_seen": "2026-09-15",
+   "last_seen": "2026-09-16",
    "sev": "HIGH",
    "source": "regression ledger RG-0114 (LOCKED) - REGRESSION, combine exit 1",
-   "status": "OPEN",
+   "status": "CLOSED",
    "summary": "NEW - a deploy guard has been shouting DANGER into a log for eleven days and every deploy has walked past it. RG-0114 ('no guard verdict may sit red for days') reports: 'pg-readiness' has been red on 8 consecutive pre-deploy scans. VERIFIED by running the underlying script directly per OS-SYSTEM-QUOTES-1, so this is not an instrument fault: test_pg_readiness.py returns FAIL SQLite-specific surface GREW {'datetime_now': (17, 25)}. scripts/pg_readiness_baseline.json records 17; bea_main.py now holds 25 SQLite-only datetime('now', ...) calls with comments stripped by the guard's own tokenizer - eight new ones - while strftime 15, julianday 2 and insert_or 12 all sit exactly on baseline, so the growth is one pattern in one file. New calls cluster in the Buzz log (13612/13613/13621/23059/23096/23555), the comms funnel (13680/13681/13699) and the intro-request expiry sweeps (22620/22650/23187/23250) - the lanes shipped this fortnight. deploy_audit.log carries danger=pg-readiness verdict=DANGER on EVERY scan since 2026-09-05, including a strict-mode scan at 2026-09-15T03:45:10Z. Two faults: (a) the ratchet is telling the truth - David's DB ruling was launch on SQLite and keep the Postgres move cheap by never letting the SQLite surface grow, and it has grown 47% in three weeks with nobody deciding that; (b) the RG-0114 class fault is live again - a red that repeats unchanged stops being information, and a DANGER stamp every deploy overrides trains the next session to override it too. Not user-facing today: deferred cost plus a blunted guard.",
-   "next_action": "CTO lane, in order. (1) Decide the ratchet's verdict rather than out-waiting it: either rewrite the eight new call sites through a portable helper (a _now_sql() / parameterised UTC cutoff - the surrounding code already passes intervals as ? parameters at 22514, 22620, 23140, so the pattern exists), or make an explicit, dated, written decision to raise the baseline and say why the Postgres move is still cheap. Raising it silently is the one move not available. (2) Whichever way (1) goes, RG-0114's own lesson says the scan must not be able to carry the same red for eleven days again - a guard that repeats N times unchanged should escalate, not scroll."
+   "next_action": "CTO lane, in order. (1) Decide the ratchet's verdict rather than out-waiting it: either rewrite the eight new call sites through a portable helper (a _now_sql() / parameterised UTC cutoff - the surrounding code already passes intervals as ? parameters at 22514, 22620, 23140, so the pattern exists), or make an explicit, dated, written decision to raise the baseline and say why the Postgres move is still cheap. Raising it silently is the one move not available. (2) Whichever way (1) goes, RG-0114's own lesson says the scan must not be able to carry the same red for eleven days again - a guard that repeats N times unchanged should escalate, not scroll.",
+   "closed": "2026-09-16",
+   "closed_evidence": "2026-09-16: RG-0114 green, combine exit 0. PROBED: test_pg_readiness.py returns PASS with {'datetime_now': 15, 'strftime': 15, 'julianday': 2, 'insert_or': 12}. The COUNT went down, not the bar up - baseline now 15, below the 17 this row measured against, and the script only rewrites the baseline on shrinkage, so no silent raise was possible. 25 -> 15 = ten sites made portable via _sql_since() at bea_main.py:189 returning a UTC stamp bound as a ? parameter. Class asserted by RG-0376 (LOCKED). deploy_audit.log reads danger=- on every scan since 2026-09-15T05:44:51Z, so the 11-day DANGER streak ended rather than being out-waited. No residual."
   },
   "DW-125": {
    "first_seen": "2026-09-15",
-   "last_seen": "2026-09-15",
+   "last_seen": "2026-09-16",
    "sev": "HIGH",
    "source": "pre-deploy tester-intake guard - test_tester_intake.py::test_widget_is_wired_into_every_tester_page",
-   "status": "OPEN",
+   "status": "CLOSED",
    "refs": [
     "DW-124"
    ],
    "summary": "NEW - a tester who hits a fault on the brand-new Quick door has no way to report it. The guard fails: 'a tester could land on these pages with no way to report a fault: quick.html, genie/q_index.html, confirm.html'. The test asserts every page on the deploy manifest's tester list carries ts_report.js; these three do not. PROBED LIVE, not read off the repo: all three are deployed and answering - GET /quick.html 200, GET /q/ 200, GET /confirm/ 200 (and /confirm/<token> 200, the one-file token route) - and curl | grep -c ts_report.js returns 0 on each against 1 on marketsquare.html. Repo copies agree: 0, 0, 0. These are not back-office pages: quick.html is the Quick door STATUS.md records as going onto the front page on 15 Sep, q/index.html is its entry page, and confirm/ is the one-tap confirmation a third party lands on from a link - the three surfaces most likely to meet a first-time user this week, and the three with no fault channel. The guard is NEWLY red, not chronically red: deploy_audit.log shows danger= WITHOUT tester-intake on the 14 Sep 04:20, 12:53 and 14:37 scans and WITH it from 14 Sep 18:03 onward - it went red when the pages shipped, which is the guard working as designed. Instrument split worth noting: ledger RG-0352 reads [ ok ] because its scope is association pages; nothing in the ledger asserts the manifest's full tester-page list, so the only thing catching this is a pre-deploy guard whose verdict is being overridden - see DW-124.",
-   "next_action": "CTO lane: add the ts_report.js include to quick.html, genie/q_index.html and confirm.html the same way marketsquare.html carries it, then re-run python3 test_tester_intake.py and expect 15/15. Second, give this a ledger entry of its own so the manifest's tester-page list is asserted rather than depending on a pre-deploy guard that DW-124 shows can be walked past."
+   "next_action": "CTO lane: add the ts_report.js include to quick.html, genie/q_index.html and confirm.html the same way marketsquare.html carries it, then re-run python3 test_tester_intake.py and expect 15/15. Second, give this a ledger entry of its own so the manifest's tester-page list is asserted rather than depending on a pre-deploy guard that DW-124 shows can be walked past.",
+   "closed": "2026-09-16",
+   "closed_evidence": "2026-09-16: test_tester_intake.py 18/18 PASS including test_widget_is_wired_into_every_tester_page. PROBED LIVE: /quick.html 200 with ts_report.js x1, /q/ 200 x1, /confirm/ 200 x1 - all three were 0 when this row was written. Class now asserted by RG-0377 (LOCKED), so it no longer depends only on an overridable pre-deploy guard. No residual."
+  },
+  "DW-126": {
+   "first_seen": "2026-09-16",
+   "last_seen": "2026-09-16",
+   "sev": "MEDIUM",
+   "source": "regression ledger RG-0018 (LOCKED) - REGRESSION, combine exit 1",
+   "status": "CLOSED",
+   "closed": "2026-09-16",
+   "summary": "FOUND AND FIXED IN THE SAME SESSION. ai_price_card.json (the Model Register) had aged to 46 days against its own 45-day maximum (verified_at 2026-08-01), so by the Live-Values Doctrine every AI cost decision was running on remembered prices. All 7 priced models re-verified against first-party pages and dated vendor sources. SIX UNCHANGED: claude-haiku-4-5 $1/$5, claude-sonnet-4-6 $3/$15, gpt-5.6-luna $0.20/$1.20, gpt-5.6-terra $2/$12, gemini-3.7-flash $0.75/$3.75 standard, and mistral-medium-3.5-128b EUR 1.5/7.5 STANDS (Scaleway console rate unobservable without the account - recorded as not-verifiable rather than guessed). ONE MOVED: gpt-5.6-sol was $5/$30 and is now $4/$20, cut 21 Aug 2026, which OpenAI describes as holding 'at least through 21 Nov 2026' - promotional, not a new floor. Sol is wired, so a comparison run off the old figure would have ruled it out on a cost it no longer carries. Second dated fact captured: gemini-3.7-flash's rate is effective only through 31 Dec 2026 and DOUBLES to $1.50/$7.50 on 1 Jan 2027. Both entries now carry price_review_by. Card bumped to 2026-09-16.1 with a last_verification block naming unchanged / moved / not-verifiable; ai_funnel_snapshot.json regenerated so the +1 strip is not staler than the register (RG-0020); and the stale 'Sol $5/$30' code comment beside TASK_MODEL in ai_provider.py corrected, because a stale comment next to the routing table is exactly how a decision runs on a remembered price. NO model choice changed - RUL-009 reserves that to David.",
+   "closed_evidence": "2026-09-16: RG-0018 re-run green - 'card 2026-09-16.1 verified 2026-09-16 (0d) - 7 priced / 6 wired' - and RG-0020 re-run green - 'snapshot current (card 2026-09-16.1)'. Combine exit 0.",
+   "next_action": "FOR DAVID, information not a task: gpt-5.6-sol is 20% cheaper on input and 33% on output than the card said, promotionally until 21 Nov 2026. Relevant if the openai lane's golden set is ever run; and a margin risk to refuse if anyone proposes building a fixed Tuppence price on a promotional rate (PRICING_CANON)."
+  },
+  "DW-127": {
+   "first_seen": "2026-09-16",
+   "last_seen": "2026-09-16",
+   "sev": "MEDIUM",
+   "source": "regression ledger RG-0347 (LOCKED) - REGRESSION, combine exit 1",
+   "status": "CLOSED",
+   "closed": "2026-09-16",
+   "refs": [
+    "RG-0367"
+   ],
+   "summary": "FOUND AND FIXED IN THE SAME SESSION - and it was the INSTRUMENT, not the product. The board reported 'the buyer-facing credentials list no longer names the interim points - the list stops summing to the score (SUPER-CRED-1)', which would be a truthfulness defect on a page buyers read. It is not. Traced rather than assumed: seller_public_credentials() builds all three of its groups through _earned_display() (bea_main.py:5039, 5042, 5049), and _earned_display() is the function that appends the ' - confirmation pending' naming, so it does reach buyers. What happened: on 15 Sep TRUST-ONE-SET-1 correctly refactored the panel onto the one shared evidence set (_trust_evidence()), moving that copy into the shared formatter - and the assertion was a forward-only 4000-char lexical window from the panel's def, so it went red over a refactor that improved the code. SECOND instance of a class that already cost a session: RG-0367 was amended 14 Sep for exactly this. A window judges WHERE text sits; correct refactoring moves text. Fixed the assertion and made it STRONGER (CRED-REACH-1): three reachability legs - the shared formatter still appends the naming, the buyer panel still builds its rows through it, and the seller's own breakdown still shares it (which is what stops the two surfaces showing one seller two different lists). A window could pass on dead copy while the panel rendered from elsewhere; this cannot. Sabotage-tested three ways. Noted and NOT touched: bea_main.py carries another session's in-progress work (183 insertions / 166 deletions); it compiles and is larger than HEAD, so it is live editing, not a torn write.",
+   "closed_evidence": "2026-09-16: RG-0347 re-run green; buyer path traced to the formatter that names the interim points; the three new legs each proven red under a separate sabotage (naming removed from the formatter, panel bypassing the formatter, seller view drifting off it).",
+   "next_action": "None for this row. CLASS note for the CTO lane: the lexical-window fault now has two instances (RG-0367, RG-0347), so any remaining forward-window leg in the board is a latent false red - worth a sweep the next time the board is being worked on rather than a row of its own."
   }
  },
- "last_run": "2026-09-15",
- "last_verdict": "RED",
+ "last_run": "2026-09-16",
+ "last_verdict": "GREEN",
  "recheck_pass_2026_08_20": {
   "requested_by": "David: close all open actions",
   "items_rechecked": 15,
@@ -2322,5 +2353,48 @@
   ],
   "register_repair": "DW-010 markdown row reconstructed - it was live in JSON as SCHEDULED with no table row (DW-119 residual)",
   "ai_watch": "routine all-clear; Sonnet-5 $3/$15 claim re-confirmed STALE; US export-control activity aimed at offshore GPU rental by Chinese firms, no ZA impact"
+ },
+ "watch_pass_2026_09_16": {
+  "verdict": "GREEN",
+  "kind": "attended fix pass on David's instruction ('fix what is fixable') - not the unattended 06:30 watch",
+  "ledger": {
+   "entries": 366,
+   "holding": 344,
+   "regressed": 0,
+   "open": 22,
+   "ready_to_lock": 0,
+   "unverified": 0,
+   "exit": 0
+  },
+  "rulings": {
+   "checked": 108,
+   "fail": 0,
+   "warn": 29,
+   "exit": 0
+  },
+  "fixed_here": [
+   "DW-123 / RG-0379 GIT-LOCK-5 ref-lock sweep, both lanes, sabotage-proven",
+   "DW-126 / RG-0018 price card re-verified, Sol corrected $5/$30 -> $4/$20",
+   "DW-127 / RG-0347 assertion replaced with reachability legs (CRED-REACH-1)",
+   "DW-121 half - zip(strict=True) in regression_ledger.py"
+  ],
+  "fixed_overnight_by_maintenance_loop_verified_here": [
+   "DW-124 / RG-0114 pg-readiness - 10 sites made portable, baseline tightened 17->15",
+   "DW-125 / RG-0377 fault-report widget on quick.html, q/index.html, confirm/index.html"
+  ],
+  "closed": [
+   "DW-123",
+   "DW-124",
+   "DW-125",
+   "DW-126",
+   "DW-127"
+  ],
+  "still_open": [
+   "DW-010 (David's canon call)",
+   "DW-087 (Monday lane)",
+   "DW-111 (server journal perms)",
+   "DW-121 (half fixed; closes on the Monday deep-scan re-run)"
+  ],
+  "not_deployed": "my two deploy-target changes - the ai_provider.py comment and the regenerated ai_funnel_snapshot.json - are committed but NOT shipped this turn: another session has uncommitted in-progress work in bea_main.py, and neither change needs to be live tonight"
  }
 }

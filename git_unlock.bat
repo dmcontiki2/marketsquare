@@ -32,6 +32,17 @@ REM sweep deletes what the SANDBOX could only rename aside (FUSE blocks unlink
 REM there; scripts/git_unlock.py renames stale locks into .git\stale_locks\),
 REM plus the orphaned loose-object temps failed FUSE unlinks leave behind.
 for %%F in (.git\next-index-*.lock) do del /f /q "%%F" >nul 2>&1
+REM GIT-LOCK-5 (16 Sep 2026, DW-123): REF LOCKS join the class, on BOTH lanes.
+REM A commit takes a lock beside every ref it updates - .git\refs\heads\<branch>.lock -
+REM and a stranded one blocks every later commit on that branch with
+REM   fatal: cannot lock ref 'HEAD': Unable to create '...main.lock': File exists
+REM That is exactly what stopped a commit on 14 Sep while BOTH unlock tools reported
+REM 'nothing to sweep': neither this bat nor scripts/git_unlock.py looked one directory
+REM down into .git\refs. Recursive by design - tags and remote refs strand the same way,
+REM and a hand-maintained list of branch names is a list somebody forgets to update.
+REM Still gated by the git.exe check above, so this can never race a live commit.
+for /r ".git\refs" %%F in (*.lock) do del /f /q "%%F" >nul 2>&1
+
 if exist ".git\stale_locks" rd /s /q ".git\stale_locks" >nul 2>&1
 del /f /q ".git\HEAD.lock.stale-*" >nul 2>&1
 for /r ".git\objects" %%F in (tmp_obj_*) do del /f /q "%%F" >nul 2>&1
