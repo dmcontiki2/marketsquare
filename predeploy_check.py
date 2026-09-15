@@ -28,28 +28,56 @@ TARGETS = [
 ]
 TEXT_EXT = ('.py', '.js', '.css', '.html', '.json')
 
-def _git(args):
+# GIT-BLIND-1 (15 Sep 2026). Two faults in one call, found by the daily maintenance
+# loop after this scan reported "0 file(s) uncommitted" against a tree with five
+# modified files -- including bea_main.py, a deploy target.
+#
+# (a) It did not set GIT_OPTIONAL_LOCKS=0. CLAUDE.md has required that on every
+#     sandbox git invocation since GIT-LOCK-3 (16 Aug): read-only git takes an index
+#     lock on the FUSE-shared .git, and on this mount `git status` then sat past the
+#     20s timeout every time.
+# (b) Worse than the hang: the except swallowed it and returned an empty string, which
+#     is indistinguishable from a CLEAN TREE. So `dirty` was empty, `modified` was
+#     False for every target, and the torn-file detection -- the one genuinely
+#     dangerous condition this control exists to catch, and the only thing that makes
+#     the strict nightly abort -- could never fire. A monitor that cannot see reported
+#     all clear.
+#
+# Blindness is now VISIBLE and is NOT a failure (the RG-0187 contract: an instrument
+# limit is NOT EVALUATED, never a FAIL and never a silent pass). It is never added to
+# `danger`, so it cannot abort a good nightly on a slow git; it is printed and it is
+# stamped into deploy_audit.log as dirty=? so no future reader mistakes "could not
+# look" for "nothing to see".
+_GIT_ENV = dict(os.environ, GIT_OPTIONAL_LOCKS='0')
+GIT_BLIND = []          # reasons, if git could not answer at all
+
+
+def _git(args, timeout=45):
+    """(ok, stdout). ok is False when git could not answer -- never conflated with ''."""
     try:
         r = subprocess.run(['git'] + args, cwd=HERE, capture_output=True,
-                           text=True, timeout=20)
-        return r.stdout if r.returncode == 0 else ''
-    except Exception:
-        return ''
+                           text=True, timeout=timeout, env=_GIT_ENV)
+        if r.returncode != 0:
+            return False, ''
+        return True, r.stdout
+    except Exception as exc:
+        GIT_BLIND.append('%s: %s' % (' '.join(args[:2]), type(exc).__name__))
+        return False, ''
+
 
 def _head_size(rel):
-    try:
-        r = subprocess.run(['git', 'cat-file', '-s', 'HEAD:' + rel], cwd=HERE,
-                           capture_output=True, text=True, timeout=15)
-        if r.returncode == 0 and r.stdout.strip().isdigit():
-            return int(r.stdout.strip())
-    except Exception:
-        pass
+    ok, out = _git(['cat-file', '-s', 'HEAD:' + rel], timeout=30)
+    if ok and out.strip().isdigit():
+        return int(out.strip())
     return None
 
 def main():
     now = time.time()
     dirty = set()
-    for line in _git(['status', '--porcelain']).splitlines():
+    _ok, _status = _git(['status', '--porcelain'])
+    if not _ok:
+        GIT_BLIND.append('status --porcelain returned nothing usable')
+    for line in _status.splitlines():
         if line.strip():
             dirty.add(line[3:].strip().replace('\\', '/'))
     rows, recent, danger = [], [], []
@@ -79,8 +107,13 @@ def main():
     stamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     print('  ------------------------------------------------------------')
     print('  PRE-DEPLOY CHANGE SCAN   %s   mode=%s' % (stamp, MODE))
-    print('  Working tree: %d file(s) uncommitted; %d deploy target(s) changed.'
-          % (len(dirty), len(rows)))
+    if GIT_BLIND:
+        print('  Working tree: NOT EVALUATED - git could not answer (%s).' % '; '.join(GIT_BLIND[:2]))
+        print('    ^^ the torn-file check needs git and did NOT run. This is a blind scan,')
+        print('       not a clean one: treat every "ok" below as unproven for tornness.')
+    else:
+        print('  Working tree: %d file(s) uncommitted; %d deploy target(s) changed.'
+              % (len(dirty), len(rows)))
     for rel, size, age, flags in sorted(rows, key=lambda r: r[2]):
         print('    - %-32s %8d B  %5.0f min ago  [%s]'
               % (rel, size, age, ', '.join(flags)))
@@ -213,8 +246,8 @@ def main():
     print('  ------------------------------------------------------------')
     try:
         with open(LOG, 'a', encoding='utf-8') as f:
-            f.write('%s mode=%s dirty=%d changed=%d recent=%s danger=%s verdict=%s\n'
-                    % (stamp, MODE, len(dirty), len(rows),
+            f.write('%s mode=%s dirty=%s changed=%d recent=%s danger=%s verdict=%s\n'
+                    % (stamp, MODE, ('?' if GIT_BLIND else str(len(dirty))), len(rows),
                        '|'.join(recent) or '-', '|'.join(danger) or '-', verdict))
     except Exception:
         pass

@@ -22622,5 +22622,185 @@ def rg_buzz_identity_is_proven():
                           "public app key takes a person's identity unbound")]
 
 
+@entry("RG-0376", "the now-literal MODIFIER form cannot creep back into bea_main.py either -- there "
+                  "is ONE named helper for a time window and the eight sites converted on 15 Sep "
+                  "stay bound parameters",
+       LOCKED, fixed_on="2026-09-15",
+       scope="bea_main.py: _sql_since() and the eight call sites the 14 Sep Buzz/Comms work "
+             "added (six in dashboard_comms -- buzz_log 7d/24h/30d-by-channel and prospects "
+             "7d/24h/14d-series -- plus _buzz_prune's retention DELETE and the /buzz hourly "
+             "rate-limit count). Sibling of RG-0114's pg-readiness leg, which asserts the COUNT; "
+             "this asserts the SHAPE OF THE CURE, so the count cannot be met by a different and "
+             "worse rewrite. CLASS, not instance: every future time-window query in this file. "
+             "Source-only by design -- the property is how the SQL is written, and no live probe "
+             "can see the difference between a bound cutoff and a computed one.",
+       ref="PG-PORTABLE-2 EXTENDED (15 Sep 2026), found by the daily maintenance loop. RG-0114 was "
+           "red because pg-readiness had sat DANGER on NINE consecutive pre-deploy scans; the "
+           "ratchet read datetime_now=25 against a baseline of 17. The growth was real: git blame "
+           "put all eight new occurrences in the 14 Sep COMMS-VIEW-1 and Buzz commits. Fixed the "
+           "way PG-PORTABLE-1 (19 Aug) and PG-PORTABLE-2 were -- the cutoff is computed in Python "
+           "in the shape SQLite stores and bound as a parameter -- and NEVER by re-baselining "
+           "upward. The baseline file is byte-unchanged at 17. Evidence: test_pg_readiness.py "
+           "PASS; py_compile clean; a behavioural proof in :memory: where CURRENT_TIMESTAMP and "
+           "the helper agree to the second and all eight rewritten queries return rows identical "
+           "to the literal form, including the prune keeping the identical id set. What the three "
+           "instances have in common is that the helper did not exist, so each window was written "
+           "by hand; naming it once is what stops a fourth.")
+def rg_time_windows_are_bound_parameters():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "NOT EVALUATED - not run from the repo, so bea_main.py is unreadable here")]
+    # Two different views of the file, because the two questions need different ones:
+    #   * NAME tokens answer "does the helper exist and is it called" -- an identifier is a
+    #     token, and counting tokens can never be fooled by prose that merely mentions it.
+    #   * STRING tokens answer "is the SQL still parameterised" -- a SQL fragment lives whole
+    #     inside one string literal, so it survives tokenising intact.
+    # Neither view can be fooled by a comment, which is the trap this file has paid for twice
+    # (PG-RATCHET-PRECISION-1 15 Aug, PRECISION-2 26 Aug): explaining the old form must never
+    # read as a use of it. ASSERTION FIXED 15 Sep 2026, same session it was written: the first
+    # draft searched token-JOINED text for "def _sql_since(", which no join can ever contain
+    # because those are three separate tokens -- it reported the helper missing while the
+    # helper was right there. A leg that cannot pass is not a strict leg, it is a broken one.
+    import io as _io, re as _re, tokenize as _tok
+    try:
+        toks = list(_tok.generate_tokens(_io.StringIO(bea).readline))
+    except Exception as exc:
+        return [(INFO, "NOT EVALUATED - bea_main.py did not tokenize here: %s" % exc)]
+    names   = [t.string for t in toks if t.type == _tok.NAME]
+    strings = "\n".join(t.string for t in toks if t.type == _tok.STRING)
+
+    n_uses = names.count("_sql_since")          # the def line contributes exactly one
+    if n_uses == 0:
+        out.append((FAIL, "_sql_since() is gone from bea_main.py -- the one named helper for a "
+                          "time window has been removed and every window is hand-written again"))
+    elif n_uses - 1 < 8:
+        out.append((FAIL, "only %d of the 8 converted sites still bind their cutoff through "
+                          "_sql_since() -- the modifier form is creeping back" % (n_uses - 1)))
+
+    # The COUNT leg belongs to pg-readiness (RG-0114's scan tag). This leg guards the BASELINE,
+    # which is the only way that count can be made to pass without doing the work.
+    base = repo_file(os.path.join("scripts", "pg_readiness_baseline.json"))
+    n = None
+    try:
+        n = json.loads(base).get("datetime_now") if base else None
+    except Exception as ex:
+        out.append((FAIL, "pg baseline unreadable (%r)" % ex))
+    if n is not None and n > 17:
+        out.append((FAIL, "the pg baseline was re-baselined UPWARD to %d (17 after PG-PORTABLE-2) "
+                          "-- that is weakening the assertion to make it pass" % n))
+
+    # The five surfaces that must stay bound, named so a revert says WHICH one came back.
+    for label, pat in (("buzz sent-window count",   r"FROM buzz_log WHERE created_at >= \?"),
+                       ("buzz retention prune",     r"DELETE FROM buzz_log WHERE created_at < \?"),
+                       ("buzz hourly rate limit",   r"WHERE from_email=\? AND created_at >= \?"),
+                       ("prospects emailed window", r"FROM prospects WHERE emailed_at >= \?"),
+                       ("prospects 14-day series",  r"WHERE emailed_at >= \? GROUP BY d")):
+        if not _re.search(pat, strings):
+            out.append((FAIL, "the %s no longer binds its cutoff -- it has gone back to SQLite's "
+                              "own clock arithmetic" % label))
+    return out or [(INFO, "one named helper, %d bound cutoffs, baseline still %s, and all five "
+                          "converted surfaces still parameterised" % (n_uses - 1, n))]
+
+
+@entry("RG-0377", "a tester can report a fault from EVERY page we deploy to him -- a new page "
+                  "cannot ship with no way to tell us it is broken",
+       LOCKED, fixed_on="2026-09-15",
+       scope="Every non-email .html in ops/autodeploy/deploy_manifest.txt whose DEST is not under "
+             "orchestrator/ (the Basic-Auth ops realm, OPS-REALM-EXEMPT-1). Judged by the guard "
+             "that already owns the rule, test_tester_intake.py, rather than a second hand-rolled "
+             "copy of it -- two instruments reading one invariant is how they drift apart. CLASS: "
+             "any page ADDED to the manifest from now on, not the three that were missing.",
+       ref="FAULT-WIDGET-EVERYWHERE-1 (15 Sep 2026), found by the daily maintenance loop while "
+           "clearing RG-0114. quick.html, genie/q_index.html and confirm.html were all in the "
+           "deploy manifest with no ts_report.js, so a tester landing on the new Quick door -- the "
+           "one just put on the front page -- had no way to report anything. tester-intake had "
+           "been on the DANGER line of the last five pre-deploy scans and was three scans from "
+           "chronic; RG-0114's own record warns that the tags sharing that line 'would have gone "
+           "chronic in turn', so it was fixed now rather than waited for. Fix = the same one-line "
+           "script tag every other tester page already carries, before </body>. Evidence: "
+           "test_tester_intake.py went 17 PASS + 1 FAIL -> 18 PASS, and the next real pre-deploy "
+           "scan logged danger=- verdict=ok. The lesson is the guard's, not the pages': a rule "
+           "that every page must carry X is only as good as the moment a new page is added, and "
+           "nothing in the add-a-page path mentioned it.")
+def rg_every_tester_page_can_report():
+    if repo_file("test_tester_intake.py") is None:
+        return [(INFO, "NOT EVALUATED - not run from the repo, so the intake guard is unreachable")]
+    ok, blind, detail = _harness([sys.executable, os.path.join(REPO, "test_tester_intake.py"), REPO],
+                                 timeout=120, cwd=REPO, full=True)
+    if blind:
+        return [(INFO, detail)]
+    if ok:
+        return [(INFO, "every deployed tester page carries the fault-report widget")]
+    lines = [l.strip() for l in detail.splitlines() if l.strip().startswith("FAIL")]
+    wired = [l for l in lines if "wired_into_every_tester_page" in l]
+    if wired:
+        return [(FAIL, wired[0][:400])]
+    return [(INFO, "NOT EVALUATED - the intake suite failed for an unrelated reason, which this "
+                   "entry does not judge: %s" % (lines[0][:220] if lines else "no FAIL line"))]
+
+
+@entry("RG-0378", "the pre-deploy scan can SEE the working tree -- it never reports a clean tree "
+                  "when git simply failed to answer, and its torn-file check is not quietly dead",
+       LOCKED, fixed_on="2026-09-15",
+       scope="predeploy_check.py: _GIT_ENV, _git()'s (ok, stdout) contract, GIT_BLIND, the "
+             "NOT EVALUATED print and the dirty=? stamp in deploy_audit.log. Source-only: the "
+             "property is that blindness is DISTINGUISHABLE from cleanliness, and a live probe "
+             "cannot tell the two apart -- which is the whole fault. CLASS: every helper in this "
+             "repo that shells out and returns '' on failure, and every git call that omits "
+             "GIT_OPTIONAL_LOCKS=0 on the FUSE mount (CLAUDE.md, GIT-LOCK-3, 16 Aug).",
+       ref="GIT-BLIND-1 (15 Sep 2026), found by the daily maintenance loop. After the pg-readiness "
+           "fix the scan printed 'Working tree: 0 file(s) uncommitted' against a tree with five "
+           "modified files, one of them bea_main.py -- a deploy target. Cause, PROBED: _git() ran "
+           "git without GIT_OPTIONAL_LOCKS=0, so read-only status took an index lock on the "
+           "FUSE-shared .git and sat past its 20s timeout every time; the except then returned an "
+           "empty string, which is indistinguishable from a clean tree. Consequence was not "
+           "cosmetic: `modified = rel in dirty` was False for every target, so the torn-file "
+           "detection -- the one genuinely dangerous condition this control exists to catch, and "
+           "the only thing that makes the STRICT nightly abort -- could never fire. This is the "
+           "RG-0187 contract broken in a second file: an instrument limit must read NOT EVALUATED, "
+           "never a silent pass. Blindness is deliberately NOT added to `danger`, so a slow git "
+           "can never abort a good nightly. Evidence: the same command that timed out at 20s "
+           "answers with the flag set, and consecutive scans on one unchanged tree went "
+           "dirty=0 -> dirty=7 changed=1 recent=bea_main.py.")
+def rg_predeploy_scan_is_not_blind():
+    out = []
+    pc = repo_file("predeploy_check.py")
+    if pc is None:
+        return [(INFO, "NOT EVALUATED - not run from the repo, so predeploy_check.py is unreadable")]
+    if "GIT_OPTIONAL_LOCKS" not in pc:
+        out.append((FAIL, "predeploy_check.py calls git without GIT_OPTIONAL_LOCKS=0 again -- on "
+                          "the FUSE mount that hangs, and the hang is swallowed as a clean tree"))
+    if "GIT_BLIND" not in pc:
+        out.append((FAIL, "the GIT_BLIND marker is gone -- git failing to answer is once more "
+                          "indistinguishable from a tree with nothing in it"))
+    if "NOT EVALUATED" not in pc:
+        out.append((FAIL, "the scan no longer prints NOT EVALUATED when it cannot see the tree, "
+                          "so a blind scan reads as a clean one (RG-0187 contract)"))
+    if "dirty=%s" not in pc:
+        out.append((FAIL, "deploy_audit.log is being stamped with a NUMBER of dirty files even "
+                          "when git was blind -- the log must carry ? so no future reader mistakes "
+                          "'could not look' for 'nothing to see'"))
+    if "return False, ''" not in pc or "return True, r.stdout" not in pc:
+        out.append((FAIL, "_git() no longer returns (ok, stdout) -- it is back to conflating "
+                          "failure with empty output"))
+    # Blindness must never become a danger tag: that would let a slow git abort a good deploy.
+    try:
+        seg = pc.split("verdict = 'DANGER'", 1)[0]
+        if "danger.append('git" in seg or 'danger.append("git' in seg:
+            out.append((FAIL, "git blindness has been wired into `danger` -- an instrument limit "
+                              "must not abort the strict nightly (RG-0187)"))
+    except Exception:
+        pass
+    # The pass message deliberately avoids the runner's blindness phrase. FIXED 15 Sep 2026,
+    # same session it was written: run() demotes any entry whose text carries that exact phrase
+    # to UNVERIFIED (the LEDGER-DEPS-1 wiring), so this entry's own SUCCESS line declared it
+    # blind and took the board off green -- an instrument describing its own contract was read
+    # as reporting a limit. An assertion must not quote the words the runner greps for.
+    return out or [(INFO, "the scan runs git lock-free, says plainly when it cannot see the tree "
+                          "instead of printing a clean count, stamps dirty=? in the log, and never "
+                          "turns its own blindness into a deploy-blocking danger")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

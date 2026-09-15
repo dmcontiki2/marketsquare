@@ -169,6 +169,29 @@ def _require_admin_or_key(x_admin_token: str = Header(default=None),
 from email.utils import parseaddr, formataddr
 from datetime import datetime, timezone, timedelta
 
+
+# PG-PORTABLE-2 (15 Sep 2026) -- the GENERAL form of PG-PORTABLE-1 (19 Aug 2026).
+# The Postgres-readiness ratchet counts SQLite-only now-literal date arithmetic in
+# this file, and it went red on nine consecutive pre-deploy scans because the Buzz
+# and Comms work of 14 Sep added eight fresh ones. Re-baselining upward was never
+# the fix: the ruling is launch on SQLite and keep the later Postgres move CHEAP,
+# so the surface must not grow. PG-PORTABLE-1 solved it in two places by hand; this
+# is that same rewrite as a named helper so the next window does not have to.
+#
+# It returns a cutoff stamp in SQLite's OWN stored shape ("YYYY-MM-DD HH:MM:SS",
+# UTC) -- byte-identical to what CURRENT_TIMESTAMP writes and to what the now-literal
+# arithmetic used to compute -- so stored values and query results are unchanged and
+# every rewritten query is a bound parameter that moves to Postgres untouched.
+#
+# The literal pattern is deliberately NOT spelled out in this comment: the ratchet is
+# a regex over this file, and prose quoting the pattern counts as a use of it. That
+# trap has been paid for twice already (15 Aug, 26 Aug).
+def _sql_since(days: float = 0, hours: float = 0) -> str:
+    """UTC cutoff stamp, in the shape SQLite stores, for a bound WHERE parameter."""
+    return (datetime.now(timezone.utc).replace(tzinfo=None)
+            - timedelta(days=days, hours=hours)).isoformat(sep=" ", timespec="seconds")
+
+
 app = FastAPI(title="TrustSquare BEA", version="1.3.1")
 
 # DEPLOY-HOOK-1 (17 Aug 2026): authenticated HTTPS deploy trigger — see
@@ -13609,8 +13632,8 @@ def dashboard_comms(_admin=Depends(_require_admin_or_key)):
                       "closed by one of the two; only that person can reopen it", None, "buzz"))
 
         sent_total = _n("SELECT COUNT(*) FROM buzz_log")
-        sent_7d    = _n("SELECT COUNT(*) FROM buzz_log WHERE created_at >= datetime('now','-7 days')")
-        sent_24h   = _n("SELECT COUNT(*) FROM buzz_log WHERE created_at >= datetime('now','-1 day')")
+        sent_7d    = _n("SELECT COUNT(*) FROM buzz_log WHERE created_at >= ?", (_sql_since(days=7),))
+        sent_24h   = _n("SELECT COUNT(*) FROM buzz_log WHERE created_at >= ?", (_sql_since(days=1),))
         out.append(_m("buzz_sent_total", "Buzzes sent (all time)", sent_total, True, "buzz_log",
                       "the log keeps %d days, so this is the window, not history" % BUZZ_LOG_KEEP_DAYS,
                       None, "buzz"))
@@ -13618,8 +13641,8 @@ def dashboard_comms(_admin=Depends(_require_admin_or_key)):
         out.append(_m("buzz_sent_24h", "Buzzes, last 24 hours", sent_24h, True, "buzz_log", None, None, "buzz"))
 
         by_ch = {r[0] or "none": int(r[1] or 0) for r in _c.execute(
-            "SELECT channel, COUNT(*) FROM buzz_log WHERE created_at >= datetime('now','-30 days') "
-            "GROUP BY channel")}
+            "SELECT channel, COUNT(*) FROM buzz_log WHERE created_at >= ? "
+            "GROUP BY channel", (_sql_since(days=30),))}
         out.append(_m("buzz_push_30d", "Arrived by push (30d)", by_ch.get("push", 0), True,
                       "buzz_log.channel", None, None, "buzz"))
         out.append(_m("buzz_email_30d", "Fell back to email (30d)", by_ch.get("email", 0), True,
@@ -13677,8 +13700,8 @@ def dashboard_comms(_admin=Depends(_require_admin_or_key)):
             _onb_ever = _pn("SELECT COUNT(*) FROM prospects WHERE onboarded_at IS NOT NULL")
             _onb_pub  = _pn("SELECT COUNT(*) FROM prospects WHERE onboarded_at IS NOT NULL "
                             "AND published_at IS NOT NULL")
-            emailed_7d    = _pn("SELECT COUNT(*) FROM prospects WHERE emailed_at >= datetime('now','-7 days')")
-            emailed_24h   = _pn("SELECT COUNT(*) FROM prospects WHERE emailed_at >= datetime('now','-1 day')")
+            emailed_7d    = _pn("SELECT COUNT(*) FROM prospects WHERE emailed_at >= ?", (_sql_since(days=7),))
+            emailed_24h   = _pn("SELECT COUNT(*) FROM prospects WHERE emailed_at >= ?", (_sql_since(days=1),))
             out.append(_m("outreach_emailed_total", "People emailed — ever", emailed_total, True,
                           "prospects.emailed_at",
                           "Everyone who has ever been sent one. The CityLauncher Overview tile "
@@ -13696,7 +13719,7 @@ def dashboard_comms(_admin=Depends(_require_admin_or_key)):
             days = []
             for _r in _p.execute(
                     "SELECT substr(emailed_at,1,10) d, COUNT(*) n FROM prospects "
-                    "WHERE emailed_at >= datetime('now','-14 days') GROUP BY d ORDER BY d"):
+                    "WHERE emailed_at >= ? GROUP BY d ORDER BY d", (_sql_since(days=14),)):
                 days.append({"day": _r[0], "sent": int(_r[1] or 0)})
             out.append(_m("outreach_by_day", "Emails per day (14d)", days, True,
                           "prospects.emailed_at", None, "series", "outreach"))
@@ -23056,8 +23079,8 @@ def _buzz_prune(conn):
     unbounded log is the only part of Buzz that grows without a ceiling on an 80 GB
     disk."""
     try:
-        conn.execute("DELETE FROM buzz_log WHERE created_at < datetime('now', ?)",
-                     ("-%d days" % BUZZ_LOG_KEEP_DAYS,))
+        conn.execute("DELETE FROM buzz_log WHERE created_at < ?",
+                     (_sql_since(days=BUZZ_LOG_KEEP_DAYS),))
     except Exception as exc:
         _log.warning("BUZZ-PRUNE-1 skipped: %s", exc)
 
@@ -23093,8 +23116,8 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
                             detail="they have not switched buzzes on for you yet")
     n_recent = conn.execute(
         """SELECT COUNT(*) AS n FROM buzz_log
-           WHERE from_email=? AND created_at >= datetime('now','-1 hour')""",
-        (sender,)).fetchone()["n"]
+           WHERE from_email=? AND created_at >= ?""",
+        (sender, _sql_since(hours=1))).fetchone()["n"]
     if n_recent >= BUZZ_MAX_PER_HOUR:
         conn.close()
         raise HTTPException(status_code=429,
