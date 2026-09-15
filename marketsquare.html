@@ -143,7 +143,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=292">
+<link rel="stylesheet" href="/static/ms.css?v=293">
 <style id="sf-styles">
 /* ── SELL-FLOW-REDO-2 (15 Jul 2026) — scoped to #screen-sell-flow ── */
 #screen-sell-flow{background:#0b1220;min-height:100vh;color:#f2f5f9;font-family:'Inter',sans-serif;padding-bottom:80px;}
@@ -621,10 +621,15 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div class="hero-logo"><img src="/static/brand/logo-white-400.png" alt="TrustSquare" style="height:30px;width:auto;display:block;"></div>
       <div class="city-badge" id="home-city-badge" onclick="handleCityBadgeClick()"><div class="badge-geo"><span class="cdot"></span>South Africa</div><div class="badge-loc">Pretoria</div></div><button id="hdr-auth-btn" onclick="headerAuthClick()" style="background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;white-space:nowrap;">Sign in</button>
     </div>
-    <!-- QUICK-DOOR-1 (15 Sep 2026, David): the Quick Listing front door. It sits in the
-         hero body, which was empty, so nothing below it moves. Both directions on purpose
-         - the spreader finds as well as lists. -->
+    <!-- QUICK-DOOR-1 PARKED (15 Sep 2026, David, same day it went up): "going into it means
+         you cant get back into the trustsquare app... i want to rather remove that link
+         from inside trustsquare to the way it was. For now at least."
+         quick.html itself stays live and still writes real drafts - only the in-app door is
+         withdrawn, because a one-way door out of the app is worse than no door. Putting it
+         back is this one line; the .quick-door styles are still in ms.css:
     <div class="hero-body"><a class="quick-door" id="quick-door" href="/quick.html"><span class="qd-chip">QUICK</span><span class="qd-txt"><b>List anything in 5 taps</b><i>or find what you want, just as fast</i></span><span class="qd-go">&#8250;</span></a></div>
+    -->
+    <div class="hero-body"></div>
   </div>
 
   <!-- LM-19: stats-row permanently removed — bottom-half real estate now belongs to the "For You" wishlist feed below -->

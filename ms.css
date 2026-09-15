@@ -49,7 +49,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .city-option:active{background:var(--surface-2);}
 .cdot{width:7px;height:7px;border-radius:50%;display:inline-block;background:#fbbf24;}
 .hero-body{position:relative;z-index:1;}
-/* QUICK-DOOR-1 (15 Sep 2026, David): violet #7C3AED is the Quick tile's own colour
+/* QUICK-DOOR-1 - PARKED 15 Sep 2026: the in-app door was withdrawn the same day (no way back
+   out of quick.html mid-flow). These rules are kept, unused, so restoring it is one line of HTML.
+   Violet #7C3AED is the Quick tile's own colour
    (QUICK-TILE-1) and no category tile uses it, so this door cannot be mistaken for
    a category. Full width, thumb height, above everything. */
 .quick-door{display:flex;align-items:center;gap:11px;margin-top:14px;padding:11px 13px;
