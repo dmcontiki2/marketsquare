@@ -11332,7 +11332,24 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     score_target  = _next["threshold"] if _next else 100
     target_label  = (_next["name"] + " tier (score " + str(score_target) + ")") if _next else "maximum Trust Score (100)"
     points_needed = max(0, score_target - current_score)
-    all_missing   = sorted(universal_missing + cat_missing, key=lambda x: x["points"], reverse=True)
+    # COACH-ORDER-1 (15 Sep 2026, David: "all of these are some specialists type credentials
+    # and not related to a normal person?"). He is right, and the cause was this one sort.
+    # Ordering purely by POINTS puts the professional credentials first every time - SACE 12,
+    # police clearance 10, a degree - because that is where the big numbers live, so a
+    # housekeeper or a private seller with no certificates opened the plan and found five
+    # things none of which they could do. Order by WHAT THIS PERSON CAN ACTUALLY DO FIRST,
+    # then by points inside each band. TS-0011 still holds: credentials are not dropped, they
+    # sit after the steps anyone can take, where they read as "if you have one" rather than as
+    # the price of entry.
+    def _effort(m):
+        sid = m["id"]
+        if sid == "universal.profile_complete":       return 0   # today, nothing needed
+        if sid == "universal.id_verified":            return 1   # today, it is in their pocket
+        if sid.startswith("universal.referral"):      return 2   # today, needs one other person
+        if sid.startswith("track_record."):           return 3   # arrives by using the app
+        return 4                                                 # a professional credential
+    all_missing = sorted(universal_missing + cat_missing,
+                         key=lambda m: (_effort(m), -m["points"]))
 
     if not ai_provider.any_lane_configured():
         return {
@@ -11356,6 +11373,16 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
         "Be warm, direct, and specific. "
         "IMPORTANT: Only recommend actions the seller has NOT already completed. "
         "Never suggest uploading an ID if id_verified is already earned. "
+        # COACH-ORDER-1: the list arrives in doable-first order and must STAY in it.
+        "The seller may have no qualifications or certificates at all - most people do not. "
+        "KEEP THE STEPS IN THE ORDER GIVEN: it is already sorted by what this person can "
+        "actually do today, not by points. Never re-order it to put the biggest number first. "
+        "Step one must always be something they can finish in the next five minutes without "
+        "buying, studying or waiting for anyone. "
+        "Write every step as a plain instruction to a person who is not technical: say what to "
+        "tap and what they will need in their hand, in one short sentence, no jargon. "
+        "Where a professional credential appears, word it as an if - 'if you have a ...' - "
+        "never as something they are expected to hold. "
         # TS-0011 (Maroushka, 5 Aug 2026): the coach never mentioned her FFC/qualifications.
         "If any professional credential signal (FFC, PPRA registration, qualifications, "
         "training certificates, memberships) is NOT yet earned, ALWAYS include uploading it "
@@ -11366,7 +11393,7 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
         'Format: {"intro": "one encouraging sentence", '
         '"steps": [{"action": "specific instruction with where/how", "points": N, "why": "one sentence explaining the benefit"}], '
         '"closing": "one motivating sentence"} '
-        "Order steps by impact (most points first). Maximum 5 steps. "
+        "Keep the steps in the order you were given. Maximum 5 steps. "
         "Keep each action under 25 words. Keep each why under 15 words."
     )
 
@@ -11420,6 +11447,29 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     guidance["intro"]         = "Here is your personalised path to " + target_label + "."
     guidance.setdefault("steps",   _build_local_guidance(req.category, all_missing))
     guidance.setdefault("closing", "Every step you complete builds buyer confidence.")
+    # COACH-DOABLE-1 (15 Sep 2026, David: "nothing on it can be clicked, it does not tell how
+    # to do it"). Each step now carries the SIGNAL it belongs to and a do key, so the page can
+    # put a real button on it instead of printing a sentence telling the person where to
+    # navigate. The AI writes the words; the wiring comes from here, in the order above, so a
+    # reworded step can never lose its button.
+    _DO = {
+        "universal.profile_complete": "profile",
+        "universal.id_verified":      "upload_id",
+        "universal.referral_1":       "referral",
+        "universal.referral_3":       "referral",
+        "universal.referral_5plus":   "referral",
+    }
+    _steps = guidance.get("steps") or []
+    for _i, _st in enumerate(_steps):
+        if not isinstance(_st, dict):
+            continue
+        _src = all_missing[_i] if _i < len(all_missing) else None
+        if _src:
+            _st.setdefault("signal_id", _src["id"])
+            _st.setdefault("do", _DO.get(_src["id"], "credential"
+                                         if _src["id"].startswith("category.") else "wait"))
+            _st.setdefault("needs", _signal_howto(_src["id"], _src.get("how", ""))[0])
+    guidance["steps"]         = _steps
     guidance["ai_available"]  = True
     guidance["current_score"] = current_score
     guidance["score_target"]  = score_target
@@ -11495,8 +11545,12 @@ def _build_local_guidance(category: str, all_missing: list = None) -> list:
         all_missing = [
             {"id": "universal.id_verified", "name": "Government-issued ID verified", "points": 15,
              "how": "Upload your ID or passport."},
-            {"id": "universal.profile_photo", "name": "Profile photo added", "points": 10,
-             "how": "Upload a clear profile photo."},
+            # NOT a scoring signal: universal.profile_photo is not in _TRUST_SIGNALS, so this
+            # row promised 10 points that can never be awarded. Removed 15 Sep 2026 rather than
+            # left to mislead - whether a photo SHOULD score is David's call on the ladder, and
+            # until it is made the coach must not ask for one and pay nothing.
+            {"id": "universal.profile_complete", "name": "Complete profile", "points": 5,
+             "how": "Add your bio, suburb and what you do."},
         ] + sorted(
             [{"id": sid, "name": s["name"], "points": s.get("points", 0), "how": s.get("how_to_earn", "")}
              for sid, s in cat_sigs.items()],

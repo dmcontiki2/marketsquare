@@ -15232,13 +15232,57 @@ async function msAskAI(){
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
 
-    const stepsHtml = (data.steps || []).map(s =>
-      `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06);">
-        <div style="flex-shrink:0;background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;border-radius:20px;padding:3px 8px;align-self:flex-start;white-space:nowrap;">+${s.points} pts</div>
-        <div><div style="font-size:13px;font-weight:600;">${s.action}</div>
-        <div style="font-size:12px;color:#6b7280;margin-top:2px;">${s.why||''}</div></div>
-      </div>`
-    ).join('');
+    /* COACH-STEP-1 (15 Sep 2026, David: "nothing on it can be clicked, it does not tell
+       how to do it or give me a single item at a time"). The plan used to print five dead
+       lines at once. It now shows ONE step, with a real button where the app actually has a
+       screen for it, and says so plainly where it does not - a button that goes nowhere is
+       worse than a sentence. Steps arrive doable-first from the server (COACH-ORDER-1). */
+    window._tnPlan = (data.steps || []); window._tnStep = 0;
+    window._tnRender = function(){
+      var list = window._tnPlan || [];
+      var i = Math.max(0, Math.min(window._tnStep|0, list.length - 1));
+      var s = list[i] || {};
+      var canDo = { upload_id: 'Upload my ID now' };
+      var btn = canDo[s.do]
+        ? '<button id="tn-do-btn" data-do="'+s.do+'" style="width:100%;margin-top:11px;padding:12px;border:0;border-radius:10px;background:#16A97C;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">'+canDo[s.do]+'</button>'
+        : '<div style="margin-top:11px;padding:10px 12px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;font-size:12px;color:#9a3412;line-height:1.5;">'
+          + (s.do === 'wait'
+              ? 'Nothing to do here \u2014 this one adds itself as you use TrustSquare.'
+              : 'There is no button for this one in the app yet. ' + (s.needs || 'Ask support and we will do it with you.'))
+          + '</div>';
+      var dots = list.map(function(_, n){
+        return '<span style="width:7px;height:7px;border-radius:50%;display:inline-block;background:'+(n===i?'#16A97C':'#d1d5db')+';"></span>'; }).join(' ');
+      return ''
+        + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">'
+        +   '<div style="font-size:11px;color:#6b7280;">Step '+(i+1)+' of '+list.length+'</div>'
+        +   '<div style="display:flex;gap:5px;align-items:center;">'+dots+'</div>'
+        + '</div>'
+        + '<div style="background:#fff;border:1.5px solid #bbf7d0;border-radius:10px;padding:13px 14px;">'
+        +   '<div style="display:inline-block;background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;border-radius:20px;padding:3px 9px;margin-bottom:7px;">+'+(s.points||0)+' points</div>'
+        +   '<div style="font-size:14px;font-weight:700;line-height:1.4;">'+(s.action||'')+'</div>'
+        +   '<div style="font-size:12.5px;color:#6b7280;margin-top:4px;line-height:1.5;">'+(s.why||'')+'</div>'
+        +   btn
+        + '</div>'
+        + '<div style="display:flex;gap:8px;margin-top:10px;">'
+        +   (i > 0 ? '<button id="tn-prev" style="flex:1;padding:10px;border:1.5px solid #d1d5db;border-radius:10px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;">Back</button>' : '')
+        +   (i < list.length - 1
+              ? '<button id="tn-next" style="flex:2;padding:10px;border:1.5px solid #16A97C;border-radius:10px;background:#fff;color:#0f6e56;font-size:13px;font-weight:700;cursor:pointer;">Not this one \u2014 show me the next \u2192</button>'
+              : '<div style="flex:2;font-size:12px;color:#6b7280;padding:10px;text-align:center;">That is the last one.</div>')
+        + '</div>';
+    };
+    window._tnWire = function(){
+      var slot = document.getElementById('tn-plan-slot'); if(!slot) return;
+      var nx = document.getElementById('tn-next'); if(nx) nx.onclick = function(){ window._tnStep++; slot.innerHTML = window._tnRender(); window._tnWire(); };
+      var pv = document.getElementById('tn-prev'); if(pv) pv.onclick = function(){ window._tnStep--; slot.innerHTML = window._tnRender(); window._tnWire(); };
+      var db = document.getElementById('tn-do-btn');
+      if(db) db.onclick = function(){
+        if(db.dataset.do === 'upload_id'){
+          var inp = document.getElementById('ms-id-upload-input');
+          if(inp) inp.click(); else showToast('Open My Space first, then tap Upload ID', 5000);
+        }
+      };
+    };
+    const stepsHtml = '<div id="tn-plan-slot">' + window._tnRender() + '</div>';
 
     if (resultEl) {
       resultEl.innerHTML = `
