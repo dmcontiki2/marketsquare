@@ -1,3 +1,46 @@
+## 2026-09-15 — REFERRAL-LANE-1: the employer's four taps
+
+David, standing in his kitchen: *"We need a quick route for the housekeeper's current employer to
+give her a referral, with this quick way really being the shortest possible way of 1. signing on for
+free, 2. Writing a single sentence referral and 3. to use buzz once to confirm it works — three
+quick items, no more than 5 clicks?"*
+
+**Built exactly to that count.** Four taps: **Yes — I'll do it** (the invite she sent him),
+**Continue** (email + the terms, the one ask of [[RUL-135]]), **Send it** (one sentence, 140
+characters), **Buzz her once**. Two typings. Verified by the harness's own `taps` counter in a
+headless walk — 4, not "about four".
+
+**Why it matters more than its size.** The draft screen has said since 12 Sep that a lister's trust
+score *"opens when somebody outside vouches for you"* — and the app gave her no way to ask. This is
+that route, and the voucher it creates is the second free account Buzz's mutual-incentive argument
+depends on ([[RUL-135]](i)).
+
+- **The buzz is a step, not a garnish.** A doorbell nobody has ever rung is a doorbell nobody
+  trusts; ringing it once while both parties are looking at it is the only demonstration that costs
+  nothing and proves everything.
+- **Consent is complete at the end and is never asked for twice:** SHE asked (the link is her
+  consent), HE answered (accepting the terms is his). Pair plus both switches, earned by the two
+  acts the flow is already made of rather than assumed — [[RUL-132]](d) holds with no special case.
+- **The copy carries the promises the design cannot:** *"you never have to use TrustSquare again if
+  you do not want to"*, and on the sentence screen, *"it is a reference, not a reference check"* —
+  the two objections an employer actually has.
+- **The reference lifts TRUST, not the listing score**, which is why it is the one thing a lister
+  cannot give herself and why it is worth an employer's minute.
+
+Entry point is a card on the draft, above the Buzz card, so the moment she sees her own advert is
+the moment she is offered the one thing that would lift it.
+
+**Concurrency note, and the guard earned its keep.** Between writing this work and recording it, the
+other session folded its fragment and a release commit landed (20:59) — CHANGELOG.md was rewritten
+under me. The assertion on the expected first line refused the write rather than overwriting, and
+the earlier entries were already safely committed. This entry is re-anchored on the new head. The
+right habit remains the one the deploy script states: drop fragments, never rewrite CHANGELOG.md
+directly.
+
+`genie/HARNESS.html` + `quick.html`, 0 page errors. **Not yet live** — the 20:59 deploy carried
+LANDSCAPE-1 and ANOTHER OPTION (both verified on the served file); the referral lane needs the next
+double-click.
+
 ## 2026-09-14 — The last two reds were the instruments, not the product
 
 Both remaining regressions were checked against the running system before anything was touched, and

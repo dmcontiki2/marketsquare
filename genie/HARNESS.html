@@ -368,6 +368,25 @@ body{background:#04070a;color:#eaf3ee;
  font-size:13px;color:var(--bright);text-align:center}
 .chip.free{border-style:dashed;color:var(--bright)}
 .body.mid{justify-content:center}
+/* THE REFERRAL LANE */
+.buzzcard.vouch{border-color:var(--c);background:rgba(255,255,255,.06)}
+.vhead{display:flex;align-items:center;gap:11px;padding:0 2px 14px}
+.vhead .av{width:46px;height:46px;border-radius:50%;background:var(--c);color:#04140e;
+ display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;flex:0 0 auto}
+.vhead .nm{font-size:17px;font-weight:800;color:var(--bright);line-height:1.25}
+.vhead .nm span{display:block;font-size:12.5px;font-weight:500;color:var(--dim)}
+.vlede{font-size:14.5px;line-height:1.65;color:#eaf3ee;padding:0 2px 14px}
+.vlede b{color:var(--bright)}
+.vsaid{border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.04);
+ padding:14px 15px;margin-bottom:12px}
+.vsaid b{display:block;font-size:15px;line-height:1.55;color:#eaf3ee;font-weight:600}
+.vsaid span{display:block;font-size:11.5px;color:var(--dim);padding-top:7px}
+.vwon{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:12px;padding:13px 14px;
+ border-radius:16px;border:1px solid var(--c);background:rgba(255,255,255,.05)}
+.vwon b{font-size:26px;font-weight:900;color:var(--c);line-height:1}
+.vwon i{font-style:normal;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;
+ color:var(--dim);font-weight:800}
+.vwon span{flex:1 0 100%;font-size:12px;color:var(--dim);line-height:1.5;padding-top:7px}
 </style>
 </head>
 <body>
@@ -954,6 +973,12 @@ function drawDraft(){
    +scores
    +'<div class="todolab">Each of these adds to your listing score</div>'
    +'<div class="todo" id="todo">'+jobs+'</div>'
+   +'<div class="buzzcard vouch"><b>The fastest thing on this whole app</b>'
+   +'<p>Your employer says <b>one sentence</b> about you. That is what opens your trust score '
+   +'&mdash; nothing you write about yourself can do it. Four taps on their side, and they never '
+   +'have to use TrustSquare again.</p>'
+   +'<button class="btn solid" id="vgo" style="width:100%;padding:13px">'
+   +'See what they get</button></div>'
    +'<div class="buzzcard"><b>Buzz &mdash; one line to the other phone</b>'
    +'<p>'+comms().card+' They have exactly the same button for you. One line each way, no '
    +'thread to scroll, and email catches it if their push is off.</p>'
@@ -965,6 +990,7 @@ function drawDraft(){
    +'<div class="foot"><button class="btn solid" id="pub" style="width:100%">Publish it</button>'
    +'<div class="hint" id="pubhint">'+taps+' taps to get here</div></div>';
   $('bzgo').onclick=function(){ drawBuzz(); };
+  if($('vgo')) $('vgo').onclick=function(){ drawVouch(0); };
   var tds=$('todo').children;
   for(var i=0;i<tds.length;i++) tds[i].onclick=function(){ this.className=this.className?'':'did'; };
   if($('msch')) $('msch').onclick=function(){
@@ -1474,6 +1500,134 @@ function drawTraders(){
   $('trback').onclick=function(){ drawLookup(); };
   paint();
 }
+
+/* ===========================================================================
+   THE REFERRAL LANE  (David, 15 Sep 2026, standing in his kitchen making coffee)
+
+   "We need a quick route for the housekeeper's current employer to give her a referral...
+   1. signing on for free, 2. Writing a single sentence referral and 3. to use buzz once to
+   confirm it works - three quick items, no more than 5 clicks?"
+
+   It is the missing piece and it is load-bearing twice over. The draft screen already tells
+   every lister "your trust score opens when somebody outside vouches for you" - and until
+   now the app gave her no way to ASK. And it is the second account: the employer who vouches
+   is exactly the person Buzz's whole economics depend on existing.
+
+   FOUR TAPS, and the count is the specification, not a boast:
+     1  "Yes - I'll do it"        the invite, opened from her link
+     2  Continue                  email + the terms, the ONE ask (RUL-135)
+     3  Send it                   one sentence, 140 characters
+     4  Buzz her                  proof the doorbell works, both ways
+   Two typings, four taps, and he is done forever. A fifth tap would be a form.
+
+   WHY THE BUZZ IS PART OF IT rather than a nicety: a doorbell nobody has ever rung is a
+   doorbell nobody trusts. Ringing it once, while both of them are looking at it, is the
+   only demonstration that costs nothing and proves everything.
+
+   CONSENT IS ALREADY COMPLETE when this flow ends, and no step asks for it twice: SHE asked
+   (the link is her consent), HE answered (accepting the terms is his). That is the pair and
+   both switches, earned by the two acts the flow is made of - never assumed.
+   ------------------------------------------------------------------------- */
+var VOUCH={ from:'Thandi Mokoena', email:'', line:'', buzzed:false };
+
+function drawVouch(stage){
+  setNav();
+  var her = VOUCH.from, ini = initialsOf(her);
+  $('screen').className='screen';
+
+  if(stage===0){
+    $('screen').innerHTML='<div class="q" style="font-size:20px">A reference, please</div>'
+     +'<div class="body mid">'
+     +'<div class="vhead"><div class="av">'+ini+'</div>'
+     +'<div class="nm">'+her+'<span>asked you for a reference</span></div></div>'
+     +'<div class="vlede">You employed her, so you are the only person who can say this. '
+     +'<b>One sentence</b> is the whole job &mdash; it opens her trust score, and nothing she '
+     +'writes about herself ever can.</div>'
+     +'<div class="bznote">Free, about a minute, and you never have to use TrustSquare again '
+     +'if you do not want to. Four taps from here.</div>'
+     +'</div>'
+     +'<div class="foot"><button class="btn solid" id="v0" style="width:100%">'
+     +'Yes &mdash; I\u2019ll do it</button>'
+     +'<div class="hint">Tap 1 of 4</div></div>';
+    $('v0').onclick=function(){ taps++; drawVouch(1); };
+    return;
+  }
+
+  if(stage===1){
+    $('screen').innerHTML='<div class="q" style="font-size:20px">Who is vouching?</div>'
+     +'<div class="body mid">'
+     +'<div class="bzin"><input id="vmail" type="email" autocomplete="email" '
+     +'placeholder="you@example.com"><button id="v1" disabled>Continue</button></div>'
+     +'<div class="bzleft">Only '+her.split(" ")[0]+' sees your name on the reference.</div>'
+     +'<div class="bznote">This is the only thing we ask you for, and it is what signs you up '
+     +'&mdash; free, no card. Continuing accepts the TrustSquare terms, Buzz included as it is: '
+     +'a doorbell between two people, with an off switch on both sides (\u00a73.8).</div>'
+     +'</div>'
+     +'<div class="foot"><button class="btn ghost" id="vb" style="width:100%">Back</button>'
+     +'<div class="hint">Tap 2 of 4</div></div>';
+    $('vmail').oninput=function(){ $('v1').disabled = !/.+@.+\..+/.test(this.value); };
+    $('v1').onclick=function(){ taps++; VOUCH.email=$('vmail').value.trim(); drawVouch(2); };
+    $('vb').onclick=function(){ drawVouch(0); };
+    try{ $('vmail').focus(); }catch(e){}
+    return;
+  }
+
+  if(stage===2){
+    $('screen').innerHTML='<div class="q" style="font-size:20px">One sentence about '
+     +her.split(" ")[0]+'</div>'
+     +'<div class="body mid">'
+     +'<div class="bzin"><input id="vline" type="text" maxlength="140" autocomplete="off" '
+     +'placeholder="She has worked for us since 2021 \u2014 honest, and never a day missed."> '
+     +'<button id="v2" disabled>Send it</button></div>'
+     +'<div class="bzleft" id="vleft">Say what you would tell a friend who asked.</div>'
+     +'<div class="bznote">It goes on her advert with your name under it. You cannot be asked '
+     +'to justify it and nobody will chase you about it &mdash; it is a reference, not a '
+     +'reference check.</div>'
+     +'</div>'
+     +'<div class="foot"><button class="btn ghost" id="vb" style="width:100%">Back</button>'
+     +'<div class="hint">Tap 3 of 4</div></div>';
+    function paint(){
+      var v=$('vline').value.trim();
+      $('v2').disabled = v.length < 8;
+      $('vleft').textContent = v.length < 8 ? 'Say what you would tell a friend who asked.'
+                                            : (140 - v.length) + ' characters left';
+    }
+    $('vline').oninput=paint;
+    $('vline').onkeydown=function(e){ if(e.key==='Enter' && !$('v2').disabled) $('v2').click(); };
+    $('v2').onclick=function(){ taps++; VOUCH.line=$('vline').value.trim(); drawVouch(3); };
+    $('vb').onclick=function(){ drawVouch(1); };
+    try{ $('vline').focus(); }catch(e){}
+    paint();
+    return;
+  }
+
+  /* stage 3 - the reference is in; one buzz proves the doorbell before he leaves */
+  var done = VOUCH.buzzed;
+  $('screen').innerHTML='<div class="q" style="font-size:20px">'
+   +(done?'That is everything':'One last thing, and it takes a second')+'</div>'
+   +'<div class="body mid">'
+   +'<div class="vsaid"><b>\u201c'+_vEsc(VOUCH.line)+'\u201d</b><span>\u2014 you, just now</span></div>'
+   +(done
+     ? '<div class="bzsaid">Buzzed '+her.split(" ")[0]+'. She has it on her phone, and she can '
+       +'buzz you back the same way &mdash; one line each, no thread. Either of you can switch '
+       +'it off, and switching it off ends it for both.</div>'
+       +'<div class="vwon"><b>+18</b><i>trust</i><span>'+her+'\u2019s score has opened. An outside '
+       +'voucher is the one thing a lister cannot give themselves.</span></div>'
+     : '<div class="bznote">Buzz is how she tells you she is running late, and how you tell her '
+       +'not to come. Ring it once now, while you are both looking at it &mdash; a doorbell '
+       +'nobody has ever rung is a doorbell nobody trusts.</div>')
+   +'</div>'
+   +'<div class="foot">'
+   +(done
+     ? '<button class="btn solid" id="v4" style="width:100%">Done</button>'
+       +'<div class="hint">Four taps. You are finished.</div>'
+     : '<button class="btn solid" id="v3" style="width:100%">Buzz '+her.split(" ")[0]
+       +' once</button><div class="hint">Tap 4 of 4</div>')
+   +'</div>';
+  if($('v3')) $('v3').onclick=function(){ taps++; VOUCH.buzzed=true; drawVouch(3); };
+  if($('v4')) $('v4').onclick=function(){ VOUCH.buzzed=false; drawDraft(); };
+}
+function _vEsc(t){ return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 /* ---------------- nav ---------------- */
 $('back').onclick=function(){

@@ -5293,8 +5293,20 @@ def get_user_trust(email: str):
     }]
     for _gname, _g in canon["groups"].items():
         for _it in _g["items"]:
-            _awarded = int(_it.get("awarded_points") or 0)
+            # DO NOT trust awarded_points on its own: on a MISSING item it still
+            # carries the signal's face value (probed 15 Sep - dmcontiki2's universal
+            # group reads earned=0 while every item in it claims awarded 15/5/5/3/2).
+            # The status is what says whether it counted, so the contribution is
+            # derived from the status and awarded_points is used only where it means
+            # something - a declared item, which carries its 80% declaration share.
             _full    = int(_it.get("points") or 0)
+            _status  = (_it.get("status") or "").lower()
+            if _status in ("earned", "verified"):
+                _awarded = _full
+            elif _status == "declared":
+                _awarded = int(_it.get("awarded_points") or 0)
+            else:
+                _awarded = 0
             # The hub's buttons switch on the SHORT key (sig.key === 'id_verified'
             # draws Upload ID and the verify card), so the group prefix is stripped
             # here and the full id is carried alongside it. Changing the key shape
