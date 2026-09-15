@@ -5271,18 +5271,55 @@ def get_user_trust(email: str):
         },
     ]
 
-    earned_pts  = sum(s["points"] if s["earned"] else int(s.get("partial_points") or 0) for s in signals)
-    available_pts = sum((s["points"] - int(s.get("partial_points") or 0)) for s in signals if not s["earned"])
-    # EVIDENCE-TRUE (24 Jul 2026): the headline score IS the sum of the earned
-    # signals shown below it - never the stored users.trust_score, which other
-    # paths (seed 40, id-verify, subscription) mutate independently and which
-    # drifted above the visible list (the same 87-over-50 class the buyer card
-    # hit). _assert_evidence_true returns that sum and logs any drift it heals.
-    score = _assert_evidence_true(user.get("trust_score"),
-                                  [s["points"] if s["earned"] else int(s.get("partial_points") or 0)
-                                   for s in signals],
-                                  "get_user_trust")
-    tier = _trust_tier(score)
+    # ONE-SCORE-1 (15 Sep 2026, David: "I added it manually and saved it but the score
+    # stayed on 27%. It is not even sitting on 40% which is the normal starting
+    # baseline"). He was right on both counts, and the cause was a SECOND CALCULATOR.
+    # This surface used to publish its own six-signal sum as the headline, so the same
+    # seller read 27 here and 62 on the breakdown; the sum has no 40-point base, so it
+    # could sit below it; and it knows nothing about user_credentials, so a credential
+    # he added could never move it. _trust_math is documented as "THE ONLY PLACE THIS
+    # FORMULA MAY LIVE" -- this surface was a second place, which is the whole bug.
+    #
+    # The headline now comes from the canonical breakdown, and the list published under
+    # it is that breakdown's own items with the base shown as the first visible row, so
+    # EVIDENCE-TRUE still holds exactly: base + every awarded_points = the headline.
+    canon = trust_score_breakdown(email)
+    signals = [{
+        "key": "established_base",
+        "name": "Established base \u2014 every seller starts here",
+        "points": 40, "earned": True, "awarded": 40,
+        "how_to_earn": "Automatic. Credentials push you above it; penalties pull you below.",
+        "group": "base",
+    }]
+    for _gname, _g in canon["groups"].items():
+        for _it in _g["items"]:
+            _awarded = int(_it.get("awarded_points") or 0)
+            _full    = int(_it.get("points") or 0)
+            # The hub's buttons switch on the SHORT key (sig.key === 'id_verified'
+            # draws Upload ID and the verify card), so the group prefix is stripped
+            # here and the full id is carried alongside it. Changing the key shape
+            # would silently remove those buttons.
+            signals.append({
+                "key":          _it["signal_id"].split(".")[-1],
+                "signal_id":    _it["signal_id"],
+                "name":         _it["name"],
+                "points":       _full,
+                # part-earned is NOT earned: a declared ID worth 12 of 15 must read
+                # "12 · 3 pending", never a tick beside the full 15.
+                "earned":       _awarded >= _full > 0,
+                "awarded":      _awarded,
+                "partial_points": _awarded if 0 < _awarded < _full else 0,
+                "pending_points": (_full - _awarded) if (_it.get("status") in ("pending", "declared")
+                                                           and _awarded < _full) else 0,
+                "how_to_earn":  _it.get("how_to_earn") or "",
+                "status":       _it.get("status"),
+                "group":        _gname,
+            })
+
+    earned_pts    = sum(s["awarded"] for s in signals)
+    available_pts = sum(max(0, s["points"] - s["awarded"]) for s in signals)
+    score         = int(canon["score"])
+    tier          = _trust_tier(score)
 
     return {
         "email":         email,
@@ -5292,6 +5329,8 @@ def get_user_trust(email: str):
         "available_pts": available_pts,
         "intro_count":   intro_count,
         "signals":       signals,
+        "penalty_total": canon.get("penalty_total", 0),
+        "pending_points": canon.get("pending_points", 0),
     }
 
 @app.post("/users/{email}/photo")
