@@ -143,7 +143,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=291">
+<link rel="stylesheet" href="/static/ms.css?v=292">
 <style id="sf-styles">
 /* ── SELL-FLOW-REDO-2 (15 Jul 2026) — scoped to #screen-sell-flow ── */
 #screen-sell-flow{background:#0b1220;min-height:100vh;color:#f2f5f9;font-family:'Inter',sans-serif;padding-bottom:80px;}
@@ -621,7 +621,10 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div class="hero-logo"><img src="/static/brand/logo-white-400.png" alt="TrustSquare" style="height:30px;width:auto;display:block;"></div>
       <div class="city-badge" id="home-city-badge" onclick="handleCityBadgeClick()"><div class="badge-geo"><span class="cdot"></span>South Africa</div><div class="badge-loc">Pretoria</div></div><button id="hdr-auth-btn" onclick="headerAuthClick()" style="background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;white-space:nowrap;">Sign in</button>
     </div>
-    <div class="hero-body"></div>
+    <!-- QUICK-DOOR-1 (15 Sep 2026, David): the Quick Listing front door. It sits in the
+         hero body, which was empty, so nothing below it moves. Both directions on purpose
+         - the spreader finds as well as lists. -->
+    <div class="hero-body"><a class="quick-door" id="quick-door" href="/quick.html"><span class="qd-chip">QUICK</span><span class="qd-txt"><b>List anything in 5 taps</b><i>or find what you want, just as fast</i></span><span class="qd-go">&#8250;</span></a></div>
   </div>
 
   <!-- LM-19: stats-row permanently removed — bottom-half real estate now belongs to the "For You" wishlist feed below -->
@@ -3590,6 +3593,20 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     </div>
   </div>
 
+  <!-- HUB-WELCOME-1 (15 Sep 2026, David after his own first sign-in): the hub greets a
+       first-time seller with four plain lines and then never again. Shown by hubWelcome()
+       in ms.js on the first visit only; dismissing it is remembered per device. -->
+  <div id="hub-welcome" class="hub-welcome" style="display:none">
+    <b>First time here — the short version.</b>
+    <ul>
+      <li>This is <b>your side</b> of TrustSquare: what you have listed, what buyers have asked you, and your profile.</li>
+      <li>Start with <b>List with AI Coach</b> — add one photo, answer a few taps, and it drafts the advert for you.</li>
+      <li><b>Listing is free</b>, and nothing is public until you tap Publish.</li>
+      <li>You accept the terms at that same moment, not before — so look around first.</li>
+    </ul>
+    <button type="button" onclick="hubWelcomeDone()">Got it</button>
+  </div>
+
   <!-- AGENT-SVC-1: Estate Agent Hub entry -->
   <div style="margin:10px 14px 0;background:linear-gradient(120deg,#0c1a2e,#1e3a5f);color:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;" onclick="goTo('agent-suite')">
     <div style="min-width:0;"><div style="font-weight:800;font-size:13.5px;">Agent Hub — estate, car &amp; tour agents</div><div style="font-size:11px;opacity:.75;">List yourself as a professional agent · seller leads land here — accept at 1T</div></div>
@@ -4504,7 +4521,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ════════════════════════════════════════════════════════════ -->
 <script src="/static/legal-must-haves/legal-cards.js?v=1"></script>
 <script src="/static/trip_essentials.js?v=1"></script>
-<script src="/static/ms.js?v=493"></script>
+<script src="/static/ms.js?v=494"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

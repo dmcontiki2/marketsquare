@@ -49,6 +49,22 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .city-option:active{background:var(--surface-2);}
 .cdot{width:7px;height:7px;border-radius:50%;display:inline-block;background:#fbbf24;}
 .hero-body{position:relative;z-index:1;}
+/* QUICK-DOOR-1 (15 Sep 2026, David): violet #7C3AED is the Quick tile's own colour
+   (QUICK-TILE-1) and no category tile uses it, so this door cannot be mistaken for
+   a category. Full width, thumb height, above everything. */
+.quick-door{display:flex;align-items:center;gap:11px;margin-top:14px;padding:11px 13px;
+ border-radius:14px;text-decoration:none;cursor:pointer;
+ background:linear-gradient(135deg,rgba(124,58,237,.34),rgba(124,58,237,.15));
+ border:1.5px solid rgba(167,139,250,.55);transition:transform .12s ease;}
+.quick-door:active{transform:scale(.99);}
+.quick-door .qd-txt{flex:1;min-width:0;display:flex;flex-direction:column;}
+.quick-door b{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:#fff;letter-spacing:-.2px;white-space:nowrap;}
+.quick-door .qd-chip{font-family:'Syne',sans-serif;font-size:9.5px;font-weight:800;letter-spacing:1.2px;
+ color:#ddd6fe;background:rgba(124,58,237,.55);border:1px solid rgba(167,139,250,.5);
+ border-radius:7px;padding:5px 7px;flex:0 0 auto;line-height:1;}
+.quick-door i{font-style:normal;font-size:11.5px;color:rgba(255,255,255,.62);margin-top:2px;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.quick-door .qd-go{font-size:22px;color:#c4b5fd;line-height:1;flex:0 0 auto;}
 .hero-eyebrow{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45);font-weight:500;margin-bottom:10px;font-family:'Inter',sans-serif;}
 .home-hero h1{font-size:30px;font-weight:800;color:#fff;line-height:1.15;margin-bottom:8px;letter-spacing:-.3px;}
 .home-hero p{color:rgba(255,255,255,.55);font-size:14px;margin-bottom:0;line-height:1.6;font-weight:400;}
@@ -1454,3 +1470,12 @@ details.te-sec[open] > summary .te-chev { transform: rotate(180deg); }
 .ms-card.bz-route>b{display:block;font-size:13px;margin-bottom:6px}
 .ms-card.bz-route p{margin:0;font-size:12.5px;line-height:1.6;color:var(--text-2)}
 .ms-empty>b:first-child{display:block;margin-bottom:6px;color:var(--text-2)}
+
+/* HUB-WELCOME-1 (15 Sep 2026) - the first-visit greeting on the Seller Hub. */
+.hub-welcome{margin:10px 14px 0;border-radius:12px;padding:14px 15px;
+ background:rgba(22,169,124,.07);border:1px solid var(--accent)}
+.hub-welcome>b:first-child{display:block;font-size:13.5px;margin-bottom:8px}
+.hub-welcome ul{margin:0;padding-left:18px}
+.hub-welcome li{font-size:12.5px;line-height:1.65;color:var(--text-2);margin-bottom:4px}
+.hub-welcome button{margin-top:10px;width:100%;padding:10px;border-radius:10px;border:0;
+ font:inherit;font-size:13px;font-weight:800;background:var(--accent);color:#fff;cursor:pointer}

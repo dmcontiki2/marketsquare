@@ -8,31 +8,30 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-09-15 - 2026-09-15 — The referral lane: four taps from the employer, and her score opens)
+## Last Completed (2026-09-15 - 2026-09-15 — The Quick door is on the front page and no longer a dry run)
 
-### 2026-09-15 — The referral lane: four taps from the employer, and her score opens
+### 2026-09-15 — The Quick door is on the front page and no longer a dry run
 
-David, from his kitchen: *"We need a quick route for the housekeeper's current employer to give her
-a referral... 1. signing on for free, 2. Writing a single sentence referral and 3. to use buzz once
-to confirm it works — three quick items, no more than 5 clicks?"*
+David: *"i think we need the Quick Listing as an option on the First page, it is currently the
+path of least resistance to list anything."* He is describing acquisition, not convenience —
+somebody who meets the app through four taps has already succeeded at it once.
 
-**The missing piece, and it was load-bearing twice.** The draft screen has been telling every lister
-*"your trust score opens when somebody outside vouches for you"* while giving her no way to ASK —
-and the voucher is exactly the second account Buzz's economics depend on existing.
+**The slot was free and had been for weeks.** The hero body has sat empty since LM-19 took the
+stats row out, so the door needed no layout argument with anything.
 
-**Four taps, and the count is the specification:** "Yes — I'll do it" → email + terms → the
-sentence → buzz her. Two typings, four taps, done forever; a fifth would make it a form. Measured by
-the app's own tap counter in a headless walk, not estimated.
+**The part that was actually missing was the other end.** `quick.html` went live with QUICK-TILE-1
+on 14 Sep but its hand-over was still a prototype stub printing the JSON it *would* have posted.
+A door on the home page pointing at that would have been the worst kind of live — visible,
+tried, and ending in nothing. It now posts to the same `/listings` every other listing goes
+through: one server, one rulebook, RUL-125(b) intact.
 
-**The buzz is part of it, not a nicety** — a doorbell nobody has ever rung is a doorbell nobody
-trusts, so it gets rung once while both of them are looking at it.
+**Deferred on purpose:** the identity note at the door still wants `GET /quick/me` off the
+`ts_user` cookie (RUL-125(a)). That endpoint does not exist, so the door reads the app's own
+signed-in marker on the same origin instead. Same answer, no new surface; when `/quick/me`
+is built it replaces four lines.
 
-**Consent completes itself without asking twice:** she asked (the link is her consent), he answered
-(accepting the terms is his) — that is the pair and both switches, earned by the two acts the flow
-is made of rather than assumed.
-
-Harness and `quick.html`, verified end to end, 0 errors. **Waiting on one deploy** together with
-LANDSCAPE-1 and ANOTHER OPTION.
+Rendered-verified at 400px before the deploy, and both publish paths walked headless.
+This release also carries the LANDSCAPE-1 and referral-lane work that was waiting on a deploy.
 
 <!-- DASH-FEED-1:END -->
 
@@ -57,6 +56,29 @@ LANDSCAPE-1 and ANOTHER OPTION.
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+## 2026-09-15 — The Quick door is on the front page and no longer a dry run
+
+David: *"i think we need the Quick Listing as an option on the First page, it is currently the
+path of least resistance to list anything."* He is describing acquisition, not convenience —
+somebody who meets the app through four taps has already succeeded at it once.
+
+**The slot was free and had been for weeks.** The hero body has sat empty since LM-19 took the
+stats row out, so the door needed no layout argument with anything.
+
+**The part that was actually missing was the other end.** `quick.html` went live with QUICK-TILE-1
+on 14 Sep but its hand-over was still a prototype stub printing the JSON it *would* have posted.
+A door on the home page pointing at that would have been the worst kind of live — visible,
+tried, and ending in nothing. It now posts to the same `/listings` every other listing goes
+through: one server, one rulebook, RUL-125(b) intact.
+
+**Deferred on purpose:** the identity note at the door still wants `GET /quick/me` off the
+`ts_user` cookie (RUL-125(a)). That endpoint does not exist, so the door reads the app's own
+signed-in marker on the same origin instead. Same answer, no new surface; when `/quick/me`
+is built it replaces four lines.
+
+Rendered-verified at 400px before the deploy, and both publish paths walked headless.
+This release also carries the LANDSCAPE-1 and referral-lane work that was waiting on a deploy.
 
 ## 2026-09-15 — The referral lane: four taps from the employer, and her score opens
 

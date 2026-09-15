@@ -69,7 +69,11 @@ function r2Fallback(img) {
   }
 }
 const API_KEY = 'ms_mk_2026_pretoria_admin';
-window.API_KEY = API_KEY;   // MAINT-B1b (5 Aug 2026): `const` at top level does NOT
+window.API_KEY = API_KEY;
+// QUICK-LIVE-1 (15 Sep 2026): quick.html is a separate page on this same origin and
+// does not load this file, so the key reaches it here rather than being typed out a
+// second time - one place to change on a rotation. Same key, already shipped above.
+try{ localStorage.setItem('ts_qk_key', API_KEY); }catch(e){}   // MAINT-B1b (5 Aug 2026): `const` at top level does NOT
                             // attach to window, so ts_report.js could never read it and
                             // every in-app fault report was refused 401. Same key, already
                             // shipped in this file — this exposes nothing new.
@@ -829,7 +833,7 @@ async function _msInit(){
   // ── DEMO MODE ACTIVATION ─────────────────────────────────
   if (DEMO_MODE) {
     // Hide real seller nav buttons, show demo join CTA
-    ['nav-onboard','nav-tuppence','nav-myspace'].forEach(id => {
+    ['nav-onboard','nav-tuppence','nav-myspace','quick-door'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -9394,6 +9398,32 @@ async function sbShowDashDraftBanner(){
   } catch(e){}
 }
 
+/* HUB-WELCOME-1 (15 Sep 2026). David, after signing in for the first time himself:
+   "If it is the first see of the app then a short message of explanation?" Four lines,
+   shown once, dismissed forever on this device. It is deliberately hung off
+   updateDashStats() rather than the sign-in: a person can reach the hub by several routes
+   and the greeting belongs to the SCREEN, not to one of the ways in.
+
+   It answers the three things he was unsure of in his own first minute: what this screen
+   is, what to do first, and that the terms are accepted at Publish rather than at sign-in
+   (RUL-135) - so looking around costs nothing and commits nothing. */
+var HUB_WELCOME_KEY = 'ms_hub_welcome_seen';
+function hubWelcome(){
+  var el = document.getElementById('hub-welcome');
+  if(!el) return;
+  var seen = false;
+  try{ seen = localStorage.getItem(HUB_WELCOME_KEY) === '1'; }catch(e){}
+  // Only a genuinely new seller: anybody with a listing has been here before, whatever
+  // this device remembers.
+  var fresh = !(window.dashState && dashState.listings && dashState.listings.length);
+  el.style.display = (!seen && fresh) ? 'block' : 'none';
+}
+function hubWelcomeDone(){
+  try{ localStorage.setItem(HUB_WELCOME_KEY, '1'); }catch(e){}
+  var el = document.getElementById('hub-welcome');
+  if(el) el.style.display = 'none';
+}
+
 function updateDashStats(){
   const pending = dashState.listings.reduce((a,dl)=>a+dl.intros.filter(i=>i.status==='pending').length,0);
   const active  = dashState.listings.filter(dl=>dl.status==='active').length;
@@ -9401,6 +9431,7 @@ function updateDashStats(){
   const pd=document.getElementById('dash-pending'); if(pd)pd.textContent=pending;
   const qd=document.getElementById('dash-queue');   if(qd)qd.textContent=dashState.listings.filter(dl=>!dl.isCommit).reduce((a,dl)=>a+dl.intros.filter(i=>i.status==='pending').length,0);
   const td=document.getElementById('dash-tn');      if(td)td.textContent=tuppence;
+  try{ hubWelcome(); }catch(e){}
 }
 
 // 7-state listing lifecycle chip for the seller hub (mirrors the BEA listing_status machine).

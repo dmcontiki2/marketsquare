@@ -513,7 +513,9 @@ function drawDoor(){
   /* DEMO ONLY. In the live spreader QUICK comes from GET /quick/me, answered from the
      ts_user cookie the browser already has - same origin, RUL-125(a). There is no
      switch and no sign-in screen; the door simply already knows. */
-  $('screen').innerHTML +=
+  /* QUICK-LIVE-1: on the live origin the door already knows who you are, so the demo
+     switch is not rendered at all - the rule three lines above, now enforced. */
+  if(!QUICK_LIVE) $('screen').innerHTML +=
     '<div class="dswitch'+(QUICK.member?' on':'')+'" id="dsw"><i></i><span>'
    +(QUICK.member
       ? 'Demo: returning member &mdash; nothing is re-asked'
@@ -525,7 +527,7 @@ function drawDoor(){
   $('next').onclick=function(){swipe(1);};
   $('bFind').onclick=function(){start('find');};
   $('bSell').onclick=function(){start('sell');};
-  $('dsw').onclick=function(){
+  if($('dsw')) $('dsw').onclick=function(){
     QUICK.member=!QUICK.member;
     QUICK.name=QUICK.member?'Hannes Roux':''; QUICK.city=QUICK.member?LOC.suburb:'';
     drawDoor();
@@ -872,6 +874,35 @@ function lsOf(picks, photos){
    model fields are sent below; the reply is {id, message}.
    ------------------------------------------------------------------------- */
 var HANDOVER={url:'', key:'', email:''};   /* the host page fills these when signed in */
+/* QUICK-LIVE-1 (15 Sep 2026, David: "add it there and make it live"). The host page
+   is now TrustSquare itself. Served from the app's own origin this fills the hand-over
+   from what the browser already holds, so Publish writes a real draft instead of
+   printing one. The key is the SAME one ms.js has shipped to every visitor since
+   MAINT-B1b - source of truth is API_KEY at the top of ms.js, which now mirrors it
+   into localStorage for this door; nothing new is exposed and there is no second copy
+   of the key in this file to forget on a rotation.
+   Identity: the design note at the door says the live spreader knows you from the
+   ts_user cookie via GET /quick/me (RUL-125(a)). That endpoint does not exist yet, so
+   this uses the app's own signed-in marker on the same origin instead - it reads it,
+   never writes it, so this door can never fake a sign-in the app did not do.
+   Opened as a file:// copy from an emailed Downloads folder there is no such storage
+   and it stays a dry run, exactly as before - the one behaviour this must not lose. */
+var QUICK_LIVE=false;
+(function(){
+  try{
+    if(location.protocol==='file:') return;
+    var k=localStorage.getItem('ts_qk_key');
+    if(!k) return;
+    HANDOVER.url=location.origin; HANDOVER.key=k; QUICK_LIVE=true;
+    var m=localStorage.getItem('ms_aa_email')||'';
+    if(/.+@.+\..+/.test(m)){
+      HANDOVER.email=m;
+      QUICK.member=true;                                   /* a member is never re-asked */
+      QUICK.name=localStorage.getItem('ms_aa_name')||m.split('@')[0];
+      QUICK.city=LOC.suburb;
+    }
+  }catch(e){}
+})();
 function handoverPayload(){
   var c=cat(), key=c.name.toLowerCase();
   var from=FIELD_FROM[key]||{};
@@ -1051,6 +1082,7 @@ function drawDraft(){
     $('jgo').onclick=function(){
       var m=$('jmail').value.trim();
       QUICK.member=true; QUICK.name=nameFromMail(m); QUICK.city=LOC.suburb;
+      HANDOVER.email=m;   /* QUICK-LIVE-1: a draft with no seller_email is an orphan */
       slot.innerHTML='';
       doPublish(btn);
     };

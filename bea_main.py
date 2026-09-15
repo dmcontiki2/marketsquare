@@ -5811,9 +5811,23 @@ def _actor(ts_user, passed, ctx="", admin_key=None):
         return p
     if not sess:
         raise HTTPException(status_code=401, detail="Please sign in to do that.")
+    # IDENTITY-BIND-2 (15 Sep 2026): a mismatch now IGNORES what was typed and acts as the
+    # session, where it used to refuse with 403.
+    #
+    # The 403 protected nothing the ignore does not. A caller still cannot act as anybody
+    # else - the passed value is simply discarded - so the security property is identical.
+    # What the 403 added was a DEAD END for the legitimate owner: every page in this app
+    # addresses these endpoints with an email it read out of localStorage, and the moment
+    # that spelling differed from the cookie (a test account, an older address, a second
+    # sign-in) the owner was refused on his own data with no way forward. David hit it twice
+    # in one evening - his own Buzz page, and a photo on his own profile that "kept asking
+    # me to add it again" because the upload 403'd behind a swallowed error.
+    #
+    # It is logged every time, because a mismatch still means a page is sending an identity
+    # it should not have needed to send, and that is worth fixing at the source.
     if p and p != sess:
-        raise HTTPException(status_code=403,
-                            detail="This action can only be performed on your own account.")
+        _log.warning("IDENTITY-BIND-2 mismatch ignored (ctx=%s): acting as session=%s, "
+                     "page sent=%s", ctx, sess, p)
     return sess
 
 

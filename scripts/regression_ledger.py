@@ -4687,7 +4687,12 @@ _re_comments = re.compile(r"<!--.*?-->", re.S)
            "whole purpose is to actually get referrals with the people opening a free account, even "
            "if they never use it. I would not add No account there?' He is right and it was the same "
            "instinct twice: the page had been written to remove every reason to hesitate, and one of "
-           "the things it removed was the reason to stay.")
+           "the things it removed was the reason to stay. ASSERTION FIXED the same session, before "
+           "this entry ever locked: leg (d) read a fixed 260-character window after the request "
+           "model's header, which ran past the end of the class into the next def "
+           "(trust_employer_link(email: str)) and reported the model asking for an identity it does "
+           "not ask for. It now reads the class BODY by indentation. The assertion moved, never the "
+           "code -- the same instrument fault as RG-0094 and RG-0367.")
 def rg_confirm_page_offers_an_account():
     _require_net()
     out = []
@@ -4717,9 +4722,20 @@ def rg_confirm_page_offers_an_account():
     if _i < 0:
         out.append((FAIL, "EmployerConfirmReq is gone -- cannot judge whether confirming still "
                           "needs an account"))
-    elif "email" in _src[_i:_i + 260]:
-        out.append((FAIL, "confirming now asks the employer for an identity -- the offer has become "
-                          "a condition, which is a different and dishonest product"))
+    else:
+        # ASSERTION FIXED on its first run, 15 Sep 2026: a fixed 260-character window ran past
+        # the end of the class and into the NEXT def, trust_employer_link(email: str) -- so this
+        # leg reported the request model asking for an identity it does not ask for. Same
+        # instrument fault as RG-0094 and RG-0367: a character window instead of a real boundary.
+        # Read the CLASS BODY: the lines after the header until one that is not indented.
+        _body = []
+        for _ln in _src[_i:].split(chr(10))[1:]:
+            if _ln.strip() and not _ln[:1].isspace():
+                break
+            _body.append(_ln)
+        if "email" in chr(10).join(_body):
+            out.append((FAIL, "confirming now asks the employer for an identity -- the offer has "
+                              "become a condition, which is a different and dishonest product"))
     # (c) across all three surfaces. AIMED, not broad: each surface is narrowed to the copy
     # the RULING is about, because both other files legitimately carry these words elsewhere
     # (ms.js says "nothing to sign again" about the accepted EULA, and this page's own source
