@@ -5316,6 +5316,26 @@ def get_user_trust(email: str):
                 "group":        _gname,
             })
 
+    # The ladder CAPS each group (universal 30, track 30, category 40) and the total at
+    # 100, so raw face values can exceed what actually counts - dmcontiki2 read 60 points
+    # of evidence against a 50 score. EVIDENCE-TRUE is about the seller never seeing a
+    # headline BIGGER than the evidence, but a list that does not add up is confusing in
+    # either direction, so each row is trimmed to what it really contributed and the
+    # trimmed ones say why. After this, base + every awarded = the headline, exactly.
+    _CAPS = {"universal": 30, "track_record": 30, "category": 40}
+    _used = {}
+    for _s in signals:
+        _g = _s.get("group")
+        if _g not in _CAPS:
+            continue
+        _room = _CAPS[_g] - _used.get(_g, 0)
+        if _s["awarded"] > _room:
+            _s["note"] = ("Above the %s cap of %d points - it counts as %d here."
+                          % (_g.replace("_", " "), _CAPS[_g], max(0, _room)))
+            _s["capped"] = True
+            _s["awarded"] = max(0, _room)
+        _used[_g] = _used.get(_g, 0) + _s["awarded"]
+
     earned_pts    = sum(s["awarded"] for s in signals)
     available_pts = sum(max(0, s["points"] - s["awarded"]) for s in signals)
     score         = int(canon["score"])
