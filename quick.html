@@ -1059,8 +1059,19 @@ function drawDraft(){
           +'what would be posted to /listings:\n\n'+JSON.stringify(res.body,null,1);
         $('pubhint').textContent='Draft composed from '+taps+' taps.';
       } else {
-        box.textContent='Draft #'+res.id+' is in TrustSquare. Finish onboarding there to go live.';
-        $('pubhint').textContent='Draft #'+res.id+' — one server, one rulebook.';
+        /* QUICK-HANDBACK-1 (15 Sep 2026, David: "We still need the long sell path where more
+           options and details can be added?"). Yes - and this is the seam between them. Quick
+           composes a thin draft; photos, the full detail set, the score and publishing all live
+           in the guided flow, which finds this row through GET /listings/mine on the SAME email.
+           So the address is the only thing he has to get right, and it now says so with the way
+           back rather than "finish onboarding there" and no door. */
+        var _e=function(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+        box.innerHTML='Draft #'+res.id+' is in TrustSquare. Finish it in the app to add photos, '
+          +'the full detail and your price \u2014 that is where it goes live.'
+          +(HANDOVER.email ? '<br><br>Sign in with <b>'+_e(HANDOVER.email)+'</b> \u2014 the draft is '
+              +'waiting on that address, and only that one.' : '')
+          +'<br><br><a href="/" style="color:#9ec7ff;font-weight:700">Open TrustSquare &#8250;</a>';
+        $('pubhint').textContent='Draft #'+res.id+' \u2014 one server, one rulebook.';
       }
     });
   }
