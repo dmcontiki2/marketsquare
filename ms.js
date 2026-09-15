@@ -12954,8 +12954,12 @@ async function buzzRender(){
   try{
     const me = await bzApi('/buzz/me');
     if(me && me.signed_in && !me.accepted){ return bzAcceptShow(box, me.email || email); }
+    // BUZZ-PAIRS-SELF-1: the SERVER's idea of who we are wins. localStorage can hold a
+    // different spelling of the same person (a test account, an old address), and once
+    // identity was bound that mismatch became a 403 on the user's own page.
+    if(me && me.email) email = me.email;
   }catch(e){ /* older server, or not signed in: fall through to the pairs call below */ }
-  try{ _bzPairs = await bzApi('/buzz/pairs?email=' + encodeURIComponent(email)); }
+  try{ _bzPairs = await bzApi('/buzz/pairs'); }   // no email: the cookie is the answer
   catch(e){ box.innerHTML = '<div class="ms-card"><div class="bz-said bad">'+e.message+'</div></div>'; return; }
 
   let h = '<div class="bz-lede">One line, straight to the other phone, with your name on it. '
@@ -12972,9 +12976,33 @@ async function buzzRender(){
 
   h += '<div class="ms-section-lbl">People you are connected to</div>';
   if(!_bzPairs.length){
-    h += '<div class="ms-card"><div class="ms-empty">Nobody yet. A connection is made when '
-       + 'somebody you work with joins from your own link — a stranger can never add themselves '
-       + 'here.</div></div>';
+    // BUZZ-EMPTY-1 (15 Sep 2026, David: "it is blank... this should look like a communicating
+    // page, it should show a layout"). An empty list that only apologises teaches nothing. This
+    // one does three things instead: says why it is empty and that that is a FEATURE (nobody can
+    // add themselves), shows a worked example of the card so the shape is learned before there is
+    // data, and names the fastest route to a first connection. The example is plainly labelled
+    // and deliberately greyed — a fake row that could be mistaken for a real one would be worse
+    // than the blank page it replaces.
+    h += '<div class="ms-card"><div class="ms-empty"><b>Nobody yet — and that is the point.</b>'
+       + 'A connection is made only when somebody you have actually dealt with joins from your own '
+       + 'link. A stranger can never add themselves here, which is why there is no block list and '
+       + 'nothing to moderate.</div></div>';
+    h += '<div class="bz-eglab">What one looks like</div>'
+       + '<div class="ms-card bz-eg" aria-hidden="true">'
+       + '<div class="bz-who"><div class="bz-av">MN</div>'
+       + '<div class="bz-nm">Mrs Nkosi<span>your employer</span></div></div>'
+       + '<div class="bz-row"><div class="bz-lbl"><b>Let her buzz me</b>'
+       + '<span>Her line reaches this phone</span></div><div class="bz-sw on"></div></div>'
+       + '<div class="bz-row"><div class="bz-lbl"><b>She lets me buzz her</b>'
+       + '<span>Your line reaches her phone</span></div><div class="bz-sw on"></div></div>'
+       + '<div class="bz-in"><input type="text" placeholder="Running 20 minutes late" disabled>'
+       + '<button disabled>Buzz</button></div>'
+       + '<div class="bz-eghint">Example only — two switches, one line, no thread. Either of you '
+       + 'can close it, and closing it closes it for both.</div></div>';
+    h += '<div class="ms-card bz-route"><b>The fastest way to your first one</b>'
+       + '<p>Ask the person you already work for to write you a one-sentence reference. It takes '
+       + 'them four taps, it opens your trust score — and it connects the two of you here, so the '
+       + 'first buzz you ever send is to somebody who has already vouched for you.</p></div>';
   } else {
     _bzPairs.forEach(function(p, i){
       h += '<div class="ms-card" id="bz-card-'+i+'">'
@@ -15242,7 +15270,13 @@ async function msAskAI(){
       var list = window._tnPlan || [];
       var i = Math.max(0, Math.min(window._tnStep|0, list.length - 1));
       var s = list[i] || {};
-      var canDo = { upload_id: 'Upload my ID now' };
+      /* RUL-136: three more steps that now end in a button instead of a sentence.
+         A step with no button was David's whole complaint - so every signal the
+         ladder pays for and an ordinary person can do must have one here. */
+      var canDo = { upload_id: 'Upload my ID now',
+                    photo: 'Add my photo now',
+                    experience: 'Tell us how long \u2014 takes 10 seconds',
+                    employer_link: 'Get my link to send them' };
       var btn = canDo[s.do]
         ? '<button id="tn-do-btn" data-do="'+s.do+'" style="width:100%;margin-top:11px;padding:12px;border:0;border-radius:10px;background:#16A97C;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">'+canDo[s.do]+'</button>'
         : '<div style="margin-top:11px;padding:10px 12px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;font-size:12px;color:#9a3412;line-height:1.5;">'
@@ -15276,9 +15310,89 @@ async function msAskAI(){
       var pv = document.getElementById('tn-prev'); if(pv) pv.onclick = function(){ window._tnStep--; slot.innerHTML = window._tnRender(); window._tnWire(); };
       var db = document.getElementById('tn-do-btn');
       if(db) db.onclick = function(){
-        if(db.dataset.do === 'upload_id'){
+        var act = db.dataset.do;
+        if(act === 'upload_id'){
           var inp = document.getElementById('ms-id-upload-input');
           if(inp) inp.click(); else showToast('Open My Space first, then tap Upload ID', 5000);
+          return;
+        }
+        /* RUL-136 - photo. The file input that already backs the Me tab avatar, so the
+           photo lands where the rest of the app already reads it from (users.photo_url),
+           and the signal turns green on the next score read with no second plumbing. */
+        if(act === 'photo'){
+          var pin = document.getElementById('ms-me-photo-inp');
+          if(pin) pin.click(); else showToast('Open My Space \u2192 Me, then tap your photo', 5000);
+          return;
+        }
+        /* RUL-136 - years of experience. The whole step is one number, so it is asked for
+           in place. No new screen, no navigation, no leaving the plan. */
+        if(act === 'experience'){
+          var host = db.parentNode;
+          db.style.display = 'none';
+          var box = document.createElement('div');
+          box.style.cssText = 'margin-top:11px;display:flex;gap:7px;align-items:center;';
+          box.innerHTML = '<input id="tn-yrs" type="number" min="0" max="70" inputmode="numeric" placeholder="e.g. 7"'
+            + ' style="flex:1;padding:11px;border:1.5px solid #bbf7d0;border-radius:10px;font-size:15px;">'
+            + '<button id="tn-yrs-go" style="padding:11px 15px;border:0;border-radius:10px;background:#16A97C;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Save</button>';
+          host.appendChild(box);
+          var yi = document.getElementById('tn-yrs'); if(yi) yi.focus();
+          document.getElementById('tn-yrs-go').onclick = async function(){
+            var v = parseInt((document.getElementById('tn-yrs')||{}).value, 10);
+            if(!(v >= 0 && v <= 70)) { showToast('Please type a number of years, 0 to 70', 4000); return; }
+            this.disabled = true; this.textContent = 'Saving\u2026';
+            try{
+              var r = await fetch(BEA_URL + '/trust/experience', {
+                method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+                body: JSON.stringify({ email: email, years: v })});
+              var j = await r.json();
+              if(!r.ok) throw new Error(j.detail || ('HTTP ' + r.status));
+              box.innerHTML = '<div style="font-size:13px;color:#065f46;font-weight:700;">'
+                + (j.points_awarded ? 'Done \u2014 +' + j.points_awarded + ' points. Your score is now ' + j.new_score + '.'
+                                    : 'Saved. Come back when you have a year behind you.') + '</div>';
+              if(typeof msRenderTrust === 'function' && j.new_score) { try { msRenderTrust(j.new_score); } catch(_){} }
+            }catch(err){
+              showToast(err.message || 'Could not save that just now', 5000);
+              this.disabled = false; this.textContent = 'Save';
+            }
+          };
+          return;
+        }
+        /* RUL-136 - previous employer. Mint the seller's own link and hand it to her with
+           a WhatsApp button, because that is how this actually gets sent in South Africa.
+           The link goes OUT from her; nobody can declare themselves her employer. */
+        if(act === 'employer_link'){
+          db.disabled = true; db.textContent = 'Getting your link\u2026';
+          (async function(){
+            try{
+              var r = await fetch(BEA_URL + '/trust/employer-link?email='
+                                  + encodeURIComponent(email), {credentials:'include'});
+              var j = await r.json();
+              if(!r.ok) throw new Error(j.detail || ('HTTP ' + r.status));
+              var msg = 'Hi, I am setting up my profile on TrustSquare. Could you confirm I worked for you? '
+                      + 'It is one tap, nothing to sign up for: ' + j.url;
+              var host = db.parentNode;
+              db.style.display = 'none';
+              var box = document.createElement('div');
+              box.style.cssText = 'margin-top:11px;';
+              box.innerHTML =
+                  '<div style="font-size:12px;color:#6b7280;margin-bottom:6px;line-height:1.5;">Send this to someone you have worked for. They tap Yes \u2014 that is all. Their name is never shown anywhere.</div>'
+                + '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:9px;padding:9px 10px;font-size:11.5px;word-break:break-all;color:#374151;">' + j.url + '</div>'
+                + '<div style="display:flex;gap:7px;margin-top:8px;">'
+                +   '<a id="tn-emp-wa" href="https://wa.me/?text=' + encodeURIComponent(msg) + '" target="_blank" rel="noopener"'
+                +      ' style="flex:2;text-align:center;padding:11px;border-radius:10px;background:#25D366;color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;">Send on WhatsApp</a>'
+                +   '<button id="tn-emp-copy" style="flex:1;padding:11px;border:1.5px solid #d1d5db;border-radius:10px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;">Copy</button>'
+                + '</div>';
+              host.appendChild(box);
+              document.getElementById('tn-emp-copy').onclick = function(){
+                try { navigator.clipboard.writeText(j.url); showToast('Link copied', 2500); }
+                catch(_) { showToast('Press and hold the link to copy it', 4000); }
+              };
+            }catch(err){
+              showToast(err.message || 'Could not make your link just now', 5000);
+              db.disabled = false; db.textContent = 'Get my link to send them';
+            }
+          })();
+          return;
         }
       };
     };

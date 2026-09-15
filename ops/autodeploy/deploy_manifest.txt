@@ -258,3 +258,8 @@ genie/email_strip/tutors_taps.jpg | orchestrator/qstrip/tutors_taps.jpg
 # this one file for /q/ and every /q/<category>, so an unknown or mistyped category still
 # opens on a real screen. Publish posts the email to the app's own live /auth/request-link.
 genie/q_index.html | q/index.html
+
+# RUL-136 (15 Sep 2026, David): "A previous employer is a good addition." The seller sends a
+# link; the person they worked for opens this page and confirms in one tap. nginx serves this
+# one file for /confirm/ and every /confirm/<token>, so the token never has to be a route.
+confirm.html | confirm/index.html

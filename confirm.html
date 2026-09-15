@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Confirm someone you have worked with — TrustSquare</title>
+<!--
+  RUL-136 (David, 15 Sep 2026): "A previous employer is a good addition."
+  The page an employer opens. It asks ONE question and stores no fact about the person
+  answering it - not their name, not their email. What is recorded is only that a
+  confirmation happened, which is the whole of the evidence and none of their privacy.
+  The link is the permission: the worker sends it to someone she has worked for.
+-->
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#f5f7f6;color:#0f1417;
+       font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;max-width:440px;width:100%;
+        padding:26px 24px 22px;box-shadow:0 18px 44px rgba(15,20,23,.08)}
+  .mark{display:flex;align-items:center;gap:9px;margin-bottom:18px}
+  .mark i{width:28px;height:28px;border-radius:8px;background:#16A97C;color:#fff;font-style:normal;
+          font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .mark b{font-size:15px;letter-spacing:-.2px}
+  h1{font-size:21px;line-height:1.3;margin:0 0 12px;letter-spacing:-.3px}
+  p{margin:0 0 14px;font-size:14.5px;color:#475569;line-height:1.6}
+  p b{color:#0f1417}
+  button{width:100%;font:inherit;font-size:15px;font-weight:700;padding:15px;border-radius:12px;
+         cursor:pointer;border:0;margin-top:9px}
+  .yes{background:#16A97C;color:#fff}
+  .no{background:#fff;color:#475569;border:1.5px solid #cbd5e1}
+  .fine{font-size:12.5px;color:#64748b;margin-top:16px;line-height:1.55}
+  .ok{background:#ecfdf5;border:1.5px solid #a7f3d0;border-radius:12px;padding:16px;margin-top:4px}
+  .ok b{color:#065f46}
+  .err{background:#fef2f2;border:1.5px solid #fecaca;border-radius:12px;padding:14px;color:#991b1b;font-size:14px}
+  .hide{display:none}
+  .yrs{width:100%;font:inherit;font-size:15px;padding:13px 14px;border:1.5px solid #cbd5e1;
+       border-radius:12px;margin-top:4px}
+  label{display:block;font-size:13px;font-weight:600;color:#334155;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="mark"><i>TS</i><b>TrustSquare</b></div>
+  <div id="load"><p>Opening the request…</p></div>
+
+  <div id="ask" class="hide">
+    <h1><span id="who">Someone</span> has asked you to confirm that they worked for you.</h1>
+    <p>You are <b>not signing anything</b> and you are <b>not paying anything</b>. You are only
+       saying that this person did work for you, which is the one thing a stranger cannot say
+       for them.</p>
+    <label for="yrs">From roughly when? (optional)</label>
+    <input id="yrs" class="yrs" type="text" inputmode="numeric" placeholder="e.g. 2019" maxlength="20">
+    <button class="yes" id="yes">Yes, they worked for me</button>
+    <button class="no" id="no">I would rather not</button>
+    <p class="fine">Your name and address are never asked for, never stored and never shown.
+       Their listing will say only that a previous employer confirmed them.</p>
+  </div>
+
+  <div id="done" class="hide">
+    <div class="ok"><b>Thank you.</b> <span id="donetxt">That is recorded.</span></div>
+    <p class="fine">Nothing else is needed from you, and you will not be emailed about this.</p>
+  </div>
+
+  <div id="nope" class="hide">
+    <p><b>Nothing has been recorded.</b> Their listing is exactly as it was, and they are not
+       told that you opened this.</p>
+    <p class="fine">You can close this page.</p>
+  </div>
+
+  <div id="bad" class="hide"><div class="err" id="baderr">That link is not valid.</div></div>
+</div>
+
+<script>
+(function(){
+  var show = function(id){ ['load','ask','done','nope','bad'].forEach(function(k){
+      document.getElementById(k).className = (k===id ? '' : 'hide'); }); };
+  var token = (location.pathname.replace(/\/+$/,'').split('/').pop() || '').trim();
+  if(!token || token === 'confirm'){
+    document.getElementById('baderr').textContent =
+      'This page needs the link that was sent to you. Open the link itself rather than typing the address.';
+    show('bad'); return;
+  }
+  fetch('/trust/employer-who?token=' + encodeURIComponent(token))
+    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+    .then(function(res){
+      if(!res.ok){
+        document.getElementById('baderr').textContent = (res.j && res.j.detail) || 'That link is not valid.';
+        show('bad'); return;
+      }
+      if(res.j.already_confirmed){
+        document.getElementById('donetxt').textContent =
+          'This was already confirmed, so there is nothing more to do.';
+        show('done'); return;
+      }
+      document.getElementById('who').textContent = res.j.name || 'Someone';
+      show('ask');
+    })
+    .catch(function(){ document.getElementById('baderr').textContent =
+        'No connection just now — please open the link again in a moment.'; show('bad'); });
+
+  document.getElementById('no').onclick = function(){ show('nope'); };
+  document.getElementById('yes').onclick = function(){
+    var b = this; b.disabled = true; b.textContent = 'Recording…';
+    fetch('/trust/employer-confirm', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({token: token, worked_from: (document.getElementById('yrs').value||'').trim()})})
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+      .then(function(res){
+        if(!res.ok){
+          document.getElementById('baderr').textContent = (res.j && res.j.detail) || 'That did not go through.';
+          show('bad'); return;
+        }
+        document.getElementById('donetxt').textContent =
+          'Their trust score went up by ' + (res.j.points_awarded || 12) + ' points, and your name is not on it.';
+        show('done');
+      })
+      .catch(function(){ b.disabled=false; b.textContent='Yes, they worked for me'; });
+  };
+})();
+</script>
+</body>
+</html>

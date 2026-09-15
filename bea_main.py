@@ -10434,6 +10434,29 @@ _TRUST_SIGNALS = {
         "how_to_earn": "Bio, suburb, listing, and category description all set.",
         "evidence_required": False,  # system-calculated
     },
+    # RUL-136 (David, 15 Sep 2026): three signals an ordinary person can actually earn.
+    # The universal cap stays 30 - this does NOT inflate anyone, it gives somebody with no
+    # certificates a second route to the same 30 that an ID plus referrals fills today.
+    # His reason, and the test for anything added here: "the more we allow the more invested
+    # a user will become."
+    "universal.profile_photo": {
+        "name": "Photo of you added",
+        "points": 5, "max": 5,
+        "how_to_earn": "Add a photo of yourself to your profile.",
+        "evidence_required": False,   # system-calculated from users.photo_url
+    },
+    "universal.experience_stated": {
+        "name": "Years of experience stated",
+        "points": 3, "max": 3,
+        "how_to_earn": "Say how many years you have been doing this.",
+        "evidence_required": False,   # self-declared, which is why it is worth 3 and not 12
+    },
+    "universal.employer_confirmed": {
+        "name": "A previous employer confirmed you",
+        "points": 12, "max": 12,
+        "how_to_earn": "Send your link to someone you have worked for - they confirm in one tap.",
+        "evidence_required": False,   # recorded when the employer opens the link and confirms
+    },
     "universal.referral_1": {
         "name": "1st verified referral",
         "points": 5, "max": 5,
@@ -10745,6 +10768,12 @@ def _compute_universal_track_status(conn, email: str) -> dict:
         and user_row["photo_url"] and has_listing
     )
     out["universal.profile_complete"] = "earned" if profile_complete else "missing"
+
+    # RUL-136: a photo of the person is its own signal now, not just a hidden precondition
+    # of "Complete profile" - which is exactly how it used to work, so someone could keep
+    # failing profile_complete without ever being told a photo was the missing piece.
+    out["universal.profile_photo"] = ("earned" if (user_row and user_row["photo_url"])
+                                      else "missing")
 
     # Referrals — placeholder for V1: not yet tracked. Always missing.
     for k in ("universal.referral_1", "universal.referral_3", "universal.referral_5plus"):
@@ -11230,6 +11259,157 @@ def trust_score_set_credential(req: CredentialUpdateReq, _key: str = Depends(aut
     return {"message": "Credential updated", "signal_id": req.signal_id, "status": req.status}
 
 
+class EmployerConfirmReq(BaseModel):
+    token: str
+    worked_from: Optional[str] = None     # free text, e.g. "2019" - never published
+
+
+@app.get("/trust/employer-link")
+def trust_employer_link(email: str):
+    """RUL-136: the seller's own link to somebody they have worked for.
+
+    The direction is the protection, exactly as the employer-link design has always had it:
+    SHE sends the link to HER employer. A stranger cannot declare himself her employer to
+    reach her, because he never receives a link. The token carries her email and nothing
+    else, so the person who opens it is never asked to identify themselves, and their name
+    is never stored or published - only that a confirmation happened."""
+    email = (email or "").strip().lower()
+    if "@" not in email:
+        raise HTTPException(status_code=400, detail="A valid email is needed.")
+    conn = database.get_db()
+    row = conn.execute("SELECT name FROM users WHERE LOWER(email) = ?", (email,)).fetchone()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="No TrustSquare account for that address.")
+    token = _pyjwt.encode(
+        {"email": email, "purpose": "employer_confirm",
+         "exp": datetime.now(timezone.utc) + timedelta(days=30),
+         "iat": datetime.now(timezone.utc)},
+        _JWT_SECRET, algorithm=_JWT_ALGO)
+    return {"url": APP_URL + "/confirm/" + token,
+            "name": row["name"] or email.split("@")[0],
+            "expires_days": 30,
+            "points": 12}
+
+
+@app.get("/trust/employer-who")
+def trust_employer_who(token: str):
+    """What the confirmation page shows before anyone taps anything. Public on purpose -
+    the token IS the permission, and it reveals only the first name of the person asking."""
+    try:
+        claims = _pyjwt.decode(token, _JWT_SECRET, algorithms=[_JWT_ALGO])
+    except Exception:
+        raise HTTPException(status_code=400, detail="That link has expired or is not valid.")
+    if claims.get("purpose") != "employer_confirm":
+        raise HTTPException(status_code=400, detail="That link is not a confirmation link.")
+    conn = database.get_db()
+    row = conn.execute("SELECT name FROM users WHERE LOWER(email) = ?",
+                       (claims["email"],)).fetchone()
+    done = conn.execute(
+        "SELECT status FROM user_credentials WHERE LOWER(email) = ? AND signal_id = ?",
+        (claims["email"], "universal.employer_confirmed")).fetchone()
+    conn.close()
+    _nm = (row["name"] if row and row["name"] else claims["email"].split("@")[0])
+    return {"name": _nm.split(" ")[0], "already_confirmed": bool(done and done["status"] == "earned")}
+
+
+@app.post("/trust/employer-confirm")
+def trust_employer_confirm(req: EmployerConfirmReq):
+    """One tap from someone they have worked for. Worth 12 points because it is the only
+    third-party evidence an ordinary person can get without buying a certificate.
+
+    UNIQUE(email, signal_id) means a second confirmation cannot stack - the signal is
+    'somebody outside vouched for you', which is true once."""
+    try:
+        claims = _pyjwt.decode(req.token, _JWT_SECRET, algorithms=[_JWT_ALGO])
+    except Exception:
+        raise HTTPException(status_code=400, detail="That link has expired or is not valid.")
+    if claims.get("purpose") != "employer_confirm":
+        raise HTTPException(status_code=400, detail="That link is not a confirmation link.")
+    email = claims["email"]
+    note = ("Confirmed by a previous employer via the seller's own link"
+            + (" - worked from " + str(req.worked_from)[:40] if req.worked_from else "")
+            + ". The confirmer is never named or published.")
+    conn = database.get_db()
+    conn.execute(
+        """INSERT INTO user_credentials (email, signal_id, status, points, notes,
+                                         verified_at, verified_by, listing_category)
+           VALUES (?, 'universal.employer_confirmed', 'earned', 12, ?, ?, 'employer-link', NULL)
+           ON CONFLICT(email, signal_id) DO UPDATE SET
+               status='earned', points=12, notes=excluded.notes,
+               verified_at=excluded.verified_at, verified_by='employer-link'""",
+        (email, note, datetime.now(timezone.utc).isoformat()))
+    conn.commit()
+    conn.close()
+    try:
+        fresh = trust_score_breakdown(email)   # recompute + write through, so it shows at once
+        _new = int(fresh.get("score") or 0)
+    except Exception:
+        _new = 0
+    return {"ok": True, "points_awarded": 12, "new_score": _new}
+
+
+class ExperienceReq(BaseModel):
+    email: str
+    years: int
+
+
+@app.post("/trust/experience")
+def trust_experience(req: ExperienceReq):
+    """RUL-136: the seller says how many years they have been doing this.
+
+    Worth 3 and not 12 because nobody checks it - it is self-declared, and the ladder
+    pays self-declared evidence self-declared money. It is on the ladder at all because
+    it is the ONE thing a person with no certificate, no ID to hand and no employer to
+    ask can still do in ten seconds, and a first step that pays is what gets somebody
+    to a second one. David, 15 Sep 2026: "the more we allow the more invested a user
+    will become."
+
+    Re-saving a different number overwrites; it never stacks (UNIQUE(email, signal_id)).
+    """
+    email = (req.email or "").strip().lower()
+    if "@" not in email:
+        raise HTTPException(status_code=400, detail="A valid email is needed.")
+    try:
+        years = int(req.years)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Years must be a whole number.")
+    if years < 0 or years > 70:
+        raise HTTPException(status_code=400, detail="Please enter a number of years between 0 and 70.")
+    conn = database.get_db()
+    row = conn.execute("SELECT 1 FROM users WHERE LOWER(email) = ?", (email,)).fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="No TrustSquare account for that address.")
+    if years < 1:
+        # Nothing to declare yet. Remove any earlier row rather than paying for a zero.
+        conn.execute("DELETE FROM user_credentials WHERE LOWER(email) = ? AND signal_id = ?",
+                     (email, "universal.experience_stated"))
+        conn.commit()
+        conn.close()
+        try:
+            _new = int((trust_score_breakdown(email) or {}).get("score") or 0)
+        except Exception:
+            _new = 0
+        return {"ok": True, "years": 0, "points_awarded": 0, "new_score": _new}
+    conn.execute(
+        """INSERT INTO user_credentials (email, signal_id, status, points, notes,
+                                         verified_at, verified_by, listing_category)
+           VALUES (?, 'universal.experience_stated', 'earned', 3, ?, ?, 'self-declared', NULL)
+           ON CONFLICT(email, signal_id) DO UPDATE SET
+               status='earned', points=3, notes=excluded.notes,
+               verified_at=excluded.verified_at, verified_by='self-declared'""",
+        (email, str(years) + " years, stated by the seller (not verified)",
+         datetime.now(timezone.utc).isoformat()))
+    conn.commit()
+    conn.close()
+    try:
+        _new = int((trust_score_breakdown(email) or {}).get("score") or 0)
+    except Exception:
+        _new = 0
+    return {"ok": True, "years": years, "points_awarded": 3, "new_score": _new}
+
+
 @app.get("/trust-score/credentials/pending")
 def trust_score_pending_queue(_admin=Depends(_require_admin_or_key)):
     """Ops queue — credentials awaiting manual review across all sellers."""
@@ -11305,6 +11485,15 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
                 "points": sig["points"] - ID_UPLOAD_INTERIM_POINTS, "how": ID_UPLOAD_INTERIM_NOTE
             })
         else:
+            # COACH-EARNABLE-1 (15 Sep 2026, David: "no request for a photo, no request for
+            # experience, or ask me what i have?"). The referral signals are a V1 placeholder -
+            # _compute_universal_track_status writes them "missing" unconditionally and nothing
+            # in the app can ever write them "earned". Asking a person to do a thing that will
+            # not move their score is worse than not asking at all, so the coach stays quiet
+            # about them until referrals are really tracked. They keep their seats on the
+            # ladder; they are simply not offered as a step.
+            if sig_id.startswith("universal.referral"):
+                continue
             universal_missing.append({
                 "id": sig_id, "name": sig["name"], "points": sig["points"], "how": sig["how_to_earn"]
             })
@@ -11343,11 +11532,16 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     # the price of entry.
     def _effort(m):
         sid = m["id"]
-        if sid == "universal.profile_complete":       return 0   # today, nothing needed
-        if sid == "universal.id_verified":            return 1   # today, it is in their pocket
-        if sid.startswith("universal.referral"):      return 2   # today, needs one other person
-        if sid.startswith("track_record."):           return 3   # arrives by using the app
-        return 4                                                 # a professional credential
+        # RUL-136: a photo and a years-of-experience line are the two things EVERY person
+        # can finish in a minute with nothing in their hand, so they sort above even the ID.
+        if sid == "universal.profile_photo":          return 0   # now, from their own phone
+        if sid == "universal.experience_stated":      return 0   # now, they already know it
+        if sid == "universal.profile_complete":       return 1   # today, nothing needed
+        if sid == "universal.id_verified":            return 2   # today, it is in their pocket
+        if sid == "universal.employer_confirmed":     return 3   # today, one message to send
+        if sid.startswith("universal.referral"):      return 4   # needs a completed sale
+        if sid.startswith("track_record."):           return 5   # arrives by using the app
+        return 6                                                 # a professional credential
     all_missing = sorted(universal_missing + cat_missing,
                          key=lambda m: (_effort(m), -m["points"]))
 
@@ -11453,11 +11647,11 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     # navigate. The AI writes the words; the wiring comes from here, in the order above, so a
     # reworded step can never lose its button.
     _DO = {
-        "universal.profile_complete": "profile",
-        "universal.id_verified":      "upload_id",
-        "universal.referral_1":       "referral",
-        "universal.referral_3":       "referral",
-        "universal.referral_5plus":   "referral",
+        "universal.profile_complete":   "profile",
+        "universal.id_verified":        "upload_id",
+        "universal.profile_photo":      "photo",
+        "universal.experience_stated":  "experience",
+        "universal.employer_confirmed": "employer_link",
     }
     # Match each written step back to the signal it came from by POINTS, not by position:
     # the model drops, merges and re-words steps, and a step matched by index alone gets the
@@ -11502,6 +11696,10 @@ _SIGNAL_HOWTO = {
                                        "My Space → Trust tab → tap 'Upload ID →' next to Government-issued ID"),
     "universal.profile_photo":        ("Add a clear profile photo",
                                        "My Space → Me tab → tap your avatar to upload a photo"),
+    "universal.experience_stated":    ("Say how long you have been doing this",
+                                       "Tap the button and type a number of years — that is the whole step"),
+    "universal.employer_confirmed":   ("Ask someone you have worked for to confirm you",
+                                       "Tap the button, send the link by WhatsApp — they tap Yes, nothing to sign up for"),
     "universal.email_verified":       ("Verify your email address",
                                        "Automatically earned when you accept the TrustSquare Terms of Service"),
     "universal.profile_complete":     ("Complete your seller profile",
@@ -22815,9 +23013,15 @@ def buzz_close(req: BuzzCloseReq, _key: str = Depends(auth.require_api_key),
 
 
 @app.get("/buzz/pairs")
-def buzz_pairs(email: str, _key: str = Depends(auth.require_api_key),
+def buzz_pairs(email: str = None, _key: str = Depends(auth.require_api_key),
                ts_user: str = Cookie(default=None)):
-    """Everyone this person can buzz, with both switches as they stand."""
+    """Everyone this person can buzz, with both switches as they stand.
+
+    BUZZ-PAIRS-SELF-1 (15 Sep 2026): `email` is OPTIONAL. It was required back when the
+    caller declared who he was; IDENTITY-BIND-1 made the session the authority, so a page
+    that still passed a localStorage address got 403'd against its own account the moment
+    the two spellings differed - which is exactly what David saw: "This action can only be
+    performed on your own account" on his own Buzz page. Omit it and the cookie answers."""
     me = _buzz_who(ts_user, email, "pairs")
     conn = database.get_db()
     rows = conn.execute("""SELECT * FROM buzz_pairs WHERE a_email=? OR b_email=?

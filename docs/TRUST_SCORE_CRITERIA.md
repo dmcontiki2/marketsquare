@@ -10,7 +10,7 @@ The Trust Score (0–100) is the server-side sum of three signal groups. No sign
 
 | Group | Description | Max pts |
 |---|---|---|
-| **Universal** | Identity, profile completeness, referrals — applies to every seller | 30 |
+| **Universal** | Identity, profile, photo, stated experience, a previous employer, referrals — applies to every seller | 30 |
 | **Category Credentials** | Qualifications, registrations, and professional standing per category | 40 |
 | **Platform Track Record** | Demonstrated performance on TrustSquare | 30 |
 
@@ -61,6 +61,40 @@ Referrals submitted via a structured platform referral link tied to the seller's
 | 1st verified referral | 5 | |
 | 3rd verified referral | +3 (cumulative 8) | |
 | 5th+ verified referral | +2 (cumulative 10) | Capped at 10 pts total |
+
+*Implementation status (15 Sep 2026): referrals are not yet tracked by the app — the three
+signals above are computed `missing` unconditionally. The AI coach therefore does not offer
+them as steps (COACH-EARNABLE-1). They keep their seats on the ladder; they are simply not
+advertised until they can actually be earned.*
+
+### U4 · Signals an ordinary person can earn — RUL-136 (David, 15 Sep 2026)
+
+Added because the ladder, as built, asked everybody for a degree, a SACE number, a police
+clearance or a DBS check. David: *"all of these are some specialists type credentials and
+not related to a normal person?"* — and his instruction for the fix: *"the more we allow the
+more invested a user will become. A previous employer is a good addition."*
+
+The Universal cap stays **30**. This does not inflate anybody; it gives a person with no
+certificates a second route to the same 30 that an ID plus referrals fills for someone else.
+
+| Signal | Pts | Verification |
+|---|---|---|
+| Photo of the person added | 5 | System-calculated from `users.photo_url` |
+| Years of experience stated | 3 | Self-declared — self-declared evidence, self-declared money |
+| A previous employer confirmed them | 12 | Third-party: the seller sends her own link, the employer taps Yes |
+
+**Why 12 for the employer.** It is the only third-party evidence an ordinary person can obtain
+without buying a certificate, and third-party evidence is what the ladder is for. It cannot
+stack: `UNIQUE(email, signal_id)` means a second confirmation changes nothing, because the
+signal is *"somebody outside vouched for you"*, which is true once.
+
+**The direction is the protection.** SHE sends the link to HER employer. A stranger cannot
+declare himself her employer to reach her, because he never receives a link. The token carries
+her email and nothing else; the person who opens it is never asked to identify themselves, and
+their name is never stored or published — only that a confirmation happened.
+
+**Why the photo is its own signal.** It used to be a hidden precondition of *Complete profile*,
+so a seller could keep failing that 5 without ever being told a photo was the missing piece.
 
 ---
 

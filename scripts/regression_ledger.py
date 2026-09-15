@@ -4668,6 +4668,81 @@ def rg_infra_test_verdict():
 
 
 
+@entry("RG-0374", "a seller with NO certificates has a real route to a real score - a photo, "
+       "years of experience and a previous employer are on the ladder, are offered by the coach, "
+       "and each one ends in a button that works",
+       LOCKED, fixed_on="2026-09-15",
+       scope="_TRUST_SIGNALS + POST /trust-score/guidance + POST /trust/experience + "
+             "GET /trust/employer-link + the public /confirm/<token> door. CLASS: every signal the "
+             "ladder pays for must be reachable by the person it is aimed at. A signal nobody can "
+             "act on is worse than no signal, because the seller reads it as a door and finds a "
+             "wall. Four legs: (a) the three RUL-136 signals exist and carry their points; (b) the "
+             "coach offers at least one of them; (c) the employer link mints and the confirm door "
+             "answers 200 for any token shape; (d) the coach never offers a referral.",
+       ref="RUL-136. David, 15 Sep 2026: 'Please add that, the more we allow the more invested a "
+           "user will become. A previous employer is a good addition.' Before this, the only "
+           "universal signals an ordinary person could earn were an ID (15) and a complete profile "
+           "(5); everything else on the ladder was a degree, a SACE number, a police clearance or a "
+           "DBS check, and the three referral signals were a placeholder the app can never write. A "
+           "housekeeper could reach 60 and no further, and the coach told her to get a degree.")
+def rg_ordinary_person_can_earn():
+    _require_net()
+    out = []
+    # (a) the ladder itself, read from the source of truth
+    src = repo_file("bea_main.py")
+    for sid, pts in (("universal.profile_photo", '"points": 5'),
+                     ("universal.experience_stated", '"points": 3'),
+                     ("universal.employer_confirmed", '"points": 12')):
+        _i = src.find('"' + sid + '": {')
+        if _i < 0:
+            out.append((FAIL, "%s is not on the ladder -- RUL-136 signal missing" % sid))
+        elif pts not in src[_i:_i + 400]:
+            out.append((FAIL, "%s is on the ladder but not at its ruled points (%s)" % (sid, pts)))
+    # (c) the public confirm door must answer for ANY token shape, never 404
+    for _t in ("abc", "not-a-real-token"):
+        try:
+            _c = urllib.request.urlopen(
+                urllib.request.Request(BASE + "/confirm/" + _t, headers=UA), timeout=TIMEOUT).getcode()
+        except urllib.error.HTTPError as he:
+            _c = he.code
+        except Exception as e:
+            out.append((INFO, "NOT EVALUATED - /confirm/ did not answer: %s" % e)); _c = None
+        if _c is not None and _c != 200:
+            out.append((FAIL, "/confirm/%s answered %s -- the employer meets a page not found and "
+                              "the seller never learns why nothing happened" % (_t, _c)))
+    # the link the seller sends must actually mint
+    try:
+        _j = json.loads(urllib.request.urlopen(
+            urllib.request.Request(BASE + "/trust/employer-link?email=walkthrough.tutor@trustsquare.co",
+                                   headers=UA), timeout=TIMEOUT).read().decode("utf-8"))
+        if "/confirm/" not in (_j.get("url") or ""):
+            out.append((FAIL, "employer-link answered without a /confirm/ url: %r" % _j))
+    except Exception as e:
+        out.append((INFO, "NOT EVALUATED - employer-link did not answer: %s" % e))
+    # (b) + (d) the coach must offer at least one of them, and never a referral
+    key = _ops_key()
+    hdrs = dict(UA, **{"Content-Type": "application/json"})
+    if key:
+        hdrs["X-Api-Key"] = key
+    try:
+        plan = json.loads(urllib.request.urlopen(urllib.request.Request(
+            BASE + "/trust-score/guidance", headers=hdrs, method="POST",
+            data=json.dumps({"email": "walkthrough.tutor@trustsquare.co",
+                             "category": "Tutors"}).encode()), timeout=TIMEOUT).read().decode("utf-8"))
+        _dos = [str((s or {}).get("do") or "") for s in (plan.get("steps") or []) if isinstance(s, dict)]
+        if _dos and not set(_dos) & {"photo", "experience", "employer_link", "upload_id", "profile"}:
+            out.append((FAIL, "the plan offers nothing an ordinary person can do -- buttons were %r"
+                              % _dos))
+        if "referral" in _dos:
+            out.append((FAIL, "the plan still offers a referral, which cannot be earned"))
+    except Exception as e:
+        out.append((INFO, "NOT EVALUATED - guidance did not answer: %s" % e))
+    if not out:
+        out.append((INFO, "photo 5 / experience 3 / employer 12 on the ladder, the confirm door "
+                          "answers, and the coach offers a step an ordinary person can take"))
+    return out
+
+
 @entry("RG-0373", "The AI trust plan opens with something an ordinary person can actually do - "
        "never a professional credential, and never a step whose button points at a screen that "
        "does not exist",
@@ -4712,10 +4787,20 @@ def rg_trust_plan_starts_doable():
         if not isinstance(_s, dict):
             continue
         _a = (_s.get("action") or "").lower()
-        if _s.get("do") == "referral" and ("qualification" in _a or "certificate" in _a
-                                           or "degree" in _a or "clearance" in _a):
-            out.append((FAIL, "step %d asks for a document but carries the referral button -- the "
-                              "step was matched to the wrong signal" % _n))
+        # 15 Sep 2026: the referral button is no longer offered at all (COACH-EARNABLE-1),
+        # so keying this leg on do=="referral" would make it inert. Broadened, not weakened:
+        # a step that asks for a DOCUMENT must carry the credential/upload button, whatever
+        # the button happens to be called. Same fault, larger net.
+        if ("qualification" in _a or "certificate" in _a or "degree" in _a
+                or "clearance" in _a) and _s.get("do") not in ("credential", "upload_id"):
+            out.append((FAIL, "step %d asks for a document but carries the '%s' button -- the "
+                              "step was matched to the wrong signal"
+                              % (_n, _s.get("do"))))
+        # COACH-EARNABLE-1: nothing in the app can write a referral signal 'earned', so a
+        # referral step is a step that cannot pay. Never offer one again.
+        if str(_s.get("signal_id") or "").startswith("universal.referral"):
+            out.append((FAIL, "step %d offers a referral signal -- referrals are not tracked, so "
+                              "this step can never award its points" % _n))
     if not out:
         out.append((INFO, "plan opens with '%s' (+%s) -- doable-first order holding"
                           % ((first.get("action") or "")[:60], first.get("points"))))

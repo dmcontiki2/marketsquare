@@ -94,3 +94,46 @@ Fri 09/11/2026 13:51:30.21  SHIPPED rc=0 - server now runs migrations + health i
 Sat 09/12/2026  5:45:05.48  IN SYNC - DEPLOY DRIFT: clean - all 19 tracked files match live
 Sun 09/13/2026  5:45:05.59  IN SYNC - DEPLOY DRIFT: clean - all 19 tracked files match live
 Mon 09/14/2026  5:45:05.97  IN SYNC - DEPLOY DRIFT: clean - all 19 tracked files match live
+Tue 09/15/2026  5:45:07.63  SHIPPING - DEPLOY DRIFT: 3 file(s) local-ahead of live - run /ship: bea_main.py, ms.css, ms.js | gate green, releasing unattended
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Tue 09/15/2026  5:45:07.68
+ ============================================================
+
+ cleared stale .git\index.lock 
+ cleared stale .git\HEAD.lock 
+  [autobump] ms.js changed -> marketsquare.html ref ?v=493
+  [autobump] ms.css changed -> marketsquare.html ref ?v=291
+  [autobump] 2 reference(s) bumped
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 60 honestly not-wired, 2 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  OK -- every health colour on the page is fed, honestly dashed, or registered with a live review date.
+folded 1, skipped 0 (already present) · verify OK
+C:\Users\David\Projects\MarketSquare\scripts\status_compile.py:94: SyntaxWarning: "\Z" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\Z"? A raw string is also an option.
+  GET /dashboard/summary captures a section with `## Last Completed[^\n]*\n(.*?)(?=\n## |\Z)`,
+no pending fragments.
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-09-15T03:45:10Z   mode=strict
+  Working tree: 14 file(s) uncommitted; 4 deploy target(s) changed.
+    - marketsquare.html                  420777 B      0 min ago  [modified, RECENT(<25m)]
+    - ms.css                             137006 B      1 min ago  [modified, RECENT(<25m)]
+    - ms.js                             1216311 B      2 min ago  [modified, RECENT(<25m)]
+    - bea_main.py                       1237120 B      2 min ago  [modified, RECENT(<25m)]
+  >> HEADS-UP: 4 target(s) changed in the last 25 min - could be another session:
+     marketsquare.html, ms.js, ms.css, bea_main.py
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  !! PG-READINESS: SQLite-ism count grew:
+       FAIL  SQLite-specific surface GREW {'datetime_now': (17, 25)} - write it portably (helpers/portable SQL) so the Postgres move stays cheap
+  Maintenance-agent guards: ok
+  !! TESTER INTAKE: fault-report guard FAILED:
+       FAIL  test_widget_is_wired_into_every_tester_page - a tester could land on these pages with no way to report a fault: quick.html, genie/q_index.html
+  Verdict: DANGER   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+ ABORT: pre-deploy scan flagged a dangerous change - strict mode. See deploy_audit.log.
+Press any key to continue . . . 
+Tue 09/15/2026  5:45:11.98  SHIP FAILED rc=1 - engine auto-rolls-back on bad health
