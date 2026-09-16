@@ -5036,15 +5036,29 @@ def seller_public_credentials(listing_id: int):
                 [{"name": "Universal base — every seller starts here", "points": 40}], "subtotal": 40,
                 "note": "the ladder starts at 40 — credentials build on top, penalties pull below"})
 
-        uni_items, _uni_sub = _earned_display(ev["items_u"], _TRUST_SIGNALS)
-        groups.append({"title": "Identity & profile", "items": uni_items, "subtotal": _uni_sub})
+        # CAP-VISIBLE-1 (15 Sep 2026, found the moment TRUST-ONE-SET-1 made this panel
+        # count the full set): Universal and Track Record are capped at 30 each by the
+        # formula, so a seller with 37 identity points showed a list summing to 87 over
+        # an 80 headline — the 90-over-85 class again, from the other direction. The
+        # group carries its CAPPED subtotal and says what was earned above it, exactly
+        # as the category group has always done.
+        uni_items, _uni_raw = _earned_display(ev["items_u"], _TRUST_SIGNALS)
+        _uni_sub = min(30, _uni_raw)
+        _g_u = {"title": "Identity & profile", "items": uni_items, "subtotal": _uni_sub}
+        if _uni_raw > 30:
+            _g_u["note"] = f"{_uni_raw} pts earned — capped at the identity maximum of 30"
+        groups.append(_g_u)
 
-        trk_items, _trk_sub = _earned_display(ev["items_t"], _TRUST_SIGNALS)
+        trk_items, _trk_raw = _earned_display(ev["items_t"], _TRUST_SIGNALS)
+        _trk_sub = min(30, _trk_raw)
         _ic = conn.execute("""SELECT COUNT(*) FROM intro_requests WHERE listing_id IN
             (SELECT id FROM listings WHERE LOWER(seller_email)=?) AND status='accepted'""",
             (email,)).fetchone()[0]
-        groups.append({"title": "Platform track record", "items": trk_items, "subtotal": _trk_sub,
-                       "note": f"{_ic} accepted introductions"})
+        _note_t = f"{_ic} accepted introductions"
+        if _trk_raw > 30:
+            _note_t += f" · {_trk_raw} pts earned — capped at the track-record maximum of 30"
+        groups.append({"title": "Platform track record", "items": trk_items,
+                       "subtotal": _trk_sub, "note": _note_t})
 
         cat_items, raw_cat = _earned_display(ev["items_c"], ev["cat_signals"], drop_ids=_drop)
         cat_items.sort(key=lambda x: -x["points"])
@@ -5056,7 +5070,7 @@ def seller_public_credentials(listing_id: int):
 
         # One formula for every surface (base-40 bug, 28 Jul 2026): pre-penalty total
         # via _trust_math; the Penalties group below applies post-cap, matching it.
-        total = _trust_math(_uni_sub, _trk_sub, raw_cat, 0, lm=_is_lm)
+        total = _trust_math(_uni_raw, _trk_raw, raw_cat, 0, lm=_is_lm)
         raw_total = 40 + _uni_sub + _trk_sub + capped
         if raw_total > 100:
             g["note"] = ((g.get("note") + " · ") if g.get("note") else "") + \

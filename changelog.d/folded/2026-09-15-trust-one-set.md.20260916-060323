@@ -1,0 +1,18 @@
+
+---
+
+## CAP-VISIBLE-1 — the list adds up again, caps and all
+
+Found the moment TRUST-ONE-SET-1 made the panel count the full set, and David saw it on the same
+screen: *"the result now shows as 80 but the components doesnt add up to it (40 +37)?"*
+
+**He is reading it correctly and the arithmetic was hiding.** Universal and Track Record each cap
+at 30 in the formula. He has 37 identity points, so the score is 40 + min(30, 37) + min(30, 10) =
+**80**, while the panel printed the group's raw 37 and invited exactly that subtraction.
+
+**The group now shows its capped subtotal and says what sits above it** — *"37 pts earned — capped
+at the identity maximum of 30"* — which is what the Certificates group has always done. The
+formula still receives the raw sums; capping is its job, not the panel's.
+
+**Guarded:** `test_trust_one_set.py` now fails the deploy if either group's subtotal stops being
+capped, or if the raw sums stop reaching `_trust_math`.

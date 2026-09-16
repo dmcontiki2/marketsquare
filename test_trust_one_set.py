@@ -73,6 +73,21 @@ def test_panel_list_and_total_are_built_together():
     assert "_earned_display(" in body, \
         "the panel's visible list and its subtotal must be produced in one pass"
 
+# ---- the visible list must still sum to the headline after the caps ---------
+def test_panel_subtotals_are_capped_like_the_formula():
+    """CAP-VISIBLE-1. Universal and Track Record cap at 30 each in the formula. The
+    moment the panel started counting the FULL set, an uncapped group subtotal made the
+    list sum to 87 over an 80 headline — the same class of bug, arriving from the other
+    direction. Each group shows its capped subtotal; the formula gets the raw sums."""
+    body = _func_body(SRC, "def seller_public_credentials(")
+    assert re.search(r"_uni_sub\s*=\s*min\(30,\s*_uni_raw\)", body), \
+        "the identity group must show its CAPPED subtotal or the list sums above the headline"
+    assert re.search(r"_trk_sub\s*=\s*min\(30,\s*_trk_raw\)", body), \
+        "the track-record group must show its CAPPED subtotal"
+    assert re.search(r"_trust_math\(_uni_raw,\s*_trk_raw,", body), \
+        "the formula must receive the RAW sums — the capping is its job, not the panel's"
+
+
 # ---- write authority: a surface may not answer a question it was not asked ---
 def test_panel_listing_writes_are_category_scoped():
     body = _func_body(SRC, "def seller_public_credentials(")
