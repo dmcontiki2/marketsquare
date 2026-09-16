@@ -19224,7 +19224,9 @@ def rg_rotation_knows_its_consumers():
                           "with no evidence behind it is not judged (OFFLINE-IS-NOT-ABSENT-1)"))
     elif ok:
         out.append((INFO, "every credential with more than one copy on the box is named in the "
-                          "register's out-of-band table -- READY TO LOCK"))
+                          "register's out-of-band table -- holding (LOCKED 7 Sep 2026; wording "
+                          "corrected 16 Sep so a passing LOCKED entry no longer prints the "
+                          "promotion phrase)"))
     else:
         # Read the count the tool itself printed rather than re-deriving it from the
         # layout of its output -- a number counted a second way is a number that can
