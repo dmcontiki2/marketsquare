@@ -1115,3 +1115,82 @@ warmed 11 tutor videos on the CF edge
  ============================================================
 Press any key to continue . . . 
 Wed 09/16/2026  2:01:19.26  drift: DEPLOY DRIFT: 2 file(s) local-ahead of live - run /ship: ai_provider.py, bea_main.py
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Wed 09/16/2026  2:01:19.34
+ ============================================================
+
+ cleared stale .git\HEAD.lock 
+  [autobump] 0 reference(s) bumped
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 60 honestly not-wired, 2 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  OK -- every health colour on the page is fed, honestly dashed, or registered with a live review date.
+folded 2, skipped 0 (already present) · verify OK
+C:\Users\David\Projects\MarketSquare\scripts\status_compile.py:94: SyntaxWarning: "\Z" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\Z"? A raw string is also an option.
+  GET /dashboard/summary captures a section with `## Last Completed[^\n]*\n(.*?)(?=\n## |\Z)`,
+folded 3, skipped 0 (already present) - verify OK
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-09-16T00:01:22Z   mode=strict
+  Working tree: 19 file(s) uncommitted; 1 deploy target(s) changed.
+    - bea_main.py                       1244096 B     98 min ago  [modified]
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  One-evidence-set trust check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 15, 'strftime': 15, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  Verdict: ok   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+  [LOCK] acquired by LAPTOP-S0AC8CVC (pid 3000), TTL 30 min.
+  ------------------------------------------------------------
+  TSL PRE-DEPLOY GATE   2026-09-16T00:01:23Z   mode=strict
+  [CM] change-management docs
+    - STATUS.md            [ok]
+    - CHANGELOG.md         [ok]
+    - CHANGE_REGISTER.md   [ok]
+    - STATUS newest date : 2026-09-16 (0 days ago)
+    - CHANGELOG newest    : 2026-09-16
+    - Ship pending        : bea_main.py
+  [DB] live databases (read-only, msdeploy@178.104.73.239)
+    - primary db        [ok, 3112960 bytes, integrity ok] (cached)
+    - redis             [not readable - not gated]
+    -- proved over HTTPS /health (no credentials needed)
+  Verdict: CM=ok  DB=ok  ->  ok   (logged -> tsl_audit.log)
+  ------------------------------------------------------------
+warning: in the working copy of 'SESSION_COUNTER.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_ship_log.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'visuals/letters/2026-09-15_Car_Dealers_za.html', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'visuals/letters/2026-09-15_Collector_Shops_za.html', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'visuals/letters/2026-09-15_Estate_Agents_za.html', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'visuals/letters/2026-09-15_adventures_experiences_register_us.html', CRLF will be replaced by LF the next time Git touches it
+ [4/6] Committed the working tree.
+69154eb Release Wed 09/16/2026  2:01:25.70
+ [5/6] Pushing to the mirror - backup ref main...
+To https://github.com/dmcontiki2/marketsquare.git
+   afc8b3d..69154eb  HEAD -> main
+ [5/6] Publishing the deploy ref - THIS is the deploy...
+To https://github.com/dmcontiki2/marketsquare.git
+   afc8b3d..69154eb  HEAD -> deploy
+
+  PUBLISHED. The server deploys it within ~2 minutes - with health check,
+  monotonic cache-buster, auto-rollback, then seed + migrations hook.
+
+ [6/6] Waiting ~3 minutes for the server to apply and settle...
+ERROR: Input redirection is not supported, exiting the process immediately.
+  [OK] /health answers ok 
+  DEPLOY DRIFT: 2 file(s) local-ahead of live - run /ship: ai_provider.py, bea_main.py
+  [WAIT] Not clean yet - one more 2-minute server tick...
+ERROR: Input redirection is not supported, exiting the process immediately.
+DEPLOY DRIFT: 2 file(s) local-ahead of live - run /ship: ai_provider.py, bea_main.py
+  If still ahead: watch  ssh root@178.104.73.239 "tail -20 /var/log/marketsquare-deploy.log"
+  [LOCK] released.
+
+ ============================================================
+  RELEASE COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Wed 09/16/2026  2:01:40.52  SHIPPED rc=0 â€” server runs migrations + smoke itself
