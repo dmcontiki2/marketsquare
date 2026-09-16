@@ -1,5 +1,5 @@
 {
- "next_id": 128,
+ "next_id": 129,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -1171,7 +1171,7 @@
   },
   "DW-111": {
    "first_seen": "2026-09-07",
-   "last_seen": "2026-09-15",
+   "last_seen": "2026-09-16",
    "sev": "MEDIUM",
    "source": "split out of DW-109 at that row's own request; re-check attempted from the sandbox today",
    "status": "OPEN",
@@ -1181,7 +1181,7 @@
    ],
    "summary": "CARRIED FORWARD 2026-09-14, STILL NOT VERIFIABLE - third attempt, same wall. msdeploy is in neither adm nor systemd-journal (id shows groups=1000(msdeploy) only); journalctl -u marketsquare returns 4 lines of permission hint and 0 resend matches; no *.log under /var/www/marketsquare. subscription_monitor reads Resend UP with issues: [] - the key authenticates, the 422 is one caller's payload. Absence from a blind instrument is not a clean bill.",
    "next_action": "OPEN - CTO lane. (a) Identify the caller: which lane posts to Resend on a 5-minute cadence, and read the 422 body (usually an unverified or mismatched from-domain, a missing to, or a malformed payload). (b) Give the watch a way to see the outcome - journal access, or have the lane record its own result to a readable file. A send lane whose only evidence lives where the watch cannot look is the DW-105 shape, where a silent failure ran a fortnight.",
-   "last_note": "2026-09-15: still unverifiable, fourth identical wall. id -nG = msdeploy only (neither adm nor systemd-journal); journalctl -u marketsquare returns the permission hint and '-- No entries --'; no *.log under /var/www/marketsquare. subscription_monitor reads Resend UP with issues: [] and fea_integrity reads status ok / alerts [] - but absence from a blind instrument is not a clean bill."
+   "last_note": "2026-09-16: still unverifiable, fifth identical wall. id = groups=1000(msdeploy) only; journalctl -u marketsquare returns the permission hint and no content. subscription_monitor reads Resend UP, issues [] (31 samples, 100%). Absence from a blind instrument is not a clean bill."
   },
   "DW-112": {
    "first_seen": "2026-09-07",
@@ -1393,6 +1393,15 @@
    "summary": "FOUND AND FIXED IN THE SAME SESSION - and it was the INSTRUMENT, not the product. The board reported 'the buyer-facing credentials list no longer names the interim points - the list stops summing to the score (SUPER-CRED-1)', which would be a truthfulness defect on a page buyers read. It is not. Traced rather than assumed: seller_public_credentials() builds all three of its groups through _earned_display() (bea_main.py:5039, 5042, 5049), and _earned_display() is the function that appends the ' - confirmation pending' naming, so it does reach buyers. What happened: on 15 Sep TRUST-ONE-SET-1 correctly refactored the panel onto the one shared evidence set (_trust_evidence()), moving that copy into the shared formatter - and the assertion was a forward-only 4000-char lexical window from the panel's def, so it went red over a refactor that improved the code. SECOND instance of a class that already cost a session: RG-0367 was amended 14 Sep for exactly this. A window judges WHERE text sits; correct refactoring moves text. Fixed the assertion and made it STRONGER (CRED-REACH-1): three reachability legs - the shared formatter still appends the naming, the buyer panel still builds its rows through it, and the seller's own breakdown still shares it (which is what stops the two surfaces showing one seller two different lists). A window could pass on dead copy while the panel rendered from elsewhere; this cannot. Sabotage-tested three ways. Noted and NOT touched: bea_main.py carries another session's in-progress work (183 insertions / 166 deletions); it compiles and is larger than HEAD, so it is live editing, not a torn write.",
    "closed_evidence": "2026-09-16: RG-0347 re-run green; buyer path traced to the formatter that names the interim points; the three new legs each proven red under a separate sabotage (naming removed from the formatter, panel bypassing the formatter, seller view drifting off it).",
    "next_action": "None for this row. CLASS note for the CTO lane: the lexical-window fault now has two instances (RG-0367, RG-0347), so any remaining forward-window leg in the board is a latent false red - worth a sweep the next time the board is being worked on rather than a row of its own."
+  },
+  "DW-128": {
+   "first_seen": "2026-09-16",
+   "last_seen": "2026-09-16",
+   "sev": "LOW",
+   "source": "scripts/cost_compliance_sweep.py - 1 NEW WARN vs 15 Sep (0 crit / 8 warn / 28 ok / 49 info, exit 1)",
+   "status": "OPEN",
+   "summary": "NEW - the cost sweep is grading the watch's own register as if it were code. The one new WARN is DAILY_WATCH/OPEN_ITEMS.json:1379 'Sonnet outside the metered AdvertAgent registry' - that line is the DW-126 summary prose written by the 16 Sep attended pass (Model Register re-verification). No AI call is made from that file; app code unchanged. Same shape as the two existing claude-code hits against ledger_runs/ and regression_ledger.py. Instrument noise, not a spend risk; recorded so a real new WARN cannot hide behind a familiar count. Not on the coverage map.",
+   "next_action": "CTO lane, unattended-safe: exclude DAILY_WATCH/, ledger_runs/ and Records/ from the sweep's scan roots (or gate the model-name grep to files that import an AI client), re-run; closes when the sweep re-runs without the register hit."
   }
  },
  "last_run": "2026-09-16",
@@ -2396,5 +2405,106 @@
    "DW-121 (half fixed; closes on the Monday deep-scan re-run)"
   ],
   "not_deployed": "my two deploy-target changes - the ai_provider.py comment and the regenerated ai_funnel_snapshot.json - are committed but NOT shipped this turn: another session has uncommitted in-progress work in bea_main.py, and neither change needs to be live tonight"
+ },
+ "watch_pass_2026_09_16_unattended": {
+  "verdict": "GREEN",
+  "kind": "unattended 06:30 watch (Wednesday, launch day +15; Monday lane not in scope)",
+  "ledger": {
+   "entries": 366,
+   "holding": 344,
+   "regressed": 0,
+   "open": 22,
+   "ready_to_lock": 0,
+   "unverified": 0,
+   "seconds": 241.6,
+   "shards": [
+    99.4,
+    70.1,
+    72.1
+   ],
+   "exit": 0
+  },
+  "site": {
+   "health": "ok",
+   "version": "1.3.1",
+   "db_integrity": "ok",
+   "root_seconds": 0.656,
+   "root_bytes": 420987,
+   "payment_test": "ok, paystack_connected",
+   "tls_days": 66,
+   "tls_expires": "2026-11-22"
+  },
+  "audit": {
+   "findings": 2,
+   "new": 0,
+   "all": "INFO"
+  },
+  "cost_sweep": {
+   "exit": 1,
+   "critical": 0,
+   "warn": 8,
+   "ok": 28,
+   "info": 49,
+   "new": 1,
+   "new_item": "DW-128"
+  },
+  "smoke": "40/40, 0 failures",
+  "deploy_drift": "clean 19/19",
+  "server": {
+   "up": 35,
+   "held": 15,
+   "planned": 1,
+   "down": 0,
+   "disk_used_pct": 47,
+   "fea": "ok, alerts []",
+   "subscription_monitor_issues": 0
+  },
+  "cron_parity": {
+   "loop_date": "2026-09-16",
+   "smoke": "39/39 all_green",
+   "health": "ok 1.3.1",
+   "fea_integrity": "ok",
+   "spend_usd": 0.0,
+   "platform_ceiling_usd": 100.0,
+   "breached": false,
+   "verdict": "parity holds"
+  },
+  "orchestrator": {
+   "queue": "[]",
+   "staged": "[]",
+   "note": "fixer paused (DW-004)"
+  },
+  "heartbeat": {
+   "previous_unattended": "2026-09-15",
+   "attended_pass": "2026-09-16 00:3x",
+   "gap_days": 1,
+   "verdict": "clean"
+  },
+  "coverage_map": {
+   "green": 79,
+   "blue": 2,
+   "amber": 1,
+   "red": 0,
+   "grey": 10,
+   "changes": [],
+   "blue_items": [
+    "DW-104 residual (watch liveness)",
+    "DW-119 residual (register half-commit)"
+   ]
+  },
+  "ai_watch": "routine all-clear; nothing new in 48h for ZA; June export-control episode resolved; Sonnet-5 $3/$15 claim STALE",
+  "monday_lane": "NOT in scope (Wednesday)",
+  "new_items": [
+   "DW-128"
+  ],
+  "closed": [],
+  "still_open": [
+   "DW-010",
+   "DW-087",
+   "DW-111",
+   "DW-121",
+   "DW-128"
+  ],
+  "checks_run": "13/13"
  }
 }
