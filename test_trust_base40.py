@@ -53,7 +53,12 @@ def test_scorer_has_base40():
         "LM credential group must be uncapped in the shared formula (Addendum 2026-07-21)"
     assert re.search(r"max\(0,\s*min\(100,\s*40\s*\+", hb), "formula lost base-40/cap/penalty order"
     body = _func_body(src, "def trust_score_breakdown(")
-    assert "_trust_math(" in body, "scorer must compute via the shared formula"
+    # TRUST-ONE-SET-1 (15 Sep 2026): the scorer now reaches the formula through the one
+    # evidence builder, so the guard follows it there instead of looking for the call
+    # inline — the property being protected is "does not re-implement", not "calls it here".
+    assert "_trust_evidence(" in body, "scorer must take its score from the shared evidence builder"
+    eb = _func_body(src, "def _trust_evidence(")
+    assert "_trust_math(" in eb, "the shared evidence builder must compute via the shared formula"
     assert re.search(r"if _is_lm_score else min\(40", body), "scorer lost the LM-uncapped rule"
 
 # ---- the buyer-facing seller panel must carry the base (today's bug) --------

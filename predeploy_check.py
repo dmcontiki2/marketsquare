@@ -183,6 +183,27 @@ def main():
     except Exception as _e:
         print('  [base-40] check skipped: %r' % _e)
 
+    # ONE-EVIDENCE-SET ratchet (15 Sep 2026, TRUST-ONE-SET-1). The two guards above
+    # both passed while the buyer-facing panel was counting a different evidence set
+    # from the scorer and writing its answer over the stored score. This one checks
+    # that there is still exactly ONE evidence builder and that no surface writes a
+    # score for a question it was not asked.
+    try:
+        import subprocess as _sp2b
+        _tf2b = os.path.join(HERE, 'test_trust_one_set.py')
+        if os.path.isfile(_tf2b):
+            _to = _sp2b.run([sys.executable, _tf2b, HERE], capture_output=True, text=True, timeout=30)
+            if _to.returncode != 0:
+                danger.append('trust-one-set')
+                print('  !! ONE-SET: a trust surface built its own evidence again:')
+                for _l in (_to.stdout or '').splitlines():
+                    if _l.startswith('FAIL'):
+                        print('       ' + _l)
+            else:
+                print('  One-evidence-set trust check: ok')
+    except Exception as _e:
+        print('  [one-set] check skipped: %r' % _e)
+
     # PG-readiness ratchet (29 Jul 2026): the SQLite-specific surface must never
     # grow, so the post-launch Postgres move stays cheap (David's DB ruling).
     try:

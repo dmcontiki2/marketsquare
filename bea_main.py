@@ -4963,7 +4963,15 @@ def seller_public_credentials(listing_id: int):
     """SUPER-CRED-1 (20 Jul 2026, David's ruling): the buyer-facing seller profile
     must show the itemised evidence that SUMS to the trust score — signal names and
     points from the canonical catalog, grouped, capped exactly like the scorer.
-    Anonymity-safe: signal names and points only, never documents or identity."""
+    Anonymity-safe: signal names and points only, never documents or identity.
+
+    TRUST-ONE-SET-1 (15 Sep 2026): this panel used to build its own universal and
+    track-record SQL — a narrower set than the scorer reads — so it showed a lower
+    number for the same seller and then wrote that number over the stored score and
+    over EVERY listing. It now reads the one evidence set, and its write authority
+    matches the scorer's: the stored score is the seller's PRIMARY category, and a
+    listing's badge is its own category. A panel may no longer answer a question it
+    was not asked."""
     conn = database.get_db()
     try:
         l = conn.execute("SELECT seller_email, category, service_class FROM listings WHERE id=?", (listing_id,)).fetchone()
@@ -4975,89 +4983,26 @@ def seller_public_credentials(listing_id: int):
             raise HTTPException(status_code=404, detail="Seller not found")
         user = dict(u)
 
-        groups = []
-        # ── Universal ──
-        uni = []
-        if user.get("id_verified_at"):
-            uni.append({"name": _TRUST_SIGNALS["universal.id_verified"]["name"], "points": _TRUST_SIGNALS["universal.id_verified"]["points"]})
-        else:
-            # ID-UPLOAD-INTERIM-1 (RUL-113): the interim points count in the score, so
-            # they must appear in the list that sums to it — named as what they are.
-            _idd = conn.execute(
-                """SELECT d.points_awarded FROM user_declarations d
-                     JOIN user_credentials c ON LOWER(c.email)=LOWER(d.email) AND c.signal_id=d.signal_id
-                    WHERE LOWER(d.email)=? AND d.signal_id='universal.id_verified' AND c.status='declared'""",
-                (email,)).fetchone()
-            if _idd and int(_idd["points_awarded"] or 0) > 0:
-                uni.append({"name": "Government-issued ID uploaded \u2014 confirmation pending",
-                            "points": int(_idd["points_awarded"])})
-        has_listing = conn.execute("SELECT 1 FROM listings WHERE LOWER(seller_email)=? LIMIT 1", (email,)).fetchone()
-        if user.get("name") and user.get("country") and user.get("photo_url") and has_listing:
-            uni.append({"name": _TRUST_SIGNALS["universal.profile_complete"]["name"], "points": _TRUST_SIGNALS["universal.profile_complete"]["points"]})
-        groups.append({"title": "Identity & profile", "items": uni, "subtotal": sum(i["points"] for i in uni)})
-
-        # ── Platform track record (computed like get_user_trust) ──
-        ic = conn.execute("""SELECT COUNT(*) FROM intro_requests WHERE listing_id IN
-            (SELECT id FROM listings WHERE LOWER(seller_email)=?) AND status='accepted'""", (email,)).fetchone()[0]
-        ign = conn.execute("""SELECT COUNT(*) FROM intro_requests WHERE listing_id IN
-            (SELECT id FROM listings WHERE LOWER(seller_email)=?)
-            AND status='pending' AND created_at < datetime('now','-48 hours')
-            AND created_at > datetime('now','-90 days')""", (email,)).fetchone()[0]
-        tr = []
-        if ic >= 1:  tr.append({"name": _TRUST_SIGNALS["track_record.intro_1"]["name"], "points": 5})
-        if ic >= 5:  tr.append({"name": _TRUST_SIGNALS["track_record.intro_5"]["name"], "points": 5})
-        if ic >= 20: tr.append({"name": _TRUST_SIGNALS["track_record.intro_20"]["name"], "points": 5})
-        if ic > 0 and ign == 0:
-            tr.append({"name": _TRUST_SIGNALS["track_record.zero_ignored_90d"]["name"], "points": 10})
-        try:
-            created = str(user.get("created_at") or "")
-            import datetime as _dt
-            if created and (_dt.datetime.now() - _dt.datetime.fromisoformat(created.replace("Z","").split(".")[0])).days >= 180 and has_listing:
-                tr.append({"name": _TRUST_SIGNALS["track_record.tenure_6mo"]["name"], "points": 5})
-        except Exception:
-            pass
-        groups.append({"title": "Platform track record", "items": tr, "subtotal": sum(i["points"] for i in tr),
-                       "note": f"{ic} accepted introductions"})
-
-        # ── Local Market model (design: base 40 + signals, capped 100) ──
+        # ── Which signal set is this advert scored under ──────────────────────
+        # SUPER-CRED-2 (22 Jul 2026): a seller with ANY Local Market listing is scored
+        # under the LM model on ALL their listings — the visible list IS the score, on
+        # every surface, so the model may not change between their own adverts.
         _is_lm = (l["category"] or "").strip().lower() in ("local_market", "local market")
         if not _is_lm:
-            # SUPER-CRED-2 (22 Jul 2026): mirror _category_key_for_user — a seller with ANY
-            # LM listing is scored under the LM model, so the buyer-facing evidence panel
-            # must use the SAME model on ALL their listings. (Bee Lady's new Tutors adverts
-            # were summing to 50 under her 100 badge — the exact mismatch this panel exists
-            # to prevent. The visible list IS the score, on every surface.)
             _is_lm = bool(conn.execute(
                 "SELECT 1 FROM listings WHERE LOWER(seller_email)=? AND category='local_market' LIMIT 1",
                 (email,)).fetchone())
-        if _is_lm:
-            groups.insert(0, {"title": "Local Market foundation", "items":
-                [{"name": "Verified Local Market seller baseline", "points": 40}], "subtotal": 40,
-                "note": "every Local Market seller starts here"})
-        else:
-            # BASE-40 FIX (28 Jul 2026, David): the universal 40-point base was missing
-            # from this panel for non-LM sellers, so JNR-FIX-2's self-heal below was
-            # rewriting stored scores to the base-less total (a viewed seller dropped
-            # 40 -> 5). Mirror the scorer exactly: base_score = 40 for ALL sellers.
-            groups.insert(0, {"title": "Foundation", "items":
-                [{"name": "Universal base — every seller starts here", "points": 40}], "subtotal": 40,
-                "note": "the ladder starts at 40 — credentials build on top, penalties pull below"})
+        cat_key = "local_market" if _is_lm else (
+            _norm_cat_key(l["category"], l["service_class"]) or _category_key_for_user(conn, email))
 
-        # ── Category credentials (earned only, names+points from the catalog) ──
-        flat = {}
-        for _grp in _CATEGORY_SIGNALS.values():
-            for sid, d in _grp.items():
-                flat[sid] = {"name": d["name"], "points": int(d.get("points") or 0)}
-        _like = "category.lm.%" if _is_lm else "category.%"
-        cred_rows = conn.execute("SELECT signal_id FROM user_credentials WHERE LOWER(email)=? AND status='earned' AND signal_id LIKE ?", (email, _like)).fetchall()
-        if not _is_lm:
-            cred_rows = [r for r in cred_rows if not r["signal_id"].startswith("category.lm.")]
-        # EVIDENCE-TRUE-1 (David's ruling 3 Aug 2026): a per-listing credential —
-        # the signed mandate — counts ONLY on the listing whose document it covers.
-        # Before this, the first mandate an agent uploaded earned +8 on every
-        # listing they ever made, which is exactly the fraud the mandate signal
-        # exists to prevent. In SA the mandate is signed with the AGENCY, so any
-        # member of that agency satisfies it for the property.
+        ev = _trust_evidence(conn, email, cat_key)
+
+        # ── EVIDENCE-TRUE-1 (David's ruling 3 Aug 2026) ───────────────────────
+        # A per-listing credential — the signed mandate — counts ONLY on the listing
+        # whose document it covers. Before this, the first mandate an agent uploaded
+        # earned +8 on every listing they ever made, which is exactly the fraud the
+        # mandate signal exists to prevent. In SA the mandate is signed with the
+        # AGENCY, so any member of that agency satisfies it for the property.
         _per_listing_ok = set()
         try:
             _peers = [email]
@@ -5077,41 +5022,50 @@ def seller_public_credentials(listing_id: int):
                     _per_listing_ok.add(r["signal_id"])
         except Exception:
             pass
+        _drop = {sid for sid in _PER_LISTING_SIGNALS if sid not in _per_listing_ok}
 
-        cat = []
-        seen = set()
-        for r in cred_rows:
-            sid = r["signal_id"]
-            if sid in _PER_LISTING_SIGNALS and sid not in _per_listing_ok:
-                continue   # no mandate document for THIS property — no points here
-            if sid in flat and sid not in seen:
-                seen.add(sid)
-                cat.append({"name": flat[sid]["name"], "points": flat[sid]["points"]})
-        cat.sort(key=lambda x: -x["points"])
-        raw_cat = sum(i["points"] for i in cat)
-        capped = min(40, raw_cat)
-        g = {"title": "Certificates & accreditations", "items": cat, "subtotal": capped}
-        if raw_cat > 40:
+        # ── The visible groups, each list and its subtotal built in one pass ───
+        groups = []
+        if _is_lm:
+            groups.append({"title": "Local Market foundation", "items":
+                [{"name": "Verified Local Market seller baseline", "points": 40}], "subtotal": 40,
+                "note": "every Local Market seller starts here"})
+        else:
+            # BASE-40 FIX (28 Jul 2026, David): base_score = 40 for ALL sellers.
+            groups.append({"title": "Foundation", "items":
+                [{"name": "Universal base — every seller starts here", "points": 40}], "subtotal": 40,
+                "note": "the ladder starts at 40 — credentials build on top, penalties pull below"})
+
+        uni_items, _uni_sub = _earned_display(ev["items_u"], _TRUST_SIGNALS)
+        groups.append({"title": "Identity & profile", "items": uni_items, "subtotal": _uni_sub})
+
+        trk_items, _trk_sub = _earned_display(ev["items_t"], _TRUST_SIGNALS)
+        _ic = conn.execute("""SELECT COUNT(*) FROM intro_requests WHERE listing_id IN
+            (SELECT id FROM listings WHERE LOWER(seller_email)=?) AND status='accepted'""",
+            (email,)).fetchone()[0]
+        groups.append({"title": "Platform track record", "items": trk_items, "subtotal": _trk_sub,
+                       "note": f"{_ic} accepted introductions"})
+
+        cat_items, raw_cat = _earned_display(ev["items_c"], ev["cat_signals"], drop_ids=_drop)
+        cat_items.sort(key=lambda x: -x["points"])
+        capped = raw_cat if _is_lm else min(40, raw_cat)
+        g = {"title": "Certificates & accreditations", "items": cat_items, "subtotal": capped}
+        if not _is_lm and raw_cat > 40:
             g["note"] = f"{raw_cat} pts earned — capped at the category maximum of 40"
         groups.append(g)
 
-        _uni_sub = next((gr["subtotal"] for gr in groups if gr["title"] == "Identity & profile"), 0)
-        _trk_sub = next((gr["subtotal"] for gr in groups if gr["title"] == "Platform track record"), 0)
-        if _is_lm:
-            # LM: no 40-cap on the credential group; the TOTAL caps at 100 instead
-            g["subtotal"] = raw_cat
-            g.pop("note", None)
-        raw_total = sum(gr["subtotal"] for gr in groups)
-        if raw_total > 100:
-            g["note"] = ((g.get("note") + " · ") if g.get("note") else "") + \
-                f"{raw_total} pts of evidence — Trust Score caps at 100"
         # One formula for every surface (base-40 bug, 28 Jul 2026): pre-penalty total
         # via _trust_math; the Penalties group below applies post-cap, matching it.
         total = _trust_math(_uni_sub, _trk_sub, raw_cat, 0, lm=_is_lm)
+        raw_total = 40 + _uni_sub + _trk_sub + capped
+        if raw_total > 100:
+            g["note"] = ((g.get("note") + " · ") if g.get("note") else "") + \
+                f"{raw_total} pts of evidence — Trust Score caps at 100"
+
         # PEN-CAP-1 (23 Jul 2026): active complaint penalties render as their own group
         # and apply AFTER the cap, exactly like the scorer — the visible list must
         # still sum to the displayed score (evidence-true principle, 20 Jul).
-        _pens = _seller_active_complaints(conn, email) + _seller_responsiveness_penalties(conn, email)
+        _pens = ev["penalties"]
         if _pens:
             _pen_items = [{"name": p.get("label") or ("Complaint — " + str(p.get("reason_code") or "upheld")),
                            "points": int(p["points"])} for p in _pens]
@@ -5119,28 +5073,34 @@ def seller_public_credentials(listing_id: int):
                            "subtotal": sum(i["points"] for i in _pen_items),
                            "note": "deducted after the cap — recovers on time rules (24-month decay or successful dispute), not by adding evidence"})
             total = max(0, total + sum(i["points"] for i in _pen_items))
-        # JNR-FIX-2 (24 Jul 2026, David Jnr feedback): the stored trust_score must
-        # never diverge from the evidence total shown here (he saw a 90 headline over
-        # an 85 evidence list). Self-heal it to the evidence-true total when they
-        # differ — mirrors the scorer's own sync (see UPDATE ... trust_score below).
+
+        # ── Write authority, narrowed to what this panel actually knows ───────
+        # JNR-FIX-2 (24 Jul 2026, David Jnr): the stored score must not sit above the
+        # evidence shown — so the heal stays. TRUST-ONE-SET-1 narrows WHAT it heals:
+        # the value written is ev["score"], the seller's score under THIS advert's
+        # category with no per-listing filter — identical to what the scorer would
+        # compute for the same category. users.trust_score is touched only when this
+        # IS the seller's primary category; listing badges only for this category.
         try:
-            # CASE-HEAL FIX (28 Jul 2026): email arrives lowercased; the stored row may
-            # not be — exact-match UPDATEs silently no-oped (Bee Lady: ledger 100, feed 85).
-            # LISTINGS-SYNC FIX (28 Jul 2026): sync listings UNCONDITIONALLY — the old
-            # users-differ guard left listings stale forever once users was already
-            # correct (Bee Lady again: users 100, browse cards 85, nothing repaired it).
-            if int(user.get("trust_score") or 0) != int(total):
-                conn.execute("UPDATE users SET trust_score = ? WHERE LOWER(email) = ?", (int(total), email))
-            conn.execute("UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = ? AND trust_score != ?",
-                         (int(total), email, int(total)))
+            _persist = int(ev["score"])
+            if cat_key == _category_key_for_user(conn, email) and int(user.get("trust_score") or 0) != _persist:
+                # CASE-HEAL FIX (28 Jul 2026): email arrives lowercased; the stored row
+                # may not be — exact-match UPDATEs silently no-oped.
+                conn.execute("UPDATE users SET trust_score = ? WHERE LOWER(email) = ?", (_persist, email))
+            conn.execute(
+                "UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = ? AND category = ? AND trust_score != ?",
+                (_persist, email, l["category"], _persist))
             conn.commit()
         except Exception:
             pass
+
         return {"trust_score": int(total), "computed_total": total,
+                "category_key": cat_key,
                 "groups": groups,
                 "next": "Verified referrals (up to 10 pts) unlock as the referral programme goes live — the path from here toward 100."}
     finally:
         conn.close()
+
 
 
 def _assert_evidence_true(claimed, parts, where=""):
@@ -10970,6 +10930,98 @@ def _sum_earned_with_replaces(items: list, signals_dict: dict) -> int:
     return total
 
 
+# ── TRUST-ONE-SET-1 (15 Sep 2026, David: "lets fix the scores to be consistent") ──
+# Third time in this bug class. BASE-40 (28 Jul) caught a surface that re-implemented
+# the ARITHMETIC; EVIDENCE-TRUE (24 Jul) caught a headline that disagreed with its own
+# list. Neither could catch this one: the buyer-facing panel summed its own list
+# correctly and used the shared formula correctly — it just counted a DIFFERENT SET OF
+# EVIDENCE from the scorer (David saw 80 on the dashboard over a 57 panel), and then
+# wrote its answer over the stored score, so whichever screen was opened last won.
+# The cure is not another checker. There is now ONE evidence builder; a surface that
+# wants a trust number asks for it here or it does not get one.
+_TRUST_CAT_NORM = {
+    "LocalMarket": "local_market", "Local Market": "local_market", "local_market": "local_market",
+    "Property": "Property", "Property_agent": "Property", "Property_private": "Property_private",
+    "Tutors": "Tutors",
+    "Services": "Services-Technical",          # default subclass when none is given
+    "Services-Technical": "Services-Technical", "Services-Casuals": "Services-Casuals",
+    "Adventures": "Adventures-Experiences",
+    "Adventures-Experiences": "Adventures-Experiences",
+    "Adventures-Accommodation": "Adventures-Accommodation",
+    "Collectors": "Collectors",
+    "Cars": "Cars_private", "Cars_dealer": "Cars_private", "Cars_private": "Cars_private",
+}
+
+
+def _norm_cat_key(category, service_class=None) -> str:
+    """Frontend/DB category name -> _CATEGORY_SIGNALS key. When the caller knows the
+    listing's service_class it picks the subclass instead of the default, mirroring
+    _category_key_for_user — so a listing and its seller resolve to the same set."""
+    cat = (category or "").strip()
+    if not cat:
+        return ""
+    sc = (service_class or "").strip().lower()
+    if cat == "Services" and sc:
+        return "Services-Technical" if sc.startswith("tech") else "Services-Casuals"
+    if cat == "Adventures" and sc:
+        return "Adventures-Accommodation" if sc.startswith("accom") else "Adventures-Experiences"
+    return _TRUST_CAT_NORM.get(cat, cat)
+
+
+def _trust_evidence(conn, email: str, cat_key: str) -> dict:
+    """THE evidence set for one seller under one category. Every trust surface reads
+    from here, so two surfaces can only disagree about a seller if they were asked
+    about different CATEGORIES — which is a real difference, not drift."""
+    cat_signals = _CATEGORY_SIGNALS.get(cat_key, {})
+    computed = _compute_universal_track_status(conn, email)
+    universal_signals = {k: v for k, v in _TRUST_SIGNALS.items() if k.startswith("universal.")}
+    track_signals     = {k: v for k, v in _TRUST_SIGNALS.items() if k.startswith("track_record.")}
+    items_u = _build_breakdown_items(conn, email, universal_signals, computed)
+    items_t = _build_breakdown_items(conn, email, track_signals, computed)
+    items_c = _build_breakdown_items(conn, email, cat_signals, {}) if cat_signals else []
+    raw_u = _sum_earned_with_replaces(items_u, _TRUST_SIGNALS)
+    raw_t = _sum_earned_with_replaces(items_t, _TRUST_SIGNALS)
+    raw_c = _sum_earned_with_replaces(items_c, cat_signals)
+    is_lm = (cat_key == "local_market")
+    penalties = _seller_active_complaints(conn, email) + _seller_responsiveness_penalties(conn, email)
+    penalty_total = sum(p["points"] for p in penalties)
+    return {
+        "cat_key": cat_key, "cat_signals": cat_signals,
+        "items_u": items_u, "items_t": items_t, "items_c": items_c,
+        "raw_u": raw_u, "raw_t": raw_t, "raw_c": raw_c, "is_lm": is_lm,
+        "penalties": penalties, "penalty_total": penalty_total,
+        "score": _trust_math(raw_u, raw_t, raw_c, penalty_total, lm=is_lm),
+    }
+
+
+def _earned_display(items: list, signals_dict: dict, drop_ids=None):
+    """The visible list and the number it sums to, produced in one pass so they cannot
+    drift apart (EVIDENCE-TRUE, 24 Jul, enforced by construction rather than by a
+    warning after the fact). Returns (display_items, total)."""
+    active = {it["signal_id"] for it in items if it["status"] in ("earned", "declared")}
+    if drop_ids:
+        active -= set(drop_ids)
+    replaced = set()
+    for sid in active:
+        rep = (signals_dict.get(sid) or {}).get("replaces")
+        if rep and rep in active:
+            replaced.add(rep)
+    out, total = [], 0
+    for it in items:
+        sid = it["signal_id"]
+        if sid not in active or sid in replaced:
+            continue
+        pts = int(it.get("awarded_points") if it.get("awarded_points") is not None else it["points"])
+        name = it["name"]
+        # ID-UPLOAD-INTERIM-1 (RUL-113): an uploaded-but-unconfirmed signal is named
+        # as what it is, and its interim points are the ones that count.
+        if it["status"] == "declared" and int(it.get("evidence_points_remaining") or 0) > 0:
+            name += " \u2014 confirmation pending"
+        out.append({"name": name, "points": pts})
+        total += pts
+    return out, total
+
+
 def _seller_active_complaints(conn, email: str) -> list:
     """Return active (non-decayed, non-disputed) seller complaints with their
     deduction values per the diminishing scale, capped at -22 total."""
@@ -11087,61 +11139,26 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
 
     # Use explicit category if provided (edit screen passes elCurrentCat);
     # otherwise fall back to auto-detection from listings.
-    if category:
-        # Normalise frontend category names to _CATEGORY_SIGNALS keys
-        _cat_norm = {
-            "LocalMarket": "local_market", "Local Market": "local_market",
-            "Property": "Property", "Property_agent": "Property",
-            "Property_private": "Property_private",
-            "Tutors": "Tutors",
-            "Services": "Services-Technical",  # default subclass
-            "Services-Technical": "Services-Technical",
-            "Services-Casuals": "Services-Casuals",
-            "Adventures": "Adventures-Experiences",
-            "Adventures-Experiences": "Adventures-Experiences",
-            "Adventures-Accommodation": "Adventures-Accommodation",
-            "Collectors": "Collectors", "Cars": "Cars_private",
-            "Cars_dealer": "Cars_private", "Cars_private": "Cars_private",
-        }
-        cat_key = _cat_norm.get(category, category)
-    else:
-        cat_key = _category_key_for_user(conn, email)
-    cat_signals = _CATEGORY_SIGNALS.get(cat_key, {})
-
-    # System-calculated statuses
-    computed = _compute_universal_track_status(conn, email)
-
-    # Build group items
-    universal_signals = {k: v for k, v in _TRUST_SIGNALS.items() if k.startswith("universal.")}
-    track_signals     = {k: v for k, v in _TRUST_SIGNALS.items() if k.startswith("track_record.")}
-
-    items_u = _build_breakdown_items(conn, email, universal_signals, computed)
-    items_t = _build_breakdown_items(conn, email, track_signals, computed)
-    items_c = _build_breakdown_items(conn, email, cat_signals, {}) if cat_signals else []
-
-    # Sums (max-capped)
-    _raw_u = _sum_earned_with_replaces(items_u, _TRUST_SIGNALS)
-    _raw_t = _sum_earned_with_replaces(items_t, _TRUST_SIGNALS)
-    _raw_c = _sum_earned_with_replaces(items_c, cat_signals)
-    _is_lm_score = (cat_key == "local_market")
+    # TRUST-ONE-SET-1: the normalisation map and the whole evidence build moved into
+    # _norm_cat_key/_trust_evidence so the buyer-facing panel cannot count a different
+    # set. This endpoint keeps the items themselves — it needs their statuses for the
+    # checklist and the tip; the panel keeps only what a buyer may see.
+    cat_key = _norm_cat_key(category) if category else _category_key_for_user(conn, email)
+    ev = _trust_evidence(conn, email, cat_key)
+    cat_signals = ev["cat_signals"]
+    items_u, items_t, items_c = ev["items_u"], ev["items_t"], ev["items_c"]
+    _raw_u, _raw_t, _raw_c = ev["raw_u"], ev["raw_t"], ev["raw_c"]
+    _is_lm_score = ev["is_lm"]
     earned_u = min(30, _raw_u)
     earned_t = min(30, _raw_t)
     # LM-CAP FIX (28 Jul 2026, David's ruling "according to the rules"): the LM
-    # credential group is uncapped per the criteria doc — the old min(40) here was
-    # writing 85 while the evidence ledger truthfully showed 100 (Bee Lady drift).
+    # credential group is uncapped per the criteria doc.
     earned_c = _raw_c if _is_lm_score else min(40, _raw_c)
-
     # Penalties (complaints §5a + responsiveness RESP-1) — applied post-cap (PEN-CAP-1)
-    penalties = _seller_active_complaints(conn, email) + _seller_responsiveness_penalties(conn, email)
-    penalty_total = sum(p["points"] for p in penalties)
-
-    # All sellers start at 40 (Established base) — matches the sell-flow sbCalcScore model.
-    # Penalties pull below 40 (bad actors); credentials push above 40.
-    # PEN-CAP-1 (23 Jul 2026, David's ruling): penalties apply AFTER the 100 cap.
-    # Surplus evidence (raw totals over 100) must never absorb a penalty — a seller
-    # displaying 100 who draws complaints must visibly drop, and recover only via
-    # the time rules (24-month complaint decay / dispute), never by adding evidence.
-    score_total = _trust_math(_raw_u, _raw_t, _raw_c, penalty_total, lm=_is_lm_score)
+    penalties = ev["penalties"]
+    penalty_total = ev["penalty_total"]
+    # All sellers start at 40 (Established base); penalties pull below, credentials push above.
+    score_total = ev["score"]
     tier = _trust_tier(score_total)
 
     # Pending points (uploaded but not yet verified by admin)

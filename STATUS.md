@@ -8,28 +8,31 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-09-15 - 2026-09-15 — Three guards that were red, and one that could not see)
+## Last Completed (2026-09-16 - 2026-09-16 — The board is green, and two of the four reds were the instrument)
 
-#### 2026-09-15 — Three guards that were red, and one that could not see
+### 2026-09-16 — The board is green, and two of the four reds were the instrument
 
-The daily maintenance loop ran with an empty fault queue, so the work was the board itself.
+Attended fix pass ("fix what is fixable"). **366 entries · 344 holding · 0 REGRESSED ·
+0 UNVERIFIED · exit 0.** Rulings 108 checked, 0 FAIL. Coverage map: **79 green · 2 blue ·
+1 amber · 0 red · 10 grey**.
 
-**The Postgres-readiness ratchet had been red for nine days running.** The Buzz and Comms work
-of 14 Sep added eight new SQLite-only date expressions to `bea_main.py`. They are now written
-through one named helper and bound as parameters, so the later Postgres move stays as cheap as
-David's ruling requires. The baseline was NOT raised — it is byte-unchanged at 17.
+Closed: **DW-123** (ref locks now swept on both lanes — GIT-LOCK-5, sabotage-proven,
+RG-0379 LOCKED), **DW-124** (pg-readiness — the SQLite surface shrank 25 → 15 through a
+portable `_sql_since()` helper; baseline tightened, not raised), **DW-125** (fault-report
+widget on the three new Quick-door pages, RG-0377 LOCKED), **DW-126** (Model Register
+re-verified after ageing to 46 days; `gpt-5.6-sol` corrected $5/$30 → $4/$20),
+**DW-127** (RG-0347's red was a lexical-window fault; the buyer-facing list was correct all
+along, and the assertion is now a stronger reachability check).
 
-**Three deployed pages had no way to report a fault** — including the new Quick door that was
-just put on the front page. Fixed with the one-line widget every other tester page carries.
+Still open: **DW-010** (CC-002 97d / CC-005 14d — David's canon call), **DW-087** and
+**DW-121** (Monday deep-scan lane), **DW-111** — the Resend lane that fails every five minutes
+and leaves no trace this watch can read, because `msdeploy` is in neither `adm` nor
+`systemd-journal`. That one needs a server-side grant or a lane that writes its own result
+file; it is the only item on the board nobody can see.
 
-**The pre-deploy scan was blind and said so as "clean".** It reported an empty working tree
-against five modified files because its git call hung on the FUSE mount and the failure was
-swallowed as no-output. That also meant its torn-file check — the one thing that aborts the
-strict nightly ship — had been silently dead. It now sees the tree, and when it cannot see, it
-says so instead of printing a reassuring zero.
-
-Three new ledger entries (RG-0376/0377/0378), each sabotage-proven to actually bite. Board is
-green: 365 entries, 0 regressed, 0 unverified. Nothing was deployed — the nightly ships it.
+For David, information not a task: `gpt-5.6-sol` is 20% cheaper on input and 33% on output
+than the register said, promotionally until 21 Nov 2026; and `gemini-3.7-flash` doubles on
+1 Jan 2027. No model choice was changed — RUL-009 reserves that to him.
 
 <!-- DASH-FEED-1:END -->
 
@@ -54,6 +57,98 @@ green: 365 entries, 0 regressed, 0 unverified. Nothing was deployed — the nigh
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+## 2026-09-16 — The board is green, and two of the four reds were the instrument
+
+Attended fix pass ("fix what is fixable"). **366 entries · 344 holding · 0 REGRESSED ·
+0 UNVERIFIED · exit 0.** Rulings 108 checked, 0 FAIL. Coverage map: **79 green · 2 blue ·
+1 amber · 0 red · 10 grey**.
+
+Closed: **DW-123** (ref locks now swept on both lanes — GIT-LOCK-5, sabotage-proven,
+RG-0379 LOCKED), **DW-124** (pg-readiness — the SQLite surface shrank 25 → 15 through a
+portable `_sql_since()` helper; baseline tightened, not raised), **DW-125** (fault-report
+widget on the three new Quick-door pages, RG-0377 LOCKED), **DW-126** (Model Register
+re-verified after ageing to 46 days; `gpt-5.6-sol` corrected $5/$30 → $4/$20),
+**DW-127** (RG-0347's red was a lexical-window fault; the buyer-facing list was correct all
+along, and the assertion is now a stronger reachability check).
+
+Still open: **DW-010** (CC-002 97d / CC-005 14d — David's canon call), **DW-087** and
+**DW-121** (Monday deep-scan lane), **DW-111** — the Resend lane that fails every five minutes
+and leaves no trace this watch can read, because `msdeploy` is in neither `adm` nor
+`systemd-journal`. That one needs a server-side grant or a lane that writes its own result
+file; it is the only item on the board nobody can see.
+
+For David, information not a task: `gpt-5.6-sol` is 20% cheaper on input and 33% on output
+than the register said, promotionally until 21 Nov 2026; and `gemini-3.7-flash` doubles on
+1 Jan 2027. No model choice was changed — RUL-009 reserves that to him.
+
+## 2026-09-15 — The trust score stops moving between screens
+
+David watched his own score read 80, then 57, then 75 across three screens in one sitting. It was
+not three bugs; it was one surface answering a question it had not been asked.
+
+**What was actually wrong.** The buyer-facing evidence panel built its own picture of a seller —
+its own SQL for identity and track record, narrower than the scorer's — and then wrote that
+picture back over the stored score and over every listing that seller owns. Two honest guards were
+already watching this exact area and neither could see it, because the panel's list summed to the
+panel's own headline and its arithmetic used the shared formula. The thing that differed was the
+evidence itself.
+
+**The cure is structural, not another checker.** There is now one evidence builder. A surface that
+wants a trust number asks for it there or it does not get one, and a third guard fails the deploy
+if that ever stops being true.
+
+**What he should expect to see.** The same seller under the same category now reads the same number
+everywhere. A number that still differs between two screens means the two screens are scoped to
+different categories — which is real, because category credentials differ per advert — and the
+panel now returns its `category_key` so that is answerable rather than mysterious.
+
+**Still his to decide:** whether the seller CV should say out loud which category it is scoring,
+and whether Housekeeping becomes a real category or Quick maps it to Services on the way out.
+
+## 2026-09-15 — David walked the Quick hand-over end to end; four findings, one removal
+
+**The door came off, and he was right about why.** *"going into it means you cant get back into
+the trustsquare app."* `quick.html` has Back and Restart inside its own flow but nothing that
+leaves it, so the in-app link was one-way. Parked, not deleted: the markup sits commented in the
+hero body and the styles stay in `ms.css`. It goes back when the flow has a way out of itself,
+not when it has a better label.
+
+**The hand-over itself held up.** Publish → "Handed over" → the draft is in the app, editable,
+and after adding a UNESCO link it published. So the seam works; everything below is about what
+travels across it.
+
+### Why it re-asked for the service type
+He chose **Childminding**, which lives under Quick's **Housekeeping** category. Two things stack:
+`FIELD_FROM` in `quick.html` has entries for `property`, `cars`, `tutors` and `services` only, and
+it is looked up by the category's lowercased NAME — so `housekeeping` misses, `from` comes back
+empty, and **none** of the category fields (`service_type` among them) are sent at all. Underneath
+that, "Housekeeping" does not exist anywhere in `ms.js` or `bea_main.py` — seven of Quick's eight
+categories match the app exactly; that one has no counterpart, which is also why the app files the
+listing under Services.
+
+### Why the numbers disagree
+**60 is not a trust score.** Quick's draft screen shows a LISTING score — how complete the advert
+is — and says so on the same line: *"trust not opened yet"*. Comparing it to 80 compares two
+different things.
+
+**80 vs 57 vs 75 is the real one.** Both screens use `_trust_math`, the canonical formula, but it
+is CATEGORY-SCOPED: the dashboard panel calls `/trust-score/breakdown?email=&category=<whatever
+the dashboard is scoped to>`, while the public seller CV calls `/sellers/credentials/<listing_id>`
+and scores against THAT listing's category. Different category in, different number out. And the
+CV endpoint does not just display its answer — it writes it back to `users.trust_score` and to
+every one of that seller's listings (the JNR-FIX-2 self-heal). So with an unresolvable category
+the two views disagree, and whichever screen was opened last wins the stored value.
+
+**The refresh before it appeared** is consistent with the same write-back landing after the page
+had already rendered; not yet proven, and not chased today.
+
+### Reserved for David
+Housekeeping/Casuals is his lane and his naming: either it becomes a real category in the app, or
+Quick maps it to Services on the way out. Nothing is patched until he says which — a mapping
+invented here would be a third vocabulary, not a fix.
+
+Buzz untested — he ran out of time at work, not a result.
 
 ### 2026-09-15 — Three guards that were red, and one that could not see
 

@@ -1,3 +1,116 @@
+## 2026-09-16 — Four reds cleared, and two of them were the instrument lying
+
+Attended pass on David's instruction, "fix what is fixable". Board went from
+**1 regressed** (and then 2 on the evening run) to **0 regressed, 0 unverified, exit 0** —
+366 entries, 344 holding. Rulings check 108 / 0 FAIL.
+
+**DW-123 — GIT-LOCK-5: both unlock lanes can now see a ref lock.** On 14 Sep the daily
+watch's own commit died on `.git/refs/heads/main.lock` while `git_unlock.py` — which had run
+first, exactly as GIT-LOCK-3 requires — reported "no stale locks, nothing to sweep". It swept
+`index.lock`, `HEAD.lock`, `packed-refs.lock`, `next-index-*.lock`; a ref lock lives one
+directory down. The tool written to clear the blocker could not see the blocker, and
+`git_unlock.bat` was blind the same way — which corrects the watch row's own claim that the
+host lane already covered it. Now: a **recursive** glob over `.git/refs` (tags and remote refs
+strand like branches, and a hand-kept branch list is one somebody forgets), ref locks counted
+as **blocking** (without that `--check` exits 0 over a lock that makes commits impossible),
+aside names flattened to `refs_heads_main.lock` so same-named refs cannot collide, and the
+matching `for /r ".git\refs"` sweep host-side. Safety untouched: nothing swept while `pgrep`
+sees a live git; the sandbox renames and never unlinks. **Proven by sabotage** — lock planted,
+commit confirmed to fail with the exact 14 Sep message, old rule confirmed blind, `--check`
+exited 1 naming the file, sweep renamed it aside, same commit succeeded. Asserted by
+**RG-0379** (LOCKED), which returns four FAILs against the pre-fix copies.
+
+**DW-126 — the Model Register had aged past its own limit.** `ai_price_card.json` was
+`verified_at` 2026-08-01, 46 days against a 45-day maximum, so by the Live-Values Doctrine
+every AI cost decision was running on remembered prices. All 7 priced models re-verified
+against first-party pages and dated vendor sources. Six unchanged. **One moved: `gpt-5.6-sol`
+$5/$30 → $4/$20**, cut 21 Aug 2026, which OpenAI describes as holding "at least through
+21 Nov 2026" — promotional, not a new floor, and Sol is wired, so a comparison run off the old
+figure would have ruled it out on a cost it no longer carries. Captured while verifying:
+`gemini-3.7-flash`'s $0.75/$3.75 is effective only **through 31 Dec 2026 and doubles on
+1 Jan 2027** — now a diary entry rather than a January surprise. Both entries carry
+`price_review_by`. Card bumped to 2026-09-16.1 with a `last_verification` block naming what was
+unchanged, what moved, and what could not be checked (the Scaleway EUR console rate is
+unobservable without the account — recorded as not-verifiable rather than guessed).
+`ai_funnel_snapshot.json` regenerated so the +1 strip is not staler than the register
+(RG-0020), and the stale `Sol $5/$30` **comment** beside `TASK_MODEL` in `ai_provider.py`
+corrected — a stale comment next to the routing table is exactly how a decision runs on a
+remembered price. **No model choice was changed**: RUL-009 reserves that to David.
+
+**DW-127 — RG-0347's red was the instrument, not the product.** The board reported that the
+buyer-facing credentials list had stopped naming the interim ID points, which would be a
+truthfulness defect on a page buyers read. Traced rather than assumed:
+`seller_public_credentials()` builds **all three** of its groups through `_earned_display()`,
+the very function that appends "— confirmation pending". The property held throughout. The
+15 Sep TRUST-ONE-SET-1 refactor correctly moved that copy into the shared formatter, and the
+assertion was a **forward-only 4000-character window** from the panel's `def` — so it went red
+over a change that improved the code. Second instance of a class that already cost a session
+(RG-0367, amended 14 Sep for the same reason). Replaced with three **reachability** legs —
+formatter still names it, buyer panel still routes through it, seller's own breakdown still
+shares it — which is **stronger** than the window, because a window can pass on dead copy while
+the panel renders from elsewhere. Sabotage-tested three ways.
+
+**DW-121 (half).** `list(zip(cities[:12], stamps, strict=True))` in `regression_ledger.py` —
+in the file that grades everything else, a silent truncation was worth more than its LOW grade.
+Row deliberately **left open**: its originating check is the Monday deep-scan lane, and running
+`deep_scan.py` off-lane would rewrite the baseline Monday's delta is measured against.
+
+**Verified, fixed overnight by the maintenance loop, not by this session:** DW-124 (pg-readiness
+— ten call sites made portable via `_sql_since()`, baseline **tightened 17 → 15**, so the count
+came down rather than the bar going up; `deploy_audit.log` clean since 05:44, ending an
+eleven-day DANGER streak) and DW-125 (the fault-report widget on `quick.html`, `q/index.html`
+and `confirm/index.html` — 18/18, all three probed live at 200 carrying it).
+
+Not shipped: the two deploy-target changes here (the `ai_provider.py` comment and the
+regenerated funnel snapshot) are committed but not deployed — another session has uncommitted
+work in `bea_main.py`, and neither change needs to be live tonight.
+
+## TRUST-ONE-SET-1 — one evidence set behind every trust surface
+
+David: *"lets fix the scores to be consistent, and this is not the 60/80 which i now
+understand as being correct."* So: the seller Trust Score reading 80 on the dashboard,
+57 on the seller profile, and 75 after a publish.
+
+**Third bug in this family, and the first the guards could not see.** `test_trust_evidence_true`
+checks a headline against its OWN list — both were right together, so it passed.
+`test_trust_base40` checks the ARITHMETIC canon — the panel used `_trust_math` correctly, so it
+passed too. What differed was the **evidence set**: the buyer-facing panel hand-rolled its own
+universal and track-record SQL, which counts a narrower set than the scorer reads, and then wrote
+its lower answer over `users.trust_score` **and over every one of that seller's listings**. So the
+number moved depending on which screen was opened last.
+
+**One builder.** `_trust_evidence(conn, email, cat_key)` is now the only place a seller's evidence
+is assembled — `_build_breakdown_items` + `_sum_earned_with_replaces` + `_trust_math`, once.
+`trust_score_breakdown` and `seller_public_credentials` both read from it, so two surfaces can now
+only disagree about a seller if they were asked about different CATEGORIES, which is a real
+difference and not drift. `_norm_cat_key` replaces the category map that existed in one endpoint
+and nowhere else, and it takes `service_class` so a listing and its seller resolve to the same set.
+
+**List and total in one pass.** `_earned_display` returns the visible items and the number they
+sum to together, so evidence-true is enforced by construction rather than by a warning logged
+after the fact.
+
+**Write authority narrowed to what each surface knows.** The panel's heal stays — JNR-FIX-2 exists
+because a stored score sat above its evidence — but it now writes the category score the scorer
+would compute, touches `users.trust_score` only when this advert's category IS the seller's
+primary one, and syncs listing badges only for listings **in that category**, mirroring the rule
+the scorer already followed for `?category=` overrides.
+
+**Everything ruled stays ruled:** the base-40 foundation, the LM-uncapped credential group
+(SUPER-CRED-2 still scores an LM seller under the LM model on all their adverts), EVIDENCE-TRUE-1's
+per-listing mandate filter with agency peers, PEN-CAP-1 penalties after the cap, and anonymity —
+names and points only, never documents or identity.
+
+**One honest consequence:** the panel used to count earned credentials from EVERY category
+(`LIKE 'category.%'`). It now counts the advert's own category, like the scorer. A multi-category
+seller's public panel can therefore read lower than it did yesterday — that is the correction, not
+a loss.
+
+**New guard: `test_trust_one_set.py`,** wired into `predeploy_check.py` beside the other two. It
+asserts there is exactly one evidence builder, that nothing else calls the raw reader, that the
+panel holds no private evidence SQL, and that its writes are category-scoped. Run against the
+pre-fix file it fails 7 of 8 — including *"the panel wrote a per-listing score to EVERY listing"*.
+
 ## QUICK-DOOR-1 PARKED — the in-app door is withdrawn, quick.html stays live
 
 David, testing it at work the same day it went up: *"the quick listing link in the app does work,
