@@ -1092,6 +1092,26 @@ def run_migrations(conn):
         expires_at TEXT    NOT NULL
     )""")
 
+    # MAINT-BRAIN-1 / TOPUP-LEDGER-1 (17 Sep 2026): OpenAI exposes no balance endpoint, so
+    # the balance is DERIVED = top-ups recorded here minus metered spend from ai_spend_log
+    # (the usage block on every response). kind: topup | auto_recharge (derived) | adjust.
+    conn.execute("""CREATE TABLE IF NOT EXISTS ai_topups (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        provider   TEXT    NOT NULL DEFAULT 'openai',
+        kind       TEXT    NOT NULL DEFAULT 'topup',
+        amount_usd REAL    NOT NULL DEFAULT 0.0,
+        at         TEXT    NOT NULL DEFAULT (datetime('now')),
+        note       TEXT    NOT NULL DEFAULT ''
+    )""")
+    for _col, _ddl in (
+        ("autorecharge_threshold_usd", "ALTER TABLE ai_spend_config ADD COLUMN autorecharge_threshold_usd REAL NOT NULL DEFAULT 0.0"),
+        ("autorecharge_amount_usd",    "ALTER TABLE ai_spend_config ADD COLUMN autorecharge_amount_usd    REAL NOT NULL DEFAULT 0.0"),
+    ):
+        try:
+            conn.execute(_ddl)
+        except Exception:
+            pass   # column already present
+
     # INTRO-RELAY-1 (5 Aug 2026, David's Option B ruling): masked-alias introduction
     # relay. Two rows per accepted intro - one alias per party. real_email is the ONLY
     # place the real address lives; it never enters an outbound body, header, or
@@ -1696,7 +1716,7 @@ _MODEL_PRICE_FALLBACK = {
     "claude-sonnet-4-6":         (3.00, 15.00),
     "gpt-5.6-luna":              (0.20, 1.20),
     "gpt-5.6-terra":             (2.00, 12.00),
-    "gpt-5.6-sol":               (5.00, 30.00),
+    "gpt-5.6-sol":               (4.00, 20.00),   # card 2026-09-16.1 (cut 21 Aug 2026; was 5/30)
     "mistral-medium-3.5-128b":   (1.5 * 1.155, 7.5 * 1.155),   # card lists EUR — converted
     # legacy, outside the register (AdvertAgent perimeter — drift D8):
     "opus":                      (15.00, 75.00),
@@ -21533,8 +21553,12 @@ def app_faults_mine(email: str, x_review_token: str = Header(default=None),
 # seen=0 on a day when app_faults was shut by RUL-040 and every customer complaint was
 # arriving by email instead -- a green-looking quiet day painted over an unread lane.
 # Counts only (RG-0222 keeps the rows behind the admin credential); no sender, no subject.
+# MAINT-BRAIN-1 (17 Sep 2026): brain_state/brain_model/brain_probe are the PROVEN state
+# (one cheap live call per run, D2); armed_switch is the raw kill switch while armed/live
+# are the EFFECTIVE cover (switch AND brain proven, D3); cost is what this run spent.
 _MAINT_HB_FIELDS = ("run", "mode", "phase", "armed", "live", "brain_keyed",
-                    "brain_lane", "seen", "acted", "lanes", "code", "email_lane")
+                    "brain_lane", "seen", "acted", "lanes", "code", "email_lane",
+                    "brain_state", "brain_model", "brain_probe", "armed_switch", "cost")
 
 @app.post("/dashboard/maint")
 def dashboard_maint_post(payload: dict = Body(...), _admin=Depends(_require_maint)):
@@ -21565,9 +21589,302 @@ def dashboard_maint_get():
         return {"state": "unknown", "note": "no maintenance-loop heartbeat recorded yet"}
     try:
         with open(p, encoding="utf-8") as fh:
-            return _json.load(fh)
+            hb = _json.load(fh)
     except Exception:
         return {"state": "unknown", "note": "maint_status.json unreadable"}
+    try:
+        hb["cost"] = _maint_cost_block(hb.get("cost") if isinstance(hb.get("cost"), dict) else None)
+    except Exception as e:
+        hb["cost_error"] = "cost block unavailable: %s" % str(e)[:80]
+    return hb
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MAINT-BRAIN-1 (17 Sep 2026, David): the maintenance agent's ONE brain path.
+# Before this the agent (scripts/maintenance_agent.py) selected models privately --
+# a hardcoded "sonnet" tier and its own key-presence chain -- bypassing the cost
+# chokepoint that every other AI call in this file goes through (price card,
+# _log_ai_spend, ceilings; CHANGELOG Session 135c, David's P1/P2/P3). Fixed by
+# DELETION: the agent's chain is gone; it POSTs here on the maint credential and
+# this endpoint does what the chokepoint always did, plus the ruling below.
+#
+# DAVID'S RULING (17 Sep 2026): on cost the agent NEVER halts. It steps DOWN to a
+# cheaper rung of the tier ladder, re-reading the price card on every call (models
+# sit on a decreasing cost curve; nothing shackles the agent to one model). A hard
+# cap that stops the agent is wrong, so _check_cost_ceiling is deliberately NOT
+# called here -- the budget shapes WHICH model answers, never WHETHER one does.
+# The bottom rung always answers. Rails still bound every call: max_tokens caps
+# output, MAX_SHIPS_PER_HOUR caps the loop, the worst case is computed BEFORE
+# dispatch (P2), and every call is spend-logged with its serving lane (P3).
+#
+# SPEND-GUARD-1 (David, 15 Aug 2026) is structural here: anthropic is banned by
+# exclude=, not by the absence of a key. Metered Anthropic billing on an unattended
+# 3x-daily loop is banned; Fable work happens in Cowork sessions on the subscription.
+# ══════════════════════════════════════════════════════════════════════════════
+_MAINT_AI_EMAIL_PREFIX = "maint:"                 # ai_spend_log.email = "maint:<run-id>"
+_MAINT_LANES_BANNED = ("anthropic",)              # SPEND-GUARD-1, in code
+_MAINT_TIER_LADDER = ("design", "sonnet", "haiku", "vision", "triage")   # text capability order; vision/triage are haiku-class
+_MAINT_DEFAULT_MAX_TOKENS = {"design": 4000, "sonnet": 2000, "haiku": 700, "triage": 400, "vision": 2000}
+
+
+def _maint_card_prices():
+    """Re-read ai_price_card.json on EVERY call (David: re-read each run) -> {model: (in, out)}
+    in USD per Mtok; falls back to the embedded table so a missing card never halts."""
+    import json as _json
+    prices = dict(_MODEL_PRICE_FALLBACK)
+    version = "embedded-fallback"
+    try:
+        _p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ai_price_card.json")
+        with open(_p, encoding="utf-8") as _fh:
+            _card = _json.load(_fh)
+        for _lane, _pd in (_card.get("providers") or {}).items():
+            for _mid, _m in (_pd.get("models") or {}).items():
+                _fx = _PRICE_CARD_FX if (_m.get("ccy") == "EUR") else 1.0
+                prices[_mid] = (float(_m["in"]) * _fx, float(_m["out"]) * _fx)
+        version = _card.get("version") or version
+    except Exception as _e:
+        _log.warning("maint brain: price card unreadable (%s) -- embedded prices", _e)
+    return prices, version
+
+
+def _maint_spend_today(conn):
+    """(agent USD today, platform USD today) from the spend log."""
+    day_start = datetime.utcnow().strftime('%Y-%m-%d 00:00:00')
+    a = conn.execute("SELECT COALESCE(SUM(est_cost_usd),0) AS t FROM ai_spend_log "
+                     "WHERE logged_at >= ? AND email LIKE ?",
+                     (day_start, _MAINT_AI_EMAIL_PREFIX + "%")).fetchone()
+    p = conn.execute("SELECT COALESCE(SUM(est_cost_usd),0) AS t FROM ai_spend_log "
+                     "WHERE logged_at >= ?", (day_start,)).fetchone()
+    return float(a["t"] if a else 0.0), float(p["t"] if p else 0.0)
+
+
+def _maint_budget_left():
+    """USD the agent may still spend today: min(agent daily budget, platform headroom).
+    The agent's daily budget is ai_spend_config.daily_user_ceiling_usd (it is one identity);
+    0/unset = unbounded. Returns None when unbounded."""
+    conn = database.get_db()
+    try:
+        cfg = conn.execute("SELECT daily_user_ceiling_usd, daily_platform_ceiling_usd "
+                           "FROM ai_spend_config WHERE id = 1").fetchone()
+        agent_spent, plat_spent = _maint_spend_today(conn)
+    finally:
+        conn.close()
+    user_cap = float((cfg["daily_user_ceiling_usd"] if cfg else 0) or 0)
+    plat_cap = float((cfg["daily_platform_ceiling_usd"] if cfg else 0) or 0)
+    lefts = []
+    if user_cap > 0: lefts.append(user_cap - agent_spent)
+    if plat_cap > 0: lefts.append(plat_cap - plat_spent)
+    return (min(lefts) if lefts else None), agent_spent, user_cap
+
+
+def _maint_pick_rung(task, lane, est_in_tokens, max_tokens):
+    """Rank-by-price step-down. Rungs = the requested tier and every cheaper tier the lane
+    maps, ordered by worst-case cost (from the card, re-read now) DESCENDING, so the first
+    rung is the requested tier and each step is a cheaper model. The first rung whose
+    worst case fits the remaining budget is chosen; if none fits, the CHEAPEST rung answers
+    anyway (never halt) and the response says so."""
+    prices, card_version = _maint_card_prices()
+    row = ai_provider.TASK_MODEL.get(lane) or {}
+    try:
+        top = _MAINT_TIER_LADDER.index(task)
+    except ValueError:
+        top = _MAINT_TIER_LADDER.index("haiku")
+    rungs = []
+    seen_models = set()
+    for t in _MAINT_TIER_LADDER[top:]:
+        m = row.get(t)
+        if not m or m in seen_models:
+            continue
+        pin, pout = prices.get(m) or (0.0, 0.0)
+        worst = (est_in_tokens / 1e6) * pin + (max_tokens / 1e6) * pout
+        rungs.append({"tier": t, "model": m, "worst_case_usd": round(worst, 6), "in": pin, "out": pout})
+        seen_models.add(m)
+    if not rungs:
+        return None, [], card_version, None
+    # a rung that costs MORE than the requested tier is not a step down -- drop it
+    req_worst = rungs[0]["worst_case_usd"]
+    rungs = [rungs[0]] + sorted([r for r in rungs[1:] if r["worst_case_usd"] <= req_worst],
+                                key=lambda r: -r["worst_case_usd"])
+    left, agent_spent, cap = _maint_budget_left()
+    chosen = None
+    if left is None:
+        chosen = rungs[0]
+    else:
+        for r in rungs:
+            if r["worst_case_usd"] <= left:
+                chosen = r; break
+        if chosen is None:
+            chosen = rungs[-1]           # bottom rung ALWAYS answers (David: never halt)
+            chosen = dict(chosen, over_budget=True)
+    return chosen, rungs, card_version, {"left_usd": left, "agent_today_usd": round(agent_spent, 6), "agent_cap_usd": cap}
+
+
+@app.post("/admin/maint/brain")
+def maint_brain(payload: dict = Body(...), _admin=Depends(_require_maint)):
+    """The maintenance agent's brain call. payload: {run, purpose, task, messages, system,
+    max_tokens, probe}. probe=true = one 4-token live call that PROVES the lane (D2): an
+    auth/billing failure comes back as ok=false with error_kind, never as a silent fallback."""
+    p = dict(payload or {})
+    run = str(p.get("run") or "adhoc")[:40]
+    purpose = re.sub(r"[^a-z0-9_-]", "", str(p.get("purpose") or "call").lower())[:24] or "call"
+    task = str(p.get("task") or "haiku").lower()
+    if task not in _MAINT_TIER_LADDER:
+        raise HTTPException(status_code=400, detail="unknown task tier: " + task[:20])
+    probe = bool(p.get("probe"))
+    lane = _ts_active_provider()
+    if lane in _MAINT_LANES_BANNED:
+        # the live lane is a banned one (SPEND-GUARD-1): use the baseline's next lane instead
+        lane = next((l for l in (ai_provider._cost_approved_fallbacks(task, lane) or [])
+                     if l not in _MAINT_LANES_BANNED), lane)
+    if probe:
+        messages, system, max_tokens = [{"role": "user", "content": "ping"}], None, 4
+        task = "haiku"
+    else:
+        messages = p.get("messages") or []
+        system = p.get("system")
+        max_tokens = int(p.get("max_tokens") or _MAINT_DEFAULT_MAX_TOKENS.get(task, 700))
+        max_tokens = max(1, min(max_tokens, 8000))
+        if not isinstance(messages, list) or not messages:
+            raise HTTPException(status_code=400, detail="messages required")
+    est_in = int(len(json.dumps(messages) + (system or "")) / 3.5) + 16
+    chosen, rungs, card_version, budget = _maint_pick_rung(task, lane, est_in, max_tokens)
+    if not chosen:
+        return {"ok": False, "error_kind": "unconfigured", "provider": lane, "model": "",
+                "text": "", "note": "lane %s maps no model for tier %s" % (lane, task)}
+    t0 = _time.time()
+    r = ai_provider.complete(messages, task=chosen["tier"], max_tokens=max_tokens, system=system,
+                             provider=lane, probe=probe, timeout=(20 if probe else 120),
+                             exclude=_MAINT_LANES_BANNED)
+    ms = int((_time.time() - t0) * 1000)
+    cost = _token_cost(r.model, int(r.in_tokens or 0), int(r.out_tokens or 0), r.provider) \
+        if (r.in_tokens is not None or r.out_tokens is not None) else 0.0
+    # every call is spend-logged to the serving lane (P3) -- probes included, they are spend
+    _log_ai_spend(_MAINT_AI_EMAIL_PREFIX + run, "/maint/" + purpose, chosen["tier"],
+                  r.in_tokens, r.out_tokens, provider=r.provider, model=r.model)
+    if r.ok:
+        state = "GREEN"
+    elif r.error_kind in ("unauthorized", "credit_exhausted"):
+        state = "RED:" + r.error_kind          # auth / billing: RED, never a silent fallback
+    elif r.error_kind == "unconfigured":
+        state = "KEYLESS"
+    else:
+        state = "AMBER:" + (r.error_kind or "unknown")
+    return {"ok": bool(r.ok), "text": r.text or "", "provider": r.provider, "model": r.model,
+            "status": r.status, "error_kind": r.error_kind or "", "state": state,
+            "tier_requested": task, "tier_used": chosen["tier"],
+            "stepped_down": chosen["tier"] != task, "over_budget": bool(chosen.get("over_budget")),
+            "in_tokens": r.in_tokens, "out_tokens": r.out_tokens, "cost_usd": round(cost, 6),
+            "worst_case_usd": chosen["worst_case_usd"], "ms": ms,
+            "ladder": [{"tier": x["tier"], "model": x["model"], "worst_case_usd": x["worst_case_usd"]} for x in rungs],
+            "budget": budget, "card_version": card_version}
+
+
+def _maint_cost_block(run_cost=None):
+    """What the ops dashboard wants (David, 17 Sep 2026): lane + cost per run, 7d/30d agent
+    spend, OpenAI-lane spend, top-ups, auto-recharges this month and the DERIVED balance.
+    OpenAI has no supported balance endpoint: balance = recorded top-ups - metered spend
+    (usage block on every response), with auto-recharges derived by replaying spend
+    against the configured threshold/amount rule. Facts, no key material."""
+    now = datetime.utcnow()
+    d7 = (now - timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
+    d30 = (now - timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')
+    month_start = now.strftime('%Y-%m-01 00:00:00')
+    conn = database.get_db()
+    try:
+        pre = _MAINT_AI_EMAIL_PREFIX + "%"
+        a7 = conn.execute("SELECT COALESCE(SUM(est_cost_usd),0) u, COUNT(*) n FROM ai_spend_log "
+                          "WHERE email LIKE ? AND logged_at >= ?", (pre, d7)).fetchone()
+        a30 = conn.execute("SELECT COALESCE(SUM(est_cost_usd),0) u, COUNT(*) n FROM ai_spend_log "
+                           "WHERE email LIKE ? AND logged_at >= ?", (pre, d30)).fetchone()
+        runs = conn.execute(
+            "SELECT email, MIN(logged_at) at, COUNT(*) calls, ROUND(SUM(est_cost_usd),6) usd, "
+            "GROUP_CONCAT(DISTINCT provider) lanes, GROUP_CONCAT(DISTINCT model) tiers "
+            "FROM ai_spend_log WHERE email LIKE ? GROUP BY email ORDER BY at DESC LIMIT 12",
+            (pre,)).fetchall()
+        lanes30 = conn.execute(
+            "SELECT provider, ROUND(SUM(est_cost_usd),6) usd, COUNT(*) calls FROM ai_spend_log "
+            "WHERE logged_at >= ? GROUP BY provider", (d30,)).fetchall()
+        topups = conn.execute("SELECT id, provider, kind, amount_usd, at, note FROM ai_topups "
+                              "WHERE provider='openai' ORDER BY at").fetchall()
+        cfg = conn.execute("SELECT autorecharge_threshold_usd, autorecharge_amount_usd, "
+                           "daily_user_ceiling_usd FROM ai_spend_config WHERE id = 1").fetchone()
+        thr = float((cfg["autorecharge_threshold_usd"] if cfg else 0) or 0)
+        amt = float((cfg["autorecharge_amount_usd"] if cfg else 0) or 0)
+        first_at = topups[0]["at"] if topups else None
+        derived = {"topups_usd": 0.0, "manual_topups": 0, "auto_recharges_month": 0,
+                   "auto_recharges_total": 0, "spend_since_first_topup_usd": 0.0,
+                   "derived_balance_usd": None,
+                   "rule": {"threshold_usd": thr, "amount_usd": amt} if (thr > 0 and amt > 0) else None,
+                   "note": ("derived, not billed: top-ups recorded here minus metered OpenAI spend; "
+                            "auto-recharges are inferred from the rule -- reconcile on the OpenAI billing page")}
+        if first_at:
+            # replay: top-ups and spend in time order; when balance < threshold, an auto-recharge lands
+            events = [(t["at"], "topup", float(t["amount_usd"])) for t in topups if t["kind"] != "auto_recharge"]
+            manual_auto = [t for t in topups if t["kind"] == "auto_recharge"]   # recorded by hand, if any
+            events += [(t["at"], "topup", float(t["amount_usd"])) for t in manual_auto]
+            spend_rows = conn.execute(
+                "SELECT logged_at, est_cost_usd FROM ai_spend_log WHERE provider='openai' "
+                "AND logged_at >= ? ORDER BY logged_at", (first_at,)).fetchall()
+            events += [(s["logged_at"], "spend", float(s["est_cost_usd"])) for s in spend_rows]
+            events.sort(key=lambda e: e[0])
+            bal, spent, auto_total, auto_month = 0.0, 0.0, 0, 0
+            for at, kind, v in events:
+                if kind == "topup":
+                    bal += v
+                else:
+                    bal -= v; spent += v
+                if thr > 0 and amt > 0 and bal < thr and bal > -1e9:
+                    while bal < thr:
+                        bal += amt; auto_total += 1
+                        if at >= month_start:
+                            auto_month += 1
+            derived.update({"topups_usd": round(sum(float(t["amount_usd"]) for t in topups), 2),
+                            "manual_topups": len(topups),
+                            "auto_recharges_month": auto_month, "auto_recharges_total": auto_total,
+                            "spend_since_first_topup_usd": round(spent, 4),
+                            "derived_balance_usd": round(bal, 4), "since": first_at})
+        else:
+            derived["note"] = ("no top-up recorded yet -- POST /admin/ai-topups {amount_usd} once and "
+                               "the balance derives from there; " + derived["note"])
+    finally:
+        conn.close()
+    return {"agent_7d_usd": round(a7["u"], 6), "agent_7d_calls": a7["n"],
+            "agent_30d_usd": round(a30["u"], 6), "agent_30d_calls": a30["n"],
+            "agent_daily_budget_usd": float((cfg["daily_user_ceiling_usd"] if cfg else 0) or 0),
+            "runs": [{"run": r["email"][len(_MAINT_AI_EMAIL_PREFIX):], "at": r["at"], "calls": r["calls"],
+                      "usd": r["usd"], "lanes": r["lanes"] or "", "tiers": r["tiers"] or ""} for r in runs],
+            "lanes_30d": [{"lane": r["provider"] or "?", "usd": r["usd"], "calls": r["calls"]} for r in lanes30],
+            "openai": derived,
+            "last_run": run_cost}
+
+
+@app.post("/admin/ai-topups")
+def admin_ai_topup(payload: dict = Body(...), _admin=Depends(_require_admin_or_key)):
+    """Record a top-up (or set the auto-recharge rule) so the balance can be derived.
+    {amount_usd, kind?: topup|auto_recharge|adjust, note?, at?} and/or
+    {autorecharge_threshold_usd, autorecharge_amount_usd}. Admin credential."""
+    p = dict(payload or {})
+    conn = database.get_db()
+    try:
+        out = {"ok": True}
+        if p.get("amount_usd") is not None:
+            kind = str(p.get("kind") or "topup")
+            if kind not in ("topup", "auto_recharge", "adjust"):
+                raise HTTPException(status_code=400, detail="kind must be topup|auto_recharge|adjust")
+            at = str(p.get("at") or datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))[:19]
+            conn.execute("INSERT INTO ai_topups (provider, kind, amount_usd, at, note) VALUES (?,?,?,?,?)",
+                         ("openai", kind, float(p["amount_usd"]), at, str(p.get("note") or "")[:120]))
+            out["recorded"] = {"kind": kind, "amount_usd": float(p["amount_usd"]), "at": at}
+        if p.get("autorecharge_threshold_usd") is not None or p.get("autorecharge_amount_usd") is not None:
+            conn.execute("UPDATE ai_spend_config SET autorecharge_threshold_usd=COALESCE(?, autorecharge_threshold_usd), "
+                         "autorecharge_amount_usd=COALESCE(?, autorecharge_amount_usd) WHERE id=1",
+                         (p.get("autorecharge_threshold_usd"), p.get("autorecharge_amount_usd")))
+            out["rule_updated"] = True
+        conn.commit()
+    finally:
+        conn.close()
+    out["cost"] = _maint_cost_block()
+    return out
 
 
 @app.get("/admin/faults")

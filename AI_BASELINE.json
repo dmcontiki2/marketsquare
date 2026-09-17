@@ -3,7 +3,7 @@
  "version": "2.0",
  "created": "2026-08-14",
  "baseline_lane": "openai",
- "price_card_version": "2026-08-19.1",
+ "price_card_version": "2026-09-16.1",
  "fx_multiplier_eur_lanes": 1.155,
  "failover_cost_tolerance": 6.0,
  "failover_rule": "Two different tests, deliberately. AUTO-FAILOVER (anthropic) must stay within the continuity tolerance of 6.0x base -- it is chosen for continuity, not price, but the cost of continuity must be bounded. LAST RESORT (scaleway) is COST-EXEMPT because it is reached when the alternative is being down or banned -- but reaching it must ALERT and be time-boxed. Note the consequence of putting the cheapest lane at the base: every failover is now a cost increase by definition. That is accepted; what is not acceptable is that it would currently be INVISIBLE in the spend log (D3).",
@@ -107,12 +107,12 @@
     },
     "gemini": {
      "model": "gemini-3.7-flash",
-     "worst_case_usd": 0.0036,
-     "multiple_of_baseline": 0.127,
+     "worst_case_usd": 0.009605,
+     "multiple_of_baseline": 0.338,
      "role": "CANARY (photo scan/refine only)",
      "failover_rank": null,
      "continuity_ok": false,
-     "note": "RUL-032, 19 Aug 2026. NOT in failover_order -- never an automatic failover target. Serves ONLY the photo-anon scan/refine canary; verify pass stays on the active lane. Hot only after the photo eval set passes at 100% plate recall. worst_case = envelope 4000in/1400out at $0.375/$1.50 (out-price estimate, confirm first-party at key time)."
+     "note": "RUL-032, 19 Aug 2026. NOT in failover_order -- never an automatic failover target. Serves ONLY the photo-anon scan/refine canary; verify pass stays on the active lane. Hot only after the photo eval set passes at 100% plate recall. worst_case = envelope 4000in/1400out + 1 image at the card's $0.75/$3.75 (2026-09-16.1; re-derived 17 Sep 2026)."
     }
    }
   },
@@ -189,7 +189,7 @@
    }
   },
   "design": {
-   "_doc": "RUL-013 (15 Aug 2026): the post-1-Sep design lane. Deliberately NO anthropic entry (SPEND-GUARD-1: an unattended loop must never hold a metered key). Envelope DECLARED, not measured \u2014 no live caller exists yet; re-derive from real call shapes before first production traffic, alongside the golden run its gate requires.",
+   "_doc": "RUL-013 (15 Aug 2026): the post-1-Sep design lane. Deliberately NO anthropic entry (SPEND-GUARD-1: an unattended loop must never hold a metered key). Envelope DECLARED, not measured — no live caller exists yet; re-derive from real call shapes before first production traffic, alongside the golden run its gate requires.",
    "envelope": {
     "max_in_tokens": 12000,
     "max_out_tokens": 4000,
@@ -197,11 +197,11 @@
     "max_image_px": 0
    },
    "baseline_lane": "openai",
-   "baseline_worst_case_usd": 0.18,
+   "baseline_worst_case_usd": 0.128,
    "lanes": {
     "openai": {
      "model": "gpt-5.6-sol",
-     "worst_case_usd": 0.18,
+     "worst_case_usd": 0.128,
      "multiple_of_baseline": 1.0,
      "role": "BASE",
      "failover_rank": 0,
@@ -210,7 +210,7 @@
     "scaleway": {
      "model": "mistral-medium-3.5-128b",
      "worst_case_usd": 0.05544,
-     "multiple_of_baseline": 0.308,
+     "multiple_of_baseline": 0.433,
      "role": "SAFETY NET",
      "failover_rank": 2,
      "continuity_ok": true
@@ -500,6 +500,12 @@
    "id": "AL-3",
    "when": "a pin (ai_active_override) is set",
    "action": "record actor and reason; RG-0019 deliberately does not trip on a pin, so nothing else will notice"
+  }
+ ],
+ "revisions": [
+  {
+   "date": "2026-09-17",
+   "what": "re-pinned to price card 2026-09-16.1; envelope worst-cases recomputed from the card (sol 5/30->4/20 cut 21 Aug; gemini 0.375/1.5 estimate -> 0.75/3.75 card). Image tiers untouched (their lane prices did not move)."
   }
  ]
 }

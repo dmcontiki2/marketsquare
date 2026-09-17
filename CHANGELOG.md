@@ -1,3 +1,71 @@
+## MAINT-BRAIN-1 · the maintenance agent's brain is the cost chokepoint, not a private chain
+
+David (17 Sep 2026): *"fix the maintenance agent's model selection... Fix by DELETION -- strip
+the agent's private chain, call the existing chokepoint."* Ruling: *"on cost, never halt --
+step DOWN to a cheaper model of better capability, re-read from the price card each run. A hard
+cap that stops the agent is wrong."* Hard constraint SPEND-GUARD-1 stands: no ANTHROPIC_API_KEY
+for the loop; Fable work happens in Cowork sessions on the subscription.
+
+**What was wrong.** `scripts/maintenance_agent.py` chose its own model: `_fix_task()` returned a
+hardcoded `"sonnet"`, `_LANE_KEY_NAMES()` ran a private key-presence chain (ANTHROPIC ->
+OPENAI -> SCALEWAY), `_load_local_ai_keys()` read a private key file that never existed on the
+box (`.secrets/ai_keys.env`, so the agent had been KEYLESS since before launch), and
+`_ensure_brain_deps()` pip-installed httpx for private vendor calls. None of it touched the
+price card, `_log_ai_spend` or the ceilings that every other AI call in `bea_main.py` goes
+through (Session 135c, P1/P2/P3). Three more defects rode on it: `brain_keyed` tested key
+PRESENCE (a junk string read KEYED); `armed`/`live` reported true with no brain attached, so
+the dashboard showed cover it did not have; `AI_BASELINE.json` was still pinned to price card
+2026-08-19.1 with the live card at 2026-09-16.1, and `_MODEL_PRICE_FALLBACK['gpt-5.6-sol']`
+still said $5/$30 (cut to $4/$20 on 21 Aug).
+
+**What changed (by deletion).** All four private functions are gone from the agent. It now
+holds ONE credential (MS_MAINT_KEY, which it already had) and POSTs every brain call to the new
+`POST /admin/maint/brain` in `bea_main.py`. That endpoint IS the chokepoint: it re-reads
+`ai_price_card.json` on every call, computes the worst case before dispatch, logs every call to
+`ai_spend_log` under `maint:<run-id>` with the SERVING lane, and applies the rank-by-price
+STEP-DOWN -- ladder = requested tier and every cheaper tier the lane maps, first rung that fits
+the day's remaining budget answers, and if none fits the CHEAPEST rung answers anyway
+(`over_budget:true`, visible on the card). `_check_cost_ceiling` is deliberately not called: the
+budget decides WHICH model answers, never WHETHER one does. Anthropic is banned structurally
+(`exclude=("anthropic",)` in `ai_provider.complete()`, new kwarg), not by the absence of a key.
+The agent's daily budget is `ai_spend_config.daily_user_ceiling_usd` (currently $0.50 -- the
+agent is one identity; tune it on the existing config endpoint).
+
+**Proof, not presence (D2).** Each run opens with one 4-token live probe through the same
+endpoint; `brain_keyed` is that result. Auth/billing refusals come back as `RED:unauthorized` /
+`RED:credit_exhausted`, never as a silent fallback (verified: a junk OpenAI key -> 401 ->
+`unauthorized`). **Cover, not claim (D3).** `armed` and `live` are now switch AND proven brain;
+the raw switch is `armed_switch`; the card shows SWITCH ON·NO COVER when they disagree.
+
+**The key file is superseded.** The app's own OpenAI lane on the box is live (probe: luna, 7 in /
+4 out) -- so the agent needed no key of its own, only the chokepoint. `.secrets/ai_keys.env`
+is dead for the agent (local copy left untouched; `maint_realrepo_probe.py` still reads it).
+Also found on the box: `marketsquare.service.d/anthropic.conf` carries a live `sk-ant-` key
+(installed 2 Sep via `install_anthropic_key.ps1`) for the app's AUTO-FAILOVER lane. The maint
+chokepoint cannot reach it (exclude=); whether the app's failover lane keeps it is David's call.
+
+**Ops dashboard.** The B2b row now shows BRAIN OK / BRAIN RED / NO BRAIN with lane+model, this
+run's cost and calls, step-downs; a new "Brain cost & balance" row shows agent 7d/30d spend, the
+daily budget, per-run lane+cost, OpenAI top-ups, auto-recharges this month and the DERIVED
+balance = recorded top-ups - metered OpenAI spend (usage block on every response), with
+auto-recharges inferred by replaying spend against a recorded threshold/amount rule. OpenAI has
+no supported balance endpoint, so the row says "derived, not billed". New `ai_topups` table +
+`POST /admin/ai-topups` (admin credential; inputs on the row). `GET /dashboard/maint` returns
+the same `cost` block. `_MAINT_HB_FIELDS` += brain_state, brain_model, brain_probe,
+armed_switch, cost.
+
+**D4 closed.** `AI_BASELINE.json` re-pinned to card 2026-09-16.1; design-tier worst case
+re-derived $0.18 -> $0.128 (sol), gemini sonnet entry priced from the card ($0.75/$3.75);
+`ai_baseline_check.py`: 0 FAIL. `ai_price_card.json` and `AI_BASELINE.json` added to
+`deploy_manifest.txt` (drift D7): the box priced from the embedded fallback until now, which
+would have made "re-read the price card each run" a fiction.
+
+**Tested before deploy** on a side-port copy of the app against the live DB: probe GREEN
+(openai/luna, $0.000006), sonnet call -> terra, step-down sonnet->haiku on a tiny budget,
+design->sonnet->haiku ladder, bottom rung answers at zero budget, bad maint key -> 401, then one
+SHADOW cycle of the new agent (`--shadow`): brain GREEN, 0 seen, heartbeat carried the proven
+state. Backups: `*.bak-maintbrain-20260917`.
+
 ## CASUALS-IS-SERVICES-1 · the seventh card on every step
 
 David: *"I have been thinking on the housekeeper, it is not a new category, it is part of casual

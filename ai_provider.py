@@ -307,7 +307,7 @@ def any_lane_configured(task="haiku"):
     return any(TASK_MODEL.get(p, {}).get(task) for p in configured_lanes())
 
 def complete(messages, *, task="haiku", max_tokens=700, system=None, provider=None,
-             timeout=30, allow_fallback=True, probe=False):
+             timeout=30, allow_fallback=True, probe=False, exclude=()):
     """P2a (1 Aug 2026): breaker-aware. Chain = [requested/active] + others, minus lanes the
     breaker or the AI_DRILL_BAN overlay excludes. Attribution is recorded PER ADAPTER
     INVOCATION (Peer cost review). probe=True is the direct no-fallback trial mode —
@@ -331,6 +331,10 @@ def complete(messages, *, task="haiku", max_tokens=700, system=None, provider=No
     # per tier — never the ADAPTERS dict insertion order.
     chain = [prov] + (_cost_approved_fallbacks(task, prov) if allow_fallback else [])
     chain = [p for p in chain if ADAPTERS.get(p) and TASK_MODEL.get(p, {}).get(task)]
+    # MAINT-BRAIN-1 (17 Sep 2026): a caller may BAN lanes structurally. The maintenance
+    # chokepoint passes exclude=("anthropic",) so SPEND-GUARD-1 holds even if a metered
+    # key ever lands on the box -- the ban lives in code, not in the absence of a key.
+    chain = [p for p in chain if p not in (exclude or ())]
     open_chain = [p for p in chain if _allowed(p)]
     if not open_chain:
         return AIResult("",None,None,prov,TASK_MODEL.get(prov,{}).get(task,""),

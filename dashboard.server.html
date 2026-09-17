@@ -1091,21 +1091,72 @@ function fuLoad(){
 <!-- MAINT-DASH-1 renderer — feeds the B2b row in the Maintenance group above -->
  <script>
  window.maintRender = function(d){
-   var ds=document.getElementById('maint-b2b-ds'), st=document.getElementById('maint-b2b-st');
+   var ds=document.getElementById('maint-b2b-ds'), st=document.getElementById('maint-b2b-st'),
+       cs=document.getElementById('maint-cost-ds');
    if(!ds||!st) return;
-   function chip(bg,fg,txt){return '<span class="ls-badge" style="background:'+bg+';color:'+fg+'">'+txt+'</span>';}
+   function chip(bg,fg,txt,tip){return '<span class="ls-badge" style="background:'+bg+';color:'+fg+'"'+(tip?' title="'+tip.replace(/"/g,'&quot;')+'"':'')+'>'+txt+'</span>';}
    var GR=['rgba(16,185,129,.16)','#6ee7b7'], AM=['rgba(230,180,60,.14)','#ffd479'],
        RD=['rgba(220,80,80,.16)','#ff9b9b'], GY=['#26303f','#7c8aa0'], BL=['rgba(59,130,246,.15)','#93c5fd'];
+   function usd(v){return (v==null||isNaN(v))?'&mdash;':('$'+Number(v).toFixed(v<0.01&&v>0?5:(v<1?4:2)));}
    if(!d||!d.received_at){
      ds.innerHTML='no heartbeat yet &mdash; appears after the next maintenance run';
-     st.innerHTML=chip(GY[0],GY[1],'NO DATA'); return;
+     st.innerHTML=chip(GY[0],GY[1],'NO DATA'); if(cs) cs.innerHTML=''; return;
    }
    var ageH=(Date.now()-Date.parse(d.received_at))/36e5, fresh=isFinite(ageH)&&ageH<36;
+   // MAINT-BRAIN-1 (17 Sep 2026): brain_state is PROVEN by one live call per run (D2);
+   // armed/live are effective cover (switch AND brain), armed_switch is the raw switch (D3).
+   var bs=d.brain_state||(d.brain_keyed?'GREEN':'KEYLESS'), red=/^RED/.test(bs), amber=/^AMBER/.test(bs);
+   var runCost=(d.cost&&d.cost.last_run)||d.cost||{};
    ds.innerHTML='last run '+(d.run||d.received_at)+' &middot; seen '+(d.seen||0)+' &middot; acted '+(d.acted||0)
-     +(d.brain_keyed?(' &middot; lane '+(d.brain_lane||'?')):' &middot; paste ONE line in .secrets/ai_keys.env to key the brain');
+     +(d.brain_keyed?(' &middot; brain '+(d.brain_lane||'?')+(d.brain_model?('/'+d.brain_model):'')):
+       (red?' &middot; brain refused: '+bs.replace(/^RED:/,'')+' &mdash; check the OpenAI key / billing':
+        ' &middot; brain unproven ('+bs+') &mdash; the app lane answers the agent; no agent key file needed'))
+     +(runCost&&runCost.calls?(' &middot; this run '+usd(runCost.usd)+' / '+runCost.calls+' call(s)'
+        +(runCost.stepped_down?(' &middot; stepped down &times;'+runCost.stepped_down):'')
+        +(runCost.over_budget?(' &middot; <b>over budget &times;'+runCost.over_budget+'</b>'):'')):'');
    st.innerHTML=(fresh?'':chip(RD[0],RD[1],'STALE '+Math.round(ageH)+'H'))
-     +(d.brain_keyed?chip(GR[0],GR[1],'KEYED'):chip(AM[0],AM[1],'NO KEY'))
-     +(d.armed?(d.live?chip(GR[0],GR[1],'ARMED'):chip(BL[0],BL[1],'ARMED&middot;IDLE')):chip(AM[0],AM[1],'SHADOW'));
+     +(d.brain_keyed?chip(GR[0],GR[1],'BRAIN OK','proven by a live call this run'):
+       (red?chip(RD[0],RD[1],'BRAIN RED',bs):(amber?chip(AM[0],AM[1],'BRAIN '+bs.replace(/^AMBER:/,'').toUpperCase(),bs):chip(AM[0],AM[1],'NO BRAIN',bs))))
+     +(d.armed?(d.live?chip(GR[0],GR[1],'ARMED'):chip(BL[0],BL[1],'ARMED&middot;IDLE'))
+       :(d.armed_switch?chip(AM[0],AM[1],'SWITCH ON&middot;NO COVER','kill switch is on but the brain is not proven: the loop cannot fix anything')
+         :chip(AM[0],AM[1],'SHADOW')));
+   if(cs){
+     var c=d.cost||{}, o=c.openai||{}, runs=(c.runs||[]).slice(0,5);
+     var rule=o.rule?('rule: recharge '+usd(o.rule.amount_usd)+' when &lt; '+usd(o.rule.threshold_usd)):'no auto-recharge rule recorded';
+     var html='<div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:4px">'
+       +'<span>agent 7d <b style="color:var(--text)">'+usd(c.agent_7d_usd)+'</b> ('+(c.agent_7d_calls||0)+' calls)</span>'
+       +'<span>30d <b style="color:var(--text)">'+usd(c.agent_30d_usd)+'</b> ('+(c.agent_30d_calls||0)+')</span>'
+       +'<span>daily budget <b style="color:var(--text)">'+usd(c.agent_daily_budget_usd)+'</b> &middot; steps down, never halts</span>'
+       +'<span>OpenAI top-ups <b style="color:var(--text)">'+usd(o.topups_usd)+'</b> &middot; spend since '+usd(o.spend_since_first_topup_usd)
+       +' &middot; auto-recharges this month <b style="color:var(--text)">'+(o.auto_recharges_month||0)+'</b>'
+       +' &middot; derived balance <b style="color:'+((o.derived_balance_usd==null)?'var(--muted)':(o.derived_balance_usd<5?'#ff9b9b':'#6ee7b7'))+'">'+usd(o.derived_balance_usd)+'</b></span>'
+       +'<span style="opacity:.8">'+rule+'</span></div>';
+     if(runs.length){
+       html+='<div style="font-size:11px;color:var(--muted);margin-top:3px">runs: '+runs.map(function(r){
+         return '<span title="'+(r.tiers||'')+'">'+(r.run||'').replace('T',' ').replace('Z','')+' '+(r.lanes||'?')+' '+usd(r.usd)+'</span>';}).join(' &middot; ')+'</div>';
+     }
+     html+='<div style="font-size:11px;color:var(--muted);margin-top:3px;opacity:.85">'+(o.note||'')+'</div>'
+       +'<div style="display:flex;gap:6px;align-items:center;margin-top:5px;flex-wrap:wrap">'
+       +'<input id="maint-topup-amt" type="number" step="0.01" min="0" placeholder="top-up USD" style="width:96px;padding:3px 6px;border:1px solid #26303f;border-radius:6px;background:transparent;color:var(--text);font-size:12px">'
+       +'<button type="button" class="ms-viz-btn" style="position:static" onclick="maintTopup(\'topup\')">record top-up</button>'
+       +'<input id="maint-rule-thr" type="number" step="0.01" min="0" placeholder="recharge when &lt; $" style="width:130px;padding:3px 6px;border:1px solid #26303f;border-radius:6px;background:transparent;color:var(--text);font-size:12px">'
+       +'<input id="maint-rule-amt" type="number" step="0.01" min="0" placeholder="recharge amount $" style="width:130px;padding:3px 6px;border:1px solid #26303f;border-radius:6px;background:transparent;color:var(--text);font-size:12px">'
+       +'<button type="button" class="ms-viz-btn" style="position:static" onclick="maintTopup(\'rule\')">save rule</button>'
+       +'<span id="maint-topup-msg" style="font-size:11px;color:var(--muted)"></span></div>';
+     cs.innerHTML=html;
+   }
+ };
+ window.maintTopup = function(kind){
+   var tok=(window._apv2Tok?window._apv2Tok():''), msg=document.getElementById('maint-topup-msg');
+   if(!tok){ if(msg) msg.textContent='sign in to the dashboard first'; return; }
+   var body={};
+   if(kind==='topup'){ var a=parseFloat((document.getElementById('maint-topup-amt')||{}).value); if(!(a>0)){ if(msg) msg.textContent='enter an amount'; return; } body.amount_usd=a; body.kind='topup'; body.note='dashboard'; }
+   else { var t=parseFloat((document.getElementById('maint-rule-thr')||{}).value), m=parseFloat((document.getElementById('maint-rule-amt')||{}).value);
+          if(!(t>=0)||!(m>=0)){ if(msg) msg.textContent='enter threshold and amount'; return; } body.autorecharge_threshold_usd=t; body.autorecharge_amount_usd=m; }
+   fetch((window._apv2B||'')+'/admin/ai-topups',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':tok},body:JSON.stringify(body)})
+    .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+    .then(function(){ if(msg) msg.textContent='saved'; maintLoad(); })
+    .catch(function(e){ if(msg) msg.textContent='failed: '+e.message; });
  };
  window.maintLoad = function(){
    fetch((window._apv2B||'')+'/dashboard/maint').then(function(r){return r.json();})
@@ -1144,8 +1195,11 @@ Implication: feeds the Maintenance loop; testers only — safe to leave ON pre-l
         reported by the loop itself after every real run. Status chips, deliberately NOT a toggle:
         the brain key is a gitignored file and ARM is env on the loop's machine — David's acts. -->
    <div class="ls-row" id="maint-b2b-row"><div class="ls-tip" data-tip="What: the B2b Maintenance Agent's own heartbeat, posted after every real run (rehearsals never post).
-NO KEY: the agent's brain cannot classify — every fault routes to the design backlog until ONE line is pasted in .secrets/ai_keys.env on the machine that runs the loop.
+BRAIN: proven by one live call per run through the app's cost chokepoint (the app's own OpenAI lane — the agent holds no AI key). RED = auth/billing refused; NO BRAIN = unproven, every fault routes to the design backlog.
 SHADOW: rehearsing, cannot commit. Arm with MAINTENANCE_AGENT_ENABLED=1 only after the B4 rehearsal signs READY. Both are your acts on your machine — that is why this row reports instead of toggling."><div class="ls-nm">&#129302; Maintenance agent (B2b)</div><div class="ls-ds" id="maint-b2b-ds">waiting for heartbeat&hellip;</div></div><div id="maint-b2b-st" style="flex:0 0 auto;display:flex;gap:5px;align-items:center"><span class="ls-badge" style="background:#26303f;color:#7c8aa0">&hellip;</span></div></div>
+   <!-- MAINT-BRAIN-1 (17 Sep 2026): lane + cost per run, 7d/30d agent spend, OpenAI top-ups,
+        auto-recharges this month and the DERIVED balance (OpenAI has no balance endpoint). -->
+   <div class="ls-row" id="maint-cost-row" style="display:block"><div class="ls-nm" style="font-size:12px">&#128181; Brain cost &amp; balance</div><div id="maint-cost-ds">&hellip;</div></div>
 
    <div class="ls-grp-h" style="margin-top:14px">Trust &amp; privacy rails</div>
    <div class="ls-row"><div class="ls-tip" data-tip="OFF: an accepted intro exchanges the parties' REAL email addresses (legacy) — an irreversible disclosure.

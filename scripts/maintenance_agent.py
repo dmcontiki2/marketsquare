@@ -6,9 +6,12 @@ human veto; his absence never stalls a fix. This is the orchestrator that makes
 that real, bound to what already exists rather than reinventing it:
 
   intake   GET /admin/faults?status=new   (localhost + MS_MAINT_KEY, like fault_reconcile)
-  brain    ai_provider.complete()          -- the IDENTIFIED source: provider+model
-                                               recorded on every fix, swappable by one
-                                               config line (the independence ruling)
+  brain    POST /admin/maint/brain (bea_main) -- the ONE cost chokepoint (MAINT-BRAIN-1,
+                                               17 Sep 2026): price card, spend log, rank-by-
+                                               price step-down. The IDENTIFIED lane+model
+                                               is recorded on every fix. This agent holds
+                                               NO AI key and picks NO model (David's ruling:
+                                               never halt on cost, step down; SPEND-GUARD-1).
   gates    regression_ledger.py · predeploy_check.py · py_compile / node --check
   deploy   the ONE engine (git mirror -> server_deploy.sh) -- NEVER re-implemented (RG-0023)
   verify   AIK-VERIFY-1: a live probe reproduces the failing action; named evidence in
@@ -82,46 +85,80 @@ _BRAIN_STUB  = os.environ.get("MAINT_BRAIN_STUB")    # canned patches for a keyl
 if _BRAIN_STUB:
     LIVE = False   # a stubbed brain can NEVER ship — rehearsal is shadow, always
 
-def _load_local_ai_keys():
-    """BRAIN-PATH-1, second half. ai_provider.envkey() reads os.environ then
-    /var/www/marketsquare/.env -- that .env exists only ON THE SERVER, so a loop running on
-    David's machine has no way to be keyed at all. The repo already has exactly one blessed
-    place for local secrets (.secrets/, gitignored at .gitignore:141, already holding
-    ms_maint_key.txt), so read the same way rather than inventing a second convention.
+# ── MAINT-BRAIN-1 (17 Sep 2026): the brain is the app's chokepoint, not this file ──
+# DELETED here: _load_local_ai_keys (a private key file), _LANE_KEY_NAMES (a private
+# key-presence chain), _fix_task (a hardcoded "sonnet"), _ensure_brain_deps (httpx for
+# private vendor calls). The agent now holds ONE credential (MS_MAINT_KEY) and POSTs to
+# /admin/maint/brain, where bea_main applies the price card, the daily budget and the
+# rank-by-price STEP-DOWN (David: never halt on cost), logs spend to the serving lane,
+# and bans anthropic structurally (SPEND-GUARD-1). Key PRESENCE is no longer a state:
+# brain_probe() makes one 4-token live call per run and the PROVEN result is what the
+# dashboard shows (D2) -- auth/billing failure reads RED, never a silent fallback.
+BRAIN = {"ok": False, "state": "UNPROBED", "provider": "", "model": "", "error_kind": "",
+         "status": None, "cost_usd": 0.0}
+RUN_COST = {"usd": 0.0, "calls": 0, "by_lane": {}, "by_tier": {}, "stepped_down": 0, "over_budget": 0}
+_RUN_ID = None      # set by main(); stamps every spend row as maint:<run>
 
-    File: .secrets/ai_keys.env -- KEY=VALUE per line, # comments allowed. ONE key is enough.
-    Never overrides a variable already set in the real environment, so a properly-provisioned
-    host always wins. Silent when the file is absent: this is a convenience, not a requirement.
-    """
-    path = os.path.join(REPO, ".secrets", "ai_keys.env")
-    loaded = []
+class _BrainReply:
+    """Duck-typed like the old AIResult so every caller reads .text/.ok/.provider/.model."""
+    def __init__(self, d):
+        d = d or {}
+        self.text = d.get("text") or ""
+        self.ok = bool(d.get("ok"))
+        self.provider = d.get("provider") or "none"
+        self.model = d.get("model") or "unavailable"
+        self.error_kind = d.get("error_kind") or ""
+        self.state = d.get("state") or ""
+        self.tier_used = d.get("tier_used") or ""
+        self.stepped_down = bool(d.get("stepped_down"))
+        self.over_budget = bool(d.get("over_budget"))
+        self.cost_usd = float(d.get("cost_usd") or 0.0)
+        self.raw = d
+
+def _account(r):
+    RUN_COST["usd"] = round(RUN_COST["usd"] + r.cost_usd, 6)
+    RUN_COST["calls"] += 1
+    RUN_COST["by_lane"][r.provider] = round(RUN_COST["by_lane"].get(r.provider, 0.0) + r.cost_usd, 6)
+    RUN_COST["by_tier"][r.tier_used or "?"] = RUN_COST["by_tier"].get(r.tier_used or "?", 0) + 1
+    if r.stepped_down: RUN_COST["stepped_down"] += 1
+    if r.over_budget: RUN_COST["over_budget"] += 1
+
+def brain(purpose, messages, task="haiku", max_tokens=700, system=None):
+    """ONE brain call through the chokepoint. Never raises: a transport failure is a
+    declined answer (ok=False, error_kind named), the RG-0049 degradation contract."""
+    key = maint_key()
+    if not key:
+        return _BrainReply({"error_kind": "no-maint-key", "state": "KEYLESS", "provider": "none"})
+    body = {"run": _RUN_ID or "adhoc", "purpose": purpose, "task": task, "messages": messages,
+            "system": system, "max_tokens": max_tokens}
     try:
-        with open(path, encoding="utf-8") as fh:
-            for line in fh:
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                k, v = line.split("=", 1)
-                k, v = k.strip(), v.strip().strip('"').strip("'")
-                if k and v and not os.environ.get(k):
-                    os.environ[k] = v
-                    loaded.append(k)
-    except OSError:
-        return []
-    return loaded
+        r = _BrainReply(api("POST", "/admin/maint/brain", key, body, timeout=180))
+    except Exception as e:
+        r = _BrainReply({"error_kind": "transport:%s" % type(e).__name__, "state": "AMBER:transport",
+                         "provider": "none", "model": "brain-unreachable"})
+    _account(r)
+    if r.stepped_down:
+        say("brain: %s stepped DOWN %s -> %s (%s) budget-left %s"
+            % (purpose, task, r.tier_used, r.model, (r.raw.get("budget") or {}).get("left_usd")))
+    return r
 
-
-_AI_KEYS_LOADED = _load_local_ai_keys()
-
-
-def _LANE_KEY_NAMES():
-    """The env var names a lane can be keyed by -- read from ai_provider so this message
-    can never drift from the real lane table (BRAIN-PATH-1)."""
+def brain_probe():
+    """D2: prove the brain with one cheap live call. Sets BRAIN for the heartbeat."""
+    key = maint_key()
+    if not key:
+        BRAIN.update({"ok": False, "state": "KEYLESS", "error_kind": "no-maint-key"}); return BRAIN
     try:
-        import ai_provider
-        return list(ai_provider._LANE_KEYS.values())
-    except Exception:
-        return [("ANTHROPIC_API_KEY",), ("OPENAI_API_KEY",), ("SCALEWAY_API_KEY", "FAILOVER_API_KEY")]
+        d = api("POST", "/admin/maint/brain", key, {"run": _RUN_ID or "adhoc", "purpose": "probe",
+                                                    "probe": True}, timeout=60)
+    except Exception as e:
+        d = {"ok": False, "state": "AMBER:transport", "error_kind": "transport:%s" % type(e).__name__}
+    r = _BrainReply(d); _account(r)
+    BRAIN.update({"ok": r.ok, "state": r.state or ("GREEN" if r.ok else "RED:unknown"),
+                  "provider": r.provider if r.ok else (r.provider if r.provider != "none" else ""),
+                  "model": r.model if r.ok else "", "error_kind": r.error_kind,
+                  "status": d.get("status"), "cost_usd": r.cost_usd,
+                  "card_version": d.get("card_version", "")})
+    return BRAIN
 
 
 def _code_stamp():
@@ -296,12 +333,12 @@ def _review_cookie():
         _REVIEW["cookie"] = None
     return _REVIEW["cookie"] or ""
 
-def api(method, path, key, body=None):
+def api(method, path, key, body=None, timeout=30):
     hdrs = dict(UA_HEADER); hdrs.update({"X-Maint-Key": key, "Content-Type": "application/json"})
     data = json.dumps(body).encode() if body is not None else None
     try:
         req = urllib.request.Request(BASE + path, method=method, headers=hdrs)
-        with urllib.request.urlopen(req, data=data, timeout=30) as r:
+        with urllib.request.urlopen(req, data=data, timeout=timeout) as r:
             return json.loads(r.read().decode() or "null")
     except urllib.error.HTTPError as e:
         if e.code not in (401, 403):
@@ -312,7 +349,7 @@ def api(method, path, key, body=None):
         hdrs2 = dict(hdrs); hdrs2["Cookie"] = ck
         req2 = urllib.request.Request(BASE + path, method=method, headers=hdrs2)
         try:
-            with urllib.request.urlopen(req2, data=data, timeout=30) as r:
+            with urllib.request.urlopen(req2, data=data, timeout=timeout) as r:
                 return json.loads(r.read().decode() or "null")
         except Exception:
             raise e
@@ -362,30 +399,10 @@ def email_lane_census():
                 "note": "customer email lane UNREAD this run -- treat 'seen' as partial"}
 
 
-# ── RUL-013: the PRE-LAUNCH fix lane is Fable ────────────────────────────────────
-# David's ruling 15 Aug 2026: pre-launch, tester reports are DESIGN REQUESTS and Fable resolves
-# them without him. Implemented as a task tier, not a hardcoded model, so the seam stays portable
-# (AI_PROVIDER_SEAM) and post-launch reverts by flipping MAINT_PHASE -- no code change at launch.
-# SAFETY: the server timer has no ANTHROPIC_API_KEY, so Fable is unreachable there. This falls
-# back to the normal reasoning tier rather than emptying the chain, which would break every
-# unattended run. A run says which lane it actually used; it never pretends to be Fable.
-def _fix_task():
-    """SPEND-GUARD-1 (David, 15 Aug 2026): NEVER route this agent at the Anthropic API key.
-
-    The first cut of RUL-013 sent pre-launch fixes to claude-fable-5 via ANTHROPIC_API_KEY.
-    That is metered usage-credit billing at $10/$50 per Mtok, fired by an UNATTENDED loop three
-    times a day with no human watching the meter -- David: "eats $ up in seconds... will bring us
-    to a screeching halt". It also contradicts the standing rule that Fable-via-credits is
-    "reserved for the most important work only" (decision note, 11 Jul).
-
-    Fable STILL resolves pre-launch design requests -- but in a COWORK SESSION on David's
-    subscription, where the tokens are already paid for. An unattended server process cannot use
-    a subscription; only a session can. So the agent proposes on its normal metered-but-cheap
-    lane, and Fable work happens where it costs nothing extra. The gap is the design, not a
-    limitation to close.
-    """
-    return "sonnet", None
-
+# RUL-013 / SPEND-GUARD-1 history: the fix tier used to be chosen HERE (_fix_task() returned a
+# hardcoded "sonnet"). Deleted 17 Sep 2026 (MAINT-BRAIN-1): the agent REQUESTS a tier; the
+# chokepoint decides the rung from the price card and the day's budget. Fable never runs here.
+FIX_TIER = "sonnet"       # requested; the chokepoint may step DOWN, never up
 
 # ── classify: REFUSE | ESCALATE | PATH_B | PATH_A ────────────────────────────────
 def classify(fault):
@@ -399,32 +416,16 @@ def classify(fault):
         if v:
             return v, "classify-stub"
     # brain classifies the remainder; DEFAULT to Path B (batched, safe) on any doubt.
-    try:
-        import ai_provider
-    except Exception as e:
-        return "PATH_B", ("ai_provider will not import (%s: %s) -- batched design lane. "
-                          "This is a WIRING fault, not a verdict on the fault." % (type(e).__name__, e))
-    # A configured lane is not the same thing as an importable module. Say which is missing,
-    # so a run report never again reads 'unavailable' for two unrelated reasons (BRAIN-PATH-1).
-    try:
-        if not ai_provider.any_lane_configured("haiku"):
-            return "PATH_B", ("no AI lane has a key where the loop runs (checked: %s) -- batched "
-                              "design lane. The brain imported fine; it has nothing to call."
-                              % ", ".join(sorted(sum(map(list, _LANE_KEY_NAMES()), []))))
-    except Exception:
-        pass
+    if not BRAIN.get("ok"):
+        return "PATH_B", ("brain %s -- batched design lane. This is a WIRING/BILLING state, not a "
+                          "verdict on the fault." % BRAIN.get("state", "UNPROBED"))
     sys_p = ("You triage a software fault for a marketplace. Answer ONE word: "
              "MECHANICAL if it is a copy/config/flag/logic bug fixable by a small code "
              "edit; DESIGN if it asks for new UI, a new flow, a layout change, or a "
              "feature. If unsure, answer DESIGN.")
     msg = [{"role": "user", "content": "TITLE: %s\nDETAIL: %s\nPAGE: %s" % (
         fault.get("title", ""), fault.get("detail", ""), fault.get("page_url", ""))}]
-    try:
-        r = ai_provider.complete(msg, task="haiku", max_tokens=8, system=sys_p)
-    except Exception as e:
-        # MAINT-B4-5: a brain CALL failure (missing dep, network, key) must degrade
-        # exactly like an unavailable brain -- batched design lane, never a crash.
-        return "PATH_B", "brain call failed (%s) -- defaulting to the batched design lane" % type(e).__name__
+    r = brain("classify", msg, task="haiku", max_tokens=8, system=sys_p)
     verdict = (r.text or "").strip().upper()
     src = "%s/%s" % (r.provider, r.model)        # the IDENTIFIED source, logged
     if not r.ok:
@@ -576,13 +577,9 @@ def propose_patch(fault):
         r = type("R", (), {})()
         r.text, r.ok, r.provider, r.model, r.error_kind = (diff or "NObugfix"), bool(diff), "stub", "rehearsal", ""
         return r
-    try:
-        import ai_provider
-    except Exception as e:
-        r = type("R", (), {})()
-        r.text, r.ok, r.provider, r.model = "NObugfix", False, "none", "unavailable"
-        r.error_kind = "import:%s" % type(e).__name__      # BRAIN-PATH-1: name it, never just 'import'
-        return r
+    if not BRAIN.get("ok"):
+        return _BrainReply({"text": "NObugfix", "provider": "none", "model": "unavailable",
+                            "error_kind": BRAIN.get("state", "UNPROBED")})
     files = _candidate_files(fault)
     if files:
         ctx = "\n\n".join("### FILE: %s\n%s" % (p, c) for p, c in files)
@@ -602,14 +599,10 @@ def propose_patch(fault):
             "Reply with ONLY the unified diff, or exactly NObugfix." % (
                 fault.get("ref"), fault.get("title", ""), fault.get("detail", ""),
                 fault.get("page_url", ""), ctx)}]
-    try:
-        _t, _p = _fix_task()
-        r = ai_provider.complete(msg, task=_t, max_tokens=2000, system=sys_p, provider=_p)
-    except Exception as e:
-        # MAINT-B4-5: same degradation contract as classify -- a failed call is a
-        # DECLINED fix (escalates to a human), never a crashed queue.
-        r = type("R", (), {})()
-        r.text, r.ok, r.provider, r.model, r.error_kind = "NObugfix", False, "none", "brain-error", type(e).__name__
+    # MAINT-B4-5 contract kept: brain() never raises -- a failed call is a DECLINED fix.
+    r = brain("patch", msg, task=FIX_TIER, max_tokens=2000, system=sys_p)
+    if not r.ok and not r.text:
+        r.text = "NObugfix"
     return r  # caller reads .text/.ok/.provider/.model
 
 
@@ -627,7 +620,6 @@ def propose_rewrite(fault):
     if not files:
         return None, "no single candidate file to rewrite"
     path, content = files[0]
-    import ai_provider
     # WINDOW-SPLICE-1 (13 Aug 2026, real-repo probe runs 7-8): for WINDOWED large files
     # the old prompt was impossible -- it demanded "the COMPLETE file, start to finish"
     # while the excerpt label said "the rest is NOT shown", and sonnet safely returned
@@ -652,11 +644,9 @@ def propose_rewrite(fault):
                  "resolve the fault. No commentary, no fences, no diff markers: file text only.")
     msg = [{"role": "user", "content": "FAULT %s\nTITLE: %s\nDETAIL: %s\n\n### FILE: %s\n%s" % (
         fault.get("ref"), fault.get("title", ""), fault.get("detail", ""), path, content)}]
-    try:
-        _t, _p = _fix_task()
-        r = ai_provider.complete(msg, task=_t, max_tokens=4000, system=sys_p, provider=_p)
-    except Exception as e:
-        return None, "rewrite brain call failed (%s)" % type(e).__name__
+    r = brain("rewrite", msg, task=FIX_TIER, max_tokens=4000, system=sys_p)
+    if not r.ok and not r.text:
+        return None, "rewrite brain call failed (%s)" % (r.error_kind or "unknown")
     text = (r.text or "").strip()
     if not r.ok or not text or "NObugfix" in text:
         return None, "brain declined a rewrite"
@@ -722,29 +712,6 @@ def record_ship(recent, ships):
     open(ships, "w").write(" ".join(str(t) for t in (recent + [time.time()])))
 
 # ── one run ───────────────────────────────────────────────────────────────────────
-def _ensure_brain_deps():
-    """BRAIN-DEPS-1 (13 Aug 2026): ai_provider lazily imports httpx INSIDE its lane
-    calls, so a fresh sandbox passes the import proof (RG-0055) and still loses its
-    brain at the FIRST REAL CALL -- proven 13 Aug: ModuleNotFoundError mid-run, the
-    fault degraded to PATH_B by default instead of by judgement. One guarded, quiet
-    install attempt; on any failure the existing degradation machinery (RG-0049)
-    takes over -- this must never kill a run."""
-    try:
-        import httpx  # noqa: F401
-        return
-    except ImportError:
-        pass
-    try:
-        import subprocess as _sp, sys as _sys
-        _sp.run([_sys.executable, "-m", "pip", "install", "--break-system-packages",
-                 "-q", "httpx"], capture_output=True, timeout=180)
-        import httpx  # noqa: F401
-        say("brain deps: httpx was missing -- installed for this run")
-    except Exception as e:
-        say("brain deps: httpx unavailable (%s) -- brain calls degrade per RG-0049"
-            % type(e).__name__)
-
-
 def _post_heartbeat(report, mode, key):
     """MAINT-DASH-1 (12 Aug 2026): after every completed REAL run, tell the dashboard
     the truth about the loop -- brain keyed or not, armed or not, what was seen and done.
@@ -756,20 +723,22 @@ def _post_heartbeat(report, mode, key):
         return
     if not key:
         return
-    names = []
-    for entry in _LANE_KEY_NAMES():
-        if isinstance(entry, (list, tuple)):
-            names.extend(entry)
-        else:
-            names.append(entry)
-    keyed = [n for n in names if os.environ.get(n)]
     lanes = {}
     for a in report.get("actions", []):
         lanes[a.get("lane", "?")] = lanes.get(a.get("lane", "?"), 0) + 1
+    # D2/D3 (17 Sep 2026): brain_keyed is the PROVEN probe result, not key presence; armed
+    # and live are EFFECTIVE cover (switch AND brain), the raw switch is armed_switch.
+    proven = bool(BRAIN.get("ok"))
     hb = {"run": report.get("run"), "mode": mode, "phase": MAINT_PHASE,
-          "armed": KILL, "live": LIVE,
-          "brain_keyed": bool(keyed),
-          "brain_lane": (keyed[0].replace("_API_KEY", "").lower() if keyed else ""),
+          "armed": KILL and proven, "live": LIVE and proven, "armed_switch": KILL,
+          "brain_keyed": proven,
+          "brain_lane": BRAIN.get("provider") or "",
+          "brain_state": BRAIN.get("state", "UNPROBED"),
+          "brain_model": BRAIN.get("model") or "",
+          "brain_probe": {"ok": proven, "status": BRAIN.get("status"),
+                          "error_kind": BRAIN.get("error_kind") or "",
+                          "card_version": BRAIN.get("card_version") or ""},
+          "cost": dict(RUN_COST),
           "seen": report.get("seen", 0), "acted": len(report.get("actions", [])),
           "lanes": lanes, "code": _code_stamp(),
           # MAINT-INTAKE-2: the card must never paint an empty app_faults queue as a quiet
@@ -778,9 +747,10 @@ def _post_heartbeat(report, mode, key):
           "email_lane": (report.get("intake") or {}).get("email_lane") or {}}
     try:
         api("POST", "/dashboard/maint", key, hb)
-        say("heartbeat -> /dashboard/maint (brain %s, %s)"
-            % ("KEYED:" + hb["brain_lane"] if keyed else "KEYLESS",
-               "ARMED" if KILL else "shadow"))
+        say("heartbeat -> /dashboard/maint (brain %s%s, %s, run cost $%.4f over %d call(s))"
+            % (hb["brain_state"], ("/" + hb["brain_lane"]) if proven else "",
+               ("ARMED" if hb["armed"] else ("ARMED-SWITCH but NO BRAIN" if KILL else "shadow")),
+               RUN_COST["usd"], RUN_COST["calls"]))
     except Exception as e:
         say("heartbeat POST failed (%s) -- run unaffected, dashboard will show stale" % e)
 
@@ -789,6 +759,8 @@ def main():
     os.makedirs(STATE, exist_ok=True)
     mode = "LIVE" if LIVE else ("SHADOW (kill switch ON, --live not passed)" if KILL
                                 else "SHADOW (kill switch OFF — default, cannot commit)")
+    if "--shadow" in sys.argv:
+        mode = "SHADOW (--shadow: one rehearsal cycle on the real queue, commit withheld)"
     say("run %s  mode=%s  phase=%s  trust-core=%s  rate<=%d/h"
         % (now(), mode, MAINT_PHASE,
            "GUARDED" if TRUST_CORE_GUARD else "OFF (MAINT_TRUST_CORE_GUARD=0)",
@@ -800,8 +772,16 @@ def main():
     # now states the code it IS: an unexpected SHA or a dirty tree is visible immediately,
     # before anyone reasons about the result.
     say("code    %s" % _code_stamp())
-    _ensure_brain_deps()
     key = maint_key()
+    global _RUN_ID
+    _RUN_ID = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    if key and not _BRAIN_STUB:
+        b = brain_probe()
+        say("brain   %s%s (probe $%.5f, card %s)" % (
+            b["state"], ("  " + b["provider"] + "/" + b["model"]) if b["ok"] else
+            ("  " + (b.get("error_kind") or "")), b.get("cost_usd", 0.0), b.get("card_version", "?")))
+    elif _BRAIN_STUB:
+        BRAIN.update({"ok": True, "state": "STUB", "provider": "stub", "model": "rehearsal"})
     if not _FAULTS_FILE and not key:
         # a key is required ONLY for the live API path; a synthetic --faults-file
         # rehearsal needs none (proven necessary by the B4 first run, 9 Aug).
@@ -833,7 +813,7 @@ def main():
         say("email lane  %d total, %d held (30d %s) -- census only, not a fix lane"
             % (_email.get("total", 0), _email.get("held_30d", 0),
                _email.get("by_category_30d") or {}))
-    report = {"run": now(), "mode": mode, "seen": len(faults),
+    report = {"run": _RUN_ID, "mode": mode, "seen": len(faults),
               "intake": {"app_faults_new": len(faults), "email_lane": _email},
               "actions": []}
     _t0 = time.time()

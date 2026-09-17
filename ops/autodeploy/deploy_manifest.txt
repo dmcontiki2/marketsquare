@@ -118,6 +118,12 @@ AUDIT_PROGRESS.md          | AUDIT_PROGRESS.md
 # ── Added 2 Aug 2026 (DEPLOY-CONSOLIDATION-1): everything the retired scp bats
 #    shipped, so the manifest engine is the ONE deploy for all tracked code. ──
 dashboard.server.html      | dashboard.html
+# MAINT-BRAIN-1 (17 Sep 2026): the price card and the baseline were never in this manifest
+# (baseline drift D7), so on the box bea_main priced from its EMBEDDED fallback table and
+# ai_provider ranked failovers by the static default. David's ruling -- re-read the price
+# card each run -- needs the card ON the box. Both are read beside main.py / ai_provider.py.
+ai_price_card.json         | ai_price_card.json
+AI_BASELINE.json           | AI_BASELINE.json
 ai_breaker.py              | ai_breaker.py
 ai_funnel_snapshot.json    | ai_funnel_snapshot.json
 apply_ai_provider_card.py  | apply_ai_provider_card.py
