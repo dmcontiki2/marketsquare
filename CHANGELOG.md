@@ -1,3 +1,32 @@
+## RUL-138 / RUL-139 / RUL-140 · today's three rulings recorded, and WORK-LOCK-1 built
+
+David (17 Sep 2026) put two facts and one instruction on the table after the TIER-NAME-1 release:
+the maintenance loop had been *expressly warned* not to interfere with the model design changes
+and did anyway; the origin firewall question ("should the Hetzner front the WAF?"); and *"wait for
+silence after all updates and then deploy and commit."*
+
+**Firewall — nothing to fix, and the false alarm is closed at its cause.** Read live through the
+Hetzner API: `trustsquare-origin-lockdown` is `applied` to the server; 80/443 accept exactly the
+22 ranges Cloudflare publishes today (0 missing, 0 extra); 22 accepts one /32. A direct probe from
+David's own IP times out on both ports. The "origin ACCEPTED a direct connection" REGRESSION came
+from running the regression ledger ON the origin, where a connect to its own address is local
+routing and never meets the cloud firewall. `rg_origin_refuses_direct` now detects that (the host
+that can `bind()` the origin IP is the origin) and reads INFO/skipped instead of a false FAIL.
+
+**Rulings recorded** in RULINGS.md with `rulings_check.py` reflections: RUL-138 (never halt on
+cost — step down, re-read the card), RUL-139 (a tier is named for its function, never a model),
+RUL-140 (a lane told to stand off does not edit; the telling is a file). STANDING_ORDERS.md SO-5
+carries the working form.
+
+**WORK-LOCK-1.** `scripts/work_lock.py` — `take / check / release / show` on a gitignored
+`.work_lock` (owner, why, scope globs, 12 h expiry). Every lane checks a file before editing and
+stops on exit 3, recording the finding instead. Verified: locked `bea_main.py` reads LOCKED (exit
+3), `ms.js` reads clear. This session's lock is released at the end of the session.
+
+**Deploy discipline.** This release goes out through `scripts/request_deploy.py --all` after the
+tree has been silent — the sanctioned host lane (RUL-092) — not by committing from the server
+checkout as the two earlier releases today did (that bypass is what forced the local merge).
+
 ## TIER-NAME-1 · a tier is named for its function, never for a model
 
 David (17 Sep 2026): *"I need to no where have a mentioned model... Do not even give a type of

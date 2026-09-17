@@ -121,3 +121,14 @@ machine: `scripts/request_host_action.py` queues it (permission quoted, allowlis
 `host_queue/done/` is read before the action is reported done. Commits and pushes of Claude's own work,
 deploys, and the bats on `host_queue/ALLOWLIST.txt` are already permitted. Only a NEW scheduled task
 registration still needs David's hand — which is why the existing agent is reused.
+
+## SO-5 — Stand-off lock and wait-for-silence (RUL-140, 17 Sep 2026, David)
+
+Before editing any file, run `python3 scripts/work_lock.py check <file>`. Exit 3 means another
+session owns that scope: record the finding where findings go (regression ledger, DAILY_WATCH) and
+do NOT edit — the owner ships it. Take a lock for your own design work (`work_lock.py take`) and
+release it when done; locks expire after 12 h. After a run of updates, wait for the tree to be
+silent (no other lane writing) and then commit and deploy ONCE via `scripts/request_deploy.py`.
+Never commit from the server checkout to get a deploy out — that bypasses the host lane and forces
+a merge later (17 Sep 2026). Tiers are functions, never models (RUL-139); on cost the maintenance
+agent steps down and never halts (RUL-138).

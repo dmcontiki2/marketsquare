@@ -186,3 +186,6 @@ host_queue/agent_heartbeat.txt
 
 # LEDGER-SHARD-1: per-shard run artefacts are measurements, not source
 ledger_runs/
+
+# WORK-LOCK-1 (RUL-140, 17 Sep 2026): per-machine stand-off lock, never shipped
+.work_lock

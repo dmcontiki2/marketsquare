@@ -899,6 +899,28 @@ REFLECTIONS = {
    ("sandbox_repair.bat", [], []),
    ("scripts/regression_ledger.py", ["RG-0348"], []),
  ],
+ "RUL-138": [
+   ("bea_main.py", ["_maint_pick_rung", "never halt", 'exclude=_MAINT_LANES_BANNED'], []),
+   ("scripts/maintenance_agent.py", ["/admin/maint/brain", "brain_probe"], ["def _fix_task", "def _load_local_ai_keys"]),
+   ("scripts/cost_compliance_sweep.py", ["_maint_pick_rung"], []),
+   ("RULINGS.md", ["NEVER HALTS"], []),
+ ],
+ "RUL-139": [
+   # the five functional tiers must be what the seam speaks; a model name as a tier key is a
+   # build failure (ai_baseline_check TIER-NAME-1), asserted here as well so a purge of the
+   # checker itself still trips the register.
+   ("ai_provider.py", ['"fast"', '"reason"', '"vision"', '"triage"', '"design"'], ['"haiku":', '"sonnet":']),
+   ("bea_main.py", ['_MAINT_TIER_LADDER = ("design", "reason", "fast"'], ['task="haiku"', 'task="sonnet"', '"sonnet_vision"']),
+   ("scripts/ai_baseline_check.py", ["TIER-NAME-1", "check_tier_names"], []),
+   ("migrations/039_functional_tier_names.py", ["fast", "reason"], []),
+   ("RULINGS.md", ["NEVER FOR A MODEL"], []),
+ ],
+ "RUL-140": [
+   ("scripts/work_lock.py", ["WORK-LOCK-1", "def check", "TTL_S"], []),
+   (".gitignore", [".work_lock"], []),
+   ("STANDING_ORDERS.md", ["SO-5", "work_lock.py check", "wait for the tree to be"], []),
+   ("RULINGS.md", ["STAND OFF A SCOPE"], []),
+ ],
  "RUL-133": [
    # The Buzz clause was adopted while the platform still had no onboarded listers -- the window
    # that made it an edit rather than a migration. Four surfaces must agree or the agreement is a
