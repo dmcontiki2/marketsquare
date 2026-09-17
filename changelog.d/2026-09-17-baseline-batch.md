@@ -47,3 +47,8 @@ live halves red until deployed. `rulings_check.py` reflections added for RUL-124
 read a cached 404, then restored the vhost — the exact CSP-SCRIPT-SRC-7 trap 033 documents.
 The vhost block was right; the instrument was wrong. Fixed to measure the origin on :443 over
 loopback with trustsquare.co SNI, never following a redirect; re-shipped in the same session.
+**Deploy 2 (4c4b34e, 17:48Z) — 042 jammed again (QUICK-PATH-3):** the origin probe now measured the
+right thing but fired the instant `systemctl reload nginx` returned, and an old worker still holding
+the previous config answered 404. Proven on the box: the identical block with a settled probe answers
+200 at the origin and through the CDN. Migration now waits up to 15 s for the reload to settle;
+third ship records 042 and unjams the chain.

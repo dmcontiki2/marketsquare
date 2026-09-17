@@ -69,7 +69,16 @@ def main():
     if t.returncode != 0:
         shutil.copy2(bak, VHOST); print("042: nginx -t FAILED, restored:\n" + t.stderr[-600:]); return 1
     subprocess.run(["systemctl", "reload", "nginx"], check=False)
-    code = _origin_status("/quick/")
+    # QUICK-PATH-3: `systemctl reload nginx` returns when the SIGHUP is delivered, not when the
+    # new workers own the listener. An immediate probe can still be answered by an old worker
+    # holding the previous config. Give the reload up to 15 s to settle; judge the last reading.
+    import time
+    code = None
+    for _ in range(30):
+        code = _origin_status("/quick/")
+        if code == 200:
+            break
+        time.sleep(0.5)
     if code != 200:
         shutil.copy2(bak, VHOST); subprocess.run(["systemctl", "reload", "nginx"], check=False)
         print("042: /quick/ did not answer 200 after reload (%r) -- restored" % (code,)); return 1
