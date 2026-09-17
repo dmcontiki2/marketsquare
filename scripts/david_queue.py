@@ -44,7 +44,12 @@ def _items():
                          raw, re.M | re.S):
         body = m.group(3)
 
-        def f(name, default=""):
+        # DW-087 (17 Sep 2026, ruff B023): f() closed over `body`, which this loop rebinds
+        # on every iteration. Harmless today only because every call happens inside the same
+        # iteration -- move one call after the loop and it would silently read the LAST
+        # block's text for every entry. Binding it as a default freezes the value at
+        # definition time, which is the fix that survives a refactor.
+        def f(name, default="", body=body):
             g = re.search(r"^%s:\s*(.+)$" % name, body, re.M)
             return g.group(1).strip() if g else default
 

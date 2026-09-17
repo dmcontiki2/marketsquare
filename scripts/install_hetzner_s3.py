@@ -49,7 +49,11 @@ for f in (ENVFILE, APPENV):
         print("  [OK] removed both keys from %s (box-wide file)" % f)
     else:
         for k, v in zip(KEYS, (ak, sk)):
-            src = re.sub(r'(?m)^(\s*%s=).*$' % k, lambda m: m.group(1) + v, src)
+            # DW-087 (17 Sep 2026, ruff B023): bind v at definition time. re.sub calls this
+            # lambda inside the same iteration so today's behaviour is correct, but a
+            # late-bound loop variable in a closure writes the LAST key's value everywhere
+            # the moment the call is deferred -- and this function writes CREDENTIALS.
+            src = re.sub(r'(?m)^(\s*%s=).*$' % k, lambda m, v=v: m.group(1) + v, src)
         open(f, "w").write(src)
         print("  [OK] updated both keys in %s" % f)
 

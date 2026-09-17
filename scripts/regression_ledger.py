@@ -1856,7 +1856,26 @@ def rg_origin_refuses_direct():
     finally:
         try: ck.close()
         except Exception: pass
-    if unfit:
+    # ON-ORIGIN GUARD (17 Sep 2026): run ON the origin itself, a connect to its own public
+    # address is routed locally and never crosses the Hetzner Cloud Firewall, so it "succeeds"
+    # regardless of the firewall -- proven 17 Sep when a ledger run on the box reported a false
+    # RG-0027 regression while the Hetzner API showed the lockdown fully applied (22/22
+    # Cloudflare ranges) and a probe from David's IP timed out on both ports. Owning the IP is
+    # the tell: only the origin can bind it.
+    if not unfit:
+        bt = socket.socket()
+        try:
+            bt.bind((ORIGIN, 0)); unfit = True
+            out.append((INFO, "RUNNER IS THE ORIGIN: this host owns %s, so a direct connect is "
+                              "local routing and never meets the cloud firewall -- probe skipped. "
+                              "Verify from a remote vantage (a sandbox run, or David's browser "
+                              "opening http://%s/ must time out)." % (ORIGIN, ORIGIN)))
+        except Exception:
+            pass
+        finally:
+            try: bt.close()
+            except Exception: pass
+    if unfit and not out:
         out.append((INFO, "RUNNER UNFIT for the raw-TCP probe: a connect to unroutable "
                           "203.0.113.1:80 'succeeded', so this network intercepts outbound "
                           "80/443 and any direct-connect result from here is meaningless. "
@@ -4705,7 +4724,6 @@ def rg_confirm_page_offers_an_account():
         ).read().decode("utf-8", "replace")
     except Exception as e:
         return [(INFO, "NOT EVALUATED - /confirm/ did not answer: %s" % e)]
-    low = page.lower()
     if "/auth/request-link" not in page:
         out.append((FAIL, "the confirm page does not offer an account at all -- the one thing this "
                           "page is for besides the confirmation itself"))
@@ -22932,6 +22950,185 @@ def rg_ref_lock_sweep():
     return out or [(INFO, "both lanes sweep the ref-lock class recursively, ref locks count as "
                           "blocking, the sandbox renames rather than unlinks, and the live-git "
                           "guard still gates the sweep")]
+
+
+@entry("RG-0380", "the cost sweep grades CODE THAT DISPATCHES, never prose that merely names a "
+                  "model -- so its warning count keeps meaning something",
+        LOCKED, fixed_on="2026-09-17",
+        scope="scripts/cost_compliance_sweep.py: the model-family classifier and its skip sets. "
+              "CLASS, and the third instance of it (DW-009 price cards, DW-047 the fable family "
+              "and .ledger_state.json, now DW-128): MODEL_RE is `claude-<word>`, so ANY document "
+              "that discusses models trips it -- and the instruments write the most such "
+              "documents. The cure is always the same shape: classify the token, or exempt the "
+              "non-dispatching FILE. Never widen the regex, never silence a call site. This entry "
+              "asserts the exemptions stayed NARROW, which is the half that can rot.",
+        ref="DW-128 (17 Sep 2026). The sweep had grown to 10 warnings and not one was a call "
+            "site. Six were the string `claude-code` -- Anthropic's CLI tool and the name of its "
+            "public GitHub repo -- read as a model family because five .bat headers, the ledger's "
+            "prose and the watch's own register all quote `claude-code #92984` from the KB5124008 "
+            "sandbox outage. The rest were the register's summary text naming Sonnet because it "
+            "RECORDS a Model Register check, plus the ledger's shard output. The danger was never "
+            "the noise: it is that a familiar count of 10 is exactly where a real eleventh warning "
+            "hides. After the fix, the same morning: 0 critical, 0 warnings, exit 0, with the "
+            "call-site OK lines untouched -- which is the proof nothing was silenced.")
+def rg_cost_sweep_grades_dispatch_not_prose():
+    """A sweep that grades its own transcript cannot be read for signal."""
+    src = repo_file(os.path.join("scripts", "cost_compliance_sweep.py"))
+    if src is None:
+        return [(INFO, "NOT EVALUATED -- cost_compliance_sweep.py not readable from this vantage "
+                       "(run the board from the working tree)")]
+    out = []
+    if 'fam == "code"' not in src:
+        out.append((FAIL, "the sweep no longer classifies `claude-code` -- the CLI tool's own "
+                          "GitHub issue reference counts as a model family again (DW-128)"))
+    if "OPEN_ITEMS.json" not in src:
+        out.append((FAIL, "the watch register has fallen out of the reference-doc exemption -- the "
+                          "sweep is grading the watch's own prose as a call site"))
+    if '"ledger_runs"' not in src:
+        out.append((FAIL, "ledger_runs/ is no longer skipped -- the sweep reads the regression "
+                          "ledger's shard output as if it were code"))
+    # the exemptions must stay NARROW: a real call site still fires at full severity
+    if "CRIT" not in src or "advert_agent.py" not in src:
+        out.append((FAIL, "the sweep has lost its full-severity branches -- an exemption was "
+                          "widened into a silence, which is the one cure not available here"))
+    return out or [(INFO, "claude-code is classified as the tool it is, the register and "
+                          "ledger_runs are exempt as non-dispatching, and real call sites still "
+                          "fire at full severity")]
+
+
+@entry("RG-0381", "the deploy lane a HUMAN double-clicks STOPS on a red, like the three automated "
+                  "lanes always have -- a gate that names a danger and ships anyway is not a gate",
+        LOCKED, fixed_on="2026-09-17",
+        scope="deploy_marketsquare.bat (the ONE code deploy, DEPLOY-CONSOLIDATION-1) and "
+              "predeploy_check.py's MODE contract. CLASS: any gate whose refusal is conditional "
+              "on an environment variable its own caller never sets. The override is deliberately "
+              "PRESERVED and deliberately EXPLICIT -- PREDEPLOY_MODE=warn, set by a human who has "
+              "read the red -- because a gate with no escape hatch gets commented out the first "
+              "time it is wrong. Only the DEFAULT changed.",
+        ref="DW-133 (17 Sep 2026), found while closing DW-129/130/131 and sharper than any of "
+            "them. predeploy_check.py defaults to MODE='warn' and returns 0 unless MODE=='strict'; "
+            "deploy_marketsquare.bat's abort is guarded by `if /I \"%PREDEPLOY_MODE%\"==\"strict\"` "
+            "and the script never set it. nightly_tsl.bat, nightly_ship.bat and arm_phone_deploy.bat "
+            "all set strict -- so the ONE lane a human clicks was the only one that would print "
+            "`Verdict: DANGER` and carry on deploying. PROVEN from the log, not argued: every line "
+            "of deploy_audit.log reads mode=warn, including "
+            "`2026-09-17T04:45:53Z mode=warn ... danger=pg-readiness|tester-intake verdict=DANGER`. "
+            "The 17 Sep faults never reached production, but the reason was that nobody pushed the "
+            "deploy ref that morning -- not that anything stopped them. A watch report had already "
+            "told David the gate was 'holding the door'; that sentence was READ off a coverage card "
+            "and never probed, and it was wrong. This entry exists so the claim is machinery "
+            "instead of a sentence.")
+def rg_manual_deploy_lane_is_strict():
+    """The lane a human clicks must refuse a red, not narrate it."""
+    bat = repo_file("deploy_marketsquare.bat")
+    chk = repo_file("predeploy_check.py")
+    if bat is None or chk is None:
+        return [(INFO, "NOT EVALUATED -- deploy_marketsquare.bat/predeploy_check.py not readable "
+                       "from this vantage (run the board from the working tree)")]
+    out = []
+    # ORDERING IS JUDGED ON EXECUTABLE LINES ONLY. First cut of this entry compared raw
+    # string positions and went red against correct code, because the explanatory `::`
+    # comment block above the fix NAMES predeploy_check.py and sits before the `set`.
+    # That is the pin-to-a-spelling class this file documents five times over; the
+    # property is "the default is set before the scan RUNS", not "before the filename
+    # first appears in the file".
+    code = [ln.strip() for ln in bat.splitlines()
+            if ln.strip() and not ln.strip().startswith("::")
+            and not ln.strip().lower().startswith("rem ")]
+    flat = bat.lower().replace(" ", "")
+    exec_flat = "\n".join(code).lower().replace(" ", "")
+    if 'predeploy_mode=strict' not in exec_flat:
+        out.append((FAIL, "deploy_marketsquare.bat no longer defaults PREDEPLOY_MODE to strict -- "
+                          "the human deploy lane would print DANGER and ship anyway (DW-133)"))
+    elif "predeploy_check.py" in exec_flat and \
+         exec_flat.index('predeploy_mode=strict') > exec_flat.index("predeploy_check.py"):
+        out.append((FAIL, "the strict default is set AFTER predeploy_check.py runs -- the scan has "
+                          "already returned 0 by then and the default is decoration"))
+    if 'if/i"%predeploy_mode%"=="strict"' not in flat:
+        out.append((FAIL, "the abort branch is gone from deploy_marketsquare.bat -- nothing acts "
+                          "on the pre-deploy scan's exit code at all"))
+    if "ifnotdefinedpredeploy_mode" not in flat:
+        out.append((FAIL, "the strict default is unconditional -- the documented "
+                          "PREDEPLOY_MODE=warn override no longer works, and an override nobody "
+                          "can reach is how a gate gets deleted instead of fixed"))
+    if "PREDEPLOY_MODE" not in chk or "strict" not in chk:
+        out.append((FAIL, "predeploy_check.py has lost its MODE contract -- strict/warn no longer "
+                          "mean anything and the caller's default cannot bite"))
+    return out or [(INFO, "the human deploy lane defaults to strict, sets it before the scan, "
+                          "still acts on the exit code, and the explicit warn override survives")]
+
+
+@entry("RG-0382", "a brain the run CANNOT REACH from where it stands reads NOT MEASURED, never a "
+                  "health colour -- so a real brain outage stays distinguishable from a laptop",
+        LOCKED, fixed_on="2026-09-17",
+        scope="scripts/maintenance_agent.py (_vantage_refusal/_declined, brain(), brain_probe(), "
+              "classify()) AND dashboard.server.html's maintenance card -- BOTH, because a state "
+              "named honestly by the producer and repainted amber by the consumer is the same lie "
+              "with a second opinion. Source-side by nature: the property is that a LIMIT is "
+              "DISTINGUISHABLE from a FAULT, and no live probe can tell the two apart -- which is "
+              "exactly the fault. CLASS, not instance: every instrument in this repo that turns an "
+              "exception into a state must ask WHY it failed before it picks a colour; the sibling "
+              "already on record is RG-0378 (git blindness vs a clean tree). The FAIL-SAFE routing "
+              "to Path B is asserted here too, so a future 'fix' cannot cure the label by granting "
+              "the unconsulted lane autonomy it never had.",
+        ref="Found by the 17 Sep maintenance loop on its own instrument. MAINT-BRAIN-1 refuses "
+            "/admin/maint/brain to any caller that is not a process on the box (403 'brain endpoint "
+            "is local-only') so that a leaked maint key can never buy model calls -- a deliberate "
+            "security control working exactly as designed. maintenance_agent collapsed that "
+            "permanent, expected refusal into 'AMBER:transport / brain-unreachable', and the "
+            "dashboard painted the B2b readiness row amber for it. PROVEN, not argued: the 05:37Z "
+            "run posted brain_state=AMBER:transport; a direct POST returned 403 "
+            "{\"detail\":\"brain endpoint is local-only\"}; the 05:42Z run after the fix posted "
+            "brain_state=NOT_EVALUATED:remote, error_kind=vantage:local-only, and /dashboard/maint "
+            "serves that back. The harm was not cosmetic: every remote run painted the same amber a "
+            "genuine outage would, so the one instrument gating the whole maintenance lane could "
+            "not report a real failure in a way anybody would notice. RG-0187's contract, at the "
+            "instrument that needed it most.")
+def rg_brain_vantage_is_not_a_fault():
+    """A refusal that is about WHERE the run stands must not wear a health colour."""
+    ag = repo_file("scripts/maintenance_agent.py")
+    dash = repo_file("dashboard.server.html")
+    if ag is None or dash is None:
+        return [(INFO, "NOT EVALUATED -- maintenance_agent.py/dashboard.server.html not readable "
+                       "from this vantage (run the board from the working tree)")]
+    out = []
+    flat = ag.replace(" ", "")
+    if "_vantage_refusal" not in ag or "local-only" not in ag:
+        out.append((FAIL, "maintenance_agent no longer recognises MAINT-BRAIN-1's local-only "
+                          "refusal -- a remote run is back to reporting the brain as broken"))
+    if "NOT_EVALUATED:remote" not in ag:
+        out.append((FAIL, "the NOT_EVALUATED state is gone from maintenance_agent -- an instrument "
+                          "limit is wearing a health colour again"))
+    if 'error_kind":"vantage:local-only' not in flat and "vantage:local-only" not in ag:
+        out.append((FAIL, "the vantage error_kind is gone -- classify() and the heartbeat can no "
+                          "longer tell a limit from a transport failure"))
+    # The cure must not have been applied by granting autonomy to an unconsulted brain.
+    # ASSERTION FIXED the same session it was written (17 Sep 2026): the first cut read a flat
+    # 600-character window after the marker and went RED against correct code, because
+    # classify()'s LATER, unrelated pre-launch PATH_A return (RUL-013) fell inside it. That is
+    # the pin-to-a-distance class this file documents elsewhere -- the property is "the vantage
+    # branch itself returns PATH_B", not "the characters near it contain no PATH_A". Judged on
+    # the branch's OWN return statement.
+    if 'startswith("vantage:")' in ag:
+        seg = ag.split('startswith("vantage:")', 1)[1]
+        i = seg.find("return ")
+        branch = seg[i:i + 40] if i >= 0 else ""
+        if '"PATH_B"' not in branch:
+            out.append((FAIL, "the vantage branch no longer returns PATH_B (returns %r) -- the "
+                              "label was fixed by removing the fail-safe, which is worse than the "
+                              "original fault" % branch.strip()[:40]))
+    if 'startswith("vantage:")' not in ag:
+        out.append((FAIL, "classify() no longer names the vantage case -- it reports 'brain "
+                          "unreachable', which reads as a defect report about the brain"))
+    # The consumer half: the dashboard must render it grey, not amber.
+    if "NOT_EVALUATED" not in dash:
+        out.append((FAIL, "dashboard.server.html does not know the NOT_EVALUATED state -- the "
+                          "producer names it honestly and the card repaints it amber"))
+    elif "notmeas" not in dash or "GY[0]" not in dash.split("notmeas", 1)[1][:2000]:
+        out.append((FAIL, "the maintenance card no longer renders NOT_EVALUATED in grey -- "
+                          "RG-0133's rule, that no instrument defaults to a health colour"))
+    return out or [(INFO, "a local-only refusal is named as a vantage limit, reads NOT_EVALUATED, "
+                          "renders grey on the card, and still routes Path B by fail-safe")]
 
 
 if __name__ == "__main__":

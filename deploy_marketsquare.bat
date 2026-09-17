@@ -73,6 +73,17 @@ if not defined PYEXE (
     echo  [3/6] WARN: python not found - gates skipped, continuing.
     goto :gates_done
 )
+:: -- GATE-STRICT-1 (17 Sep 2026, DW-133). This lane used to leave PREDEPLOY_MODE unset,
+:: -- which means "warn": predeploy_check.py printed "Verdict: DANGER" and then returned 0,
+:: -- so the abort below could never fire and the deploy carried on. The three OTHER lanes
+:: -- (nightly_tsl.bat, nightly_ship.bat, arm_phone_deploy.bat) have always set strict, so
+:: -- the ONE lane a human double-clicks was the only one that did not stop. Proven 17 Sep:
+:: -- deploy_audit.log carries "mode=warn ... danger=pg-readiness|tester-intake verdict=DANGER".
+:: -- A gate that names a danger and ships anyway is the RG-0133 class: a colour carrying
+:: -- no information. DELIBERATE ESCAPE HATCH, explicit and unchanged: run
+::     set "PREDEPLOY_MODE=warn"
+:: -- in the same shell before this script to ship over a red you have read and accepted.
+if not defined PREDEPLOY_MODE set "PREDEPLOY_MODE=strict"
 %PYEXE% "%PROJECT%\predeploy_check.py"
 set SCANRC=%errorlevel%
 if /I "%PREDEPLOY_MODE%"=="strict" if not "%SCANRC%"=="0" (

@@ -1,5 +1,5 @@
 {
- "next_id": 133,
+ "next_id": 134,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -853,12 +853,12 @@
   },
   "DW-087": {
    "first_seen": "2026-08-31",
-   "last_seen": "2026-09-14",
+   "last_seen": "2026-09-17",
    "sev": "LOW",
    "source": "scripts/deep_scan.py (Monday lane) — delta vs SCAN_REPORT.json baseline 2026-08-24",
-   "status": "OPEN",
-   "summary": "STILL FAILING 2026-09-14 - Monday deep-scan lane re-ran, all seven present. SCAN_REPORT.json 2026-09-14T04:44:02Z, 4/4 tools, 244 findings / 4 new / 0 crash-class. Six match file+line with new=false; the seventh (vulture DEAD ternary in scripts/regression_ledger.py) drifted 9579 -> 9851 as the file grew and was matched on message, not line, so drift cannot be mistaken for a fix. No close.",
-   "next_action": "Next Monday lane or an attended tidy pass. Look at `david_queue.py:48` (B023) first — a late-bound loop variable in a closure is the one item here that can produce wrong OUTPUT rather than dead code — and at regression_ledger.py:9579, an unsatisfiable ternary inside the instrument that grades everything else.",
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-17 — the originating check re-ran and PASSED. `deep_scan.py` reports **251 findings, 0 new, 0 crash-class, 4/4 tools**, and the two items this row named as the ones that mattered are GONE, verified by running the tools directly rather than reading the delta: `ruff --select B023 .` now reports **All checks passed** (was `david_queue.py:48`), and the unsatisfiable-ternary/dead-assignment class in the ledger is clear (`ruff --select F841,B007 scripts/regression_ledger.py` clean). The B023 fix was the one this row flagged as able to produce wrong OUTPUT rather than dead code: `f()` closed over `body`, which the loop rebinds — harmless only because every call happened inside the same iteration. A second instance found while closing, in `install_hetzner_s3.py`, was fixed in the same pass and matters more: that closure writes CREDENTIALS, so a deferred call would have written the last key's value to every slot. Both are now bound at definition time.",
+   "next_action": "None - closed 2026-09-17, evidence quoted in the summary.",
    "last_note": "2026-09-15: NOT re-run - Monday deep-scan lane, today is Tuesday. Deliberately not run off-lane: deep_scan.py rewrites SCAN_REPORT.json, the baseline next Monday's delta is measured against. No check, no close. last_seen deliberately NOT bumped."
   },
   "DW-088": {
@@ -1313,12 +1313,12 @@
   },
   "DW-121": {
    "first_seen": "2026-09-14",
-   "last_seen": "2026-09-14",
+   "last_seen": "2026-09-17",
    "sev": "LOW",
    "source": "scripts/deep_scan.py (Monday lane) - NEW delta vs SCAN_REPORT.json, baseline 2026-09-07",
-   "status": "OPEN",
-   "summary": "NEW - 4 new static findings, none in app code, none crash-class (244 total, 234 LOW / 10 MEDIUM, 4/4 tools). THREE of the four are one artefact counted twice: they sit in ledger_runs/committed_ledger.py, the committed snapshot of scripts/regression_ledger.py, and each mirrors a finding already carried against the original (DEAD ternary :9826 and :17109, unused import _re0 :15530, vs :9851, :17209, :15614 live). The scan double-counts, inflating the delta every time the snapshot refreshes. ONE is genuinely new and in the instrument itself: ruff B905 at scripts/regression_ledger.py:20125 - a zip() without strict=, which truncates silently instead of raising. In the file that grades everything else that is worth more than its LOW grade.",
-   "next_action": "CTO lane, cheapest first: add strict= at regression_ledger.py:20125, and decide whether ledger_runs/ belongs in the scan scope at all - a generated snapshot that duplicates every finding in its source makes the delta mean less each week. Then the DW-087 backlog.",
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-17 — the originating check re-ran and PASSED: **0 new findings**. Three of the four were one artefact counted twice, exactly as this row diagnosed — `ledger_runs/committed_ledger.py` is a GENERATED snapshot of `scripts/regression_ledger.py`, so every finding in it duplicated one already carried against the original at a different line number. `ledger_runs/` is now out of the deep scan's scope, on the same reasoning that removed `_to_delete/`: a report padded with copies teaches you to ignore the report. The ORIGINAL is still scanned in full, so nothing was hidden — and the weekly delta means something again. The fourth item (the `strict=` call) reads clean.",
+   "next_action": "None - closed 2026-09-17, evidence quoted in the summary.",
    "last_note": "2026-09-16: HALF FIXED, deliberately NOT closed. The genuinely-new finding is fixed - regression_ledger.py now reads list(zip(cities[:12], stamps, strict=True)); a file-wide grep confirms no other bare zip( remains. NOT closed because its originating check is the Monday deep-scan lane and today is Wednesday: running deep_scan.py off-lane would rewrite SCAN_REPORT.json, the baseline Monday's delta is measured against. No check, no close. The remaining half - whether ledger_runs/ (a generated snapshot duplicating every finding in its source) belongs in the scan scope - is for that run to settle."
   },
   "DW-122": {
@@ -1399,49 +1399,58 @@
    "last_seen": "2026-09-17",
    "sev": "LOW",
    "source": "scripts/cost_compliance_sweep.py - 1 NEW WARN vs 15 Sep (0 crit / 8 warn / 28 ok / 49 info, exit 1)",
-   "status": "OPEN",
-   "summary": "NEW - the cost sweep is grading the watch's own register as if it were code. The one new WARN is DAILY_WATCH/OPEN_ITEMS.json:1379 'Sonnet outside the metered AdvertAgent registry' - that line is the DW-126 summary prose written by the 16 Sep attended pass (Model Register re-verification). No AI call is made from that file; app code unchanged. Same shape as the two existing claude-code hits against ledger_runs/ and regression_ledger.py. Instrument noise, not a spend risk; recorded so a real new WARN cannot hide behind a familiar count. Not on the coverage map.",
-   "next_action": "CTO lane, unattended-safe: exclude DAILY_WATCH/, ledger_runs/ and Records/ from the sweep's scan roots (or gate the model-name grep to files that import an AI client), re-run; closes when the sweep re-runs without the register hit."
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-17 — the originating check re-ran and PASSED: `cost_compliance_sweep.py` exits 0 with **0 critical · 0 warnings · 29 ok · 53 info** (was 10 warnings). FIXED AT THE CLASS, not silenced. All six `claude-code` warnings were the string in `claude-code #92984` — the GitHub issue reference for the KB5124008 sandbox outage, quoted in five .bat headers, the ledger's prose and this register — matched by MODEL_RE, which is `claude-<word>`. It is Anthropic's CLI tool and its public repo name; it is not a model and cannot be selected as one, so it is now classified like any other known non-model token. The register joined the reference-doc exemption its sibling coverage map already had, and `ledger_runs/` is skipped as instrument exhaust exactly as `.ledger_state.json` already was. The 29 call-site OK lines are UNCHANGED — that is the proof nothing real was hidden. Asserted by **RG-0380** (LOCKED), which also checks the exemptions stayed narrow.",
+   "next_action": "None - closed 2026-09-17, evidence quoted in the summary."
   },
   "DW-129": {
    "first_seen": "2026-09-17",
    "last_seen": "2026-09-17",
    "sev": "HIGH",
    "source": "regression ledger RG-0351 (LOCKED) - REGRESSION, combine exit 1; corroborated by test_pg_readiness.py and predeploy_check.py",
-   "status": "OPEN",
-   "summary": "NEW - a LOCKED fix ROTTED overnight. RG-0351 asserts the plain SQLite clock is GONE from bea_main.py (every no-modifier datetime('now') is the portable form) so the Postgres move stays cheap. It now reads \"REGRESSION: 1 plain datetime('now') call(s) are back in bea_main.py\" and the combine exits 1. PROBED two more ways, not taken from the board's word: test_pg_readiness.py returns \"FAIL SQLite-specific surface GREW {'datetime_now': (15, 16)}\" - the ratchet went UP, 15 -> 16, which is the direction the entry exists to forbid; and predeploy_check.py prints \"Verdict: DANGER\" naming the same cause. LOCATED: bea_main.py:1103, the new ai_topups table - \"at TEXT NOT NULL DEFAULT (datetime('now'))\". INTRODUCED BY commit c5866aa (MAINT-BRAIN-1, 17 Sep 04:29 UTC, 'maintenance agent routed through the cost chokepoint'), i.e. about two hours before this watch ran - a DDL default in a brand-new table, not a revert of the 45 sites RG-0351 converted on 10 Sep. Low blast radius today (SQLite is what production runs; the value shape is unchanged) and NO user-visible effect. The cost is the Postgres move and the principle: the ratchet's whole contract is that the count may only fall. ONE LINE to fix. The pre-deploy gate is holding the door - it reads DANGER, so this cannot ship unnoticed.",
-   "next_action": "CTO lane, one line: change bea_main.py:1103 to the portable CURRENT_TIMESTAMP form the other 45 sites use, re-run test_pg_readiness.py (expect the baseline back at 15) and the ledger shard carrying RG-0351. Row closes when RG-0351 reads [ ok ] and combine exits 0."
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-17 — the originating check re-ran and PASSED. RG-0351 reads `[  ok  ]`, the combine exits 0 (368 entries · 346 holding · 0 REGRESSED · 0 UNVERIFIED) and `test_pg_readiness.py` returns `PASS pg-readiness ratchet: {'datetime_now': 15, ...}` — the ratchet is back at 15, the number it may never exceed. Fixed by the concurrent AI-agent session, not by this one: the `datetime('now')` DDL default was removed from the ai_topups table during that session's own rework. Verified on disk before closing — zero plain `datetime('now')` remain in bea_main.py.",
+   "next_action": "None - closed 2026-09-17, evidence quoted in the summary."
   },
   "DW-130": {
    "first_seen": "2026-09-17",
    "last_seen": "2026-09-17",
    "sev": "HIGH",
    "source": "test_tester_intake.py::test_maintenance_key_opens_faults_and_nothing_else (17/18) - re-run directly, and by predeploy_check.py",
-   "status": "OPEN",
-   "summary": "NEW - a narrow key got wider. MS_MAINT_KEY exists to open the fault lane and nothing else; the guard that says so now FAILS with \"MS_MAINT_KEY now opens endpoints outside the fault lane: /admin/maint/brain\". PROBED directly this run: the suite is 17 PASS / 1 FAIL and the failing test is this one; predeploy_check.py independently prints \"TESTER INTAKE: fault-report guard FAILED\" naming the same endpoint, verdict DANGER. INTRODUCED BY the same commit as DW-129 - c5866aa (MAINT-BRAIN-1, 17 Sep 04:29 UTC) - which added POST /admin/maint/brain and let the maintenance key reach it. WHY IT MATTERS beyond the guard: the endpoint the key now reaches SPENDS MONEY (it is the agent's model-call chokepoint), so a key scoped to 'report a fault' can now trigger paid inference. Scope creep on a credential is the class RG-0147 and the 22 Aug secrets work were paid for. NOT a public exposure - the key is server-side and the endpoint is admin-gated; this is the blast radius of one credential, not an open door.",
-   "next_action": "CTO lane: decide the intended scope and make code and guard agree - either gate /admin/maint/brain behind the admin token alone (leaving MS_MAINT_KEY fault-only, which is what the guard asserts), or widen the guard DELIBERATELY with a dated reason in its allowlist. Do not weaken the assertion to make it pass. Row closes when the suite reads 18/18 and predeploy_check reaches ok."
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-17 — the originating check re-ran and PASSED. `test_tester_intake.py` is 18/18 including `test_maintenance_key_opens_faults_and_nothing_else`, and predeploy_check's tester-intake leg reads ok. Fixed by the concurrent session: `/admin/maint/brain` is now behind `_require_brain`, which requires the maintenance key AND a loopback origin — it refuses anything carrying x-real-ip or x-forwarded-for. That is a NARROWER door than the one the guard asked for, so the credential-scope class is closed rather than accommodated.",
+   "next_action": "None - closed 2026-09-17, evidence quoted in the summary."
   },
   "DW-131": {
    "first_seen": "2026-09-17",
    "last_seen": "2026-09-17",
    "sev": "MEDIUM",
    "source": "scripts/cost_compliance_sweep.py - NEW WARN vs 16 Sep (0 crit / 10 warn / 28 ok / 48 info, exit 1)",
-   "status": "OPEN",
-   "summary": "NEW and it is the money one. bea_main.py:21723 `maint_brain` - \"spend-log OK but NO _check_cost_ceiling\". Every other one of the 22 AI call sites in the file carries BOTH halves; this one logs what it spent but nothing stops it spending. That is principle P2 (budget every call) unmet at a brand-new call site. Same commit as DW-129 and DW-130: c5866aa (MAINT-BRAIN-1, 17 Sep 04:29 UTC), whose own message says the agent is 'routed through the cost chokepoint' - the spend half landed, the ceiling half did not. TODAY'S EXPOSURE IS SMALL and measured, not assumed: cron spend reads $0.00 today and $0.0612 for the month against a $100 platform ceiling, and the platform ceiling itself still applies at the account level. The gap is the per-call guard, which is what stops a loop rather than a bill. Second NEW WARN in the same sweep - DAILY_WATCH/OPEN_ITEMS.json:1403 'unknown model family claude-code' - is the known DW-128 shape (the sweep grading the watch's own register) and is recorded there, not here.",
-   "next_action": "CTO lane: add the _check_cost_ceiling call to maint_brain the way the other 22 sites do it, re-run the sweep. Row closes when maint_brain reads ceiling OK + spend-log OK."
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-17 — the originating check re-ran and PASSED: the cost sweep reads `maint_brain — ceiling ✓ spend-log ✓` and the whole sweep is now 0 critical · 0 warnings · exit 0. IMPORTANT — the fix is NOT the one this row proposed, and the row was wrong. This session added `_check_cost_ceiling(\"\")` before the dispatch; the concurrent session REMOVED it the same hour under an explicit ruling from David: the agent must never HALT on cost — it steps DOWN the tier ladder and the cheapest rung answers. The rail at this site is therefore `_maint_pick_rung` (worst case computed before dispatch, min of agent budget and platform headroom), which bounds spend without ever stopping an unattended run. That is the better control and it is David's call; this row's proposed cure has been withdrawn, not merely overridden. RESIDUAL, recorded not closed: the sweep's OK line for this site still reads the generic 'ceiling ✓' wording rather than naming the step-down rail — cosmetic, and it belongs to the lane that owns that branch.",
+   "next_action": "None - closed 2026-09-17, evidence quoted in the summary."
   },
   "DW-132": {
    "first_seen": "2026-09-17",
    "last_seen": "2026-09-17",
    "sev": "LOW",
    "source": "regression ledger RG-0377 - 1 UNVERIFIED on the combine summary",
-   "status": "OPEN",
-   "summary": "NEW - an assertion went BLIND, which is not the same as a fix rotting and the ledger says so properly. RG-0377 (a tester can report a fault from EVERY page we deploy to him) reads [ ???? ] NOT EVALUATED because it judges itself by running test_tester_intake.py, and that suite is failing for a reason RG-0377 does not judge - the maintenance-key leg of DW-130. So the fault-widget property is very likely still TRUE (its own leg, test_widget_is_wired_into_every_tester_page, PASSES) but no verdict can be rendered while the suite is red. This is RG-0187's contract working as designed - an instrument limit reads UNVERIFIED, never REGRESSION - and it is recorded because a blind assertion is a real loss of cover for as long as it lasts, not a clean bill. Resolves by itself the moment DW-130 is fixed; kept as its own row so that if it does NOT, somebody notices.",
-   "next_action": "None of its own - fix DW-130 and re-run. Row closes when RG-0377 reads [ ok ] on a combine run. If it goes red rather than ok once the suite is green, that is a NEW finding with a new id."
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-17 — the originating check re-ran and PASSED. RG-0377 reads `[  ok  ]` and the combine summary shows 0 UNVERIFIED (was 1). The assertion was never broken, only blind: it judges itself by running test_tester_intake.py, and that suite went green the moment DW-130 was fixed. Resolved exactly as this row predicted it would.",
+   "next_action": "None - closed 2026-09-17, evidence quoted in the summary."
+  },
+  "DW-133": {
+   "first_seen": "2026-09-17",
+   "last_seen": "2026-09-17",
+   "sev": "HIGH",
+   "source": "deploy_marketsquare.bat + predeploy_check.py MODE contract - found while closing DW-129/130/131",
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-17 — found and fixed in the same session, then asserted. **This is the answer to David's question 'why did the old process let this happen at all'.** `predeploy_check.py` defaults to MODE='warn' and returns 0 unless MODE=='strict'; `deploy_marketsquare.bat`'s abort is guarded by `if /I \"%PREDEPLOY_MODE%\"==\"strict\"` and the script NEVER SET IT. `nightly_tsl.bat`, `nightly_ship.bat` and `arm_phone_deploy.bat` all set strict — so the ONE lane a human double-clicks was the only one that would print `Verdict: DANGER` and deploy anyway. PROVEN from the log, not argued: every line of deploy_audit.log reads mode=warn, including `2026-09-17T04:45:53Z mode=warn ... danger=pg-readiness|tester-intake verdict=DANGER`. CORRECTION ON THE RECORD: this morning's watch report told David 'the pre-deploy gate is holding the door'. That sentence was READ off a coverage card and never probed, and it was wrong — the faults did not reach production because nobody pushed the deploy ref, not because anything stopped them. Fixed: the lane now defaults to strict, set BEFORE the scan runs, with the explicit `PREDEPLOY_MODE=warn` override preserved. Asserted by **RG-0381** (LOCKED), which checks the ordering on executable lines only.",
+   "next_action": "None - closed 2026-09-17 on the lane defaulting to strict before the scan and RG-0381 (LOCKED) passing."
   }
  },
  "last_run": "2026-09-17",
- "last_verdict": "RED",
+ "last_verdict": "GREEN",
  "recheck_pass_2026_08_20": {
   "requested_by": "David: close all open actions",
   "items_rechecked": 15,
@@ -2649,5 +2658,58 @@
    "red": 3,
    "grey": 10
   }
+ },
+ "fix_pass_2026_09_17": {
+  "verdict": "GREEN",
+  "kind": "attended fix pass (David: fix it, do not undo the concurrent session, close the open actions)",
+  "ledger": {
+   "entries": 368,
+   "holding": 346,
+   "regressed": 0,
+   "open": 22,
+   "ready_to_lock": 0,
+   "unverified": 0,
+   "exit": 0
+  },
+  "cost_sweep": {
+   "critical": 0,
+   "warn": 0,
+   "ok": 29,
+   "info": 53,
+   "exit": 0
+  },
+  "deep_scan": {
+   "findings": 251,
+   "new": 0,
+   "crash_class": 0,
+   "tools": "4/4"
+  },
+  "production_impact": "none - c5866aa never reached origin/deploy (4f5f466); live bea_main.py dated 12 Sep",
+  "closed": [
+   "DW-087",
+   "DW-121",
+   "DW-128",
+   "DW-129",
+   "DW-130",
+   "DW-131",
+   "DW-132",
+   "DW-133"
+  ],
+  "still_open": [
+   "DW-010",
+   "DW-111"
+  ],
+  "new_assertions": [
+   "RG-0380",
+   "RG-0381"
+  ],
+  "correction": "this morning's report said the pre-deploy gate was holding the door; PROBED false - predeploy_check defaults to warn and returns 0 on DANGER. Fixed as DW-133/RG-0381.",
+  "fixed_by_other_session": [
+   "DW-129",
+   "DW-130",
+   "DW-131"
+  ],
+  "davids_ruling_honoured": "never halt on cost - the _check_cost_ceiling this session added to maint_brain was removed by the other session under David's ruling and NOT re-applied",
+  "collision": "3 ledger entries written 07:1x were destroyed by a concurrent write at 07:22:55; compare-and-swap kept the loss on this session. bea_main.py and regression_ledger.py have no fragment-and-compile lane."
  }
 }

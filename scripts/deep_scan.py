@@ -28,8 +28,14 @@ REPORT = os.path.join(REPO, "SCAN_REPORT.json")
 # Scanning them produced 200+ phantom findings on the first run (the same lesson
 # _to_delete/ taught the cost sweep in DW-018): a report padded with code that can
 # never run teaches you to ignore the report.
+# DW-121 (17 Sep 2026): ledger_runs/ holds committed_ledger.py -- a GENERATED SNAPSHOT of
+# scripts/regression_ledger.py. Every finding in it is a duplicate of one already carried
+# against the original, at a different line number, so each real defect was counted twice and
+# each week's delta meant less than the one before. Three of the four "new" findings on
+# 14 Sep were this one artefact. Same reasoning as _to_delete/ above: a report padded with
+# copies teaches you to ignore the report. The ORIGINAL is still scanned in full.
 EXCLUDE = ["_CCP_STAGED", "_to_delete", ".lintenv", "node_modules", ".git",
-           "AUDIT_GLOBAL_QA", "_incoming", "venv", ".venv"]
+           "AUDIT_GLOBAL_QA", "_incoming", "venv", ".venv", "ledger_runs"]
 EXCLUDE_GLOB = ",".join(f"{d}/**" for d in EXCLUDE) + ",**/*.bak-*"
 
 
