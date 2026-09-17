@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trust Score — one evidence set, and where the caps bite</title>
+<style>
+:root{--ink:#0b1220;--panel:#161f2e;--line:rgba(255,255,255,.10);
+--base:#64748b;--uni:#10b981;--trk:#38bdf8;--cat:#a78bfa;--pen:#ef4444;--over:#f59e0b;
+--t1:#f3f6fb;--t2:rgba(243,246,251,.74);--t3:rgba(243,246,251,.45);}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--t1);font:15px/1.6 Inter,-apple-system,Segoe UI,Roboto,sans-serif;padding:26px 18px 60px}
+.wrap{max-width:1100px;margin:0 auto}
+h1{font-size:25px;margin:0 0 4px;letter-spacing:-.4px}
+.sub{color:var(--t2);font-size:14px;margin:0 0 4px}
+.stamp{color:var(--t3);font-size:12px;margin:0 0 22px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.9px;color:var(--t3);margin:26px 0 10px;font-weight:700}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+
+/* ladder */
+.lad{display:grid;grid-template-columns:190px 1fr 120px;gap:10px;align-items:center;margin-bottom:9px}
+.lname{font-size:13px;font-weight:700}
+.lname i{display:block;font-style:normal;font-size:11px;color:var(--t3);font-weight:400}
+.bar{height:26px;border-radius:7px;background:rgba(255,255,255,.05);position:relative;overflow:hidden}
+.fill{height:100%;border-radius:7px}
+.spill{position:absolute;top:0;height:100%;border-radius:0 7px 7px 0;
+ background:repeating-linear-gradient(45deg,rgba(245,158,11,.5),rgba(245,158,11,.5) 6px,rgba(245,158,11,.18) 6px,rgba(245,158,11,.18) 12px);}
+.lval{text-align:right;font-size:13px;font-weight:800}
+.lval s{text-decoration:none;color:var(--over);font-size:11px;display:block;font-weight:700}
+.tot{display:grid;grid-template-columns:190px 1fr 120px;gap:10px;align-items:center;
+ border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.tot .lname{font-size:14px}
+.tot .lval{font-size:20px;color:var(--uni)}
+.note{font-size:12.5px;color:var(--t2);margin-top:14px;border-left:3px solid var(--over);padding-left:11px}
+
+/* flow */
+.flow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:780px){.flow{grid-template-columns:1fr}.lad,.tot{grid-template-columns:130px 1fr 92px}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+.box.one{border-color:rgba(16,185,129,.55);background:rgba(16,185,129,.09)}
+.box h3{margin:0 0 5px;font-size:13.5px}
+.box p{margin:0;font-size:12.5px;color:var(--t2)}
+.box code{background:rgba(255,255,255,.08);padding:1px 5px;border-radius:5px;font-size:11.5px;color:#ffd9a3;font-family:ui-monospace,Menlo,Consolas,monospace}
+.arrow{text-align:center;color:var(--t3);font-size:18px;margin:6px 0}
+.rule{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--t2);margin-bottom:9px}
+.dot{width:9px;height:9px;border-radius:50%;margin-top:7px;flex:0 0 auto}
+</style></head><body><div class="wrap">
+
+<h1>Trust Score — one evidence set, and where the caps bite</h1>
+<p class="sub">Why the same seller read 80, then 57, then 75 — and why the list now adds up to the headline</p>
+<p class="stamp">15–16 September 2026 · TRUST-ONE-SET-1 · CAP-VISIBLE-1 · live on trustsquare.co</p>
+
+<h2>The ladder, with a real seller on it (listing 385)</h2>
+<div class="card">
+  <div class="lad">
+    <div class="lname">Foundation<i>every seller starts here</i></div>
+    <div class="bar"><div class="fill" style="width:40%;background:var(--base)"></div></div>
+    <div class="lval">40</div>
+  </div>
+  <div class="lad">
+    <div class="lname">Identity &amp; profile<i>ID · profile · photo · experience · employer</i></div>
+    <div class="bar"><div class="fill" style="width:30%;background:var(--uni)"></div>
+      <div class="spill" style="left:30%;width:7%"></div></div>
+    <div class="lval">30 <s>37 earned · 7 above the cap</s></div>
+  </div>
+  <div class="lad">
+    <div class="lname">Platform track record<i>introductions, tenure, responsiveness</i></div>
+    <div class="bar"><div class="fill" style="width:10%;background:var(--trk)"></div></div>
+    <div class="lval">10</div>
+  </div>
+  <div class="lad">
+    <div class="lname">Certificates<i>category credentials</i></div>
+    <div class="bar"><div class="fill" style="width:0%;background:var(--cat)"></div></div>
+    <div class="lval">0</div>
+  </div>
+  <div class="tot">
+    <div class="lname">Trust Score</div>
+    <div class="bar"><div class="fill" style="width:80%;background:linear-gradient(90deg,var(--base) 0 50%,var(--uni) 50% 87.5%,var(--trk) 87.5% 100%)"></div></div>
+    <div class="lval">80 / 100</div>
+  </div>
+  <p class="note"><b>40 + 37 + 10 = 87, but the score is 80.</b> Identity and Track Record cap at
+  30 each, so the sum is 40 + min(30,&nbsp;37) + min(30,&nbsp;10). The striped tail is the 7 points
+  earned above the cap — real, and not counted. The panel now prints the capped subtotal and says
+  what sits above it, so the visible list adds up to the headline.</p>
+</div>
+
+<h2>Why the number used to move between screens</h2>
+<div class="flow">
+  <div class="box">
+    <h3 style="color:var(--pen)">Before</h3>
+    <p>The buyer-facing panel built its <b>own</b> SQL for identity and track record — a narrower
+    set than the scorer read. Same seller, two pictures.</p>
+  </div>
+  <div class="box">
+    <h3 style="color:var(--pen)">Then it wrote</h3>
+    <p>It saved <b>its</b> answer to <code>users.trust_score</code> and to <b>every</b> listing that
+    seller owns. Whichever screen you opened last won.</p>
+  </div>
+  <div class="box one">
+    <h3 style="color:var(--uni)">Now</h3>
+    <p>One builder — <code>_trust_evidence()</code>. Both surfaces read it. The panel heals only
+    its own category, and touches the stored score only when that IS the primary category.</p>
+  </div>
+</div>
+
+<h2>What this does not change</h2>
+<div class="card">
+  <div class="rule"><span class="dot" style="background:var(--uni)"></span><div><b>The 60 in Quick is not a trust score.</b> It is the listing score — how complete the advert is — and says "trust not opened yet" on the same line.</div></div>
+  <div class="rule"><span class="dot" style="background:var(--cat)"></span><div><b>Two screens may still differ if they are scoped to different categories</b>, because category credentials differ per advert — the panel now returns its <code>category_key</code> so that is answerable rather than mysterious.</div></div>
+  <div class="rule"><span class="dot" style="background:var(--over)"></span><div><b>A multi-category seller's public panel can read lower than before</b>: it used to count earned credentials from every category, and now counts the advert's own, like the scorer.</div></div>
+  <div class="rule"><span class="dot" style="background:var(--base)"></span><div><b>Every prior ruling stands</b> — base 40, the uncapped Local Market group, the per-listing mandate rule, penalties after the cap, and names-and-points-only anonymity.</div></div>
+</div>
+
+<h2>The guard, so it is the last time</h2>
+<div class="card">
+  <p style="margin:0 0 8px;font-size:13.5px;color:var(--t2)">Two guards were already watching this
+  area and neither could see this bug: one checks a headline against its <em>own</em> list, the
+  other checks the arithmetic canon. Both passed while the panel counted a different set.</p>
+  <p style="margin:0;font-size:13.5px;color:var(--t2)"><code>test_trust_one_set.py</code> now fails
+  the deploy if a second evidence builder appears, if the panel grows its own evidence SQL, if its
+  writes stop being category-scoped, or if a group subtotal stops being capped. Run against the old
+  file it fails 7 of 8 — including <em>"the panel wrote a per-listing score to EVERY listing"</em>.</p>
+</div>
+
+</div></body></html>

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quick Listing (beta) and how the system runs (2 of 2)</title>
+<style>
+:root{
+  --bg:#0b1220; --panel:#111a2b; --panel2:#16213a; --line:#243250; --text:#e8eefc; --muted:#9fb0d0;
+  --quick:#7C3AED; --find:#22D3EE;
+  --l-users:#10B981; --l-edge:#3B82F6; --l-data:#F59E0B; --l-int:#14B8A6; --l-deploy:#8B5CF6; --l-guard:#F43F5E; --l-dash:#FBBF24; --l-ai:#38BDF8;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.page{max-width:1180px;margin:0 auto;padding:28px 22px 40px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-bottom:18px}
+.mark{display:flex;align-items:center;gap:12px}
+.mark .sq{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#a78bfa,#6d28d9);display:grid;place-items:center;font-weight:800;font-size:20px;color:#120a2a}
+.mark h1{margin:0;font-size:26px}
+.mark .sub{color:var(--muted);font-size:13px}
+.pill{border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;letter-spacing:.3px;border:1px solid}
+.pill.beta{color:#fff;background:var(--quick);border-color:var(--quick)}
+.pill.test{color:#c4b5fd;border-color:#8b5cf6;background:rgba(139,92,246,.10)}
+.pill.link{color:#cfe0ff;border-color:#3B82F6;background:rgba(59,130,246,.10)}
+.one{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--quick);border-radius:14px;padding:14px 18px;margin-bottom:14px}
+.one b{color:#fff}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+.note b{color:#fff}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.lane{border:1px solid var(--line);border-left:6px solid var(--c);border-radius:14px;background:var(--panel);padding:14px 16px 12px}
+.lane h2{margin:0 0 4px;font-size:16px;color:var(--c)}
+.lane .why{color:var(--muted);font-size:12.5px;margin:0 0 10px}
+.taps{display:grid;gap:6px}
+.tap{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
+.tap .n{width:24px;height:24px;border-radius:50%;background:var(--c);color:#0b1220;display:grid;place-items:center;font-size:12px;font-weight:800;margin-top:1px}
+.tap .t{font-weight:700;font-size:13px;color:#fff}
+.tap .d{font-size:12px;color:var(--muted)}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:22px}
+.fact{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:12.5px}
+.fact b{display:block;color:var(--quick);font-size:13px;margin-bottom:2px}
+
+h2.sec{margin:8px 0 4px;font-size:20px;color:#fff}
+p.secsub{margin:0 0 12px;color:var(--muted);font-size:13px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 12px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+.sys{display:grid;gap:10px}
+.row{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:stretch}
+.rowlbl{border-radius:12px;padding:10px 12px;font-weight:800;font-size:13px;color:#0b1220;background:var(--c);display:flex;flex-direction:column;justify-content:center}
+.rowlbl small{font-weight:600;font-size:11px;opacity:.85}
+.cells{display:flex;flex-wrap:wrap;gap:6px}
+.cell{flex:1 1 150px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--c);border-radius:10px;padding:8px 10px;min-width:140px}
+.cell .t{font-weight:700;font-size:13px;color:#fff}
+.cell .d{font-size:11.5px;color:var(--muted);margin-top:2px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.flow .cell{flex:1 1 110px;min-width:105px}
+.flow .a{color:var(--c);font-size:16px}
+.down{text-align:center;color:var(--muted);font-size:12px;margin:-2px 0}
+.dash{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.dcell{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.45);border-radius:10px;padding:8px 6px;text-align:center;font-size:11.5px}
+.dcell b{display:block;color:var(--l-dash);font-size:12.5px;margin-bottom:2px}
+footer{margin-top:18px;color:var(--muted);font-size:11.5px;border-top:1px solid var(--line);padding-top:10px}
+@media (max-width:820px){.two{grid-template-columns:1fr}.facts{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr}.dash{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <div class="mark"><div class="sq">Q</div><div><h1>Quick Listing</h1><div class="sub">Visual 2 of 2 · the lighter front door, then how the whole system runs</div></div></div>
+  <span class="pill beta">BETA</span>
+  <span class="pill test">IN TESTING · live page, go-live date not set</span>
+  <span class="pill link">trustsquare.co/quick/</span>
+</header>
+
+<div class="one">
+  <b>What it is:</b> the same TrustSquare, entered through a five-tap door. No typing, no form, no sign-in screen. Made for people whose <b>labour is the product</b> — a housekeeper, a driver, a tutor, a gardener — and for anyone who wants to list or find something in under a minute on a cheap phone.
+  <div class="note"><b>Not a second system.</b> One server, one rulebook, one database. Quick Listing has no scorer and no store of its own; it hands the advert card into the same listings the main app reads, and the same three scores apply. What feels like a separate app is its own violet home-screen tile and its own manifest.</div>
+</div>
+
+<div class="two">
+  <div class="lane" style="--c:var(--quick)">
+    <h2>List anything — Lerato gets work</h2>
+    <p class="why">Housekeeping example. Every one of the eight categories has its own four questions; the shape is the same: what · where · when · rate.</p>
+    <div class="taps">
+      <div class="tap"><span class="n">1</span><div><div class="t">Pick the tile</div><div class="d">Housekeeping · "Get work"</div></div></div>
+      <div class="tap"><span class="n">2</span><div><div class="t">What work do you do?</div><div class="d">Cleaning · Laundry &amp; ironing · Cooking · Childminding …</div></div></div>
+      <div class="tap"><span class="n">3</span><div><div class="t">Where can you work?</div><div class="d">Area tiles seeded from her city; one tap to change</div></div></div>
+      <div class="tap"><span class="n">4</span><div><div class="t">Which days are you open?</div><div class="d">A weekly grid — the product for the whole class</div></div></div>
+      <div class="tap"><span class="n">5</span><div><div class="t">What do you charge a day?</div><div class="d">R250 · R300 · R350 · R400 · Ask me</div></div></div>
+      <div class="tap" style="border-color:var(--quick)"><span class="n">✓</span><div><div class="t">Advert card → hand-over</div><div class="d">She sees her card first; Publish writes a real draft listing into TrustSquare. A member is not re-asked; a stranger gets one ask (email) at the end.</div></div></div>
+    </div>
+  </div>
+  <div class="lane" style="--c:var(--find)">
+    <h2>Find what you want — Naledi needs help</h2>
+    <p class="why">Same door, other direction. Three taps, then narrow if there are too many.</p>
+    <div class="taps">
+      <div class="tap"><span class="n">1</span><div><div class="t">What do you need?</div><div class="d">Cleaning · Cooking · Childminding …</div></div></div>
+      <div class="tap"><span class="n">2</span><div><div class="t">Which area?</div><div class="d">Her suburb first, then the city, then further out</div></div></div>
+      <div class="tap"><span class="n">3</span><div><div class="t">Which day?</div><div class="d">Mon … Sun · Any day</div></div></div>
+      <div class="tap"><span class="n">+</span><div><div class="t">Narrow, up to three times</div><div class="d">Pay band · proof wanted (employer confirmed / ID checked) · experience</div></div></div>
+      <div class="tap" style="border-color:var(--find)"><span class="n">✓</span><div><div class="t">Results, ordered by the three scores</div><div class="d">Trust Score shown; tap through to request an introduction in the main app (1 Tuppence)</div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="facts">
+  <div class="fact"><b>Free where the worker brings the link</b>A housekeeper sends her personal link to the family she already works for. That connection costs nobody a Tuppence — both become app users. Only platform-made introductions cost.</div>
+  <div class="fact"><b>Vouching, not vetting</b>An employer can confirm someone they have worked with. That becomes a dated fact on the card and lifts the Trust Score. TrustSquare never declares a person "safe".</div>
+  <div class="fact"><b>Buzz</b>One line to the other side's phone — Yes / No / Ask me later. Web push first, email backup, no SMS.</div>
+  <div class="fact"><b>Installable tile</b>Its own web-app manifest, violet icon, sits beside the TrustSquare tile. Same sign-in cookie, same service worker, same accounts.</div>
+</div>
+
+<h2 class="sec">How the whole thing runs — one founder, one server, a lot of machinery</h2>
+<p class="secsub">Colour = layer. Read top to bottom: users at the top, what they hit next, where data lives, what ships code, what keeps it honest, and the screens David watches.</p>
+<div class="legend">
+  <span><i style="background:var(--l-users)"></i>Users</span>
+  <span><i style="background:var(--l-edge)"></i>Edge &amp; runtime</span>
+  <span><i style="background:var(--l-data)"></i>Data</span>
+  <span><i style="background:var(--l-int)"></i>Integrations</span>
+  <span><i style="background:var(--l-ai)"></i>AI lane</span>
+  <span><i style="background:var(--l-deploy)"></i>Delivery</span>
+  <span><i style="background:var(--l-guard)"></i>Guardrails</span>
+  <span><i style="background:var(--l-dash)"></i>Dashboards</span>
+</div>
+
+<div class="sys">
+
+<div class="row" style="--c:var(--l-users)">
+  <div class="rowlbl">Users<small>phones, mostly</small></div>
+  <div class="cells">
+    <div class="cell"><div class="t">TrustSquare PWA</div><div class="d">Installable green tile · offline banner · web push</div></div>
+    <div class="cell"><div class="t">Quick Listing PWA</div><div class="d">Violet tile at /quick/ · same cookie and service worker</div></div>
+    <div class="cell"><div class="t">Agency console</div><div class="d">Estate agents: bulk import, per-agent Trust Scores, API</div></div>
+    <div class="cell"><div class="t">Outreach lane</div><div class="d">City-by-city prospect emails carrying the Quick link (separate CityLauncher tool)</div></div>
+  </div>
+</div>
+<div class="down">▼</div>
+
+<div class="row" style="--c:var(--l-edge)">
+  <div class="rowlbl">Edge &amp; runtime<small>Hetzner CPX32 · 8 GB · 100 GB volume</small></div>
+  <div class="cells">
+    <div class="cell"><div class="t">Cloudflare</div><div class="d">DNS · CDN · TLS · WAF · cache purge on every deploy</div></div>
+    <div class="cell"><div class="t">nginx</div><div class="d">Static files, service worker route, reverse proxy, origin gate</div></div>
+    <div class="cell"><div class="t">FastAPI "BEA" v1.3.1</div><div class="d">One Python app under systemd · /health · /listings · /flags · dashboards</div></div>
+    <div class="cell"><div class="t">Feature flags</div><div class="d">New work ships flag-dark; David arms it on the real app before the field sees it</div></div>
+  </div>
+</div>
+<div class="down">▼</div>
+
+<div class="row" style="--c:var(--l-data)">
+  <div class="rowlbl">Data<small>small on purpose</small></div>
+  <div class="cells">
+    <div class="cell"><div class="t">SQLite (primary)</div><div class="d">~3 MB · integrity checked in /health · migrations numbered 001…</div></div>
+    <div class="cell"><div class="t">Uploads &amp; media</div><div class="d">Photos on the volume; never touched by a code deploy</div></div>
+    <div class="cell"><div class="t">Backups</div><div class="d">GitHub mirror · DB pulled off the box · encrypted archive to R2 · restore is rehearsed</div></div>
+    <div class="cell"><div class="t">Own fare cache</div><div class="d">Travel data read only from our schema; suppliers are swappable adapters behind it</div></div>
+  </div>
+</div>
+<div class="down">▼</div>
+
+<div class="row" style="--c:var(--l-int)">
+  <div class="rowlbl">Integrations<small>flat-cost only</small></div>
+  <div class="cells">
+    <div class="cell"><div class="t">Paystack</div><div class="d">Tuppence packs and subscriptions · no money for goods ever</div></div>
+    <div class="cell"><div class="t">Resend</div><div class="d">Transactional email; backup channel for Buzz</div></div>
+    <div class="cell"><div class="t">Web Push (VAPID)</div><div class="d">Self-hosted, free, every registered device</div></div>
+    <div class="cell"><div class="t">n8n (Docker)</div><div class="d">Self-hosted automations and workflows</div></div>
+    <div class="cell"><div class="t">Travelpayouts / open data</div><div class="d">Cached fares · airports · affiliate links out. No Google, no per-click bill</div></div>
+  </div>
+</div>
+<div class="down">▼</div>
+
+<div class="row" style="--c:var(--l-ai)">
+  <div class="rowlbl">AI lane<small>multi-vendor, swappable</small></div>
+  <div class="cells">
+    <div class="cell"><div class="t">Haiko in the app</div><div class="d">Reads a photo, drafts the advert, coaches the listing</div></div>
+    <div class="cell"><div class="t">Provider seam</div><div class="d">Any model behind one interface · baseline register · auto-failover · spend ceilings per lane</div></div>
+    <div class="cell"><div class="t">The "Solar Council"</div><div class="d">Claude as CTO and executor · OpenAI as independent auditor · Grok for security and graphics</div></div>
+    <div class="cell"><div class="t">Cost rails</div><div class="d">Fixed Tuppence prices for features; ceilings and spend logs on every AI lane</div></div>
+  </div>
+</div>
+<div class="down">▼</div>
+
+<div class="row" style="--c:var(--l-deploy)">
+  <div class="rowlbl">Delivery<small>ONE deploy, no exceptions</small></div>
+  <div class="cells flow">
+    <div class="cell"><div class="t">git push → deploy ref</div><div class="d">The only way code ships</div></div><span class="a">→</span>
+    <div class="cell"><div class="t">Server timer ~2 min</div><div class="d">Pulls, copies by manifest allowlist</div></div><span class="a">→</span>
+    <div class="cell"><div class="t">Cache-bust ↑</div><div class="d">Monotonic; an older build can never land</div></div><span class="a">→</span>
+    <div class="cell"><div class="t">Restart + health</div><div class="d">Fails health → automatic rollback</div></div><span class="a">→</span>
+    <div class="cell"><div class="t">CDN purge + migrations</div><div class="d">Idempotent seed, one-time scripts</div></div><span class="a">→</span>
+    <div class="cell"><div class="t">post_deploy_status.json</div><div class="d">Every step's outcome, readable over HTTP</div></div>
+  </div>
+</div>
+<div class="down">▼</div>
+
+<div class="row" style="--c:var(--l-guard)">
+  <div class="rowlbl">Guardrails<small>machinery, not memory</small></div>
+  <div class="cells">
+    <div class="cell"><div class="t">Regression ledger</div><div class="d">366 executable assertions against the LIVE site (board of 16 Sep: 0 regressed). Every fix gets one; a fix that rots turns red</div></div>
+    <div class="cell"><div class="t">Rulings register</div><div class="d">108 product rulings, each checked to be reflected where the next session reads</div></div>
+    <div class="cell"><div class="t">Heartbeat + BIT</div><div class="d">Server posts built-in-test every 10 min; older than that = stale, not green</div></div>
+    <div class="cell"><div class="t">Maintenance agent</div><div class="d">Runs in shadow with a kill switch; fault queue, deep scans, dependency and lint sweeps</div></div>
+    <div class="cell"><div class="t">Host queue (20 min)</div><div class="d">Sessions request host actions; an allowlist gates them; results are read back before "done"</div></div>
+    <div class="cell"><div class="t">Secrets register</div><div class="d">Rotations logged; no secret in git or in a chat</div></div>
+  </div>
+</div>
+<div class="down">▼</div>
+
+<div class="row" style="--c:var(--l-dash)">
+  <div class="rowlbl">Dashboards<small>what David actually opens</small></div>
+  <div class="cells" style="display:block">
+    <div class="dash">
+      <div class="dcell"><b>Dashboard</b>Listings, sellers, intros, wallet totals</div>
+      <div class="dcell"><b>Ops Map</b>Coverage map: green / blue / amber / red / grey</div>
+      <div class="dcell"><b>Ops</b>Server, backups, lanes, fault queue</div>
+      <div class="dcell"><b>Horizon</b>What is coming, by date</div>
+      <div class="dcell"><b>Launch Switch</b>The "+1 page": AI providers and infrastructure, live-probed</div>
+      <div class="dcell"><b>Live Users</b>Who is on, from where</div>
+      <div class="dcell"><b>Comms</b>Email and push lanes, outreach waves</div>
+      <div class="dcell"><b>Quick Listing</b>Flow board, the comic, the emails</div>
+    </div>
+    <div class="note">Rule for every gauge: grey or "not measured" until a live probe answers. No hand-painted green. Plus a Visuals gallery of every diagram like this one.</div>
+  </div>
+</div>
+
+</div>
+
+<footer>Names in the examples (Lerato, Naledi) are illustrative. Facts: live health probe and the project's own canon and status files, 16 Sep 2026. Visual 1 covers the TrustSquare flows: sell, buy, Trust Score, wallet, My Space.</footer>
+</div>
+</body>
+</html>

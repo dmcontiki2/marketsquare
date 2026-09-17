@@ -617,7 +617,7 @@ function drawFree(s,trail){
   $('screen').innerHTML='<div class="q">'+s.q+'</div>'
     +(trail?'<div class="trail">'+trail+'</div>':'')
     +'<div class="body mid">'
-    +'<div class="bzin"><input id="frtxt" type="text" maxlength="40" autocomplete="off" '
+    +'<div class="bzin"><input id="frtxt" type="text" maxlength="80" autocomplete="off" '
     +'autocapitalize="words" placeholder="'+hint+'"><button id="frgo" disabled>Use it</button></div>'
     +'<div class="bzleft" id="frleft">Whatever you type is what people will see.</div>'
     +'<div class="bznote">The six above are only the ones we see most. This is not a '
@@ -630,7 +630,7 @@ function drawFree(s,trail){
     $('frgo').disabled = v.length < 2;
     $('frleft').textContent = v.length < 2
       ? 'Whatever you type is what people will see.'
-      : (40 - v.length) + ' characters left';
+      : (80 - v.length) + ' characters left';
   }
   $('frtxt').oninput=paint;
   $('frtxt').onkeydown=function(e){ if(e.key==='Enter' && !$('frgo').disabled) $('frgo').click(); };
@@ -770,10 +770,58 @@ var REQ={property:['prop_type','beds','baths','listing_type'],
          tutors:['subject','level','mode'],
          services:['service_type']};
 /* which tap answers which server field, per category, in the SELLING direction */
+/* CASUALS-IS-SERVICES-1 (17 Sep 2026, David: "it is not a new category, it is part of
+   casual services. Please make it everywhere part of services.")
+   Housekeeping is a DOORWAY, not a category. The housekeeper does not go looking for
+   "Services", so the card stays where she can find it — but what this app WRITES, and
+   what TrustSquare scores and files it under, is Services / Casuals. Same correction
+   for Local Market, whose DB category has always been local_market: the door's label
+   and the platform's category are two different things, and only one of them travels. */
+var CAT_OUT={
+  homehelp:    {category:'Services',     service_class:'Casuals'},
+  services:    {category:'Services',     service_class:'Technical'},
+  localmarket: {category:'local_market'}};
+function catOut(c){ return CAT_OUT[c.key] || {category:c.name}; }
+
+/* THE SEVENTH CARD, ON EVERY STEP (17 Sep 2026, David: "we do need a written seventh
+   card for text... a text entry for costs card everywhere for a different input... what
+   are you hunting can also have a separate card for a text option.")
+   The engine already had this — drawFree() has been here all along, a typed line that
+   commits exactly like a tap. It was switched on for WHERE and nowhere else, so six
+   tiles were the whole world on every other question. A list of six is never the whole
+   world. Every step that is a list of choices now ends with one, and it takes a
+   sentence rather than only a name. The week is the one exception: a calendar is not a
+   list of words. */
+var FREE_HINT={
+  what:'Name it in your own words', price:'Type the amount', where:'Type the area',
+  deal:'Say which', beds:'How many', make:'Type the make', year:'Type the year',
+  level:'Type the level', mode:'Say how', how:'Say how', when:'Say when',
+  day:'Say when', cond:'Describe the condition', auth:'Say what you have',
+  len:'Say how long', rare:'Describe it', ship:'Say how'};
+(function(){
+  for(var i=0;i<CATS.length;i++){
+    var c=CATS[i];
+    ['sell','find'].forEach(function(side){
+      var f=c[side]; if(!f||!f.steps) return;
+      f.steps.forEach(function(s){
+        if(s.kind==='week') return;
+        s.free=true;
+        if(!s.freeHint) s.freeHint=FREE_HINT[s.key]||'Type it in';
+      });
+    });
+  }
+})();
+
 var FIELD_FROM={
  property:{prop_type:'what',listing_type:'deal',beds:'beds'},
  cars:{make:'make',vehicle_year:'year'},
  tutors:{subject:'what',level:'level',mode:'mode'},
+ /* CASUALS-IS-SERVICES-1: this map and REQ are keyed by the category KEY, but were
+    looked up by its lowercased NAME — which matched for seven of the eight by luck and
+    missed homehelp entirely, so the work she picked (Childminding) never travelled and
+    the listing score was computed against no required fields at all. Looked up by key
+    now, and homehelp has its entry. */
+ homehelp:{service_type:'what'},
  services:{service_type:'what'}};
 var NICE={prop_type:'property type',listing_type:'for sale or to rent',beds:'number of bedrooms',
  baths:'number of bathrooms',make:'make',model:'model',vehicle_year:'year',mileage_km:'mileage',
@@ -829,7 +877,7 @@ var PRICE_NOTE={collectors:'This is your asking price. TrustSquare can look up a
 var PRICE_NOTE_ANY='This is your asking price \u2014 buyers see it as asked, not as a valuation.';
 
 function lsOf(picks, photos){
-  var c=cat(), key=c.name.toLowerCase();
+  var c=cat(), key=c.key;
   var req=REQ[key]||[], from=FIELD_FROM[key]||{};
   var score=0, missing=[], n=photos||0;
   var ph=Math.min(40, n ? (10+8*(n-1)) : 0);
@@ -904,14 +952,15 @@ var QUICK_LIVE=false;
   }catch(e){}
 })();
 function handoverPayload(){
-  var c=cat(), key=c.name.toLowerCase();
+  var c=cat(), key=c.key;
   var from=FIELD_FROM[key]||{};
   var where=pickOf('where'), price=pickOf('price');
   var ls=lsOf(picks,0);
+  var _co=catOut(c);
   var body={
     title: c.draftTitle(picks),
     price: price ? price.label : 'POA',
-    category: c.name,
+    category: _co.category,
     city: LOC.city,
     area: where ? where.label : LOC.suburb,
     suburb: where ? where.label : LOC.suburb,      /* required by the server */
@@ -919,6 +968,7 @@ function handoverPayload(){
     trust_score: SELLER.ts,
     seller_email: HANDOVER.email || null
   };
+  if(_co.service_class) body.service_class=_co.service_class;
   ['prop_type','listing_type','beds','make','vehicle_year','subject','level','mode','service_type']
     .forEach(function(f){
       var k=from[f]; if(!k) return;
