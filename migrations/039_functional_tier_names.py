@@ -51,10 +51,15 @@ def main():
         shutil.copy2(DB, bak); print("039: backup -> %s" % bak)
         for table, col, old, new, n in plan:
             # the breaker keys (provider, task) uniquely -- merge on collision rather than fail
+            # the live app may already have written NEW-name rows between deploy and this run:
+            # on a key collision the old-name row yields (the new row is the fresher state)
             if table == "ai_breaker":
-                conn.execute("DELETE FROM %s WHERE %s=? AND provider IN (SELECT provider FROM %s WHERE %s=?)"
-                             % (table, col, table, col), (old, new))
-            conn.execute("UPDATE %s SET %s=? WHERE %s=?" % (table, col, new, old), (new, old))
+                conn.execute("DELETE FROM ai_breaker WHERE task=? AND provider IN "
+                             "(SELECT provider FROM ai_breaker WHERE task=?)", (old, new))
+            elif table == "ai_breaker_stats":
+                conn.execute("DELETE FROM ai_breaker_stats WHERE task=? AND (provider, bucket_minute) IN "
+                             "(SELECT provider, bucket_minute FROM ai_breaker_stats WHERE task=?)", (old, new))
+            conn.execute("UPDATE %s SET %s=? WHERE %s=?" % (table, col, col), (new, old))
         conn.commit(); print("039: applied")
     finally:
         conn.close()
