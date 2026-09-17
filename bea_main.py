@@ -21772,11 +21772,10 @@ def maint_brain(payload: dict = Body(...), _brain=Depends(_require_brain)):
     if not chosen:
         return {"ok": False, "error_kind": "unconfigured", "provider": lane, "model": "",
                 "text": "", "note": "lane %s maps no model for tier %s" % (lane, task)}
-    # C1 rail (DW-131, 17 Sep 2026): the ONLY one of 23 AI call sites with no ceiling.
-    # Empty email = PLATFORM ceiling only -- the agent lane is not subject to the $0.50
-    # consumer per-user cap, but a runaway loop still stops at the platform budget.
-    # Fails open on internal error, so it can never kill a run (RG-0049).
-    _check_cost_ceiling("")
+    # DW-131 (17 Sep 2026): a concurrent lane added _check_cost_ceiling("") here. REMOVED the
+    # same day by David's ruling (never halt on cost -- step down, cheapest rung answers).
+    # The rail at this site is the budgeted ladder above (_maint_pick_rung: worst case before
+    # dispatch, min(agent budget, platform headroom)); the cost sweep recognises it as such.
     t0 = _time.time()
     r = ai_provider.complete(messages, task=chosen["tier"], max_tokens=max_tokens, system=system,
                              provider=lane, probe=probe, timeout=(20 if probe else 120),
