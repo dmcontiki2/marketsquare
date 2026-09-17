@@ -55,7 +55,11 @@ KNOWN_NON_MODELS = {"mem", "relay"}
 SKIP_FILES = {".ledger_state.json"}
 SKIP_DIRS = {"node_modules", "__pycache__", ".git", "archive", "_CCP_STAGED",
              ".maint_agent", ".lintenv",
-             ".ruff_cache", ".claude", "Kronberg", "Obsidian", "Records"}
+             ".ruff_cache", ".claude", "Kronberg", "Obsidian", "Records",
+             # DW-128 (17 Sep 2026): ledger_runs/ holds the regression ledger's shard
+             # output -- the same self-referential exhaust as .ledger_state.json above.
+             # Scanning it makes the instrument grade its own transcript.
+             "ledger_runs"}
 # GOLDEN_EVAL_*.json/.html (produced by failover/eval_golden_set.py, 18 Jul 2026) are
 # frozen one-off benchmark snapshots — a "reference ceiling" Sonnet lane exists ONLY to
 # score candidate cheap-lane models against, never called from live app code (verified
@@ -160,8 +164,17 @@ def wrapper_compliance(root: Path):
                 tup = "_deduct_tuppence" in seg or "tuppence" in seg.lower()
                 helper = node.name.startswith("_") and ("return" in seg and ("_oin" in seg or "tokens" in seg))
                 caller_logs = helper and f"{node.name}(" in src.replace(seg, "") and "_log_ai_spend" in src
+                # STEP-DOWN RAIL (David's ruling, 17 Sep 2026, MAINT-BRAIN-1): the maintenance
+                # chokepoint budgets every call (worst case before dispatch, _maint_pick_rung) but
+                # NEVER halts -- on a short budget it steps DOWN the tier ladder and the cheapest
+                # rung still answers. A hard cap that stops the agent is wrong by ruling, so the
+                # rail here is the budgeted ladder, not _check_cost_ceiling. DW-131 closed by this
+                # dated exemption, not by weakening the rule for any other site.
+                stepdown = "_maint_pick_rung" in seg and "_maint_budget_left" in src
                 if ceil and log:
                     findings.append((OK, f"bea_main.py:{node.lineno} `{node.name}` — ceiling ✓ spend-log ✓"))
+                elif stepdown and log:
+                    findings.append((OK, f"bea_main.py:{node.lineno} `{node.name}` — budgeted step-down ladder ✓ spend-log ✓ (never-halt rail, David 17 Sep 2026)"))
                 elif caller_logs:
                     findings.append((WARN, f"bea_main.py:{node.lineno} `{node.name}` — helper; caller logs spend, but add a ceiling check"))
                 elif tup and not log:
@@ -247,7 +260,12 @@ def model_discipline(root: Path):
                 elif rel.replace("\\", "/").split("/")[-1] in (
                         "AI_BASELINE.json", "AI_CHALLENGER_BOARD.html",
                         "AI_MODEL_BASELINE_MAP.html", "ai_price_card.json",
-                        "DEFENCE_COVERAGE_MAP.html"):  # the watch's own report narrates AI-watch findings
+                        "DEFENCE_COVERAGE_MAP.html",   # the watch's own report narrates AI-watch findings
+                        # DW-128 (17 Sep 2026): the watch REGISTER is the same author, the same
+                        # purpose and the same non-dispatching prose as the coverage map beside
+                        # it -- DW-126's summary names Sonnet because it RECORDS a Model Register
+                        # check. Nothing reads either file as a model selector.
+                        "OPEN_ITEMS.json", "OPEN_ITEMS.md"):
                     findings.append((INFO, f"{rel}:{line} Sonnet in a reference document describing the model field — not a call site (reference-doc exemption, 30 Aug 2026)"))
                 else:
                     findings.append((WARN, f"{rel}:{line} Sonnet outside the metered AdvertAgent registry — justify or downgrade to Haiku"))
@@ -263,6 +281,15 @@ def model_discipline(root: Path):
                     findings.append((WARN, f"{rel}:{line} Fable ({m.group(0)}) at a call site — premium family, confirm it is metered"))
                 else:
                     findings.append((INFO, f"{rel}:{line} Fable ({m.group(0)}) in reference text — not a call site (DW-047)"))
+            elif fam == "code":
+                # DW-128 (17 Sep 2026), same shape as the DW-047 fable fix: `claude-code` is
+                # Anthropic's CLI tool and the name of its PUBLIC GITHUB REPO. Every hit to
+                # date is the phrase "claude-code #92984" -- the issue number for the Windows
+                # KB5124008 sandbox fault -- quoted in five .bat headers, the ledger's prose
+                # and the watch register. It is not a model, cannot be selected as one, and
+                # MODEL_RE only ever matched it because the regex is `claude-<word>`. A real
+                # model family added tomorrow still falls through to the WARN below.
+                findings.append((INFO, f"{rel}:{line} `{m.group(0)}` is the CLI tool / its GitHub repo, not a model family (DW-128)"))
             else:
                 findings.append((WARN, f"{rel}:{line} unknown model family `{m.group(0)}` — classify"))
     return findings
