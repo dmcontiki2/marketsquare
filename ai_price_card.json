@@ -38,7 +38,7 @@
    "lane": "openai",
    "primary_reason": "VENDOR INDEPENDENCE, not price. Anthropic supplies the guidance layer (Claude authored most of this codebase and acts as CEO/COO-level advisor); having the same vendor also perform the outsourced production work creates a single correlated dependency across both judgement and execution. This extends Addendum 1's auditor-independence rationale from REVIEW to EXECUTION.",
    "supporting": "The 2026-08-01.1 funnel independently ranks gpt-5.6-luna first on haiku, triage and vision at +78/78/79% cost delta, all passing the golden set. Cost supports the ruling; it is not the reason for it.",
-   "noted_exception": "sonnet tier reads +25% (gpt-5.6-terra vs claude-sonnet-4-6), below the 30% materiality bar. Moved anyway as part of a WHOLE-LANE independence ruling, which is a different decision class from a per-tier procurement switch. The 30% bar continues to govern per-tier procurement moves.",
+   "noted_exception": "reason tier reads +25% (gpt-5.6-terra vs claude-sonnet-4-6), below the 30% materiality bar. Moved anyway as part of a WHOLE-LANE independence ruling, which is a different decision class from a per-tier procurement switch. The 30% bar continues to govern per-tier procurement moves.",
    "supersedes": "Addendum 1's 'Staying with Claude' as the STANDING LANE. Claude remains the guidance/harness layer; that was never the thing being procured."
   }
  },
@@ -78,7 +78,7 @@
      "token_profile": null,
      "budgets": null,
      "gate_by_tier": {
-      "haiku": {
+      "fast": {
        "status": "production",
        "prompt_version": "not yet versioned — record at next eval",
        "effort": "default (non-reasoning)",
@@ -126,7 +126,7 @@
      "token_profile": null,
      "budgets": null,
      "gate_by_tier": {
-      "sonnet": {
+      "reason": {
        "status": "production",
        "prompt_version": "not yet versioned — record at next eval",
        "effort": "default",
@@ -172,14 +172,14 @@
       "note": "absorbed all 2026 usage (EUR 0.12 credited); cap/expiry to record; post-credit marginal rate = listed EUR prices"
      },
      "gate_by_tier": {
-      "haiku": {
+      "fast": {
        "status": "passed",
        "prompt_version": "18-Jul eval set (pre-versioning)",
        "effort": "default (instruct)",
        "date": "2026-07-18",
        "caveat": "20-call sample; vision 2/2 only"
       },
-      "sonnet": {
+      "reason": {
        "status": "passed",
        "prompt_version": "18-Jul eval set (pre-versioning)",
        "effort": "default (instruct)",
@@ -233,7 +233,7 @@
      "token_profile": null,
      "budgets": null,
      "gate_by_tier": {
-      "haiku": {
+      "fast": {
        "status": "passed",
        "prompt_version": "production prompts, bea_main.py 31-Jul build (GS-OAI-V1)",
        "effort": "reasoning_effort=\"none\"",
@@ -283,7 +283,7 @@
      "token_profile": null,
      "budgets": null,
      "gate_by_tier": {
-      "sonnet": {
+      "reason": {
        "status": "passed",
        "prompt_version": "production prompts, bea_main.py 31-Jul build (GS-OAI-V1)",
        "effort": "reasoning_effort=\"none\"",

@@ -1107,15 +1107,17 @@ function fuLoad(){
    // armed/live are effective cover (switch AND brain), armed_switch is the raw switch (D3).
    var bs=d.brain_state||(d.brain_keyed?'GREEN':'KEYLESS'), red=/^RED/.test(bs), amber=/^AMBER/.test(bs);
    var runCost=(d.cost&&d.cost.last_run)||d.cost||{};
+   // TIER-NAME-1: the card names the LANE and the TIER; the model that served is a register fact,
+   // shown only in the chip tooltip -- a label must never make one model "the agent".
    ds.innerHTML='last run '+(d.run||d.received_at)+' &middot; seen '+(d.seen||0)+' &middot; acted '+(d.acted||0)
-     +(d.brain_keyed?(' &middot; brain '+(d.brain_lane||'?')+(d.brain_model?('/'+d.brain_model):'')):
+     +(d.brain_keyed?(' &middot; brain '+(d.brain_lane||'?')+' &middot; fast tier'):
        (red?' &middot; brain refused: '+bs.replace(/^RED:/,'')+' &mdash; check the OpenAI key / billing':
         ' &middot; brain unproven ('+bs+') &mdash; the app lane answers the agent; no agent key file needed'))
      +(runCost&&runCost.calls?(' &middot; this run '+usd(runCost.usd)+' / '+runCost.calls+' call(s)'
         +(runCost.stepped_down?(' &middot; stepped down &times;'+runCost.stepped_down):'')
         +(runCost.over_budget?(' &middot; <b>over budget &times;'+runCost.over_budget+'</b>'):'')):'');
    st.innerHTML=(fresh?'':chip(RD[0],RD[1],'STALE '+Math.round(ageH)+'H'))
-     +(d.brain_keyed?chip(GR[0],GR[1],'BRAIN OK','proven by a live call this run'):
+     +(d.brain_keyed?chip(GR[0],GR[1],'BRAIN OK','proven by a live call this run; served by '+(d.brain_model||'?')+' per the register'):
        (red?chip(RD[0],RD[1],'BRAIN RED',bs):(amber?chip(AM[0],AM[1],'BRAIN '+bs.replace(/^AMBER:/,'').toUpperCase(),bs):chip(AM[0],AM[1],'NO BRAIN',bs))))
      +(d.armed?(d.live?chip(GR[0],GR[1],'ARMED'):chip(BL[0],BL[1],'ARMED&middot;IDLE'))
        :(d.armed_switch?chip(AM[0],AM[1],'SWITCH ON&middot;NO COVER','kill switch is on but the brain is not proven: the loop cannot fix anything')
@@ -1444,11 +1446,11 @@ window.lsSave=function(){ var body={mode:S.mode,fault_report:!!S.fault_report,ve
   /* ── colour system ─────────────────────────────────────────────
      App categories:  Listings/Adverts purple · Trust&Safety green · Search blue ·
                       Tuppence cyan · Ops amber
-     Task tiers:      haiku sky · sonnet violet · vision pink · triage gold
+     Task tiers:      fast sky · reason violet · vision pink · triage gold
      Vendor lanes:    Anthropic terracotta · OpenAI green · Scaleway purple
      Status:          ok green · warn amber · fail red · no-key grey            */
   var CAT={listings:'#8b5cf6',trust:'#10b981',search:'#3b82f6',tuppence:'#06b6d4',ops:'#f59e0b'};
-  var TIER={haiku:'#38bdf8',sonnet:'#a78bfa',vision:'#f472b6',triage:'#fbbf24'};
+  var TIER={fast:'#38bdf8',reason:'#a78bfa',vision:'#f472b6',triage:'#fbbf24'};
   var LANE={anthropic:'#e07a5f',openai:'#10a37f',scaleway:'#8b5cf6'};
   var STAT={ok:'#22c55e',warn:'#eab308',fail:'#ef4444',nokey:'#6b7280'};
 
@@ -1459,19 +1461,19 @@ window.lsSave=function(){ var body={mode:S.mode,fault_report:!!S.fault_report,ve
     if(!(d.providers||[]).length){avail={openai:true,anthropic:true,scaleway:true};}
     var groups=[
       {id:'listings',name:'LISTINGS &amp; ADVERTS',c:CAT.listings,items:[
-        {n:'Advert coach &amp; super-adverts',t:['sonnet','haiku']},
-        {n:'Mode B anonymity rewrite',t:['sonnet']},
-        {n:'Import photo scan',t:['sonnet','vision']}]},
+        {n:'Advert coach &amp; super-adverts',t:['reason','fast']},
+        {n:'Mode B anonymity rewrite',t:['reason']},
+        {n:'Import photo scan',t:['reason','vision']}]},
       {id:'trust',name:'TRUST &amp; SAFETY',c:CAT.trust,items:[
-        {n:'KYC ID verification',t:['sonnet','vision']},
+        {n:'KYC ID verification',t:['reason','vision']},
         {n:'Photo checks — orientation &middot; anonymity',t:['vision']}]},
       {id:'search',name:'SEARCH &amp; DISCOVERY',c:CAT.search,items:[
-        {n:'Search interpretation',t:['haiku']}]},
+        {n:'Search interpretation',t:['fast']}]},
       {id:'tuppence',name:'TUPPENCE AI SERVICES',c:CAT.tuppence,items:[
-        {n:'Tier 1 &amp; 2 buyer/seller services',t:['haiku','sonnet']}]},
+        {n:'Tier 1 &amp; 2 buyer/seller services',t:['fast','reason']}]},
       {id:'ops',name:'OPS &amp; ADMIN',c:CAT.ops,items:[
         {n:'Email triage',t:['triage']},
-        {n:'Provider self-test (this dashboard)',t:['haiku']}]}
+        {n:'Provider self-test (this dashboard)',t:['fast']}]}
     ];
     var s='';
     s+='<defs><filter id="msvGlow" x="-40%" y="-40%" width="180%" height="180%">'+
@@ -1483,7 +1485,7 @@ window.lsSave=function(){ var body={mode:S.mode,fault_report:!!S.fault_report,ve
     s+=txt(1170,32,'VENDOR LANES',12,'#64748b',800,'middle','2px');
 
     /* tier chips */
-    var tiers={haiku:{y:170,d:'everyday text'},sonnet:{y:290,d:'heavy reasoning'},vision:{y:410,d:'image analysis'},triage:{y:530,d:'inbox sorting'}};
+    var tiers={fast:{y:170,d:'everyday text'},reason:{y:290,d:'heavy reasoning'},vision:{y:410,d:'image analysis'},triage:{y:530,d:'inbox sorting'}};
     Object.keys(tiers).forEach(function(k){var t=tiers[k];
       s+=box(432,t.y-26,112,52,TIER[k],'#0d1526',26);
       s+=txt(488,t.y-2,k,14,TIER[k],800,'middle');
@@ -1569,7 +1571,7 @@ window.lsSave=function(){ var body={mode:S.mode,fault_report:!!S.fault_report,ve
       else{s+=txt(lx,772,e[0]+':',11,'#e2e8f0',700);lx+=e[0].length*7+16;}
     });
     lx=40;
-    [['Task tier',null],['haiku',TIER.haiku],['sonnet',TIER.sonnet],['vision',TIER.vision],['triage',TIER.triage]].forEach(function(e){
+    [['Task tier',null],['fast',TIER.fast],['reason',TIER.reason],['vision',TIER.vision],['triage',TIER.triage]].forEach(function(e){
       if(e[1]){s+='<rect x="'+lx+'" y="790" width="12" height="12" rx="3" fill="'+e[1]+'"/>';s+=txt(lx+18,800,e[0],11,'#94a3b8');lx+=e[0].length*7+42;}
       else{s+=txt(lx,800,e[0]+':',11,'#e2e8f0',700);lx+=e[0].length*7+16;}
     });
@@ -3106,7 +3108,7 @@ window.apv3Render = function(){
         vtxt='\u2717 live call FAILED at '+ver.hhmm+(ver.msg?(' \u2014 '+ver.msg):''); vcol='#ef4444'; }
       else { vtxt='\u2713 live call verified '+ver.hhmm+' (decays after 24h)'; vcol='#22c55e'; }
     }
-    var models=p.models?('fast '+(p.models.haiku||'—').split('-20')[0]+' &middot; reason '+(p.models.sonnet||'—')):'';
+    var models=p.models?('fast '+(p.models.fast||'—').split('-20')[0]+' &middot; reason '+(p.models.reason||'—')):'';
     h+='<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">'
       +'<span style="width:9px;height:9px;border-radius:50%;background:'+st[0]+';opacity:'+(active?'1':(avail?'.55':'.6'))+';flex:0 0 auto;"></span>'
       +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text)">'+p.label

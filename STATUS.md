@@ -8,6 +8,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
+## Last Completed (2026-09-17 — TIER-NAME-1: tiers are functions, not models)
+- Task tiers renamed everywhere to fast / reason / vision / triage / design (215 sites, 17 files); stored rows migrated (039); `ai_baseline_check.py` now FAILS if a model name is ever used as a tier label. Maintenance brain endpoint is loopback-only + maint key. Detail: CHANGELOG TIER-NAME-1.
+
 ## Last Completed (2026-09-17 — MAINT-BRAIN-1: maintenance agent routed through the cost chokepoint)
 - Agent's private model chain DELETED; every brain call is `POST /admin/maint/brain` (price card re-read per call, spend-logged, rank-by-price step-down, never halts). Brain PROVEN by a live probe per run; armed/live = switch AND proven brain. Baseline re-pinned to card 2026-09-16.1. Dashboard row shows lane, cost per run, 7d/30d, top-ups, auto-recharges, derived balance. Detail: CHANGELOG MAINT-BRAIN-1.
 

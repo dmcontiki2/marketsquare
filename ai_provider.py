@@ -2,10 +2,10 @@
 """
 ai_provider.py — the single seam for LLM inference (D1-FIX).
 Swap the inference vendor in ONE place (AI_ACTIVE env), exactly like ai_service_tiers swaps feed providers.
-Call sites use abstract task tiers ("haiku"/"sonnet"/"vision"/"triage"), never vendor model strings.
+Call sites use abstract task tiers ("fast"/"reason"/"vision"/"triage"), never vendor model strings.
 
     from ai_provider import complete
-    r = complete(messages, task="haiku", max_tokens=700)
+    r = complete(messages, task="fast", max_tokens=700)
     r.text, r.in_tokens, r.out_tokens, r.provider, r.model
 
 Adding a provider = add an adapter to ADAPTERS + a task->model row. Flip AI_ACTIVE to switch. No call-site edits.
@@ -51,7 +51,7 @@ TASK_MODEL = {
     # SESSION on the subscription, where the tokens are already paid for. A server process cannot
     # use a subscription; only a session can. Do not add an anthropic row here without David
     # explicitly accepting per-token billing for autonomous runs.
-    "anthropic": {"haiku":"claude-haiku-4-5-20251001","sonnet":"claude-sonnet-4-6",
+    "anthropic": {"fast":"claude-haiku-4-5-20251001","reason":"claude-sonnet-4-6",
                   "vision":"claude-haiku-4-5-20251001","triage":"claude-haiku-4-5-20251001"},
     # GPT-5.6 family. Prices RE-VERIFIED 16 Sep 2026 (RG-0018 re-verification): Luna $0.20/$1.20 and
     # Terra $2/$12 UNCHANGED since 31 Jul; Sol is now $4/$20, cut again on 21 Aug 2026 from the $5/$30
@@ -63,13 +63,13 @@ TASK_MODEL = {
     # the vision tier too. Luna = cheap tiers, Terra = reasoning rung ("gpt-5.6-sol" exists as flagship).
     # Vendor-doc gate UNCHANGED: golden-set eval before production traffic; OPENAI_API_KEY still
     # unprovisioned (David-only) — dashboard shows the lane DISABLED until the key lands. RG-0016.
-    "openai":    {"haiku":"gpt-5.6-luna","sonnet":"gpt-5.6-terra",
+    "openai":    {"fast":"gpt-5.6-luna","reason":"gpt-5.6-terra",
                   "vision":"gpt-5.6-luna","triage":"gpt-5.6-luna",
                   "design":"gpt-5.6-sol"},
     # Scaleway EU (P1) — canon lives HERE per seam philosophy; deliberately ignores FAILOVER_MODEL_* env
     # (those belong to failover/ai_backends.py). Reasoning tier uses the non-thinking instruct variant
     # (qwen3.5-397b overthinks short tasks — live demo finding 17 Jul).
-    "scaleway":  {"haiku":"mistral-medium-3.5-128b","sonnet":"mistral-medium-3.5-128b",
+    "scaleway":  {"fast":"mistral-medium-3.5-128b","reason":"mistral-medium-3.5-128b",
                   "vision":"mistral-medium-3.5-128b","triage":"mistral-medium-3.5-128b",
                   "design":"mistral-medium-3.5-128b"},
     # ONE-MODEL STANDBY (David's ruling, 18 Jul 2026): whole row = mistral-medium-3.5-128b.
@@ -77,11 +77,11 @@ TASK_MODEL = {
     # failed 1/7 adverts). One standby = one behaviour to know. Prior row ids in CHANGELOG.
     # GEMINI CANARY (RUL-032, David 19 Aug 2026): photo anon SCAN/REFINE lane ONLY -- Gemini is
     # grounding-trained (native boxes/masks), the capability the two general lanes lacked (RUL-031).
-    # sonnet tier only (the anon scan's tier); deliberately NOT in failover_order -- it is never an
+    # reason tier only (the anon scan's tier); deliberately NOT in failover_order -- it is never an
     # automatic failover target, and the VERIFY pass stays on the active lane (a weak scanner can
     # never leak). Dark until GEMINI_API_KEY lands; goes hot only via PHOTO_SCAN_CANARY=1 after the
     # photo eval set passes at 100% plate recall (Switch Test Plan). Model id: re-verify at key time.
-    "gemini":    {"sonnet":"gemini-3.7-flash"},
+    "gemini":    {"reason":"gemini-3.7-flash"},
 }
 
 @dataclass
@@ -302,11 +302,11 @@ def configured_lanes():
     """Providers with a key present (env or server .env)."""
     return [p for p, names in _LANE_KEYS.items() if envkey(*names)]
 
-def any_lane_configured(task="haiku"):
+def any_lane_configured(task="fast"):
     """True when at least ONE wired lane is keyed and maps this task tier."""
     return any(TASK_MODEL.get(p, {}).get(task) for p in configured_lanes())
 
-def complete(messages, *, task="haiku", max_tokens=700, system=None, provider=None,
+def complete(messages, *, task="fast", max_tokens=700, system=None, provider=None,
              timeout=30, allow_fallback=True, probe=False, exclude=()):
     """P2a (1 Aug 2026): breaker-aware. Chain = [requested/active] + others, minus lanes the
     breaker or the AI_DRILL_BAN overlay excludes. Attribution is recorded PER ADAPTER

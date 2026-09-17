@@ -135,18 +135,18 @@ def no_pii(t): return not PII_RE.search(t)
 
 # ── LUNA (haiku/triage/vision tiers) ──
 L="gpt-5.6-luna"
-run("T1",L,"haiku","draft-from-intent",None,
+run("T1",L,"fast","draft-from-intent",None,
     DRAFT_PROMPT % ("Selling my 3 seater genuine leather couch, dark brown, 2 years old, small scratch on one arm, want R4500", "Pretoria"),
     350,[("json+schema",jchk("title","category","condition","price","description")),
          ("no PII",no_pii),
          ("price honest",lambda t: "4" in json.loads(t)["price"] and "500" in json.loads(t)["price"]),
          ("no invention",lambda t: "oak" not in t.lower() and "italian" not in t.lower())])
-run("T2",L,"haiku","search-interpret",_SI_SYSTEM,
+run("T2",L,"fast","search-interpret",_SI_SYSTEM,
     "im looking for a reliable bakkie under 150k around centurion",
     120,[("json+schema",jchk("terms","price_min","price_max","category")),
          ("price parsed",lambda t: json.loads(t)["price_max"]==150000),
          ("category",lambda t: json.loads(t)["category"]=="Cars")])
-run("T3",L,"haiku","anon-rewrite",_ANON_AI_SYSTEM,
+run("T3",L,"fast","anon-rewrite",_ANON_AI_SYSTEM,
     "TITLE: Stunning 3 bed home — ProLux Properties exclusive!\nDESCRIPTION: Lovely family home at 252 Olivier Street, Elarduspark. 3 beds, 2 baths, double garage, R1,450,000. Call Marietta at ProLux Properties on 082 555 1234 or WhatsApp, viewing by appointment through our Lynnwood office. www.proluxproperties.co.za",
     1000,[("format",lambda t: re.search(r"TITLE:.*DESCRIPTION:",t,re.S|re.I) is not None),
           ("PII scrubbed",no_pii),
@@ -164,19 +164,19 @@ run("T5",L,"vision","vision-draft-2-photos",_VISION_SYSTEM,
           ("core fields",lambda t: all(k in json.loads(t) for k in ("title","category"))),
           ("no PII",no_pii)])
 
-# ── TERRA (sonnet tier) ──
+# ── TERRA (reason tier) ──
 T="gpt-5.6-terra"
-run("T6",T,"sonnet","anon-rewrite-hard",_ANON_AI_SYSTEM,
+run("T6",T,"reason","anon-rewrite-hard",_ANON_AI_SYSTEM,
     "TITLE: Kruger Safari Special — Bushveld Tours & Safaris!\nDESCRIPTION: 3-day Kruger package R8,999pp incl. game drives with ranger Johan. Book via bookings@bushveldtours.co.za or call our Nelspruit office 013 741 9999. Depart from our depot at 17 Impala Road. Follow @bushveldtours for specials!",
     1000,[("format",lambda t: re.search(r"TITLE:.*DESCRIPTION:",t,re.S|re.I) is not None),
           ("PII scrubbed",lambda t: not re.search(r"(bushveld|johan|013\s?741|impala road|@|bookings)",t,re.I)),
           ("facts kept",lambda t: "8,999" in t or "8999" in t.replace(" ",""))])
-run("T7",T,"sonnet","price-check-no-invention",None,
+run("T7",T,"reason","price-check-no-invention",None,
     "You assess marketplace prices for TrustSquare (South Africa). Comparable sales provided are the ONLY price evidence — never invent figures. Comps for 2-bed flats, Elarduspark, Pretoria (rent/month): R6,800 · R7,200 · R7,500 · R7,900. Asking price under review: R9,500/month. Reply ONLY JSON: {\"fair\": true|false, \"estimate\": <number from comps range>, \"rationale\": \"<2 sentences citing only the comps>\"}",
     600,[("json+schema",jchk("fair","estimate","rationale")),
          ("verdict",lambda t: json.loads(t)["fair"] is False),
          ("estimate in comps range",lambda t: 6800 <= float(json.loads(t)["estimate"]) <= 7900)])
-run("T8",T,"sonnet","photo-anon-scan",
+run("T8",T,"reason","photo-anon-scan",
     "You are the photo anonymiser for TrustSquare, an anonymity-first marketplace. Inspect this photo for ANY identifying content: contact details, logos/watermarks, signage, number plates, house numbers, faces, documents. Reply with ONLY a JSON object: {\"verdict\": \"clean\"|\"redact\"|\"reject\", \"confidence\": 0.0-1.0, \"labels\": []}",
     [img_block(os.path.join(REPO, "Jewelry", "IMG_8033.JPG")), {"type":"text","text":"Scan this seller photo."}],
     400,[("json+schema",jchk("verdict","confidence")),

@@ -87,7 +87,7 @@ if _BRAIN_STUB:
 
 # ── MAINT-BRAIN-1 (17 Sep 2026): the brain is the app's chokepoint, not this file ──
 # DELETED here: _load_local_ai_keys (a private key file), _LANE_KEY_NAMES (a private
-# key-presence chain), _fix_task (a hardcoded "sonnet"), _ensure_brain_deps (httpx for
+# key-presence chain), _fix_task (a hardcoded "reason"), _ensure_brain_deps (httpx for
 # private vendor calls). The agent now holds ONE credential (MS_MAINT_KEY) and POSTs to
 # /admin/maint/brain, where bea_main applies the price card, the daily budget and the
 # rank-by-price STEP-DOWN (David: never halt on cost), logs spend to the serving lane,
@@ -123,7 +123,7 @@ def _account(r):
     if r.stepped_down: RUN_COST["stepped_down"] += 1
     if r.over_budget: RUN_COST["over_budget"] += 1
 
-def brain(purpose, messages, task="haiku", max_tokens=700, system=None):
+def brain(purpose, messages, task="fast", max_tokens=700, system=None):
     """ONE brain call through the chokepoint. Never raises: a transport failure is a
     declined answer (ok=False, error_kind named), the RG-0049 degradation contract."""
     key = maint_key()
@@ -400,9 +400,9 @@ def email_lane_census():
 
 
 # RUL-013 / SPEND-GUARD-1 history: the fix tier used to be chosen HERE (_fix_task() returned a
-# hardcoded "sonnet"). Deleted 17 Sep 2026 (MAINT-BRAIN-1): the agent REQUESTS a tier; the
+# hardcoded "reason"). Deleted 17 Sep 2026 (MAINT-BRAIN-1): the agent REQUESTS a tier; the
 # chokepoint decides the rung from the price card and the day's budget. Fable never runs here.
-FIX_TIER = "sonnet"       # requested; the chokepoint may step DOWN, never up
+FIX_TIER = "reason"       # requested; the chokepoint may step DOWN, never up
 
 # ── classify: REFUSE | ESCALATE | PATH_B | PATH_A ────────────────────────────────
 def classify(fault):
@@ -425,7 +425,7 @@ def classify(fault):
              "feature. If unsure, answer DESIGN.")
     msg = [{"role": "user", "content": "TITLE: %s\nDETAIL: %s\nPAGE: %s" % (
         fault.get("title", ""), fault.get("detail", ""), fault.get("page_url", ""))}]
-    r = brain("classify", msg, task="haiku", max_tokens=8, system=sys_p)
+    r = brain("classify", msg, task="fast", max_tokens=8, system=sys_p)
     verdict = (r.text or "").strip().upper()
     src = "%s/%s" % (r.provider, r.model)        # the IDENTIFIED source, logged
     if not r.ok:
@@ -777,8 +777,9 @@ def main():
     _RUN_ID = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     if key and not _BRAIN_STUB:
         b = brain_probe()
+        # TIER-NAME-1: lane + tier are the labels; the model that served is a register fact.
         say("brain   %s%s (probe $%.5f, card %s)" % (
-            b["state"], ("  " + b["provider"] + "/" + b["model"]) if b["ok"] else
+            b["state"], ("  " + b["provider"] + " · fast tier, served by " + b["model"]) if b["ok"] else
             ("  " + (b.get("error_kind") or "")), b.get("cost_usd", 0.0), b.get("card_version", "?")))
     elif _BRAIN_STUB:
         BRAIN.update({"ok": True, "state": "STUB", "provider": "stub", "model": "rehearsal"})

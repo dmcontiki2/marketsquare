@@ -60,9 +60,9 @@ def seed(conn, provider, task, n_ok, n_fail=0, lat=500, days_ago=0, kind="http_5
 def test_quality_gate_blocks_ranking():
     """openai has NO golden-set pass on record -> even 100% availability stays GATED."""
     conn = fresh_conn()
-    seed(conn, "openai", "haiku", 50)          # perfect record
-    seed(conn, "scaleway", "haiku", 40, 10)    # worse availability, but gated PASS
-    rank = sb.ranking(conn)["tasks"]["haiku"]
+    seed(conn, "openai", "fast", 50)          # perfect record
+    seed(conn, "scaleway", "fast", 40, 10)    # worse availability, but gated PASS
+    rank = sb.ranking(conn)["tasks"]["fast"]
     ranked = {l["provider"] for l in rank["ranked"]}
     assert "openai" not in ranked, "GATE VIOLATION: ungated lane was ranked"
     gated = [l for l in rank["unranked"] if l["provider"] == "openai"]
@@ -73,8 +73,8 @@ def test_quality_gate_blocks_ranking():
 
 def test_unconfigured_is_disabled_not_outage():
     conn = fresh_conn()
-    seed(conn, "scaleway", "sonnet", 0, 10, kind="unconfigured")
-    rank = sb.ranking(conn)["tasks"]["sonnet"]
+    seed(conn, "scaleway", "reason", 0, 10, kind="unconfigured")
+    rank = sb.ranking(conn)["tasks"]["reason"]
     lane = [l for l in rank["unranked"] if l["provider"] == "scaleway"][0]
     assert lane["status"] == "DISABLED", f"expected DISABLED, got {lane['status']}"
     assert "availability_pct" not in lane, "unconfigured rows polluted availability"
@@ -85,12 +85,12 @@ def test_ranking_order_band_then_cost_then_latency():
     """anthropic: band A, expensive. scaleway: band A, cheap -> scaleway must rank #1.
     Then degrade scaleway to band C -> anthropic overtakes despite its price."""
     conn = fresh_conn()
-    seed(conn, "anthropic", "haiku", 200, 0, lat=400)
-    seed(conn, "scaleway", "haiku", 200, 0, lat=900)
-    r1 = sb.ranking(conn)["tasks"]["haiku"]["ranked"]
+    seed(conn, "anthropic", "fast", 200, 0, lat=400)
+    seed(conn, "scaleway", "fast", 200, 0, lat=900)
+    r1 = sb.ranking(conn)["tasks"]["fast"]["ranked"]
     assert r1[0]["provider"] == "scaleway", "same band: cheaper lane must rank first"
-    seed(conn, "scaleway", "haiku", 0, 20)     # push availability below 98 -> band C
-    r2 = sb.ranking(conn)["tasks"]["haiku"]["ranked"]
+    seed(conn, "scaleway", "fast", 0, 20)     # push availability below 98 -> band C
+    r2 = sb.ranking(conn)["tasks"]["fast"]["ranked"]
     assert r2[0]["provider"] == "anthropic", "band beats cost: degraded lane must drop"
     conn.close()
 

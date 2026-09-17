@@ -67,7 +67,7 @@ except Exception:      # standalone / test use
 
 # Checker runs on the cheap tier by design (constraint 4).
 CHECKER_TASK = "triage"
-DOER_TASK = "haiku"
+DOER_TASK = "fast"
 
 
 # ------------------------------------------------------------------ the spec

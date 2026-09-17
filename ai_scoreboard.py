@@ -39,7 +39,7 @@ from datetime import datetime, timedelta, timezone
 
 from ai_provider import complete, TASK_MODEL, ADAPTERS
 
-TASKS = ("haiku", "sonnet", "vision", "triage")
+TASKS = ("fast", "reason", "vision", "triage")
 MIN_SAMPLES = 5            # below this a lane shows INSUFFICIENT DATA, never a rank
 DEFAULT_WINDOW_DAYS = 90   # David's 3-month history window
 PROBE_MAX_TOKENS = 60
@@ -49,9 +49,9 @@ PROBE_MAX_TOKENS = 60
 _PNG_1x1_RED = ("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4"
                 "2mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
 PROBES = {
-    "haiku":  {"messages": [{"role": "user", "content": "Reply with exactly: OK"}],
+    "fast":  {"messages": [{"role": "user", "content": "Reply with exactly: OK"}],
                "sanity": lambda t: "ok" in t.lower()},
-    "sonnet": {"messages": [{"role": "user", "content": "What is 7+5? Reply with the number only."}],
+    "reason": {"messages": [{"role": "user", "content": "What is 7+5? Reply with the number only."}],
                "sanity": lambda t: "12" in t},
     "triage": {"messages": [{"role": "user", "content":
                "Classify the sentiment of this review as GOOD or BAD, one word only: 'excellent service, highly recommended'"}],
