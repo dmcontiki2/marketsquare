@@ -123,6 +123,36 @@ def _account(r):
     if r.stepped_down: RUN_COST["stepped_down"] += 1
     if r.over_budget: RUN_COST["over_budget"] += 1
 
+# VANTAGE-BRAIN-1 (17 Sep 2026): MAINT-BRAIN-1 refuses /admin/maint/brain to any caller
+# that is not a process ON the box -- 403 {"detail":"brain endpoint is local-only"}. That is a
+# DELIBERATE, PERMANENT property of WHERE a run is standing. It is not a transport failure, not
+# a billing failure, and not a state of the brain. Collapsing it into "AMBER:transport /
+# brain-unreachable" broke the RG-0187 contract at the one instrument that gates the whole B2b
+# lane: an instrument LIMIT must read NOT EVALUATED, never a FAIL and never a health colour
+# (CLAUDE.md evidence ladder; RG-0133's three properties). Two harms it caused, both proven on
+# the 17 Sep 05:37Z run: (a) the dashboard's B2b row painted AMBER every time the loop ran from
+# a laptop, so a REAL brain outage was indistinguishable from a remote vantage; (b) classify()
+# reported "brain unreachable", which reads as a defect report about the brain. The FAIL-SAFE
+# routing to Path B is deliberately UNCHANGED -- an unconsultable brain still means the human
+# lane -- only the NAME of the state changed, because the name is what a person acts on.
+def _vantage_refusal(e):
+    """Return a reason string when e is MAINT-BRAIN-1's local-only refusal, else ''."""
+    try:
+        if not isinstance(e, urllib.error.HTTPError) or e.code != 403:
+            return ""
+        body = (e.read() or b"").decode("utf-8", "replace")
+    except Exception:
+        return ""
+    return "local-only" if "local-only" in body else ""
+
+def _declined(e):
+    """One shape for 'the brain did not answer', with the vantage case named apart."""
+    if _vantage_refusal(e):
+        return {"error_kind": "vantage:local-only", "state": "NOT_EVALUATED:remote",
+                "provider": "none", "model": "not-consultable-from-here"}
+    return {"error_kind": "transport:%s" % type(e).__name__, "state": "AMBER:transport",
+            "provider": "none", "model": "brain-unreachable"}
+
 def brain(purpose, messages, task="fast", max_tokens=700, system=None):
     """ONE brain call through the chokepoint. Never raises: a transport failure is a
     declined answer (ok=False, error_kind named), the RG-0049 degradation contract."""
@@ -134,8 +164,7 @@ def brain(purpose, messages, task="fast", max_tokens=700, system=None):
     try:
         r = _BrainReply(api("POST", "/admin/maint/brain", key, body, timeout=180))
     except Exception as e:
-        r = _BrainReply({"error_kind": "transport:%s" % type(e).__name__, "state": "AMBER:transport",
-                         "provider": "none", "model": "brain-unreachable"})
+        r = _BrainReply(_declined(e))
     _account(r)
     if r.stepped_down:
         say("brain: %s stepped DOWN %s -> %s (%s) budget-left %s"
@@ -151,7 +180,7 @@ def brain_probe():
         d = api("POST", "/admin/maint/brain", key, {"run": _RUN_ID or "adhoc", "purpose": "probe",
                                                     "probe": True}, timeout=60)
     except Exception as e:
-        d = {"ok": False, "state": "AMBER:transport", "error_kind": "transport:%s" % type(e).__name__}
+        d = dict(_declined(e)); d["ok"] = False
     r = _BrainReply(d); _account(r)
     BRAIN.update({"ok": r.ok, "state": r.state or ("GREEN" if r.ok else "RED:unknown"),
                   "provider": r.provider if r.ok else (r.provider if r.provider != "none" else ""),
@@ -417,8 +446,12 @@ def classify(fault):
             return v, "classify-stub"
     # brain classifies the remainder; DEFAULT to Path B (batched, safe) on any doubt.
     if not BRAIN.get("ok"):
-        return "PATH_B", ("brain %s -- batched design lane. This is a WIRING/BILLING state, not a "
-                          "verdict on the fault." % BRAIN.get("state", "UNPROBED"))
+        _st = BRAIN.get("state", "UNPROBED")
+        _why = ("NOT MEASURED from this vantage (the brain endpoint is local-only)"
+                if str(_st).startswith("NOT_EVALUATED")
+                else "a WIRING/BILLING state")
+        return "PATH_B", ("brain %s -- batched design lane. This is %s, not a verdict on the "
+                          "fault." % (_st, _why))
     sys_p = ("You triage a software fault for a marketplace. Answer ONE word: "
              "MECHANICAL if it is a copy/config/flag/logic bug fixable by a small code "
              "edit; DESIGN if it asks for new UI, a new flow, a layout change, or a "
@@ -429,6 +462,10 @@ def classify(fault):
     verdict = (r.text or "").strip().upper()
     src = "%s/%s" % (r.provider, r.model)        # the IDENTIFIED source, logged
     if not r.ok:
+        if (r.error_kind or "").startswith("vantage:"):
+            return "PATH_B", ("brain NOT CONSULTABLE from this vantage (MAINT-BRAIN-1: the endpoint "
+                              "is local-only) -- design lane by FAIL-SAFE. A property of where this "
+                              "run stood, not a fault in the brain and not a verdict on the fault.")
         return "PATH_B", "brain unreachable (%s) -- defaulting to design lane" % r.error_kind
     if "MECHANICAL" in verdict:
         return "PATH_A", "brain[%s]=MECHANICAL" % src

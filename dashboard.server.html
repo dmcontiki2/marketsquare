@@ -1105,20 +1105,28 @@ function fuLoad(){
    var ageH=(Date.now()-Date.parse(d.received_at))/36e5, fresh=isFinite(ageH)&&ageH<36;
    // MAINT-BRAIN-1 (17 Sep 2026): brain_state is PROVEN by one live call per run (D2);
    // armed/live are effective cover (switch AND brain), armed_switch is the raw switch (D3).
-   var bs=d.brain_state||(d.brain_keyed?'GREEN':'KEYLESS'), red=/^RED/.test(bs), amber=/^AMBER/.test(bs);
+   // VANTAGE-BRAIN-1 (17 Sep 2026): NOT_EVALUATED is NOT a health colour. A run made from a
+   // laptop cannot reach the brain endpoint at all (MAINT-BRAIN-1 is local-only by design), so
+   // painting that AMBER made a real outage indistinguishable from a remote vantage. Grey and
+   // the words NOT MEASURED are the honest rendering -- RG-0133's rule, CLAUDE.md's ladder.
+   var bs=d.brain_state||(d.brain_keyed?'GREEN':'KEYLESS'), red=/^RED/.test(bs),
+       notmeas=/^NOT_EVALUATED/.test(bs), amber=/^AMBER/.test(bs);
    var runCost=(d.cost&&d.cost.last_run)||d.cost||{};
    // TIER-NAME-1: the card names the LANE and the TIER; the model that served is a register fact,
    // shown only in the chip tooltip -- a label must never make one model "the agent".
    ds.innerHTML='last run '+(d.run||d.received_at)+' &middot; seen '+(d.seen||0)+' &middot; acted '+(d.acted||0)
      +(d.brain_keyed?(' &middot; brain '+(d.brain_lane||'?')+' &middot; fast tier'):
        (red?' &middot; brain refused: '+bs.replace(/^RED:/,'')+' &mdash; check the OpenAI key / billing':
-        ' &middot; brain unproven ('+bs+') &mdash; the app lane answers the agent; no agent key file needed'))
+        (notmeas?' &middot; brain NOT MEASURED &mdash; that run stood off the box, where the brain endpoint refuses every caller by design; no claim either way'
+         :' &middot; brain unproven ('+bs+') &mdash; the app lane answers the agent; no agent key file needed')))
      +(runCost&&runCost.calls?(' &middot; this run '+usd(runCost.usd)+' / '+runCost.calls+' call(s)'
         +(runCost.stepped_down?(' &middot; stepped down &times;'+runCost.stepped_down):'')
         +(runCost.over_budget?(' &middot; <b>over budget &times;'+runCost.over_budget+'</b>'):'')):'');
    st.innerHTML=(fresh?'':chip(RD[0],RD[1],'STALE '+Math.round(ageH)+'H'))
      +(d.brain_keyed?chip(GR[0],GR[1],'BRAIN OK','proven by a live call this run; served by '+(d.brain_model||'?')+' per the register'):
-       (red?chip(RD[0],RD[1],'BRAIN RED',bs):(amber?chip(AM[0],AM[1],'BRAIN '+bs.replace(/^AMBER:/,'').toUpperCase(),bs):chip(AM[0],AM[1],'NO BRAIN',bs))))
+       (red?chip(RD[0],RD[1],'BRAIN RED',bs)
+        :(notmeas?chip(GY[0],GY[1],'BRAIN NOT MEASURED','this run could not reach the brain endpoint from where it stood (local-only by design) -- not a fault, not a pass')
+          :(amber?chip(AM[0],AM[1],'BRAIN '+bs.replace(/^AMBER:/,'').toUpperCase(),bs):chip(AM[0],AM[1],'NO BRAIN',bs)))))
      +(d.armed?(d.live?chip(GR[0],GR[1],'ARMED'):chip(BL[0],BL[1],'ARMED&middot;IDLE'))
        :(d.armed_switch?chip(AM[0],AM[1],'SWITCH ON&middot;NO COVER','kill switch is on but the brain is not proven: the loop cannot fix anything')
          :chip(AM[0],AM[1],'SHADOW')));
