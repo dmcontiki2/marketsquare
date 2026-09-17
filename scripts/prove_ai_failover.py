@@ -68,7 +68,7 @@ print("AI-FAILOVER-PROOF-1 — exercising the real ai_provider.complete()\n"
 r = scenario("1. active lane returns HTTP 5xx (the 16 Aug outage shape)",
              {"anthropic": _fake("anthropic", False, "http_5xx", 503),
               "openai":    _fake("openai", True)},
-             task="sonnet", provider="anthropic")
+             task="reason", provider="anthropic")
 _check("failover happened: answer came from the SECOND lane", r.provider, "openai")
 _check("caller sees SUCCESS, not an outage", r.ok, True)
 _check("both lanes were actually called, in order", calls, ["anthropic", "openai"])
@@ -77,7 +77,7 @@ _check("both lanes were actually called, in order", calls, ["anthropic", "openai
 r = scenario("2. active lane returns 401 unauthorized (revoked/expired key)",
              {"anthropic": _fake("anthropic", False, "unauthorized", 401),
               "openai":    _fake("openai", True)},
-             task="sonnet", provider="anthropic")
+             task="reason", provider="anthropic")
 _check("auth failure fails OVER, it does not fail the request", r.provider, "openai")
 _check("caller sees SUCCESS", r.ok, True)
 
@@ -85,14 +85,14 @@ _check("caller sees SUCCESS", r.ok, True)
 r = scenario("3. active lane returns 429 rate_limited",
              {"anthropic": _fake("anthropic", False, "rate_limited", 429),
               "openai":    _fake("openai", True)},
-             task="sonnet", provider="anthropic")
+             task="reason", provider="anthropic")
 _check("429 fails OVER", r.provider, "openai")
 
 # ── 4. EVERY lane down — the honest-failure case ────────────────────────────
 r = scenario("4. every lane down (must fail honestly, never silently succeed)",
              {"anthropic": _fake("anthropic", False, "http_5xx", 503),
               "openai":    _fake("openai", False, "http_5xx", 503)},
-             task="sonnet", provider="anthropic")
+             task="reason", provider="anthropic")
 _check("reports failure", r.ok, False)
 _check("reports the REQUESTED lane's failure, not the last one tried", r.provider, "anthropic")
 _check("every lane was tried before giving up", sorted(calls), ["anthropic", "openai"])
@@ -101,7 +101,7 @@ _check("every lane was tried before giving up", sorted(calls), ["anthropic", "op
 r = scenario("5. probe mode is unambiguous — a probe's outcome is the TARGET's",
              {"anthropic": _fake("anthropic", False, "http_5xx", 503),
               "openai":    _fake("openai", True)},
-             task="sonnet", provider="anthropic", probe=True)
+             task="reason", provider="anthropic", probe=True)
 _check("probe did not fall through to another lane", r.provider, "anthropic")
 _check("probe reports the target's failure", r.ok, False)
 _check("only the target lane was called", calls, ["anthropic"])
@@ -110,7 +110,7 @@ _check("only the target lane was called", calls, ["anthropic"])
 r = scenario("6. allow_fallback=False is honoured",
              {"anthropic": _fake("anthropic", False, "http_5xx", 503),
               "openai":    _fake("openai", True)},
-             task="sonnet", provider="anthropic", allow_fallback=False)
+             task="reason", provider="anthropic", allow_fallback=False)
 _check("no failover when the caller forbade it", r.provider, "anthropic")
 
 failed = [r for r in RESULTS if not r[0]]

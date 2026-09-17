@@ -2113,7 +2113,7 @@ def rg_vendor_neutral_copy():
 
 
 @entry("RG-0036", "KYC document fetch is SSRF-safe: allowlisted host, no redirects, size-capped",
-       LOCKED, scope="bea_main.py _sonnet_verify_identity / _fetch_kyc_document (KYC-SSRF-1)",
+       LOCKED, scope="bea_main.py _vision_verify_identity / _fetch_kyc_document (KYC-SSRF-1)",
        fixed_on="2026-08-05",
        ref="AI-SERVICES-AUDIT-1 F3 (Peer round 2 BLOCKER-class). verify-identity fetched a "
            "caller-supplied doc_url with a bare urllib.urlopen -- no host allowlist, no private-IP "
@@ -6352,7 +6352,7 @@ def rg_gemini_canary():
     if ap is not None:
         if '"gemini"' not in ap or "def _gemini" not in ap:
             out.append((FAIL, "the gemini lane has GONE from ai_provider.py"))
-        if '"gemini":    {"sonnet"' in ap and '"gemini"' in ap.split("_FAILOVER_ORDER_DEFAULT = ")[-1].split("]")[0]:
+        if '"gemini":    {"reason"' in ap and '"gemini"' in ap.split("_FAILOVER_ORDER_DEFAULT = ")[-1].split("]")[0]:
             out.append((FAIL, "gemini crept into the default failover order -- the canary must "
                               "never be an automatic failover target"))
     if bea is not None:

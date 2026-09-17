@@ -320,6 +320,52 @@ def check_change_is_recorded(base):
     return out
 
 
+
+# ── TIER-NAME-1 (17 Sep 2026, David): a tier is named for its FUNCTION, never a model ──
+# "haiku"/"sonnet" as task tiers made one vendor's model "the agent" by perception, and a
+# silent reversion was one habit away. Tiers are fast / reason / vision / triage / design;
+# which model serves each is the register's decision, re-selected as prices and capability
+# move. This check FAILS the moment a model-family word is used as a tier key or task
+# argument anywhere in the code set. Model IDS remain legal ONLY inside the register
+# (ai_price_card.json), TASK_MODEL, and the embedded price fallback -- as values, never keys.
+_TIER_CODE_SET = ("bea_main.py", "ai_provider.py", "ai_breaker.py", "ai_scoreboard.py", "ai_qc.py",
+                  "scripts/maintenance_agent.py", "scripts/cost_compliance_sweep.py",
+                  "scripts/price_truth.py", "scripts/prove_ai_failover.py", "dashboard.server.html",
+                  "AI_BASELINE.json", "ai_price_card.json", "ai_funnel_snapshot.json")
+# model FAMILY words only -- vendor/lane names (openai, anthropic, scaleway, gemini) are legal
+# keys because lanes ARE vendors (independence design); the ban is on a MODEL as a tier.
+_MODEL_WORDS = r"(?:haiku|sonnet|opus|fable|luna|terra|sol)"
+_TIER_KEY_RE = re.compile(
+    r"""(?:task\s*=\s*["'](%s)(?:_vision|_rewrite)?["'])"""            # task="<model>"
+    r"""|(?:(?:^|[{,(\[])\s*["'](%s)(?:_vision|_rewrite)?["']\s*:(?!\s*\())"""   # {"<model>": ...} dict key (not a price tuple)
+    r"""|(?:TIER\.(%s)\b)"""                                           # JS TIER.<model>
+    % (_MODEL_WORDS, _MODEL_WORDS, _MODEL_WORDS), re.M)
+_ALLOWED_KEY_FILES = {"ai_price_card.json"}   # the register keys its MODELS by id, by design
+
+def check_tier_names(base):
+    out = []
+    hits = 0
+    for rel in _TIER_CODE_SET:
+        src = _src(rel)
+        if src is None:
+            continue
+        for i, line in enumerate(src.splitlines(), 1):
+            ls = line.lstrip()
+            if ls.startswith(("#", "//", "*", "<!--", "/*")):
+                continue
+            for m in _TIER_KEY_RE.finditer(line):
+                word = (m.group(1) or m.group(2) or m.group(3) or "").lower()
+                # a model ID as a dict key is legal in the register / price tables:
+                # those keys are hyphenated ids ("claude-...", "gpt-5.6-luna"), never a bare family word
+                if rel in _ALLOWED_KEY_FILES:
+                    continue
+                hits += 1
+                out.append((FAIL, "TIER-NAME-1: %s:%d uses the model name '%s' as a tier label: %s"
+                            % (rel, i, word, ls[:90])))
+    if not hits:
+        out.append((INFO, "tiers are functional names only (fast / reason / vision / triage / design) -- no model name is a label"))
+    return out
+
 def main():
     known_ok = "--known-ok" in sys.argv
     base = _load(BASELINE, "baseline")
@@ -332,6 +378,7 @@ def main():
         ("cost envelope: images, probes, max_tokens", check_envelope_constants(base)),
         ("failover affordability", check_failover_affordability(base)),
         ("change is recorded", check_change_is_recorded(base)),
+        ("tier names are functions, not models (TIER-NAME-1)", check_tier_names(base)),
     )
     fails = warns = muted = 0
     print("AI BASELINE CHECK -- MarketSquare")

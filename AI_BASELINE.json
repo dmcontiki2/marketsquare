@@ -35,7 +35,7 @@
   }
  ],
  "tiers": {
-  "haiku": {
+  "fast": {
    "envelope": {
     "max_in_tokens": 4000,
     "max_out_tokens": 1800,
@@ -71,7 +71,7 @@
     }
    }
   },
-  "sonnet": {
+  "reason": {
    "envelope": {
     "max_in_tokens": 4000,
     "max_out_tokens": 1400,
@@ -229,8 +229,8 @@
   "anon_refine_max_regions": 8,
   "anon_scan_max_regions": 12,
   "max_tokens_ceiling_by_tier": {
-   "haiku": 1800,
-   "sonnet": 1400,
+   "fast": 1800,
+   "reason": 1400,
    "vision": 2000,
    "triage": 400,
    "design": 4000
@@ -239,7 +239,7 @@
  "known_drift_at_creation": [
   {
    "id": "D1",
-   "what": "_MODEL_PRICE['haiku'] = (0.80,4.00) vs price card (1.00,5.00)",
+   "what": "_MODEL_PRICE['fast'] = (0.80,4.00) vs price card (1.00,5.00)",
    "where": "bea_main.py:1440",
    "effect": "every haiku row in ai_spend_log is 20-25% low, and _check_cost_ceiling sums that table -- so the daily rails are 20-25% looser than intended",
    "severity": "HIGH"

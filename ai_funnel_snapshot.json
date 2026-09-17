@@ -2,7 +2,7 @@
  "card_version": "2026-09-16.1",
  "generated": "2026-09-16",
  "tiers": {
-  "haiku": [
+  "fast": [
    {
     "provider": "openai",
     "gate": "pending-golden-set"
@@ -30,7 +30,7 @@
     "gate": "golden-set-passed"
    }
   ],
-  "sonnet": [
+  "reason": [
    {
     "provider": "openai",
     "gate": "pending-golden-set"

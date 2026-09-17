@@ -32,37 +32,37 @@ class T(unittest.TestCase):
     def setUp(self): reset(); ALERTS.clear(); os.environ.pop("AI_DRILL_BAN", None)
 
     def test_01_t1_consecutive_trips(self):
-        for _ in range(3): brk.record("anthropic", "haiku", False, "timeout")
-        s = state("anthropic", "haiku")
+        for _ in range(3): brk.record("anthropic", "fast", False, "timeout")
+        s = state("anthropic", "fast")
         self.assertEqual((s["state"], s["trip_reason"]), ("tripped", "T1_outage"))
-        self.assertFalse(brk.allows("anthropic", "haiku"))
+        self.assertFalse(brk.allows("anthropic", "fast"))
 
     def test_02_success_resets_t1_counter(self):
-        brk.record("anthropic", "haiku", False, "timeout")
-        brk.record("anthropic", "haiku", False, "timeout")
-        brk.record("anthropic", "haiku", True)
-        brk.record("anthropic", "haiku", False, "timeout")
-        self.assertEqual(state("anthropic", "haiku")["state"], "closed")
+        brk.record("anthropic", "fast", False, "timeout")
+        brk.record("anthropic", "fast", False, "timeout")
+        brk.record("anthropic", "fast", True)
+        brk.record("anthropic", "fast", False, "timeout")
+        self.assertEqual(state("anthropic", "fast")["state"], "closed")
 
     def test_03_t2_rolling_denominator(self):
-        for _ in range(8): brk.record("scaleway", "haiku", True)
-        brk.record("scaleway", "haiku", False, "rate_limited")   # 1/9 — no trip
-        self.assertEqual(state("scaleway", "haiku")["state"], "closed")
-        brk.record("scaleway", "haiku", False, "rate_limited")   # 2/10 = 20% -> trip
-        self.assertEqual(state("scaleway", "haiku")["trip_reason"], "T2_degraded")
+        for _ in range(8): brk.record("scaleway", "fast", True)
+        brk.record("scaleway", "fast", False, "rate_limited")   # 1/9 — no trip
+        self.assertEqual(state("scaleway", "fast")["state"], "closed")
+        brk.record("scaleway", "fast", False, "rate_limited")   # 2/10 = 20% -> trip
+        self.assertEqual(state("scaleway", "fast")["trip_reason"], "T2_degraded")
 
     def test_04_t3_immediate_and_loud(self):
-        brk.record("openai", "haiku", False, "unauthorized")
-        s = state("openai", "haiku")
+        brk.record("openai", "fast", False, "unauthorized")
+        s = state("openai", "fast")
         self.assertEqual((s["state"], s["trip_reason"]), ("tripped", "T3_account"))
         self.assertTrue(any(a.get("loud") for a in ALERTS))
 
     def test_05_invalid_request_and_unconfigured_never_trip(self):
         for _ in range(6):
-            brk.record("anthropic", "haiku", False, "invalid_request")
-            brk.record("openai", "haiku", False, "unconfigured")
-        self.assertEqual(state("anthropic", "haiku")["state"], "closed")
-        self.assertEqual(state("openai", "haiku")["state"], "closed")
+            brk.record("anthropic", "fast", False, "invalid_request")
+            brk.record("openai", "fast", False, "unconfigured")
+        self.assertEqual(state("anthropic", "fast")["state"], "closed")
+        self.assertEqual(state("openai", "fast")["state"], "closed")
         c = get_db()
         n = c.execute("SELECT COALESCE(SUM(attempts),0) a FROM ai_breaker_stats "
                       "WHERE provider='openai'").fetchone()["a"]
@@ -70,40 +70,40 @@ class T(unittest.TestCase):
         self.assertEqual(n, 0, "unconfigured attempts must not pollute T2 stats")
 
     def test_06_atomic_probe_claim(self):
-        for _ in range(3): brk.record("anthropic", "haiku", False, "timeout")
-        backdate("anthropic", "haiku", probe_after="2020-01-01T00:00:00")
-        self.assertTrue(brk.claim_probe("anthropic", "haiku"))
-        self.assertFalse(brk.claim_probe("anthropic", "haiku"), "second claim inside lease must fail")
+        for _ in range(3): brk.record("anthropic", "fast", False, "timeout")
+        backdate("anthropic", "fast", probe_after="2020-01-01T00:00:00")
+        self.assertTrue(brk.claim_probe("anthropic", "fast"))
+        self.assertFalse(brk.claim_probe("anthropic", "fast"), "second claim inside lease must fail")
 
     def test_07_dropout_auto_recovers_with_hysteresis(self):
-        for _ in range(3): brk.record("anthropic", "haiku", False, "timeout")
-        brk.record("anthropic", "haiku", True); brk.record("anthropic", "haiku", True)
-        self.assertNotEqual(state("anthropic", "haiku")["state"], "closed", "2 probes must not close")
-        backdate("anthropic", "haiku",
+        for _ in range(3): brk.record("anthropic", "fast", False, "timeout")
+        brk.record("anthropic", "fast", True); brk.record("anthropic", "fast", True)
+        self.assertNotEqual(state("anthropic", "fast")["state"], "closed", "2 probes must not close")
+        backdate("anthropic", "fast",
                  first_probe_ok_at=(datetime.datetime.utcnow()-datetime.timedelta(seconds=400)).isoformat(timespec="seconds"))
-        brk.record("anthropic", "haiku", True)
-        self.assertEqual(state("anthropic", "haiku")["state"], "closed", "3rd probe past span auto-recovers (David: dropouts auto)")
+        brk.record("anthropic", "fast", True)
+        self.assertEqual(state("anthropic", "fast")["state"], "closed", "3rd probe past span auto-recovers (David: dropouts auto)")
         self.assertTrue(any(a.get("event") == "recovered" for a in ALERTS))
 
     def test_08_ban_goes_ready_never_auto(self):
-        brk.record("openai", "haiku", False, "unauthorized")
-        for _ in range(2): brk.record("openai", "haiku", True)
-        backdate("openai", "haiku",
+        brk.record("openai", "fast", False, "unauthorized")
+        for _ in range(2): brk.record("openai", "fast", True)
+        backdate("openai", "fast",
                  first_probe_ok_at=(datetime.datetime.utcnow()-datetime.timedelta(seconds=400)).isoformat(timespec="seconds"))
-        brk.record("openai", "haiku", True)
-        s = state("openai", "haiku")
+        brk.record("openai", "fast", True)
+        s = state("openai", "fast")
         self.assertEqual(s["state"], "ready", "a BAN must wait for the operator (David's ruling)")
-        self.assertFalse(brk.allows("openai", "haiku"))
-        self.assertEqual(brk.restore("openai", "haiku", who="david"), 1)
-        self.assertTrue(brk.allows("openai", "haiku"))
+        self.assertFalse(brk.allows("openai", "fast"))
+        self.assertEqual(brk.restore("openai", "fast", who="david"), 1)
+        self.assertTrue(brk.allows("openai", "fast"))
 
     def test_09_drill_is_stateless_overlay(self):
         os.environ["AI_DRILL_BAN"] = "anthropic"
-        self.assertFalse(brk.allows("anthropic", "haiku"))
-        brk.record("anthropic", "haiku", False, "timeout")   # drill lanes never write state
-        self.assertIsNone(state("anthropic", "haiku"))
+        self.assertFalse(brk.allows("anthropic", "fast"))
+        brk.record("anthropic", "fast", False, "timeout")   # drill lanes never write state
+        self.assertIsNone(state("anthropic", "fast"))
         del os.environ["AI_DRILL_BAN"]
-        self.assertTrue(brk.allows("anthropic", "haiku"), "unset env = drill over instantly")
+        self.assertTrue(brk.allows("anthropic", "fast"), "unset env = drill over instantly")
 
     def test_10_seam_skips_tripped_lane_and_attributes_per_attempt(self):
         calls = []
@@ -117,14 +117,14 @@ class T(unittest.TestCase):
         try:
             ap.ADAPTERS.update(anthropic=fake("anthropic", False), openai=fake("openai", True),
                                scaleway=fake("scaleway", True))
-            r = ap.complete([{"role":"user","content":"hi"}], task="haiku", provider="anthropic")
+            r = ap.complete([{"role":"user","content":"hi"}], task="fast", provider="anthropic")
             self.assertTrue(r.ok and r.provider == "openai")
-            s = state("anthropic", "haiku")
+            s = state("anthropic", "fast")
             self.assertEqual(s["consec_fails"], 1, "failure recorded against the lane that failed")
-            for _ in range(2): ap.complete([{"role":"user","content":"hi"}], task="haiku", provider="anthropic")
-            self.assertEqual(state("anthropic", "haiku")["state"], "tripped")
+            for _ in range(2): ap.complete([{"role":"user","content":"hi"}], task="fast", provider="anthropic")
+            self.assertEqual(state("anthropic", "fast")["state"], "tripped")
             calls.clear()
-            ap.complete([{"role":"user","content":"hi"}], task="haiku", provider="anthropic")
+            ap.complete([{"role":"user","content":"hi"}], task="fast", provider="anthropic")
             self.assertNotIn("anthropic", calls, "tripped lane must not receive normal calls")
         finally:
             ap.ADAPTERS.update(old)
@@ -134,7 +134,7 @@ class T(unittest.TestCase):
         try:
             ap.ADAPTERS.update(anthropic=lambda *a, **k: ap.AIResult("",None,None,"anthropic","m",ok=False,error_kind="timeout"),
                                openai=lambda *a, **k: ap.AIResult("ok",1,1,"openai","m",ok=True))
-            r = ap.complete([{"role":"user","content":"hi"}], task="haiku", provider="anthropic", probe=True)
+            r = ap.complete([{"role":"user","content":"hi"}], task="fast", provider="anthropic", probe=True)
             self.assertFalse(r.ok, "a probe must NEVER be answered by another lane (Peer blocker #3)")
             self.assertEqual(r.provider, "anthropic")
         finally:
@@ -145,7 +145,7 @@ class T(unittest.TestCase):
         try:
             dead = lambda *a, **k: ap.AIResult("",None,None,"x","m",ok=False,error_kind="connection")
             ap.ADAPTERS.update(anthropic=dead, openai=dead, scaleway=dead)
-            r = ap.complete([{"role":"user","content":"hi"}], task="haiku", provider="anthropic")
+            r = ap.complete([{"role":"user","content":"hi"}], task="fast", provider="anthropic")
             self.assertFalse(r.ok)
         finally:
             ap.ADAPTERS.update(old)

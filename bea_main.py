@@ -1100,7 +1100,7 @@ def run_migrations(conn):
         provider   TEXT    NOT NULL DEFAULT 'openai',
         kind       TEXT    NOT NULL DEFAULT 'topup',
         amount_usd REAL    NOT NULL DEFAULT 0.0,
-        at         TEXT    NOT NULL DEFAULT (datetime('now')),
+        at         TEXT    NOT NULL DEFAULT '',
         note       TEXT    NOT NULL DEFAULT ''
     )""")
     for _col, _ddl in (
@@ -1696,11 +1696,15 @@ if not N8N_WEBHOOK_DECLINE:
 # Two layers: _AI_COST flat fallback (when a call site passes no tokens) and
 # _MODEL_PRICE real per-MILLION-token list prices (C2, Session 97). When usage
 # {input_tokens, output_tokens} is passed, the logger computes the EXACT cost.
+# TIER-NAME-1 (17 Sep 2026, David): tiers are named for the FUNCTION they serve, never for a
+# model. fast = everyday text · reason = heavy reasoning / rewrites · vision = image analysis ·
+# triage = inbox sorting · design = design requests. Which model serves a tier is decided by
+# the register (ai_price_card.json) + TASK_MODEL, re-selected as prices and capability move --
+# a tier label must never make one vendor's model "the agent" by name.
 _AI_COST = {
-    "haiku":          0.0023,   # claude-haiku-4-5 — 800in+400out tokens avg
-    "sonnet":         0.0150,   # claude-sonnet-4-6 — standard call
-    "sonnet_vision":  0.0400,   # claude-sonnet-4-6 — with 12 images
-    "sonnet_rewrite": 0.0150,
+    "fast":    0.0023,   # 800in+400out tokens avg on the base lane
+    "reason":  0.0150,   # standard reasoning call
+    "vision":  0.0400,   # with up to 12 images
 }
 
 # Real list prices, USD per 1,000,000 tokens (input, output) — keyed by MODEL ID and
@@ -1746,9 +1750,10 @@ _MODEL_PRICE = _load_model_prices()
 # Legacy TIER keys still arrive from call sites; resolve them to the model the serving
 # (or active) lane maps for that task tier. Exact when the caller states the serving
 # lane; the intended-lane guess only remains for callers that pass neither.
-_TIER_TO_TASK = {"haiku": "haiku", "sonnet": "sonnet", "sonnet_vision": "vision",
-                 "sonnet_rewrite": "sonnet", "vision": "vision", "triage": "triage",
+_TIER_TO_TASK = {"fast": "fast", "reason": "reason", "vision": "vision", "triage": "triage",
                  "design": "design"}
+# TIER-NAME-1: stored rows were migrated once (migrations/019_functional_tier_names.py); no alias
+# shim exists on purpose -- a model name used as a tier label fails scripts/ai_baseline_check.py.
 
 def _tier_model(model_key: str, prov: str | None = None) -> str:
     """Legacy tier key -> model id via the given (or active) lane's TASK_MODEL row."""
@@ -1822,15 +1827,15 @@ except Exception:
     # Import-failure fallback ONLY (seam unreachable => this path speaks raw Anthropic).
     # D2 fix (15 Aug 2026): vision was claude-sonnet-4-6 here vs haiku in the seam - an
     # import failure silently tripled every vision call's price. Now matches the seam row.
-    _TS_AI_MODELS   = {"haiku":"claude-haiku-4-5-20251001","sonnet":"claude-sonnet-4-6",
+    _TS_AI_MODELS   = {"fast":"claude-haiku-4-5-20251001","reason":"claude-sonnet-4-6",
                        "vision":"claude-haiku-4-5-20251001","triage":"claude-haiku-4-5-20251001"}
 # Endpoint + key resolve from the active provider (today = Anthropic; the URL/headers helper
 # below is the single place the wire protocol lives, so a swap changes it here, not in 15 bodies).
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-AA_MODEL = _TS_AI_MODELS["haiku"]
+AA_MODEL = _TS_AI_MODELS["fast"]
 # KYC / SA-ID verification model (SCAN-1 fix — was referenced undefined in the
 # ID-verification path at ~7541/7568/7572). Matches VISION_MODEL standard.
-SONNET_MODEL = _TS_AI_MODELS["sonnet"]
+REASON_MODEL = _TS_AI_MODELS["reason"]
 
 # AI EMAIL TRIAGE (Session 94) — inbound @trustsquare.co mail forwarded by a
 # Cloudflare Email Worker to POST /email/inbound (auth: EMAIL_INBOUND_SECRET).
@@ -4427,13 +4432,13 @@ def _vision_orient_image(img):
                  "media_type": "image/jpeg", "data": b64}},
                 {"type": "text", "text": prompt},
             ]}],
-            task="haiku", max_tokens=8,
+            task="fast", max_tokens=8,
             provider=_ts_active_provider(), timeout=20)
         ans = (_sr.text or "").strip().lower()
         it, ot = _sr.in_tokens, _sr.out_tokens
         # P2 wrapper — log spend HERE (moved from the caller): tokens are spent
         # even when the answer is 'none' and no rotation happens.
-        _log_ai_spend("", "/listings/photo:orient", "haiku", it, ot,
+        _log_ai_spend("", "/listings/photo:orient", "fast", it, ot,
                       provider=_sr.provider, model=_sr.model)
         # PIL.rotate is COUNTER-CLOCKWISE for positive angles.
         if "ccw" in ans:
@@ -4495,7 +4500,7 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
         _b64.b64encode(pbuf.getvalue()).decode(),
         _anon_scan_provider(_ts_active_provider()), category or "")   # GEMINI-CANARY-1
     if _it is not None or _ot is not None:
-        _log_ai_spend(spend_who, "/listings/photo#anon-scan", "sonnet_vision", _it, _ot,
+        _log_ai_spend(spend_who, "/listings/photo#anon-scan", "vision", _it, _ot,
                       provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
     if not scan:   # no key / provider down / unparseable verdict — FAIL CLOSED
         raise HTTPException(status_code=503,
@@ -7208,11 +7213,11 @@ async def aa_market_note(req: dict, background_tasks: BackgroundTasks):
                 "Mention real price ranges where relevant. No fluff, no caveats.")
         _res = await _aio.to_thread(
             _ap.complete, [{"role": "user", "content": prompt}],
-            task="haiku", max_tokens=120, system=_sys, provider=_ts_active_provider())
+            task="fast", max_tokens=120, system=_sys, provider=_ts_active_provider())
         if not _res.ok:
             raise RuntimeError("active AI provider returned no result")
         text = (_res.text or "").strip()
-        background_tasks.add_task(_log_ai_spend, _email, "/advert-agent/market-note", "haiku",
+        background_tasks.add_task(_log_ai_spend, _email, "/advert-agent/market-note", "fast",
                                   _res.in_tokens, _res.out_tokens,
                                   provider=_res.provider, model=_res.model)
         return {"response": text, "_provider": _res.provider, "_model": _res.model, **_report_stamp()}
@@ -7338,7 +7343,7 @@ async def listing_draft_from_photos(req: dict, background_tasks: BackgroundTasks
         )})
         _sr = await asyncio.to_thread(
             ai_provider.complete, [{"role": "user", "content": content}],
-            task="haiku", max_tokens=700,
+            task="fast", max_tokens=700,
             provider=_ts_active_provider(), timeout=40)
         text = (_sr.text or "").strip()
         if text.startswith("```"):
@@ -7346,7 +7351,7 @@ async def listing_draft_from_photos(req: dict, background_tasks: BackgroundTasks
         ai = json.loads(text)
         _in, _out = _sr.in_tokens, _sr.out_tokens
         background_tasks.add_task(_log_ai_spend, "", "/listings/draft-from-photos",
-                                  "haiku", _in, _out,
+                                  "fast", _in, _out,
                                   provider=_sr.provider, model=_sr.model)
         caps = [{"slot": str(c.get("slot",""))[:40], "caption": str(c.get("caption",""))[:90]}
                 for c in (ai.get("captions") or []) if c.get("caption")]
@@ -7408,7 +7413,7 @@ async def listing_draft_from_photo(req: dict, background_tasks: BackgroundTasks)
         )})
         _sr = await asyncio.to_thread(
             ai_provider.complete, [{"role": "user", "content": content}],
-            task="haiku", max_tokens=350,
+            task="fast", max_tokens=350,
             provider=_ts_active_provider(), timeout=20)
         text = (_sr.text or "").strip()
         if text.startswith("```"):
@@ -7416,7 +7421,7 @@ async def listing_draft_from_photo(req: dict, background_tasks: BackgroundTasks)
         ai = json.loads(text)
         _in, _out = _sr.in_tokens, _sr.out_tokens
         background_tasks.add_task(_log_ai_spend, email, "/listings/draft-from-photo",
-                                  "haiku", _in, _out,
+                                  "fast", _in, _out,
                                   provider=_sr.provider, model=_sr.model)
         out = dict(draft)
         for k in ("title", "category", "condition", "price", "description"):
@@ -7715,7 +7720,7 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
     try:
         _sr = await asyncio.to_thread(
             ai_provider.complete, [{"role": "user", "content": user_message}],
-            task="haiku", max_tokens=1800, system=system_prompt,
+            task="fast", max_tokens=1800, system=system_prompt,
             provider=_ts_active_provider(), timeout=30)
         if not _sr.text and _sr.in_tokens is None:
             raise RuntimeError("AI call failed (no content/usage)")   # was resp.raise_for_status()
@@ -7756,7 +7761,7 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
         conn.commit()
     conn.close()
 
-    background_tasks.add_task(_log_ai_spend, req.email, "/advert-agent/coach", "haiku", _co_in, _co_out,
+    background_tasks.add_task(_log_ai_spend, req.email, "/advert-agent/coach", "fast", _co_in, _co_out,
                               provider=_sr.provider, model=_sr.model)
     return {"coaching_json": coaching_json, "tuppence_remaining": tuppence_remaining, "free_used": free_used}
 
@@ -7832,7 +7837,7 @@ async def aa_coach_ask(req: AACoachAskRequest, background_tasks: BackgroundTasks
         try:
             _sr = await asyncio.to_thread(
                 ai_provider.complete, [{"role": "user", "content": user_message}],
-                task="haiku", max_tokens=220, system=system_prompt,
+                task="fast", max_tokens=220, system=system_prompt,
                 provider=_ts_active_provider(), timeout=20)
             answer = (_sr.text or "").strip()
             if not answer:
@@ -7846,7 +7851,7 @@ async def aa_coach_ask(req: AACoachAskRequest, background_tasks: BackgroundTasks
         conn.commit()
         used += 1
         remaining = max(0, SF_COACH_ASK_CAP - used)
-        background_tasks.add_task(_log_ai_spend, email, "/advert-agent/coach/ask", "haiku",
+        background_tasks.add_task(_log_ai_spend, email, "/advert-agent/coach/ask", "fast",
                                   _sr.in_tokens, _sr.out_tokens, provider=_sr.provider, model=_sr.model)
         return {"answer": answer, "used": used, "cap": SF_COACH_ASK_CAP, "remaining": remaining,
                 "warn": remaining <= SF_COACH_ASK_WARN_LEFT,
@@ -8558,7 +8563,7 @@ def mint_buyer_token(req: BuyerTokenRequest):
 # ── SEARCH-AI-1: sentence → dial-in params on the cheap tier (David, 6 Jul 2026) ──
 # The deterministic FEA parser handles common shapes for $0; this endpoint is the
 # LAST-RESORT fallback for sentence-shaped total misses. Independence doctrine:
-# one thin layer (ai_provider seam, task="haiku" → Haiku 4.5 / gpt-4o-mini by config);
+# one thin layer (ai_provider seam, task="fast" → Haiku 4.5 / gpt-4o-mini by config);
 # deterministic parser IS the degradation path, so switching this off loses nothing.
 SEARCH_AI_ENABLED   = os.getenv("SEARCH_AI_ENABLED", "0") == "1"      # dark until David flips
 SEARCH_AI_DRYRUN    = os.getenv("SEARCH_AI_DRYRUN", "1") == "1"       # $0 mock until validated
@@ -8857,14 +8862,14 @@ def search_interpret(req: SearchInterpretIn):
         else:
             r = _si_ai.complete(
                 [{"role": "user", "content": qn}],
-                task="haiku", max_tokens=120, system=_SI_SYSTEM)
+                task="fast", max_tokens=120, system=_SI_SYSTEM)
             if not r.ok:
                 # One spaced retry — validation batch showed burst-pace transients recover.
                 import time as _si_t
                 _si_t.sleep(1.2)
                 r = _si_ai.complete(
                     [{"role": "user", "content": qn}],
-                    task="haiku", max_tokens=120, system=_SI_SYSTEM)
+                    task="fast", max_tokens=120, system=_SI_SYSTEM)
             if not r.ok:
                 return {"enabled": True, "fallback": True}
             txt = (r.text or "").strip()
@@ -8882,7 +8887,7 @@ def search_interpret(req: SearchInterpretIn):
             (qn, json.dumps(params), model_used, _token_cost(model_used, it or 0, ot or 0) if not SEARCH_AI_DRYRUN else 0.0))
         conn.commit()
         if not SEARCH_AI_DRYRUN:
-            _log_ai_spend("", "/search/interpret", "haiku", it, ot,
+            _log_ai_spend("", "/search/interpret", "fast", it, ot,
                           provider=r.provider, model=r.model)
         return {"enabled": True, "params": params, "cached": False}
     except Exception:
@@ -11696,7 +11701,7 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     try:
         _sr = await asyncio.to_thread(
             ai_provider.complete, [{"role": "user", "content": user_message}],
-            task="haiku", max_tokens=600, system=system_prompt,
+            task="fast", max_tokens=600, system=system_prompt,
             provider=_ts_active_provider(), timeout=20)
         if not _sr.text and _sr.in_tokens is None:
             raise RuntimeError("AI call failed (no content/usage)")   # was resp.raise_for_status()
@@ -11772,7 +11777,7 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     guidance["current_score"] = current_score
     guidance["score_target"]  = score_target
     guidance["points_needed"] = points_needed
-    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/guidance", "haiku", _g_in, _g_out,
+    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/guidance", "fast", _g_in, _g_out,
                               provider=_sr.provider, model=_sr.model)
     return guidance
 
@@ -11939,7 +11944,7 @@ async def trust_score_upload_comment(req: UploadCommentRequest, background_tasks
     try:
         _sr = await asyncio.to_thread(
             ai_provider.complete, [{"role": "user", "content": user_message}],
-            task="haiku", max_tokens=120, system=system_prompt,
+            task="fast", max_tokens=120, system=system_prompt,
             provider=_ts_active_provider(), timeout=15)
         if not _sr.text and _sr.in_tokens is None:
             raise RuntimeError("AI call failed (no content/usage)")   # was resp.raise_for_status()
@@ -11955,7 +11960,7 @@ async def trust_score_upload_comment(req: UploadCommentRequest, background_tasks
         _uc_in, _uc_out = None, None   # API failed — flat estimate
         _uc_prov, _uc_model = None, None
 
-    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/upload-comment", "haiku", _uc_in, _uc_out,
+    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/upload-comment", "fast", _uc_in, _uc_out,
                               provider=_uc_prov, model=_uc_model)
     return {"comment": comment, "signal_pts": signal_pts, "next_signal": next_suggestion}
 
@@ -12544,7 +12549,7 @@ def _fetch_kyc_document(doc_url: str) -> bytes:
     return data
 
 
-async def _sonnet_verify_identity(doc_url: str, claimed_name: str,
+async def _vision_verify_identity(doc_url: str, claimed_name: str,
                                    claimed_id: str, doc_type: str, email: str = "") -> dict:
     """Call Sonnet vision to verify identity document.
     SWAP POINT: replace this function with PaddleOCR/PassportEye for zero-token operation.
@@ -12570,7 +12575,7 @@ async def _sonnet_verify_identity(doc_url: str, claimed_name: str,
             media_type = "image/webp"
 
         # SEAM-ROUTED (P0, 17 Jul 2026): KYC vision call goes through ai_provider.complete()
-        # with task="sonnet" — same claude-sonnet-4-6 on the Anthropic path as the old SDK call.
+        # with task="reason" — same claude-sonnet-4-6 on the Anthropic path as the old SDK call.
         prompt = f"""You are a document verification assistant for TrustSquare marketplace.
 Examine this identity document image carefully.
 
@@ -12608,7 +12613,7 @@ If you cannot read the document clearly, set confidence below 0.5 and explain in
                     {"type": "text", "text": prompt}
                 ]
             }],
-            task="sonnet", max_tokens=300,
+            task="reason", max_tokens=300,
             provider=_ts_active_provider(), allow_fallback=False, timeout=120)   # KYC-PIN-1 (F3): ID docs never fan out to standby vendors
         raw = _sr.text.strip()
         # Parse JSON from response
@@ -12619,7 +12624,7 @@ If you cannot read the document clearly, set confidence below 0.5 and explain in
         verified = (result.get("name_match") and result.get("id_match") and
                     result.get("confidence", 0) >= 0.75 and
                     result.get("document_appears_genuine", True))
-        _log_ai_spend(email, "/users/verify-identity", "sonnet_vision",
+        _log_ai_spend(email, "/users/verify-identity", "vision",
                       getattr(_sr, "in_tokens", None), getattr(_sr, "out_tokens", None),
                       provider=getattr(_sr, "provider", None), model=getattr(_sr, "model", None))
         return {
@@ -12628,13 +12633,13 @@ If you cannot read the document clearly, set confidence below 0.5 and explain in
             "extracted_name": result.get("extracted_name", ""),
             "extracted_id": result.get("extracted_id", ""),
             "notes": result.get("notes", ""),
-            "model": SONNET_MODEL,
+            "model": REASON_MODEL,
         }
     except HTTPException:
         raise
     except Exception as e:
         return {"verified": False, "confidence": 0.0, "extracted_name": "",
-                "extracted_id": "", "notes": f"Verification error: {str(e)}", "model": SONNET_MODEL}
+                "extracted_id": "", "notes": f"Verification error: {str(e)}", "model": REASON_MODEL}
 
 
 class IdentityVerifyIn(BaseModel):
@@ -12707,7 +12712,7 @@ async def verify_identity(
     conn.commit()
 
     # ── Step 2: Sonnet vision verification ───────────────────────────────
-    ai = await _sonnet_verify_identity(
+    ai = await _vision_verify_identity(
         payload.doc_url, payload.full_name, payload.id_number, doc_type, email=email
     )
     result["ai_verified"]    = ai["verified"]
@@ -12746,13 +12751,13 @@ async def _run_cert_name_check(email: str, doc_url: str, id_name: str, doc_type:
     matches the seller's verified ID name. Awards cert_name_verified if
     confidence >= 0.75 and name match >= 0.70.
 
-    SWAP POINT: replace _sonnet_verify_identity() here with
+    SWAP POINT: replace _vision_verify_identity() here with
     PaddleOCR + local name extraction when token cost warrants it.
     """
     import logging
     _log = logging.getLogger(__name__)
     try:
-        result = await _sonnet_verify_identity(
+        result = await _vision_verify_identity(
             doc_url=doc_url,
             claimed_name=id_name,
             claimed_id="",
@@ -15897,7 +15902,7 @@ def _anon_ai_rewrite(title: str, desc: str, provider: str, category: str = "", w
         import ai_provider as _ap
         res = _ap.complete(
             [{"role": "user", "content": "TITLE: %s\nDESCRIPTION: %s" % (title, desc)}],
-            task="haiku", max_tokens=1000,
+            task="fast", max_tokens=1000,
             system=(_ANON_AI_SYSTEM_TOURS if _anon_is_travel(category) else _ANON_AI_SYSTEM),
             provider=provider)
         if not res.ok:
@@ -15909,7 +15914,7 @@ def _anon_ai_rewrite(title: str, desc: str, provider: str, category: str = "", w
         d = m.group(2).strip().strip("*").strip()
         if desc.strip() and not d:   # model dropped the body — distrust it
             return False, title, desc, None, None
-        _log_ai_spend(who, "/agencies/import#anonymise", "haiku", res.in_tokens, res.out_tokens,
+        _log_ai_spend(who, "/agencies/import#anonymise", "fast", res.in_tokens, res.out_tokens,
                       provider=res.provider, model=res.model)
         return True, (t or title), d, res.in_tokens, res.out_tokens
     except Exception:
@@ -15925,7 +15930,7 @@ def _anon_ai_rewrite(title: str, desc: str, provider: str, category: str = "", w
 # either: attached images are re-encoded (EXIF/GPS stripped) thumb+medium like
 # the normal upload path. Spec defaults: redact-if-localised, reject-if-flyer;
 # first-N ops spot-check flag; agency brand fully hidden. Vision goes through
-# the ai_provider seam (task="sonnet" → claude-sonnet — upgraded from Haiku for
+# the ai_provider seam (task="reason" → claude-sonnet — upgraded from Haiku for
 # detection quality, David 7 Jul 2026; ~3.75x cost, logged as sonnet_vision). Used by agency_import AND every seller photo upload via _seller_photo_anon_gate (11 Jul 2026).
 
 _ANON_PHOTO_MAX = 6        # photos scanned per advert (cost bound)
@@ -16119,7 +16124,7 @@ def _anon_photo_scan(jpeg_b64, provider, category=""):
                 {"type": "image", "source": {"type": "base64",
                  "media_type": "image/jpeg", "data": jpeg_b64}},
                 {"type": "text", "text": _anon_scan_prompt_for(category)}]}],
-            task="sonnet", max_tokens=1400, provider=provider)   # Sonnet for import scans (David, 7 Jul 2026); tokens 500->800->1400 11 Jul (verbose labels truncated JSON)
+            task="reason", max_tokens=1400, provider=provider)   # Sonnet for import scans (David, 7 Jul 2026); tokens 500->800->1400 11 Jul (verbose labels truncated JSON)
         if not res.ok:
             _log.warning("anon photo scan: provider returned not-ok (provider=%s)", provider)
             return None, None, None, None
@@ -16409,9 +16414,9 @@ def _anon_refine_regions(img, regions, provider, category, spend_who, endpoint):
                         "from the front-left corner usually tilts a few degrees). "
                         "If the item is not visible, found=false."
                         % (lbl or "an identifying item"))}]}],
-                task="sonnet", max_tokens=120, provider=provider)
+                task="reason", max_tokens=120, provider=provider)
             if res.in_tokens is not None or res.out_tokens is not None:
-                _log_ai_spend(spend_who, endpoint + "#refine", "sonnet_vision",
+                _log_ai_spend(spend_who, endpoint + "#refine", "vision",
                               res.in_tokens, res.out_tokens,
                               provider=res.provider, model=res.model)
             if not res.ok:
@@ -16531,7 +16536,7 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
         v, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(),
                                              provider, category)
         if _it is not None or _ot is not None:
-            _log_ai_spend(spend_who, endpoint, "sonnet_vision", _it, _ot,
+            _log_ai_spend(spend_who, endpoint, "vision", _it, _ot,
                           provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
         if not v:
             return None, labels
@@ -16575,7 +16580,7 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
         v, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(),
                                              provider, category)
         if _it is not None or _ot is not None:
-            _log_ai_spend(spend_who, endpoint, "sonnet_vision", _it, _ot,
+            _log_ai_spend(spend_who, endpoint, "vision", _it, _ot,
                           provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
         if v and v["verdict"] == "clean" and v["confidence"] >= _ANON_PHOTO_CONF:
             # PHOTO-MEASURE-1: same output-truth ceiling on the last-resort rung.
@@ -16605,7 +16610,7 @@ def _anon_photo_pass(photo_srcs, agent, provider, category=""):
         pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
         scan, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(), provider, category)
         if _it is not None or _ot is not None:
-            _log_ai_spend(agent, "/agencies/import#photo-scan", "sonnet_vision", _it, _ot,
+            _log_ai_spend(agent, "/agencies/import#photo-scan", "vision", _it, _ot,
                           provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
         if not scan:
             held += 1; notes.append("held:scan-failed"); continue
@@ -17658,7 +17663,7 @@ def admin_ai_test(payload: dict = Body(default=None), _admin=Depends(_require_ad
         import ai_provider as _ap
         prov=_req_prov or _ts_active_provider()
         prompt=((payload or {}).get("prompt") or "Reply with exactly: TrustSquare AI provider test OK.").strip()
-        r=_ap.complete([{"role":"user","content":prompt}], task="haiku", max_tokens=40, provider=prov)
+        r=_ap.complete([{"role":"user","content":prompt}], task="fast", max_tokens=40, provider=prov)
         return {"ok": bool(r.ok), "provider": r.provider, "model": r.model,
                 "text": (r.text or "")[:400], "in_tokens": r.in_tokens, "out_tokens": r.out_tokens}
     except Exception as e:
@@ -18838,7 +18843,7 @@ async def vision_draft(
             "Identifying information was detected in photos and removed from this listing to protect seller anonymity."
         )
 
-    background_tasks.add_task(_log_ai_spend, _ve_email, "/listings/vision-draft", "sonnet_vision", _vd_in, _vd_out,
+    background_tasks.add_task(_log_ai_spend, _ve_email, "/listings/vision-draft", "vision", _vd_in, _vd_out,
                               provider=_sr.provider, model=_sr.model)
     return {
         "draft": draft,
@@ -19146,12 +19151,12 @@ async def ai_listing_rewrite(listing_id: int, email: str, ts_user: str = Cookie(
     try:
         _sr = await asyncio.to_thread(
             ai_provider.complete, [{"role": "user", "content": user_prompt}],
-            task="haiku", max_tokens=350, system=system_prompt,
+            task="fast", max_tokens=350, system=system_prompt,
             provider=_ts_active_provider(), timeout=20)
         _rw_in, _rw_out = _sr.in_tokens, _sr.out_tokens
         # P2 — Tuppence covers the revenue side; log token spend so the cost
         # dashboard sees it too (sweep 12 Jun 2026)
-        _log_ai_spend(email, "/listings/ai-rewrite", "haiku", _rw_in, _rw_out,
+        _log_ai_spend(email, "/listings/ai-rewrite", "fast", _rw_in, _rw_out,
                       provider=_sr.provider, model=_sr.model)
         raw = _sr.text.strip()
         # Strip markdown fences if model adds them
@@ -19250,12 +19255,12 @@ async def ai_seller_audit(listing_id: int, email: str, ts_user: str = Cookie(def
     try:
         _sr = await asyncio.to_thread(
             ai_provider.complete, [{"role": "user", "content": user_prompt}],
-            task="haiku", max_tokens=400, system=system_prompt,
+            task="fast", max_tokens=400, system=system_prompt,
             provider=_ts_active_provider(), timeout=20)
         _au_in, _au_out = _sr.in_tokens, _sr.out_tokens
         # P2 — Tuppence covers the revenue side; log token spend so the cost
         # dashboard sees it too (sweep 12 Jun 2026)
-        _log_ai_spend(email, "/listings/ai-audit", "haiku", _au_in, _au_out,
+        _log_ai_spend(email, "/listings/ai-audit", "fast", _au_in, _au_out,
                       provider=_sr.provider, model=_sr.model)
         raw = _sr.text.strip()
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
@@ -19946,7 +19951,7 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
     try:
         _sr = await asyncio.to_thread(
             ai_provider.complete, [{"role": "user", "content": user_prompt}],
-            task="sonnet", max_tokens=700, system=system_prompt,
+            task="reason", max_tokens=700, system=system_prompt,
             provider=_ts_active_provider(), timeout=30)
         raw = _sr.text.strip()
         _pc_in, _pc_out = _sr.in_tokens, _sr.out_tokens   # C2/C3
@@ -19980,7 +19985,7 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
         cc.close()
 
     # C3 — log real AI spend for this paid call (was previously unlogged).
-    _log_ai_spend(email, "/listings/ai-price-check", "sonnet", _pc_in, _pc_out,
+    _log_ai_spend(email, "/listings/ai-price-check", "reason", _pc_in, _pc_out,
                   provider=_sr.provider, model=_sr.model)
 
     _log.info("ai-price-check: listing #%d buyer=%s verdict=%s verified=%s flag=%s charged=1T",
@@ -20231,7 +20236,7 @@ async def ai_yield_calc(listing_id: int, email: str,
     try:
         _sr = await asyncio.to_thread(
             ai_provider.complete, [{"role": "user", "content": user_prompt}],
-            task="haiku", max_tokens=250, system=system_prompt,
+            task="fast", max_tokens=250, system=system_prompt,
             provider=_ts_active_provider(), timeout=20)
         raw = _sr.text.strip()
         _yc_in, _yc_out = _sr.in_tokens, _sr.out_tokens   # C2/C3
@@ -20267,7 +20272,7 @@ async def ai_yield_calc(listing_id: int, email: str,
         remaining = _current_tuppence(email)
 
     # C3 — log real AI spend for this paid call (was previously unlogged).
-    _log_ai_spend(email, "/listings/yield-calc", "haiku", _yc_in, _yc_out,
+    _log_ai_spend(email, "/listings/yield-calc", "fast", _yc_in, _yc_out,
                   provider=_yc_prov, model=_yc_model)
 
     _log.info("ai-yield-calc: listing #%d email=%s gross=%.1f%% charged=1T",
@@ -20395,7 +20400,7 @@ async def ai_batch_card_listings(req: BatchCardRequest, ts_user: str = Cookie(de
         _bc_in, _bc_out = _sr.in_tokens, _sr.out_tokens
         # P2 — Tuppence covers the revenue side; log token spend so the cost
         # dashboard sees it too (sweep 12 Jun 2026)
-        _log_ai_spend(req.seller_email, "/listings/batch-cards", "sonnet_vision", _bc_in, _bc_out,
+        _log_ai_spend(req.seller_email, "/listings/batch-cards", "vision", _bc_in, _bc_out,
                       provider=_sr.provider, model=_sr.model)
         raw = _sr.text.strip()
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
@@ -20837,7 +20842,7 @@ async def _classify_email(from_addr: str, subject: str, body: str,
         _cl_in, _cl_out = _sr.in_tokens, _sr.out_tokens
         # P2 wrapper — log spend HERE with real tokens (moved from the caller's
         # flat-estimate log; cost_is_real=1 on the dashboard).
-        _log_ai_spend(from_addr, "/email/inbound", "haiku", _cl_in, _cl_out,
+        _log_ai_spend(from_addr, "/email/inbound", "fast", _cl_in, _cl_out,
                       provider=_sr.provider, model=_sr.model)
         raw = _sr.text.strip()
         if raw.startswith("```"):
@@ -21602,7 +21607,7 @@ def dashboard_maint_get():
 # ══════════════════════════════════════════════════════════════════════════════
 # MAINT-BRAIN-1 (17 Sep 2026, David): the maintenance agent's ONE brain path.
 # Before this the agent (scripts/maintenance_agent.py) selected models privately --
-# a hardcoded "sonnet" tier and its own key-presence chain -- bypassing the cost
+# a hardcoded "reason" tier and its own key-presence chain -- bypassing the cost
 # chokepoint that every other AI call in this file goes through (price card,
 # _log_ai_spend, ceilings; CHANGELOG Session 135c, David's P1/P2/P3). Fixed by
 # DELETION: the agent's chain is gone; it POSTs here on the maint credential and
@@ -21623,8 +21628,8 @@ def dashboard_maint_get():
 # ══════════════════════════════════════════════════════════════════════════════
 _MAINT_AI_EMAIL_PREFIX = "maint:"                 # ai_spend_log.email = "maint:<run-id>"
 _MAINT_LANES_BANNED = ("anthropic",)              # SPEND-GUARD-1, in code
-_MAINT_TIER_LADDER = ("design", "sonnet", "haiku", "vision", "triage")   # text capability order; vision/triage are haiku-class
-_MAINT_DEFAULT_MAX_TOKENS = {"design": 4000, "sonnet": 2000, "haiku": 700, "triage": 400, "vision": 2000}
+_MAINT_TIER_LADDER = ("design", "reason", "fast", "vision", "triage")   # text capability order; vision/triage are fast-class
+_MAINT_DEFAULT_MAX_TOKENS = {"design": 4000, "reason": 2000, "fast": 700, "triage": 400, "vision": 2000}
 
 
 def _maint_card_prices():
@@ -21688,7 +21693,7 @@ def _maint_pick_rung(task, lane, est_in_tokens, max_tokens):
     try:
         top = _MAINT_TIER_LADDER.index(task)
     except ValueError:
-        top = _MAINT_TIER_LADDER.index("haiku")
+        top = _MAINT_TIER_LADDER.index("fast")
     rungs = []
     seen_models = set()
     for t in _MAINT_TIER_LADDER[top:]:
@@ -21719,15 +21724,31 @@ def _maint_pick_rung(task, lane, est_in_tokens, max_tokens):
     return chosen, rungs, card_version, {"left_usd": left, "agent_today_usd": round(agent_spent, 6), "agent_cap_usd": cap}
 
 
+def _require_brain(request: Request, x_maint_key: str = Header(default=None)):
+    """MAINT-BRAIN-1 credential: the maint key AND a same-box caller. The scoped maint key
+    opens the fault lane and nothing else (SEC-1 / RG-0065 / test_tester_intake), and this
+    endpoint SPENDS, so it is not added to that key's scope. Instead: the key must match AND
+    the request must come from the loopback interface with no proxy headers -- nginx stamps
+    X-Real-IP / X-Forwarded-For on everything it forwards, so a request that carries neither
+    and arrives from 127.0.0.1 can only be a process on this machine (the agent). A leaked
+    maint key used from outside still buys a complaint list, never a model call."""
+    host = (request.client.host if request.client else "") or ""
+    if host not in ("127.0.0.1", "::1") or request.headers.get("x-real-ip") or request.headers.get("x-forwarded-for"):
+        raise HTTPException(status_code=403, detail="brain endpoint is local-only")
+    if not (x_maint_key and MS_MAINT_KEY and _ts_secrets.compare_digest(x_maint_key, MS_MAINT_KEY)):
+        raise HTTPException(status_code=401, detail="Admin credentials required.")
+    return {"via": "maint-key+loopback", "scope": "brain"}
+
+
 @app.post("/admin/maint/brain")
-def maint_brain(payload: dict = Body(...), _admin=Depends(_require_maint)):
+def maint_brain(payload: dict = Body(...), _brain=Depends(_require_brain)):
     """The maintenance agent's brain call. payload: {run, purpose, task, messages, system,
     max_tokens, probe}. probe=true = one 4-token live call that PROVES the lane (D2): an
     auth/billing failure comes back as ok=false with error_kind, never as a silent fallback."""
     p = dict(payload or {})
     run = str(p.get("run") or "adhoc")[:40]
     purpose = re.sub(r"[^a-z0-9_-]", "", str(p.get("purpose") or "call").lower())[:24] or "call"
-    task = str(p.get("task") or "haiku").lower()
+    task = str(p.get("task") or "fast").lower()
     if task not in _MAINT_TIER_LADDER:
         raise HTTPException(status_code=400, detail="unknown task tier: " + task[:20])
     probe = bool(p.get("probe"))
@@ -21738,7 +21759,7 @@ def maint_brain(payload: dict = Body(...), _admin=Depends(_require_maint)):
                      if l not in _MAINT_LANES_BANNED), lane)
     if probe:
         messages, system, max_tokens = [{"role": "user", "content": "ping"}], None, 4
-        task = "haiku"
+        task = "fast"
     else:
         messages = p.get("messages") or []
         system = p.get("system")
@@ -21751,6 +21772,11 @@ def maint_brain(payload: dict = Body(...), _admin=Depends(_require_maint)):
     if not chosen:
         return {"ok": False, "error_kind": "unconfigured", "provider": lane, "model": "",
                 "text": "", "note": "lane %s maps no model for tier %s" % (lane, task)}
+    # C1 rail (DW-131, 17 Sep 2026): the ONLY one of 23 AI call sites with no ceiling.
+    # Empty email = PLATFORM ceiling only -- the agent lane is not subject to the $0.50
+    # consumer per-user cap, but a runaway loop still stops at the platform budget.
+    # Fails open on internal error, so it can never kill a run (RG-0049).
+    _check_cost_ceiling("")
     t0 = _time.time()
     r = ai_provider.complete(messages, task=chosen["tier"], max_tokens=max_tokens, system=system,
                              provider=lane, probe=probe, timeout=(20 if probe else 120),
@@ -22481,7 +22507,7 @@ def grade_card_condition(photo_urls=None, thumb_url=None, medium_url=None, timeo
         it, ot = _sr.in_tokens, _sr.out_tokens
         result["in_tokens"], result["out_tokens"] = it, ot
         # P2 wrapper — log real token spend (platform attribution; batch grading).
-        _log_ai_spend("", "grade_card_condition", "sonnet_vision", it, ot,
+        _log_ai_spend("", "grade_card_condition", "vision", it, ot,
                       provider=_sr.provider, model=_sr.model)
         raw = (_sr.text or "").strip()
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
@@ -23958,14 +23984,14 @@ def planner_heritage_compose(req: PlannerComposeReq, _key: str = Depends(auth.re
     for attempt in (1, 2):
         try:
             r = ai_provider.complete([{"role": "user", "content": ask}],
-                                     task="haiku", system=system, max_tokens=1200, timeout=45)
+                                     task="fast", system=system, max_tokens=1200, timeout=45)
             raw = (r.text or "").strip()
             if raw.startswith("```"):
                 raw = raw.strip("`").lstrip("json").strip()
             plan = _jr.validate_heritage_plan(json.loads(raw), list(wmap.keys()), days)
             # PLANNER-COST-1: log the tokens that actually served, on the lane that
             # actually answered, so a planner call is visible on the spend dashboard.
-            _log_ai_spend(email, "/planner/heritage/compose", "haiku",
+            _log_ai_spend(email, "/planner/heritage/compose", "fast",
                           r.in_tokens, r.out_tokens,
                           provider=r.provider, model=r.model)
             break

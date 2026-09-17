@@ -35,9 +35,9 @@ DAYS_MAX = 45
 # Token shapes per tier (chars of reality, not measurements — replace with spend-log
 # p50/p95 once volume exists; the Peer's cost review documents the derivation)
 SHAPES = {  # (in_low, out_low, in_high, out_high)
-    "haiku":  (500, 120, 2000, 700),
+    "fast":  (500, 120, 2000, 700),
     "triage": (500, 120, 2000, 700),
-    "sonnet": (500, 120, 2000, 700),
+    "reason": (500, 120, 2000, 700),
     "vision": (1100 + 400, 1200, 19200 + 800, 1200),  # images + prompt text
 }
 GATE_ORDER = {"production": 0, "golden-set-passed": 1, "pending-golden-set": 2}

@@ -16,19 +16,19 @@ def mk(provider, ok=True, text="OK", err=""):
 
 orig = dict(ap.ADAPTERS)
 ap.ADAPTERS.update({"anthropic": mk("anthropic"), "openai": mk("openai")})
-r = ap.complete([{"role":"user","content":"hi"}], task="haiku", provider="anthropic")
+r = ap.complete([{"role":"user","content":"hi"}], task="fast", provider="anthropic")
 check("A1 baseline: anthropic answers", r.ok and r.provider=="anthropic")
 
 ap.ADAPTERS["anthropic"] = mk("anthropic", ok=False, err="timeout / connection refused")
-r = ap.complete([{"role":"user","content":"hi"}], task="haiku", provider="anthropic")
+r = ap.complete([{"role":"user","content":"hi"}], task="fast", provider="anthropic")
 check("A2 T1 outage: auto-fallback to openai", r.ok and r.provider=="openai", f"answered by {r.provider}")
 
 ap.ADAPTERS["anthropic"] = mk("anthropic", ok=False, err="403 organization suspended")
-r = ap.complete([{"role":"user","content":"hi"}], task="haiku", provider="anthropic")
+r = ap.complete([{"role":"user","content":"hi"}], task="fast", provider="anthropic")
 check("A3 T3 ban: auto-fallback to openai", r.ok and r.provider=="openai")
 
 ap.ADAPTERS.update({"anthropic": mk("anthropic", ok=False, err="down"), "openai": mk("openai", ok=False, err="down")})
-r = ap.complete([{"role":"user","content":"hi"}], task="haiku", provider="anthropic")
+r = ap.complete([{"role":"user","content":"hi"}], task="fast", provider="anthropic")
 check("A4 blackout: returns ok=False, no crash", (not r.ok))
 ap.ADAPTERS.update(orig)
 
