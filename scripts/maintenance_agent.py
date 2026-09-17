@@ -777,8 +777,9 @@ def main():
     _RUN_ID = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     if key and not _BRAIN_STUB:
         b = brain_probe()
+        # TIER-NAME-1: lane + tier are the labels; the model that served is a register fact.
         say("brain   %s%s (probe $%.5f, card %s)" % (
-            b["state"], ("  " + b["provider"] + "/" + b["model"]) if b["ok"] else
+            b["state"], ("  " + b["provider"] + " · fast tier, served by " + b["model"]) if b["ok"] else
             ("  " + (b.get("error_kind") or "")), b.get("cost_usd", 0.0), b.get("card_version", "?")))
     elif _BRAIN_STUB:
         BRAIN.update({"ok": True, "state": "STUB", "provider": "stub", "model": "rehearsal"})
