@@ -423,6 +423,10 @@ def run_migrations(conn):
         ("attested_at",      "TEXT"),
         ("attested_email",   "TEXT"),
         ("import_source",    "TEXT"),   # IMPORT-SYNC-1: 'agency_import' rows face the publish quality gate
+        # ZOOM-HMI-1 (RG-0221 prerequisite, 17 Sep 2026): listing quality was computed per row
+        # (_import_quality_score) and never STORED, so no SQL could order by it. Stamped on
+        # create / edit / publish / photo add; migration 040 backfills once.
+        ("quality_score",    "REAL"),
     ]:
         if _col not in listing_cols:
             conn.execute(f"ALTER TABLE listings ADD COLUMN {_col} {_type}")
@@ -1178,6 +1182,11 @@ def run_migrations(conn):
         # PHOTO-REPLACE-1: default ON - David ruled 7 Aug. OFF restores the 15 Jul
         # "ugly-but-anonymous beats rejected" behaviour without a deploy.
         "ALTER TABLE launch_switches ADD COLUMN photo_replace_request INTEGER NOT NULL DEFAULT 1",
+        # BASELINE-Q4-1 (RUL-126, 17 Sep 2026): ONE switch for the whole post-launch design
+        # batch (Zoom, DCB-001, credential claims, private-seller VEL, Squire, the $5 fold,
+        # the funds gauge, the agency letters). Default OFF = the existing app untouched for
+        # every user. Arming it is DAVID'S act (RUL-076 s7.4), via POST /admin/flags.
+        "ALTER TABLE launch_switches ADD COLUMN baseline_q4 INTEGER NOT NULL DEFAULT 0",
     ):
         try:
             conn.execute(_ddl)
@@ -3193,12 +3202,18 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
 
     rows = conn.execute(sql, params).fetchall()
     _founders = launch_redemption.founders_email_set(conn)
+    # FIDE-CLAIM-1: badges from a LIVE JOIN at render time -- tier + title class only (dark until armed)
+    _cbadges = _credential_badges_for(conn, list({(dict(_x).get("seller_email") or "").lower() for _x in rows if dict(_x).get("seller_email")}))
     conn.close()
     out = []
     for _r in rows:
         _d = dict(_r)
         if _founders and (_d.get("seller_email") or "").lower() in _founders:
             _d["founders"] = True
+        if _cbadges:
+            _cb = _cbadges.get((_d.get("seller_email") or "").lower())
+            if _cb:
+                _d["credential_badges"] = _cb
         if (_d.get("category") or "").lower() == "property":
             _d["availability_label"] = _rental_availability(_d.get("rental_status"), _d.get("available_from"))
         _scrub_vehicle_specs(_d)   # CARS-SPEC-1 D1: unconfirmed vehicle specs never public
@@ -3229,6 +3244,206 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
             conn2.close()
         return {"items": out, "facets": fc}
     return out
+
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# ZOOM — the narrowing funnel (ZOOM-HMI-1 · RUL-076/078/089 · RG-0221 · 17 Sep 2026)
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# The engine is zoom_engine.py (pure, tested by test_zoom_engine.py). This endpoint does the
+# three things only the app can: build the REACH-SCOPED candidate set (the same rows a list
+# would show, with the same suspension/demo filters as /listings), resolve the buyer's tier
+# from the account (RUL-078: Pro -> global; RUL-128 once armed: Starter -> global), and hand
+# back rows the client may not have loaded (a Global buyer's other cities), stripped of seller
+# identity exactly as /listings strips them. Counts, ids and question come out of ONE call over
+# ONE row set, so a facet count and the result count can never disagree (spec rule 2).
+# Flag-dark: the endpoint is additive; the FEA only calls it when baseline_q4 is armed (or in
+# David's local preview). Nothing existing changes shape.
+import zoom_engine as _zoom
+from urllib.parse import unquote
+
+_ZOOM_RAW_CATS = {
+    "Property": ("property",), "Cars": ("cars",), "Tutors": ("tutors",),
+    "Services": ("services", "housekeeping"), "Collectors": ("collectors", "collectables"),
+    "Local Market": ("local_market",),   # == LM_CATEGORY, which is defined further down the file
+}
+
+def _buyer_reach_tier(conn, email: str) -> str:
+    """'free' | 'global' for an ACCOUNT. RUL-078: a live Pro seller subscription resolves to
+    global (a Pro subscriber is never silently treated as local). RUL-128 (armed by
+    baseline_q4): Starter carries global buyer reach too -- the one-$5-tier fold. The wishlist
+    token lane (_buyer_tier) still counts: an existing Global subscriber keeps what they paid for."""
+    email = (email or "").strip().lower()
+    if not email:
+        return "free"
+    try:
+        u = conn.execute("SELECT seller_tier, buyer_token, billing_period_end FROM users WHERE LOWER(email)=?",
+                         (email,)).fetchone()
+    except Exception:
+        u = None
+    if not u:
+        return "free"
+    st = (u["seller_tier"] or "free").lower()
+    if st == "pro" or (st == "starter" and _baseline_q4_on()):
+        return "global"
+    if u["buyer_token"]:
+        try:
+            return _buyer_tier(conn, u["buyer_token"])
+        except Exception:
+            return "free"
+    return "free"
+
+def _zoom_candidates(conn, cat_norm: str, city: str, demo: int, tier: str):
+    """The reach-scoped set. Travel is borderless (canon 2a); online-mode rows are borderless
+    (canon 2b); physical categories are the buyer's city (+ extended) for Free and every city
+    for Global. Returns (rows, locked_geo) where locked_geo carries the TRUE counts of cities a
+    Free buyer cannot open (spec 6.2 rule 3: locked != empty)."""
+    susp = "(l.suspension_reason IS NULL OR l.suspension_reason = '') AND (l.listing_status IS NULL OR l.listing_status = 'live')"
+    demo_f = "" if demo else "AND (l.is_demo = 0 OR l.is_demo IS NULL)"
+    base = "SELECT l.*, gs.lat AS suburb_lat, gs.lng AS suburb_lng FROM listings l LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id WHERE " + susp + " " + demo_f
+    locked = []
+    if cat_norm == "Travel":
+        rows = conn.execute(base + " AND (LOWER(l.category) LIKE 'adventures%' OR LOWER(l.category) IN ('tours','heritage','accommodation','experiences','guides'))").fetchall()
+        return [dict(r) for r in rows], locked
+    raws = _ZOOM_RAW_CATS.get(cat_norm, (cat_norm.lower(),))
+    cat_in = ",".join("?" for _ in raws)
+    if tier == "global":
+        rows = conn.execute(base + f" AND LOWER(l.category) IN ({cat_in})", list(raws)).fetchall()
+        return [dict(r) for r in rows], locked
+    city_row = conn.execute("SELECT id FROM geo_cities WHERE LOWER(name)=LOWER(?) LIMIT 1", (city,)).fetchone()
+    cid = city_row["id"] if city_row else None
+    q = base + f" AND LOWER(l.category) IN ({cat_in}) AND (LOWER(l.city) = LOWER(?)"
+    params = list(raws) + [city]
+    if cid:
+        q += " OR l.id IN (SELECT lc.listing_id FROM listing_cities lc WHERE lc.city_id = ?)"
+        params.append(cid)
+    if cat_norm in ("Services", "Tutors"):
+        q += " OR LOWER(COALESCE(l.mode,'')) IN ('online','both')"
+    q += ")"
+    rows = [dict(r) for r in conn.execute(q, params).fetchall()]
+    seen = {r["id"] for r in rows}
+    lk = conn.execute("SELECT l.city AS c, COUNT(*) AS n FROM listings l WHERE " + susp + " " + demo_f +
+                      f" AND LOWER(l.category) IN ({cat_in}) AND LOWER(l.city) != LOWER(?) AND l.id NOT IN ({','.join(str(int(i)) for i in seen) or '0'}) GROUP BY l.city ORDER BY n DESC LIMIT 4",
+                      list(raws) + [city]).fetchall()
+    locked = [{"v": r["c"], "n": r["n"]} for r in lk if r["c"]]
+    return rows, locked
+
+def _zoom_public_row(d):
+    d = dict(d)
+    if (d.get("category") or "").lower() == "property":
+        d["availability_label"] = _rental_availability(d.get("rental_status"), d.get("available_from"))
+    _scrub_vehicle_specs(d)
+    return _strip_seller_identity(d)
+
+@app.get("/zoom/next")
+def zoom_next(category: str, city: str = "Pretoria", f: Optional[str] = None, q: Optional[str] = None,
+              email: Optional[str] = None, demo: int = 0, rows: int = 1):
+    """One call per tap. `f` = chosen chips as `facet:value|facet:value` (values URL-encoded by
+    the client, decoded here); `q` = a typed shortcut (rule 4). Returns the sheet's whole state:
+    total, chips (with auto chips flagged), the ONE question (options with true counts, tail
+    folded, locked out-of-reach geography), arrival, the relax offer, ordered ids + ranking
+    scores, and -- with rows=1 -- the public rows so the client can render what it never loaded."""
+    cat_norm = _zoom.norm_cat(category)
+    chosen = {}
+    for part in (f or "").split("|"):
+        if ":" in part:
+            k, v = part.split(":", 1)
+            k = k.strip()
+            v = unquote(v.strip())
+            if k and v:
+                chosen[k] = v
+    conn = database.get_db()
+    try:
+        tier = _buyer_reach_tier(conn, email or "")
+        cands, locked = _zoom_candidates(conn, cat_norm, city, demo, tier)
+        # quality: the stored column; a row stamped before the column existed is scored live
+        def _qf(r):
+            return _import_quality_score(r)[0]
+        res = _zoom.next_step(cands, cat_norm, chosen, tier=tier, locked_geo=locked, quality_fn=_qf, text=q)
+        # RUL-066 rung 3: a locked-geography offer on screen is a ceiling event -- log it
+        if res.get("question") and res["question"].get("locked"):
+            try:
+                _zoom_ceiling_log(conn, tier, cat_norm, city, res["question"]["locked"])
+            except Exception:
+                pass
+        out = dict(res)
+        out["category"] = cat_norm
+        if rows:
+            by_id = {r["id"]: r for r in cands}
+            out["rows"] = [_zoom_public_row(by_id[i]) for i in res["ids"][:60] if i in by_id]
+        return out
+    finally:
+        conn.close()
+
+def _zoom_ceiling_log(conn, tier, cat_norm, city, locked):
+    conn.execute("CREATE TABLE IF NOT EXISTS zoom_ceiling_events (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, tier TEXT, category TEXT, city TEXT, offered TEXT)")
+    conn.execute("INSERT INTO zoom_ceiling_events (ts, tier, category, city, offered) VALUES (?,?,?,?,?)",
+                 (datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), tier, cat_norm, city,
+                  json.dumps([{"city": l["v"], "n": l["n"]} for l in locked])[:800]))
+    conn.commit()
+
+class _ZoomWatchIn(BaseModel):
+    email: str
+    category: str
+    city: Optional[str] = None
+    path: str            # the chip string, same shape as /zoom/next?f=
+    label: Optional[str] = None
+
+@app.post("/zoom/watch")
+def zoom_watch_save(w: _ZoomWatchIn):
+    """Rule 5: a saved path is a standing interest -- 'For You' = your saved paths, run fresh.
+    Free on every tier (RUL-077 boundary 4). Stored per account; the client keeps a local copy
+    too so a signed-out user still has theirs."""
+    email = (w.email or "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="email required")
+    conn = database.get_db()
+    try:
+        conn.execute("CREATE TABLE IF NOT EXISTS zoom_watches (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, category TEXT NOT NULL, city TEXT, path TEXT NOT NULL, label TEXT, created_at TEXT NOT NULL, UNIQUE(email, category, city, path))")
+        conn.execute("INSERT OR IGNORE INTO zoom_watches (email, category, city, path, label, created_at) VALUES (?,?,?,?,?,?)",
+                     (email, _zoom.norm_cat(w.category), (w.city or "").strip(), w.path.strip(), (w.label or "").strip()[:160],
+                      datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")))
+        conn.commit()
+        rows = conn.execute("SELECT id, category, city, path, label, created_at FROM zoom_watches WHERE email=? ORDER BY id DESC", (email,)).fetchall()
+        return {"watches": [dict(r) for r in rows]}
+    finally:
+        conn.close()
+
+@app.get("/zoom/watches")
+def zoom_watch_list(email: str):
+    email = (email or "").strip().lower()
+    conn = database.get_db()
+    try:
+        try:
+            rows = conn.execute("SELECT id, category, city, path, label, created_at FROM zoom_watches WHERE email=? ORDER BY id DESC", (email,)).fetchall()
+        except Exception:
+            rows = []
+        out = []
+        for r in rows:
+            d = dict(r)
+            try:
+                chosen = {}
+                for part in (d["path"] or "").split("|"):
+                    if ":" in part:
+                        k, v = part.split(":", 1); chosen[k] = unquote(v)
+                tier = _buyer_reach_tier(conn, email)
+                cands, _lk = _zoom_candidates(conn, d["category"], d["city"] or "Pretoria", 0, tier)
+                res = _zoom.next_step(cands, d["category"], chosen, tier=tier)
+                d["total"] = res["total"]; d["ids"] = res["ids"][:12]
+            except Exception:
+                d["total"] = None; d["ids"] = []
+            out.append(d)
+        return {"watches": out}
+    finally:
+        conn.close()
+
+@app.delete("/zoom/watch/{watch_id}")
+def zoom_watch_delete(watch_id: int, email: str):
+    conn = database.get_db()
+    try:
+        conn.execute("DELETE FROM zoom_watches WHERE id=? AND email=?", (watch_id, (email or "").strip().lower()))
+        conn.commit()
+        return {"ok": True}
+    finally:
+        conn.close()
 
 @app.post("/listings")
 def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: str = Depends(auth.require_api_key)):
@@ -3266,8 +3481,9 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
          listing.mileage_km, listing.transmission, listing.fuel_type, listing.body_type,
          listing.drivetrain, listing.colour, listing.vehicle_specs, listing.spec_confirmed)
     )
-    conn.commit()
     new_id = cursor.lastrowid
+    _stamp_quality_score(conn, new_id)   # ZOOM-HMI-1: the stored quality the ranking reads
+    conn.commit()
     conn.close()
     # Wishlist matching deferred until listing goes live (draft listings not matched)
     return {"id": new_id, "message": "Listing saved as draft — seller must complete onboarding to go live"}
@@ -3662,6 +3878,25 @@ def _import_quality_score(row):
     return int(round(score)), missing
 
 
+def _stamp_quality_score(conn, listing_id):
+    """ZOOM-HMI-1: write listings.quality_score from the stored row so SQL and the funnel can
+    ORDER by it (spec 6.1: 0.5 x quality + 0.5 x trust). Never raises -- a missing column or
+    row leaves the write behaviour it wraps exactly as it was."""
+    try:
+        row = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+        if not row:
+            return None
+        score, _missing = _import_quality_score(row)
+        conn.execute("UPDATE listings SET quality_score = ? WHERE id = ?", (float(score), listing_id))
+        return score
+    except Exception as _qe:
+        try:
+            _log.warning("quality_score stamp skipped for listing %s: %s", listing_id, _qe)
+        except Exception:
+            pass
+        return None
+
+
 @app.put("/listings/{listing_id}/publish")
 def publish_listing(listing_id: int, email: str, attested: int = 0):
     """Transition a draft listing to live. Called by the seller onboarding flow
@@ -3769,6 +4004,7 @@ def publish_listing(listing_id: int, email: str, attested: int = 0):
             "UPDATE listings SET attested_at = CURRENT_TIMESTAMP, attested_email = ? WHERE id = ?",
             (email, listing_id)
         )
+    _stamp_quality_score(conn, listing_id)   # ZOOM-HMI-1
     conn.commit()
     conn.close()
 
@@ -4024,6 +4260,7 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
         f"UPDATE listings SET {sets}, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         vals + [listing_id]
     )
+    _stamp_quality_score(conn, listing_id)   # ZOOM-HMI-1
     conn.commit()
     conn.close()
     # Re-match on edit — listing content may have changed enough to surface new buyers
@@ -4574,6 +4811,411 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
         return img2, "redacted:" + ", ".join(sorted(set(_lbls))[:4]) + _mismatch
     return img, ("" if not _mismatch else _mismatch.lstrip("|"))
 
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# DCB-001 — batch upload, then order (RUL-127 · 17 Sep 2026 · RUL-126 batch, flag-dark)
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# The seller uploads photos in ANY order, taps ONE as the cover, and asks for an order.
+# This endpoint returns the order the CANON wants (cover first, then the category's named
+# slots -- exterior -> interior -> detail -- then everything else). Consistency is enforced
+# at OUTPUT, never at input (RUL-127). Vision is spent only when a provider is live and the
+# ceiling allows; otherwise the RULES answer (cover first, the seller's own order kept) so
+# the button never dies. No schema change: photos already carry order.
+from typing import List as _TList, Dict as _TDict, Any as _TAny
+class _PhotoOrderIn(BaseModel):
+    category: str
+    sub: Optional[str] = None
+    cover: Optional[str] = None                 # id of the photo the seller tapped as cover
+    slots: _TList[_TList[str]] = []             # [[key, label, hint], ...] in canon order (main first)
+    photos: _TList[_TDict[str, _TAny]] = []     # [{id, thumb (data URL, small)}, ...] in upload order
+    email: Optional[str] = None
+
+_PHOTO_ORDER_MAX = 24
+
+@app.post("/listings/photos/order")
+def photos_order_suggest(p: _PhotoOrderIn):
+    ids = [str(x.get("id")) for x in (p.photos or []) if x.get("id")][:_PHOTO_ORDER_MAX]
+    if not ids:
+        raise HTTPException(status_code=400, detail="no photos")
+    slots = [s for s in (p.slots or []) if s and s[0] != "main"]
+    labels = [(s[0], s[1], (s[2] if len(s) > 2 else "")) for s in slots]
+    cover = p.cover if p.cover in ids else ids[0]
+    rest = [i for i in ids if i != cover]
+    assign = {cover: "main"}
+    method = "rules"
+    reason = "cover first, then your own order"
+    # ── vision pass (one call for the whole set; small thumbnails keep it cheap) ──────────
+    if rest and labels:
+        try:
+            _check_cost_ceiling((p.email or "anon").lower())
+            import base64 as _b64
+            content = []
+            for x in p.photos:
+                pid = str(x.get("id")); th = str(x.get("thumb") or "")
+                if pid == cover or not th.startswith("data:image/"):
+                    continue
+                mt = th[5:th.index(";")]; b64 = th[th.index(",") + 1:]
+                if len(b64) > 120000:      # ~90 KB decoded -- the client sends ~160px thumbs
+                    continue
+                content.append({"type": "text", "text": "PHOTO id=%s" % pid})
+                content.append({"type": "image", "source": {"type": "base64", "media_type": mt, "data": b64}})
+            if content:
+                slot_txt = "\n".join("- %s: %s%s" % (k, lb, (" (" + h + ")" if h else "")) for k, lb, h in labels)
+                content.append({"type": "text", "text": (
+                    "These photos belong to ONE %s advert (%s). Order them the way a buyer expects to see them "
+                    "-- exterior before interior before detail, the widest establishing view first, close-ups "
+                    "last -- and assign each to the best-fitting named slot below where one fits (a slot may "
+                    "stay empty; a photo that fits no slot gets slot \"extra\").\nSLOTS:\n%s\n"
+                    "Answer ONLY with JSON: {\"order\": [ids in display order], \"assign\": {id: slot_key}}."
+                    % (p.category, p.sub or "general", slot_txt))})
+                _sr = ai_provider.complete([{"role": "user", "content": content}], task="vision",
+                                           max_tokens=400, provider=_ts_active_provider(), timeout=60)
+                if getattr(_sr, "ok", False):
+                    m = re.search(r"\{[\s\S]*\}", _sr.text or "")
+                    if m:
+                        d = json.loads(m.group())
+                        ai_order = [str(i) for i in d.get("order", []) if str(i) in rest]
+                        if ai_order:
+                            rest = ai_order + [i for i in rest if i not in ai_order]
+                            method = "ai"; reason = "arranged by the photo reader"
+                            for i, sk in (d.get("assign") or {}).items():
+                                if str(i) in rest and any(sk == k for k, _l, _h in labels):
+                                    assign[str(i)] = sk
+                    try:
+                        _log_ai_spend((p.email or "anon").lower(), "/listings/photos/order", "vision",
+                                      getattr(_sr, "in_tokens", None), getattr(_sr, "out_tokens", None),
+                                      provider=getattr(_sr, "provider", None), model=getattr(_sr, "model", None))
+                    except Exception:
+                        pass
+        except HTTPException:
+            raise
+        except Exception as _oe:
+            try:
+                _log.info("photo order: vision unavailable, rules answer used (%s)", _oe)
+            except Exception:
+                pass
+    # rules fill: any unassigned photo takes the next empty named slot, in canon order
+    free = [k for k, _l, _h in labels if k not in assign.values()]
+    for i in rest:
+        if i not in assign:
+            assign[i] = free.pop(0) if free else "extra"
+    return {"order": [cover] + rest, "assign": assign, "cover": cover, "method": method, "reason": reason}
+
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# FIDE-CLAIM-1 — credential claims (CREDENTIAL_CLAIMS_DESIGN.md · RG-0216 · 17 Sep 2026)
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# A seller privately claims an official credential ID; the backend matches it against a
+# locally-held PUBLIC registry; the listing wears only the TIER BADGE -- verification without
+# identification, evidence without intrusion. Registry: credential_registry (FIDE first, 4,237
+# rows seeded by migration 041 from fide_registry_seed.json.gz). Claims: credential_claims,
+# PRIVATE, ONE account per credential ever (UNIQUE(source, credential_id)). Tier A is anchored
+# on the EXISTING id-verify lane (users.id_verified + id_name); Tier B is registry-name only.
+# The trust weight lands in the VEL catalogue (_CATEGORY_SIGNALS['Tutors'].fide_*) through the
+# ordinary user_credentials lane -- no second trust path. Public payloads carry badge + tier +
+# title CLASS only: never name, never the ID, never the federation (A2).
+# DARK until launch_switches.baseline_q4 = 1 (RUL-126) or env CREDENTIAL_CLAIMS=1 (the spec's
+# own switch, kept so the lane can be lit on a sandbox without the whole batch).
+import unicodedata as _ucd
+import difflib as _difflib
+
+_CRED_TITLE_RANK = {"FST": 5, "FT": 4, "FI": 3, "NI": 2, "DI": 1}
+_CRED_TITLE_NAME = {"FST": "FIDE Senior Trainer", "FT": "FIDE Trainer", "FI": "FIDE Instructor",
+                    "NI": "National Instructor", "DI": "Developmental Instructor"}
+_CRED_SIGNAL_FOR = {"FST": "category.tutors.fide_ft", "FT": "category.tutors.fide_ft",
+                    "FI": "category.tutors.fide_fi", "NI": "category.tutors.fide_ni", "DI": "category.tutors.fide_di"}
+
+def _credential_claims_on() -> bool:
+    return _baseline_q4_on() or os.environ.get("CREDENTIAL_CLAIMS", "") == "1"
+
+def _cred_name_norm(n: str) -> str:
+    n = _ucd.normalize("NFKD", n or "")
+    n = "".join(ch for ch in n if not _ucd.combining(ch)).lower()
+    if "," in n:
+        a, b = n.split(",", 1); n = b.strip() + " " + a.strip()
+    n = re.sub(r"[^a-z0-9 ]+", " ", n)
+    return re.sub(r"\s+", " ", n).strip()
+
+def _cred_name_sim(a: str, b: str) -> float:
+    a, b = _cred_name_norm(a), _cred_name_norm(b)
+    if not a or not b:
+        return 0.0
+    if a == b:
+        return 1.0
+    ta, tb = set(a.split()), set(b.split())
+    tok = len(ta & tb) / float(max(1, len(ta | tb)))
+    seq = _difflib.SequenceMatcher(None, a, b).ratio()
+    return max(seq, tok)
+
+def _cred_ensure_tables(conn):
+    conn.execute("""CREATE TABLE IF NOT EXISTS credential_registry(
+        source TEXT NOT NULL, credential_id TEXT NOT NULL, name_norm TEXT NOT NULL, detail TEXT,
+        federation TEXT, harvested_at TEXT, PRIMARY KEY(source, credential_id))""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS credential_claims(
+        id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, email TEXT NOT NULL,
+        source TEXT NOT NULL, credential_id TEXT NOT NULL, claimed_name TEXT NOT NULL,
+        tier TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active', similarity REAL,
+        claimed_at TEXT NOT NULL, reviewed_at TEXT, reviewed_by TEXT,
+        UNIQUE(source, credential_id))""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_cred_claims_email ON credential_claims(email)")
+
+def _cred_badge_title(detail: str, tier: str) -> str:
+    base = _CRED_TITLE_NAME.get((detail or "").upper(), "FIDE-listed trainer")
+    if tier == "A":
+        return "✓ Verified %s (%s)" % (base, (detail or "").upper())
+    return "FIDE-listed trainer"
+
+def _cred_apply_trust(conn, email: str, detail: str, tier: str):
+    """Tier A -> the title-rank signal in the VEL catalogue (weights live THERE, not here);
+    Tier B -> the listed signal. The ordinary user_credentials lane does the rest."""
+    email = (email or "").lower()
+    if tier == "A":
+        sig = _CRED_SIGNAL_FOR.get((detail or "").upper())
+        if sig:
+            _upsert_credential(conn, email, sig, "earned")
+    _upsert_credential(conn, email, "category.tutors.fide_listed", "earned")
+
+def _cred_revoke_trust(conn, email: str):
+    conn.execute("DELETE FROM user_credentials WHERE email=? AND signal_id LIKE 'category.tutors.fide_%'", ((email or "").lower(),))
+
+def _cred_tier_for(conn, email: str, registry_name_norm: str, claimed_name: str):
+    """(tier, similarity, status). Tier A needs the id-verify lane to have verified a legal name
+    that matches the registry entry; Tier B is a registry-name match; 0.60-0.85 goes PENDING."""
+    sim = _cred_name_sim(claimed_name, registry_name_norm)
+    u = conn.execute("SELECT id_verified, id_name FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+    if u and int(u["id_verified"] or 0) and (u["id_name"] or "").strip():
+        if _cred_name_sim(u["id_name"], registry_name_norm) >= 0.85:
+            return "A", max(sim, _cred_name_sim(u["id_name"], registry_name_norm)), "active"
+    if sim >= 0.85:
+        return "B", sim, "active"
+    if sim >= 0.60:
+        return "B", sim, "pending"
+    return None, sim, "declined"
+
+class _CredentialClaimIn(BaseModel):
+    email: str
+    source: str = "FIDE"
+    credential_id: str
+    claimed_name: str
+
+@app.post("/credentials/claim")
+def credentials_claim(body: _CredentialClaimIn, ts_user: str = Cookie(default=None),
+                      x_admin_key: str = Header(default=None)):
+    if not _credential_claims_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    email = _actor(ts_user, body.email, "credential-claim", x_admin_key)
+    email = (email or "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=401, detail="Please sign in to claim a credential.")
+    src = (body.source or "FIDE").strip().upper()
+    cid = re.sub(r"\s+", "", str(body.credential_id or "")).strip()
+    name = (body.claimed_name or "").strip()
+    if not cid or not name:
+        raise HTTPException(status_code=400, detail="credential_id and claimed_name are required")
+    conn = database.get_db()
+    try:
+        _cred_ensure_tables(conn)
+        u = conn.execute("SELECT id FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        if not u:
+            raise HTTPException(status_code=404, detail="Account not found -- sign in first.")
+        reg = conn.execute("SELECT * FROM credential_registry WHERE source=? AND credential_id=?", (src, cid)).fetchone()
+        if not reg:
+            n = conn.execute("SELECT COUNT(*) AS n FROM credential_registry WHERE source=?", (src,)).fetchone()["n"]
+            return {"status": "not_found", "source": src,
+                    "message": "That ID is not in the %s registry we hold (%s entries, seminar awards 2022 onward). "
+                               "The registry grows monthly -- turn on re-check and we will try again after the next refresh." % (src, f"{n:,}"),
+                    "recheck": True}
+        tier, sim, status = _cred_tier_for(conn, email, reg["name_norm"], name)
+        if status == "declined":
+            return {"status": "name_mismatch", "source": src,
+                    "message": "That ID exists in the registry but the name you gave does not match it. "
+                               "Enter your name exactly as the registry lists it."}
+        holder = conn.execute("SELECT * FROM credential_claims WHERE source=? AND credential_id=?", (src, cid)).fetchone()
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        if holder and holder["email"] != email and holder["status"] in ("active", "pending"):
+            # sec 5: a Tier-A newcomer DISPLACES a Tier-B holder; anything else is refused
+            if tier == "A" and holder["tier"] == "B":
+                conn.execute("UPDATE credential_claims SET status='displaced', reviewed_at=? WHERE id=?", (now, holder["id"]))
+                _cred_revoke_trust(conn, holder["email"])
+                try:
+                    _notify_credential_displaced(conn, holder["email"], src)
+                except Exception:
+                    pass
+                conn.execute("INSERT INTO credential_claims (user_id, email, source, credential_id, claimed_name, tier, status, similarity, claimed_at) VALUES (?,?,?,?,?,?,?,?,?)",
+                             (u["id"], email, src, cid, name, tier, status, sim, now))
+            else:
+                return {"status": "taken", "source": src,
+                        "message": "This credential is already claimed by another account. If it is yours, verify your identity "
+                                   "(My Space -> Verify ID) and claim again -- an identity-anchored claim takes precedence."}
+        elif holder and holder["email"] == email:
+            conn.execute("UPDATE credential_claims SET claimed_name=?, tier=?, status=?, similarity=?, claimed_at=? WHERE id=?",
+                         (name, tier, status, sim, now, holder["id"]))
+        else:
+            if holder:   # a displaced / revoked row on this id: the row belongs to history, the claim is new
+                conn.execute("DELETE FROM credential_claims WHERE id=? AND status IN ('displaced','revoked')", (holder["id"],))
+            conn.execute("INSERT INTO credential_claims (user_id, email, source, credential_id, claimed_name, tier, status, similarity, claimed_at) VALUES (?,?,?,?,?,?,?,?,?)",
+                         (u["id"], email, src, cid, name, tier, status, sim, now))
+        if status == "active":
+            _cred_apply_trust(conn, email, reg["detail"], tier)
+        conn.commit()
+        return {"status": status, "tier": tier, "source": src, "similarity": round(sim, 2),
+                "badge": _cred_badge_title(reg["detail"], tier) if status == "active" else None,
+                "message": ("Claimed -- your listings now carry the badge." if status == "active"
+                            else "Received -- the name is close but not exact, so a person will review it. You will see the badge once approved.")}
+    finally:
+        conn.close()
+
+def _notify_credential_displaced(conn, email, src):
+    try:
+        _push_to_seller(conn, email, "A credential claim was superseded",
+                        "Another account verified their identity against the same %s credential. Verify your ID to reclaim it." % src)
+    except Exception:
+        pass
+
+@app.get("/credentials/mine")
+def credentials_mine(email: str = "", ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """The probe (sec 8): answers whenever the lane is lit. Claims + tiers for the session user."""
+    if not _credential_claims_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    em = (_actor(ts_user, email, "credentials-mine", x_admin_key) or "").strip().lower()
+    conn = database.get_db()
+    try:
+        _cred_ensure_tables(conn)
+        n = conn.execute("SELECT COUNT(*) AS n FROM credential_registry").fetchone()["n"]
+        if not em:
+            return {"claims": [], "registry": {"FIDE": n}, "signed_in": False}
+        rows = conn.execute("SELECT c.source, c.credential_id, c.tier, c.status, c.claimed_at, r.detail FROM credential_claims c "
+                            "LEFT JOIN credential_registry r ON r.source=c.source AND r.credential_id=c.credential_id "
+                            "WHERE c.email=? ORDER BY c.id DESC", (em,)).fetchall()
+        out = []
+        for r in rows:
+            d = dict(r)
+            d["badge"] = _cred_badge_title(d.get("detail"), d["tier"]) if d["status"] == "active" else None
+            out.append(d)
+        return {"claims": out, "registry": {"FIDE": n}, "signed_in": True}
+    finally:
+        conn.close()
+
+def _credential_badges_for(conn, emails):
+    """Public badges from a LIVE JOIN at render time (sec 8) -- tier + title CLASS only."""
+    out = {}
+    if not emails or not _credential_claims_on():
+        return out
+    try:
+        _cred_ensure_tables(conn)
+        q = ",".join("?" for _ in emails)
+        for r in conn.execute("SELECT c.email, c.source, c.tier, r.detail FROM credential_claims c "
+                              "JOIN credential_registry r ON r.source=c.source AND r.credential_id=c.credential_id "
+                              f"WHERE c.status='active' AND LOWER(c.email) IN ({q})", [e.lower() for e in emails]).fetchall():
+            out.setdefault(r["email"].lower(), []).append({"source": r["source"], "tier": r["tier"],
+                                                            "title": _cred_badge_title(r["detail"], r["tier"])})
+    except Exception:
+        return {}
+    return out
+
+@app.get("/admin/credentials")
+def admin_credentials(_admin=Depends(_require_admin_or_key)):
+    conn = database.get_db()
+    try:
+        _cred_ensure_tables(conn)
+        pend = [dict(r) for r in conn.execute("SELECT c.*, r.detail, r.federation FROM credential_claims c LEFT JOIN credential_registry r ON r.source=c.source AND r.credential_id=c.credential_id WHERE c.status='pending' ORDER BY c.id").fetchall()]
+        stats = {r["source"]: r["n"] for r in conn.execute("SELECT source, COUNT(*) AS n FROM credential_registry GROUP BY source")}
+        counts = {r["status"]: r["n"] for r in conn.execute("SELECT status, COUNT(*) AS n FROM credential_claims GROUP BY status")}
+        return {"pending": pend, "registry": stats, "claims": counts, "on": _credential_claims_on()}
+    finally:
+        conn.close()
+
+class _CredentialReviewIn(BaseModel):
+    claim_id: int
+    decision: str          # approve | reject | revoke
+    reason: Optional[str] = None
+
+@app.post("/admin/credentials/review")
+def admin_credentials_review(body: _CredentialReviewIn, _admin=Depends(_require_admin_or_key)):
+    conn = database.get_db()
+    try:
+        _cred_ensure_tables(conn)
+        c = conn.execute("SELECT * FROM credential_claims WHERE id=?", (body.claim_id,)).fetchone()
+        if not c:
+            raise HTTPException(status_code=404, detail="claim not found")
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        who = str((_admin or {}).get("name") or "admin")[:80] if isinstance(_admin, dict) else "admin"
+        if body.decision == "approve":
+            reg = conn.execute("SELECT detail FROM credential_registry WHERE source=? AND credential_id=?", (c["source"], c["credential_id"])).fetchone()
+            conn.execute("UPDATE credential_claims SET status='active', reviewed_at=?, reviewed_by=? WHERE id=?", (now, who, c["id"]))
+            _cred_apply_trust(conn, c["email"], reg["detail"] if reg else "", c["tier"])
+        elif body.decision in ("reject", "revoke"):
+            conn.execute("UPDATE credential_claims SET status=?, reviewed_at=?, reviewed_by=? WHERE id=?",
+                         ("revoked" if body.decision == "revoke" else "rejected", now, who, c["id"]))
+            _cred_revoke_trust(conn, c["email"])
+        else:
+            raise HTTPException(status_code=400, detail="decision must be approve, reject or revoke")
+        conn.commit()
+        return {"ok": True, "claim_id": c["id"], "status": body.decision}
+    finally:
+        conn.close()
+
+class _RegistryUpsertIn(BaseModel):
+    source: str
+    rows: _TList[_TDict[str, _TAny]]     # [{credential_id, name, detail, federation}], capped
+
+@app.post("/admin/credentials/registry-upsert")
+def admin_registry_upsert(body: _RegistryUpsertIn, _admin=Depends(_require_admin_or_key)):
+    """Monthly refresh WITHOUT a deploy (data lane). Idempotent; keeps the highest title."""
+    rows = (body.rows or [])[:5000]
+    src = (body.source or "").strip().upper()
+    if not src or not rows:
+        raise HTTPException(status_code=400, detail="source and rows required")
+    conn = database.get_db()
+    try:
+        _cred_ensure_tables(conn)
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        ins = upd = 0
+        for r in rows:
+            cid = re.sub(r"\s+", "", str(r.get("credential_id") or ""))
+            if not cid:
+                continue
+            nn = r.get("name_norm") or _cred_name_norm(r.get("name") or "")
+            det = str(r.get("detail") or "").upper()
+            cur = conn.execute("SELECT detail FROM credential_registry WHERE source=? AND credential_id=?", (src, cid)).fetchone()
+            if cur is None:
+                conn.execute("INSERT INTO credential_registry (source, credential_id, name_norm, detail, federation, harvested_at) VALUES (?,?,?,?,?,?)",
+                             (src, cid, nn, det, r.get("federation") or "", now)); ins += 1
+            elif _CRED_TITLE_RANK.get(det, 0) > _CRED_TITLE_RANK.get((cur["detail"] or "").upper(), 0):
+                conn.execute("UPDATE credential_registry SET detail=?, name_norm=?, harvested_at=? WHERE source=? AND credential_id=?",
+                             (det, nn, now, src, cid)); upd += 1
+        conn.commit()
+        n = conn.execute("SELECT COUNT(*) AS n FROM credential_registry WHERE source=?", (src,)).fetchone()["n"]
+        return {"inserted": ins, "upgraded": upd, "total": n}
+    finally:
+        conn.close()
+
+# ── QUICK-ME-1 (RUL-125(a) · 17 Sep 2026): the three facts the spreader may hold ──────────
+# genie/QUICKLIST_DESIGN_NOTES.md: "who you are, what you have accepted, what exists -- from one
+# GET /quick/me, which the browser can make because it is the same origin carrying the ts_user
+# cookie." The endpoint did not exist; the door read a localStorage marker instead, and a fresh
+# visitor arriving by e-mail link held no API key, so Publish was a DRY RUN on the live origin.
+# Now: identity from the proven cookie (never from what was typed), the same public app key
+# ms.js ships to every visitor (nothing new exposed), and the EULA fact. Ungated -- a stranger
+# gets {signed_in: false} plus the key, which is exactly what the door needs to go live.
+@app.get("/quick/me")
+def quick_me(ts_user: str = Cookie(default=None)):
+    em = _session_email(ts_user)
+    out = {"signed_in": False, "key": auth.API_KEY if hasattr(auth, "API_KEY") else os.environ.get("MS_API_KEY", ""),
+           "email": None, "name": None, "eula_accepted": False, "city": None, "listings": 0}
+    if not em:
+        return out
+    conn = database.get_db()
+    try:
+        u = conn.execute("SELECT name, eula_accepted_at, lm_eula_accepted_at, last_city FROM users WHERE LOWER(email)=?", (em,)).fetchone()
+        if not u:
+            return out
+        n = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE LOWER(seller_email)=? AND (listing_status IS NULL OR listing_status='live')", (em,)).fetchone()["n"]
+        out.update({"signed_in": True, "email": em, "name": u["name"] or em.split("@")[0],
+                    "eula_accepted": bool(u["eula_accepted_at"] or u["lm_eula_accepted_at"]),
+                    "city": u["last_city"], "listings": n})
+        return out
+    finally:
+        conn.close()
+
 @app.post("/listings/photo")
 async def upload_listing_photo(
     file: UploadFile = File(...),
@@ -4711,6 +5353,7 @@ async def upload_listing_photo(
                         "UPDATE listings SET description=? WHERE id=?",
                         (new_desc, listing_id)
                     )
+                _stamp_quality_score(conn, listing_id)   # ZOOM-HMI-1: photos move quality
                 conn.commit()
         finally:
             conn.close()
@@ -8354,7 +8997,18 @@ def _seller_country_for_listing(conn, listing_row: dict) -> Optional[str]:
 
 
 def _buyer_tier(conn, buyer_token: str) -> str:
-    """Return 'free' or 'global' for this buyer_token. Defaults to 'free'."""
+    """Return 'free' or 'global' for this buyer_token. Defaults to 'free'.
+    RUL-078 (RG-0224 criterion 9, built 17 Sep 2026): a live PRO seller subscription resolves to
+    global -- a Pro subscriber is never silently treated as local. RUL-128 (armed by baseline_q4):
+    Starter carries global buyer reach too. Consulted BEFORE the wishlist token row."""
+    try:
+        u = conn.execute("SELECT seller_tier FROM users WHERE buyer_token = ?", (buyer_token,)).fetchone()
+        if u:
+            st = (u["seller_tier"] or "free").lower()
+            if st == "pro" or (st == "starter" and _baseline_q4_on()):
+                return "global"
+    except Exception:
+        pass
     row = conn.execute(
         "SELECT tier, expires_at FROM wishlist_subscriptions WHERE buyer_token = ?",
         (buyer_token,)
@@ -9417,6 +10071,10 @@ def init_global_subscription(buyer_token: str, email: str):
     Paystack reference and the resulting subscription row's paystack_ref."""
     if not buyer_token or len(buyer_token) < 8:
         raise HTTPException(status_code=400, detail="valid buyer_token required")
+    if _baseline_q4_on():
+        # RUL-128: the separate buyer subscription is retired -- reach comes with Starter ($5).
+        # Nobody is sold the old product once the ladder has one $5 rung.
+        raise HTTPException(status_code=410, detail="Global reach now comes with the Starter plan ($5 a month, 10 listing slots included). Choose Starter under Plans.")
     # FX-LIVE-1 (RUL-022): $5 canon; ZAR charge floats live (was fixed R90)
     _glob_zar = usd_to_zar_amount(WISHLIST_GLOBAL_USD)
     reference = f"ms_wishlist_{uuid.uuid4().hex[:12]}"
@@ -10564,6 +11222,15 @@ _CATEGORY_SIGNALS = {
         # Private sellers — no agent registration required
         "category.property.exp_10plus":    {"name": "Property experience 10+ years", "points": 5, "how_to_earn": "Declare ownership/investment experience — CV optional."},
         "category.property.exp_2_5":       {"name": "Property experience 2–5 years", "points": 4, "how_to_earn": "Declare experience."},
+        # RUL-129 (14 Sep 2026; built 17 Sep, RUL-126 batch): evidence a PRIVATE seller can actually
+        # hold. Each is a DATED, SOURCED fact about a document or a third party -- never a
+        # conclusion about the person (RG-0238) -- checkable by somebody outside TrustSquare
+        # (RUL-115), added once, counts on every listing afterwards. Points are the CTO's draft
+        # against that standard, reported to David with the batch. Dark until baseline_q4.
+        "category.property.title_deed":    {"name": "Title deed / Deeds Office search in your name (dated)", "points": 8, "how_to_earn": "Upload the title deed or a DeedsWeb search result showing the property registered in your verified ID name. Checkable at the Deeds Office by anyone.", "evidence_required": True, "private_seller": True, "baseline_q4": True},
+        "category.property.rates_account": {"name": "Municipal rates & taxes statement in your name (latest)", "points": 4, "how_to_earn": "Upload the latest municipal rates statement for the property, in your name. Dated; checkable with the municipality.", "evidence_required": True, "private_seller": True, "baseline_q4": True},
+        "category.property.levy_statement": {"name": "Body corporate / HOA levy statement (current)", "points": 3, "how_to_earn": "Sectional title or estate: upload the current levy statement from the managing agent. Checkable with the body corporate.", "evidence_required": True, "private_seller": True, "baseline_q4": True},
+        "category.property.coc_electrical": {"name": "Electrical Certificate of Compliance (CoC), dated", "points": 3, "how_to_earn": "Upload the CoC issued by a registered electrician (Department of Labour registration number on it). Checkable against that register.", "evidence_required": True, "private_seller": True, "baseline_q4": True},
     },
     "Cars_private": {
         # Private car sellers — no dealer registration
@@ -10589,6 +11256,16 @@ _CATEGORY_SIGNALS = {
         "category.tutors.exp_2_5":         {"name": "Teaching experience 2–5 years", "points": 5, "how_to_earn": "Upload CV with verifiable teaching dates — reviewed by TrustSquare."},
         "category.tutors.exp_5plus":       {"name": "Teaching experience 5+ years", "points": 6, "how_to_earn": "Upload CV.", "additional_to": "category.tutors.exp_2_5"},
         "category.tutors.safeguarding":    {"name": "Safeguarding / child protection cert", "points": 3, "how_to_earn": "Upload safeguarding or child protection certificate. Examples: NSPCC (UK), Mandatory Reporter (AU/US), child protection training SA."},
+        # FIDE-CLAIM-1 (17 Sep 2026): registry-matched chess-trainer credentials. Earned ONLY by the
+        # claim lane (POST /credentials/claim), never by upload: Tier A (identity-anchored) takes the
+        # title-rank signal, Tier B (registry name only) takes fide_listed. Capped so a credential
+        # alone never outranks conduct (sec 7). A dated, sourced FACT about a registry entry, never a
+        # conclusion about the person (RG-0238).
+        "category.tutors.fide_ft":         {"name": "FIDE Trainer (FT) — registry-verified, identity-anchored", "points": 8, "how_to_earn": "Claim your FIDE ID (My Space → Credentials). Verified against the FIDE Trainers\u2019 Commission registry we hold; identity-anchored via ID verification.", "replaces": "category.tutors.fide_fi", "claim_only": True},
+        "category.tutors.fide_fi":         {"name": "FIDE Instructor (FI) — registry-verified, identity-anchored", "points": 6, "how_to_earn": "Claim your FIDE ID (My Space → Credentials).", "replaces": "category.tutors.fide_ni", "claim_only": True},
+        "category.tutors.fide_ni":         {"name": "FIDE National Instructor (NI) — registry-verified, identity-anchored", "points": 4, "how_to_earn": "Claim your FIDE ID (My Space → Credentials).", "replaces": "category.tutors.fide_di", "claim_only": True},
+        "category.tutors.fide_di":         {"name": "FIDE Developmental Instructor (DI) — registry-verified, identity-anchored", "points": 3, "how_to_earn": "Claim your FIDE ID (My Space → Credentials).", "claim_only": True},
+        "category.tutors.fide_listed":     {"name": "FIDE-listed trainer (registry name match)", "points": 2, "how_to_earn": "Claim your FIDE ID (My Space → Credentials). Verify your ID to anchor it and earn the title points.", "claim_only": True},
         "category.tutors.online_ready":    {"name": "Online platform proficiency", "points": 1, "how_to_earn": "Declare platforms used: Zoom, Google Classroom, Microsoft Teams, etc. Applies to online tutors."},
         "category.tutors.strong_cv":       {"name": "Strong structured CV", "points": 2, "how_to_earn": "Upload CV with clear dates, subjects taught, and institutions — assessed at onboarding."},
     },
@@ -10741,6 +11418,11 @@ _CATEGORY_SIGNALS = {
         "category.lm.product_guide_3":     {"name": "Third product guide / recipe",         "points": 1,  "how_to_earn": "Upload a third guide — maximum 3 counted.", "evidence_required": True, "additional_to": "category.lm.product_guide_2"},
         # ── Media & social ────────────────────────────────────────────────
         "category.lm.media_feature":       {"name": "Media feature or press coverage",      "points": 2,  "how_to_earn": "Upload a scan or screenshot of a magazine, newspaper, or online article featuring your work.", "evidence_required": True},
+        # RUL-129 (14 Sep 2026; built 17 Sep, RUL-126 batch): evidence a private Local Market seller can
+        # hold -- dated, sourced, outside-checkable, added once. Dark until baseline_q4.
+        "category.lm.trading_permit":      {"name": "Municipal trading / market permit (current)",   "points": 4, "how_to_earn": "Upload your current informal-trading or market-stall permit. Dated; checkable with the issuing municipality.", "evidence_required": True, "private_seller": True, "baseline_q4": True},
+        "category.lm.food_coa":            {"name": "Certificate of Acceptability for food premises (R638), dated", "points": 5, "how_to_earn": "Food and preserves: upload the Certificate of Acceptability issued by municipal environmental health. Checkable with the issuing office.", "evidence_required": True, "private_seller": True, "baseline_q4": True},
+        "category.lm.producer_registration": {"name": "Producer / grower registration number (dated)",   "points": 4, "how_to_earn": "Upload your registration with the relevant register -- e.g. a beekeeper registration (BR) number, DALRRD producer registration, or a craft guild register entry. Checkable in that register.", "evidence_required": True, "private_seller": True, "baseline_q4": True},
         "category.lm.social_proof":        {"name": "Active social media presence",         "points": 1,  "how_to_earn": "Add your Instagram, Facebook page, or website URL showing your products/services.", "evidence_required": False},
     },
 }
@@ -11007,11 +11689,48 @@ def _norm_cat_key(category, service_class=None) -> str:
     return _TRUST_CAT_NORM.get(cat, cat)
 
 
+# ── RUL-129 (17 Sep 2026): the VEL catalogue, readable -- a draft screen reads its points from
+# HERE, never from a table typed on the screen. Public, read-only, names/points/how-to only.
+# Entries carrying baseline_q4 are served only once David arms the batch (RUL-126).
+_CATALOGUE_PUBLIC_KEYS = {
+    "property": "Property_private", "property_private": "Property_private", "property_agent": "Property",
+    "localmarket": "local_market", "local_market": "local_market", "local market": "local_market",
+    "collectors": "Collectors", "cars": "Cars_private", "tutors": "Tutors",
+    "services": "Services-Technical", "services-technical": "Services-Technical", "services-casuals": "Services-Casuals",
+    "homehelp": "Services-Casuals", "housekeeping": "Services-Casuals",
+    "adventures": "Adventures-Experiences", "adventures-experiences": "Adventures-Experiences",
+    "adventures-accommodation": "Adventures-Accommodation",
+}
+
+@app.get("/trust/catalogue")
+def trust_catalogue(category: str = "", private: int = 0):
+    key = _CATALOGUE_PUBLIC_KEYS.get((category or "").strip().lower(), (category or "").strip())
+    sigs = _CATEGORY_SIGNALS.get(key, {})
+    armed = _baseline_q4_on()
+    out = []
+    for sid, v in sigs.items():
+        if v.get("baseline_q4") and not armed:
+            continue
+        if private and not v.get("private_seller"):
+            continue
+        if not v.get("points"):
+            continue
+        out.append({"id": sid, "name": v["name"], "points": v["points"], "how_to_earn": v.get("how_to_earn", ""),
+                    "private_seller": bool(v.get("private_seller")), "claim_only": bool(v.get("claim_only")),
+                    "evidence_required": bool(v.get("evidence_required", True))})
+    out.sort(key=lambda x: -x["points"])
+    return {"category": key, "signals": out, "baseline_q4": armed,
+            "note": "These raise the TRUST score, not the listing score. Each is a dated, sourced fact about a document or a third party -- never a conclusion about a person. Added once in TrustSquare, they count on every listing."}
+
+
 def _trust_evidence(conn, email: str, cat_key: str) -> dict:
     """THE evidence set for one seller under one category. Every trust surface reads
     from here, so two surfaces can only disagree about a seller if they were asked
     about different CATEGORIES — which is a real difference, not drift."""
     cat_signals = _CATEGORY_SIGNALS.get(cat_key, {})
+    # RUL-129 entries ride the RUL-126 batch: invisible to every trust surface until David arms it
+    if any(v.get("baseline_q4") for v in cat_signals.values()) and not _baseline_q4_on():
+        cat_signals = {k: v for k, v in cat_signals.items() if not v.get("baseline_q4")}
     computed = _compute_universal_track_status(conn, email)
     universal_signals = {k: v for k, v in _TRUST_SIGNALS.items() if k.startswith("universal.")}
     track_signals     = {k: v for k, v in _TRUST_SIGNALS.items() if k.startswith("track_record.")}
@@ -16009,6 +16728,12 @@ def _anon_blur_fraction(regions, grid=200):
     return sum(cells) / float(grid * grid)
 
 
+def _baseline_q4_on() -> bool:
+    """BASELINE-Q4-1 (RUL-126): fail-safe read of launch_switches.baseline_q4. On ANY doubt
+    return False -- dark is the side that leaves the field's app exactly as it is."""
+    return _bit_flag("baseline_q4", False)
+
+
 def _anon_replace_enabled():
     """Fail-safe read of launch_switches.photo_replace_request. On ANY doubt return
     True - the ruling is the current policy, and the safe side of this switch is the
@@ -17692,6 +18417,7 @@ class _FlagsUpdate(BaseModel):
     intro_relay:           Optional[bool] = None  # INTRO-RELAY-1: masked-alias introductions (dark until CF rail is live)
     account_binding:       Optional[bool] = None  # ACCOUNT-BIND-1: charges bound to the proven session
     photo_replace_request: Optional[bool] = None  # PHOTO-REPLACE-1: ask for a new photo rather than blur it into ruin (TS-0022)
+    baseline_q4:           Optional[bool] = None  # BASELINE-Q4-1: the RUL-126 batch, armed by David only
 
 def _flags_payload(d):
     def b(k): return bool(d.get(k, 0))
@@ -17706,6 +18432,8 @@ def _flags_payload(d):
         # column must read as ON - b() would read a missing key as OFF and silently
         # restore the very behaviour Maroushka reported three times.
         "photo_replace_request": bool(d.get("photo_replace_request", 1)),
+        # BASELINE-Q4-1: a row predating the column reads OFF -- dark is the safe side.
+        "baseline_q4": b("baseline_q4"),
         "photo_max_blur_pct": round(_ANON_MAX_BLUR_FRAC * 100),
         "relay_configured": bool(RELAY_INBOUND_SECRET),
         "data": {"ops": b("data_ops"), "places": b("data_places"),
@@ -17718,6 +18446,7 @@ def _flags_payload(d):
             "heritage_verified":   live and b("verified_tier") and b("p_heritage"),
             "expedition_verified": live and b("verified_tier") and b("p_expedition"),
             "weekend_verified":    live and b("verified_tier") and b("p_weekend"),
+            "baseline_q4":         b("baseline_q4"),   # BASELINE-Q4-1: the FEA reads it from here
         },
         "bit_flags": {
             "ai_example_enabled":    bool(d.get("ai_example_enabled", 1)),
@@ -17837,6 +18566,15 @@ def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
             conn.execute("UPDATE launch_switches SET " + ", ".join(sets) + " WHERE id = 1", vals)
             conn.commit()
         row = conn.execute("SELECT * FROM launch_switches WHERE id = 1").fetchone()
+        # RUL-128: arming the batch (0 -> 1) folds every live Global subscriber into Starter, once,
+        # at the same price, Paystack untouched. Idempotent, so a re-arm moves nobody twice.
+        try:
+            if data.get("baseline_q4") and not int(prior.get("baseline_q4") or 0) and row and int(row["baseline_q4"] or 0):
+                _moved = _fold_global_into_starter(conn, actor=str((_admin or {}).get("name") or "admin")[:80] if isinstance(_admin, dict) else "admin")
+                conn.commit()
+                _log.warning("RUL-128 fold on arming: %d Global subscriber(s) moved to Starter at the same price: %s", len(_moved), _moved)
+        except Exception as _fe:
+            _log.error("RUL-128 fold failed on arming (flag stays armed; run the fold again via /admin/flags): %s", _fe)
         # D4: the change is RECORDED — actor, prior value, new value, reason, timestamp.
         try:
             _actor = str((_admin or {}).get("name") or (_admin or {}).get("sub") or "admin")[:80]
@@ -23742,6 +24480,716 @@ if os.getenv("FADE_SWEEP_ENABLED", "1") == "1":
                 print("LIFECYCLE-SWEEP error: %s" % _le)
             _lt.sleep(86400)
     threading.Thread(target=_lifecycle_daily_loop, daemon=True).start()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# SQUIRE — the Pro subscriber's personal agent (SQUIRE_SPEC.md · RUL-077/078 · RG-0224 · 17 Sep 2026)
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# A layer over ZOOM, not a parallel system: a brief IS a Zoom path plus prose. Squire
+# SPECIFIES (words -> chips + a written brief + the two questions you forgot), WATCHES
+# (server-side, on a schedule -- RUL-070), SHORTLISTS WITH REASONS, and PREPARES THE APPROACH.
+# HARD BOUNDARIES, each asserted by RG-0224: Pro-only (no leak to Free/Starter/Agency); Watches
+# and For You stay free on every tier (zoom_watches never checks tier); Squire never GRANTS an
+# introduction (the only intro path is POST /intros, 1T held at every tier -- this file never
+# writes intro_requests); seller identity never enters Squire's context (every listing it reads
+# passes _strip_seller_identity; the approach carries the NEED, never the person); a brief
+# about a MINOR is minimised and never transmitted in identifying form (POPIA); the METERED
+# unit is the APPROACH; the ceiling arrives WITH the offer (RUL-066 rung 1), warns before
+# composing (rung 2), logs telemetry (rung 3); top-up is TUPPENCE -- no second currency.
+# Flag-dark until launch_switches.baseline_q4 = 1 (RUL-126).
+SQUIRE_INCLUDED_APPROACHES = 20      # per calendar month, included in Pro (flat, cappable)
+SQUIRE_TOPUP_BUNDLE = 5              # approaches per top-up
+SQUIRE_TOPUP_TUPPENCE = 1            # price of the bundle, in Tuppence (1T = $2, fixed)
+SQUIRE_WARN_AT = 2                   # rung 2: warn before composing when this many remain
+
+def _squire_on() -> bool:
+    return _baseline_q4_on()
+
+def _squire_ensure(conn):
+    conn.execute("""CREATE TABLE IF NOT EXISTS squire_briefs(
+        id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, category TEXT NOT NULL, city TEXT,
+        need_text TEXT NOT NULL, path TEXT, brief_text TEXT, questions TEXT, answers TEXT,
+        is_minor INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT 'active',
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL, last_match_at TEXT)""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS squire_matches(
+        id INTEGER PRIMARY KEY AUTOINCREMENT, brief_id INTEGER NOT NULL, listing_id INTEGER NOT NULL,
+        score REAL, reasons TEXT, seen INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL,
+        UNIQUE(brief_id, listing_id))""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS squire_approaches(
+        id INTEGER PRIMARY KEY AUTOINCREMENT, brief_id INTEGER NOT NULL, listing_id INTEGER NOT NULL,
+        email TEXT NOT NULL, text TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'sent',
+        answer TEXT, created_at TEXT NOT NULL, answered_at TEXT)""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS squire_allowance(
+        email TEXT NOT NULL, period TEXT NOT NULL, extra INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY(email, period))""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS squire_events(
+        id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, email TEXT, kind TEXT NOT NULL,
+        tier TEXT, category TEXT, limit_n INTEGER, detail TEXT)""")
+
+def _squire_now():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def _squire_period():
+    return datetime.now(timezone.utc).strftime("%Y-%m")
+
+def _seller_tier_of(conn, email: str) -> str:
+    u = conn.execute("SELECT seller_tier FROM users WHERE LOWER(email)=?", ((email or "").lower(),)).fetchone()
+    return ((u["seller_tier"] if u else "") or "free").lower()
+
+def _squire_require_pro(conn, email: str):
+    """Criterion 1: Squire is gated to Pro. Every Squire endpoint passes through here."""
+    if not _squire_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    email = (email or "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=401, detail="Please sign in.")
+    tier = _seller_tier_of(conn, email)
+    if tier != "pro":
+        raise HTTPException(status_code=403, detail="Squire comes with the Pro plan ($20 a month). Watches and For You stay free on every plan.")
+    return email
+
+def _squire_allowance(conn, email: str) -> dict:
+    period = _squire_period()
+    used = conn.execute("SELECT COUNT(*) AS n FROM squire_approaches WHERE email=? AND substr(created_at,1,7)=?",
+                        (email, period)).fetchone()["n"]
+    row = conn.execute("SELECT extra FROM squire_allowance WHERE email=? AND period=?", (email, period)).fetchone()
+    extra = int(row["extra"]) if row else 0
+    limit_n = SQUIRE_INCLUDED_APPROACHES + extra
+    return {"period": period, "included": SQUIRE_INCLUDED_APPROACHES, "extra": extra, "used": used,
+            "limit": limit_n, "remaining": max(0, limit_n - used),
+            "offer": {"approaches": SQUIRE_TOPUP_BUNDLE, "tuppence": SQUIRE_TOPUP_TUPPENCE,
+                      "text": "Another %d for %dT?" % (SQUIRE_TOPUP_BUNDLE, SQUIRE_TOPUP_TUPPENCE)},
+            "warn": max(0, limit_n - used) <= SQUIRE_WARN_AT}
+
+def _squire_event(conn, email, kind, tier, category, limit_n=None, detail=""):
+    """Rung 3: every ceiling hit writes telemetry with limit, tier and category."""
+    conn.execute("INSERT INTO squire_events (ts, email, kind, tier, category, limit_n, detail) VALUES (?,?,?,?,?,?,?)",
+                 (_squire_now(), email, kind, tier, category, limit_n, (detail or "")[:400]))
+
+_MINOR_RX = re.compile(r"\b(my|our)\s+(\d{1,2}[- ]?year[- ]?old|son|daughter|child|kid|teenager|toddler|boy|girl)\b|\bgrade\s*\d{1,2}\b|\b(\d{1,2})\s*(yr|yrs|years?)\s*old\b", re.I)
+_NAME_AFTER_RX = re.compile(r"\b(named|called|name is)\s+([A-Z][a-z]+)", re.I)
+_SCHOOL_RX = re.compile(r"\b[A-Z][\w'&-]*(?:\s+[A-Z][\w'&-]*)*\s+(School|College|Primary|High|Academy|Laerskool|Hoërskool)\b")
+
+def _squire_minimise(text: str, is_minor: bool) -> str:
+    """POPIA (boundary 6): a brief about a child carries the NEED, never the child. Names,
+    schools and addresses come out; the grade and the gap stay."""
+    t = text or ""
+    if not is_minor:
+        return t
+    t = re.sub(r"\b(my|our)\s+\d{1,2}[- ]?year[- ]?old(\s+(son|daughter|child|kid|boy|girl))?\b", "a learner", t, flags=re.I)
+    t = re.sub(r"\b(my|our)\s+(son|daughter|child|kid|boy|girl)\b", "a learner", t, flags=re.I)
+    t = re.sub(r"\b(\d{1,2})[- ]?year[- ]?old\b", "a learner", t, flags=re.I)
+    t = re.sub(r"\s*\b(named|called|name is)\s+[A-Z][\w'-]+", "", t)
+    t = _SCHOOL_RX.sub("their school", t)
+    t = re.sub(r"\b\d{1,4}\s+[A-Z][a-z]+\s+(Street|Road|Avenue|Drive|Lane|Str|Rd|Ave)\b", "the area", t)
+    return re.sub(r"\s{2,}", " ", t).strip()
+
+_FORGOT_QUESTIONS = {
+    "Tutors":     ["IEB or CAPS (or another curriculum)?", "Is a police clearance required?"],
+    "Services":   ["Do you need a quote first, or a fixed call-out?", "Weekday, weekend, or urgent?"],
+    "Property":   ["Furnished or unfurnished?", "Earliest move-in date?"],
+    "Cars":       ["Manual or automatic?", "Is a full service history a must?"],
+    "Collectors": ["Graded only, or raw acceptable?", "Is shipping fine, or collect in person?"],
+    "Travel":     ["Dates fixed or flexible?", "How many travellers?"],
+    "Local Market": ["Collect or deliver?", "Once-off or a repeat order?"],
+}
+
+def _squire_draft_brief(need: str, cat_norm: str, chips: list, is_minor: bool, email: str) -> str:
+    """The Sonnet-class call is reserved for brief drafting (what the cap pays for). A template
+    answers when no provider is live or the ceiling refuses, so a brief is never lost."""
+    chip_txt = ", ".join(c.get("label", "") for c in chips if c.get("label")) or "no filters yet"
+    template = ("Looking for %s. Path: %s. In the buyer's words: %s" % (cat_norm.lower(), chip_txt, _squire_minimise(need, is_minor).strip()))
+    try:
+        _check_cost_ceiling(email)
+        sys_p = ("You write a short brief (max 80 words) from a buyer to a seller on an anonymous marketplace. "
+                 "Describe the NEED only: what is wanted, when, where (suburb level at most), budget if given, and the two "
+                 "details a seller needs to say yes. Never include a name, a school, a street address, a phone number or an "
+                 "email. If the brief concerns a child, refer to them only as 'a learner' with a grade. Plain sentences.")
+        res = ai_provider.complete([{"role": "user", "content": "CATEGORY: %s\nCHIPS: %s\nBUYER SAID: %s" % (cat_norm, chip_txt, _squire_minimise(need, is_minor))}],
+                                   task="reason", max_tokens=220, system=sys_p, provider=_ts_active_provider(), timeout=30)
+        if getattr(res, "ok", False) and (res.text or "").strip():
+            try:
+                _log_ai_spend(email, "/squire/brief", "reason", getattr(res, "in_tokens", None), getattr(res, "out_tokens", None),
+                              provider=getattr(res, "provider", None), model=getattr(res, "model", None))
+            except Exception:
+                pass
+            out = res.text.strip()
+            return _squire_minimise(out, is_minor)
+    except HTTPException:
+        raise
+    except Exception:
+        pass
+    return template
+
+def _squire_shortlist(conn, brief) -> list:
+    """Rule-based matching over the SAME reach-scoped set Zoom uses -- cheap, nightly-safe. Reasons
+    are facts a buyer can check: chips matched, trust, quality, availability. Seller identity never
+    enters: every row is stripped before it reaches this function's output."""
+    email = brief["email"]
+    tier = _buyer_reach_tier(conn, email)   # RUL-078: Pro -> global
+    cat_norm = _zoom.norm_cat(brief["category"])
+    cands, _lk = _zoom_candidates(conn, cat_norm, brief["city"] or "Pretoria", 0, tier)
+    chosen = {}
+    for part in (brief["path"] or "").split("|"):
+        if ":" in part:
+            k, v = part.split(":", 1); chosen[k] = unquote(v)
+    res = _zoom.next_step(cands, cat_norm, chosen, tier=tier, quality_fn=lambda r: _import_quality_score(r)[0])
+    by_id = {r["id"]: r for r in cands}
+    out = []
+    nchips = len([c for c in res["chips"] if not c.get("auto")])
+    for lid in res["ids"][:12]:
+        r = by_id.get(lid)
+        if not r:
+            continue
+        reasons = []
+        if nchips:
+            reasons.append("matches all %d of your chips" % nchips if nchips > 1 else "matches your chip")
+        t = int(r.get("trust_score") or 0)
+        reasons.append("trust %d" % t)
+        q = r.get("quality_score")
+        if q is not None:
+            reasons.append("listing quality %d" % int(q))
+        if r.get("availability"):
+            reasons.append("available %s" % r["availability"])
+        if r.get("mode"):
+            reasons.append(str(r["mode"]).lower())
+        if r.get("attested_at"):
+            reasons.append("specs attested by the seller")
+        if r.get("super_example"):
+            reasons.append("AI example advert")
+        out.append({"listing_id": lid, "score": res["scores"].get(str(lid)), "reasons": reasons,
+                    "listing": _zoom_public_row(r)})
+    return out
+
+def _squire_store_matches(conn, brief_id, shortlist):
+    now = _squire_now(); new = 0
+    for m in shortlist:
+        cur = conn.execute("INSERT OR IGNORE INTO squire_matches (brief_id, listing_id, score, reasons, created_at) VALUES (?,?,?,?,?)",
+                           (brief_id, m["listing_id"], m["score"], json.dumps(m["reasons"]), now))
+        new += cur.rowcount
+        conn.execute("UPDATE squire_matches SET score=?, reasons=? WHERE brief_id=? AND listing_id=?",
+                     (m["score"], json.dumps(m["reasons"]), brief_id, m["listing_id"]))
+    conn.execute("UPDATE squire_briefs SET last_match_at=? WHERE id=?", (now, brief_id))
+    return new
+
+class _SquireBriefIn(BaseModel):
+    email: str
+    need_text: str
+    category: Optional[str] = None
+    city: Optional[str] = None
+
+@app.get("/squire/status")
+def squire_status(email: str = "", ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """Answers for ANY signed-in user (so the app can show what Pro buys) -- but capability starts
+    at Pro: briefs, shortlists and approaches are refused below it."""
+    if not _squire_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    em = (_actor(ts_user, email, "squire-status", x_admin_key) or "").strip().lower()
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        tier = _seller_tier_of(conn, em) if em else "free"
+        pro = tier == "pro"
+        out = {"pro": pro, "tier": tier, "included": SQUIRE_INCLUDED_APPROACHES,
+               "topup": {"approaches": SQUIRE_TOPUP_BUNDLE, "tuppence": SQUIRE_TOPUP_TUPPENCE}, "briefs": []}
+        if pro:
+            out["allowance"] = _squire_allowance(conn, em)
+            out["reach"] = _buyer_reach_tier(conn, em)
+            for b in conn.execute("SELECT * FROM squire_briefs WHERE email=? AND status!='deleted' ORDER BY id DESC", (em,)).fetchall():
+                d = dict(b)
+                d["questions"] = json.loads(d.get("questions") or "[]"); d["answers"] = json.loads(d.get("answers") or "{}")
+                d["matches"] = conn.execute("SELECT COUNT(*) AS n FROM squire_matches WHERE brief_id=?", (b["id"],)).fetchone()["n"]
+                d["new_matches"] = conn.execute("SELECT COUNT(*) AS n FROM squire_matches WHERE brief_id=? AND seen=0", (b["id"],)).fetchone()["n"]
+                out["briefs"].append(d)
+        return out
+    finally:
+        conn.close()
+
+@app.post("/squire/brief")
+def squire_brief_create(body: _SquireBriefIn, ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        em = _squire_require_pro(conn, _actor(ts_user, body.email, "squire-brief", x_admin_key))
+        need = (body.need_text or "").strip()
+        if len(need) < 8:
+            raise HTTPException(status_code=400, detail="Say it in a sentence or two.")
+        cat_norm = _zoom.norm_cat(body.category or "") if body.category else _squire_guess_category(need)
+        city = (body.city or "Pretoria").strip()
+        is_minor = 1 if _MINOR_RX.search(need) else 0
+        tier = _buyer_reach_tier(conn, em)
+        cands, _lk = _zoom_candidates(conn, cat_norm, city, 0, tier)
+        # SPECIFIES: plain words -> a Zoom path (rule 4 of the funnel), then prose
+        res = _zoom.next_step(cands, cat_norm, {}, tier=tier, text=need)
+        chips = [c for c in res["chips"] if not c.get("auto")]
+        path = "|".join("%s:%s" % (c["facet"], c["v"]) for c in chips)
+        brief_text = _squire_draft_brief(need, cat_norm, chips, bool(is_minor), em)
+        questions = _FORGOT_QUESTIONS.get(cat_norm, ["When do you need it by?", "What is your budget?"])
+        now = _squire_now()
+        cur = conn.execute("INSERT INTO squire_briefs (email, category, city, need_text, path, brief_text, questions, answers, is_minor, status, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                           (em, cat_norm, city, _squire_minimise(need, bool(is_minor)) if is_minor else need, path, brief_text,
+                            json.dumps(questions), "{}", is_minor, "active", now, now))
+        bid = cur.lastrowid
+        b = dict(conn.execute("SELECT * FROM squire_briefs WHERE id=?", (bid,)).fetchone())
+        sl = _squire_shortlist(conn, b)
+        _squire_store_matches(conn, bid, sl)
+        conn.commit()
+        return {"brief_id": bid, "category": cat_norm, "chips": chips, "brief_text": brief_text, "questions": questions,
+                "is_minor": bool(is_minor), "matches": len(sl), "shortlist": sl[:5]}
+    finally:
+        conn.close()
+
+def _squire_guess_category(need: str) -> str:
+    t = (need or "").lower()
+    for cat, rx in (("Tutors", r"tutor|teach|lesson|maths|matric|grade|coach"), ("Property", r"rent|flat|apartment|house|bedroom|to let|buy a home"),
+                    ("Cars", r"\bcar\b|bakkie|hilux|bmw|toyota|vehicle|mileage"), ("Collectors", r"card|coin|stamp|lego|collect|graded|krugerrand"),
+                    ("Travel", r"tour|safari|lodge|stay|trip|guide|holiday"), ("Services", r"plumb|electric|garden|paint|clean|handyman|repair")):
+        if re.search(rx, t):
+            return cat
+    return "Local Market"
+
+class _SquireAnswersIn(BaseModel):
+    email: str
+    answers: dict
+
+@app.post("/squire/brief/{brief_id}/answers")
+def squire_brief_answers(brief_id: int, body: _SquireAnswersIn, ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        em = _squire_require_pro(conn, _actor(ts_user, body.email, "squire-answers", x_admin_key))
+        b = conn.execute("SELECT * FROM squire_briefs WHERE id=? AND email=?", (brief_id, em)).fetchone()
+        if not b:
+            raise HTTPException(status_code=404, detail="brief not found")
+        ans = {str(k)[:80]: _squire_minimise(str(v)[:300], bool(b["is_minor"])) for k, v in (body.answers or {}).items()}
+        conn.execute("UPDATE squire_briefs SET answers=?, updated_at=? WHERE id=?", (json.dumps(ans), _squire_now(), brief_id))
+        conn.commit()
+        return {"ok": True, "answers": ans}
+    finally:
+        conn.close()
+
+@app.get("/squire/brief/{brief_id}/shortlist")
+def squire_brief_shortlist(brief_id: int, email: str = "", refresh: int = 0, ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        em = _squire_require_pro(conn, _actor(ts_user, email, "squire-shortlist", x_admin_key))
+        b = conn.execute("SELECT * FROM squire_briefs WHERE id=? AND email=?", (brief_id, em)).fetchone()
+        if not b:
+            raise HTTPException(status_code=404, detail="brief not found")
+        sl = _squire_shortlist(conn, dict(b))
+        if refresh:
+            _squire_store_matches(conn, brief_id, sl)
+        conn.execute("UPDATE squire_matches SET seen=1 WHERE brief_id=?", (brief_id,))
+        appr = {r["listing_id"]: dict(r) for r in conn.execute("SELECT * FROM squire_approaches WHERE brief_id=? ORDER BY id", (brief_id,)).fetchall()}
+        for m in sl:
+            a = appr.get(m["listing_id"])
+            if a:
+                m["approach"] = {"id": a["id"], "status": a["status"], "answer": a["answer"], "created_at": a["created_at"]}
+        conn.commit()
+        return {"brief_id": brief_id, "allowance": _squire_allowance(conn, em), "shortlist": sl}
+    finally:
+        conn.close()
+
+class _SquireApproachIn(BaseModel):
+    email: str
+    brief_id: int
+    listing_id: int
+    text: Optional[str] = None
+    draft_only: int = 0        # rung 2: check the ceiling BEFORE composing, charge nothing
+
+@app.post("/squire/approach")
+def squire_approach(body: _SquireApproachIn, ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """THE METERED UNIT. Never grants an introduction: the seller receives the NEED and answers
+    through Squire; the buyer still requests an introduction the ordinary way (1T held)."""
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        em = _squire_require_pro(conn, _actor(ts_user, body.email, "squire-approach", x_admin_key))
+        b = conn.execute("SELECT * FROM squire_briefs WHERE id=? AND email=?", (body.brief_id, em)).fetchone()
+        if not b:
+            raise HTTPException(status_code=404, detail="brief not found")
+        al = _squire_allowance(conn, em)
+        if body.draft_only:
+            # rung 2: warn before effort is spent; nothing is charged, nothing is written
+            return {"status": "ok" if al["remaining"] > 0 else "ceiling", "allowance": al,
+                    "warn": al["warn"], "message": (None if al["remaining"] > SQUIRE_WARN_AT else
+                            ("You have %d approach%s left this month." % (al["remaining"], "" if al["remaining"] == 1 else "es")
+                             if al["remaining"] > 0 else
+                             "You've used your %d approaches this month. %s" % (al["limit"], al["offer"]["text"])))}
+        if al["remaining"] <= 0:
+            # rung 1: the rejection and the offer arrive together; no charge on a rejected attempt;
+            # the drafted text is returned to the caller UNCHANGED so it is never lost
+            _squire_event(conn, em, "ceiling_hit", "pro", b["category"], al["limit"], "approach refused at cap")
+            conn.commit()
+            return {"status": "ceiling", "allowance": al, "draft": body.text or "",
+                    "message": "You've used your %d approaches this month. %s" % (al["limit"], al["offer"]["text"]),
+                    "offer": al["offer"]}
+        lst = conn.execute("SELECT id, seller_email, title, category FROM listings WHERE id=?", (body.listing_id,)).fetchone()
+        if not lst:
+            raise HTTPException(status_code=404, detail="listing not found")
+        text = (body.text or b["brief_text"] or b["need_text"] or "").strip()
+        text = _squire_minimise(text, bool(b["is_minor"]))[:1200]
+        if not text:
+            raise HTTPException(status_code=400, detail="nothing to send")
+        ans = json.loads(b["answers"] or "{}")
+        if ans:
+            text += "\n\n" + "\n".join("%s %s" % (k, v) for k, v in ans.items())
+        now = _squire_now()
+        cur = conn.execute("INSERT INTO squire_approaches (brief_id, listing_id, email, text, status, created_at) VALUES (?,?,?,?,?,?)",
+                           (body.brief_id, body.listing_id, em, text, "sent", now))
+        aid = cur.lastrowid
+        conn.commit()
+        # deliver the NEED to the seller -- anonymous both ways; the buyer's identity is never in it
+        try:
+            _push_to_seller(conn, lst["seller_email"], "A buyer's brief for your listing",
+                            "A Pro buyer's agent sent a brief for '%s'. Open Squire in My Space to answer before any introduction." % (lst["title"] or "your listing")[:80])
+        except Exception:
+            pass
+        al2 = _squire_allowance(conn, em)
+        return {"status": "sent", "approach_id": aid, "allowance": al2,
+                "note": "Sent as your need, not your name. When you want the seller's details, request an introduction the usual way (1T)."}
+    finally:
+        conn.close()
+
+class _SquireAnswerIn(BaseModel):
+    email: str          # the SELLER answering
+    answer: str
+
+@app.get("/squire/inbox")
+def squire_inbox(email: str = "", ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """The seller's side: briefs sent to their listings. No buyer identity -- the brief is the need."""
+    if not _squire_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    em = (_actor(ts_user, email, "squire-inbox", x_admin_key) or "").strip().lower()
+    if not em:
+        raise HTTPException(status_code=401, detail="Please sign in.")
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        rows = conn.execute("SELECT a.id, a.listing_id, a.text, a.status, a.answer, a.created_at, a.answered_at, l.title FROM squire_approaches a "
+                            "JOIN listings l ON l.id=a.listing_id WHERE LOWER(l.seller_email)=? ORDER BY a.id DESC", (em,)).fetchall()
+        return {"approaches": [dict(r) for r in rows]}
+    finally:
+        conn.close()
+
+@app.post("/squire/approach/{approach_id}/answer")
+def squire_approach_answer(approach_id: int, body: _SquireAnswerIn, ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    if not _squire_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    em = (_actor(ts_user, body.email, "squire-answer", x_admin_key) or "").strip().lower()
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        a = conn.execute("SELECT a.*, l.seller_email FROM squire_approaches a JOIN listings l ON l.id=a.listing_id WHERE a.id=?", (approach_id,)).fetchone()
+        if not a or (a["seller_email"] or "").lower() != em:
+            raise HTTPException(status_code=404, detail="not yours")
+        conn.execute("UPDATE squire_approaches SET answer=?, status='answered', answered_at=? WHERE id=?",
+                     ((body.answer or "").strip()[:1200], _squire_now(), approach_id))
+        conn.commit()
+        try:
+            _push_to_seller(conn, a["email"], "A seller answered your brief", "Open Squire to read the answer -- then request an introduction if it fits.")
+        except Exception:
+            pass
+        return {"ok": True}
+    finally:
+        conn.close()
+
+class _SquireTopupIn(BaseModel):
+    email: str
+
+@app.post("/squire/topup")
+def squire_topup(body: _SquireTopupIn, ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """Criterion 8: the top-up is TUPPENCE. One ledger row, one allowance row, one transaction --
+    money-touching writes are transactional (scale-shape invariant 2). No refunds (canon)."""
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        em = _squire_require_pro(conn, _actor(ts_user, body.email, "squire-topup", x_admin_key))
+        if not conn.in_transaction:
+            conn.execute("BEGIN IMMEDIATE")
+        bal = conn.execute("SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?", (em,)).fetchone()["bal"]
+        if bal is None or bal < SQUIRE_TOPUP_TUPPENCE:
+            conn.rollback()
+            raise HTTPException(status_code=402, detail="%dT is needed for %d more approaches. Top up your Tuppence first." % (SQUIRE_TOPUP_TUPPENCE, SQUIRE_TOPUP_BUNDLE))
+        period = _squire_period()
+        conn.execute("INSERT INTO transactions (user_email, type, amount, description) VALUES (?, 'squire_topup', ?, ?)",
+                     (em, -SQUIRE_TOPUP_TUPPENCE, "Squire: %d more approaches this month (%s)" % (SQUIRE_TOPUP_BUNDLE, period)))
+        conn.execute("INSERT INTO squire_allowance (email, period, extra) VALUES (?,?,?) ON CONFLICT(email, period) DO UPDATE SET extra = extra + excluded.extra",
+                     (em, period, SQUIRE_TOPUP_BUNDLE))
+        _squire_event(conn, em, "topup", "pro", None, None, "%d approaches for %dT" % (SQUIRE_TOPUP_BUNDLE, SQUIRE_TOPUP_TUPPENCE))
+        conn.commit()
+        return {"status": "ok", "allowance": _squire_allowance(conn, em), "charged_tuppence": SQUIRE_TOPUP_TUPPENCE}
+    finally:
+        conn.close()
+
+@app.delete("/squire/brief/{brief_id}")
+def squire_brief_delete(brief_id: int, email: str = "", ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        em = _squire_require_pro(conn, _actor(ts_user, email, "squire-delete", x_admin_key))
+        conn.execute("UPDATE squire_briefs SET status='deleted', updated_at=? WHERE id=? AND email=?", (_squire_now(), brief_id, em))
+        conn.commit()
+        return {"ok": True}
+    finally:
+        conn.close()
+
+def _squire_watch_all(conn):
+    """WATCHES while the user sleeps (RUL-070): every active brief re-matched; new matches pushed."""
+    _squire_ensure(conn)
+    n_briefs = n_new = 0
+    for b in conn.execute("SELECT * FROM squire_briefs WHERE status='active'").fetchall():
+        b = dict(b)
+        if _seller_tier_of(conn, b["email"]) != "pro":
+            continue     # criterion 1 holds on the schedule too: a lapsed Pro is not watched for
+        try:
+            sl = _squire_shortlist(conn, b)
+            new = _squire_store_matches(conn, b["id"], sl)
+            n_briefs += 1; n_new += new
+            if new:
+                try:
+                    _push_to_seller(conn, b["email"], "Squire found %d new match%s" % (new, "" if new == 1 else "es"),
+                                    "For your brief: %s" % (b["need_text"] or "")[:60])
+                except Exception:
+                    pass
+        except Exception as ex:
+            try:
+                _log.warning("squire watch: brief %s skipped (%s)", b.get("id"), ex)
+            except Exception:
+                pass
+    conn.commit()
+    return {"briefs": n_briefs, "new_matches": n_new}
+
+@app.post("/squire/run-all")
+def squire_run_all(_admin=Depends(_require_admin_or_key)):
+    if not _squire_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    conn = database.get_db()
+    try:
+        return _squire_watch_all(conn)
+    finally:
+        conn.close()
+
+if os.getenv("SQUIRE_WATCH_ENABLED", "1") == "1":
+    def _squire_watch_loop():
+        import time as _st
+        _st.sleep(240)
+        while True:
+            try:
+                if _squire_on():
+                    _c = database.get_db()
+                    try:
+                        _r = _squire_watch_all(_c)
+                    finally:
+                        _c.close()
+                    print("SQUIRE-WATCH: %s" % _r)
+            except Exception as _se:
+                print("SQUIRE-WATCH error: %s" % _se)
+            _st.sleep(6 * 3600)
+    threading.Thread(target=_squire_watch_loop, daemon=True).start()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# ONE $5 TIER — Global buyer reach folds into Starter (RUL-128 · RUL-080 · 17 Sep 2026)
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# THE LADDER once armed: Free (local, 2 slots) · Starter $5 (10 slots + global buyer reach) ·
+# Pro $20 (30 slots + reach + Squire). The separate buyer subscription retires. EXECUTION CARE
+# (RUL-128, David's own words): wishlist_subscriptions is a LIVE Paystack-backed table -- an
+# existing Global subscriber KEEPS what they bought, is migrated to Starter at the SAME price,
+# and is never cancelled and re-sold. So: their wishlist row is never touched (it still grants
+# reach through _buyer_tier), Paystack is never called, and the fold GRANTS Starter to the
+# account until the reach they paid for expires. The fold runs at the moment David ARMS the
+# batch (POST /admin/flags baseline_q4 -> 1), audited per account, idempotent, and dark before.
+def _fold_global_into_starter(conn, actor="admin"):
+    """Idempotent: a subscriber already on starter/pro/agency is left alone."""
+    now = datetime.now(timezone.utc)
+    rows = conn.execute("SELECT w.buyer_token, w.expires_at, w.paystack_ref, u.email, u.seller_tier FROM wishlist_subscriptions w "
+                        "JOIN users u ON u.buyer_token = w.buyer_token WHERE w.tier='global'").fetchall()
+    moved = []
+    for r in rows:
+        exp = r["expires_at"]
+        try:
+            if exp and datetime.fromisoformat(exp) < now:
+                continue          # lapsed: nothing bought to keep
+        except Exception:
+            pass
+        st = (r["seller_tier"] or "free").lower()
+        if st in ("starter", "pro", "agency"):
+            continue
+        conn.execute("UPDATE users SET seller_tier='starter', slot_limit=?, billing_period_end=COALESCE(billing_period_end, ?) WHERE LOWER(email)=?",
+                     (_tier_slot_limit("starter"), exp, r["email"].lower()))
+        try:
+            conn.execute("INSERT INTO admin_audit (ts, actor, action, field, prior, new, reason) VALUES (?,?,?,?,?,?,?)",
+                         (now.strftime("%Y-%m-%dT%H:%M:%SZ"), actor, "RUL-128 fold", "seller_tier:" + r["email"].lower(), st, "starter",
+                          "Global buyer reach folded into Starter at the same price; Paystack untouched (%s); reach until %s" % (r["paystack_ref"] or "-", exp or "-")))
+        except Exception:
+            pass
+        moved.append(r["email"].lower())
+    return moved
+
+@app.get("/pricing/ladder")
+def pricing_ladder():
+    """The ONE ladder the pricing page reads (RUL-128 once armed; the pre-fold shape before).
+    Numbers come from _SELLER_SUB_TIERS -- PRICING_CANON's source of truth -- never typed twice."""
+    armed = _baseline_q4_on()
+    t = _SELLER_SUB_TIERS
+    ladder = [
+        {"id": "free", "label": t["free"]["label"], "usd": t["free"]["usd"], "slots": t["free"]["slot_limit"],
+         "reach": "local", "features": ["%d active listing slots" % t["free"]["slot_limit"], "Local buyer reach (your city)", "Tuppence pay-as-you-go", "Anonymous seller profile"]},
+        {"id": "starter", "label": t["starter"]["label"], "usd": t["starter"]["usd"], "slots": t["starter"]["slot_limit"],
+         "reach": "global" if armed else "local",
+         "features": ["%d active listing slots" % t["starter"]["slot_limit"]] + (["Global buyer reach — national + worldwide"] if armed else []) + ["+2 Tuppence every month", "All features included"]},
+        {"id": "pro", "label": t["pro"]["label"], "usd": t["pro"]["usd"], "slots": t["pro"]["slot_limit"],
+         "reach": "global",
+         "features": ["%d active listing slots" % t["pro"]["slot_limit"], "Global buyer reach — national + worldwide", "+10 Tuppence every month"] + (["Squire — your personal agent (%d approaches a month, top-ups in Tuppence)" % SQUIRE_INCLUDED_APPROACHES] if armed else []) + ["All features included"]},
+    ]
+    return {"armed": armed, "ladder": ladder,
+            "buyer_subscription": None if armed else {"id": "global", "usd": WISHLIST_GLOBAL_USD, "label": "Global buyer reach"},
+            "note": ("One ladder: reach comes with Starter and Pro. Introductions still cost 1 Tuppence on every plan." if armed
+                     else "Two $5 products today: Starter (seller slots) and Global (buyer reach).")}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# AIPROV-FUNDS-1 — "can this AI function STOP?" (RG-0203 · 17 Sep 2026 · RUL-126 batch)
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# One row per app AI FUNCTION (fast / reason / vision / triage) x the lane that serves it, with
+# the money each lane can still spend. EVIDENCE LADDER (21 Aug doctrine): our own spend is
+# PROBED (ai_spend_log, the daily ceiling); a vendor's balance is NOT -- none of the four lanes
+# exposes a probeable balance to an API key (Anthropic/OpenAI: usage reports only; Scaleway:
+# postpaid; Gemini: prepaid credits with no API) -- so a balance renders NOT MEASURED plus a
+# DATED, manually entered last-known figure, never a guessed colour (RG-0133). Each lane carries
+# its auto-top-up state, because the stop-risk this gauge exists to kill is credit exhaustion.
+# The manual figures live in ai_funds.json beside main.py: a config file, written by the admin
+# endpoint below, never by a deploy.
+_AI_FUNDS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ai_funds.json")
+_AI_FUNDS_DEFAULT = {
+    "anthropic": {"balance_usd": None, "as_of": None, "auto_topup": "unknown", "note": "Console -> Billing; auto-reload armed 29 Aug 2026 (David) -- confirm and date it here"},
+    "openai":    {"balance_usd": None, "as_of": None, "auto_topup": "unknown", "note": "Platform -> Billing; auto-recharge armed 29 Aug 2026 (David) -- confirm and date it here"},
+    "scaleway":  {"balance_usd": None, "as_of": None, "auto_topup": "postpaid", "note": "Postpaid, invoiced monthly -- alert only, cannot run dry mid-month"},
+    "gemini":    {"balance_usd": None, "as_of": None, "auto_topup": "prepaid", "note": "Prepaid credits (D5) -- no API exposes the remainder"},
+}
+
+def _ai_funds_read():
+    try:
+        with open(_AI_FUNDS_PATH, encoding="utf-8") as fh:
+            d = json.load(fh)
+        out = json.loads(json.dumps(_AI_FUNDS_DEFAULT))
+        for k, v in (d or {}).items():
+            if k in out and isinstance(v, dict):
+                out[k].update(v)
+        return out
+    except Exception:
+        return json.loads(json.dumps(_AI_FUNDS_DEFAULT))
+
+def _ai_funds_write(d):
+    tmp = _AI_FUNDS_PATH + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump(d, fh, indent=1)
+    os.replace(tmp, _AI_FUNDS_PATH)
+
+@app.get("/dashboard/ai-funds")
+def dashboard_ai_funds():
+    """The gauge behind the +1 card's data-ai-funds strip. Numbers only where something probed
+    them; NOT MEASURED where nothing did. No health colour is decided here -- the strip paints grey
+    until data answers (RG-0133)."""
+    funds = _ai_funds_read()
+    conn = database.get_db()
+    try:
+        cfg = conn.execute("SELECT daily_platform_ceiling_usd FROM ai_spend_config LIMIT 1").fetchone()
+        ceiling = float(cfg["daily_platform_ceiling_usd"]) if cfg and cfg["daily_platform_ceiling_usd"] is not None else None
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        month = today[:7]
+        rows = conn.execute("SELECT provider, model, SUM(est_cost_usd) AS usd, COUNT(*) AS n, "
+                            "SUM(CASE WHEN substr(logged_at,1,10)=? THEN est_cost_usd ELSE 0 END) AS today_usd "
+                            "FROM ai_spend_log WHERE substr(logged_at,1,7)=? GROUP BY provider, model", (today, month)).fetchall()
+        d30 = conn.execute("SELECT provider, SUM(est_cost_usd) AS usd FROM ai_spend_log WHERE logged_at >= ? GROUP BY provider",
+                           ((datetime.now(timezone.utc) - timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ"),)).fetchall()
+    finally:
+        conn.close()
+    by_lane_task = {}
+    lane_month = {}
+    for r in rows:
+        lane = (r["provider"] or "unknown").lower()
+        task = (r["model"] or "").lower()
+        # tier keys are FUNCTIONAL (TIER-NAME-1); old rows may still say a model id -- fold them by family
+        if task not in ("fast", "reason", "vision", "triage"):
+            task = "vision" if "vision" in task else ("reason" if ("sonnet" in task or "reason" in task) else "fast")
+        by_lane_task[(lane, task)] = {"month_usd": round(float(r["usd"] or 0), 4), "today_usd": round(float(r["today_usd"] or 0), 4), "calls": int(r["n"] or 0)}
+        lane_month[lane] = lane_month.get(lane, 0.0) + float(r["usd"] or 0)
+    daily_avg = {(r["provider"] or "unknown").lower(): float(r["usd"] or 0) / 30.0 for r in d30}
+    active = _ts_active_provider()
+    functions = []
+    for task, label in (("fast", "Everyday text"), ("reason", "Reasoning / drafting"), ("vision", "Photo reading"), ("triage", "Email triage")):
+        lane = active
+        try:
+            if not ai_provider.TASK_MODEL.get(lane, {}).get(task):
+                lane = next((p for p in ("anthropic", "openai", "scaleway") if ai_provider.TASK_MODEL.get(p, {}).get(task)), active)
+        except Exception:
+            pass
+        spend = by_lane_task.get((lane, task), {"month_usd": 0.0, "today_usd": 0.0, "calls": 0})
+        f = funds.get(lane, {})
+        bal = f.get("balance_usd"); as_of = f.get("as_of")
+        runway = None; runway_basis = "NOT MEASURED"
+        if bal is not None and as_of:
+            # spend since the figure was written comes off it; runway divides by the lane's 30-day daily average
+            try:
+                since = datetime.fromisoformat(as_of[:10]).replace(tzinfo=timezone.utc).strftime("%Y-%m-%dT00:00:00Z")
+                c2 = database.get_db()
+                try:
+                    used = c2.execute("SELECT COALESCE(SUM(est_cost_usd),0) AS u FROM ai_spend_log WHERE LOWER(provider)=? AND logged_at >= ?", (lane, since)).fetchone()["u"]
+                finally:
+                    c2.close()
+                remaining = float(bal) - float(used or 0)
+                avg = daily_avg.get(lane, 0.0)
+                runway = round(remaining / avg, 1) if avg > 0 else None
+                runway_basis = "manual figure of $%.2f on %s minus $%.2f measured spend since" % (float(bal), as_of[:10], float(used or 0))
+            except Exception:
+                runway = None
+        functions.append({"task": task, "label": label, "lane": lane, "model": (ai_provider.TASK_MODEL.get(lane, {}) or {}).get(task),
+                          "today_usd": spend["today_usd"], "month_usd": spend["month_usd"], "calls_month": spend["calls"],
+                          "ceiling_usd": ceiling, "ceiling_left_today_usd": (round(ceiling - spend["today_usd"], 2) if ceiling is not None else None),
+                          "funds": ("NOT MEASURED" if bal is None else {"balance_usd": bal, "as_of": as_of}),
+                          "runway_days": runway, "runway_basis": runway_basis,
+                          "auto_topup": f.get("auto_topup", "unknown"), "note": f.get("note", "")})
+    lanes = {}
+    for lane, f in funds.items():
+        lanes[lane] = dict(f, month_spend_usd=round(lane_month.get(lane, 0.0), 4), daily_avg_usd=round(daily_avg.get(lane, 0.0), 4),
+                           measured=(f.get("balance_usd") is not None))
+    return {"updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "active_lane": active,
+            "ceiling_usd_per_day": ceiling, "functions": functions, "lanes": lanes,
+            "honesty": "Vendor balances are NOT MEASURED by any API we hold; a dated manual figure is shown where one was entered. Spend and the daily ceiling are measured."}
+
+class _AiFundsIn(BaseModel):
+    lane: str
+    balance_usd: Optional[float] = None
+    as_of: Optional[str] = None            # YYYY-MM-DD; defaults to today when a balance is given
+    auto_topup: Optional[str] = None       # armed | not armed | postpaid | prepaid | unknown
+    note: Optional[str] = None
+    clear: Optional[bool] = None           # withdraw the manual figure: the lane reads NOT MEASURED again
+
+@app.post("/admin/ai-funds")
+def admin_ai_funds(body: _AiFundsIn, _admin=Depends(_require_admin)):
+    """The dated manual figure. Written by a person who just read the vendor console; the date is
+    part of the figure (an undated status assertion is a defect -- 21 Aug doctrine)."""
+    lane = (body.lane or "").strip().lower()
+    if lane not in _AI_FUNDS_DEFAULT:
+        raise HTTPException(status_code=400, detail="lane must be one of: " + ", ".join(_AI_FUNDS_DEFAULT))
+    d = _ai_funds_read()
+    if body.clear:
+        d[lane]["balance_usd"] = None; d[lane]["as_of"] = None
+    if body.balance_usd is not None:
+        d[lane]["balance_usd"] = float(body.balance_usd)
+        d[lane]["as_of"] = (body.as_of or datetime.now(timezone.utc).strftime("%Y-%m-%d"))[:10]
+    if body.auto_topup is not None:
+        if body.auto_topup not in ("armed", "not armed", "postpaid", "prepaid", "unknown"):
+            raise HTTPException(status_code=400, detail="auto_topup must be armed | not armed | postpaid | prepaid | unknown")
+        d[lane]["auto_topup"] = body.auto_topup
+        d[lane]["auto_topup_as_of"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    if body.note is not None:
+        d[lane]["note"] = body.note[:200]
+    _ai_funds_write(d)
+    return {"ok": True, "lane": lane, "funds": d[lane]}
 
 
 # ── SEC-2 / DEPLOY-CHANNEL-1 (23 Jul 2026, David-approved) ────────────────────

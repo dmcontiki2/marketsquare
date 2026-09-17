@@ -189,3 +189,4 @@ ledger_runs/
 
 # WORK-LOCK-1 (RUL-140, 17 Sep 2026): per-machine stand-off lock, never shipped
 .work_lock
+_verify_rig/

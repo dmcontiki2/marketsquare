@@ -51,11 +51,33 @@ function loadFeatureFlags(){
   try{
     fetch(BEA_URL + '/flags').then(function(r){return r.ok ? r.json() : null;}).then(function(f){
       if(f && f.effective){ window.FEATURES = Object.assign(window.FEATURES, f.effective, {_loaded:true, _raw:f});
-        try{ document.documentElement.setAttribute('data-verified', window.FEATURES.verified_visible ? '1':'0'); }catch(e){} }
+        try{ document.documentElement.setAttribute('data-verified', window.FEATURES.verified_visible ? '1':'0'); }catch(e){}
+        try{ document.documentElement.setAttribute('data-baseline', msBaselineOn() ? '1':'0'); if(typeof _msBaselineApplied==='function') _msBaselineApplied(); }catch(e){} }
     }).catch(function(e){ console.warn('feature flags load failed (default: free-only)', e); });
   }catch(e){ console.warn('feature flags load error', e); }
 }
 loadFeatureFlags();
+
+// ── BASELINE-Q4-1 (RUL-126, 17 Sep 2026): ONE switch for the whole post-launch design batch
+// (Zoom, DCB-001, credential claims, private-seller VEL, Squire, the $5 fold, the funds
+// gauge, the agency letters). Served by /flags as effective.baseline_q4; default OFF, so
+// the existing app is untouched for every user. ARMING IS DAVID'S ACT (RUL-076 s7.4).
+// Local viewing (RUL-076 s7.3 -- David sees it on the actual app LOCALLY first): on a
+// non-production host only, ?baseline=1 turns the preview on for that browser and
+// ?baseline=0 turns it off. The live origin never honours the parameter.
+function msBaselineOn(){
+  try{
+    if(window.FEATURES && window.FEATURES.baseline_q4) return true;
+    var h = String(location.hostname||'');
+    var local = (h==='localhost' || h==='127.0.0.1' || h==='' || /^192\.168\./.test(h) || /^10\./.test(h) || location.protocol==='file:');
+    if(!local) return false;
+    var q = new URLSearchParams(location.search).get('baseline');
+    if(q==='1'){ try{ localStorage.setItem('ts_baseline_preview','1'); }catch(e){} return true; }
+    if(q==='0'){ try{ localStorage.removeItem('ts_baseline_preview'); }catch(e){} return false; }
+    return localStorage.getItem('ts_baseline_preview')==='1';
+  }catch(e){ return false; }
+}
+try{ document.documentElement.setAttribute('data-baseline', msBaselineOn() ? '1':'0'); }catch(e){}
 
 // ── Photo resilience: R2 primary → local Hetzner mirror fallback ─────────
 // If R2 is unreachable, swap src to /media/<key> served from Hetzner disk.
@@ -317,37 +339,10 @@ async function apiPut(path) {
 // ── LIVE LISTINGS LOADER ──────────────────────────────────
 // Merges live BEA listings with demo data for founding sellers.
 // Once real sellers are onboarded, demo data will be removed.
-async function loadLiveListings(retryCount) {
-  if (!BEA_ENABLED || isOffline()) return;
-  const attempt = retryCount || 0;
-  // Clear previously fetched live listings before reload (needed on city switch)
-  for (let i = LISTINGS.length - 1; i >= 0; i--) {
-    if (LISTINGS[i].isLive) LISTINGS.splice(i, 1);
-  }
-  try {
-    const suburbParam = nearbyMode ? '' : (activeSuburb ? '&suburb=' + encodeURIComponent(activeSuburb.name) : '');
-    const demoParam = DEMO_MODE ? '&demo=1' : '';
-    const live = await apiGet('/listings?city=' + encodeURIComponent(activeCity.name) + suburbParam + demoParam);
-    if (!live) {
-      if (attempt < 3) {
-        // Exponential backoff: 3s → 6s → 12s
-        const delay = 3000 * Math.pow(2, attempt);
-        // Show subtle retry indicator on home Local Market tile
-        const lmCount = document.getElementById('lm-home-count');
-        if (lmCount && attempt === 0) lmCount.textContent = 'Connecting…';
-        setTimeout(() => loadLiveListings(attempt + 1), delay);
-      } else {
-        // All retries exhausted — show offline-style message
-        const lmCount = document.getElementById('lm-home-count');
-        if (lmCount) lmCount.textContent = 'Tap to refresh';
-        const lmTile = document.getElementById('lm-home-tile');
-        if (lmTile) lmTile.onclick = () => { loadLiveListings(0); initLMHomeTile(); };
-      }
-      return;
-    }
-    if (live && live.length > 0) {
-      // Map BEA listing format to FEA format and prepend to LISTINGS
-      const mapped = live.map(l => {
+// ZOOM-HMI-1 (17 Sep 2026): the BEA->FEA listing mapper, lifted out of loadLiveListings
+// so the Zoom funnel (which may return rows the city feed never loaded -- a Global
+// buyer's other cities, RUL-078) maps them through the SAME shape. Body unchanged.
+function _msMapBeaListing(l){
         // Extract multi-photo URLs encoded as [photos:url1|url2|...] prefix
         let desc = l.description || '';
         let photos = [];
@@ -458,9 +453,47 @@ async function loadLiveListings(retryCount) {
           linked_wonders: l.linked_wonders || null,
           listing_lat:  l.listing_lat  || null,
           listing_lng:  l.listing_lng  || null,
+          // FOUNDERS-MAP-1 (17 Sep 2026): the BEA has sent `founders` since Canon Addendum 1 and
+          // isFounders() reads l.founders -- but this mapper never copied it, so the Ruby Spark
+          // could not render on a single live listing. Repair lane.
+          founders: !!l.founders,
+          // FIDE-CLAIM-1: tier + title class only (the server never sends name / id / federation)
+          credential_badges: Array.isArray(l.credential_badges) ? l.credential_badges : null,
           beaListingId: l.id
         };
-      });
+}
+
+async function loadLiveListings(retryCount) {
+  if (!BEA_ENABLED || isOffline()) return;
+  const attempt = retryCount || 0;
+  // Clear previously fetched live listings before reload (needed on city switch)
+  for (let i = LISTINGS.length - 1; i >= 0; i--) {
+    if (LISTINGS[i].isLive) LISTINGS.splice(i, 1);
+  }
+  try {
+    const suburbParam = nearbyMode ? '' : (activeSuburb ? '&suburb=' + encodeURIComponent(activeSuburb.name) : '');
+    const demoParam = DEMO_MODE ? '&demo=1' : '';
+    const live = await apiGet('/listings?city=' + encodeURIComponent(activeCity.name) + suburbParam + demoParam);
+    if (!live) {
+      if (attempt < 3) {
+        // Exponential backoff: 3s → 6s → 12s
+        const delay = 3000 * Math.pow(2, attempt);
+        // Show subtle retry indicator on home Local Market tile
+        const lmCount = document.getElementById('lm-home-count');
+        if (lmCount && attempt === 0) lmCount.textContent = 'Connecting…';
+        setTimeout(() => loadLiveListings(attempt + 1), delay);
+      } else {
+        // All retries exhausted — show offline-style message
+        const lmCount = document.getElementById('lm-home-count');
+        if (lmCount) lmCount.textContent = 'Tap to refresh';
+        const lmTile = document.getElementById('lm-home-tile');
+        if (lmTile) lmTile.onclick = () => { loadLiveListings(0); initLMHomeTile(); };
+      }
+      return;
+    }
+    if (live && live.length > 0) {
+      // Map BEA listing format to FEA format and prepend to LISTINGS
+      const mapped = live.map(_msMapBeaListing);
       // Add live listings to front of LISTINGS array
       mapped.forEach(l => {
         // Consolidate tour markets to ONE benchmark: skip the redundant accommodation super-example
@@ -1315,9 +1348,22 @@ function isFounders(l){
   return !!l.founders;                                      // live branch: BEA founders flag
 }
 function fspark(l){
-  return isFounders(l)
+  return (isFounders(l)
     ? `<img src="/static/founders_spark.svg" alt="Founders Badge" style="width:16px;height:16px;vertical-align:middle;margin-left:4px;cursor:pointer;flex:none;" onclick="event.stopPropagation();showToast('Founders Badge · minted at launch 2026 — never minted again',4000)">`
-    : '';
+    : '') + credBadge(l);
+}
+// FIDE-CLAIM-1 (17 Sep 2026): the credential badge -- tier + title CLASS, painted only from what
+// the server's live JOIN sent. Never a name, never an ID, never a federation. Nothing is rendered
+// unless the batch flag is armed (the server sends nothing while dark; the gate here is belt and braces).
+function credBadge(l){
+  try{
+    if(!l || !Array.isArray(l.credential_badges) || !l.credential_badges.length) return '';
+    if(typeof msBaselineOn==='function' && !msBaselineOn()) return '';
+    return l.credential_badges.map(function(b){
+      var a = b.tier==='A';
+      return '<span class="cred-badge'+(a?' a':'')+'" onclick="event.stopPropagation();showToast(\''+String(b.title||'').replace(/'/g,'')+' — matched against the '+String(b.source||'')+' registry we hold'+(a?', anchored to a verified identity':'')+'. This says the credential is real, never that a person is safe.\',5000)">'+_wlEsc(b.title||'')+'</span>';
+    }).join('');
+  }catch(e){ return ''; }
 }
 
 function updateTuppenceUI(){
@@ -1971,6 +2017,7 @@ function sellSheetNewAccount() {
 }
 
 function goTo(name){
+  if(name!=='browse' && name!=='adventures' && typeof zoomReset==='function') zoomReset();   // ZOOM-HMI-1: the funnel lives on the doors only
   // In demo mode block seller-only screens
   if (DEMO_MODE && (name==='tuppence'||name==='dashboard'||name==='onboard'||name==='publish'||name==='sell-b'||name==='plans'||name==='myspace'||name==='wishlist'||name==='guided-onboard'||name==='sell-flow'||name==='ai-features'||name==='agent-suite'||name.startsWith('aa-'))) {
     showToast('This is a demo. Visit trustsquare.co to join as a founding seller.');
@@ -2003,6 +2050,7 @@ function goTo(name){
   if(name==='plans'){
     const el=document.getElementById('plans-home-city');
     if(el) el.textContent=localStorage.getItem('ms_user_city')||activeCity.name||'your city';
+    try{ msRenderLadder(); }catch(e){}   // RUL-128 (flag-gated inside)
   }
   if(name==='onboard') renderMagicBanner();
   if(name==='aa-home')aaRenderHome();
@@ -2208,11 +2256,12 @@ function setPlan(tier, label){
 
 function filterBrowse(cat){
   // Adventures gets its own dedicated screen
-  if(cat==='Adventures'){ goTo('adventures'); refreshAdvCatChips(); renderAdvGrid(); return; }
+  if(cat==='Adventures'){ goTo('adventures'); refreshAdvCatChips(); if(typeof zoomEnter==='function') zoomEnter('Adventures'); renderAdvGrid(); return; }
   activeFilter=cat; goTo('browse');
   document.querySelectorAll('#chip-row .chip').forEach(c=>{
     c.classList.toggle('active', c.textContent.includes(cat)||(cat==='All'&&c.textContent==='All'));
   });
+  if(typeof zoomEnter==='function') zoomEnter(cat);   // ZOOM-HMI-1 (no-op unless the flag is on)
   renderFilterBar(); renderGrid();
   const sub=document.getElementById('browse-sub');
   const cityLabel = activeCity.name || 'your city';
@@ -2234,10 +2283,11 @@ let trustMin = 0;
 function setTrustMin(v){ trustMin = parseInt(v,10) || 0; renderActiveFilterTags(); renderGrid(); }
 
 function setFilter(el, cat){
-  if(cat==='Adventures'){ goTo('adventures'); refreshAdvCatChips(); renderAdvGrid(); return; }
+  if(cat==='Adventures'){ goTo('adventures'); refreshAdvCatChips(); if(typeof zoomEnter==='function') zoomEnter('Adventures'); renderAdvGrid(); return; }
   activeFilter = cat;
   document.querySelectorAll('#chip-row .chip').forEach(c=>c.classList.remove('active'));
   el.classList.add('active');
+  if(typeof zoomEnter==='function') zoomEnter(cat);   // ZOOM-HMI-1 (no-op unless the flag is on)
   renderFilterBar();
   renderGrid();
   const sub = document.getElementById('browse-sub');
@@ -2280,7 +2330,7 @@ function renderFilterBar(){
   area.innerHTML = `<div class="filter-bar" style="display:flex;gap:8px;align-items:center;">
     <div class="filter-pill${activeCount>0?' has-value':''}" style="flex:1;justify-content:center;gap:6px;" onclick="openFilterSheet('${cat}')">
       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-      Filtered Search${badgeHtml}
+      ${(typeof msBaselineOn==='function' && msBaselineOn() && typeof ZOOM_CATS!=='undefined' && ZOOM_CATS[activeFilter]) ? 'Zoom · one question at a time' : 'Filtered Search'}${badgeHtml}
     </div>
   </div>`;
 
@@ -2288,6 +2338,7 @@ function renderFilterBar(){
 }
 
 function openFilterSheet(cat){
+  if(typeof zoomOpen==='function' && zoomOpen(cat)) return;   // ZOOM-HMI-1: under the flag the funnel IS the filter
   _ensureUniversalBlocks();
   if(cat==='cars') _fillMakeDatalist();   // FILTER-DATA-2
   const _s = document.getElementById('fs-'+cat);
@@ -2316,6 +2367,214 @@ function _fillMakeDatalist(){
 }
 function closeFsBg(e, id){
   if(e.target.id===id) document.getElementById(id).classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// ZOOM — the narrowing funnel (ZOOM-HMI-1 · RUL-076/078/089 · RG-0221 · 17 Sep 2026)
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// The filter PANEL is replaced by a funnel that asks ONE question at a time -- the facet the
+// server's gain ranker picks (zoom_engine.py) -- as large tap targets each carrying its TRUE
+// count from the same row set as the list. Zero-count options never arrive; dependency and
+// geography rules live server-side; typing is a shortcut THROUGH the funnel; a saved path is a
+// Watch. Results stay on screen throughout: the question is a bottom sheet (spec s5).
+// FLAG-DARK: every entry point checks msBaselineOn(); with the flag off nothing here runs and
+// the pre-Zoom filter sheets serve exactly as before (acceptance 8).
+const ZOOM_CATS = {Property:1, Tutors:1, Services:1, Adventures:1, Collectors:1, Cars:1};
+const zoomState = { active:false, cat:'', chips:{}, res:null, mode:'question', taps:0, busy:false, seq:0, text:'' };
+let _zoomIds = null;      // Set of FEA ids that survive (like _msSearchIds)
+let _zoomOrder = null;    // Map FEA id -> rank position (server order = Ranking Score, pinned first)
+let _zoomScores = null;   // Map FEA id -> ranking score, painted on the card
+
+function zoomActiveFor(cat){ return !!(zoomState.active && msBaselineOn() && zoomState.cat===cat); }
+function _zoomEl(){
+  let el = document.getElementById('zoom-sheet');
+  if(el) return el;
+  el = document.createElement('div');
+  el.id = 'zoom-sheet'; el.className = 'zoom-sheet'; el.setAttribute('role','dialog'); el.setAttribute('aria-label','Narrow your search');
+  document.body.appendChild(el);
+  return el;
+}
+function _zoomChipStr(){
+  return Object.keys(zoomState.chips).map(k => k + ':' + encodeURIComponent(zoomState.chips[k])).join('|');
+}
+function _zoomEmail(){ try{ return localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || ''; }catch(e){ return ''; } }
+
+// Enter a category door. Called from setFilter / filterBrowse / the Adventures screen when the
+// flag is on. Opens the sheet with the FIRST question (0 chips): arrival at <=24 rows is a
+// collapse rule for AFTER the user has narrowed, not a reason to stay silent at the door.
+function zoomEnter(cat){
+  if(!msBaselineOn() || !ZOOM_CATS[cat]){ zoomReset(); return; }
+  if(zoomState.active && zoomState.cat===cat){ zoomFetch(); return; }
+  zoomState.active = true; zoomState.cat = cat; zoomState.chips = {}; zoomState.res = null;
+  zoomState.mode = 'question'; zoomState.taps = 0; zoomState.text = '';
+  document.body.classList.add('zoom-open'); document.body.classList.remove('zoom-peek');
+  zoomFetch();
+}
+function zoomReset(){
+  if(!zoomState.active && !_zoomIds) return;
+  zoomState.active = false; zoomState.cat = ''; zoomState.chips = {}; zoomState.res = null; zoomState.taps = 0;
+  _zoomIds = null; _zoomOrder = null; _zoomScores = null;
+  document.body.classList.remove('zoom-open','zoom-peek');
+  const el = document.getElementById('zoom-sheet'); if(el){ el.classList.remove('open','peek'); el.innerHTML=''; }
+}
+function zoomOpen(cat){   // the Filter pill under the flag: (re)open the sheet for this door
+  if(!msBaselineOn()) return false;
+  const c = cat==='adventures' ? 'Adventures' : (cat.charAt(0).toUpperCase()+cat.slice(1));
+  if(!ZOOM_CATS[c]) return false;
+  if(!zoomState.active || zoomState.cat!==c) zoomEnter(c);
+  else { zoomState.mode = 'question'; _zoomRender(); }
+  return true;
+}
+async function zoomFetch(){
+  const seq = ++zoomState.seq;
+  zoomState.busy = true; _zoomRender();
+  try{
+    const p = new URLSearchParams();
+    p.set('category', zoomState.cat); p.set('city', (activeCity && activeCity.name) || 'Pretoria');
+    const f = _zoomChipStr(); if(f) p.set('f', f);
+    if(zoomState.text){ p.set('q', zoomState.text); }
+    const em = _zoomEmail(); if(em) p.set('email', em);
+    if(DEMO_MODE) p.set('demo','1');
+    p.set('rows','1');
+    const r = await fetch(BEA_URL + '/zoom/next?' + p.toString());
+    if(seq !== zoomState.seq) return;               // a newer tap superseded this answer
+    if(!r.ok) throw new Error('zoom ' + r.status);
+    const res = await r.json();
+    if(seq !== zoomState.seq) return;
+    zoomState.text = '';
+    // the server's chips are the truth (auto-collapse and dependency drops happen there)
+    zoomState.chips = {}; (res.chips||[]).forEach(c => { zoomState.chips[c.facet] = c.v; });
+    zoomState.res = res;
+    // rows the city feed never loaded (a Global buyer's other cities) join LISTINGS in the same shape
+    if(Array.isArray(res.rows)){
+      res.rows.forEach(row => {
+        const fid = 'bea_' + row.id;
+        if(!LISTINGS.find(e => e.id === fid)){ try{ LISTINGS.push(_msMapBeaListing(row)); }catch(e){} }
+      });
+    }
+    _zoomIds = new Set((res.ids||[]).map(i => 'bea_' + i));
+    _zoomOrder = new Map(); (res.ids||[]).forEach((i, k) => _zoomOrder.set('bea_' + i, k));
+    _zoomScores = new Map(); Object.keys(res.scores||{}).forEach(k => _zoomScores.set('bea_' + k, res.scores[k]));
+    const anyChip = Object.keys(zoomState.chips).some(k => !(res.chips||[]).find(c => c.facet===k && c.auto));
+    if(res.arrived && anyChip && zoomState.mode==='question') zoomState.mode = 'bar';
+    if(!res.arrived && zoomState.mode==='bar') zoomState.mode = 'question';
+  }catch(e){
+    console.warn('zoom fetch failed', e);
+    zoomState.res = zoomState.res || {total:0, chips:[], question:null, arrived:true, ids:[]};
+    zoomState.res.error = 'The funnel could not reach the server. Showing everything.';
+    _zoomIds = null; _zoomOrder = null;
+  }finally{
+    if(seq === zoomState.seq){ zoomState.busy = false; _zoomRender(); _zoomRerenderGrid(); }
+  }
+}
+function _zoomRerenderGrid(){
+  try{
+    if(zoomState.cat==='Adventures' && typeof renderAdvGrid==='function'){ renderAdvGrid(); }
+    else if(typeof renderGrid==='function'){ renderGrid(); }
+  }catch(e){ console.warn('zoom rerender', e); }
+}
+function zoomPick(facet, value){
+  if(zoomState.busy) return;
+  zoomState.chips[facet] = value; zoomState.taps++;
+  zoomState.mode = 'question';
+  try{ wlCaptureSearch && zoomState.cat && wlCaptureSearch(facet + ':' + value, zoomState.cat, null); }catch(e){}
+  zoomFetch();
+}
+function zoomDrop(facet){
+  if(zoomState.busy) return;
+  delete zoomState.chips[facet];     // the server drops the children (spec 3.2) and re-asks
+  zoomState.mode = 'question';
+  zoomFetch();
+}
+function zoomLockedTap(city, n){
+  // RUL-066 rung 1: the rejection and the offer arrive together, priced, never a bare lock
+  showToast(city + ' has ' + n + ' listing' + (n===1?'':'s') + ' — open every city for $5 a month');
+  try{ if(typeof goTo==='function' && document.getElementById('screen-plans')) goTo('plans'); }catch(e){}
+}
+function zoomWiden(){
+  const r = zoomState.res; if(!r || !r.relax) return;
+  zoomDrop(r.relax.facet);
+}
+function zoomKeepNarrowing(){ zoomState.mode = 'question'; _zoomRender(); }
+function zoomPeek(){
+  const el = _zoomEl();
+  const peek = !el.classList.contains('peek');
+  el.classList.toggle('peek', peek); document.body.classList.toggle('zoom-peek', peek);
+}
+function zoomType(){
+  const inp = document.getElementById('zoom-type-in'); if(!inp) return;
+  const t = (inp.value||'').trim(); if(!t) return;
+  zoomState.text = t; zoomState.taps++; zoomState.mode = 'question';
+  zoomFetch();
+}
+function zoomClearAll(){ if(zoomState.busy) return; zoomState.chips = {}; zoomState.taps = 0; zoomState.mode='question'; zoomFetch(); }
+async function zoomSave(){
+  const r = zoomState.res; if(!r) return;
+  const chips = (r.chips||[]).filter(c => !c.auto);
+  if(!chips.length){ showToast('Narrow first, then save the path'); return; }
+  const label = zoomState.cat + ' · ' + chips.map(c => c.label).join(' › ');
+  const path = _zoomChipStr();
+  try{
+    const key = 'ts_zoom_watches';
+    const list = JSON.parse(localStorage.getItem(key) || '[]');
+    if(!list.find(w => w.category===zoomState.cat && w.path===path)){
+      list.unshift({category: zoomState.cat, city: (activeCity&&activeCity.name)||'', path, label, created_at: new Date().toISOString()});
+      localStorage.setItem(key, JSON.stringify(list.slice(0, 40)));
+    }
+  }catch(e){}
+  const em = _zoomEmail();
+  if(em){
+    try{ await fetch(BEA_URL + '/zoom/watch', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email: em, category: zoomState.cat, city:(activeCity&&activeCity.name)||'', path, label})}); }catch(e){}
+  }
+  showToast('Saved — this path now runs fresh under For You');
+}
+function _zoomEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+function _zoomRender(){
+  const el = _zoomEl();
+  if(!zoomState.active || !msBaselineOn()){ el.classList.remove('open'); return; }
+  el.classList.add('open');
+  const r = zoomState.res;
+  const total = r ? (r.total||0) : 0;
+  const chips = r ? (r.chips||[]) : [];
+  // geography is ONE chip that deepens (rule 3): fold geo_* chips into one Pretoria › Menlo Park › 12th Street
+  const geo = chips.filter(c => c.geo), nongeo = chips.filter(c => !c.geo);
+  let rail = nongeo.map(c => `<span class="zoom-chip${c.auto?' auto':''}" onclick="zoomDrop('${_zoomEsc(c.facet)}')" title="${c.auto?'Applied for you — every match shares it':'Tap to remove'}">${_zoomEsc(c.label)}<span class="x">×</span></span>`).join('');
+  if(geo.length){
+    const order = {country:0, city:1, suburb:2, street:3};
+    geo.sort((a,b)=> (order[a.level]||0)-(order[b.level]||0));
+    const last = geo[geo.length-1];
+    rail += `<span class="zoom-chip geo" onclick="zoomDrop('${_zoomEsc(last.facet)}')" title="Tap to step back one level">${geo.map((g,i)=> (i?'<span class="lvl"> › </span>':'📍 ') + _zoomEsc(g.label)).join('')}<span class="x">×</span></span>`;
+  }
+  if(!chips.length) rail = `<span style="font-size:12.5px;color:var(--text-3);">Narrow ${_zoomEsc(zoomState.cat)} one question at a time</span>`;
+  rail += `<span class="zoom-count">${zoomState.busy ? '…' : total + ' match' + (total===1?'':'es')}</span>`;
+  let body = '';
+  if(r && r.error){ body = `<div class="zoom-note">${_zoomEsc(r.error)}</div>`; }
+  else if(zoomState.mode==='bar' || !(r && r.question)){
+    const relax = r && r.relax ? `<span class="act" onclick="zoomWiden()">Widen: drop ${_zoomEsc(r.relax.label)} → ${r.relax.n}</span>` : '';
+    const more = (r && r.question) ? `<span class="act" onclick="zoomKeepNarrowing()">Keep narrowing</span>` : (chips.length ? `<span class="act" onclick="zoomClearAll()">Start again</span>` : '');
+    body = `<div class="zoom-bar"><span><b>${zoomState.taps}</b> tap${zoomState.taps===1?'':'s'} · <b>${total}</b> match${total===1?'':'es'}</span>${relax}${more}<span class="act" onclick="zoomSave()">Save</span></div>`;
+    if(total===0 && !(r && r.question)) body += `<div class="zoom-note">Nothing left on this path — widen a chip or start again.</div>`;
+  } else {
+    const q = r.question;
+    const opts = (q.options||[]).map(o => `<button class="zoom-opt" onclick="zoomPick('${_zoomEsc(q.facet)}','${_zoomEsc(o.v).replace(/'/g,'&#39;')}')"><span class="lbl">${_zoomEsc(o.label)}</span><span class="n">${o.n}</span></button>`).join('');
+    const locked = (q.locked||[]).map(o => `<button class="zoom-opt locked" onclick="zoomLockedTap('${_zoomEsc(o.v).replace(/'/g,'&#39;')}',${o.n})"><span class="lbl">🔒 ${_zoomEsc(o.label)}</span><span class="n">${o.n}</span></button>`).join('');
+    const tailN = (q.tail||[]).length;
+    const more = tailN ? `<button class="zoom-opt more" onclick="document.getElementById('zoom-tail').style.display='grid';this.style.display='none';">${tailN} more…</button><div id="zoom-tail" class="zoom-tail" style="display:none;">${(q.tail||[]).map(o => `<button class="zoom-opt" onclick="zoomPick('${_zoomEsc(q.facet)}','${_zoomEsc(o.v).replace(/'/g,'&#39;')}')"><span class="lbl">${_zoomEsc(o.label)}</span><span class="n">${o.n}</span></button>`).join('')}</div>` : '';
+    const relax = r.relax ? `<div class="zoom-bar"><span>Only ${total} left</span><span class="act" onclick="zoomWiden()">Widen: drop ${_zoomEsc(r.relax.label)} → ${r.relax.n}</span></div>` : '';
+    body = `<div class="zoom-q"><span>${_zoomEsc(q.q)}</span><small>${zoomState.taps} tap${zoomState.taps===1?'':'s'} · <span class="act" style="cursor:pointer;color:var(--accent);" onclick="zoomState.mode='bar';_zoomRender();">done</span></small></div>
+      <div class="zoom-opts">${opts}${locked}${more}</div>${relax}
+      <div class="zoom-type" style="margin-top:8px;"><input id="zoom-type-in" type="search" placeholder="…or type it: ‘2 bed Menlo Park’" onkeydown="if(event.key==='Enter'){zoomType();}"><button onclick="zoomType()">Go</button></div>`;
+  }
+  el.innerHTML = `<div class="zoom-handle" onclick="zoomPeek()" aria-label="Show or hide the question"></div><div class="zoom-rail">${rail}</div><div class="zoom-body">${body}</div>`;
+}
+// After the flags load (or the local preview flips), a door already open re-enters the funnel.
+function _msBaselineApplied(){
+  try{
+    if(!msBaselineOn()) { zoomReset(); return; }
+    const scr = document.querySelector('.screen.active'); const id = scr ? scr.id : '';
+    if(id==='screen-browse' && activeFilter && ZOOM_CATS[activeFilter]) zoomEnter(activeFilter);
+    else if(id==='screen-adventures') zoomEnter('Adventures');
+  }catch(e){}
 }
 
 // ── Universal filter layer (two-layer, category-scoped model) ──
@@ -3096,6 +3355,7 @@ function renderAdvGrid(){
   let items = LISTINGS.filter(l => {
     // SEARCH-HMI-1: an active typed search narrows Adventures too.
     if(typeof _msSearchIds !== 'undefined' && _msSearchIds && !_msSearchIds.has(String(l.id))) return false;
+    if(typeof _zoomIds !== 'undefined' && _zoomIds && zoomActiveFor('Adventures') && !_zoomIds.has(String(l.id))) return false;   // ZOOM-HMI-1
     const cat = (l.cat||'').toLowerCase();
     if(!cat.startsWith('adventures')) return false;
 
@@ -4035,6 +4295,9 @@ function renderGrid(){
     // SEARCH-HMI-1: when a typed search is active, only ids the engine matched
     // survive (placeholders/'coming soon' cards drop out by design).
     if(_msSearchIds && !_msSearchIds.has(String(l.id))) return false;
+    // ZOOM-HMI-1: while the funnel is open only the ids it returned survive -- the same row
+    // set its counts were computed from, so the count and the list can never disagree.
+    if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id))) return false;
     if(activeFilter!=='All' && normCat(l.cat)!==activeFilter) return false;
     // Placeholders always show — they are paused but intentionally visible
     const isPlaceholder = String(l.id).startsWith('ph_');
@@ -4169,6 +4432,11 @@ function renderGrid(){
     const bph=String(b.id).startsWith('ph_')?1:0;
     return aph-bph;
   });
+  // ZOOM-HMI-1 (spec 6.1): the server's order IS the Ranking Score (0.5 quality + 0.5 trust),
+  // super_example already pinned first there -- one ranking method, two surfaces.
+  if(_zoomOrder && zoomActiveFor(activeFilter)){
+    filtered.sort((a,b)=> (_zoomOrder.has(a.id)?_zoomOrder.get(a.id):1e9) - (_zoomOrder.has(b.id)?_zoomOrder.get(b.id):1e9));
+  }
 
   const grid = document.getElementById('listing-grid');
   const countEl = document.getElementById('results-count');
@@ -4215,7 +4483,7 @@ function cardHtml(l){
   const _fallbackPhoto=_catCfg.catPhoto;
   const _fallbackDiv=`<div class="emoji-fallback" style="background:${_catCfg.bg}">${_catCfg.icon}</div>`;
   const imgHtml=((l.photos&&l.photos[0])||l.photo)
-    ?`<img src="${(l.photos&&l.photos[0])||l.photo}" alt="${l.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='${_fallbackPhoto?'block':'flex'}">${_fallbackPhoto?`<img src="${_fallbackPhoto}" alt="${l.cat}" loading="lazy" style="display:none;width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${_fallbackDiv}`:_fallbackDiv}`
+    ?`<img src="${(l.photos&&l.photos[0])||l.photo}" alt="${l.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='${_fallbackPhoto?'block':'flex'}'">${_fallbackPhoto?`<img src="${_fallbackPhoto}" alt="${l.cat}" loading="lazy" style="display:none;width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${_fallbackDiv}`:_fallbackDiv}`
     :(_fallbackPhoto
         ?`<img src="${_fallbackPhoto}" alt="${l.cat}" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${_fallbackDiv}`
         :_fallbackDiv);
@@ -4227,6 +4495,7 @@ function cardHtml(l){
       ${(String(l.id).startsWith('demo_')||String(l.id).startsWith('ph_'))?'<div class="demo-card-badge"></div>':''}
       ${l.feat&&!l.paused?'<div class="feat-badge">Featured</div>':''}
       ${l.paused?'<div class="paused-badge">⏸ Pending</div>':''}
+      ${(typeof _zoomScores!=='undefined' && _zoomScores && _zoomScores.has(l.id))?'<div class="zoom-score" title="Ranking score: half listing quality, half seller trust">'+_zoomScores.get(l.id)+'</div>':''}
       ${rentalCardBadge(l)}
       <div class="model-badge ${m}">${m==='commit'?'⏳ Commit':'👥 Queue'}</div>
       ${l.cat==='Services'&&l.service_class?`<div class="model-badge queue" style="bottom:24px;">${l.service_class==='Technical'?'🔧 Technical':'🤝 Casuals'}</div>`:''}
@@ -13472,6 +13741,10 @@ async function wlRenderSettings() {
         ? 'Matching listings from every country on the platform.'
         : 'Matches listings within your country only.';
       document.getElementById('wl-upgrade-btn').style.display = isGlobal ? 'none' : '';
+      if (typeof msBaselineOn==='function' && msBaselineOn() && !isGlobal) {   // RUL-128: the separate buyer product is gone
+        var _ub = document.getElementById('wl-upgrade-btn'); if (_ub) _ub.textContent = 'Get Starter · reach comes with it · $5/mo';
+        var _td = document.getElementById('wl-tier-detail'); if (_td) _td.textContent = 'Matches listings within your country only. Starter ($5/mo) opens every country — and gives you 10 listing slots.';
+      }
     }
   } catch(e) {}
   // Signals list
@@ -13505,8 +13778,34 @@ async function wlRenderSettings() {
   if (btn) btn.textContent = en ? 'Disable pings' : 'Enable pings on this device';
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   ONE $5 TIER — the pricing page reads ONE ladder (RUL-128 · 17 Sep 2026 · flag-dark)
+   With the batch armed, /pricing/ladder says Starter carries global buyer reach and Pro
+   carries reach + Squire; the separate "Upgrade to Global" buyer product is gone from the
+   Watch screen and points at Starter instead. Numbers come from the server (PRICING_CANON's
+   source of truth), never typed twice. Flag off = the page as it is today. */
+async function msRenderLadder(){
+  if(!(typeof msBaselineOn==='function' && msBaselineOn())) return;
+  try{
+    var r = await fetch(BEA_URL+'/pricing/ladder'); if(!r.ok) return;
+    var d = await r.json(); if(!d.armed && !msBaselineOn()) return;
+    var tick = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+    (d.ladder||[]).forEach(function(t){
+      var card = document.getElementById('plan-card-'+t.id); if(!card) return;
+      var feats = card.querySelector('.plan-features'); if(!feats) return;
+      feats.innerHTML = (t.features||[]).map(function(f){ return '<div class="plan-feat yes">'+tick+_wlEsc(f)+'</div>'; }).join('');
+      var price = card.querySelector('.plan-price'); if(price) price.innerHTML = '$'+t.usd+'<span class="plan-period"> / month</span>';
+    });
+    var note = document.getElementById('plans-one-ladder-note');
+    if(!note){ var host = document.getElementById('plan-card-free'); if(host && host.parentNode){ note = document.createElement('div'); note.id='plans-one-ladder-note'; note.style.cssText='font-size:12.5px;color:rgba(255,255,255,.75);text-align:center;margin:0 16px 12px;line-height:1.4;'; host.parentNode.insertBefore(note, host); } }
+    if(note) note.textContent = d.note || '';
+  }catch(e){}
+}
+
 async function wlStartGlobalCheckout() {
   if (DEMO_MODE) { showToast('This is a demo. Visit trustsquare.co to subscribe.'); return; }
+  if (typeof msBaselineOn==='function' && msBaselineOn()) { window._plansReturnTo='wishlist'; showToast('Reach now comes with the Starter plan'); goTo('plans'); return; }   // RUL-128: one $5 rung
   // Email is required by Paystack — use stored email if present
   const email = localStorage.getItem('ms_user_email') || prompt('Email for Paystack receipt:');
   if (!email) return;
@@ -14187,6 +14486,7 @@ async function msSellerSignIn() {
 function msInit(){
   const email = localStorage.getItem('ms_user_email') || localStorage.getItem('ms_aa_email') || '';
   const name  = localStorage.getItem('ms_user_name') || '';
+  try{ msRenderSquireCard(); msRenderSquireInbox(); }catch(e){}   // SQUIRE (flag-gated inside)
   const city  = (typeof activeCity !== 'undefined' && activeCity.name) ? activeCity.name
                : localStorage.getItem('ms_user_city') || '–';
 
@@ -14729,6 +15029,7 @@ function msRenderTrust(score){
 function msRenderLiveSignals(signals){
   const el = document.getElementById('ms-trust-signals');
   if(!el) return;
+  try{ msRenderCredentialCard(); }catch(e){}   // FIDE-CLAIM-1 (flag-gated inside)
 
   // Inject hidden file input for ID upload (once)
   if(!document.getElementById('ms-id-upload-input')){
@@ -14794,6 +15095,63 @@ function msRenderLiveSignals(signals){
       document.getElementById('ms-id-upload-input').click();
     }
   };
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   FIDE-CLAIM-1 — the claim moment (CREDENTIAL_CLAIMS_DESIGN.md sec 2 · 17 Sep 2026)
+   "Hold an official credential? Verify it — free, private." Lives on My Space under the
+   trust signals. The claim stays private; listings wear only the badge. Flag-dark: the
+   card renders only when the batch flag is armed (or David's local preview). */
+function msRenderCredentialCard(){
+  var host = document.getElementById('ms-trust-signals'); if(!host) return;
+  var card = document.getElementById('ms-cred-card');
+  if(!(typeof msBaselineOn==='function' && msBaselineOn())){ if(card) card.style.display='none'; return; }
+  if(!card){
+    card = document.createElement('div'); card.id='ms-cred-card'; card.className='ms-card';
+    host.parentNode.insertBefore(card, host.nextSibling);
+  }
+  card.style.display='';
+  card.innerHTML = '<div style="font-weight:700;font-size:14px;">Hold an official credential? <span style="color:var(--text-3);font-weight:500;">Verify it — free, private.</span></div>'+
+    '<div class="ms-cred-msg">We match your ID against the public registry we hold. Buyers see only the badge — never your name, ID or federation.</div>'+
+    '<div class="ms-cred-form"><select id="ms-cred-src"><option value="FIDE">FIDE trainer title (chess)</option></select>'+
+    '<input id="ms-cred-id" inputmode="numeric" placeholder="FIDE ID (e.g. 14300320)" maxlength="12">'+
+    '<input id="ms-cred-name" placeholder="Your name exactly as the registry lists it">'+
+    '<button id="ms-cred-btn" onclick="msClaimCredential()">Claim credential</button></div>'+
+    '<div class="ms-cred-msg" id="ms-cred-out"></div><div id="ms-cred-list"></div>';
+  msLoadCredentials();
+}
+async function msLoadCredentials(){
+  var el = document.getElementById('ms-cred-list'); if(!el) return;
+  var email = localStorage.getItem('ms_user_email') || localStorage.getItem('ms_aa_email') || '';
+  try{
+    var r = await fetch(BEA_URL+'/credentials/mine?email='+encodeURIComponent(email), {credentials:'include'});
+    if(!r.ok){ el.innerHTML=''; return; }
+    var d = await r.json();
+    var n = d.registry && d.registry.FIDE;
+    el.innerHTML = (d.claims||[]).map(function(c){
+      var st = c.status==='active' ? (c.badge||'Claimed') : c.status==='pending' ? 'Under review — the name was close but not exact' : c.status==='displaced' ? 'Superseded by an identity-verified claim' : c.status;
+      return '<div class="ms-cred-claim"><span>'+_wlEsc(c.source)+' · ID ending '+_wlEsc(String(c.credential_id||'').slice(-3))+'</span><span style="font-weight:600;color:'+(c.status==='active'?'#0f6e56':'var(--text-3)')+';">'+_wlEsc(st)+(c.tier==='B'&&c.status==='active'?' · <a onclick="goTo(\'myspace\')" style="cursor:pointer;">verify ID to anchor it</a>':'')+'</span></div>';
+    }).join('') + (n ? '<div class="ms-cred-msg" style="margin-top:8px;">Registry held: FIDE trainers, '+Number(n).toLocaleString()+' entries.</div>' : '');
+  }catch(e){ el.innerHTML=''; }
+}
+async function msClaimCredential(){
+  var email = localStorage.getItem('ms_user_email') || localStorage.getItem('ms_aa_email') || '';
+  var out = document.getElementById('ms-cred-out'), btn = document.getElementById('ms-cred-btn');
+  var src = (document.getElementById('ms-cred-src')||{}).value || 'FIDE';
+  var cid = ((document.getElementById('ms-cred-id')||{}).value||'').trim();
+  var name = ((document.getElementById('ms-cred-name')||{}).value||'').trim();
+  if(!email){ if(out) out.textContent='Sign in first — a claim is tied to your account.'; return; }
+  if(!cid || !name){ if(out) out.textContent='Enter the ID and your name as the registry lists it.'; return; }
+  if(btn){ btn.disabled=true; btn.textContent='Checking…'; }
+  try{
+    var r = await fetch(BEA_URL+'/credentials/claim', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email:email, source:src, credential_id:cid, claimed_name:name})});
+    var d = await r.json().catch(function(){ return {}; });
+    if(!r.ok){ if(out) out.textContent = d.detail || ('Could not claim ('+r.status+')'); }
+    else { if(out) out.textContent = d.message || d.status; if(d.status==='active'){ showToast('✓ Credential claimed — your listings carry the badge'); try{ msLoadTrust && msLoadTrust(); }catch(e){} } }
+    msLoadCredentials();
+  }catch(e){ if(out) out.textContent='Could not reach the server — try again.'; }
+  if(btn){ btn.disabled=false; btn.textContent='Claim credential'; }
 }
 
 async function msUploadIdDoc(e){
@@ -14909,6 +15267,136 @@ function msRenderIntrosFallback(){
 
 const MS_COLORS = ['ms-ia-green','ms-ia-blue','ms-ia-amber','ms-ia-coral'];
 function msColorFor(str){ let h=0; for(let i=0;i<(str||'').length;i++) h=(h*31+str.charCodeAt(i))&0xffff; return MS_COLORS[h % MS_COLORS.length]; }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   SQUIRE — the Pro subscriber's personal agent (SQUIRE_SPEC.md · RUL-077/078 · RG-0224)
+   My Space, Overview tab. Flag-dark (msBaselineOn). The card exists for every signed-in
+   user so the product can say what Pro buys; the CAPABILITY starts at Pro (the server
+   refuses below it). Nothing here ever grants an introduction: "Introduce me" opens the
+   listing and the ordinary intro button does what it always did (1T held). */
+var _sqState = { status:null, open:null, shortlist:null, busy:false };
+function _sqEmail(){ return localStorage.getItem('ms_user_email') || localStorage.getItem('ms_aa_email') || ''; }
+function msRenderSquireCard(){
+  var host = document.getElementById('ms-tab-overview'); if(!host) return;
+  var card = document.getElementById('ms-squire-card');
+  if(!(typeof msBaselineOn==='function' && msBaselineOn())){ if(card) card.style.display='none'; return; }
+  if(!card){ card = document.createElement('div'); card.id='ms-squire-card'; card.className='ms-card'; card.style.marginBottom='12px';
+    var lbl = document.createElement('div'); lbl.className='ms-section-lbl'; lbl.id='ms-squire-lbl'; lbl.textContent='Squire · your agent';
+    host.insertBefore(lbl, host.firstChild); host.insertBefore(card, lbl.nextSibling); }
+  card.style.display='';
+  card.innerHTML = '<div class="ms-cred-msg">Loading…</div>';
+  sqLoad();
+}
+async function sqLoad(){
+  var card = document.getElementById('ms-squire-card'); if(!card) return;
+  var em = _sqEmail();
+  try{
+    var r = await fetch(BEA_URL+'/squire/status?email='+encodeURIComponent(em), {credentials:'include'});
+    if(!r.ok){ card.innerHTML='<div class="ms-cred-msg">Squire is not available right now.</div>'; return; }
+    _sqState.status = await r.json();
+  }catch(e){ card.innerHTML='<div class="ms-cred-msg">Squire could not reach the server.</div>'; return; }
+  sqRender();
+}
+function sqRender(){
+  var card = document.getElementById('ms-squire-card'); var s=_sqState.status; if(!card||!s) return;
+  if(!s.pro){
+    card.innerHTML = '<div style="font-weight:700;font-size:14px;">A squire attends you in a square where you cannot be seen.</div>'+
+      '<div class="ms-cred-msg">Say what you need once. Squire turns it into a search, watches while you sleep, shortlists with reasons, and sends your brief to a seller before you spend an introduction. Comes with the <b>Pro plan ($20 a month)</b>; your Watches and For You stay free on every plan.</div>'+
+      '<div class="ms-cred-form"><button onclick="goTo(\'plans\')">See the Pro plan</button></div>';
+    return;
+  }
+  var al = s.allowance || {};
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-weight:700;font-size:14px;">Say what you need</div>'+
+    '<div class="ms-cred-msg" style="margin:0;">'+al.remaining+' of '+al.limit+' approaches left · '+(s.reach==='global'?'national + global reach':'local reach')+'</div></div>'+
+    '<div class="ms-cred-form"><textarea id="sq-need" rows="3" placeholder="e.g. maths tutor for a Grade 9 learner, failing trig, patient, Afrikaans or English, Menlo Park, weekday afternoons" style="border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:14px;font-family:Inter,sans-serif;background:var(--surface);color:var(--text);"></textarea>'+
+    '<button id="sq-brief-btn" onclick="sqCreateBrief()">Brief my squire</button></div><div class="ms-cred-msg" id="sq-out"></div>';
+  (s.briefs||[]).forEach(function(b){
+    h += '<div class="ms-cred-claim" style="flex-direction:column;align-items:stretch;gap:4px;">'+
+      '<div style="display:flex;justify-content:space-between;gap:8px;"><b>'+_wlEsc(b.category)+'</b><span style="color:var(--text-3);font-size:12px;">'+b.matches+' match'+(b.matches===1?'':'es')+(b.new_matches?' · <b style="color:#0f6e56;">'+b.new_matches+' new</b>':'')+'</span></div>'+
+      '<div style="font-size:12.5px;color:var(--text-2);">'+_wlEsc(b.need_text||'')+(b.is_minor?' <span class="cred-badge" title="Held under you as account holder; minimised; never sent in identifying form">learner · minimised</span>':'')+'</div>'+
+      '<div style="display:flex;gap:8px;"><button class="ms-sig-action" onclick="sqOpen('+b.id+')">Shortlist</button><button class="ms-sig-action" style="background:transparent;color:var(--text-3);" onclick="sqDelete('+b.id+')">Remove</button></div>'+
+      (_sqState.open===b.id ? '<div id="sq-sl-'+b.id+'"></div>' : '')+'</div>';
+  });
+  card.innerHTML = h;
+  if(_sqState.open) sqRenderShortlist();
+}
+async function sqCreateBrief(){
+  var need = (document.getElementById('sq-need')||{}).value||''; var out=document.getElementById('sq-out'); var btn=document.getElementById('sq-brief-btn');
+  if(need.trim().length<8){ if(out) out.textContent='Say it in a sentence or two.'; return; }
+  if(btn){ btn.disabled=true; btn.textContent='Specifying…'; }
+  try{
+    var r = await fetch(BEA_URL+'/squire/brief',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:_sqEmail(), need_text:need, city:(activeCity&&activeCity.name)||''})});
+    var d = await r.json().catch(function(){return {};});
+    if(!r.ok){ if(out) out.textContent = d.detail || ('Could not brief ('+r.status+')'); }
+    else { showToast('✓ Brief written — '+d.matches+' match'+(d.matches===1?'':'es')+' so far'); _sqState.open = d.brief_id; await sqLoad(); return; }
+  }catch(e){ if(out) out.textContent='Could not reach the server.'; }
+  if(btn){ btn.disabled=false; btn.textContent='Brief my squire'; }
+}
+async function sqOpen(id){ _sqState.open = (_sqState.open===id) ? null : id; _sqState.shortlist=null; sqRender(); if(_sqState.open){ try{ var r=await fetch(BEA_URL+'/squire/brief/'+id+'/shortlist?email='+encodeURIComponent(_sqEmail())+'&refresh=1',{credentials:'include'}); if(r.ok){ _sqState.shortlist=await r.json(); } }catch(e){} sqRenderShortlist(); } }
+function sqRenderShortlist(){
+  var id=_sqState.open, el=document.getElementById('sq-sl-'+id); if(!el) return;
+  var b=(_sqState.status.briefs||[]).filter(function(x){return x.id===id;})[0]; var sl=_sqState.shortlist;
+  if(!sl){ el.innerHTML='<div class="ms-cred-msg">Matching…</div>'; return; }
+  var qs = (b.questions||[]).map(function(q,i){ return '<input placeholder="'+_wlEsc(q)+'" value="'+_wlEsc((b.answers||{})[q]||'')+'" data-q="'+_wlEsc(q)+'" class="sq-q">'; }).join('');
+  var h = '<div class="ms-cred-msg"><b>Your brief</b> — sent as your need, never your name:<br>'+_wlEsc(b.brief_text||'')+'</div>'+
+    '<div class="ms-cred-msg"><b>The two things you forgot:</b></div><div class="ms-cred-form">'+qs+'<button class="ms-sig-action" onclick="sqSaveAnswers('+id+')">Save answers</button></div>';
+  var al = sl.allowance||{};
+  if(al.warn) h += '<div class="ms-cred-msg" style="color:#92400e;">'+(al.remaining>0 ? 'You have '+al.remaining+' approach'+(al.remaining===1?'':'es')+' left this month.' : 'You\'ve used your '+al.limit+' approaches this month. '+(al.offer&&al.offer.text||''))+(al.remaining<=0?' <button class="ms-sig-action" onclick="sqTopup()">Another '+(al.offer&&al.offer.approaches||5)+' for '+(al.offer&&al.offer.tuppence||1)+'T</button>':'')+'</div>';
+  h += '<div class="ms-cred-msg" style="margin-top:8px;"><b>Shortlist, with reasons</b></div>';
+  if(!sl.shortlist.length) h += '<div class="ms-cred-msg">Nothing matches yet — Squire keeps watching and will buzz you.</div>';
+  sl.shortlist.forEach(function(m){
+    var L=m.listing||{}; var ap=m.approach;
+    h += '<div class="ms-cred-claim" style="flex-direction:column;align-items:stretch;gap:4px;">'+
+      '<div style="display:flex;justify-content:space-between;gap:8px;"><b>'+_wlEsc(L.title||('Listing '+m.listing_id))+'</b><span style="color:var(--text-3);font-size:12px;">'+(L.price||'')+'</span></div>'+
+      '<div style="font-size:12.5px;color:var(--text-2);">'+_wlEsc((m.reasons||[]).join(' · '))+'</div>'+
+      (ap ? '<div style="font-size:12.5px;">'+(ap.status==='answered' ? '<b>Seller answered:</b> '+_wlEsc(ap.answer||'') : 'Brief sent '+_wlEsc(String(ap.created_at||'').slice(0,10))+' — waiting for the seller')+'</div>' : '')+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+(ap?'':'<button class="ms-sig-action" onclick="sqApproach('+id+','+m.listing_id+')">Send my brief</button>')+
+      '<button class="ms-sig-action" style="background:transparent;color:var(--accent);border:1px solid var(--border);" onclick="try{openDetail(\'bea_'+m.listing_id+'\')}catch(e){}">Introduce me (1T)</button></div></div>';
+  });
+  el.innerHTML = h;
+}
+async function sqSaveAnswers(id){
+  var ans={}; document.querySelectorAll('#sq-sl-'+id+' .sq-q').forEach(function(i){ if(i.value.trim()) ans[i.dataset.q]=i.value.trim(); });
+  try{ await fetch(BEA_URL+'/squire/brief/'+id+'/answers',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:_sqEmail(), answers:ans})}); showToast('✓ Saved — they ride with your brief'); await sqLoad(); }catch(e){ showToast('Could not save'); }
+}
+async function sqApproach(briefId, listingId){
+  var em=_sqEmail();
+  try{
+    // rung 2: ask the ceiling BEFORE composing effort; nothing is charged
+    var pre = await fetch(BEA_URL+'/squire/approach',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em, brief_id:briefId, listing_id:listingId, draft_only:1})});
+    var pd = await pre.json().catch(function(){return {};});
+    if(pd.status==='ceiling'){ showToast(pd.message||'At the monthly cap'); _sqState.shortlist.allowance = pd.allowance; sqRenderShortlist(); return; }
+    if(pd.warn && pd.message) showToast(pd.message);
+    var extra = window.prompt('Add a line for this seller (optional). Your brief goes as your need, never your name.', '') ;
+    if(extra===null) return;   // the user backed out: nothing sent, nothing charged
+    var r = await fetch(BEA_URL+'/squire/approach',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em, brief_id:briefId, listing_id:listingId, text: (extra?extra+'\n\n':'')+((_sqState.status.briefs||[]).filter(function(x){return x.id===briefId;})[0]||{}).brief_text})});
+    var d = await r.json().catch(function(){return {};});
+    if(d.status==='ceiling'){ showToast(d.message); _sqState.shortlist.allowance=d.allowance; try{ sessionStorage.setItem('sq_draft_'+listingId, d.draft||''); }catch(e){} sqRenderShortlist(); return; }   // rung 1+2: offer with the limit, draft kept
+    if(!r.ok){ showToast(d.detail||'Could not send'); return; }
+    showToast('✓ Brief sent — '+(d.allowance&&d.allowance.remaining)+' left this month');
+    sqOpen(briefId); sqOpen(briefId);
+  }catch(e){ showToast('Could not reach the server'); }
+}
+async function sqTopup(){
+  try{ var r=await fetch(BEA_URL+'/squire/topup',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:_sqEmail()})}); var d=await r.json().catch(function(){return {};});
+    if(!r.ok){ showToast(d.detail||'Top-up failed'); return; } showToast('✓ '+d.allowance.extra+' extra approaches this month — '+d.charged_tuppence+'T'); if(_sqState.shortlist) _sqState.shortlist.allowance=d.allowance; sqRenderShortlist(); try{ syncTuppence && syncTuppence(); }catch(e){} }catch(e){ showToast('Could not reach the server'); }
+}
+async function sqDelete(id){ try{ await fetch(BEA_URL+'/squire/brief/'+id+'?email='+encodeURIComponent(_sqEmail()),{method:'DELETE',credentials:'include'}); _sqState.open=null; await sqLoad(); }catch(e){} }
+/* Seller side: briefs sent to my listings (anonymous -- the need, never the buyer). */
+async function msRenderSquireInbox(){
+  var host = document.getElementById('ms-tab-overview'); if(!host) return;
+  if(!(typeof msBaselineOn==='function' && msBaselineOn())) return;
+  var em=_sqEmail(); if(!em) return;
+  try{
+    var r=await fetch(BEA_URL+'/squire/inbox?email='+encodeURIComponent(em),{credentials:'include'}); if(!r.ok) return;
+    var d=await r.json(); if(!(d.approaches||[]).length) return;
+    var card=document.getElementById('ms-squire-inbox'); if(!card){ card=document.createElement('div'); card.id='ms-squire-inbox'; card.className='ms-card'; card.style.marginBottom='12px'; var sq=document.getElementById('ms-squire-card'); host.insertBefore(card, sq ? sq.nextSibling : host.firstChild); }
+    card.innerHTML='<div style="font-weight:700;font-size:14px;">Briefs sent to your listings</div><div class="ms-cred-msg">A Pro buyer\'s agent sent these. Answer here — no details change hands until they request an introduction.</div>'+
+      d.approaches.map(function(a){ return '<div class="ms-cred-claim" style="flex-direction:column;align-items:stretch;gap:4px;"><b>'+_wlEsc(a.title||'')+'</b><div style="font-size:12.5px;white-space:pre-wrap;">'+_wlEsc(a.text||'')+'</div>'+(a.answer?'<div style="font-size:12.5px;"><b>You answered:</b> '+_wlEsc(a.answer)+'</div>':'<div class="ms-cred-form"><input id="sq-ans-'+a.id+'" placeholder="Your answer (no contact details needed)"><button class="ms-sig-action" onclick="sqAnswer('+a.id+')">Answer</button></div>')+'</div>'; }).join('');
+  }catch(e){}
+}
+async function sqAnswer(id){ var v=((document.getElementById('sq-ans-'+id)||{}).value||'').trim(); if(!v) return; try{ var r=await fetch(BEA_URL+'/squire/approach/'+id+'/answer',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:_sqEmail(), answer:v})}); if(r.ok){ showToast('✓ Answer sent'); msRenderSquireInbox(); } }catch(e){} }
+
 function msInitials(email){ const n=(email||'').split('@')[0]; return n.slice(0,2).toUpperCase(); }
 
 function msRenderIntroList(elId, items, dir){
@@ -16547,6 +17035,7 @@ function sfStartCat(cat){
   sfLoadSuburbs();   // AREA-SUGGEST-1: warm the suburb list for the area input
   sfState.cat=cat; sfState.sub=null; sfState.lmType=null;
   sfState.photos={}; sfState.files={}; sfState.previews={}; sfState.mainPhase=0; sfState.mainMsg=''; sfState.mvSig=''; sfState.anonFlags={};
+  sfState.dcb=null;   // DCB-001: a fresh listing starts with an empty photo set
   sfState.coachSid='sf'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);   // SF-COACH-ASK-1: one cap per listing session
   sfState.coachAsk={open:false,q:'',a:'',msg:'',used:0,remaining:null,busy:false,capped:false};
   sfState.A={}; sfState.B={}; sfState.C={}; sfState.features=[]; sfState.price='';
@@ -16780,6 +17269,7 @@ function sfSlotHtml(sl){
   '</div><div class="sf-info"><div class="sf-nm">'+sl[1]+'</div><div class="sf-hint">'+(st===2?'Tap to replace':sl[2])+'</div></div>'+badge+clr+'</div>';
 }
 function sfPhotosS(){
+  if(sfDcbOn()) return sfDcbPhotosS();   // DCB-001 under the flag: batch upload, then order
   var f=sfFlow();
   var h='<div class="sf-hdr"><div class="sf-step">Step 1 of 6 · '+f.label+'</div><h2>Photos</h2></div>'+sfMeter()+
   '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Start with your main photo, or continue and add it later.</b> I check every photo and blur '+f.aiCap+' before anyone sees it.</div></div>';
@@ -16834,6 +17324,222 @@ function sfPhotosS(){
      (sfState.photos.main===2?'sfGo(\'secA\')':'sfSkip(\'photos\',\'secA\')')+'">'+f.sections[0].title+' →</button></div>';   // INVITE-GATE-1: never disabled
   return h;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   DCB-001 — batch upload, then order (RUL-127 · 17 Sep 2026 · RUL-126 batch, flag-dark)
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Evidence: F-011 (David Jnr: sequencing "too difficult" on a phone), TS-0006, TS-0022/28/
+   29/30 (Maroushka: cover and photo friction), TS-0030 (HEIC silence). The named-slot
+   step asked the seller to plan the order BEFORE picking a photo. Under the flag the step
+   becomes: pick any number, in any order -> a grid -> tap ONE as cover -> "AI order"
+   arranges the rest per canon (exterior -> interior -> detail) -> drag to adjust -> the
+   order becomes the named slots (consistency at OUTPUT, never at input). sfState.files /
+   previews / photos are DERIVED from the ordered set on every change, so sfFinish, the
+   quality meter, the multivision pass and the upload-time anonymity gate are untouched
+   (publish holds the cover: order[0] IS the main slot). Flag off = the slot step, byte for
+   byte. */
+function sfDcbOn(){ return typeof msBaselineOn==='function' && msBaselineOn(); }
+function sfDcb(){ if(!sfState.dcb) sfState.dcb={items:[], cover:null, assign:{}, method:'', busy:false, note:''}; return sfState.dcb; }
+function sfDcbPhotosS(){
+  var f=sfFlow(), d=sfDcb(), n=d.items.length, max=sfMaxPhotos();
+  var h='<div class="sf-hdr"><div class="sf-step">Step 1 of 6 · '+f.label+'</div><h2>Photos</h2></div>'+sfMeter()+
+    '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Add your photos in any order.</b> Then tap the one that should be the cover — I\'ll put the rest in the order buyers expect, and you can drag to change it. I check every photo and blur '+f.aiCap+' before anyone sees it.</div></div>';
+  if(sfState.mainPhase===1){
+    h+='<div class="sf-aipanel"><div class="sf-cap"><span class="sf-spin"></span>AI is reading your cover photo — checking for '+f.aiCap+'…</div></div>';
+  } else if(sfState.mainPhase===2){
+    h+='<div class="sf-aipanel" style="border-color:rgba(52,211,153,.5);"><div class="sf-cap ok">'+(sfState.mainMsg||'✓ Cover accepted')+'</div></div>';
+  } else if(sfState.mainPhase===3){
+    h+='<div class="sf-aipanel" style="border-color:rgba(239,68,68,.55);"><div class="sf-cap" style="color:#fca5a5;">⚠ '+(sfState.mainMsg||'That cover doesn\'t match your advert type — tap another photo as the cover.')+'</div></div>';
+  }
+  h+='<div class="dcb-grid" id="dcb-grid">';
+  d.items.forEach(function(it, i){
+    var isCover = d.cover===it.key;
+    var slotKey = isCover ? 'main' : (it.slot||d.assign[it.key]||'');
+    var slotLbl = isCover ? 'Cover' : (function(){ var s=f.slots.filter(function(sl){return sl[0]===slotKey;})[0]; return s ? s[1] : 'Extra'; })();
+    var badge = it.rejected ? '<span class="dcb-badge bad">not this type</span>' : (isCover ? '<span class="dcb-badge cover">★ Cover</span>' : '<span class="dcb-badge">'+(i+1)+' · '+slotLbl+'</span>');
+    h+='<div class="dcb-tile'+(isCover?' cover':'')+(it.rejected?' rejected':'')+'" data-key="'+it.key+'" onclick="sfDcbSetCover(\''+it.key+'\')" title="Tap to make this the cover · press and drag to reorder">'+
+       '<img src="'+it.preview+'" alt="" draggable="false">'+badge+
+       '<span class="dcb-x" onclick="event.stopPropagation();sfDcbRemove(\''+it.key+'\')" title="Remove">✕</span>'+
+       '<span class="dcb-mv"><span onclick="event.stopPropagation();sfDcbMove(\''+it.key+'\',-1)" title="Move earlier">‹</span><span onclick="event.stopPropagation();sfDcbMove(\''+it.key+'\',1)" title="Move later">›</span></span>'+
+       '</div>';
+  });
+  if(n<max) h+='<div class="dcb-tile add" onclick="sfDcbPick()"><div class="dcb-plus">＋</div><div class="dcb-addlbl">'+(n?'Add more':'Add photos')+'<br><small>'+n+' of '+max+'</small></div></div>';
+  h+='</div>';
+  if(n){
+    h+='<div class="dcb-actions">'+
+       '<button class="sf-btn gho" onclick="sfDcbAiOrder()" '+(d.busy||n<2?'disabled':'')+'>'+(d.busy?'<span class="sf-spin"></span>Ordering…':'✨ AI order')+'</button>'+
+       '<span class="dcb-note">'+(d.note||(n<2?'Add a second photo and I can order them for you.':'Tap a photo to make it the cover. Drag to adjust.'))+'</span></div>';
+  }
+  h+='<input type="file" id="sf-file-dcb" accept="image/*" multiple style="display:none;" onchange="sfDcbChosen(this)">';
+  h+='<div class="sf-skipline"><a onclick="sfSkip(\'photos\',\'secA\')">'+(sfState.photos.main===2?'Done with photos →':'No photo handy? Continue and add them later →')+'</a></div>'+
+     '<div class="sf-skipwarn" id="sf-warn-photos">'+(sfState.photos.main===2?'More photos raise your Quality Score — full sets get roughly 3× more buyer contact.':'You can add photos later — listings with photos get roughly 3× more buyer contact.')+'</div>';
+  h+='<div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'home\')">←</button><button class="sf-btn pri" onclick="'+
+     (sfState.photos.main===2?'sfGo(\'secA\')':'sfSkip(\'photos\',\'secA\')')+'">'+f.sections[0].title+' →</button></div>';
+  setTimeout(sfDcbBindDrag, 0);
+  return h;
+}
+function sfDcbPick(){ var el=document.getElementById('sf-file-dcb'); if(el){ el.value=''; el.click(); } }
+function sfDcbChosen(input){
+  var d=sfDcb(), room=sfMaxPhotos()-d.items.length;
+  var files=Array.prototype.slice.call(input.files||[]).slice(0, Math.max(0,room));
+  if(!files.length) return;
+  var over=(input.files||[]).length-files.length;
+  var pending=files.length;
+  // the seller's OWN order is kept: items are placed in selection order and the previews
+  // fill in as the readers finish (FileReader completes in any order)
+  var placed=files.map(function(file,i){ var it={key:'p'+Date.now().toString(36)+'_'+i+'_'+Math.random().toString(36).slice(2,6), file:file, preview:''}; d.items.push(it); return it; });
+  placed.forEach(function(it){
+    var rd=new FileReader();
+    rd.onload=function(e){
+      it.preview=e.target.result;
+      if(--pending===0){
+        if(!d.cover){ d.cover=d.items[0].key; }
+        sfDcbApply(true);
+        obTrack('photo_pick');
+        sfToast('\u2713 '+files.length+' photo'+(files.length===1?'':'s')+' added'+(over>0?' \u2014 '+over+' left out, the cap is '+sfMaxPhotos():'')+(d.items.length>1?' \u2014 tap one as the cover, or let me order them':''));
+      }
+    };
+    rd.onerror=function(){ if(--pending===0){ if(!d.cover&&d.items.length) d.cover=d.items[0].key; sfDcbApply(true); } };
+    rd.readAsDataURL(it.file);
+  });
+}
+function sfDcbSetCover(key){
+  if(_dcbJustDragged) return;   // the click that ends a drag is not a cover tap
+  var d=sfDcb(); if(d.cover===key) return;
+  var it=d.items.filter(function(x){return x.key===key;})[0]; if(!it) return;
+  if(it.rejected){ sfToast('That photo was rejected as the cover — it doesn\'t show what you\'re selling'); return; }
+  d.cover=key;
+  d.items.sort(function(a,b){ return (a.key===key?-1:0)-(b.key===key?-1:0); });   // cover to the front, others keep order
+  sfDcbApply(true);
+  sfToast('★ Cover set');
+}
+function sfDcbRemove(key){
+  var d=sfDcb();
+  d.items=d.items.filter(function(x){return x.key!==key;});
+  delete d.assign[key];
+  if(d.cover===key){ d.cover=d.items.length?d.items[0].key:null; sfState.mainPhase=0; sfState.mainMsg=''; sfState.visionDraft=null; }
+  sfDcbApply(d.cover && d.items.length && d.items[0].key===d.cover && key!==d.cover ? false : true);
+  sfToast('Photo removed');
+}
+function sfDcbMove(key, dir){
+  var d=sfDcb(), i=d.items.findIndex(function(x){return x.key===key;});
+  var j=i+dir; if(i<0||j<0||j>=d.items.length) return;
+  var t=d.items[i]; d.items[i]=d.items[j]; d.items[j]=t;
+  d.cover=d.items[0].key;   // whatever is first IS the cover -- the grid never lies about it
+  d.assign={};              // a hand-made order IS the order: slots follow the grid positionally
+  sfDcbApply(true);
+}
+/* Drag to adjust (pointer events, phone-first): press a tile, move over another tile and the
+   two swap live; release to settle. The first tile is always the cover. */
+var _dcbDrag=null, _dcbJustDragged=false;
+function sfDcbBindDrag(){
+  var g=document.getElementById('dcb-grid'); if(!g||g._dcbBound) return; g._dcbBound=true;
+  g.addEventListener('pointerdown', function(e){
+    var t=e.target.closest('.dcb-tile:not(.add)'); if(!t) return;
+    if(e.target.closest('.dcb-x,.dcb-mv')) return;
+    _dcbDrag={key:t.dataset.key, moved:false, x:e.clientX, y:e.clientY};
+  });
+  if(document._dcbDocBound) return; document._dcbDocBound=true;
+  // document-level move/up so a re-rendered grid never loses the gesture
+  document.addEventListener('pointermove', function(e){
+    if(!_dcbDrag) return;
+    if(!_dcbDrag.moved && Math.hypot(e.clientX-_dcbDrag.x, e.clientY-_dcbDrag.y)<8) return;
+    _dcbDrag.moved=true;
+    var g=document.getElementById('dcb-grid'); if(!g){ _dcbDrag=null; return; }
+    var src=g.querySelector('.dcb-tile[data-key="'+_dcbDrag.key+'"]'); if(!src){ _dcbDrag=null; return; }
+    src.classList.add('dragging');
+    var el=document.elementFromPoint(e.clientX, e.clientY); var over=el && el.closest ? el.closest('.dcb-tile:not(.add)') : null;
+    if(over && over!==src){
+      var d=sfDcb(), a=d.items.findIndex(function(x){return x.key===_dcbDrag.key;}), b=d.items.findIndex(function(x){return x.key===over.dataset.key;});
+      if(a>-1&&b>-1&&a!==b){
+        var it=d.items.splice(a,1)[0]; d.items.splice(b,0,it); d.cover=d.items[0].key;
+        if(a<b) over.after(src); else over.before(src);   // live: the DOM follows the list, no re-render mid-gesture
+      }
+    }
+    e.preventDefault();
+  }, {passive:false});
+  var end=function(){
+    if(!_dcbDrag) return;
+    var was=_dcbDrag; _dcbDrag=null;
+    if(was.moved){ _dcbJustDragged=true; setTimeout(function(){ _dcbJustDragged=false; }, 350); sfDcb().assign={}; sfDcbApply(true); sfToast('Order updated'); }
+    else { var g=document.getElementById('dcb-grid'); var src=g&&g.querySelector('.dragging'); if(src) src.classList.remove('dragging'); }
+  };
+  document.addEventListener('pointerup', end); document.addEventListener('pointercancel', end);
+}
+/* Derive the slot model from the ordered set. rerender=true also re-runs the cover vision
+   when the cover changed (same cost profile as today: one vision read per cover choice). */
+function sfDcbApply(rerender){
+  var d=sfDcb(), f=sfFlow();
+  var prevMain = sfState.files.main;
+  sfState.files={}; sfState.previews={}; var newPhotos={};
+  f.slots.forEach(function(sl){ newPhotos[sl[0]]=0; });
+  var named=f.slots.slice(1).map(function(sl){return sl[0];});
+  var used={};
+  d.items.forEach(function(it, i){
+    var k;
+    if(i===0){ k='main'; }
+    else {
+      var want=d.assign[it.key];
+      if(want && named.indexOf(want)>-1 && !used[want]) k=want;
+      else { k=null; for(var j=0;j<named.length;j++){ if(!used[named[j]]){ k=named[j]; break; } } }
+      if(!k) k='extra'+i+'_'+it.key;
+    }
+    used[k]=1; it.slot=k;
+    if(it.rejected && k==='main') return;   // a rejected cover holds no slot
+    sfState.files[k]=it.file; sfState.previews[k]=it.preview; newPhotos[k]=2;
+  });
+  sfState.photos=newPhotos;
+  var coverChanged = (sfState.files.main !== prevMain);
+  if(coverChanged){
+    if(sfState.files.main){ sfState.mainPhase=1; sfState.mainMsg=''; sfState.visionDraft=null; }
+    else { sfState.mainPhase=0; sfState.mainMsg=''; sfState.visionDraft=null; sfState.photos.main=0; }
+  }
+  if(!sfState.files.main) sfState.photos.main=0;
+  if(rerender!==false) sfRender();
+  if(coverChanged && sfState.files.main) sfDcbVision(sfState.files.main);
+}
+/* Cover vision: WRONG-TYPE-1's hard stop still applies, but a rejected COVER is not lost --
+   it stays in the grid flagged, and the seller taps another photo as the cover. */
+async function sfDcbVision(file){
+  var d=sfDcb(), key=d.cover;
+  await sfRunVision(file);
+  if(sfState.mainPhase===3){
+    var it=d.items.filter(function(x){return x.key===key;})[0]; if(it) it.rejected=true;
+    sfState.photos.main=0; sfRender();
+  }
+}
+function _dcbThumb(dataUrl, px){
+  return new Promise(function(res){
+    try{
+      var im=new Image(); im.onload=function(){ try{ var c=document.createElement('canvas'); var s=Math.min(1, px/Math.max(im.width, im.height)); c.width=Math.max(1,Math.round(im.width*s)); c.height=Math.max(1,Math.round(im.height*s)); c.getContext('2d').drawImage(im,0,0,c.width,c.height); res(c.toDataURL('image/jpeg',0.7)); }catch(e){ res(''); } };
+      im.onerror=function(){ res(''); }; im.src=dataUrl;
+    }catch(e){ res(''); }
+  });
+}
+async function sfDcbAiOrder(){
+  var d=sfDcb(), f=sfFlow(); if(d.busy||d.items.length<2) return;
+  d.busy=true; d.note='Reading your photos…'; sfRender();
+  try{
+    var photos=[];
+    for(var i=0;i<d.items.length;i++){ var it=d.items[i]; photos.push({id:it.key, thumb: await _dcbThumb(it.preview, 160)}); }
+    var body={category: sfState.cat, sub: sfState.sub||sfState.lmType||'', cover: d.cover, email: sfState.email||'',
+              slots: f.slots.map(function(sl){ return [sl[0], sl[1], sl[2]||'']; }), photos: photos};
+    var r=await fetch(BEA_URL+'/listings/photos/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok) throw new Error('order '+r.status);
+    var res=await r.json();
+    var byKey={}; d.items.forEach(function(x){byKey[x.key]=x;});
+    var ordered=(res.order||[]).map(function(k){return byKey[k];}).filter(Boolean);
+    d.items.forEach(function(x){ if(ordered.indexOf(x)<0) ordered.push(x); });
+    d.items=ordered; d.cover=d.items[0].key; d.assign=res.assign||{};
+    d.method=res.method||''; d.note=(res.method==='ai'?'✨ Ordered by the photo reader — drag to adjust.':'Ordered: cover first, then your own order — drag to adjust.');
+    obTrack('photo_ai_order',{n:d.items.length, method:d.method});
+  }catch(e){
+    d.note='Could not reach the photo reader — your order is kept. Drag to adjust.';
+  }
+  d.busy=false;
+  sfDcbApply(true);
+}
+
 var _sfPickKey = null;
 /* MAROUSHKA-PHOTO-1 (3 Aug 2026, Maroushka feedback): "I couldn't go back and
    replace a photo once it was uploaded." A filled slot used to hard-refuse. It

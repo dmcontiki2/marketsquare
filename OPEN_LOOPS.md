@@ -265,3 +265,12 @@ same defect class as an undated status assertion (the ONETAP_SETUP.md "(this is 
 - **[C] DONE 14 Sep — per-category comms live in the Quick Listing.** RUL-132 as a data table, not
   branches; each row badged ruled / not-ruled on screen. All eight categories driven in a browser,
   two real faults found and fixed in the process. Phase two — porting it to the app — is not started.
+- **[C] DONE 17 Sep — the whole baseline batch is built flag-dark and proven in the rendered app.**
+  All nine items of `BASELINE_BATCH_2026Q4.md` §1 behind one flag (`baseline_q4`, default 0); the
+  live app is unchanged until armed. Rendered proofs: `BASELINE_BATCH_PROOFS_2026-09-17.html`.
+  Deploy requested (RUL-092); ledger live halves go green when it lands. Detail: plan §6.
+- **[D] 17 Sep — arm the baseline.** See it locally first, then the 30 Oct sandbox, then
+  `POST /admin/flags {baseline_q4:true}` (+1 page). Nothing else in the batch waits on anyone.
+- **[D] 17 Sep — after arming, three field measurements are yours:** DCB-001 time-to-publish
+  before/after and David Jnr's retest; the Quick five-tap walk on a real phone; a dated AI vendor
+  balance per lane on the +1 card (the gauge reads NOT MEASURED until then).

@@ -21,7 +21,7 @@ pricing:                        # authority = PRICING_CANON.md §1 + bea_main.py
     Starter: [5, 10, 2]
     Pro:     [20, 30, 10]
     Agency:  [0, 10, 0]         # free + verified; base 10, grows with Trust Score
-  buyer_tiers:
+  buyer_tiers:                  # RUL-128 (armed by launch_switches.baseline_q4): Global folds INTO Starter -- PRICING_CANON 2d
     Free:   [0, "local city"]
     Global: [5, "national + global"]
   founders_badge: {tier: Pro, bonus_pct: 20, example: "Pro 10 -> 12T", rev: 3, deadline: "2026-08-01"}

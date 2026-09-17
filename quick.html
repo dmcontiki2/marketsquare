@@ -865,6 +865,20 @@ var CRED={collectors:[['Third-party authentication certificate',8],
           homehelp:  [['Police clearance / background check',10],['Any NQF qualification or short course',8]],
           services:  [['Police clearance / background check',10],['Formal trade certificate',8]],
           adventures:[['Activity-specific guide certificate',12],['Current first aid',6]]};
+/* RUL-129 (14 Sep 2026; built 17 Sep, RUL-126 batch): Property and Local Market read their
+   block from the ladder itself -- GET /trust/catalogue -- so the points come from the
+   catalogue, never from a table typed on this screen. While the batch is dark the endpoint
+   serves no private-seller entries and the two screens stay silent, exactly as before. */
+(function(){
+  try{
+    if(location.protocol==='file:') return;
+    [['property','property'],['localmarket','localmarket']].forEach(function(p){
+      fetch(location.origin+'/trust/catalogue?category='+p[0]+'&private=1').then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+        if(d && d.signals && d.signals.length){ CRED[p[1]] = d.signals.slice(0,4).map(function(s){ return [s.name, s.points]; }); }
+      }).catch(function(){});
+    });
+  }catch(e){}
+})();
 
 /* WHAT A PRICE IS, AND IS NOT. The number the lister types is an ASKING price.
    For the collectible lanes the app already resolves a real one from free public
@@ -940,8 +954,7 @@ var QUICK_LIVE=false;
   try{
     if(location.protocol==='file:') return;
     var k=localStorage.getItem('ts_qk_key');
-    if(!k) return;
-    HANDOVER.url=location.origin; HANDOVER.key=k; QUICK_LIVE=true;
+    if(k){ HANDOVER.url=location.origin; HANDOVER.key=k; QUICK_LIVE=true; }
     var m=localStorage.getItem('ms_aa_email')||'';
     if(/.+@.+\..+/.test(m)){
       HANDOVER.email=m;
@@ -949,8 +962,28 @@ var QUICK_LIVE=false;
       QUICK.name=localStorage.getItem('ms_aa_name')||m.split('@')[0];
       QUICK.city=LOC.suburb;
     }
+    /* QUICK-ME-1 (RUL-125(a), 17 Sep 2026): the origin answers who you are and hands the same
+       public key ms.js ships -- so a visitor arriving by e-mail link, who has never opened the
+       app and holds no marker, still publishes LIVE instead of a dry run. The cookie wins over
+       the marker; nothing is ever written back. */
+    fetch(location.origin+'/quick/me',{credentials:'include'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+      if(!d) return;
+      if(d.key && !HANDOVER.key){ HANDOVER.url=location.origin; HANDOVER.key=d.key; QUICK_LIVE=true; }
+      if(d.signed_in && d.email){ HANDOVER.email=d.email; QUICK.member=true; QUICK.name=d.name||d.email.split('@')[0]; if(d.city) QUICK.city=d.city; }
+    }).catch(function(){});
   }catch(e){}
 })();
+/* QUICK-PRICE-BASIS-1 (17 Sep 2026, found proving RUL-125(c) on the rig): the price chips are
+   bare amounts ("R250") but the question that produced them names the basis ("What do you
+   charge a day?"). The server (JNR-FIX-5B) refuses a bare amount on a rate-based category with
+   a 422 -- so the spreader's OWN first lane, Housekeeping, could not hand over at all. The flow
+   knows the basis; it now states it, exactly as the guided flow does (PRICE-UNIT-1). */
+var PRICE_BASIS={homehelp:' / day', tutors:' / hour', services:' / call-out', adventures:' / person / night'};
+function priceWithBasis(key, label){
+  var l=String(label||'').trim(); if(!l) return 'POA';
+  if(!PRICE_BASIS[key] || !/\d/.test(l) || /\/|\bper\b|ask|quote|poa/i.test(l)) return l;
+  return l+PRICE_BASIS[key];
+}
 function handoverPayload(){
   var c=cat(), key=c.key;
   var from=FIELD_FROM[key]||{};
@@ -959,7 +992,7 @@ function handoverPayload(){
   var _co=catOut(c);
   var body={
     title: c.draftTitle(picks),
-    price: price ? price.label : 'POA',
+    price: price ? priceWithBasis(key, price.label) : 'POA',
     category: _co.category,
     city: LOC.city,
     area: where ? where.label : LOC.suburb,

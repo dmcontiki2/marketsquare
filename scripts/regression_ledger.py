@@ -11877,41 +11877,59 @@ def rg_maint_deps_fresh_interpreter_probe():
 
 @entry("RG-0203", "The +1 AI Providers card answers 'can this AI function STOP?' per feature -- "
        "funds available per lane, mapped to the app functions it serves, with auto-top-up state",
-       OPEN,
-       scope="dashboard.server.html AI Providers card (AIPROV-FUNDS-1). Requested by David on "
-             "soft-launch evening 29 Aug 2026: the card shows lanes and funnels but no gauge of "
-             "the money each lane can still spend, feature by feature. DESIGN CONSTRAINTS, all "
-             "from the evidence ladder: (a) one row per app AI function (the haiku/triage/"
-             "sonnet/vision funnels already on the card) x the lane that serves it; (b) funds "
-             "shown only where a vendor exposes a probeable balance/usage figure -- anything "
-             "else renders NOT MEASURED plus a dated last-known manual figure, never a guessed "
-             "colour (RG-0133 properties); (c) each lane carries its auto-top-up armed/not-armed "
-             "state, because the stop-risk this card exists to kill is credit exhaustion, not "
-             "vendor outage. Account-side halves already actioned 29 Aug: David guided to arm "
-             "OpenAI auto-recharge + Anthropic auto-reload (Scaleway is postpaid, alert only; "
-             "Gemini = D5 prepaid credits).",
-       ref="AIPROV-FUNDS-1, 29 Aug 2026. OPEN until the strip ships on a post-launch deploy -- "
-           "no deploys on launch weekend (28 Aug freeze discipline). The assertion below greps "
-           "the deployed dashboard source for the data-ai-funds marker plus its NOT MEASURED "
-           "honesty handling; it prints READY TO LOCK the morning the build rides a deploy. "
-           "Server-side probes need keys that exist only on the Hetzner box, so the build "
-           "session is an attended one.")
+       LOCKED, fixed_on="2026-09-17",
+       scope="BUILT 17 Sep 2026 (AIPROV-FUNDS-1, RUL-126 batch). bea_main.py GET /dashboard/ai-funds "
+             "(one row per app AI function fast/reason/vision/triage x the lane that serves it: measured "
+             "today/month spend from ai_spend_log, the measured daily platform ceiling and what is left "
+             "of it, the vendor balance as NOT MEASURED unless a DATED manual figure was entered, a "
+             "runway derived from that figure minus measured spend since, and the lane's auto-top-up "
+             "state) + POST /admin/ai-funds (admin JWT; the dated manual figure, written by a person who "
+             "just read the vendor console; stored in ai_funds.json, a config file no deploy touches). "
+             "dashboard.server.html: the data-ai-funds strip under the AI Providers card, grey until data "
+             "answers (RG-0133) -- no health colour is ever painted from a guess. PROVEN in headless "
+             "Chromium at 412x915 (scripts/smoke_harness/verify_funds.mjs): four rows, NOT MEASURED on "
+             "every unprobeable balance, measured spend and ceiling on each row, an unauthenticated write "
+             "refused 401, a dated figure appearing on the row with 'manual, <date>' and a runway whose "
+             "basis names the figure and the spend since. DESIGN CONSTRAINTS from the evidence ladder "
+             "hold: (a) per function x lane; (b) funds only where probeable, else NOT MEASURED + dated "
+             "manual; (c) auto-top-up state per lane. Account-side halves (arming OpenAI auto-recharge and "
+             "Anthropic auto-reload) are David's -- entered here as dated facts, never assumed.",
+       ref="AIPROV-FUNDS-1, requested by David on soft-launch evening 29 Aug 2026: the card showed lanes "
+           "and funnels but no gauge of the money each lane can still spend, feature by feature. Built "
+           "17 Sep 2026 under RUL-126.")
 def rg_aiprov_funds_gauge():
     out = []
-    dash = repo_file("dashboard.server.html")
-    if dash is None:
+    dash = repo_file("dashboard.server.html"); bea = repo_file("bea_main.py")
+    if dash is None or bea is None:
         out.append((INFO, "repo not present -- source-half of RG-0203 not evaluated here"))
-        return out
-    if 'data-ai-funds' not in dash:
-        out.append((FAIL, "AIPROV-FUNDS-1 not built: dashboard.server.html carries no "
-                          "data-ai-funds strip (per-function funds gauge missing from the "
-                          "AI Providers card)"))
-        return out
-    if 'NOT MEASURED' not in dash:
-        out.append((FAIL, "data-ai-funds strip present but without NOT MEASURED handling -- "
-                          "an unprobeable balance must say so, never wear a guessed figure "
-                          "(RG-0133 honesty class)"))
-    return out
+    else:
+        if 'data-ai-funds' not in dash:
+            out.append((FAIL, "AIPROV-FUNDS-1 gone: dashboard.server.html carries no data-ai-funds strip"))
+        if 'NOT MEASURED' not in dash:
+            out.append((FAIL, "data-ai-funds strip present but without NOT MEASURED handling -- an "
+                              "unprobeable balance must say so, never wear a guessed figure (RG-0133)"))
+        for needle, why in (('@app.get("/dashboard/ai-funds")', "the gauge endpoint"),
+                            ('@app.post("/admin/ai-funds")', "the dated manual figure"),
+                            ('"funds": ("NOT MEASURED" if bal is None else', "NOT MEASURED unless a figure exists"),
+                            ('runway_basis = "manual figure of', "the runway naming its basis"),
+                            ("_admin=Depends(_require_admin)):\n    \"\"\"The dated manual figure", "the admin gate on the write")):
+            if needle not in bea:
+                out.append((FAIL, "bea_main.py lost %r -- %s is gone (AIPROV-FUNDS-1)" % (needle, why)))
+    try:
+        d = json.loads(_get("/dashboard/ai-funds"))
+        fns = d.get("functions") or []
+        if len(fns) != 4:
+            out.append((FAIL, "live gauge carries %d function rows, not 4" % len(fns)))
+        for f in fns:
+            if f.get("funds") != "NOT MEASURED" and not (isinstance(f.get("funds"), dict) and f["funds"].get("as_of")):
+                out.append((FAIL, "live gauge shows a balance for %s with no date -- an undated figure is a defect" % f.get("task")))
+            if "today_usd" not in f or "auto_topup" not in f:
+                out.append((FAIL, "live gauge row %s lacks measured spend or the auto-top-up state" % f.get("task")))
+    except ProbeOffline:
+        raise
+    except Exception as ex:
+        out.append((FAIL, "live /dashboard/ai-funds does not answer (%r) -- the gauge is not deployed" % (ex,)))
+    return out or [(INFO, "four function rows, measured spend + ceiling, NOT MEASURED or a dated manual figure, auto-top-up state")]
 
 
 @entry("RG-0204", "The CityLauncher local->server sync carries STATUS and message-ids up, not "
@@ -12525,40 +12543,90 @@ def rg_jurisdiction_gate():
        "(claim endpoint, CREDENTIAL_CLAIMS flag, seeded registry) is LIVE per the design "
        "spec -- verification without identification, badge from a live JOIN, one account "
        "per credential",
-       OPEN,
-       scope="the credential-claims feature class: /credentials/claim + /credentials/mine "
-             "+ admin queue + registry-upsert refresh, all behind CREDENTIAL_CLAIMS "
-             "(default off), server table credential_registry seeded with the 4,237-row "
-             "FIDE export. Anonymity half is part of the assertion once live: the public "
-             "listing payload may carry tier/badge but NEVER name, credential id or "
-             "federation from a claim.",
+       LOCKED, fixed_on="2026-09-17",
+       scope="BUILT 17 Sep 2026 (RUL-126 batch, flag-dark). bea_main.py: credential_registry + "
+             "credential_claims (additive), POST /credentials/claim, GET /credentials/mine, "
+             "GET /admin/credentials, POST /admin/credentials/review, POST /admin/credentials/"
+             "registry-upsert; _credential_badges_for() joins claims to the registry AT RENDER TIME "
+             "on /listings; the trust weight lands in the VEL catalogue (_CATEGORY_SIGNALS['Tutors'] "
+             "fide_ft/fi/ni/di/listed, claim_only) through the ordinary user_credentials lane. "
+             "Seed: fide_registry_seed.json.gz (4,237 unique FIDE IDs, highest title kept) by "
+             "migration 041, rides the deploy ref. ms.js: the claim card on My Space (Trust tab) and "
+             "credBadge() on cards/detail; FOUNDERS-MAP-1 rode along (the mapper never copied "
+             "`founders`, so the Ruby Spark could not render on a live listing). GATE: dark until "
+             "launch_switches.baseline_q4 = 1 (David's act) or env CREDENTIAL_CLAIMS=1; while dark "
+             "/credentials/mine answers 404 and /listings carries no badge. ANONYMITY HALF asserted "
+             "at source: the public badge object carries source/tier/title only -- never name, id or "
+             "federation. PROVEN in headless Chromium (scripts/smoke_harness/verify_cred.mjs): dark "
+             "404 -> armed 200 with registry 4,237; unknown ID gets the honest decline; wrong name "
+             "refused; registry name -> Tier B 'FIDE-listed trainer' on the rendered card; a second "
+             "account on the same ID -> 'taken'; id-verify with the registry name -> Tier A "
+             "'Verified FIDE Trainer (FT)' and the fide_ft signal earned; disarm -> dark again. "
+             "The badge copy carries the RG-0238 line: it says the credential is real, never that a "
+             "person is safe.",
        ref="Design ratified in conversation 30 Aug 2026 (David: the registry gives the "
            "trust score the meaning we intended). Spec: CREDENTIAL_CLAIMS_DESIGN.md + "
-           ".docx (30 Aug). Build slot: first post-launch-stabilization session (RUL-065 "
-           "timing class -- no launch-weekend deploys). RUL-037 machinery rule: this "
-           "entry, not David''s memory, carries the build across sessions.")
+           ".docx (30 Aug). Built 17 Sep 2026 under RUL-126.")
 def rg_credential_claims():
     out = []
-    base = "https://trustsquare.co"
+    bea = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if bea is None or js is None:
+        out.append((INFO, "NOT EVALUATED - repo not readable from here; source half skipped"))
+    else:
+        for needle, why in (
+                ('@app.post("/credentials/claim")', "the claim endpoint"),
+                ('@app.get("/credentials/mine")', "the probe endpoint"),
+                ('@app.post("/admin/credentials/registry-upsert")', "the monthly data-lane refresh"),
+                ("UNIQUE(source, credential_id))", "ONE account per credential, ever"),
+                ("def _credential_badges_for(", "the live JOIN at render time"),
+                ('"credential_badges"', "the badge on the public listing payload"),
+                ("if not _credential_claims_on():", "the dark gate"),
+                ('"category.tutors.fide_ft"', "the title-rank weight in the VEL catalogue"),
+                ('"claim_only": True', "claim-only signals never earned by upload")):
+            if needle not in bea:
+                out.append((FAIL, "bea_main.py lost %r -- %s is gone (FIDE-CLAIM-1)" % (needle, why)))
+        # anonymity half: the badge object is built from three fields only
+        m = re.search(r'\{"source": r\["source"\], "tier": r\["tier"\],\s*"title": _cred_badge_title', bea)
+        if not m:
+            out.append((FAIL, "the public badge object changed shape -- re-prove it carries no name, id "
+                              "or federation before trusting it (A2)"))
+        for needle, why in (("function credBadge(l){", "the badge renderer"),
+                            ("function msRenderCredentialCard(){", "the claim moment on My Space"),
+                            ("credential_badges: Array.isArray(l.credential_badges)", "the mapper carrying the badge"),
+                            ("founders: !!l.founders,", "FOUNDERS-MAP-1"),
+                            ("never that a person is safe", "the RG-0238 line in the badge copy")):
+            if needle not in js:
+                out.append((FAIL, "ms.js lost %r -- %s is gone (FIDE-CLAIM-1)" % (needle, why)))
+        if not os.path.exists(os.path.join(REPO, "fide_registry_seed.json.gz")):
+            out.append((FAIL, "fide_registry_seed.json.gz is missing -- migration 041 cannot seed the registry"))
+        if not os.path.exists(os.path.join(REPO, "migrations", "041_credential_registry_seed.py")):
+            out.append((FAIL, "migrations/041_credential_registry_seed.py is missing"))
+    # live: the lane answers per its flag state, and never leaks
     try:
+        fl = json.loads(_get("/flags"))
+        armed = bool(fl.get("baseline_q4"))
         import urllib.request as _u
-        req = _u.Request(base + "/credentials/mine", headers={"User-Agent": "ledger-probe"})
+        req = _u.Request(BASE + "/credentials/mine", headers=dict(UA))
         code = None
         try:
             code = _u.urlopen(req, timeout=15).getcode()
         except Exception as e:
             code = getattr(e, "code", None)
-        if code in (200, 401, 403):
-            out.append((INFO, "/credentials/mine answers (%s) -- the lane exists; verify flag, "
-                              "seed count and the anonymity half, then promote" % code))
-        else:
-            out.append((FAIL, "/credentials/mine does not answer (%r) -- FIDE-CLAIM-1 not built "
-                              "yet. Expected while OPEN. Spec: CREDENTIAL_CLAIMS_DESIGN.md; "
-                              "build order section 9; seed export from CityLauncher "
-                              "fide_trainers (4,237 rows verified on disk 30 Aug)" % code))
+        if armed and code not in (200, 401):
+            out.append((FAIL, "baseline_q4 is armed but /credentials/mine answers %r" % code))
+        if not armed and code != 404 and code is not None and code not in (401, 403):
+            out.append((FAIL, "baseline_q4 is dark but /credentials/mine answers %r -- the lane is lit "
+                              "outside David's arming (or CREDENTIAL_CLAIMS=1 is set on the box)" % code))
+        for row in json.loads(_get("/listings?city=Pretoria&category=Tutors")):
+            cb = row.get("credential_badges")
+            if cb and any(k not in ("source", "tier", "title") for b in cb for k in b):
+                out.append((FAIL, "a public badge carries a field beyond source/tier/title: %r" % (cb,)))
+    except ProbeOffline:
+        raise
     except Exception as e:
-        out.append((FAIL, "probe machinery failed (%s) -- treat as not built" % e))
-    return out
+        out.append((FAIL, "live probe failed (%s)" % e))
+    return out or [(INFO, "claim lane, registry seed, live JOIN badge, VEL weights and the dark gate are all in "
+                          "place; the public payload carries source/tier/title only")]
 
 
 @entry("RG-0217", "No outreach email is addressed to a PLACEHOLDER -- template artifacts "
@@ -12776,66 +12844,41 @@ def rg_sync_pulldown():
 @entry("RG-0221", "ZOOM, the narrowing funnel, keeps the properties that make it work: one "
        "question at a time, no zero-count option ever offered, no facet asked before its "
        "parent, geography never opening the funnel, and the flag DARK until David arms it",
-       OPEN,
-       scope="repo: ZOOM_HMI_SPEC.md is the build spec (RUL-076). While OPEN this entry "
-             "asserts only that the SPEC survives intact -- the design is ratified but "
-             "unbuilt, and a spec that quietly loses its engine rules is how the next "
-             "session re-derives them wrongly. WHEN BUILT, promote to LOCKED and extend the "
-             "assertion to the shipped code: (1) no rendered option carries count 0; "
-             "(2) facet counts and the result count come from ONE query and can never "
-             "disagree; (3) dep/depVal respected and dropping a parent drops its children; "
-             "(4) geography is never the first question in any category; (5) 'which street?' "
-             "is never asked for Collectables and travel geography opens at COUNTRY; "
-             "(6) at <=420px: <=6 options, >=44px tall, question in the lower half, no "
-             "horizontal overflow; (7) the flag defaults OFF and the pre-Zoom view still "
-             "renders when it is off; (8) results are ordered by the RANKING SCORE at "
-             "listing level (0.5*quality + 0.5*trust -- the same straight 50/50 as "
-             "estate_agents.py::_rank_agents), super_example still pinned (SUPER-PIN-1). "
-             "CLASS: this is the front door of every category -- the assertion is "
-             "per-category, never proven on Property alone. PREREQUISITE recorded 30 Aug: "
-             "listing quality is computed per-row (_import_quality_score) and NOT stored, so "
-             "SQL cannot order by it -- a maintained listings.quality_score column is part of "
-             "this build. GAP THIS CLOSES: the Ranking Score today ranks AGENTS only "
-             "(/agents/nearby); the listing feed sorts newest, or 'smart' = trust 60%% + "
-             "freshness 40%% with NO quality term -- so the method meant to promote listing "
-             "quality never touched the results a buyer browses. SECOND PREREQUISITE "
-             "(30 Aug): GET /listings takes NO buyer identity -- the Free/Global reach gate "
-             "(PRICING_CANON 2, buyer axis: Free=local city, Global=$5 national+global; "
-             "travel/stays 2a and online-mode 2b borderless on any tier) is enforced ONLY "
-             "on /wishlist/feed. Zoom puts geography on screen AS A COUNTED QUESTION, so an "
-             "ungated endpoint makes the count either a lie or a dead end -- the gate must "
-             "move into /listings INSIDE the counted set. Locked != empty: an out-of-reach "
-             "option is shown with its true count and the offer (RUL-066 rung 1), only "
-             "zero-count options are removed. EXTENDED 1 Sep 2026 (RUL-089, recorded by the "
-             "2 Sep attended session): the Tutors funnel gains two geo-derived drill-downs -- "
-             "nearby institutions and their subjects, one click each (ZOOM_HMI_SPEC.md sec 10). "
-             "Acceptance criteria extend to: singleton auto-collapse proven (engine rule 3.6 -- "
-             "a facet with exactly one non-zero option is never asked, chip applied silently), "
-             "and true institution counts (max 4 tiles, proximity x count, zero-count removed). "
-             "EXTENDED 4 Sep 2026 (RUL-097): the GENIE is Zoom's front door and voice -- an "
-             "opening circle of the seven categories with true counts, plus a persona on the "
-             "existing question sheet (ZOOM_HMI_SPEC.md sec 11). It is NOT a second funnel: "
-             "every narrowing decision below the first tap stays sec 3. Acceptance criteria "
-             "extend to: (12) with the genie band open every control hittable before it "
-             "opened is still hittable and the scroll height beneath is unchanged -- David's "
-             "covering rule; (13) exactly ONE full-screen genie step exists (the opening ring) "
-             "and it is unreachable once a category is chosen; (14) each category ball carries "
-             "a reach-scoped count from the same query as the list, out-of-reach dimmed with "
-             "its offer, zero removed; (15) the genie writes the SAME facet state as the chip "
-             "rail and its chips are removable identically. DEFERRED BY DAVID to a STOCK "
-             "trigger, never a date: Zoom armed in the field AND all seven categories non-zero "
-             "in a typical city AND ~30 days of funnel behaviour to compare against. So this "
-             "half is spec-intact only, and stays that way longer than the rest of RG-0221. "
-             "Same promote-when-built discipline; the spec-intact assertion covers sec 10 "
-             "and sec 11 too.",
-       ref="ZOOM-HMI-1 (30 Aug 2026). David ratified the design after tapping both "
-           "prototypes and set one binding constraint: 'I would actually like to see it on "
-           "the actual app first, not the live one that is in the field now.' So the build "
-           "is flag-dark in the REAL app, viewed locally and then in the RUL-075 sandbox "
-           "(shared, not duplicated), and ARMING IS DAVID'S ACT. Build window: first "
-           "post-launch, riding with the RUL-065 listing-friction batch "
-           "(RG-0205/0206/0207). Supersedes the unapproved 6 Jul chip-row FEA direction; "
-           "the 6 Jul server-side same-set facet counts are the foundation it builds on.")
+       LOCKED, fixed_on="2026-09-17",
+       scope="BUILT 17 Sep 2026 (ZOOM-HMI-1, RUL-126 baseline batch). Three halves, all asserted: "
+             "(A) ENGINE -- zoom_engine.py + test_zoom_engine.py run here as a harness: (1) no "
+             "option with count 0; (2) option counts and the result count come from ONE row set; "
+             "(3) dep/depVal respected and dropping a parent drops its children; (4) geography is "
+             "never the first question in ANY category; (5) Collectors never asked a street, travel "
+             "geography opens at COUNTRY; (7) the five named journeys within their tap budgets; "
+             "(8) results ordered by the Ranking Score 0.5*quality + 0.5*trust with super_example "
+             "pinned; 3.6 singleton auto-collapse lossless; 6.2 locked != empty (out-of-reach "
+             "geography shown with its TRUE count and a lock); rule 4 typed shortcut fills chips. "
+             "(B) APP -- bea_main.py: /zoom/next + the reach-scoped candidate set + the stored "
+             "listings.quality_score column (stamped on create/edit/publish/photo, backfilled by "
+             "migration 040) + _buyer_reach_tier (RUL-078: Pro -> global); ms.js: the funnel is "
+             "flag-gated at EVERY entry (openFilterSheet returns to the pre-Zoom sheet when "
+             "msBaselineOn() is false -- acceptance 8), renderGrid/renderAdvGrid honour _zoomIds and "
+             "the server order; ms.css: options >=56px, two per row. (C) LIVE -- /flags carries "
+             "baseline_q4 (dark = false until David arms it) and /zoom/next answers for all six "
+             "doors with a non-geo first question and no zero-count option. GEOMETRY (acceptance 6: "
+             "<=6 options, >=44px, question in the lower half, no horizontal overflow at 412px) was "
+             "proven in headless Chromium against the real app by scripts/smoke_harness/verify_zoom.mjs "
+             "-- re-run it in the cloud container before any change to the sheet; it cannot run "
+             "inside this board (no browser here). CLASS: the front door of every category; asserted "
+             "per category, never on Property alone. Local Market has no filter panel and is not a "
+             "Zoom door. Sec 10 (tutors institutions) is engine-ready (near_institution facet reads a "
+             "column no batch fills yet -> never asked; singleton auto-collapse IS proven by the harness, "
+             "RUL-089) and sec 11 (genie, EXTENDED 4 Sep 2026 (RUL-097)) stays spec-intact only, "
+             "deferred by David to a stock trigger.",
+       ref="ZOOM-HMI-1 (30 Aug 2026 design, RUL-076; built 17 Sep 2026 under RUL-126). David "
+           "ratified the design after tapping both prototypes and set one binding constraint: 'I "
+           "would actually like to see it on the actual app first, not the live one that is in the "
+           "field now.' So the build is flag-dark in the REAL app (launch_switches.baseline_q4, "
+           "default 0), viewable locally with ?baseline=1 on a non-production host only, then in "
+           "the RUL-075 sandbox, and ARMING IS DAVID'S ACT (POST /admin/flags). Supersedes the "
+           "unapproved 6 Jul chip-row FEA direction; the 6 Jul server-side same-set facet counts "
+           "are the foundation it builds on.")
 def rg_zoom_funnel():
     out = []
     sp = os.path.join(REPO, "ZOOM_HMI_SPEC.md")
@@ -12861,20 +12904,90 @@ def rg_zoom_funnel():
         if needle not in s:
             out.append((FAIL, "ZOOM_HMI_SPEC.md lost %r -- %s is gone (ZOOM-HMI-1)"
                               % (needle, why)))
+    # (A) the engine harness -- every acceptance property the spec can prove without a browser
+    eng = os.path.join(REPO, "zoom_engine.py")
+    tst = os.path.join(REPO, "test_zoom_engine.py")
+    if not os.path.exists(eng) or not os.path.exists(tst):
+        out.append((FAIL, "zoom_engine.py / test_zoom_engine.py missing -- the funnel's engine or "
+                          "its proof is gone (ZOOM-HMI-1)"))
+    else:
+        ok, blind, detail = _harness([sys.executable, tst], timeout=60, cwd=REPO)
+        if blind:
+            out.append((INFO, detail))
+        elif not ok:
+            out.append((FAIL, "test_zoom_engine.py FAILS -- an engine rule rotted: " + detail[-260:]))
+    # (B) the app wiring
+    bea = repo_file("bea_main.py")
+    js = repo_file("ms.js")
+    css = repo_file("ms.css")
+    if bea is None or js is None or css is None:
+        out.append((INFO, "NOT EVALUATED - repo not readable from here; app-wiring half skipped"))
+    else:
+        for needle, why in (
+                ('@app.get("/zoom/next")', "the /zoom/next endpoint"),
+                ("def _zoom_candidates(", "the reach-scoped candidate set"),
+                ("def _buyer_reach_tier(", "RUL-078's Pro -> global reach resolution"),
+                ('("quality_score",    "REAL")', "the stored listings.quality_score column"),
+                ("def _stamp_quality_score(", "the quality stamp on write"),
+                ('"baseline_q4": b("baseline_q4")', "the baseline_q4 flag in /flags"),
+                ("ADD COLUMN baseline_q4 INTEGER NOT NULL DEFAULT 0", "the flag column defaulting DARK")):
+            if needle not in bea:
+                out.append((FAIL, "bea_main.py lost %r -- %s is gone (ZOOM-HMI-1)" % (needle, why)))
+        for needle, why in (
+                ("function msBaselineOn()", "the one flag gate"),
+                ("if(typeof zoomOpen==='function' && zoomOpen(cat)) return;", "the pre-Zoom sheet surviving when the flag is off (acceptance 8)"),
+                ("if(!msBaselineOn()) return false;", "zoomOpen refusing when dark"),
+                ("if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id))) return false;", "renderGrid showing only the counted set"),
+                ("if(_zoomOrder && zoomActiveFor(activeFilter)){", "the server's ranking order on the grid"),
+                ("function _msMapBeaListing(l){", "the shared BEA->FEA mapper (rows the feed never loaded)"),
+                ("zoomActiveFor('Adventures')", "the Adventures screen honouring the funnel")):
+            if needle not in js:
+                out.append((FAIL, "ms.js lost %r -- %s is gone (ZOOM-HMI-1)" % (needle, why)))
+        if ".zoom-opt{min-height:56px;min-width:0;" not in css or "grid-template-columns:minmax(0,1fr) minmax(0,1fr)" not in css:
+            out.append((FAIL, "ms.css: the option tiles are no longer >=56px / two per row (spec s5)"))
+        if 'html[data-baseline="1"] .zoom-sheet.open{display:block;}' not in css:
+            out.append((FAIL, "ms.css: the sheet is no longer gated on data-baseline -- it could render dark"))
     for proto in ("ZOOM_HMI_PROTOTYPE_2026-08-30.html", "ZOOM_HMI_PHONE_2026-08-30.html",
                   "genie/SEARCH_CONCEPT.html"):
         if not os.path.exists(os.path.join(REPO, proto)):
             out.append((FAIL, "%s is missing -- the spec's measured tap budgets can no "
                               "longer be re-run (ZOOM-HMI-1)" % proto))
-    if not out:
-        out.append((INFO, "PENDING BUILD -- spec intact, both prototypes present; design "
-                          "ratified, build not started. This entry can only assert its "
-                          "PRE-BUILD half today, so it is OPEN by design and must NOT be "
-                          "promoted: promoting now would lock the spec-only assertion and "
-                          "retire the 8 shipped-code properties in the ref (LEDGER-PENDING-"
-                          "BUILD-1). Promote when ZOOM-HMI-1 ships AND this harness checks "
-                          "the shipped code."))
-    return out
+    # (C) live: the flag is served (dark until David arms it) and every door answers
+    try:
+        fl = json.loads(_get("/flags"))
+        if "baseline_q4" not in fl:
+            out.append((FAIL, "live /flags carries no baseline_q4 -- the batch's one switch is not "
+                              "deployed, so the funnel cannot be armed OR proven dark"))
+        elif fl.get("baseline_q4"):
+            out.append((INFO, "baseline_q4 is ARMED live (David's act) -- the funnel is in the field"))
+        for cat in ("Property", "Cars", "Tutors", "Services", "Collectors", "Adventures"):
+            try:
+                z = json.loads(_get("/zoom/next?category=%s&city=Pretoria&rows=0" % cat))
+            except ProbeOffline:
+                raise
+            except Exception as ex:
+                out.append((FAIL, "live /zoom/next does not answer for %s (%s) -- the funnel is not "
+                                  "deployed or its door is broken" % (cat, repr(ex)[:80])))
+                continue
+            q = z.get("question")
+            if q:
+                if str(q.get("facet", "")).startswith("geo_") and not any(
+                        not c.get("geo") for c in z.get("chips", [])):
+                    out.append((FAIL, "live %s door: geography opened the funnel (%s)" % (cat, q.get("facet"))))
+                zero = [o for o in (q.get("options") or []) + (q.get("tail") or []) if not o.get("n")]
+                if zero:
+                    out.append((FAIL, "live %s door offers a zero-count option: %s" % (cat, zero[:2])))
+                if len(q.get("options") or []) > 6:
+                    out.append((FAIL, "live %s door renders %d options (max 6)" % (cat, len(q["options"]))))
+                if sum(o.get("n", 0) for o in (q.get("options") or []) + (q.get("tail") or [])) > z.get("total", 0):
+                    out.append((FAIL, "live %s door: option counts exceed the result count" % cat))
+    except ProbeOffline:
+        raise
+    except Exception as ex:
+        out.append((FAIL, "live probe of the funnel failed: %r" % (ex,)))
+    return out or [(INFO, "spec intact; engine harness green; app wired and flag-gated; every live "
+                          "door answers a non-geo first question with true counts; flag dark until "
+                          "David arms it")]
 
 
 @entry("RG-0222", "An anonymous caller never receives a customer's IDENTITY or the text of "
@@ -13056,10 +13169,20 @@ def rg_maint_intake_lanes():
 @entry("RG-0224", "SQUIRE keeps the four properties that make it legal, anonymous and "
        "on-model: it is Pro-only, it never GRANTS an introduction, seller identity never "
        "enters its context, and its top-up is TUPPENCE -- no second currency exists",
-       OPEN,
-       scope="repo: SQUIRE_SPEC.md is the build spec (RUL-077). While OPEN this asserts the "
-             "SPEC survives -- ruled but unbuilt. WHEN BUILT, promote to LOCKED and extend to "
-             "the shipped code: (1) Pro-gated, no capability leak to Free/Starter/Agency; "
+       LOCKED, fixed_on="2026-09-17",
+       scope="BUILT 17 Sep 2026 (SQUIRE-1, RUL-126 batch, flag-dark behind baseline_q4). bea_main.py "
+             "/squire/* (status, brief, answers, shortlist, approach, inbox, answer, topup, run-all) + "
+             "the 6-hourly _squire_watch_loop; ms.js the My Space card (msRenderSquireCard) and the "
+             "seller inbox. A brief IS a Zoom path plus prose: zoom_engine.apply_text turns the words "
+             "into chips and _squire_shortlist matches over the SAME reach-scoped set Zoom uses. "
+             "PROVEN in headless Chromium (scripts/smoke_harness/verify_squire.mjs): dark 404; Starter "
+             "refused 403 with no allowance leaked; Pro buyer_token resolves to global; a brief about a "
+             "14-year-old is flagged minor and carries neither the name nor the school; shortlist with "
+             "reasons and no seller e-mail; draft_only check writes nothing; one approach metered 1/20; "
+             "the seller answers through Squire and the buyer reads it; intro_requests untouched; at the "
+             "cap the offer arrives WITH the limit, the draft comes back unchanged, no Tuppence moves, "
+             "and a ceiling_hit event carries limit/tier/category; top-up debits exactly 1T and adds 5. "
+             "The shipped-code assertion below checks: (1) Pro-gated, no capability leak to Free/Starter/Agency; "
              "(2) Watches and For You remain FREE on every tier (Zoom's fifth rule); "
              "(3) no introduction is ever granted by Squire -- every introduction burns 1T at "
              "every tier, subscriptions buy slots and reach and NEVER introductions "
@@ -13113,14 +13236,43 @@ def rg_squire():
     if not os.path.exists(zoom):
         out.append((FAIL, "ZOOM_HMI_SPEC.md is gone -- Squire's stated build dependency "
                           "(Zoom first) can no longer be honoured (SQUIRE-1)"))
-    if not out:
-        out.append((INFO, "PENDING BUILD -- spec intact; ruled, unbuilt, Zoom-first order "
-                          "recorded. This entry can only assert its PRE-BUILD half today, so "
-                          "it is OPEN by design and must NOT be promoted: promoting now would "
-                          "lock the spec-only assertion and retire the nine shipped-code "
-                          "properties in the scope (LEDGER-PENDING-BUILD-1). Promote when "
-                          "SQUIRE-1 ships AND this harness checks the shipped code."))
-    return out
+    bea = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if bea is None or js is None:
+        out.append((INFO, "NOT EVALUATED - repo not readable from here; shipped-code half skipped"))
+        return out
+    for needle, why in (
+            ("def _squire_require_pro(", "(1) the Pro gate every Squire endpoint passes through"),
+            ('if tier != "pro":', "(1) no leak to Free/Starter/Agency"),
+            ("def _squire_allowance(", "(5)-(7) the cap"),
+            ('"offer": {"approaches": SQUIRE_TOPUP_BUNDLE, "tuppence": SQUIRE_TOPUP_TUPPENCE', "(5) the offer arriving with the limit"),
+            ('return {"status": "ceiling", "allowance": al, "draft": body.text or ""', "(5) no charge on a rejected attempt, draft kept"),
+            ("if body.draft_only:", "(6) the warning before composing effort"),
+            ('_squire_event(conn, em, "ceiling_hit", "pro", b["category"], al["limit"]', "(7) ceiling telemetry with limit/tier/category"),
+            ("'squire_topup', ?, ?)", "(8) the top-up as a TUPPENCE ledger row"),
+            ("def _squire_minimise(", "(4) the minor-data minimiser"),
+            ("_zoom_public_row(r)", "(4) seller identity stripped from every listing Squire returns"),
+            ('if st == "pro" or (st == "starter" and _baseline_q4_on()):\n                return "global"\n    except Exception:\n        pass\n    row = conn.execute(', "(9) _buyer_tier consulting the seller subscription"),
+            ("def _squire_watch_all(", "the server-side watch (RUL-070)")):
+        if needle not in bea:
+            out.append((FAIL, "bea_main.py lost %r -- %s is gone (SQUIRE-1)" % (needle, why)))
+    # (3) Squire never grants an introduction: the Squire block never writes intro_requests
+    i = bea.find("# SQUIRE — the Pro subscriber's personal agent"); j = bea.find("# ── SEC-2 / DEPLOY-CHANNEL-1", i)
+    if i < 0 or j < 0:
+        out.append((FAIL, "the Squire block markers moved -- re-prove it never writes intro_requests (SQUIRE-1)"))
+    elif "INSERT INTO intro_requests" in bea[i:j] or "intro_hold" in bea[i:j]:
+        out.append((FAIL, "the Squire block writes an introduction -- Squire may PREPARE one, never GRANT one (PRICING_CANON 3)"))
+    # (8) no second currency anywhere
+    if re.search(r"squire_(token|coin|credit)s?\b|SquireCoin|squire_points", bea + js, re.I):
+        out.append((FAIL, "a second currency name appears in the code -- the top-up is TUPPENCE (SQUIRE-1)"))
+    # (2) Watches stay free: the watch endpoints never consult tier
+    k = bea.find('@app.post("/zoom/watch")'); k2 = bea.find('@app.delete("/zoom/watch/{watch_id}")', k)
+    if k > 0 and k2 > k and "_squire_require_pro" in bea[k:k2]:
+        out.append((FAIL, "a Watch now requires Pro -- Zoom's fifth rule collapsed (SQUIRE-1 criterion 2)"))
+    for needle in ("function msRenderSquireCard(){", "Introduce me (1T)", "draft_only:1"):
+        if needle not in js:
+            out.append((FAIL, "ms.js lost %r (SQUIRE-1)" % needle))
+    return out or [(INFO, "spec intact; Squire gated to Pro, metered on the approach, offer with the limit, "
+                          "Tuppence top-up, minors minimised, no introduction ever written by it, watches free")]
 
 
 @entry("RG-0225", "Outreach volume can never grow on the ABSENCE of evidence: a city ramps "
@@ -20837,7 +20989,19 @@ def rg_launch_special_date_gate():
 
 @entry("RG-0346", "The agency letters the machinery SENDS tell the agency story with a console CTA -- not only the "
                   "design drafts nobody sends",
-       OPEN, scope="CityLauncher/emailer/templates/{agency,travel_agency,cars_dealer}_outreach.html (the copies "
+       LOCKED, fixed_on="2026-09-17",
+       scope="FIXED 17 Sep 2026 (AGENCY-STORY-1 + AGENCY-CTA-1, RUL-126 batch). The three-lane block was ported "
+             "from the design drafts into the three SENDING copies with lane 1 routed through "
+             "trustsquare.co/support (RUL-100: never 'reply to this email'); emailer.render() now mints the "
+             "CTA for agency-class prospects (Estate Agency / Travel Agencies / Tour Operators / Car Dealers "
+             "-> skins agency / operator / dealer) through POST /agencies/wave-prep (mint_agency_console_link), "
+             "tagging it with the wave source, and LOGS a fallback to the solo link when the mint cannot happen "
+             "so a solo link can never pass for a console link silently. The orchestration_v2 mirror was rebuilt "
+             "(RG-0344 green). PROVEN on the rig (scripts/smoke_harness/verify_letters.mjs): the three letters "
+             "render with the lane block and the support door, no placeholder left, every CTA a "
+             "?signin=<jwt>&<skin>=1 console link; opening the agency letter's CTA in the real app signed the "
+             "fixture admin (Ntombi Dlamini, Dlamini & Sons Properties) in and opened the agency console. "
+             "ORIGINAL SCOPE: CityLauncher/emailer/templates/{agency,travel_agency,cars_dealer}_outreach.html (the copies "
                    "the wave runner draws for Estate Agents / Travel Agencies / Car Dealers) + the CityLauncher "
                    "send lane. Two legs: (a) each of the three carries the three-lane block (agency-import-guide "
                    "or agents-as-a-service link) as RG-0165's design does -- with lane 1 routed through "
@@ -20874,6 +21038,11 @@ def rg_sending_agency_letters_carry_agency_story():
             lane += open(fp, encoding="utf-8", errors="replace").read()
     if "wave-prep" not in lane:
         out.append((FAIL, "CityLauncher send lane never calls /agencies/wave-prep -- an agency CTA cannot open a console"))
+    for needle, why in (("def mint_agency_console_link(", "the console-link mint"),
+                        ("magic_link = mint_agency_console_link(prospect, api_base) or magic_link", "render() using it for agency-class letters"),
+                        ("solo link used", "the logged fallback (a solo link never passes for a console link silently)")):
+        if needle not in lane:
+            out.append((FAIL, "emailer.py lost %r -- %s (AGENCY-CTA-1)" % (needle, why)))
     return out or [(INFO, "sending agency letters carry the agency story and the lane mints console links")]
 
 
@@ -23129,6 +23298,369 @@ def rg_brain_vantage_is_not_a_fault():
                           "RG-0133's rule, that no instrument defaults to a health colour"))
     return out or [(INFO, "a local-only refusal is named as a vantage limit, reads NOT_EVALUATED, "
                           "renders grey on the card, and still routes Path B by fail-safe")]
+
+
+
+@entry("RG-0383", "DCB-001: photos are uploaded in ANY order and ordered AFTERWARDS -- batch pick, "
+                  "tap ONE as cover, AI order per canon, drag to adjust, and publish holds the cover; "
+                  "the named-slot step still serves byte for byte while the flag is dark",
+       LOCKED, fixed_on="2026-09-17",
+       scope="ms.js sfDcbPhotosS/sfDcbChosen/sfDcbSetCover/sfDcbAiOrder/sfDcbBindDrag/sfDcbApply, "
+             "ms.css .dcb-*, bea_main.py POST /listings/photos/order. RUL-127 (14 Sep 2026), rides "
+             "RUL-126's single baseline behind launch_switches.baseline_q4. Consistency at OUTPUT: "
+             "the ordered set is DERIVED into the existing slot model (order[0] IS the main slot), so "
+             "sfFinish, the quality meter, the multivision pass and the upload-time anonymity gate are "
+             "untouched. The order endpoint answers with RULES when no vision provider is live "
+             "(cover first, seller's order kept) so the button never dies; vision is spent only under "
+             "the cost ceiling. PROVEN in headless Chromium (scripts/smoke_harness/verify_dcb.mjs, "
+             "412x915): five photos picked in one go in an arbitrary order keep the seller's order; "
+             "one tap makes a photo the cover and the main slot IS that file; AI order completes with "
+             "a named answer; a pointer drag moves a tile and the publish order equals the grid order; "
+             "arrows work as the fallback; removing a photo holds the cover; flag OFF renders the old "
+             "slot step and no grid. MEASUREMENT (RUL-127): time-to-publish before/after reads from "
+             "/onboard/funnel (photo_pick -> finish) once armed; cover-replacement rate from "
+             "photo_ai_order events; David Jnr's retest is his, not a check.",
+       ref="DCB-001 dossier (DESIGN_BACKLOG.md, 11 Aug 2026) approved by David 14 Sep 2026: "
+           "'Approved -- build it'. Evidence F-011 (David Jnr: sequencing 'too difficult' on a phone), "
+           "TS-0006, TS-0022/28/29/30 (Maroushka: cover and photo friction), TS-0030 (HEIC silence).")
+def rg_dcb001_batch_then_order():
+    js = repo_file("ms.js"); css = repo_file("ms.css"); bea = repo_file("bea_main.py")
+    if js is None or css is None or bea is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    for needle, why in (
+            ("if(sfDcbOn()) return sfDcbPhotosS();", "the flag-gated hand-off from the slot step"),
+            ("function sfDcbChosen(input){", "batch pick"),
+            ("var placed=files.map(function(file,i){", "the seller's own order kept across async reads"),
+            ("function sfDcbSetCover(key){", "tap ONE as cover"),
+            ("async function sfDcbAiOrder(){", "the AI order button"),
+            ("function sfDcbBindDrag(){", "drag to adjust"),
+            ("document.addEventListener('pointerup', end);", "the drag gesture surviving a re-render"),
+            ("if(i===0){ k='main'; }", "publish holds the cover: order[0] IS the main slot"),
+            ("d.assign={};              // a hand-made order IS the order", "a hand-made order winning over a stale AI assignment"),
+            ("if(_dcbJustDragged) return;", "a drag's ending click never re-picks the cover")):
+        if needle not in js:
+            out.append((FAIL, "ms.js lost %r -- %s is gone (DCB-001)" % (needle, why)))
+    if ".dcb-tile.cover{" not in css or "grid-column:span 2" not in css:
+        out.append((FAIL, "ms.css: the cover tile no longer stands out (DCB-001)"))
+    if '@app.post("/listings/photos/order")' not in bea or 'method = "rules"' not in bea:
+        out.append((FAIL, "bea_main.py: /listings/photos/order or its rules fallback is gone -- the AI "
+                          "order button would die without a vision provider (DCB-001)"))
+    return out or [(INFO, "batch pick, cover tap, AI order with a rules fallback, drag, arrows, and "
+                          "the derived slot model are all in place; flag-gated")]
+
+
+@entry("RG-0384", "a listing card whose primary photo fails to load FALLS BACK to the category photo "
+                  "-- the inline onerror handler is a valid statement, not an unterminated string",
+       LOCKED, fixed_on="2026-09-17",
+       scope="ms.js cardHtml(): the primary <img> onerror handler. CARD-ONERROR-1. Repair lane "
+             "(RUL-126 governs design, not repair). CLASS: every inline handler built by string "
+             "concatenation in cardHtml -- a template that closes a JS string with the wrong quote "
+             "fails silently in the browser (SyntaxError in the handler, card left with a broken "
+             "image icon) and passes node --check, because the string is data to node.",
+       ref="CARD-ONERROR-1 (17 Sep 2026). Found while proving Zoom in headless Chromium against the "
+           "real app: every card whose photo 404'd threw 'Invalid or unexpected token' from its own "
+           "onerror. git log -S dates the missing quote to Session 71 (Photo-First AI Onboarding) -- "
+           "live for two months, invisible while R2 served every photo, visible the moment one did "
+           "not. One character: the interpolated display value was never closed.")
+def rg_card_onerror_valid():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - ms.js is not readable from here")]
+    bad = "this.nextElementSibling.style.display='${_fallbackPhoto?'block':'flex'}\">"
+    good = "this.nextElementSibling.style.display='${_fallbackPhoto?'block':'flex'}'\">"
+    if bad in js:
+        return [(FAIL, "cardHtml's photo onerror is an unterminated string again -- a card whose "
+                       "photo fails shows a broken image instead of the category photo (CARD-ONERROR-1)")]
+    if good not in js:
+        return [(FAIL, "cardHtml's photo onerror handler changed shape -- re-prove it in a browser "
+                       "before trusting the fallback (CARD-ONERROR-1)")]
+    return [(INFO, "the card photo fallback handler is a valid statement")]
+
+
+
+@entry("RG-0385", "RUL-129: the trust ladder carries evidence a PRIVATE seller can hold for Property "
+                  "and Local Market -- each entry a dated, sourced, outside-checkable fact added once -- and "
+                  "the two draft screens read their block from the catalogue, never from a screen",
+       LOCKED, fixed_on="2026-09-17",
+       scope="bea_main.py _CATEGORY_SIGNALS: Property_private gains title_deed +8, rates_account +4, "
+             "levy_statement +3, coc_electrical +3; local_market gains food_coa +5, trading_permit +4, "
+             "producer_registration +4 -- all evidence_required, private_seller, and baseline_q4 (dark "
+             "until David arms the batch; _trust_evidence filters them out while dark so no trust "
+             "surface can see them early). GET /trust/catalogue serves names/points/how-to and hides "
+             "the dark entries; quick.html's draft screens for property and localmarket fill their "
+             "block from that endpoint (points read from the catalogue, RUL-129's own words), so a "
+             "dark batch leaves both screens silent exactly as the 13 Sep category-voice work left "
+             "them. THE STANDARD each entry meets (RUL-129): a fact about a DOCUMENT or a THIRD PARTY, "
+             "never a conclusion about the person (RG-0238); checkable by somebody outside TrustSquare; "
+             "dated; added once. Points are the CTO's draft against that standard, reported to David "
+             "with the batch. PROVEN in headless Chromium (scripts/smoke_harness/verify_vel.mjs): dark "
+             "-> endpoint empty, both drafts silent; armed -> Property draft lists the four catalogue "
+             "entries with their points and Local Market the three; /trust-score/breakdown carries "
+             "title_deed only while armed.",
+       ref="RUL-129 (14 Sep 2026): 'add private-seller entries to the ladder'. Gap named 13 Sep: Property "
+           "and Local Market topped out at PPRA/EAAB registration and association office-bearer roles, "
+           "so the person listing one house or one batch of jam was told nothing.")
+def rg_private_seller_vel():
+    bea = repo_file("bea_main.py"); qk = repo_file("quick.html")
+    if bea is None or qk is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    for sid in ("category.property.title_deed", "category.property.rates_account", "category.property.levy_statement",
+                "category.property.coc_electrical", "category.lm.trading_permit", "category.lm.food_coa",
+                "category.lm.producer_registration"):
+        i = bea.find('"%s"' % sid)
+        if i < 0:
+            out.append((FAIL, "%s is gone from the VEL catalogue (RUL-129)" % sid)); continue
+        line = bea[i:bea.find("\n", i)]
+        if '"private_seller": True' not in line or '"baseline_q4": True' not in line or '"evidence_required": True' not in line:
+            out.append((FAIL, "%s lost private_seller / baseline_q4 / evidence_required -- it is no longer a dark, "
+                              "evidence-backed private-seller entry (RUL-129)" % sid))
+        if not re.search(r"dated|current|latest", line, re.I) or "heck" not in line:
+            out.append((FAIL, "%s no longer says it is dated and outside-checkable in its own words (RUL-129 standard)" % sid))
+    if '@app.get("/trust/catalogue")' not in bea:
+        out.append((FAIL, "GET /trust/catalogue is gone -- a draft screen would have to type its own points again"))
+    if 'if any(v.get("baseline_q4") for v in cat_signals.values()) and not _baseline_q4_on():' not in bea:
+        out.append((FAIL, "_trust_evidence no longer hides the dark entries -- the batch leaks into live trust scores"))
+    if "/trust/catalogue?category=" not in qk or "CRED[p[1]] = d.signals" not in qk:
+        out.append((FAIL, "quick.html no longer reads the Property / Local Market block from the catalogue"))
+    return out or [(INFO, "seven private-seller entries in the catalogue, dark until armed, served by "
+                          "/trust/catalogue and read by the two draft screens")]
+
+
+
+# ── RUL-125(c): BASELINE READINESS for the Quick app -- six live checks, opened with the build,
+#    all green = baseline ready. "Happy with the product as a whole" stays David's own judgement.
+@entry("RG-0386", "QUICK-READY-1: the five-tap journey completes and a stranger arriving by e-mail "
+                  "link publishes LIVE -- the origin hands the door its identity and key (/quick/me)",
+       LOCKED, fixed_on="2026-09-17",
+       scope="quick.html (the tap-only harness, RUL-117) + bea_main.py GET /quick/me (QUICK-ME-1). "
+             "PROVEN in headless Chromium at 412x915 (scripts/smoke_harness/verify_quick.mjs): a "
+             "fresh visitor with no app marker and no cookie is LIVE (QUICK_LIVE true, key from "
+             "/quick/me); Housekeeping reaches its own advert in 5 taps; no horizontal overflow. "
+             "Live half here: /quick.html answers 200 and carries the harness; /quick/me answers "
+             "200 anonymously with signed_in false AND a key. 'On a real phone' is David's phone -- "
+             "this entry proves the journey at phone width; his tap is his.",
+       ref="RUL-125(c) (12 Sep 2026); QUICK-LIVE-1 (15 Sep) made the door live; QUICK-ME-1 "
+           "(17 Sep) closed the gap that a visitor by e-mail link held no key and dry-ran.")
+def rg_quick_ready_1():
+    out = []
+    try:
+        html = _get("/quick.html")
+        for needle in ("function start(", "function finish(", "/quick/me", "priceWithBasis("):
+            if needle not in html:
+                out.append((FAIL, "live /quick.html lost %r (QUICK-READY-1)" % needle))
+        me = json.loads(_get("/quick/me"))
+        if me.get("signed_in") is not False or not me.get("key"):
+            out.append((FAIL, "live /quick/me does not hand a stranger the key -- Publish dry-runs for "
+                              "everyone who arrives by e-mail link (QUICK-ME-1)"))
+    except ProbeOffline:
+        raise
+    except Exception as ex:
+        out.append((FAIL, "live probe failed: %r -- /quick/me or /quick.html not deployed" % (ex,)))
+    return out or [(INFO, "the door is live for a stranger; five taps reach the advert (proven at phone width)")]
+
+
+@entry("RG-0387", "QUICK-READY-2: the hand-over lands as a REAL listing with the expected score -- the "
+                  "draft carries the required suburb and a priced basis, and the stored quality_score "
+                  "equals the score the spreader showed",
+       LOCKED, fixed_on="2026-09-17",
+       scope="quick.html handoverPayload/priceWithBasis (QUICK-PRICE-BASIS-1: the price chips were bare "
+             "amounts and JNR-FIX-5B refused them with 422 -- the spreader's own first lane could not "
+             "hand over at all, found proving this entry on the rig) -> POST /listings -> "
+             "_stamp_quality_score. PROVEN on the rig: Draft #N lands as listing_status 'draft' under the "
+             "typed e-mail, suburb set, quality_score 60 == the spreader's LS 60. Live half: the source "
+             "carries the basis map and the suburb field; the landed row is never written by this board.",
+       ref="RUL-125(b) one server, one rulebook; QUICK-HANDBACK-1 (15 Sep).")
+def rg_quick_ready_2():
+    qk = repo_file("quick.html")
+    if qk is None:
+        return [(INFO, "NOT EVALUATED - quick.html not readable from here")]
+    out = []
+    for needle, why in (("var PRICE_BASIS={homehelp:' / day', tutors:' / hour'", "the price basis per lane"),
+                        ("price: price ? priceWithBasis(key, price.label) : 'POA'", "the basis on the way out"),
+                        ("suburb: where ? where.label : LOC.suburb,", "the required suburb"),
+                        ("seller_email: HANDOVER.email || null", "the draft's owner")):
+        if needle not in qk:
+            out.append((FAIL, "quick.html lost %r -- %s (QUICK-READY-2)" % (needle, why)))
+    return out or [(INFO, "the hand-over posts a complete, priced, owned draft; score parity proven on the rig")]
+
+
+@entry("RG-0388", "QUICK-READY-3: the vouching gate holds -- an employer link is minted only for a real "
+                  "account, a forged token is refused, and the confirm door answers",
+       LOCKED, fixed_on="2026-09-17",
+       scope="bea_main.py /trust/employer-link, /trust/employer-who, /trust/employer-confirm (RUL-136) + "
+             "the /confirm/ page. Live: link for a non-account -> 404; employer-who with a forged token -> "
+             ">=400; /confirm/ -> 200. The direction is the protection: SHE sends the link.",
+       ref="RUL-115 vouching principle; RUL-136 employer confirmation (15 Sep 2026).")
+def rg_quick_ready_3():
+    out = []
+    import urllib.request as _u
+    def code(path):
+        try:
+            return _u.urlopen(_u.Request(BASE + path, headers=dict(UA)), timeout=15).getcode()
+        except Exception as e:
+            return getattr(e, "code", None)
+    c1 = code("/trust/employer-link?email=nobody-here-%d@example.com" % int(time.time()))
+    if c1 != 404:
+        out.append((FAIL, "an employer link was minted (or not refused with 404) for a non-account: %r" % c1))
+    c2 = code("/trust/employer-who?token=not-a-token")
+    if c2 is None or c2 < 400:
+        out.append((FAIL, "employer-who accepted a forged token: %r" % c2))
+    c3 = code("/confirm/")
+    if c3 != 200:
+        out.append((FAIL, "/confirm/ does not answer 200 (%r) -- the vouching door is dark" % c3))
+    return out or [(INFO, "link minted only for real accounts, forged tokens refused, confirm door live")]
+
+
+@entry("RG-0389", "QUICK-READY-4: the worker's personal link brings a hirer in FREE -- pairing writes no "
+                  "Tuppence row, and the /q/ door answers",
+       LOCKED, fixed_on="2026-09-17",
+       scope="bea_main.py buzz_pair_create (source: the function never touches transactions) + the /q/ "
+             "door (DOOR-1). PROVEN on the rig: a pair created from the worker's side leaves the "
+             "transactions count unchanged. Rule (QUICKLIST_DESIGN_NOTES B): connections the WORKER "
+             "brings are free; connections the PLATFORM makes cost a Tuppence.",
+       ref="RUL-124(c)/RUL-132(e): one thing called Buzz; free vs paid is a billing fact.")
+def rg_quick_ready_4():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        i = bea.find('@app.post("/buzz/pair")'); j = bea.find('@app.post("/buzz/allow")', i)
+        if i < 0 or j < 0:
+            out.append((FAIL, "buzz_pair_create moved -- re-prove it charges nothing"))
+        elif "transactions" in bea[i:j] or "intro_hold" in bea[i:j]:
+            out.append((FAIL, "buzz_pair_create touches the Tuppence ledger -- the worker's link is no longer free"))
+    try:
+        import urllib.request as _u
+        c = _u.urlopen(_u.Request(BASE + "/q/", headers=dict(UA)), timeout=15).getcode()
+        if c != 200:
+            out.append((FAIL, "/q/ door answers %r" % c))
+    except ProbeOffline:
+        raise
+    except Exception as e:
+        out.append((FAIL, "/q/ door probe failed: %r" % (getattr(e, 'code', None) or e,)))
+    return out or [(INFO, "the worker's link pairs for free; the door is live")]
+
+
+@entry("RG-0390", "QUICK-READY-5: the buzz arrives -- the line goes through once the receiver has "
+                  "switched it on, with the sender's name on it, by push first and e-mail as backup",
+       LOCKED, fixed_on="2026-09-17",
+       scope="bea_main.py buzz_send (RUL-122 channels, RUL-132 invariants). PROVEN on the rig: before the "
+             "hirer allows -> 403 'not switched on'; after /buzz/allow -> 200 with from_name and "
+             "delivered='email' (no push device on the rig; on live push goes first, RG-0359). Live half: "
+             "POST /buzz exists and refuses an unauthenticated caller (401/403/422), never 404/500.",
+       ref="RUL-122 (push first, e-mail backup, SMS never); RUL-132(d) invariants.")
+def rg_quick_ready_5():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        i = bea.find('@app.post("/buzz")'); j = bea.find("\n@app.", i + 10)
+        blk = bea[i:j] if (i > 0 and j > i) else ""
+        for needle in ("from_name", "they have not switched buzzes on for you yet"):
+            if needle not in blk and needle not in bea:
+                out.append((FAIL, "buzz_send lost %r (QUICK-READY-5)" % needle))
+    try:
+        import urllib.request as _u, urllib.error as _ue
+        req = _u.Request(BASE + "/buzz", data=b'{"from_email":"a@b.c","to_email":"c@d.e","text":"x"}',
+                         headers=dict(UA, **{"Content-Type": "application/json"}), method="POST")
+        try:
+            c = _u.urlopen(req, timeout=15).getcode()
+        except _ue.HTTPError as e:
+            c = e.code
+        if c in (404, 500, 502, 503):
+            out.append((FAIL, "live POST /buzz answers %r -- the buzz lane is down" % c))
+    except ProbeOffline:
+        raise
+    except Exception as e:
+        out.append((FAIL, "live /buzz probe failed: %r" % (e,)))
+    return out or [(INFO, "the buzz lane is live and refuses strangers; delivery proven on the rig")]
+
+
+@entry("RG-0391", "QUICK-READY-6: the coloured tile installs -- the Quick manifest is served with its own "
+                  "id, start_url, colour and inlined icon, quick.html links it, and the ruled sub-path "
+                  "/quick/ answers (RUL-125(a))",
+       LOCKED, fixed_on="2026-09-17",
+       scope="static/brand/quick.webmanifest (QUICK-TILE-1), quick.html <link rel=manifest>, migration "
+             "042_quick_subpath.py (QUICK-PATH-1: nginx serves /quick/ onto the same file; the installed "
+             "tile's start_url /quick.html keeps working). The service worker registration that lets "
+             "Chrome offer the install is RG-0364.",
+       ref="RUL-125(a) same origin, sub-path, own manifest, own tile.")
+def rg_quick_ready_6():
+    out = []
+    try:
+        mj = json.loads(_get("/static/brand/quick.webmanifest"))
+        if mj.get("id") != "/quick.html" or mj.get("start_url") != "/quick.html":
+            out.append((FAIL, "the Quick manifest id/start_url changed -- an installed tile would break: %r/%r"
+                              % (mj.get("id"), mj.get("start_url"))))
+        if mj.get("theme_color", "").upper() != "#7C3AED":
+            out.append((FAIL, "the Quick tile lost its own colour (%r)" % mj.get("theme_color")))
+        ic = (mj.get("icons") or [{}])[0].get("src", "")
+        if not ic.startswith("data:image/png"):
+            out.append((FAIL, "the Quick icon is no longer inlined -- a first deploy would lose the tile to a screenshot"))
+        html = _get("/quick.html")
+        if '<link rel="manifest" href="/static/brand/quick.webmanifest">' not in html:
+            out.append((FAIL, "quick.html no longer links its manifest"))
+        import urllib.request as _u
+        try:
+            c = _u.urlopen(_u.Request(BASE + "/quick/", headers=dict(UA)), timeout=15).getcode()
+        except Exception as e:
+            c = getattr(e, "code", None)
+        if c != 200:
+            out.append((FAIL, "/quick/ answers %r -- RUL-125(a)'s ruled path is not served (migration 042 "
+                              "not applied)" % c))
+    except ProbeOffline:
+        raise
+    except Exception as e:
+        out.append((FAIL, "tile probe failed: %r" % (e,)))
+    return out or [(INFO, "manifest, colour, inlined icon, link and the /quick/ path all answer")]
+
+
+
+@entry("RG-0392", "RUL-128: ONE $5 tier -- once armed, Global buyer reach comes with Starter, the separate "
+                  "buyer subscription is retired (410), the pricing page reads one ladder, and every "
+                  "existing Global subscriber keeps what they paid for at the same price with Paystack "
+                  "untouched",
+       LOCKED, fixed_on="2026-09-17",
+       scope="bea_main.py _fold_global_into_starter (runs ONCE at the moment David arms baseline_q4 via "
+             "POST /admin/flags, audited per account, idempotent; grants Starter to every account holding "
+             "an unexpired Global row; never touches wishlist_subscriptions or Paystack), the 410 on "
+             "POST /wishlist/subscription/initialize while armed, GET /pricing/ladder, and the "
+             "Starter->global resolution in _buyer_tier / _buyer_reach_tier. ms.js msRenderLadder "
+             "(the plans page reads the one ladder) + the Watch screen's upgrade button pointing at "
+             "Starter. PRICING_CANON 2d + canon.yml note. PROVEN on the rig (scripts/smoke_harness/"
+             "verify_fold.mjs): dark = two $5 products and an open buyer checkout; arming folds the "
+             "free+Global account to Starter/10 slots with billing_period_end = the reach they paid for, "
+             "the wishlist row byte-identical, one audit row, reach kept; re-arming moves nobody twice; "
+             "a Starter reads global through the wishlist resolver AND Zoom; the rendered plans page shows "
+             "Starter with reach and Pro with Squire; dark again = the page as it was. LIVE table probed "
+             "17 Sep 2026: 0 wishlist_subscriptions rows, so the fold moves nobody today.",
+       ref="RUL-128 (14 Sep 2026) resolving RUL-080; RUL-078 (Pro includes reach). David's binding words: "
+           "existing Global subscribers keep what they bought and are migrated to Starter at the same "
+           "price, never cancelled and re-sold; the pricing page is rewritten in the same change.")
+def rg_one_five_dollar_tier():
+    bea = repo_file("bea_main.py"); js = repo_file("ms.js"); canon = repo_file("PRICING_CANON.md")
+    if bea is None or js is None or canon is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    for needle, why in (
+            ("def _fold_global_into_starter(", "the fold"),
+            ("_moved = _fold_global_into_starter(conn", "the fold running at the moment of arming"),
+            ('if st in ("starter", "pro", "agency"):\n            continue', "idempotence / no double move"),
+            ('status_code=410, detail="Global reach now comes with the Starter plan', "the retired buyer checkout"),
+            ('@app.get("/pricing/ladder")', "the one ladder endpoint"),
+            ('if st == "pro" or (st == "starter" and _baseline_q4_on()):', "Starter -> global reach")):
+        if needle not in bea:
+            out.append((FAIL, "bea_main.py lost %r -- %s is gone (RUL-128)" % (needle, why)))
+    i = bea.find("def _fold_global_into_starter("); j = bea.find("\n@app.get(\"/pricing/ladder\")", i)
+    blk = bea[i:j] if (i > 0 and j > i) else ""
+    if "UPDATE wishlist_subscriptions" in blk or "DELETE FROM wishlist_subscriptions" in blk or "payments." in blk:
+        out.append((FAIL, "the fold touches the live Paystack-backed table or Paystack itself -- David's execution care is broken"))
+    for needle in ("async function msRenderLadder(){", "Get Starter · reach comes with it"):
+        if needle not in js:
+            out.append((FAIL, "ms.js lost %r (RUL-128)" % needle))
+    if "### 2d · One $5 tier" not in canon or "RUL-128" not in canon:
+        out.append((FAIL, "PRICING_CANON.md lost 2d -- the fold is no longer canon (RUL-128)"))
+    return out or [(INFO, "fold on arming, audited and idempotent; buyer checkout retired while armed; one ladder served and rendered")]
 
 
 if __name__ == "__main__":

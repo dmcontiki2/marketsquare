@@ -41,6 +41,47 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-126": [
+   # THE BASELINE CHANGES ONCE (14 Sep): one flag for the whole batch, dark by default, armed by
+   # David. A second flag per item, or a default of 1, or the plan file vanishing, trips here.
+   ("RULINGS.md", ["THE BASELINE CHANGES ONCE"], []),
+   ("BASELINE_BATCH_2026Q4.md", ["RUL-126", "ARMING SEQUENCE"], []),
+   ("bea_main.py", ["ADD COLUMN baseline_q4 INTEGER NOT NULL DEFAULT 0", '"baseline_q4": b("baseline_q4")', "def _baseline_q4_on()"], []),
+   ("ms.js", ["function msBaselineOn()", "The live origin never honours the parameter"], []),
+ ],
+ "RUL-127": [
+   # DCB-001 approved (14 Sep): batch upload, then order; consistency at OUTPUT.
+   ("RULINGS.md", ["PHOTOS ARE UPLOADED IN ANY ORDER AND ORDERED AFTERWARDS"], []),
+   ("DESIGN_BACKLOG.md", ["GATE: David Conradie", "RUL-127"], []),
+   ("ms.js", ["function sfDcbPhotosS()", "if(sfDcbOn()) return sfDcbPhotosS();"], []),
+   ("bea_main.py", ['@app.post("/listings/photos/order")'], []),
+   ("scripts/regression_ledger.py", ["RG-0383"], []),
+ ],
+ "RUL-128": [
+   # ONE $5 TIER (14 Sep): Global folds into Starter; existing subscribers migrate at the same
+   # price and are never cancelled; the pricing page is rewritten in the same change.
+   ("RULINGS.md", ["ONE $5 TIER"], []),
+   ("bea_main.py", ["RUL-128", "def _buyer_reach_tier("], []),
+   ("PRICING_CANON.md", ["RUL-128"], []),
+ ],
+ "RUL-129": [
+   # PRIVATE-SELLER VEL ENTRIES (14 Sep): dated, sourced, outside-checkable, added once; the
+   # two draft screens read their block from the catalogue endpoint, never from a screen table.
+   ("RULINGS.md", ["CREDENTIALS A PRIVATE SELLER CAN ACTUALLY HOLD"], []),
+   ("bea_main.py", ['"category.property.title_deed"', '"category.lm.trading_permit"', '@app.get("/trust/catalogue")', '"private_seller": True'], []),
+   ("quick.html", ["/trust/catalogue?category="], []),
+   ("scripts/regression_ledger.py", ["RG-0385"], []),
+ ],
+ "RUL-124": [
+   ("RULINGS.md", ["THE QUICK LISTING APP IS THE NEXT DESIGN TRACK"], []),
+   ("ops/autodeploy/deploy_manifest.txt", ["quick.html                 | quick.html"], []),
+ ],
+ "RUL-125": [
+   # sub-path, own manifest, one server; readiness as ledger checks
+   ("RULINGS.md", ["SUB-PATH, OWN MANIFEST, ONE SERVER, READINESS AS CHECKS"], []),
+   ("static/brand/quick.webmanifest", ["TrustSquare Quick"], []),
+   ("scripts/regression_ledger.py", ["QUICK-READY-"], []),
+ ],
  "RUL-089": [
    # Tutors funnel geo drill-downs (David, 1 Sep): spec sec 10 carries the design,
    # RG-0221's acceptance criteria carry the build gate (singleton auto-collapse +

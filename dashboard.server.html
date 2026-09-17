@@ -1043,7 +1043,40 @@ function fuLoad(){
     <div class="ls-h" style="margin-top:12px;font-size:12px;">Latest funnel (order &middot; gate only)</div>
     <div id="apv3-funnel" style="font-size:11px;color:var(--muted);line-height:1.7"></div>
     <div id="apv3-out" style="font-size:12px;color:var(--muted);margin-top:10px;white-space:pre-wrap"></div>
+    <!-- AIPROV-FUNDS-1 (RG-0203, 17 Sep 2026): "can this AI function STOP?" -- one row per app AI
+         function x the lane serving it. Money is PROBED only where something measured it (our own
+         spend, the daily ceiling); a vendor balance reads NOT MEASURED plus a dated manual figure,
+         never a guessed colour (RG-0133). Grey until data answers. -->
+    <div class="ls-h" style="margin-top:12px;font-size:12px;">Funds gauge &middot; can this function stop?</div>
+    <div data-ai-funds id="apv3-funds" style="font-size:11.5px;line-height:1.55;color:var(--muted)">Loading funds gauge&hellip;</div>
   </div>
+
+  <!-- AIPROV-FUNDS-1 loader -->
+  <script>
+  window.apv3FundsLoad = function(){
+    var el=document.getElementById('apv3-funds'); if(!el) return;
+    fetch(window._apv3B+'/dashboard/ai-funds').then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+      if(!d){ el.innerHTML='<span style="color:#9ca3af">NOT MEASURED &mdash; /dashboard/ai-funds did not answer</span>'; return; }
+      var esc=function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); };
+      var rows=(d.functions||[]).map(function(f){
+        var fundsTxt = (f.funds==='NOT MEASURED')
+          ? '<span style="color:#9ca3af;font-weight:700">NOT MEASURED</span>'
+          : ('$'+Number(f.funds.balance_usd).toFixed(2)+' <span style="color:#9ca3af">manual, '+esc(f.funds.as_of)+'</span>');
+        var runway = (f.runway_days!=null) ? (' &middot; runway &asymp; <b>'+(f.runway_days>365 ? 'over a year' : f.runway_days+' days')+'</b> <span title="'+esc(f.runway_basis)+'" style="color:#9ca3af">(derived from the manual figure)</span>') : '';
+        var top = f.auto_topup==='armed' ? 'auto-top-up <b>armed</b>' : f.auto_topup==='not armed' ? '<b style="color:#f59e0b">auto-top-up NOT armed</b>' : f.auto_topup==='postpaid' ? 'postpaid (cannot run dry mid-month)' : f.auto_topup==='prepaid' ? 'prepaid credits' : '<span style="color:#9ca3af">auto-top-up state unknown</span>';
+        var ceil = (f.ceiling_left_today_usd!=null) ? (' &middot; $'+f.ceiling_left_today_usd.toFixed(2)+' of the $'+Number(f.ceiling_usd).toFixed(0)+'/day ceiling left') : '';
+        return '<div style="display:flex;flex-wrap:wrap;gap:4px 10px;padding:6px 0;border-top:1px solid rgba(148,163,184,.15)">'
+          +'<span style="min-width:150px"><b style="color:var(--text,#e5e7eb)">'+esc(f.label)+'</b> <span style="color:#9ca3af">'+esc(f.task)+'</span></span>'
+          +'<span>lane <b>'+esc(f.lane)+'</b> <span style="color:#9ca3af">'+esc(f.model||'')+'</span></span>'
+          +'<span>today $'+Number(f.today_usd).toFixed(3)+' &middot; month $'+Number(f.month_usd).toFixed(2)+' ('+f.calls_month+' calls)'+ceil+'</span>'
+          +'<span>funds '+fundsTxt+runway+' &middot; '+top+'</span>'
+          +'</div>';
+      }).join('');
+      el.innerHTML = rows + '<div style="color:#9ca3af;margin-top:6px">'+esc(d.honesty)+' Enter a dated figure after reading a vendor console: <code>POST /admin/ai-funds {lane, balance_usd, auto_topup}</code>. Updated '+esc(d.updated_at)+'.</div>';
+    }).catch(function(e){ el.innerHTML='<span style="color:#9ca3af">NOT MEASURED &mdash; '+String(e).replace(/</g,'&lt;')+'</span>'; });
+  };
+  try{ window.addEventListener('load', function(){ setTimeout(window.apv3FundsLoad, 600); }); }catch(e){}
+  </script>
 
   <!-- AI PROVIDER REGISTRY v3 — funnel strip (order+types) · manual pin with decay -->
   <script>/* EARLY SHIM (DASH-AIPROV-3): later cards (Infrastructure/services) read these v2-era

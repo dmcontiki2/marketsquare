@@ -94,6 +94,12 @@ launch_redemption.py       | launch_redemption.py
 account_closure.py         | account_closure.py
 id_verify_provider.py      | id_verify_provider.py
 estate_agents.py           | estate_agents.py
+# ZOOM-HMI-1 (17 Sep 2026, RUL-126 batch): the narrowing-funnel engine behind /zoom/next.
+# Flag-dark -- imported by main.py, exercised only when launch_switches.baseline_q4 = 1.
+zoom_engine.py             | zoom_engine.py
+# FIDE-CLAIM-1 (17 Sep 2026): the FIDE trainers registry seed read by migration 041 -- the data
+# lane rides the deploy ref like everything else (ONE_DEPLOY), never scp.
+fide_registry_seed.json.gz | fide_registry_seed.json.gz
 # TP-LINKOUT-1 (24 Aug 2026): the safe affiliate lane. Server-side 302s only --
 # no third-party script ever reaches a page (RG-0025). Dark unless the server env
 # sets TP_LINKOUT_ENABLED, so deploying this file changes nothing customer-facing.

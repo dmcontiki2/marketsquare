@@ -1481,3 +1481,75 @@ details.te-sec[open] > summary .te-chev { transform: rotate(180deg); }
 .hub-welcome li{font-size:12.5px;line-height:1.65;color:var(--text-2);margin-bottom:4px}
 .hub-welcome button{margin-top:10px;width:100%;padding:10px;border-radius:10px;border:0;
  font:inherit;font-size:13px;font-weight:800;background:var(--accent);color:#fff;cursor:pointer}
+
+/* ══ ZOOM — the narrowing funnel (ZOOM-HMI-1 · RUL-076 · RG-0221 · 17 Sep 2026) ══════════
+   Phone is the design target (spec s5): the question is a BOTTOM SHEET above the bottom bar,
+   options two per row and >=56px tall, the chip rail one horizontal line, the sheet peeks to
+   its title on handle tap, and on arrival it collapses to a slim bar. Flag-dark: nothing here
+   renders unless html[data-baseline="1"] (baseline_q4 armed, or David's local preview). */
+.zoom-sheet{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:430px;z-index:190;background:var(--surface);border-top:1px solid var(--border);border-radius:18px 18px 0 0;box-shadow:0 -8px 28px rgba(17,24,39,.14);padding:6px 14px calc(64px + max(env(safe-area-inset-bottom),8px));font-family:'Inter',sans-serif;}
+html[data-baseline="1"] .zoom-sheet.open{display:block;}
+.zoom-handle{width:38px;height:4px;border-radius:2px;background:var(--border);margin:2px auto 8px;cursor:pointer;}
+.zoom-rail{display:flex;gap:6px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;padding-bottom:6px;align-items:center;min-height:32px;}
+.zoom-rail::-webkit-scrollbar{display:none;}
+.zoom-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;border-radius:999px;padding:5px 10px 5px 12px;font-size:12.5px;font-weight:600;line-height:1.2;cursor:pointer;max-width:70vw;}
+.zoom-chip.geo{background:#0e7490;}
+.zoom-chip.auto{background:var(--surface-2);color:var(--text-2);border:1px dashed var(--border);}
+.zoom-chip .x{opacity:.75;font-size:14px;line-height:1;}
+.zoom-chip .lvl{opacity:.75;}
+.zoom-count{flex:0 0 auto;font-size:12px;color:var(--text-3);font-weight:600;margin-left:auto;padding-left:6px;}
+.zoom-q{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:var(--text);margin:4px 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.zoom-q small{font-family:'Inter',sans-serif;font-weight:600;font-size:11.5px;color:var(--text-3);}
+.zoom-opts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;}
+.zoom-opt{min-height:56px;min-width:0;max-width:100%;border:1.5px solid var(--border);border-radius:14px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text);text-align:left;transition:border-color var(--t),background var(--t);}
+.zoom-opt:active{background:var(--accent-light);border-color:var(--accent);}
+.zoom-opt .n{flex:0 0 auto;font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-light);border-radius:999px;padding:2px 8px;}
+.zoom-opt .lbl{flex:1;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.2;word-break:break-word;}
+.zoom-opt.locked{border-style:dashed;color:var(--text-2);background:var(--surface-2);}
+.zoom-opt.locked .n{background:#fef3c7;color:#92400e;}
+.zoom-opt.more{grid-column:1/-1;min-height:44px;justify-content:center;color:var(--accent);border-style:dashed;}
+.zoom-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0 2px;font-size:13px;color:var(--text-2);}
+.zoom-bar b{color:var(--text);}
+.zoom-bar .act{color:var(--accent);font-weight:700;cursor:pointer;padding:6px 4px;}
+.zoom-type{display:flex;gap:6px;margin:0 0 8px;}
+.zoom-type input{flex:1;border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;font-size:14px;font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);min-height:44px;}
+.zoom-type button{border:none;background:var(--accent);color:#fff;border-radius:12px;padding:0 14px;font-weight:700;min-height:44px;cursor:pointer;}
+.zoom-tail{margin-top:8px;max-height:180px;overflow-y:auto;border-top:1px solid var(--border);padding-top:8px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;}
+.zoom-note{font-size:12px;color:var(--text-3);margin-top:6px;}
+.zoom-sheet.peek .zoom-body{display:none;}
+.zoom-sheet.peek{padding-bottom:calc(58px + max(env(safe-area-inset-bottom),8px));}
+html[data-baseline="1"] .zoom-sheet.open ~ .bnav{box-shadow:none;}
+body.zoom-open #listing-grid, body.zoom-open #adv-grid{padding-bottom:300px;}
+body.zoom-open.zoom-peek #listing-grid, body.zoom-open.zoom-peek #adv-grid{padding-bottom:120px;}
+.zoom-score{position:absolute;left:6px;bottom:6px;z-index:6;background:rgba(17,24,39,.72);color:#fff;font-size:10px;font-weight:700;border-radius:999px;padding:2px 7px;}
+
+/* ══ DCB-001 — batch upload, then order (RUL-127 · 17 Sep 2026) — flag-dark ═══════════════ */
+.dcb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 18px 10px;touch-action:none;}
+.dcb-tile{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:var(--surface-2);border:2px solid var(--border);cursor:pointer;user-select:none;-webkit-user-select:none;min-height:96px;}
+.dcb-tile img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
+.dcb-tile.cover{border-color:#f59e0b;box-shadow:0 0 0 2px rgba(245,158,11,.35);grid-column:span 2;grid-row:span 2;}
+.dcb-tile.rejected{border-color:#ef4444;}
+.dcb-tile.rejected img{opacity:.45;}
+.dcb-tile.dragging{opacity:.55;transform:scale(.96);}
+.dcb-badge{position:absolute;left:6px;bottom:6px;background:rgba(17,24,39,.78);color:#fff;font-size:10.5px;font-weight:700;border-radius:999px;padding:3px 8px;max-width:calc(100% - 12px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dcb-badge.cover{background:#f59e0b;color:#1f2937;}
+.dcb-badge.bad{background:#ef4444;}
+.dcb-x{position:absolute;top:4px;right:4px;width:24px;height:24px;line-height:22px;text-align:center;border-radius:50%;background:rgba(17,24,39,.72);color:#fff;font-size:12px;font-weight:700;}
+.dcb-mv{position:absolute;top:4px;left:4px;display:flex;gap:2px;}
+.dcb-mv span{width:24px;height:24px;line-height:22px;text-align:center;border-radius:50%;background:rgba(17,24,39,.72);color:#fff;font-size:15px;font-weight:700;}
+.dcb-tile.add{display:flex;flex-direction:column;align-items:center;justify-content:center;border-style:dashed;color:var(--text-2);background:var(--surface);}
+.dcb-plus{font-size:28px;line-height:1;color:var(--accent);}
+.dcb-addlbl{font-size:12px;font-weight:600;text-align:center;margin-top:4px;}
+.dcb-addlbl small{font-weight:500;color:var(--text-3);}
+.dcb-actions{display:flex;align-items:center;gap:10px;margin:0 18px 10px;}
+.dcb-actions .sf-btn{flex:0 0 auto;min-height:44px;}
+.dcb-note{font-size:12.5px;color:var(--text-2);line-height:1.35;}
+
+/* ══ FIDE-CLAIM-1 — credential badge + claim card (17 Sep 2026) — flag-dark ═══════════════ */
+.cred-badge{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:700;background:#eef2f8;color:#1e3a5f;border:1px solid #c7d2e6;vertical-align:middle;cursor:pointer;white-space:nowrap;}
+.cred-badge.a{background:#0f6e56;color:#fff;border-color:#0f6e56;}
+.ms-cred-form{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px;}
+.ms-cred-form input,.ms-cred-form select{border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:14px;font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);min-height:44px;width:100%;}
+.ms-cred-form button{border:none;background:var(--accent);color:#fff;border-radius:12px;padding:0 14px;font-weight:700;min-height:44px;cursor:pointer;font-family:'Inter',sans-serif;}
+.ms-cred-msg{font-size:12.5px;color:var(--text-2);margin-top:6px;line-height:1.4;}
+.ms-cred-claim{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--border);font-size:13px;}

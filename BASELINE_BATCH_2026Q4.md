@@ -82,3 +82,29 @@ Verified in the RENDERED app at phone width, not at the API or DB layer.
 - DCB-001's GATE line — filled after eleven weeks empty ([[RUL-127]]).
 - RUL-080's reserved mechanism — chosen ([[RUL-128]]).
 - The Property / Local Market credential gap — ruled ([[RUL-129]]).
+
+---
+
+## 6 — BUILD STATUS (17 Sep 2026, the Wednesday session)
+
+**All nine items are built flag-dark and proven in the rendered app at phone width.** One change,
+one flag: `launch_switches.baseline_q4` (default 0). `/flags` reports it; the existing app is the
+same experience for every user until David arms it. Proofs: `BASELINE_BATCH_PROOFS_2026-09-17.html`
+(13 rendered screens) — re-runnable via `scripts/smoke_harness/rig/README.md` + `verify_*.mjs`.
+
+| # | Item | Proved in the rendered app | Ledger |
+|---|------|----------------------------|--------|
+| 1 | Zoom | 3–4 taps to each canonical target on six doors; no zero-count option; no facet before its parent; geography never first; travel starts at country. **Local Market is not a door** — it has no filter panel today. | RG-0221 LOCKED |
+| 2 | DCB-001 | Any-order upload, one-tap cover, AI order (vision → rules fallback), drag reorder, publish holds the cover. Time-to-publish and David Jnr's retest are field measurements after arming. | RG-0383 |
+| 3 | Credential claims | `/credentials/mine` answers when lit (404 dark); Tier A/B claim, one account per credential, badge from a live JOIN, no "safe" wording. Registry: 4,237 FIDE IDs (`migrations/041`). | RG-0216 LOCKED |
+| 4 | Private-seller VEL | Property + Local Market draft screens carry the dated, sourced block; points read from `/trust/catalogue`. | RG-0385 |
+| 5 | Squire | Pro-only; ceiling hit never writes an intro; seller identity stripped; top-up is Tuppence only. | RG-0224 LOCKED |
+| 6 | Quick at `/quick/` | Hand-over lands as a real listing with the expected score; vouching gate holds; personal link free; buzz arrives; coloured tile manifest. `migrations/042` adds the nginx sub-path. Real-phone walk is a field measurement. | RG-0386–0391 |
+| 7 | One $5 tier | Fold runs once on arming at the same price, never touches Paystack (`wishlist_subscriptions` has 0 rows today); one ladder on the plans screen. | RG-0392 |
+| 8 | Funds gauge | Four functions × lane on the +1 card; balances NOT MEASURED until David enters a dated figure (`POST /admin/ai-funds`). | RG-0203 LOCKED |
+| 9 | Agency letters | Three rendered letters tell the agency story and carry a minted console link. | RG-0346 LOCKED |
+
+Live faults repaired on the way (not batch items): CARD-ONERROR-1 (RG-0384), FOUNDERS-MAP-1,
+QUICK-PRICE-BASIS-1, QUICK-ME-1.
+
+§3 arming sequence unchanged. §4 items remain David's and were not re-asked.
