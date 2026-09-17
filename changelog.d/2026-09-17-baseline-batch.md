@@ -40,3 +40,10 @@ QUICK-PRICE-BASIS-1, QUICK-ME-1. Also riding this deploy: R1/R2 repair-lane work
 Ledger: RG-0221/0216/0224/0203/0346 rewritten LOCKED; RG-0383–0392 new. Source halves green;
 live halves red until deployed. `rulings_check.py` reflections added for RUL-124–129.
 `ms.js` ?v=495, `ms.css` ?v=294. Deploy requested through `scripts/request_deploy.py` (RUL-092).
+
+**Deploy 1 (67ea011, 17:43Z) — DEPLOY OK, health ok; migrations 040 (115 listings stamped) and
+041 (4,237 registry rows) recorded. 042 jammed the chain (QUICK-PATH-2):** its proof probed
+`http://127.0.0.1/quick/`, measured Certbot's port-80 301, followed it out through Cloudflare and
+read a cached 404, then restored the vhost — the exact CSP-SCRIPT-SRC-7 trap 033 documents.
+The vhost block was right; the instrument was wrong. Fixed to measure the origin on :443 over
+loopback with trustsquare.co SNI, never following a redirect; re-shipped in the same session.

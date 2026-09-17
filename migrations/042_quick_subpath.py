@@ -9,7 +9,7 @@ the installed tile's start_url and the address printed in outreach both keep wor
 Same discipline as 033: write, nginx -t, reload, then PROVE it from the response; restore the
 backup and exit 1 if the served path does not answer 200.
 """
-import os, re, shutil, subprocess, sys, urllib.request
+import os, re, shutil, subprocess, sys
 from datetime import datetime, timezone
 APPLY = "--apply" in sys.argv
 TS = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
@@ -23,6 +23,30 @@ BLOCK = """    # QUICK-PATH-1 (RUL-125(a), 17 Sep 2026): the ruled sub-path onto
         add_header Cache-Control "public, max-age=300" always;
     }
 """
+
+def _origin_status(path):
+    """Status the ORIGIN serves for `path` on :443 -- loopback TCP, trustsquare.co SNI + Host.
+
+    QUICK-PATH-2 (17 Sep 2026): the first cut of this migration probed http://127.0.0.1/quick/
+    and let urllib follow the answer. Port 80 is Certbot's `return 301 https://...` block, so
+    the probe measured a redirect and then followed it OUT through Cloudflare, which served the
+    404 it had cached moments before the reload. The vhost was right; the instrument was wrong
+    (the exact CSP-SCRIPT-SRC-7 trap 033 documents). Never follow redirects here; never leave
+    the box.
+    """
+    import http.client, socket, ssl as _ssl
+    ctx = _ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = _ssl.CERT_NONE
+    try:
+        conn = http.client.HTTPSConnection("127.0.0.1", 443, timeout=10, context=ctx)
+        raw = socket.create_connection(("127.0.0.1", 443), timeout=10)
+        conn.sock = ctx.wrap_socket(raw, server_hostname="trustsquare.co")
+        conn.request("GET", path, headers={"Host": "trustsquare.co", "User-Agent": "TrustSquare-Migration/042"})
+        r = conn.getresponse(); r.read(); conn.close()
+        return r.status
+    except Exception as ex:
+        return repr(ex)
 
 def main():
     if not os.path.exists(VHOST):
@@ -45,11 +69,7 @@ def main():
     if t.returncode != 0:
         shutil.copy2(bak, VHOST); print("042: nginx -t FAILED, restored:\n" + t.stderr[-600:]); return 1
     subprocess.run(["systemctl", "reload", "nginx"], check=False)
-    try:
-        req = urllib.request.Request("http://127.0.0.1/quick/", headers={"Host": "trustsquare.co", "User-Agent": "migration-042"})
-        code = urllib.request.urlopen(req, timeout=10).getcode()
-    except Exception as ex:
-        code = getattr(ex, "code", None) or repr(ex)
+    code = _origin_status("/quick/")
     if code != 200:
         shutil.copy2(bak, VHOST); subprocess.run(["systemctl", "reload", "nginx"], check=False)
         print("042: /quick/ did not answer 200 after reload (%r) -- restored" % (code,)); return 1
