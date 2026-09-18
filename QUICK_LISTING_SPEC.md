@@ -7,6 +7,14 @@ petrol jockeys, truck drivers. The shape is his, in his words:*
 
 ---
 
+> **DAVID ANSWERED, 18 September 2026 (evening).** D1, D6 and D7 are decided, and a WhatsApp
+> answer supersedes half of D2. The eight decisions are now rulings **RUL-142 … RUL-149** in
+> `RULINGS.md` and are written into the sections below — this document no longer asks for them.
+> **Still open and still his: D3 (what she is called), D4 (do the SA letters point at this door),
+> D5 (where she comes from at all).** Those three are in §4, unchanged.
+
+---
+
 ## 0. THE ONE THING TO UNDERSTAND FIRST
 
 **Most of this is already built.** The trust ladder is live code with real point values. The
@@ -25,15 +33,17 @@ here: a correct instrument nobody reads, beside a wrong one everybody does.
 
 ## 1. THE LADDER THAT ALREADY EXISTS (live values, read from `_TRUST_SIGNALS`)
 
-Universal signals, **capped at 30 points in total**:
+Universal signals, **capped at 40 points in total** (raised from 30 by RUL-142, 18 Sep 2026 —
+see the cap arithmetic in §7):
 
 | Signal | Points | What she actually does |
 |---|---|---|
 | Government ID verified | **15** | Uploads her ID. 12 land at once (RUL-113 interim), 3 wait for confirmation. |
 | **A previous employer confirmed her** | **12** | Sends her own link to someone she has worked for. They tap Yes. One tap, no account. |
+| **A SECOND previous employer confirmed her** | **6** | RUL-142. The one signal this market can stack. Still one tap, still no account. |
 | Complete profile | 5 | Bio, suburb, listing, description all set. |
 | Photo of her added | 5 | Adds a photo of herself. |
-| Referral 1 / 3rd / 5th+ | 5 / 3 / 2 | Shares her referral link with clients. |
+| **Verified client 1st / 3rd / 5th+** | **5 / 6 / 7** | A client who **actually hired her** confirms it. Rising, so the third is worth more than the first (RUL-142). **Never paid for a signup.** |
 | Years of experience stated | 3 | Says how long she has been doing this. |
 
 **The employer confirmation is the centre of gravity for this market.** It is the only
@@ -78,9 +88,21 @@ It also means the flow David described has one more beat in it than he wrote:
 
 ---
 
-## 4. THE FIVE DECISIONS THAT ARE DAVID'S
+## 4. THE DECISIONS THAT WERE DAVID'S
 
 Batched, not dripped. Everything else in this document is mine to execute.
+
+**D1 — ANSWERED 18 Sep: yes, a second employer confirmation counts, at 6 points, and the universal
+cap rises to 40. RUL-142.** The original argument is kept below because the cap arithmetic it
+works through is what forced the cap to move.
+
+**D2 — ANSWERED IN PART, 18 Sep, and better than the question asked.** The return path is
+WhatsApp via `wa.me/?text=` with no number held anywhere (RUL-146, §8). Whether the ACCOUNT KEY
+also moves off email is still open and still a bigger build.
+
+**D6 — ANSWERED 18 Sep: 5 / 6 / 7, for verified CLIENTS, never signups. RUL-142.**
+
+**D7 — ANSWERED 18 Sep: the unit is the taxi drop. RUL-147, §9.**
 
 **D1 — Does a SECOND employer confirmation count?**
 David said "+x for a second employer". The shipped code says no: `UNIQUE(email, signal_id)`,
@@ -147,6 +169,16 @@ chess, because it decides whether this is a four-week or a four-month move.
   pictures wrong would do real harm: clean, well-kept workwear for everyone, prefer anonymous
   framing, and compare the set rather than the photo.
 - **She publishes by her own hand.** Nobody taps it for her.
+- **The confirmer's reachability is held, never shown** (RUL-144). They verify a phone or an
+  email, with no account. We store it, we never publish it, never share it, never attach it to
+  her listing — and we say exactly that in the sentence that asks for it. Their NAME is still
+  never stored.
+- **Never share private details — that is not the same as never store them** (RUL-148). Collect
+  only what a stated purpose needs, say what we hold when we ask, never show it to anyone.
+- **The English EULA binds, and we say so in her language** (RUL-143). A translation that
+  quietly prevailed was drafted once and corrected before shipping; it does not come back.
+- **Four languages minimum, isiXhosa fifth for Cape Town, twelve official languages not eleven**
+  (RUL-149).
 
 ---
 
@@ -218,3 +250,71 @@ that ends the argument:
 *My recommendation: build the shaded-area map and the proximity sentence. Never a pin, never
 a street name, never an employer's address — not even blurred, because a blurred pin is still
 a pin.*
+
+
+---
+
+## 8. WHATSAPP WITHOUT HOLDING A NUMBER (RUL-146 — David approved this text verbatim)
+
+*David, 18 Sep 2026: "i dont want us to regress". This is carried in full, not paraphrased down.*
+
+> The WhatsApp answer is better than you'd hope, because the mechanism you want already exists and
+> costs nothing.
+>
+> `https://wa.me/?text=<message>` opens WhatsApp on her phone with a message pre-filled and no
+> recipient. She picks who it goes to from her own contacts. We never learn who she chose, never see
+> a number, never store one, never transmit one. The link does not contain a number because it does
+> not need one.
+>
+> That gives you three things immediately:
+>
+> **Her employer referral.** She taps "Send this to someone I work for", picks them in her own
+> contacts, and the one-tap confirm link travels over the channel she actually uses. This is exactly
+> RUL-115(b) already — she sends her link — just expressed in WhatsApp instead of email. The
+> confirmer stays unnamed and unstored, as you said.
+>
+> **Her way back to her own draft.** This is the Montana problem solved for a market with no email:
+> a "Send this to myself on WhatsApp" button. She picks her own chat, and the link to her
+> half-finished advert now lives in the app she opens fifty times a day. No API, no cost, no number,
+> nothing for us to lose.
+>
+> **Buyer to seller — you already built it.** Buzz connects two parties without either seeing the
+> other's details. That is the answer for introductions; nothing about WhatsApp changes it.
+>
+> The one thing that genuinely costs money is us messaging her unprompted — that needs the WhatsApp
+> Business API and per-message fees, so it stays yours to decide. The two patterns above need none
+> of it.
+
+**Build rule, asserted by the ledger (WA-NONUMBER-1 / RG-0407, LOCKED):** every WhatsApp share link
+the app emits is `https://wa.me/?text=...` with **no phone number in the path**, and no code path
+stores, logs or transmits a recipient number obtained from one. Scope: every Easy Lane button
+(employer referral, send-to-myself) and any future WhatsApp share anywhere in the product.
+
+---
+
+## 9. THE AREA UNIT IS THE TAXI DROP (RUL-147 — answers D7)
+
+Publish **the route and the drop, plus the suburb**. Never an address, never a street, never a
+block. A block plus her open days can identify a household — hers to be found at, and her
+employers' to be found empty. Those households are not our users and agreed to nothing.
+
+Proximity is computed **for the viewer, about the viewer** — *"within walking distance of you"* —
+and published nowhere. The precision lives in the sentence, where it is safe, not on the map, where
+it is not. Never a pin; a blurred pin is still a pin.
+
+The taxi drop is also simply the better unit for this market: it is what she would tell a friend,
+and it is how the person reading her advert already navigates.
+
+---
+
+## 10. THE POST-CONFIRM GLIMPSE (RUL-145 — decision 4)
+
+The moment an employer taps **Yes** is the only moment we will ever have their full attention, and
+today it ends in a receipt. Instead, on that same page, with **no wall and no account**:
+
+1. **Her card, with the score moving in front of them** — 50 → 62, animated, the reason attached
+   ("a previous employer confirmed her"). This is the visual §3 calls the heart of David's ask; the
+   confirm page is where it earns the most, because the person watching it just caused it.
+2. **Two or three other already-public workers in their area** — the product discovered as a
+   BUYER, from the one page where we can prove it works.
+3. **The free account offered after the decision, never as its price** (RUL-137(d)).

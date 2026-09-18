@@ -1208,13 +1208,59 @@ function drawDraft(){
            So the address is the only thing he has to get right, and it now says so with the way
            back rather than "finish onboarding there" and no door. */
         var _e=function(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+        /* WA-SELFSEND-1 (19 Sep 2026, RUL-146 / David's decision 5 of 18 Sep). The email
+           above is the way back for somebody who reads email. This market largely does
+           not: a domestic worker in Johannesburg opens WhatsApp fifty times a day and an
+           inbox rarely or never, and Montana proved what a missing way back costs -- a
+           finished advert sat invisible for six days because the hand-back screen was the
+           only thing that ever named it, and it died with the tab.
+
+           She sends it to HERSELF, from her own contacts, over `https://wa.me/?text=` with
+           NO recipient in the link (RUL-146, asserted by ledger WA-NONUMBER-1). We never
+           see a number, never store one, never transmit one.
+
+           The message deliberately carries NO sign-in token. The emailed link does, and it
+           can, because arriving in that inbox is itself proof the address is hers; a token
+           handed straight back to whoever typed the address proves nothing and would let
+           anyone mint a sign-in for anybody. So this message carries the two things she
+           actually needs to find her way home -- the advert's number and the address it is
+           waiting on -- and she signs in with that address as she would anyway. Making the
+           link itself resumable without email is the account-key question (D2), which is
+           David's and is still open. Recorded, not pre-empted. */
+        var _waMsg='My TrustSquare advert #'+res.id+' is saved and waiting for me to publish it.\n\n'
+          +(function(){ try{ return (HANDOVER.url&&HANDOVER.url.indexOf('http')===0)
+              ? HANDOVER.url.replace(/\/+$/,'') : 'https://trustsquare.co'; }
+            catch(_){ return 'https://trustsquare.co'; } })()+'/?draft='+res.id
+          +(HANDOVER.email ? '\n\nIt is waiting on '+HANDOVER.email+' \u2014 sign in with that address to finish it.' : '');
         box.innerHTML='<b>Saved \u2014 and it is not public yet.</b><br><br>'
           +'Advert #'+res.id+' is yours, in TrustSquare. One step left: look it over, add '
           +'anything you want, and publish it.'
           +(HANDOVER.email ? '<br><br>We have just emailed <b>'+_e(HANDOVER.email)+'</b> a link '
               +'straight to it, so you can finish it whenever you like \u2014 on this phone or '
               +'anywhere else. The advert is waiting on that address, and only that one.' : '')
-          +'<br><br><a href="/" style="color:#9ec7ff;font-weight:700">Finish it now &#8250;</a>';
+          +'<br><br><div style="font-size:12.5px;opacity:.85;margin-bottom:7px;">'
+          +'Keep it somewhere you will actually look. Send it to yourself on WhatsApp \u2014 '
+          +'you choose the chat, we never see a number.</div>'
+          +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+          +'<a id="qwaself" href="https://wa.me/?text='+encodeURIComponent(_waMsg)+'" '
+          +'target="_blank" rel="noopener" style="flex:2 1 170px;text-align:center;padding:12px;'
+          +'border-radius:10px;background:#25D366;color:#0b2015;font-size:13.5px;font-weight:800;'
+          +'text-decoration:none;">Send it to myself on WhatsApp</a>'
+          +'<button id="qwacopy" style="flex:1 1 90px;padding:12px;border:1.5px solid #47617f;'
+          +'border-radius:10px;background:transparent;color:#cfe0f5;font-size:13px;'
+          +'font-weight:700;cursor:pointer;">Copy</button>'
+          +'</div>'
+          +'<br><a href="/" style="color:#9ec7ff;font-weight:700">Finish it now &#8250;</a>';
+        try{
+          var _wa=$('qwaself');
+          if(_wa) _wa.onclick=function(){ qTrack('q_wa_self'); };   /* QUICK-FUNNEL-1: did anybody use it */
+          var _cp=$('qwacopy');
+          if(_cp) _cp.onclick=function(){
+            qTrack('q_wa_copy');
+            try{ navigator.clipboard.writeText(_waMsg); this.textContent='Copied'; }
+            catch(_){ this.textContent='Press and hold to copy'; }
+          };
+        }catch(_){}
         $('pubhint').textContent='Draft #'+res.id+' \u2014 one server, one rulebook.';
       }
     });

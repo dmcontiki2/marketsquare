@@ -24280,3 +24280,61 @@ verified clients rather than signups or the score stops measuring the seller, an
 work-area map must show shaded suburbs and a proximity sentence, never a pin or a street,
 because those are her employers' addresses and her own pattern of life.
 Cost model impact: none.
+
+
+## Session — 19 September 2026 (onboarding-goal run 15, 01:00–04:00 SAST)
+
+**David's eight decisions of 18 Sep evening are now rulings RUL-142 … RUL-149** and are reflected
+in `QUICK_LISTING_SPEC.md`: the trust ladder pays rising points (5/6/7) for verified clients who
+actually hired her rather than for signups, a second employer confirmation counts at 6, and the
+universal cap moves 30 → 40 to make room; the EULA is translated into the launch languages with
+the English remaining binding and said plainly; the employer who confirms verifies a phone or an
+email with no account, which we store and never publish, share or attach to her listing, and say
+so where we ask; after the tap they see her score move and two or three real neighbours, with no
+wall; WhatsApp is used without holding a single number; the area unit is the taxi drop, never an
+address or a block; the principle is never to SHARE a private detail, not never to store one; and
+the launch languages are English, isiZulu, Sesotho and Afrikaans with isiXhosa fifth for Cape
+Town — twelve official languages, not eleven. `rulings_check.py`: 126 rulings, 0 FAIL.
+
+**WA-SELFSEND-1 / RG-0408 — the way back to her own draft, in the app she actually opens.** The
+Quick hand-back screen now offers "Send it to myself on WhatsApp" on the numberless
+`https://wa.me/?text=` link: she picks her own chat from her own contacts and no number ever
+reaches us. Montana proved what a missing way back costs — a finished advert scoring 94 sat
+invisible for six days because the hand-back screen was the only thing that ever named it, and it
+died with the tab. RG-0395 answered that with email; for the market this goal was redirected at on
+18 Sep, email is the same missing door with a stamp on it. The message deliberately carries **no
+sign-in token**: the emailed link may carry one because arriving in that inbox proves the address
+belongs to the reader, while a token handed back to whoever typed an address proves nothing.
+Walked end to end in a real browser at phone width as a stranger — door, five taps, draft, the one
+email ask, hand-over, the WhatsApp button — with every beacon firing and the link shape verified.
+
+**WA-NONUMBER-1 / RG-0407 (LOCKED)** asserts that every WhatsApp link the app emits anywhere is the
+numberless form and that no code path stores, logs or transmits a recipient number. The numberless
+and number-carrying URLs are one character apart and look identical in a screenshot, so the promise
+needed machinery rather than a memory. It also fences the reserved half of RUL-146: messaging her
+unprompted needs the WhatsApp Business API and per-message fees, which is money and is David's.
+
+**EULA v1.17 landed properly.** The three copies were bumped on 18 Sep (the data-subject-request
+contact row now names UK GDPR, CCPA and the Australian Privacy Act alongside POPIA and routes to a
+mailbox that is actually read) while `canon.yml` and `LEGAL_VERSIONS.md` stayed at v1.16 —
+`rulings_check` FAILed RUL-133 for a day, correctly, because landing a version is atomic. The
+register is now finished. The assertion that failed was a **literal version pin** on a living
+document; it was corrected to assert the property, and the real check now lives in
+**EULA-VERSION-LAND-1 / RG-0406**, which compares the four version stamps to each other rather
+than to a constant, and was proven to go red in both failure directions before it was locked.
+
+**The stale CityLauncher dashboard was closed by probing it, not by deploying over it.** The live
+page is md5-identical to the repo copy and carries the STATS-HUMAN-1 markers; another lane had
+already refreshed it.
+
+**Recorded as OPEN ledger entries rather than as work left for David (SO-4):** the ladder values
+and the cap of 40 (RG-0409 — a scoring change touching four hardcoded caps, a UNIQUE-constraint
+migration, and an evidence type that does not exist yet, and *not* on the critical path to the
+onboarding number, because publishing does not depend on the score); the reachability gate and the
+post-confirm glimpse (RG-0410); the taxi-drop area unit (RG-0411); and the EULA in the launch
+languages (RG-0412, which must wait on RG-0400 — translating before the fourth EULA copy is closed
+would turn four copies into twenty).
+
+The onboarding number is still **0 of 20**, both probes agreeing. 2,499 letters sent; registered
+accounts have risen from 25 to 40 since 18 Sep.
+Cost model impact: none.

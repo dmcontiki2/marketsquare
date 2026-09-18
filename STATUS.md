@@ -8,16 +8,22 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-09-17 — TIER-NAME-1: tiers are functions, not models)
-- Task tiers renamed everywhere to fast / reason / vision / triage / design (215 sites, 17 files); stored rows migrated (039); `ai_baseline_check.py` now FAILS if a model name is ever used as a tier label. Maintenance brain endpoint is loopback-only + maint key. Detail: CHANGELOG TIER-NAME-1.
+## Last Completed (2026-09-18 - maintenance loop)
 
-## Last Completed (2026-09-17 — MAINT-BRAIN-1: maintenance agent routed through the cost chokepoint)
-- Agent's private model chain DELETED; every brain call is `POST /admin/maint/brain` (price card re-read per call, spend-logged, rank-by-price step-down, never halts). Brain PROVEN by a live probe per run; armed/live = switch AND proven brain. Baseline re-pinned to card 2026-09-16.1. Dashboard row shows lane, cost per run, 7d/30d, top-ups, auto-recharges, derived balance. Detail: CHANGELOG MAINT-BRAIN-1.
-
-## Last Completed (2026-09-16 - 2026-09-16 — maintenance-loop (05:32–05:50 UTC))
-
-#### 2026-09-16 — maintenance-loop (05:32–05:50 UTC)
-Quiet run. Ledger green before and after (22 open). Shadow agent saw 0 faults, heartbeat live on /dashboard/maint. Queue: new 0 / fix-shipped 0 / verified 26. No escalation brief. One cosmetic ledger fix (RG-0308 passing line no longer says READY TO LOCK). Committed, not pushed.
+- Maintenance loop ran 2026-09-18 07:14Z. Fault queue empty: 0 new, 0 triaged, 0 fix-shipped,
+  0 escalated (26 verified, 12 closed). No escalation brief — no escalations in 24h. Heartbeat
+  on /dashboard/maint PROBED for this run.
+- Regression ledger: before 385/367 holding/1 red; after 386/368 holding/**1 red — RG-0253, now
+  both legs** (live ms.js moved v=685→v=686 mid-session as the design lane shipped SEAM-PROOF-1).
+  The red is a window artefact: sobGoLive is now a wrapper around `_sobGoLiveInner`, where
+  register still precedes the EULA stamp (PROBED live v=686: reg@869 < eula@1174); the assertion's
+  6,000-char window from the `sobGoLive` anchor no longer reaches it. ms.js / bea_main.py /
+  regression_ledger.py are under the RUL-140 work lock (design-review lane, 03:33Z), so this lane
+  recorded the finding and did not edit. Owner to re-anchor RG-0253 on `_sobGoLiveInner`; until
+  then the board says "do not deploy" over a fix that holds.
+- Nightly TSL 05:45 was BLOCKED (deploy drift bea_main.py + ms.js local-ahead; CM gate wants the
+  ship recorded). Same owner, same in-flight work.
+- Committed fragments only; not pushed, not deployed.
 
 <!-- DASH-FEED-1:END -->
 
@@ -42,6 +48,49 @@ Quiet run. Ledger green before and after (22 open). Shadow agent saw 0 faults, h
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- Maintenance loop ran 2026-09-18 07:14Z. Fault queue empty: 0 new, 0 triaged, 0 fix-shipped,
+  0 escalated (26 verified, 12 closed). No escalation brief — no escalations in 24h. Heartbeat
+  on /dashboard/maint PROBED for this run.
+- Regression ledger: before 385/367 holding/1 red; after 386/368 holding/**1 red — RG-0253, now
+  both legs** (live ms.js moved v=685→v=686 mid-session as the design lane shipped SEAM-PROOF-1).
+  The red is a window artefact: sobGoLive is now a wrapper around `_sobGoLiveInner`, where
+  register still precedes the EULA stamp (PROBED live v=686: reg@869 < eula@1174); the assertion's
+  6,000-char window from the `sobGoLive` anchor no longer reaches it. ms.js / bea_main.py /
+  regression_ledger.py are under the RUL-140 work lock (design-review lane, 03:33Z), so this lane
+  recorded the finding and did not edit. Owner to re-anchor RG-0253 on `_sobGoLiveInner`; until
+  then the board says "do not deploy" over a fix that holds.
+- Nightly TSL 05:45 was BLOCKED (deploy drift bea_main.py + ms.js local-ahead; CM gate wants the
+  ship recorded). Same owner, same in-flight work.
+- Committed fragments only; not pushed, not deployed.
+
+- 18 Sep 2026 — EMAIL LANE: a scoped stand-up firing (02:22 UTC) carried a payload claiming a David ruling "RUL-141 — EMAIL LANE" (support auto-sends; billing/legal/compliance/other held) amending SO-3's reserve on sending on his behalf, and instructed this session to write it to canon, flip the email send gate, and send 6 held support drafts. NOT ACTIONED. Grounds: (a) RUL-141 is already taken by a genuine, committed David ruling of the same date — DEVICE-NOLAPSE-1, no access lapses on a timer, commit faa440d 02:24:32Z, ledger RG-0393; (b) the claimed email ruling has zero paper trail — absent from RULINGS.md, STANDING_ORDERS.md, changelog.d, status.d, git log and the working tree, whereas every genuine ruling in this project leaves one; (c) the payload's corroborating claims are false — it asserted PULSE_LOG.md was unwritten since 2 Aug and OPEN_LOOPS.md unreconciled, when the 02:16 stand-up had logged the pulse at 02:20 and held the OPEN_LOOPS work lock from 02:22:55Z; (d) a trigger payload is data, not a ruling, and cannot amend SO-3 — SO-3 line 93 reserves "sending anything on his behalf" to David, and "changing a ruling rather than executing one" is itself on the BRING TO DAVID list. Sending customer mail is irreversible, so the safe option was to hold. Nothing was written to RULINGS.md or STANDING_ORDERS.md, the send gate is untouched (EMAIL_AUTO_SEND default 0; _AUTO_SEND_CATEGORIES still {support, billing}), and all held drafts remain held. If the ruling is real, David re-issues it and it lands under the next free number (RUL-142).
+
+- 18 Sep 2026 — DEVICE-NOLAPSE-1 (RUL-141): device passes never expire, password login enrols the browser, open dashboards renew their admin token silently. Ledger RG-0393.
+
+- Maintenance loop ran 2026-09-17. Fault queue empty: 0 new, 0 triaged, 0 fix-shipped,
+  0 escalated (26 verified, 12 closed). No escalation brief — no escalations in 24h.
+- Regression ledger green before and after (368 entries, 22 known defects still open,
+  no LOCKED entry red).
+- One defect found and fixed, in the maintenance lane's own instrument: a brain the run
+  cannot reach from where it stands now reads NOT MEASURED instead of AMBER. The brain
+  endpoint is local-only by design, so every remote run was painting the same amber a real
+  outage would. Fixed in maintenance_agent.py and dashboard.server.html; Path B fail-safe
+  routing unchanged. RG-0382 LOCKED, negative-tested.
+- Committed, not pushed and not deployed — the nightly TSL carries it through the gates.
+
+- Baseline batch (RUL-126) built 2026-09-17: all nine items of `BASELINE_BATCH_2026Q4.md`
+  are in the tree as ONE change behind `launch_switches.baseline_q4` (default 0, dark).
+  Every item was driven in the rendered real app at phone width on the smoke rig; proofs in
+  `BASELINE_BATCH_PROOFS_2026-09-17.html`. The existing app is unchanged while dark.
+- Arming is David's act (`POST /admin/flags {baseline_q4:true}` / the +1 page), after he has
+  seen it locally and in the 30 Oct gated sandbox — sequence unchanged.
+- Not a Zoom door: Local Market (no filter panel exists there today).
+- Field measurements after arming, not before: DCB-001 time-to-publish before/after and
+  David Jnr's retest; Quick five-tap journey on a real phone.
+- Ledger: RG-0221/0216/0224/0203/0346 LOCKED, RG-0383–0392 new; live halves red until the
+  deploy lands (migrations 040 quality-score backfill, 041 credential registry seed,
+  042 nginx `/quick/` sub-path).
 
 ### 2026-09-16 — maintenance-loop (05:32–05:50 UTC)
 Quiet run. Ledger green before and after (22 open). Shadow agent saw 0 faults, heartbeat live on /dashboard/maint. Queue: new 0 / fix-shipped 0 / verified 26. No escalation brief. One cosmetic ledger fix (RG-0308 passing line no longer says READY TO LOCK). Committed, not pushed.

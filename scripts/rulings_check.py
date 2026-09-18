@@ -956,6 +956,59 @@ REFLECTIONS = {
    ("migrations/039_functional_tier_names.py", ["fast", "reason"], []),
    ("RULINGS.md", ["NEVER FOR A MODEL"], []),
  ],
+ # --- David's eight decisions of 18 Sep 2026 evening (DECISIONS_2026-09-18_EVENING.md),
+ # written in by the onboarding-goal run on 19 Sep. Each asserts the RULING TEXT is on record
+ # and that the lane that must obey it (QUICK_LISTING_SPEC.md, which is what the next session
+ # reads) actually carries the rule -- not merely a pointer to the ruling.
+ "RUL-142": [
+   ("scripts/regression_ledger.py", ["LADDER-RUL142-1"], []),
+   ("RULINGS.md", ["THE LADDER PAYS RISING POINTS FOR EACH VERIFIED CLIENT, NEVER FOR A SIGNUP"], []),
+   ("QUICK_LISTING_SPEC.md", ["capped at 40 points in total", "Verified client 1st / 3rd / 5th+",
+                              "5 / 6 / 7", "A SECOND previous employer confirmed her"],
+                             ["capped at 30 points in total"]),
+ ],
+ "RUL-143": [
+   ("scripts/regression_ledger.py", ["EULA-LANG-1"], []),
+   ("RULINGS.md", ["THE EULA IS TRANSLATED INTO THE LAUNCH LANGUAGES"], []),
+   ("QUICK_LISTING_SPEC.md", ["The English EULA binds, and we say so in her language"], []),
+ ],
+ "RUL-144": [
+   ("scripts/regression_ledger.py", ["CONFIRM-GLIMPSE-1"], []),
+   ("RULINGS.md", ["THE CONFIRMER GIVES US A WAY TO REACH THEM"], []),
+   ("QUICK_LISTING_SPEC.md", ["The confirmer's reachability is held, never shown",
+                              "Their NAME is still\n  never stored"], []),
+ ],
+ "RUL-145": [
+   ("scripts/regression_ledger.py", ["CONFIRM-GLIMPSE-1"], []),
+   ("RULINGS.md", ["AFTER THE TAP, SHOW THEM WHAT THEY JUST DID"], []),
+   ("QUICK_LISTING_SPEC.md", ["THE POST-CONFIRM GLIMPSE", "no wall and no account"], []),
+ ],
+ "RUL-146": [
+   # The forbidden string is the shape that would betray the whole ruling: a wa.me link with a
+   # number in the PATH. Asserted in the spec here and, over the code, by ledger RG-0407.
+   ("RULINGS.md", ["WHATSAPP WITHOUT HOLDING A SINGLE NUMBER"], []),
+   ("QUICK_LISTING_SPEC.md", ["https://wa.me/?text=", "no phone number in the path",
+                              "Buzz connects two parties without either seeing the"],
+                             []),
+   ("scripts/regression_ledger.py", ["WA-NONUMBER-1", "WA-SELFSEND-1"], []),
+   ("quick.html", ["WA-SELFSEND-1", "https://wa.me/?text="], []),
+ ],
+ "RUL-147": [
+   ("scripts/regression_ledger.py", ["AREA-TAXIDROP-1"], []),
+   ("RULINGS.md", ["THE AREA UNIT IS THE TAXI DROP"], []),
+   ("QUICK_LISTING_SPEC.md", ["THE AREA UNIT IS THE TAXI DROP", "a blurred pin is still a pin"], []),
+ ],
+ "RUL-148": [
+   ("RULINGS.md", ["THE PRINCIPLE IS NEVER SHARE PRIVATE DETAILS"], []),
+   ("QUICK_LISTING_SPEC.md", ["Never share private details"], []),
+ ],
+ "RUL-149": [
+   ("scripts/regression_ledger.py", ["EULA-LANG-1"], []),
+   # "eleven official languages" is forbidden on purpose: SASL made it twelve in 2023, and the
+   # stale number is the defect this ruling names.
+   ("RULINGS.md", ["FOUR LAUNCH LANGUAGES AS THE MINIMUM"], []),
+   ("QUICK_LISTING_SPEC.md", ["isiXhosa fifth for Cape Town"], ["eleven official languages"]),
+ ],
  "RUL-141": [
    ("bea_main.py", ["DEVICE-NOLAPSE-1", "def _mint_device(", "async def _device_renews_admin_token("], ["timedelta(days=_DEVICE_DAYS)"]),
    ("dashboard.server.html", ["X-Admin-Token-Renewed"], []),
@@ -975,7 +1028,17 @@ REFLECTIONS = {
    # the switch (which eula_sync does NOT cover, because it is ordinary UI copy). The forbidden
    # string is the draft's own status line: if the clause is ever reverted to a parked draft while
    # the feature is live, this trips rather than going quiet.
-   ("eula_clean.html", ["3.8 Buzz", "Buzz delivery records", "v1.16"], []),
+   # ASSERTION CORRECTED 19 Sep 2026 (onboarding run 15): this line required the LITERAL "v1.16"
+   # in eula_clean.html, which pinned a living document to the version current on the day the
+   # ruling was written. The 18 Sep v1.17 bump (data-subject-request contact row) therefore
+   # FAILed RUL-133 while the Buzz clause -- the thing the ruling is actually about -- was
+   # perfectly intact. A version pin is a proxy for the property; the property is that the
+   # clause is present on every surface and that the four version stamps AGREE. The first half
+   # is asserted here; the second half is asserted for real, and version-agnostically, by
+   # regression ledger EULA-VERSION-LAND-1 (RG-0406), which compares the stamps to each other
+   # instead of to a constant. Same class as EULA-ANCHOR-1: a hardcoded anchor breaks on a
+   # legitimate change and then gets "fixed" by reverting the legitimate change.
+   ("eula_clean.html", ["3.8 Buzz", "Buzz delivery records"], []),
    ("terms.html", ["3.8 Buzz"], []),
    ("ms.js", ["3.8 Buzz", "section 3.8"], []),
    ("canon.yml", ["v1.16"], []),

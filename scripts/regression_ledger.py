@@ -24680,5 +24680,330 @@ def rg_quick_funnel_1():
                           "a person with the dwell beacon, and measures nothing on file://")]
 
 
+@entry("RG-0406", "EULA-VERSION-LAND-1: the EULA version is the SAME number everywhere it is "
+                  "written -- the published document, its own footer, the machine-readable canon "
+                  "pointer and the version register -- so a bump is landed or it is not landed",
+       LOCKED, fixed_on="2026-09-19",
+       scope="eula_clean.html (header stamp + end-of-document footer), canon.yml (eula:) and "
+             "LEGAL_VERSIONS.md (the EULA table row + a paragraph for that version). THE FAULT, "
+             "twice in five days: on 14 Sep the v1.15 edit updated the EULA's FOOTER and left the "
+             "HEADER reading v1.14, and eula_sync.py did not catch it because it compares the "
+             "three COPIES to each other, never the header to the footer. On 18 Sep a lane bumped "
+             "all three copies to v1.17 (the data-subject-request contact row) and left canon.yml "
+             "and LEGAL_VERSIONS.md at v1.16, so `rulings_check.py` FAILed RUL-133 for a day and "
+             "the register described a document the site was no longer serving. Landing a version "
+             "is ATOMIC (CLAUDE.md P5/P10); a half-landed one is the drift the register exists to "
+             "catch, and neither existing instrument could see it: RG-0077 proves the three copies "
+             "are byte-identical, which stays true when all three are wrong together. THE "
+             "ASSERTION IS DELIBERATELY VERSION-AGNOSTIC -- it compares the four stamps to EACH "
+             "OTHER and never to a constant. That is the lesson of EULA-ANCHOR-1 and of the "
+             "RUL-133 assertion corrected alongside this entry: a checker pinned to today's "
+             "version turns every legitimate bump into a red, and a red that is cured by "
+             "reverting a legitimate change is worse than no checker at all.",
+       ref="EULA-FORK-1 / RG-0077 (the three copies, one writer) · EULA-FOOTER-1 (14 Sep, header "
+           "vs footer) · EULA-ANCHOR-1 (hardcoded anchors break on legitimate additions) · "
+           "RUL-133 · CLAUDE.md P5/P10 · LEGAL_VERSIONS.md")
+def rg_eula_version_land_1():
+    import re as _re
+    out = []
+    eula = repo_file("eula_clean.html")
+    canon = repo_file("canon.yml")
+    reg = repo_file("LEGAL_VERSIONS.md")
+    if eula is None or canon is None or reg is None:
+        return [(INFO, "NOT EVALUATED - one of eula_clean.html / canon.yml / LEGAL_VERSIONS.md is "
+                       "not readable from here")]
+
+    head = _re.search(r"Version\s+(\d+\.\d+)\s*\u00b7\s*Last updated", eula)
+    foot = _re.search(r"End of TrustSquare Terms of Use / EULA v(\d+\.\d+)", eula)
+    cpin = _re.search(r'^\s*eula:\s*"v(\d+\.\d+)"', canon, _re.M)
+    rrow = _re.search(r"\|\s*\*\*EULA\*\*\s*\|\s*\*\*v(\d+\.\d+)\*\*\s*\|", reg)
+
+    for got, what in ((head, "the EULA's header version stamp"),
+                      (foot, "the EULA's end-of-document footer version"),
+                      (cpin, "canon.yml's eula: pointer"),
+                      (rrow, "the EULA row in LEGAL_VERSIONS.md")):
+        if got is None:
+            out.append((FAIL, "%s cannot be found at all -- the version is unreadable, which is "
+                              "worse than wrong, because nothing downstream can check it" % what))
+    if out:
+        return out
+
+    stamps = {"eula_clean.html header": head.group(1),
+              "eula_clean.html footer": foot.group(1),
+              "canon.yml eula:": cpin.group(1),
+              "LEGAL_VERSIONS.md EULA row": rrow.group(1)}
+    distinct = sorted(set(stamps.values()))
+    if len(distinct) != 1:
+        out.append((FAIL, "the EULA version is landed in some places and not others: "
+                          + " · ".join("%s = v%s" % (k, v) for k, v in stamps.items())
+                          + " -- landing a version is atomic, so finish the landing (or back the "
+                            "bump out); never green this by reverting the published document"))
+        return out
+
+    v = distinct[0]
+    if ("v%s (" % v) not in reg:
+        out.append((FAIL, "LEGAL_VERSIONS.md says the EULA is v%s but carries no paragraph "
+                          "describing what changed in v%s -- a version register that records a "
+                          "number and not the change is a version number, not a register" % (v, v)))
+        return out
+
+    return [(INFO, "the EULA reads v%s in its header, its footer, canon.yml and the version "
+                   "register, and the register says what changed in it" % v)]
+
+
+@entry("RG-0407", "WA-NONUMBER-1: every WhatsApp share the app emits carries a message and NO "
+                  "recipient -- she picks the person from her own contacts, and no phone number "
+                  "ever enters our path, our logs or our database",
+       LOCKED, fixed_on="2026-09-19",
+       scope="Every surface that emits a WhatsApp link (quick.html, ms.js, marketsquare.html, "
+             "bea_main.py and the outreach templates): the link must be the numberless form "
+             "`https://wa.me/?text=...`, never `wa.me/<number>` or `?phone=`, and no code path may "
+             "store, log or transmit a recipient number obtained from one. RUL-146, David 18 Sep "
+             "2026, approving the mechanism verbatim: *'The link does not contain a number because "
+             "it does not need one.'* WHY THIS IS LOCKED BEFORE THE BUTTONS EXIST: the numberless "
+             "form and the number-carrying form are ONE CHARACTER APART in the URL, they look "
+             "identical in a screenshot, and the number-carrying one is what every tutorial and "
+             "every LLM completion on earth will suggest -- `wa.me/27821234567?text=...`. The day "
+             "somebody wires 'send it to her employer for her' the numberless property dies "
+             "silently, and with it the reason this pattern was allowed at all: we never learn who "
+             "she chose. This entry is the machinery for a promise that is otherwise only a "
+             "memory. It is also the fence around the RESERVED half of RUL-146 -- messaging her "
+             "unprompted needs the WhatsApp Business API and per-message fees, which is money and "
+             "is David's; a recipient number appearing in our code is the first visible symptom of "
+             "that line being crossed.",
+       ref="RUL-146 · RUL-115(b) (she sends her own link) · RUL-136/137 (the confirmer is never "
+           "named or stored) · QUICK_LISTING_SPEC.md section 8 · DECISIONS_2026-09-18_EVENING.md "
+           "decision 5")
+def rg_wa_nonumber_1():
+    import re as _re
+    out = []
+    surfaces = ("quick.html", "ms.js", "marketsquare.html", "bea_main.py",
+                "marketsquare_admin.html")
+    seen_any = False
+    for name in surfaces:
+        src = repo_file(name)
+        if src is None:
+            continue
+        for m in _re.finditer(r"(?:https?://)?(?:api\.)?wa\.me/([^\"'\s<>)]*)", src):
+            seen_any = True
+            tail = m.group(1)
+            if not tail.startswith("?text="):
+                out.append((FAIL, "%s emits a WhatsApp link that is not the numberless form: "
+                                  "wa.me/%s -- RUL-146 allows only https://wa.me/?text=<message>, "
+                                  "where she picks the recipient from her own contacts"
+                                  % (name, tail[:60])))
+        for bad in ("api.whatsapp.com/send?phone=", "wa.me/%s", "wa.me/' +", 'wa.me/" +'):
+            if bad in src:
+                out.append((FAIL, "%s builds a WhatsApp link with a recipient in it (%r) -- a "
+                                  "number in the path is the one shape RUL-146 forbids"
+                                  % (name, bad)))
+    if out:
+        return out
+    if not seen_any:
+        return [(INFO, "no WhatsApp share link is emitted anywhere yet -- the guard is armed and "
+                       "will fail the first one that carries a recipient")]
+    return [(INFO, "every WhatsApp link emitted is the numberless https://wa.me/?text= form; the "
+                   "recipient is chosen in her own contacts and never reaches us")]
+
+
+@entry("RG-0408", "WA-SELFSEND-1: a person who has just composed an advert can put the way back "
+                  "to it into the app she actually opens -- she sends it to herself on WhatsApp, "
+                  "from her own contacts, and the message carries no sign-in token",
+       LOCKED, fixed_on="2026-09-19",
+       scope="quick.html, the hand-back screen after a draft reaches the server: a 'Send it to "
+             "myself on WhatsApp' button on the numberless `https://wa.me/?text=` link (RUL-146), "
+             "plus Copy, plus the q_wa_self / q_wa_copy beacons so we can see whether anyone uses "
+             "it. THE FAULT IT CLOSES: the only way back to a composed draft was an EMAIL. "
+             "Montana (listing 382) is the proof of what a missing way back costs -- a finished "
+             "advert, quality 94, invisible for six days because the hand-back screen was the only "
+             "thing that ever named it and it died with the tab. RG-0395 answered that with mail. "
+             "But the market David redirected this goal at on 18 Sep -- South African domestic "
+             "workers, housecleaners first -- opens WhatsApp fifty times a day and an inbox rarely "
+             "or never, so for her the emailed door is the same missing door with a stamp on it. "
+             "THE TOKEN IS DELIBERATELY ABSENT AND THIS IS THE LOAD-BEARING PART: the emailed link "
+             "carries a 7-day sign-in token and may, because arriving in that inbox is itself "
+             "proof the address belongs to the reader. A token handed back to whoever typed an "
+             "address proves nothing -- type a stranger's address, receive a sign-in for it -- so "
+             "this message carries only the advert's number, its URL and the address it is waiting "
+             "on. Anyone may hold it; it grants nothing. Making the link itself resumable without "
+             "email is the account-key question (QUICK_LISTING_SPEC.md D2), which is David's and "
+             "is still open: this entry exists partly so that when D2 is answered, whoever builds "
+             "it finds the reason the token was left out rather than assuming it was forgotten.",
+       ref="RUL-146 / RG-0407 WA-NONUMBER-1 · RG-0395 QUICK-RETURN-1 (the emailed way back) · "
+           "RG-0404 SELLFLOW-RETURN-1 · RG-0405 QUICK-FUNNEL-1 (the beacons) · "
+           "QUICK_LISTING_SPEC.md sections 8 and D2 · DECISIONS_2026-09-18_EVENING.md decision 5")
+def rg_wa_selfsend_1():
+    out = []
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - quick.html is not readable from here")]
+    if "WA-SELFSEND-1" not in q:
+        return [(FAIL, "the WhatsApp way back to her own draft is gone -- the only door left is "
+                       "an email, which is the door this market does not use")]
+    for token, why in (
+        ("Send it to myself on WhatsApp",
+         "the self-send button is gone from the hand-back screen"),
+        ("https://wa.me/?text=",
+         "the self-send no longer uses the numberless WhatsApp link (RUL-146)"),
+        ("qTrack('q_wa_self')",
+         "the self-send beacon is gone, so we cannot tell whether a single person used it -- "
+         "and an unmeasured guess about a market is how this goal lost a week once already"),
+        ("'/?draft='+res.id",
+         "the message no longer names the draft it is supposed to lead back to")):
+        if token not in q:
+            out.append((FAIL, why))
+
+    # The whole safety argument of this entry is that the self-send message is not a credential.
+    i = q.find("var _waMsg=")
+    if i < 0:
+        out.append((FAIL, "the self-send message is no longer built in one place, so it cannot be "
+                          "asserted to be free of a sign-in token"))
+    else:
+        msg_src = q[i:i + 700]
+        for leak in ("signin=", "token", "jwt", "HANDOVER.key"):
+            if leak in msg_src:
+                out.append((FAIL, "the WhatsApp self-send message now carries %r -- a link anyone "
+                                  "may hold must grant nothing, because the person typing the "
+                                  "address has proved nothing about owning it" % leak))
+    return out or [(INFO, "the hand-back screen offers a numberless WhatsApp self-send that names "
+                          "the draft and carries no credential, and both taps are measured")]
+
+
+@entry("RG-0409", "LADDER-RUL142-1: the ladder pays rising points for each VERIFIED CLIENT and "
+                  "for a second employer confirmation, and the universal cap is 40 -- the numbers "
+                  "David approved are the numbers the code scores",
+       OPEN,
+       scope="bea_main.py _TRUST_SIGNALS (universal.referral_1/3/5plus -> 5/6/7 and renamed to "
+             "verified CLIENTS, a new universal.employer_confirmed_2 at 6) and the four places "
+             "the universal cap 30 is written: _trust_score() (min(30, uni_pts)), its docstring "
+             "formula, _uni_sub = min(30, _uni_raw) and the 'capped at the identity maximum of "
+             "30' note. RUL-142, David 18 Sep 2026. WHY IT IS OPEN AND NOT DONE TONIGHT, stated "
+             "so the next run does not have to re-derive it: (a) it is a SCORING change, and the "
+             "cap is what every band, every RUL-115 visibility threshold and every headline "
+             "number is built on top of -- four hardcoded 30s that must move together or a panel "
+             "sums to 87 over an 80 headline, which is the exact CAP-VISIBLE-1 fault of 15 Sep; "
+             "(b) the second employer confirmation needs the UNIQUE(email, signal_id) model "
+             "opened, which is a migration, not a constant; (c) 'verified client' does not exist "
+             "as a concept in the code at all -- a client who HIRED her and confirmed it is a new "
+             "evidence type, not a rename of the referral rows; and (d) COACH-EARNABLE-1 records "
+             "that nothing in the app can write a referral signal 'earned' today, so the values "
+             "5/3/2 and 5/6/7 currently score identically for every real user and the change is "
+             "worth nothing until (c) exists. IT IS ALSO NOT ON THE CRITICAL PATH TO THE "
+             "ONBOARDING NUMBER: publishing does not depend on the score, so this is the right "
+             "thing to do second and the wrong thing to do instead of the way back to a draft. "
+             "Do it in its own session, with the bands re-probed after.",
+       ref="RUL-142 (amends RUL-136) · QUICK_LISTING_SPEC.md sections 1 and 7 (the cap "
+           "arithmetic) · CAP-VISIBLE-1 · COACH-EARNABLE-1 · RUL-115 (visibility thresholds)")
+def rg_ladder_rul142_1():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py is not readable from here")]
+    done = ('"universal.employer_confirmed_2"' in src) and ("min(30, uni_pts)" not in src)
+    if done:
+        return [(INFO, "the ladder carries the RUL-142 values and the universal cap has moved off "
+                       "30 -- re-probe the trust bands, then lock this entry")]
+    return [(FAIL, "the ladder still scores referrals 5/3/2 against a universal cap of 30, "
+                        "and a second employer confirmation cannot be recorded at all (RUL-142)")]
+
+
+@entry("RG-0410", "CONFIRM-GLIMPSE-1: the employer who taps Yes verifies a way to reach them, is "
+                  "told in the same sentence that we never publish or share it, and then SEES "
+                  "what their tap did -- her score moving, and real neighbours",
+       OPEN,
+       scope="The one-tap employer-confirmation page and its endpoint in bea_main.py. Two of "
+             "David's decisions of 18 Sep, which are one build because they live on one screen. "
+             "RUL-144: the confirmer verifies a phone or an email, with NO account; we store that "
+             "contact, never publish it, never share it, never attach it to her listing, and we "
+             "SAY SO AT THE POINT WE ASK -- their NAME is still never stored (RUL-136/137 "
+             "survives intact). RUL-148 is the unlock: the principle is never SHARE a private "
+             "detail, not never STORE one, and this project had narrowed its own designs on the "
+             "stronger misreading. RUL-145: after the tap, show her card with the score moving in "
+             "front of them (50 -> 62, the reason attached) and then two or three already-public "
+             "workers in their area -- no wall, no account, and the free-account offer AFTER the "
+             "decision, never as its price (RUL-137(d)). WHY IT MATTERS MORE THAN IT LOOKS: the "
+             "tap is the only moment we will ever have that person's full attention, and today it "
+             "ends in a receipt. It is also the only screen on which we can prove the product to "
+             "a stranger who arrived as a BUYER. Not built tonight: the score visual does not "
+             "exist anywhere yet (QUICK_LISTING_SPEC.md section 3 calls it the one genuinely new "
+             "build), and a confirmation flow that starts collecting a contact needs its consent "
+             "wording checked against the EULA before it collects anything.",
+       ref="RUL-144 · RUL-145 · RUL-148 · RUL-136/137 (the confirmer is never named) · "
+           "RUL-137(d) · QUICK_LISTING_SPEC.md sections 3 and 10")
+def rg_confirm_glimpse_1():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py is not readable from here")]
+    if "CONFIRM-GLIMPSE-1" in src:
+        return [(INFO, "the confirm page takes a reachability check with its promise attached and "
+                       "shows the score moving -- probe it in a real browser, then lock")]
+    return [(FAIL, "the employer confirmation still ends in a receipt: no reachability check "
+                        "(RUL-144) and no glimpse of what the tap did (RUL-145)")]
+
+
+@entry("RG-0411", "AREA-TAXIDROP-1: where she works is published as the taxi route and drop plus "
+                  "the suburb -- never a street, never a block, never a pin, and proximity is "
+                  "computed for the viewer and published nowhere",
+       OPEN,
+       scope="The listing surface in marketsquare.html and whatever geo fields back it. RUL-147, "
+             "David 18 Sep 2026, deciding D7. The taxi drop is the unit an ordinary South African "
+             "navigates by and the one she would give a friend. A STREET OR A BLOCK IS BARRED FOR "
+             "A REASON THAT IS NOT SQUEAMISHNESS: those are her EMPLOYERS' addresses, households "
+             "that are not our users and agreed to nothing; and a block plus her open days is "
+             "simultaneously a map of where she can be found alone and a map of which houses are "
+             "empty on which days. RUL-115 exists because David saw the weaker version of this. "
+             "Proximity is stated to the viewer about the viewer -- 'within walking distance of "
+             "you' -- and drawn nowhere: the precision lives in the sentence, where it is safe. "
+             "Never a pin; a blurred pin is still a pin. Not built tonight: it needs a geo "
+             "representation for routes and drops that does not exist yet, and SO-1 also bars any "
+             "exemplar map presented as a surveyed location, so the illustrative note has to ship "
+             "with the first drawing of it.",
+       ref="RUL-147 (extends RUL-115) · SO-1 · QUICK_LISTING_SPEC.md section 9")
+def rg_area_taxidrop_1():
+    ms = repo_file("marketsquare.html")
+    if ms is None:
+        return [(INFO, "NOT EVALUATED - marketsquare.html is not readable from here")]
+    if "AREA-TAXIDROP-1" in ms:
+        return [(INFO, "the listing surface publishes the route, the drop and the suburb, and no "
+                       "street, block or pin -- probe a rendered listing, then lock")]
+    return [(FAIL, "the area a seller works in has no taxi-route/drop representation yet "
+                        "(RUL-147); nothing publishes a street or a pin today either")]
+
+
+@entry("RG-0412", "EULA-LANG-1: the terms are readable in the language she speaks, and the page "
+                  "says plainly -- in that language -- that the English version is the binding one",
+       OPEN,
+       scope="eula_clean.html (the one writer, scripts/eula_sync.py) plus the acceptance surfaces. "
+             "RUL-143 and RUL-149, David 18 Sep 2026: translate into the launch languages -- "
+             "English, isiZulu, Sesotho, Afrikaans as the minimum four (~90% of the country with "
+             "cluster intelligibility), isiXhosa fifth and not optional for Cape Town -- with the "
+             "ENGLISH remaining binding and that fact said plainly at the point of acceptance, "
+             "not buried in a clause she would need the translation to find. WHY IT IS A GOAL "
+             "ITEM AND NOT HOUSEKEEPING: a domestic worker asked to accept 120 kB of English "
+             "legal text she cannot read has not agreed to anything in any sense that matters, to "
+             "her or to a court, and acceptance is the last gate before the number moves. TWO "
+             "TRAPS ON RECORD: a draft once had the translations PREVAIL over the English and was "
+             "corrected before shipping (Country Schedules D7/E8/G7) -- that must not come back; "
+             "and RG-0400 shows a FOURTH, hand-kept copy of the EULA already drifted to v1.10 in "
+             "marketsquare.html, so translating before that fork is closed would multiply four "
+             "copies into twenty. Close RG-0400 first. South Africa has TWELVE official languages "
+             "since SASL was added in 2023; any screen of ours saying eleven is a defect.",
+       ref="RUL-143 · RUL-149 · RG-0400 EULA-FORK-2 (close first) · RG-0077 / EULA-FORK-1 (one "
+           "writer) · LEGAL_VERSIONS.md · QUICK_LISTING_SPEC.md section 6")
+def rg_eula_lang_1():
+    e = repo_file("eula_clean.html")
+    if e is None:
+        return [(INFO, "NOT EVALUATED - eula_clean.html is not readable from here")]
+    out = []
+    if "eleven official languages" in e.lower():
+        out.append((FAIL, "the EULA says South Africa has eleven official languages -- SASL made "
+                          "it twelve in 2023 (RUL-149)"))
+    if "EULA-LANG-1" in e:
+        return out or [(INFO, "the terms carry the launch-language versions and name the English "
+                              "as binding in each of them")]
+    out.append((FAIL, "the terms exist in English only; the four launch languages and the "
+                           "plain statement that English binds are not there yet (RUL-143/149)"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
