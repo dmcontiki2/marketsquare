@@ -300,6 +300,28 @@ def _get(path):
         try:
             _cache[path] = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
         except urllib.error.HTTPError as e:
+            # EDGE-BLIND-1 (18 Sep 2026). Cloudflare answers a non-browser client with
+            # 403 "error code: 1010" -- a body that is not the app's JSON and not the
+            # app's HTML. Callers then json.loads() it, raise, and report a LOCKED entry
+            # as REGRESSED. That happened THREE times in one session (RG-0386, RG-0253,
+            # RG-0229), each time on an endpoint that was in fact perfect, each time
+            # printing "Do not deploy over this". We did not read the payload, so we are
+            # BLIND, not regressed -- and the evidence ladder says an instrument that
+            # cannot see must say so, never render a verdict. Sibling of GATE-CACHE-1.
+            try:
+                _peek = e.read().decode("utf-8", "replace")[:600]
+            except Exception:
+                _peek = ""
+            if e.code in (403, 429, 503) and (
+                    "error code: 1010" in _peek
+                    or "Cloudflare" in _peek
+                    or "cf-browser-verification" in _peek
+                    or "Attention Required" in _peek):
+                raise ProbeOffline("edge (Cloudflare) refused this client with HTTP %s -- the "
+                                   "payload was never read, so this entry is BLIND here, not "
+                                   "regressed. Probe the app directly (http://127.0.0.1:8000) "
+                                   "from the box, or re-run from a vantage the edge allows."
+                                   % e.code)
             ck = _review_cookie() if e.code in (401, 403) else ""
             if not ck:
                 if e.code in (401, 403) and _REVIEW["rate_limited"]:
@@ -24249,6 +24271,104 @@ def rg_hub_eula_1():
                               "(CPA s49)" % bad))
     return out or [(INFO, "the hub's Publish hands a stranded draft to the Terms screen; only the "
                           "tapped listing is seeded; acceptance stays the seller's own act")]
+
+
+@entry("RG-0400", "EULA-FORK-2: the acceptance box a SELLER actually reads and ticks carries the "
+                  "same version as the EULA the site publishes -- there is no fourth copy drifting "
+                  "behind the three eula_sync.py knows about",
+       OPEN, fixed_on="",
+       scope="marketsquare.html's seller-onboarding acceptance box (div#sob-eula-scroll, phase 3 "
+             "'Almost live') measured against eula_clean.html. FOUND 18 Sep 2026 while walking the "
+             "publish journey in a live browser: the box the seller scrolls, ticks and goes live on "
+             "reads 'Version 1.10 - 23 July 2026' with a footer saying v1.9, while eula_clean.html, "
+             "terms.html and the ms.js _EULA_HTML literal are all v1.17. marketsquare.html does not "
+             "reference _EULA_HTML at all (0 occurrences), so this is a genuine FOURTH hand-kept "
+             "copy -- and eula_sync.py, THE ONE WRITER, only knows three. That is why RG-0077 "
+             "reports the EULA in sync while the document a human is actually agreeing to is seven "
+             "versions behind what the site publishes. Exactly EULA-FORK-1 (14 Aug), one copy "
+             "further on: 'the fix is machinery, not memory' -- and the machinery has a blind spot. "
+             "WHY THIS IS OPEN AND NOT FIXED THE SAME SESSION, deliberately: the fourth copy is "
+             "RESTYLED markup (dark-theme divs), not a byte copy of the source's <p> structure, so "
+             "there is no safe mechanical sync -- and auto-transforming the text of a legal gate, "
+             "unattended, is how you end up with a consent record nobody can defend. The real fix "
+             "is architectural (render the box from the one source at runtime, as ms.js does) and "
+             "needs eyes on the rendered result, because the source markup is light-theme and the "
+             "box is dark. This entry exists so the fork is VISIBLE every run instead of hiding "
+             "behind a green RG-0077.",
+       ref="EULA-FORK-1 / RG-0077 (the three-copy guard this slipped past) · scripts/eula_sync.py "
+           "(THE ONE WRITER -- teach it the fourth target) · RUL-133 / BUZZ-ACCEPT-1 (acceptance "
+           "binds only what was actually acknowledged) · found by the 18 Sep browser walk, RG-0396.")
+def rg_eula_fork_2():
+    src = repo_file("eula_clean.html")
+    fea = repo_file("marketsquare.html")
+    if src is None or fea is None:
+        return [(INFO, "NOT EVALUATED - eula_clean.html/marketsquare.html not readable from here")]
+    import re as _re
+    def ver(t):
+        m = _re.search(r"Version\s+(\d+\.\d+)", t)
+        return m.group(1) if m else None
+    sv = ver(src)
+    box = ""
+    i = fea.find('id="sob-eula-scroll"')
+    if i >= 0:
+        box = fea[i:i + 400000]
+    fv = ver(box) if box else None
+    out = []
+    if sv is None:
+        return [(INFO, "NOT EVALUATED - no version marker found in eula_clean.html")]
+    if i < 0:
+        return [(INFO, "NOT EVALUATED - the seller acceptance box (#sob-eula-scroll) is not in "
+                       "marketsquare.html; if the box now renders from the synced source, this "
+                       "entry is satisfied by construction and can be locked")]
+    if fv is None:
+        out.append((FAIL, "the seller's acceptance box carries no version marker at all -- nothing "
+                          "can tell which agreement a seller ticked"))
+    elif fv != sv:
+        out.append((FAIL, "the seller ticks EULA v%s while the site publishes v%s -- a fourth copy "
+                          "has drifted %s behind the one writer (EULA-FORK-2)" % (fv, sv, fv)))
+    if "_EULA_HTML" not in fea and fv is not None:
+        out.append((INFO, "marketsquare.html holds its own styled copy rather than rendering the "
+                          "synced source -- that is the root cause, not the drift itself"))
+    return out or [(INFO, "the seller ticks the same EULA version the site publishes (v%s)" % sv)]
+
+
+@entry("RG-0401", "EDGE-BLIND-1: an edge refusal makes an entry BLIND, never REGRESSED -- the board "
+                  "may not convict the app of a fault it was never allowed to look at",
+       LOCKED, fixed_on="2026-09-18",
+       scope="regression_ledger.py _get(): a 403/429/503 whose body is a Cloudflare block "
+             "('error code: 1010', a challenge page) raises ProbeOffline -> UNVERIFIED (exit 2), "
+             "instead of propagating an HTTPError that each caller turns into a FAIL. FOUND BY "
+             "COSTING A SESSION THREE TIMES on 18 Sep 2026: RG-0386, then RG-0253, then RG-0229 all "
+             "reported REGRESSED with the board printing 'Do not deploy over this', and all three "
+             "judged HOLDING on an immediate re-run against endpoints that were perfect. The cause "
+             "is not flakiness: Cloudflare answers a non-browser client (the ledger's own UA, and "
+             "any server-side call to the public hostname) with a 403 body that is not JSON, the "
+             "caller json.loads() it, and the exception becomes a verdict. A checker that cannot "
+             "see must SAY it cannot see -- CLAUDE.md's self-verification rule, and the S140 "
+             "false-RED class. Sibling of GATE-CACHE-1, which already does exactly this for a "
+             "rate-limited review credential.",
+       ref="CLAUDE.md 'a checker that disagrees with the authority must suspect itself first' (S140) "
+           "· GATE-CACHE-1 (the same move for a 429 on the review gate) · LEDGER-OFFLINE-1 · "
+           "found chasing RG-0386/0253/0229 during the 18 Sep onboarding run.")
+def rg_edge_blind_1():
+    src = repo_file("scripts/regression_ledger.py")
+    if src is None:
+        src = io.open(__file__, encoding="utf-8").read() if "__file__" in dir() else None
+    if src is None:
+        return [(INFO, "NOT EVALUATED - the ledger source is not readable from here")]
+    out = []
+    if "EDGE-BLIND-1" not in src:
+        out.append((FAIL, "the edge-block guard is gone -- a Cloudflare 1010 will be reported as a "
+                          "REGRESSION again and will block the deploy lane on a phantom"))
+    else:
+        seg = src.split("def _get(", 1)[-1][:3000]
+        if "error code: 1010" not in seg:
+            out.append((FAIL, "_get no longer recognises the edge's 1010 body -- the exact response "
+                              "that produced three false REDs on 18 Sep"))
+        if "ProbeOffline" not in seg:
+            out.append((FAIL, "_get no longer converts an edge refusal into ProbeOffline, so it "
+                              "renders a verdict on a payload it never read"))
+    return out or [(INFO, "an edge refusal is reported as blind (UNVERIFIED), never as a regression")]
 
 
 if __name__ == "__main__":
