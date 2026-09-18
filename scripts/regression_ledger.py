@@ -23663,5 +23663,51 @@ def rg_one_five_dollar_tier():
     return out or [(INFO, "fold on arming, audited and idempotent; buyer checkout retired while armed; one ladder served and rendered")]
 
 
+
+@entry("RG-0393", "David's own access never lapses on a timer -- a device pass has no expiry (only "
+                  "revocation ends it), the cookie is re-issued on every visit, the master password "
+                  "enrols the browser it is typed into, and an expired 8-hour admin token on an open "
+                  "page is renewed silently for an enrolled device",
+       LOCKED, fixed_on="2026-09-18",
+       scope="CLASS: every access credential David himself uses (device pass, dashboard admin token, "
+             "Orchestrator gate via /_device_ok). bea_main.py _mint_device / admin_enrol mint device "
+             "JWTs WITHOUT exp; _device_from_cookie ignores exp (admin_devices.revoked is the control); "
+             "/admin/device-ok and /admin/device-token re-set ts_device for 400 days (Chrome's cap) on "
+             "every call; POST /admin/login with the master password also mints a device; the "
+             "_device_renews_admin_token middleware swaps an expired X-Admin-Token for a fresh one when "
+             "the device pass is valid and returns X-Admin-Token-Renewed; dashboard.server.html's fetch "
+             "wrapper stores it. Team PIN logins and tester/reviewer credentials are OUT of scope.",
+       ref="DEVICE-NOLAPSE-1 / RUL (18 Sep 2026). Fault: the Quick Listing frame on the dashboard showed "
+           "nginx '401 Authorization Required' -- David's laptop Chrome had never been enrolled, his "
+           "password session from 17 Sep 04:33 had lapsed (8-hour token), and the frame had no pass. "
+           "David: 'do not ever create time lapsing failures for me where i lose access because of a "
+           "runtime day counter.'")
+def rg_access_never_lapses():
+    bea = repo_file("bea_main.py"); dash = repo_file("dashboard.server.html")
+    if bea is None or dash is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    for needle, why in (
+            ("def _mint_device(", "the non-expiring device mint"),
+            ('options={"verify_exp": False}', "device passes judged by revocation, not by a clock"),
+            ("_DEVICE_COOKIE_MAX_AGE = 400 * 24 * 3600", "the longest cookie age a browser keeps"),
+            ('_set_device_cookie(response, ts_device)   # DEVICE-NOLAPSE-1: sliding re-issue', "sliding re-issue"),
+            ('_dtok = _mint_device("browser via master password "', "the password enrolling its browser"),
+            ("async def _device_renews_admin_token(", "silent renewal of an expired admin token"),
+            ('response.headers["X-Admin-Token-Renewed"] = renewed', "the renewed token handed back")):
+        if needle not in bea:
+            out.append((FAIL, "bea_main.py lost %r -- %s is gone (DEVICE-NOLAPSE-1)" % (needle, why)))
+    # class guard: no device JWT may carry an exp again
+    for blk_start in ("def _mint_device(", "def admin_enrol("):
+        i = bea.find(blk_start); j = bea.find("\n@app.", i + 10) if i >= 0 else -1
+        blk = bea[i:j] if (i >= 0 and j > i) else ""
+        if '"scope": "device"' in blk and '"exp"' in blk:
+            out.append((FAIL, "%s mints a device pass with an expiry again -- David loses access on a timer" % blk_start))
+    if "timedelta(days=_DEVICE_DAYS)" in bea:
+        out.append((FAIL, "a device expiry computed from _DEVICE_DAYS is back"))
+    if "X-Admin-Token-Renewed" not in dash:
+        out.append((FAIL, "dashboard.server.html no longer stores a renewed admin token -- an open page lapses"))
+    return out or [(INFO, "device passes never expire; cookie re-issued per visit; password enrols its browser; open pages renew silently")]
+
 if __name__ == "__main__":
     sys.exit(main())

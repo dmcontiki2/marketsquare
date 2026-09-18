@@ -220,6 +220,19 @@
   </div>
 </div>
 <script>
+/* DEVICE-NOLAPSE-1 (18 Sep 2026, David: no access that lapses on a timer). When the server renews an
+   expired admin token for an enrolled device it returns X-Admin-Token-Renewed; store it so every later
+   call on this open page carries the fresh one. Wraps fetch once; changes nothing else. */
+(function(){
+  if (window._nolapseFetch || !window.fetch) return; window._nolapseFetch = true;
+  var _f = window.fetch.bind(window);
+  window.fetch = function(){
+    return _f.apply(null, arguments).then(function(r){
+      try { var t = r.headers.get('X-Admin-Token-Renewed'); if (t) sessionStorage.setItem('ms_admin_token', t); } catch(e) {}
+      return r;
+    });
+  };
+})();
 (function(){
   /* GATE-ORIGIN-1 (14 Aug 2026): relative when served, absolute only from file://.
      _apv3B two thousand lines below already did this; the gate did not, so a served page

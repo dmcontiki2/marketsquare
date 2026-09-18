@@ -956,6 +956,12 @@ REFLECTIONS = {
    ("migrations/039_functional_tier_names.py", ["fast", "reason"], []),
    ("RULINGS.md", ["NEVER FOR A MODEL"], []),
  ],
+ "RUL-141": [
+   ("bea_main.py", ["DEVICE-NOLAPSE-1", "def _mint_device(", "async def _device_renews_admin_token("], ["timedelta(days=_DEVICE_DAYS)"]),
+   ("dashboard.server.html", ["X-Admin-Token-Renewed"], []),
+   ("scripts/regression_ledger.py", ["RG-0393"], []),
+   ("RULINGS.md", ["NO ACCESS OF DAVID'S MAY LAPSE ON A TIMER"], []),
+ ],
  "RUL-140": [
    ("scripts/work_lock.py", ["WORK-LOCK-1", "def check", "TTL_S"], []),
    (".gitignore", [".work_lock"], []),

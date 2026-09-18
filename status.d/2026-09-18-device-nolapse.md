@@ -1,0 +1,1 @@
+- 18 Sep 2026 — DEVICE-NOLAPSE-1 (RUL-141): device passes never expire, password login enrols the browser, open dashboards renew their admin token silently. Ledger RG-0393.

@@ -17574,8 +17574,16 @@ def admin_login(req: _AdminLoginRequest, request: Request, response: Response):
         _rate_clear(_admin_attempts, ip)          # ADMIN-NOLOCK-2: success wipes the slate
         _rate_clear(_review_attempts, ip)         # master credential rescues the gate lane too
         _grant_review_cookie(response, "admin-master/" + ip)
+        # DEVICE-NOLAPSE-1: the master password also enrols THIS browser as a device, so the
+        # Orchestrator pages, the dashboard frames and every later visit pass with no second login.
+        try:
+            _dtok = _mint_device("browser via master password " + datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+            if _dtok:
+                _set_device_cookie(response, _dtok)
+        except Exception as _dex:
+            _log.warning("DEVICE-NOLAPSE-1: device mint on login failed: %r", _dex)
         return {"token": _make_token("master"), "expires_hours": _TOKEN_HOURS, "role": "master",
-                "gate": "unlocked"}
+                "gate": "unlocked", "device": "enrolled"}
 
     # 2. Team PIN — numeric only, 4-8 digits
     candidate = req.password.strip()
@@ -17679,7 +17687,33 @@ def admin_verify(x_admin_token: str = Header(default=None)):
 # accepts the cookie in place of X-Launch-Key (it asks /admin/device-ok on localhost). Nothing in
 # nginx changes: the Basic-auth paths stay exactly as they are, so a fault here cannot lock anyone
 # out. Enrol tokens are one-time, 20 min, minted server-side by scripts/mint_enrol_link.py.
-_DEVICE_DAYS = int(os.environ.get("MS_DEVICE_DAYS", "180"))
+_DEVICE_DAYS = int(os.environ.get("MS_DEVICE_DAYS", "180"))   # legacy; no longer an expiry (DEVICE-NOLAPSE-1)
+# DEVICE-NOLAPSE-1 (18 Sep 2026, David: "do not ever create time lapsing failures for me where i lose
+# access because of a runtime day counter"). A device pass has NO expiry: it lives until it is REVOKED
+# (/admin/devices/<id>/revoke). The browser cookie is re-issued on every visit with the longest age a
+# browser will keep (Chrome caps cookies at 400 days), so an in-use device never ages out.
+_DEVICE_COOKIE_MAX_AGE = 400 * 24 * 3600
+
+
+def _set_device_cookie(resp, token):
+    resp.set_cookie("ts_device", token, max_age=_DEVICE_COOKIE_MAX_AGE, httponly=True, secure=True,
+                    samesite="lax", path="/")
+
+
+def _mint_device(label):
+    """Create an unrevoked, non-expiring device record and return its cookie token (or None)."""
+    if not _JWT_SECRET:
+        return None
+    jti = uuid.uuid4().hex
+    conn = _admin_db()
+    try:
+        _device_tables(conn)
+        conn.execute("INSERT INTO admin_devices (jti, label, expires_at) VALUES (?, ?, NULL)", (jti, label))
+        conn.commit()
+    finally:
+        conn.close()
+    return _pyjwt.encode({"sub": "device/" + label, "scope": "device", "jti": jti,
+                          "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
 _WEB_ROOT = os.environ.get("MS_WEB_ROOT", "/var/www/marketsquare")
 
 
@@ -17698,7 +17732,9 @@ def _device_from_cookie(ts_device):
     if not ts_device or not _JWT_SECRET:
         return None
     try:
-        payload = _pyjwt.decode(ts_device, _JWT_SECRET, algorithms=[_JWT_ALGO])
+        # DEVICE-NOLAPSE-1: expiry is NOT checked -- revocation in admin_devices is the control.
+        payload = _pyjwt.decode(ts_device, _JWT_SECRET, algorithms=[_JWT_ALGO],
+                                options={"verify_exp": False})
     except Exception:
         return None
     if payload.get("scope") != "device" or not payload.get("jti"):
@@ -17748,38 +17784,38 @@ def admin_enrol(t: str = "", code: str = "", next: str = ""):
         if not row or row["used_at"] or (row["expires_at"] and row["expires_at"] < datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")):
             return HTMLResponse(_NOT_ENROLLED_HTML % ("That link or code has expired or was already used — ask for a fresh one.", next or "/m"), status_code=410, headers={"Cache-Control": "no-store"})
         jti = uuid.uuid4().hex
-        exp = datetime.now(timezone.utc) + timedelta(days=_DEVICE_DAYS)
         conn.execute("UPDATE admin_enrol_tokens SET used_at = CURRENT_TIMESTAMP WHERE token = ?", (row["token"],))
-        conn.execute("INSERT INTO admin_devices (jti, label, expires_at) VALUES (?, ?, ?)",
-                     (jti, row["label"], exp.strftime("%Y-%m-%d %H:%M:%S")))
+        conn.execute("INSERT INTO admin_devices (jti, label, expires_at) VALUES (?, ?, NULL)",   # DEVICE-NOLAPSE-1
+                     (jti, row["label"]))
         conn.commit()
     finally:
         conn.close()
     token = _pyjwt.encode({"sub": "device/" + (row["label"] or "?"), "scope": "device", "jti": jti,
-                           "iat": datetime.now(timezone.utc), "exp": exp}, _JWT_SECRET, algorithm=_JWT_ALGO)
+                           "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
     dest = next if (next.startswith("/") and not next.startswith("//")) else "/m"
     resp = RedirectResponse(dest, status_code=302)
-    resp.set_cookie("ts_device", token, max_age=_DEVICE_DAYS * 24 * 3600, httponly=True, secure=True,
-                    samesite="lax", path="/")
+    _set_device_cookie(resp, token)
     _log.info("DEVICE-ENROL-1: device enrolled label=%s jti=%s", row["label"], jti[:8])
     return resp
 
 
 @app.get("/admin/device-ok")
-def admin_device_ok(ts_device: str = Cookie(default=None)):
+def admin_device_ok(response: Response, ts_device: str = Cookie(default=None)):
     """200 for an enrolled device, 401 otherwise. CityLauncher asks this on localhost."""
     d = _device_from_cookie(ts_device)
     if not d:
         raise HTTPException(status_code=401, detail="Not an enrolled device.")
+    _set_device_cookie(response, ts_device)   # DEVICE-NOLAPSE-1: sliding re-issue
     return {"ok": True, "label": d["label"]}
 
 
 @app.get("/admin/device-token")
-def admin_device_token(ts_device: str = Cookie(default=None)):
+def admin_device_token(response: Response, ts_device: str = Cookie(default=None)):
     """The page gate calls this first: an enrolled device gets its 8h admin JWT with no typing."""
     d = _device_from_cookie(ts_device)
     if not d:
         raise HTTPException(status_code=401, detail="Not an enrolled device.")
+    _set_device_cookie(response, ts_device)   # DEVICE-NOLAPSE-1: sliding re-issue
     return {"token": _make_token("device/" + d["label"]), "expires_hours": _TOKEN_HOURS, "role": "master",
             "device": d["label"]}
 
@@ -25537,3 +25573,31 @@ def geo_stays(s: float, w: float, n: float, e: float, limit: int = 60):
     from datetime import datetime as _dt
     return {"stays": [{"city": r["city"], "n": r["n"], "lat": r["lat"], "lng": r["lng"]} for r in rows],
             "as_of": _dt.utcnow().isoformat() + "Z"}
+
+
+# DEVICE-NOLAPSE-1 (18 Sep 2026): the 8-hour admin token must never lock David out of a page he
+# left open. When a request carries an admin token that no longer verifies (expired) AND a valid,
+# unrevoked device pass, the token is replaced with a fresh one before the endpoint sees it, and the
+# fresh token is handed back in X-Admin-Token-Renewed so the page stores it. No device = unchanged.
+@app.middleware("http")
+async def _device_renews_admin_token(request: Request, call_next):
+    renewed = None
+    try:
+        tok = request.headers.get("x-admin-token")
+        dev = request.cookies.get("ts_device")
+        if tok and dev and _JWT_SECRET:
+            try:
+                _pyjwt.decode(tok, _JWT_SECRET, algorithms=[_JWT_ALGO])
+            except Exception:
+                d = _device_from_cookie(dev)
+                if d:
+                    renewed = _make_token("device/" + d["label"])
+                    hdrs = [(k, v) for (k, v) in request.scope["headers"] if k != b"x-admin-token"]
+                    hdrs.append((b"x-admin-token", renewed.encode()))
+                    request.scope["headers"] = hdrs
+    except Exception:
+        renewed = None
+    response = await call_next(request)
+    if renewed:
+        response.headers["X-Admin-Token-Renewed"] = renewed
+    return response
