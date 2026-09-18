@@ -24073,3 +24073,50 @@ discipline.
 
 Proposed CUT, not an addition: full score coaching for a first publish, one line for a returning
 member.
+
+## Session — onboarding goal run 13 (18 Sep 2026, Opus 5, unattended)
+
+**QUICK-RETURN-1 — the Quick app now mails a composer the way back to his own draft (RG-0395).**
+
+The onboarding number is 0 and has been since the goal began. This run found the first person who
+should have made it 1, and why he did not. `/onboard/funnel?days=6` showed one session from the
+Montana outfitter letters walking the entire journey — landed, dwell, subpick, photos, photo_pick,
+photo_ok, features, legal, scorecard, finish, handoff. Probed on the box, that is listing 382,
+"Guided Fair Chase Hunts" (Victor, Montana), with a photo, a 998-character description and a
+quality score of 94 — a better advert than most rows that are live. Its author is prospect 83302,
+source `register:moga`, emailed 11 Sep 22:12: a real outfitter, from a cold letter, by his own hand.
+
+He pressed a button reading "Publish it" and was handed a draft plus homework — *finish it in the
+app, sign in with this address* — and then nothing reached him. He has no `users` row, and
+`create_listing` scheduled no background task at all: the Quick lane never mailed anybody. The
+hand-back screen was the only thing that ever named his advert, and it died with the tab. Six days
+invisible. The advert was finished; the door was missing.
+
+Fixed forward: `Listing.source` (accepted, never stored) lets the server tell the Quick lane apart,
+and a draft landed with `source:'quick'` and a typed address now triggers a background send of one
+transactional email carrying a sign-in link straight to that draft. The gate is `source=='quick'`
+only — deliberately, so the agency import lane, which also lands drafts, never mails anybody
+(RUL-096(f) keeps sending reserved). The hand-back copy now says the email is on its way.
+
+It does **not** publish, and must never be "fixed" so that it does: RUL-117(c) rules the Quick app
+ends at "a draft advert (a prototype the seller then finishes)", and ONBOARDING_GOAL §3 bars
+publishing on a seller's behalf. Making the "Publish it" button actually publish would be changing
+a ruling rather than executing one — that wording is a question for David, not a silent edit.
+
+Proven before ship (7/7, executing the shipped text of both new functions against stubs): address
+normalised, advert named, sign-in token decodes for that address, copy states it is not public yet
+and that publishing is theirs, a hostile title cannot inject HTML, a blank or junk address mails
+nobody, and a dead mail transport returns quietly instead of breaking the hand-over. Proven again
+end-to-end on the live service after deploy (982c5d2, relay, health-checked): a POST carrying
+`source:'quick'` produced `INFO:bea:quick-return mail for draft 386: sent` in the service log.
+
+Ledger green at the end (RG-0395 new and LOCKED, every locked fix holding); rulings check 0 FAIL.
+The number is still 0 — this fix buys the *next* person, not the last one.
+
+Left for David, batched and prepared: listing 382's author has still not been mailed, because a
+message to a named individual is reserved (RUL-099). `scripts/quick_draft_backfill.py` is written
+and tested, refuses to run without his words on record, and sends exactly the mail the product now
+sends automatically. Also his: listing 386 is this session's wiring test and wants deleting, as do
+two zero-byte scratch files parked in `_to_delete/`.
+
+Cost model impact: none — one transactional email per composed draft, on the existing transport.

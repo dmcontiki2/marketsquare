@@ -27,37 +27,43 @@ If the sandbox is dead, run it host-side: queue `run_py MarketSquare\scripts\onb
 | 2026-09-09/10 (runs 8–10) | **unknown** | — | — | NOT MEASURED: sandbox dead (KB5124008) |
 | 2026-09-12 (run 11) | **0** | 0 | 0 | 6,748 on the list · 1,482 emailed · 5 registered |
 | 2026-09-13 (run 12, 01:00 SAST) | **0** | 0 | 0 | 6,748 · 1,482 emailed at 01:00, +108 at 01:31 (re-armed wave) · 5 registered |
+| 2026-09-18 (run 13, 02:30 SAST) | **0** | 0 | 0 | 6,748 · 1,942 emailed · **25 registered** (was 5) · first full journey walked |
 
 Target: **20 by Fri 31 Oct 2026.** Model: runs 5–8, 11, 12 Fable 5.1; runs 9–10 Opus 5 (drift, RUL-096h).
 
-## WHAT RUN 12 DID (13 Sep 2026, 01:00–01:50 SAST, Fable 5.1)
+## WHAT RUN 13 DID (18 Sep 2026, 02:30-03:20 SAST, Opus 5) - THE FIRST REAL PERSON WAS FOUND, AND LOST
 
-1. **Measured.** Number 0, both probes agree. Fact board green (every locked fix holding, 22 open);
-   rulings 0 fail. Sandbox alive.
-2. **Found why the 13 Sep 00:10 wave sent nothing.** Log: "no armed city has anyone to send to".
-   Cause: at 06:17 on 12 Sep a session disarmed all 72 US/UK/AU wave entries (11 US cities, 5 UK,
-   4 AU, 52 US state buckets) executing the jurisdiction gate (RG-0215) because the US/UK/AU law
-   research sat in an APPENDIX of OUTREACH_LAW, not under a `##` heading. That contradicted RUL-071
-   (cities.json lane=outreach for every US/UK/AU city), RUL-074 ("all three countries are
-   outreach-covered per the 20 Aug law notes"), RUL-082 and RUL-059. Nothing legal changed.
-3. **Fixed as a class, then re-armed (JURIS-RULED-1).** US/UK/AU promoted to ruled sections 10–12
-   of the law notes (text unchanged); RG-0215 now reads localize._CITY_COUNTRY so state buckets are
-   judged, not "unknown"; 72 entries re-armed and stamped `rearmed_by`; new LOCKED RG-0361 goes red
-   if the gate and the rulings disagree again (sabotage-tested against the 12 Sep policy); RUL-074
-   reflection added to rulings_check. PROBED before re-arming: US render carries identity, reg no.,
-   street postal address, why-received, source line, unsubscribe; GB/AU identity + why-received +
-   unsubscribe; test_intl_templates.py ALL PASS.
-4. **Pool after re-arm (chokepoint count): 854** — Maine 536, Alaska 137, Montana 118, Colorado 63.
-   Every other armed city 0. Wave queued 01:25, RAN 01:31–01:35 SAST: **108 sent, 0 failed** — Alaska 24
-   (wave 3), Colorado 48 (wave 4, ramp doubled), Maine 24 (wave 4), Montana 12 (wave 6, reset by a dirty wave).
-5. **Texas TREC lead is DEAD** (probed data.texas.gov s7ft-44qi: 20 columns, no email — stripped by
-   statute). Plan corrected (13 Sep para). The sandbox CAN read Socrata portals (data.<state>.gov).
-6. No product code changed; nothing deployed. No ruling from David this run (unattended).
-
-## WHERE THE FUNNEL LEAKS (PROBED 12 Sep 2026, /onboard/funnel?days=4 — not re-read tonight)
-
-- 34 sessions · 9 humans · **0 humans from any letter.** People open and do nothing — the ASK is the
-  bottleneck. The n ≥ 10 humans-from-letters threshold for taking click→publish to David is NOT met.
+1. **Measured.** Number 0, both probes agree. Rulings 0 FAIL. Ledger green at the start except
+   one flaky RED (see OPEN LOOPS below); green at the end, RG-0395 new and LOCKED.
+2. **FOUND THE PERSON.** `/onboard/funnel?days=6`: 15 humans, and one session from
+   `montana-adventures-experiences-20260912` walked **the entire journey** - landed, dwell, subpick,
+   photos, photo_pick, photo_ok, features, legal, scorecard, finish, handoff. PROBED on the box:
+   that is **listing 382**, "Guided Fair Chase Hunts", Victor Montana, $500-1000/person, a photo,
+   a 998-character description, **quality score 94** - better than most rows that are live. Its
+   author is **prospect 83302**, source `register:moga` (Montana Outfitters & Guides), emailed
+   11 Sep 22:12. A real outfitter, from a cold letter, by his own hand.
+3. **FOUND WHY HE IS NOT THE NUMBER.** He pressed a button reading **"Publish it"**, and got a
+   draft plus homework: *"Finish it in the app... sign in with this address."* Then nothing. He
+   has **no users row** and `create_listing` scheduled **no background task at all** - the Quick
+   lane never mailed anybody. The hand-back screen was the only thing that ever named his advert
+   and it died with the tab. Six days invisible. **The advert was finished; the door was missing.**
+4. **FIXED IT FORWARD, SHIPPED, PROVEN LIVE (QUICK-RETURN-1 / RG-0395).** A draft composed in the
+   Quick app now mails its author a link straight back to it. Deployed 02:51 via the relay
+   (982c5d2, health-checked). PROVEN end-to-end on the live service, not inferred: a POST with
+   `source:'quick'` produced `INFO:bea:quick-return mail for draft 386: sent` in the service log.
+   Proven before ship too (7/7 on the shipped text of both functions): address normalised, advert
+   named, signin token decodes for that address, copy says it is not public yet and that
+   publishing is theirs, hostile title cannot inject html, junk address mails nobody, dead
+   transport never breaks the hand-over.
+5. **WHAT THE FIX DELIBERATELY DOES NOT DO.** It does not publish. RUL-117(c) rules the Quick app
+   ends at "a draft advert (a prototype the seller then finishes)", and ONBOARDING_GOAL s3 bars
+   publishing on a seller's behalf. Making "Publish it" publish would be changing a ruling, which
+   is reserved - so the button's label is arguably still ahead of what it does, and **that wording
+   is a question for David, not a thing to quietly change.** The gate is `source=='quick'` only,
+   precisely so the agency import lane - which also lands drafts - never mails anybody.
+6. Residue: listing **386** is my wiring test ("WIRING TEST - quick return path (delete me)") and
+   listing 382's real author was NOT mailed (see the batched question). Two zero-byte scratch files
+   are parked in `_to_delete/`; the sandbox may not delete.
 
 ## SUPPLY — ASSOCIATION LANE NEARLY DONE; LICENCE FILES CARRY NO MAILBOX
 
@@ -75,27 +81,41 @@ Target: **20 by Fri 31 Oct 2026.** Model: runs 5–8, 11, 12 Fable 5.1; runs 9�
 - Older dead ends stand: USATF finder/regionals · NY DEC guides · US search scraping · orienteeringusa
   · skifederation · americancanoe · americanhiking · adventurecycling · coloradooutfitters.org.
 
-## GAP — NO RUN 14–18 Sep 2026 (written 18 Sep by an interactive session, not a goal run)
+## WHERE THE FUNNEL LEAKS (PROBED 18 Sep 2026, /onboard/funnel?days=6)
 
-The scheduled task `trustsquare-onboarding-goal` was deleted on 13 Sep (model edit would not save) and
-nothing replaced it, so runs 13+ never fired. The host-side wave kept going without the agent:
-14–18 Sep sent 12 / 24 / 48 / 12 / 10 letters (0 failed), all Montana. PROBED 18 Sep: published 0,
-6,748 on the list, 2,465 emailed. Task recreated 18 Sep, daily 01:00 SAST, model Opus 5 (David's 13 Sep
-choice), permissions auto; next run is run 13. Five nights of funnel reads were not done — read
-/onboard/funnel?days=6 to cover them.
+30 sessions, 15 humans, 18 distinct emails. 16 landed from letters. **One walked the whole way**
+(Montana, above). The rest stall early: 15 dwell, only 3 subpick. So there are now TWO leaks, and
+they are different sizes:
+- **The far leak is FIXED tonight**: whoever finishes now gets the way back. That was worth 1 person.
+- **The near leak is untouched**: 15 dwell -> 3 subpick. Most people land, look, and do not take
+  the first tap. That is the next thing to work on, and it is a wording/first-screen problem, not
+  a plumbing one.
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
-1. Run the number. Read `CityLauncher/logs/launchday_14Mon09_2026010.log` — the per-city gap counts
-   LOCAL CALENDAR DAYS (MIN-GAP-1), so the 14 Sep 00:10 wave should send again in ME/AK/MT/CO. Read it.
-2. Ledger in shards + rulings check. Both green at the end of run 12 (RG-0361 new, locked).
-3. Read /onboard/funnel?days=3 for the first human from a letter (grade it: dwell + touch).
-4. Supply: probe ONE untested kind above (USFS permittee PDFs or a chamber directory) with curl first;
-   build an adapter only if mailboxes render.
-5. RG-0346 (agency letters lack the console CTA) — still open; agency sends are David's per-send act
-   (RUL-053f), so it adds no nightly volume. Lower priority than 3–4.
-6. Still unproven as ONE walk: seller form → save → publish → visible logged out. 7. YouTube: film 07
-   (Liquidation) unpublished — David's click, when he chooses.
+1. Run the number. Read `/onboard/funnel?days=3` and look for a SECOND full walk - and, above all,
+   for **listing 382 going live**, which is what the first real onboarding looks like.
+2. Ledger in shards + rulings check. Both green at the end of run 13.
+3. **The near leak: landed -> first tap.** 15 dwelled, 3 tapped. Read the first screen as a stranger
+   would. This is now the biggest measurable loss in the funnel and it is inside the agent's remit.
+4. Supply: probe ONE untested kind (USFS permittee PDFs or a chamber directory) with curl first.
+5. The `moga` register produced the only real composer we have ever had. **Associations of working
+   guides are the lane that works** - prefer more of that kind over any new geography.
+
+## OPEN LOOPS LEFT BY RUN 13 (not fixed tonight, deliberately)
+
+- **The ledger's live JSON probes can go RED on a network hiccup.** Shard 4 reported RG-0386
+  REGRESSED with `JSONDecodeError` while the live endpoints were in fact perfect (re-probed 4/4
+  clean immediately after, green on the full re-run). 14 checks do `json.loads(_get(...))`; a 200
+  that is not JSON - an edge interstitial, a truncated body - becomes a FAIL and the board then says
+  "Do not deploy over this". That is a false RED that can freeze the deploy lane, the S140 class
+  CLAUDE.md names. FIX: one `_get_json()` that retries once and raises ProbeOffline (UNVERIFIED,
+  blind) rather than FAIL when the body is not the app's JSON. Small, one helper, 14 call sites.
+  Left undone tonight only because CLAUDE.md allows one fix per task and the conversion leak won.
+- Listing **386** (my wiring test) and the two files in `_to_delete/` need a deletion, which is
+  David's.
+- RG-0346 (agency letters lack the console CTA) - still open, still adds no nightly volume.
+- Film 07 (Liquidation) unpublished - David's click, when he chooses.
 
 ## THINGS ALREADY TRIED THAT DID NOT WORK
 
@@ -109,4 +129,19 @@ choice), permissions auto; next run is run 13. Five nights of funnel reads were 
 
 ## OPEN QUESTIONS FOR DAVID (batched, never dripped)
 
-None new. The US/UK/AU re-arm is reported with the veto stated; film 07 is his click, when he chooses.
+**ONE question, and it is worth answering quickly, because it is a real person.**
+
+The Montana outfitter (listing 382) built a 94-score advert on 12 September and has never heard
+from us. Tonight's fix only helps people who come *after* it. Mailing *him* is a message to a
+named individual, which RUL-099 reserves to David, and RUL-096(f) reserves sending outside the
+allowlisted waves - so the agent has not sent it.
+
+It is prepared and tested, and sends the exact same mail the product now sends automatically -
+no new offer, no price claim, and it publishes nothing:
+
+    python3 scripts/quick_draft_backfill.py --list
+    python3 scripts/quick_draft_backfill.py --send --only 382 --permission "<your words>" --date <YYYY-MM-DD>
+
+`--list` shows 7 pre-fix drafts; 6 are the 23 Aug one-per-category seeded set (they have accounts).
+**382 is the only real composer.** One word from David and the machine sends it - no click for him.
+
