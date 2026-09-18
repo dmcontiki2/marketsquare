@@ -23843,6 +23843,23 @@ def rg_quick_return_1():
                 out.append((FAIL, "the gate no longer requires a typed address -- it would mail "
                                   "on an empty or absent seller_email"))
 
+    # --- it must never mail a link it cannot sign (QUICK-RETURN-GUARD-1) ----
+    # 18 Sep 2026, found on the one lead that mattered: a sender process without
+    # MS_JWT_SECRET signed the link with an EMPTY key, _send_html_email reported
+    # 'sent', and the button was dead on arrival -- the service rejects the token and
+    # tells the person their link expired. Nothing anywhere went red. A dead link is
+    # worse than no mail: it spends the one moment they open it.
+    if "_quick_draft_return" in bea:
+        gseg = bea.split("def _quick_draft_return", 1)[1][:2600]
+        if "if not _JWT_SECRET:" not in gseg:
+            out.append((FAIL, "the empty-secret guard is gone -- a BEA booted without "
+                              "MS_JWT_SECRET would mail every composer a sign-in link signed "
+                              "with an empty key, dead on arrival, and report it as sent "
+                              "(QUICK-RETURN-GUARD-1)"))
+        elif gseg.index("if not _JWT_SECRET:") > gseg.index("_pyjwt.encode("):
+            out.append((FAIL, "the empty-secret guard now runs AFTER the token is minted -- "
+                              "it must fail closed BEFORE signing"))
+
     # --- it must never publish. This is the anti-gaming half. ---------------
     seg = bea.split("def _quick_draft_return", 1)
     if len(seg) == 2:

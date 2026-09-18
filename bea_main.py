@@ -15736,6 +15736,18 @@ def _quick_draft_return(to_email: str, listing_id: int, title: str) -> None:
         em = (to_email or "").strip().lower()
         if "@" not in em:
             return
+        # QUICK-RETURN-GUARD-1 (18 Sep 2026). Found the hard way, on the one lead that
+        # mattered: a process that had not loaded MS_JWT_SECRET signed the link with an
+        # EMPTY key, the mail reported 'sent', and the button in it was dead on arrival --
+        # the live service rejects the token and tells the person their link "expired".
+        # A dead link is worse than no mail: it spends the one moment he opens it, and
+        # nothing anywhere goes red. _JWT_SECRET is deliberately "" when unset
+        # (JWT-HARDEN-1), so fail CLOSED and shout, rather than mail a broken door.
+        if not _JWT_SECRET:
+            _log.error("quick-return NOT sent for draft %s: MS_JWT_SECRET is empty, so the "
+                       "sign-in link would be signed with an empty key and rejected on "
+                       "arrival (QUICK-RETURN-GUARD-1)", listing_id)
+            return
         token = _pyjwt.encode(
             {"email": em, "purpose": "signin",
              "exp": datetime.now(timezone.utc) + timedelta(minutes=20),

@@ -28,6 +28,33 @@ import argparse, sqlite3, sys, os
 
 DB = "/var/www/marketsquare/marketsquare.db"
 CUTOFF = "2026-09-18"          # drafts composed before the door existed
+ALREADY_SENT = {382}           # 18 Sep 2026: sent, token verified against the service secret.
+                               # Re-sending would mail the same person twice for no gain.
+
+
+def _load_service_env():
+    """Load the BEA service's REAL environment: systemd `Environment=` AND every
+    `EnvironmentFile=`. QUICK-RETURN-GUARD-1 (18 Sep 2026) -- reading only the first
+    is what signed listing 382's link with an empty key and mailed a dead button.
+    MS_JWT_SECRET lives in /etc/marketsquare/secrets.env, which `systemctl show -p
+    Environment` does not show."""
+    import subprocess, shlex
+    def sh(*a):
+        return subprocess.run(a, capture_output=True, text=True).stdout.strip()
+    for tok in shlex.split(sh("systemctl", "show", "marketsquare", "-p", "Environment", "--value")):
+        if "=" in tok:
+            k, v = tok.split("=", 1)
+            os.environ.setdefault(k, v)
+    for spec in sh("systemctl", "show", "marketsquare", "-p", "EnvironmentFiles", "--value").split():
+        path = spec.split("(")[0].strip()
+        try:
+            for ln in open(path, encoding="utf-8"):
+                ln = ln.strip()
+                if ln and not ln.startswith("#") and "=" in ln:
+                    k, v = ln.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+        except OSError:
+            pass
 
 
 def candidates(conn):
@@ -64,6 +91,8 @@ def main():
     rows = candidates(conn)
     if a.only:
         rows = [r for r in rows if r["id"] in a.only]
+    if a.send:
+        rows = [r for r in rows if r["id"] not in ALREADY_SENT]
 
     print("%-5s %-17s %-6s %-28s %-8s %s" % ("id", "made", "score", "title", "account", "city"))
     for r in rows:
@@ -81,8 +110,14 @@ def main():
               "RUL-099 reserves a message to a named individual to him.", file=sys.stderr)
         return 2
 
+    _load_service_env()
     sys.path.insert(0, "/var/www/marketsquare")
     import main as B
+    if not B._JWT_SECRET:
+        print("REFUSED: MS_JWT_SECRET is empty in this process, so every link would be "
+              "signed with an empty key and rejected on arrival. This is exactly how the "
+              "first send to listing 382 went out dead on 18 Sep.", file=sys.stderr)
+        return 3
     sent = 0
     for r in rows:
         status = "skipped"
