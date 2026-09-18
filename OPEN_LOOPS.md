@@ -16,7 +16,8 @@ audit reports, chat threads) FEEDS this file; David reads only this.
 
 Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. Not duplicated here.
 
-**Last reconciled: 2026-09-18 03:3xZ (stand-up, mechanical — SO-3/RUL-037; second pass after David's 03:1xZ approval closed six more rows).** **Third pass 2026-09-18 09:0xZ: L3 closed against production evidence (David: "Please close it"); LIVE LOOPS now holds L7 alone.** Previous
+**Last reconciled: 2026-09-18 03:3xZ (stand-up, mechanical — SO-3/RUL-037; second pass after David's 03:1xZ approval closed six more rows).** **Third pass 2026-09-18 09:0xZ: L3 closed against production evidence (David: "Please close it"); LIVE LOOPS now holds L7 alone.**
+**Fourth pass 2026-09-18 19:2xZ (stand-up, mechanical): L7 CLOSED as EXPIRED — LIVE LOOPS is now EMPTY. D11 and D15 corrected: each named an action that no longer exists.** Previous
 reconciliation 2026-08-20 — **twenty-eight days** in which this file was not the integrator it
 claims to be. The cause is now named rather than deplored: every stand-up between 2 Aug and
 18 Sep ran cloud-only with **no write path to this repo**, so sessions could read this file and
@@ -45,20 +46,69 @@ not the reconciliation.
 
 | # | Loop | Owner | Single next action | Opened | Source |
 |---|------|-------|--------------------|--------|--------|
-| L7 | **Tooling-through-the-gate** — GATE-ENFORCE-2 (13 Aug) raises the origin token gate; on-box/edge tooling reading data endpoints anonymously (maintenance-loop intake, server smoke data probes) will 401. UA-EDGE-1's sibling. Ledger already fixed (reads via reviewer cookie). | [C] | NARROWED same day: agent verified UNAFFECTED (localhost default; RG-0053 now asserts it structurally). Remaining: attended off-box tools (fault_reconcile, cost sweep) need the reviewer cookie when next used; server smoke data probes need cookie or localhost vantage. | 2026-08-13 | changelog.d 2026-08-13-gate-enforce-activated |
+*(no rows)*
 
 ## ⚪ DECISIONS AWAITING DAVID / COUNSEL — ranked
 
 | # | Decision | Owner | Single next action | Opened | Source |
 |---|----------|-------|--------------------|--------|--------|
 
-| D9 | **FLIP-DRILL-1: pick the hour** — runbook ready (`FIRE_DRILL_RUNBOOK.html`). DEFERRED by David 5 Aug 2026 ("needed, just not now") — STANDS OVER till after launch (David, 11 Aug). | [D] | David names a quiet hour when ready; Claude keeps the log. | 2026-08-03 | this session |
+| D9 | **FLIP-DRILL-1: pick the hour** — runbook ready (`FIRE_DRILL_RUNBOOK.html`). DEFERRED by David 5 Aug 2026 ("needed, just not now") — STANDS OVER till after launch (David, 11 Aug). | [D] | David names a quiet hour when ready; Claude keeps the log. **Note 18 Sep 2026: the condition this was deferred ON — "till after launch" — lapsed at full launch on 1 Sep, 17 days ago. Still genuinely his (naming the hour); no longer waiting on anything.** | 2026-08-03 | this session |
 | D10 | **Travelpayouts tours programs — RESUBMITTED 22 Aug 2026 (David's word, per RUL-041).** The 5 Aug decline (*'website under development or not yet ready'*) blocked GYG · Viator · Welcome Pickups · Booking.com and 22 others; 26 programs auto-connect on approval. Submitted with the site answering publicly and the changed face being real (EULA v1.14 live, gate down, honesty labelling in flight) — not a resubmit-unchanged. Aviasales flights Data API unaffected. **TRAVELPAYOUTS_TOKEN is UNROTATABLE** (one permanent token per account, copy-only, verified on the API page 22 Aug) — accepted risk, reasoned and dated in SECRETS_REGISTER.md, policed by RG-0146. | [C] | **OUTCOME READ 24 Aug 2026 — DECLINED AGAIN, same reason.** Probed at app.travelpayouts.com (project Trustsquare, ID 758984): *"20 programs are currently unavailable… Your website is currently under development or not yet ready. Please complete setting up your site and re-submit your Project for review."* Available **26** / blocked **20** — Booking.com, Viator and GetYourGuide all still blocked. The 22 Aug "we've connected you to relevant brands" email is their generic template, NOT an approval (evidence-ladder: email READ said yes, dashboard PROBE said no; the probe wins). Per RUL-041: do NOT resubmit unchanged — the next submit waits until the site's changed face is materially different (soft launch, 29 Aug, is the natural moment, and the timing call is David's). Their dashboard is meanwhile offering **+25% GetYourGuide rewards, expiring 24 Aug, to switch the Drive loader back on** — declined; all five Drive functions stay Off. Safe lane BUILT instead: travelpayouts_partners.py (TP-LINKOUT-1), server-side 302s, host allowlist, dark by flag, RG-0181. Original standing rule unchanged: commercial lane only — server-side or link-out, NEVER a TP script (RG-0025). | 2026-08-05 | RUL-041 · scheduled follow-up |
-| D11 | **Maroushka's TS-0022 letter drafted** — the retest letter IS the remediation (9 pre-fix covers need her re-upload; class fix RG-0047 live). | [D] | Say "send" (chat) or POST retest-send. | 2026-08-11 | Records/FAULT_RECONCILE_2026-08-11.md |
+| D11 | **Maroushka's TS-0022 letter drafted** — the retest letter IS the remediation (9 pre-fix covers need her re-upload; class fix RG-0047 live). | [D] | **ACTION CORRECTED 18 Sep 2026 — "retest-send" DOES NOT EXIST.** `grep` finds no `retest-send` route in `bea_main.py`; the only fault-letter endpoints are `/admin/faults/{fid}/close-draft` and `/admin/faults/{fid}/close-send`. **NO-RETEST-1 (David, 11 Aug 2026 — the same day this row was opened) retired the retest lane in his own words: "there are no retests… the retest-wait status is retired", legacy rows migrated by `migrations/012`.** The row therefore asked him for 38 days to fire an endpoint his own ruling had deleted. Live mechanism, unchanged in substance: GET close-draft → David approves → POST close-send, which closes the fault and stamps `verified_at`. Still his: the send. | 2026-08-11 | Records/FAULT_RECONCILE_2026-08-11.md |
 | D14 | **Designer-role binding** (5 Aug boundary redraw item 2) — guidelines now written (DESIGN_CHANGE_GUIDELINES.md); until bound, you are the gate by default. | [D] | Rule: you / a design agent / both. No urgency before launch. | 2026-08-11 | MAINTENANCE_AGENT.md amendment |
-| D15 | **Study & Work-Abroad Advisor (Maroushka's idea, 22 Aug — RUL-042).** Positioning RULED: preparation is ours, based on actuals (possible / typically needed / viability, risks, opportunities); partner education & immigration agencies take the Dossier and provide the actual plans and guidance — that handoff IS the introduction. Assessment on disk: ~$0.50–1.00/report vs 5T = $10, existing 5T deep-dive class, no paid feed, ~70% reuse, MVP 3–5 sessions (one corridor first). | [D] | TEASER: DECIDED 22 Aug (David — 'build it now, no risk to baseline') — built as SAW-1 (static page + banner + manifest line, RG-0158 OPEN), rides the next deploy. UPDATE 23 Aug: 5T CONFIRMED + build GREENLIT + work-route example added (RUL-043); videos full-length, SHELVED until spec approved. Remaining to David: deploy timing (rides next TSL) · agency outreach approach (education + placement agencies — sending is his) · the video unshelve moment. Plus a business action: recruit 2–3 founding education/immigration agencies (same lane as travel agencies). | 2026-08-22 | RUL-042 · STUDY_WORK_ABROAD_ADVISOR_ASSESSMENT — nice.docx |
+| D15 | **Study & Work-Abroad Advisor (Maroushka's idea, 22 Aug — RUL-042).** Positioning RULED: preparation is ours, based on actuals (possible / typically needed / viability, risks, opportunities); partner education & immigration agencies take the Dossier and provide the actual plans and guidance — that handoff IS the introduction. Assessment on disk: ~$0.50–1.00/report vs 5T = $10, existing 5T deep-dive class, no paid feed, ~70% reuse, MVP 3–5 sessions (one corridor first). | [D] | TEASER: DECIDED 22 Aug (David — 'build it now, no risk to baseline') — built as SAW-1 (static page + banner + manifest line, RG-0158 OPEN), rides the next deploy. UPDATE 23 Aug: 5T CONFIRMED + build GREENLIT + work-route example added (RUL-043); videos full-length, SHELVED until spec approved. Remaining to David: ~~deploy timing (rides next TSL)~~ **— DISCHARGED 18 Sep 2026: the teaser is LIVE, probed 200 at `/static/studyabroad_teaser.html`, and has been since before 24 Aug, when RUL-050 deliberately retired its index banner (unlisted, still live). Deploys also stopped being David's at RUL-092 (3 Sep). Two reasons this limb was never his.** · agency outreach approach (education + placement agencies — sending is his) · the video unshelve moment. Plus a business action: recruit 2–3 founding education/immigration agencies (same lane as travel agencies). | 2026-08-22 | RUL-042 · STUDY_WORK_ABROAD_ADVISOR_ASSESSMENT — nice.docx |
 
 ## ✅ CLOSED — last 7 days
+
+### Closed 2026-09-18, fourth pass (stand-up, mechanical — SO-3/RUL-037). LIVE LOOPS is now EMPTY.
+
+- **L7 CLOSED 2026-09-18 — "Tooling-through-the-gate" EXPIRED, not fixed. Its premise stopped being
+  true at full launch.** The row (opened 13 Aug) said GATE-ENFORCE-2 raises the origin token gate, so
+  on-box/edge tooling reading data endpoints anonymously **will 401**, leaving attended off-box tools
+  needing the reviewer cookie. PROBE 2026-09-18 19:0xZ, anonymous `curl`, no cookie and no token:
+  `/ai/functions` **200** (serves the full function list) · `/review/verify` **200 `{"valid":true}`** ·
+  `/dashboard/bit` **200** · `/dashboard/maint` **200**. Nothing 401s, so there is no cookie for an
+  attended tool to need. This is **the same discharge that closed D7 this morning** — the gate came
+  down at full launch, **1 Sep 2026** — and L7 is its sibling: one row described the gate stopping
+  *people*, this one described it stopping *our own tools*, and both stopped being true on the same
+  day for the same reason. Closing D7 without sweeping for its siblings is why this survived another
+  17 days. **LAG: 17 days.** The nginx `auth_request` catch-all machinery is still in the tree
+  (`bea_main.py` comments, migration 016) and is dead in the same sense as D7's `showGate()` — a
+  housekeeping pass, not a loop.
+
+- **THE HEADING IS NOW HONEST: 🟠 LIVE LOOPS holds no rows.** Stated plainly because the file's own
+  rule 3 says David reads top-down until he stops caring: for the first time since this file was
+  created, a reader who stops at the first two headings has read the whole truth — nothing is
+  blocking and nothing is live. Every remaining row is in DECISIONS AWAITING DAVID, and two of those
+  were corrected today for naming actions that no longer exist.
+
+**Shipped this run (not loop closures — defects found while probing the loops):**
+
+- **EULA-FOOTER-1 — the published EULA contradicted itself on its own version number.** `eula_clean.html`
+  opened with *"Version 1.17 · Last updated 18 September 2026"* and closed, 1,109 lines later, with
+  *"— End of TrustSquare Terms of Use / EULA v1.16 —"* plus a v1.16 country-schedule line. Both were
+  **live**: `GET /terms` served the 1.17 header and the 1.16 footer in the same document. Fixed at THE
+  SOURCE and propagated by THE ONE WRITER — `scripts/eula_sync.py` → *"synced: terms.html, ms.js"*, then
+  `--check` → *"EULA in sync (120332 bytes) across eula_clean.html, terms.html, ms.js"*, and all three now
+  read v1.17 top and bottom (`v1.16` occurrences: **0, 0, 0**). Not edited in `terms.html`, which is
+  generated — that was L11's mistake this morning and it is not repeated.
+- **This also corrects a figure inside RG-0400.** That entry says the seller box is *"1.10 behind"* a
+  published **v1.17**; until tonight the published footer said v1.16, so the entry was right about the
+  fork and arithmetically unprovable from the document it cited. It is now exactly seven versions.
+- **RG-0238 GREEN — the word "vetted" is off the listing surface.** `ms.js` told a seller *"let a **vetted**
+  local agent carry it"*. RG-0238 bans exactly that word, unqualified, as a representation about a person's
+  future conduct (CHILD-SAFETY-WORDING-1, from David's own 1 Sep framing). Now reads *"let a local agent
+  carry it"* — the offer is unchanged, the claim we cannot stand behind is gone. `grep vetted ms.js` → **0**;
+  `node --check` green. One occurrence in the tree; `marketsquare.html` and `quick.html` were already clean.
+- **A PROBE METHOD WAS WRONG AND IS NAMED HERE.** This morning's L11 closure cited *"zero `legal@` routes"*
+  on the live `/privacy`. Cloudflare's email obfuscation (`email-decode.min.js`) is active on that page, so
+  **every address is hex-encoded and a live `grep` for `legal@` returns zero whether or not it is there** —
+  the check could not have failed. Re-run properly by decoding the `cfemail` payloads: `/privacy` = **16 ×
+  support@, 0 × legal@** (the claim holds, now on evidence), `/terms` = 10 × legal@, 9 × support@, 3 ×
+  compliance@, matching the deliberate IP-takedown/arbitration carve-out. The finding is the method, not the
+  result: a probe that cannot return a negative is not a probe.
+
 
 ### Closed 2026-09-18, second pass — David: *"I approve all changes, please implement and close all of them."*
 
