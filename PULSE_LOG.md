@@ -37,3 +37,5 @@
 🟢 2026-08-01 trustsquare.co up · 1.3s · SSL 54d · /health ok · /payment/test ok
 🟢 2026-08-01 (daytime) trustsquare.co up · 1.2s · SSL 53d · /health ok · /payment/test ok
 2026-08-02 (daytime) 🟢 trustsquare.co up · 1.0s · SSL 53d · /health ok v1.3.1 · /payment/test ok (paystack connected)
+2026-09-18 02:20 UTC 🟢 trustsquare.co up · 1.0s · /health ok (v1.3.1, db integrity ok, primary present) · homepage 200 (421 KB) · /quick/ 200 · BIT board 8/8 PASS · ledger 0 REGRESSED. SSL omitted — /health exposes no ssl_days and a sandbox TLS probe only sees the egress-proxy certificate (never the site's). *First entry since 2026-08-02: every run between was cloud-only with no write path, so 47 days of pulses were run and not logged — an unlogged pulse is an unrun pulse.*
+2026-09-18 02:25 UTC (scoped run) 🟢 trustsquare.co up · 0.33s · /health ok (v1.3.1, db integrity ok, primary present) · homepage 200. SSL omitted — /health exposes no ssl_days. Second probe of the day; the 02:20 stand-up line above is the run of record.

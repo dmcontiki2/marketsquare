@@ -74,7 +74,22 @@ def release(owner):
         print("no lock"); return 0
     if d.get("owner") != owner and _age(d) < TTL_S:
         print("REFUSED: lock is held by %s, not %s" % (d["owner"], owner)); return 3
-    os.remove(LOCK); print("released"); return 0
+    # WORK-LOCK-2 (18 Sep 2026): the sandbox mount refuses unlink (same FUSE/permission class
+    # that forced RENAME on git locks -- GIT-LOCK-3 / RG-0015 / RG-0379). os.remove() here raised
+    # PermissionError and left the lock in place, so `release` reported a crash and every later
+    # lane read exit 3 and stood off a file nobody was editing -- a lock that cannot be released
+    # is a repo that freezes for TTL. Rename is the only move the mount allows, and renaming the
+    # lock aside is equivalent to removing it because _load() only ever reads LOCK by that name.
+    try:
+        os.remove(LOCK)
+    except OSError:
+        aside = LOCK + ".released-" + time.strftime("%Y%m%d-%H%M%S", time.gmtime())
+        try:
+            os.replace(LOCK, aside)
+        except OSError as e:
+            print("REFUSED: cannot release the lock (neither unlink nor rename): %s" % e)
+            return 4
+    print("released"); return 0
 
 if __name__ == "__main__":
     a = sys.argv[1:]

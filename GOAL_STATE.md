@@ -75,6 +75,15 @@ Target: **20 by Fri 31 Oct 2026.** Model: runs 5–8, 11, 12 Fable 5.1; runs 9�
 - Older dead ends stand: USATF finder/regionals · NY DEC guides · US search scraping · orienteeringusa
   · skifederation · americancanoe · americanhiking · adventurecycling · coloradooutfitters.org.
 
+## GAP — NO RUN 14–18 Sep 2026 (written 18 Sep by an interactive session, not a goal run)
+
+The scheduled task `trustsquare-onboarding-goal` was deleted on 13 Sep (model edit would not save) and
+nothing replaced it, so runs 13+ never fired. The host-side wave kept going without the agent:
+14–18 Sep sent 12 / 24 / 48 / 12 / 10 letters (0 failed), all Montana. PROBED 18 Sep: published 0,
+6,748 on the list, 2,465 emailed. Task recreated 18 Sep, daily 01:00 SAST, model Opus 5 (David's 13 Sep
+choice), permissions auto; next run is run 13. Five nights of funnel reads were not done — read
+/onboard/funnel?days=6 to cover them.
+
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
 1. Run the number. Read `CityLauncher/logs/launchday_14Mon09_2026010.log` — the per-city gap counts

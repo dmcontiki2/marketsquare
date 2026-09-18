@@ -163,3 +163,13 @@ run_py     CityLauncher\scripts\refresh_roster_names.py
 # --- email-strip screens (and any future photo refresh) ship without a session scp.
 # --- Media only by construction: media_push.bat refuses code, RG-0023 watches it.
 run_bat    MarketSquare\media_push.bat
+
+# --- Widened 18 Sep 2026. QUIET-COMMIT-1. Executes the permission David already gave on
+# --- 3 Sep 2026 (RUL-095): "commit + push of Claude's own work is permitted, no re-ask".
+# --- It adds NO new authority - commit.bat is already allowlisted and does strictly more
+# --- (it pushes). What this adds is the WAIT: SO-5 says commit only once the tree is silent,
+# --- and until now the waiting was a sentence in a report rather than machinery, so work
+# --- stood down for silence was never picked up again. Commits only; never pushes, never
+# --- deploys, refuses a clean tree, re-queues itself while another lane is writing, and
+# --- gives up after 12 attempts rather than queueing forever.
+run_py     MarketSquare\scripts\quiet_commit.py

@@ -178,6 +178,7 @@ autodeploy_agent_log.txt
 fw_selfheal_log.txt
 *.flag.done-*
 host_queue/*.req
+host_queue/*.cancelled-*
 host_queue/done/
 host_queue/worker_log.txt
 
@@ -189,4 +190,11 @@ ledger_runs/
 
 # WORK-LOCK-1 (RUL-140, 17 Sep 2026): per-machine stand-off lock, never shipped
 .work_lock
+.work_lock.released-*
 _verify_rig/
+_to_delete/
+host_queue/QUIET_COMMIT_ATTEMPTS.txt
+# local BEA scratch DB -- never a repo artifact (18 Sep 2026)
+/marketsquare.db
+/marketsquare.db-journal
+/_to_delete/

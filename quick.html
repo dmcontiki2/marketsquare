@@ -999,7 +999,12 @@ function handoverPayload(){
     suburb: where ? where.label : LOC.suburb,      /* required by the server */
     description: c.draftBody(picks),
     trust_score: SELLER.ts,
-    seller_email: HANDOVER.email || null
+    seller_email: HANDOVER.email || null,
+    /* QUICK-RETURN-1 (18 Sep 2026): says which door composed this. The server mails
+       the way back ONLY for 'quick' -- every other lane that lands a draft stays
+       silent. Without this the draft is composed and then unreachable: PROBED on
+       listing 382, a finished 94-score advert orphaned for six days. */
+    source: 'quick'
   };
   if(_co.service_class) body.service_class=_co.service_class;
   ['prop_type','listing_type','beds','make','vehicle_year','subject','level','mode','service_type']
@@ -1149,11 +1154,13 @@ function drawDraft(){
            So the address is the only thing he has to get right, and it now says so with the way
            back rather than "finish onboarding there" and no door. */
         var _e=function(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
-        box.innerHTML='Draft #'+res.id+' is in TrustSquare. Finish it in the app to add photos, '
-          +'the full detail and your price \u2014 that is where it goes live.'
-          +(HANDOVER.email ? '<br><br>Sign in with <b>'+_e(HANDOVER.email)+'</b> \u2014 the draft is '
-              +'waiting on that address, and only that one.' : '')
-          +'<br><br><a href="/" style="color:#9ec7ff;font-weight:700">Open TrustSquare &#8250;</a>';
+        box.innerHTML='<b>Saved \u2014 and it is not public yet.</b><br><br>'
+          +'Advert #'+res.id+' is yours, in TrustSquare. One step left: look it over, add '
+          +'anything you want, and publish it.'
+          +(HANDOVER.email ? '<br><br>We have just emailed <b>'+_e(HANDOVER.email)+'</b> a link '
+              +'straight to it, so you can finish it whenever you like \u2014 on this phone or '
+              +'anywhere else. The advert is waiting on that address, and only that one.' : '')
+          +'<br><br><a href="/" style="color:#9ec7ff;font-weight:700">Finish it now &#8250;</a>';
         $('pubhint').textContent='Draft #'+res.id+' \u2014 one server, one rulebook.';
       }
     });

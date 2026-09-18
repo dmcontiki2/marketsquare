@@ -23709,5 +23709,172 @@ def rg_access_never_lapses():
         out.append((FAIL, "dashboard.server.html no longer stores a renewed admin token -- an open page lapses"))
     return out or [(INFO, "device passes never expire; cookie re-issued per visit; password enrols its browser; open pages renew silently")]
 
+
+@entry("RG-0394", "the stand-off lock can actually be RELEASED from the sandbox -- a lock that "
+                  "cannot be released freezes every lane for its full 12-hour TTL",
+       LOCKED, fixed_on="2026-09-18",
+       scope="scripts/work_lock.py release(). Source-only by nature: the property is that the "
+             "release path SURVIVES a mount that refuses unlink, and a probe run where unlink "
+             "happens to work cannot prove it. CLASS, not instance: this repo has now been bitten "
+             "three times by the same mount behaviour -- RG-0015 (index.lock), RG-0379 (ref "
+             "locks) and this one -- so every tool that removes a control file must rename when "
+             "it cannot unlink, never raise. Sibling of RG-0379; WORK-LOCK-1 (RUL-140) is the "
+             "mechanism this protects.",
+       ref="WORK-LOCK-2 (18 Sep 2026), found by the daily stand-up on its own instrument, one "
+           "day after WORK-LOCK-1 shipped. The stand-up took the lock on OPEN_LOOPS.md exactly as "
+           "SO-5 requires, reconciled the file, and then `release` died with `PermissionError: "
+           "[Errno 1] Operation not permitted: .../.work_lock` -- os.remove() on a mount that "
+           "refuses unlink, the same FUSE/permission class GIT-LOCK-3 and GIT-LOCK-5 already "
+           "renamed their way around. The harm is not the traceback: the lock STAYED, so for the "
+           "next 12 hours every lane running `check` would have read exit 3 and stood off a file "
+           "nobody was editing -- including the next stand-up, whose whole job is to reconcile "
+           "that file. A tool written to stop lanes colliding would have stopped the only lane "
+           "doing the work, and it would have looked exactly like correct behaviour. PROVEN by "
+           "running the failing case, not by reading the diff: release on the real stuck lock "
+           "printed `released` and exit 0, a following `check` returned 0, and a clean "
+           "take -> check(3) -> release(0) -> check(0) cycle was driven end to end. The lock is "
+           "renamed to `.work_lock.released-<UTC stamp>` because _load() only ever reads the file "
+           "by its exact name, so renaming aside IS removal as far as every reader is concerned; "
+           "the aside pattern was added to .gitignore in the same change so the residue cannot "
+           "drift into a commit. A release that can neither unlink nor rename now returns 4 and "
+           "says so, rather than raising -- an instrument that fails must NAME its failure.")
+def rg_work_lock_releasable():
+    """release() must never depend on unlink alone, and must not raise when unlink is refused."""
+    out = []
+    try:
+        with open(os.path.join(REPO, "scripts", "work_lock.py"), encoding="utf-8",
+                  errors="replace") as f:
+            src = f.read()
+    except OSError:
+        # VANTAGE-1: a clone or a run from outside the working tree cannot see this file.
+        return [(INFO, "NOT EVALUATED -- scripts/work_lock.py not readable from this vantage "
+                       "(run the board from the working tree)")]
+
+    if "def release(" not in src:
+        return [(FAIL, "scripts/work_lock.py has no release() -- WORK-LOCK-1's mechanism is gone")]
+
+    body = src.split("def release(", 1)[1].split("\ndef ", 1)[0]
+
+    # The guard must sit BETWEEN the unlink and the rename fallback. Checking the whole body for
+    # "except OSError" is not enough -- the fallback has one of its own, which would mask an
+    # unguarded os.remove(). Look only at the span the exception has to cross.
+    if "os.remove" in body:
+        span = body.split("os.remove", 1)[1]
+        span = span.split("os.replace", 1)[0] if "os.replace" in span else span
+        if "except OSError" not in span:
+            out.append((FAIL, "release() unlinks without catching OSError on the unlink itself -- "
+                              "on the sandbox mount it raises and LEAVES THE LOCK, freezing every "
+                              "lane for the full TTL; this is the exact 18 Sep fault"))
+    if "os.replace" not in body and "os.rename" not in body:
+        out.append((FAIL, "release() has no rename fallback -- rename is the only removal the "
+                          "mount allows (RG-0015 / RG-0379 class)"))
+    if "released-" not in body:
+        out.append((FAIL, "release() no longer renames the lock to a .released-<stamp> sibling, "
+                          "so _load() can still find it by name and the lock is not released"))
+
+    gi = os.path.join(REPO, ".gitignore")
+    try:
+        with open(gi, encoding="utf-8", errors="replace") as f:
+            ign = f.read()
+        if ".work_lock.released-*" not in ign and ".work_lock*" not in ign:
+            out.append((FAIL, ".gitignore does not cover .work_lock.released-* -- released locks "
+                              "accumulate into commits as untracked residue"))
+    except OSError:
+        out.append((INFO, "NOT EVALUATED -- .gitignore not readable from this vantage"))
+
+    return out or [(INFO, "release() catches the refused unlink, renames the lock aside to "
+                          "`.work_lock.released-<stamp>`, names a total failure as exit 4, and "
+                          "the aside pattern is gitignored")]
+
+@entry("RG-0395", "QUICK-RETURN-1: a draft composed in the Quick app reaches its author again -- "
+                  "the hand-over mails the composer a way back to his own advert, and no other "
+                  "lane that lands a draft mails anybody",
+       LOCKED, fixed_on="2026-09-18",
+       scope="bea_main.py: Listing.source (accepted, never stored), _send_draft_waiting_email, "
+             "_quick_draft_return, and the source=='quick' gate at the end of create_listing; "
+             "quick.html: source:'quick' on the hand-over payload + the hand-back copy. "
+             "WHY THIS IS THE ONBOARDING GOAL AND NOT HOUSEKEEPING -- PROBED on the live box "
+             "18 Sep 2026: listing 382, a real Montana outfitter who came from a cold letter, "
+             "walked every step of the five-tap journey (funnel src montana-adventures-"
+             "experiences-20260912: landed->dwell->subpick->photos->photo_pick->photo_ok->"
+             "features->legal->scorecard->finish->handoff), added a photo and a 998-character "
+             "description, scored 94, pressed a button reading 'Publish it' -- and then sat as "
+             "a draft for six days with NO users row and NO mail of any kind. create_listing "
+             "scheduled no background task at all, so the hand-back screen was the only thing "
+             "that ever named the draft, and it died with the tab. The advert was finished; "
+             "the door was missing. RUL-117(c) rules the Quick app ends at 'a draft advert (a "
+             "prototype the seller then finishes)' -- so this entry polices the way BACK, and "
+             "must never be 'fixed' by publishing on the seller's behalf: that is ONBOARDING_GOAL "
+             "section 3 and RUL-117(c) at once. PROVEN 18 Sep before ship (7/7, the shipped text "
+             "of both functions exec'd with stubs): the mail is addressed to the typed address "
+             "normalised, names the advert, carries a signin token that decodes for that address "
+             "with draft=<id>; the copy says it is not public yet, that publishing is theirs, and "
+             "why they received it; a hostile title cannot inject html; a blank or junk address "
+             "mails nobody; a dead transport returns quietly instead of breaking the hand-over.",
+       ref="RUL-117(c) (five taps to a DRAFT the seller then finishes); RUL-125(b) one server, "
+           "one rulebook; QUICK-HANDBACK-1 (15 Sep) built the seam, this closes it; "
+           "ONBOARDING_GOAL.md section 3 (the seller publishes by his own hand).")
+def rg_quick_return_1():
+    out = []
+    bea = repo_file("bea_main.py")
+    qk = repo_file("quick.html")
+    if bea is None or qk is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py/quick.html not readable from here")]
+
+    # --- the gate: only the Quick lane, only with an address -----------------
+    if "_quick_draft_return" not in bea:
+        out.append((FAIL, "the return path is gone -- a Quick draft is composed and then "
+                          "unreachable by its author (QUICK-RETURN-1, the listing-382 fault)"))
+    else:
+        gate = None
+        for ln in bea.splitlines():
+            if 'listing.source or ""' in ln:
+                gate = ln
+                break
+        if gate is None:
+            out.append((FAIL, "the source gate is gone from create_listing -- either nothing "
+                              "mails, or EVERY lane that lands a draft now mails its seller"))
+        else:
+            if '== "quick"' not in gate:
+                out.append((FAIL, "the gate no longer names 'quick' -- the agency import lane "
+                                  "lands drafts too, and mailing those sellers is sending on "
+                                  "David's behalf (RUL-096(f), reserved)"))
+            if "seller_email" not in gate:
+                out.append((FAIL, "the gate no longer requires a typed address -- it would mail "
+                                  "on an empty or absent seller_email"))
+
+    # --- it must never publish. This is the anti-gaming half. ---------------
+    seg = bea.split("def _quick_draft_return", 1)
+    if len(seg) == 2:
+        body = seg[1][:2600]
+        for bad in ("listing_status", "published_at", "UPDATE listings"):
+            if bad in body:
+                out.append((FAIL, "the return path writes %r -- it must hand the seller back to "
+                                  "his draft, NEVER publish it for him (ONBOARDING_GOAL s3, "
+                                  "RUL-117(c))" % bad))
+
+    # --- the composer is told the truth on screen ---------------------------
+    if "source: 'quick'" not in qk:
+        out.append((FAIL, "quick.html no longer marks its hand-over as the Quick lane -- the "
+                          "server cannot tell it apart and the author is never mailed"))
+    if "emailed" not in qk.split("Advert #", 1)[-1][:900]:
+        out.append((INFO, "the hand-back screen no longer promises the email -- check the copy "
+                          "still matches what the server actually does"))
+
+    # --- live half ----------------------------------------------------------
+    try:
+        live = _get("/quick.html")
+        if "source: 'quick'" not in live:
+            out.append((FAIL, "LIVE /quick.html does not mark its hand-over as the Quick lane -- "
+                              "deployed drafts are orphaned again (the listing-382 fault is back)"))
+    except ProbeOffline:
+        raise
+    except Exception as ex:
+        out.append((INFO, "NOT EVALUATED - live /quick.html unreadable from here (%r)" % (ex,)))
+
+    return out or [(INFO, "a Quick draft mails its author the way back; no other lane mails "
+                          "anyone; the return path cannot publish")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

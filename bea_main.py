@@ -2333,6 +2333,11 @@ class Listing(BaseModel):
     # Trust
     trust_score: Optional[int] = None
     seller_email: Optional[str] = None
+    # QUICK-RETURN-1 (18 Sep 2026): which door composed this draft. Accepted, never
+    # stored -- it decides ONE thing: whether the composer is sent the way back to
+    # his own advert. Gated to 'quick' precisely so the agency import lane, which
+    # also lands drafts, never mails anybody (RUL-096(f): sending stays reserved).
+    source: Optional[str] = None
 
 class User(BaseModel):
     email: str
@@ -3485,6 +3490,13 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
     _stamp_quality_score(conn, new_id)   # ZOOM-HMI-1: the stored quality the ranking reads
     conn.commit()
     conn.close()
+    # QUICK-RETURN-1 (18 Sep 2026): the Quick app's composer gets the way back to his
+    # own draft. Gated on source=='quick' so no other lane that lands a draft (agency
+    # import above all) ever mails anybody. Background: the hand-over must not wait on
+    # a mail round-trip, and must not fail if mail does.
+    if (listing.source or "").strip().lower() == "quick" and listing.seller_email:
+        background_tasks.add_task(_quick_draft_return, listing.seller_email,
+                                  new_id, listing.title)
     # Wishlist matching deferred until listing goes live (draft listings not matched)
     return {"id": new_id, "message": "Listing saved as draft — seller must complete onboarding to go live"}
 
@@ -15672,6 +15684,68 @@ def _send_html_email(to_email: str, subject: str, html: str, plain: str) -> str:
             _log.error("app email (smtp) failed: %s", exc)
             return "failed"
     return "dry"
+
+
+def _send_draft_waiting_email(to_email: str, link: str, title: str, code: str = "") -> str:
+    """QUICK-RETURN-1 (18 Sep 2026). The Quick app composes a draft and hands it to the
+    listings table; RUL-117(c) is explicit that it ends at "a draft advert (a prototype
+    the seller then finishes)". Nothing carried the seller back to it. PROBED 18 Sep:
+    listing 382 -- a real Montana outfitter, from a cold letter, five taps, a photo, a
+    998-character description, quality score 94 -- had sat as a draft for six days with
+    no account and no mail of any kind. The advert was finished; the door was missing.
+
+    This is NOT outreach and is not sent on anyone's behalf: it goes only to an address
+    the person typed into our own form seconds earlier for exactly this purpose, and it
+    does one thing -- gives him back the advert he just made. He still presses publish."""
+    safe = (title or "your advert").replace("<", "&lt;").replace(">", "&gt;")
+    subject = "Your TrustSquare advert is composed \u2014 one step left"
+    html = (
+        "<div style='font-family:Inter,Arial,sans-serif;max-width:460px;margin:auto'>"
+        "<h2 style='color:#0c1a2e;margin-bottom:6px'>Your advert is waiting</h2>"
+        "<p style='color:#0c1a2e;font-size:16px;margin-top:0'><b>" + safe + "</b></p>"
+        "<p>You built this on TrustSquare a moment ago. It is saved and nobody else can "
+        "see it yet \u2014 the last step is yours: check it over, add anything you want, "
+        "and publish it.</p>"
+        "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
+        "text-decoration:none;padding:13px 24px;border-radius:8px;font-weight:700'>"
+        "Open my advert &rarr;</a></p>"
+        + ("<p style='color:#6b7280;font-size:13px'>If that link has gone stale, open "
+           "<a href='" + APP_URL + "'>trustsquare.co</a> and sign in with <b>"
+           + to_email + "</b> \u2014 the advert is waiting on that address, and only "
+           "that one.</p>")
+        + "<p style='color:#6b7280;font-size:12px'>You are getting this because you "
+          "entered this address to publish an advert. If that wasn't you, ignore it "
+          "\u2014 nothing is public and nothing else will be sent.</p>"
+        "</div>"
+    )
+    plain = ("Your TrustSquare advert is composed and waiting: " + (title or "")
+             + "\n\nIt is saved and not yet public. Open it, check it and publish it:\n"
+             + link
+             + "\n\nIf that link has gone stale, open " + APP_URL + " and sign in with "
+             + to_email + " -- the advert is waiting on that address.\n\n"
+             "You are getting this because you entered this address to publish an "
+             "advert. If that wasn't you, ignore it.")
+    return _send_html_email(to_email, subject, html, plain)
+
+
+def _quick_draft_return(to_email: str, listing_id: int, title: str) -> None:
+    """Background leg of QUICK-RETURN-1. Never raises into the request: a draft that
+    landed is a good outcome even if the mail transport is having a bad day, and the
+    composer already has the on-screen hand-back."""
+    try:
+        em = (to_email or "").strip().lower()
+        if "@" not in em:
+            return
+        token = _pyjwt.encode(
+            {"email": em, "purpose": "signin",
+             "exp": datetime.now(timezone.utc) + timedelta(minutes=20),
+             "iat": datetime.now(timezone.utc)},
+            _JWT_SECRET, algorithm=_JWT_ALGO)
+        link = APP_URL + "/?signin=" + token + "&draft=" + str(int(listing_id))
+        status = _send_draft_waiting_email(em, link, title or "")
+        _log.info("quick-return mail for draft %s: %s", listing_id, status)
+    except Exception as exc:
+        _log.error("quick-return mail for draft %s failed: %s", listing_id, exc)
 
 
 def _send_invite_email(to_email: str, link: str, agency_name: str = "") -> str:
