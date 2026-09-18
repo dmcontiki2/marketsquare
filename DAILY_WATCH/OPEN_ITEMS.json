@@ -1,5 +1,5 @@
 {
- "next_id": 134,
+ "next_id": 137,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -80,13 +80,13 @@
   },
   "DW-010": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-09-17",
+   "last_seen": "2026-09-18",
    "sev": "MEDIUM",
    "source": "cc_age_check (Monday lane)",
    "status": "SCHEDULED",
    "summary": "cc_age 2026-09-14: CC-002 open 96d and CC-005 open 13d against the 7d threshold - both past it, CC-002 now a day past the week David deferred it to. Stays SCHEDULED: landing CC-002 is a canon call (its staged edits were built on the RETIRED five-tier model), and that call is David's.",
    "disposition": "FORMALLY DEFERRED 2026-08-21 (attended session, reflected here by the watch) — CC-002 is ~10 open product/pricing questions in AWAITING_DAVID.md, several touching the EULA and one a live payment path, against SOFT-to-PUBLIC 29 Aug / FULL LAUNCH 1 Sep (RUL-001). Target: first post-launch week, from Mon 8 Sep 2026. David's veto point: name any single item that must land before launch and it lands on its own.",
-   "last_note": "2026-09-15: cc_age_check re-ran off-lane (cheap date check) - CC-002 open 97d, CC-005 open 14d, both past the 7d threshold. Sibling Monday checks that DID pass: check_canon_pointers ALL IN LINE, check_pricing_canon ALL IN LINE. ROW RECONSTRUCTED in OPEN_ITEMS.md this pass - the item was live here as SCHEDULED but had no markdown table row (DW-119 residual, from the other side: that parity check compares the HIGHEST id in each half and cannot see a row missing from the middle)."
+   "last_note": "2026-09-18: cc_age_check re-ran off-lane (cheap date check) - CC-002 open 100d (4/5 STAGED), CC-005 open 17d (1/8 spec written), both past the 7d threshold. Stays SCHEDULED - both are David's calls."
   },
   "DW-011": {
    "first_seen": "2026-08-03",
@@ -1171,7 +1171,7 @@
   },
   "DW-111": {
    "first_seen": "2026-09-07",
-   "last_seen": "2026-09-17",
+   "last_seen": "2026-09-18",
    "sev": "MEDIUM",
    "source": "split out of DW-109 at that row's own request; re-check attempted from the sandbox today",
    "status": "OPEN",
@@ -1181,7 +1181,7 @@
    ],
    "summary": "CARRIED FORWARD 2026-09-14, STILL NOT VERIFIABLE - third attempt, same wall. msdeploy is in neither adm nor systemd-journal (id shows groups=1000(msdeploy) only); journalctl -u marketsquare returns 4 lines of permission hint and 0 resend matches; no *.log under /var/www/marketsquare. subscription_monitor reads Resend UP with issues: [] - the key authenticates, the 422 is one caller's payload. Absence from a blind instrument is not a clean bill.",
    "next_action": "OPEN - CTO lane. (a) Identify the caller: which lane posts to Resend on a 5-minute cadence, and read the 422 body (usually an unverified or mismatched from-domain, a missing to, or a malformed payload). (b) Give the watch a way to see the outcome - journal access, or have the lane record its own result to a readable file. A send lane whose only evidence lives where the watch cannot look is the DW-105 shape, where a silent failure ran a fortnight.",
-   "last_note": "2026-09-16: still unverifiable, fifth identical wall. id = groups=1000(msdeploy) only; journalctl -u marketsquare returns the permission hint and no content. subscription_monitor reads Resend UP, issues [] (31 samples, 100%). Absence from a blind instrument is not a clean bill."
+   "last_note": "2026-09-18: seventh identical wall. id = groups=1000(msdeploy) only; journalctl -u marketsquare -> permission hint, '-- No entries --'; no *.log under /var/www/marketsquare. subscription_monitor reads Resend UP, issues [] (31 samples, 100%). Absence from a blind instrument is not a clean bill. Stays OPEN."
   },
   "DW-112": {
    "first_seen": "2026-09-07",
@@ -1447,10 +1447,59 @@
    "status": "CLOSED",
    "summary": "CLOSED 2026-09-17 — found and fixed in the same session, then asserted. **This is the answer to David's question 'why did the old process let this happen at all'.** `predeploy_check.py` defaults to MODE='warn' and returns 0 unless MODE=='strict'; `deploy_marketsquare.bat`'s abort is guarded by `if /I \"%PREDEPLOY_MODE%\"==\"strict\"` and the script NEVER SET IT. `nightly_tsl.bat`, `nightly_ship.bat` and `arm_phone_deploy.bat` all set strict — so the ONE lane a human double-clicks was the only one that would print `Verdict: DANGER` and deploy anyway. PROVEN from the log, not argued: every line of deploy_audit.log reads mode=warn, including `2026-09-17T04:45:53Z mode=warn ... danger=pg-readiness|tester-intake verdict=DANGER`. CORRECTION ON THE RECORD: this morning's watch report told David 'the pre-deploy gate is holding the door'. That sentence was READ off a coverage card and never probed, and it was wrong — the faults did not reach production because nobody pushed the deploy ref, not because anything stopped them. Fixed: the lane now defaults to strict, set BEFORE the scan runs, with the explicit `PREDEPLOY_MODE=warn` override preserved. Asserted by **RG-0381** (LOCKED), which checks the ordering on executable lines only.",
    "next_action": "None - closed 2026-09-17 on the lane defaulting to strict before the scan and RG-0381 (LOCKED) passing."
+  },
+  "DW-134": {
+   "first_seen": "2026-09-18",
+   "last_seen": "2026-09-18",
+   "sev": "HIGH",
+   "source": "regression ledger RG-0253 (combine exit 1) vs a direct read of the asserted property in the working tree and on live",
+   "status": "OPEN",
+   "refs": [
+    "RG-0253",
+    "RG-0381",
+    "RG-0187",
+    "DW-135"
+   ],
+   "summary": "NEW - the ledger reads REGRESSION on RG-0253 and the deploy gate will now refuse, but the FIX IS INTACT: an instrument-window fault, not a rotted fix. The entry's check takes 6000 characters from 'async function sobGoLive' and looks for the register call before the EULA call; the attended session's uncommitted SEAM-PROOF-1 work (ms.js mtime 09:15 SAST today, not in any commit) wrapped sobGoLive in a 5202-character proof step and moved the body into _sobGoLiveInner, so both calls now sit 71+ characters past the window (reg@-1 eula@-1 = 'not found', not 'wrong order'). PROBED in the same tree with a 12000-character window: register @6071 precedes EULA @6376. Live ms.js v685 PASSES the same check. First combine of the day (385-entry tree): 385 entries, 1 REGRESSED (this one), 22 open, exit 1. A second combine was refused by LEDGER-SHARD-1 because the tree grew to 386 entries mid-run (RG-0396 HUB-EULA-1 added 09:15:49 SAST) - the guard working as designed. UPDATE 07:18Z, after measurement: the attended session COMMITTED the work as a051975 (07:17:49Z, 'HUB-EULA-1 (RG-0396)'), sweeping this watch's audit and cost-sweep outputs into the same commit. Still NOT on origin/deploy - the fix is committed, not shipped; DW-134's window fault is unchanged by the commit. UPDATE 07:2x Z: second full run on the committed 386-entry tree: 386 entries · 368 holding · 1 REGRESSED · 17 open · 0 ready · 0 UNVERIFIED, exit 1 - RG-0253 now reads reg@-1 eula@-1 on BOTH legs, because live v686 carries the same wrapper. Wide-window probe on the served bytes: register @6071 precedes EULA @6376. Property holds everywhere; the window is what is blind.",
+   "next_action": "Attended CTO lane (the session that wrote SEAM-PROOF-1): re-aim RG-0253's window to the function that now carries the calls (_sobGoLiveInner) or widen it, and say so in the entry ref (standing rule 4: fix the assertion, never weaken it). Until then deploy_marketsquare.bat stops on this red by RG-0381's strict default, which blocks shipping DW-135's fix. Closes when the ledger re-runs with RG-0253 ok.",
+   "evidence_grade": "PROBED (working-tree read + live ms.js check re-run with a wider window)"
+  },
+  "DW-135": {
+   "first_seen": "2026-09-18",
+   "last_seen": "2026-09-18",
+   "sev": "HIGH",
+   "source": "attended session's own SEAM-PROOF-1 note in the ms.js working tree (READ here) + the same session's new ledger entry RG-0396 HUB-EULA-1",
+   "status": "FIXED-UNVERIFIED",
+   "refs": [
+    "RG-0253",
+    "RG-0395",
+    "RG-0396",
+    "RUL-135",
+    "DW-134"
+   ],
+   "summary": "NEW - USER-FACING, LIVE, per the attended session's note (this watch could not probe it without a write): a FIRST-TIME seller arriving by cold-letter magic link (?magic=1, no session cookie) reaches 'Go live' and then POST /users/<email>/eula answers 401 and PUT /listings/<id>/publish answers 403 'EULA not accepted' - every first-time stranger has been unable to publish since the 14 Sep identity binding (RUL-135(k)), which correctly refuses to let the public key tick anyone's box. Same user-visible outcome as EULA-ORDER-1 (3 Sep, RG-0253) by a different mechanism, which is why RG-0253's textual call-order check stays green on live while the journey is broken. Fix in progress in the working tree: SEAM-PROOF-1 (ms.js +114 lines: the app emails a 6-digit sign-in code and asks for it once at Go live when there is no session) and RG-0396 HUB-EULA-1 (a seller tapping Publish on his own stranded draft is taken to the terms). Uncommitted and undeployed as of 07:16Z; deploy_drift reads bea_main.py + ms.js local-ahead. Evidence grade: READ - the session's comment says PROBED on the live site today with a demo draft. UPDATE 07:18Z, after measurement: the attended session COMMITTED the work as a051975 (07:17:49Z, 'HUB-EULA-1 (RG-0396)'), sweeping this watch's audit and cost-sweep outputs into the same commit. Still NOT on origin/deploy - the fix is committed, not shipped; DW-134's window fault is unchanged by the commit. UPDATE 07:2x Z, PROBED: the deploy ref rode at 07:19:37Z (post_deploy_status.json: seed/ladder_seed/geo_seed/migrations/fea_baseline all ok) and the served ms.js v686 (1,291,886 B) CARRIES SEAM-PROOF-1 and _sobGoLiveInner (4 hits each); deploy_drift now clean 19/19; audit reads VERSION-KEY-BENIGN (served bytes identical to repo). RG-0396 HUB-EULA-1 is LOCKED and passes live. FIXED-UNVERIFIED, not closed: RG-0396 asserts the hub Publish path (a signed-in seller with a stranded draft); nothing yet exercises the no-session magic-link path that this row is about, so the served code is proof of shipping, not of the journey.",
+   "next_action": "Attended lane: re-walk the magic-link no-session journey on the served build (or add the assertion that does), then close on that evidence. RESIDUAL if closed on a walk alone: the class needs a ledger entry that exercises the no-session path, or the next binding change re-breaks it silently.",
+   "evidence_grade": "READ (attended session's probe note); not independently measured by the watch"
+  },
+  "DW-136": {
+   "first_seen": "2026-09-18",
+   "last_seen": "2026-09-18",
+   "sev": "MEDIUM",
+   "source": "correlation of the live post_deploy_status.json timestamp with the ledger's two exit-1 runs and the host-queue record (PROBED)",
+   "status": "OPEN",
+   "refs": [
+    "DW-134",
+    "RG-0381",
+    "RUL-092",
+    "ONE_DEPLOY.md"
+   ],
+   "summary": "NEW - a deploy rode while the ledger read REGRESSION, and no gate stopped it. Timeline, all PROBED: this watch's first combine read exit 1 (RG-0253) at ~07:12Z on the 385-entry tree; a051975 was committed 07:17:49Z; the deploy ref was placed 07:19:37Z (post_deploy_status.json); the second combine on the committed tree read exit 1 again at ~07:27Z. No deploy request exists in host_queue (only quiet-commit requests, the newest FAILED rc=1 - work_lock held by the attended design-review lane), and the nightly TSL gate had BLOCKED at 03:45Z (rc=2). So the push that shipped a051975 used the raw `git push HEAD:deploy` lane, which ONE_DEPLOY documents but which runs no pre-deploy gate - the 'three automated lanes stop on a red' property (RG-0381's premise) does not cover it. Today the red was false (DW-134) and the deploy was clean (fea_baseline 3/3 match, drift clean 19/19), so the outcome is fine; the structural fact is that a true red would not have stopped it either.",
+   "next_action": "CTO lane: confirm which lane pushed a051975 (the attended session's own record), then decide the raw-push lane's status - either it runs the same pre-deploy scan as request_deploy.py (strict by default, RG-0381 pattern) or ONE_DEPLOY states in one line that it is the ungated break-glass path and RUL-092 sessions must not use it for routine ships. Either way, assert it. Closes when a ledger entry asserts the chosen property and passes.",
+   "evidence_grade": "PROBED (timestamps and queue record); the lane identity is inferred from the absence of any other record"
   }
  },
- "last_run": "2026-09-17",
- "last_verdict": "GREEN",
+ "last_run": "2026-09-18",
+ "last_verdict": "AMBER",
  "recheck_pass_2026_08_20": {
   "requested_by": "David: close all open actions",
   "items_rechecked": 15,
@@ -2711,5 +2760,151 @@
   ],
   "davids_ruling_honoured": "never halt on cost - the _check_cost_ceiling this session added to maint_brain was removed by the other session under David's ruling and NOT re-applied",
   "collision": "3 ledger entries written 07:1x were destroyed by a concurrent write at 07:22:55; compare-and-swap kept the loss on this session. bea_main.py and regression_ledger.py have no fragment-and-compile lane."
+ },
+ "watch_pass_2026_09_18": {
+  "verdict": "AMBER",
+  "kind": "unattended 09:06 UTC watch (Friday, launch day +17; Monday lane not in scope); a concurrent attended session was editing ms.js, bea_main.py and the ledger during the run",
+  "ledger": {
+   "entries": 385,
+   "holding": 362,
+   "regressed": 1,
+   "open": 22,
+   "ready_to_lock": 0,
+   "unverified": 0,
+   "shards": [
+    108.9,
+    94.2,
+    79.1
+   ],
+   "exit": 1,
+   "regressed_ids": [
+    "RG-0253"
+   ],
+   "adjudication": "RG-0253 red is an instrument-window fault (DW-134): fix intact in repo (reg@6071 < eula@6376) and live v685 passes; second combine refused by LEDGER-SHARD-1 (tree grew 385->386 mid-run, RG-0396 added by the attended session)"
+  },
+  "site": {
+   "health": "ok",
+   "version": "1.3.1",
+   "db_integrity": "ok",
+   "root_seconds": 0.31,
+   "root_bytes": 420987,
+   "payment_test": "ok",
+   "paystack_connected": true,
+   "tls_days": 64,
+   "tls_expires": "2026-11-22"
+  },
+  "smoke": {
+   "result": "40/40",
+   "all_pass": true
+  },
+  "deploy_drift": {
+   "status": "clean",
+   "tracked": 19,
+   "note": "after a051975 rode at 07:19:37Z; earlier reading this run was drift (bea_main.py, ms.js) from the then-uncommitted work"
+  },
+  "audit": {
+   "findings": 2,
+   "new": 1,
+   "levels": [
+    "INFO",
+    "INFO"
+   ],
+   "note": "post-deploy re-run: DEMO-PLACEHOLDERS by design; VERSION-KEY-BENIGN (served bytes identical to repo, v686)"
+  },
+  "server": {
+   "fea": "ok",
+   "fea_alerts": 0,
+   "subscriptions": {
+    "UP": 35,
+    "HELD": 15,
+    "PLANNED": 1,
+    "DOWN": 0
+   },
+   "issues": 0,
+   "disk_free_pct": 50.7,
+   "queue": 0,
+   "staged": 0,
+   "uptime_days": 15
+  },
+  "cron_parity": {
+   "loop_date": "2026-09-18",
+   "smoke": "39/39",
+   "health": "ok",
+   "spend_today_usd": 0.0,
+   "platform_ceiling_usd": 100.0,
+   "month_cost_usd": 0.073288,
+   "calls_this_month": 112,
+   "match": true
+  },
+  "cost_sweep": {
+   "critical": 0,
+   "warn": 0,
+   "ok": 31,
+   "info": 57,
+   "exit": 0,
+   "new_warns": 0
+  },
+  "ai_watch": "all-clear; Sept 14 Claude Code weekly-limit change is a subscription matter, not the API lane; June export-control episode lifted 1 Jul (known); stale $3/$15 Sonnet claim refused on sight (RG-0184)",
+  "heartbeat": {
+   "last_run_read": "2026-09-17",
+   "gap_days": 1,
+   "ok": true
+  },
+  "new": [
+   "DW-134",
+   "DW-135",
+   "DW-136"
+  ],
+  "closed": [],
+  "still_open": [
+   "DW-010",
+   "DW-111",
+   "DW-134",
+   "DW-135 (FIXED-UNVERIFIED)",
+   "DW-136"
+  ],
+  "coverage_map": {
+   "green": 81,
+   "blue": 3,
+   "amber": 3,
+   "red": 0,
+   "grey": 11,
+   "changes": [
+    "NEW card RED at 07:1x then re-graded BLUE at 07:2x: first-time strangers cannot publish - fix served in v686, no-session path unasserted (DW-135)",
+    "NEW AMBER: RG-0253 window blind, both legs (DW-134)",
+    "NEW AMBER: the raw-push deploy lane is ungated (DW-136)",
+    "DW-111 amber re-dated"
+   ],
+   "blue_items": [
+    "watch liveness unasserted (DW-104 residual)",
+    "register half-commit unasserted (DW-119 residual)",
+    "SEAM-PROOF-1 served but the no-session publish path is unasserted (DW-135)"
+   ]
+  },
+  "checks_run": "12/12 daily (Monday lane not in scope); ledger run twice (first combine on the 385-tree, second combine refused mid-run by LEDGER-SHARD-1 after the attended session added RG-0396, then a full re-run on the committed 386-tree); audit + deploy_drift re-run after the 07:19Z deploy",
+  "ledger_second_run": {
+   "entries": 386,
+   "holding": 368,
+   "regressed": 1,
+   "open": 17,
+   "ready_to_lock": 0,
+   "unverified": 0,
+   "shards": [
+    105.3,
+    null,
+    null
+   ],
+   "exit": 1,
+   "regressed_ids": [
+    "RG-0253"
+   ],
+   "note": "committed 386-entry tree; RG-0253 red on both legs (live v686 carries the wrapper); RG-0396 LOCKED and passing"
+  },
+  "live_deploy": {
+   "placed_utc": "2026-09-18T07:19:37Z",
+   "commit": "a051975",
+   "ms_js_version": 686,
+   "post_deploy_steps": "seed ok, ladder_seed ok, geo_seed ok, migrations none pending, fea_baseline refreshed 3/3"
+  }
  }
 }
