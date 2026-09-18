@@ -1,0 +1,3 @@
+BLOCKED Fri 09/18/2026  5:45:07.69
+DEPLOY DRIFT: 2 file(s) local-ahead of live - run /ship: bea_main.py, ms.js
+Gate not clean (rc=2) - NOT shipped. See nightly_tsl_gate.txt.

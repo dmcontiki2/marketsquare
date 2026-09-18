@@ -6904,7 +6904,90 @@ function sobAttestSatisfied(){
   return a.sections.every(s=>!!a.confirmed[s]) && !!(chk&&chk.checked);
 }
 
+/* SEAM-PROOF-1 (18 Sep 2026). PROBED on the live site today with a demo draft: a seller who
+   arrives from a cold letter (?magic=1, no session cookie) reaches "Go live", and then
+   POST /users/<email>/eula answers 401 and PUT /listings/<id>/publish answers 403 "EULA not
+   accepted" -- every first-time stranger has been unable to publish since the 14 Sep identity
+   binding (RUL-135(k)), which correctly refuses to let the public key tick anyone's box. The
+   binding stays. What was missing is the PROOF at the moment it is needed: if there is no
+   session, the app emails the person a 6-digit code (the app's own sign-in code, SIGNIN-CODE-1)
+   and asks for it right here, once, after the work is done -- the magic link proves the inbox,
+   the tick makes the terms bind (RUL-135(c)). A signed-in seller never sees this. */
 async function sobGoLive() {
+  const btn = document.getElementById('sob-p3-next');
+  const errEl = document.getElementById('sob-p3-err');
+  if (errEl) errEl.style.display = 'none';
+  if (btn) { btn.disabled = true; btn.textContent = 'Going live…'; }
+  if (!sobState._proofDone) {
+    var _me = null;
+    try {
+      var _mr = await fetch(BEA_URL + '/quick/me', { credentials: 'include' });
+      if (_mr.ok) _me = await _mr.json();
+    } catch(e) { _me = null; }
+    var _want = String(sobState.email || '').trim().toLowerCase();
+    if (_me && _me.signed_in && String(_me.email || '').toLowerCase() === _want) {
+      sobState._proofDone = true;
+    } else if (_me) {
+      sobAskInboxCode(_want);
+      if (btn) { btn.disabled = false; btn.textContent = 'Go live →'; }
+      return;
+    }
+    /* probe failed outright: fall through and let the server answer as it always did */
+  }
+  return _sobGoLiveInner();
+}
+
+/* SEAM-PROOF-1: send the code, ask for it in place, then finish the publish in this tab. */
+function sobAskInboxCode(email){
+  var host = document.getElementById('sob-p3-err'); if(!host) return;
+  var old = document.getElementById('sob-proof-box'); if(old) old.parentNode.removeChild(old);
+  var box = document.createElement('div'); box.id = 'sob-proof-box';
+  box.style.cssText = 'margin-top:14px;background:rgba(200,135,58,.10);border:1.5px solid rgba(200,135,58,.55);border-radius:12px;padding:14px 14px 12px;';
+  box.innerHTML =
+    '<div style="font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:rgba(200,135,58,.95);margin-bottom:6px;">One last check</div>'
+  + '<div style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.85);margin-bottom:10px;">We have emailed a 6-digit code to <b>' + String(email).replace(/</g,'&lt;') + '</b>. Enter it and your listing goes live \u2014 this is how we know the listing is yours.</div>'
+  + '<div style="display:flex;gap:8px;align-items:stretch;">'
+  +   '<input id="sob-proof-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code" style="flex:1;min-width:0;padding:12px 14px;font-size:18px;letter-spacing:5px;text-align:center;border-radius:10px;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#fff;outline:none;">'
+  +   '<button id="sob-proof-btn" type="button" style="padding:12px 16px;font-size:13px;font-weight:700;background:#C8873A;color:#fff;border:none;border-radius:10px;cursor:pointer;white-space:nowrap;">Confirm &amp; go live</button>'
+  + '</div>'
+  + '<div id="sob-proof-msg" style="font-size:12px;margin-top:8px;color:rgba(255,255,255,.6);line-height:1.45;">No email after a minute? Check spam, or <a href="#" id="sob-proof-again" style="color:#fbbf24;font-weight:700;">send the code again</a>.</div>';
+  host.parentNode.insertBefore(box, host);
+  function sendCode(){
+    try{
+      fetch(BEA_URL + '/auth/request-link', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email: email }) }).catch(function(){});
+    }catch(e){}
+  }
+  sendCode();
+  try{ obTrack('proof_asked'); }catch(e){}
+  var inp = document.getElementById('sob-proof-code'), b = document.getElementById('sob-proof-btn'), m = document.getElementById('sob-proof-msg');
+  document.getElementById('sob-proof-again').addEventListener('click', function(ev){ ev.preventDefault(); sendCode(); m.style.color='rgba(255,255,255,.6)'; m.textContent='Sent again \u2014 give it a minute.'; });
+  function submit(){
+    var code = String(inp.value||'').replace(/\D/g,'');
+    if(code.length !== 6){ m.style.color='#fca5a5'; m.textContent='Enter the 6 digits from the email.'; return; }
+    b.disabled = true; m.style.color='rgba(255,255,255,.6)'; m.textContent='Checking\u2026';
+    fetch(BEA_URL + '/auth/verify-code', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email: email, code: code }) })
+    .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, status:r.status, d:d}; }); })
+    .then(function(res){
+      if(res.ok && res.d && res.d.ok){
+        try{ localStorage.setItem('ms_user_email', res.d.email); localStorage.setItem('ms_aa_email', res.d.email); }catch(e){}
+        if(typeof updateHeaderAuthBtn==='function') { try{ updateHeaderAuthBtn(); }catch(e){} }
+        sobState._proofDone = true;
+        m.style.color='#34d399'; m.textContent='\u2713 Confirmed \u2014 going live\u2026';
+        try{ obTrack('proof_ok'); }catch(e){}
+        return _sobGoLiveInner().then(function(){ var bx=document.getElementById('sob-proof-box'); if(bx && bx.parentNode) bx.parentNode.removeChild(bx); });
+      }
+      m.style.color='#fca5a5';
+      m.textContent = (res.d && res.d.detail) || (res.status===429 ? 'Too many attempts \u2014 wait a few minutes.' : 'That code did not work.');
+      b.disabled = false;
+    })
+    .catch(function(){ m.style.color='#fca5a5'; m.textContent='Could not connect \u2014 try again.'; b.disabled=false; });
+  }
+  b.addEventListener('click', submit);
+  inp.addEventListener('keydown', function(e){ if(e.key==='Enter') submit(); });
+  setTimeout(function(){ try{ inp.focus(); }catch(e){} }, 150);
+}
+
+async function _sobGoLiveInner() {
   const btn = document.getElementById('sob-p3-next');
   const errEl = document.getElementById('sob-p3-err');
   if (errEl) errEl.style.display = 'none';
@@ -6928,7 +7011,7 @@ async function sobGoLive() {
       body: JSON.stringify({ email, name: sobState.name, ai_sessions: 3 })
     }).catch(() => {});
     const _eu = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/eula', {
-      method: 'POST', headers: { 'X-Api-Key': API_KEY }
+      method: 'POST', headers: { 'X-Api-Key': API_KEY }, credentials: 'include'   // SEAM-PROOF-1: the session is the proof
     }).catch(() => null);
     if (!_eu || !_eu.ok) console.warn('sobGoLive: EULA stamp failed', _eu && _eu.status);
   }
@@ -6956,7 +7039,7 @@ async function sobGoLive() {
       // Publish the draft listing
       const res = await fetch(
         BEA_URL + '/listings/' + draft.id + '/publish?email=' + encodeURIComponent(email) + _attQ,
-        { method: 'PUT' }
+        { method: 'PUT', credentials: 'include' }   // SEAM-PROOF-1
       );
       const resText = await res.text();
       console.warn('sobGoLive publish', draft.id, res.status, resText.slice(0,200));
@@ -9850,6 +9933,33 @@ async function dashPublish(listingId){
   try{
     const res=await fetch(BEA_URL+'/listings/'+listingId+'/publish?email='+encodeURIComponent(email),{method:'PUT'});
     const d=await res.json().catch(()=>({}));
+    /* HUB-EULA-1 (18 Sep 2026). This button turned the server's "EULA not accepted"
+       403 into a toast and stopped -- it told the seller to accept the Terms and
+       offered him no way to accept them. PROBED in a real browser on a real stranded
+       draft: sign in from the emailed link, land on the hub, tap Publish, read the
+       error, listing stays "Draft - not visible yet". A dead end, and not a rare one:
+       quick.html creates no account, so eula_accepted_at is NULL for EVERY Quick-app
+       composer arriving for the first time (RG-0395's lane, and the reason the
+       onboarding number was still 0 with a finished 94-score advert on the books).
+       sobInit() already handles exactly this case -- it sees the EULA unsigned, opens
+       phase 3 with the returning-seller note, and _sobGoLiveInner() registers, stamps
+       the acceptance and publishes (EULA-ORDER-1). So hand over to it rather than
+       re-implement consent here: the seller still reads the terms and ticks the box
+       himself, which is the whole point (CPA s49 -- conspicuous AND acknowledged). */
+    if(res.status===403 && /eula|terms/i.test(String(d.detail||''))){
+      const _dl=dashState.listings.find(x=>x.beaListingId===listingId);
+      const _r=(_dl&&_dl._raw)||{};
+      sobState.email=email;
+      sobState.name=localStorage.getItem('ms_aa_name')||sobState.name||email;
+      /* seed ONLY the listing he tapped -- an unseeded sobInit re-fetches and would
+         take every other draft live with it, which he did not ask for */
+      sobState.drafts=[{id:listingId, title:_r.title||(_dl&&_dl.title)||'Your listing',
+        price:_r.price||'POA', category:_r.category||'', city:_r.city||'',
+        listing_status:'draft'}];
+      showToast('One step first \u2014 please read and accept the Terms, then it goes live.');
+      goTo('seller-onboard');
+      return;
+    }
     if(!res.ok) throw new Error(d.detail||('HTTP '+res.status));
     showToast('Listing is live ✓');
     const dl=dashState.listings.find(x=>x.beaListingId===listingId);

@@ -93,7 +93,16 @@ not the reconciliation.
   deadline by 27 days.
 - **L11 CLOSED — one rights inbox.** `privacy.html` now routes every privacy, POPIA, UK GDPR, CCPA/CPRA and
   Australian Privacy Act request to **support@**, and the EULA's contact row was changed to match (v1.16 → **v1.17**,
-  18 Sep). `legal@` occurrences in `privacy.html`: **0**. The EULA's other eleven `legal@` uses — IP takedown
+  18 Sep). **CORRECTED SAME SESSION — the first attempt was in the wrong file and was reverted.** I edited
+  `terms.html`, which is GENERATED. `eula_clean.html` is THE SOURCE and `scripts/eula_sync.py` is the one writer
+  of `terms.html` and of the `_EULA_HTML` literal in `ms.js` — the copy users actually accept. A concurrent lane
+  ran the sync and correctly restored v1.16/`legal@` over my edit, exactly as EULA-FORK-1 (14 Aug) was built to
+  do after the three copies silently forked and users were accepting an older agreement than the one published.
+  Worse, my version had shipped to `terms.html` alone, so for about twenty minutes the published page said v1.17
+  while the in-app acceptance modal still said v1.16 with `legal@` — **I had recreated the exact fork that
+  machinery exists to prevent.** Redone at the source and synced: `eula_sync.py --check` reports *"EULA in sync
+  (120,332 bytes) across eula_clean.html, terms.html, ms.js"*, and all three are PROBED live at v1.17 with the
+  support@ rights row and zero `legal@` rights rows (`ms.js?v=685`). `legal@` occurrences in `privacy.html`: **0**. The EULA's other eleven `legal@` uses — IP takedown
   notices, the arbitration opt-out — were deliberately **left alone**: those are a different function and
   re-pointing them would have been a worse change than the one being fixed.
 - **L12 CLOSED — see D4.** Supplement D covers France and Portugal on the same basis; D2 carries the EU Art 27

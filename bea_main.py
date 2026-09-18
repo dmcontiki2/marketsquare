@@ -14708,7 +14708,9 @@ def _ob_is_bot(ua: str) -> bool:
 
 _OB_ORDER = ["landed", "dwell", "subpick", "photos", "photo_pick", "photo_ok", "photo_rejected",
              "photo_fallback", "secA", "secB", "secC", "features", "legal", "agents",
-             "scorecard", "finish", "draft", "handoff", "publish_ok", "publish_fail"]
+             "scorecard", "finish", "draft", "handoff",
+             # SEAM-PROOF-1 (18 Sep 2026): the inbox-code step between hand-off and publish.
+             "proof_asked", "proof_ok", "publish_ok", "publish_fail"]
 
 
 @app.post("/onboard/step")

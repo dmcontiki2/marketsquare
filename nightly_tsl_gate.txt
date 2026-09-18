@@ -1,15 +1,17 @@
   ------------------------------------------------------------
-  TSL PRE-DEPLOY GATE   2026-09-15T03:45:06Z   mode=strict
+  TSL PRE-DEPLOY GATE   2026-09-18T03:45:05Z   mode=strict
   [CM] change-management docs
     - STATUS.md            [ok]
     - CHANGELOG.md         [ok]
     - CHANGE_REGISTER.md   [ok]
-    - STATUS newest date : 2026-09-15 (0 days ago)
-    - CHANGELOG newest    : 2026-09-15
-    - Ship pending        : bea_main.py, ms.css, ms.js
+    - STATUS newest date : 2026-09-17 (1 days ago)
+    - CHANGELOG newest    : 2026-09-16
+    - Ship pending        : bea_main.py, ms.js
+    - (note) CHANGE_REGISTER.md not modified this session
+    >> code is shipping but CHANGELOG's newest entry is 2026-09-16, not today, and CHANGELOG.md is not itself modified - record this ship first
   [DB] live databases (read-only, msdeploy@178.104.73.239)
-    - primary db        [ok, 3112960 bytes, integrity ok] (cached)
+    - primary db        [ok, 3461120 bytes, integrity ok] (cached)
     - redis             [not readable - not gated]
     -- proved over HTTPS /health (no credentials needed)
-  Verdict: CM=ok  DB=ok  ->  ok   (logged -> tsl_audit.log)
+  Verdict: CM=REVIEW  DB=ok  ->  REVIEW   (logged -> tsl_audit.log)
   ------------------------------------------------------------

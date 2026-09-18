@@ -24071,5 +24071,160 @@ def rg_maint_arming_vantage():
                           "also rides the whitelisted `mode` field, and the card renders a grey "
                           "ARMING NOT MEASURED chip instead of SHADOW")]
 
+
+@entry("RG-0399", "the 00:10 wave fires from the SERVER and only from the server -- the Windows "
+                  "DailyWave task stays disabled or neutralised, because two hosts against two "
+                  "copies of prospects.db double-send",
+       LOCKED, fixed_on="2026-09-18",
+       scope="LIVE half over SSH (short timeout; INFO when unreachable): citylauncher-wave.timer on "
+             "the Hetzner box is enabled + active, and emailer/wave_runner.py there is byte-identical "
+             "to ../CityLauncher/emailer/wave_runner.py (a stale server runner was the 3 Sep state). "
+             "RECORD half on disk: the newest CityLauncher/logs/disable_daily_wave_*.log shows "
+             "\\CityLauncher\\DailyWave 'Scheduled Task State: Disabled' (or the task absent) -- and "
+             "while it still reads Enabled (the host-queue worker is not admin, so the 18 Sep run was "
+             "refused with Access is denied) the marker CityLauncher/WAVE_RUNS_ON_SERVER must exist "
+             "AND launch_day_wave.bat must carry the no-op guard that reads it. Both halves, because a "
+             "timer with a live Windows task is a double sender and a disabled task with no timer is "
+             "silence. Never a send, never a DB write: this reads a log, two files and systemctl.",
+       ref="WAVE-SERVER-1 (18 Sep 2026). David: 'Wave timer: move the 00:10 wave from your laptop's "
+           "Task Scheduler to the server so a sleeping laptop cannot delay it - approve? Yea - "
+           "approved'. PROBED before the move: the server held a 3 Sep wave_runner.py (441 lines vs "
+           "781), no waves_policy.json, no emailer/assets, 5 templates missing, a Resend key two "
+           "rotations old and no TS_POSTAL_ADDRESS (every US send would have raised "
+           "UnsupportedCountry). pull_from_server.py carried verdicts and engagement down but never "
+           "'emailed'/'sent', so a server send left the laptop pool believing the person was still "
+           "sendable; the Windows task also fired on wake (StartWhenAvailable: 07:35 on 11 Sep). "
+           "schtasks /DISABLE through the queue was refused (NOT ADMIN), so the bat the task runs "
+           "was made a no-op behind a marker file and PROVEN by running it through the queue "
+           "(result 20260918-035709-362: rc=0, 'this PC is a NO-OP. Nothing sent.'). Also found on "
+           "the box: 549 emailed rows with emailed_at NULL, which silently disabled SOURCE-QUALITY-1 "
+           "there (0 held sources vs 11) -- backfilled from each row's first sent event after a "
+           ".backup. Timer enabled 04:16Z only after the proof and an md5 match.")
+def rg_wave_server_only():
+    """Server timer is the one sender; the laptop lane is disabled or neutralised."""
+    import glob as _glob
+    import hashlib as _hashlib
+    out = []
+    cl = os.path.normpath(os.path.join(REPO, "..", "CityLauncher"))
+
+    # RECORD half: the newest disable log, else the marker + guard that stand in for it
+    logs = sorted(_glob.glob(os.path.join(cl, "logs", "disable_daily_wave_*.log")), key=os.path.getmtime)
+    disabled = False
+    if logs:
+        try:
+            with open(logs[-1], encoding="utf-8", errors="replace") as f:
+                txt = f.read()
+        except OSError:
+            txt = ""
+        i = txt.find("QUERY \\CityLauncher\\DailyWave")
+        seg = txt[i:] if i >= 0 else ""
+        j = seg.find("---- ", 10)
+        seg = seg[:j] if j > 0 else seg
+        if "Scheduled Task State:" in seg:
+            disabled = "Scheduled Task State:                 Disabled" in seg or \
+                       re.search(r"Scheduled Task State:\s+Disabled", seg) is not None
+        elif "does not exist" in seg or "cannot find the file" in seg:
+            disabled = True          # no task at all cannot fire
+        if not disabled:
+            out.append((INFO, "newest %s still shows \\CityLauncher\\DailyWave ENABLED (the queue worker "
+                              "is not admin) -- the marker + bat guard are what hold" % os.path.basename(logs[-1])))
+    else:
+        out.append((INFO, "no CityLauncher/logs/disable_daily_wave_*.log yet -- the marker + bat guard are what hold"))
+    if not disabled:
+        marker = os.path.join(cl, "WAVE_RUNS_ON_SERVER")
+        if not os.path.exists(marker):
+            out.append((FAIL, "CityLauncher/WAVE_RUNS_ON_SERVER is missing while the Windows DailyWave task is "
+                              "not proven disabled -- the laptop bat would send again at 00:10 (double send)"))
+        try:
+            with open(os.path.join(cl, "launch_day_wave.bat"), encoding="utf-8", errors="replace") as f:
+                bat = f.read()
+        except OSError:
+            bat = ""
+        if 'if exist "%PROJECT%\\WAVE_RUNS_ON_SERVER"' not in bat or "exit /b 0" not in bat:
+            out.append((FAIL, "launch_day_wave.bat no longer carries the WAVE_RUNS_ON_SERVER no-op guard -- "
+                              "a Task Scheduler firing would run the whole wave from the laptop"))
+
+    # LIVE half: the server timer and the runner it fires (read-only over SSH)
+    try:
+        with open(os.path.join(cl, "emailer", "wave_runner.py"), "rb") as f:
+            local_md5 = _hashlib.md5(f.read()).hexdigest()
+    except OSError:
+        local_md5 = None
+    try:
+        q = ("systemctl is-enabled citylauncher-wave.timer; systemctl is-active citylauncher-wave.timer; "
+             "md5sum /var/www/citylauncher/emailer/wave_runner.py | cut -d' ' -f1; "
+             "test -f /var/www/citylauncher/nightly_wave.sh && echo sh-present")
+        res = subprocess.run(["ssh", "-o", "ConnectTimeout=8", "-o", "BatchMode=yes",
+                              "root@178.104.73.239", q], capture_output=True, text=True, timeout=25)
+        lines = [l.strip() for l in (res.stdout or "").splitlines()]
+        if res.returncode != 0 and len(lines) < 3:
+            out.append((INFO, "server probe skipped (no SSH from here)"))
+        else:
+            enabled = lines[0] if len(lines) > 0 else "?"
+            active = lines[1] if len(lines) > 1 else "?"
+            remote_md5 = lines[2] if len(lines) > 2 else ""
+            if enabled != "enabled" or active != "active":
+                out.append((FAIL, "citylauncher-wave.timer is %s/%s on the server -- nothing fires the 00:10 "
+                                  "wave any more (the Windows task was disabled for it)" % (enabled, active)))
+            if local_md5 and remote_md5 and remote_md5 != local_md5:
+                out.append((FAIL, "server emailer/wave_runner.py differs from the laptop copy -- the box is "
+                                  "running a stale conductor (deploy_citylauncher.bat ships it)"))
+            if "sh-present" not in lines:
+                out.append((FAIL, "/var/www/citylauncher/nightly_wave.sh is missing on the server -- the timer "
+                                  "would fail at 22:10 UTC"))
+    except Exception:
+        out.append((INFO, "server probe skipped (no SSH from here)"))
+
+    if not any(r == FAIL for r, _ in out):
+        out.append((INFO, "the server timer is the one sender (enabled+active, runner md5 matches) and the "
+                          "laptop lane is %s" % ("disabled" if disabled else "neutralised by marker + guard")))
+    return out
+
+@entry("RG-0396", "HUB-EULA-1: a seller who taps Publish on his own stranded draft is taken to the "
+                  "Terms and goes live -- he is never told to accept them with no way to accept them",
+       LOCKED, fixed_on="2026-09-18",
+       scope="ms.js dashPublish(): the 403 'EULA not accepted' branch hands over to the seller-"
+             "onboarding flow (sobState seeded with ONLY the tapped listing, then goTo "
+             "'seller-onboard'), where sobInit() opens phase 3 with the returning-seller note and "
+             "_sobGoLiveInner() registers the account, stamps the acceptance and publishes "
+             "(EULA-ORDER-1). THE FAULT, PROBED IN A REAL BROWSER 18 Sep 2026 on a real stranded "
+             "draft: sign in from the emailed link -> land on My Seller Hub -> the draft is there "
+             "with a Publish button -> tap it -> toast 'You must accept the TrustSquare Terms "
+             "before publishing' -> nothing opens, listing stays 'Draft - not visible yet'. A dead "
+             "end, and not a rare one: quick.html creates no account, so users.eula_accepted_at is "
+             "NULL for EVERY first-time Quick composer. This is the last wall between the "
+             "onboarding number and 1 -- RG-0395 got the man back to his advert, this lets him "
+             "publish it. It must NEVER be 'fixed' by stamping acceptance for him: he reads and "
+             "ticks, which is what makes the clause bind (CPA s49, RUL-133/BUZZ-ACCEPT-1).",
+       ref="RG-0395 (the return path) · EULA-ORDER-1/WALK-1 (3 Sep, same fault fixed in the guided "
+           "lane only) · GUIDED-PUBLISH-1 S138 (dashPublish itself) · ONBOARDING_GOAL.md section 3.")
+def rg_hub_eula_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - ms.js not readable from here")]
+    out = []
+    if "async function dashPublish(" not in js:
+        return [(FAIL, "dashPublish is gone -- the hub can no longer publish a stranded draft")]
+    body = js.split("async function dashPublish(", 1)[1][:3200]
+    if "403" not in body or "eula" not in body.lower():
+        out.append((FAIL, "the hub's Publish no longer recognises the EULA 403 -- the seller is "
+                          "told to accept the Terms and given no way to accept them, which is the "
+                          "18 Sep dead end (HUB-EULA-1)"))
+    if "goTo('seller-onboard')" not in body:
+        out.append((FAIL, "the EULA branch no longer opens the acceptance flow -- the seller is "
+                          "stranded on the hub again"))
+    if "sobState.drafts" not in body:
+        out.append((FAIL, "the handover no longer seeds the tapped listing -- an unseeded sobInit "
+                          "re-fetches and would take EVERY other draft live with it"))
+    # the anti-gaming half: the hub must never stamp acceptance on the seller's behalf
+    for bad in ("/eula'", '/eula"', "eula_accepted_at ="):
+        if bad in body:
+            out.append((FAIL, "dashPublish writes the EULA acceptance itself (%r) -- acceptance is "
+                              "the seller's own act, read and ticked, or the clause does not bind "
+                              "(CPA s49)" % bad))
+    return out or [(INFO, "the hub's Publish hands a stranded draft to the Terms screen; only the "
+                          "tapped listing is seeded; acceptance stays the seller's own act")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

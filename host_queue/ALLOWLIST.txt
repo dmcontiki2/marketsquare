@@ -181,3 +181,14 @@ run_py     MarketSquare\scripts\quiet_commit.py
 # --- same flag, same probe round, no prompts. Spend is the nightly probe, well under 1 US cent
 # --- per night, bounded by the scoreboard agent's own budget. Reverse: disable_scoreboard.bat.
 run_bat    MarketSquare\enable_scoreboard_unattended.bat
+
+# --- Widened 18 Sep 2026. WAVE-SERVER-1. David: "Wave timer: move the 00:10 wave from your
+# --- laptop's Task Scheduler to the server so a sleeping laptop cannot delay it - approve?
+# --- Yea - approved" (18 Sep 2026). disable_daily_wave.bat DISABLES the two Windows wave tasks
+# --- (\CityLauncher\DailyWave and the older \CityLauncher\LaunchDayWave) and writes their
+# --- schtasks /Query state to logs\disable_daily_wave_<stamp>.log. It is the one host-side act
+# --- the cut-over needs: two hosts firing the same wave against two DB copies double-send,
+# --- because pull_from_server never carried 'emailed' down. Sends nothing, deletes nothing,
+# --- touches no DB, no money. The server timer is enabled only after this bat's .result
+# --- proves both tasks Disabled. Re-enabling either task = double send.
+run_bat    CityLauncher\disable_daily_wave.bat
