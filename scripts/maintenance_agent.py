@@ -766,8 +766,32 @@ def _post_heartbeat(report, mode, key):
     # D2/D3 (17 Sep 2026): brain_keyed is the PROVEN probe result, not key presence; armed
     # and live are EFFECTIVE cover (switch AND brain), the raw switch is armed_switch.
     proven = bool(BRAIN.get("ok"))
+    # MAINT-VANTAGE-2 (18 Sep 2026) -- RG-0382's contract, applied to the fields beside the one it
+    # fixed. KILL and LIVE are read from the env of WHOEVER POSTS. On the box that is the server's
+    # MAINTENANCE_AGENT_ENABLED, i.e. the real arming state. From a host run (maint_host.bat, which
+    # deliberately never sets it) or any other off-box vantage, they are locally-false values that
+    # say nothing about whether the agent is armed -- and posting them overwrote the server's state
+    # with a reading the runner could not observe. PROVEN 18 Sep: the card read armed:true
+    # mode:LIVE at 02:20Z, then armed:false after a host SHADOW run at 02:35Z. NOTHING WAS
+    # DISARMED. A reader -- David, a stand-up, the next session -- would have concluded the
+    # maintenance lane was off while it was armed and running, or re-armed what was never off.
+    # A LIMIT MUST STAY DISTINGUISHABLE FROM A FAULT: off-box, these post as None (NOT MEASURED),
+    # never as False. The vantage signal is the brain probe's own refusal kind, which MAINT-BRAIN-1
+    # returns precisely because the endpoint is local-only -- so "can I reach the local-only
+    # endpoint" is exactly "am I on the box", and no second mechanism is invented to ask it.
+    _offbox = str(BRAIN.get("error_kind") or "").startswith("vantage:")
+    # The server's heartbeat whitelist (_MAINT_HB_FIELDS in bea_main.py) is a fixed tuple, so a new
+    # key would be silently dropped -- and bea_main.py was held by another lane when this shipped
+    # (SO-5). The vantage therefore rides `mode`, which IS whitelisted and is already free text, so
+    # the card tells the truth today without waiting on a second file. arming_vantage is sent too
+    # and costs nothing: it starts working the moment that tuple gains the key.
+    if _offbox:
+        mode = "%s  [arming NOT MEASURED -- off-box vantage]" % mode
     hb = {"run": report.get("run"), "mode": mode, "phase": MAINT_PHASE,
-          "armed": KILL and proven, "live": LIVE and proven, "armed_switch": KILL,
+          "armed": None if _offbox else (KILL and proven),
+          "live": None if _offbox else (LIVE and proven),
+          "armed_switch": None if _offbox else KILL,
+          "arming_vantage": "off-box (NOT MEASURED)" if _offbox else "on-box",
           "brain_keyed": proven,
           "brain_lane": BRAIN.get("provider") or "",
           "brain_state": BRAIN.get("state", "UNPROBED"),
@@ -786,7 +810,8 @@ def _post_heartbeat(report, mode, key):
         api("POST", "/dashboard/maint", key, hb)
         say("heartbeat -> /dashboard/maint (brain %s%s, %s, run cost $%.4f over %d call(s))"
             % (hb["brain_state"], ("/" + hb["brain_lane"]) if proven else "",
-               ("ARMED" if hb["armed"] else ("ARMED-SWITCH but NO BRAIN" if KILL else "shadow")),
+               ("arming NOT MEASURED (off-box vantage)" if _offbox else
+                ("ARMED" if hb["armed"] else ("ARMED-SWITCH but NO BRAIN" if KILL else "shadow"))),
                RUN_COST["usd"], RUN_COST["calls"]))
     except Exception as e:
         say("heartbeat POST failed (%s) -- run unaffected, dashboard will show stale" % e)

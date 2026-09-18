@@ -941,6 +941,7 @@ async function _msInit(){
     obTrack('landed', {drafted: sp.get('drafted')==='1'});   // ONBOARD-FUNNEL-1
     // drafted=1 means admin already saved listings — skip photo upload, go to tier+EULA
     if(sp.get('drafted')==='1'){
+      if(sp.get('publish')==='1') sobState._publishNow = 'ask';   // HANDOVER-PUBLISH-1: recovery link
       goTo('seller-onboard');
     } else {
       // SELL-FLOW-REDO-2 (15 Jul 2026): ALL individual sellers get the new
@@ -6623,6 +6624,11 @@ async function sobInit() {
   sobState._skipPreview = false;
   sobState.drafts = _seededDrafts; // restore seeded drafts — must survive init reset
   sobState._cameFromGuided = cameFromGuided; // restore flag after reset
+  /* HANDOVER-PUBLISH-1: true = the guided scorecard tap already accepted the terms, publish on
+     arrival; 'ask' = a recovery link (?drafted=1&publish=1) -- skip the plan screen and open the
+     acceptance screen directly. Either way the plan step is never in front of the listing. */
+  const publishNow = sobState._publishNow || false;
+  sobState._publishNow = false;
 
   // Reset to phase 1 (or 2 if coming from guided screen)
   sobGoPhase(skipPreview ? 2 : 1);
@@ -6652,12 +6658,14 @@ async function sobInit() {
       sobState.drafts = all.filter(l => l.listing_status === 'draft' || (!l.published_at && !l.listing_status));
     } catch(e) {
       if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:#fca5a5;font-size:13px;">Could not load your listing — please check your connection and try again.</div>';
+      if (publishNow) sobGoPhase(1);   // HANDOVER-PUBLISH-1: the message lives on phase 1
       return;
     }
   }
 
   if (!sobState.drafts.length) {
     if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:rgba(255,255,255,.65);font-size:13px;">No draft listings found for this account.<br>Please contact TrustSquare support.</div>';
+    if (publishNow) sobGoPhase(1);   // HANDOVER-PUBLISH-1
     return;
 
   }
@@ -6798,6 +6806,18 @@ async function sobInit() {
 
         </div>`;
     }).join('');
+  }
+  /* HANDOVER-PUBLISH-1: publish first, account afterwards. The guided path arrives with the
+     terms already accepted on the scorecard tap, so it publishes now; phase 3 stays underneath
+     so a refusal (a Cars draft that still needs its attestation, a full plan, a 422) lands on
+     the screen that can fix it. A recovery link opens the acceptance screen and waits for the
+     tap -- nothing publishes without the acceptance. */
+  if (publishNow === true) {
+    sobState._publishedNow = true;
+    sobGoPhase(3);
+    try { await sobGoLive(); } catch(e) { console.warn('publish-now failed', e); }
+  } else if (publishNow === 'ask') {
+    sobGoPhase(3);
   }
 }
 
@@ -7014,6 +7034,7 @@ async function sobGoLive() {
 
   obTrack('publish_ok',{n:successCount});   // ONBOARD-FUNNEL-1: the number's own event
   sobGoPhase(4);
+  if (sobState._publishedNow) { sobState._publishedNow = false; sobAccountAfter(email); }   // HANDOVER-PUBLISH-1
   showToast("🎉 You're live on TrustSquare!");
   // Show "View my listing" button if we have a listing id to open
   const viewBtn = document.getElementById('sob-view-listing-btn');
@@ -7062,6 +7083,25 @@ async function sobGoLive() {
 function sobP2Back() {
   // Only used for normal (non-guided) flow now
   sobGoPhase(1);
+}
+
+/* HANDOVER-PUBLISH-1: the listing is live; NOW the account. One sign-in email (code + link,
+   the app's own /auth/request-link), and one plain line on the success screen saying the plan,
+   banking and profile can wait. Fire-and-forget: a mail failure may never dent a publish. */
+function sobAccountAfter(email){
+  try{
+    fetch(BEA_URL + '/auth/request-link', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email: email }) }).catch(function(){});
+  }catch(e){}
+  try{
+    var t = document.getElementById('sob-success-title'); if(!t) return;
+    var old = document.getElementById('sob-account-after'); if(old) old.parentNode.removeChild(old);
+    var d = document.createElement('div'); d.id = 'sob-account-after';
+    d.style.cssText = 'margin:6px auto 18px;max-width:440px;text-align:left;font-size:13px;line-height:1.55;color:rgba(255,255,255,.78);background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.45);border-radius:12px;padding:12px 14px;';
+    d.innerHTML = '<b style="color:#fff;">Your account can wait.</b> Your listing is live on the free plan. We have emailed <b>'
+      + String(email||'').replace(/</g,'&lt;') + '</b> a sign-in link \u2014 whenever you come back, tap Sign in and a fresh one arrives. Add your details, choose a plan or edit the listing then.';
+    t.parentNode.insertBefore(d, t.nextSibling);
+  }catch(e){}
 }
 
 function sobStartOver() {
@@ -17929,8 +17969,20 @@ function sfScoreS(){
     h+='</div>';
   }
   if(sc.total>=50){
-    h+='<div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'photos\')">Improve first</button>'+
-       '<button class="sf-btn pri" id="sf-list-btn" onclick="sfFinish(false)">Continue to publish 🚀</button></div>';
+    /* HANDOVER-PUBLISH-1 (18 Sep 2026, David: "let a hand-over publish first and ask for the
+       account afterwards"). The 12 Sep Montana outfitter finished at 100/100, pressed Continue,
+       and was handed a plan screen and an EULA screen before anything of his could go live; he
+       left at that seam (onboard_steps: finish -> handoff -> nothing). The publish tap is now the
+       acceptance: the SAME two sentences the phase-3 EULA screen asks for sit above the button
+       and the button names the act, so the terms bind on the tap (RUL-135(b)/(c): the magic link
+       proves the inbox, the tick makes the terms bind). The listing goes live on the free plan;
+       the plan, banking and profile are asked for AFTER, on the success screen. */
+    h+='<div class="sf-card" id="sf-terms-ack" style="border-color:rgba(200,135,58,.55);">'+
+       '<div style="font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:rgba(200,135,58,.9);margin-bottom:6px;">Before you publish</div>'+
+       '<div style="font-size:13px;line-height:1.55;">By tapping <b>Publish now</b> you confirm: I have read and accept the <a href="/terms" target="_blank" rel="noopener" style="color:#fbbf24;font-weight:700;">TrustSquare Seller Terms</a>, and confirm all listing information is accurate. I understand that listings with inappropriate content will be permanently removed.</div>'+
+       '<div style="font-size:12px;color:var(--text-3,#8b93a7);margin-top:6px;line-height:1.45;">Your listing goes live on the free plan straight away. Your account details, plan and payout details can wait \u2014 we email you a sign-in link.</div></div>'+
+       '<div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'photos\')">Improve first</button>'+
+       '<button class="sf-btn pri" id="sf-list-btn" onclick="sfFinish(false)">Publish now \u2014 I accept the Terms</button></div>';
   } else {
     h+='<div class="sf-foot"><button class="sf-btn gho" onclick="sfFinish(true)">Save draft & finish later</button>'+
        '<button class="sf-btn pri" onclick="sfGo(\'photos\')">Add what\'s missing →</button></div>';
@@ -18074,8 +18126,9 @@ async function sfFinish(draftOnly){
       var sc=sfScore();
       sfToast('Draft saved — '+(50-sc.total>0?(50-sc.total)+' points to go before it can publish.':'finish any time.'));
     } else {
-      await goHandoff();   // routes to seller-onboard (EULA → cars attest → publish)
-      obTrack('handoff');   // ONBOARD-FUNNEL-1: draft saved, EULA/publish screen next
+      sobState._publishNow = true;   // HANDOVER-PUBLISH-1: the scorecard tap was the acceptance
+      await goHandoff();   // routes to seller-onboard; with _publishNow it publishes on arrival
+      obTrack('handoff');   // ONBOARD-FUNNEL-1: draft saved, publish follows immediately
       /* A2HS-ASK-1 (RG-0209, 30 Aug 2026): the seller's invested moment — first
          successful publish handoff. promptAddToHomeScreen() carries its own
          standalone/already-done guards and the iOS fallback; push NOTIFICATIONS

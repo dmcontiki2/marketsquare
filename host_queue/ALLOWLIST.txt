@@ -173,3 +173,11 @@ run_bat    MarketSquare\media_push.bat
 # --- deploys, refuses a clean tree, re-queues itself while another lane is writing, and
 # --- gives up after 12 attempts rather than queueing forever.
 run_py     MarketSquare\scripts\quiet_commit.py
+
+# --- Widened 18 Sep 2026. SCOREBOARD-2, closing OPEN_LOOPS L3 (open since 3 Aug).
+# --- David, 18 Sep 2026: "I approve all changes, please implement and close all of them."
+# --- The interactive enable_scoreboard.bat cannot be queued (choice /M + pause block forever),
+# --- which is the real reason L3 aged six weeks as a "David click". This is its unattended twin:
+# --- same flag, same probe round, no prompts. Spend is the nightly probe, well under 1 US cent
+# --- per night, bounded by the scoreboard agent's own budget. Reverse: disable_scoreboard.bat.
+run_bat    MarketSquare\enable_scoreboard_unattended.bat

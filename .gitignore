@@ -198,3 +198,4 @@ host_queue/QUIET_COMMIT_ATTEMPTS.txt
 /marketsquare.db
 /marketsquare.db-journal
 /_to_delete/
+host_queue/QUIET_COMMIT_REASON.txt

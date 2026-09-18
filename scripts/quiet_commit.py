@@ -38,6 +38,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); REPO = os.path.dirname(HERE)
 ENV = dict(os.environ, GIT_OPTIONAL_LOCKS='0')
 LOCK = os.path.join(REPO, '.work_lock')
 MARK = os.path.join(REPO, 'host_queue', 'QUIET_COMMIT_ATTEMPTS.txt')
+REASON_FILE = os.path.join(REPO, 'host_queue', 'QUIET_COMMIT_REASON.txt')
 
 IGNORE_DIRS = ('.git/', 'host_queue/', '__pycache__/', '.maint_agent/', 'ledger_runs/',
                '_verify_rig/', '_to_delete/', 'node_modules/', '.secrets/')
@@ -102,11 +103,26 @@ def _bump(n):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--reason', required=True)
+    # HOST-QUEUE reality (proven 18 Sep, first live tick): host_queue_worker.py runs an
+    # allowlisted run_py entry with NO ARGUMENTS -- the request's `reason` field is metadata for
+    # the log, not argv. --reason was required, so the very first real invocation died with
+    # "the following arguments are required: --reason" and committed nothing. The mechanism built
+    # to stop work sitting uncommitted sat uncommitted. So: the reason is OPTIONAL and is read
+    # from a file the requester leaves beside the queue, falling back to a generic message. A tool
+    # the queue cannot invoke is not a tool.
+    ap.add_argument('--reason', default=None)
     ap.add_argument('--quiet-minutes', type=float, default=8.0)
     ap.add_argument('--max-attempts', type=int, default=12)
     ap.add_argument('--owner', default='quiet-commit')
     a = ap.parse_args()
+
+    if not a.reason:
+        try:
+            a.reason = open(REASON_FILE, encoding='utf-8').read().strip() or None
+        except OSError:
+            a.reason = None
+    if not a.reason:
+        a.reason = 'Claude working-tree commit (QUIET-COMMIT-1, reason file absent)'
 
     stamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%MZ')
     if not git('status', '--porcelain'):

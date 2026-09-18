@@ -1173,9 +1173,11 @@ function fuLoad(){
        (red?chip(RD[0],RD[1],'BRAIN RED',bs)
         :(notmeas?chip(GY[0],GY[1],'BRAIN NOT MEASURED','this run could not reach the brain endpoint from where it stood (local-only by design) -- not a fault, not a pass')
           :(amber?chip(AM[0],AM[1],'BRAIN '+bs.replace(/^AMBER:/,'').toUpperCase(),bs):chip(AM[0],AM[1],'NO BRAIN',bs)))))
-     +(d.armed?(d.live?chip(GR[0],GR[1],'ARMED'):chip(BL[0],BL[1],'ARMED&middot;IDLE'))
-       :(d.armed_switch?chip(AM[0],AM[1],'SWITCH ON&middot;NO COVER','kill switch is on but the brain is not proven: the loop cannot fix anything')
-         :chip(AM[0],AM[1],'SHADOW')));
+     +((d.armed==null&&d.armed_switch==null)
+       ?chip(GY[0],GY[1],'ARMING NOT MEASURED','this run posted from off the box, where MAINTENANCE_AGENT_ENABLED cannot be read -- it is a vantage limit, not a disarm. The last on-box run is what says whether the agent is armed. (MAINT-VANTAGE-2)')
+       :(d.armed?(d.live?chip(GR[0],GR[1],'ARMED'):chip(BL[0],BL[1],'ARMED&middot;IDLE'))
+         :(d.armed_switch?chip(AM[0],AM[1],'SWITCH ON&middot;NO COVER','kill switch is on but the brain is not proven: the loop cannot fix anything')
+           :chip(AM[0],AM[1],'SHADOW'))));
    if(cs){
      var c=d.cost||{}, o=c.openai||{}, runs=(c.runs||[]).slice(0,5);
      var rule=o.rule?('rule: recharge '+usd(o.rule.amount_usd)+' when &lt; '+usd(o.rule.threshold_usd)):'no auto-recharge rule recorded';

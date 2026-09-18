@@ -23893,5 +23893,183 @@ def rg_quick_return_1():
                           "anyone; the return path cannot publish")]
 
 
+
+@entry("RG-0397", "the published reason for having no UK or EU representative stays TRUE -- the Article 27 "
+                  "exemption is a dated determination with a tripwire, never a standing assumption",
+       LOCKED, fixed_on="2026-09-18",
+       scope="privacy.html Supplement A2 AND the production identity-verification path "
+             "(bea_main.py _vision_verify_identity, id_verify_provider.py). BOTH, because the "
+             "claim and the thing it describes must be checked against each other -- a true "
+             "sentence about code that has since changed is the most dangerous kind of false "
+             "statement, because it was true when written and nobody re-reads it. Source-side by "
+             "nature: the assertion is about what the code DOES NOT do, and no live probe can "
+             "prove the absence of a feature. CLASS, not instance: every published legal claim in "
+             "this repo that rests on a technical fact needs the fact policed, or the claim decays "
+             "silently -- the sibling pattern is TRAVELPAYOUTS_TOKEN (UNROTATABLE-ACCEPTED, dated "
+             "reasoning, policed by RG-0146).",
+       ref="D4 (18 Sep 2026), David's scope ruling 'all three' plus his instruction not to leave "
+           "the item flagged or pending a further permission. UK GDPR Article 27 requires a "
+           "controller outside the UK to appoint a UK representative UNLESS Article 27(2) applies: "
+           "processing is occasional, does not include large-scale special-category data, and is "
+           "unlikely to result in a risk to rights and freedoms. The decisive limb is "
+           "special-category data, and it was settled by READING THE CODE rather than by "
+           "assertion: _vision_verify_identity sends the uploaded document to a vision model with "
+           "a prompt that extracts the printed NAME and ID NUMBER and compares them to what the "
+           "seller typed -- no facial recognition, no biometric template, no 1:1 or 1:N face "
+           "match, no liveness. id_verify_provider.py's own header states that closing the "
+           "'is this the holder' gap would need DHA photo-retrieval or fingerprint plus a live "
+           "selfie match, and calls that 'a strictly higher tier, deliberately left as a future "
+           "lane'; the provider key defaults to 'stub' (disabled). The only liveness wording in "
+           "the tree sits in APP_PREVIEW.html behind a literal '[COUNSEL REQUIRED: insert "
+           "provider]' placeholder -- a mockup, not a build. A photograph becomes biometric data "
+           "under Article 4(14) only through specific technical processing allowing unique "
+           "identification; OCR of a name and a number is not that. So no Article 9 processing "
+           "occurs, the exemption limb holds, and privacy.html A2 says so in those words rather "
+           "than claiming a representative exists or leaving a bracket. THIS ENTRY IS THE REASON "
+           "THAT IS NOT A FLAG: the determination reverses itself the moment its basis does. If "
+           "face-matching, biometric or liveness processing ever enters the production path, or if "
+           "A2's published wording drifts from what the code does, this entry goes RED and the "
+           "representative question is back on the board the same day -- automatically, without "
+           "anyone remembering to ask.")
+def rg_uk_art27_basis_holds():
+    """A2's published basis must keep matching the code. Red the day it stops."""
+    out = []
+
+    def _slurp(rel):
+        try:
+            with open(os.path.join(REPO, rel), encoding="utf-8", errors="replace") as f:
+                return f.read()
+        except OSError:
+            return None
+
+    priv = _slurp("privacy.html")
+    bea = _slurp("bea_main.py")
+    prov = _slurp("id_verify_provider.py")
+    if priv is None or bea is None or prov is None:
+        # VANTAGE-1: a clone or a run from outside the working tree cannot see these.
+        return [(INFO, "NOT EVALUATED -- privacy.html / bea_main.py / id_verify_provider.py not "
+                       "readable from this vantage (run the board from the working tree)")]
+
+    # (a) the published claim must still be there, and still say what it said
+    if "A2 &middot; UK representative" not in priv and "A2 · UK representative" not in priv:
+        out.append((FAIL, "privacy.html no longer carries Supplement A2 -- the UK representative "
+                          "position has been removed or overwritten without a decision"))
+    # Whitespace-normalised: the same sentence is hard-wrapped differently in A2 and D2, and a
+    # literal count missed D2 for that reason alone -- an assertion that depends on where a line
+    # happens to break is an assertion that will fail for the wrong reason one day.
+    elif re.sub(r"\s+", " ", priv).count(
+            "we do not perform facial recognition, biometric matching, or liveness checks") < 2:
+        out.append((FAIL, "the published no-biometrics BASIS is missing from A2 (UK) or D2 (EU) -- "
+                          "BOTH supplements rest on the same sentence and both must carry it. "
+                          "Either restore it or the Article 27 determination has to be remade"))
+    if "D2 &middot; EU representative" not in priv and "D2 · EU representative" not in priv:
+        out.append((FAIL, "privacy.html no longer carries Supplement D2 -- the EU Article 27 "
+                          "position has been removed. France and Portugal Schedules still "
+                          "cross-reference this policy, so the claim cannot simply vanish"))
+
+    # (b) the code must still not do the thing A2 says it does not do.
+    # SCOPE MATTERS, and the first draft of this check got it wrong: a bare search of bea_main.py
+    # for "liveness" fires on the AI-provider health wording ("per-provider liveness"), which is
+    # about whether a vendor's API is up and has nothing to do with faces. An assertion that cries
+    # wolf on unrelated code is worse than none -- it gets muted. So the scan is limited to the
+    # identity path: id_verify_provider.py in full, plus the identity-verification functions in
+    # bea_main.py, and only terms that unambiguously mean face/biometric processing.
+    BIO = ("face_match", "facematch", "face_recognition", "facial_recognition",
+           "compare_faces", "face_compare", "biometric_template", "selfie_match",
+           "face_embedding", "faceid")
+    ident = prov
+    for fname in ("_vision_verify_identity", "verify_identity", "_fetch_kyc_document"):
+        if fname in bea:
+            ident += bea.split(fname, 1)[1][:6000]
+    low = ident.lower()
+    hits = sorted({t for t in BIO if t in low})
+    # "liveness" counts only inside the identity path, where it can only mean a liveness check.
+    if "liveness" in low and "future lane" not in low.split("liveness", 1)[1][:400]:
+        hits.append("liveness")
+    if hits:
+        out.append((FAIL, "the identity-verification path now mentions %s -- if ANY biometric or "
+                          "liveness processing has gone live, the Article 27(2) exemption published "
+                          "in privacy.html A2 is no longer available and a UK representative must "
+                          "be appointed. This is a legal exposure, not a lint failure."
+                          % ", ".join(hits)))
+
+    # (c) the ID-verification prompt must still be OCR-and-compare, not identification
+    if "_vision_verify_identity" in bea:
+        seg = bea.split("_vision_verify_identity", 1)[1][:4000]
+        if "Extract the FULL NAME" not in seg or "Extract the ID NUMBER" not in seg:
+            out.append((FAIL, "the identity-verification prompt no longer reads as name/number "
+                              "extraction -- re-read it against A2 before this stays published"))
+
+    return out or [(INFO, "A2 is published, its no-biometrics basis is intact, and the production "
+                          "identity path still does OCR name/number comparison only -- no face "
+                          "match, no liveness, provider defaults to a disabled stub")]
+
+
+@entry("RG-0398", "a maintenance run that CANNOT SEE the arming switch reports NOT MEASURED -- it "
+                  "never repaints the server's armed state with a locally-false reading",
+       LOCKED, fixed_on="2026-09-18",
+       scope="scripts/maintenance_agent.py (_post_heartbeat: armed / live / armed_switch) AND "
+             "dashboard.server.html's maintenance chip -- BOTH lanes, because a state named "
+             "honestly by the producer and repainted by the consumer is the same lie with a "
+             "second opinion, which is RG-0382's own wording. Source-side by nature: the property "
+             "is that a LIMIT stays DISTINGUISHABLE from a FAULT, and a probe run from one vantage "
+             "cannot demonstrate what a run from another vantage would post. Direct sibling of "
+             "RG-0382, which fixed exactly this for the brain field and stopped one field short.",
+       ref="MAINT-VANTAGE-2 (18 Sep 2026), found by the daily stand-up on the instrument it had "
+           "just used. At 02:20Z /dashboard/maint read armed:true armed_switch:true mode:LIVE. The "
+           "stand-up queued a host-side SHADOW run to restore a missed heartbeat; at 02:35Z the "
+           "same card read armed:false armed_switch:false mode:SHADOW. NOTHING HAD BEEN DISARMED. "
+           "KILL and LIVE are read from the environment of whichever process posts the heartbeat, "
+           "and maint_host.bat deliberately never sets MAINTENANCE_AGENT_ENABLED -- so an off-box "
+           "run was overwriting the server's arming state with a value it had no way to observe. "
+           "The harm is not cosmetic and not hypothetical: the stand-up had cited armed:true "
+           "fifteen minutes earlier as the evidence discharging OPEN_LOOPS D12, and any later "
+           "reader -- David, the next stand-up, a session deciding whether to re-arm -- would have "
+           "read the card as a disarmed maintenance lane. Fixed at the producer: when the brain "
+           "probe's own refusal kind starts with 'vantage:' (which MAINT-BRAIN-1 returns precisely "
+           "because the endpoint is local-only, so 'can I reach it' IS 'am I on the box', and no "
+           "second mechanism is invented), armed/live/armed_switch post as None rather than False. "
+           "Fixed at the consumer: null renders a grey ARMING NOT MEASURED chip, the same "
+           "treatment RG-0382 gave BRAIN NOT MEASURED. The vantage also rides `mode`, which is "
+           "already on the server's _MAINT_HB_FIELDS whitelist, because bea_main.py was held by a "
+           "concurrent lane (SO-5) and a fix that waits on another file is a fix that does not "
+           "ship tonight.")
+def rg_maint_arming_vantage():
+    """Off-box runs must post NOT MEASURED for arming, and the card must render it as such."""
+    out = []
+
+    def _slurp(rel):
+        try:
+            with open(os.path.join(REPO, rel), encoding="utf-8", errors="replace") as f:
+                return f.read()
+        except OSError:
+            return None
+
+    agent = _slurp(os.path.join("scripts", "maintenance_agent.py"))
+    dash = _slurp("dashboard.server.html")
+    if agent is None or dash is None:
+        return [(INFO, "NOT EVALUATED -- maintenance_agent.py / dashboard.server.html not readable "
+                       "from this vantage (run the board from the working tree)")]
+
+    if "_offbox" not in agent:
+        out.append((FAIL, "maintenance_agent no longer computes an off-box vantage -- a host run "
+                          "will repaint the server's arming state again (the 18 Sep fault)"))
+    else:
+        seg = agent.split("_offbox", 1)[1][:1200]
+        if '"armed": None if _offbox' not in seg:
+            out.append((FAIL, "`armed` is no longer posted as None from an off-box vantage -- a "
+                              "local False is being published as the agent's arming state"))
+        if '"armed_switch": None if _offbox' not in seg:
+            out.append((FAIL, "`armed_switch` is no longer posted as None from an off-box vantage"))
+
+    if "ARMING NOT MEASURED" not in dash:
+        out.append((FAIL, "the maintenance card no longer renders the NOT MEASURED arming chip -- "
+                          "a null arming state will fall through and paint as SHADOW, which is the "
+                          "consumer half of the same lie"))
+
+    return out or [(INFO, "off-box runs post armed/live/armed_switch as NOT MEASURED, the vantage "
+                          "also rides the whitelisted `mode` field, and the card renders a grey "
+                          "ARMING NOT MEASURED chip instead of SHADOW")]
+
 if __name__ == "__main__":
     sys.exit(main())
