@@ -24338,3 +24338,26 @@ would turn four copies into twenty).
 The onboarding number is still **0 of 20**, both probes agreeing. 2,499 letters sent; registered
 accounts have risen from 25 to 40 since 18 Sep.
 Cost model impact: none.
+
+**DOOR-FUNNEL-1 / RG-0413 — the door the letters point at was the dark one.** The eight live
+outreach templates link to `trustsquare.co/q/<cat>`, which serves `genie/q_index.html`, an older
+fork of the composer. Probed on the live page in a real browser at phone width: `typeof qTrack`
+was `undefined` — not one funnel beacon had ever been posted from the page cold recipients
+actually land on. QUICK-FUNNEL-1 instrumented `quick.html`, served at `/quick/`, and was written
+up as "the Quick door is not dark"; every figure anybody had about arrivals at the Quick door was
+therefore measured somewhere else. The same class as SELLFLOW-RETURN-1 eight days earlier: a fix
+proven on a case is not proven on the case's lane. The public door now beacons arrival, each
+question, the composed advert, the address given and the sign-in link sent, and carries the dwell
+beacon from its first beacon — it is in every letter, and mail scanners fetch every URL in every
+letter, so without it the first thing this instrument would have produced is a wave of phantom
+arrivals. Proven before ship: a full walk posts all nine beacons with no page errors, a render
+with no human input posts the arrival alone, and one scroll plus twelve seconds adds dwell.
+
+**RG-0414 DOOR-RETURN-1 (open), and a correction.** That door cannot write a listing, and that is
+deliberate and right — no API key may live in a public page — so it keeps the composed answers in
+localStorage and emails a sign-in link. It is not broken. But its only way back is an inbox plus
+one browser's storage, which is exactly what the market this goal was redirected at is least
+likely to have. The entry carries an explicit warning not to paste the /quick/ WhatsApp button
+onto it: here there is no server-side draft for it to point at, and telling somebody their advert
+is saved somewhere it is not is worse than the gap.
+Cost model impact: none.

@@ -73,7 +73,22 @@ reserved is in the way and the letter is mine to rewrite. Stated now, not on 31 
    proven red in both failure directions before locking.
 6. **The stale CityLauncher dashboard closed BY PROBE, not by deploying over it** — the live page
    is md5-identical to the repo copy and carries the STATS-HUMAN-1 markers. Another lane fixed it.
-7. **Ledger green before and after** (50-entry shards, `--combine=8`): every locked fix holding.
+7. **THE FINDING OF THE RUN — RG-0413 DOOR-FUNNEL-1. The door the letters point at was the
+   dark one.** The eight live outreach templates link to `trustsquare.co/q/<cat>`, which serves
+   `genie/q_index.html` — an older fork of the composer. **PROBED on the live page: `typeof
+   qTrack` was `undefined`.** Not one beacon, ever. QUICK-FUNNEL-1 (18 Sep) instrumented
+   `quick.html`, served at `/quick/`, and was written up as "the Quick door is not dark" — so
+   every figure anybody had about arrivals at the Quick door was measured on a page cold
+   recipients never see. Instrumented tonight and proven in a real browser: a full walk posts
+   `q_door, q_step_1..5, q_draft, q_handover, q_signin_sent`; a render with no human input posts
+   `q_door` alone; one scroll plus twelve seconds adds `dwell`.
+8. **Also learned, and it corrects a wrong first reading:** that door **cannot** write a listing,
+   and that is deliberate and right — no API key may live in a public page, so it keeps the
+   answers in `localStorage` and emails a sign-in link. It is not broken. But its only way back
+   is email plus one browser's storage, which is precisely what this market lacks — **RG-0414
+   DOOR-RETURN-1**, open, with the warning not to paste the `/quick/` WhatsApp button onto it,
+   because here there is no server-side draft for it to point at.
+9. **Ledger green before and after** (shards + `--combine=8`): every locked fix holding.
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
@@ -83,8 +98,14 @@ reserved is in the way and the letter is mine to rewrite. Stated now, not on 31 
    clear `.git/index.lock` with `scripts/git_unlock.py` and re-run **before** believing it.
 4. **Then the letter.** It is the one measurable leak, it is mine, and run 14 deferred it, run 15
    deferred it for David's decisions. It should not be deferred a third time.
-5. **Watch `q_wa_self`.** It is a hypothesis about a market, not a fact. If nobody taps it, say so.
-6. The four new OPEN entries carry David's unbuilt decisions with the reason each was deferred:
+5. **Read the door's beacons for the first time.** From tonight `/q/<cat>` reports `q_door`,
+   `q_step_<n>`, `q_draft`, `q_handover`, `q_signin_sent` and `dwell`. The nightly wave fires at
+   00:10 SAST, so the first real numbers for the lane that carries every cold arrival land within
+   a day. **Read them against `dwell`, never raw.** Also watch `q_wa_self` on `/quick/` — it is a
+   hypothesis about a market, not a fact, and if nobody taps it, say so.
+6. **RG-0414 DOOR-RETURN-1 is the next real build** and probably the highest-value one left
+   inside this authority: a way back from the public door that does not need an inbox.
+7. The four new OPEN entries carry David's unbuilt decisions with the reason each was deferred:
    **RG-0409** ladder values + cap 40 (a scoring change, four hardcoded caps, and NOT on the
    critical path — publishing does not depend on the score) · **RG-0410** reachability gate +
    post-confirm glimpse · **RG-0411** taxi-drop area unit · **RG-0412** EULA in the launch
@@ -124,6 +145,9 @@ reserved is in the way and the letter is mine to rewrite. Stated now, not on 31 
 ## THINGS ALREADY TRIED THAT DID NOT WORK
 
 - Reading raw `funnel` step counts as people (they include scanners) — read `human_funnel`.
+- **Instrumenting a lane without checking which URL the letters use.** RG-0405 measured
+  `quick.html` (`/quick/`) while every letter points at `/q/<cat>` (`genie/q_index.html`). Open a
+  live letter, follow the link, and check `typeof qTrack` on the page it actually opens.
 - Believing a ledger RED before clearing `.git/index.lock`. Two REDs, one lock (run 14).
 - `request_deploy.py --files <x>` — it does not commit and ships nothing. Use `--all`, then PROBE.
 - "Resend is unreachable from the box" (run 13) — wrong; it answers 200 in 0.19 s.

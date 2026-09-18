@@ -25005,5 +25005,93 @@ def rg_eula_lang_1():
     return out
 
 
+@entry("RG-0413", "DOOR-FUNNEL-1: the door the outreach letters actually point at is measured -- "
+                  "every arrival, every question, the composed advert and the sign-in ask, with a "
+                  "scanner told apart from a person",
+       LOCKED, fixed_on="2026-09-19",
+       scope="genie/q_index.html, which is what https://trustsquare.co/q/<cat> serves: qTrack() on "
+             "the obTrack contract, the FUNNEL-HUMAN-1 dwell beacon, and q_door, q_step_<n>, "
+             "q_draft, q_handover, q_signin_sent. THE FAULT, AND IT IS A DISCIPLINE FAULT MORE "
+             "THAN A CODE ONE: QUICK-FUNNEL-1 (RG-0405, 18 Sep) instrumented quick.html and was "
+             "written up as 'the Quick door is not dark'. It is served at /quick/. The eight live "
+             "outreach templates link to /q/<cat>, which serves THIS file -- an older fork of the "
+             "same composer -- and PROBED ON THE LIVE PAGE 19 Sep 2026 in a real browser at phone "
+             "width, `typeof qTrack` on it was 'undefined'. Not one beacon had ever been posted "
+             "from the page cold recipients actually land on, so every figure anybody had about "
+             "arrivals at 'the Quick door' was measured somewhere else. EXACTLY the class of "
+             "SELLFLOW-RETURN-1, eight days later: a fix proven on a case is not proven on the "
+             "case's LANE -- check which road the traffic comes down before instrumenting it, and "
+             "check it against the letter, not against the filename. The dwell beacon is carried "
+             "from this door's very first beacon rather than added later, because this page is IN "
+             "every letter and mail-security scanners fetch every URL in every letter: without it "
+             "the first thing this instrument would have produced is a wave of phantom arrivals, "
+             "which is FUNNEL-DENOM-1 all over again. PROVEN before ship in a real browser at 390 "
+             "px: a full walk posts q_door, q_step_1..5, q_draft, q_handover, q_signin_sent with "
+             "no page errors; a render with no human input posts q_door alone, while one scroll "
+             "plus twelve seconds adds dwell.",
+       ref="RG-0405 QUICK-FUNNEL-1 (the same fix on the other file) · RG-0404 SELLFLOW-RETURN-1 "
+           "(same class) · RG-0402 FUNNEL-DENOM-1 / FUNNEL-HUMAN-1 (the dwell beacon) · "
+           "ONBOARDING_GOAL.md section 2 (PROBED beats READ)")
+def rg_door_funnel_1():
+    d = repo_file("genie/q_index.html")
+    if d is None:
+        return [(INFO, "NOT EVALUATED - genie/q_index.html is not readable from here")]
+    if "DOOR-FUNNEL-1" not in d:
+        return [(FAIL, "the door the outreach letters point at posts no beacons again -- cold "
+                       "arrivals are invisible on the only lane that carries them")]
+    out = []
+    for token, why in (
+        ("function qTrack(", "the beacon function is gone from the public door"),
+        ("/onboard/step", "the door's beacons no longer reach the funnel endpoint"),
+        ("qTrack('q_door')", "arrivals at the door are uncounted again"),
+        ("q_step_", "we can no longer see which question loses them"),
+        ("qTrack('q_draft')", "we cannot see who composed an advert"),
+        ("qTrack('q_signin_sent')", "we cannot see who asked for the link that carries their "
+                                    "answers into the app -- the only thing this door can do"),
+        ("_qfDwellFire", "the dwell beacon is gone, so the mail scanners that fetch every URL in "
+                         "every letter count as arrivals"),
+        ("location.protocol==='file:'", "the dry-run guard is gone; a copy opened from a "
+                                        "Downloads folder would post to the live funnel")):
+        if token not in d:
+            out.append((FAIL, why))
+    return out or [(INFO, "the public door beacons door/step/draft/handover/signin_sent and tells "
+                          "a scanner from a person")]
+
+
+@entry("RG-0414", "DOOR-RETURN-1: the door the letters point at gives her a way back that does not "
+                  "depend on email or on one browser's storage",
+       OPEN,
+       scope="genie/q_index.html. PROBED LIVE 19 Sep 2026: the public door cannot write a listing "
+             "-- deliberately, and correctly, because no API key may live in a public page, so it "
+             "keeps the composed answers in localStorage under ts_quick_draft and emails a "
+             "sign-in link with 'Open it on this phone and your advert is waiting'. That is a "
+             "sound design and it is NOT broken. But it rests on two things this market does not "
+             "reliably have: an email she reads, and the SAME browser storage when she comes "
+             "back -- and a letter opened in a mail app's in-app browser is not always the "
+             "browser she returns in. WA-SELFSEND-1 (RG-0408) answered the same problem for "
+             "/quick/, where a real draft id exists to link to; here there is no server-side "
+             "draft to point at, so the honest fix is different and is NOT a copy of that button: "
+             "either the door hands its answers to the server the way /quick/ does (which is the "
+             "account-key question, QUICK_LISTING_SPEC.md D2, David's and still open), or the "
+             "sign-in link itself is offered over WhatsApp as well as email. DO NOT paste a "
+             "'send it to myself' button here that points at a draft that does not exist -- "
+             "telling somebody their advert is saved somewhere it is not is worse than the gap.",
+       ref="RG-0408 WA-SELFSEND-1 · RG-0413 DOOR-FUNNEL-1 · RUL-146 · QUICK_LISTING_SPEC.md D2 · "
+           "RG-0395 QUICK-RETURN-1 (the Montana case)")
+def rg_door_return_1():
+    d = repo_file("genie/q_index.html")
+    if d is None:
+        return [(INFO, "NOT EVALUATED - genie/q_index.html is not readable from here")]
+    if "DOOR-RETURN-1" in d:
+        return [(INFO, "the public door offers a way back that does not depend on email alone -- "
+                       "walk it in a real browser, then lock")]
+    if "wa.me/" in d:
+        return [(FAIL, "the public door emits a WhatsApp link while DOOR-RETURN-1 is unbuilt -- "
+                       "check it does not promise a draft the server never received")]
+    return [(FAIL, "the only way back from the public door is an emailed sign-in link plus one "
+                   "browser's localStorage -- the two things this market is least likely to have "
+                   "(RG-0414)")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

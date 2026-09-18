@@ -405,6 +405,7 @@ function setNav(){
 
 /* ---------------- door ---------------- */
 function drawDoor(){
+  qTrack('q_door');            /* DOOR-FUNNEL-1: landed on the door a letter points at */
   mode=null; step=0; picks=[]; narrow=[]; taps=0; atBuzz=false;
   paintTheme(); setNav();
   var c=cat();
@@ -448,6 +449,7 @@ function swipe(d){
 function start(m){ mode=m; step=0; picks=[]; narrow=[]; taps=0; clearInterval(heroTimer); drawStep(); }
 function drawStep(){
   setNav();
+  try{ qTrack('q_step_'+(step+1)); }catch(e){}   /* DOOR-FUNNEL-1: which question lost them */
   var f=flow();
   if(step>=f.steps.length){ drawResult(); return; }
   var s=f.steps[step];
@@ -706,6 +708,49 @@ function lsOf(picks, photos){
    whatever is sent; unknown keys are ignored by the Listing model, so only real
    model fields are sent below; the reply is {id, message}.
    ------------------------------------------------------------------------- */
+/* DOOR-FUNNEL-1 (19 Sep 2026). THE DOOR THE LETTERS POINT AT WAS THE DARK ONE.
+   QUICK-FUNNEL-1 (18 Sep, RG-0405) instrumented quick.html and the board has been read
+   ever since as "the Quick door is measured". PROBED on the LIVE page 19 Sep: the eight
+   outreach templates link to https://trustsquare.co/q/<cat>, which serves THIS file, and
+   on it `typeof qTrack` is 'undefined' -- not one beacon, ever. Everything anybody
+   believes about arrivals at the Quick door was measured on a different page. Same class
+   as SELLFLOW-RETURN-1: a fix proven on a case is not proven on the case's LANE.
+   Contract copied from quick.html rather than imported, because this file is served
+   standalone and must keep working opened from a Downloads folder, where it measures
+   nothing by design. Fire-and-forget: never throws, never blocks, never changes what the
+   visitor sees, and sends no address unless one has been typed into the ask. */
+var _qfSid='', _QF_BASE='';
+try{ _QF_BASE = (location.protocol==='file:') ? '' : location.origin; }catch(e){ _QF_BASE=''; }
+function qTrack(stepName, meta){
+  try{
+    if(!_QF_BASE) return;                      /* file:// dry run -- measure nothing */
+    if(!_qfSid){
+      try{ _qfSid=sessionStorage.getItem('ms_ob_sid')||''; }catch(e){}
+      if(!_qfSid){ _qfSid='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+                   try{ sessionStorage.setItem('ms_ob_sid',_qfSid); }catch(e){} }
+    }
+    var sp=null; try{ sp=new URLSearchParams(location.search); }catch(e){}
+    var body={sid:_qfSid, step:String(stepName||'').slice(0,40), meta:meta||null, magic:false,
+              src:(sp&&sp.get('src')?String(sp.get('src')).slice(0,120):''),
+              cat:(function(){ try{ return String((cat()&&(cat().key||cat().name))||''); }catch(e){ return ''; } })(), sub:'',
+              email:(window._doorMail||'')};
+    fetch(_QF_BASE+'/onboard/step',{method:'POST',keepalive:true,
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(function(){});
+  }catch(e){}
+}
+/* FUNNEL-HUMAN-1's dwell beacon: 12 s on the page AND a real pointer/key/scroll event.
+   Carried from the first beacon this door ever posts, so it can never repeat the
+   scanner-counted-as-a-person fault FUNNEL-DENOM-1 had to unpick on 18 Sep. Mail
+   security scanners fetch every URL in every letter, and this page is IN every letter. */
+var _qfDwellSent=false,_qfArmed=false,_qfInput=false;
+function _qfDwellFire(){ if(_qfDwellSent||!_qfArmed||!_qfInput) return; _qfDwellSent=true; qTrack('dwell'); }
+try{
+  setTimeout(function(){ _qfArmed=true; _qfDwellFire(); },12000);
+  ['pointerdown','keydown','touchstart','wheel','scroll'].forEach(function(ev){
+    window.addEventListener(ev,function(){ _qfInput=true; _qfDwellFire(); },{passive:true});
+  });
+}catch(e){}
+
 var HANDOVER={url:'', key:'', email:''};   /* the host page fills these when signed in */
 function handoverPayload(){
   var c=cat(), key=c.name.toLowerCase();
@@ -747,6 +792,7 @@ function handOver(done){
 }
 
 function drawDraft(){
+  qTrack('q_draft');           /* DOOR-FUNNEL-1: the advert was composed and shown */
   var c=cat();
   var title=c.draftTitle(picks);
   var facts=picks.map(function(p){return '<span>'+p.label+'</span>';}).join('');
@@ -845,6 +891,7 @@ function drawDraft(){
        answers. Nothing here claims more than that. */
     var mail = (window._doorMail||'').trim();
     btn.disabled=true; btn.textContent='Sending your link…';
+    qTrack('q_handover');       /* DOOR-FUNNEL-1: an address was given and the link asked for */
     try{
       localStorage.setItem('ts_quick_draft', JSON.stringify({
         category: cat().name, title: cat().draftTitle(picks),
@@ -865,6 +912,7 @@ function drawDraft(){
           $('pubhint').textContent='Nothing was sent.';
           return;
         }
+        qTrack('q_signin_sent');  /* DOOR-FUNNEL-1: the one thing this door can actually do, done */
         btn.textContent='\u2713 Check your email';
         box.innerHTML='<b>Your sign-in link is on its way to '+mail.replace(/[<>&]/g,'')+'.</b> '
           +'Open it on this phone and your advert is waiting, filled in exactly as you see it '
