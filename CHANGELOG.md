@@ -24154,3 +24154,48 @@ Lesson worth keeping: `sent` is EXECUTED, not PROBED. A mail that reports succes
 that works.
 
 Cost model impact: none.
+
+### Run 13, part 2 — the wall (18 Sep 2026)
+
+David pushed back twice on the same pattern: work gets done, the action stays open. He was right,
+and the thing I had actually left undone was that I sent the Montana composer a link to a journey
+nobody had ever proven worked — the "still unproven as ONE walk" line that has sat in GOAL_STATE
+since the goal began.
+
+Walked it in a real browser as that seller. **It was a dead end.** Sign in from the emailed link →
+My Seller Hub → the draft is there marked "Draft — not visible yet" with a Publish button → tap it →
+toast "You must accept the TrustSquare Terms before publishing" → nothing opens. No terms, no way to
+accept them. `dashPublish()` turned the server's 403 into a toast and stopped. Not a rare case:
+quick.html creates no account, so `eula_accepted_at` is NULL for every first-time Quick composer.
+This is why the number is 0 with a finished 94-score advert on the books.
+
+**HUB-EULA-1 (RG-0396).** The hub's Publish now hands a stranded draft to the seller-onboarding
+flow, where `sobInit()` opens the Terms and `_sobGoLiveInner()` registers the account, stamps the
+acceptance and publishes — machinery that already existed and that EULA-ORDER-1 wired into the
+guided lane on 3 Sep while the hub button was left behind. It seeds only the listing the seller
+tapped, so accepting does not silently take his other drafts live, and it never stamps acceptance on
+his behalf: he reads and ticks, which is what makes the clause bind (CPA s49).
+
+**Proven end to end, and it is the first time this walk has ever been proven** (07:29, live browser,
+phone width): link → signed in → hub → draft → Publish → Terms → read, tick, Go live →
+`listing_status 'live'`, `published_at 07:29:29`, `eula_accepted_at 07:29:28`. Both probes agree —
+an anonymous `GET /listings` returned it. Test rows 386/387/388 archived immediately after.
+
+Two findings recorded on the way, neither of them David's to action:
+
+- **The EULA the seller actually ticks is a fourth, unsynced copy.** The acceptance box in
+  `marketsquare.html` reads v1.10 (footer v1.9) while `eula_clean.html`/`terms.html`/ms.js are
+  v1.17. `eula_sync.py` knows three copies, not four, so RG-0077 reports "in sync" while the
+  document people agree to is seven versions behind. Left for its own session — it is the legal
+  text a person consented to, not a tail-end edit.
+- **RG-0253 was a false RED (LEDGER-FOLLOW-1).** It read a window from `sobGoLive`, which
+  SEAM-PROOF-1 had reduced to a wrapper, found neither call (`reg@-1 eula@-1`) and reported an
+  inversion. The order is correct in `_sobGoLiveInner` and tonight's live publish proves it. The
+  checker now follows the delegation, and -1 now reads as "lost its target, UNVERIFIED".
+- Also identified: the earlier "flaky" red was **Cloudflare error 1010** blocking server-side calls
+  to the public hostname — a 403 whose body is not JSON. Not a hiccup. On-box probes should use
+  `http://127.0.0.1:8000`.
+
+Board green, rulings 0 FAIL. The number is still 0 — but the wall in front of it is gone.
+
+Cost model impact: none.

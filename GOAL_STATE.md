@@ -86,6 +86,57 @@ Target: **20 by Fri 31 Oct 2026.** Model: runs 5–8, 11, 12 Fable 5.1; runs 9�
    Two zero-byte scratch files sit in a gitignored `_to_delete/`; the sandbox cannot delete and
    they are invisible to git - not a task for anyone.
 
+## RUN 13, PART 2 — THE WALL, FOUND AND REMOVED (18 Sep, after David pushed back twice)
+
+David's objection, and it was correct: I kept doing something and leaving the action open. The second
+time, the thing I had left undone was that **I sent the Montana man a link to a journey nobody had
+ever proven worked** — the "still unproven as ONE walk" line that has sat in this file since the goal
+began. So I walked it, in a real browser, as him.
+
+**IT WAS A DEAD END, and it is the whole reason the number is 0.**
+Sign in from the emailed link → land on My Seller Hub → the draft is there, marked *"Draft — not
+visible yet"*, with a **Publish** button → tap it → toast: *"You must accept the TrustSquare Terms
+before publishing"* → **and nothing opens. No terms, no way to accept them.** Listing stays a draft.
+`dashPublish()` turned the server's 403 into a toast and stopped. That is not rare — quick.html
+creates no account, so `eula_accepted_at` is NULL for EVERY first-time Quick composer. Every single
+one of them hit this.
+
+**HUB-EULA-1 / RG-0396 — fixed, shipped, proven.** The hub's Publish now hands a stranded draft to
+the seller-onboarding flow, where `sobInit()` opens the Terms and `_sobGoLiveInner()` registers,
+stamps the acceptance and publishes (the machinery already existed — EULA-ORDER-1 fixed this for the
+guided lane only, back on 3 Sep; the hub button never got it). It seeds ONLY the listing he tapped,
+so accepting does not silently take his other drafts live. It does NOT stamp acceptance for him: he
+reads and ticks, which is what makes the clause bind.
+
+**THE WALK IS NOW PROVEN END TO END, for the first time since the goal began** (18 Sep 07:29, live
+browser, phone width): emailed link → signed in → hub → draft → Publish → Terms → read, tick, Go
+live → `listing_status 'live'`, `published_at 07:29:29`, `eula_accepted_at 07:29:28` stamped one
+second earlier by the seller's own tick — **and both probes agree**: an anonymous `GET /listings`
+returned it. Test rows 386/387/388 archived immediately afterwards; nothing seeded is left anywhere
+the number could count it.
+
+### TWO THINGS FOUND ON THE WAY, BOTH RECORDED, NEITHER DAVID'S
+
+1. **The EULA the seller actually ticks is a FOURTH, UNSYNCED COPY.** The acceptance box inside
+   `marketsquare.html` (`sob-eula-box`) reads **Version 1.10, 23 July 2026**, and its own footer says
+   **v1.9** — while `eula_clean.html` / `terms.html` / the ms.js literal are now **v1.17**.
+   `scripts/eula_sync.py` syncs three copies and does not know about this one, so RG-0077 reports
+   "in sync" while the document people are actually agreeing to is two months and seven versions
+   behind. This is EULA-FORK-1 exactly, one copy further on. **NEXT RUN: bring the sob box under
+   eula_sync.py and extend RG-0077 to assert four copies, not three.** Not done tonight: it is
+   the legal text a person agreed to, and it deserves its own session rather than the tail of this one.
+2. **RG-0253 was a false RED and is fixed (LEDGER-FOLLOW-1).** It read a 6000-char window from
+   `sobGoLive`, which SEAM-PROOF-1 had reduced to a wrapper — so it found NEITHER the register nor
+   the EULA call (`reg@-1 eula@-1`) and reported an inversion. The ordering is correct in
+   `_sobGoLiveInner`, and tonight's live publish proves it. The checker now follows the delegation,
+   and an index of -1 now says "this check has lost its target, UNVERIFIED" instead of crying
+   regression. Sibling of the Cloudflare finding below.
+3. **The "flaky" ledger red from part 1 has a real cause: Cloudflare.** A server-side call to
+   `https://trustsquare.co` is answered with **`error code: 1010`** (bot block) — a 403 whose body is
+   not JSON, which is exactly the `JSONDecodeError` that made RG-0386 look regressed. Not a network
+   hiccup. The `_get_json()` retry/ProbeOffline fix noted in part 1 is still the right fix and is
+   still open; probes that must reach the app from the box should use `http://127.0.0.1:8000`.
+
 ## SUPPLY — ASSOCIATION LANE NEARLY DONE; LICENCE FILES CARRY NO MAILBOX
 
 - Harvested + drawn: rrca, pacific, moga, wyoga, coa, apha, mpga. New association = one dict entry in
@@ -150,14 +201,11 @@ they are different sizes:
 
 ## OPEN QUESTIONS FOR DAVID (batched, never dripped)
 
-**None.** The one thing this run had been holding back - mailing the Montana composer - was sent.
-Listing 382 is still a draft because **publishing it is his act, not ours** (ONBOARDING_GOAL s3,
-RUL-117(c)); he now has a working link to it and that is the whole of what we may do.
+**None.** Nothing from this run is waiting on David.
 
-A NOTE FOR THE NEXT SESSION, not a question: the button he pressed says **"Publish it"** and hands
-back a draft. RUL-117(c) rules that app ends at a draft, so the wording is the honest thing to
-change, not the behaviour - but changing what a ruled screen SAYS is still David's, so no session
-should quietly reword it. Raise it once, plainly, if he asks what else is in the way.
+Listing 382 is still a draft because publishing it is the seller's own act (ONBOARDING_GOAL s3,
+RUL-117(c)). He has a working link, and as of 07:29 tonight the path behind that link actually
+works. If he taps it, the number becomes 1.
 
 ## WHAT RUN 13 LEARNED ABOUT ITSELF (read before parking anything as 'reserved')
 

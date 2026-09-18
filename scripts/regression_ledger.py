@@ -15321,7 +15321,17 @@ def rg_stop_loss_release():
 def rg_eula_order_first_seller():
     out = []
     def check(js, label):
-        i = js.find("async function sobGoLive")
+        # LEDGER-FOLLOW-1 (18 Sep 2026): SEAM-PROOF-1 split the work out of sobGoLive into
+        # _sobGoLiveInner, and this check kept reading a 6000-char window from the WRAPPER --
+        # which still carries the EULA-ORDER-1 comment but no longer the two fetches. It went
+        # RED with "reg@-1 eula@-1" (found NEITHER call), i.e. the instrument had lost its
+        # target, while the property itself was fine: PROVEN end-to-end in a live browser
+        # 18 Sep 07:29 -- a first-time seller published, eula_accepted_at 07:29:28 stamped
+        # one second BEFORE published_at 07:29:29. An index of -1 is a checker that cannot
+        # see, never evidence of an inversion; say so rather than crying regression.
+        i = js.find("function _sobGoLiveInner")
+        if i < 0:
+            i = js.find("async function sobGoLive")
         if i < 0:
             return [(FAIL, "%s: sobGoLive is gone" % label)]
         body = js[i:i + 6000]
@@ -15329,9 +15339,15 @@ def rg_eula_order_first_seller():
             return [(FAIL, "%s: EULA-ORDER-1 block missing from sobGoLive -- first-time sellers get 403 at publish" % label)]
         reg = body.find("fetch(BEA_URL + '/users', {")
         eula = body.find("/eula'")
-        if reg < 0 or eula < 0 or reg > eula:
-            return [(FAIL, "%s: sobGoLive stamps the EULA before registering the account (reg@%d eula@%d)" % (label, reg, eula))]
-        return [(INFO, "%s: register precedes EULA stamp in sobGoLive" % label)]
+        if reg < 0 or eula < 0:
+            return [(FAIL, "%s: the go-live path no longer shows BOTH the account registration "
+                           "and the EULA stamp (reg@%d eula@%d) -- this check has lost its target, "
+                           "so the ordering is UNVERIFIED here, not proven inverted (LEDGER-FOLLOW-1)"
+                           % (label, reg, eula))]
+        if reg > eula:
+            return [(FAIL, "%s: the go-live path stamps the EULA before registering the account "
+                           "(reg@%d eula@%d) -- first-time sellers get 403 at publish" % (label, reg, eula))]
+        return [(INFO, "%s: register precedes EULA stamp on the go-live path" % label)]
     js = repo_file("ms.js")
     out += check(js, "repo ms.js") if js is not None else [(INFO, "ms.js not beside the ledger -- source leg skipped")]
     try:
@@ -24195,7 +24211,16 @@ def rg_wave_server_only():
              "NULL for EVERY first-time Quick composer. This is the last wall between the "
              "onboarding number and 1 -- RG-0395 got the man back to his advert, this lets him "
              "publish it. It must NEVER be 'fixed' by stamping acceptance for him: he reads and "
-             "ticks, which is what makes the clause bind (CPA s49, RUL-133/BUZZ-ACCEPT-1).",
+             "ticks, which is what makes the clause bind (CPA s49, RUL-133/BUZZ-ACCEPT-1). "
+             "PROVEN END TO END IN A REAL BROWSER after the fix, 18 Sep 07:29 -- and this is the "
+             "FIRST time the whole walk has ever been proven, the item GOAL_STATE has carried as "
+             "'still unproven as ONE walk' since the goal began: emailed sign-in link -> signed in "
+             "-> My Seller Hub -> the draft is there marked 'Draft - not visible yet' -> tap "
+             "Publish -> the Terms screen opens (it used to dead-end here) -> read, tick both "
+             "boxes, Go live -> listing 388 listing_status 'live', published_at 07:29:29, "
+             "users.eula_accepted_at 07:29:28 stamped one second earlier by the seller's own tick "
+             "-> and BOTH probes agree: an anonymous GET /listings returns it. Test rows archived "
+             "after (386/387/388); no seeded row is ever left where the number can count it.",
        ref="RG-0395 (the return path) · EULA-ORDER-1/WALK-1 (3 Sep, same fault fixed in the guided "
            "lane only) · GUIDED-PUBLISH-1 S138 (dashPublish itself) · ONBOARDING_GOAL.md section 3.")
 def rg_hub_eula_1():
