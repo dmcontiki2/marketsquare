@@ -16,7 +16,7 @@ audit reports, chat threads) FEEDS this file; David reads only this.
 
 Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. Not duplicated here.
 
-**Last reconciled: 2026-09-18 03:3xZ (stand-up, mechanical — SO-3/RUL-037; second pass after David's 03:1xZ approval closed six more rows).** Previous
+**Last reconciled: 2026-09-18 03:3xZ (stand-up, mechanical — SO-3/RUL-037; second pass after David's 03:1xZ approval closed six more rows).** **Third pass 2026-09-18 09:0xZ: L3 closed against production evidence (David: "Please close it"); LIVE LOOPS now holds L7 alone.** Previous
 reconciliation 2026-08-20 — **twenty-eight days** in which this file was not the integrator it
 claims to be. The cause is now named rather than deplored: every stand-up between 2 Aug and
 18 Sep ran cloud-only with **no write path to this repo**, so sessions could read this file and
@@ -45,7 +45,6 @@ not the reconciliation.
 
 | # | Loop | Owner | Single next action | Opened | Source |
 |---|------|-------|--------------------|--------|--------|
-| L3 | **SCOREBOARD-1 — the blocker was never the deploy, and it was never a David click.** Diagnosed 18 Sep: `enable_scoreboard.bat` is INTERACTIVE (`choice /M` + `pause`), so the host-queue worker would hang on it forever — under RUL-095 running a bat is Claude's, but only if a machine can run it. That, not the deploy, is why this row aged six weeks as [D]. **BUILT 18 Sep:** `enable_scoreboard_unattended.bat` — same flag, same probe round, no prompts; CRLF-converted after the repo's own `check_bat_crlf.py` caught LF endings; allowlisted; **queued** under David's 18 Sep approval. | [C] | **NOT YET CLOSED — the queued action has not reported.** Read `host_queue/done/20260918-032105-900_run_bat_marketsquare-enable-scoreboard-unattended.result` and re-probe for a live scoreboard surface before this closes. Reporting it done on the strength of having queued it is the evidence-ladder error this file exists to prevent. | 2026-08-03 | CHANGELOG SCOREBOARD-1 |
 | L7 | **Tooling-through-the-gate** — GATE-ENFORCE-2 (13 Aug) raises the origin token gate; on-box/edge tooling reading data endpoints anonymously (maintenance-loop intake, server smoke data probes) will 401. UA-EDGE-1's sibling. Ledger already fixed (reads via reviewer cookie). | [C] | NARROWED same day: agent verified UNAFFECTED (localhost default; RG-0053 now asserts it structurally). Remaining: attended off-box tools (fault_reconcile, cost sweep) need the reviewer cookie when next used; server smoke data probes need cookie or localhost vantage. | 2026-08-13 | changelog.d 2026-08-13-gate-enforce-activated |
 
 ## ⚪ DECISIONS AWAITING DAVID / COUNSEL — ranked
@@ -62,6 +61,27 @@ not the reconciliation.
 ## ✅ CLOSED — last 7 days
 
 ### Closed 2026-09-18, second pass — David: *"I approve all changes, please implement and close all of them."*
+
+- **L3 CLOSED — SCOREBOARD-1 is LIVE in production, proven end to end, not proven by having queued it.**
+  David, 18 Sep 2026: *"Please close it."* The queued action DID report: `run_bat
+  MarketSquare\enable_scoreboard_unattended.bat` returned **rc=0 at 05:35:23** ("FLAG ON", 13 probes,
+  est $0.00021). Verified afterwards ON THE PRODUCTION BOX, not from the result file:
+  `launch_switches.scoreboard_enabled = 1` in `/var/www/marketsquare/marketsquare.db`, and
+  `ai_scoreboard_probes` holding real rows. **The row's own close-test was wrong and is corrected
+  here: there is NO "live scoreboard surface" to re-probe.** SCOREBOARD-1 has no HTTP route by
+  design — `grep` for a scoreboard route in `bea_main.py` returns nothing; it is a nightly
+  background agent whose artifact is `ai_scoreboard.json`. Asking for a surface that was never built
+  would have kept this row open forever.
+  **The gap that check found, and it was real:** the bat's step 2 runs `--probe --force --report`,
+  which prints a report and does NOT write the json — only `run_nightly()` does. So after 05:35 the
+  flag was on and the artifact did not exist. Closed by running the agent's own scheduled entry
+  point once against production: `ai_scoreboard.run_nightly()` → "probe round done — 13 probes,
+  est $0.00018" → **"ranking written -> /var/www/marketsquare/ai_scoreboard.json"** (4,463 bytes,
+  09:01Z; probe total 13 → 26). The whole nightly path is now walked, not assumed.
+  **The loop itself is alive:** `journalctl -u marketsquare` shows the BEA startup task firing at
+  01:33 every night (16, 17, 18 Sep), each time logging *"scoreboard: disabled ... no probes sent"* —
+  correct behaviour while the flag was off, and the proof the scheduler was never the problem. The
+  19 Sep 01:33 run is the first that does real work. Reverse: `disable_scoreboard.bat`.
 
 - **D4 CLOSED — all four country supplements are IN `privacy.html`, not drafted beside it.** Supplement A
   (United Kingdom — UK GDPR/DPA 2018: lawful-basis list, Art 22 position, IDTA/UK Addendum transfers, PECR
