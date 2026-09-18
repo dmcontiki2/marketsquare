@@ -171,6 +171,25 @@ EULA → list → AI-guided trust score*. The US outfitter letter lane is no lon
 
 ## OPEN LOOPS (run 13 + run 14)
 
+**FOUND 18 Sep EVENING — three things another lane or an old deploy left, none of them David's:**
+- **The EULA is mid-landing and the version register has not moved.** `eula_clean.html`,
+  `terms.html` and ms.js's `_EULA_HTML` were bumped **v1.16 -> v1.17 (version stamp only, no
+  clause text changed)** by another lane at ~19:13 while this session was running, and they sit
+  UNCOMMITTED in the working tree. `canon.yml` and `LEGAL_VERSIONS.md` still say v1.16, so
+  `rulings_check.py` now reports **1 FAIL on RUL-133** — correctly: landing a version is atomic
+  (P5/P10) and this landing is half done. **Deliberately not touched and not committed by run 14**:
+  it is legal text and another lane owns it (SO-5). Whoever finishes it must do the whole landing,
+  not just green the checker — and must NOT `git add -A` it in passing.
+- **The CityLauncher dashboard on the server is weeks stale.** `/var/www/citylauncher/
+  citylauncher.html` is **54,945 bytes** against the repo's **92,569**, and carries NONE of the
+  markers the repo copy has — not even OPTOUT-COUNT-1, which shipped 31 Aug. So the API half of
+  STATS-HUMAN-1 (RG-0403) is live and correct, and the PAGE half never arrived, which is exactly
+  the "honest API, raw repaint" split that entry was written to prevent. **Ask David where he
+  actually reads the board before deploying over it** — the server copy may not be the page he opens.
+- **The sandbox cannot remove `.git/index.lock`** (mount refuses unlink), so a sandbox commit needs
+  `scripts/git_unlock.py` run before AND after. Two locks were healed this evening; 19 orphaned
+  `tmp_obj` files await the host sweep.
+
 - **RUN 14: `_get_json()` still does not exist.** Run 13 specified it; nothing wrote it. RG-0401
   (EDGE-BLIND-1) fixed `_get()` to raise ProbeOffline on an edge refusal, which covers most of it,
   but the 14 `json.loads(_get(...))` call sites are still individually unprotected against a 200
