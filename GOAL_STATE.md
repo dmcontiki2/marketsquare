@@ -145,23 +145,29 @@ warning, made now rather than on 31 October.
 - Older dead ends stand: USATF finder/regionals · NY DEC guides · US search scraping · orienteeringusa
   · skifederation · americancanoe · americanhiking · adventurecycling · coloradooutfitters.org.
 
-## WHAT THE NEXT RUN SHOULD PICK UP (rewritten by run 14 — run 13's list is superseded)
+## WHAT THE NEXT RUN SHOULD PICK UP — **DIRECTION CHANGED BY DAVID, 18 Sep evening**
 
-1. Run the number. Then read `GET /onboard/funnel?days=21` and **read `human_funnel` and
-   `letter_humans`, never `funnel`** (FUNNEL-DENOM-1). Watch `published_at` on listing **382**.
-2. Ledger in shards (`--shard=k/8`, then `--combine=8`) + rulings check. Both green at the end of
-   run 14. **If the board opens RED, clear `.git/index.lock` with `scripts/git_unlock.py` and
-   re-run before believing it** — that was both of run 14's opening REDs.
-3. **THE ONE JOB: the letter. 8 human clicks from ~320 human opens.** This is now the only large
-   measurable loss in the whole chain and it is explicitly mine (ONBOARDING_GOAL s5, "change the
-   email"). Read the letter as a working outfitter would at 06:00. Change ONE thing, ship it, and
-   let the wave measure it — `click_register.tier` grades human vs machine already, so an A/B is
-   readable without new instrumentation. Do not change the app's first screen: run 14 proved
-   nothing is being lost there.
-4. Supply is NOT the constraint any more and should not take a run's budget: 4,257 letters are
-   already on the list unsent. More names do not help while 2.4% of readers click.
-5. If the letter rewrite does not move the click rate within ~2 waves, the honest next question is
-   a different channel, and that is a section-9 STALLED report, not more letters.
+**READ `QUICK_LISTING_SPEC.md` BEFORE DOING ANYTHING ELSE. It supersedes the letter-rewrite
+plan below it.** David redirected the goal on the evening of 18 Sep: the target market is
+South African casual services — **housecleaners first**, then waiters, petrol jockeys, truck
+drivers — reached through the Quick door, in the shape *promise → visual → 4 clicks → email →
+EULA → list → AI-guided trust score*. The US outfitter letter lane is no longer the main line.
+
+1. Run the number. Read `human_funnel` / `letter_humans`, never `funnel` (FUNNEL-DENOM-1).
+   **NEW: the Quick door now reports too** — `q_door`, `q_step_<n>`, `q_draft`, `q_handover`
+   (QUICK-FUNNEL-1, shipped 18 Sep evening). This is the first data we have ever had on it;
+   read it before forming any opinion about the Quick lane.
+2. Ledger in shards (`--shard=k/8`, then `--combine=8`) + rulings check. If the board opens
+   RED, clear `.git/index.lock` with `scripts/git_unlock.py` and re-run before believing it.
+3. **DO NOT start building the spec's items 3-5 until David has answered D1-D7.** They are
+   listed in `QUICK_LISTING_SPEC.md` sections 4 and 7 and several of them change a ruling,
+   which is reserved. He was asked on 18 Sep and is away at a chess tournament on 19 Sep.
+4. **What IS unblocked and worth doing without him:** watch the new Quick beacons; prove one
+   walk end to end from `/q/homehelp` in a real browser at phone width as a stranger, and
+   write down exactly where it breaks. That walk has never been done for a Quick-origin
+   draft — the 18 Sep proof used seeded rows.
+5. Do not rewrite the outfitter letter yet. The letter analysis in section 5 below still
+   stands and is still true; it is simply no longer the first thing.
 
 ## OPEN LOOPS (run 13 + run 14)
 
