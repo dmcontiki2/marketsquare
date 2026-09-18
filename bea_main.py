@@ -3494,7 +3494,17 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
     # own draft. Gated on source=='quick' so no other lane that lands a draft (agency
     # import above all) ever mails anybody. Background: the hand-over must not wait on
     # a mail round-trip, and must not fail if mail does.
-    if (listing.source or "").strip().lower() == "quick" and listing.seller_email:
+    # SELLFLOW-RETURN-1 (18 Sep 2026): widened from "quick" to the self-serve composing
+    # lanes. The gate was written the night listing 382 was found -- a real Montana
+    # outfitter from a cold letter who built a complete advert and then sat invisible for
+    # six days -- and it did not cover the lane HE used. 382 was created at 15:37:09 on
+    # 12 Sep by the main app's guided sell-flow, which sent no source at all, so the fix
+    # for him would not have fired for the next him. The list is an ALLOWLIST of lanes
+    # that a person composed themselves, never "anyone with an address": the agency
+    # import lane sends no source and so still mails nobody, which is the property
+    # RG-0395 exists to protect.
+    _SELF_SERVE_LANES = ("quick", "sellflow")
+    if (listing.source or "").strip().lower() in _SELF_SERVE_LANES and listing.seller_email:
         background_tasks.add_task(_quick_draft_return, listing.seller_email,
                                   new_id, listing.title)
     # Wishlist matching deferred until listing goes live (draft listings not matched)

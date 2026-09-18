@@ -24549,5 +24549,98 @@ def rg_stats_human_1():
                           "register reports NOT MEASURED rather than zero")]
 
 
+@entry("RG-0404", "SELLFLOW-RETURN-1: EVERY lane a person composes an advert in mails them the "
+                  "way back to it -- the fix written for the man who was lost covers the road he "
+                  "actually walked",
+       LOCKED, fixed_on="2026-09-18",
+       scope="bea_main.py create_listing: the return-mail gate widens from source=='quick' to the "
+             "_SELF_SERVE_LANES allowlist ('quick','sellflow'); ms.js goHandoff() tags its draft "
+             "source:'sellflow'. THE FAULT, PROBED: RG-0395 shipped QUICK-RETURN-1 on 18 Sep "
+             "because listing 382 -- Rick Wemple, Montana, from a cold letter, the ONLY advert "
+             "anybody has ever built on TrustSquare -- sat as an orphan draft for six days with "
+             "no mail of any kind. But 382 was created at 15:37:09 on 12 Sep by the MAIN APP'S "
+             "GUIDED SELL-FLOW, not by the Quick door: its funnel session walked sfGo screens "
+             "(subpick/photos/photo_pick/features/legal/scorecard/finish/handoff) and quick.html "
+             "posts no funnel beacons at all, so a Quick origin would have left no trace. The "
+             "gate therefore excluded the very lane that produced the case it was written for, "
+             "and the next person to do exactly what he did would have got exactly what he got. "
+             "An ALLOWLIST of composing lanes, never 'anyone with a seller_email': the agency "
+             "import lane sends no source and still mails nobody, which is the property RG-0395 "
+             "exists to protect and which a blanket rule would have destroyed. "
+             "LESSON RECORDED: a fix proven on a case is not proven on the case's LANE -- check "
+             "which road the evidence actually came down before gating on it.",
+       ref="RG-0395 / QUICK-RETURN-1 (the gate this widens) · RG-0396 / HUB-EULA-1 (the wall "
+           "behind it) · RG-0402 / FUNNEL-DENOM-1 (how 382's provenance came to light) · "
+           "ONBOARDING_GOAL.md section 3 -- this mails a way back, it never publishes for anyone")
+def rg_sellflow_return_1():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        if "SELLFLOW-RETURN-1" not in bea:
+            out.append((FAIL, "the sell-flow lane is no longer mailed -- the lane that has "
+                              "produced every advert ever built is silent again"))
+        else:
+            seg = bea.split("QUICK-RETURN-1 (18 Sep 2026)", 1)[-1][:2500]
+            if "_SELF_SERVE_LANES" not in seg or "sellflow" not in seg:
+                out.append((FAIL, "the return-mail gate no longer carries the self-serve lane "
+                                  "allowlist"))
+            if "agency" not in seg.lower():
+                out.append((INFO, "the note that keeps the agency lane excluded has gone from "
+                                  "the gate -- the behaviour may still hold, the reason does not"))
+    ms = repo_file("ms.js")
+    if ms is not None:
+        if "source:         'sellflow'" not in ms and "source:'sellflow'" not in ms:
+            out.append((FAIL, "goHandoff no longer tags its draft as the sell-flow lane, so the "
+                              "server cannot tell a self-serve composer from an import"))
+    return out or [(INFO, "both self-serve composing lanes tag themselves and are mailed the way "
+                          "back; the agency import lane sends no source and mails nobody")]
+
+
+@entry("RG-0405", "QUICK-FUNNEL-1: the Quick door is not dark -- every screen a composer reaches "
+                  "posts a beacon, and a scanner rendering the page is told apart from a person",
+       LOCKED, fixed_on="2026-09-18",
+       scope="quick.html: qTrack() (the obTrack contract, copied rather than imported because "
+             "this file must keep working opened from a Downloads folder as a dry run, where it "
+             "measures nothing by design), the FUNNEL-HUMAN-1 dwell beacon, and one beacon per "
+             "screen: q_door, q_step_<n>, q_draft, q_handover / q_handover_dry. THE FAULT: "
+             "quick.html has posted ZERO funnel rows since it was built, while ms.js has carried "
+             "ONBOARD-FUNNEL-1 since 5 Sep. The Quick door has been linked from eight live "
+             "outreach templates since 14 Sep, so four days of real traffic to the lowest-"
+             "friction path we have is unmeasured and unmeasurable -- we cannot say whether one "
+             "person has ever arrived, which question loses them, or whether anybody has "
+             "finished. Found 18 Sep while costing David's proposal to aim the South African "
+             "housecleaner lane at this door: leaning on it would have been a decision taken "
+             "blind. Sibling of RG-0402 -- reading the funnel wrong cost a week of work aimed at "
+             "a leak that did not exist, and reading no funnel at all is the same mistake with "
+             "the lights off. The dwell beacon is carried from the start precisely so this door "
+             "never repeats the scanner-as-person fault the main app had to unpick.",
+       ref="ONBOARD-FUNNEL-1 / obTrack in ms.js (the contract mirrored here) · FUNNEL-HUMAN-1 "
+           "(the dwell beacon) · RG-0402 / FUNNEL-DENOM-1 · RUL-125(a) (the ruled /quick/ "
+           "sub-path) · QUICK_LISTING_SPEC.md section 3")
+def rg_quick_funnel_1():
+    out = []
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - quick.html is not readable from here")]
+    if "QUICK-FUNNEL-1" not in q:
+        out.append((FAIL, "the Quick door posts no funnel beacons again -- the lowest-friction "
+                          "lane we have is invisible"))
+        return out
+    for token, why in (
+        ("function qTrack(", "the beacon function is gone"),
+        ("/onboard/step", "the beacons no longer reach the funnel endpoint"),
+        ("q_door", "the landing beacon is gone -- arrivals at the door are uncounted"),
+        ("q_draft", "the composed-advert beacon is gone -- we cannot see who finished"),
+        ("q_handover", "the hand-over beacon is gone -- we cannot see a draft reach the server"),
+        ("_qfDwellFire", "the dwell beacon is gone, so a mail scanner rendering this page counts "
+                         "as a person -- exactly the fault FUNNEL-DENOM-1 had to unpick"),
+        ("location.protocol==='file:'", "the dry-run guard is gone; a copy opened from a "
+                                        "Downloads folder would post beacons to a live funnel")):
+        if token not in q:
+            out.append((FAIL, why))
+    return out or [(INFO, "the Quick door beacons door/step/draft/handover, tells a scanner from "
+                          "a person with the dwell beacon, and measures nothing on file://")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -503,6 +503,7 @@ function setNav(){
 
 /* ---------------- door ---------------- */
 function drawDoor(){
+  qTrack('q_door');            /* QUICK-FUNNEL-1: landed on the Quick door */
   mode=null; step=0; picks=[]; narrow=[]; taps=0; atBuzz=false;
   paintTheme(); setNav();
   var c=cat();
@@ -581,6 +582,7 @@ var FREE_LABEL = 'Another option';
 
 function drawStep(){
   setNav();
+  try{ qTrack('q_step_'+(step+1)); }catch(e){}   /* QUICK-FUNNEL-1: which question lost them */
   var f=flow();
   if(step>=f.steps.length){ drawResult(); return; }
   var s=f.steps[step];
@@ -943,6 +945,48 @@ function lsOf(picks, photos){
    whatever is sent; unknown keys are ignored by the Listing model, so only real
    model fields are sent below; the reply is {id, message}.
    ------------------------------------------------------------------------- */
+/* QUICK-FUNNEL-1 (18 Sep 2026). This door has been linked from live outreach letters
+   since 14 Sep and posted NOT ONE funnel beacon in that time -- ms.js has had ONBOARD-
+   FUNNEL-1 since 5 Sep, quick.html never got it. So every visit to /q/<category> has
+   been invisible: we cannot say how many people arrived, which question lost them, or
+   whether anybody has ever finished. On 18 Sep the onboarding goal proved that reading
+   the funnel wrong had already cost a week of work aimed at a leak that did not exist;
+   reading NO funnel is the same mistake with the lights off. Deliberately a copy of
+   ms.js's obTrack shape rather than an import -- this file is served standalone and
+   must keep working opened from a Downloads folder as a dry run.
+   Fire-and-forget: never throws, never blocks, never changes what the seller sees.
+   No address is ever sent unless the seller has typed one into the hand-over. */
+var _qfSid='', _QF_BASE='';
+try{ _QF_BASE = (location.protocol==='file:') ? '' : location.origin; }catch(e){ _QF_BASE=''; }
+function qTrack(stepName, meta){
+  try{
+    if(!_QF_BASE) return;                      /* file:// dry run -- measure nothing */
+    if(!_qfSid){
+      try{ _qfSid=sessionStorage.getItem('ms_ob_sid')||''; }catch(e){}
+      if(!_qfSid){ _qfSid='q'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+                   try{ sessionStorage.setItem('ms_ob_sid',_qfSid); }catch(e){} }
+    }
+    var sp=null; try{ sp=new URLSearchParams(location.search); }catch(e){}
+    var body={sid:_qfSid, step:String(stepName||'').slice(0,40), meta:meta||null, magic:false,
+              src:(sp&&sp.get('src')?String(sp.get('src')).slice(0,120):''),
+              cat:(function(){ try{ return String((cat()&&(cat().key||cat().name))||''); }catch(e){ return ''; } })(), sub:'',
+              email:(typeof HANDOVER!=='undefined'&&HANDOVER&&HANDOVER.email)?HANDOVER.email:''};
+    fetch(_QF_BASE+'/onboard/step',{method:'POST',keepalive:true,
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(function(){});
+  }catch(e){}
+}
+/* FUNNEL-HUMAN-1's dwell beacon, same contract as ms.js: 12 s on the page AND a real
+   pointer/key/scroll event. Without it every mail-scanner that renders this door counts
+   as a person, which is exactly the fault FUNNEL-DENOM-1 had to unpick on 18 Sep. */
+var _qfDwellSent=false,_qfArmed=false,_qfInput=false;
+function _qfDwellFire(){ if(_qfDwellSent||!_qfArmed||!_qfInput) return; _qfDwellSent=true; qTrack('dwell'); }
+try{
+  setTimeout(function(){ _qfArmed=true; _qfDwellFire(); },12000);
+  ['pointerdown','keydown','touchstart','wheel','scroll'].forEach(function(ev){
+    window.addEventListener(ev,function(){ _qfInput=true; _qfDwellFire(); },{passive:true});
+  });
+}catch(e){}
+
 var HANDOVER={url:'', key:'', email:''};   /* the host page fills these when signed in */
 /* QUICK-LIVE-1 (15 Sep 2026, David: "add it there and make it live"). The host page
    is now TrustSquare itself. Served from the app's own origin this fills the hand-over
@@ -1039,6 +1083,7 @@ function handOver(done){
 }
 
 function drawDraft(){
+  qTrack('q_draft');           /* QUICK-FUNNEL-1: the advert was composed and shown */
   var c=cat();
   var title=c.draftTitle(picks);
   var facts=picks.map(function(p){return '<span>'+p.label+'</span>';}).join('');
@@ -1150,6 +1195,7 @@ function drawDraft(){
         return;
       }
       btn.textContent='✓ Handed over';
+      qTrack(res.dry?'q_handover_dry':'q_handover');   /* QUICK-FUNNEL-1: the draft reached the server */
       if(res.dry){
         box.textContent='DRY RUN — no server is wired to this prototype. This is exactly '
           +'what would be posted to /listings:\n\n'+JSON.stringify(res.body,null,1);

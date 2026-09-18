@@ -8314,6 +8314,16 @@ async function goHandoff() {
           description:    f.description || '',
           seller_email:   goState.email,
           listing_status: 'draft',
+          /* SELLFLOW-RETURN-1 (18 Sep 2026). QUICK-RETURN-1 mails a composer the way back
+             to his own draft, gated on source=='quick'. This lane sent NO source at all,
+             so it got no mail -- and this is the lane that produced listing 382: Rick
+             Wemple, Montana, the only advert anybody has ever built on TrustSquare, who
+             finished it at 15:37:09 on 12 Sep and then heard nothing for six days because
+             the hand-back screen died with his tab. The fix that was written for him did
+             not cover the road he actually walked. Naming the lane here (rather than
+             mailing anyone with an address) keeps the agency-import lane excluded by
+             construction: it sends no source, so it still mails nobody. */
+          source:         'sellflow',
         };
         // BEDS-PUBLISH-1 (23 Jul 2026, Maroushka feedback): structured category fields
         // were dropped on the CREATE path (only the PUT patch carried them), so a
