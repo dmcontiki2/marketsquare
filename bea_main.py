@@ -14800,6 +14800,25 @@ def onboard_funnel(days: int = 7, src: str = None, magic_only: int = 0, bots: in
         rows = conn.execute(f"SELECT COUNT(*) FROM onboard_steps WHERE {w}", args).fetchone()[0]
         humans = conn.execute(f"SELECT COUNT(DISTINCT sid) FROM onboard_steps WHERE {w} AND step='dwell' AND bot=0",
                               args).fetchone()[0]
+        # FUNNEL-DENOM-1 (18 Sep 2026). The docstring above calls `humans` "the denominator a
+        # conversion rate may be built on" -- and then `funnel` counts EVERY non-bot session,
+        # which is a different population sitting in the same table. Run 13 of the onboarding
+        # goal read "15 dwell -> 3 subpick" off those two columns and wrote the landed->first-tap
+        # gap down as the next thing to fix. It is not a gap: over 21 days only 3 of 65 ungraded
+        # letter landings ever stayed 12 s and touched the page, and 26 of the rest arrive inside
+        # the 22h UTC hour the wave fires -- mail scanners the UA grader did not catch. The step
+        # counts were reading scanner traffic as interest. So the honest funnel is reported next
+        # to the raw one, over the SAME sessions the `humans` count is built from, and a reader
+        # can no longer divide two populations by accident. Raw `funnel` is left byte-identical
+        # so no existing consumer changes meaning underneath itself.
+        human_sids = f"SELECT sid FROM onboard_steps WHERE {w} AND step='dwell' AND bot=0"
+        human_steps = {}
+        for r in conn.execute(f"SELECT step, COUNT(DISTINCT sid) FROM onboard_steps WHERE {w} "
+                              f"AND sid IN ({human_sids}) GROUP BY step", args + args):
+            human_steps[r[0]] = r[1]
+        letter_humans = conn.execute(
+            f"SELECT COUNT(DISTINCT sid) FROM onboard_steps WHERE {w} AND step='landed' "
+            f"AND sid IN ({human_sids})", args + args).fetchone()[0]
         bot_w = " AND ".join(x for x in where if not x.startswith("bot = 0"))
         bot_sessions = conn.execute(f"SELECT COUNT(DISTINCT sid) FROM onboard_steps WHERE {bot_w} AND bot=1",
                                     args).fetchone()[0]
@@ -14810,13 +14829,22 @@ def onboard_funnel(days: int = 7, src: str = None, magic_only: int = 0, bots: in
     ordered = [{"step": s, "sessions": steps.get(s, 0)} for s in _OB_ORDER if s in steps]
     extra = sorted(s for s in steps if s not in _OB_ORDER)
     ordered += [{"step": s, "sessions": steps[s]} for s in extra]
+    h_ordered = [{"step": s, "sessions": human_steps.get(s, 0)} for s in _OB_ORDER if s in human_steps]
+    h_ordered += [{"step": s, "sessions": human_steps[s]} for s in sorted(s for s in human_steps
+                                                                         if s not in _OB_ORDER)]
     return {"days": days, "since": since, "sessions": sessions, "humans": humans,
             "bot_sessions": bot_sessions, "ungraded_sessions": ungraded, "bots_included": bool(bots),
             "distinct_emails": with_email,
             "rows": rows, "funnel": ordered, "by_src": by_src, "by_cat": by_cat,
+            "human_funnel": h_ordered, "letter_humans": letter_humans,
             "note": "counts of distinct browser sessions per step; no addresses are returned; "
                     "scanner sessions excluded unless bots=1 (FUNNEL-HUMAN-1); humans = sessions "
-                    "that stayed 12 s and touched the page"}
+                    "that stayed 12 s and touched the page. READ human_funnel, NOT funnel, when "
+                    "you are asking where people fall out: funnel counts every non-bot session, "
+                    "including link scanners the UA grader missed, while human_funnel counts only "
+                    "the `humans` sessions -- the same denominator (FUNNEL-DENOM-1). "
+                    "letter_humans = sessions that arrived on an outreach link AND stayed; that "
+                    "is the true cold-outreach arrival count."}
 
 
 @app.get("/wonders")

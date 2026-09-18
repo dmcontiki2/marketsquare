@@ -24393,5 +24393,84 @@ def rg_edge_blind_1():
     return out or [(INFO, "an edge refusal is reported as blind (UNVERIFIED), never as a regression")]
 
 
+@entry("RG-0402", "FUNNEL-DENOM-1: the funnel reports where PEOPLE fall out, over the same "
+                  "sessions it calls the denominator -- a step count and the `humans` count may "
+                  "never be two different populations in one table",
+       LOCKED, fixed_on="2026-09-18",
+       scope="bea_main.py onboard_funnel(): adds human_funnel (per-step distinct sessions "
+             "restricted to the sessions that fired the 'dwell' beacon -- exactly the sessions "
+             "`humans` counts) and letter_humans (arrived on an outreach link AND stayed). The raw "
+             "`funnel` array is left byte-identical so no existing reader changes meaning "
+             "underneath itself; the note now says which one to read. WHY THIS IS THE ONBOARDING "
+             "GOAL AND NOT HOUSEKEEPING: the endpoint's own docstring called `humans` 'the "
+             "denominator a conversion rate may be built on', and the array printed beside it "
+             "counted EVERY non-bot session. Run 13 read '15 dwell -> 3 subpick' off those two "
+             "columns and wrote landed->first-tap down as the biggest measurable loss in the "
+             "funnel and the next thing to work on. PROBED on the live DB 18 Sep 2026 and it is "
+             "not a loss at all: over 21 days 156 non-bot sessions produced 28 that dwelled, and "
+             "only 3 of those 28 had a 'landed' row -- the other 25 were ordinary visitors with no "
+             "letter and so no category to sub-pick. 65 letter landings were ungraded by the UA "
+             "grader and never dwelled; 26 of them arrive inside the 22h UTC hour the wave fires "
+             "(00:10 SAST), which is the FUNNEL-HUMAN-1 scanner signature one layer on. The step "
+             "counts were reading mail-scanner traffic as interest, and a whole run of work was "
+             "about to be aimed at a wall nobody was standing in front of. The true cold-outreach "
+             "arrival count over 21 days is 3. PROVEN 9/9 before ship on a fixture holding a "
+             "scanner (landed+photos, no dwell), a real letter arrival, a walk-in human and a "
+             "graded bot: the raw funnel still counts the scanner at 'photos', human_funnel does "
+             "not, letter_humans counts only the letter arrival that stayed, and human_funnel is "
+             "<= funnel at every step.",
+       ref="FUNNEL-HUMAN-1 / RG-0300 class (the dwell beacon this builds the denominator from) · "
+           "ONBOARDING_GOAL.md section 2 (two probes must agree; PROBED beats EXECUTED beats READ) "
+           "· CLAUDE.md self-verification / S140 false-reading class · found in run 14 of the "
+           "onboarding goal while acting on run 13's 'near leak'.")
+def rg_funnel_denominator():
+    out = []
+    src = repo_file("bea_main.py")
+    if src is not None:
+        if "FUNNEL-DENOM-1" not in src:
+            out.append((FAIL, "the honest funnel is gone from onboard_funnel -- a reader can "
+                              "divide step counts by `humans` again, which is how run 13 invented "
+                              "a landed->first-tap leak that the data does not contain"))
+        else:
+            seg = src.split("def onboard_funnel(", 1)[-1][:6000]
+            for token, why in (
+                ("human_funnel", "human_funnel is no longer returned -- the only per-step counts "
+                                 "left share no denominator with `humans`"),
+                ("letter_humans", "letter_humans is no longer returned -- the true cold-outreach "
+                                  "arrival count is dark again"),
+                ("step='dwell'", "the human set is no longer built from the dwell beacon, so "
+                                 "'human' has quietly become something else")):
+                if token not in seg:
+                    out.append((FAIL, why))
+    try:
+        d = json.loads(_get("/onboard/funnel?days=21"))
+    except ProbeOffline as ex:
+        out.append((INFO, "live half UNVERIFIED -- the endpoint could not be read: %r" % (ex,)))
+        return out or [(INFO, "source half holds; live half blind")]
+    except Exception as ex:
+        out.append((FAIL, "/onboard/funnel is unreadable: %r" % (ex,)))
+        return out
+    if "human_funnel" not in d or "letter_humans" not in d:
+        out.append((FAIL, "the live endpoint answers without human_funnel/letter_humans -- the "
+                          "deployed build predates FUNNEL-DENOM-1"))
+        return out
+    raw = {r["step"]: r["sessions"] for r in d.get("funnel", [])}
+    hum = {r["step"]: r["sessions"] for r in d.get("human_funnel", [])}
+    for s, n in hum.items():
+        if n > raw.get(s, 0):
+            out.append((FAIL, "human_funnel['%s']=%d exceeds funnel['%s']=%d -- the honest count "
+                              "cannot be larger than the count it is a subset of" % (s, n, s, raw.get(s, 0))))
+    if hum.get("dwell", -1) != d.get("humans", -2):
+        out.append((FAIL, "human_funnel['dwell']=%r disagrees with humans=%r -- the two numbers "
+                          "are built from the same set and must match"
+                    % (hum.get("dwell"), d.get("humans"))))
+    if d.get("letter_humans", 0) > d.get("humans", 0):
+        out.append((FAIL, "letter_humans=%r exceeds humans=%r -- a letter arrival that stayed is "
+                          "by construction one of the humans" % (d.get("letter_humans"), d.get("humans"))))
+    return out or [(INFO, "live: %d sessions, %d humans, %d of them arrived on a letter; "
+                          "human_funnel agrees with its denominator at every step"
+                    % (d.get("sessions", -1), d.get("humans", -1), d.get("letter_humans", -1)))]
+
+
 if __name__ == "__main__":
     sys.exit(main())
