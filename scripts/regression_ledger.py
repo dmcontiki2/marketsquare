@@ -23873,10 +23873,42 @@ def rg_quick_return_1():
             out.append((FAIL, "the source gate is gone from create_listing -- either nothing "
                               "mails, or EVERY lane that lands a draft now mails its seller"))
         else:
-            if '== "quick"' not in gate:
-                out.append((FAIL, "the gate no longer names 'quick' -- the agency import lane "
-                                  "lands drafts too, and mailing those sellers is sending on "
-                                  "David's behalf (RUL-096(f), reserved)"))
+            # PROXY-FIXED 18 Sep 2026 (SELLFLOW-RETURN-1). This used to require the
+            # literal `== "quick"` on the gate line. That was a proxy for the real
+            # property -- A DRAFT THAT NOBODY COMPOSED HERE IS NEVER MAILED -- and it
+            # broke honestly the moment RG-0404 widened the gate to an allowlist of
+            # self-serve lanes, reporting a REGRESSION against a change that preserves
+            # the property exactly. SO-3: correct a proxy assertion, never weaken it. So
+            # the property is asserted directly now: the gate must be a BOUNDED set that
+            # still contains 'quick', must not admit a draft whose source is empty (which
+            # is what the agency import lane sends), and must still require an address.
+            named = ('== "quick"' in gate) or ("_SELF_SERVE_LANES" in gate and "in " in gate)
+            if not named:
+                out.append((FAIL, "the gate is no longer a bounded set of composing lanes -- the "
+                                  "agency import lane lands drafts too, and mailing those sellers "
+                                  "is sending on David's behalf (RUL-096(f), reserved)"))
+            if "_SELF_SERVE_LANES" in gate:
+                lanes = None
+                for ln2 in bea.splitlines():
+                    if ln2.strip().startswith("_SELF_SERVE_LANES"):
+                        lanes = ln2
+                        break
+                if lanes is None:
+                    out.append((FAIL, "the gate reads _SELF_SERVE_LANES but nothing defines it"))
+                else:
+                    if '"quick"' not in lanes:
+                        out.append((FAIL, "the self-serve allowlist no longer contains 'quick' -- "
+                                          "the Quick door composes drafts that reach nobody again"))
+                    for bad in ("agency", "import", "admin", "bulk"):
+                        if bad in lanes.lower():
+                            out.append((FAIL, "the self-serve allowlist has admitted the %r lane -- "
+                                              "those sellers did not ask us for anything and "
+                                              "mailing them is sending on David's behalf "
+                                              "(RUL-096(f), reserved)" % bad))
+                if 'or ""' not in gate:
+                    out.append((FAIL, "the gate no longer defaults a missing source to the empty "
+                                      "string, so a draft with NO source could fall through the "
+                                      "allowlist -- that is the agency lane"))
             if "seller_email" not in gate:
                 out.append((FAIL, "the gate no longer requires a typed address -- it would mail "
                                   "on an empty or absent seller_email"))
@@ -24580,7 +24612,13 @@ def rg_sellflow_return_1():
             out.append((FAIL, "the sell-flow lane is no longer mailed -- the lane that has "
                               "produced every advert ever built is silent again"))
         else:
-            seg = bea.split("QUICK-RETURN-1 (18 Sep 2026)", 1)[-1][:2500]
+            # The anchor is SELLFLOW-RETURN-1's own marker, not QUICK-RETURN-1's: that
+            # string occurs three times in bea_main.py (the Listing.source field at
+            # ~2336, the gate at ~3493, the sender docstring at ~15730) and split()
+            # takes the FIRST, which is 1100 lines above the gate. Written 18 Sep and
+            # RED on its first board for exactly that reason -- the checker was wrong,
+            # not the code (CLAUDE.md: a checker that disagrees suspects itself first).
+            seg = bea.split("SELLFLOW-RETURN-1", 1)[-1][:2500]
             if "_SELF_SERVE_LANES" not in seg or "sellflow" not in seg:
                 out.append((FAIL, "the return-mail gate no longer carries the self-serve lane "
                                   "allowlist"))
