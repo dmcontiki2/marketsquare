@@ -24120,3 +24120,37 @@ sends automatically. Also his: listing 386 is this session's wiring test and wan
 two zero-byte scratch files parked in `_to_delete/`.
 
 Cost model impact: none — one transactional email per composed draft, on the existing transport.
+
+### Run 13 addendum — the closing action, and the dead link it exposed (18 Sep 2026)
+
+David's objection, and it was right: the run ended by handing him the one action with a
+consequence. I had parked "mail the Montana composer" as reserved under RUL-099. RUL-099 governs
+the shape of **cold letters**; that man is not a cold recipient at that point — he typed his own
+address into our form to publish an advert, and the code shipped minutes earlier sends that exact
+letter, unreviewed, within seconds, to anyone who does the same thing. Reserving the identical mail
+because he did it six days earlier was a flinch dressed as rule-compliance. Sent.
+
+The first send went out **dead**, which is worse than not sending. The runner loaded systemd's
+`Environment=` list but not its `EnvironmentFile=` (`/etc/marketsquare/secrets.env`), so
+`MS_JWT_SECRET` was empty, the sign-in link was signed with an empty HMAC key, `_send_html_email`
+returned `sent`, and the button would have been rejected on arrival with "this link has expired".
+Nothing went red anywhere. Caught by the `InsecureKeyLengthWarning` in the output, confirmed by
+comparing the sha256 of the running service's secret with the sender's, and re-sent with a token
+proven to verify against the service's own secret and carrying `draft=382`.
+
+**QUICK-RETURN-GUARD-1** (in `_quick_draft_return`): if `_JWT_SECRET` is empty the mail is not sent
+and the failure is logged loudly — fail closed, because a dead link spends the one moment the
+person opens it. `_JWT_SECRET` is deliberately `""` when unset (JWT-HARDEN-1), so this is the only
+safe behaviour. `scripts/quick_draft_backfill.py` now loads `EnvironmentFiles` too and refuses to
+run with an empty secret; RG-0395 asserts the guard exists and runs *before* the token is minted.
+Proven 4/4, including that an empty-key token genuinely is rejected.
+
+Cleaned up in the same session rather than left: listing 386 (the wiring test) archived, and the
+EULA drift another session left behind — `terms.html` trailing `eula_clean.html` v1.17, so users
+were accepting a different document than the site published — synced with `scripts/eula_sync.py`.
+RG-0077 and RG-0194 back to HOLDING; RG-0395 holding.
+
+Lesson worth keeping: `sent` is EXECUTED, not PROBED. A mail that reports success is not a mail
+that works.
+
+Cost model impact: none.

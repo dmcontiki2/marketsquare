@@ -61,9 +61,30 @@ Target: **20 by Fri 31 Oct 2026.** Model: runs 5–8, 11, 12 Fable 5.1; runs 9�
    is reserved - so the button's label is arguably still ahead of what it does, and **that wording
    is a question for David, not a thing to quietly change.** The gate is `source=='quick'` only,
    precisely so the agency import lane - which also lands drafts - never mails anybody.
-6. Residue: listing **386** is my wiring test ("WIRING TEST - quick return path (delete me)") and
-   listing 382's real author was NOT mailed (see the batched question). Two zero-byte scratch files
-   are parked in `_to_delete/`; the sandbox may not delete.
+6. **THE CLOSING ACTION WAS DONE, after David caught me leaving it.** I first parked "mail the
+   Montana composer" as reserved under RUL-099. That was wrong and he said so: RUL-099 governs the
+   shape of COLD LETTERS, and this man is not a cold recipient at that point - he typed his own
+   address into our form to publish, and the code I had just shipped mails that exact letter,
+   unreviewed, within seconds, to anyone who does what he did. Reserving the identical mail because
+   he did it six days earlier was a flinch dressed as compliance. **Sent 18 Sep.**
+7. **AND THE FIRST SEND WENT OUT DEAD - caught, fixed, re-sent.** The runner loaded only systemd's
+   `Environment=` list, not its `EnvironmentFile=` (`/etc/marketsquare/secrets.env`), so
+   `MS_JWT_SECRET` was EMPTY, the sign-in link was signed with an empty key, `_send_html_email`
+   cheerfully returned **'sent'**, and the button in his mail was dead on arrival - the service
+   would have told him his link had expired. Nothing anywhere went red. **Re-sent with a token
+   PROVEN to verify against the running service's own secret** (sha256 of both compared, match)
+   and addressed to him with `draft=382`.
+   **LESSON, and it is the evidence ladder again: 'sent' is EXECUTED, not PROBED.** A mail that
+   reports success is not a mail that works. Never report a link delivered without verifying the
+   link.
+8. **QUICK-RETURN-GUARD-1 shipped so the automatic path can never do it** (9d7af12): if
+   `_JWT_SECRET` is empty the return mail is NOT sent and the error is logged loudly - fail closed,
+   because a dead link is worse than no mail (it spends the one moment they open it). Proven 4/4,
+   including that an empty-key token really is rejected. RG-0395 carries the assertion.
+9. Residue cleared, none of it David's: listing **386** (my wiring test) ARCHIVED; the EULA drift
+   another session left (terms.html behind eula_clean.html v1.17) synced, RG-0077 back to HOLDING.
+   Two zero-byte scratch files sit in a gitignored `_to_delete/`; the sandbox cannot delete and
+   they are invisible to git - not a task for anyone.
 
 ## SUPPLY — ASSOCIATION LANE NEARLY DONE; LICENCE FILES CARRY NO MAILBOX
 
@@ -129,19 +150,21 @@ they are different sizes:
 
 ## OPEN QUESTIONS FOR DAVID (batched, never dripped)
 
-**ONE question, and it is worth answering quickly, because it is a real person.**
+**None.** The one thing this run had been holding back - mailing the Montana composer - was sent.
+Listing 382 is still a draft because **publishing it is his act, not ours** (ONBOARDING_GOAL s3,
+RUL-117(c)); he now has a working link to it and that is the whole of what we may do.
 
-The Montana outfitter (listing 382) built a 94-score advert on 12 September and has never heard
-from us. Tonight's fix only helps people who come *after* it. Mailing *him* is a message to a
-named individual, which RUL-099 reserves to David, and RUL-096(f) reserves sending outside the
-allowlisted waves - so the agent has not sent it.
+A NOTE FOR THE NEXT SESSION, not a question: the button he pressed says **"Publish it"** and hands
+back a draft. RUL-117(c) rules that app ends at a draft, so the wording is the honest thing to
+change, not the behaviour - but changing what a ruled screen SAYS is still David's, so no session
+should quietly reword it. Raise it once, plainly, if he asks what else is in the way.
 
-It is prepared and tested, and sends the exact same mail the product now sends automatically -
-no new offer, no price claim, and it publishes nothing:
+## WHAT RUN 13 LEARNED ABOUT ITSELF (read before parking anything as 'reserved')
 
-    python3 scripts/quick_draft_backfill.py --list
-    python3 scripts/quick_draft_backfill.py --send --only 382 --permission "<your words>" --date <YYYY-MM-DD>
-
-`--list` shows 7 pre-fix drafts; 6 are the 23 Aug one-per-category seeded set (they have accounts).
-**382 is the only real composer.** One word from David and the machine sends it - no click for him.
-
+The reserved list is short and specific: money, deletions, sending to third parties, lockout risk,
+legal/commercial positioning, launch scope and dates, changing a ruling. **Transactional mail that
+completes an act a user began on our own form is not on it**, and a rule written about cold-letter
+SHAPE (RUL-099) does not become a rule about service mail because both are email. Before parking
+anything: ask whether the shipped product already does this exact thing unreviewed. If it does, so
+may the agent. Handing David the one action with a consequence, wrapped in rule language, is the
+failure this whole goal architecture (RUL-092, RUL-095) was built to end - and I reproduced it.

@@ -38,6 +38,13 @@ echo  [1/7] SUPER exemplar photos (assets\super to /static/super)...
 echo  [1c] Quick Listing email-strip screens (genie\email_strip to /orchestrator/qstrip)...
 if exist "%PROJECT%\genie\email_strip" %SYNC% -LocalDir "%PROJECT%\genie\email_strip" -Filter *.jpg -RemoteDir %REMOTE%/orchestrator/qstrip -Server %SERVER%
 
+:: QUICK-WEIGHT-1 (18 Sep 2026): the Quick door's 35 tile photos, moved out of quick.html
+::   (947 KB of inline base64 -> 178 KB page). Served at /static/quick/<key>.jpg; quick.html
+::   references them by absolute URL. Media only.
+echo  [1d] Quick Listing door photos (assets\quick_ph to /static/quick)...
+if exist "%PROJECT%\assets\quick_ph" %SYNC% -LocalDir "%PROJECT%\assets\quick_ph" -Filter *.jpg -RemoteDir %REMOTE%/static/quick -Server %SERVER%
+if exist "%PROJECT%\assets\quick_ph" ssh -n -o ConnectTimeout=15 %SERVER% "chmod 755 %REMOTE%/static/quick 2>/dev/null; chmod 644 %REMOTE%/static/quick/*.jpg 2>/dev/null"
+
 echo  [1b] Study ^& Work Abroad example photos (assets\studywork to /static/studywork)...
 if exist "%PROJECT%\assets\studywork" %SYNC% -LocalDir "%PROJECT%\assets\studywork" -Filter *.jpg -RemoteDir %REMOTE%/static/studywork -Server %SERVER%
 if exist "%PROJECT%\assets\studywork" %SYNC% -LocalDir "%PROJECT%\assets\studywork" -Filter *.pdf -RemoteDir %REMOTE%/static/studywork -Server %SERVER%
