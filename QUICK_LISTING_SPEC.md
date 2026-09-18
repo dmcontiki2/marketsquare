@@ -147,3 +147,74 @@ chess, because it decides whether this is a four-week or a four-month move.
   pictures wrong would do real harm: clean, well-kept workwear for everyone, prefer anonymous
   framing, and compare the set rather than the photo.
 - **She publishes by her own hand.** Nobody taps it for her.
+
+---
+
+## 7. TWO LATE ADDITIONS FROM DAVID (18 Sep, evening)
+
+### D6 — Referrals at 5 / 6 / 7 instead of 5 / 3 / 2
+
+**First, the freeing fact: the referral signals are a V1 placeholder.** `COACH-EARNABLE-1`
+records it plainly — `_compute_universal_track_status` writes them "missing" unconditionally
+and *nothing in the app can ever write them "earned"*. The coach deliberately stays silent
+about them, because asking someone to do a thing that cannot move their score is worse than
+not asking. So changing 5/3/2 to 5/6/7 today changes nothing at all. Nothing to migrate, and
+we can define this properly the first time.
+
+**The inversion is the good idea.** A ladder that pays *more* for the third than the first
+turns the score into a reason to keep going, instead of a reason to stop after one. That is
+exactly right for this market.
+
+**The one hard constraint: pay for verified CLIENTS, never for signups.** The invariant in
+the code is explicit — the Trust Score measures the seller: verified identity, credentials,
+system-calculated track record. If points come from people she recruits for us, the score
+starts measuring how good she is at marketing TrustSquare, and a trust score that measures
+that is not a trust score. A neighbour reading "78" must be reading evidence about her work,
+not her recruiting.
+
+The honest version keeps everything David wants: pay for a **client who actually hired her
+and confirmed it**. That is real third-party evidence, it genuinely is more evidence the more
+there are, it justifies rising weights — and it still delivers the growth, because a verified
+client is a real user who arrived through her.
+
+**Cap arithmetic, which forces a choice:** 5 + 6 + 7 = 18 from referrals, plus 12 for the
+employer confirmation, is 30 — the entire universal cap. Her photo, her ID and her years of
+experience would then be worth literally nothing. So rising referral weights require the
+universal cap to move (~40 is the natural number) or the rest of the ladder to be rebalanced.
+*My recommendation: 5 / 6 / 7 for verified clients, universal cap to 40, employer confirmation
+stays 12 and a second employer adds 6 (D1). An ordinary housecleaner can then reach 50 + 30
+without owning a single certificate, which is the whole point of RUL-136.*
+
+### D7 — A local map of where she works
+
+**The instinct is the most commercially valuable thing in this market.** "She already works
+two doors down, on Tuesdays" is the single fact most likely to convert a neighbour, and no
+competitor can show it. Worth building.
+
+**But it must never publish addresses or streets.** Three reasons, and the first is the one
+that ends the argument:
+
+1. **They are her employers' addresses, not hers.** Those households never agreed to anything
+   and are not our users. We would be publishing third-party home addresses.
+2. **Her open days plus her streets tells a stranger exactly where she is and when.** That is
+   a safety problem for her and a pattern-of-life map of her employers' empty houses. RUL-115
+   exists because David saw this: *"A listing that puts a woman's open days and her suburb in
+   front of anybody at all, with no accountability on the other side, is not a service to
+   her."* Streets are far more precise than the suburb he was already uneasy about.
+3. SO-1 bars presenting any exemplar map as a real surveyed location.
+
+**The version that keeps all the value and none of the risk** — and I think it is actually
+*more* persuasive than pins:
+
+- A soft shape, not points: the suburbs she works in, shaded, with no marker anywhere.
+- The useful fact stated in words: *"Works in Lynnwood and Menlo Park · open Tuesdays and
+  Thursdays."*
+- Proximity computed **for the viewer, about the viewer**: *"Already works about 400 m from
+  you"* — true, compelling, and it draws nothing. The precision lives in the sentence, where
+  it is safe, instead of on the map, where it is not.
+- Exact detail is exchanged only after an introduction is accepted, which is already how the
+  platform works.
+
+*My recommendation: build the shaded-area map and the proximity sentence. Never a pin, never
+a street name, never an employer's address — not even blurred, because a blurred pin is still
+a pin.*

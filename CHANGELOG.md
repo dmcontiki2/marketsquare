@@ -24251,3 +24251,32 @@ Letters do reach inboxes — the wave sends via Resend from the verified `mail.t
 Also: the board opened RED on RG-0015 and RG-0197 — one stranded `.git/index.lock`, not two faults;
 healed with `scripts/git_unlock.py`. Ledger 389 entries · 0 regressed · 0 unverified; rulings 0 FAIL.
 Cost model impact: none.
+
+## Session — Quick lane, evening of 18 Sep 2026 (Opus 5)
+
+**SELLFLOW-RETURN-1 / RG-0404.** QUICK-RETURN-1 (shipped that morning) mails a composer the
+way back to their own draft, gated on `source == 'quick'`. Probed listing 382's provenance and
+found the gate excluded the very lane it was written for: Rick Wemple's advert — the only one
+anybody has ever built on TrustSquare — was created at 15:37:09 on 12 Sep by the main app's
+guided sell-flow, which sent no source at all. The next person to do exactly what he did would
+have got exactly what he got. The gate is now an allowlist of self-serve composing lanes
+(`quick`, `sellflow`) and ms.js tags its draft; the agency import lane sends no source and
+still mails nobody, which is the property RG-0395 exists to protect.
+
+**QUICK-FUNNEL-1 / RG-0405.** quick.html had posted zero funnel beacons since it was built,
+while ms.js has carried ONBOARD-FUNNEL-1 since 5 Sep — so four days of real traffic to the
+lowest-friction path we have, linked from eight live outreach templates, was unmeasurable. It
+now beacons door, each step, draft composed and hand-over, and carries the FUNNEL-HUMAN-1
+dwell beacon from the start so a mail scanner rendering the page is never counted as a person.
+Measures nothing on `file://`, so a copy opened from a Downloads folder stays a dry run.
+
+**QUICK_LISTING_SPEC.md** written from David's direction for the South African casual-services
+market (housecleaners first, then waiters, petrol jockeys, truck drivers): promise → visual →
+4 clicks → email → EULA → list → AI-guided trust score. Records that most of the ladder already
+exists in code, that RUL-115 makes the score the gate to being visible rather than post-listing
+polish, and batches seven decisions that are David's — including that the referral signals are
+a V1 placeholder nothing can currently award, that rising referral weights must pay for
+verified clients rather than signups or the score stops measuring the seller, and that the
+work-area map must show shaded suburbs and a proximity sentence, never a pin or a street,
+because those are her employers' addresses and her own pattern of life.
+Cost model impact: none.
