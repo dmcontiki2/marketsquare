@@ -24199,3 +24199,25 @@ Two findings recorded on the way, neither of them David's to action:
 Board green, rulings 0 FAIL. The number is still 0 — but the wall in front of it is gone.
 
 Cost model impact: none.
+
+### Run 13, part 3 — the link that would not have worked (18 Sep 2026)
+
+David asked how we close the loop on listing 382, and answering it surfaced the thing that would
+have wasted everything above it: `_quick_draft_return` borrowed the sign-in token's **20-minute**
+life. Right for a code somebody just requested; wrong for a letter saying *come back and finish your
+advert*. His landed at roughly 01:15 Montana time — dead long before he could open it, and the app
+would have told him his link had expired. Both earlier sends carried that fault, so he had no
+working link at all.
+
+**QUICK-RETURN-TTL-1**: the return link now lives 7 days (precedent: the 30-day purpose-scoped
+employer-confirm token), the letter states that life honestly rather than leaving it vague
+(AGENCY-INVITE-MAIL-1's lesson: never claim a life the token does not have), the ordinary 20-minute
+sign-in code is untouched, and RG-0395 now fails if a minutes-life or an unstated life comes back.
+Proven 4/4 before ship, then re-sent to him once with the token verified against the running
+service's own secret.
+
+Incidental but worth knowing: **Resend is unreachable from the server** — the same Cloudflare 1010
+block behind tonight's false REDs — so app mail has been going out via the Gmail SMTP fallback all
+along. Nothing is broken; the Resend dashboard just isn't the place to look.
+
+Cost model impact: none.

@@ -137,6 +137,42 @@ the number could count it.
    hiccup. The `_get_json()` retry/ProbeOffline fix noted in part 1 is still the right fix and is
    still open; probes that must reach the app from the box should use `http://127.0.0.1:8000`.
 
+## RUN 13, PART 3 — WHY THE LINK WOULD NOT HAVE WORKED, AND WHAT "CLOSING IT" ACTUALLY MEANS
+
+**The link I sent him was dead before he woke up.** `_quick_draft_return` borrowed the SIGN-IN
+token's **20-minute** life. Twenty minutes is right for a code somebody just asked for; it is wrong
+for a letter that says *come back and finish your advert*. His arrived at roughly **01:15 Montana
+time**. By any hour he could plausibly have opened it, the button was dead and the app would have
+told him his link had expired. Both earlier sends had this fault, so until now **he had no working
+link at all**. QUICK-RETURN-TTL-1: seven days, the copy states it, RG-0395 asserts it, the ordinary
+20-minute sign-in code is untouched. Re-sent to him once, token verified against the running
+service's own secret before it went.
+
+Also learned: **Resend is unreachable from the box** (the same Cloudflare 1010 that caused the false
+REDs), so every app email is actually going out through the **Gmail SMTP fallback**, From
+"TrustSquare <dmcontiki2@gmail.com>". It works, and it is worth knowing before anyone reasons about
+deliverability or reputation from the Resend dashboard, which will show nothing.
+
+### WHAT CLOSING THIS ACTUALLY MEANS (David asked, 18 Sep)
+
+The loop is *"a person we contacted cold publishes by their own hand."* Three of its four parts are
+now ours and are done; the fourth is his and always was:
+
+1. He can reach his advert — a letter that arrives and a link that still works. **Done.**
+2. The advert is there when he arrives, and is his. **Done, proven in a browser.**
+3. Tapping Publish actually publishes. **Done — HUB-EULA-1; it dead-ended before tonight.**
+4. **He taps it.** Not ours, by §3 and RUL-117(c). If either of us taps it the number is a lie.
+
+So "closed" has two honest endings and both are closes: **he publishes and the number is 1**, or
+**he does not, and the answer is that one man was never the plan.** The system is the plan: 2,465
+people have been written to, 15 humans came from letters in six days, and every one of them used to
+hit the same wall he did. That wall is gone. The next composer is the real test, and there is no
+manual step behind them.
+
+**Do not send him a third reminder.** Two letters and a resend is the limit of what is honest for
+one cold prospect; more is chasing a single number rather than fixing a funnel, and RUL-103 already
+says exhausting the list is fine. Watch `published_at` on 382 and move on to the near leak.
+
 ## SUPPLY — ASSOCIATION LANE NEARLY DONE; LICENCE FILES CARRY NO MAILBOX
 
 - Harvested + drawn: rrca, pacific, moga, wyoga, coa, apha, mpga. New association = one dict entry in
