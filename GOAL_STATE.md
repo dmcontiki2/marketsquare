@@ -89,6 +89,11 @@ reserved is in the way and the letter is mine to rewrite. Stated now, not on 31 
    DOOR-RETURN-1**, open, with the warning not to paste the `/quick/` WhatsApp button onto it,
    because here there is no server-side draft for it to point at.
 9. **Ledger green before and after** (shards + `--combine=8`): every locked fix holding.
+10. **Deployed twice and PROBED both times** (a deploy tool that prints a success line is
+   EXECUTED, not PROBED — run 14's lesson). `/quick/` carries WA-SELFSEND-1, `/q/homehelp`
+   carries DOOR-FUNNEL-1, and a live walk of the door had every beacon accepted 200 by the
+   server. **That walk was made with `?src=probe-run15`** so the row is identifiable — exclude
+   it before reporting the door's first real numbers.
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
