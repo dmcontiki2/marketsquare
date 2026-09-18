@@ -16,6 +16,11 @@ Montana and Colorado are sendable again, and the re-run wave sent **108 letters*
 the first real person from a letter, and find the next member directory that publishes mailboxes —
 the Texas licence file turned out to have no email column.
 
+> **NOTE FOR THE 20 Sep SUNDAY SUMMARY (written by run 14, Fri 18 Sep):** the paragraph above and
+> every "N people landed / N dwelled" figure before it counted mail scanners as people. Run 14
+> proved it and fixed the instrument. Write Sunday's summary from the numbers in RUN 14 below,
+> not from any figure in this file dated before 18 Sep.
+
 ## THE NUMBER
 
 Run it, never recall it: `python3 MarketSquare/scripts/onboarding_number.py`
@@ -28,150 +33,101 @@ If the sandbox is dead, run it host-side: queue `run_py MarketSquare\scripts\onb
 | 2026-09-12 (run 11) | **0** | 0 | 0 | 6,748 on the list · 1,482 emailed · 5 registered |
 | 2026-09-13 (run 12, 01:00 SAST) | **0** | 0 | 0 | 6,748 · 1,482 emailed at 01:00, +108 at 01:31 (re-armed wave) · 5 registered |
 | 2026-09-18 (run 13, 02:30 SAST) | **0** | 0 | 0 | 6,748 · 1,942 emailed · **25 registered** (was 5) · first full journey walked |
+| 2026-09-18 (run 14, 12:20 SAST) | **0** | 0 | 0 | 6,748 · 2,491 emailed · 25 registered · **8 human clicks ever** (probed, see below) |
 
 Target: **20 by Fri 31 Oct 2026.** Model: runs 5–8, 11, 12 Fable 5.1; runs 9–10 Opus 5 (drift, RUL-096h).
 
-## WHAT RUN 13 DID (18 Sep 2026, 02:30-03:20 SAST, Opus 5) - THE FIRST REAL PERSON WAS FOUND, AND LOST
+## WHAT RUN 13 DID (18 Sep 2026, Opus 5) — condensed by run 14; full detail in RG-0395/0396/0400/0401
 
-1. **Measured.** Number 0, both probes agree. Rulings 0 FAIL. Ledger green at the start except
-   one flaky RED (see OPEN LOOPS below); green at the end, RG-0395 new and LOCKED.
-2. **FOUND THE PERSON.** `/onboard/funnel?days=6`: 15 humans, and one session from
-   `montana-adventures-experiences-20260912` walked **the entire journey** - landed, dwell, subpick,
-   photos, photo_pick, photo_ok, features, legal, scorecard, finish, handoff. PROBED on the box:
-   that is **listing 382**, "Guided Fair Chase Hunts", Victor Montana, $500-1000/person, a photo,
-   a 998-character description, **quality score 94** - better than most rows that are live. Its
-   author is **prospect 83302**, source `register:moga` (Montana Outfitters & Guides), emailed
-   11 Sep 22:12. A real outfitter, from a cold letter, by his own hand.
-3. **FOUND WHY HE IS NOT THE NUMBER.** He pressed a button reading **"Publish it"**, and got a
-   draft plus homework: *"Finish it in the app... sign in with this address."* Then nothing. He
-   has **no users row** and `create_listing` scheduled **no background task at all** - the Quick
-   lane never mailed anybody. The hand-back screen was the only thing that ever named his advert
-   and it died with the tab. Six days invisible. **The advert was finished; the door was missing.**
-4. **FIXED IT FORWARD, SHIPPED, PROVEN LIVE (QUICK-RETURN-1 / RG-0395).** A draft composed in the
-   Quick app now mails its author a link straight back to it. Deployed 02:51 via the relay
-   (982c5d2, health-checked). PROVEN end-to-end on the live service, not inferred: a POST with
-   `source:'quick'` produced `INFO:bea:quick-return mail for draft 386: sent` in the service log.
-   Proven before ship too (7/7 on the shipped text of both functions): address normalised, advert
-   named, signin token decodes for that address, copy says it is not public yet and that
-   publishing is theirs, hostile title cannot inject html, junk address mails nobody, dead
-   transport never breaks the hand-over.
-5. **WHAT THE FIX DELIBERATELY DOES NOT DO.** It does not publish. RUL-117(c) rules the Quick app
-   ends at "a draft advert (a prototype the seller then finishes)", and ONBOARDING_GOAL s3 bars
-   publishing on a seller's behalf. Making "Publish it" publish would be changing a ruling, which
-   is reserved - so the button's label is arguably still ahead of what it does, and **that wording
-   is a question for David, not a thing to quietly change.** The gate is `source=='quick'` only,
-   precisely so the agency import lane - which also lands drafts - never mails anybody.
-6. **THE CLOSING ACTION WAS DONE, after David caught me leaving it.** I first parked "mail the
-   Montana composer" as reserved under RUL-099. That was wrong and he said so: RUL-099 governs the
-   shape of COLD LETTERS, and this man is not a cold recipient at that point - he typed his own
-   address into our form to publish, and the code I had just shipped mails that exact letter,
-   unreviewed, within seconds, to anyone who does what he did. Reserving the identical mail because
-   he did it six days earlier was a flinch dressed as compliance. **Sent 18 Sep.**
-7. **AND THE FIRST SEND WENT OUT DEAD - caught, fixed, re-sent.** The runner loaded only systemd's
-   `Environment=` list, not its `EnvironmentFile=` (`/etc/marketsquare/secrets.env`), so
-   `MS_JWT_SECRET` was EMPTY, the sign-in link was signed with an empty key, `_send_html_email`
-   cheerfully returned **'sent'**, and the button in his mail was dead on arrival - the service
-   would have told him his link had expired. Nothing anywhere went red. **Re-sent with a token
-   PROVEN to verify against the running service's own secret** (sha256 of both compared, match)
-   and addressed to him with `draft=382`.
-   **LESSON, and it is the evidence ladder again: 'sent' is EXECUTED, not PROBED.** A mail that
-   reports success is not a mail that works. Never report a link delivered without verifying the
-   link.
-8. **QUICK-RETURN-GUARD-1 shipped so the automatic path can never do it** (9d7af12): if
-   `_JWT_SECRET` is empty the return mail is NOT sent and the error is logged loudly - fail closed,
-   because a dead link is worse than no mail (it spends the one moment they open it). Proven 4/4,
-   including that an empty-key token really is rejected. RG-0395 carries the assertion.
-9. Residue cleared, none of it David's: listing **386** (my wiring test) ARCHIVED; the EULA drift
-   another session left (terms.html behind eula_clean.html v1.17) synced, RG-0077 back to HOLDING.
-   Two zero-byte scratch files sit in a gitignored `_to_delete/`; the sandbox cannot delete and
-   they are invisible to git - not a task for anyone.
+Run 13 found the first real person and removed the wall in front of him. In short:
 
-## RUN 13, PART 2 — THE WALL, FOUND AND REMOVED (18 Sep, after David pushed back twice)
+- **Found him.** Listing **382**, "Guided Fair Chase Hunts", Victor Montana, quality 94 — built by
+  **prospect 83302** (`register:moga`, a cold letter) entirely by his own hand, then left as a draft
+  for six days. `create_listing` scheduled no task at all: the hand-back screen was the only thing
+  that ever named his advert, and it died with the tab.
+- **QUICK-RETURN-1 / RG-0395** — a Quick-app draft now mails its author a link back to it. The first
+  send went out with a token signed by an EMPTY `MS_JWT_SECRET` (the runner loaded systemd's
+  `Environment=` but not its `EnvironmentFile=`) and `_send_html_email` still returned 'sent'.
+  **LESSON: 'sent' is EXECUTED, not PROBED. Never report a link delivered without verifying it.**
+  QUICK-RETURN-GUARD-1 now fails closed on an empty key; QUICK-RETURN-TTL-1 gives the link 7 days
+  (it was borrowing the 20-minute sign-in TTL, so every earlier send was dead before he woke).
+- **HUB-EULA-1 / RG-0396** — the hub's Publish used to dead-end: *"You must accept the Terms"* with
+  no way to accept them, for EVERY first-time Quick composer (quick.html creates no account, so
+  `eula_accepted_at` is NULL). Now it hands the draft to the Terms screen. **The whole walk —
+  emailed link -> hub -> draft -> Publish -> Terms -> tick -> live — was proven end to end in a real
+  browser for the first time on 18 Sep 07:29, both probes agreeing.** Test rows archived after.
+- **Deliberately NOT done, and still correct:** nothing publishes on a seller's behalf
+  (ONBOARDING_GOAL s3, RUL-117(c)). The "Publish it" label in the Quick app is arguably ahead of
+  what the button does; changing it is changing a ruling, which is David's.
+- **Do not send prospect 83302 a third reminder.** Two letters and a resend is the limit.
+- **RG-0400 (open): the EULA a seller actually ticks is a FOURTH, unsynced copy** — the
+  `sob-eula-box` in marketsquare.html reads v1.10 while the site publishes v1.17, and
+  `eula_sync.py` knows only three copies. Left open on purpose: it is restyled markup, not a byte
+  copy, and auto-transforming the text of a legal gate unattended is how you get a consent record
+  nobody can defend. Needs its own session.
 
-David's objection, and it was correct: I kept doing something and leaving the action open. The second
-time, the thing I had left undone was that **I sent the Montana man a link to a journey nobody had
-ever proven worked** — the "still unproven as ONE walk" line that has sat in this file since the goal
-began. So I walked it, in a real browser, as him.
+## WHAT RUN 14 DID (18 Sep 2026, 12:00-13:30 SAST, Opus 5) — THE NEAR LEAK DOES NOT EXIST
 
-**IT WAS A DEAD END, and it is the whole reason the number is 0.**
-Sign in from the emailed link → land on My Seller Hub → the draft is there, marked *"Draft — not
-visible yet"*, with a **Publish** button → tap it → toast: *"You must accept the TrustSquare Terms
-before publishing"* → **and nothing opens. No terms, no way to accept them.** Listing stays a draft.
-`dashPublish()` turned the server's 403 into a toast and stopped. That is not rare — quick.html
-creates no account, so `eula_accepted_at` is NULL for EVERY first-time Quick composer. Every single
-one of them hit this.
+1. **Measured.** Number 0, both probes agree. 2,491 emailed (was 1,942), 25 registered. Listing 382
+   is STILL a draft — the Montana man has not tapped Publish. That is his act; do not chase it.
+2. **Ledger opened RED on two entries (RG-0015, RG-0197) — same single cause:** a stranded
+   `.git/index.lock` (0 bytes, >60 min, survived every self-heal). Healed with
+   `scripts/git_unlock.py`; 9 tmp_obj orphans still await the host sweep. Both green at the end.
+   **This is worth knowing: two REDs that read as two faults were one lock.** Clear the lock first,
+   re-run, and only then believe a red.
+3. **KILLED RUN 13's "NEXT THING TO WORK ON". It was an artefact of the instrument.**
+   Run 13 wrote: *"the near leak is untouched: 15 dwell -> 3 subpick... the biggest measurable loss
+   in the funnel."* It is not a loss. `GET /onboard/funnel` reported `humans` (sessions that stayed
+   12 s AND touched the page) in one field and its `funnel` step counts over EVERY non-bot session
+   in the next — two different populations in one table, with the docstring calling the first one
+   "the denominator a conversion rate may be built on". PROBED on the live DB, 21 days:
+   - 156 non-bot sessions -> **28 dwelled**. Of those 28, only **3 had a `landed` row at all**.
+     The other 25 are ordinary visitors with no letter, so no category, so nothing to sub-pick.
+   - **65 letter landings were never graded as bots and never dwelled. 26 of them arrive inside the
+     22h UTC hour the nightly wave fires** (00:10 SAST) — the FUNNEL-HUMAN-1 scanner signature, one
+     layer on from where that fix stopped. The `subpick`/`photos` rows they generate are real code
+     paths: a letter pre-selects the category, `sfInit` calls `sfStartCat`, and the scanner's own
+     render logs landed+subpick+photos **in the same second**. It looks exactly like a funnel.
+   - So: nobody is stalling on the first screen. **Almost nobody is reaching it.**
+4. **FUNNEL-DENOM-1 / RG-0402 — fixed, shipped (db931d6), PROBED live.** `/onboard/funnel` now also
+   returns `human_funnel` (per-step counts over exactly the sessions `humans` counts) and
+   `letter_humans` (arrived on an outreach link AND stayed), and the note names which to read. Raw
+   `funnel` left byte-identical so no existing reader changes meaning underneath itself. Proven 9/9
+   on a fixture before ship (scanner, real letter arrival, walk-in human, graded bot); proven on the
+   live box after. **Live, 21 days:** raw `landed 63 · subpick 23 · photos 22` vs honest
+   `landed 2 · subpick 2 · photos 4`, `humans 27`, `letter_humans 2`.
+5. **THE EMAIL LANE AGREES, INDEPENDENTLY — and this is the real number.**
+   `click_register.tier` has graded every recipient since the campaign began:
+   **human_click 8 · human_open 321 · machine 163 · uncertain 84.**
+   **Eight real humans have clicked, ever, out of 2,491 letters.** `rickwemple@aol.com` — Montana —
+   is one of the eight. Two instruments built on different evidence now agree within single digits.
 
-**HUB-EULA-1 / RG-0396 — fixed, shipped, proven.** The hub's Publish now hands a stranded draft to
-the seller-onboarding flow, where `sobInit()` opens the Terms and `_sobGoLiveInner()` registers,
-stamps the acceptance and publishes (the machinery already existed — EULA-ORDER-1 fixed this for the
-guided lane only, back on 3 Sep; the hub button never got it). It seeds ONLY the listing he tapped,
-so accepting does not silently take his other drafts live. It does NOT stamp acceptance for him: he
-reads and ticks, which is what makes the clause bind.
+## WHERE THE FUNNEL ACTUALLY LEAKS (run 14, probed 18 Sep) — READ THIS, NOT THE OLD SECTION
 
-**THE WALK IS NOW PROVEN END TO END, for the first time since the goal began** (18 Sep 07:29, live
-browser, phone width): emailed link → signed in → hub → draft → Publish → Terms → read, tick, Go
-live → `listing_status 'live'`, `published_at 07:29:29`, `eula_accepted_at 07:29:28` stamped one
-second earlier by the seller's own tick — **and both probes agree**: an anonymous `GET /listings`
-returned it. Test rows 386/387/388 archived immediately afterwards; nothing seeded is left anywhere
-the number could count it.
+The honest chain, all-time, every figure probed:
 
-### TWO THINGS FOUND ON THE WAY, BOTH RECORDED, NEITHER DAVID'S
+    2,491 letters  ->  ~329 real people opened one  ->  8 clicked  ->  1 built a complete advert  ->  0 published
 
-1. **The EULA the seller actually ticks is a FOURTH, UNSYNCED COPY.** The acceptance box inside
-   `marketsquare.html` (`sob-eula-box`) reads **Version 1.10, 23 July 2026**, and its own footer says
-   **v1.9** — while `eula_clean.html` / `terms.html` / the ms.js literal are now **v1.17**.
-   `scripts/eula_sync.py` syncs three copies and does not know about this one, so RG-0077 reports
-   "in sync" while the document people are actually agreeing to is two months and seven versions
-   behind. This is EULA-FORK-1 exactly, one copy further on. **NEXT RUN: bring the sob box under
-   eula_sync.py and extend RG-0077 to assert four copies, not three.** Not done tonight: it is
-   the legal text a person agreed to, and it deserves its own session rather than the tail of this one.
-2. **RG-0253 was a false RED and is fixed (LEDGER-FOLLOW-1).** It read a 6000-char window from
-   `sobGoLive`, which SEAM-PROOF-1 had reduced to a wrapper — so it found NEITHER the register nor
-   the EULA call (`reg@-1 eula@-1`) and reported an inversion. The ordering is correct in
-   `_sobGoLiveInner`, and tonight's live publish proves it. The checker now follows the delegation,
-   and an index of -1 now says "this check has lost its target, UNVERIFIED" instead of crying
-   regression. Sibling of the Cloudflare finding below.
-3. **The "flaky" ledger red from part 1 has a real cause: Cloudflare.** A server-side call to
-   `https://trustsquare.co` is answered with **`error code: 1010`** (bot block) — a 403 whose body is
-   not JSON, which is exactly the `JSONDecodeError` that made RG-0386 look regressed. Not a network
-   hiccup. The `_get_json()` retry/ProbeOffline fix noted in part 1 is still the right fix and is
-   still open; probes that must reach the app from the box should use `http://127.0.0.1:8000`.
+- **Letters reach inboxes.** The outreach wave sends via **Resend**, From
+  `David at TrustSquare <david@mail.trustsquare.co>`, a Resend-verified subdomain.
+  `api.resend.com` answers the box **200 in 0.19 s** — run 13's note that "Resend is unreachable
+  from the box, everything goes via the Gmail SMTP fallback" is **WRONG for the outreach wave** and
+  should not be repeated. It confused a Cloudflare block on `trustsquare.co` with a block on Resend.
+  (It may still be true of the *app's* transactional mail in `bea_main.py` — that was not re-probed.)
+- **The loss is between reading the letter and clicking it: 8 clicks from ~320 human opens (2.4%).**
+  That is the one big measurable leak, and ONBOARDING_GOAL section 5 names "change the email" as
+  mine to do without asking.
+- **The app is not the bottleneck and has not been.** Of the 8 who clicked, 1 built a finished
+  advert scoring 94 — a 12.5% build rate from a cold click, which is good. The wall behind him
+  (HUB-EULA-1) was removed on 18 Sep.
 
-## RUN 13, PART 3 — WHY THE LINK WOULD NOT HAVE WORKED, AND WHAT "CLOSING IT" ACTUALLY MEANS
-
-**The link I sent him was dead before he woke up.** `_quick_draft_return` borrowed the SIGN-IN
-token's **20-minute** life. Twenty minutes is right for a code somebody just asked for; it is wrong
-for a letter that says *come back and finish your advert*. His arrived at roughly **01:15 Montana
-time**. By any hour he could plausibly have opened it, the button was dead and the app would have
-told him his link had expired. Both earlier sends had this fault, so until now **he had no working
-link at all**. QUICK-RETURN-TTL-1: seven days, the copy states it, RG-0395 asserts it, the ordinary
-20-minute sign-in code is untouched. Re-sent to him once, token verified against the running
-service's own secret before it went.
-
-Also learned: **Resend is unreachable from the box** (the same Cloudflare 1010 that caused the false
-REDs), so every app email is actually going out through the **Gmail SMTP fallback**, From
-"TrustSquare <dmcontiki2@gmail.com>". It works, and it is worth knowing before anyone reasons about
-deliverability or reputation from the Resend dashboard, which will show nothing.
-
-### WHAT CLOSING THIS ACTUALLY MEANS (David asked, 18 Sep)
-
-The loop is *"a person we contacted cold publishes by their own hand."* Three of its four parts are
-now ours and are done; the fourth is his and always was:
-
-1. He can reach his advert — a letter that arrives and a link that still works. **Done.**
-2. The advert is there when he arrives, and is his. **Done, proven in a browser.**
-3. Tapping Publish actually publishes. **Done — HUB-EULA-1; it dead-ended before tonight.**
-4. **He taps it.** Not ours, by §3 and RUL-117(c). If either of us taps it the number is a lie.
-
-So "closed" has two honest endings and both are closes: **he publishes and the number is 1**, or
-**he does not, and the answer is that one man was never the plan.** The system is the plan: 2,465
-people have been written to, 15 humans came from letters in six days, and every one of them used to
-hit the same wall he did. That wall is gone. The next composer is the real test, and there is no
-manual step behind them.
-
-**Do not send him a third reminder.** Two letters and a resend is the limit of what is honest for
-one cold prospect; more is chasing a single number rather than fixing a funnel, and RUL-103 already
-says exhausting the list is fine. Watch `published_at` on 382 and move on to the near leak.
+**THE TRAJECTORY, STATED PLAINLY (ONBOARDING_GOAL section 9).** 4,257 letters remain unsent. At the
+measured rate (8 human clicks per 2,491 letters, ~1 finished advert per 8 clicks) the rest of the
+list yields roughly **14 more human clicks and perhaps 2 more finished adverts**. **20 by 31 October
+is not reachable on how the letter currently performs.** It needs the human-open -> click rate to go
+from 2.4% to roughly 20% — about eightfold — or a different channel. This is NOT a BLOCKED state:
+nothing reserved to David is in the way, and the letter is mine to rewrite. It is a trajectory
+warning, made now rather than on 31 October.
 
 ## SUPPLY — ASSOCIATION LANE NEARLY DONE; LICENCE FILES CARRY NO MAILBOX
 
@@ -189,30 +145,35 @@ says exhausting the list is fine. Watch `published_at` on 382 and move on to the
 - Older dead ends stand: USATF finder/regionals · NY DEC guides · US search scraping · orienteeringusa
   · skifederation · americancanoe · americanhiking · adventurecycling · coloradooutfitters.org.
 
-## WHERE THE FUNNEL LEAKS (PROBED 18 Sep 2026, /onboard/funnel?days=6)
+## WHAT THE NEXT RUN SHOULD PICK UP (rewritten by run 14 — run 13's list is superseded)
 
-30 sessions, 15 humans, 18 distinct emails. 16 landed from letters. **One walked the whole way**
-(Montana, above). The rest stall early: 15 dwell, only 3 subpick. So there are now TWO leaks, and
-they are different sizes:
-- **The far leak is FIXED tonight**: whoever finishes now gets the way back. That was worth 1 person.
-- **The near leak is untouched**: 15 dwell -> 3 subpick. Most people land, look, and do not take
-  the first tap. That is the next thing to work on, and it is a wording/first-screen problem, not
-  a plumbing one.
+1. Run the number. Then read `GET /onboard/funnel?days=21` and **read `human_funnel` and
+   `letter_humans`, never `funnel`** (FUNNEL-DENOM-1). Watch `published_at` on listing **382**.
+2. Ledger in shards (`--shard=k/8`, then `--combine=8`) + rulings check. Both green at the end of
+   run 14. **If the board opens RED, clear `.git/index.lock` with `scripts/git_unlock.py` and
+   re-run before believing it** — that was both of run 14's opening REDs.
+3. **THE ONE JOB: the letter. 8 human clicks from ~320 human opens.** This is now the only large
+   measurable loss in the whole chain and it is explicitly mine (ONBOARDING_GOAL s5, "change the
+   email"). Read the letter as a working outfitter would at 06:00. Change ONE thing, ship it, and
+   let the wave measure it — `click_register.tier` grades human vs machine already, so an A/B is
+   readable without new instrumentation. Do not change the app's first screen: run 14 proved
+   nothing is being lost there.
+4. Supply is NOT the constraint any more and should not take a run's budget: 4,257 letters are
+   already on the list unsent. More names do not help while 2.4% of readers click.
+5. If the letter rewrite does not move the click rate within ~2 waves, the honest next question is
+   a different channel, and that is a section-9 STALLED report, not more letters.
 
-## WHAT THE NEXT RUN SHOULD PICK UP
+## OPEN LOOPS (run 13 + run 14)
 
-1. Run the number. Read `/onboard/funnel?days=3` and look for a SECOND full walk - and, above all,
-   for **listing 382 going live**, which is what the first real onboarding looks like.
-2. Ledger in shards + rulings check. Both green at the end of run 13.
-3. **The near leak: landed -> first tap.** 15 dwelled, 3 tapped. Read the first screen as a stranger
-   would. This is now the biggest measurable loss in the funnel and it is inside the agent's remit.
-4. Supply: probe ONE untested kind (USFS permittee PDFs or a chamber directory) with curl first.
-5. The `moga` register produced the only real composer we have ever had. **Associations of working
-   guides are the lane that works** - prefer more of that kind over any new geography.
-
-## OPEN LOOPS LEFT BY RUN 13 (not fixed tonight, deliberately)
-
-- **The ledger's live JSON probes can go RED on a network hiccup.** Shard 4 reported RG-0386
+- **RUN 14: `_get_json()` still does not exist.** Run 13 specified it; nothing wrote it. RG-0401
+  (EDGE-BLIND-1) fixed `_get()` to raise ProbeOffline on an edge refusal, which covers most of it,
+  but the 14 `json.loads(_get(...))` call sites are still individually unprotected against a 200
+  that is not JSON. Small, one helper. RG-0402 uses `json.loads(_get(...))` and inherits the gap.
+- **RUN 14: the ledger's `rg_no_third_party_script_on_surface` downloads ~16 MB per run** (ten
+  `/static/adventures_*_map.html`, up to 2.5 MB each). Cold, that is ~172 s — on its own it is why
+  a whole-board run gets killed and why shard 1 is the slow one. A HEAD/Range or a cached digest
+  would make the board runnable in one call again.
+- *(run 13, superseded in part by RG-0401)* **The ledger's live JSON probes can go RED on a network hiccup.** Shard 4 reported RG-0386
   REGRESSED with `JSONDecodeError` while the live endpoints were in fact perfect (re-probed 4/4
   clean immediately after, green on the full re-run). 14 checks do `json.loads(_get(...))`; a 200
   that is not JSON - an edge interstitial, a truncated body - becomes a FAIL and the board then says
@@ -220,12 +181,22 @@ they are different sizes:
   CLAUDE.md names. FIX: one `_get_json()` that retries once and raises ProbeOffline (UNVERIFIED,
   blind) rather than FAIL when the body is not the app's JSON. Small, one helper, 14 call sites.
   Left undone tonight only because CLAUDE.md allows one fix per task and the conversion leak won.
-- Listing **386** (my wiring test) and the two files in `_to_delete/` need a deletion, which is
-  David's.
+- Listing **386** (wiring test) is ARCHIVED, not deleted; 387/388 likewise. The two files in
+  `_to_delete/` and **9 orphaned `tmp_obj` files in `.git/objects`** need a deletion, which is
+  David's (`git_unlock.bat` sweeps the tmp_objs).
 - RG-0346 (agency letters lack the console CTA) - still open, still adds no nightly volume.
 - Film 07 (Liquidation) unpublished - David's click, when he chooses.
 
 ## THINGS ALREADY TRIED THAT DID NOT WORK
+
+- **Reading `funnel` step counts as people (run 13 did, and built a plan on it).** They include mail
+  scanners the UA grader missed. Read `human_funnel` / `letter_humans` (FUNNEL-DENOM-1).
+- **Believing a ledger RED before clearing `.git/index.lock`.** Two REDs, one lock (run 14).
+- **`request_deploy.py --files <x> "reason"`** — it does not commit, prints `relay: Everything
+  up-to-date`, advances the ref to the PREVIOUS head and reports "live in ~2 min". Nothing ships.
+  Use `--all "reason"`, then PROBE the live endpoint. Another "reports success, did nothing".
+- **Repeating run 13's "Resend is unreachable from the box".** It is reachable (200 in 0.19 s); the
+  outreach wave goes out through it from a verified subdomain.
 
 - Opening `/admin.html` publicly. `fill_wave_gaps.py` via the queue (401). Reading "no sendable
   prospects" as supply (13 Sep: it was a DISARM — check `armed`/`gates_green` in waves_policy.json and
@@ -237,11 +208,28 @@ they are different sizes:
 
 ## OPEN QUESTIONS FOR DAVID (batched, never dripped)
 
-**None.** Nothing from this run is waiting on David.
+**None.** Nothing from run 13 or run 14 is waiting on David, and nothing reserved is in the way.
 
 Listing 382 is still a draft because publishing it is the seller's own act (ONBOARDING_GOAL s3,
-RUL-117(c)). He has a working link, and as of 07:29 tonight the path behind that link actually
-works. If he taps it, the number becomes 1.
+RUL-117(c)). He has a working link and, since 18 Sep 07:29, a path behind it that actually works.
+If he taps it, the number becomes 1.
+
+**One thing David should KNOW, not decide (run 14):** on how the letter performs today — 8 real
+clicks from ~320 real readers of 2,491 letters — 20 by 31 October is not reachable through this
+channel. Nothing is blocked; rewriting the letter is mine and is the next run's job. This is stated
+now rather than on 31 October because he makes real decisions on this number.
+
+## WHAT RUN 14 LEARNED ABOUT ITSELF
+
+**The instrument is part of the goal.** Run 13 was careful, honest and thorough, and still handed
+the next run a target that did not exist — because it trusted a number the endpoint itself had
+mislabelled. ONBOARDING_GOAL s2 says PROBED beats EXECUTED beats READ beats RECALLED; a figure
+returned by our own API is only READ. Before spending a run on "the biggest measurable loss in the
+funnel", go behind the endpoint to the rows and check the denominator is the same one.
+
+**And the corollary, which cost this run twenty minutes:** a deploy tool that prints a success line
+is EXECUTED, not PROBED — exactly run 13's own lesson about 'sent'. The same class bit twice in two
+days. Probe the live thing.
 
 ## WHAT RUN 13 LEARNED ABOUT ITSELF (read before parking anything as 'reserved')
 

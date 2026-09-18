@@ -24221,3 +24221,33 @@ block behind tonight's false REDs — so app mail has been going out via the Gma
 along. Nothing is broken; the Resend dashboard just isn't the place to look.
 
 Cost model impact: none.
+
+## Session — Onboarding goal run 14 (18 Sep 2026, Opus 5)
+
+**FUNNEL-DENOM-1 / RG-0402 — the onboarding funnel was counting mail scanners as people, and the
+previous run had already built its plan on that.** `GET /onboard/funnel` reported `humans` (sessions
+that stayed 12 s and touched the page) beside a `funnel` array counted over *every* non-bot session
+— two populations in one table, with the docstring calling the first "the denominator a conversion
+rate may be built on". Run 13 read "15 dwell → 3 subpick" off those two columns and recorded
+landed→first-tap as the biggest measurable loss in the funnel and the next thing to fix. Probed on
+the live DB over 21 days, it is not a loss: 156 non-bot sessions produced 28 that dwelled, only 3 of
+which had a `landed` row at all; 65 letter landings were never graded as bots and never dwelled, and
+26 of those arrive inside the 22h UTC hour the nightly wave fires — the FUNNEL-HUMAN-1 scanner
+signature one layer on. Their `subpick`/`photos` rows are real code paths (a letter pre-selects the
+category, `sfInit` → `sfStartCat`, logged in the same second), which is why it looked like a funnel.
+Fix: the endpoint now also returns `human_funnel` (per-step counts over exactly the sessions
+`humans` counts) and `letter_humans` (arrived on an outreach link AND stayed), and the note names
+which to read; raw `funnel` is left byte-identical so no existing reader changes meaning underneath
+itself. Proven 9/9 on a fixture before ship and probed live after (db931d6): raw
+`landed 63 · subpick 23 · photos 22` vs honest `landed 2 · subpick 2 · photos 4`, `letter_humans 2`.
+
+**What it shows.** The email lane's own grader agrees independently: `click_register.tier` reads
+human_click 8 · human_open 321 · machine 163 · uncertain 84 — **eight real humans have clicked, ever,
+out of 2,491 letters**, one of them the Montana outfitter who built a complete advert. The app is not
+the bottleneck; the loss is between reading the letter and clicking it (8 clicks / ~320 human opens).
+Letters do reach inboxes — the wave sends via Resend from the verified `mail.trustsquare.co`, and
+`api.resend.com` answers the box 200 in 0.19 s, correcting a note left by the previous run.
+
+Also: the board opened RED on RG-0015 and RG-0197 — one stranded `.git/index.lock`, not two faults;
+healed with `scripts/git_unlock.py`. Ledger 389 entries · 0 regressed · 0 unverified; rulings 0 FAIL.
+Cost model impact: none.
