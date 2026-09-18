@@ -23881,6 +23881,28 @@ def rg_quick_return_1():
                 out.append((FAIL, "the gate no longer requires a typed address -- it would mail "
                                   "on an empty or absent seller_email"))
 
+    # --- the link must still work when they actually open it (QUICK-RETURN-TTL-1) ---
+    # 18 Sep 2026: this borrowed the sign-in CODE's 20-minute life. Right for a code
+    # somebody just asked for; wrong for a letter saying "come back and finish your
+    # advert". The first one went to Montana at ~01:15 local -- dead long before he
+    # could plausibly open it, and the button would have told him his link expired.
+    if "_quick_draft_return" in bea:
+        tseg = bea.split("def _quick_draft_return", 1)[1][:3000]
+        if "timedelta(minutes=" in tseg.split("_pyjwt.encode", 1)[0][-800:] or \
+           "timedelta(minutes=" in tseg[:tseg.find("_pyjwt.encode") + 400 if "_pyjwt.encode" in tseg else 0]:
+            out.append((FAIL, "the return link is minted with a MINUTES life again -- a letter that "
+                              "says 'come back and finish your advert' is opened hours or days "
+                              "later, so the button is dead on arrival (QUICK-RETURN-TTL-1)"))
+        if "timedelta(days=" not in tseg:
+            out.append((FAIL, "the return link no longer carries a days-long life -- it will not "
+                              "survive until the person opens it"))
+    if "_send_draft_waiting_email" in bea:
+        cseg = bea.split("def _send_draft_waiting_email", 1)[1][:3000]
+        if "7 days" not in cseg:
+            out.append((FAIL, "the letter no longer tells the reader how long the link lasts -- "
+                              "AGENCY-INVITE-MAIL-1: never state a life the token does not have, "
+                              "and never leave it unstated either"))
+
     # --- it must never mail a link it cannot sign (QUICK-RETURN-GUARD-1) ----
     # 18 Sep 2026, found on the one lead that mattered: a sender process without
     # MS_JWT_SECRET signed the link with an EMPTY key, _send_html_email reported

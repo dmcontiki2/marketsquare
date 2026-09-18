@@ -15711,8 +15711,8 @@ def _send_draft_waiting_email(to_email: str, link: str, title: str, code: str = 
         "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
         "text-decoration:none;padding:13px 24px;border-radius:8px;font-weight:700'>"
         "Open my advert &rarr;</a></p>"
-        + ("<p style='color:#6b7280;font-size:13px'>If that link has gone stale, open "
-           "<a href='" + APP_URL + "'>trustsquare.co</a> and sign in with <b>"
+        + ("<p style='color:#6b7280;font-size:13px'>The link works for 7 days. After that, "
+           "open <a href='" + APP_URL + "'>trustsquare.co</a> and sign in with <b>"
            + to_email + "</b> \u2014 the advert is waiting on that address, and only "
            "that one.</p>")
         + "<p style='color:#6b7280;font-size:12px'>You are getting this because you "
@@ -15723,7 +15723,7 @@ def _send_draft_waiting_email(to_email: str, link: str, title: str, code: str = 
     plain = ("Your TrustSquare advert is composed and waiting: " + (title or "")
              + "\n\nIt is saved and not yet public. Open it, check it and publish it:\n"
              + link
-             + "\n\nIf that link has gone stale, open " + APP_URL + " and sign in with "
+             + "\n\nThe link works for 7 days. After that, open " + APP_URL + " and sign in with "
              + to_email + " -- the advert is waiting on that address.\n\n"
              "You are getting this because you entered this address to publish an "
              "advert. If that wasn't you, ignore it.")
@@ -15750,9 +15750,20 @@ def _quick_draft_return(to_email: str, listing_id: int, title: str) -> None:
                        "sign-in link would be signed with an empty key and rejected on "
                        "arrival (QUICK-RETURN-GUARD-1)", listing_id)
             return
+        # QUICK-RETURN-TTL-1 (18 Sep 2026). This borrowed the SIGN-IN token's 20-minute
+        # life, and 20 minutes is right for a code somebody just asked for and wrong for
+        # a letter that says "come back and finish your advert". PROVED ITSELF THE DAY IT
+        # SHIPPED: the first of these went to a Montana outfitter at ~01:15 his local time;
+        # by the hour he could plausibly have opened it the link was long dead, and the
+        # button in it would have told him his link had expired. A dead button is worse
+        # than no letter -- it spends the one moment he came back. Seven days covers "I
+        # read it over breakfast" and "I got to it at the weekend" without leaving a
+        # month-long key sitting in an inbox; the 30-day employer_confirm token is the
+        # precedent for a long, purpose-scoped link (RUL-136).
+        _ttl_days = 7
         token = _pyjwt.encode(
             {"email": em, "purpose": "signin",
-             "exp": datetime.now(timezone.utc) + timedelta(minutes=20),
+             "exp": datetime.now(timezone.utc) + timedelta(days=_ttl_days),
              "iat": datetime.now(timezone.utc)},
             _JWT_SECRET, algorithm=_JWT_ALGO)
         link = APP_URL + "/?signin=" + token + "&draft=" + str(int(listing_id))
