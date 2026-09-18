@@ -24472,5 +24472,82 @@ def rg_funnel_denominator():
                     % (d.get("sessions", -1), d.get("humans", -1), d.get("letter_humans", -1)))]
 
 
+@entry("RG-0403", "STATS-HUMAN-1: the CityLauncher board's OPENED and CLICKED cards count PEOPLE "
+                  "-- the grading that already exists is what reaches David's screen, not the raw "
+                  "webhook events it was built to correct",
+       LOCKED, fixed_on="2026-09-18",
+       scope="CityLauncher/api/server.py prospects_stats() (opened_human / clicked_human / "
+             "graded_machine / graded_uncertain / graded_recipients / human_grading, read from the "
+             "click_register table, None-not-zero when it cannot be read) AND "
+             "CityLauncher/dashboard/citylauncher.html (the two cards lead with the human figure, "
+             "keep the raw one visible underneath as '<n> incl. scanners', and the funnel bars for "
+             "those two stages use the graded figure). BOTH halves, because a number named "
+             "honestly by the API and repainted raw by the page is the same lie with a second "
+             "opinion. THE FAULT: the Resend webhook advances prospects.status on ANY event, so "
+             "the stage counts include the mail-security scanners (Defender Safe Links, "
+             "Proofpoint, Mimecast) that fetch every URL in every message. PROBED on the live DB "
+             "18 Sep 2026: status said opened 434 / clicked 75; click_register, scoring the SAME "
+             "events, graded human_click 8 - human_open 321 - machine 163 - uncertain 84. The "
+             "click card was overstating real people about ninefold. click_register.py has "
+             "existed since 3 Sep and funnel_report.py (FUNNEL-READ-1, 6 Sep) has read it "
+             "correctly the whole time -- the grading was right and simply never reached the "
+             "board, which is the more dangerous shape: a correct instrument nobody is looking "
+             "at, beside a wrong one they are. Found the same day as FUNNEL-DENOM-1 / RG-0402, "
+             "which is this exact fault in MarketSquare's /onboard/funnel, and which had already "
+             "cost a run of the onboarding goal a week of work aimed at a leak that did not "
+             "exist. CLASS, not instance: wherever this project grades humans from machines, the "
+             "graded number is the one that goes on the card.",
+       ref="RG-0402 / FUNNEL-DENOM-1 (the same fault, MarketSquare side, same day) · "
+           "HUMAN-CLICKS-1 / click_register.py · FUNNEL-READ-1 / emailer/funnel_report.py · "
+           "OPTOUT-COUNT-1 and TEST-FIXTURE-EXCLUDE-1 (the same server-side-count move on this "
+           "board) · ONBOARDING_GOAL.md section 2 · David, 18 Sep 2026: \u201cChange the email "
+           "statistics to be correct.\u201d")
+def rg_stats_human_1():
+    out = []
+    api = repo_file("../CityLauncher/api/server.py")
+    if api is None:
+        out.append((INFO, "NOT EVALUATED - CityLauncher/api/server.py is not readable from here"))
+    else:
+        if "STATS-HUMAN-1" not in api:
+            out.append((FAIL, "the human grading is gone from prospects_stats -- the board is "
+                              "counting mail scanners as people again"))
+        else:
+            seg = api.split("def prospects_stats(", 1)[-1][:6000]
+            for token, why in (
+                ("click_register", "prospects_stats no longer reads the click register, so its "
+                                   "human figures cannot be coming from the grader"),
+                ("clicked_human", "clicked_human is gone -- the only click number left is the "
+                                  "scanner-inflated one"),
+                ("opened_human", "opened_human is gone"),
+                ("NOT MEASURED", "an unreadable register no longer reports NOT MEASURED, so it "
+                                 "will paint a reassuring zero instead of admitting it is blind")):
+                if token not in seg:
+                    out.append((FAIL, why))
+            if "totals['clicked_human'] = None" not in seg:
+                out.append((FAIL, "the failure path no longer sets the human counts to None -- a "
+                                  "missing register must never read as zero people"))
+    dash = repo_file("../CityLauncher/dashboard/citylauncher.html")
+    if dash is None:
+        out.append((INFO, "NOT EVALUATED - CityLauncher/dashboard/citylauncher.html is not "
+                          "readable from here"))
+    else:
+        if "STATS-HUMAN-1" not in dash:
+            out.append((FAIL, "the dashboard no longer leads with the human figure -- the API can "
+                              "name it honestly and the page will still paint the raw count"))
+        else:
+            for token, why in (
+                ("opened_human", "the Opened card is not reading the graded figure"),
+                ("clicked_human", "the Clicked card is not reading the graded figure"),
+                ("incl. scanners", "the raw count is no longer labelled as including scanners, so "
+                                   "the two numbers are indistinguishable on the card"),
+                ("stageVal", "the funnel bars are back on raw stage counts -- a bar built from "
+                             "scanner traffic is not a funnel")):
+                if token not in dash:
+                    out.append((FAIL, why))
+    return out or [(INFO, "the board's opened/clicked cards and funnel bars lead with the graded "
+                          "human count; the raw figure stays visible and labelled; an unreadable "
+                          "register reports NOT MEASURED rather than zero")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
