@@ -5,8 +5,39 @@ diary — the changelog is the diary.*
 
 ---
 
-> **READ FIRST, RUN 16.** Nothing is waiting on David. `DECISIONS_2026-09-18_EVENING.md` is DONE
-> (run 15). The trajectory warning below is the thing to read before choosing what to do.
+> ## READ FIRST, RUN 16 — TWO THINGS, AND THE FIRST ONE OUTRANKS EVERY BUILD
+>
+> **1. OUTREACH HAS STOPPED. PROBED 19 Sep, letters per day out of `prospects.emailed_at`:**
+> `5 Sep 398 · 6 Sep 251 · 7 Sep 254 · 9 Sep 317 · 10 Sep 12 · 11 Sep 142 · 12 Sep 108 ·`
+> `13 Sep 87 · 14 Sep 146 · 15 Sep 93 · 16 Sep 57 · 17 Sep 43 · 18 Sep 0 · 19 Sep 0.`
+> **A week of decay and then nothing for two days.** `emailed` has been frozen at 2,499 across
+> three measurements. Meanwhile the door instrument that shipped on 19 Sep has caught **one
+> arrival in two days, and that one was run 15's own labelled probe** (`src=probe-run15`).
+>
+> **FIND OUT WHY BEFORE BUILDING ANYTHING.** What is already ruled out, so do not re-probe it:
+> the policy is NOT disarmed (96 of 102 cities armed, cap 250/day, batch 12); the laptop's 00:10
+> task is a DELIBERATE no-op (WAVE-SERVER-1 — `logs/launchday_19Sat09_2026010.log` says so in
+> terms, and the server timer is the one sender); an attempt to disable the laptop task on 18 Sep
+> 05:55 FAILED on permissions ("NOT ADMIN") and is a red herring. **So the question is the SERVER
+> sender, and whether the guards are refusing everything or the sendable supply is simply
+> exhausted** — 4,249 of 6,748 are unsent, but they may sit in unarmed cities or blocked
+> categories. Do not read "no sendable prospects" as supply without proving it (13 Sep precedent).
+>
+> **Building a better door for a market nobody is being invited to is the definition of wasted
+> effort.** Design work is downstream of this.
+>
+> **2. THE DIRECTION CHANGED — David, 19 Sep (live).** The employer lane. See the block further
+> down headed "DIRECTION CHANGED AGAIN" and `QUICK_LISTING_SPEC.md` **Part II**; RUL-150/151/152.
+> **Do NOT build the role registry contents or the employer lane tonight** — the 92-role slate is
+> under review with David in a separate session (`ROLE_SLATE_REVIEW.md`) and the review changes
+> the shape of both. What IS unblocked and safe: `speaks[]` on the seller (needed under every
+> scenario), RG-0414 DOOR-RETURN-1, and the letter itself.
+>
+> **And note what the decay says about strategy:** 398 letters a day down to zero in twelve days
+> is a channel exhausting itself. That is the strongest evidence yet that David's employer lane is
+> not a nice-to-have — it is the replacement for a channel that is dying in front of us.
+>
+> `DECISIONS_2026-09-18_EVENING.md` is DONE (run 15). Nothing is waiting on David.
 
 ## NOTE FOR THE 20 SEP SUNDAY SUMMARY (this is the next run's one required deliverable)
 
