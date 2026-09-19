@@ -24361,3 +24361,28 @@ likely to have. The entry carries an explicit warning not to paste the /quick/ W
 onto it: here there is no server-side draft for it to point at, and telling somebody their advert
 is saved somewhere it is not is worse than the gap.
 Cost model impact: none.
+
+
+**C1-FAILSAFE-1 / RG-0415 — a cost ceiling that cannot be read is not a ceiling.** `_check_cost_ceiling`
+failed open on any internal error, by deliberate design ("never lock a legitimate paying user out").
+That is right for a blip and wrong for a breakage, and the old code could not tell them apart.
+Proved against the old code before changing it: with the cost-accounting database unreadable, **200
+of 200 consecutive paid AI calls were allowed — permanently, and silently.** The brake (the ceiling
+check), the meter (`ai_spend_log`) and the concurrency guard (`ai_spend_holds`) all sit on one
+database, so the single failure that removes the ceiling removes the record of the overspend at the
+same moment; the only signal was one log line nobody reads. Now a short streak keeps serving and a
+persistent one refuses with 429 — step down, never halt (RUL-138) — and the calls that went through
+blind are counted, because that number is the exposure. The breaker state is deliberately
+process-local, the one justified exception to "no state on the box": it exists to survive the
+database being broken, so it cannot live in that database. Ten assertions pass, including that a
+blip of five is tolerated and the sixth closes the rail.
+
+**A correction on the record.** This fix was put to David on the claim that a failed reservation
+INSERT could defeat an already-breached ceiling. **That claim was wrong**, and it was disproved
+against the old code before shipping: the breach raises before the INSERT is reached, so the old
+code refused correctly in exactly that case. The reservation was still split out — a failed write
+should not divert the whole check into the fail-open branch — but it is not the defect that
+justified the change. The breaker is. Second instance in one day of asserting a defect read off a
+grep line; a defect is a hypothesis until it has been run against the old code and watched to fail.
+Cost model impact: none — the ceilings are unchanged at $0.50/user/day and $100/platform/day. This
+changes only what happens when the accounting itself breaks.

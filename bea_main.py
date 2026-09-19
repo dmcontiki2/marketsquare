@@ -2169,6 +2169,18 @@ def _maybe_fire_spend_alert(conn):
 # C1-RES worst-case hold (USD): a conservative per-call ceiling — the dearest metered
 # call (Sonnet vision batch) rounds up to this. Over-reserves slightly (safe direction);
 # settled down to the real figure the moment _log_ai_spend records actual tokens.
+# C1-FAILSAFE-1 (19 Sep 2026, David approved). The ceiling's own circuit breaker.
+# DELIBERATELY PROCESS-LOCAL, which is the one justified exception to scale-invariant #3
+# ("no state on the box"): this state exists to survive the DATABASE being broken, so it
+# cannot live in that database. It is per-worker by design -- N workers each tolerate N
+# blips, which is the safe direction: more tolerance of transients, and every worker still
+# closes independently once its own view of the DB is persistently broken.
+_CEILING_FAIL_STREAK      = 0      # consecutive internal failures of the ceiling check
+_CEILING_FAIL_FIRST_AT    = None   # when the current streak began
+_CEILING_BLIND_CALLS      = 0      # paid calls that proceeded UNMETERED. This is the exposure.
+_CEILING_FAIL_OPEN_MAX    = 5      # blips tolerated before we stop spending blind
+_CEILING_FAIL_OPEN_WINDOW_S = 300  # a streak older than this is stale and resets
+
 _AI_WORST_CASE_HOLD_USD = 0.06
 _HOLD_TTL_S = 180
 
@@ -2206,8 +2218,12 @@ def _check_cost_ceiling(email: str) -> None:
     AI call. REFUSES (HTTP 429) when today's logged AI spend has reached the per-user
     or platform-wide USD ceiling. Distinct from observe-and-alert. Ceiling 0 = off.
     Superusers exempt from the per-user rail (still counted toward platform).
-    Fail-OPEN on internal error — never lock a legitimate paying user out.
+    Fail-OPEN on a TRANSIENT internal error — never lock a legitimate paying user out
+    over a blip. C1-FAILSAFE-1 (19 Sep 2026): a PERSISTENT internal failure closes the
+    rail instead, because a ceiling that cannot be read is not a ceiling, and the meter
+    that would have caught the overspend lives in the same database.
     """
+    global _CEILING_FAIL_STREAK, _CEILING_FAIL_FIRST_AT, _CEILING_BLIND_CALLS
     try:
         conn = database.get_db()
         try:
@@ -2252,21 +2268,65 @@ def _check_cost_ceiling(email: str) -> None:
                             detail="You've reached today's AI usage limit on this account. "
                                    "It resets at 00:00 UTC."
                         )
-            # C1-RES: cleared all ceilings — place a worst-case reservation atomically so
-            # concurrent callers see it and cannot collectively overshoot. Settled by
-            # _log_ai_spend once the real cost is known; self-expires if the call aborts.
-            _exp = (__import__('datetime').datetime.utcnow()
-                    + __import__('datetime').timedelta(seconds=_HOLD_TTL_S)).isoformat(timespec="seconds")
-            _crt = __import__('datetime').datetime.utcnow().isoformat(timespec="seconds")
-            conn.execute("INSERT INTO ai_spend_holds (email, est_usd, expires_at, created_at) VALUES (?,?,?,?)",
-                         (email or '', _AI_WORST_CASE_HOLD_USD, _exp, _crt))
-            conn.commit()
+            # C1-FAILSAFE-1: the brake has now done its job on READS alone. The
+            # reservation below is a WRITE, with a different failure mode, and it used to
+            # share this try -- so a failed INSERT (locked DB, missing table after a
+            # migration, full disk) silently disabled a ceiling the read had already
+            # cleared, and would equally have disabled one the read had BREACHED. The
+            # reservation is now best-effort and separate: losing it weakens concurrent-
+            # overshoot protection by one worst-case call, which is a rounding error, and
+            # it can no longer defeat the ceiling itself.
+            try:
+                _exp = (__import__('datetime').datetime.utcnow()
+                        + __import__('datetime').timedelta(seconds=_HOLD_TTL_S)).isoformat(timespec="seconds")
+                _crt = __import__('datetime').datetime.utcnow().isoformat(timespec="seconds")
+                conn.execute("INSERT INTO ai_spend_holds (email, est_usd, expires_at, created_at) VALUES (?,?,?,?)",
+                             (email or '', _AI_WORST_CASE_HOLD_USD, _exp, _crt))
+                conn.commit()
+            except Exception as _hold_exc:
+                _log.warning("C1-RES hold not placed (ceiling still enforced): %s", _hold_exc)
         finally:
             conn.close()
+        # The check completed. Any previous streak was transient — clear it.
+        _CEILING_FAIL_STREAK = 0
+        _CEILING_FAIL_FIRST_AT = None
     except HTTPException:
         raise
     except Exception as exc:
-        _log.error("_check_cost_ceiling failed (failing open): %s", exc)
+        # C1-FAILSAFE-1. Fail-open is RIGHT for a blip and WRONG for a breakage, and the
+        # old code could not tell them apart. The danger was never one bad line: the brake
+        # (this check), the meter (ai_spend_log) and the concurrency guard (ai_spend_holds)
+        # all sit on ONE database. When that database is the thing that is broken, the old
+        # behaviour lost all three at once and said so only in a log line nobody reads --
+        # spending real money with no ceiling, no record of it, and no alarm.
+        #
+        # So: step DOWN, never halt on the first stumble (RUL-138, David: "on cost, never
+        # halt -- step DOWN"). A short streak is a blip and we keep serving. A persistent
+        # streak is a breakage, and at that point "never lock out a legitimate user" is no
+        # longer the operative risk -- spending unmetered money is.
+        _now = __import__('time').time()
+        if (_CEILING_FAIL_FIRST_AT is None
+                or (_now - _CEILING_FAIL_FIRST_AT) > _CEILING_FAIL_OPEN_WINDOW_S):
+            _CEILING_FAIL_STREAK = 0
+            _CEILING_FAIL_FIRST_AT = _now
+        _CEILING_FAIL_STREAK += 1
+
+        if _CEILING_FAIL_STREAK > _CEILING_FAIL_OPEN_MAX:
+            _log.error("C1-FAILSAFE-1 CLOSED: the cost ceiling has failed %d times in a row "
+                       "(%.0fs) -- refusing paid AI rather than spending unmetered. %d call(s) "
+                       "already went through blind. Last error: %s",
+                       _CEILING_FAIL_STREAK, _now - (_CEILING_FAIL_FIRST_AT or _now),
+                       _CEILING_BLIND_CALLS, exc)
+            raise HTTPException(
+                status_code=429,
+                detail="AI services are temporarily paused while we verify our usage "
+                       "accounting. Please try again shortly."
+            )
+
+        _CEILING_BLIND_CALLS += 1
+        _log.error("C1-FAILSAFE-1 OPEN (%d/%d in this window, %d blind call(s) total): "
+                   "the cost ceiling could not be read, allowing this call. %s",
+                   _CEILING_FAIL_STREAK, _CEILING_FAIL_OPEN_MAX, _CEILING_BLIND_CALLS, exc)
 
 
 # Serve local media files (fallback when Hetzner Object Storage not yet configured)

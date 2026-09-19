@@ -1,0 +1,199 @@
+# ROLE SLATE — REVIEW WORKING FILE
+*Created 19 September 2026 for David's review discussion. **This file is the state of that
+discussion** — it is marked up across several sittings, so whatever is written here is what
+survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss11-18).*
+
+## HOW TO USE THIS FILE
+
+- **`D` column** = on David's original list of 19 Sep. Blank = added by Claude as "the ones you
+  did not list".
+- **`Decision` column** — fill in one of: **`IN`** (beta), **`LATER`** (after beta),
+  **`HOLD`** (blocked on something — say what in Notes), **`OUT`** (not a TrustSquare role).
+- **Rename freely.** The label is what she calls herself; the `key` behind it never changes.
+- Add rows at will. Every role is a data row, never a new screen (spec s13).
+
+## THE RULES THIS REVIEW MUST NOT BREAK
+
+1. **The employer enrols; the employer NEVER creates the listing.** (ONBOARDING_GOAL s3, RUL-150.)
+2. **Role names only — no collective noun.** She is a *Cleaner*, a *Welder*. Never "domestic
+   worker", "help", "maid", "service provider". (Spec s13.)
+3. **Never the word "safe"** about a person (RG-0238); a verified email is not identity (RUL-135).
+4. **Anything with a legal licence to practise** (PSIRA, PrDP, CoC, blasting) is either verified or
+   left out — never shipped as an ordinary row. (Spec s15c.)
+5. Representation parity in every image for every role (SO-2). This list is exactly where getting
+   the pictures wrong would do real harm.
+
+## OPEN QUESTIONS THIS REVIEW SHOULD SETTLE
+
+- **"Miner" and "Industry worker" are sectors, not roles.** Split them into the actual jobs, or
+  drop the buckets? (They are on David's list as written.)
+- **Where does Chef sit** — Casuals, or does it deserve its own treatment?
+- **Which roles need police clearance to be effectively mandatory** rather than a bonus? Anything
+  with child contact or home access (nanny, creche assistant, locksmith, live-in housekeeper).
+- **Which employers do we approach first**, and which roles does each one unlock at scale?
+- **What are the four taps for each class?** Casuals defaults to what/where/when/rate. Technical
+  probably needs trade/qualification/area/call-out. Roles override only where they must.
+
+---
+
+# SERVICES — CASUALS
+
+### Home & care
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Home cleaner | D | IN | David's list. The anchor role — everything is already built around it. |
+| Housekeeper (live-in / live-out) |  |  |  |
+| Nanny / childminder |  |  | Highest trust bar of any Casuals role. Police clearance should be near-mandatory, not optional. |
+| Elder carer |  |  | See s15c — sits close to health care. |
+| Home nurse aide |  |  | See s15c — closest to a clinical claim. Recommend HOLD for beta. |
+| Cook (domestic) |  |  |  |
+| Chef | D | IN | David's list. Sits oddly between Casuals and a trade — worth a word in the review. |
+| Laundry & ironing |  |  | Already an option on the live homehelp door. |
+| Gardener |  |  | Already an option on the live homehelp door. |
+| Pool cleaner |  |  |  |
+| Window cleaner |  |  |  |
+
+### Food & hospitality
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Hotel cleaner / room attendant | D |  | David's list. |
+| Quick-food kitchen hand | D |  | David's list. |
+| Till / counter assistant | D |  | David's list. |
+| Waiter / waitress |  |  |  |
+| Barista |  |  |  |
+| Bartender |  |  | Liquor-serving age rules — worth one check. |
+| Dishwasher / kitchen porter |  |  |  |
+| Baker |  |  |  |
+| Butcher's assistant |  |  |  |
+| Banqueting / function staff |  |  | Strong weekend-work fit. |
+
+### Retail & forecourt
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Petrol / forecourt attendant | D |  | David's list. |
+| Shelf packer |  |  |  |
+| Stock assistant |  |  |  |
+| Spaza / shop assistant |  |  |  |
+| Car guard |  |  | Often informal/self-employed already — may be the easiest cold sign-up of any role. |
+| Parking attendant |  |  |  |
+
+### Logistics & yard
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Warehouse picker / packer |  |  |  |
+| Loader |  |  |  |
+| Removals / moving help |  |  | Good household-hire fit. |
+| Delivery rider (e-hailing / food) |  |  | Already gig workers — they understand the model instantly. |
+| Courier on foot |  |  |  |
+
+### Site & general labour
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Factory worker (general) | D |  | David's list. |
+| Municipal worker (general) | D |  | David's list. Municipality as an employer is a big enrollment target. |
+| Farm worker | D |  | David's list. Seasonal lay-off is the strongest enrollment pitch we have. |
+| General labourer |  |  |  |
+| Painter's assistant |  |  |  |
+| Builder's assistant |  |  |  |
+| Cleaner (office / industrial) |  |  |  |
+| Grounds & landscaping help |  |  |  |
+
+### Trades-adjacent & informal
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Seamstress / tailor |  |  |  |
+| Hair braider |  |  |  |
+| Salon assistant |  |  |  |
+| Cobbler |  |  |  |
+| Car washer |  |  |  |
+| Event staff |  |  |  |
+| Creche assistant |  |  | Child-contact — same clearance question as nanny. |
+
+### Security
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Security guard |  | HOLD | s15c. PSIRA registration is a LEGAL requirement to work, not a trust bonus. Verify or leave out. |
+
+---
+
+# SERVICES — TECHNICAL
+
+### Mining & heavy industry
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Miner (general) | D |  | David's list. 'Miner' is a sector, not a role — the review should split it. |
+| Rock drill operator |  |  |  |
+| Blaster |  |  | Licensed. |
+| Winch driver |  |  |  |
+| TMM / machine operator |  |  |  |
+| Rigger |  |  |  |
+| Boilermaker |  |  |  |
+| Millwright |  |  |  |
+| Fitter & turner |  |  |  |
+| Welder |  |  | Probably the single most portable technical skill on this list. |
+| Crane operator |  |  | Licensed. |
+| Forklift operator |  |  | Licensed. |
+
+### Motor & transport
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Transport / business driver | D |  | David's list. |
+| Code 10 / 14 driver |  |  |  |
+| Long-haul driver |  |  |  |
+| Taxi / shuttle driver |  | HOLD | s15c. PrDP is a legal requirement for passenger-carrying. |
+| Diesel mechanic |  |  |  |
+| Motor mechanic |  |  |  |
+| Auto electrician |  |  |  |
+| Panel beater |  |  |  |
+| Spray painter |  |  |  |
+| Tyre fitter |  |  |  |
+
+### Building trades
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Industry worker (skilled) | D |  | David's list. Like 'Miner' — a bucket the review should split or drop. |
+| Electrician |  |  | CoC / DoEL registration already pays 12 pts on the Technical ladder. |
+| Plumber |  |  | PIRB already on the ladder. |
+| Bricklayer |  |  |  |
+| Plasterer |  |  |  |
+| Tiler |  |  |  |
+| Carpenter |  |  |  |
+| Roofer |  |  |  |
+| Glazier |  |  |  |
+| Ceiling & partition installer |  |  |  |
+| Painter (qualified) |  |  |  |
+| Paving |  |  |  |
+| Waterproofing |  |  |  |
+
+### Systems & installation
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Refrigeration / HVAC technician |  |  |  |
+| Solar PV installer |  |  | Growth market in SA — loadshedding demand is real and current. |
+| Borehole & pump technician |  |  |  |
+| CCTV / alarm installer |  |  | PSIRA may apply — check alongside the security guard question. |
+| Gate & garage-door technician |  |  |  |
+| Locksmith |  |  | Trust-sensitive: access to homes. Clearance question. |
+| Appliance repair |  |  |  |
+| IT / networking technician |  |  |  |
+| Small-engine repair |  |  |  |
+
+---
+
+## DECISIONS LOG
+*Append one line per sitting. Date, what was settled, what is still open.*
+
+- **19 Sep 2026 (Claude, seeding):** slate drafted from David's list of eleven plus ~80 more.
+  Nothing decided yet. Three roles pre-marked HOLD on legal-licence grounds (security guard, taxi /
+  shuttle driver, home nurse aide).

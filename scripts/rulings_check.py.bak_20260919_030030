@@ -980,14 +980,6 @@ REFLECTIONS = {
                               "the buyer sorts by it rather than being able to exclude on it"],
                              ["eleven official languages"]),
  ],
- # --- Role-slate sitting 1, 19 Sep 2026: clearance gates visibility for three child/dependent-adult
- # roles. Asserted on the slate itself, because the slate is the canonical state of that review.
- "RUL-153": [
-   ("RULINGS.md", ["A POLICE CLEARANCE IS WHAT OPENS PUBLIC VISIBILITY, NOT A BONUS"], []),
-   ("ROLE_SLATE_REVIEW.md", ["| Nanny |  | IN |", "| Caregiver |  | IN |", "| Cr\u00e8che assistant |  | IN |",
-                            "Police clearance gates public visibility (RUL-153)"],
-                           ["Nanny / childminder |"]),
- ],
  "RUL-152": [
    ("RULINGS.md", ["RUL-075 WAS A DECISION NOT TO SPEND TWO MONTHS ON LOCALISATION",
                    "seatbelts built ALONGSIDE the work, never a turnstile in front of it"], []),

@@ -76,48 +76,45 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 
 | Role | D | Decision | Notes |
 |---|:--:|:--:|---|
-| Petrol attendant | D | IN | David's list. Renamed 19 Sep (was 'Petrol / forecourt attendant'). Each station is a dealer-owned business that can say yes on the spot. |
-| Shelf packer |  | IN | Absorbs Stock assistant — one job. |
-| Stock assistant |  | OUT | 19 Sep: merged into Shelf packer. |
-| Shop assistant |  | IN | Renamed 19 Sep (was 'Spaza / shop assistant') — 'spaza' names the shop, not the work. |
-| Merchandiser |  | IN | Added 19 Sep — brand-paid shelf work across several stores; the biggest retail gig role that was missing. |
-| Car guard |  | HOLD | 19 Sep: PSIRA treats car guards as security officers who must be registered — same treatment as Security guard (verify PSIRA or leave out). The earlier 'easiest cold sign-up' note was wrong. |
-| Parking attendant |  | OUT | 19 Sep: a site-bound job (one mall or municipal lot) nobody hires through a marketplace; he lists under what else he can do. |
+| Petrol / forecourt attendant | D |  | David's list. |
+| Shelf packer |  |  |  |
+| Stock assistant |  |  |  |
+| Spaza / shop assistant |  |  |  |
+| Car guard |  |  | Often informal/self-employed already — may be the easiest cold sign-up of any role. |
+| Parking attendant |  |  |  |
 
 ### Logistics & yard
 
 | Role | D | Decision | Notes |
 |---|:--:|:--:|---|
-| Picker / packer |  | IN | Renamed 19 Sep (was 'Warehouse picker / packer') — the SA job-advert phrase. |
-| Loader |  | OUT | 19 Sep: merged into General worker (was General labourer) — same hire. |
-| Removals helper |  | IN | Renamed 19 Sep (was 'Removals / moving help'). Households hire directly. |
-| Delivery rider |  | IN | Renamed 19 Sep (was 'Delivery rider (e-hailing / food)'). Already gig workers. Driving-licence verification is settled once, with the drivers in Motor & transport. |
-| Courier on foot |  | OUT | 19 Sep: not a role hired at any scale in SA. |
+| Warehouse picker / packer |  |  |  |
+| Loader |  |  |  |
+| Removals / moving help |  |  | Good household-hire fit. |
+| Delivery rider (e-hailing / food) |  |  | Already gig workers — they understand the model instantly. |
+| Courier on foot |  |  |  |
 
 ### Site & general labour
 
 | Role | D | Decision | Notes |
 |---|:--:|:--:|---|
-| Factory worker (general) | D | OUT | David's list. 19 Sep: a workplace, not a job — merged into General worker; 'factory' is an `employer_kinds[]` value, and staff list as General worker, Picker / packer, Sewing machinist or Machine operator. |
-| Municipal worker (general) | D | OUT | David's list. 19 Sep: the municipality is the enrolling employer (`employer_kinds[]`), not the job — staff list as General worker, Office cleaner, Driver etc. Still a big enrollment target. |
-| Farm worker | D | IN | David's list. What she calls herself; farms hire directly by season. Seasonal lay-off is the strongest enrollment pitch we have. |
-| General worker |  | IN | Renamed 19 Sep (was 'General labourer') — the most-used title in SA job adverts. Absorbs Loader, Factory worker, Municipal worker. |
-| Painter |  | IN | Renamed 19 Sep (was "Painter's assistant"). Casuals, because most SA house painters hold no certificate; a trade certificate is evidence on this row (8 pts). Replaces Technical 'Painter (qualified)'. |
-| Builder's assistant |  | IN | The SA construction entry job. |
-| Office cleaner |  | IN | Renamed 19 Sep (was 'Cleaner (office / industrial)'). Contract cleaning companies are among the biggest enrolling employers. |
-| Grounds & landscaping help |  | OUT | 19 Sep: merged into Gardener — one job, house or estate. |
+| Factory worker (general) | D |  | David's list. |
+| Municipal worker (general) | D |  | David's list. Municipality as an employer is a big enrollment target. |
+| Farm worker | D |  | David's list. Seasonal lay-off is the strongest enrollment pitch we have. |
+| General labourer |  |  |  |
+| Painter's assistant |  |  |  |
+| Builder's assistant |  |  |  |
+| Cleaner (office / industrial) |  |  |  |
+| Grounds & landscaping help |  |  |  |
 
 ### Trades-adjacent & informal
 
 | Role | D | Decision | Notes |
 |---|:--:|:--:|---|
-| Seamstress / tailor |  | IN | Both words kept — each is what one of them calls themselves. |
-| Sewing machinist |  | IN | Added 19 Sep — the clothing-factory job; KZN and Cape Town retrenchments fit the former-employee pitch exactly. |
-| Hair braider |  | IN | Large informal trade, distinct from hairdressing. |
-| Hairdresser |  | IN | Renamed 19 Sep (was 'Salon assistant') — what she calls herself. |
-| Nail technician |  | IN | Added 19 Sep — one of the largest informal beauty trades. |
-| Cobbler |  | LATER | Fixed-stall trade, low volume. |
-| Car washer |  | IN | Mobile washers come to homes and offices — a direct hire. |
+| Seamstress / tailor |  |  |  |
+| Hair braider |  |  |  |
+| Salon assistant |  |  |  |
+| Cobbler |  |  |  |
+| Car washer |  |  |  |
 | Event staff |  | IN | Absorbs Banqueting / function staff. Strongest weekend-work fit on the slate. |
 | Crèche assistant |  | IN | Child contact. **Police clearance gates public visibility (RUL-153).** Tap override: *children's ages* replaces *what*. |
 
@@ -177,7 +174,7 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 | Roofer |  |  |  |
 | Glazier |  |  |  |
 | Ceiling & partition installer |  |  |  |
-| Painter (qualified) |  | OUT | 19 Sep: one Painter row, in Casuals; the certificate is evidence on it, not a separate role. |
+| Painter (qualified) |  |  |  |
 | Paving |  |  |  |
 | Waterproofing |  |  |  |
 
@@ -203,4 +200,4 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 - **19 Sep 2026 (Claude, seeding):** slate drafted from David's list of eleven plus ~80 more.
   Nothing decided yet. Three roles pre-marked HOLD on legal-licence grounds (security guard, taxi /
   shuttle driver, home nurse aide).
-- **19 Sep 2026, sitting 1 (David + Claude):** Home & care settled — IN: Housekeeper, Nanny, Caregiver, Cook, Gardener, Handyman (added), Crèche assistant (pulled forward from Trades-adjacent); Food & hospitality settled — IN: Room attendant, Kitchen assistant, Cashier, Waiter, Bartender, Event staff (absorbs Banqueting); LATER: Barista, Baker, Butchery assistant; OUT: Dishwasher / kitchen porter (into Kitchen assistant), Banqueting (into Event staff); Retail & forecourt settled — IN: Petrol attendant, Shelf packer (absorbs Stock assistant), Shop assistant, Merchandiser (added); HOLD: Car guard (PSIRA); OUT: Stock assistant, Parking attendant; Logistics & yard settled — IN: Picker / packer, Removals helper, Delivery rider; OUT: Loader (into General worker), Courier on foot; Site & general labour settled — IN: General worker (renamed; absorbs Loader, Factory worker, Municipal worker), Farm worker, Builder's assistant, Painter (renamed; Technical 'Painter (qualified)' OUT), Office cleaner; OUT: Factory worker, Municipal worker (both are employer_kinds, not jobs), Grounds & landscaping help (into Gardener); Trades-adjacent settled — IN: Seamstress / tailor, Sewing machinist (added), Hair braider, Hairdresser (renamed), Nail technician (added), Car washer; LATER: Cobbler. CASUALS FULLY DECIDED except Security guard / Car guard (HOLD, PSIRA); LATER: Pool cleaner, Window cleaner, Pet sitter / dog walker (added), House sitter (added); OUT: Home nurse aide (into Caregiver), Laundry & ironing (a task on Home cleaner). David ruled police clearance gates public visibility for Nanny, Caregiver and Crèche assistant (RUL-153); tap overrides set for all three. Casuals taps stay what/where/when/rate. OPEN: all Technical groups (Mining & heavy industry next), Technical taps, which employers first.
+- **19 Sep 2026, sitting 1 (David + Claude):** Home & care settled — IN: Housekeeper, Nanny, Caregiver, Cook, Gardener, Handyman (added), Crèche assistant (pulled forward from Trades-adjacent); Food & hospitality settled — IN: Room attendant, Kitchen assistant, Cashier, Waiter, Bartender, Event staff (absorbs Banqueting); LATER: Barista, Baker, Butchery assistant; OUT: Dishwasher / kitchen porter (into Kitchen assistant), Banqueting (into Event staff); LATER: Pool cleaner, Window cleaner, Pet sitter / dog walker (added), House sitter (added); OUT: Home nurse aide (into Caregiver), Laundry & ironing (a task on Home cleaner). David ruled police clearance gates public visibility for Nanny, Caregiver and Crèche assistant (RUL-153); tap overrides set for all three. Casuals taps stay what/where/when/rate. OPEN: every other group (Retail & forecourt next), Technical taps, which employers first.

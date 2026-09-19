@@ -25093,5 +25093,76 @@ def rg_door_return_1():
                    "(RG-0414)")]
 
 
+@entry("RG-0415", "C1-FAILSAFE-1: a cost ceiling that cannot be READ stops being a ceiling -- a "
+                  "persistent failure of the accounting database closes the paid-AI rail instead "
+                  "of spending unmetered money forever in silence",
+       LOCKED, fixed_on="2026-09-19",
+       scope="bea_main.py _check_cost_ceiling(): a consecutive-failure breaker "
+             "(_CEILING_FAIL_STREAK / _CEILING_FAIL_OPEN_MAX=5 / _CEILING_FAIL_OPEN_WINDOW_S=300) "
+             "and a blind-call counter (_CEILING_BLIND_CALLS); the C1-RES hold INSERT moved into "
+             "its own try so a write failure is logged and survived rather than aborting the "
+             "check. THE REAL DEFECT, PROVED ON THE OLD CODE: with the cost-accounting DB "
+             "unreadable, 200 of 200 consecutive paid AI calls were ALLOWED -- for ever, and "
+             "silently. The brake (this check), the meter (ai_spend_log) and the concurrency "
+             "guard (ai_spend_holds) all sit on ONE database, so the single failure that removes "
+             "the ceiling removes the record of the overspend at the same moment. The only signal "
+             "was one _log.error nobody reads. Fail-open is RIGHT for a blip and WRONG for a "
+             "breakage and the old code could not tell them apart; now a short streak keeps "
+             "serving (availability) and a persistent one refuses with 429 (RUL-138, David: 'on "
+             "cost, never halt -- step DOWN'). The breaker state is DELIBERATELY process-local, "
+             "the one justified exception to scale-invariant #3: it exists to survive the "
+             "database being broken, so it cannot live in that database. "
+             "A CORRECTION ON THE RECORD, because a wrong assertion is worse than no assertion: "
+             "this fix was proposed to David on the claim that a failed hold INSERT could defeat "
+             "an ALREADY-BREACHED ceiling. THAT CLAIM WAS WRONG and was disproved against the old "
+             "code before shipping -- the breach raises HTTPException before the INSERT is ever "
+             "reached, and `except HTTPException: raise` re-raises it, so the old code correctly "
+             "refused in exactly that case. The hold split is kept because it is still a real if "
+             "small improvement (a failed write no longer diverts the whole check into the "
+             "fail-open branch), but it is NOT the defect that justified the change. The breaker "
+             "is. LESSON, and it is the second instance in one day: a defect read off a grep line "
+             "is a hypothesis, not a finding. Run it against the old code and watch it fail before "
+             "telling anyone it is broken.",
+       ref="C1 (Session 97, the original ceiling) · C1-RES (the reservation) · RUL-138 (step down, "
+           "never halt) · CLAUDE.md scale-invariant #3 (no state on the box) and the "
+           "self-verification rule · ONBOARDING_GOAL.md section 7 (the cost fence)")
+def rg_c1_failsafe_1():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py is not readable from here")]
+    out = []
+    if "C1-FAILSAFE-1" not in src:
+        return [(FAIL, "the cost ceiling's circuit breaker is gone -- a broken accounting "
+                       "database once again means unlimited unmetered AI spend, silently")]
+    for token, why in (
+        ("_CEILING_FAIL_STREAK",
+         "the consecutive-failure counter is gone; a breakage is indistinguishable from a blip"),
+        ("_CEILING_BLIND_CALLS",
+         "the blind-call counter is gone -- that number IS the financial exposure"),
+        ("_CEILING_FAIL_OPEN_MAX",
+         "the tolerance threshold is gone, so the rail can never close"),
+        ("global _CEILING_FAIL_STREAK",
+         "the function no longer declares the breaker globals, so its counters are local and "
+         "every call starts from zero -- the breaker would never trip"),
+        ("C1-RES hold not placed (ceiling still enforced)",
+         "the reservation INSERT is back inside the main try, so a write failure diverts the "
+         "whole ceiling check into the fail-open branch"),
+    ):
+        if token not in src:
+            out.append((FAIL, why))
+
+    # The breaker must be able to REFUSE. If the only outcome left is a log line, it is decoration.
+    i = src.find("C1-FAILSAFE-1 CLOSED")
+    if i < 0:
+        out.append((FAIL, "nothing logs the CLOSED transition, so a rail that stopped spending "
+                          "would do it invisibly"))
+    else:
+        if "status_code=429" not in src[i:i + 1400]:
+            out.append((FAIL, "the breaker no longer raises 429 when it closes -- it observes the "
+                              "failure and spends anyway, which is the defect it was built to end"))
+    return out or [(INFO, "a blip keeps serving, a persistent accounting failure closes the paid-AI "
+                          "rail with a 429, and the calls that went through blind are counted")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
