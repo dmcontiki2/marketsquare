@@ -95,6 +95,27 @@ reserved is in the way and the letter is mine to rewrite. Stated now, not on 31 
    server. **That walk was made with `?src=probe-run15`** so the row is identifiable — exclude
    it before reporting the door's first real numbers.
 
+## DIRECTION CHANGED AGAIN — DAVID, 19 SEP 2026 (live session). READ THIS FIRST.
+
+**The acquisition gap (D5) is answered, and it changes what "next" means.** David's direction:
+add every casual and technical role under **Services-Casuals / Services-Technical**, add the
+**employer side**, and *"use these service types to enrol their current employees or previous
+employees as referrals."* **RUL-150, RUL-151, RUL-152.** The plan is `QUICK_LISTING_SPEC.md`
+**Part II** — read it before choosing any work.
+
+- **The employer is the SUPPLY channel, not just a demand side.** 8 human clicks per 2,499 cold
+  letters versus one mine's HR department. An institution's confirmation is worth more than a
+  household's, and it satisfies the Casuals reference signals at source.
+- **Most of it is already built and is called `agencies`** — `create_agency`, `invite_agent`
+  (account + cap + magic link, **creates no listing**), `set_agency_verified`, tier sync, rollup.
+  Generalise it; do not rebuild it.
+- **The hard line: enrollment NEVER creates a listing** (ONBOARDING_GOAL s3). Build the importer so
+  it cannot, and assert that in the ledger.
+- **The letter is no longer first.** One employer door is worth more than every letter left on the
+  list — but opening it is a human conversation, and that is the one genuine hand-off in the plan.
+- **RUL-152: stop quoting RUL-075 (or any ruling) back at David as a blocker.** Ask what the rule
+  was protecting; if the request does not threaten it, the ruling is silent.
+
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
 1. **Write the Sunday summary** (see the note at the top). That is the one required deliverable.

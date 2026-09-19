@@ -318,3 +318,315 @@ today it ends in a receipt. Instead, on that same page, with **no wall and no ac
 2. **Two or three other already-public workers in their area** — the product discovered as a
    BUYER, from the one page where we can prove it works.
 3. **The free account offered after the decision, never as its price** (RUL-137(d)).
+
+
+---
+---
+
+# PART II — THE BETA ROLL-OUT (David, 19 September 2026)
+
+*David's direction, verbatim in substance: add all of these roles under **Service — Casuals** and
+**Service — Technical**; add the employer side ("this is a huge change"); and **"the aim is to use
+these service types to 'enroll' their current employees or previous employees as referrals."***
+
+---
+
+## 11. THE ONE THING TO UNDERSTAND ABOUT PART II
+
+That last sentence is the whole strategy, and it answers **D5 — the honest gap this document has
+carried since 18 September: we have no way to reach these people.**
+
+Cold letters to individuals convert at **8 human clicks per 2,499 letters**. One HR department at
+one mine has three thousand employees and is **one conversation**. The employer is not primarily a
+demand side. **The employer is the supply channel** — and it arrives carrying the single most
+valuable thing on the trust ladder already attached.
+
+Because when a mine, a hotel group, a transport company or a municipality confirms someone, that
+is worth *more* than a household's confirmation, not less:
+
+- It is an **institution, not a neighbour** — verifiable, accountable, and it has a name anyone can
+  check.
+- It is **issued at source**, not a scanned letter of unknown provenance (`category.services_cas.ref_1`
+  today pays 8 points for a letter with "verifiable contact" — this is that signal without the scan,
+  the doubt, or the phone call).
+- It **scales**: one employer action enrolls hundreds of people, each of whom then does the one act
+  that counts — publishing their own advert, by their own hand.
+
+**So the order is inverted from how it looks.** We are not adding roles so that miners can sell
+things. We are adding roles so that **employers can vouch for their people at scale**, and those
+people then sell whatever they can actually sell — weekend cleaning, driving, welding, childcare —
+with institutional proof already on their profile.
+
+---
+
+## 12. MOST OF THE EMPLOYER SIDE IS ALREADY BUILT. IT IS CALLED "AGENCIES".
+
+This is the good news and it changes the size of the job. The agency lane already does, today, in
+shipped code, almost exactly what the employer lane needs:
+
+| Built already | Where | What it does |
+|---|---|---|
+| `create_agency` | bea_main.py | Registers the organisation |
+| `set_agency_verified` | bea_main.py | Marks it verified — and verification drives member tier |
+| `invite_agent` | bea_main.py | **Creates the person's own account, sets a listing cap, mints a magic sign-in link and emails it** |
+| `_sync_agency_member_tiers` | bea_main.py | One writer; invite-then-verify and verify-then-invite end in the same place (AGENCY-REACH-1) |
+| `_agency_agent_rollup` | bea_main.py | The organisation sees its own people |
+| Agency import + anonymisation | AGENCY_IMPORT_ANONYMISATION_SPEC.md | Bulk intake that already anonymises |
+
+**And it already respects the line that matters most.** `invite_agent` creates a user, a membership
+and a sign-in link. **It creates no listing.** The regression ledger records this as a property
+worth protecting in its own right (RG-0395/RG-0404: *"the agency import lane sends no source and
+still mails nobody"*).
+
+**So the employer lane is a generalisation, not a new build:** an estate agency is one kind of
+organisation; a mine, a hotel group, a fast-food franchise, a transport operator, a farm, a factory
+and a municipality are others. The work is renaming the concept, widening the verification evidence
+(a CIPC number and a letterhead rather than an EAAB licence), and giving the organisation a reason
+to care.
+
+### 12a. THE HARD LINE, AND IT IS NOT NEGOTIABLE
+
+**The employer enrolls the person. The employer NEVER creates the listing.**
+
+`ONBOARDING_GOAL.md` §3 bars it in terms — *"You may not create the listing for them. Nor may
+David. They do it themselves."* — and it is also the only thing that makes the trust score mean
+anything. A thousand listings generated from an HR export is a database, not a marketplace, and
+every one of them would be a lie on the number.
+
+The enrollment flow is therefore:
+
+    employer verifies  ->  employer invites (name + a way to reach them)
+      ->  the worker gets HER OWN sign-in link
+      ->  she builds her own advert, in her own language, in four taps
+      ->  she publishes it BY HER OWN HAND
+      ->  the employer confirmation is already on it
+
+A bulk CSV that ends in listings is the one shape this must never take. Build the importer so that
+it *cannot* — the ledger entry should assert it, not the code review.
+
+### 12b. WHY AN EMPLOYER WOULD ACTUALLY DO IT
+
+Worth being honest that this needs a reason, and "help us with supply" is not one. The three that
+hold up:
+
+1. **It is a staff benefit that costs nothing.** Their people earn on their off days, with the
+   employer's name behind them.
+2. **Retrenchment and seasonal lay-off.** A mine or a farm that lets people go can hand them
+   something real on the way out. This is the strongest version of the pitch and the one most
+   likely to open a door, because it solves a problem the employer already has.
+3. **Former employees cost them nothing to vouch for** — David's word was *"previous employees"*,
+   and that is deliberate: it is a much easier ask than anything involving current staff, payroll,
+   or a union conversation.
+
+---
+
+## 13. THE ROLE REGISTRY — DATA, NOT CODE
+
+**Every role is a row, never a door.** The Quick app's `CATS` array is already data (8 categories,
+JSON), and the `homehelp` door's first question is **already a role picker** — *"What work do you
+do?"* → Cleaning / Laundry & ironing / Cooking / Childminding / Office cleaning / Garden help.
+
+So adding fifty roles is adding rows to that list plus one field, **not fifty forks of the same
+page**. This matters more than it sounds: this project has now been bitten twice in eight days by
+forked copies of the same file (`quick.html` vs `genie/q_index.html`; the fourth EULA copy in
+RG-0400). A role-per-door design would be that mistake fifty times over.
+
+**One row per role carries:**
+
+| Field | Why |
+|---|---|
+| `key` | stable id, never translated |
+| `service_class` | **`Casuals` or `Technical`** — already in the model (`bea_main.py:2307`) |
+| `label[lang]` | what she is called, in each language |
+| `questions[]` | the four taps, defaulted from the class and overridden only where a role needs it |
+| `signals[]` | which category trust signals apply (both ladders already exist — see §14) |
+| `draft_title` / `draft_body` | templates per language |
+| `employer_kinds[]` | which organisations vouch for this role — the enrollment join |
+
+**Naming (D3, answered by default since it was not overridden):** **the role name only, never a
+collective noun.** She is a *Cleaner*, a *Chef*, a *Welder*. Not "domestic worker", not "help", not
+"service provider". It is what she would call herself, it sidesteps every loaded word, and it
+translates cleanly. Veto this if you want a different line.
+
+---
+
+## 14. BOTH TRUST LADDERS ALREADY EXIST — THIS IS WHY THE TWO CLASSES ARE THE RIGHT HOME
+
+David's instruction to file everything under the two service classes lands on machinery that is
+already built and already correct for these people:
+
+**Services-Casuals** (live values, `_CATEGORY_SIGNALS`):
+police clearance **10** · any NQF qualification or short course **8** · 2–4 years in service **6** ·
+5+ years **8** · reference letter **8** · second reference letter **5** · strong profile **5**
+
+**Services-Technical** (live values):
+trade licence (PIRB / DoEL) **12** · professional body registration (ECSA, PIRB) **12** · formal
+trade certificate **8** · CIDB grading **6** · public liability insurance **5** · primary industry
+licence / CoC **5** · registered company (CIPC) **5**
+
+Two observations that should shape the build:
+
+1. **The Casuals ladder is already designed for someone with no certificates** — clearance,
+   experience and references, not qualifications. That is exactly RUL-136's test, and it means a
+   petrol jockey or a till worker is not a second-class citizen of this ladder.
+2. **An employer confirmation is a better `ref_1` than a scanned letter.** Rather than inventing a
+   new signal, the enrollment should *satisfy the reference signals at source* — digital, verified,
+   no scan, no phone call. That is a smaller change than it looks and it makes the enrollment
+   immediately worth points to the worker, which is what makes her finish.
+
+---
+
+## 15. THE ROLE SLATE — DAVID'S LIST, MAPPED, PLUS THE ONES HE DID NOT LIST
+
+*A seed slate for discussion, not a closed list. Every one of these is a row.*
+
+### 15a. SERVICES — CASUALS
+
+**David's:** Home cleaner · Hotel cleaner / room attendant · Petrol / forecourt attendant ·
+Quick-food kitchen hand · Till / counter assistant · Factory worker (general) · Municipal worker
+(general) · Chef · Farm worker
+
+**Not listed, and they belong:**
+
+- **Home & care:** Nanny / childminder · Elder carer · Home nurse aide · Cook (domestic) ·
+  Laundry & ironing · Gardener · Pool cleaner · Window cleaner · Housekeeper (live-in / live-out)
+- **Food & hospitality:** Waiter / waitress · Barista · Bartender · Dishwasher / kitchen porter ·
+  Baker · Butcher's assistant · Banqueting / function staff
+- **Retail & forecourt:** Shelf packer · Stock assistant · Spaza / shop assistant · Car guard ·
+  Parking attendant
+- **Logistics & yard:** Warehouse picker / packer · Loader · Removals / moving help · Delivery
+  rider (e-hailing / food) · Courier on foot
+- **Site & general labour:** General labourer · Painter's assistant · Builder's assistant ·
+  Cleaner (office / industrial) · Grounds & landscaping help
+- **Trades-adjacent & informal:** Seamstress / tailor · Hair braider · Salon assistant ·
+  Cobbler · Car washer · Event staff · Crèche assistant
+- **Security:** Security guard (PSIRA-graded — see the note below)
+
+### 15b. SERVICES — TECHNICAL
+
+**David's:** Miner · Transport / business driver · Industry worker (skilled)
+
+**Not listed, and they belong:**
+
+- **Mining & heavy industry:** Rock drill operator · Blaster · Winch driver · TMM / machine
+  operator · Rigger · Boilermaker · Millwright · Fitter & turner · Welder · Crane operator ·
+  Forklift operator
+- **Motor & transport:** Code 10 / 14 driver · Long-haul driver · Taxi / shuttle driver ·
+  Diesel mechanic · Motor mechanic · Auto electrician · Panel beater · Spray painter · Tyre fitter
+- **Building trades:** Electrician · Plumber · Bricklayer · Plasterer · Tiler · Carpenter · Roofer ·
+  Glazier · Ceiling & partition installer · Painter (qualified) · Paving · Waterproofing
+- **Systems & installation:** Refrigeration / HVAC technician · Solar PV installer · Borehole &
+  pump technician · CCTV / alarm installer · Gate & garage-door technician · Locksmith ·
+  Appliance repair · IT / networking technician · Small-engine repair
+
+### 15c. THREE ROLES THAT NEED A DECISION BEFORE THEY SHIP
+
+Flagged now rather than discovered later:
+
+- **Security guard** — PSIRA registration is a legal requirement to work, not a trust bonus.
+  Listing an unregistered guard could expose both him and us. Either verify PSIRA or leave the role
+  out; do not ship it as an ordinary Casuals row.
+- **Driver (passenger-carrying)** — a professional driving permit (PrDP) is likewise a legal
+  requirement. Same treatment.
+- **Home nurse aide / elder carer** — the closer a role sits to health care, the more a trust score
+  reads as a competence claim we are not making. Keep the language to what the ladder actually
+  evidences and never near a clinical claim (RG-0238: never the word "safe").
+
+---
+
+## 16. LANGUAGE — THE MULTIPLIER, AND IT IS THREE DIFFERENT THINGS
+
+David, 19 Sep: *"The multiplier addition will be the language option... but we are also going to
+add this for the other countries — New York may have Mexican, Mandarin, Indian etc. This language
+option is a great tool."*
+
+**He is right that it is a great tool, and the reason is worth naming precisely: language is not an
+accessibility feature here, it is a MATCHING feature and a trust signal.** A Johannesburg household
+that speaks Sesotho at home and a Sandton family that wants a nanny who speaks Mandarin are both
+doing the same thing — looking for someone their household can actually talk to. That is a reason
+to hire, and no competitor in this market shows it.
+
+**These must never collapse into one field:**
+
+| # | Field | What it is | Frozen? |
+|---|---|---|---|
+| 1 | `speaks[]` | **The languages she can work in.** Seller-declared, shown on her card, filterable by the buyer. **This is the multiplier.** | No — build it |
+| 2 | `composed_in` | The language she wrote her advert in. Drives display and RUL-086 runtime translation. | No |
+| 3 | `ui_locale` | The app's own chrome. 5,171 strings inventoried. | RUL-075 lane |
+| 4 | EULA language | RUL-143 — English binds, said plainly in her language. | RG-0412, waits on RG-0400 |
+
+**(1) is the one to build first and it is cheap.** It is a seller attribute and a filter. It needs
+no translated app at all: a Pretoria buyer reading English can still see *"speaks isiZulu, Sesotho,
+English"* and that is already the whole commercial value.
+
+### 16a. LANGUAGE SETS ARE PER-COUNTRY DATA — SAME SHAPE AS THE GEO HIERARCHY
+
+The app already carries Country → Region → City → Suburb. Languages hang off **country**, as a
+seeded table, never hardcoded:
+
+- **South Africa** — English, isiZulu, isiXhosa, Sesotho, Afrikaans, Setswana, Sepedi, Xitsonga,
+  siSwati, Tshivenda, isiNdebele, **SASL**. *(Twelve. SASL was added in 2023 — any screen of ours
+  saying eleven is a defect, RUL-149.)*
+- **United States** — English, Spanish, Mandarin, Cantonese, Tagalog, Vietnamese, Korean, Hindi,
+  Gujarati, Punjabi, Haitian Creole, Arabic, Russian, Portuguese, Polish, ASL.
+- **United Kingdom** — English, Polish, Urdu, Punjabi, Bengali, Gujarati, Romanian, Arabic,
+  Portuguese, Somali, BSL.
+- **Australia** — English, Mandarin, Arabic, Vietnamese, Cantonese, Punjabi, Greek, Italian,
+  Tagalog, Hindi, Auslan.
+
+The seller picks from her country's set; the buyer filters on the same set. Adding a country is a
+data seed, exactly like adding a city.
+
+### 16b. ONE REAL CAUTION, AS A CAUTION AND NOT A GATE
+
+**Seller-declared and displayed is safe everywhere. A buyer-side hard filter is not, in every
+market.** In the United States, an *employer* screening workers by language moves close to
+national-origin discrimination under Title VII, and the same logic reaches housing contexts. In
+South Africa it is unremarkable and genuinely useful.
+
+The design that keeps the value and the safety in every market: **she declares it, we display it,
+and the buyer sorts by it rather than being able to exclude on it.** "Speaks Mandarin" appears
+prominently and ranks her up for a Mandarin-speaking viewer; there is no "hide everyone who
+doesn't" switch in the employment-facing lanes. That is a one-line design rule now and an expensive
+retrofit later.
+
+---
+
+## 17. WHAT THIS DOES TO THE 31 OCTOBER NUMBER — HONESTLY
+
+The current trajectory is stated plainly in GOAL_STATE: on how the cold letter performs today,
+**20 published listings by 31 October is not reachable through that channel.**
+
+**This changes that, and it is the first thing that has.** One verified employer enrolling two
+hundred former employees, of whom a few per cent finish, is the whole goal in one conversation —
+and every one of them is a real person from our outreach, publishing by their own hand, with no
+rule in §3 bent.
+
+**But it is honest to say what it now depends on**, because it moves the bottleneck rather than
+removing it: it depends on **David or someone opening one employer door**, which is a conversation
+with a human being, not a thing the agent can do from a sandbox. That is the one genuine hand-off
+in this plan, and it is worth more than every remaining letter on the list.
+
+**Build order, highest effect on the number first:**
+
+1. **`speaks[]` on the seller** — smallest change, immediate commercial value, no dependencies.
+2. **The role registry** — the two classes, the slate above, as data. Unblocks everything else.
+3. **The organisation lane** — generalise `agencies`, widen verification, and assert in the ledger
+   that enrollment can never create a listing.
+4. **Enrollment satisfies the reference signals at source** — makes the invitation worth points on
+   arrival, which is what makes her finish.
+5. **Language on the composing surfaces**, with the parity harness built alongside rather than
+   ahead of it.
+6. **The employer-side demand product** — businesses hiring through TrustSquare. Real, and second.
+
+---
+
+## 18. WHAT IS STILL DAVID'S
+
+- **Which employers to approach first** — and the retrenchment / former-employee angle is the one
+  most likely to open a door.
+- **Whether the organisation lane is priced** — it is free supply today; charging changes it into a
+  commercial product and that is money, which is reserved.
+- **The three flagged roles in §15c** (security, passenger-carrying drivers, care) — each carries a
+  legal registration question, not a design one.
+- **The beta slate and its order** — the list above is a seed for discussion, as he asked.

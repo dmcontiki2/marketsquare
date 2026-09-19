@@ -960,6 +960,30 @@ REFLECTIONS = {
  # written in by the onboarding-goal run on 19 Sep. Each asserts the RULING TEXT is on record
  # and that the lane that must obey it (QUICK_LISTING_SPEC.md, which is what the next session
  # reads) actually carries the rule -- not merely a pointer to the ruling.
+ # --- David's direction of 19 Sep 2026 (live session): the beta roll-out.
+ # RUL-150/151 assert the PLAN carries the rule, because Part II of the spec is what the
+ # next session builds from. RUL-152 is asserted on RULINGS.md itself: it is a rule about
+ # how rulings are USED, so its reflection point is the register.
+ "RUL-150": [
+   ("RULINGS.md", ["THE EMPLOYER IS THE SUPPLY CHANNEL"], []),
+   ("QUICK_LISTING_SPEC.md", ["The employer enrolls the person. The employer NEVER creates the listing",
+                              "Services-Casuals", "Services-Technical",
+                              "THE ROLE REGISTRY \u2014 DATA, NOT CODE"], []),
+   ("bea_main.py", ["service_class"], []),
+ ],
+ "RUL-151": [
+   ("RULINGS.md", ["THE LANGUAGE SHE SPEAKS IS A MATCHING SIGNAL"], []),
+   # The forbidden string is the collapse this ruling exists to prevent: one "language"
+   # field doing the job of four. If the spec ever describes it as a single setting, trip.
+   ("QUICK_LISTING_SPEC.md", ["LANGUAGE \u2014 THE MULTIPLIER, AND IT IS THREE DIFFERENT THINGS",
+                              "`speaks[]`", "LANGUAGE SETS ARE PER-COUNTRY DATA",
+                              "the buyer sorts by it rather than being able to exclude on it"],
+                             ["eleven official languages"]),
+ ],
+ "RUL-152": [
+   ("RULINGS.md", ["RUL-075 WAS A DECISION NOT TO SPEND TWO MONTHS ON LOCALISATION",
+                   "seatbelts built ALONGSIDE the work, never a turnstile in front of it"], []),
+ ],
  "RUL-142": [
    ("scripts/regression_ledger.py", ["LADDER-RUL142-1"], []),
    ("RULINGS.md", ["THE LADDER PAYS RISING POINTS FOR EACH VERIFIED CLIENT, NEVER FOR A SIGNUP"], []),
