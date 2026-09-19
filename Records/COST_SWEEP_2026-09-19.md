@@ -1,32 +1,32 @@
 # Cost-Compliance Sweep — 2026-09-19
-_Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sweep is static + $0; scanned 7 repos under `/sessions/rcw-01jtxstv1vrfjkxg8udjytgl/mnt/Projects`._
+_Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sweep is static + $0; scanned 7 repos under `/sessions/nice-peaceful-babbage/mnt/Projects`._
 
 ## Wrapper compliance — every AI call ceiling-checked + spend-logged (P2)
 
 - ✅ **OK** — bea_main.py:4702 `_vision_orient_image` — ceiling ✓ spend-log ✓
 - ✅ **OK** — bea_main.py:4917 `photos_order_suggest` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:7910 `aa_market_note` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:8023 `listing_draft_from_photos` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:8092 `listing_draft_from_photo` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:8188 `aa_coach` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:8512 `aa_coach_ask` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:12333 `trust_score_guidance` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:12684 `trust_score_upload_comment` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:13353 `_vision_verify_identity` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:16807 `_anon_ai_rewrite` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:19573 `vision_draft` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:20073 `ai_listing_rewrite` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:20162 `ai_seller_audit` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:20742 `ai_price_check` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:21056 `ai_yield_calc` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:21291 `ai_batch_card_listings` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:21678 `_classify_email` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:22715 `maint_brain` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:23403 `grade_card_condition` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:24830 `_squire_draft_brief` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:25547 `_ts_breaker_heartbeat` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:25619 `planner_heritage_compose` — ceiling ✓ spend-log ✓
-- ✅ **OK** — bea_main.py:25548 `_hb_loop` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:7954 `aa_market_note` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:8067 `listing_draft_from_photos` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:8136 `listing_draft_from_photo` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:8232 `aa_coach` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:8556 `aa_coach_ask` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:12377 `trust_score_guidance` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:12728 `trust_score_upload_comment` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:13397 `_vision_verify_identity` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:16851 `_anon_ai_rewrite` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:19617 `vision_draft` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:20117 `ai_listing_rewrite` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:20206 `ai_seller_audit` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:20786 `ai_price_check` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:21100 `ai_yield_calc` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:21335 `ai_batch_card_listings` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:21722 `_classify_email` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:22759 `maint_brain` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:23447 `grade_card_condition` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:24876 `_squire_draft_brief` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:25593 `_ts_breaker_heartbeat` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:25665 `planner_heritage_compose` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:25594 `_hb_loop` — ceiling ✓ spend-log ✓
 - ✅ **OK** — advert_agent.py:795 `run_model` — metered via Tuppence hold/settle
 
 ## Model discipline — Haiku unless paid + metered (P1)
@@ -44,7 +44,7 @@ _Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sw
 - ℹ️ **INFO** — MarketSquare/ai_price_card.json:369 Sonnet in a reference document describing the model field — not a call site (reference-doc exemption, 30 Aug 2026)
 - ℹ️ **INFO** — MarketSquare/ai_provider.py:54 Sonnet in the provider-model registry (TASK_MODEL/fallback) — single-source, Tuppence-metered; keep justified
 - ℹ️ **INFO** — MarketSquare/bea_main.py:1839 Sonnet in the provider-model registry (TASK_MODEL/fallback) — single-source, Tuppence-metered; keep justified
-- ℹ️ **INFO** — MarketSquare/bea_main.py:20023 model constant `PRICE_CHECK_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
+- ℹ️ **INFO** — MarketSquare/bea_main.py:20067 model constant `PRICE_CHECK_MODEL` = claude-sonnet-4-6 — used by Tuppence-metered endpoints; keep justified
 - ℹ️ **INFO** — MarketSquare/boards_host.bat:4 `claude-code` is the CLI tool / its GitHub repo, not a model family (DW-128)
 - ℹ️ **INFO** — MarketSquare/dashboard.server.html:1592 model name inside a UI display label — text on a diagram, not a call site (DW-009)
 - ℹ️ **INFO** — MarketSquare/DEFENCE_COVERAGE_MAP.html:155 Fable (claude-fable-5) in reference text — not a call site (DW-047)
@@ -114,9 +114,9 @@ _Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sw
 
 - **Anthropic API** (18): `MarketSquare/ai_provider.py:118`, `MarketSquare/ai_provider.py:119`, `MarketSquare/main.py:1014`, `MarketSquare/main.py:1024`, `MarketSquare/subscription_monitor.py:122`, `MarketSquare/failover/ai_backends.py:13`, `MarketSquare/failover/ai_backends.py:142`, `MarketSquare/failover/ai_backends.py:144`, `MarketSquare/scripts/install_anthropic_key.py:58`, `MarketSquare/scripts/install_anthropic_key.py:59`, `MarketSquare/scripts/peer_pack_ai.py:62`, `MarketSquare/scripts/regression_ledger.py:1104` …
 - **Anthropic SDK** (6): `MarketSquare/data_audit.py:154`, `MarketSquare/main.py:8028`, `MarketSquare/_verify_rig/letters/emailer.py:173`, `CityLauncher/emailer/emailer.py:173`, `CityLauncher/orchestration/haiko_agent.py:228`, `CityLauncher/orchestration/strategist_agent.py:301`
-- **Google APIs** (17): `MarketSquare/ai_provider.py:231`, `MarketSquare/bea_main.py:16040`, `MarketSquare/bea_main.py:16041`, `MarketSquare/bea_main.py:18544`, `MarketSquare/citylauncher_ops.html:727`, `CityLauncher/citylauncher_launch.html:1089`, `CityLauncher/CITYLAUNCHER_REDESIGN.html:50`, `CityLauncher/api/server.py:488`, `CityLauncher/dashboard/citylauncher.html:930`, `CityLauncher/scraper/sources/google_maps.py:14`, `CityLauncher/scraper/sources/google_maps.py:217`, `CityLauncher/scraper/sources/google_maps.py:250` …
-- **OpenAI** (40): `MarketSquare/add_openai_key.bat:10`, `MarketSquare/add_openai_key.bat:11`, `MarketSquare/add_openai_key.bat:11`, `MarketSquare/add_openai_key.bat:13`, `MarketSquare/AI_BASELINE.json:442`, `MarketSquare/ai_provider.py:64`, `MarketSquare/ai_provider.py:161`, `MarketSquare/ai_provider.py:173`, `MarketSquare/ai_provider.py:297`, `MarketSquare/bea_main.py:18566`, `MarketSquare/bea_main.py:18703`, `MarketSquare/bea_main.py:18714` …
+- **Google APIs** (17): `MarketSquare/ai_provider.py:231`, `MarketSquare/bea_main.py:16084`, `MarketSquare/bea_main.py:16085`, `MarketSquare/bea_main.py:18588`, `MarketSquare/citylauncher_ops.html:727`, `CityLauncher/citylauncher_launch.html:1089`, `CityLauncher/CITYLAUNCHER_REDESIGN.html:50`, `CityLauncher/api/server.py:488`, `CityLauncher/dashboard/citylauncher.html:930`, `CityLauncher/scraper/sources/google_maps.py:14`, `CityLauncher/scraper/sources/google_maps.py:217`, `CityLauncher/scraper/sources/google_maps.py:250` …
+- **OpenAI** (40): `MarketSquare/add_openai_key.bat:10`, `MarketSquare/add_openai_key.bat:11`, `MarketSquare/add_openai_key.bat:11`, `MarketSquare/add_openai_key.bat:13`, `MarketSquare/AI_BASELINE.json:442`, `MarketSquare/ai_provider.py:64`, `MarketSquare/ai_provider.py:161`, `MarketSquare/ai_provider.py:173`, `MarketSquare/ai_provider.py:297`, `MarketSquare/bea_main.py:18610`, `MarketSquare/bea_main.py:18747`, `MarketSquare/bea_main.py:18758` …
 - **Paid data feeds** (66): `MarketSquare/ai_service_tiers.py:19`, `MarketSquare/ai_service_tiers.py:114`, `MarketSquare/ai_service_tiers.py:115`, `MarketSquare/ai_service_tiers.py:117`, `MarketSquare/ai_service_tiers.py:202`, `MarketSquare/ai_service_tiers.py:203`, `MarketSquare/ai_service_tiers.py:210`, `MarketSquare/ai_service_tiers.py:211`, `MarketSquare/ai_service_tiers.py:242`, `MarketSquare/ai_service_tiers.py:243`, `MarketSquare/ai_service_tiers.py:247`, `MarketSquare/ai_service_tiers.py:248` …
-- **Paystack (txn)** (11): `MarketSquare/bea_main.py:14360`, `MarketSquare/bea_main.py:14370`, `MarketSquare/bea_main.py:14374`, `MarketSquare/bea_main.py:14377`, `MarketSquare/bea_main.py:14381`, `MarketSquare/bea_main.py:18320`, `MarketSquare/payments.py:32`, `MarketSquare/subscription_monitor.py:157`, `MarketSquare/scripts/audit_env_file.sh:8`, `MarketSquare/scripts/fix_paystack_env.py:71`, `MarketSquare/scripts/verify_paystack_key.sh:17`
+- **Paystack (txn)** (11): `MarketSquare/bea_main.py:14404`, `MarketSquare/bea_main.py:14414`, `MarketSquare/bea_main.py:14418`, `MarketSquare/bea_main.py:14421`, `MarketSquare/bea_main.py:14425`, `MarketSquare/bea_main.py:18364`, `MarketSquare/payments.py:32`, `MarketSquare/subscription_monitor.py:157`, `MarketSquare/scripts/audit_env_file.sh:8`, `MarketSquare/scripts/fix_paystack_env.py:71`, `MarketSquare/scripts/verify_paystack_key.sh:17`
 
 **Totals:** 0 critical · 0 warnings · 31 ok · 57 info
