@@ -25164,6 +25164,46 @@ def rg_c1_failsafe_1():
                           "rail with a 429, and the calls that went through blind are counted")]
 
 
+@entry("RG-0417", "FADE-90-1: every seller on every tier gets the same 90-day inactivity window "
+                  "before an advert is hidden -- in the code, the EULA and the tier cards alike",
+       LOCKED, fixed_on="2026-09-19",
+       scope="ALL tiers (free/starter/pro/agency), ALL markets. bea_main.py _FADE_WINDOWS (what the "
+             "sweep does), eula_clean.html s4.8 (what the seller agreed to; terms.html + ms.js follow "
+             "via eula_sync.py and RG-0077), marketsquare.html tier cards + embedded EULA copy (what "
+             "the seller is shown). All three must say 90 for everyone, or the app does one thing "
+             "and promises another.",
+       ref="RUL-158 (David, 19 Sep 2026). The 18 Sep 20:41 SAST release restart fired the lifecycle "
+           "sweep 2 minutes after boot and hid the Bee Lady's three real adverts (273/274/275) on "
+           "the free tier's 30-day window. Revived the same morning via keep-live; the window is now "
+           "90 days for all tiers. EULA v1.18.")
+def rg_fade_90_1():
+    out = []
+    bea = repo_file("bea_main.py"); eula = repo_file("eula_clean.html"); ms = repo_file("marketsquare.html")
+    if bea is None or eula is None or ms is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py / eula_clean.html / marketsquare.html not readable from here")]
+    import re as _re
+    m = _re.search(r"^_FADE_WINDOWS\s*=\s*(\{[^}]*\})", bea, _re.M)
+    if not m:
+        out.append((FAIL, "_FADE_WINDOWS cannot be found in bea_main.py"))
+    else:
+        try:
+            import ast as _ast
+            w = _ast.literal_eval(m.group(1))
+            bad = {k: v for k, v in w.items() if v != 90}
+            if bad or set(w) != {"free", "starter", "pro", "agency"}:
+                out.append((FAIL, "_FADE_WINDOWS is not 90 for every tier: %r" % (w,)))
+        except Exception as ex:
+            out.append((FAIL, "_FADE_WINDOWS unreadable: %s" % ex))
+    clause = "within an inactivity window of 90 days, which is the same for every tier."
+    for name, txt in (("eula_clean.html", eula), ("marketsquare.html embedded EULA", ms)):
+        if clause not in txt:
+            out.append((FAIL, "%s does not carry the one-window fade clause" % name))
+    for stale in ("30-day listing \u00b7 free renewal", "60-day listing \u00b7 free renewal"):
+        if stale in ms:
+            out.append((FAIL, "marketsquare.html tier card still advertises '%s'" % stale))
+    return out or [(INFO, "sweep, EULA and tier cards all give every tier the same 90 days")]
+
+
 @entry("RG-0416", "SPEND-GAUGE-1: the money is LEGIBLE -- one line says what AI cost today, "
                   "yesterday and all time, and an unreadable gauge says NOT MEASURED rather "
                   "than zero",

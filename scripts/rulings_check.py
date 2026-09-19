@@ -1006,6 +1006,13 @@ REFLECTIONS = {
    ("RULINGS.md", ["ONE PICTURE OF THE WORK FOR ITS ROLE"], []),
    ("ROLE_SLATE_REVIEW.md", ["## RULED \u2014 ONE ROLE PICTURE AS THE FIRST PHOTO (RUL-157", "## FIRST EMPLOYERS"], []),
  ],
+ "RUL-158": [
+   ("RULINGS.md", ["ONE 90-DAY FADE WINDOW FOR EVERY SELLER ON EVERY TIER"], []),
+   ("bea_main.py", ['_FADE_WINDOWS = {"free": 90, "starter": 90, "pro": 90, "agency": 90}'], ['"free": 30, "starter": 60']),
+   ("eula_clean.html", ["within an inactivity window of 90 days, which is the same for every tier."], ["Free \u2014 30 days; Starter \u2014 60 days"]),
+   ("marketsquare.html", ["within an inactivity window of 90 days, which is the same for every tier."], ["30-day listing \u00b7 free renewal", "60-day listing \u00b7 free renewal"]),
+   ("docs/LISTING_STATE_MACHINE.md", ["90 days for EVERY tier (RUL-158"], ["| Free | 30 days |"]),
+ ],
  "RUL-152": [
    ("RULINGS.md", ["RUL-075 WAS A DECISION NOT TO SPEND TWO MONTHS ON LOCALISATION",
                    "seatbelts built ALONGSIDE the work, never a turnstile in front of it"], []),

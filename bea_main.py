@@ -23850,7 +23850,9 @@ def tuppence_ai_settle(payload: dict, _key: str = Depends(auth.require_api_key))
 
 # TIER-PURGE-1: the retired five-tier names (standard/professional/business/elite, all 90)
 # were carried here too. The canon four are unchanged; an unknown tier already falls back.
-_FADE_WINDOWS = {"free": 30, "starter": 60, "pro": 90, "agency": 90}
+# FADE-90-1 (RUL-158, David 19 Sep 2026): one 90-day window for every tier. 30 days hid real
+# hand-recruited sellers (the Bee Lady, 18 Sep) whose adverts were simply quiet in pre-launch.
+_FADE_WINDOWS = {"free": 90, "starter": 90, "pro": 90, "agency": 90}
 _FADE_WARN_LEAD_DAYS = 7      # nudge email this many days BEFORE the window closes
 _FADE_GRACE_DAYS = 14         # faded → archived after this many days, per locked spec
 RESP_PENALTY_AT_H = 48        # unanswered intro → −5 at this age

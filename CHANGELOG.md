@@ -1,3 +1,180 @@
+## 2026-09-19 — FADE-90-1: one 90-day fade window for every seller (RUL-158, RG-0417, EULA v1.18)
+
+**What happened.** The 18 Sep 20:41 SAST release restart fired the lifecycle sweep two minutes after boot. It
+hid all three of the Bee Lady's real adverts (273 honey, 274 Beekeeping Course, 275 Bee Talks) because her
+free-tier 30-day window had run out: no sign-in since mid-August and no enquiries. The 12 Sep warning mail went
+unanswered. Tutors dropped from 3 listings to 1. Probed: hers were the only real adverts faded (3 of 117 scanned).
+
+**Revived** the same morning through the seller's own keep-live route. PROBED in David's Chrome: Tutors shows 3 listings.
+
+**Decided (David, RUL-158).** The inactivity window is 90 days for Free, Starter, Pro and Agency alike.
+Warning email, 14-day one-tap grace and archive unchanged.
+
+**Landed atomically:** `_FADE_WINDOWS` in bea_main.py · EULA s4.8 → v1.18 (eula_clean.html, synced to terms.html
+and ms.js by eula_sync.py) · the embedded EULA copy and the three tier cards in marketsquare.html ("90-day listing"
+on each) · canon.yml + LEGAL_VERSIONS.md · docs/LISTING_STATE_MACHINE.md + docs/SELL_FLOW.md · rulings_check RUL-158 ·
+ledger RG-0417 LOCKED. eula_sync --check, check_pricing_canon, check_canon_pointers and rulings_check all green.
+Cost model impact: none.
+
+## 2026-09-18 — QUICK-ME-ROUTE-1: /quick/me handed back to the app (migration 043)
+
+- Found by the post-fix ledger run: RG-0386 red — the live /quick/me answered the Quick HTML page, not JSON.
+  Cause: migration 042's `location /quick/` prefix (17 Sep) swallowed the app's GET /quick/me, so a
+  stranger arriving by e-mail link never got the identity/key the Quick page needs.
+- migrations/043_quick_me_route.py adds an exact `location = /quick/me` proxy to the app ahead of the
+  page door; nginx -t, reload, and proves JSON on the origin over TLS loopback, else restores.
+
+## 2026-09-18 — maintenance-loop: quiet queue; one ledger red owned by the locked design lane (RG-0253 window artefact)
+
+**Fault queue: empty.** PROBED via /admin/faults: 0 new, 0 triaged, 0 fix-shipped, 0 escalated
+(26 verified, 12 closed). No tester fault work this run. Shadow maintenance agent ran foreground
+(MS_BEA_URL=https://trustsquare.co): mode SHADOW, phase postlaunch, 0 seen / 0 acted, run cost
+$0.0000. Report `.maint_agent/run_20260918T071450Z.json`. Heartbeat PROBED on GET /dashboard/maint:
+run=20260918T071448Z (this run), brain NOT_EVALUATED:remote, arming NOT MEASURED (off-box vantage,
+RG-0398 wording as designed). Email lane census: 24 total, 6 held in 30d (legal 1, other 5,
+spam 1, support 7) — counts only. Escalation brief: no escalations in 24h, no brief written.
+
+**Regression ledger BEFORE (3 shards + combine, 263.8 s): 385 entries · 367 holding · 1 REGRESSED
+· 17 open · 0 unverified.** The red is **RG-0253** (first-time seller: register before EULA stamp),
+source leg only at that point — the live leg (served ms.js v=685) PASSED.
+**AFTER (284.6 s): 386 entries · 368 holding · 1 REGRESSED · 17 open.** Same entry, now red on BOTH
+legs: between the two runs the design lane committed HUB-EULA-1 (a051975, RG-0396) and the deploy
+ref shipped — live ms.js moved v=685 → v=686 and now carries SEAM-PROOF-1 too. PROBED on the live
+v=686: `_sobGoLiveInner` present, register@869 precedes eula@1174 — the property HOLDS live and in
+repo; only the assertion cannot see it.
+
+Cause, PROBED in the working tree: the design-review lane's uncommitted **SEAM-PROOF-1** (18 Sep)
+wraps `sobGoLive()` around a new `_sobGoLiveInner()` and moves the register→EULA fetch pair into
+the inner function, which begins 5,202 chars after the `async function sobGoLive` anchor. The
+assertion reads a 6,000-char window from that anchor, so it now finds neither call (`reg@-1
+eula@-1`) and reports a regression. Inside `_sobGoLiveInner` the order is intact: register@869
+precedes eula@1174. **The property holds; the instrument's window is too short for the new shape.**
+
+Not fixed by this lane, deliberately: `ms.js`, `bea_main.py` and `scripts/regression_ledger.py`
+are under the WORK-LOCK-1 stand-off (RUL-140) held by "Fable design-review lane (session 01LTt5)"
+since 03:33Z — `work_lock.py check` exit 3, lock 3.7 h old, not stale. Per the lock contract the
+finding is recorded here and the owner ships it. What the owner needs to do now (SEAM-PROOF-1 is
+already live): re-anchor RG-0253 on `_sobGoLiveInner` (or widen its window past the wrapper) so
+the assertion follows the function it polices — until then the board prints "Do not deploy over
+this" for a fix that has not rotted, and the nightly TSL gate reads red.
+
+Also on record (not this lane's): the 05:45 nightly TSL was **BLOCKED** — `TSL_READY.flag` reads
+"DEPLOY DRIFT: bea_main.py, ms.js local-ahead of live; gate not clean (rc=2)"; the CM gate asked
+for the ship to be recorded first (CHANGELOG newest folded entry 2026-09-16; 09-17/09-18 fragments
+sit unfolded in changelog.d/, which the deploy compiles).
+
+No file under the lock was touched. No push, no deploy (NIGHTLY-SHIP-1 carries committed work).
+
+## 2026-09-18 — DEVICE-NOLAPSE-1: David's access no longer lapses on a timer (RUL-141, RG-0393)
+
+- Fault: the dashboard's Quick Listing frame showed nginx "401 Authorization Required". PROBED from the
+  server log: David's laptop Chrome had never been enrolled as a device; he had signed in by password on
+  17 Sep 04:33 UTC; the 8-hour admin token lapsed and the Orchestrator gate refused the frame.
+- Fix (bea_main.py): device passes are minted without an expiry and judged only by revocation; the
+  ts_device cookie is re-issued for 400 days on every /admin/device-ok and /admin/device-token call; a
+  master-password login also enrols that browser; new middleware `_device_renews_admin_token` swaps an
+  expired X-Admin-Token for a fresh one when the device pass is valid and returns X-Admin-Token-Renewed.
+- dashboard.server.html: a fetch wrapper stores X-Admin-Token-Renewed in sessionStorage.
+- Middleware proven on the server's own venv with TestClient: expired token + no device = 401;
+  expired token + device (itself carrying an old exp) = 200 and renewed; junk device = 401.
+- Locked: regression ledger RG-0393 (fails against the pre-fix file — tested), rulings_check RUL-141,
+  RULINGS.md RUL-141, Projects/CLAUDE.md standing rule.
+
+## 2026-09-17 — maintenance-loop: the brain's amber was the laptop, not the brain (RG-0382)
+
+**Fault queue: empty.** 0 new, 0 triaged, 0 fix-shipped, 0 escalated (26 verified, 12 closed).
+No tester fault work this run. Regression ledger green before and after; no escalation brief
+written (no escalations in 24h).
+
+**The one defect this run found was its own instrument.** `/admin/maint/brain` refuses every
+caller that is not a process on the box — 403 `brain endpoint is local-only`, MAINT-BRAIN-1's
+deliberate control so a leaked maint key can never buy model calls. `maintenance_agent.py`
+collapsed that permanent, expected refusal into `AMBER:transport / brain-unreachable`, and
+`dashboard.server.html` painted the B2b readiness row amber for it.
+
+That broke the RG-0187 contract at the one instrument gating the whole maintenance lane: an
+instrument LIMIT must read NOT EVALUATED, never a FAIL and never a health colour. The harm was
+not cosmetic — every remote run painted the same amber a genuine outage would, so a real brain
+failure could not report itself in a way anybody would notice.
+
+Fixed on both sides, because a state named honestly by the producer and repainted amber by the
+consumer is the same lie with a second opinion:
+- `maintenance_agent.py`: `_vantage_refusal()` / `_declined()` classify the local-only 403 apart
+  from transport failure; `brain()`, `brain_probe()` and `classify()` all read it as
+  `NOT_EVALUATED:remote` / `vantage:local-only`.
+- `dashboard.server.html`: the maintenance card renders NOT_EVALUATED grey, labelled
+  BRAIN NOT MEASURED, instead of amber.
+- The FAIL-SAFE routing to Path B is deliberately UNCHANGED. An unconsultable brain still means
+  the human lane; only the NAME of the state changed, because the name is what a person acts on.
+
+**Evidence (PROVED, not read):** 05:37Z run posted `brain_state=AMBER:transport`; a direct POST
+returned 403 `{"detail":"brain endpoint is local-only"}`; the 05:42Z run after the fix posted
+`brain_state=NOT_EVALUATED:remote`, `error_kind=vantage:local-only`, and `/dashboard/maint`
+serves that back.
+
+**RG-0382 LOCKED** — asserts both halves plus the fail-safe, so a future "fix" cannot cure the
+label by granting the unconsulted lane autonomy it never had. Its first cut went red against
+correct code (a flat 600-char window caught classify()'s later, unrelated pre-launch PATH_A
+return); the assertion was fixed the same session to judge the branch's own return statement,
+and negative-tested to bite on all three ways the fix could rot.
+
+Not pushed, not deployed — the nightly TSL ships it through the gates.
+
+## 2026-09-17 — baseline batch: all nine items built flag-dark, proven in the rendered app (RUL-126)
+
+The whole `BASELINE_BATCH_2026Q4.md` build order is in the tree as ONE change behind
+`launch_switches.baseline_q4` (default 0). `/flags` now carries `baseline_q4` and
+`effective.baseline_q4`; `POST /admin/flags {baseline_q4:true}` arms it — that is David's act,
+not this session's. With the flag dark the existing app is byte-for-byte the same experience.
+Preview is honoured only on a local origin (`?baseline=1` / `ts_baseline_preview`); the live
+origin never honours the parameter.
+
+Built (each proven at 412×915 in the rendered real app on the smoke rig — `scripts/smoke_harness/rig/`
++ `verify_*.mjs`; visual proofs in `BASELINE_BATCH_PROOFS_2026-09-17.html`):
+1. **Zoom** (RG-0221, RUL-076) — `zoom_engine.py` (pure engine, `test_zoom_engine.py` green) +
+   `GET /zoom/next` + watches; FEA sheet replaces the filter panel on the six browse doors. Proved:
+   3–4 taps to each canonical target, no zero-count option, no facet before its parent, geography
+   never first, travel geography starts at country. Local Market has no filter panel today and
+   is therefore NOT a Zoom door — stated, not hidden.
+2. **DCB-001** (RUL-127, RG-0383) — batch upload, one-tap cover, `POST /listings/photos/order`
+   (vision under the ceiling, rules fallback), drag reorder, publish holds the cover.
+3. **Credential claims** (RG-0216) — registry seeded from 4,237 FIDE IDs (`migrations/041`),
+   `POST /credentials/claim`, `GET /credentials/mine` (404 while dark), Tier A/B, one account per
+   credential, badges via a live JOIN, no surface calls a person safe.
+4. **Private-seller VEL entries** (RUL-129, RG-0385) — Property and Local Market catalogue rows,
+   every one dated and outside-checkable; `GET /trust/catalogue` feeds the Quick draft screens.
+5. **Squire** (RG-0224, RUL-077) — Pro-only (403 otherwise), brief → shortlist → approach; a
+   ceiling hit never writes an intro; top-up is Tuppence, no second currency.
+6. **Quick app at `/quick/`** (RUL-124/125, RG-0386–0391) — `migrations/042` adds the sub-path
+   to nginx; `/quick/me` gives the page its key and identity; price basis fixed (QUICK-PRICE-BASIS-1).
+7. **One $5 tier** (RUL-128, RG-0392) — `_fold_global_into_starter` runs once on arming, moves
+   subscribers at the same price, never touches `wishlist_subscriptions`/Paystack (0 rows today);
+   `/pricing/ladder` and the plans screen show one ladder when armed.
+8. **AI funds gauge** (RG-0203) — `GET /dashboard/ai-funds` + `data-ai-funds` strip on the +1
+   AI Providers card; vendor balances read NOT MEASURED until David enters a dated figure.
+9. **Agency letters** (RG-0346) — CityLauncher's three letters tell the agency story and mint the
+   console link via `/agencies/wave-prep` (solo link only as a logged fallback).
+
+Live faults found on the way and fixed in the same change: CARD-ONERROR-1 (unterminated onerror
+string in `cardHtml`, RG-0384), FOUNDERS-MAP-1 (`founders` dropped in the BEA→FEA map),
+QUICK-PRICE-BASIS-1, QUICK-ME-1. Also riding this deploy: R1/R2 repair-lane work (RG-0363/0364).
+
+Ledger: RG-0221/0216/0224/0203/0346 rewritten LOCKED; RG-0383–0392 new. Source halves green;
+live halves red until deployed. `rulings_check.py` reflections added for RUL-124–129.
+`ms.js` ?v=495, `ms.css` ?v=294. Deploy requested through `scripts/request_deploy.py` (RUL-092).
+
+**Deploy 1 (67ea011, 17:43Z) — DEPLOY OK, health ok; migrations 040 (115 listings stamped) and
+041 (4,237 registry rows) recorded. 042 jammed the chain (QUICK-PATH-2):** its proof probed
+`http://127.0.0.1/quick/`, measured Certbot's port-80 301, followed it out through Cloudflare and
+read a cached 404, then restored the vhost — the exact CSP-SCRIPT-SRC-7 trap 033 documents.
+The vhost block was right; the instrument was wrong. Fixed to measure the origin on :443 over
+loopback with trustsquare.co SNI, never following a redirect; re-shipped in the same session.
+**Deploy 2 (4c4b34e, 17:48Z) — 042 jammed again (QUICK-PATH-3):** the origin probe now measured the
+right thing but fired the instant `systemctl reload nginx` returned, and an old worker still holding
+the previous config answered 404. Proven on the box: the identical block with a settled probe answers
+200 at the origin and through the CDN. Migration now waits up to 15 s for the reload to settle;
+third ship records 042 and unjams the chain.
+
 ## RUL-138 / RUL-139 / RUL-140 · today's three rulings recorded, and WORK-LOCK-1 built
 
 David (17 Sep 2026) put two facts and one instruction on the table after the TIER-NAME-1 release:

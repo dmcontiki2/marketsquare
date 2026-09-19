@@ -50,12 +50,12 @@ Buyers only ever interact with listings in the **LIVE** state.
   - Tap "Keep live" → returns to LIVE immediately (endpoint: `POST /listings/{id}/keep-live`)
   - No response within 14 days → auto-moves to ARCHIVED
 
-**Inactivity windows by subscription tier (David's ruling, 23 Jul 2026 — 30/60/90):**
+**Inactivity window — 90 days for EVERY tier (RUL-158, David 19 Sep 2026; supersedes the 23 Jul 30/60/90 ladder):**
 
 | Tier        | Inactivity window | Warning nudge | Hidden | Auto-archived if no action |
 |-------------|-------------------|---------------|--------|----------------------------|
-| Free        | 30 days           | Day 23        | Day 30 | Day 44 (30 + 14)           |
-| Starter     | 60 days           | Day 53        | Day 60 | Day 74 (60 + 14)           |
+| Free        | 90 days           | Day 83        | Day 90 | Day 104 (90 + 14)          |
+| Starter     | 90 days           | Day 83        | Day 90 | Day 104 (90 + 14)          |
 | Pro         | 90 days           | Day 83        | Day 90 | Day 104 (90 + 14)          |
 | Agency      | 90 days           | Day 83        | Day 90 | Day 104 (90 + 14)          |
 
@@ -198,8 +198,8 @@ A listing enters FADE OUT when there has been no intro request received and no s
 
 | Tier | Inactivity window | Warning nudge | Hidden | Auto-archived if no action |
 |------|-------------------|---------------|--------|----------------------------|
-| Free | 30 days | Day 23 | Day 30 | Day 44 (30 + 14) |
-| Starter | 60 days | Day 53 | Day 60 | Day 74 (60 + 14) |
+| Free | 90 days | Day 83 | Day 90 | Day 104 (90 + 14) |
+| Starter | 90 days | Day 83 | Day 90 | Day 104 (90 + 14) |
 | Pro | 90 days | Day 83 | Day 90 | Day 104 (90 + 14) |
 | Agency | 90 days | Day 83 | Day 90 | Day 104 (90 + 14) |
 

@@ -8,22 +8,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-09-18 - maintenance loop)
+## Last Completed (2026-09-19 - fade 90)
 
-- Maintenance loop ran 2026-09-18 07:14Z. Fault queue empty: 0 new, 0 triaged, 0 fix-shipped,
-  0 escalated (26 verified, 12 closed). No escalation brief — no escalations in 24h. Heartbeat
-  on /dashboard/maint PROBED for this run.
-- Regression ledger: before 385/367 holding/1 red; after 386/368 holding/**1 red — RG-0253, now
-  both legs** (live ms.js moved v=685→v=686 mid-session as the design lane shipped SEAM-PROOF-1).
-  The red is a window artefact: sobGoLive is now a wrapper around `_sobGoLiveInner`, where
-  register still precedes the EULA stamp (PROBED live v=686: reg@869 < eula@1174); the assertion's
-  6,000-char window from the `sobGoLive` anchor no longer reaches it. ms.js / bea_main.py /
-  regression_ledger.py are under the RUL-140 work lock (design-review lane, 03:33Z), so this lane
-  recorded the finding and did not edit. Owner to re-anchor RG-0253 on `_sobGoLiveInner`; until
-  then the board says "do not deploy" over a fix that holds.
-- Nightly TSL 05:45 was BLOCKED (deploy drift bea_main.py + ms.js local-ahead; CM gate wants the
-  ship recorded). Same owner, same in-flight work.
-- Committed fragments only; not pushed, not deployed.
+- 19 Sep 2026: Bee Lady's 3 adverts were hidden by the 30-day fade on 18 Sep; revived via keep-live (PROBED live, Tutors = 3). RUL-158: fade window now 90 days for every tier, EULA v1.18. RG-0417 locked.
 
 <!-- DASH-FEED-1:END -->
 
@@ -48,6 +35,8 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- 19 Sep 2026: Bee Lady's 3 adverts were hidden by the 30-day fade on 18 Sep; revived via keep-live (PROBED live, Tutors = 3). RUL-158: fade window now 90 days for every tier, EULA v1.18. RG-0417 locked.
 
 - Maintenance loop ran 2026-09-18 07:14Z. Fault queue empty: 0 new, 0 triaged, 0 fix-shipped,
   0 escalated (26 verified, 12 closed). No escalation brief — no escalations in 24h. Heartbeat

@@ -393,8 +393,8 @@ Live score shown at top. Updates in real time as signals are acted on. Tier badg
 
 | Tier | Fee | Max live listings | Fade Out |
 |------|-----|-------------------|----------|
-| Free | $0 | 2 | 30 days |
-| Starter | $5/mo | 25 | 60 days |
+| Free | $0 | 2 | 90 days (RUL-158) |
+| Starter | $5/mo | 25 | 90 days (RUL-158) |
 | Premium | $15/mo | 50 | 120 days |
 
 Batch expansion: +20 listings per 1T, stackable, persists until used.
