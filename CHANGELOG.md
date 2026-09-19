@@ -24386,3 +24386,26 @@ justified the change. The breaker is. Second instance in one day of asserting a 
 grep line; a defect is a hypothesis until it has been run against the old code and watched to fail.
 Cost model impact: none — the ceilings are unchanged at $0.50/user/day and $100/platform/day. This
 changes only what happens when the accounting itself breaks.
+
+
+**SPEND-GAUGE-1 / RG-0416 — the money is legible now.** `ai_spend_log` has recorded every AI call
+since 28 May and `/admin/ai-spend/summary` has served today-and-week since 11 June, and on 19
+September neither David nor Claude could answer "what did we spend yesterday" without opening an
+ssh session, because nothing anywhere displayed it. Third instance of one shape in two days, after
+FUNNEL-DENOM-1 and STATS-HUMAN-1: a correct instrument nobody reads, sitting beside a decision
+being taken without it — David was weighing whether free listings become a rising cost at ten times
+scale, and the answer was already on disk. `scripts/spend_gauge.py` now says it in one line
+(GREEN/AMBER/RED, `--full`, `--json`), appends a durable trend to `SPEND_LOG.md`, and works from an
+admin key or the server key, whichever is reachable. The summary endpoint gained yesterday, a
+14-day trend, today's top spenders, headroom against the ceiling, and the C1-FAILSAFE-1 breaker
+state — which is process-local, so that endpoint is the only window onto blind (unmetered) calls.
+**An unreadable gauge reports NOT MEASURED and never prints $0.00**: a confident zero from a blind
+probe is exactly how a real overspend would hide, which is RG-0403's rule applied to money rather
+than to people.
+
+**PROBED ON THE LIVE BOX, 19 Sep:** $3.44 of AI all time across 778 calls since 28 May; $0.0255
+yesterday; busiest day ever $0.126 on 19 August — against a $100/day platform ceiling, so
+yesterday used 0.03% of it. At the measured $0.0044 per call the existing ceiling supports on the
+order of a thousand new sellers a day. The gauge exists not because the number is alarming but
+because the day it is alarming is not the day to start building the means to see it.
+Cost model impact: none — ceilings unchanged.

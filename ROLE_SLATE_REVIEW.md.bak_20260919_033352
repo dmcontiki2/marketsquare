@@ -186,40 +186,15 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 
 | Role | D | Decision | Notes |
 |---|:--:|:--:|---|
-| Air-con & refrigeration technician |  | IN | Renamed 19 Sep (was 'Refrigeration / HVAC technician'). Licence gate (RUL-156): handling refrigerant legally requires SAQCC Refrigerant registration — added to the RUL-156 licence list. |
-| Solar PV installer |  | IN | Installer not licensed: PV GreenCard is evidence, not a gate. The CoC must come from a gated Electrician, and the listing says so. Loadshedding demand is real. |
-| Borehole & pump technician |  | IN | Water outages make household pumps and tanks an urgent direct hire. |
-| CCTV / alarm installer |  | IN | Licence gate (RUL-156): installing security equipment is a 'security service' under the PSIRA Act. |
-| Gate & garage-door technician |  | IN | Licence gate (RUL-156): gate motors and access control are security equipment on PSIRA's reading. |
-| Locksmith |  | IN | Licence gate (RUL-156): a PSIRA security service; PSIRA registration includes a fingerprint criminal-record check, which answers the home-access concern without a separate clearance rule. |
-| Appliance repair |  | IN | Households hire mobile repairers directly. |
-| IT / networking technician |  | LATER | Households mostly buy this from shops. |
-| Small-engine repair |  | LATER | Low, seasonal volume. |
-
----
-
-## RULED — ONE ROLE PICTURE AS THE FIRST PHOTO (RUL-157, David, 19 Sep 2026)
-*Raised and ruled by David in sitting 1.* David: *"for each job type, casual and technical, we should have the quick lister show a single job type picture which we will draw up as a photo on Higgsfield later, and then I want to change the design to always show these photos as the first photo allowing the Services (only) category users to add their own photos after that ... a consistent photo when searched for all service types, but then ranked according to the RS which will be based on the TS and the LS ... this is not bad because we are working anonymous"* — and then: *"these roles are not a person but rather a very good photo of the type of work, it should be clearly identifiable as that type of work based on what the user sees."*
-
-- **The rule:** one generated picture per role, always photo 1 on a Services listing, her own photos after; search cards look alike and differ by rank (RS from TS and LS) and card facts.
-- **The picture is the WORK** (tools, hands at work, the finished result), identifiable as that job at a glance, never a person — which settles SO-2 parity and the risk of slot 1 reading as her photo.
-- **Why it is good:** the buyer's first pick is made on evidence, not on a face.
-- **Cost:** one Higgsfield picture per IN role now; LATER roles get theirs when they return.
-
----
-
-## FIRST EMPLOYERS — THE APPROACH ORDER (David approved, 19 Sep 2026)
-*Fastest yes first, biggest numbers in parallel. Every one enrols; none creates a listing (RUL-150).*
-
-| # | Employer | Why this position | Roles it unlocks at scale |
-|---|---|---|---|
-| 1 | One Pretoria fast-food franchisee or fuel-station dealer | Owner can say yes the same week — proves the enrolment flow end to end | Kitchen assistant, Cashier, Petrol attendant |
-| 2 | A mine running retrenchments | Largest numbers; enrolling former employees is reportable under its Social and Labour Plan (MPRDA) | Welder, Boilermaker, Diesel mechanic, Plant operator, Driver, Electrician + every Casuals role |
-| 3 | A contract cleaning company | Thousands of staff, one HR door | Office cleaner, Home cleaner |
-| 4 | A hotel group | Staff benefit on off days; seasonal lay-offs | Room attendant, Kitchen assistant, Waiter, Bartender, Event staff, Chef |
-| 5 | A freight / logistics operator | Licence history already on record | Code 10 / Code 14 driver, Driver, Diesel mechanic, Forklift operator, Picker / packer |
-| 6 | Farms | Timed to the end of a season | Farm worker, General worker, Driver |
-| 7 | A municipality | Last — procurement and politics make it the slowest door | General worker, Office cleaner, Driver, Gardener |
+| Refrigeration / HVAC technician |  |  |  |
+| Solar PV installer |  |  | Growth market in SA — loadshedding demand is real and current. |
+| Borehole & pump technician |  |  |  |
+| CCTV / alarm installer |  |  | PSIRA may apply — check alongside the security guard question. |
+| Gate & garage-door technician |  |  |  |
+| Locksmith |  |  | Trust-sensitive: access to homes. Clearance question. |
+| Appliance repair |  |  |  |
+| IT / networking technician |  |  |  |
+| Small-engine repair |  |  |  |
 
 ---
 
@@ -247,8 +222,6 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 | Tyre fitter | Motor & transport | Mobile fitting exists but volume is low. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
 | Glazier | Building trades | Low volume; mostly glass shops. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
 | Ceiling & partition installer | Building trades | Mostly subcontracted to building firms. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
-| IT / networking technician | Systems & installation | Households mostly buy this from shops. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
-| Small-engine repair | Systems & installation | Low, seasonal volume. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
 
 ### HOLD — blocked on a legal registration
 
@@ -272,4 +245,4 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 - **19 Sep 2026 (Claude, seeding):** slate drafted from David's list of eleven plus ~80 more.
   Nothing decided yet. Three roles pre-marked HOLD on legal-licence grounds (security guard, taxi /
   shuttle driver, home nurse aide).
-- **19 Sep 2026, sitting 1 (David + Claude) — SLATE FULLY DECIDED.** Every row carries IN / LATER / OUT; no HOLD remains. Casuals: all six groups decided. Technical: 'Miner' and 'Industry worker' split; mine-only jobs (Rock drill operator, Blaster, Winch driver) routed to the RUL-124 position lane. Factory worker and Municipal worker are `employer_kinds[]`, not jobs. Added: Handyman, Pet sitter / dog walker, House sitter, Merchandiser, Sewing machinist, Nail technician, Gas installer. RULINGS MADE: RUL-153 (police clearance gates visibility for Nanny, Caregiver, Crèche assistant, with tap overrides); RUL-154 (LATER / HOLD / ROUTED register kept and rebuilt every sitting); RUL-155 (driving-licence gate); RUL-156 (the gate covers every licence to practise — PSIRA, PrDP, DoEL, SAQCC Gas, SAQCC Refrigerant — so the three HOLDs went IN, gated); RUL-157 (one picture of the WORK per role, always photo 1 on a Services listing, her own photos after). TAPS: Casuals what/where/when/rate; Technical trade/qualification/area/call-out (qualification always offers trade-tested / certificate / experience only). EMPLOYER ORDER approved (section above). CONCERN LOGGED, not a gate: a SAPS clearance does not search the National Child Protection Register (Form 30). NEXT SITTING: nothing on the slate is open; what follows is build work — the role registry as data rows (s13), the role pictures (RUL-157), and the first employer conversation, which is David's.
+- **19 Sep 2026, sitting 1 (David + Claude):** CASUALS FULLY DECIDED (Home & care, Food & hospitality, Retail & forecourt, Logistics & yard, Site & general labour, Trades-adjacent) — only Security guard and Car guard stay HOLD on PSIRA. Mining & heavy industry decided: 'Miner' split; mine-only jobs (Rock drill operator, Blaster, Winch driver) routed to the RUL-124 position lane. Key renames: Nanny, Caregiver, Cook, Room attendant, Kitchen assistant, Cashier, Waiter, Petrol attendant, General worker, Office cleaner, Hairdresser, Plant operator. Factory worker and Municipal worker are `employer_kinds[]`, not jobs. RULINGS: RUL-156 (licence gate for every licence to practise); RUL-155 (driving licence gate); RUL-153 (police clearance gates visibility for Nanny, Caregiver, Crèche assistant, with their tap overrides); RUL-154 (every LATER / HOLD / routed role is kept in the register above). TAPS: Casuals what/where/when/rate; Technical trade/qualification/area/call-out, with qualification always offering trade-tested / certificate / experience only. EMPLOYERS NAMED SO FAR: hotel groups, fast-food franchisees, fuel-station dealers, contract cleaners, farms, clothing factories, mines (Social and Labour Plan retrenchment duty under the MPRDA is the pitch). Motor & transport decided: IN Driver, Code 10 / Code 14 driver, Diesel mechanic, Motor mechanic, Auto electrician; LATER Panel beater, Spray painter, Tyre fitter; OUT Long-haul (into Code 14). RUL-155: every driving role is publicly visible only once its licence (and PrDP-G for heavy goods) is verified. Freight/logistics operators and bus companies added to the employer list. Building trades decided: IN Electrician and Gas installer (added) behind the licence gate, Plumber (PIRB as evidence), Bricklayer, Plasterer, Tiler, Carpenter, Roofer (absorbs Waterproofing), Paver; LATER Glazier, Ceiling & partition installer; OUT Industry worker (split), Waterproofing. RUL-156 extends the RUL-155 gate to every licence to practise, so Security guard, Car guard and Taxi / shuttle driver move HOLD -> IN, gated. FOR DISCUSSION: David's role-picture proposal (section below the register). OPEN: Systems & installation (next), Systems & installation, the first-employer order.

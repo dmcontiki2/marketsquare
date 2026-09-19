@@ -7800,8 +7800,10 @@ def verify_seller_subscription(reference: str):
 @app.get("/admin/ai-spend/summary")
 def admin_ai_spend_daily_summary(_admin=Depends(_require_admin_or_key)):
     """Live AI-spend summary for the nightly cost-compliance sweep (P2, 11 Jun 2026).
-    Returns today's and 7-day spend, the configured ceilings, and a 7-day
-    per-endpoint/model breakdown. Read-only; $0; admin key required."""
+    Returns today's, yesterday's and 7-day spend, the ceilings, who is spending it,
+    the C1-FAILSAFE-1 breaker state, and a 7-day per-endpoint/model breakdown.
+    Read-only; $0; admin key required."""
+    global _CEILING_FAIL_STREAK, _CEILING_BLIND_CALLS
     conn = database.get_db()
     try:
         today = datetime.utcnow().strftime("%Y-%m-%d 00:00:00")
@@ -7816,14 +7818,56 @@ def admin_ai_spend_daily_summary(_admin=Depends(_require_admin_or_key)):
             "SELECT endpoint, model, COALESCE(SUM(est_cost_usd),0) AS usd, COUNT(*) AS calls, "
             "SUM(cost_is_real) AS real_rows FROM ai_spend_log WHERE logged_at >= ? "
             "GROUP BY endpoint, model ORDER BY usd DESC LIMIT 25", (week,)).fetchall()
+        # SPEND-GAUGE-1: yesterday, the 7-day trend, and who is actually spending it.
+        _yday0 = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%d 00:00:00")
+        _y = conn.execute("SELECT COALESCE(SUM(est_cost_usd),0) AS u, COUNT(*) AS n "
+                          "FROM ai_spend_log WHERE logged_at >= ? AND logged_at < ?",
+                          (_yday0, today)).fetchone()
+        _days = conn.execute(
+            "SELECT substr(logged_at,1,10) AS d, COALESCE(SUM(est_cost_usd),0) AS u, "
+            "COUNT(*) AS n FROM ai_spend_log WHERE logged_at >= ? "
+            "GROUP BY d ORDER BY d DESC", (week,)).fetchall()
+        _top = conn.execute(
+            "SELECT email, COALESCE(SUM(est_cost_usd),0) AS u, COUNT(*) AS n "
+            "FROM ai_spend_log WHERE logged_at >= ? GROUP BY email "
+            "ORDER BY u DESC LIMIT 5", (today,)).fetchall()
     finally:
         conn.close()
+    _plat_ceiling = (cfg["daily_platform_ceiling_usd"] if cfg else 0) or 0
+    _today_usd = round(t["u"], 4)
     return {
-        "today_usd": round(t["u"], 4), "today_calls": t["n"],
+        "today_usd": _today_usd, "today_calls": t["n"],
         "week_usd": round(w["u"], 4), "week_calls": w["n"],
+        # SPEND-GAUGE-1 (19 Sep 2026, David): everything below exists so the number can be
+        # READ, not merely stored. This endpoint had carried today/week since 11 Jun and
+        # nothing ever displayed it -- the same "a correct instrument nobody reads beside a
+        # wrong one they do" shape as FUNNEL-DENOM-1 and STATS-HUMAN-1. A ceiling you cannot
+        # see is a ceiling you only find out about when it bites.
+        "yesterday_usd": round(_y["u"], 4), "yesterday_calls": _y["n"],
+        "pct_of_platform_ceiling": (round(100.0 * _today_usd / _plat_ceiling, 1)
+                                    if _plat_ceiling > 0 else None),
+        "platform_ceiling_reached": bool(_plat_ceiling > 0 and _today_usd >= _plat_ceiling),
+        "days": [{"date": r["d"], "usd": round(r["u"], 4), "calls": r["n"]} for r in _days],
+        "top_users_today": [{"email": r["email"] or "(anon)", "usd": round(r["u"], 4),
+                             "calls": r["n"],
+                             "at_user_ceiling": bool((cfg["daily_user_ceiling_usd"] if cfg else 0)
+                                                     and r["u"] >= cfg["daily_user_ceiling_usd"])}
+                            for r in _top],
+        # The C1-FAILSAFE-1 breaker lives in process memory (it must survive this database
+        # being broken), so it can only be read from inside the process. This is that window.
+        # blind_calls IS the financial exposure: paid calls that ran with no ceiling in force.
+        "ceiling_breaker": {
+            "blind_calls": _CEILING_BLIND_CALLS,
+            "consecutive_failures": _CEILING_FAIL_STREAK,
+            "closed": bool(_CEILING_FAIL_STREAK > _CEILING_FAIL_OPEN_MAX),
+            "note": ("the cost ceiling is being enforced normally" if _CEILING_FAIL_STREAK == 0
+                     else "the cost ceiling has failed %d time(s) in a row; %d paid call(s) have "
+                          "run unmetered since this process started"
+                          % (_CEILING_FAIL_STREAK, _CEILING_BLIND_CALLS)),
+        },
         "daily_user_ceiling_usd": (cfg["daily_user_ceiling_usd"] if cfg else 0) or 0,
-        "daily_platform_ceiling_usd": (cfg["daily_platform_ceiling_usd"] if cfg else 0) or 0,
-        "ceiling_warning": (None if cfg and (cfg["daily_platform_ceiling_usd"] or 0) > 0
+        "daily_platform_ceiling_usd": _plat_ceiling,
+        "ceiling_warning": (None if _plat_ceiling > 0
                             else "platform ceiling is 0/unset — AI spend is UNCAPPED"),
         "by_endpoint": [{"endpoint": r["endpoint"], "model": r["model"],
                          "usd": round(r["usd"], 4), "calls": r["calls"],

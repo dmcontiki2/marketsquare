@@ -1002,10 +1002,6 @@ REFLECTIONS = {
    ("ROLE_SLATE_REVIEW.md", ["| Security guard |  | IN |", "| Car guard |  | IN |", "| Taxi / shuttle driver |  | IN |",
                             "| Electrician |  | IN |", "| Gas installer |  | IN |"], ["| Security guard |  | HOLD |"]),
  ],
- "RUL-157": [
-   ("RULINGS.md", ["ONE PICTURE OF THE WORK FOR ITS ROLE"], []),
-   ("ROLE_SLATE_REVIEW.md", ["## RULED \u2014 ONE ROLE PICTURE AS THE FIRST PHOTO (RUL-157", "## FIRST EMPLOYERS"], []),
- ],
  "RUL-152": [
    ("RULINGS.md", ["RUL-075 WAS A DECISION NOT TO SPEND TWO MONTHS ON LOCALISATION",
                    "seatbelts built ALONGSIDE the work, never a turnstile in front of it"], []),

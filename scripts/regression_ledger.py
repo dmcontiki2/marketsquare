@@ -25164,5 +25164,68 @@ def rg_c1_failsafe_1():
                           "rail with a 429, and the calls that went through blind are counted")]
 
 
+@entry("RG-0416", "SPEND-GAUGE-1: the money is LEGIBLE -- one line says what AI cost today, "
+                  "yesterday and all time, and an unreadable gauge says NOT MEASURED rather "
+                  "than zero",
+       LOCKED, fixed_on="2026-09-19",
+       scope="scripts/spend_gauge.py (GREEN/AMBER/RED in one line, --full, --json, an appended "
+             "SPEND_LOG.md trend) plus bea_main.py admin_ai_spend_daily_summary(), which now also "
+             "returns yesterday, a 14-day trend, today's top spenders, pct_of_platform_ceiling, "
+             "platform_ceiling_reached and the C1-FAILSAFE-1 breaker state (process-local, so "
+             "this endpoint is the ONLY way to see blind_calls at all). THE FAULT WAS NOT MISSING "
+             "DATA. ai_spend_log has recorded every call since 28 May 2026 and "
+             "/admin/ai-spend/summary has served today+week since 11 Jun -- and on 19 Sep 2026 "
+             "NEITHER David NOR Claude could answer 'what did we spend yesterday' without opening "
+             "an ssh session, because nothing anywhere displayed it. That is the third instance of "
+             "one shape in two days (FUNNEL-DENOM-1, STATS-HUMAN-1, this): a correct instrument "
+             "nobody reads, sitting beside a decision being made without it. David was weighing "
+             "whether free listings become a rising cost at 10x scale and the answer was already "
+             "on disk. PROBED ON THE LIVE BOX: $3.44 all time over 778 calls, $0.0255 yesterday, "
+             "against a $100/day platform ceiling -- 0.03%. The gauge exists not because the "
+             "number is alarming but because the day it IS alarming is not the day to start "
+             "building the means to see it. THE NOT-MEASURED RULE IS LOAD-BEARING: when neither "
+             "MS_ADMIN_KEY nor the server key is reachable the gauge reports GREY / NOT MEASURED "
+             "and never prints $0.00 -- a confident zero from a blind probe is exactly how a real "
+             "overspend would hide, which is RG-0403's rule applied to money instead of people.",
+       ref="C1 (the ceiling) · RG-0415 C1-FAILSAFE-1 (the breaker whose blind_calls this exposes) "
+           "· RG-0402 FUNNEL-DENOM-1 and RG-0403 STATS-HUMAN-1 (the same unread-instrument shape) "
+           "· scripts/cost_compliance_sweep.py (code coverage; this is the live counterpart) · "
+           "ONBOARDING_GOAL.md section 7 (the cost fence)")
+def rg_spend_gauge_1():
+    g = repo_file("scripts/spend_gauge.py")
+    b = repo_file("bea_main.py")
+    if g is None or b is None:
+        return [(INFO, "NOT EVALUATED - spend_gauge.py or bea_main.py not readable from here")]
+    out = []
+    if "SPEND-GAUGE-1" not in g:
+        return [(FAIL, "the spend gauge is gone -- the AI bill is back to being recorded but "
+                       "never shown, which is the state it was built to end")]
+    for token, why in (
+        ("def verdict(", "the one-line verdict is gone; a gauge that needs interpreting is a meter"),
+        ("NOT MEASURED", "the not-measured path is gone -- a blind gauge would report a number it "
+                         "did not measure, and a confident $0.00 is how an overspend hides"),
+        ("_via_ssh", "the server-key fallback is gone, so the gauge only works where an admin key "
+                     "is already set"),
+        ("SPEND_LOG", "the durable trend is gone; the gauge would only be useful on days somebody "
+                      "remembered to run it"),
+        ("AMBER_PCT", "the thresholds are gone, so every day reads the same and nothing escalates"),
+    ):
+        if token not in g:
+            out.append((FAIL, why))
+    # A gauge that cannot see the breaker cannot see unmetered spend at all.
+    for token, why in (
+        ("ceiling_breaker", "the summary endpoint no longer exposes the C1-FAILSAFE-1 breaker, so "
+                            "blind (unmetered) calls became invisible again -- they are "
+                            "process-local and this endpoint is the only window onto them"),
+        ("yesterday_usd", "the endpoint no longer reports yesterday, which is the question a human "
+                          "actually asks"),
+        ("pct_of_platform_ceiling", "the endpoint no longer reports headroom against the ceiling"),
+    ):
+        if token not in b:
+            out.append((FAIL, why))
+    return out or [(INFO, "one line reports today, yesterday, all-time and headroom; an "
+                          "unreadable gauge reports NOT MEASURED, never zero")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
