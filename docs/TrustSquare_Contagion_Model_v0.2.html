@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Contagion Model v1.7 &mdash; Goal Agent + Association Lane + Audience</title>
+<title>Contagion Model v1.8 &mdash; Services Lane (employer enrolment, SA)</title>
 <style>
 :root{
   --navy:#0d1b2a; --navy2:#11253a; --panel:#132b42; --line:#22405c; --ink:#e8eef4;
@@ -79,7 +79,7 @@ canvas.ch{width:100%;height:78px;display:block}
 .tag.guess{background:#4a2c12;color:#e0a86f}
 .tag.bench{background:#3a2450;color:#c9a6e8}
 .money{display:flex;gap:0;align-items:stretch;background:#101f16;border-bottom:1px solid #1d3a2a;flex:0 0 auto;overflow-x:auto}
-.money .m{padding:5px 12px;border-right:1px solid #1d3a2a;min-width:118px;white-space:nowrap}
+.money .m{flex:0 0 auto;padding:5px 12px;border-right:1px solid #1d3a2a;min-width:118px;white-space:nowrap}
 .money .m span{display:block;font-size:9px;color:#6f9a80;text-transform:uppercase;letter-spacing:.07em}
 .money .m b{font-size:14px;font-variant-numeric:tabular-nums;color:#8fe0b0}
 .money .m i{font-style:normal;display:block;font-size:10px;color:#5d7d69}
@@ -119,7 +119,7 @@ canvas.ch{width:100%;height:78px;display:block}
 .planpick button:last-child{border-radius:0 5px 5px 0}
 .planpick button.on{background:var(--gold);color:#1a1400;border-color:var(--gold);font-weight:600}
 .cmp{display:flex;align-items:stretch;background:#0f2135;border-bottom:1px solid var(--line);flex:0 0 auto;overflow-x:auto}
-.cmp .c{padding:5px 12px;border-right:1px solid var(--line);min-width:112px;white-space:nowrap}
+.cmp .c{flex:0 0 auto;padding:5px 12px;border-right:1px solid var(--line);min-width:112px;white-space:nowrap}
 .cmp .c span{display:block;font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.07em;margin-bottom:1px}
 .cmp .c b{font-size:14px;font-variant-numeric:tabular-nums}
 .cmp .c u{text-decoration:none;font-size:10.5px;font-weight:600;margin-left:6px;color:var(--dim2)}
@@ -131,13 +131,26 @@ canvas.ch{width:100%;height:78px;display:block}
 .planbox b{color:var(--ink)}
 .planbox ol{margin:6px 0 0;padding-left:17px}
 .planbox li{margin-bottom:3px}
+/* ---- v1.8 services lane ---- */
+button.svc{border-color:#14b8a6;color:#5eead4}
+button.svc.on{background:#14b8a6;color:#04211d;border-color:#14b8a6;font-weight:700}
+.svcbar{display:none;align-items:stretch;background:#0b2723;border-bottom:1px solid #145048;flex:0 0 auto;overflow-x:auto}
+.svcbar.show{display:flex}
+.svcbar .c{flex:0 0 auto;padding:5px 12px;border-right:1px solid #145048;min-width:118px;white-space:nowrap}
+.svcbar .c span{display:block;font-size:9px;color:#6fbfb3;text-transform:uppercase;letter-spacing:.07em;margin-bottom:1px}
+.svcbar .c b{font-size:14px;font-variant-numeric:tabular-nums;color:#e8eef4}
+.svcbar .c u{text-decoration:none;font-size:10.5px;font-weight:600;margin-left:6px}
+.svcbar .c i{font-style:normal;display:block;font-size:10px;color:#5d8d85;font-variant-numeric:tabular-nums}
+.svcbar .up{color:var(--good)} .svcbar .dn{color:var(--bad)}
+.svcbar .hdr{background:#0f3a33;min-width:150px}
+.svcbar .hdr b{color:#5eead4}
 </style>
 </head>
 <body>
 <div class="app">
 
   <div class="top">
-    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.7&nbsp;&middot;&nbsp;goal agent (RUL-096) + clubs, unions &amp; federations WITH their own audience + measured funnel + planners + wave plan v3.2 + RAMP-1</span></div>
+    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.8&nbsp;&middot;&nbsp;Services lane (teal toggle) + goal agent (RUL-096) + clubs, unions &amp; federations WITH their own audience + measured funnel + planners + wave plan v3.2 + RAMP-1</span></div>
     <div class="clock"><span id="dateOut">1 Sep 2026</span><small id="weekOut">week 0 of 156</small></div>
     <div class="ctrls">
       <button class="primary" id="btnPlay">&#9654;&nbsp; Run</button>
@@ -148,6 +161,9 @@ canvas.ch{width:100%;height:78px;display:block}
     <div class="ctrls planpick">
       <button id="btnOld" title="The v0.1 assumption: a flat 28 emails a week, wave 2 at week 8, wave 3 at week 20.">v0.1 drip</button>
       <button id="btnNew" class="on" title="Email Wave Plan v3.2 as written: the 28 Aug proving ladder, 1 Sep global launch, 30 per category per city per day.">v3.2 plan</button>
+    </div>
+    <div class="ctrls">
+      <button id="btnSvc" class="svc" title="v1.8: switch the Services lane on or off. ON adds the Services-Casuals / Services-Technical role slate, enrolled through employers (RUL-150/151/152), across South Africa. OFF is exactly v1.7 - the dashboard pins stay on OFF.">Services lane: OFF</button>
     </div>
     <div class="stats">
       <div class="stat"><b id="sTot">0</b><span>Sellers</span></div>
@@ -167,6 +183,7 @@ canvas.ch{width:100%;height:78px;display:block}
 
   <div class="money" id="moneyBar"></div>
   <div class="cmp" id="cmpBar"></div>
+  <div class="svcbar" id="svcBar"></div>
 
   <div class="body">
     <div class="mapwrap">
@@ -177,6 +194,7 @@ canvas.ch{width:100%;height:78px;display:block}
         <div><i style="background:#f4801a"></i> Strain 2 &mdash; Starter $5</div>
         <div><i style="background:#2f80ed"></i> Strain 3 &mdash; Pro $20</div>
         <div><i style="background:#11161d;border:1.5px solid #c9d4de"></i> Strain 4 &mdash; Agency agent</div>
+        <div id="lgSvc" style="display:none"><i style="background:#14b8a6"></i> Strain 5 &mdash; Service worker (v1.8)</div>
         <div><i style="background:#3a4a5a"></i> Exposed, not yet active</div>
         <div><i style="background:rgba(90,170,220,.4);border:1px solid rgba(120,200,245,.6)"></i> Buyers, no seller yet</div>
         <div><i style="background:#3a1f24;border:1px solid rgba(200,80,90,.55)"></i> Barriered &mdash; cannot be entered</div>
@@ -231,6 +249,7 @@ const CITIES = [{"n":"Pretoria","c":"ZA","y":-25.74486,"x":28.18783,"pop":2700,"
    and SPC's 2025 projection runs ~11% above the actual census - use the census;
    Papeete is only the THIRD largest commune in French Polynesia, behind Faaa. */
 
+const SNAP = 10;                        // per-city snapshot stride (v1.8 adds service actives + gated)
 const WEEKS = 157;                       // 1 Sep 2026 -> 3 years
 const START_MS = Date.UTC(2026, 8, 1);
 const TARGET_DENSITY = 60;               // sellers in Pretoria; from CityLauncher cities.target = 60
@@ -422,6 +441,32 @@ const PARAMS = [
  {k:"assocJoin",g:"Association lane", l:"Of those, the share who join when their own teacher or club asks", lo:.04, mid:.25, hi:.60, src:"guess", n:"Why this is not custJoin's 9%. Three things are true here that are true nowhere else in the model. (1) The ask comes from someone the person already knows, already pays and will see again next week - not from a stranger's email. (2) It is TRANSACTIONAL rather than promotional: if the tutor takes bookings through the app then using the app is how you get your lesson, which converts far above being told about something. (3) The person joining is a BUYER, which is a much smaller commitment than listing something for sale - most of the model's friction is on the seller side and none of it applies. Against all that: a volunteer club secretary may never actually send the message, an optional ask converts far worse than a required one, and nobody has tested any of this. Hence lo 0.04 - the case where it is announced once and ignored."},
  {k:"unionMemb",g:"Association lane", l:"Individual teachers reachable per union agreement", lo:200, mid:2500, hi:40000, src:"data", n:"PROBED 4 Sep 2026 and the probe killed the plan that preceded it: we hold 1,622 teachers_trainers rows and 1,194 of the 1,235 that would pass the send guards are SCHOOL OFFICES, not teachers - stjbcs@mweb.co.za is St John the Baptist School, linden@linden.co.za is a high school. A switchboard will never list itself as a specialist tutor. A teacher's personal address cannot be scraped at all, which makes the union and SACE route not a nice-to-have but the ONLY route to this audience. The economics are unusually strong for them: free tier, no commission line anywhere in the canon, the buyer pays the single introduction, and a qualified teacher with ID verification sits at 95 - Highly Trusted - on the day they list."},
 
+ // --- SERVICES LANE v1.8 (19 Sep 2026) - RUL-150/151/152, QUICK_LISTING_SPEC Part II, ROLE_SLATE_REVIEW ---
+ // David, 19 Sep: add every casual and technical role under Services-Casuals / Services-Technical, add the
+ // employer side, and "use these service types to enrol their current employees or previous employees as
+ // referrals". The employer is the SUPPLY channel. Enrolment NEVER creates a listing - the worker publishes
+ // by her own hand through the Quick door. South Africa only: every employer on the approach order is here.
+ {k:"svcDen", g:"Services lane", l:"Addressable casual + technical workers per 1,000 people (ZA)", lo:6, mid:18, hi:45, src:"guess", n:"The bigger SA base. Stats SA QLFS Q2 2026: 16.7m employed (informal sector up 34k, construction up 39k in the quarter) and 8.5m unemployed at 33.6%. Casual and trade work - household, informal, construction, hospitality, forecourt - is millions of people; this counts only the slice that would put a listing on a phone. 18 per 1,000 over the 28.3m people in the model's 55 SA cities is ~510k before incumbents, roughly 25x the ordinary seller base per person."},
+ {k:"svcInc", g:"Services lane", l:"Share already held by incumbents (WhatsApp groups, word of mouth, gig apps)", lo:.40, mid:.65, hi:.85, src:"guess", n:"Most casual work in SA is placed by word of mouth and WhatsApp; the gig apps hold a thin urban slice. Higher than the ordinary 60% because a worker who has regular work does not look."},
+ {k:"svcEng", g:"Services lane", l:"Share of that market reachable in English only", lo:.30, mid:.50, hi:.75, src:"guess", n:"Before the launch languages ship. RUL decision 8 (18 Sep): English, isiZulu, Sesotho, Afrikaans reach ~90% with cluster intelligibility; isiXhosa fifth for Cape Town. After svcLangW the lane converts at the full 90%."},
+ {k:"empYes", g:"Services lane", l:"Employer approached -> enrols its staff", lo:.05, mid:.20, hi:.50, src:"guess", n:"A human conversation, the one genuine hand-off in the plan. First door: one Pretoria franchisee or fuel-station dealer (can say yes the same week), then a mine running retrenchments, a contract cleaner, a hotel group, freight, farms, a municipality last."},
+ {k:"empSize", g:"Services lane", l:"Current + former staff on an enrolled employer's roster", lo:8, mid:60, hi:900, src:"guess", n:"Heavy-tailed on purpose: a franchisee has ~25, a contract cleaner thousands, a mine's retrenchment list thousands. Each enrolment draws a lognormal roster around this."},
+ {k:"empReach", g:"Services lane", l:"Share of the roster the employer can invite (WhatsApp/SMS on file)", lo:.30, mid:.60, hi:.85, src:"guess", n:"Former employees are the weak end: numbers change. The invite is an account + magic link (the agencies machinery, generalised) - it creates NO listing."},
+ {k:"svcAct", g:"Services lane", l:"Invited worker -> publishes her own listing /week", lo:.04, mid:.12, hi:.30, src:"guess", n:"The Quick door: five taps, draft, hand-over. The whole lane stands on this number and nothing measures it yet - the door's beacons (q_door ... q_handover) started 19 Sep."},
+ {k:"svcLapse", g:"Services lane", l:"Invited, never listed -> lapses /week", lo:.03, mid:.08, hi:.20, src:"guess", n:"Goes to the warm pool, not the grave - the WhatsApp self-send (WA-SELFSEND-1) is the way back without an inbox."},
+ {k:"svcGated", g:"Services lane", l:"Share of workers in a licence / clearance-gated role", lo:.08, mid:.18, hi:.30, src:"data", n:"14 of the IN roles on the 19 Sep slate carry a gate before public visibility: police clearance (Nanny, Caregiver, Creche assistant, RUL-153) or a licence (PSIRA, PrDP, DoEL, SAQCC, refrigerant; RUL-155/156). Volume-weighted lower than the role count."},
+ {k:"svcGateWk", g:"Services lane", l:"Weeks to verify a gated worker", lo:2, mid:6, hi:16, src:"guess", n:"Police clearance and registry checks. The listing waits; it is not refused."},
+ {k:"svcGateFail", g:"Services lane", l:"Gated workers who never clear", lo:.10, mid:.30, hi:.50, src:"guess", n:"No registration, lapsed licence, or simply never uploads the proof."},
+ {k:"svcRef", g:"Services lane", l:"WhatsApp invites to ex-colleagues per listed worker /week", lo:.01, mid:.05, hi:.15, src:"guess", n:"wa.me/?text= with no number (decision 5, built 19 Sep): she picks from her own contacts. Co-workers from the same roster are the tightest peer group in the model."},
+ {k:"svcRefTake", g:"Services lane", l:"Invited co-worker signs up", lo:.05, mid:.15, hi:.35, src:"guess", n:"A message from someone she worked beside, not a stranger."},
+ {k:"svcB2s", g:"Services lane", l:"SA app users who also have casual or trade work to offer", lo:.05, mid:.15, hi:.35, src:"guess", n:"The services twin of b2s. With official unemployment at 33.6% (QLFS Q2 2026) a large share of the people who arrive to hire also have work to sell - the gardener's neighbour sees the Gardener card and makes her own. Applied to b2s, so it inherits that benchmark's rate."},
+ {k:"svcAud", g:"Services lane", l:"Households / clients a worker already has", lo:1, mid:3, hi:8, src:"guess", n:"A home cleaner works for several houses a week; a plumber has a phone full of past jobs. The confirming employer is one of them."},
+ {k:"svcAudJoin", g:"Services lane", l:"Of those, share who join (confirm tap + post-confirm glimpse)", lo:.15, mid:.40, hi:.75, src:"guess", n:"Decisions 3 and 4 (18 Sep): the confirmer verifies a phone or email, no account needed, then sees her score move and two or three other workers nearby. Free-account offer after."},
+ {k:"svcTgt", g:"Services lane", l:"Service supply a city needs vs the ordinary target", lo:2, mid:6, hi:15, src:"guess", n:"A household hires within walking distance of the taxi drop (decision 6), so a service market needs far more workers than a tutor market before it feels full."},
+ {k:"svcIntroX", g:"Services lane", l:"Paid introductions per worker vs an ordinary seller", lo:.5, mid:1.0, hi:2.0, src:"guess", n:"Households hire often but many repeat off-app once introduced. 1T = $2 per introduction, canon 3."},
+ {k:"svcPay", g:"Services lane", l:"Upgrade propensity vs an ordinary seller", lo:.10, mid:.35, hi:.80, src:"guess", n:"$5 a month is R92 - a trade takes it, a casual mostly does not. Free is the expected tier."},
+ {k:"svcChurn", g:"Services lane", l:"Churn multiplier for service workers", lo:.8, mid:1.2, hi:2.0, src:"guess", n:"Casual work is transient: a worker who finds a permanent post stops listing."},
+
  // --- agencies ---
  {k:"agRate",  g:"Agencies", l:"Agency conversions /city /week", lo:.002, mid:.012, hi:.045, src:"guess", n:"Hub events, scaled by city size. Three agencies already signed up pre-launch, so the floor is not zero."},
  {k:"agSize",  g:"Agencies", l:"Agents per agency", lo:4, mid:14, hi:55, src:"guess", n:"Only 2 agencies / 3 memberships exist so far - too few to measure."},
@@ -447,7 +492,8 @@ const DEFAULTS={allure:1,badge:.35,discount:0,referral:0,complaint:0,delay:0,poo
   w2Week:8,w3Week:20,stripeW:0,africaW:157,agPush:1,advPush:1,compW:157,compS:1.5,
   dayCap:30,measured:1,agGateW:8,rollW:157,featW:8,liveKeysW:0,barriers:1,localiseW:157,
   tpW:0,tpToursW:157,refW:157,varsityW:157,ramp:1,rampCap:96,ring2W:1,ring3W:4,ring4W:8,ring5W:157,scrapeWk:30,aipaW:13,aucW:26,fideW:157,fideUp:1.35,
-  clubW:1,clubProvW:157,fedW:157,unionW:157,goalW:0,goalCap:6,goalCities:43};
+  clubW:1,clubProvW:157,fedW:157,unionW:157,goalW:0,goalCap:6,goalCities:43,
+  svcOn:0,svcW:3,empPace:4,svcLangW:13};
 
 /* -------- scenario levers: things David can actually change -------- */
 const LEVERS = {
@@ -496,7 +542,11 @@ const LEVERS = {
   rollW:    {v:157,  lo:0,  hi:157, st:1,   l:"Optional later outreach wave", n:"OFF by default. After the launch window the model runs unencumbered by our present development state - no scraped-list ceiling, no batch rate, no per-day cap. Set a week here only to ask what an extra outreach push would add on top."},
   agPush:   {v:1.0,  lo:0,  hi:4,   st:.1,  l:"Agency outreach intensity",     n:"Multiplier on agency conversion. Hubs are the fastest lever you own."},
   compW:    {v:157,  lo:0,  hi:157, st:1,   l:"Week a competitor clone lands", n:"157 = never. Cross-immunity: whoever they take, you cannot have."},
-  compS:    {v:1.5,  lo:.2, hi:5,   st:.1,  l:"Competitor strength vs you",    n:"Their transmission relative to yours. Funded clone with your concept = 2-4."}
+  compS:    {v:1.5,  lo:.2, hi:5,   st:.1,  l:"Competitor strength vs you",    n:"Their transmission relative to yours. Funded clone with your concept = 2-4."},
+  svcOn:    {v:0,    lo:0,  hi:1,   st:1,   l:"Services lane (v1.8)",          n:"The toggle in the top bar does the same. OFF = v1.7 exactly, which is what the dashboard pins. ON = the 19 Sep role slate (Services-Casuals + Services-Technical) enrolled through employers across South Africa."},
+  svcW:     {v:3,    lo:0,  hi:157, st:1,   l:"Week the first employer door opens", n:"Week 3 = Tue 22 Sep: the approved approach order starts with one Pretoria franchisee or fuel-station dealer who can say yes the same week. A placeholder, not a commitment - move it to when the first conversation actually happens."},
+  empPace:  {v:4,    lo:0,  hi:40,  st:1,   l:"Employers approached /month",  n:"Each approach is a human conversation - the one real hand-off in the plan. Roughly one a week is David's own bandwidth; a Growth Partner lane (Stage 2, Oct) could raise it."},
+  svcLangW: {v:13,   lo:0,  hi:157, st:1,   l:"Week the four launch languages ship", n:"English, isiZulu, Sesotho, Afrikaans (~90%). Waits on RG-0412, which waits on RG-0400 (the unsynced EULA box). Week 13 (1 Dec) is a placeholder. 157 = English only, forever."}
 };
 
 /* ================= EMAIL WAVE PLAN v3.2 =========================
@@ -664,6 +714,7 @@ function gammaVar(r,k){
   }
   return d;
 }
+function gauss(r){ const u1=r()||1e-12,u2=r()||1e-12; return Math.sqrt(-2*Math.log(u1))*Math.cos(6.283185307*u2); }
 function betaVar(r,a,b){ const x=gammaVar(r,a), y=gammaVar(r,b); return (x+y)>0?x/(x+y):0.5; }
 function pert(r,lo,mid,hi){
   if(!(hi>lo)) return mid;
@@ -728,8 +779,11 @@ function railSet(L,week){
    v32=true runs the Email Wave Plan v3.2 schedule instead of the v0.1 flat drip. */
 function simulate(seed, L, sample, keepTrace, v32){
   const r=mulberry32(seed), n=CITIES.length;
+  // v1.8: the Services-lane parameters draw from their own stream, so adding them leaves every
+  // v1.7 ensemble draw - and therefore every dashboard pin - exactly where it was
+  const rP=mulberry32((seed^0x5E7C0DE)>>>0);
   const P={}; PARAMS.forEach(p=>{
-    P[p.k] = (p.lock && p.obs!==null) ? p.obs : (sample ? pert(r,p.lo,p.mid,p.hi) : (p.obs!==null?p.obs:p.mid));
+    P[p.k] = (p.lock && p.obs!==null) ? p.obs : (sample ? pert(p.g==="Services lane"?rP:r,p.lo,p.mid,p.hi) : (p.obs!==null?p.obs:p.mid));
   });
   const beta = P.peers*P.pTell*P.pTake*L.allure*(1+1.4*L.referral);
   const delayPen=1-0.55*L.delay, cmpPen=1-Math.min(.8,L.complaint*14);
@@ -781,6 +835,23 @@ function simulate(seed, L, sample, keepTrace, v32){
   // membership, not one per listing. Under-claiming is the safe direction for a guessed number.
   const AE=new Float64Array(n);
   let assocActives=0, assocBuyers=0;
+  // ---- v1.8 SERVICES LANE state (all zero while the toggle is OFF, so v1.7 is untouched) ----
+  // Its own compartments, because a cleaner enrolled by a hotel group is not the same person as a
+  // tutor answering a cold letter: different market size, different door, different liquidity.
+  const svcOn = (L.svcOn||0)>=.5;
+  const VS=new Float64Array(n),VE=new Float64Array(n),VG=new Float64Array(n),VA0=new Float64Array(n),
+        VA5=new Float64Array(n),VD=new Float64Array(n),VW=new Float64Array(n),VQ=new Float64Array(n),LqS=new Float64Array(n);
+  // its OWN random stream: switching the lane on must not reshuffle the draws of every other lane,
+  // or the with/without comparison would be mostly noise
+  const r2=mulberry32((seed^0x5EC5A11)>>>0); const svcN=new Float64Array(n); let svcOrg=0, svcCross=0;
+  let empApproached=0, empEnrolled=0, empRoster=0, svcInvited=0, svcEver=0, svcBuyers=0, svcRefd=0, svcGateFailed=0;
+  const ZA_IX=[]; let zaPop=0; for(let i=0;i<n;i++) if(CITIES[i].c==="ZA"){ ZA_IX.push(i); zaPop+=CITIES[i].pop; }
+  const PTA_IX = CITY_IX["Pretoria"];
+  if(svcOn) for(const i of ZA_IX){
+    VS[i]=CITIES[i].pop*1000*P.svcDen/1000*(1-P.svcInc)*0.90;   // 0.90 = the four launch languages' reach
+    svcN[i]=VS[i];
+  }
+  function pickZA(){ let u=r2()*zaPop; for(const i of ZA_IX){ u-=CITIES[i].pop; if(u<=0) return i; } return ZA_IX[0]; }
   const rampStreak={};   // RAMP-1: per-city consecutive-clean-wave count
   // SIM-RAMP-2: the plan's addressable list per city, and its ladder window.
   // The fortnight in the written plan was a duration ESTIMATE at full caps, not a
@@ -1292,6 +1363,98 @@ function simulate(seed, L, sample, keepTrace, v32){
       }
     }
 
+    // ---- 5c. v1.8 THE SERVICES LANE: employers enrol, workers publish by their own hand ----
+    let svcNewWk=0;
+    if(svcOn){
+      const langX = (w>=L.svcLangW && L.svcLangW<157) ? 1 : P.svcEng/0.90;
+      if(w>=L.svcW && L.svcW<157){
+        // employer doors: a few human conversations a month, a fraction say yes
+        const appr=pois(r2, L.empPace/WEEKS_PER_MONTH);
+        empApproached+=appr;
+        const yes=binom(r2, appr, Math.min(.95,P.empYes));
+        for(let k=0;k<yes;k++){
+          const i=(empEnrolled===0 && PTA_IX!==undefined) ? PTA_IX : pickZA();   // the approved order starts in Pretoria
+          const roster=Math.max(3, Math.round(P.empSize*Math.exp(1.1*gauss(r2)-0.605)));  // lognormal, mean = empSize
+          empEnrolled++; empRoster+=roster;
+          // the roster is people, not listings: an account and a magic link each, and NOTHING published
+          const inv=Math.min(binom(r2, roster, Math.min(.95,P.empReach*langX)), Math.round(VS[i]));
+          VS[i]-=inv; VE[i]+=inv; svcInvited+=inv;
+          if(keepTrace) trace.events.push({w:w,i:i,t:"employer",n:roster});
+        }
+      }
+      for(const i of ZA_IX){
+        const va=VA0[i]+VA5[i], atB=A0[i]+A5[i]+A20[i]+AG[i];
+        // liquidity of the SERVICE market: enough workers near the taxi drop, and households to hire them
+        const d=va/(cityTarget(CITIES[i].pop,P.tgtExp)*P.svcTgt), ls=d*d/(P.K*P.K+d*d);
+        const bd=BU[i]/Math.max(1,(atB+va)*P.buyNeed), lb=bd*bd/(0.36+bd*bd);
+        LqS[i]=ls*lb;
+        // word of mouth among workers - the model's own organic force of infection, with the
+        // service market's liquidity and the service market's size, exactly as for every other seller
+        const vaEff=VA0[i]+P.w5*VA5[i];
+        if(vaEff>0 && VS[i]>=1 && svcN[i]>0){
+          const f=beta*proof*(1+P.localProof*LqS[i])*vaEff*(P.lqFloor+(1-P.lqFloor)*LqS[i])/svcN[i]
+                  *delayPen*cmpPen*(1-P.entrantPen)*langX;
+          const nx=binom(r2, Math.round(VS[i]), 1-Math.exp(-f));
+          VS[i]-=nx; VE[i]+=nx; svcOrg+=nx;
+        }
+        // people who came to hire, and list their own work instead (the services twin of b2s)
+        if(BU[i]>=1 && VS[i]>=1){
+          const c=Math.min(Math.round(VS[i]), binom(r2, Math.round(BU[i]), Math.min(.2, P.b2s*P.svcB2s*(0.25+0.75*LqS[i])*langX)));
+          if(c>0){ BU[i]-=c; VS[i]-=c; VE[i]+=c; svcCross+=c; }
+        }
+        // co-workers told on WhatsApp by someone they worked beside
+        if(w>=L.svcW && va>=1){
+          const took=binom(r2, Math.round(va*P.svcRef), Math.min(.6,P.svcRefTake*langX*(0.5+0.5*LqS[i])));
+          const room=Math.min(took, Math.round(VS[i]));
+          if(room>0){ VS[i]-=room; VE[i]+=room; svcRefd+=room; }
+        }
+        // the Quick door: she publishes by her own hand, or she lapses to the warm pool
+        if(VE[i]>=1){
+          const act=binom(r2, Math.round(VE[i]), Math.min(.9,P.svcAct*langX*delayPen));
+          const lap=binom(r2, Math.round(VE[i]-act), P.svcLapse);
+          VE[i]-=act+lap; VW[i]+=lap;
+          const gated=binom(r2, act, P.svcGated);        // police clearance / licence before she is visible
+          VG[i]+=gated; VA0[i]+=act-gated; svcEver+=act-gated; svcNewWk+=act-gated;
+          // she does not arrive alone: the households she already works for confirm, glimpse, and join
+          const newA=act-gated;
+          if(newA>0){
+            const want=binom(r2, Math.round(newA*P.svcAud), P.svcAudJoin);
+            const got=Math.min(want, Math.round(GS[i])); GS[i]-=got; BU[i]+=got; svcBuyers+=got;
+          }
+        }
+        if(VG[i]>=1){
+          const rel=binom(r2, Math.round(VG[i]), Math.min(1,1/Math.max(1,P.svcGateWk)));
+          const fail=binom(r2, rel, P.svcGateFail);
+          VG[i]-=rel; VA0[i]+=rel-fail; VQ[i]+=fail; svcEver+=rel-fail; svcNewWk+=rel-fail; svcGateFailed+=fail;
+          if(rel-fail>0){ const want=binom(r2, Math.round((rel-fail)*P.svcAud), P.svcAudJoin);
+            const got=Math.min(want, Math.round(GS[i])); GS[i]-=got; BU[i]+=got; svcBuyers+=got; }
+        }
+        // households who simply SEE a worker listed near them
+        const vis=(VA0[i]+VA5[i])*(0.4+0.6*LqS[i]);
+        if(vis>0 && GS[i]>=1){
+          const lam=P.pubBeta*proof*P.impr*vis/GP[i]*langX;
+          const got=binom(r2, Math.round(GS[i]), 1-Math.exp(-lam));
+          GS[i]-=got; BU[i]+=got; svcBuyers+=got;
+        }
+        // money: a trade takes Starter, a casual mostly stays Free
+        if(rails.has("ZA")){
+          const gate=(0.15+0.85*(LqS[i]*LqS[i]/(0.09+LqS[i]*LqS[i])))*(1+1.5*L.discount)*delayPen;
+          const u5=binom(r2, Math.round(VA0[i]), Math.min(.5,P.pUp5*P.svcPay*gate));
+          VA0[i]-=u5; VA5[i]+=u5;
+        }
+        // churn: casual work is transient - a permanent post ends the listing
+        const cr=(P.churn+P.churnLon*(1-LqS[i])+L.complaint*2.0+0.02*L.delay)*P.svcChurn;
+        for(const [arr,mult] of [[VA0,1.0],[VA5,.62]]){
+          const lost=binom(r2, Math.round(arr[i]), Math.min(.6,cr*mult));
+          arr[i]-=lost; const imm=binom(r2,lost,P.immune); VQ[i]+=imm; VD[i]+=lost-imm;
+        }
+        // and the way back
+        const lift=0.4+0.6*LqS[i];
+        if(VD[i]>=1){ const b=binom(r2,Math.round(VD[i]),Math.min(.35,P.react*lift)); VD[i]-=b; VA0[i]+=b; }
+        if(VW[i]>=1){ const b=binom(r2,Math.round(VW[i]),Math.min(.35,P.reactWarm*lift*langX)); VW[i]-=b; VA0[i]+=b; svcEver+=b; svcNewWk+=b; }
+      }
+    }
+
     // ---- 6. competitor with cross-immunity ----
     if(w>=L.compW){
       for(let i=0;i<n;i++){
@@ -1305,24 +1468,25 @@ function simulate(seed, L, sample, keepTrace, v32){
     }
 
     // ---- 7. bookkeeping ----
-    let tA=0,t0=0,t5=0,t20=0,tG=0,cities=0,working=0;const ctry=new Set();
+    let tA=0,t0=0,t5=0,t20=0,tG=0,tS=0,cities=0,working=0;const ctry=new Set();
     let rnum=0,rden=0;
     for(let i=0;i<n;i++){
-      const at=A0[i]+A5[i]+A20[i]+AG[i];
-      tA+=at;t0+=A0[i];t5+=A5[i];t20+=A20[i];tG+=AG[i];
+      const atB=A0[i]+A5[i]+A20[i]+AG[i], vs=VA0[i]+VA5[i], at=atB+vs;
+      tA+=at;t0+=A0[i];t5+=A5[i];t20+=A20[i];tG+=AG[i];tS+=vs;
       if(at>=1){cities++;ctry.add(CITIES[i].c);
+        if(atB<1){ if(LqS[i]>=0.35) working++; continue; }   // a services-only city: counted, but R stays seller-to-seller
         if(Lq[i]>=0.35) working++;
         const dur=1/Math.max(.005,P.churn+P.churnLon*(1-Lq[i])+L.complaint*2);
-        const ri=beta*proof*(1+P.localProof*Lq[i])*delayPen*cmpPen*LT[i]*(S[i]/N[i])*(Aeff[i]/at)*dur*P.pAct;
-        rnum+=ri*at; rden+=at;
+        const ri=beta*proof*(1+P.localProof*Lq[i])*delayPen*cmpPen*LT[i]*(S[i]/N[i])*(Aeff[i]/atB)*dur*P.pAct;
+        rnum+=ri*atB; rden+=atB;
       }
     }
     seriesTot[w]=tA;
     if(keepTrace){
       trace.A.push(tA); trace.R.push(rden>0?rnum/rden:0);
-      trace.mix.push([t0,t5,t20,tG]);
-      const snap=new Float32Array(n*8);
-      for(let i=0;i<n;i++){snap[i*8]=A0[i];snap[i*8+1]=A5[i];snap[i*8+2]=A20[i];snap[i*8+3]=AG[i];snap[i*8+4]=E[i];snap[i*8+5]=Lq[i];snap[i*8+6]=BU[i];snap[i*8+7]=1-GS[i]/GP[i];}
+      trace.mix.push([t0,t5,t20,tG,tS]);
+      const snap=new Float32Array(n*SNAP);
+      for(let i=0;i<n;i++){const o=i*SNAP;snap[o]=A0[i];snap[o+1]=A5[i];snap[o+2]=A20[i];snap[o+3]=AG[i];snap[o+4]=E[i]+VE[i];snap[o+5]=Lq[i];snap[o+6]=BU[i];snap[o+7]=1-GS[i]/GP[i];snap[o+8]=VA0[i]+VA5[i];snap[o+9]=VG[i];}
       trace.snap.push(snap);
       // PRICING CANON: 1 Tuppence = USD $2 and a buyer pays 1T per introduction (canon 3).
       // Seller tiers Free $0 / Starter $5 / Pro $20 / AGENCY FREE (canon 1). Buyer Global $5 (canon 2).
@@ -1357,6 +1521,16 @@ function simulate(seed, L, sample, keepTrace, v32){
                           +    tourMix *P.tpTourUSD*TP_RATE_TOURS ) * WEEKS_PER_MONTH;
         tpAccrued += affRev/WEEKS_PER_MONTH;
       }
+      // v1.8 services lane money, at canon prices, ZA fees
+      let svcIntroRev=0, svcSubRev=0, svcFee=0;
+      if(svcOn && rails.has("ZA")) for(const i of ZA_IX){
+        const va=VA0[i]+VA5[i];
+        const intros=va*P.introRt*P.svcIntroX*P.introAcc*aucX*WEEKS_PER_MONTH;
+        const iRev=intros*TUPPENCE_USD, sRev=VA5[i]*SUB_STARTER*(1-L.discount);
+        svcIntroRev+=iRev; svcSubRev+=sRev;
+        svcFee+=(iRev+sRev)*FEE_ZA_PCT + (VA5[i]+intros/Math.max(1,P.bundleT))*FEE_ZA_FIX;
+      }
+      introRev += svcIntroRev; subSeller += svcSubRev;
       const featIntroRev = featIntros*TUPPENCE_USD*WEEKS_PER_MONTH*railShare;
       const featRevMo    = featRev*WEEKS_PER_MONTH*railShare;
       const featCostMo   = featCost*WEEKS_PER_MONTH;
@@ -1386,6 +1560,7 @@ function simulate(seed, L, sample, keepTrace, v32){
                   + at*P.introRt*P.introAcc*aucX*TUPPENCE_USD*WEEKS_PER_MONTH;
         feeCost += rev*pct + (subs+tups)*fix;
       }
+      feeCost += svcFee; revZA += svcIntroRev+svcSubRev;
       zaShare = mrr>0 ? revZA/mrr : 1;
       const fixedCost=FIXED_MO_USD;
       // AI PA (RUL-081): the assistant's token bill, every active user, once on.
@@ -1409,6 +1584,13 @@ function simulate(seed, L, sample, keepTrace, v32){
         clubSignups:clubSignups, fedSignups:fedSignups, unionSignups:unionSignups,
         assocActives:assocActives, assocBuyers:assocBuyers,
         goalSignups:goalSignups, fedBodies:fedBodies, outPub:outPub,
+        svcOn:(svcOn?1:0), svcActives:tS, svcIntroRev:svcIntroRev, svcSubRev:svcSubRev, svcEver:svcEver, svcBuyers:svcBuyers,
+        svcOrg:svcOrg, svcCross:svcCross, empApproached:empApproached, empEnrolled:empEnrolled, empRoster:empRoster, svcInvited:svcInvited, svcRefd:svcRefd,
+        svcNew:svcNewWk, svcGateFailed:svcGateFailed,
+        svcGated:(function(){let t=0;for(const i of ZA_IX)t+=VG[i];return t;})(),
+        svcWaiting:(function(){let t=0;for(const i of ZA_IX)t+=VE[i];return t;})(),
+        svcPoolLeft:(function(){let t=0;for(const i of ZA_IX)t+=VS[i];return t;})(),
+        zaSellers:(function(){let t=0;for(const i of ZA_IX)t+=A0[i]+A5[i]+A20[i]+AG[i]+VA0[i]+VA5[i];return t;})(),
         clubLeft:(function(){let t=0;for(let ci=0;ci<clubPool.length;ci++)t+=clubPool[ci];return t;})(),
         sentTot:(function(){let t=0;for(let i2=0;i2<n;i2++)t+=sent[i2];return t;})(),
         referred:(function(){let t=0;for(let i=0;i<n;i++)t+=REF[i];return t;})(),
@@ -1442,6 +1624,8 @@ function runEnsemble(){
   const bar=document.getElementById('mcBar'), lbl=document.getElementById('mcLbl');
   const L=leverVals();
   const jobs=[{key:'old',v32:false,label:'v0.1 drip'},{key:'new',v32:true,label:'v3.2 plan'}];
+  ENSD.base=null;
+  if(L.svcOn>=.5) jobs.push({key:'base',v32:true,label:'without services',L:Object.assign({},L,{svcOn:0})});
   let ji=0, runs=[], done=0;
   function finishJob(){
     const p10=new Float64Array(WEEKS),p50=new Float64Array(WEEKS),p90=new Float64Array(WEEKS),col=new Float64Array(ENS);
@@ -1458,7 +1642,7 @@ function runEnsemble(){
     if(token!==ensToken) return;
     const t0=performance.now();
     while(ji<jobs.length && performance.now()-t0<45){
-      runs.push(simulate(1000+done, L, true, false, jobs[ji].v32).series); done++;
+      runs.push(simulate(1000+done, jobs[ji].L||L, true, false, jobs[ji].v32).series); done++;
       if(done>=ENS) finishJob();
     }
     const total=jobs.length*ENS, sofar=ji*ENS+done;
@@ -1469,6 +1653,7 @@ function runEnsemble(){
     lbl.innerHTML='<b style="color:var(--gold)">v3.2 &rarr; '+Math.round(nw.takeoff*100)+'% took off</b>'+
                   ' &nbsp;vs&nbsp; v0.1 &rarr; '+Math.round(o.takeoff*100)+'%'+
                   ' &nbsp;&middot;&nbsp; '+ENS+' runs each';
+    if(ENSD.base) lbl.innerHTML+=' &nbsp;&middot;&nbsp; <b style="color:#5eead4">services '+Math.round(nw.takeoff*100)+'% vs '+Math.round(ENSD.base.takeoff*100)+'% without</b>';
     syncFizz(); draw();
   })();
 }
@@ -1481,12 +1666,15 @@ function syncFizz(){
 /* ======================= LIVE RUN ============================== */
 /* Both plans are always computed on the same seed and the same scenario dials,
    so the only thing separating the two curves is the wave plan itself. */
-let RUNS={old:null,new:null}, VIEW='new', RUN=null, week=0, playing=false, timer=null;
+let RUNS={old:null,new:null,base:null}, VIEW='new', RUN=null, week=0, playing=false, timer=null;
 function leverVals(){const o={};for(const k in LEVERS)o[k]=LEVERS[k].v;return o;}
 function rebuild(){
   const L=leverVals();
   RUNS.old=simulate(7, L, false, true, false);
   RUNS.new=simulate(7, L, false, true, true);
+  // v1.8: the same seed with the Services lane OFF, so the toggle shows exactly what it changes
+  RUNS.base = (L.svcOn>=.5) ? simulate(7, Object.assign({},L,{svcOn:0}), false, true, true) : null;
+  syncSvcUI();
   RUN=RUNS[VIEW];
   if(week>=WEEKS)week=WEEKS-1;
   runEnsemble(); draw();
@@ -1522,14 +1710,14 @@ if(window.ResizeObserver){
 function px(lng){return (lng+180)/360*W;}
 function py(lat){return (LAT_TOP-lat)/(LAT_TOP-LAT_BOT)*H;}
 
-const TIER_COL=['#e63946','#f4801a','#2f80ed','#0b0f14'];
+const TIER_COL=['#e63946','#f4801a','#2f80ed','#0b0f14','#14b8a6'];
 function draw(){
   if(!W||!RUN)return;
   const snap=RUN.trace.snap[Math.min(week,WEEKS-1)];
   const rails=railSet(leverVals(),week);
   // country activity
   const act={}, n=CITIES.length;
-  for(let i=0;i<n;i++){const a=snap[i*8]+snap[i*8+1]+snap[i*8+2]+snap[i*8+3];if(a>=1)act[CITIES[i].c]=(act[CITIES[i].c]||0)+a;}
+  for(let i=0;i<n;i++){const o=i*SNAP,a=snap[o]+snap[o+1]+snap[o+2]+snap[o+3]+snap[o+8];if(a>=1)act[CITIES[i].c]=(act[CITIES[i].c]||0)+a;}
   cx.fillStyle='#081420'; cx.fillRect(0,0,W,H);
   // graticule
   cx.strokeStyle='rgba(255,255,255,.035)'; cx.lineWidth=1; cx.beginPath();
@@ -1564,10 +1752,10 @@ function draw(){
     cx.quadraticCurveTo((x1+x2)/2,(y1+y2)/2-Math.abs(x2-x1)*0.22,x2,y2); cx.stroke();
   }
   // cities
-  let maxA=1; for(let i=0;i<n;i++){const a=snap[i*8]+snap[i*8+1]+snap[i*8+2]+snap[i*8+3];if(a>maxA)maxA=a;}
+  let maxA=1; for(let i=0;i<n;i++){const o=i*SNAP,a=snap[o]+snap[o+1]+snap[o+2]+snap[o+3]+snap[o+8];if(a>maxA)maxA=a;}
   for(let i=0;i<n;i++){
-    const t=[snap[i*8],snap[i*8+1],snap[i*8+2],snap[i*8+3]], e=snap[i*8+4], bu=snap[i*8+6];
-    const a=t[0]+t[1]+t[2]+t[3];
+    const o=i*SNAP, t=[snap[o],snap[o+1],snap[o+2],snap[o+3],snap[o+8]], e=snap[o+4], bu=snap[o+6];
+    const a=t[0]+t[1]+t[2]+t[3]+t[4];
     const X=px(CITIES[i].x), Y=py(CITIES[i].y);
     if(a<1){
       if(bu>=3){ // people want it here, nobody is selling yet
@@ -1580,7 +1768,7 @@ function draw(){
       continue;
     }
     const r=Math.min(16,2.0+3.1*Math.log10(1+a));
-    let dom=0; for(let k=1;k<4;k++) if(t[k]>t[dom]) dom=k;
+    let dom=0; for(let k=1;k<5;k++) if(t[k]>t[dom]) dom=k;
     // glow
     const g=cx.createRadialGradient(X,Y,0,X,Y,r*3.2);
     g.addColorStop(0,TIER_COL[dom]+'55'); g.addColorStop(1,'transparent');
@@ -1589,7 +1777,7 @@ function draw(){
     if(dom===3){cx.strokeStyle='#c9d4de';cx.lineWidth=1;cx.stroke();}
     if(r>4.5){ // tier donut
       let ang=-Math.PI/2;
-      for(let k=0;k<4;k++){
+      for(let k=0;k<5;k++){
         if(t[k]<=0)continue;
         const sw=6.283185*t[k]/a;
         cx.beginPath(); cx.strokeStyle=TIER_COL[k]===('#0b0f14')?'#c9d4de':TIER_COL[k];
@@ -1599,7 +1787,7 @@ function draw(){
   }
   drawCharts();
   const st=RUN.trace.events.filter(e=>e.t==='stat'&&e.w===week)[0]||{mrr:0,cities:0,ctry:0};
-  diagnose(st); cmpBar(); moneyBar();
+  diagnose(st); cmpBar(); moneyBar(); svcBar();
   const mix=RUN.trace.mix[week], tot=RUN.trace.A[week];
   document.getElementById('sTot').textContent=Math.round(tot).toLocaleString();
   document.getElementById('sCity').textContent=st.cities;
@@ -1648,6 +1836,7 @@ function drawCharts(){
   if(EO) for(let w=0;w<WEEKS;w++) mx=Math.max(mx,EO.p50[w]);
   for(let w=0;w<WEEKS;w++) mx=Math.max(mx,RUN.trace.A[w]);
   if(runOther) for(let w=0;w<WEEKS;w++) mx=Math.max(mx,runOther.trace.A[w]);
+  const runBase=(VIEW==='new')?RUNS.base:null;
   const xA=w=>8+(w/(WEEKS-1))*(cA.w-16), yA=v=>cA.h-6-(Math.sqrt(v/mx))*(cA.h-12);
   if(EV){
     g.beginPath(); g.moveTo(xA(0),yA(EV.p10[0]));
@@ -1665,6 +1854,12 @@ function drawCharts(){
     g.strokeStyle='rgba(215,230,245,.6)'; g.lineWidth=1.2; g.stroke();
     g.setLineDash([]);
   }
+  if(runBase){   // v1.8: the same plan WITHOUT the services lane - the gap is what the lane adds
+    g.setLineDash([1.5,2.5]);
+    g.beginPath(); g.moveTo(xA(0),yA(runBase.trace.A[0]));
+    for(let w=1;w<WEEKS;w++)g.lineTo(xA(w),yA(runBase.trace.A[w]));
+    g.strokeStyle='#5eead4'; g.lineWidth=1.6; g.stroke(); g.setLineDash([]);
+  }
   g.beginPath(); g.moveTo(xA(0),yA(RUN.trace.A[0]));
   for(let w=1;w<WEEKS;w++)g.lineTo(xA(w),yA(RUN.trace.A[w]));
   g.strokeStyle='#c9a227'; g.lineWidth=1.8; g.stroke();
@@ -1673,6 +1868,7 @@ function drawCharts(){
   g.fillStyle='#6f8aa3'; g.fillText(Math.round(mx).toLocaleString(),10,10);
   g.fillStyle='#c9a227'; g.fillText('solid '+(VIEW==='new'?'v3.2':'v0.1'),10,22);
   g.fillStyle='rgba(215,230,245,.7)'; g.fillText('dashed '+(VIEW==='new'?'v0.1':'v3.2'),10,33);
+  if(runBase){ g.fillStyle='#5eead4'; g.fillText('dotted teal = without services',10,44); }
 
     const cB=chart('chartB'); const h=cB.g;
   let rmx=1.5; for(let w=0;w<WEEKS;w++)rmx=Math.max(rmx,RUN.trace.R[w]);
@@ -1685,13 +1881,13 @@ function drawCharts(){
   h.fillStyle='#6f8aa3';h.font='9px sans-serif';h.fillText('R = 1',10,yB(1)-3);
 
   const cC=chart('chartC'); const k=cC.g;
-  let cmx=10; for(let w=0;w<WEEKS;w++){const m=RUN.trace.mix[w];cmx=Math.max(cmx,m[0]+m[1]+m[2]+m[3]);}
+  let cmx=10; for(let w=0;w<WEEKS;w++){const m=RUN.trace.mix[w];cmx=Math.max(cmx,m[0]+m[1]+m[2]+m[3]+(m[4]||0));}
   const xC=w=>8+(w/(WEEKS-1))*(cC.w-16), yC=v=>cC.h-6-(v/cmx)*(cC.h-12);
   let base=new Float64Array(WEEKS);
-  for(let t=0;t<4;t++){
+  for(let t=0;t<5;t++){
     k.beginPath(); k.moveTo(xC(0),yC(base[0]));
     for(let w=0;w<WEEKS;w++)k.lineTo(xC(w),yC(base[w]));
-    for(let w=WEEKS-1;w>=0;w--){base[w]+=RUN.trace.mix[w][t];k.lineTo(xC(w),yC(base[w]));}
+    for(let w=WEEKS-1;w>=0;w--){base[w]+=(RUN.trace.mix[w][t]||0);k.lineTo(xC(w),yC(base[w]));}
     k.closePath(); k.fillStyle=t===3?'#39424e':TIER_COL[t]; k.globalAlpha=.85; k.fill(); k.globalAlpha=1;
   }
   k.strokeStyle='rgba(255,255,255,.35)';k.lineWidth=1;k.beginPath();k.moveTo(xC(week),0);k.lineTo(xC(week),cC.h);k.stroke();
@@ -1960,6 +2156,8 @@ function moneyBar(){
     ['Travelpayouts', st.affRev||0,    (st.toursOpen? 'flights 1.2% + tours 8%' : 'flights only - tours declined')+', no fee'],
     ['Agency agents', 0, Math.round(st.agentsFree||0).toLocaleString()+' paying $0 by canon']
   ];
+  if(st.svcOn) cells.splice(1,0,['Services lane', (st.svcIntroRev||0)+(st.svcSubRev||0),
+    Math.round(st.svcActives||0).toLocaleString()+' workers; inside the lines around it']);
   let h='<div class="m hdr"><span>Revenue / month</span><b>'+f(tot)+'</b><i>'+
         (tot>0? 'introductions are '+Math.round(100*(st.introRev||0)/tot)+'% of it' : 'nothing is being charged yet')+'</i></div>';
   for(let k=0;k<cells.length;k++){
@@ -2030,6 +2228,50 @@ function cmpBar(){
   el.innerHTML=h;
 }
 
+/* ---- v1.8: what the Services lane changes, at the week on screen ---- */
+function syncSvcUI(){
+  const on=LEVERS.svcOn.v>=.5, b=document.getElementById('btnSvc'), lg=document.getElementById('lgSvc');
+  if(b){ b.classList.toggle('on',on); b.textContent='Services lane: '+(on?'ON':'OFF'); }
+  if(lg) lg.style.display=on?'flex':'none';
+}
+function svcBar(){
+  const el=document.getElementById('svcBar'); if(!el) return;
+  const on=LEVERS.svcOn.v>=.5 && RUNS.base && VIEW==='new';
+  el.classList.toggle('show', !!on);
+  if(!on){ el.innerHTML=''; return; }
+  const sn=statAt(RUNS.new,week), sb=statAt(RUNS.base,week);
+  const f=(v,m)=>(m?'$':'')+Math.round(v).toLocaleString();
+  const d=(nv,ov)=>{ if(ov>0){const p=(nv/ov-1)*100; return '<u class="'+(p>2?'up':(p<-2?'dn':''))+'">'+(p>=0?'+':'')+(Math.abs(p)>=1000?Math.round(p).toLocaleString():p.toFixed(0))+'%</u>';}
+                     return nv>0?'<u class="up">new</u>':''; };
+  const rows=[
+    ['Sellers, ensemble median', (ENSD.new?ENSD.new.p50[week]:0), (ENSD.base?ENSD.base.p50[week]:0), 0],
+    ['Sellers, mid run',      RUNS.new.trace.A[week], RUNS.base.trace.A[week], 0],
+    ['SA sellers',            sn.zaSellers||0, sb.zaSellers||0, 0],
+    ['Buyers',                sn.buyers||0, sb.buyers||0, 0],
+    ['Revenue /mo',           sn.mrr||0, sb.mrr||0, 1],
+    ['Net, canon costs',      sn.netCanon||0, sb.netCanon||0, 1],
+    ['Cities working',        sn.working||0, sb.working||0, 0]
+  ];
+  let h='<div class="c hdr"><span>Services lane ON</span><b>v1.8</b><i>teal = with it &middot; vs without</i></div>';
+  for(const [lab,nv,ov,m] of rows) h+='<div class="c"><span>'+lab+'</span><b>'+f(nv,m)+'</b>'+d(nv,ov)+'<i>without '+f(ov,m)+'</i></div>';
+  const only=[
+    ['Service workers listed', f(sn.svcActives||0), 'ever listed '+f(sn.svcEver||0)],
+    ['Awaiting clearance',     f(sn.svcGated||0),   f(sn.svcGateFailed||0)+' never cleared'],
+    ['Invited, not yet listed',f(sn.svcWaiting||0), f(sn.svcInvited||0)+' invited by employers'],
+    ['Employers enrolled',     f(sn.empEnrolled||0),f(sn.empApproached||0)+' approached &middot; '+f(sn.empRoster||0)+' on rosters'],
+    ['Workers by word of mouth',f(sn.svcOrg||0),   'the model\'s own organic spread'],
+    ['Came to hire, listed instead',f(sn.svcCross||0),'app users with work to offer'],
+    ['Co-workers via WhatsApp',f(sn.svcRefd||0),    'wa.me, no number held'],
+    ['Households via workers', f(sn.svcBuyers||0),  'confirm tap + glimpse + seen'],
+    ['Service revenue /mo',    f((sn.svcIntroRev||0)+(sn.svcSubRev||0),1), f(sn.svcIntroRev||0,1)+' intros &middot; '+f(sn.svcSubRev||0,1)+' subs'],
+    ['SA service market left', f(sn.svcPoolLeft||0),'addressable, not yet reached']
+  ];
+  for(const [lab,v,sub] of only) h+='<div class="c"><span>'+lab+'</span><b style="color:#5eead4">'+v+'</b><i>'+sub+'</i></div>';
+  if(ENSD.new&&ENSD.base){ const p=Math.round(ENSD.new.takeoff*100), q=Math.round(ENSD.base.takeoff*100);
+    h+='<div class="c"><span>Takes off (ensemble)</span><b>'+p+'%</b><u class="'+(p>q?'up':(p<q?'dn':''))+'">'+(p-q>=0?'+':'')+(p-q)+'pt</u><i>without '+q+'%</i></div>'; }
+  el.innerHTML=h;
+}
+
 /* ======================= PANEL UI ============================== */
 const TELEMETRY=[
  {s:0,t:"Referral / inviter on signup",d:"There is no referred_by, invite code or inviter_id anywhere. users.referral_count exists but the code says \"not yet tracked. Always missing.\" Without this, pTell and pTake - the entire allure term - can never be measured, only guessed."},
@@ -2097,7 +2339,21 @@ function buildPanel(which){
       "from disclosed Poshmark, Depop, Reverb, Airbnb and Etsy counts, free-to-paid from the OpenView/Pendo freemium survey. "+
       "Those carry a <span class='tag bench'>bench</span> tag in Calibration, with the source on each row.";
     b.appendChild(pb2);
-    const groups={"Product & offer":["allure","badge","discount","referral"],
+    const pb3=document.createElement('div'); pb3.className='planbox';
+    pb3.style.borderLeftColor='#14b8a6';
+    pb3.innerHTML="<b>v1.8 &mdash; the Services lane (19 Sep 2026), behind the teal toggle.</b> "+
+      "RUL-150/151/152: every casual and technical role on the reviewed slate (Services-Casuals, Services-Technical), "+
+      "and the <b>employer</b> as the supply channel &mdash; it enrols its current and former staff; it never creates a listing. "+
+      "<ol><li><b>A bigger SA base.</b> Casual and trade workers are their own addressable market, sized per 1,000 people "+
+      "(Stats SA QLFS Q2 2026: 16.7m employed, 8.5m unemployed, 33.6%).</li>"+
+      "<li><b>Employer doors</b> in the approved order, Pretoria first; each yes is a roster invited by WhatsApp/SMS.</li>"+
+      "<li><b>She publishes by her own hand</b> at the Quick door; gated roles wait for clearance or a licence.</li>"+
+      "<li><b>She does not arrive alone:</b> her households confirm, glimpse, and join as buyers; co-workers follow on WhatsApp.</li>"+
+      "<li><b>Languages</b> (EN, isiZulu, Sesotho, Afrikaans) lift the lane from English-only to ~90%.</li></ol>"+
+      "OFF is v1.7 exactly, so the dashboard's BEAT THE MODEL pins do not move. Every new number is in Calibration under <i>Services lane</i>, and every one is a guess until the door's beacons say otherwise.";
+    b.appendChild(pb3);
+    const groups={"Services lane (v1.8, RUL-150)":["svcOn","svcW","empPace","svcLangW"],
+      "Product & offer":["allure","badge","discount","referral"],
       "Damage":["complaint","delay"],
       "Email Wave Plan v3.2":["dayCap","measured","agGateW","rollW"],
       "Email waves \u2014 v0.1 drip only":["poolX","batch","w2Week","w3Week"],
@@ -2131,6 +2387,10 @@ function buildPanel(which){
           if(k==='fedW')      return L.v>=157?'letter unsent':'week '+L.v;
           if(k==='unionW')    return L.v>=157?'no union approached':'week '+L.v;
           if(k==='measured') return L.v>=.5?'measured lists':'at the cap';
+          if(k==='svcOn')    return L.v>=.5?'ON':'OFF';
+          if(k==='svcW')     return L.v>=157?'no employer door':'week '+L.v;
+          if(k==='empPace')  return Math.round(L.v)+' / month';
+          if(k==='svcLangW') return L.v>=157?'English only':'week '+L.v;
           if(k==='dayCap') return Math.round(L.v)+' / cat / city / day';
           if(k==='batch') return Math.round(L.v).toLocaleString();
           if(k==='poolX') return L.v.toFixed(1)+'x  ('+Math.round(1385*L.v).toLocaleString()+')';
@@ -2143,7 +2403,7 @@ function buildPanel(which){
           '<div class="note">'+L.n+'</div>';
         const inp=row.querySelector('input'), out=row.querySelector('b');
         inp.addEventListener('input',()=>{L.v=parseFloat(inp.value);out.textContent=disp();});
-        inp.addEventListener('change',()=>{rebuild();});
+        inp.addEventListener('change',()=>{rebuild(); if(k==='svcOn') buildPanel('scn');});
         g.appendChild(row);
       }
     }
@@ -2196,6 +2456,10 @@ function buildPanel(which){
   if(which==='idea'){
     const g=document.createElement('div'); g.className='grp'; g.innerHTML='<h3>Scenario presets</h3>';
     const presets={
+      "SERVICES LANE as planned 19 Sep (employers wk 3, languages wk 13)":{svcOn:1,svcW:3,empPace:4,svcLangW:13},
+      "Services lane, English only (languages never ship)":{svcOn:1,svcW:3,empPace:4,svcLangW:157},
+      "Services lane, a Growth Partner doubles the employer pace":{svcOn:1,svcW:3,empPace:8,svcLangW:13},
+      "Services lane, one employer a month":{svcOn:1,svcW:3,empPace:1,svcLangW:13},
       "Everything goes right":{allure:1.6,badge:1,referral:.8,batch:300,agPush:3,stripeW:0,compW:157,complaint:0,delay:0},
       "Honest base case (current policy)":{allure:1,badge:.35,referral:0,batch:28,agPush:1,stripeW:0,compW:157,complaint:.002,delay:.1},
       "Planner lane never ships":{featW:157,allure:1,badge:.35,batch:28,agPush:1,stripeW:0,compW:157,complaint:.002,delay:.1},
@@ -2222,6 +2486,7 @@ function buildPanel(which){
     for(const nm in presets){
       const btn=document.createElement('button'); btn.textContent=nm; btn.style.cssText='width:100%;margin-bottom:5px;text-align:left';
       btn.onclick=()=>{const d=Object.assign({},DEFAULTS);
+        d.svcOn=LEVERS.svcOn.v;            // a preset that does not mention the Services lane keeps the toggle where it is
         Object.assign(d,presets[nm]);
         // A preset may also pin an OBSERVED parameter value - used by the human-verified
         // click preset, which is the difference between the goal landing and missing.
@@ -2229,7 +2494,7 @@ function buildPanel(which){
         PARAMS.forEach(p=>{ if(p.__presetPinned){ p.obs=null; p.__presetPinned=false; } });
         if(pin) for(const pk in pin){ if(PM[pk]){ PM[pk].obs=pin[pk]; PM[pk].__presetPinned=true; } }
         for(const k in d) if(LEVERS[k]) LEVERS[k].v=d[k];
-        week=0; rebuild();};
+        week=0; rebuild(); syncSvcUI();};
       g.appendChild(btn);
     }
     b.appendChild(g);
@@ -2260,6 +2525,11 @@ document.getElementById('btnStep').onclick=()=>{week=Math.min(WEEKS-1,week+1);dr
 document.getElementById('btnReset').onclick=()=>{week=0;draw();};
 document.getElementById('btnOld').onclick=()=>setView('old');
 document.getElementById('btnNew').onclick=()=>setView('new');
+document.getElementById('btnSvc').onclick=()=>{
+  LEVERS.svcOn.v = LEVERS.svcOn.v>=.5 ? 0 : 1;
+  if(VIEW!=='new') setView('new');       // the comparison lives on the v3.2 plan
+  rebuild(); const at=document.querySelector('.tab.active'); if(at && at.dataset.t==='scn') buildPanel('scn');
+};
 function tick(){
   if(!playing)return;
   const sp=parseInt(document.getElementById('speed').value,10);
@@ -2272,11 +2542,12 @@ cv.addEventListener('mousemove',ev=>{
   for(let i=0;i<CITIES.length;i++){const dx=px(CITIES[i].x)-mx,dy=py(CITIES[i].y)-my,d=dx*dx+dy*dy;if(d<bd){bd=d;best=i;}}
   const h=document.getElementById('hover');
   if(best<0){h.style.display='none';return;}
-  const s=RUN.trace.snap[Math.min(week,WEEKS-1)],o=best*8;
+  const s=RUN.trace.snap[Math.min(week,WEEKS-1)],o=best*SNAP;
   const rails=railSet(leverVals(),week);
   h.style.display='block'; h.style.left=Math.min(mx+14,r.width-230)+'px'; h.style.top=(my+14)+'px';
   h.innerHTML='<b>'+CITIES[best].n+', '+CITIES[best].c+'</b>'+
     'free '+Math.round(s[o])+' &middot; $5 '+Math.round(s[o+1])+' &middot; $20 '+Math.round(s[o+2])+' &middot; agency '+Math.round(s[o+3])+'<br>'+
+    ((s[o+8]>=0.5||s[o+9]>=0.5)?'<span style="color:#5eead4">service workers '+Math.round(s[o+8])+' listed &middot; '+Math.round(s[o+9])+' awaiting clearance</span><br>':'')+
     'exposed '+Math.round(s[o+4])+' &middot; liquidity '+(s[o+5]*100).toFixed(0)+'%<br>'+
     'prospects seeded '+CITIES[best].pr+' &middot; rail '+(rails.has(CITIES[best].c)?'yes':'<span style="color:#e63946">none</span>');
 });

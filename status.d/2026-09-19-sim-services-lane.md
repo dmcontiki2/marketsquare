@@ -1,0 +1,1 @@
+- 19 Sep 2026: Contagion Model v1.8 (SIM-SVC-1) - Services lane (RUL-150/151/152, SA employer enrolment) behind a teal toggle; OFF = v1.7 draw for draw, dashboard pins unmoved. ON, mid run: SA sellers wk156 32,181 vs 10,994.
