@@ -18308,7 +18308,7 @@ async function sfAgentsLoad(){
   var ags=(near&&near.agents)||[];
   if(!ags.length){
     h+='<div class="sf-card" style="text-align:center;"><div class="sf-title">No listed '+sfAgentNoun()+'s near '+city+' yet</div>'+
-       '<div style="font-size:12.5px;color:'+mut+';">Vetted '+sfAgentNoun()+'s join weekly — you can continue privately.</div></div>';
+       '<div style="font-size:12.5px;color:'+mut+';">New '+sfAgentNoun()+'s appear here as they register — you can continue privately.</div></div>';
   } else {
     h+='<div class="sf-card" style="padding:12px 14px;"><div class="sf-title">'+(sfAgentVertical()==='cars'?'Car sales agents':'Agents')+' near you — ranked by trust</div>'+
        '<div style="font-size:11px;color:'+mut+';margin-bottom:8px;">50% listing quality · 50% trust score · anonymous until introduced. No lead brokers, no cold calls.</div>';

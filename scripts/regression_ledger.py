@@ -1494,6 +1494,33 @@ def _judge(e):
         out = [(FAIL, f"check crashed (ledger fault, not necessarily the app): {ex!r}")]
     fails = [m for s, m in out if s == FAIL]
     infos = [m for s, m in out if s == INFO]
+    # EDGE-BLIND-2 (19 Sep 2026): RG-0401 is LOCKED and says an edge refusal makes an
+    # entry BLIND, never REGRESSED -- "the board may not convict the app of a fault it was
+    # never allowed to look at". _get() honours that by RAISING ProbeOffline on a Cloudflare
+    # refusal or a 429 on the gate credential. But a check that CATCHES its own ProbeOffline
+    # and re-emits it as FAIL text only got reclassified when _NET["ok"] is False -- i.e. only
+    # when the WHOLE machine was blind. An edge refusal is a property of the refusal, not of
+    # the machine: the site is reachable, this one read was not allowed. RG-0163 was convicted
+    # REGRESSED on exactly that path (19 Sep, 18:49Z board) while its endpoint was fine.
+    # Narrow by design: only the two markers _get() raises for an edge/gate refusal move, and
+    # they move INDIVIDUALLY -- any other FAIL in the same entry still stands and is still
+    # judged. Nothing is hidden; the text still prints under NOT EVALUATED and UNVERIFIED
+    # still exits non-zero.
+    _EDGE_BLIND = ("gate credential rate-limited", "(Cloudflare) refused")
+    if fails:
+        _edge = [m for m in fails if any(k in m for k in _EDGE_BLIND)]
+        if _edge:
+            _msg = ("NOT EVALUATED (EDGE-BLIND-2, RG-0401) - the edge refused this client, so "
+                    "the payload was never read. Blind here, not a verdict on the app. Re-run "
+                    "from a vantage the edge allows, or probe the app directly from the box.")
+            fails = [m for m in fails if m not in _edge]
+            infos = infos + [_msg] + _edge
+            # out carries the verdict vocabulary the status ladder below reads. Without this
+            # line an entry whose ONLY fails were edge refusals would fall through to HOLDING
+            # -- i.e. a blind read would print as a PASS, which is the opposite failure and a
+            # worse one than the REGRESSION this fixes.
+            out = list(out) + [(INFO, _msg)]
+
     # LEDGER-OFFLINE-1: several checks catch their own transport errors and turn
     # them into FAIL text, so they never reach the ProbeOffline handler above.
     # Reclassify those ONLY when the preflight has PROVEN this machine is blind -
