@@ -81,7 +81,7 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 | Stock assistant |  | OUT | 19 Sep: merged into Shelf packer. |
 | Shop assistant |  | IN | Renamed 19 Sep (was 'Spaza / shop assistant') — 'spaza' names the shop, not the work. |
 | Merchandiser |  | IN | Added 19 Sep — brand-paid shelf work across several stores; the biggest retail gig role that was missing. |
-| Car guard |  | IN | 19 Sep: was HOLD. PSIRA treats car guards as security officers who must be registered. Licence gate (RUL-155/156): publicly visible once PSIRA registration is verified. The earlier 'easiest cold sign-up' note was wrong. |
+| Car guard |  | HOLD | 19 Sep: PSIRA treats car guards as security officers who must be registered — same treatment as Security guard (verify PSIRA or leave out). The earlier 'easiest cold sign-up' note was wrong. |
 | Parking attendant |  | OUT | 19 Sep: a site-bound job (one mall or municipal lot) nobody hires through a marketplace; he lists under what else he can do. |
 
 ### Logistics & yard
@@ -91,7 +91,7 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 | Picker / packer |  | IN | Renamed 19 Sep (was 'Warehouse picker / packer') — the SA job-advert phrase. |
 | Loader |  | OUT | 19 Sep: merged into General worker (was General labourer) — same hire. |
 | Removals helper |  | IN | Renamed 19 Sep (was 'Removals / moving help'). Households hire directly. |
-| Delivery rider |  | IN | Renamed 19 Sep (was 'Delivery rider (e-hailing / food)'). Already gig workers. Licence gate (RUL-155): verified driving licence (code A for a motorbike) opens public visibility. |
+| Delivery rider |  | IN | Renamed 19 Sep (was 'Delivery rider (e-hailing / food)'). Already gig workers. Driving-licence verification is settled once, with the drivers in Motor & transport. |
 | Courier on foot |  | OUT | 19 Sep: not a role hired at any scale in SA. |
 
 ### Site & general labour
@@ -125,7 +125,7 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 
 | Role | D | Decision | Notes |
 |---|:--:|:--:|---|
-| Security guard |  | IN | 19 Sep: was HOLD (s15c). PSIRA registration is a legal requirement to work. Licence gate (RUL-155/156): publicly visible once PSIRA registration is verified. |
+| Security guard |  | HOLD | s15c. PSIRA registration is a LEGAL requirement to work, not a trust bonus. Verify or leave out. |
 
 ---
 
@@ -152,35 +152,34 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 
 | Role | D | Decision | Notes |
 |---|:--:|:--:|---|
-| Driver | D | IN | David's list. Renamed 19 Sep (was 'Transport / business driver'). Goods and errands in a light vehicle; people-for-reward stays in Taxi / shuttle (HOLD). Licence gate (RUL-155): verified driving licence opens public visibility. |
-| Code 10 / Code 14 driver |  | IN | Renamed 19 Sep (the SA advert wording). Absorbs Long-haul driver. Licence gate (RUL-155): verified licence AND PrDP-G (goods vehicle over 3,500 kg). |
-| Long-haul driver |  | OUT | 19 Sep: merged into Code 10 / Code 14 driver — long-haul is Code 14 work by definition. |
-| Taxi / shuttle driver |  | IN | 19 Sep: was HOLD (s15c). Licence gate (RUL-155/156): publicly visible once licence AND PrDP-P (passengers) are verified. |
-| Diesel mechanic |  | IN | Mines retrench them; truck fleets and farms hire them. |
-| Motor mechanic |  | IN | Households hire mobile mechanics directly. |
-| Auto electrician |  | IN | Portable and in demand; trade test as evidence. |
-| Panel beater |  | LATER | Needs a workshop and spray booth — the buyer is a business. |
-| Spray painter |  | LATER | Needs a workshop and spray booth — the buyer is a business. |
-| Tyre fitter |  | LATER | Mobile fitting exists but volume is low. |
+| Transport / business driver | D |  | David's list. |
+| Code 10 / 14 driver |  |  |  |
+| Long-haul driver |  |  |  |
+| Taxi / shuttle driver |  | HOLD | s15c. PrDP is a legal requirement for passenger-carrying. |
+| Diesel mechanic |  |  |  |
+| Motor mechanic |  |  |  |
+| Auto electrician |  |  |  |
+| Panel beater |  |  |  |
+| Spray painter |  |  |  |
+| Tyre fitter |  |  |  |
 
 ### Building trades
 
 | Role | D | Decision | Notes |
 |---|:--:|:--:|---|
-| Industry worker (skilled) | D | OUT | David's list. 19 Sep: split — a bucket; every job in it has its own row. |
-| Electrician |  | IN | Licence gate (RUL-155/156): only a DoEL-registered electrician may do or certify installation work (Electrical Installation Regulations) — publicly visible once registration is verified. Registration also pays 12 pts. |
-| Gas installer |  | IN | Added 19 Sep. Licence gate (RUL-155/156): SAQCC Gas registration is a legal requirement. Loadshedding gas conversions make it a real market. |
-| Plumber |  | IN | PIRB registration is evidence (12 pts), not a gate — plumbing is not state-licensed; a geyser-installation claim shows only with verified PIRB (SANS 10254 requires a qualified plumber). |
-| Bricklayer |  | IN | Core household / small-builder hire. |
-| Plasterer |  | IN | Core household / small-builder hire. |
-| Tiler |  | IN | Core household / small-builder hire. |
-| Carpenter |  | IN | Core household / small-builder hire. |
-| Roofer |  | IN | Absorbs Waterproofing — one hire, urgent in the rainy season. |
-| Glazier |  | LATER | Low volume; mostly glass shops. |
-| Ceiling & partition installer |  | LATER | Mostly subcontracted to building firms. |
+| Industry worker (skilled) | D |  | David's list. Like 'Miner' — a bucket the review should split or drop. |
+| Electrician |  |  | CoC / DoEL registration already pays 12 pts on the Technical ladder. |
+| Plumber |  |  | PIRB already on the ladder. |
+| Bricklayer |  |  |  |
+| Plasterer |  |  |  |
+| Tiler |  |  |  |
+| Carpenter |  |  |  |
+| Roofer |  |  |  |
+| Glazier |  |  |  |
+| Ceiling & partition installer |  |  |  |
 | Painter (qualified) |  | OUT | 19 Sep: one Painter row, in Casuals; the certificate is evidence on it, not a separate role. |
-| Paver |  | IN | Renamed 19 Sep (was 'Paving'). Suburban paving is a large direct-hire market. |
-| Waterproofing |  | OUT | 19 Sep: merged into Roofer — a service, not a name he calls himself. |
+| Paving |  |  |  |
+| Waterproofing |  |  |  |
 
 ### Systems & installation
 
@@ -199,7 +198,7 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 ---
 
 ## LATER / HOLD / ROUTED REGISTER (RUL-154)
-*David, 19 Sep 2026: "We do need to keep track of all the ones you have listed as LATER." Every role not IN is listed here with the thing that brings it back. Rebuilt from the tables above at the end of every sitting (generator: the sitting's regen step); a role never leaves this register except by a Decision change in its table row.*
+*David, 19 Sep 2026: "We do need to keep track of all the ones you have listed as LATER." Every role not IN is listed here with the thing that brings it back. Rebuilt from the tables above at the end of every sitting; a role never leaves this register except by a Decision change in its table row.*
 
 ### LATER — after beta
 
@@ -217,17 +216,14 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 | Millwright | Mining & heavy industry | Only factories hire one — waits for the business-hiring side (s17 step 6). | The business-hiring side ships (QUICK_LISTING_SPEC s17 step 6). |
 | Fitter & turner | Mining & heavy industry | Only factories hire one — waits for the business-hiring side (s17 step 6). | The business-hiring side ships (QUICK_LISTING_SPEC s17 step 6). |
 | Crane operator | Mining & heavy industry | Site-bound; the certified-operator requirement is handled with the business-hiring side. | The business-hiring side ships (QUICK_LISTING_SPEC s17 step 6). |
-| Panel beater | Motor & transport | Needs a workshop and spray booth — the buyer is a business. | The business-hiring side ships (QUICK_LISTING_SPEC s17 step 6). |
-| Spray painter | Motor & transport | Needs a workshop and spray booth — the buyer is a business. | The business-hiring side ships (QUICK_LISTING_SPEC s17 step 6). |
-| Tyre fitter | Motor & transport | Mobile fitting exists but volume is low. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
-| Glazier | Building trades | Low volume; mostly glass shops. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
-| Ceiling & partition installer | Building trades | Mostly subcontracted to building firms. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
 
 ### HOLD — blocked on a legal registration
 
 | Role | Group | Why | Comes back when |
 |---|---|---|---|
-| — none — | | | |
+| Car guard | Retail & forecourt | 19 Sep: PSIRA treats car guards as security officers who must be registered — same treatment as Security guard (verify PSIRA or leave out). The earlier 'easiest cold sign-up' note was wrong. | PSIRA registration verification is built (verify, or leave out). |
+| Security guard | Security | s15c. PSIRA registration is a LEGAL requirement to work, not a trust bonus. Verify or leave out. | PSIRA registration verification is built (verify, or leave out). |
+| Taxi / shuttle driver | Motor & transport | s15c. PrDP is a legal requirement for passenger-carrying. | PrDP verification is built (verify, or leave out). |
 
 ### ROUTED — not a service role, but not dropped
 
@@ -245,4 +241,4 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 - **19 Sep 2026 (Claude, seeding):** slate drafted from David's list of eleven plus ~80 more.
   Nothing decided yet. Three roles pre-marked HOLD on legal-licence grounds (security guard, taxi /
   shuttle driver, home nurse aide).
-- **19 Sep 2026, sitting 1 (David + Claude):** CASUALS FULLY DECIDED (Home & care, Food & hospitality, Retail & forecourt, Logistics & yard, Site & general labour, Trades-adjacent) — only Security guard and Car guard stay HOLD on PSIRA. Mining & heavy industry decided: 'Miner' split; mine-only jobs (Rock drill operator, Blaster, Winch driver) routed to the RUL-124 position lane. Key renames: Nanny, Caregiver, Cook, Room attendant, Kitchen assistant, Cashier, Waiter, Petrol attendant, General worker, Office cleaner, Hairdresser, Plant operator. Factory worker and Municipal worker are `employer_kinds[]`, not jobs. RULINGS: RUL-156 (licence gate for every licence to practise); RUL-155 (driving licence gate); RUL-153 (police clearance gates visibility for Nanny, Caregiver, Crèche assistant, with their tap overrides); RUL-154 (every LATER / HOLD / routed role is kept in the register above). TAPS: Casuals what/where/when/rate; Technical trade/qualification/area/call-out, with qualification always offering trade-tested / certificate / experience only. EMPLOYERS NAMED SO FAR: hotel groups, fast-food franchisees, fuel-station dealers, contract cleaners, farms, clothing factories, mines (Social and Labour Plan retrenchment duty under the MPRDA is the pitch). Motor & transport decided: IN Driver, Code 10 / Code 14 driver, Diesel mechanic, Motor mechanic, Auto electrician; LATER Panel beater, Spray painter, Tyre fitter; OUT Long-haul (into Code 14). RUL-155: every driving role is publicly visible only once its licence (and PrDP-G for heavy goods) is verified. Freight/logistics operators and bus companies added to the employer list. Building trades decided: IN Electrician and Gas installer (added) behind the licence gate, Plumber (PIRB as evidence), Bricklayer, Plasterer, Tiler, Carpenter, Roofer (absorbs Waterproofing), Paver; LATER Glazier, Ceiling & partition installer; OUT Industry worker (split), Waterproofing. RUL-156 extends the RUL-155 gate to every licence to practise, so Security guard, Car guard and Taxi / shuttle driver move HOLD -> IN, gated. FOR DISCUSSION: David's role-picture proposal (section below the register). OPEN: Systems & installation (next), Systems & installation, the first-employer order.
+- **19 Sep 2026, sitting 1 (David + Claude):** CASUALS FULLY DECIDED (Home & care, Food & hospitality, Retail & forecourt, Logistics & yard, Site & general labour, Trades-adjacent) — only Security guard and Car guard stay HOLD on PSIRA. Mining & heavy industry decided: 'Miner' split; mine-only jobs (Rock drill operator, Blaster, Winch driver) routed to the RUL-124 position lane. Key renames: Nanny, Caregiver, Cook, Room attendant, Kitchen assistant, Cashier, Waiter, Petrol attendant, General worker, Office cleaner, Hairdresser, Plant operator. Factory worker and Municipal worker are `employer_kinds[]`, not jobs. RULINGS: RUL-153 (police clearance gates visibility for Nanny, Caregiver, Crèche assistant, with their tap overrides); RUL-154 (every LATER / HOLD / routed role is kept in the register above). TAPS: Casuals what/where/when/rate; Technical trade/qualification/area/call-out, with qualification always offering trade-tested / certificate / experience only. EMPLOYERS NAMED SO FAR: hotel groups, fast-food franchisees, fuel-station dealers, contract cleaners, farms, clothing factories, mines (Social and Labour Plan retrenchment duty under the MPRDA is the pitch). OPEN: Motor & transport (next), Building trades, Systems & installation, the first-employer order.

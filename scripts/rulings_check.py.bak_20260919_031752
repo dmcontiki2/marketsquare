@@ -993,15 +993,6 @@ REFLECTIONS = {
    ("ROLE_SLATE_REVIEW.md", ["## LATER / HOLD / ROUTED REGISTER (RUL-154)", "### LATER \u2014 after beta",
                             "### HOLD \u2014 blocked on a legal registration", "### ROUTED \u2014 not a service role, but not dropped"], []),
  ],
- "RUL-155": [
-   ("RULINGS.md", ["EVERY DRIVING ROLE IS LISTED AT ONCE BUT PUBLICLY VISIBLE ONLY WHEN ITS LEGAL LICENCE IS VERIFIED"], []),
-   ("ROLE_SLATE_REVIEW.md", ["| Driver | D | IN |", "| Code 10 / Code 14 driver |  | IN |", "Licence gate (RUL-155)", "PrDP-G"], []),
- ],
- "RUL-156": [
-   ("RULINGS.md", ["THE RUL-155 GATE COVERS EVERY LICENCE TO PRACTISE"], []),
-   ("ROLE_SLATE_REVIEW.md", ["| Security guard |  | IN |", "| Car guard |  | IN |", "| Taxi / shuttle driver |  | IN |",
-                            "| Electrician |  | IN |", "| Gas installer |  | IN |"], ["| Security guard |  | HOLD |"]),
- ],
  "RUL-152": [
    ("RULINGS.md", ["RUL-075 WAS A DECISION NOT TO SPEND TWO MONTHS ON LOCALISATION",
                    "seatbelts built ALONGSIDE the work, never a turnstile in front of it"], []),
