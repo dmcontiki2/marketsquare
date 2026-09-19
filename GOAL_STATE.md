@@ -7,14 +7,23 @@ diary — the changelog is the diary.*
 
 > ## READ FIRST, RUN 16 — TWO THINGS, AND THE FIRST ONE OUTRANKS EVERY BUILD
 >
-> **1. OUTREACH HAS STOPPED. PROBED 19 Sep, letters per day out of `prospects.emailed_at`:**
+> **1. OUTREACH IS PAUSED ON PURPOSE — DO NOT DIAGNOSE IT.** David asked for no send on the
+> nights of 18 and 19 Sep, and for the next wave to go out **the night of 20 Sep**, after the new
+> design is live. **There is no sending fault. Do not spend this run looking for one.**
+>
+> *Recorded because an earlier draft of this banner got it wrong and would have cost the run:* the
+> decay below is real and worth knowing, but the two zero days at the end are David's decision, not
+> a defect. PROBED beats RECALLED — and it does not beat ASKING THE PERSON WHO TURNED IT OFF.
+> Letters per day out of `prospects.emailed_at`:
 > `5 Sep 398 · 6 Sep 251 · 7 Sep 254 · 9 Sep 317 · 10 Sep 12 · 11 Sep 142 · 12 Sep 108 ·`
 > `13 Sep 87 · 14 Sep 146 · 15 Sep 93 · 16 Sep 57 · 17 Sep 43 · 18 Sep 0 · 19 Sep 0.`
 > **A week of decay and then nothing for two days.** `emailed` has been frozen at 2,499 across
 > three measurements. Meanwhile the door instrument that shipped on 19 Sep has caught **one
 > arrival in two days, and that one was run 15's own labelled probe** (`src=probe-run15`).
 >
-> **FIND OUT WHY BEFORE BUILDING ANYTHING.** What is already ruled out, so do not re-probe it:
+> **THE DECAY BEFORE THE PAUSE IS STILL WORTH UNDERSTANDING** — 398 a day down to 43 over twelve
+> days is a channel exhausting itself, and that is a finding about SUPPLY, not about a broken
+> sender. Diagnose that, do not re-diagnose the pause. Already ruled out, so do not re-probe:
 > the policy is NOT disarmed (96 of 102 cities armed, cap 250/day, batch 12); the laptop's 00:10
 > task is a DELIBERATE no-op (WAVE-SERVER-1 — `logs/launchday_19Sat09_2026010.log` says so in
 > terms, and the server timer is the one sender); an attempt to disable the laptop task on 18 Sep
@@ -23,8 +32,11 @@ diary — the changelog is the diary.*
 > exhausted** — 4,249 of 6,748 are unsent, but they may sit in unarmed cities or blocked
 > categories. Do not read "no sendable prospects" as supply without proving it (13 Sep precedent).
 >
-> **Building a better door for a market nobody is being invited to is the definition of wasted
-> effort.** Design work is downstream of this.
+> **THIS RUN'S JOB, IN DAVID'S OWN WORDS (19 Sep):** *"activate this goal session to do an
+> analysis, then a diagnostic to give us a good understanding of what these last batch of
+> improvements we want to implement means and also what it will need in terms of design"* — and
+> **start the design for the parts already decided.** So: analysis and diagnostic first, design
+> second, and the wave goes out tomorrow night once the new design is live.
 >
 > **2. THE DIRECTION CHANGED — David, 19 Sep (live).** The employer lane. See the block further
 > down headed "DIRECTION CHANGED AGAIN" and `QUICK_LISTING_SPEC.md` **Part II**; RUL-150/151/152.
