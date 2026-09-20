@@ -3676,6 +3676,12 @@ function closeCitySelector() {
 
 async function selectCountry(iso2, name) {
   activeCountry = { iso2, name };
+  // ADV-CO-CHIP-1c: same rule on the real geo picker -- an explicit country choice is
+  // the clearest statement of which market the person wants, so Adventures follows it.
+  if (typeof selectAdvCountry === 'function') {
+    selectAdvCountry(iso2, name,
+                     (typeof ADV_COUNTRY_FLAGS !== 'undefined' && ADV_COUNTRY_FLAGS[iso2]) || '\u{1F30D}');
+  }
   activeRegion  = null;
   activeCity    = { id: null, name: '' };
   activeSuburb  = null;
@@ -3739,11 +3745,19 @@ function selectDemoCity(name) {
   const _CF = { 'ZA':'🇿🇦', 'US':'🇺🇸', 'GB':'🇬🇧', 'AU':'🇦🇺' };
   if (_iso2) {
     activeCountry = { iso2:_iso2, name:_CN[_iso2] || _iso2 };
-    // ADV-CO-CHIP-1 / BORDERLESS-COUNT-1 (RG-0078): picking YOUR city must not narrow
-    // Adventures to your country -- a buyer planning a trip is not local to the
-    // destination. This line re-pinned advCountry to the city's country (Pretoria -> ZA)
-    // and was the second way the South-African-examples symptom kept coming back after
-    // the borderless default was set. The Adventures picker is an EXPLICIT choice only.
+    // ADV-CO-CHIP-1c (20 Sep 2026, David: "i changed to US in the home page, then went
+    // to adventures where the switch did not happen"). An EXPLICIT market switch moves
+    // Adventures with it -- that is what the switch means to the person who taps it, and
+    // it is how a New York market shows dollars instead of rands. ADV-CO-CHIP-1 removed
+    // this sync earlier today on the reading that it was what pinned ZA. It was not: the
+    // pin was the hardcoded ZA chip literal plus a boot default of Pretoria, both fixed.
+    // Nothing here runs at boot, so a visitor who has chosen no market still opens on
+    // "All countries" (BORDERLESS-COUNT-1 intact). Routed through selectAdvCountry so
+    // there is ONE writer: it persists the choice, repaints the chip and re-renders.
+    if (typeof selectAdvCountry === 'function') {
+      selectAdvCountry(_iso2, _CN[_iso2] || _iso2,
+                       (typeof ADV_COUNTRY_FLAGS !== 'undefined' && ADV_COUNTRY_FLAGS[_iso2]) || '\u{1F30D}');
+    }
     _wfCountry=_iso2;
     { const _wfs=document.getElementById('wf-country-select'); if(_wfs && Array.from(_wfs.options).some(o=>o.value===_iso2)) _wfs.value=_iso2; }
     _wfType='all'; { const _wft=document.getElementById('wf-type-select'); if(_wft) _wft.value='all'; }

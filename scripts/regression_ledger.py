@@ -26079,7 +26079,17 @@ def rg_journal_readable():
              "asserted what the one control that decides the market DEFAULTS TO, so a fix and "
              "the sentence a buyer reads were never connected. Fixed by painting the chip FROM "
              "the state, removing the city re-pin, and making advResetAll release the pin and "
-             "its saved copy.")
+             "its saved copy. AMENDED THE SAME DAY (ADV-CO-CHIP-1c, design-phase amendment, "
+             "not a broken rule): removing the city sync went too far. David switched the "
+             "home page to the United States, opened Adventures and found it unmoved -- "
+             "'i changed to US in the home page, then went to adventures where the switch "
+             "did not happen'. An EXPLICIT market switch is the clearest statement of which "
+             "market a person wants, so it now carries into Adventures THROUGH "
+             "selectAdvCountry -- one writer, which persists the choice and repaints the "
+             "chip. Nothing in that path runs at boot, so an untouched visitor still opens "
+             "on All countries and BORDERLESS-COUNT-1 stands. What is asserted below is "
+             "therefore BOTH halves: no hardcoded country in the markup, and the market "
+             "switch actually reaching the adventures list.")
 def rg_adv_country_chip_truthful():
     out = []
     js = repo_file("ms.js")
@@ -26094,8 +26104,14 @@ def rg_adv_country_chip_truthful():
     elif js.count("advPaintCountryChip") < 2:
         out.append((FAIL, "ms.js: advPaintCountryChip is defined but never invoked on load"))
     if re.search(r"advCountry\s*=\s*_iso2", js):
-        out.append((FAIL, "ms.js: the city sync re-pins advCountry to the selected city's "
-                          "country again -- choosing Pretoria silently narrows Adventures to ZA"))
+        out.append((FAIL, "ms.js: the market switch assigns advCountry directly again, "
+                          "bypassing selectAdvCountry -- a second writer that does not "
+                          "persist the choice or repaint the chip, which is the split that "
+                          "let the markup and the filter disagree in the first place"))
+    if "selectAdvCountry(_iso2" not in js:
+        out.append((FAIL, "ms.js: the home-page market switch no longer carries into "
+                          "Adventures -- switching to New York leaves the adventures list "
+                          "on another market's currency (David, 20 Sep 2026)"))
     m = re.search(r"function advResetAll\(\)\{(.{0,1500}?)\n\}", js, re.S)
     if not m:
         out.append((FAIL, "ms.js: advResetAll() not found -- the escape from the country pin is gone"))
