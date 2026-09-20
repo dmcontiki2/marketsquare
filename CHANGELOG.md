@@ -1,3 +1,21 @@
+## 2026-09-20 — DICTV: why a fixed word stayed wrong on David's screen
+
+David, minutes after the fix went live, with a screenshot: *"both 'Wereld Erfenis' and 'Uitgelicht'
+is wrong"* — on a page the server had already corrected.
+
+He was looking at his own browser's copy. Each reader keeps the dictionary in `localStorage` so the
+second visit is instant; that copy was written before the Afrikaans was re-done, so the old machine
+words kept being painted from it and **no fix on the server could ever reach him**. A cache with no
+version is a fix that cannot be delivered.
+
+The version now sits in the key (`DICTV`): raise it when the checked words change and every browser
+drops what it holds and refetches once. Old copies are swept out on load, so nobody carries a stale
+dictionary around. This is the mechanism the reviewers' corrections will ride on.
+
+And his second point, which is a naming call and his to make: **Local Market is "Plaaslike Mark"**,
+capital M — it is the name of a place in the app, not a description of one. Six phrases carry it;
+migration 047 re-seeds from the same file.
+
 ## 2026-09-20 — PAINT-ALL-1: the translate button turns the page over in 6 seconds, not 16
 
 Checking the Afrikaans in a rendered phone browser showed the words were right and the screen was

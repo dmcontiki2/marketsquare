@@ -19377,7 +19377,17 @@ async function msUnverifiedGate(sellerEmail, category){
    ------------------------------------------------------------------------- */
 (function(){
   var LANGS=[['en','English'],['zu','isiZulu'],['st','Sesotho'],['af','Afrikaans'],['xh','isiXhosa']];
-  var KEY='ts_lang', CACHE='ts_i18n_', MAXLEN=240, CHUNK=60;
+  /* DICTV (20 Sep 2026, David: "both 'Wereld Erfenis' and 'Uitgelicht' is wrong" -- on a page
+     that was ALREADY fixed on the server). Each reader keeps their own copy of the dictionary
+     in the browser, and that copy was written before the Afrikaans was re-done by hand, so the
+     old machine words kept being painted from it and no server fix could ever reach them.
+     The stamp goes in the key: raise it whenever the checked words change, and every browser
+     drops what it has and refetches once. Old copies are swept out on load. */
+  var DICTV='2';
+  var KEY='ts_lang', CACHE='ts_i18n'+DICTV+'_', MAXLEN=240, CHUNK=60;
+  try{ for(var _i=localStorage.length-1;_i>=0;_i--){ var _k=localStorage.key(_i);
+       if(_k && _k.indexOf('ts_i18n')===0 && _k.indexOf(CACHE)!==0) localStorage.removeItem(_k); }
+  }catch(e){}
   var lang='en', busy=false, dict={}, pending=false;
   /* REPAINT-RACE-1 (20 Sep 2026): the bottom nav stayed English while the page around it was
      Afrikaans. MutationObserver DELIVERS RECORDS IN BATCHES, so the nav's own insertion arrived
