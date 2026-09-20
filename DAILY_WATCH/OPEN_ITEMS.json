@@ -1,5 +1,5 @@
 {
-  "next_id": 139,
+  "next_id": 140,
   "items": {
     "DW-001": {
       "first_seen": "2026-08-02",
@@ -1174,14 +1174,15 @@
       "last_seen": "2026-09-20",
       "sev": "MEDIUM",
       "source": "split out of DW-109 at that row's own request; re-check attempted from the sandbox today",
-      "status": "OPEN",
+      "status": "CLOSED",
       "refs": [
         "DW-109",
         "DW-105"
       ],
       "summary": "19 Sep - eighth identical wall, re-probed, no new information. journalctl -u marketsquare --since '24 hours ago' piped to grep -ci resend returns 0 (journal unreadable by this account); ls /var/www/marketsquare/*.log returns 'No such file or directory'; id still reads uid=1000(msdeploy) groups=1000(msdeploy) - neither adm nor systemd-journal. subscription_monitor reads 35 UP / 15 HELD / 1 PLANNED, issues: [] so the Resend key authenticates. Absence from a blind instrument is still not a clean bill. CARRIED FORWARD 2026-09-14, STILL NOT VERIFIABLE - third attempt, same wall. msdeploy is in neither adm nor systemd-journal (id shows groups=1000(msdeploy) only); journalctl -u marketsquare returns 4 lines of permission hint and 0 resend matches; no *.log under /var/www/marketsquare. subscription_monitor reads Resend UP with issues: [] - the key authenticates, the 422 is one caller's payload. Absence from a blind instrument is not a clean bill.",
       "next_action": "OPEN - CTO lane. (a) Identify the caller: which lane posts to Resend on a 5-minute cadence, and read the 422 body (usually an unverified or mismatched from-domain, a missing to, or a malformed payload). (b) Give the watch a way to see the outcome - journal access, or have the lane record its own result to a readable file. A send lane whose only evidence lives where the watch cannot look is the DW-105 shape, where a silent failure ran a fortnight.",
-      "last_note": "2026-09-18: seventh identical wall. id = groups=1000(msdeploy) only; journalctl -u marketsquare -> permission hint, '-- No entries --'; no *.log under /var/www/marketsquare. subscription_monitor reads Resend UP, issues [] (31 samples, 100%). Absence from a blind instrument is not a clean bill. Stays OPEN."
+      "last_note": "2026-09-18: seventh identical wall. id = groups=1000(msdeploy) only; journalctl -u marketsquare -> permission hint, '-- No entries --'; no *.log under /var/www/marketsquare. subscription_monitor reads Resend UP, issues [] (31 samples, 100%). Absence from a blind instrument is not a clean bill. Stays OPEN.",
+      "closed": "2026-09-20: RG-0424 JOURNAL-READ-1 LOCKED; live leg reads 'msdeploy can read the marketsquare journal'; the Resend 422 was _infra_resend()'s deliberate empty-body probe (422 = ok), and the /app/fault 422 was the ledger's own intake probe"
     },
     "DW-112": {
       "first_seen": "2026-09-07",
@@ -1490,7 +1491,7 @@
       "last_seen": "2026-09-20",
       "sev": "MEDIUM",
       "source": "correlation of the live post_deploy_status.json timestamp with the ledger's two exit-1 runs and the host-queue record (PROBED)",
-      "status": "OPEN",
+      "status": "CLOSED",
       "refs": [
         "DW-134",
         "RG-0381",
@@ -1499,32 +1500,42 @@
       ],
       "summary": "19 Sep - STILL OPEN, unchanged on disk. ONE_DEPLOY.md line 12 still lists the raw lane ('Any session w/ push auth' -> git push origin HEAD:deploy) with no gate and no line naming it a break-glass path. Today's deploy was clean and rode over a GREEN board (post_deploy_status.json 2026-09-19T04:12:40Z, ref deploy, all five steps ok, migrations 'none pending') and RG-0381 reads [ ok ], so the HUMAN lane is gated; the raw-push lane still is not. Not closable: the originating correlation cannot re-run on a green board. NEW - a deploy rode while the ledger read REGRESSION, and no gate stopped it. Timeline, all PROBED: this watch's first combine read exit 1 (RG-0253) at ~07:12Z on the 385-entry tree; a051975 was committed 07:17:49Z; the deploy ref was placed 07:19:37Z (post_deploy_status.json); the second combine on the committed tree read exit 1 again at ~07:27Z. No deploy request exists in host_queue (only quiet-commit requests, the newest FAILED rc=1 - work_lock held by the attended design-review lane), and the nightly TSL gate had BLOCKED at 03:45Z (rc=2). So the push that shipped a051975 used the raw `git",
       "next_action": "CTO lane: confirm which lane pushed a051975 (the attended session's own record), then decide the raw-push lane's status - either it runs the same pre-deploy scan as request_deploy.py (strict by default, RG-0381 pattern) or ONE_DEPLOY states in one line that it is the ungated break-glass path and RUL-092 sessions must not use it for routine ships. Either way, assert it. Closes when a ledger entry asserts the chosen property and passes.",
-      "evidence_grade": "PROBED (timestamps and queue record); the lane identity is inferred from the absence of any other record"
+      "evidence_grade": "PROBED (timestamps and queue record); the lane identity is inferred from the absence of any other record",
+      "closed": "2026-09-20: RG-0422 DEPLOY-GATE-ALL-1 LOCKED; pre-push hook proven to REFUSE a DANGER push on the deploy ref (exit 1) and to leave main untouched"
     },
     "DW-137": {
       "first_seen": "2026-09-19",
       "last_seen": "2026-09-20",
       "sev": "MEDIUM",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source": "the watch's own Phase-B verify step - a read-back of a backup it had just written",
       "summary": "NEW - a file READ on this mount can return a short file with no error, and the backup lane is exactly where that is dangerous. cp wrote OPEN_ITEMS.md correctly (318127 B, 1049 lines) and the immediate read-back returned 29737 B / 62 lines silently; a re-read moments later returned the full 318127 B / 1049 lines, and cmp on six fresh copies (3 to /tmp, 3 to the mount) was IDENTICAL every time. The write was always sound; the fault is a stale/partial READ through the FUSE bridge. CLAUDE.md makes a cp backup the ONLY undo on this mount, and the standing method is write-then-verify-by-reading - so a short read makes a session 'restore' from a file it misread, turning the recovery step into the data-loss step. It also invalidated one comparison in this run (a column-count check read 1 pre-existing defect against the backup where git show HEAD: reads 24; no row damaged, verified against git, 0 new).",
       "next_action": "CTO lane: verify read-after-settle, not read-immediately - re-read until two consecutive reads agree, or verify against git show HEAD:<path> and the byte count the writer returned, never against a single fresh read of a just-written file. Then assert it in the ledger.",
       "refs": [
         "CLAUDE.md file-writes-on-this-mount rule",
         "DW-119"
-      ]
+      ],
+      "closed": "2026-09-20: RG-0421 SAFE-READ-1 LOCKED; settled_read/verify_after_write/safe_backup with both failure legs proven; wired into changelog_compile + status_compile"
     },
     "DW-138": {
       "first_seen": "2026-09-20",
       "last_seen": "2026-09-20",
       "sev": "MEDIUM",
       "source": "regression ledger combine summary (1 ready to lock, was 0) - the tripwire the DW-122 coverage card named for itself",
+      "status": "CLOSED",
+      "closed": "2026-09-20: RG-0238 promoted to LOCKED and WIDENED to 7 surfaces incl. absence-of-record claims; combine reads 0 ready to lock; proven to bite on 4 injections"
+    },
+    "DW-139": {
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "sev": "HIGH",
+      "source": "marketsquare journal, readable for the first time via DW-111/RG-0424",
       "status": "OPEN",
       "closed": null
     }
   },
   "last_run": "2026-09-20",
-  "last_verdict": "GREEN",
+  "last_verdict": "GREEN (observe) / ATTENDED FIX PASS",
   "recheck_pass_2026_08_20": {
     "requested_by": "David: close all open actions",
     "items_rechecked": 15,
@@ -2986,5 +2997,29 @@
     "david_decision": "DW-137 - close as a flake that did not recur, or keep open until read-after-settle is built and asserted? Watch recommends keeping it open.",
     "coverage_map": "82 GREEN / 3 BLUE / 3 AMBER / 0 RED / 11 GREY, 99 cards (yesterday 83/2/3/0/11); DW-122 card GREEN -> BLUE on its own stated ready-to-lock tripwire",
     "checks_run": "12 of 12 in scope (Monday canon/deep-scan lane not in scope on a Sunday)"
+  },
+  "attended_fix_pass_2026_09_20": {
+    "instruction": "David, 20 Sep 2026: \"please fix all of them to closure\"",
+    "closed": [
+      "DW-111",
+      "DW-136",
+      "DW-137",
+      "DW-138"
+    ],
+    "new": [
+      "DW-139 - POST /i18n/translate 500s, 262 vs 39 in 15 min, sqlite3 database is locked at main.py:25082; owned by the concurrent I18N-TRANSLATE-1 session, not touched here"
+    ],
+    "still_open": [
+      "DW-010 - CC-002 (102d) and CC-005 (19d) are David's own sign-offs",
+      "DW-139 - handed to the session that owns the feature"
+    ],
+    "new_ledger_entries": [
+      "RG-0421 SAFE-READ-1",
+      "RG-0422 DEPLOY-GATE-ALL-1",
+      "RG-0424 JOURNAL-READ-1",
+      "RG-0238 promoted OPEN->LOCKED and widened"
+    ],
+    "server_change": "msdeploy added to systemd-journal group; made durable by migrations/045_journal_read_for_msdeploy.py",
+    "ledger_after": "411 entries / 388 holding / 22 open / 0 ready to lock / 0 UNVERIFIED; 1 REGRESSED = RG-0157 catching this pass's own untracked migration, cleared by committing it"
   }
 }

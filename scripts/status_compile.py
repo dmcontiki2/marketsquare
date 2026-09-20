@@ -31,6 +31,22 @@ write if the anchor heading is missing rather than guessing where to insert.
 """
 import datetime, os, re, shutil, sys
 
+# --- DW-137 / SAFE-READ-1 -------------------------------------------------
+# Verify by a SETTLED read, never a single fresh one. On this FUSE mount a read
+# of a just-written file can come back short with no error (19 Sep 2026: 29,737
+# bytes of a 318,127-byte file), which would report a CORRECT fold as FAILED and
+# invite a "restore" that is itself the data loss. Falls back to a plain read if
+# the helper is missing, so this script never stops working on its account.
+try:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from safe_read import settled_read as _settled_read
+except Exception:                                    # pragma: no cover
+    def _settled_read(p):
+        with open(p, "rb") as _fh:
+            return _fh.read()
+# --------------------------------------------------------------------------
+
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRAG_DIR = os.path.join(ROOT, "status.d")
 FOLDED = os.path.join(FRAG_DIR, "folded")
@@ -226,8 +242,7 @@ def main():
     if parts:
         # Read the WHOLE file: the managed feed block shifts every offset, so a
         # byte-budgeted head read can report a correct fold as FAILED.
-        with open(STATUS, "rb") as fh:
-            head = fh.read()
+        head = _settled_read(STATUS)   # DW-137: settled, not a single read
         ok = parts[0][:60] in head
         if feed_src is not None and FEED_BEGIN.encode() not in head:
             ok = False

@@ -9,12 +9,31 @@ Locked by regression-ledger **RG-0023**; the media lane by **RG-0021**.
 |-------------------------|-----------------------------------------------------|
 | David at the PC         | double-click **deploy_marketsquare.bat** (now a thin gated wrapper) or **release.bat** |
 | /ship, /TSL, /start     | they run deploy_marketsquare.bat → same wrapper     |
-| Any session w/ push auth| `git push origin HEAD:deploy` (or `python deploy_web.py`) |
+| Any session w/ push auth| `git push origin HEAD:deploy` (or `python deploy_web.py`) — **gated by the `pre-push` hook**, see below |
 | HTTPS-only agent        | `POST /admin/deploy` with `X-Deploy-Token` (enable per ops/autodeploy/deploy_router.py) |
 
 The wrapper: git_unlock → autobump (child ?v= refs) → predeploy_check + CM/DB
 gate + deploy lock → commit → push `main` (backup) → push `deploy` (THE deploy)
 → waits, then md5-verifies local vs live (check_deploy_drift.py).
+
+**Every lane is gated, including the raw push (DEPLOY-GATE-ALL-1, 20 Sep 2026).**
+A `pre-push` hook fires on `refs/heads/deploy` and only that ref, runs
+`predeploy_check.py` with `PREDEPLOY_MODE=strict` set *before* the scan, and
+**refuses the push on a DANGER verdict**. Pushing `main` is untouched — it
+deploys nothing. Install or repair it with:
+
+    python3 scripts/install_git_hooks.py          # idempotent
+    python3 scripts/install_git_hooks.py --check  # exit 1 if not armed
+
+Deliberate override, when you mean it (both are visible in shell history):
+
+    PREDEPLOY_MODE=warn git push origin HEAD:deploy
+    git push --no-verify origin HEAD:deploy
+
+Why it exists: on **18 Sep 2026 a deploy rode while the regression board read
+REGRESSION**, because this lane ran no gate — RG-0381 had fixed only the lane a
+human double-clicks. Git hooks are **local to a clone and never carried by git**,
+so re-run the installer after a fresh clone; `RG-0422` goes red if it is missing.
 
 The engine (ops/autodeploy/server_deploy.sh, on the server, every ~2 min):
 manifest allowlist copy (never deletes; never touches DB/.env/uploads/
