@@ -3415,6 +3415,28 @@ function renderAdvGrid(){
     return true;
   });
 
+  // ADV-CO-CHIP-1b (20 Sep 2026): under "All countries" the grid opened with every ZA
+  // exemplar in a row -- live rows arrive in server order -- so a borderless page still
+  // READ as a South African page priced in rand, which is the very complaint the
+  // borderless default was meant to answer. One deterministic pass: each country keeps
+  // its own order, the grid takes one country at a time. An explicit country pick is
+  // untouched -- this only shapes the ALL view.
+  if(advCountry === 'ALL' && items.length > 1){
+    const _lanes = new Map();
+    items.forEach(function(l){
+      const k = String(l.country||'ZA').toUpperCase();
+      if(!_lanes.has(k)) _lanes.set(k, []);
+      _lanes.get(k).push(l);
+    });
+    const _rows = Array.from(_lanes.values());
+    const _deep = Math.max.apply(null, _rows.map(function(r){ return r.length; }));
+    const _mixed = [];
+    for(let i = 0; i < _deep; i++){
+      _rows.forEach(function(r){ if(r[i]) _mixed.push(r[i]); });
+    }
+    if(_mixed.length === items.length) items = _mixed;
+  }
+
   countEl.textContent = items.length
     ? `${items.length} listing${items.length===1?'':'s'} · ${advCountryName}`
     : '';
