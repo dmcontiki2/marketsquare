@@ -1,3 +1,37 @@
+## 2026-09-20 — I18N-AF-1: the Afrikaans re-done by hand, once, and kept
+
+David, 20 Sep 2026: *"the Afrikaans has many mistakes... many of the english to afrikaans words came out wrong
+and some sounded more Dutch than Afrikaans"*, and then, reading a live page: *"Wereld Erfenis..."*
+
+**He was right, and the cause was ours.** `/i18n/translate` ran on the cheapest task tier with a one-line prompt
+and bare labels with no context. That is a machine asked to translate the word "Featured" with nothing around it.
+It produced: *Uitgelicht* for Featured (Dutch, not Afrikaans), *Wereld Erfenis* for World Heritage (Dutch spacing,
+no circumflex — Afrikaans is one word, Wêrelderfenis), *Vertroue Telling* for the Trust Score brand name, *KPA*
+for CPA and *FOUTE* for OPS — it translated the acronyms — and it dropped lines it could not manage without
+saying so, which is why "Make an introduction" never appeared in Afrikaans at all.
+
+**The fix is the one David chose:** *"if it is done once and then kept, then we can use Opus 5. Lets get it
+better in the single translation."* All 2,066 cached Afrikaans phrases were pulled off the live server and
+re-done by hand in one sitting.
+
+- `roles/app_i18n_af.json` — 1,564 checked Afrikaans phrases, plus the 502 kept deliberately in English.
+- `migrations/045_i18n_af_hand_translated.py` — OVERWRITES the machine Afrikaans with the file, and seeds the
+  English-by-choice phrases as themselves, so the runtime finds a cache hit and never re-translates them.
+- The 502 in English: EULA and legal clauses (RUL-143 — the English binds, and a half-checked Afrikaans legal
+  text is worse than English), acronyms, codes, admin and job references.
+- Numbers were handled by template, not one by one: "3 slots" and "10 slots" share one checked pattern
+  ("# plekke"), which is why 189 number-bearing phrases came right off 120 hand-written templates.
+
+**The runtime prompt is rewritten** for phrases the file has not seen — new text, and the other three languages:
+a house rule per language (Afrikaans: South African Afrikaans, *never* Dutch forms or spelling, jy/jou not u), an
+explicit do-not-translate list (TrustSquare, Trust Score, Tuppence, Buzz, CPA, POPIA, FICA, NQF, TGCSA and the
+rest), the lines told plainly that they are buttons and labels on a phone, and — the silent fault — one retry
+when a line comes back missing instead of letting it vanish. The lane also moves off the cheapest tier
+(`I18N_TASK`), which it can now afford because the checked file answers nearly everything from cache.
+
+**Not a ruling.** David's standing instruction holds: the language work becomes a ruling only after his readers
+have checked it. isiZulu, Sesotho and isiXhosa are still first-draft quality and wait for them.
+
 ## 2026-09-20 — I18N-TRANSLATE-1: a Translate button in the main app, cached so each phrase is paid for once
 
 David, 20 Sep 2026 (from the airport, offsite in the Cape): *"Please build the button in the main app please,

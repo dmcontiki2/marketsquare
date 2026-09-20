@@ -25035,6 +25035,49 @@ I18N_LANGS = {"zu": "isiZulu", "st": "Sesotho (Southern Sotho)", "af": "Afrikaan
 I18N_MAX_STRINGS = 60          # per request
 I18N_MAX_CHARS = 240           # per string
 I18N_DAILY_CALL_CAP = 400      # AI calls per day across all readers -- a hard ceiling on spend
+I18N_TASK = "reason"           # I18N-AF-1 (20 Sep 2026): the cheapest tier produced Dutch Afrikaans.
+                               # The checked files now answer almost every phrase from cache, so this
+                               # lane only fires on genuinely new text -- worth the better tier.
+
+# Words that must come back UNCHANGED. The cheap lane translated the acronyms -- CPA came back as
+# "KPA", OPS as "FOUTE", and the Trust Score brand name as "Vertroue Telling" -- so say it plainly.
+I18N_KEEP = ("TrustSquare", "MarketSquare", "Trust Score", "Tuppence", "Buzz", "Quick Listing",
+             "Local Market", "CPA", "POPIA", "FICA", "NCA", "ECT Act", "NQF", "TGCSA", "OPS",
+             "Starter", "Pro", "Global", "Paystack", "UNESCO", "Krugerrand")
+
+# One house rule per language. Afrikaans needed its own: the model kept reaching for Dutch.
+I18N_HOUSE = {
+    "af": ("Write SOUTH AFRICAN Afrikaans as it is written and spoken in South Africa today. "
+           "Afrikaans is NOT Dutch: never use Dutch words, Dutch spelling or Dutch word order "
+           "(Featured is 'Uitgestal', never the Dutch 'Uitgelicht'; World Heritage is one word, "
+           "'Werelderfenis', with a circumflex on the first e, never 'Wereld Erfenis'). Use the "
+           "correct Afrikaans diacritics. Address the user as 'jy/jou', not 'u'. Use everyday "
+           "words an ordinary person in Pretoria or Cape Town would say out loud."),
+    "zu": "Write everyday isiZulu as it is spoken in South Africa, not a word-for-word rendering.",
+    "st": "Write everyday Sesotho (Southern Sotho) as it is spoken in South Africa.",
+    "xh": "Write everyday isiXhosa as it is spoken in South Africa.",
+}
+
+def _i18n_prompt(lang: str, items) -> str:
+    """The prompt is the product here. Bare labels with no context are what produced the Dutch."""
+    numbered = "\n".join("%d. %s" % (i + 1, t) for i, t in enumerate(items))
+    return (
+        "You are translating the interface of TrustSquare, a South African online marketplace that "
+        "ordinary working people use on their phones. Translate each numbered line into %s.\n\n"
+        "%s\n\n"
+        "Rules:\n"
+        "- Most lines are BUTTONS, LABELS or SHORT HEADINGS on a screen, not prose. Keep each one "
+        "short enough to fit on a phone button. Do not explain, expand or add words.\n"
+        "- Leave these EXACTLY as they are -- they are names and acronyms, not words: %s.\n"
+        "- Leave every other acronym, product name, place name, person name, price, currency, date "
+        "and number exactly as it is. If a line is only an acronym or a code, repeat it unchanged.\n"
+        "- Translate nothing inside {curly braces}, and keep the braces.\n"
+        "- Keep emoji, punctuation and separators (such as the middot) in the same places.\n"
+        "- Answer EVERY numbered line. Never skip one, never merge two, never renumber. If you "
+        "cannot translate a line, repeat the English for that number.\n"
+        "- Reply with the numbered lines only, nothing before or after.\n\n"
+        "%s" % (I18N_LANGS[lang], I18N_HOUSE.get(lang, ""), ", ".join(I18N_KEEP), numbered)
+    )
 
 def _i18n_ensure(conn):
     conn.execute("""CREATE TABLE IF NOT EXISTS i18n_cache(
@@ -25102,27 +25145,35 @@ def i18n_translate(body: _I18nIn):
     if spent >= I18N_DAILY_CALL_CAP:
         return {"lang": lang, "out": out, "from_cache": cached, "translated": 0, "capped": True}
 
-    fresh = {}
-    try:                                           # 3. TRANSLATE — no database handle open
+    calls = [0]
+
+    def _i18n_ask(items):
+        """One call. Returns {src: translation} for the lines that came back."""
         import ai_provider
-        numbered = "\n".join("%d. %s" % (i + 1, t) for i, t in enumerate(missing))
-        res = ai_provider.complete(
-            [{"role": "user", "content":
-              "Translate each numbered line into %s, for a South African marketplace app used by "
-              "ordinary working people. Keep it short and plain, keep the same numbering, translate "
-              "nothing inside {curly braces}, and leave names, place names, prices and numbers as they "
-              "are. Reply with the numbered lines only.\n\n%s" % (I18N_LANGS[lang], numbered)}],
-            task="fast", max_tokens=1400, timeout=30)
+        calls[0] += 1
+        res = ai_provider.complete([{"role": "user", "content": _i18n_prompt(lang, items)}],
+                                   task=I18N_TASK, max_tokens=1600, timeout=40)
         lines = {}
         if res.ok and res.text:
             for ln in res.text.splitlines():
                 m = re.match(r"^(\d+)[.)]\s*(.+)$", ln.strip())
                 if m:
                     lines[int(m.group(1))] = m.group(2).strip()
-        for i, src in enumerate(missing, 1):
-            got = lines.get(i)
-            if got and got != src:
-                fresh[src] = got
+        got = {}
+        for i, src in enumerate(items, 1):
+            val = lines.get(i)
+            if val and val != src:
+                got[src] = val
+        return got
+
+    fresh = {}
+    try:                                           # 3. TRANSLATE — no database handle open
+        fresh = _i18n_ask(missing)
+        # A dropped line used to vanish silently: "Make an introduction" simply never appeared in
+        # Afrikaans. Ask once more for whatever came back short, then give up and leave it English.
+        again = [t for t in missing if t not in fresh]
+        if again and len(again) < len(missing):
+            fresh.update(_i18n_ask(again))
     except Exception as exc:
         _log.warning("i18n translate failed (%s): %s", lang, exc)
 
@@ -25134,8 +25185,9 @@ def i18n_translate(body: _I18nIn):
             for src, got in fresh.items():
                 conn.execute("INSERT INTO i18n_cache (lang, src, out, created_at) VALUES (?,?,?,?) "
                              "ON CONFLICT DO NOTHING", (lang, src, got, now))
-            conn.execute("INSERT INTO i18n_spend (day, calls) VALUES (?, 1) "
-                         "ON CONFLICT(day) DO UPDATE SET calls = calls + 1", (day,))
+            conn.execute("INSERT INTO i18n_spend (day, calls) VALUES (?, ?) "
+                         "ON CONFLICT(day) DO UPDATE SET calls = calls + excluded.calls",
+                         (day, max(1, calls[0])))
             conn.commit()
         except Exception as exc:
             _log.warning("i18n cache write skipped (%s): %s", lang, exc)
