@@ -44,3 +44,9 @@ belong to the parallel lane's in-flight work, not to this run: RG-0157 (untracke
 fix not yet deployed). Not touched, not committed here.
 
 Not deployed and not pushed — the nightly TSL ships committed work through the gates.
+
+**RUL-158 repointed the same way (rulings_check).** `scripts/rulings_check.py` required the
+one-window fade clause in `marketsquare.html` and so read FAIL for the identical reason —
+the copy was correctly deleted. It now reads the clause from `ms.js`; `marketsquare.html`
+keeps the banned half (its tier cards may never advertise the 30/60-day windows).
+Rulings check: 137 checked, 0 FAIL.

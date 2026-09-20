@@ -1019,7 +1019,14 @@ REFLECTIONS = {
    ("RULINGS.md", ["ONE 90-DAY FADE WINDOW FOR EVERY SELLER ON EVERY TIER"], []),
    ("bea_main.py", ['_FADE_WINDOWS = {"free": 90, "starter": 90, "pro": 90, "agency": 90}'], ['"free": 30, "starter": 60']),
    ("eula_clean.html", ["within an inactivity window of 90 days, which is the same for every tier."], ["Free \u2014 30 days; Starter \u2014 60 days"]),
-   ("marketsquare.html", ["within an inactivity window of 90 days, which is the same for every tier."], ["30-day listing \u00b7 free renewal", "60-day listing \u00b7 free renewal"]),
+   # FADE-90-2 (20 Sep 2026): this row used to require the clause IN marketsquare.html. That
+   # page's embedded EULA was deliberately deleted the same day by EULA-FORK-2 (RG-0400) -- it
+   # was a drifted fourth copy at v1.10 -- and the acceptance box now renders ms.js's _EULA_HTML
+   # at runtime. So the ruling is reflected in ms.js, which is the text the seller scrolls and
+   # ticks; requiring it in marketsquare.html was asserting a document that no longer exists.
+   # marketsquare.html keeps the BANNED half: its tier cards may never advertise the old windows.
+   ("ms.js", ["within an inactivity window of 90 days, which is the same for every tier."], []),
+   ("marketsquare.html", [], ["30-day listing \u00b7 free renewal", "60-day listing \u00b7 free renewal"]),
    ("docs/LISTING_STATE_MACHINE.md", ["90 days for EVERY tier (RUL-158"], ["| Free | 30 days |"]),
  ],
  "RUL-159": [
