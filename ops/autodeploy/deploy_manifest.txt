@@ -29,6 +29,7 @@ ms.css                     | static/ms.css
 # data URI in each, because the brand PNGs ride the separate media lane and a /static/
 # reference would 404 on first deploy and lose the tile to a screenshot.
 quick.html                 | quick.html
+roles/quick_i18n.json      | roles/quick_i18n.json
 static/brand/quick.webmanifest | static/brand/quick.webmanifest
 ts_report.js               | static/ts_report.js
 # DEMO-BANNER-1 (22 Aug 2026): the red DEMO tab on the demo maps. Ungated -- unlike
