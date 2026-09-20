@@ -14226,7 +14226,7 @@ def rg_dashboard_signedout_truth():
 @entry("RG-0238", "No listing surface ever calls a PERSON safe -- we publish dated, sourced "
        "FACTS about a credential, never a conclusion about someone's future conduct, and "
        "never an absence-of-record claim",
-       OPEN,
+       LOCKED, fixed_on="2026-09-20",
        scope="Every seller- and buyer-facing surface that could carry a trust badge: "
              "marketsquare.html, ms.js, listing card and profile templates, and any future "
              "verification badge. BANNED as unqualified badge text: 'safe', 'vetted', "
@@ -14259,31 +14259,77 @@ def rg_dashboard_signedout_truth():
            "until it is, and stands afterwards. Promote when wired to real listing "
            "templates and a badge-bearing surface exists to police. NOTE: first written as "
            "RG-0237 and renumbered -- LEDGER-DUP-1 caught a concurrent session taking that "
-           "id mid-write, which is exactly what that guard is for.")
+           "id mid-write, which is exactly what that guard is for. "
+           "PROMOTED TO LOCKED 20 Sep 2026, on the condition this ref set for itself -- "
+           "'promote when wired to real listing templates and a badge-bearing surface exists "
+           "to police'. RG-0384's credential-claim lane shipped 17 Sep and its badge copy was "
+           "written to this rule ('it says the credential is real, never that a person is "
+           "safe'), so the surface now exists. It printed READY TO LOCK on the 20 Sep watch "
+           "run and was raised as DW-138: an OPEN entry is EXPECTED to fail, so while it sat "
+           "OPEN the run exited 0 on its account and a real breach -- a 'vetted' badge "
+           "reaching a tutor listing -- would have read as business as usual. "
+           "THE ASSERTION WAS WIDENED, NOT MERELY RE-STATED (standing rule 4 forbids the "
+           "reverse): (a) it now scans the two composer doors quick.html and genie/q_index.html "
+           "and the two legal surfaces terms.html and eula_clean.html, not just "
+           "marketsquare.html and ms.js; (b) it scans bea_main.py, which is where badge text "
+           "now ORIGINATES (_credential_badges_for), with COMMENTS STRIPPED FIRST -- the file "
+           "carries the word 'vetted' in a design comment about association membership, and a "
+           "guard pinned to a raw spelling would have gone red against correct code, which "
+           "this repo has now paid for six times (RG-0381, RG-0352b); (c) the ABSENCE-OF-RECORD "
+           "half of the scope, banned in words since 1 Sep but never actually implemented, is "
+           "now checked -- 'not on the register', 'no record found', 'no criminal record', "
+           "'clean record', 'dbs clear'. All six surfaces PROBED clean at promotion.")
 def rg_no_safety_adjective():
     out = []
-    banned = ["child-safe", "child safe", "vetted", "background checked", "safety verified"]
+    # Adjectives that describe the PERSON, not a document.
+    banned = ["child-safe", "child safe", "vetted", "background checked",
+              "safety verified", "background screened", "fully screened",
+              "safety checked", "police checked"]
+    # Absence-of-record claims: unprovable, and a defamation risk for anyone we
+    # get wrong. Banned in this entry's scope since 1 Sep 2026; implemented here
+    # at promotion (20 Sep 2026) -- the scope said it, the code never checked it.
+    banned_absence = ["not on the register", "no record found", "no criminal record",
+                      "clean record", "dbs clear"]
+    # Every surface that can put words in front of a buyer or a seller. bea_main.py
+    # is here because _credential_badges_for is where badge text now ORIGINATES.
+    surfaces = ("marketsquare.html", "ms.js", "quick.html", "genie/q_index.html",
+                "terms.html", "eula_clean.html", "bea_main.py")
     seen_any = False
-    for fn in ("marketsquare.html", "ms.js"):
+    scanned = []
+    for fn in surfaces:
         f = os.path.join(REPO, fn)
         if not os.path.isfile(f):
             continue
         seen_any = True
         try:
-            t = open(f, encoding="utf-8", errors="replace").read().lower()
+            t = open(f, encoding="utf-8", errors="replace").read()
         except OSError:
             continue
-        for b in banned:
-            if b in t:
+        if fn.endswith(".py"):
+            # Strip whole-line and trailing comments before judging. A design
+            # comment is not a surface, and a checker pinned to a raw spelling
+            # goes red against correct code -- the RG-0381 / RG-0352b lesson.
+            t = "\n".join(re.sub(r"(?<![\"'])#.*$", "", ln) for ln in t.splitlines())
+        t = t.lower()
+        scanned.append(fn)
+        for bad in banned:
+            if bad in t:
                 out.append((FAIL, "%s contains %r -- a safety adjective on a listing "
                                   "surface is a representation about a person's future "
-                                  "conduct (CHILD-SAFETY-WORDING-1)" % (fn, b)))
+                                  "conduct (CHILD-SAFETY-WORDING-1)" % (fn, bad)))
+        for bad in banned_absence:
+            if bad in t:
+                out.append((FAIL, "%s contains %r -- an absence-of-record claim is not "
+                                  "evidence of safety, is unprovable, and invites a "
+                                  "defamation claim (CHILD-SAFETY-WORDING-1)" % (fn, bad)))
     if not seen_any:
         return [(INFO, "SKIPPED -- listing surfaces not present here (outside repo)")]
     if not out:
-        out.append((INFO, "no banned safety adjective on the listing surfaces scanned."))
-    out.append((INFO, "OPEN: no verification badge ships yet -- this is a tripwire set "
-                      "AHEAD of the feature, not proof the feature is right."))
+        out.append((INFO, "no safety adjective and no absence-of-record claim on any of "
+                          "the %d surfaces scanned (%s)" % (len(scanned), ", ".join(scanned))))
+    out.append((INFO, "LOCKED 20 Sep 2026: the credential-badge lane (RG-0384) ships, so "
+                      "this polices a real surface rather than standing ahead of one. "
+                      "REQUIRED FORM stays: the fact, its source, its date."))
     return out
 
 
@@ -21147,8 +21193,41 @@ def rg_one_login_device_passes_ops_gate():
         else:
             out.append((FAIL, "%s answers %d (WWW-Authenticate=%r) anonymously -- expected 401 + Basic (DEVICE-AUTH-1)"
                         % (path, st, www[:40])))
+    # UPSTREAM-BLIND-1 (20 Sep 2026). /admin/device-ok is the APP endpoint the nginx
+    # sub-request targets, and unlike the four ops pages above it sits in FRONT of no
+    # error_page fail-safe -- so while the app is restarting (a deploy, a worker recycle)
+    # the edge answers 502 for it while every ops page still correctly answers 401. The
+    # old line read that 502 as "not fail-closed" and printed REGRESSION / "Do not deploy
+    # over this" over an app that was perfectly fail-closed thirty seconds later: PROBED
+    # 20 Sep 2026 -- the board FAILed on 502 and an immediate re-probe answered 401 with
+    # {"detail":"Not an enrolled device."} and /health 200. That is RG-0401's rule one
+    # layer in (a checker that cannot see must SAY it cannot see) and RG-0187's contract
+    # (an instrument limit reads NOT EVALUATED, never a rotted fix).
+    # The assertion is NOT weakened. A 5xx is re-probed once, and then judged against
+    # /health: app answering + device-ok 5xx = a REAL routing/fail-closed fault and still
+    # a FAIL; app not answering = the sub-request target could not be reached at all, so
+    # this leg is BLIND (UNVERIFIED, exit 2) and the app's availability is another entry's
+    # job. Every non-5xx answer (200, 404, 403...) is judged exactly as before.
     st = _status("/admin/device-ok")
-    if st != 401:
+    if st >= 500:
+        time.sleep(3)
+        st = _status("/admin/device-ok")
+    if st >= 500:
+        try:
+            _hs = _status("/health")
+        except ProbeOffline:
+            _hs = None
+        if _hs == 200:
+            out.append((FAIL, "/admin/device-ok answers %d anonymously while /health answers 200 -- the "
+                              "sub-request target is broken behind a live app, so the enrolled-device "
+                              "check is not fail-closed (DEVICE-AUTH-1)" % st))
+        else:
+            out.append((INFO, "NOT EVALUATED (UPSTREAM-BLIND-1) - /admin/device-ok answered %d and "
+                              "/health answered %s, so the app itself was not serving when this leg "
+                              "read it. Blind here, not a verdict on the device check; the ops-page "
+                              "legs above still judged the gate. Re-run once the app answers."
+                        % (st, _hs)))
+    elif st != 401:
         out.append((FAIL, "/admin/device-ok answers %d anonymously -- expected 401; the enrolled-device check is "
                           "%s (DEVICE-AUTH-1)" % (st, "gone -- every phone meets the password box again" if st == 404 else "not fail-closed")))
     m = os.path.join(REPO, "migrations", "037_device_auth.py")
@@ -25457,6 +25536,64 @@ def rg_qdoor_za_only_1():
                           "only Gauteng suburb tiles, so the five-tap lane cannot serve the US "
                           "recipients who are 92% of the addresses left on the cold list"))
     return out or [(INFO, "fence intact")]
+
+
+@entry("RG-0420", "UPSTREAM-BLIND-1: a 502 from the app endpoint behind the ops gate makes that leg "
+                  "BLIND, never REGRESSED -- the board may not convict the device check of being "
+                  "open because the app was restarting when it looked",
+       LOCKED, fixed_on="2026-09-20",
+       scope="scripts/regression_ledger.py rg_one_login_device_passes_ops_gate(), the "
+             "/admin/device-ok leg only. FOUND BY A FALSE RED THE SAME MORNING: the 20 Sep "
+             "maintenance board printed '1 previously-fixed issue HAVE COME BACK. Do not deploy "
+             "over this' on RG-0342, reason '/admin/device-ok answers 502 anonymously -- the "
+             "enrolled-device check is not fail-closed'. An immediate re-probe from the same "
+             "sandbox answered 401 with {\"detail\":\"Not an enrolled device.\"}, /health "
+             "answered 200, /dashboard.html answered 401 + Basic. Nothing had rotted: the app "
+             "was not serving for the instant that leg read it. WHY THIS LEG AND NOT THE OTHERS: "
+             "the four ops PAGES sit behind nginx's error_page 500 502 503 504 =401 fail-safe, "
+             "so a 5xx THERE is a real finding and still FAILs; /admin/device-ok is the raw "
+             "sub-request TARGET with no such fail-safe in front of it, so a 5xx there is the "
+             "app being unreachable -- an instrument limit, which RG-0187's contract says reads "
+             "NOT EVALUATED and never a rotted fix. THE ASSERTION IS NOT WEAKENED, and that is "
+             "the whole point: a 5xx is re-probed once and then judged against /health -- app "
+             "answering 200 while device-ok 5xxs is a REAL routing fault and still a FAIL; app "
+             "not answering means this leg was blind. CLASS: every ledger leg that probes an "
+             "endpoint the edge can 502 on its own -- third instance of one shape (GATE-CACHE-1 "
+             "for a rate-limited credential, RG-0401/EDGE-BLIND-1 for a Cloudflare refusal, this "
+             "for an upstream restart). A false RED costs the same trust as a false green, and "
+             "this one carried 'do not deploy' with it.",
+       ref="DEVICE-AUTH-1, RG-0342, RG-0401 EDGE-BLIND-1, RG-0187, RG-0133.")
+def rg_upstream_blind_1():
+    src = repo_file("scripts/regression_ledger.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - the ledger source is not readable from here")]
+    out = []
+    if "UPSTREAM-BLIND-1" not in src:
+        out.append((FAIL, "the upstream-blind guard is gone -- an app restart during a board run "
+                          "will be reported as REGRESSION on RG-0342 again and will carry "
+                          "'do not deploy' with it"))
+        return out
+    seg = src.split("def rg_one_login_device_passes_ops_gate(", 1)[-1][:6000]
+    if 'st = _status("/admin/device-ok")' not in seg:
+        out.append((FAIL, "the device-ok leg no longer probes /admin/device-ok at all"))
+    if "if st >= 500:" not in seg:
+        out.append((FAIL, "the device-ok leg no longer separates a 5xx from a wrong status -- a "
+                          "502 is being judged as 'not fail-closed' again"))
+    if '_hs = _status("/health")' not in seg:
+        out.append((FAIL, "the 5xx branch no longer checks /health, so it cannot tell a broken "
+                          "sub-request target (a real FAIL) from an app that was not serving"))
+    if "NOT EVALUATED (UPSTREAM-BLIND-1)" not in seg:
+        out.append((FAIL, "the blind branch no longer emits the blind marker, so a blind read would "
+                          "fall through to HOLDING -- a blind read printing as a PASS, which is "
+                          "the worse failure of the two"))
+    if 'out.append((FAIL, "/admin/device-ok answers %d anonymously while /health answers 200' not in seg:
+        out.append((FAIL, "the app-alive branch no longer FAILs -- the assertion has been "
+                          "weakened into an unconditional pass on 5xx, which the canon forbids"))
+    # The pass text deliberately avoids the blind marker phrase: _judge reads that phrase in
+    # any INFO as "this entry could not be evaluated", so a clean pass wearing it would print
+    # UNVERIFIED and exit non-zero -- proven on this very entry, 20 Sep 2026, first run.
+    return out or [(INFO, "a 5xx on the device-ok leg is re-probed, then health-gated: a real "
+                          "fault still FAILs, an unreachable app reads blind")]
 
 
 if __name__ == "__main__":

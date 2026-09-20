@@ -25018,6 +25018,105 @@ def squire_brief_create(body: _SquireBriefIn, ts_user: str = Cookie(default=None
     finally:
         conn.close()
 
+# ===========================================================================
+# ON-DEMAND TRANSLATION FOR THE MAIN APP  (David, 20 Sep 2026: the app is English,
+# and a reader whose phone is in another language taps ONE button to have the screen
+# translated.) The Quick door ships pre-translated words (its 400 strings are worth
+# checking by hand); the main app has thousands, so it translates on demand and
+# CACHES EVERY PHRASE FOREVER: the first reader of a phrase pays for it once, every
+# reader after that is free and instant. The model is chosen by the baseline for the
+# task tier -- never named here (David, 17 Sep: a function is not a model name).
+#
+# What it will NOT translate: the EULA and terms (RUL-143 keeps English binding, with
+# its own checked translation), anything the page marks data-notranslate, and strings
+# with no letters (prices, dates, scores travel as they are).
+# ---------------------------------------------------------------------------
+I18N_LANGS = {"zu": "isiZulu", "st": "Sesotho (Southern Sotho)", "af": "Afrikaans", "xh": "isiXhosa"}
+I18N_MAX_STRINGS = 60          # per request
+I18N_MAX_CHARS = 240           # per string
+I18N_DAILY_CALL_CAP = 400      # AI calls per day across all readers -- a hard ceiling on spend
+
+def _i18n_ensure(conn):
+    conn.execute("""CREATE TABLE IF NOT EXISTS i18n_cache(
+        lang TEXT NOT NULL, src TEXT NOT NULL, out TEXT NOT NULL, created_at TEXT NOT NULL,
+        PRIMARY KEY (lang, src))""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS i18n_spend(
+        day TEXT PRIMARY KEY, calls INTEGER NOT NULL DEFAULT 0)""")
+
+def _i18n_translatable(t: str) -> bool:
+    t = (t or "").strip()
+    return bool(t) and len(t) <= I18N_MAX_CHARS and any(ch.isalpha() for ch in t)
+
+class _I18nIn(BaseModel):
+    lang: str
+    strings: _TList[str] = []
+
+@app.post("/i18n/translate")
+def i18n_translate(body: _I18nIn):
+    lang = (body.lang or "").strip().lower()
+    if lang not in I18N_LANGS:
+        raise HTTPException(status_code=400, detail="unsupported language")
+    want, seen = [], set()
+    for t in (body.strings or []):
+        t = (t or "").strip()
+        if t in seen or not _i18n_translatable(t):
+            continue
+        seen.add(t); want.append(t)
+        if len(want) >= I18N_MAX_STRINGS:
+            break
+    if not want:
+        return {"lang": lang, "out": {}, "from_cache": 0, "translated": 0}
+    conn = database.get_db()
+    try:
+        _i18n_ensure(conn)
+        out, missing = {}, []
+        for t in want:
+            row = conn.execute("SELECT out FROM i18n_cache WHERE lang=? AND src=?", (lang, t)).fetchone()
+            if row:
+                out[t] = row["out"] if not isinstance(row, tuple) else row[0]
+            else:
+                missing.append(t)
+        cached = len(out)
+        if missing:
+            day = datetime.now(timezone.utc).date().isoformat()
+            conn.execute("INSERT INTO i18n_spend (day, calls) VALUES (?, 0) ON CONFLICT DO NOTHING", (day,))
+            spent = conn.execute("SELECT calls FROM i18n_spend WHERE day=?", (day,)).fetchone()
+            spent = (spent["calls"] if not isinstance(spent, tuple) else spent[0]) or 0
+            if spent >= I18N_DAILY_CALL_CAP:
+                conn.commit()
+                return {"lang": lang, "out": out, "from_cache": cached, "translated": 0, "capped": True}
+            try:
+                import ai_provider
+                numbered = "\n".join("%d. %s" % (i + 1, t) for i, t in enumerate(missing))
+                res = ai_provider.complete(
+                    [{"role": "user", "content":
+                      "Translate each numbered line into %s, for a South African marketplace app used by "
+                      "ordinary working people. Keep it short and plain, keep the same numbering, translate "
+                      "nothing inside {curly braces}, and leave names, place names, prices and numbers as they "
+                      "are. Reply with the numbered lines only.\n\n%s" % (I18N_LANGS[lang], numbered)}],
+                    task="fast", max_tokens=1400, timeout=30)
+                lines = {}
+                if res.ok and res.text:
+                    for ln in res.text.splitlines():
+                        ln = ln.strip()
+                        m = re.match(r"^(\d+)[.)]\s*(.+)$", ln)
+                        if m:
+                            lines[int(m.group(1))] = m.group(2).strip()
+                now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+                for i, src in enumerate(missing, 1):
+                    got = lines.get(i)
+                    if got and got != src:
+                        conn.execute("INSERT INTO i18n_cache (lang, src, out, created_at) VALUES (?,?,?,?) "
+                                     "ON CONFLICT DO NOTHING", (lang, src, got, now))
+                        out[src] = got
+                conn.execute("UPDATE i18n_spend SET calls = calls + 1 WHERE day=?", (day,))
+                conn.commit()
+            except Exception as exc:                      # a translation that fails leaves English on screen
+                _log.warning("i18n translate failed (%s): %s", lang, exc)
+        return {"lang": lang, "out": out, "from_cache": cached, "translated": len(out) - cached}
+    finally:
+        conn.close()
+
 def _squire_guess_category(need: str) -> str:
     t = (need or "").lower()
     for cat, rx in (("Tutors", r"tutor|teach|lesson|maths|matric|grade|coach"), ("Property", r"rent|flat|apartment|house|bedroom|to let|buy a home"),

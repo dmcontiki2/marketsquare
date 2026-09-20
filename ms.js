@@ -15155,6 +15155,7 @@ function openEulaModal() {
   hdr.innerHTML = '<span style="font-size:15px;font-weight:800;color:#1e293b;">Terms &amp; Conditions</span><button onclick="document.getElementById(\'eula-modal-overlay\').remove()" style="background:#f1f5f9;border:none;border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;color:#64748b;font-weight:700;">✕</button>';
   const body = document.createElement('div');
   body.style.cssText = 'overflow-y:auto;padding:18px 20px 32px;flex:1;font-size:13px;line-height:1.75;color:#334155;';
+  body.setAttribute('data-notranslate','1');   /* RUL-143: the English EULA binds; it has its own checked translation */
   body.innerHTML = '<style>h1,h2,h3{color:#1e293b;margin:16px 0 6px;}h1{font-size:16px;}h2{font-size:14px;}h3{font-size:13px;}p{margin:4px 0;}table{width:100%;border-collapse:collapse;margin:8px 0;}td,th{border:1px solid #e2e8f0;padding:6px 8px;font-size:12px;vertical-align:top;}strong{color:#1e293b;}</style>' + _EULA_HTML;
   sheet.appendChild(hdr);
   sheet.appendChild(body);
@@ -19245,3 +19246,132 @@ async function msUnverifiedGate(sellerEmail, category){
     return window.confirm(msg);
   }catch(e){ return true; }   /* a warning failure must never block a buyer */
 }
+
+
+/* ===========================================================================
+   TRANSLATE THIS PAGE  (David, 20 Sep 2026: "build the button in the main app -
+   it worked well in the quick listing app")
+
+   The app is English, because English carries furthest. A reader who would rather
+   read isiZulu, Sesotho, Afrikaans or isiXhosa taps the globe, bottom-left, and the
+   page is translated in place; tapping English puts it back, word for word, from the
+   original text held in memory. The Quick door's own words are pre-translated and
+   checked by hand; this lane is for the thousands of strings in the main app, so it
+   asks the server, which translates a phrase ONCE and then serves it from cache to
+   everybody, for nothing.
+
+   What it never touches: the EULA and terms (data-notranslate — RUL-143 keeps the
+   English binding), form inputs, and anything with no letters in it (prices, scores,
+   dates, phone numbers travel unchanged). If the server cannot answer, the screen
+   simply stays English — a failed translation is never allowed to blank a page.
+   ------------------------------------------------------------------------- */
+(function(){
+  var LANGS=[['en','English'],['zu','isiZulu'],['st','Sesotho'],['af','Afrikaans'],['xh','isiXhosa']];
+  var KEY='ts_lang', CACHE='ts_i18n_', MAXLEN=240, CHUNK=60;
+  var lang='en', busy=false, dict={}, pending=false;
+  function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function read(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function loadDict(l){
+    dict={}; var raw=read(CACHE+l); if(!raw) return;
+    try{ dict=JSON.parse(raw)||{}; }catch(e){ dict={}; }
+  }
+  function saveDict(){ try{ store(CACHE+lang, JSON.stringify(dict)); }catch(e){} }
+  function skip(n){
+    for(var e=n.parentNode; e && e!==document.body; e=e.parentNode){
+      var t=e.nodeName;
+      if(t==='SCRIPT'||t==='STYLE'||t==='NOSCRIPT'||t==='TEXTAREA'||t==='INPUT'||t==='OPTION') return true;
+      if(e.getAttribute && e.getAttribute('data-notranslate')!==null) return true;
+      if(e.id==='ts-lang') return true;
+    }
+    return false;
+  }
+  function nodes(root){
+    var out=[], w=document.createTreeWalker(root||document.body, NodeFilter.SHOW_TEXT, null), n;
+    while((n=w.nextNode())){
+      var v=(n.__en!==undefined && n.nodeValue===n.__tr) ? n.__en : n.nodeValue;
+      var t=(v||'').trim();
+      if(!t || t.length>MAXLEN) continue;
+      if(!/[A-Za-z]/.test(t)) continue;
+      if(skip(n)) continue;
+      n.__en=v; out.push(n);
+    }
+    return out;
+  }
+  function paint(list){
+    busy=true;
+    list.forEach(function(n){
+      var t=(n.__en||'').trim(), got=dict[t];
+      var v = (lang==='en' || !got) ? n.__en : n.__en.replace(t, got);
+      if(n.nodeValue!==v) n.nodeValue=v;
+      n.__tr=n.nodeValue;
+    });
+    busy=false;
+  }
+  function ask(list){
+    var need=[];
+    list.forEach(function(n){ var t=(n.__en||'').trim(); if(t && dict[t]===undefined && need.indexOf(t)<0) need.push(t); });
+    if(!need.length || lang==='en'){ paint(list); return; }
+    var at=0, want=lang;
+    (function next(){
+      if(at>=need.length || want!==lang){ saveDict(); paint(list); return; }
+      var slice=need.slice(at, at+CHUNK); at+=CHUNK;
+      fetch('/i18n/translate',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({lang:want, strings:slice})})
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){
+          if(d && d.out && want===lang){ for(var k in d.out) dict[k]=d.out[k]; paint(list); }
+          next();
+        })
+        .catch(function(){ next(); });     /* silent: the screen stays English */
+    })();
+  }
+  function setLang(l){
+    lang=l; store(KEY,l); document.documentElement.lang=l; pill();
+    var list=nodes(document.body);
+    if(l==='en'){ paint(list); return; }
+    loadDict(l); paint(list); ask(list);
+  }
+  function pill(){
+    var p=document.getElementById('ts-lang');
+    if(!p){
+      p=document.createElement('div'); p.id='ts-lang'; p.setAttribute('data-notranslate','1');
+      document.body.appendChild(p);
+      var st=document.createElement('style');
+      st.textContent='#ts-lang{position:fixed;left:12px;bottom:12px;z-index:9998;font:600 12px system-ui,sans-serif}'
+       +'#ts-lang .pill{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;cursor:pointer;'
+       +'background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.28);box-shadow:0 6px 18px rgba(0,0,0,.35)}'
+       +'#ts-lang .menu{position:absolute;bottom:42px;left:0;background:#0f172a;border:1px solid rgba(255,255,255,.22);'
+       +'border-radius:12px;padding:6px;min-width:168px;box-shadow:0 10px 28px rgba(0,0,0,.45)}'
+       +'#ts-lang .menu b{display:block;padding:8px 10px;border-radius:8px;color:#e2e8f0;font-weight:600;cursor:pointer}'
+       +'#ts-lang .menu b.on{background:#f2b035;color:#0f172a}'
+       +'#ts-lang .menu i{display:block;padding:6px 10px 4px;color:#94a3b8;font-style:normal;font-weight:400;font-size:11px}';
+      document.head.appendChild(st);
+    }
+    var cur=LANGS.filter(function(x){ return x[0]===lang; })[0]||LANGS[0];
+    p.innerHTML='<div class="pill" id="ts-langb"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" '
+     +'stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20'
+     +'M12 2a15 15 0 0 0 0 20"/></svg>'+cur[1]+'</div>';
+    document.getElementById('ts-langb').onclick=function(e){
+      e.stopPropagation();
+      if(document.getElementById('ts-langm')){ pill(); return; }
+      p.insertAdjacentHTML('afterbegin','<div class="menu" id="ts-langm">'+LANGS.map(function(x){
+        return '<b data-l="'+x[0]+'" class="'+(x[0]===lang?'on':'')+'">'+x[1]+'</b>'; }).join('')
+       +'<i>Machine translation. The terms stay in English.</i></div>');
+      var bs=p.querySelectorAll('[data-l]');
+      for(var i=0;i<bs.length;i++) bs[i].onclick=function(ev){ ev.stopPropagation(); setLang(this.getAttribute('data-l')); };
+    };
+  }
+  function start(){
+    pill();
+    var saved=read(KEY);
+    if(saved && saved!=='en' && LANGS.some(function(x){ return x[0]===saved; })) setLang(saved);
+    document.addEventListener('click', function(){ if(document.getElementById('ts-langm')) pill(); });
+    var tmr=null;
+    new MutationObserver(function(){
+      if(busy || lang==='en') return;
+      clearTimeout(tmr);
+      tmr=setTimeout(function(){ var l=nodes(document.body); paint(l); ask(l); }, 250);   /* the feed keeps loading */
+    }).observe(document.body, {childList:true, subtree:true});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
