@@ -25294,5 +25294,170 @@ def rg_spend_gauge_1():
                           "unreadable gauge reports NOT MEASURED, never zero")]
 
 
+def _cl_file(*parts):
+    """Read a file from the sibling CityLauncher repo, or None when it is not mounted."""
+    try:
+        with open(os.path.join(REPO, "..", "CityLauncher", *parts), encoding="utf-8",
+                  errors="replace") as fh:
+            return fh.read()
+    except Exception:
+        return None
+
+
+@entry("RG-0418", "LETTER-CLICK-1: the letter carrying almost every address left on the cold "
+                  "list leads with the one thing that separates us from every platform that has "
+                  "ever mailed a licensed guide -- we take no commission -- and asks him to LOOK, "
+                  "not to commit",
+       LOCKED, fixed_on="2026-09-20",
+       scope="CityLauncher/emailer/emailer.py subject_for()['adventures_experiences:register'] and "
+             "CityLauncher/emailer/templates/adventures_outfitter_outreach.html. MEASURED, not "
+             "supposed: 2,499 letters produced roughly 330 real human opens, 8 clicks (2.4%), 1 "
+             "finished advert and 0 publications, and the open->click step is the one big leak in "
+             "the whole funnel (the app is NOT the bottleneck -- of the 8 who clicked, 1 built an "
+             "advert scoring 94). This letter is the one that matters now because 428 of the 466 "
+             "addresses still sendable anywhere in the world are Maine Professional Guides "
+             "Association members, and register-sourced adventures rows take THIS template via "
+             "REGISTER-LETTER-1, not adventures_experiences_outreach.html. FOUR CHANGES, each "
+             "aimed at a named defect. (a) The subject was 'A free listing for your outfit in "
+             "<city> - TrustSquare': the exact phrase every lead-gen directory sends a guide, "
+             "asking for a commitment in six words, and spending two of them on a brand that "
+             "carries no recognition to earn the space. It now says 'No commission on your trips "
+             "- a free listing in <city>', because a licensed guide is pitched constantly by "
+             "platforms that all take a cut and that is the only claim in the letter he cannot "
+             "get elsewhere. (b) The second paragraph opened 'a global marketplace that opened on "
+             "1 September' -- telling a stranger the marketplace is three weeks old BEFORE giving "
+             "him any reason to care. The newness is not hidden (it is now its own paragraph, said "
+             "plainly, and it is what makes 'free and stays free' credible) but it no longer leads. "
+             "(c) The three benefit panels were ordered cost / anonymity / commission; commission "
+             "now leads them, matching the subject. (d) The ask was 'List your outfit - free' with "
+             "a competing 'have a look around first' link to a marketplace that is nearly empty. "
+             "It is now ONE button, 'See what your listing would look like', over the sentence "
+             "that makes the click cheap and is literally true of the flow: nothing is published "
+             "and no account is created until he says so (the account is minted at the terms "
+             "acceptance, not at the click). NOT DONE HERE AND DELIBERATELY: no A/B split. "
+             "email_variants exists, but 428 letters at a 2.4% base rate cannot separate two "
+             "subject lines from noise, and a split that cannot be read is theatre. The read is "
+             "by wave date instead -- clicks arrive tagged src=<city>-<category>-<yyyymmdd>.",
+       ref="ONBOARDING_GOAL.md s5 ('change the email' is named authority) and s1. Proven before "
+           "ship: emailer.py parses, test_localize.py GREEN (14 templates x 4 countries), and the "
+           "letter was rendered for a real Maine register row through localize_html(country='US') "
+           "-- 7,440 bytes, well-formed, no unfilled placeholder beyond the per-recipient ones.")
+def rg_letter_click_1():
+    out = []
+    em = _cl_file("emailer", "emailer.py")
+    tpl = _cl_file("emailer", "templates", "adventures_outfitter_outreach.html")
+    if em is None or tpl is None:
+        return [(INFO, "NOT EVALUATED - the CityLauncher repo is not mounted beside this one")]
+    # (a) the subject
+    if "'adventures_experiences:register': f'No commission on your trips" not in em:
+        out.append((FAIL, "the register-letter subject no longer leads with the no-commission "
+                          "claim -- the one thing in the letter a guide cannot get from the "
+                          "platforms that already mail him"))
+    if "A free listing for your outfit in {city}" in em:
+        out.append((FAIL, "the old directory-shaped subject line is back in subject_for()"))
+    # (b)/(c) the body
+    if "We take no commission on\n    your trips" not in tpl and "no commission on" not in tpl.lower():
+        out.append((FAIL, "the opening paragraph no longer states that we take no commission"))
+    if "a global marketplace that opened on 1 September" in tpl:
+        out.append((FAIL, "the letter leads on being three weeks old again, before giving the "
+                          "reader a reason to care"))
+    if "I should say plainly that we are new" not in tpl:
+        out.append((FAIL, "the plain statement that we are new has been dropped -- the honesty is "
+                          "load-bearing here, it is what makes 'free and stays free' credible"))
+    i_comm, i_cost = tpl.find("No booking commission, ever"), tpl.find("It costs you nothing")
+    if i_comm < 0 or i_cost < 0:
+        out.append((FAIL, "a benefit panel is missing from the letter"))
+    elif i_comm > i_cost:
+        out.append((FAIL, "the benefit panels no longer lead with commission, so the body "
+                          "contradicts the subject line the reader opened on"))
+    # (d) one ask, and the sentence that makes it cheap
+    if "See what your listing would look like" not in tpl:
+        out.append((FAIL, "the call to action is no longer an invitation to LOOK"))
+    if "no\n    account is created until you say so" not in tpl and \
+       "account is created until you say so" not in tpl:
+        out.append((FAIL, "the letter no longer says that nothing is published and no account is "
+                          "created until the reader says so -- that sentence is what makes the "
+                          "click cheap, and it is true of the flow"))
+    if '<div class="cta-browse"' in tpl:
+        out.append((FAIL, "the competing 'have a look around first' link is back, sending a cold "
+                          "reader to a marketplace that is nearly empty instead of to his own "
+                          "draft advert"))
+    # THE DEPLOY HALF, and it is the half that decides whether any of the above reaches a reader.
+    # deploy_citylauncher.bat names every template FILE BY HAND, and that list has silently gone
+    # stale before: WAVE-SERVER-1 (18 Sep 2026) found the server's wave kit 15 days old with FIVE
+    # templates missing entirely. A letter rewritten in the repo and absent from that list is worse
+    # than one never rewritten -- the deploy prints SHIPPED and the wave sends the old copy. So the
+    # property asserted is the RELATIONSHIP, not this one filename: every template emailer.py can
+    # SELECT must be on the list the deploy ships.
+    bat = _cl_file("deploy_citylauncher.bat")
+    if bat is None:
+        out.append((INFO, "deploy_citylauncher.bat not readable from here - deploy half unasserted"))
+    else:
+        import re as _re
+        shipped = {m.lower() for m in _re.findall(r"templates\\([\w.\-]+)", bat)}
+        sel = {m.lower() for m in _re.findall(r"TMPL_DIR\s*/\s*'([^']+)'", em)}
+        if not shipped or not sel:
+            out.append((INFO, "could not read both lists - deploy half unasserted rather than "
+                              "guessed (a checker that cannot see must say so)"))
+        else:
+            missing = sorted(sel - shipped)
+            if missing:
+                out.append((FAIL, "emailer.py can send %d letter(s) that deploy_citylauncher.bat "
+                                  "does not ship, so the server keeps sending the old copy while "
+                                  "the deploy reports success: %s" % (len(missing), ", ".join(missing))))
+    return out or [(INFO, "the register letter leads on no-commission, is honest about being new, "
+                          "makes one cheap ask -- and every letter the sender can pick is on the "
+                          "deploy list")]
+
+
+@entry("RG-0419", "QDOOR-ZA-ONLY-1: the Quick door is a South African product, and 92% of the "
+                  "addresses left on the cold list are in Maine -- the low-friction lane and the "
+                  "remaining list do not overlap at all",
+       OPEN,
+       scope="MarketSquare/genie/q_index.html (served at trustsquare.co/q/<cat>) and "
+             "CityLauncher/emailer/localize.py INTL-COPY-1. PROBED 20 Sep 2026, not inferred: "
+             "the live door was fetched and its question set read -- every price chip in it is in "
+             "rands (adventures: 'What do you charge a day?' R250 / R300 / R350 / R400 / R450), "
+             "and the suburb tiles are Menlyn, Midrand, Mamelodi, Sandton. localize_html() was "
+             "then run over adventures_experiences_outreach.html for both countries: the ZA render "
+             "carries the strip and the /q/adventures link, the US render carries NEITHER. So the "
+             "ZA-ONLY fence is doing exactly what it should and MUST NOT be removed -- showing a "
+             "Maine guide a Pretoria suburb and a rand day rate is worse than showing him nothing. "
+             "THE POINT OF THIS ENTRY IS THE CONSEQUENCE, WHICH NOBODY HAD WRITTEN DOWN: run 15 "
+             "instrumented /q/<cat> as 'the door the letters actually point at' and 'the lane that "
+             "carries every cold arrival', and that sentence is true only of South African "
+             "recipients. 428 of the 466 sendable addresses left are US. Those readers get "
+             "{{magic_link}} into the full app and have no five-tap path at all, so the q_* "
+             "beacons will stay near zero however well the letters perform, and reading that as "
+             "'the door is not working' would be the third instance of measuring one lane and "
+             "concluding about another (SELLFLOW-RETURN-1, RG-0405, this). THE FIX IS NOT TO POINT "
+             "US LETTERS AT THE DOOR. It is to give the door per-country question sets -- the "
+             "magic link already carries ?country=, so the door can read it -- and price bands are "
+             "per-market judgement, not a currency-symbol swap: R250 a day and $250 a day are not "
+             "the same offer. Until that exists, this is a real and measured gap, not a defect to "
+             "paper over.",
+       ref="INTL-COPY-1, RG-0413 DOOR-FUNNEL-1, RG-0414 DOOR-RETURN-1, QUICK_LISTING_SPEC.md D2.")
+def rg_qdoor_za_only_1():
+    out = []
+    door = repo_file(os.path.join("genie", "q_index.html"))
+    loc = _cl_file("emailer", "localize.py")
+    if door is None or loc is None:
+        return [(INFO, "NOT EVALUATED - genie/q_index.html or CityLauncher/emailer/localize.py "
+                       "not readable from here")]
+    if "_ZA_ONLY" not in loc or "ZA-ONLY" not in loc:
+        out.append((FAIL, "the INTL-COPY-1 fence is gone from localize.py -- the rand price chips "
+                          "and Menlyn suburb tiles would now travel to every country"))
+    rand_chips = ('"R250"' in door) or ("'R250'" in door)
+    if not rand_chips:
+        out.append((INFO, "the door no longer carries the rand day-rate chips this entry was "
+                          "opened on -- re-probe it: if it has become country-aware, this entry "
+                          "is ready to close"))
+    else:
+        out.append((FAIL, "the door still prices only in rands (R250/R300/R350 a day) and offers "
+                          "only Gauteng suburb tiles, so the five-tap lane cannot serve the US "
+                          "recipients who are 92% of the addresses left on the cold list"))
+    return out or [(INFO, "fence intact")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

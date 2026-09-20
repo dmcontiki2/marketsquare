@@ -1,3 +1,170 @@
+## 2026-09-20 — QUICK-SVC-DOOR-1: the Services door (RUL-159) + role registry + role pictures + language preview
+
+David, 19-20 Sep, role-slate sitting 1 and the build that followed it.
+
+**The slate.** `ROLE_SLATE_REVIEW.md` fully decided: 99 rows, 61 IN / 19 LATER / 19 OUT, no HOLD. Rulings made
+the same session: RUL-153 (police clearance gates Nanny / Caregiver / Crèche assistant), RUL-154 (the
+LATER / HOLD / ROUTED register), RUL-155 + RUL-156 (licence gate for every licence to practise), RUL-157 (one
+picture of the WORK per role, photo 1 on every Services listing), RUL-159 (the door shape), RUL-160 (translation:
+Claude drafts, an OpenAI Language reviewer proofreads, first-month user feedback corrects).
+
+**The registry.** `roles/role_registry.json` is GENERATED from the slate by `scripts/build_role_registry.py`
+(never hand-edited): questions, signals, gates, employer_kinds, aliases, finish_questions, enrol_link, role picture.
+Board + contact sheet: `roles/ROLE_REGISTRY.html` (`scripts/role_registry_board.py`).
+
+**The pictures.** 61 role pictures via the Higgsfield API on David's prepaid balance (auto top-up OFF);
+model chosen by comparison (Soul 2 / Recraft / Ideogram / Grok Imagine 2.0 on welder, cleaner, nanny; trials kept in
+`roles/pictures/_trial/`). Every one checked by eye (no people, no faces, no text) and approved by David.
+`scripts/gen_role_pictures.py` (dry run by default). Door-size copies `assets/quick_ph/role_*.jpg` ride the
+media lane to /static/quick.
+
+**The door (quick.html).** Seven categories: Housekeeping folds into Services (the homehelp entry stays as the
+hidden Casuals half, Services/Casuals on the wire). Services = group -> role -> class taps, five taps to a draft
+for every role; the old "what" tap is gone; role-specific questions on the finish screen; `?role=<key>` enrolment
+link lands on tap 3; photo 1 is the role picture; the searcher's shelf ranks soonest-available first. One engine:
+a generated data block (`scripts/sync_quick_roles.py`) plus three one-line hooks — no category forked.
+
+**Language — PREVIEW, NOT A RULING (David, 20 Sep: "only after I have had someone read it first").** The Quick
+door follows the phone's language (en / zu / st / af / xh); a globe pill on every screen switches both ways;
+"Languages I work in" chips on the finish screen. Words: `roles/quick_i18n.json` (143 strings x 4, Claude's first
+draft, being read by David's people).
+
+Verified in a rendered phone-width browser: every flow walked, 0 console errors, the other six categories unchanged.
+Walkthroughs in the Visuals gallery: Services Door Walkthrough, Quick Door Languages.
+
+# 2026-09-20 — onboarding goal, run 16 (Opus 5)
+
+**The number is 0.** Both probes agree. 2,499 emailed (unchanged — David's pause of 18/19 Sep held
+exactly as asked, confirmed off `prospects.emailed_at`; there was no sending fault to find).
+42 registered, was 40.
+
+**The finding: the cold list is nearly empty, and that is why the sends decayed.** Probed by
+running the wave's own composer over all 102 cities rather than reading a note. Of 6,748 prospects,
+2,499 are already emailed and almost all the rest cannot be written to — wrong geo, invalid,
+bounced, opted out, an organisation rather than a person, an info@ desk, a sibling mailbox at a
+firm already contacted, or in a source our own send history measures above the 5% bounce stop-loss
+(openstreetmap 10.6%, google_maps 7.0%, club:agn 12.5%, usatf-new-england 40%). **466 addresses are
+sendable anywhere in the world; tomorrow night's wave composes 42.** All 95 armed cities gate
+GREEN and the guards hold 8 rows in total — nothing is stuck. The batch was NOT raised to empty the
+list faster: RAMP-1 and the 250/day cap protect the sending domain (RUL-111) and the trade buys
+about one extra click.
+
+**RG-0419 QDOOR-ZA-ONLY-1 (open).** The Quick door is a South African product — probed live, every
+price chip is in rands and the suburb tiles are Gauteng; `localize_html()` proves the US render
+carries no door strip and no `/q/` link. The ZA-ONLY fence (INTL-COPY-1) is correct and must not be
+removed. The consequence, which nobody had written down: 428 of the 466 addresses left are US, so
+the five-tap lane serves none of them and the `q_*` beacons will stay near zero however well the
+letters perform. The fix is per-country question sets, not pointing US letters at a rand-priced door.
+
+**RG-0418 LETTER-CLICK-1 (fixed).** Rewrote the register-outreach letter carrying 428 of the 466,
+and its subject line, against the one measurable leak (8 clicks from ~330 human opens, 2.4%).
+Subject now leads with the only claim a licensed guide cannot get from the platforms already
+mailing him — we take no commission. The body no longer opens by telling a stranger we are three
+weeks old before giving him a reason to care; it says so plainly one paragraph later, where it
+makes "free and stays free" credible. One call to action instead of three, and it invites him to
+look rather than to commit: nothing is published and no account is created until he says so, which
+is true of the flow. No A/B split — 428 letters at a 2.4% base rate cannot separate two subject
+lines from noise, and a split that cannot be read is theatre.
+
+**rulings_check RUL-104 corrected from a constant to a property.** The assertion pinned the literal
+"a global marketplace that opened"; the rule is that we call ourselves a global marketplace and
+name no country of origin. The rewrite separated those two sentences and the literal failed a
+letter that obeys the ruling. The copy was genuinely wrong too — it had dropped "global" — so both
+were fixed, and the loosened assertion was proven still to catch the original fault in both
+directions before it was accepted. Same class as the RUL-133 correction of 19 Sep, in the second
+place run 15 said to look. The must-not lists carrying RUL-110's sharpening are untouched.
+
+Ledger green before and after (shards + `--combine=8`, 0 regressions). `rulings_check`: 137, 0 FAIL.
+The board caught two of this run's own errors on the way — a CSS class name matched where a div was
+meant, and the ops email-template mirror left stale against the sending copy. Both fixed.
+
+CityLauncher deploy requested for the letter and subject; the next run must PROBE the server's copy
+before the 22:10 UTC wave rather than trusting the success line.
+
+Cost model impact: none.
+
+## 2026-09-19 — SIM-SVC-1: Contagion Model v1.8, the Services lane behind a toggle (RUL-150/151/152)
+
+David: *"update our simulation program to include the new services we plan to implement, considering the new
+bigger user base in South Africa at least ... with a toggle to show it."* Done in
+`docs/TrustSquare_Contagion_Model_v0.2.html` (deployed as `/orchestrator/simulation.html`).
+
+**What the lane models.** Its own SA-only compartments, so it never borrows the ordinary seller's numbers:
+a bigger addressable base (`svcDen`, casual + technical workers per 1,000 people, grounded in Stats SA QLFS
+Q2 2026: 16.7m employed, 8.5m unemployed, 33.6%); employer doors in the approved order, Pretoria first
+(`svcW`, `empPace`, `empYes`, lognormal `empSize` rosters, `empReach`); enrolment NEVER creates a listing,
+she publishes by her own hand at the Quick door (`svcAct`); gated roles wait for clearance or a licence
+(`svcGated`, 14 IN roles, RUL-153/155/156); households she already works for confirm and join (`svcAud`,
+decisions 3-4); co-workers via wa.me with no number (`svcRef`); the model's own organic spread and a
+services twin of b2s (`svcB2s`); service liquidity by the taxi drop (`svcTgt`); languages lift the lane
+from English-only to ~90% at `svcLangW` (decision 8). Money at canon prices with ZA fees.
+
+**The toggle.** Teal "Services lane" button in the top bar. ON adds a with/without strip, a teal
+dotted "without services" curve, a fifth tier (Strain 5, teal) on the map and tier chart, a third
+ensemble, four presets and a lever group. **OFF is v1.7 draw for draw** - the lane draws its parameters
+and its dynamics from its own random streams. Verified in a rendered headless browser: mid run and
+110-seed ensemble identical to v1.7 at weeks 2/8/26/52/104/156, no page errors.
+
+**What it says (mid run, defaults).** SA sellers at week 156: 32,181 with the lane vs 10,994 without
+(+193%); 21,097 service workers listed, 35 employers enrolled from 152 approached, ~100k of the ~160k
+SA service market still unreached. Almost nothing before week 52: at 4 conversations a month the
+employer door seeds the lane, and it only ignites once SA liquidity builds. Every new number is a
+guess until the Quick door's beacons measure `svcAct`.
+
+Dashboard: the BEAT THE MODEL card now pins "v1.8 (pins from v1.7, unchanged)" - RG-0287's
+version-agreement check stays green.
+
+## 2026-09-19 — SIM-PHONE-1: the simulation works on a phone (model v1.8, display only)
+
+David, at the chess club on his phone: the map was tiny and, when run, coloured the TOP edge of the map
+instead of the earth. **Cause, reproduced at Pixel-7 size:** the fixed bars (stats, money, comparison,
+diagnosis, charts) took the whole screen height, the map box got 0 px tall, and with x and y scaled
+independently every city landed on y = 0. **Fixed:** the map is never painted into a box with no size;
+the projection now keeps the earth's proportions and has World / Africa / SA views, +/- zoom, drag to
+pan, wheel zoom, and tap-a-city for its card. **Phone layout:** four screens behind a bottom bar - Map,
+Graphs (three charts stacked, full width), Data (every number as a two-column grid) and Controls (the
+full panel) - with the clock and Run/Pause/Step on top of every screen, so the run can be paused on any
+of them. Portrait opens on the Africa view; landscape shows the whole world. Model output unchanged
+(same seed: 58 / 91 / 150,917 / 168,093 sellers at weeks 2 / 8 / 52 / 156). Verified rendered at phone
+portrait, phone landscape and desktop, no page errors.
+
+## 2026-09-19 — maintenance-loop: empty queue, board green, nothing to fix
+
+Daily B2b maintenance session (Claude-by-hand, pre/post-launch contract: register rows in
+→ gate-passing commits out, nothing else).
+
+**Fault queue — nothing to act on.** `GET /admin/faults` PROBED live 19 Sep 05:39 UTC with
+the maintenance key through the armed review gate: `status=new` → `[]`, `status=open` → `[]`,
+`status=fix-shipped` → `[]`. Historical rows remain in `verified` (TS-0035 and earlier) and
+`closed` (TS-0034 and earlier). No fault was fixed this run because none was waiting; the
+shadow agent's run report `.maint_agent/run_20260919T053647Z.json` records `seen: 0, acted: 0`.
+
+**Shadow agent.** `MS_BEA_URL=https://trustsquare.co python3 scripts/maintenance_agent.py`
+ran FOREGROUND (BRAIN-DEPS-2) and completed in ~25 s. Kill switch OFF as always — arming is
+David's act alone, never a session's. It minted the review credential itself (GATE-COOKIE-1),
+so the origin gate did not block the lane. Email lane census: 24 total, 6 held in the last
+30 days (legal 1, other 5, spam 1, support 7) — counts only, not a fix lane (RG-0222).
+
+**Heartbeat PROBED, not assumed.** `GET /dashboard/maint` (with the ts_review cookie minted
+from `.secrets/review_code.txt`) returns `"run":"20260919T053646Z"` — this run's own stamp —
+so the dashboard's B2b readiness row is reading today's session and not a stale one.
+
+**Brain lane reported honestly as NOT_EVALUATED.** The agent printed
+`brain NOT_EVALUATED:remote  vantage:local-only` and `arming NOT MEASURED (off-box vantage)`.
+That is the RG-0187 contract behaving correctly: an instrument that cannot see the box says
+so instead of painting a colour. It is NOT a red and must not be reported as one.
+
+**Escalation brief.** `scripts/escalation_brief.py` → "no escalations in the last 24h — no
+brief written". Nothing for David to read.
+
+**Regression ledger — green either side of the run.** Run in shards (LEDGER-SHARD-1) before
+the fault work: 404 entries, 0 regressed, 23 known defects OPEN. Re-run after: same verdict,
+exit 0. No LOCKED entry rotted, no OPEN entry printed READY TO LOCK.
+
+**No new ledger entry this session, and that is correct:** the rule is one entry per FIX, and
+no fix was made. Nothing was shipped, nothing deployed, nothing pushed — NIGHTLY-SHIP-1 (the
+05:45 TSL on David's machine) carries committed work through the gates.
+
 ## 2026-09-19 — FADE-90-1: one 90-day fade window for every seller (RUL-158, RG-0417, EULA v1.18)
 
 **What happened.** The 18 Sep 20:41 SAST release restart fired the lifecycle sweep two minutes after boot. It

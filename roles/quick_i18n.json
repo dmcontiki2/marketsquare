@@ -1,0 +1,922 @@
+{
+ "_about": "Quick door translations (preview, NOT a ruling). Claude's first draft 20 Sep 2026; to be read by David's reviewers and the Language reviewer (RUL-160). Keys are the exact English on screen.",
+ "langs": [
+  "af",
+  "zu",
+  "st",
+  "xh"
+ ],
+ "w": {
+  "Property": [
+   "Eiendom",
+   "Izindlu nezindawo",
+   "Matlo le dibaka",
+   "Izindlu nemihlaba"
+  ],
+  "Cars": [
+   "Motors",
+   "Izimoto",
+   "Dikoloi",
+   "Iimoto"
+  ],
+  "Tutors": [
+   "Onderrig",
+   "Abafundisi",
+   "Barupeli",
+   "Abafundisi"
+  ],
+  "Services": [
+   "Dienste",
+   "Izinsizakalo",
+   "Ditshebeletso",
+   "Iinkonzo"
+  ],
+  "Collectors": [
+   "Versamelaars",
+   "Abaqoqi",
+   "Babokelli",
+   "Abaqokeleli"
+  ],
+  "Adventures": [
+   "Avonture",
+   "Ukuvakasha",
+   "Maeto",
+   "Uhambo"
+  ],
+  "Local Market": [
+   "Plaaslike mark",
+   "Imakethe yendawo",
+   "Mmaraka wa lehae",
+   "Imarike yasekuhlaleni"
+  ],
+  "Find a place": [
+   "Soek 'n plek",
+   "Thola indawo",
+   "Fumana sebaka",
+   "Fumana indawo"
+  ],
+  "List a place": [
+   "Adverteer 'n plek",
+   "Faka indawo",
+   "Kenya sebaka",
+   "Faka indawo"
+  ],
+  "Find a car": [
+   "Soek 'n motor",
+   "Thola imoto",
+   "Fumana koloi",
+   "Fumana imoto"
+  ],
+  "Sell a car": [
+   "Verkoop 'n motor",
+   "Thengisa imoto",
+   "Rekisa koloi",
+   "Thengisa imoto"
+  ],
+  "Find a tutor": [
+   "Soek 'n tutor",
+   "Thola umfundisi",
+   "Fumana morupeli",
+   "Fumana umfundisi"
+  ],
+  "Offer tutoring": [
+   "Bied onderrig aan",
+   "Nikeza ukufundisa",
+   "Fana ka thuto",
+   "Nikezela ngokufundisa"
+  ],
+  "Find a pro": [
+   "Soek 'n vakman",
+   "Thola uchwepheshe",
+   "Fumana setsebi",
+   "Fumana ingcali"
+  ],
+  "Offer a service": [
+   "Bied 'n diens aan",
+   "Nikeza insizakalo",
+   "Fana ka tshebeletso",
+   "Nikezela ngenkonzo"
+  ],
+  "Find a piece": [
+   "Soek 'n stuk",
+   "Thola into",
+   "Fumana ntho",
+   "Fumana into"
+  ],
+  "Sell a piece": [
+   "Verkoop 'n stuk",
+   "Thengisa into",
+   "Rekisa ntho",
+   "Thengisa into"
+  ],
+  "Find a trip": [
+   "Soek 'n uitstappie",
+   "Thola uhambo",
+   "Fumana leeto",
+   "Fumana uhambo"
+  ],
+  "List a trip": [
+   "Adverteer 'n uitstappie",
+   "Faka uhambo",
+   "Kenya leeto",
+   "Faka uhambo"
+  ],
+  "Find something": [
+   "Soek iets",
+   "Thola okuthile",
+   "Fumana ho hong",
+   "Fumana into"
+  ],
+  "Sell something": [
+   "Verkoop iets",
+   "Thengisa okuthile",
+   "Rekisa ho hong",
+   "Thengisa into"
+  ],
+  "What kind of work?": [
+   "Watter soort werk?",
+   "Uhlobo luni lomsebenzi?",
+   "Ke mosebetsi wa mofuta ofe?",
+   "Luhlobo luni lomsebenzi?"
+  ],
+  "Which one are you?": [
+   "Watter een is jy?",
+   "Ungubani kulaba?",
+   "O mang ho bana?",
+   "Ungubani kwaba?"
+  ],
+  "What do you need?": [
+   "Wat het jy nodig?",
+   "Udingani?",
+   "O hloka eng?",
+   "Ufuna ntoni?"
+  ],
+  "Who do you need?": [
+   "Wie het jy nodig?",
+   "Udinga bani?",
+   "O hloka mang?",
+   "Ufuna bani?"
+  ],
+  "Where can you work?": [
+   "Waar kan jy werk?",
+   "Ungasebenza kuphi?",
+   "O ka sebetsa kae?",
+   "Ungasebenza phi?"
+  ],
+  "Where do you work?": [
+   "Waar werk jy?",
+   "Usebenza kuphi?",
+   "O sebetsa kae?",
+   "Usebenza phi?"
+  ],
+  "Which area?": [
+   "Watter area?",
+   "Yiphi indawo?",
+   "Sebaka sefe?",
+   "Yeyiphi indawo?"
+  ],
+  "Which days are you open?": [
+   "Watter dae is jy beskikbaar?",
+   "Yiziphi izinsuku otholakala ngazo?",
+   "O fumaneha ka matsatsi afe?",
+   "Zeziphi iintsuku ofumaneka ngazo?"
+  ],
+  "What do you charge a day?": [
+   "Wat vra jy per dag?",
+   "Ukhokhisa malini ngosuku?",
+   "O lefisa bokae ka letsatsi?",
+   "Uhlawulisa malini ngosuku?"
+  ],
+  "What do you hold?": [
+   "Watter kwalifikasie het jy?",
+   "Unaziphi iziqu?",
+   "O na le lengolo lefe?",
+   "Unaziphi iziqinisekiso?"
+  ],
+  "How do you charge?": [
+   "Hoe hef jy?",
+   "Ukhokhisa kanjani?",
+   "O lefisa jwang?",
+   "Uhlawulisa njani?"
+  ],
+  "How soon?": [
+   "Hoe gou?",
+   "Nini?",
+   "Kapele hakae?",
+   "Nini?"
+  ],
+  "Another option": [
+   "'n Ander opsie",
+   "Okunye",
+   "Kgetho e nngwe",
+   "Olunye ukhetho"
+  ],
+  "Every day": [
+   "Elke dag",
+   "Nsuku zonke",
+   "Letsatsi le leng le le leng",
+   "Yonke imihla"
+  ],
+  "Mon": [
+   "Ma",
+   "Mso",
+   "Mma",
+   "Mvu"
+  ],
+  "Tue": [
+   "Di",
+   "Bil",
+   "Bed",
+   "Bin"
+  ],
+  "Wed": [
+   "Wo",
+   "Tha",
+   "Rar",
+   "Tha"
+  ],
+  "Thu": [
+   "Do",
+   "Sin",
+   "Ne",
+   "Sin"
+  ],
+  "Fri": [
+   "Vr",
+   "Hla",
+   "Hla",
+   "Hla"
+  ],
+  "Sat": [
+   "Sa",
+   "Mgq",
+   "Moq",
+   "Mgq"
+  ],
+  "Sun": [
+   "So",
+   "Son",
+   "Son",
+   "Caw"
+  ],
+  "Today": [
+   "Vandag",
+   "Namuhla",
+   "Kajeno",
+   "Namhlanje"
+  ],
+  "This week": [
+   "Hierdie week",
+   "Kuleli sonto",
+   "Bekeng ena",
+   "Kule veki"
+  ],
+  "This month": [
+   "Hierdie maand",
+   "Kulenyanga",
+   "Kgweding ena",
+   "Kule nyanga"
+  ],
+  "No rush": [
+   "Geen haas nie",
+   "Akukho ukuphuthuma",
+   "Ha ho potlako",
+   "Akukho ngxamiso"
+  ],
+  "Per call-out": [
+   "Per uitroep",
+   "Ngokubizwa ngakunye",
+   "Ka pitso ka nngwe",
+   "Ngobizo ngalunye"
+  ],
+  "Per hour": [
+   "Per uur",
+   "Ngehora",
+   "Ka hora",
+   "Ngeyure"
+  ],
+  "Per job": [
+   "Per werk",
+   "Ngomsebenzi",
+   "Ka mosebetsi",
+   "Ngomsebenzi"
+  ],
+  "Quote first": [
+   "Kwotasie eers",
+   "Ikhotheshini kuqala",
+   "Theko pele",
+   "Ikowuteyishini kuqala"
+  ],
+  "Trade-tested": [
+   "Vakgetoets",
+   "Uhlolwe ekhonweni",
+   "O lekotswe mosebetsing",
+   "Uvavanyiwe kubugcisa"
+  ],
+  "Certificate": [
+   "Sertifikaat",
+   "Isitifiketi",
+   "Setifikeiti",
+   "Isatifikethi"
+  ],
+  "Experience only": [
+   "Net ondervinding",
+   "Ulwazi lomsebenzi kuphela",
+   "Boiphihlelo feela",
+   "Amava kuphela"
+  ],
+  "Ask me": [
+   "Vra my",
+   "Ngibuze",
+   "Mpotse",
+   "Ndibuze"
+  ],
+  "Home & care": [
+   "Huis & versorging",
+   "Ekhaya nokunakekela",
+   "Lapeng le tlhokomelo",
+   "Ekhaya nokhathalelo"
+  ],
+  "Food & hospitality": [
+   "Kos & gasvryheid",
+   "Ukudla nokwamukela izivakashi",
+   "Dijo le kamohelo ya baeti",
+   "Ukutya nokwamkela iindwendwe"
+  ],
+  "Shops & forecourt": [
+   "Winkels & vulstasies",
+   "Izitolo neziteshi zikaphethiloli",
+   "Mabenkele le diteishene tsa peterole",
+   "Iivenkile nezikhululo zepetroli"
+  ],
+  "Warehouse & delivery": [
+   "Pakhuis & aflewering",
+   "Indawo yokugcina nokuhambisa",
+   "Polokelo le phepelo",
+   "Indawo yokugcina nokuhambisa"
+  ],
+  "General & site work": [
+   "Algemene & terreinwerk",
+   "Umsebenzi ojwayelekile nowasemasayithi",
+   "Mosebetsi o akaretsang le wa saete",
+   "Umsebenzi oqhelekileyo nowasesizeni"
+  ],
+  "Beauty, sewing & more": [
+   "Skoonheid, naaldwerk & meer",
+   "Ubuhle, ukuthunga nokunye",
+   "Botle, ho roka le tse ding",
+   "Ubuhle, ukuthunga nokunye"
+  ],
+  "Security": [
+   "Sekuriteit",
+   "Ezokuphepha",
+   "Tshireletso",
+   "Ukhuseleko"
+  ],
+  "Heavy industry & plant": [
+   "Swaar nywerheid & masjinerie",
+   "Izimboni ezinkulu nemishini",
+   "Diindasteri tse boima le metjhini",
+   "Imizi-mveliso emikhulu noomatshini"
+  ],
+  "Driving & vehicles": [
+   "Bestuur & voertuie",
+   "Ukushayela nezimoto",
+   "Ho kganna le dikoloi",
+   "Ukuqhuba nezithuthi"
+  ],
+  "Building trades": [
+   "Bouambagte",
+   "Imisebenzi yokwakha",
+   "Mesebetsi ya kaho",
+   "Imisebenzi yokwakha"
+  ],
+  "Installers & repairs": [
+   "Installeerders & herstelwerk",
+   "Abafaki nabalungisi",
+   "Bakenyi le balokisi",
+   "Abafakeli nabalungisi"
+  ],
+  "Which ages do you care for?": [
+   "Watter ouderdomme versorg jy?",
+   "Unakekela izingane zeminyaka emingaki?",
+   "O hlokomela bana ba dilemo dife?",
+   "Ukhathalela abantwana abaneminyaka emingaphi?"
+  ],
+  "Babies": [
+   "Babas",
+   "Izinsana",
+   "Masea",
+   "Iintsana"
+  ],
+  "Toddlers": [
+   "Kleuters",
+   "Abantwana abancane",
+   "Bana ba banyenyane",
+   "Abantwana abancinci"
+  ],
+  "School age": [
+   "Skoolgaande",
+   "Abasesikoleni",
+   "Ba sekolo",
+   "Abasesikolweni"
+  ],
+  "Teenagers": [
+   "Tieners",
+   "Intsha",
+   "Bacha",
+   "Ulutsha"
+  ],
+  "Who do you care for?": [
+   "Vir wie sorg jy?",
+   "Unakekela bani?",
+   "O hlokomela mang?",
+   "Ukhathalela bani?"
+  ],
+  "An older person": [
+   "'n Ouer persoon",
+   "Umuntu osekhulile",
+   "Motho ya hodileng",
+   "Umntu omdala"
+  ],
+  "A person with a disability": [
+   "'n Persoon met 'n gestremdheid",
+   "Umuntu okhubazekile",
+   "Motho ya nang le bokowa",
+   "Umntu okhubazekileyo"
+  ],
+  "Someone recovering at home": [
+   "Iemand wat tuis herstel",
+   "Umuntu olulama ekhaya",
+   "Motho ya folang hae",
+   "Umntu ochacha ekhaya"
+  ],
+  "Live-in or live-out?": [
+   "Inwoon of uitwoon?",
+   "Uhlala khona noma uyagoduka?",
+   "O dula teng kapa o a kgutla?",
+   "Uhlala apho okanye uyagoduka?"
+  ],
+  "Live-in": [
+   "Inwoon",
+   "Ngihlala khona",
+   "Ke dula teng",
+   "Ndihlala apho"
+  ],
+  "Live-out": [
+   "Uitwoon",
+   "Ngiyagoduka",
+   "Ke a kgutla",
+   "Ndiyagoduka"
+  ],
+  "Languages I work in": [
+   "Tale waarin ek werk",
+   "Izilimi engisebenza ngazo",
+   "Dipuo tseo ke sebetsang ka tsona",
+   "Iilwimi endisebenza ngazo"
+  ],
+  "Here is your advert": [
+   "Hier is jou advertensie",
+   "Nasi isikhangiso sakho",
+   "Papatso ya hao ke ena",
+   "Nantsi intengiso yakho"
+  ],
+  "Publish it": [
+   "Publiseer dit",
+   "Yishicilele",
+   "E phatlalatse",
+   "Yipapashe"
+  ],
+  "Your five": [
+   "Jou vyf",
+   "Abakho abahlanu",
+   "Ba hao ba bahlano",
+   "Abakho abahlanu"
+  ],
+  "Your three scores": [
+   "Jou drie tellings",
+   "Amaphuzu akho amathathu",
+   "Dintlha tsa hao tse tharo",
+   "Amanqaku akho amathathu"
+  ],
+  "Home cleaner": [
+   "Huisskoonmaker",
+   "Umhlanzi wasekhaya",
+   "Mohlwekisi wa lapeng",
+   "Umcoci wasekhaya"
+  ],
+  "Housekeeper": [
+   "Huishoudster",
+   "Umgcini wendlu",
+   "Mohlokomedi wa ntlo",
+   "Umgcini wendlu"
+  ],
+  "Nanny": [
+   "Kinderoppasser",
+   "Umzanyana",
+   "Mohlokomedi wa bana",
+   "Umgcini-bantwana"
+  ],
+  "Caregiver": [
+   "Versorger",
+   "Umnakekeli",
+   "Mohlokomedi",
+   "Umkhathaleli"
+  ],
+  "Cook": [
+   "Kok",
+   "Umpheki",
+   "Mophehi",
+   "Umpheki"
+  ],
+  "Chef": [
+   "Sjef",
+   "Ushefu",
+   "Shefo",
+   "Umpheki oyingcali"
+  ],
+  "Gardener": [
+   "Tuinier",
+   "Umlimi wengadi",
+   "Molemi wa serapa",
+   "Umlimi wegadi"
+  ],
+  "Handyman": [
+   "Handwerksman",
+   "Umlungisi wezinto",
+   "Molokisi wa dintho",
+   "Umlungisi wezinto"
+  ],
+  "Crèche assistant": [
+   "Crèche-assistent",
+   "Umsizi wasenkulisa",
+   "Mothusi wa kereche ya bana",
+   "Umncedisi wasenkulisa"
+  ],
+  "Room attendant": [
+   "Kamerbediende",
+   "Umhlanzi wamakamelo",
+   "Mohlwekisi wa diphaposi",
+   "Umcoci wamagumbi"
+  ],
+  "Kitchen assistant": [
+   "Kombuisassistent",
+   "Umsizi wasekhishini",
+   "Mothusi wa kitjhene",
+   "Umncedisi wasekhitshini"
+  ],
+  "Cashier": [
+   "Kassier",
+   "Umthathi wemali",
+   "Mokgethi wa tjhelete",
+   "Umamkeli-mali"
+  ],
+  "Waiter": [
+   "Kelner",
+   "Uweta",
+   "Moweitara",
+   "Uweyitala"
+  ],
+  "Bartender": [
+   "Kroegman",
+   "Umphakeli wotshwala",
+   "Mofepi wa dino",
+   "Umphakeli wotywala"
+  ],
+  "Event staff": [
+   "Funksiepersoneel",
+   "Abasebenzi bemicimbi",
+   "Basebetsi ba meketeng",
+   "Abasebenzi bemisitho"
+  ],
+  "Petrol attendant": [
+   "Petroljoggie",
+   "Umsebenzi wasegaraji",
+   "Mosebeletsi wa garaje",
+   "Umsebenzi wasegaraji"
+  ],
+  "Shelf packer": [
+   "Rakpakker",
+   "Umhleli wamashalofu",
+   "Mohlophisi wa dishelefo",
+   "Umlungiseleli weeshelufa"
+  ],
+  "Shop assistant": [
+   "Winkelassistent",
+   "Umsizi wasesitolo",
+   "Mothusi wa lebenkeleng",
+   "Umncedisi wevenkile"
+  ],
+  "Merchandiser": [
+   "Uitstaller",
+   "Umhleli wezimpahla",
+   "Mohlophisi wa thepa",
+   "Umlungiseleli weempahla"
+  ],
+  "Car guard": [
+   "Motorwag",
+   "Umqaphi wezimoto",
+   "Molebeli wa dikoloi",
+   "Umlindi weemoto"
+  ],
+  "Picker / packer": [
+   "Uitsoeker / pakker",
+   "Umkhethi nompakishi",
+   "Mokgethi le mopakiti",
+   "Umkhethi nompakishi"
+  ],
+  "Removals helper": [
+   "Verhuishelper",
+   "Umsizi wokuthutha",
+   "Mothusi wa ho fallisa",
+   "Umncedisi wokufudusa"
+  ],
+  "Delivery rider": [
+   "Afleweringsryer",
+   "Umhambisi ngesithuthuthu",
+   "Mopalami wa phepelo",
+   "Umhambisi ngesithuthuthu"
+  ],
+  "General worker": [
+   "Algemene werker",
+   "Isisebenzi esijwayelekile",
+   "Mosebetsi wa kakaretso",
+   "Umsebenzi jikelele"
+  ],
+  "Farm worker": [
+   "Plaaswerker",
+   "Isisebenzi sasepulazini",
+   "Mosebetsi wa polasing",
+   "Umsebenzi wasefama"
+  ],
+  "Builder's assistant": [
+   "Bouersassistent",
+   "Umsizi womakhi",
+   "Mothusi wa moahi",
+   "Umncedisi womakhi"
+  ],
+  "Painter": [
+   "Verwer",
+   "Umpendi",
+   "Mopenti",
+   "Umpeyinti"
+  ],
+  "Office cleaner": [
+   "Kantoorskoonmaker",
+   "Umhlanzi wamahhovisi",
+   "Mohlwekisi wa diofisi",
+   "Umcoci weeofisi"
+  ],
+  "Seamstress / tailor": [
+   "Naaldwerkster / kleremaker",
+   "Umthungi",
+   "Moroki",
+   "Umthungi"
+  ],
+  "Sewing machinist": [
+   "Naaimasjienwerker",
+   "Umthungi ngomshini",
+   "Moroki wa motjhini",
+   "Umthungi ngomatshini"
+  ],
+  "Hair braider": [
+   "Haarvlegter",
+   "Umaluki wezinwele",
+   "Moloho wa moriri",
+   "Umluki weenwele"
+  ],
+  "Hairdresser": [
+   "Haarkapper",
+   "Umlungisi wezinwele",
+   "Mokgabisi wa moriri",
+   "Umlungisi weenwele"
+  ],
+  "Nail technician": [
+   "Naelterapeut",
+   "Uchwepheshe wezinzipho",
+   "Setsebi sa manala",
+   "Ingcali yeenzipho"
+  ],
+  "Car washer": [
+   "Karwasser",
+   "Umgezi wezimoto",
+   "Mohlatswi wa dikoloi",
+   "Umhlambi weemoto"
+  ],
+  "Security guard": [
+   "Sekuriteitswag",
+   "Unogada",
+   "Molebeledi",
+   "Unogada"
+  ],
+  "Plant operator (TLB / excavator)": [
+   "Masjienoperateur (TLB / graaf)",
+   "Umshayeli we-TLB",
+   "Mokganni wa TLB",
+   "Umqhubi we-TLB"
+  ],
+  "Welder": [
+   "Sweiser",
+   "Uwelda",
+   "Mowelda",
+   "Uwelda"
+  ],
+  "Boilermaker": [
+   "Ketelmaker",
+   "Umenzi wamabhoyila",
+   "Moetsi wa diboilara",
+   "Umenzi weebhoyila"
+  ],
+  "Forklift operator": [
+   "Vurkhyseroperateur",
+   "Umshayeli we-forklift",
+   "Mokganni wa forklift",
+   "Umqhubi we-forklift"
+  ],
+  "Driver": [
+   "Bestuurder",
+   "Umshayeli",
+   "Mokganni",
+   "Umqhubi"
+  ],
+  "Code 10 / Code 14 driver": [
+   "Kode 10 / Kode 14-bestuurder",
+   "Umshayeli weKhodi 10 / 14",
+   "Mokganni wa Khoutu 10 / 14",
+   "Umqhubi weKhowudi 10 / 14"
+  ],
+  "Taxi / shuttle driver": [
+   "Taxi- / pendelbestuurder",
+   "Umshayeli wetekisi",
+   "Mokganni wa tekesi",
+   "Umqhubi weteksi"
+  ],
+  "Diesel mechanic": [
+   "Dieselwerktuigkundige",
+   "Umakhenikha wedizili",
+   "Makheniki wa disele",
+   "Umkhandi weenjini zedizili"
+  ],
+  "Motor mechanic": [
+   "Motorwerktuigkundige",
+   "Umakhenikha wezimoto",
+   "Makheniki wa dikoloi",
+   "Umkhandi weemoto"
+  ],
+  "Auto electrician": [
+   "Motorelektrisiën",
+   "Uchwepheshe kagesi wezimoto",
+   "Setsebi sa motlakase sa dikoloi",
+   "Ingcali yombane weemoto"
+  ],
+  "Electrician": [
+   "Elektrisiën",
+   "Umsebenzi kagesi",
+   "Setsebi sa motlakase",
+   "Ingcali yombane"
+  ],
+  "Gas installer": [
+   "Gasinstalleerder",
+   "Umfaki wegesi",
+   "Mokenyi wa kgase",
+   "Umfakeli werhasi"
+  ],
+  "Plumber": [
+   "Loodgieter",
+   "Umlungisi wamapayipi",
+   "Molokisi wa dipeipi",
+   "Umlungisi wemibhobho"
+  ],
+  "Bricklayer": [
+   "Messelaar",
+   "Umakhi wezitini",
+   "Moahi wa ditena",
+   "Umakhi wezitena"
+  ],
+  "Plasterer": [
+   "Pleisteraar",
+   "Umsimenti wezindonga",
+   "Mothadi wa samente",
+   "Umtyabeki"
+  ],
+  "Tiler": [
+   "Teëlêer",
+   "Umbeki wamathayela",
+   "Mobei wa dithaele",
+   "Umbeki weethayile"
+  ],
+  "Carpenter": [
+   "Timmerman",
+   "Umbazi",
+   "Mmetli",
+   "Umchweli"
+  ],
+  "Roofer": [
+   "Dakwerker",
+   "Umakhi wophahla",
+   "Moahi wa marulelo",
+   "Umakhi wophahla"
+  ],
+  "Paver": [
+   "Plaveier",
+   "Umbeki wamaphevu",
+   "Mobei wa diphevu",
+   "Umbeki wee-paving"
+  ],
+  "Air-con & refrigeration technician": [
+   "Lugversorging- en verkoelingstegnikus",
+   "Uchwepheshe wama-aircon nezifriji",
+   "Setsebi sa di-aircon le difriji",
+   "Ingcali yee-aircon neefriji"
+  ],
+  "Solar PV installer": [
+   "Sonkraginstalleerder",
+   "Umfaki wamaphaneli elanga",
+   "Mokenyi wa diphanele tsa letsatsi",
+   "Umfakeli weepaneli zelanga"
+  ],
+  "Borehole & pump technician": [
+   "Boorgat- en pomptegnikus",
+   "Uchwepheshe wamaphampu amanzi",
+   "Setsebi sa diphampo tsa metsi",
+   "Ingcali yeempompo zamanzi"
+  ],
+  "CCTV / alarm installer": [
+   "Kringtelevisie- en alarminstalleerder",
+   "Umfaki we-CCTV nama-alamu",
+   "Mokenyi wa CCTV le dialamo",
+   "Umfakeli we-CCTV nee-alarm"
+  ],
+  "Gate & garage-door technician": [
+   "Hek- en motorhuisdeurtegnikus",
+   "Uchwepheshe wamagede neminyango yegaraji",
+   "Setsebi sa dikgoro le mamati a karatjhe",
+   "Ingcali yamasango neengcango zegaraji"
+  ],
+  "Locksmith": [
+   "Slotmaker",
+   "Umenzi wokhiye",
+   "Moetsi wa dinotlolo",
+   "Umenzi wezitshixo"
+  ],
+  "Appliance repair": [
+   "Toestelherstelwerk",
+   "Umlungisi wezinto zikagesi",
+   "Molokisi wa disebediswa tsa motlakase",
+   "Umlungisi wezixhobo zombane"
+  ]
+ },
+ "p": [
+  [
+   "available today",
+   "beskikbaar vandag",
+   "uyatholakala namuhla",
+   "o fumaneha kajeno",
+   "uyafumaneka namhlanje"
+  ],
+  [
+   "available this week",
+   "beskikbaar hierdie week",
+   "uyatholakala kuleli sonto",
+   "o fumaneha bekeng ena",
+   "uyafumaneka kule veki"
+  ],
+  [
+   "available this month",
+   "beskikbaar hierdie maand",
+   "uyatholakala kulenyanga",
+   "o fumaneha kgweding ena",
+   "uyafumaneka kule nyanga"
+  ],
+  [
+   "available later",
+   "later beskikbaar",
+   "uzotholakala kamuva",
+   "o tla fumaneha hamorao",
+   "uya kufumaneka kamva"
+  ]
+ ],
+ "r": [
+  [
+   "^(\\d+) taps to get here$",
+   "$1 tikke om hier te kom",
+   "ukuthinta okungu-$1 ukufika lapha",
+   "ho tobetsa ha $1 ho fihla mona",
+   "ukucofa ku-$1 ukufika apha"
+  ],
+  [
+   "^Yes — (\\d+) near you$",
+   "Ja — $1 naby jou",
+   "Yebo — $1 eduze kwakho",
+   "E — $1 haufi le wena",
+   "Ewe — $1 kufutshane nawe"
+  ],
+  [
+   "Draft — (\\d+) things? left to finish",
+   "Konsep — nog $1 dinge om klaar te maak",
+   "Okusalungiswa — kusele okungu-$1 ukuqeda",
+   "Kakaretso — ho sala dintho tse $1 ho qeta",
+   "Uyilo — kuseleyo izinto ezi-$1 ukugqiba"
+  ]
+ ]
+}

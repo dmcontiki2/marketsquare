@@ -1,0 +1,239 @@
+### Home cleaner  [IN]  -> save as roles/pictures/home_cleaner.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a spotless sunlit lounge with a neatly folded cleaning cloth, spray bottle and bucket on a gleaming tiled floor. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Housekeeper  [IN]  -> save as roles/pictures/housekeeper.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a perfectly made bed with crisp white linen, folded towels and a tidy bedside table. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Nanny  [IN]  -> save as roles/pictures/nanny.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a bright playroom with wooden building blocks, a picture book and a small backpack neatly arranged. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Caregiver  [IN]  -> save as roles/pictures/caregiver.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a comfortable armchair beside a window with a folded blanket, reading glasses, a cup of tea and a walking stick. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Cook  [IN]  -> save as roles/pictures/cook.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a home kitchen counter with a pot of stew simmering, chopped vegetables on a board and fresh bread. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Chef  [IN]  -> save as roles/pictures/chef.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a professional stainless-steel kitchen pass with plated dishes under warm lights and a chef's knife. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Gardener  [IN]  -> save as roles/pictures/gardener.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a freshly mown suburban lawn with neat flower beds, a rake and a wheelbarrow. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Pool cleaner  [LATER]  -> save as roles/pictures/pool_cleaner.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a crystal-clear blue swimming pool with a pool net and a brush resting on the paving. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Window cleaner  [LATER]  -> save as roles/pictures/window_cleaner.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a squeegee and bucket beside a streak-free window reflecting a blue sky. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Handyman  [IN]  -> save as roles/pictures/handyman.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: an open toolbox with a drill, spirit level and screwdrivers beside a newly hung door. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Pet sitter / dog walker  [LATER]  -> save as roles/pictures/pet_sitter_dog_walker.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a dog lead, water bowl and ball on a garden path. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### House sitter  [LATER]  -> save as roles/pictures/house_sitter.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a front door with a set of house keys on a hook and potted plants on the step. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Room attendant  [IN]  -> save as roles/pictures/room_attendant.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a hotel room with a freshly made bed, folded towels and a housekeeping trolley in the doorway. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Kitchen assistant  [IN]  -> save as roles/pictures/kitchen_assistant.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a busy commercial kitchen prep station with stacked clean plates and chopped ingredients. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Cashier  [IN]  -> save as roles/pictures/cashier.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a tidy shop till counter with a card machine and a neat row of receipts. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Waiter  [IN]  -> save as roles/pictures/waiter.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a restaurant table set with glasses, cutlery and a tray carrying two plated meals. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Barista  [LATER]  -> save as roles/pictures/barista.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: an espresso machine pouring coffee with a latte-art cup on the counter. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Bartender  [IN]  -> save as roles/pictures/bartender.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a bar counter with polished glasses, a cocktail shaker and bottles on backlit shelves. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Baker  [LATER]  -> save as roles/pictures/baker.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: fresh loaves and rolls cooling on racks in a bakery. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Butchery assistant  [LATER]  -> save as roles/pictures/butchery_assistant.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a clean butchery display counter with neatly cut meat and a scale. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Petrol attendant  [IN]  -> save as roles/pictures/petrol_attendant.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a fuel pump nozzle in a car's fuel inlet at a South African forecourt, with a squeegee on the island. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Shelf packer  [IN]  -> save as roles/pictures/shelf_packer.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a supermarket aisle with perfectly faced, fully stocked shelves. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Shop assistant  [IN]  -> save as roles/pictures/shop_assistant.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a neat small shop counter with goods displayed on shelves behind it. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Merchandiser  [IN]  -> save as roles/pictures/merchandiser.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a branded promotional shelf display being fully stocked in a supermarket, with a clipboard (no readable brand names). The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Car guard  [IN]  -> save as roles/pictures/car_guard.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a bright reflective vest folded on a bollard in a shopping-centre parking lot. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Picker / packer  [IN]  -> save as roles/pictures/picker_packer.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a warehouse aisle with a pallet of packed, taped boxes and a handheld scanner. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Removals helper  [IN]  -> save as roles/pictures/removals_helper.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a moving truck with its doors open, wrapped furniture and stacked boxes inside. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Delivery rider  [IN]  -> save as roles/pictures/delivery_rider.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a delivery motorbike with a top box parked at a kerb. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Farm worker  [IN]  -> save as roles/pictures/farm_worker.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: rows of crops in a South African field at golden hour with a crate of harvested produce. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### General worker  [IN]  -> save as roles/pictures/general_worker.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a pair of work gloves, a shovel and a wheelbarrow on a work site. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Painter  [IN]  -> save as roles/pictures/painter.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a freshly painted wall with a roller tray, roller and drop sheet. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Builder's assistant  [IN]  -> save as roles/pictures/builders_assistant.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a half-built brick wall with a trowel, mortar tub and stacked bricks. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Office cleaner  [IN]  -> save as roles/pictures/office_cleaner.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a clean open-plan office with a cleaning trolley at the end of the row. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Seamstress / tailor  [IN]  -> save as roles/pictures/seamstress_tailor.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a sewing machine with measuring tape, pins and a half-finished garment. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Sewing machinist  [IN]  -> save as roles/pictures/sewing_machinist.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: an industrial sewing machine with a stack of cut fabric pieces. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Hair braider  [IN]  -> save as roles/pictures/hair_braider.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a set of neat finished braids on a salon mannequin head with combs and hair extensions. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Hairdresser  [IN]  -> save as roles/pictures/hairdresser.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a salon station with scissors, combs, a hairdryer and a mirror. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Nail technician  [IN]  -> save as roles/pictures/nail_technician.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a manicure station with polish bottles, a nail file and a neatly finished set of nail tips on a display. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Cobbler  [LATER]  -> save as roles/pictures/cobbler.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a shoe repair bench with a resoled shoe, a hammer and leather offcuts. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Car washer  [IN]  -> save as roles/pictures/car_washer.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a gleaming freshly washed car with a bucket, sponge and foam. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Event staff  [IN]  -> save as roles/pictures/event_staff.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a function hall with round tables set with white cloths, glasses and centrepieces. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Crèche assistant  [IN]  -> save as roles/pictures/creche_assistant.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a colourful creche room with small tables, crayons, drawings on the wall and tiny chairs. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Security guard  [IN]  -> save as roles/pictures/security_guard.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a guardhouse at a boom gate at dusk with a torch and a logbook. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Plant operator (TLB / excavator)  [IN]  -> save as roles/pictures/plant_operator_tlb_excavator.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a yellow TLB digging a trench on a building site. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Rigger  [LATER]  -> save as roles/pictures/rigger.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: steel slings and shackles hooked to a crane load on a site. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Boilermaker  [IN]  -> save as roles/pictures/boilermaker.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: heavy steel plate being cut with sparks in a workshop. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Millwright  [LATER]  -> save as roles/pictures/millwright.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: an opened industrial gearbox with tools laid out beside it. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Fitter & turner  [LATER]  -> save as roles/pictures/fitter_turner.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a metal lathe turning a steel shaft with coolant spray. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Welder  [IN]  -> save as roles/pictures/welder.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a welding bead glowing with bright sparks on a steel joint, welding helmet on the bench. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Crane operator  [LATER]  -> save as roles/pictures/crane_operator.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a mobile crane lifting a steel beam against a blue sky. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Forklift operator  [IN]  -> save as roles/pictures/forklift_operator.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a forklift lifting a pallet in a warehouse. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Driver  [IN]  -> save as roles/pictures/driver.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a clean light delivery vehicle parked at a loading bay. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Code 10 / Code 14 driver  [IN]  -> save as roles/pictures/code_10_code_14_driver.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a truck and trailer on an open South African highway. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Taxi / shuttle driver  [IN]  -> save as roles/pictures/taxi_shuttle_driver.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a white minibus shuttle parked at a pickup point. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Diesel mechanic  [IN]  -> save as roles/pictures/diesel_mechanic.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: an open diesel engine bay of a truck with a torque wrench. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Motor mechanic  [IN]  -> save as roles/pictures/motor_mechanic.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a car on a lift in a workshop with tools on a trolley. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Auto electrician  [IN]  -> save as roles/pictures/auto_electrician.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a multimeter clipped to a car battery with wiring harness exposed. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Panel beater  [LATER]  -> save as roles/pictures/panel_beater.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a car door panel mid-repair with filler and a sanding block. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Spray painter  [LATER]  -> save as roles/pictures/spray_painter.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a freshly sprayed glossy car panel in a spray booth. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Tyre fitter  [LATER]  -> save as roles/pictures/tyre_fitter.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a tyre on a balancing machine with new tyres stacked beside it. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Electrician  [IN]  -> save as roles/pictures/electrician.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: an open distribution board with neat wiring and a voltage tester. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Gas installer  [IN]  -> save as roles/pictures/gas_installer.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a gas hob connected to a gas bottle with new copper piping and a regulator. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Plumber  [IN]  -> save as roles/pictures/plumber.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: new copper pipes and a geyser installation with a pipe wrench. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Bricklayer  [IN]  -> save as roles/pictures/bricklayer.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a straight brick wall with a spirit level and trowel. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Plasterer  [IN]  -> save as roles/pictures/plasterer.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a smoothly plastered wall with a plastering float and hawk. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Tiler  [IN]  -> save as roles/pictures/tiler.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a freshly tiled floor with spacers, a tile cutter and grout float. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Carpenter  [IN]  -> save as roles/pictures/carpenter.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a workbench with a hand plane, wood shavings and a finished cabinet door. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Roofer  [IN]  -> save as roles/pictures/roofer.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a corrugated iron roof being fitted with roofing screws and a sealed flashing. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Glazier  [LATER]  -> save as roles/pictures/glazier.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a large glass pane being fitted into an aluminium window frame. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Ceiling & partition installer  [LATER]  -> save as roles/pictures/ceiling_partition_installer.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a new ceiling grid with boards partly installed in an office. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Paver  [IN]  -> save as roles/pictures/paver.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: freshly laid interlocking paving in a driveway with a rubber mallet. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Air-con & refrigeration technician  [IN]  -> save as roles/pictures/air_con_refrigeration_technician.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a wall-mounted air conditioner with its cover off and refrigerant gauges attached. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Solar PV installer  [IN]  -> save as roles/pictures/solar_pv_installer.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: solar panels mounted on a South African roof under a clear sky with an inverter on the wall. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Borehole & pump technician  [IN]  -> save as roles/pictures/borehole_pump_technician.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a borehole pump and pressure tank beside a green water tank. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### CCTV / alarm installer  [IN]  -> save as roles/pictures/cctv_alarm_installer.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a CCTV camera mounted under the eaves of a house with an alarm keypad. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Gate & garage-door technician  [IN]  -> save as roles/pictures/gate_garage_door_technician.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a sliding gate motor with its cover open beside a steel gate. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Locksmith  [IN]  -> save as roles/pictures/locksmith.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a door lock cylinder taken apart with keys and locksmith picks. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Appliance repair  [IN]  -> save as roles/pictures/appliance_repair.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a washing machine with its back panel off and a toolkit. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### IT / networking technician  [LATER]  -> save as roles/pictures/it_networking_technician.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a neat network cabinet with patched cables and a router. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.
+
+### Small-engine repair  [LATER]  -> save as roles/pictures/small_engine_repair.png
+Photorealistic photograph, natural daylight, a South African setting. Subject: a lawnmower engine on a workbench with a spark plug and tools. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood.

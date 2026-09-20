@@ -865,9 +865,18 @@ REFLECTIONS = {
    # Global marketplace, never 'a South African marketplace' (David, 6 Sep). The club letter went
    # to ~1,000 US readers with the old wording for four days after the ruling; asserted now.
    # RUL-110 (8 Sep) sharpened it: no country of origin as a qualifier either.
+   # PROPERTY, NOT CONSTANT (20 Sep 2026). These two entries pinned "a global marketplace that
+   # opened" -- but the RULE is that we call ourselves a global marketplace and name no country of
+   # origin; "that opened" is one sentence's word order and carries no part of it. LETTER-CLICK-1
+   # rewrote the outfitter letter so the positioning and the we-are-new disclosure are separate
+   # sentences, and the literal FAILed a letter that obeys the ruling perfectly. That is the
+   # RUL-133 fault of 19 Sep in a second place, exactly where run 15 said to go looking: a checker
+   # pinned to today's phrasing eventually punishes the correct answer, and the cheap cure is to
+   # contort the copy until the checker is quiet. The must-NOT lists are untouched and still carry
+   # the whole of RUL-110's sharpening -- what is asserted is now the claim, not the sentence.
    ("RULINGS.md", ["GLOBAL MARKETPLACE, NOT A SOUTH AFRICAN ONE"], []),
-   ("../CityLauncher/emailer/templates/sports_club_outreach.html", ["a global marketplace that opened"], ["South African marketplace", "founded in South Africa"]),
-   ("../CityLauncher/emailer/templates/adventures_outfitter_outreach.html", ["a global marketplace that opened"], ["South African marketplace", "founded in South Africa"]),
+   ("../CityLauncher/emailer/templates/sports_club_outreach.html", ["a global marketplace"], ["South African marketplace", "founded in South Africa"]),
+   ("../CityLauncher/emailer/templates/adventures_outfitter_outreach.html", ["a global marketplace"], ["South African marketplace", "founded in South Africa"]),
    ("../CityLauncher/emailer/templates/federation_intro_outreach.txt", ["a global marketplace"], ["South African marketplace", "founded in South Africa"]),
    ("scripts/youtube_pack_build.py", ["global marketplace"], ["South African marketplace", "founded in South Africa"]),
  ],
@@ -1012,6 +1021,13 @@ REFLECTIONS = {
    ("eula_clean.html", ["within an inactivity window of 90 days, which is the same for every tier."], ["Free \u2014 30 days; Starter \u2014 60 days"]),
    ("marketsquare.html", ["within an inactivity window of 90 days, which is the same for every tier."], ["30-day listing \u00b7 free renewal", "60-day listing \u00b7 free renewal"]),
    ("docs/LISTING_STATE_MACHINE.md", ["90 days for EVERY tier (RUL-158"], ["| Free | 30 days |"]),
+ ],
+ "RUL-159": [
+   ("RULINGS.md", ["HOUSEKEEPING FOLDS INTO SERVICES"], []),
+   ("roles/role_registry.json", ["\"taps_to_draft\": 5", "\"finish_questions\"", "/q/services?role="], ["\"What work do you do?\""]),
+ ],
+ "RUL-160": [
+   ("RULINGS.md", ["LANGUAGE REVIEWER"], []),
  ],
  "RUL-152": [
    ("RULINGS.md", ["RUL-075 WAS A DECISION NOT TO SPEND TWO MONTHS ON LOCALISATION",

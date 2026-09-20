@@ -8,9 +8,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-09-19 - fade 90)
+## Last Completed (2026-09-19 - sim services lane)
 
-- 19 Sep 2026: Bee Lady's 3 adverts were hidden by the 30-day fade on 18 Sep; revived via keep-live (PROBED live, Tutors = 3). RUL-158: fade window now 90 days for every tier, EULA v1.18. RG-0417 locked.
+- 19 Sep 2026: Contagion Model v1.8 (SIM-SVC-1) - Services lane (RUL-150/151/152, SA employer enrolment) behind a teal toggle; OFF = v1.7 draw for draw, dashboard pins unmoved. ON, mid run: SA sellers wk156 32,181 vs 10,994.
 
 <!-- DASH-FEED-1:END -->
 
@@ -35,6 +35,10 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- 19 Sep 2026: Contagion Model v1.8 (SIM-SVC-1) - Services lane (RUL-150/151/152, SA employer enrolment) behind a teal toggle; OFF = v1.7 draw for draw, dashboard pins unmoved. ON, mid run: SA sellers wk156 32,181 vs 10,994.
+
+- 19 Sep 2026 (maintenance-loop): fault queue EMPTY - new/open/fix-shipped all [] PROBED live 05:39 UTC; shadow agent seen 0, acted 0; heartbeat at /dashboard/maint carries this run's stamp (20260919T053646Z); no escalation brief (none in 24h); regression ledger 404 entries, 0 regressed, 23 open, green before and after. Nothing fixed because nothing was waiting.
 
 - 19 Sep 2026: Bee Lady's 3 adverts were hidden by the 30-day fade on 18 Sep; revived via keep-live (PROBED live, Tutors = 3). RUL-158: fade window now 90 days for every tier, EULA v1.18. RG-0417 locked.
 

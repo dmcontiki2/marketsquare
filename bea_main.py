@@ -3463,7 +3463,7 @@ def zoom_watch_save(w: _ZoomWatchIn):
     conn = database.get_db()
     try:
         conn.execute("CREATE TABLE IF NOT EXISTS zoom_watches (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, category TEXT NOT NULL, city TEXT, path TEXT NOT NULL, label TEXT, created_at TEXT NOT NULL, UNIQUE(email, category, city, path))")
-        conn.execute("INSERT OR IGNORE INTO zoom_watches (email, category, city, path, label, created_at) VALUES (?,?,?,?,?,?)",
+        conn.execute("INSERT INTO zoom_watches (email, category, city, path, label, created_at) VALUES (?,?,?,?,?,?) ON CONFLICT DO NOTHING",
                      (email, _zoom.norm_cat(w.category), (w.city or "").strip(), w.path.strip(), (w.label or "").strip()[:160],
                       datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")))
         conn.commit()
@@ -24943,7 +24943,7 @@ def _squire_shortlist(conn, brief) -> list:
 def _squire_store_matches(conn, brief_id, shortlist):
     now = _squire_now(); new = 0
     for m in shortlist:
-        cur = conn.execute("INSERT OR IGNORE INTO squire_matches (brief_id, listing_id, score, reasons, created_at) VALUES (?,?,?,?,?)",
+        cur = conn.execute("INSERT INTO squire_matches (brief_id, listing_id, score, reasons, created_at) VALUES (?,?,?,?,?) ON CONFLICT DO NOTHING",
                            (brief_id, m["listing_id"], m["score"], json.dumps(m["reasons"]), now))
         new += cur.rowcount
         conn.execute("UPDATE squire_matches SET score=?, reasons=? WHERE brief_id=? AND listing_id=?",

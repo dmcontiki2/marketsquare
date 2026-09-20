@@ -1,0 +1,551 @@
+{
+ "home_cleaner": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:08:13",
+  "prompt_sha": "65b0d4e0b6a3",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "kitchen_assistant": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:14:02",
+  "prompt_sha": "f9b3fa1ebe5c",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "cashier": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:14:13",
+  "prompt_sha": "1fb31e65e75b",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "room_attendant": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:14:20",
+  "prompt_sha": "e228a95d2295",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "handyman": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:14:24",
+  "prompt_sha": "27ff7c8d204b",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "waiter": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:15:13",
+  "prompt_sha": "6d0380998b26",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "bartender": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:15:26",
+  "prompt_sha": "6fcbee212745",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "nanny": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:17:22",
+  "prompt_sha": "c4acbf4955ba",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "shelf_packer": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:17:28",
+  "prompt_sha": "b5d626d35da1",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "cook": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:17:29",
+  "prompt_sha": "975d229f1619",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "shop_assistant": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:17:36",
+  "prompt_sha": "10eff4967a85",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "housekeeper": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:18:24",
+  "prompt_sha": "b36fd5e165f9",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "chef": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:20:17",
+  "prompt_sha": "11c8e89d0986",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "petrol_attendant": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:20:22",
+  "prompt_sha": "afef299fb630",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "caregiver": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:20:27",
+  "prompt_sha": "235035fa5ef2",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "merchandiser": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:21:23",
+  "prompt_sha": "e759d284643d",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "gardener": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:22:21",
+  "prompt_sha": "652dd0f36807",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "removals_helper": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:22:33",
+  "prompt_sha": "3137e8c0bc46",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "car_guard": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:22:42",
+  "prompt_sha": "bc38ef4c84f9",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "picker_packer": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:22:42",
+  "prompt_sha": "06c3c56fe36a",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "general_worker": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:24:21",
+  "prompt_sha": "3e7d7986fddb",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "delivery_rider": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:24:25",
+  "prompt_sha": "d6b3e2b82a52",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "farm_worker": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:24:29",
+  "prompt_sha": "3ad60e87ec81",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "painter": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:24:45",
+  "prompt_sha": "186734dbb1e0",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "seamstress_tailor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:25:22",
+  "prompt_sha": "5de866fa28c6",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "builders_assistant": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:25:30",
+  "prompt_sha": "3d6e706cc500",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "hairdresser": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:26:36",
+  "prompt_sha": "8d0834343014",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "hair_braider": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:26:42",
+  "prompt_sha": "a91a354e3359",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "sewing_machinist": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:26:50",
+  "prompt_sha": "c46b66439989",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "office_cleaner": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:27:08",
+  "prompt_sha": "8aeb3a8d0df9",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "nail_technician": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:28:03",
+  "prompt_sha": "9908012c035a",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "event_staff": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:28:15",
+  "prompt_sha": "4f58ce5e81d6",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "car_washer": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:28:22",
+  "prompt_sha": "31b0f244a026",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "creche_assistant": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:28:25",
+  "prompt_sha": "4b6a23c61aba",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "welder": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:29:17",
+  "prompt_sha": "1a451977f0d7",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "security_guard": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:29:28",
+  "prompt_sha": "c95c019fcb85",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "plant_operator_tlb_excavator": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:29:40",
+  "prompt_sha": "6388ba2d5054",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "boilermaker": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:29:47",
+  "prompt_sha": "cad71343be97",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "code_10_code_14_driver": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:30:48",
+  "prompt_sha": "755ebdc3e315",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "driver": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:30:48",
+  "prompt_sha": "cc7f72d7faf0",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "taxi_shuttle_driver": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:30:52",
+  "prompt_sha": "ab52eec4d3e7",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "forklift_operator": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:31:01",
+  "prompt_sha": "d114a068b713",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "diesel_mechanic": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:32:08",
+  "prompt_sha": "e66fc55440c6",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "electrician": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:32:13",
+  "prompt_sha": "a5a94a178bc7",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "auto_electrician": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:32:19",
+  "prompt_sha": "29ea110adbc3",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "plumber": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:33:34",
+  "prompt_sha": "0d439c7348db",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "motor_mechanic": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:33:47",
+  "prompt_sha": "19ae2050411c",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "bricklayer": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:33:53",
+  "prompt_sha": "5f4aadf7a8e7",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "carpenter": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:34:58",
+  "prompt_sha": "09474e45b62d",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "tiler": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:34:58",
+  "prompt_sha": "ba39262c6850",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "plasterer": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:35:09",
+  "prompt_sha": "19417c4edbdd",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "roofer": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:36:16",
+  "prompt_sha": "ce8f5a55adcb",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "paver": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:36:25",
+  "prompt_sha": "51789f7c4a5c",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "air_con_refrigeration_technician": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:36:41",
+  "prompt_sha": "d48108f7b650",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "borehole_pump_technician": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:37:58",
+  "prompt_sha": "9dfbb7845600",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "gas_installer": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:37:59",
+  "prompt_sha": "8f48fd1b1634",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "cctv_alarm_installer": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:38:02",
+  "prompt_sha": "9f46551011fd",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "solar_pv_installer": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:38:03",
+  "prompt_sha": "e9ce30db44a2",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "appliance_repair": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:39:09",
+  "prompt_sha": "97f786909a0a",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "locksmith": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:39:19",
+  "prompt_sha": "1e4ceed79805",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ },
+ "gate_garage_door_technician": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-19T17:39:22",
+  "prompt_sha": "3f75bb0899ef",
+  "approved": true,
+  "approved_by": "David",
+  "approved_at": "2026-09-19T17:59:07"
+ }
+}

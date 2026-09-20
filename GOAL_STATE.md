@@ -3,60 +3,54 @@
 *Read this FIRST. Update it at the END of every run. Under 100 lines: it is a state file, not a
 diary — the changelog is the diary.*
 
+> **This file is 231 lines and has been over budget since run 13. Stated rather than quietly
+> inherited.** The overrun is real cost: every run pays to read it. The fix is not a trim — it is
+> that "WHERE THE FUNNEL LEAKS", "THE SUPPLY FLOOR" and "THINGS ALREADY TRIED" are durable
+> reference, not state, and belong in one `GOAL_FACTS.md` this file points at. **Next run that is
+> not shipping against the wave should do that split**, leaving here only: the number table, what
+> the last run did, what the next should pick up, and the open questions.
+
 ---
 
-> ## READ FIRST, RUN 16 — TWO THINGS, AND THE FIRST ONE OUTRANKS EVERY BUILD
->
-> **1. OUTREACH IS PAUSED ON PURPOSE — DO NOT DIAGNOSE IT.** David asked for no send on the
-> nights of 18 and 19 Sep, and for the next wave to go out **the night of 20 Sep**, after the new
-> design is live. **There is no sending fault. Do not spend this run looking for one.**
->
-> *Recorded because an earlier draft of this banner got it wrong and would have cost the run:* the
-> decay below is real and worth knowing, but the two zero days at the end are David's decision, not
-> a defect. PROBED beats RECALLED — and it does not beat ASKING THE PERSON WHO TURNED IT OFF.
-> Letters per day out of `prospects.emailed_at`:
-> `5 Sep 398 · 6 Sep 251 · 7 Sep 254 · 9 Sep 317 · 10 Sep 12 · 11 Sep 142 · 12 Sep 108 ·`
-> `13 Sep 87 · 14 Sep 146 · 15 Sep 93 · 16 Sep 57 · 17 Sep 43 · 18 Sep 0 · 19 Sep 0.`
-> **A week of decay and then nothing for two days.** `emailed` has been frozen at 2,499 across
-> three measurements. Meanwhile the door instrument that shipped on 19 Sep has caught **one
-> arrival in two days, and that one was run 15's own labelled probe** (`src=probe-run15`).
->
-> **THE DECAY BEFORE THE PAUSE IS STILL WORTH UNDERSTANDING** — 398 a day down to 43 over twelve
-> days is a channel exhausting itself, and that is a finding about SUPPLY, not about a broken
-> sender. Diagnose that, do not re-diagnose the pause. Already ruled out, so do not re-probe:
-> the policy is NOT disarmed (96 of 102 cities armed, cap 250/day, batch 12); the laptop's 00:10
-> task is a DELIBERATE no-op (WAVE-SERVER-1 — `logs/launchday_19Sat09_2026010.log` says so in
-> terms, and the server timer is the one sender); an attempt to disable the laptop task on 18 Sep
-> 05:55 FAILED on permissions ("NOT ADMIN") and is a red herring. **So the question is the SERVER
-> sender, and whether the guards are refusing everything or the sendable supply is simply
-> exhausted** — 4,249 of 6,748 are unsent, but they may sit in unarmed cities or blocked
-> categories. Do not read "no sendable prospects" as supply without proving it (13 Sep precedent).
->
-> **THIS RUN'S JOB, IN DAVID'S OWN WORDS (19 Sep):** *"activate this goal session to do an
-> analysis, then a diagnostic to give us a good understanding of what these last batch of
-> improvements we want to implement means and also what it will need in terms of design"* — and
-> **start the design for the parts already decided.** So: analysis and diagnostic first, design
-> second, and the wave goes out tomorrow night once the new design is live.
->
-> **2. THE DIRECTION CHANGED — David, 19 Sep (live).** The employer lane. See the block further
-> down headed "DIRECTION CHANGED AGAIN" and `QUICK_LISTING_SPEC.md` **Part II**; RUL-150/151/152.
-> **Do NOT build the role registry contents or the employer lane tonight** — the 92-role slate is
-> under review with David in a separate session (`ROLE_SLATE_REVIEW.md`) and the review changes
-> the shape of both. What IS unblocked and safe: `speaks[]` on the seller (needed under every
-> scenario), RG-0414 DOOR-RETURN-1, and the letter itself.
->
-> **And note what the decay says about strategy:** 398 letters a day down to zero in twelve days
-> is a channel exhausting itself. That is the strongest evidence yet that David's employer lane is
-> not a nice-to-have — it is the replacement for a channel that is dying in front of us.
->
-> `DECISIONS_2026-09-18_EVENING.md` is DONE (run 15). Nothing is waiting on David.
+## SUNDAY SUMMARY — 20 September 2026
 
-## NOTE FOR THE 20 SEP SUNDAY SUMMARY (this is the next run's one required deliverable)
+**The number is 0.** Both probes agree: nobody we contacted cold has published a listing by their
+own hand. The database says nobody, and there is nobody for a logged-out visitor to find. Two
+records in the raw count are our own test seeds and do not count.
 
-Write it from the RUN 14 and RUN 15 numbers below and from nothing dated before 18 Sep — every
-"N people landed / N dwelled" figure older than that counted mail scanners as people. The honest
-chain is in "WHERE THE FUNNEL ACTUALLY LEAKS". Say plainly: the number is 0, the letter is the
-leak, and 20 by 31 October is not reachable on how the letter performs today.
+**What moved this week.** Registrations went from 5 to 42 — people who opened an account. Not one
+of them has published. Nothing was emailed on 18 or 19 September because you asked for the pause,
+and the pause held exactly as asked.
+
+**What I found this week, and it is the thing that matters.** The cold email list is nearly empty.
+There are 6,748 names on it. 2,499 have been written to. Of the rest, almost none can be written
+to at all: wrong place, invalid address, already bounced, opted out, a company rather than a
+person, a general info@ desk, a second mailbox at a firm we already contacted, or sitting in a
+source our own sending history shows bounces too often to use. **What is genuinely left is 466
+addresses.** That is why the nightly sends fell from about 400 a day to 43. Nothing is broken and
+no gate is stuck — we have simply been consuming the list, and we are near the bottom of it.
+
+**What that means, said plainly.** Those 2,499 letters produced about 330 real people reading one,
+8 people clicking, 1 finished advert and 0 published listings. On that performance the last 466
+letters will not produce 20 listings. They will most likely produce none. Cold email is not a
+channel that is underperforming — it is a channel that runs out this month.
+
+**I did not force more letters out.** I could have raised the nightly batch and emptied the list in
+two nights. It would have bought perhaps one extra click and spent the sending reputation we will
+need for whatever channel comes next. That is a bad trade and I did not make it.
+
+**What I did instead.** I rewrote the letter that carries 428 of the 466 addresses left — the one
+that goes to licensed guides in Maine. It now leads with the only thing we offer that the
+platforms already emailing them do not: we take no commission on their trips. It is honest that we
+are new rather than hiding it. And it asks them to look at their own advert rather than to commit
+to a listing, because nothing is published and no account is created until they say so. It goes
+out with the next wave.
+
+**What is next, in one line.** The employer side you called on 19 September is no longer an
+addition to outreach — it is the replacement for a channel that ends this month, and it is the
+only route to 20 that is still open.
+
+---
 
 ## THE NUMBER
 
@@ -66,126 +60,113 @@ If the sandbox is dead, run it host-side: queue `run_py MarketSquare\scripts\onb
 | date | published by own hand | probe A | probe B | notes |
 |------|----------------------|---------|---------|-------|
 | 2026-09-04 → 08 (runs 1–7) | **0** | 0 | 0 | baseline; raw 2 = e2e_test seeds, barred by §3 |
-| 2026-09-09/10 (runs 8–10) | **unknown** | — | — | NOT MEASURED: sandbox dead (KB5124008) |
 | 2026-09-12 (run 11) | **0** | 0 | 0 | 6,748 on the list · 1,482 emailed · 5 registered |
 | 2026-09-13 (run 12) | **0** | 0 | 0 | 1,482 emailed at 01:00, +108 at 01:31 · 5 registered |
 | 2026-09-18 (run 13, 02:30) | **0** | 0 | 0 | 1,942 emailed · **25 registered** · first full journey walked |
 | 2026-09-18 (run 14, 12:20) | **0** | 0 | 0 | 2,491 emailed · 25 registered · **8 human clicks ever** |
-| 2026-09-19 (run 15, 01:00) | **0** | 0 | 0 | 6,748 · **2,499 emailed · 40 registered** (was 25) · listing 382 still a draft |
+| 2026-09-19 (run 15, 01:00) | **0** | 0 | 0 | 2,499 emailed · 40 registered · listing 382 still a draft |
+| 2026-09-20 (run 16, 01:00) | **0** | 0 | 0 | 2,499 emailed (pause held) · **42 registered** · **466 sendable left** |
 
-Target: **20 by Fri 31 Oct 2026.** Runs 5–8, 11, 12 Fable 5.1; runs 9–10, 13–15 Opus 5.
+Target: **20 by Fri 31 Oct 2026.** Runs 5–8, 11, 12 Fable 5.1; runs 9–10, 13–16 Opus 5.
 
-## WHERE THE FUNNEL ACTUALLY LEAKS (probed 18 Sep, still the truth) — READ THIS, NOT AN OLD SECTION
+## THE SUPPLY FLOOR — RUN 16'S FINDING, AND THE MOST IMPORTANT NUMBER AFTER THE GOAL ITSELF
 
-    2,499 letters  ->  ~330 real people opened one  ->  8 clicked  ->  1 built a complete advert  ->  0 published
+**466 addresses are sendable anywhere in the world. Tomorrow night's wave composes 42.**
+PROBED by running the wave's own composer over all 102 cities, not by reading a note:
 
-- Read `human_funnel` / `letter_humans`, **never** raw `funnel` (FUNNEL-DENOM-1): the raw step
-  counts include mail scanners. The Quick door now reports too — `q_door`, `q_step_<n>`,
-  `q_draft`, `q_handover`, and from run 15 `q_wa_self` / `q_wa_copy`.
-- **The loss is between reading the letter and clicking it: 8 clicks from ~320 human opens
-  (2.4%).** That is the one big measurable leak, and rewriting the letter is mine (§5).
+    6,748 on the list -> 2,499 already emailed -> 2,055 scraped rows in armed cities
+      -> minus sources our own send history condemns (openstreetmap 10.6%, google_maps 7.0%,
+         club:agn 12.5%, club:wpa 11.1%, usatf-new-england 40% — the 5% stop-loss is correct)
+      -> minus info@ desks (216), second mailboxes at a firm already written to (225+89),
+         government domains (37), placeholder names (15)  ->  **466**
+
+- **All 95 armed cities gate GREEN. The guards hold 8 rows in total. Nothing is stuck.** Do not go
+  looking for a broken sender or a disarmed policy — run 16 did, and the answer is consumption.
+- Where the 466 sit: **Maine 428** · Pretoria 20 · Cape Town 6 · Durban 4 · Johannesburg 3 · rest 5.
+- **The decay 398→43/day was never a fault.** Batch is 12 a city, only 8 cities have any pool left,
+  so 42 is the honest arithmetic. **Do not raise the batch to empty the list faster** — RAMP-1 and
+  the 250/day cap protect the sending domain (RUL-111), and the trade buys ~1 click.
+- `teachers_trainers` (1,114 rows on dbe_emis) is held by **blocked_categories**, not by the source
+  gate. Unblocking it is a person-only/POPIA decision, not a technique — it is David's, not mine.
+
+## WHERE THE FUNNEL LEAKS (probed 18 Sep, re-confirmed 20 Sep)
+
+    2,499 letters  ->  ~330 real people opened one  ->  8 clicked  ->  1 built an advert  ->  0 published
+
+- Read `human_funnel` / `letter_humans`, **never** raw `funnel` (FUNNEL-DENOM-1): raw counts include
+  mail scanners. Over 30 days `letter_humans` is **2** — arrived on an outreach link AND stayed.
+- **The loss is open→click: 8 from ~330 (2.4%).** That is the one measurable leak and it is mine.
 - **The app is not the bottleneck.** Of the 8 who clicked, 1 built an advert scoring 94.
-- Letters do reach inboxes — Resend, verified subdomain, `api.resend.com` answers in 0.19 s.
+- Letters do reach inboxes — Resend, verified subdomain, answers in 0.19 s.
 
-**THE TRAJECTORY, STATED PLAINLY (ONBOARDING_GOAL §9).** 4,249 letters remain unsent. At the
-measured rate they yield roughly **14 more human clicks and perhaps 2 more finished adverts**.
-**20 by 31 October is not reachable on how the letter currently performs** — it needs the
-open→click rate to go from 2.4% to ~20%, or a different channel. NOT a BLOCKED state: nothing
-reserved is in the way and the letter is mine to rewrite. Stated now, not on 31 October.
+## WHAT RUN 16 DID (20 Sep 2026, 01:00–04:00 SAST, Opus 5)
 
-## WHAT RUN 15 DID (19 Sep 2026, 01:00–04:00 SAST, Opus 5) — DAVID'S EIGHT DECISIONS ARE NOW MACHINERY
-
-1. **Measured.** 0, both probes agree. 2,499 emailed, **40 registered (was 25)** — the only
-   number that moved this week. Listing 382 is STILL a draft; publishing it is his act, and he
-   has had a working link and a working path behind it since 18 Sep 07:29. **Do not chase him.**
-2. **Decisions 1–8 → RUL-142 … RUL-149**, reflected in `QUICK_LISTING_SPEC.md` (§1 ladder, §6
-   rules, §8 WhatsApp verbatim, §9 taxi drop, §10 glimpse). `rulings_check`: 126, **0 FAIL**.
-3. **BUILT AND PROVEN — WA-SELFSEND-1 / RG-0408.** The Quick hand-back screen now offers "Send it
-   to myself on WhatsApp" on the numberless `wa.me/?text=` link. This is the Montana problem
-   answered for a market with no email. **Walked end to end in a real browser at phone width as a
-   stranger** — door → 5 taps → draft → the one email ask → hand-over → the button — with every
-   beacon firing. **The message carries no sign-in token, deliberately:** the emailed link may
-   carry one because arriving in that inbox proves the address is the reader's; a token handed
-   back to whoever typed an address proves nothing and would mint a sign-in for anybody.
-4. **RG-0407 WA-NONUMBER-1 (LOCKED)** — every WhatsApp link the app emits is numberless and no
-   code path stores a recipient number. The two URL shapes are one character apart. It also
-   fences the reserved half of RUL-146 (Business API = money = David's).
-5. **EULA v1.17 landed** in `canon.yml` + `LEGAL_VERSIONS.md`. The RUL-133 FAIL was a **literal
-   version pin** on a living document; corrected to assert the property, with the real check now
-   in **RG-0406 EULA-VERSION-LAND-1**, which compares the four stamps to each other and was
-   proven red in both failure directions before locking.
-6. **The stale CityLauncher dashboard closed BY PROBE, not by deploying over it** — the live page
-   is md5-identical to the repo copy and carries the STATS-HUMAN-1 markers. Another lane fixed it.
-7. **THE FINDING OF THE RUN — RG-0413 DOOR-FUNNEL-1. The door the letters point at was the
-   dark one.** The eight live outreach templates link to `trustsquare.co/q/<cat>`, which serves
-   `genie/q_index.html` — an older fork of the composer. **PROBED on the live page: `typeof
-   qTrack` was `undefined`.** Not one beacon, ever. QUICK-FUNNEL-1 (18 Sep) instrumented
-   `quick.html`, served at `/quick/`, and was written up as "the Quick door is not dark" — so
-   every figure anybody had about arrivals at the Quick door was measured on a page cold
-   recipients never see. Instrumented tonight and proven in a real browser: a full walk posts
-   `q_door, q_step_1..5, q_draft, q_handover, q_signin_sent`; a render with no human input posts
-   `q_door` alone; one scroll plus twelve seconds adds `dwell`.
-8. **Also learned, and it corrects a wrong first reading:** that door **cannot** write a listing,
-   and that is deliberate and right — no API key may live in a public page, so it keeps the
-   answers in `localStorage` and emails a sign-in link. It is not broken. But its only way back
-   is email plus one browser's storage, which is precisely what this market lacks — **RG-0414
-   DOOR-RETURN-1**, open, with the warning not to paste the `/quick/` WhatsApp button onto it,
-   because here there is no server-side draft for it to point at.
-9. **Ledger green before and after** (shards + `--combine=8`): every locked fix holding.
-10. **Deployed twice and PROBED both times** (a deploy tool that prints a success line is
-   EXECUTED, not PROBED — run 14's lesson). `/quick/` carries WA-SELFSEND-1, `/q/homehelp`
-   carries DOOR-FUNNEL-1, and a live walk of the door had every beacon accepted 200 by the
-   server. **That walk was made with `?src=probe-run15`** so the row is identifiable — exclude
-   it before reporting the door's first real numbers.
-
-## DIRECTION CHANGED AGAIN — DAVID, 19 SEP 2026 (live session). READ THIS FIRST.
-
-**The acquisition gap (D5) is answered, and it changes what "next" means.** David's direction:
-add every casual and technical role under **Services-Casuals / Services-Technical**, add the
-**employer side**, and *"use these service types to enrol their current employees or previous
-employees as referrals."* **RUL-150, RUL-151, RUL-152.** The plan is `QUICK_LISTING_SPEC.md`
-**Part II** — read it before choosing any work.
-
-- **The employer is the SUPPLY channel, not just a demand side.** 8 human clicks per 2,499 cold
-  letters versus one mine's HR department. An institution's confirmation is worth more than a
-  household's, and it satisfies the Casuals reference signals at source.
-- **Most of it is already built and is called `agencies`** — `create_agency`, `invite_agent`
-  (account + cap + magic link, **creates no listing**), `set_agency_verified`, tier sync, rollup.
-  Generalise it; do not rebuild it.
-- **The hard line: enrollment NEVER creates a listing** (ONBOARDING_GOAL s3). Build the importer so
-  it cannot, and assert that in the ledger.
-- **The letter is no longer first.** One employer door is worth more than every letter left on the
-  list — but opening it is a human conversation, and that is the one genuine hand-off in the plan.
-- **RUL-152: stop quoting RUL-075 (or any ruling) back at David as a blocker.** Ask what the rule
-  was protecting; if the request does not threaten it, the ruling is silent.
+1. **Measured.** 0, both probes agree. 2,499 emailed, 42 registered (was 40). Pause held: zero sent
+   on 18 and 19 Sep, confirmed off `prospects.emailed_at`. **There was no sending fault to find.**
+2. **THE FINDING — the supply floor above.** Ran the wave composer across all 102 cities and took
+   the exclusion apart row by row. 466 left, 42 tomorrow, and the decay explained without a defect.
+3. **SECOND FINDING — RG-0419 QDOOR-ZA-ONLY-1 (open). The Quick door is a South African product.**
+   PROBED on the live page: every price chip is in rands (R250–R450 a day), suburb tiles are Menlyn
+   and Midrand; `localize_html()` proves the US render carries no door strip and no `/q/` link at
+   all. The ZA-ONLY fence is RIGHT and must not be removed. **Consequence nobody had written down:
+   428 of the 466 left are US, so the five-tap lane serves none of them, and the `q_*` beacons will
+   stay near zero however well the letters perform.** Full reasoning in the ledger entry.
+4. **BUILT AND SHIPPED — RG-0418 LETTER-CLICK-1.** Rewrote the letter carrying 428 of the 466 and
+   its subject. Was "A free listing for your outfit in <city> — TrustSquare" (the shape every
+   lead-gen directory sends a licensed guide); now "No commission on your trips — a free listing in
+   <city>". Body no longer opens on being three weeks old; commission leads; one ask, not three,
+   and it asks him to LOOK — nothing is published and no account created until he says so, which is
+   true of the flow. **No A/B split, deliberately:** 428 letters at 2.4% cannot separate two
+   subjects from noise. CityLauncher deploy requested — **next run must PROBE that it shipped.**
+5. **CORRECTED A CHECKER THAT WOULD HAVE PUNISHED THE RIGHT ANSWER.** `rulings_check` RUL-104 pinned
+   the literal "a global marketplace that opened"; the rule is that we call ourselves a global
+   marketplace and name no country of origin. My rewrite separated those two sentences and FAILed a
+   letter that obeys the ruling. **My copy was also genuinely wrong — it had dropped "global" — so
+   both were fixed:** the word is back, and the assertion now tests the claim, not the sentence.
+   **Proven still able to catch the original fault**, in both directions, before it was accepted.
+   Exactly where run 15 said to look after RUL-133. `rulings_check`: 137, **0 FAIL**.
+6. **Ledger green before and after** (shards + `--combine=8`), 0 regressions both times. The board
+   caught two of my own mistakes on the way — a CSS class name matched where I meant a div, and the
+   ops email-template mirror gone stale against the sending copy. Both fixed, not argued with.
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
-1. **Write the Sunday summary** (see the note at the top). That is the one required deliverable.
-2. Run the number. Read `human_funnel` / `letter_humans` and the `q_*` beacons.
+0. **TIMING RISK, AND IT IS THE ONE THING THAT COULD WASTE THIS RUN.** The rewritten letter was
+   still QUEUED when run 16 ended (`CL_DEPLOY_REQUEST.flag` present). The server wave fires at
+   **22:10 UTC on 20 Sep** — *before* the next nightly goal run — so if the host autodeploy agent
+   does not tick before then (David's laptop asleep), the wave sends the OLD letter to all 428
+   Maine addresses and the rewrite is wasted on the largest batch left. Run 16 tried to register a
+   one-off pre-wave check and **the scheduled-task registration needed an approval nobody was
+   awake to give**, so it does not exist. Told to David in the run's notification instead. **If you
+   are reading this before 22:10 UTC on 20 Sep, do step 1 FIRST.**
+1. **Confirm the CityLauncher deploy landed** (`CL_DEPLOY_RESULT.txt`, then PROBE the server's copy
+   of the template) **before 22:10 UTC.** A deploy tool printing success is EXECUTED, not PROBED.
+2. Run the number. Read `human_funnel` / `letter_humans` and the `q_*` beacons — and read the `q_*`
+   ones against RG-0419: near-zero is EXPECTED while the remaining list is US.
 3. Ledger in shards (`--shard=k/8`, then `--combine=8`) + `rulings_check`. If the board opens RED,
    clear `.git/index.lock` with `scripts/git_unlock.py` and re-run **before** believing it.
-4. **Then the letter.** It is the one measurable leak, it is mine, and run 14 deferred it, run 15
-   deferred it for David's decisions. It should not be deferred a third time.
-5. **Read the door's beacons for the first time.** From tonight `/q/<cat>` reports `q_door`,
-   `q_step_<n>`, `q_draft`, `q_handover`, `q_signin_sent` and `dwell`. The nightly wave fires at
-   00:10 SAST, so the first real numbers for the lane that carries every cold arrival land within
-   a day. **Read them against `dwell`, never raw.** Also watch `q_wa_self` on `/quick/` — it is a
-   hypothesis about a market, not a fact, and if nobody taps it, say so.
-6. **RG-0414 DOOR-RETURN-1 is the next real build** and probably the highest-value one left
-   inside this authority: a way back from the public door that does not need an inbox.
-7. The four new OPEN entries carry David's unbuilt decisions with the reason each was deferred:
-   **RG-0409** ladder values + cap 40 (a scoring change, four hardcoded caps, and NOT on the
-   critical path — publishing does not depend on the score) · **RG-0410** reachability gate +
-   post-confirm glimpse · **RG-0411** taxi-drop area unit · **RG-0412** EULA in the launch
-   languages (**must wait on RG-0400**, or four EULA copies become twenty).
+4. **Read the new letter's first numbers** after the 21 Sep wave. Clicks arrive tagged
+   `src=<city>-<category>-<yyyymmdd>`, so the new letter's are separable by date. **Do not call it
+   either way on one night** — 42 letters at any plausible rate is one or two clicks.
+5. **The employer lane is now the main line, not a second track.** The 92-role slate is under review
+   with David (`ROLE_SLATE_REVIEW.md`) and that review changes its shape, so build the parts that
+   hold under every scenario: `speaks[]` on the seller, and RG-0414 DOOR-RETURN-1.
+6. **RG-0419 is the highest-value door work left** — per-country question sets. The magic link
+   already carries `?country=`. Price bands are per-market judgement: R250 and $250 are not the
+   same offer, and that part is worth putting in front of David as a question, not guessing.
+7. Still carried from run 15 with the reason each was deferred: **RG-0409** ladder values + cap 40 ·
+   **RG-0410** reachability gate + post-confirm glimpse · **RG-0411** taxi-drop area unit ·
+   **RG-0412** EULA in the launch languages (**must wait on RG-0400**).
 
 ## OPEN LOOPS
 
 - **RG-0400 (open): the EULA a seller actually ticks is a FOURTH, unsynced copy** — `sob-eula-box`
-  in marketsquare.html reads v1.10 while the site publishes v1.17. Restyled markup, not a byte
-  copy, so there is no safe mechanical sync; the real fix is rendering the box from the one
-  source. Needs its own session and eyes on the rendered result. **Blocks RG-0412.**
+  in marketsquare.html reads v1.10 while the site publishes v1.18. Restyled markup, not a byte
+  copy, so there is no safe mechanical sync; the real fix is rendering the box from the one source.
+  Needs its own session and eyes on the rendered result. **Blocks RG-0412.**
+- **RG-0419 (open): the Quick door prices only in rands** — see above. Not a defect to paper over.
+- **RG-0414 (open): the only way back from the public door** is an emailed sign-in link plus one
+  browser's localStorage — the two things this market is least likely to have.
 - `_get_json()` still does not exist (specified by run 13, unwritten). RG-0401 covers most of it;
   14 `json.loads(_get(...))` sites remain individually unprotected against a 200 that is not JSON.
 - The ledger's `rg_no_third_party_script_on_surface` downloads ~16 MB per run — why shard 1 is slow.
@@ -196,64 +177,81 @@ employees as referrals."* **RUL-150, RUL-151, RUL-152.** The plan is `QUICK_LIST
 - RG-0346 (agency letters lack the console CTA) — open, adds no nightly volume.
 - Film 07 (Liquidation) unpublished — David's click, when he chooses.
 
-## SUPPLY — ASSOCIATION LANE NEARLY DONE; LICENCE FILES CARRY NO MAILBOX
+## SUPPLY — THE ASSOCIATION LANE IS THE ONLY ONE STILL PRODUCING
 
 - Harvested + drawn: rrca, pacific, moga, wyoga, coa, apha, mpga. New association = one dict entry
-  in `CityLauncher/us_register_assoc.py`; run via `run_us_registers.bat`. ZA Durban/PMB rows =
-  blocked category, 0 sendable.
+  in `CityLauncher/us_register_assoc.py`; run via `run_us_registers.bat`.
+- **Registers are the best addresses we own** — rrca 2.55%, mpga 2.5%, moga 2.63%, apha 0% bounce,
+  against 7–12% for every scraped source. A new register is worth more than a new scraper.
 - **NOT harvestable, do not re-probe:** Idaho IOGA · NM NMCOG · Utah UOGA · NY NYSOGA · Oregon OOGA
   · WA WOGA · Colorado DPO · Vermont VOGA · Nevada · **Texas TREC (no email column)** · Idaho IOGLB
   · Oregon Marine Board · Alaska CBPL · Wyoming board home page.
-- **Working kinds:** member directories that PUBLISH a mailbox. Untested leads: US Forest Service
-  outfitter-guide permit-holder lists; chamber-of-commerce (GrowthZone/ChamberMaster) directories;
-  state guide associations not yet probed (AZ, NV, SD, ND, NE, KS, OK, AR, MO, MN, WI, MI, PA, VA,
-  NC, TN).
+- **Untested leads:** US Forest Service outfitter-guide permit-holder lists; chamber-of-commerce
+  (GrowthZone/ChamberMaster) directories; state guide associations not yet probed (AZ, NV, SD, ND,
+  NE, KS, OK, AR, MO, MN, WI, MI, PA, VA, NC, TN).
 - **There is still no acquisition channel at all for the SA housecleaner market** (QUICK_LISTING_
   SPEC D5, David's, open). The product idea is strong and the way to reach her does not exist yet.
 
 ## THINGS ALREADY TRIED THAT DID NOT WORK
 
 - Reading raw `funnel` step counts as people (they include scanners) — read `human_funnel`.
-- **Instrumenting a lane without checking which URL the letters use.** RG-0405 measured
-  `quick.html` (`/quick/`) while every letter points at `/q/<cat>` (`genie/q_index.html`). Open a
-  live letter, follow the link, and check `typeof qTrack` on the page it actually opens.
+- **Instrumenting a lane without checking which URL the letters use** (RG-0405 measured `/quick/`
+  while every letter points at `/q/<cat>`) — and its sequel, **assuming a lane that exists serves
+  the readers you are sending to** (RG-0419: the door is ZA-only, the list is US).
+- **Reading "the sends are decaying" as a fault.** Run 16 checked gates, policy, guards and the
+  sender before the answer turned out to be that the list is nearly used up. Count the sendable
+  pool FIRST: `wave_runner.sendable_by_category` over every city takes 90 seconds.
 - Believing a ledger RED before clearing `.git/index.lock`. Two REDs, one lock (run 14).
-- `request_deploy.py --files <x>` — it does not commit and ships nothing. Use `--all`, then PROBE.
 - "Resend is unreachable from the box" (run 13) — wrong; it answers 200 in 0.19 s.
-- Pinning an assertion to today's version number (run 15: RUL-133 FAILed on a correct bump).
+- Pinning an assertion to today's version number or today's phrasing (run 15: RUL-133; run 16:
+  RUL-104). Assert the property. A checker pinned to a constant will one day punish a correct fix.
 - Backgrounding work in the device shell — `nohup`/`setsid` are both killed when the call returns.
-  Run shards in the FOREGROUND, in parallel, with `wait` (7 shards ≈ 75 s).
-- Opening `/admin.html` publicly. `fill_wave_gaps.py` via the queue (401). Reading "no sendable
-  prospects" as supply (check `armed`/`gates_green`/`disarmed_by` FIRST). Halving the batch for a
-  "measurement week" (RG-0290). US general search scraping. Trusting "wave #N logged". Running the
-  ledger in one call. Probing register sites blind (curl first). Retrying a dead mount twice.
+  Run shards in the FOREGROUND, in parallel, with `wait` (8 shards ≈ 85 s).
+- Opening `/admin.html` publicly. `fill_wave_gaps.py` via the queue (401). Halving the batch
+  for a "measurement week" (RG-0290). US general search scraping. Trusting "wave #N logged".
+  Running the ledger in one call. Probing register sites blind (curl first). Retrying a dead
+  mount twice. `request_deploy.py --files <x>` (ships nothing — use `--all`, then PROBE).
 
 ## OPEN QUESTIONS FOR DAVID (batched, never dripped)
 
-**Three, all from QUICK_LISTING_SPEC.md §4, all positioning or strategy rather than technique —
-and none of them blocks anything currently in flight:**
+**None of these blocks anything in flight. All are positioning or strategy, not technique.**
 
-- **D3 — what is she called?** "Housecleaner", "domestic worker", "home help", "cleaner" carry
-  very different weight in South Africa. The Quick door is labelled `homehelp` today.
+- **D3 — what is she called?** "Housecleaner", "domestic worker", "home help", "cleaner" carry very
+  different weight in South Africa. The Quick door is labelled `homehelp` today.
 - **D4 — do the South African letters get re-aimed at the Quick door** as the primary call to
   action, rather than sitting as a strip under a "list your business" letter written for companies?
 - **D5 — where does she come from at all?** We have no list of housecleaners and no directory to
   harvest. This decides whether the redirection is a four-week or a four-month move.
+- **NEW, D8 — the 1,114 teachers on the education register.** They are the single largest reachable
+  block left and they are held by `blocked_categories` as a person-only/POPIA call, not by anything
+  technical. Whether they may be written to is yours, not mine.
 
-**One thing David should KNOW, not decide:** on how the letter performs today, 20 by 31 October is
-not reachable through that channel. Nothing is blocked; the letter is mine and is next.
+**One thing David should KNOW, not decide:** the cold list has 466 addresses left in it. On measured
+performance that is not 20 listings, and it is very likely 0. Nothing is blocked; the letter is
+rewritten and shipping; the employer lane is the only route to the goal still open.
 
-## WHAT RUN 15 LEARNED ABOUT ITSELF
+## WHAT RUN 16 LEARNED ABOUT ITSELF
 
-**A checker pinned to today's value will one day punish the correct answer.** `rulings_check`
-FAILed RUL-133 because the EULA had legitimately moved to v1.17 and the assertion demanded the
-literal "v1.16" — the Buzz clause the ruling is actually about was perfectly intact. The cheap cure
-is to revert the good change until the checker is quiet, and it would have been indistinguishable
-from diligence. Assert the PROPERTY (do the four stamps agree?), never the constant. Same class as
-EULA-ANCHOR-1, and worth a look wherever else a literal is standing in for a rule.
+**A wrong hypothesis that survives one check will survive ten.** This run nearly built a
+country-neutral Quick-door link into the Maine letter on the strength of a correct-sounding chain:
+the door is instrumented, the letters should point at it, the strip is fenced ZA-only, therefore
+unfence the door. Every step was true and the conclusion was wrong, because nobody had opened the
+door itself. One fetch of the live page — rand price chips, Gauteng suburb tiles — killed it in
+thirty seconds and turned a bad build into a real finding. **The cheapest step in the chain was the
+one nobody had taken.** Same shape as run 15's stale dashboard: PROBED beats READ, and the thing
+most worth probing is the assumption the whole plan rests on.
 
-**And: verify before you fix.** Two items were handed to this run as work. One — the half-landed
-EULA — was real. The other — the stale dashboard — had already been fixed by another lane, and
-"refresh it through the normal lanes" would have deployed over a good page on the strength of a
-note written the day before. One md5 settled it. PROBED beats READ, including when what you are
-reading is your own predecessor's handover.
+**A truncated tool output is not evidence of absence — and I nearly shipped a fix on one.** Late in
+the run I grepped `deploy_citylauncher.bat` for the letter I had just rewritten, saw it was not in
+the output, and concluded the deploy would print SHIPPED while the wave sent the old copy. It was a
+real-sounding finding of exactly the shape this run had already produced twice. It was wrong: my
+grep was `| head -20` and the filename sits below the cut, added by WAVE-SERVER-1 on 18 Sep for
+this very reason. **Two minutes from editing a deploy script that was not broken** — run 15's
+"verify before you fix", and the reason it is worth writing down twice is that the false finding
+felt exactly like the two true ones. The salvage was to assert the PROPERTY instead: every template
+`emailer.py` can select must be on the list the deploy ships. That list is hand-typed and has gone
+stale before, so the assertion is worth more than the edit would have been.
+
+**And the board is a colleague, not a gate.** It caught two of my own errors tonight and one of them
+— a CSS class name matching where I meant a div — I had already convinced myself was a false
+positive. It was not. Read the red before arguing with it.

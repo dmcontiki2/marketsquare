@@ -1,0 +1,5999 @@
+{
+ "_generated_by": "scripts/build_role_registry.py from ROLE_SLATE_REVIEW.md -- never hand-edit",
+ "_rulings": [
+  "RUL-150",
+  "RUL-153",
+  "RUL-154",
+  "RUL-155",
+  "RUL-156",
+  "RUL-157"
+ ],
+ "_invariant": "Enrolment creates an account and a sign-in link, never a listing (RUL-150).",
+ "door": {
+  "category": "services",
+  "picker_steps": [
+   {
+    "key": "group",
+    "q": "What kind of work?",
+    "kind": "tile",
+    "source": "registry.group"
+   },
+   {
+    "key": "role",
+    "q": "Which one are you?",
+    "kind": "tile",
+    "source": "registry.role",
+    "photo": "role_picture"
+   }
+  ],
+  "taps_to_draft": 5,
+  "ruling": "RUL-159"
+ },
+ "counts": {
+  "in": 61,
+  "later": 19,
+  "out": 19
+ },
+ "roles": [
+  {
+   "key": "home_cleaner",
+   "label": {
+    "en": "Home cleaner",
+    "af": "Huisskoonmaker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "in",
+   "on_davids_list": true,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=home_cleaner",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household",
+    "contract_cleaner"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/home_cleaner.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a spotless sunlit lounge with a neatly folded cleaning cloth, spray bottle and bucket on a gleaming tiled floor. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Home cleaner available in {where}",
+    "af": "Huisskoonmaker beskikbaar in {where}"
+   },
+   "note": "David's list. The anchor role — everything is already built around it.",
+   "aliases": [
+    "Laundry & ironing"
+   ]
+  },
+  {
+   "key": "housekeeper",
+   "label": {
+    "en": "Housekeeper",
+    "af": "Huishoudster",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week",
+     "extra": [
+      {
+       "t": "Live-in"
+      },
+      {
+       "t": "Live-out"
+      }
+     ]
+    }
+   ],
+   "enrol_link": "/q/services?role=housekeeper",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/housekeeper.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a perfectly made bed with crisp white linen, folded towels and a tidy bedside table. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Housekeeper available in {where}",
+    "af": "Huishoudster beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'Housekeeper (live-in / live-out)'): live-in or live-out is an answer on her *when* tap, not her name."
+  },
+  {
+   "key": "nanny",
+   "label": {
+    "en": "Nanny",
+    "af": "Kinderoppasser",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [
+    {
+     "key": "ages",
+     "q": "Which ages do you care for?",
+     "kind": "tile",
+     "multi": true,
+     "tiles": [
+      {
+       "t": "Babies"
+      },
+      {
+       "t": "Toddlers"
+      },
+      {
+       "t": "School age"
+      },
+      {
+       "t": "Teenagers"
+      }
+     ]
+    }
+   ],
+   "enrol_link": "/q/services?role=nanny",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-153"
+   },
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/nanny.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a bright playroom with wooden building blocks, a picture book and a small backpack neatly arranged. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Nanny available in {where}",
+    "af": "Kinderoppasser beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'Nanny / childminder' — 'childminder' is British). **Police clearance gates public visibility (RUL-153).** Tap override: *children's ages* replaces *what*."
+  },
+  {
+   "key": "caregiver",
+   "label": {
+    "en": "Caregiver",
+    "af": "Versorger",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [
+    {
+     "key": "cares_for",
+     "q": "Who do you care for?",
+     "kind": "tile",
+     "multi": true,
+     "tiles": [
+      {
+       "t": "An older person"
+      },
+      {
+       "t": "A person with a disability"
+      },
+      {
+       "t": "Someone recovering at home"
+      }
+     ]
+    }
+   ],
+   "enrol_link": "/q/services?role=caregiver",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-153"
+   },
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/caregiver.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a comfortable armchair beside a window with a folded blanket, reading glasses, a cup of tea and a walking stick. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Caregiver available in {where}",
+    "af": "Versorger beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'Elder carer') — the SA word; absorbs Home nurse aide. **Police clearance gates public visibility (RUL-153).** Tap override: *who she cares for* (an older person / a person with a disability / someone recovering at home) replaces *what* — never a condition, never a clinical claim (s15c, RG-0238).",
+   "aliases": [
+    "Home nurse aide"
+   ]
+  },
+  {
+   "key": "home_nurse_aide",
+   "label": {
+    "en": "Home nurse aide",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "out",
+   "on_davids_list": false,
+   "merged_into": "caregiver",
+   "note": "19 Sep: 'nurse' is a title reserved for people registered with SANC under the Nursing Act — folded into Caregiver instead."
+  },
+  {
+   "key": "cook",
+   "label": {
+    "en": "Cook",
+    "af": "Kok",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=cook",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/cook.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a home kitchen counter with a pot of stew simmering, chopped vegetables on a board and fresh bread. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Cook available in {where}",
+    "af": "Kok beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'Cook (domestic)'). Separate row from Chef: a Cook works in a home, a Chef in a kitchen business."
+  },
+  {
+   "key": "chef",
+   "label": {
+    "en": "Chef",
+    "af": "Sjef",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "in",
+   "on_davids_list": true,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=chef",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "hotel_group",
+    "restaurant",
+    "caterer"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/chef.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a professional stainless-steel kitchen pass with plated dishes under warm lights and a chef's knife. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Chef available in {where}",
+    "af": "Sjef beskikbaar in {where}"
+   },
+   "note": "David's list. Sits oddly between Casuals and a trade — worth a word in the review."
+  },
+  {
+   "key": "laundry_ironing",
+   "label": {
+    "en": "Laundry & ironing",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "out",
+   "on_davids_list": false,
+   "merged_into": "home_cleaner",
+   "note": "19 Sep: a task, not a name she calls herself — stays an option on Home cleaner's *what* tap, where the live homehelp door already has it."
+  },
+  {
+   "key": "gardener",
+   "label": {
+    "en": "Gardener",
+    "af": "Tuinier",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=gardener",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household",
+    "municipality",
+    "estate"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/gardener.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a freshly mown suburban lawn with neat flower beds, a rake and a wheelbarrow. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Gardener available in {where}",
+    "af": "Tuinier beskikbaar in {where}"
+   },
+   "note": "Already an option on the live homehelp door.",
+   "aliases": [
+    "Grounds & landscaping help"
+   ]
+  },
+  {
+   "key": "pool_cleaner",
+   "label": {
+    "en": "Pool cleaner",
+    "af": "Swembadskoonmaker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=pool_cleaner",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/pool_cleaner.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a crystal-clear blue swimming pool with a pool net and a brush resting on the paving. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Pool cleaner available in {where}",
+    "af": "Swembadskoonmaker beskikbaar in {where}"
+   },
+   "note": "Every role costs a parity-checked photo set (SO-2); beta carries the volume roles."
+  },
+  {
+   "key": "window_cleaner",
+   "label": {
+    "en": "Window cleaner",
+    "af": "Vensterskoonmaker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=window_cleaner",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/window_cleaner.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a squeegee and bucket beside a streak-free window reflecting a blue sky. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Window cleaner available in {where}",
+    "af": "Vensterskoonmaker beskikbaar in {where}"
+   },
+   "note": "Homes rarely hire one directly in SA; office windows are contract work."
+  },
+  {
+   "key": "handyman",
+   "label": {
+    "en": "Handyman",
+    "af": "Handwerksman",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=handyman",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household",
+    "estate"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/handyman.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: an open toolbox with a drill, spirit level and screwdrivers beside a newly hung door. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Handyman available in {where}",
+    "af": "Handwerksman beskikbaar in {where}"
+   },
+   "note": "Added 19 Sep — the biggest household hire missing from the slate. Casuals ladder (no licence claimed; anything electrical or gas stays with the Technical trades)."
+  },
+  {
+   "key": "pet_sitter_dog_walker",
+   "label": {
+    "en": "Pet sitter / dog walker",
+    "af": "Troeteldieroppasser / honde-stapper",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=pet_sitter_dog_walker",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/pet_sitter_dog_walker.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a dog lead, water bowl and ball on a garden path. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Pet sitter / dog walker available in {where}",
+    "af": "Troeteldieroppasser / honde-stapper beskikbaar in {where}"
+   },
+   "note": "Added 19 Sep."
+  },
+  {
+   "key": "house_sitter",
+   "label": {
+    "en": "House sitter",
+    "af": "Huisoppasser",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=house_sitter",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/house_sitter.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a front door with a set of house keys on a hook and potted plants on the step. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "House sitter available in {where}",
+    "af": "Huisoppasser beskikbaar in {where}"
+   },
+   "note": "Added 19 Sep. Home access — RUL-115 gate applies; clearance a bonus, not a gate."
+  },
+  {
+   "key": "room_attendant",
+   "label": {
+    "en": "Room attendant",
+    "af": "Kamerbediende",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "in",
+   "on_davids_list": true,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=room_attendant",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "hotel_group"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/room_attendant.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a hotel room with a freshly made bed, folded towels and a housekeeping trolley in the doorway. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Room attendant available in {where}",
+    "af": "Kamerbediende beskikbaar in {where}"
+   },
+   "note": "David's list. Renamed 19 Sep (was 'Hotel cleaner / room attendant') — her title at every SA hotel group, which is who enrols her."
+  },
+  {
+   "key": "kitchen_assistant",
+   "label": {
+    "en": "Kitchen assistant",
+    "af": "Kombuisassistent",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "in",
+   "on_davids_list": true,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=kitchen_assistant",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "fast_food_franchise",
+    "hotel_group",
+    "restaurant"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/kitchen_assistant.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a busy commercial kitchen prep station with stacked clean plates and chopped ingredients. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Kitchen assistant available in {where}",
+    "af": "Kombuisassistent beskikbaar in {where}"
+   },
+   "note": "David's list. Renamed 19 Sep (was 'Quick-food kitchen hand'); absorbs Dishwasher / kitchen porter — one job.",
+   "aliases": [
+    "Dishwasher / kitchen porter"
+   ]
+  },
+  {
+   "key": "cashier",
+   "label": {
+    "en": "Cashier",
+    "af": "Kassier",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "in",
+   "on_davids_list": true,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=cashier",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "fast_food_franchise",
+    "retailer",
+    "fuel_station_dealer"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/cashier.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a tidy shop till counter with a card machine and a neat row of receipts. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Cashier available in {where}",
+    "af": "Kassier beskikbaar in {where}"
+   },
+   "note": "David's list. Renamed 19 Sep (was 'Till / counter assistant') — the SA word."
+  },
+  {
+   "key": "waiter",
+   "label": {
+    "en": "Waiter",
+    "af": "Kelner",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=waiter",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "restaurant",
+    "hotel_group"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/waiter.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a restaurant table set with glasses, cutlery and a tray carrying two plated meals. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Waiter available in {where}",
+    "af": "Kelner beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'Waiter / waitress') — one word, for men and women."
+  },
+  {
+   "key": "barista",
+   "label": {
+    "en": "Barista",
+    "af": "Barista",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=barista",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/barista.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: an espresso machine pouring coffee with a latte-art cup on the counter. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Barista available in {where}",
+    "af": "Barista beskikbaar in {where}"
+   },
+   "note": "Small, city-centre-only pool."
+  },
+  {
+   "key": "bartender",
+   "label": {
+    "en": "Bartender",
+    "af": "Kroegman",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=bartender",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "restaurant",
+    "hotel_group"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/bartender.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a bar counter with polished glasses, a cocktail shaker and bottles on backlit shelves. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Bartender available in {where}",
+    "af": "Kroegman beskikbaar in {where}"
+   },
+   "note": "Every seller is an adult, so liquor age rules do not bite."
+  },
+  {
+   "key": "dishwasher_kitchen_porter",
+   "label": {
+    "en": "Dishwasher / kitchen porter",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "out",
+   "on_davids_list": false,
+   "merged_into": "kitchen_assistant",
+   "note": "19 Sep: merged into Kitchen assistant ('kitchen porter' is British)."
+  },
+  {
+   "key": "baker",
+   "label": {
+    "en": "Baker",
+    "af": "Bakker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=baker",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/baker.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: fresh loaves and rolls cooling on racks in a bakery. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Baker available in {where}",
+    "af": "Bakker beskikbaar in {where}"
+   },
+   "note": "Low volume; mostly in-store supermarket bakeries."
+  },
+  {
+   "key": "butchery_assistant",
+   "label": {
+    "en": "Butchery assistant",
+    "af": "Slaghuisassistent",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=butchery_assistant",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/butchery_assistant.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a clean butchery display counter with neatly cut meat and a scale. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Butchery assistant available in {where}",
+    "af": "Slaghuisassistent beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was \"Butcher's assistant\") — the SA word."
+  },
+  {
+   "key": "banqueting_function_staff",
+   "label": {
+    "en": "Banqueting / function staff",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "out",
+   "on_davids_list": false,
+   "merged_into": "event_staff",
+   "note": "19 Sep: merged into Event staff — one job under two labels."
+  },
+  {
+   "key": "petrol_attendant",
+   "label": {
+    "en": "Petrol attendant",
+    "af": "Petroljoggie",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Retail & forecourt",
+   "status": "in",
+   "on_davids_list": true,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=petrol_attendant",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "fuel_station_dealer"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/petrol_attendant.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a fuel pump nozzle in a car's fuel inlet at a South African forecourt, with a squeegee on the island. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Petrol attendant available in {where}",
+    "af": "Petroljoggie beskikbaar in {where}"
+   },
+   "note": "David's list. Renamed 19 Sep (was 'Petrol / forecourt attendant'). Each station is a dealer-owned business that can say yes on the spot."
+  },
+  {
+   "key": "shelf_packer",
+   "label": {
+    "en": "Shelf packer",
+    "af": "Rakpakker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Retail & forecourt",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=shelf_packer",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "retailer"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/shelf_packer.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a supermarket aisle with perfectly faced, fully stocked shelves. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Shelf packer available in {where}",
+    "af": "Rakpakker beskikbaar in {where}"
+   },
+   "note": "Absorbs Stock assistant — one job.",
+   "aliases": [
+    "Stock assistant"
+   ]
+  },
+  {
+   "key": "stock_assistant",
+   "label": {
+    "en": "Stock assistant",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Retail & forecourt",
+   "status": "out",
+   "on_davids_list": false,
+   "merged_into": "shelf_packer",
+   "note": "19 Sep: merged into Shelf packer."
+  },
+  {
+   "key": "shop_assistant",
+   "label": {
+    "en": "Shop assistant",
+    "af": "Winkelassistent",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Retail & forecourt",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=shop_assistant",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "retailer"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/shop_assistant.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a neat small shop counter with goods displayed on shelves behind it. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Shop assistant available in {where}",
+    "af": "Winkelassistent beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'Spaza / shop assistant') — 'spaza' names the shop, not the work."
+  },
+  {
+   "key": "merchandiser",
+   "label": {
+    "en": "Merchandiser",
+    "af": "Uitstaller",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Retail & forecourt",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=merchandiser",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "retailer",
+    "brand"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/merchandiser.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a branded promotional shelf display being fully stocked in a supermarket, with a clipboard (no readable brand names). The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Merchandiser available in {where}",
+    "af": "Uitstaller beskikbaar in {where}"
+   },
+   "note": "Added 19 Sep — brand-paid shelf work across several stores; the biggest retail gig role that was missing."
+  },
+  {
+   "key": "car_guard",
+   "label": {
+    "en": "Car guard",
+    "af": "Motorwag",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Retail & forecourt",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=car_guard",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": {
+    "type": "licence",
+    "licences": [
+     "psira"
+    ],
+    "ruling": "RUL-156"
+   },
+   "employer_kinds": [
+    "security_company"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/car_guard.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a bright reflective vest folded on a bollard in a shopping-centre parking lot. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Car guard available in {where}",
+    "af": "Motorwag beskikbaar in {where}"
+   },
+   "note": "19 Sep: was HOLD. PSIRA treats car guards as security officers who must be registered. Licence gate (RUL-155/156): publicly visible once PSIRA registration is verified. The earlier 'easiest cold sign-up' note was wrong."
+  },
+  {
+   "key": "parking_attendant",
+   "label": {
+    "en": "Parking attendant",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Retail & forecourt",
+   "status": "out",
+   "on_davids_list": false,
+   "note": "19 Sep: a site-bound job (one mall or municipal lot) nobody hires through a marketplace; he lists under what else he can do."
+  },
+  {
+   "key": "picker_packer",
+   "label": {
+    "en": "Picker / packer",
+    "af": "Uitsoeker / pakker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Logistics & yard",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=picker_packer",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "freight_operator",
+    "retailer",
+    "factory"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/picker_packer.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a warehouse aisle with a pallet of packed, taped boxes and a handheld scanner. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Picker / packer available in {where}",
+    "af": "Uitsoeker / pakker beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'Warehouse picker / packer') — the SA job-advert phrase."
+  },
+  {
+   "key": "loader",
+   "label": {
+    "en": "Loader",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Logistics & yard",
+   "status": "out",
+   "on_davids_list": false,
+   "merged_into": "general_worker",
+   "note": "19 Sep: merged into General worker (was General labourer) — same hire."
+  },
+  {
+   "key": "removals_helper",
+   "label": {
+    "en": "Removals helper",
+    "af": "Verhuishelper",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Logistics & yard",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=removals_helper",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "freight_operator"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/removals_helper.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a moving truck with its doors open, wrapped furniture and stacked boxes inside. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Removals helper available in {where}",
+    "af": "Verhuishelper beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'Removals / moving help'). Households hire directly."
+  },
+  {
+   "key": "delivery_rider",
+   "label": {
+    "en": "Delivery rider",
+    "af": "Afleweringsryer",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Logistics & yard",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=delivery_rider",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": {
+    "type": "licence",
+    "licences": [
+     "driving_licence_code_a"
+    ],
+    "ruling": "RUL-156"
+   },
+   "employer_kinds": [
+    "fast_food_franchise",
+    "retailer"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/delivery_rider.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a delivery motorbike with a top box parked at a kerb. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Delivery rider available in {where}",
+    "af": "Afleweringsryer beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'Delivery rider (e-hailing / food)'). Already gig workers. Licence gate (RUL-155): verified driving licence (code A for a motorbike) opens public visibility."
+  },
+  {
+   "key": "courier_on_foot",
+   "label": {
+    "en": "Courier on foot",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Logistics & yard",
+   "status": "out",
+   "on_davids_list": false,
+   "note": "19 Sep: not a role hired at any scale in SA."
+  },
+  {
+   "key": "factory_worker_general",
+   "label": {
+    "en": "Factory worker (general)",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Site & general labour",
+   "status": "out",
+   "on_davids_list": true,
+   "merged_into": "general_worker",
+   "note": "David's list. 19 Sep: a workplace, not a job — merged into General worker; 'factory' is an `employer_kinds[]` value, and staff list as General worker, Picker / packer, Sewing machinist or Machine operator."
+  },
+  {
+   "key": "municipal_worker_general",
+   "label": {
+    "en": "Municipal worker (general)",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Site & general labour",
+   "status": "out",
+   "on_davids_list": true,
+   "merged_into": "general_worker",
+   "note": "David's list. 19 Sep: the municipality is the enrolling employer (`employer_kinds[]`), not the job — staff list as General worker, Office cleaner, Driver etc. Still a big enrollment target."
+  },
+  {
+   "key": "farm_worker",
+   "label": {
+    "en": "Farm worker",
+    "af": "Plaaswerker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Site & general labour",
+   "status": "in",
+   "on_davids_list": true,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=farm_worker",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "farm"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/farm_worker.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: rows of crops in a South African field at golden hour with a crate of harvested produce. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Farm worker available in {where}",
+    "af": "Plaaswerker beskikbaar in {where}"
+   },
+   "note": "David's list. What she calls herself; farms hire directly by season. Seasonal lay-off is the strongest enrollment pitch we have."
+  },
+  {
+   "key": "general_worker",
+   "label": {
+    "en": "General worker",
+    "af": "Algemene werker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Site & general labour",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=general_worker",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "municipality",
+    "factory",
+    "mine",
+    "farm",
+    "construction"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/general_worker.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a pair of work gloves, a shovel and a wheelbarrow on a work site. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "General worker available in {where}",
+    "af": "Algemene werker beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'General labourer') — the most-used title in SA job adverts. Absorbs Loader, Factory worker, Municipal worker.",
+   "aliases": [
+    "Loader",
+    "Factory worker (general)",
+    "Municipal worker (general)"
+   ]
+  },
+  {
+   "key": "painter",
+   "label": {
+    "en": "Painter",
+    "af": "Verwer",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Site & general labour",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=painter",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "construction"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/painter.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a freshly painted wall with a roller tray, roller and drop sheet. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Painter available in {where}",
+    "af": "Verwer beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was \"Painter's assistant\"). Casuals, because most SA house painters hold no certificate; a trade certificate is evidence on this row (8 pts). Replaces Technical 'Painter (qualified)'.",
+   "aliases": [
+    "Painter (qualified)"
+   ]
+  },
+  {
+   "key": "builders_assistant",
+   "label": {
+    "en": "Builder's assistant",
+    "af": "Bouersassistent",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Site & general labour",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=builders_assistant",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "construction"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/builders_assistant.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a half-built brick wall with a trowel, mortar tub and stacked bricks. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Builder's assistant available in {where}",
+    "af": "Bouersassistent beskikbaar in {where}"
+   },
+   "note": "The SA construction entry job."
+  },
+  {
+   "key": "office_cleaner",
+   "label": {
+    "en": "Office cleaner",
+    "af": "Kantoorskoonmaker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Site & general labour",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=office_cleaner",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "contract_cleaner",
+    "municipality"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/office_cleaner.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a clean open-plan office with a cleaning trolley at the end of the row. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Office cleaner available in {where}",
+    "af": "Kantoorskoonmaker beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'Cleaner (office / industrial)'). Contract cleaning companies are among the biggest enrolling employers."
+  },
+  {
+   "key": "grounds_landscaping_help",
+   "label": {
+    "en": "Grounds & landscaping help",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Site & general labour",
+   "status": "out",
+   "on_davids_list": false,
+   "merged_into": "gardener",
+   "note": "19 Sep: merged into Gardener — one job, house or estate."
+  },
+  {
+   "key": "seamstress_tailor",
+   "label": {
+    "en": "Seamstress / tailor",
+    "af": "Naaldwerkster / kleremaker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Trades-adjacent & informal",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=seamstress_tailor",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "clothing_factory"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/seamstress_tailor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a sewing machine with measuring tape, pins and a half-finished garment. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Seamstress / tailor available in {where}",
+    "af": "Naaldwerkster / kleremaker beskikbaar in {where}"
+   },
+   "note": "Both words kept — each is what one of them calls themselves."
+  },
+  {
+   "key": "sewing_machinist",
+   "label": {
+    "en": "Sewing machinist",
+    "af": "Naaimasjienwerker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Trades-adjacent & informal",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=sewing_machinist",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "clothing_factory"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/sewing_machinist.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: an industrial sewing machine with a stack of cut fabric pieces. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Sewing machinist available in {where}",
+    "af": "Naaimasjienwerker beskikbaar in {where}"
+   },
+   "note": "Added 19 Sep — the clothing-factory job; KZN and Cape Town retrenchments fit the former-employee pitch exactly."
+  },
+  {
+   "key": "hair_braider",
+   "label": {
+    "en": "Hair braider",
+    "af": "Haarvlegter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Trades-adjacent & informal",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=hair_braider",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/hair_braider.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a set of neat finished braids on a salon mannequin head with combs and hair extensions. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Hair braider available in {where}",
+    "af": "Haarvlegter beskikbaar in {where}"
+   },
+   "note": "Large informal trade, distinct from hairdressing."
+  },
+  {
+   "key": "hairdresser",
+   "label": {
+    "en": "Hairdresser",
+    "af": "Haarkapper",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Trades-adjacent & informal",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=hairdresser",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/hairdresser.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a salon station with scissors, combs, a hairdryer and a mirror. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Hairdresser available in {where}",
+    "af": "Haarkapper beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'Salon assistant') — what she calls herself."
+  },
+  {
+   "key": "nail_technician",
+   "label": {
+    "en": "Nail technician",
+    "af": "Naelterapeut",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Trades-adjacent & informal",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=nail_technician",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/nail_technician.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a manicure station with polish bottles, a nail file and a neatly finished set of nail tips on a display. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Nail technician available in {where}",
+    "af": "Naelterapeut beskikbaar in {where}"
+   },
+   "note": "Added 19 Sep — one of the largest informal beauty trades."
+  },
+  {
+   "key": "cobbler",
+   "label": {
+    "en": "Cobbler",
+    "af": "Skoenmaker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Trades-adjacent & informal",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=cobbler",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/cobbler.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a shoe repair bench with a resoled shoe, a hammer and leather offcuts. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Cobbler available in {where}",
+    "af": "Skoenmaker beskikbaar in {where}"
+   },
+   "note": "Fixed-stall trade, low volume."
+  },
+  {
+   "key": "car_washer",
+   "label": {
+    "en": "Car washer",
+    "af": "Karwasser",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Trades-adjacent & informal",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=car_washer",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/car_washer.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a gleaming freshly washed car with a bucket, sponge and foam. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Car washer available in {where}",
+    "af": "Karwasser beskikbaar in {where}"
+   },
+   "note": "Mobile washers come to homes and offices — a direct hire."
+  },
+  {
+   "key": "event_staff",
+   "label": {
+    "en": "Event staff",
+    "af": "Funksiepersoneel",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Trades-adjacent & informal",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=event_staff",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "hotel_group",
+    "caterer"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/event_staff.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a function hall with round tables set with white cloths, glasses and centrepieces. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Event staff available in {where}",
+    "af": "Funksiepersoneel beskikbaar in {where}"
+   },
+   "note": "Absorbs Banqueting / function staff. Strongest weekend-work fit on the slate.",
+   "aliases": [
+    "Banqueting / function staff"
+   ]
+  },
+  {
+   "key": "creche_assistant",
+   "label": {
+    "en": "Crèche assistant",
+    "af": "Crèche-assistent",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Trades-adjacent & informal",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [
+    {
+     "key": "ages",
+     "q": "Which ages do you care for?",
+     "kind": "tile",
+     "multi": true,
+     "tiles": [
+      {
+       "t": "Babies"
+      },
+      {
+       "t": "Toddlers"
+      },
+      {
+       "t": "School age"
+      },
+      {
+       "t": "Teenagers"
+      }
+     ]
+    }
+   ],
+   "enrol_link": "/q/services?role=creche_assistant",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-153"
+   },
+   "employer_kinds": [
+    "creche"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/creche_assistant.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a colourful creche room with small tables, crayons, drawings on the wall and tiny chairs. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Crèche assistant available in {where}",
+    "af": "Crèche-assistent beskikbaar in {where}"
+   },
+   "note": "Child contact. **Police clearance gates public visibility (RUL-153).** Tap override: *children's ages* replaces *what*."
+  },
+  {
+   "key": "security_guard",
+   "label": {
+    "en": "Security guard",
+    "af": "Sekuriteitswag",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Security",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=security_guard",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": {
+    "type": "licence",
+    "licences": [
+     "psira"
+    ],
+    "ruling": "RUL-156"
+   },
+   "employer_kinds": [
+    "security_company"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/security_guard.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a guardhouse at a boom gate at dusk with a torch and a logbook. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Security guard available in {where}",
+    "af": "Sekuriteitswag beskikbaar in {where}"
+   },
+   "note": "19 Sep: was HOLD (s15c). PSIRA registration is a legal requirement to work. Licence gate (RUL-155/156): publicly visible once PSIRA registration is verified."
+  },
+  {
+   "key": "miner_general",
+   "label": {
+    "en": "Miner (general)",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Mining & heavy industry",
+   "status": "out",
+   "on_davids_list": true,
+   "split": true,
+   "note": "David's list. 19 Sep: split — a sector, not a job; he lists under the portable trade he holds, with 'mine' as an `employer_kinds[]` value."
+  },
+  {
+   "key": "rock_drill_operator",
+   "label": {
+    "en": "Rock drill operator",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Mining & heavy industry",
+   "status": "out",
+   "on_davids_list": false,
+   "routed_to": "position_lane_RUL-124",
+   "note": "19 Sep: exists only underground — routed to the position lane (RUL-124)."
+  },
+  {
+   "key": "blaster",
+   "label": {
+    "en": "Blaster",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Mining & heavy industry",
+   "status": "out",
+   "on_davids_list": false,
+   "routed_to": "position_lane_RUL-124",
+   "note": "19 Sep: mine-only and carries a statutory blasting certificate — routed to the position lane (RUL-124)."
+  },
+  {
+   "key": "winch_driver",
+   "label": {
+    "en": "Winch driver",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Mining & heavy industry",
+   "status": "out",
+   "on_davids_list": false,
+   "routed_to": "position_lane_RUL-124",
+   "note": "19 Sep: mine-only — routed to the position lane (RUL-124)."
+  },
+  {
+   "key": "plant_operator_tlb_excavator",
+   "label": {
+    "en": "Plant operator (TLB / excavator)",
+    "af": "Masjienoperateur (TLB / graaf)",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Mining & heavy industry",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=plant_operator_tlb_excavator",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "construction",
+    "mine",
+    "municipality"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/plant_operator_tlb_excavator.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a yellow TLB digging a trench on a building site. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Plant operator (TLB / excavator) available in {where}",
+    "af": "Masjienoperateur (TLB / graaf) beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'TMM / machine operator'). Builders and plot owners hire TLB operators daily; the operator certificate is evidence, not a licence gate."
+  },
+  {
+   "key": "rigger",
+   "label": {
+    "en": "Rigger",
+    "af": "Tuier",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Mining & heavy industry",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=rigger",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/rigger.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: steel slings and shackles hooked to a crane load on a site. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Rigger available in {where}",
+    "af": "Tuier beskikbaar in {where}"
+   },
+   "note": "Contract site work."
+  },
+  {
+   "key": "boilermaker",
+   "label": {
+    "en": "Boilermaker",
+    "af": "Ketelmaker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Mining & heavy industry",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=boilermaker",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "mine",
+    "factory"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/boilermaker.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: heavy steel plate being cut with sparks in a workshop. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Boilermaker available in {where}",
+    "af": "Ketelmaker beskikbaar in {where}"
+   },
+   "note": "Portable; a trade test (Red Seal) is evidence worth 8 pts."
+  },
+  {
+   "key": "millwright",
+   "label": {
+    "en": "Millwright",
+    "af": "Meulmaker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Mining & heavy industry",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=millwright",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/millwright.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: an opened industrial gearbox with tools laid out beside it. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Millwright available in {where}",
+    "af": "Meulmaker beskikbaar in {where}"
+   },
+   "note": "Only factories hire one — waits for the business-hiring side (s17 step 6)."
+  },
+  {
+   "key": "fitter_turner",
+   "label": {
+    "en": "Fitter & turner",
+    "af": "Passer en draaier",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Mining & heavy industry",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=fitter_turner",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/fitter_turner.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a metal lathe turning a steel shaft with coolant spray. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Fitter & turner available in {where}",
+    "af": "Passer en draaier beskikbaar in {where}"
+   },
+   "note": "Only factories hire one — waits for the business-hiring side (s17 step 6)."
+  },
+  {
+   "key": "welder",
+   "label": {
+    "en": "Welder",
+    "af": "Sweiser",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Mining & heavy industry",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=welder",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "mine",
+    "factory",
+    "construction"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/welder.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a welding bead glowing with bright sparks on a steel joint, welding helmet on the bench. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Welder available in {where}",
+    "af": "Sweiser beskikbaar in {where}"
+   },
+   "note": "The single most portable technical skill on the slate."
+  },
+  {
+   "key": "crane_operator",
+   "label": {
+    "en": "Crane operator",
+    "af": "Hyskraanoperateur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Mining & heavy industry",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=crane_operator",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/crane_operator.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a mobile crane lifting a steel beam against a blue sky. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Crane operator available in {where}",
+    "af": "Hyskraanoperateur beskikbaar in {where}"
+   },
+   "note": "Site-bound; the certified-operator requirement is handled with the business-hiring side."
+  },
+  {
+   "key": "forklift_operator",
+   "label": {
+    "en": "Forklift operator",
+    "af": "Vurkhyseroperateur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Mining & heavy industry",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=forklift_operator",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "freight_operator",
+    "factory",
+    "retailer"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/forklift_operator.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a forklift lifting a pallet in a warehouse. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Forklift operator available in {where}",
+    "af": "Vurkhyseroperateur beskikbaar in {where}"
+   },
+   "note": "Warehouses hire casual forklift drivers constantly; the operator certificate is evidence."
+  },
+  {
+   "key": "driver",
+   "label": {
+    "en": "Driver",
+    "af": "Bestuurder",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Motor & transport",
+   "status": "in",
+   "on_davids_list": true,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=driver",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": {
+    "type": "licence",
+    "licences": [
+     "driving_licence"
+    ],
+    "ruling": "RUL-156"
+   },
+   "employer_kinds": [
+    "freight_operator",
+    "municipality",
+    "mine",
+    "farm"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/driver.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a clean light delivery vehicle parked at a loading bay. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Driver available in {where}",
+    "af": "Bestuurder beskikbaar in {where}"
+   },
+   "note": "David's list. Renamed 19 Sep (was 'Transport / business driver'). Goods and errands in a light vehicle; people-for-reward stays in Taxi / shuttle (HOLD). Licence gate (RUL-155): verified driving licence opens public visibility."
+  },
+  {
+   "key": "code_10_code_14_driver",
+   "label": {
+    "en": "Code 10 / Code 14 driver",
+    "af": "Kode 10 / Kode 14-bestuurder",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Motor & transport",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=code_10_code_14_driver",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": {
+    "type": "licence",
+    "licences": [
+     "driving_licence",
+     "prdp_g"
+    ],
+    "ruling": "RUL-156"
+   },
+   "employer_kinds": [
+    "freight_operator",
+    "mine"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/code_10_code_14_driver.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a truck and trailer on an open South African highway. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Code 10 / Code 14 driver available in {where}",
+    "af": "Kode 10 / Kode 14-bestuurder beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (the SA advert wording). Absorbs Long-haul driver. Licence gate (RUL-155): verified licence AND PrDP-G (goods vehicle over 3,500 kg).",
+   "aliases": [
+    "Long-haul driver"
+   ]
+  },
+  {
+   "key": "long_haul_driver",
+   "label": {
+    "en": "Long-haul driver",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Motor & transport",
+   "status": "out",
+   "on_davids_list": false,
+   "merged_into": "code_10_code_14_driver",
+   "note": "19 Sep: merged into Code 10 / Code 14 driver — long-haul is Code 14 work by definition."
+  },
+  {
+   "key": "taxi_shuttle_driver",
+   "label": {
+    "en": "Taxi / shuttle driver",
+    "af": "Taxi- / pendelbestuurder",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Motor & transport",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=taxi_shuttle_driver",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": {
+    "type": "licence",
+    "licences": [
+     "driving_licence",
+     "prdp_p"
+    ],
+    "ruling": "RUL-156"
+   },
+   "employer_kinds": [
+    "transport_operator"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/taxi_shuttle_driver.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a white minibus shuttle parked at a pickup point. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Taxi / shuttle driver available in {where}",
+    "af": "Taxi- / pendelbestuurder beskikbaar in {where}"
+   },
+   "note": "19 Sep: was HOLD (s15c). Licence gate (RUL-155/156): publicly visible once licence AND PrDP-P (passengers) are verified."
+  },
+  {
+   "key": "diesel_mechanic",
+   "label": {
+    "en": "Diesel mechanic",
+    "af": "Dieselwerktuigkundige",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Motor & transport",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=diesel_mechanic",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "mine",
+    "freight_operator",
+    "farm"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/diesel_mechanic.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: an open diesel engine bay of a truck with a torque wrench. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Diesel mechanic available in {where}",
+    "af": "Dieselwerktuigkundige beskikbaar in {where}"
+   },
+   "note": "Mines retrench them; truck fleets and farms hire them."
+  },
+  {
+   "key": "motor_mechanic",
+   "label": {
+    "en": "Motor mechanic",
+    "af": "Motorwerktuigkundige",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Motor & transport",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=motor_mechanic",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "dealership"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/motor_mechanic.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a car on a lift in a workshop with tools on a trolley. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Motor mechanic available in {where}",
+    "af": "Motorwerktuigkundige beskikbaar in {where}"
+   },
+   "note": "Households hire mobile mechanics directly."
+  },
+  {
+   "key": "auto_electrician",
+   "label": {
+    "en": "Auto electrician",
+    "af": "Motorelektrisiën",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Motor & transport",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=auto_electrician",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "mine",
+    "freight_operator",
+    "dealership"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/auto_electrician.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a multimeter clipped to a car battery with wiring harness exposed. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Auto electrician available in {where}",
+    "af": "Motorelektrisiën beskikbaar in {where}"
+   },
+   "note": "Portable and in demand; trade test as evidence."
+  },
+  {
+   "key": "panel_beater",
+   "label": {
+    "en": "Panel beater",
+    "af": "Duikklopper",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Motor & transport",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=panel_beater",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/panel_beater.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a car door panel mid-repair with filler and a sanding block. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Panel beater available in {where}",
+    "af": "Duikklopper beskikbaar in {where}"
+   },
+   "note": "Needs a workshop and spray booth — the buyer is a business."
+  },
+  {
+   "key": "spray_painter",
+   "label": {
+    "en": "Spray painter",
+    "af": "Spuitverwer",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Motor & transport",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=spray_painter",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/spray_painter.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a freshly sprayed glossy car panel in a spray booth. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Spray painter available in {where}",
+    "af": "Spuitverwer beskikbaar in {where}"
+   },
+   "note": "Needs a workshop and spray booth — the buyer is a business."
+  },
+  {
+   "key": "tyre_fitter",
+   "label": {
+    "en": "Tyre fitter",
+    "af": "Bandpasser",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Motor & transport",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=tyre_fitter",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/tyre_fitter.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a tyre on a balancing machine with new tyres stacked beside it. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Tyre fitter available in {where}",
+    "af": "Bandpasser beskikbaar in {where}"
+   },
+   "note": "Mobile fitting exists but volume is low."
+  },
+  {
+   "key": "industry_worker_skilled",
+   "label": {
+    "en": "Industry worker (skilled)",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "out",
+   "on_davids_list": true,
+   "split": true,
+   "note": "David's list. 19 Sep: split — a bucket; every job in it has its own row."
+  },
+  {
+   "key": "electrician",
+   "label": {
+    "en": "Electrician",
+    "af": "Elektrisiën",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=electrician",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": {
+    "type": "licence",
+    "licences": [
+     "doel_electrician_registration"
+    ],
+    "ruling": "RUL-156"
+   },
+   "employer_kinds": [
+    "mine",
+    "construction",
+    "municipality"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/electrician.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: an open distribution board with neat wiring and a voltage tester. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Electrician available in {where}",
+    "af": "Elektrisiën beskikbaar in {where}"
+   },
+   "note": "Licence gate (RUL-155/156): only a DoEL-registered electrician may do or certify installation work (Electrical Installation Regulations) — publicly visible once registration is verified. Registration also pays 12 pts."
+  },
+  {
+   "key": "gas_installer",
+   "label": {
+    "en": "Gas installer",
+    "af": "Gasinstalleerder",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=gas_installer",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": {
+    "type": "licence",
+    "licences": [
+     "saqcc_gas"
+    ],
+    "ruling": "RUL-156"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/gas_installer.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a gas hob connected to a gas bottle with new copper piping and a regulator. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Gas installer available in {where}",
+    "af": "Gasinstalleerder beskikbaar in {where}"
+   },
+   "note": "Added 19 Sep. Licence gate (RUL-155/156): SAQCC Gas registration is a legal requirement. Loadshedding gas conversions make it a real market."
+  },
+  {
+   "key": "plumber",
+   "label": {
+    "en": "Plumber",
+    "af": "Loodgieter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=plumber",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "construction",
+    "municipality"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/plumber.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: new copper pipes and a geyser installation with a pipe wrench. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Plumber available in {where}",
+    "af": "Loodgieter beskikbaar in {where}"
+   },
+   "note": "PIRB registration is evidence (12 pts), not a gate — plumbing is not state-licensed; a geyser-installation claim shows only with verified PIRB (SANS 10254 requires a qualified plumber)."
+  },
+  {
+   "key": "bricklayer",
+   "label": {
+    "en": "Bricklayer",
+    "af": "Messelaar",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=bricklayer",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/bricklayer.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a straight brick wall with a spirit level and trowel. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Bricklayer available in {where}",
+    "af": "Messelaar beskikbaar in {where}"
+   },
+   "note": "Core household / small-builder hire."
+  },
+  {
+   "key": "plasterer",
+   "label": {
+    "en": "Plasterer",
+    "af": "Pleisteraar",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=plasterer",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/plasterer.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a smoothly plastered wall with a plastering float and hawk. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Plasterer available in {where}",
+    "af": "Pleisteraar beskikbaar in {where}"
+   },
+   "note": "Core household / small-builder hire."
+  },
+  {
+   "key": "tiler",
+   "label": {
+    "en": "Tiler",
+    "af": "Teëlêer",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=tiler",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/tiler.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a freshly tiled floor with spacers, a tile cutter and grout float. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Tiler available in {where}",
+    "af": "Teëlêer beskikbaar in {where}"
+   },
+   "note": "Core household / small-builder hire."
+  },
+  {
+   "key": "carpenter",
+   "label": {
+    "en": "Carpenter",
+    "af": "Timmerman",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=carpenter",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/carpenter.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a workbench with a hand plane, wood shavings and a finished cabinet door. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Carpenter available in {where}",
+    "af": "Timmerman beskikbaar in {where}"
+   },
+   "note": "Core household / small-builder hire."
+  },
+  {
+   "key": "roofer",
+   "label": {
+    "en": "Roofer",
+    "af": "Dakwerker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=roofer",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/roofer.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a corrugated iron roof being fitted with roofing screws and a sealed flashing. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Roofer available in {where}",
+    "af": "Dakwerker beskikbaar in {where}"
+   },
+   "note": "Absorbs Waterproofing — one hire, urgent in the rainy season.",
+   "aliases": [
+    "Waterproofing"
+   ]
+  },
+  {
+   "key": "glazier",
+   "label": {
+    "en": "Glazier",
+    "af": "Glaswerker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=glazier",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/glazier.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a large glass pane being fitted into an aluminium window frame. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Glazier available in {where}",
+    "af": "Glaswerker beskikbaar in {where}"
+   },
+   "note": "Low volume; mostly glass shops."
+  },
+  {
+   "key": "ceiling_partition_installer",
+   "label": {
+    "en": "Ceiling & partition installer",
+    "af": "Plafon- en afskortinginstalleerder",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=ceiling_partition_installer",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/ceiling_partition_installer.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a new ceiling grid with boards partly installed in an office. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Ceiling & partition installer available in {where}",
+    "af": "Plafon- en afskortinginstalleerder beskikbaar in {where}"
+   },
+   "note": "Mostly subcontracted to building firms."
+  },
+  {
+   "key": "painter_qualified",
+   "label": {
+    "en": "Painter (qualified)",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "out",
+   "on_davids_list": false,
+   "merged_into": "painter",
+   "note": "19 Sep: one Painter row, in Casuals; the certificate is evidence on it, not a separate role."
+  },
+  {
+   "key": "paver",
+   "label": {
+    "en": "Paver",
+    "af": "Plaveier",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=paver",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/paver.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: freshly laid interlocking paving in a driveway with a rubber mallet. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Paver available in {where}",
+    "af": "Plaveier beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'Paving'). Suburban paving is a large direct-hire market."
+  },
+  {
+   "key": "waterproofing",
+   "label": {
+    "en": "Waterproofing",
+    "af": null,
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Building trades",
+   "status": "out",
+   "on_davids_list": false,
+   "merged_into": "roofer",
+   "note": "19 Sep: merged into Roofer — a service, not a name he calls himself."
+  },
+  {
+   "key": "air_con_refrigeration_technician",
+   "label": {
+    "en": "Air-con & refrigeration technician",
+    "af": "Lugversorging- en verkoelingstegnikus",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Systems & installation",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=air_con_refrigeration_technician",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": {
+    "type": "licence",
+    "licences": [
+     "saqcc_refrigerant"
+    ],
+    "ruling": "RUL-156"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/air_con_refrigeration_technician.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a wall-mounted air conditioner with its cover off and refrigerant gauges attached. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Air-con & refrigeration technician available in {where}",
+    "af": "Lugversorging- en verkoelingstegnikus beskikbaar in {where}"
+   },
+   "note": "Renamed 19 Sep (was 'Refrigeration / HVAC technician'). Licence gate (RUL-156): handling refrigerant legally requires SAQCC Refrigerant registration — added to the RUL-156 licence list."
+  },
+  {
+   "key": "solar_pv_installer",
+   "label": {
+    "en": "Solar PV installer",
+    "af": "Sonkraginstalleerder",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Systems & installation",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=solar_pv_installer",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/solar_pv_installer.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: solar panels mounted on a South African roof under a clear sky with an inverter on the wall. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Solar PV installer available in {where}",
+    "af": "Sonkraginstalleerder beskikbaar in {where}"
+   },
+   "note": "Installer not licensed: PV GreenCard is evidence, not a gate. The CoC must come from a gated Electrician, and the listing says so. Loadshedding demand is real."
+  },
+  {
+   "key": "borehole_pump_technician",
+   "label": {
+    "en": "Borehole & pump technician",
+    "af": "Boorgat- en pomptegnikus",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Systems & installation",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=borehole_pump_technician",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/borehole_pump_technician.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a borehole pump and pressure tank beside a green water tank. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Borehole & pump technician available in {where}",
+    "af": "Boorgat- en pomptegnikus beskikbaar in {where}"
+   },
+   "note": "Water outages make household pumps and tanks an urgent direct hire."
+  },
+  {
+   "key": "cctv_alarm_installer",
+   "label": {
+    "en": "CCTV / alarm installer",
+    "af": "Kringtelevisie- en alarminstalleerder",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Systems & installation",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=cctv_alarm_installer",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": {
+    "type": "licence",
+    "licences": [
+     "psira"
+    ],
+    "ruling": "RUL-156"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/cctv_alarm_installer.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a CCTV camera mounted under the eaves of a house with an alarm keypad. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "CCTV / alarm installer available in {where}",
+    "af": "Kringtelevisie- en alarminstalleerder beskikbaar in {where}"
+   },
+   "note": "Licence gate (RUL-156): installing security equipment is a 'security service' under the PSIRA Act."
+  },
+  {
+   "key": "gate_garage_door_technician",
+   "label": {
+    "en": "Gate & garage-door technician",
+    "af": "Hek- en motorhuisdeurtegnikus",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Systems & installation",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=gate_garage_door_technician",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": {
+    "type": "licence",
+    "licences": [
+     "psira"
+    ],
+    "ruling": "RUL-156"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/gate_garage_door_technician.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a sliding gate motor with its cover open beside a steel gate. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Gate & garage-door technician available in {where}",
+    "af": "Hek- en motorhuisdeurtegnikus beskikbaar in {where}"
+   },
+   "note": "Licence gate (RUL-156): gate motors and access control are security equipment on PSIRA's reading."
+  },
+  {
+   "key": "locksmith",
+   "label": {
+    "en": "Locksmith",
+    "af": "Slotmaker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Systems & installation",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=locksmith",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": {
+    "type": "licence",
+    "licences": [
+     "psira"
+    ],
+    "ruling": "RUL-156"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/locksmith.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a door lock cylinder taken apart with keys and locksmith picks. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Locksmith available in {where}",
+    "af": "Slotmaker beskikbaar in {where}"
+   },
+   "note": "Licence gate (RUL-156): a PSIRA security service; PSIRA registration includes a fingerprint criminal-record check, which answers the home-access concern without a separate clearance rule."
+  },
+  {
+   "key": "appliance_repair",
+   "label": {
+    "en": "Appliance repair",
+    "af": "Toestelherstelwerk",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Systems & installation",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=appliance_repair",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/appliance_repair.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a washing machine with its back panel off and a toolkit. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Appliance repair available in {where}",
+    "af": "Toestelherstelwerk beskikbaar in {where}"
+   },
+   "note": "Households hire mobile repairers directly."
+  },
+  {
+   "key": "it_networking_technician",
+   "label": {
+    "en": "IT / networking technician",
+    "af": "IT- en netwerktegnikus",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Systems & installation",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=it_networking_technician",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/it_networking_technician.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a neat network cabinet with patched cables and a router. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "IT / networking technician available in {where}",
+    "af": "IT- en netwerktegnikus beskikbaar in {where}"
+   },
+   "note": "Households mostly buy this from shops."
+  },
+  {
+   "key": "small_engine_repair",
+   "label": {
+    "en": "Small-engine repair",
+    "af": "Kleinenjinherstelwerk",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Technical",
+   "group": "Systems & installation",
+   "status": "later",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "qualification",
+     "q": "What do you hold?",
+     "kind": "tile",
+     "tiles": [
+      {
+       "t": "Trade-tested"
+      },
+      {
+       "t": "Certificate"
+      },
+      {
+       "t": "Experience only"
+      }
+     ]
+    },
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "callout",
+     "q": "How do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Call-out fee"
+      },
+      {
+       "t": "Per hour"
+      },
+      {
+       "t": "Per day"
+      },
+      {
+       "t": "I quote"
+      }
+     ]
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=small_engine_repair",
+   "signals": [
+    "category.services_tech.trade_cert",
+    "category.services_tech.body_reg",
+    "category.services_tech.coc",
+    "category.services_tech.cidb",
+    "category.services_tech.insurance",
+    "category.services_tech.tickets",
+    "category.services_tech.exp_3_7",
+    "category.services_tech.exp_7plus",
+    "category.services_tech.strong_cv"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/small_engine_repair.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a lawnmower engine on a workbench with a spark plug and tools. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Small-engine repair available in {where}",
+    "af": "Kleinenjinherstelwerk beskikbaar in {where}"
+   },
+   "note": "Low, seasonal volume."
+  }
+ ]
+}
