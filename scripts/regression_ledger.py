@@ -322,6 +322,23 @@ def _get(path):
                                    "regressed. Probe the app directly (http://127.0.0.1:8000) "
                                    "from the box, or re-run from a vantage the edge allows."
                                    % e.code)
+            # UPSTREAM-BLIND-1 (20 Sep 2026), the general half of RG-0420. An ORIGIN 5xx
+            # is not an edge refusal and carries no Cloudflare marker, so the branch above
+            # never caught it: the HTTPError propagated, each caller turned it into a FAIL,
+            # and the board printed "previously-fixed issue HAVE COME BACK. Do not deploy
+            # over this". MEASURED on this very run, 20 Sep 2026: RG-0001, RG-0004 and
+            # RG-0007 all reported "check crashed ... <HTTPError 502: 'Bad Gateway'>" in one
+            # board while /health answered 200 three times in a row seconds later, and every
+            # one of them judged HOLDING on an immediate re-read. The app restarts; a read
+            # that lands in that window returns no payload at all. No payload read = BLIND,
+            # exactly as for an edge refusal -- RG-0187's contract and RG-0401's rule, one
+            # layer in. NOT a licence to ignore a 5xx: _status() still RETURNS the code, so
+            # every entry that asserts "this endpoint must not 5xx" is untouched and still
+            # convicts. This only covers _get(), whose whole job is to read a body.
+            if e.code in (502, 504) or (e.code == 503 and "Cloudflare" not in _peek):
+                raise ProbeOffline("origin answered HTTP %s for %s -- no payload was read, so "
+                                   "this entry is BLIND here, not regressed. The app was most "
+                                   "likely restarting; re-run once it answers." % (e.code, path))
             ck = _review_cookie() if e.code in (401, 403) else ""
             if not ck:
                 if e.code in (401, 403) and _REVIEW["rate_limited"]:
@@ -25356,6 +25373,7 @@ def rg_c1_failsafe_1():
 def rg_fade_90_1():
     out = []
     bea = repo_file("bea_main.py"); eula = repo_file("eula_clean.html"); ms = repo_file("marketsquare.html")
+    msjs = repo_file("ms.js")
     if bea is None or eula is None or ms is None:
         return [(INFO, "NOT EVALUATED - bea_main.py / eula_clean.html / marketsquare.html not readable from here")]
     import re as _re
@@ -25372,9 +25390,29 @@ def rg_fade_90_1():
         except Exception as ex:
             out.append((FAIL, "_FADE_WINDOWS unreadable: %s" % ex))
     clause = "within an inactivity window of 90 days, which is the same for every tier."
-    for name, txt in (("eula_clean.html", eula), ("marketsquare.html embedded EULA", ms)):
-        if clause not in txt:
+    # FADE-90-2 (20 Sep 2026). This leg used to read the clause out of marketsquare.html's
+    # EMBEDDED EULA. That copy is gone on purpose: EULA-FORK-2 (RG-0400, closed the same day
+    # in the parallel lane) removed the hand-kept fourth copy that had drifted to v1.10, and
+    # the acceptance box now renders ms.js's _EULA_HTML at runtime -- the text eula_sync.py
+    # keeps in step with eula_clean.html. So the old leg was convicting the app of losing a
+    # clause from a document that was correctly deleted, which is an assertion gone wrong, not
+    # a fix gone back (CLAUDE.md: fix the assertion and say so). It is REPOINTED, not dropped,
+    # and it is now STRONGER -- it reads the words the seller actually scrolls and ticks
+    # instead of a copy nobody rendered. marketsquare.html is still checked, but only if it
+    # ever embeds the EULA again: a returning fourth copy must carry the clause too.
+    for name, txt in (("eula_clean.html", eula), ("ms.js _EULA_HTML (the text the seller ticks)", msjs)):
+        if txt is None:
+            out.append((INFO, "NOT EVALUATED - %s is not readable from here" % name))
+        elif clause not in txt:
             out.append((FAIL, "%s does not carry the one-window fade clause" % name))
+    # A "has a fourth copy come back?" leg was WRITTEN HERE AND THEN REMOVED, deliberately, and
+    # the removal is the point: it keyed on marketsquare.html not mentioning _EULA_HTML, and the
+    # page mentions it precisely BECAUSE the fix landed -- so the guard could never fire, and a
+    # returning fourth copy would have read GREEN through it. A guard that cannot fire is worse
+    # than no guard, because it looks like cover (RG-0133's rule). That property belongs to
+    # RG-0400 EULA-FORK-2, which owns it properly and checks the rendered acceptance box; this
+    # entry owns the narrower one -- every copy that DOES exist carries the clause. Do not
+    # half-duplicate RG-0400 here; strengthen RG-0400 instead.
     for stale in ("30-day listing \u00b7 free renewal", "60-day listing \u00b7 free renewal"):
         if stale in ms:
             out.append((FAIL, "marketsquare.html tier card still advertises '%s'" % stale))
@@ -25660,6 +25698,24 @@ def rg_upstream_blind_1():
     if 'out.append((FAIL, "/admin/device-ok answers %d anonymously while /health answers 200' not in seg:
         out.append((FAIL, "the app-alive branch no longer FAILs -- the assertion has been "
                           "weakened into an unconditional pass on 5xx, which the canon forbids"))
+    # THE GENERAL HALF, added the same run it was needed: the leg above protects ONE entry,
+    # and three others (RG-0001, RG-0004, RG-0007) crashed on the same origin 502 in the very
+    # next board, each printing "check crashed ... 502" as a REGRESSION. _get() reads bodies,
+    # so a 502 there means no payload at all -- blind. _status() is deliberately NOT changed:
+    # it returns the code, so every entry asserting "this must not 5xx" still convicts.
+    gseg = src.split("def _get(", 1)[-1][:4000]
+    if "if e.code in (502, 504)" not in gseg or "UPSTREAM-BLIND-1" not in gseg:
+        out.append((FAIL, "_get() no longer converts an origin 502/504 into a blind read -- an "
+                          "app restart mid-board will be printed as a batch of regressions again "
+                          "(UPSTREAM-BLIND-1)"))
+    if "ProbeOffline" not in gseg:
+        out.append((FAIL, "_get() no longer raises ProbeOffline at all, so an unread body can "
+                          "still become a verdict"))
+    sseg = src.split("def _status(", 1)[-1][:1200]
+    if "return e.code" not in sseg:
+        out.append((FAIL, "_status() no longer RETURNS the HTTP code -- the entries that assert "
+                          "an endpoint must not 5xx have been blinded along with the read path, "
+                          "which is a weakening this fix must never cause"))
     # The pass text deliberately avoids the blind marker phrase: _judge reads that phrase in
     # any INFO as "this entry could not be evaluated", so a clean pass wearing it would print
     # UNVERIFIED and exit non-zero -- proven on this very entry, 20 Sep 2026, first run.
@@ -25911,6 +25967,161 @@ def rg_deploy_gate_all_lanes():
                           "names it"))
     return out
 
+
+
+@entry("RG-0424", "JOURNAL-READ-1: the deploy account can READ the application journal -- an "
+                  "instrument that cannot see must not be the reason a question stays open "
+                  "for nine days",
+       LOCKED, fixed_on="2026-09-20",
+       scope="The msdeploy account's membership of the systemd-journal group on the Hetzner "
+             "box, and migrations/045_journal_read_for_msdeploy.py which re-applies it "
+             "idempotently so a rebuilt server does not silently go blind again. Repo half "
+             "always runs; the LIVE half runs only where SSH happens to be configured and "
+             "reports NOT EVALUATED when it is not -- an instrument limit is never a FAIL "
+             "and never a silent pass (RG-0187).",
+       ref="DW-111, opened 7 Sep 2026 and re-probed on NINE separate days. Every one of "
+           "those sessions hit the same wall and wrote the same honest sentence -- msdeploy "
+           "is in neither 'adm' nor 'systemd-journal', journalctl -u marketsquare returns "
+           "'-- No entries --', /var/www/marketsquare/*.log does not exist, so 'absence "
+           "from a blind instrument is not a clean bill'. Correct, and useless: the row "
+           "could never close, because nothing it asserted could ever be measured. THE "
+           "QUESTION IT WAS BLOCKING WAS ANSWERED IN ABOUT FOUR MINUTES once the journal "
+           "could be read, and the answer was that nothing was wrong at all: the Resend 422 "
+           "'every five minutes' is _infra_resend() posting an EMPTY BODY to Resend on "
+           "purpose (INFRA-RESEND-1, 22 Jul 2026 -- 422 means auth passed and nothing was "
+           "sent, so the probe reports ok), fired by the +1 dashboard polling "
+           "/admin/services-status on a five-minute cycle. 12 per hour, exactly. A second "
+           "422 class found in the same read -- POST /app/fault, 228 times in 24 h with "
+           "zero successes -- looked for a moment like a six-day tester-facing outage, and "
+           "the nginx user-agent field settled it: 'TrustSquare-RegressionLedger/1.0'. That "
+           "is THIS FILE's own tester-intake probe asserting the endpoint refuses an "
+           "unauthenticated report. Both 422 classes were instruments succeeding. THE "
+           "LESSON, and it is why this is a LOCKED entry rather than a note: the project "
+           "already knows that a checker which cannot see must say so (RG-0401 EDGE-BLIND-1, "
+           "RG-0187, the NOT MEASURED rule). What it had not done is treat the BLINDNESS "
+           "ITSELF as the defect to fix. Nine re-probes cost more than the one-line grant "
+           "ever would have. When a register row's only content is 'still cannot see', the "
+           "fix is to restore vision, not to re-confirm the dark. NOTE on breadth, stated "
+           "rather than glossed: this grants read of the whole system journal, not just one "
+           "unit. A sudoers rule scoped to 'journalctl -u marketsquare *' looks tighter and "
+           "is not -- the wildcard permits a further -u <unit>, granting the same breadth "
+           "while pretending otherwise. msdeploy already owns and reads "
+           "/var/www/marketsquare/.env, so the application's own secrets were already in "
+           "reach; this adds read-only visibility and no write, no new restart rights, no "
+           "root.")
+def rg_journal_readable():
+    out = []
+    mig = None
+    mdir = os.path.join(REPO, "migrations")
+    if os.path.isdir(mdir):
+        for fn in os.listdir(mdir):
+            if "journal_read" in fn and fn.endswith(".py"):
+                mig = os.path.join(mdir, fn)
+                break
+    if not mig:
+        out.append((FAIL, "no journal-read migration in migrations/ -- a rebuilt server "
+                          "goes blind again and DW-111's nine-day wall returns "
+                          "(JOURNAL-READ-1)"))
+    else:
+        t = open(mig, encoding="utf-8", errors="replace").read()
+        if "systemd-journal" not in t or "usermod" not in t:
+            out.append((FAIL, "%s no longer grants systemd-journal to the deploy account"
+                              % os.path.basename(mig)))
+        if "-aG" not in t:
+            out.append((FAIL, "%s must use `usermod -aG` (additive) -- a non-additive "
+                              "usermod would REMOVE the account's other groups"
+                              % os.path.basename(mig)))
+
+    # LIVE half: only where SSH is actually configured. Blind => NOT EVALUATED.
+    try:
+        import subprocess
+        r = subprocess.run(
+            ["ssh", "-o", "ConnectTimeout=6", "-o", "BatchMode=yes",
+             "-o", "StrictHostKeyChecking=accept-new", "-o", "ControlPath=none",
+             "msdeploy@178.104.73.239",
+             "journalctl -u marketsquare -n 1 --no-pager >/dev/null 2>&1 && echo READABLE "
+             "|| echo BLIND"],
+            capture_output=True, text=True, timeout=25)
+        said = (r.stdout or "").strip().splitlines()[-1] if (r.stdout or "").strip() else ""
+        if said == "READABLE":
+            out.append((INFO, "live: msdeploy can read the marketsquare journal"))
+        elif said == "BLIND":
+            out.append((FAIL, "live: msdeploy STILL cannot read the marketsquare journal -- "
+                              "the grant was reverted or the server was rebuilt without "
+                              "migration 045 (DW-111 returns)"))
+        else:
+            out.append((INFO, "NOT EVALUATED -- no SSH to the box from this vantage; the "
+                              "live half of JOURNAL-READ-1 was not measured here"))
+    except Exception:
+        out.append((INFO, "NOT EVALUATED -- no SSH to the box from this vantage; the live "
+                          "half of JOURNAL-READ-1 was not measured here"))
+    if not [o for o in out if o[0] == FAIL] and mig:
+        out.insert(0, (INFO, "migration %s re-applies the grant idempotently on a rebuilt "
+                             "server" % os.path.basename(mig)))
+    return out
+
+
+
+@entry("RG-0425", "The Adventures country chip states the country that is actually being filtered",
+       LOCKED, fixed_on="2026-09-20",
+       scope="marketsquare.html adv-country-flag/adv-country-name, ms.js advCountry state, the "
+             "city sync and advResetAll. WHAT HAPPENED (David, 20 Sep 2026): 'the adventures "
+             "examples are STILL showing South African prices -- we did fix this, how did it "
+             "reappear?' The currency fix had NOT regressed: RG-0002..RG-0006 hold and the "
+             "rendered app prices ZA in R, AU in A$, GB in pounds, US in dollars. What "
+             "reappeared was the COUNTRY PICKER. The chip was a hardcoded ZA literal in "
+             "marketsquare.html from 19 Apr 2026 that BORDERLESS-COUNT-1 (14 Aug) never touched "
+             "when it changed the state default to ALL, so the header read 'South Africa' over "
+             "an unfiltered grid whose ZA exemplars sort first. Two silent re-pins compounded "
+             "it: the city sync overwrote advCountry with the selected city's country (Pretoria "
+             "-> ZA), and one pick persisted to localStorage with no control able to clear it. "
+             "THE LESSON THIS ENTRY EXISTS FOR: every currency guard asserted a SYMBOL; none "
+             "asserted what the one control that decides the market DEFAULTS TO, so a fix and "
+             "the sentence a buyer reads were never connected. Fixed by painting the chip FROM "
+             "the state, removing the city re-pin, and making advResetAll release the pin and "
+             "its saved copy.")
+def rg_adv_country_chip_truthful():
+    out = []
+    js = repo_file("ms.js")
+    html = repo_file("marketsquare.html")
+    BORDERLESS_FLAG = "\U0001F30D"
+    if js is None or html is None:
+        return [(INFO, "ms.js / marketsquare.html not present (running outside the repo) -- "
+                       "source half skipped")]
+    if "function advPaintCountryChip(" not in js:
+        out.append((FAIL, "ms.js: advPaintCountryChip() is gone -- the chip is back to being "
+                          "whatever the markup says, which is how this fault returned"))
+    elif js.count("advPaintCountryChip") < 2:
+        out.append((FAIL, "ms.js: advPaintCountryChip is defined but never invoked on load"))
+    if re.search(r"advCountry\s*=\s*_iso2", js):
+        out.append((FAIL, "ms.js: the city sync re-pins advCountry to the selected city's "
+                          "country again -- choosing Pretoria silently narrows Adventures to ZA"))
+    m = re.search(r"function advResetAll\(\)\{(.{0,1500}?)\n\}", js, re.S)
+    if not m:
+        out.append((FAIL, "ms.js: advResetAll() not found -- the escape from the country pin is gone"))
+    elif "ms_adv_country" not in m.group(1):
+        out.append((FAIL, "ms.js: advResetAll() no longer clears the saved country pin -- one "
+                          "pick holds that browser on one market permanently"))
+    for el, want in (("adv-country-flag", BORDERLESS_FLAG), ("adv-country-name", "All countries")):
+        mm = re.search(r'id="' + el + r'">([^<]*)<', html)
+        if not mm:
+            out.append((FAIL, "marketsquare.html: #" + el + " is gone from the Adventures header"))
+        elif mm.group(1).strip() != want:
+            out.append((FAIL, "marketsquare.html: #" + el + " ships the literal " +
+                              repr(mm.group(1)) + " -- the markup names a country the filter has "
+                              "not chosen (the 19 Apr 2026 defect)"))
+    try:
+        live = _get("/")
+    except ProbeOffline as e:
+        out.append((INFO, "live index unreadable from this vantage -- the deployed half was not "
+                          "measured: " + str(e)[:120]))
+        return out
+    for el, want in (("adv-country-flag", BORDERLESS_FLAG), ("adv-country-name", "All countries")):
+        mm = re.search(r'id="' + el + r'">([^<]*)<', live)
+        if mm and mm.group(1).strip() != want:
+            out.append((FAIL, "LIVE: #" + el + " reads " + repr(mm.group(1)) + " -- the deployed "
+                              "header names a country the filter has not chosen"))
+    return out
 
 
 if __name__ == "__main__":

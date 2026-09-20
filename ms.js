@@ -2813,6 +2813,22 @@ try {
     advCountryFlag = _savedAdvCo.flag || advCountryFlag;
   }
 } catch (e) { /* private mode / blocked storage -- borderless default stands */ }
+
+// ADV-CO-CHIP-1 (20 Sep 2026, David: "the adventures examples are showing South African
+// prices again"). The country chip is the ONLY country statement a buyer reads, and it was
+// a hardcoded ZA literal in marketsquare.html (Session 22, 19 Apr 2026) that
+// BORDERLESS-COUNT-1 never touched: the JS default became 'ALL' while the header kept
+// saying "South Africa", and the ZA exemplars that sort first under it read as the
+// currency fix having been lost. It had not: symbols are correct per country. The chip is
+// now PAINTED FROM THE STATE on every load, so markup can no longer disagree with what is
+// actually filtered -- the class, not this instance.
+function advPaintCountryChip(){
+  var f=document.getElementById('adv-country-flag'), n=document.getElementById('adv-country-name');
+  if(f) f.textContent=advCountryFlag;
+  if(n) n.textContent=advCountryName;
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', advPaintCountryChip);
+else advPaintCountryChip();
 let advSubcat = 'all';
 let advCat = 'all';
 
@@ -3338,6 +3354,12 @@ function refreshAdvFilterBadge(){
 
 function advResetAll(){   // ADV-FIX-2: one-tap escape from any filter combination
   try{ advSubcat='all'; }catch(e){}
+  // ADV-CO-CHIP-1: the escape now releases the COUNTRY pin too, and its saved copy --
+  // before this, one pick wrote ms_adv_country to localStorage and no control on the
+  // screen could take it back, so that browser stayed on one country for good.
+  try{ advCountry='ALL'; advCountryName='All countries'; advCountryFlag='\u{1F30D}';
+       localStorage.removeItem('ms_adv_country');
+       if(typeof advPaintCountryChip==='function') advPaintCountryChip(); }catch(e){}
   try{ if(typeof advCat!=='undefined') advCat='all'; }catch(e){}
   try{ if(typeof filterState!=='undefined' && filterState.adventures) filterState.adventures={}; }catch(e){}
   try{ if(typeof _msSearchIds!=='undefined') _msSearchIds=null; }catch(e){}
@@ -3695,11 +3717,14 @@ function selectDemoCity(name) {
   const _CF = { 'ZA':'🇿🇦', 'US':'🇺🇸', 'GB':'🇬🇧', 'AU':'🇦🇺' };
   if (_iso2) {
     activeCountry = { iso2:_iso2, name:_CN[_iso2] || _iso2 };
-    advCountry=_iso2; advCountryName=_CN[_iso2]||_iso2; advCountryFlag=_CF[_iso2]||''; _wfCountry=_iso2;
+    // ADV-CO-CHIP-1 / BORDERLESS-COUNT-1 (RG-0078): picking YOUR city must not narrow
+    // Adventures to your country -- a buyer planning a trip is not local to the
+    // destination. This line re-pinned advCountry to the city's country (Pretoria -> ZA)
+    // and was the second way the South-African-examples symptom kept coming back after
+    // the borderless default was set. The Adventures picker is an EXPLICIT choice only.
+    _wfCountry=_iso2;
     { const _wfs=document.getElementById('wf-country-select'); if(_wfs && Array.from(_wfs.options).some(o=>o.value===_iso2)) _wfs.value=_iso2; }
     _wfType='all'; { const _wft=document.getElementById('wf-type-select'); if(_wft) _wft.value='all'; }
-    const _af=document.getElementById('adv-country-flag'); if(_af) _af.textContent=_CF[_iso2]||'';
-    const _an=document.getElementById('adv-country-name'); if(_an) _an.textContent=_CN[_iso2]||_iso2;
   }
   closeCitySelector();
   updateBadgeLabel();
