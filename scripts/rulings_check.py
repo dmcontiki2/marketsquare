@@ -1015,6 +1015,16 @@ REFLECTIONS = {
    ("RULINGS.md", ["ONE PICTURE OF THE WORK FOR ITS ROLE"], []),
    ("ROLE_SLATE_REVIEW.md", ["## RULED \u2014 ONE ROLE PICTURE AS THE FIRST PHOTO (RUL-157", "## FIRST EMPLOYERS"], []),
  ],
+ "RUL-161": [
+   ("RULINGS.md", ["THE DEPLOY ACCOUNT MAY READ THE SERVER'S LOGS"], []),
+   # The grant itself lives on the server, so the thing this file can assert is that the
+   # means of RE-APPLYING it survives -- a rebuilt box that skipped the migration is exactly
+   # how DW-111's nine-day blindness would come back. The LIVE half is RG-0424's job.
+   ("migrations/045_journal_read_for_msdeploy.py",
+    ["systemd-journal", "usermod", "-aG"], []),
+   ("scripts/regression_ledger.py", ["JOURNAL-READ-1"], []),
+ ],
+
  "RUL-158": [
    ("RULINGS.md", ["ONE 90-DAY FADE WINDOW FOR EVERY SELLER ON EVERY TIER"], []),
    ("bea_main.py", ['_FADE_WINDOWS = {"free": 90, "starter": 90, "pro": 90, "agency": 90}'], ['"free": 30, "starter": 60']),
