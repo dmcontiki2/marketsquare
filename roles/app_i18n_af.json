@@ -194,7 +194,7 @@
   "Refunds": "Terugbetalings",
   "Sign in": "Teken in",
   "Simplex": "Simpleks",
-  "Starter": "Begin",
+  "Starter": "Starter",
   "Summary": "Opsomming",
   "This is": "Dit is",
   "Tunisia": "Tunisië",
@@ -1565,7 +1565,12 @@
   "Each AI service is charged from your Tuppence balance and is non-refundable. Most cost 1T; batch tools are priced per run.": "Elke KI-diens word van jou Tuppence-saldo afgetrek en is nie terugbetaalbaar nie. Die meeste kos 1T; bondelgereedskap word per lopie geprys.",
   "Our AI reviews your listing — title, description, price and trust score — then gives you 3 specific fixes to attract more buyers right now.": "Ons KI sien jou advertensie na — titel, beskrywing, prys en Trust Score — en gee jou dan 3 spesifieke regstellings om nou meer kopers te lok.",
   "🔒 We never sell or share your wishlist. It is used only to surface matching listings on your device. Data is purged after 90 days of inactivity.": "🔒 Ons verkoop of deel nooit jou wenslys nie. Dit word net gebruik om passende advertensies op jou toestel te wys. Data word ná 90 dae van onaktiwiteit uitgevee.",
-  "Your Tuppence balance is debited 1T (or 2T if boosted) when a buyer submits the first introduction request on a listing. This is non-refundable if you decline or ignore.": "Jou Tuppence-saldo word met 1T gedebiteer (of 2T as dit versterk is) wanneer 'n koper die eerste voorstellingsversoek op 'n advertensie indien. Dit is nie terugbetaalbaar as jy weier of ignoreer nie."
+  "Your Tuppence balance is debited 1T (or 2T if boosted) when a buyer submits the first introduction request on a listing. This is non-refundable if you decline or ignore.": "Jou Tuppence-saldo word met 1T gedebiteer (of 2T as dit versterk is) wanneer 'n koper die eerste voorstellingsversoek op 'n advertensie indien. Dit is nie terugbetaalbaar as jy weier of ignoreer nie.",
+  "Make an introduction": "Maak 'n voorstelling",
+  "Pretoria CBD": "Pretoria CBD",
+  "Apartheid Museum": "Apartheidmuseum",
+  "Robben Island": "Robbeneiland",
+  "Blyde River Canyon Nature Reserve": "Blyde River Canyon-natuurreservaat"
  },
  "en": [
   "KE",

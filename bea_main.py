@@ -25042,7 +25042,7 @@ I18N_TASK = "reason"           # I18N-AF-1 (20 Sep 2026): the cheapest tier prod
 # Words that must come back UNCHANGED. The cheap lane translated the acronyms -- CPA came back as
 # "KPA", OPS as "FOUTE", and the Trust Score brand name as "Vertroue Telling" -- so say it plainly.
 I18N_KEEP = ("TrustSquare", "MarketSquare", "Trust Score", "Tuppence", "Buzz", "Quick Listing",
-             "Local Market", "CPA", "POPIA", "FICA", "NCA", "ECT Act", "NQF", "TGCSA", "OPS",
+             "CPA", "POPIA", "FICA", "NCA", "ECT Act", "NQF", "TGCSA", "OPS", "CBD",
              "Starter", "Pro", "Global", "Paystack", "UNESCO", "Krugerrand")
 
 # One house rule per language. Afrikaans needed its own: the model kept reaching for Dutch.
@@ -25050,12 +25050,23 @@ I18N_HOUSE = {
     "af": ("Write SOUTH AFRICAN Afrikaans as it is written and spoken in South Africa today. "
            "Afrikaans is NOT Dutch: never use Dutch words, Dutch spelling or Dutch word order "
            "(Featured is 'Uitgestal', never the Dutch 'Uitgelicht'; World Heritage is one word, "
-           "'Werelderfenis', with a circumflex on the first e, never 'Wereld Erfenis'). Use the "
+           "'Wêrelderfenis', one word with the circumflex, never 'Wereld Erfenis'). Use the "
            "correct Afrikaans diacritics. Address the user as 'jy/jou', not 'u'. Use everyday "
            "words an ordinary person in Pretoria or Cape Town would say out loud."),
     "zu": "Write everyday isiZulu as it is spoken in South Africa, not a word-for-word rendering.",
     "st": "Write everyday Sesotho (Southern Sotho) as it is spoken in South Africa.",
     "xh": "Write everyday isiXhosa as it is spoken in South Africa.",
+}
+
+# What the app's own words MEAN, so a label is never guessed from the word alone. The first live
+# run with the new prompt still gave "Stel jouself voor" (introduce yourself) for "Make an
+# introduction", because nothing in the prompt said what an Introduction IS on this platform.
+I18N_GLOSS = {
+    "af": ("Words this app uses in its own way: an INTRODUCTION is the once-off, paid exchange of "
+           "contact details between one buyer and one seller -- in Afrikaans 'n voorstelling, so "
+           "\"Make an introduction\" is \"Maak 'n voorstelling\" and never \"stel jouself voor\". "
+           "A LISTING is an advertensie. LISTING SLOTS are advertensieplekke. A SELLER is a "
+           "verkoper and a BUYER a koper. A WISHLIST is a wenslys."),
 }
 
 def _i18n_prompt(lang: str, items) -> str:
@@ -25064,6 +25075,7 @@ def _i18n_prompt(lang: str, items) -> str:
     return (
         "You are translating the interface of TrustSquare, a South African online marketplace that "
         "ordinary working people use on their phones. Translate each numbered line into %s.\n\n"
+        "%s\n\n"
         "%s\n\n"
         "Rules:\n"
         "- Most lines are BUTTONS, LABELS or SHORT HEADINGS on a screen, not prose. Keep each one "
@@ -25076,7 +25088,8 @@ def _i18n_prompt(lang: str, items) -> str:
         "- Answer EVERY numbered line. Never skip one, never merge two, never renumber. If you "
         "cannot translate a line, repeat the English for that number.\n"
         "- Reply with the numbered lines only, nothing before or after.\n\n"
-        "%s" % (I18N_LANGS[lang], I18N_HOUSE.get(lang, ""), ", ".join(I18N_KEEP), numbered)
+        "%s" % (I18N_LANGS[lang], I18N_HOUSE.get(lang, ""), I18N_GLOSS.get(lang, ""),
+                ", ".join(I18N_KEEP), numbered)
     )
 
 def _i18n_ensure(conn):
