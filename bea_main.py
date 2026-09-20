@@ -25053,6 +25053,12 @@ class _I18nIn(BaseModel):
 
 @app.post("/i18n/translate")
 def i18n_translate(body: _I18nIn):
+    """READ, RELEASE, TRANSLATE, WRITE — in that order and never otherwise. The first build held
+    the connection open across the AI call, so a page asking for twenty chunks at once collided
+    with ordinary traffic and SQLite answered 'database is locked' (live, 20 Sep). The AI call now
+    happens with NO database handle open, and the write is a short transaction with a busy timeout.
+    A write that still loses the race costs this reader nothing: the translation is returned anyway
+    and simply gets cached by the next reader."""
     lang = (body.lang or "").strip().lower()
     if lang not in I18N_LANGS:
         raise HTTPException(status_code=400, detail="unsupported language")
@@ -25066,56 +25072,77 @@ def i18n_translate(body: _I18nIn):
             break
     if not want:
         return {"lang": lang, "out": {}, "from_cache": 0, "translated": 0}
-    conn = database.get_db()
+
+    day = datetime.now(timezone.utc).date().isoformat()
+    out, missing, spent = {}, [], 0
+    conn = database.get_db()                       # 1. READ
     try:
-        _i18n_ensure(conn)
-        out, missing = {}, []
+        conn.execute("PRAGMA busy_timeout=4000")
+        try:
+            _i18n_ensure(conn); conn.commit()
+        except Exception:
+            pass
         for t in want:
             row = conn.execute("SELECT out FROM i18n_cache WHERE lang=? AND src=?", (lang, t)).fetchone()
             if row:
                 out[t] = row["out"] if not isinstance(row, tuple) else row[0]
             else:
                 missing.append(t)
-        cached = len(out)
-        if missing:
-            day = datetime.now(timezone.utc).date().isoformat()
-            conn.execute("INSERT INTO i18n_spend (day, calls) VALUES (?, 0) ON CONFLICT DO NOTHING", (day,))
-            spent = conn.execute("SELECT calls FROM i18n_spend WHERE day=?", (day,)).fetchone()
-            spent = (spent["calls"] if not isinstance(spent, tuple) else spent[0]) or 0
-            if spent >= I18N_DAILY_CALL_CAP:
-                conn.commit()
-                return {"lang": lang, "out": out, "from_cache": cached, "translated": 0, "capped": True}
-            try:
-                import ai_provider
-                numbered = "\n".join("%d. %s" % (i + 1, t) for i, t in enumerate(missing))
-                res = ai_provider.complete(
-                    [{"role": "user", "content":
-                      "Translate each numbered line into %s, for a South African marketplace app used by "
-                      "ordinary working people. Keep it short and plain, keep the same numbering, translate "
-                      "nothing inside {curly braces}, and leave names, place names, prices and numbers as they "
-                      "are. Reply with the numbered lines only.\n\n%s" % (I18N_LANGS[lang], numbered)}],
-                    task="fast", max_tokens=1400, timeout=30)
-                lines = {}
-                if res.ok and res.text:
-                    for ln in res.text.splitlines():
-                        ln = ln.strip()
-                        m = re.match(r"^(\d+)[.)]\s*(.+)$", ln)
-                        if m:
-                            lines[int(m.group(1))] = m.group(2).strip()
-                now = datetime.now(timezone.utc).isoformat(timespec="seconds")
-                for i, src in enumerate(missing, 1):
-                    got = lines.get(i)
-                    if got and got != src:
-                        conn.execute("INSERT INTO i18n_cache (lang, src, out, created_at) VALUES (?,?,?,?) "
-                                     "ON CONFLICT DO NOTHING", (lang, src, got, now))
-                        out[src] = got
-                conn.execute("UPDATE i18n_spend SET calls = calls + 1 WHERE day=?", (day,))
-                conn.commit()
-            except Exception as exc:                      # a translation that fails leaves English on screen
-                _log.warning("i18n translate failed (%s): %s", lang, exc)
-        return {"lang": lang, "out": out, "from_cache": cached, "translated": len(out) - cached}
+        r = conn.execute("SELECT calls FROM i18n_spend WHERE day=?", (day,)).fetchone()
+        spent = (r["calls"] if not isinstance(r, tuple) else r[0]) if r else 0
+    except Exception as exc:
+        _log.warning("i18n cache read failed (%s): %s", lang, exc)
+        missing = [t for t in want if t not in out]
     finally:
-        conn.close()
+        conn.close()                               # 2. RELEASE — nothing is held across the AI call
+
+    cached = len(out)
+    if not missing:
+        return {"lang": lang, "out": out, "from_cache": cached, "translated": 0}
+    if spent >= I18N_DAILY_CALL_CAP:
+        return {"lang": lang, "out": out, "from_cache": cached, "translated": 0, "capped": True}
+
+    fresh = {}
+    try:                                           # 3. TRANSLATE — no database handle open
+        import ai_provider
+        numbered = "\n".join("%d. %s" % (i + 1, t) for i, t in enumerate(missing))
+        res = ai_provider.complete(
+            [{"role": "user", "content":
+              "Translate each numbered line into %s, for a South African marketplace app used by "
+              "ordinary working people. Keep it short and plain, keep the same numbering, translate "
+              "nothing inside {curly braces}, and leave names, place names, prices and numbers as they "
+              "are. Reply with the numbered lines only.\n\n%s" % (I18N_LANGS[lang], numbered)}],
+            task="fast", max_tokens=1400, timeout=30)
+        lines = {}
+        if res.ok and res.text:
+            for ln in res.text.splitlines():
+                m = re.match(r"^(\d+)[.)]\s*(.+)$", ln.strip())
+                if m:
+                    lines[int(m.group(1))] = m.group(2).strip()
+        for i, src in enumerate(missing, 1):
+            got = lines.get(i)
+            if got and got != src:
+                fresh[src] = got
+    except Exception as exc:
+        _log.warning("i18n translate failed (%s): %s", lang, exc)
+
+    if fresh:
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        conn = database.get_db()                   # 4. WRITE — short, and never fatal
+        try:
+            conn.execute("PRAGMA busy_timeout=4000")
+            for src, got in fresh.items():
+                conn.execute("INSERT INTO i18n_cache (lang, src, out, created_at) VALUES (?,?,?,?) "
+                             "ON CONFLICT DO NOTHING", (lang, src, got, now))
+            conn.execute("INSERT INTO i18n_spend (day, calls) VALUES (?, 1) "
+                         "ON CONFLICT(day) DO UPDATE SET calls = calls + 1", (day,))
+            conn.commit()
+        except Exception as exc:
+            _log.warning("i18n cache write skipped (%s): %s", lang, exc)
+        finally:
+            conn.close()
+        out.update(fresh)
+    return {"lang": lang, "out": out, "from_cache": cached, "translated": len(fresh)}
 
 def _squire_guess_category(need: str) -> str:
     t = (need or "").lower()
