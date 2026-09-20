@@ -1530,8 +1530,8 @@
       "last_seen": "2026-09-20",
       "sev": "HIGH",
       "source": "marketsquare journal, readable for the first time via DW-111/RG-0424",
-      "status": "OPEN",
-      "closed": null
+      "status": "CLOSED",
+      "closed": "2026-09-20: 197 successes / 0x500 / 0 db-locked since the owning session's 17:21Z deploy, vs 262x500 in the 15 min before. RESIDUAL: cause unconfirmed, no ledger entry asserts it."
     }
   },
   "last_run": "2026-09-20",
@@ -3004,14 +3004,14 @@
       "DW-111",
       "DW-136",
       "DW-137",
-      "DW-138"
+      "DW-138",
+      "DW-139"
     ],
     "new": [
-      "DW-139 - POST /i18n/translate 500s, 262 vs 39 in 15 min, sqlite3 database is locked at main.py:25082; owned by the concurrent I18N-TRANSLATE-1 session, not touched here"
+      "DW-139 raised AND closed in the same pass: /i18n/translate 500s (262 vs 39 in 15 min, sqlite3 database is locked at main.py:25082); the owning I18N-TRANSLATE-1 session deployed at 17:21Z and it has served 197 requests with no errors since. Residual: unasserted."
     ],
     "still_open": [
-      "DW-010 - CC-002 (102d) and CC-005 (19d) are David's own sign-offs",
-      "DW-139 - handed to the session that owns the feature"
+      "DW-010 - CC-002 (102d) and CC-005 (19d) are David's own sign-offs; nothing technical blocks them"
     ],
     "new_ledger_entries": [
       "RG-0421 SAFE-READ-1",
