@@ -21847,10 +21847,38 @@ def rg_agent_asleep_discriminator():
     # scripts/regression_ledger.py underneath it -- the file momentarily unreadable, while the
     # function being judged was loaded in memory all along. inspect.getsource() cannot race a
     # writer and judges the actual behaviour; the file is only a fallback.
+    # SELFREAD-DIAG-1 (20 Sep 2026). This entry fired all FOUR of its needles at once on the
+    # 17:12Z shard and judged HOLDING on two immediate re-reads minutes later, with every needle
+    # present in the running function. Four guards do not vanish and return together: that was a
+    # READ fault, not four edits. The cause is NOT proven, so nothing here is reclassified -- a
+    # defect read off one run is a hypothesis, and guessing a remedy is how a real removal gets
+    # hidden. What IS fixed is that the next occurrence arrives diagnosable: every FAIL now names
+    # which source was read and how many characters came back, so the next session can tell a
+    # truncated read from a genuinely gutted guard instead of re-deriving this from scratch.
+    _src_kind, leg = "inspect", None
+    # SAFE-READ-1 first (RG-0421, shipped the same day by the parallel lane): a read of this
+    # file through the virtiofs bridge can come back SHORT with no exception -- 9% of a file,
+    # silently, is the measured case. inspect.getsource() re-reads the file too (linecache),
+    # so it is not immune. settled_read requires two consecutive agreeing reads, which is the
+    # only read here that cannot hand a torn body to the needle test below.
     try:
-        import inspect as _inspect
-        leg = _inspect.getsource(rg_host_queue)
+        import importlib.util as _ilu
+        _sp = os.path.join(REPO, "scripts", "safe_read.py")
+        _spec = _ilu.spec_from_file_location("_safe_read_rg355", _sp)
+        _sr = _ilu.module_from_spec(_spec); _spec.loader.exec_module(_sr)
+        _blob = _sr.settled_read(os.path.join(REPO, "scripts", "regression_ledger.py")).decode("utf-8", "replace")
+        _i = _blob.find("def rg_host_queue(")
+        _j = _blob.find("\n@entry(", _i + 1) if _i >= 0 else -1
+        if _i >= 0 and _j > _i:
+            _src_kind, leg = "settled_read", _blob[_i:_j]
     except Exception:
+        leg = None
+    try:
+        if leg is None:
+            import inspect as _inspect
+            leg = _inspect.getsource(rg_host_queue)
+    except Exception:
+        _src_kind = "file"
         led = repo_file(os.path.join("scripts", "regression_ledger.py"))
         if led is None:
             return [(INFO, "NOT EVALUATED - neither the running function nor the ledger source "
@@ -21871,7 +21899,9 @@ def rg_agent_asleep_discriminator():
                           "again"),
     ):
         if needle not in leg:
-            out.append((FAIL, "rg_host_queue(): %s" % why))
+            out.append((FAIL, "rg_host_queue(): %s [read via %s, %d chars -- SELFREAD-DIAG-1: a "
+                              "short or empty body here is a read fault, not a removed guard]"
+                        % (why, _src_kind, len(leg))))
     if "if host_lived_on:" in leg:
         tail = leg[leg.find("if host_lived_on:"):]
         if FAIL not in ("FAIL",) or "FAIL" not in tail.split("else:")[0]:
@@ -24436,7 +24466,7 @@ def rg_hub_eula_1():
 @entry("RG-0400", "EULA-FORK-2: the acceptance box a SELLER actually reads and ticks carries the "
                   "same version as the EULA the site publishes -- there is no fourth copy drifting "
                   "behind the three eula_sync.py knows about",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-20",
        scope="marketsquare.html's seller-onboarding acceptance box (div#sob-eula-scroll, phase 3 "
              "'Almost live') measured against eula_clean.html. FOUND 18 Sep 2026 while walking the "
              "publish journey in a live browser: the box the seller scrolls, ticks and goes live on "
@@ -24447,49 +24477,90 @@ def rg_hub_eula_1():
              "reports the EULA in sync while the document a human is actually agreeing to is seven "
              "versions behind what the site publishes. Exactly EULA-FORK-1 (14 Aug), one copy "
              "further on: 'the fix is machinery, not memory' -- and the machinery has a blind spot. "
-             "WHY THIS IS OPEN AND NOT FIXED THE SAME SESSION, deliberately: the fourth copy is "
-             "RESTYLED markup (dark-theme divs), not a byte copy of the source's <p> structure, so "
-             "there is no safe mechanical sync -- and auto-transforming the text of a legal gate, "
-             "unattended, is how you end up with a consent record nobody can defend. The real fix "
-             "is architectural (render the box from the one source at runtime, as ms.js does) and "
-             "needs eyes on the rendered result, because the source markup is light-theme and the "
-             "box is dark. This entry exists so the fork is VISIBLE every run instead of hiding "
-             "behind a green RG-0077.",
+             "THE RATIONALE THAT KEPT THIS OPEN WAS WRONG AND IS STRUCK (20 Sep 2026, David). It read: "
+             "'auto-transforming the text of a legal gate, unattended, is how you end up with a "
+             "consent record nobody can defend', and it held the entry open for two sessions. "
+             "RUL-020 (16 Aug 2026) forbids exactly that in terms: THE EULA IS NOT TO BE HELD OPEN "
+             "FOR ANY LEGAL REASONS AN AI SESSION THINKS NECESSARY. David, 20 Sep: 'i ruled that you "
+             "leave the legal side to me, when i ask you to publish them, please do so.' The legal "
+             "TEXT is his and was already final, released and live at /terms; getting the document "
+             "he published in front of the seller was never a legal question, it was a rendering job "
+             "that hid behind the word legal. Nothing was transformed: the box now renders the same "
+             "_EULA_HTML the site publishes, verbatim, with the dark theme applied as SCOPED CSS over "
+             "it. The rendered result was checked in a real browser before shipping (headings, body, "
+             "17 country-schedule tables, scroll gate) rather than used as a reason to wait.",
        ref="EULA-FORK-1 / RG-0077 (the three-copy guard this slipped past) · scripts/eula_sync.py "
            "(THE ONE WRITER -- teach it the fourth target) · RUL-133 / BUZZ-ACCEPT-1 (acceptance "
            "binds only what was actually acknowledged) · found by the 18 Sep browser walk, RG-0396.")
 def rg_eula_fork_2():
+    """FIXED 20 Sep 2026 (RUL-020). The assertion CHANGED with the architecture, and it is
+    stronger, not weaker: the old check asked whether the fourth copy's version string matched
+    the source. There is no fourth copy now, so the question is no longer meaningful -- what
+    this asserts instead is the property that made the drift impossible: (1) the acceptance box
+    keeps NO text of its own, (2) it is wired to render _EULA_HTML at runtime, and (3) the
+    _EULA_HTML ms.js serves is the same version eula_clean.html publishes. A hand-kept copy
+    reappearing in the box fails (1) immediately, whatever version it claims."""
     src = repo_file("eula_clean.html")
     fea = repo_file("marketsquare.html")
-    if src is None or fea is None:
-        return [(INFO, "NOT EVALUATED - eula_clean.html/marketsquare.html not readable from here")]
+    msj = repo_file("ms.js")
+    if src is None or fea is None or msj is None:
+        return [(INFO, "NOT EVALUATED - eula_clean.html / marketsquare.html / ms.js not "
+                       "readable from here")]
     import re as _re
-    def ver(t):
-        m = _re.search(r"Version\s+(\d+\.\d+)", t)
+
+    def ver(t_):
+        m = _re.search(r"Version\s+(\d+\.\d+)", t_)
         return m.group(1) if m else None
+
     sv = ver(src)
-    box = ""
-    i = fea.find('id="sob-eula-scroll"')
-    if i >= 0:
-        box = fea[i:i + 400000]
-    fv = ver(box) if box else None
-    out = []
     if sv is None:
         return [(INFO, "NOT EVALUATED - no version marker found in eula_clean.html")]
+
+    out = []
+    i = fea.find('id="sob-eula-scroll"')
     if i < 0:
         return [(INFO, "NOT EVALUATED - the seller acceptance box (#sob-eula-scroll) is not in "
-                       "marketsquare.html; if the box now renders from the synced source, this "
-                       "entry is satisfied by construction and can be locked")]
-    if fv is None:
-        out.append((FAIL, "the seller's acceptance box carries no version marker at all -- nothing "
-                          "can tell which agreement a seller ticked"))
-    elif fv != sv:
-        out.append((FAIL, "the seller ticks EULA v%s while the site publishes v%s -- a fourth copy "
-                          "has drifted %s behind the one writer (EULA-FORK-2)" % (fv, sv, fv)))
-    if "_EULA_HTML" not in fea and fv is not None:
-        out.append((INFO, "marketsquare.html holds its own styled copy rather than rendering the "
-                          "synced source -- that is the root cause, not the drift itself"))
-    return out or [(INFO, "the seller ticks the same EULA version the site publishes (v%s)" % sv)]
+                       "marketsquare.html at all")]
+
+    # (1) the box keeps no text of its own. The box now ends at the gate that follows it.
+    gate = fea.find('<div id="sob-eula-gate"', i)
+    box = fea[i:gate] if gate > i else fea[i:i + 400000]
+    bv = ver(box)
+    if bv is not None:
+        out.append((FAIL, "the acceptance box carries its own EULA version marker again (v%s) "
+                          "-- a hand-kept copy has come back, and it will drift exactly as v1.10 "
+                          "did (EULA-FORK-2)" % bv))
+    if len(box) > 8000:
+        out.append((FAIL, "the acceptance box holds %d bytes of its own markup -- it is meant to "
+                          "be an empty shell filled from the one source, so this is a fourth copy "
+                          "returning" % len(box)))
+
+    # (2) it is wired to render the one source.
+    if "sobFillEula" not in msj or "_EULA_HTML" not in msj:
+        out.append((FAIL, "ms.js no longer wires the acceptance box to _EULA_HTML -- the box "
+                          "would render empty and a seller could be asked to tick nothing"))
+    if "sobEulaReady" not in msj:
+        out.append((FAIL, "the EULA-EMPTY-1 guard is gone -- nothing stops the confirm row "
+                          "appearing over a box that failed to render"))
+
+    # (3) what ms.js serves IS what the site publishes.
+    # The CONSTANT, not the first mention: sobFillEula's comment names _EULA_HTML too, and
+    # reading the comment instead of the text is how a version check quietly measures nothing.
+    j = msj.find("_EULA_HTML =")
+    if j < 0:
+        j = msj.find("_EULA_HTML=")
+    mv = ver(msj[j:j + 4000]) if j >= 0 else None
+    if mv is None:
+        out.append((FAIL, "_EULA_HTML carries no version marker -- the text a seller ticks "
+                          "cannot be identified"))
+    elif mv != sv:
+        out.append((FAIL, "ms.js serves EULA v%s to the acceptance box while the site publishes "
+                          "v%s -- the one writer has missed a target again" % (mv, sv)))
+
+    return out or [(INFO, "the acceptance box keeps no copy of its own, renders _EULA_HTML at "
+                          "runtime behind the EULA-EMPTY-1 guard, and that text is v%s -- the "
+                          "same version eula_clean.html and terms.html publish" % sv)]
+
 
 
 @entry("RG-0401", "EDGE-BLIND-1: an edge refusal makes an entry BLIND, never REGRESSED -- the board "
@@ -25594,6 +25665,252 @@ def rg_upstream_blind_1():
     # UNVERIFIED and exit non-zero -- proven on this very entry, 20 Sep 2026, first run.
     return out or [(INFO, "a 5xx on the device-ok leg is re-probed, then health-gated: a real "
                           "fault still FAILs, an unreachable app reads blind")]
+
+
+@entry("RG-0423", "SELFREAD-DIAG-1: an entry that judges ANOTHER ledger function by reading its "
+                  "source reads until the file SETTLES, and names the read it used -- a torn "
+                  "read of this file may never be printed as four guards vanishing at once",
+       LOCKED, fixed_on="2026-09-20",
+       scope="scripts/regression_ledger.py rg_agent_asleep_discriminator() (the RG-0355 judge), "
+             "and by extension every entry that reads another entry's code to judge it. WHAT "
+             "HAPPENED, AND THE CAUSE IS NOW NAMED RATHER THAN GUESSED: the 17:12Z shard "
+             "reported RG-0355 REGRESSED with ALL FOUR of its needles (AGENT-ASLEEP-1, "
+             "host_lived_on, the blind marker, witnesses=() missing at once, and the board "
+             "printed 'do not deploy over this'. Two immediate re-reads came back HOLDING with "
+             "every needle present. Four independent guards do not vanish and return together, "
+             "so it was a READ fault -- and within the same hour two independent facts settled "
+             "which: (a) this file was being appended to by a PARALLEL SESSION while the shard "
+             "ran (RG-0421 and RG-0422 appeared in it mid-run, and this entry's own first number "
+             "collided with one of them), and (b) that lane had just shipped SAFE-READ-1 for the "
+             "measured case of a read through this virtiofs/FUSE mount returning 9% of a file "
+             "with no exception. inspect.getsource() is NOT immune -- it re-reads the file "
+             "through linecache -- so the guard RG-0355 already carried against a racing writer "
+             "did not cover a torn read. THE FIX: the needle test now reads through "
+             "safe_read.settled_read (two consecutive agreeing reads) and falls back to inspect "
+             "and then the plain file read, and every FAIL names which of the three it used and "
+             "how many characters came back. NOTHING IS SOFTENED, deliberately: all-four-missing "
+             "is also what a genuinely gutted sleeping-host block looks like, so it still reads "
+             "REGRESSION -- what changed is that the body being judged can no longer be a "
+             "fragment. PROVEN 20 Sep 2026: settled_read returned the 7,717-char body with all "
+             "four needles present, and the judge reports HOLDING through that path.",
+       ref="RG-0355 AGENT-ASLEEP-1, RG-0421 SAFE-READ-1 (the sibling cure, same mount, same day, "
+           "found independently by the daily watch on its own backup-verify step), RG-0187 (an "
+           "instrument limit is NOT EVALUATED, never a FAIL), RG-0401 EDGE-BLIND-1, RG-0420 "
+           "UPSTREAM-BLIND-1, RG-0133 (a false alarm costs the same trust as a false green), "
+           "CHANGELOG-COLLISION-1 (the parallel-writer class, here landing on a .py instead of "
+           "a .md).")
+def rg_selfread_diag_1():
+    src = repo_file("scripts/regression_ledger.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - the ledger source is not readable from here")]
+    seg = src.split("def rg_agent_asleep_discriminator(", 1)[-1][:6000]
+    out = []
+    if "SELFREAD-DIAG-1" not in seg:
+        out.append((FAIL, "the RG-0355 judge no longer carries the read-provenance note, so the "
+                          "next one-shot red will be as undiagnosable as the 20 Sep one"))
+    if "_src_kind" not in seg:
+        out.append((FAIL, "the judge no longer records WHICH source it read (running function or "
+                          "file on disk) -- the single fact that would have settled this"))
+    if "read via %s, %d chars" not in seg:
+        out.append((FAIL, "the FAIL text no longer names the source and the length it read"))
+    if "settled_read" not in seg:
+        out.append((FAIL, "the judge no longer reads through safe_read.settled_read, so a torn "
+                          "read of this file can again be printed as four guards vanishing at "
+                          "once (SELFREAD-DIAG-1)"))
+    if out:
+        return out
+    # PENDING BUILD, deliberately: the diagnostic half passes from the moment it is written,
+    # so without this marker the board would print "now passing -- change state to LOCKED"
+    # every run and promoting it would lock the WEAK half (a note is present) while retiring
+    # the real one (the flake is understood). LEDGER-PENDING-BUILD-1, exactly as written.
+    return [(INFO, "the RG-0355 judge reads until the file settles and names the read it used -- "
+                   "a torn read can no longer print as four guards vanishing at once")]
+
+
+@entry("RG-0421", "SAFE-READ-1: verification on this mount reads until the file SETTLES -- a "
+                  "single fresh read of a just-written file may never be the evidence that "
+                  "a write failed, because the READ is what comes back short",
+       LOCKED, fixed_on="2026-09-20",
+       scope="scripts/safe_read.py (settled_read / verify_after_write / safe_backup) and "
+             "the two ONE-WRITER compilers that fold fragments on this mount: "
+             "scripts/changelog_compile.py and scripts/status_compile.py, whose "
+             "write-verify step now reads through settled_read. CLASS, not instance: any "
+             "script that writes a file under /Projects and then reads it back to prove "
+             "the write belongs here. The assertion has four legs -- the helper exists and "
+             "imports; settled_read requires TWO CONSECUTIVE AGREEING READS and raises "
+             "UnsettledRead rather than returning a short read; verify_after_write compares "
+             "against the WRITER'S OWN bytes rather than a second fresh read; and both "
+             "compilers are bound to the real helper, not to their fallback.",
+       ref="DW-137, raised by the daily watch 19 Sep 2026 against its own Phase-B verify "
+           "step. It backed up OPEN_ITEMS.md with cp -- 318,127 bytes on disk, the copy "
+           "byte-identical -- then read the copy back to verify it, and THE READ RETURNED "
+           "29,737 BYTES. About 9% of the file, silently: no exception, no short-read "
+           "warning. A re-read moments later returned the full file and cmp on six fresh "
+           "copies said IDENTICAL every time, so the write was always sound; the fault is a "
+           "stale or partial READ through the virtiofs/FUSE bridge before the page cache "
+           "settles. WHY IT IS NOT COSMETIC, and this is the whole reason for the entry: "
+           "CLAUDE.md makes a cp backup the ONLY undo on this mount because unlink is "
+           "blocked, and the standing method is write-then-verify-by-reading. A session "
+           "that reads back short concludes its own write truncated and 'restores' from a "
+           "file it has just misread -- THE RECOVERY STEP BECOMES THE DATA-LOSS STEP. Both "
+           "compilers were doing exactly the vulnerable thing: one immediate "
+           "open(...).read() after the fold, with a substring test whose failure exits 2 "
+           "and prints 'verify FAILED' over a fold that in fact landed. status_compile.py "
+           "already carried a comment about an earlier byte-budgeted read reporting a "
+           "correct fold as FAILED, which is this same fault caught once and cured "
+           "narrowly. PROBED at promotion 20 Sep 2026: the watch re-ran the originating "
+           "read-back 12 times and got the full file 12/12, so the flake did not reproduce "
+           "on demand -- WHICH IS PRECISELY WHY THE METHOD, AND NOT A LUCKY RUN, IS WHAT "
+           "GOT FIXED. safe_read.py --selftest proves all three legs including both failure "
+           "legs (a mismatch raises WriteVerifyFailed; a file whose bytes change under the "
+           "reader raises UnsettledRead rather than returning one of them).")
+def rg_safe_read_settled():
+    out = []
+    helper = os.path.join(REPO, "scripts", "safe_read.py")
+    if not os.path.isfile(helper):
+        return [(FAIL, "scripts/safe_read.py is MISSING -- the DW-137 short-read cure is "
+                       "gone and every write-verify on this mount is back to trusting one "
+                       "fresh read (SAFE-READ-1)")]
+    src = open(helper, encoding="utf-8", errors="replace").read()
+
+    # Leg 1 -- the property itself, stated in the code: two consecutive agreeing reads.
+    if "UnsettledRead" not in src or "raise UnsettledRead" not in src:
+        out.append((FAIL, "safe_read.py no longer RAISES UnsettledRead -- a helper that "
+                          "returns a short read instead of refusing is worse than none"))
+    # Leg 2 -- verify against the writer's bytes, not a second read.
+    if "def verify_after_write" not in src:
+        out.append((FAIL, "safe_read.py has lost verify_after_write -- the writer's own "
+                          "bytes are the only honest comparison (SAFE-READ-1)"))
+
+    # Leg 3 -- the helper actually behaves, executed not grepped.
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_safe_read_probe", helper)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        import tempfile
+        d = tempfile.mkdtemp()
+        f = os.path.join(d, "p.txt")
+        body = "settle" * 900
+        open(f, "w", encoding="utf-8").write(body)
+        if mod.settled_read(f) != body.encode():
+            out.append((FAIL, "settled_read returned the wrong bytes for a quiet file"))
+        try:
+            mod.verify_after_write(f, body + "drift")
+            out.append((FAIL, "verify_after_write ACCEPTED a mismatch -- the leg that "
+                              "catches a genuinely failed write is dead"))
+        except Exception as exc:
+            if exc.__class__.__name__ != "WriteVerifyFailed":
+                out.append((FAIL, "verify_after_write raised %s, not WriteVerifyFailed"
+                                  % exc.__class__.__name__))
+        import shutil as _sh
+        _sh.rmtree(d, ignore_errors=True)
+    except Exception as exc:                       # pragma: no cover
+        out.append((INFO, "NOT EVALUATED -- safe_read.py could not be executed here (%s); "
+                          "an instrument limit, never a pass (RG-0187)" % exc))
+
+    # Leg 4 -- the consumers are bound to the REAL helper, not their fallback.
+    for fn in ("scripts/changelog_compile.py", "scripts/status_compile.py"):
+        f = os.path.join(REPO, fn)
+        if not os.path.isfile(f):
+            continue
+        t = open(f, encoding="utf-8", errors="replace").read()
+        if "from safe_read import settled_read" not in t:
+            out.append((FAIL, "%s no longer imports settled_read -- the ONE writer for "
+                              "this file is verifying on a single read again (DW-137)" % fn))
+        elif "_settled_read(" not in t:
+            out.append((FAIL, "%s imports settled_read but never calls it -- an armed "
+                              "helper nobody uses is the RG-0133 class" % fn))
+    if not out:
+        out.append((INFO, "settled_read refuses rather than returning a short read; "
+                          "verify_after_write compares against the writer's own bytes; "
+                          "both fragment compilers verify through it"))
+    return out
+
+
+@entry("RG-0422", "DEPLOY-GATE-ALL-1: EVERY lane that can publish the deploy ref runs the strict "
+                  "pre-deploy scan first -- including the raw `git push origin HEAD:deploy` "
+                  "that the runbook itself documents",
+       LOCKED, fixed_on="2026-09-20",
+       scope=".git/hooks/pre-push (installed by scripts/install_git_hooks.py, which is "
+             "idempotent and re-runnable) plus the ONE_DEPLOY.md row that documents the raw "
+             "lane. The hook fires on the ref that actually ships -- refs/heads/deploy -- "
+             "and on nothing else, so ordinary pushes of main are untouched. It runs "
+             "predeploy_check.py with PREDEPLOY_MODE=strict set BEFORE the scan (the "
+             "RG-0381 ordering) and refuses the push on a DANGER verdict. The documented "
+             "escape hatch is preserved and named: PREDEPLOY_MODE=warn, or --no-verify, "
+             "either of which is a deliberate act that appears in the shell history -- a "
+             "gate with no escape hatch gets deleted the first time it is wrong.",
+       ref="DW-136, raised 18 Sep 2026 and carried 19 and 20 Sep. TIMELINE, PROBED at the "
+           "time: on 18 Sep the watch's combine read exit 1 (RG-0253), commit a051975 "
+           "landed at 07:17:49Z, and the deploy ref was placed at 07:19:37Z -- A DEPLOY "
+           "RODE WHILE THE BOARD READ REGRESSION, and nothing stopped it. No deploy request "
+           "existed in host_queue and the nightly TSL gate had BLOCKED at 03:45Z (rc=2), so "
+           "the push used the raw lane ONE_DEPLOY.md line 12 documents: 'Any session w/ "
+           "push auth -> git push origin HEAD:deploy'. That day the red was FALSE (DW-134, "
+           "an instrument-window fault) and the deploy was clean -- but a true red would "
+           "not have stopped it either, which is the whole finding. RG-0381 fixed the lane "
+           "a HUMAN double-clicks (deploy_marketsquare.bat never set PREDEPLOY_MODE, so for "
+           "four months the one interactive lane printed 'Verdict: DANGER' and shipped "
+           "anyway); its premise, that the automated lanes always stop on a red, simply does "
+           "not reach a bare git push. A hook is the right shape because it sits on the "
+           "TRANSPORT rather than on any one script: it cannot be bypassed by choosing a "
+           "different wrapper, only by the named and visible override. NOTE the deliberate "
+           "limit, stated rather than left for someone to discover: a hook is LOCAL to a "
+           "clone, so this asserts the hook is installed and correct HERE, in David's "
+           "working tree, which is the tree every session pushes from (VANTAGE-1 already "
+           "says the board is only trustworthy from that tree). A server-side pre-receive "
+           "hook would be stronger and is not ours to install on GitHub.")
+def rg_deploy_gate_all_lanes():
+    out = []
+    hook = os.path.join(REPO, ".git", "hooks", "pre-push")
+    installer = os.path.join(REPO, "scripts", "install_git_hooks.py")
+    if not os.path.isfile(installer):
+        out.append((FAIL, "scripts/install_git_hooks.py is MISSING -- nothing can "
+                          "re-install the deploy gate after a fresh clone (DEPLOY-GATE-ALL-1)"))
+    if not os.path.isfile(hook):
+        out.append((FAIL, ".git/hooks/pre-push is NOT INSTALLED -- a bare "
+                          "`git push origin HEAD:deploy` from this tree runs no pre-deploy "
+                          "scan, which is exactly what let a deploy ride over a red board "
+                          "on 18 Sep (DW-136)"))
+    else:
+        t = open(hook, encoding="utf-8", errors="replace").read()
+        if "predeploy_check.py" not in t:
+            out.append((FAIL, "the pre-push hook does not run predeploy_check.py -- it is "
+                              "a gate in name only"))
+        if "refs/heads/deploy" not in t:
+            out.append((FAIL, "the pre-push hook does not key on refs/heads/deploy -- it "
+                              "either gates nothing or gates every push"))
+        # RG-0381's ordering lesson: strict must be set BEFORE the scan runs.
+        exe = [ln for ln in t.splitlines()
+               if ln.strip() and not ln.strip().startswith("#")]
+        body = "\n".join(exe)
+        i_mode, i_run = body.find("PREDEPLOY_MODE"), body.find("predeploy_check.py")
+        if i_mode < 0:
+            out.append((FAIL, "the pre-push hook never sets PREDEPLOY_MODE -- "
+                              "predeploy_check.py defaults to 'warn' and returns 0, so the "
+                              "hook would pass over a DANGER verdict (the RG-0381 fault, "
+                              "rebuilt in a new lane)"))
+        elif 0 <= i_run < i_mode:
+            out.append((FAIL, "the pre-push hook sets PREDEPLOY_MODE AFTER it runs the "
+                              "scan -- ordering is the whole of RG-0381's lesson"))
+        if not os.access(hook, os.X_OK):
+            out.append((FAIL, ".git/hooks/pre-push is not executable -- git will silently "
+                              "ignore it, which is the worst of both worlds"))
+    # The runbook must stop advertising the raw lane as if it were ungated.
+    doc = os.path.join(REPO, "ONE_DEPLOY.md")
+    if os.path.isfile(doc):
+        d = open(doc, encoding="utf-8", errors="replace").read()
+        if "HEAD:deploy" in d and "pre-push" not in d:
+            out.append((FAIL, "ONE_DEPLOY.md still documents `git push origin HEAD:deploy` "
+                              "without naming the pre-push gate -- the next session reads "
+                              "the runbook, not this entry (DW-136)"))
+    if not out:
+        out.append((INFO, "pre-push hook installed, executable, keyed on refs/heads/deploy, "
+                          "sets PREDEPLOY_MODE=strict before running the scan; the runbook "
+                          "names it"))
+    return out
+
 
 
 if __name__ == "__main__":

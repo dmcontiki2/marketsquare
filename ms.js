@@ -6564,8 +6564,57 @@ function sobEulaScroll() {
   }
 }
 
+// EULA-FORK-2 (20 Sep 2026, RUL-020 / RG-0400). The seller acceptance box used to hold its
+// OWN styled copy of the EULA inside marketsquare.html. eula_sync.py -- THE ONE WRITER --
+// only knew three targets, so that fourth copy drifted to v1.10 while the site published
+// v1.18: the document a human actually read and ticked was eight versions behind the one
+// David released. RUL-020 (16 Aug): "the EULA is not to be held open for any legal reasons
+// an AI session thinks necessary." The fix is not to re-sync a copy; it is to stop having
+// one. The box now renders _EULA_HTML -- the same text /terms and eula_clean.html carry.
+// The source markup is light-theme <p>/<table>; the box is dark, so the theme is applied as
+// SCOPED CSS over that markup rather than by rewriting the words. Nothing transforms the
+// text of a legal gate: it is reproduced verbatim and coloured.
+function sobFillEula() {
+  const box = document.getElementById('sob-eula-scroll');
+  if (!box) return false;
+  if (box.getAttribute('data-eula-filled') === '1') return true;
+  if (typeof _EULA_HTML !== 'string' || !_EULA_HTML) return false;
+  box.innerHTML =
+    '<style>' +
+    '#sob-eula-scroll p{margin:5px 0;font-size:11px;color:rgba(255,255,255,.72);line-height:1.5;}' +
+    '#sob-eula-scroll strong{color:rgba(255,255,255,.92);}' +
+    '#sob-eula-scroll em{color:rgba(255,255,255,.55);font-style:normal;}' +
+    '#sob-eula-scroll h1,#sob-eula-scroll h2,#sob-eula-scroll h3{font-size:13px;font-weight:700;' +
+      'color:rgba(255,255,255,.92);margin:14px 0 6px;}' +
+    '#sob-eula-scroll ul,#sob-eula-scroll ol{margin:5px 0 5px 18px;font-size:11px;' +
+      'color:rgba(255,255,255,.72);line-height:1.5;}' +
+    '#sob-eula-scroll table{border-collapse:collapse;width:100%;margin:8px 0;}' +
+    '#sob-eula-scroll td,#sob-eula-scroll th{border:1px solid rgba(255,255,255,.18);padding:6px 8px;' +
+      'font-size:11px;vertical-align:top;color:rgba(255,255,255,.72);}' +
+    '#sob-eula-scroll a{color:#fbbf24;}' +
+    '</style>' + _EULA_HTML;
+  box.setAttribute('data-eula-filled', '1');
+  return true;
+}
+
+// EULA-EMPTY-1: a seller may never tick an agreement that did not render. If the fill fails
+// the scroll gate stays shut and the confirm row stays hidden, so there is no path to accept.
+function sobEulaReady() {
+  const ok = sobFillEula();
+  if (!ok) {
+    const ph = document.getElementById('sob-eula-placeholder');
+    if (ph) ph.textContent = 'The Terms of Use could not be loaded. Please refresh before continuing.';
+    const confirm = document.getElementById('sob-eula-confirm');
+    if (confirm) confirm.style.display = 'none';
+  }
+  return ok;
+}
+
+try { document.addEventListener('DOMContentLoaded', sobFillEula); } catch (e) {}
+
 function sobResetEulaGate() {
   // Reset scroll gate when entering Phase 3
+  sobEulaReady();
   const box     = document.getElementById('sob-eula-scroll');
   const cue     = document.getElementById('sob-eula-scroll-cue');
   const confirm = document.getElementById('sob-eula-confirm');
@@ -19311,7 +19360,7 @@ async function msUnverifiedGate(sellerEmail, category){
     var need=[];
     list.forEach(function(n){ var t=(n.__en||'').trim(); if(t && dict[t]===undefined && need.indexOf(t)<0) need.push(t); });
     if(!need.length || lang==='en'){ paint(list); return; }
-    var at=0, want=lang;
+    var at=0, want=lang, fails=0;
     (function next(){
       if(at>=need.length || want!==lang){ saveDict(); paint(list); return; }
       var slice=need.slice(at, at+CHUNK); at+=CHUNK;
@@ -19319,10 +19368,12 @@ async function msUnverifiedGate(sellerEmail, category){
         body:JSON.stringify({lang:want, strings:slice})})
         .then(function(r){ return r.ok ? r.json() : null; })
         .then(function(d){
-          if(d && d.out && want===lang){ for(var k in d.out) dict[k]=d.out[k]; paint(list); }
+          if(d && d.out && want===lang){ fails=0; for(var k in d.out) dict[k]=d.out[k]; paint(list); }
+          else fails++;
+          if(fails>=3){ saveDict(); return; }    /* three refusals: stop asking, stay English */
           next();
         })
-        .catch(function(){ next(); });     /* silent: the screen stays English */
+        .catch(function(){ if(++fails<3) next(); });   /* silent: the screen stays English */
     })();
   }
   function setLang(l){
