@@ -26140,5 +26140,67 @@ def rg_adv_country_chip_truthful():
     return out
 
 
+@entry("RG-0426", "The app has a SECOND working AI lane -- the failover is real, not only ranked",
+       OPEN, fixed_on="",
+       scope="The live marketsquare service environment on the Hetzner box, against the lane "
+             "ranking in AI_BASELINE.json. WHY THIS IS OPEN (20 Sep 2026): David's Anthropic API "
+             "organisation ran out of prepaid credit and API access was switched off over an "
+             "unpaid balance of US$0.19. AI_BASELINE ranks a standby lane FIRST in every tier "
+             "(openai rank 0, anthropic rank 1, scaleway rank 2), so on paper the app rides "
+             "through a dead vendor. It does not: the running service carries ANTHROPIC_API_KEY "
+             "and NO standby key at all, so every tier has exactly one reachable lane and a "
+             "vendor outage -- or 19 cents of unpaid balance -- takes the whole AI surface down "
+             "with no fallback. A ranking is not a failover until the key behind the rank "
+             "exists. This entry PASSES the day a second lane's key is present in the running "
+             "process, and it is deliberately checked at the point of use (/proc/<pid>/environ) "
+             "rather than in a config file, per RG-0147. Provisioning the key is David's -- it "
+             "is a vendor credential, and the money behind it is his call.")
+def rg_second_ai_lane_present():
+    out = []
+    base = repo_file("AI_BASELINE.json")
+    if base:
+        try:
+            import json as _json
+            tiers = _json.loads(base).get("tiers", {})
+            ranked = set()
+            for t in tiers.values():
+                for lane, cfg in (t.get("lanes") or {}).items():
+                    if isinstance(cfg, dict) and cfg.get("failover_rank") is not None:
+                        ranked.add(lane)
+            if len(ranked) < 2:
+                out.append((FAIL, "AI_BASELINE.json ranks fewer than two lanes -- the failover "
+                                  "design itself has gone single-vendor"))
+            else:
+                out.append((INFO, "ranked lanes: " + ", ".join(sorted(ranked))))
+        except Exception as e:
+            out.append((INFO, "AI_BASELINE.json unreadable: " + str(e)[:80]))
+    import subprocess
+    try:
+        r = subprocess.run(
+            ["ssh", "-o", "ConnectTimeout=8", "-o", "BatchMode=yes",
+             "-o", "StrictHostKeyChecking=accept-new", "root@178.104.73.239",
+             "pid=$(systemctl show -p MainPID --value marketsquare); "
+             "tr '\\0' '\\n' < /proc/$pid/environ | grep -o '^[A-Z_]*API_KEY' | sort -u"],
+            capture_output=True, text=True, timeout=25)
+        names = [l.strip() for l in (r.stdout or "").splitlines() if l.strip().endswith("API_KEY")]
+        if not names:
+            out.append((INFO, "NOT EVALUATED -- no SSH to the box from this vantage; the live "
+                              "half of the second-lane check was not measured here"))
+            return out
+        ai = [n for n in names if n.split("_")[0] in
+              ("ANTHROPIC", "OPENAI", "SCALEWAY", "FAILOVER", "XAI", "GEMINI", "GOOGLE", "DEEPSEEK")]
+        out.append((INFO, "AI keys present in the running service: " +
+                          (", ".join(sorted(ai)) if ai else "none")))
+        if len(ai) < 2:
+            out.append((FAIL, "only %d AI vendor key is live on the box (%s) -- the ranked "
+                              "failover has nowhere to fall to, so one vendor outage or an unpaid "
+                              "balance takes every AI feature down at once"
+                              % (len(ai), ", ".join(sorted(ai)) or "none")))
+    except Exception:
+        out.append((INFO, "NOT EVALUATED -- no SSH to the box from this vantage; the live half "
+                          "of the second-lane check was not measured here"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
