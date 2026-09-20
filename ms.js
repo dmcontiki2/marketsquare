@@ -19379,6 +19379,12 @@ async function msUnverifiedGate(sellerEmail, category){
   var LANGS=[['en','English'],['zu','isiZulu'],['st','Sesotho'],['af','Afrikaans'],['xh','isiXhosa']];
   var KEY='ts_lang', CACHE='ts_i18n_', MAXLEN=240, CHUNK=60;
   var lang='en', busy=false, dict={}, pending=false;
+  /* REPAINT-RACE-1 (20 Sep 2026): the bottom nav stayed English while the page around it was
+     Afrikaans. MutationObserver DELIVERS RECORDS IN BATCHES, so the nav's own insertion arrived
+     in the same batch as paint()'s 900 text writes -- the callback saw busy, returned, and the
+     nav was never walked again because nothing else on the page ever moved. A skipped batch is
+     now remembered and re-run the moment painting ends. */
+  var rescan=null, missed=false, seen={};
   function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
   function read(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
   function loadDict(l){
@@ -19416,29 +19422,47 @@ async function msUnverifiedGate(sellerEmail, category){
       n.__tr=n.nodeValue;
     });
     busy=false;
+    if(missed && rescan){ missed=false; rescan(); }   /* REPAINT-RACE-1: a batch we had to skip */
   }
   function ask(list){
+    /* PAINT-ALL-1 (20 Sep 2026): a chunk that lands must be painted over the WHOLE page, not over
+       the list this particular run started with. The bottom nav was built after the run that later
+       learned its words, so its words arrived in a dictionary nobody ever applied to it -- English
+       nav, Afrikaans page. And every observer tick used to restart the queue from the first chunk,
+       so on a busy page the later chunks were never reached and nothing was ever cached. */
     var need=[];
-    list.forEach(function(n){ var t=(n.__en||'').trim(); if(t && dict[t]===undefined && need.indexOf(t)<0) need.push(t); });
+    list.forEach(function(n){ var t=(n.__en||'').trim();
+      if(t && dict[t]===undefined && !seen[t] && need.indexOf(t)<0) need.push(t); });
     if(!need.length || lang==='en'){ paint(list); return; }
-    var at=0, want=lang, fails=0;
-    (function next(){
-      if(at>=need.length || want!==lang){ saveDict(); paint(list); return; }
-      var slice=need.slice(at, at+CHUNK); at+=CHUNK;
+    var at=0, want=lang, fails=0, live=0, LANES=3;
+    need.forEach(function(t){ seen[t]=1; });                 /* asked once, never queued again */
+    /* Three chunks in the air at once. A first switch on a full page is ~1,900 phrases = 32 chunks;
+       one at a time that is half a minute of English before the page turns over. */
+    function next(){
+      if(want!==lang || fails>=3 || at>=need.length){
+        if(!live){ saveDict(); paint(nodes(document.body)); }
+        return;
+      }
+      var slice=need.slice(at, at+CHUNK); at+=CHUNK; live++;
       fetch('/i18n/translate',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({lang:want, strings:slice})})
         .then(function(r){ return r.ok ? r.json() : null; })
         .then(function(d){
-          if(d && d.out && want===lang){ fails=0; for(var k in d.out) dict[k]=d.out[k]; paint(list); }
+          live--;
+          if(d && d.out && want===lang){ fails=0; for(var k in d.out) dict[k]=d.out[k];
+                                         saveDict();               /* after EVERY chunk, so a reader
+                                            who leaves mid-fill still comes back to a warm cache */
+                                         paint(nodes(document.body)); }
           else fails++;
           if(fails>=3){ saveDict(); return; }    /* three refusals: stop asking, stay English */
           next();
         })
-        .catch(function(){ if(++fails<3) next(); });   /* silent: the screen stays English */
-    })();
+        .catch(function(){ live--; fails++; next(); });   /* silent: the screen stays English */
+    }
+    for(var w=0; w<LANES; w++) next();
   }
   function setLang(l){
-    lang=l; store(KEY,l); document.documentElement.lang=l; pill();
+    lang=l; store(KEY,l); document.documentElement.lang=l; seen={}; pill();
     var list=nodes(document.body);
     if(l==='en'){ paint(list); return; }
     loadDict(l); paint(list); ask(list);
@@ -19479,10 +19503,14 @@ async function msUnverifiedGate(sellerEmail, category){
     if(saved && saved!=='en' && LANGS.some(function(x){ return x[0]===saved; })) setLang(saved);
     document.addEventListener('click', function(){ if(document.getElementById('ts-langm')) pill(); });
     var tmr=null;
-    new MutationObserver(function(){
-      if(busy || lang==='en') return;
+    rescan=function(){
       clearTimeout(tmr);
       tmr=setTimeout(function(){ var l=nodes(document.body); paint(l); ask(l); }, 250);   /* the feed keeps loading */
+    };
+    new MutationObserver(function(){
+      if(busy){ missed=true; return; }                /* REPAINT-RACE-1: do not lose this batch */
+      if(lang==='en') return;
+      rescan();
     }).observe(document.body, {childList:true, subtree:true});
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', start); else start();

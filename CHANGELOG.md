@@ -1,3 +1,23 @@
+## 2026-09-20 — PAINT-ALL-1: the translate button turns the page over in 6 seconds, not 16
+
+Checking the Afrikaans in a rendered phone browser showed the words were right and the screen was
+slow: the bottom nav was still reading Browse / Sell / Wallet / My Space long after the page around
+it had turned Afrikaans. Three faults, all in `ms.js`, none of them in the words:
+
+- **A chunk was painted over the list that asked for it, not over the page.** The nav is built after
+  the first walk, so the run that later learned "Blaai" applied it to a list the nav was not in. Each
+  chunk now repaints the whole document.
+- **Every DOM tick restarted the queue at chunk one.** On a page whose feed keeps loading, the later
+  chunks were never reached and nothing was ever written to the browser cache. A phrase already asked
+  for is now never queued again, so 113 calls for one page became 35.
+- **One chunk at a time.** A first switch is ~1,900 phrases: 32 round trips end to end. Three now run
+  at once, and the dictionary is written to the browser after every chunk, not only at the end, so a
+  reader who leaves half way still comes back to a warm cache.
+
+Measured on the live site at phone width, cold: **16.2s and 23 calls before, 6.4s and 9 calls after**;
+a second visit is 4 calls. Round trip through Afrikaans, English and isiZulu, 0 console errors. The
+EULA stays English throughout (`data-notranslate`, RUL-143).
+
 ## 2026-09-20 — I18N-AF-1: the Afrikaans re-done by hand, once, and kept
 
 David, 20 Sep 2026: *"the Afrikaans has many mistakes... many of the english to afrikaans words came out wrong
