@@ -1,5 +1,5 @@
 {
-  "next_id": 138,
+  "next_id": 139,
   "items": {
     "DW-001": {
       "first_seen": "2026-08-02",
@@ -80,7 +80,7 @@
     },
     "DW-010": {
       "first_seen": "2026-08-03",
-      "last_seen": "2026-09-18",
+      "last_seen": "2026-09-20",
       "sev": "MEDIUM",
       "source": "cc_age_check (Monday lane)",
       "status": "SCHEDULED",
@@ -1171,7 +1171,7 @@
     },
     "DW-111": {
       "first_seen": "2026-09-07",
-      "last_seen": "2026-09-19",
+      "last_seen": "2026-09-20",
       "sev": "MEDIUM",
       "source": "split out of DW-109 at that row's own request; re-check attempted from the sandbox today",
       "status": "OPEN",
@@ -1487,7 +1487,7 @@
     },
     "DW-136": {
       "first_seen": "2026-09-18",
-      "last_seen": "2026-09-19",
+      "last_seen": "2026-09-20",
       "sev": "MEDIUM",
       "source": "correlation of the live post_deploy_status.json timestamp with the ledger's two exit-1 runs and the host-queue record (PROBED)",
       "status": "OPEN",
@@ -1503,7 +1503,7 @@
     },
     "DW-137": {
       "first_seen": "2026-09-19",
-      "last_seen": "2026-09-19",
+      "last_seen": "2026-09-20",
       "sev": "MEDIUM",
       "status": "OPEN",
       "source": "the watch's own Phase-B verify step - a read-back of a backup it had just written",
@@ -1513,9 +1513,17 @@
         "CLAUDE.md file-writes-on-this-mount rule",
         "DW-119"
       ]
+    },
+    "DW-138": {
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "sev": "MEDIUM",
+      "source": "regression ledger combine summary (1 ready to lock, was 0) - the tripwire the DW-122 coverage card named for itself",
+      "status": "OPEN",
+      "closed": null
     }
   },
-  "last_run": "2026-09-19",
+  "last_run": "2026-09-20",
   "last_verdict": "GREEN",
   "recheck_pass_2026_08_20": {
     "requested_by": "David: close all open actions",
@@ -2950,5 +2958,33 @@
       "DW-137"
     ],
     "coverage_map": "83 GREEN / 2 BLUE / 3 AMBER / 0 RED / 11 GREY (yesterday 81/3/3/0/11)"
+  },
+  "watch_pass_2026_09_20": {
+    "verdict": "GREEN",
+    "site": "health ok BEA 1.3.1, root 200 in 0.32s, /payment/test ok, TLS 63d",
+    "ledger": "406 entries / 382 holding / 0 REGRESSED / 23 open / 1 ready to lock / 0 UNVERIFIED, combine exit 0 (269.2s, 3 shards)",
+    "ready_to_lock": "RG-0238",
+    "global_qa": "2 findings, 0 new, both INFO",
+    "cost_sweep": "exit 0 clean - 0 critical / 0 warnings / 31 ok / 57 info; no change in warn-critical lines vs 2026-09-19",
+    "daily_checks": "deploy drift clean - all 19 tracked files match live",
+    "smoke": "40/40 OK, 0 FAIL",
+    "server": "fea alerts []; subscription_monitor 35 UP / 15 HELD / 1 PLANNED / 0 DOWN; TLS 62d; disk 50.5% free",
+    "cron_parity": "OK - findings.cron.json loop_date 2026-09-20, smoke 39/39 all_green, health ok, spend $0.00 of $100 not breached",
+    "orchestrator": "queue.json and staged.json both empty (fixer paused per DW-004)",
+    "heartbeat": "last_run was 2026-09-19 - no missed run",
+    "ai_watch": "routine all-clear, no register item; Sonnet 5 confirmed $2/$10 permanent",
+    "new_items": [
+      "DW-138"
+    ],
+    "closed_items": [],
+    "rechecked_not_closed": [
+      "DW-010 (cc_age_check FAILED: CC-002 102d, CC-005 19d)",
+      "DW-111 (ninth wall - msdeploy in neither adm nor systemd-journal)",
+      "DW-136 (ONE_DEPLOY.md line 12 ungated raw-push lane unchanged; no deploy rode this run)",
+      "DW-137 (read-back probe 12/12 clean but intermittent and unfixed - raised as David decision)"
+    ],
+    "david_decision": "DW-137 - close as a flake that did not recur, or keep open until read-after-settle is built and asserted? Watch recommends keeping it open.",
+    "coverage_map": "82 GREEN / 3 BLUE / 3 AMBER / 0 RED / 11 GREY, 99 cards (yesterday 83/2/3/0/11); DW-122 card GREEN -> BLUE on its own stated ready-to-lock tripwire",
+    "checks_run": "12 of 12 in scope (Monday canon/deep-scan lane not in scope on a Sunday)"
   }
 }
