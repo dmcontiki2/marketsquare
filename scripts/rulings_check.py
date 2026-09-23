@@ -25,7 +25,7 @@ REPO = os.path.dirname(HERE)
 PROJECTS = os.path.dirname(REPO)
 REGISTER = os.path.join(REPO, "RULINGS.md")
 
-FAIL, WARN, INFO = "FAIL", "WARN", "INFO"
+FAIL, WARN, INFO, BLIND = "FAIL", "WARN", "INFO", "BLIND"
 
 
 def _read(path):
@@ -34,6 +34,25 @@ def _read(path):
         return None
     with open(p, "r", encoding="utf-8", errors="replace") as fh:
         return fh.read()
+
+
+def _outside_repo(path):
+    """True when an assertion points at a file OUTSIDE this repo -- a sibling project under
+    Projects/ (e.g. '../CityLauncher/...') or the Projects-root CLAUDE.md.
+
+    VANTAGE-BLIND-1 (23 Sep 2026). A session mounted at the repo alone cannot see those files,
+    so `_read` returns None for every one of them and the checker convicted 38 rulings of
+    'file missing' on a tree where nothing was missing -- and then printed 'the blind spot is
+    live', which is exactly backwards: the blind spot was the CHECKER'S.
+
+    This repo has already settled the doctrine three times and this instrument never got it:
+    RG-0401 (an edge refusal is BLIND, never REGRESSED), RG-0420 (an origin 502 is blind), and
+    the maintenance producer's `vantage:` rule (arming posts NOT MEASURED, never False). A probe
+    that cannot reach its target reports that it could not reach it. It does not return a verdict.
+    """
+    resolved = os.path.normpath(path if os.path.isabs(path) else os.path.join(REPO, path))
+    repo = os.path.normpath(REPO)
+    return os.path.commonpath([resolved, repo]) != repo
 
 
 # Each ruling: list of (file, [must_contain...], [must_NOT_contain...])
@@ -1147,7 +1166,8 @@ def main():
         return 2
 
     listed = set(re.findall(r"\| (RUL-\d{3}) \|", reg))
-    fails = warns = 0
+    fails = warns = blinds = 0
+    blind_rids, blind_paths = set(), set()
     print("RULINGS CHECK -- is every ruling reflected where the next session will read?")
     print("=" * 78)
 
@@ -1161,7 +1181,12 @@ def main():
             c = _read(path)
             name = os.path.basename(path)
             if c is None:
-                problems.append((FAIL, "%s: file missing (%s)" % (rid, name)))
+                if _outside_repo(path):
+                    # VANTAGE-BLIND-1: not mounted here, so NOT CHECKED -- never a verdict.
+                    problems.append((BLIND, "%s: NOT CHECKED (%s) -- %s is outside this repo "
+                                            "and is not mounted on this machine" % (rid, name, path)))
+                else:
+                    problems.append((FAIL, "%s: file missing (%s)" % (rid, name)))
                 continue
             for needle in must:
                 if needle not in c:
@@ -1176,6 +1201,11 @@ def main():
                 print("  %-5s %s" % (lvl, msg))
                 fails += 1 if lvl == FAIL else 0
                 warns += 1 if lvl == WARN else 0
+                blinds += 1 if lvl == BLIND else 0
+                if lvl == BLIND:
+                    blind_rids.add(rid)
+            if all(lvl == BLIND for lvl, _ in problems):
+                print("  INFO  %s reflected where this vantage can see" % rid)
         else:
             print("  INFO  %s reflected" % rid)
 
@@ -1186,11 +1216,24 @@ def main():
         warns += 1
 
     print("=" * 78)
-    print("%d rulings checked, %d FAIL, %d WARN" % (len(REFLECTIONS), fails, warns))
+    print("%d rulings checked, %d FAIL, %d WARN, %d NOT CHECKED"
+          % (len(REFLECTIONS), fails, warns, blinds))
+    if blinds:
+        # VANTAGE-BLIND-1: say what was not looked at, every time, in both outcomes. A green
+        # that quietly skipped a third of its assertions is the worse of the two errors.
+        print("VANTAGE: %d assertion(s) across %d ruling(s) were NOT CHECKED -- they point at "
+              "files outside this repo (sibling projects under %s) which are not mounted here. "
+              "This is the checker being blind, not the canon being broken. Mount the Projects "
+              "folder to check them." % (blinds, len(blind_rids), PROJECTS))
     if fails:
         print("RESULT: at least one ruling exists only in memory or in one file -- the blind "
               "spot is live.")
         return 1
+    if blinds:
+        print("RESULT: every ruling REACHABLE FROM THIS VANTAGE is reflected in canon. "
+              "%d assertion(s) were not checked -- see VANTAGE above; this is not a green for "
+              "those." % blinds)
+        return 0
     print("RESULT: every ruling is reflected in canon. No session should rediscover one.")
     return 0
 
