@@ -516,6 +516,72 @@ def repo_file(name):
         return fh.read()
 
 
+# ── vantage: what this machine can actually SEE ─────────────────────────────
+# Sibling projects that live beside MarketSquare in David's Projects folder. Their
+# presence is how a session tells "I am mounted at the whole Projects folder" from
+# "I am mounted at MarketSquare alone".
+SIBLING_PROJECTS = ("CityLauncher", "Auction")
+
+
+def projects_root_visible():
+    """True when this session can actually see the Projects folder that holds MarketSquare's
+    siblings -- not merely that SOME parent directory exists.
+
+    The parent of the repo ALWAYS exists (it is the mount point), so os.path.exists() on it
+    is not evidence of anything. Only a known sibling project being there is.
+    """
+    root = os.path.normpath(os.path.join(REPO, ".."))
+    return any(os.path.isdir(os.path.join(root, s)) for s in SIBLING_PROJECTS)
+
+
+def sibling_visible(path):
+    """True when `path` is one this vantage can reach -- so a missing file is REALLY missing.
+    False when the project holding it is not mounted, which makes the read BLIND.
+
+    LEDGER-VANTAGE-BLIND-1 (23 Sep 2026). The daily stand-up runs with ONLY the MarketSquare
+    folder mounted. Four entries -- RG-0229, RG-0230, RG-0252, RG-0399 -- assert on
+    '../CityLauncher/...' files and the Projects-root CLAUDE.md, and every one of those reads
+    came back absent, so the board printed four REGRESSIONS and
+    "Do not deploy over this" on a tree where nothing was missing. The files were on David's
+    machine the whole time; the instrument could not see them.
+
+    This repo has now settled the same doctrine FIVE times and these four entries had it in
+    the file beside them without inheriting it: RG-0187 (an instrument that cannot run reads
+    UNVERIFIED), RG-0401/EDGE-BLIND (an edge refusal is BLIND, never REGRESSED), RG-0420
+    (an origin 502 is blind), the maintenance producer's `vantage:` rule (NOT MEASURED, never
+    False), and VANTAGE-BLIND-1 in scripts/rulings_check.py the same day. A probe that cannot
+    reach its target reports that it could not reach it. It does not return a verdict.
+
+    DELIBERATELY NOT WEAKENED, and this is the whole point: the test is whether the PROJECT
+    ROOT is mounted, not whether the file is there. On David's machine and on the host agent
+    -- the two vantages that run from the real Projects folder -- CityLauncher IS visible, so
+    a genuinely deleted ssh_bootstrap.py, marker or bat still FAILs exactly as before. Only a
+    vantage that cannot see the project at all is spared, and it is spared loudly.
+    """
+    resolved = os.path.normpath(path if os.path.isabs(path) else os.path.join(REPO, path))
+    repo = os.path.normpath(REPO)
+    try:
+        if os.path.commonpath([resolved, repo]) == repo:
+            return True                      # in-repo: always checkable, present or not
+    except ValueError:
+        return True                          # different drive -- not this blind spot
+    root = os.path.normpath(os.path.join(REPO, ".."))
+    try:
+        rel = os.path.relpath(resolved, root)
+    except ValueError:
+        return True
+    if rel.startswith(".."):
+        return True                          # outside Projects entirely -- not this blind spot
+    parts = rel.split(os.sep)
+    if len(parts) == 1:
+        return projects_root_visible()       # a file in the Projects root, e.g. CLAUDE.md
+    return os.path.isdir(os.path.join(root, parts[0]))
+
+
+BLIND_VANTAGE = ("NOT EVALUATED - %s is not mounted on this vantage, so %s could not be read "
+                 "(LEDGER-VANTAGE-BLIND-1). An instrument limit, never a verdict.")
+
+
 # ── market model ────────────────────────────────────────────────────────────
 # Cities the demo feed ships, and the symbol a buyer must see there.
 CITY_CCY = {
@@ -1706,6 +1772,47 @@ def _run_shard(k, n):
     return 0
 
 
+CHUNK_STATE = os.path.join(SHARD_DIR, "chunk_state.json")
+
+
+def _run_chunk(budget_s=110):
+    """LEDGER-CHUNK-1 (23 Sep 2026). --shard=k/n splits the board by COUNT, but the cap a sandbox
+    command dies at (~180s) is a limit on TIME, and entry weights drift: on 23 Sep shards 1/6 and
+    6/6 both overran it (one live-page entry alone took 37s) while the host-side full run took
+    10.5 minutes. Measured, not guessed. So --chunk splits by TIME instead: each call measures
+    entries until its budget is spent, checkpoints after EVERY entry, and the next call resumes
+    where it stopped. It can never hit the cap whatever the weights, it needs no n to be chosen,
+    and it judges through the same _judge() as every other mode. The final call prints the
+    verdict. A checkpoint older than 90 minutes, or taken against a different ledger size, is
+    discarded and the board starts again -- a board is a measurement, not an archive."""
+    os.makedirs(SHARD_DIR, exist_ok=True)
+    st = None
+    try:
+        st = json.load(open(CHUNK_STATE, encoding="utf-8"))
+    except Exception:
+        st = None
+    if (not st or st.get("total_entries") != len(LEDGER) or st.get("done")
+            or time.time() - st.get("started", 0) > 5400):
+        st = {"started": time.time(), "total_entries": len(LEDGER), "next": 0,
+              "results": [], "took_s": 0.0, "done": False}
+    t0 = time.time()
+    while st["next"] < len(LEDGER) and time.time() - t0 < budget_s:
+        s0 = time.time()
+        st["results"].append(_judge(LEDGER[st["next"]]))
+        st["took_s"] += time.time() - s0
+        st["next"] += 1
+        json.dump(st, open(CHUNK_STATE, "w", encoding="utf-8"))
+    if st["next"] < len(LEDGER):
+        print("chunk: %d/%d entries measured so far -- run --chunk again to continue"
+              % (st["next"], len(LEDGER)))
+        return None
+    st["done"] = True
+    json.dump(st, open(CHUNK_STATE, "w", encoding="utf-8"))
+    print("# chunked board complete: %d entries, %d minutes from first to last measurement"
+          % (len(st["results"]), int((time.time() - st["started"]) / 60)), file=sys.stderr)
+    return st["results"], round(st["took_s"], 1)
+
+
 def _load_shards(n, max_age_s=5400):
     """Every shard must exist, agree on the ledger size, and be recent. Anything else
     raises -- a stale or partial board is refused, never quietly patched over."""
@@ -1740,7 +1847,17 @@ def main():
     if _shard:
         _k, _n = [int(x) for x in _shard.replace(":", "/").split("/")]
         return _run_shard(_k, _n)
-    if _combine:
+    if "--chunk" in sys.argv:
+        _r = _run_chunk()
+        if _r is None:
+            return 4      # LEDGER-CHUNK-1: more to measure -- run --chunk again
+        results, took = _r
+        _combine = None
+    else:
+        _r = None
+    if _r is not None:
+        pass
+    elif _combine:
         results, took, _age = _load_shards(int(_combine))
         print("# assembled from %s shards, oldest piece %ds old" % (_combine, _age), file=sys.stderr)
     else:
@@ -13687,6 +13804,9 @@ def rg_optout_lane():
     # by RG-0187 on the first run after this entry was written (31 Aug).
     v = os.path.join(REPO, "..", "CityLauncher", "verify_optout_lane.py")
     if not os.path.exists(v):
+        if not sibling_visible(v):
+            # LEDGER-VANTAGE-BLIND-1: absent-because-unmounted is not absent.
+            return [(INFO, BLIND_VANTAGE % ("CityLauncher", "verify_optout_lane.py"))]
         return [(FAIL, "verify_optout_lane.py is GONE -- the opt-out lane has no proof "
                        "and must be treated as unproven (OPTOUT-LANE-1)")]
     ok, blind, detail = _harness([sys.executable, v], timeout=150)
@@ -13723,8 +13843,11 @@ def rg_sandbox_ssh_selfheal():
     cl = os.path.join(REPO, "..", "CityLauncher")
     boot = os.path.join(cl, "ssh_bootstrap.py")
     if not os.path.exists(boot):
-        out.append((FAIL, "CityLauncher/ssh_bootstrap.py is GONE -- the python lane lost its "
-                          "self-heal (SSH-BOOTSTRAP-1)"))
+        if not sibling_visible(boot):
+            out.append((INFO, BLIND_VANTAGE % ("CityLauncher", "ssh_bootstrap.py")))
+        else:
+            out.append((FAIL, "CityLauncher/ssh_bootstrap.py is GONE -- the python lane lost its "
+                              "self-heal (SSH-BOOTSTRAP-1)"))
     for s in ("pull_from_server.py", "sync_local_to_server.py", "push_estate_agents.py",
               "push_us_uk_cities.py", "run_local_scraper.py", "run_za_estate_agents.py"):
         p = os.path.join(cl, s)
@@ -13734,8 +13857,10 @@ def rg_sandbox_ssh_selfheal():
             out.append((FAIL, s + " uses SSH but no longer calls ssh_bootstrap.ensure_ssh() -- "
                               "it will strand on a cold sandbox exactly like the 31 Aug case"))
     cm = os.path.join(REPO, "..", "CLAUDE.md")
-    if not (os.path.exists(cm) and
-            "SSH-BOOTSTRAP-1" in open(cm, encoding="utf-8", errors="replace").read()):
+    if not sibling_visible(cm):
+        out.append((INFO, BLIND_VANTAGE % ("the Projects folder", "Projects/CLAUDE.md")))
+    elif not (os.path.exists(cm) and
+              "SSH-BOOTSTRAP-1" in open(cm, encoding="utf-8", errors="replace").read()):
         out.append((FAIL, "Projects/CLAUDE.md lost the SSH-BOOTSTRAP-1 section -- the knowledge "
                           "moved back to a file sessions do not load, which IS the original fault"))
     if not out:
@@ -15353,6 +15478,11 @@ def rg_autodeploy_agent():
                        ("STANDING_ORDERS.md", ["RUL-092"]),
                        (os.path.join("..", "CityLauncher", "deploy_citylauncher.bat"), ["if not defined UNATTENDED pause", "if defined UNATTENDED exit /b 0"])):
         t = repo_file(f) or ""
+        if not t and not sibling_visible(os.path.join(REPO, f)):
+            # LEDGER-VANTAGE-BLIND-1: an unmounted sibling is unread, not gutted.
+            out.append((INFO, BLIND_VANTAGE % ("CityLauncher", f) +
+                              " %d assertion(s) not checked." % len(needles)))
+            continue
         for n in needles:
             if n not in t:
                 out.append((FAIL, "%s lost '%s'" % (f, n)))
@@ -24429,6 +24559,16 @@ def rg_wave_server_only():
     out = []
     cl = os.path.normpath(os.path.join(REPO, "..", "CityLauncher"))
 
+    # LEDGER-VANTAGE-BLIND-1 (23 Sep 2026): on a MarketSquare-only mount every read below
+    # comes back absent, and this entry then convicted the laptop lane of being armed -- twice
+    # -- on a machine where CityLauncher simply is not visible. The RECORD half is now gated
+    # on seeing the project at all. Where it IS visible (David's PC, the host agent) every
+    # assertion below fires exactly as before.
+    cl_visible = sibling_visible(cl)
+    if not cl_visible:
+        out.append((INFO, BLIND_VANTAGE % ("CityLauncher", "the DailyWave disable log, the "
+                          "WAVE_RUNS_ON_SERVER marker and launch_day_wave.bat")))
+
     # RECORD half: the newest disable log, else the marker + guard that stand in for it
     logs = sorted(_glob.glob(os.path.join(cl, "logs", "disable_daily_wave_*.log")), key=os.path.getmtime)
     disabled = False
@@ -24450,9 +24590,9 @@ def rg_wave_server_only():
         if not disabled:
             out.append((INFO, "newest %s still shows \\CityLauncher\\DailyWave ENABLED (the queue worker "
                               "is not admin) -- the marker + bat guard are what hold" % os.path.basename(logs[-1])))
-    else:
+    elif cl_visible:
         out.append((INFO, "no CityLauncher/logs/disable_daily_wave_*.log yet -- the marker + bat guard are what hold"))
-    if not disabled:
+    if not disabled and cl_visible:
         marker = os.path.join(cl, "WAVE_RUNS_ON_SERVER")
         if not os.path.exists(marker):
             out.append((FAIL, "CityLauncher/WAVE_RUNS_ON_SERVER is missing while the Windows DailyWave task is "
@@ -24499,7 +24639,9 @@ def rg_wave_server_only():
 
     if not any(r == FAIL for r, _ in out):
         out.append((INFO, "the server timer is the one sender (enabled+active, runner md5 matches) and the "
-                          "laptop lane is %s" % ("disabled" if disabled else "neutralised by marker + guard")))
+                          "laptop lane is %s" % ("disabled" if disabled else
+                                                 "neutralised by marker + guard" if cl_visible else
+                                                 "NOT READ from this vantage")))
     return out
 
 @entry("RG-0396", "HUB-EULA-1: a seller who taps Publish on his own stranded draft is taken to the "
@@ -26892,6 +27034,77 @@ def rg_rul164_free_cap():
     for need in ("LANG_DRAFTS_PER_ADVERT_DAY", "I18N_DAILY_CALL_CAP", "lang_draft_log"):
         if need not in body:
             out.append((FAIL, "the free-lane cap (%s) no longer stands before the AI call" % need))
+    return out
+
+
+@entry("RG-0440", "LEDGER-CHUNK-1: the board can be finished from a session with a per-command time cap, "
+                  "whatever the entry weights",
+       LOCKED, fixed_on="2026-09-23",
+       scope="scripts/regression_ledger.py --chunk: time-budgeted, checkpointed after every entry, "
+             "resumable, judged through _judge(). WHY: 23 Sep 2026, --shard=1/6 and 6/6 overran the ~180s "
+             "sandbox cap (the board now takes ~10 minutes; one entry alone took 37s), so no session "
+             "could finish it and the verdict had to come from the host queue. NOT the 8-10 Sep outage "
+             "(the drive share not mounting after a Windows update): the sandbox worked; the board had "
+             "simply outgrown a count-based split.")
+def rg_ledger_chunk_1():
+    t = repo_file("scripts/regression_ledger.py") or ""
+    out = []
+    for need in ("def _run_chunk(", 'if "--chunk" in sys.argv:', "json.dump(st, open(CHUNK_STATE"):
+        if need not in t:
+            out.append((FAIL, "--chunk lost %s" % need))
+    return out
+
+
+@entry("RG-0441", "AUDIT-AUTH-1 / AUDIT-L1 / AUDIT-Q1: publishing, editing and listing your own adverts act "
+                  "as the proven session; one tap never publishes for an existing account; the single-advert "
+                  "read keeps the seller anonymous",
+       OPEN, fixed_on="",
+       scope="Found by the 23 Sep 2026 bug audit of the day's work (genie/BUG_AUDIT_2026-09-23.html). bea_main.py: "
+             "PUT /listings/{id}/publish, PUT /listings/{id} and GET /listings/mine now call _actor() "
+             "(RUL-135) instead of trusting ?email=; POST /listings/quick-publish gives an EXISTING account a "
+             "draft + sign-in letter (never publishes or accepts terms for it), strips client-set trust/photo/spec "
+             "fields and rate-limits per connection; GET /listings/{id} no longer returns seller_email to anyone "
+             "but the seller, nor the language working data. LIVE legs are anonymous refusal probes only.")
+def rg_audit_auth_1():
+    out = []
+    b = repo_file("bea_main.py") or ""
+    for need in ('_actor(ts_user, email, "listing-publish"', '_actor(ts_user, email, "listing-update"',
+                 '_actor(ts_user, email, "listings-mine"', "existing_account = bool(_u) and not sess",
+                 '"trust_score", "thumb_url", "medium_url"', 'for _k in ("seller_email", "attested_email"):'):
+        if need not in b:
+            out.append((FAIL, "bea_main.py lost %s" % need[:60]))
+    try:
+        import urllib.request as _u
+        _require_net()
+        req = _u.Request(BASE + "/listings/1/publish?email=someone@example.com", method="PUT", headers=UA)
+        try:
+            _u.urlopen(req, timeout=TIMEOUT); out.append((FAIL, "LIVE: publish by ?email= alone was accepted"))
+        except urllib.error.HTTPError as e:
+            if e.code not in (401, 403, 404):
+                out.append((FAIL, "LIVE: publish without a session answered %s" % e.code))
+        lst = json.loads(_get("/listings?city=Pretoria&page_size=1"))
+        arr = lst if isinstance(lst, list) else (lst.get("listings") or lst.get("items") or [])
+        if arr:
+            one = json.loads(_get("/listings/%s" % arr[0]["id"]))
+            for k in ("seller_email", "extra_back", "search_en"):
+                if k in one:
+                    out.append((FAIL, "LIVE: GET /listings/{id} returns %s to an anonymous reader" % k))
+    except ProbeOffline:
+        raise
+    return out
+
+
+@entry("RG-0442", "AUDIT-XSS-1: advert titles and descriptions are stored as plain text -- markup never "
+                  "reaches a render path", LOCKED, fixed_on="2026-09-23",
+       scope="bea_main.py _plain_text() applied in create_listing and update_listing (the two doors that write "
+             "title/description). Class, not instance: every page renders these fields into HTML, so the guard "
+             "sits where they are written. Found by the 23 Sep audit (older problem, not introduced that day).")
+def rg_audit_xss_1():
+    b = repo_file("bea_main.py") or ""
+    out = []
+    for need in ("def _plain_text(", "listing.title = _plain_text(listing.title)", "update.title = _plain_text(update.title)"):
+        if need not in b:
+            out.append((FAIL, "the plain-text guard lost %s" % need))
     return out
 
 if __name__ == "__main__":
