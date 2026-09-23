@@ -1,6 +1,6 @@
-# Global QA audit — 2026-09-20 (14.1s)
+# Global QA audit — 2026-09-23 (22.1s)
 
 **2 findings** (0 new vs previous run)
 
 - **INFO** [demo] `DEMO-PLACEHOLDERS` — 3 'coming soon' placeholder listings present (by design; verify they stay out of counts)
-- **INFO** [drift] `VERSION-KEY-BENIGN` — repo html pins ms.js v496, live pins v710, but the served bytes are IDENTICAL to the repo — this is the server's monotonic ?v= bump, not drift. Recorded, not raised (DW-001).
+- **INFO** [drift] `VERSION-KEY-BENIGN` — repo html pins ms.js v501, live pins v723, but the served bytes are IDENTICAL to the repo — this is the server's monotonic ?v= bump, not drift. Recorded, not raised (DW-001).
