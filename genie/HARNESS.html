@@ -2622,7 +2622,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     if(!QUICK.member && !/.+@.+\..+/.test(em)){ var m=$('qpmail'); if(m){ m.focus(); m.style.borderColor='#e06a5a'; } return; }
     btn.disabled=true; btn.textContent=qTr('Publishing…');
     var pay=handoverPayload().body; pay.seller_email=em||null;
-    fetch('/quick/publish',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
+    fetch('/listings/quick-publish',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({listing:pay, email:em, accept_terms:true})})
     .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
     .then(function(res){

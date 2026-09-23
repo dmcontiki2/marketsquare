@@ -26848,7 +26848,7 @@ def rg_rulings_settled_read_1():
 @entry("RG-0438", "ONE-TAP-PUBLISH-1 + LANG-ON-1 + ARRIVAL-1: one tap publishes from the Quick door, the "
                   "languages are on for everyone, and saving is an arrival",
        OPEN, fixed_on="",
-       scope="RUL-163 (David, 23 Sep 2026). bea_main.py POST /quick/publish (create + terms-by-tap + "
+       scope="RUL-163 (David, 23 Sep 2026). bea_main.py POST /listings/quick-publish (create + terms-by-tap + "
              "publish in one call; a missing accept_terms is refused); quick.html publishNow()/celebrate(); "
              "migration 049 arms launch_switches.lang_layer. LIVE legs: /flags reports lang_layer ON to an "
              "anonymous reader; /quick/publish refuses a call that does not accept the terms (400); /quick/ "
@@ -26865,11 +26865,11 @@ def rg_one_tap_publish_1():
         if not (f.get("effective") or {}).get("lang_layer"):
             out.append((FAIL, "LIVE /flags: lang_layer is not on for an anonymous reader"))
         try:
-            _ll_post("/quick/publish", {"listing": {}, "email": "x@example.com", "accept_terms": False})
-            out.append((FAIL, "LIVE /quick/publish accepted a call that did not accept the terms"))
+            _ll_post("/listings/quick-publish", {"listing": {}, "email": "x@example.com", "accept_terms": False})
+            out.append((FAIL, "LIVE /listings/quick-publish accepted a call that did not accept the terms"))
         except urllib.error.HTTPError as e:
             if e.code != 400:
-                out.append((FAIL, "LIVE /quick/publish without terms answered %s, expected 400" % e.code))
+                out.append((FAIL, "LIVE /listings/quick-publish without terms answered %s, expected 400" % e.code))
     except ProbeOffline:
         raise
     return out

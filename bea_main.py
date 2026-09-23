@@ -4003,7 +4003,7 @@ class _QuickPublishIn(BaseModel):
     accept_terms: bool = False
 
 
-@app.post("/quick/publish")
+@app.post("/listings/quick-publish")
 def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, ts_user: str = Cookie(default=None)):
     """ONE-TAP-PUBLISH-1 (David, 23 Sep 2026: "make the SAVE and PUBLISH a single tap -- your reasoning
     here is impeccable"; RUL-145: no wall, no account). The Quick door's one ask -- her email, on a

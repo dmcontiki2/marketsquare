@@ -1070,8 +1070,8 @@ REFLECTIONS = {
  # reads, the server's language set, the app's menu, and the Quick door's five languages.
  "RUL-163": [
    ("RULINGS.md", ["SAVE AND PUBLISH ARE ONE TAP"], []),
-   ("quick.html", ["ONE-TAP-PUBLISH-1", "ARRIVAL-1", "/quick/publish", "QUICK-NEXT-1"], []),
-   ("bea_main.py", ['@app.post("/quick/publish")'], []),
+   ("quick.html", ["ONE-TAP-PUBLISH-1", "ARRIVAL-1", "/listings/quick-publish", "QUICK-NEXT-1"], []),
+   ("bea_main.py", ['@app.post("/listings/quick-publish")'], []),
    ("migrations/049_lang_layer_on.py", ["lang_layer=1"], []),
    ("ops/autodeploy/deploy_manifest.txt", ["quick.html | q/index.html"], ["genie/q_index.html | q/index.html"]),
  ],
