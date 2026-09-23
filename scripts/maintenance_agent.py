@@ -1071,6 +1071,14 @@ def _backup_lane():
     (recorded in the report), it never kills it (RG-0049 spirit)."""
     import glob, time as _t
     rec = {"ran": False, "outcome": ""}
+    # BACKUP-ORIGIN-SKIP-1 (23 Sep 2026): the same file runs on the origin's own
+    # maintenance-agent.timer (/opt/marketsquare-src). There the producer would try to back
+    # the server up ONTO ITSELF over ssh -- a daily "FAILED" line at best, a pointless copy
+    # at worst. The archive's job is an OFF-BOX copy, so this lane only runs off the box.
+    if os.path.realpath(REPO).startswith("/opt/marketsquare-src"):
+        rec["outcome"] = "skipped: running on the origin -- the archive lane is off-box only"
+        say("backup lane: %s" % rec["outcome"])
+        return rec
     try:
         newest = max((os.path.getmtime(z) for z in glob.glob(os.path.join(REPO, "backups", "*.zip"))),
                      default=0)

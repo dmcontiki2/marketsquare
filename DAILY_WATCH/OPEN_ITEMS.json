@@ -1538,18 +1538,20 @@
    "last_seen": "2026-09-23",
    "sev": "HIGH",
    "source": "regression ledger RG-0099 + direct ssh probe + run_daily_checks + smoke_test",
-   "status": "OPEN",
+   "status": "CLOSED",
    "summary": "SSH-LOCKOUT-1 recurred: port 22 unreachable from egress 197.184.121.169 (new ISP address); RG-0099 REGRESSION on sandbox and host boards; six on-box checks blind; RG-0308 pushes its shard past the sandbox cap so the board was assembled host-side. Self-heal armed (RG-0188 ok) but a firewall edit is not the watch's to make.",
-   "next_action": "python3 scripts/hetzner_fw_selfheal.py (or add 197.184.121.169 on TCP 22 of trustsquare-origin-lockdown); RG-0099 green closes it."
+   "next_action": "python3 scripts/hetzner_fw_selfheal.py (or add 197.184.121.169 on TCP 22 of trustsquare-origin-lockdown); RG-0099 green closes it.",
+   "closed": "2026-09-23: RG-0099 ok (ssh:22 open), RG-0427 ok, RG-0245 ok (rule holds only 197.184.121.169/32). Fixed by maintenance loop 3d770e2 SANDBOX-EGRESS-1 (PC and sandbox egress differed; host pruner locked sandbox out). Residual: none."
   },
   "DW-141": {
    "first_seen": "2026-09-23",
    "last_seen": "2026-09-23",
    "sev": "HIGH",
    "source": "regression ledger RG-0234 (both vantages)",
-   "status": "OPEN",
+   "status": "CLOSED",
    "summary": "Backup lane silently stopped again: newest archive backups/2026-09-12_1553.zip is 11 days old (8-day line). The archive still restores (integrity ok, users=71); freshness failed. Cause not probed (no SSH).",
-   "next_action": "Pull a fresh snapshot (/backup or the RG-0234 recipe) and put the pull on a timer; RG-0234 green closes it."
+   "next_action": "Pull a fresh snapshot (/backup or the RG-0234 recipe) and put the pull on a timer; RG-0234 green closes it.",
+   "closed": "2026-09-23: RG-0234 ok (2026-09-23_1705.zip restores, users=113), RG-0350 ok (producer called by maintenance_agent.py, BACKUP-IN-AGENT-1, 3d770e2). Added BACKUP-ORIGIN-SKIP-1: backup lane skips on the origin. Residual: timer is desktop-bound; RG-0234 8-day line is the net."
   },
   "DW-142": {
    "first_seen": "2026-09-23",
@@ -1557,8 +1559,8 @@
    "sev": "MEDIUM",
    "source": "cost_compliance_sweep.py exit 2 (1 CRITICAL, 1 WARN, both new vs 20 Sep)",
    "status": "OPEN",
-   "summary": "bea_main.py i18n_translate / _i18n_ask: AI call via ai_provider.complete with its own 400/day cap, but no _check_cost_ceiling and no _log_ai_spend — outside the $100 platform ceiling and invisible to the spend dashboard. Lane probed working (3.6 s uncached translation).",
-   "next_action": "CTO lane: wrap _i18n_ask with _check_cost_ceiling + _log_ai_spend, keep the daily cap; sweep exit 0 closes it."
+   "summary": "Fix built + proven (scripts/apply_i18n_cost_rail.py, I18N-COST-RAIL-1: ceiling check + spend log inside _i18n_ask; sweep grader clean on a copy) but NOT applied: bea_main.py under WORK-LOCK-1 by lang-quick-2026-09-23 (RUL-140). bea_main.py i18n_translate / _i18n_ask: AI call via ai_provider.complete with its own 400/day cap, but no _check_cost_ceiling and no _log_ai_spend — outside the $100 platform ceiling and invisible to the spend dashboard. Lane probed working (3.6 s uncached translation).",
+   "next_action": "Run python3 scripts/apply_i18n_cost_rail.py once work_lock.py check bea_main.py is clear (lock expires 07:55Z 24 Sep at latest); commit + ship; sweep exit 0 closes it."
   },
   "DW-143": {
    "first_seen": "2026-09-23",
@@ -3141,5 +3143,23 @@
    "DW-010"
   ],
   "checks_run": "11 of 13"
+ },
+ "attended_fix_pass_2026_09_23": {
+  "instruction": "David, 23 Sep 2026: \"please fix these 3 issues - REAL ISSUES\"",
+  "closed": [
+   "DW-140",
+   "DW-141"
+  ],
+  "still_open": [
+   "DW-142 (fix staged, bea_main.py locked by lang-quick, RUL-140)",
+   "DW-143",
+   "DW-144",
+   "DW-010"
+  ],
+  "added": [
+   "BACKUP-ORIGIN-SKIP-1 guard in scripts/maintenance_agent.py",
+   "scripts/apply_i18n_cost_rail.py (I18N-COST-RAIL-1)"
+  ],
+  "evidence": "RG-0099/0427/0245/0234/0350/0188 all HOLDING via _judge() at ~20:00Z; ssh SSH_OK"
  }
 }
