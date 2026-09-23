@@ -26648,7 +26648,7 @@ def _ll_post(path, payload):
 
 @entry("RG-0431", "LANG-LAYER-1: the language layer exists -- nine approved country lists, Sepedi in "
                   "place of Sesotho, the advert's second language gated on the seller's approval",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-23",
        scope="roles/lang_countries.json (the approved lists, RUL-162), bea_main.py (/lang/countries, "
              "/listings/{id}/lang/draft|approve|remove, listings.lang_orig/lang_extra/extra_status/"
              "search_en, the English search layer in GET /listings?q=, launch_switches.lang_layer "
@@ -26692,7 +26692,7 @@ def rg_lang_layer_1():
 
 @entry("RG-0432", "I18N-SA5-1: isiZulu, isiXhosa and Sepedi answer from the hand-drafted dictionaries, "
                   "not from a fresh machine guess",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-23",
        scope="roles/app_i18n_zu.json, app_i18n_xh.json, app_i18n_nso.json (1,569 phrases each, "
              "Claude's hand draft per RUL-160 -- the Language reviewer and users' flags correct them) "
              "loaded into i18n_cache by migrations/048. PROBED the day it was written: the machine lane "
@@ -26726,7 +26726,7 @@ def rg_i18n_sa5_1():
 
 @entry("RG-0433", "QUICK-ADTEXT-1 / QUICK-EVERYDAY-1 / QUICK-DEMO-OFF-1: the live Quick app writes her "
                   "advert in plain words, says 'Every day', and never shows a demo switch",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-23",
        scope="quick.html (served at /quick/ and /quick.html), repair lane -- live faults found by the "
              "23 Sep audit: (F1) our coaching line 'Written from your N taps ... Change any word of it "
              "before it goes up' was the advert's DESCRIPTION, the words a buyer reads; (F5) seven "
@@ -26739,7 +26739,8 @@ def rg_quick_adtext_1():
         page = _get("/quick/")
     except ProbeOffline:
         raise
-    for bad in ("Change any word of it before it goes up", "'Any day'"):
+    # The CODE that wrote them, not the words -- the fix's own comment quotes the old line.
+    for bad in ("+'. Change any word of it before it goes up.'", "ch.length===order.length ? 'Any day'"):
         if bad in page:
             out.append((FAIL, "LIVE /quick/ still carries %s" % bad))
     for good in ("function qAdBody(", "'Every day' : ch.join", "location.protocol==='file:') $('screen').innerHTML +=",
@@ -26751,7 +26752,7 @@ def rg_quick_adtext_1():
 
 @entry("RG-0434", "QUICK-DRAFT-LAND-1: the Quick app's way back (?draft=<id>, emailed and WhatsApp) opens "
                   "the hub on that advert with Publish in reach",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-23",
        scope="ms.js -- the magic-link parser remembers ?draft= across sign-in and msLandDraft() brings the "
              "card forward. WHY: the 23 Sep audit (F2/F3) found nothing in the app read ?draft=, so a "
              "person who had just built an advert landed on the hub's front page. SCOPE: both arrivals "
@@ -26769,7 +26770,7 @@ def rg_quick_draft_land_1():
 
 
 @entry("RG-0435", "QUICK-NEXT-1: the reworked Quick app is served for David's review, unindexed",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-23",
        scope="quick_next.html at /quick_next.html (deploy manifest). It REPLACES /quick/ only when David "
              "has seen it; until then it must be reachable, carry noindex, and speak South Africa's five "
              "languages with Sepedi (RUL-162).")
