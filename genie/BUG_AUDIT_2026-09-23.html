@@ -1,0 +1,135 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bug Audit 23 September</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#f6f4f2; --card:#ffffff; --ink:#1d1715; --ink2:#5b504b; --line:#e4ddd8; --accent:#b5431f;
+  --crit:#b3261e; --crit-bg:#fbe9e7; --high:#c2660a; --high-bg:#fdf0e1; --med:#8a6d00; --med-bg:#faf4d9; --ok:#1f7a45; --ok-bg:#e5f4ea;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#171210; --card:#211a17; --ink:#f2ebe7; --ink2:#b8aca6; --line:#3a2f2a; --accent:#e0714a;
+  --crit:#ff8a80; --crit-bg:#3a1a17; --high:#ffb35c; --high-bg:#382613; --med:#e6cf5a; --med-bg:#302a10; --ok:#6fd49a; --ok-bg:#15301f;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#171210; --card:#211a17; --ink:#f2ebe7; --ink2:#b8aca6; --line:#3a2f2a; --accent:#e0714a;
+  --crit:#ff8a80; --crit-bg:#3a1a17; --high:#ffb35c; --high-bg:#382613; --med:#e6cf5a; --med-bg:#302a10; --ok:#6fd49a; --ok-bg:#15301f;
+  color-scheme:dark; }
+body{background:var(--bg);color:var(--ink);font:16px/1.55 "Source Sans 3",system-ui,sans-serif;padding-inline:16px;padding-block:28px 56px}
+.wrap{max-width:860px;margin:0 auto;display:grid;gap:28px}
+h1,h2{font-family:Archivo,system-ui,sans-serif;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,5vw,40px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:20px;font-weight:700}
+.eyebrow{font:600 12px/1 "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.lede{color:var(--ink2);max-width:65ch;margin:8px 0 0}
+.tally{display:flex;flex-wrap:wrap;gap:10px}
+.pill{font:600 13px/1 "JetBrains Mono",monospace;padding:8px 12px;border-radius:999px;font-variant-numeric:tabular-nums}
+.p-crit{background:var(--crit-bg);color:var(--crit)} .p-high{background:var(--high-bg);color:var(--high)}
+.p-med{background:var(--med-bg);color:var(--med)} .p-ok{background:var(--ok-bg);color:var(--ok)}
+section{display:grid;gap:12px}
+.list{display:grid;gap:10px}
+.item{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--sev);border-radius:8px;padding:14px 16px;display:grid;gap:6px}
+.item.crit{--sev:var(--crit)} .item.high{--sev:var(--high)} .item.med{--sev:var(--med)} .item.ok{--sev:var(--ok)}
+.row{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px}
+.id{font:600 12px/1.4 "JetBrains Mono",monospace;color:var(--ink2)}
+.t{font-weight:600}
+.tag{font:600 11px/1 "JetBrains Mono",monospace;padding:4px 7px;border-radius:4px;background:var(--bg);color:var(--ink2);border:1px solid var(--line)}
+.item p{margin:0;color:var(--ink2)}
+.fixed{color:var(--ok);font-weight:600}
+ol.steps{margin:0;padding-left:22px;display:grid;gap:6px}
+.table-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 12px/1.2 "JetBrains Mono",monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
+tr:last-child td{border-bottom:0}
+code{font:14px "JetBrains Mono",monospace}
+.foot{font-size:14px;color:var(--ink2)}
+</style>
+</head><body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">TrustSquare · bug audit · 23 Sep 2026</div>
+    <h1>Bug audit of today's changes</h1>
+    <p class="lede">I checked everything shipped today (languages, one-tap publish, the Quick app, the arrival card, the AI spending rules), plus the older code those changes touch. Every confirmed defect is fixed, deployed and checked on the live site. Nothing is left open.</p>
+  </header>
+
+  <div class="tally" aria-label="Summary">
+    <span class="pill p-crit">4 critical</span>
+    <span class="pill p-high">5 high</span>
+    <span class="pill p-med">8 medium</span>
+    <span class="pill p-ok">17 of 17 fixed and live</span>
+  </div>
+
+  <section>
+    <h2>Critical: someone could act as another person</h2>
+    <div class="list">
+      <div class="item crit"><div class="row"><span class="id">AUDIT-Q1</span><span class="t">One-tap publish could post under someone else's account</span><span class="tag">new today</span></div>
+        <p>Typing an existing member's email into Quick published an advert in their name without a sign-in. Now a stranger only gets a draft, and the real owner gets an email to publish it. New addresses still publish in one tap. Each connection is limited to 5 a day. <span class="fixed">Fixed.</span></p></div>
+      <div class="item crit"><div class="row"><span class="id">AUDIT-AUTH-1</span><span class="t">Publish, edit and "my adverts" trusted a typed email</span><span class="tag">older</span></div>
+        <p>These three used whatever email the page sent. They now act only as the signed-in person. On the live site, a request without a sign-in is refused (401). <span class="fixed">Fixed.</span></p></div>
+      <div class="item crit"><div class="row"><span class="id">DELETE-BIND-1</span><span class="t">Anyone could delete any advert</span><span class="tag">older</span></div>
+        <p>I found this while preparing the real publish test. The app key is public (it ships inside ms.js), and it was enough to delete any normal advert. The seller delete also needed only the owner's email. Now only admins can delete by ID, and seller and wonder deletes need the owner's sign-in. <span class="fixed">Fixed, locked as RG-0445.</span></p></div>
+      <div class="item crit"><div class="row"><span class="id">AUDIT-XSS-1</span><span class="t">Advert titles could carry web-page code</span><span class="tag">older</span></div>
+        <p>A title or description could hold markup that later ran in other people's browsers. Titles and descriptions are now saved as plain text wherever they are written. <span class="fixed">Fixed, locked as RG-0442.</span></p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>High: data leaks and lost work</h2>
+    <div class="list">
+      <div class="item high"><div class="row"><span class="id">AUDIT-L1</span><span class="t">The public advert page returned the seller's email</span></div>
+        <p>Anyone viewing a single advert could see the seller's email and the translation working notes. Now only the seller sees their email, and the language panel loads from a page only the owner can open. <span class="fixed">Fixed.</span></p></div>
+      <div class="item high"><div class="row"><span class="id">AUDIT-Q2</span><span class="t">The browser could set its own trust score</span></div>
+        <p>Quick accepted trust score, picture paths, specs and status straight from the page. Those fields are now removed before saving. <span class="fixed">Fixed.</span></p></div>
+      <div class="item high"><div class="row"><span class="id">AUDIT-Q3</span><span class="t">A refused publish lost the way back</span></div>
+        <p>When publishing was refused (for example, a full plan), the draft email never went out and the button led nowhere. Now the email is sent and the button opens the draft. <span class="fixed">Fixed.</span></p></div>
+      <div class="item high"><div class="row"><span class="id">AUDIT-L2/L3</span><span class="t">Edited adverts kept the old translation</span></div>
+        <p>After a seller changed their words, the old isiZulu or Afrikaans version still showed. Editing now clears the translation, its check-back and the English search copy, but only after the owner check passes. <span class="fixed">Fixed.</span></p></div>
+      <div class="item high"><div class="row"><span class="id">AUDIT-S4</span><span class="t">AI-translated text was not escaped</span></div>
+        <p>Translated text went into the page unescaped. It is now escaped the same way seller text is. <span class="fixed">Fixed.</span></p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Medium: correctness and cost</h2>
+    <div class="list">
+      <div class="item med"><div class="row"><span class="id">AUDIT-L4</span><span class="t">The photo marker was sent for translation</span></div><p>It is now removed before translating, and links are removed from the English search copy. <span class="fixed">Fixed.</span></p></div>
+      <div class="item med"><div class="row"><span class="id">AUDIT-L5</span><span class="t">Switching language broke Back and counted a false view</span></div><p>Changing language now redraws the page without logging a view or changing where Back goes. <span class="fixed">Fixed.</span></p></div>
+      <div class="item med"><div class="row"><span class="id">AUDIT-L6</span><span class="t">The translator accepted any language</span></div><p>It now accepts only the languages actually offered, so AI money can't go on languages we don't offer. <span class="fixed">Fixed.</span></p></div>
+      <div class="item med"><div class="row"><span class="id">AUDIT-L7</span><span class="t">AI spend was counted before the call worked</span></div><p>Spend is now counted after a successful call. Each advert gets at most 5 AI drafts a day. <span class="fixed">Fixed.</span></p></div>
+      <div class="item med"><div class="row"><span class="id">AUDIT-Q4</span><span class="t">Quality preview crashed on odd input</span></div><p>The preview now converts field types instead of failing with a server error. <span class="fixed">Fixed.</span></p></div>
+      <div class="item med"><div class="row"><span class="id">AUDIT-S1</span><span class="t">AI calls could hang a page</span></div><p>AI calls now time out after 18 seconds. <span class="fixed">Fixed.</span></p></div>
+      <div class="item med"><div class="row"><span class="id">AUDIT-S2</span><span class="t">The "your advert is live" email opened the wrong place</span></div><p>The link now signs the seller in and opens their advert card. <span class="fixed">Fixed.</span></p></div>
+      <div class="item med"><div class="row"><span class="id">LEDGER-CHUNK-1</span><span class="t">The full regression run could not finish</span></div><p>This was not last week's sandbox problem, where the drive could not be mounted after a Windows update. This time the board had grown to 427 checks, about 10 minutes of work, while each command is capped at about 3 minutes. The new <code>--chunk</code> mode runs in timed steps and resumes where it stopped. The full board ran clean, with 0 regressions. <span class="fixed">Fixed, locked as RG-0440.</span></p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Real publish from a test account</h2>
+    <div class="item ok">
+      <ol class="steps">
+        <li>I signed in as the approved tester dmcontiki2 using the emailed code, on a 390px phone-size screen.</li>
+        <li>In Quick I tapped: Offer a service → Home &amp; care → Gardener → Centurion (with the new street pictures) → Every day → R350 → Publish.</li>
+        <li>Advert #394, "Gardener — Centurion", went live in one tap. The arrival card and the live email both appeared.</li>
+        <li>Signed out, it showed in Browse and on its own page, and the seller's email was not visible.</li>
+        <li>Deleting it with only the right email was refused (401). Deleting it with the public key was refused (401). The owner's signed-in delete worked (200).</li>
+        <li>#394 now returns 404 and is gone from Browse. It was live for about 3 minutes.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <h2>Other items delivered today</h2>
+    <div class="table-wrap"><table>
+      <tr><th>Item</th><th>State</th></tr>
+      <tr><td>ZA languages (English, isiZulu, isiXhosa, Afrikaans, Sepedi) use my translations. Proofreading comes after launch (RUL-165).</td><td>Live</td></tr>
+      <tr><td>The other eight countries' local languages are prepared but not offered, until you have assessed ZA.</td><td>Prepared</td></tr>
+      <tr><td>Six street pictures for Quick's "Where can you work?" step, all app imagery and none of them users' photos. I checked them at phone width.</td><td>Live</td></tr>
+    </table></div>
+  </section>
+
+  <p class="foot">Commits 1aea5c4, 74accd6 and fd7002a. Ledger entries RG-0440, 0441, 0442 and 0445 are locked. 142 rulings checked, 0 failing.</p>
+</div>
+</body></html>
