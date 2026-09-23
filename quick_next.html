@@ -2553,6 +2553,13 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
         cards[0].parentNode.insertBefore(d2, cards[0]);
         for(var i=0;i<cards.length;i++) d2.lastChild.appendChild(cards[i]);
       }
+      /* ONE-SCORER-1: the ring shows THE server's number for this exact draft, not a local count */
+      try{ fetch('/quality/preview',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(handoverPayload().body)}).then(function(r){ return r.ok?r.json():null; }).then(function(d){
+          if(!d || d.score==null) return; var rg=body.querySelector('.ring'); if(!rg) return;
+          var p2=Math.max(0,Math.min(100,Math.round(d.score))), c2=rg.querySelectorAll('circle')[1], t2=rg.querySelector('text');
+          if(c2) c2.setAttribute('stroke-dasharray',(C*p2/100).toFixed(1)+' '+C.toFixed(1)); if(t2) t2.textContent=p2;
+          var hb=rg.querySelector('b'); if(hb) hb.textContent='Your advert is '+p2+'% strong'; }).catch(function(){}); }catch(e){}
       var pub=$('pub'); if(pub) pub.textContent='Save my advert';
       var h=$('pubhint'); if(h) h.textContent='Free. We send you a link — one tap in the app publishes it.';
     }catch(e){ console.warn('quick-next draft', e); }
@@ -2600,7 +2607,9 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
       return (r?T(r.label):T('Services'))+' — '+(w?w.label:LOC.suburb); };
   });
   var _hp0=handoverPayload;
-  handoverPayload=function(){ var h=_hp0(); try{ h.body.lang_orig=QLANG; }catch(e){} return h; };
+  handoverPayload=function(){ var h=_hp0(); try{ h.body.lang_orig=QLANG;
+      var dy=pickOf('days')||pickOf('when'); if(dy) h.body.availability=dy.label;   /* every answer travels */
+    }catch(e){} return h; };
 
   /* one door: /quick_next.html?c=homehelp (or /q/<category>-style words) opens that category */
   try{

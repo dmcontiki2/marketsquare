@@ -1084,6 +1084,8 @@ function handoverPayload(){
     source: 'quick'
   };
   if(_co.service_class) body.service_class=_co.service_class;
+  /* QUICK-ANSWERS-1 (23 Sep 2026): the days she ticked travel as the listing's availability */
+  var _dy=pickOf('days')||pickOf('when'); if(_dy) body.availability=_dy.label;
   ['prop_type','listing_type','beds','make','vehicle_year','subject','level','mode','service_type']
     .forEach(function(f){
       var k=from[f]; if(!k) return;

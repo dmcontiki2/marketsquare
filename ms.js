@@ -10169,6 +10169,9 @@ async function dashPublish(listingId){
     const dl=dashState.listings.find(x=>x.beaListingId===listingId);
     if(dl){ dl.status='active'; if(dl._raw) dl._raw.listing_status='live'; }
     if(typeof renderDash==='function') renderDash();
+    /* PUBLISH-REFRESH-1 (23 Sep 2026, David's 15 Sep test: "published, but invisible until refresh"):
+       the buyer feed is re-read the moment Publish succeeds, so her advert is in Browse without a reload. */
+    try{ if(typeof loadLiveListings==='function') loadLiveListings(0); if(typeof loadLiveDash==='function') loadLiveDash(); }catch(e){}
   }catch(e){ showToast('Publish failed: '+e.message+' — nothing was lost. If it keeps happening, tell us at trustsquare.co/support.', 7000); }
 }
 
@@ -19562,7 +19565,20 @@ async function msUnverifiedGate(sellerEmail, category){
     LANGS=list;
   }
   window.msAppLang=function(){ return lang; };
-  window.msLangSync=function(){ syncLangs(); try{ pill(); }catch(e){} };
+  window.msLangSync=function(){ syncLangs(); try{ pill(); hdrPill(); }catch(e){} };
+  /* LANG-HDR-1 (David's brief, Part A3): with the layer on, a globe + code button sits in the header
+     beside Sign in, so the reader sees his language at once; it opens the same menu. */
+  function hdrPill(){
+    if(!msLangOn()) return;
+    var auth=document.getElementById('hdr-auth-btn'); if(!auth) return;
+    var h=document.getElementById('ts-langh');
+    if(!h){ h=document.createElement('button'); h.id='ts-langh'; h.setAttribute('data-notranslate','1');
+      h.style.cssText='margin-right:6px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);'
+        +'border-radius:20px;padding:6px 10px;font:800 12px system-ui,sans-serif;cursor:pointer;letter-spacing:.05em';
+      auth.parentNode.insertBefore(h, auth);
+      h.onclick=function(e){ e.stopPropagation(); var b=document.getElementById('ts-langb'); if(b) b.click(); }; }
+    h.textContent='\u{1F310} '+String(lang||'en').toUpperCase();
+  }
   /* DICTV (20 Sep 2026, David: "both 'Wereld Erfenis' and 'Uitgelicht' is wrong" -- on a page
      that was ALREADY fixed on the server). Each reader keeps their own copy of the dictionary
      in the browser, and that copy was written before the Afrikaans was re-done by hand, so the
@@ -19658,7 +19674,7 @@ async function msUnverifiedGate(sellerEmail, category){
     for(var w=0; w<LANES; w++) next();
   }
   function setLang(l){
-    lang=l; store(KEY,l); document.documentElement.lang=l; seen={}; pill();
+    lang=l; store(KEY,l); document.documentElement.lang=l; seen={}; pill(); try{ hdrPill(); }catch(e){}
     try{ if(msLangOn()){ var _ds=document.querySelector('.screen.active'); if(_ds && _ds.id==='screen-detail' && window._msLastDetail) openDetail(window._msLastDetail); } }catch(e){}
     var list=nodes(document.body);
     if(l==='en'){ paint(list); return; }

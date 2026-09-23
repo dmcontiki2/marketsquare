@@ -3997,6 +3997,20 @@ def _import_quality_score(row):
     return int(round(score)), missing
 
 
+@app.post("/quality/preview")
+def quality_preview(body: dict = Body(default={})):
+    """ONE-SCORER-1 (David's 15 Sep test: Quick said 60, the app said 80). The Quick door asks THE
+    server scorer -- the same _import_quality_score that stamps listings.quality_score -- for the
+    draft it is about to hand over, instead of counting its own. Pure computation on the fields sent;
+    nothing is stored and no identity is involved."""
+    allowed = ("description", "category", "prop_type", "beds", "baths", "listing_type", "make", "model",
+               "vehicle_year", "mileage_km", "transmission", "subject", "level", "mode", "service_type",
+               "price", "suburb", "area", "title")
+    row = {k: (body or {}).get(k) for k in allowed}
+    score, missing = _import_quality_score(row)
+    return {"score": round(float(score)), "missing": missing}
+
+
 def _stamp_quality_score(conn, listing_id):
     """ZOOM-HMI-1: write listings.quality_score from the stored row so SQL and the funnel can
     ORDER by it (spec 6.1: 0.5 x quality + 0.5 x trust). Never raises -- a missing column or
@@ -18775,7 +18789,7 @@ def _flags_payload(d):
             "expedition_verified": live and b("verified_tier") and b("p_expedition"),
             "weekend_verified":    live and b("verified_tier") and b("p_weekend"),
             "baseline_q4":         b("baseline_q4"),   # BASELINE-Q4-1: the FEA reads it from here
-            "lang_layer":          b("lang_layer"),    # LANG-LAYER-1: public switch; get_flags ORs in testers
+            "lang_layer":          b("lang_layer") or b("baseline_q4"),   # LANG-Q4-1: rides the Q4 switch; get_flags ORs in testers
         },
         "bit_flags": {
             "ai_example_enabled":    bool(d.get("ai_example_enabled", 1)),
@@ -18871,7 +18885,9 @@ def _is_tester_cookie(tok) -> bool:
 
 
 def _lang_layer_on(ts_review=None) -> bool:
-    return _bit_flag("lang_layer", False) or _is_tester_cookie(ts_review)
+    # LANG-Q4-1 (David's brief, 23 Sep 2026): the language layer rides the Q4 batch -- ONE switch-on.
+    # Arming baseline_q4 turns it on for everybody; lang_layer remains as a separate lever only.
+    return _bit_flag("lang_layer", False) or _baseline_q4_on() or _is_tester_cookie(ts_review)
 
 @app.post("/admin/flags")
 def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
