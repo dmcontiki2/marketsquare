@@ -27210,5 +27210,30 @@ def rg_return_link_1():
 
 
 
+@entry("RG-0445", "DELETE-BIND-1: nobody deletes an advert they cannot prove is theirs -- the raw "
+                  "delete-by-id is admin-only and the seller delete is bound to the session", LOCKED,
+       fixed_on="2026-09-23",
+       scope="bea_main.py delete_listing (admin credentials required for every advert, not only supers -- the "
+             "app key is public in ms.js), delete_listing_by_seller and remove_listing_wonder (_actor session "
+             "binding; the typed ?email= alone used to be enough). marketsquare_admin.html deleteLM sends "
+             "X-Admin-Token. Found by the 23 Sep audit while preparing the real-publish test.")
+def rg_delete_bind_1():
+    b = repo_file("bea_main.py") or ""
+    out = []
+    d = b.split("def delete_listing(", 1)[-1].split("\n@app.", 1)[0]
+    if "_require_admin_or_key(x_admin_token, x_admin_key)" not in d.split("conn = database.get_db()", 1)[0]:
+        out.append((FAIL, "delete-by-id no longer demands admin credentials before touching the database"))
+    sd = b.split("def delete_listing_by_seller(", 1)[-1].split("\n@app.", 1)[0]
+    if '_actor(ts_user, email, "listing-delete"' not in sd:
+        out.append((FAIL, "the seller delete is no longer bound to the session"))
+    w = b.split("async def remove_listing_wonder(", 1)[-1].split("\n@app.", 1)[0]
+    if '_actor(ts_user, email, "wonder-remove"' not in w:
+        out.append((FAIL, "the wonder removal is no longer bound to the session"))
+    a = repo_file("marketsquare_admin.html") or ""
+    if "'X-Admin-Token': sessionStorage.getItem('ms_admin_token')" not in a:
+        out.append((FAIL, "the admin delete no longer sends its admin token"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

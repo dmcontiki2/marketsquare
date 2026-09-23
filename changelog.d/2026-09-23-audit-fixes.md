@@ -11,3 +11,8 @@
 - RUL-165: ZA languages live on Claude's drafts; the other eight countries' local languages "prepared", not offered.
 - LEDGER-CHUNK-1: `regression_ledger.py --chunk` — time-budgeted, resumable board; the full board ran in-session: 427 entries, 0 regressed.
 - APP-PICS-1: six street pictures for Quick's "Where do you work?" step (scripts/gen_app_pictures.py; app imagery only, never users' photos); pushed by the media lane; used only once each picture has loaded.
+
+## DELETE-BIND-1 (RG-0445)
+- `DELETE /listings/{id}` now requires admin credentials for every advert (the app key is public in ms.js).
+- `DELETE /listings/{id}/seller` and `DELETE /listings/{id}/wonders/{wid}` are bound to the signed-in session (`_actor`); the typed email alone no longer deletes.
+- Admin console delete sends its admin token; ms.js seller deletes send credentials.

@@ -10208,7 +10208,7 @@ async function wabRemove(listingId, wonderId, wonderName) {
   if (!sellerEmail) { showToast('Sign in to manage wonders'); return; }
   try {
     const resp = await fetch(BEA_URL + '/listings/' + listingId + '/wonders/' + wonderId + '?email=' + encodeURIComponent(sellerEmail), {
-      method: 'DELETE'
+      method: 'DELETE', credentials: 'include'
     });
     if (!resp.ok) throw new Error('API ' + resp.status);
     // Remove from _raw so it doesn\'t reappear
@@ -11389,7 +11389,7 @@ async function elConfirmDeleteListing() {
   try {
     const res = await fetch(
       BEA_URL + '/listings/' + elCurrentId + '/seller?email=' + encodeURIComponent(email),
-      { method: 'DELETE' }
+      { method: 'DELETE', credentials: 'include' }  // DELETE-BIND-1: session-bound
     );
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));

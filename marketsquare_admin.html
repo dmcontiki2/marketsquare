@@ -2952,7 +2952,7 @@ async function deleteLM(id, title) {
   showToast('Deleting...');
   try {
     const resp = await fetch(BEA_URL + '/listings/' + id, {
-      method: 'DELETE', headers: { 'X-Api-Key': API_KEY }
+      method: 'DELETE', headers: { 'X-Api-Key': API_KEY, 'X-Admin-Token': sessionStorage.getItem('ms_admin_token') || '' }
     });
     if (!resp.ok) throw new Error('API ' + resp.status);
     allListings = allListings.filter(l => l.id !== id);

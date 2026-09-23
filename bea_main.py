@@ -4713,6 +4713,10 @@ def get_listing_version_snapshot(listing_id: int, version_num: int, _key: str = 
 def delete_listing(listing_id: int, _key: str = Depends(auth.require_api_key),
                    x_admin_token: str = Header(default=None),
                    x_admin_key: str = Header(default=None)):
+    # DELETE-BIND-1 (23 Sep 2026): the app key is public (it ships in ms.js), so this
+    # raw delete-by-id is now admin-only for EVERY advert. Sellers delete through
+    # /listings/{id}/seller, which is bound to their session.
+    _require_admin_or_key(x_admin_token, x_admin_key)
     conn = database.get_db()
     _row = conn.execute("SELECT showcase, super_example FROM listings WHERE id = ?",
                         (listing_id,)).fetchone()
@@ -4734,9 +4738,12 @@ def delete_listing(listing_id: int, _key: str = Depends(auth.require_api_key),
 
 
 @app.delete("/listings/{listing_id}/seller")
-def delete_listing_by_seller(listing_id: int, email: str):
-    """Seller-authenticated delete. No API key required — email must match
-    seller_email on the listing. Used by buyer-facing edit screen."""
+def delete_listing_by_seller(listing_id: int, email: str = "",
+                             ts_user: str = Cookie(default=None),
+                             x_admin_key: str = Header(default=None)):
+    """Seller delete. DELETE-BIND-1 (23 Sep 2026): bound to the signed-in session via
+    _actor -- the typed email alone used to be enough to delete anyone's advert."""
+    email = _actor(ts_user, email, "listing-delete", x_admin_key)
     conn = database.get_db()
     row = conn.execute(
         "SELECT seller_email, showcase, super_example FROM listings WHERE id = ?",
@@ -15385,10 +15392,14 @@ def get_listing_wonders(listing_id: int):
 
 # ── SERVER HEALTH ────────────────────────────────────────────────────────────
 @app.delete("/listings/{listing_id}/wonders/{wonder_id}")
-async def remove_listing_wonder(listing_id: int, wonder_id: str, email: str):
-    """Remove a single wonder from a listing's linked_wonders. Email-auth required.
+async def remove_listing_wonder(listing_id: int, wonder_id: str, email: str = "",
+                                ts_user: str = Cookie(default=None),
+                                x_admin_key: str = Header(default=None)):
+    """Remove a single wonder from a listing's linked_wonders.
+    DELETE-BIND-1: bound to the signed-in session via _actor.
     Handles both plain ID list format and auto_linked object format.
     """
+    email = _actor(ts_user, email, "wonder-remove", x_admin_key)
     import json as _jd
     conn = database.get_db()
     try:
