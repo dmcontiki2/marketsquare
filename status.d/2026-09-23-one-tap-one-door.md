@@ -1,0 +1,1 @@
+- 23 Sep 2026 evening: languages switched on for everyone (049); Quick publishes in one tap with an arrival screen; one Quick door (/quick/ = /q/<cat>); RUL-163, RUL-164.

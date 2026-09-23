@@ -39,8 +39,7 @@ roles/app_i18n_zu.json     | roles/app_i18n_zu.json
 roles/app_i18n_xh.json     | roles/app_i18n_xh.json
 roles/app_i18n_nso.json    | roles/app_i18n_nso.json
 roles/lang_countries.json  | roles/lang_countries.json
-# QUICK-NEXT-1 (23 Sep 2026): the reworked Quick app, previewed at /quick_next.html before it replaces /quick/.
-quick_next.html            | quick_next.html
+# QUICK-NEXT-1: the preview was promoted into quick.html on 23 Sep; /quick_next.html now redirects to /quick/.
 static/brand/quick.webmanifest | static/brand/quick.webmanifest
 ts_report.js               | static/ts_report.js
 # DEMO-BANNER-1 (22 Aug 2026): the red DEMO tab on the demo maps. Ungated -- unlike
@@ -281,7 +280,9 @@ genie/email_strip/tutors_taps.jpg | orchestrator/qstrip/tutors_taps.jpg
 # found, and also switch it on." Built from HARNESS.html by genie/build_door.py. nginx serves
 # this one file for /q/ and every /q/<category>, so an unknown or mistyped category still
 # opens on a real screen. Publish posts the email to the app's own live /auth/request-link.
-genie/q_index.html | q/index.html
+# QUICK-ONE-DOOR-1 (23 Sep 2026, David: "keep only the one door open"): the /q/<category> door IS the
+# Quick app -- the same file as /quick/. genie/q_index.html (built from HARNESS by build_door.py) is retired.
+quick.html | q/index.html
 
 # RUL-136 (15 Sep 2026, David): "A previous employer is a good addition." The seller sends a
 # link; the person they worked for opens this page and confirms in one tap. nginx serves this

@@ -1068,6 +1068,17 @@ REFLECTIONS = {
  # LANG-LAYER-1 (23 Sep 2026): Sepedi takes Sesotho's place in South Africa; nine country lists
  # approved; the advert speaks the lister's language. Reflected in the approved-list file the app
  # reads, the server's language set, the app's menu, and the Quick door's five languages.
+ "RUL-163": [
+   ("RULINGS.md", ["SAVE AND PUBLISH ARE ONE TAP"], []),
+   ("quick.html", ["ONE-TAP-PUBLISH-1", "ARRIVAL-1", "/quick/publish", "QUICK-NEXT-1"], []),
+   ("bea_main.py", ['@app.post("/quick/publish")'], []),
+   ("migrations/049_lang_layer_on.py", ["lang_layer=1"], []),
+   ("ops/autodeploy/deploy_manifest.txt", ["quick.html | q/index.html"], ["genie/q_index.html | q/index.html"]),
+ ],
+ "RUL-164": [
+   ("RULINGS.md", ["AI SPEND FOLLOWS WHO PAYS"], []),
+   ("bea_main.py", ["LANG_DRAFTS_PER_ADVERT_DAY", "RUL-164"], []),
+ ],
  "RUL-162": [
    ("RULINGS.md", ["SEPEDI TAKES SESOTHO'S PLACE IN SOUTH AFRICA"], []),
    ("roles/lang_countries.json", ['["nso","offered"]', '"retired":["st"]', '"NA"', '"BW"', '"MZ"', '"KE"', '"DE"', '"GB"', '"US"', '"AU"'],

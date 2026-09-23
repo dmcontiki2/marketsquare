@@ -1,5 +1,5 @@
 {
- "_about": "Quick door translations (preview, NOT a ruling). Claude's first draft 20 Sep 2026; to be read by David's reviewers and the Language reviewer (RUL-160). Keys are the exact English on screen. 23 Sep 2026 (RUL-162): Sepedi ('nso') added as the fifth column; Sesotho ('st') is kept for readers who chose it before, but is no longer offered.",
+ "_about": "Quick door translations (preview, NOT a ruling). Claude's first draft 20 Sep 2026; to be read by David's reviewers and the Language reviewer (RUL-160). Keys are the exact English on screen. 23 Sep 2026 (RUL-162): Sepedi ('nso') added as the fifth column; Sesotho ('st') is kept for readers who chose it before, but is no longer offered. 23 Sep 2026 evening (David: 'translate the draft screen's own words for all five languages'): the draft/publish/arrival screens' words added, Claude's draft for David's readers (RUL-160).",
  "langs": [
   "af",
   "zu",
@@ -1015,6 +1015,307 @@
    "Tse ding",
    "Ezinye",
    "Tše dingwe"
+  ],
+  "Get seen for work — in a minute": [
+   "Word gesien vir werk — binne 'n minuut",
+   "Bonakala ukuze uthole umsebenzi — ngomzuzu owodwa",
+   "",
+   "Bonwa ukuze ufumane umsebenzi — ngomzuzu omnye",
+   "Bonwa gore o hwetše mošomo — ka motsotso o tee"
+  ],
+  "Put it on TrustSquare — in a minute": [
+   "Sit dit op TrustSquare — binne 'n minuut",
+   "Kufake ku-TrustSquare — ngomzuzu owodwa",
+   "",
+   "Yifake kwiTrustSquare — ngomzuzu omnye",
+   "E bee go TrustSquare — ka motsotso o tee"
+  ],
+  "A few taps, no typing. Your advert, your language.": [
+   "'n Paar tikke, geen tik nie. Jou advertensie, jou taal.",
+   "Ukuthinta okumbalwa, akukho ukubhala. Isikhangiso sakho, ngolimi lwakho.",
+   "",
+   "Ukucofa okumbalwa, akukho kuchwetheza. Isibhengezo sakho, ngolwimi lwakho.",
+   "Go kgotla gannyane, ga go ngwalwe. Papatšo ya gago, ka polelo ya gago."
+  ],
+  "free?": [
+   "vry?",
+   "ukhululekile?",
+   "",
+   "ukhululekile?",
+   "o lokologile?"
+  ],
+  "weekend": [
+   "naweek",
+   "impelasonto",
+   "",
+   "impelaveki",
+   "mafelelo a beke"
+  ],
+  "open": [
+   "oop",
+   "uvulekile",
+   "",
+   "uvulekile",
+   "ke a bulega"
+  ],
+  "Tap every day you are free. Tap one again to take it back.": [
+   "Tik elke dag wat jy vry is. Tik weer om dit terug te neem.",
+   "Thinta usuku ngalunye okhululekile ngalo. Thinta futhi ukuze ulususe.",
+   "",
+   "Cofa yonke imihla ekhululekileyo. Cofa kwakhona ukuyirhoxisa.",
+   "Kgotla letšatši le lengwe le le lengwe leo o lokologilego. Kgotla gape go le tloša."
+  ],
+  "Pick your open days": [
+   "Kies jou oop dae",
+   "Khetha izinsuku zakho",
+   "",
+   "Khetha iintsuku zakho",
+   "Kgetha matšatši a gago"
+  ],
+  "Your advert — ready to publish": [
+   "Jou advertensie — gereed om te plaas",
+   "Isikhangiso sakho — silungele ukushicilelwa",
+   "",
+   "Isibhengezo sakho — silungele ukupapashwa",
+   "Papatšo ya gago — e loketše go phatlalatšwa"
+  ],
+  "You can add it in the app after you publish.": [
+   "Jy kan dit in die app byvoeg nadat jy geplaas het.",
+   "Ungakwengeza ku-app ngemva kokushicilela.",
+   "",
+   "Unokuyongeza kwi-app emva kokupapasha.",
+   "O ka e oketša go app ka morago ga go phatlalatša."
+  ],
+  "How your advert is scored": [
+   "Hoe jou advertensie punte kry",
+   "Isikhangiso sakho sibalwa kanjani",
+   "",
+   "Isibhengezo sakho sibalwa njani",
+   "Papatšo ya gago e lekanyetšwa bjang"
+  ],
+  "Only you see these. Buyers see the star alone.": [
+   "Net jy sien dit. Kopers sien net die ster.",
+   "Nguwe kuphela obona lokhu. Abathengi babona inkanyezi kuphela.",
+   "",
+   "Nguwe kuphela obona oku. Abathengi babona inkwenkwezi kuphela.",
+   "Ke wena fela yo a bonago se. Bareki ba bona naledi fela."
+  ],
+  "Add your own photos": [
+   "Voeg jou eie foto's by",
+   "Engeza izithombe zakho",
+   "",
+   "Yongeza iifoto zakho",
+   "Oketša diswantšho tša gago"
+  ],
+  "Worth more than anything else you can do right now.": [
+   "Werd meer as enigiets anders wat jy nou kan doen.",
+   "Kubaluleke ukwedlula noma yini ongayenza manje.",
+   "",
+   "Kubaluleke ngaphezu kwayo nantoni na onokuyenza ngoku.",
+   "E bohlokwa go feta se sengwe le se sengwe seo o ka se dirago bjale."
+  ],
+  "Each of these adds to your listing score": [
+   "Elkeen hiervan tel by jou advertensiepunt",
+   "Ngayinye yalezi yengeza kumaphuzu esikhangiso sakho",
+   "",
+   "Nganye kwezi yongeza kumanqaku esibhengezo sakho",
+   "Se sengwe le se sengwe sa tše se oketša meputso ya papatšo ya gago"
+  ],
+  "Check the wording": [
+   "Kyk na die bewoording",
+   "Hlola amagama",
+   "",
+   "Jonga amagama",
+   "Lekola mantšu"
+  ],
+  "Confirm your number": [
+   "Bevestig jou nommer",
+   "Qinisekisa inombolo yakho",
+   "",
+   "Qinisekisa inombolo yakho",
+   "Netefatša nomoro ya gago"
+  ],
+  "What happens after you publish": [
+   "Wat gebeur nadat jy plaas",
+   "Kwenzekani ngemva kokushicilela",
+   "",
+   "Kwenzeka ntoni emva kokupapasha",
+   "Go direga eng ka morago ga go phatlalatša"
+  ],
+  "The fastest thing on this whole app": [
+   "Die vinnigste ding op hierdie hele app",
+   "Into esheshayo kunazo zonke kule app",
+   "",
+   "Eyona nto ikhawulezayo kule app yonke",
+   "Selo sa ka pela kudu go app ye ka moka"
+  ],
+  "See what they get": [
+   "Kyk wat hulle kry",
+   "Bona abakutholayo",
+   "",
+   "Jonga into abayifumanayo",
+   "Bona seo ba se hwetšago"
+  ],
+  "See how it works": [
+   "Kyk hoe dit werk",
+   "Bona ukuthi kusebenza kanjani",
+   "",
+   "Jonga indlela esebenza ngayo",
+   "Bona ka moo e šomago ka gona"
+  ],
+  "Publish": [
+   "Plaas",
+   "Shicilela",
+   "",
+   "Papasha",
+   "Phatlalatša"
+  ],
+  "Publishing…": [
+   "Plaas tans…",
+   "Iyashicilela…",
+   "",
+   "Iyapapasha…",
+   "E a phatlalatšwa…"
+  ],
+  "Publishing accepts the": [
+   "Deur te plaas aanvaar jy die",
+   "Ukushicilela kusho ukwamukela",
+   "",
+   "Ukupapasha kukwamkela",
+   "Go phatlalatša ke go amogela"
+  ],
+  "TrustSquare terms": [
+   "TrustSquare-bepalings",
+   "imigomo ye-TrustSquare",
+   "",
+   "imimiselo yeTrustSquare",
+   "melawana ya TrustSquare"
+  ],
+  "Free.": [
+   "Gratis.",
+   "Mahhala.",
+   "",
+   "Simahla.",
+   "Ke mahala."
+  ],
+  "Your email — introductions reach you here": [
+   "Jou e-pos — voorstellings bereik jou hier",
+   "I-imeyili yakho — izethulo zikufinyelela lapha",
+   "",
+   "I-imeyile yakho — iintshayelelo zifika kuwe apha",
+   "Imeile ya gago — ditsebišo di go fihlelela mo"
+  ],
+  "Your advert is live.": [
+   "Jou advertensie is aanlyn.",
+   "Isikhangiso sakho sesiphila.",
+   "",
+   "Isibhengezo sakho siphila ngoku.",
+   "Papatšo ya gago e phela bjale."
+  ],
+  "Your advert is saved.": [
+   "Jou advertensie is gestoor.",
+   "Isikhangiso sakho sigciniwe.",
+   "",
+   "Isibhengezo sakho sigciniwe.",
+   "Papatšo ya gago e bolokilwe."
+  ],
+  "People can find it now. Your name and number stay private until you accept an introduction.": [
+   "Mense kan dit nou vind. Jou naam en nommer bly privaat totdat jy 'n voorstelling aanvaar.",
+   "Abantu sebengasithola manje. Igama lakho nenombolo kuhlala kuyimfihlo uze wamukele isethulo.",
+   "",
+   "Abantu banokusifumana ngoku. Igama lakho nenombolo zihlala ziyimfihlo de wamkele intshayelelo.",
+   "Batho ba ka e hwetša bjale. Leina la gago le nomoro di dula e le sephiri go fihlela o amogela tsebišo."
+  ],
+  "See my advert": [
+   "Sien my advertensie",
+   "Bona isikhangiso sami",
+   "",
+   "Jonga isibhengezo sam",
+   "Bona papatšo ya ka"
+  ],
+  "Finish it in the app": [
+   "Maak dit in die app klaar",
+   "Qedela ku-app",
+   "",
+   "Yigqibe kwi-app",
+   "E fetše go app"
+  ],
+  "Send it to myself on WhatsApp": [
+   "Stuur dit vir myself op WhatsApp",
+   "Zithumelele ku-WhatsApp",
+   "",
+   "Ndizithumelele kuWhatsApp",
+   "Ke e iromelle ka WhatsApp"
+  ],
+  "We emailed you a link to it as well.": [
+   "Ons het ook vir jou 'n skakel daarna ge-e-pos.",
+   "Sikuthumelele nesixhumanisi nge-imeyili.",
+   "",
+   "Sikuthumelele nekhonkco nge-imeyile.",
+   "Re go romeletše le kgokagano ka imeile."
+  ],
+  "Not published — nothing was lost. Try again.": [
+   "Nie geplaas nie — niks is verlore nie. Probeer weer.",
+   "Akushicilelwanga — akukho okulahlekile. Zama futhi.",
+   "",
+   "Ayipapashwanga — akukho kulahlekileyo. Zama kwakhona.",
+   "Ga se ya phatlalatšwa — ga go se se lahlegilego. Leka gape."
+  ],
+  "No connection — nothing was sent.": [
+   "Geen verbinding nie — niks is gestuur nie.",
+   "Akukho ukuxhumana — akukho okuthunyelwe.",
+   "",
+   "Akukho qhagamshelo — akukho nto ithunyelweyo.",
+   "Ga go kgokagano — ga go se se rometšwego."
+  ],
+  "Police clearance / background check": [
+   "Polisieklaring / agtergrondtoets",
+   "Isitifiketi samaphoyisa / ukuhlolwa kwesizinda",
+   "",
+   "Isiqinisekiso samapolisa / ukuhlolwa kwemvelaphi",
+   "Tiišetšo ya maphodisa / tekolo ya morago"
+  ],
+  "Any NQF qualification or short course": [
+   "Enige NQF-kwalifikasie of kort kursus",
+   "Noma iyiphi iziqu ze-NQF noma isifundo esifushane",
+   "",
+   "Nasiphi na isiqinisekiso seNQF okanye ikhosi emfutshane",
+   "Thuto efe goba efe ya NQF goba thuto ye kopana"
+  ],
+  "What do you charge an hour?": [
+   "Wat vra jy per uur?",
+   "Ukhokhisa malini ngehora?",
+   "",
+   "Uhlawulisa malini ngeyure?",
+   "O lefiša bokae ka iri?"
+  ],
+  "From what price, per job?": [
+   "Vanaf watter prys, per werk?",
+   "Kusukela kuliphi inani, ngomsebenzi ngamunye?",
+   "",
+   "Ukusuka kweliphi ixabiso, ngomsebenzi ngamnye?",
+   "Go tloga go theko efe, ka mošomo?"
+  ],
+  "What is your call-out fee?": [
+   "Wat is jou uitroepfooi?",
+   "Imalini imali yokubizwa?",
+   "",
+   "Yimalini imali yokubizwa?",
+   "Tefo ya gago ya go bitšwa ke bokae?"
+  ],
+  "What do you charge?": [
+   "Wat vra jy?",
+   "Ukhokhisa malini?",
+   "",
+   "Uhlawulisa malini?",
+   "O lefiša bokae?"
+  ],
+  "Draft translations, being checked by readers. Tap any time to switch back.": [
+   "Konsepvertalings, word deur lesers nagegaan. Tik enige tyd om terug te skakel.",
+   "Izinguqulo ezisalungiswa, zihlolwa ngabafundi. Thinta noma nini ukuze ubuyele.",
+   "",
+   "Iinguqulelo eziyidrafti, zihlolwa ngabafundi. Cofa nanini na ukubuyela.",
+   "Diphetolelo tša kakanyo, di lekolwa ke babadi. Kgotla neng le neng go boela morago."
   ]
  },
  "p": [
@@ -1049,6 +1350,22 @@
    "o tla fumaneha hamorao",
    "uya kufumaneka kamva",
    "o tla hwetšagala ka morago"
+  ],
+  [
+   "Best next step:",
+   "Beste volgende stap:",
+   "Isinyathelo esilandelayo esihle:",
+   "",
+   "Elona nyathelo lilandelayo:",
+   "Kgato ye kaone ye e latelago:"
+  ],
+  [
+   "Add your own photos",
+   "Voeg jou eie foto's by",
+   "Engeza izithombe zakho",
+   "",
+   "Yongeza iifoto zakho",
+   "Oketša diswantšho tša gago"
   ]
  ],
  "r": [
@@ -1075,6 +1392,22 @@
    "Kakaretso — ho sala dintho tse $1 ho qeta",
    "Uyilo — kuseleyo izinto ezi-$1 ukugqiba",
    "Kakanyo — go šetše dilo tše $1 go feleletša"
+  ],
+  [
+   "^Your advert is (\\d+)% strong$",
+   "Jou advertensie is $1% sterk",
+   "Isikhangiso sakho siqine ngo-$1%",
+   "",
+   "Isibhengezo sakho somelele nge-$1%",
+   "Papatšo ya gago e tiile ka $1%"
+  ],
+  [
+   "^\\+(\\d+) available$",
+   "+$1 beskikbaar",
+   "+$1 okutholakalayo",
+   "",
+   "+$1 efumanekayo",
+   "+$1 e a hwetšagala"
   ]
  ]
 }

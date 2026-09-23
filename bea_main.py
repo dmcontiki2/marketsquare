@@ -3997,6 +3997,55 @@ def _import_quality_score(row):
     return int(round(score)), missing
 
 
+class _QuickPublishIn(BaseModel):
+    listing: dict
+    email: str = ""
+    accept_terms: bool = False
+
+
+@app.post("/quick/publish")
+def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, ts_user: str = Cookie(default=None)):
+    """ONE-TAP-PUBLISH-1 (David, 23 Sep 2026: "make the SAVE and PUBLISH a single tap -- your reasoning
+    here is impeccable"; RUL-145: no wall, no account). The Quick door's one ask -- her email, on a
+    button that says it accepts the terms, with the terms linked beside it -- creates the advert AND
+    publishes it in the same tap. The acceptance is recorded as ever (users.eula_accepted_at); it is
+    her own tap on a button whose label states it (CPA s49: drawn to her attention, assent by act).
+    A signed-in member publishes as her session, never as a typed address. Anonymity is unchanged:
+    buyers never see the email; introductions reach it. Guards that stay: listing velocity, the
+    price-basis rule, the free-plan slot limit (a full plan returns 402 and the advert stays a draft)."""
+    if not body.accept_terms:
+        raise HTTPException(status_code=400, detail="Tick-free, but the button must accept the terms.")
+    sess = _session_email(ts_user)
+    em = (sess or body.email or "").strip().lower()
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", em):
+        raise HTTPException(status_code=400, detail="Please type an email address we can reach you on.")
+    fields = dict(body.listing or {})
+    fields["seller_email"] = em
+    fields["source"] = "quick_live"            # no 'waiting' letter: it is live, the live letter goes instead
+    try:
+        listing = Listing(**{k: v for k, v in fields.items() if k in Listing.__fields__})
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail="That advert is missing something: %s" % str(exc)[:160])
+    created = create_listing(listing, background_tasks, "quick-door")
+    lid = int(created["id"])
+    conn = database.get_db()
+    try:
+        conn.execute("INSERT INTO users (email, aa_free_used, aa_sessions_remaining) VALUES (?, 0, 0) "
+                     "ON CONFLICT(email) DO NOTHING", (em,))
+        conn.execute("UPDATE users SET eula_accepted_at = COALESCE(eula_accepted_at, CURRENT_TIMESTAMP) "
+                     "WHERE email = ?", (em,))
+        conn.commit()
+    finally:
+        conn.close()
+    _log.info("ONE-TAP-PUBLISH-1: listing %s, terms accepted by tap for %s (session=%s)", lid, em, bool(sess))
+    try:
+        publish_listing(lid, em)
+    except HTTPException as he:
+        return {"id": lid, "live": False, "detail": he.detail, "status": he.status_code}
+    background_tasks.add_task(_quick_live_mail, em, lid, listing.title)
+    return {"id": lid, "live": True}
+
+
 @app.post("/quality/preview")
 def quality_preview(body: dict = Body(default={})):
     """ONE-SCORER-1 (David's 15 Sep test: Quick said 60, the app said 80). The Quick door asks THE
@@ -15979,6 +16028,46 @@ def _quick_draft_return(to_email: str, listing_id: int, title: str) -> None:
         _log.error("quick-return mail for draft %s failed: %s", listing_id, exc)
 
 
+def _send_quick_live_email(to_email: str, link: str, title: str) -> str:
+    """ONE-TAP-PUBLISH-1 (David, 23 Sep 2026: "make the SAVE and PUBLISH a single tap"). The advert
+    went live in the tap; this letter is her key back to it, and the honest exit if it was not her."""
+    safe = (title or "your advert").replace("<", "&lt;").replace(">", "&gt;")
+    subject = "Your TrustSquare advert is live"
+    html = (
+        "<div style='font-family:Inter,Arial,sans-serif;max-width:460px;margin:auto'>"
+        "<h2 style='color:#0c1a2e;margin-bottom:6px'>Your advert is live</h2>"
+        "<p style='color:#0c1a2e;font-size:16px;margin-top:0'><b>" + safe + "</b></p>"
+        "<p>People can find it on TrustSquare now. Your name and contact details stay private until "
+        "you accept an introduction.</p>"
+        "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
+        "text-decoration:none;padding:13px 24px;border-radius:8px;font-weight:700'>"
+        "Open my advert &rarr;</a></p>"
+        "<p style='color:#6b7280;font-size:13px'>Add photos there to make it stronger. The link works "
+        "for 7 days; after that, sign in at <a href='" + APP_URL + "'>trustsquare.co</a> with <b>"
+        + to_email + "</b>.</p>"
+        "<p style='color:#6b7280;font-size:12px'>If this was not you, open the link and delete the "
+        "advert, or ignore this letter.</p></div>")
+    plain = ("Your TrustSquare advert is live: " + (title or "") + "\n\nOpen it:\n" + link +
+             "\n\nIf this was not you, open the link and delete it, or ignore this letter.")
+    return _send_html_email(to_email, subject, html, plain)
+
+
+def _quick_live_mail(to_email: str, listing_id: int, title: str) -> None:
+    try:
+        em = (to_email or "").strip().lower()
+        if "@" not in em or not _JWT_SECRET:
+            if not _JWT_SECRET:
+                _log.error("quick-live mail NOT sent for %s: MS_JWT_SECRET empty (QUICK-RETURN-GUARD-1)", listing_id)
+            return
+        token = _pyjwt.encode({"email": em, "purpose": "signin",
+                               "exp": datetime.now(timezone.utc) + timedelta(days=7),
+                               "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
+        link = APP_URL + "/?signin=" + token + "&listing=" + str(int(listing_id))
+        _log.info("quick-live mail for %s: %s", listing_id, _send_quick_live_email(em, link, title or ""))
+    except Exception as exc:
+        _log.error("quick-live mail for %s failed: %s", listing_id, exc)
+
+
 def _send_invite_email(to_email: str, link: str, agency_name: str = "") -> str:
     """AGENCY-INVITE-MAIL-1 (24 Aug 2026): the agent-invite email. The old wiring sent
     _send_login_email with code='' -- an EMPTY code box headlined 'type this code', and
@@ -25328,6 +25417,7 @@ def i18n_translate(body: _I18nIn):
 # Dark for the public until launch_switches.lang_layer = 1; testers (ts_review) see it now.
 # ---------------------------------------------------------------------------
 _LANG_COUNTRIES_CACHE = {"d": None}
+LANG_DRAFTS_PER_ADVERT_DAY = 5   # RUL-164: free feature, capped per advert per day (3 AI calls each)
 
 
 def _lang_countries():
@@ -25354,11 +25444,9 @@ def quick_next_preview():
     review it on his phone before it replaces /quick/. The file rides the deploy manifest into the
     live root (this module's own directory); nginx hands unknown paths to the app, so the app serves
     it. Not linked from anywhere, not indexed."""
-    _p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "quick_next.html")
-    if not os.path.isfile(_p):
-        raise HTTPException(status_code=404, detail="Preview not deployed")
-    with open(_p, encoding="utf-8") as _f:
-        return HTMLResponse(_f.read(), headers={"X-Robots-Tag": "noindex, nofollow", "Cache-Control": "no-cache"})
+    # Promoted 23 Sep 2026 (QUICK-ONE-DOOR-1): the preview IS /quick/ now; old links land there.
+    from fastapi.responses import RedirectResponse as _RR
+    return _RR(url="/quick/", status_code=301)
 
 
 @app.get("/lang/countries")
@@ -25433,6 +25521,23 @@ def listing_lang_draft(listing_id: int, body: _LangDraftIn, ts_user: str = Cooki
     conn = database.get_db()
     try:
         row = _lang_owner_row(conn, listing_id, ts_user, body.email, "lang-draft", x_admin_key)
+        # RUL-164 (David, 23 Sep 2026): a FREE AI feature runs on the allocated free lane under a cap
+        # budgeted into the free package. The second-language draft is free, so it counts against the
+        # same daily ceiling as the translate button, plus a per-advert cap so one seller cannot spend it.
+        _i18n_ensure(conn)
+        day = datetime.now(timezone.utc).date().isoformat()
+        r = conn.execute("SELECT calls FROM i18n_spend WHERE day=?", (day,)).fetchone()
+        if r and (r["calls"] if not isinstance(r, tuple) else r[0]) >= I18N_DAILY_CALL_CAP:
+            raise HTTPException(status_code=429, detail="Translation has reached today's limit -- please try again tomorrow.")
+        conn.execute("CREATE TABLE IF NOT EXISTS lang_draft_log (listing_id INTEGER, day TEXT, n INTEGER, PRIMARY KEY (listing_id, day))")
+        n = conn.execute("SELECT n FROM lang_draft_log WHERE listing_id=? AND day=?", (listing_id, day)).fetchone()
+        if n and (n["n"] if not isinstance(n, tuple) else n[0]) >= LANG_DRAFTS_PER_ADVERT_DAY:
+            raise HTTPException(status_code=429, detail="You can redraft this advert's languages %d times a day." % LANG_DRAFTS_PER_ADVERT_DAY)
+        conn.execute("INSERT INTO lang_draft_log (listing_id, day, n) VALUES (?,?,1) "
+                     "ON CONFLICT(listing_id, day) DO UPDATE SET n = n + 1", (listing_id, day))
+        conn.execute("INSERT INTO i18n_spend (day, calls) VALUES (?, 3) "
+                     "ON CONFLICT(day) DO UPDATE SET calls = calls + 3", (day,))
+        conn.commit()
     finally:
         conn.close()
     title, desc = row.get("title") or "", row.get("description") or ""

@@ -25304,9 +25304,9 @@ def rg_eula_lang_1():
            "(same class) · RG-0402 FUNNEL-DENOM-1 / FUNNEL-HUMAN-1 (the dwell beacon) · "
            "ONBOARDING_GOAL.md section 2 (PROBED beats READ)")
 def rg_door_funnel_1():
-    d = repo_file("genie/q_index.html")
+    d = repo_file("quick.html")   # QUICK-ONE-DOOR-1 (23 Sep 2026): /q/<cat> serves quick.html
     if d is None:
-        return [(INFO, "NOT EVALUATED - genie/q_index.html is not readable from here")]
+        return [(INFO, "NOT EVALUATED - quick.html is not readable from here")]
     if "DOOR-FUNNEL-1" not in d:
         return [(FAIL, "the door the outreach letters point at posts no beacons again -- cold "
                        "arrivals are invisible on the only lane that carries them")]
@@ -25317,8 +25317,8 @@ def rg_door_funnel_1():
         ("qTrack('q_door')", "arrivals at the door are uncounted again"),
         ("q_step_", "we can no longer see which question loses them"),
         ("qTrack('q_draft')", "we cannot see who composed an advert"),
-        ("qTrack('q_signin_sent')", "we cannot see who asked for the link that carries their "
-                                    "answers into the app -- the only thing this door can do"),
+        ("qTrack(res.j.live ? 'q_published' : 'q_handover')", "we cannot see who published from the door "
+                                    "(ONE-TAP-PUBLISH-1 replaced the old sign-in-link ask; assertion moved with it)"),
         ("_qfDwellFire", "the dwell beacon is gone, so the mail scanners that fetch every URL in "
                          "every letter count as arrivals"),
         ("location.protocol==='file:'", "the dry-run guard is gone; a copy opened from a "
@@ -25331,7 +25331,7 @@ def rg_door_funnel_1():
 
 @entry("RG-0414", "DOOR-RETURN-1: the door the letters point at gives her a way back that does not "
                   "depend on email or on one browser's storage",
-       OPEN,
+       LOCKED, fixed_on="2026-09-23",
        scope="genie/q_index.html. PROBED LIVE 19 Sep 2026: the public door cannot write a listing "
              "-- deliberately, and correctly, because no API key may live in a public page, so it "
              "keeps the composed answers in localStorage under ts_quick_draft and emails a "
@@ -25350,9 +25350,9 @@ def rg_door_funnel_1():
        ref="RG-0408 WA-SELFSEND-1 · RG-0413 DOOR-FUNNEL-1 · RUL-146 · QUICK_LISTING_SPEC.md D2 · "
            "RG-0395 QUICK-RETURN-1 (the Montana case)")
 def rg_door_return_1():
-    d = repo_file("genie/q_index.html")
+    d = repo_file("quick.html")   # QUICK-ONE-DOOR-1
     if d is None:
-        return [(INFO, "NOT EVALUATED - genie/q_index.html is not readable from here")]
+        return [(INFO, "NOT EVALUATED - quick.html is not readable from here")]
     if "DOOR-RETURN-1" in d:
         return [(INFO, "the public door offers a way back that does not depend on email alone -- "
                        "walk it in a real browser, then lock")]
@@ -25704,7 +25704,7 @@ def rg_letter_click_1():
        ref="INTL-COPY-1, RG-0413 DOOR-FUNNEL-1, RG-0414 DOOR-RETURN-1, QUICK_LISTING_SPEC.md D2.")
 def rg_qdoor_za_only_1():
     out = []
-    door = repo_file(os.path.join("genie", "q_index.html"))
+    door = repo_file("quick.html")   # QUICK-ONE-DOOR-1 (23 Sep 2026): the one door
     loc = _cl_file("emailer", "localize.py")
     if door is None or loc is None:
         return [(INFO, "NOT EVALUATED - genie/q_index.html or CityLauncher/emailer/localize.py "
@@ -26775,20 +26775,20 @@ def rg_quick_draft_land_1():
              "has seen it; until then it must be reachable, carry noindex, and speak South Africa's five "
              "languages with Sepedi (RUL-162).")
 def rg_quick_next_1():
+    # PROMOTED 23 Sep 2026 (RUL-163): the reworked app IS /quick/; the preview URL redirects there.
     out = []
     try:
-        page = _get("/quick_next.html")
+        page = _get("/quick/")
     except ProbeOffline:
         raise
-    for good in ("QUICK-NEXT-1", 'name="robots" content="noindex', "['nso','Sepedi']", "Save my advert"):
+    for good in ("QUICK-NEXT-1", "ONE-TAP-PUBLISH-1", "['nso','Sepedi']", "ARRIVAL-1"):
         if good not in page:
-            out.append((FAIL, "LIVE /quick_next.html is missing %s" % good))
+            out.append((FAIL, "LIVE /quick/ is missing %s" % good))
     return out
-
 
 @entry("RG-0436", "QUICK-ONE-DOOR-1: there is ONE Quick app -- the outreach door /q/<category> and /quick/ "
                   "serve the same file",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-23",
        scope="Found by the 23 Sep audit (F16): /q/homehelp (913 KB, built from genie/HARNESS.html by "
              "build_door.py, linked from every outreach letter) and /quick/ (228 KB, quick.html) have "
              "drifted apart -- different colours, labels, hand-over, Buzz state and price basis. "
@@ -26843,6 +26843,56 @@ def rg_rulings_settled_read_1():
                    "read, so a mid-write read can still print a ruling as unreflected")]
 
 
+
+
+@entry("RG-0438", "ONE-TAP-PUBLISH-1 + LANG-ON-1 + ARRIVAL-1: one tap publishes from the Quick door, the "
+                  "languages are on for everyone, and saving is an arrival",
+       OPEN, fixed_on="",
+       scope="RUL-163 (David, 23 Sep 2026). bea_main.py POST /quick/publish (create + terms-by-tap + "
+             "publish in one call; a missing accept_terms is refused); quick.html publishNow()/celebrate(); "
+             "migration 049 arms launch_switches.lang_layer. LIVE legs: /flags reports lang_layer ON to an "
+             "anonymous reader; /quick/publish refuses a call that does not accept the terms (400); /quick/ "
+             "carries the arrival and honours reduced motion. Promoted once measured after the deploy.")
+def rg_one_tap_publish_1():
+    out = []
+    q = repo_file("quick.html")
+    if q is not None:
+        for need in ("function publishNow(", "function celebrate(", "accept_terms:true", "prefers-reduced-motion"):
+            if need not in q:
+                out.append((FAIL, "quick.html lost %s" % need))
+    try:
+        f = json.loads(_get("/flags"))
+        if not (f.get("effective") or {}).get("lang_layer"):
+            out.append((FAIL, "LIVE /flags: lang_layer is not on for an anonymous reader"))
+        try:
+            _ll_post("/quick/publish", {"listing": {}, "email": "x@example.com", "accept_terms": False})
+            out.append((FAIL, "LIVE /quick/publish accepted a call that did not accept the terms"))
+        except urllib.error.HTTPError as e:
+            if e.code != 400:
+                out.append((FAIL, "LIVE /quick/publish without terms answered %s, expected 400" % e.code))
+    except ProbeOffline:
+        raise
+    return out
+
+
+@entry("RG-0439", "RUL-164: a FREE AI feature runs under the budgeted free cap -- the advert's second-language "
+                  "draft cannot spend past the day's ceiling or 5 redrafts per advert",
+       LOCKED, fixed_on="2026-09-23",
+       scope="bea_main.py listing_lang_draft: counts 3 calls per draft into i18n_spend (the translate lane's "
+             "daily ceiling, I18N_DAILY_CALL_CAP) and caps redrafts per advert per day "
+             "(LANG_DRAFTS_PER_ADVERT_DAY). Source check: the guard must stand before the AI call.")
+def rg_rul164_free_cap():
+    b = repo_file("bea_main.py")
+    if b is None:
+        return [(INFO, "bea_main.py not readable here -- NOT EVALUATED")]
+    i = b.find('def listing_lang_draft(')
+    j = b.find('_lang_translate_advert(title, desc, src, dst)', i)
+    body = b[i:j] if i >= 0 and j > i else ""
+    out = []
+    for need in ("LANG_DRAFTS_PER_ADVERT_DAY", "I18N_DAILY_CALL_CAP", "lang_draft_log"):
+        if need not in body:
+            out.append((FAIL, "the free-lane cap (%s) no longer stands before the AI call" % need))
+    return out
 
 if __name__ == "__main__":
     sys.exit(main())
