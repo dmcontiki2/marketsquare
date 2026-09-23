@@ -25332,6 +25332,19 @@ def _lang_offered(country: str):
     return [code for code, st in (c.get("langs") or []) if st == "offered"]
 
 
+@app.get("/quick_next.html")
+def quick_next_preview():
+    """QUICK-NEXT-1 (23 Sep 2026): the reworked Quick app, served beside the live one so David can
+    review it on his phone before it replaces /quick/. The file rides the deploy manifest into the
+    live root (this module's own directory); nginx hands unknown paths to the app, so the app serves
+    it. Not linked from anywhere, not indexed."""
+    _p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "quick_next.html")
+    if not os.path.isfile(_p):
+        raise HTTPException(status_code=404, detail="Preview not deployed")
+    with open(_p, encoding="utf-8") as _f:
+        return HTMLResponse(_f.read(), headers={"X-Robots-Tag": "noindex, nofollow", "Cache-Control": "no-cache"})
+
+
 @app.get("/lang/countries")
 def lang_countries(ts_review: str = Cookie(default=None)):
     """The approved language list per country (RUL-162) and whether the layer is on for THIS reader."""
