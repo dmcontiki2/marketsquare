@@ -5,7 +5,8 @@ WHY: the trustsquare-origin-lockdown firewall allowlists SSH (port 22) to David'
 home IP. Home power/router resets change that IP (proven 17 Aug: blackout -> new IP
 -> both David and the session locked out until a hand-fix at the Hetzner panel).
 
-WHAT: run from David's machine/network (the sandbox shares its egress). Reads the
+WHAT: run from David's machine AND from the sandbox (since 23 Sep 2026 they can have
+DIFFERENT egress IPs -- SANDBOX-EGRESS-1, see PEERS below). Reads the
 current public IP, reads the firewall's SSH rule via the Hetzner Cloud API, and if
 the rule is not exactly [current IP], SETS it to that (NO-STALE-IP-1, 2 Sep 2026: stale
 entries are pruned, every other rule stays intact).
@@ -18,12 +19,55 @@ Cloud API token with read+write, created at console.hetzner.com > project > Secu
 Run:  python3 scripts/hetzner_fw_selfheal.py           # heal if needed
       python3 scripts/hetzner_fw_selfheal.py --check   # report only, change nothing
 """
-import json, os, sys, urllib.request
+import json, os, sys, time, urllib.request
 
 FIREWALL_ID = 11414216          # trustsquare-origin-lockdown
 API = "https://api.hetzner.cloud/v1"
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CHECK = "--check" in sys.argv
+
+# SANDBOX-EGRESS-1 (23 Sep 2026, maintenance loop). The "one egress" premise broke: on
+# 23 Sep David's PC left through 165.165.181.198 while the Cowork sandbox (a Hyper-V VM
+# on the same PC) left through 197.184.121.169. The host tick, honouring NO-STALE-IP-1,
+# SET the rule to the PC's address every 20 min and so locked every sandbox session out
+# of port 22 for the whole day (RG-0099 red, three sessions saw it). Two vantages, two
+# lanes, one rule:
+#   * every run first BEACONS its own vantage (host / sandbox) and IP into PEERS, with
+#     a UTC timestamp -- the file is gitignored (.secrets/) and shared over the mount;
+#   * the HOST lane is the pruner: it SETS the rule to exactly {its own IP} U {every
+#     peer beacon younger than PEER_TTL_H}. A sandbox IP older than that is a dead
+#     address and is pruned, so NO-STALE-IP-1 still holds -- the bound is 24 h, not 0,
+#     and it is short BECAUSE the sandbox lane re-adds itself on every SSH load;
+#   * the SANDBOX lane is ADD-ONLY: it can only put its own IP in, never take one out,
+#     so it can never lock the host out while the host's beacon is not yet on file.
+# Either lane can only ever name the IP of the machine that ran it: still the anti-lockout.
+PEERS = os.path.join(REPO, ".secrets", "egress_peers.json")
+PEER_TTL_H = 24   # short on purpose: the sandbox re-adds itself on every SSH load
+VANTAGE = "host" if os.name == "nt" else "sandbox"
+
+def _beacon(my_ip):
+    """Record this vantage's live egress; return the fresh IPs of the OTHER vantages."""
+    now = time.time()
+    try:
+        peers = json.load(open(PEERS, encoding="utf-8"))
+    except Exception:
+        peers = {}
+    if not CHECK:
+        peers[VANTAGE] = {"ip": my_ip, "at": now,
+                          "at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now))}
+        try:
+            os.makedirs(os.path.dirname(PEERS), exist_ok=True)
+            with open(PEERS, "w", encoding="utf-8") as f:
+                json.dump(peers, f, indent=1)
+        except OSError as e:
+            print("[fw-selfheal] beacon not written (%s) -- peers unchanged" % e)
+    fresh = []
+    for v, rec in peers.items():
+        if v == VANTAGE or not isinstance(rec, dict):
+            continue
+        if now - float(rec.get("at", 0)) <= PEER_TTL_H * 3600 and rec.get("ip"):
+            fresh.append(rec["ip"])
+    return fresh
 
 def token():
     t = os.environ.get("HETZNER_API_TOKEN", "").strip()
@@ -62,23 +106,42 @@ def main():
         return 3
     ips = ssh[0].get("source_ips", [])
     want = my_ip + "/32"
-    # NO-STALE-IP-1 (David, 2 Sep 2026): the SSH rule holds EXACTLY the current egress IP.
-    # There is ONE egress (David's PC and the sandbox share it -- server sshd log 2 Sep:
-    # 197.184.106.176 until 04:36Z, then only 197.185.137.157). Every entry that is not
-    # the current IP is a dead address left by a router reset, and a dead allowlist entry
-    # is an open door for whoever the ISP hands that IP to next. Heal = set, not append.
-    if ips == [want]:
-        print("[fw-selfheal] ok: SSH rule holds exactly %s. Nothing to do." % want)
+    # NO-STALE-IP-1 (David, 2 Sep 2026): the SSH rule holds EXACTLY the live egress IPs.
+    # Every entry that is not a live vantage is a dead address left by a router reset, and
+    # a dead allowlist entry is an open door for whoever the ISP hands that IP to next.
+    # Heal = set, not append -- on the HOST lane. SANDBOX-EGRESS-1 (23 Sep 2026) widened
+    # "the one IP" to "the live vantages": see PEERS / _beacon above.
+    peers = _beacon(my_ip)
+    want_set = sorted({want} | {p + "/32" for p in peers})
+    if VANTAGE == "host":
+        if sorted(ips) == want_set:
+            print("[fw-selfheal] ok: SSH rule holds exactly %s (host + %d fresh sandbox beacon). "
+                  "Nothing to do." % (want_set, len(peers)))
+            return 0
+        stale = [i for i in ips if i not in want_set]
+        if CHECK:
+            print("[fw-selfheal] WOULD SET the SSH rule to %s (currently: %s; stale: %s). "
+                  "Run without --check to heal." % (want_set, ips, stale))
+            return 0
+        ssh[0]["source_ips"] = want_set
+        api("/firewalls/%d/actions/set_rules" % FIREWALL_ID, tok, method="POST", body={"rules": rules})
+        print("[fw-selfheal] HEALED: SSH allowlist is now exactly %s; pruned %d stale: %s"
+              % (want_set, len(stale), stale))
         return 0
-    stale = [i for i in ips if i not in (want, my_ip)]
+    # sandbox lane: add-only. It puts its own IP in; only the host tick ever takes one out.
+    if want in ips:
+        print("[fw-selfheal] ok: SSH rule already holds this sandbox's %s (rule: %s). "
+              "Nothing to do." % (want, ips))
+        return 0
+    new_ips = sorted(set(ips) | {want})
     if CHECK:
-        print("[fw-selfheal] WOULD SET the SSH rule to [%s] (currently: %s; stale: %s). "
-              "Run without --check to heal." % (want, ips, stale))
+        print("[fw-selfheal] WOULD ADD %s to the SSH rule (currently: %s) -- sandbox lane is "
+              "add-only; the host tick prunes. Run without --check to heal." % (want, ips))
         return 0
-    ssh[0]["source_ips"] = [want]
+    ssh[0]["source_ips"] = new_ips
     api("/firewalls/%d/actions/set_rules" % FIREWALL_ID, tok, method="POST", body={"rules": rules})
-    print("[fw-selfheal] HEALED: SSH allowlist is now exactly [%s]; pruned %d stale: %s"
-          % (want, len(stale), stale))
+    print("[fw-selfheal] HEALED (sandbox lane, add-only): SSH allowlist is now %s; the host "
+          "tick prunes anything older than %d h" % (new_ips, PEER_TTL_H))
     return 0
 
 

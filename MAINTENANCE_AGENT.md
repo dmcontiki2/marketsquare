@@ -290,6 +290,15 @@ that is the correct trade: a spare archive costs disk, a missing one costs the b
 Asserted by RG-0350 (the producer exists, is wired here, and the lane is fresh) alongside
 RG-0234 (the archive restores).
 
+**BACKUP-IN-AGENT-1 (23 Sep 2026) — the wiring above was a sentence, and sentences stop.** The
+lane ran on 10, 11 and 12 Sep and then not at all for 11 days: the scheduled loop's own step
+list never carried "step 2a", so no run executed it, and RG-0234 went red again. The producer
+is now called from `scripts/maintenance_agent.py` at the end of every run (`_backup_lane`):
+skipped when the newest archive is under 20 h old, capped at 150 s, never raises — the outcome
+is written into the run report under `backup`. Step 2a above is therefore automatic; running
+it by hand is only for a day when the agent itself did not run. RG-0350 now asserts the CALL
+exists in the agent, not only the sentence here.
+
 ## WAVE-WITNESS-1 — the wave-hygiene witness has a PRODUCER too (11 Sep 2026)
 
 Second instance of the BACKUP-UNATTENDED-1 class, found the very next day. RG-0175 asserts

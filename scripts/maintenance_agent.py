@@ -1055,7 +1055,44 @@ def main():
     _flush()
     say("report -> %s  (%d seen, %d acted)" % (path, report["seen"], len(report["actions"])))
     _post_heartbeat(report, mode, key)
+    report["backup"] = _backup_lane()
+    _flush()
     return 0
+
+
+def _backup_lane():
+    """BACKUP-IN-AGENT-1 (23 Sep 2026): the DB-archive producer runs INSIDE the agent run.
+    BACKUP-UNATTENDED-1 (10 Sep) wired backup_db_sandbox.py into 'step 2a' of the loop as a
+    line in MAINTENANCE_AGENT.md -- and the loop's own step list never carried it, so the lane
+    ran on 10, 11 and 12 Sep and then stopped for 11 days while RG-0234 sat red (the same
+    silence the 10 Sep fix was written to end). A producer that lives in prose is a chore;
+    this one lives in the code every run executes. Guarded: skipped when the newest archive
+    is younger than 20 h; hard 150 s cap; never raises -- a backup fault degrades the run
+    (recorded in the report), it never kills it (RG-0049 spirit)."""
+    import glob, time as _t
+    rec = {"ran": False, "outcome": ""}
+    try:
+        newest = max((os.path.getmtime(z) for z in glob.glob(os.path.join(REPO, "backups", "*.zip"))),
+                     default=0)
+        age_h = (_t.time() - newest) / 3600.0
+        if age_h < 20:
+            rec["outcome"] = "skipped: newest archive is %.1f h old (<20 h)" % age_h
+            say("backup lane: %s" % rec["outcome"])
+            return rec
+        prod = os.path.join(REPO, "scripts", "backup_db_sandbox.py")
+        if not os.path.isfile(prod):
+            rec["outcome"] = "producer scripts/backup_db_sandbox.py missing"
+            say("backup lane: %s" % rec["outcome"])
+            return rec
+        rec["ran"] = True
+        r = subprocess.run([sys.executable, prod], cwd=REPO, capture_output=True, text=True, timeout=150)
+        tail = ((r.stdout or "") + (r.stderr or "")).strip().splitlines()
+        rec["outcome"] = ("ok: " if r.returncode == 0 else "FAILED rc=%d: " % r.returncode) + \
+                         (tail[-1][:200] if tail else "(no output)")
+    except Exception as e:
+        rec["outcome"] = "FAILED: %s %s" % (type(e).__name__, str(e)[:120])
+    say("backup lane: %s" % rec["outcome"])
+    return rec
 
 # ── AIK-VERIFY-1: reproduce the failing action against the live surface ──────────
 def aik_verify(fault, key):

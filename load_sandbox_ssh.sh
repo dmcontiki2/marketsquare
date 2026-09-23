@@ -48,4 +48,10 @@ CFG_EOF
     chmod 600 "$HOME/.ssh/config"
 fi
 
+# 3. SANDBOX-EGRESS-1 (23 Sep 2026): the sandbox and David's PC can leave through DIFFERENT
+#    public IPs, and the host's 20-min self-heal only ever names the PC's. So every SSH load
+#    beacons THIS vantage's IP and adds it to the origin's port-22 allowlist (add-only; the
+#    host tick prunes beacons older than 24 h). Never fatal: no token / no network = no change.
+python3 "$SCRIPT_DIR/scripts/hetzner_fw_selfheal.py" 2>/dev/null | grep -E "HEALED|cannot read" || true
+
 echo "SSH key loaded into sandbox — Hetzner server accessible (host key seeded, multiplexing on)."
