@@ -1187,6 +1187,11 @@ def run_migrations(conn):
         # the funds gauge, the agency letters). Default OFF = the existing app untouched for
         # every user. Arming it is DAVID'S act (RUL-076 s7.4), via POST /admin/flags.
         "ALTER TABLE launch_switches ADD COLUMN baseline_q4 INTEGER NOT NULL DEFAULT 0",
+        # LANG-LAYER-1 (RUL-162, 23 Sep 2026): the language layer -- country language lists, the
+        # advert's second language, the code chips. Default OFF for the public; it is ON for anyone
+        # holding the tester cookie (ts_review), so David and his testers see it first. Switching it
+        # on for everybody is David's act, via POST /admin/flags {"lang_layer": true}.
+        "ALTER TABLE launch_switches ADD COLUMN lang_layer INTEGER NOT NULL DEFAULT 0",
     ):
         try:
             conn.execute(_ddl)
@@ -1383,6 +1388,19 @@ def run_migrations(conn):
     if "available_from" not in listing_cols_sm:
         conn.execute("ALTER TABLE listings ADD COLUMN available_from TEXT")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_rental_status ON listings(rental_status)")
+
+    # ── LANG-LAYER-1 (RUL-162, David 23 Sep 2026): the advert speaks the lister's language ──
+    # lang_orig   the language she wrote it in (ISO code; NULL reads as English)
+    # lang_extra  the ONE extra language she chose, from her country's approved list
+    # title_extra / desc_extra  that extra version; extra_back = its translation back into
+    #             her own language, so she approves what it really says, not what we hope it says
+    # extra_status 'draft' until she approves; editing the original drops it back to 'draft'
+    # search_en   the English search layer, so an isiZulu-only advert answers an English search
+    for _lc, _ld in (("lang_orig", "TEXT"), ("lang_extra", "TEXT"), ("title_extra", "TEXT"),
+                     ("desc_extra", "TEXT"), ("extra_back", "TEXT"), ("extra_status", "TEXT"),
+                     ("search_en", "TEXT")):
+        if _lc not in listing_cols_sm:
+            conn.execute("ALTER TABLE listings ADD COLUMN %s %s" % (_lc, _ld))
 
     # ── EULA acceptance gate (Session 37) ────────────────────────
     # eula_accepted_at must be non-NULL before a seller can publish.
@@ -2398,6 +2416,7 @@ class Listing(BaseModel):
     # his own advert. Gated to 'quick' precisely so the agency import lane, which
     # also lands drafts, never mails anybody (RUL-096(f): sending stays reserved).
     source: Optional[str] = None
+    lang_orig: Optional[str] = None   # LANG-LAYER-1 (RUL-162): the language she wrote the advert in
 
 class User(BaseModel):
     email: str
@@ -3126,8 +3145,13 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
         _terms = [t for t in re.findall(r"[A-Za-z0-9]{2,}", q)][:8]
         if _terms:
             _match = " ".join(t + "*" for t in _terms)
-            _xw.append("id IN (SELECT l2.id FROM listings l2 JOIN listings_fts f ON f.rowid = l2.rowid WHERE listings_fts MATCH ?)")
+            # LANG-LAYER-1 (RUL-162): an advert written in isiZulu is found by an English search --
+            # every non-English advert carries an English search layer (listings.search_en).
+            _en_like = " AND ".join(["LOWER(COALESCE(l3.search_en,'')) LIKE ?"] * len(_terms))
+            _xw.append("(id IN (SELECT l2.id FROM listings l2 JOIN listings_fts f ON f.rowid = l2.rowid WHERE listings_fts MATCH ?)"
+                       " OR id IN (SELECT l3.id FROM listings l3 WHERE l3.search_en IS NOT NULL AND " + _en_like + "))")
             _xp.append(_match)
+            _xp.extend("%" + t.lower() + "%" for t in _terms)
     if price_min is not None:
         _xw.append("price_num >= ?"); _xp.append(price_min)
     if price_max is not None:
@@ -3282,6 +3306,11 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
         if (_d.get("category") or "").lower() == "property":
             _d["availability_label"] = _rental_availability(_d.get("rental_status"), _d.get("available_from"))
         _scrub_vehicle_specs(_d)   # CARS-SPEC-1 D1: unconfirmed vehicle specs never public
+        # LANG-LAYER-1: the public list carries a second language only once she has approved it;
+        # the back-translation and the English search layer are working data, never shown.
+        _d.pop("extra_back", None); _d.pop("search_en", None)
+        if _d.get("extra_status") != "approved":
+            _d.pop("title_extra", None); _d.pop("desc_extra", None)
         # SELLER-ANON-1 (8 Aug 2026): strip seller identity LAST, after the founders
         # lookup above has used seller_email. /listings was the only public endpoint
         # still shipping it — the same _strip_seller_identity() has guarded the
@@ -3547,6 +3576,14 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
          listing.drivetrain, listing.colour, listing.vehicle_specs, listing.spec_confirmed)
     )
     new_id = cursor.lastrowid
+    # LANG-LAYER-1 (RUL-162): record the advert's original language when the composer knows it
+    # (the Quick door does -- she chose it). Only a language we serve is stored; anything else is dropped.
+    try:
+        _lo = (listing.lang_orig or "").strip().lower()
+        if _lo and _lo in I18N_LANGS:
+            conn.execute("UPDATE listings SET lang_orig=? WHERE id=?", (_lo, new_id))
+    except Exception as _le:
+        _log.warning("LANG-LAYER-1 lang_orig not stored for %s: %s", new_id, _le)
     _stamp_quality_score(conn, new_id)   # ZOOM-HMI-1: the stored quality the ranking reads
     conn.commit()
     conn.close()
@@ -4235,6 +4272,19 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
     if not existing:
         conn.close()
         raise HTTPException(status_code=404, detail="Listing not found")
+
+    # LANG-LAYER-1 (RUL-162): if she edits the ORIGINAL words, an approved second language no
+    # longer says what the advert says -- it drops back to draft and asks her again. Never silently
+    # republished, never left drifting.
+    try:
+        _ex_l = dict(existing)
+        if _ex_l.get("extra_status") == "approved" and (
+                (update.title is not None and update.title != _ex_l.get("title")) or
+                (update.description is not None and update.description != _ex_l.get("description"))):
+            conn.execute("UPDATE listings SET extra_status='draft' WHERE id=?", (listing_id,))
+            conn.commit()
+    except Exception as _le:
+        _log.warning("LANG-LAYER-1 extra-reset skipped for %s: %s", listing_id, _le)
 
     if update.price is not None:   # JNR-FIX-5B: same basis guard on edits
         try:
@@ -18695,6 +18745,7 @@ class _FlagsUpdate(BaseModel):
     account_binding:       Optional[bool] = None  # ACCOUNT-BIND-1: charges bound to the proven session
     photo_replace_request: Optional[bool] = None  # PHOTO-REPLACE-1: ask for a new photo rather than blur it into ruin (TS-0022)
     baseline_q4:           Optional[bool] = None  # BASELINE-Q4-1: the RUL-126 batch, armed by David only
+    lang_layer:            Optional[bool] = None  # LANG-LAYER-1: the language layer for everybody (testers always see it)
 
 def _flags_payload(d):
     def b(k): return bool(d.get(k, 0))
@@ -18724,6 +18775,7 @@ def _flags_payload(d):
             "expedition_verified": live and b("verified_tier") and b("p_expedition"),
             "weekend_verified":    live and b("verified_tier") and b("p_weekend"),
             "baseline_q4":         b("baseline_q4"),   # BASELINE-Q4-1: the FEA reads it from here
+            "lang_layer":          b("lang_layer"),    # LANG-LAYER-1: public switch; get_flags ORs in testers
         },
         "bit_flags": {
             "ai_example_enabled":    bool(d.get("ai_example_enabled", 1)),
@@ -18787,14 +18839,39 @@ def _ts_funnel_snapshot():
         return None
 
 @app.get("/flags")
-def get_flags():
-    """Public — buyer app + dashboard read launch-switch state. Safe default = launch/free-only."""
+def get_flags(ts_review: str = Cookie(default=None)):
+    """Public — buyer app + dashboard read launch-switch state. Safe default = launch/free-only.
+    LANG-LAYER-1: a reader holding a valid tester cookie sees the language layer before the public."""
     conn = database.get_db()
     try:
         row = conn.execute("SELECT * FROM launch_switches WHERE id = 1").fetchone()
     finally:
         conn.close()
-    return _flags_payload(dict(row) if row else {})
+    out = _flags_payload(dict(row) if row else {})
+    try:
+        if not out["effective"].get("lang_layer") and _is_tester_cookie(ts_review):
+            out["effective"]["lang_layer"] = True
+            out["effective"]["lang_layer_tester"] = True
+    except Exception:
+        pass
+    return out
+
+
+def _is_tester_cookie(tok) -> bool:
+    """LANG-LAYER-1: True when the request carries a valid review-scope token -- the same
+    credential the tester gate has always issued (reviewer code, emailed gate link, admin sign-in).
+    Fails closed: any doubt reads as 'not a tester', which leaves the public app unchanged."""
+    if not tok:
+        return False
+    try:
+        payload = _pyjwt.decode(tok, _REVIEW_SECRET, algorithms=[_JWT_ALGO])
+        return payload.get("scope") == "review"
+    except Exception:
+        return False
+
+
+def _lang_layer_on(ts_review=None) -> bool:
+    return _bit_flag("lang_layer", False) or _is_tester_cookie(ts_review)
 
 @app.post("/admin/flags")
 def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
@@ -25031,7 +25108,17 @@ def squire_brief_create(body: _SquireBriefIn, ts_user: str = Cookie(default=None
 # its own checked translation), anything the page marks data-notranslate, and strings
 # with no letters (prices, dates, scores travel as they are).
 # ---------------------------------------------------------------------------
-I18N_LANGS = {"zu": "isiZulu", "st": "Sesotho (Southern Sotho)", "af": "Afrikaans", "xh": "isiXhosa"}
+I18N_LANGS = {"zu": "isiZulu", "st": "Sesotho (Southern Sotho)", "af": "Afrikaans", "xh": "isiXhosa",
+              # LANG-LAYER-1 (RUL-162, David 23 Sep 2026): Sepedi takes Sesotho's place in South Africa
+              # (census 2022); "st" stays ACCEPTED so a reader who picked it before still gets an answer,
+              # but no screen offers it any more. The rest are the nine-country lists David approved --
+              # only the 'offered' ones in roles/lang_countries.json; 'reader' languages are not here.
+              "nso": "Sepedi (Sesotho sa Leboa / Northern Sotho)", "ng": "Oshiwambo (Oshindonga)",
+              "tn": "Setswana", "pt": "Portuguese (as written in Mozambique)", "sw": "Kiswahili",
+              "de": "German", "tr": "Turkish", "ru": "Russian", "ar": "Arabic", "cy": "Welsh",
+              "pl": "Polish", "ro": "Romanian", "pa": "Punjabi (Gurmukhi script)", "es": "Spanish",
+              "zh": "Simplified Chinese (Mandarin)", "tl": "Tagalog", "vi": "Vietnamese",
+              "yue": "Cantonese (Traditional Chinese characters)", "en": "English"}
 I18N_MAX_STRINGS = 60          # per request
 I18N_MAX_CHARS = 240           # per string
 I18N_DAILY_CALL_CAP = 400      # AI calls per day across all readers -- a hard ceiling on spend
@@ -25056,6 +25143,10 @@ I18N_HOUSE = {
     "zu": "Write everyday isiZulu as it is spoken in South Africa, not a word-for-word rendering.",
     "st": "Write everyday Sesotho (Southern Sotho) as it is spoken in South Africa.",
     "xh": "Write everyday isiXhosa as it is spoken in South Africa.",
+    "nso": ("Write everyday SEPEDI (Sesotho sa Leboa, Northern Sotho) as spoken in Limpopo and Gauteng. "
+            "Sepedi is NOT Southern Sotho: use Sepedi spelling and words ('go' not 'ho', 'ke a leboga' "
+            "not 'ke a leboha', the letter š where Sepedi writes it)."),
+    "en": "Write plain, everyday English that a South African would use.",
 }
 
 # What the app's own words MEAN, so a label is never guessed from the word alone. The first live
@@ -25208,6 +25299,173 @@ def i18n_translate(body: _I18nIn):
             conn.close()
         out.update(fresh)
     return {"lang": lang, "out": out, "from_cache": cached, "translated": len(fresh)}
+
+# ===========================================================================
+# LANG-LAYER-1 — THE ADVERT SPEAKS THE LISTER'S LANGUAGE  (RUL-162, David 23 Sep 2026)
+#   1. she writes in her own language; the advert stores it as its ORIGINAL (lang_orig)
+#   2. she picks ONE extra language, only from her country's approved list
+#   3. the app drafts it AND translates that draft back into her own language, so she
+#      approves what it really says
+#   4. the original is live at once; the extra waits for her tap (extra_status)
+#   5. every non-English advert carries an English search layer (search_en)
+#   6. a buyer sees his language if an approved version exists, else the original + code chip
+# Dark for the public until launch_switches.lang_layer = 1; testers (ts_review) see it now.
+# ---------------------------------------------------------------------------
+_LANG_COUNTRIES_CACHE = {"d": None}
+
+
+def _lang_countries():
+    if _LANG_COUNTRIES_CACHE["d"] is None:
+        try:
+            _p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "roles", "lang_countries.json")
+            with open(_p, encoding="utf-8") as _f:
+                _LANG_COUNTRIES_CACHE["d"] = json.load(_f)
+        except Exception as exc:
+            _log.warning("lang_countries.json unreadable: %s", exc)
+            _LANG_COUNTRIES_CACHE["d"] = {"names": {}, "countries": {}}
+    return _LANG_COUNTRIES_CACHE["d"]
+
+
+def _lang_offered(country: str):
+    c = (_lang_countries().get("countries") or {}).get((country or "ZA").upper()) or \
+        (_lang_countries().get("countries") or {}).get("ZA") or {}
+    return [code for code, st in (c.get("langs") or []) if st == "offered"]
+
+
+@app.get("/lang/countries")
+def lang_countries(ts_review: str = Cookie(default=None)):
+    """The approved language list per country (RUL-162) and whether the layer is on for THIS reader."""
+    d = _lang_countries()
+    return {"on": _lang_layer_on(ts_review), "names": d.get("names") or {}, "countries": d.get("countries") or {}}
+
+
+def _lang_ai(prompt: str, max_tokens: int = 1200) -> str:
+    import ai_provider
+    res = ai_provider.complete([{"role": "user", "content": prompt}], task=I18N_TASK,
+                               max_tokens=max_tokens, timeout=45)
+    if not (res.ok and res.text):
+        raise HTTPException(status_code=503, detail="Translation is busy right now -- please try again in a minute.")
+    return res.text.strip()
+
+
+def _lang_translate_advert(title: str, desc: str, src: str, dst: str):
+    """One call per direction. Returns (title, description) in dst. The advert is the seller's own
+    words: keep her meaning, her prices, her place names and her numbers exactly."""
+    src_n = I18N_LANGS.get(src, "English") if src != "en" else "English"
+    dst_n = I18N_LANGS.get(dst, "English") if dst != "en" else "English"
+    prompt = (
+        "Translate this TrustSquare marketplace advert from %s into %s. It was written by the seller "
+        "herself. Keep her meaning exactly; do not add, praise or soften anything. Keep every price, "
+        "currency, number, date, place name, person name and brand name exactly as written.\n%s\n%s\n\n"
+        "Reply in exactly this form and nothing else:\nTITLE: <the title>\nTEXT: <the description>\n\n"
+        "TITLE: %s\nTEXT: %s" % (src_n, dst_n, I18N_HOUSE.get(dst, ""), I18N_GLOSS.get(dst, ""),
+                                 (title or "").strip(), (desc or "").strip()))
+    out = _lang_ai(prompt, max_tokens=1600)
+    m_t = re.search(r"TITLE:\s*(.+)", out)
+    m_d = re.search(r"TEXT:\s*([\s\S]+)", out)
+    t = (m_t.group(1).strip() if m_t else "").splitlines()[0] if m_t else ""
+    d = m_d.group(1).strip() if m_d else ""
+    if not t:
+        raise HTTPException(status_code=502, detail="The translation came back empty -- please try again.")
+    return t[:200], d[:4000]
+
+
+class _LangDraftIn(BaseModel):
+    email: str = ""
+    lang_orig: str = ""
+    lang_extra: str = ""
+    country: str = "ZA"
+
+
+def _lang_owner_row(conn, listing_id, ts_user, email, ctx, admin_key=None):
+    em = _actor(ts_user, email, ctx, admin_key)
+    row = conn.execute("SELECT * FROM listings WHERE id=?", (listing_id,)).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if (row["seller_email"] or "").strip().lower() != (em or "").strip().lower():
+        raise HTTPException(status_code=403, detail="Only the seller can change this advert's languages.")
+    return dict(row)
+
+
+@app.post("/listings/{listing_id}/lang/draft")
+def listing_lang_draft(listing_id: int, body: _LangDraftIn, ts_user: str = Cookie(default=None),
+                       ts_review: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """Steps 1-3 and 5: record the original language, draft the extra one, translate it back
+    into her own language for her to check, and (re)build the English search layer."""
+    if not _lang_layer_on(ts_review) and not (x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY):
+        raise HTTPException(status_code=404, detail="Not available yet.")
+    src = (body.lang_orig or "en").strip().lower()
+    dst = (body.lang_extra or "").strip().lower()
+    offered = _lang_offered(body.country)
+    if src not in I18N_LANGS:
+        raise HTTPException(status_code=400, detail="Unknown language for the original.")
+    if dst and (dst not in offered or dst == src):
+        raise HTTPException(status_code=400, detail="Pick a second language from your country's list, different from the original.")
+    conn = database.get_db()
+    try:
+        row = _lang_owner_row(conn, listing_id, ts_user, body.email, "lang-draft", x_admin_key)
+    finally:
+        conn.close()
+    title, desc = row.get("title") or "", row.get("description") or ""
+    t_x = d_x = back = None
+    if dst:
+        t_x, d_x = _lang_translate_advert(title, desc, src, dst)
+        b_t, b_d = _lang_translate_advert(t_x, d_x, dst, src)
+        back = b_t + "\n\n" + b_d
+    search_en = None
+    if src != "en":
+        if dst == "en":
+            search_en = (t_x or "") + " " + (d_x or "")
+        else:
+            e_t, e_d = _lang_translate_advert(title, desc, src, "en")
+            search_en = e_t + " " + e_d
+    conn = database.get_db()
+    try:
+        conn.execute("PRAGMA busy_timeout=4000")
+        conn.execute("UPDATE listings SET lang_orig=?, lang_extra=?, title_extra=?, desc_extra=?, extra_back=?, "
+                     "extra_status=?, search_en=? WHERE id=?",
+                     (src, dst or None, t_x, d_x, back, "draft" if dst else None,
+                      (search_en or "")[:6000] or None, listing_id))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"listing_id": listing_id, "lang_orig": src, "lang_extra": dst or None, "title_extra": t_x,
+            "desc_extra": d_x, "extra_back": back, "extra_status": "draft" if dst else None,
+            "search_en": bool(search_en)}
+
+
+@app.post("/listings/{listing_id}/lang/approve")
+def listing_lang_approve(listing_id: int, body: _LangDraftIn, ts_user: str = Cookie(default=None),
+                         ts_review: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """Step 4: nothing in the second language goes live until she taps this."""
+    if not _lang_layer_on(ts_review) and not (x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY):
+        raise HTTPException(status_code=404, detail="Not available yet.")
+    conn = database.get_db()
+    try:
+        row = _lang_owner_row(conn, listing_id, ts_user, body.email, "lang-approve", x_admin_key)
+        if not row.get("lang_extra") or not row.get("title_extra"):
+            raise HTTPException(status_code=409, detail="There is no second-language draft to approve.")
+        conn.execute("UPDATE listings SET extra_status='approved' WHERE id=?", (listing_id,))
+        conn.commit()
+        return {"listing_id": listing_id, "extra_status": "approved", "lang_extra": row.get("lang_extra")}
+    finally:
+        conn.close()
+
+
+@app.post("/listings/{listing_id}/lang/remove")
+def listing_lang_remove(listing_id: int, body: _LangDraftIn, ts_user: str = Cookie(default=None),
+                        ts_review: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """She can take the second language away again at any time; the original is untouched."""
+    conn = database.get_db()
+    try:
+        _lang_owner_row(conn, listing_id, ts_user, body.email, "lang-remove", x_admin_key)
+        conn.execute("UPDATE listings SET lang_extra=NULL, title_extra=NULL, desc_extra=NULL, extra_back=NULL, "
+                     "extra_status=NULL WHERE id=?", (listing_id,))
+        conn.commit()
+        return {"listing_id": listing_id, "extra_status": None}
+    finally:
+        conn.close()
+
 
 def _squire_guess_category(need: str) -> str:
     t = (need or "").lower()

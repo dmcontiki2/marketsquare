@@ -33,6 +33,14 @@ roles/quick_i18n.json      | roles/quick_i18n.json
 # I18N-AF-1 (20 Sep 2026, David read the live Afrikaans): the hand-written Afrikaans for the
 # main app, read by migration 045. Text, so it rides this lane and not the media lane.
 roles/app_i18n_af.json     | roles/app_i18n_af.json
+# LANG-LAYER-1 (RUL-162, 23 Sep 2026): the other three South African launch languages, hand-drafted
+# (read by migration 048), and the approved language list per country (read by /lang/countries).
+roles/app_i18n_zu.json     | roles/app_i18n_zu.json
+roles/app_i18n_xh.json     | roles/app_i18n_xh.json
+roles/app_i18n_nso.json    | roles/app_i18n_nso.json
+roles/lang_countries.json  | roles/lang_countries.json
+# QUICK-NEXT-1 (23 Sep 2026): the reworked Quick app, previewed at /quick_next.html before it replaces /quick/.
+quick_next.html            | quick_next.html
 static/brand/quick.webmanifest | static/brand/quick.webmanifest
 ts_report.js               | static/ts_report.js
 # DEMO-BANNER-1 (22 Aug 2026): the red DEMO tab on the demo maps. Ungated -- unlike

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <title>Quick — TrustSquare</title>
+<meta name="robots" content="noindex, nofollow">
 <!-- QUICK-TILE-1 (14 Sep 2026, David): the SAME registered TrustSquare mark, only the
      green re-hued to violet #7C3AED - a colour no category tile uses, so the Quick tile
      is unmistakable beside the TrustSquare one and the mark itself is untouched.
@@ -1213,7 +1214,7 @@ function drawDraft(){
     handOver(function(res){
       var box=$('hres'); box.style.display='block';
       if(res.err){
-        btn.textContent='Publish it'; btn.disabled=false;
+        btn.textContent='Save my advert'; btn.disabled=false;
         box.style.borderColor='#e06a5a';
         box.textContent='Not handed over: '+res.err;
         $('pubhint').textContent='Nothing was sent.';
@@ -2283,7 +2284,7 @@ document.addEventListener('click', function(){ if(document.getElementById('qlm')
    most prevailing languages" - so four chips (RUL-149) and a "More" chip that opens the rest of the
    twelve only if she needs them. Placed under her advert, pre-ticked with her door language.
    This records what she can WORK in; the globe pill is what changes what the SCREEN shows. */
-var SVC_SPEAKS_MAIN=['English','isiZulu','Sesotho','Afrikaans'];
+var SVC_SPEAKS_MAIN=['English','isiZulu','Sesotho','Afrikaans'];   /* QUICK-NEXT-1 reassigns below (RUL-162) */
 var SVC_SPEAKS_MORE=['isiXhosa','Setswana','Sepedi','Xitsonga','siSwati','Tshivenda','isiNdebele','SASL'];
 var _svcFinish0=svcFinish;
 svcFinish=function(){
@@ -2318,7 +2319,7 @@ svcFinish=function(){
 function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" */
   var box=$('svcsp'); if(!box) return;
   var has=function(l){ return picks.some(function(p){ return p.key==='speaks' && p.label===l; }); };
-  var all=['English','isiZulu','Sesotho','Afrikaans'].concat(SVC_SPEAKS_MORE);
+  var all=SVC_SPEAKS_MAIN.concat(SVC_SPEAKS_MORE);
   box.querySelector('.chips').innerHTML=all.map(function(l){
     return '<button class="chip'+(has(l)?' on':'')+'" data-sp="'+l+'">'+l+'</button>'; }).join('');
   var bs=box.querySelectorAll('[data-sp]');
@@ -2328,6 +2329,290 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     if(at>=0){ picks.splice(at,1); this.className='chip'; } else { picks.push({label:l, photo:null, key:'speaks'}); this.className='chip on'; }
   };
 }
+
+/* ===========================================================================
+   QUICK-NEXT-1 — THE REWORKED QUICK APP  (David, 23 Sep 2026: "it is not yet where I want it
+   to be ... easy / quick / fluid, but stunning")
+   Built on the live engine, not a fork of it: every change below wraps a function the engine
+   already calls, so the tap flow, the hand-over and the scores are the same code as /quick/.
+   Previewed at /quick_next.html; it replaces /quick/ when David has seen it.
+   What changed, each tied to the 23 Sep audit (genie/QUICK_NEXT_REVIEW.html):
+     · language is on the FIRST screen, as big code buttons, and in the top bar on every screen
+       (never over the tiles); South Africa's five: English, isiZulu, isiXhosa, Afrikaans, Sepedi
+     · "Where can you work?" is places, not rooms -- chips with a pin, no house interiors
+     · the days screen keeps Next right under the week; "Every day" moves straight on
+     · trades name their amount after the basis ("R450 / hour"), so no advert is left "POA"
+     · the draft leads with the advert and ONE strength ring; the score detail and the
+       what-happens-next cards fold away instead of stacking up
+     · the button says what it does -- it SAVES the advert, and the emailed / WhatsApp link opens
+       it in the app with Publish in reach
+     · button text picks the readable colour for every category's colour
+     · the next step's pictures are fetched while she reads the current one
+   ------------------------------------------------------------------------- */
+(function(){
+  /* ---- language: five SA languages, codes, first screen + top bar ---- */
+  QLANGS=[['en','English'],['zu','isiZulu'],['xh','isiXhosa'],['af','Afrikaans'],['nso','Sepedi']];
+  var ok=QLANGS.map(function(x){ return x[0]; });
+  var m=/[?&]lang=([a-z]{2,3})\b/.exec(location.search||'');
+  if(m && ok.indexOf(m[1])>=0) QLANG=m[1];
+  else {
+    var saved=null; try{ saved=localStorage.getItem('ts_qlang'); }catch(e){}
+    if(saved==='st') QLANG='nso';                 /* RUL-162: Sepedi took Sesotho's place */
+    else if(ok.indexOf(QLANG)<0) QLANG='en';
+    if(!saved){
+      var L=navigator.languages||[navigator.language||'en'];
+      for(var i=0;i<L.length;i++){ var c=String(L[i]).toLowerCase().split('-')[0]; if(ok.indexOf(c)>=0){ QLANG=c; break; } }
+    }
+  }
+  document.documentElement.lang=QLANG;
+  SVC_SPEAKS_MAIN=['English','isiZulu','isiXhosa','Afrikaans','Sepedi'];
+  SVC_SPEAKS_MORE=['Sesotho','Setswana','Xitsonga','siSwati','Tshivenda','isiNdebele','SASL'];
+
+  var st=document.createElement('style');
+  st.textContent=[
+   '#qlang{display:none!important}',
+   '.qlb{flex:0 0 auto;height:40px;min-width:58px;padding:0 12px;border-radius:999px;border:1px solid var(--line);',
+   ' background:var(--panel);color:var(--bright);font:800 13px system-ui,sans-serif;display:flex;align-items:center;',
+   ' justify-content:center;gap:6px;cursor:pointer;position:relative;letter-spacing:.04em}',
+   '.qlb svg{width:15px;height:15px}',
+   '.qlm{position:absolute;top:46px;right:0;z-index:80;background:#101512;border:1px solid rgba(255,255,255,.18);',
+   ' border-radius:14px;padding:6px;min-width:190px;box-shadow:0 14px 36px rgba(0,0,0,.55);text-align:left}',
+   '.qlm b{display:flex;gap:10px;align-items:center;padding:11px 12px;border-radius:10px;color:#eee;font:600 15px system-ui,sans-serif;cursor:pointer}',
+   '.qlm b em{font-style:normal;font-weight:800;min-width:34px;opacity:.7;font-size:12px}',
+   '.qlm b.on{background:var(--c);color:var(--onc,#fff)}',
+   '.qlm i{display:block;padding:8px 12px 6px;color:#9fb3aa;font:400 12px/1.4 system-ui,sans-serif}',
+   '.promise{text-align:center;margin:0 0 20px;padding:0 8px}',
+   '.promise b{display:block;font-size:25px;font-weight:800;letter-spacing:-.4px;line-height:1.15}',
+   '.promise span{display:block;margin-top:6px;font-size:15px;color:var(--dim)}',
+   '.langrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:22px;max-width:360px}',
+   '.langrow b{min-width:54px;height:44px;padding:0 10px;border-radius:12px;border:1.5px solid var(--line);',
+   ' background:var(--panel);color:var(--bright);display:flex;align-items:center;justify-content:center;',
+   ' font:800 14px system-ui,sans-serif;letter-spacing:.05em;cursor:pointer}',
+   '.langrow b.on{background:var(--c);border-color:var(--c);color:var(--onc,#fff)}',
+   '.langhint{font-size:12.5px;color:var(--dim);text-align:center;margin-top:8px}',
+   '.btn.solid,.wd.on b,.wkall.on,.chip.on,.todo div .plus{color:var(--onc,#04140e)!important}',
+   '.wd.on i{color:var(--onc,#04140e)!important;opacity:.85}',
+   '[data-step=where] .chip:not(.free):before{content:"\\1F4CD";margin-right:6px}',
+   '[data-step=where] .chips{justify-content:flex-start}',
+   '.wd i{font-size:11px}.wkline{font-size:14px}.hint{font-size:13px}.card p{font-size:14.5px}',
+   '.buzzcard p{font-size:14px}.trail span{font-size:12.5px}.tile b{font-size:15px}',
+   '.body.mid{justify-content:flex-start;padding-top:6px}',
+   '.wkgo{margin-top:16px;width:100%}',
+   '.ring{display:flex;gap:14px;align-items:center;margin-top:14px;padding:14px;border-radius:18px;',
+   ' background:rgba(255,255,255,.05);border:1px solid var(--line)}',
+   '.ring svg{flex:0 0 auto;width:64px;height:64px}',
+   '.ring b{display:block;font-size:17px;line-height:1.25}',
+   '.ring span{display:block;font-size:14px;color:var(--dim);margin-top:3px;line-height:1.4}',
+   '.ring span i{font-style:normal;color:var(--c);font-weight:800}',
+   'details.fold{margin-top:12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03)}',
+   'details.fold>summary{list-style:none;cursor:pointer;padding:14px;font-size:14.5px;font-weight:700;color:var(--bright);',
+   ' display:flex;justify-content:space-between;align-items:center}',
+   'details.fold>summary::-webkit-details-marker{display:none}',
+   'details.fold>summary:after{content:"+";font-size:20px;color:var(--c)}',
+   'details.fold[open]>summary:after{content:"\\2212"}',
+   'details.fold>div{padding:0 12px 12px}'
+  ].join('');
+  document.head.appendChild(st);
+
+  /* the top-bar language button -- replaces the floating pill that covered the tiles */
+  qPill=function(){
+    var bar=document.querySelector('.bar'); if(!bar) return;
+    var b=document.getElementById('qlb');
+    if(!b){ b=document.createElement('div'); b.id='qlb'; b.className='qlb'; b.setAttribute('aria-label','Language');
+            bar.insertBefore(b, document.getElementById('home')); }
+    b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/>'
+      +'<path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>'+QLANG.toUpperCase();
+    b.onclick=function(e){
+      e.stopPropagation();
+      var mm=document.getElementById('qlm'); if(mm){ mm.parentNode.removeChild(mm); return; }
+      b.insertAdjacentHTML('beforeend','<div class="qlm" id="qlm">'+QLANGS.map(function(x){
+        return '<b data-l="'+x[0]+'" class="'+(x[0]===QLANG?'on':'')+'"><em>'+x[0].toUpperCase()+'</em>'+x[1]+'</b>'; }).join('')
+        +'<i>Draft translations, being checked by readers. Tap any time to switch back.</i></div>');
+      var bs=b.querySelectorAll('[data-l]');
+      for(var i=0;i<bs.length;i++) bs[i].onclick=function(ev){ ev.stopPropagation(); qNextSetLang(this.getAttribute('data-l')); };
+    };
+  };
+  document.addEventListener('click', function(){ var mm=document.getElementById('qlm'); if(mm) mm.parentNode.removeChild(mm); });
+  window.qNextSetLang=function(l){
+    qSetLang(l);
+    if(!mode) drawDoor();                                   /* the door's own buttons repaint */
+  };
+
+  /* readable text on every category colour: whichever of white / near-black contrasts more */
+  function lum(hex){
+    var h=String(hex||'').replace('#',''); if(h.length===3) h=h.replace(/./g,'$&$&');
+    var v=[0,2,4].map(function(i){ var c=parseInt(h.substr(i,2),16)/255; return c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4); });
+    return 0.2126*v[0]+0.7152*v[1]+0.0722*v[2];
+  }
+  var _pt0=paintTheme;
+  paintTheme=function(){
+    _pt0();
+    try{ var L=lum(cat().c), cw=(1.05)/(L+0.05), cd=(L+0.05)/(lum('#04140e')+0.05);
+         document.documentElement.style.setProperty('--onc', cw>=cd ? '#ffffff' : '#04140e'); }catch(e){}
+  };
+
+  /* the door: a promise at the top, the five languages under the buttons */
+  var _dd0=drawDoor;
+  drawDoor=function(){
+    _dd0();
+    var sc=$('screen'); if(!sc) return;
+    var sw=$('dsw'); if(sw) sw.parentNode.removeChild(sw);   /* never a demo switch in the preview */
+    sc.insertAdjacentHTML('afterbegin','<div class="promise"><b>'+(svcIs(cat())?'Get seen for work — in a minute':'Put it on TrustSquare — in a minute')+'</b>'
+      +'<span>A few taps, no typing. Your advert, your language.</span></div>');
+    sc.insertAdjacentHTML('beforeend','<div class="langrow">'+QLANGS.map(function(x){
+        return '<b data-ql="'+x[0]+'" class="'+(x[0]===QLANG?'on':'')+'" title="'+x[1]+'">'+x[0].toUpperCase()+'</b>'; }).join('')
+      +'</div><div class="langhint">'+(QLANGS.filter(function(x){ return x[0]===QLANG; })[0]||QLANGS[0])[1]+'</div>');
+    var bs=sc.querySelectorAll('[data-ql]');
+    for(var i=0;i<bs.length;i++) bs[i].onclick=function(){ qNextSetLang(this.getAttribute('data-ql')); };
+    qPill(); qTranslate(document.getElementById('app'));
+  };
+
+  /* "where" is a place, not a room: chips with a pin (CSS), and no room photo rides along */
+  var _fl0=flow;
+  flow=function(){
+    var f=_fl0(); if(!f || !f.steps) return f;
+    var steps=f.steps.map(function(x){
+      if(!x || x.key!=='where' || x.kind==='chip') return x;
+      return {q:x.q, key:x.key, kind:'chip', free:x.free, freeHint:x.freeHint,
+              tiles:x.tiles.map(function(t){ return {t:t.t, wide:false}; })};
+    });
+    /* trades: after HOW she charges, ask HOW MUCH -- unless she quotes first */
+    var how=pickOf('how');
+    var last=steps[steps.length-1];
+    if(svcIs(cat()) && mode==='sell' && last && last.key==='how' && !(how && /quote/i.test(how.label))){
+      var basis=how ? how.label : 'Per call-out';
+      var Q={'Per hour':['What do you charge an hour?',['R150','R200','R250','R300','R400']],
+             'Per job':['From what price, per job?',['R300','R500','R800','R1 200','R2 000']],
+             'Per call-out':['What is your call-out fee?',['R350','R450','R550','R650','R800']]}[basis]
+             || ['What do you charge?',['R200','R350','R500','R800']];
+      steps.push({q:Q[0], key:'price', kind:'chip', free:true, tiles:Q[1].map(function(v){ return {t:v}; })});
+    }
+    return {steps:steps};
+  };
+  var _pwb0=priceWithBasis;
+  priceWithBasis=function(key, label){
+    var how=pickOf('how');
+    if(how && /\d/.test(String(label||'')) && !/\/|\bper\b/i.test(String(label||''))){
+      var u={'Per hour':' / hour','Per job':' / job','Per call-out':' / call-out'}[how.label];
+      if(u) return String(label).trim()+u;
+    }
+    return _pwb0(key, label);
+  };
+
+  /* every step: tell CSS which step it is, fetch the NEXT step's pictures now */
+  var _ds0=drawStep;
+  drawStep=function(){
+    _ds0();
+    try{
+      var f=flow(), s=f.steps[step]; if(s) $('screen').setAttribute('data-step', s.key); else $('screen').removeAttribute('data-step');
+      var nx=f.steps[step+1];
+      (nx && nx.tiles || []).forEach(function(t){ if(t.p && PH[t.p]){ var im=new Image(); im.src=PH[t.p]; } });
+    }catch(e){}
+  };
+
+  /* the days: Next sits right under the week; "Every day" moves straight on */
+  var _dw0=drawWeek;
+  drawWeek=function(s, trail){
+    _dw0(s, trail);
+    var go=$('wkgo'), all=$('wkall'), body=$('screen').querySelector('.body');
+    if(go && body){ var ft=go.parentNode; body.appendChild(go); go.className+=' wkgo'; if(ft && ft.className==='foot') ft.parentNode.removeChild(ft); }
+    if(all){ var a0=all.onclick; all.onclick=function(){ a0.call(this);
+      var n=$('wk') ? $('wk').querySelectorAll('.wd.on').length : 0;
+      if(n===7) setTimeout(function(){ if($('wkgo') && !$('wkgo').disabled) $('wkgo').click(); }, 380); }; }
+  };
+
+  /* the draft: the advert first, one strength ring, everything else folded */
+  var _dr0=drawDraft;
+  drawDraft=function(){
+    _dr0();
+    try{
+      var body=$('screen').querySelector('.body'); if(!body) return;
+      var q=lsOf(picks,0), top=q.missing[0], pct=Math.max(0,Math.min(100,Math.round(q.score)));
+      var R=26, C=2*Math.PI*R, dash=(C*pct/100).toFixed(1)+' '+C.toFixed(1);
+      var ring='<div class="ring"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="'+R+'" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="7"/>'
+        +'<circle cx="32" cy="32" r="'+R+'" fill="none" stroke="var(--c)" stroke-width="7" stroke-linecap="round" '
+        +'stroke-dasharray="'+dash+'" transform="rotate(-90 32 32)"/>'
+        +'<text x="32" y="37" text-anchor="middle" font-size="16" font-weight="800" fill="currentColor">'+pct+'</text></svg>'
+        +'<div><b>Your advert is '+pct+'% strong</b>'
+        +(top ? '<span>Best next step: '+top.t+' <i>+'+Math.round(top.pts)+'</i></span>' : '<span>Everything that counts is in.</span>')
+        +'<span>You can add it in the app after you save — nothing is public until you publish.</span></div></div>';
+      var card=body.querySelector('.card');
+      if(card) card.insertAdjacentHTML('afterend', ring);
+      var flag=body.querySelector('.draftflag'); if(flag) flag.innerHTML='<span>&#9998;</span> Your advert — not public yet';
+      var scoreBits=[body.querySelector('.scores'), body.querySelector('.msline'), body.querySelector('.todolab'), $('todo')].filter(Boolean);
+      if(scoreBits.length){
+        var d1=document.createElement('details'); d1.className='fold';
+        d1.innerHTML='<summary>How your advert is scored</summary><div></div>';
+        scoreBits[0].parentNode.insertBefore(d1, scoreBits[0]);
+        scoreBits.forEach(function(n){ d1.lastChild.appendChild(n); });
+      }
+      var cards=body.querySelectorAll('.buzzcard');
+      if(cards.length){
+        var d2=document.createElement('details'); d2.className='fold';
+        d2.innerHTML='<summary>What happens after you save</summary><div></div>';
+        cards[0].parentNode.insertBefore(d2, cards[0]);
+        for(var i=0;i<cards.length;i++) d2.lastChild.appendChild(cards[i]);
+      }
+      var pub=$('pub'); if(pub) pub.textContent='Save my advert';
+      var h=$('pubhint'); if(h) h.textContent='Free. We send you a link — one tap in the app publishes it.';
+    }catch(e){ console.warn('quick-next draft', e); }
+  };
+
+  /* THE ADVERT IS WRITTEN IN HER LANGUAGE (RUL-162: the advert speaks the lister's language).
+     Built only from her answers -- the words she tapped, in the language she chose -- and the
+     hand-over tells the server which language that is (lang_orig), so a buyer sees the code chip
+     and she can add ONE second language, approved by her, in the app. */
+  var AD={
+    en:{at:function(r,p){return r+' in '+p+'.';}, every:'Available every day, Monday to Sunday.', days:'Available: ',
+        speak:'I speak ', rate:'Rate: ', cta:'Send me an introduction request on TrustSquare and I will get back to you.'},
+    zu:{at:function(r,p){return r+' — ngisebenza e-'+p+'.';}, every:'Ngiyatholakala nsuku zonke, kusukela ngoMsombuluko kuya ngeSonto.',
+        days:'Ngiyatholakala: ', speak:'Ngikhuluma ', rate:'Inani: ', cta:'Ngithumelele isicelo sesethulo ku-TrustSquare, ngizokuphendula.'},
+    xh:{at:function(r,p){return r+' — ndisebenza e-'+p+'.';}, every:'Ndiyafumaneka yonke imihla, ukusuka ngoMvulo ukuya ngeCawa.',
+        days:'Ndiyafumaneka: ', speak:'Ndithetha ', rate:'Ixabiso: ', cta:'Ndithumelele isicelo sentshayelelo kwiTrustSquare, ndiza kukuphendula.'},
+    af:{at:function(r,p){return r+' in '+p+'.';}, every:'Elke dag beskikbaar, Maandag tot Sondag.', days:'Beskikbaar: ',
+        speak:'Ek praat ', rate:'Tarief: ', cta:"Stuur vir my 'n voorstellingsversoek op TrustSquare en ek sal jou antwoord."},
+    nso:{at:function(r,p){return r+' — ke šoma kua '+p+'.';}, every:'Ke a hwetšagala matšatši ohle, go tloga Mošupologo go fihla Sontaga.',
+        days:'Ke a hwetšagala: ', speak:'Ke bolela ', rate:'Theko: ', cta:'Nthomelela kgopelo ya tsebišo go TrustSquare, ke tla go araba.'}
+  };
+  function T(x){ return (typeof qTr==='function') ? qTr(String(x||'')) : String(x||''); }
+  function Tlist(x){ return String(x||'').split(', ').map(T).join(', '); }
+  qAdBody=function(c, pk){
+    var A=AD[QLANG]||AD.en;
+    var by=function(k){ for(var i=pk.length-1;i>=0;i--) if(pk[i].key===k) return pk[i]; return null; };
+    var what=by('what'), where=by('where'), days=by('days')||by('when'), price=by('price'), how=by('how');
+    var s=[];
+    if(what) s.push(where ? A.at(T(what.label), where.label) : T(what.label)+'.');
+    else if(pk[0]) s.push(T(pk[0].label)+(pk[1]?' — '+T(pk[1].label):'')+(where?', '+where.label:'')+'.');
+    if(days) s.push(days.label==='Every day' ? A.every : A.days+Tlist(days.label)+'.');
+    var rest=pk.filter(function(p){ return p!==what && p!==where && p!==days && p!==price && (what || (p!==pk[0] && p!==pk[1]))
+                                     && !(price && p===how) && p.key!=='group' && p.key!=='speaks'; })
+               .map(function(p){ return T(p.label); });
+    if(rest.length) s.push(rest.join(', ')+'.');
+    var sp=pk.filter(function(p){ return p.key==='speaks'; }).map(function(p){ return p.label; });
+    if(sp.length) s.push(A.speak+sp.join(', ')+'.');
+    if(price) s.push(A.rate+priceWithBasis(c.key, price.label)+'.');
+    s.push(A.cta);
+    return s.join(' ');
+  };
+  [SV_I,HH_I].forEach(function(i){
+    var c=CATS[i], t0=c.draftTitle;
+    c.draftTitle=function(pk){ var r=svcPickIn(pk,'what'), w=svcPickIn(pk,'where');
+      return (r?T(r.label):T('Services'))+' — '+(w?w.label:LOC.suburb); };
+  });
+  var _hp0=handoverPayload;
+  handoverPayload=function(){ var h=_hp0(); try{ h.body.lang_orig=QLANG; }catch(e){} return h; };
+
+  /* one door: /quick_next.html?c=homehelp (or /q/<category>-style words) opens that category */
+  try{
+    var want=((location.search.match(/[?&]c=([a-z]+)/i)||[])[1]||'').toLowerCase();
+    var ALIAS={housekeeping:'homehelp',home:'homehelp',help:'homehelp',casual:'homehelp',car:'cars',tutor:'tutors',
+               service:'services',trade:'services',collector:'collectors',adventure:'adventures',travel:'adventures',
+               local:'localmarket',market:'localmarket'};
+    want=ALIAS[want]||want;
+    if(want==='homehelp') want='services';     /* RUL-159: Housekeeping is the Services door's Home & care */
+    for(var k=0;k<CATS.length;k++) if(CATS[k].key===want){ ci=k; break; }
+  }catch(e){}
+})();
 
 drawDoor();
 </script>

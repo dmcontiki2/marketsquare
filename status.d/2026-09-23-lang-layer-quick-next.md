@@ -1,0 +1,1 @@
+- 23 Sep 2026: RUL-162 language layer built (tester-only; public switch is David's), isiZulu/isiXhosa/Sepedi hand-drafted dictionaries (migration 048), Quick repair-lane fixes live-bound, reworked Quick app at /quick_next.html for David's review. Ledger RG-0431..0436 OPEN until measured live.

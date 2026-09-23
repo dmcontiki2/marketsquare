@@ -52,6 +52,7 @@ function loadFeatureFlags(){
     fetch(BEA_URL + '/flags').then(function(r){return r.ok ? r.json() : null;}).then(function(f){
       if(f && f.effective){ window.FEATURES = Object.assign(window.FEATURES, f.effective, {_loaded:true, _raw:f});
         try{ document.documentElement.setAttribute('data-verified', window.FEATURES.verified_visible ? '1':'0'); }catch(e){}
+        try{ if(window.FEATURES.lang_layer && typeof window.msLangSync==='function') window.msLangSync(); }catch(e){}
         try{ document.documentElement.setAttribute('data-baseline', msBaselineOn() ? '1':'0'); if(typeof _msBaselineApplied==='function') _msBaselineApplied(); }catch(e){} }
     }).catch(function(e){ console.warn('feature flags load failed (default: free-only)', e); });
   }catch(e){ console.warn('feature flags load error', e); }
@@ -394,6 +395,11 @@ function _msMapBeaListing(l){
         }
         return {
           id: 'bea_' + l.id,
+          /* LANG-LAYER-1 (RUL-162): the language she wrote it in, and the second language only
+             once she approved it -- the server never sends an unapproved one to the public list. */
+          _lo: String(l.lang_orig||'').toLowerCase(),
+          _lx: (l.extra_status==='approved' && l.lang_extra && l.title_extra)
+                 ? {lang:String(l.lang_extra).toLowerCase(), title:l.title_extra, desc:l.desc_extra||''} : null,
           cat: normCat(l.category),
           advType: String(l.category||'').toLowerCase(),   // ADV-FIX-4: raw subtype survives normCat
           country: (l.country||'ZA').toString().toUpperCase(),   // MAP+CURRENCY FIX (25 Jul): country must survive normalization, else detail view treats every adventure as ZA (Dinokeng map + rands)
@@ -888,6 +894,20 @@ async function _msInit(){
   // URL format: trustsquare.co?magic=1&name=...&email=...&cat=...&city=...
   const sp = new URLSearchParams(window.location.search);
   // ── SELF-SERVE SIGN-IN: ?signin=<token> from an emailed magic link ──
+  /* QUICK-DRAFT-LAND-1 (23 Sep 2026, audit F2/F3): the Quick app's emailed link and its WhatsApp
+     note both carry ?draft=<id>, and nothing in the app read it -- a person who had just built an
+     advert landed on the hub's front page and had to find it. Remember it; once signed in, the hub
+     opens with that advert in front of her and its Publish button in reach. */
+  try{ const _dq = parseInt(sp.get('draft')||'',10); if(_dq>0) sessionStorage.setItem('ts_land_draft', String(_dq)); }catch(e){}
+  if(!sp.get('signin') && sp.get('draft')){
+    window.history.replaceState({}, '', window.location.pathname);
+    setTimeout(function(){
+      try{
+        if(localStorage.getItem('ms_aa_email')){ goTo('dashboard'); msLandDraft(); }
+        else { showToast('Sign in with the email your advert is waiting on \u2014 it opens straight after.'); goTo('signin'); }
+      }catch(e){}
+    }, 600);
+  }
   if(sp.get('signin')){
     const _tok = sp.get('signin');
     // AGENCY-LINK-1 (RG-0164, 23 Aug 2026): a console link carries signin+org params together.
@@ -914,6 +934,7 @@ async function _msInit(){
             if(typeof openAgencyConsole==='function'){ openAgencyConsole(); } else { goTo('dashboard'); }
           } else {
             goTo('dashboard');
+            msLandDraft();   // QUICK-DRAFT-LAND-1
           }
           if(typeof updateHeaderAuthBtn==='function') updateHeaderAuthBtn();
           setTimeout(promptAddToHomeScreen, 1200);
@@ -4557,6 +4578,7 @@ function cardHtml(l){
       ${(String(l.id).startsWith('demo_')||String(l.id).startsWith('ph_'))?'<div class="demo-card-badge"></div>':''}
       ${l.feat&&!l.paused?'<div class="feat-badge">Featured</div>':''}
       ${l.paused?'<div class="paused-badge">⏸ Pending</div>':''}
+      ${(msLangOn() && l._lo && l._lo!=='en')?'<div class="ts-lchip" style="position:absolute;bottom:8px;left:8px;margin:0;z-index:5" data-notranslate="1">'+msLangCode(l._lo)+(l._lx?' \u00b7 '+msLangCode(l._lx.lang):'')+'</div>':''}
       ${(typeof _zoomScores!=='undefined' && _zoomScores && _zoomScores.has(l.id))?'<div class="zoom-score" title="Ranking score: half listing quality, half seller trust">'+_zoomScores.get(l.id)+'</div>':''}
       ${rentalCardBadge(l)}
       <div class="model-badge ${m}">${m==='commit'?'⏳ Commit':'👥 Queue'}</div>
@@ -4886,6 +4908,66 @@ function catCfg(l){
   return { icon:'📦', bg:'var(--navy)', model:'queue' };
 }
 
+/* QUICK-DRAFT-LAND-1: bring the waiting advert to the front of the hub -- scroll to it, ring it,
+   and say what the one remaining step is. Tries for ~10 s while the hub loads; silent if absent. */
+function msLandDraft(){
+  var id=0; try{ id=parseInt(sessionStorage.getItem('ts_land_draft')||'',10)||0; }catch(e){}
+  if(!id) return;
+  (function tryIt(n){
+    var btn=null;
+    try{ btn=document.querySelector('[onclick="dashPublish('+id+')"]'); }catch(e){}
+    if(btn){
+      try{ sessionStorage.removeItem('ts_land_draft'); }catch(e){}
+      var card=btn.closest('.mlcard')||btn.parentNode.parentNode;
+      try{ card.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){ card.scrollIntoView(); }
+      card.style.transition='box-shadow .4s'; card.style.boxShadow='0 0 0 3px #7C3AED, 0 10px 30px rgba(124,58,237,.35)';
+      btn.textContent='Publish my advert';
+      if(typeof showToast==='function') showToast('Here is the advert you just made \u2014 tap Publish when it looks right.');
+      return;
+    }
+    if(n>0) setTimeout(function(){ tryIt(n-1); }, 500);
+  })(20);
+}
+
+/* ===========================================================================
+   LANG-LAYER-1 — THE ADVERT SPEAKS THE LISTER'S LANGUAGE  (RUL-162, David 23 Sep 2026)
+   The app speaks the READER's language (the globe, bottom-left). The advert speaks the
+   LISTER's language: published as she wrote it, plus one extra language she chose and
+   approved. A reader sees the approved version in his own language when there is one;
+   otherwise the original, with a code chip saying which language it is in. Codes, never
+   flags -- a flag names a country, and South Africa has twelve official languages.
+   The advert's words are never machine-painted by the globe: they are hers, or approved by her.
+   Dark for the public until /flags says lang_layer; testers see it now.
+   ------------------------------------------------------------------------- */
+function msLangOn(){ try{ return !!(window.FEATURES && window.FEATURES.lang_layer); }catch(e){ return false; } }
+function msLangCode(c){ return String(c||'en').toUpperCase().slice(0,3); }
+var _msLangFlip = {};
+function msLangView(l){
+  var v = {on:false, title:l.title, desc:l.desc, chip:'', flip:''};
+  if(!msLangOn()) return v;
+  v.on = true;
+  var app = (typeof window.msAppLang==='function') ? window.msAppLang() : 'en';
+  var orig = l._lo || 'en', x = l._lx;
+  var showX = !!(x && (x.lang===app) !== !!_msLangFlip[l.id]);
+  var code = showX ? x.lang : orig;
+  if(showX){ v.title = x.title; v.desc = x.desc || l.desc; }
+  v.chip = ' <span class="ts-lchip" title="This advert is in '+msLangCode(code)+'">'+msLangCode(code)+'</span>';
+  if(x) v.flip = '<button class="ts-lflip" onclick="_msLangFlip[\''+l.id+'\']=!_msLangFlip[\''+l.id+'\'];openDetail(\''+l.id+'\')">'
+    + 'Also in ' + msLangCode(showX ? orig : x.lang) + ' \u2014 show it</button>';
+  return v;
+}
+(function(){
+  try{
+    var st=document.createElement('style');
+    st.textContent='.ts-lchip{display:inline-block;vertical-align:middle;margin-left:8px;padding:2px 7px;border-radius:6px;'
+      +'font:800 11px/1.4 system-ui,sans-serif;letter-spacing:.04em;background:#0f8a7e;color:#fff}'
+      +'.ts-lflip{display:inline-block;margin:6px 0 10px;padding:6px 12px;border-radius:999px;border:1.5px solid #0f8a7e;'
+      +'background:transparent;color:#0f8a7e;font:700 12px system-ui,sans-serif;cursor:pointer}'
+      +'.card .ts-lchip{position:absolute;top:8px;left:8px;margin:0;z-index:2}';
+    document.head.appendChild(st);
+  }catch(e){}
+})();
+
 function openDetail(id){
   // DEAD-CLICK GUARD (TS-0002/0003, 5 Aug 2026). Two failures met here:
   //  1. FEA listing ids are 'bea_N' STRINGS; BEA ids are integers. A raw integer from
@@ -4902,6 +4984,8 @@ function openDetail(id){
     return;
   }
   msTrackView(l);
+  const _lv = msLangView(l);   /* LANG-LAYER-1: which words of the advert this reader sees */
+  window._msLastDetail = l.id;
   const active=document.querySelector('.screen.active');
   prevScreen=active?active.id.replace('screen-',''):'browse';
   const t=trustTier(l.trust),m=catCfg(l).model,isCommit=m==='commit';
@@ -4995,7 +5079,7 @@ function openDetail(id){
         ${l.feat?'<span style="font-size:10px;font-weight:700;color:var(--accent);">★ FEATURED</span>':''}${fspark(l)}
       </div>
       ${l.super_example?'<div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.02em;font-family:Syne,sans-serif;margin-bottom:6px;">AI EXAMPLE GENERATED ADVERT — not a real listing; an AI-made example of the benchmark for this category</div>':''}
-      <div class="dtitle">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
+      <div class="dtitle"${_lv.on?' data-notranslate="1"':''}>${_lv.title||(l.cat?l.cat+' listing':'Untitled')}${_lv.chip}</div>${_lv.flip}
       <div class="dmeta"><div class="dmi" onclick="showListingAreaMap('${id}')" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||l.country.toUpperCase()}`:''}${advEnvLabel?' · '+advEnvLabel:''} <span style="color:var(--accent);font-size:11px;font-weight:600;">· View on map</span></div></div>
       <div class="price-block">
         <div>
@@ -5076,7 +5160,7 @@ function openDetail(id){
         ${l.area||l.suburb ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📍 ${l.suburb||l.area}</span>` : ''}
       </div>` : ''}
       ${l.cat==='Cars' ? vehSpecPanel(l) : ''}
-      <div class="dsec"><h3>About this listing</h3>${maskContactInfo(formatDesc(l.desc),_introAccepted)}</div>
+      <div class="dsec"${_lv.on?' data-notranslate="1"':''}><h3>About this listing</h3>${maskContactInfo(formatDesc(_lv.desc),_introAccepted)}</div>
       ${isAdv ? advNearbyStrip(l, id) : ''}
       ${(function(){ if(!(l.super_example && isAdv)) return ''; var _mc=(l.tour&&ADV_TOUR_MAP[l.tour])||ADV_COUNTRY_MAP[(l.country||'ZA').toUpperCase()]; if(!_mc) return ''; var _u='/static/'+_mc.file; var _bs='background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap;'; return '<div class="dsec adv-reserve-map"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px;flex-wrap:wrap;"><h3 style="margin:0;">'+_mc.title+'</h3><div style="display:flex;gap:7px;flex-shrink:0;"><button type="button" data-u="'+_u+'" data-t="'+_mc.title+'" onclick="advMapExpand(this)" style="'+_bs+'">⤢ Expand</button><a href="'+_u+'" target="_blank" rel="noopener" style="'+_bs+'text-decoration:none;display:inline-flex;align-items:center;">Open ↗</a></div></div><div style="font-size:12px;color:var(--text-3);margin:-2px 0 10px;">'+_mc.blurb+'</div><div style="border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border);box-shadow:0 3px 14px rgba(0,0,0,.10);"><iframe src="'+_u+'" title="Interactive tour map" loading="lazy" style="width:100%;height:480px;border:0;display:block;background:#0d1b2e;"></iframe></div></div>'; })()}
       ${(l.super_example && isAdv) ? tripEssentialsPanel(l, id) : ''}
@@ -10248,6 +10332,7 @@ async function openEditListing(beaId) {
 
   // Render form and navigate
   renderEditForm(elCurrentRaw);
+  try{ elLangRender(elCurrentRaw); }catch(e){}   // LANG-LAYER-1: the advert's languages (testers first)
   elRenderPhotos(elCurrentRaw, '');
   window._currentEditBeaId = beaId;
   goTo('edit-listing');
@@ -10258,6 +10343,86 @@ async function openEditListing(beaId) {
   if (sellerEmail) {
     setTimeout(() => elLoadSidebarPanels(sellerEmail, elCurrentCat), 200);
   }
+}
+
+/* LANG-LAYER-1 (RUL-162) — the seller's side of the advert languages, on her edit screen.
+   Original language (defaults to the language her app is in), ONE extra language from her
+   country's approved list, the draft AND its translation back into her own words, and one
+   Approve tap. Nothing in the extra language goes live until she taps Approve; if she edits
+   the original afterwards the server drops the extra back to draft and this panel asks again. */
+async function elLangRender(raw){
+  try{
+    if(!msLangOn() || !raw || !raw.id) return;
+    var host=document.getElementById('el-tsh-section'); if(!host || !host.parentNode) return;
+    var box=document.getElementById('el-lang-section');
+    if(!box){ box=document.createElement('div'); box.id='el-lang-section'; box.style.marginTop='20px';
+              host.parentNode.insertBefore(box, host); }
+    var lc=await fetch('/lang/countries',{credentials:'same-origin'}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});
+    if(!lc || !lc.countries) { box.innerHTML=''; return; }
+    var iso=String(raw.country||((typeof activeCountry!=='undefined'&&activeCountry&&activeCountry.iso2)||'ZA')).toUpperCase();
+    var c=lc.countries[iso]||lc.countries.ZA;
+    var offered=c.langs.filter(function(x){return x[1]==='offered';}).map(function(x){return x[0];});
+    if(offered.indexOf('en')<0) offered.unshift('en');
+    var nm=function(k){ return (lc.names&&lc.names[k])||k; };
+    var app=(typeof window.msAppLang==='function')?window.msAppLang():'en';
+    var orig=String(raw.lang_orig||'').toLowerCase() || (offered.indexOf(app)>=0?app:'en');
+    var extra=String(raw.lang_extra||'').toLowerCase();
+    var st=raw.extra_status||'';
+    var esc=function(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+    var opt=function(sel,skip){ return offered.filter(function(k){return k!==skip;}).map(function(k){
+        return '<option value="'+k+'"'+(k===sel?' selected':'')+'>'+msLangCode(k)+' \u00b7 '+nm(k)+'</option>'; }).join(''); };
+    var draftHtml='';
+    if(extra && raw.title_extra){
+      draftHtml='<div style="margin-top:12px;border-radius:10px;border:1px solid #cfe7e3;background:#f3fbf9;padding:12px">'
+        +'<div style="font-size:12px;font-weight:800;color:#0f8a7e;margin-bottom:6px">'+msLangCode(extra)+' \u2014 how buyers will read it'
+        +(st==='approved'?' <span class="ts-lchip" style="background:#16a34a">Live</span>':' <span class="ts-lchip" style="background:#c77800">Waiting for you</span>')+'</div>'
+        +'<div data-notranslate="1" style="font-weight:700">'+esc(raw.title_extra)+'</div>'
+        +'<div data-notranslate="1" style="font-size:13px;white-space:pre-wrap;margin-top:4px">'+esc(raw.desc_extra)+'</div>'
+        +(raw.extra_back?'<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #b7dcd6;font-size:12px;color:#475569">'
+          +'<b>Check it:</b> this is that text translated back into '+nm(orig)+'. If it says what you meant, approve it.'
+          +'<div data-notranslate="1" style="white-space:pre-wrap;margin-top:4px;color:#0f172a">'+esc(raw.extra_back)+'</div></div>':'')
+        +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'
+        +(st!=='approved'?'<button class="mla-btn" id="el-lang-ok" style="background:#0f8a7e;color:#fff;border-color:#0f8a7e">\u2713 Approve '+msLangCode(extra)+'</button>':'')
+        +'<button class="mla-btn" id="el-lang-redo">Draft it again</button>'
+        +'<button class="mla-btn" id="el-lang-off">Remove '+msLangCode(extra)+'</button></div></div>';
+    }
+    box.innerHTML='<div style="border:1.5px solid var(--border);border-radius:12px;overflow:hidden">'
+      +'<div style="background:var(--surface-2);padding:10px 14px;font-size:13px;font-weight:700">\ud83c\udf10 Advert languages</div>'
+      +'<div style="padding:12px 14px;font-size:13px;line-height:1.5">'
+      +'<label style="display:block;font-weight:700;margin-bottom:4px">You wrote it in</label>'
+      +'<select id="el-lang-orig" style="width:100%;padding:9px;border-radius:8px">'+opt(orig,null)+'</select>'
+      +'<label style="display:block;font-weight:700;margin:12px 0 4px">Also show it in (optional, one language)</label>'
+      +'<select id="el-lang-extra" style="width:100%;padding:9px;border-radius:8px"><option value="">\u2014 No second language \u2014</option>'+opt(extra,orig)+'</select>'
+      +'<div style="font-size:12px;color:var(--text-3);margin-top:6px">Your advert goes live in your own words straight away. A second language only goes live after you approve it.'
+      +(orig!=='en'?' We also add an English search layer, so people searching in English still find you.':'')+'</div>'
+      +'<button class="mla-btn" id="el-lang-go" style="margin-top:10px;background:var(--accent);color:#fff;border-color:var(--accent)">Save languages</button>'
+      +'<div id="el-lang-msg" style="font-size:12px;margin-top:8px"></div>'
+      +draftHtml+'</div></div>';
+    var email=(SELLERS[0]&&SELLERS[0]._email)||localStorage.getItem('ms_aa_email')||'';
+    var post=function(path, extraBody){
+      return fetch(BEA_URL+'/listings/'+raw.id+path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(Object.assign({email:email,country:iso},extraBody||{}))})
+        .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); });
+    };
+    var msg=function(t,bad){ var m=document.getElementById('el-lang-msg'); if(m){ m.textContent=t; m.style.color=bad?'#b3261e':'#0f8a7e'; } };
+    var refresh=async function(){ try{ var fresh=await apiGet('/listings/'+raw.id); if(fresh&&fresh.id){ elCurrentRaw=fresh; elLangRender(fresh);} }catch(e){} };
+    var draft=function(){
+      var o=document.getElementById('el-lang-orig').value, x=document.getElementById('el-lang-extra').value;
+      msg(x?'Translating\u2026 and translating it back so you can check it. This takes a few seconds.':'Saving\u2026');
+      post('/lang/draft',{lang_orig:o, lang_extra:x}).then(function(r){
+        if(!r.ok){ msg((r.j&&r.j.detail)||'Could not do that just now.',true); return; }
+        msg(x?'Done \u2014 read the check below, then approve it.':'Saved.'); refresh();
+      }).catch(function(){ msg('No connection \u2014 nothing changed.',true); });
+    };
+    document.getElementById('el-lang-go').onclick=draft;
+    var b;
+    if((b=document.getElementById('el-lang-redo'))) b.onclick=draft;
+    if((b=document.getElementById('el-lang-ok'))) b.onclick=function(){
+      post('/lang/approve').then(function(r){ if(!r.ok){ msg((r.j&&r.j.detail)||'Could not approve.',true); return; }
+        msg('Approved \u2014 buyers who read '+nm(extra)+' now see this version.'); refresh(); }); };
+    if((b=document.getElementById('el-lang-off'))) b.onclick=function(){
+      post('/lang/remove').then(function(r){ if(r.ok){ msg('Removed. Your original stays exactly as it was.'); refresh(); } }); };
+  }catch(e){ console.warn('elLangRender', e); }
 }
 
 async function elLoadSidebarPanels(email, category) {
@@ -19377,6 +19542,27 @@ async function msUnverifiedGate(sellerEmail, category){
    ------------------------------------------------------------------------- */
 (function(){
   var LANGS=[['en','English'],['zu','isiZulu'],['st','Sesotho'],['af','Afrikaans'],['xh','isiXhosa']];
+  /* LANG-LAYER-1 (RUL-162, 23 Sep 2026): when the layer is on, the menu offers the languages
+     David approved for the reader's COUNTRY (roles/lang_countries.json via /lang/countries) --
+     in South Africa Sepedi instead of Sesotho -- with the code beside each name. Off, the menu
+     is exactly what it was. */
+  var LC=null, LCask=false;
+  function syncLangs(){
+    if(!msLangOn()) return;
+    if(!LC){
+      if(!LCask){ LCask=true;
+        fetch('/lang/countries',{credentials:'same-origin'}).then(function(r){ return r.ok?r.json():null; })
+          .then(function(d){ if(d && d.countries){ LC=d; syncLangs(); pill(); } }).catch(function(){}); }
+      return;
+    }
+    var iso=(typeof activeCountry!=='undefined' && activeCountry && activeCountry.iso2)||'ZA';
+    var c=LC.countries[iso]||LC.countries.ZA; if(!c) return;
+    var list=c.langs.filter(function(x){ return x[1]==='offered'; }).map(function(x){ return [x[0], LC.names[x[0]]||x[0]]; });
+    if(!list.some(function(x){ return x[0]==='en'; })) list.unshift(['en','English']);
+    LANGS=list;
+  }
+  window.msAppLang=function(){ return lang; };
+  window.msLangSync=function(){ syncLangs(); try{ pill(); }catch(e){} };
   /* DICTV (20 Sep 2026, David: "both 'Wereld Erfenis' and 'Uitgelicht' is wrong" -- on a page
      that was ALREADY fixed on the server). Each reader keeps their own copy of the dictionary
      in the browser, and that copy was written before the Afrikaans was re-done by hand, so the
@@ -19473,6 +19659,7 @@ async function msUnverifiedGate(sellerEmail, category){
   }
   function setLang(l){
     lang=l; store(KEY,l); document.documentElement.lang=l; seen={}; pill();
+    try{ if(msLangOn()){ var _ds=document.querySelector('.screen.active'); if(_ds && _ds.id==='screen-detail' && window._msLastDetail) openDetail(window._msLastDetail); } }catch(e){}
     var list=nodes(document.body);
     if(l==='en'){ paint(list); return; }
     loadDict(l); paint(list); ask(list);
@@ -19483,7 +19670,9 @@ async function msUnverifiedGate(sellerEmail, category){
       p=document.createElement('div'); p.id='ts-lang'; p.setAttribute('data-notranslate','1');
       document.body.appendChild(p);
       var st=document.createElement('style');
-      st.textContent='#ts-lang{position:fixed;left:12px;bottom:12px;z-index:9998;font:600 12px system-ui,sans-serif}'
+      /* LANG-PILL-CLEAR-1 (23 Sep 2026): the pill sat ON the bottom nav, over 'Browse'. It now rides
+         just above it, clear of every tab. */
+      st.textContent='#ts-lang{position:fixed;left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);z-index:9998;font:600 12px system-ui,sans-serif}'
        +'#ts-lang .pill{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;cursor:pointer;'
        +'background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.28);box-shadow:0 6px 18px rgba(0,0,0,.35)}'
        +'#ts-lang .menu{position:absolute;bottom:42px;left:0;background:#0f172a;border:1px solid rgba(255,255,255,.22);'
@@ -19493,6 +19682,7 @@ async function msUnverifiedGate(sellerEmail, category){
        +'#ts-lang .menu i{display:block;padding:6px 10px 4px;color:#94a3b8;font-style:normal;font-weight:400;font-size:11px}';
       document.head.appendChild(st);
     }
+    syncLangs();
     var cur=LANGS.filter(function(x){ return x[0]===lang; })[0]||LANGS[0];
     p.innerHTML='<div class="pill" id="ts-langb"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" '
      +'stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20'
@@ -19500,9 +19690,14 @@ async function msUnverifiedGate(sellerEmail, category){
     document.getElementById('ts-langb').onclick=function(e){
       e.stopPropagation();
       if(document.getElementById('ts-langm')){ pill(); return; }
+      syncLangs();
+      var _on=msLangOn();
       p.insertAdjacentHTML('afterbegin','<div class="menu" id="ts-langm">'+LANGS.map(function(x){
-        return '<b data-l="'+x[0]+'" class="'+(x[0]===lang?'on':'')+'">'+x[1]+'</b>'; }).join('')
-       +'<i>Machine translation. The terms stay in English.</i></div>');
+        return '<b data-l="'+x[0]+'" class="'+(x[0]===lang?'on':'')+'">'
+          +(_on?'<em style="display:inline-block;min-width:30px;font-style:normal;font-weight:800;opacity:.7">'+msLangCode(x[0])+'</em>':'')
+          +x[1]+'</b>'; }).join('')
+       +'<i>'+(_on?'The app is translated for you. Adverts stay in the language the seller chose. The terms stay in English.'
+                 :'Machine translation. The terms stay in English.')+'</i></div>');
       var bs=p.querySelectorAll('[data-l]');
       for(var i=0;i<bs.length;i++) bs[i].onclick=function(ev){ ev.stopPropagation(); setLang(this.getAttribute('data-l')); };
     };
@@ -19510,7 +19705,7 @@ async function msUnverifiedGate(sellerEmail, category){
   function start(){
     pill();
     var saved=read(KEY);
-    if(saved && saved!=='en' && LANGS.some(function(x){ return x[0]===saved; })) setLang(saved);
+    if(saved && saved!=='en' && (LANGS.some(function(x){ return x[0]===saved; }) || /^(nso|ng|tn|pt|sw|de|tr|ru|ar|cy|pl|ro|pa|es|zh|tl|vi|yue)$/.test(saved))) setLang(saved);
     document.addEventListener('click', function(){ if(document.getElementById('ts-langm')) pill(); });
     var tmr=null;
     rescan=function(){

@@ -5356,9 +5356,12 @@ def rg_management_lanes_reachable():
             out.append((FAIL, "port 22 unreachable from this vantage on 3 tries (%s) WHILE a "
                               "control host's port 22 answered -- so the vantage is fine and the "
                               "origin is not. SSH-LOCKOUT-1 class: the home IP likely changed "
-                              "(power/router reset). Fix: run scripts/hetzner_fw_selfheal.py, or "
-                              "add the current IP at Hetzner > Firewalls > "
-                              "trustsquare-origin-lockdown" % _ssh_err))
+                              "(power/router reset) -- OR this vantage's egress differs from the "
+                              "PC's (SANDBOX-EGRESS-1, 23 Sep 2026: the sandbox and the host can "
+                              "leave through different IPs; the host tick only names the PC's). "
+                              "Fix: run scripts/hetzner_fw_selfheal.py FROM THIS VANTAGE (it adds "
+                              "this IP; bash load_sandbox_ssh.sh does it too), or add the current "
+                              "IP at Hetzner > Firewalls > trustsquare-origin-lockdown" % _ssh_err))
     try:
         req = urllib.request.Request(BASE + "/terms", headers=UA)
         try:
@@ -14854,19 +14857,26 @@ def rg_conversion_reconcile():
         out.append((FAIL, "live leg unreachable: %s" % str(e)[:80]))
     return out
 
-@entry("RG-0245", "The origin SSH allowlist holds EXACTLY the one live egress IP -- no stale "
+@entry("RG-0245", "The origin SSH allowlist holds EXACTLY the live egress IPs -- no stale "
        "address from a past router reset is left as an open door",
        LOCKED, fixed_on="2026-09-02",
        scope="Hetzner firewall 11414216 (trustsquare-origin-lockdown), inbound port-22 rule, "
-             "and scripts/hetzner_fw_selfheal.py which owns it. CLASS: there is ONE egress "
-             "(David's PC and the sandbox share it -- server sshd log 2 Sep 2026: "
-             "197.184.106.176 accepted until 04:36Z, then only 197.185.137.157, no overlap), so "
-             "the rule must hold exactly one /32. Two legs: (a) LIVE -- the Hetzner API reports "
-             "the SSH rule with exactly one source_ip; (b) SOURCE -- the self-heal SETS the rule "
-             "rather than appending (the 'prune with David' wording is gone). Needs "
-             ".secrets/hetzner_token.txt (RG-0188) -- without it the live leg is UNVERIFIED, "
-             "not red. Sibling of RG-0099 (detect) and RG-0188 (armed): this one says the "
-             "heal leaves no residue.",
+             "and scripts/hetzner_fw_selfheal.py which owns it. CLASS: every entry in the rule "
+             "is a LIVE vantage. ASSERTION AMENDED 23 Sep 2026 (SANDBOX-EGRESS-1, maintenance "
+             "loop): the 2 Sep premise 'there is ONE egress (David's PC and the sandbox share "
+             "it)' was measured false on 23 Sep -- the PC left through 165.165.181.198 while "
+             "the sandbox left through 197.184.121.169 -- so 'exactly one /32' was locking the "
+             "sandbox out by design. The rule now holds the union of live vantages: the host's "
+             "IP plus every sandbox beacon younger than 24 h (.secrets/egress_peers.json). "
+             "Not weakened: an address that is neither this vantage nor a fresh beacon is still "
+             "stale and still red, and the count may never exceed the number of vantages (2). The bound is 24 h because the sandbox re-adds itself on every SSH load. "
+             "Two legs: (a) LIVE -- every source_ip is this vantage's IP or a fresh peer beacon, "
+             "at most 2; (b) SOURCE -- the HOST lane SETS the rule (prunes), the SANDBOX lane "
+             "is add-only (cannot lock the host out), and the old append-forever wording is "
+             "gone. Needs .secrets/hetzner_token.txt (RG-0188) -- without it the live leg is "
+             "UNVERIFIED, not red. Sibling of RG-0099 (detect), RG-0188 (armed), RG-0274 (host "
+             "cure wired) and RG-0427 (sandbox cure wired): this one says the heal leaves no "
+             "residue.",
        ref="David, 2 Sep 2026, on the morning maintenance report's 'prune the 4 stale IPs with "
            "David at a calm moment': 'there should be no stale IPs'. Root cause: the 17 Aug "
            "self-heal was written add-only out of caution, so every router reset since left "
@@ -14881,8 +14891,12 @@ def rg_ssh_allowlist_single_ip():
         if "prune with David" in sh or 'ips + [want]' in sh:
             out.append((FAIL, "hetzner_fw_selfheal.py APPENDS the current IP instead of SETTING the "
                               "rule -- stale /32s will accumulate again (NO-STALE-IP-1)"))
-        if 'ssh[0]["source_ips"] = [want]' not in sh:
-            out.append((FAIL, "hetzner_fw_selfheal.py no longer sets source_ips to exactly [current IP]"))
+        if 'ssh[0]["source_ips"] = want_set' not in sh or 'if VANTAGE == "host":' not in sh:
+            out.append((FAIL, "hetzner_fw_selfheal.py's HOST lane no longer SETS source_ips to exactly "
+                              "the live vantages (host IP + fresh sandbox beacons) -- the pruner is gone"))
+        if 'new_ips = sorted(set(ips) | {want})' not in sh:
+            out.append((FAIL, "hetzner_fw_selfheal.py's SANDBOX lane is no longer add-only -- a "
+                              "sandbox run could prune the host's IP and lock David out"))
     tokp = os.path.join(REPO, ".secrets", "hetzner_token.txt") if REPO else None
     tok = os.environ.get("HETZNER_API_TOKEN", "").strip()
     if not tok and tokp and os.path.exists(tokp):
@@ -14905,11 +14919,50 @@ def rg_ssh_allowlist_single_ip():
             out.append((FAIL, "no inbound port-22 rule on firewall 11414216 -- layout changed"))
         else:
             ips = ssh[0].get("source_ips", [])
-            if len(ips) != 1:
-                out.append((FAIL, "SSH rule holds %d source IPs (%s) -- must be exactly the one live "
-                                  "egress; run scripts/hetzner_fw_selfheal.py" % (len(ips), ips)))
+            # SANDBOX-EGRESS-1: live = this vantage's IP + every fresh peer beacon.
+            my_ip = ""
+            try:
+                my_ip = _ur.urlopen("https://api.ipify.org", timeout=10).read().decode().strip()
+            except Exception:
+                pass
+            fresh = set()
+            peer_seen = set()
+            try:
+                import time as _t
+                peers = json.load(open(os.path.join(REPO, ".secrets", "egress_peers.json"),
+                                       encoding="utf-8"))
+                for v, rec in peers.items():
+                    if isinstance(rec, dict) and rec.get("ip"):
+                        peer_seen.add(v)
+                        if _t.time() - float(rec.get("at", 0)) <= 24 * 3600:
+                            fresh.add(rec["ip"] + "/32")
+            except Exception:
+                pass
+            if my_ip:
+                fresh.add(my_ip + "/32")
+            me = "host" if os.name == "nt" else "sandbox"
+            other = "sandbox" if me == "host" else "host"
+            if len(ips) > 2:
+                out.append((FAIL, "SSH rule holds %d source IPs (%s) -- more than the two live "
+                                  "vantages (host PC, sandbox); run scripts/hetzner_fw_selfheal.py "
+                                  "from the host to prune" % (len(ips), ips)))
+            elif not my_ip:
+                raise ProbeOffline("cannot read this vantage's egress IP -- stale-vs-live not judged")
+            elif other not in peer_seen and any(i != my_ip + "/32" for i in ips):
+                # RG-0187 contract: what this vantage cannot see is NOT EVALUATED, never red.
+                raise ProbeOffline("the %s vantage has never beaconed (.secrets/egress_peers.json) "
+                                   "-- cannot tell its live IP from a stale one from here; judged "
+                                   "once its self-heal has run" % other)
             else:
-                out.append((INFO, "SSH allowlist is exactly one /32 (%s)" % ips[0]))
+                stale = [i for i in ips if i not in fresh]
+                if stale:
+                    out.append((FAIL, "SSH rule holds %s which is neither this vantage (%s) nor a "
+                                      "fresh peer beacon (%s) -- a stale /32 is an open door; run "
+                                      "scripts/hetzner_fw_selfheal.py from the host to prune"
+                                      % (stale, my_ip, sorted(fresh - {my_ip + "/32"}) or "none")))
+                else:
+                    out.append((INFO, "SSH allowlist holds only live vantages: %s (this vantage %s)"
+                                      % (ips, my_ip)))
     except Exception as e:
         raise ProbeOffline("Hetzner API unreachable: %s" % str(e)[:80])
     return out
@@ -21559,7 +21612,17 @@ def rg_host_agent_reads_real_exit_code():
                      "therefore David's alone (RUL-095) -- archives accumulate until he prunes, "
                      "and that is the correct trade.",
        fixed_on="10 Sep 2026",
-       ref="BACKUP-UNATTENDED-1. Found by the daily maintenance loop with RG-0234 red at 9 days "
+       ref="BACKUP-IN-AGENT-1 (23 Sep 2026, maintenance loop) -- STRENGTHENED: RG-0234 was red "
+           "again at 11 days (newest 2026-09-12_1553.zip). The 10 Sep wiring was a line in "
+           "MAINTENANCE_AGENT.md ('step 2a'); the scheduled loop's own step list never carried "
+           "it, so it ran on 10, 11, 12 Sep and then nobody's instructions said to. The "
+           "producer is now CALLED from scripts/maintenance_agent.py at the end of every run "
+           "(skipped under 20 h, 150 s cap, never raises, outcome in the run report); this "
+           "entry now asserts that call exists. Proven same session: the guarded call ran the "
+           "stub producer to 'ok' on an empty backups/, recorded 'FAILED rc=1' on a failing "
+           "stub without raising, and skipped ('0.0 h old') on the real tree after "
+           "2026-09-23_1705.zip restored clean (users=113 listings=119). "
+           "ORIGINAL: BACKUP-UNATTENDED-1. Found by the daily maintenance loop with RG-0234 red at 9 days "
            "(the lane had also sat 27 days stale before 1 Sep). backup_marketsquare.bat is "
            "native-Windows, on no schedule and on no allowlist, so it ran only when asked. The "
            "producer now runs where the loop runs: sqlite3 .backup on the box (consistent, "
@@ -21590,6 +21653,20 @@ def rg_backup_has_a_producer():
     elif "BACKUP-UNATTENDED-1" not in canon or "backup_db_sandbox.py" not in canon:
         out.append((FAIL, "MAINTENANCE_AGENT.md no longer wires the producer into the daily run "
                           "-- the loop will stop making archives and only report on them again"))
+    # BACKUP-IN-AGENT-1 (23 Sep 2026): the prose wiring above was proven insufficient -- the
+    # loop's own step list never carried 'step 2a', so the lane ran 10-12 Sep and then stopped
+    # for 11 days with RG-0234 red. The producer must be CALLED BY CODE the loop always runs:
+    # scripts/maintenance_agent.py (step 2 of every run) invokes it when the newest archive is
+    # older than 20 h. A wiring that only a reader can execute is decoration (the RG-0350 class,
+    # one layer up).
+    agent = repo_file(os.path.join("scripts", "maintenance_agent.py"))
+    if agent is None:
+        out.append((INFO, "maintenance_agent.py not readable here -- code-wiring leg skipped"))
+    elif "def _backup_lane(" not in agent or 'report["backup"] = _backup_lane()' not in agent \
+            or "backup_db_sandbox.py" not in agent:
+        out.append((FAIL, "maintenance_agent.py no longer CALLS the backup producer -- the lane is "
+                          "back to a sentence in a doc, which is exactly how it stopped for 11 days "
+                          "(BACKUP-IN-AGENT-1)"))
     # The proof log must actually be growing: a producer that runs but never proves is the
     # same defect one layer down.
     proof = repo_file(os.path.join("backups", "RESTORE_PROOF.md"))
@@ -26200,6 +26277,570 @@ def rg_second_ai_lane_present():
         out.append((INFO, "NOT EVALUATED -- no SSH to the box from this vantage; the live half "
                           "of the second-lane check was not measured here"))
     return out
+
+
+@entry("RG-0427", "SANDBOX-EGRESS-1: the sandbox can reach port 22 even when its public IP differs "
+       "from David's PC -- both management vantages beacon their egress, the host prunes, the "
+       "sandbox adds itself on every SSH load",
+       LOCKED, fixed_on="2026-09-23",
+       scope="scripts/hetzner_fw_selfheal.py (vantage-aware: HOST lane sets, SANDBOX lane adds), "
+             "load_sandbox_ssh.sh (calls it on every SSH load, never fatal), "
+             ".secrets/egress_peers.json (the beacon file, gitignored, 24 h TTL), and the live "
+             "port-22 rule. CLASS: two vantages that share a mount but not an egress. The host "
+             "tick can only name the PC's IP; the sandbox can only name its own; each lane can "
+             "only ever ADD the machine that ran it, so neither can lock the other out. Three "
+             "legs: (a) SOURCE -- the self-heal branches on VANTAGE, writes the beacon, and the "
+             "SSH loader calls it; (b) LIVE -- from any vantage with the token: this vantage's "
+             "own IP is in the rule (the cure ran); (c) PROBE -- port 22 answers from here (the "
+             "cure worked). No token -> legs (b) is UNVERIFIED, (a) and (c) still judge.",
+       ref="Maintenance loop, 23 Sep 2026. RG-0099 read REGRESSION from three separate sessions "
+           "the same day (daily-watch, run 17, this loop) while the host's fw_selfheal_log said "
+           "'ok: SSH rule holds exactly 165.165.181.198/32' six ticks running -- the PC's egress "
+           "had moved at ~16:35 SAST and the sandbox's had not (197.184.121.169 on ipify AND "
+           "ifconfig.me). NO-STALE-IP-1's one-IP heal was doing exactly what it was told and "
+           "that was the fault: 'one egress' was an assumption written into a pruner. Fixed at "
+           "the class (RG-0245 amended, not weakened): the rule = live vantages, a beacon file "
+           "carries the sandbox's IP to the host tick, and the sandbox lane heals itself on "
+           "every SSH load instead of waiting for a human to notice. PROBED same session: "
+           "sandbox run added 197.184.121.169/32; ssh root@178.104.73.239 answered 3/3 "
+           "(SSH-OK ubuntu-4gb-nbg1-1 2026-09-23T16:58:59Z) after three timeouts minutes "
+           "earlier.")
+def rg_sandbox_egress_lane():
+    out = []
+    sh = repo_file("scripts/hetzner_fw_selfheal.py")
+    if sh is None:
+        raise ProbeOffline("repo not readable here -- source legs not measured")
+    for needle, why in (('VANTAGE = "host" if os.name == "nt" else "sandbox"',
+                         "the self-heal no longer knows which vantage it runs from"),
+                        ("def _beacon(", "the beacon writer is gone -- the host tick cannot learn "
+                                         "the sandbox's IP"),
+                        ('PEERS = os.path.join(REPO, ".secrets", "egress_peers.json")',
+                         "the beacon file moved out of .secrets/ (it must stay gitignored and "
+                         "on the shared mount)"),
+                        ("PEER_TTL_H = 24", "the 24 h beacon TTL is gone -- either a stale sandbox "
+                                            "IP lives forever or a live one is pruned daily")):
+        if needle not in sh:
+            out.append((FAIL, why))
+    ld = repo_file("load_sandbox_ssh.sh")
+    if ld is None or "scripts/hetzner_fw_selfheal.py" not in ld:
+        out.append((FAIL, "load_sandbox_ssh.sh no longer runs the self-heal -- the sandbox lane "
+                          "is back to waiting for a human to notice a lockout"))
+    # live leg (needs the token)
+    tok = os.environ.get("HETZNER_API_TOKEN", "").strip()
+    tokp = os.path.join(REPO, ".secrets", "hetzner_token.txt") if REPO else None
+    if not tok and tokp and os.path.exists(tokp):
+        try:
+            tok = open(tokp, encoding="utf-8").read().strip()
+        except OSError:
+            tok = ""
+    _require_net()
+    import socket
+    import urllib.request as _ur
+    my_ip = ""
+    try:
+        my_ip = _ur.urlopen("https://api.ipify.org", timeout=10).read().decode().strip()
+    except Exception:
+        pass
+    if tok and my_ip:
+        try:
+            req = _ur.Request("https://api.hetzner.cloud/v1/firewalls/11414216",
+                              headers={"Authorization": "Bearer " + tok,
+                                       "User-Agent": "trustsquare-ledger/1"})
+            with _ur.urlopen(req, timeout=20) as r:
+                fw = json.loads(r.read().decode())["firewall"]
+            ssh = [x for x in fw["rules"] if x.get("direction") == "in" and str(x.get("port")) == "22"]
+            ips = ssh[0].get("source_ips", []) if ssh else []
+            if my_ip + "/32" not in ips:
+                out.append((FAIL, "this vantage's egress %s is NOT in the SSH rule (%s) -- the "
+                                  "cure did not run here; bash load_sandbox_ssh.sh or "
+                                  "python3 scripts/hetzner_fw_selfheal.py" % (my_ip, ips)))
+            else:
+                out.append((INFO, "this vantage (%s) is in the SSH rule" % my_ip))
+        except Exception as e:
+            out.append((INFO, "live rule not read (%s) -- leg (b) unverified" % str(e)[:60]))
+    else:
+        out.append((INFO, "no Hetzner token or no egress read here -- leg (b) unverified"))
+    ok = False
+    for _ in range(3):
+        try:
+            socket.create_connection(("178.104.73.239", 22), timeout=8).close()
+            ok = True
+            break
+        except Exception:
+            pass
+    if not ok:
+        out.append((FAIL, "port 22 does not answer from this vantage (%s) on 3 tries -- the "
+                          "sandbox lane is locked out; the self-heal should have added this IP"
+                          % (my_ip or "ip unknown")))
+    elif not any(r == FAIL for r, _ in out):
+        out.append((INFO, "port 22 answers from this vantage -- both lanes wired, cure proven"))
+    return out
+
+
+
+@entry("RG-0428", "ONBOARD-REAL-1: ONBOARDED counts a human who used the account or built an "
+                  "advert -- never the users row our own mailer creates at send time",
+       LOCKED, fixed_on="2026-09-23",
+       scope="CityLauncher/api/server.py reconcile_conversions() and its new helper "
+             "_pre_onboard_status(). WHAT WAS WRONG: the reconciler stamped "
+             "prospects.onboarded_at on `if e in users` -- the mere EXISTENCE of a row in "
+             "marketsquare.users. AGENCY-WAVE-1 posts /agencies/wave-prep for every "
+             "agency-class prospect AT SEND TIME and that call 'creates the org dark', i.e. a "
+             "users row holding an address we scraped and nothing else. So ONBOARDED was a "
+             "re-count of our own sending, and it had already reached David: the 20 Sep Sunday "
+             "summary told him 42 people had opened an account and not one had published. "
+             "PROBED 23 Sep 2026 on the live databases, not inferred: all 40 non-test prospects "
+             "stamped onboarded were category 'Estate Agents'; every matching users row was "
+             "created inside the 22:10 UTC wave minute, one every two or three seconds, on six "
+             "consecutive nights; and across all 40, last_seen, eula_accepted_at, "
+             "lm_eula_accepted_at, auth_linked_at, photo_url and buyer_token were ALL NULL -- "
+             "zero activation of any kind. Same class as FUNNEL-DENOM-1 (mail scanners counted "
+             "as readers) and as the contract's own naive probe that reads 2 when the honest "
+             "number is 0: an instrument that reads HIGH by default is the one a goal-driven "
+             "agent is least likely to question, because it flatters. "
+             "THE FIX, AND ITS SECOND LEG IS THE POINT. Leg one: a prospect is onboarded when "
+             "the account bearing the address has been USED, dated by the earliest thing the "
+             "human actually did. Leg one ALONE would have been a worse instrument than the "
+             "bug, and the check that caught that is the one worth keeping: bea_main.py upserts "
+             "a BARE users row (aa_free_used/aa_sessions_remaining both 0, no activation column "
+             "set) at the instant a listing is created, so the one person who builds an advert "
+             "and does not publish it -- precisely the prospect worth most to this goal -- would "
+             "have read as a dark shell and been retracted. Leg two therefore counts WORK ON THE "
+             "ACCOUNT: any listing row bearing the address in ANY listing_status, and any AI-coach "
+             "or top-up credit. Running it proved the point rather than arguing it -- leg two "
+             "stamped exactly one prospect the OLD rule had also never reached: Rick Wemple "
+             "(register:moga, Montana), whose draft 382 carries four of his own photographs and "
+             "scores 94, built the day after our letter and unpublished ever since. "
+             "RETRACTION, not deletion: rows stamped under the old rule whose account has never "
+             "been used and which have published nothing are UNSTAMPED, and the status they are "
+             "returned to is READ from email_events (clicked > opened > emailed) rather than "
+             "guessed, so a retraction cannot quietly destroy a real open or a real click. The "
+             "pass re-derives everything every RECONCILE_INTERVAL_SEC, so the moment such an "
+             "account IS used the row stamps again, at the real moment -- nothing is lost and "
+             "no judgement is frozen. Measured on a copy of the live pair: 45 -> 5 stamped, 41 "
+             "retracted, 1 newly and correctly stamped, clicked preserved at 74, second pass a "
+             "no-op. NOT WEAKENED ANYWHERE: the published leg, which is what the GOAL is scored "
+             "on, is untouched, and the goal number was never inflated by this -- "
+             "onboarding_number.py requires published_at AND emailed_at AND a non-test source "
+             "AND probe B, so it read 0 throughout. What was inflated was the funnel David reads.")
+def rg_onboard_real_1():
+    """Behavioural, not a needle hunt: build a synthetic pair of databases whose rows are
+    the four cases that matter and RUN the real reconciler over them. A grep would pass on
+    a fix that looked right; only running it can show that the rule does not punish the
+    seller who built an advert and stopped."""
+    import sqlite3 as _sq, tempfile, importlib.util, shutil as _sh
+    out = []
+    path = os.path.join(REPO, "..", "CityLauncher", "api", "server.py")
+    if not os.path.exists(path):
+        return [(INFO, "CityLauncher not mounted -- reconciler half not evaluated")]
+
+    tmp = tempfile.mkdtemp(prefix="rg428_")
+    try:
+        ms = os.path.join(tmp, "ms.db"); cl = os.path.join(tmp, "cl.db")
+        m = _sq.connect(ms)
+        m.execute("CREATE TABLE users (email TEXT UNIQUE, created_at TEXT, last_seen TEXT, "
+                  "eula_accepted_at TEXT, lm_eula_accepted_at TEXT, auth_linked_at TEXT, "
+                  "id_verified_at TEXT, photo_url TEXT, buyer_token TEXT, "
+                  "aa_free_used INTEGER DEFAULT 0, aa_sessions_remaining INTEGER DEFAULT 0)")
+        m.execute("CREATE TABLE listings (id INTEGER PRIMARY KEY, seller_email TEXT, "
+                  "listing_status TEXT, published_at TEXT, created_at TEXT)")
+        # A: the wave-prep shape -- a shell nobody has ever touched
+        m.execute("INSERT INTO users (email, created_at) VALUES ('dark@x.test','2026-09-17 22:10:42')")
+        # B: RICK'S SHAPE -- bare users row, but a DRAFT listing he built himself
+        m.execute("INSERT INTO users (email, created_at) VALUES ('builder@x.test','2026-09-12 15:37:09')")
+        m.execute("INSERT INTO listings (id, seller_email, listing_status, published_at, created_at) "
+                  "VALUES (382,'builder@x.test','draft',NULL,'2026-09-12 15:37:09')")
+        # C: a genuinely used account -- activation column set, no listing at all
+        m.execute("INSERT INTO users (email, created_at, eula_accepted_at) "
+                  "VALUES ('used@x.test','2026-09-01 08:00:00','2026-09-02 09:30:00')")
+        # D: the full journey -- live listing
+        m.execute("INSERT INTO users (email, created_at, last_seen) "
+                  "VALUES ('live@x.test','2026-09-03 08:00:00','2026-09-04 10:00:00')")
+        m.execute("INSERT INTO listings (id, seller_email, listing_status, published_at, created_at) "
+                  "VALUES (400,'live@x.test','live','2026-09-05 11:00:00','2026-09-04 10:00:00')")
+        m.commit(); m.close()
+
+        c = _sq.connect(cl)
+        c.execute("CREATE TABLE prospects (id INTEGER PRIMARY KEY, email TEXT, status TEXT, "
+                  "scraped_at TEXT, emailed_at TEXT, onboarded_at TEXT, published_at TEXT)")
+        c.execute("CREATE TABLE onboard_events (id INTEGER PRIMARY KEY, prospect_id INTEGER, "
+                  "listing_id TEXT, event TEXT, created_at TEXT)")
+        c.execute("CREATE TABLE email_events (id INTEGER PRIMARY KEY, prospect_id INTEGER, "
+                  "message_id TEXT, event TEXT, created_at TEXT)")
+        rows = [(1, 'dark@x.test',    'onboarded', '2026-09-17 22:10:42'),   # falsely stamped
+                (2, 'builder@x.test', 'clicked',   None),
+                (3, 'used@x.test',    'emailed',   None),
+                (4, 'live@x.test',    'emailed',   None)]
+        for pid, em, st, ob in rows:
+            c.execute("INSERT INTO prospects (id,email,status,emailed_at,onboarded_at) "
+                      "VALUES (?,?,?, '2026-09-11T22:12:45', ?)", (pid, em, st, ob))
+        # prospect 1 really did open the letter -- a retraction may not erase that
+        c.execute("INSERT INTO email_events (prospect_id, event) VALUES (1,'email.opened')")
+        c.commit(); c.close()
+
+        spec = importlib.util.spec_from_file_location("rg428_srv", path)
+        mod = importlib.util.module_from_spec(spec)
+        try:
+            spec.loader.exec_module(mod)
+        except Exception as ex:
+            return [(INFO, "reconciler not importable here (%s: %s) -- NOT EVALUATED"
+                           % (type(ex).__name__, str(ex)[:70]))]
+        if not hasattr(mod, "reconcile_conversions"):
+            return [(FAIL, "reconcile_conversions() is gone from CityLauncher/api/server.py")]
+
+        r1 = mod.reconcile_conversions(ms_db_path=ms, cl_db_path=cl)
+        if not r1.get("ok"):
+            return [(INFO, "reconciler refused to run here (%s) -- NOT EVALUATED"
+                           % str(r1.get("reason"))[:70])]
+
+        c = _sq.connect(cl)
+        got = dict((e, (ob, st)) for e, ob, st in
+                   c.execute("SELECT email, onboarded_at, status FROM prospects"))
+        c.close()
+
+        # (a) THE BUG ITSELF: a shell nobody used is not an onboarding
+        if got['dark@x.test'][0] is not None:
+            out.append((FAIL, "a users row with no activation and no listing still stamps "
+                              "onboarded -- ONBOARD-REAL-1 is gone and ONBOARDED is again a "
+                              "re-count of our own sending"))
+        # (b) THE LEG THAT MATTERS MOST: the seller who built and did not publish
+        if got['builder@x.test'][0] is None:
+            out.append((FAIL, "a seller with a DRAFT listing does not read onboarded -- the "
+                              "rule now punishes the one prospect worth most to the goal"))
+        # (c) a genuinely used account still counts, dated when it was used
+        if got['used@x.test'][0] is None:
+            out.append((FAIL, "an account with an accepted EULA does not read onboarded -- "
+                              "the rule has been tightened past the truth"))
+        elif not str(got['used@x.test'][0]).startswith("2026-09-02"):
+            out.append((FAIL, "onboarded_at for a used account is %r, not the moment it was "
+                              "used" % got['used@x.test'][0]))
+        # (d) the published leg is untouched -- this is what the GOAL is scored on
+        if got['live@x.test'][1] != 'published':
+            out.append((FAIL, "a live listing no longer advances the prospect to published -- "
+                              "the goal's own leg has been damaged"))
+        # (e) a retraction may not destroy a real open
+        if got['dark@x.test'][1] != 'opened':
+            out.append((FAIL, "retraction returned status to %r; email_events records an open, "
+                              "so 'opened' is the honest state -- a retraction that forgets "
+                              "evidence is a second lie"
+                              % got['dark@x.test'][1]))
+        # (f) idempotent: a second pass must change nothing
+        r2 = mod.reconcile_conversions(ms_db_path=ms, cl_db_path=cl)
+        if r2.get("onboarded_retracted") or r2.get("onboarded_new") or r2.get("published_new"):
+            out.append((FAIL, "second pass is not a no-op (%s) -- the reconciler oscillates"
+                              % {k: r2[k] for k in ('onboarded_new', 'published_new',
+                                                    'onboarded_retracted')}))
+        if not any(v == FAIL for v, _ in out):
+            out.append((INFO, "ran the real reconciler over a synthetic pair: shell not counted, "
+                              "draft-builder counted, used account counted at the moment it was "
+                              "used, published leg intact, open preserved, second pass a no-op"))
+            out.append((INFO, "first pass: %s" % {k: r1.get(k) for k in
+                                                  ('onboarded_new', 'published_new',
+                                                   'onboarded_retracted', 'ms_dark_users')}))
+    finally:
+        _sh.rmtree(tmp, ignore_errors=True)
+    return out
+
+
+
+
+@entry("RG-0429", "PUBLISH-WALL-1: a seller who has finished the whole advert is not asked to "
+                  "build an account at the last step -- the wall does not stand between the "
+                  "work and the result",
+       OPEN,
+       scope="bea_main.py POST /listings (creates listing_status='draft', published_at NULL) and "
+             "PUT /listings/{id}/publish (EULA gate + slot guard), against the wizard flow in "
+             "marketsquare.html / ms.js. THE EVIDENCE IS ONE MAN, AND HE IS THE WHOLE GOAL SO "
+             "FAR. Rick Wemple, a licensed Montana outfitter reached through register:moga, "
+             "opened our letter on 11 Sep 2026 and on 12 Sep built listing 382 'Guided Fair "
+             "Chase Hunts' -- his own description, his own price, FOUR of his own photographs, "
+             "quality_score 94, the best non-demo advert on the platform. created_at equals "
+             "updated_at: he wrote it once and never came back. It is still a draft eleven days "
+             "later and it is the only thing standing between this goal and the number 1. "
+             "WHY HE STOPPED, PROBED not guessed: he has NO row in marketsquare.users at all. "
+             "POST /listings needs no account -- seller_email is just a column -- so the wizard "
+             "let him do every minute of the work as a stranger; PUT publish then requires an "
+             "account with eula_accepted_at and a plan slot. The wall sits at the exact moment "
+             "of maximum motivation and minimum patience, after the work is done and before he "
+             "can see any result from it. David already ruled on this shape in his own words "
+             "(RUL-145, 18 Sep 2026): 'After the tap, show them what they just did -- her score "
+             "moving, then real neighbours. NO WALL, NO ACCOUNT.' The wizard has not been "
+             "brought under that ruling. NOT FIXED TONIGHT, deliberately and with the reason "
+             "stated: it is a change to the first-listing flow in marketsquare.html, which is "
+             "one feature of its own and the file this project has most often damaged by "
+             "hurrying. The EULA itself is NOT the thing to remove -- accepting terms is legally "
+             "load-bearing; what must move is WHEN it is asked and how little is asked with it. "
+             "NOTE FOR WHOEVER TAKES THIS: telling Rick by email is NOT the workaround. RUL-106 "
+             "puts a 60-day floor on re-contacting any address already written to, whatever the "
+             "lane, and RUL-106(e) reserves any follow-up programme to David explicitly. The "
+             "fix has to be in the flow, not in a letter.")
+def rg_publish_wall_1():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "bea_main.py not readable here -- NOT EVALUATED")]
+    if "@app.post(\"/listings\")" not in bea:
+        return [(FAIL, "POST /listings is gone -- this entry no longer describes the code")]
+    # The property: the create path must not be able to strand a finished advert. It is
+    # satisfied EITHER by the create path carrying the seller through to live, OR by the
+    # account/EULA step being asked before the work rather than after it. Asserted on the
+    # marker a fix must leave behind, so this cannot pass by accident.
+    if "PUBLISH-WALL-1" not in bea and "PUBLISH-WALL-1" not in (repo_file("ms.js") or ""):
+        out.append((INFO, "still open: POST /listings creates a draft that only an account "
+                          "with an accepted EULA can publish, and the wizard asks for neither "
+                          "until the work is finished"))
+    live = repo_file("marketsquare.html") or ""
+    if "sob-eula-box" in live:
+        out.append((INFO, "the wizard's own EULA box is RG-0400's fourth unsynced copy -- "
+                          "whoever moves this step fixes that at the same time or not at all"))
+    return out
+
+
+@entry("RG-0430", "LISTING-COUNTRY-1: a listing is born in the country it is actually in -- "
+                  "the create path may not default every seller on earth to South Africa",
+       OPEN,
+       scope="bea_main.py POST /listings. The INSERT names no `country` column, so every "
+             "listing a real seller creates through the wizard takes the table default "
+             "country='ZA' whatever city it is in. PROBED on the live database 23 Sep 2026: "
+             "grouped by city and country, every seeded or imported market is correct -- "
+             "Chicago US, Denver US, London GB, Sydney AU, Maun BW, Nairobi KE -- and the ONLY "
+             "wrong pair is Montana|ZA, 4 rows, which is every listing ever created through "
+             "the wizard in that city, Rick Wemple's 382 among them. WHY IT MATTERS TO THE "
+             "GOAL RATHER THAN BEING TIDINESS: 428 of the ~416 addresses still sendable are in "
+             "the United States, so the first cold prospect who does publish will land stamped "
+             "South African, in a market picker RG-0425 has only just been taught to tell the "
+             "truth. A market that says the wrong country about the first real seller we ever "
+             "win is a bad way to win one. Deferred from run 17 for one reason, stated rather "
+             "than implied: that run had already shipped ONBOARD-REAL-1 and CLAUDE.md allows "
+             "one fix per task -- a second edit to bea_main.py at the end of a long session is "
+             "how a good night ships a bad change.")
+def rg_listing_country_1():
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "bea_main.py not readable here -- NOT EVALUATED")]
+    i = bea.find('@app.post("/listings")')
+    if i < 0:
+        return [(FAIL, "POST /listings is gone -- this entry no longer describes the code")]
+    body = bea[i:i + 4000]
+    j = body.find("INSERT INTO listings")
+    if j < 0:
+        return [(INFO, "create path restructured -- re-read this entry before trusting it")]
+    cols = body[j:j + 1200]
+    if "country" not in cols:
+        return [(INFO, "still open: the create INSERT names no country column, so the row "
+                       "takes the table default 'ZA' regardless of city")]
+    return [(INFO, "the create path sets country explicitly")]
+
+
+
+
+# ── LANG-LAYER-1 / QUICK-NEXT-1 (23 Sep 2026, David from Cape Town airport: "perform this design
+#    change ... set up the other three launch country languages ... review the quick listing app and
+#    fix/improve it"). Entries start OPEN because their live legs cannot pass until the deploy lands;
+#    each prints READY TO LOCK when it does, and is promoted then -- never before it is measured.
+def _ll_post(path, payload):
+    import urllib.request as _u, json as _j
+    _require_net()
+    req = _u.Request(BASE + path, data=_j.dumps(payload).encode("utf-8"),
+                     headers=dict(UA, **{"Content-Type": "application/json"}), method="POST")
+    return _j.loads(_u.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace"))
+
+
+@entry("RG-0431", "LANG-LAYER-1: the language layer exists -- nine approved country lists, Sepedi in "
+                  "place of Sesotho, the advert's second language gated on the seller's approval",
+       OPEN, fixed_on="",
+       scope="roles/lang_countries.json (the approved lists, RUL-162), bea_main.py (/lang/countries, "
+             "/listings/{id}/lang/draft|approve|remove, listings.lang_orig/lang_extra/extra_status/"
+             "search_en, the English search layer in GET /listings?q=, launch_switches.lang_layer "
+             "with the tester cookie OR'd in by /flags), ms.js (msLangView, the country menu, the "
+             "seller's 'Advert languages' panel). SCOPE: all nine active countries; 'reader' "
+             "languages are deliberately NOT offered anywhere. Public switch stays OFF until David "
+             "arms it; this entry asserts the machinery, not the switch.")
+def rg_lang_layer_1():
+    out = []
+    src = repo_file("bea_main.py")
+    if src is not None:
+        for needle in ('"/lang/countries"', '"/listings/{listing_id}/lang/draft"', '"/listings/{listing_id}/lang/approve"',
+                       "extra_status='draft' WHERE id=?", "l3.search_en", '"nso": "Sepedi'):
+            if needle not in src:
+                out.append((FAIL, "bea_main.py lost %s" % needle))
+        if 'if _d.get("extra_status") != "approved":' not in src:
+            out.append((FAIL, "the public list no longer withholds an UNAPPROVED second language"))
+    lc = repo_file("roles/lang_countries.json")
+    if lc is not None:
+        import json as _j
+        d = _j.loads(lc)
+        za = dict((k, v) for k, v in d["countries"]["ZA"]["langs"])
+        if za.get("nso") != "offered" or "st" in za:
+            out.append((FAIL, "South Africa's list is not Sepedi-in / Sesotho-out (RUL-162)"))
+        if len(d["countries"]) != 9:
+            out.append((FAIL, "expected the nine approved countries, found %d" % len(d["countries"])))
+    try:
+        live = json.loads(_get("/lang/countries"))
+        za = dict((k, v) for k, v in live["countries"]["ZA"]["langs"])
+        if za.get("nso") != "offered":
+            out.append((FAIL, "LIVE /lang/countries does not offer Sepedi in South Africa"))
+        f = json.loads(_get("/flags"))
+        if "lang_layer" not in (f.get("effective") or {}):
+            out.append((FAIL, "LIVE /flags does not report effective.lang_layer"))
+    except ProbeOffline:
+        raise
+    except Exception as e:
+        out.append((FAIL, "LIVE language layer not answering: %s" % str(e)[:120]))
+    return out
+
+
+@entry("RG-0432", "I18N-SA5-1: isiZulu, isiXhosa and Sepedi answer from the hand-drafted dictionaries, "
+                  "not from a fresh machine guess",
+       OPEN, fixed_on="",
+       scope="roles/app_i18n_zu.json, app_i18n_xh.json, app_i18n_nso.json (1,569 phrases each, "
+             "Claude's hand draft per RUL-160 -- the Language reviewer and users' flags correct them) "
+             "loaded into i18n_cache by migrations/048. PROBED the day it was written: the machine lane "
+             "rendered 'Your blue bicycle' as 'elimhlophe' (WHITE) -- the reason checked words beat "
+             "on-demand ones. Asserts one phrase per language comes back EXACTLY as the file says, "
+             "from cache. SCOPE: South Africa's five; other countries' languages ride the on-demand lane.")
+def rg_i18n_sa5_1():
+    out = []
+    import json as _j
+    for lang, phrase in (("zu", "Request Introduction"), ("xh", "Request Introduction"), ("nso", "Request Introduction")):
+        f = repo_file("roles/app_i18n_%s.json" % lang)
+        want = None
+        if f is not None:
+            want = _j.loads(f)["t"].get(phrase)
+            if not want:
+                out.append((FAIL, "roles/app_i18n_%s.json lost '%s'" % (lang, phrase)))
+                continue
+        try:
+            r = _ll_post("/i18n/translate", {"lang": lang, "strings": [phrase]})
+            got = (r.get("out") or {}).get(phrase)
+            if want and got != want:
+                out.append((FAIL, "LIVE %s '%s' = %r, the checked file says %r" % (lang, phrase, got, want)))
+            elif not got:
+                out.append((FAIL, "LIVE %s gave no answer for '%s'" % (lang, phrase)))
+        except ProbeOffline:
+            raise
+        except Exception as e:
+            out.append((FAIL, "LIVE /i18n/translate %s failed: %s" % (lang, str(e)[:100])))
+    return out
+
+
+@entry("RG-0433", "QUICK-ADTEXT-1 / QUICK-EVERYDAY-1 / QUICK-DEMO-OFF-1: the live Quick app writes her "
+                  "advert in plain words, says 'Every day', and never shows a demo switch",
+       OPEN, fixed_on="",
+       scope="quick.html (served at /quick/ and /quick.html), repair lane -- live faults found by the "
+             "23 Sep audit: (F1) our coaching line 'Written from your N taps ... Change any word of it "
+             "before it goes up' was the advert's DESCRIPTION, the words a buyer reads; (F5) seven "
+             "ticked days became 'Any day'; (F6) the 'Demo: new here' switch was drawn before "
+             "/quick/me answered, so every real visitor saw it. SCOPE: every category's draftBody "
+             "(the Services wrapper included), not just Housekeeping.")
+def rg_quick_adtext_1():
+    out = []
+    try:
+        page = _get("/quick/")
+    except ProbeOffline:
+        raise
+    for bad in ("Change any word of it before it goes up", "'Any day'"):
+        if bad in page:
+            out.append((FAIL, "LIVE /quick/ still carries %s" % bad))
+    for good in ("function qAdBody(", "'Every day' : ch.join", "location.protocol==='file:') $('screen').innerHTML +=",
+                 "/?draft='+res.id"):
+        if good not in page:
+            out.append((FAIL, "LIVE /quick/ is missing %s" % good))
+    return out
+
+
+@entry("RG-0434", "QUICK-DRAFT-LAND-1: the Quick app's way back (?draft=<id>, emailed and WhatsApp) opens "
+                  "the hub on that advert with Publish in reach",
+       OPEN, fixed_on="",
+       scope="ms.js -- the magic-link parser remembers ?draft= across sign-in and msLandDraft() brings the "
+             "card forward. WHY: the 23 Sep audit (F2/F3) found nothing in the app read ?draft=, so a "
+             "person who had just built an advert landed on the hub's front page. SCOPE: both arrivals "
+             "-- with ?signin= (the email) and without (the WhatsApp note, signed in or not).")
+def rg_quick_draft_land_1():
+    out = []
+    try:
+        js = _get("/static/ms.js")
+    except ProbeOffline:
+        raise
+    for good in ("function msLandDraft(", "ts_land_draft", "msLandDraft();   // QUICK-DRAFT-LAND-1"):
+        if good not in js:
+            out.append((FAIL, "LIVE ms.js is missing %s" % good))
+    return out
+
+
+@entry("RG-0435", "QUICK-NEXT-1: the reworked Quick app is served for David's review, unindexed",
+       OPEN, fixed_on="",
+       scope="quick_next.html at /quick_next.html (deploy manifest). It REPLACES /quick/ only when David "
+             "has seen it; until then it must be reachable, carry noindex, and speak South Africa's five "
+             "languages with Sepedi (RUL-162).")
+def rg_quick_next_1():
+    out = []
+    try:
+        page = _get("/quick_next.html")
+    except ProbeOffline:
+        raise
+    for good in ("QUICK-NEXT-1", 'name="robots" content="noindex', "['nso','Sepedi']", "Save my advert"):
+        if good not in page:
+            out.append((FAIL, "LIVE /quick_next.html is missing %s" % good))
+    return out
+
+
+@entry("RG-0436", "QUICK-ONE-DOOR-1: there is ONE Quick app -- the outreach door /q/<category> and /quick/ "
+                  "serve the same file",
+       OPEN, fixed_on="",
+       scope="Found by the 23 Sep audit (F16): /q/homehelp (913 KB, built from genie/HARNESS.html by "
+             "build_door.py, linked from every outreach letter) and /quick/ (228 KB, quick.html) have "
+             "drifted apart -- different colours, labels, hand-over, Buzz state and price basis. "
+             "quick_next.html already accepts ?c=<category> with the /q/ aliases, so the merge is: "
+             "promote quick_next.html to quick.html, then point /q/<category> at it. Promotion waits "
+             "for David's review of the reworked app (RUL-076's 'David sees it first'). Passes when "
+             "both paths serve the same document.")
+def rg_quick_one_door_1():
+    out = []
+    try:
+        a = _get("/q/homehelp")
+        b = _get("/quick/")
+    except ProbeOffline:
+        raise
+    import hashlib as _h
+    if _h.md5(a.encode()).hexdigest() != _h.md5(b.encode()).hexdigest():
+        out.append((FAIL, "/q/homehelp (%d bytes) and /quick/ (%d bytes) are still two different apps"
+                          % (len(a), len(b))))
+    return out
+
+
+
+@entry("RG-0437", "RULINGS-SETTLED-READ-1: rulings_check may not report a ruling unreflected "
+                  "because it read the file while another lane was writing it",
+       OPEN,
+       scope="scripts/rulings_check.py, the reads it makes of RULINGS.md and "
+             "scripts/regression_ledger.py. FOUND 23 Sep 2026 by the onboarding run, from its "
+             "own instrument disagreeing with itself: three consecutive invocations minutes "
+             "apart returned 1 FAIL, then 2 FAIL, then 0 FAIL, 0 FAIL, 0 FAIL, with no edit "
+             "between them. The two FAILs named RUL-161 JOURNAL-READ-1 and RUL-162 LANG-LAYER-1 "
+             "as absent from regression_ledger.py; grep found them present 4 and 2 times "
+             "respectively at that same moment. A parallel lane (standup-2026-09-23, which "
+             "holds the work lock on this file) was landing RUL-162 at the time. This is the "
+             "SAME fault RG-0421 SAFE-READ-1 measured on this mount and RG-0423 fixed for the "
+             "ledger's reads of its own source; rulings_check was never brought under it. "
+             "WHY IT IS WORTH AN ENTRY RATHER THAN A SHRUG: this checker's failure sentence is "
+             "'at least one ruling exists only in memory or in one file -- the blind spot is "
+             "live', and it is a session-end gate. A false FAIL here sends the next session "
+             "hunting a ruling that is perfectly reflected, and -- worse in this project's "
+             "history -- teaches it to distrust a green board. THE FIX is scripts/safe_read.py "
+             "settled_read on both reads, exactly as RG-0423 did. NOT DONE HERE, and the reason "
+             "is a rule not a preference: RUL-140 / SO-5 -- work_lock.py reports "
+             "scripts/rulings_check.py owned by another lane, so this run records the finding "
+             "and leaves the file alone. The owner ships it.")
+def rg_rulings_settled_read_1():
+    src_rc = repo_file("scripts/rulings_check.py")
+    if src_rc is None:
+        return [(INFO, "rulings_check.py not readable here -- NOT EVALUATED")]
+    if "settled_read" in src_rc:
+        return [(INFO, "rulings_check reads through settled_read")]
+    return [(INFO, "still open: rulings_check reads RULINGS.md and the ledger with a plain "
+                   "read, so a mid-write read can still print a ruling as unreflected")]
+
 
 
 if __name__ == "__main__":

@@ -1,0 +1,15 @@
+{
+ "_about": "RUL-162 (David, 23 Sep 2026): approved languages per active country, ranked by home language, up to four beside English (RUL-149). status 'offered' = switched on; 'reader' = drafted but NOT offered until a human reader signs it off (RUL-160). 'lead' marks the language that leads in that country ahead of English. Codes are ISO 639; the app shows CODES, never flags.",
+ "names": {"en":"English","zu":"isiZulu","xh":"isiXhosa","af":"Afrikaans","nso":"Sepedi","st":"Sesotho","ng":"Oshiwambo","naq":"Khoekhoegowab","hz":"Otjiherero","tn":"Setswana","kck":"Ikalanga","pt":"Português","vmw":"Emakhuwa","ts":"Xichangana","seh":"Cisena","sw":"Kiswahili","ki":"Gikuyu","luy":"Luhya","kln":"Kalenjin","de":"Deutsch","tr":"Türkçe","ru":"Русский","ar":"العربية","cy":"Cymraeg","pl":"Polski","ro":"Română","pa":"ਪੰਜਾਬੀ","es":"Español","zh":"中文","tl":"Tagalog","vi":"Tiếng Việt","yue":"廣東話"},
+ "countries": {
+  "ZA": {"name":"South Africa","source":"census 2022","langs":[["en","offered"],["zu","offered"],["xh","offered"],["af","offered"],["nso","offered"]],"retired":["st"]},
+  "NA": {"name":"Namibia","source":"census 2011","langs":[["en","offered"],["ng","offered"],["naq","reader"],["af","offered"],["hz","reader"]]},
+  "BW": {"name":"Botswana","source":"census 2011","langs":[["en","offered"],["tn","offered"],["kck","reader"]]},
+  "MZ": {"name":"Mozambique","source":"census 2017","lead":"pt","langs":[["pt","offered"],["en","offered"],["vmw","reader"],["ts","reader"],["seh","reader"]]},
+  "KE": {"name":"Kenya","source":"census 2019","lead":"sw","langs":[["en","offered"],["sw","offered"],["ki","reader"],["luy","reader"],["kln","reader"]]},
+  "DE": {"name":"Germany","lead":"de","langs":[["de","offered"],["en","offered"],["tr","offered"],["ru","offered"],["ar","offered"]]},
+  "GB": {"name":"United Kingdom","source":"census 2021","langs":[["en","offered"],["cy","offered"],["pl","offered"],["ro","offered"],["pa","offered"]]},
+  "US": {"name":"United States","langs":[["en","offered"],["es","offered"],["zh","offered"],["tl","offered"],["vi","offered"]]},
+  "AU": {"name":"Australia","source":"census 2021","langs":[["en","offered"],["zh","offered"],["ar","offered"],["vi","offered"],["yue","offered"]]}
+ }
+}

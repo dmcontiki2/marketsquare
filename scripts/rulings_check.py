@@ -1065,6 +1065,18 @@ REFLECTIONS = {
  "RUL-160": [
    ("RULINGS.md", ["LANGUAGE REVIEWER"], []),
  ],
+ # LANG-LAYER-1 (23 Sep 2026): Sepedi takes Sesotho's place in South Africa; nine country lists
+ # approved; the advert speaks the lister's language. Reflected in the approved-list file the app
+ # reads, the server's language set, the app's menu, and the Quick door's five languages.
+ "RUL-162": [
+   ("RULINGS.md", ["SEPEDI TAKES SESOTHO'S PLACE IN SOUTH AFRICA"], []),
+   ("roles/lang_countries.json", ['["nso","offered"]', '"retired":["st"]', '"NA"', '"BW"', '"MZ"', '"KE"', '"DE"', '"GB"', '"US"', '"AU"'],
+                                 ['["st","offered"]']),
+   ("bea_main.py", ['"nso": "Sepedi', "LANG-LAYER-1", "/listings/{listing_id}/lang/approve"], []),
+   ("ms.js", ["LANG-LAYER-1", "msLangView"], []),
+   ("quick_next.html", ["['nso','Sepedi']"], ["['st','Sesotho']]"]),
+   ("scripts/regression_ledger.py", ["LANG-LAYER-1"], []),
+ ],
  "RUL-152": [
    ("RULINGS.md", ["RUL-075 WAS A DECISION NOT TO SPEND TWO MONTHS ON LOCALISATION",
                    "seatbelts built ALONGSIDE the work, never a turnstile in front of it"], []),
