@@ -27058,7 +27058,7 @@ def rg_ledger_chunk_1():
 @entry("RG-0441", "AUDIT-AUTH-1 / AUDIT-L1 / AUDIT-Q1: publishing, editing and listing your own adverts act "
                   "as the proven session; one tap never publishes for an existing account; the single-advert "
                   "read keeps the seller anonymous",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-23",
        scope="Found by the 23 Sep 2026 bug audit of the day's work (genie/BUG_AUDIT_2026-09-23.html). bea_main.py: "
              "PUT /listings/{id}/publish, PUT /listings/{id} and GET /listings/mine now call _actor() "
              "(RUL-135) instead of trusting ?email=; POST /listings/quick-publish gives an EXISTING account a "

@@ -16,3 +16,9 @@
 - `DELETE /listings/{id}` now requires admin credentials for every advert (the app key is public in ms.js).
 - `DELETE /listings/{id}/seller` and `DELETE /listings/{id}/wonders/{wid}` are bound to the signed-in session (`_actor`); the typed email alone no longer deletes.
 - Admin console delete sends its admin token; ms.js seller deletes send credentials.
+
+## REAL-PUBLISH-1 (23 Sep 2026, live)
+- Signed in as dmcontiki2 (code sign-in), walked /quick/ at 390px: Offer a service -> Home & care -> Gardener -> Centurion -> Every day -> R350 -> Publish.
+- Advert #394 "Gardener — Centurion" went live in one tap; arrival card shown; visible in Browse and on its public page to an anonymous visitor; no seller email in the public read.
+- Stranger with the right email -> 401; public app key raw delete -> 401; owner session delete -> 200; #394 now 404 and gone from Browse.
+- RG-0441 promoted to LOCKED after its live probes returned clean.
