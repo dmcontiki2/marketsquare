@@ -1056,8 +1056,38 @@ def main():
     say("report -> %s  (%d seen, %d acted)" % (path, report["seen"], len(report["actions"])))
     _post_heartbeat(report, mode, key)
     report["backup"] = _backup_lane()
+    report["standup"] = _standup_lane()
     _flush()
     return 0
+
+
+def _standup_lane():
+    """STANDUP-WATCHDOG-1 (written 23 Sep 2026, wired here the same day).
+
+    WHY THIS EXISTS. The daily stand-up is the routine that notices everything else, and
+    when IT stops nothing notices. Two separate silent outages are on the record:
+    2 Aug - 18 Sep 2026, when every run was cloud-only with no write path and 47 days of
+    pulses were run but never logged; and 20-22 Sep 2026, when the schedule simply did not
+    fire and PULSE_LOG went three days unwritten. Both were found by a human reading the
+    file weeks later, which is not a detector.
+
+    So the loop that runs every ~20 minutes now reads the freshness of the stand-up's own
+    output. The producer is scripts/standup_freshness.py; this is the one line that makes
+    it a lane. It never raises: a watchdog that can take the run down with it is worse
+    than no watchdog. And per RG-0187 an unreadable PULSE_LOG reports UNKNOWN, never
+    FRESH -- a confident green from a blind probe is exactly how the next outage hides.
+    """
+    rec = {"ran": False, "state": "UNKNOWN", "reason": "", "age_h": None}
+    try:
+        sys.path.insert(0, os.path.join(REPO, "scripts"))
+        import standup_freshness as _sf
+        r = _sf.check()
+        rec.update({"ran": True, "state": r.get("state"), "reason": r.get("reason"),
+                    "age_h": r.get("age_h")})
+    except Exception as e:
+        rec["reason"] = "watchdog could not run: %s: %s" % (type(e).__name__, str(e)[:120])
+    say("standup lane: %s (%s)" % (rec["state"], rec["reason"] or "-"))
+    return rec
 
 
 def _backup_lane():

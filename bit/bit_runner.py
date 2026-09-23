@@ -20,14 +20,67 @@ for i,a in enumerate(sys.argv):
 VERBOSE = "--verbose" in sys.argv
 AS_JSON = "--json" in sys.argv
 
+# -- BIT-EDGE-BLIND-1 (23 Sep 2026) -----------------------------------------
+# THE BOARD CONVICTED THE APP OF SEVEN BROKEN MARKERS BECAUSE CLOUDFLARE WOULD NOT
+# TALK TO IT. Measured this run: `curl https://trustsquare.co/health` -> 200, and the
+# same URL through this file's urllib client -> 403, "Server: cloudflare", body
+# "error code: 1010" -- Cloudflare's bad-User-Agent refusal, which fires on the
+# default "Python-urllib/3.x". Every check here opens `if st != 200: return False`,
+# so ONE edge refusal printed S1 B-BEA-HEALTH FAIL, six more S2 FAILs and "Worst
+# severity exit=2" -- a gate that blocks, against a site that was answering 200 the
+# whole time.
+#
+# Two changes, and the second is the one that matters:
+#  (a) identify ourselves. A named UA is what the integrity check wants, and an
+#      instrument probing its own site should say who it is anyway. MEASURED: curl,
+#      browser and "TrustSquare-BIT" UAs all return 200; only the default is refused.
+#  (b) AN EDGE REFUSAL IS NOT A VERDICT. If the edge refuses us again the board stops
+#      and reports NOT MEASURED (exit 3) instead of printing failures it never earned.
+#      NOT WEAKENED: a real 403 FROM THE APP still fails its marker. The signature
+#      tested is Cloudflare's own (cloudflare server/cf-ray plus a 1010/1020/challenge
+#      body), never "any 403".
+#
+# FOURTH time this repo has settled this doctrine, first time this file got it:
+# RG-0187 (an instrument that cannot run reads UNVERIFIED), RG-0401/EDGE-BLIND (a
+# Cloudflare refusal is BLIND, never REGRESSED), RG-0420/UPSTREAM-BLIND (an origin 502
+# is blind), LEDGER-VANTAGE-BLIND-1 (an unmounted sibling project is blind).
+# A false red costs the same trust as a false green, and this one carried an S1.
+UA = "TrustSquare-BIT/1.0 (+https://trustsquare.co; internal build-integrity board)"
+EDGE_REFUSALS = []
+
+
+def _is_edge_refusal(status, body, hdrs):
+    """True only for the EDGE refusing to pass us through -- never for the app's own 403."""
+    if status not in (403, 503, 429):
+        return False
+    keys = {k.lower() for k in (hdrs or {})}
+    server = ""
+    for k, v in (hdrs or {}).items():
+        if k.lower() == "server":
+            server = str(v).lower()
+    if "cloudflare" not in server and "cf-ray" not in keys:
+        return False
+    txt = (body or b"")[:2000].decode("utf-8", "replace").lower()
+    return ("error code: 1010" in txt or "error code: 1020" in txt
+            or "attention required" in txt or "checking your browser" in txt
+            or "just a moment" in txt or "cf-error-details" in txt)
+
+
 def _get(path, headers=None, timeout=15):
     url = BASE.rstrip("/") + path
-    req = urllib.request.Request(url, headers=headers or {})
+    h = {"User-Agent": UA, "Accept": "*/*"}
+    h.update(headers or {})
+    req = urllib.request.Request(url, headers=h)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, r.read()
     except urllib.error.HTTPError as e:
-        return e.code, (e.read() if hasattr(e,"read") else b"")
+        body = e.read() if hasattr(e, "read") else b""
+        hdrs = dict(getattr(e, "headers", {}) or {})
+        if _is_edge_refusal(e.code, body, hdrs):
+            EDGE_REFUSALS.append("%s -> %s (cloudflare edge refusal; the app was not reached)"
+                                 % (path, e.code))
+        return e.code, body
     except Exception as e:
         return None, str(e).encode()
 
@@ -122,6 +175,24 @@ def main():
         results.append({"id":b["id"],"sev":b["severity"],"type":b["type"],"state":state,"detail":detail,"desc":b["desc"]})
         if state=="FAIL": worst=max(worst, 2 if b["severity"]=="S1" else 1)
     fails=[r for r in results if r["state"]!="PASS"]
+    # BIT-EDGE-BLIND-1: if the edge refused us at any point this board measured NOTHING.
+    # Exit 3 = NOT MEASURED, deliberately neither 0 (healthy) nor 1/2 (confirmed fail), so
+    # no caller and no stand-up can read a refusal as good news or as a real regression.
+    if EDGE_REFUSALS:
+        if AS_JSON:
+            print(json.dumps({"base": BASE, "state": "NOT MEASURED",
+                              "reason": "cloudflare edge refusal",
+                              "refusals": EDGE_REFUSALS[:10],
+                              "markers_unread": len(fails), "markers_total": len(results),
+                              "note": "instrument limit, not a verdict -- the app was never "
+                                      "reached. Re-run from a vantage the edge allows."},
+                             indent=2))
+        else:
+            print("[BIT] NOT MEASURED against %s -- the Cloudflare edge refused this client "
+                  "(%s). The app was never reached, so nothing here is a verdict; %d of %d "
+                  "markers went unread. Re-run from a vantage the edge allows."
+                  % (BASE, EDGE_REFUSALS[0], len(fails), len(results)))
+        return 3
     if AS_JSON:
         print(json.dumps({"base":BASE,"worst":worst,"results":results},indent=2)); return worst
     if not fails and not VERBOSE:

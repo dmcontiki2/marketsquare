@@ -45,8 +45,48 @@ _ANON_AI_SYSTEM = extract("_ANON_AI_SYSTEM")
 i = BEA.index("def _build_vision_prompt")
 j = min(x for x in (BEA.find("\ndef ", i + 10), BEA.find("\n@app.", i + 10),
                     BEA.find("\nasync def ", i + 10)) if x != -1)
-ns = {"_CURRENCY_MAP": _CURRENCY_MAP}
-exec(BEA[i:j], ns)
+# ── BIT-NS-1 (23 Sep 2026) ──────────────────────────────────────────────────
+# This harness lifts _build_vision_prompt OUT of bea_main.py and execs it in a namespace
+# it hand-keeps. On 23 Sep the app's copy grew an os.environ read, the namespace carried
+# only _CURRENCY_MAP, and the whole board died on `NameError: name 'os' is not defined`
+# BEFORE case 1 -- so the stand-up that reads "BIT board 8/8 PASS" every morning had
+# nothing to read at all. A hand-kept namespace against a file somebody else edits daily
+# is a standing trap, not a one-off: it breaks again the next time the slice touches re,
+# json or time.
+#
+# TWO CHANGES, and the second is the one that matters:
+#  (a) seed the namespace from the stdlib modules the app actually uses, resolved on
+#      demand, so ordinary drift heals itself;
+#  (b) a name that is STILL missing exits with a sentence naming it and saying the board
+#      DID NOT RUN. Silence and a traceback both read as "no news" in a scheduled run,
+#      and this instrument's whole job is to be the thing that speaks up. Same doctrine as
+#      RG-0187 / LEDGER-VANTAGE-BLIND-1: an instrument that could not look says so, loudly,
+#      and never lets its own failure be mistaken for a pass.
+import importlib as _importlib
+
+_SLICE_STDLIB = ("os", "re", "json", "time", "math", "base64", "hashlib",
+                 "datetime", "random", "textwrap", "unicodedata", "html")
+
+
+def _slice_ns(seed):
+    ns = dict(seed)
+    for m in _SLICE_STDLIB:
+        try:
+            ns.setdefault(m, _importlib.import_module(m))
+        except ImportError:
+            pass
+    return ns
+
+
+ns = _slice_ns({"_CURRENCY_MAP": _CURRENCY_MAP})
+try:
+    exec(BEA[i:j], ns)
+except NameError as _e:
+    raise SystemExit(
+        "BIT-NS-1: the _build_vision_prompt slice lifted out of bea_main.py needs a name this "
+        "harness does not provide (%s). THE BOARD DID NOT RUN -- it did not pass and it did not "
+        "fail. Add the name to _SLICE_STDLIB if it is a stdlib module, or to the seed dict if it "
+        "is an app constant, then re-run. Never report 8/8 from a run that ended here." % _e)
 build_vision_prompt = ns["_build_vision_prompt"]
 
 TRIAGE_SYSTEM = (
