@@ -101,3 +101,12 @@ Part A: 1 shipped as roles/lang_countries.json (file, not table); 2 PARTLY — t
 Part B: 1 yes; 2 shipped as listing columns (lang_extra/title_extra/desc_extra/extra_back/extra_status), not a separate table — same behaviour; 3–5 yes; 6 yes (edit of title/description resets to draft); 7 yes; 8 yes; 9 yes (code chips on card and detail).
 Part C: 1 shipped (email + WhatsApp link opens the hub on her advert with Publish); 2 shipped (role, class, area, rate, days as availability; languages in the text); 3 shipped in the preview (/quality/preview = the server scorer); 4 shipped (Browse re-reads after Publish); 5 live; 6 preview (top bar) + main-app pill lifted off the nav (live); 7 preview; 8 preview; 9 live; 10 preview; 11 preview; 12 preview.
 Part D: nine lists seeded with reader_needed rows unoffered; MZ/DE lead-language fallback: NOT BUILT in Quick (Quick is ZA-only today).
+
+### Update — 23 Sep 2026, later (David: "switch the languages on", one-tap publish, one door, draft words, arrival)
+- Languages: ON for everyone (migration 049; /flags lang_layer = true, probed).
+- Part C1 superseded by ONE-TAP-PUBLISH-1: the Quick door publishes in the tap (POST /listings/quick-publish); the live letter + arrival screen are her way back.
+- One door: /quick/ and every /q/<category> serve the same file (md5-identical, probed); /quick_next.html 301s to /quick/.
+- House rule HARNESS.html == quick.html: now TRUE (copied; the old door build is retired).
+- Draft/publish/arrival words: drafted in zu, xh, af, nso (46 entries) for David's readers (RUL-160).
+- Arrival celebration: built (photo + title rise into a card; reduced motion respected).
+- Not fired live: a real one-tap publish (it would put a test advert in front of buyers); the refusal paths were probed live.

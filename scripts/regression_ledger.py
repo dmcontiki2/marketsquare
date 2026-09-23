@@ -26847,7 +26847,7 @@ def rg_rulings_settled_read_1():
 
 @entry("RG-0438", "ONE-TAP-PUBLISH-1 + LANG-ON-1 + ARRIVAL-1: one tap publishes from the Quick door, the "
                   "languages are on for everyone, and saving is an arrival",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-23",
        scope="RUL-163 (David, 23 Sep 2026). bea_main.py POST /listings/quick-publish (create + terms-by-tap + "
              "publish in one call; a missing accept_terms is refused); quick.html publishNow()/celebrate(); "
              "migration 049 arms launch_switches.lang_layer. LIVE legs: /flags reports lang_layer ON to an "
