@@ -19574,7 +19574,7 @@ async function msUnverifiedGate(sellerEmail, category){
     var h=document.getElementById('ts-langh');
     if(!h){ h=document.createElement('button'); h.id='ts-langh'; h.setAttribute('data-notranslate','1');
       h.style.cssText='margin-right:6px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);'
-        +'border-radius:20px;padding:6px 10px;font:800 12px system-ui,sans-serif;cursor:pointer;letter-spacing:.05em';
+        +'border-radius:20px;padding:6px 10px;font:800 12px system-ui,sans-serif;cursor:pointer;letter-spacing:.05em;white-space:nowrap';
       auth.parentNode.insertBefore(h, auth);
       h.onclick=function(e){ e.stopPropagation(); var b=document.getElementById('ts-langb'); if(b) b.click(); }; }
     h.textContent='\u{1F310} '+String(lang||'en').toUpperCase();
