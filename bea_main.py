@@ -2417,6 +2417,13 @@ class Listing(BaseModel):
     # also lands drafts, never mails anybody (RUL-096(f): sending stays reserved).
     source: Optional[str] = None
     lang_orig: Optional[str] = None   # LANG-LAYER-1 (RUL-162): the language she wrote the advert in
+    # LISTING-COUNTRY-1 (23 Sep 2026): the create path named no country, so every
+    # listing a real seller made took the table default 'ZA' whatever city it was in.
+    # PROBED on the live data: every seeded market was right and the only wrong pair
+    # was Montana|ZA -- 4 rows, every wizard-created listing in that city. 'Montana' is
+    # not in geo_cities at all, which is why the geo lookup could never have saved it:
+    # the link the seller arrived on is the only place the country is actually known.
+    country: Optional[str] = None
 
 class User(BaseModel):
     email: str
@@ -3541,15 +3548,24 @@ def zoom_watch_delete(watch_id: int, email: str):
 
 @app.post("/listings")
 def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: str = Depends(auth.require_api_key)):
+    listing.title = _plain_text(listing.title)              # AUDIT-XSS-1
+    listing.description = _plain_text(listing.description)
     if not listing.suburb:
         raise HTTPException(status_code=400, detail="suburb is required")
     launch_redemption.check_listing_velocity(listing.seller_email)  # per-day flood control (env-gated OFF)
     conn = database.get_db()
     # Resolve geo_city_id from city name at creation time
     _gcity_row = conn.execute(
-        "SELECT id FROM geo_cities WHERE name=? AND active=1 LIMIT 1", (listing.city,)
+        "SELECT id, country_iso2 FROM geo_cities WHERE name=? AND active=1 LIMIT 1",
+        (listing.city,)
     ).fetchone()
     _geo_city_id = _gcity_row["id"] if _gcity_row else None
+    # LISTING-COUNTRY-1: what the seller told us wins, then the geo table, then the
+    # old default -- which is now a last resort rather than the silent answer for
+    # every city the geo table has never heard of.
+    _country = ((listing.country or "")
+                or (_gcity_row["country_iso2"] if _gcity_row else "")
+                or "ZA").strip().upper()[:2]
     _validate_rental_fields(listing.rental_status, listing.available_from)
     _validate_vehicle_fields(listing.vehicle_specs, listing.spec_confirmed)
     _validate_price_unit(listing.category, listing.price)   # JNR-FIX-5B
@@ -3561,8 +3577,9 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
             trust_score, seller_email, listing_status, published_at,
             street_address, listing_lat, listing_lng, geo_city_id,
             make, model, variant, vehicle_year, mileage_km, transmission,
-            fuel_type, body_type, drivetrain, colour, vehicle_specs, spec_confirmed)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            fuel_type, body_type, drivetrain, colour, vehicle_specs, spec_confirmed,
+            country)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (listing.title, listing.price, listing.category, listing.city,
          listing.area, listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
          listing.service_class, listing.prop_type, listing.beds, listing.baths, listing.garages,
@@ -3573,7 +3590,8 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
          listing.street_address, listing.listing_lat, listing.listing_lng, _geo_city_id,
          listing.make, listing.model, listing.variant, listing.vehicle_year,
          listing.mileage_km, listing.transmission, listing.fuel_type, listing.body_type,
-         listing.drivetrain, listing.colour, listing.vehicle_specs, listing.spec_confirmed)
+         listing.drivetrain, listing.colour, listing.vehicle_specs,
+         listing.spec_confirmed, _country)
     )
     new_id = cursor.lastrowid
     # LANG-LAYER-1 (RUL-162): record the advert's original language when the composer knows it
@@ -4003,8 +4021,19 @@ class _QuickPublishIn(BaseModel):
     accept_terms: bool = False
 
 
+_QP_IP_LOG = {}
+_QP_IP_MAX = 5            # one-tap publishes per client address per 24h (AUDIT-Q1)
+
+
+def _qp_client_ip(request):
+    h = request.headers
+    return (h.get("cf-connecting-ip") or (h.get("x-forwarded-for") or "").split(",")[0].strip()
+            or (request.client.host if request.client else "?"))
+
+
 @app.post("/listings/quick-publish")
-def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, ts_user: str = Cookie(default=None)):
+def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, request: Request,
+                  ts_user: str = Cookie(default=None)):
     """ONE-TAP-PUBLISH-1 (David, 23 Sep 2026: "make the SAVE and PUBLISH a single tap -- your reasoning
     here is impeccable"; RUL-145: no wall, no account). The Quick door's one ask -- her email, on a
     button that says it accepts the terms, with the terms linked beside it -- creates the advert AND
@@ -4019,15 +4048,41 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, ts_u
     em = (sess or body.email or "").strip().lower()
     if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", em):
         raise HTTPException(status_code=400, detail="Please type an email address we can reach you on.")
+    # AUDIT-Q1 (23 Sep 2026): one tap may create a NEW seller and publish at once, but it may never act
+    # for somebody who already exists. An address that already has an account, typed by someone who
+    # is not signed in as it, gets a DRAFT and a sign-in link to that inbox -- only its owner can
+    # publish it, and nobody's terms are accepted on their behalf. A per-address rate limit stops the
+    # door being used to mail strangers.
+    ip = _qp_client_ip(request)
+    import time as _qt
+    now_t = _qt.time()
+    hits = [t for t in _QP_IP_LOG.get(ip, []) if now_t - t < 86400]
+    if len(hits) >= _QP_IP_MAX and not sess:
+        raise HTTPException(status_code=429, detail="Too many adverts from this connection today -- please try again tomorrow.")
+    hits.append(now_t); _QP_IP_LOG[ip] = hits
+    conn = database.get_db()
+    try:
+        _u = conn.execute("SELECT email FROM users WHERE LOWER(email)=?", (em,)).fetchone()
+    finally:
+        conn.close()
+    existing_account = bool(_u) and not sess
     fields = dict(body.listing or {})
+    # AUDIT-Q2: the browser never sets a score, an image path, a spec blob or an attestation.
+    for _k in ("trust_score", "thumb_url", "medium_url", "vehicle_specs", "spec_confirmed", "listing_status",
+               "published_at", "seller_email", "source"):
+        fields.pop(_k, None)
     fields["seller_email"] = em
-    fields["source"] = "quick_live"            # no 'waiting' letter: it is live, the live letter goes instead
+    fields["source"] = "quick" if existing_account else "quick_live"   # 'quick' = draft + the way-back letter
     try:
         listing = Listing(**{k: v for k, v in fields.items() if k in Listing.__fields__})
     except Exception as exc:
         raise HTTPException(status_code=422, detail="That advert is missing something: %s" % str(exc)[:160])
     created = create_listing(listing, background_tasks, "quick-door")
     lid = int(created["id"])
+    if existing_account:
+        _log.info("ONE-TAP-PUBLISH-1: %s already has an account and is not signed in -- draft %s + sign-in letter", em, lid)
+        return {"id": lid, "live": False, "verify": True,
+                "detail": "You already have a TrustSquare account. We emailed you a link -- open it to publish."}
     conn = database.get_db()
     try:
         conn.execute("INSERT INTO users (email, aa_free_used, aa_sessions_remaining) VALUES (?, 0, 0) "
@@ -4041,6 +4096,7 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, ts_u
     try:
         publish_listing(lid, em)
     except HTTPException as he:
+        background_tasks.add_task(_quick_draft_return, em, lid, listing.title)   # AUDIT-Q3: the way back is real
         return {"id": lid, "live": False, "detail": he.detail, "status": he.status_code}
     background_tasks.add_task(_quick_live_mail, em, lid, listing.title)
     return {"id": lid, "live": True}
@@ -4055,7 +4111,10 @@ def quality_preview(body: dict = Body(default={})):
     allowed = ("description", "category", "prop_type", "beds", "baths", "listing_type", "make", "model",
                "vehicle_year", "mileage_km", "transmission", "subject", "level", "mode", "service_type",
                "price", "suburb", "area", "title")
-    row = {k: (body or {}).get(k) for k in allowed}
+    row = {}
+    for k in allowed:                          # AUDIT-Q4: odd types are coerced, never a 500
+        v = (body or {}).get(k)
+        row[k] = None if v is None else (v if isinstance(v, (int, float)) and not isinstance(v, bool) else str(v)[:4000])
     score, missing = _import_quality_score(row)
     return {"score": round(float(score)), "missing": missing}
 
@@ -4079,8 +4138,97 @@ def _stamp_quality_score(conn, listing_id):
         return None
 
 
+@app.get("/listings/{listing_id}/withdraw")
+def withdraw_listing(listing_id: int, email: str):
+    """RECOUP-WITHDRAW-1 (23 Sep 2026) -- the "take it down" link in a recovery letter.
+
+    A letter that asks a seller whether they want their draft published has to offer
+    the other answer just as plainly, and it has to be one tap: no account, no reply,
+    no explanation asked for. This archives the seller's own listing and DELETES the
+    photographs, because that is what the letter says it does -- a promise to delete
+    that only hides a row would be worse than not offering it.
+
+    Auth is the bare ?email=, the same shape /listings/{id}/publish already uses: the
+    action is the seller's own and it removes rather than exposes.
+    """
+    conn = database.get_db()
+    row = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+    owner = (row["seller_email"] or "").strip().lower()
+    if owner and owner != (email or "").strip().lower():
+        conn.close()
+        raise HTTPException(status_code=403, detail="Not authorised to withdraw this listing")
+
+    # Delete the photographs from object storage before the row forgets where they are.
+    keys, deleted, failed = [], 0, 0
+    try:
+        _urls = json.loads(row["photo_urls"] or "[]")
+    except Exception:
+        _urls = []
+    for u in list(_urls) + [row["thumb_url"], row["medium_url"]]:
+        u = str(u or "")
+        if u.startswith(R2_PUBLIC_URL + "/"):
+            k = u[len(R2_PUBLIC_URL) + 1:].split("?")[0]
+            if k and k not in keys:
+                keys.append(k)
+    if _S3_CONFIGURED:
+        for k in keys:
+            try:
+                _s3.delete_object(Bucket=HETZNER_S3_BUCKET, Key=k)
+                deleted += 1
+            except Exception as _ex:
+                failed += 1
+                _log.warning("RECOUP-WITHDRAW-1: could not delete %s (%s)", k, _ex)
+    else:
+        failed = len(keys)
+
+    conn.execute(
+        "UPDATE listings SET listing_status='archived', published_at=NULL, "
+        "photo_urls=NULL, thumb_url=NULL, medium_url=NULL, "
+        "status_changed_at=CURRENT_TIMESTAMP, "
+        "block_cause=COALESCE(block_cause,'withdrawn_by_seller') WHERE id = ?",
+        (listing_id,))
+    conn.commit()
+    conn.close()
+    _log.info("RECOUP-WITHDRAW-1: listing %s withdrawn by %s; %s/%s photos deleted",
+              listing_id, email, deleted, len(keys))
+
+    note = ("Your photographs have been deleted."
+            if failed == 0 else
+            "Your advert is down. One or more photographs could not be deleted "
+            "automatically; email us and we will remove them by hand.")
+    return HTMLResponse(
+        "<!doctype html><meta charset='utf-8'>"
+        "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+        "<title>Advert withdrawn</title>"
+        "<body style=\"margin:0;background:#0b1020;color:#e8ecf4;"
+        "font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;"
+        "display:flex;align-items:center;justify-content:center;min-height:100vh\">"
+        "<div style='max-width:32rem;padding:2rem'>"
+        "<h1 style='font-size:1.4rem;margin:0 0 1rem'>Done - your advert is down.</h1>"
+        "<p style='margin:0 0 1rem'>" + note + "</p>"
+        "<p style='margin:0;color:#9aa4b8'>You will not hear from us about it again. "
+        "Thank you for the time you did put into it.</p>"
+        "</div></body>")
+
+
 @app.put("/listings/{listing_id}/publish")
-def publish_listing(listing_id: int, email: str, attested: int = 0):
+def publish_listing_route(listing_id: int, email: str = "", attested: int = 0,
+                          accepted_terms: int = 0,
+                          ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """AUDIT-AUTH-1 (23 Sep 2026): the publish door acts as the proven session, never as a typed
+    ?email= -- a stranger could previously publish anyone's draft by naming them."""
+    # EULA-PUBLISH-1: accepted_terms rides through to the gate. Without this the
+    # parameter exists on the inner function and is unreachable from HTTP, which is
+    # the quiet way a consent gate becomes decoration.
+    return publish_listing(listing_id, _actor(ts_user, email, "listing-publish", x_admin_key),
+                           attested, accepted_terms)
+
+
+def publish_listing(listing_id: int, email: str, attested: int = 0,
+                    accepted_terms: int = 0):
     """Transition a draft listing to live. Called by the seller onboarding flow
     once the seller has chosen a subscription tier and accepted the EULA.
     Auth: ?email= must match seller_email on the listing (or listing has no owner yet).
@@ -4092,7 +4240,7 @@ def publish_listing(listing_id: int, email: str, attested: int = 0):
         conn.close()
         raise HTTPException(status_code=404, detail="Listing not found")
     # Email auth: if listing has a seller_email it must match; if NULL accept first caller
-    if existing["seller_email"] and existing["seller_email"] != email:
+    if existing["seller_email"] and existing["seller_email"].strip().lower() != (email or "").strip().lower():
         conn.close()
         raise HTTPException(status_code=403, detail="Not authorised to publish this listing")
     current_status = existing["listing_status"] or "draft"
@@ -4106,12 +4254,37 @@ def publish_listing(listing_id: int, email: str, attested: int = 0):
     ).fetchone()
     # Superusers bypass the EULA gate (for admin testing)
     is_super = bool(user_row["is_superuser"]) if user_row else False
-    if user_row and not user_row["eula_accepted_at"] and not is_super:
-        conn.close()
-        raise HTTPException(
-            status_code=403,
-            detail="EULA not accepted — seller must accept the TrustSquare Terms before publishing."
-        )
+    # ── EULA-PUBLISH-1 (23 Sep 2026) ─────────────────────────────────────────
+    # This gate read `if user_row and not user_row["eula_accepted_at"]`, so a seller
+    # with NO users row at all fell straight through it and published having accepted
+    # nothing. That is not a corner case -- the guided wizard creates a listing from
+    # seller_email alone, so EVERY FIRST-TIME SELLER is exactly that shape. PROVEN on
+    # the live site 23 Sep 2026: a fresh address created a draft and published it,
+    # 200 "Listing is now live", publicly visible, with no account and no acceptance
+    # anywhere on record. The screen that asks for consent is well built -- the Terms
+    # sit in a scroll box, the confirm tick is hidden until you reach the end, and
+    # "Go live" is disabled until you tick it -- but ALL of that lived in the browser,
+    # and a gate that lives only in the browser is not a gate.
+    # Acceptance is now required on every path and RECORDED here: a caller that has
+    # not accepted sends accepted_terms=1 with the publish -- the tick the seller just
+    # made -- and the row is created and stamped at that moment. Nothing is bypassed
+    # and nothing is taken on trust from the client.
+    if not user_row or not user_row["eula_accepted_at"]:
+        if not is_super:
+            if not int(accepted_terms or 0):
+                conn.close()
+                raise HTTPException(
+                    status_code=403,
+                    detail=("EULA not accepted - the seller must accept the TrustSquare "
+                            "Terms before publishing."))
+            conn.execute("INSERT INTO users (email) VALUES (?) ON CONFLICT(email) DO NOTHING",
+                         (email,))
+            conn.execute("UPDATE users SET eula_accepted_at = "
+                         "COALESCE(eula_accepted_at, CURRENT_TIMESTAMP) WHERE email = ?",
+                         (email,))
+            user_row = conn.execute(
+                "SELECT trust_score, eula_accepted_at, is_superuser FROM users WHERE email = ?",
+                (email,)).fetchone()
     user_trust = int(user_row["trust_score"] or 0) if user_row else 0
 
     # ── CARS-SPEC-1 (D3): vehicle attestation gate ────────────────────────
@@ -4264,8 +4437,10 @@ def publish_listing(listing_id: int, email: str, attested: int = 0):
     return {"message": "Listing is now live", "listing_id": listing_id}
 
 @app.get("/listings/mine")
-def get_seller_listings(email: str):
-    """Return all listings for this seller email — no auth key required."""
+def get_seller_listings(email: str = "", ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """Return all listings for this seller -- AUDIT-AUTH-1 (23 Sep 2026): bound to the proven session
+    (RUL-135 / IDENTITY-BIND-2), no longer to whatever email is typed into the query string."""
+    email = _actor(ts_user, email, "listings-mine", x_admin_key)
     conn = database.get_db()
     rows = conn.execute(
         """SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
@@ -4283,8 +4458,22 @@ def get_seller_listings(email: str):
         out.append(d)
     return out
 
+@app.get("/listings/{listing_id}/lang")
+def listing_lang_read(listing_id: int, email: str = "", ts_user: str = Cookie(default=None),
+                      x_admin_key: str = Header(default=None)):
+    """AUDIT-L1: the seller's language panel reads her drafts, back-translation and status here,
+    owner-checked -- the public single-listing read no longer carries them."""
+    conn = database.get_db()
+    try:
+        row = _lang_owner_row(conn, listing_id, ts_user, email, "lang-read", x_admin_key)
+    finally:
+        conn.close()
+    return {k: row.get(k) for k in ("id", "lang_orig", "lang_extra", "title_extra", "desc_extra",
+                                    "extra_back", "extra_status", "country")}
+
+
 @app.get("/listings/{listing_id}")
-def get_listing(listing_id: int):
+def get_listing(listing_id: int, ts_user: str = Cookie(default=None)):
     """Fetch a single listing by ID."""
     conn = database.get_db()
     row = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
@@ -4295,6 +4484,18 @@ def get_listing(listing_id: int):
     if (_d.get("category") or "").lower() == "property":
         _d["availability_label"] = _rental_availability(_d.get("rental_status"), _d.get("available_from"))
     _scrub_vehicle_specs(_d)   # CARS-SPEC-1 D1: unconfirmed vehicle specs never public
+    # AUDIT-L1 (23 Sep 2026): the language working data is never public, an unapproved second
+    # language is hidden, and the seller's identity leaves only for the seller herself (SELLER-ANON-1).
+    _d.pop("extra_back", None); _d.pop("search_en", None)
+    if _d.get("extra_status") != "approved":
+        _d.pop("title_extra", None); _d.pop("desc_extra", None)
+    try:
+        _me = (_session_email(ts_user) or "").strip().lower()
+    except Exception:
+        _me = ""
+    if not _me or _me != (_d.get("seller_email") or "").strip().lower():
+        for _k in ("seller_email", "attested_email"):
+            _d.pop(_k, None)
     return _d
 
 @app.get("/sellers/summary/{listing_id}")
@@ -4321,7 +4522,8 @@ def seller_summary_for_listing(listing_id: int):
 
 
 @app.put("/listings/{listing_id}")
-def update_listing(listing_id: int, update: ListingUpdate, background_tasks: BackgroundTasks, email: Optional[str] = None):
+def update_listing(listing_id: int, update: ListingUpdate, background_tasks: BackgroundTasks, email: Optional[str] = None,
+                   ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
     """Update a published listing.
     Auth: ?email= must match seller_email on the listing.
     If seller_email is NULL (admin-created listing with no owner yet), any email is
@@ -4336,19 +4538,6 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
         conn.close()
         raise HTTPException(status_code=404, detail="Listing not found")
 
-    # LANG-LAYER-1 (RUL-162): if she edits the ORIGINAL words, an approved second language no
-    # longer says what the advert says -- it drops back to draft and asks her again. Never silently
-    # republished, never left drifting.
-    try:
-        _ex_l = dict(existing)
-        if _ex_l.get("extra_status") == "approved" and (
-                (update.title is not None and update.title != _ex_l.get("title")) or
-                (update.description is not None and update.description != _ex_l.get("description"))):
-            conn.execute("UPDATE listings SET extra_status='draft' WHERE id=?", (listing_id,))
-            conn.commit()
-    except Exception as _le:
-        _log.warning("LANG-LAYER-1 extra-reset skipped for %s: %s", listing_id, _le)
-
     if update.price is not None:   # JNR-FIX-5B: same basis guard on edits
         try:
             _validate_price_unit(existing["category"], update.price)   # category not editable via ListingUpdate
@@ -4356,6 +4545,16 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
             conn.close()
             raise
 
+    if update.title is not None:
+        update.title = _plain_text(update.title)            # AUDIT-XSS-1
+    if update.description is not None:
+        update.description = _plain_text(update.description)
+    # AUDIT-AUTH-1 (23 Sep 2026): the editor is the proven session (RUL-135), not the typed ?email=.
+    try:
+        email = _actor(ts_user, email, "listing-update", x_admin_key)
+    except HTTPException:
+        conn.close()
+        raise
     if not email:
         conn.close()
         raise HTTPException(status_code=401, detail="Seller email required — pass ?email=your@email.com")
@@ -4364,7 +4563,7 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
     # and stamp it — first editor becomes the owner.
     if not existing["seller_email"]:
         conn.execute("UPDATE listings SET seller_email = ? WHERE id = ?", (email, listing_id))
-    elif existing["seller_email"] != email:
+    elif existing["seller_email"].strip().lower() != email.strip().lower():
         conn.close()
         raise HTTPException(status_code=403, detail="Not authorised to edit this listing")
 
@@ -4378,6 +4577,20 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
             status_code=403,
             detail="EULA not accepted — please accept the TrustSquare Terms before editing your listing."
         )
+
+    # LANG-LAYER-1 (RUL-162), placed AFTER the owner and terms checks (AUDIT-L2): when the ORIGINAL
+    # words change, the second language no longer says what the advert says. The old translation,
+    # its back-translation and the English search layer are CLEARED (AUDIT-L3) -- so nothing stale can
+    # be approved or searched -- and her panel asks her to draft it again.
+    try:
+        _ex_l = dict(existing)
+        if (_ex_l.get("lang_extra") or _ex_l.get("search_en")) and (
+                (update.title is not None and update.title != _ex_l.get("title")) or
+                (update.description is not None and update.description != _ex_l.get("description"))):
+            conn.execute("UPDATE listings SET extra_status=CASE WHEN lang_extra IS NULL THEN NULL ELSE 'draft' END, "
+                         "title_extra=NULL, desc_extra=NULL, extra_back=NULL, search_en=NULL WHERE id=?", (listing_id,))
+    except Exception as _le:
+        _log.warning("LANG-LAYER-1 extra-reset skipped for %s: %s", listing_id, _le)
 
     # Archive current snapshot before updating
     version_num = conn.execute(
@@ -16062,7 +16275,7 @@ def _quick_live_mail(to_email: str, listing_id: int, title: str) -> None:
         token = _pyjwt.encode({"email": em, "purpose": "signin",
                                "exp": datetime.now(timezone.utc) + timedelta(days=7),
                                "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
-        link = APP_URL + "/?signin=" + token + "&listing=" + str(int(listing_id))
+        link = APP_URL + "/?signin=" + token + "&draft=" + str(int(listing_id))   # hub opens on her advert (AUDIT-S2)
         _log.info("quick-live mail for %s: %s", listing_id, _send_quick_live_email(em, link, title or ""))
     except Exception as exc:
         _log.error("quick-live mail for %s failed: %s", listing_id, exc)
@@ -25312,7 +25525,8 @@ def i18n_translate(body: _I18nIn):
     A write that still loses the race costs this reader nothing: the translation is returned anyway
     and simply gets cached by the next reader."""
     lang = (body.lang or "").strip().lower()
-    if lang not in I18N_LANGS:
+    # AUDIT-L6: only a language that is OFFERED somewhere (RUL-165: ZA only today) may spend the lane.
+    if lang not in I18N_LANGS or lang == "en" or lang not in _lang_offered_anywhere():
         raise HTTPException(status_code=400, detail="unsupported language")
     want, seen = [], set()
     for t in (body.strings or []):
@@ -25420,6 +25634,22 @@ _LANG_COUNTRIES_CACHE = {"d": None}
 LANG_DRAFTS_PER_ADVERT_DAY = 5   # RUL-164: free feature, capped per advert per day (3 AI calls each)
 
 
+def _plain_text(v):
+    """AUDIT-XSS-1 (23 Sep 2026 bug audit): advert titles and descriptions are PLAIN TEXT, and the app
+    renders them into HTML. Markup is removed at the door so no later render path can execute it."""
+    if v is None:
+        return v
+    v = re.sub(r"<[^>]*>", "", str(v))
+    return v.replace("<", "\u2039").replace(">", "\u203a")
+
+
+def _lang_offered_anywhere():
+    out = {"st"}
+    for c in (_lang_countries().get("countries") or {}).values():
+        out.update(code for code, st in (c.get("langs") or []) if st == "offered")
+    return out
+
+
 def _lang_countries():
     if _LANG_COUNTRIES_CACHE["d"] is None:
         try:
@@ -25459,7 +25689,7 @@ def lang_countries(ts_review: str = Cookie(default=None)):
 def _lang_ai(prompt: str, max_tokens: int = 1200) -> str:
     import ai_provider
     res = ai_provider.complete([{"role": "user", "content": prompt}], task=I18N_TASK,
-                               max_tokens=max_tokens, timeout=45)
+                               max_tokens=max_tokens, timeout=18)
     if not (res.ok and res.text):
         raise HTTPException(status_code=503, detail="Translation is busy right now -- please try again in a minute.")
     return res.text.strip()
@@ -25468,6 +25698,7 @@ def _lang_ai(prompt: str, max_tokens: int = 1200) -> str:
 def _lang_translate_advert(title: str, desc: str, src: str, dst: str):
     """One call per direction. Returns (title, description) in dst. The advert is the seller's own
     words: keep her meaning, her prices, her place names and her numbers exactly."""
+    desc = re.sub(r"^\[photos:[^\]]*\]\s*", "", desc or "")   # AUDIT-L4: never translate the photo marker
     src_n = I18N_LANGS.get(src, "English") if src != "en" else "English"
     dst_n = I18N_LANGS.get(dst, "English") if dst != "en" else "English"
     prompt = (
@@ -25535,8 +25766,6 @@ def listing_lang_draft(listing_id: int, body: _LangDraftIn, ts_user: str = Cooki
             raise HTTPException(status_code=429, detail="You can redraft this advert's languages %d times a day." % LANG_DRAFTS_PER_ADVERT_DAY)
         conn.execute("INSERT INTO lang_draft_log (listing_id, day, n) VALUES (?,?,1) "
                      "ON CONFLICT(listing_id, day) DO UPDATE SET n = n + 1", (listing_id, day))
-        conn.execute("INSERT INTO i18n_spend (day, calls) VALUES (?, 3) "
-                     "ON CONFLICT(day) DO UPDATE SET calls = calls + 3", (day,))
         conn.commit()
     finally:
         conn.close()
@@ -25553,9 +25782,16 @@ def listing_lang_draft(listing_id: int, body: _LangDraftIn, ts_user: str = Cooki
         else:
             e_t, e_d = _lang_translate_advert(title, desc, src, "en")
             search_en = e_t + " " + e_d
+    if search_en:
+        search_en = re.sub(r"https?://\S+", " ", search_en)   # AUDIT-L4: no URL words in the search layer
+    _calls = (2 if dst else 0) + (1 if (src != "en" and dst != "en") else 0)
     conn = database.get_db()
     try:
         conn.execute("PRAGMA busy_timeout=4000")
+        if _calls:   # AUDIT-L7: the day's ceiling is charged with the calls actually made, after they succeeded
+            _d7 = datetime.now(timezone.utc).date().isoformat()
+            conn.execute("INSERT INTO i18n_spend (day, calls) VALUES (?, ?) "
+                         "ON CONFLICT(day) DO UPDATE SET calls = calls + excluded.calls", (_d7, _calls))
         conn.execute("UPDATE listings SET lang_orig=?, lang_extra=?, title_extra=?, desc_extra=?, extra_back=?, "
                      "extra_status=?, search_en=? WHERE id=?",
                      (src, dst or None, t_x, d_x, back, "draft" if dst else None,

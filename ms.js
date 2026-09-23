@@ -4915,14 +4915,16 @@ function msLandDraft(){
   if(!id) return;
   (function tryIt(n){
     var btn=null;
-    try{ btn=document.querySelector('[onclick="dashPublish('+id+')"]'); }catch(e){}
+    try{ btn=document.querySelector('[onclick="dashPublish('+id+')"]') || document.querySelector('[onclick="openEditListing('+id+')"]'); }catch(e){}
     if(btn){
       try{ sessionStorage.removeItem('ts_land_draft'); }catch(e){}
       var card=btn.closest('.mlcard')||btn.parentNode.parentNode;
       try{ card.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){ card.scrollIntoView(); }
       card.style.transition='box-shadow .4s'; card.style.boxShadow='0 0 0 3px #7C3AED, 0 10px 30px rgba(124,58,237,.35)';
-      btn.textContent='Publish my advert';
-      if(typeof showToast==='function') showToast('Here is the advert you just made \u2014 tap Publish when it looks right.');
+      var _isPub=/dashPublish/.test(btn.getAttribute('onclick')||'');
+      if(_isPub) btn.textContent='Publish my advert';
+      if(typeof showToast==='function') showToast(_isPub ? 'Here is the advert you just made \u2014 tap Publish when it looks right.'
+                                                         : 'Here is your advert \u2014 it is live. Add photos to make it stronger.');
       return;
     }
     if(n>0) setTimeout(function(){ tryIt(n-1); }, 500);
@@ -4950,9 +4952,10 @@ function msLangView(l){
   var orig = l._lo || 'en', x = l._lx;
   var showX = !!(x && (x.lang===app) !== !!_msLangFlip[l.id]);
   var code = showX ? x.lang : orig;
-  if(showX){ v.title = x.title; v.desc = x.desc || l.desc; }
+  var _e=function(t){ return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  if(showX){ v.title = _e(x.title); v.desc = x.desc ? _e(x.desc) : l.desc; }   /* AUDIT-S4: AI text is escaped */
   v.chip = ' <span class="ts-lchip" title="This advert is in '+msLangCode(code)+'">'+msLangCode(code)+'</span>';
-  if(x) v.flip = '<button class="ts-lflip" onclick="_msLangFlip[\''+l.id+'\']=!_msLangFlip[\''+l.id+'\'];openDetail(\''+l.id+'\')">'
+  if(x) v.flip = '<button class="ts-lflip" onclick="_msLangFlip[\''+l.id+'\']=!_msLangFlip[\''+l.id+'\'];window._msRerender=true;openDetail(\''+l.id+'\')">'
     + 'Also in ' + msLangCode(showX ? orig : x.lang) + ' \u2014 show it</button>';
   return v;
 }
@@ -4983,11 +4986,14 @@ function openDetail(id){
     if (typeof showToast === 'function') showToast('That listing is not in view right now — try Browse.');
     return;
   }
-  msTrackView(l);
+  /* AUDIT-L5: a language re-render of the SAME advert is not a new visit -- no extra view is
+     counted and Back still returns to where she came from. */
+  const _rerender = !!window._msRerender; window._msRerender = false;
+  if(!_rerender) msTrackView(l);
   const _lv = msLangView(l);   /* LANG-LAYER-1: which words of the advert this reader sees */
   window._msLastDetail = l.id;
   const active=document.querySelector('.screen.active');
-  prevScreen=active?active.id.replace('screen-',''):'browse';
+  if(!_rerender) prevScreen=active?active.id.replace('screen-',''):'browse';
   const t=trustTier(l.trust),m=catCfg(l).model,isCommit=m==='commit';
   const _introKey = `${l.sellerIdx==null?0:l.sellerIdx}-${l.id}`;
   const _introAccepted = acceptedIntros.has(_introKey);
@@ -7232,7 +7238,11 @@ async function _sobGoLiveInner() {
       }
       // Publish the draft listing
       const res = await fetch(
-        BEA_URL + '/listings/' + draft.id + '/publish?email=' + encodeURIComponent(email) + _attQ,
+        // EULA-PUBLISH-1: this call is only ever reached from sob phase 3, AFTER the
+        // Terms have been scrolled to the end and the confirm box ticked, so it carries
+        // that acceptance to the server -- which now records it rather than assuming it.
+        BEA_URL + '/listings/' + draft.id + '/publish?email=' + encodeURIComponent(email)
+          + _attQ + '&accepted_terms=1',
         { method: 'PUT', credentials: 'include' }   // SEAM-PROOF-1
       );
       const resText = await res.text();
@@ -8630,8 +8640,18 @@ async function goHandoff() {
   // A self-serve "not sure yet" seller who has reached a saved draft should
   // never lose it. Email a one-tap sign-in link so they can leave now and
   // return to finish — or decide not to list — anytime. Once per session;
-  // invite (magic-link) users already have their own link.
-  if (BEA_ENABLED && !magicLink.active && goState.email && goState.listingId && !goState._returnLinkSent) {
+  // Invited arrivals included -- see RETURN-LINK-1 below.
+  /* RETURN-LINK-1 (23 Sep 2026) -- THE LINE THAT LOST RICK WEMPLE.
+     This read `!magicLink.active`, on the reasoning written above it: an invited
+     seller 'already has their own link'. He does not. The link in a cold letter
+     carries ?magic=1 and drops him back at the START of the sell flow; it is not a
+     link to the draft he just built, and nothing else told him the draft existed.
+     EVERY cold prospect arrives with magicLink.active === true, so the one safety
+     net under a stranded draft was switched off for exactly the population we mail.
+     PROVEN: a licensed Montana outfitter built a 94-scoring advert with four of his
+     own photographs on 12 Sep 2026, left, and heard nothing for eleven days.
+     A saved draft now always earns a way back. */
+  if (BEA_ENABLED && goState.email && goState.listingId && !goState._returnLinkSent) {
     goState._returnLinkSent = true;
     fetch(BEA_URL + '/auth/request-link', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -10361,6 +10381,10 @@ async function elLangRender(raw){
     if(!box){ box=document.createElement('div'); box.id='el-lang-section'; box.style.marginTop='20px';
               host.parentNode.insertBefore(box, host); }
     var lc=await fetch('/lang/countries',{credentials:'same-origin'}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});
+    /* AUDIT-L1: drafts and the back-translation come from the owner-only read, not the public listing */
+    try{ var _em0=(SELLERS[0]&&SELLERS[0]._email)||localStorage.getItem('ms_aa_email')||'';
+         var _own=await fetch(BEA_URL+'/listings/'+raw.id+'/lang?email='+encodeURIComponent(_em0),{credentials:'same-origin'}).then(function(r){return r.ok?r.json():null;});
+         if(_own) raw=Object.assign({}, raw, _own); }catch(e){}
     if(!lc || !lc.countries) { box.innerHTML=''; return; }
     var iso=String(raw.country||((typeof activeCountry!=='undefined'&&activeCountry&&activeCountry.iso2)||'ZA')).toUpperCase();
     var c=lc.countries[iso]||lc.countries.ZA;
@@ -10408,7 +10432,7 @@ async function elLangRender(raw){
         .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); });
     };
     var msg=function(t,bad){ var m=document.getElementById('el-lang-msg'); if(m){ m.textContent=t; m.style.color=bad?'#b3261e':'#0f8a7e'; } };
-    var refresh=async function(){ try{ var fresh=await apiGet('/listings/'+raw.id); if(fresh&&fresh.id){ elCurrentRaw=fresh; elLangRender(fresh);} }catch(e){} };
+    var refresh=async function(){ try{ elLangRender(Object.assign({}, raw)); }catch(e){} };
     var draft=function(){
       var o=document.getElementById('el-lang-orig').value, x=document.getElementById('el-lang-extra').value;
       msg(x?'Translating\u2026 and translating it back so you can check it. This takes a few seconds.':'Saving\u2026');
@@ -19675,7 +19699,7 @@ async function msUnverifiedGate(sellerEmail, category){
   }
   function setLang(l){
     lang=l; store(KEY,l); document.documentElement.lang=l; seen={}; pill(); try{ hdrPill(); }catch(e){}
-    try{ if(msLangOn()){ var _ds=document.querySelector('.screen.active'); if(_ds && _ds.id==='screen-detail' && window._msLastDetail) openDetail(window._msLastDetail); } }catch(e){}
+    try{ if(msLangOn()){ var _ds=document.querySelector('.screen.active'); if(_ds && _ds.id==='screen-detail' && window._msLastDetail){ window._msRerender=true; openDetail(window._msLastDetail); } } }catch(e){}
     var list=nodes(document.body);
     if(l==='en'){ paint(list); return; }
     loadDict(l); paint(list); ask(list);

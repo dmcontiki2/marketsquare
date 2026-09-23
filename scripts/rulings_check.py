@@ -1068,6 +1068,10 @@ REFLECTIONS = {
  # LANG-LAYER-1 (23 Sep 2026): Sepedi takes Sesotho's place in South Africa; nine country lists
  # approved; the advert speaks the lister's language. Reflected in the approved-list file the app
  # reads, the server's language set, the app's menu, and the Quick door's five languages.
+ "RUL-165": [
+   ("RULINGS.md", ["SOUTH AFRICA GOES LIVE FIRST"], []),
+   ("roles/lang_countries.json", ['"prepared"', '["zu","offered"]'], ['["pt","offered"]', '["de","offered"]', '["sw","offered"]', '["tn","offered"]']),
+ ],
  "RUL-163": [
    ("RULINGS.md", ["SAVE AND PUBLISH ARE ONE TAP"], []),
    ("quick.html", ["ONE-TAP-PUBLISH-1", "ARRIVAL-1", "/listings/quick-publish", "QUICK-NEXT-1"], []),

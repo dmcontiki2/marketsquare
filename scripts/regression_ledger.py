@@ -26740,7 +26740,7 @@ def rg_publish_wall_1():
 
 @entry("RG-0430", "LISTING-COUNTRY-1: a listing is born in the country it is actually in -- "
                   "the create path may not default every seller on earth to South Africa",
-       OPEN,
+       LOCKED, fixed_on="2026-09-23",
        scope="bea_main.py POST /listings. The INSERT names no `country` column, so every "
              "listing a real seller creates through the wizard takes the table default "
              "country='ZA' whatever city it is in. PROBED on the live database 23 Sep 2026: "
@@ -27106,6 +27106,109 @@ def rg_audit_xss_1():
         if need not in b:
             out.append((FAIL, "the plain-text guard lost %s" % need))
     return out
+
+
+@entry("RG-0443", "EULA-PUBLISH-1: nothing publishes without an acceptance RECORDED ON THE SERVER "
+                  "-- a consent gate that lives only in the browser is not a gate",
+       LOCKED, fixed_on="2026-09-23",
+       scope="bea_main.py publish_listing() and its AUDIT-AUTH-1 route wrapper. THE DEFECT: the "
+             "gate read `if user_row and not user_row[\"eula_accepted_at\"]`, so a seller with NO "
+             "users row fell straight through it. Not a corner case -- the guided wizard creates "
+             "a listing from seller_email alone, so every FIRST-TIME seller is that shape. PROVEN "
+             "LIVE 23 Sep 2026, not reasoned: a fresh address created a draft through POST "
+             "/listings and published it with PUT /listings/391/publish?email=... -- 200, "
+             "'Listing is now live', publicly visible, with no account and no acceptance anywhere "
+             "on record. (Test listing 391 archived immediately; it was public for about two "
+             "minutes, which is itself the lesson that a probe which publishes must archive in "
+             "the same breath.) WHAT MAKES IT WORTH THIS MUCH TEXT: the browser side is GOOD -- "
+             "sob phase 3 puts the Terms in a scroll box, hides the confirm tick until you reach "
+             "the end, and leaves 'Go live' disabled until you tick it. All of that was real and "
+             "none of it was enforced, so any route that reached publish another way -- a "
+             "recovery link, dashPublish, a direct call -- skipped consent entirely while the "
+             "screen gave everyone the impression it could not be skipped. THE FIX: acceptance is "
+             "required on every path and stamped here; a caller that has not yet accepted sends "
+             "accepted_terms=1 (the tick the seller just made) and the row is created and "
+             "stamped at that moment. sobGoLive carries it because it is only reachable after the "
+             "tick; dashPublish deliberately does NOT, so its existing 403-and-offer-to-accept "
+             "handling (HUB-EULA-1) still runs. STRICTLY TIGHTENING: no path that publishes today "
+             "without acceptance keeps doing so, and no path that publishes WITH it changes.")
+def rg_eula_publish_1():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "bea_main.py not readable here -- NOT EVALUATED")]
+    if 'if user_row and not user_row["eula_accepted_at"] and not is_super:' in bea:
+        out.append((FAIL, "the old gate is back: `if user_row and not ...` skips consent entirely "
+                          "for a seller with no users row, which is every first-time seller"))
+    if "EULA-PUBLISH-1" not in bea:
+        out.append((FAIL, "EULA-PUBLISH-1 is gone from bea_main.py"))
+    # the parameter must exist on BOTH the inner function and the route, and the route must
+    # forward it -- a parameter the HTTP layer cannot reach is the quiet way a gate becomes
+    # decoration, and this fix was one call away from exactly that.
+    i = bea.find("def publish_listing_route(")
+    j = bea.find("def publish_listing(")
+    if i < 0 or j < 0:
+        out.append((INFO, "publish route restructured -- re-read this entry before trusting it"))
+    else:
+        if "accepted_terms" not in bea[i:i + 900]:
+            out.append((FAIL, "the publish ROUTE takes no accepted_terms -- the gate cannot be "
+                              "satisfied from HTTP, so every first-time seller is refused"))
+        if "attested, accepted_terms)" not in bea[i:i + 900]:
+            out.append((FAIL, "the publish route does not FORWARD accepted_terms to the gate"))
+        if "def publish_listing(listing_id: int, email: str, attested: int = 0,\n"            "                    accepted_terms: int = 0):" not in bea:
+            out.append((FAIL, "publish_listing() no longer accepts accepted_terms"))
+    js = repo_file("ms.js") or ""
+    if js and "accepted_terms=1" not in js:
+        out.append((FAIL, "no caller sends accepted_terms -- sobGoLive cannot publish at all"))
+    if not any(v == FAIL for v, _ in out):
+        out.append((INFO, "gate required on every path, parameter reachable from HTTP and "
+                          "forwarded, and the post-tick caller sends it"))
+    return out
+
+
+@entry("RG-0444", "RETURN-LINK-1: a saved draft always earns a way back -- the seller who leaves "
+                  "mid-listing is emailed a link to it, and being an invited arrival does not "
+                  "disqualify him",
+       LOCKED, fixed_on="2026-09-23",
+       scope="ms.js goHandoff(), the /auth/request-link call after a draft is saved. THIS IS THE "
+             "LINE THAT LOST THE ONLY REAL SELLER THIS GOAL HAS EVER PRODUCED. The condition read "
+             "`if (BEA_ENABLED && !magicLink.active && goState.email && goState.listingId && "
+             "!goState._returnLinkSent)`, and the comment above it gave the reasoning: 'invite "
+             "(magic-link) users already have their own link.' They do not. The link in a cold "
+             "letter carries ?magic=1 and routes to the START of the sell flow -- it is not a "
+             "link to the draft that seller just built, and nothing else ever told him the draft "
+             "existed. EVERY cold prospect arrives with magicLink.active === true, so the one "
+             "safety net under a stranded draft was switched off for precisely the population the "
+             "whole outreach programme exists to reach. THE COST, measured: Rick Wemple, a "
+             "licensed Montana outfitter from register:moga, clicked on 12 Sep 2026 and eighteen "
+             "minutes later had a complete advert -- four of his own photographs, his own price, "
+             "quality_score 94, the best non-demo listing on the platform. created_at equals "
+             "updated_at. He heard nothing for eleven days because this line decided he did not "
+             "need telling. CLASS, not instance: a safety net that exempts a population is not a "
+             "safety net, and the exemption here was justified by an assumption about a link "
+             "nobody had opened. SECOND REASON IT MATTERS NOW: AUDIT-AUTH-1 (same day) makes "
+             "publish require a proven session, so the emailed sign-in link is no longer merely "
+             "a convenience for a seller who wandered off -- it is the only way a cold arrival "
+             "can publish at all.")
+def rg_return_link_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "ms.js not readable here -- NOT EVALUATED")]
+    i = js.find("_returnLinkSent) {")
+    if i < 0:
+        return [(FAIL, "the saved-draft return link is gone from goHandoff() -- a stranded draft "
+                       "has no way back at all")]
+    line_start = js.rfind("\n", 0, i) + 1
+    cond = js[line_start:i]
+    if "magicLink.active" in cond:
+        return [(FAIL, "the return link is gated on the arrival channel again (%s) -- invited "
+                       "sellers, which is every cold prospect, get no way back to their draft"
+                       % cond.strip()[:90])]
+    if "/auth/request-link" not in js:
+        return [(FAIL, "nothing requests a sign-in link -- the return path has no sender")]
+    return [(INFO, "every saved draft earns an emailed way back, invited arrivals included")]
+
+
 
 if __name__ == "__main__":
     sys.exit(main())
