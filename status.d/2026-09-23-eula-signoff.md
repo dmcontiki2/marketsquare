@@ -1,0 +1,1 @@
+- EULA-SIGNOFF-1 / RUL-166 (23 Sep): Quick door saves drafts for anyone without a signed EULA; one-tap publish only for signed members (RG-0446).

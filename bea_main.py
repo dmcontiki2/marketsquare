@@ -4043,7 +4043,7 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     buyers never see the email; introductions reach it. Guards that stay: listing velocity, the
     price-basis rule, the free-plan slot limit (a full plan returns 402 and the advert stays a draft)."""
     if not body.accept_terms:
-        raise HTTPException(status_code=400, detail="Tick-free, but the button must accept the terms.")
+        raise HTTPException(status_code=400, detail="The Save/Publish button must be tapped to send the advert.")
     sess = _session_email(ts_user)
     em = (sess or body.email or "").strip().lower()
     if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", em):
@@ -4062,17 +4062,22 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     hits.append(now_t); _QP_IP_LOG[ip] = hits
     conn = database.get_db()
     try:
-        _u = conn.execute("SELECT email FROM users WHERE LOWER(email)=?", (em,)).fetchone()
+        _u = conn.execute("SELECT email, eula_accepted_at FROM users WHERE LOWER(email)=?", (em,)).fetchone()
     finally:
         conn.close()
     existing_account = bool(_u) and not sess
+    # EULA-SIGNOFF-1 (RUL-166, David 23 Sep 2026: "we dont publish unless we have both his email and his
+    # acceptance of the EULA"). The one tap publishes ONLY for a signed-in member whose EULA is already
+    # signed. Everyone else gets a DRAFT and the way-back letter; publishing happens in the TrustSquare
+    # app, behind its scroll-to-the-end EULA gate. The Quick door never records an acceptance.
+    signed_member = bool(sess) and bool(_u) and bool(_u["eula_accepted_at"])
     fields = dict(body.listing or {})
     # AUDIT-Q2: the browser never sets a score, an image path, a spec blob or an attestation.
     for _k in ("trust_score", "thumb_url", "medium_url", "vehicle_specs", "spec_confirmed", "listing_status",
                "published_at", "seller_email", "source"):
         fields.pop(_k, None)
     fields["seller_email"] = em
-    fields["source"] = "quick" if existing_account else "quick_live"   # 'quick' = draft + the way-back letter
+    fields["source"] = "quick_live" if signed_member else "quick"   # 'quick' = draft + the way-back letter
     try:
         listing = Listing(**{k: v for k, v in fields.items() if k in Listing.__fields__})
     except Exception as exc:
@@ -4083,16 +4088,18 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
         _log.info("ONE-TAP-PUBLISH-1: %s already has an account and is not signed in -- draft %s + sign-in letter", em, lid)
         return {"id": lid, "live": False, "verify": True,
                 "detail": "You already have a TrustSquare account. We emailed you a link -- open it to publish."}
-    conn = database.get_db()
-    try:
-        conn.execute("INSERT INTO users (email, aa_free_used, aa_sessions_remaining) VALUES (?, 0, 0) "
-                     "ON CONFLICT(email) DO NOTHING", (em,))
-        conn.execute("UPDATE users SET eula_accepted_at = COALESCE(eula_accepted_at, CURRENT_TIMESTAMP) "
-                     "WHERE email = ?", (em,))
-        conn.commit()
-    finally:
-        conn.close()
-    _log.info("ONE-TAP-PUBLISH-1: listing %s, terms accepted by tap for %s (session=%s)", lid, em, bool(sess))
+    if not signed_member:
+        conn = database.get_db()
+        try:
+            conn.execute("INSERT INTO users (email, aa_free_used, aa_sessions_remaining) VALUES (?, 0, 0) "
+                         "ON CONFLICT(email) DO NOTHING", (em,))
+            conn.commit()
+        finally:
+            conn.close()
+        _log.info("EULA-SIGNOFF-1: draft %s for %s -- EULA not yet signed, publish happens in the app", lid, em)
+        return {"id": lid, "live": False, "need": "eula",
+                "detail": "Your advert is saved. We emailed you a link -- open it in TrustSquare, read and sign the Terms, and publish."}
+    _log.info("ONE-TAP-PUBLISH-1: listing %s published in one tap by signed member %s", lid, em)
     try:
         publish_listing(lid, em)
     except HTTPException as he:

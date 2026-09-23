@@ -27235,5 +27235,39 @@ def rg_delete_bind_1():
     return out
 
 
+@entry("RG-0446", "EULA-SIGNOFF-1: the Quick door never publishes for anyone who has not signed the EULA -- "
+                  "a new lister gets a draft and signs the terms in the app; only a signed member publishes in one tap",
+       LOCKED, fixed_on="2026-09-23",
+       scope="RUL-166 (David, 23 Sep 2026: 'we dont publish unless we have both his email and his acceptance of "
+             "the EULA'). bea_main.py quick_publish: signed_member = session AND users.eula_accepted_at; everyone "
+             "else gets source 'quick' (draft + way-back letter) and need='eula'; the function never writes "
+             "eula_accepted_at. quick.html: 'Save my advert' for non-signed visitors, no acceptance wording.")
+def rg_eula_signoff_1():
+    out = []
+    b = repo_file("bea_main.py")
+    if b is None:
+        return [(INFO, "bea_main.py not readable here -- NOT EVALUATED")]
+    i = b.find("def quick_publish(")
+    j = b.find("\n@app.", i + 10)
+    body = b[i:j] if i >= 0 else ""
+    if not body:
+        return [(FAIL, "quick_publish not found")]
+    if "eula_accepted_at =" in body or "SET eula_accepted_at" in body:
+        out.append((FAIL, "quick_publish writes eula_accepted_at -- the Quick door must never record an acceptance"))
+    if "signed_member" not in body or 'bool(_u["eula_accepted_at"])' not in body:
+        out.append((FAIL, "quick_publish lost the signed-member gate (session AND a signed EULA)"))
+    k = body.find("publish_listing(")
+    g = body.find("if not signed_member:")
+    if k < 0 or g < 0 or g > k:
+        out.append((FAIL, "quick_publish can reach publish_listing before the signed-member gate"))
+    q = repo_file("quick.html")
+    if q is not None:
+        if "qTr('Publishing accepts the')" in q or "<p>Publishing accepts the" in q:
+            out.append((FAIL, "quick.html still tells visitors that publishing accepts the terms"))
+        if "Save my advert" not in q or "QUICK.eula" not in q:
+            out.append((FAIL, "quick.html lost the Save-my-advert path for visitors without a signed EULA"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

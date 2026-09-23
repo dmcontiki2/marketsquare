@@ -1046,7 +1046,7 @@ var QUICK_LIVE=false;
     fetch(location.origin+'/quick/me',{credentials:'include'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
       if(!d) return;
       if(d.key && !HANDOVER.key){ HANDOVER.url=location.origin; HANDOVER.key=d.key; QUICK_LIVE=true; }
-      if(d.signed_in && d.email){ HANDOVER.email=d.email; QUICK.member=true; QUICK.name=d.name||d.email.split('@')[0]; if(d.city) QUICK.city=d.city; }
+      if(d.signed_in && d.email){ HANDOVER.email=d.email; QUICK.member=true; QUICK.eula=!!d.eula_accepted; /* EULA-SIGNOFF-1 */ QUICK.name=d.name||d.email.split('@')[0]; if(d.city) QUICK.city=d.city; }
     }).catch(function(){});
   }catch(e){}
 })();
@@ -1299,11 +1299,10 @@ function drawDraft(){
     var slot=$('jslot');
     slot.innerHTML='<div class="joinbox"><b>One thing, once.</b>'
       +'<div class="bzin"><input id="jmail" type="email" autocomplete="email" '
-      +'placeholder="you@example.com"><button id="jgo" disabled>Publish</button></div>'
-      +'<p>Publishing accepts the TrustSquare terms, including Buzz exactly as it is '
-      +'\u2014 a doorbell between two people, not a messaging service, with an off '
-      +'switch on both sides. This is the only thing this screen ever asks you, and '
-      +'it will not ask you again on any device you are signed in on.</p></div>';
+      +'placeholder="you@example.com"><button id="jgo" disabled>Save</button></div>'
+      +'<p>Your advert is saved as a draft. Before it goes live you read and sign the '
+      +'TrustSquare terms in the app (EULA-SIGNOFF-1) \u2014 including Buzz, a doorbell '
+      +'between two people, not a messaging service, with an off switch on both sides.</p></div>';
     $('jmail').oninput=function(){ $('jgo').disabled = !/.+@.+\..+/.test(this.value); };
     $('jgo').onclick=function(){
       var m=$('jmail').value.trim();
@@ -2629,22 +2628,23 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
      the terms, which are one tap away beside it -- and the advert is live when the tap lands.
      A signed-in member sees no box at all: one tap, as herself. */
   function esc(t){ return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function qPubLabel(){ return (QUICK.member&&QUICK.eula) ? qTr('Publish') : qTr('Save my advert'); }
   function publishNow(btn){
     var em = QUICK.member ? (HANDOVER.email||'') : (($('qpmail')||{}).value||'').trim();
     if(!QUICK.member && !/.+@.+\..+/.test(em)){ var m=$('qpmail'); if(m){ m.focus(); m.style.borderColor='#e06a5a'; } return; }
-    btn.disabled=true; btn.textContent=qTr('Publishing…');
+    btn.disabled=true; btn.textContent=(QUICK.member&&QUICK.eula) ? qTr('Publishing…') : qTr('Saving…');
     var pay=handoverPayload().body; pay.seller_email=em||null;
     fetch('/listings/quick-publish',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({listing:pay, email:em, accept_terms:true})})
     .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
     .then(function(res){
-      if(!res.ok){ btn.disabled=false; btn.textContent=qTr('Publish'); var h=$('pubhint');
+      if(!res.ok){ btn.disabled=false; btn.textContent=qPubLabel(); var h=$('pubhint');
         if(h) h.textContent=(res.j && res.j.detail) ? String(res.j.detail) : qTr('Not published — nothing was lost. Try again.'); return; }
       qTrack(res.j.live ? 'q_published' : 'q_handover');
       if(!QUICK.member && em){ QUICK.member=true; HANDOVER.email=em; QUICK.name=nameFromMail(em); }
       celebrate(res.j);
     })
-    .catch(function(){ btn.disabled=false; btn.textContent=qTr('Publish'); var h=$('pubhint'); if(h) h.textContent=qTr('No connection — nothing was sent.'); });
+    .catch(function(){ btn.disabled=false; btn.textContent=qPubLabel(); var h=$('pubhint'); if(h) h.textContent=qTr('No connection — nothing was sent.'); });
   }
 
   /* DOOR-RETURN-1 (RG-0414, closed by ONE-TAP-PUBLISH-1): the way back no longer depends on email or on
@@ -2667,7 +2667,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
       +'<div class="ar-after">'
       +(live?'<p>'+qTr('People can find it now. Your name and number stay private until you accept an introduction.')+'</p>'
             :'<p>'+esc(r.detail||'')+'</p>')
-      +'<a class="ar-btn" href="'+(live?'/?listing=':'/?draft=')+id+'">'+(live?qTr('See my advert'):qTr('Finish it in the app'))+'</a>'   /* AUDIT-Q3 */
+      +'<a class="ar-btn" href="'+(live?'/?listing=':'/?draft=')+id+'">'+(live?qTr('See my advert'):(r.need==='eula'?qTr('Sign the terms and publish'):qTr('Finish it in the app')))+'</a>'   /* AUDIT-Q3 */
       +'<a class="ar-wa" href="https://wa.me/?text='+encodeURIComponent(waMsg)+'" target="_blank" rel="noopener">'+qTr('Send it to myself on WhatsApp')+'</a>'
       +'<p class="ar-small">'+qTr('We emailed you a link to it as well.')+'</p></div>';
     $('app').appendChild(ov);
@@ -2716,8 +2716,12 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
       foot.insertAdjacentHTML('afterbegin','<div class="qpbox"><input id="qpmail" type="email" autocomplete="email" inputmode="email" '
         +'placeholder="'+qTr('Your email — introductions reach you here')+'"></div>');
     }
-    pub.textContent=qTr('Publish');
-    var h=$('pubhint'); if(h) h.innerHTML=qTr('Publishing accepts the')+' <a href="/terms" target="_blank" rel="noopener" style="color:var(--bright)">'+qTr('TrustSquare terms')+'</a>. '+qTr('Free.');
+    /* EULA-SIGNOFF-1 (RUL-166, David 23 Sep 2026): only a signed-in member who has already signed the EULA
+       publishes in one tap. Everyone else SAVES a draft here and publishes in the TrustSquare app, after
+       reading and signing the terms there. This door never claims or records an acceptance. */
+    pub.textContent=qPubLabel();
+    var h=$('pubhint'); if(h) h.innerHTML=(QUICK.member&&QUICK.eula) ? qTr('Free.')
+      : qTr('Free. Before it goes live you read and sign the')+' <a href="/terms" target="_blank" rel="noopener" style="color:var(--bright)">'+qTr('TrustSquare terms')+'</a> '+qTr('in the app.');
     pub.onclick=function(){ publishNow(this); };
     try{ qTranslate($('screen')); }catch(e){}
   };
