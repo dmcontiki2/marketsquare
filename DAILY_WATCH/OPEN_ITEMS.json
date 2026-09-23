@@ -1,5 +1,5 @@
 {
- "next_id": 145,
+ "next_id": 146,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -1579,6 +1579,15 @@
    "status": "OPEN",
    "summary": "DNS blip in the sandbox (gaierror) convicted RG-0315 and RG-0390 REGRESSED and blinded RG-0300/0347/0356; all re-judged HOLDING minutes later via the same _judge(), host board agrees. Entries that catch their own URLError re-emit it as FAIL instead of ProbeOffline — the RG-0401 class one layer down. No false verdict reached the report.",
    "next_action": "CTO lane: route gaierror/URLError inside an entry to UNVERIFIED, never REGRESSION. Closes on the next shard run with no gaierror-based red."
+  },
+  "DW-145": {
+   "first_seen": "2026-09-23",
+   "last_seen": "2026-09-23",
+   "sev": "LOW",
+   "source": "regression ledger RG-0258 (sandbox vantage) + curl",
+   "status": "OPEN",
+   "summary": "adventures_de_map.html is 1,212,792 B and takes ~15 s from the sandbox (3 probes); RG-0258 reads it unreachable -> REGRESSED from the sandbox, green from the PC host board. Heavy page + timeout-as-regression (DW-144 class).",
+   "next_action": "CTO lane: trim the DE map; make RG-0258 read a timeout as NOT EVALUATED. Closes when RG-0258 holds from the sandbox."
   }
  },
  "last_run": "2026-09-23",
@@ -3160,6 +3169,8 @@
    "BACKUP-ORIGIN-SKIP-1 guard in scripts/maintenance_agent.py",
    "scripts/apply_i18n_cost_rail.py (I18N-COST-RAIL-1)"
   ],
-  "evidence": "RG-0099/0427/0245/0234/0350/0188 all HOLDING via _judge() at ~20:00Z; ssh SSH_OK"
+  "evidence": "RG-0099/0427/0245/0234/0350/0188 all HOLDING via _judge() at ~20:00Z; ssh SSH_OK",
+  "ledger_after": "427 entries / 401 holding / 22 open / 3 ready to lock (RG-0429/0430/0437, lang-quick) / 0 unverified / 1 red sandbox-only RG-0258 (DW-145)",
+  "push": "git_push MarketSquare DONE rc=0 22:15 SAST; BACKUP-ORIGIN-SKIP-1 present in /opt/marketsquare-src"
  }
 }
