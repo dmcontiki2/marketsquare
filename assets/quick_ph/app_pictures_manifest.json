@@ -1,0 +1,38 @@
+{
+ "place_pretoria_east": {
+  "use": "app picture (Quick 'where' step)",
+  "made": "2026-09-23T20:15:01",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic, natural daylight, warm late-afternoon light, shallow depth of field, square 1:1. Street-level view of an ordinary South African suburb scene. NO people's faces (people only from behind or far away), NO readable text, NO signs with words, NO logos, NO brand names, NO single famous landmark. Calm, welcoming, true to Gauteng: jacaranda or acacia trees, highveld sky. Pretoria East: a quiet tree-lined residential street with walled family homes, lawns and a jacaranda tree."
+ },
+ "place_midrand": {
+  "use": "app picture (Quick 'where' step)",
+  "made": "2026-09-23T20:19:00",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic, natural daylight, warm late-afternoon light, shallow depth of field, square 1:1. Street-level view of an ordinary South African suburb scene. NO people's faces (people only from behind or far away), NO readable text, NO signs with words, NO logos, NO brand names, NO single famous landmark. Calm, welcoming, true to Gauteng: jacaranda or acacia trees, highveld sky. Midrand: open highveld land beside new office parks and a highway overpass in the distance, dry grass and acacia trees."
+ },
+ "place_sandton": {
+  "use": "app picture (Quick 'where' step)",
+  "made": "2026-09-23T20:20:11",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic, natural daylight, warm late-afternoon light, shallow depth of field, square 1:1. Street-level view of an ordinary South African suburb scene. NO people's faces (people only from behind or far away), NO readable text, NO signs with words, NO logos, NO brand names, NO single famous landmark. Calm, welcoming, true to Gauteng: jacaranda or acacia trees, highveld sky. Sandton: a leafy upmarket avenue with high garden walls and tall office towers softly blurred on the skyline."
+ },
+ "place_centurion": {
+  "use": "app picture (Quick 'where' step)",
+  "made": "2026-09-23T20:21:24",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic, natural daylight, warm late-afternoon light, shallow depth of field, square 1:1. Street-level view of an ordinary South African suburb scene. NO people's faces (people only from behind or far away), NO readable text, NO signs with words, NO logos, NO brand names, NO single famous landmark. Calm, welcoming, true to Gauteng: jacaranda or acacia trees, highveld sky. Centurion: a neat suburban road with modern townhouses, clipped hedges and a wide highveld sky."
+ },
+ "place_menlyn": {
+  "use": "app picture (Quick 'where' step)",
+  "made": "2026-09-23T20:24:09",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic, natural daylight, warm late-afternoon light, shallow depth of field, square 1:1. Street-level view of an ordinary South African suburb scene. NO people's faces (people only from behind or far away), NO readable text, NO signs with words, NO logos, NO brand names, NO single famous landmark. Calm, welcoming, true to Gauteng: jacaranda or acacia trees, highveld sky. Menlyn: a busy modern retail and office precinct seen from a tree-lined sidewalk, glass buildings blurred in the background."
+ },
+ "place_mamelodi": {
+  "use": "app picture (Quick 'where' step)",
+  "made": "2026-09-23T20:27:28",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic, natural daylight, warm late-afternoon light, shallow depth of field, square 1:1. Street-level view of an ordinary South African suburb scene. NO people's faces (people only from behind or far away), NO readable text, NO signs with words, NO logos, NO brand names, NO single famous landmark. Calm, welcoming, true to Gauteng: jacaranda or acacia trees, highveld sky. Mamelodi: a well-kept paved residential street of neat face-brick family homes with painted gates, small tended gardens and a jacaranda, the Magaliesberg ridge soft in the distance. Proud, orderly, welcoming -- the same care as any suburb."
+ }
+}

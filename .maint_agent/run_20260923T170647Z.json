@@ -1,0 +1,31 @@
+{
+  "run": "20260923T170646Z",
+  "mode": "SHADOW (kill switch OFF \u2014 default, cannot commit)",
+  "seen": 0,
+  "intake": {
+    "app_faults_new": 0,
+    "email_lane": {
+      "lane": "email_triage",
+      "total": 24,
+      "by_category_30d": {
+        "legal": 1,
+        "other": 4,
+        "spam": 1,
+        "support": 3
+      },
+      "by_status_30d": {
+        "drafted": 5,
+        "sent": 2,
+        "skipped": 1,
+        "system": 1
+      },
+      "held_30d": 5,
+      "note": "counts only (RG-0222); rows need the admin credential"
+    }
+  },
+  "actions": [],
+  "backup": {
+    "ran": false,
+    "outcome": "skipped: newest archive is 0.0 h old (<20 h)"
+  }
+}
