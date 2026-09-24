@@ -32,203 +32,180 @@ If SSH is dead, queue it host-side: `run_py MarketSquare\scripts\onboarding_numb
 | 2026-09-19 (run 15, 01:00) | **0** | 0 | 0 | 2,499 emailed · listing 382 still a draft |
 | 2026-09-20 (run 16, 01:00) | **0** | 0 | 0 | 2,499 emailed (pause held) · **466 sendable left** |
 | 2026-09-23 (run 17, 16:50) | **0** | 0 | 0 | 2,549 emailed · **"45 registered" was 1** · both probes read live, and re-run host-side on a second vantage: same answer |
+| 2026-09-24 (run 18, 02:51) | **0** | 0 | 0 | 2,573 emailed · funnel now says **5 registered** (4 e2e_test + Rick), so RG-0428 landed · raw 3, all e2e_test |
 
-Target: **20 by Fri 31 Oct 2026** — 38 days. Runs 5–8, 11, 12 Fable 5.1; runs 9–10, 13–17 Opus 5.
+Target: **20 by Fri 31 Oct 2026** — 37 days. Runs 5–8, 11, 12 Fable 5.1; runs 9–10, 13–18 Opus 5.
 *(Runs 21–22 Sep did not happen: the scheduled task was lost again. The server's own nightly
 wave is unaffected by that — it fires from the box, not from a session.)*
 
-## WHAT RUN 17 DID (23 Sep 2026, 16:50–19:30 UTC, Opus 5)
+## WHAT RUN 17 DID (23 Sep 2026, Opus 5) — compressed; the detail is in the ledger and changelog
 
-1. **Restored the measurement.** Port 22 timed out from both this sandbox and the cloud
-   container; the daily-watch lane had it as RG-0099 red. The Hetzner rule ALREADY held this
-   sandbox's IP (`hetzner_fw_selfheal.py --check`), so the standing advice — "add the IP" — was
-   wrong; it propagated on its own minutes later. Consequences beyond the number: **RG-0234 went
-   green too** (the backup lane needs SSH; it had been 11 days stale and made a verified,
-   restore-tested archive at 17:05).
-2. **THE FINDING — RG-0428 ONBOARD-REAL-1. "Registered" was counting our own sending.** The
-   reconciler stamped `onboarded_at` on the mere existence of a `marketsquare.users` row, and
-   `/agencies/wave-prep` creates one of those AT SEND TIME for every agency-class prospect.
-   PROBED, not inferred: all 40 non-test rows were Estate Agents, created one every two or three
-   seconds inside the 22:10 UTC wave minute on six consecutive nights, with last_seen, EULA,
-   auth, photo and buyer token ALL NULL. Now counts only an account a human has used —
-   **plus, and this leg is the point, anyone who has built a listing in any status.** Leg one
-   alone would have been worse than the bug: it would have erased the one prospect who matters.
-   Proven in all three directions (pre-fix code FAILs 3 ways; leg-one-only FAILs on exactly that
-   assertion; current code passes). Measured on a copy of the live pair: 45 → 5, 41 retracted,
-   1 correctly added, clicks preserved, second pass a no-op. **The goal number was never
-   inflated by this** — `onboarding_number.py` demands published_at AND emailed_at AND a
-   non-test source AND probe B. What was inflated is the funnel David reads.
-3. **SECOND FINDING, and it is the whole goal — RG-0429 PUBLISH-WALL-1.** That surviving leg
-   named the one real person: **Rick Wemple, a licensed Montana outfitter from `register:moga`.**
-   Letter 11 Sep, and on 12 Sep he built listing 382 "Guided Fair Chase Hunts" — his own words,
-   his own price, **four of his own photographs, quality_score 94, the best non-demo advert on
-   the platform.** `created_at == updated_at`: he wrote it once and never came back. **He has no
-   `users` row at all.** `POST /listings` needs no account; `PUT publish` needs an account with
-   an accepted EULA and a plan slot. So the wall sits after all the work and before any result —
-   the exact shape David ruled against in RUL-145. He is one step from being the number 1.
-4. **Did NOT build a nudge lane, and the reason is a ruling not a preference.** The obvious move
-   — email him — is barred by RUL-106: a 60-day floor on re-contacting any address already
-   written to, *whatever the lane*, and RUL-106(e) reserves any follow-up programme to David
-   explicitly. Checking that before building it is the only reason a night was not wasted.
-   **The question is with David, framed as his.** The fix that needs nobody's permission is the
-   flow itself (RG-0429).
-5. **Logged rather than rushed:** RG-0430 LISTING-COUNTRY-1 — `POST /listings` names no
-   `country`, so every listing a real seller creates is born `ZA`. Live proof: every seeded
-   market is right (Chicago US, Denver US, London GB, Sydney AU) and the only wrong pair is
-   **Montana|ZA, 4 rows** — every wizard-created listing there, Rick's among them. 92% of the
-   addresses left are American. One fix per task, so it is an OPEN entry, not a hurried second
-   edit to `bea_main.py`.
-6. **RG-0437 RULINGS-SETTLED-READ-1** — `rulings_check` returned 1 FAIL, then 2 FAIL, then 0, 0,
-   0 within minutes with no edit between, naming rulings that grep proved present. It reads a
-   file a parallel lane is writing. Recorded and NOT fixed: RUL-140/SO-5, `work_lock` shows
-   `scripts/rulings_check.py` owned by `standup-2026-09-23`. The owner ships it.
-7. **Boards.** Before: 413 entries, 2 regressed (RG-0099 ssh, RG-0234 backup) — both now green.
-   After: 424 entries, 391 holding, **1 regressed (RG-0157, not mine)**, 0 UNVERIFIED.
-   `rulings_check` 139 rulings, **0 FAIL**, three consecutive runs.
-8. **Deliberately did NOT commit.** SO-5 says commit once the tree is silent, and it is not:
-   33 paths are dirty and most are the language lane's live work (`bea_main.py`, `ms.js`,
-   `quick.html`, `roles/quick_i18n.json`) plus their untracked migration 048. A `git add -A`
-   tonight would sweep another session's half-finished change into a commit with my message on
-   it. The CityLauncher deploy does not need the MarketSquare tree, so it went anyway; the
-   commit waits for whoever finishes last. Changelog fragment written to
-   `changelog.d/2026-09-23-onboard-real.md` so the record does not depend on that.
+1. **Restored the measurement.** Port 22 was dead from both vantages; the Hetzner rule already held
+   this sandbox's IP and propagated on its own. RG-0099 and RG-0234 both went green (the backup lane
+   needs SSH; it made a restore-tested archive at 17:05).
+2. **RG-0428 ONBOARD-REAL-1 — "registered" was counting our own sending.** The reconciler stamped
+   `onboarded_at` on the mere existence of a `users` row, and the agency wave creates one AT SEND
+   TIME. All 40 non-test rows were estate agents created seconds apart inside one 22:10 UTC wave
+   minute with every human field NULL. Now counts only an account a human has used **plus anyone who
+   has built a listing in any status** — and that second leg is the point: leg one alone would have
+   erased the one prospect who matters. 45 → 5. The goal number was never inflated; the funnel David
+   reads was.
+3. **RG-0429 named the one real person: Rick Wemple**, a licensed Montana outfitter from
+   `register:moga`. Letter 11 Sep, and on 12 Sep he built listing 382 "Guided Fair Chase Hunts" —
+   his words, his price, **four of his own photographs, quality_score 94**, the best non-demo advert
+   on the platform. `created_at == updated_at`. No `users` row at all.
+4. **Shipped that night, live and verified at 20:48Z (deploy ref 1aea5c4):** RG-0444 RETURN-LINK-1
+   (the `!magicLink.active` line that exempted every cold prospect from the emailed way back — *the
+   line that lost him*), RG-0443 EULA-PUBLISH-1 (publishing required no recorded acceptance when the
+   seller had no users row, which is every first-time seller — PROVEN live with a 200 and a public
+   listing), RG-0430 LISTING-COUNTRY-1 (every wizard listing was born `ZA`; 382 corrected to `US`),
+   and RECOUP-WITHDRAW-1 (the take-it-down link, which really deletes the photographs).
+5. **David came back live at 20:00Z and asked for Rick to be recouped.** He chose the route himself:
+   fix the flow first, then ONE letter asking permission, carrying a take-it-down link we honour.
+   Permission recorded with his words at `.secrets/recontact_permission.json`; letter drafted at
+   `RECOUP_RICK_LETTER.md`; **not sent** — his order was flow first.
+6. Also logged: RG-0437 (`rulings_check` can print a false FAIL from a mid-write read).
 
-## RUN 17 ADDENDUM — DAVID CAME BACK LIVE (20:00Z) AND ASKED FOR RICK TO BE RECOUPED
+## WHAT RUN 18 DID (24 Sep 2026, 02:51–03:40 UTC, Opus 5)
 
-He chose: fix the flow, then ONE letter asking Rick's permission, carrying a take-it-down link we
-honour, explaining we are following up on the effort he already made. Permission recorded at
-`.secrets/recontact_permission.json` with his words; letter drafted at `RECOUP_RICK_LETTER.md`;
-**neither sent.**
+0. **Probed run 17's deploy rather than trusting its success line.** The server's own
+   `citylauncher/api/server.py` carries `ONBOARD-REAL-1` (4 hits, file dated 17:35Z) and the funnel
+   now reads **5 registered** — four `e2e_test` rows and **Rick Wemple**, nobody else. The 45 is
+   gone from the number David reads. (GOAL_STATE said to expect "1"; 5 is the figure run 17's own
+   measurement predicted — 45 → 5 — and four of the five are declared test seeds.)
 
-**The correction that matters: RG-0429 is WRONG as written and must be rewritten.**
-`HANDOVER-PUBLISH-1` already exists — `?magic=1&…&drafted=1&publish=1` skips the plan screen,
-shows the Terms, publishes, and asks for the account afterwards, which is exactly RUL-145's
-shape. `dashPublish` is a second surface for stranded drafts. The flow was built; **nothing ever
-sends the link that reaches it.** That is the real defect and it is much smaller.
-
-**Proven live and it is the thing to fix first:** a fresh address created a draft and published it
-with no account and no Terms accepted — 200, publicly visible. Every first-time seller is that
-shape, Rick included. Spec in `PENDING_FIXES_RUN17.md` (fix A).
-
-**BLOCKED, and not on a decision:** `bea_main.py` and `ms.js` are locked by
-`lang-quick-2026-09-23` (taken 19:55Z, 12 h expiry). RUL-140/SO-5 — recorded, not edited. Done
-anyway because it needed no locked file: listing 382 now reads `country='US'`.
-
-## WHAT RUN 17 SHIPPED FOR RICK (23 Sep, 20:00-21:00Z, David live at the keyboard)
-
-He asked for the recoup, chose the route himself (fix the flow, then ONE letter asking Rick's
-permission with a take-it-down option we honour), released the language lane's lock so the work
-could proceed, and accepted the residual exposure explicitly.
-
-1. **RG-0444 RETURN-LINK-1 — the line that lost him.** `goHandoff()` emailed a "here is your draft,
-   finish anytime" link only `if (!magicLink.active)`, reasoned as "invited users already have
-   their own link". They do not: a cold letter's link restarts the sell flow, it does not return
-   anyone to a draft. Every cold prospect has `magicLink.active === true`, so the one safety net
-   under a stranded draft was off for exactly the people outreach exists to reach. Now always on.
-2. **RG-0443 EULA-PUBLISH-1.** Publishing required no recorded acceptance when the seller had no
-   users row — which is every first-time seller. PROVEN live: a fresh address published, 200,
-   publicly visible, nothing accepted. The browser gate was good and enforced nothing.
-3. **RG-0430 LISTING-COUNTRY-1 closed** in code, and listing 382 corrected to `US` on the live DB.
-4. **RECOUP-WITHDRAW-1** — the take-it-down link: archives, and really deletes the photographs.
-5. **RG-0429 was WRONG and is corrected in `PENDING_FIXES_RUN17.md`:** HANDOVER-PUBLISH-1 already
-   implements RUL-145's publish-first-account-after. The flow was built; nothing sent the link.
-
-**WATCH THIS — the language lane's AUDIT-AUTH-1 (23 Sep) ships alongside.** Publish now acts as the
-proven session, not a typed `?email=`. Correct, and I want it — but its written justification is
-"there are no onboarded listers... nobody to lock out", and that stopped being true the same night.
-A cold arrival with no session now gets 401 on publish, which silently reverses HANDOVER-PUBLISH-1
-for that population. RETURN-LINK-1 is what keeps the road open: the emailed sign-in link is now the
-only way a cold seller reaches publish at all. **Rick's letter must therefore carry a `?signin=`
-link, not a `?magic=1` one** — `RECOUP_RICK_LETTER.md` is updated accordingly.
-
-**LIVE AND VERIFIED 23 Sep 20:48Z.** Deploy ref 1aea5c4; the server's own copies carry both
-markers; service active. PROBED, not read: a Montana draft now stores `country='US'` (was `ZA`),
-and the exact call that returned `200 "Listing is now live"` with no account and nothing accepted
-at 20:01Z is now refused. **Said precisely, because it matters:** it is refused `401 Please sign
-in to do that` — AUDIT-AUTH-1 catches it before the EULA gate does, so the dangerous behaviour is
-closed live but MY gate specifically was proven by source assertion and by the pre/post ledger
-test, not exercised end to end on the live box (no session and no MS_ADMIN_KEY from this vantage).
-It becomes load-bearing the moment a SIGNED-IN seller publishes — which is exactly Rick's path, and
-exactly what the letter's checklist requires walking in a real browser before it sends.
-Both test listings archived; nothing of mine is public. Boards after: 432 entries, 406 holding,
-0 UNVERIFIED, `rulings_check` 142 / 0 FAIL. The one red is RG-0431 LANG-LAYER-1 — the language
-lane's own entry, mid-flight, not ours.
-
-**The letter is NOT sent.** David's order was flow first. Permission recorded with his words at
-`.secrets/recontact_permission.json`; the pre-send checklist is in the letter file and every item
-of it must pass, including walking the link end to end in a real browser as a signed-in arrival.
+1. **THE FINDING, and it is the same leak one layer down — RG-0444's fix was wired to the wrong
+   sender. RETURN-LANE-1.** `goHandoff()` — the sell flow's "draft saved" step — POSTed
+   `/auth/request-link` and put a toast on screen saying *"we emailed you a link so you can finish
+   anytime."* `/auth/request-link` is the **interactive** sign-in lane: a **20-minute** token, and
+   no `&draft=` on the link. So "finish anytime" was twenty minutes, and inside those twenty
+   minutes it dropped him on the hub's front page instead of the advert he had just written.
+   **The right letter was already being sent** and had been since SELLFLOW-RETURN-1 (18 Sep):
+   `POST /listings` fires `_quick_draft_return` for the self-serve lanes — seven-day token,
+   `&draft=<id>`, fails closed on an empty signing secret. PROBED, not read: a `source='sellflow'`
+   draft logged `quick-return mail for draft 398: sent`. So the client call was a **second letter,
+   worse than the first, arriving beside it — and the one the seller was told to expect.** Removed;
+   the toast stays (a letter really is sent) and now says what is in it.
+2. **RG-0444's assertion was a PROXY and is corrected, not weakened.** It read
+   `"/auth/request-link" in ms.js` as proof "the return path has a sender" — it was pointing at the
+   wrong sender, so what it proved present was exactly the letter that fails. It now asserts the
+   lane that carries him back: `sellflow` in `_SELF_SERVE_LANES`, `_quick_draft_return` present,
+   `goHandoff` tagging `source:'sellflow'`, and the block NOT calling the 20-minute lane.
+3. **RG-0447 RECOUP-LINK-TTL-1 — the class, and it caught the letter before it went.** A sign-in
+   link that travels in a *letter* is never minted from the interactive lane. The code was already
+   right in all six minting sites; the defect was in a **written recipe**. `RECOUP_RICK_LETTER.md`
+   (23 Sep) told whoever sent it to mint Rick's publish link from `/auth/request-link` — a
+   twenty-minute button, posted to a man who opens his post when he opens it — and it carried no
+   `&draft=382` either. The entry FAILs against the 23 Sep letter on **both** legs and passes
+   against the corrected one. Recipe now: 7 days, `&draft=382`, `&src=recoup-382`, minted the way
+   `_quick_draft_return` does, plus the unexpiring fallback stated in the letter's own words.
+4. **RG-0429 rewritten, because as written it was false in both halves.** It claimed the wizard has
+   no route past the account wall (HANDOVER-PUBLISH-1 already implements RUL-145's shape) and that
+   the wall is the defect (**RUL-166**, David, 23 Sep, rules the EULA acceptance *moves* and never
+   goes away — an entry demanding no-account publishing would have put this board in standing
+   conflict with a later ruling of his). It now asserts the property that is load-bearing, in three
+   legs: the road exists · something sends the link with nobody exempted · that link outlives the
+   reading of the letter.
+5. **Two of the recoup letter's six pre-send checks now PASS on live evidence.** The withdraw link
+   was walked in a real browser: a throwaway draft with a real uploaded photograph went
+   `archived / withdrawn_by_seller`, and the photograph answered **404** at its public URL
+   afterwards (200 before) — the letter's promise to delete is kept, not merely displayed. And the
+   23 Sep publish hole stays shut: `PUT /listings/{id}/publish` answers 401 with *and* without
+   `accepted_terms=1` for a caller with no session. Fix B is live too: a fresh Montana draft is
+   born `country='US'`.
+6. **Boards.** Before: 433 entries, 408 holding, 1 regressed (RG-0431, the language lane's),
+   0 UNVERIFIED. After: 434, 408 holding, **1 regressed — still RG-0431, still not ours**,
+   0 UNVERIFIED, 4 ready to lock. `rulings_check` 142 rulings, 0 FAIL, twice.
+   RG-0154 went red mid-run because a new changelog fragment put `session_counter` behind the
+   evidence; re-derived to 206 and green again — my consequence, not a finding.
+7. **Housekeeping worth knowing:** `git status` **cannot be run from this sandbox any more.** It
+   creates `.git/index.lock` and then cannot unlink it (deletion is off), so it returns empty
+   output and leaves a lock that blocks Windows git. Mine is moved to `_to_delete/`. Read git state
+   host-side or not at all; the commit went through the host queue (`quiet_commit.py`), which is
+   what that lane is for.
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
-0. **PROBE that the CityLauncher deploy landed.** Requested 23 Sep ~19:20 UTC for RG-0428; read
-   `CL_DEPLOY_RESULT.txt`, then check the SERVER's copy of `api/server.py` carries
-   `ONBOARD-REAL-1`. A deploy tool printing success is EXECUTED, not PROBED. Then re-run the
-   number and confirm the funnel line reports **1 registered, not 45**.
-2. **RG-0429 IS THE BUILD. Nothing else comes close.** One man with a 94-scoring advert is
-   stopped by a wall we put there. Bring the wizard under RUL-145: the account and the EULA are
-   asked for *before* the work or folded into one tap at the end — the EULA is legally
-   load-bearing and does not get removed, only moved. It touches `marketsquare.html`, so treat
-   it as the session's one feature, never bash-write that file, and expect RG-0400 (the
-   wizard's `sob-eula-box` is a fourth unsynced EULA copy) to land in the same piece of work.
-3. **RG-0430** is the small one worth doing first if RG-0429 will not fit: one column on the
-   create path, and the first American who publishes is not filed as South African.
-4. **Do not raise the batch and do not go looking for a broken sender.** The list is being
-   consumed; ~416 addresses remain. See `GOAL_FACTS.md`.
-5. **RG-0157 is red and it is the language lane's, not ours** — untracked migration
-   `048_i18n_zu_xh_nso_hand_drafts.py`. It blocks the MarketSquare deploy ref, not CityLauncher's
-   own bat. Do not "fix" another lane's mid-flight work; if it is still red in a day, say so.
+0. **PROBE that run 18's deploy landed.** `scripts/request_deploy.py --status`, then confirm the
+   SERVER's `static/ms.js` carries `RETURN-LANE-1` and no longer POSTs `/auth/request-link` from
+   `goHandoff`. A tool printing success is EXECUTED, not PROBED.
+1. **THE RECOUP LETTER IS ONE CHECK FROM SENDING, AND THAT CHECK NEEDS A HUMAN.** Five of the six
+   pre-send items in `RECOUP_RICK_LETTER.md` now pass on live evidence. The sixth — walk the publish
+   link end to end in a real browser **as a signed-in arrival**, confirm the advert is publicly
+   visible, archive the probe — could not be done by run 18: driving a browser to a URL that carries
+   a sign-in token is refused in an unattended session by a credential guard, and every other route
+   to a session needs the same token. It is about five minutes of work **with David at the
+   keyboard**, or by any attended session. Do not send the letter until it passes; do not weaken the
+   item. Everything else for the letter is ready, including the corrected link recipe.
+2. **RG-0400 is now the biggest unowned thing in the publish path** — the EULA box a seller actually
+   ticks (`sob-eula-box` in marketsquare.html) is a FOURTH, unsynced copy reading v1.10 while the
+   site publishes v1.18. It is legally load-bearing, it sits inside every publish journey including
+   Rick's, and it blocks RG-0412. Restyled markup, so no safe mechanical sync: render the box from
+   the one source. Treat it as the session's one feature and **never bash-write that file.**
+3. **RG-0430 is closed; RG-0419 (Quick door prices only in rands) and RG-0414 are the small ones.**
+4. **Do not raise the batch and do not go looking for a broken sender.** ~390 addresses remain.
+   See `GOAL_FACTS.md`.
+5. **RG-0431 is red for the second day and it is the language lane's** — `bea_main.py` lost
+   `extra_status='draft' WHERE id=?`. No work lock is held on it any more, so the owner may have
+   finished and left the entry behind. Run 18 did not touch it (RUL-140 was about the lock; the
+   reason now is one-fix-per-task). If it is still red on the 25th, it has been abandoned rather
+   than in flight — say so, then fix it.
 6. Still carried, with the reason each was deferred: **RG-0409** ladder values + cap 40 ·
    **RG-0410** reachability gate + post-confirm glimpse · **RG-0411** taxi-drop area unit ·
    **RG-0412** EULA in the launch languages (**waits on RG-0400**) · **RG-0414** DOOR-RETURN-1 ·
-   **RG-0419** per-country question sets for the Quick door.
+   **RG-0419** per-country question sets for the Quick door · **RG-0437** rulings_check false FAIL.
 
 ## OPEN LOOPS
 
-- **RG-0429 (open): the publish wall.** The goal's single biggest leak. See above.
+- **The recoup letter to Rick: one pre-send check left, and it needs a person** (see next-run item 1).
 - **RG-0400 (open): the EULA a seller actually ticks is a FOURTH, unsynced copy** —
-  `sob-eula-box` in marketsquare.html reads v1.10 while the site publishes v1.18. Restyled
-  markup, not a byte copy, so there is no safe mechanical sync; the real fix renders the box
-  from the one source. **Blocks RG-0412, and sits inside RG-0429's scope.**
-- **RG-0430 (open): every wizard-created listing is born country='ZA'.**
+  `sob-eula-box` in marketsquare.html reads v1.10 while the site publishes v1.18. Restyled markup,
+  so no safe mechanical sync; render the box from the one source. **Blocks RG-0412.** Now the
+  biggest unowned thing in the publish path.
+- **RG-0431 (red, not ours): the language lane's `extra_status='draft'`.** Second day. No lock held.
 - **RG-0437 (open): rulings_check can print a false FAIL from a mid-write read.** Owned lane.
 - **RG-0419 (open): the Quick door prices only in rands.** Not a defect to paper over.
 - **RG-0414 (open): the only way back from the public door** is an emailed sign-in link plus one
-  browser's localStorage — the two things this market is least likely to have. Rick is the proof.
+  browser's localStorage. Rick is the proof. Run 18 at least made the emailed half real.
 - `_get_json()` still does not exist (specified by run 13, unwritten). RG-0401 covers most of it;
   14 `json.loads(_get(...))` sites remain individually unprotected against a 200 that is not JSON.
-- The ledger's `rg_no_third_party_script_on_surface` downloads ~16 MB per run — why shard 1 is slow.
+- The ledger's `rg_no_third_party_script_on_surface` downloads ~16 MB per run — why a shard is slow.
 - `marketsquare.html` reports `[TORN]` to `mount_guard.py` as "mount LARGER than committed but
   git-clean". Probably CRLF normalisation, not a tear — but **never bash-write that file**.
-- Listing 386/387/388 ARCHIVED not deleted; 2 files in `_to_delete/` and 9 orphaned `tmp_obj`
-  files need a deletion, which is David's.
+- **`git status` is unusable from this sandbox** — it creates `.git/index.lock`, cannot unlink it,
+  returns empty output, and leaves a lock that blocks Windows git. Use the host queue.
+- Listings 386/387/388 ARCHIVED not deleted; probe listings 397/398 archived (run 18, never public);
+  3 files in `_to_delete/` and 9 orphaned `tmp_obj` files need a deletion, which is David's.
 - RG-0346 (agency letters lack the console CTA) — open, adds no nightly volume.
 - Film 07 (Liquidation) unpublished — David's click, when he chooses.
 
 ## OPEN QUESTIONS FOR DAVID (batched, never dripped)
 
-**D9 is the only one that is worth anything this week. The rest are positioning.**
+**D9 IS ANSWERED — he answered it live on 23 Sep and chose the route himself.** It is not re-asked.
+What replaces it is not a question but a five-minute job only a person can do:
 
-- **D9 — NEW, and it is one sentence.** May a short note go to someone who has built an advert
-  and not put it live, telling them it is ready and how to finish? RUL-106 bars it (60-day floor,
-  every lane) and RUL-106(e) reserves the programme to him. The door already exists and is
-  dated: `TS_RECONTACT_PERMISSION`. **Rick Wemple is the live case and his advert is eleven days
-  old.** Asked 23 Sep. Nothing is built until he answers; the flow fix (RG-0429) proceeds either
-  way.
-- **D3 — what is she called?** "Housecleaner", "domestic worker", "home help", "cleaner" carry
-  very different weight in South Africa. The Quick door is labelled `homehelp` today.
-- **D4 — do the South African letters get re-aimed at the Quick door** as the primary call to
-  action, rather than sitting as a strip under a "list your business" letter written for companies?
+- **THE ONE THING WAITING ON HIM.** The letter to Rick is drafted, its permission is recorded in his
+  own words, its link recipe is corrected, and five of its six pre-send checks pass on live evidence.
+  The sixth needs someone signed in, in a real browser: open the minted link, tap Publish, read the
+  Terms, tick, confirm the advert is publicly visible, archive the probe. An unattended session is
+  refused when it drives a browser to a URL carrying a sign-in token, so this one cannot be automated
+  away. **It is the last thing between this goal and the number 1.**
+- **D3 — what is she called?** "Housecleaner", "domestic worker", "home help", "cleaner" carry very
+  different weight in South Africa. The Quick door is labelled `homehelp` today.
+- **D4 — do the South African letters get re-aimed at the Quick door** as the primary call to action,
+  rather than sitting as a strip under a "list your business" letter written for companies?
 - **D5 — where does she come from at all?** We have no list of housecleaners and no directory to
   harvest. Four-week or four-month move.
-- **D8 — the 1,114 teachers on the education register.** The largest reachable block left, held
-  by `blocked_categories` as a person-only/POPIA call, not by anything technical.
+- **D8 — the 1,114 teachers on the education register.** The largest reachable block left, held by
+  `blocked_categories` as a person-only/POPIA call, not by anything technical.
 
-**One thing David should KNOW, not decide:** cold email has roughly 416 addresses left and, on
-measured performance, that is not 20 listings. The route to 20 is no longer "send more"; it is
-"stop losing the people who already said yes". Run 17 found that we have been losing 100% of them
-at the last step, and that we had been counting our own mailer as if they were people.
+**One thing David should KNOW, not decide:** cold email has roughly 390 addresses left and, on
+measured performance, that is not 20 listings. The route to 20 is "stop losing the people who already
+said yes". Run 17 found we were losing 100% of them at the last step. Run 18 found that the fix for
+that was wired to the wrong sender, so the letter promising "finish anytime" was dying in twenty
+minutes and landing him on the wrong page. Both halves are now closed.
 
-## WHAT RUN 17 LEARNED ABOUT ITSELF
+## WHAT RUNS 17-18 LEARNED ABOUT THEMSELVES
 
 **Ask what CREATES a number before you believe what it means.** "42 registered" survived four
 runs and reached David in a written summary, because it was plausible, it was rising, and it
@@ -254,3 +231,22 @@ nobody takes; the cheap step is not always a probe — sometimes it is reading o
 only when it has work; the heartbeat file said it had ticked 17 minutes earlier. RG-0355 has
 said this in writing since 12 September. The alarm I was about to raise was already answered by
 the board I had not finished reading.
+
+**A fix is not finished until you follow the wire to the far end (run 18).** RETURN-LINK-1 was
+correct, proven, deployed and celebrated — and it sent the wrong letter, because the sender it
+switched on was the twenty-minute interactive lane rather than the seven-day one sitting two
+functions away. The entry guarding it asserted the presence of that wrong sender as proof of health.
+Nobody was careless; the assertion was written about the thing that was there, not about the thing
+the seller needs. **Ask what the person RECEIVES, not whether the code ran.**
+
+**Every good fix leaves a comment naming what it removed, so a substring test on a fix marker
+convicts the fix (run 18).** Twice in twenty minutes: RG-0429's leg matched `!magicLink.active`
+inside the paragraph documenting its removal, then the corrected RG-0444 matched
+`/auth/request-link` inside the comment I had just written explaining its deletion. Both were caught
+by running the entry against pre-fix, post-fix and reverted trees — never by reading it. Judge the
+condition line, or the block forward from it; never the function.
+
+**A lesson recorded in the one function it was learned in does not generalise by itself (run 18).**
+QUICK-RETURN-TTL-1 was written on 18 Sep, about this exact man, with the seven-day figure and the
+reasoning in full — and five days later a brand-new artefact reached for the twenty-minute lane
+again. What stops it is an assertion about the CLASS, which is now RG-0447.
