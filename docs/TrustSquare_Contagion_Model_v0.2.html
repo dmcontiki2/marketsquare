@@ -394,7 +394,7 @@ const PARAMS = [
  // --- email wave injection ---
  {k:"deliver", g:"Email wave", l:"Delivered / sent", lo:.86, mid:.94, hi:.98, src:"lit", n:"Resend, DKIM+DMARC live. Not measurable today: the webhook never maps email.delivered."},
  {k:"open",    g:"Email wave", l:"Opened / delivered", lo:.14, mid:.28, hi:.44, src:"lit", n:"Cold B2B to a scraped list. Webhook maps email.opened."},
- {k:"click",   g:"Email wave", l:"Clicked / opened", lo:.013, mid:.10, hi:.22, src:"data", n:"MEASURED 5 Sep 2026, and it is the most consequential measurement in the model because the two available readings disagree by a factor of twenty. RAW: 46 distinct people clicked of the 155 who opened = 0.297, ABOVE the old high end. HUMAN-VERIFIED: the click register grades the same events and finds 2 human clickers - 56 machine, 11 uncertain, 48 open-only - so the human reading is 2/155 = 0.013, BELOW the old low end. Corporate link-scanners fetch every URL in an email and a scanner fetch is indistinguishable from a person unless something grades it (the same class of error that produced 11 phantom opt-outs on 1 Sep). The low bound is moved to the human-verified floor and the range is left wide ON PURPOSE. Two clicks is not a rate, so nothing here is pinned as an observation yet - see the Calibration tab, where open and bounce ARE pinned and this one deliberately is not."},
+ {k:"click",   g:"Email wave", l:"Clicked / opened", lo:.013, mid:.10, hi:.22, src:"data", n:"MEASURED 5 Sep 2026, and it is the most consequential measurement in the model because the two available readings disagree by a factor of twenty. RAW: 46 distinct people clicked of the 155 who opened = 0.297, ABOVE the old high end. HUMAN-VERIFIED: the click register grades the same events and finds 2 human clickers - 56 machine, 11 uncertain, 48 open-only - so the human reading is 2/155 = 0.013, BELOW the old low end. RE-READ 24 Sep 2026: 2 human clickers of 534 openers = 0.0037, and David pinned it (mid run). Corporate link-scanners fetch every URL in an email and a scanner fetch is indistinguishable from a person unless something grades it (the same class of error that produced 11 phantom opt-outs on 1 Sep). The low bound is moved to the human-verified floor and the range is left wide ON PURPOSE. Two clicks is not a rate, so nothing here is pinned as an observation yet - see the Calibration tab, where open and bounce ARE pinned and this one deliberately is not."},
  {k:"signup",  g:"Email wave", l:"Signed up / clicked", lo:.06, mid:.18, hi:.38, src:"guess", n:"Magic link prefills name/email/category/city, so the form is nearly done. Untested."},
  {k:"fatigue", g:"Email wave", l:"Decay per repeat wave", lo:.35, mid:.55, hi:.75, src:"lit", n:"Multiplier on response for each further wave to the same prospect."},
  {k:"burn",    g:"Email wave", l:"Burned / emailed", lo:.55, mid:.80, hi:.95, src:"guess", n:"Share of non-responders who become permanently immune to re-mailing."},
@@ -558,6 +558,12 @@ const PM = {}; PARAMS.forEach(p=>{p.obs=null; p.lock=false; PM[p.k]=p;});
    yet, which is the entire goal). An unmeasured number stays unmeasured here. */
 PM.open.obs   = 0.218;    // 155 opened / 712 sent
 PM.bounce.obs = 0.0154;   // 11 hard bounces / 712 sent, well inside the 5% stop-loss
+/* ---- OBSERVED, 24 Sep 2026 (David's decision, 24 Sep: "pin the measured click rate") ----
+   click_register grades every click; 2,491 letters sent, 534 distinct openers, 2 human clickers
+   (56 machine, 11 uncertain, 48 open-only). 2 / 534 = 0.0037 — the reading the deterministic mid run
+   now uses. The ensemble still samples the lo-mid-hi range (a rate from two clicks is a reading, not a
+   distribution), so the dashboard's pinned medians — the 29 Aug baseline — do not move; the mid run does. */
+PM.click.obs  = 0.0037;   // 2 human clickers / 534 openers, 24 Sep 2026
 const DEFAULTS={allure:1,badge:.35,discount:0,referral:0,complaint:0,delay:0,poolX:1,batch:28,
   w2Week:8,w3Week:20,stripeW:0,africaW:157,agPush:1,advPush:1,compW:157,compS:1.5,
   dayCap:30,measured:1,agGateW:8,rollW:157,featW:8,liveKeysW:0,barriers:1,localiseW:157,

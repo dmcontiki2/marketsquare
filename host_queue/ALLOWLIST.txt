@@ -192,3 +192,6 @@ run_bat    MarketSquare\enable_scoreboard_unattended.bat
 # --- touches no DB, no money. The server timer is enabled only after this bat's .result
 # --- proves both tasks Disabled. Re-enabling either task = double send.
 run_bat    CityLauncher\disable_daily_wave.bat
+
+# SMS-LANE-1 (24 Sep 2026): David approved the first SMS wave to the 1,111 Gumtree numbers (about R222); the bat reads his approval file and sends only when an SMS provider is configured
+run_bat    CityLauncher\send_sms_wave.bat

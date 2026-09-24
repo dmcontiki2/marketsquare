@@ -4192,6 +4192,37 @@ def key_link_open(secret: str, draft: int = 0):
     return RedirectResponse(url=_mint_signin_url(em, draft or None, 20), status_code=302)
 
 
+@app.get("/listings/{listing_id}/status-card.png")
+def listing_status_card(listing_id: int, ts_user: str = Cookie(default=None)):
+    """STATUS-CARD-1 (24 Sep 2026, proposal 2 of the casual-workers plan, inside RUL-146): the WhatsApp
+    Status card for a LIVE advert. Public, because a Status is public -- but her first name rides on it
+    only when her own session asks for it (Mode B: the public read never carries a name)."""
+    from fastapi.responses import Response as _Resp
+    import status_card
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+        if not row or (row["listing_status"] or "live") != "live":
+            raise HTTPException(status_code=404, detail="Listing not found")
+        l = dict(row)
+        seller = (l.get("seller_email") or "").strip().lower()
+        u = conn.execute("SELECT name, trust_score FROM users WHERE LOWER(email)=?", (seller,)).fetchone()
+    finally:
+        conn.close()
+    owner = bool(seller) and _session_email(ts_user) == seller
+    first_name = (u["name"] if (owner and u and u["name"]) else None)
+    trust = l.get("trust_score") if l.get("trust_score") is not None else (u["trust_score"] if u else None)
+    link = APP_URL + "/?listing=%d&src=status" % int(listing_id)
+    make = APP_URL + "/quick/?src=status"
+    try:
+        png = status_card.render(l, link, make, first_name=first_name, trust=trust)
+    except Exception as exc:
+        _log.warning("STATUS-CARD-1 render failed for %s: %s", listing_id, exc)
+        raise HTTPException(status_code=500, detail="Could not draw the card right now.")
+    return _Resp(content=png, media_type="image/png",
+                 headers={"Cache-Control": "private, max-age=600", "Content-Disposition": "inline; filename=trustsquare-%d.png" % int(listing_id)})
+
+
 @app.get("/auth/session-link")
 def auth_session_link(draft: int = 0, ts_user: str = Cookie(default=None)):
     """A sign-in hop for the identity this browser already holds (phone-code sessions at the Quick door),

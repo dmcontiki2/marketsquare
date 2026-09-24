@@ -5209,6 +5209,7 @@ function openDetail(id){
         <p>Seller name, contact details and specific address are only revealed after both parties accept.</p>
       </div>
     </div>
+    ${String(l.cat||'').toLowerCase()==='services' ? `<div style="margin:0 0 14px;text-align:center;font-size:13px;color:var(--text-3);">Do work like this yourself? <a href="/quick/?src=status-make" style="color:var(--accent);font-weight:700;">Make your own advert \u2014 free</a></div>` : ''}
     <div class="sticky-cta">
       <button class="cta-btn ${isCommit?'commit-cta':'queue-cta'}" onclick="openModal('${id}')">
         ${isCommit?'⏳ Request Introduction':'👥 Join Queue'}
@@ -7445,6 +7446,41 @@ function sobStartOver() {
   sobState._cameFromGuided = false;
   sobState._skipPreview = false;
   goTo(SF_ENABLED ? 'sell-flow' : 'guided-onboard');   // SELL-FLOW-REDO-2
+}
+
+/* STATUS-CARD-1 (24 Sep 2026, proposal 2 of the casual-workers plan, inside RUL-146): one tap makes a
+   1080x1920 card for her WhatsApp Status -- role picture, first name (only for her own eyes: the server
+   adds it solely when the owner's session asks), area, rate, trust badge, QR and the link with ?src=status.
+   The share sheet gets the image + the text; where sharing files is not possible the card opens in a new
+   tab and the text is copied. Every viewer of the card meets two doors: ask for an introduction, or make
+   their own advert -- the supply loop. */
+async function msShareStatus(listingId, title){
+  const id = parseInt(String(listingId).replace(/^bea_/, ''), 10);
+  if (!id) { showToast('This advert is not live yet.'); return; }
+  const url  = BEA_URL + '/listings/' + id + '/status-card.png';
+  const link = 'https://trustsquare.co/?listing=' + id + '&src=status';
+  const text = (title ? title + ' \u2014 ' : '') + 'on TrustSquare. Ask for an introduction: ' + link +
+               '\nMake your own advert, free: https://trustsquare.co/quick/?src=status';
+  try { if (typeof obTrack === 'function') obTrack('status_share', {listing: id}); } catch (e) {}
+  try {
+    const r = await fetch(url, {credentials: 'include'});
+    if (!r.ok) throw new Error('card ' + r.status);
+    const blob = await r.blob();
+    const file = new File([blob], 'trustsquare-' + id + '.png', {type: 'image/png'});
+    if (navigator.canShare && navigator.canShare({files: [file]})) {
+      await navigator.share({files: [file], text: text});
+      return;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  try { window.open(url, '_blank'); } catch (e) {}
+  try { await navigator.clipboard.writeText(text); showToast('Your Status card opened \u2014 save it and post it. The link is copied.'); }
+  catch (e) { showToast('Your Status card opened in a new tab \u2014 save it and post it on your Status.'); }
+}
+
+function sobShareStatus() {
+  const first = sobState.drafts && sobState.drafts[0];
+  if (first && first.id) msShareStatus(first.id, first.title || '');
+  else showToast('Open My Space to share your advert once it is live.');
 }
 
 function sobViewMyListing() {
@@ -10205,7 +10241,7 @@ function renderDashCard(dl){
       ${statusBadge}
       ${wonderBanners}
       ${introsHtml}
-      ${dl.beaListingId?`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button><button class="mla-btn" onclick="showToast('Pause coming soon')">Pause</button></div>`:''}
+      ${dl.beaListingId?`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${dl.status!=='draft'?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||''))})">Share to Status</button>`:''}<button class="mla-btn" onclick="showToast('Pause coming soon')">Pause</button></div>`:''}
     </div>
   </div>`;
 }
