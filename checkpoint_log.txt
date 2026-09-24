@@ -337,3 +337,6 @@ Fri 09/18/2026  5:30:03.42  committed 3 change(s)
  create mode 100644 scripts/rulings_check.py.bak_20260919_032720
 Sat 09/19/2026  5:30:06.28  committed 13 change(s)
 Sun 09/20/2026  5:30:03.53  clean - nothing to commit 
+[main 1a7a23c] Nightly checkpoint Thu 09/24/2026  5:30:06.28 (auto, no deploy)
+ 2 files changed, 167 insertions(+), 171 deletions(-)
+Thu 09/24/2026  5:30:06.43  committed 2 change(s)

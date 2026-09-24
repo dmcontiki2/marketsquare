@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Contagion Model v1.8 &mdash; Services Lane (employer enrolment, SA)</title>
+<title>Contagion Model v1.9 &mdash; Services Lane re-based (casual workers, 24 Sep 2026)</title>
 <style>
 :root{
   --navy:#0d1b2a; --navy2:#11253a; --panel:#132b42; --line:#22405c; --ink:#e8eef4;
@@ -206,7 +206,7 @@ button.svc.on{background:#14b8a6;color:#04211d;border-color:#14b8a6;font-weight:
 <div class="app">
 
   <div class="top">
-    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.8&nbsp;&middot;&nbsp;Services lane (teal toggle) + goal agent (RUL-096) + clubs, unions &amp; federations WITH their own audience + measured funnel + planners + wave plan v3.2 + RAMP-1</span></div>
+    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.9&nbsp;&middot;&nbsp;Services lane re-based 24 Sep (teal toggle) + goal agent (RUL-096) + clubs, unions &amp; federations WITH their own audience + measured funnel + planners + wave plan v3.2 + RAMP-1</span></div>
     <div class="clock"><span id="dateOut">1 Sep 2026</span><small id="weekOut">week 0 of 156</small></div>
     <div class="ctrls">
       <button class="primary" id="btnPlay">&#9654;&nbsp; Run</button>
@@ -219,7 +219,7 @@ button.svc.on{background:#14b8a6;color:#04211d;border-color:#14b8a6;font-weight:
       <button id="btnNew" class="on" title="Email Wave Plan v3.2 as written: the 28 Aug proving ladder, 1 Sep global launch, 30 per category per city per day.">v3.2 plan</button>
     </div>
     <div class="ctrls">
-      <button id="btnSvc" class="svc" title="v1.8: switch the Services lane on or off. ON adds the Services-Casuals / Services-Technical role slate, enrolled through employers (RUL-150/151/152), across South Africa. OFF is exactly v1.7 - the dashboard pins stay on OFF.">Services lane: OFF</button>
+      <button id="btnSvc" class="svc" title="v1.9: switch the Services lane on or off. ON adds the Services-Casuals / Services-Technical role slate, enrolled through employers (RUL-150/151/152), across South Africa. OFF is exactly v1.7 - the dashboard pins stay on OFF.">Services lane: OFF</button>
     </div>
     <div class="stats">
       <div class="stat"><b id="sTot">0</b><span>Sellers</span></div>
@@ -255,7 +255,7 @@ button.svc.on{background:#14b8a6;color:#04211d;border-color:#14b8a6;font-weight:
         <div><i style="background:#f4801a"></i> Strain 2 &mdash; Starter $5</div>
         <div><i style="background:#2f80ed"></i> Strain 3 &mdash; Pro $20</div>
         <div><i style="background:#11161d;border:1.5px solid #c9d4de"></i> Strain 4 &mdash; Agency agent</div>
-        <div id="lgSvc" style="display:none"><i style="background:#14b8a6"></i> Strain 5 &mdash; Service worker (v1.8)</div>
+        <div id="lgSvc" style="display:none"><i style="background:#14b8a6"></i> Strain 5 &mdash; Service worker (v1.9)</div>
         <div><i style="background:#3a4a5a"></i> Exposed, not yet active</div>
         <div><i style="background:rgba(90,170,220,.4);border:1px solid rgba(120,200,245,.6)"></i> Buyers, no seller yet</div>
         <div><i style="background:#3a1f24;border:1px solid rgba(200,80,90,.55)"></i> Barriered &mdash; cannot be entered</div>
@@ -513,26 +513,29 @@ const PARAMS = [
  // employer side, and "use these service types to enrol their current employees or previous employees as
  // referrals". The employer is the SUPPLY channel. Enrolment NEVER creates a listing - the worker publishes
  // by her own hand through the Quick door. South Africa only: every employer on the approach order is here.
- {k:"svcDen", g:"Services lane", l:"Addressable casual + technical workers per 1,000 people (ZA)", lo:6, mid:18, hi:45, src:"guess", n:"The bigger SA base. Stats SA QLFS Q2 2026: 16.7m employed (informal sector up 34k, construction up 39k in the quarter) and 8.5m unemployed at 33.6%. Casual and trade work - household, informal, construction, hospitality, forecourt - is millions of people; this counts only the slice that would put a listing on a phone. 18 per 1,000 over the 28.3m people in the model's 55 SA cities is ~510k before incumbents, roughly 25x the ordinary seller base per person."},
- {k:"svcInc", g:"Services lane", l:"Share already held by incumbents (WhatsApp groups, word of mouth, gig apps)", lo:.40, mid:.65, hi:.85, src:"guess", n:"Most casual work in SA is placed by word of mouth and WhatsApp; the gig apps hold a thin urban slice. Higher than the ordinary 60% because a worker who has regular work does not look."},
+ {k:"svcDen", g:"Services lane", l:"Addressable casual + technical workers per 1,000 people (ZA)", lo:15, mid:40, hi:110, src:"data", n:"RE-BASED 24 Sep 2026 from the casual-workers research (CityLauncher/CASUALS_REACH_PROPOSALS_2026-09-23): 854,000 domestic workers employed and 1.1m working in private households (Stats SA), ~1.6m with the informal tail (AskMandla, Jun 2026), plus gardeners, piece-job and day labour (MSR 10,000+ registered), EPWP leavers (~1m opportunities a year) and the informal technical trades - and they concentrate in the cities the model draws. 40 per 1,000 over the model's 28.3m urban people is ~1.13m before incumbents (was 18 = ~510k). hi 110 counts the unemployed who would list themselves as available. WAS: 6 / 18 / 45. Old note: The bigger SA base. Stats SA QLFS Q2 2026: 16.7m employed (informal sector up 34k, construction up 39k in the quarter) and 8.5m unemployed at 33.6%. Casual and trade work - household, informal, construction, hospitality, forecourt - is millions of people; this counts only the slice that would put a listing on a phone. 18 per 1,000 over the 28.3m people in the model's 55 SA cities is ~510k before incumbents, roughly 25x the ordinary seller base per person."},
+ {k:"svcInc", g:"Services lane", l:"Share already held by incumbents (WhatsApp groups, word of mouth, gig apps)", lo:.25, mid:.45, hi:.65, src:"guess", n:"RE-BASED 24 Sep 2026: word of mouth and WhatsApp groups are not an exclusive incumbent - a worker keeps them AND lists. 28% of domestic workers lost a job in the past year (SweepSouth) and need the next employer fast with a reference, and the gig apps hold ~6,500 active workers nationally. WAS .40 / .65 / .85. Old note: Most casual work in SA is placed by word of mouth and WhatsApp; the gig apps hold a thin urban slice. Higher than the ordinary 60% because a worker who has regular work does not look."},
  {k:"svcEng", g:"Services lane", l:"Share of that market reachable in English only", lo:.30, mid:.50, hi:.75, src:"guess", n:"Before the launch languages ship. RUL decision 8 (18 Sep): English, isiZulu, Sesotho, Afrikaans reach ~90% with cluster intelligibility; isiXhosa fifth for Cape Town. After svcLangW the lane converts at the full 90%."},
  {k:"empYes", g:"Services lane", l:"Employer approached -> enrols its staff", lo:.05, mid:.20, hi:.50, src:"guess", n:"A human conversation, the one genuine hand-off in the plan. First door: one Pretoria franchisee or fuel-station dealer (can say yes the same week), then a mine running retrenchments, a contract cleaner, a hotel group, freight, farms, a municipality last."},
- {k:"empSize", g:"Services lane", l:"Current + former staff on an enrolled employer's roster", lo:8, mid:60, hi:900, src:"guess", n:"Heavy-tailed on purpose: a franchisee has ~25, a contract cleaner thousands, a mine's retrenchment list thousands. Each enrolment draws a lognormal roster around this."},
+ {k:"empSize", g:"Services lane", l:"Current + former staff on an enrolled employer's roster", lo:8, mid:120, hi:1500, src:"guess", n:"RE-BASED 24 Sep 2026 to the door order in the casuals research: a residential estate gate desk registers 300-800 domestic workers (and 1,000 confirming households), EPWP contractors, cleaning / security / hospitality employers with high churn, the 50 TVET colleges already in Lane C, and SADSAWU / Izwi. WAS 8 / 60 / 900. Old note: Heavy-tailed on purpose: a franchisee has ~25, a contract cleaner thousands, a mine's retrenchment list thousands. Each enrolment draws a lognormal roster around this."},
  {k:"empReach", g:"Services lane", l:"Share of the roster the employer can invite (WhatsApp/SMS on file)", lo:.30, mid:.60, hi:.85, src:"guess", n:"Former employees are the weak end: numbers change. The invite is an account + magic link (the agencies machinery, generalised) - it creates NO listing."},
  {k:"svcAct", g:"Services lane", l:"Invited worker -> publishes her own listing /week", lo:.04, mid:.12, hi:.30, src:"guess", n:"The Quick door: five taps, draft, hand-over. The whole lane stands on this number and nothing measures it yet - the door's beacons (q_door ... q_handover) started 19 Sep."},
  {k:"svcLapse", g:"Services lane", l:"Invited, never listed -> lapses /week", lo:.03, mid:.08, hi:.20, src:"guess", n:"Goes to the warm pool, not the grave - the WhatsApp self-send (WA-SELFSEND-1) is the way back without an inbox."},
  {k:"svcGated", g:"Services lane", l:"Share of workers in a licence / clearance-gated role", lo:.08, mid:.18, hi:.30, src:"data", n:"14 of the IN roles on the 19 Sep slate carry a gate before public visibility: police clearance (Nanny, Caregiver, Creche assistant, RUL-153) or a licence (PSIRA, PrDP, DoEL, SAQCC, refrigerant; RUL-155/156). Volume-weighted lower than the role count."},
  {k:"svcGateWk", g:"Services lane", l:"Weeks to verify a gated worker", lo:2, mid:6, hi:16, src:"guess", n:"Police clearance and registry checks. The listing waits; it is not refused."},
  {k:"svcGateFail", g:"Services lane", l:"Gated workers who never clear", lo:.10, mid:.30, hi:.50, src:"guess", n:"No registration, lapsed licence, or simply never uploads the proof."},
- {k:"svcRef", g:"Services lane", l:"WhatsApp invites to ex-colleagues per listed worker /week", lo:.01, mid:.05, hi:.15, src:"guess", n:"wa.me/?text= with no number (decision 5, built 19 Sep): she picks from her own contacts. Co-workers from the same roster are the tightest peer group in the model."},
- {k:"svcRefTake", g:"Services lane", l:"Invited co-worker signs up", lo:.05, mid:.15, hi:.35, src:"guess", n:"A message from someone she worked beside, not a stranger."},
+ {k:"svcRef", g:"Services lane", l:"WhatsApp invites and Status views per listed worker /week (the referral component)", lo:.05, mid:.20, hi:.50, src:"guess", n:"RE-BASED 24 Sep 2026: the referral component is now two things - the wa.me self-send to co-workers (decision 5) AND her Status card (proposal 2 of the casuals research: one tap after publishing makes a 1080x1920 card with QR and short link; 30-150 Status viewers; 82% of township businesses already reach customers on WhatsApp - TEA 2025). RUL-142 pays rising trust points (5/6/7) only when a verified client hires, never for a signup, and the employer confirmation carries 12 points - so the incentive is points, never cash. WAS .01 / .05 / .15. Old note: wa.me/?text= with no number (decision 5, built 19 Sep): she picks from her own contacts. Co-workers from the same roster are the tightest peer group in the model."},
+ {k:"svcRefTake", g:"Services lane", l:"Invited co-worker or Status viewer starts her own draft", lo:.05, mid:.18, hi:.35, src:"guess", n:"A message from someone she worked beside, not a stranger - and the Status card carries a second button, Make your own, free (the supply loop). Nudged .15 -> .18 on 24 Sep for the second button; still a guess until ?src=status counts arrive."},
  {k:"svcB2s", g:"Services lane", l:"SA app users who also have casual or trade work to offer", lo:.05, mid:.15, hi:.35, src:"guess", n:"The services twin of b2s. With official unemployment at 33.6% (QLFS Q2 2026) a large share of the people who arrive to hire also have work to sell - the gardener's neighbour sees the Gardener card and makes her own. Applied to b2s, so it inherits that benchmark's rate."},
  {k:"svcAud", g:"Services lane", l:"Households / clients a worker already has", lo:1, mid:3, hi:8, src:"guess", n:"A home cleaner works for several houses a week; a plumber has a phone full of past jobs. The confirming employer is one of them."},
  {k:"svcAudJoin", g:"Services lane", l:"Of those, share who join (confirm tap + post-confirm glimpse)", lo:.15, mid:.40, hi:.75, src:"guess", n:"Decisions 3 and 4 (18 Sep): the confirmer verifies a phone or email, no account needed, then sees her score move and two or three other workers nearby. Free-account offer after."},
  {k:"svcTgt", g:"Services lane", l:"Service supply a city needs vs the ordinary target", lo:2, mid:6, hi:15, src:"guess", n:"A household hires within walking distance of the taxi drop (decision 6), so a service market needs far more workers than a tutor market before it feels full."},
  {k:"svcIntroX", g:"Services lane", l:"Paid introductions per worker vs an ordinary seller", lo:.5, mid:1.0, hi:2.0, src:"guess", n:"Households hire often but many repeat off-app once introduced. 1T = $2 per introduction, canon 3."},
- {k:"svcPay", g:"Services lane", l:"Upgrade propensity vs an ordinary seller", lo:.10, mid:.35, hi:.80, src:"guess", n:"$5 a month is R92 - a trade takes it, a casual mostly does not. Free is the expected tier."},
+ {k:"svcPay", g:"Services lane", l:"Upgrade propensity vs an ordinary seller", lo:.03, mid:.12, hi:.30, src:"data", n:"RE-BASED 24 Sep 2026: $5 a month is ~R82 and her MEDIAN monthly spend on data and airtime is R94 (SweepSouth, 5,500+ respondents) - a subscription is nearly her whole connectivity budget. A trade takes it, a casual almost never does; her revenue is the household's paid introduction, not her subscription. WAS .10 / .35 / .80."},
  {k:"svcChurn", g:"Services lane", l:"Churn multiplier for service workers", lo:.8, mid:1.2, hi:2.0, src:"guess", n:"Casual work is transient: a worker who finds a permanent post stops listing."},
+ {k:"svcMail", g:"Services lane", l:"Share of invited casual workers who can finish an E-MAIL step (the RUL-166 gate)", lo:.15, mid:.35, hi:.60, src:"guess", n:"NEW 24 Sep 2026. Every channel in the casuals research ends at the Quick door, which asks for an e-mail to publish (RUL-166: nothing goes live without her e-mail and her signed EULA). She has WhatsApp, not e-mail (SweepSouth, TEA 2025). An Android phone carries a Google account, so some can, most do not. Multiplies svcAct and the way back from the warm pool until svcKeyW ships a phone / link key. The door's beacons will measure it: e-mail field shown vs draft published."},
+ {k:"svcChanN", g:"Services lane", l:"Door visits per week from the ground + air channels, once they run", lo:60, mid:250, hi:1200, src:"guess", n:"NEW 24 Sep 2026. Proposals 4-6 of the casuals research: posters with QR + WORK number at the ranks she stands at twice a day (Denneboom, Bosman St, Marabastad, Soshanguve - 15m taxi trips a day nationally), listing mornings (30-40 people helped to publish per morning), community radio live reads (Soshanguve CR ~18k listeners, Mams FM, Moretele), SA Youth (4m young people, zero-rated), ~850 WhatsApp job groups, Facebook groups, and R3 Meta clicks only where a source code converts (R1,000 = ~330 visits). Ramps in over six weeks. Every visit is counted by its ?src= code, so this number stops being a guess in the first week it runs."},
+ {k:"svcChanConv", g:"Services lane", l:"Door visit -> she starts her own draft (enters the invited pool)", lo:.05, mid:.15, hi:.35, src:"guess", n:"NEW 24 Sep 2026. A poster scan or a radio call to action is colder than an employer's invitation; a listing morning is warmer (an ambassador's phone, her own hand). Blended. She still has to publish (svcAct) and pass the gate (svcMail / svcKeyW)."},
 
  // --- agencies ---
  {k:"agRate",  g:"Agencies", l:"Agency conversions /city /week", lo:.002, mid:.012, hi:.045, src:"guess", n:"Hub events, scaled by city size. Three agencies already signed up pre-launch, so the floor is not zero."},
@@ -560,7 +563,7 @@ const DEFAULTS={allure:1,badge:.35,discount:0,referral:0,complaint:0,delay:0,poo
   dayCap:30,measured:1,agGateW:8,rollW:157,featW:8,liveKeysW:0,barriers:1,localiseW:157,
   tpW:0,tpToursW:157,refW:157,varsityW:157,ramp:1,rampCap:96,ring2W:1,ring3W:4,ring4W:8,ring5W:157,scrapeWk:30,aipaW:13,aucW:26,fideW:157,fideUp:1.35,
   clubW:1,clubProvW:157,fedW:157,unionW:157,goalW:0,goalCap:6,goalCities:43,
-  svcOn:0,svcW:3,empPace:4,svcLangW:13};
+  svcOn:0,svcW:3,empPace:4,svcLangW:3,svcKeyW:157,svcChanW:157};
 
 /* -------- scenario levers: things David can actually change -------- */
 const LEVERS = {
@@ -610,10 +613,12 @@ const LEVERS = {
   agPush:   {v:1.0,  lo:0,  hi:4,   st:.1,  l:"Agency outreach intensity",     n:"Multiplier on agency conversion. Hubs are the fastest lever you own."},
   compW:    {v:157,  lo:0,  hi:157, st:1,   l:"Week a competitor clone lands", n:"157 = never. Cross-immunity: whoever they take, you cannot have."},
   compS:    {v:1.5,  lo:.2, hi:5,   st:.1,  l:"Competitor strength vs you",    n:"Their transmission relative to yours. Funded clone with your concept = 2-4."},
-  svcOn:    {v:0,    lo:0,  hi:1,   st:1,   l:"Services lane (v1.8)",          n:"The toggle in the top bar does the same. OFF = v1.7 exactly, which is what the dashboard pins. ON = the 19 Sep role slate (Services-Casuals + Services-Technical) enrolled through employers across South Africa."},
+  svcOn:    {v:0,    lo:0,  hi:1,   st:1,   l:"Services lane (v1.9)",          n:"The toggle in the top bar does the same. OFF = v1.7 exactly, which is what the dashboard pins. ON = the 19 Sep role slate (Services-Casuals + Services-Technical) enrolled through employers across South Africa."},
   svcW:     {v:3,    lo:0,  hi:157, st:1,   l:"Week the first employer door opens", n:"Week 3 = Tue 22 Sep: the approved approach order starts with one Pretoria franchisee or fuel-station dealer who can say yes the same week. A placeholder, not a commitment - move it to when the first conversation actually happens."},
   empPace:  {v:4,    lo:0,  hi:40,  st:1,   l:"Employers approached /month",  n:"Each approach is a human conversation - the one real hand-off in the plan. Roughly one a week is David's own bandwidth; a Growth Partner lane (Stage 2, Oct) could raise it."},
-  svcLangW: {v:13,   lo:0,  hi:157, st:1,   l:"Week the four launch languages ship", n:"English, isiZulu, Sesotho, Afrikaans (~90%). Waits on RG-0412, which waits on RG-0400 (the unsynced EULA box). Week 13 (1 Dec) is a placeholder. 157 = English only, forever."}
+  svcLangW: {v:3,     lo:0,  hi:157, st:1,   l:"Week the launch languages shipped (did: week 3)", n:"SHIPPED 23 Sep 2026 = week 3 (RUL-164/165): English, isiZulu, isiXhosa, Afrikaans, Sepedi are ON for everyone, on Claude's drafts, proofreading after launch. 157 = never, kept for the English-only counterfactual. Before 24 Sep this sat at 13 (1 Dec)."},
+  svcKeyW:  {v:157,   lo:0,  hi:157, st:1,   l:"Week the phone / link key ships (D2: no e-mail needed to publish)", n:"157 = never = today's truth: RUL-166 (23 Sep) keeps her e-mail and her signed EULA as the key. The casuals research (23 Sep, section 2) calls this the ONE decision that multiplies or zeroes every reach channel: option A (the draft link is the key + phone notifications) or option B (phone number + one-time code, EULA still signed in the app). Until it ships, only svcMail of invited casual workers can publish. Set a week to see what opening the gate is worth; the EULA stays mandatory either way."},
+  svcChanW: {v:157,   lo:0,  hi:157, st:1,   l:"Week the ground + air channels start (ranks, radio, SA Youth, job groups)", n:"157 = never = today's truth: nothing printed, no WORK number held, no test budget approved. The 23 Sep six-week sequence puts the free rails (Status card, SA Youth, job groups) first and money (posters R500, ambassador R20-30 per published advert, radio R1-5k a month) from week 3 of the plan - roughly model week 7-8 if David decides this week. Pretoria for the first twelve weeks, then the rest of SA."},
 };
 
 /* ================= EMAIL WAVE PLAN v3.2 =========================
@@ -911,7 +916,7 @@ function simulate(seed, L, sample, keepTrace, v32){
   // its OWN random stream: switching the lane on must not reshuffle the draws of every other lane,
   // or the with/without comparison would be mostly noise
   const r2=mulberry32((seed^0x5EC5A11)>>>0); const svcN=new Float64Array(n); let svcOrg=0, svcCross=0;
-  let empApproached=0, empEnrolled=0, empRoster=0, svcInvited=0, svcEver=0, svcBuyers=0, svcRefd=0, svcGateFailed=0;
+  let empApproached=0, empEnrolled=0, empRoster=0, svcInvited=0, svcEver=0, svcBuyers=0, svcRefd=0, svcGateFailed=0, svcChan=0;
   const ZA_IX=[]; let zaPop=0; for(let i=0;i<n;i++) if(CITIES[i].c==="ZA"){ ZA_IX.push(i); zaPop+=CITIES[i].pop; }
   const PTA_IX = CITY_IX["Pretoria"];
   if(svcOn) for(const i of ZA_IX){
@@ -1434,6 +1439,16 @@ function simulate(seed, L, sample, keepTrace, v32){
     let svcNewWk=0;
     if(svcOn){
       const langX = (w>=L.svcLangW && L.svcLangW<157) ? 1 : P.svcEng/0.90;
+      // v1.9: the publish key. RUL-166 keeps e-mail as the key; until a phone / link key ships only svcMail of casual workers get through.
+      const gateX = (w>=L.svcKeyW && L.svcKeyW<157) ? 1 : P.svcMail;
+      // v1.9: ground + air channels (posters at ranks, listing mornings, radio, SA Youth, job groups) - door visits that start a draft.
+      if(w>=L.svcChanW && L.svcChanW<157){
+        const wk=w-L.svcChanW;
+        const visits=pois(r2, P.svcChanN*Math.min(1,(wk+1)/6));
+        let starts=binom(r2, visits, Math.min(.6,P.svcChanConv*langX));
+        if(wk<12 && PTA_IX!==undefined){ const m=Math.min(starts,Math.round(VS[PTA_IX])); VS[PTA_IX]-=m; VE[PTA_IX]+=m; svcChan+=m; }
+        else { for(let k=0;k<starts;k++){ const i=pickZA(); if(VS[i]>=1){ VS[i]-=1; VE[i]+=1; svcChan+=1; } } }
+      }
       if(w>=L.svcW && L.svcW<157){
         // employer doors: a few human conversations a month, a fraction say yes
         const appr=pois(r2, L.empPace/WEEKS_PER_MONTH);
@@ -1477,7 +1492,7 @@ function simulate(seed, L, sample, keepTrace, v32){
         }
         // the Quick door: she publishes by her own hand, or she lapses to the warm pool
         if(VE[i]>=1){
-          const act=binom(r2, Math.round(VE[i]), Math.min(.9,P.svcAct*langX*delayPen));
+          const act=binom(r2, Math.round(VE[i]), Math.min(.9,P.svcAct*langX*delayPen*gateX));
           const lap=binom(r2, Math.round(VE[i]-act), P.svcLapse);
           VE[i]-=act+lap; VW[i]+=lap;
           const gated=binom(r2, act, P.svcGated);        // police clearance / licence before she is visible
@@ -1518,7 +1533,7 @@ function simulate(seed, L, sample, keepTrace, v32){
         // and the way back
         const lift=0.4+0.6*LqS[i];
         if(VD[i]>=1){ const b=binom(r2,Math.round(VD[i]),Math.min(.35,P.react*lift)); VD[i]-=b; VA0[i]+=b; }
-        if(VW[i]>=1){ const b=binom(r2,Math.round(VW[i]),Math.min(.35,P.reactWarm*lift*langX)); VW[i]-=b; VA0[i]+=b; svcEver+=b; svcNewWk+=b; }
+        if(VW[i]>=1){ const b=binom(r2,Math.round(VW[i]),Math.min(.35,P.reactWarm*lift*langX*gateX)); VW[i]-=b; VA0[i]+=b; svcEver+=b; svcNewWk+=b; }
       }
     }
 
@@ -1653,7 +1668,7 @@ function simulate(seed, L, sample, keepTrace, v32){
         goalSignups:goalSignups, fedBodies:fedBodies, outPub:outPub,
         svcOn:(svcOn?1:0), svcActives:tS, svcIntroRev:svcIntroRev, svcSubRev:svcSubRev, svcEver:svcEver, svcBuyers:svcBuyers,
         svcOrg:svcOrg, svcCross:svcCross, empApproached:empApproached, empEnrolled:empEnrolled, empRoster:empRoster, svcInvited:svcInvited, svcRefd:svcRefd,
-        svcNew:svcNewWk, svcGateFailed:svcGateFailed,
+        svcNew:svcNewWk, svcGateFailed:svcGateFailed, svcChan:svcChan,
         svcGated:(function(){let t=0;for(const i of ZA_IX)t+=VG[i];return t;})(),
         svcWaiting:(function(){let t=0;for(const i of ZA_IX)t+=VE[i];return t;})(),
         svcPoolLeft:(function(){let t=0;for(const i of ZA_IX)t+=VS[i];return t;})(),
@@ -2331,7 +2346,7 @@ function svcBar(){
     ['Net, canon costs',      sn.netCanon||0, sb.netCanon||0, 1],
     ['Cities working',        sn.working||0, sb.working||0, 0]
   ];
-  let h='<div class="c hdr"><span>Services lane ON</span><b>v1.8</b><i>teal = with it &middot; vs without</i></div>';
+  let h='<div class="c hdr"><span>Services lane ON</span><b>v1.9</b><i>teal = with it &middot; vs without</i></div>';
   for(const [lab,nv,ov,m] of rows) h+='<div class="c"><span>'+lab+'</span><b>'+f(nv,m)+'</b>'+d(nv,ov)+'<i>without '+f(ov,m)+'</i></div>';
   const only=[
     ['Service workers listed', f(sn.svcActives||0), 'ever listed '+f(sn.svcEver||0)],
@@ -2340,7 +2355,8 @@ function svcBar(){
     ['Employers enrolled',     f(sn.empEnrolled||0),f(sn.empApproached||0)+' approached &middot; '+f(sn.empRoster||0)+' on rosters'],
     ['Workers by word of mouth',f(sn.svcOrg||0),   'the model\'s own organic spread'],
     ['Came to hire, listed instead',f(sn.svcCross||0),'app users with work to offer'],
-    ['Co-workers via WhatsApp',f(sn.svcRefd||0),    'wa.me, no number held'],
+    ['Co-workers via WhatsApp + Status',f(sn.svcRefd||0),    'wa.me and her Status card, no number held'],
+    ['Came in from ranks, radio, SA Youth',f(sn.svcChan||0),'posters, listing mornings, live reads, job groups'],
     ['Households via workers', f(sn.svcBuyers||0),  'confirm tap + glimpse + seen'],
     ['Service revenue /mo',    f((sn.svcIntroRev||0)+(sn.svcSubRev||0),1), f(sn.svcIntroRev||0,1)+' intros &middot; '+f(sn.svcSubRev||0,1)+' subs'],
     ['SA service market left', f(sn.svcPoolLeft||0),'addressable, not yet reached']
@@ -2420,7 +2436,8 @@ function buildPanel(which){
     b.appendChild(pb2);
     const pb3=document.createElement('div'); pb3.className='planbox';
     pb3.style.borderLeftColor='#14b8a6';
-    pb3.innerHTML="<b>v1.8 &mdash; the Services lane (19 Sep 2026), behind the teal toggle.</b> "+
+    pb3.innerHTML="<b>v1.9 &mdash; the Services lane re-based 24 Sep 2026 on the casual-workers research (23 Sep), behind the teal toggle.</b> "+
+      "Six numbers moved (market size 18 &rarr; 40 per 1,000; incumbents .65 &rarr; .45; employer roster 60 &rarr; 120; referral .05 &rarr; .20 with the Status card; upgrade propensity .35 &rarr; .12; languages shipped week 3) and three arrived: the e-mail gate (svcMail), the ground + air channels (svcChanN, svcChanConv) and two new week levers, <b>svcKeyW</b> and <b>svcChanW</b>, both 157 = never until David decides. OFF is still v1.7 draw for draw. "+
       "RUL-150/151/152: every casual and technical role on the reviewed slate (Services-Casuals, Services-Technical), "+
       "and the <b>employer</b> as the supply channel &mdash; it enrols its current and former staff; it never creates a listing. "+
       "<ol><li><b>A bigger SA base.</b> Casual and trade workers are their own addressable market, sized per 1,000 people "+
@@ -2431,7 +2448,7 @@ function buildPanel(which){
       "<li><b>Languages</b> (EN, isiZulu, Sesotho, Afrikaans) lift the lane from English-only to ~90%.</li></ol>"+
       "OFF is v1.7 exactly, so the dashboard's BEAT THE MODEL pins do not move. Every new number is in Calibration under <i>Services lane</i>, and every one is a guess until the door's beacons say otherwise.";
     b.appendChild(pb3);
-    const groups={"Services lane (v1.8, RUL-150)":["svcOn","svcW","empPace","svcLangW"],
+    const groups={"Services lane (v1.9, RUL-150)":["svcOn","svcW","empPace","svcLangW","svcKeyW","svcChanW"],
       "Product & offer":["allure","badge","discount","referral"],
       "Damage":["complaint","delay"],
       "Email Wave Plan v3.2":["dayCap","measured","agGateW","rollW"],
@@ -2535,10 +2552,12 @@ function buildPanel(which){
   if(which==='idea'){
     const g=document.createElement('div'); g.className='grp'; g.innerHTML='<h3>Scenario presets</h3>';
     const presets={
-      "SERVICES LANE as planned 19 Sep (employers wk 3, languages wk 13)":{svcOn:1,svcW:3,empPace:4,svcLangW:13},
-      "Services lane, English only (languages never ship)":{svcOn:1,svcW:3,empPace:4,svcLangW:157},
-      "Services lane, a Growth Partner doubles the employer pace":{svcOn:1,svcW:3,empPace:8,svcLangW:13},
-      "Services lane, one employer a month":{svcOn:1,svcW:3,empPace:1,svcLangW:13},
+      "SERVICES LANE today (24 Sep): languages live wk 3, e-mail gate stays, no ranks/radio yet":{svcOn:1,svcW:3,empPace:4,svcLangW:3,svcKeyW:157,svcChanW:157},
+      "REACH PLAN 23 Sep: phone/link key wk 6, ranks + radio + SA Youth from wk 8":{svcOn:1,svcW:3,empPace:4,svcLangW:3,svcKeyW:6,svcChanW:8},
+      "Reach plan but the e-mail gate is kept (RUL-166 unchanged)":{svcOn:1,svcW:3,empPace:4,svcLangW:3,svcKeyW:157,svcChanW:8},
+      "Reach plan + a Growth Partner doubles the employer pace":{svcOn:1,svcW:3,empPace:8,svcLangW:3,svcKeyW:6,svcChanW:8},
+      "Services lane, English only (languages never ship)":{svcOn:1,svcW:3,empPace:4,svcLangW:157,svcKeyW:157,svcChanW:157},
+      "Services lane, one employer a month":{svcOn:1,svcW:3,empPace:1,svcLangW:3,svcKeyW:157,svcChanW:157},
       "Everything goes right":{allure:1.6,badge:1,referral:.8,batch:300,agPush:3,stripeW:0,compW:157,complaint:0,delay:0},
       "Honest base case (current policy)":{allure:1,badge:.35,referral:0,batch:28,agPush:1,stripeW:0,compW:157,complaint:.002,delay:.1},
       "Planner lane never ships":{featW:157,allure:1,badge:.35,batch:28,agPush:1,stripeW:0,compW:157,complaint:.002,delay:.1},

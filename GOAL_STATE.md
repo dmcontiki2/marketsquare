@@ -118,7 +118,11 @@ wave is unaffected by that — it fires from the box, not from a session.)*
    0 UNVERIFIED, 4 ready to lock. `rulings_check` 142 rulings, 0 FAIL, twice.
    RG-0154 went red mid-run because a new changelog fragment put `session_counter` behind the
    evidence; re-derived to 206 and green again — my consequence, not a finding.
-7. **Housekeeping worth knowing:** `git status` **cannot be run from this sandbox any more.** It
+7. **LIVE AND PROBED 24 Sep 03:44Z, deploy ref `1a7a23c`.** Not read from a success line: the
+   server's own `static/ms.js` and the CDN-served copy both carry `RETURN-LANE-1`, the return-link
+   block no longer calls `/auth/request-link`, the condition no longer exempts invited arrivals, and
+   the toast now reads "a link straight back to this advert. It works for a week."
+8. **Housekeeping worth knowing:** `git status` **cannot be run from this sandbox any more.** It
    creates `.git/index.lock` and then cannot unlink it (deletion is off), so it returns empty
    output and leaves a lock that blocks Windows git. Mine is moved to `_to_delete/`. Read git state
    host-side or not at all; the commit went through the host queue (`quiet_commit.py`), which is
