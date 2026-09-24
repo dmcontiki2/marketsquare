@@ -347,3 +347,26 @@ CLASS property, deliberately not a two-package list: any module the lane's INSTR
 belongs in `REQUIRED`. A new harness that needs a new package adds a line there — it does not
 get to be silently blind for a fortnight first.
 
+## SCREEN-WALK-1 — the loop LOOKS at the live app, in every language (24 Sep 2026)
+
+The ledger looks backward: it guards faults already named. On 24 Sep a fault nobody had named
+reached David first — every home tile read 0 in Afrikaans over 58 loaded listings (RG-0452). A
+change that is right where it was made and wrong in a setting nobody looked at (another language,
+another country, another screen) is the commonest fault of building on a live app, and until today
+a human was the only detector.
+
+**Runs inside every agent run, automatically** (`_screen_walk_lane`, after the backup and standup
+lanes; Linux sandbox only, ~30 s): `scripts/screen_walk.py` opens the live app in a real headless
+browser in en, af, zu, xh and nso, **as a returning reader** (dictionary warm, then reload — a first
+visit passes the 24 Sep class by luck, proven), and reads the home tiles, the Featured count and every
+Browse screen's card count off the screen. Any language that shows different numbers from English, or
+a page error, is a MISMATCH. The witness is `ledger_runs/screen_walk_status.json`; **RG-0456** judges
+it (stale > 72 h = the producer stopped = red).
+
+The browser toolkit is cached OUTSIDE the repo at `Projects/.tools/screen_walk` (~410 MB, no download
+per session). If it is ever missing: `python3 scripts/screen_walk.py --install`, re-run until it says
+complete (one piece per call, each inside the command cap). Proof mode:
+`--serve-ms-js=<file>` walks a chosen build instead of the live one and never writes the witness.
+
+Next increments go INTO this instrument, not beside it: other countries' languages (LANGS), more
+screens (detail, filters applied, the sell flow), a second city.

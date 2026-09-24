@@ -1057,8 +1057,45 @@ def main():
     _post_heartbeat(report, mode, key)
     report["backup"] = _backup_lane()
     report["standup"] = _standup_lane()
+    report["screen_walk"] = _screen_walk_lane()
     _flush()
     return 0
+
+
+def _screen_walk_lane():
+    """SCREEN-WALK-1 (24 Sep 2026): the forward-looking half of the machinery.
+
+    The regression ledger guards faults we have already NAMED. Nothing looked at the live app
+    the way a person does, so on 24 Sep David was the detector: every home tile read 0 in
+    Afrikaans over 58 loaded listings. scripts/screen_walk.py opens the live app in a real
+    headless browser in each South African language, as a RETURNING reader, and fails when any
+    language shows different numbers from English (tiles, Featured, each Browse screen) or the
+    page throws. Proven to catch the 24 Sep build and pass the fixed one.
+
+    Runs only where its browser toolkit can run (the Linux Cowork sandbox; the toolkit is cached
+    at Projects/.tools/screen_walk so no download happens). Skipped on the origin and on the
+    Windows host. ~30 s, hard cap 120 s, never raises. The witness it writes is what ledger
+    RG-0456 judges -- a producer that lives in code, not in a sentence (BACKUP-IN-AGENT-1)."""
+    rec = {"ran": False, "state": "NOT_MEASURED", "outcome": ""}
+    if os.path.realpath(REPO).startswith("/opt/marketsquare-src") or not sys.platform.startswith("linux"):
+        rec["outcome"] = "skipped: the screen walk runs in the Linux sandbox only"
+        say("screen walk lane: %s" % rec["outcome"])
+        return rec
+    try:
+        prod = os.path.join(REPO, "scripts", "screen_walk.py")
+        if not os.path.isfile(prod):
+            rec["outcome"] = "producer scripts/screen_walk.py missing"
+        else:
+            rec["ran"] = True
+            r = subprocess.run([sys.executable, prod], cwd=REPO, capture_output=True, text=True,
+                               timeout=120, env=dict(os.environ, MS_BEA_URL=BASE))
+            rec["state"] = {0: "OK", 1: "MISMATCH"}.get(r.returncode, "NOT_MEASURED")
+            tail = [l for l in ((r.stdout or "") + (r.stderr or "")).splitlines() if l.strip()]
+            rec["outcome"] = " | ".join(tail[-4:])[:400] if tail else "(no output)"
+    except Exception as e:
+        rec["outcome"] = "FAILED: %s %s" % (type(e).__name__, str(e)[:120])
+    say("screen walk lane: %s -- %s" % (rec["state"], rec["outcome"][:160]))
+    return rec
 
 
 def _standup_lane():

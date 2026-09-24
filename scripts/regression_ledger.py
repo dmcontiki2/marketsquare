@@ -27971,5 +27971,72 @@ def rg_sec_gate_1():
     return out or [(INFO, "gate installed last; %d routes declared; admin tokens typed; stranger test gates "
                           "the deploy; manifest ships gate + policy" % len(pol))]
 
+
+@entry("RG-0456", "SCREEN-WALK-1: a real browser walks the live app in every South African language each "
+                  "day, as a returning reader, and every language shows the same numbers as English",
+       LOCKED, fixed_on="2026-09-24",
+       scope="scripts/screen_walk.py (the walk), scripts/maintenance_agent.py _screen_walk_lane() (the "
+             "producer, every daily loop run), ledger_runs/screen_walk_status.json (the witness). "
+             "WHY: on 24 Sep 2026 David was the only detector of a fault the machinery could not see -- "
+             "every home tile read 0 in Afrikaans (RG-0452). The ledger looks BACKWARD at faults already "
+             "named; this looks FORWARD at the screen a person sees. English is the reference; af, zu, "
+             "xh and nso must show identical home-tile numbers, Featured count and card counts on each "
+             "Browse screen, with no page error. A translation changes words, never quantities. "
+             "RETURNING-READER-1, paid for the same hour: the first version walked a FIRST visit and "
+             "passed over the broken build, because a cold dictionary paints late and the counts came "
+             "out right by luck. It now warms the dictionary, reloads, and judges the returning visit "
+             "-- proven by serving the pre-fix ms.js (dfcafd4) through the walk's proof mode: MISMATCH "
+             "in all four languages, all tiles 0, exactly David's screenshot; and OK on the live build. "
+             "JUDGED HERE: witness OK and under 72 h -> holding; MISMATCH -> FAIL naming the screen; "
+             "older than 72 h -> FAIL (the producer is wired into the daily loop, so silence means it "
+             "stopped -- WAVE-WITNESS-1's rule); NOT MEASURED or no witness from this vantage -> NOT "
+             "EVALUATED, never a pass. SCOPE today: South Africa's five languages, the active city the "
+             "sandbox lands on, the home and Browse screens. Other countries' languages and other "
+             "screens are the next increments -- add them to LANGS / the read, not a new instrument.",
+       ref="RG-0452 I18N-KEY-1 (the fault that proved the gap) · BACKUP-IN-AGENT-1 (producer in code, "
+           "not prose) · WAVE-WITNESS-1 (a freshness guard names its producer) · RG-0187 (blind reads "
+           "NOT EVALUATED) · scripts/smoke_harness (the older English-only harness, on demand only)")
+def rg_screen_walk_1():
+    out = []
+    sw = repo_file(os.path.join("scripts", "screen_walk.py"))
+    ag = repo_file(os.path.join("scripts", "maintenance_agent.py"))
+    if sw is None or ag is None:
+        return [(INFO, "NOT EVALUATED - scripts not readable here")]
+    if "RETURNING-READER-1" not in sw or "pg.reload(" not in sw:
+        out.append((FAIL, "the walk no longer judges a RETURNING visit -- a first visit passes over "
+                          "the 24 Sep class by luck (proven)"))
+    for lang in ('"af"', '"zu"', '"xh"', '"nso"'):
+        if lang not in sw.split("LANGS =", 1)[-1][:120]:
+            out.append((FAIL, "the walk no longer covers %s" % lang.strip('"')))
+    if 'report["screen_walk"] = _screen_walk_lane()' not in ag:
+        out.append((FAIL, "the daily agent no longer runs the screen walk -- the witness will go "
+                          "stale with nobody the wiser"))
+    wit = repo_file(os.path.join("ledger_runs", "screen_walk_status.json"))
+    if wit is None:
+        out.append((INFO, "NOT EVALUATED - no screen-walk witness from this vantage"))
+        return out
+    try:
+        w = json.loads(wit)
+    except Exception as ex:
+        out.append((INFO, "NOT EVALUATED - witness unreadable (%s)" % type(ex).__name__))
+        return out
+    try:
+        at = datetime.datetime.strptime(w.get("at", ""), "%Y-%m-%dT%H:%M:%SZ")
+        age_h = (datetime.datetime.utcnow() - at).total_seconds() / 3600.0
+    except Exception:
+        age_h = None
+    st = w.get("state")
+    if st == "MISMATCH":
+        out.append((FAIL, "the live screens disagree between languages: %s"
+                          % "; ".join(w.get("problems") or [])[:300]))
+    elif st != "OK":
+        out.append((INFO, "NOT EVALUATED - last walk was NOT MEASURED (%s)" % (w.get("reason") or "")[:120]))
+    elif age_h is None or age_h > 72:
+        out.append((FAIL, "the screen walk has not run for %s -- its producer has stopped"
+                          % ("an unknown time" if age_h is None else "%.0f h" % age_h)))
+    return out or [(INFO, "last walk %.0f h ago: en/af/zu/xh/nso agree on every number read"
+                          % (age_h or 0))]
+
+
 if __name__ == "__main__":
     sys.exit(main())
