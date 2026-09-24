@@ -27727,7 +27727,7 @@ def rg_ledger_state_1():
 
 @entry("RG-0452", "I18N-KEY-1: page text is never read as a logic key except through msEnText -- in any "
                   "language but English the home tiles counted 0 and the filter sheet switched itself off",
-       OPEN,
+       LOCKED, fixed_on="2026-09-24",
        scope="ms.js, the whole class: every place that reads the page's TEXT to decide something. "
              "FOUND 24 Sep 2026 from David's screenshot (Afrikaans, Pretoria): all six home tiles read "
              "'0 advertensies'. REPRODUCED in his Chrome the same hour: 58 live listings loaded "
@@ -27751,7 +27751,11 @@ def rg_ledger_state_1():
        ref="LANG-LAYER-1 (RG-0431) and the DICTV / REPAINT-RACE-1 / PAINT-ALL-1 language-layer work "
            "(20 Sep) -- the layer is correct; the readers were not told it exists. Same class as "
            "RG-0413 / RG-0431 the same morning, in the product rather than the ledger: judging by "
-           "a spelling instead of by the thing itself.")
+           "a spelling instead of by the thing itself. PROMOTED the same session on LIVE proof, read in "
+           "David's Chrome after dac264b shipped (ms.js?v=748): a fresh load in Afrikaans painted "
+           "19/3/2/29/1/4 with no clicks, and the filter sheet's painted labels ('Prysklas', 'Enige') "
+           "resolve to their English keys ('Price Range', 'Any'). The sandbox's own live leg is BLIND "
+           "(the edge refuses a non-browser client), which is why the browser read is named here.")
 def rg_i18n_key_1():
     import re as _re
     msj = repo_file("ms.js")
