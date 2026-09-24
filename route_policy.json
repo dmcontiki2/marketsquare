@@ -1911,7 +1911,8 @@
   },
   {
    "key": "GET /openapi.json",
-   "level": "admin"
+   "level": "admin",
+   "local": true
   },
   {
    "key": "GET /docs",
