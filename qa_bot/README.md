@@ -46,5 +46,7 @@ get a well-formed request past validation, or had only a made-up target).
   code changes, including any change that weakens tests, this bot or the deploy gate. It
   emails the ops address only when something is red.
 
-A bot that cannot run never blocks a deploy (that is a bot problem, not a code verdict). It is
-logged, and the nightly run re-checks.
+The gate **fails closed**: a bot that cannot run (crash, timeout) also refuses the release, and the
+refused commit is not retried until a new commit arrives. The bot's own OpenAI spend has a **hard
+daily cap** (`QA_DAILY_USD`, default $3). Past the cap, new routes stay unruled and are attacked as
+protected. Both came from OpenAI's first nightly review, which reviewed the bot itself.
