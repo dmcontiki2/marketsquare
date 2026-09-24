@@ -1966,6 +1966,35 @@ async def _cf_purge_all():
 # Local media mirror — absolute path on server
 _LOCAL_MEDIA_DIR = "/var/www/marketsquare/media"
 
+_SAFE_KEY_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic", ".heif", ".pdf"}
+
+
+def _safe_storage_key(key: str) -> str:
+    """UPLOAD-KEY-1 (24 Sep 2026, security assessment): storage keys are built from the
+    client's upload filename. A name like ../../../../x climbed out of the media mirror and,
+    with the app running as root, wrote anywhere on the server. Every key is now reduced to
+    safe characters per segment, '.'/'..' segments are neutralised, and any extension that a
+    browser would execute (html, svg, js ...) is disarmed with a .bin suffix."""
+    import re as _re
+    parts = []
+    for seg in str(key or "").replace("\\", "/").split("/"):
+        seg = _re.sub(r"[^A-Za-z0-9._-]", "_", seg)[:120]
+        if seg in ("", ".", ".."):
+            continue
+        if seg.startswith("."):
+            seg = "_" + seg[1:]
+        parts.append(seg)
+    if not parts:
+        parts = ["upload"]
+    if len(parts) > 2:                      # keys are always prefix/name: never let a filename make folders
+        parts = [parts[0], "_".join(parts[1:])]
+    last = parts[-1]
+    ext = ("." + last.rsplit(".", 1)[-1].lower()) if "." in last else ""
+    if ext not in _SAFE_KEY_EXT:
+        parts[-1] = last + ".bin"
+    return "/".join(parts)
+
+
 def _s3_upload(data: bytes, key: str, content_type: str) -> str:
     """Upload bytes to R2 (primary) AND mirror to local Hetzner disk (redundant fallback).
 
@@ -1977,6 +2006,10 @@ def _s3_upload(data: bytes, key: str, content_type: str) -> str:
     CPX32 live (4vCPU, 8GB RAM, 76GB SSD). 100GB Hetzner Volume mounted at /mnt/HC_Volume_105840760 for Overpass DB.
     At 50,000 listings + photos ≈ 30GB — well within CPX32 capacity for years.
     """
+    key = _safe_storage_key(key)   # UPLOAD-KEY-1
+    if not str(content_type or "").lower().startswith(("image/", "application/pdf")):
+        content_type = "application/octet-stream"   # never serve an upload as a web page
+
     import os as _os
 
     # ── Primary: R2 ───────────────────────────────────────────────────────
@@ -1994,7 +2027,9 @@ def _s3_upload(data: bytes, key: str, content_type: str) -> str:
 
     # ── Mirror: local Hetzner disk ────────────────────────────────────────
     try:
-        local_path = _os.path.join(_LOCAL_MEDIA_DIR, key)
+        local_path = _os.path.realpath(_os.path.join(_LOCAL_MEDIA_DIR, key))
+        if not local_path.startswith(_os.path.realpath(_LOCAL_MEDIA_DIR) + _os.sep):
+            raise ValueError("storage key escapes the media mirror")   # UPLOAD-KEY-1
         _os.makedirs(_os.path.dirname(local_path), exist_ok=True)
         with open(local_path, "wb") as _f:
             _f.write(data)

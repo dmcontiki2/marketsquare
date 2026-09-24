@@ -472,6 +472,12 @@ class SecurityGate:
         if hide and not admin:
             send = _scrubbing_send(send, hide, session)
 
+        # 7. CONTENT-GATE-1 (24 Sep 2026, security assessment): user-written record fields are plain text
+        #    and photo fields are plain https links, on EVERY JSON answer (admins included - the console
+        #    renders the same records). Many render paths in ms.js / quick.html / the admin console put
+        #    these into innerHTML, so markup is neutralised here once instead of at 200 separate sinks.
+        send = _encoding_send(send)
+
         return await self.app(scope, receive, send)
 
 
@@ -565,6 +571,104 @@ def _scrubbing_send(send, hide, session):
                 if cleaned != parsed:            # only a body that really lost a private key is rewritten
                     raw = _dumps(cleaned)
             except ValueError:
+                pass
+            start = dict(state["start"])
+            start["headers"] = [(k, v) for (k, v) in start.get("headers", []) if k.lower() != b"content-length"]
+            start["headers"].append((b"content-length", str(len(raw)).encode()))
+            await send(start)
+            await send({"type": "http.response.body", "body": raw})
+            return
+        await send(message)
+    return _send
+
+
+# ---- 7. CONTENT-GATE-1: output encoding for user-written record fields ------------------------------
+# Keys whose values are ALWAYS plain text when they sit on a record (a dict carrying "id").
+_TEXT_KEYS = frozenset({
+    "title", "suburb", "area", "city", "prop_type", "make", "model", "msg", "message", "seller_name",
+    "display_name", "business_name", "agency_name", "headline", "tagline", "summary", "heading",
+    "caption", "location", "name", "subtitle", "bullets", "sections", "description", "desc",
+})
+# Keys whose values must be a plain https:// (or same-site /path) link - nothing that can break out of
+# an attribute or run as a scheme.
+_URL_KEYS = frozenset({"thumb_url", "photo", "medium_url", "photo_url", "image_url", "avatar_url",
+                       "logo_url", "photos", "photo_urls", "images"})
+_URL_OK = re.compile(r"^(https://[^\s\"'<>`\\]+|/(?!/)[^\s\"'<>`\\]*|data:image/(?:png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+)$")
+
+
+def _pt(v):
+    if isinstance(v, str):
+        if "<" in v or ">" in v:
+            v = re.sub(r"<[^>]*>", "", v).replace("<", "\u2039").replace(">", "\u203a")
+        return v
+    if isinstance(v, list):
+        return [_pt(x) for x in v]
+    if isinstance(v, dict):
+        return {k: _pt(x) for k, x in v.items()}
+    return v
+
+
+def _text_field(v):
+    """Plain text; a description stored as a JSON document is decoded, cleaned and re-encoded, because
+    escaped markup inside it (\\u003c) only turns into '<' after the browser parses it."""
+    if isinstance(v, str) and v.lstrip().startswith(("{", "[")):
+        try:
+            doc = json.loads(v)
+        except ValueError:
+            return _pt(v)
+        cleaned = _pt(doc)
+        return v if cleaned == doc else json.dumps(cleaned, ensure_ascii=False)
+    return _pt(v)
+
+
+def _url_field(v):
+    if isinstance(v, str):
+        return v if (not v or _URL_OK.match(v)) else ""
+    if isinstance(v, list):
+        return [x for x in (_url_field(y) for y in v) if x or x == 0]
+    return v
+
+
+def _encode(obj):
+    if isinstance(obj, list):
+        return [_encode(x) for x in obj]
+    if isinstance(obj, dict):
+        record = "id" in obj
+        out = {}
+        for k, v in obj.items():
+            if k in _URL_KEYS:
+                out[k] = _url_field(v)
+            elif record and k in _TEXT_KEYS:
+                out[k] = _text_field(v)
+            else:
+                out[k] = _encode(v)
+        return out
+    return obj
+
+
+def _encoding_send(send):
+    state = {"start": None, "chunks": [], "json": False}
+
+    async def _send(message):
+        if message["type"] == "http.response.start":
+            ctype = Headers(raw=message.get("headers", [])).get("content-type", "")
+            state["json"] = ctype.startswith("application/json")
+            if not state["json"]:
+                await send(message)
+            else:
+                state["start"] = message
+            return
+        if message["type"] == "http.response.body" and state["json"]:
+            state["chunks"].append(message.get("body", b""))
+            if message.get("more_body"):
+                return
+            raw = b"".join(state["chunks"])
+            try:
+                parsed = json.loads(raw)
+                cleaned = _encode(parsed)
+                if cleaned != parsed:            # untouched answers keep their exact bytes
+                    raw = _dumps(cleaned)
+            except Exception:
                 pass
             start = dict(state["start"])
             start["headers"] = [(k, v) for (k, v) in start.get("headers", []) if k.lower() != b"content-length"]
