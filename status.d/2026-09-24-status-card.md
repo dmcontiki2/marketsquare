@@ -1,0 +1,1 @@
+- STATUS-CARD-1 (24 Sep): Status card + share button live in the hub and on the You're-live screen; services adverts carry the "Make your own — free" loop; model mid run pinned to the measured click rate; door pack, posters ×5, WhatsApp greeting and SA Youth / group texts filed in CityLauncher/doors.
