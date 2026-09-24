@@ -1,8 +1,10 @@
-# RECOUP-1 — the one letter to Rick Wemple (DRAFT, NOT SENT)
+# RECOUP-1 — the one letter to Rick Wemple — **SENT 24 Sep 2026 04:26Z**
 
 To: rickwemple@aol.com · Wemples Wildlife Outfitter LLC, Victor, Montana · source `register:moga`
 Permission: `.secrets/recontact_permission.json` (David, 23 Sep 2026, RUL-106(b), this address only)
-Blocked on: the flow fixes in `PENDING_FIXES_RUN17.md` landing first — David's order.
+SENT: 24 Sep 2026 04:26Z · Resend id `01a0d1a8-9cd1-778a-8831-93b9bb4626a0` · one send, no follow-up.
+The flow fixes landed first, which was David's order: TERMS-HANDOVER-1 went live at 04:20Z and the
+whole journey was walked on the live site afterwards. All six pre-send checks passed.
 
 **What he already did:** letter 11 Sep 22:12 UTC → opened 23:45 → clicked 12 Sep 15:19 → finished
 advert 15:37. Eighteen minutes from click to a complete listing with four of his own photographs.
