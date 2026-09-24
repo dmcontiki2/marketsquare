@@ -1,0 +1,134 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Why the AI Misses Them</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#f6f4f2; --card:#ffffff; --ink:#1d1715; --ink2:#5b504b; --line:#e4ddd8; --accent:#b5431f;
+  --crit:#b3261e; --crit-bg:#fbe9e7; --high:#c2660a; --high-bg:#fdf0e1; --ok:#1f7a45; --ok-bg:#e5f4ea;
+  --fix:#1d4ed8; --fix-bg:#e8eefc; --grey:#6b625d; --grey-bg:#eeeae7;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#171210; --card:#211a17; --ink:#f2ebe7; --ink2:#b8aca6; --line:#3a2f2a; --accent:#e0714a;
+  --crit:#ff8a80; --crit-bg:#3a1a17; --high:#ffb35c; --high-bg:#382613; --ok:#6fd49a; --ok-bg:#15301f;
+  --fix:#8fb0ff; --fix-bg:#18223d; --grey:#b8aca6; --grey-bg:#2c2421;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#171210; --card:#211a17; --ink:#f2ebe7; --ink2:#b8aca6; --line:#3a2f2a; --accent:#e0714a;
+  --crit:#ff8a80; --crit-bg:#3a1a17; --high:#ffb35c; --high-bg:#382613; --ok:#6fd49a; --ok-bg:#15301f;
+  --fix:#8fb0ff; --fix-bg:#18223d; --grey:#b8aca6; --grey-bg:#2c2421;
+  color-scheme:dark; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Source Sans 3",system-ui,sans-serif;padding-inline:16px;padding-block:28px 56px;user-select:text;-webkit-user-select:text}
+.wrap{max-width:860px;margin:0 auto;display:grid;gap:28px}
+h1,h2{font-family:Archivo,system-ui,sans-serif;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,5vw,40px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:20px;font-weight:700}
+.eyebrow{font:600 12px/1.4 "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.lede{color:var(--ink2);max-width:65ch;margin:8px 0 0}
+.verdict{background:var(--crit-bg);color:var(--ink);border-left:5px solid var(--crit);border-radius:8px;padding:14px 16px;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font:600 12px/1 "JetBrains Mono",monospace;padding:7px 11px;border-radius:999px}
+.p-crit{background:var(--crit-bg);color:var(--crit)} .p-high{background:var(--high-bg);color:var(--high)}
+.p-ok{background:var(--ok-bg);color:var(--ok)} .p-fix{background:var(--fix-bg);color:var(--fix)} .p-grey{background:var(--grey-bg);color:var(--grey)}
+section{display:grid;gap:12px}
+.sub{color:var(--ink2);margin:-6px 0 0;font-size:15px}
+.list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.item{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--sev);border-radius:8px;padding:12px 16px;display:flex;gap:12px;align-items:baseline}
+.item.crit{--sev:var(--crit)} .item.high{--sev:var(--high)} .item.ok{--sev:var(--ok)} .item.fix{--sev:var(--fix)} .item.grey{--sev:var(--grey)}
+.n{font:600 12px/1.6 "JetBrains Mono",monospace;color:var(--ink2);min-width:22px}
+.chip{font:600 11px/1 "JetBrains Mono",monospace;padding:4px 7px;border-radius:4px;white-space:nowrap;flex:none}
+code{font:13.5px "JetBrains Mono",monospace;overflow-wrap:anywhere}
+.foot{font-size:14px;color:var(--ink2);display:grid;gap:4px}
+.copybtn{justify-self:start;font:600 14px/1 "Source Sans 3",system-ui,sans-serif;background:var(--ink);color:var(--bg);border:0;border-radius:8px;padding:10px 16px;cursor:pointer}
+.copybtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (max-width:520px){ .item{flex-wrap:wrap} .chip{order:-1} }
+</style>
+</head><body>
+<div class="wrap" id="page">
+  <header>
+    <div class="eyebrow">TrustSquare · independent peer review · 24 Sep 2026 · reviewer: OpenAI (Peer lane)</div>
+    <h1>Why the AI misses these bugs</h1>
+    <p class="lede">OpenAI read the 23 September bug audit and our working rules, and answered in plain language. I then checked its main claims against the code on your laptop and the live server.</p>
+  </header>
+
+  <button class="copybtn" id="copy" type="button">Copy all text</button>
+
+  <div class="verdict">OpenAI's verdict: "17 of 17 fixed, nothing left open" is not supported — and on disk it is wrong: 3 live routes still act on a typed email with no sign-in.</div>
+
+  <div class="legend" aria-label="Colour key">
+    <span class="pill p-crit">Blind spot</span>
+    <span class="pill p-high">Why fixes come back</span>
+    <span class="pill p-ok">Rules that help</span>
+    <span class="pill p-fix">The fix OpenAI recommends</span>
+    <span class="pill p-grey">Out of date</span>
+  </div>
+
+  <section>
+    <h2>Why the AI makes these mistakes</h2>
+    <ul class="list">
+      <li class="item crit"><span class="n">1</span><span>It treated a typed email as proof of who you are — an email is a label, not a key.</span></li>
+      <li class="item crit"><span class="n">2</span><span>It put the delete key inside <code>ms.js</code>, which every visitor downloads — "the lock printed on the outside of the door".</span></li>
+      <li class="item crit"><span class="n">3</span><span>It put people's words into pages without treating them as possibly hostile.</span></li>
+      <li class="item crit"><span class="n">4</span><span>It tested that the normal journey works, and never first tried to act as a stranger.</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Why fixed bugs keep coming back</h2>
+    <ul class="list">
+      <li class="item high"><span class="n">5</span><span>The rules are spread over many files that contradict each other, so a later session can follow the old rule and rebuild the defect.</span></li>
+      <li class="item high"><span class="n">6</span><span>The regression ledger stops known bugs returning, but it cannot find a bug nobody added to it.</span></li>
+      <li class="item high"><span class="n">7</span><span>"Build first" makes building fast, but nobody challenges identity, deletion, money or privacy designs before they go live.</span></li>
+      <li class="item high"><span class="n">8</span><span>The same AI writes the code, audits it and declares it fixed — the audit grades its own homework.</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Rules that already help</h2>
+    <ul class="list">
+      <li class="item ok"><span class="n">9</span><span>Test before and after every fix, lock it in the ledger, and prove "live" on the live site — OpenAI says these point the right way.</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>The one change OpenAI recommends</h2>
+    <ul class="list">
+      <li class="item fix"><span class="n">10</span><span>Stop one AI from writing, approving and deploying sensitive changes: every deploy passes an automatic gate that tries each action as a stranger, another user, the owner and an admin.</span></li>
+      <li class="item fix"><span class="n">11</span><span>An audit counts only when an independent reviewer sees the code, the full route list and a failing test before plus a passing test after.</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>What I checked on disk</h2>
+    <p class="sub">OpenAI could not see the code, so I tested its top claims myself.</p>
+    <ul class="list">
+      <li class="item crit"><span class="chip p-crit">LIVE</span><span>Anyone can replace any seller's profile photo — <code>POST /users/{email}/photo</code>.</span></li>
+      <li class="item crit"><span class="chip p-crit">LIVE</span><span>Anyone can downgrade any seller to the Free plan — <code>POST /users/{email}/seller-tier/downgrade-free</code>.</span></li>
+      <li class="item crit"><span class="chip p-crit">LIVE</span><span>Anyone who knows a seller's email can remove cities from their advert — <code>DELETE /listings/{id}/cities/{city}</code>.</span></li>
+      <li class="item high"><span class="chip p-high">NOT SHIPPED</span><span>A take-it-down link written on 23 Sep archives an advert and deletes its photos for anyone with the email, and its note says it copied "the same shape /publish already uses" — the regression caught in the act.</span></li>
+      <li class="item high"><span class="chip p-high">TO SWEEP</span><span>31 routes take an email and never call the sign-in check; some are public on purpose (opt-out links, trust badge), the rest need binding.</span></li>
+      <li class="item ok"><span class="chip p-ok">FIXED TODAY</span><span>The project <code>CLAUDE.md</code> still told agents that edits authenticate by <code>?email=</code> — OpenAI's number-one finding — and now says the sign-in decides.</span></li>
+      <li class="item grey"><span class="chip p-grey">OUT OF DATE</span><span>OpenAI worried new addresses still publish in one tap; the code now makes that a draft, so the audit page itself no longer matches the code.</span></li>
+    </ul>
+  </section>
+
+  <div class="foot">
+    <span>Full OpenAI report (plain text, copyable): <code>MarketSquare\Records\PEER_REVIEW_2026-09-24-0753_full.md</code> · cost $0.12.</span>
+    <span>Sent to OpenAI: the bug audit, its changelog note and both <code>CLAUDE.md</code> rule files.</span>
+    <span>The laptop's OpenAI key had expired (refused with 401), so I replaced it with the live server key; peer reviews run from the laptop again.</span>
+  </div>
+</div>
+<script>
+(function(){
+  var b=document.getElementById('copy');
+  b.addEventListener('click',function(){
+    var t=document.getElementById('page').innerText.replace(/^Copy all text\s*/m,'');
+    function done(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy all text';},1800);}
+    function fallback(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(a);}
+    try{navigator.clipboard.writeText(t).then(done,fallback);}catch(e){fallback();}
+  });
+})();
+</script>
+</body></html>

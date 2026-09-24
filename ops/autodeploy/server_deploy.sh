@@ -109,6 +109,13 @@ if [ "$FORCE" -eq 0 ] && [ "$TARGET_SHA" = "$LAST_SHA" ]; then
     exit 0
 fi
 
+# ── QA-BOT-1 (24 Sep 2026): a commit the QA Bot refused is not retried every 2 minutes ────
+QA_BOT="$MS_SRC/qa_bot/qa_bot.py"
+QA_REJECTED_FILE="${MS_QA_REJECTED:-/var/lib/trustsquare-qabot/rejected_sha}"
+if [ "$FORCE" -eq 0 ] && [ "$TARGET_SHA" = "$(cat "$QA_REJECTED_FILE" 2>/dev/null)" ]; then
+    exit 0   # the QA Bot already rolled this exact commit back; a new commit (or --force) tries again
+fi
+
 SHORT="$(echo "$TARGET_SHA" | cut -c1-8)"
 PREV_DISP="${LAST_SHA:0:8}"; [ -z "$PREV_DISP" ] && PREV_DISP="none"
 log "─────────────────────────────────────────────────────────────────────────"
@@ -119,6 +126,28 @@ if ! git -C "$MS_SRC" reset --hard "$TARGET_SHA" >>"$MS_LOG" 2>&1; then
     die "git reset --hard $SHORT failed — live site NOT changed." 2
 fi
 git -C "$MS_SRC" clean -fd -e '.last_deployed_sha' >>"$MS_LOG" 2>&1 || true
+
+# ── Stranger test (SEC-GATE-1, David 24 Sep 2026) — BEFORE anything live is touched ────────
+# Imports the exact commit being shipped, in-process, against a throwaway copy of the live DB with
+# its own made-up credentials and no network, and proves every route is declared in
+# route_policy.json and refuses a stranger, a signed-in intruder and every non-admin token.
+# A FAIL means this commit would open a door: the live site is NOT changed. (The QA Bot below then
+# attacks the running release through the front door - the two do not replace each other.)
+ST="$MS_SRC/scripts/stranger_test.py"
+if [ -f "$ST" ] && [ -f "$MS_SRC/route_policy.json" ] && [ "${MS_STRANGER_GATE:-1}" = "1" ]; then
+    ST_PY="${MS_PY:-$MS_LIVE/venv/bin/python}"; [ -x "$ST_PY" ] || ST_PY="python3"
+    ST_TMP="$(mktemp -d)"
+    "$ST_PY" -c "import sqlite3,sys; sqlite3.connect(sys.argv[1]).backup(sqlite3.connect(sys.argv[2]))" \
+        "$MS_LIVE/marketsquare.db" "$ST_TMP/st.db" >>"$MS_LOG" 2>&1 || cp "$MS_LIVE/marketsquare.db" "$ST_TMP/st.db"
+    if (cd "$ST_TMP" && MS_ROUTE_POLICY="$MS_SRC/route_policy.json" timeout 600 "$ST_PY" "$ST" --src "$MS_SRC" \
+            --db "$ST_TMP/st.db" --json /var/log/marketsquare-stranger.json >>"$MS_LOG" 2>&1); then
+        log "stranger test: PASS for ${SHORT}"
+        rm -rf "$ST_TMP"
+    else
+        rm -rf "$ST_TMP"
+        die "stranger test FAILED for ${SHORT} — a route is undeclared or opens to a stranger; live site NOT changed (report: /var/log/marketsquare-stranger.json)" 3
+    fi
+fi
 
 # ── Snapshot current live files (rollback point) BEFORE we overwrite anything ─
 TS="$(date -u '+%Y%m%d-%H%M%S')"
@@ -215,8 +244,30 @@ for _ in $(seq 1 12); do
     sleep 2
 done
 
+# ── QA Bot gate (QA-BOT-1, David 24 Sep 2026) ─────────────────────────────────
+# The independent QA Bot attacks every protected route of the NEW release through the front
+# door, as a stranger, as a holder of the public app key, and as a signed-in intruder, against
+# OpenAI's rulings. If any route that was closed (or any brand-new route) is now open, the
+# release is rolled back exactly like an unhealthy one. A bot that cannot run (rc other than 1)
+# never blocks a deploy -- that is a bot problem, not a verdict on the code; it is logged loudly.
+qa_ok=1
+if [ "$healthy" -eq 1 ] && [ "$restart_ok" -eq 1 ] && [ -f "$QA_BOT" ] && [ "${MS_QA_GATE:-1}" = "1" ]; then
+    log "QA Bot gate: attacking every protected route of ${SHORT}..."
+    MS_SRC="$MS_SRC" MS_LIVE="$MS_LIVE" timeout 1200 python3 "$QA_BOT" gate >>"$MS_LOG" 2>&1
+    qa_rc=$?
+    if [ "$qa_rc" -eq 0 ]; then
+        log "QA Bot gate: pass"
+    elif [ "$qa_rc" -eq 1 ]; then
+        qa_ok=0
+        mkdir -p "$(dirname "$QA_REJECTED_FILE")" && echo "$TARGET_SHA" > "$QA_REJECTED_FILE"
+        warn "QA Bot gate: this release OPENED a route -- rolling back (details above; David has the report by email)"
+    else
+        warn "QA Bot gate could not run (rc=$qa_rc) -- release stays; the nightly run will re-check"
+    fi
+fi
+
 # ── Verdict / rollback ───────────────────────────────────────────────────────
-if [ "$healthy" -eq 1 ] && [ "$restart_ok" -eq 1 ]; then
+if [ "$healthy" -eq 1 ] && [ "$restart_ok" -eq 1 ] && [ "$qa_ok" -eq 1 ]; then
     echo "$TARGET_SHA" > "$STATE_FILE"
     # purge CDN (best-effort, non-fatal) now that the app is confirmed healthy
     if [ -n "$MS_ADMIN_KEY" ]; then
@@ -250,7 +301,7 @@ if [ "$healthy" -eq 1 ] && [ "$restart_ok" -eq 1 ]; then
 fi
 
 # ---- failure: roll back to the snapshot + previous commit -------------------
-warn "deploy UNHEALTHY (health=$healthy restart_ok=$restart_ok) — rolling back to snapshot $TS"
+warn "deploy REFUSED (health=$healthy restart_ok=$restart_ok qa_gate=$qa_ok) — rolling back to snapshot $TS"
 rb_ok=1
 for dest in "${DESTS[@]}"; do
     if [ -f "$BACKUP_DIR/$dest" ]; then

@@ -1,0 +1,12 @@
+[
+ {"id": "GET /listings/{listing_id}",
+  "objection": "This is the public advert page: every buyer opens it from Browse and from shared links, before any sign-in (the handler is 'Fetch a single listing by ID'). It has to answer anyone for live adverts. Whether it wrongly shows drafts, archived adverts or the seller's email to non-owners is a separate privacy check, not a reason to put the whole page behind a sign-in."},
+ {"id": "POST /search/interpret",
+  "objection": "The handler's own contract is 'Public, heavily gated': the owner designed search to work for anonymous buyers. It is dark unless SEARCH_AI_ENABLED is on, has a hard daily dollar cap (SEARCH_AI_DAILY_USD) and a dry-run switch, and returns {enabled:false} when dark. It acts on no person's data."},
+ {"id": "GET /optout/status",
+  "objection": "The handler refuses every real address with 400 (OPTOUT-PROBE-ISOLATE-1) and only answers for the reserved RFC 2606 '.invalid' test domain, or returns a bare row count with no addresses. It exists so monitoring can prove the opt-out register is armed; it reveals nothing about real people."},
+ {"id": "POST /optout",
+  "objection": "This is the RFC 8058 one-click List-Unsubscribe endpoint: mail clients POST 'List-Unsubscribe=One-Click' with the address and no token, by standard. The only thing a stranger can do with it is stop marketing email to an address - the safe direction - and it reveals nothing."},
+ {"id": "GET /health/resources",
+  "objection": "The handler documents it as non-sensitive operational data (RAM, disk, CPU load, response time, DB sizes) for the public health panel, with no person's data and no action."}
+]

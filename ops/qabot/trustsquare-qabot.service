@@ -1,0 +1,14 @@
+[Unit]
+Description=TrustSquare QA Bot nightly security audit (QA-BOT-1: OpenAI judges, the bot attacks, David gets an email only when red)
+After=network-online.target marketsquare.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Environment=MS_SRC=/opt/marketsquare-src
+Environment=MS_LIVE=/var/www/marketsquare
+ExecStart=/usr/bin/python3 /opt/marketsquare-src/qa_bot/qa_bot.py nightly
+# exit 1 = a RED verdict, which is a finding, not a broken service
+SuccessExitStatus=1
+TimeoutStartSec=3600
+Nice=10

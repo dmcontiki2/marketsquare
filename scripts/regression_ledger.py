@@ -27848,5 +27848,51 @@ def rg_i18n_cost_rail_1():
                           "('/i18n/translate'); I18N_DAILY_CALL_CAP=%s kept" % m.group(1))]
 
 
+
+@entry("RG-0454", "QA-BOT-1: the independent QA Bot guards every deploy and audits every night -- OpenAI "
+                  "judges, the bot attacks, the Author only fixes",
+       LOCKED, fixed_on="2026-09-24",
+       scope="qa_bot/qa_bot.py + ops/autodeploy/server_deploy.sh (gate after the health check, rollback "
+             "when a closed route opens or a new route ships open, a refused commit is not retried) + "
+             "migrations/050_qa_bot_nightly.py + ops/qabot/trustsquare-qabot.{service,timer}. David, "
+             "24 Sep 2026: 'the tester should not be a human tester ... i need you to create an "
+             "independent QA Bot to perform the audit'. OpenAI's rulings live ONLY on the server "
+             "(/var/lib/trustsquare-qabot/policy.json): a rulings file in the repo would let the Author "
+             "mark its own route public, so its presence trips this entry.",
+       ref="OpenAI peer review of the 23 Sep bug audit (Records/PEER_REVIEW_2026-09-24-0753_full.md): "
+           "'Do not let the same AI both write, approve, and deploy sensitive changes.' First live runs "
+           "24 Sep 08:17-08:33Z; baseline accepted 41 open / 2 crash / 146 closed / 52 unproven / 57 "
+           "public. Five Author appeals the same morning, all five upheld by OpenAI.")
+def rg_qa_bot_1():
+    out = []
+    bot = repo_file("qa_bot/qa_bot.py")
+    if bot is None:
+        return [(FAIL, "qa_bot/qa_bot.py is gone -- no independent auditor guards deploys")]
+    for needle, why in (("JUDGE_SYSTEM", "OpenAI no longer judges the routes"),
+                        ('cmd == "gate"', "the deploy gate command is gone"),
+                        ("def pin_front_door", "the bot no longer attacks through the front door"),
+                        ("def restore(", "the bot no longer puts back what a probe got through"),
+                        ('"intruder"', "the signed-in intruder persona is gone")):
+        if needle not in bot:
+            out.append((FAIL, "qa_bot.py: %s" % why))
+    if 'os.path.join(STATE, "policy.json")' not in bot:
+        out.append((FAIL, "qa_bot.py reads its rulings from somewhere other than the server-only state dir"))
+    for p in ("qa_bot/policy.json", "qa_bot/route_policy.json"):
+        if repo_file(p) is not None:
+            out.append((FAIL, "%s is in the repo -- the Author could set its own rulings" % p))
+    sd = repo_file("ops/autodeploy/server_deploy.sh") or ""
+    if 'python3 "$QA_BOT" gate' not in sd:
+        out.append((FAIL, "server_deploy.sh no longer runs the QA Bot gate on every deploy"))
+    if '[ "$qa_ok" -eq 1 ]; then' not in sd:
+        out.append((FAIL, "server_deploy.sh no longer rolls back a release the QA Bot refused"))
+    if "QA_REJECTED_FILE" not in sd:
+        out.append((FAIL, "server_deploy.sh would retry a refused commit every 2 minutes"))
+    for p in ("migrations/050_qa_bot_nightly.py", "ops/qabot/trustsquare-qabot.service",
+              "ops/qabot/trustsquare-qabot.timer"):
+        if repo_file(p) is None:
+            out.append((FAIL, "%s is missing -- the nightly audit is not installed" % p))
+    return out or [(INFO, "QA Bot present; deploy gate, rollback and no-retry wired; nightly timer "
+                          "shipped; rulings kept off the repo")]
+
 if __name__ == "__main__":
     sys.exit(main())

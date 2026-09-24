@@ -183,11 +183,11 @@ BEA dependencies must be installed into the BEA venv, not system Python. Always 
 - Location badge is 2-line: top=country+region (dim), bottom=city+suburb
 - Tier gating: free→suburb panel, starter→city panel, pro→country panel
 - Admin sellerData includes geo_city_id (int) for suburb lookups
-- Edit-after-publish: sellers use `PUT /listings/{id}?email=` — email-auth, no API key; NULL seller_email accepts first caller and stamps it
+- Edit-after-publish: `PUT /listings/{id}` acts ONLY as the signed-in session via `_actor()` — a typed `?email=` authorises nothing (IDENTITY-BIND-1/2, AUDIT-AUTH-1 23 Sep 2026); a listing with NULL seller_email is claimed by the first signed-in editor
 - listing_versions table archives full JSON snapshot before every PUT — version_num increments per listing
 - BEA FastAPI route order critical: `GET /listings/mine` MUST be registered before `GET /listings/{listing_id: int}`
 - Profile photo: uploaded via `POST /users/{email}/photo` → R2 → stored in users.photo_url; restored on login via GET /users/{email}
-- Tuppence balance synced from `GET /tuppence/balance?email=` on buyer app load (server wins if greater than local)
+- Tuppence balance synced from `GET /tuppence/balance` on buyer app load — session-bound via `_actor()`, a typed email is ignored (server wins if greater than local)
 - ⚠️ Dev-only: `POST /dev/credit` endpoint and Dev Tools nav in admin app — **REMOVE BEFORE LAUNCH**
 - ⚠️ DEMO DATA SOURCING: `demo_listings.json` is repo-tracked and deployed from local; **`demo_sellers.json` is server-only by deliberate design** — the single source of truth lives ONLY on the box (`/var/www/marketsquare/demo_sellers.json`, served by `GET /demo-sellers`, ~40 sellers). It was de-bloated out of the FEA and a local+server copy kept drifting, so it is intentionally NOT in the repo. Do NOT "fix" its local absence by pulling it down or committing a local copy — that reintroduces the drift. It is purged at launch (may later be promoted to permanent repo-tracked data). Deploy `[3e]` treats its local absence as `[INFO] by design`; the verify step still guards the sole server copy.
 
