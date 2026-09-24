@@ -1664,9 +1664,9 @@
    "source": "David: answer to \"why did the watch not catch the bugs\"",
    "status": "CLOSED",
    "closed": "2026-09-24",
-   "summary": "AUTHZ-PROBE-1: built scripts/authz_probe.py -- the security lane the watch never had. Calls the live site against every admin + identity-bound write route with the public app key and with no auth, asserts each refuses. Safe by construction (bogus targets). This is why the watch missed the bug-audit holes: it only re-checked known fixes; nothing tried the front door with the wrong key.",
-   "closed_evidence": "Tool committed dad7d2c; found DW-151 (purge-cache) and DW-153 (3 latent) on its first runs.",
-   "residual": "Wire the probe into the DAILY RUN. Overlaps SEC-GATE-1's scripts/stranger_test.py (parallel job) -- consolidate: one probe, wired into the ledger/deploy gate."
+   "summary": "AUTHZ-PROBE-1 built as a stop-gap live authz probe (found the anonymous /admin/purge-cache hole). SUPERSEDED same day and FOLDED INTO the QA Bot (qa_bot/qa_bot.py, QA-BOT-1): OpenAPI-derived coverage of every route, 3 personas incl. a real signed-in intruder, OpenAI rules each route, on-box (no WAF/UA trap), deploy gate + nightly. scripts/authz_probe.py is now a deprecation stub pointing to the bot. One probe, not two.",
+   "closed_evidence": "Server policy already rules every route the probe covered; rulings match today's fixes. Consolidation committed.",
+   "residual": ""
   },
   "DW-153": {
    "first_seen": "2026-09-24",
@@ -1675,7 +1675,7 @@
    "source": "authz_probe.py (LATENT findings)",
    "status": "OPEN",
    "summary": "AUTHZ-CONSOLE-KEY-1: the admin + agency consoles authenticate with the PUBLIC app key (shipped in ms.js), so 3 admin-intent routes are reachable by anyone holding it -- POST /agencies/{id}/verify (grants agency tier, 'never self-served', no frontend caller), PUT /agencies/{id} (rename), POST /trust-score/credential (sets any user's trust credential -> inflate trust score). Same class as ADMIN-BIND-1, which that sweep missed. Probe flags them as LATENT (public key gets past the gate; only a bogus id/payload stopped the probe).",
-   "next_action": "Owned by the parallel SEC-GATE-1 lane (route policy + token typing + 60 handler fixes + stranger-test deploy gate, David 24 Sep 'build the whole solution as one job'). Fix = move these consoles to admin/agency credentials, not the public key. Closes when authz_probe latent==0."
+   "next_action": "OWNED BY THE QA BOT. OpenAI rules POST /agencies/{id}/verify, PUT /agencies/{id} and POST /trust-score/credential as 'admin'; the bot attacks them every deploy + nightly and rolls back any release that leaves them open to the public key. Closes when the bot reports them PASS (refused). The handler fix is the SEC-GATE-1 lane's."
   }
  },
  "last_run": "2026-09-24",
@@ -3384,6 +3384,16 @@
   ],
   "open": [
    "DW-153"
+  ]
+ },
+ "fold_note_2026_09_24": {
+  "action": "authz_probe.py folded into qa_bot/qa_bot.py (QA-BOT-1); one probe, not two",
+  "authority": "the QA Bot is the source of truth on whether a route is closed",
+  "closed": [
+   "DW-152"
+  ],
+  "reassigned": [
+   "DW-153 -> QA Bot"
   ]
  }
 }
