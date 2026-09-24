@@ -95,7 +95,7 @@ def render(listing, link, make_link, first_name=None, trust=None):
 
     # photo panel
     pic = _role_picture(listing)
-    px, py, pw, ph = 60, 150, W - 120, 880
+    px, py, pw, ph = 60, 150, W - 120, 800
     if pic is not None:
         r = max(pw / pic.width, ph / pic.height)
         pic = pic.resize((int(pic.width * r) + 1, int(pic.height * r) + 1), Image.LANCZOS)
@@ -124,7 +124,13 @@ def render(listing, link, make_link, first_name=None, trust=None):
     area = listing.get("area") or listing.get("suburb") or listing.get("city") or ""
     who = (first_name.strip().split()[0] if first_name and first_name.strip() else "")
     head = (who + " · " if who else "") + role
-    for ln in _wrap(d, head, _font(92), W - 120)[:2]:
+    _lines = _wrap(d, head, _font(92), W - 120)
+    if len(_lines) > 1:                          # long titles: one line, ellipsised, so the card never overflows
+        _one = head
+        while _one and d.textlength(_one + "…", font=_font(92)) > W - 120:
+            _one = _one[:-1].rstrip()
+        _lines = [_one + "…"]
+    for ln in _lines:
         d.text((60, y), ln, font=_font(92), fill=(255, 255, 255)); y += 104
     sub = " · ".join([s for s in (area, str(listing.get("availability") or "").strip(), str(listing.get("price") or "").strip()) if s])
     for ln in _wrap(d, sub, _font(46, False), W - 120)[:2]:
@@ -132,7 +138,7 @@ def render(listing, link, make_link, first_name=None, trust=None):
     y += 30
 
     # CTA panel with QR
-    ch = 420
+    ch = 400
     d.rounded_rectangle((60, y, W - 60, y + ch), 40, fill=_hex(panel), outline=_hex(accent), width=3)
     qr = _qr(link, 300)
     if qr is not None:

@@ -120,6 +120,10 @@ Rules (David, 2 Aug 2026):
 | DW-147 | 2026-09-24 | 2026-09-24 | MEDIUM | regression ledger RG-0413 (LOCKED) — REGRESSION, re-judged ~07:47Z + read of `quick.html` | **NEW — a false red: the assertion pins a SPELLING the code no longer uses; the PROPERTY holds.** Fail text: `we cannot see who published from the door`. READ: `quick.html:2650` is now `qTrack(res.j.live ? 'q_published' : (res.j.identity==='link' ? 'q_handover_link' : (res.j.identity==='phone' ? 'q_handover_phone' : 'q_handover')))` — publishes are still beaconed as `q_published`; the handover beacon was split three ways by the same commit `4300824`. The entry looks for the exact old string `qTrack(res.j.live ? 'q_published' : 'q_handover')`. RG-0352 class (a guard that pins a spelling goes red against correct code). | OPEN | Owning lane amends RG-0413's token to the property (`'q_published'` fired on live publish) and says so in the entry ref (CLAUDE.md ledger rule 4); RG-0413 `[ ok ]` closes it. |
 | DW-148 | 2026-09-24 | 2026-09-24 | MEDIUM | regression ledger RG-0431 (LOCKED) — REGRESSION, re-judged ~07:47Z + `git log -S` | **NEW — a false red, same class as DW-147.** Fail text: `bea_main.py lost extra_status='draft' WHERE id=?`. READ: `bea_main.py:4758` still returns an edited advert's second language to draft — `UPDATE listings SET extra_status=CASE WHEN lang_extra IS NULL THEN NULL ELSE 'draft' END, ... WHERE id=?` (AUDIT-L3 also clears the stale translation). `git log -S` shows the literal left in **`1aea5c4`** (23 Sep 20:42Z, the bug-audit fixes), which IS on the deploy ref — so this has been red since last night while the behaviour is correct. | OPEN | Owning lane re-points RG-0431's needle at the CASE form (or the property) and records why in the ref; RG-0431 `[ ok ]` closes it. |
 | DW-149 | 2026-09-24 | 2026-09-24 | LOW | `cost_compliance_sweep.py` — NEW WARN vs 23 Sep | **NEW — the advert-language draft helper has no platform ceiling check.** `🟠 WARN — bea_main.py:25968 _lang_ai — helper; caller logs spend, but add a ceiling check`. Bounded by its own lane caps (RG-0439: 3 calls per draft into the i18n daily ceiling, 5 redrafts per advert per day), so spend cannot run away; the gap is only that the $10/day platform ceiling cannot stop it. Sibling of DW-142. | OPEN | Fold into the same rail fix as DW-142 (`_check_cost_ceiling` before the call); sweep with no WARN on `_lang_ai` closes it. |
+| DW-150 | 2026-09-24 | 2026-09-24 | HIGH | authz_probe.py + David: "build the security lane" | **CLOSED 2026-09-24 (attended CTO pass) — IDENTITY-BIND-3.** 8 write routes trusted an email in the request instead of the proven session (keep-live, listing cities add/remove, listing wonders, profile photo, trust/experience, zoom-watch save/delete). Bound to the session via `_actor` (same class as AUDIT-AUTH-1). Deployed (commit `dad7d2c`, live `main.py` 08:22Z). PROVEN: authz_probe post-deploy — every identity route refuses a sessionless call (401/403); smoke 40/40. RESIDUAL: ledger tripwire deferred to the SEC-GATE-1 lane (concurrent ledger churn). | CLOSED | — |
+| DW-151 | 2026-09-24 | 2026-09-24 | MEDIUM | authz_probe.py first live run | **CLOSED 2026-09-24 (attended CTO pass) — ADMIN-LOCALGUARD-1.** `POST /admin/purge-cache` (and `/admin/refresh-pois`) answered ANONYMOUS callers 200 — the guard failed OPEN when the env key was unset. A real pre-existing hole no audit had found. Now fail-closed: valid admin key OR no `X-Forwarded-For` (local-only — the deploy's own purge). Deployed `dad7d2c`. PROVEN: authz_probe post-deploy — anon purge refused. | CLOSED | — |
+| DW-152 | 2026-09-24 | 2026-09-24 | INFO | David: "why did the watch not catch the bugs?" | **CLOSED 2026-09-24 — AUTHZ-PROBE-1 built.** `scripts/authz_probe.py`: the security lane the watch never had — calls the live site against every admin + identity-bound write route with the public app key and with no auth, asserts each refuses (safe bogus targets). This is *why* the watch missed the bug-audit holes: it only re-checked known fixes; nothing tried the front door with the wrong key. Found DW-151 and DW-153 on its first runs. RESIDUAL: wire into the daily run; overlaps SEC-GATE-1's `stranger_test.py` — consolidate to one probe. | CLOSED | — |
+| DW-153 | 2026-09-24 | 2026-09-24 | HIGH | authz_probe.py (LATENT) | **OPEN — AUTHZ-CONSOLE-KEY-1.** The admin + agency consoles authenticate with the PUBLIC app key (shipped in ms.js), so 3 admin-intent routes are reachable by anyone holding it: `POST /agencies/{id}/verify` (grants agency tier, 'never self-served', no frontend caller), `PUT /agencies/{id}` (rename), `POST /trust-score/credential` (sets any user's trust credential → inflate trust score). Same class as ADMIN-BIND-1, which that sweep missed. | OPEN | Owned by the parallel **SEC-GATE-1** lane (route policy + token typing + 60 handler fixes + stranger-test deploy gate). Fix = move these consoles off the public key. Closes when authz_probe latent==0. |
 
 
 ### Watch pass — 2026-09-24 (Thursday, unattended ~04:40–07:50 UTC — launch day +23; Monday deep-scan/canon lane NOT in scope)
@@ -143,6 +147,30 @@ ZA — 22 Sep Claude error window (00:50–02:10 UTC) already resolved, no price
 "Sonnet 5 reverts to $3/$15" claim not seen. Self-heartbeat: last_run 2026-09-23 → **1-day gap, DW-143 CLOSED**.
 Open loops: 🔴 BLOCKING NOW is empty. RED alert sent: **delivered via worker, Resend id
 `01a0d260-c362-73ef-8fde-aecad061ac8d`**. Checks run 13/13 applicable (Monday lane not in scope).
+
+### Attended CTO pass — 2026-09-24 (David: "yes please" — build the watch security lane + close the email-identity write routes)
+
+**Two fixes shipped and proven live; the lane built; one deeper class found and handed to the parallel security-gate job.**
+David asked why the daily watch never caught the bug-audit vulnerabilities. Answer: every check it ran
+was a REGRESSION check — it re-proved known fixes; nothing tried the front door with the wrong key.
+Built the missing lane and closed the class it exposed.
+
+- **AUTHZ-PROBE-1** (`scripts/authz_probe.py`, DW-152) — a live authorization probe: every admin route and
+  every identity-bound write route, called with the public app key and with no auth, asserted to refuse.
+  Safe by construction (bogus/nonexistent targets). On its first run it found a real hole no audit had:
+  `POST /admin/purge-cache` answered anonymous callers 200.
+- **ADMIN-LOCALGUARD-1** (DW-151, CLOSED) — purge-cache/refresh-pois now fail-closed (valid admin key OR
+  no X-Forwarded-For; the deploy's own localhost purge still works). Deployed `dad7d2c`.
+- **IDENTITY-BIND-3** (DW-150, CLOSED) — 8 write routes bound to the proven session via `_actor` instead of
+  a typed email (same class as AUDIT-AUTH-1). Deployed `dad7d2c`. Same-origin cookie, no frontend change.
+- **AUTHZ-CONSOLE-KEY-1** (DW-153, OPEN) — the admin/agency consoles authenticate with the public app key,
+  so `agencies/{id}/verify`, `agencies/{id}` rename and `trust-score/credential` are reachable by anyone
+  holding it (ADMIN-BIND-1 class, missed by that sweep). Handed to the parallel **SEC-GATE-1** lane, which
+  David commissioned the same day to "build the whole solution as one job" (central gate + route policy +
+  token typing + 60 handler fixes + stranger-test deploy gate).
+- Verify: authz_probe post-deploy — 0 outright holes, 3 latent (DW-153); `/health` ok 1.3.1; smoke 40/40; no rollback.
+- Coordination: SEC-GATE-1 holds `bea_main.py`; my fixes committed before its lock, so it builds on top. The
+  ledger tripwire for these fixes is deferred to that lane to avoid colliding writes into `regression_ledger.py`.
 
 ### Attended fix pass — 2026-09-23 ~20:00Z (David: "please fix these 3 issues — REAL ISSUES")
 

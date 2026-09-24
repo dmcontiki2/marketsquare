@@ -122,6 +122,7 @@ def run():
     _discover_public_key()
     results = []
     holes = []
+    latent = []
     offline = 0
     key_variants = [("public-key", {"X-Api-Key": PUBLIC_KEY} if PUBLIC_KEY else {"X-Api-Key": "none"}),
                     ("no-auth", {})]
@@ -134,12 +135,20 @@ def run():
                     offline += 1
                 if verdict == "HOLE":
                     holes.append((cid, vname, method, path, st, snippet[:120]))
+                # LATENT: on an ADMIN route the public key must be REFUSED (401/403). If it got a
+                # non-2xx that is NOT an auth refusal (404/400/422), the key passed auth and only
+                # bad input stopped it -- on a real target it would succeed. That is a finding, not
+                # clean. (No-auth admin probes that 401 are the correct refusal, so only the
+                # public-key variant is judged this way.)
+                if group == "admin" and vname == "public-key" and verdict == "REJECTED":
+                    latent.append((cid, method, path, st, "public key passed the admin gate (only "
+                                   "bad input stopped it -- a real target would succeed)"))
                 results.append({"group": group, "id": cid, "variant": vname,
                                 "method": method, "path": path, "status": st, "verdict": verdict})
-    ok = len(holes) == 0 and offline == 0
+    ok = len(holes) == 0 and len(latent) == 0 and offline == 0
     return {"ok": ok, "public_key_found": bool(PUBLIC_KEY), "base": BASE,
             "cases": len(ADMIN_CASES) + len(IDENTITY_CASES), "probes": len(results),
-            "holes": holes, "offline": offline, "results": results}
+            "holes": holes, "latent": latent, "offline": offline, "results": results}
 
 
 def main():
@@ -155,8 +164,13 @@ def main():
         print("\n!!!! %d LIVE HOLE(S) — a sensitive route answered 2xx:" % len(out["holes"]))
         for cid, v, m, p, st, sn in out["holes"]:
             print("   [%s via %s] %s %s -> %s  %s" % (cid, v, m, p, st, sn))
-    else:
+    elif not out.get("latent"):
         print("\nOK — every sensitive route refused both the public key and no-auth.")
+    if out.get("latent"):
+        print("\n!! %d LATENT hole(s) — an ADMIN route let the PUBLIC key past its gate "
+              "(only a bogus target stopped it; a real one would succeed):" % len(out["latent"]))
+        for cid, m, p, st, why in out["latent"]:
+            print("   [%s] %s %s -> %s  %s" % (cid, m, p, st, why))
     # Note the REJECTED (non-2xx, non-401/403) ones so a boundary shift is visible.
     rej = [r for r in out["results"] if r["verdict"] == "REJECTED"]
     if rej:

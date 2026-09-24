@@ -1,5 +1,5 @@
 {
- "next_id": 150,
+ "next_id": 154,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -1634,6 +1634,48 @@
    "status": "OPEN",
    "summary": "bea_main.py:25968 _lang_ai helper has no platform ceiling check; bounded by RG-0439 lane caps.",
    "next_action": "Same rail fix as DW-142; sweep with no WARN on _lang_ai closes it."
+  },
+  "DW-150": {
+   "first_seen": "2026-09-24",
+   "last_seen": "2026-09-24",
+   "sev": "HIGH",
+   "source": "authz_probe.py (new) + David: \"build the security lane\"",
+   "status": "CLOSED",
+   "closed": "2026-09-24",
+   "summary": "IDENTITY-BIND-3: 8 write routes trusted an email in the request instead of the proven session (keep-live, listing cities add/remove, listing wonders, profile photo, trust/experience, zoom-watch save/delete). Bound to the session via _actor. Deployed (commit dad7d2c, live main.py 08:22Z). Same class as AUDIT-AUTH-1.",
+   "closed_evidence": "authz_probe.py post-deploy: every identity route refuses a sessionless call (401/403), 0 holes; smoke 40/40.",
+   "residual": "Ledger tripwire not yet added (regression_ledger.py under concurrent multi-session churn + SEC-GATE-1 building the route-policy gate); authz_probe.py catches regressions meanwhile."
+  },
+  "DW-151": {
+   "first_seen": "2026-09-24",
+   "last_seen": "2026-09-24",
+   "sev": "MEDIUM",
+   "source": "authz_probe.py first live run",
+   "status": "CLOSED",
+   "closed": "2026-09-24",
+   "summary": "ADMIN-LOCALGUARD-1: POST /admin/purge-cache (and /admin/refresh-pois) answered ANONYMOUS callers 200 -- the guard failed OPEN when the env key was unset. A real pre-existing hole no audit had found. Now fail-closed: valid admin key OR no X-Forwarded-For (local-only; the deploy's own purge). Deployed dad7d2c.",
+   "closed_evidence": "authz_probe.py post-deploy: anon POST /admin/purge-cache refused (401/403); deploy auto-purge (localhost) preserved.",
+   "residual": ""
+  },
+  "DW-152": {
+   "first_seen": "2026-09-24",
+   "last_seen": "2026-09-24",
+   "sev": "INFO",
+   "source": "David: answer to \"why did the watch not catch the bugs\"",
+   "status": "CLOSED",
+   "closed": "2026-09-24",
+   "summary": "AUTHZ-PROBE-1: built scripts/authz_probe.py -- the security lane the watch never had. Calls the live site against every admin + identity-bound write route with the public app key and with no auth, asserts each refuses. Safe by construction (bogus targets). This is why the watch missed the bug-audit holes: it only re-checked known fixes; nothing tried the front door with the wrong key.",
+   "closed_evidence": "Tool committed dad7d2c; found DW-151 (purge-cache) and DW-153 (3 latent) on its first runs.",
+   "residual": "Wire the probe into the DAILY RUN. Overlaps SEC-GATE-1's scripts/stranger_test.py (parallel job) -- consolidate: one probe, wired into the ledger/deploy gate."
+  },
+  "DW-153": {
+   "first_seen": "2026-09-24",
+   "last_seen": "2026-09-24",
+   "sev": "HIGH",
+   "source": "authz_probe.py (LATENT findings)",
+   "status": "OPEN",
+   "summary": "AUTHZ-CONSOLE-KEY-1: the admin + agency consoles authenticate with the PUBLIC app key (shipped in ms.js), so 3 admin-intent routes are reachable by anyone holding it -- POST /agencies/{id}/verify (grants agency tier, 'never self-served', no frontend caller), PUT /agencies/{id} (rename), POST /trust-score/credential (sets any user's trust credential -> inflate trust score). Same class as ADMIN-BIND-1, which that sweep missed. Probe flags them as LATENT (public key gets past the gate; only a bogus id/payload stopped the probe).",
+   "next_action": "Owned by the parallel SEC-GATE-1 lane (route policy + token typing + 60 handler fixes + stranger-test deploy gate, David 24 Sep 'build the whole solution as one job'). Fix = move these consoles to admin/agency credentials, not the public key. Closes when authz_probe latent==0."
   }
  },
  "last_run": "2026-09-24",
@@ -3319,5 +3361,29 @@
   ],
   "checks_run": "13 of 13 applicable (Monday lane not in scope)",
   "correction": "alert line 'not yet shipped (deploy ref c3c1fdd)' was wrong - stale local origin/deploy; probed live main.py 04:32:36Z carries the 3 calls"
+ },
+ "attended_cto_pass_2026_09_24": {
+  "instruction": "David, 24 Sep 2026: 'yes please' -- build the watch security lane and close the email-as-identity write routes.",
+  "built": [
+   "scripts/authz_probe.py (AUTHZ-PROBE-1)"
+  ],
+  "fixed_deployed": [
+   "IDENTITY-BIND-3 (8 write routes, DW-150)",
+   "ADMIN-LOCALGUARD-1 (purge-cache/refresh-pois fail-closed, DW-151)"
+  ],
+  "deploy": "commit dad7d2c relayed to origin/deploy; live main.py 2026-09-24T08:22:34Z; /health ok 1.3.1; smoke 40/40; no rollback",
+  "found_open": [
+   "DW-153 AUTHZ-CONSOLE-KEY-1 (3 admin-intent routes reachable with the public key) -> SEC-GATE-1 parallel lane"
+  ],
+  "verify": "authz_probe.py post-deploy: 0 outright holes, 3 latent (DW-153); smoke 40/40",
+  "coordination": "parallel session SEC-GATE-1 holds bea_main.py + is building the comprehensive route-policy/stranger-test gate; my fixes committed before its lock, it builds on top. Ledger tripwire deferred to that lane to avoid colliding writes.",
+  "closed": [
+   "DW-150",
+   "DW-151",
+   "DW-152"
+  ],
+  "open": [
+   "DW-153"
+  ]
  }
 }
