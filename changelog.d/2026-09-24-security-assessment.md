@@ -17,3 +17,11 @@
   pipeline reads now need the launch key or an enrolled device; LAUNCH_API_KEY rotated. Probed: 401.
 - nginx: /quick/, /quick.html and /q/ now carry the security headers; /media/ is sandboxed + nosniff;
   server_tokens off; TLS 1.0/1.1 retired.
+- SEC-ASSESS-2 (bea_main.py): PAY-AMOUNT-1 -- Tuppence top-ups (verify + webhook), seller plans and the wishlist
+  plan are granted only when Paystack shows a ZAR charge of at least the asked price (metadata alone is set by
+  whoever starts the transaction); SMS-CAP-1 platform daily SMS ceiling (SMS_DAILY_CAP, default 300);
+  ADMIN-CEIL-1 master password compared in constant time with a platform-wide failure ceiling; enrol `next`
+  refuses backslash redirects; uploaded .doc/.docx keep their names, SVG is never served as an image.
+- Server: prod venv upgraded (Pillow 12.3, PyJWT 2.15, python-multipart 0.0.32, starlette 1.3.1 / FastAPI
+  0.135.3, aiohttp, cryptography, urllib3, requests, idna, anyio): pip-audit 0 known vulns, stranger test 302/302,
+  QA gate pass. AdvertAgent venv patched. BEA and strategist bound to 127.0.0.1. OS packages upgraded.

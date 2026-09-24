@@ -1969,7 +1969,7 @@ async def _cf_purge_all():
 # Local media mirror — absolute path on server
 _LOCAL_MEDIA_DIR = "/var/www/marketsquare/media"
 
-_SAFE_KEY_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic", ".heif", ".pdf"}
+_SAFE_KEY_EXT = {".jpg", ".jpeg", ".jfif", ".png", ".webp", ".gif", ".heic", ".heif", ".pdf", ".doc", ".docx"}
 
 
 def _safe_storage_key(key: str) -> str:
@@ -2010,7 +2010,10 @@ def _s3_upload(data: bytes, key: str, content_type: str) -> str:
     At 50,000 listings + photos ≈ 30GB — well within CPX32 capacity for years.
     """
     key = _safe_storage_key(key)   # UPLOAD-KEY-1
-    if not str(content_type or "").lower().startswith(("image/", "application/pdf")):
+    if str(content_type or "").lower().startswith(("image/svg", "image/svg+xml")):
+        content_type = "application/octet-stream"   # an SVG is a script-capable document, never an image here
+    if not str(content_type or "").lower().startswith(("image/", "application/pdf", "application/msword",
+                                                     "application/vnd.openxmlformats-officedocument")):
         content_type = "application/octet-stream"   # never serve an upload as a web page
 
     import os as _os
@@ -4377,6 +4380,12 @@ def auth_phone_start(body: _PhoneStart, request: Request):
                          (e164, _sql_since(hours=1))).fetchone()["n"]
         if n >= 3:
             raise HTTPException(status_code=429, detail="Three codes went to that number in the last hour -- use the last one, or wait a while.")
+        # SMS-CAP-1 (24 Sep 2026, security assessment): SMS pumping walks premium number ranges from many IPs;
+        # one platform-wide daily ceiling bounds the bill whatever the rotation.
+        _day = conn.execute("SELECT COUNT(*) AS n FROM phone_codes WHERE created_at > ?", (_sql_since(hours=24),)).fetchone()["n"]
+        if _day >= int(os.environ.get("SMS_DAILY_CAP", "300") or 300):
+            _log.warning("SMS-CAP-1: platform daily SMS ceiling reached (%s)", _day)
+            raise HTTPException(status_code=429, detail="We can't send more codes today -- please use the e-mail or link option.")
         code = "%06d" % _sk.randbelow(1000000)
         conn.execute("INSERT INTO phone_codes (phone, code_hash, expires_at) VALUES (?,?,?)",
                      (e164, _key_hash(e164 + ":" + code), _sql_since(hours=-10 / 60.0)))   # ten minutes AHEAD
@@ -8449,6 +8458,23 @@ def _safe_callback_url(url):
         return url.strip()
     return None
 
+def _paystack_paid_enough(data, expected_rands, ref=""):
+    """PAY-AMOUNT-1 (24 Sep 2026, security assessment): a grant is only as good as the money behind it.
+    Paystack's metadata is set by whoever starts the transaction, so the tuppence/tier it names is never
+    trusted on its own: the charge must be in ZAR and at least the price we would have asked (5% slack
+    for the live FX rate moving between checkout and verify)."""
+    try:
+        amount = int((data or {}).get("amount") or 0)            # kobo
+        cur = str((data or {}).get("currency") or "").upper()
+        need = int(round(float(expected_rands) * 100 * 0.95))
+    except Exception:
+        return False
+    ok = cur == "ZAR" and need > 0 and amount >= need
+    if not ok:
+        _log.warning("PAY-AMOUNT-1: ref %s paid %s %s, needed >= %s kobo - NOT granted", ref, amount, cur, need)
+    return ok
+
+
 @app.post("/payment/initialize")
 def initialize_payment(email: str, tuppence: int, ai_pack_sessions: int = 0, callback_url: str = ""):
     # FX-LIVE-1 (RUL-022): Tuppence is USD-canon ($2/T); the ZAR charge floats on
@@ -8485,6 +8511,12 @@ def verify_payment(reference: str):
         ai_sessions = int(metadata.get("ai_pack_sessions", 0) or 0)
         if not _payment_grants_allowed():
             raise HTTPException(status_code=503, detail="Payments are not live yet - top-ups are temporarily disabled.")
+        try:
+            tuppence = int(tuppence or 0)
+        except (TypeError, ValueError):
+            tuppence = 0
+        if tuppence <= 0 or not _paystack_paid_enough(result["data"], usd_to_zar_amount(tuppence * 2), reference):
+            raise HTTPException(status_code=400, detail="The amount paid does not match this top-up.")
         conn = database.get_db()
         # Idempotency (mirror the webhook): skip if this reference was already credited
         if conn.execute("SELECT id FROM transactions WHERE description LIKE ?", (f"%ref {reference}%",)).fetchone():
@@ -8562,6 +8594,8 @@ async def paystack_webhook(request: Request):
         if not _payment_grants_allowed():
             _log.warning("Paystack webhook: grants gated (test key, ALLOW_TEST_PAYMENTS!=1) - ref %s not credited", reference)
             return {"status": "ok"}
+        if tuppence > 0 and not _paystack_paid_enough(data, usd_to_zar_amount(tuppence * 2), reference):
+            return {"status": "ok"}   # PAY-AMOUNT-1: logged; nothing credited
 
         conn = database.get_db()
         # Idempotency: skip if this reference was already processed
@@ -8741,6 +8775,8 @@ def verify_seller_subscription(reference: str):
         raise HTTPException(status_code=503, detail="Payments are not live yet - subscriptions are temporarily disabled.")
 
     plan = _SELLER_SUB_TIERS[tier]
+    if not is_downgrade and not _paystack_paid_enough(result["data"], plan["amount_rands"], reference):
+        raise HTTPException(status_code=400, detail="The amount paid does not match this plan.")   # PAY-AMOUNT-1
     slot_limit = plan["slot_limit"]
     # Billing period end = 30 days from now
     billing_end = (datetime.utcnow() + timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -11332,6 +11368,8 @@ def verify_global_subscription(reference: str):
             raise HTTPException(status_code=400, detail="Missing buyer_token in metadata")
         if not _payment_grants_allowed():
             raise HTTPException(status_code=503, detail="Payments are not live yet - subscriptions are temporarily disabled.")
+        if not _paystack_paid_enough(result["data"], usd_to_zar_amount(WISHLIST_GLOBAL_USD), reference):
+            raise HTTPException(status_code=400, detail="The amount paid does not match this subscription.")   # PAY-AMOUNT-1
         now = datetime.now(timezone.utc)
         expires = (now + timedelta(days=30)).isoformat()
         conn = database.get_db()
@@ -19230,6 +19268,8 @@ def agency_import(agency_id: int, req: _AgencyImport):
 # IPs cannot brute-force a 4-8 digit PIN. The master password is checked BEFORE it and never consumes it
 # (ADMIN-NOLOCK-2: the super admin can never be locked out by traffic he did not generate).
 _admin_pin_global       = {}   # "all" -> [failed_pin_count, window_start_epoch]
+_admin_master_global    = {}   # ADMIN-CEIL-1 (24 Sep 2026): wrong master passwords, all sources
+_ADMIN_MASTER_GLOBAL_MAX = 60
 _ADMIN_PIN_GLOBAL_MAX   = 30   # wrong team PINs, all sources, per _RATE_WINDOW
 
 @app.post("/admin/login")
@@ -19258,7 +19298,11 @@ def admin_login(req: _AdminLoginRequest, request: Request, response: Response):
         raise HTTPException(status_code=503, detail="Admin password not configured on server.")
 
     # 1. Master password — immediate token, no PIN change required
-    if req.password == _ADMIN_PASSWORD or req.password.strip() == _ADMIN_PASSWORD:
+    if not _rate_ok(_admin_master_global, "all", _ADMIN_MASTER_GLOBAL_MAX):
+        raise _rate_429(_admin_master_global, "all")    # ADMIN-CEIL-1: no per-IP rotation past this
+    import hmac as _hm
+    if (_hm.compare_digest(req.password.encode(), _ADMIN_PASSWORD.encode())
+            or _hm.compare_digest(req.password.strip().encode(), _ADMIN_PASSWORD.encode())):
         _rate_clear(_admin_attempts, ip)          # ADMIN-NOLOCK-2: success wipes the slate
         _rate_clear(_review_attempts, ip)         # master credential rescues the gate lane too
         _grant_review_cookie(response, "admin-master/" + ip)
@@ -19309,6 +19353,8 @@ def admin_login(req: _AdminLoginRequest, request: Request, response: Response):
 
     # ADMIN-NOLOCK-2: reached only when the credential really was wrong.
     _rate_note_failure(_admin_attempts, ip)
+    if not (candidate.isdigit() and 4 <= len(candidate) <= 8):
+        _rate_note_failure(_admin_master_global, "all")   # ADMIN-CEIL-1: wrong master passwords spend a global budget
     if candidate.isdigit() and 4 <= len(candidate) <= 8:
         _rate_note_failure(_admin_pin_global, "all")   # SEC-GATE-1 (24 Sep 2026): a wrong PIN spends the global budget
     _log.warning("admin-login FAILED from %s", ip)
@@ -19516,7 +19562,7 @@ def admin_enrol(request: Request, t: str = "", code: str = "", next: str = ""):
         conn.close()
     token = _pyjwt.encode({"sub": "device/" + (row["label"] or "?"), "scope": "device", "jti": jti,
                            "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
-    dest = next if (next.startswith("/") and not next.startswith("//")) else "/m"
+    dest = next if (next.startswith("/") and not next.startswith("//") and "\\" not in next) else "/m"   # SEC-ASSESS-2: /\\evil.com
     resp = RedirectResponse(dest, status_code=302)
     _set_device_cookie(resp, token)
     _log.info("DEVICE-ENROL-1: device enrolled label=%s jti=%s", row["label"], jti[:8])
