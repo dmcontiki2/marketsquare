@@ -1,0 +1,113 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QA Bot Is Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#f6f4f2; --card:#ffffff; --ink:#1d1715; --ink2:#5b504b; --line:#e4ddd8; --accent:#b5431f;
+  --crit:#b3261e; --crit-bg:#fbe9e7; --high:#c2660a; --high-bg:#fdf0e1; --med:#8a6d00; --med-bg:#faf4d9;
+  --ok:#1f7a45; --ok-bg:#e5f4ea; --fix:#1d4ed8; --fix-bg:#e8eefc; --grey:#6b625d; --grey-bg:#eeeae7;
+  --vio:#6d28d9; --vio-bg:#f0eafc; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#171210; --card:#211a17; --ink:#f2ebe7; --ink2:#b8aca6; --line:#3a2f2a; --accent:#e0714a;
+  --crit:#ff8a80; --crit-bg:#3a1a17; --high:#ffb35c; --high-bg:#382613; --med:#e6cf5a; --med-bg:#302a10;
+  --ok:#6fd49a; --ok-bg:#15301f; --fix:#8fb0ff; --fix-bg:#18223d; --grey:#b8aca6; --grey-bg:#2c2421;
+  --vio:#c4a8ff; --vio-bg:#261b3d; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#171210; --card:#211a17; --ink:#f2ebe7; --ink2:#b8aca6; --line:#3a2f2a; --accent:#e0714a;
+  --crit:#ff8a80; --crit-bg:#3a1a17; --high:#ffb35c; --high-bg:#382613; --med:#e6cf5a; --med-bg:#302a10;
+  --ok:#6fd49a; --ok-bg:#15301f; --fix:#8fb0ff; --fix-bg:#18223d; --grey:#b8aca6; --grey-bg:#2c2421;
+  --vio:#c4a8ff; --vio-bg:#261b3d; color-scheme:dark; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Source Sans 3",system-ui,sans-serif;padding-inline:16px;padding-block:28px 56px}
+.wrap{max-width:900px;margin:0 auto;display:grid;gap:26px}
+h1,h2{font-family:Archivo,system-ui,sans-serif;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,5vw,40px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:20px;font-weight:700}
+.eyebrow{font:600 12px/1.4 "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.lede{color:var(--ink2);max-width:68ch;margin:8px 0 0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tile{border-radius:10px;padding:12px 14px;display:grid;gap:2px}
+.tile b{font:800 30px/1 Archivo,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.tile span{font-weight:600;font-size:14px}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.step{background:var(--card);border:1px solid var(--line);border-top:5px solid var(--c);border-radius:8px;padding:12px 14px;display:grid;gap:4px;align-content:start}
+.step .who{font:600 12px/1.3 "JetBrains Mono",monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--c)}
+.step p{margin:0;color:var(--ink2);font-size:15px}
+@media (max-width:700px){.flow{grid-template-columns:1fr 1fr}}
+@media (max-width:420px){.flow{grid-template-columns:1fr}}
+section{display:grid;gap:10px}
+.list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.item{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--sev);border-radius:8px;padding:12px 16px;display:flex;gap:12px;align-items:baseline}
+.item.crit{--sev:var(--crit)} .item.high{--sev:var(--high)} .item.ok{--sev:var(--ok)} .item.fix{--sev:var(--fix)} .item.grey{--sev:var(--grey)} .item.vio{--sev:var(--vio)}
+.num{font:800 18px/1 Archivo,system-ui,sans-serif;min-width:30px;font-variant-numeric:tabular-nums;color:var(--sev)}
+.chip{font:600 11px/1 "JetBrains Mono",monospace;padding:4px 7px;border-radius:4px;white-space:nowrap;flex:none}
+code{font:13px "JetBrains Mono",monospace;overflow-wrap:anywhere;color:var(--ink2)}
+.sub{color:var(--ink2);margin:-4px 0 0;font-size:15px}
+.foot{font-size:14px;color:var(--ink2);display:grid;gap:4px}
+@media (max-width:520px){ .item{flex-wrap:wrap} }
+</style>
+</head><body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">TrustSquare · QA-BOT-1 · 24 Sep 2026 · live on the server</div>
+    <h1>The QA Bot is live</h1>
+    <p class="lede">OpenAI now decides what every route must require. The bot attacks the live site against those rulings on every deploy and every night. Claude only fixes. You hear from it only when something is red.</p>
+  </header>
+
+  <div class="flow" aria-label="Who does what">
+    <div class="step" style="--c:var(--vio)"><span class="who">1 · OpenAI judges</span><b>Rules every route</b><p>297 routes ruled; the rulings sit on the server, not in Claude's reach.</p></div>
+    <div class="step" style="--c:var(--crit)"><span class="who">2 · The bot attacks</span><b>Stranger, key, intruder</b><p>Every protected route, through the front door, against real test accounts.</p></div>
+    <div class="step" style="--c:var(--fix)"><span class="who">3 · Claude fixes</span><b>Code only</b><p>A route is closed when the bot says so, not when Claude says so.</p></div>
+    <div class="step" style="--c:var(--ok)"><span class="who">4 · You read</span><b>Email only when red</b><p>Nightly at 02:30, and whenever a deploy is rolled back.</p></div>
+  </div>
+
+  <section>
+    <h2>First live attack: 24 Sep, 08:43</h2>
+    <div class="tiles">
+      <div class="tile" style="background:var(--crit-bg);color:var(--crit)"><b>41</b><span>Open to the wrong person</span></div>
+      <div class="tile" style="background:var(--high-bg);color:var(--high)"><b>2</b><span>Crash on a stranger</span></div>
+      <div class="tile" style="background:var(--med-bg);color:var(--med)"><b>52</b><span>Not yet provable</span></div>
+      <div class="tile" style="background:var(--ok-bg);color:var(--ok)"><b>146</b><span>Closed correctly</span></div>
+      <div class="tile" style="background:var(--grey-bg);color:var(--grey)"><b>57</b><span>Public by OpenAI's ruling</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What the 43 red routes are</h2>
+    <ul class="list">
+      <li class="item crit"><span class="num">15</span><span>Admin and ops pages anyone can read: costs, email triage, presence, funnel and self-checks (<code>/dashboard/*</code>, <code>/ops/selfcheck</code>, <code>/payment/test</code>).</span></li>
+      <li class="item crit"><span class="num">9</span><span>Anyone can act for another person: withdraw their advert, downgrade their plan, edit their agent profile, or spend AI and ID checks in their name.</span></li>
+      <li class="item crit"><span class="num">11</span><span>Anyone can read another person's data: subscription, trust breakdown, launch status, suspension state, and an archived advert.</span></li>
+      <li class="item crit"><span class="num">6</span><span>The public app key alone is enough to create agencies, Local Market adverts and user accounts, list agencies, issue buyer tokens and run the paid AI search.</span></li>
+      <li class="item high"><span class="num">2</span><span>Two routes crash with a server error when a stranger calls them (<code>PUT /listings/{id}/wonders</code>, <code>POST /agencies/wave-prep</code>).</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Proven today</h2>
+    <ul class="list">
+      <li class="item ok"><span class="chip" style="background:var(--ok-bg);color:var(--ok)">GATE</span><span>A route that was closed and opens is caught, and so is a new route that ships open. The deploy then rolls back and that commit is not retried.</span></li>
+      <li class="item ok"><span class="chip" style="background:var(--ok-bg);color:var(--ok)">LIVE</span><span>Deployed as <code>cbd5ef5</code>: the gate ran from the live code and passed (no route opened), and the nightly timer is active.</span></li>
+      <li class="item vio"><span class="chip" style="background:var(--vio-bg);color:var(--vio)">INDEPENDENT</span><span>Claude appealed five rulings with reasons, and OpenAI upheld all five, so the judge cannot be talked down.</span></li>
+      <li class="item ok"><span class="chip" style="background:var(--ok-bg);color:var(--ok)">SAFE</span><span>Anything a probe gets through is detected, put back exactly, and any advert it creates is taken down at once.</span></li>
+      <li class="item ok"><span class="chip" style="background:var(--ok-bg);color:var(--ok)">AFRIKAANS</span><span>Quick now reads "'n Paar klikke, geen tikwerk nie." on the live site, checked on a rendered phone screen.</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Who closes the 43</h2>
+    <ul class="list">
+      <li class="item fix"><span class="chip" style="background:var(--fix-bg);color:var(--fix)">SEC-GATE-1</span><span>Another session holds the lock on the app code and is fixing this exact class, so Claude in this session does not touch it.</span></li>
+      <li class="item fix"><span class="chip" style="background:var(--fix-bg);color:var(--fix)">AUTOMATIC</span><span>Each of its deploys passes through the bot's gate, and each night's email shows which of the 43 are still open.</span></li>
+    </ul>
+  </section>
+
+  <div class="foot">
+    <span>Full route-by-route report: <code>MarketSquare\Records\QA_BOT_REPORT_2026-09-24.html</code>.</span>
+    <span>Design: <code>MarketSquare\qa_bot\README.md</code> · ledger RG-0454 · rulings and history: <code>/var/lib/trustsquare-qabot</code> on the server.</span>
+    <span>OpenAI cost so far: $0.45 to rule all routes, about $0.02 for the appeals.</span>
+  </div>
+</div>
+</body></html>

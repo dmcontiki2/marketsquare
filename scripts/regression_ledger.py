@@ -27887,6 +27887,11 @@ def rg_qa_bot_1():
         out.append((FAIL, "server_deploy.sh no longer rolls back a release the QA Bot refused"))
     if "QA_REJECTED_FILE" not in sd:
         out.append((FAIL, "server_deploy.sh would retry a refused commit every 2 minutes"))
+    if "failing CLOSED" not in sd:
+        out.append((FAIL, "server_deploy.sh lets a release through when the QA Bot cannot run -- the gate "
+                          "must fail closed (OpenAI nightly review, 24 Sep)"))
+    if "class BudgetExceeded" not in bot or "QA_DAILY_USD" not in bot:
+        out.append((FAIL, "qa_bot.py lost its hard daily cap on its own OpenAI spend (OpenAI nightly review, 24 Sep)"))
     for p in ("migrations/050_qa_bot_nightly.py", "ops/qabot/trustsquare-qabot.service",
               "ops/qabot/trustsquare-qabot.timer"):
         if repo_file(p) is None:

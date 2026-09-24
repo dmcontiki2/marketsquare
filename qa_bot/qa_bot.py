@@ -226,18 +226,48 @@ Reply with JSON only: {"routes":[{"id":"<METHOD /path exactly as given>","class"
 "reason":"<one plain sentence a non-programmer understands>"}]}"""
 
 
+DAILY_USD = float(os.environ.get("QA_DAILY_USD", "3.00"))
+PRICE_IN, PRICE_OUT = 2.0, 12.0          # $/Mtok for the judge model; used for the cap and the report
+
+
+class BudgetExceeded(Exception):
+    pass
+
+
+def _spend_file():
+    return os.path.join(STATE, "spend.json")
+
+def spent_today():
+    day = datetime.date.today().isoformat()
+    return float(jload(_spend_file(), {}).get(day, 0.0))
+
+def _record_spend(usd):
+    day = datetime.date.today().isoformat()
+    d = jload(_spend_file(), {})
+    d = {k: v for k, v in d.items() if k >= (datetime.date.today() - datetime.timedelta(days=30)).isoformat()}
+    d[day] = round(float(d.get(day, 0.0)) + usd, 4)
+    jsave(_spend_file(), d)
+
+
 def openai_chat(key, system, user, max_out=16000, timeout=300):
+    """One judge call, inside a HARD daily dollar cap (QA_DAILY_USD, default $3). The worst case of
+    the call is charged against the cap BEFORE it is made; the real cost is recorded after."""
+    worst = (len(system) + len(user)) / 4 / 1e6 * PRICE_IN + max_out / 1e6 * PRICE_OUT
+    if spent_today() + worst > DAILY_USD:
+        raise BudgetExceeded("daily OpenAI cap $%.2f reached (spent $%.3f today)" % (DAILY_USD, spent_today()))
     body = {"model": MODEL, "max_completion_tokens": max_out,
             "response_format": {"type": "json_object"},
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
     req = urllib.request.Request("https://api.openai.com/v1/chat/completions",
                                  data=json.dumps(body).encode(),
-                                 headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"})
+                                 headers={"Authorization": "Bearer " + key, "Content-Type": "application/json",
+                                          "User-Agent": "TrustSquare-QA-Bot/1"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         resp = json.loads(r.read().decode())
     text = (resp.get("choices", [{}])[0].get("message", {}).get("content") or "").strip()
     u = resp.get("usage", {})
-    cost = u.get("prompt_tokens", 0) / 1e6 * 2.0 + u.get("completion_tokens", 0) / 1e6 * 12.0
+    cost = u.get("prompt_tokens", 0) / 1e6 * PRICE_IN + u.get("completion_tokens", 0) / 1e6 * PRICE_OUT
+    _record_spend(cost)
     return json.loads(text) if text else {}, cost
 
 
@@ -277,6 +307,9 @@ def classify(env, only_new=True, batch=14, workers=4):
                             results[r["id"]] = {"class": r["class"], "reason": (r.get("reason") or "")[:300],
                                                 "by": MODEL, "at": now_iso()}
                 return
+            except BudgetExceeded as e:
+                say("classify: %s -- remaining routes stay unruled and are treated as protected" % e)
+                return
             except Exception as e:  # network / rate limit -- retry, then leave unruled
                 say("classify: batch attempt %d failed: %r" % (attempt + 1, e)[:200])
                 time.sleep(5 * (attempt + 1))
@@ -308,7 +341,11 @@ def appeal(env, rid, objection):
             "The Author's argument is not evidence by itself: check it against the code below, then rule "
             "again on this ONE route (you may keep your ruling).\n\n===== ROUTE %s  (handler %s) =====\n%s"
             % (old["class"], old.get("reason", ""), objection, rid, name, src[:6000]))
-    data, cost = openai_chat(key, JUDGE_SYSTEM, user)
+    try:
+        data, cost = openai_chat(key, JUDGE_SYSTEM, user)
+    except BudgetExceeded as e:
+        say("appeal: %s" % e)
+        return None
     r = next((x for x in data.get("routes", []) if x.get("class") in CLASSES), None)
     if not r:
         say("appeal: no valid ruling returned")
@@ -769,6 +806,8 @@ def nightly_review(env):
     capped = diff[:150000] + ("\n...[truncated at 150k chars]" if len(diff) > 150000 else "")
     try:
         data, cost = openai_chat(key, REVIEW_SYSTEM, capped, timeout=600)
+    except BudgetExceeded as e:
+        return {"verdict": "SKIPPED", "findings": [], "cost": 0.0, "note": str(e)}
     except Exception as e:
         return {"verdict": "SKIPPED", "findings": [], "cost": 0.0, "note": "review failed: %r" % e}
     data["cost"] = cost
@@ -820,9 +859,9 @@ code{font:12.5px ui-monospace,monospace} .v{font:700 11px ui-monospace,monospace
 </style></head><body><div class="w"><div class="eb">TrustSquare · QA Bot · %s · judge: OpenAI · attacker: the bot</div>
 <h1>%s</h1><div class="tiles">%s</div>%s<h2>Every protected route, worst first</h2>
 <div class="tw"><table>%s</table></div>
-<p style="color:#5b504b;font-size:13px">Personas: stranger (no sign-in, no key) · publickey (only the key inside the public ms.js) · intruder (a signed-in QA account aimed at another QA account's archived advert). Things a probe managed to create are removed afterwards: %d of %d.</p>
+<p style="color:#5b504b;font-size:13px">OpenAI spend today $%.3f of a $%.2f hard daily cap. Personas: stranger (no sign-in, no key) · publickey (only the key inside the public ms.js) · intruder (a signed-in QA account aimed at another QA account's archived advert). Things a probe managed to create are removed afterwards: %d of %d.</p>
 </div></body></html>""" % (esc(title), esc(run["at"]), esc(title), tiles, extra, "".join(rows),
-                             run["cleanup"]["removed"], run["cleanup"]["found"])
+                             spent_today(), DAILY_USD, run["cleanup"]["removed"], run["cleanup"]["found"])
 
 
 def email(env, subject, html_body):
@@ -832,7 +871,8 @@ def email(env, subject, html_body):
         return False
     req = urllib.request.Request("https://api.resend.com/emails", data=json.dumps({
         "from": "TrustSquare QA Bot <hello@mail.trustsquare.co>", "to": [to], "subject": subject,
-        "html": html_body}).encode(), headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"})
+        "html": html_body}).encode(), headers={"Authorization": "Bearer " + key, "Content-Type": "application/json",
+                                               "User-Agent": "TrustSquare-QA-Bot/1"})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             return 200 <= r.status < 300
@@ -913,6 +953,12 @@ def main():
             return 0
         if cmd == "nightly":
             review = nightly_review(env)
+            rej = os.path.join(STATE, "rejected_sha")
+            if os.path.exists(rej) and time.time() - os.path.getmtime(rej) < 26 * 3600:
+                review.setdefault("findings", []).insert(0, {
+                    "severity": "RED", "file": "deploy gate",
+                    "summary": "The gate refused commit %s in the last day; it did not go live." % open(rej).read().strip()[:10]})
+                review["verdict"] = "RED"
             run["review"] = review
             page = render(run, "Nightly security audit", review=review, new_rules=new)
             path = save_run(run, page, "nightly")

@@ -248,8 +248,10 @@ done
 # The independent QA Bot attacks every protected route of the NEW release through the front
 # door, as a stranger, as a holder of the public app key, and as a signed-in intruder, against
 # OpenAI's rulings. If any route that was closed (or any brand-new route) is now open, the
-# release is rolled back exactly like an unhealthy one. A bot that cannot run (rc other than 1)
-# never blocks a deploy -- that is a bot problem, not a verdict on the code; it is logged loudly.
+# release is rolled back exactly like an unhealthy one. It FAILS CLOSED: a bot that cannot run
+# (crash, timeout) also refuses the release -- OpenAI's nightly review, 24 Sep: a gate that waves
+# code through when it breaks is no gate. Either way the refused commit is recorded, so the timer
+# does not re-deploy it every 2 minutes; a new commit (a fix to the code or to the bot) goes again.
 qa_ok=1
 if [ "$healthy" -eq 1 ] && [ "$restart_ok" -eq 1 ] && [ -f "$QA_BOT" ] && [ "${MS_QA_GATE:-1}" = "1" ]; then
     log "QA Bot gate: attacking every protected route of ${SHORT}..."
@@ -257,12 +259,14 @@ if [ "$healthy" -eq 1 ] && [ "$restart_ok" -eq 1 ] && [ -f "$QA_BOT" ] && [ "${M
     qa_rc=$?
     if [ "$qa_rc" -eq 0 ]; then
         log "QA Bot gate: pass"
-    elif [ "$qa_rc" -eq 1 ]; then
+    else
         qa_ok=0
         mkdir -p "$(dirname "$QA_REJECTED_FILE")" && echo "$TARGET_SHA" > "$QA_REJECTED_FILE"
-        warn "QA Bot gate: this release OPENED a route -- rolling back (details above; David has the report by email)"
-    else
-        warn "QA Bot gate could not run (rc=$qa_rc) -- release stays; the nightly run will re-check"
+        if [ "$qa_rc" -eq 1 ]; then
+            warn "QA Bot gate: this release OPENED a route -- rolling back (details above; David has the report by email)"
+        else
+            warn "QA Bot gate could not run (rc=$qa_rc) -- failing CLOSED, rolling back; fix the bot or the code in a new commit"
+        fi
     fi
 fi
 
