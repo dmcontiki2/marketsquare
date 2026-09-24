@@ -64,24 +64,24 @@ code{font:13px "JetBrains Mono",monospace;overflow-wrap:anywhere;color:var(--ink
   </div>
 
   <section>
-    <h2>First live attack: 24 Sep, 08:43</h2>
+    <h2>Before and after the other session's security release</h2>
+    <p class="sub">Same attack, same rulings, run by the bot, not by the session that wrote the fixes.</p>
     <div class="tiles">
-      <div class="tile" style="background:var(--crit-bg);color:var(--crit)"><b>41</b><span>Open to the wrong person</span></div>
-      <div class="tile" style="background:var(--high-bg);color:var(--high)"><b>2</b><span>Crash on a stranger</span></div>
-      <div class="tile" style="background:var(--med-bg);color:var(--med)"><b>52</b><span>Not yet provable</span></div>
-      <div class="tile" style="background:var(--ok-bg);color:var(--ok)"><b>146</b><span>Closed correctly</span></div>
+      <div class="tile" style="background:var(--crit-bg);color:var(--crit)"><b>43 → 9</b><span>Open to the wrong person or crashing</span></div>
+      <div class="tile" style="background:var(--ok-bg);color:var(--ok)"><b>146 → 197</b><span>Closed correctly</span></div>
+      <div class="tile" style="background:var(--med-bg);color:var(--med)"><b>52 → 35</b><span>Not yet provable</span></div>
       <div class="tile" style="background:var(--grey-bg);color:var(--grey)"><b>57</b><span>Public by OpenAI's ruling</span></div>
     </div>
   </section>
 
   <section>
-    <h2>What the 43 red routes are</h2>
+    <h2>The 9 still open (all reachable with the public app key)</h2>
     <ul class="list">
-      <li class="item crit"><span class="num">15</span><span>Admin and ops pages anyone can read: costs, email triage, presence, funnel and self-checks (<code>/dashboard/*</code>, <code>/ops/selfcheck</code>, <code>/payment/test</code>).</span></li>
-      <li class="item crit"><span class="num">9</span><span>Anyone can act for another person: withdraw their advert, downgrade their plan, edit their agent profile, or spend AI and ID checks in their name.</span></li>
-      <li class="item crit"><span class="num">11</span><span>Anyone can read another person's data: subscription, trust breakdown, launch status, suspension state, and an archived advert.</span></li>
-      <li class="item crit"><span class="num">6</span><span>The public app key alone is enough to create agencies, Local Market adverts and user accounts, list agencies, issue buyer tokens and run the paid AI search.</span></li>
-      <li class="item high"><span class="num">2</span><span>Two routes crash with a server error when a stranger calls them (<code>PUT /listings/{id}/wonders</code>, <code>POST /agencies/wave-prep</code>).</span></li>
+      <li class="item crit"><span class="num">2</span><span>Two admin pages anyone can read: the dashboard summary and the listings coverage map.</span></li>
+      <li class="item crit"><span class="num">2</span><span>Two "about me" pages answer without a sign-in: launch status and the Quick "me" card.</span></li>
+      <li class="item crit"><span class="num">3</span><span>Three actions still work with the public key alone: create a user account, mark someone online, and run the paid AI search.</span></li>
+      <li class="item crit"><span class="num">1</span><span>A signed-in stranger can open another person's archived advert.</span></li>
+      <li class="item high"><span class="num">1</span><span>The old Quick preview page is still served to anyone, which OpenAI ruled admin-only.</span></li>
     </ul>
   </section>
 
@@ -89,7 +89,8 @@ code{font:13px "JetBrains Mono",monospace;overflow-wrap:anywhere;color:var(--ink
     <h2>Proven today</h2>
     <ul class="list">
       <li class="item ok"><span class="chip" style="background:var(--ok-bg);color:var(--ok)">GATE</span><span>A route that was closed and opens is caught, and so is a new route that ships open. The deploy then rolls back and that commit is not retried.</span></li>
-      <li class="item ok"><span class="chip" style="background:var(--ok-bg);color:var(--ok)">LIVE</span><span>Deployed as <code>cbd5ef5</code>: the gate ran from the live code and passed (no route opened), and the nightly timer is active.</span></li>
+      <li class="item ok"><span class="chip" style="background:var(--ok-bg);color:var(--ok)">LIVE</span><span>The gate checked the other session's two security releases and let both through (09:01 and 09:03), and the nightly timer is active.</span></li>
+      <li class="item high"><span class="chip" style="background:var(--high-bg);color:var(--high)">OWNED</span><span>At 08:55 the bot wrongly refused one of those releases because it crashed on the newly closed route list; that is fixed, and a crash can no longer count as a finding.</span></li>
       <li class="item vio"><span class="chip" style="background:var(--vio-bg);color:var(--vio)">INDEPENDENT</span><span>Claude appealed five rulings with reasons, and OpenAI upheld all five, so the judge cannot be talked down.</span></li>
       <li class="item ok"><span class="chip" style="background:var(--ok-bg);color:var(--ok)">SAFE</span><span>Anything a probe gets through is detected, put back exactly, and any advert it creates is taken down at once.</span></li>
       <li class="item ok"><span class="chip" style="background:var(--ok-bg);color:var(--ok)">AFRIKAANS</span><span>Quick now reads "'n Paar klikke, geen tikwerk nie." on the live site, checked on a rendered phone screen.</span></li>
@@ -97,17 +98,17 @@ code{font:13px "JetBrains Mono",monospace;overflow-wrap:anywhere;color:var(--ink
   </section>
 
   <section>
-    <h2>Who closes the 43</h2>
+    <h2>Who closes the 9</h2>
     <ul class="list">
-      <li class="item fix"><span class="chip" style="background:var(--fix-bg);color:var(--fix)">SEC-GATE-1</span><span>Another session holds the lock on the app code and is fixing this exact class, so Claude in this session does not touch it.</span></li>
-      <li class="item fix"><span class="chip" style="background:var(--fix-bg);color:var(--fix)">AUTOMATIC</span><span>Each of its deploys passes through the bot's gate, and each night's email shows which of the 43 are still open.</span></li>
+      <li class="item fix"><span class="chip" style="background:var(--fix-bg);color:var(--fix)">SEC-GATE-1</span><span>The other session holds the lock on the app code, fixed 34 of the 43 today, and has already adjusted its gate so the bot can read the route list.</span></li>
+      <li class="item fix"><span class="chip" style="background:var(--fix-bg);color:var(--fix)">AUTOMATIC</span><span>Every one of its deploys passes the bot's gate, and each night's email lists what is still open until the list is empty.</span></li>
     </ul>
   </section>
 
   <div class="foot">
     <span>Full route-by-route report: <code>MarketSquare\Records\QA_BOT_REPORT_2026-09-24.html</code>.</span>
     <span>Design: <code>MarketSquare\qa_bot\README.md</code> · ledger RG-0454 · rulings and history: <code>/var/lib/trustsquare-qabot</code> on the server.</span>
-    <span>OpenAI cost so far: $0.45 to rule all routes, about $0.02 for the appeals.</span>
+    <span>OpenAI cost so far: about $0.70 in total, under a hard cap of $3 a day that OpenAI's own first review asked for.</span>
   </div>
 </div>
 </body></html>
