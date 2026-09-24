@@ -14084,8 +14084,11 @@ function wlCaptureView(listing) {
   const txt = (listing.title || '') + ' ' + (listing.description || listing.desc || '');
   wlSendSignal({ signal_type: 'browse_view', raw_text: txt.slice(0, 240), category: cat });
   // Bump server-side view counter for the demand signal on cards
-  if (listing.id != null) {
-    fetch(BEA_URL + '/listings/' + encodeURIComponent(listing.id) + '/view', { method:'POST' }).catch(()=>{});
+  // BUGSWEEP-24SEP: app ids are 'bea_275' - the route takes the number, so every view was a 422
+  // and the demand counter on cards never moved.
+  const _vid = String(listing.id == null ? '' : listing.id).replace(/^bea_/, '');
+  if (/^\d+$/.test(_vid)) {
+    fetch(BEA_URL + '/listings/' + _vid + '/view', { method:'POST' }).catch(()=>{});
   }
 }
 function wlCaptureSearch(query, cat, resultCount) {
