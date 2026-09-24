@@ -10398,7 +10398,7 @@ function renderDashCard(dl){
       ${statusBadge}
       ${wonderBanners}
       ${introsHtml}
-      ${dl.beaListingId?(_ls==='archived'?`<div class="ml-actions"><span style="font-size:11px;color:var(--text-3);">Archived — an archived advert cannot come back. Make a new one any time.</span></div>`:`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${(dl.status!=='draft'&&_ls==='live')?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||''))})">Share to Status</button>`:''}${_ls==='live'?`<button class="mla-btn" onclick="msPauseListing(${dl.beaListingId}, true)">Pause</button>`:''}${_ls==='paused'?`<button class="mla-btn accent" onclick="msPauseListing(${dl.beaListingId}, false)">Resume</button>`:''}</div>`):''}
+      ${dl.beaListingId?(_ls==='archived'?`<div class="ml-actions"><span style="font-size:11px;color:var(--text-3);">Archived — an archived advert cannot come back. Make a new one any time.</span><button class="mla-btn" style="color:#dc2626;border-color:#fecaca;" onclick="dashDeleteListing(${dl.beaListingId}, ${JSON.stringify(String(dl.title||'')).replace(/"/g,'&quot;')})">Delete</button></div>`:`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${(dl.status!=='draft'&&_ls==='live')?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||''))})">Share to Status</button>`:''}${_ls==='live'?`<button class="mla-btn" onclick="msPauseListing(${dl.beaListingId}, true)">Pause</button>`:''}${_ls==='paused'?`<button class="mla-btn accent" onclick="msPauseListing(${dl.beaListingId}, false)">Resume</button>`:''}</div>`):''}
     </div>
   </div>`;
 }
@@ -10582,6 +10582,9 @@ async function openEditListing(beaId) {
   }
 
   elCurrentId  = beaId;
+  // DEL-STUCK-2: the delete button is one shared element; a previous successful
+  // delete left it on 'Deleting...' with clicks disabled for every later listing.
+  { const _db = document.getElementById('el-delete-btn'); if (_db) { _db.textContent = 'Delete this listing'; _db.style.pointerEvents = 'auto'; } }
   elCurrentCat = normCat(dl.cat || dl._raw.category || '');
   elCurrentRaw = dl._raw;
   // Derive gate-aware category for trust score panel (Property_private / Property_agent)
@@ -11670,6 +11673,11 @@ async function wpSave(beaId,sellerEmail){
   if(!beaId||!sellerEmail)return;
   try{await fetch(BEA_URL+'/listings/'+beaId+'/wonders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:sellerEmail,wonder_ids:_wpLinked.map(w=>w.id)})});}catch(e){console.warn('wpSave failed',e);}
 }
+// DEL-STUCK-2: archived adverts have no Edit screen, so the hub card deletes them directly.
+async function dashDeleteListing(beaId, title) {
+  elCurrentId = beaId; elCurrentRaw = { title: title || '' };
+  await elConfirmDeleteListing();
+}
 async function elConfirmDeleteListing() {
   if (!elCurrentId) return;
   const title = elCurrentRaw && elCurrentRaw.title ? '"' + elCurrentRaw.title + '"' : 'this listing';
@@ -11698,6 +11706,7 @@ async function elConfirmDeleteListing() {
     // Remove from local dashState so dashboard re-renders correctly
     dashState.listings = dashState.listings.filter(dl => dl.beaListingId !== elCurrentId);
     elCurrentId = null; elCurrentCat = null; elCurrentRaw = null;
+    if (btn) { btn.textContent = 'Delete this listing'; btn.style.pointerEvents = 'auto'; }  // DEL-STUCK-2
     await loadLiveListings();
     renderDash();
     showToast('Listing deleted');
