@@ -28175,5 +28175,39 @@ def rg_gate_sync_1():
                    "reads a staff-only /flags field (%s) anonymously" % ", ".join(sorted(staff_only)))]
 
 
+@entry("RG-0458", "DEL-STUCK-2: the edit screen's delete button never stays stuck on 'Deleting...', and "
+                  "archived adverts can be deleted from the Seller Hub",
+       LOCKED, fixed_on="2026-09-24",
+       scope="ms.js seller edit screen + Seller Hub cards, ALL categories, ALL markets. FOUND 24 Sep 2026: "
+             "David could not delete his temporary adverts. Server log: his first delete succeeded; no "
+             "later delete ever left the browser. The delete button is ONE shared element and the "
+             "success path never restored it, so it stayed on 'Deleting...' with clicks disabled for "
+             "every advert opened afterwards. Archived adverts had no Edit screen and so no delete at "
+             "all. FIX: reset on every edit-screen open and after a successful delete; archived cards "
+             "carry a Delete button on the same session-bound seller endpoint. David confirmed all four "
+             "deleted the same evening. SCOPE of this check: source only (ms.js).",
+       ref="Session 74 'Delete listing stuck on Deleting...' (22 May, a DIFFERENT cause: empty email) "
+           "-- same symptom twice, so both halves are asserted here.")
+def rg_del_stuck_2():
+    src = repo_file("ms.js")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - ms.js is not readable here")]
+    bad = []
+    i = src.find("async function openEditListing(")
+    body = src[i:i + 6000] if i >= 0 else ""
+    if "_db.textContent = 'Delete this listing'" not in body:
+        bad.append("openEditListing no longer resets the shared delete button")
+    j = src.find("async function elConfirmDeleteListing(")
+    dbody = src[j:j + 3000] if j >= 0 else ""
+    k = dbody.find("await loadLiveListings();")
+    if k < 0 or "btn.textContent = 'Delete this listing'" not in dbody[:k]:
+        bad.append("a successful delete no longer restores the button before leaving the screen")
+    if "async function dashDeleteListing(" not in src or "onclick=\"dashDeleteListing(" not in src:
+        bad.append("archived Seller Hub cards lost their Delete button")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "delete button resets on open and after success; archived cards can be deleted")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
