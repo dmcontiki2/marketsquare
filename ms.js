@@ -2281,7 +2281,7 @@ function filterBrowse(cat){
   if(cat==='Adventures'){ goTo('adventures'); refreshAdvCatChips(); if(typeof zoomEnter==='function') zoomEnter('Adventures'); renderAdvGrid(); return; }
   activeFilter=cat; goTo('browse');
   document.querySelectorAll('#chip-row .chip').forEach(c=>{
-    c.classList.toggle('active', c.textContent.includes(cat)||(cat==='All'&&c.textContent==='All'));
+    c.classList.toggle('active', msEnText(c).includes(cat)||(cat==='All'&&msEnText(c)==='All'));   // I18N-KEY-1
   });
   if(typeof zoomEnter==='function') zoomEnter(cat);   // ZOOM-HMI-1 (no-op unless the flag is on)
   renderFilterBar(); renderGrid();
@@ -2623,7 +2623,7 @@ function _ensureUniversalBlocks(){
     if(sheet){
       sheet.querySelectorAll('.fs-section').forEach(function(sec){
         const lbl=sec.querySelector('.fs-label');
-        if(lbl && /^Area/i.test(lbl.textContent.trim()) && !sec.classList.contains('uni-block')) sec.style.display='none';
+        if(lbl && /^Area/i.test(msEnText(lbl)) && !sec.classList.contains('uni-block')) sec.style.display='none';
       });
     }
   });
@@ -2660,7 +2660,7 @@ function toggleOpt(el, group){
   // Single select within group — deselect others
   const parent = el.closest('.fs-options');
   parent.querySelectorAll('.fs-opt').forEach(o=>o.classList.remove('sel'));
-  if(el.textContent.trim()==='Any'){
+  if(msEnText(el)==='Any'){   // I18N-KEY-1: the painted word may be 'Enige'
     // Any = clear
   } else {
     el.classList.add('sel');
@@ -2676,7 +2676,7 @@ function getSelOpt(sheetId, group){
   for(const sec of sections){
     const opts = sec.querySelectorAll('.fs-opt');
     for(const opt of opts){
-      if(opt.classList.contains('sel')) return opt.textContent.trim();
+      if(opt.classList.contains('sel')) return msEnText(opt);
     }
   }
   return '';
@@ -2687,9 +2687,9 @@ function getSelOptInSection(sectionLabel, sheetId){
   if(!sheet) return '';
   for(const sec of sheet.querySelectorAll('.fs-section')){
     const label = sec.querySelector('.fs-label');
-    if(label && label.textContent.trim()===sectionLabel){
+    if(label && msEnText(label)===sectionLabel){   // I18N-KEY-1: labels are matched in English
       const sel = sec.querySelector('.fs-opt.sel');
-      return sel ? sel.textContent.trim() : '';
+      return sel ? msEnText(sel) : '';
     }
   }
   return '';
@@ -2705,8 +2705,8 @@ function getSelOptsInSection(sectionLabel, sheetId){
   if(!sheet) return [];
   for(const sec of sheet.querySelectorAll('.fs-section')){
     const label = sec.querySelector('.fs-label');
-    if(label && label.textContent.trim().startsWith(sectionLabel)){
-      return Array.from(sec.querySelectorAll('.fs-opt.sel')).map(o=>o.textContent.trim());
+    if(label && msEnText(label).startsWith(sectionLabel)){   // I18N-KEY-1
+      return Array.from(sec.querySelectorAll('.fs-opt.sel')).map(o=>msEnText(o));
     }
   }
   return [];
@@ -4017,6 +4017,21 @@ function renderHomeStats() {
   if (listingsEl) listingsEl.textContent = n;
 }
 
+/* I18N-KEY-1 (24 Sep 2026, David: "the app again does not update the numbers"). The language layer
+   paints translations straight into the page's text nodes and keeps each node's English as __en.
+   Any code that reads page TEXT to decide something -- which category a tile is, which filter
+   section a label names, which chip is active -- must read the English, never what is painted:
+   in Afrikaans the home tiles read 'Eiendom', looked up counts['Eiendom'], and showed 0 for every
+   category over 58 loaded listings. It only 'suddenly appeared' when a recount happened to run
+   before the paint. The same fault silently switched off the filter sheet in every other language.
+   Ledger RG-0452 holds the class: page text is never read as a key except through here. */
+function msEnText(el){
+  if(!el) return '';
+  var out='', w=document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null), n;
+  while((n=w.nextNode())){ out += (n.__en!==undefined && n.nodeValue===n.__tr) ? n.__en : n.nodeValue; }
+  return out.trim();
+}
+
 function renderCatCounts() {
   const grid = document.getElementById('home-cat-grid');
   if (!grid) return;
@@ -4111,7 +4126,9 @@ function renderCatCounts() {
       }
       return;
     }
-    const name = tile.querySelector('.cat-name').textContent.trim();
+    // I18N-KEY-1 (24 Sep 2026): the KEY is the English category, never the painted word --
+    // in Afrikaans this read 'Eiendom', found no count, and every tile said 0.
+    const name = tile.dataset.cat || msEnText(tile.querySelector('.cat-name'));
     const n = counts[name] || 0;
     tile.querySelector('.cat-count').textContent = n + (n === 1 ? ' listing' : ' listings');
     // Category tiles always show — even at 0 listings — so empty/prospect cities still
@@ -4238,7 +4255,7 @@ function msParseQuery(raw){
 function _msApplyChip(cat){
   activeFilter = cat;
   document.querySelectorAll('#chip-row .chip').forEach(c=>{
-    c.classList.toggle('active', c.textContent.includes(cat)||(cat==='All'&&c.textContent.trim()==='All'));
+    c.classList.toggle('active', msEnText(c).includes(cat)||(cat==='All'&&msEnText(c)==='All'));   // I18N-KEY-1
   });
   if (typeof renderFilterBar === 'function') renderFilterBar();
   const sub = document.getElementById('browse-sub');
@@ -12655,7 +12672,7 @@ function aaRenderDetailScreen(draft) {
 function aaSelectCategory(cat) {
   // Update chip selection — only category chips (not class chips)
   document.querySelectorAll('#aa-cat-chips .aa-cat-chip').forEach(btn => {
-    btn.classList.toggle('selected', btn.textContent.includes(cat));
+    btn.classList.toggle('selected', msEnText(btn).includes(cat));   // I18N-KEY-1
   });
   // Reset service_class when category changes
   aaDB.get(aaDraftId).then(draft => {
@@ -12825,7 +12842,7 @@ function aaGetSelectedCategory() {
   const selected = document.querySelector('.aa-cat-chip.selected');
   if (!selected) return null;
   // Extract category name from chip text (strip emoji prefix)
-  const text = selected.textContent.trim();
+  const text = msEnText(selected);   // I18N-KEY-1: match the English key, not the painted word
   return Object.keys(AA_CATEGORIES).find(k => text.includes(k)) || null;
 }
 
@@ -13557,7 +13574,7 @@ function aaRenderFlow(cat) {
   aaFlowActiveCat = cat;
   // Update chip selection
   document.querySelectorAll('.aa-flow-cat-chip').forEach(btn => {
-    btn.classList.toggle('sel', btn.textContent.includes(cat));
+    btn.classList.toggle('sel', msEnText(btn).includes(cat));   // I18N-KEY-1
   });
   const flow = AA_FLOWS[cat];
   if (!flow) return;

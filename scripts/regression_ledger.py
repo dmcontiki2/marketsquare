@@ -27724,5 +27724,68 @@ def rg_ledger_state_1():
                           % len(LEDGER))]
 
 
+
+@entry("RG-0452", "I18N-KEY-1: page text is never read as a logic key except through msEnText -- in any "
+                  "language but English the home tiles counted 0 and the filter sheet switched itself off",
+       OPEN,
+       scope="ms.js, the whole class: every place that reads the page's TEXT to decide something. "
+             "FOUND 24 Sep 2026 from David's screenshot (Afrikaans, Pretoria): all six home tiles read "
+             "'0 advertensies'. REPRODUCED in his Chrome the same hour: 58 live listings loaded "
+             "(Property 19, Adventures 29, Cars 4, Tutors 3, Services 2, Collectors 1), every tile 0. "
+             "CAUSE: the language layer paints translations INTO the text nodes and keeps each node's "
+             "English as __en; renderCatCounts() keyed its count lookup off the painted tile name, so "
+             "it asked for counts['Eiendom'] and got nothing. Whenever a recount happened to run before "
+             "the paint the numbers appeared -- David's 'many clicks and then it suddenly appears'. "
+             "THE CLASS, found by the same grep: 13 sites read painted text as a key -- the tiles, the "
+             "filter sheet's section labels and chosen options (getSelOpt / getSelOptInSection / "
+             "getSelOptsInSection: in Afrikaans every filter quietly returned nothing, so no filter "
+             "applied), the 'Any' option, the Area-section hide, both category-chip highlighters, the "
+             "advert-agent category chip (aaGetSelectedCategory -> 'Please select a category first' "
+             "with one selected) and the sell-flow category buttons. All 13 now read msEnText(el), "
+             "which returns the node's English while the painted value is still the one the layer "
+             "wrote. PROVEN LIVE before shipping: the fixed renderCatCounts evaluated in the served "
+             "page turned 0/0/0/0/0/0 into 19/3/2/29/1/4 with the Afrikaans labels intact. "
+             "ASSERTED AS A RATCHET AT ZERO: any new .textContent.trim() / .includes( / .startsWith( "
+             "/ textContent=== in ms.js trips this -- a new reader of page text goes through "
+             "msEnText or it is a defect in waiting for every non-English reader.",
+       ref="LANG-LAYER-1 (RG-0431) and the DICTV / REPAINT-RACE-1 / PAINT-ALL-1 language-layer work "
+           "(20 Sep) -- the layer is correct; the readers were not told it exists. Same class as "
+           "RG-0413 / RG-0431 the same morning, in the product rather than the ledger: judging by "
+           "a spelling instead of by the thing itself.")
+def rg_i18n_key_1():
+    import re as _re
+    msj = repo_file("ms.js")
+    if msj is None:
+        return [(INFO, "NOT EVALUATED - ms.js not readable from here")]
+    out = []
+    i = msj.find("function msEnText(el){")
+    body = msj[i:i + 500] if i >= 0 else ""
+    if i < 0 or "__en" not in body or "n.nodeValue===n.__tr" not in body.replace(" ", ""):
+        out.append((FAIL, "msEnText is gone or no longer returns the node's English -- every text "
+                          "key reads the painted translation again"))
+    readers = _re.findall(r"\.textContent\s*\.\s*(?:trim\(\)|includes\(|startsWith\(|indexOf\()|"
+                          r"\.textContent\s*===?", msj)
+    if readers:
+        out.append((FAIL, "%d place(s) in ms.js read painted page text as a key again (%s) -- in any "
+                          "language but English they read the translation and miss"
+                          % (len(readers), ", ".join(sorted(set(r.strip() for r in readers)))[:120])))
+    r = msj.find("function renderCatCounts()")
+    rc = msj[r:r + 7000] if r >= 0 else ""
+    if "msEnText(tile.querySelector('.cat-name'))" not in rc and "tile.dataset.cat" not in rc:
+        out.append((FAIL, "renderCatCounts keys the tile off its painted name again -- in Afrikaans "
+                          "every tile reads 0"))
+    try:
+        served = _get(BASE.rstrip("/") + "/static/ms.js")
+        if "function msEnText(el){" not in served:
+            out.append((FAIL, "LIVE: the served ms.js has no msEnText -- the fix is on disk and not "
+                              "in the reader's browser"))
+    except ProbeOffline:
+        out.append((INFO, "LIVE leg BLIND: the edge would not serve ms.js to this client"))
+    except Exception as ex:
+        out.append((INFO, "LIVE leg inconclusive (%s)" % type(ex).__name__))
+    return out or [(INFO, "no page-text key reads left outside msEnText; tiles key on the English "
+                          "category; the served ms.js carries it")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
