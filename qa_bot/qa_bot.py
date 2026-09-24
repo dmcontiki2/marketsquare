@@ -890,6 +890,34 @@ code{font:12.5px ui-monospace,monospace} .v{font:700 11px ui-monospace,monospace
                              spent_today(), DAILY_USD, run["cleanup"]["removed"], run["cleanup"]["found"])
 
 
+def email_body(run, title, review=None, regress=None):
+    """What David reads: the red items only, one line each. The full route-by-route page stays on the
+    server (latest.html) -- a 100 KB table of routes is not an email, and mail filters agree."""
+    esc = html.escape
+    c = summarise(run)
+    red = [r for r in run["results"] if r["verdict"] in ("FAIL", "CRASH")]
+    li = "".join("<li><b style='color:%s'>%s</b> <code>%s</code> &mdash; %s</li>" % (
+        "#b3261e" if r["verdict"] == "FAIL" else "#c2660a", r["verdict"], esc(r["id"]),
+        esc(next((v["detail"] for v in r["personas"].values() if v["verdict"] in ("FAIL", "CRASH")), "")))
+        for r in red)
+    parts = ["<h2 style='margin:0 0 8px'>%s</h2>" % esc(title),
+             "<p><b style='color:#b3261e'>%d open</b> &middot; <b style='color:#c2660a'>%d crash</b> &middot; "
+             "<b style='color:#1f7a45'>%d closed</b> &middot; %d not yet provable &middot; %d public by ruling</p>"
+             % (c.get("FAIL", 0), c.get("CRASH", 0), c.get("PASS", 0), c.get("UNPROVEN", 0), c.get("SKIP", 0))]
+    if regress:
+        parts.append("<p><b>This deploy was rolled back.</b> Opened: %s</p>"
+                     % ", ".join("<code>%s</code>" % esc(x["id"]) for x in regress))
+    if red:
+        parts.append("<p>Still open:</p><ul>%s</ul>" % li)
+    if review and review.get("findings"):
+        parts.append("<p>OpenAI's review of the day's code (%s):</p><ul>%s</ul>" % (esc(review.get("verdict", "")), "".join(
+            "<li><b>%s</b> %s &mdash; %s</li>" % (esc(f.get("severity", "")), esc(f.get("file", "")), esc(f.get("summary", "")))
+            for f in review["findings"][:12])))
+    parts.append("<p style='color:#6b625d;font-size:13px'>Judge: OpenAI. Attacker: the QA Bot. Full report on the server: "
+                 "/var/lib/trustsquare-qabot/latest.html</p>")
+    return "<div style='font:15px/1.5 system-ui,sans-serif;color:#1d1715;max-width:760px'>%s</div>" % "".join(parts)
+
+
 def email(env, subject, html_body):
     key, to = env.get("RESEND_API_KEY"), env.get("QA_REPORT_TO") or env.get("GMAIL_ADDRESS")
     if not key or not to:
@@ -901,6 +929,7 @@ def email(env, subject, html_body):
                                                "User-Agent": "TrustSquare-QA-Bot/1"})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
+            say("email: accepted by Resend (%d) %s" % (r.status, r.read(120).decode("utf-8", "replace")))
             return 200 <= r.status < 300
     except Exception as e:
         say("email failed: %r" % e)
@@ -972,7 +1001,8 @@ def main():
                 say("GATE: %d route(s) opened by this deploy -> ROLL BACK" % len(reg))
                 for x in reg:
                     say("  OPENED  %s  (was %s)" % (x["id"], x["previous"]))
-                email(env, "QA Bot stopped a deploy: %d route(s) opened" % len(reg), page)
+                email(env, "QA Bot stopped a deploy: %d route(s) opened" % len(reg),
+                      email_body(run, "QA Bot stopped a deploy", regress=reg))
                 return 1
             accept(run)
             say("GATE: pass -- report %s" % path)
@@ -992,7 +1022,8 @@ def main():
             red = c.get("FAIL", 0) + c.get("CRASH", 0) > 0 or review.get("verdict") == "RED"
             if red:
                 email(env, "QA Bot nightly audit: RED - %d open, %d crash, review %s" % (
-                    c.get("FAIL", 0), c.get("CRASH", 0), review.get("verdict")), page)
+                    c.get("FAIL", 0), c.get("CRASH", 0), review.get("verdict")),
+                      email_body(run, "QA Bot nightly audit", review=review))
             if last is None or not regressions(run, last):
                 accept(run)
             say("NIGHTLY:", "RED" if red else "GREEN", path)
