@@ -27791,5 +27791,62 @@ def rg_i18n_key_1():
                           "category; the served ms.js carries it")]
 
 
+
+@entry("RG-0453", "I18N-COST-RAIL-1: the Translate button's AI call is inside the platform cost rail -- "
+                  "ceiling-checked before, spend-logged after, every call",
+       LOCKED, fixed_on="2026-09-24",
+       scope="bea_main.py /i18n/translate -> _i18n_ask, the helper that makes the Translate button's "
+             "AI call. It calls _check_cost_ceiling(\"\") BEFORE every ai_provider.complete (over the "
+             "platform ceiling that raises 429, which the endpoint's own try/except catches: the reader "
+             "gets cache + English, never an error) and _log_ai_spend(\"\", \"/i18n/translate\", "
+             "I18N_TASK, ...) AFTER it with the tokens, provider and model that actually answered. The "
+             "lane's own I18N_DAILY_CALL_CAP (400/day) stays. CLASS: every AI call on the platform is "
+             "ceiling-checked and spend-logged -- a lane with its own private cap is still inside the "
+             "rail, because a private cap is invisible to the $10/day platform ceiling and to the +1 "
+             "page. The cost sweep (cost_compliance_sweep.py wrapper_compliance) is the class-wide "
+             "net; this entry pins the one call site that escaped it. Sibling still OPEN in the watch: "
+             "_lang_ai (DW-149) has no ceiling check.",
+       ref="DW-142, found by the 23 Sep cost sweep (CRITICAL: i18n_translate UNWRAPPED & UNMETERED). "
+           "Staged as scripts/apply_i18n_cost_rail.py on 23 Sep while bea_main.py was under a "
+           "WORK-LOCK-1 lock (RUL-140); applied 24 Sep 08:08Z when the lock cleared, commit dfcafd4, "
+           "DEPLOY OK live at dfcafd46 08:12:20Z. PROBED 24 Sep 08:13Z: POST /i18n/translate (af, a "
+           "fresh sentence) -> 200, translated 1; the production ai_spend_log gained row 963 "
+           "(/i18n/translate, reason, 604/37 tokens, $0.002367, cost_is_real=1) -- before the fix that "
+           "row could not exist. The sweep re-run reads 'i18n_translate -- ceiling OK, spend-log OK'.")
+def rg_i18n_cost_rail_1():
+    import re as _re
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py not readable from here")]
+    out = []
+    i = bea.find("    def _i18n_ask(items):")
+    if i < 0:
+        return [(FAIL, "_i18n_ask is gone from bea_main.py -- the Translate AI call moved; re-pin it "
+                       "inside the cost rail (I18N-COST-RAIL-1)")]
+    j = bea.find("\n    fresh = {}", i)
+    body = bea[i:j if j > i else i + 2500]
+    c = body.find("_check_cost_ceiling(")
+    a = body.find("ai_provider.complete(")
+    lg = body.find("_log_ai_spend(")
+    if a < 0:
+        out.append((FAIL, "_i18n_ask no longer calls ai_provider.complete -- re-derive where the "
+                          "Translate AI call happens and pin that site"))
+    if c < 0 or (a >= 0 and c > a):
+        out.append((FAIL, "_i18n_ask makes its AI call without _check_cost_ceiling first -- the "
+                          "platform ceiling cannot stop the Translate button again"))
+    if lg < 0 or (a >= 0 and lg < a):
+        out.append((FAIL, "_i18n_ask no longer calls _log_ai_spend after the AI call -- Translate "
+                          "spend is invisible to the ceiling and the +1 page again"))
+    elif '"/i18n/translate"' not in body[lg:lg + 200]:
+        out.append((FAIL, "_i18n_ask logs its spend under the wrong endpoint -- the +1 page cannot "
+                          "attribute Translate spend"))
+    m = _re.search(r"^I18N_DAILY_CALL_CAP\s*=\s*(\d+)", bea, _re.M)
+    if not m or int(m.group(1)) <= 0:
+        out.append((FAIL, "I18N_DAILY_CALL_CAP is gone or zero -- the lane's own daily cap must stay "
+                          "alongside the platform rail"))
+    return out or [(INFO, "_i18n_ask: ceiling-check -> ai_provider.complete -> spend-log "
+                          "('/i18n/translate'); I18N_DAILY_CALL_CAP=%s kept" % m.group(1))]
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -1558,9 +1558,10 @@
    "last_seen": "2026-09-24",
    "sev": "MEDIUM",
    "source": "cost_compliance_sweep.py exit 2 (1 CRITICAL, 1 WARN, both new vs 20 Sep)",
-   "status": "OPEN",
+   "status": "CLOSED",
    "summary": "24 Sep: STILL FAILING - sweep exit 2, CRITICAL bea_main.py:25799 i18n_translate + WARN :25852 _i18n_ask. Lock CLEAR (work_lock.py show: no lock) but apply_i18n_cost_rail.py not yet run. Spend $0.0153 today of the new $10/day platform ceiling. Fix built + proven (scripts/apply_i18n_cost_rail.py, I18N-COST-RAIL-1: ceiling check + spend log inside _i18n_ask; sweep grader clean on a copy) but NOT applied: bea_main.py under WORK-LOCK-1 by lang-quick-2026-09-23 (RUL-140). bea_main.py i18n_translate / _i18n_ask: AI call via ai_provider.complete with its own 400/day cap, but no _check_cost_ceiling and no _log_ai_spend — outside the $100 platform ceiling and invisible to the spend dashboard. Lane probed working (3.6 s uncached translation).",
-   "next_action": "Lock is clear: run python3 scripts/apply_i18n_cost_rail.py, commit, ship; sweep exit 0 on i18n_translate closes it."
+   "next_action": "None - closed. Sibling DW-149 (_lang_ai ceiling check) stays OPEN.",
+   "closed": "2026-09-24 ~08:15Z: I18N-COST-RAIL-1 applied (apply_i18n_cost_rail.py after the lock cleared 08:07Z). sweep re-run 24 Sep 08:08Z (Records/COST_SWEEP_2026-09-24.md): i18n_translate — ceiling ✓ spend-log ✓ and _i18n_ask — ceiling ✓ spend-log ✓, 0 CRITICAL (exit 1 only on DW-149's _lang_ai WARN); commit dfcafd4, relayed 08:10Z, server DEPLOY OK · now live at dfcafd46 · health ok 08:12:20Z, post-deploy 5/5 ok, live main.py carries the rail; live POST /i18n/translate (af, fresh sentence) → 200 translated 1 in 2.7 s, /health ok 1.3.1, and the production ai_spend_log gained row 963 (/i18n/translate, reason, 604/37 tokens, $0.002367, cost_is_real=1) at 08:13:55Z; ledger RG-0453 LOCKED (passes; proven to FAIL with either call removed)."
   },
   "DW-143": {
    "first_seen": "2026-09-23",
