@@ -570,6 +570,17 @@ async function loadLiveDash() {
     } catch(e) { console.warn('loadLiveDash /listings/mine failed:', e); }
   }
 
+  // LM-NOSHOW-1: accepted Local Market introductions (with any report's state) ride on their card.
+  try {
+    const _lmA = await fetch(BEA_URL + '/local-market/my-accepted?email=' + encodeURIComponent(sellerEmail || ''),
+      {credentials: 'include', headers: {'X-Api-Key': API_KEY}}).then(function(r){ return r.ok ? r.json() : []; });
+    dashState.listings.forEach(function(d){ d.lmAccepted = []; });
+    (_lmA || []).forEach(function(a){
+      const d = dashState.listings.find(function(x){ return x.beaListingId === a.listing_id; });
+      if (d) d.lmAccepted.push(a);
+    });
+  } catch (e) { console.warn('loadLiveDash my-accepted failed:', e); }
+
   // ── Step 2: Merge pending intros ────────────────────────
   try {
     const intros = await apiGet('/intros');
@@ -10398,9 +10409,74 @@ function renderDashCard(dl){
       ${statusBadge}
       ${wonderBanners}
       ${introsHtml}
+      ${lmNoShowRows(dl)}
       ${dl.beaListingId?(_ls==='archived'?`<div class="ml-actions"><span style="font-size:11px;color:var(--text-3);">Archived — an archived advert cannot come back. Make a new one any time.</span><button class="mla-btn" style="color:#dc2626;border-color:#fecaca;" onclick="dashDeleteListing(${dl.beaListingId}, ${JSON.stringify(String(dl.title||'')).replace(/"/g,'&quot;')})">Delete</button></div>`:`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${(dl.status!=='draft'&&_ls==='live')?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||''))})">Share to Status</button>`:''}${_ls==='live'?`<button class="mla-btn" onclick="msPauseListing(${dl.beaListingId}, true)">Pause</button>`:''}${_ls==='paused'?`<button class="mla-btn accent" onclick="msPauseListing(${dl.beaListingId}, false)">Resume</button>`:''}</div>`):''}
     </div>
   </div>`;
+}
+
+// ── LM-NOSHOW-1 (David, 24 Sep 2026: "design this into the app") ─────────────
+// A Local Market seller who accepted an introduction and was stood up can say so, once per
+// introduction, for 30 days. It is a report, not a verdict: the buyer is emailed and can answer,
+// ops upholds or dismisses (admin > Alerts). Upheld = buyer -3 trust and, if the advert is still
+// active, 1T back (LM-T3/LM-T4/LM-16). The hub shows where each report stands.
+const LM_NOSHOW_REASONS = [
+  ['no_show',        'They did not arrive at the agreed time'],
+  ['went_silent',    'They stopped replying after the introduction'],
+  ['cancelled_late', 'They cancelled at the last minute'],
+  ['other',          'Something else went wrong']
+];
+function _lmEsc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function lmNoShowRows(dl){
+  const rows = (dl && dl.lmAccepted) || [];
+  if (!rows.length) return '';
+  return rows.map(function(a){
+    const when = String(a.created_at||'').slice(0,10);
+    const who  = a.buyer_first_name ? _lmEsc(a.buyer_first_name) : 'The buyer';
+    let right;
+    if (!a.complaint_status) right = '<button class="mla-btn" style="border-color:#ef4444;color:#b91c1c;" onclick="lmNoShowOpen(' + a.intro_id + ', ' + (dl.beaListingId||0) + ')">They didn\u2019t show</button>';
+    else if (a.complaint_status === 'pending') right = '<span class="ml-status" style="background:#fef3c7;color:#92400e;">\u23f3 Reported \u2014 under review</span>';
+    else if (a.complaint_status === 'upheld') right = '<span class="ml-status" style="background:#dcfce7;color:#166534;">\u2713 Upheld' + (a.credit_issued ? ' \u00b7 1T back' : '') + '</span>';
+    else right = '<span class="ml-status" style="background:var(--surface-2);color:var(--text-3);">Report not upheld</span>';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--border);padding:8px 0 2px;margin-top:8px;font-size:12px;">'
+      + '<div><strong>' + who + '</strong> \u00b7 introduction accepted ' + when
+      + '<div style="color:var(--text-3);font-size:11px;">Buyer trust ' + (a.buyer_trust==null?'\u2013':a.buyer_trust) + '</div></div>' + right + '</div>';
+  }).join('');
+}
+function lmNoShowOpen(introId, listingId){
+  let bg = document.getElementById('lm-noshow-sheet');
+  if (bg) bg.remove();
+  bg = document.createElement('div');
+  bg.id = 'lm-noshow-sheet';
+  bg.className = 'modal-bg open';
+  bg.onclick = function(e){ if (e.target === bg) bg.remove(); };
+  bg.innerHTML = '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="lmns-h" style="max-width:440px;">'
+    + '<h3 id="lmns-h" style="margin:0 0 6px;font-size:18px;">What happened?</h3>'
+    + '<p style="font-size:13px;color:var(--text-2);margin:0 0 12px;line-height:1.5;">We tell the buyer and give them 7 days to answer before anyone decides. If the report is upheld, the buyer loses 3 trust points and, if this advert is still live, you get 1T back.</p>'
+    + LM_NOSHOW_REASONS.map(function(r, i){ return '<label style="display:flex;gap:10px;align-items:center;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;margin:0 0 8px;cursor:pointer;font-size:14px;"><input type="radio" name="lmns-r" value="' + r[0] + '"' + (i===0?' checked':'') + '> ' + r[1] + '</label>'; }).join('')
+    + '<textarea id="lmns-note" maxlength="300" placeholder="Anything we should know (optional)" style="width:100%;box-sizing:border-box;min-height:70px;border:1.5px solid var(--border);border-radius:10px;padding:10px;font:inherit;margin:4px 0 12px;"></textarea>'
+    + '<button id="lmns-go" class="modal-cta commit" style="width:100%;">Report the no-show</button>'
+    + '<button class="modal-cancel" style="width:100%;margin-top:8px;" onclick="document.getElementById(\'lm-noshow-sheet\').remove()">Cancel</button></div>';
+  document.body.appendChild(bg);
+  document.getElementById('lmns-go').onclick = async function(){
+    const btn = this; const pick = bg.querySelector('input[name=lmns-r]:checked');
+    const note = (document.getElementById('lmns-note').value || '').trim();
+    const email = _msSignedEmail();
+    if (!pick || !email) { showToast('Sign in first.'); return; }
+    btn.disabled = true; btn.textContent = 'Sending\u2026';
+    try {
+      const r = await fetch(BEA_URL + '/local-market/complaint', { method: 'POST', credentials: 'include',
+        headers: {'Content-Type': 'application/json', 'X-Api-Key': API_KEY},
+        body: JSON.stringify({intro_id: introId, seller_email: email, reason: pick.value + (note ? ': ' + note : '')}) });
+      const j = await r.json().catch(function(){ return {}; });
+      if (!r.ok) throw new Error((j && j.detail) || ('HTTP ' + r.status));
+      bg.remove();
+      showToast('Reported. We have told the buyer and will decide after they answer.', 6000);
+      const dl = dashState.listings.find(function(x){ return x.beaListingId === listingId; });
+      if (dl && dl.lmAccepted) dl.lmAccepted.forEach(function(a){ if (a.intro_id === introId) a.complaint_status = 'pending'; });
+      renderDash();
+    } catch (e) { btn.disabled = false; btn.textContent = 'Report the no-show'; showToast('Not sent: ' + e.message, 6000); }
+  };
 }
 
 // ── Hub: publish a stranded draft (GUIDED-PUBLISH-1, S138) ──────────────────

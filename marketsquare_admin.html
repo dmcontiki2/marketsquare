@@ -1701,6 +1701,10 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
 <!-- ══ VIEW: ALERTS ═══════════════════════════════════════ -->
 <div id="view-alerts" class="view">
   <div class="view-header">Alerts</div>
+  <!-- LM-NOSHOW-1 (24 Sep 2026): the ops queue for Local Market no-show reports. The routes existed
+       (uphold / dismiss) but no screen called them, so a report could never be judged. -->
+  <div class="view-sub">Local Market no-show reports awaiting a decision</div>
+  <div id="lm-noshow-container" style="padding:0 20px 8px;"><div style="font-size:13px;color:var(--text-3);padding:8px 0;">Loading reports…</div></div>
   <div class="view-sub">Pending introductions awaiting seller response</div>
   <div id="alerts-container" style="padding:0 20px;">
     <div style="text-align:center;padding:40px 0;color:var(--text-3);">
@@ -3117,7 +3121,40 @@ async function subDowngradeFree() {
   }
 }
 
+// LM-NOSHOW-1: ops decides each report. Uphold = buyer -3 trust and, if the advert is still
+// active, 1T back to the seller (LM-T3/LM-T4). Dismiss = nothing changes. Both are final.
+async function loadLmNoShows() {
+  const box = document.getElementById('lm-noshow-container'); if (!box) return;
+  try {
+    const r = await fetch(BEA_URL + '/local-market/complaints?status=pending');
+    if (!r.ok) throw new Error('API ' + r.status);
+    const rows = await r.json();
+    if (!rows.length) { box.innerHTML = '<div style="font-size:13px;color:var(--text-3);padding:8px 0;">No reports waiting.</div>'; return; }
+    const esc = function(t){ return String(t==null?'':t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+    box.innerHTML = rows.map(function(c){
+      return '<div style="border:1.5px solid rgba(239,68,68,.35);border-radius:12px;padding:12px 14px;margin:0 0 10px;">'
+        + '<div style="font-weight:700;font-size:14px;">' + esc(c.listing_title || ('Listing #' + c.listing_id)) + '</div>'
+        + '<div style="font-size:12px;color:var(--text-3);margin:2px 0 6px;">Report #' + c.id + ' \u00b7 intro #' + c.intro_id + ' \u00b7 filed ' + esc(String(c.filed_at||'').slice(0,16)) + ' \u00b7 seller ' + esc(c.seller_email) + '</div>'
+        + '<div style="font-size:13px;margin:0 0 10px;">' + esc(c.reason) + '</div>'
+        + '<div style="font-size:11px;color:var(--text-3);margin:0 0 8px;">Check the buyer\'s reply to our email before deciding.</div>'
+        + '<div style="display:flex;gap:8px;"><button onclick="lmNoShowDecide(' + c.id + ',\'uphold\')" style="flex:1;background:#dc2626;color:#fff;border:none;border-radius:50px;padding:9px;font-weight:700;cursor:pointer;">Uphold</button>'
+        + '<button onclick="lmNoShowDecide(' + c.id + ',\'dismiss\')" style="flex:1;background:none;border:1.5px solid var(--text-3);color:inherit;border-radius:50px;padding:9px;font-weight:700;cursor:pointer;">Dismiss</button></div></div>';
+    }).join('');
+  } catch (e) { box.innerHTML = '<div style="font-size:13px;color:#ef4444;padding:8px 0;">Could not load reports: ' + e.message + '</div>'; }
+}
+async function lmNoShowDecide(id, how) {
+  if (!confirm(how === 'uphold' ? 'Uphold this no-show? The buyer loses 3 trust points and the seller may get 1T back. This is final.' : 'Dismiss this report? Nothing changes for either side. This is final.')) return;
+  try {
+    const r = await fetch(BEA_URL + '/local-market/complaint/' + id + '/' + how, {method: 'PUT'});
+    const j = await r.json().catch(function(){ return {}; });
+    if (!r.ok) throw new Error(j.detail || ('API ' + r.status));
+    showToast(how === 'uphold' ? ('Upheld \u00b7 buyer ' + j.buyer_trust_penalty + ' \u00b7 seller credit ' + j.seller_credit + 'T') : 'Dismissed');
+  } catch (e) { showToast('Not saved: ' + e.message); }
+  loadLmNoShows();
+}
+
 async function loadAlerts() {
+  loadLmNoShows();
   const c = document.getElementById('alerts-container');
   c.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-3);font-size:13px;">⏳ Checking intros...</div>';
   try {

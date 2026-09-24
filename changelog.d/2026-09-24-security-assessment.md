@@ -33,3 +33,7 @@
   PRIVATE-DOCS-1 ID documents and certificates go to /var/lib/trustsquare-private (encrypted off-site nightly),
   served only by /private-docs/ to owner, admin/enrolled device, or an accepted-intro buyer for post-intro docs;
   the 14 existing files + 7 orphans migrate out of the public bucket. BASELINE_BATCH item 10 STRICT-CSP-1.
+- EDGE (David approved "yes, do the DNS changes"): duplicate resend._domainkey.mail TXT (the root key) deleted, so
+  mail.trustsquare.co DKIM verifies; DMARC p=quarantine on trustsquare.co, mail. and learn.; ORIGIN-LOCK-1 - a
+  Cloudflare request-header transform rule adds X-TS-Origin (secret held only in the rule and
+  /etc/nginx/ts_origin_secret) and nginx answers 403 without it, so no other Cloudflare account can reach the origin.

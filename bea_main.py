@@ -8403,6 +8403,11 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
                 detail="This introduction was already %s — it is charged once, never twice."
                        % ((_row["status"] or "accepted").strip().lower() or "accepted"))
         _buyer = _row["buyer_email"]
+        # LM-ACCEPT-1 (24 Sep 2026, found building the no-show button): a Local Market intro was
+        # accepted through this door as if the BUYER paid - a 1T charge (or a 402 for a buyer with
+        # an empty wallet, i.e. every anonymous one). LM-T1: the SELLER paid 1T when the first request
+        # arrived; accepting costs nobody anything. Same race guard, no money row.
+        _lm = ((intro["intro_type"] if "intro_type" in intro.keys() else "") or "").strip().lower() == "local_market"
         # INTRO-HOLD-1: if a hold was placed at request time the money has ALREADY left
         # the wallet. Delivery BURNS that hold — it must never deduct a second Tuppence.
         _held = int(_row["held"] or 0) and not _row["released_at"]
@@ -8418,7 +8423,7 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
         _balance = conn.execute(
             "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
             (_buyer,)).fetchone()["bal"]
-        if _burn_on and not _held and (_balance is None or _balance < 1):   # insufficient -> 402, never a negative wallet
+        if _burn_on and not _held and not _lm and (_balance is None or _balance < 1):   # insufficient -> 402, never a negative wallet
             conn.rollback(); conn.close()
             raise HTTPException(
                 status_code=402,
@@ -8438,7 +8443,9 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
             conn.rollback(); conn.close()
             raise HTTPException(status_code=409,
                                 detail="This introduction was just accepted elsewhere.")
-        if not _burn_on:
+        if _lm:
+            pass   # LM-ACCEPT-1: nothing to charge - the seller paid at request time (LM-T1)
+        elif not _burn_on:
             # Charge waived by the BIT safe-state. tuppence_charged is still set to 1 by the
             # UPDATE above so the once-only race guard is untouched and no later accept can
             # re-charge this intro; the ZERO-amount row records WHY no money moved, keeping
@@ -11884,6 +11891,13 @@ LM_BUYER_MIN_TRUST  = 20
 LM_REPEAT_WINDOW_DAYS = 90
 LM_COOLING_OFF_DAYS  = 30
 LM_BUYER_NOSHOW_PENALTY = 3   # PR LM-T4 / LM-16
+LM_NOSHOW_WINDOW_DAYS = 30    # LM-NOSHOW-1: a missed meeting is reported within 30 days of the introduction
+LM_NOSHOW_REASONS = {         # LM-NOSHOW-1: what happened, in the seller's words (fixed list for ops)
+    "no_show": "did not arrive at the agreed time",
+    "went_silent": "stopped replying after the introduction",
+    "cancelled_late": "cancelled at the last minute",
+    "other": "something else went wrong",
+}
 
 
 class LMListingIn(BaseModel):
@@ -12374,17 +12388,87 @@ def lm_file_complaint(req: LMComplaintIn, _key: str = Depends(auth.require_api_k
             or listing["seller_email"].strip().lower() != (req.seller_email or "").strip().lower()):
         conn.close()
         raise HTTPException(status_code=403, detail="Not your listing")
+    # LM-NOSHOW-1 (David, 24 Sep 2026: "design this into the app"). A no-show is only possible
+    # after the seller ACCEPTED - before that nobody was due to show. One report per introduction,
+    # within 30 days of it, with a reason from a fixed list so ops can judge like with like.
+    if (intro.get("status") or "").strip().lower() != "accepted":
+        conn.close()
+        raise HTTPException(status_code=409, detail="You can report a no-show only on an introduction you accepted.")
+    if conn.execute("SELECT 1 FROM lm_complaints WHERE intro_id = ?", (req.intro_id,)).fetchone():
+        conn.close()
+        raise HTTPException(status_code=409, detail="You have already reported this introduction.")
+    try:
+        _age = conn.execute("SELECT julianday('now') - julianday(?) AS d", (intro.get("created_at"),)).fetchone()["d"]
+    except Exception:
+        _age = 0
+    if _age is not None and _age > LM_NOSHOW_WINDOW_DAYS:
+        conn.close()
+        raise HTTPException(status_code=409, detail="No-shows can be reported for %d days after the introduction." % LM_NOSHOW_WINDOW_DAYS)
+    _code, _, _note = (req.reason or "").partition(":")
+    _code = _code.strip().lower()
+    if _code not in LM_NOSHOW_REASONS:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Choose what happened: " + ", ".join(LM_NOSHOW_REASONS))
+    _note = _plain_text(_note.strip())[:300]
     # Buyer token is stored in buyer_email when buyer is anonymous; both forms accepted
     buyer_id = intro.get("buyer_email") or ""
     cur = conn.execute(
         """INSERT INTO lm_complaints (listing_id, seller_email, buyer_token, intro_id, reason)
            VALUES (?, ?, ?, ?, ?)""",
-        (intro["listing_id"], req.seller_email, buyer_id, req.intro_id, req.reason)
+        (intro["listing_id"], (req.seller_email or "").strip().lower(), buyer_id, req.intro_id,
+         _code + ((": " + _note) if _note else ""))
     )
     new_id = cur.lastrowid
+    _title = (conn.execute("SELECT title FROM listings WHERE id = ?", (intro["listing_id"],)).fetchone() or {"title": ""})["title"]
     conn.commit()
     conn.close()
+    # The buyer hears it from us and can give her side before anyone rules (fairness: a report is
+    # not a verdict). An anonymous buyer token has no inbox; ops sees that on the queue.
+    if "@" in buyer_id and not buyer_id.lower().endswith(".invalid"):
+        try:
+            _send_system_email(buyer_id, "A seller reported a missed Local Market meeting",
+                _lc_email_html("A seller says the meeting did not happen",
+                    "The seller of \u201c" + (_title or "a Local Market item") + "\u201d reported that the "
+                    "introduction you both accepted did not go ahead (" + LM_NOSHOW_REASONS[_code] + "). "
+                    "Nothing has been decided. If that is not what happened, reply to this email within 7 days "
+                    "and tell us your side - we read both before anything changes. If the report is upheld, "
+                    "3 points come off your buyer Trust Score.", "Open TrustSquare"))
+        except Exception as _me:
+            _log.error("LM-NOSHOW-1 buyer mail failed: %s", _me)
     return {"complaint_id": new_id, "status": "pending"}
+
+
+@app.get("/local-market/my-accepted")
+def lm_my_accepted(email: str = "", _key: str = Depends(auth.require_api_key),
+                   ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """LM-NOSHOW-1: the seller's ACCEPTED Local Market introductions (last 30 days), each with the
+    state of any no-show report, so the hub can offer the button - and say what became of it.
+    Bound to the signed-in seller. The buyer's identity is not returned; her buyer Trust Score is."""
+    me = (_actor(ts_user, email, "lm-my-accepted", x_admin_key) or "").strip().lower()
+    if "@" not in me:
+        raise HTTPException(status_code=401, detail="Sign in first.")
+    conn = database.get_db()
+    try:
+        rows = conn.execute(
+            """SELECT i.id AS intro_id, i.listing_id, i.created_at, i.buyer_email, i.buyer_name,
+                      l.title, c.id AS complaint_id, c.status AS complaint_status, c.credit_issued
+               FROM intro_requests i
+               JOIN listings l ON l.id = i.listing_id
+               LEFT JOIN lm_complaints c ON c.intro_id = i.id
+               WHERE i.intro_type = 'local_market' AND i.status = 'accepted'
+                 AND LOWER(l.seller_email) = ?
+                 AND i.created_at >= datetime('now', ?)
+               ORDER BY i.created_at DESC""", (me, "-%d days" % LM_NOSHOW_WINDOW_DAYS)).fetchall()
+        out = []
+        for r in rows:
+            out.append({"intro_id": r["intro_id"], "listing_id": r["listing_id"], "title": r["title"],
+                        "created_at": r["created_at"], "buyer_first_name": ((r["buyer_name"] or "").split(" ") or [""])[0][:30],
+                        "buyer_trust": _buyer_trust(conn, r["buyer_email"] or ""),
+                        "complaint_id": r["complaint_id"], "complaint_status": r["complaint_status"],
+                        "credit_issued": bool(r["credit_issued"])})
+        return out
+    finally:
+        conn.close()
 
 
 @app.put("/local-market/complaint/{complaint_id}/uphold")

@@ -2025,6 +2025,16 @@
   {
    "key": "POST /admin/complaints/uphold",
    "level": "admin"
+  },
+  {
+   "key": "GET /local-market/my-accepted",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
   }
  ]
 }
