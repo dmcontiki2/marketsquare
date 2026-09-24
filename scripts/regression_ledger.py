@@ -25360,8 +25360,13 @@ def rg_wa_selfsend_1():
 @entry("RG-0409", "LADDER-RUL142-1: the ladder pays rising points for each VERIFIED CLIENT and "
                   "for a second employer confirmation, and the universal cap is 40 -- the numbers "
                   "David approved are the numbers the code scores",
-       OPEN,
-       scope="bea_main.py _TRUST_SIGNALS (universal.referral_1/3/5plus -> 5/6/7 and renamed to "
+       LOCKED, fixed_on="2026-09-24",
+       scope="BUILT 24 Sep 2026 (commit 303fbc0, David's go-ahead in the bug-sweep session): _UNI_CAP = 40 "
+             "read by the formula, the seller panel, /users/{email}/trust and the breakdown; "
+             "universal.employer_confirmed_2 at 6 (one nonce per employer link, same link never stacks); "
+             "verified clients 5/6/7 from POST /intros/{id}/hired on an accepted introduction. Rig-tested "
+             "(+5 client, 12 then 6 employers, third link 0) and read back live. ORIGINAL SCOPE: "
+             "bea_main.py _TRUST_SIGNALS (universal.referral_1/3/5plus -> 5/6/7 and renamed to "
              "verified CLIENTS, a new universal.employer_confirmed_2 at 6) and the four places "
              "the universal cap 30 is written: _trust_score() (min(30, uni_pts)), its docstring "
              "formula, _uni_sub = min(30, _uni_raw) and the 'capped at the identity maximum of "
@@ -25386,10 +25391,11 @@ def rg_ladder_rul142_1():
     src = repo_file("bea_main.py")
     if src is None:
         return [(INFO, "NOT EVALUATED - bea_main.py is not readable from here")]
-    done = ('"universal.employer_confirmed_2"' in src) and ("min(30, uni_pts)" not in src)
+    done = ('"universal.employer_confirmed_2"' in src) and ("min(30, uni_pts)" not in src) \
+        and ("_UNI_CAP = 40" in src) and ('"/intros/{intro_id}/hired"' in src)
     if done:
-        return [(INFO, "the ladder carries the RUL-142 values and the universal cap has moved off "
-                       "30 -- re-probe the trust bands, then lock this entry")]
+        return [(INFO, "RUL-142 holds: universal cap 40 (_UNI_CAP), second employer 6, verified "
+                       "clients 5/6/7 from the buyer's 'I hired them'")]
     return [(FAIL, "the ladder still scores referrals 5/3/2 against a universal cap of 30, "
                         "and a second employer confirmation cannot be recorded at all (RUL-142)")]
 
