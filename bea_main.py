@@ -304,6 +304,51 @@ def _demand_norm_category(raw):
     return None
 
 
+EULA_CURRENT_VERSION = "1.18"
+# The last version whose changes are MATERIAL (everyone who accepted an earlier one re-accepts once,
+# at her next Publish or Edit). v1.16 added s3.8 Buzz. Raise this ONLY when David marks a version
+# material; a non-material version just bumps EULA_CURRENT_VERSION.
+EULA_MATERIAL_VERSION = "1.16"
+EULA_MATERIAL_DATE = "2026-09-14"          # the day EULA_MATERIAL_VERSION went live
+EULA_MATERIAL_NOTE = ("Since you last accepted, the Terms added Section 3.8 (Buzz), named your data "
+                      "rights by country (v1.17) and updated the AI disclosure (v1.18).")
+
+
+def _eula_vkey(v):
+    try:
+        return tuple(int(x) for x in str(v or "").strip().split("."))
+    except Exception:
+        return (0,)
+
+
+def _eula_apply_material(conn):
+    """EULA-VERSION-1: park the acceptance of anyone whose accepted version predates the material
+    version, so every existing EULA gate shows the Terms again at her next Publish/Edit. Nothing is
+    deleted - the old acceptance moves to eula_prev_accepted_at/eula_prev_version. Acceptances with
+    no recorded version are dated: on/after EULA_MATERIAL_DATE they saw the material text, and are
+    stamped with it. Staff/seed accounts (@trustsquare.co, @example.com, superusers) are left alone:
+    their adverts are platform content, not a person's agreement. Idempotent."""
+    conn.execute("""UPDATE users SET eula_version = ? WHERE eula_accepted_at IS NOT NULL
+                    AND (eula_version IS NULL OR eula_version = '') AND eula_accepted_at >= ?""",
+                 (EULA_MATERIAL_VERSION, EULA_MATERIAL_DATE))
+    rows = conn.execute("""SELECT id, eula_accepted_at, eula_version FROM users
+                           WHERE eula_accepted_at IS NOT NULL AND COALESCE(is_superuser, 0) = 0
+                             AND LOWER(email) NOT LIKE '%@trustsquare.co'
+                             AND LOWER(email) NOT LIKE '%@example.com'
+                             AND LOWER(email) NOT LIKE '%.invalid'""").fetchall()
+    n = 0
+    for r in rows:
+        if _eula_vkey(r["eula_version"]) < _eula_vkey(EULA_MATERIAL_VERSION):
+            conn.execute("UPDATE users SET eula_prev_accepted_at = eula_accepted_at, "
+                         "eula_prev_version = COALESCE(eula_version, 'pre-' || ?), "
+                         "eula_accepted_at = NULL, eula_version = NULL WHERE id = ?",
+                         (EULA_MATERIAL_VERSION, r["id"]))
+            n += 1
+    if n:
+        _log.info("EULA-VERSION-1: %d account(s) re-accept v%s at their next publish/edit", n, EULA_MATERIAL_VERSION)
+    return n
+
+
 def run_migrations(conn):
     """Add suburbs table and suburb column to listings if not present."""
     conn.execute("""
@@ -1428,6 +1473,28 @@ def run_migrations(conn):
     # Quick door then published her adverts in one tap without the Terms ever being shown.
     if "buzz_accepted_at" not in user_cols_eula:
         conn.execute("ALTER TABLE users ADD COLUMN buzz_accepted_at TEXT")
+    # EULA-VERSION-1 (David, 24 Sep 2026: "Re-accept on material change"). eula_version is stamped
+    # by a trigger whenever eula_accepted_at goes from empty to set, so every one of the several
+    # acceptance writes records the version without each having to remember it.
+    for _c in ("eula_version", "eula_prev_accepted_at", "eula_prev_version"):
+        if _c not in user_cols_eula:
+            conn.execute("ALTER TABLE users ADD COLUMN %s TEXT" % _c)
+    conn.execute("CREATE TABLE IF NOT EXISTS eula_meta (id INTEGER PRIMARY KEY CHECK (id = 1), "
+                 "current_version TEXT NOT NULL, material_version TEXT NOT NULL, material_note TEXT)")
+    conn.execute("INSERT INTO eula_meta (id, current_version, material_version, material_note) "
+                 "VALUES (1, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET current_version=excluded.current_version, "
+                 "material_version=excluded.material_version, material_note=excluded.material_note",
+                 (EULA_CURRENT_VERSION, EULA_MATERIAL_VERSION, EULA_MATERIAL_NOTE))
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS trg_eula_version_stamp
+                    AFTER UPDATE OF eula_accepted_at ON users
+                    WHEN NEW.eula_accepted_at IS NOT NULL AND OLD.eula_accepted_at IS NULL
+                    BEGIN UPDATE users SET eula_version = (SELECT current_version FROM eula_meta WHERE id = 1)
+                          WHERE id = NEW.id; END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS trg_eula_version_stamp_ins
+                    AFTER INSERT ON users WHEN NEW.eula_accepted_at IS NOT NULL
+                    BEGIN UPDATE users SET eula_version = (SELECT current_version FROM eula_meta WHERE id = 1)
+                          WHERE id = NEW.id; END""")
+    _eula_apply_material(conn)
     # E2E-HMI-1: the seller profile (headline, about, region, tags) lived only in one browser.
     if "profile_json" not in user_cols_eula:
         conn.execute("ALTER TABLE users ADD COLUMN profile_json TEXT")
@@ -6503,6 +6570,10 @@ def get_user(email: str, _key: str = Depends(auth.require_api_key),
     if not row:
         raise HTTPException(status_code=404, detail="User not found")
     data = dict(row)
+    # EULA-VERSION-1: a returning seller whose acceptance was parked is told what changed.
+    if not data.get("eula_accepted_at") and data.get("eula_prev_accepted_at"):
+        data["eula_reaccept"] = True
+        data["eula_changes"] = EULA_MATERIAL_NOTE
     # C1/H2 (audit 16 Jul 2026): never expose identity-document internals over this
     # public-by-email read. Hashed ID number, legal ID name and the AI match score
     # are PII; verified STATUS still travels via id_verified_at.
@@ -12716,12 +12787,13 @@ _CATEGORY_SIGNALS = {
         # VERT-4-1b (RUL-049): service-company technician credentials
         "category.service.trade_licence": {"name": "Trade licence (PIRB / DoEL Installation Electrician)", "points": 12, "how_to_earn": "The CoC-issuing licence for the trade — PIRB for plumbing, DoEL IE/Wireman's for electrical. Gates go-live for regulated trades."},
         "category.service.cipc_registered": {"name": "Registered company (CIPC)", "points": 5, "how_to_earn": "CIPC registration number — must at least be submitted before go-live."},
-        "category.service.insured": {"name": "Public liability insurance", "points": 6, "how_to_earn": "Policy schedule or broker letter."},
-        "category.service.cidb": {"name": "CIDB grading (construction)", "points": 4, "how_to_earn": "CIDB registration number and grade."},
+        # TRUST-DUPE-1 (David, 24 Sep 2026): insurance and CIDB were scored twice here. One signal
+        # each (the services_tech ids below, which the role registry and sell flow use), at the
+        # VERT-4-1b values 6 / 4. estate_agents.py now writes the same ids.
         "category.services_tech.trade_cert": {"name": "Formal trade certificate", "points": 8, "how_to_earn": "Upload (City & Guilds, TVET, MERSETA, CETA, Red Seal)."},
         "category.services_tech.body_reg":   {"name": "Professional body registration", "points": 12, "how_to_earn": "Upload (ECSA, PIRB, NHBRC, FSCA, SAICA) — verified."},
-        "category.services_tech.insurance":  {"name": "Public liability insurance", "points": 5, "how_to_earn": "Upload policy schedule with expiry date. Expected by any homeowner hiring a trade into their property."},
-        "category.services_tech.cidb":       {"name": "CIDB grading (construction)", "points": 6, "how_to_earn": "Upload CIDB registration certificate (SA). Required for contractors above R200k. Upload grade level document."},
+        "category.services_tech.insurance":  {"name": "Public liability insurance", "points": 6, "how_to_earn": "Upload policy schedule with expiry date. Expected by any homeowner hiring a trade into their property."},
+        "category.services_tech.cidb":       {"name": "CIDB grading (construction)", "points": 4, "how_to_earn": "Upload CIDB registration certificate (SA). Required for contractors above R200k. Upload grade level document."},
         "category.services_tech.coc":        {"name": "Primary industry licence / CoC", "points": 5, "how_to_earn": "Upload with expiry date (electrical CoC, gas CoC, plumbing licence etc.)."},
         "category.services_tech.tickets":    {"name": "Additional tickets (max 2 counted)", "points": 6, "how_to_earn": "Upload First Aid, heights, confined space etc. (3 pts each, max 2)."},
         "category.services_tech.exp_3_7":    {"name": "Years in trade 3–7", "points": 4, "how_to_earn": "Upload CV."},
@@ -26000,12 +26072,119 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
                           "\u22125 trust point penalty stands and eases after " +
                           str(RESP_PENALTY_ACTIVE_DAYS) + " days.", "Open your dashboard"))
 
+        # ── EULA 14.5 B3 (E2E-HMI-1, 24 Sep 2026): three or more introductions left unanswered to
+        # removal inside any rolling 30 days BLOCKS the seller's adverts - the EULA promised this,
+        # measured by the Platform, and nothing did it. Local Market has its own ladder (LM-14e).
+        # Reinstatement is a staff act after the 60-day cooling-off (POST /admin/listings/{id}/unblock).
+        b3 = conn.execute(
+            """SELECT LOWER(l.seller_email) AS seller, COUNT(*) AS n
+               FROM intro_requests ir JOIN listings l ON l.id = ir.listing_id
+               WHERE ir.status = 'expired' AND ir.created_at >= datetime('now', '-30 days')
+                 AND (l.is_demo = 0 OR l.is_demo IS NULL)
+                 AND LOWER(COALESCE(l.category,'')) NOT IN ('local_market','local market')
+                 AND l.seller_email IS NOT NULL AND l.seller_email != ''
+               GROUP BY LOWER(l.seller_email) HAVING COUNT(*) >= 3""").fetchall()
+        res["b3_blocked"] = 0
+        for sb in b3:
+            live = conn.execute("SELECT id, title FROM listings WHERE LOWER(seller_email) = ? "
+                                "AND listing_status IN ('live','paused','faded')", (sb["seller"],)).fetchall()
+            if not live:
+                continue
+            if not dry_run:
+                conn.execute("UPDATE listings SET listing_status='blocked', block_cause='B3', status_changed_at=? "
+                             "WHERE LOWER(seller_email) = ? AND listing_status IN ('live','paused','faded')",
+                             (now_iso, sb["seller"]))
+            res["b3_blocked"] += len(live)
+            _mail(sb["seller"], "Your adverts are blocked \u2014 introductions went unanswered",
+                  _lc_email_html("Your adverts are blocked",
+                      str(sb["n"]) + " introduction requests went unanswered in the last 30 days, which the "
+                      "Terms (Section 14.5, cause B3) treat as systematic ignoring. Your adverts are hidden "
+                      "from buyers. You can ask for reinstatement after a 60-day cooling-off by replying to "
+                      "this email and confirming you have read the introduction rules.", "Open TrustSquare"))
+
         if not dry_run:
             conn.commit()
     finally:
         conn.close()
     res["emails_sent"] = sent[0]
     return res
+
+
+class _AdminBlockIn(BaseModel):
+    cause: str
+    notes: Optional[str] = None
+
+
+@app.post("/admin/listings/{listing_id}/block")
+def admin_block_listing(listing_id: int, req: _AdminBlockIn, _admin=Depends(_require_admin_or_key)):
+    """EULA 14.5 (E2E-HMI-1): staff BLOCK on verified evidence of an enumerated cause B1-B6. Blocks
+    every live/paused/faded advert of that seller (the EULA blocks the listing with the account)."""
+    cause = (req.cause or "").strip().upper()
+    if cause not in ("B1", "B2", "B3", "B4", "B5", "B6"):
+        raise HTTPException(status_code=400, detail="cause must be one of B1-B6 (EULA 14.5)")
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT seller_email FROM listings WHERE id = ?", (listing_id,)).fetchone()
+        if not row or not (row["seller_email"] or "").strip():
+            raise HTTPException(status_code=404, detail="Listing not found")
+        now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        cur = conn.execute("UPDATE listings SET listing_status='blocked', block_cause=?, status_changed_at=? "
+                           "WHERE LOWER(seller_email) = LOWER(?) AND listing_status IN ('live','paused','faded')",
+                           (cause + ((":" + req.notes[:200]) if req.notes else ""), now_iso, row["seller_email"]))
+        conn.commit()
+        return {"ok": True, "cause": cause, "listings_blocked": cur.rowcount}
+    finally:
+        conn.close()
+
+
+@app.post("/admin/listings/{listing_id}/unblock")
+def admin_unblock_listing(listing_id: int, _admin=Depends(_require_admin_or_key)):
+    """EULA 14.5 reinstatement (staff act): the seller's blocked adverts go live again."""
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT seller_email FROM listings WHERE id = ?", (listing_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        cur = conn.execute("UPDATE listings SET listing_status='live', block_cause=NULL, status_changed_at=? "
+                           "WHERE LOWER(seller_email) = LOWER(?) AND listing_status = 'blocked'",
+                           (now_iso, row["seller_email"]))
+        conn.commit()
+        return {"ok": True, "listings_reinstated": cur.rowcount}
+    finally:
+        conn.close()
+
+
+class _UpholdIn(BaseModel):
+    listing_id: int
+    reason_code: str
+    notes: Optional[str] = None
+
+
+@app.post("/admin/complaints/uphold")
+def admin_uphold_complaint(req: _UpholdIn, _admin=Depends(_require_admin_or_key)):
+    """E2E-HMI-1 (24 Sep 2026): a buyer complaint now reaches the support queue with the advert on it;
+    this is the staff step that turns an upheld one into the Trust Score deduction the EULA and the
+    trust hub describe (seller_complaints had no writer at all). Never filed by a buyer directly."""
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT seller_email FROM listings WHERE id = ?", (req.listing_id,)).fetchone()
+        if not row or not (row["seller_email"] or "").strip():
+            raise HTTPException(status_code=404, detail="Listing not found")
+        now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        cur = conn.execute("INSERT INTO seller_complaints (seller_email, listing_id, reason_code, notes, status, "
+                           "filed_at, resolved_at) VALUES (?,?,?,?, 'upheld', ?, ?)",
+                           (row["seller_email"].strip().lower(), req.listing_id, (req.reason_code or "other")[:40],
+                            (req.notes or "")[:500], now_iso, now_iso))
+        conn.commit()
+        cid = cur.lastrowid
+    finally:
+        conn.close()
+    try:
+        trust_score_breakdown(row["seller_email"].strip().lower())
+    except Exception:
+        pass
+    return {"ok": True, "complaint_id": cid}
 
 
 @app.post("/admin/lifecycle-sweep")

@@ -217,10 +217,10 @@ CREDENTIAL_SLOTS_SERVICE = [
     {"slot": "cipc_number", "signal_id": "category.service.cipc_registered", "points": 5,
      "label": "Registered company (CIPC)", "legal": True,
      "verify": "CIPC registration number — must at least be submitted before go-live."},
-    {"slot": "insurance_ref", "signal_id": "category.service.insured", "points": 6,
+    {"slot": "insurance_ref", "signal_id": "category.services_tech.insurance", "points": 6,
      "label": "Public liability insurance", "legal": False,
      "verify": "Policy schedule or broker letter."},
-    {"slot": "cidb_grade", "signal_id": "category.service.cidb", "points": 4,
+    {"slot": "cidb_grade", "signal_id": "category.services_tech.cidb", "points": 4,
      "label": "CIDB grading (construction)", "legal": False,
      "verify": "CIDB registration number and grade."},
 ]
@@ -439,8 +439,8 @@ VERTICALS = {
         "badge_signals": {
             "category.service.trade_licence": "Licensed (CoC-issuing)",
             "category.service.cipc_registered": "Registered company (CIPC)",
-            "category.service.insured": "Public liability insured",
-            "category.service.cidb": "CIDB graded",
+            "category.services_tech.insurance": "Public liability insured",   # TRUST-DUPE-1
+            "category.services_tech.cidb": "CIDB graded",
         },
         "stock_photo": "/static/agent-stock/property.jpg",
         "gate_signal": "category.service.trade_licence",

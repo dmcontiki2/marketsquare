@@ -237,8 +237,8 @@ Live score shown at top. Updates in real time as signals are acted on. Tier badg
 | Signal ID | Signal | Pts | Evidence | AI coaching script |
 |-----------|--------|-----|----------|--------------------|
 | services_tech.body_reg | Professional body registration | 12 | Upload | *"ECSA, PIRB, NHBRC, FSCA, or SAICA registration is your most powerful credential. Upload your registration certificate — I'll verify the body and number."* |
-| services_tech.insurance | Public liability insurance | 5 | Upload | *"Clients want to know you're insured before they let you work on their property. Upload your current liability policy — expiry date included."* |
-| services_tech.cidb | CIDB grading (construction) | 6 | Upload | *"If you do construction work above R200k in SA, CIDB grading is legally required. Upload your CIDB certificate."* |
+| services_tech.insurance | Public liability insurance | 6 | Upload | *"Clients want to know you're insured before they let you work on their property. Upload your current liability policy — expiry date included."* |
+| services_tech.cidb | CIDB grading (construction) | 4 | Upload | *"If you do construction work above R200k in SA, CIDB grading is legally required. Upload your CIDB certificate."* |
 | services_tech.trade_cert | Formal trade certificate | 8 | Upload | *"Your trade certificate — City & Guilds, TVET, MERSETA, CETA, or Red Seal — is the foundation credential. Upload it."* |
 | services_tech.coc | Primary industry licence / CoC | 5 | Upload | *"Your Certificate of Compliance proves you're legally authorised to do the work. Upload your CoC — buyers look for this before hiring."* |
 | services_tech.tickets | Additional tickets (up to 2) | 6 | Upload | *"First Aid, working at heights, confined space — each ticket is worth 3 points. Upload up to 2."* |

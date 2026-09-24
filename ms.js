@@ -5258,6 +5258,13 @@ function openDetail(id){
       </button>
     </div>`;
   goTo('detail');
+  // E2E-HMI-1 (24 Sep 2026): the CTA offered 'Join Queue' on adverts whose seller has no verified
+  // ID, which the server refuses. Say so on the button itself.
+  _msSellerCanReceive(id).then(function(ok){
+    if (ok) return;
+    const b = document.querySelector('#screen-detail .sticky-cta .cta-btn');
+    if (b) { b.innerHTML = '\ud83d\udd12 Introductions open once this seller verifies their ID'; b.style.opacity = '.6'; b.style.fontSize = '13px'; }
+  });
   loadDetailWonders(l);
   loadDetailPois(l);
   tvsInitDetail(id, l.cat, l.listingType);
@@ -7034,6 +7041,9 @@ async function sobInit() {
         const uData = await uRes.json();
         _eulaKnown = true;
         sobState._eulaSigned    = !!uData.eula_accepted_at;
+        // EULA-VERSION-1 (24 Sep 2026): a returning seller re-accepting after a material change is
+        // told what changed, not told she never accepted.
+        sobState._eulaChanges   = uData.eula_reaccept ? (uData.eula_changes || 'The Terms have changed since you accepted them.') : '';
         sobState._hasBanking    = !!uData.banking_added_at;
       }
     } catch(e) {}
@@ -7043,6 +7053,7 @@ async function sobInit() {
     if (_mustSign && !sobState._cameFromGuided) {
       const noteEl = document.getElementById('sob-returning-eula-note');
       if (noteEl) noteEl.style.display = 'block';
+      if (noteEl && sobState._eulaChanges) noteEl.innerHTML = '<strong style="color:#fbbf24;">The Terms have changed.</strong> ' + sobState._eulaChanges + ' Please read and accept them once \u2014 your listing goes live straight after.';
       sobState._needEula = false;
       sobGoPhase(3);
       return; // skip rendering draft cards — user must sign EULA first
@@ -9731,10 +9742,10 @@ const SB_SIGNALS = {
   Services_Technical: [
     {id:'services_tech.body_reg', pts:12,declPts:0,   label:'Professional body registration', how:'upload', script:"ECSA, PIRB, NHBRC, FSCA, or SAICA — your most powerful credential. Upload your registration."},
     {id:'services_tech.trade_cert',pts:8,declPts:0,   label:'Formal trade certificate',        how:'upload', script:"City & Guilds, TVET, MERSETA, CETA, or Red Seal — the foundation credential. Upload it."},
-    {id:'services_tech.cidb',    pts:6,  declPts:0,   label:'CIDB grading (construction)',    how:'upload', script:"If you do construction above R200k in SA, CIDB grading is legally required."},
+    {id:'services_tech.cidb',    pts:4,  declPts:0,   label:'CIDB grading (construction)',    how:'upload', script:"If you do construction above R200k in SA, CIDB grading is legally required."},
     {id:'services_tech.tickets', pts:6,  declPts:0,   label:'Additional tickets (up to 2)',    how:'upload', script:"First Aid, working at heights, confined space — 3 pts each, up to 2. Upload yours."},
     {id:'services_tech.coc',     pts:5,  declPts:0,   label:'Primary industry licence / CoC', how:'upload', script:"Your CoC proves you're legally authorised. Upload it — buyers look for this before hiring."},
-    {id:'services_tech.insurance',pts:5, declPts:0,   label:'Public liability insurance',     how:'upload', script:"Clients want to know you're insured. Upload your current liability policy — expiry included."},
+    {id:'services_tech.insurance',pts:6, declPts:0,   label:'Public liability insurance',     how:'upload', script:"Clients want to know you're insured. Upload your current liability policy — expiry included."},
     {id:'services_tech.exp_7plus',pts:4, declPts:3,   label:'Trade experience 7+ years',      how:'declare',script:"7+ years is significant. Declare now — 3 points, 1 more with your CV."},
     {id:'services_tech.exp_3_7', pts:4,  declPts:3,   label:'Trade experience 3–7 years',     how:'declare',script:"Declare your years in trade. 3 points on declaration, 1 more with CV."},
     {id:'services_tech.strong_cv',pts:2, declPts:0,   label:'Strong verifiable CV',           how:'upload', script:"A CV with references is a strong supporting document."}

@@ -2013,6 +2013,18 @@
   {
    "key": "GET /private-docs/{kind}/{name}",
    "level": "public"
+  },
+  {
+   "key": "POST /admin/listings/{listing_id}/block",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/listings/{listing_id}/unblock",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/complaints/uphold",
+   "level": "admin"
   }
  ]
 }
