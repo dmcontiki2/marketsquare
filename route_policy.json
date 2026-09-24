@@ -2008,7 +2008,7 @@
   },
   {
    "key": "POST /auth/logout",
-   "level": "public"
+   "level": "user"
   },
   {
    "key": "GET /private-docs/{kind}/{name}",

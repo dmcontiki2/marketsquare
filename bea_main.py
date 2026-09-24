@@ -18024,6 +18024,8 @@ def auth_logout(response: Response, ts_user: str = Cookie(default=None)):
     cookie on this one. Before this, 'Sign out' only cleared the page's memory - the HttpOnly session
     cookie stayed valid for up to 180 days on a shared or stolen device."""
     em = _session_email(ts_user)
+    if not em:
+        raise HTTPException(status_code=401, detail="Not signed in.")   # nothing to end
     if em:
         conn = database.get_db()
         try:
@@ -18034,7 +18036,7 @@ def auth_logout(response: Response, ts_user: str = Cookie(default=None)):
             conn.close()
         _session_version(em, fresh=True)
     response.delete_cookie("ts_user", path="/", secure=True, httponly=True, samesite="lax")
-    return {"ok": bool(em)}          # a stranger gets {"ok": false}: nothing was done for them
+    return {"ok": True}
 
 # ── AGENCY (Team plan) — umbrella over agent sellers ───────────────────────
 class _AgencyCreate(_BaseModel):
