@@ -159,8 +159,34 @@ def pin_front_door():
     socket.getaddrinfo = pinned
 
 def load_openapi():
-    with urllib.request.urlopen(SPEC_URL, timeout=30) as r:
-        return json.loads(r.read().decode())
+    """The route list. SEC-GATE-1 (24 Sep) closed /openapi.json to the public, so the bot asks as an
+    admin when refused, and keeps the last good copy so a refused or broken spec can never stop it."""
+    cache = os.path.join(STATE, "openapi_cache.json")
+    hdrs = [{}]
+    try:
+        adm = load_env().get("MS_ADMIN_KEY")
+        if adm:
+            hdrs.append({"X-Admin-Key": adm})
+    except Exception:
+        pass
+    for h in hdrs:
+        try:
+            req = urllib.request.Request(SPEC_URL, headers=dict(h, **{"User-Agent": "TrustSquare-QA-Bot/1"}))
+            with urllib.request.urlopen(req, timeout=30) as r:
+                spec = json.loads(r.read().decode())
+            if spec.get("paths"):
+                jsave(cache, spec)
+                return spec
+        except urllib.error.HTTPError as e:
+            if e.code not in (401, 403):
+                break
+        except Exception:
+            break
+    spec = jload(cache, None)
+    if spec:
+        say("openapi: live spec unavailable -- using the last good copy")
+        return spec
+    raise RuntimeError("no route list: /openapi.json refused and no cached copy")
 
 def operations(spec):
     ops = []
@@ -982,4 +1008,14 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    # exit 1 means "a route opened" to the deploy gate; any crash of the bot itself must never be
+    # mistaken for that verdict, so it exits 2 (the gate then fails closed and says why)
+    try:
+        sys.exit(main())
+    except SystemExit:
+        raise
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        say("QA BOT ERROR: the bot itself failed (exit 2) -- not a verdict on the code")
+        sys.exit(2)
