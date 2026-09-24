@@ -21,3 +21,8 @@ untouched — nothing goes live without a signed EULA, recorded server-side — 
   per-number throttle, numbers never logged in full. Fails dark.
 - Guard: RG-0450. HARNESS.html copied from quick.html (house rule). Still open on the human side: David's SMS
   account (the key lands in .secrets, then the server env) and the WhatsApp Business number for the posters.
+- **Rendered walk, 24 Sep 07:4x UTC, 390 px:** /q/homehelp → Gardener → Centurion → Every day → R350 → *WhatsApp link* → Save → key link shown and
+  carried in the WhatsApp self-send → key link opened in a fresh browser → Seller Hub signed in as `w-…@key` with the draft in front →
+  Publish my advert → the scroll-to-end Terms + two consents → Go live → advert #401 live, no e-mail in the public read, `eula_accepted_at`
+  stamped on the key account by publish_listing; withdrawn again through the app's own route. The "You're live" screen now says where
+  requests land for a key account (Seller Hub / SMS) instead of "your email" (marketsquare.html ids + ms.js sobDone wording).

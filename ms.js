@@ -7332,6 +7332,15 @@ async function _sobGoLiveInner() {
   localStorage.setItem('ms_aa_email', email);
   localStorage.setItem('ms_aa_name', sobState.name);
 
+  // LINK-KEY-1 / PHONE-KEY-1 (RUL-167, 24 Sep 2026): a key account has no inbox -- say where requests really land.
+  try {
+    if (/@key\.trustsquare\.co$/i.test(String(email || ''))) {
+      const sub = document.getElementById('sob-success-sub');
+      const how = document.getElementById('sob-success-how');
+      if (sub) sub.textContent = 'Introduction requests wait for you here in your Seller Hub \u2014 open your TrustSquare link to see them. The free AI coach can polish your listing whenever you\u2019re ready.';
+      if (how) how.textContent = 'Introduction requests wait in your Seller Hub (and by SMS if you gave a phone number)';
+    }
+  } catch (e) {}
   // Update success title
   const titleEl = document.getElementById('sob-success-title');
   if (titleEl) {
