@@ -626,6 +626,15 @@ def entry(rid, title, state, scope, fixed_on="", ref=""):
     # LEDGER-DUP-1 (19 Aug 2026): two concurrent sessions both claimed RG-0118/0119.
     # A duplicated id makes the whole board ambiguous -- refuse loudly at import so the
     # session that collides fixes it before anything else runs. Never silently renumber.
+    # LEDGER-STATE-1 (24 Sep 2026, RG-0451): the state slot takes LOCKED or OPEN and nothing
+    # else. RG-0429 and RG-0447 were written with a DATE in it ("2026-09-24"); _judge() reads
+    # anything that is not LOCKED as OPEN, so two shipped fixes could have rotted and printed
+    # "open" instead of REGRESSION. Refuse loudly at import, exactly like LEDGER-DUP-1.
+    if state not in (LOCKED, OPEN):
+        raise SystemExit("LEDGER-STATE-1: %s declares state %r -- an entry is LOCKED or OPEN. "
+                         "Anything else is judged as OPEN, so a locked fix that rots would print "
+                         "'open' instead of REGRESSION. A date belongs in fixed_on=." % (rid, state))
+
     def deco(fn):
         if any(e["id"] == rid for e in LEDGER):
             raise SystemExit("LEDGER-DUP-1: id %s is already taken by '%s' -- pick the next "
@@ -20615,7 +20624,7 @@ def rg_letter_render_does_not_write_the_db():
 @entry("RG-0331", "A listing created by a seller OUTSIDE South Africa carries its own country on the "
        "server -- the app now sends the invited seller's country (INVITE-PLACE-1), and the server "
        "must not quietly file it as ZA",
-       OPEN,
+       LOCKED, fixed_on="2026-09-23",
        scope="bea_main.py: the listings table has NO country column and class Listing(BaseModel) has "
              "no country field. _listing_country_iso2() reads listing['country'] which a listings row "
              "never carries, so every pricing/tier/currency decision it feeds treats the row as ZA. "
@@ -20629,7 +20638,15 @@ def rg_letter_render_does_not_write_the_db():
              "reads the column. ms.js goHandoff already posts city -- add country_iso2 from sfState.",
        ref="EMAIL-FORENSIC-1 follow-through, 7 Sep 2026 (INVITE-PLACE-1 shipped the client half). "
            "Source-checked, not yet live-probable: a listing's country is not exposed on any read "
-           "endpoint, which is itself the symptom.")
+           "endpoint, which is itself the symptom. PROMOTED 24 Sep 2026 by the maintenance loop on "
+           "its READY TO LOCK print: LISTING-COUNTRY-1 (RG-0430, 23 Sep) shipped the fix on the "
+           "EXISTING listings.country column rather than a new country_iso2 one -- class Listing "
+           "gained country: Optional[str], and the create INSERT names country (seller's word, "
+           "then geo_cities, then ZA as a last resort). ASSERTION AMENDED on promotion, stated "
+           "here as the canon requires: the old column test's second alternative "
+           "(listings-paren ... country_iso2, DOTALL) matched ANY 'listings(' followed anywhere "
+           "later in the file by 'country_iso2' -- a pass with nothing judged. It now asserts "
+           "the create INSERT names the country column, which is the property.")
 def rg_listing_carries_own_country_server_side():
     bm = os.path.join(REPO, "bea_main.py")
     if not os.path.isfile(bm):
@@ -20641,8 +20658,10 @@ def rg_listing_carries_own_country_server_side():
     if "country" not in model:
         out.append((FAIL, "class Listing(BaseModel) has no country field -- a US/GB/AU seller's "
                           "listing is stored with no country and read as ZA (RG-0331)"))
-    if not re.search(r"ADD COLUMN country_iso2|listings\s*\(.*?country_iso2", src, re.S):
-        out.append((FAIL, "the listings table has no country_iso2 column (RG-0331)"))
+    # Amended 24 Sep 2026 on promotion -- see ref. The property: the create path WRITES the country.
+    if not re.search(r"INSERT INTO listings\s*\([^)]*\bcountry\b[^)]*\)", src):
+        out.append((FAIL, "the create path's INSERT INTO listings names no country column -- "
+                          "the row falls to the table default ZA (RG-0331)"))
     if not out:
         out.append((INFO, "listings carry their own country server-side"))
     return out
@@ -21825,7 +21844,14 @@ def rg_backup_has_a_producer():
            "auto-TIGHTENED 49 -> 17. Evidence: test_pg_readiness.py PASS; py_compile clean; and "
            "a behavioural proof in :memory: -- CURRENT_TIMESTAMP and datetime('now') return the "
            "identical string as a DDL default, in an INSERT and in an UPDATE, and all 14 "
-           "rewritten CREATE TABLE statements execute clean.")
+           "rewritten CREATE TABLE statements execute clean. RECURRED 24 Sep 2026 (PG-PORTABLE-3): "
+           "PHONE-KEY-1 (commit 4300824, the phone_codes table and /auth/phone/start|verify) put "
+           "back three plain forms and two modifier forms; the board caught it the next morning. "
+           "Fixed by the maintenance loop: CURRENT_TIMESTAMP for the three, _sql_since(hours=1) "
+           "and _sql_since(hours=-10/60) as bound stamps for the two; value shape proven "
+           "byte-identical in :memory:; test_pg_readiness PASS at the baseline of 15. This entry "
+           "now FAILS on the modifier count too, so the next one is caught here and not only by "
+           "the pre-deploy scan.")
 def rg_pg_plain_clock_is_portable():
     out = []
     bea = repo_file("bea_main.py")
@@ -21856,8 +21882,16 @@ def rg_pg_plain_clock_is_portable():
                               "PG-PORTABLE-2) -- that is weakening the assertion to make it "
                               "pass" % n))
         else:
+            # PG-PORTABLE-3 (24 Sep 2026): the modifier forms ratchet too. PHONE-KEY-1 added two
+            # of them beside the three plain ones, and only the pre-deploy scan would have seen
+            # the two -- this entry printed them as INFO. The count may only fall.
+            _mods = len(_re.findall(r"datetime\('now'\s*,", code))
+            if _mods > n:
+                out.append((FAIL, "%d modifier-form SQLite clock call(s) in code against a baseline "
+                                  "of %d -- new code reached for the SQLite clock instead of "
+                                  "_sql_since() / a bound stamp" % (_mods, n)))
             out.append((INFO, "pg baseline datetime_now=%d; %d modifier form(s) left to convert"
-                              % (n, len(_re.findall(r"datetime\('now'\s*,", code)))))
+                              % (n, _mods)))
     except Exception as ex:
         out.append((FAIL, "pg baseline unreadable (%r)" % ex))
     return out
@@ -25444,7 +25478,11 @@ def rg_eula_lang_1():
              "plus twelve seconds adds dwell.",
        ref="RG-0405 QUICK-FUNNEL-1 (the same fix on the other file) · RG-0404 SELLFLOW-RETURN-1 "
            "(same class) · RG-0402 FUNNEL-DENOM-1 / FUNNEL-HUMAN-1 (the dwell beacon) · "
-           "ONBOARDING_GOAL.md section 2 (PROBED beats READ)")
+           "ONBOARDING_GOAL.md section 2 (PROBED beats READ) · AMENDED 24 Sep 2026 by the maintenance "
+           "loop: the publish-beacon check asserted a literal call spelling, and LINK-KEY-1 "
+           "(RG-0450) legitimately added q_handover_link / q_handover_phone -- REGRESSION printed "
+           "while the property held. The check is now a pattern over the property "
+           "(q_published when live, q_handover otherwise); nothing it used to catch passes now.")
 def rg_door_funnel_1():
     d = repo_file("quick.html")   # QUICK-ONE-DOOR-1 (23 Sep 2026): /q/<cat> serves quick.html
     if d is None:
@@ -25459,14 +25497,20 @@ def rg_door_funnel_1():
         ("qTrack('q_door')", "arrivals at the door are uncounted again"),
         ("q_step_", "we can no longer see which question loses them"),
         ("qTrack('q_draft')", "we cannot see who composed an advert"),
-        ("qTrack(res.j.live ? 'q_published' : 'q_handover')", "we cannot see who published from the door "
-                                    "(ONE-TAP-PUBLISH-1 replaced the old sign-in-link ask; assertion moved with it)"),
         ("_qfDwellFire", "the dwell beacon is gone, so the mail scanners that fetch every URL in "
                          "every letter count as arrivals"),
         ("location.protocol==='file:'", "the dry-run guard is gone; a copy opened from a "
                                         "Downloads folder would post to the live funnel")):
         if token not in d:
             out.append((FAIL, why))
+    # Amended 24 Sep 2026 (maintenance loop): LINK-KEY-1 (RG-0450) legitimately widened the
+    # publish beacon to name the key identity (q_handover_link / q_handover_phone). The literal
+    # spelling broke while the property held, and the board printed REGRESSION. Asserted as the
+    # PROPERTY: the publish result beacons 'q_published' when live and a plain 'q_handover'
+    # otherwise -- the identity variants may grow, those two may not disappear.
+    if not re.search(r"qTrack\(\s*res\.j\.live\s*\?\s*'q_published'\s*:[^;]*'q_handover'", d):
+        out.append((FAIL, "we cannot see who published from the door (the publish result no "
+                          "longer beacons q_published / q_handover)"))
     return out or [(INFO, "the public door beacons door/step/draft/handover/signin_sent and tells "
                           "a scanner from a person")]
 
@@ -26689,7 +26733,7 @@ def rg_onboard_real_1():
 @entry("RG-0429", "PUBLISH-WALL-1: a finished advert is never stranded -- the road past the "
                   "account/EULA step exists, AND something actually sends the seller the link "
                   "that reaches it",
-       "2026-09-24",
+       LOCKED, fixed_on="2026-09-24",
        scope="bea_main.py (POST /listings, PUT /listings/{id}/publish, _quick_draft_return), "
              "ms.js (goHandoff, dashPublish, sobGoLive, the ?signin=/?draft= landing) and the "
              "HANDOVER-PUBLISH-1 link shape. "
@@ -26847,15 +26891,28 @@ def _ll_post(path, payload):
              "with the tester cookie OR'd in by /flags), ms.js (msLangView, the country menu, the "
              "seller's 'Advert languages' panel). SCOPE: all nine active countries; 'reader' "
              "languages are deliberately NOT offered anywhere. Public switch stays OFF until David "
-             "arms it; this entry asserts the machinery, not the switch.")
+             "arms it; this entry asserts the machinery, not the switch.",
+       ref="AMENDED 24 Sep 2026 by the maintenance loop: the edit-reset check was the literal "
+           "\"extra_status='draft' WHERE id=?\"; AUDIT-L3 (commit 1aea5c4) rewrote it as a CASE "
+           "that also clears the stale translation, back-translation and search layer, and the "
+           "board printed REGRESSION over a stronger fix. Now asserted as the property -- the "
+           "edit UPDATE sets extra_status back to 'draft' (plain or CASE form).")
 def rg_lang_layer_1():
     out = []
     src = repo_file("bea_main.py")
     if src is not None:
         for needle in ('"/lang/countries"', '"/listings/{listing_id}/lang/draft"', '"/listings/{listing_id}/lang/approve"',
-                       "extra_status='draft' WHERE id=?", "l3.search_en", '"nso": "Sepedi'):
+                       "l3.search_en", '"nso": "Sepedi'):
             if needle not in src:
                 out.append((FAIL, "bea_main.py lost %s" % needle))
+        # Amended 24 Sep 2026 (maintenance loop): this was the literal "extra_status='draft'
+        # WHERE id=?", and AUDIT-L3 (1aea5c4) rewrote that reset into a CASE that ALSO clears the
+        # stale translation -- a stronger fix, which the spelling check read as a REGRESSION.
+        # The property: editing the original drops the second language back to 'draft'.
+        if not re.search(r"UPDATE listings SET extra_status\s*=\s*(?:'draft'|CASE WHEN lang_extra "
+                         r"IS NULL THEN NULL ELSE 'draft' END)", src):
+            out.append((FAIL, "bea_main.py no longer drops an edited advert's second language "
+                              "back to 'draft' -- an unapproved translation could stay live"))
         if 'if _d.get("extra_status") != "approved":' not in src:
             out.append((FAIL, "the public list no longer withholds an UNAPPROVED second language"))
     lc = repo_file("roles/lang_countries.json")
@@ -27005,7 +27062,7 @@ def rg_quick_one_door_1():
 
 @entry("RG-0437", "RULINGS-SETTLED-READ-1: rulings_check may not report a ruling unreflected "
                   "because it read the file while another lane was writing it",
-       OPEN,
+       LOCKED, fixed_on="2026-09-24",
        scope="scripts/rulings_check.py, the reads it makes of RULINGS.md and "
              "scripts/regression_ledger.py. FOUND 23 Sep 2026 by the onboarding run, from its "
              "own instrument disagreeing with itself: three consecutive invocations minutes "
@@ -27024,15 +27081,29 @@ def rg_quick_one_door_1():
              "settled_read on both reads, exactly as RG-0423 did. NOT DONE HERE, and the reason "
              "is a rule not a preference: RUL-140 / SO-5 -- work_lock.py reports "
              "scripts/rulings_check.py owned by another lane, so this run records the finding "
-             "and leaves the file alone. The owner ships it.")
+             "and leaves the file alone. The owner ships it. SHIPPED 24 Sep 2026 by the maintenance "
+           "loop (work lock free, taken for the edit): rulings_check._read, the ONE read "
+           "chokepoint, goes through safe_read.settled_read, cached one read per file per run "
+           "(uncached it took the check from 2 s to 2 min); an unsettled read comes back "
+           "UNSETTLED and prints NOT CHECKED, never 'file missing' or 'not reflected'. HARNESS "
+           "AMENDED, stated here as the canon requires: the open case returned INFO, which the "
+           "judge scores as a pass, so this entry printed READY TO LOCK on 24 Sep while the fix "
+           "was unbuilt. It is a FAIL now, and the pass needs settled_read INSIDE _read.")
 def rg_rulings_settled_read_1():
     src_rc = repo_file("scripts/rulings_check.py")
     if src_rc is None:
         return [(INFO, "rulings_check.py not readable here -- NOT EVALUATED")]
-    if "settled_read" in src_rc:
-        return [(INFO, "rulings_check reads through settled_read")]
-    return [(INFO, "still open: rulings_check reads RULINGS.md and the ledger with a plain "
-                   "read, so a mid-write read can still print a ruling as unreflected")]
+    # Amended 24 Sep 2026: the open case used to return INFO -- scored as a pass -- so the
+    # board printed READY TO LOCK over an unbuilt fix. The pass now needs the read CHOKEPOINT
+    # to call settled_read and the callers to treat an unsettled read as NOT CHECKED.
+    m = re.search(r"^def _read\(path\):.*?(?=^def )", src_rc, re.S | re.M)
+    body = m.group(0) if m else ""
+    if "_settled_read(" in body and "UNSETTLED" in body and "c is UNSETTLED" in src_rc \
+            and "reg is UNSETTLED" in src_rc:
+        return [(INFO, "rulings_check's one read chokepoint goes through settled_read; an "
+                       "unsettled read reads NOT CHECKED, never FAIL")]
+    return [(FAIL, "rulings_check reads RULINGS.md and the ledger with a plain read, so a "
+                   "mid-write read can still print a ruling as unreflected (RG-0437)")]
 
 
 
@@ -27354,7 +27425,7 @@ def rg_eula_signoff_1():
 @entry("RG-0447", "RECOUP-LINK-TTL-1: a sign-in link that travels in a LETTER is never minted "
                   "from the interactive 20-minute lane -- a button that is dead before it is "
                   "read spends the one moment the person came back",
-       "2026-09-24",
+       LOCKED, fixed_on="2026-09-24",
        scope="The class: every letter, note or printed artefact that carries a ?signin= link. "
              "bea_main.py mints signin tokens in six places and the split is already correct in "
              "CODE -- _quick_draft_return 7 days, _send_quick_live_email 7 days, the agent invite "
@@ -27619,6 +27690,38 @@ def rg_link_key_1():
     if repo_file("sms_provider.py") is None:
         out.append((FAIL, "sms_provider.py is missing"))
     return out
+
+
+
+@entry("RG-0451", "LEDGER-STATE-1: every ledger entry is LOCKED or OPEN -- a malformed state can "
+                  "never turn a locked fix into one that rots silently as 'open'",
+       LOCKED, fixed_on="2026-09-24",
+       scope="scripts/regression_ledger.py entry() and every @entry in it. FOUND 24 Sep 2026 by "
+             "the maintenance loop reading its own board: RG-0429 PUBLISH-WALL-1 and RG-0447 "
+             "RECOUP-LINK-TTL-1 were declared with the DATE '2026-09-24' in the state slot "
+             "(a fixed_on that landed one argument early). _judge() treats every state that is "
+             "not LOCKED as OPEN, so both printed '[ LOCK ] now passing' -- and had either fix "
+             "rotted it would have printed 'open', never REGRESSION: two shipped fixes with no "
+             "tripwire, looking guarded. CLASS: the state vocabulary is closed. entry() now "
+             "refuses anything else at import, loudly, like LEDGER-DUP-1; both entries set to "
+             "LOCKED, fixed_on 2026-09-24. Sibling in the same run: RG-0437's harness returned "
+             "INFO for its open case, which the judge also scores as a pass -- same family "
+             "(a check that cannot say no), fixed in that entry.",
+       ref="LEDGER-DUP-1 (the import-time refusal pattern) · RG-0187 (an instrument's limits "
+           "must read as limits) · RG-0429 · RG-0447 · RG-0437")
+def rg_ledger_state_1():
+    out = []
+    bad = [(e["id"], e["state"]) for e in LEDGER if e["state"] not in (LOCKED, OPEN)]
+    if bad:
+        out.append((FAIL, "entries with a state that is neither LOCKED nor OPEN: %r" % bad[:10]))
+    src = repo_file(os.path.join("scripts", "regression_ledger.py"))
+    if src is None:
+        out.append((INFO, "NOT EVALUATED - the ledger's own source is not readable here"))
+    elif "if state not in (LOCKED, OPEN):" not in src or "LEDGER-STATE-1: %s declares state" not in src:
+        out.append((FAIL, "entry() no longer refuses a malformed state at import -- a date in the "
+                          "state slot would again be judged OPEN"))
+    return out or [(INFO, "all %d entries are LOCKED or OPEN, and entry() refuses anything else"
+                          % len(LEDGER))]
 
 
 if __name__ == "__main__":

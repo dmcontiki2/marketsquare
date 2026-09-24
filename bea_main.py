@@ -622,7 +622,7 @@ def run_migrations(conn):
     conn.execute("""CREATE TABLE IF NOT EXISTS phone_codes (
         id INTEGER PRIMARY KEY AUTOINCREMENT, phone TEXT NOT NULL, code_hash TEXT NOT NULL,
         expires_at TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, used_at TEXT,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')))""")
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_phone_codes_phone ON phone_codes(phone, created_at)")
     # ── ONETAP-1 (19 Aug 2026, David's ruling) — federated sign-in identity ──
     # auth_sub is the provider's STABLE subject id. Email can change at the
@@ -4221,13 +4221,14 @@ def auth_phone_start(body: _PhoneStart, request: Request):
     hits.append(now); _PH_IP_LOG[ip] = hits
     conn = database.get_db()
     try:
-        n = conn.execute("SELECT COUNT(*) AS n FROM phone_codes WHERE phone=? AND created_at > datetime('now','-1 hour')",
-                         (e164,)).fetchone()["n"]
+        # PG-PORTABLE-3 (24 Sep 2026): bound UTC stamps, never the SQLite clock (RG-0351 / pg ratchet).
+        n = conn.execute("SELECT COUNT(*) AS n FROM phone_codes WHERE phone=? AND created_at > ?",
+                         (e164, _sql_since(hours=1))).fetchone()["n"]
         if n >= 3:
             raise HTTPException(status_code=429, detail="Three codes went to that number in the last hour -- use the last one, or wait a while.")
         code = "%06d" % _sk.randbelow(1000000)
-        conn.execute("INSERT INTO phone_codes (phone, code_hash, expires_at) VALUES (?,?, datetime('now','+10 minutes'))",
-                     (e164, _key_hash(e164 + ":" + code)))
+        conn.execute("INSERT INTO phone_codes (phone, code_hash, expires_at) VALUES (?,?,?)",
+                     (e164, _key_hash(e164 + ":" + code), _sql_since(hours=-10 / 60.0)))   # ten minutes AHEAD
         conn.commit()
     finally:
         conn.close()
@@ -4246,7 +4247,7 @@ def auth_phone_verify(body: _PhoneVerify, response: Response):
     conn = database.get_db()
     try:
         row = conn.execute("SELECT id, code_hash, attempts FROM phone_codes WHERE phone=? AND used_at IS NULL "
-                           "AND expires_at > datetime('now') ORDER BY id DESC LIMIT 1", (e164,)).fetchone()
+                           "AND expires_at > CURRENT_TIMESTAMP ORDER BY id DESC LIMIT 1", (e164,)).fetchone()
         if not row:
             raise HTTPException(status_code=401, detail="That code has expired -- ask for a new one.")
         if row["attempts"] >= 5:
@@ -4254,7 +4255,7 @@ def auth_phone_verify(body: _PhoneVerify, response: Response):
         if row["code_hash"] != _key_hash(e164 + ":" + code):
             conn.execute("UPDATE phone_codes SET attempts=attempts+1 WHERE id=?", (row["id"],)); conn.commit()
             raise HTTPException(status_code=401, detail="That code is not right.")
-        conn.execute("UPDATE phone_codes SET used_at=datetime('now') WHERE id=?", (row["id"],))
+        conn.execute("UPDATE phone_codes SET used_at=CURRENT_TIMESTAMP WHERE id=?", (row["id"],))
         u = conn.execute("SELECT email FROM users WHERE phone=? AND closed_at IS NULL ORDER BY id LIMIT 1", (e164,)).fetchone()
         if u:
             em = u["email"]

@@ -28,10 +28,36 @@ REGISTER = os.path.join(REPO, "RULINGS.md")
 FAIL, WARN, INFO, BLIND = "FAIL", "WARN", "INFO", "BLIND"
 
 
+# RULINGS-SETTLED-READ-1 (RG-0437, 24 Sep 2026): every read this checker makes goes through
+# safe_read.settled_read -- two consecutive AGREEING reads -- because a plain read through this
+# virtiofs/FUSE mount can return a fragment while another lane is writing the file (SAFE-READ-1,
+# RG-0421; measured 23 Sep: 1 FAIL, 2 FAIL, 0, 0, 0 on five runs with no edit between them).
+# A read that never settles is the CHECKER being blind, so it comes back as UNSETTLED and is
+# reported NOT CHECKED -- never "file missing", never "ruling not reflected".
+try:
+    sys.path.insert(0, HERE)
+    from safe_read import settled_read as _settled_read, UnsettledRead as _UnsettledRead
+except Exception:                                   # pragma: no cover - safe_read ships beside this file
+    _settled_read, _UnsettledRead = None, None
+
+UNSETTLED = object()
+# One settled read per file per run: a settled read costs at least one settle delay, and the
+# 400-odd assertions name ~140 files -- uncached that took this check from 2 s to 2 min.
+_CACHE = {}
+
+
 def _read(path):
     p = path if os.path.isabs(path) else os.path.join(REPO, path)
     if not os.path.exists(p):
         return None
+    if p in _CACHE:
+        return _CACHE[p]
+    if _settled_read is not None:
+        try:
+            _CACHE[p] = _settled_read(p).decode("utf-8", "replace")
+        except _UnsettledRead:
+            _CACHE[p] = UNSETTLED
+        return _CACHE[p]
     with open(p, "r", encoding="utf-8", errors="replace") as fh:
         return fh.read()
 
@@ -1191,6 +1217,11 @@ def main():
     if reg is None:
         print("RULINGS CHECK: RULINGS.md missing -- the register itself is gone")
         return 2
+    if reg is UNSETTLED:
+        print("RULINGS CHECK: RULINGS.md never settled across consecutive reads -- another lane "
+              "is writing it. NOT CHECKED (the register is unreadable right now, not missing); "
+              "re-run in a minute.")
+        return 2
 
     listed = set(re.findall(r"\| (RUL-\d{3}) \|", reg))
     fails = warns = blinds = 0
@@ -1207,6 +1238,11 @@ def main():
         for path, must, must_not in REFLECTIONS[rid]:
             c = _read(path)
             name = os.path.basename(path)
+            if c is UNSETTLED:
+                # RULINGS-SETTLED-READ-1: a read that never settled is not evidence either way.
+                problems.append((BLIND, "%s: NOT CHECKED (%s) -- the file never settled across "
+                                        "consecutive reads (another lane writing it)" % (rid, name)))
+                continue
             if c is None:
                 if _outside_repo(path):
                     # VANTAGE-BLIND-1: not mounted here, so NOT CHECKED -- never a verdict.
@@ -1245,13 +1281,18 @@ def main():
     print("=" * 78)
     print("%d rulings checked, %d FAIL, %d WARN, %d NOT CHECKED"
           % (len(REFLECTIONS), fails, warns, blinds))
+    unsettled_files = sorted(os.path.basename(k) for k, v in _CACHE.items() if v is UNSETTLED)
+    if unsettled_files:
+        # RULINGS-SETTLED-READ-1: a different blindness from VANTAGE -- name it separately.
+        print("UNSETTLED: %s never settled across consecutive reads (another lane was writing); "
+              "every assertion on it reads NOT CHECKED. Re-run in a minute." % ", ".join(unsettled_files))
     if blinds:
         # VANTAGE-BLIND-1: say what was not looked at, every time, in both outcomes. A green
         # that quietly skipped a third of its assertions is the worse of the two errors.
         print("VANTAGE: %d assertion(s) across %d ruling(s) were NOT CHECKED -- they point at "
-              "files outside this repo (sibling projects under %s) which are not mounted here. "
-              "This is the checker being blind, not the canon being broken. Mount the Projects "
-              "folder to check them." % (blinds, len(blind_rids), PROJECTS))
+              "files outside this repo (sibling projects under %s) which are not mounted here, "
+              "or at a file that never settled (see UNSETTLED). This is the checker being blind, "
+              "not the canon being broken." % (blinds, len(blind_rids), PROJECTS))
     if fails:
         print("RESULT: at least one ruling exists only in memory or in one file -- the blind "
               "spot is live.")
