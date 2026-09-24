@@ -85,7 +85,15 @@ already closed and the stale claim about it removed. The harness is in the repo:
    it. The shortfall is **reach, not copy**, which is D4 and D5, and the phantom 12.9% was the one
    figure that argued against them.
 
-4. **RG-0110 was a FALSE RED and is cleared — RG-0465 FN-WINDOW-1.** The board printed
+4. **THE FIX WAS ONE MANIFEST LINE FROM SHIPPING HALF OF ITSELF.** `click_register.py` — the
+   grader `server.py` imports — **was not in `deploy_citylauncher.bat`.** The server was running
+   the 3 September copy. Shipping `server.py` alone would have published `opened_proxy` as a
+   permanent **0** and left all 331 false human opens exactly where they were — a half-shipped fix
+   that passes every source check on the board. Caught by looking at what the box actually runs
+   (`ls` on the server: 3 Sep, 12,067 bytes). Manifest fixed, and RG-0464 now has a far-end leg
+   that FAILs if the grader ever falls out of it again.
+
+5. **RG-0110 was a FALSE RED and is cleared — RG-0465 FN-WINDOW-1.** The board printed
    *"auth_verify no longer routes through `_establish_user_session`"* and carried "Do not deploy
    over this". auth_verify's **last line** is that exact call. The check read
    `bea.split("def auth_verify(")[1][:1400]` — not the function, but the first 1400 bytes of
@@ -97,13 +105,13 @@ already closed and the stale claim about it removed. The harness is in the repo:
    this file still read a fixed byte window** — a sweep, not a late-night edit, and none is red
    today.
 
-5. **Boards.** Before: 450 · 425 holding · **4 REGRESSED** · 19 open · 1 ready to lock · 1
+6. **Boards.** Before: 450 · 425 holding · **4 REGRESSED** · 19 open · 1 ready to lock · 1
    UNVERIFIED. After: **452 · 429 holding · 3 REGRESSED · 19 open · 1 ready to lock · 0
    UNVERIFIED**; `rulings_check` 142 rulings, **0 FAIL**, 25 WARN. Both new entries were run
    against a reverted tree as well as this one — RG-0464 FAILs on the pre-fix source, RG-0465's
    byte-window form FAILs on today's.
 
-6. **The three remaining reds are not ours.** RG-0351 (17 modifier-form SQLite clocks against a
+7. **The three remaining reds are not ours.** RG-0351 (17 modifier-form SQLite clocks against a
    baseline of 15 — the ratchet ran backwards) and RG-0450 (`genie/HARNESS.html` differs from
    `quick.html`) are the parallel lane's RUL-167 work, written today; RG-0450 is that lane's own
    brand-new entry. RG-0373 is a live probe: the trust plan's step 4 offers a referral signal that

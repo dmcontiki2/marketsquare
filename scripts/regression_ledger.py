@@ -28617,10 +28617,24 @@ def rg_proxy_open_1():
         if "graded.get('proxy_open', 0) + " in s or "+ graded.get('proxy_open'" in s:
             bad.append("opened_human has been made to include proxy_open again -- this is the "
                        "defect restored")
+    # THE FAR END OF THE WIRE. server.py imports this grader; the CityLauncher deploy
+    # manifest shipped server.py and NOT click_register.py, so the box was still running
+    # the 3 Sep copy. Shipping one without the other publishes opened_proxy as a permanent
+    # 0 and leaves the 331 false human opens exactly where they were -- a half-shipped fix
+    # that reads green on every source check above. Found 24 Sep 2026 before the deploy
+    # landed, by looking at what the server actually runs.
+    bat = os.path.join(REPO, "..", "CityLauncher", "deploy_citylauncher.bat")
+    if sibling_visible(bat) and os.path.exists(bat):
+        with open(bat, encoding="utf-8", errors="replace") as fh:
+            b = fh.read()
+        if "click_register.py" not in b:
+            bad.append("the CityLauncher deploy manifest no longer ships click_register.py -- "
+                       "the server would keep grading opens with a stale copy while every "
+                       "source check here passes")
     if bad:
         return [(FAIL, "; ".join(bad))]
-    return [(INFO, "proxy fetches grade into proxy_open, are counted under their own name, and "
-                   "cannot rejoin a human figure")]
+    return [(INFO, "proxy fetches grade into proxy_open, are counted under their own name, "
+                   "cannot rejoin a human figure, and the grader is in the deploy manifest")]
 
 
 @entry("RG-0463", "LEDGER-ENTRY-CEILING-1: one over-cap entry cannot wedge the chunked board, and a "
