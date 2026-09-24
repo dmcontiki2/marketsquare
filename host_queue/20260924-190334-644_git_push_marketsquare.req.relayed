@@ -1,0 +1,5 @@
+action=git_push
+arg=MarketSquare
+requested_at=2026-09-24T19:03:34Z
+permission=David, 3 Sep 2026 (RUL-095): commit + push of Claude's own work is permitted
+reason=DEL-STUCK-2 ledger entry RG-0458

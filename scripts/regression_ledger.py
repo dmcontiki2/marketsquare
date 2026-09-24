@@ -514,6 +514,39 @@ def _sources_changed(before, after):
     return sorted(k for k in before if before[k] != after.get(k))
 
 
+def fn_body(src, marker):
+    """The WHOLE body of the function `marker` opens, or '' when it is not there.
+
+    FN-WINDOW-1 (24 Sep 2026). Checks in this file used to read a function as a fixed
+    slice -- src.split("def foo(")[1][:1400] -- and ask whether some call appeared in
+    it. That is not a read of the function; it is a read of the first N bytes of the
+    REST OF THE FILE, and it convicts the moment the function grows past N.
+
+    It did. RG-0110 asserts that both sign-in doors route through the one shared
+    session establisher. On 24 Sep 2026 SIGNIN-ONCE-1 -- a correct, David-approved
+    hardening -- added ~1,050 characters of single-use-link logic to auth_verify, and
+    pushed its `return _establish_user_session(...)` from inside the 1400-byte window
+    to offset 2056. The board printed "auth_verify no longer routes through
+    _establish_user_session" on a function whose LAST LINE is that exact call, and
+    carried a deploy block with it. auth_verify_code sat at offset 1372 -- twenty-eight
+    characters from the same false red.
+
+    A false RED costs the same trust as a false green (RG-0459), and this project's own
+    rule is that a checker disagreeing with the authority suspects itself first. So the
+    read is bounded by the function, never by a byte count: from the marker to the next
+    top-level def or decorator.
+    """
+    if marker not in src:
+        return ""
+    seg = src.split(marker, 1)[1]
+    end = len(seg)
+    for stop in ("\n@app.", "\n@router.", "\ndef ", "\nclass ", "\n@entry("):
+        i = seg.find(stop)
+        if i != -1:
+            end = min(end, i)
+    return seg[:end]
+
+
 def repo_file(name):
     """Return repo file text, or None when running outside the repo."""
     p = os.path.join(REPO, name)
@@ -6060,7 +6093,10 @@ def rg_signin_device_independent():
                               "code door can now drift apart silently"))
         # both doors must go through the one establisher
         for fn in ("def auth_verify(", "def auth_verify_code("):
-            seg = bea.split(fn)[1][:1400] if fn in bea else ""
+            # FN-WINDOW-1: the WHOLE body, never a byte window -- a fixed slice made
+            # this assertion convict auth_verify on 24 Sep 2026 for growing, not for
+            # drifting. See fn_body().
+            seg = fn_body(bea, fn)
             if seg and "_establish_user_session" not in seg:
                 out.append((FAIL, "%s no longer routes through _establish_user_session" % fn.strip("def (")))
         if "_signin_codes" not in bea or "_SIGNIN_CODE_TRIES" not in bea:
@@ -28429,6 +28465,162 @@ def rg_envkey_blind_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "RG-0426 unions both key doors and still convicts a one-lane box")]
+
+
+@entry("RG-0465", "FN-WINDOW-1: a check that asks what is inside a function reads the whole function, "
+       "never the first N bytes of the rest of the file",
+       LOCKED, fixed_on="2026-09-24",
+       scope="scripts/regression_ledger.py fn_body() and RG-0110's two sign-in-door reads. FOUND "
+             "24 Sep 2026 by the onboarding run, checking a red before inheriting it. RG-0110 "
+             "printed 'auth_verify no longer routes through _establish_user_session' and carried "
+             "'Do not deploy over this'. auth_verify's LAST LINE is "
+             "`return _establish_user_session(email, response)`. Nothing had drifted. The check "
+             "read `bea.split('def auth_verify(')[1][:1400]` -- not the function, but the first "
+             "1400 bytes of everything after it -- and SIGNIN-ONCE-1, a correct and "
+             "David-approved hardening shipped the same day, added ~1,050 characters of "
+             "single-use-link logic and pushed the call to offset 2056. MEASURED, not reasoned: "
+             "auth_verify 2056, auth_verify_code 1372. The second door was TWENTY-EIGHT "
+             "CHARACTERS from the same false conviction, so this was one comment line away from "
+             "reading as both sign-in doors breaking at once. THE CLASS: a byte window is a "
+             "proxy for a function body, and like every proxy assertion in this file it fails "
+             "towards conviction as soon as the thing it stands for changes shape. It also "
+             "punishes exactly the work this project wants -- a function that gains a security "
+             "check gets its own guard turned against it. FIX: fn_body() bounds the read by the "
+             "next top-level def or decorator, so the answer is the function's real body however "
+             "long it grows; RG-0110's two reads go through it. NOT CLAIMED AS CLOSED, and this "
+             "is stated rather than hidden: 22 other checks in this file still read a fixed "
+             "window. Those are a sweep, not a late-night edit, and none of them is red today. "
+             "This entry asserts the helper exists, that the sign-in doors use it, and that they "
+             "do not go back -- the residual is named in the ref and in GOAL_STATE.",
+       ref="Proven both ways: RG-0110 returns clean on today's tree, and the byte-window form "
+           "returns FAIL on the same tree. The lesson is the one run 18 paid for -- a checker "
+           "that disagrees with the authority suspects itself first, and a false RED costs the "
+           "same trust as a false green (RG-0459). Residual: 22 fixed-window reads remain in "
+           "this file; the next one to grow past its window convicts a correct function.")
+def rg_fn_window_1():
+    src = repo_file("scripts/regression_ledger.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - regression_ledger.py is not readable here")]
+    bad = []
+    if "def fn_body(" not in src:
+        bad.append("fn_body() is gone -- function-body reads are back to byte windows")
+    if "FN-WINDOW-1" not in src:
+        bad.append("the FN-WINDOW-1 reasoning was stripped, so the next author repeats it")
+    try:
+        i = src.index('@entry("RG-0110"'); j = src.index('@entry("RG-0111"')
+    except ValueError:
+        return [(FAIL, "RG-0110 or RG-0111 is gone -- the entry this one guards has moved")]
+    blk = src[i:j]
+    if "fn_body(bea, fn)" not in blk:
+        bad.append("RG-0110 no longer reads the sign-in doors through fn_body()")
+    if "[1][:1400]" in blk or "[1][:14" in blk:
+        bad.append("RG-0110 has gone back to a byte window -- the false red is restored")
+    # and the property itself, measured against the live source rather than asserted
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        for fn in ("def auth_verify(", "def auth_verify_code("):
+            body = fn_body(bea, fn)
+            if not body:
+                bad.append("%s is gone from bea_main.py" % fn.strip("def ("))
+            elif "_establish_user_session" not in body:
+                bad.append("%s really has left the shared session door" % fn.strip("def ("))
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "fn_body() bounds the read by the function; both sign-in doors are read "
+                   "whole and both still reach the one session establisher")]
+
+
+@entry("RG-0464", "PROXY-OPEN-1: a mailbox provider fetching our tracking pixel is never counted as "
+       "a person who read the letter -- the open lands in its own tier and says so",
+       LOCKED, fixed_on="2026-09-24",
+       scope="CityLauncher/click_register.py (PROXY_UA / PROXY_IP_PREFIXES / APPLE_MPP_UA, "
+             "proxy_reason(), the 'proxy' bucket in score_events, the proxy_open tier and "
+             "n_proxy_opens column in rollup/ensure_table/write_register) and "
+             "CityLauncher/api/server.py's funnel totals (opened_proxy alongside opened_human). "
+             "FOUND 24 Sep 2026 by the onboarding run, reading the funnel's own opened figure "
+             "before believing what it meant. The register said 331 recipients were "
+             "'human_open' -- a 12.9% read rate on 2,574 letters, which would have said the "
+             "letter is widely read and simply not acted on, and sent the next month of work "
+             "into rewriting copy. PROBED on the live register, not inferred: 297 of those 331 "
+             "had no open event that was anything but a proxy prefetch. The evidence names "
+             "itself -- 229 events carry 'GoogleImageProxy' in the User-Agent, 18 carry "
+             "'YahooMailProxy', 17 carry 'MSOffice 16', and 301 carry the bare token "
+             "'Mozilla/5.0', which is Apple Mail Privacy Protection and which no real browser "
+             "or mail client sends. Corroborated independently by IP: 326 of the open events "
+             "came from 74.125/142.250/66.249/66.102, all Google. WHY IT GRADED HUMAN: "
+             "MACHINE_UA and MACHINE_IP_PREFIXES were built on 3 Sep to answer 'which of our "
+             "CLICKS were people?' -- Proofpoint, Mimecast, Defender Safe Links. The module was "
+             "then asked to grade OPENS too and its evidence set was never re-aimed with it. No "
+             "image proxy appears in either list, so a proxy fetch scored on one signal only, "
+             "'clicked Nh after send', which is worth -1, and -1 is 'human'. 328 of the 331 "
+             "gradings rested on that single reason. THE CLASS is this project's most expensive "
+             "one and it is now on its fourth instance: FUNNEL-DENOM-1 (scanners counted as "
+             "readers), ONBOARD-REAL-1 (our own mailer's rows counted as 42 registrations, and "
+             "it reached David in writing), the contract's naive probe that reads 3 when the "
+             "honest number is 0, and this. Every one of them read HIGH, and a number that "
+             "flatters is the one nobody audits. NOT DELETED, AND THAT IS THE SECOND LEG: a "
+             "proxy fetch proves the letter reached a live mailbox, and proves nothing at all "
+             "about whether a person looked -- the proxy fires either way. So it is recorded as "
+             "opened_proxy under its own name with its own reason string, never folded into a "
+             "human count and never thrown away, exactly as RG-0187 / RG-0459 / RG-0460 require "
+             "of any instrument that cannot see. STRICTLY TIGHTENING, checked: nothing that "
+             "graded machine became human, and the nine human CLICKS are untouched -- an image "
+             "proxy fetches pixels, not links. Re-scored on a copy of the live database: "
+             "human_open 331 -> 34, uncertain 84 -> 16, proxy_open 365, machine 203 unchanged, "
+             "human_click 9 unchanged. THE HONEST FUNNEL: 2,574 letters, 34 people we can show "
+             "opened one, 365 more delivered but unmeasurable, 9 clicks, 0 published.",
+       ref="Measured on the live register and re-scored on a copy of it before shipping. The "
+           "figure that matters to the goal is the one this uncovered: nine clicks from "
+           "thirty-four readers we can actually see is a letter that works on the people who "
+           "read it, so the shortfall is reach, not copy.")
+def rg_proxy_open_1():
+    cr = os.path.join(REPO, "..", "CityLauncher", "click_register.py")
+    srv = os.path.join(REPO, "..", "CityLauncher", "api", "server.py")
+    if not sibling_visible(cr):
+        return [(INFO, "NOT EVALUATED - CityLauncher is not mounted on this vantage")]
+    if not os.path.exists(cr):
+        return [(FAIL, "CityLauncher/click_register.py is gone -- the grader this entry "
+                       "guards no longer exists")]
+    with open(cr, encoding="utf-8", errors="replace") as fh:
+        t = fh.read()
+    bad = []
+    for needle, why in (
+            ("PROXY_UA", "the named-proxy User-Agent list is gone"),
+            ("googleimageproxy", "GoogleImageProxy is no longer recognised -- the single "
+                                 "largest source of false human opens"),
+            ("yahoomailproxy", "YahooMailProxy is no longer recognised"),
+            ("APPLE_MPP_UA", "the Apple Mail Privacy Protection signature is gone -- 248 of "
+                             "the 297 false opens were MPP"),
+            ("def proxy_reason(", "proxy_reason() is gone -- a proxy fetch has no way to be "
+                                  "named"),
+            ("bucket = 'proxy'", "score_events no longer grades a proxy fetch into its own "
+                                 "bucket, so it falls back to 'human' on the timing signal "
+                                 "alone -- the exact defect"),
+            ("'proxy_open'", "the proxy_open tier is gone -- these rows would rejoin a human "
+                             "count"),
+            ("n_proxy_opens", "the count is gone -- a demotion that keeps no record is a "
+                              "deletion, not an instrument")):
+        if needle not in t:
+            bad.append(why)
+    if "ADD COLUMN n_proxy_opens" not in t:
+        bad.append("the migration for the already-live table is gone -- CREATE IF NOT EXISTS "
+                   "would leave the old column set and the count would silently vanish")
+    # the tier must never be reachable from the human branch
+    if "row['tier'] = 'human_open'" in t and "row['n_proxy_opens'] += 1" not in t:
+        bad.append("proxy fetches can reach the human_open branch again")
+    if sibling_visible(srv) and os.path.exists(srv):
+        with open(srv, encoding="utf-8", errors="replace") as fh:
+            s = fh.read()
+        if "opened_proxy" not in s:
+            bad.append("the funnel no longer publishes opened_proxy -- the 365 unmeasurable "
+                       "deliveries would read as nothing at all")
+        if "graded.get('proxy_open', 0) + " in s or "+ graded.get('proxy_open'" in s:
+            bad.append("opened_human has been made to include proxy_open again -- this is the "
+                       "defect restored")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "proxy fetches grade into proxy_open, are counted under their own name, and "
+                   "cannot rejoin a human figure")]
 
 
 @entry("RG-0463", "LEDGER-ENTRY-CEILING-1: one over-cap entry cannot wedge the chunked board, and a "

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bug Sweep 24 Sep</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#0f172a;--mute:#64748b;--line:#e2e8f0;
+--live:#0f7a4f;--livebg:#e6f6ee;--code:#1d4ed8;--codebg:#e8efff;--ask:#b45309;--askbg:#fff4e0;}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#131c2e;--ink:#e5e9f0;--mute:#94a3b8;--line:#243049;
+--live:#4ade80;--livebg:#12301f;--code:#93b4ff;--codebg:#172448;--ask:#fbbf24;--askbg:#35270b;}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:24px;margin:0 0 4px}.sub{color:var(--mute);margin:0 0 20px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:22px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;border-top:5px solid var(--c)}
+.k b{display:block;font-size:28px;color:var(--c)}.k span{color:var(--mute);font-size:13px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.col{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.col h2{font-size:16px;margin:0 0 10px}
+.it{border-left:5px solid var(--c);background:var(--cb);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
+.it small{display:block;color:var(--mute);font-size:12px;margin-top:2px}
+.live{--c:var(--live);--cb:var(--livebg)}.code{--c:var(--code);--cb:var(--codebg)}.ask{--c:var(--ask);--cb:var(--askbg)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 16px;font-size:13px;color:var(--mute)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--c);margin-right:6px;vertical-align:-1px}
+</style></head><body><div class="wrap">
+<h1>Bug sweep — TrustSquare app &amp; Quick listing door</h1>
+<p class="sub">24 Sep 2026 · commits e0a4d22 + 6b205dd · deployed and walked on trustsquare.co in a real browser</p>
+<div class="kpis">
+<div class="k" style="--c:var(--live)"><b>9</b><span>fixed &amp; seen working live</span></div>
+<div class="k" style="--c:var(--code)"><b>20</b><span>fixed, checked in code</span></div>
+<div class="k" style="--c:var(--ask)"><b>3</b><span>need your decision</span></div>
+</div>
+<div class="legend"><span class="live"><i></i>Fixed — verified in the live app</span><span class="code"><i></i>Fixed — compiled, linted, traced (needs a real buyer/seller event to see)</span><span class="ask"><i></i>Your call</span></div>
+<div class="cols">
+<div class="col"><h2>TrustSquare app — buyers &amp; browsing</h2>
+<div class="it live">Search stopped working after anyone opened a listing.<small>a flag overwrote the search function</small></div>
+<div class="it live">Every listing view was refused (422), so view counts never moved.</div>
+<div class="it code">"Request sent" showed even when the server refused the introduction.</div>
+<div class="it code">The unverified-seller warning never appeared.<small>the listing now carries the seller's tick state, never the email</small></div>
+<div class="it code">Local Market: any error still said "Introduction requested".</div>
+<div class="it code">Local Market seller documents never loaded after an accepted intro.</div>
+</div>
+<div class="col"><h2>TrustSquare app — sellers</h2>
+<div class="it live">Sign-in on a new device said "no seller account found".<small>now sends the 6-digit code</small></div>
+<div class="it live">Sign-in saved the typed email instead of the account's email.</div>
+<div class="it live">Accept / Decline never reached the server, but the screen said "Accepted, 1T deducted".</div>
+<div class="it live">The "Keep live" button crashed, so faded adverts couldn't be revived.</div>
+<div class="it code">Your own buyer requests showed on your dashboard as incoming ones.</div>
+<div class="it code">AI rewrite charged 1T and then filled a field that doesn't exist.</div>
+<div class="it code">Photo auto-save said "saved" when the save was refused.</div>
+<div class="it code">Local Market publish crashed before the success screen.</div>
+<div class="it code">Buzz, credential-claim and top-up refreshes crashed silently.</div>
+</div>
+<div class="col"><h2>Money &amp; server</h2>
+<div class="it code">An expired introduction (1T already refunded) could still be accepted and charged.</div>
+<div class="it code">Two requests at the same moment could push a wallet below zero.<small>intro hold, boost, Local Market, AI services</small></div>
+<div class="it code">A Local Market seller could be charged twice for the same "first" intro.</div>
+<div class="it code">"My listings" dropped adverts saved with capital letters in the email.</div>
+<div class="it code">Failed Quick taps still created empty private-link accounts and used up the daily limit.</div>
+<div class="it code">Alert tasks could be dropped mid-flight; this morning's payment-ref code was blocking the pre-deploy check.</div>
+</div>
+<div class="col"><h2>Quick listing door</h2>
+<div class="it live">Going Back from the advert kept the old price.<small>R250 → R350 now saves R350 only</small></div>
+<div class="it live">Switching language on the advert left the old language showing.</div>
+<div class="it live">Home dropped the language row and the promise line.</div>
+<div class="it code">A typed "Per day" rate was saved as "/ call-out".</div>
+<div class="it code">"Terms accepted" showed to people who hadn't accepted them.</div>
+<div class="it code">Members signed only to Local Market terms saw "Publish" but got a draft.</div>
+<div class="it code">Blocked browser storage stopped the member check.</div>
+<div class="it code">Signed-in members now use their profile city, not the timezone guess.</div>
+</div>
+<div class="col"><h2>Your decision</h2>
+<div class="it ask">Quick door: Cars, Tutors, Collectors and Adventures have no location step, so strangers are filed under Menlyn, Pretoria.</div>
+<div class="it ask">Street-address map pins are never saved; fixing that shows each house's exact spot on the public map.</div>
+<div class="it ask">RUL-142 (cap 40, second employer 6 pts, verified clients 5/6/7) is ruled, but the code still caps at 30.</div>
+</div>
+</div></div></body></html>
