@@ -25853,9 +25853,15 @@ def i18n_translate(body: _I18nIn):
     def _i18n_ask(items):
         """One call. Returns {src: translation} for the lines that came back."""
         import ai_provider
+        # I18N-COST-RAIL-1 (DW-142, 23 Sep 2026): inside the platform rail like every other
+        # AI call. Over the ceiling this raises 429; the caller's try/except catches it and the
+        # reader gets cache + English, never an error. The 400/day cap above still applies.
+        _check_cost_ceiling("")
         calls[0] += 1
         res = ai_provider.complete([{"role": "user", "content": _i18n_prompt(lang, items)}],
                                    task=I18N_TASK, max_tokens=1600, timeout=40)
+        _log_ai_spend("", "/i18n/translate", I18N_TASK, res.in_tokens, res.out_tokens,
+                      provider=res.provider, model=res.model)
         lines = {}
         if res.ok and res.text:
             for ln in res.text.splitlines():
