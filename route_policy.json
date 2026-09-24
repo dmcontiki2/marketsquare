@@ -1968,6 +1968,43 @@
   {
    "key": "GET /listings/{listing_id}/status-card.png",
    "level": "public"
+  },
+  {
+   "key": "POST /buzz/accept",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /listings/{listing_id}/pause",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "POST /users/me/profile",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
   }
  ]
 }

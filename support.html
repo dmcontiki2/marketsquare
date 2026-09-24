@@ -264,7 +264,7 @@
         Are my personal details shared with sellers?
         <span class="arrow">⌄</span>
       </button>
-      <div class="faq-a">No. TrustSquare is designed to protect your privacy. Your name and email address are never shared with sellers without your explicit consent. All communication is handled through the TrustSquare platform until you choose to share more.</div>
+      <div class="faq-a">No. TrustSquare is designed to protect your privacy. Your name and email address are never shared with sellers without your explicit consent. You and the seller stay anonymous until you both accept the introduction; only then are your contact details exchanged.</div>
     </div>
 
     <div class="faq-item">
@@ -272,7 +272,7 @@
         What is the Trust Score shown on listings?
         <span class="arrow">⌄</span>
       </button>
-      <div class="faq-a">The Trust Score is a rating from 70–96 that reflects the reliability and track record of a seller on TrustSquare. It is based on factors such as response rate, completed connections, and account standing. Higher scores indicate sellers with a stronger history of engagement.</div>
+      <div class="faq-a">The Trust Score is a rating from 0 to 100 (New 0–39, Established 40–69, Trusted 70–89, Highly Trusted 90+) that reflects the reliability and track record of a seller on TrustSquare. It is based on factors such as response rate, completed connections, and account standing. Higher scores indicate sellers with a stronger history of engagement.</div>
     </div>
 
     <div class="faq-item">
@@ -546,6 +546,22 @@
         fail('Sorry \u2014 your message did not reach us. Please check your connection and try again.');
       });
   }
+</script>
+<script>
+/* E2E-HMI-1 (24 Sep 2026): complaints used to be a mailto with nothing attached. The app now sends
+   people here with ?topic=report&listing=N (from an advert) or ?topic=complaint (from My Space);
+   pre-fill the form so the complaint lands in the support queue with the advert named on it. */
+(function(){
+  try{
+    var q=new URLSearchParams(location.search), t=q.get('topic'), l=(q.get('listing')||'').replace(/[^0-9]/g,'');
+    if(!t) return;
+    var f=document.getElementById('support-form'); if(!f) return;
+    var sel=f.querySelector('select[name=topic]'); if(sel){ for(var i=0;i<sel.options.length;i++){ if(sel.options[i].text==='Report a problem'){ sel.selectedIndex=i; } } }
+    var ta=f.querySelector('textarea[name=message]');
+    if(ta && !ta.value) ta.value = l ? ('Complaint about listing #'+l+' (https://trustsquare.co/?listing='+l+'):\n\n') : 'Complaint:\n\n';
+    setTimeout(function(){ f.scrollIntoView({behavior:'smooth',block:'start'}); }, 300);
+  }catch(e){}
+})();
 </script>
 
 <script src="/static/ts_report.js?v=6" defer></script>

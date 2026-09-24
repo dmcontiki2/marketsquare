@@ -1616,7 +1616,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <!-- TQTY-1 (15 Jul 2026, David): flat $2/T means bundles were theatre —
            buy exactly what you need, from 1T up. -->
       <div style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:14px;padding:16px;">
-        <div style="font-size:12px;color:var(--text-3);margin-bottom:10px;">1 Tuppence = 1 introduction = $2 (R36). Same price at any quantity — buy exactly what you need.</div>
+        <div id="tq-rate-line" style="font-size:12px;color:var(--text-3);margin-bottom:10px;">1 Tuppence = 1 introduction = $2. Same price at any quantity — buy exactly what you need.</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px;">
           <button onclick="tqAdjust(-1)" style="width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:22px;font-weight:700;cursor:pointer;">−</button>
           <input type="text" id="tq-qty" inputmode="numeric" value="1" oninput="tqInput(this)"
@@ -1631,7 +1631,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
           <span class="tq-chip" onclick="tqSet(20)" style="cursor:pointer;border:1.5px solid var(--border);border-radius:50px;padding:5px 13px;font-size:12px;color:var(--text-2);">20</span>
           <span class="tq-chip" onclick="tqSet(50)" style="cursor:pointer;border:1.5px solid var(--border);border-radius:50px;padding:5px 13px;font-size:12px;color:var(--text-2);">50</span>
         </div>
-        <div id="tq-price" style="text-align:center;font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;">1T = $2 · R36</div>
+        <div id="tq-price" style="text-align:center;font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;">1T = $2</div>
         <button onclick="tqBuy()" style="width:100%;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Buy Tuppence →</button>
       </div>
     </div>
@@ -2289,10 +2289,10 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div style="font-size:52px;margin-bottom:16px;">🎉</div>
       <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:10px;">You're live</div>
       <h2 id="sob-success-title" style="font-size:22px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px;">Your listing is now live on TrustSquare.</h2>
-      <p id="sob-success-sub" style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Introduction requests will arrive by email. The free AI coach can polish your listing whenever you're ready.</p>
+      <p id="sob-success-sub" style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Introduction requests will arrive by email. Your first AI coach session is free; after that it is 1T per use.</p>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;text-align:left;">
         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔔</div><div><div id="sob-success-how" style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Introduction requests go to your email</div><div style="font-size:12px;color:rgba(255,255,255,.45);">No commission — buyers connect directly</div></div></div>
-        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">✨</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Free AI listing coach included</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Improve your listing from your dashboard</div></div></div>
+        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">✨</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">First AI coach session free</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Improve your listing from your dashboard</div></div></div>
         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔒</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Your identity is protected</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Name &amp; contact only revealed on mutual acceptance</div></div></div>
         <!-- PHOTO-BRIDGE-1 (7 Sep 2026, David): INVITE-GATE-1 lets a seller publish with no
              photo — correctly, "there should be no resistance at all". But the success screen then
@@ -2314,7 +2314,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
             <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:4px;">Add your banking details</div>
             <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">Required so Tuppence payouts can be processed when introductions convert to sales. Takes 30 seconds.</div>
             <button onclick="sobAddBanking()" style="background:#fbbf24;color:#1e2a3a;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Add banking details →</button>
-            <button onclick="document.getElementById('sob-banking-nudge').style.display='none';" style="background:none;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.8);border-radius:50px;padding:6px 14px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;margin-left:8px;">🧪 Skip for testing</button>
+            <button onclick="document.getElementById('sob-banking-nudge').style.display='none';" style="background:none;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.8);border-radius:50px;padding:6px 14px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;margin-left:8px;">Later</button>
           </div>
         </div>
       </div>
@@ -2557,10 +2557,10 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div style="font-size:52px;margin-bottom:16px;">🎉</div>
       <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:10px;">You're live</div>
       <h2 id="pa-success-title" style="font-size:22px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px;"></h2>
-      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Introduction requests will come to your email. The free AI coach can polish your listing whenever you're ready.</p>
+      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Introduction requests will come to your email. Your first AI coach session is free; after that it is 1T per use.</p>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;text-align:left;">
         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔔</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Receive introduction requests</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Buyers connect directly — no commission ever</div></div></div>
-        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">✨</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Free AI listing coach included</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Enhance your listing with AI from your dashboard</div></div></div>
+        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">✨</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">First AI coach session free</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Enhance your listing with AI from your dashboard</div></div></div>
         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔒</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Your identity is protected</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Name &amp; contact only revealed on mutual acceptance</div></div></div>
       </div>
       <button onclick="goTo('dashboard')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Go to my dashboard →</button>
@@ -2943,7 +2943,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
             <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:4px;">Add your banking details</div>
             <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">Required so Tuppence payouts can be processed when introductions convert to sales.</div>
             <button onclick="goTo('dashboard')" style="background:#fbbf24;color:#1e2a3a;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Add in dashboard →</button>
-            <button onclick="document.getElementById('sb-banking-nudge').style.display='none';" style="background:none;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.8);border-radius:50px;padding:6px 14px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;margin-left:8px;">🧪 Skip for testing</button>
+            <button onclick="document.getElementById('sb-banking-nudge').style.display='none';" style="background:none;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.8);border-radius:50px;padding:6px 14px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;margin-left:8px;">Later</button>
           </div>
         </div>
       </div>
@@ -3432,7 +3432,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <div><div style="font-size:14px;font-weight:700;color:var(--navy);">💳 Billing enquiry</div><div style="font-size:12px;color:var(--text-3);margin-top:2px;">Questions about charges or invoices</div></div>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:var(--text-3);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div class="ms-card" style="margin-bottom:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="window.open('mailto:support@trustsquare.co?subject=Complaint','_blank')">
+      <div class="ms-card" style="margin-bottom:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="location.href='/support?topic=complaint#support-form'">
         <div><div style="font-size:14px;font-weight:700;color:var(--navy);">🚩 Lodge a complaint</div><div style="font-size:12px;color:var(--text-3);margin-top:2px;">We respond within 2 business days</div></div>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:var(--text-3);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
@@ -3620,7 +3620,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:var(--text-3);"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
 
-    <div class="ms-card" style="margin-bottom:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="window.open('mailto:support@trustsquare.co?subject=Complaint','_blank')">
+    <div class="ms-card" style="margin-bottom:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="location.href='/support?topic=complaint#support-form'">
       <div>
         <div style="font-size:14px;font-weight:700;color:var(--navy);">🚩 Lodge a complaint</div>
         <div style="font-size:12px;color:var(--text-3);margin-top:2px;">We respond within 2 business days</div>
@@ -3715,7 +3715,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <p class="modal-sub" id="topup-modal-desc"></p>
     <div class="modal-notice commit" style="margin-bottom:16px;">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-      <span>Secure payment via Paystack · ZAR · test mode</span>
+      <span>Secure payment via Paystack · billed in ZAR</span>
     </div>
     <div style="margin-bottom:16px;margin-top:12px;">
       <label style="font-size:13px;color:var(--text-2);font-weight:500;display:block;margin-bottom:6px;">Your email</label>

@@ -409,8 +409,10 @@ function _msMapBeaListing(l){
           feat: false,
           title: l.title,
           city:   l.city || activeCity.name,
-          area:   l.area || l.suburb || activeCity.name,
-          suburb: l.suburb || l.area || activeCity.name,
+          // E2E-HMI-1 (24 Sep 2026): borderless adverts (trips, online) fell back to the VIEWER's city,
+          // so a Sydney reef dive read '📍 London'. The advert's own city comes before the viewer's.
+          area:   l.area || l.suburb || l.city || activeCity.name,
+          suburb: l.suburb || l.area || l.city || activeCity.name,
           trust: l.trust_score || 40,
           price: l.price || 'POA',
           per: (function(){var p=String(l.price||'');if(p.indexOf('/')>-1){var u=p.split('/').pop().trim().toLowerCase();var M={hr:'hour',hrs:'hour',hour:'hour',day:'day',visit:'visit','call-out':'call-out',callout:'call-out',call:'call-out',month:'month',mo:'month',week:'week',wk:'week',night:'night',pp:'person',person:'person',session:'session',lesson:'lesson',km:'km'};return u?('per '+(M[u]||u)):'';}if(/\bpp\b/i.test(p))return 'per person';return '';})(),
@@ -908,7 +910,8 @@ async function _msInit(){
     setTimeout(function(){
       try{
         if(localStorage.getItem('ms_aa_email')){ goTo('dashboard'); msLandDraft(); }
-        else { showToast('Sign in with the email your advert is waiting on \u2014 it opens straight after.'); goTo('signin'); }
+        else { try{ var _qe=localStorage.getItem('ts_quick_email')||''; var _si=document.getElementById('si-email'); if(_qe && _si && !_si.value) _si.value=_qe; }catch(_){}   /* E2E-HMI-1: no re-asking what Quick knows */
+          showToast('Sign in with the email your advert is waiting on \u2014 it opens straight after.'); goTo('signin'); }
       }catch(e){}
     }, 600);
   }
@@ -1077,6 +1080,11 @@ async function _msInit(){
             else msg='Payment confirmed!';
             showToast(msg, 5000);
             // Navigate to wallet so they see the new balance
+            goTo('tuppence');
+          } else if (r.status === 400) {
+            // E2E-HMI-1 (24 Sep 2026): a cancelled checkout comes back WITH a reference; the server
+            // answers 400 because Paystack says it was not paid. That is a cancel, not an alarm.
+            showToast('Payment not completed \u2014 nothing was charged.', 5000);
             goTo('tuppence');
           } else {
             showToast('Payment could not be verified — contact support if you were charged.');
@@ -1408,6 +1416,7 @@ function loadFX(){
     if(j && j.rates && j.rates.ZAR > 5 && j.rates.ZAR < 50){
       FX.ZAR=j.rates.ZAR; FX.GBP=j.rates.GBP||FX.GBP; FX.AUD=j.rates.AUD||FX.AUD;
       FX.EUR=j.rates.EUR||FX.EUR; FX.ts=Date.now(); FX.live=(j.source!=='fallback');
+      if(typeof tqPaint==='function') tqPaint();   // E2E-HMI-1: wallet price follows the live rate
     }
   }).catch(function(){/* parachute values stand */});
 }
@@ -1440,6 +1449,7 @@ function topUp(n){
   var _tuIso=(typeof activeCountry!=='undefined' && activeCountry && activeCountry.iso2)||'ZA';
   document.getElementById('topup-zar-label').textContent=fxTopupLine(_tuIso, usd);
   document.getElementById('topup-usd-label').textContent='$'+usd;
+  try{ const _te=document.getElementById('topup-email'); if(_te && !_te.value) _te.value=_msSignedEmail(); }catch(_){}   // E2E-HMI-1
   document.getElementById('topup-modal').classList.add('open');
 }
 function aaBuyAIPack(t, sessions){
@@ -1466,7 +1476,9 @@ function tqPriceLine(n){
   return n+'T = $'+usd+(la?' · '+la:'');
 }
 function tqPaint(){ var n=tqVal(); var el=document.getElementById('tq-qty'); if(el) el.value=n;
-  var p=document.getElementById('tq-price'); if(p) p.textContent=tqPriceLine(n); }
+  var p=document.getElementById('tq-price'); if(p) p.textContent=tqPriceLine(n);
+  // E2E-HMI-1 (24 Sep 2026): the wallet said R36 while Paystack charged R33 - one live rate everywhere.
+  var r=document.getElementById('tq-rate-line'); if(r) r.textContent='1 Tuppence = 1 introduction = '+tqPriceLine(1).replace(/^1T = /,'')+'. Same price at any quantity \u2014 buy exactly what you need.'; }
 function tqAdjust(d){ var el=document.getElementById('tq-qty'); if(el) el.value=String(tqVal()+d); tqPaint(); }
 function tqSet(n){ var el=document.getElementById('tq-qty'); if(el) el.value=String(n); tqPaint(); }
 function tqInput(el){ tqPaint(); }
@@ -2082,7 +2094,7 @@ function goTo(name){
   if(name==='aa-home')aaRenderHome();
   if(name==='aa-coach')aaRenderCoachScreen();
   if(name==='aa-publish')aaRenderPublishScreen();
-  if(name==='tuppence'){aaLoadWalletSessions();hiwInit();txSyncFilterUI();loadTransactionHistory('tn-history','tn-load-more');}
+  if(name==='tuppence'){if(typeof tqPaint==='function')tqPaint();aaLoadWalletSessions();hiwInit();txSyncFilterUI();loadTransactionHistory('tn-history','tn-load-more');}
   if(name==='myspace')msInit();
   if(name==='guided-onboard') goInit();
   if(name==='sell-flow') sfInit();   // SELL-FLOW-REDO-2
@@ -4377,7 +4389,17 @@ async function msRunSearch(explicit){
           if (p.price_min != null) u += '&price_min=' + p.price_min;
           if (p.price_max != null) u += '&price_max=' + p.price_max;
           if (p.trust_min != null) u += '&trust_min=' + p.trust_min;
-          const rows2 = await apiGet(u);
+          let rows2 = await apiGet(u);
+          // E2E-HMI-1 (24 Sep 2026): 'someone to fix my door lock' became terms ['door lock','fix'] and
+          // matched nothing, while two Locksmith adverts sat in Services. Relax the AI's words the way
+          // the plain search already does: one word at a time (longest first), then the category alone.
+          if ((!rows2 || !rows2.length) && p.terms && p.terms.length) {
+            const _base = u.replace(/&q=[^&]*/, '');
+            const _words = [].concat.apply([], p.terms.map(function(t){ return String(t).split(/\s+/); }))
+              .filter(function(w){ return w.length >= 3; }).sort(function(a,b){ return b.length - a.length; });
+            for (const w of _words) { rows2 = await apiGet(_base + '&q=' + encodeURIComponent(w)); if (rows2 && rows2.length) break; }
+            if ((!rows2 || !rows2.length) && p.category) rows2 = await apiGet(_base);
+          }
           if (rows2 && rows2.length) rows = rows2;
         }
       } catch(e) {}
@@ -4809,7 +4831,13 @@ function openBEASellerProfile(l) {
       let since=''; const ms=String(s.member_since||'');
       if(ms.length>=7){ since=(MO[ms.slice(5,7)]||'')+' '+ms.slice(0,4); }
       const cats=Object.keys(s.categories||{});
-      el.style.color=''; el.innerHTML='<div class="cv-stats">'
+      el.style.color='';
+      // E2E-HMI-1 (24 Sep 2026): the seller's own words, saved on her account, shown to buyers (no name).
+      const _esc=function(t){ return String(t||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); };
+      const _prof=(s.headline?'<div style="font-weight:700;font-size:14px;margin:0 0 4px;">'+_esc(s.headline)+'</div>':'')
+        +(s.about?'<div style="font-size:13px;color:var(--text-2);line-height:1.5;margin:0 0 10px;">'+_esc(s.about)+'</div>':'')
+        +(Array.isArray(s.tags)&&s.tags.length?'<div style="margin:0 0 10px;">'+s.tags.map(function(t){return '<span class="cv-tag" style="display:inline-block;margin:0 6px 6px 0;padding:3px 10px;border-radius:12px;background:var(--surface-2);font-size:11px;">'+_esc(t)+'</span>';}).join('')+'</div>':'');
+      el.innerHTML=_prof+'<div class="cv-stats">'
         +'<div class="cv-stat"><div class="cv-stat-val">'+(s.active_listings||0)+'</div><div class="cv-stat-label">Active listing'+((s.active_listings||0)===1?'':'s')+'</div></div>'
         +(since?'<div class="cv-stat"><div class="cv-stat-val" style="font-size:15px;">'+since+'</div><div class="cv-stat-label">Listing since</div></div>':'')
         +(cats.length?'<div class="cv-stat"><div class="cv-stat-val" style="font-size:14px;">'+cats.map(function(c){var M={'adventures_accommodation':'Adventures · Stays','adventures_experiences':'Adventures · Experiences','local_market':'Local Market'};var k=String(c);var lbl=M[k.toLowerCase()]||k.replace(/_/g,' ').replace(/\w/g,function(ch){return ch.toUpperCase();});return lbl.replace(/</g,'&lt;');}).join(', ')+'</div><div class="cv-stat-label">Categor'+(cats.length===1?'y':'ies')+'</div></div>':'')
@@ -5214,6 +5242,8 @@ function openDetail(id){
       </div>
     </div>
     ${String(l.cat||'').toLowerCase()==='services' ? `<div style="margin:0 0 14px;text-align:center;font-size:13px;color:var(--text-3);">Do work like this yourself? <a href="/quick/?src=status-make" style="color:var(--accent);font-weight:700;">Make your own advert \u2014 free</a></div>` : ''}
+    <div style="margin:0 0 14px;text-align:center;font-size:12px;"><a href="/support?topic=report&amp;listing=${encodeURIComponent(String(l.id||'').replace('bea_',''))}#support-form" style="color:var(--text-3);">🚩 Report this listing</a></div>
+    <!-- E2E-HMI-1 (24 Sep 2026): a buyer had no way to report an advert; complaints now reach the support queue with the listing on them. -->
     <div class="sticky-cta">
       <button class="cta-btn ${isCommit?'commit-cta':'queue-cta'}" onclick="openModal('${id}')">
         ${isCommit?'⏳ Request Introduction':'👥 Join Queue'}
@@ -5920,7 +5950,27 @@ async function sbPublishBatchListings() {
 }
 // ── END AI5 Seller Batch Cards ────────────────────────────────────────────────
 
+// E2E-HMI-1 (24 Sep 2026): the server holds introductions to sellers without a verified ID
+// (_seller_intro_gate). The app used to open the form, ask the buyer to confirm, and then fail.
+// Ask first, and say plainly what is happening instead of offering a request that cannot go.
+function _msSignedEmail(){ try{ return localStorage.getItem('ms_aa_email')||localStorage.getItem('ms_user_email')||''; }catch(_){ return ''; } }
+function _msSignedName(){ try{ return localStorage.getItem('ms_user_name')||localStorage.getItem('ms_aa_name')||''; }catch(_){ return ''; } }
+async function _msSellerCanReceive(id){
+  try{
+    const l=findListing(id); if(!l || !l.isLive || !BEA_ENABLED) return true;
+    const beaId=parseInt(String(l.id).replace('bea_',''),10); if(!beaId) return true;
+    const r=await fetch(BEA_URL+'/listings/'+beaId); if(!r.ok) return true;
+    const d=await r.json();
+    return d.seller_id_green_tick !== false;
+  }catch(_){ return true; }   /* unknown never blocks a buyer; the server still decides */
+}
 function openModal(id){
+  _msSellerCanReceive(id).then(function(ok){
+    if(!ok){ showToast('This seller has not verified their ID yet, so TrustSquare is holding introductions to them for your safety. Nothing was charged.', 7000); return; }
+    _openModalNow(id);
+  });
+}
+function _openModalNow(id){
   pendingIntroId=id;
   pendingLMIntroId=null;
   const l=findListing(id),isCommit=catCfg(l).model==='commit';
@@ -5930,6 +5980,9 @@ function openModal(id){
   document.getElementById('modal-notice-queue').style.display=isCommit?'none':'flex';
   document.getElementById('modal-cta-btn').className=`modal-cta ${isCommit?'commit':'queue'}`;
   document.getElementById('modal-cta-btn').textContent=isCommit?'Submit Introduction Request':'Join Queue · 1T on acceptance';
+  // E2E-HMI-1: a signed-in buyer is not asked again for what the app already knows.
+  try{ const _me=document.getElementById('m-email'), _mn=document.getElementById('m-name');
+    if(_me && !_me.value) _me.value=_msSignedEmail(); if(_mn && !_mn.value) _mn.value=_msSignedName(); }catch(_){}
   // Reset tn-deduct-notice to standard text (LM modal changes it to seller-pays)
   const tnNotice = document.querySelector('#intro-modal .tn-deduct-notice');
   if (tnNotice) tnNotice.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> 1 Tuppence ($2) deducted only on seller acceptance';
@@ -5968,7 +6021,7 @@ function submitIntro(){
       // LISTING id; and the toast now reports what the server actually did.
       (async () => {
         const ok = await msUnverifiedGate('', l.category, beaId);
-        if(!ok){ showToast('Introduction not sent.'); return; }
+        if(!ok){ return; }   // E2E-HMI-1: the gate itself says why
         try{
           const r = await fetch(BEA_URL + '/intros', { method:'POST', credentials:'include',
             headers:{'Content-Type':'application/json','X-Api-Key':API_KEY},
@@ -6114,6 +6167,22 @@ function openCVEdit(){
   editTags = [...editingSeller.tags];
   renderCVEditForm();
   goTo('cv-edit');
+  // E2E-HMI-1 (24 Sep 2026): the account's saved profile wins over this browser's copy - it is what
+  // buyers see, and it is the same on every device.
+  try {
+    const _em = _msSignedEmail();
+    if (_em && typeof BEA_ENABLED !== 'undefined' && BEA_ENABLED) {
+      fetch(BEA_URL + '/users/' + encodeURIComponent(_em), {credentials: 'include', headers: {'X-Api-Key': API_KEY}})
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(u){
+          if (!u || !u.profile_json) return;
+          let p = {}; try { p = JSON.parse(u.profile_json) || {}; } catch (_) { p = {}; }
+          ['headline','about','region'].forEach(function(k){ if (p[k]) editingSeller[k] = p[k]; });
+          if (Array.isArray(p.tags)) { editingSeller.tags = p.tags; editTags = [...p.tags]; }
+          renderCVEditForm();
+        }).catch(function(){});
+    }
+  } catch (_) {}
 }
 
 function renderCVEditForm(){
@@ -6278,9 +6347,13 @@ async function handleCVPhoto(e){
   const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
   if (BEA_ENABLED && sellerEmail) {
     try {
-      // Convert base64 dataURL back to a Blob for upload
-      const res  = await fetch(result);
-      const blob = await res.blob();
+      // Convert base64 dataURL back to a Blob for upload.
+      // E2E-HMI-1 (24 Sep 2026): fetch(data:...) is refused by the page's connect-src policy, so the
+      // profile photo never reached the server while the screen said 'saved'. Decode it locally.
+      const _b64 = String(result).split(',')[1] || '';
+      const _bin = atob(_b64); const _u8 = new Uint8Array(_bin.length);
+      for (let _i = 0; _i < _bin.length; _i++) _u8[_i] = _bin.charCodeAt(_i);
+      const blob = new Blob([_u8], {type: 'image/jpeg'});
       const fd   = new FormData();
       fd.append('file', blob, 'profile.jpg');
       const up = await fetch(BEA_URL + '/users/' + encodeURIComponent(sellerEmail) + '/photo', { method: 'POST', body: fd });
@@ -6343,6 +6416,16 @@ function refreshTagsUI(){
     </div>`).join('');
 }
 
+// E2E-HMI-1 (24 Sep 2026): one writer for the seller profile on the account (POST /users/me/profile,
+// bound to the signed-in session - a typed email authorises nothing).
+async function msSaveProfileToServer(p){
+  if (typeof DEMO_MODE !== 'undefined' && DEMO_MODE) return true;
+  try {
+    const r = await fetch(BEA_URL + '/users/me/profile', { method: 'POST', credentials: 'include',
+      headers: {'Content-Type': 'application/json', 'X-Api-Key': API_KEY}, body: JSON.stringify(p || {}) });
+    return r.ok;
+  } catch (_) { return false; }
+}
 function saveCVEdit(){
   const s = editingSeller;
 
@@ -6372,7 +6455,11 @@ function saveCVEdit(){
   if(typeof SELLERS!=='undefined' && SELLERS){ if(!SELLERS[0]) SELLERS[0]={}; Object.assign(SELLERS[0], s); }
   localStorage.setItem('ms_seller_profile', JSON.stringify(s));
 
-  showToast('✓ Profile saved');
+  // E2E-HMI-1 (24 Sep 2026): the profile lived only in this browser - buyers never saw it and a
+  // second device lost it, while the screen said 'saved'. Save it to the account; say so only then.
+  msSaveProfileToServer({headline: s.headline || '', about: s.about || '', years_exp: s.yearsExp || '',
+                         region: s.region || '', tags: s.tags || []})
+    .then(function(ok){ showToast(ok ? '\u2713 Profile saved' : 'Saved on this phone only \u2014 could not reach TrustSquare. Try again.', ok ? 3000 : 6000); });
   goTo('dashboard');
   switchDashTab('profile');
 }
@@ -7377,7 +7464,7 @@ async function _sobGoLiveInner() {
     if (/@key\.trustsquare\.co$/i.test(String(email || ''))) {
       const sub = document.getElementById('sob-success-sub');
       const how = document.getElementById('sob-success-how');
-      if (sub) sub.textContent = 'Introduction requests wait for you here in your Seller Hub \u2014 open your TrustSquare link to see them. The free AI coach can polish your listing whenever you\u2019re ready.';
+      if (sub) sub.textContent = 'Introduction requests wait for you here in your Seller Hub \u2014 open your TrustSquare link to see them. Your first AI coach session is free; after that it is 1T per use.';
       if (how) how.textContent = 'Introduction requests wait in your Seller Hub (and by SMS if you gave a phone number)';
     }
   } catch (e) {}
@@ -7391,6 +7478,15 @@ async function _sobGoLiveInner() {
       : `${count} listings are now live on TrustSquare.`;
   }
 
+  // E2E-HMI-1 (24 Sep 2026): 'requests will arrive by email' was untrue for a seller without a
+  // verified ID - the server holds every introduction to them. Tell her, and where to fix it.
+  try {
+    fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/id-status').then(function(r){ return r.ok ? r.json() : null; }).then(function(st){
+      if (!st || st.green_tick) return;
+      const sub = document.getElementById('sob-success-sub');
+      if (sub) sub.innerHTML = 'Your advert is live and buyers can see it. <strong style="color:#fbbf24">Buyers can send you introductions once your ID is verified</strong> \u2014 do it in My Space \u2192 Trust \u2192 Upload ID. It is what keeps scammers out.';
+    }).catch(function(){});
+  } catch (e) {}
   obTrack('publish_ok',{n:successCount});   // ONBOARD-FUNNEL-1: the number's own event
   sobGoPhase(4);
   if (sobState._publishedNow) { sobState._publishedNow = false; sobAccountAfter(email); }   // HANDOVER-PUBLISH-1
@@ -10196,10 +10292,28 @@ function msKeepLive(id){
   }).then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(){
       var dl = dashState.listings.find(function(x){ return x.beaListingId === id || x.id === id; });
-      if(dl){ dl.listing_status = 'live'; if(dl._raw) dl._raw.listing_status = 'live'; }
+      if(dl){ dl.listing_status = 'live'; if(dl._raw){ dl._raw.listing_status = 'live'; dl._raw.fade_nudge_sent_at = null; } }
+      showToast('Kept live \u2014 the 90-day clock starts again.');
       renderDash();
     })
     .catch(function(e){ console.warn('keep-live failed', e); });
+}
+
+// E2E-HMI-1 (24 Sep 2026): Pause was a dead button ('Pause coming soon') on every advert while
+// the EULA (s4.6) promises a PAUSED state. Paused adverts are hidden from buyers; the fade clock runs on.
+function msPauseListing(id, pause){
+  fetch(BEA_URL + '/listings/' + id + '/pause', {
+    method: 'POST', credentials: 'include', headers: {'Content-Type': 'application/json', 'X-Api-Key': API_KEY},
+    body: JSON.stringify({pause: !!pause})
+  }).then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error((j && j.detail) || ('HTTP ' + r.status)); return j; }); })
+    .then(function(j){
+      var dl = dashState.listings.find(function(x){ return x.beaListingId === id || x.id === id; });
+      var st = (j && j.listing_status) || (pause ? 'paused' : 'live');
+      if(dl){ dl.listing_status = st; dl.status = st === 'paused' ? 'paused' : dl.status; if(dl._raw) dl._raw.listing_status = st; }
+      showToast(pause ? 'Paused \u2014 buyers cannot see it until you resume.' : 'Resumed \u2014 buyers can see it again.');
+      renderDash();
+    })
+    .catch(function(e){ showToast('Could not change it: ' + e.message); });
 }
 
 function renderDashCard(dl){
@@ -10212,6 +10326,9 @@ function renderDashCard(dl){
     ? `<span class="ml-status st-queue">👥 ${pendingIntros.length} request${pendingIntros.length>1?'s':''} waiting</span>`
     : sbLifecycleChip(_ls);
   if(_ls==='faded') statusBadge += ` <button class="mla-btn accent" onclick="msKeepLive(${dl.beaListingId})" style="padding:5px 12px;font-size:11px;border-radius:8px;">\u21bb Keep live</button>`;
+  // E2E-HMI-1 (24 Sep 2026): the 7-day warning lived only in an email; the hub showed a plain
+  // 'Live' until the advert vanished. Show it here too, with the same one-tap fix.
+  if(_ls==='live' && dl._raw && dl._raw.fade_nudge_sent_at) statusBadge += ` <span class="ml-status" style="background:#fef3c7;color:#92400e;">\u23f3 Hides soon \u2014 no activity</span> <button class="mla-btn accent" onclick="msKeepLive(${dl.beaListingId})" style="padding:5px 12px;font-size:11px;border-radius:8px;">\u21bb Keep live</button>`;
 
   const introsHtml = pendingIntros.map(intro => `
     <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-top:8px;">
@@ -10263,7 +10380,7 @@ function renderDashCard(dl){
       ${statusBadge}
       ${wonderBanners}
       ${introsHtml}
-      ${dl.beaListingId?`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${dl.status!=='draft'?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||''))})">Share to Status</button>`:''}<button class="mla-btn" onclick="showToast('Pause coming soon')">Pause</button></div>`:''}
+      ${dl.beaListingId?(_ls==='archived'?`<div class="ml-actions"><span style="font-size:11px;color:var(--text-3);">Archived after 90 quiet days — it cannot come back. Make a new advert any time.</span></div>`:`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${(dl.status!=='draft'&&_ls==='live')?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||''))})">Share to Status</button>`:''}${_ls==='live'?`<button class="mla-btn" onclick="msPauseListing(${dl.beaListingId}, true)">Pause</button>`:''}${_ls==='paused'?`<button class="mla-btn accent" onclick="msPauseListing(${dl.beaListingId}, false)">Resume</button>`:''}</div>`):''}
     </div>
   </div>`;
 }
@@ -10700,7 +10817,9 @@ function _elFieldVal(raw, fieldId) {
   const map = {
     title:        raw.title        || '',
     price:        (raw.price || '').replace(/[^0-9.]/g, '') || '',
-    rate:         (raw.price || '').replace(/[^0-9.]/g, '') || '',
+    // E2E-HMI-1 (24 Sep 2026): keep the price BASIS (R450/hr) - the server refuses a bare amount
+    // for rate-based adverts, so stripping it here made every Services/Tutors edit fail with 422.
+    rate:         (raw.price || ''),
     desc:         desc,
     suburb:       raw.suburb       || '',
     area:         raw.area || raw.suburb || '',
@@ -10721,6 +10840,34 @@ function _elFieldVal(raw, fieldId) {
   return map[fieldId] !== undefined ? map[fieldId] : '';
 }
 
+// E2E-HMI-1 (24 Sep 2026): the Listing Coach writes structured answers into the description
+// header (**Service type:** Electrical ...) and not into columns, so the edit form came back
+// blank for them. Read them back from that header when the column is empty.
+function _elDescField(raw, fieldId) {
+  const desc = String((raw && raw.description) || '');
+  const lbl = {service_type:'Service type', radius:'Travel radius', experience:'Experience',
+               registered:'Registered', callout_fee:'Call-out fee', area:'Area'}[fieldId];
+  if (!lbl) return '';
+  const m = desc.match(new RegExp('\\*\\*' + lbl + '[^*]*:\\*\\*\\s*([^\\n]+)', 'i'));
+  return m ? m[1].trim() : '';
+}
+// E2E-HMI-1: a bare amount typed into a rate field inherits the basis and currency of the saved
+// price (R450/hr + '480' -> R480/hr); anything already carrying a basis is sent as typed.
+function _elRateWithBasis(typed, orig) {
+  const t = String(typed || '').trim();
+  if (!t) return t;
+  if (/^poa$/i.test(t)) return 'POA';
+  if (/[a-z\/]/i.test(t.replace(/^[^0-9]*/, ''))) return t;
+  const amt = t.replace(/[^0-9.]/g, '');
+  if (!amt) return t;
+  const o = String(orig || '');
+  const cur = (o.match(/^\s*([^0-9\s]{1,3})/) || [])[1] || '';
+  const basis = ((o.match(/[0-9][0-9.,\s]*(.*)$/) || [])[1] || '').trim();
+  if (!basis) return t;
+  if (basis.charAt(0) === '/') return cur + amt + (/\s\//.test(o) ? ' / ' + basis.slice(1).trim() : basis);
+  return cur + amt + ' ' + basis;
+}
+
 // Build the edit form — mirrors AA field definitions but pre-populated & AI suggestions optional
 function renderEditForm(raw) {
   const fields = _elGetFields(elCurrentCat, raw.service_class);
@@ -10728,7 +10875,7 @@ function renderEditForm(raw) {
   if (!container) return;
 
   container.innerHTML = fields.map(f => {
-    const val = _elFieldVal(raw, f.id);
+    const val = _elFieldVal(raw, f.id) || _elDescField(raw, f.id);
     const sug = elAISuggestions[f.id];
     const sugHtml = sug
       ? `<div class="el-sug-pill">✨ <strong>Suggestion:</strong> ${sug.suggestion}<br>
@@ -11382,12 +11529,17 @@ async function saveEditedListing() {
   // Map form field IDs → BEA model field names
   const payload = {};
   if (fd.title)        payload.title        = fd.title;
-  if (fd.price || fd.rate) {
+  if (fd.rate && !fd.price) {
+    payload.price = _elRateWithBasis(fd.rate, (elCurrentRaw && elCurrentRaw.price) || '');   // E2E-HMI-1
+  } else if (fd.price || fd.rate) {
     // Strip currency symbols, spaces, commas and any text — keep digits and one decimal point only
     const rawP = (fd.price || fd.rate).replace(/[^0-9.]/g, '');
     payload.price = rawP || (fd.price || fd.rate);
   }
   if (fd.desc)         payload.description  = fd.desc;
+  // E2E-HMI-1: keep the description's **Rate:** header in step with the price just saved.
+  if (payload.description && fd.rate && !fd.price && payload.price)
+    payload.description = payload.description.replace(/(\*\*Rate:\*\*\s*)[^\n]*/i, '$1' + payload.price);
   if (fd.suburb)       payload.suburb       = fd.suburb;
   if (fd.area)         payload.area         = fd.area;
   if (fd.prop_type)    payload.prop_type    = fd.prop_type;
@@ -12634,14 +12786,15 @@ async function aaRenderHome() {
     const dots    = [1,2,3].map(s =>
       `<span class="aa-stage-dot ${s < stage ? 'done' : s === stage ? 'active' : ''}"></span>`
     ).join('');
-    const stageLabel = stage >= 3 ? 'Ready to publish' : `Next: ${stageNames[stage] || 'Details'}`;
+    // E2E-HMI-1: a published advert kept reading 'Ready to publish' here, inviting a second copy.
+    const stageLabel = d.listing_id ? 'Sent to My Listings' : (stage >= 3 ? 'Ready to publish' : `Next: ${stageNames[stage] || 'Details'}`);
     return `
       <div class="aa-draft-card">
         <div class="aa-draft-cat">${emoji} ${d.category || 'No category'}</div>
         <div class="aa-draft-title">${title}</div>
         <div class="aa-draft-meta">
           <div class="aa-stage-dots">${dots}</div>
-          <span style="font-size:11px;color:var(--text-3);">Stage ${stage} of 4 · ${stageLabel}</span>
+          <span style="font-size:11px;color:var(--text-3);">Stage ${stage} of 3 · ${stageLabel}</span>
           <span class="aa-draft-age">${age}</span>
         </div>
         <div style="display:flex;gap:8px;margin-top:10px;">
@@ -13154,7 +13307,7 @@ async function aaFetchDetailSessionBadge(email) {
       badge.innerHTML = `<span style="font-weight:700;">${bal}T available · costs 1T per coach call</span>`;
       if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
     } else {
-      badge.innerHTML = `<div style="font-weight:700;color:#dc2626;margin-bottom:6px;">Insufficient Tuppence — AI Coach costs 1T per call</div>
+      badge.innerHTML = `<div style="font-weight:700;color:var(--navy);margin-bottom:6px;">Your free coach session is used — each further coach call is 1T</div>
         <div style="font-size:12px;color:var(--text-3);">Top up your Tuppence wallet to continue using AI Coach.</div>
         <button onclick="openTopup()" style="margin-top:8px;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;">Top Up Tuppence</button>`;
       if (btn) { btn.disabled = true; btn.style.opacity = '.4'; }
@@ -13273,7 +13426,7 @@ async function aaFetchSessionBadge(email) {
       badge.innerHTML = `<span style="font-weight:700;">${bal}T available · costs 1T per coach call</span>`;
       if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Run AI Coach'; }
     } else {
-      badge.innerHTML = `<div style="font-weight:700;color:#dc2626;margin-bottom:6px;">Insufficient Tuppence — AI Coach costs 1T per call</div>
+      badge.innerHTML = `<div style="font-weight:700;color:var(--navy);margin-bottom:6px;">Your free coach session is used — each further coach call is 1T</div>
         <button onclick="openTopup()" style="margin-top:8px;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;">Top Up Tuppence</button>`;
       if (btn) { btn.disabled = true; btn.style.opacity = '.4'; btn.textContent = 'Run AI Coach'; }
     }
@@ -13503,9 +13656,20 @@ async function aaDoPublish() {
     const res = await fetch(`${BEA_URL}/advert-agent/publish`, { method: 'POST', body: fd });
     if (!res.ok) {
       let detail = 'Publish failed — please try again';
-      try { const j = JSON.parse(await res.text()); detail = j.detail || detail; } catch(_) {}
+      let _pj = null;
+      try { const j = JSON.parse(await res.text()); _pj = j; detail = j.detail || detail; } catch(_) {}
       if (res.status === 402) {
         showToast('Slot limit reached'); openPlans('aa-publish', true);
+      } else if (res.status === 409 && _pj && _pj.need === 'eula' && _pj.listing_id) {
+        // E2E-HMI-1 (24 Sep 2026): a first-time seller got a toast and was left on this screen with
+        // no way to accept the Terms. Hand the saved draft to the hub's Publish, which opens the
+        // Terms step (HUB-EULA-1) and goes live the moment she accepts.
+        await aaDB.put({ ...draft, email, stage: 3, listing_id: _pj.listing_id, updated_at: Date.now() });
+        showToast('Saved. One step left: read and accept the Terms to go live.', 5000);
+        if (btn) { btn.disabled = false; btn.textContent = 'Publish Listing'; }
+        goTo('dashboard');
+        setTimeout(function(){ try { dashPublish(_pj.listing_id); } catch(_) {} }, 1200);
+        return;
       } else {
         showToast(detail);
       }
@@ -13815,7 +13979,8 @@ async function bzAcceptShow(box, email){
   go.onclick = async () => {
     go.disabled = true; go.textContent = 'Opening\u2026';
     try{
-      await bzApi('/users/' + encodeURIComponent(email) + '/eula', 'POST');
+      // E2E-HMI-1 (24 Sep 2026): Buzz s3.8 only - this used to stamp the WHOLE Terms as accepted.
+      await bzApi('/buzz/accept', 'POST', {});
     }catch(e){
       go.disabled = false; go.textContent = 'Accept and open Buzz';
       box.insertAdjacentHTML('beforeend',
@@ -15142,7 +15307,9 @@ function msInit(){
 
   // Wallet badge
   const tnBadge = document.getElementById('nav-tn-badge');
-  const walBal  = tnBadge ? (parseInt(tnBadge.textContent)||5) : 5;
+  // E2E-HMI-1 (24 Sep 2026): parseInt('0')||5 showed '5 Tuppence' to every empty wallet.
+  const _tbN    = tnBadge ? parseInt(tnBadge.textContent, 10) : NaN;
+  const walBal  = isNaN(_tbN) ? 0 : _tbN;
   const msPill  = document.getElementById('ms-tn-pill');
   if(msPill) msPill.textContent = walBal + ' T';
   const msWalBal = document.getElementById('ms-wallet-balance');
@@ -16352,6 +16519,7 @@ function msEditField(field){
     const trimmed = val.trim();
     if(!trimmed){ showToast('Name cannot be empty'); return; }
     localStorage.setItem('ms_user_name', trimmed);
+    msSaveProfileToServer({name: trimmed});   // E2E-HMI-1: the account's name, not just this browser's
     const pdName = document.getElementById('ms-pd-name');
     if(pdName) pdName.textContent = trimmed;
     const msName = document.getElementById('ms-display-name');
@@ -19708,8 +19876,10 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
            + 'TrustSquare never holds deposits and cannot recover money you send '
            + 'to a seller.';
     }
-    msg += '\n\nDo you want to continue with this introduction?';
-    return window.confirm(msg);
+    // E2E-HMI-1 (24 Sep 2026): the server refuses introductions to unverified sellers, so asking
+    // "continue?" offered a choice that did not exist. Say what is happening instead.
+    showToast('This seller has not verified their ID yet, so TrustSquare is holding introductions to them for your safety. Nothing was charged.', 7000);
+    return false;
   }catch(e){ return true; }   /* a warning failure must never block a buyer */
 }
 

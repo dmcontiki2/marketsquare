@@ -1423,6 +1423,14 @@ def run_migrations(conn):
     user_cols_eula = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
     if "eula_accepted_at" not in user_cols_eula:
         conn.execute("ALTER TABLE users ADD COLUMN eula_accepted_at TEXT")
+    # E2E-HMI-1 (24 Sep 2026): Buzz s3.8 acceptance is its OWN record. It used to be written into
+    # eula_accepted_at, so one tick on Buzz counted as accepting the whole Seller Terms and the
+    # Quick door then published her adverts in one tap without the Terms ever being shown.
+    if "buzz_accepted_at" not in user_cols_eula:
+        conn.execute("ALTER TABLE users ADD COLUMN buzz_accepted_at TEXT")
+    # E2E-HMI-1: the seller profile (headline, about, region, tags) lived only in one browser.
+    if "profile_json" not in user_cols_eula:
+        conn.execute("ALTER TABLE users ADD COLUMN profile_json TEXT")
 
     conn.commit()
 
@@ -3662,6 +3670,8 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
                    request: Request = None, response: Response = None):
     listing.title = _plain_text(listing.title)              # AUDIT-XSS-1
     listing.description = _plain_text(listing.description)
+    listing.title, listing.description, _scrubbed = _private_text_scrub(
+        listing.title, listing.description, listing.seller_email or "", "create")   # E2E-HMI-1
     if not listing.suburb:
         raise HTTPException(status_code=400, detail="suburb is required")
     # SEC-GATE-1 (24 Sep 2026): owners are matched on the lowercased session email, so store it that way.
@@ -4855,7 +4865,8 @@ def listing_lang_read(listing_id: int, email: str = "", ts_user: str = Cookie(de
 
 
 @app.get("/listings/{listing_id}")
-def get_listing(listing_id: int, ts_user: str = Cookie(default=None)):
+def get_listing(listing_id: int, ts_user: str = Cookie(default=None),
+                x_admin_key: str = Header(default=None), x_admin_token: str = Header(default=None)):
     """Fetch a single listing by ID."""
     conn = database.get_db()
     row = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
@@ -4863,6 +4874,24 @@ def get_listing(listing_id: int, ts_user: str = Cookie(default=None)):
     if not row:
         raise HTTPException(status_code=404, detail="Listing not found")
     _d = dict(row)
+    # E2E-HMI-1 (24 Sep 2026): EULA s4.6 - "Buyers only ever see ... listings in the LIVE state.
+    # Draft listings are invisible to Buyers." Any advert was readable by id in any state (drafts,
+    # archived, faded, a QA fixture). Only the seller herself, or staff, may read a non-live one.
+    _st = (_d.get("listing_status") or "live").strip().lower()
+    if _st not in ("live", "active"):
+        _viewer = ""
+        try:
+            _viewer = (_session_email(ts_user) or "").strip().lower()
+        except Exception:
+            _viewer = ""
+        _staff = bool(x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY)
+        if not _staff and x_admin_token:
+            try:
+                _staff = bool(_admin_claims(x_admin_token))
+            except Exception:
+                _staff = False
+        if not _staff and (not _viewer or _viewer != (_d.get("seller_email") or "").strip().lower()):
+            raise HTTPException(status_code=404, detail="Listing not found")
     if (_d.get("category") or "").lower() == "property":
         _d["availability_label"] = _rental_availability(_d.get("rental_status"), _d.get("available_from"))
     _scrub_vehicle_specs(_d)   # CARS-SPEC-1 D1: unconfirmed vehicle specs never public
@@ -4905,8 +4934,25 @@ def seller_summary_for_listing(listing_id: int):
         return {"found": False}
     cats = {r["category"]: r["n"] for r in rows}
     firsts = [r["first_seen"] for r in rows if r["first_seen"]]
-    return {"found": True, "active_listings": sum(cats.values()), "categories": cats,
-            "member_since": (min(firsts)[:7] if firsts else None)}
+    out = {"found": True, "active_listings": sum(cats.values()), "categories": cats,
+           "member_since": (min(firsts)[:7] if firsts else None)}
+    # E2E-HMI-1 (24 Sep 2026): the profile a seller writes now reaches buyers - headline, about
+    # and tags only, already contact-scrubbed when saved. Never the name or email (SELLER-ANON-1).
+    try:
+        import json as _sj
+        _c2 = database.get_db()
+        try:
+            _pr = _c2.execute("SELECT profile_json FROM users WHERE LOWER(email)=LOWER(?)",
+                              (row["seller_email"],)).fetchone()
+        finally:
+            _c2.close()
+        _p = _sj.loads(_pr["profile_json"]) if _pr and _pr["profile_json"] else {}
+        for _k in ("headline", "about", "tags"):
+            if _p.get(_k):
+                out[_k] = _p[_k]
+    except Exception:
+        pass
+    return out
 
 
 @app.put("/listings/{listing_id}")
@@ -4937,6 +4983,8 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
         update.title = _plain_text(update.title)            # AUDIT-XSS-1
     if update.description is not None:
         update.description = _plain_text(update.description)
+    update.title, update.description, _scrubbed = _private_text_scrub(
+        update.title, update.description, "", "edit #%s" % listing_id)   # E2E-HMI-1
     # AUDIT-AUTH-1 (23 Sep 2026): the editor is the proven session (RUL-135), not the typed ?email=.
     try:
         email = _actor(ts_user, email, "listing-update", x_admin_key)
@@ -9864,11 +9912,13 @@ async def aa_publish(
 
     if coach_output:
         desc = f"{desc}\n\n---\nAI coaching notes:\n{coach_output}".strip()
+    title, desc, _scrubbed = _private_text_scrub(title, desc, email, "aa-publish")   # E2E-HMI-1
 
     # Upload photos to R2 (or local fallback) — EXIF-rotate before storage
     thumb_url  = None
     medium_url = None
     _anon_notes = []
+    _aa_urls = []   # E2E-HMI-1: every stored photo, in order (only the first was ever kept)
     for idx, photo in enumerate(photos):
         raw_data = await photo.read()
         # Apply EXIF orientation fix and compress to JPEG
@@ -9907,7 +9957,9 @@ async def aa_publish(
                 url = f"/media/{fname}"
             except Exception:
                 url = None
-        if url and idx == 0:
+        if url:
+            _aa_urls.append(url)
+        if url and not thumb_url:    # E2E-HMI-1: the first photo that cleared, not only photo #1
             thumb_url  = url
             medium_url = url
 
@@ -9963,6 +10015,8 @@ async def aa_publish(
          "live" if _go_live else "draft"),   # SEC-GATE-1 (24 Sep 2026): draft until the EULA is on record
     )
     listing_id = cursor.lastrowid
+    if len(_aa_urls) > 1:   # E2E-HMI-1: the gallery gets every photo she took
+        conn.execute("UPDATE listings SET photo_urls = ? WHERE id = ?", (_json.dumps(_aa_urls), listing_id))
     # Upsert user record so seller can use AA coach going forward
     conn.execute(
         "INSERT INTO users (email, aa_free_used, aa_sessions_remaining) VALUES (?, 0, 0) ON CONFLICT(email) DO NOTHING",
@@ -11137,6 +11191,8 @@ def get_showcase(limit: int = 30):
                   l.published_at, l.view_count
            FROM wishlist_showcase s
            JOIN listings l ON l.id = s.listing_id
+           WHERE COALESCE(l.listing_status, 'live') = 'live'          -- E2E-HMI-1: never an archived/QA advert
+             AND (l.suspension_reason IS NULL OR l.suspension_reason = '')
            ORDER BY s.sort_order ASC, s.added_at DESC
            LIMIT ?""",
         (limit,)
@@ -13522,6 +13578,19 @@ def trust_employer_confirm(req: EmployerConfirmReq, ts_user: str = Cookie(defaul
                verified_at=excluded.verified_at, verified_by=excluded.verified_by""",
         (email, _signal, _pts, note, datetime.now(timezone.utc).isoformat(), _by))
     conn.commit()
+    # E2E-HMI-1 (24 Sep 2026): the Buzz screen promised "a reference ... connects the two of you
+    # here", but nothing ever created a Buzz connection (0 pairs, no caller of /buzz/pair). A
+    # confirmer who is signed in has now dealt with her in person - connect them. Allowing still
+    # takes each side's own switch; this only puts the row on both screens.
+    try:
+        _conf = (_session_email(ts_user) or "").strip().lower()
+        if _conf and "@" in _conf and _conf != (email or "").strip().lower():
+            _pa, _pb = _buzz_key(email, _conf)
+            conn.execute("INSERT INTO buzz_pairs (a_email, b_email, created_by, source) VALUES (?,?,?,?) "
+                         "ON CONFLICT(a_email, b_email) DO NOTHING", (_pa, _pb, _conf, "reference"))
+            conn.commit()
+    except Exception as _bze:
+        _log.error("E2E-HMI-1 buzz pair from reference failed: %s", _bze)
     conn.close()
     try:
         fresh = trust_score_breakdown(email)   # recompute + write through, so it shows at once
@@ -25957,11 +26026,13 @@ def _buzz_accepted(email: str) -> bool:
     try:
         conn = database.get_db()
         try:
-            row = conn.execute("SELECT eula_accepted_at FROM users WHERE email = ?",
+            row = conn.execute("SELECT eula_accepted_at, buzz_accepted_at FROM users WHERE email = ?",
                                ((email or "").strip().lower(),)).fetchone()
         finally:
             conn.close()
-        return bool(row and row["eula_accepted_at"])
+        # E2E-HMI-1: the full Terms include s3.8, so either record opens Buzz - but a Buzz tick
+        # never stands in for the full Terms (see POST /buzz/accept).
+        return bool(row and (row["eula_accepted_at"] or row["buzz_accepted_at"]))
     except Exception as exc:
         _log.error("BUZZ-ACCEPT-1 flag read failed: %s", exc)
         return False          # fail-closed: no proof of acceptance is not acceptance
@@ -25996,6 +26067,29 @@ def buzz_me(_key: str = Depends(auth.require_api_key),
     return {"email": me or "", "signed_in": bool(_session_email(ts_user)),
             "accepted": _buzz_accepted(me) if me else False,
             "enforced": _identity_bind_enabled()}
+
+
+class _BuzzAcceptIn(BaseModel):
+    email: Optional[str] = None
+
+
+@app.post("/buzz/accept")
+def buzz_accept(req: _BuzzAcceptIn = None, _key: str = Depends(auth.require_api_key),
+                ts_user: str = Cookie(default=None)):
+    """E2E-HMI-1 (24 Sep 2026): record acceptance of Buzz (EULA s3.8) ONLY. Bound to the signed-in
+    session. It never touches users.eula_accepted_at, which gates publishing adverts."""
+    me = (_buzz_who(ts_user, (req.email if req else None), "buzz-accept", require_accept=False) or "").strip().lower()
+    if "@" not in me:
+        raise HTTPException(status_code=401, detail="Sign in first.")
+    conn = database.get_db()
+    try:
+        conn.execute("INSERT INTO users (email) VALUES (?) ON CONFLICT(email) DO NOTHING", (me,))
+        conn.execute("UPDATE users SET buzz_accepted_at = COALESCE(buzz_accepted_at, CURRENT_TIMESTAMP) "
+                     "WHERE email = ?", (me,))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True, "accepted": True}
 
 
 @app.post("/buzz/pair")
@@ -26445,6 +26539,101 @@ def keep_listing_live(listing_id: int, req: _KeepLiveIn,
         return {"listing_id": listing_id, "listing_status": "live"}
     finally:
         conn.close()
+
+
+class _PauseIn(BaseModel):
+    pause: bool = True
+    email: Optional[str] = None
+
+
+@app.post("/listings/{listing_id}/pause")
+def pause_listing(listing_id: int, req: _PauseIn,
+                  ts_user: str = Cookie(default=None),
+                  x_admin_key: str = Header(default=None)):
+    """E2E-HMI-1 (24 Sep 2026): Pause was a dead button ('Pause coming soon') on every advert.
+    EULA s4.6/4.8: PAUSED hides the advert from buyers; the fade clock keeps running while paused.
+    Only live <-> paused. Bound to the signed-in session."""
+    actor = (_actor(ts_user, req.email, "pause", x_admin_key) or "").strip().lower()
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT id, seller_email, listing_status FROM listings WHERE id=?",
+                           (listing_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        if (row["seller_email"] or "").strip().lower() != actor:
+            raise HTTPException(status_code=403, detail="Not your listing")
+        st = (row["listing_status"] or "live").lower()
+        want = "paused" if req.pause else "live"
+        if st == want:
+            return {"listing_id": listing_id, "listing_status": st}
+        if st not in ("live", "paused"):
+            raise HTTPException(status_code=409, detail="Only a live advert can be paused (this one is %s)." % st)
+        now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        conn.execute("UPDATE listings SET listing_status=?, status_changed_at=? WHERE id=?",
+                     (want, now_iso, listing_id))
+        conn.commit()
+        return {"listing_id": listing_id, "listing_status": want}
+    finally:
+        conn.close()
+
+
+class _ProfileIn(BaseModel):
+    name: Optional[str] = None
+    headline: Optional[str] = None
+    about: Optional[str] = None
+    years_exp: Optional[str] = None
+    region: Optional[str] = None
+    tags: Optional[list] = None
+    email: Optional[str] = None
+
+
+@app.post("/users/me/profile")
+def save_my_profile(req: _ProfileIn, _key: str = Depends(auth.require_api_key),
+                    ts_user: str = Cookie(default=None),
+                    x_admin_key: str = Header(default=None)):
+    """E2E-HMI-1 (24 Sep 2026): the seller profile and display name were saved only in the
+    browser (localStorage) while the screen said 'Profile saved'. Saved to the ACCOUNT now,
+    bound to the signed-in session. The headline/about text goes through the same contact
+    scrub as adverts - a profile is public-facing too."""
+    me = (_actor(ts_user, req.email, "profile", x_admin_key) or "").strip().lower()
+    if "@" not in me:
+        raise HTTPException(status_code=401, detail="Sign in first.")
+    import json as _pj
+    conn = database.get_db()
+    try:
+        conn.execute("INSERT INTO users (email) VALUES (?) ON CONFLICT(email) DO NOTHING", (me,))
+        if req.name is not None:
+            nm = _plain_text(str(req.name))[:80].strip()
+            if nm:
+                conn.execute("UPDATE users SET name=? WHERE email=?", (nm, me))
+        fields = {k: getattr(req, k) for k in ("headline", "about", "region", "tags")
+                  if getattr(req, k) is not None}
+        if fields:
+            row = conn.execute("SELECT profile_json FROM users WHERE email=?", (me,)).fetchone()
+            try:
+                cur = _pj.loads(row["profile_json"]) if row and row["profile_json"] else {}
+            except Exception:
+                cur = {}
+            for k in ("headline", "about", "region"):
+                if k in fields:
+                    cur[k] = _plain_text(str(fields[k]))[:(160 if k != "about" else 1500)]
+            if "tags" in fields:
+                cur["tags"] = [_plain_text(str(t))[:40] for t in (fields["tags"] or [])][:20]
+            cur["headline"], cur["about"], _h = _private_text_scrub(cur.get("headline", ""), cur.get("about", ""), me, "profile")
+            conn.execute("UPDATE users SET profile_json=? WHERE email=?", (_pj.dumps(cur), me))
+        conn.commit()
+    finally:
+        conn.close()
+    out = {"ok": True}
+    if req.years_exp not in (None, ""):
+        try:
+            out["experience"] = trust_experience(ExperienceReq(email=me, years=int(str(req.years_exp).strip() or 0)),
+                                                 ts_user=ts_user, x_admin_key=x_admin_key)
+        except HTTPException as _e:
+            out["experience_error"] = _e.detail
+        except Exception:
+            pass
+    return out
 
 
 # Daily runner: first pass ~2 minutes after boot, then every 24h. Gated by env.
@@ -26990,6 +27179,29 @@ def i18n_translate(body: _I18nIn, request: Request):
 # ---------------------------------------------------------------------------
 _LANG_COUNTRIES_CACHE = {"d": None}
 LANG_DRAFTS_PER_ADVERT_DAY = 5   # RUL-164: free feature, capped per advert per day (3 AI calls each)
+
+
+def _private_text_scrub(title, desc, who="", where=""):
+    """E2E-HMI-1 (24 Sep 2026): the hard anonymity strip (phone numbers, email addresses, web
+    addresses, handles, street addresses) ran only on agency imports. A private seller could
+    publish 'phone me on 082 555 1234' and it went live to every buyer - the whole introduction
+    model bypassed in one line. Same regex, every private publish and edit. Text with nothing to
+    strip is returned untouched (no whitespace rewrites)."""
+    hits = []
+    out = []
+    for v in (title, desc):
+        if not v:
+            out.append(v)
+            continue
+        clean, h = _anon_regex_clean(v)
+        if h:
+            hits.extend(h)
+            out.append(clean)
+        else:
+            out.append(v)
+    if hits:
+        _log.info("E2E-HMI-1 contact scrub (%s) for %s: %s", where, who, sorted(set(hits)))
+    return out[0], out[1], sorted(set(hits))
 
 
 def _plain_text(v):

@@ -2652,6 +2652,9 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     var em = QUICK.member ? (HANDOVER.email||'') : (($('qpmail')||{}).value||'').trim();
     if(mode==='email' && !/.+@.+\..+/.test(em)){ var m=$('qpmail'); if(m){ m.focus(); m.style.borderColor='#e06a5a'; } return; }
     if(mode==='phone'){ var h0=$('pubhint'); if(h0) h0.textContent=qTr('Confirm the SMS code first, then save.'); var ph=$('qpphone'); if(ph) ph.focus(); return; }
+    // E2E-HMI-1 (24 Sep 2026): the app asked her for the email she had just typed here. Same origin,
+    // so leave it where the app's sign-in screen can pre-fill it (this device only, never sent on).
+    if(mode==='email' && em){ try{ localStorage.setItem('ts_quick_email', em); }catch(_){} }
     btn.disabled=true; btn.textContent=(QUICK.member&&QUICK.eula) ? qTr('Publishing…') : qTr('Saving…');
     var pay=handoverPayload().body; pay.seller_email=(mode==='link'?null:(em||null));
     fetch('/listings/quick-publish',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
