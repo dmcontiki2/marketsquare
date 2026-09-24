@@ -10451,6 +10451,7 @@ function lmNoShowOpen(introId, listingId){
   bg = document.createElement('div');
   bg.id = 'lm-noshow-sheet';
   bg.className = 'modal-bg open';
+  bg.style.zIndex = '100000';   // above the floating language pill
   bg.onclick = function(e){ if (e.target === bg) bg.remove(); };
   bg.innerHTML = '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="lmns-h" style="max-width:440px;">'
     + '<h3 id="lmns-h" style="margin:0 0 6px;font-size:18px;">What happened?</h3>'
