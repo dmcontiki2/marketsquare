@@ -18034,7 +18034,7 @@ def auth_logout(response: Response, ts_user: str = Cookie(default=None)):
             conn.close()
         _session_version(em, fresh=True)
     response.delete_cookie("ts_user", path="/", secure=True, httponly=True, samesite="lax")
-    return {"ok": True}
+    return {"ok": bool(em)}          # a stranger gets {"ok": false}: nothing was done for them
 
 # ── AGENCY (Team plan) — umbrella over agent sellers ───────────────────────
 class _AgencyCreate(_BaseModel):
