@@ -473,6 +473,12 @@ def _admin_json(path):
     return doc
 
 
+def _admin_text(path):
+    """GATE-SYNC-1 (24 Sep 2026): _admin_json's raw text, for checks that parse the body themselves."""
+    _admin_json(path)
+    return _cache["ADM:" + path]
+
+
 def listings():
     return _json("/demo-listings")["listings"]
 
@@ -1265,7 +1271,7 @@ def rg_register_matches_live_switch():
     if not recorded:
         return [(FAIL, "ai_price_card.json has no active_lane field -- the register cannot "
                        "track the live switch without it")]
-    ap = _json("/flags").get("ai_provider") or {}
+    ap = _admin_json("/flags").get("ai_provider") or {}   # GATE-SYNC-1: staff-only field since SEC-GATE-1
     # AMENDED 1 Aug 2026 (manual-pin feature): the register tracks the STANDING lane; a
     # time-decaying operator pin is ops, not procurement, so it must NOT trip this check.
     live = ap.get("standing") or ap.get("active")
@@ -3360,7 +3366,7 @@ def rg_run_states_its_own_code():
 def rg_ai_coach_front_door():
     out = []
     try:
-        flags = _json("/flags")
+        flags = _admin_json("/flags")   # GATE-SYNC-1: ai_provider is a staff-only field since SEC-GATE-1
         active = ((flags.get("ai_provider") or {}).get("active") or "").strip()
         if not active:
             out.append((FAIL, "/flags names no active AI lane -- the coach cannot be expected "
@@ -3441,7 +3447,7 @@ def rg_maint_dash_lane():
                 out.append((FAIL, "a toggle appeared inside the B2b card -- the no-web-arming "
                                   "design decision has been violated (MAINT-DASH-1)"))
     try:
-        hb = _json("/dashboard/maint")
+        hb = _admin_json("/dashboard/maint")   # GATE-SYNC-1: admin-only since SEC-GATE-1
         if not hb.get("received_at"):
             out.append((FAIL, "endpoint live but NO real heartbeat recorded yet -- the lane is "
                               "not proven end-to-end; passes after the next maintenance run"))
@@ -3456,6 +3462,8 @@ def rg_maint_dash_lane():
     except urllib.error.HTTPError as e:
         out.append((FAIL, "GET /dashboard/maint answered %d -- the endpoint has not reached "
                           "the live server yet (ships with the next deploy)" % e.code))
+    except ProbeOffline as po:
+        out.append((INFO, "NOT EVALUATED - staff read of /dashboard/maint: %s" % str(po)[:120]))
     return out
 
 
@@ -5016,7 +5024,8 @@ def rg_ordinary_person_can_earn():
     try:
         _j = json.loads(urllib.request.urlopen(
             urllib.request.Request(BASE + "/trust/employer-link?email=walkthrough.tutor@trustsquare.co",
-                                   headers=UA), timeout=TIMEOUT).read().decode("utf-8"))
+                                   headers=dict(UA, **({"X-Admin-Key": _admin_key()} if _admin_key() else {}))),
+            timeout=TIMEOUT).read().decode("utf-8"))   # GATE-SYNC-1: user-level since SEC-GATE-1
         if "/confirm/" not in (_j.get("url") or ""):
             out.append((FAIL, "employer-link answered without a /confirm/ url: %r" % _j))
     except Exception as e:
@@ -5026,6 +5035,8 @@ def rg_ordinary_person_can_earn():
     hdrs = dict(UA, **{"Content-Type": "application/json"})
     if key:
         hdrs["X-Api-Key"] = key
+    if _admin_key():                    # GATE-SYNC-1
+        hdrs["X-Admin-Key"] = _admin_key()
     try:
         plan = json.loads(urllib.request.urlopen(urllib.request.Request(
             BASE + "/trust-score/guidance", headers=hdrs, method="POST",
@@ -5070,6 +5081,8 @@ def rg_trust_plan_starts_doable():
     hdrs = dict(UA, **{"Content-Type": "application/json"})
     if key:
         hdrs["X-Api-Key"] = key
+    if _admin_key():                    # GATE-SYNC-1: guidance is user-level since SEC-GATE-1
+        hdrs["X-Admin-Key"] = _admin_key()
     try:
         req = urllib.request.Request(BASE + "/trust-score/guidance", data=body,
                                      headers=hdrs, method="POST")
@@ -5134,7 +5147,7 @@ def rg_one_trust_score_everywhere():
     out = []
     for email in ("dmcontiki2@gmail.com", "walkthrough.tutor@trustsquare.co"):
         try:
-            hub = _json("/users/%s/trust" % urllib.parse.quote(email))
+            hub = _admin_json("/users/%s/trust" % urllib.parse.quote(email))   # GATE-SYNC-1: a user-level read
         except Exception as e:
             out.append((INFO, "NOT EVALUATED - hub read failed for %s: %s" % (email, e)))
             continue
@@ -6509,9 +6522,16 @@ def rg_intro_relay_proven():
             out.append((FAIL, "intro_relay flag is OFF -- accepted introductions are handing out "
                               "REAL addresses again (the pre-19-Aug behaviour). Anonymity is the "
                               "product; this is a launch blocker, not a preference."))
-        if d.get("relay_configured") is not True:
-            out.append((FAIL, "the Cloudflare inbound rail reports unconfigured -- replies to "
-                              "aliases will vanish"))
+        # GATE-SYNC-1 (24 Sep 2026): SEC-GATE-1 stopped telling STRANGERS whether the inbound
+        # rail is configured (infrastructure posture). The public flag above stays public; this
+        # half is read as staff. No key on this machine = this half is blind, never red.
+        try:
+            rc = _admin_json("/flags").get("relay_configured")
+            if rc is not True:
+                out.append((FAIL, "the Cloudflare inbound rail reports unconfigured -- replies to "
+                                  "aliases will vanish"))
+        except ProbeOffline as po:
+            out.append((INFO, "NOT EVALUATED - inbound-rail state is staff-only: %s" % str(po)[:100]))
     except Exception as ex:
         out.append((FAIL, "/flags unreachable (%r)" % ex))
     # /intro/relay must exist and refuse a caller without the worker secret.
@@ -7156,8 +7176,8 @@ def rg_ai_breaker_fails_over():
         # OPS-KEY-EYES-1 (30 Aug 2026, closes the D14 gap): authenticated read of the live
         # lane count -- the blue card turns green by assertion, not by a dated hand-probe.
         try:
-            _req = urllib.request.Request(BASE + "/ops/selfcheck",
-                                          headers=dict(UA, **{"X-Api-Key": _ok}))
+            _req = urllib.request.Request(BASE + "/ops/selfcheck",   # GATE-SYNC-1: + staff key
+                                          headers=dict(UA, **{"X-Api-Key": _ok, "X-Admin-Key": _admin_key()}))
             st = urllib.request.urlopen(_req, timeout=TIMEOUT).getcode()
         except urllib.error.HTTPError as _e:
             st = _e.code
@@ -7169,11 +7189,11 @@ def rg_ai_breaker_fails_over():
         try:
             if _ok:
                 _req = urllib.request.Request(BASE + "/ops/selfcheck",
-                                              headers=dict(UA, **{"X-Api-Key": _ok}))
+                                              headers=dict(UA, **{"X-Api-Key": _ok, "X-Admin-Key": _admin_key()}))
                 doc = json.loads(urllib.request.urlopen(_req, timeout=TIMEOUT).read()
                                  .decode("utf-8", "replace"))
             else:
-                doc = _json("/ops/selfcheck")
+                doc = _json("/ops/selfcheck")   # anon-on-purpose: reached only if a stranger got 200
             lanes = ((doc.get("ai") or {}).get("lanes_configured") or [])
             if len(lanes) < 2:
                 out.append((FAIL, "the box has %d configured AI lane(s) (%s) -- failover is "
@@ -9787,7 +9807,7 @@ def rg_agency_wave_lane():
         out.append((FAIL, "no wave machinery references agency_outreach -- the agency wave cannot be sent"))
     # live half: the link-minting endpoint must be deployed (bare GET answers 405, a missing route 404)
     try:
-        _get("/agencies/wave-prep")
+        _get("/agencies/wave-prep")   # anon-on-purpose: asserts the route exists and refuses a bare GET
         out.append((FAIL, "GET /agencies/wave-prep answered 200 -- it must be POST-only"))
     except urllib.error.HTTPError as e:
         if e.code == 404:
@@ -12111,7 +12131,7 @@ def rg_aiprov_funds_gauge():
             if needle not in bea:
                 out.append((FAIL, "bea_main.py lost %r -- %s is gone (AIPROV-FUNDS-1)" % (needle, why)))
     try:
-        d = json.loads(_get("/dashboard/ai-funds"))
+        d = _admin_json("/dashboard/ai-funds")   # GATE-SYNC-1: admin-only since SEC-GATE-1
         fns = d.get("functions") or []
         if len(fns) != 4:
             out.append((FAIL, "live gauge carries %d function rows, not 4" % len(fns)))
@@ -13259,7 +13279,17 @@ def rg_triage_pii():
                               "(%s)" % (page, "ships" if ships else "local copy")))
     # LIVE half -- the one that matters. Anonymous, exactly as a stranger would call it.
     try:
-        d = _json("/dashboard/email-triage?limit=5")
+        d = _json("/dashboard/email-triage?limit=5")   # anon-on-purpose: the STRANGER's view is the subject
+    except urllib.error.HTTPError as he:
+        # GATE-SYNC-1 (24 Sep 2026): since SEC-GATE-1 a stranger is refused outright -- stronger
+        # than the counts-only redaction this entry was written for, and the property (no row
+        # reaches a stranger) holds. Anything other than a refusal is still judged below.
+        if he.code in (401, 403):
+            out.append((INFO, "a stranger is refused outright (HTTP %d) -- no sender, subject or "
+                              "draft can reach one" % he.code))
+            return out
+        out.append((INFO, "NOT EVALUATED live: HTTP %d" % he.code))
+        return out
     except Exception as e:
         out.append((INFO, "NOT EVALUATED live: %s" % str(e)[:120]))
         return out
@@ -13339,7 +13369,7 @@ def rg_maint_intake_lanes():
                               "quiet day"))
     # LIVE half: the heartbeat the dashboard actually reads.
     try:
-        hb = _json("/dashboard/maint")
+        hb = _admin_json("/dashboard/maint")   # GATE-SYNC-1: admin-only since SEC-GATE-1
     except Exception as e:
         out.append((INFO, "NOT EVALUATED live: %s" % str(e)[:120]))
         return out
@@ -18620,12 +18650,12 @@ def rg_onboard_funnel_is_measured():
         # FUNNEL-HUMAN-1 (7 Sep 2026): the ledger's own UA is a machine and is now flagged bot=1,
         # so a probe row is hidden from the default read BY DESIGN. Ask for bots=1 -- the assertion
         # here is that WRITES REACH THE TABLE, and RG-0315 owns the hidden-by-default property.
-        named = json.loads(_get("/onboard/funnel?src=probe-ledger&days=2&bots=1"))
+        named = _admin_json("/onboard/funnel?src=probe-ledger&days=2&bots=1")   # GATE-SYNC-1
         got = {r["step"]: r["sessions"] for r in named.get("funnel", [])}
         if got.get("landed", 0) < 1:
             out.append((FAIL, "the probe step was accepted but /onboard/funnel?src=probe-ledger does "
                               "not show it -- writes are not reaching the table"))
-        dflt = json.loads(_get("/onboard/funnel?days=2"))
+        dflt = _admin_json("/onboard/funnel?days=2")   # GATE-SYNC-1
         if "probe-ledger" in (dflt.get("by_src") or {}):
             out.append((FAIL, "the default funnel view counts probe-ledger rows -- probes are "
                               "polluting the real numbers"))
@@ -19043,7 +19073,7 @@ def rg_every_outreach_category_has_a_landing_route():
         out.append((FAIL, "the club lane lost its route ('sports clubs' -> Tutors) -- INVITE-CAT-2"))
     # live half: a real src whose sessions all stop at 'landed'
     try:
-        body = _get("/onboard/funnel?days=14")
+        body = _admin_text("/onboard/funnel?days=14")   # GATE-SYNC-1
         if body:
             d = json.loads(body)
             stuck = []
@@ -19222,7 +19252,7 @@ def rg_video_links_are_measurable():
             out.append((INFO, "all %d upload package(s) carry a tracked ?src=yt- link" % len(packs)))
 
     try:
-        body = _get("/onboard/funnel?days=30")
+        body = _admin_text("/onboard/funnel?days=30")   # GATE-SYNC-1
         if body:
             d = json.loads(body)
             yt = dict((k, v) for k, v in (d.get("by_src") or {}).items() if k.startswith("yt-"))
@@ -20241,10 +20271,9 @@ def rg_funnel_counts_people_not_scanners():
                                               "+http://www.google.com/bot.html)",
                                               "Content-Type": "application/json"})
         urllib.request.urlopen(req, timeout=TIMEOUT).read()
-        hid = json.loads(urllib.request.urlopen(urllib.request.Request(
-            BASE + "/onboard/funnel?days=1&src=" + psrc, headers=UA), timeout=TIMEOUT).read())
-        shown = json.loads(urllib.request.urlopen(urllib.request.Request(
-            BASE + "/onboard/funnel?days=1&src=" + psrc + "&bots=1", headers=UA), timeout=TIMEOUT).read())
+        # GATE-SYNC-1 (24 Sep 2026): the funnel is admin-only since SEC-GATE-1; read it as staff.
+        hid = _admin_json("/onboard/funnel?days=1&src=" + psrc)
+        shown = _admin_json("/onboard/funnel?days=1&src=" + psrc + "&bots=1")
         if "humans" not in hid:
             out.append((FAIL, "live GET /onboard/funnel returns no 'humans' field -- the deploy did not "
                               "land or the field was dropped (FUNNEL-HUMAN-1)"))
@@ -20453,7 +20482,7 @@ def rg_invited_seller_city_reaches_listing():
            "prospects onboarded, 0 published. PROBED live: the forward button is disabled on arrival.")
 def rg_invited_seller_can_pass_screen_one():
     try:
-        f = json.loads(_get("/onboard/funnel?days=30&bots=1"))
+        f = _admin_json("/onboard/funnel?days=30&bots=1")   # GATE-SYNC-1
     except Exception as ex:
         return [(INFO, "funnel not readable (%s) -- not evaluated" % repr(ex)[:80])]
     steps = [r.get("step") for r in (f.get("funnel") or [])]
@@ -23928,14 +23957,26 @@ def rg_quick_ready_2():
 def rg_quick_ready_3():
     out = []
     import urllib.request as _u
-    def code(path):
+    def code(path, staff=False):
+        h = dict(UA, **({"X-Admin-Key": _admin_key()} if staff else {}))
         try:
-            return _u.urlopen(_u.Request(BASE + path, headers=dict(UA)), timeout=15).getcode()
+            return _u.urlopen(_u.Request(BASE + path, headers=h), timeout=15).getcode()
         except Exception as e:
             return getattr(e, "code", None)
-    c1 = code("/trust/employer-link?email=nobody-here-%d@example.com" % int(time.time()))
-    if c1 != 404:
-        out.append((FAIL, "an employer link was minted (or not refused with 404) for a non-account: %r" % c1))
+    # GATE-SYNC-1 (24 Sep 2026): SEC-GATE-1 made the link route user-level, so a stranger is now
+    # stopped at the gate (401) before the handler can say 404. Both doors are asserted: the
+    # stranger is refused, AND the handler itself -- reached as staff -- still refuses a
+    # non-account with 404. Nothing that used to fail passes now.
+    _nobody = "/trust/employer-link?email=nobody-here-%d@example.com" % int(time.time())
+    c0 = code(_nobody)
+    if c0 is None or c0 < 400:
+        out.append((FAIL, "a stranger was handed an employer link for a non-account: %r" % c0))
+    if _admin_key():
+        c1 = code(_nobody, staff=True)
+        if c1 != 404:
+            out.append((FAIL, "an employer link was minted (or not refused with 404) for a non-account: %r" % c1))
+    else:
+        out.append((INFO, "NOT EVALUATED - no admin key here: the handler's own 404 cannot be reached"))
     c2 = code("/trust/employer-who?token=not-a-token")
     if c2 is None or c2 < 400:
         out.append((FAIL, "employer-who accepted a forged token: %r" % c2))
@@ -24922,7 +24963,7 @@ def rg_funnel_denominator():
                 if token not in seg:
                     out.append((FAIL, why))
     try:
-        d = json.loads(_get("/onboard/funnel?days=21"))
+        d = _admin_json("/onboard/funnel?days=21")   # GATE-SYNC-1
     except ProbeOffline as ex:
         out.append((INFO, "live half UNVERIFIED -- the endpoint could not be read: %r" % (ex,)))
         return out or [(INFO, "source half holds; live half blind")]
@@ -28036,6 +28077,96 @@ def rg_screen_walk_1():
                           % ("an unknown time" if age_h is None else "%.0f h" % age_h)))
     return out or [(INFO, "last walk %.0f h ago: en/af/zu/xh/nso agree on every number read"
                           % (age_h or 0))]
+
+
+
+@entry("RG-0457", "GATE-SYNC-1: no board check reads a locked page as a stranger -- when the security gate "
+                  "closes a route, the checks that read it move to the staff door in the same change",
+       LOCKED, fixed_on="2026-09-24",
+       scope="scripts/regression_ledger.py against route_policy.json (the security gate's own route "
+             "list). FOUND 24 Sep 2026: SEC-GATE-1 went live and closed a set of reads to strangers -- "
+             "correctly -- and the board went red on six checks (RG-0118 inbound-rail state, RG-0203 "
+             "/dashboard/ai-funds, RG-0293 / RG-0315 / RG-0402 /onboard/funnel, RG-0388 "
+             "/trust/employer-link) plus RG-0372 blind, RG-0061 red a deploy later, RG-0222 / RG-0223 "
+             "blind, and THREE that went quietly blind while still printing ok (RG-0299, RG-0301, "
+             "RG-0326 -- their live halves say 'not evaluated' in lower case, which the judge scores "
+             "as a pass). Nothing in the app was broken: the checks were reading staff pages as a "
+             "stranger. David: 'if we dont fix them as we see them then we forget them.' FIX: every "
+             "such read now goes through the staff door (_admin_json / _admin_text, X-Admin-Key); "
+             "RG-0388 now asserts BOTH doors (a stranger is refused; the handler, reached as staff, "
+             "still says 404 for a non-account); RG-0222 accepts an outright refusal as the stronger "
+             "form of its no-rows property; RG-0128's message stops blaming a stale key for a route "
+             "that is now local-only. THE TRIPWIRE, so the next gate change cannot do this silently: "
+             "every _get()/_json() of a literal path in this file is matched to its GET rule in "
+             "route_policy.json (literal rules first); any that is not 'public' FAILS unless the line "
+             "carries '# anon-on-purpose' -- a check whose subject IS the stranger's view. SCOPE: this "
+             "file's literal-path reads; reads built from variables are not seen (stated, not hidden).",
+       ref="SEC-GATE-1 (RG-0455, the gate) · QA-BOT-1 (RG-0454, which rules what each route requires) "
+           "· LEDGER-ADMINREAD-1 (30 Aug, the staff door) · RG-0187 (a blind read is NOT EVALUATED) · "
+           "SECOND WAVE the same hour, found by re-running the full board after the first fix: "
+           "RG-0019 and RG-0060 read /flags.ai_provider, now a STAFF-ONLY FIELD on a public page "
+           "(so the tripwire's second leg measures anonymous-vs-staff /flags keys live and fails on "
+           "any staff-only field read anonymously); RG-0373 / RG-0374 read the user-level "
+           "guidance and employer-link routes; RG-0128 read /ops/selfcheck with the ops key alone; "
+           "RG-0229's opt-out verifier (CityLauncher/verify_optout_lane.py) read /optout/status as "
+           "a stranger -- all now read as staff, and the verifier's recipient gates stay anonymous.")
+def rg_gate_sync_1():
+    led = repo_file(os.path.join("scripts", "regression_ledger.py"))
+    pol = repo_file("route_policy.json")
+    if led is None or pol is None:
+        return [(INFO, "NOT EVALUATED - the ledger source or route_policy.json is not readable here")]
+    try:
+        routes = json.loads(pol)["routes"]
+    except Exception as ex:
+        return [(INFO, "NOT EVALUATED - route_policy.json unreadable (%s)" % type(ex).__name__)]
+    rules = []
+    for r in routes:
+        meth, _, path = str(r.get("key", "")).partition(" ")
+        if meth != "GET" or not path:
+            continue
+        rx = re.compile("^" + re.sub(r"\\\{[^}]+\\\}", "[^/]+", re.escape(path)) + "$")
+        rules.append((0 if "{" not in path else 1, rx, r.get("level"), r.get("key")))
+    rules.sort(key=lambda t: t[0])
+    hits = []
+    for n, line in enumerate(led.splitlines(), 1):
+        if "anon-on-purpose" in line:
+            continue
+        for m in re.finditer(r"""\b_(?:get|json)\(\s*(["'])(/[^"']*)\1""", line):
+            path = re.sub(r"%[sd]", "X", m.group(2).split("?")[0].replace("%40", "@"))
+            for _o, rx, lvl, key in rules:
+                if rx.match(path):
+                    if lvl != "public":
+                        hits.append("line %d reads %s (%s: %s)" % (n, path, key, lvl))
+                    break
+    # Leg 2 -- the same fault one level down: /flags is PUBLIC, but since SEC-GATE-1 some of its
+    # FIELDS are staff-only (ai_provider, relay_configured, bit_flags...). A check that reads one
+    # of them through an anonymous /flags read sees nothing and goes red (RG-0019, RG-0060 did).
+    # Two cached reads, anonymous and staff; the staff-only field set is MEASURED, never listed.
+    try:
+        anon_keys = set(_json("/flags"))
+        staff_only = set(_admin_json("/flags")) - anon_keys
+    except ProbeOffline:
+        staff_only = None
+    except Exception:
+        staff_only = None
+    if staff_only:
+        lines = led.splitlines()
+        for n, line in enumerate(lines, 1):
+            if '"/flags"' not in line or "_admin_json" in line or "anon-on-purpose" in line:
+                continue
+            window = "\n".join(lines[n - 1:n + 6])
+            for fld in sorted(staff_only):
+                if ('get("%s")' % fld) in window or ('["%s"]' % fld) in window:
+                    hits.append("line %d reads staff-only /flags field %s anonymously" % (n, fld))
+    if hits:
+        return [(FAIL, "%d board check(s) read a locked page as a stranger -- they will go red or "
+                       "quietly blind: %s" % (len(hits), "; ".join(hits[:6])))]
+    if staff_only is None:
+        return [(INFO, "literal-path reads all match public routes or the staff door; the /flags "
+                       "field leg is blind here (no staff read possible)")]
+    return [(INFO, "every literal-path read in the board matches a public route, or reads through "
+                   "the staff door, or is marked as a deliberate stranger's-view check; no check "
+                   "reads a staff-only /flags field (%s) anonymously" % ", ".join(sorted(staff_only)))]
 
 
 if __name__ == "__main__":
