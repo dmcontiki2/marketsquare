@@ -1,0 +1,1 @@
+- LINK-KEY-1 / PHONE-KEY-1 / RUL-167 (24 Sep): the Quick door's key is now e-mail, phone code (dark until an SMS provider is configured) or the private link; key accounts are never mailed; EULA gate unchanged (RG-0450). Waiting on David: SMS provider account, WhatsApp Business SIM.

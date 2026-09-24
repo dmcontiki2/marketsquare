@@ -27573,5 +27573,53 @@ def rg_terms_handover():
                           "lands a refused publish on the Terms, and the served ms.js carries both")]
 
 
+
+@entry("RG-0450", "LINK-KEY-1 / PHONE-KEY-1 (RUL-167): a casual worker's key may be a phone number or the private "
+                  "link, the EULA gate is untouched, and no mail is ever sent to a key identity",
+       LOCKED, fixed_on="2026-09-24",
+       scope="bea_main.py quick_publish (key_mode 'link' creates a key account and a DRAFT, never a live advert, "
+             "never stamps eula_accepted_at), /k/{secret} (mints only purpose=signin hops for a key_hash match), "
+             "/auth/phone/start + /auth/phone/verify (503 sms_unavailable until a provider is configured; six-digit "
+             "code, 10 minutes, 5 tries), the mail guards in _send_html_email / _send_review_link_email / "
+             "_send_system_email / _relay_forward / _demand_send_invite / _smtp_send_reply, sms_provider.py, "
+             "quick.html's E-mail / Phone / WhatsApp-link chooser, HARNESS.html identical to quick.html.")
+def rg_link_key_1():
+    out = []
+    b = repo_file("bea_main.py")
+    if b is None:
+        return [(INFO, "bea_main.py not readable here -- NOT EVALUATED")]
+    i = b.find("def quick_publish("); j = b.find("\n@app.", i + 10); body = b[i:j] if i >= 0 else ""
+    if 'key_mode == "link"' not in body or "_new_key_identity()" not in body:
+        out.append((FAIL, "quick_publish lost the link-key branch"))
+    if "eula_accepted_at =" in body or "SET eula_accepted_at" in body:
+        out.append((FAIL, "quick_publish writes eula_accepted_at -- the door must never record an acceptance"))
+    kb = body.split('key_mode == "link"', 1)[-1]
+    if kb and kb.find("publish_listing(") >= 0 and kb.find("if not signed_member:") > kb.find("publish_listing("):
+        out.append((FAIL, "the link-key path can reach publish_listing before the signed-member gate"))
+    k = b.find("def key_link_open("); kk = b[k:b.find("\n@app.", k + 10)] if k >= 0 else ""
+    if not kk or "_mint_signin_url(" not in kk or "key_hash=?" not in kk:
+        out.append((FAIL, "/k/{secret} no longer resolves a key hash into a sign-in hop"))
+    m = b.find("def _mint_signin_url("); mm = b[m:m + 900] if m >= 0 else ""
+    if '"purpose": "signin"' not in mm:
+        out.append((FAIL, "_mint_signin_url no longer mints a signin-purpose token"))
+    for fn in ("_send_html_email(", "_send_review_link_email(", "_send_system_email(", "_relay_forward(",
+               "_demand_send_invite(", "_smtp_send_reply("):
+        f = b.find("def " + fn); seg = b[f:f + 1400] if f >= 0 else ""
+        if "_is_key_identity(" not in seg:
+            out.append((FAIL, "%s lost its key-identity mail guard" % fn))
+    p = b.find("def auth_phone_start("); pp = b[p:b.find("\n@app.", p + 10)] if p >= 0 else ""
+    if "sms_unavailable" not in pp or "randbelow(1000000)" not in pp:
+        out.append((FAIL, "/auth/phone/start lost its dark-fail or its six-digit code"))
+    q = repo_file("quick.html") or ""
+    if 'data-m="link"' not in q or "/auth/phone/verify" not in q or "key_mode:(mode==='link'?'link':'email')" not in q:
+        out.append((FAIL, "quick.html lost the E-mail / Phone / WhatsApp-link chooser"))
+    h = repo_file("genie/HARNESS.html")
+    if h is not None and h != q:
+        out.append((FAIL, "genie/HARNESS.html differs from quick.html (house rule: identical)"))
+    if repo_file("sms_provider.py") is None:
+        out.append((FAIL, "sms_provider.py is missing"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -101,6 +101,8 @@ storage.py                 | storage.py
 payments.py                | payments.py
 ai_service_tiers.py        | ai_service_tiers.py
 ai_provider.py             | ai_provider.py
+# PHONE-KEY-1 (24 Sep 2026): the one SMS door (phone codes, key-seller nudges); fails dark without SMS_PROVIDER/SMS_TOKEN
+sms_provider.py            | sms_provider.py
 launch_redemption.py       | launch_redemption.py
 account_closure.py         | account_closure.py
 id_verify_provider.py      | id_verify_provider.py

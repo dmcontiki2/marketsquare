@@ -1046,7 +1046,9 @@ var QUICK_LIVE=false;
     fetch(location.origin+'/quick/me',{credentials:'include'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
       if(!d) return;
       if(d.key && !HANDOVER.key){ HANDOVER.url=location.origin; HANDOVER.key=d.key; QUICK_LIVE=true; }
-      if(d.signed_in && d.email){ HANDOVER.email=d.email; QUICK.member=true; QUICK.eula=!!d.eula_accepted; /* EULA-SIGNOFF-1 */ QUICK.name=d.name||d.email.split('@')[0]; if(d.city) QUICK.city=d.city; }
+      QUICK.smsReady=!!d.sms_ready;                       /* PHONE-KEY-1: offer the phone code only when a code can be sent */
+      if(d.signed_in && d.email){ HANDOVER.email=d.email; QUICK.member=true; QUICK.eula=!!d.eula_accepted; /* EULA-SIGNOFF-1 */ QUICK.name=d.name||d.email.split('@')[0]; if(d.city) QUICK.city=d.city; if(d.key_identity) QUICK.identity='key'; }
+      try{ var _pt=document.getElementById('qpid-phone'); if(_pt) _pt.style.display=QUICK.smsReady?'':'none'; }catch(e){}
     }).catch(function(){});
   }catch(e){}
 })();
@@ -2629,18 +2631,23 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
      A signed-in member sees no box at all: one tap, as herself. */
   function esc(t){ return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function qPubLabel(){ return (QUICK.member&&QUICK.eula) ? qTr('Publish') : qTr('Save my advert'); }
+  /* PHONE-KEY-1 / LINK-KEY-1 (RUL-167, David 24 Sep 2026): her KEY may be an e-mail, a phone number (a
+     six-digit code by SMS) or the private link itself. The EULA is still signed in the app before
+     anything goes live -- this door only chooses how she gets back in. */
   function publishNow(btn){
+    var mode = QUICK.member ? 'session' : (QUICK.idMode||'email');
     var em = QUICK.member ? (HANDOVER.email||'') : (($('qpmail')||{}).value||'').trim();
-    if(!QUICK.member && !/.+@.+\..+/.test(em)){ var m=$('qpmail'); if(m){ m.focus(); m.style.borderColor='#e06a5a'; } return; }
+    if(mode==='email' && !/.+@.+\..+/.test(em)){ var m=$('qpmail'); if(m){ m.focus(); m.style.borderColor='#e06a5a'; } return; }
+    if(mode==='phone'){ var h0=$('pubhint'); if(h0) h0.textContent=qTr('Confirm the SMS code first, then save.'); var ph=$('qpphone'); if(ph) ph.focus(); return; }
     btn.disabled=true; btn.textContent=(QUICK.member&&QUICK.eula) ? qTr('Publishing…') : qTr('Saving…');
-    var pay=handoverPayload().body; pay.seller_email=em||null;
+    var pay=handoverPayload().body; pay.seller_email=(mode==='link'?null:(em||null));
     fetch('/listings/quick-publish',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({listing:pay, email:em, accept_terms:true})})
+      body:JSON.stringify({listing:pay, email:(mode==='link'?'':em), accept_terms:true, key_mode:(mode==='link'?'link':'email'), name:(QUICK.name||'')})})
     .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
     .then(function(res){
       if(!res.ok){ btn.disabled=false; btn.textContent=qPubLabel(); var h=$('pubhint');
         if(h) h.textContent=(res.j && res.j.detail) ? String(res.j.detail) : qTr('Not published — nothing was lost. Try again.'); return; }
-      qTrack(res.j.live ? 'q_published' : 'q_handover');
+      qTrack(res.j.live ? 'q_published' : (res.j.identity==='link' ? 'q_handover_link' : (res.j.identity==='phone' ? 'q_handover_phone' : 'q_handover')));
       if(!QUICK.member && em){ QUICK.member=true; HANDOVER.email=em; QUICK.name=nameFromMail(em); }
       celebrate(res.j);
     })
@@ -2659,7 +2666,10 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     var card=$('screen').querySelector('.card'), img=card&&card.querySelector('img'), t=card&&card.querySelector('h3');
     var src=img?img.getAttribute('src'):'', title=t?t.textContent:'';
     var live=!!r.live, id=r.id;
-    var waMsg=(live?'My TrustSquare advert is live: ':'My TrustSquare advert is saved: ')+title+'\n\nhttps://trustsquare.co/?listing='+id;
+    var keyUrl=r.key_url||'', openUrl=r.open_url||'';
+    var waMsg=keyUrl
+      ? (qTr('My TrustSquare advert')+': '+title+'\n\n'+qTr('This link is my KEY to it -- keep it, do not share it:')+'\n'+keyUrl)
+      : ((live?'My TrustSquare advert is live: ':'My TrustSquare advert is saved: ')+title+'\n\nhttps://trustsquare.co/?listing='+id);
     var ov=document.createElement('div'); ov.id='arrive';
     ov.innerHTML='<div class="ar-burst"></div>'
       +'<div class="ar-card"><img src="'+esc(src)+'" alt=""><div class="ar-pad"><div class="ar-tick">&#10003;</div>'
@@ -2667,9 +2677,10 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
       +'<div class="ar-after">'
       +(live?'<p>'+qTr('People can find it now. Your name and number stay private until you accept an introduction.')+'</p>'
             :'<p>'+esc(r.detail||'')+'</p>')
-      +'<a class="ar-btn" href="'+(live?'/?listing=':'/?draft=')+id+'">'+(live?qTr('See my advert'):(r.need==='eula'?qTr('Sign the terms and publish'):qTr('Finish it in the app')))+'</a>'   /* AUDIT-Q3 */
-      +'<a class="ar-wa" href="https://wa.me/?text='+encodeURIComponent(waMsg)+'" target="_blank" rel="noopener">'+qTr('Send it to myself on WhatsApp')+'</a>'
-      +'<p class="ar-small">'+qTr('We emailed you a link to it as well.')+'</p></div>';
+      +(keyUrl ? '<div class="ar-key"><div class="ar-key-l">'+qTr('Your private key link')+'</div><div class="ar-key-u">'+esc(keyUrl)+'</div></div>' : '')
+      +'<a class="ar-btn" href="'+esc(keyUrl||openUrl||((live?'/?listing=':'/?draft=')+id))+'">'+(live?qTr('See my advert'):(r.need==='eula'?qTr('Sign the terms and publish'):qTr('Finish it in the app')))+'</a>'   /* AUDIT-Q3 · LINK-KEY-1 */
+      +'<a class="ar-wa" href="https://wa.me/?text='+encodeURIComponent(waMsg)+'" target="_blank" rel="noopener">'+(keyUrl?qTr('Send my key to myself on WhatsApp'):qTr('Send it to myself on WhatsApp'))+'</a>'
+      +'<p class="ar-small">'+(keyUrl ? qTr('Lose the link and you lose the key -- WhatsApp it to yourself now.') : (openUrl ? qTr('Introductions reach you by SMS.') : qTr('We emailed you a link to it as well.')))+'</p></div>';
     $('app').appendChild(ov);
     try{ var wa=ov.querySelector('.ar-wa'); if(wa) wa.onclick=function(){ qTrack('q_wa_self'); }; }catch(e){}
     requestAnimationFrame(function(){ ov.className='go'; });
@@ -2704,7 +2715,13 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
    '@media (prefers-reduced-motion:reduce){#arrive .ar-card,#arrive .ar-tick,#arrive .ar-after,#arrive .ar-burst{animation:none!important;transform:none!important;opacity:1!important}}',
    '.qpbox{margin:0 0 10px}.qpbox input{width:100%;padding:15px 16px;border-radius:14px;border:1.5px solid var(--line);',
    ' background:var(--panel);color:#fff;font:16px inherit}',
-   '.qpterms{font-size:12.5px;color:var(--dim);text-align:center;margin-top:8px}.qpterms a{color:var(--bright)}'
+   '.qpterms{font-size:12.5px;color:var(--dim);text-align:center;margin-top:8px}.qpterms a{color:var(--bright)}',
+   '.qpid-tabs{display:flex;gap:6px;margin:0 0 8px}.qpid-tab{flex:1;padding:10px 6px;border-radius:999px;border:1.5px solid var(--line);background:var(--panel);color:#cfe0d8;font:700 13px inherit}',
+   '.qpid-tab.on{background:var(--c);color:var(--onc,#fff);border-color:var(--c)}',
+   '.qpid-hint{font-size:12.5px;color:var(--dim);margin:6px 2px 0;line-height:1.4}',
+   '.qpid-row{display:flex;gap:8px;margin-top:8px}.qpid-row input{flex:1}.qpid-row button{padding:0 16px;border-radius:14px;border:0;background:var(--c);color:var(--onc,#fff);font:700 14px inherit}',
+   '.ar-key{width:min(320px,90%);margin-top:10px;background:rgba(255,255,255,.06);border:1px dashed var(--c);border-radius:14px;padding:10px 12px;text-align:left}',
+   '.ar-key-l{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}.ar-key-u{font:600 12.5px/1.4 ui-monospace,monospace;word-break:break-all;color:#e6f2ec}'
   ].join('');
   document.head.appendChild(st2);
   var _dr1=drawDraft;
@@ -2713,8 +2730,58 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     var pub=$('pub'); if(!pub) return;
     var foot=pub.parentNode;
     if(!QUICK.member){
-      foot.insertAdjacentHTML('afterbegin','<div class="qpbox"><input id="qpmail" type="email" autocomplete="email" inputmode="email" '
-        +'placeholder="'+qTr('Your email — introductions reach you here')+'"></div>');
+      var _svc = (function(){ try{ return /services/i.test((catOut(cat())||{}).category||'') || cat().key==='services'; }catch(e){ return false; } })();
+      if(!QUICK.idMode) QUICK.idMode = _svc ? 'link' : 'email';     /* casual workers have WhatsApp, not e-mail */
+      foot.insertAdjacentHTML('afterbegin','<div class="qpbox" id="qpid">'
+        +'<div class="qpid-tabs">'
+        +'<button type="button" class="qpid-tab" data-m="email">'+qTr('E-mail')+'</button>'
+        +'<button type="button" class="qpid-tab" data-m="phone" id="qpid-phone" style="'+(QUICK.smsReady?'':'display:none')+'">'+qTr('Phone')+'</button>'
+        +'<button type="button" class="qpid-tab" data-m="link">'+qTr('WhatsApp link')+'</button></div>'
+        +'<div class="qpid-pane" data-p="email"><input id="qpmail" type="email" autocomplete="email" inputmode="email" placeholder="'+qTr('Your email — introductions reach you here')+'"></div>'
+        +'<div class="qpid-pane" data-p="phone" hidden><div class="qpid-row"><input id="qpphone" type="tel" inputmode="tel" autocomplete="tel" placeholder="'+qTr('Your phone number')+'"><button type="button" id="qpsend">'+qTr('Send code')+'</button></div>'
+        +'<div class="qpid-row" id="qpcodebox" hidden><input id="qpcode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="'+qTr('6-digit code')+'"><button type="button" id="qpverify">'+qTr('Confirm')+'</button></div>'
+        +'<div class="qpid-hint" id="qpphonehint">'+qTr('A six-digit code comes by SMS. Introductions reach you on this number.')+'</div></div>'
+        +'<div class="qpid-pane" data-p="link" hidden><div class="qpid-hint">'+qTr('No e-mail needed. You get a private link that is your key to this advert — send it to yourself on WhatsApp and keep it. Introductions wait for you inside.')+'</div></div>'
+        +'</div>');
+      var box=$('qpid');
+      function setMode(m){
+        QUICK.idMode=m;
+        box.querySelectorAll('.qpid-tab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-m')===m); });
+        box.querySelectorAll('.qpid-pane').forEach(function(pn){ pn.hidden = pn.getAttribute('data-p')!==m; });
+        var h=$('pubhint'); if(h) h.innerHTML = qTr('Free. Before it goes live you read and sign the')+' <a href="/terms" target="_blank" rel="noopener" style="color:var(--bright)">'+qTr('TrustSquare terms')+'</a> '+qTr('in the app.');
+      }
+      box.querySelectorAll('.qpid-tab').forEach(function(b){ b.onclick=function(){ setMode(b.getAttribute('data-m')); qTrack('q_id_'+b.getAttribute('data-m')); }; });
+      setMode(QUICK.idMode);
+      /* PHONE-KEY-1: the code flow. A 503 sms_unavailable means no provider yet -- fall back to the link, never a dead end. */
+      var _phone='';
+      $('qpsend').onclick=function(){
+        var raw=($('qpphone').value||'').trim(); var hint=$('qpphonehint'); var btn=this;
+        if(raw.replace(/\D/g,'').length<9){ hint.textContent=qTr('Type the number you use for SMS, for example 082 123 4567.'); return; }
+        btn.disabled=true; hint.textContent=qTr('Sending the code…');
+        fetch('/auth/phone/start',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:raw, name:QUICK.name||''})})
+        .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, st:r.status, j:j}; }); })
+        .then(function(res){
+          btn.disabled=false;
+          if(res.ok){ _phone=raw; $('qpcodebox').hidden=false; $('qpcode').focus(); hint.textContent=qTr('Code sent to')+' '+(res.j.masked||raw)+'. '+qTr('Type it here.'); qTrack('q_phone_code_sent'); return; }
+          if(res.st===503 && res.j && res.j.detail==='sms_unavailable'){ $('qpid-phone').style.display='none'; setMode('link'); var h=$('pubhint'); if(h) h.textContent=qTr('SMS codes are not switched on yet — your private WhatsApp link works today.'); return; }
+          hint.textContent=(res.j&&res.j.detail)?String(res.j.detail):qTr('Could not send the code. Try again.');
+        }).catch(function(){ btn.disabled=false; hint.textContent=qTr('No connection — nothing was sent.'); });
+      };
+      $('qpverify').onclick=function(){
+        var code=($('qpcode').value||'').trim(); var hint=$('qpphonehint'); var btn=this;
+        if(!/^\d{6}$/.test(code)){ hint.textContent=qTr('Type the six digits from the SMS.'); return; }
+        btn.disabled=true;
+        fetch('/auth/phone/verify',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:_phone, code:code})})
+        .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+        .then(function(res){
+          btn.disabled=false;
+          if(!res.ok){ hint.textContent=(res.j&&res.j.detail)?String(res.j.detail):qTr('That code is not right.'); return; }
+          QUICK.member=true; QUICK.eula=false; QUICK.identity='phone'; HANDOVER.email=res.j.email||''; QUICK.openUrl=res.j.signin_url||'';
+          var b2=$('qpid'); if(b2) b2.innerHTML='<div class="qpid-hint">&#10003; '+qTr('Phone confirmed. Introductions reach you by SMS.')+'</div>';
+          var pub=$('pub'); if(pub){ pub.textContent=qPubLabel(); pub.disabled=false; }
+          qTrack('q_phone_verified');
+        }).catch(function(){ btn.disabled=false; hint.textContent=qTr('No connection — try again.'); });
+      };
     }
     /* EULA-SIGNOFF-1 (RUL-166, David 23 Sep 2026): only a signed-in member who has already signed the EULA
        publishes in one tap. Everyone else SAVES a draft here and publishes in the TrustSquare app, after

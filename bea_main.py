@@ -612,6 +612,18 @@ def run_migrations(conn):
     if "buyer_token" not in user_cols:
         conn.execute("ALTER TABLE users ADD COLUMN buyer_token TEXT")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_users_buyer_token ON users(buyer_token)")
+    # PHONE-KEY-1 / LINK-KEY-1 (24 Sep 2026): a phone number or a private link as the account key.
+    if "phone" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN phone TEXT")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone)")
+    if "key_hash" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN key_hash TEXT")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_users_key_hash ON users(key_hash)")
+    conn.execute("""CREATE TABLE IF NOT EXISTS phone_codes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, phone TEXT NOT NULL, code_hash TEXT NOT NULL,
+        expires_at TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, used_at TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')))""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_phone_codes_phone ON phone_codes(phone, created_at)")
     # ── ONETAP-1 (19 Aug 2026, David's ruling) — federated sign-in identity ──
     # auth_sub is the provider's STABLE subject id. Email can change at the
     # provider (and Apple private-relay addresses are opaque), so the sub is the
@@ -4019,6 +4031,8 @@ class _QuickPublishIn(BaseModel):
     listing: dict
     email: str = ""
     accept_terms: bool = False
+    key_mode: str = "email"     # LINK-KEY-1: "link" = no e-mail, the private link is her key (RUL-167)
+    name: str = ""
 
 
 _QP_IP_LOG = {}
@@ -4045,9 +4059,26 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     if not body.accept_terms:
         raise HTTPException(status_code=400, detail="The Save/Publish button must be tapped to send the advert.")
     sess = _session_email(ts_user)
-    em = (sess or body.email or "").strip().lower()
-    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", em):
-        raise HTTPException(status_code=400, detail="Please type an email address we can reach you on.")
+    key_mode = (body.key_mode or "email").strip().lower()
+    key_secret = None
+    if not sess and key_mode == "link":
+        # LINK-KEY-1 (RUL-167, David 24 Sep 2026): no e-mail -- the private link IS her key. The key
+        # account is created first so the draft has an owner; the secret goes back to her once and only
+        # its hash is stored. Publishing still happens in the app, behind the EULA gate.
+        import secrets as _sk
+        key_secret = _sk.token_urlsafe(24)
+        em = _new_key_identity()
+        conn = database.get_db()
+        try:
+            conn.execute("INSERT INTO users (email, name, key_hash, aa_free_used, aa_sessions_remaining) "
+                         "VALUES (?,?,?,0,0)", (em, ((body.name or "").strip()[:60] or None), _key_hash(key_secret)))
+            conn.commit()
+        finally:
+            conn.close()
+    else:
+        em = (sess or body.email or "").strip().lower()
+        if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", em):
+            raise HTTPException(status_code=400, detail="Please type an email address we can reach you on.")
     # AUDIT-Q1 (23 Sep 2026): one tap may create a NEW seller and publish at once, but it may never act
     # for somebody who already exists. An address that already has an account, typed by someone who
     # is not signed in as it, gets a DRAFT and a sign-in link to that inbox -- only its owner can
@@ -4065,7 +4096,7 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
         _u = conn.execute("SELECT email, eula_accepted_at FROM users WHERE LOWER(email)=?", (em,)).fetchone()
     finally:
         conn.close()
-    existing_account = bool(_u) and not sess
+    existing_account = bool(_u) and not sess and not key_secret
     # EULA-SIGNOFF-1 (RUL-166, David 23 Sep 2026: "we dont publish unless we have both his email and his
     # acceptance of the EULA"). The one tap publishes ONLY for a signed-in member whose EULA is already
     # signed. Everyone else gets a DRAFT and the way-back letter; publishing happens in the TrustSquare
@@ -4097,6 +4128,16 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
         finally:
             conn.close()
         _log.info("EULA-SIGNOFF-1: draft %s for %s -- EULA not yet signed, publish happens in the app", lid, em)
+        if key_secret:
+            # the one time the secret travels: back to her, to send to herself on WhatsApp
+            return {"id": lid, "live": False, "need": "eula", "identity": "link",
+                    "key_url": APP_URL + "/k/" + key_secret + "?draft=" + str(lid),
+                    "detail": "Your advert is saved. The private link below is your key to it -- send it to yourself on WhatsApp, then open it to read and sign the Terms and publish."}
+        if _is_key_identity(em):
+            # a phone-code session: hand back a sign-in hop so the app opens on her draft
+            return {"id": lid, "live": False, "need": "eula", "identity": "phone",
+                    "open_url": _mint_signin_url(em, lid, 60),
+                    "detail": "Your advert is saved. Open it in TrustSquare, read and sign the Terms, and publish."}
         return {"id": lid, "live": False, "need": "eula",
                 "detail": "Your advert is saved. We emailed you a link -- open it in TrustSquare, read and sign the Terms, and publish."}
     _log.info("ONE-TAP-PUBLISH-1: listing %s published in one tap by signed member %s", lid, em)
@@ -4107,6 +4148,126 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
         return {"id": lid, "live": False, "detail": he.detail, "status": he.status_code}
     background_tasks.add_task(_quick_live_mail, em, lid, listing.title)
     return {"id": lid, "live": True}
+
+
+@app.get("/k/{secret}")
+def key_link_open(secret: str, draft: int = 0):
+    """LINK-KEY-1 (RUL-167): her private link is her key. It never lapses; each visit mints a short
+    sign-in hop and lands her in the app on her draft (the hub's own EULA gate stands before Publish)."""
+    from fastapi.responses import RedirectResponse, HTMLResponse
+    conn = database.get_db()
+    try:
+        u = conn.execute("SELECT email FROM users WHERE key_hash=? AND closed_at IS NULL",
+                         (_key_hash(secret or ""),)).fetchone()
+        if not u:
+            return HTMLResponse("<!doctype html><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
+                                "<body style='font-family:system-ui;padding:32px;background:#0b1512;color:#e6f2ec'>"
+                                "<h2>This link is not one we know.</h2><p>Make a new advert at "
+                                "<a style='color:#7fe0b6' href='/quick/'>trustsquare.co/quick</a> and keep the new link.</p></body>",
+                                status_code=404)
+        em = u["email"]
+        if not draft:
+            d = conn.execute("SELECT id FROM listings WHERE LOWER(seller_email)=? AND listing_status='draft' "
+                             "ORDER BY id DESC LIMIT 1", (em.lower(),)).fetchone()
+            draft = int(d["id"]) if d else 0
+        try:
+            conn.execute("UPDATE users SET last_seen=? WHERE email=?",
+                         (datetime.now(timezone.utc).isoformat(timespec="seconds"), em))
+            conn.commit()
+        except Exception:
+            pass
+    finally:
+        conn.close()
+    if not _JWT_SECRET:
+        return HTMLResponse("<p>Sign-in is not available right now. Please try again in a minute.</p>", status_code=503)
+    return RedirectResponse(url=_mint_signin_url(em, draft or None, 20), status_code=302)
+
+
+@app.get("/auth/session-link")
+def auth_session_link(draft: int = 0, ts_user: str = Cookie(default=None)):
+    """A sign-in hop for the identity this browser already holds (phone-code sessions at the Quick door),
+    so the app opens signed in with her draft in front of her."""
+    em = _session_email(ts_user)
+    if not em:
+        raise HTTPException(status_code=401, detail="Please sign in.")
+    return {"url": _mint_signin_url(em, draft or None, 20)}
+
+
+class _PhoneStart(BaseModel):
+    phone: str
+    name: str = ""
+
+class _PhoneVerify(BaseModel):
+    phone: str
+    code: str
+    draft: int = 0
+
+_PH_IP_LOG = {}
+
+@app.post("/auth/phone/start")
+def auth_phone_start(body: _PhoneStart, request: Request):
+    """PHONE-KEY-1 (RUL-167): a one-time code by SMS. Fails dark with 503 sms_unavailable until an SMS
+    provider is configured, so the door can fall back to the link key without a dead end."""
+    import sms_provider, secrets as _sk, time as _t
+    e164 = sms_provider.normalise(body.phone)
+    if not e164:
+        raise HTTPException(status_code=400, detail="Please type a phone number we can send a code to (for example 082 123 4567).")
+    if not sms_provider.ready():
+        raise HTTPException(status_code=503, detail="sms_unavailable")
+    ip = _qp_client_ip(request); now = _t.time()
+    hits = [t for t in _PH_IP_LOG.get(ip, []) if now - t < 3600]
+    if len(hits) >= 10:
+        raise HTTPException(status_code=429, detail="Too many codes from this connection -- please try again later.")
+    hits.append(now); _PH_IP_LOG[ip] = hits
+    conn = database.get_db()
+    try:
+        n = conn.execute("SELECT COUNT(*) AS n FROM phone_codes WHERE phone=? AND created_at > datetime('now','-1 hour')",
+                         (e164,)).fetchone()["n"]
+        if n >= 3:
+            raise HTTPException(status_code=429, detail="Three codes went to that number in the last hour -- use the last one, or wait a while.")
+        code = "%06d" % _sk.randbelow(1000000)
+        conn.execute("INSERT INTO phone_codes (phone, code_hash, expires_at) VALUES (?,?, datetime('now','+10 minutes'))",
+                     (e164, _key_hash(e164 + ":" + code)))
+        conn.commit()
+    finally:
+        conn.close()
+    st, info = sms_provider.send(e164, "TrustSquare code: %s. It works for 10 minutes. Never share it." % code, "phone-code")
+    if st != "sent":
+        raise HTTPException(status_code=503, detail="We could not send the code right now (%s)." % info)
+    return {"ok": True, "masked": sms_provider.mask(e164)}
+
+
+@app.post("/auth/phone/verify")
+def auth_phone_verify(body: _PhoneVerify, response: Response):
+    import sms_provider
+    e164 = sms_provider.normalise(body.phone); code = (body.code or "").strip()
+    if not e164 or not re.fullmatch(r"\d{6}", code):
+        raise HTTPException(status_code=400, detail="Type the six-digit code from the SMS.")
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT id, code_hash, attempts FROM phone_codes WHERE phone=? AND used_at IS NULL "
+                           "AND expires_at > datetime('now') ORDER BY id DESC LIMIT 1", (e164,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=401, detail="That code has expired -- ask for a new one.")
+        if row["attempts"] >= 5:
+            raise HTTPException(status_code=429, detail="Too many tries -- ask for a new code.")
+        if row["code_hash"] != _key_hash(e164 + ":" + code):
+            conn.execute("UPDATE phone_codes SET attempts=attempts+1 WHERE id=?", (row["id"],)); conn.commit()
+            raise HTTPException(status_code=401, detail="That code is not right.")
+        conn.execute("UPDATE phone_codes SET used_at=datetime('now') WHERE id=?", (row["id"],))
+        u = conn.execute("SELECT email FROM users WHERE phone=? AND closed_at IS NULL ORDER BY id LIMIT 1", (e164,)).fetchone()
+        if u:
+            em = u["email"]
+        else:
+            em = _new_key_identity()
+            conn.execute("INSERT INTO users (email, phone, aa_free_used, aa_sessions_remaining) VALUES (?,?,0,0)", (em, e164))
+        conn.commit()
+    finally:
+        conn.close()
+    out = _establish_user_session(em, response)
+    out["identity"] = "phone"
+    out["signin_url"] = _mint_signin_url(em, body.draft or None, 60)
+    return out
 
 
 @app.post("/quality/preview")
@@ -5623,6 +5784,12 @@ def quick_me(ts_user: str = Cookie(default=None)):
     em = _session_email(ts_user)
     out = {"signed_in": False, "key": auth.API_KEY if hasattr(auth, "API_KEY") else os.environ.get("MS_API_KEY", ""),
            "email": None, "name": None, "eula_accepted": False, "city": None, "listings": 0}
+    try:
+        import sms_provider
+        out["sms_ready"] = bool(sms_provider.ready())     # PHONE-KEY-1: the door offers the phone code only when it can send one
+    except Exception:
+        out["sms_ready"] = False
+    out["key_identity"] = _is_key_identity(em)
     if not em:
         return out
     conn = database.get_db()
@@ -6745,6 +6912,60 @@ def _account_binding_enabled() -> bool:
         return False
 
 
+# ══ PHONE-KEY-1 / LINK-KEY-1 (David, 24 Sep 2026 -- RUL-167, amending RUL-166's key, not its EULA) ══
+# The casual worker has WhatsApp, not e-mail. Her ACCOUNT KEY may now be a phone number (a one-time
+# code by SMS) or the private draft link itself; the EULA sign-off stays mandatory and is still
+# recorded server-side by publish_listing. A key account is an ordinary users row whose e-mail is a
+# synthetic, never-mailed identity under KEY_ID_DOMAIN: every mail sender skips it, and an SMS goes
+# to her phone instead when one is on file and a provider is configured (sms_provider.py).
+KEY_ID_DOMAIN = "key.trustsquare.co"
+
+def _is_key_identity(email) -> bool:
+    return (email or "").strip().lower().endswith("@" + KEY_ID_DOMAIN)
+
+def _new_key_identity() -> str:
+    import secrets as _sk
+    return "w-" + _sk.token_hex(5) + "@" + KEY_ID_DOMAIN
+
+def _key_hash(secret: str) -> str:
+    return hashlib.sha256(("ts-key:" + (secret or "")).encode("utf-8")).hexdigest()
+
+def _mint_signin_url(email: str, draft_id=None, minutes: int = 20) -> str:
+    """A short, silently re-minted sign-in hop for an identity already proved (the key link or the
+    phone code). The KEY itself never lapses (David's no-lapse rule); only this hop is short-lived."""
+    token = _pyjwt.encode({"email": email, "purpose": "signin",
+                           "exp": datetime.now(timezone.utc) + timedelta(minutes=minutes),
+                           "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
+    url = APP_URL + "/?signin=" + token
+    if draft_id:
+        url += "&draft=" + str(int(draft_id))
+    return url
+
+def _user_phone(conn, email):
+    try:
+        r = conn.execute("SELECT phone FROM users WHERE LOWER(email)=?", ((email or "").lower(),)).fetchone()
+        return (r["phone"] if r and r["phone"] else None)
+    except Exception:
+        return None
+
+def _sms_key_seller(email: str, text: str, purpose: str) -> str:
+    """SMS to a key-account seller when she left a phone; 'skipped' otherwise. Never raises."""
+    try:
+        import sms_provider
+        conn = database.get_db()
+        try:
+            ph = _user_phone(conn, email)
+        finally:
+            conn.close()
+        if not ph:
+            return "skipped"
+        st, _info = sms_provider.send(ph, text, purpose)
+        return st
+    except Exception as exc:
+        _log.warning("sms to key seller failed (%s): %s", purpose, exc)
+        return "failed"
+
+
 def _session_email(ts_user):
     """Proven email from the ts_user session cookie (JWT scope 'user'), or None.
     The cookie is set ONLY by /auth/verify after a magic-link click — possession of
@@ -6982,6 +7203,9 @@ def _relay_forward(to_real: str, from_alias: str, subject: str, body: str) -> bo
     if not to_clean:
         _log.warning("INTRO-RELAY-1 forward skipped — bad recipient")
         return False
+    if _is_key_identity(to_clean):          # LINK-KEY-1: no inbox -- an SMS nudge if she left a phone
+        _sms_key_seller(to_clean, "TrustSquare: a message about your advert is waiting. Open your TrustSquare link to read it.", "relay-nudge")
+        return False
     key = ai_provider.envkey("RESEND_API_KEY") or ""
     if not key:
         _log.error("INTRO-RELAY-1 forward skipped — RESEND_API_KEY not set")
@@ -7161,6 +7385,13 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
             "timestamp":     datetime.now(timezone.utc).isoformat(),
         }
         background_tasks.add_task(_fire_webhook, N8N_WEBHOOK_NEW_INTRO, payload)
+    try:
+        if _is_key_identity(listing["seller_email"]):   # LINK-KEY-1: she has no inbox -- SMS if she left a phone
+            background_tasks.add_task(_sms_key_seller, listing["seller_email"],
+                "TrustSquare: someone asked to be introduced to you about '%s'. Open your TrustSquare link to answer."
+                % ((listing["title"] or "your advert")[:50]), "intro-request")
+    except Exception:
+        pass
     return {"message": "Introduction request submitted"}
 
 @app.get("/intros")
@@ -9755,6 +9986,8 @@ def _demand_render_invite(ticket, prospect, code):
 def _demand_send_invite(to_email, subject, html):
     """The ONLY send path. Triple-gated: env ON + dry-run OFF + RESEND_API_KEY present.
     Writes the outreach ledger AT send (one touch per address, enforced upstream)."""
+    if _is_key_identity(to_email):          # LINK-KEY-1
+        return ("dry", None)
     key = ai_provider.envkey("RESEND_API_KEY") or ""
     if not (DEMAND_LOOP_ENABLED and not DEMAND_LOOP_DRYRUN and key):
         return ("dry", None)
@@ -12520,6 +12753,8 @@ def trust_score_set_credential(req: CredentialUpdateReq, _key: str = Depends(aut
                          "(My Space -> Credentials) - a clear, current document verifies fastest.\n\nTrustSquare"
                          % (_sname, (" Reason: " + req.notes) if req.notes else ""))
             import requests as _rq2
+            if _is_key_identity(req.email):   # LINK-KEY-1: no inbox to tell
+                raise RuntimeError("key identity -- no mail")
             _rq2.post("https://api.resend.com/emails", json={
                 # RESEND-FROM-1 (7 Aug 2026): the ONE sender still reading the env raw.
                 # Bitter irony - this mail exists to fix TS-0010 (a credential decision
@@ -15881,6 +16116,9 @@ def _send_review_link_email(to_email: str, link: str, code: str = "") -> str:
     """Email the one-time gate access link. Mirrors _send_login_email's proven
     transport (Resend -> Gmail SMTP fallback, RESEND-FROM-1 + MAIL-FALLBACK-1
     lessons kept). Returns 'sent' | 'failed' | 'dry'."""
+    if _is_key_identity(to_email):          # LINK-KEY-1
+        _log.info("mail skipped: %s is a key identity", to_email)
+        return "skipped"
     subject = "Your TrustSquare access code"
     html = (
         "<div style='font-family:Inter,Arial,sans-serif;max-width:440px;margin:auto'>"
@@ -16134,6 +16372,9 @@ def _send_html_email(to_email: str, subject: str, html: str, plain: str) -> str:
     Carries MAIL-FALLBACK-1 (22 Jul 2026): a configured-but-unauthorized Resend key
     falls through to Gmail, never short-circuits with 'failed'.
     Returns 'sent' | 'failed' | 'dry' (no transport configured)."""
+    if _is_key_identity(to_email):          # LINK-KEY-1: a key identity has no inbox
+        _log.info("mail skipped: %s is a key identity", to_email)
+        return "skipped"
     key = ai_provider.envkey("RESEND_API_KEY") or ""
     if key:
         try:
@@ -16286,6 +16527,9 @@ def _send_quick_live_email(to_email: str, link: str, title: str) -> str:
 def _quick_live_mail(to_email: str, listing_id: int, title: str) -> None:
     try:
         em = (to_email or "").strip().lower()
+        if _is_key_identity(em):            # LINK-KEY-1: SMS if she left a phone; the hub shows it either way
+            _sms_key_seller(em, "TrustSquare: your advert '%s' is live. Open your TrustSquare link to see it." % (title or "")[:50], "quick-live")
+            return
         if "@" not in em or not _JWT_SECRET:
             if not _JWT_SECRET:
                 _log.error("quick-live mail NOT sent for %s: MS_JWT_SECRET empty (QUICK-RETURN-GUARD-1)", listing_id)
@@ -22096,6 +22340,8 @@ def _smtp_send_reply(to_addr: str, subject: str, body: str,
     """Send a plain-text support reply. Prefers Resend (domain-aligned From =
     SUPPORT_FROM_EMAIL, Reply-To = SUPPORT_REPLY_TO) — the L3a launch path.
     Falls back to Gmail SMTP if Resend is unset/fails. Never raises."""
+    if _is_key_identity(to_addr):           # LINK-KEY-1
+        return False
     to_clean = parseaddr(to_addr)[1]
     if not to_clean:
         _log.warning("_smtp_send_reply skipped — no valid recipient in %r", to_addr)
@@ -24289,6 +24535,9 @@ RESP_PENALTY_ACTIVE_DAYS = 90 # penalty eases (drops out of the score) after thi
 def _send_system_email(to_email: str, subject: str, html: str) -> str:
     """Transactional lifecycle email. Resend if configured, Gmail SMTP fallback
     (MAIL-FALLBACK-1 pattern). Returns 'sent' | 'failed' | 'dry'."""
+    if _is_key_identity(to_email):          # LINK-KEY-1
+        _log.info("mail skipped: %s is a key identity", to_email)
+        return "skipped"
     key = ai_provider.envkey("RESEND_API_KEY") or ""
     if key:
         try:
