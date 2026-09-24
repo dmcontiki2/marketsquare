@@ -2902,20 +2902,22 @@ def ops_selfcheck(_key: str = Depends(auth.require_api_key)):
     return out
 
 @app.post("/admin/purge-cache")
-async def purge_cache(x_admin_key: str = Header(None)):
-    """Purge Cloudflare cache. Called automatically after deploys."""
-    ADMIN_KEY = os.getenv("ADMIN_KEY", "")
-    if ADMIN_KEY and x_admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail="Forbidden")
+async def purge_cache(request: Request, x_admin_key: str = Header(None)):
+    """Purge Cloudflare cache. Called automatically after deploys.
+    ADMIN-LOCALGUARD-1 (24 Sep 2026): fail-closed — was open to anonymous external callers
+    when the env key was unset (found by scripts/authz_probe.py). The deploy calls this
+    directly on localhost (no X-Forwarded-For); external callers always carry one."""
+    if not _admin_local_or_key(request, x_admin_key, "purge-cache"):
+        raise HTTPException(status_code=403, detail="Not found")
     await _cf_purge_all()
     return {"purged": True}
 
 @app.post("/admin/refresh-pois/{listing_id}")
-async def refresh_pois(listing_id: int, x_admin_key: str = Header(None)):
-    """Force-refresh nearby POIs for a property listing. Clears cached value and re-fetches from Overpass."""
-    ADMIN_KEY = os.getenv("ADMIN_KEY", "")
-    if ADMIN_KEY and x_admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail="Forbidden")
+async def refresh_pois(listing_id: int, request: Request, x_admin_key: str = Header(None)):
+    """Force-refresh nearby POIs for a property listing. Clears cached value and re-fetches from Overpass.
+    ADMIN-LOCALGUARD-1 (24 Sep 2026): fail-closed (was open when the env key was unset)."""
+    if not _admin_local_or_key(request, x_admin_key, "refresh-pois"):
+        raise HTTPException(status_code=403, detail="Not found")
     conn = database.get_db()
     row = conn.execute("SELECT category, listing_lat, listing_lng, geo_city_id FROM listings WHERE id=?", (listing_id,)).fetchone()
     if not row:
@@ -3501,11 +3503,14 @@ class _ZoomWatchIn(BaseModel):
     label: Optional[str] = None
 
 @app.post("/zoom/watch")
-def zoom_watch_save(w: _ZoomWatchIn):
+def zoom_watch_save(w: _ZoomWatchIn,
+                    ts_user: str = Cookie(default=None),
+                    x_admin_key: str = Header(default=None)):
     """Rule 5: a saved path is a standing interest -- 'For You' = your saved paths, run fresh.
     Free on every tier (RUL-077 boundary 4). Stored per account; the client keeps a local copy
-    too so a signed-out user still has theirs."""
-    email = (w.email or "").strip().lower()
+    too so a signed-out user still has theirs (the client only POSTs here when signed in).
+    IDENTITY-BIND-3 (24 Sep 2026): the server copy is saved to the signed-in account."""
+    email = (_actor(ts_user, w.email, "zoom-watch-save", x_admin_key) or "").strip().lower()
     if not email:
         raise HTTPException(status_code=400, detail="email required")
     conn = database.get_db()
@@ -3549,7 +3554,11 @@ def zoom_watch_list(email: str):
         conn.close()
 
 @app.delete("/zoom/watch/{watch_id}")
-def zoom_watch_delete(watch_id: int, email: str):
+def zoom_watch_delete(watch_id: int, email: str = "",
+                      ts_user: str = Cookie(default=None),
+                      x_admin_key: str = Header(default=None)):
+    # IDENTITY-BIND-3 (24 Sep 2026): delete only from the signed-in account.
+    email = _actor(ts_user, email, "zoom-watch-delete", x_admin_key)
     conn = database.get_db()
     try:
         conn.execute("DELETE FROM zoom_watches WHERE id=? AND email=?", (watch_id, (email or "").strip().lower()))
@@ -6627,9 +6636,14 @@ def get_user_trust(email: str):
     }
 
 @app.post("/users/{email}/photo")
-async def upload_user_photo(email: str, file: UploadFile = File(...)):
+async def upload_user_photo(email: str, file: UploadFile = File(...),
+                            ts_user: str = Cookie(default=None),
+                            x_admin_key: str = Header(default=None)):
     """Upload a seller profile photo. Compresses to 400×400 JPEG, stores to R2 or local,
-    saves URL to users.photo_url. No API key required — seller identifies by email."""
+    saves URL to users.photo_url.
+    IDENTITY-BIND-3 (24 Sep 2026): bound to the signed-in session via _actor, not the
+    path email — the app key is public, so the path proved nothing."""
+    email = _actor(ts_user, email, "profile-photo", x_admin_key)
     # PHOTO-TYPE-1 (TS-0025): the bytes decide, not the browser's guess.
     content_type = (file.content_type or "").strip()
     if not _photo_type_ok(content_type, getattr(file, "filename", "") or ""):
@@ -7076,6 +7090,30 @@ def _admin_only(admin_key, ctx=""):
         _log.warning("IDENTITY-BIND-1 admin refusal (ctx=%s)", ctx)
         raise HTTPException(status_code=403, detail="Not found")
     return True
+
+
+def _admin_local_or_key(request, admin_key, ctx=""):
+    """ADMIN-LOCALGUARD-1 (24 Sep 2026). For OUR-OWN ops endpoints that a LOCAL process
+    calls directly (the deploy's CDN purge hits http://localhost:8000 with no proxy) but
+    the public must never reach. Fail-closed. True only if:
+      - a correct admin key is presented (MS_ADMIN_KEY or the legacy ADMIN_KEY env), OR
+      - the request carries NO X-Forwarded-For — i.e. it did not pass through nginx, which
+        stamps X-Forwarded-For (via $proxy_add_x_forwarded_for) on every proxied request.
+        Only a process on the box can reach uvicorn without the proxy, and port 8000 is
+        firewalled to localhost, so an external caller can never satisfy this branch.
+    Found by scripts/authz_probe.py: /admin/purge-cache answered anonymous callers 200
+    because its old guard failed OPEN when the env key was unset."""
+    keys = [k for k in (MS_ADMIN_KEY, os.getenv("ADMIN_KEY", "")) if k]
+    if admin_key and admin_key in keys:
+        return True
+    try:
+        xff = request.headers.get("x-forwarded-for")
+    except Exception:
+        xff = None
+    if not xff:
+        return True
+    _log.warning("ADMIN-LOCALGUARD-1 refusal (ctx=%s): external caller, no valid key", ctx)
+    return False
 
 
 def _agency_admin_or_refuse(agency_id, ts_user, admin_key, ctx=""):
@@ -12869,7 +12907,9 @@ class ExperienceReq(BaseModel):
 
 
 @app.post("/trust/experience")
-def trust_experience(req: ExperienceReq):
+def trust_experience(req: ExperienceReq,
+                     ts_user: str = Cookie(default=None),
+                     x_admin_key: str = Header(default=None)):
     """RUL-136: the seller says how many years they have been doing this.
 
     Worth 3 and not 12 because nobody checks it - it is self-declared, and the ladder
@@ -12881,7 +12921,9 @@ def trust_experience(req: ExperienceReq):
 
     Re-saving a different number overwrites; it never stacks (UNIQUE(email, signal_id)).
     """
-    email = (req.email or "").strip().lower()
+    # IDENTITY-BIND-3 (24 Sep 2026): the credential is written to the SIGNED-IN
+    # account, not to whatever email the page put in the body — this awards trust score.
+    email = (_actor(ts_user, req.email, "trust-experience", x_admin_key) or "").strip().lower()
     if "@" not in email:
         raise HTTPException(status_code=400, detail="A valid email is needed.")
     try:
@@ -14348,13 +14390,16 @@ class ListingCityIn(BaseModel):
 
 
 @app.post("/listings/{listing_id}/cities")
-def add_listing_city(listing_id: int, payload: ListingCityIn):
+def add_listing_city(listing_id: int, payload: ListingCityIn,
+                     ts_user: str = Cookie(default=None),
+                     x_admin_key: str = Header(default=None)):
     """Seller extends their listing to an additional city.
     Requires Starter, Pro or Agency (AGENCY-REACH-1). No country boundary — a
-    seller may reach abroad (RUL-108). Seller authenticates by email
-    (same pattern as edit-after-publish: email must match listing.seller_email).
+    seller may reach abroad (RUL-108).
+    IDENTITY-BIND-3 (24 Sep 2026): bound to the signed-in session via _actor, not a
+    typed email — the app key is public.
     """
-    email = payload.email.lower().strip()
+    email = (_actor(ts_user, payload.email, "listing-city-add", x_admin_key) or "").lower().strip()
     conn = database.get_db()
     try:
         # Verify listing belongs to this seller
@@ -14404,9 +14449,12 @@ def add_listing_city(listing_id: int, payload: ListingCityIn):
 
 
 @app.delete("/listings/{listing_id}/cities/{city_id}")
-def remove_listing_city(listing_id: int, city_id: int, email: str):
-    """Remove an extended city from a listing."""
-    email = email.lower().strip()
+def remove_listing_city(listing_id: int, city_id: int, email: str = "",
+                        ts_user: str = Cookie(default=None),
+                        x_admin_key: str = Header(default=None)):
+    """Remove an extended city from a listing.
+    IDENTITY-BIND-3 (24 Sep 2026): bound to the signed-in session via _actor."""
+    email = (_actor(ts_user, email, "listing-city-remove", x_admin_key) or "").lower().strip()
     conn = database.get_db()
     try:
         listing = conn.execute(
@@ -15571,13 +15619,16 @@ def _update_listing_wonders_sync(listing_id: int, request: Request):
 
 # Replace above with proper sync endpoint
 @app.post("/listings/{listing_id}/wonders")
-async def set_listing_wonders(listing_id: int, request: Request):
-    """Set linked_wonders for a listing. Body: {email, wonder_ids: [...up to 5...]}"""
+async def set_listing_wonders(listing_id: int, request: Request,
+                              ts_user: str = Cookie(default=None),
+                              x_admin_key: str = Header(default=None)):
+    """Set linked_wonders for a listing. Body: {email, wonder_ids: [...up to 5...]}
+    IDENTITY-BIND-3 (24 Sep 2026): bound to the signed-in session via _actor."""
     try:
         body = await request.json()
     except Exception as exc:
         raise HTTPException(status_code=400, detail="Invalid JSON body") from exc
-    email = body.get("email","").strip()
+    email = (_actor(ts_user, body.get("email","").strip(), "wonder-set", x_admin_key) or "").strip()
     wonder_ids = body.get("wonder_ids", [])
     if not email:
         raise HTTPException(status_code=401, detail="email required")
@@ -25393,16 +25444,20 @@ class _KeepLiveIn(BaseModel):
     email: str
 
 @app.post("/listings/{listing_id}/keep-live")
-def keep_listing_live(listing_id: int, req: _KeepLiveIn):
+def keep_listing_live(listing_id: int, req: _KeepLiveIn,
+                      ts_user: str = Cookie(default=None),
+                      x_admin_key: str = Header(default=None)):
     """Seller revives a FADED listing (or resets the fade clock on a warned one).
-    Seller identifies by email — same trust model as /users/{email}/photo."""
+    IDENTITY-BIND-3 (24 Sep 2026): bound to the signed-in session via _actor, not a
+    typed email — the app key is public, so an email in the body proved nothing."""
+    actor = _actor(ts_user, req.email, "keep-live", x_admin_key)
     conn = database.get_db()
     try:
         row = conn.execute("SELECT id, seller_email, listing_status FROM listings WHERE id=?",
                            (listing_id,)).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Listing not found")
-        if (row["seller_email"] or "").lower() != (req.email or "").lower():
+        if (row["seller_email"] or "").lower() != (actor or "").lower():
             raise HTTPException(status_code=403, detail="Not your listing")
         st = (row["listing_status"] or "live").lower()
         if st not in ("faded", "live", "paused"):
