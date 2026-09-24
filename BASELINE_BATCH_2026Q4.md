@@ -39,6 +39,7 @@ Ordered by dependency, not by size. Each item is built flag-dark; nothing is arm
 | 7 | **One $5 tier — fold Global into Starter** | [[RUL-128]] · [[RUL-080]] | — | Live Paystack table. Existing Global subscribers migrate at the same price, never cancelled and re-sold. The pricing page is rewritten in the same change, never before it. |
 | 8 | **AI funds gauge on the +1 card** | RG-0203 | — | `dashboard.server.html` carries no `data-ai-funds` strip, so "can this AI function stop?" is unanswerable. Cheap, independent. |
 | 9 | **Agency letters** | RG-0346 | — | The three letters the sending lane draws still tell the solo-seller story and never mint the agency console link. Copy and flow, not mechanics. |
+| 10 | **STRICT-CSP-1 — the browser blocks injected script** | Security assessment 24 Sep 2026 (David approved: "Strict CSP in the Q4 batch") | — (touches every page, so it rides this batch, not a drip) | Today's CSP allows `'unsafe-inline'` script and `unpkg.com`, so any markup that slips past CONTENT-GATE-1 still runs. Move the ~163 inline `onclick=` handlers in `ms.js` / `marketsquare.html` / `quick.html` / the consoles to `addEventListener`, drop `'unsafe-inline'` from `script-src` (nonce or hash for the few boot scripts), self-host or pin with SRI anything taken from unpkg/cdnjs, add `Permissions-Policy` and HSTS `includeSubDomains`. Ship first as `Content-Security-Policy-Report-Only` for a week, then enforce. |
 
 ---
 
@@ -55,6 +56,7 @@ Verified in the RENDERED app at phone width, not at the API or DB layer.
 - **$5 fold** — every existing Global subscriber still has what they paid for, at the same price, with no Paystack cancellation; the pricing page shows one ladder.
 - **Funds gauge** — each AI function's lane shows funds and auto-top-up state on the rendered dashboard.
 - **Agency letters** — a rendered letter tells the agency story and carries a working console link.
+- **Strict CSP** — every page and both consoles render and work with the enforcing policy; the report-only week shows zero violations from the app itself; an injected `<img onerror>` in a test listing does not run.
 
 ---
 

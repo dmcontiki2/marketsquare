@@ -2005,6 +2005,14 @@
      "in": "json"
     }
    ]
+  },
+  {
+   "key": "POST /auth/logout",
+   "level": "public"
+  },
+  {
+   "key": "GET /private-docs/{kind}/{name}",
+   "level": "public"
   }
  ]
 }

@@ -1676,6 +1676,7 @@ function headerAuthClick(){
   if(_msIsSignedIn()) goTo('dashboard'); else goTo('signin');
 }
 function signOut(){
+  try{ fetch('/auth/logout', {method:'POST', credentials:'same-origin'}); }catch(e){}   // SESSION-END-1: the server session ends too
   ['ms_aa_email','ms_aa_name','ms_seller_profile','ms_seller_photo','ms_seller_photo_url',
    'ms_user_photo','ms_user_name','ms_trust_score','ms_intros_sent','ms_superuser','ms_joined_date']
     .forEach(function(k){ localStorage.removeItem(k); });

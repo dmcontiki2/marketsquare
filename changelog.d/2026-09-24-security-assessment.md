@@ -25,3 +25,11 @@
 - Server: prod venv upgraded (Pillow 12.3, PyJWT 2.15, python-multipart 0.0.32, starlette 1.3.1 / FastAPI
   0.135.3, aiohttp, cryptography, urllib3, requests, idna, anyio): pip-audit 0 known vulns, stranger test 302/302,
   QA gate pass. AdvertAgent venv patched. BEA and strategist bound to 127.0.0.1. OS packages upgraded.
+- SEC-ASSESS-3 (David's approvals, 24 Sep): SESSION-END-1 sign-out (POST /auth/logout, called by ms.js signOut)
+  and account closure end every session of the account (users.session_version; no timer - an unchanged
+  version never lapses); SIGNIN-ONCE-1 sign-in links work once and never after 72 h; ID-MATCH-1 the 0.60-0.75
+  ID band earns only when the AI reports a match; VOUCH-OTHERS-1 employer confirmations count only from a
+  signed-in person other than the seller, and a second confirmation must come from a different person;
+  PRIVATE-DOCS-1 ID documents and certificates go to /var/lib/trustsquare-private (encrypted off-site nightly),
+  served only by /private-docs/ to owner, admin/enrolled device, or an accepted-intro buyer for post-intro docs;
+  the 14 existing files + 7 orphans migrate out of the public bucket. BASELINE_BATCH item 10 STRICT-CSP-1.

@@ -92,6 +92,13 @@ def close_account(conn, email, closure_type="user", cause=None):
     id_hash = row["id_number_hash"] if "id_number_hash" in row.keys() else None
     # Write ledger rows against the address as STORED, so the wallet keeps summing.
     email = row["email"]
+    # SESSION-END-1 (24 Sep 2026, security assessment, David approved): closing an account ends every
+    # session it has - the signed-in cookie of a closed account must not keep acting for 180 days.
+    # (the column is created by the BEA at start-up - SESSION-END-1 in bea_main.py)
+    try:
+        conn.execute("UPDATE users SET session_version = COALESCE(session_version, 0) + 1 WHERE email = ?", (email,))
+    except Exception:
+        pass
 
     bal = _balance(conn, email)
     forfeit = bool(closure_type == "breach" and (cause or "").upper() in FRAUD_CAUSES)

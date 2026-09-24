@@ -2006,6 +2006,30 @@ def _safe_storage_key(key: str) -> str:
     return "/".join(parts)
 
 
+_PRIVATE_DIR = os.environ.get("MS_PRIVATE_DIR", "/var/lib/trustsquare-private")
+_PRIVATE_KINDS = ("ids", "docs")
+
+
+def _private_path(key: str) -> str:
+    p = os.path.realpath(os.path.join(_PRIVATE_DIR, key))
+    if not p.startswith(os.path.realpath(_PRIVATE_DIR) + os.sep):
+        raise ValueError("private key escapes the private store")
+    return p
+
+
+def _private_store(data: bytes, key: str) -> str:
+    """PRIVATE-DOCS-1 (24 Sep 2026, security assessment, David approved): ID documents and certificates
+    never go to the public photo bucket. They live on the server (root-only volume backup, encrypted
+    off-site) and are served by /private-docs/ only to their owner, an admin or enrolled device, or -
+    for a post-intro certificate - a buyer whose introduction the seller accepted."""
+    p = _private_path(key)
+    os.makedirs(os.path.dirname(p), mode=0o700, exist_ok=True)
+    with open(p, "wb") as fh:
+        fh.write(data)
+    os.chmod(p, 0o600)
+    return "/private-docs/" + key
+
+
 def _s3_upload(data: bytes, key: str, content_type: str) -> str:
     """Upload bytes to R2 (primary) AND mirror to local Hetzner disk (redundant fallback).
 
@@ -2018,6 +2042,8 @@ def _s3_upload(data: bytes, key: str, content_type: str) -> str:
     At 50,000 listings + photos ≈ 30GB — well within CPX32 capacity for years.
     """
     key = _safe_storage_key(key)   # UPLOAD-KEY-1
+    if key.split("/", 1)[0] in _PRIVATE_KINDS:
+        return _private_store(data, key)          # PRIVATE-DOCS-1: never the public bucket
     if str(content_type or "").lower().startswith(("image/svg", "image/svg+xml")):
         content_type = "application/octet-stream"   # an SVG is a script-capable document, never an image here
     if not str(content_type or "").lower().startswith(("image/", "application/pdf", "application/msword",
@@ -7280,6 +7306,52 @@ def _sms_key_seller(email: str, text: str, purpose: str) -> str:
         return "failed"
 
 
+_SV_CACHE = {}          # SESSION-END-1: email -> (session_version, read_at)
+_SV_READY = [False]
+
+
+def _sv_ensure(conn):
+    if _SV_READY[0]:
+        return
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN session_version INTEGER DEFAULT 0")
+        conn.commit()
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+    try:
+        conn.execute("CREATE TABLE IF NOT EXISTS used_signin_links (link_hash TEXT PRIMARY KEY, used_at REAL NOT NULL)")
+        conn.commit()
+    except Exception:
+        pass
+    _SV_READY[0] = True
+
+
+def _session_version(email, fresh=False):
+    """SESSION-END-1 (24 Sep 2026, security assessment, David approved): a session is only as alive as
+    the account's session_version. Signing out or closing the account bumps it, which ends every session
+    of that account at once. There is NO timer here - an unchanged version never lapses."""
+    import time as _t
+    hit = _SV_CACHE.get(email)
+    if hit and not fresh and _t.time() - hit[1] < 30:
+        return hit[0]
+    v = 0
+    try:
+        conn = database.get_db()
+        try:
+            _sv_ensure(conn)
+            row = conn.execute("SELECT session_version FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+            v = int((row["session_version"] if row else 0) or 0)
+        finally:
+            conn.close()
+    except Exception:
+        return hit[0] if hit else 0
+    _SV_CACHE[email] = (v, _t.time())
+    return v
+
+
 def _session_email(ts_user):
     """Proven email from the ts_user session cookie (JWT scope 'user'), or None.
     The cookie is set ONLY by /auth/verify after a magic-link click — possession of
@@ -7291,7 +7363,10 @@ def _session_email(ts_user):
         p = _pyjwt.decode(ts_user, _JWT_SECRET, algorithms=[_JWT_ALGO])
         if p.get("scope") != "user":
             return None
-        return ((p.get("sub") or "").strip().lower()) or None
+        em = ((p.get("sub") or "").strip().lower()) or None
+        if em and int(p.get("sv", 0) or 0) < _session_version(em):
+            return None                                   # SESSION-END-1: signed out / account closed
+        return em
     except Exception:
         return None
 
@@ -13536,10 +13611,17 @@ def trust_employer_confirm(req: EmployerConfirmReq, ts_user: str = Cookie(defaul
     if claims.get("purpose") != "employer_confirm":
         raise HTTPException(status_code=400, detail="That link is not a confirmation link.")
     email = claims["email"]
-    # SEC-GATE-1 (24 Sep 2026): the seller signed in as herself cannot be her own third-party voucher.
-    if _session_email(ts_user) == (email or "").strip().lower():
+    # VOUCH-OTHERS-1 (24 Sep 2026, David approved): a confirmation counts only from a SIGNED-IN person who
+    # is not the seller. Before this, the seller could open her own link in a private window and confirm
+    # herself for +12 trust points.
+    _confirmer = (_session_email(ts_user) or "").strip().lower()
+    if not _confirmer:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=401, content={"detail": "Please sign in to TrustSquare first (it is free), then open this link again - a confirmation only counts from a signed-in person.", "code": "signin_required"})
+    if _confirmer == (email or "").strip().lower():
         raise HTTPException(status_code=403,
                             detail="This link is for someone you have worked for - you cannot confirm yourself.")
+    _who = hashlib.sha256(_confirmer.encode("utf-8")).hexdigest()[:12]
     note = ("Confirmed by a previous employer via the seller's own link"
             + (" - worked from " + str(req.worked_from)[:40] if req.worked_from else "")
             + ". The confirmer is never named or published.")
@@ -13556,13 +13638,15 @@ def trust_employer_confirm(req: EmployerConfirmReq, ts_user: str = Cookie(defaul
     # confirmation through a DIFFERENT link (a second person) stacks as employer_confirmed_2 at 6.
     # The same link tapped again, or a legacy link without a nonce, never stacks.
     _nonce = claims.get("nonce")
-    _by = "employer-link:" + _nonce if _nonce else "employer-link"
+    _by = ("employer-link:" + _nonce if _nonce else "employer-link") + "|by:" + _who
     _signal, _pts = "universal.employer_confirmed", 12
     if _prev and _prev["status"] == "earned":
         _second = conn.execute(
             "SELECT status, verified_by FROM user_credentials WHERE email = ? AND signal_id = 'universal.employer_confirmed_2'",
             (email,)).fetchone()
-        if (not _nonce) or (_prev["verified_by"] or "") == _by or (_second and _second["status"] == "earned"):
+        _pv = (_prev["verified_by"] or "")
+        if ((not _nonce) or _pv.split("|by:")[0] == _by.split("|by:")[0] or ("|by:" + _who) in _pv
+                or (_second and _second["status"] == "earned")):
             conn.close()
             return {"ok": True, "points_awarded": 0, "already": True,
                     "new_score": None}
@@ -14415,6 +14499,49 @@ def list_seller_documents(
     return [dict(r) for r in rows]
 
 
+@app.get("/private-docs/{kind}/{name}")
+def private_document(kind: str, name: str, request: Request,
+                     ts_user: str = Cookie(default=None), ts_device: str = Cookie(default=None)):
+    """PRIVATE-DOCS-1: the only door to an ID document or certificate. Owner, admin (key/token or an
+    enrolled device), or a buyer with an ACCEPTED introduction to that seller for a post-intro document.
+    Everyone else gets the same 404 as a file that does not exist."""
+    from fastapi.responses import FileResponse
+    if kind not in _PRIVATE_KINDS or "/" in name or name.startswith("."):
+        raise HTTPException(status_code=404, detail="Not found")
+    key = kind + "/" + name
+    try:
+        path = _private_path(key)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Not found")
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail="Not found")
+    allowed = bool(_gate_is_admin(request.headers, {}) or _device_from_cookie(ts_device))
+    if not allowed:
+        sess = _session_email(ts_user)
+        if sess:
+            conn = database.get_db()
+            try:
+                row = conn.execute("SELECT email, visibility FROM seller_documents WHERE url=?",
+                                   ("/private-docs/" + key,)).fetchone()
+                if row and (row["email"] or "").strip().lower() == sess:
+                    allowed = True
+                elif row and kind == "docs" and row["visibility"] == "post_intro":
+                    allowed = bool(conn.execute(
+                        "SELECT 1 FROM intro_requests i JOIN listings l ON l.id = i.listing_id "
+                        "WHERE LOWER(i.buyer_email)=? AND LOWER(l.seller_email)=? AND i.status='accepted' LIMIT 1",
+                        (sess, (row["email"] or "").strip().lower())).fetchone())
+            finally:
+                conn.close()
+    if not allowed:
+        raise HTTPException(status_code=404, detail="Not found")
+    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    mt = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "jfif": "image/jpeg", "png": "image/png", "webp": "image/webp",
+          "gif": "image/gif", "pdf": "application/pdf"}.get(ext, "application/octet-stream")
+    return FileResponse(path, media_type=mt, headers={"Cache-Control": "private, no-store",
+                                                      "X-Content-Type-Options": "nosniff",
+                                                      "Content-Security-Policy": "default-src 'none'; img-src 'self'; sandbox"})
+
+
 @app.get("/users/{email}/documents/public")
 def list_public_documents(email: str, intro_id: int = None):
     """Return post_intro documents for a seller. Called by buyer app after intro accepted.
@@ -14720,6 +14847,12 @@ def _host_is_public(host: str) -> bool:
 def _fetch_kyc_document(doc_url: str) -> bytes:
     """SSRF-safe fetch of an already-uploaded ID document. Raises ValueError on any
     policy violation; the caller turns that into an honest 'could not fetch' result."""
+    if doc_url.startswith("/private-docs/"):                     # PRIVATE-DOCS-1: read it from the store
+        with open(_private_path(doc_url[len("/private-docs/"):]), "rb") as fh:
+            data = fh.read(_KYC_MAX_BYTES + 1)
+        if len(data) > _KYC_MAX_BYTES:
+            raise ValueError("document exceeds the size limit")
+        return data
     base = (R2_PUBLIC_URL or "").rstrip("/")
     if not base or not doc_url.startswith(base + "/"):
         raise ValueError("document URL is not on the approved storage host")
@@ -14919,8 +15052,9 @@ async def verify_identity(
             "UPDATE users SET id_verified_at=strftime('%Y-%m-%dT%H:%M:%SZ','now'), id_ai_score=? WHERE email=?",
             (ai["confidence"], email)
         )
-    elif ai["confidence"] >= 0.60:
-        # Acceptable confidence — auto-earn (no human review path)
+    elif ai["verified"] and ai["confidence"] >= 0.60:
+        # ID-MATCH-1 (24 Sep 2026, David approved): 0.60-0.75 earns only when the AI says the document
+        # MATCHES the typed name and number. A clear photo of someone else's ID no longer earns the badge.
         _upsert_credential(conn, email, "category.lm.id_ai_verified", "earned")
         result["signals_awarded"].append("category.lm.id_ai_verified")
         conn.execute(
@@ -17495,7 +17629,7 @@ def _establish_user_session(email: str, response: Response):
         conn.close()
     # ACCOUNT-BIND-1 (5 Aug 2026): proven email possession, kept as an HttpOnly cookie.
     _sess_tok = _pyjwt.encode(
-        {"scope": "user", "sub": email,
+        {"scope": "user", "sub": email, "sv": _session_version(email, fresh=True),   # SESSION-END-1
          "exp": datetime.now(timezone.utc) + timedelta(days=180),
          "iat": datetime.now(timezone.utc)},
         _JWT_SECRET, algorithm=_JWT_ALGO)
@@ -17861,7 +17995,46 @@ def auth_verify(req: _SignInVerify, response: Response):
     email = (payload.get("email") or "").strip().lower()
     if not email:
         raise HTTPException(status_code=401, detail="This sign-in link is not valid.")
+    # SIGNIN-ONCE-1 (24 Sep 2026, security assessment, David approved): a sign-in link works ONCE and
+    # never after 72 hours, so a forwarded mail, a mail-scanner log or browser history cannot replay it.
+    # The same browser re-sending it within a minute (a double render) is not a second use.
+    import time as _t
+    _iat = payload.get("iat")
+    if isinstance(_iat, (int, float)) and _t.time() - float(_iat) > 72 * 3600:
+        raise HTTPException(status_code=401, detail="This sign-in link is too old — request a new one.")
+    _h = hashlib.sha256(req.token.encode("utf-8")).hexdigest()
+    conn = database.get_db()
+    try:
+        _sv_ensure(conn)
+        _row = conn.execute("SELECT used_at FROM used_signin_links WHERE link_hash=?", (_h,)).fetchone()
+        if _row and _t.time() - float(_row["used_at"]) > 60:
+            raise HTTPException(status_code=410, detail="This sign-in link was already used — request a new one.")
+        if not _row:
+            conn.execute("INSERT OR IGNORE INTO used_signin_links (link_hash, used_at) VALUES (?, ?)", (_h, _t.time()))
+            conn.execute("DELETE FROM used_signin_links WHERE used_at < ?", (_t.time() - 8 * 86400,))
+            conn.commit()
+    finally:
+        conn.close()
     return _establish_user_session(email, response)   # SIGNIN-CODE-1: one shared door
+
+
+@app.post("/auth/logout")
+def auth_logout(response: Response, ts_user: str = Cookie(default=None)):
+    """SESSION-END-1: signing out ends every session of this account (all devices) and clears the
+    cookie on this one. Before this, 'Sign out' only cleared the page's memory - the HttpOnly session
+    cookie stayed valid for up to 180 days on a shared or stolen device."""
+    em = _session_email(ts_user)
+    if em:
+        conn = database.get_db()
+        try:
+            _sv_ensure(conn)
+            conn.execute("UPDATE users SET session_version = COALESCE(session_version, 0) + 1 WHERE LOWER(email)=?", (em,))
+            conn.commit()
+        finally:
+            conn.close()
+        _session_version(em, fresh=True)
+    response.delete_cookie("ts_user", path="/", secure=True, httponly=True, samesite="lax")
+    return {"ok": True}
 
 # ── AGENCY (Team plan) — umbrella over agent sellers ───────────────────────
 class _AgencyCreate(_BaseModel):
