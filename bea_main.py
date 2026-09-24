@@ -162,7 +162,7 @@ def _require_admin_or_key(x_admin_token: str = Header(default=None),
             detail="Admin credentials required (fail-closed mode: admin key only).")
     if x_admin_token and _JWT_SECRET:
         try:  # _pyjwt/_JWT_SECRET defined later at module level — resolved at call time
-            return _pyjwt.decode(x_admin_token, _JWT_SECRET, algorithms=[_JWT_ALGO])
+            return _admin_claims(x_admin_token)   # SEC-GATE-1: typed admin token only
         except Exception:
             pass
     raise HTTPException(status_code=401, detail="Admin credentials required.")
@@ -3450,7 +3450,8 @@ def _zoom_public_row(d):
 
 @app.get("/zoom/next")
 def zoom_next(category: str, city: str = "Pretoria", f: Optional[str] = None, q: Optional[str] = None,
-              email: Optional[str] = None, demo: int = 0, rows: int = 1):
+              email: Optional[str] = None, demo: int = 0, rows: int = 1,
+              ts_user: str = Cookie(default=None)):
     """One call per tap. `f` = chosen chips as `facet:value|facet:value` (values URL-encoded by
     the client, decoded here); `q` = a typed shortcut (rule 4). Returns the sheet's whole state:
     total, chips (with auto chips flagged), the ONE question (options with true counts, tail
@@ -3467,7 +3468,8 @@ def zoom_next(category: str, city: str = "Pretoria", f: Optional[str] = None, q:
                 chosen[k] = v
     conn = database.get_db()
     try:
-        tier = _buyer_reach_tier(conn, email or "")
+        # SEC-GATE-1 (24 Sep 2026): reach tier comes from the proven session, never the typed ?email= (which let anyone borrow a Pro account's global reach).
+        tier = _buyer_reach_tier(conn, _session_email(ts_user) or "")
         cands, locked = _zoom_candidates(conn, cat_norm, city, demo, tier)
         # quality: the stored column; a row stamped before the column existed is scored live
         def _qf(r):
@@ -3567,12 +3569,63 @@ def zoom_watch_delete(watch_id: int, email: str = "",
     finally:
         conn.close()
 
+# SEC-GATE-1 (24 Sep 2026): short-lived purpose tokens for the anonymous draft/withdraw lanes. HMAC, not a
+# JWT, so they can never be mistaken for a session or admin token; keyed off MS_JWT_SECRET, fail closed when unset.
+def _purpose_token(purpose: str, subject, days: int = 7) -> str:
+    import hmac as _hm, time as _t
+    if not _JWT_SECRET:
+        return ""
+    exp = int(_t.time()) + int(days) * 86400
+    key = hashlib.sha256(("SEC-GATE-1:%s:%s" % (purpose, _JWT_SECRET)).encode()).digest()
+    sig = _hm.new(key, ("%s|%s|%d" % (purpose, subject, exp)).encode(), hashlib.sha256).hexdigest()
+    return "%d.%s" % (exp, sig)
+
+
+def _purpose_token_ok(token, purpose: str, subject) -> bool:
+    import hmac as _hm, time as _t
+    try:
+        if not _JWT_SECRET or not token or "." not in str(token):
+            return False
+        exp_s, sig = str(token).strip().split(".", 1)
+        exp = int(exp_s)
+        if exp < int(_t.time()):
+            return False
+        key = hashlib.sha256(("SEC-GATE-1:%s:%s" % (purpose, _JWT_SECRET)).encode()).digest()
+        want = _hm.new(key, ("%s|%s|%d" % (purpose, subject, exp)).encode(), hashlib.sha256).hexdigest()
+        return _hm.compare_digest(want, sig)
+    except Exception:
+        return False
+
+
+# SEC-GATE-1 (24 Sep 2026): the way-back letter is mailed from a public route, so it is throttled per
+# address and per client IP (in-memory, the _QP_IP_LOG pattern). The draft is always saved; only the mail is held.
+_DRAFT_MAIL_LOG = {}
+_DRAFT_MAIL_MAX = {"to:": 3, "ip:": 10}     # letters per 24h
+
+
+def _draft_mail_allowed(addr: str, ip: str) -> bool:
+    import time as _t
+    now = _t.time()
+    keys = ["to:" + (addr or "").strip().lower()] + (["ip:" + ip] if ip else [])
+    for k in keys:
+        _DRAFT_MAIL_LOG[k] = [x for x in _DRAFT_MAIL_LOG.get(k, []) if now - x < 86400]
+        if len(_DRAFT_MAIL_LOG[k]) >= _DRAFT_MAIL_MAX[k[:3]]:
+            return False
+    for k in keys:
+        _DRAFT_MAIL_LOG[k].append(now)
+    return True
+
+
 @app.post("/listings")
-def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: str = Depends(auth.require_api_key)):
+def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: str = Depends(auth.require_api_key),
+                   request: Request = None, response: Response = None):
     listing.title = _plain_text(listing.title)              # AUDIT-XSS-1
     listing.description = _plain_text(listing.description)
     if not listing.suburb:
         raise HTTPException(status_code=400, detail="suburb is required")
+    # SEC-GATE-1 (24 Sep 2026): owners are matched on the lowercased session email, so store it that way.
+    if listing.seller_email:
+        listing.seller_email = listing.seller_email.strip().lower()
     launch_redemption.check_listing_velocity(listing.seller_email)  # per-day flood control (env-gated OFF)
     conn = database.get_db()
     # Resolve geo_city_id from city name at creation time
@@ -3607,7 +3660,7 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
          listing.listing_type,   # BEDS-PUBLISH-1
          listing.subject, listing.level, listing.mode, listing.service_type, listing.availability,
          (listing.rental_status or 'available'), listing.available_from,
-         listing.trust_score, listing.seller_email, 'draft',
+         None, listing.seller_email, 'draft',   # SEC-GATE-1 (24 Sep 2026): trust_score is never client-set; publish_listing takes it from the seller's account
          listing.street_address, listing.listing_lat, listing.listing_lng, _geo_city_id,
          listing.make, listing.model, listing.variant, listing.vehicle_year,
          listing.mileage_km, listing.transmission, listing.fuel_type, listing.body_type,
@@ -3641,10 +3694,23 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
     # RG-0395 exists to protect.
     _SELF_SERVE_LANES = ("quick", "sellflow")
     if (listing.source or "").strip().lower() in _SELF_SERVE_LANES and listing.seller_email:
-        background_tasks.add_task(_quick_draft_return, listing.seller_email,
-                                  new_id, listing.title)
+        # SEC-GATE-1 (24 Sep 2026): a public route must not mail an unlimited stream of letters to any address.
+        _ip = _qp_client_ip(request) if request is not None else ""
+        if _draft_mail_allowed(listing.seller_email, _ip):
+            background_tasks.add_task(_quick_draft_return, listing.seller_email,
+                                      new_id, listing.title)
+        else:
+            _log.warning("SEC-GATE-1: way-back letter for draft %s throttled (address/IP daily cap)", new_id)
     # Wishlist matching deferred until listing goes live (draft listings not matched)
-    return {"id": new_id, "message": "Listing saved as draft — seller must complete onboarding to go live"}
+    # SEC-GATE-1 (24 Sep 2026): draft_token lets the anonymous composer attach photos to THIS draft only.
+    # It is also set as an HttpOnly cookie (ts_draft), so the browser that made the draft proves it on the
+    # photo uploads that follow without the page having to carry the token.
+    _dtok = _purpose_token("draft", new_id, days=7)
+    if response is not None and _dtok:
+        response.set_cookie("ts_draft", _dtok, max_age=7 * 86400, httponly=True, secure=True,
+                            samesite="lax", path="/")
+    return {"id": new_id, "message": "Listing saved as draft — seller must complete onboarding to go live",
+            "draft_token": _dtok}
 
 
 
@@ -4347,8 +4413,23 @@ def _stamp_quality_score(conn, listing_id):
         return None
 
 
+def _withdraw_link_token(listing_id: int, seller_email: str, days: int = 30) -> str:
+    """SEC-GATE-1 (24 Sep 2026): mint the &t= for a recovery letter's take-down link
+    (API base + /listings/<id>/withdraw?email=<owner>&t=<this>). Bound to the listing AND its owner."""
+    return _purpose_token("withdraw", "%s|%s" % (int(listing_id), (seller_email or "").strip().lower()), days=days)
+
+
+_WITHDRAW_PAGE = ("<!doctype html><meta charset='utf-8'>"
+                  "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+                  "<title>%s</title>"
+                  "<body style=\"margin:0;background:#0b1020;color:#e8ecf4;"
+                  "font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;"
+                  "display:flex;align-items:center;justify-content:center;min-height:100vh\">"
+                  "<div style='max-width:32rem;padding:2rem'>%s</div></body>")
+
+
 @app.get("/listings/{listing_id}/withdraw")
-def withdraw_listing(listing_id: int, email: str):
+def withdraw_listing(listing_id: int, email: str = "", t: str = "", confirm: int = 0):
     """RECOUP-WITHDRAW-1 (23 Sep 2026) -- the "take it down" link in a recovery letter.
 
     A letter that asks a seller whether they want their draft published has to offer
@@ -4369,6 +4450,36 @@ def withdraw_listing(listing_id: int, email: str):
     if owner and owner != (email or "").strip().lower():
         conn.close()
         raise HTTPException(status_code=403, detail="Not authorised to withdraw this listing")
+    # SEC-GATE-1 (24 Sep 2026): a bare ?email= let anyone who knew a seller's address (or nobody, for an
+    # ownerless listing) archive her advert and delete its photos. The letter link now carries a signed
+    # token bound to this listing and its owner, and the tap lands on a confirm page first, so a mail
+    # scanner's pre-fetch changes nothing (the OPTOUT-CONFIRM-1 lesson).
+    # A DRAFT (never public) may still be withdrawn by its owner's address alone, so the letters already
+    # posted with a bare ?email= keep working; a live advert needs the signed token.
+    _tok_ok = bool(owner) and _purpose_token_ok(t, "withdraw", "%s|%s" % (int(listing_id), owner))
+    _legacy_ok = (bool(owner) and (row["listing_status"] or "draft") == "draft"
+                  and owner == (email or "").strip().lower())
+    if not (_tok_ok or _legacy_ok):
+        conn.close()
+        return HTMLResponse(_WITHDRAW_PAGE % (
+            "Link not valid",
+            "<h1 style='font-size:1.4rem;margin:0 0 1rem'>This take-down link is not valid or has expired.</h1>"
+            "<p style='margin:0'>Sign in to TrustSquare and remove the advert from your listings, or simply "
+            "reply to our letter and we will take it down for you.</p>"), status_code=403)
+    if not int(confirm or 0):
+        conn.close()
+        import html as _h
+        return HTMLResponse(_WITHDRAW_PAGE % (
+            "Take your advert down?",
+            "<h1 style='font-size:1.4rem;margin:0 0 1rem'>Take your advert down?</h1>"
+            "<p style='margin:0 0 1rem'>This archives the advert and deletes its photographs.</p>"
+            "<form method='get' action='/listings/%d/withdraw'>"
+            "<input type='hidden' name='email' value='%s'>"
+            "<input type='hidden' name='t' value='%s'><input type='hidden' name='confirm' value='1'>"
+            "<button type='submit' style='background:#e8ecf4;color:#0b1020;border:0;border-radius:8px;"
+            "padding:12px 24px;font-size:16px;cursor:pointer'>Yes, take it down</button></form>"
+            "<p style='margin:1rem 0 0;color:#9aa4b8'><small>Changed your mind? Just close this page.</small></p>"
+            % (int(listing_id), _h.escape(owner, quote=True), _h.escape(t, quote=True))))
 
     # Delete the photographs from object storage before the row forgets where they are.
     keys, deleted, failed = [], 0, 0
@@ -5456,7 +5567,10 @@ class _PhotoOrderIn(BaseModel):
 _PHOTO_ORDER_MAX = 24
 
 @app.post("/listings/photos/order")
-def photos_order_suggest(p: _PhotoOrderIn):
+def photos_order_suggest(p: _PhotoOrderIn, ts_user: str = Cookie(default=None)):
+    # SEC-GATE-1 (24 Sep 2026): paid vision only for a proven session, metered by THAT email -- a stranger
+    # rotating the typed p.email could spend the whole platform AI ceiling. Anonymous callers get the rules answer.
+    _who = _session_email(ts_user)
     ids = [str(x.get("id")) for x in (p.photos or []) if x.get("id")][:_PHOTO_ORDER_MAX]
     if not ids:
         raise HTTPException(status_code=400, detail="no photos")
@@ -5468,9 +5582,9 @@ def photos_order_suggest(p: _PhotoOrderIn):
     method = "rules"
     reason = "cover first, then your own order"
     # ── vision pass (one call for the whole set; small thumbnails keep it cheap) ──────────
-    if rest and labels:
+    if rest and labels and _who:
         try:
-            _check_cost_ceiling((p.email or "anon").lower())
+            _check_cost_ceiling(_who)
             import base64 as _b64
             content = []
             for x in p.photos:
@@ -5505,7 +5619,7 @@ def photos_order_suggest(p: _PhotoOrderIn):
                                 if str(i) in rest and any(sk == k for k, _l, _h in labels):
                                     assign[str(i)] = sk
                     try:
-                        _log_ai_spend((p.email or "anon").lower(), "/listings/photos/order", "vision",
+                        _log_ai_spend(_who, "/listings/photos/order", "vision",
                                       getattr(_sr, "in_tokens", None), getattr(_sr, "out_tokens", None),
                                       provider=getattr(_sr, "provider", None), model=getattr(_sr, "model", None))
                     except Exception:
@@ -5853,8 +5967,30 @@ async def upload_listing_photo(
     is_primary: Optional[str] = Form(None),
     caption: Optional[str] = Form(None),
     category: Optional[str] = Form(None),
-    _key: str = Depends(auth.require_api_key)
+    _key: str = Depends(auth.require_api_key),
+    draft_token: Optional[str] = Form(None),
+    ts_user: str = Cookie(default=None),
+    ts_draft: str = Cookie(default=None),
+    x_admin_key: str = Header(default=None)
 ):
+    # SEC-GATE-1 (24 Sep 2026): with listing_id this writes the advert's cover and photo strip, and the app
+    # key is public -- so only the listing's owner (session), its anonymous composer (draft_token from
+    # POST /listings, drafts only) or MS_ADMIN_KEY may attach. Checked before any vision spend.
+    if listing_id and not (x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY):
+        _c1 = database.get_db()
+        try:
+            _r1 = _c1.execute("SELECT seller_email, listing_status FROM listings WHERE id=?", (listing_id,)).fetchone()
+        finally:
+            _c1.close()
+        if _r1:
+            _own1 = (_r1["seller_email"] or "").strip().lower()
+            _sess1 = _session_email(ts_user)
+            _draft1 = (_r1["listing_status"] or "draft") == "draft"
+            if not ((_sess1 and _own1 and _sess1 == _own1)
+                    or (_draft1 and (_purpose_token_ok(draft_token, "draft", int(listing_id))
+                                     or _purpose_token_ok(ts_draft, "draft", int(listing_id))))):
+                raise HTTPException(status_code=403, detail="Not authorised to add photos to this listing")
+
     # Validate file type
     # PHOTO-TYPE-1 (TS-0025): the bytes decide, not the browser's guess.
     content_type = (file.content_type or "").strip()
@@ -6000,7 +6136,11 @@ async def upload_listing_photo(
 async def upload_draft_listing_photo(
     listing_id: int,
     email: str,
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    draft_token: Optional[str] = Form(None),
+    ts_user: str = Cookie(default=None),
+    ts_draft: str = Cookie(default=None),
+    x_admin_key: str = Header(default=None)
 ):
     """Upload a photo to a DRAFT listing. Email-auth only — no API key required.
     Reuses the same compression pipeline as /listings/photo.
@@ -6036,7 +6176,17 @@ async def upload_draft_listing_photo(
     if (row["listing_status"] or "draft") != "draft":
         conn.close()
         raise HTTPException(status_code=409, detail="Only draft listings can use this endpoint")
-    if row["seller_email"] and row["seller_email"] != email:
+    if row["seller_email"] and row["seller_email"].strip().lower() != (email or "").strip().lower():
+        conn.close()
+        raise HTTPException(status_code=403, detail="Not authorised to edit this listing")
+    # SEC-GATE-1 (24 Sep 2026): knowing a seller's address is not proof -- the caller must be the signed-in
+    # owner, the draft's anonymous composer (draft_token from POST /listings), or MS_ADMIN_KEY.
+    _own = (row["seller_email"] or "").strip().lower()
+    _sess = _session_email(ts_user)
+    if not ((x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY)
+            or (_sess and _own and _sess == _own)
+            or _purpose_token_ok(draft_token, "draft", int(listing_id))
+            or _purpose_token_ok(ts_draft, "draft", int(listing_id))):
         conn.close()
         raise HTTPException(status_code=403, detail="Not authorised to edit this listing")
 
@@ -6114,8 +6264,9 @@ async def upload_draft_listing_photo(
 
     try:
         conn.execute(
-            "UPDATE listings SET thumb_url=?, medium_url=?, photo_urls=?, seller_email=COALESCE(seller_email,?), description=? WHERE id=?",
-            (primary_url, primary_url, new_photo_urls, email, new_desc, listing_id)
+            # SEC-GATE-1 (24 Sep 2026): a photo upload no longer stamps ownership onto an ownerless draft.
+            "UPDATE listings SET thumb_url=?, medium_url=?, photo_urls=?, description=? WHERE id=?",
+            (primary_url, primary_url, new_photo_urls, new_desc, listing_id)
         )
         conn.commit()
     finally:
@@ -6172,7 +6323,8 @@ def create_user(user: User, _key: str = Depends(auth.require_api_key)):
     if is_new and user.ai_sessions and user.ai_sessions > 0:
         conn.execute(
             "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + ? WHERE email = ?",
-            (user.ai_sessions, user.email)
+            # SEC-GATE-1 (24 Sep 2026): the grant is the server's (3, what the app sends), never a client-chosen number.
+            (min(int(user.ai_sessions), 3), user.email)
         )
         conn.commit()
     # ACCOUNT-CLOSE-1: a returning user gets their retained Tuppence back (EULA 14.1/14.3).
@@ -7465,7 +7617,16 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
     return {"message": "Introduction request submitted"}
 
 @app.get("/intros")
-def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None):
+def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
+                   ts_user: str = Cookie(default=None),
+                   x_admin_key: str = Header(default=None),
+                   x_admin_token: str = Header(default=None)):
+    # SEC-GATE-1 (24 Sep 2026): a non-admin caller sees only intros where the session is the buyer or the listing's seller.
+    _scope = None
+    if not _summary_caller_is_admin(x_admin_key, x_admin_token):
+        _scope = _session_email(ts_user)
+        if not _scope:
+            raise HTTPException(status_code=401, detail="Please sign in to see your introductions.")
     conn = database.get_db()
     # status="all" means no status filter — return all regardless of status
     if status == "all":
@@ -7504,6 +7665,12 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None):
                    ORDER BY i.created_at DESC""",
                 (status,)
             ).fetchall()
+    if _scope is not None:
+        # SEC-GATE-1 (24 Sep 2026): drop every row the session is neither buyer nor listing owner of.
+        _own_ids = {r["id"] for r in conn.execute(
+            "SELECT id FROM listings WHERE LOWER(seller_email) = ?", (_scope,)).fetchall()}
+        rows = [r for r in rows
+                if (r["buyer_email"] or "").strip().lower() == _scope or r["listing_id"] in _own_ids]
     conn.close()
     return [dict(r) for r in rows]
 
@@ -7566,6 +7733,8 @@ def _seller_verification_notice(conn, seller_email, category=None):
 # untouched and remains the introduction gate — nothing here can take a
 # seller's introductions away.
 ID_NPR_PRICE_T = 1
+# SEC-GATE-1 (24 Sep 2026): live Home Affairs queries per account per UTC day (stops ID/name oracle use).
+_NPR_DAILY_ATTEMPTS = int(os.getenv("NPR_DAILY_ATTEMPTS", "5") or 5)
 
 
 def _utc_now() -> str:
@@ -7662,6 +7831,25 @@ def verify_identity_npr(email: str, payload: NPRVerifyRequest,
             return {"outcome": "unavailable", "charged_t": 0, "verified": False,
                     "message": "Identity verification is not available right "
                                "now. You have not been charged."}
+
+        # SEC-GATE-1 (24 Sep 2026): no paid supplier query without the 1T to pay for it, and a daily attempt cap per account.
+        _bal = conn.execute(
+            "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
+            (em,)).fetchone()["bal"]
+        if _bal is None or int(_bal) < ID_NPR_PRICE_T:
+            raise HTTPException(
+                status_code=402,
+                detail=f"Insufficient Tuppence — you have {int(_bal or 0)}T, need {ID_NPR_PRICE_T}T")
+        _day0 = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00Z")
+        _tries = conn.execute(
+            """SELECT COUNT(*) AS n FROM id_verification_ledger
+               WHERE lower(email)=? AND outcome IN ('verified','failed')
+                 AND created_at >= ?""", (em, _day0)).fetchone()["n"]
+        if int(_tries or 0) >= _NPR_DAILY_ATTEMPTS:
+            raise HTTPException(
+                status_code=429,
+                detail="Too many ID checks on this account today - please try again tomorrow. "
+                       "You have not been charged.")
 
         # 5 ── live query
         res = id_verify_provider.verify_id(id_clean, payload.full_name or "")
@@ -7784,7 +7972,12 @@ def id_status(email: str):
                FROM users WHERE lower(email)=?""", (em,)
         ).fetchone()
         if r is None:
-            raise HTTPException(status_code=404, detail="User not found")
+            # SEC-GATE-1 (24 Sep 2026): an unknown address reads as "no ID on file", not 404, so this is no account-existence oracle.
+            return {
+                "state": "none", "label": "No ID on file", "green_tick": False,
+                "npr_verified_at": None, "price_t": ID_NPR_PRICE_T, "can_buy": True,
+                "interim_points": 0, "pending_points": 0, "pending_note": None,
+            }
         # ID-UPLOAD-INTERIM-1 (RUL-113, DW-109): a document that is on file but not
         # yet confirmed is a state of its own. Before this, an upload that returned
         # 200 left this route saying "No ID on file" — the seller uploaded again.
@@ -8112,18 +8305,44 @@ def _payment_grants_allowed() -> bool:
         return True
     return os.getenv("ALLOW_TEST_PAYMENTS", "") == "1"
 
+
+def _claim_payment_ref(conn, reference: str, kind: str) -> bool:
+    """SEC-GATE-1 (24 Sep 2026): one Paystack reference grants once per kind, enforced by a UNIQUE key.
+    Written on the caller's open transaction (no commit) so the claim and the grant land together.
+    Returns True only for the call that claimed it."""
+    conn.execute("CREATE TABLE IF NOT EXISTS payment_refs_consumed (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                 "kind TEXT NOT NULL, reference TEXT NOT NULL, consumed_at TEXT NOT NULL, UNIQUE(kind, reference))")
+    cur = conn.execute(
+        "INSERT OR IGNORE INTO payment_refs_consumed (kind, reference, consumed_at) VALUES (?,?,?)",
+        (kind, reference, datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")))
+    return cur.rowcount == 1
+
+
+def _safe_callback_url(url):
+    """SEC-GATE-1 (24 Sep 2026): Paystack may only send the payer back to our own site (no open redirect)."""
+    from urllib.parse import urlparse as _up
+    try:
+        p = _up((url or "").strip())
+    except Exception:
+        return None
+    if p.scheme == "https" and (p.hostname or "").lower() in ("trustsquare.co", "www.trustsquare.co"):
+        return url.strip()
+    return None
+
 @app.post("/payment/initialize")
 def initialize_payment(email: str, tuppence: int, ai_pack_sessions: int = 0, callback_url: str = ""):
     # FX-LIVE-1 (RUL-022): Tuppence is USD-canon ($2/T); the ZAR charge floats on
     # the live rate (12h-cached, parachute-backed) — the R36 hardcode is retired.
     amount_rands = usd_to_zar_amount(tuppence * 2)
     reference = f"ms_tuppence_{uuid.uuid4().hex[:12]}"
+    # SEC-GATE-1 (24 Sep 2026): AI packs are retired and were never priced here - never carry a free count into metadata.
+    ai_pack_sessions = 0
     result = payments.initialize_payment(
         email=email,
         amount_rands=amount_rands,
         reference=reference,
         metadata={"tuppence": tuppence, "email": email, "ai_pack_sessions": ai_pack_sessions},
-        callback_url=callback_url or None
+        callback_url=_safe_callback_url(callback_url)   # SEC-GATE-1 (24 Sep 2026): own-site callback only
     )
     if result.get("status"):
         return {
@@ -8149,6 +8368,10 @@ def verify_payment(reference: str):
         conn = database.get_db()
         # Idempotency (mirror the webhook): skip if this reference was already credited
         if conn.execute("SELECT id FROM transactions WHERE description LIKE ?", (f"%ref {reference}%",)).fetchone():
+            conn.close()
+            return {"status": "ok", "tuppence_credited": 0, "ai_sessions_credited": 0, "email": email, "note": "already processed"}
+        # SEC-GATE-1 (24 Sep 2026): atomic claim - a concurrent webhook for the same reference cannot credit twice.
+        if not _claim_payment_ref(conn, reference, "tuppence"):
             conn.close()
             return {"status": "ok", "tuppence_credited": 0, "ai_sessions_credited": 0, "email": email, "note": "already processed"}
         conn.execute(
@@ -8229,6 +8452,12 @@ async def paystack_webhook(request: Request):
 
         if existing:
             _log.info("Paystack webhook: ref %s already processed — skipping", reference)
+            conn.close()
+            return {"status": "ok"}
+
+        # SEC-GATE-1 (24 Sep 2026): atomic claim shared with /payment/verify, only for events that actually grant.
+        if (tuppence > 0 or ai_sessions > 0) and not _claim_payment_ref(conn, reference, "tuppence"):
+            _log.info("Paystack webhook: ref %s already claimed — skipping", reference)
             conn.close()
             return {"status": "ok"}
 
@@ -8349,7 +8578,7 @@ def init_seller_subscription(email: str, tier: str, callback_url: str = ""):
             "email": email,
             "is_downgrade": is_downgrade,
         },
-        callback_url=callback_url or None,
+        callback_url=_safe_callback_url(callback_url),   # SEC-GATE-1 (24 Sep 2026): own-site callback only
     )
     if result.get("status"):
         return {
@@ -8395,9 +8624,24 @@ def verify_seller_subscription(reference: str):
     slot_limit = plan["slot_limit"]
     # Billing period end = 30 days from now
     billing_end = (datetime.utcnow() + timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # SEC-GATE-1 (24 Sep 2026): the period runs from when Paystack says it was paid, not from each verify call.
+    try:
+        _paid_at = (result["data"].get("paid_at") or "").strip().replace("Z", "+00:00")
+        if _paid_at:
+            _paid_dt = datetime.fromisoformat(_paid_at).astimezone(timezone.utc).replace(tzinfo=None)
+            billing_end = (_paid_dt + timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except Exception:
+        pass
 
     conn = database.get_db()
     try:
+        # SEC-GATE-1 (24 Sep 2026): one payment applies once - a replayed reference no longer re-extends the
+        # period or collects another monthly Tuppence grant.
+        if not _claim_payment_ref(conn, reference, "seller_subscription"):
+            _log.info("Seller subscription ref %s already applied — not re-applied", reference)
+            return {"status": "ok", "email": email, "tier": tier, "label": plan["label"],
+                    "slot_limit": slot_limit, "is_downgrade": is_downgrade,
+                    "effective": "already_applied"}
         if is_downgrade:
             # Schedule downgrade — keep current tier active until billing_period_end
             conn.execute(
@@ -8591,8 +8835,35 @@ class AAPublishRequest(BaseModel):
     coach_output: Optional[str] = None
 
 
+# SEC-GATE-1 (24 Sep 2026): per-client-IP daily call budgets for the anonymous AI lanes and the view counter.
+# In-process like _QP_IP_LOG; request.client.host is the true client (the central gate rewrites it).
+_SEC_IP_LOG = {}
+_MARKET_NOTE_IP_MAX = int(os.getenv("MARKET_NOTE_IP_MAX", "80") or 80)
+_DRAFT_PHOTOS_IP_MAX = int(os.getenv("DRAFT_PHOTOS_IP_MAX", "20") or 20)
+_DRAFT_PHOTO_IP_MAX = int(os.getenv("DRAFT_PHOTO_IP_MAX", "30") or 30)
+_MARKET_NOTE_PROMPT_MAX = 3000   # longest real caller prompt is a description rewrite
+
+
+def _sec_ip_budget_ok(request, bucket: str, max_per_day: int) -> bool:
+    """SEC-GATE-1 (24 Sep 2026): True and counts the call if this client IP is under its 24h budget for bucket."""
+    import time as _st
+    ip = (request.client.host if (request is not None and request.client) else "?")
+    now_t = _st.time()
+    if len(_SEC_IP_LOG) > 50000:   # bound memory: forget clients idle for a day
+        for _k in [k for k, v in _SEC_IP_LOG.items() if not v or now_t - v[-1] >= 86400]:
+            _SEC_IP_LOG.pop(_k, None)
+    key = (bucket, ip)
+    hits = [t for t in _SEC_IP_LOG.get(key, []) if now_t - t < 86400]
+    if len(hits) >= max_per_day:
+        _SEC_IP_LOG[key] = hits
+        return False
+    hits.append(now_t)
+    _SEC_IP_LOG[key] = hits
+    return True
+
+
 @app.post("/advert-agent/market-note")
-async def aa_market_note(req: dict, background_tasks: BackgroundTasks):
+async def aa_market_note(req: dict, background_tasks: BackgroundTasks, request: Request):
     """Lightweight inline market context note — existence-gated (Session 90).
     Accepts {email, prompt} and returns {response} with a single Haiku sentence.
     Used by sbTriggerMarketNote() in the sell flow (B3 inline note + Path A inline note).
@@ -8603,6 +8874,10 @@ async def aa_market_note(req: dict, background_tasks: BackgroundTasks):
     prompt = (req.get("prompt") or "").strip()
     if not prompt:
         raise HTTPException(status_code=400, detail="prompt is required")
+    # SEC-GATE-1 (24 Sep 2026): bound the free-form prompt and the calls per client, so this is no open LLM proxy.
+    prompt = prompt[:_MARKET_NOTE_PROMPT_MAX]
+    if not _sec_ip_budget_ok(request, "market-note", _MARKET_NOTE_IP_MAX):
+        raise HTTPException(status_code=429, detail="Too many AI notes from this connection today - please try again tomorrow.")
 
     # Existence gate — email must belong to a registered user (Session 90)
     _email = (req.get("email") or "").strip().lower()
@@ -8705,7 +8980,7 @@ def _template_draft(intent: str, city: str) -> dict:
             "condition": "seller-declared", "description": desc, "source": "template"}
 
 @app.post("/listings/draft-from-photos")
-async def listing_draft_from_photos(req: dict, background_tasks: BackgroundTasks):
+async def listing_draft_from_photos(req: dict, background_tasks: BackgroundTasks, request: Request):
     """Guided listing v2: ONE batched Haiku vision call reads ALL the seller's
     photos -> per-slot captions + a polished description. Free to the seller,
     $0-first: no key / over ceiling / any error -> graceful empty result (the
@@ -8719,6 +8994,9 @@ async def listing_draft_from_photos(req: dict, background_tasks: BackgroundTasks
     fields = req.get("fields") or {}
     empty = {"captions": [], "description": "", "source": "none"}
     if not ai_provider.any_lane_configured():
+        return empty
+    # SEC-GATE-1 (24 Sep 2026): anonymous vision calls get a per-client daily budget; over it, the same graceful empty result.
+    if not _sec_ip_budget_ok(request, "draft-from-photos", _DRAFT_PHOTOS_IP_MAX):
         return empty
     try:
         _check_cost_ceiling("")
@@ -8774,7 +9052,8 @@ async def listing_draft_from_photos(req: dict, background_tasks: BackgroundTasks
 
 
 @app.post("/listings/draft-from-photo")
-async def listing_draft_from_photo(req: dict, background_tasks: BackgroundTasks):
+async def listing_draft_from_photo(req: dict, background_tasks: BackgroundTasks, request: Request,
+                                   ts_user: str = Cookie(default=None)):
     """One photo + one sentence -> a drafted listing the seller fine-tunes.
     Accepts {intent, photo_b64?, city?, email?} -> {title, category, condition,
     price, description, source}. Free: no Tuppence, no DB writes.
@@ -8785,7 +9064,8 @@ async def listing_draft_from_photo(req: dict, background_tasks: BackgroundTasks)
     if len(intent) > 300:
         intent = intent[:300]
     city = (req.get("city") or "").strip() or "Pretoria"
-    email = (req.get("email") or "").strip().lower()
+    # SEC-GATE-1 (24 Sep 2026): the per-user ceiling and spend log key off the proven session, never a typed email.
+    email = _session_email(ts_user) or ""
 
     draft = _template_draft(intent, city)
 
@@ -8796,6 +9076,9 @@ async def listing_draft_from_photo(req: dict, background_tasks: BackgroundTasks)
         photo_b64 = ""
 
     if not ai_provider.any_lane_configured():
+        return draft
+    # SEC-GATE-1 (24 Sep 2026): per-client daily budget; over it, serve the same $0 template.
+    if not _sec_ip_budget_ok(request, "draft-from-photo", _DRAFT_PHOTO_IP_MAX):
         return draft
     try:
         _check_cost_ceiling(email)   # C1 — over the daily ceiling: serve the $0 template
@@ -9188,6 +9471,8 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
 # the seller typed is ever discarded (the client keeps the question in the box); every
 # cap-hit is logged with limit, tier and category for demand telemetry.
 SF_COACH_ASK_CAP = int(os.getenv("SF_COACH_ASK_CAP", "10"))
+# SEC-GATE-1 (24 Sep 2026): free questions per email per UTC day across all listing sessions (3 listings' worth).
+SF_COACH_ASK_DAILY_CAP = int(os.getenv("SF_COACH_ASK_DAILY_CAP", "30"))
 SF_COACH_ASK_WARN_LEFT = 2
 SF_COACH_ASK_CAP_COPY = ("You\u2019ve used your %d free questions for this listing. Finish and publish it \u2014 "
                          "then the AI Coach on your dashboard can go deeper on this advert for 1 Tuppence a session.")
@@ -9229,6 +9514,20 @@ async def aa_coach_ask(req: AACoachAskRequest, background_tasks: BackgroundTasks
                          (sid, email, (req.step or "")[:40], cat, tier, q, SF_COACH_ASK_CAP))
             conn.commit()
             _log.info("SF-COACH-ASK-1 cap hit: limit=%s tier=%s category=%s", SF_COACH_ASK_CAP, tier, cat)
+            raise HTTPException(status_code=429, detail={
+                "message": SF_COACH_ASK_CAP_COPY % SF_COACH_ASK_CAP,
+                "used": used, "cap": SF_COACH_ASK_CAP, "remaining": 0, "upsell": "dashboard_coach_1T"})
+        # SEC-GATE-1 (24 Sep 2026): session_id is client-chosen, so also cap free answers per email per UTC day.
+        _day0 = datetime.utcnow().strftime("%Y-%m-%d 00:00:00")
+        _used_today = conn.execute(
+            "SELECT COUNT(*) AS n FROM coach_ask_log WHERE LOWER(email)=? AND cap_hit=0 AND created_at >= ?",
+            (email, _day0)).fetchone()["n"]
+        if _used_today >= SF_COACH_ASK_DAILY_CAP:
+            conn.execute("INSERT INTO coach_ask_log (session_id, email, step, category, tier, question, cap_hit, cap_limit) "
+                         "VALUES (?,?,?,?,?,?,1,?)",
+                         (sid, email, (req.step or "")[:40], cat, tier, q, SF_COACH_ASK_DAILY_CAP))
+            conn.commit()
+            _log.info("SEC-GATE-1 coach-ask daily cap hit: limit=%s tier=%s category=%s", SF_COACH_ASK_DAILY_CAP, tier, cat)
             raise HTTPException(status_code=429, detail={
                 "message": SF_COACH_ASK_CAP_COPY % SF_COACH_ASK_CAP,
                 "used": used, "cap": SF_COACH_ASK_CAP, "remaining": 0, "upsell": "dashboard_coach_1T"})
@@ -9294,6 +9593,8 @@ async def aa_publish(
 ):
     """Receive draft + photos, upload to R2, create pending listing, return listing id."""
     import json as _json
+    # SEC-GATE-1 (24 Sep 2026): one canonical spelling, so the owner, slot and velocity checks all see the same account.
+    email = (email or "").strip().lower()
 
     try:
         field_data = _json.loads(fields)
@@ -9302,6 +9603,10 @@ async def aa_publish(
 
     title         = field_data.get("title") or field_data.get("item_name", "")
     price         = field_data.get("price") or field_data.get("rate")
+    # SEC-GATE-1 (24 Sep 2026): the same gates as every other publish door (create_listing / quick_publish):
+    # per-day listing velocity and the price-basis rule, checked before any photo is stored.
+    launch_redemption.check_listing_velocity(email)
+    _validate_price_unit(category, "" if price is None else str(price))
     suburb        = field_data.get("suburb") or field_data.get("area", "")
     desc          = field_data.get("desc", "")
     service_class = field_data.get("service_class") or None
@@ -9453,10 +9758,13 @@ async def aa_publish(
     conn = database.get_db()
     # Inherit seller trust_score + slot_limit from users table
     ts_row = conn.execute(
-        "SELECT trust_score, slot_limit, is_superuser FROM users WHERE LOWER(email) = ?", (email,)
+        "SELECT trust_score, slot_limit, is_superuser, eula_accepted_at FROM users WHERE LOWER(email) = ?", (email,)
     ).fetchone()
     seller_trust = int(ts_row["trust_score"] or 40) if ts_row else 40
     is_super = bool(ts_row["is_superuser"]) if ts_row else False
+    # SEC-GATE-1 (24 Sep 2026): RUL-166 / EULA-PUBLISH-1 - nothing goes live without the seller's recorded EULA
+    # acceptance; without it the advert is saved as a DRAFT and published from the app behind the EULA gate.
+    _go_live = is_super or bool(ts_row and ts_row["eula_accepted_at"])
     # Slot guard at publish time (superusers exempt)
     if not is_super:
         slot_limit = int(ts_row["slot_limit"]) if ts_row and ts_row["slot_limit"] else 2
@@ -9488,13 +9796,15 @@ async def aa_publish(
     cursor = conn.execute(
         """INSERT INTO listings
            (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class, seller_email, trust_score, ai_suggested_price, scryfall_id, published_at,
-            make, model, variant, vehicle_year, mileage_km, transmission, fuel_type, body_type, colour, vehicle_specs, spec_confirmed, attested_at, attested_email)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, CURRENT_TIMESTAMP,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            make, model, variant, vehicle_year, mileage_km, transmission, fuel_type, body_type, colour, vehicle_specs, spec_confirmed, attested_at, attested_email,
+            listing_status)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, CURRENT_TIMESTAMP,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (title, price, category, city, suburb, suburb, desc, thumb_url, medium_url, service_class, email, seller_trust, ai_price_anchor, scryfall_id,
          _veh_cols["make"], _veh_cols["model"], _veh_cols["variant"], _veh_cols["vehicle_year"],
          _veh_cols["mileage_km"], _veh_cols["transmission"], _veh_cols["fuel_type"], _veh_cols["body_type"],
          _veh_cols["colour"], _veh_cols["vehicle_specs"], _veh_cols["spec_confirmed"],
-         _veh_cols["attested_at"], _veh_cols["attested_email"]),
+         _veh_cols["attested_at"], _veh_cols["attested_email"],
+         "live" if _go_live else "draft"),   # SEC-GATE-1 (24 Sep 2026): draft until the EULA is on record
     )
     listing_id = cursor.lastrowid
     # Upsert user record so seller can use AA coach going forward
@@ -9505,6 +9815,14 @@ async def aa_publish(
     conn.commit()
     conn.close()
 
+    if not _go_live:
+        # SEC-GATE-1 (24 Sep 2026): a draft is not matched to buyers; it goes live via publish_listing's EULA gate.
+        # 409, not 200: the app's publish screens treat any 2xx as "Listing published!", and it is not.
+        # A non-2xx makes them show this detail line instead (ms.js aaDoPublish shows j.detail).
+        from fastapi.responses import JSONResponse as _JR
+        return _JR(status_code=409, content={
+            "listing_id": listing_id, "pdf_url": None, "live": False, "need": "eula",
+            "detail": "Your advert is saved as a draft. Read and accept the TrustSquare Terms in the app to publish it."})
     # Wishlist matching — async, never blocks publish (PR-14)
     background_tasks.add_task(run_match_job, listing_id)
     return {"listing_id": listing_id, "pdf_url": None}  # PDF generation added in Stage 4
@@ -9952,7 +10270,7 @@ def _purge_expired_signals(conn):
 
 
 @app.post("/buyer-token")
-def mint_buyer_token(req: BuyerTokenRequest):
+def mint_buyer_token(req: BuyerTokenRequest, ts_user: str = Cookie(default=None)):
     """Issue or fetch an anonymous buyer_token.
     If email is provided AND a users row exists with a buyer_token, return that.
     If email is provided AND users row exists without one, mint and store.
@@ -9961,6 +10279,10 @@ def mint_buyer_token(req: BuyerTokenRequest):
     new_token = uuid.uuid4().hex
     if not req.email:
         return {"buyer_token": new_token, "linked": False}
+    # SEC-GATE-1 (24 Sep 2026): a linked token is the key to that person's wishlist - only her own session may fetch it.
+    _sess = _session_email(ts_user)
+    if not _sess or _sess != (req.email or "").strip().lower():
+        raise HTTPException(status_code=401, detail="Please sign in to link this device to your account.")
     conn = database.get_db()
     row = conn.execute(
         "SELECT buyer_token FROM users WHERE email = ?", (req.email,)
@@ -10500,6 +10822,8 @@ def get_wishlist_feed(buyer_token: str, min_trust_override: int = 0, limit: int 
     on top of per-signal thresholds (PR-07). Free-tier buyers get a flag in the
     response if cross-country matches exist they cannot see (PR-17).
     """
+    # SEC-GATE-1 (24 Sep 2026): bound the page size (the app asks for 30).
+    limit = max(1, min(int(limit or 30), 100))
     conn = database.get_db()
     # Increment view_count opportunistically when a card surfaces (lazy mark-as-seen
     # happens on tap, not here — we only count appearances)
@@ -10627,8 +10951,11 @@ def mark_match_seen(match_id: int, buyer_token: str):
 
 
 @app.post("/listings/{listing_id}/view")
-def increment_listing_view(listing_id: int):
+def increment_listing_view(listing_id: int, request: Request):
     """Public view counter — feeds PR-30 demand signal on the feed card."""
+    # SEC-GATE-1 (24 Sep 2026): one counted view per client per listing per day, so scripts cannot inflate demand.
+    if not _sec_ip_budget_ok(request, "view:%d" % listing_id, 1):
+        return {"message": "view counted"}
     conn = database.get_db()
     conn.execute(
         "UPDATE listings SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ?",
@@ -10749,7 +11076,8 @@ def boost_listing(req: BoostRequest, background_tasks: BackgroundTasks):
     if not listing:
         conn.close()
         raise HTTPException(status_code=404, detail="Listing not found")
-    if not listing["seller_email"] or listing["seller_email"] != req.seller_email:
+    # SEC-GATE-1 (24 Sep 2026): case-insensitive owner match (the gate binds seller_email to the lowercased session).
+    if not listing["seller_email"] or listing["seller_email"].strip().lower() != (req.seller_email or "").strip().lower():
         conn.close()
         raise HTTPException(status_code=403, detail="You do not own this listing")
     # Check Tuppence balance
@@ -10804,7 +11132,9 @@ def boost_stats(listing_id: int, seller_email: str):
     if not listing:
         conn.close()
         raise HTTPException(status_code=404, detail="Listing not found")
-    if listing["seller_email"] != seller_email:
+    # SEC-GATE-1 (24 Sep 2026): case-insensitive owner match (the gate binds seller_email to the lowercased session).
+    if (not listing["seller_email"]
+            or listing["seller_email"].strip().lower() != (seller_email or "").strip().lower()):
         conn.close()
         raise HTTPException(status_code=403, detail="You do not own this listing")
     row = conn.execute(
@@ -10884,6 +11214,13 @@ def verify_global_subscription(reference: str):
         now = datetime.now(timezone.utc)
         expires = (now + timedelta(days=30)).isoformat()
         conn = database.get_db()
+        # SEC-GATE-1 (24 Sep 2026): a reference already applied (legacy paystack_ref or claimed) never re-extends expiry.
+        _prior = conn.execute("SELECT expires_at FROM wishlist_subscriptions WHERE paystack_ref = ?",
+                              (reference,)).fetchone()
+        if _prior or not _claim_payment_ref(conn, reference, "wishlist_global"):
+            conn.close()
+            return {"status": "ok", "tier": "global",
+                    "expires_at": _prior["expires_at"] if _prior else None, "note": "already processed"}
         conn.execute(
             """INSERT INTO wishlist_subscriptions (buyer_token, tier, activated_at, expires_at, paystack_ref)
                VALUES (?, 'global', ?, ?, ?)
@@ -11034,7 +11371,7 @@ def get_vapid_public_key():
 
 
 @app.post("/wishlist/wearable/register")
-def register_wearable(req: WearableRegisterReq):
+def register_wearable(req: WearableRegisterReq, ts_user: str = Cookie(default=None)):
     """Buyer subscribes a device. Idempotent on (buyer_token, push_endpoint).
     The endpoint URL alone is harmless — it cannot be used to find the buyer's
     identity. The browser-managed push_keys are needed to encrypt payloads
@@ -11044,6 +11381,14 @@ def register_wearable(req: WearableRegisterReq):
     if not req.push_endpoint or not req.push_keys:
         raise HTTPException(status_code=400, detail="push_endpoint and push_keys required")
     conn = database.get_db()
+    # SEC-GATE-1 (24 Sep 2026): a token linked to an account carries its Buzz/intro pushes, so only that signed-in account may add a device to it.
+    _linked = conn.execute("SELECT email FROM users WHERE buyer_token = ? LIMIT 1",
+                           (req.buyer_token,)).fetchone()
+    if _linked and _linked["email"]:
+        if _session_email(ts_user) != (_linked["email"] or "").strip().lower():
+            conn.close()
+            raise HTTPException(status_code=403,
+                                detail="Sign in to the account this device list belongs to.")
     conn.execute(
         """INSERT INTO wearable_devices
              (buyer_token, push_endpoint, push_keys, platform, device_label)
@@ -11491,6 +11836,10 @@ def lm_get_listing(listing_id: int):
     return _strip_seller_identity(dict(row))
 
 
+# SEC-GATE-1 (24 Sep 2026): per-buyer rolling-24h cap on Local Market intros (each first intro debits a seller).
+LM_INTRO_DAILY_CAP = 10
+
+
 @app.post("/local-market/intro")
 def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks):
     """Buyer submits an intro on a Local Market listing. Server-side gates:
@@ -11578,6 +11927,17 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks):
                 detail=f"seller_insufficient_tuppence (needs {cost_T}T, has {bal}T)"
             )
 
+    # SEC-GATE-1 (24 Sep 2026): one buyer may not fan intros across every LM listing, each of which debits its seller 1T.
+    _lm_recent = conn.execute(
+        """SELECT COUNT(*) AS n FROM intro_requests
+           WHERE buyer_email = ? AND intro_type = 'local_market' AND created_at >= ?""",
+        (req.buyer_email or req.buyer_token, _sql_since(hours=24))
+    ).fetchone()["n"] or 0
+    if int(_lm_recent) >= LM_INTRO_DAILY_CAP:
+        conn.close()
+        raise HTTPException(status_code=429,
+                            detail="You have sent a lot of Local Market introductions today - please try again tomorrow.")
+
     # Insert the intro
     cur = conn.execute(
         """INSERT INTO intro_requests
@@ -11643,7 +12003,9 @@ def lm_file_complaint(req: LMComplaintIn, _key: str = Depends(auth.require_api_k
     listing = conn.execute(
         "SELECT seller_email FROM listings WHERE id = ?", (intro["listing_id"],)
     ).fetchone()
-    if not listing or listing["seller_email"] != req.seller_email:
+    # SEC-GATE-1 (24 Sep 2026): case-insensitive owner match - the gate binds seller_email to the lowercased session email.
+    if (not listing or not listing["seller_email"]
+            or listing["seller_email"].strip().lower() != (req.seller_email or "").strip().lower()):
         conn.close()
         raise HTTPException(status_code=403, detail="Not your listing")
     # Buyer token is stored in buyer_email when buyer is anonymous; both forms accepted
@@ -12897,7 +13259,7 @@ def trust_employer_who(token: str):
 
 
 @app.post("/trust/employer-confirm")
-def trust_employer_confirm(req: EmployerConfirmReq):
+def trust_employer_confirm(req: EmployerConfirmReq, ts_user: str = Cookie(default=None)):
     """One tap from someone they have worked for. Worth 12 points because it is the only
     third-party evidence an ordinary person can get without buying a certificate.
 
@@ -12910,10 +13272,22 @@ def trust_employer_confirm(req: EmployerConfirmReq):
     if claims.get("purpose") != "employer_confirm":
         raise HTTPException(status_code=400, detail="That link is not a confirmation link.")
     email = claims["email"]
+    # SEC-GATE-1 (24 Sep 2026): the seller signed in as herself cannot be her own third-party voucher.
+    if _session_email(ts_user) == (email or "").strip().lower():
+        raise HTTPException(status_code=403,
+                            detail="This link is for someone you have worked for - you cannot confirm yourself.")
     note = ("Confirmed by a previous employer via the seller's own link"
             + (" - worked from " + str(req.worked_from)[:40] if req.worked_from else "")
             + ". The confirmer is never named or published.")
     conn = database.get_db()
+    # SEC-GATE-1 (24 Sep 2026): a replayed link must not re-earn a confirmation ops has rejected.
+    _prev = conn.execute(
+        "SELECT status FROM user_credentials WHERE email = ? AND signal_id = 'universal.employer_confirmed'",
+        (email,)).fetchone()
+    if _prev and _prev["status"] == "rejected":
+        conn.close()
+        raise HTTPException(status_code=409,
+                            detail="This confirmation has already been reviewed and cannot be applied again.")
     conn.execute(
         """INSERT INTO user_credentials (email, signal_id, status, points, notes,
                                          verified_at, verified_by, listing_category)
@@ -13596,6 +13970,9 @@ async def upload_seller_document(
 
     # Determine signal_id for this doc type — uses stacking chain
     # so each additional upload of the same type fills the next slot
+    # SEC-GATE-1 (24 Sep 2026): only category credentials may be named by the client; universal/track_record signals have their own flows.
+    if signal_id and not str(signal_id).startswith("category."):
+        signal_id = None
     conn_pre = database.get_db()
     try:
         effective_signal = signal_id or _next_signal_for_doc(doc_type, conn_pre, email)
@@ -13738,11 +14115,16 @@ def list_public_documents(email: str, intro_id: int = None):
     """Return post_intro documents for a seller. Called by buyer app after intro accepted.
     No API key required — documents are intentionally shared post-introduction."""
     email = email.lower().strip()
+    # SEC-GATE-1 (24 Sep 2026): 'Visible after intro' means after an accepted intro - no intro_id, no documents.
+    if not intro_id:
+        return []
     conn = database.get_db()
     # Verify intro exists and is accepted before revealing docs
     if intro_id:
+        # SEC-GATE-1 (24 Sep 2026): intro_requests has no seller_email column (this always raised); the seller is the listing's.
         intro = conn.execute(
-            "SELECT status FROM intro_requests WHERE id=? AND seller_email=?",
+            "SELECT i.status FROM intro_requests i JOIN listings l ON l.id = i.listing_id "
+            "WHERE i.id=? AND LOWER(l.seller_email)=?",
             (intro_id, email)
         ).fetchone()
         if not intro or intro["status"] != "accepted":
@@ -14753,7 +15135,7 @@ def _summary_caller_is_admin(x_admin_key, x_admin_token) -> bool:
         return True
     if x_admin_token and _JWT_SECRET:
         try:
-            _pyjwt.decode(x_admin_token, _JWT_SECRET, algorithms=[_JWT_ALGO])
+            _admin_claims(x_admin_token)   # SEC-GATE-1: typed admin token only
             return True
         except Exception:
             return False
@@ -15004,12 +15386,16 @@ class PresencePing(BaseModel):
     city: str | None = None
 
 @app.post("/presence/ping")
-def presence_ping(p: PresencePing, _key: str = Depends(auth.require_api_key)):
+def presence_ping(p: PresencePing, _key: str = Depends(auth.require_api_key),
+                  ts_user: str = Cookie(default=None)):
     """The signed-in app pings this every ~45s so the live-users map can light up.
     Records last_seen + last_city on the user row. Cheap, idempotent."""
-    email = (p.email or "").lower().strip()
+    # SEC-GATE-1 (24 Sep 2026): who is online comes from the proven session, never the typed address
+    # (anyone could otherwise mark any member online). No session = nothing recorded, no error, so a
+    # visitor whose page only remembers a typed email is not bounced to sign-in every 45 seconds.
+    email = _session_email(ts_user) or ""
     if not email:
-        raise HTTPException(status_code=400, detail="email required")
+        return {"ok": True, "recorded": False}
     conn = database.get_db()
     try:
         conn.execute(
@@ -15482,6 +15868,11 @@ _OB_ORDER = ["landed", "dwell", "subpick", "photos", "photo_pick", "photo_ok", "
              "proof_asked", "proof_ok", "publish_ok", "publish_fail"]
 
 
+# SEC-GATE-1 (24 Sep 2026): per-client-IP hourly beacon cap (in-memory, same shape as _QP_IP_LOG).
+_OB_IP_LOG = {}
+_OB_MAX_PER_IP_HOUR = 300
+
+
 @app.post("/onboard/step")
 async def onboard_step(request: Request):
     """Funnel beacon from the guided sell flow. Always answers 200 -- a beacon that can
@@ -15510,6 +15901,19 @@ async def onboard_step(request: Request):
     magic = 1 if body.get("magic") else 0
     ua = (request.headers.get("user-agent") or "")[:200]          # FUNNEL-HUMAN-1
     bot = 1 if _ob_is_bot(ua) else 0
+    # SEC-GATE-1 (24 Sep 2026): the per-sid cap is caller-chosen, so also cap rows per client IP per hour.
+    import time as _obt
+    _ob_ip = (request.client.host if request.client else "?") or "?"
+    _ob_now = _obt.time()
+    _ob_hits = [t for t in _OB_IP_LOG.get(_ob_ip, []) if _ob_now - t < 3600]
+    if len(_ob_hits) >= _OB_MAX_PER_IP_HOUR:
+        _OB_IP_LOG[_ob_ip] = _ob_hits
+        return {"ok": False, "capped": True}
+    _ob_hits.append(_ob_now)
+    _OB_IP_LOG[_ob_ip] = _ob_hits
+    if len(_OB_IP_LOG) > 5000:   # keep the in-memory log bounded
+        for _k in [k for k, v in _OB_IP_LOG.items() if not v or _ob_now - v[-1] >= 3600]:
+            _OB_IP_LOG.pop(_k, None)
     conn = database.get_db()
     try:
         n = conn.execute("SELECT COUNT(*) FROM onboard_steps WHERE sid=?", (sid,)).fetchone()[0]
@@ -15898,12 +16302,38 @@ class _AdminChangePinRequest(_BaseModel):
 def _make_token(sub: str) -> str:
     payload = {
         "sub": sub,
+        "scope": "admin",   # SEC-GATE-1 (24 Sep 2026): typed, so no other token can pass as admin
         "exp": datetime.now(timezone.utc) + timedelta(hours=_TOKEN_HOURS),
         "iat": datetime.now(timezone.utc),
     }
     if not _JWT_SECRET:
         raise HTTPException(status_code=503, detail="Server auth not configured (MS_JWT_SECRET unset).")
     return _pyjwt.encode(payload, _JWT_SECRET, algorithm=_JWT_ALGO)
+
+
+# SEC-GATE-1 (24 Sep 2026) -- TOKEN-TYPE-1. Every JWT in this file is signed with the same
+# _JWT_SECRET: the admin token, the ts_user session cookie, e-mailed sign-in links, the 30-day
+# employer_confirm link (minted for ANY account by the public GET /trust/employer-link) and the
+# device pass. The admin checks used to accept ANY of them, because they only verified the
+# signature - so a stranger could turn an employer link into admin rights in two requests.
+# An admin token must now BE an admin token: scope "admin" and an admin subject. Tokens minted
+# before this change (8 h life) carry exactly {sub, exp, iat} with an admin subject; that shape
+# is accepted too, so nobody signed in to the dashboard is thrown out mid-shift.
+_ADMIN_LEGACY_CLAIMS = frozenset({"sub", "exp", "iat"})
+
+
+def _admin_claims(token):
+    """Decode an admin token or raise a pyjwt error (ExpiredSignatureError / InvalidTokenError)."""
+    if not token or not _JWT_SECRET:
+        raise _pyjwt.InvalidTokenError("no admin token")
+    claims = _pyjwt.decode(token, _JWT_SECRET, algorithms=[_JWT_ALGO])
+    sub = str(claims.get("sub") or "")
+    sub_ok = sub == "master" or sub.startswith("team:") or sub.startswith("device/")
+    if sub_ok and claims.get("scope") == "admin":
+        return claims
+    if sub_ok and "scope" not in claims and set(claims) <= _ADMIN_LEGACY_CLAIMS:
+        return claims
+    raise _pyjwt.InvalidTokenError("not an admin token")
 
 # ── VIEW-ONLY REVIEWER ACCESS (Paystack compliance) ───────────────────────────
 # A pre-launch "reviewer" credential that unlocks ONLY the public browse view.
@@ -16851,6 +17281,25 @@ def auth_providers():
     we are removing."""
     return {p: _oauth_ready(p) for p in _OIDC}
 
+def _local_caller(request) -> bool:
+    """SEC-GATE-1 (24 Sep 2026): the server's own automation - a loopback caller that did not come through
+    nginx (nginx always sets X-Real-IP). The security gate has already normalised request.client."""
+    try:
+        host = request.client.host if request and request.client else ""
+    except Exception:
+        host = ""
+    return host in ("127.0.0.1", "::1") and not request.headers.get("x-real-ip")
+
+
+def _oauth_safe_next(nxt) -> str:
+    # SEC-GATE-1 (24 Sep 2026): '//host' and '/\host' pass startswith('/') but browsers treat them as off-site (open redirect).
+    # Only a same-site path of printable ASCII: tabs/newlines ('/\t/evil.com') are dropped by browsers
+    # and would turn it back into '//evil.com'.
+    nxt = str(nxt or "/")
+    if not re.fullmatch(r"/(?![/\\])[\x21-\x7e]*", nxt):
+        return "/"
+    return nxt
+
 @app.get("/auth/oauth/{provider}/start")
 def auth_oauth_start(provider: str, request: Request, next: str = "/"):
     """Send the browser to the provider. Plain 302, no script anywhere."""
@@ -16866,7 +17315,7 @@ def auth_oauth_start(provider: str, request: Request, next: str = "/"):
     # (which would break across workers and restarts, i.e. would cause retries).
     state = _pyjwt.encode(
         {"scope": "oauth-state", "p": provider, "nonce": nonce,
-         "next": next if next.startswith("/") else "/",
+         "next": _oauth_safe_next(next),   # SEC-GATE-1 (24 Sep 2026): no off-site landing after sign-in
          "exp": datetime.now(timezone.utc) + timedelta(minutes=_OAUTH_STATE_MIN),
          "iat": datetime.now(timezone.utc)},
         _REVIEW_SECRET, algorithm=_JWT_ALGO)
@@ -16882,7 +17331,11 @@ def auth_oauth_start(provider: str, request: Request, next: str = "/"):
         params["prompt"] = "select_account"
     if provider == "apple":
         params["response_mode"] = "form_post"   # Apple POSTs the callback
-    return RedirectResponse(url=cfg["authorize"] + "?" + _ue(params), status_code=302)
+    resp = RedirectResponse(url=cfg["authorize"] + "?" + _ue(params), status_code=302)
+    # SEC-GATE-1 (24 Sep 2026): bind the round trip to THIS browser (login CSRF); SameSite=None so Apple's cross-site form_post carries it.
+    resp.set_cookie("ts_oauth_nonce", nonce, max_age=_OAUTH_STATE_MIN * 60, httponly=True,
+                    secure=True, samesite="none", path="/auth/oauth/")
+    return resp
 
 def _oauth_verify_id_token(provider: str, id_token: str, nonce: str):
     """Verify the provider's ID token against its published JWKS. Returns the
@@ -16904,7 +17357,7 @@ def _oauth_verify_id_token(provider: str, id_token: str, nonce: str):
         raise HTTPException(status_code=401, detail="Sign-in token did not match this request.")
     return claims
 
-def _oauth_complete(provider: str, code: str, state: str, response: Response):
+def _oauth_complete(provider: str, code: str, state: str, response: Response, nonce_cookie: str = None):
     """Exchange the code, verify the ID token, establish the session. Shared by the
     Google (GET) and Apple (POST) callbacks so the two can never drift."""
     cfg = _OIDC.get(provider)
@@ -16917,6 +17370,11 @@ def _oauth_complete(provider: str, code: str, state: str, response: Response):
                             detail="That sign-in attempt expired. Please tap the button again.") from exc
     if st.get("scope") != "oauth-state" or st.get("p") != provider:
         raise HTTPException(status_code=401, detail="Sign-in state did not match.")
+    # SEC-GATE-1 (24 Sep 2026): login CSRF -- a code+state pair only completes in the browser whose /start set the matching nonce cookie.
+    import hmac as _oa_hmac
+    if not nonce_cookie or not _oa_hmac.compare_digest(str(nonce_cookie), str(st.get("nonce") or "")):
+        raise HTTPException(status_code=401,
+                            detail="That sign-in attempt expired. Please tap the button again.")
     secret = (_apple_client_secret() if provider == "apple"
               else (ai_provider.envkey(cfg["client_secret_env"]) or "").strip())
     try:
@@ -16946,6 +17404,7 @@ def _oauth_complete(provider: str, code: str, state: str, response: Response):
         raise HTTPException(status_code=401, detail="That Google account's email is not verified.")
     sub = claims.get("sub") or ""
     out = _establish_user_session(email, response)   # the ONE session door
+    response.delete_cookie("ts_oauth_nonce", path="/auth/oauth/")   # SEC-GATE-1 (24 Sep 2026): nonce is single-use
     try:
         conn = database.get_db()
         try:
@@ -16966,7 +17425,9 @@ def auth_oauth_google_callback(request: Request, code: str = "", state: str = ""
     if error or not code:
         return RedirectResponse(url="/?signin=cancelled", status_code=302)
     resp = RedirectResponse(url="/", status_code=302)
-    _out, nxt = _oauth_complete("google", code, state, resp)
+    # SEC-GATE-1 (24 Sep 2026): pass the browser's nonce cookie (login CSRF) and re-check the landing path.
+    _out, nxt = _oauth_complete("google", code, state, resp, request.cookies.get("ts_oauth_nonce"))
+    nxt = _oauth_safe_next(nxt)
     resp.headers["Location"] = nxt + ("&" if "?" in nxt else "?") + "signedin=1"
     return resp
 
@@ -16980,7 +17441,9 @@ async def auth_oauth_apple_callback(request: Request):
     if not code:
         return RedirectResponse(url="/?signin=cancelled", status_code=302)
     resp = RedirectResponse(url="/", status_code=302)
-    _out, nxt = _oauth_complete("apple", code, state, resp)
+    # SEC-GATE-1 (24 Sep 2026): pass the browser's nonce cookie (login CSRF) and re-check the landing path.
+    _out, nxt = _oauth_complete("apple", code, state, resp, request.cookies.get("ts_oauth_nonce"))
+    nxt = _oauth_safe_next(nxt)
     resp.headers["Location"] = nxt + ("&" if "?" in nxt else "?") + "signedin=1"
     return resp
 
@@ -16988,6 +17451,34 @@ async def auth_oauth_apple_callback(request: Request):
 class _SignInCodeVerify(_BaseModel):
     email: str
     code: str
+
+# SEC-GATE-1 (24 Sep 2026): per-EMAIL budgets that a fresh code cannot reset (brute force of the 6-digit code) and send limits (mail-bomb).
+_SIGNIN_FAIL_WINDOW = 3600   # wrong codes per address, per hour
+_SIGNIN_FAIL_MAX    = 12
+_signin_fails       = {}     # email -> [failed_count, window_start_epoch]
+_SIGNIN_SEND_PER_EMAIL = 4   # codes mailed to one address per _RATE_WINDOW
+_SIGNIN_SEND_PER_IP    = 20  # codes mailed from one client IP per _RATE_WINDOW
+_signin_send_email  = {}     # email -> [sends, window_start_epoch]
+_signin_send_ip     = {}     # ip -> [sends, window_start_epoch]
+
+def _signin_fail_blocked(email: str) -> bool:
+    """SEC-GATE-1 (24 Sep 2026): True while this address has used up its wrong-code budget."""
+    import time as _t
+    rec = _signin_fails.get(email)
+    if not rec or _t.time() - rec[1] > _SIGNIN_FAIL_WINDOW:
+        _signin_fails.pop(email, None)
+        return False
+    return rec[0] >= _SIGNIN_FAIL_MAX
+
+def _signin_fail_note(email: str) -> None:
+    """SEC-GATE-1 (24 Sep 2026): record one wrong code for this address."""
+    import time as _t
+    now = _t.time()
+    rec = _signin_fails.get(email)
+    if not rec or now - rec[1] > _SIGNIN_FAIL_WINDOW:
+        _signin_fails[email] = [1, now]
+    else:
+        rec[0] += 1
 
 @app.post("/auth/verify-code")
 def auth_verify_code(req: _SignInCodeVerify, request: Request, response: Response):
@@ -16999,19 +17490,38 @@ def auth_verify_code(req: _SignInCodeVerify, request: Request, response: Respons
     if not _review_rate_ok(ip):
         raise HTTPException(status_code=429, detail="Too many attempts. Please wait a few minutes.")
     email = (req.email or "").strip().lower()
+    # SEC-GATE-1 (24 Sep 2026): per-address wrong-code budget survives /auth/request-link issuing a fresh code.
+    if _signin_fail_blocked(email):
+        raise HTTPException(status_code=429,
+                            detail="Too many wrong codes for this address. Please wait an hour, or use the link in the email.")
     if not _signin_code_ok(email, req.code or ""):
+        _signin_fail_note(email)   # SEC-GATE-1 (24 Sep 2026)
         raise HTTPException(status_code=401,
                             detail="That code is wrong or has expired — send yourself a new one.")
+    _signin_fails.pop(email, None)   # SEC-GATE-1 (24 Sep 2026): a correct code clears the address's slate
     _log.info("signin-code OK for %s from %s", email, ip)
     return _establish_user_session(email, response)
 
 @app.post("/auth/request-link")
-def auth_request_link(req: _SignInRequest):
+def auth_request_link(req: _SignInRequest, request: Request):
     """Email a sign-in CODE (primary) and link (convenience). Always returns ok."""
     import time as _t
     email = (req.email or "").strip().lower()
     if "@" not in email or "." not in email.split("@")[-1]:
         raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+    # SEC-GATE-1 (24 Sep 2026): this lane mails ANY address -- limit sends per client IP and per address.
+    ip = (request.headers.get("x-forwarded-for")
+          or (request.client.host if request.client else "?")).split(",")[0].strip()
+    for _bucket, _k, _max in ((_signin_send_ip, ip, _SIGNIN_SEND_PER_IP),
+                              (_signin_send_email, email, _SIGNIN_SEND_PER_EMAIL)):
+        if not _rate_ok(_bucket, _k, _max):
+            _left = max(_rate_retry_after(_bucket, _k), 1)
+            raise HTTPException(status_code=429,
+                                detail="Too many sign-in codes requested. Try again in %s."
+                                       % (("%dm %02ds" % (_left // 60, _left % 60)) if _left >= 60 else ("%d seconds" % _left)),
+                                headers={"Retry-After": str(_left)})
+    _rate_note_failure(_signin_send_ip, ip)          # counts a SEND, not a failure (same bookkeeping)
+    _rate_note_failure(_signin_send_email, email)
     token = _pyjwt.encode(
         {"email": email, "purpose": "signin",
          "exp": datetime.now(timezone.utc) + timedelta(minutes=20),
@@ -17144,7 +17654,9 @@ class _AgencyWavePrep(_BaseModel):
     skin: str = "agency"           # agency | operator | dealer -- picks the console skin param
 
 @app.post("/agencies/wave-prep")
-def agency_wave_prep(req: _AgencyWavePrep, _key: str = Depends(auth.require_api_key)):
+def agency_wave_prep(req: _AgencyWavePrep, _key: str = Depends(auth.require_api_key),
+                     request: Request = None, x_admin_key: str = Header(default=None),
+                     x_admin_token: str = Header(default=None)):
     """AGENCY-WAVE-1 (RG-0163/0164, 23 Aug 2026): pre-create scraped agencies for the
     outreach wave and mint each admin a one-click console link (?signin=<jwt>&agency=1).
     Idempotent by admin_email -- an existing agency gets a fresh link, never a duplicate
@@ -17152,6 +17664,10 @@ def agency_wave_prep(req: _AgencyWavePrep, _key: str = Depends(auth.require_api_
     (the n8n payload node honors prospect.magic_link). Unlike create_agency these orgs
     land verified=0 -- verification is earned on application, and the 'agency' seller
     tier follows verification (AGENCY-TIER-1)."""
+    # SEC-GATE-1 (24 Sep 2026): this mints one-click SIGN-IN links for any address it is given, so it is
+    # the box's own outreach (CityLauncher, loopback) or an admin - never the public app key.
+    if not _local_caller(request):
+        _require_admin_or_key(x_admin_token=x_admin_token, x_admin_key=x_admin_key)
     days = max(1, min(int(req.link_days or 14), 30))
     out = []
     conn = database.get_db()
@@ -17287,6 +17803,7 @@ def invite_agent(agency_id: int, req: _AgentInvite, _key: str = Depends(auth.req
     if "@" not in email:
         raise HTTPException(status_code=400, detail="valid email required")
     cap = int(req.listing_cap) if req.listing_cap else 10
+    cap = max(1, min(cap, 20))   # SEC-GATE-1 (24 Sep 2026): an invite cannot write a negative or oversized users.slot_limit (20 = Pro seat max)
     conn = database.get_db()
     try:
         if not conn.execute("SELECT id FROM agencies WHERE id=?", (agency_id,)).fetchone():
@@ -17343,7 +17860,10 @@ def update_agent_cap(agency_id: int, email: str, req: _AgentCapUpdate,
         if req.listing_cap is not None:
             cap = int(req.listing_cap)
         conn.execute("UPDATE agency_members SET listing_cap=?, seat_paid=? WHERE agency_id=? AND LOWER(agent_email)=?", (cap, paid, agency_id, email))
-        conn.execute("UPDATE users SET slot_limit=?, seller_tier=? WHERE LOWER(email)=?", (cap, ('pro' if paid else 'starter'), email))
+        # SEC-GATE-1 (24 Sep 2026): never downgrade a self-subscribed member (billing_period_end set) -- same rule as _sync_agency_member_tiers.
+        _u = conn.execute("SELECT billing_period_end FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        if paid or not (_u and _u["billing_period_end"]):
+            conn.execute("UPDATE users SET slot_limit=?, seller_tier=? WHERE LOWER(email)=?", (cap, ('pro' if paid else 'starter'), email))
         conn.commit()
     finally:
         conn.close()
@@ -18360,6 +18880,10 @@ def agency_import(agency_id: int, req: _AgencyImport):
             raise HTTPException(status_code=404, detail="Agency not found")
         if not req.api_key or req.api_key != a["api_key"]:
             raise HTTPException(status_code=401, detail="Invalid agency API key")
+        # SEC-GATE-1 (24 Sep 2026): bound the paid AI rewrite + vision work one call can trigger.
+        if isinstance(req.adverts, list) and len(req.adverts) > 200:
+            raise HTTPException(status_code=413,
+                                detail="At most 200 adverts per import call - split the file and send the rest in another call.")
         members = {r["agent_email"].lower() for r in conn.execute(
             "SELECT agent_email FROM agency_members WHERE agency_id=? AND status!='removed'", (agency_id,)).fetchall()}
         imported = 0; unmatched = 0; capped = 0; needs_rev = 0; rows = []
@@ -18496,6 +19020,12 @@ def agency_import(agency_id: int, req: _AgencyImport):
     finally:
         conn.close()
 
+# SEC-GATE-1 (24 Sep 2026): ONE platform-wide budget for wrong team PINs (login + forced change), so rotating
+# IPs cannot brute-force a 4-8 digit PIN. The master password is checked BEFORE it and never consumes it
+# (ADMIN-NOLOCK-2: the super admin can never be locked out by traffic he did not generate).
+_admin_pin_global       = {}   # "all" -> [failed_pin_count, window_start_epoch]
+_ADMIN_PIN_GLOBAL_MAX   = 30   # wrong team PINs, all sources, per _RATE_WINDOW
+
 @app.post("/admin/login")
 def admin_login(req: _AdminLoginRequest, request: Request, response: Response):
     """Check master password OR team PIN. Returns JWT or must_change_pin signal.
@@ -18540,6 +19070,9 @@ def admin_login(req: _AdminLoginRequest, request: Request, response: Response):
     # 2. Team PIN — numeric only, 4-8 digits
     candidate = req.password.strip()
     if candidate.isdigit() and 4 <= len(candidate) <= 8:
+        # SEC-GATE-1 (24 Sep 2026): platform-wide wrong-PIN ceiling (see _admin_pin_global).
+        if not _rate_ok(_admin_pin_global, "all", _ADMIN_PIN_GLOBAL_MAX):
+            raise _rate_429(_admin_pin_global, "all")
         conn = _admin_db()
         try:
             rows = conn.execute(
@@ -18570,11 +19103,13 @@ def admin_login(req: _AdminLoginRequest, request: Request, response: Response):
 
     # ADMIN-NOLOCK-2: reached only when the credential really was wrong.
     _rate_note_failure(_admin_attempts, ip)
+    if candidate.isdigit() and 4 <= len(candidate) <= 8:
+        _rate_note_failure(_admin_pin_global, "all")   # SEC-GATE-1 (24 Sep 2026): a wrong PIN spends the global budget
     _log.warning("admin-login FAILED from %s", ip)
     raise HTTPException(status_code=401, detail="Incorrect password or PIN.")
 
 @app.post("/admin/change-pin")
-def admin_change_pin(req: _AdminChangePinRequest, response: Response):
+def admin_change_pin(req: _AdminChangePinRequest, request: Request, response: Response):
     """
     Forced PIN change on first login.
     Verifies current PIN, sets new PIN, clears must_change_pin flag, returns token.
@@ -18586,6 +19121,15 @@ def admin_change_pin(req: _AdminChangePinRequest, response: Response):
         raise HTTPException(status_code=400, detail="New PIN must be exactly 6 digits.")
     if new_pin == current:
         raise HTTPException(status_code=400, detail="New PIN must be different from current PIN.")
+
+    # SEC-GATE-1 (24 Sep 2026): this door mints an admin token from a PIN guess and had NO limit --
+    # same per-IP failure budget as /admin/login plus the platform-wide wrong-PIN ceiling.
+    ip = (request.headers.get("x-forwarded-for")
+          or (request.client.host if request.client else "?")).split(",")[0].strip()
+    if not _rate_ok(_admin_attempts, ip, _ADMIN_MAX_FAILS):
+        raise _rate_429(_admin_attempts, ip)
+    if not _rate_ok(_admin_pin_global, "all", _ADMIN_PIN_GLOBAL_MAX):
+        raise _rate_429(_admin_pin_global, "all")
 
     conn = _admin_db()
     try:
@@ -18601,6 +19145,7 @@ def admin_change_pin(req: _AdminChangePinRequest, response: Response):
                     (new_hash, row["id"])
                 )
                 conn.commit()
+                _rate_clear(_admin_attempts, ip)   # SEC-GATE-1 (24 Sep 2026): success wipes this IP's slate, as admin_login does
                 # GATE-NOLOCK-1: finishing the forced PIN change is a successful
                 # login — grant gate passage too, or the new team member lands
                 # behind the pre-launch gate with a valid admin token and no way in.
@@ -18616,6 +19161,10 @@ def admin_change_pin(req: _AdminChangePinRequest, response: Response):
     finally:
         conn.close()
 
+    # SEC-GATE-1 (24 Sep 2026): a wrong current PIN spends both budgets.
+    _rate_note_failure(_admin_attempts, ip)
+    _rate_note_failure(_admin_pin_global, "all")
+    _log.warning("admin-change-pin FAILED from %s", ip)
     raise HTTPException(status_code=401, detail="Current PIN incorrect.")
 
 @app.get("/admin/verify")
@@ -18624,7 +19173,7 @@ def admin_verify(x_admin_token: str = Header(default=None)):
     if not x_admin_token:
         raise HTTPException(status_code=401, detail="No token provided.")
     try:
-        payload = _pyjwt.decode(x_admin_token, _JWT_SECRET, algorithms=[_JWT_ALGO])
+        payload = _admin_claims(x_admin_token)   # SEC-GATE-1: typed admin token only
     except _pyjwt.ExpiredSignatureError as exc:
         raise HTTPException(status_code=401, detail="Token expired.") from exc
     except _pyjwt.InvalidTokenError as exc:
@@ -18714,12 +19263,26 @@ _NOT_ENROLLED_HTML = """<!doctype html><meta name=viewport content="width=device
 <small>Ask Claude for a code. Each code works once and for 20 minutes. Home-screen apps keep their own cookies, so enrol from inside the app you will use.</small>"""
 
 
+# SEC-GATE-1 (24 Sep 2026): wrong typed enrol CODES (not ?t= links) are budgeted per IP and platform-wide --
+# a 6-digit code guarded a permanent admin device pass with no attempt limit at all.
+_enrol_code_fails     = {}   # ip | "all" -> [failed_count, window_start_epoch]
+_ENROL_CODE_IP_MAX    = 10
+_ENROL_CODE_ALL_MAX   = 30
+
 @app.get("/admin/enrol")
-def admin_enrol(t: str = "", code: str = "", next: str = ""):
+def admin_enrol(request: Request, t: str = "", code: str = "", next: str = ""):
     """Burn a one-time enrol token (link ?t= or typed 6-digit ?code=), set the device cookie, land on /m."""
     from fastapi.responses import RedirectResponse
+    import html as _en_html
+    _next_html = _en_html.escape(next or "/m", quote=True)   # SEC-GATE-1 (24 Sep 2026): `next` was reflected raw into the page (XSS)
     if (not t and not code) or not _JWT_SECRET:
-        return HTMLResponse(_NOT_ENROLLED_HTML % ("Type the code Claude gave you.", next or "/m"), status_code=401, headers={"Cache-Control": "no-store"})
+        return HTMLResponse(_NOT_ENROLLED_HTML % ("Type the code Claude gave you.", _next_html), status_code=401, headers={"Cache-Control": "no-store"})
+    ip = (request.headers.get("x-forwarded-for")
+          or (request.client.host if request.client else "?")).split(",")[0].strip()
+    if not t and (not _rate_ok(_enrol_code_fails, ip, _ENROL_CODE_IP_MAX)
+                  or not _rate_ok(_enrol_code_fails, "all", _ENROL_CODE_ALL_MAX)):
+        # SEC-GATE-1 (24 Sep 2026): code-guess budget spent; the emailed/QR ?t= link still works.
+        return HTMLResponse(_NOT_ENROLLED_HTML % ("Too many wrong codes — wait 10 minutes, or open the enrol link instead.", _next_html), status_code=429, headers={"Cache-Control": "no-store", "Retry-After": "600"})
     conn = _admin_db()
     try:
         _device_tables(conn)
@@ -18734,7 +19297,10 @@ def admin_enrol(t: str = "", code: str = "", next: str = ""):
             row = conn.execute("SELECT token, label, expires_at, used_at FROM admin_enrol_tokens WHERE code = ? AND used_at IS NULL",
                                (code.strip(),)).fetchone()
         if not row or row["used_at"] or (row["expires_at"] and row["expires_at"] < datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")):
-            return HTMLResponse(_NOT_ENROLLED_HTML % ("That link or code has expired or was already used — ask for a fresh one.", next or "/m"), status_code=410, headers={"Cache-Control": "no-store"})
+            if not t:   # SEC-GATE-1 (24 Sep 2026): a wrong typed code spends the per-IP and global budgets
+                _rate_note_failure(_enrol_code_fails, ip)
+                _rate_note_failure(_enrol_code_fails, "all")
+            return HTMLResponse(_NOT_ENROLLED_HTML % ("That link or code has expired or was already used — ask for a fresh one.", _next_html), status_code=410, headers={"Cache-Control": "no-store"})
         jti = uuid.uuid4().hex
         conn.execute("UPDATE admin_enrol_tokens SET used_at = CURRENT_TIMESTAMP WHERE token = ?", (row["token"],))
         conn.execute("INSERT INTO admin_devices (jti, label, expires_at) VALUES (?, ?, NULL)",   # DEVICE-NOLAPSE-1
@@ -18866,7 +19432,7 @@ def _require_admin(x_admin_token: str = Header(default=None)):
     if not x_admin_token:
         raise HTTPException(status_code=401, detail="No admin token.")
     try:
-        return _pyjwt.decode(x_admin_token, _JWT_SECRET, algorithms=[_JWT_ALGO])
+        return _admin_claims(x_admin_token)   # SEC-GATE-1: typed admin token only
     except _pyjwt.ExpiredSignatureError as exc:
         raise HTTPException(status_code=401, detail="Token expired.") from exc
     except _pyjwt.InvalidTokenError as exc:
@@ -20365,8 +20931,26 @@ def _is_invited_prospect(email: str) -> bool:
         return False
 
 
+# SEC-GATE-1 (24 Sep 2026): per-IP call budget for vision-draft — a blank seller_email is a
+# legitimate guided-flow call, so it skips the per-user ceiling; this caps looping from one IP.
+_VISION_IP_HITS = {}          # ip -> [count, window_start_epoch]   (in-process, per worker)
+_VISION_MAX_PER_IP = 40       # vision calls per IP per 10 minutes
+
+
+def _vision_ip_ok(ip: str) -> bool:
+    import time as _t
+    now = _t.time()
+    rec = _VISION_IP_HITS.get(ip)
+    if not rec or now - rec[1] > 600:
+        _VISION_IP_HITS[ip] = [1, now]
+        return True
+    rec[0] += 1
+    return rec[0] <= _VISION_MAX_PER_IP
+
+
 @app.post("/listings/vision-draft")
 async def vision_draft(
+    request: Request,
     background_tasks: BackgroundTasks,
     photos: list[UploadFile] = File(...),
     category_hint: str = Form(default=""),
@@ -20408,6 +20992,9 @@ async def vision_draft(
         _vc.close()
         if not _ve and not _is_invited_prospect(_ve_email):
             raise HTTPException(status_code=401, detail="Unrecognised account — please complete seller registration first.")
+    # SEC-GATE-1 (24 Sep 2026): anonymous callers had no per-user rail — cap calls per client IP.
+    if not _vision_ip_ok((request.client.host if request.client else "?")):
+        raise HTTPException(status_code=429, detail="Too many photo analyses from this connection. Please wait a few minutes.")
     _check_cost_ceiling(_ve_email)   # C1 — refuse if daily cost ceiling reached
 
     # ── 1. Read and validate photos ──────────────────────────────────────────
@@ -21575,8 +22162,9 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
             raise HTTPException(status_code=400,
                 detail=f"Tier {tier} is not available for this listing")
         _charge = ai_service_tiers.TIER_TUPPENCE.get(tier, 1)
-    _require_tuppence(email, _charge)   # pre-flight only — no deduction yet
+    # SEC-GATE-1 (24 Sep 2026): bind BEFORE the balance pre-flight, so a 402/401 can never probe another account's balance.
     email = _bind_charged_email(email, ts_user, "ai3-price")   # ACCOUNT-BIND-1
+    _require_tuppence(email, _charge)   # pre-flight only — no deduction yet
     _check_cost_ceiling(email)    # C1 — refuse if daily cost ceiling reached
     category    = listing["category"] or "General"
     city        = listing["city"] or "South Africa"
@@ -21897,8 +22485,9 @@ async def ai_yield_calc(listing_id: int, email: str,
             raise HTTPException(status_code=400,
                 detail=f"Tier {tier} is not available for this listing")
         _charge = ai_service_tiers.TIER_TUPPENCE.get(tier, 1)
-    _require_tuppence(email, _charge)
+    # SEC-GATE-1 (24 Sep 2026): bind BEFORE the balance pre-flight, so a 402/401 can never probe another account's balance.
     email = _bind_charged_email(email, ts_user, "ai4-yield")   # ACCOUNT-BIND-1
+    _require_tuppence(email, _charge)
     _check_cost_ceiling(email)    # C1 — refuse if daily cost ceiling reached
 
     def _num(v):
@@ -22854,7 +23443,9 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
     _triage_message so the support form runs the identical lane (SUPPORT-AI-LANE-1)."""
     if not EMAIL_INBOUND_SECRET:
         raise HTTPException(status_code=503, detail="Email triage not configured")
-    if x_inbound_secret != EMAIL_INBOUND_SECRET:
+    # SEC-GATE-1 (24 Sep 2026): constant-time secret compare (bytes, so a non-ASCII header cannot raise).
+    if not _ts_secrets.compare_digest((x_inbound_secret or "").encode("utf-8"),
+                                      EMAIL_INBOUND_SECRET.encode("utf-8")):
         raise HTTPException(status_code=401, detail="Invalid inbound secret")
     return await _triage_message(req.from_addr, req.to_addr or "", req.subject or "",
                                  req.body or "", message_id=req.message_id, source="email",
@@ -22973,11 +23564,24 @@ def _fault_caller_ok(x_review_token, ts_review, x_api_key, reporter_email="") ->
     tok = x_review_token or ts_review
     if tok:
         try:
-            _pyjwt.decode(tok, _REVIEW_SECRET, algorithms=[_JWT_ALGO])
-            return True
+            # SEC-GATE-1: only a review-scope token, not an oauth-state or review-link token
+            if _pyjwt.decode(tok, _REVIEW_SECRET, algorithms=[_JWT_ALGO]).get("scope") == "review":
+                return True
         except Exception:
             pass
     return _fault_known_user(reporter_email)
+
+
+def _fault_reviewer_ok(x_review_token, ts_review) -> bool:
+    """SEC-GATE-1 (24 Sep 2026): a valid review-scope token (tester) — used to decide whether an
+    ACK may be mailed to a typed reporter address; same check as /review/verify."""
+    tok = x_review_token or ts_review
+    if not tok:
+        return False
+    try:
+        return _pyjwt.decode(tok, _REVIEW_SECRET, algorithms=[_JWT_ALGO]).get("scope") == "review"
+    except Exception:
+        return False
 
 
 def _fault_ip_ok(ip: str) -> bool:
@@ -23015,6 +23619,7 @@ async def app_fault_file(
     x_review_token: str = Header(default=None),
     ts_review: str = Cookie(default=None),
     x_api_key: str = Header(default=None),
+    ts_user: str = Cookie(default=None),   # SEC-GATE-1 (24 Sep 2026): proves the ACK address
 ):
     """A tester files an app fault from inside the app. Returns the reference the
     ACK email quotes. Screenshot is optional (multipart 'file')."""
@@ -23102,7 +23707,12 @@ async def app_fault_file(
 
     # Auto-ACK — instant, per David's launch-mode ruling. FAULT_ACK_SEND=0 is the off switch.
     ack_sent = False
-    if reporter_email and os.getenv("FAULT_ACK_SEND", "1") == "1":
+    # SEC-GATE-1 (24 Sep 2026): mail the ACK only to a PROVEN address (the signed-in session's own,
+    # or a tester's), so the public app key cannot make us email an attacker-chosen title anywhere.
+    _ack_proven = bool(reporter_email) and (
+        reporter_email == (_session_email(ts_user) or "")
+        or _fault_reviewer_ok(x_review_token, ts_review))
+    if reporter_email and _ack_proven and os.getenv("FAULT_ACK_SEND", "1") == "1":
         try:
             body = ("Thank you — your report is logged as <b>" + ref + "</b> and is in the fix "
                     "queue.<br><br><i>&ldquo;" + (title.replace("<", "&lt;")) + "&rdquo;</i>"
@@ -23157,6 +23767,7 @@ SUPPORT_TOPIC_BINS = {
     "trust": "TRUST", "intro": "INTRO", "browse": "BROWSE", "advert": "ADV",
     "technical": "MISC", "other": "MISC",
 }
+_SUPPORT_MAX_ACK_PER_EMAIL = 5   # SEC-GATE-1 (24 Sep 2026): auto-answered support messages per address per hour
 
 
 def _support_subject(ref: str, title: str) -> str:
@@ -23254,6 +23865,13 @@ async def support_message(
     title = message.splitlines()[0].strip()[:140] or "Support message"
     conn = database.get_db()
     try:
+        # SEC-GATE-1 (24 Sep 2026): per-recipient hourly cap on the AI triage + ack mail, so the
+        # anonymous form cannot be used to mail-bomb an address; the message itself is still stored.
+        _since_s = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat(sep=" ", timespec="seconds")[:19]
+        _prior_s = conn.execute(
+            "SELECT COUNT(*) AS n FROM app_faults WHERE reporter_email = ? AND source = 'support-form' "
+            "AND filed_at >= ?", (email, _since_s)).fetchone()
+        _over_cap = (_prior_s["n"] or 0) >= _SUPPORT_MAX_ACK_PER_EMAIL
         cur = conn.execute(
             "INSERT INTO app_faults (ref, bin, reporter_email, reporter_name, source, severity, "
             " title, detail, page_url, app_version, user_agent, viewport, console_tail, "
@@ -23285,6 +23903,10 @@ async def support_message(
     # IN THE BACKGROUND on purpose: triage is an AI call, and a support form that makes a
     # distressed user watch a spinner for eight seconds is its own fault. The row is
     # already committed, so nothing can be lost by answering the browser first.
+    if _over_cap:
+        # SEC-GATE-1 (24 Sep 2026): stored for the triage board, but no further AI call or mail this hour.
+        _log.warning("support-form per-recipient cap hit for %s (%s stored, not auto-answered)", email, ref)
+        return {"ok": True, "ref": ref, "queued": False}
     background_tasks.add_task(_support_followup, ref, email, title, message)
     return {"ok": True, "ref": ref, "queued": True}
 
@@ -24039,12 +24661,28 @@ def _orch_write_json(name, data):
         _j.dump(data, f, indent=2)
     _o.replace(tmp, str(p))
 
+def _orch_require_device_or_admin(request: Request):
+    """SEC-GATE-1 (24 Sep 2026): in-app check behind the nginx Basic Auth realm — an enrolled,
+    unrevoked ts_device pass or an admin credential; refuses 401 otherwise."""
+    if _device_from_cookie(request.cookies.get("ts_device")):
+        return True
+    if _summary_caller_is_admin(request.headers.get("x-admin-key"), request.headers.get("x-admin-token")):
+        return True
+    # The orchestrator page itself sends neither: it is served, and these calls are made, inside nginx's
+    # Basic Auth realm. nginx forwards the checked Authorization header and always sets X-Real-IP, so a
+    # request carrying both came through that realm (port 8000 is firewalled from the internet).
+    if request.headers.get("x-real-ip") and (request.headers.get("authorization") or "").lower().startswith("basic "):
+        return True
+    raise HTTPException(status_code=401, detail="Enrolled device or admin credential required.")
+
+
 @app.post("/orchestrator/approve")
-def orchestrator_approve(body: _OrchApproveBody):
+def orchestrator_approve(body: _OrchApproveBody, request: Request):
     """Approve a staged (Regulatory/Financial-gated) item from the ops page.
     nginx Basic-Auth-gated (same realm as the page). Moves the item to the
     front of the Fixer queue with approved:true; the next Fixer run ships it
     (still smoke-gated). Never deploys or moves money itself."""
+    _orch_require_device_or_admin(request)   # SEC-GATE-1 (24 Sep 2026): do not rely on nginx Basic Auth alone
     item_id = (body.id or "").strip()
     if not item_id:
         raise HTTPException(status_code=400, detail="missing id")
@@ -24134,13 +24772,15 @@ def _map_live_response(name):
                     headers={"Cache-Control": "no-store", "X-Map-Source": label})
 
 @app.get("/orchestrator/defence_map.html")
-def orchestrator_defence_map_live():
+def orchestrator_defence_map_live(request: Request):
     """Gated by nginx Basic Auth (same realm as the orchestrator page)."""
+    _orch_require_device_or_admin(request)   # SEC-GATE-1 (24 Sep 2026): do not rely on nginx Basic Auth alone
     return _map_live_response("defence_map.html")
 
 @app.get("/orchestrator/watch_register.md")
-def orchestrator_watch_register_live():
+def orchestrator_watch_register_live(request: Request):
     """Gated by nginx Basic Auth (same realm as the orchestrator page)."""
+    _orch_require_device_or_admin(request)   # SEC-GATE-1 (24 Sep 2026): do not rely on nginx Basic Auth alone
     return _map_live_response("watch_register.md")
 
 
@@ -24325,10 +24965,17 @@ def _grading_review_auth(request: Request):
 
 @app.get("/grading-review")
 def grading_review(request: Request):
+    # SEC-GATE-1 (24 Sep 2026): this checks MS_ADMIN_PASSWORD, so it shares /admin/login's failed-attempt budget.
+    _gr_ip = (request.client.host if request.client else "?")
+    if not _rate_ok(_admin_attempts, _gr_ip, _ADMIN_MAX_FAILS):
+        raise _rate_429(_admin_attempts, _gr_ip)
     if not _grading_review_auth(request):
+        if request.headers.get("authorization", "").startswith("Basic "):
+            _rate_note_failure(_admin_attempts, _gr_ip)   # SEC-GATE-1: count only a wrong credential, not the bare challenge
         return _TSResponse(
             status_code=401, content="Authentication required.",
             headers={"WWW-Authenticate": 'Basic realm="TrustSquare Grading Review"'})
+    _rate_clear(_admin_attempts, _gr_ip)   # SEC-GATE-1: success wipes the slate, as /admin/login does
 
     conn = database.get_db()
     try:
@@ -24425,7 +25072,9 @@ app.include_router(launch_redemption.router)
 # launch_redemption). Anon + quality scoring injected from this file so both
 # sides always use the same passes.
 import estate_agents
-estate_agents.configure(anon_fn=_anon_regex_clean, quality_fn=_import_quality_score, invite_fn=_mint_agent_invite)
+# SEC-GATE-1 (24 Sep 2026): the roster lane authorises its console caller as THIS agency's admin, not the public app key.
+estate_agents.configure(anon_fn=_anon_regex_clean, quality_fn=_import_quality_score, invite_fn=_mint_agent_invite,
+                        agency_admin_fn=_agency_admin_or_refuse)
 estate_agents.init_schema()
 app.include_router(estate_agents.router)
 
@@ -25141,6 +25790,29 @@ class BuzzCloseReq(BaseModel):
     close:       bool = True
 
 
+def _buzz_close_notice_ok(conn, row, me, other) -> bool:
+    """SEC-GATE-1 (24 Sep 2026): may the 'Buzz closed' notice go to `other`? Only when `other`
+    ENGAGED with this pair (switched on 'let them buzz me', or has buzzed `me`) - /buzz/pair lets
+    anybody pair with any address - and at most once per pair per 24h. Records the send."""
+    other_allows = row["a_allows"] if row["a_email"] == other else row["b_allows"]
+    engaged = bool(other_allows) or bool(conn.execute(
+        "SELECT 1 FROM buzz_log WHERE pair_id=? AND from_email=? LIMIT 1",
+        (row["id"], other)).fetchone())
+    if not engaged:
+        return False
+    conn.execute("CREATE TABLE IF NOT EXISTS buzz_close_notices ("
+                 " pair_id INTEGER PRIMARY KEY, sent_at TEXT NOT NULL)")
+    prev = conn.execute("SELECT sent_at FROM buzz_close_notices WHERE pair_id=?",
+                        (row["id"],)).fetchone()
+    if prev and (prev["sent_at"] or "") >= _sql_since(hours=24):
+        return False
+    conn.execute("INSERT INTO buzz_close_notices (pair_id, sent_at) VALUES (?, ?) "
+                 "ON CONFLICT(pair_id) DO UPDATE SET sent_at=excluded.sent_at",
+                 (row["id"], datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")))
+    conn.commit()
+    return True
+
+
 @app.post("/buzz/close")
 def buzz_close(req: BuzzCloseReq, _key: str = Depends(auth.require_api_key),
                ts_user: str = Cookie(default=None)):
@@ -25171,7 +25843,11 @@ def buzz_close(req: BuzzCloseReq, _key: str = Depends(auth.require_api_key),
         mine  = _buzz_name(conn, me)
         # One last notice, then the channel is quiet. Not a buzz FROM them - a fact.
         try:
-            if not _push_to_seller(conn, other, "Buzz closed",
+            if not _buzz_close_notice_ok(conn, row, me, other):
+                # SEC-GATE-1 (24 Sep 2026): no notice to someone who never engaged with this pair,
+                # nor a second one inside 24h (close/reopen loops must not spam an address).
+                _log.info("BUZZ-CLOSE-1 notice suppressed for pair %s", row["id"])
+            elif not _push_to_seller(conn, other, "Buzz closed",
                                    "Buzz is closed between you and " + mine
                                    + ". You still have each other’s number.",
                                    timeout=BUZZ_PUSH_TIMEOUT):
@@ -25213,7 +25889,10 @@ def buzz_pairs(email: str = None, _key: str = Depends(auth.require_api_key),
     out = []
     for r in rows:
         v = _buzz_pair_view(r, me)
-        v["other_name"] = _buzz_name(conn, v["other_email"])
+        # SEC-GATE-1 (24 Sep 2026): the registered name only once THEY have let me buzz them - anybody can
+        # pair with any address, so otherwise this is a name lookup; fall back to _buzz_name's own local part.
+        v["other_name"] = (_buzz_name(conn, v["other_email"]) if v["they_allow_me"]
+                           else ((v["other_email"] or "").split("@")[0] or "Somebody"))
         out.append(v)
     conn.close()
     return out
@@ -25882,8 +26561,44 @@ class _I18nIn(BaseModel):
     lang: str
     strings: _TList[str] = []
 
+# SEC-GATE-1 (24 Sep 2026): the anonymous translate lane spent AI money with no per-client limit.
+_I18N_IP_HITS = {}             # client address -> [AI-backed requests, window start]
+I18N_IP_MAX_AI = 60            # AI-backed requests per client address per 10 minutes (cache hits are free)
+
+def _i18n_ip_ok(ip: str) -> bool:
+    """SEC-GATE-1 (24 Sep 2026): per-client ceiling on requests that reach the AI; same shape as _fault_ip_ok."""
+    import time as _t
+    now = _t.time()
+    if len(_I18N_IP_HITS) > 5000:          # keep the map small without a cron
+        for k in [k for k, v in _I18N_IP_HITS.items() if now - v[1] > 600]:
+            _I18N_IP_HITS.pop(k, None)
+    rec = _I18N_IP_HITS.get(ip)
+    if not rec or now - rec[1] > 600:
+        _I18N_IP_HITS[ip] = [1, now]
+        return True
+    rec[0] += 1
+    return rec[0] <= I18N_IP_MAX_AI
+
+def _i18n_reserve_call(day: str) -> bool:
+    """SEC-GATE-1 (24 Sep 2026): charge ONE call to the day's cap atomically BEFORE it is made, whatever it
+    returns -- the old count ran after the call and only when a translation differed, so it could be dodged."""
+    conn = database.get_db()
+    try:
+        conn.execute("PRAGMA busy_timeout=4000")
+        _i18n_ensure(conn)
+        conn.execute("INSERT INTO i18n_spend (day, calls) VALUES (?, 0) ON CONFLICT(day) DO NOTHING", (day,))
+        cur = conn.execute("UPDATE i18n_spend SET calls = calls + 1 WHERE day=? AND calls < ?",
+                           (day, I18N_DAILY_CALL_CAP))
+        conn.commit()
+        return cur.rowcount == 1
+    except Exception as exc:
+        _log.warning("i18n spend reservation failed (spending nothing): %s", exc)
+        return False                        # a meter that cannot be written is not a meter
+    finally:
+        conn.close()
+
 @app.post("/i18n/translate")
-def i18n_translate(body: _I18nIn):
+def i18n_translate(body: _I18nIn, request: Request):
     """READ, RELEASE, TRANSLATE, WRITE — in that order and never otherwise. The first build held
     the connection open across the AI call, so a page asking for twenty chunks at once collided
     with ordinary traffic and SQLite answered 'database is locked' (live, 20 Sep). The AI call now
@@ -25933,15 +26648,24 @@ def i18n_translate(body: _I18nIn):
         return {"lang": lang, "out": out, "from_cache": cached, "translated": 0}
     if spent >= I18N_DAILY_CALL_CAP:
         return {"lang": lang, "out": out, "from_cache": cached, "translated": 0, "capped": True}
+    # SEC-GATE-1 (24 Sep 2026): per-client limit on AI-backed requests; the reader keeps what the cache gave.
+    if not _i18n_ip_ok(request.client.host if request.client else "?"):
+        return {"lang": lang, "out": out, "from_cache": cached, "translated": 0, "capped": True}
 
     calls = [0]
+    capped = [False]
 
     def _i18n_ask(items):
         """One call. Returns {src: translation} for the lines that came back."""
         import ai_provider
+        # SEC-GATE-1 (24 Sep 2026): reserve the call against the day's cap FIRST, so every call counts
+        # whatever it returns (the old after-the-fact count missed calls that came back unchanged).
+        if not _i18n_reserve_call(day):
+            capped[0] = True
+            return {}
         # I18N-COST-RAIL-1 (DW-142, 23 Sep 2026): inside the platform rail like every other
         # AI call. Over the ceiling this raises 429; the caller's try/except catches it and the
-        # reader gets cache + English, never an error. The 400/day cap above still applies.
+        # reader gets cache + English, never an error.
         _check_cost_ceiling("")
         calls[0] += 1
         res = ai_provider.complete([{"role": "user", "content": _i18n_prompt(lang, items)}],
@@ -25980,15 +26704,16 @@ def i18n_translate(body: _I18nIn):
             for src, got in fresh.items():
                 conn.execute("INSERT INTO i18n_cache (lang, src, out, created_at) VALUES (?,?,?,?) "
                              "ON CONFLICT DO NOTHING", (lang, src, got, now))
-            conn.execute("INSERT INTO i18n_spend (day, calls) VALUES (?, ?) "
-                         "ON CONFLICT(day) DO UPDATE SET calls = calls + excluded.calls",
-                         (day, max(1, calls[0])))
+            # SEC-GATE-1 (24 Sep 2026): no i18n_spend write here any more -- every call was already
+            # charged by _i18n_reserve_call before it was made (charging again would double-count).
             conn.commit()
         except Exception as exc:
             _log.warning("i18n cache write skipped (%s): %s", lang, exc)
         finally:
             conn.close()
         out.update(fresh)
+    if capped[0]:
+        return {"lang": lang, "out": out, "from_cache": cached, "translated": len(fresh), "capped": True}
     return {"lang": lang, "out": out, "from_cache": cached, "translated": len(fresh)}
 
 # ===========================================================================
@@ -26295,6 +27020,10 @@ def squire_approach(body: _SquireApproachIn, ts_user: str = Cookie(default=None)
             return {"status": "ceiling", "allowance": al, "draft": body.text or "",
                     "message": "You've used your %d approaches this month. %s" % (al["limit"], al["offer"]["text"]),
                     "offer": al["offer"]}
+        # SEC-GATE-1 (24 Sep 2026): an approach may only go to a listing on THIS brief's shortlist, not any listing id.
+        if not conn.execute("SELECT 1 FROM squire_matches WHERE brief_id=? AND listing_id=?",
+                            (body.brief_id, body.listing_id)).fetchone():
+            raise HTTPException(status_code=404, detail="listing not on this brief's shortlist")
         lst = conn.execute("SELECT id, seller_email, title, category FROM listings WHERE id=?", (body.listing_id,)).fetchone()
         if not lst:
             raise HTTPException(status_code=404, detail="listing not found")
@@ -27021,7 +27750,7 @@ async def _device_renews_admin_token(request: Request, call_next):
         dev = request.cookies.get("ts_device")
         if tok and dev and _JWT_SECRET:
             try:
-                _pyjwt.decode(tok, _JWT_SECRET, algorithms=[_JWT_ALGO])
+                _admin_claims(tok)   # SEC-GATE-1: anything that is not a live admin token gets renewed
             except Exception:
                 d = _device_from_cookie(dev)
                 if d:
@@ -27035,3 +27764,58 @@ async def _device_renews_admin_token(request: Request, call_next):
     if renewed:
         response.headers["X-Admin-Token-Renewed"] = renewed
     return response
+
+
+# ══ SEC-GATE-1 (24 Sep 2026) — the central security gate ═══════════════════════════════════════════
+# David: "give me the safe solution, not step one of a 15 step process." Every route is declared in
+# route_policy.json (deny by default); access level, act-as-yourself binding, ownership, private-field
+# hiding and the true client IP are enforced in ONE place, security_gate.py, in front of the router.
+# Installed last so it sits innermost: CORS, GZip and the device-renew middleware run first.
+import security_gate as _sec_gate
+
+
+def _gate_is_admin(hdrs, cookies) -> bool:
+    """Admin = MS_ADMIN_KEY or a typed admin token. The auth_fail_closed narrowing stays in the handlers
+    that implement it; applying it here would lock the token console out of the very switch that
+    turns it back off (/admin/flags)."""
+    k = hdrs.get("x-admin-key")
+    if k and MS_ADMIN_KEY and _ts_secrets.compare_digest(k, MS_ADMIN_KEY):
+        return True
+    t = hdrs.get("x-admin-token")
+    if not t:
+        return False
+    try:
+        _admin_claims(t)
+        return True
+    except Exception:
+        return False
+
+
+def _gate_is_maint(hdrs) -> bool:
+    k = hdrs.get("x-maint-key")
+    return bool(k and MS_MAINT_KEY and _ts_secrets.compare_digest(k, MS_MAINT_KEY))
+
+
+def _gate_is_superuser(email) -> bool:
+    if not email:
+        return False
+    try:
+        conn = database.get_db()
+        try:
+            row = conn.execute("SELECT is_superuser FROM users WHERE LOWER(email) = ?",
+                               (email.strip().lower(),)).fetchone()
+        finally:
+            conn.close()
+        return bool(row and row[0])
+    except Exception:
+        return False
+
+
+SEC_GATE_UNDECLARED = _sec_gate.install(
+    app,
+    session_email=_session_email,
+    is_admin=_gate_is_admin,
+    is_maint=_gate_is_maint,
+    db=database.get_db,
+    is_superuser=_gate_is_superuser,
+)

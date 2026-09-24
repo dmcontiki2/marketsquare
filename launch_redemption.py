@@ -383,6 +383,11 @@ def redeem_launch_code(req: RedeemReq):
             "SELECT * FROM launch_codes WHERE code=? AND status='issued'", (code,)).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="That launch number is not in the registry.")
+        # SEC-GATE-1 (24 Sep 2026): an individual code belongs to the address it was issued to -- a leaked or
+        # forwarded code must not mint on somebody else's account (agency codes stay one-per-agent by design).
+        if row["code_type"] == "individual" and (row["email"] or "").strip().lower() != email:
+            raise HTTPException(status_code=403,
+                                detail="That launch number was issued to a different email address — sign in with that address to redeem it.")
         try:
             if datetime.fromisoformat(str(row["expires_at"]).replace("Z", "+00:00")).date() < today:
                 raise HTTPException(status_code=410, detail="That launch number has expired.")

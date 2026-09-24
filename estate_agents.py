@@ -40,7 +40,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional, List
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Cookie   # SEC-GATE-1 (24 Sep 2026): Cookie for the agency-admin session
 from pydantic import BaseModel
 
 import auth
@@ -52,15 +52,19 @@ router = APIRouter()
 _ANON_FN = None       # text -> (clean, hits)
 _QUALITY_FN = None    # listings row/dict -> (score, missing)
 _INVITE_FN = None     # email, agency_name -> 'sent'|'failed'|'dry'  (AGENCY-INVITE-MAIL-1)
+# SEC-GATE-1 (24 Sep 2026): agency_id, ts_user, admin_key, ctx -> True or raises 401/403 (bea_main._agency_admin_or_refuse)
+_AGENCY_ADMIN_FN = None
 
-def configure(anon_fn=None, quality_fn=None, invite_fn=None):
-    global _ANON_FN, _QUALITY_FN, _INVITE_FN
+def configure(anon_fn=None, quality_fn=None, invite_fn=None, agency_admin_fn=None):
+    global _ANON_FN, _QUALITY_FN, _INVITE_FN, _AGENCY_ADMIN_FN
     if anon_fn:
         _ANON_FN = anon_fn
     if quality_fn:
         _QUALITY_FN = quality_fn
     if invite_fn:
         _INVITE_FN = invite_fn
+    if agency_admin_fn:   # SEC-GATE-1 (24 Sep 2026): the roster lane's console auth is the agency's own admin
+        _AGENCY_ADMIN_FN = agency_admin_fn
 
 _FALLBACK_STRIP = [
     re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"),
@@ -758,7 +762,9 @@ class BulkOnboardIn(BaseModel):
 
 @router.post("/agencies/{agency_id}/agents/bulk")
 def bulk_onboard_agents(agency_id: int, req: BulkOnboardIn,
-                        x_api_key: Optional[str] = Header(default=None, alias="X-Api-Key")):
+                        x_api_key: Optional[str] = Header(default=None, alias="X-Api-Key"),
+                        ts_user: Optional[str] = Cookie(default=None),
+                        x_admin_key: Optional[str] = Header(default=None)):
     """Agency bulk onboarding: membership + anonymised service profile + credential
     CLAIMS (pending, verified by ops before they score).
     AUTH (AGENCY-KEY-1): EITHER the app X-Api-Key header (console path) OR the
@@ -770,8 +776,12 @@ def bulk_onboard_agents(agency_id: int, req: BulkOnboardIn,
         _ag = conn.execute("SELECT id, api_key, name FROM agencies WHERE id=?", (agency_id,)).fetchone()
         if not _ag:
             raise HTTPException(status_code=404, detail="Agency not found")
-        if not ((x_api_key and x_api_key == auth.API_KEY) or (req.api_key and req.api_key == _ag["api_key"])):
-            raise HTTPException(status_code=401, detail="Auth failed: send the app X-Api-Key header, or your agency api_key in the body")
+        # SEC-GATE-1 (24 Sep 2026): the app X-Api-Key ships in public ms.js, so it no longer authorises a roster;
+        # the console path is THIS agency's signed-in admin (or MS_ADMIN_KEY), the IT path its own api_key.
+        if not (req.api_key and req.api_key == _ag["api_key"]):
+            if _AGENCY_ADMIN_FN is None:
+                raise HTTPException(status_code=401, detail="Auth failed: sign in as this agency's admin, or send your agency api_key in the body")
+            _AGENCY_ADMIN_FN(agency_id, ts_user, x_admin_key, "agency-bulk")
         report = []
         for a in req.agents:
             email = (a.email or "").strip().lower()
@@ -779,8 +789,15 @@ def bulk_onboard_agents(agency_id: int, req: BulkOnboardIn,
                 report.append({"email": a.email, "ok": False, "error": "invalid email"})
                 continue
             cap = int(a.listing_cap or 10)
+            # SEC-GATE-1 (24 Sep 2026): provision seats this roster CREATES or already manages; never re-tier anyone
+            # else (the old unconditional UPDATE downgraded Pro users and handed out Starter to any address).
+            _existed = conn.execute("SELECT 1 FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+            _member = conn.execute("SELECT 1 FROM agency_members WHERE agency_id=? AND LOWER(agent_email)=? "
+                                   "AND COALESCE(status,'') != 'removed'", (agency_id, email)).fetchone()
             conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (email,))
-            conn.execute("UPDATE users SET slot_limit=?, seller_tier='starter' WHERE LOWER(email)=?", (cap, email))
+            if not _existed or _member:
+                conn.execute("UPDATE users SET slot_limit=?, seller_tier='starter' WHERE LOWER(email)=? "
+                             "AND LOWER(COALESCE(seller_tier,'free')) IN ('free','','starter')", (cap, email))
             conn.execute("""INSERT INTO agency_members (agency_id, agent_email, listing_cap, status, agent_name, city, country)
                 VALUES (?,?,?,'invited',?,?,?)
                 ON CONFLICT(agency_id, agent_email) DO UPDATE SET listing_cap=excluded.listing_cap,
@@ -1030,6 +1047,10 @@ def accept_agent_intro(intro_id: int, email: str):
     conn = database.get_db()
     try:
         init_schema(conn)
+        # SEC-GATE-1 (24 Sep 2026): take the write lock BEFORE the status/balance checks so parallel accepts
+        # cannot all pass on the same balance (money-touching writes are transactional).
+        if not conn.in_transaction:
+            conn.execute("BEGIN IMMEDIATE")
         intro = conn.execute("SELECT * FROM agent_intros WHERE id=? AND agent_email=?", (intro_id, email)).fetchone()
         if not intro:
             raise HTTPException(status_code=404, detail="Intro not found for this agent")
@@ -1037,8 +1058,11 @@ def accept_agent_intro(intro_id: int, email: str):
             raise HTTPException(status_code=409, detail=f"Intro already {intro['status']}")
         if _tuppence_balance(conn, email) < 1:
             raise HTTPException(status_code=402, detail="Insufficient Tuppence — top up to accept this introduction (1T)")
-        conn.execute("UPDATE agent_intros SET status='accepted', tuppence_charged=1, responded_at=? WHERE id=?",
-                     (_now(), intro_id))
+        _upd = conn.execute("UPDATE agent_intros SET status='accepted', tuppence_charged=1, responded_at=? "
+                            "WHERE id=? AND status='pending'", (_now(), intro_id))
+        if _upd.rowcount != 1:   # SEC-GATE-1 (24 Sep 2026): settled by someone else meanwhile -- charge nothing
+            conn.rollback()
+            raise HTTPException(status_code=409, detail="Intro already settled")
         conn.execute("INSERT INTO transactions (user_email, type, amount, description) VALUES (?,'intro_deduct',-1,?)",
                      (email, f"Seller lead accepted · agent intro #{intro_id}"))
         conn.commit()

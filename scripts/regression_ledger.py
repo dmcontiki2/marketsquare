@@ -27894,5 +27894,77 @@ def rg_qa_bot_1():
     return out or [(INFO, "QA Bot present; deploy gate, rollback and no-retry wired; nightly timer "
                           "shipped; rulings kept off the repo")]
 
+
+@entry("RG-0455", "SEC-GATE-1: one security gate in front of every route -- deny by default, act as yourself, "
+                  "own your records, typed admin tokens, and a stranger test that blocks the deploy",
+       LOCKED, fixed_on="2026-09-24",
+       scope="security_gate.py + route_policy.json + bea_main.py (_admin_claims, _make_token scope, the "
+             "_sec_gate.install call at the END of the module) + scripts/stranger_test.py + "
+             "ops/autodeploy/server_deploy.sh (stranger test BEFORE any live file is touched) + the deploy "
+             "manifest lines. David, 24 Sep 2026: 'when i ask how can we be secure, then i would expect ... "
+             "the safe solution, not step one of a 15 step process'. CLASS, not instance: a route added "
+             "tomorrow without a declared rule is refused by the gate at runtime, fails this entry on the "
+             "host, and fails the stranger test on the server -- three places, no memory required. "
+             "The Author's policy says what each route IS; the QA Bot (RG-0454) independently judges "
+             "whether that is RIGHT against OpenAI's rulings kept off the repo.",
+       ref="24 Sep 2026 review of all 292 routes: 13 critical / 40 high, incl. admin takeover via an "
+           "employer_confirm JWT accepted as X-Admin-Token, account takeover via /agencies/wave-prep, "
+           "every buyer's email via GET /intros. Stranger test: 302 routes, A1 176 / B1 474 / B2 72 / "
+           "C 95 checks PASS on the production venv before shipping.")
+def rg_sec_gate_1():
+    import ast, json as _json
+    out = []
+    gate = repo_file("security_gate.py")
+    if gate is None:
+        return [(FAIL, "security_gate.py is gone -- every route is back to guarding itself")]
+    for needle, why in (("class SecurityGate", "the gate class is gone"),
+                        ('"undeclared_route"', "deny-by-default for undeclared routes is gone"),
+                        ("def _as_id", "ids are no longer normalised the way pydantic reads them ('0_9' bypass)"),
+                        ('media = ctype.split(";")[0].strip().lower()', "content types are no longer read case-blind (application/JSON bypass)"),
+                        ("RESOURCES = {", "the single owner-lookup table is gone")):
+        if needle not in gate:
+            out.append((FAIL, "security_gate.py: %s" % why))
+    bea = repo_file("bea_main.py") or ""
+    if "_sec_gate.install(" not in bea:
+        out.append((FAIL, "bea_main.py no longer installs the security gate"))
+    elif bea.rfind("_sec_gate.install(") < bea.rfind("\n@app."):
+        out.append((FAIL, "a route is registered AFTER the gate is installed -- the startup check cannot see it"))
+    if "def _admin_claims" not in bea or '"scope": "admin"' not in bea:
+        out.append((FAIL, "admin tokens are no longer typed (TOKEN-TYPE-1)"))
+    if "_pyjwt.decode(x_admin_token, _JWT_SECRET" in bea:
+        out.append((FAIL, "an admin check decodes X-Admin-Token without _admin_claims -- any signed JWT passes again"))
+    try:
+        pol = {e["key"] for e in _json.loads(repo_file("route_policy.json") or "{}").get("routes", [])}
+    except Exception as e:
+        return out + [(FAIL, "route_policy.json unreadable (%s) -- the gate would refuse to start" % e)]
+    missing = []
+    try:
+        tree = ast.parse(bea)
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                for d in node.decorator_list:
+                    if (isinstance(d, ast.Call) and isinstance(d.func, ast.Attribute)
+                            and isinstance(d.func.value, ast.Name) and d.func.value.id == "app"
+                            and d.func.attr in ("get", "post", "put", "delete", "patch")
+                            and d.args and isinstance(d.args[0], ast.Constant)):
+                        k = d.func.attr.upper() + " " + d.args[0].value
+                        if k not in pol:
+                            missing.append(k)
+    except SyntaxError as e:
+        return out + [(FAIL, "bea_main.py does not parse: %s" % e)]
+    for k in missing[:20]:
+        out.append((FAIL, "route has no rule in route_policy.json (the gate refuses it): %s" % k))
+    sd = repo_file("ops/autodeploy/server_deploy.sh") or ""
+    if "stranger_test.py" not in sd or 'die "stranger test FAILED' not in sd:
+        out.append((FAIL, "server_deploy.sh no longer runs the stranger test before touching live files"))
+    if repo_file("scripts/stranger_test.py") is None:
+        out.append((FAIL, "scripts/stranger_test.py is gone -- nothing blocks a deploy that opens a route"))
+    man = repo_file("ops/autodeploy/deploy_manifest.txt") or ""
+    for f in ("security_gate.py", "route_policy.json"):
+        if f + " " not in man and f + "\t" not in man:
+            out.append((FAIL, "deploy_manifest.txt does not ship %s -- main.py would fail to start" % f))
+    return out or [(INFO, "gate installed last; %d routes declared; admin tokens typed; stranger test gates "
+                          "the deploy; manifest ships gate + policy" % len(pol))]
+
 if __name__ == "__main__":
     sys.exit(main())

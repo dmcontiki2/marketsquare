@@ -1,6 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* SEC-GATE-1 (24 Sep 2026): the server's central gate refuses admin actions that carry no admin
+   credential - the public app key opens nothing any more. Every call this page makes to its own
+   server therefore carries the page's admin token (sessionStorage ms_admin_token), and a token the
+   server renews (X-Admin-Token-Renewed, DEVICE-NOLAPSE-1) is stored straight away. */
+(function(){
+  if (window.__tsAdminFetch) return; window.__tsAdminFetch = true;
+  var _f = window.fetch.bind(window);
+  window.fetch = function(input, init){
+    try {
+      var url = (typeof input === 'string') ? input : ((input && input.url) || '');
+      var own = url.indexOf('http') !== 0 || url.indexOf(location.origin) === 0 || url.indexOf('https://trustsquare.co') === 0;
+      var tok = sessionStorage.getItem('ms_admin_token');
+      if (own && tok) {
+        init = Object.assign({}, init || {});
+        var h = new Headers(init.headers || ((typeof input !== 'string' && input && input.headers) || {}));
+        if (!h.has('X-Admin-Token')) h.set('X-Admin-Token', tok);
+        init.headers = h;
+      }
+    } catch (e) {}
+    return _f(input, init).then(function(r){
+      try { var nt = r.headers.get('X-Admin-Token-Renewed'); if (nt) sessionStorage.setItem('ms_admin_token', nt); } catch (e) {}
+      return r;
+    });
+  };
+})();
+</script>
+
 <meta charset="UTF-8">
 <link rel="manifest" href="/m/manifest-admin.webmanifest"><link rel="apple-touch-icon" href="/static/brand/apple-touch-icon-admin.png"><link rel="icon" href="/static/brand/icon-32-admin.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Admin"><meta name="theme-color" content="#b91c1c">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">

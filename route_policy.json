@@ -1,0 +1,1961 @@
+{
+ "_doc": "SEC-GATE-1 route policy. Every route the BEA serves must have exactly one entry. level: public|user|admin|maint|service|token|device|reviewer. bind: actor params rewritten to the session email. own: record ids that must belong to the session (resources in security_gate.RESOURCES). hide: response keys removed for strangers. See security_gate.py.",
+ "routes": [
+  {
+   "key": "GET /optout",
+   "level": "public"
+  },
+  {
+   "key": "POST /optout",
+   "level": "public"
+  },
+  {
+   "key": "GET /optout/status",
+   "level": "admin",
+   "local": true
+  },
+  {
+   "key": "GET /health",
+   "level": "public"
+  },
+  {
+   "key": "GET /ops/selfcheck",
+   "level": "admin",
+   "local": true
+  },
+  {
+   "key": "POST /admin/purge-cache",
+   "level": "admin",
+   "local": true
+  },
+  {
+   "key": "POST /admin/refresh-pois/{listing_id}",
+   "level": "admin"
+  },
+  {
+   "key": "GET /listings",
+   "level": "public",
+   "hide": [
+    "street_address"
+   ]
+  },
+  {
+   "key": "GET /zoom/next",
+   "level": "public",
+   "hide": [
+    "street_address"
+   ]
+  },
+  {
+   "key": "POST /zoom/watch",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "GET /zoom/watches",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "DELETE /zoom/watch/{watch_id}",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /listings",
+   "level": "public"
+  },
+  {
+   "key": "POST /listings/quick-publish",
+   "level": "public"
+  },
+  {
+   "key": "POST /quality/preview",
+   "level": "public"
+  },
+  {
+   "key": "GET /listings/{listing_id}/withdraw",
+   "level": "token"
+  },
+  {
+   "key": "PUT /listings/{listing_id}/publish",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "GET /listings/mine",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "GET /listings/{listing_id}/lang",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "GET /listings/{listing_id}",
+   "level": "public",
+   "hide": [
+    "street_address"
+   ]
+  },
+  {
+   "key": "GET /sellers/summary/{listing_id}",
+   "level": "public"
+  },
+  {
+   "key": "PUT /listings/{listing_id}",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "GET /listings/{listing_id}/versions",
+   "level": "admin"
+  },
+  {
+   "key": "GET /listings/{listing_id}/versions/{version_num}",
+   "level": "admin"
+  },
+  {
+   "key": "DELETE /listings/{listing_id}",
+   "level": "admin"
+  },
+  {
+   "key": "DELETE /listings/{listing_id}/seller",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "GET /geo/countries",
+   "level": "public"
+  },
+  {
+   "key": "GET /geo/regions",
+   "level": "public"
+  },
+  {
+   "key": "GET /geo/cities",
+   "level": "public"
+  },
+  {
+   "key": "GET /geo/suburbs",
+   "level": "public"
+  },
+  {
+   "key": "GET /geo/nearby",
+   "level": "public"
+  },
+  {
+   "key": "POST /geo/countries",
+   "level": "admin"
+  },
+  {
+   "key": "GET /suburbs",
+   "level": "public"
+  },
+  {
+   "key": "GET /cities",
+   "level": "public"
+  },
+  {
+   "key": "POST /listings/photos/order",
+   "level": "public"
+  },
+  {
+   "key": "POST /credentials/claim",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "GET /credentials/mine",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "GET /admin/credentials",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/credentials/review",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/credentials/registry-upsert",
+   "level": "admin"
+  },
+  {
+   "key": "GET /quick/me",
+   "level": "public"
+  },
+  {
+   "key": "POST /listings/photo",
+   "level": "public"
+  },
+  {
+   "key": "POST /listings/{listing_id}/photo/draft",
+   "level": "token"
+  },
+  {
+   "key": "POST /users",
+   "level": "public"
+  },
+  {
+   "key": "GET /users/{email}",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "GET /users/{email}/subscription",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "GET /sellers/credentials/{listing_id}",
+   "level": "public"
+  },
+  {
+   "key": "GET /users/{email}/trust",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "POST /users/{email}/photo",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "POST /users/{email}/upload-id",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "DELETE /users/{email}",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "POST /intro/relay",
+   "level": "token"
+  },
+  {
+   "key": "POST /intros",
+   "level": "user",
+   "bind": [
+    {
+     "name": "buyer_email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "GET /intros",
+   "level": "user"
+  },
+  {
+   "key": "GET /intros/{listing_id}",
+   "level": "user",
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "POST /users/{email}/verify-identity-npr",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "GET /id-verify/status",
+   "level": "public",
+   "hide": [
+    "provider",
+    "last_outcome",
+    "last_attempt_at",
+    "degraded_reason"
+   ]
+  },
+  {
+   "key": "GET /users/{email}/id-status",
+   "level": "public",
+   "hide": [
+    "npr_verified_at"
+   ]
+  },
+  {
+   "key": "PUT /intros/{intro_id}/accept",
+   "level": "user",
+   "own": [
+    {
+     "name": "intro_id",
+     "in": "path",
+     "resource": "intro_seller"
+    }
+   ]
+  },
+  {
+   "key": "PUT /intros/{intro_id}/decline",
+   "level": "user",
+   "own": [
+    {
+     "name": "intro_id",
+     "in": "path",
+     "resource": "intro_seller"
+    }
+   ]
+  },
+  {
+   "key": "POST /payment/initialize",
+   "level": "public"
+  },
+  {
+   "key": "GET /payment/verify",
+   "level": "public",
+   "hide": [
+    "email"
+   ]
+  },
+  {
+   "key": "GET /payment/test",
+   "level": "admin"
+  },
+  {
+   "key": "POST /payment/webhook",
+   "level": "token"
+  },
+  {
+   "key": "GET /subscription/tiers",
+   "level": "public"
+  },
+  {
+   "key": "POST /payment/seller-subscription/initialize",
+   "level": "public"
+  },
+  {
+   "key": "GET /payment/seller-subscription/verify",
+   "level": "public",
+   "hide": [
+    "email"
+   ]
+  },
+  {
+   "key": "GET /admin/ai-spend/summary",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/migrate-photos",
+   "level": "admin"
+  },
+  {
+   "key": "POST /advert-agent/market-note",
+   "level": "public"
+  },
+  {
+   "key": "POST /listings/draft-from-photos",
+   "level": "public"
+  },
+  {
+   "key": "POST /listings/draft-from-photo",
+   "level": "public"
+  },
+  {
+   "key": "GET /advert-agent/status",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /advert-agent/coach",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /advert-agent/coach/ask",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /advert-agent/buy-pack",
+   "level": "public"
+  },
+  {
+   "key": "POST /advert-agent/publish",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "form"
+    }
+   ]
+  },
+  {
+   "key": "GET /tuppence/balance",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /buyer-token",
+   "level": "public"
+  },
+  {
+   "key": "POST /search/interpret",
+   "level": "public"
+  },
+  {
+   "key": "POST /wishlist/signal",
+   "level": "public"
+  },
+  {
+   "key": "GET /wishlist/signals",
+   "level": "token"
+  },
+  {
+   "key": "PUT /wishlist/signals/{signal_id}",
+   "level": "token"
+  },
+  {
+   "key": "DELETE /wishlist/signals/{signal_id}",
+   "level": "token"
+  },
+  {
+   "key": "DELETE /wishlist/signals",
+   "level": "token"
+  },
+  {
+   "key": "GET /wishlist/feed",
+   "level": "token"
+  },
+  {
+   "key": "POST /wishlist/feed/seen/{match_id}",
+   "level": "token"
+  },
+  {
+   "key": "POST /listings/{listing_id}/view",
+   "level": "public"
+  },
+  {
+   "key": "GET /wishlist/showcase",
+   "level": "public"
+  },
+  {
+   "key": "POST /wishlist/showcase",
+   "level": "admin"
+  },
+  {
+   "key": "PUT /wishlist/showcase/{showcase_id}",
+   "level": "admin"
+  },
+  {
+   "key": "DELETE /wishlist/showcase/{showcase_id}",
+   "level": "admin"
+  },
+  {
+   "key": "POST /wishlist/boost",
+   "level": "user",
+   "bind": [
+    {
+     "name": "seller_email",
+     "in": "json"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "json",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "GET /wishlist/boost/stats",
+   "level": "user",
+   "bind": [
+    {
+     "name": "seller_email",
+     "in": "query"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "query",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "POST /wishlist/subscription/initialize",
+   "level": "public"
+  },
+  {
+   "key": "GET /wishlist/subscription/verify",
+   "level": "public"
+  },
+  {
+   "key": "GET /wishlist/subscription/status",
+   "level": "token"
+  },
+  {
+   "key": "GET /wishlist/vapid-public-key",
+   "level": "public"
+  },
+  {
+   "key": "POST /wishlist/wearable/register",
+   "level": "token"
+  },
+  {
+   "key": "GET /wishlist/wearable/list",
+   "level": "token"
+  },
+  {
+   "key": "DELETE /wishlist/wearable/{device_id}",
+   "level": "token"
+  },
+  {
+   "key": "POST /local-market/listings",
+   "level": "user",
+   "bind": [
+    {
+     "name": "seller_email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "GET /local-market/listings",
+   "level": "public"
+  },
+  {
+   "key": "GET /local-market/listings/{listing_id}",
+   "level": "public"
+  },
+  {
+   "key": "POST /local-market/intro",
+   "level": "user",
+   "bind": [
+    {
+     "name": "buyer_email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /local-market/complaint",
+   "level": "user",
+   "bind": [
+    {
+     "name": "seller_email",
+     "in": "json"
+    }
+   ],
+   "own": [
+    {
+     "name": "intro_id",
+     "in": "json",
+     "resource": "intro_seller"
+    }
+   ]
+  },
+  {
+   "key": "PUT /local-market/complaint/{complaint_id}/uphold",
+   "level": "admin"
+  },
+  {
+   "key": "PUT /local-market/complaint/{complaint_id}/dismiss",
+   "level": "admin"
+  },
+  {
+   "key": "GET /local-market/complaints",
+   "level": "admin"
+  },
+  {
+   "key": "GET /local-market/suspension/check",
+   "level": "admin"
+  },
+  {
+   "key": "POST /local-market/eula/accept",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /users/{email}/eula",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "GET /trust/catalogue",
+   "level": "public"
+  },
+  {
+   "key": "GET /trust-score/breakdown",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /trust-score/credential",
+   "level": "admin"
+  },
+  {
+   "key": "GET /trust/employer-link",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "GET /trust/employer-who",
+   "level": "token"
+  },
+  {
+   "key": "POST /trust/employer-confirm",
+   "level": "token"
+  },
+  {
+   "key": "POST /trust/experience",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "GET /trust-score/credentials/pending",
+   "level": "admin"
+  },
+  {
+   "key": "POST /trust-score/guidance",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /trust-score/upload-comment",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /users/{email}/documents",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "GET /users/{email}/documents",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "GET /users/{email}/documents/public",
+   "level": "user",
+   "own": [
+    {
+     "name": "intro_id",
+     "in": "query",
+     "resource": "intro_buyer"
+    }
+   ]
+  },
+  {
+   "key": "DELETE /users/{email}/documents/{doc_id}",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ],
+   "own": [
+    {
+     "name": "doc_id",
+     "in": "path",
+     "resource": "document"
+    }
+   ]
+  },
+  {
+   "key": "POST /users/{email}/declare",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "POST /users/{email}/verify-identity",
+   "level": "admin"
+  },
+  {
+   "key": "POST /users/{email}/banking",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "GET /users/{email}/identity-status",
+   "level": "admin"
+  },
+  {
+   "key": "GET /listings/{listing_id}/cities",
+   "level": "public"
+  },
+  {
+   "key": "POST /listings/{listing_id}/cities",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "DELETE /listings/{listing_id}/cities/{city_id}",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "PUT /users/{email}/seller-tier",
+   "level": "admin"
+  },
+  {
+   "key": "POST /users/{email}/seller-tier/downgrade-free",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "GET /dashboard/fixed-costs",
+   "level": "admin"
+  },
+  {
+   "key": "GET /dashboard/summary",
+   "level": "public"
+  },
+  {
+   "key": "POST /dashboard/bit",
+   "level": "maint",
+   "local": true
+  },
+  {
+   "key": "POST /presence/ping",
+   "level": "public"
+  },
+  {
+   "key": "GET /dashboard/launch-metrics",
+   "level": "admin"
+  },
+  {
+   "key": "GET /dashboard/comms",
+   "level": "admin"
+  },
+  {
+   "key": "GET /dashboard/presence",
+   "level": "admin"
+  },
+  {
+   "key": "GET /dashboard/bit",
+   "level": "admin"
+  },
+  {
+   "key": "POST /onboard/step",
+   "level": "public"
+  },
+  {
+   "key": "GET /onboard/funnel",
+   "level": "admin",
+   "local": true
+  },
+  {
+   "key": "GET /wonders",
+   "level": "public"
+  },
+  {
+   "key": "GET /wonders/{wonder_id}",
+   "level": "public"
+  },
+  {
+   "key": "PUT /listings/{listing_id}/wonders",
+   "level": "user",
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "POST /listings/{listing_id}/wonders",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "GET /listings/{listing_id}/wonders",
+   "level": "public"
+  },
+  {
+   "key": "DELETE /listings/{listing_id}/wonders/{wonder_id}",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "GET /health/resources",
+   "level": "admin",
+   "local": true
+  },
+  {
+   "key": "GET /privacy",
+   "level": "public"
+  },
+  {
+   "key": "GET /terms",
+   "level": "public"
+  },
+  {
+   "key": "POST /review/login",
+   "level": "public"
+  },
+  {
+   "key": "GET /review/verify",
+   "level": "reviewer"
+  },
+  {
+   "key": "POST /review/request-link",
+   "level": "public"
+  },
+  {
+   "key": "POST /review/claim-code",
+   "level": "public"
+  },
+  {
+   "key": "HEAD /review/enter",
+   "level": "public"
+  },
+  {
+   "key": "GET /review/enter",
+   "level": "token"
+  },
+  {
+   "key": "GET /auth/providers",
+   "level": "public"
+  },
+  {
+   "key": "GET /auth/oauth/{provider}/start",
+   "level": "public"
+  },
+  {
+   "key": "GET /auth/oauth/google/callback",
+   "level": "token"
+  },
+  {
+   "key": "POST /auth/oauth/apple/callback",
+   "level": "token"
+  },
+  {
+   "key": "POST /auth/verify-code",
+   "level": "public"
+  },
+  {
+   "key": "POST /auth/request-link",
+   "level": "public"
+  },
+  {
+   "key": "POST /auth/verify",
+   "level": "token"
+  },
+  {
+   "key": "POST /agencies",
+   "level": "superuser"
+  },
+  {
+   "key": "POST /agencies/wave-prep",
+   "level": "admin",
+   "local": true
+  },
+  {
+   "key": "GET /agencies/{agency_id}",
+   "level": "user",
+   "own": [
+    {
+     "name": "agency_id",
+     "in": "path",
+     "resource": "agency"
+    }
+   ]
+  },
+  {
+   "key": "POST /agencies/{agency_id}/verify",
+   "level": "admin"
+  },
+  {
+   "key": "POST /agencies/{agency_id}/agents",
+   "level": "user",
+   "own": [
+    {
+     "name": "agency_id",
+     "in": "path",
+     "resource": "agency"
+    }
+   ]
+  },
+  {
+   "key": "PUT /agencies/{agency_id}/agents/{email}",
+   "level": "user",
+   "own": [
+    {
+     "name": "agency_id",
+     "in": "path",
+     "resource": "agency"
+    }
+   ]
+  },
+  {
+   "key": "DELETE /agencies/{agency_id}/agents/{email}",
+   "level": "user",
+   "own": [
+    {
+     "name": "agency_id",
+     "in": "path",
+     "resource": "agency"
+    }
+   ]
+  },
+  {
+   "key": "GET /agencies/by-admin/{email}",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "PUT /agencies/{agency_id}",
+   "level": "superuser"
+  },
+  {
+   "key": "GET /agencies",
+   "level": "superuser"
+  },
+  {
+   "key": "POST /agencies/{agency_id}/import",
+   "level": "token"
+  },
+  {
+   "key": "POST /admin/login",
+   "level": "public"
+  },
+  {
+   "key": "POST /admin/change-pin",
+   "level": "public"
+  },
+  {
+   "key": "GET /admin/verify",
+   "level": "admin"
+  },
+  {
+   "key": "GET /admin/enrol",
+   "level": "token"
+  },
+  {
+   "key": "GET /admin/device-ok",
+   "level": "device"
+  },
+  {
+   "key": "GET /admin/device-token",
+   "level": "device"
+  },
+  {
+   "key": "GET /m/dashboard",
+   "level": "device"
+  },
+  {
+   "key": "GET /m/admin",
+   "level": "device"
+  },
+  {
+   "key": "GET /m",
+   "level": "device"
+  },
+  {
+   "key": "GET /m/manifest-{app}.webmanifest",
+   "level": "public"
+  },
+  {
+   "key": "GET /m/manifest.webmanifest",
+   "level": "public"
+  },
+  {
+   "key": "GET /admin/devices",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/devices/{device_id}/revoke",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/anon-rescan-listing",
+   "level": "admin"
+  },
+  {
+   "key": "GET /admin/services-status",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/ai-restore",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/ai-test",
+   "level": "admin"
+  },
+  {
+   "key": "GET /flags",
+   "level": "public",
+   "hide": [
+    "ai_provider",
+    "bit_flags",
+    "relay_configured"
+   ]
+  },
+  {
+   "key": "POST /admin/flags",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/users",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/tuppence/grant",
+   "level": "admin"
+  },
+  {
+   "key": "GET /admin/tuppence/recent-listers",
+   "level": "admin"
+  },
+  {
+   "key": "GET /admin/users",
+   "level": "admin"
+  },
+  {
+   "key": "DELETE /admin/users/{user_id}",
+   "level": "admin"
+  },
+  {
+   "key": "GET /admin/ai-spend",
+   "level": "admin"
+  },
+  {
+   "key": "PUT /admin/ai-spend/config",
+   "level": "admin"
+  },
+  {
+   "key": "GET /demo-listings",
+   "level": "public"
+  },
+  {
+   "key": "GET /demo-sellers",
+   "level": "public"
+  },
+  {
+   "key": "POST /listings/vision-draft",
+   "level": "public"
+  },
+  {
+   "key": "GET /api/fx",
+   "level": "public"
+  },
+  {
+   "key": "POST /listings/{listing_id}/ai-rewrite",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "POST /listings/{listing_id}/ai-audit",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "GET /ai/example/{function_id}",
+   "level": "public"
+  },
+  {
+   "key": "GET /listings/{listing_id}/value-tiers",
+   "level": "public"
+  },
+  {
+   "key": "POST /listings/{listing_id}/price-check",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /listings/{listing_id}/yield-calc",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /listings/batch-cards",
+   "level": "user",
+   "bind": [
+    {
+     "name": "seller_email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "GET /tuppence/history",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /email/inbound",
+   "level": "token"
+  },
+  {
+   "key": "POST /app/fault",
+   "level": "public"
+  },
+  {
+   "key": "POST /support/message",
+   "level": "public"
+  },
+  {
+   "key": "GET /app/faults/mine",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /dashboard/maint",
+   "level": "maint"
+  },
+  {
+   "key": "GET /dashboard/maint",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/maint/brain",
+   "level": "maint"
+  },
+  {
+   "key": "POST /admin/ai-topups",
+   "level": "admin"
+  },
+  {
+   "key": "GET /admin/faults",
+   "level": "maint"
+  },
+  {
+   "key": "PUT /admin/faults/{fid}",
+   "level": "maint"
+  },
+  {
+   "key": "GET /admin/faults/{fid}/close-draft",
+   "level": "maint"
+  },
+  {
+   "key": "POST /admin/faults/{fid}/close-send",
+   "level": "maint"
+  },
+  {
+   "key": "GET /admin/email-triage",
+   "level": "admin"
+  },
+  {
+   "key": "GET /dashboard/email-triage",
+   "level": "admin",
+   "local": true
+  },
+  {
+   "key": "GET /dashboard/cost",
+   "level": "admin",
+   "local": true
+  },
+  {
+   "key": "GET /dashboard/scan",
+   "level": "admin",
+   "local": true
+  },
+  {
+   "key": "POST /orchestrator/approve",
+   "level": "device"
+  },
+  {
+   "key": "GET /orchestrator/defence_map.html",
+   "level": "device"
+  },
+  {
+   "key": "GET /orchestrator/watch_register.md",
+   "level": "device"
+  },
+  {
+   "key": "GET /grading-review",
+   "level": "token"
+  },
+  {
+   "key": "GET /flights/indicative",
+   "level": "public"
+  },
+  {
+   "key": "POST /tuppence/ai-commit",
+   "level": "service"
+  },
+  {
+   "key": "POST /tuppence/ai-settle",
+   "level": "service"
+  },
+  {
+   "key": "POST /admin/lifecycle-sweep",
+   "level": "admin"
+  },
+  {
+   "key": "GET /buzz/me",
+   "level": "user"
+  },
+  {
+   "key": "POST /buzz/pair",
+   "level": "user",
+   "bind": [
+    {
+     "name": "from_email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /buzz/allow",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /buzz/close",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "GET /buzz/pairs",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /buzz",
+   "level": "user",
+   "bind": [
+    {
+     "name": "from_email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /admin/intro-reminder-sweep",
+   "level": "admin"
+  },
+  {
+   "key": "POST /listings/{listing_id}/keep-live",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "GET /squire/status",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /squire/brief",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /i18n/translate",
+   "level": "public"
+  },
+  {
+   "key": "GET /quick_next.html",
+   "level": "public"
+  },
+  {
+   "key": "GET /lang/countries",
+   "level": "public"
+  },
+  {
+   "key": "POST /listings/{listing_id}/lang/draft",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "POST /listings/{listing_id}/lang/approve",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "POST /listings/{listing_id}/lang/remove",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ],
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "POST /squire/brief/{brief_id}/answers",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "GET /squire/brief/{brief_id}/shortlist",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /squire/approach",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "GET /squire/inbox",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /squire/approach/{approach_id}/answer",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /squire/topup",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "DELETE /squire/brief/{brief_id}",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /squire/run-all",
+   "level": "admin"
+  },
+  {
+   "key": "GET /pricing/ladder",
+   "level": "public"
+  },
+  {
+   "key": "GET /dashboard/ai-funds",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/ai-funds",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/deploy-file",
+   "level": "token"
+  },
+  {
+   "key": "POST /planner/heritage/compose",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "GET /planner/map/{sid}",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "GET /listings-coverage",
+   "level": "public"
+  },
+  {
+   "key": "GET /geo/stays",
+   "level": "public"
+  },
+  {
+   "key": "GET /agents/template",
+   "level": "public"
+  },
+  {
+   "key": "POST /agents/profile",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "GET /agents/profile",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "PUT /agents/profile/publish",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /agencies/{agency_id}/agents/bulk",
+   "level": "token"
+  },
+  {
+   "key": "GET /agents/nearby",
+   "level": "public"
+  },
+  {
+   "key": "GET /agents/pitch",
+   "level": "public"
+  },
+  {
+   "key": "POST /agents/intro",
+   "level": "user",
+   "bind": [
+    {
+     "name": "seller_email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "GET /agents/intros",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "GET /agents/intros/for-seller",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "PUT /agents/intros/{intro_id}/accept",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ],
+   "own": [
+    {
+     "name": "intro_id",
+     "in": "path",
+     "resource": "agent_intro_agent"
+    }
+   ]
+  },
+  {
+   "key": "PUT /agents/intros/{intro_id}/decline",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ],
+   "own": [
+    {
+     "name": "intro_id",
+     "in": "path",
+     "resource": "agent_intro_agent"
+    }
+   ]
+  },
+  {
+   "key": "POST /launch/redeem",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /launch/sync-registry",
+   "level": "admin"
+  },
+  {
+   "key": "GET /launch/status",
+   "level": "admin"
+  },
+  {
+   "key": "GET /launch/mine",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /admin/deploy",
+   "level": "token"
+  },
+  {
+   "key": "GET /admin/deploy/status",
+   "level": "token"
+  },
+  {
+   "key": "GET /go/partners",
+   "level": "public"
+  },
+  {
+   "key": "GET /go/partner/{slug}",
+   "level": "public"
+  },
+  {
+   "key": "GET /openapi.json",
+   "level": "admin"
+  },
+  {
+   "key": "GET /docs",
+   "level": "admin"
+  },
+  {
+   "key": "GET /docs/oauth2-redirect",
+   "level": "admin"
+  },
+  {
+   "key": "GET /redoc",
+   "level": "admin"
+  },
+  {
+   "key": "MOUNT /media",
+   "level": "public"
+  },
+  {
+   "key": "GET /k/{secret}",
+   "level": "token"
+  },
+  {
+   "key": "GET /auth/session-link",
+   "level": "user"
+  },
+  {
+   "key": "POST /auth/phone/start",
+   "level": "public"
+  },
+  {
+   "key": "POST /auth/phone/verify",
+   "level": "public"
+  },
+  {
+   "key": "GET /demand/tickets",
+   "level": "admin"
+  },
+  {
+   "key": "POST /demand/sweep",
+   "level": "admin"
+  },
+  {
+   "key": "GET /listings/{listing_id}/status-card.png",
+   "level": "public"
+  }
+ ]
+}

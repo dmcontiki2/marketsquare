@@ -49,6 +49,11 @@ Read `AGENT_BRIEFING.md` at the start of every session — it is the single sour
 - Prefer small, focused changes over sweeping refactors
 - After every change: what changed, why, and what to watch
 - Use /compact when context starts filling up
+- **SEC-GATE-1 (24 Sep 2026) — every route is declared or it is refused.** A new `@app.<method>` route needs
+  an entry in `route_policy.json` (level public|user|superuser|admin|maint|service|token|device|reviewer; `bind`
+  for the acting email, `own` for record ids, `hide` for private response keys — see `security_gate.py`).
+  Without one the gate answers 403 `undeclared_route`, RG-0455 fails on the host and `scripts/stranger_test.py`
+  blocks the deploy on the server. Admin pages send `X-Admin-Token`; the public app key is not a credential.
 
 ## Demo-mode wiring rule (AI-enforced)
 Any new FEA feature that calls the BEA API **must** include a `DEMO_MODE` guard:
