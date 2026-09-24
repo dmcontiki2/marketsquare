@@ -11936,9 +11936,14 @@ def _seller_trust(conn, email: str) -> int:
     return int(row["trust_score"] or 0) if row else 0
 
 
+LM_BUYER_BASE_TRUST = 40   # LM-BUYER-BASE-1 (David, 24 Sep 2026): a new buyer starts at 40, like sellers
+
+
 def _buyer_trust(conn, buyer_token: str) -> int:
+    # LM-BUYER-BASE-1: with a base of 0 an upheld no-show (-3) floored at 0 and changed nothing for a
+    # new buyer, and sellers saw 'Buyer trust 0' on a buyer with no history. No record = the base.
     row = conn.execute("SELECT score FROM buyer_trust WHERE buyer_token = ?", (buyer_token,)).fetchone()
-    return int(row["score"] or 0) if row else 0
+    return int(row["score"] if row["score"] is not None else LM_BUYER_BASE_TRUST) if row else LM_BUYER_BASE_TRUST
 
 
 def _set_buyer_trust(conn, buyer_token: str, delta: int):

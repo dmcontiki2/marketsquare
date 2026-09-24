@@ -188,6 +188,12 @@ Seller notified (push + in-app) — 48 hour response window
 
 **LM-16** — A no-show complaint by a seller, once upheld, deducts 3 Trust Score points from the buyer.
 
+**LM-16a** — *(24 Sep 2026, David — LM-BUYER-BASE-1)* A buyer with no history starts at a Trust Score of **40**, the same base as sellers, so the first upheld no-show visibly costs 3 points (37).
+
+**LM-16b** — *(24 Sep 2026, David — LM-NOSHOW-1)* The seller reports a no-show from the hub, only on an introduction she accepted, once per introduction, within 30 days, choosing what happened (did not arrive / stopped replying / cancelled last minute / other). The buyer is emailed and has 7 days to answer before ops upholds or dismisses (admin → Alerts).
+
+**LM-16c** — *(24 Sep 2026 — LM-ACCEPT-1)* Accepting a Local Market introduction charges nobody: the seller paid under LM-T1 when the request arrived.
+
 **LM-17** — *(v0.2 — REWRITTEN)* There is no automatic block on intro submission based on buyer Trust Score. Sellers see the score on every intro request (LM-15) and self-select. A buyer whose score has fallen due to no-show complaints will see fewer accepted introductions naturally — sellers are unlikely to accept a 0-score buyer when they're paying 1T per intro and care about completion. The market self-regulates without a hard gate.
 
 **LM-18** — Buyers can see their own Local Market introduction history in the Tuppence Wallet / My Activity screen.

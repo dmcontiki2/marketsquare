@@ -618,7 +618,9 @@ async function loadLiveDash() {
         dl.intros.push({
           id: 'live_' + intro.id,
           beaId: intro.id,
-          name: intro.buyer_email || 'Anonymous buyer',
+          // E2E-HMI-1 (24 Sep 2026): the buyer's EMAIL showed on a request the seller had not yet
+          // accepted - identities are revealed only on acceptance. First name only until then.
+          name: (String(intro.buyer_name || '').trim().split(/\s+/)[0]) || 'A buyer',
           msg: intro.message || 'Introduction request received.',
           time: formatIntroTime(intro.created_at),
           status: 'pending'
