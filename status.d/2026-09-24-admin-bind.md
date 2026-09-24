@@ -1,0 +1,1 @@
+- ADMIN-BIND-1 / RG-0448 (24 Sep): admin user routes and the AI-spend config now require admin credentials — the public app key opened them until this morning; platform AI ceiling lowered $100 → $10 a day (David, 24 Sep).

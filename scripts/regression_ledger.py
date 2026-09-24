@@ -27421,6 +27421,157 @@ def rg_recoup_link_ttl_1():
                           "recipe mints a 7-day token with draft and src attached"))
     return out
 
+@entry("RG-0448", "ADMIN-BIND-1: the admin user list, admin user create/deactivate and the AI-spend "
+                  "config are never reachable with the public app key alone -- admin credentials on all five",
+       LOCKED, fixed_on="2026-09-24",
+       scope="bea_main.py admin_add_user, admin_list_users, admin_deactivate_user, admin_ai_spend_summary "
+             "(GET /admin/ai-spend) and admin_ai_spend_config (PUT). Found 24 Sep 2026 while setting the platform "
+             "AI ceiling: all five were guarded by auth.require_api_key only, and the app key ships in ms.js -- "
+             "PROBED LIVE: GET /admin/users and GET /admin/ai-spend answered 200 with the public key (admin "
+             "account names, the alert e-mail, the ceilings). Same class as DELETE-BIND-1 (RG-0445). Each handler "
+             "now calls _require_admin_or_key(x_admin_token, x_admin_key) before touching the database.")
+def rg_admin_bind_1():
+    b = repo_file("bea_main.py")
+    if b is None:
+        return [(INFO, "bea_main.py not readable here -- NOT EVALUATED")]
+    out = []
+    for fn in ("admin_add_user(", "admin_list_users(", "admin_deactivate_user(",
+               "admin_ai_spend_summary(", "admin_ai_spend_config("):
+        i = b.find("def " + fn)
+        if i < 0:
+            out.append((FAIL, "%s not found" % fn)); continue
+        body = b[i:b.find("\n@app.", i + 10)]
+        head = body.split("database.get_db()", 1)[0]
+        if "_require_admin_or_key(x_admin_token, x_admin_key)" not in head:
+            out.append((FAIL, "%s no longer demands admin credentials before touching the database" % fn))
+    # live: the public key alone must be refused by the APP (401). A Cloudflare 403 is the edge
+    # refusing this client (EDGE-BLIND-1) and proves nothing either way -- say so, never pass on it.
+    key = None
+    try:
+        _m = re.search(r"API_KEY\s*=\s*['\"]([A-Za-z0-9_\-]{8,})['\"]", repo_file("ms.js") or "")
+        key = _m.group(1) if _m else None
+    except Exception:
+        key = None
+    if key:
+        base = os.environ.get("MS_BEA_URL") or BASE
+        hdr = dict(UA); hdr["X-Api-Key"] = key
+        try:
+            urllib.request.urlopen(urllib.request.Request(base.rstrip("/") + "/admin/users", headers=hdr), timeout=TIMEOUT)
+            out.append((FAIL, "LIVE: GET /admin/users still answers 200 with the public app key"))
+        except urllib.error.HTTPError as e:
+            if e.code == 401:
+                pass
+            elif e.code == 403:
+                out.append((INFO, "LIVE probe BLIND: the edge answered 403 to this client -- re-probe from the box"))
+            else:
+                out.append((INFO, "LIVE probe inconclusive (HTTP %s)" % e.code))
+        except Exception as ex:
+            out.append((INFO, "LIVE probe inconclusive (%s)" % type(ex).__name__))
+    return out
+
+
+@entry("RG-0449", "TERMS-HANDOVER-1: the seller sent to the Terms by a refused publish LANDS on the "
+                  "Terms -- the gate that decides that is not switched off by a lookup the client "
+                  "was never allowed to make",
+       LOCKED, fixed_on="2026-09-24",
+       scope="ms.js sobInit()'s returning-seller gate and dashPublish()'s HUB-EULA-1 handover. FOUND "
+             "24 Sep 2026 by walking the whole cold-seller journey on the LIVE site in headless "
+             "Chromium at phone size (scripts/smoke_harness/verify_terms_handover.mjs), as a seller "
+             "with no acceptance on record arriving on a 7-day ?signin=&draft= link -- the journey "
+             "the onboarding goal counts and the one the recoup letter sends a man down. THE "
+             "MEASUREMENT, two requests apart: PUT /listings/399/publish answered 403 (EULA, "
+             "RG-0443 working), and the very next request, GET /users/<him>, answered 401. That "
+             "endpoint carries Depends(auth.require_api_key) on the server and this ONE call sent no "
+             "X-Api-Key, while every neighbouring call in the same file sends it. So `if (uRes.ok)` "
+             "was false for EVERY seller who has ever been handed over: _eulaSigned was never read, "
+             "the note that explains why he is on this screen stayed hidden, and sobGoPhase(3) never "
+             "fired. dashPublish said 'One step first -- please read and accept the Terms' and then "
+             "dropped him on phase 1, a listing preview whose only button says 'Looks good'. Nothing "
+             "on that screen mentions terms; they are two taps further on. WHY IT IS A CLASS AND NOT "
+             "A TYPO: the gate fell through to the UNSAFE side when it could not read the truth. A "
+             "consent gate that cannot see may only fail towards asking, never past it -- so the "
+             "second leg here is that a FAILED lookup still lands him on the Terms whenever the "
+             "server has just refused the publish for want of an acceptance. Sibling of HUB-EULA-1 "
+             "(RG-0395, the dead end this handover was built to remove) one layer on, and of "
+             "RETURN-LANE-1 (RG-0444, run 18): a fix wired to the wrong sender, then a gate wired to "
+             "a call that could not answer. WALKED AFTER THE FIX, live: handover lands on sob-p3, the "
+             "terms render (v1.18, 106k chars), the scroll gate opens, both boxes tick, Go live "
+             "answers 200, and a logged-out reader sees listing_status 'live'.",
+       ref="RG-0395 / HUB-EULA-1 · RG-0443 EULA-PUBLISH-1 (the 403 that starts this) · RG-0400 "
+           "EULA-FORK-2 (the box itself, proven rendering here) · RUL-166 (publishing happens in the "
+           "app, behind the EULA) · scripts/smoke_harness/verify_terms_handover.mjs")
+def rg_terms_handover():
+    """Three source legs on the CONDITIONS, not on the fix marker (run 18's lesson: a comment
+    naming what a fix removed will satisfy a substring test for the thing it removed), plus a
+    LIVE leg on the file the seller's browser is actually served."""
+    msj = repo_file("ms.js")
+    if msj is None:
+        return [(INFO, "NOT EVALUATED - ms.js not readable from here")]
+    out = []
+
+    # (1) the lookup the gate depends on sends the key that endpoint requires.
+    i = msj.find("'/users/' + encodeURIComponent(sobState.email)")
+    if i < 0:
+        out.append((FAIL, "sobInit no longer looks the seller's acceptance up at all -- the gate "
+                          "cannot know whether he has signed"))
+    else:
+        call = msj[i:i + 260]
+        if "X-Api-Key" not in call:
+            out.append((FAIL, "the sobInit /users/ lookup sends no X-Api-Key again -- that endpoint "
+                              "requires one, so it answers 401 and the whole EULA gate is skipped "
+                              "(TERMS-HANDOVER-1)"))
+
+    # (2) the phase-3 jump survives a lookup that fails. Judge the CONDITION line.
+    j = msj.find("sobState._cameFromGuided")
+    cond = None
+    for probe in ("_eulaKnown ? !sobState._eulaSigned : !!sobState._needEula",
+                  "_eulaKnown?!sobState._eulaSigned:!!sobState._needEula"):
+        if probe in msj:
+            cond = probe
+            break
+    if cond is None:
+        out.append((FAIL, "the phase-3 jump is decided only by a lookup that can fail -- a seller "
+                          "whose acceptance cannot be read is routed PAST the terms he was just "
+                          "told to accept (TERMS-HANDOVER-1 leg 2)"))
+    k = msj.find("sobGoPhase(3);" + chr(10) + "      return; // skip rendering draft cards")
+    if k < 0 and "sobGoPhase(3)" not in msj:
+        out.append((FAIL, "nothing in sobInit opens the Terms phase any more"))
+
+    # (3) the handover records WHY it is handing over, before it navigates.
+    d = msj.find("async function dashPublish(")
+    if d < 0:
+        out.append((FAIL, "dashPublish is gone -- the hub's Publish button is the only door a "
+                          "returning cold seller has"))
+    else:
+        blk = msj[d:d + 3000]
+        seed = blk.find("sobState._needEula=true")
+        if seed < 0:
+            seed = blk.find("sobState._needEula = true")
+        nav = blk.find("goTo('seller-onboard')")
+        if seed < 0:
+            out.append((FAIL, "dashPublish's 403 branch no longer records that the acceptance is "
+                              "what is missing, so sobInit cannot fail safe on a lookup error"))
+        elif nav >= 0 and seed > nav:
+            out.append((FAIL, "dashPublish sets _needEula AFTER it navigates -- sobInit reads it "
+                              "before that, so the flag arrives too late to be read"))
+
+    # (4) LIVE: the file the seller's browser is served carries the fixed call.
+    try:
+        served = _get(BASE.rstrip("/") + "/static/ms.js")
+        s = served.find("'/users/' + encodeURIComponent(sobState.email)")
+        if s < 0:
+            out.append((FAIL, "LIVE: the served ms.js does not look the acceptance up at all"))
+        elif "X-Api-Key" not in served[s:s + 260]:
+            out.append((FAIL, "LIVE: the ms.js this site serves still makes the keyless /users/ "
+                              "call -- the fix is on disk and not in the seller's browser"))
+    except ProbeOffline:
+        out.append((INFO, "LIVE leg BLIND: the edge would not serve ms.js to this client"))
+    except Exception as ex:
+        out.append((INFO, "LIVE leg inconclusive (%s)" % type(ex).__name__))
+
+    return out or [(INFO, "the acceptance lookup sends the key it needs, a failed lookup still "
+                          "lands a refused publish on the Terms, and the served ms.js carries both")]
+
 
 if __name__ == "__main__":
     sys.exit(main())

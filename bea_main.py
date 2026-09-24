@@ -19306,7 +19306,10 @@ def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
 
 
 @app.post("/admin/users")
-def admin_add_user(user: _AdminUserCreate, _key: str = Depends(auth.require_api_key)):
+def admin_add_user(user: _AdminUserCreate, _key: str = Depends(auth.require_api_key),
+                   x_admin_token: str = Header(default=None), x_admin_key: str = Header(default=None)):
+    # ADMIN-BIND-1 (24 Sep 2026): the app key is public (it ships in ms.js) -- admin accounts are admin-only.
+    _require_admin_or_key(x_admin_token, x_admin_key)
     """Add a team member with a numeric PIN. Starts with must_change_pin=1."""
     pin = user.pin.strip()
     if not pin.isdigit() or not (4 <= len(pin) <= 8):
@@ -19423,7 +19426,9 @@ def admin_recent_listers(days: int = 30, admin=Depends(_require_admin)):
 
 
 @app.get("/admin/users")
-def admin_list_users(_key: str = Depends(auth.require_api_key)):
+def admin_list_users(_key: str = Depends(auth.require_api_key),
+                     x_admin_token: str = Header(default=None), x_admin_key: str = Header(default=None)):
+    _require_admin_or_key(x_admin_token, x_admin_key)   # ADMIN-BIND-1
     """List all active admin team members. API-key protected."""
     conn = _admin_db()
     try:
@@ -19440,7 +19445,9 @@ def admin_list_users(_key: str = Depends(auth.require_api_key)):
         conn.close()
 
 @app.delete("/admin/users/{user_id}")
-def admin_deactivate_user(user_id: int, _key: str = Depends(auth.require_api_key)):
+def admin_deactivate_user(user_id: int, _key: str = Depends(auth.require_api_key),
+                          x_admin_token: str = Header(default=None), x_admin_key: str = Header(default=None)):
+    _require_admin_or_key(x_admin_token, x_admin_key)   # ADMIN-BIND-1
     """Deactivate a team member (soft delete). API-key protected."""
     conn = _admin_db()
     try:
@@ -19463,7 +19470,9 @@ def admin_deactivate_user(user_id: int, _key: str = Depends(auth.require_api_key
 # These are admin-key protected. David uses these to monitor and intervene.
 
 @app.get("/admin/ai-spend")
-def admin_ai_spend_summary(_key: str = Depends(auth.require_api_key)):
+def admin_ai_spend_summary(_key: str = Depends(auth.require_api_key),
+                           x_admin_token: str = Header(default=None), x_admin_key: str = Header(default=None)):
+    _require_admin_or_key(x_admin_token, x_admin_key)   # ADMIN-BIND-1: alert e-mail and ceilings are not public
     """Return current-month AI spend, income config, % used, and per-endpoint breakdown.
     Red flag status: 'ok' | 'warning' | 'alert' based on threshold.
     """
@@ -19574,7 +19583,10 @@ class AISpendConfigUpdate(BaseModel):
 
 
 @app.put("/admin/ai-spend/config")
-def admin_ai_spend_config(cfg: AISpendConfigUpdate, _key: str = Depends(auth.require_api_key)):
+def admin_ai_spend_config(cfg: AISpendConfigUpdate, _key: str = Depends(auth.require_api_key),
+                          x_admin_token: str = Header(default=None), x_admin_key: str = Header(default=None)):
+    # ADMIN-BIND-1 (24 Sep 2026): with the public app key alone anyone could raise the AI spend ceilings.
+    _require_admin_or_key(x_admin_token, x_admin_key)
     """Update AI spend monitoring config.
     monthly_income_usd  — actual monthly platform revenue (USD). Alert fires when
                           AI spend crosses alert_threshold_pct % of this.
