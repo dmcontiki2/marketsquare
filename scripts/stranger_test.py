@@ -226,6 +226,11 @@ def main():
             if not gate_refused(r):
                 fails.append(("B1", key, "signed-in user got %s" % r.status_code))
 
+    # B0: the deploy's health contract survives the gate byte-for-byte (server_deploy.sh greps '"status":"ok"')
+    r = call("GET", "/health")
+    if '"status":"ok"' not in (r.text or ""):
+        fails.append(("B0", "GET /health", "health body no longer carries '\"status\":\"ok\"' - every deploy would roll back"))
+
     # B2: real admin credentials pass the gate (checked on read-only admin routes only)
     for key, route in keys:
         pol = policy.get(key)

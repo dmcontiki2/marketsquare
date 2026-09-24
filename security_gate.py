@@ -164,8 +164,14 @@ def runtime_keys(app):
     return keys
 
 
+def _dumps(obj):
+    # Byte-for-byte the shape Starlette's JSONResponse renders (compact, UTF-8), so a body the gate
+    # re-serialises reads exactly like one it did not touch (the deploy health check greps '"status":"ok"').
+    return json.dumps(obj, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode("utf-8")
+
+
 async def _send_json(send, status, payload, extra_headers=()):
-    body = json.dumps(payload).encode()
+    body = _dumps(payload)
     headers = [(b"content-type", b"application/json"), (b"content-length", str(len(body)).encode())]
     headers.extend(extra_headers)
     await send({"type": "http.response.start", "status": status, "headers": headers})
@@ -451,7 +457,7 @@ class SecurityGate:
                 scope["query_string"] = urlencode(query).encode("latin-1")
             if rewritten:
                 if json_obj is not None:
-                    body = json.dumps(json_obj).encode("utf-8")
+                    body = _dumps(json_obj)
                 elif form_pairs is not None:
                     body = urlencode(form_pairs).encode("latin-1")
                 _set_header(scope, "content-length", str(len(body)))
@@ -554,7 +560,10 @@ def _scrubbing_send(send, hide, session):
                 return
             raw = b"".join(state["chunks"])
             try:
-                raw = json.dumps(_scrub(json.loads(raw), hide, session)).encode("utf-8")
+                parsed = json.loads(raw)
+                cleaned = _scrub(parsed, hide, session)
+                if cleaned != parsed:            # only a body that really lost a private key is rewritten
+                    raw = _dumps(cleaned)
             except ValueError:
                 pass
             start = dict(state["start"])
