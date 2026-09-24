@@ -15851,7 +15851,7 @@ async function msLoadIntros(email){
     localStorage.setItem('ms_intros_sent', sent.length);
     msRenderIntroList('ms-intros-sent', sent, 'sent');
     msRenderIntroList('ms-intros-recv', recv, 'received');
-    msRenderOpenActions(sent.concat(recv));
+    msRenderOpenActions(recv);   /* BUGSWEEP-24SEP: Accept/Decline belong to intros she RECEIVED, never to her own requests */
     msUpdateStats(0, parseInt(localStorage.getItem('ms_trust_score')||'15'));
   } catch(e){ msRenderIntrosFallback(); }
 }
@@ -16017,12 +16017,31 @@ function msRenderIntroList(elId, items, dir){
     const initials = msInitials(ident);
     const colour = msColorFor(ident);
     const meta = 'Listing #'+(i.listing_id||'–')+' · '+(i.created_at ? new Date(i.created_at).toLocaleDateString('en-ZA',{day:'numeric',month:'short'}) : '–');
+    // RUL-142: the client of an ACCEPTED introduction confirms she hired the seller - that is
+    // what makes a verified client (5/6/7 points to the seller). Once, and only by the client.
+    const hired = (dir==='sent' && i.status==='accepted')
+      ? (i.hired_confirmed_at
+          ? '<span class="ms-chip ms-chip-done" style="margin-left:6px;">Hired ✓</span>'
+          : '<button class="ms-btn-sm primary" style="margin-left:6px;" onclick="msIntroHired('+parseInt(i.id,10)+',this)">I hired them</button>')
+      : '';
     return '<div class="ms-intro-item">'
       +'<div class="ms-intro-avatar '+colour+'">'+initials+'</div>'
       +'<div style="flex:1;min-width:0;"><div class="ms-intro-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+ident+'</div>'
       +'<div class="ms-intro-meta">'+meta+'</div></div>'
-      +chip+'</div>';
+      +chip+hired+'</div>';
   }).join('');
+}
+
+async function msIntroHired(introId, btn){
+  if(!confirm('Confirm that you hired this person after the introduction? It adds to their Trust Score, and you can only say it once.')) return;
+  if(btn){ btn.disabled = true; btn.textContent = 'Saving…'; }
+  try{
+    const r = await fetch(BEA_URL + '/intros/' + introId + '/hired', { method:'POST', credentials:'include', headers:{'X-Api-Key':API_KEY} });
+    const j = await r.json().catch(function(){ return {}; });
+    if(!r.ok){ showToast('Not saved — ' + ((j && typeof j.detail==='string' && j.detail) || ('error ' + r.status))); if(btn){ btn.disabled=false; btn.textContent='I hired them'; } return; }
+    if(btn){ btn.outerHTML = '<span class="ms-chip ms-chip-done" style="margin-left:6px;">Hired ✓</span>'; }
+    showToast('✓ Thank you — that counts as a verified client for them');
+  }catch(e){ showToast('Could not reach the server'); if(btn){ btn.disabled=false; btn.textContent='I hired them'; } }
 }
 
 function msRenderOpenActions(items){

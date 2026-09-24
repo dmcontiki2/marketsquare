@@ -356,6 +356,17 @@
    ]
   },
   {
+   "key": "POST /intros/{intro_id}/hired",
+   "level": "user",
+   "own": [
+    {
+     "name": "intro_id",
+     "in": "path",
+     "resource": "intro_buyer"
+    }
+   ]
+  },
+  {
    "key": "GET /intros",
    "level": "user"
   },

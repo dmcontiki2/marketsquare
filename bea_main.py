@@ -954,6 +954,9 @@ def run_migrations(conn):
         conn.execute("ALTER TABLE intro_requests ADD COLUMN reminder_stage INTEGER NOT NULL DEFAULT 0")
     if "last_reminder_at" not in intro_cols2:
         conn.execute("ALTER TABLE intro_requests ADD COLUMN last_reminder_at TEXT")
+    # RUL-142 (24 Sep 2026): the client's own "I hired them" - what makes a verified client.
+    if "hired_confirmed_at" not in intro_cols2:
+        conn.execute("ALTER TABLE intro_requests ADD COLUMN hired_confirmed_at TEXT")
     conn.execute("""CREATE TABLE IF NOT EXISTS intro_reminder_log (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
         intro_id     INTEGER,
@@ -4739,11 +4742,19 @@ def publish_listing(listing_id: int, email: str, attested: int = 0,
             city_name_str = city_name["name"] if city_name else ""
             glat, glng = _geocode_address(listing_row["street_address"], city_name_str)
             if glat and glng:
-                database.get_db().execute(
-                    "UPDATE listings SET listing_lat=?, listing_lng=? WHERE id=?",
-                    (glat, glng, listing_id)
-                )
-                database.get_db().commit()
+                # BUGSWEEP-24SEP (David's decision): the write used to go to one connection and the
+                # commit to another, so it was never saved. Saved now - but rounded to 0.005 deg
+                # (~500 m), because these coordinates are public and come from a PRIVATE street
+                # address: the map shows the neighbourhood, never the house.
+                glat = round(round(float(glat) / 0.005) * 0.005, 4)
+                glng = round(round(float(glng) / 0.005) * 0.005, 4)
+                _gc = database.get_db()
+                try:
+                    _gc.execute("UPDATE listings SET listing_lat=?, listing_lng=? WHERE id=?",
+                                (glat, glng, listing_id))
+                    _gc.commit()
+                finally:
+                    _gc.close()
 
         city_row = database.get_db().execute(
             "SELECT lat, lng FROM geo_cities WHERE id = (SELECT geo_city_id FROM listings WHERE id = ?)",
@@ -6541,10 +6552,10 @@ def seller_public_credentials(listing_id: int):
         # group carries its CAPPED subtotal and says what was earned above it, exactly
         # as the category group has always done.
         uni_items, _uni_raw = _earned_display(ev["items_u"], _TRUST_SIGNALS)
-        _uni_sub = min(30, _uni_raw)
+        _uni_sub = min(_UNI_CAP, _uni_raw)
         _g_u = {"title": "Identity & profile", "items": uni_items, "subtotal": _uni_sub}
-        if _uni_raw > 30:
-            _g_u["note"] = f"{_uni_raw} pts earned — capped at the identity maximum of 30"
+        if _uni_raw > _UNI_CAP:
+            _g_u["note"] = f"{_uni_raw} pts earned — capped at the identity maximum of {_UNI_CAP}"
         groups.append(_g_u)
 
         trk_items, _trk_raw = _earned_display(ev["items_t"], _TRUST_SIGNALS)
@@ -6609,7 +6620,7 @@ def seller_public_credentials(listing_id: int):
         return {"trust_score": int(total), "computed_total": total,
                 "category_key": cat_key,
                 "groups": groups,
-                "next": "Verified referrals (up to 10 pts) unlock as the referral programme goes live — the path from here toward 100."}
+                "next": "Verified clients (5, 6 and 7 pts) and a second employer confirmation (6 pts) — the path from here toward 100."}
     finally:
         conn.close()
 
@@ -6829,7 +6840,7 @@ def get_user_trust(email: str):
     # headline BIGGER than the evidence, but a list that does not add up is confusing in
     # either direction, so each row is trimmed to what it really contributed and the
     # trimmed ones say why. After this, base + every awarded = the headline, exactly.
-    _CAPS = {"universal": 30, "track_record": 30, "category": 40}
+    _CAPS = {"universal": _UNI_CAP, "track_record": 30, "category": 40}   # RUL-142
     _used = {}
     for _s in signals:
         _g = _s.get("group")
@@ -8302,6 +8313,42 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
         background_tasks.add_task(_fire_webhook, N8N_WEBHOOK_ACCEPT, payload)
     return {"message": "Introduction accepted — 1T charged"}
 
+@app.post("/intros/{intro_id}/hired")
+def intro_hired(intro_id: int, ts_user: str = Cookie(default=None)):
+    """RUL-142: the BUYER of an accepted introduction confirms they actually hired the seller.
+    That is what a 'verified client' is - third-party evidence from a real user who reached her
+    through TrustSquare, never a signup. Only the buyer, signed in as herself, can say it, once."""
+    me = _session_email(ts_user)
+    if not me:
+        raise HTTPException(status_code=401, detail="Please sign in to confirm.")
+    conn = database.get_db()
+    try:
+        row = conn.execute(
+            "SELECT i.buyer_email, i.status, i.hired_confirmed_at, l.seller_email FROM intro_requests i "
+            "JOIN listings l ON l.id = i.listing_id WHERE i.id = ?", (intro_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Introduction not found.")
+        if (row["buyer_email"] or "").strip().lower() != me:
+            raise HTTPException(status_code=403, detail="Only the client of this introduction can confirm it.")
+        if (row["seller_email"] or "").strip().lower() == me:
+            raise HTTPException(status_code=403, detail="You cannot confirm yourself.")
+        if (row["status"] or "").strip().lower() != "accepted":
+            raise HTTPException(status_code=409, detail="You can confirm once the introduction has been accepted.")
+        if row["hired_confirmed_at"]:
+            return {"ok": True, "already": True}
+        conn.execute("UPDATE intro_requests SET hired_confirmed_at = ? WHERE id = ? AND hired_confirmed_at IS NULL",
+                     (datetime.now(timezone.utc).isoformat(), intro_id))
+        conn.commit()
+        seller = (row["seller_email"] or "").strip().lower()
+    finally:
+        conn.close()
+    try:
+        trust_score_breakdown(seller)   # recompute + write through, so her score moves at once
+    except Exception:
+        pass
+    return {"ok": True, "already": False}
+
+
 @app.put("/intros/{intro_id}/decline")
 def decline_intro(intro_id: int, background_tasks: BackgroundTasks,
                   _key: str = Depends(auth.require_api_key),
@@ -9290,7 +9337,7 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
             "• Professional body membership (IEASA, SAPOA, NAR) → 5 pts\n"
             "• Private seller declaration → 0 pts but visible label (no PPRA required for private sellers)\n"
             "• Government ID verified by TrustSquare → 15 Universal pts\n"
-            "• Verified referrals from buyers → up to 10 Universal pts\n"
+            "• Verified clients from buyers → 5/6/7 Universal pts for the 1st/3rd/5th client who confirms they hired the seller\n"
             "\n"
             "COACHING INSTRUCTION FOR PROPERTY:\n"
             "1. Check whether the seller is a registered estate agent or a private seller — tailor advice accordingly.\n"
@@ -9333,7 +9380,7 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
             "• Online platform proficiency declaration → 1 pt (online tutors: Zoom, Google Classroom, etc.)\n"
             "• Well-structured CV (verifiable dates, no gaps) → 2 pts\n"
             "• Government ID verified by TrustSquare → 15 Universal pts\n"
-            "• Verified referrals from students or parents → up to 10 Universal pts\n"
+            "• Verified clients from students or parents → 5/6/7 Universal pts for the 1st/3rd/5th client who confirms they hired the seller\n"
             "\n"
             "COACHING INSTRUCTION FOR TUTORS:\n"
             "1. ALWAYS check the 'subject' field first. Tailor every credential suggestion and example\n"
@@ -9411,7 +9458,7 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
             "• Professional appraisal or valuation → 5 pts — from recognised appraiser\n"
             "• Collector association membership (SANA, Philatelic Foundation etc.) → 3 pts\n"
             "• Government ID verified by TrustSquare → 15 Universal pts\n"
-            "• Verified referrals → up to 10 Universal pts\n"
+            "• Verified clients → 5/6/7 Universal pts for the 1st/3rd/5th client who confirms they hired the seller\n"
             "\n"
             "COACHING INSTRUCTION FOR COLLECTORS:\n"
             "1. Read the listing to determine the collecting domain (cards, coins, art, wine, stamps, memorabilia etc.) and tailor all suggestions to that domain.\n"
@@ -12275,15 +12322,21 @@ TRUST_TIERS = [
     (90, 100, "Highly Trusted", "gold"),
 ]
 
+# RUL-142 (David, 18 Sep 2026; built 24 Sep): the universal cap rises from 30 to 40 so rising
+# verified-client points (5/6/7) and a second employer confirmation (6) do not squeeze her photo,
+# ID and experience to nothing. ONE constant, read by every surface that caps the group.
+_UNI_CAP = 40
+
+
 def _trust_math(uni_pts, track_pts, cat_pts, penalty_pts, lm=False):
-    """CANON — docs/TRUST_SCORE_CRITERIA.md Amendment v1.3 + Addendum 2026-07-21 §2:
-        score = max(0, min(100, 40 + Universal(<=30) + Track(<=30) + Category) + penalties)
+    """CANON — docs/TRUST_SCORE_CRITERIA.md Amendment v1.3 + Addendum 2026-07-21 §2, RUL-142:
+        score = max(0, min(100, 40 + Universal(<=40) + Track(<=30) + Category) + penalties)
     Category caps at 40 for standard categories; the LOCAL MARKET credential group is
     UNCAPPED (raw totals of 140-178 exist) — only the 100 total caps it (Bee Lady = 100).
     THE ONLY PLACE THIS FORMULA MAY LIVE (base-40 bug + LM cap drift, 28 Jul 2026).
     Guarded by test_trust_base40.py -> predeploy_check.py."""
     cat = cat_pts if lm else min(40, cat_pts)
-    return max(0, min(100, 40 + min(30, uni_pts) + min(30, track_pts) + cat) + penalty_pts)
+    return max(0, min(100, 40 + min(_UNI_CAP, uni_pts) + min(30, track_pts) + cat) + penalty_pts)
 
 
 def _trust_tier(score: int) -> dict:
@@ -12323,7 +12376,7 @@ ID_UPLOAD_INTERIM_POINTS = max(0, min(15, int(os.environ.get("ID_UPLOAD_INTERIM_
 ID_UPLOAD_INTERIM_NOTE = "Waiting confirmation to add an extra %d points." % (15 - ID_UPLOAD_INTERIM_POINTS)
 
 _TRUST_SIGNALS = {
-    # ── Group 1 · Universal (max 30) ─────────────────────────
+    # ── Group 1 · Universal (max 40 — RUL-142) ───────────────
     "universal.id_verified": {
         "name": "Government-issued ID verified",
         "points": 15, "max": 15,
@@ -12359,22 +12412,33 @@ _TRUST_SIGNALS = {
         "how_to_earn": "Send your link to someone you have worked for - they confirm in one tap.",
         "evidence_required": False,   # recorded when the employer opens the link and confirms
     },
+    # RUL-142: a SECOND employer confirmation stacks at 6 - the one signal this market can stack.
+    # A different link (its own nonce) from a different person; the same link tapped twice never counts.
+    "universal.employer_confirmed_2": {
+        "name": "A second previous employer confirmed you",
+        "points": 6, "max": 6,
+        "how_to_earn": "Send a new link to another person you have worked for - one tap, no account.",
+        "evidence_required": False,   # recorded when the second employer confirms
+    },
+    # RUL-142: rising points for VERIFIED CLIENTS - somebody who was introduced to her through
+    # TrustSquare, and then confirmed that they actually HIRED her. Never paid for a signup.
+    # (Signal ids keep their old 'referral' names so stored rows and ledgers stay valid.)
     "universal.referral_1": {
-        "name": "1st verified referral",
+        "name": "1st verified client",
         "points": 5, "max": 5,
-        "how_to_earn": "Share your referral link with a client.",
+        "how_to_earn": "A client introduced through TrustSquare taps 'I hired them' after the job.",
         "evidence_required": False,
     },
     "universal.referral_3": {
-        "name": "3rd verified referral",
-        "points": 3, "max": 3,
-        "how_to_earn": "2 more verified referrals after the first.",
+        "name": "3rd verified client",
+        "points": 6, "max": 6,
+        "how_to_earn": "Three different clients have confirmed they hired you.",
         "evidence_required": False,
     },
     "universal.referral_5plus": {
-        "name": "5th+ verified referral",
-        "points": 2, "max": 2,
-        "how_to_earn": "Cap: 10 pts total from referrals.",
+        "name": "5th+ verified client",
+        "points": 7, "max": 7,
+        "how_to_earn": "Five or more different clients have confirmed they hired you.",
         "evidence_required": False,
     },
 
@@ -12701,9 +12765,21 @@ def _compute_universal_track_status(conn, email: str) -> dict:
     out["universal.profile_photo"] = ("earned" if (user_row and user_row["photo_url"])
                                       else "missing")
 
-    # Referrals — placeholder for V1: not yet tracked. Always missing.
-    for k in ("universal.referral_1", "universal.referral_3", "universal.referral_5plus"):
-        out[k] = "missing"
+    # RUL-142 (built 24 Sep 2026): verified CLIENTS - distinct buyers whose introduction on her
+    # listing was accepted AND who confirmed afterwards that they hired her (POST /intros/{id}/hired).
+    try:
+        _vc = conn.execute(
+            """SELECT COUNT(DISTINCT LOWER(i.buyer_email)) AS n FROM intro_requests i
+               JOIN listings l ON l.id = i.listing_id
+               WHERE LOWER(l.seller_email) = LOWER(?) AND i.status = 'accepted'
+                 AND i.hired_confirmed_at IS NOT NULL
+                 AND LOWER(COALESCE(i.buyer_email,'')) != LOWER(?)""",
+            (email, email)).fetchone()["n"] or 0
+    except Exception:
+        _vc = 0   # column not migrated yet on this database
+    out["universal.referral_1"]     = "earned" if _vc >= 1 else "missing"
+    out["universal.referral_3"]     = "earned" if _vc >= 3 else "missing"
+    out["universal.referral_5plus"] = "earned" if _vc >= 5 else "missing"
 
     # Successful intros (accepted)
     intro_count = conn.execute(
@@ -13115,7 +13191,7 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
     items_u, items_t, items_c = ev["items_u"], ev["items_t"], ev["items_c"]
     _raw_u, _raw_t, _raw_c = ev["raw_u"], ev["raw_t"], ev["raw_c"]
     _is_lm_score = ev["is_lm"]
-    earned_u = min(30, _raw_u)
+    earned_u = min(_UNI_CAP, _raw_u)   # RUL-142
     earned_t = min(30, _raw_t)
     # LM-CAP FIX (28 Jul 2026, David's ruling "according to the rules"): the LM
     # credential group is uncapped per the criteria doc.
@@ -13195,7 +13271,7 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
         "next_tier": tier["next_tier"],
         "category_key": cat_key,
         "groups": {
-            "universal":    {"earned": earned_u, "max": 30, "items": items_u},
+            "universal":    {"earned": earned_u, "max": _UNI_CAP, "items": items_u},
             "track_record": {"earned": earned_t, "max": 30, "items": items_t},
             "category":     {"earned": earned_c, "max": 40, "items": items_c, "label": cat_key or "—"},
         },
@@ -13303,15 +13379,24 @@ def trust_employer_link(email: str):
     conn.close()
     if not row:
         raise HTTPException(status_code=404, detail="No TrustSquare account for that address.")
+    import secrets as _ek
     token = _pyjwt.encode(
         {"email": email, "purpose": "employer_confirm",
+         "nonce": _ek.token_urlsafe(9),          # RUL-142: one link = one confirmer
          "exp": datetime.now(timezone.utc) + timedelta(days=30),
          "iat": datetime.now(timezone.utc)},
         _JWT_SECRET, algorithm=_JWT_ALGO)
+    _c = database.get_db()
+    try:
+        _first = _c.execute("SELECT status FROM user_credentials WHERE LOWER(email)=? AND "
+                            "signal_id='universal.employer_confirmed'", (email,)).fetchone()
+    finally:
+        _c.close()
+    _pts = 6 if (_first and _first["status"] == "earned") else 12
     return {"url": APP_URL + "/confirm/" + token,
             "name": row["name"] or email.split("@")[0],
             "expires_days": 30,
-            "points": 12}
+            "points": _pts}
 
 
 @app.get("/trust/employer-who")
@@ -13327,12 +13412,18 @@ def trust_employer_who(token: str):
     conn = database.get_db()
     row = conn.execute("SELECT name FROM users WHERE LOWER(email) = ?",
                        (claims["email"],)).fetchone()
-    done = conn.execute(
-        "SELECT status FROM user_credentials WHERE LOWER(email) = ? AND signal_id = ?",
-        (claims["email"], "universal.employer_confirmed")).fetchone()
+    rows = conn.execute(
+        "SELECT signal_id, status, verified_by FROM user_credentials WHERE LOWER(email) = ? AND signal_id IN "
+        "('universal.employer_confirmed', 'universal.employer_confirmed_2')", (claims["email"],)).fetchall()
     conn.close()
     _nm = (row["name"] if row and row["name"] else claims["email"].split("@")[0])
-    return {"name": _nm.split(" ")[0], "already_confirmed": bool(done and done["status"] == "earned")}
+    # RUL-142: THIS link is spent once it earned a confirmation; the seller is 'done' once both are earned.
+    _nonce = claims.get("nonce")
+    _earned = [r for r in rows if r["status"] == "earned"]
+    _used = bool(_nonce) and any((r["verified_by"] or "") == "employer-link:" + _nonce for r in _earned)
+    _both = len(_earned) >= 2
+    _legacy_done = (not _nonce) and any(r["signal_id"] == "universal.employer_confirmed" for r in _earned)
+    return {"name": _nm.split(" ")[0], "already_confirmed": bool(_used or _both or _legacy_done)}
 
 
 @app.post("/trust/employer-confirm")
@@ -13359,20 +13450,39 @@ def trust_employer_confirm(req: EmployerConfirmReq, ts_user: str = Cookie(defaul
     conn = database.get_db()
     # SEC-GATE-1 (24 Sep 2026): a replayed link must not re-earn a confirmation ops has rejected.
     _prev = conn.execute(
-        "SELECT status FROM user_credentials WHERE email = ? AND signal_id = 'universal.employer_confirmed'",
+        "SELECT status, verified_by FROM user_credentials WHERE email = ? AND signal_id = 'universal.employer_confirmed'",
         (email,)).fetchone()
     if _prev and _prev["status"] == "rejected":
         conn.close()
         raise HTTPException(status_code=409,
                             detail="This confirmation has already been reviewed and cannot be applied again.")
+    # RUL-142: each link carries its own nonce. The FIRST earned confirmation is worth 12; a
+    # confirmation through a DIFFERENT link (a second person) stacks as employer_confirmed_2 at 6.
+    # The same link tapped again, or a legacy link without a nonce, never stacks.
+    _nonce = claims.get("nonce")
+    _by = "employer-link:" + _nonce if _nonce else "employer-link"
+    _signal, _pts = "universal.employer_confirmed", 12
+    if _prev and _prev["status"] == "earned":
+        _second = conn.execute(
+            "SELECT status, verified_by FROM user_credentials WHERE email = ? AND signal_id = 'universal.employer_confirmed_2'",
+            (email,)).fetchone()
+        if (not _nonce) or (_prev["verified_by"] or "") == _by or (_second and _second["status"] == "earned"):
+            conn.close()
+            return {"ok": True, "points_awarded": 0, "already": True,
+                    "new_score": None}
+        if _second and _second["status"] == "rejected":
+            conn.close()
+            raise HTTPException(status_code=409,
+                                detail="This confirmation has already been reviewed and cannot be applied again.")
+        _signal, _pts = "universal.employer_confirmed_2", 6
     conn.execute(
         """INSERT INTO user_credentials (email, signal_id, status, points, notes,
                                          verified_at, verified_by, listing_category)
-           VALUES (?, 'universal.employer_confirmed', 'earned', 12, ?, ?, 'employer-link', NULL)
+           VALUES (?, ?, 'earned', ?, ?, ?, ?, NULL)
            ON CONFLICT(email, signal_id) DO UPDATE SET
-               status='earned', points=12, notes=excluded.notes,
-               verified_at=excluded.verified_at, verified_by='employer-link'""",
-        (email, note, datetime.now(timezone.utc).isoformat()))
+               status='earned', points=excluded.points, notes=excluded.notes,
+               verified_at=excluded.verified_at, verified_by=excluded.verified_by""",
+        (email, _signal, _pts, note, datetime.now(timezone.utc).isoformat(), _by))
     conn.commit()
     conn.close()
     try:
@@ -13380,7 +13490,7 @@ def trust_employer_confirm(req: EmployerConfirmReq, ts_user: str = Cookie(defaul
         _new = int(fresh.get("score") or 0)
     except Exception:
         _new = 0
-    return {"ok": True, "points_awarded": 12, "new_score": _new}
+    return {"ok": True, "points_awarded": _pts, "new_score": _new}
 
 
 class ExperienceReq(BaseModel):
@@ -13530,8 +13640,7 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
             # not move their score is worse than not asking at all, so the coach stays quiet
             # about them until referrals are really tracked. They keep their seats on the
             # ladder; they are simply not offered as a step.
-            if sig_id.startswith("universal.referral"):
-                continue
+            # RUL-142 (24 Sep): verified clients ARE earnable now, so they are offered again.
             universal_missing.append({
                 "id": sig_id, "name": sig["name"], "points": sig["points"], "how": sig["how_to_earn"]
             })
@@ -13577,6 +13686,7 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
         if sid == "universal.profile_complete":       return 1   # today, nothing needed
         if sid == "universal.id_verified":            return 2   # today, it is in their pocket
         if sid == "universal.employer_confirmed":     return 3   # today, one message to send
+        if sid == "universal.employer_confirmed_2":   return 3   # the same, to a second person
         if sid.startswith("universal.referral"):      return 4   # needs a completed sale
         if sid.startswith("track_record."):           return 5   # arrives by using the app
         return 6                                                 # a professional credential
@@ -13690,6 +13800,7 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
         "universal.profile_photo":      "photo",
         "universal.experience_stated":  "experience",
         "universal.employer_confirmed": "employer_link",
+        "universal.employer_confirmed_2": "employer_link",   # RUL-142
     }
     # Match each written step back to the signal it came from by POINTS, not by position:
     # the model drops, merges and re-words steps, and a step matched by index alone gets the
@@ -13738,6 +13849,14 @@ _SIGNAL_HOWTO = {
                                        "Tap the button and type a number of years — that is the whole step"),
     "universal.employer_confirmed":   ("Ask someone you have worked for to confirm you",
                                        "Tap the button, send the link by WhatsApp — they tap Yes, and they can open their own free TrustSquare while they are there"),
+    "universal.employer_confirmed_2": ("Ask a second person you have worked for to confirm you",
+                                       "Tap the button for a NEW link and send it to someone else you have worked for — one tap, no account"),
+    "universal.referral_1":           ("Get your first verified client",
+                                       "After a job that came through a TrustSquare introduction, ask the client to tap 'I hired them' under My Space → Intros"),
+    "universal.referral_3":           ("Get three verified clients",
+                                       "Each different client who confirms they hired you counts — the third is worth more than the first"),
+    "universal.referral_5plus":       ("Get five verified clients",
+                                       "Five or more different clients who confirmed they hired you"),
     "universal.email_verified":       ("Verify your email address",
                                        "Automatically earned when you accept the TrustSquare Terms of Service"),
     "universal.profile_complete":     ("Complete your seller profile",

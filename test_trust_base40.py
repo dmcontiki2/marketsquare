@@ -28,7 +28,7 @@ def _func_body(src, header):
 # ---- the canon formula, as published (agency email: "40 + 45 = 85") ---------
 def canon_score(uni, track, cat, penalties, lm=False):
     c = cat if lm else min(40, cat)
-    return max(0, min(100, 40 + min(30, uni) + min(30, track) + c) + penalties)
+    return max(0, min(100, 40 + min(40, uni) + min(30, track) + c) + penalties)   # RUL-142: universal cap 40
 
 def test_published_examples_hold():
     # The agency outreach email promises: base 40 + 45 credentials = 85.
@@ -38,6 +38,9 @@ def test_published_examples_hold():
     # Floor and cap.
     assert canon_score(0, 0, 0, -60) == 0
     assert canon_score(30, 30, 40, 0) == 100
+    # RUL-142: an ordinary worker with no certificate reaches 40 + 38 (ID 15, photo 5, profile 5,
+    # experience 3, employer 12 - capped nowhere now) instead of stopping at 70.
+    assert canon_score(40, 0, 0, 0) == 80 and canon_score(46, 0, 0, 0) == 80
     # LM (Addendum 2026-07-21 §2): credential group UNCAPPED, total caps at 100.
     # Bee Lady (id 273): full-catalog evidence must reach 100, not the capped 85.
     assert canon_score(5, 0, 60, 0, lm=True) == 100   # 40+5+60=105 -> caps at 100
@@ -52,6 +55,8 @@ def test_scorer_has_base40():
     assert re.search(r"cat_pts if lm else min\(40,\s*cat_pts\)", hb), \
         "LM credential group must be uncapped in the shared formula (Addendum 2026-07-21)"
     assert re.search(r"max\(0,\s*min\(100,\s*40\s*\+", hb), "formula lost base-40/cap/penalty order"
+    assert "min(_UNI_CAP, uni_pts)" in hb and re.search(r"^_UNI_CAP = 40$", src, re.M), \
+        "RUL-142: the universal group caps at 40 through the one constant"
     body = _func_body(src, "def trust_score_breakdown(")
     # TRUST-ONE-SET-1 (15 Sep 2026): the scorer now reaches the formula through the one
     # evidence builder, so the guard follows it there instead of looking for the call

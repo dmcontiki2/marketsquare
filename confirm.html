@@ -171,8 +171,9 @@
           document.getElementById('baderr').textContent = (res.j && res.j.detail) || 'That did not go through.';
           show('bad'); return;
         }
-        document.getElementById('donetxt').textContent =
-          'Their trust score went up by ' + (res.j.points_awarded || 12) + ' points, and your name is not on it.';
+        document.getElementById('donetxt').textContent = res.j.already
+          ? 'This was already confirmed, so there is nothing more to do.'   /* RUL-142: one link = one confirmer */
+          : 'Their trust score went up by ' + (res.j.points_awarded || 12) + ' points, and your name is not on it.';
         show('done');
       })
       .catch(function(){ b.disabled=false; b.textContent='Yes, they worked for me'; });
