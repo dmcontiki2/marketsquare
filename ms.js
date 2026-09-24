@@ -328,7 +328,9 @@ async function apiPost(path, data) {
 
 async function apiPut(path) {
   try {
-    const res = await fetch(BEA_URL + path, { method: 'PUT' });
+    // BUGSWEEP-24SEP: the intro accept/decline routes require X-Api-Key; without it every
+    // dashboard Accept was refused (401) while the screen said "Accepted".
+    const res = await fetch(BEA_URL + path, { method: 'PUT', credentials: 'include', headers: {'X-Api-Key': API_KEY} });
     if (!res.ok) throw new Error('API error ' + res.status);
     return await res.json();
   } catch(e) {
@@ -565,7 +567,9 @@ async function loadLiveDash() {
     const intros = await apiGet('/intros');
     if (!intros || !intros.length) return;
 
-    const pending = intros.filter(i => i.status === 'pending');
+    const _me = String(sellerEmail || '').toLowerCase();
+    // BUGSWEEP-24SEP: /intros also returns requests this person made AS A BUYER.
+    const pending = intros.filter(i => i.status === 'pending' && String(i.buyer_email || '').toLowerCase() !== _me);
     if (!pending.length) return;
 
     pending.forEach(intro => {
@@ -4972,7 +4976,7 @@ function msLangView(l){
   var _e=function(t){ return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
   if(showX){ v.title = _e(x.title); v.desc = x.desc ? _e(x.desc) : l.desc; }   /* AUDIT-S4: AI text is escaped */
   v.chip = ' <span class="ts-lchip" title="This advert is in '+msLangCode(code)+'">'+msLangCode(code)+'</span>';
-  if(x) v.flip = '<button class="ts-lflip" onclick="_msLangFlip[\''+l.id+'\']=!_msLangFlip[\''+l.id+'\'];window._msRerender=true;openDetail(\''+l.id+'\')">'
+  if(x) v.flip = '<button class="ts-lflip" onclick="_msLangFlip[\''+l.id+'\']=!_msLangFlip[\''+l.id+'\'];window._msRerenderFlag=true;openDetail(\''+l.id+'\')">'
     + 'Also in ' + msLangCode(showX ? orig : x.lang) + ' \u2014 show it</button>';
   return v;
 }
@@ -5005,7 +5009,7 @@ function openDetail(id){
   }
   /* AUDIT-L5: a language re-render of the SAME advert is not a new visit -- no extra view is
      counted and Back still returns to where she came from. */
-  const _rerender = !!window._msRerender; window._msRerender = false;
+  const _rerender = !!window._msRerenderFlag; window._msRerenderFlag = false;   /* BUGSWEEP-24SEP: was window._msRerender, which overwrote the search re-render FUNCTION */
   if(!_rerender) msTrackView(l);
   const _lv = msLangView(l);   /* LANG-LAYER-1: which words of the advert this reader sees */
   window._msLastDetail = l.id;
@@ -5949,21 +5953,39 @@ function submitIntro(){
     lmSubmitIntro(lmId, name, email, msg);
   } else if(pendingIntroId!==null){
     const l=findListing(pendingIntroId),isCommit=catCfg(l).model==='commit';
-    if(isCommit){l.paused=true;}else{l.queueCount=(l.queueCount||0)+1;}
-    addTx(isCommit?'Introduction request sent':'Joined seller queue',l.title,'pending',false);
-    showToast(isCommit?'✓ Request sent · listing paused':'✓ Joined queue · waiting for seller');
-    renderGrid();
+    const _markSent=function(){
+      if(isCommit){l.paused=true;}else{l.queueCount=(l.queueCount||0)+1;}
+      addTx(isCommit?'Introduction request sent':'Joined seller queue',l.title,'pending',false);
+      showToast(isCommit?'✓ Request sent · listing paused':'✓ Joined queue · waiting for seller');
+      renderGrid();
+    };
     // Post to BEA if listing is a live listing
     if(BEA_ENABLED && l.isLive) {
       const beaId = parseInt(String(l.id).replace('bea_',''));
       // ID-NPR-5 (RUL-039): tell the buyer if this seller is unverified. Advisory
       // only — declining is the buyer stepping back, never us refusing them.
+      // BUGSWEEP-24SEP: the seller's email never reaches the browser, so the gate is asked by
+      // LISTING id; and the toast now reports what the server actually did.
       (async () => {
-        const ok = await msUnverifiedGate(l.sellerEmail || l.seller_email || '', l.category);
+        const ok = await msUnverifiedGate('', l.category, beaId);
         if(!ok){ showToast('Introduction not sent.'); return; }
-        apiPost('/intros', { listing_id: beaId, buyer_email: email, buyer_name: name,
-                             message: msg || null, unverified_ack: true });
+        try{
+          const r = await fetch(BEA_URL + '/intros', { method:'POST', credentials:'include',
+            headers:{'Content-Type':'application/json','X-Api-Key':API_KEY},
+            body: JSON.stringify({ listing_id: beaId, buyer_email: email, buyer_name: name,
+                                   message: msg || null, unverified_ack: true }) });
+          if(!r.ok){
+            const j = await r.json().catch(function(){ return {}; });
+            const why = (j && j.detail) ? (typeof j.detail==='string' ? j.detail : 'please try again')
+                      : (r.status===401 ? 'please sign in first' : r.status===402 ? 'not enough Tuppence' : 'please try again');
+            showToast('Introduction not sent — ' + why, 5000);
+            return;
+          }
+          _markSent();
+        }catch(e){ showToast('Could not reach the server — introduction not sent.'); }
       })();
+    } else {
+      _markSent();
     }
   }
 }
@@ -10173,8 +10195,8 @@ function msKeepLive(id){
     body: JSON.stringify({email: email})
   }).then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(){
-      var dl = dashState.listings.find(function(x){ return x.id === id; });
-      if(dl) dl.listing_status = 'live';
+      var dl = dashState.listings.find(function(x){ return x.beaListingId === id || x.id === id; });
+      if(dl){ dl.listing_status = 'live'; if(dl._raw) dl._raw.listing_status = 'live'; }
       renderDash();
     })
     .catch(function(e){ console.warn('keep-live failed', e); });
@@ -10189,7 +10211,7 @@ function renderDashCard(dl){
   let statusBadge = (_ls==='live' && pendingIntros.length>0)
     ? `<span class="ml-status st-queue">👥 ${pendingIntros.length} request${pendingIntros.length>1?'s':''} waiting</span>`
     : sbLifecycleChip(_ls);
-  if(_ls==='faded') statusBadge += ` <button class="mla-btn accent" onclick="msKeepLive(${dl.id})" style="padding:5px 12px;font-size:11px;border-radius:8px;">\u21bb Keep live</button>`;
+  if(_ls==='faded') statusBadge += ` <button class="mla-btn accent" onclick="msKeepLive(${dl.beaListingId})" style="padding:5px 12px;font-size:11px;border-radius:8px;">\u21bb Keep live</button>`;
 
   const introsHtml = pendingIntros.map(intro => `
     <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-top:8px;">
@@ -10200,7 +10222,7 @@ function renderDashCard(dl){
       <div style="font-size:12px;color:var(--text-2);margin-bottom:10px;line-height:1.5;font-style:italic;">"${intro.msg}"</div>
       <div style="display:flex;gap:8px;">
         <button class="mla-btn accent" style="flex:1;padding:7px 0;text-align:center;"
-          onclick="handleIntro('${dl.id}','${intro.id}','accept')">✓ Accept · 1T</button>
+          onclick="handleIntro('${dl.id}','${intro.id}','accept')">✓ Accept</button>
         <button class="mla-btn danger" style="flex:1;padding:7px 0;text-align:center;"
           onclick="handleIntro('${dl.id}','${intro.id}','decline')">✕ Decline</button>
       </div>
@@ -10334,27 +10356,26 @@ async function handleIntro(dlId, introId, action){
   const intro = dl ? dl.intros.find(i=>i.id===introId) : null;
   if(!intro) return;
   if(action==='accept'){
-    if(tuppence<1){ showToast('Not enough Tuppence — top up first'); return; }
-    tuppence -= 1;
-    updateTuppenceUI();
-    addTx(`Intro accepted · ${intro.name}`, dl.title, '−1T', false);
+    // BUGSWEEP-24SEP: the server charges the BUYER on accept (accept_intro), never the seller,
+    // so no seller balance check or deduction here; and the screen changes only on success.
+    if(BEA_ENABLED && intro.beaId){
+      const ok = await apiPut('/intros/'+intro.beaId+'/accept');
+      if(!ok){ showToast('Could not accept — please sign in and try again.'); return; }
+    }
+    addTx(`Intro accepted · ${intro.name}`, dl.title, 'accepted', false);
     intro.status = 'accepted';
     dl.status = 'active';
     const listing = LISTINGS.find(l=>l.title===dl.title);
     if(listing) acceptedIntros.add(`${listing.sellerIdx}-${listing.id}`);
-    showToast(`✓ Accepted — ${intro.name}'s contact revealed. 1T deducted.`);
-    // Post to BEA if live intro
-    if(BEA_ENABLED && intro.beaId){
-      await apiPut('/intros/'+intro.beaId+'/accept');
-    }
+    showToast(`✓ Accepted — ${intro.name}'s contact revealed.`);
   } else {
+    if(BEA_ENABLED && intro.beaId){
+      const ok = await apiPut('/intros/'+intro.beaId+'/decline');
+      if(!ok){ showToast('Could not decline — please sign in and try again.'); return; }
+    }
     intro.status = 'declined';
     dl.status = 'active';
     showToast(`Declined — ${intro.name} notified. Listing reactivated.`);
-    // Post to BEA if live intro
-    if(BEA_ENABLED && intro.beaId){
-      await apiPut('/intros/'+intro.beaId+'/decline');
-    }
   }
   renderDash();
   updateTuppenceUI();
@@ -10936,9 +10957,15 @@ async function elAddPhoto(event) {
         photoPayload.thumb_url  = _elPhotoUrls[0];
         photoPayload.medium_url = _elPhotoUrls[0];
       }
-      await fetch(BEA_URL + '/listings/' + elCurrentId + '?email=' + encodeURIComponent(sellerEmail),
-        { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      const _sr = await fetch(BEA_URL + '/listings/' + elCurrentId + '?email=' + encodeURIComponent(sellerEmail),
+        { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(photoPayload) });
+      if (!_sr.ok) {   // BUGSWEEP-24SEP: a refused save used to show "added and saved"
+        const _sj = await _sr.json().catch(() => ({}));
+        showToast('Photo added but NOT saved — ' + ((_sj && typeof _sj.detail==='string' && _sj.detail) || ('error ' + _sr.status)), 5000);
+        event.target.value = '';
+        return;
+      }
     }
     showToast('✅ Photo added and saved');
   } catch(e) { showToast('Photo upload failed: ' + e.message); }
@@ -11584,7 +11611,7 @@ async function elRunRewrite() {
     const data = await r.json();
     // Pre-fill title and description fields
     const titleEl = document.getElementById('elf-title');
-    const descEl  = document.getElementById('elf-description');
+    const descEl  = document.getElementById('elf-desc');   /* BUGSWEEP-24SEP: the field is elf-desc */
     if (titleEl && data.new_title) titleEl.value = data.new_title;
     if (descEl  && data.new_description) descEl.value = data.new_description;
     if (out) out.innerHTML = `
@@ -11744,8 +11771,7 @@ function openLMCreateFromWizard() {
     showToast('Please sign in to create a Local Market listing');
     // Reset category selection so they can try again after login
     pubCat = null;
-    document.getElementById('pub-b-next').style.opacity = '.4';
-    document.getElementById('pub-b-next').style.pointerEvents = 'none';
+    { const _pb = document.getElementById('pub-b-next'); if (_pb) { _pb.style.opacity = '.4'; _pb.style.pointerEvents = 'none'; } }
     document.querySelectorAll('.cat-big-tile').forEach(t => t.classList.remove('selected'));
     setTimeout(() => openSellNav(), 800);
     return;
@@ -11782,8 +11808,7 @@ function feaLmCloseCreate() {
   document.getElementById('fea-lm-create-modal').style.display = 'none';
   // Reset wizard category so seller can pick again
   pubCat = null;
-  document.getElementById('pub-b-next').style.opacity = '.4';
-  document.getElementById('pub-b-next').style.pointerEvents = 'none';
+  { const _pb = document.getElementById('pub-b-next'); if (_pb) { _pb.style.opacity = '.4'; _pb.style.pointerEvents = 'none'; } }
   document.querySelectorAll('.cat-big-tile').forEach(t => t.classList.remove('selected'));
 }
 
@@ -11909,7 +11934,7 @@ async function feaLmSubmit() {
 
 function _feaLmShowSuccess(title, listingId) {
   // Reuse the pub-claim success screen with LM-specific copy
-  document.getElementById('claim-title').textContent = `"${title}" is live on Local Market.`;
+  const _ct = document.getElementById('claim-title'); if (_ct) _ct.textContent = `"${title}" is live on Local Market.`;
   const claimSub = document.getElementById('claim-sub');
   if (claimSub) claimSub.textContent = 'Your listing is live. Buyers in your area can find it now.';
   const claimId = document.getElementById('claim-listing-id');
@@ -13805,7 +13830,7 @@ let _bzPairs = [];
 async function buzzRender(){
   const box = document.getElementById('bz-content');
   if(!box) return;
-  const email = bzEmail();
+  let email = bzEmail();   /* BUGSWEEP-24SEP: let, the server's identity replaces it below */
   if(!email){
     box.innerHTML = '<div class="ms-card"><div class="bz-lede">Sign in to use Buzz. It only ever '
       + 'works between two people who are already connected.</div></div>';
@@ -14936,10 +14961,16 @@ async function openLMSellerProfile() {
   const docSection = document.getElementById('lm-cv-docs-section');
   if (!docSection) return;
   try {
-    const sellerEmail = c.seller_email || '';
-    // Use public endpoint — no API key needed, returns only post_intro docs
-    const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(sellerEmail) + '/documents/public');
-    const docs = r.ok ? await r.json() : [];
+    // BUGSWEEP-24SEP: documents show after an ACCEPTED intro, so find the buyer's own accepted
+    // intro on this listing; the server finds the seller from it (the email never reaches us).
+    let docs = [];
+    const ir = await fetch(BEA_URL + '/intros?status=accepted', { credentials: 'include' });
+    const mine = ir.ok ? await ir.json() : [];
+    const _acc = (Array.isArray(mine) ? mine : []).find(i => String(i.listing_id) === String(c.id).replace('bea_', ''));
+    if (_acc) {
+      const r = await fetch(BEA_URL + '/users/_/documents/public?intro_id=' + encodeURIComponent(_acc.id), { credentials: 'include' });
+      docs = r.ok ? await r.json() : [];
+    }
     const DOC_ICONS = {
       id_doc:'🪪', certificate:'🎓', training:'📚', membership:'🏛',
       professional_role:'⭐', guide:'📖', recipe:'🍯', presentation:'📊', other:'📎'
@@ -14999,6 +15030,7 @@ async function lmSubmitIntro(listingId, name, email, message) {
     if (resp.status === 410) { showToast('This listing has been suspended and is no longer accepting introductions.'); return; }
     if (resp.status === 402) { showToast('The seller does not have enough Tuppence right now. Please try again later.'); return; }
     if (resp.status === 429) { showToast('You already requested an introduction on this listing recently. Please wait 7 days.'); return; }
+    if (!resp.ok) { const j = await resp.json().catch(()=>({})); showToast('Introduction not sent — ' + ((j && typeof j.detail==='string' && j.detail) || (resp.status===401 ? 'please sign in first' : 'please try again'))); return; }
     showToast('✓ Introduction requested · seller has 48hrs to respond');
   } catch(e) {
     showToast('Could not submit introduction: ' + e.message);
@@ -15024,8 +15056,8 @@ async function msSellerSignIn() {
   try {
     const user = await apiGet('/users/' + encodeURIComponent(email));
     if (user && user.email) {
-      const name = user.name || email;
-      localStorage.setItem('ms_aa_email', email);
+      const name = user.name || user.email;
+      localStorage.setItem('ms_aa_email', String(user.email).toLowerCase());   /* BUGSWEEP-24SEP: the session's identity, not the typed one */
       localStorage.setItem('ms_aa_name',  name);
       if(!localStorage.getItem('ms_joined_date')) localStorage.setItem('ms_joined_date', new Date().toISOString());
       localStorage.setItem('ms_superuser', user.is_superuser ? '1' : '0');
@@ -15039,7 +15071,9 @@ async function msSellerSignIn() {
       // Load dashboard data in background
       setTimeout(async () => { await loadLiveDash(); renderDash(); }, 400);
     } else {
-      msg.style.color='#dc2626'; msg.textContent='No seller account found for that email.';
+      // BUGSWEEP-24SEP: /users/{email} now needs a signed-in session, so a new device got
+      // "no account found" for a real seller. No session = send the 6-digit sign-in code.
+      return requestSignInLink('ms-seller-email-inp','ms-seller-signin-msg');
     }
   } catch(e) {
     msg.style.color='#dc2626'; msg.textContent='Could not connect — please try again.';
@@ -15712,7 +15746,7 @@ async function msClaimCredential(){
     var r = await fetch(BEA_URL+'/credentials/claim', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email:email, source:src, credential_id:cid, claimed_name:name})});
     var d = await r.json().catch(function(){ return {}; });
     if(!r.ok){ if(out) out.textContent = d.detail || ('Could not claim ('+r.status+')'); }
-    else { if(out) out.textContent = d.message || d.status; if(d.status==='active'){ showToast('✓ Credential claimed — your listings carry the badge'); try{ msLoadTrust && msLoadTrust(); }catch(e){} } }
+    else { if(out) out.textContent = d.message || d.status; if(d.status==='active'){ showToast('✓ Credential claimed — your listings carry the badge'); try{ if(typeof msInit==='function') msInit(); }catch(e){}   /* BUGSWEEP-24SEP: msLoadTrust never existed */ } }
     msLoadCredentials();
   }catch(e){ if(out) out.textContent='Could not reach the server — try again.'; }
   if(btn){ btn.disabled=false; btn.textContent='Claim credential'; }
@@ -15943,7 +15977,7 @@ async function sqApproach(briefId, listingId){
 }
 async function sqTopup(){
   try{ var r=await fetch(BEA_URL+'/squire/topup',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:_sqEmail()})}); var d=await r.json().catch(function(){return {};});
-    if(!r.ok){ showToast(d.detail||'Top-up failed'); return; } showToast('✓ '+d.allowance.extra+' extra approaches this month — '+d.charged_tuppence+'T'); if(_sqState.shortlist) _sqState.shortlist.allowance=d.allowance; sqRenderShortlist(); try{ syncTuppence && syncTuppence(); }catch(e){} }catch(e){ showToast('Could not reach the server'); }
+    if(!r.ok){ showToast(d.detail||'Top-up failed'); return; } showToast('✓ '+d.allowance.extra+' extra approaches this month — '+d.charged_tuppence+'T'); if(_sqState.shortlist) _sqState.shortlist.allowance=d.allowance; sqRenderShortlist(); try{ if(typeof d.charged_tuppence==='number'){ tuppence=Math.max(0,tuppence-d.charged_tuppence); updateTuppenceUI(); } }catch(e){}   /* BUGSWEEP-24SEP: syncTuppence never existed */ }catch(e){ showToast('Could not reach the server'); }
 }
 async function sqDelete(id){ try{ await fetch(BEA_URL+'/squire/brief/'+id+'?email='+encodeURIComponent(_sqEmail()),{method:'DELETE',credentials:'include'}); _sqState.open=null; await sqLoad(); }catch(e){} }
 /* Seller side: briefs sent to my listings (anonymous -- the need, never the buyer). */
@@ -19631,10 +19665,17 @@ async function msBuyIdVerification(email, containerId){
 
 /* The buyer's warning. Returns true to proceed. NEVER blocks — declining is
    simply the buyer choosing not to continue, not us refusing them. */
-async function msUnverifiedGate(sellerEmail, category){
+async function msUnverifiedGate(sellerEmail, category, listingId){
   try{
-    if(!sellerEmail) return true;
-    const st = await msIdStatus(sellerEmail);
+    let st = null;
+    if(listingId){
+      // BUGSWEEP-24SEP: by listing - /listings/{id} carries seller_id_green_tick, never the email.
+      const lr = await fetch(BEA_URL + '/listings/' + encodeURIComponent(listingId));
+      if(lr.ok){ const ld = await lr.json(); if(typeof ld.seller_id_green_tick === 'boolean') st = {green_tick: ld.seller_id_green_tick}; }
+    } else if(sellerEmail){
+      st = await msIdStatus(sellerEmail);
+    }
+    if(!st) return true;                          /* unknown = never block a buyer */
     if(st && st.green_tick) return true;          // verified — no warning
 
     const isStay = String(category||'').toLowerCase().indexOf('adventure') === 0;
@@ -19800,7 +19841,7 @@ async function msUnverifiedGate(sellerEmail, category){
   }
   function setLang(l){
     lang=l; store(KEY,l); document.documentElement.lang=l; seen={}; pill(); try{ hdrPill(); }catch(e){}
-    try{ if(msLangOn()){ var _ds=document.querySelector('.screen.active'); if(_ds && _ds.id==='screen-detail' && window._msLastDetail){ window._msRerender=true; openDetail(window._msLastDetail); } } }catch(e){}
+    try{ if(msLangOn()){ var _ds=document.querySelector('.screen.active'); if(_ds && _ds.id==='screen-detail' && window._msLastDetail){ window._msRerenderFlag=true; openDetail(window._msLastDetail); } } }catch(e){}
     var list=nodes(document.body);
     if(l==='en'){ paint(list); return; }
     loadDict(l); paint(list); ask(list);

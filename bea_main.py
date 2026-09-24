@@ -2124,7 +2124,7 @@ def _maybe_fire_lane_alert(prov: str, endpoint: str, email: str = ""):
             try:
                 _loop = _aio.get_event_loop()
                 if _loop.is_running():
-                    _loop.create_task(_fire_webhook(N8N_WEBHOOK_AI_ALERT, payload))
+                    _keep_task(_loop.create_task(_fire_webhook(N8N_WEBHOOK_AI_ALERT, payload)))
             except Exception:
                 pass  # alert failure must never affect user response
     except Exception as exc:
@@ -2189,7 +2189,7 @@ def _maybe_fire_spend_alert(conn):
             try:
                 loop = asyncio.get_event_loop()
                 if loop.is_running():
-                    loop.create_task(_fire_webhook(N8N_WEBHOOK_AI_ALERT, payload))
+                    _keep_task(loop.create_task(_fire_webhook(N8N_WEBHOOK_AI_ALERT, payload)))
             except Exception:
                 pass  # alert failure must never affect user response
     except Exception as exc:
@@ -4136,6 +4136,19 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     sess = _session_email(ts_user)
     key_mode = (body.key_mode or "email").strip().lower()
     key_secret = None
+    # BUGSWEEP-24SEP: limit and validate FIRST - a refused or invalid tap used to leave an empty
+    # key account behind and still spend one of the connection's five daily tries.
+    ip = _qp_client_ip(request)
+    import time as _qt
+    now_t = _qt.time()
+    hits = [t for t in _QP_IP_LOG.get(ip, []) if now_t - t < 86400]
+    if len(hits) >= _QP_IP_MAX and not sess:
+        raise HTTPException(status_code=429, detail="Too many adverts from this connection today -- please try again tomorrow.")
+    try:
+        _probe = dict(body.listing or {}); _probe["seller_email"] = "probe@trustsquare.co"
+        Listing(**{k: v for k, v in _probe.items() if k in Listing.__fields__})
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail="That advert is missing something: %s" % str(exc)[:160])
     if not sess and key_mode == "link":
         # LINK-KEY-1 (RUL-167, David 24 Sep 2026): no e-mail -- the private link IS her key. The key
         # account is created first so the draft has an owner; the secret goes back to her once and only
@@ -4159,12 +4172,6 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     # is not signed in as it, gets a DRAFT and a sign-in link to that inbox -- only its owner can
     # publish it, and nobody's terms are accepted on their behalf. A per-address rate limit stops the
     # door being used to mail strangers.
-    ip = _qp_client_ip(request)
-    import time as _qt
-    now_t = _qt.time()
-    hits = [t for t in _QP_IP_LOG.get(ip, []) if now_t - t < 86400]
-    if len(hits) >= _QP_IP_MAX and not sess:
-        raise HTTPException(status_code=429, detail="Too many adverts from this connection today -- please try again tomorrow.")
     hits.append(now_t); _QP_IP_LOG[ip] = hits
     conn = database.get_db()
     try:
@@ -4766,7 +4773,7 @@ def get_seller_listings(email: str = "", ts_user: str = Cookie(default=None), x_
         """SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
            FROM listings l
            LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id
-           WHERE l.seller_email = ? ORDER BY l.created_at DESC""",
+           WHERE LOWER(l.seller_email) = LOWER(?) ORDER BY l.created_at DESC""",
         (email,)
     ).fetchall()
     conn.close()
@@ -4813,6 +4820,12 @@ def get_listing(listing_id: int, ts_user: str = Cookie(default=None)):
         _me = (_session_email(ts_user) or "").strip().lower()
     except Exception:
         _me = ""
+    # BUGSWEEP-24SEP: the buyer's unverified-seller warning (ID-NPR-5, RUL-039) needs the seller's
+    # green-tick state; the email never leaves, so the flag travels on the listing instead.
+    try:
+        _d["seller_id_green_tick"] = bool(id_status(_d.get("seller_email") or "").get("green_tick"))
+    except Exception:
+        pass
     if not _me or _me != (_d.get("seller_email") or "").strip().lower():
         for _k in ("seller_email", "attested_email"):
             _d.pop(_k, None)
@@ -5954,7 +5967,7 @@ def quick_me(ts_user: str = Cookie(default=None)):
             return out
         n = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE LOWER(seller_email)=? AND (listing_status IS NULL OR listing_status='live')", (em,)).fetchone()["n"]
         out.update({"signed_in": True, "email": em, "name": u["name"] or em.split("@")[0],
-                    "eula_accepted": bool(u["eula_accepted_at"] or u["lm_eula_accepted_at"]),
+                    "eula_accepted": bool(u["eula_accepted_at"]),   # BUGSWEEP-24SEP: quick-publish checks the main terms only
                     "city": u["last_city"], "listings": n})
         return out
     finally:
@@ -7180,6 +7193,29 @@ def _session_email(ts_user):
         return None
 
 
+def _wallet_lock(conn):
+    """BUGSWEEP-24SEP (TUPPENCE-RACE-1): every Tuppence spend reads SUM(amount) and then inserts a
+    debit. With sqlite3's default isolation a SELECT opens no transaction, so two requests at once
+    both passed the balance check and the wallet went below zero. BEGIN IMMEDIATE takes the write
+    lock BEFORE the read, so the second request waits and then sees the first debit. If a
+    transaction is already open (an earlier write in the same handler) we proceed without it,
+    exactly as accept_intro does, rather than raise "cannot start a transaction within a transaction"."""
+    try:
+        if not conn.in_transaction:
+            conn.execute("BEGIN IMMEDIATE")
+    except Exception as _wl_exc:
+        _log.warning("wallet lock not taken: %s", _wl_exc)
+
+
+_BG_TASKS = set()   # BUGSWEEP-24SEP: strong refs so the event loop cannot GC a fire-and-forget task mid-flight
+
+
+def _keep_task(task):
+    _BG_TASKS.add(task)
+    task.add_done_callback(_BG_TASKS.discard)
+    return task
+
+
 def _bind_charged_email(passed_email, ts_user, ctx=""):
     """Enforce (flag ON) or shadow-log (flag OFF) that the charged account is the
     session's proven identity. Returns the canonical charged email. Flag OFF is
@@ -7559,11 +7595,12 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
     # and the ECT Act s44 argument ("until delivery it is only held, not spent") had no
     # implementation behind it. The hold is a real -1 ledger row, so the buyer sees the
     # commitment in their balance immediately, exactly as they were told.
+    _wallet_lock(conn)   # BUGSWEEP-24SEP: two requests at 1T both passed this check
     _hold_balance = conn.execute(
         "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
         (intro.buyer_email,)).fetchone()["bal"]
     if _hold_balance is None or _hold_balance < 1:
-        conn.close()
+        conn.rollback(); conn.close()
         raise HTTPException(
             status_code=402,
             detail="1 Tuppence is needed to request an introduction. It is held, not spent — "
@@ -8108,7 +8145,7 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
         if _row is None:
             conn.rollback(); conn.close()
             raise HTTPException(status_code=404, detail="Intro not found")
-        _settled = (_row["status"] or "").strip().lower() in ("accepted", "declined")
+        _settled = (_row["status"] or "").strip().lower() in ("accepted", "declined", "expired")   # BUGSWEEP-24SEP: expired = hold already returned
         _already_charged = int(_row["charged"] or 0)      # the tuppence_charged flag
         if _settled or _already_charged or _row["status"] == "accepted":
             conn.rollback(); conn.close()
@@ -8145,7 +8182,7 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
         _upd = conn.execute(
             "UPDATE intro_requests SET status = 'accepted', tuppence_charged = 1 "
             "WHERE id = ? AND COALESCE(tuppence_charged, 0) = 0 "
-            "AND COALESCE(LOWER(status), 'pending') NOT IN ('accepted', 'declined')",
+            "AND COALESCE(LOWER(status), 'pending') NOT IN ('accepted', 'declined', 'expired')",
             (intro_id,))
         if _upd.rowcount != 1:
             # Someone else won the race between our read and our write.
@@ -8313,7 +8350,8 @@ def _claim_payment_ref(conn, reference: str, kind: str) -> bool:
     conn.execute("CREATE TABLE IF NOT EXISTS payment_refs_consumed (id INTEGER PRIMARY KEY AUTOINCREMENT, "
                  "kind TEXT NOT NULL, reference TEXT NOT NULL, consumed_at TEXT NOT NULL, UNIQUE(kind, reference))")
     cur = conn.execute(
-        "INSERT OR IGNORE INTO payment_refs_consumed (kind, reference, consumed_at) VALUES (?,?,?)",
+        "INSERT INTO payment_refs_consumed (kind, reference, consumed_at) VALUES (?,?,?) "
+        "ON CONFLICT(kind, reference) DO NOTHING",  # portable: pg-ratchet (BUGSWEEP-24SEP)
         (kind, reference, datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")))
     return cur.rowcount == 1
 
@@ -11081,13 +11119,14 @@ def boost_listing(req: BoostRequest, background_tasks: BackgroundTasks):
         conn.close()
         raise HTTPException(status_code=403, detail="You do not own this listing")
     # Check Tuppence balance
+    _wallet_lock(conn)   # BUGSWEEP-24SEP
     bal_row = conn.execute(
         "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
         (req.seller_email,)
     ).fetchone()
     balance = int(bal_row["bal"] or 0)
     if balance < BOOST_COST_T:
-        conn.close()
+        conn.rollback(); conn.close()
         raise HTTPException(status_code=402, detail=f"Insufficient Tuppence — boost requires {BOOST_COST_T}T (you have {balance}T)")
     # Deduct 2T
     conn.execute(
@@ -11916,12 +11955,13 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks):
 
     # Seller balance check (only if this is the first chargeable intro)
     if first_intro:
+        _wallet_lock(conn)   # BUGSWEEP-24SEP
         bal = conn.execute(
             "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
             (seller_email,)
         ).fetchone()["bal"] or 0
         if int(bal) < cost_T:
-            conn.close()
+            conn.rollback(); conn.close()
             raise HTTPException(
                 status_code=402,
                 detail=f"seller_insufficient_tuppence (needs {cost_T}T, has {bal}T)"
@@ -11949,15 +11989,17 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks):
 
     # Charge the seller on the first intro per listing (LM-T1, LM-T5)
     if first_intro:
+        # BUGSWEEP-24SEP: claim the first-intro flag atomically; only the request that flips it pays.
+        _flip = conn.execute(
+            "UPDATE listings SET lm_intro_charged = 1 WHERE id = ? AND COALESCE(lm_intro_charged, 0) = 0",
+            (req.listing_id,))
+        first_intro = (_flip.rowcount == 1)
+    if first_intro:
         txn_type = "lm_boost_deduct" if is_boosted else "lm_intro_deduct"
         conn.execute(
             "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, ?, ?, ?)",
             (seller_email, txn_type, -cost_T,
              f"Local Market intro · listing #{req.listing_id} · {listing.get('title','')}")
-        )
-        conn.execute(
-            "UPDATE listings SET lm_intro_charged = 1 WHERE id = ?",
-            (req.listing_id,)
         )
 
     conn.commit()
@@ -14115,6 +14157,16 @@ def list_public_documents(email: str, intro_id: int = None):
     """Return post_intro documents for a seller. Called by buyer app after intro accepted.
     No API key required — documents are intentionally shared post-introduction."""
     email = email.lower().strip()
+    # BUGSWEEP-24SEP: the buyer never holds the seller's email (SELLER-ANON-1), so "_" means
+    # "the seller of this intro's listing". The route policy already binds intro_id to the buyer.
+    if email in ("_", "-") and intro_id:
+        _c0 = database.get_db()
+        try:
+            _r0 = _c0.execute("SELECT LOWER(l.seller_email) AS e FROM intro_requests i JOIN listings l "
+                              "ON l.id = i.listing_id WHERE i.id=?", (intro_id,)).fetchone()
+        finally:
+            _c0.close()
+        email = (_r0["e"] if _r0 else "") or ""
     # SEC-GATE-1 (24 Sep 2026): 'Visible after intro' means after an accepted intro - no intro_id, no documents.
     if not intro_id:
         return []
@@ -21409,12 +21461,17 @@ PRICE_CHECK_MODEL = "claude-sonnet-4-6"  # AI3 — needs market reasoning depth
 def _deduct_tuppence(conn, email: str, amount: int, description: str) -> int:
     """Deduct `amount` Tuppence from `email`. Returns new balance.
     Raises HTTPException 402 if balance insufficient. Does NOT commit."""
+    _wallet_lock(conn)   # BUGSWEEP-24SEP: read-then-debit under the write lock
     row = conn.execute(
         "SELECT COALESCE(SUM(amount), 0) as bal FROM transactions WHERE user_email = ?",
         (email,)
     ).fetchone()
     balance = int(row["bal"])
     if balance < amount:
+        try:
+            conn.rollback()   # release the write lock before refusing
+        except Exception:
+            pass
         raise HTTPException(
             status_code=402,
             detail=f"Insufficient Tuppence — you have {balance}T, need {amount}T"
@@ -25473,7 +25530,11 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
         ).fetchall()
         for ir in gone:
             if not dry_run:
-                conn.execute("UPDATE intro_requests SET status='expired' WHERE id=?", (ir["id"],))
+                # BUGSWEEP-24SEP: only expire what is STILL pending - a seller may have accepted it
+                # between the SELECT above and this write.
+                _exp = conn.execute("UPDATE intro_requests SET status='expired' WHERE id=? AND status='pending'", (ir["id"],))
+                if _exp.rowcount != 1:
+                    continue
                 # INTRO-HOLD-1: the buyer's email below says "You were not charged." With a
                 # hold in place that is only true if we actually return it here.
                 _release_intro_hold(conn, ir["id"], "request expired")

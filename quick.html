@@ -1030,6 +1030,7 @@ var QUICK_LIVE=false;
 (function(){
   try{
     if(location.protocol==='file:') return;
+    try{   /* BUGSWEEP-24SEP: blocked storage must not stop the /quick/me call below */
     var k=localStorage.getItem('ts_qk_key');
     if(k){ HANDOVER.url=location.origin; HANDOVER.key=k; QUICK_LIVE=true; }
     var m=localStorage.getItem('ms_aa_email')||'';
@@ -1039,6 +1040,7 @@ var QUICK_LIVE=false;
       QUICK.name=localStorage.getItem('ms_aa_name')||m.split('@')[0];
       QUICK.city=LOC.suburb;
     }
+    }catch(_se){}
     /* QUICK-ME-1 (RUL-125(a), 17 Sep 2026): the origin answers who you are and hands the same
        public key ms.js ships -- so a visitor arriving by e-mail link, who has never opened the
        app and holds no marker, still publishes LIVE instead of a dry run. The cookie wins over
@@ -1047,7 +1049,7 @@ var QUICK_LIVE=false;
       if(!d) return;
       if(d.key && !HANDOVER.key){ HANDOVER.url=location.origin; HANDOVER.key=d.key; QUICK_LIVE=true; }
       QUICK.smsReady=!!d.sms_ready;                       /* PHONE-KEY-1: offer the phone code only when a code can be sent */
-      if(d.signed_in && d.email){ HANDOVER.email=d.email; QUICK.member=true; QUICK.eula=!!d.eula_accepted; /* EULA-SIGNOFF-1 */ QUICK.name=d.name||d.email.split('@')[0]; if(d.city) QUICK.city=d.city; if(d.key_identity) QUICK.identity='key'; }
+      if(d.signed_in && d.email){ HANDOVER.email=d.email; QUICK.member=true; QUICK.eula=!!d.eula_accepted; /* EULA-SIGNOFF-1 */ QUICK.name=d.name||d.email.split('@')[0]; if(d.city){ QUICK.city=d.city; LOC.city=d.city; } /* BUGSWEEP-24SEP: her own city, not the timezone guess */ if(d.key_identity) QUICK.identity='key'; }
       try{ var _pt=document.getElementById('qpid-phone'); if(_pt) _pt.style.display=QUICK.smsReady?'':'none'; }catch(e){}
     }).catch(function(){});
   }catch(e){}
@@ -1123,7 +1125,7 @@ function drawDraft(){
   var who = mem
     ? '<div class="whoami"><div class="av">'+initialsOf(QUICK.name)+'</div>'
       +'<div class="nm">Publishing as '+QUICK.name
-      +'<span>'+QUICK.city+' &middot; terms accepted &middot; nothing re-asked</span></div>'
+      +'<span>'+QUICK.city+(QUICK.eula?' &middot; terms accepted':'')+' &middot; nothing re-asked</span></div>'
       +'<u id="msch">change</u></div>'
     : '';
   /* ONE list, not two. The checklist and the coaching were the same thing said
@@ -1908,10 +1910,17 @@ function _vEsc(t){ return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;
 $('back').onclick=function(){
   if(atBuzz){ atBuzz=false; drawDraft(); return; }
   if(mode==='find' && narrow.length){ narrow.pop(); drawAds(); return; }
-  if(step>0){ step--; picks.pop(); drawStep(); return; }
+  if(step>0){
+    /* BUGSWEEP-24SEP: the draft screen adds 'speaks' and 'fin_*' answers; popping blindly
+       removed those instead of the answer being reopened, so the old price stayed saved. */
+    step--;
+    for(var _i=picks.length-1;_i>=0;_i--){ var _k=String(picks[_i].key||''); if(_k==='speaks'||_k.indexOf('fin_')===0) picks.splice(_i,1); }
+    while(picks.length>step) picks.pop();
+    drawStep(); return;
+  }
   drawDoor();
 };
-$('home').onclick=drawDoor;
+$('home').onclick=function(){ drawDoor(); };   /* BUGSWEEP-24SEP: call the CURRENT drawDoor (it is wrapped later) */
 
 /* swipe on the door */
 var sx=null;
@@ -2437,6 +2446,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
   window.qNextSetLang=function(l){
     qSetLang(l);
     if(!mode) drawDoor();                                   /* the door's own buttons repaint */
+    else if(mode==='sell' && !atBuzz && step>=flow().steps.length) drawDraft();   /* BUGSWEEP-24SEP: the advert she saves is the one she sees */
   };
 
   /* readable text on every category colour: whichever of white / near-black contrasts more */
@@ -2507,6 +2517,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     var how=pickOf('how');
     if(how && /\d/.test(String(label||'')) && !/\/|\bper\b/i.test(String(label||''))){
       var u={'Per hour':' / hour','Per job':' / job','Per call-out':' / call-out'}[how.label];
+      if(!u){ var _pm=/^\s*per\s+([a-z][a-z \-]{1,20})\s*$/i.exec(String(how.label||'')); if(_pm) u=' / '+_pm[1].toLowerCase(); }   /* BUGSWEEP-24SEP: her own typed basis */
       if(u) return String(label).trim()+u;
     }
     return _pwb0(key, label);
