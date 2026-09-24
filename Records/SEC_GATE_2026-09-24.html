@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Security Gate</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#14181f;--muted:#5b6472;--line:#e3e6eb;
+--gate:#2563eb;--gate-bg:#e8f0fe;--closed:#15803d;--closed-bg:#e7f6ec;--hole:#c2410c;--hole-bg:#fdeee6;
+--deploy:#a16207;--deploy-bg:#fdf6e3;--you:#7c3aed;--you-bg:#f1eafe}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1318;--card:#171c23;--ink:#e8ecf2;--muted:#9aa4b2;--line:#28303a;
+--gate:#7aa7ff;--gate-bg:#16233d;--closed:#5fd08a;--closed-bg:#12281b;--hole:#ff9a66;--hole-bg:#2d1a10;--deploy:#e8c15a;--deploy-bg:#2a2412;--you:#b99bff;--you-bg:#221a36}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:1.5rem;margin:0 0 4px}h2{font-size:1.05rem;margin:28px 0 10px}
+.sub{color:var(--muted);margin:0 0 18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-size:1.7rem;line-height:1.1}.kpi span{color:var(--muted);font-size:.85rem}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}
+.node{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:110px;text-align:center}
+.arrow{align-self:center;color:var(--muted);font-size:1.2rem}
+.gate{flex:1 1 420px;background:var(--gate-bg);border:2px solid var(--gate);border-radius:12px;padding:10px}
+.gate .t{color:var(--gate);font-weight:700;margin:0 0 8px}
+.st{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px}
+.s{background:var(--card);border-left:4px solid var(--gate);border-radius:8px;padding:7px 9px;font-size:.85rem}
+.s b{display:block;font-size:.9rem}
+.deploy{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.d{background:var(--deploy-bg);border:1px solid var(--deploy);border-radius:10px;padding:9px 12px;font-size:.88rem}
+.d b{color:var(--deploy)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:.88rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600}
+.pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:.78rem;font-weight:600;white-space:nowrap}
+.hole{background:var(--hole-bg);color:var(--hole)}.ok{background:var(--closed-bg);color:var(--closed)}
+.you{background:var(--you-bg);border:1px solid var(--you);border-radius:12px;padding:12px 14px}
+.you b{color:var(--you)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body><div class="wrap">
+<h1>SEC-GATE-1 — one gate in front of every route</h1>
+<p class="sub">TrustSquare · 24 Sep 2026 · live since 09:03 UTC (release dadb5e0)</p>
+
+<div class="kpis">
+ <div class="kpi"><b>304</b><span>routes declared — anything undeclared is refused</span></div>
+ <div class="kpi"><b>53</b><span>critical + high holes found in the full review, all addressed</span></div>
+ <div class="kpi"><b>722</b><span>attack checks on every deploy, before live files change</span></div>
+ <div class="kpi"><b>0</b><span>regressions on the 441-entry ledger</span></div>
+</div>
+<div class="legend"><span><i style="background:var(--gate)"></i>the gate</span><span><i style="background:var(--deploy)"></i>deploy guards</span><span><i style="background:var(--hole)"></i>hole before</span><span><i style="background:var(--closed)"></i>closed now</span><span><i style="background:var(--you)"></i>your step</span></div>
+
+<h2>Every request now passes six checks in one place</h2>
+<div class="flow">
+ <div class="node">Visitor</div><div class="arrow">→</div>
+ <div class="node">Cloudflare</div><div class="arrow">→</div>
+ <div class="node">nginx</div><div class="arrow">→</div>
+ <div class="gate"><p class="t">security_gate.py</p>
+  <div class="st">
+   <div class="s"><b>1 · Declared?</b>not in route_policy.json → refused</div>
+   <div class="s"><b>2 · Level</b>public · user · admin · maint · service</div>
+   <div class="s"><b>3 · Act as yourself</b>a typed email becomes the signed-in email</div>
+   <div class="s"><b>4 · Your record?</b>one owner table for listings, agencies, intros, documents</div>
+   <div class="s"><b>5 · Private fields</b>street address, editor emails, keys hidden from strangers</div>
+   <div class="s"><b>6 · True IP</b>every rate limit counts real people</div>
+  </div></div>
+ <div class="arrow">→</div><div class="node">The route’s own code</div>
+</div>
+
+<h2>A release cannot go live if it opens a door</h2>
+<div class="deploy">
+ <div class="d"><b>Host ledger RG-0455</b><br>every route declared, gate installed</div><div class="arrow">→</div>
+ <div class="d"><b>Stranger test</b><br>the exact commit, before live files change</div><div class="arrow">→</div>
+ <div class="d"><b>Health check</b><br>app answers “status ok”</div><div class="arrow">→</div>
+ <div class="d"><b>QA Bot</b><br>independent attack, OpenAI rulings</div><div class="arrow">→</div>
+ <div class="node">Live</div>
+</div>
+
+<h2>The worst holes, before and after (probed live after the deploy)</h2>
+<table>
+<tr><th>Attack a stranger could do this morning</th><th>Before</th><th>Now</th></tr>
+<tr><td>Turn the public employer link into admin rights (two requests)</td><td><span class="pill hole">admin takeover</span></td><td><span class="pill ok">401</span></td></tr>
+<tr><td>Get a sign-in link for any account via /agencies/wave-prep</td><td><span class="pill hole">account takeover</span></td><td><span class="pill ok">401</span></td></tr>
+<tr><td>Download every buyer’s email and message from /intros</td><td><span class="pill hole">data dump</span></td><td><span class="pill ok">401</span></td></tr>
+<tr><td>Spend someone else’s Tuppence by typing their email</td><td><span class="pill hole">money drain</span></td><td><span class="pill ok">acts as self only</span></td></tr>
+<tr><td>Mark trust credentials “earned” for any account</td><td><span class="pill hole">trust forgery</span></td><td><span class="pill ok">admin only</span></td></tr>
+<tr><td>Read agency API keys and member lists</td><td><span class="pill hole">key leak</span></td><td><span class="pill ok">owner only · 50 keys rotated</span></td></tr>
+<tr><td>Reach the app directly on port 8000, around nginx and Cloudflare</td><td><span class="pill hole">bypass</span></td><td><span class="pill ok">port closed</span></td></tr>
+<tr><td>Read the full route map /openapi.json</td><td><span class="pill hole">attack map</span></td><td><span class="pill ok">401</span></td></tr>
+</table>
+
+<h2>Your one step</h2>
+<div class="you"><b>Reload the ops dashboard tab you have open.</b> It was loaded before the change, so it still asks without its admin token and the health panel shows “unknown” until you reload.</div>
+</div></body></html>
