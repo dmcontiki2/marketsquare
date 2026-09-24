@@ -92,18 +92,32 @@ carries that sentence.
    its public URL before, the withdraw page rendered "Done - your advert is down. Your photographs
    have been deleted.", the row went `archived / withdrawn_by_seller` with the photo columns
    cleared, and the object answered **404** afterwards. The promise is kept, not merely displayed.
-3. **OUTSTANDING — and it is the only thing left.** The publish link walked end to end in a real
-   browser AS A SIGNED-IN ARRIVAL, on a throwaway address with a real draft, confirmed publicly
-   visible afterwards, then archived. Run 18 could not do it: driving a browser to a URL carrying a
-   sign-in token is refused in an unattended session by a credential guard, and every other route to
-   a session needs the same token. What IS established: the server half is behaviourally proven
-   (RG-0443), `dashPublish` hands a 403 to the Terms screen and `sobGoLive` re-publishes with
-   `&accepted_terms=1` (ms.js 7245, `node --check` clean), and `?signin=…&draft=…` is the same
-   landing the live Quick-app letter already uses. What is NOT established is the one thing this
-   item exists for: that a real seller with no users row gets from the link to a live advert
-   without hitting something nobody foresaw. **David, or a session with him at the keyboard, can
-   close this in about five minutes** — open the minted link, tap Publish, read the Terms, tick,
-   confirm the advert is visible logged out, archive the probe.
+3. **PASS (24 Sep 2026 04:06Z, walked end to end in a real browser) — and it found a defect on
+   the way, which is why it existed.** Headless Chromium at phone size, on the LIVE site, as a
+   throwaway seller with no acceptance on record arriving on a seven-day `?signin=&draft=` link
+   exactly like the one above (draft 399). The mile completes: he is signed in, the hub puts his
+   advert in front of him with Publish in reach, the server refuses the publish with 403 (EULA),
+   the terms render in the box — **v1.18, 106,368 characters**, the same version the site
+   publishes — the scroll gate opens at the end, both boxes tick, `PUT /listings/399/publish`
+   answers **200**, the screen says "YOU'RE LIVE", and a **logged-out** reader sees
+   `listing_status: "live"` with `published_at` stamped. The probe was archived immediately and
+   never appeared in a public feed.
+   **WHAT IT CAUGHT (TERMS-HANDOVER-1, RG-0449, fixed and shipped the same session):** two
+   requests after the 403, `GET /users/<him>` answered **401** — that endpoint requires the app
+   key and this one call sent none. So the returning-seller gate never ran for anybody:
+   `sobGoPhase(3)` never fired, the note explaining why he is on that screen stayed hidden, and
+   the handover dropped him on phase 1, a listing preview whose only button reads "Looks good".
+   He could still reach the terms in two more taps, unprompted and unexplained — at the one
+   moment we have his attention. Now: the lookup sends the key, and a lookup that fails still
+   lands a refused publish on the Terms.
+   **THE ONE CONDITION ON THIS PASS:** the fix must be LIVE before the letter goes, because the
+   letter sends him down exactly this road. Confirm the served `static/ms.js` carries
+   `TERMS-HANDOVER-1` and that the walk reports `handover landed on sob-p3`, then send.
+   Re-runnable: `node scripts/smoke_harness/verify_terms_handover.mjs "<url>" <id>`.
+   **Also measured, not a blocker:** the terms box is 39,829 px tall in a 338 px window — about
+   118 screenfuls on a phone before the confirm row appears. The gate is deliberate and the text
+   is David's; it is reported, not adjusted.
+
 4. **PASS.** Listing 382 reads `country='US'` (verified 24 Sep 02:58Z on the live DB), so a Montana
    elk hunt does not surface in the South African market. The create path now carries country too:
    a fresh Montana draft (397) was born `US`, where before it would have been `ZA`.

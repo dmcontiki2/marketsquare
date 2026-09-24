@@ -6873,23 +6873,46 @@ async function sobInit() {
   // ── Returning-seller gate: check EULA + banking status ──────────────────
   // If this seller already has an account, check if they've signed the EULA
   // and if they have banking details on file.
+  /* TERMS-HANDOVER-1 (24 Sep 2026) -- THIS GATE NEVER RAN FOR ANYBODY, AND IT IS THE LAST
+     STEP OF THE ONLY JOURNEY THE ONBOARDING NUMBER COUNTS. Two faults, one measured cause.
+     (1) GET /users/{email} carries Depends(auth.require_api_key) on the server. THIS call
+         sent no X-Api-Key, so it answered 401 to every caller -- PROBED live 24 Sep 04:02Z
+         in a real browser, as a cold seller on his own proven ts_user session: the publish
+         came back 403 (EULA), and the very next request, GET /users/<him>, came back 401.
+         `if (uRes.ok)` was therefore never true: _eulaSigned was never read, the note that
+         explains why he is here stayed hidden, and sobGoPhase(3) never fired. So
+         dashPublish's HUB-EULA-1 handover told him "One step first -- please read and accept
+         the Terms" and then put him on PHASE 1, a listing preview whose only button reads
+         "Looks good". Nothing on that screen mentions terms. The terms are two taps further
+         on, and he was given no reason to take them.
+     (2) A gate that could not read the truth fell through to the UNSAFE side. When we are
+         here BECAUSE publishing was refused for want of an acceptance, the terms screen is
+         the one place he must land; a failed lookup may not quietly route him past it.
+     Fixed: send the key the endpoint asks for, and if the lookup still fails while
+     _needEula is set, show the note and go to phase 3 anyway. Strictly tightening -- no
+     arrival that reaches the terms today stops reaching them. */
   if (BEA_ENABLED && sobState.email) {
+    let _eulaKnown = false;
     try {
-      const uRes = await fetch(BEA_URL + '/users/' + encodeURIComponent(sobState.email));
+      const uRes = await fetch(BEA_URL + '/users/' + encodeURIComponent(sobState.email),
+                               { headers: { 'X-Api-Key': API_KEY } });
       if (uRes.ok) {
         const uData = await uRes.json();
+        _eulaKnown = true;
         sobState._eulaSigned    = !!uData.eula_accepted_at;
         sobState._hasBanking    = !!uData.banking_added_at;
-        // If EULA not yet signed, jump straight to phase 3 (EULA)
-        // and add a note explaining why
-        if (!sobState._eulaSigned && !sobState._cameFromGuided) {
-          const noteEl = document.getElementById('sob-returning-eula-note');
-          if (noteEl) noteEl.style.display = 'block';
-          sobGoPhase(3);
-          return; // skip rendering draft cards — user must sign EULA first
-        }
       }
     } catch(e) {}
+    // Jump straight to phase 3 (EULA) when he has not signed -- or when we could not find
+    // out AND publishing was just refused for want of it -- and say why.
+    const _mustSign = _eulaKnown ? !sobState._eulaSigned : !!sobState._needEula;
+    if (_mustSign && !sobState._cameFromGuided) {
+      const noteEl = document.getElementById('sob-returning-eula-note');
+      if (noteEl) noteEl.style.display = 'block';
+      sobState._needEula = false;
+      sobGoPhase(3);
+      return; // skip rendering draft cards — user must sign EULA first
+    }
   }
 
   // Render draft cards
@@ -10187,6 +10210,10 @@ async function dashPublish(listingId){
       const _r=(_dl&&_dl._raw)||{};
       sobState.email=email;
       sobState.name=localStorage.getItem('ms_aa_name')||sobState.name||email;
+      /* TERMS-HANDOVER-1 (24 Sep 2026): say WHY we are handing over, so sobInit lands him on
+         the terms even if the users lookup fails. The 403 above is the server telling us the
+         acceptance is missing -- that fact must not be lost on the way to the next screen. */
+      sobState._needEula=true;
       /* seed ONLY the listing he tapped -- an unseeded sobInit re-fetches and would
          take every other draft live with it, which he did not ask for */
       sobState.drafts=[{id:listingId, title:_r.title||(_dl&&_dl.title)||'Your listing',
