@@ -26686,55 +26686,105 @@ def rg_onboard_real_1():
 
 
 
-@entry("RG-0429", "PUBLISH-WALL-1: a seller who has finished the whole advert is not asked to "
-                  "build an account at the last step -- the wall does not stand between the "
-                  "work and the result",
-       OPEN,
-       scope="bea_main.py POST /listings (creates listing_status='draft', published_at NULL) and "
-             "PUT /listings/{id}/publish (EULA gate + slot guard), against the wizard flow in "
-             "marketsquare.html / ms.js. THE EVIDENCE IS ONE MAN, AND HE IS THE WHOLE GOAL SO "
-             "FAR. Rick Wemple, a licensed Montana outfitter reached through register:moga, "
-             "opened our letter on 11 Sep 2026 and on 12 Sep built listing 382 'Guided Fair "
-             "Chase Hunts' -- his own description, his own price, FOUR of his own photographs, "
-             "quality_score 94, the best non-demo advert on the platform. created_at equals "
-             "updated_at: he wrote it once and never came back. It is still a draft eleven days "
-             "later and it is the only thing standing between this goal and the number 1. "
-             "WHY HE STOPPED, PROBED not guessed: he has NO row in marketsquare.users at all. "
-             "POST /listings needs no account -- seller_email is just a column -- so the wizard "
-             "let him do every minute of the work as a stranger; PUT publish then requires an "
-             "account with eula_accepted_at and a plan slot. The wall sits at the exact moment "
-             "of maximum motivation and minimum patience, after the work is done and before he "
-             "can see any result from it. David already ruled on this shape in his own words "
-             "(RUL-145, 18 Sep 2026): 'After the tap, show them what they just did -- her score "
-             "moving, then real neighbours. NO WALL, NO ACCOUNT.' The wizard has not been "
-             "brought under that ruling. NOT FIXED TONIGHT, deliberately and with the reason "
-             "stated: it is a change to the first-listing flow in marketsquare.html, which is "
-             "one feature of its own and the file this project has most often damaged by "
-             "hurrying. The EULA itself is NOT the thing to remove -- accepting terms is legally "
-             "load-bearing; what must move is WHEN it is asked and how little is asked with it. "
-             "NOTE FOR WHOEVER TAKES THIS: telling Rick by email is NOT the workaround. RUL-106 "
-             "puts a 60-day floor on re-contacting any address already written to, whatever the "
-             "lane, and RUL-106(e) reserves any follow-up programme to David explicitly. The "
-             "fix has to be in the flow, not in a letter.")
+@entry("RG-0429", "PUBLISH-WALL-1: a finished advert is never stranded -- the road past the "
+                  "account/EULA step exists, AND something actually sends the seller the link "
+                  "that reaches it",
+       "2026-09-24",
+       scope="bea_main.py (POST /listings, PUT /listings/{id}/publish, _quick_draft_return), "
+             "ms.js (goHandoff, dashPublish, sobGoLive, the ?signin=/?draft= landing) and the "
+             "HANDOVER-PUBLISH-1 link shape. "
+             "THIS ENTRY WAS WRONG AS FIRST WRITTEN (23 Sep 2026) AND IS CORRECTED RATHER THAN "
+             "QUIETLY CLOSED, because the wrong version was the night's headline. It asserted "
+             "that the wizard has NO route past the account wall and that the wall itself is the "
+             "defect. Both halves were false. (1) The route was already built: a link of the "
+             "shape ?magic=1&...&drafted=1&publish=1 routes to seller-onboard, sets "
+             "_publishNow='ask', skips the plan screen, opens the Terms, publishes and asks for "
+             "the account afterwards -- RUL-145's shape, shipped weeks earlier; dashPublish is a "
+             "second such surface for a stranded draft, handing its 403 to the Terms screen so "
+             "sobGoLive can register, stamp the acceptance and publish (&accepted_terms=1). "
+             "(2) The wall is not a defect to remove: RUL-166 (David, 23 Sep 2026, after his own "
+             "waiter-route test went live with no EULA) rules that 'we dont publish unless we "
+             "have both his email and his acceptance of the EULA' -- the acceptance MOVES, it "
+             "never goes away. RUL-145's 'no wall, no account' governs the confirmer's tap, not "
+             "publishing a listing. An entry that kept demanding no-account publishing would "
+             "have put this board in standing conflict with the later ruling. "
+             "WHAT THE REAL DEFECT WAS, and it is much smaller and much worse: nothing in the "
+             "system ever SENT that link. goHandoff emailed the way back only "
+             "`if (!magicLink.active)`, reasoned as 'invited users already have their own link' "
+             "-- and every cold prospect arrives with magicLink.active true, so the one safety "
+             "net under a stranded draft was off for exactly the population outreach exists to "
+             "reach. THE MEASURED COST IS ONE MAN AND HE IS THE WHOLE GOAL SO FAR: Rick Wemple, "
+             "a licensed Montana outfitter from register:moga, clicked on 12 Sep 2026 and "
+             "eighteen minutes later had listing 382 'Guided Fair Chase Hunts' -- his own words, "
+             "his own price, four of his own photographs, quality_score 94, the best non-demo "
+             "advert on the platform, created_at == updated_at, no users row at all. He heard "
+             "nothing for eleven days because of that one condition. Fixed 23 Sep 2026 by "
+             "RETURN-LINK-1 (RG-0444). "
+             "THIRD LEG ADDED 24 Sep 2026 (run 18): a road plus a sender is still not a way back "
+             "if the link dies before the letter is read -- see RG-0447 / QUICK-RETURN-TTL-1. "
+             "The property is therefore all three at once, and this entry FAILs if any one of "
+             "them goes: the handover route exists, every saved draft earns an emailed way back "
+             "with no population exempted, and that letter's token outlives the interactive "
+             "sign-in lane. STILL CARRIED, NOT PART OF THIS PROPERTY: RG-0400 (the wizard's "
+             "sob-eula-box is a fourth unsynced EULA copy) -- whoever next touches the wizard's "
+             "consent step fixes that in the same piece of work.")
 def rg_publish_wall_1():
     out = []
     bea = repo_file("bea_main.py")
-    if bea is None:
-        return [(INFO, "bea_main.py not readable here -- NOT EVALUATED")]
-    if "@app.post(\"/listings\")" not in bea:
+    js = repo_file("ms.js")
+    if bea is None or js is None:
+        return [(INFO, "bea_main.py / ms.js not readable here -- NOT EVALUATED")]
+    if '@app.post("/listings")' not in bea:
         return [(FAIL, "POST /listings is gone -- this entry no longer describes the code")]
-    # The property: the create path must not be able to strand a finished advert. It is
-    # satisfied EITHER by the create path carrying the seller through to live, OR by the
-    # account/EULA step being asked before the work rather than after it. Asserted on the
-    # marker a fix must leave behind, so this cannot pass by accident.
-    if "PUBLISH-WALL-1" not in bea and "PUBLISH-WALL-1" not in (repo_file("ms.js") or ""):
-        out.append((INFO, "still open: POST /listings creates a draft that only an account "
-                          "with an accepted EULA can publish, and the wizard asks for neither "
-                          "until the work is finished"))
-    live = repo_file("marketsquare.html") or ""
-    if "sob-eula-box" in live:
-        out.append((INFO, "the wizard's own EULA box is RG-0400's fourth unsynced copy -- "
-                          "whoever moves this step fixes that at the same time or not at all"))
+
+    # LEG 1 -- the road past the account/EULA step still exists, on both surfaces.
+    if "_publishNow" not in js:
+        out.append((FAIL, "HANDOVER-PUBLISH-1 is gone from ms.js -- a drafted+publish arrival no "
+                          "longer skips the plan screen and publishes"))
+    i = js.find("async function dashPublish(")
+    dp = js[i:js.find("\nasync function ", i + 10)] if i >= 0 else ""
+    if not dp:
+        out.append((FAIL, "dashPublish is gone -- the second surface for a stranded draft"))
+    elif "seller-onboard" not in dp or "403" not in dp:
+        out.append((FAIL, "dashPublish no longer hands the EULA 403 to the Terms screen -- the "
+                          "seller is told to accept terms he is given no way to accept"))
+    if "accepted_terms=1" not in js:
+        out.append((FAIL, "no caller sends accepted_terms=1 -- the post-tick publish cannot record "
+                          "the acceptance EULA-PUBLISH-1 now requires, so publishing dead-ends"))
+
+    # LEG 2 -- something sends the link, with no population exempted. THE defect of 12-23 Sep.
+    # Judge the CONDITION LINE, not the function -- the first draft of this leg searched the
+    # whole of goHandoff for "!magicLink.active", matched the paragraph that documents its
+    # REMOVAL, and convicted the corrected tree. A false red costs the same trust as a false
+    # green (RG-0133), and a fix that leaves a good explanation behind must not accuse itself.
+    # RG-0444 already had the right technique; this copies it rather than inventing another.
+    i = js.find("_returnLinkSent) {")
+    if i < 0:
+        out.append((FAIL, "the saved-draft return link is gone from goHandoff() -- a stranded "
+                          "draft has no way back at all"))
+    else:
+        cond = js[js.rfind("\n", 0, i) + 1:i]
+        if "magicLink.active" in cond:
+            out.append((FAIL, "RETURN-LINK-1 has come back: the return link is gated on the "
+                              "arrival channel again (%s) -- invited sellers, which is every cold "
+                              "prospect, get no way back to their draft" % cond.strip()[:90]))
+    if "_SELF_SERVE_LANES" not in bea or '"sellflow"' not in bea:
+        out.append((FAIL, "POST /listings no longer mails the guided flow's composers their way "
+                          "back -- the sell-flow lane has left _SELF_SERVE_LANES"))
+
+    # LEG 3 -- the way back must outlive the reading of the letter (RG-0447's property, here
+    # because a link that expires first makes legs 1 and 2 decorative).
+    if "_ttl_days = 7" not in bea:
+        out.append((FAIL, "the draft-return letter's 7-day token is gone -- a way back that dies "
+                          "before the post is opened is not a way back"))
+
+    if "sob-eula-box" in (repo_file("marketsquare.html") or ""):
+        out.append((INFO, "carried: the wizard's own EULA box is RG-0400's fourth unsynced copy -- "
+                          "whoever moves the consent step fixes that in the same work"))
+    if not [x for x in out if x[0] == FAIL]:
+        out.append((INFO, "road, sender and lifetime all present: a finished draft has a publish "
+                          "route, an emailed way back with nobody exempted, and a token that "
+                          "survives until the letter is read"))
     return out
 
 
@@ -27204,9 +27254,41 @@ def rg_return_link_1():
         return [(FAIL, "the return link is gated on the arrival channel again (%s) -- invited "
                        "sellers, which is every cold prospect, get no way back to their draft"
                        % cond.strip()[:90])]
-    if "/auth/request-link" not in js:
-        return [(FAIL, "nothing requests a sign-in link -- the return path has no sender")]
-    return [(INFO, "every saved draft earns an emailed way back, invited arrivals included")]
+    # ASSERTION CORRECTED 24 Sep 2026 (RETURN-LANE-1), and it was a PROXY, not a property.
+    # This leg read `"/auth/request-link" in js` as proof that "the return path has a
+    # sender". It was pointing at the WRONG sender. /auth/request-link is the interactive
+    # lane -- a 20-minute token with no &draft= -- so what it proved present was a letter
+    # that died before the seller read it and landed him on the hub rather than on his own
+    # advert. The real sender is server-side and predates this entry: POST /listings fires
+    # _quick_draft_return for the self-serve lanes (SELLFLOW-RETURN-1, 18 Sep 2026), which
+    # mints seven days and appends &draft=. The client call was a redundant second letter
+    # and has been removed. Assert the lane that actually carries him back.
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "bea_main.py not readable here -- NOT EVALUATED")]
+    if '"sellflow"' not in bea or "_SELF_SERVE_LANES" not in bea:
+        return [(FAIL, "the sell-flow lane is no longer in _SELF_SERVE_LANES -- POST /listings "
+                       "stops mailing the guided flow's composers their way back, which is the "
+                       "lane listing 382 was built in")]
+    if "_quick_draft_return" not in bea:
+        return [(FAIL, "nothing sends the draft-return letter -- the return path has no sender")]
+    g = js.find("function goHandoff")
+    gh = js[g:js.find("\nfunction ", g + 10)] if g >= 0 else ""
+    if "source:" not in gh or "'sellflow'" not in gh:
+        return [(FAIL, "goHandoff no longer tags its draft source='sellflow' -- the server's "
+                       "return letter is gated on that tag, so the letter stops being sent")]
+    # Read the BLOCK, forward from the condition, never the function: the comment above this
+    # block names the endpoint it stopped calling, and a function-wide search matches that
+    # explanation and convicts the fix. (Caught by the pre/post test on this very entry,
+    # minutes after writing the same warning into RG-0429. The trap is the normal case, not
+    # a corner: every good fix leaves behind a paragraph naming what it removed.)
+    blk = js[i:i + 700]
+    if "/auth/request-link" in blk:
+        return [(FAIL, "goHandoff is back on the interactive 20-minute sign-in lane "
+                       "(RETURN-LANE-1) -- that letter dies before it is read and carries no "
+                       "&draft=, so it lands him on the hub instead of his own advert")]
+    return [(INFO, "every saved draft earns an emailed way back, invited arrivals included, sent "
+                   "server-side on a seven-day token that opens on the advert itself")]
 
 
 
@@ -27266,6 +27348,77 @@ def rg_eula_signoff_1():
             out.append((FAIL, "quick.html still tells visitors that publishing accepts the terms"))
         if "Save my advert" not in q or "QUICK.eula" not in q:
             out.append((FAIL, "quick.html lost the Save-my-advert path for visitors without a signed EULA"))
+    return out
+
+
+@entry("RG-0447", "RECOUP-LINK-TTL-1: a sign-in link that travels in a LETTER is never minted "
+                  "from the interactive 20-minute lane -- a button that is dead before it is "
+                  "read spends the one moment the person came back",
+       "2026-09-24",
+       scope="The class: every letter, note or printed artefact that carries a ?signin= link. "
+             "bea_main.py mints signin tokens in six places and the split is already correct in "
+             "CODE -- _quick_draft_return 7 days, _send_quick_live_email 7 days, the agent invite "
+             "72 h, the agency console link 72 h, and /auth/request-link 20 minutes, which is "
+             "RIGHT because it answers a person who has just asked for a code. THE DEFECT WAS IN "
+             "A WRITTEN RECIPE, and it was one send away from being paid for: "
+             "RECOUP_RICK_LETTER.md (23 Sep) instructed whoever sent it to 'POST "
+             "/auth/request-link for rickwemple@aol.com and send the ?signin= link it mints' -- "
+             "the 20-minute lane -- for a letter to a Montana outfitter who would open it "
+             "whenever his post gets opened. He would have tapped a button and been told his "
+             "link had expired. WHAT MAKES THIS WORTH AN ENTRY RATHER THAN A DIFF: this project "
+             "has already paid for it once. QUICK-RETURN-TTL-1 (18 Sep 2026) exists because the "
+             "first draft-return letter went to THE SAME MAN at ~01:15 his local time carrying a "
+             "20-minute token; the fix, the reasoning and the seven-day figure were all written "
+             "down, and five days later a new artefact reached for the short lane again. A "
+             "lesson recorded in the one function it was learned in does not generalise by "
+             "itself. ASSERTED AS A PROPERTY, not as a constant: any mail-sending path that "
+             "mints a 'signin' token must give it materially longer than the interactive lane. "
+             "RECIPE CORRECTED 24 Sep 2026: the recoup link is minted the way _quick_draft_return "
+             "does -- 7 days, &draft=382 so he lands on the advert rather than the hub, "
+             "&src=recoup-382 so the result is measurable -- and the letter now also states the "
+             "unexpiring way back (sign in at trustsquare.co with the same address), so a lapsed "
+             "link costs him nothing.")
+def rg_recoup_link_ttl_1():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "bea_main.py not readable here -- NOT EVALUATED")]
+    import re as _re
+    short = []
+    for m in _re.finditer(r'"purpose": "signin"', bea):
+        head = bea[max(0, m.start() - 2600):m.start()]
+        tail = bea[m.start():m.start() + 900]
+        fns = _re.findall(r"\ndef (_?[a-zA-Z0-9_]+)\(", head)
+        fn = fns[-1] if fns else "?"
+        if fn == "auth_request_link":
+            continue                      # the interactive lane: 20 minutes is correct there
+        mails = any(w in fn for w in ("mail", "send", "return", "invite")) or "_send_" in tail
+        if mails and "timedelta(minutes=" in tail:
+            short.append(fn)
+    if short:
+        out.append((FAIL, "a letter-borne sign-in link is minted with a minutes-long life (%s) -- "
+                          "a letter is read when the post is read, not within the hour"
+                          % ", ".join(sorted(set(short)))))
+    if "_ttl_days = 7" not in bea or "QUICK-RETURN-TTL-1" not in bea:
+        out.append((FAIL, "QUICK-RETURN-TTL-1 is gone from _quick_draft_return -- the draft-return "
+                          "letter is back on a short-lived token"))
+    if "QUICK-RETURN-GUARD-1" not in bea:
+        out.append((FAIL, "the empty-secret guard is gone -- a link signed with an empty key mails "
+                          "as 'sent' and is rejected on arrival"))
+    letter = repo_file("RECOUP_RICK_LETTER.md")
+    if letter is not None:
+        if "/auth/request-link" in letter and "20-minute" not in letter:
+            out.append((FAIL, "RECOUP_RICK_LETTER.md still instructs minting the publish link from "
+                              "/auth/request-link without naming its 20-minute life"))
+        if "src=recoup-382" not in letter:
+            out.append((FAIL, "the recoup publish link lost src=recoup-382 -- whatever he does "
+                              "would be unmeasurable and we would be guessing again"))
+        if "draft=382" not in letter:
+            out.append((FAIL, "the recoup publish link lost &draft=382 -- he would land on the hub "
+                              "front page and have to find his own advert"))
+    if not out:
+        out.append((INFO, "letter-borne sign-in links outlive the interactive lane; the recoup "
+                          "recipe mints a 7-day token with draft and src attached"))
     return out
 
 

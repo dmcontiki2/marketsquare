@@ -8651,13 +8651,25 @@ async function goHandoff() {
      PROVEN: a licensed Montana outfitter built a 94-scoring advert with four of his
      own photographs on 12 Sep 2026, left, and heard nothing for eleven days.
      A saved draft now always earns a way back. */
+  /* RETURN-LANE-1 (24 Sep 2026) -- THIS BUTTON WAS SENDING THE WRONG LETTER, AND THE
+     TOAST BELOW WAS DESCRIBING IT.
+     It POSTed /auth/request-link, which is the INTERACTIVE sign-in lane: a 20-minute
+     token (auth_request_link, matching _SIGNIN_CODE_MIN = 20) and no &draft= on the
+     link. So the letter this toast promised -- "finish anytime" -- died in twenty
+     minutes, and inside those twenty minutes it dropped him on the hub's front page
+     rather than on the advert he had just written.
+     The RIGHT letter was already being sent, from the server, and had been since
+     SELLFLOW-RETURN-1 (18 Sep 2026): POST /listings fires _quick_draft_return for
+     source 'sellflow', which mints a SEVEN-DAY token, appends &draft=<id> so the hub
+     opens on his advert, and fails closed if MS_JWT_SECRET is empty
+     (QUICK-RETURN-GUARD-1). PROBED 24 Sep 03:15Z, not read: a sellflow draft logged
+     "quick-return mail for draft 398: sent".
+     So this call was a SECOND letter, worse than the first, arriving beside it -- and
+     the one the toast pointed at. Removed. The toast stays, because a letter really
+     was sent; its wording now matches what is actually in it. */
   if (BEA_ENABLED && goState.email && goState.listingId && !goState._returnLinkSent) {
     goState._returnLinkSent = true;
-    fetch(BEA_URL + '/auth/request-link', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: goState.email })
-    }).catch(function(){});
-    showToast('✓ Draft saved — we emailed ' + goState.email + ' a link so you can finish anytime.', 6000);
+    showToast('✓ Draft saved — we emailed ' + goState.email + ' a link straight back to this advert. It works for a week.', 6000);
   }
 
   if (btn) { btn.disabled = false; btn.textContent = 'Take me to the app →'; }
