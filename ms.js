@@ -558,6 +558,12 @@ async function loadLiveDash() {
             dashState.listings.push(dl);
           } else {
             dl._raw = l;  // refresh full data for edit form
+            // E2E-HMI-1 (24 Sep 2026): the server's state wins. An advert published through the Terms
+            // step kept reading 'Draft - not visible yet' on the hub until a page reload.
+            dl.listing_status = (l.listing_status || 'live').toLowerCase();
+            dl.status = l.listing_status==='draft' ? 'draft' : (dl.listing_status==='paused' ? 'paused' : 'active');
+            dl.title = l.title || dl.title;
+            if (l.thumb_url) dl.photo = l.thumb_url;
           }
         });
       }
@@ -10380,7 +10386,7 @@ function renderDashCard(dl){
       ${statusBadge}
       ${wonderBanners}
       ${introsHtml}
-      ${dl.beaListingId?(_ls==='archived'?`<div class="ml-actions"><span style="font-size:11px;color:var(--text-3);">Archived after 90 quiet days — it cannot come back. Make a new advert any time.</span></div>`:`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${(dl.status!=='draft'&&_ls==='live')?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||''))})">Share to Status</button>`:''}${_ls==='live'?`<button class="mla-btn" onclick="msPauseListing(${dl.beaListingId}, true)">Pause</button>`:''}${_ls==='paused'?`<button class="mla-btn accent" onclick="msPauseListing(${dl.beaListingId}, false)">Resume</button>`:''}</div>`):''}
+      ${dl.beaListingId?(_ls==='archived'?`<div class="ml-actions"><span style="font-size:11px;color:var(--text-3);">Archived — an archived advert cannot come back. Make a new one any time.</span></div>`:`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${(dl.status!=='draft'&&_ls==='live')?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||''))})">Share to Status</button>`:''}${_ls==='live'?`<button class="mla-btn" onclick="msPauseListing(${dl.beaListingId}, true)">Pause</button>`:''}${_ls==='paused'?`<button class="mla-btn accent" onclick="msPauseListing(${dl.beaListingId}, false)">Resume</button>`:''}</div>`):''}
     </div>
   </div>`;
 }
@@ -11539,7 +11545,9 @@ async function saveEditedListing() {
   if (fd.desc)         payload.description  = fd.desc;
   // E2E-HMI-1: keep the description's **Rate:** header in step with the price just saved.
   if (payload.description && fd.rate && !fd.price && payload.price)
-    payload.description = payload.description.replace(/(\*\*Rate:\*\*\s*)[^\n]*/i, '$1' + payload.price);
+    payload.description = /\*\*Rate:\*\*/i.test(payload.description)
+      ? payload.description.replace(/(\*\*Rate:\*\*\s*)[^\n]*/i, '$1' + payload.price)
+      : payload.description.replace(/(\bRate:\s*)[^.\n]*/i, '$1' + payload.price);   // Quick's plain 'Rate: R250 / hour.'
   if (fd.suburb)       payload.suburb       = fd.suburb;
   if (fd.area)         payload.area         = fd.area;
   if (fd.prop_type)    payload.prop_type    = fd.prop_type;
@@ -13679,7 +13687,9 @@ async function aaDoPublish() {
     const data = await res.json();
     // Mark draft complete
     await aaDB.put({ ...draft, email, stage: 3, listing_id: data.listing_id, updated_at: Date.now() });
-    showToast('Listing published! 🎉');
+    // E2E-HMI-1 (24 Sep 2026): a photo the privacy check holds back used to vanish without a word.
+    const _held = (data && data.photos_held) || 0;
+    showToast(_held ? ('Listing published! ' + _held + ' photo' + (_held > 1 ? 's were' : ' was') + ' held back because it may show who you are or where you live \u2014 add another in Edit.') : 'Listing published! 🎉', _held ? 7000 : 3000);
     goTo('aa-home');
   } catch (e) {
     showToast('Publish failed — please try again. If it keeps failing, tell us at trustsquare.co/support.', 7000);

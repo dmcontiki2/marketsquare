@@ -10032,10 +10032,12 @@ async def aa_publish(
         from fastapi.responses import JSONResponse as _JR
         return _JR(status_code=409, content={
             "listing_id": listing_id, "pdf_url": None, "live": False, "need": "eula",
+            "photos_held": sum(1 for _n in _anon_notes if ":held:" in _n),   # E2E-HMI-1: say it, never drop silently
             "detail": "Your advert is saved as a draft. Read and accept the TrustSquare Terms in the app to publish it."})
     # Wishlist matching — async, never blocks publish (PR-14)
     background_tasks.add_task(run_match_job, listing_id)
-    return {"listing_id": listing_id, "pdf_url": None}  # PDF generation added in Stage 4
+    return {"listing_id": listing_id, "pdf_url": None,   # PDF generation added in Stage 4
+            "photos_held": sum(1 for _n in _anon_notes if ":held:" in _n)}   # E2E-HMI-1
 
 
 # ── TUPPENCE BALANCE (public read) ───────────────────────────
