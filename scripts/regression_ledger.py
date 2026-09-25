@@ -29104,5 +29104,29 @@ def rg_quick_open_rate():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "typed rates with a minimum-wage floor, repo and live")]
 
+
+@entry("RG-0476", "ARRIVE-EXIT-1: the 'Your advert is live' screen in Quick has a way out -- a close button and "
+       "'List something else', both to a FRESH start, never back into the form just published",
+       OPEN, fixed_on="",
+       scope="quick.html celebrate() (the arrival overlay). SCOPE: source + live /q/ page.",
+       ref="David 25 Sep 2026 with two screenshots: 'There is no go back button from this screen'. Rendered test before "
+           "shipping: publish (mocked) -> arrival -> 'List something else' -> Quick front door, picks empty, no errors.")
+def rg_arrive_exit():
+    q = repo_file("quick.html")
+    bad = []
+    if q is not None:
+        body = q[q.find("function celebrate("):q.find("function celebrate(")+6000]
+        for tok, what in (("ar-again", "'List something else'"), ("ar-x", "the close button"), ("drawDoor()", "the fresh start")):
+            if tok not in body:
+                bad.append("arrival screen lost " + what)
+    live = _get("/q/")
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - /q/ unreadable from here")] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if "ARRIVE-EXIT-1" not in live:
+        bad.append("live /q/ has no way out of the arrival screen (not deployed?)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "arrival screen has a close and 'List something else', repo and live")]
+
 if __name__ == "__main__":
     sys.exit(main())
