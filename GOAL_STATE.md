@@ -85,15 +85,24 @@ already closed and the stale claim about it removed. The harness is in the repo:
    it. The shortfall is **reach, not copy**, which is D4 and D5, and the phantom 12.9% was the one
    figure that argued against them.
 
-4. **THE FIX WAS ONE MANIFEST LINE FROM SHIPPING HALF OF ITSELF.** `click_register.py` — the
+4. **SHIPPED AND PROBED ON THE LIVE SERVER, not left on the tick.** The re-score landed
+   **00:00:40Z 25 Sep** and matches the pre-ship copy-test exactly: **human_open 331 → 34,
+   proxy_open 365, uncertain 84 → 16, machine 203 unchanged, human_click 9 unchanged.** It took
+   two attempts and the first one is the lesson — see next.
+
+5. **THE FIX WAS ONE MANIFEST LINE FROM SHIPPING HALF OF ITSELF, AND IT ACTUALLY DID, ONCE.** `click_register.py` — the
    grader `server.py` imports — **was not in `deploy_citylauncher.bat`.** The server was running
    the 3 September copy. Shipping `server.py` alone would have published `opened_proxy` as a
    permanent **0** and left all 331 false human opens exactly where they were — a half-shipped fix
    that passes every source check on the board. Caught by looking at what the box actually runs
-   (`ls` on the server: 3 Sep, 12,067 bytes). Manifest fixed, and RG-0464 now has a far-end leg
-   that FAILs if the grader ever falls out of it again.
+   (`ls` on the server: 3 Sep, 12,067 bytes). **The 23:41Z ship then ran on the OLD manifest and
+   did exactly that** — for fourteen minutes the box published `opened_proxy` as a field that read
+   **0** while the grader still produced the 331, which looks precisely like an audit that found
+   nothing. Re-requested; the grader landed 23:55Z (16,330 bytes) and the reconcile pass re-scored
+   at 00:00:40Z. RG-0464 now carries a far-end leg that FAILs if the grader ever falls out of the
+   manifest again.
 
-5. **RG-0110 was a FALSE RED and is cleared — RG-0465 FN-WINDOW-1.** The board printed
+6. **RG-0110 was a FALSE RED and is cleared — RG-0465 FN-WINDOW-1.** The board printed
    *"auth_verify no longer routes through `_establish_user_session`"* and carried "Do not deploy
    over this". auth_verify's **last line** is that exact call. The check read
    `bea.split("def auth_verify(")[1][:1400]` — not the function, but the first 1400 bytes of
@@ -105,13 +114,14 @@ already closed and the stale claim about it removed. The harness is in the repo:
    this file still read a fixed byte window** — a sweep, not a late-night edit, and none is red
    today.
 
-6. **Boards.** Before: 450 · 425 holding · **4 REGRESSED** · 19 open · 1 ready to lock · 1
+7. **Boards.** Before: 450 · 425 holding · **4 REGRESSED** · 19 open · 1 ready to lock · 1
    UNVERIFIED. After: **452 · 429 holding · 3 REGRESSED · 19 open · 1 ready to lock · 0
-   UNVERIFIED**; `rulings_check` 142 rulings, **0 FAIL**, 25 WARN. Both new entries were run
+   UNVERIFIED**. One red on the way through was **this run's own** — RG-0154, the session counter
+   falling behind the status fragment this run wrote; counter derived to 207 and cleared; `rulings_check` 142 rulings, **0 FAIL**, 25 WARN. Both new entries were run
    against a reverted tree as well as this one — RG-0464 FAILs on the pre-fix source, RG-0465's
    byte-window form FAILs on today's.
 
-7. **The three remaining reds are not ours.** RG-0351 (17 modifier-form SQLite clocks against a
+8. **The three remaining reds are not ours.** RG-0351 (17 modifier-form SQLite clocks against a
    baseline of 15 — the ratchet ran backwards) and RG-0450 (`genie/HARNESS.html` differs from
    `quick.html`) are the parallel lane's RUL-167 work, written today; RG-0450 is that lane's own
    brand-new entry. RG-0373 is a live probe: the trust plan's step 4 offers a referral signal that
@@ -121,12 +131,11 @@ already closed and the stale claim about it removed. The harness is in the repo:
 
 ## WHAT THE NEXT RUN SHOULD PICK UP
 
-0. **Confirm the CityLauncher deploy landed.** `python3 scripts/request_deploy.py --status` — it
-   was PENDING on the 20-minute tick when run 20 closed. Then **re-run the funnel and read
-   `opened_human` / `opened_proxy`** on the live board, do not assume the re-score: the live
-   register still holds the old tiers until the refresh pass runs against the shipped grader.
-   **The dashboard David reads will drop from ~331 opens to ~34 the moment it does.** That is the
-   correction, not a fault — but it must not surprise him, so it is in the note to him below.
+0. **DONE, do not redo: the deploy landed and the live register re-scored at 00:00:40Z 25 Sep**
+   (human_open 34, proxy_open 365, human_click 9). What is still worth one look: whether `/onboard/funnel` and the dashboard panel
+   David reads are showing `opened_proxy` beside `opened_human`, or whether either surface still
+   renders only the one figure. **His board has dropped from ~331 opens to 34** — that is the
+   correction, not a fault, and he was told on the night of 24 Sep.
 
 1. **The number did not move and the reason is now measured, not guessed.** ~390 cold addresses
    remain and 9 of 2,574 have ever clicked. The route to 20 is D4 and D5 — a door aimed at one
