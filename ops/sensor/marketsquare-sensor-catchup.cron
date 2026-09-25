@@ -1,0 +1,6 @@
+# SENSOR-CATCHUP-1 (25 Sep 2026, DW-157) -- installed by migrations/052_sensor_catchup.py.
+# The daily cron sensor (root crontab, 30 1 * * *) is re-invoked with --catch-up after every
+# boot and every hour; it is a no-op once today's findings.cron.json exists.
+SHELL=/bin/bash
+@reboot root sleep 240 && cd /var/www/marketsquare && /usr/bin/python3 /var/www/marketsquare/sensor.py --catch-up >> /var/log/sensor_cron.log 2>&1
+45 2-23 * * * root cd /var/www/marketsquare && /usr/bin/python3 /var/www/marketsquare/sensor.py --catch-up >> /var/log/sensor_cron.log 2>&1

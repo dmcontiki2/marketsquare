@@ -83,6 +83,21 @@ def parse_open_items():
 
 def main():
     now = datetime.datetime.now(datetime.timezone.utc)
+    # SENSOR-CATCHUP-1 (25 Sep 2026, DW-157): the 01:30 UTC cron run is the only one a day,
+    # so a reboot landing on that minute (25 Sep: the security assessment's one-time kernel
+    # reboot at 01:30:06Z) skipped the day's run and left the watch no parity to read.
+    # /etc/cron.d/marketsquare-sensor-catchup (migration 052) re-invokes with --catch-up
+    # after every boot and hourly; it is a no-op once today's file exists, so the sensor
+    # still runs exactly once a day in the normal case.
+    if "--catch-up" in sys.argv:
+        try:
+            with open(FINDINGS, encoding="utf-8") as fh:
+                if json.load(fh).get("loop_date") == now.strftime("%Y-%m-%d"):
+                    return 0
+        except Exception:
+            pass
+        print("%s SENSOR-CATCHUP-1: no run recorded for %s -- catching up"
+              % (now.strftime("%Y-%m-%dT%H:%M:%SZ"), now.strftime("%Y-%m-%d")))
     weekday = now.strftime("%A")
     dow = int(now.strftime("%u"))  # 1=Mon
 

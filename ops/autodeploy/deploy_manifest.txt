@@ -217,6 +217,9 @@ orchestration_v2/templates/agency_lane_design/cars_dealer_outreach.html | orches
 # ── DW-045 (16 Aug 2026): the smoke instrument rides the SAME deploy as the app,
 #    so the 01:30 cron sensor can never again grade with a retired assertion. ──
 smoke_test.py              | smoke_test.py
+# ── SENSOR-CATCHUP-1 (25 Sep 2026, DW-157): the cron sensor rides the deploy too, so its
+#    --catch-up flag (used by /etc/cron.d/marketsquare-sensor-catchup, migration 052) ships. ──
+sensor.py                  | sensor.py
 
 # ── SAW-1 (22 Aug 2026): Study & Work Abroad teaser — static preview, RUL-042 ──
 studyabroad_teaser.html    | static/studyabroad_teaser.html

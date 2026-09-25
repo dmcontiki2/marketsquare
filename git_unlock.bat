@@ -26,6 +26,12 @@ if not errorlevel 1 (
   exit /b 0
 )
 set RC=0
+REM GIT-LOCK-6 (25 Sep 2026, DW-154): "/aged" = the every-tick sweep run by autodeploy_agent.bat.
+REM The sandbox's git runs inside the VM, where tasklist cannot see it, so a lock can belong to a
+REM LIVE sandbox commit even when no git.exe runs here. The tick therefore clears a top-level or
+REM ref lock only once it is older than 15 minutes (a commit holds one for seconds), and never
+REM touches loose-object temps or the stale_locks asides - those stay with the full sweep below.
+if /i "%~1"=="/aged" goto :aged
 for %%L in (index.lock HEAD.lock packed-refs.lock) do call :clearone %%L
 REM GIT-LOCK-3 (16 Aug 2026): next-index-*.lock joins the class, and the host
 REM sweep deletes what the SANDBOX could only rename aside (FUSE blocks unlink
@@ -47,6 +53,10 @@ if exist ".git\stale_locks" rd /s /q ".git\stale_locks" >nul 2>&1
 del /f /q ".git\HEAD.lock.stale-*" >nul 2>&1
 for /r ".git\objects" %%F in (tmp_obj_*) do del /f /q "%%F" >nul 2>&1
 exit /b %RC%
+
+:aged
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$c=(Get-Date).AddMinutes(-15); $l=@(); foreach($n in 'index.lock','HEAD.lock','packed-refs.lock'){ $p=Join-Path '.git' $n; if(Test-Path $p){ $l+=Get-Item $p } }; if(Test-Path '.git\refs'){ $l+=Get-ChildItem '.git\refs' -Recurse -Filter '*.lock' -File }; foreach($f in $l){ if($f.LastWriteTime -lt $c){ Remove-Item -Force $f.FullName; Write-Output ('cleared aged ' + $f.FullName) } }"
+exit /b 0
 
 :clearone
 if not exist ".git\%1" exit /b 0

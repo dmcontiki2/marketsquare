@@ -1700,6 +1700,30 @@ def _judge(e, ceiling_s=None):
             # worse one than the REGRESSION this fixes.
             out = list(out) + [(INFO, _msg)]
 
+    # TRANSPORT-BLIND-1 (25 Sep 2026, DW-144/145 residual). LEDGER-OFFLINE-1 below only
+    # reclassifies a caught transport error when the WHOLE machine is proven blind. On 24 Sep a
+    # sandbox resolver blip (gaierror -2) convicted RG-0315 and RG-0390 while /health answered
+    # before and after, and RG-0258 read a slow 1.2 MB page as a regression. A read that never
+    # got a payload is BLIND, whatever the rest of the machine is doing. Same shape as
+    # EDGE-BLIND-2: only messages carrying an unmistakable exception signature move, they move
+    # INDIVIDUALLY, any other FAIL in the entry still convicts, and UNVERIFIED still exits
+    # non-zero. Deliberately NOT matched: bare 'TimeoutError'/'timed out' -- RG-0099's SSH
+    # lockout verdict names the socket error type and must keep convicting.
+    _TRANSPORT_BLIND = ("gaierror(", "Name or service not known",
+                        "Temporary failure in name resolution", "The read operation timed out",
+                        "<urlopen error", "RemoteDisconnected(", "IncompleteRead(",
+                        "ConnectionResetError(", "BLIND here")
+    if fails:
+        _tb = [m for m in fails if any(k in m for k in _TRANSPORT_BLIND)
+               and "control host" not in m]
+        if _tb:
+            _msg = ("NOT EVALUATED (TRANSPORT-BLIND-1) - the read failed in transport (resolver, "
+                    "timeout or dropped connection), so no payload was judged. Blind here, not "
+                    "a verdict on the app. Re-run before trusting this row.")
+            fails = [m for m in fails if m not in _tb]
+            infos = infos + [_msg] + _tb
+            out = list(out) + [(INFO, _msg)]
+
     # LEDGER-OFFLINE-1: several checks catch their own transport errors and turn
     # them into FAIL text, so they never reach the ProbeOffline handler above.
     # Reclassify those ONLY when the preflight has PROVEN this machine is blind -
@@ -5148,6 +5172,19 @@ def rg_ordinary_person_can_earn():
     return out
 
 
+def _referral_earnable():
+    """COACH-EARNABLE-2 (25 Sep 2026): can a referral signal actually be EARNED? Source leg,
+    read from the repo when it is visible: the ladder writes universal.referral_* 'earned' from
+    confirmed hires, and the route that records a hire exists. Outside the repo the live plan
+    is trusted on this leg only (the do/wording leg still runs) -- blindness never reads red."""
+    src = repo_file("bea_main.py")
+    if src is None:
+        return True
+    return ('out["universal.referral_1"]     = "earned" if _vc >= 1' in src
+            and "hired_confirmed_at IS NOT NULL" in src
+            and '@app.post("/intros/{intro_id}/hired")' in src)
+
+
 @entry("RG-0373", "The AI trust plan opens with something an ordinary person can actually do - "
        "never a professional credential, and never a step whose button points at a screen that "
        "does not exist",
@@ -5165,7 +5202,12 @@ def rg_ordinary_person_can_earn():
            "impact (most points first)'. Ordering is now by what the person can do today - profile, "
            "then ID, then referrals, then track record, then credentials - and the prompt is told to "
            "keep that order and to word a credential as an 'if you have one'. TS-0011 still holds: "
-           "credentials are not dropped, they are placed after the steps anyone can take.")
+           "credentials are not dropped, they are placed after the steps anyone can take. "
+           "ASSERTION AMENDED 25 Sep 2026 (COACH-EARNABLE-2, DW-155): the referral leg said "
+           "'referrals are not tracked' -- true on 15 Sep, false since RUL-142 was built on 24 Sep "
+           "(verified clients via POST /intros/{id}/hired). It read red against a correct plan. It "
+           "now checks the property: a referral step is offered only while the ladder can earn it, "
+           "and it must carry do=='wait' and point at the 'I hired them' tap.")
 def rg_trust_plan_starts_doable():
     _require_net()
     key = _ops_key()
@@ -5203,11 +5245,22 @@ def rg_trust_plan_starts_doable():
             out.append((FAIL, "step %d asks for a document but carries the '%s' button -- the "
                               "step was matched to the wrong signal"
                               % (_n, _s.get("do"))))
-        # COACH-EARNABLE-1: nothing in the app can write a referral signal 'earned', so a
-        # referral step is a step that cannot pay. Never offer one again.
+        # COACH-EARNABLE-1 (15 Sep) barred referral steps because nothing could write them
+        # 'earned'. RUL-142 (David, 18 Sep; built 24 Sep, 303fbc0) made them earnable -- a
+        # client of an ACCEPTED intro taps 'I hired them' (POST /intros/{id}/hired) and the
+        # ladder counts distinct confirmed clients. COACH-EARNABLE-2 (25 Sep 2026): the leg
+        # was pinned to the OLD premise and read red against correct code. It now asserts the
+        # PROPERTY the entry is about -- a referral step may be offered only while it can
+        # actually pay, and it must point at the real button, never at a screen that is not
+        # there: do=='wait' (no action button of its own) and the words name 'hired'.
         if str(_s.get("signal_id") or "").startswith("universal.referral"):
-            out.append((FAIL, "step %d offers a referral signal -- referrals are not tracked, so "
-                              "this step can never award its points" % _n))
+            if not _referral_earnable():
+                out.append((FAIL, "step %d offers a referral signal but nothing in the app can "
+                                  "write it 'earned' -- this step can never award its points" % _n))
+            if _s.get("do") != "wait" or "hired" not in _a:
+                out.append((FAIL, "step %d offers a verified-client step with button '%s' and "
+                                  "wording that does not point at the 'I hired them' tap"
+                                  % (_n, _s.get("do"))))
     if not out:
         out.append((INFO, "plan opens with '%s' (+%s) -- doable-first order holding"
                           % ((first.get("action") or "")[:60], first.get("points"))))
@@ -28679,6 +28732,112 @@ def rg_ledger_entry_ceiling_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "per-entry ceiling armed, un-swallowable, and blind-on-cut")]
 
+
+
+@entry("RG-0466", "TRANSPORT-BLIND-1: a read that failed in transport (resolver blip, timeout, dropped "
+       "connection) is BLIND, never REGRESSED -- while every real fault in the same entry still convicts",
+       LOCKED, fixed_on="2026-09-25",
+       scope="scripts/regression_ledger.py _judge(). FOUND 24 Sep 2026 (DW-144/145): a sandbox resolver "
+             "blip (gaierror -2) convicted RG-0315 and RG-0390 while /health answered before and after, "
+             "and RG-0258 read a slow 1.2 MB page as a regression. LEDGER-OFFLINE-1 only reclassified "
+             "caught transport errors when the WHOLE machine was proven blind. FIX: FAIL messages that "
+             "carry an exception signature (gaierror, name-resolution, read timeout, urlopen error, "
+             "dropped connection, a re-emitted ProbeOffline 'BLIND here') move INDIVIDUALLY to NOT "
+             "EVALUATED; any other FAIL still stands; UNVERIFIED still exits non-zero. Bare "
+             "'TimeoutError' is deliberately NOT a signature: RG-0099's SSH-lockout verdict names it "
+             "and must keep convicting. SCOPE: source + a behavioural self-test through _judge().",
+       ref="DW-144/DW-145 residual, coverage-map AMBER card, closed 25 Sep 2026 on David's 'fix the four "
+           "ambers'. The self-test below is the proof: five synthetic entries, judged by the real _judge().")
+def rg_transport_blind_1():
+    def _mk(msgs):
+        return {"id": "SELFTEST", "state": LOCKED, "fn": (lambda: msgs), "title": "", "scope": "",
+                "fixed_on": "", "ref": ""}
+    cases = [
+        ("resolver blip", [(FAIL, "/flags unreachable (URLError(gaierror(-2, 'Name or service not known')))")], "UNVERIFIED"),
+        ("slow read", [(FAIL, "live leg unreachable: TimeoutError('The read operation timed out')")], "UNVERIFIED"),
+        ("blip + real fault", [(FAIL, "/flags unreachable (URLError(gaierror(-3, 'Temporary failure in name resolution')))"),
+                               (FAIL, "a real fault")], "REGRESSION"),
+        ("SSH lockout", [(FAIL, "port 22 unreachable from this vantage on 3 tries (TimeoutError) WHILE a "
+                                "control host's port 22 answered")], "REGRESSION"),
+        ("plain fault", [(FAIL, "genie/HARNESS.html differs from quick.html")], "REGRESSION"),
+    ]
+    bad = []
+    for name, msgs, want in cases:
+        got = _judge(_mk(msgs))["status"]
+        if got != want:
+            bad.append("%s judged %s, must be %s" % (name, got, want))
+    src = repo_file("scripts/regression_ledger.py")
+    if src is not None and "_TRANSPORT_BLIND = (" not in src:
+        bad.append("_judge() lost the TRANSPORT-BLIND-1 signature list")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "transport failures read BLIND, real faults (incl. the SSH lockout) still convict")]
+
+
+@entry("RG-0467", "GIT-LOCK-6: a git lock stranded by a sandbox commit is cleared by the HOST within the "
+       "hour -- every night and every agent tick, not only when something happens to commit",
+       LOCKED, fixed_on="2026-09-25",
+       scope="nightly_checkpoint.bat, autodeploy_agent.bat, git_unlock.bat (:aged). FOUND 25 Sep 2026 "
+             "(DW-154): commit be1b2a6 left .git/HEAD.lock at 00:01:50Z (FUSE blocks unlink in the "
+             "sandbox); the 05:30 nightly checkpoint found a clean tree and exited BEFORE calling "
+             "git_unlock.bat, and the 20-min agent only swept when it had queued work -- so the lock "
+             "stood 278 min until the morning watch. FIX: the checkpoint sweeps before its clean-tree "
+             "exit; the agent runs `git_unlock.bat /aged` on every tick before its early exit. /aged "
+             "clears top-level and ref locks only when older than 15 minutes, because a sandbox commit "
+             "runs inside the VM where tasklist cannot see it -- an aged-only sweep can never pull a "
+             "lock out from under a live commit. SCOPE: source only; RG-0015's live >60-min tripwire "
+             "remains the runtime proof.",
+       ref="DW-154 residual (coverage-map AMBER), closed 25 Sep 2026. Live-proven the same morning with an "
+           "aged probe lock in .git/refs/heads (see the DW-154 closure line in DAILY_WATCH/OPEN_ITEMS.md).")
+def rg_git_lock_6():
+    nc = repo_file("nightly_checkpoint.bat")
+    ag = repo_file("autodeploy_agent.bat")
+    gu = repo_file("git_unlock.bat")
+    if nc is None or ag is None or gu is None:
+        return [(INFO, "NOT EVALUATED - the host .bat files are not readable here")]
+    bad = []
+    i_un, i_clean = nc.find('call "%~dp0git_unlock.bat"'), nc.find("clean - nothing to commit")
+    if i_un < 0 or i_clean < 0 or i_un > i_clean:
+        bad.append("nightly_checkpoint.bat no longer sweeps locks BEFORE its clean-tree exit")
+    i_aged, i_exit = ag.find('git_unlock.bat" /aged'), ag.find('if not exist "%REQ%" if not exist "%CLREQ%" exit /b 0')
+    if i_aged < 0 or i_exit < 0 or i_aged > i_exit:
+        bad.append("autodeploy_agent.bat no longer runs the aged sweep on every tick (before its early exit)")
+    if ':aged' not in gu or 'AddMinutes(-15)' not in gu or 'if /i "%~1"=="/aged" goto :aged' not in gu:
+        bad.append("git_unlock.bat lost its age-gated /aged mode")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "host sweeps stale git locks nightly and every 20 min, aged-only")]
+
+
+@entry("RG-0468", "SENSOR-CATCHUP-1: a reboot on the 01:30 cron minute can no longer cost the day's "
+       "sensor run -- the sensor catches up after boot and hourly, and is a no-op once it has run",
+       LOCKED, fixed_on="2026-09-25",
+       scope="sensor.py --catch-up, ops/sensor/marketsquare-sensor-catchup.cron, migrations/052_sensor_catchup.py, "
+             "and sensor.py in the deploy manifest. FOUND 25 Sep 2026 (DW-157): the security assessment's "
+             "one-time kernel reboot landed at 01:30:06Z, the once-a-day sensor never ran, and the watch "
+             "had no parity reading. SCOPE: source; the live proof is the next findings.cron.json "
+             "carrying today's loop_date, which the daily watch reads over SSH.",
+       ref="DW-157, coverage-map parity card AMBER -> GREEN on the next dated file. sensor.py was not in the "
+           "deploy manifest before this fix; it now rides the one deploy like smoke_test.py (DW-045).")
+def rg_sensor_catchup_1():
+    se = repo_file("sensor.py")
+    cr = repo_file("ops/sensor/marketsquare-sensor-catchup.cron")
+    mg = repo_file("migrations/052_sensor_catchup.py")
+    mf = repo_file("ops/autodeploy/deploy_manifest.txt")
+    if se is None:
+        return [(INFO, "NOT EVALUATED - sensor.py is not readable here")]
+    bad = []
+    if '"--catch-up" in sys.argv' not in se or 'get("loop_date") == now.strftime("%Y-%m-%d")' not in se:
+        bad.append("sensor.py lost its --catch-up no-op guard")
+    if not cr or "@reboot" not in cr or "sensor.py --catch-up" not in cr:
+        bad.append("the catch-up cron file lost its @reboot / --catch-up lines")
+    if not mg or "/etc/cron.d/marketsquare-sensor-catchup" not in mg:
+        bad.append("migration 052 no longer installs the catch-up cron")
+    if not mf or not re.search(r"(?m)^sensor\.py\s*\|\s*sensor\.py\s*$", mf):
+        bad.append("sensor.py is no longer in the deploy manifest -- the flag would never reach the box")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "catch-up armed: after boot + hourly, no-op once today's run exists")]
 
 if __name__ == "__main__":
     sys.exit(main())

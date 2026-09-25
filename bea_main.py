@@ -12403,7 +12403,10 @@ def lm_file_complaint(req: LMComplaintIn, _key: str = Depends(auth.require_api_k
         conn.close()
         raise HTTPException(status_code=409, detail="You have already reported this introduction.")
     try:
-        _age = conn.execute("SELECT julianday('now') - julianday(?) AS d", (intro.get("created_at"),)).fetchone()["d"]
+        # PG-PORTABLE-4 (25 Sep 2026): age computed in Python, not with SQLite's julianday().
+        _ca = str(intro.get("created_at") or "").replace("T", " ").replace("Z", "")[:19]
+        _age = ((datetime.now(timezone.utc).replace(tzinfo=None) - datetime.fromisoformat(_ca)).total_seconds() / 86400.0
+                if _ca else None)
     except Exception:
         _age = 0
     if _age is not None and _age > LM_NOSHOW_WINDOW_DAYS:
@@ -12462,8 +12465,8 @@ def lm_my_accepted(email: str = "", _key: str = Depends(auth.require_api_key),
                LEFT JOIN lm_complaints c ON c.intro_id = i.id
                WHERE i.intro_type = 'local_market' AND i.status = 'accepted'
                  AND LOWER(l.seller_email) = ?
-                 AND i.created_at >= datetime('now', ?)
-               ORDER BY i.created_at DESC""", (me, "-%d days" % LM_NOSHOW_WINDOW_DAYS)).fetchall()
+                 AND i.created_at >= ?
+               ORDER BY i.created_at DESC""", (me, _sql_since(days=LM_NOSHOW_WINDOW_DAYS))).fetchall()  # PG-PORTABLE-4
         out = []
         for r in rows:
             out.append({"intro_id": r["intro_id"], "listing_id": r["listing_id"], "title": r["title"],
@@ -18171,7 +18174,8 @@ def auth_verify(req: _SignInVerify, response: Response):
         if _row and _t.time() - float(_row["used_at"]) > 60:
             raise HTTPException(status_code=410, detail="This sign-in link was already used — request a new one.")
         if not _row:
-            conn.execute("INSERT OR IGNORE INTO used_signin_links (link_hash, used_at) VALUES (?, ?)", (_h, _t.time()))
+            conn.execute("INSERT INTO used_signin_links (link_hash, used_at) VALUES (?, ?) "
+                         "ON CONFLICT(link_hash) DO NOTHING", (_h, _t.time()))  # portable: pg-ratchet (PG-PORTABLE-4)
             conn.execute("DELETE FROM used_signin_links WHERE used_at < ?", (_t.time() - 8 * 86400,))
             conn.commit()
     finally:
@@ -26168,11 +26172,11 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
         b3 = conn.execute(
             """SELECT LOWER(l.seller_email) AS seller, COUNT(*) AS n
                FROM intro_requests ir JOIN listings l ON l.id = ir.listing_id
-               WHERE ir.status = 'expired' AND ir.created_at >= datetime('now', '-30 days')
+               WHERE ir.status = 'expired' AND ir.created_at >= ?
                  AND (l.is_demo = 0 OR l.is_demo IS NULL)
                  AND LOWER(COALESCE(l.category,'')) NOT IN ('local_market','local market')
                  AND l.seller_email IS NOT NULL AND l.seller_email != ''
-               GROUP BY LOWER(l.seller_email) HAVING COUNT(*) >= 3""").fetchall()
+               GROUP BY LOWER(l.seller_email) HAVING COUNT(*) >= 3""", (_sql_since(days=30),)).fetchall()  # PG-PORTABLE-4
         res["b3_blocked"] = 0
         for sb in b3:
             live = conn.execute("SELECT id, title FROM listings WHERE LOWER(seller_email) = ? "

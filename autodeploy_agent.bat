@@ -62,6 +62,10 @@ if exist "%~dp0.secrets\hetzner_token.txt" (
     ver >nul
 )
 
+:: GIT-LOCK-6 (25 Sep 2026, DW-154): every tick (20 min) sweeps git locks older than 15 minutes,
+:: so a lock stranded by a sandbox commit clears within the hour instead of waiting for the next
+:: git-writing job. Aged-only: a live commit (even an invisible sandbox one) is never touched.
+call "%~dp0git_unlock.bat" /aged >nul 2>&1
 if not exist "%REQ%" if not exist "%CLREQ%" exit /b 0
 
 call "%~dp0git_unlock.bat" >nul 2>&1
