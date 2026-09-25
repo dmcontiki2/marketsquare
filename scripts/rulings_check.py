@@ -1097,6 +1097,12 @@ REFLECTIONS = {
  # QUICK-OPEN-RATE-1 (25 Sep 2026): Quick wage rates are typed with a minimum-wage floor, no preset amounts.
  # VOUCH-WHO-1 (25 Sep 2026): the reference is worded for whoever the seller works for.
  # COUNTRY-PACK-1 (25 Sep 2026): Quick examples follow her country and city.
+ # SHARE-CHAIN-ALL-1 (25 Sep 2026): every business is a Share Chain; Buzz free, Tuppence only on a new introduction.
+ "RUL-171": [
+   ("RULINGS.md", ["EVERY BUSINESS IS A SHARE CHAIN"], []),
+   ("genie/INTEREST_ON_INTEREST_LOOP.html", ["RUL-171", "Her regulars stay hers"], []),
+   ("genie/SHARE_CHAIN.html", ["Worker \u2192 hirer is the only referral that counts"], []),
+ ],
  "RUL-170": [
    ("RULINGS.md", ["QUICK'S EXAMPLES FOLLOW WHERE SHE IS"], []),
    ("quick.html", ["COUNTRY-PACK-1", "var QPACK =", "Which city?"], []),

@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Interest on interest — every business spreads TrustSquare</title>
+<style>
+:root{
+  --bg:#f6f5f1; --card:#ffffff; --ink:#1c1b18; --ink2:#55534c; --muted:#8a877d; --line:#e4e1d8;
+  --seller:#6d28d9; --seller-bg:#f1ebfd;
+  --regular:#1d6fd1; --regular-bg:#e8f0fc;
+  --gain:#0f8a55; --gain-bg:#e6f5ed;
+  --revenue:#b77800; --revenue-bg:#fcf3dd;
+  --friction:#c2362b; --friction-bg:#fcebe9;
+  --k1:#b39cf2; --k2:#7c3aed; --k3:#4c1d95;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141413; --card:#1f1e1c; --ink:#f4f2ea; --ink2:#c3c2b7; --muted:#8f8c82; --line:#34322e;
+    --seller:#a78bfa; --seller-bg:#2a2140;
+    --regular:#5ea1ef; --regular-bg:#18273b;
+    --gain:#3cc487; --gain-bg:#16301f;
+    --revenue:#e6a82a; --revenue-bg:#33280f;
+    --friction:#ef6b5f; --friction-bg:#3a1a17;
+    --k1:#6d4fc4; --k2:#9d7bf5; --k3:#d2c3ff;
+  }
+}
+:root[data-theme="dark"]{
+    --bg:#141413; --card:#1f1e1c; --ink:#f4f2ea; --ink2:#c3c2b7; --muted:#8f8c82; --line:#34322e;
+    --seller:#a78bfa; --seller-bg:#2a2140;
+    --regular:#5ea1ef; --regular-bg:#18273b;
+    --gain:#3cc487; --gain-bg:#16301f;
+    --revenue:#e6a82a; --revenue-bg:#33280f;
+    --friction:#ef6b5f; --friction-bg:#3a1a17;
+    --k1:#6d4fc4; --k2:#9d7bf5; --k3:#d2c3ff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+h1{font-size:26px;line-height:1.2;margin:0 0 6px}
+.sub{color:var(--ink2);margin:0 0 18px;max-width:760px}
+.key{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600}
+.chip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.c-seller{background:var(--seller-bg);color:var(--seller)} .c-seller i{background:var(--seller)}
+.c-regular{background:var(--regular-bg);color:var(--regular)} .c-regular i{background:var(--regular)}
+.c-gain{background:var(--gain-bg);color:var(--gain)} .c-gain i{background:var(--gain)}
+.c-revenue{background:var(--revenue-bg);color:var(--revenue)} .c-revenue i{background:var(--revenue)}
+.c-friction{background:var(--friction-bg);color:var(--friction)} .c-friction i{background:var(--friction)}
+.grid{display:grid;grid-template-columns:1.15fr 1fr;gap:16px}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h2{font-size:15px;margin:0 0 4px;letter-spacing:.2px}
+.card .hint{color:var(--muted);font-size:13px;margin:0 0 12px}
+svg text{font-family:inherit}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+@media (max-width:760px){.three{grid-template-columns:1fr}}
+.who{border-radius:12px;padding:14px;border-left:5px solid}
+.who h3{margin:0 0 6px;font-size:14px}
+.who ul{margin:0;padding-left:18px} .who li{margin:3px 0;font-size:14px}
+.w-seller{background:var(--seller-bg);border-color:var(--seller)} .w-seller h3{color:var(--seller)}
+.w-regular{background:var(--regular-bg);border-color:var(--regular)} .w-regular h3{color:var(--regular)}
+.w-rev{background:var(--revenue-bg);border-color:var(--revenue)} .w-rev h3{color:var(--revenue)}
+.report{margin-top:16px}
+.rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:640px){.rgrid{grid-template-columns:repeat(2,1fr)}}
+.tile{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.tile b{display:block;font-size:22px;line-height:1.1}
+.tile span{font-size:12.5px;color:var(--ink2)}
+.tile.warn b{color:var(--friction)} .tile.good b{color:var(--gain)}
+.decide{margin-top:16px;background:var(--revenue-bg);border:1px dashed var(--revenue);border-radius:12px;padding:14px 16px}
+.decide b{color:var(--revenue)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink2);margin:6px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:18px;height:3px;border-radius:2px;display:inline-block}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:6px 9px;border-radius:7px;opacity:0;transition:opacity .1s;white-space:nowrap}
+table.data{border-collapse:collapse;font-size:12.5px;margin-top:8px;width:100%}
+table.data td,table.data th{border-bottom:1px solid var(--line);padding:3px 6px;text-align:right;color:var(--ink2)}
+table.data th:first-child,table.data td:first-child{text-align:left}
+details summary{cursor:pointer;color:var(--muted);font-size:12.5px;margin-top:8px}
+.foot{color:var(--muted);font-size:12px;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Interest on interest — every business spreads TrustSquare</h1>
+  <p class="sub">The hairdresser hands Quick + Buzz to her regulars because it makes <em>her</em> money faster; some of those regulars run businesses too, and they do the same — each round recruits the next, at no acquisition cost to TrustSquare.</p>
+
+  <div class="key">
+    <span class="chip c-seller"><i></i>Sellers / businesses</span>
+    <span class="chip c-regular"><i></i>Regulars / customers</span>
+    <span class="chip c-gain"><i></i>Seller's gain</span>
+    <span class="chip c-revenue"><i></i>TrustSquare revenue</span>
+    <span class="chip c-friction"><i></i>Friction risk</span>
+  </div>
+
+  <div class="grid">
+    <!-- LOOP -->
+    <div class="card">
+      <h2>The loop</h2>
+      <p class="hint">Example names from one tradition: Thandi (hairdresser); regulars Sipho, Nomsa, Zanele.</p>
+      <svg viewBox="0 0 560 460" width="100%" role="img" aria-label="Flywheel: seller invites regulars, regulars book via Buzz, seller profits, some regulars are sellers who invite theirs; every regular meeting an unknown seller earns Tuppence">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+          </marker>
+          <marker id="ahr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--revenue)"/>
+          </marker>
+        </defs>
+        <path d="M392,56 C452,56 462,120 462,176" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#ah)"/>
+        <path d="M462,284 C462,350 440,408 404,408" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#ah)"/>
+        <path d="M158,408 C120,408 98,350 98,276" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#ah)"/>
+        <path d="M98,188 C98,112 120,56 166,56" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#ah)"/>
+
+        <rect x="170" y="20" width="220" height="72" rx="12" fill="var(--seller-bg)" stroke="var(--seller)" stroke-width="2"/>
+        <text x="280" y="46" text-anchor="middle" font-size="14" font-weight="700" fill="var(--seller)">1 · Thandi, hairdresser</text>
+        <text x="280" y="65" text-anchor="middle" font-size="12" fill="var(--ink2)">hands her Quick link / QR</text>
+        <text x="280" y="81" text-anchor="middle" font-size="12" fill="var(--ink2)">to all her regulars</text>
+
+        <rect x="370" y="182" width="184" height="100" rx="12" fill="var(--regular-bg)" stroke="var(--regular)" stroke-width="2"/>
+        <text x="462" y="206" text-anchor="middle" font-size="14" font-weight="700" fill="var(--regular)">2 · Regulars join</text>
+        <text x="462" y="225" text-anchor="middle" font-size="12" fill="var(--ink2)">book &amp; Buzz her direct,</text>
+        <text x="462" y="241" text-anchor="middle" font-size="12" fill="var(--ink2)">both consent once</text>
+        <rect x="374" y="251" width="176" height="22" rx="6" fill="var(--friction-bg)"/>
+        <text x="462" y="266" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--friction)">⚠ iPhone: home screen first</text>
+
+        <rect x="160" y="368" width="240" height="76" rx="12" fill="var(--gain-bg)" stroke="var(--gain)" stroke-width="2"/>
+        <text x="280" y="393" text-anchor="middle" font-size="14" font-weight="700" fill="var(--gain)">3 · Thandi profits faster</text>
+        <text x="280" y="412" text-anchor="middle" font-size="12" fill="var(--ink2)">fewer missed bookings, faster</text>
+        <text x="280" y="428" text-anchor="middle" font-size="12" fill="var(--ink2)">reaction, monthly report</text>
+
+        <rect x="6" y="190" width="184" height="84" rx="12" fill="var(--seller-bg)" stroke="var(--seller)" stroke-width="2"/>
+        <text x="98" y="214" text-anchor="middle" font-size="14" font-weight="700" fill="var(--seller)">4 · Sipho, Nomsa…</text>
+        <text x="98" y="233" text-anchor="middle" font-size="12" fill="var(--ink2)">plumber, tutor: see it work,</text>
+        <text x="98" y="249" text-anchor="middle" font-size="12" fill="var(--ink2)">list, then invite</text>
+        <text x="98" y="265" text-anchor="middle" font-size="12" fill="var(--ink2)">THEIR regulars</text>
+
+        <circle cx="280" cy="232" r="70" fill="var(--revenue-bg)" stroke="var(--revenue)" stroke-width="2"/>
+        <text x="280" y="206" text-anchor="middle" font-size="13.5" font-weight="700" fill="var(--revenue)">TrustSquare</text>
+        <text x="280" y="226" text-anchor="middle" font-size="11.5" fill="var(--ink2)">Tuppence when</text>
+        <text x="280" y="242" text-anchor="middle" font-size="11.5" fill="var(--ink2)">a regular meets</text>
+        <text x="280" y="258" text-anchor="middle" font-size="11.5" fill="var(--ink2)">a seller she</text>
+        <text x="280" y="274" text-anchor="middle" font-size="11.5" fill="var(--ink2)">doesn't know</text>
+        <path d="M368,232 L354,232" stroke="var(--revenue)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ahr)"/>
+        <path d="M192,232 L206,232" stroke="var(--revenue)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ahr)"/>
+      </svg>
+    </div>
+
+    <!-- MATH -->
+    <div class="card">
+      <h2>Why it compounds — sellers per 100 founders</h2>
+      <p class="hint">K = regulars each seller brings × share of them who start listing. Example: 50 regulars each.</p>
+      <svg id="chart" viewBox="0 0 440 300" width="100%" role="img" aria-label="Cumulative sellers per 100 founding sellers over six invite rounds for K 0.5, 1.0 and 1.5"></svg>
+      <div class="legend">
+        <span><i style="background:var(--k1)"></i>K 0.5 — 1% list</span>
+        <span><i style="background:var(--k2)"></i>K 1.0 — 2% list</span>
+        <span><i style="background:var(--k3)"></i>K 1.5 — 3% list</span>
+      </div>
+      <details><summary>Table view</summary>
+        <table class="data" id="tbl"></table>
+      </details>
+    </div>
+  </div>
+
+  <div class="three">
+    <div class="who w-seller">
+      <h3>Seller's selling reason</h3>
+      <ul>
+        <li>Regulars book and Buzz her directly — no WhatsApp chaos.</li>
+        <li>Late / sick / "can you fit me in" arrives as a named buzz.</li>
+        <li>A monthly report shows who's gone quiet, so she wins them back.</li>
+        <li><b>Her regulars stay hers</b> — no other seller can ever see who they are, only anonymous adverts.</li>
+      </ul>
+    </div>
+    <div class="who w-regular">
+      <h3>Regular's reason</h3>
+      <ul>
+        <li>One tap to book the person she already trusts.</li>
+        <li>Already inside the app when she needs a plumber or tutor.</li>
+      </ul>
+    </div>
+    <div class="who w-rev">
+      <h3>TrustSquare's return</h3>
+      <ul>
+        <li>Every seller does user acquisition for free, out of self-interest.</li>
+        <li>Revenue comes when regulars meet sellers they don't know.</li>
+        <li>Some regulars become sellers — the "interest on interest".</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card report">
+    <h2>Generic monthly report — one template, labels change per category</h2>
+    <p class="hint">Same data shape for a hairdresser, tutor, housekeeper or plumber; only "clients / pupils / households" changes.</p>
+    <div class="rgrid">
+      <div class="tile"><b>46</b><span>bookings this month</span></div>
+      <div class="tile good"><b>78%</b><span>came back within 6 weeks (repeat rate)</span></div>
+      <div class="tile"><b>Fri · Sat</b><span>busiest days</span></div>
+      <div class="tile warn"><b>5</b><span>late / cancel buzzes</span></div>
+      <div class="tile warn"><b>7</b><span>regulars gone quiet 6+ weeks — tap to buzz</span></div>
+      <div class="tile good"><b>+4</b><span>new regulars joined via your link</span></div>
+    </div>
+  </div>
+
+  <div class="decide">
+    <b>RULED 25 Sep 2026 — RUL-171:</b> every business is a Share Chain. Buzz is free, and so is booking between a seller and her own invited regulars; Tuppence only when a regular is introduced to a seller she doesn't know. Revenue comes from introductions, features and referrals (Travelpayouts), with the Auctions boost business added later. Privacy is unchanged: nobody else ever sees who her regulars are, only anonymous adverts.
+  </div>
+
+  <p class="foot">Illustration only — example numbers, not measured data. Built 25 Sep 2026 for the Buzz / Quick Listing discussion.</p>
+</div>
+<div id="tip"></div>
+<script>
+(function(){
+  var K=[0.5,1.0,1.5], cols=["var(--k1)","var(--k2)","var(--k3)"], R=6;
+  var series=K.map(function(k){var a=[],c=0,g=100;for(var i=0;i<=R;i++){c+=g;a.push(Math.round(c));g*=k;}return a;});
+  var svg=document.getElementById("chart"), ns="http://www.w3.org/2000/svg";
+  var L=52,T=16,W=440-L-58,H=300-T-40, max=3400;
+  function x(i){return L+i*W/R} function y(v){return T+H-v/max*H}
+  function el(n,a,p){var e=document.createElementNS(ns,n);for(var k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e;}
+  [0,1000,2000,3000].forEach(function(v){
+    el("line",{x1:L,x2:L+W,y1:y(v),y2:y(v),stroke:"var(--line)","stroke-width":1});
+    var t=el("text",{x:L-8,y:y(v)+4,"text-anchor":"end","font-size":11,fill:"var(--muted)"});t.textContent=v.toLocaleString("en-ZA");
+  });
+  for(var i=0;i<=R;i++){var t=el("text",{x:x(i),y:T+H+18,"text-anchor":"middle","font-size":11,fill:"var(--muted)"});t.textContent=i;}
+  var xl=el("text",{x:L+W/2,y:T+H+34,"text-anchor":"middle","font-size":11,fill:"var(--muted)"});xl.textContent="invite rounds";
+  series.forEach(function(s,si){
+    el("polyline",{points:s.map(function(v,i){return x(i)+","+y(v)}).join(" "),fill:"none",stroke:cols[si],"stroke-width":2,"stroke-linejoin":"round"});
+    s.forEach(function(v,i){el("circle",{cx:x(i),cy:y(v),r:4,fill:cols[si],stroke:"var(--card)","stroke-width":2});});
+    var lt=el("text",{x:x(R)+8,y:y(s[R])+4,"font-size":12,"font-weight":700,fill:"var(--ink)"});lt.textContent=s[R].toLocaleString("en-ZA");
+  });
+  // hover: crosshair per round
+  var tip=document.getElementById("tip"), cross=el("line",{x1:0,x2:0,y1:T,y2:T+H,stroke:"var(--muted)","stroke-dasharray":"3 3",opacity:0});
+  for(var j=0;j<=R;j++)(function(j){
+    var hit=el("rect",{x:x(j)-W/R/2,y:T,width:W/R,height:H,fill:"transparent"});
+    hit.addEventListener("mousemove",function(e){cross.setAttribute("x1",x(j));cross.setAttribute("x2",x(j));cross.setAttribute("opacity",1);
+      tip.innerHTML="Round "+j+"<br>K 0.5: "+series[0][j].toLocaleString("en-ZA")+"<br>K 1.0: "+series[1][j].toLocaleString("en-ZA")+"<br>K 1.5: "+series[2][j].toLocaleString("en-ZA");
+      tip.style.left=(e.clientX+14)+"px";tip.style.top=(e.clientY-10)+"px";tip.style.opacity=1;});
+    hit.addEventListener("mouseleave",function(){tip.style.opacity=0;cross.setAttribute("opacity",0);});
+  })(j);
+  var tb="<tr><th>Round</th>"+series[0].map(function(_,i){return"<th>"+i+"</th>"}).join("")+"</tr>";
+  K.forEach(function(k,si){tb+="<tr><td>K "+k.toFixed(1)+"</td>"+series[si].map(function(v){return"<td>"+v.toLocaleString("en-ZA")+"</td>"}).join("")+"</tr>";});
+  document.getElementById("tbl").innerHTML=tb;
+})();
+</script>
+</body>
+</html>
