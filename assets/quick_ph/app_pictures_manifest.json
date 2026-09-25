@@ -840,5 +840,89 @@
   "provider": "higgsfield",
   "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. An empty vacant residential plot of land with grass, a few trees and boundary pegs in a quiet suburb, no house on it.",
   "ruling": "RUL-164 / GOODS-FIT-1"
+ },
+ "svc_plumber": {
+  "made": "2026-09-25T12:33:45.811084Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. A plumber's gloved hands fitting a chrome tap under a kitchen sink with a pipe wrench and new copper pipes, no face visible.",
+  "ruling": "RUL-164 / KIND-FIT-1"
+ },
+ "svc_handyman": {
+  "made": "2026-09-25T12:34:51.592865Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. A handyman's open toolbox with a cordless drill, spirit level, tape measure and screws on a wooden workbench, a shelf half-mounted on the wall behind.",
+  "ruling": "RUL-164 / KIND-FIT-1"
+ },
+ "svc_painter": {
+  "made": "2026-09-25T12:37:05.725066Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. A freshly painted interior wall in a warm colour with a paint roller, tray and brushes on a drop cloth, masking tape along the skirting board.",
+  "ruling": "RUL-164 / KIND-FIT-1"
+ },
+ "svc_pool": {
+  "made": "2026-09-25T12:38:03.711070Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. A sparkling blue backyard swimming pool being cleaned with a leaf net and brush on long poles, a basket of pool chemicals beside it, no people.",
+  "ruling": "RUL-164 / KIND-FIT-1"
+ },
+ "lm_crafts": {
+  "made": "2026-09-25T12:39:52.258512Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. Handmade crafts on a market table: beaded jewellery, woven baskets, small carved wooden animals and glazed pottery bowls.",
+  "ruling": "RUL-164 / KIND-FIT-1"
+ },
+ "tut_english": {
+  "made": "2026-09-25T12:41:33.310711Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. A learner's desk with an open English novel, a stack of paperback classics, a notebook with tiny unreadable handwriting, a pencil and a reading lamp.",
+  "ruling": "RUL-164 / KIND-FIT-1"
+ },
+ "tut_afrikaans": {
+  "made": "2026-09-25T12:43:31.253954Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. A school exercise book, a thick bilingual dictionary and a pencil case on a desk beside a window with purple jacaranda trees outside, a language lesson.",
+  "ruling": "RUL-164 / KIND-FIT-1"
+ },
+ "tut_accounting": {
+  "made": "2026-09-25T12:45:08.678210Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. An accounting study desk: a ledger workbook with ruled columns, a calculator, a few receipts and a highlighter, no readable text.",
+  "ruling": "RUL-164 / KIND-FIT-1"
+ },
+ "tut_coding": {
+  "made": "2026-09-25T12:46:22.779063Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. A laptop showing blurred colourful lines of code on a tidy study desk with a notebook and a cup of tea, a coding lesson at home.",
+  "ruling": "RUL-164 / KIND-FIT-1"
+ },
+ "hh_cleaning": {
+  "made": "2026-09-25T12:47:48.099308Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. Cleaning supplies - a mop and bucket, spray bottles and cloths - on a freshly cleaned, shining tiled kitchen floor in a family home, no people.",
+  "ruling": "RUL-164 / KIND-FIT-1"
+ },
+ "hh_laundry": {
+  "made": "2026-09-25T12:48:38.410278Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. A neat pile of freshly ironed shirts and folded towels beside an iron on an ironing board in a sunny laundry room, no people.",
+  "ruling": "RUL-164 / KIND-FIT-1"
+ },
+ "hh_cooking": {
+  "made": "2026-09-25T12:49:53.460753Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. A home-cooked South African meal being prepared on a stove: a pot of stew, fresh vegetables and a wooden spoon on the kitchen counter, no people.",
+  "ruling": "RUL-164 / KIND-FIT-1"
+ },
+ "hh_childminding": {
+  "made": "2026-09-25T12:51:07.560274Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. A tidy children's play corner in a family home with wooden building blocks, picture books and a soft play mat, sunny window, no people.",
+  "ruling": "RUL-164 / KIND-FIT-1"
+ },
+ "hh_office": {
+  "made": "2026-09-25T12:52:13.384413Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product/marketplace photograph, square 1:1, natural warm light, South African setting. NO readable text, NO logos, NO brand names or badges, NO number plates, NO faces. An open-plan office after cleaning: a vacuum cleaner and a cleaning trolley beside tidy desks and shining floors, evening light, no people.",
+  "ruling": "RUL-164 / KIND-FIT-1"
  }
 }

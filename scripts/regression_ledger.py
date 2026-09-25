@@ -29454,5 +29454,36 @@ def rg_goods_fit_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "goods drafts fit the pick, repo and live")]
 
+@entry("RG-0487", "KIND-FIT-1 + CUSTOMER-REF-1: every Quick kind wears its own picture (Services, Crafts, Tutors, Home help) "
+       "and a Local Market seller is vouched for by 'A customer'",
+       OPEN, fixed_on="",
+       scope="quick.html KIND-FIT-1 block + vouchWho localmarket line; 14 pictures svc_/lm_crafts/tut_/hh_* under /static/quick. "
+             "CLASS: no kind tile may borrow another kind's picture; the reference names who really vouches for that seller.",
+       ref="David 25 Sep 2026: a Plants draft showed a house and said 'someone you worked for' -- 'it should rather say "
+           "a customer'; 'it is mostly to add photo generic types with the right categories' (14 pictures approved).")
+def rg_kind_fit_1():
+    q = repo_file("quick.html")
+    bad = []
+    if q is not None:
+        for tok, what in (("'Pool care':'svc_pool'", "the pool-care picture"), ("'Crafts':'lm_crafts'", "the crafts picture"),
+                          ("'Coding':'tut_coding'", "the coding picture"), ("'Childminding':'hh_childminding'", "the childminding picture"),
+                          ("if(k==='localmarket') return {subj:'A customer'", "the customer reference")):
+            if tok not in q:
+                bad.append("quick.html lost " + what)
+    live = _get("/q/")
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - /q/ unreadable")] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if "KIND-FIT-1 (David 25 Sep 2026). The last kinds" not in live:
+        bad.append("live Quick has no KIND-FIT-1 (not deployed?)")
+    try:
+        import urllib.request as _u
+        for k in ("svc_pool", "hh_childminding", "tut_coding"):
+            _u.urlopen(_u.Request(BASE + "/static/quick/%s.jpg" % k, method="HEAD", headers=UA), timeout=15)
+    except Exception as e:
+        bad.append("kind pictures not served (%s)" % str(e)[:40])
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "every kind wears its own picture, repo and live")]
+
 if __name__ == "__main__":
     sys.exit(main())
