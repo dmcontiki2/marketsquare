@@ -588,6 +588,10 @@ _TEXT_KEYS = frozenset({
     "title", "suburb", "area", "city", "prop_type", "make", "model", "msg", "message", "seller_name",
     "display_name", "business_name", "agency_name", "headline", "tagline", "summary", "heading",
     "caption", "location", "name", "subtitle", "bullets", "sections", "description", "desc",
+    # CONTENT-GATE-2 (25 Sep 2026 inspection, ts1-01/ts2-01/ts3-02/ts3-04): seller- and buyer-written fields the
+    # app also paints into the page, which this list had missed.
+    "subject", "level", "mode", "service_type", "service_class", "availability", "buyer_name", "buyer_first_name",
+    "price", "per", "other_name", "from_name", "colour", "variant", "body_type", "condition", "destination",
 })
 # Keys whose values must be a plain https:// (or same-site /path) link - nothing that can break out of
 # an attribute or run as a scheme.
@@ -600,6 +604,10 @@ def _pt(v):
     if isinstance(v, str):
         if "<" in v or ">" in v:
             v = re.sub(r"<[^>]*>", "", v).replace("<", "\u2039").replace(">", "\u203a")
+        if '"' in v:
+            # CONTENT-GATE-2 (25 Sep 2026 inspection, ts2-03): a straight double quote let a title break out of
+            # alt="..." / src="..." and add its own handler; it leaves as a typographic quote instead.
+            v = re.sub(r'(^|[\s(\[{])"', lambda m: m.group(1) + "\u201c", v).replace('"', "\u201d")
         return v
     if isinstance(v, list):
         return [_pt(x) for x in v]
@@ -633,7 +641,7 @@ def _encode(obj):
     if isinstance(obj, list):
         return [_encode(x) for x in obj]
     if isinstance(obj, dict):
-        record = "id" in obj
+        record = "id" in obj or "pair_id" in obj   # CONTENT-GATE-2: Buzz pair rows carry pair_id, not id
         out = {}
         for k, v in obj.items():
             if k in _URL_KEYS:

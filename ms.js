@@ -93,6 +93,20 @@ function r2Fallback(img) {
 }
 const API_KEY = 'ms_mk_2026_pretoria_admin';
 window.API_KEY = API_KEY;
+/* QUICK-LINK-CARRY-1 (25 Sep 2026 inspection, ts1-12 + quick-13): every link from the app into Quick carries the way
+   back (from=app) and the reader's language (quick.html already reads ?lang=), so nobody lands in Quick in English
+   with no road home. Rewritten at tap time, so static links in marketsquare.html are covered too. */
+document.addEventListener('click', function(e){
+  var a = (e.target && e.target.closest) ? e.target.closest('a[href^="/quick/"],a[href^="/quick.html"]') : null;
+  if(!a) return;
+  try{
+    var u = new URL(a.getAttribute('href'), location.origin);
+    if(!u.searchParams.get('from')) u.searchParams.set('from', 'app');
+    var _ql = ''; try{ _ql = (localStorage.getItem('ts_lang') || '').toLowerCase(); }catch(_){}
+    if(_ql && _ql !== 'en' && !u.searchParams.get('lang')) u.searchParams.set('lang', _ql);
+    a.setAttribute('href', u.pathname + u.search + u.hash);
+  }catch(_){}
+}, true);
 // QUICK-LIVE-1 (15 Sep 2026): quick.html is a separate page on this same origin and
 // does not load this file, so the key reaches it here rather than being typed out a
 // second time - one place to change on a rotation. Same key, already shipped above.
@@ -971,6 +985,12 @@ async function _msInit(){
       }catch(e){ showToast('Could not sign you in — please try again.'); }
     })();
   }
+  /* DRAFT-AFTER-SIGNIN-1 (25 Sep 2026 inspection, ts1-06): the 6-digit code and Google/Apple sign-ins reload the page
+     to '/', so the ?draft branch above never ran again and the advert she was promised never opened. A draft still
+     waiting in this tab opens now. */
+  if(!sp.get('signin') && !sp.get('draft')){
+    try{ if(sessionStorage.getItem('ts_land_draft') && _msIsSignedIn()){ setTimeout(function(){ try{ goTo('dashboard'); msLandDraft(); }catch(_){} }, 600); } }catch(_){}
+  }
   if(sp.get('magic')==='1'){
     magicLink = {
       active: true,
@@ -1155,7 +1175,8 @@ async function _msInit(){
               sobSelTier(sobState.selectedTier);
               showToast((d.label || sobState.selectedTier) + ' activated — complete your EULA to go live.', 4000);
             } else {
-              showToast('Subscription activated! Re-open your magic link to finish onboarding.');
+              showToast((d.label ? d.label : 'Your new plan') + ' is active \u2014 thank you.', 5000);   // PLAN-RETURN-1: a Plans-screen upgrade has nothing to resume
+              try{ if(typeof loadLiveDash==='function') loadLiveDash(); goTo('dashboard'); }catch(_){}
             }
           } else {
             showToast('Subscription payment could not be verified — contact support if you were charged.');
@@ -2251,7 +2272,7 @@ async function _subSelectTier(tierId, tierLabel, usdPrice, isDowngrade) {
 
   try {
     const r = await fetch(BEA_URL + '/payment/seller-subscription/initialize?email=' +
-      encodeURIComponent(email) + '&tier=' + tierId, { method: 'POST' });
+      encodeURIComponent(email) + '&tier=' + tierId + '&callback_url=' + encodeURIComponent(window.location.origin + window.location.pathname + '?ps_sub_return=1'), { method: 'POST' });   // PLAN-RETURN-1: come back to the handler that applies the plan
     const d = await r.json();
     if (!r.ok) { showToast(d.detail || 'Could not start payment'); return; }
     showToast(isDowngrade ? 'Downgrade scheduled.' : 'Redirecting to payment…');
@@ -2302,7 +2323,7 @@ function setPlan(tier, label){
   }
   if (!email) { showToast('Sign in first to upgrade'); return; }
   // Initiate Paystack subscription payment
-  const cb = encodeURIComponent(window.location.href.split('?')[0] + '?sub_verify=1');
+  const cb = encodeURIComponent(window.location.origin + window.location.pathname + '?ps_sub_return=1');   // PLAN-RETURN-1 (25 Sep 2026 inspection, ts1-02): nothing read ?sub_verify, so a paid upgrade was never applied
   fetch(BEA_URL + '/payment/seller-subscription/initialize?email=' + encodeURIComponent(email) +
         '&tier=' + tier + '&callback_url=' + cb, { method: 'POST' })
     .then(r => r.json())
@@ -3853,6 +3874,7 @@ async function selectCity(id, name, lat, lng) {
   renderFeatured();
   renderHomeStats();
   if (viewMode === 'map') renderMap();
+  try{ loadLiveListings(0); }catch(_){}   // CITY-SWITCH-LOAD-1 (25 Sep 2026 inspection, ts1-07): the new city's adverts, now
 }
 
 async function selectSuburb(id, name) {
@@ -5004,7 +5026,9 @@ function msLandDraft(){
       return;
     }
     if(n>0) setTimeout(function(){ tryIt(n-1); }, 500);
-  })(20);
+    else { try{ sessionStorage.removeItem('ts_land_draft'); }catch(e){}   /* DRAFT-AFTER-SIGNIN-1: never a silent give-up */
+      if(typeof showToast==='function') showToast('We could not find that advert on this account yet \u2014 if you used another email in Quick, sign in with that one.', 7000); }
+  })(40);
 }
 
 /* ===========================================================================
@@ -5048,6 +5072,12 @@ function msLangView(l){
 })();
 
 function openDetail(id){
+  /* LM-DEEPLINK-1 (25 Sep 2026 inspection, ts1-03): a Local Market advert opened from a link (Quick's Find, a Status
+     share) opens on its own page -- the ordinary page asked the buyer for 1T, and Local Market is free for buyers. */
+  try{
+    const _lmL = findListing(id) || ((id != null && !String(id).startsWith('bea_')) ? findListing('bea_' + id) : null);
+    if (_lmL && _lmL.cat === 'LocalMarket' && typeof lmOpenDetail === 'function') { lmOpenDetail(String(_lmL.id).replace(/^bea_/, '')); return; }
+  }catch(_){}
   // DEAD-CLICK GUARD (TS-0002/0003, 5 Aug 2026). Two failures met here:
   //  1. FEA listing ids are 'bea_N' STRINGS; BEA ids are integers. A raw integer from
   //     /listings/mine matched nothing and openDetail threw on l.trust — inside a
@@ -6010,6 +6040,9 @@ async function _msSellerCanReceive(id){
     const beaId=parseInt(String(l.id).replace('bea_',''),10); if(!beaId) return true;
     const r=await fetch(BEA_URL+'/listings/'+beaId); if(!r.ok) return true;
     const d=await r.json();
+    /* INTRO-GATE-MATCH-1 (25 Sep 2026 inspection, ts4-01): gate on the server's own answer. The paid Home Affairs
+       tick alone locked 44 of the 65 live adverts whose sellers the server accepts (verified ID document or agency). */
+    if (typeof d.seller_can_receive === 'boolean') return d.seller_can_receive;
     return d.seller_id_green_tick !== false;
   }catch(_){ return true; }   /* unknown never blocks a buyer; the server still decides */
 }
@@ -10434,7 +10467,7 @@ function renderDashCard(dl){
       ${wonderBanners}
       ${introsHtml}
       ${lmNoShowRows(dl)}
-      ${dl.beaListingId?(_ls==='archived'?`<div class="ml-actions"><span style="font-size:11px;color:var(--text-3);">Archived — an archived advert cannot come back. Make a new one any time.</span><button class="mla-btn" style="color:#dc2626;border-color:#fecaca;" onclick="dashDeleteListing(${dl.beaListingId}, ${JSON.stringify(String(dl.title||'')).replace(/"/g,'&quot;')})">Delete</button></div>`:`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${(dl.status!=='draft'&&_ls==='live')?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||''))})">Share to Status</button>`:''}${_ls==='live'?`<button class="mla-btn" onclick="msPauseListing(${dl.beaListingId}, true)">Pause</button>`:''}${_ls==='paused'?`<button class="mla-btn accent" onclick="msPauseListing(${dl.beaListingId}, false)">Resume</button>`:''}</div>`):''}
+      ${dl.beaListingId?(_ls==='archived'?`<div class="ml-actions"><span style="font-size:11px;color:var(--text-3);">Archived — an archived advert cannot come back. Make a new one any time.</span><button class="mla-btn" style="color:#dc2626;border-color:#fecaca;" onclick="dashDeleteListing(${dl.beaListingId}, ${JSON.stringify(String(dl.title||'')).replace(/"/g,'&quot;')})">Delete</button></div>`:`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${(dl.status!=='draft'&&_ls==='live')?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||'')).replace(/"/g,'&quot;')})">Share to Status</button>`:''}${_ls==='live'?`<button class="mla-btn" onclick="msPauseListing(${dl.beaListingId}, true)">Pause</button>`:''}${_ls==='paused'?`<button class="mla-btn accent" onclick="msPauseListing(${dl.beaListingId}, false)">Resume</button>`:''}</div>`):''}
     </div>
   </div>`;
 }
@@ -10536,9 +10569,11 @@ async function dashPublish(listingId){
       sobState._needEula=true;
       /* seed ONLY the listing he tapped -- an unseeded sobInit re-fetches and would
          take every other draft live with it, which he did not ask for */
-      sobState.drafts=[{id:listingId, title:_r.title||(_dl&&_dl.title)||'Your listing',
+      /* CAR-ATTEST-SEED-1 (25 Sep 2026 inspection, ts2-02): seed the FULL row -- a Quick car carries make and year,
+         and without them the vehicle-confirmation card never showed, so every publish failed 409 for good. */
+      sobState.drafts=[Object.assign({}, _r, {id:listingId, title:_r.title||(_dl&&_dl.title)||'Your listing',
         price:_r.price||'POA', category:_r.category||'', city:_r.city||'',
-        listing_status:'draft'}];
+        listing_status:'draft'})];
       showToast('One step first \u2014 please read and accept the Terms, then it goes live.');
       goTo('seller-onboard');
       return;
@@ -11654,9 +11689,15 @@ async function saveEditedListing() {
   if (fd.rate && !fd.price) {
     payload.price = _elRateWithBasis(fd.rate, (elCurrentRaw && elCurrentRaw.price) || '');   // E2E-HMI-1
   } else if (fd.price || fd.rate) {
-    // Strip currency symbols, spaces, commas and any text — keep digits and one decimal point only
-    const rawP = (fd.price || fd.rate).replace(/[^0-9.]/g, '');
-    payload.price = rawP || (fd.price || fd.rate);
+    /* PRICE-KEEP-1 (25 Sep 2026 inspection, ts3-01): the box shows the stored price stripped to digits, so re-sending
+       it turned a Quick range like 'R1 000–R5 000' into R10,005,000 on ANY save. An untouched box leaves the stored
+       price alone; a typed price is still reduced to its digits as before. */
+    const _storedP = String((elCurrentRaw && elCurrentRaw.price) || '');
+    const _typedP  = String(fd.price || fd.rate);
+    if (!(_storedP && _typedP === _storedP.replace(/[^0-9.]/g, ''))) {
+      const rawP = _typedP.replace(/[^0-9.]/g, '');
+      payload.price = rawP || _typedP;
+    }
   }
   if (fd.desc)         payload.description  = fd.desc;
   // E2E-HMI-1: keep the description's **Rate:** header in step with the price just saved.
@@ -14189,9 +14230,11 @@ async function buzzRender(){
        + 'them four taps, it opens your trust score — and it connects the two of you here, so the '
        + 'first buzz you ever send is to somebody who has already vouched for you.</p></div>';
   } else {
-    _bzPairs.forEach(function(p, i){
+    _bzPairs.forEach(function(p0, i){
+      /* BUZZ-ESC-1 (25 Sep 2026 inspection, ts3-04): names come from other people -- escaped before they touch the page. */
+      var p = Object.assign({}, p0, {other_name: _lmEsc(p0.other_name||''), other_email: _lmEsc(p0.other_email||'')});
       h += '<div class="ms-card" id="bz-card-'+i+'">'
-        + '<div class="bz-who"><div class="bz-av">'+bzInitials(p.other_name)+'</div>'
+        + '<div class="bz-who"><div class="bz-av">'+_lmEsc(bzInitials(p0.other_name||''))+'</div>'
         + '<div class="bz-nm">'+p.other_name+'<span>'+p.other_email+'</span></div></div>';
       if(p.closed){
         h += '<div class="bz-closed">Buzz is closed between you and '+p.other_name+'. '
@@ -14289,14 +14332,14 @@ async function buzzRender(){
         const j = await bzApi('/buzz', 'POST',
           {from_email: bzEmail(), to_email: p.other_email, text: text});
         inp.value = ''; document.getElementById('bz-left-'+i).textContent = '';
-        said.innerHTML = '<div class="bz-said">Sent as <b>' + j.from_name + '</b> — '
-          + (j.delivered==='push' ? ('it buzzed ' + p.other_name + '’s phone.')
-            : j.delivered==='email' ? (p.other_name + ' has no push on this account, so it went to '
+        said.innerHTML = '<div class="bz-said">Sent as <b>' + _lmEsc(j.from_name) + '</b> — '
+          + (j.delivered==='push' ? ('it buzzed ' + _lmEsc(p.other_name) + '’s phone.')
+            : j.delivered==='email' ? (_lmEsc(p.other_name) + ' has no push on this account, so it went to '
                 + 'their email.')
             : 'nothing could carry it — check with them directly.')
           + '</div>';
       }catch(e){
-        said.innerHTML = '<div class="bz-said bad">' + e.message + '</div>';
+        said.innerHTML = '<div class="bz-said bad">' + _lmEsc(e.message) + '</div>';
       }
       btn.disabled = false; btn.textContent = 'Buzz';
     };
@@ -19997,7 +20040,7 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
     if(listingId){
       // BUGSWEEP-24SEP: by listing - /listings/{id} carries seller_id_green_tick, never the email.
       const lr = await fetch(BEA_URL + '/listings/' + encodeURIComponent(listingId));
-      if(lr.ok){ const ld = await lr.json(); if(typeof ld.seller_id_green_tick === 'boolean') st = {green_tick: ld.seller_id_green_tick}; }
+      if(lr.ok){ const ld = await lr.json(); if(typeof ld.seller_can_receive === 'boolean') st = {green_tick: ld.seller_can_receive}; else if(typeof ld.seller_id_green_tick === 'boolean') st = {green_tick: ld.seller_id_green_tick}; }   /* INTRO-GATE-MATCH-1 */
     } else if(sellerEmail){
       st = await msIdStatus(sellerEmail);
     }

@@ -5006,6 +5006,18 @@ def get_listing(listing_id: int, ts_user: str = Cookie(default=None),
         _d["seller_id_green_tick"] = bool(id_status(_d.get("seller_email") or "").get("green_tick"))
     except Exception:
         pass
+    # INTRO-GATE-MATCH-1 (25 Sep 2026 inspection, ts4-01): the app locked introductions on the paid Home Affairs tick
+    # while this server's real rule (_seller_intro_gate) accepts a verified ID document or a verified agency -- 44 of
+    # the 65 live adverts were locked for buyers the server would serve. The server's own answer now travels on the
+    # listing (a yes/no only; the seller's identity never leaves).
+    try:
+        _gc = database.get_db()
+        try:
+            _d["seller_can_receive"] = _seller_intro_gate(_gc, _d.get("seller_email") or "") is None
+        finally:
+            _gc.close()
+    except Exception:
+        pass
     if not _me or _me != (_d.get("seller_email") or "").strip().lower():
         for _k in ("seller_email", "attested_email"):
             _d.pop(_k, None)
@@ -7976,6 +7988,12 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
     if listing_status != "live":
         conn.close()
         raise HTTPException(status_code=409, detail=f"Listing is not available for introductions (status: {listing_status})")
+    # LM-PAID-GUARD-1 (25 Sep 2026 inspection, ts1-03): Local Market introductions are free for buyers and run through
+    # /local-market/intro. A paid request on a Local Market advert (an app page opened from a link) would hold and then
+    # burn the buyer's 1T, so it is refused before anything is held.
+    if (listing["category"] or "").strip().lower() in ("local_market", "local market"):
+        conn.close()
+        raise HTTPException(status_code=409, detail="Local Market introductions are free for buyers \u2014 open the advert in Local Market to ask.")
     # Self-intro guard — buyer cannot intro their own listing
     if listing["seller_email"] and intro.buyer_email and        listing["seller_email"].lower() == intro.buyer_email.lower():
         conn.close()
