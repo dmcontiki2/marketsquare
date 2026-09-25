@@ -29138,7 +29138,7 @@ def rg_arrive_exit():
        "TrustSquare adverts and a tap opens the advert; her advert is filed in the city of the area she chose; her Quick "
        "language carries into the app; Quick's tile covers /quick/ only; the Quick tile is offered at her first save; "
        "'Pass Quick on' (single-use invite, QR + share sheet, the other person's Accept)",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="quick.html SEAM-1 module + celebrate() hooks; static/brand/quick.webmanifest. SCOPE: source + live /quick/ page.",
        ref="David 25 Sep 2026 seam audit (QUICK_TS_SEAM_AUDIT_2026-09-25.html) and his calls: gate A, both tiles at their "
            "moments, build Pass it on now. Probed before the fix: one Back left Quick mid-advert; Find showed five invented "
@@ -29175,7 +29175,7 @@ def rg_seam_quick():
 @entry("RG-0478", "SEAM-1 (app side): a small Quick door inside Sell (David's option A) that now has a way back; "
        "the repo copy of TrustSquare's manifest matches the served one (id / start_url / scope, RUL-123); a push tap opens "
        "TrustSquare, never the Quick door",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="marketsquare.html sell sheet + ms.js sfHomeS(); static/brand/site.webmanifest; assets/service-worker.js.",
        ref="David 25 Sep 2026: 'we do need it in the app somewhere but small and unobtrusive' -> A. The served manifest "
            "(12 Sep) already carried the RUL-123 fields; the repo's static/brand copy had drifted without them.")
@@ -29205,7 +29205,7 @@ def rg_seam_app():
 
 @entry("RG-0479", "QUICK-PASS-1 (server): /quick-invite routes -- create, read, accept ONCE, cancel, QR; a first name at most, "
        "never a number or a key link; declared public in route_policy.json",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="bea_main.py QUICK-PASS-1 block; route_policy.json; migrations/053_quick_invites.py. SCOPE: source + live.",
        ref="David 25 Sep 2026: 'Build it now'. TestClient: create 200, read open, QR PNG, accept 200, second accept 409, "
            "cancel after accept 409, unknown 404; stranger test PASS (299 routes).")
@@ -29235,7 +29235,7 @@ def rg_quick_pass_server():
 
 @entry("RG-0480", "FTS-KEYWORD-1: a search containing OR / AND / NOT / NEAR never breaks the listings query (it answered "
        "HTTP 500 on 'garden OR service'); operators are dropped and every term is quoted",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="bea_main.py get_listings() full-text branch. SCOPE: source + live GET /listings.",
        ref="Found 25 Sep 2026 in the Quick/TrustSquare seam audit while wiring Find to real adverts: "
            "/listings?q=garden%20OR%20servic* -> 500. sqlite FTS5 check: quoted terms parse, bare OR* does not.")
