@@ -51,11 +51,15 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 | Chef | D | IN | David's list. Sits oddly between Casuals and a trade — worth a word in the review. |
 | Laundry & ironing |  | OUT | 19 Sep: a task, not a name she calls herself — stays an option on Home cleaner's *what* tap, where the live homehelp door already has it. |
 | Gardener |  | IN | Already an option on the live homehelp door. |
-| Pool cleaner |  | LATER | Every role costs a parity-checked photo set (SO-2); beta carries the volume roles. |
-| Window cleaner |  | LATER | Homes rarely hire one directly in SA; office windows are contract work. |
+| Pool cleaner |  | IN | 25 Sep 2026: IN (RUL-172, David: 'All of them'). Every role costs a parity-checked photo set (SO-2); beta carries the volume roles. |
+| Window cleaner |  | IN | 25 Sep 2026: IN (RUL-172, David: 'All of them'). Homes rarely hire one directly in SA; office windows are contract work. |
 | Handyman |  | IN | Added 19 Sep — the biggest household hire missing from the slate. Casuals ladder (no licence claimed; anything electrical or gas stays with the Technical trades). |
-| Pet sitter / dog walker |  | LATER | Added 19 Sep. |
+| Pet sitter / dog walker |  | IN | 25 Sep 2026: IN (RUL-172, David: 'All of them'). Added 19 Sep. |
 | House sitter |  | LATER | Added 19 Sep. Home access — RUL-115 gate applies; clearance a bonus, not a gate. |
+| Carpet washer |  | IN | 25 Sep 2026: IN (RUL-172, David: 'All of them'). Carpets and upholstery in homes and offices; self-employed, so the reference reads 'A customer'. |
+| Au pair |  | IN | 25 Sep 2026: IN (RUL-172, David: 'All of them'). Lives with the family and minds the children. **Police clearance gates public visibility (RUL-153)**, same as Nanny. Tap override: *children's ages*. |
+| Tree cutter |  | IN | 25 Sep 2026: IN (RUL-172, David: 'All of them'). Felling, trimming and removal; the customer is the household or estate. |
+| Garden waste removal |  | IN | 25 Sep 2026: IN (RUL-172, David: 'All of them'). Refuse and garden-waste runs with a bakkie or trailer; a customer, not an employer. |
 
 ### Food & hospitality
 
@@ -71,6 +75,10 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 | Baker |  | LATER | Low volume; mostly in-store supermarket bakeries. |
 | Butchery assistant |  | LATER | Renamed 19 Sep (was "Butcher's assistant") — the SA word. |
 | Banqueting / function staff |  | OUT | 19 Sep: merged into Event staff — one job under two labels. |
+| Griller / braai |  | IN | 25 Sep 2026: IN (RUL-172, David: 'All of them'). The braai at functions, shisanyamas and events; paid by the customer or the venue. |
+| Hotel porter |  | IN | 25 Sep 2026: IN (RUL-172, David: 'All of them'). Luggage and guest service at hotels; the hotel group enrols. |
+| Lodge staff |  | IN | 25 Sep 2026: IN (RUL-172, David: 'All of them'). Game-lodge and guest-lodge all-rounders (rooms, dining, guest care); the lodge enrols. |
+| Caterer |  | IN | 25 Sep 2026: IN (RUL-172, David: 'All of them'). Food for functions from her own kitchen; self-employed, so the reference reads 'A customer'. |
 
 ### Retail & forecourt
 
@@ -126,6 +134,7 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 | Role | D | Decision | Notes |
 |---|:--:|:--:|---|
 | Security guard |  | IN | 19 Sep: was HOLD (s15c). PSIRA registration is a legal requirement to work. Licence gate (RUL-155/156): publicly visible once PSIRA registration is verified. |
+| Bodyguard |  | IN | 25 Sep 2026: IN (RUL-172, David: 'All of them'). Close protection. PSIRA registration is a legal requirement: licence gate (RUL-156), publicly visible once PSIRA is verified. |
 
 ---
 
@@ -230,9 +239,6 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 
 | Role | Group | Why | Comes back when |
 |---|---|---|---|
-| Pool cleaner | Home & care | Every role costs a parity-checked photo set (SO-2); beta carries the volume roles. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
-| Window cleaner | Home & care | Homes rarely hire one directly in SA; office windows are contract work. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
-| Pet sitter / dog walker | Home & care | Added 19 Sep. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
 | House sitter | Home & care | Added 19 Sep. Home access — RUL-115 gate applies; clearance a bonus, not a gate. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
 | Barista | Food & hospitality | Small, city-centre-only pool. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
 | Baker | Food & hospitality | Low volume; mostly in-store supermarket bakeries. | Beta roles have their parity-checked photo sets (SO-2) and beta has closed. |
@@ -280,3 +286,4 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 - **20 Sep 2026, LANGUAGE PREVIEW (not a ruling, at David's instruction until his readers have checked it):** quick.html follows the phone's language on the Quick door (en / zu / st / af / xh); a globe pill on every screen switches both ways, so reviewers and employers can flip back to English; 'Languages I work in' chips on the finish screen, pre-ticked with the door language. Words: `roles/quick_i18n.json` (143 strings x 4, Claude's first draft) -> injected by `scripts/sync_quick_roles.py`. OPEN: David's readers check the file; then the ruling; the main-app Translate button is not built. Visual: `roles/QUICK_LANGUAGE_WALKTHROUGH.html`.
 
 - **20 Sep 2026, AFRIKAANS RE-DONE BY HAND (I18N-AF-1) — David read the live pages: "the Afrikaans has many mistakes... some sounded more Dutch than Afrikaans", then "Wereld Erfenis...".** He was right on every count: the runtime lane ran on the cheapest tier with a one-line prompt and bare, context-free labels, so it gave *Uitgelicht* for Featured (Dutch), *Wereld Erfenis* for World Heritage (Dutch spacing, no circumflex), *Vertroue Telling* for the Trust Score brand name, *KPA* for CPA and *FOUTE* for OPS — it translated the acronyms — and it dropped lines silently ("Make an introduction" never appeared in Afrikaans at all). FIX, at David's instruction ("if it is done once and then kept, then we can use Opus 5"): the whole live Afrikaans cache — 2,066 phrases — was re-done by hand in one sitting and is now KEPT in `roles/app_i18n_af.json`; migration 045 overwrites the machine rows with it. 1,564 phrases are checked Afrikaans; 502 stay ENGLISH on purpose — EULA and legal clauses (RUL-143: the English binds, and half-checked Afrikaans legal text is worse than English), acronyms, codes and admin references — and are seeded as themselves so the runtime never machine-translates them again. The runtime prompt is rewritten for the stragglers: South African Afrikaans and never Dutch, an explicit do-not-translate list, labels told they are buttons, and one retry when a line comes back missing instead of dropping it. NOT A RULING, per David's standing instruction that the language work becomes a ruling only after his readers have checked it — isiZulu, Sesotho and isiXhosa are still first-draft quality and wait for them.
+- **25 Sep 2026, RUL-172 (David + Claude):** the 42-type board on orchestrator/quick_listing.html was checked against the slate. David: 'All of them'. Pool cleaner, Window cleaner and Pet sitter / dog walker move LATER -> IN; nine board types never on the slate are added IN: Carpet washer, Au pair (clearance gate), Tree cutter, Garden waste removal, Griller / braai, Hotel porter, Lodge staff, Caterer, Bodyguard (PSIRA gate). House sitter stays LATER.

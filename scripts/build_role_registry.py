@@ -233,6 +233,33 @@ MERGED = {  # OUT rows that live on as a search alias of a live role (explicit, 
 }
 SPLIT = {"miner_general", "industry_worker_skilled"}  # buckets: the person picks the real trade
 
+# ---- RUL-172 (David, 25 Sep 2026: "All of them") -- the board's types brought in ----
+PIC.update({
+ "pet_sitter_dog_walker": "a dog lead, a water bowl and a tennis ball on a leafy suburban garden path",
+ "carpet_washer": "a carpet-cleaning machine on a half-cleaned lounge carpet, the clean stripe clearly brighter",
+ "au_pair": "a family kitchen table with a child's lunchbox, school books and a car key ready for the school run",
+ "tree_cutter": "a freshly felled tree trunk cut into rounds on a lawn, with a chainsaw and safety helmet beside it",
+ "garden_waste_removal": "a bakkie load bin piled with branches and bagged garden refuse beside a tidy garden",
+ "griller_braai": "meat and boerewors sizzling on a hot braai grid over glowing coals at an outdoor function",
+ "hotel_porter": "a brass luggage trolley stacked with suitcases in a bright hotel lobby",
+ "lodge_staff": "a game-lodge deck set for breakfast overlooking the bushveld at sunrise",
+ "caterer": "a long buffet table of covered chafing dishes and platters set up for a function",
+ "bodyguard": "a black sedan's open rear door at a hotel entrance at night with an earpiece on the seat",
+})
+AF.update({"pet_sitter_dog_walker": "Troeteldieroppasser / hondestapper", "carpet_washer": "Matskoonmaker",
+ "au_pair": "Au pair", "tree_cutter": "Boomafkapper", "garden_waste_removal": "Tuinvullisverwydering",
+ "griller_braai": "Braaier", "hotel_porter": "Hotelportier", "lodge_staff": "Lodge-personeel",
+ "caterer": "Spysenier", "bodyguard": "Lyfwag"})
+GATES.update({"au_pair": CLEAR, "bodyguard": LIC("psira")})
+EK.update({"pool_cleaner": ["household", "estate"], "window_cleaner": ["household", "contract_cleaner"],
+ "pet_sitter_dog_walker": ["household"], "carpet_washer": ["household", "contract_cleaner"], "au_pair": ["household"],
+ "tree_cutter": ["household", "estate", "municipality"], "garden_waste_removal": ["household", "estate"],
+ "griller_braai": ["restaurant", "caterer"], "hotel_porter": ["hotel_group"], "lodge_staff": ["hotel_group"],
+ "caterer": ["caterer", "hotel_group"], "bodyguard": ["security_company"]})
+STEP_OVERRIDES.update({"au_pair": {"what": AGES},
+ "pet_sitter_dog_walker": {"what": {"key": "pets", "q": "Which pets do you look after?", "kind": "tile", "multi": True,
+   "tiles": [{"t": "Dogs"}, {"t": "Cats"}, {"t": "Birds"}, {"t": "Other pets"}]}}})
+
 def main():
     t = io.open(SLATE, encoding="utf-8").read()
     body = t.split("## RULED")[0]
@@ -282,7 +309,7 @@ def main():
     keys = [r["key"] for r in roles]
     assert len(keys) == len(set(keys)), "duplicate role key"
     out = {"_generated_by": "scripts/build_role_registry.py from ROLE_SLATE_REVIEW.md -- never hand-edit",
-           "_rulings": ["RUL-150", "RUL-153", "RUL-154", "RUL-155", "RUL-156", "RUL-157"],
+           "_rulings": ["RUL-150", "RUL-153", "RUL-154", "RUL-155", "RUL-156", "RUL-157", "RUL-172"],
            "_invariant": "Enrolment creates an account and a sign-in link, never a listing (RUL-150).",
            "door": {"category": "services", "picker_steps": PICKER_STEPS, "taps_to_draft": 5,
                     "ruling": "RUL-159"},

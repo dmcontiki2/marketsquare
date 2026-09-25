@@ -1,0 +1,29 @@
+{
+  "run": "20260925T054637Z",
+  "mode": "SHADOW (kill switch OFF \u2014 default, cannot commit)",
+  "seen": 0,
+  "intake": {
+    "app_faults_new": 0,
+    "email_lane": {
+      "lane": "email_triage",
+      "error": "HTTPError: HTTP Error 401: Unauthorized",
+      "note": "customer email lane UNREAD this run -- treat 'seen' as partial"
+    }
+  },
+  "actions": [],
+  "backup": {
+    "ran": true,
+    "outcome": "ok: OK  archive 2026-09-25_0547.zip (1658445 bytes), restores clean, users=122 listings=126"
+  },
+  "standup": {
+    "ran": true,
+    "state": "FRESH",
+    "reason": "newest pulse line is dated 2026-09-24 (5.8 h)",
+    "age_h": 5.8
+  },
+  "screen_walk": {
+    "ran": true,
+    "state": "OK",
+    "outcome": "[screen-walk] walked 5 languages in 30s | [screen-walk] OK"
+  }
+}

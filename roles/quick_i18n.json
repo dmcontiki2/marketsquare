@@ -2919,6 +2919,132 @@
    "Moreki o re",
    "Umthengi uthi",
    "Moreki o re"
+  ],
+  "Pool cleaner": [
+   "Swembadskoonmaker",
+   "Umhlanzi wamachibi okubhukuda",
+   "Mohloekisi wa letamo la ho sesa",
+   "Umcoci wamadama okuqubha",
+   "Mohlwekiši wa bodiba bja go rutha"
+  ],
+  "Window cleaner": [
+   "Vensterskoonmaker",
+   "Umhlanzi wamafasitela",
+   "Mohloekisi wa difenstere",
+   "Umcoci weefestile",
+   "Mohlwekiši wa mafasetere"
+  ],
+  "Pet sitter / dog walker": [
+   "Troeteldieroppasser / hondestapper",
+   "Umgcini wezilwane / umhambisi wezinja",
+   "Mohlokomedi wa diphoofolo / mohatisi wa dintja",
+   "Umgcini wezilwanyana / umhambisi wezinja",
+   "Mohlokomedi wa diphoofolo / mosepediši wa dimpša"
+  ],
+  "Carpet washer": [
+   "Matskoonmaker",
+   "Umgezi wokhaphethi",
+   "Mohlatswi wa dikhapete",
+   "Umhlambi weekhaphethi",
+   "Mohlatswi wa dikhapete"
+  ],
+  "Au pair": [
+   "Au pair",
+   "I-au pair",
+   "Au pair",
+   "I-au pair",
+   "Au pair"
+  ],
+  "Tree cutter": [
+   "Boomafkapper",
+   "Umgawuli wezihlahla",
+   "Morema difate",
+   "Umgawuli wemithi",
+   "Moremi wa dihlare"
+  ],
+  "Garden waste removal": [
+   "Tuinvullisverwydering",
+   "Ukususwa kwemfucuza yengadi",
+   "Ho tlosa matlakala a serapa",
+   "Ukususwa kwenkunkuma yegadi",
+   "Go tloša ditlakala tša serapa"
+  ],
+  "Griller / braai": [
+   "Braaier",
+   "Umosi wenyama / braai",
+   "Mohadiki wa nama / braai",
+   "Umoji wenyama / braai",
+   "Mohadiki wa nama / braai"
+  ],
+  "Hotel porter": [
+   "Hotelportier",
+   "Umthwali wemithwalo ehhotela",
+   "Mojari wa thoto hoteleng",
+   "Umthwali wemithwalo ehotele",
+   "Mojari wa dithoto hoteleng"
+  ],
+  "Lodge staff": [
+   "Lodge-personeel",
+   "Abasebenzi be-lodge",
+   "Basebetsi ba lodge",
+   "Abasebenzi be-lodge",
+   "Bašomi ba lodge"
+  ],
+  "Caterer": [
+   "Spysenier",
+   "Umphakeli wokudla",
+   "Mofepi wa mekete",
+   "Umlungiseleli wokutya",
+   "Mofepi wa menyanya"
+  ],
+  "Bodyguard": [
+   "Lyfwag",
+   "Unogada womuntu",
+   "Molebeledi wa motho",
+   "Unogada womntu",
+   "Mohlapetši wa motho"
+  ],
+  "Which pets do you look after?": [
+   "Watter troeteldiere versorg jy?",
+   "Unakekela iziphi izilwane?",
+   "O hlokomela diphoofolo dife?",
+   "Ukhathalela eziphi izilwanyana?",
+   "O hlokomela diphoofolo dife?"
+  ],
+  "Dogs": [
+   "Honde",
+   "Izinja",
+   "Dintja",
+   "Izinja",
+   "Dimpša"
+  ],
+  "Cats": [
+   "Katte",
+   "Amakati",
+   "Dikatse",
+   "Iikati",
+   "Dikatse"
+  ],
+  "Birds": [
+   "Voëls",
+   "Izinyoni",
+   "Dinonyana",
+   "Iintaka",
+   "Dinonyana"
+  ],
+  "Other pets": [
+   "Ander troeteldiere",
+   "Ezinye izilwane",
+   "Diphoofolo tse ding",
+   "Ezinye izilwanyana",
+   "Diphoofolo tše dingwe"
+  ],
+  "your regular customer, Menlyn": [
+   "jou vaste klant, Menlyn",
+   "ikhasimende lakho elivamile, eMenlyn",
+   "moreki wa hao wa kamehla, Menlyn",
+   "umthengi wakho oqhelekileyo, eMenlyn",
+   "moreki wa gago wa ka mehla, Menlyn"
   ]
  },
  "p": [

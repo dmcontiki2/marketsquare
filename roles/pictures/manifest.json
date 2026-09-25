@@ -547,5 +547,75 @@
   "approved": true,
   "approved_by": "David",
   "approved_at": "2026-09-19T17:59:07"
+ },
+ "pool_cleaner": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-25T20:44:23",
+  "prompt_sha": "2bf3fa309b74",
+  "approved": false
+ },
+ "window_cleaner": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-25T20:45:43",
+  "prompt_sha": "1dd64b872df4",
+  "approved": false
+ },
+ "pet_sitter_dog_walker": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-25T20:47:06",
+  "prompt_sha": "c58170dd4da8",
+  "approved": false
+ },
+ "carpet_washer": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-25T20:48:19",
+  "prompt_sha": "e2de60543403",
+  "approved": false
+ },
+ "au_pair": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-25T20:50:41",
+  "prompt_sha": "d88ebe715853",
+  "approved": false
+ },
+ "tree_cutter": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-25T20:51:59",
+  "prompt_sha": "6239b38fd8cc",
+  "approved": false
+ },
+ "garden_waste_removal": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-25T20:53:43",
+  "prompt_sha": "e8feb1680019",
+  "approved": false
+ },
+ "griller_braai": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-25T20:54:59",
+  "prompt_sha": "80492454d8c1",
+  "approved": false
+ },
+ "hotel_porter": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-25T20:56:23",
+  "prompt_sha": "cc0a5d9caef2",
+  "approved": false
+ },
+ "lodge_staff": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-09-25T20:57:31",
+  "prompt_sha": "15a21c0cfbf6",
+  "approved": false
  }
 }

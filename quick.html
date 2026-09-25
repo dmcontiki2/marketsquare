@@ -1121,6 +1121,7 @@ function handOver(done){
 function vouchWho(){
   var k=cat().key, w=pickOf('what'), r=null;
   try{ if(w && typeof SVC_ROLES!=='undefined') for(var i=0;i<SVC_ROLES.length;i++) if(SVC_ROLES[i].l===w.label){ r=SVC_ROLES[i]; break; } }catch(e){}
+  if(r && window.SVC_CUSTOMER && SVC_CUSTOMER[r.k]) return {subj:'A customer', demo:'You have used their work'};   /* RUL-172(c) */
   if(k==='homehelp' || (k==='services' && r && r.c==='C')) return {subj:'Your employer', demo:'You employed her'};
   if(k==='tutors') return {subj:'A parent or student you teach', demo:'You have used them as a tutor'};
   if(k==='services') return {subj:'A customer you have worked for', demo:'You have used their work'};
@@ -3198,8 +3199,8 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
                 'Clothes':/cloth|dress|shirt|apron|jacket|knitwear|fashion|shoe|\bhats?\b|scarf|skirt|jersey/i,
                 'Tools':/\btools?\b|drill|\bsaws?\b|spanner|hammer|wrench|grinder|equipment|workshop/i};
   window.GROUP_RX=GROUP_RX;
-  function groupRx(){ return cat().key==='localmarket' ? (GROUP_RX[roleLabel()]||null) : null; }
-  function typeFilter(list){ var g=groupRx(); if(g) return list.filter(function(l){ return g.test((l.title||'')+' '+(l.description||'')); });
+  function groupRx(){ return (cat().key==='localmarket' || (window.svcIs && svcIs(cat()))) ? (GROUP_RX[roleLabel()]||null) : null; }   /* SVC-FIND-1 */
+  function typeFilter(list){ var g=groupRx(); if(g) return list.filter(function(l){ return g.test((l.title||'')+' '+(l.description||'')+' '+(l.service_type||'')); });
     var w=roleLabel(), rx=TYPE_RX[w]; if(!rx || cat().key!=='adventures') return list;
     var want = w==='Game lodge' ? /accommodation/ : /experiences/;
     return list.filter(function(l){ return want.test(String(l.category||'')) && rx.test((l.title||'')+' '+(l.description||'')); }); }
@@ -3687,6 +3688,22 @@ var QPACK = {"ZA": {"name": "South Africa", "cur": "R", "tz": ["Africa/Johannesb
   Object.keys(K).forEach(function(c){ Object.keys(K[c]).forEach(function(n){ var k=K[c][n]; PH[k]=PH_BASE+k+'.jpg'; }); });
   CATS.forEach(function(c){ var m=K[c.key]; if(!m) return; ['sell','find'].forEach(function(side){ ((c[side]||{}).steps||[]).forEach(function(s){
     if(s.key==='what') (s.tiles||[]).forEach(function(t){ if(m[t.t]) t.p=m[t.t]; }); }); }); });
+})();
+
+/* ===========================================================================
+   SVC-FIND-1 + CUSTOMER-REF-2 (RUL-172, David 25 Sep 2026). A Services search returns that role only; the
+   self-employed are vouched for by a customer and buzz their regular customers.
+   ------------------------------------------------------------------------- */
+var SVC_CUSTOMER={"hair_braider": 1, "hairdresser": 1, "nail_technician": 1, "car_washer": 1, "seamstress_tailor": 1, "handyman": 1, "pool_cleaner": 1, "window_cleaner": 1, "pet_sitter_dog_walker": 1, "carpet_washer": 1, "tree_cutter": 1, "garden_waste_removal": 1, "griller_braai": 1, "caterer": 1};
+(function(){
+  var RX={"Home cleaner": "(home|house|domestic)\\W*(clean|help|work)|\\bdomestic\\b|laundry|ironing|^(?![\\s\\S]*(office|commercial|contract|carpet|window|pool|car)\\W*(clean|wash))[\\s\\S]*\\bclean(er|ers|ing)\\b", "Housekeeper": "housekeep", "Nanny": "nann(y|ies)|child\\W?mind|babysit|child\\W?care", "Caregiver": "care\\W?giv|\\bcarer\\b|elderly|frail\\W?care|home\\W?nurs|companion", "Cook": "\\bcook", "Chef": "\\bchef", "Gardener": "garden(er|ing|\\s+service)|\\blawn|landscap|grounds", "Handyman": "handy\\W?m[ae]n|odd\\W?jobs|home\\W?maintenance", "Pool cleaner": "pool\\W*(clean|service|care|maint)|swimming\\W*pool", "Window cleaner": "window\\W*(clean|wash)", "Pet sitter / dog walker": "dog\\W*walk|pet\\W*(sit|care|mind)|dog\\W*sit|cat\\W*sit", "Carpet washer": "carpet|rug\\W*clean|upholster", "Au pair": "au\\W?pair", "Tree cutter": "tree\\W*(cut|fell|remov|surg|trim|prun|work)|arborist", "Garden waste removal": "garden\\W*(waste|refuse|rubbish)|refuse\\W*remov|waste\\W*remov|rubble\\W*remov", "Room attendant": "room\\W*attend|chamber\\W?maid|hotel\\W*(clean|housekeep)", "Kitchen assistant": "kitchen\\W*(assist|hand|porter|help)|dish\\W?wash|scullery", "Cashier": "cashier|till\\W*operat", "Waiter": "\\bwait(er|ers|ress|ron|ing\\s+staff)", "Bartender": "bar\\W?(tender|man|men|maid|lady|person|staff)", "Griller / braai": "braai|griller|\\bgrill", "Hotel porter": "^(?![\\s\\S]*kitchen\\W*porter)[\\s\\S]*(porter|bell\\W?(boy|man|hop)|luggage)", "Lodge staff": "lodge\\W*(staff|work|host|attend|all\\W?round)|game\\W*lodge", "Caterer": "cater(er|ing)", "Petrol attendant": "petrol|fuel\\W*attend|forecourt", "Shelf packer": "shelf\\W*(pack|stack|fill)|stock\\W*assist", "Shop assistant": "(shop|sales|store|retail)\\W*assist", "Merchandiser": "merchandis", "Car guard": "car\\W*guard|parking\\W*attend", "Picker / packer": "^(?![\\s\\S]*shelf\\W*pack)[\\s\\S]*(\\bpicker|order\\W*pick|warehouse\\W*(pack|pick)|\\bpacker)", "Removals helper": "removals|remover|furniture\\W*mov|moving\\W*help|house\\W*mov|\\bmovers?\\b", "Delivery rider": "deliver(y|ies)|courier", "Farm worker": "farm\\W*(work|hand|labour)|farmhand", "General worker": "general\\W*(work|labour)|labourer|\\bloader\\b|factory\\W*work", "Painter": "^(?![\\s\\S]*spray\\W*paint)[\\s\\S]*paint(er|ers|ing)", "Builder's assistant": "builder\\W?s?\\W*assist|build(ing)?\\W*assist|construction\\W*(help|assist|labour)", "Office cleaner": "office\\W*clean|commercial\\W*clean|contract\\W*clean", "Seamstress / tailor": "seamstress|tailor|alteration|dress\\W?mak", "Sewing machinist": "sewing\\W*machin|machinist", "Hair braider": "braid", "Hairdresser": "hair\\W*(dress|styl|salon|cut)|barber", "Nail technician": "\\bnail", "Car washer": "car\\W*wash|valet", "Event staff": "event\\W*(staff|help|crew|work)|function\\W*staff|banquet", "Crèche assistant": "cr[eè]che|day\\W?care|pre\\W?school|nursery\\W*school", "Security guard": "^(?![\\s\\S]*(car\\W*guard|body\\W?guard))[\\s\\S]*(security|\\bguard|watch\\W?man|night\\W*watch|psira)", "Bodyguard": "body\\W?guard|close\\W*protection|vip\\W*protection", "Plant operator (TLB / excavator)": "plant\\W*operat|\\btlb\\b|excavator|backhoe|grader|bulldozer", "Boilermaker": "boiler\\W?mak", "Welder": "\\bweld", "Forklift operator": "fork\\W?lift", "Driver": "^(?![\\s\\S]*(taxi|shuttle|code\\W*1[04]\\b|long\\W?haul))[\\s\\S]*(driver|chauffeur)", "Code 10 / Code 14 driver": "code\\W*1[04]\\b|truck\\W*driv|long\\W?haul|heavy\\W*vehicle", "Taxi / shuttle driver": "taxi|shuttle", "Diesel mechanic": "diesel", "Motor mechanic": "^(?![\\s\\S]*diesel)[\\s\\S]*mechanic", "Auto electrician": "auto\\W*electric", "Electrician": "^(?![\\s\\S]*auto\\W*electric)[\\s\\S]*electric", "Gas installer": "\\bgas\\b", "Plumber": "plumb", "Bricklayer": "brick", "Plasterer": "plaster", "Tiler": "\\btil(er|ers|ing|es)\\b", "Carpenter": "carpent|joiner|woodwork", "Roofer": "roof|waterproof", "Paver": "\\bpav(er|ers|ing)\\b", "Air-con & refrigeration technician": "air\\W?con|refrigerat|hvac", "Solar PV installer": "solar", "Borehole & pump technician": "borehole|\\bpump", "CCTV / alarm installer": "cctv|alarm", "Gate & garage-door technician": "gate\\W*(motor|repair|automat|technic)|garage\\W*door", "Locksmith": "lock\\W?smith", "Appliance repair": "appliance"};
+  Object.keys(RX).forEach(function(l){ try{ window.GROUP_RX[l]=new RegExp(RX[l],'i'); }catch(e){} });
+  var _cm=comms;
+  comms=function(){ var c=_cm();
+    try{ var w=pickOf('what'), r=null; if(w) for(var i=0;i<SVC_ROLES.length;i++) if(SVC_ROLES[i].l===w.label){ r=SVC_ROLES[i]; break; }
+      if(r && SVC_CUSTOMER[r.k] && cat().key==='homehelp'){ var s=COMMS.services, o={}; for(var k in c) o[k]=c[k];
+        o.bRole=qTr('your regular customer, Menlyn'); o.card=s.sellCard; o.sellCard=s.sellCard; o.sample=s.sample; o.many=s.many; return o; } }catch(e){}
+    return c; };
 })();
 
 drawDoor();

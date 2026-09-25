@@ -6,7 +6,8 @@
   "RUL-154",
   "RUL-155",
   "RUL-156",
-  "RUL-157"
+  "RUL-157",
+  "RUL-172"
  ],
  "_invariant": "Enrolment creates an account and a sign-in link, never a listing (RUL-150).",
  "door": {
@@ -30,8 +31,8 @@
   "ruling": "RUL-159"
  },
  "counts": {
-  "in": 61,
-  "later": 19,
+  "in": 73,
+  "later": 16,
   "out": 19
  },
  "roles": [
@@ -543,7 +544,7 @@
    },
    "service_class": "Casuals",
    "group": "Home & care",
-   "status": "later",
+   "status": "in",
    "on_davids_list": false,
    "questions": [
     {
@@ -576,7 +577,8 @@
    ],
    "gate": null,
    "employer_kinds": [
-    "household"
+    "household",
+    "estate"
    ],
    "role_picture": {
     "file": "roles/pictures/pool_cleaner.png",
@@ -586,7 +588,7 @@
     "en": "Pool cleaner available in {where}",
     "af": "Swembadskoonmaker beskikbaar in {where}"
    },
-   "note": "Every role costs a parity-checked photo set (SO-2); beta carries the volume roles."
+   "note": "25 Sep 2026: IN (RUL-172, David: 'All of them'). Every role costs a parity-checked photo set (SO-2); beta carries the volume roles."
   },
   {
    "key": "window_cleaner",
@@ -599,7 +601,7 @@
    },
    "service_class": "Casuals",
    "group": "Home & care",
-   "status": "later",
+   "status": "in",
    "on_davids_list": false,
    "questions": [
     {
@@ -632,7 +634,8 @@
    ],
    "gate": null,
    "employer_kinds": [
-    "household"
+    "household",
+    "contract_cleaner"
    ],
    "role_picture": {
     "file": "roles/pictures/window_cleaner.png",
@@ -642,7 +645,7 @@
     "en": "Window cleaner available in {where}",
     "af": "Vensterskoonmaker beskikbaar in {where}"
    },
-   "note": "Homes rarely hire one directly in SA; office windows are contract work."
+   "note": "25 Sep 2026: IN (RUL-172, David: 'All of them'). Homes rarely hire one directly in SA; office windows are contract work."
   },
   {
    "key": "handyman",
@@ -705,14 +708,14 @@
    "key": "pet_sitter_dog_walker",
    "label": {
     "en": "Pet sitter / dog walker",
-    "af": "Troeteldieroppasser / honde-stapper",
+    "af": "Troeteldieroppasser / hondestapper",
     "zu": null,
     "st": null,
     "xh": null
    },
    "service_class": "Casuals",
    "group": "Home & care",
-   "status": "later",
+   "status": "in",
    "on_davids_list": false,
    "questions": [
     {
@@ -732,7 +735,28 @@
      "kind": "chip"
     }
    ],
-   "finish_questions": [],
+   "finish_questions": [
+    {
+     "key": "pets",
+     "q": "Which pets do you look after?",
+     "kind": "tile",
+     "multi": true,
+     "tiles": [
+      {
+       "t": "Dogs"
+      },
+      {
+       "t": "Cats"
+      },
+      {
+       "t": "Birds"
+      },
+      {
+       "t": "Other pets"
+      }
+     ]
+    }
+   ],
    "enrol_link": "/q/services?role=pet_sitter_dog_walker",
    "signals": [
     "category.services_cas.clearance",
@@ -749,13 +773,13 @@
    ],
    "role_picture": {
     "file": "roles/pictures/pet_sitter_dog_walker.png",
-    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a dog lead, water bowl and ball on a garden path. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a dog lead, a water bowl and a tennis ball on a leafy suburban garden path. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
    },
    "draft_title": {
     "en": "Pet sitter / dog walker available in {where}",
-    "af": "Troeteldieroppasser / honde-stapper beskikbaar in {where}"
+    "af": "Troeteldieroppasser / hondestapper beskikbaar in {where}"
    },
-   "note": "Added 19 Sep."
+   "note": "25 Sep 2026: IN (RUL-172, David: 'All of them'). Added 19 Sep."
   },
   {
    "key": "house_sitter",
@@ -812,6 +836,258 @@
     "af": "Huisoppasser beskikbaar in {where}"
    },
    "note": "Added 19 Sep. Home access — RUL-115 gate applies; clearance a bonus, not a gate."
+  },
+  {
+   "key": "carpet_washer",
+   "label": {
+    "en": "Carpet washer",
+    "af": "Matskoonmaker",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=carpet_washer",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household",
+    "contract_cleaner"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/carpet_washer.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a carpet-cleaning machine on a half-cleaned lounge carpet, the clean stripe clearly brighter. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Carpet washer available in {where}",
+    "af": "Matskoonmaker beskikbaar in {where}"
+   },
+   "note": "25 Sep 2026: IN (RUL-172, David: 'All of them'). Carpets and upholstery in homes and offices; self-employed, so the reference reads 'A customer'."
+  },
+  {
+   "key": "au_pair",
+   "label": {
+    "en": "Au pair",
+    "af": "Au pair",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [
+    {
+     "key": "ages",
+     "q": "Which ages do you care for?",
+     "kind": "tile",
+     "multi": true,
+     "tiles": [
+      {
+       "t": "Babies"
+      },
+      {
+       "t": "Toddlers"
+      },
+      {
+       "t": "School age"
+      },
+      {
+       "t": "Teenagers"
+      }
+     ]
+    }
+   ],
+   "enrol_link": "/q/services?role=au_pair",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-153"
+   },
+   "employer_kinds": [
+    "household"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/au_pair.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a family kitchen table with a child's lunchbox, school books and a car key ready for the school run. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Au pair available in {where}",
+    "af": "Au pair beskikbaar in {where}"
+   },
+   "note": "25 Sep 2026: IN (RUL-172, David: 'All of them'). Lives with the family and minds the children. **Police clearance gates public visibility (RUL-153)**, same as Nanny. Tap override: *children's ages*."
+  },
+  {
+   "key": "tree_cutter",
+   "label": {
+    "en": "Tree cutter",
+    "af": "Boomafkapper",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=tree_cutter",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household",
+    "estate",
+    "municipality"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/tree_cutter.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a freshly felled tree trunk cut into rounds on a lawn, with a chainsaw and safety helmet beside it. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Tree cutter available in {where}",
+    "af": "Boomafkapper beskikbaar in {where}"
+   },
+   "note": "25 Sep 2026: IN (RUL-172, David: 'All of them'). Felling, trimming and removal; the customer is the household or estate."
+  },
+  {
+   "key": "garden_waste_removal",
+   "label": {
+    "en": "Garden waste removal",
+    "af": "Tuinvullisverwydering",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Home & care",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=garden_waste_removal",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "household",
+    "estate"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/garden_waste_removal.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a bakkie load bin piled with branches and bagged garden refuse beside a tidy garden. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Garden waste removal available in {where}",
+    "af": "Tuinvullisverwydering beskikbaar in {where}"
+   },
+   "note": "25 Sep 2026: IN (RUL-172, David: 'All of them'). Refuse and garden-waste runs with a bakkie or trailer; a customer, not an employer."
   },
   {
    "key": "room_attendant",
@@ -1301,6 +1577,232 @@
    "on_davids_list": false,
    "merged_into": "event_staff",
    "note": "19 Sep: merged into Event staff — one job under two labels."
+  },
+  {
+   "key": "griller_braai",
+   "label": {
+    "en": "Griller / braai",
+    "af": "Braaier",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=griller_braai",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "restaurant",
+    "caterer"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/griller_braai.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: meat and boerewors sizzling on a hot braai grid over glowing coals at an outdoor function. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Griller / braai available in {where}",
+    "af": "Braaier beskikbaar in {where}"
+   },
+   "note": "25 Sep 2026: IN (RUL-172, David: 'All of them'). The braai at functions, shisanyamas and events; paid by the customer or the venue."
+  },
+  {
+   "key": "hotel_porter",
+   "label": {
+    "en": "Hotel porter",
+    "af": "Hotelportier",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=hotel_porter",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "hotel_group"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/hotel_porter.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a brass luggage trolley stacked with suitcases in a bright hotel lobby. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Hotel porter available in {where}",
+    "af": "Hotelportier beskikbaar in {where}"
+   },
+   "note": "25 Sep 2026: IN (RUL-172, David: 'All of them'). Luggage and guest service at hotels; the hotel group enrols."
+  },
+  {
+   "key": "lodge_staff",
+   "label": {
+    "en": "Lodge staff",
+    "af": "Lodge-personeel",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=lodge_staff",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "hotel_group"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/lodge_staff.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a game-lodge deck set for breakfast overlooking the bushveld at sunrise. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Lodge staff available in {where}",
+    "af": "Lodge-personeel beskikbaar in {where}"
+   },
+   "note": "25 Sep 2026: IN (RUL-172, David: 'All of them'). Game-lodge and guest-lodge all-rounders (rooms, dining, guest care); the lodge enrols."
+  },
+  {
+   "key": "caterer",
+   "label": {
+    "en": "Caterer",
+    "af": "Spysenier",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Food & hospitality",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=caterer",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": null,
+   "employer_kinds": [
+    "caterer",
+    "hotel_group"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/caterer.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a long buffet table of covered chafing dishes and platters set up for a function. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Caterer available in {where}",
+    "af": "Spysenier beskikbaar in {where}"
+   },
+   "note": "25 Sep 2026: IN (RUL-172, David: 'All of them'). Food for functions from her own kitchen; self-employed, so the reference reads 'A customer'."
   },
   {
    "key": "petrol_attendant",
@@ -2765,6 +3267,68 @@
     "af": "Sekuriteitswag beskikbaar in {where}"
    },
    "note": "19 Sep: was HOLD (s15c). PSIRA registration is a legal requirement to work. Licence gate (RUL-155/156): publicly visible once PSIRA registration is verified."
+  },
+  {
+   "key": "bodyguard",
+   "label": {
+    "en": "Bodyguard",
+    "af": "Lyfwag",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Casuals",
+   "group": "Security",
+   "status": "in",
+   "on_davids_list": false,
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where can you work?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "days",
+     "q": "Which days are you open?",
+     "kind": "week"
+    },
+    {
+     "key": "price",
+     "q": "What do you charge a day?",
+     "kind": "chip"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/services?role=bodyguard",
+   "signals": [
+    "category.services_cas.clearance",
+    "category.services_cas.nqf",
+    "category.services_cas.exp_2_4",
+    "category.services_cas.exp_5plus",
+    "category.services_cas.ref_1",
+    "category.services_cas.ref_2",
+    "category.services_cas.profile"
+   ],
+   "gate": {
+    "type": "licence",
+    "licences": [
+     "psira"
+    ],
+    "ruling": "RUL-156"
+   },
+   "employer_kinds": [
+    "security_company"
+   ],
+   "role_picture": {
+    "file": "roles/pictures/bodyguard.png",
+    "prompt": "Photorealistic photograph, natural daylight, a South African setting. Subject: a black sedan's open rear door at a hotel entrance at night with an earpiece on the seat. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Bodyguard available in {where}",
+    "af": "Lyfwag beskikbaar in {where}"
+   },
+   "note": "25 Sep 2026: IN (RUL-172, David: 'All of them'). Close protection. PSIRA registration is a legal requirement: licence gate (RUL-156), publicly visible once PSIRA is verified."
   },
   {
    "key": "miner_general",

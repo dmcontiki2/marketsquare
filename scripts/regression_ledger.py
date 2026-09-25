@@ -29514,6 +29514,105 @@ def rg_lm_group_find_1():
     return [(INFO, "Local Market groups match the advert's own words, repo and live")]
 
 
+@entry("RG-0490", "QUICK-LINK-1: an outreach letter opens the door on HER ROLE, in a language the "
+       "country actually offers, carrying its wave tag -- never a bare pre-RUL-159 door name",
+       LOCKED, fixed_on="2026-09-25",
+       scope="CityLauncher/emailer/quick_door.py (new), CityLauncher/emailer/emailer.py render() "
+             "({{quick_link}} / {{language_row}}), 14 outreach templates, and the CityLauncher "
+             "deploy manifest. FOUND 25 Sep 2026 on David's instruction to check CityLauncher "
+             "against the app: the two had drifted a whole business model apart. The door grew a "
+             "role picker (RUL-159: 73 live roles, each with its own picture, three questions and "
+             "draft title), five South African languages (RUL-162/163/165) and phone / "
+             "private-link account keys (RUL-167). Every letter still posted a bare "
+             "'https://trustsquare.co/q/homehelp' -- the pre-RUL-159 door name, no role, no "
+             "language, no source tag -- so a cleaner who clicked landed on a generic group "
+             "picker and started from nothing. FIX: one builder that reads MarketSquare's OWN "
+             "files (roles/role_registry.json for which roles are 'in', roles/lang_countries.json "
+             "for RUL-162's per-country list) rather than keeping a second copy of the truth, and "
+             "two placeholders the templates carry. A role is attached only on an EXACT key or "
+             "English-label match -- a fuzzy match would put a welder's picture on a cleaner's "
+             "letter, and her own job on the screen is the entire value. Only 'offered' languages "
+             "are shown: a 'reader' language is drafted and not signed off (RUL-160), and "
+             "offering one promises a door that is not open. MEASURED BEFORE AND AFTER on all 16 "
+             "templates rendered for a ZA prospect: 14 carried a hardcoded door link, 14 still "
+             "carry one, 0 lost one; a ZA cleaner's letter now opens "
+             "/q/services?role=home_cleaner&src=<wave> plus four language links, a US outfitter "
+             "stays English (RUL-165) and a sports club stays doorless BY DECISION, named in "
+             "DOORLESS so the next absence is visible rather than assumed. TWO TRAPS CAUGHT "
+             "BEFORE SHIPPING, both the same class as last night's manifest fault: (a) "
+             "quick_door.py was not in the deploy manifest, and emailer.py imports it -- without "
+             "it every letter falls back to the plain door, which looks exactly like a working "
+             "send; (b) MARKETSQUARE-PATH-1 -- the sibling is 'MarketSquare' on David's machine "
+             "and 'marketsquare' on the server, AND THE SERVER ALSO CARRIES AN EMPTY "
+             "/var/www/MarketSquare holding only visuals/, so a single hard-coded spelling "
+             "resolves to a real directory containing none of these files and silently drops "
+             "every role and language. The resolver now takes the first candidate that actually "
+             "HOLDS the files. VANTAGE DOCTRINE: an unreadable sibling degrades to the plain door "
+             "and says so through degraded(); it never guesses and never blocks a send.",
+       ref="Rendered end to end for ZA casual, ZA technical, ZA tutor, ZA agency and US outfitter "
+           "before any deploy. The two roles files are MarketSquare's to publish and are already "
+           "in its manifest -- asserted here, because if they fall out of it CityLauncher's "
+           "letters degrade silently while both projects still look correct.")
+def rg_quick_link_1():
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    qd = os.path.join(cl, "emailer", "quick_door.py")
+    if not sibling_visible(qd):
+        return [(INFO, "NOT EVALUATED - CityLauncher is not mounted on this vantage")]
+    if not os.path.exists(qd):
+        return [(FAIL, "CityLauncher/emailer/quick_door.py is gone -- letters are back to a "
+                       "bare door with no role and no language")]
+    with open(qd, encoding="utf-8", errors="replace") as fh:
+        q = fh.read()
+    bad = []
+    for needle, why in (
+            ("def build_quick_link(", "the link builder is gone"),
+            ("role_registry.json", "the role list is no longer read -- no role deep-links"),
+            ("lang_countries.json", "RUL-162's language list is no longer read"),
+            ('status") == "in"', "roles are no longer filtered to the ones the door offers"),
+            ('status == "offered"', "a drafted-but-unsigned language could be offered "
+                                    "(RUL-160)"),
+            ("def _find_ms(", "MARKETSQUARE-PATH-1 is gone -- a single hard-coded spelling "
+                              "resolves to the server's EMPTY /var/www/MarketSquare and every "
+                              "role and language is silently dropped"),
+            ("def degraded(", "the blind-vantage report is gone -- a degraded link would pass "
+                              "for a good one")):
+        if needle not in q:
+            bad.append(why)
+    # the far end of the wire, twice over
+    bat = os.path.join(cl, "deploy_citylauncher.bat")
+    if os.path.exists(bat):
+        with open(bat, encoding="utf-8", errors="replace") as fh:
+            b = fh.read()
+        if "quick_door.py" not in b:
+            bad.append("quick_door.py is not in the CityLauncher deploy manifest -- emailer.py "
+                       "imports it, so the box would fall back to the plain door on every send")
+    man = repo_file("ops/autodeploy/deploy_manifest.txt")
+    if man is not None:
+        for f in ("roles/role_registry.json", "roles/lang_countries.json"):
+            if f not in man:
+                bad.append("%s left MarketSquare's deploy manifest -- CityLauncher's letters "
+                           "read it and would degrade silently" % f)
+    em = os.path.join(cl, "emailer", "emailer.py")
+    if os.path.exists(em):
+        with open(em, encoding="utf-8", errors="replace") as fh:
+            e = fh.read()
+        if "{{quick_link}}" not in e:
+            bad.append("render() no longer fills {{quick_link}} -- the templates would post the "
+                       "placeholder text itself")
+    # no template may go back to a hardcoded door
+    import glob as _glob
+    hard = [os.path.basename(f) for f in
+            _glob.glob(os.path.join(cl, "emailer", "templates", "*_outreach*.html"))
+            if not f.endswith((".bak", ".b.html")) and ".bak-" not in f
+            and "trustsquare.co/q/" in open(f, encoding="utf-8", errors="replace").read()]
+    if hard:
+        bad.append("hardcoded door link(s) are back in: " + ", ".join(sorted(hard)[:4]))
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "letters open the door on the role, in an offered language, with the wave "
+                   "tag; the builder and both roles files are in their manifests")]
+
+
 @entry("RG-0489", "ADVERT-WORDS-1: the interface translator never rewrites an advert -- every advert title and "
        "description carries data-notranslate, and the advert translator keeps nicknames and never invents words",
        LOCKED, fixed_on="2026-09-25",
