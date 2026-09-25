@@ -29425,7 +29425,7 @@ def rg_map_first_view():
 
 @entry("RG-0486", "GOODS-FIT-1: Local Market, Cars and Property drafts fit the pick -- each kind its own picture, the picture "
        "marked EXAMPLE PHOTO, a buyer's reference, the seller's side of Buzz, no bedrooms for a plot, Price not Rate",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="quick.html GOODS-FIT-1 block + vouchWho goods lines + sellCard for cars/collectors/localmarket + the two advert "
              "body builders; 15 pictures lm_/car_/prop_* under /static/quick. CLASS: any Quick draft picture is an illustration "
              "and must say so; any kind tile must wear a picture of that kind.",
