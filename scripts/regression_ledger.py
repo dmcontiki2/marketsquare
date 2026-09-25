@@ -29646,5 +29646,54 @@ def rg_advert_words_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "advert words are never page-translated, repo and live")]
 
+@entry("RG-0491", "ROLES-25SEP-1 + SVC-FIND-1 (RUL-172): all 42 board types are live Quick roles with their own work picture, "
+       "a Services search returns only the role asked for, and the self-employed are vouched for by 'A customer'",
+       OPEN, fixed_on="",
+       scope="ROLE_SLATE_REVIEW.md -> roles/role_registry.json -> quick.html QUICK-ROLES block; quick.html SVC-FIND-1 block "
+             "(GROUP_RX per role, groupRx covers Services, typeFilter reads service_type); role_*.jpg under /static/quick. "
+             "CLASS: every live role has a picture, a search match that finds it and no other role, and the right voucher.",
+       ref="David 25 Sep 2026: 'If a dog walker wants to list ... or if they are searching for a dog walker, do they end up "
+           "with the right adverts? And the same for all of these types'; answers 'All of them' and 'Yes, A customer'.")
+def rg_roles_25sep_1():
+    import json as _j, re as _re
+    q = repo_file("quick.html")
+    bad = []
+    if q is not None:
+        m = _re.search(r"var SVC_ROLES = (\[.*?\]);", q)
+        roles = _j.loads(m.group(1)) if m else []
+        if len(roles) < 73: bad.append("quick.html carries %d roles, expected 73+" % len(roles))
+        m2 = _re.search(r"  var RX=(\{.*?\});\n", q)
+        rx = _j.loads(m2.group(1)) if m2 else {}
+        labels = [r["l"] for r in roles]
+        miss = [l for l in labels if l not in rx]
+        if miss: bad.append("roles with no search match: " + ", ".join(miss[:6]))
+        for l in labels:
+            if l not in rx: continue
+            own = "%s \u2014 Pretoria East. %s in Pretoria East." % (l, l)
+            if not _re.search(rx[l], own, _re.I): bad.append("%s does not find itself" % l)
+            for o in labels:
+                if o != l and _re.search(rx[l], "%s \u2014 Pretoria East. %s in Pretoria East." % (o, o), _re.I):
+                    bad.append("%s also finds %s" % (l, o)); break
+        for k in ("pet_sitter_dog_walker", "bodyguard", "au_pair", "caterer"):
+            if '"k": "%s"' % k not in q: bad.append("role %s missing" % k)
+            if not os.path.exists(os.path.join(REPO, "assets", "quick_ph", "role_%s.jpg" % k)):
+                bad.append("no picture for %s" % k)
+        if "if(r && window.SVC_CUSTOMER && SVC_CUSTOMER[r.k]) return {subj:'A customer'" not in q:
+            bad.append("customer reference lost")
+    live = _get("/q/")
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - /q/ unreadable")] + ([(FAIL, "; ".join(bad[:8]))] if bad else [])
+    if "SVC-FIND-1 + CUSTOMER-REF-2 (RUL-172" not in live or '"k": "pet_sitter_dog_walker"' not in live:
+        bad.append("live Quick lacks RUL-172 roles or search (not deployed?)")
+    try:
+        import urllib.request as _u
+        for k in ("pet_sitter_dog_walker", "bodyguard"):
+            _u.urlopen(_u.Request(BASE + "/static/quick/role_%s.jpg" % k, method="HEAD", headers=UA), timeout=15)
+    except Exception as e:
+        bad.append("role pictures not served (%s)" % str(e)[:40])
+    if bad:
+        return [(FAIL, "; ".join(bad[:8]))]
+    return [(INFO, "73 roles live, each found by its own search only, repo and live")]
+
 if __name__ == "__main__":
     sys.exit(main())

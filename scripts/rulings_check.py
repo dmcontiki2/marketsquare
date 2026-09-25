@@ -1098,6 +1098,12 @@ REFLECTIONS = {
  # VOUCH-WHO-1 (25 Sep 2026): the reference is worded for whoever the seller works for.
  # COUNTRY-PACK-1 (25 Sep 2026): Quick examples follow her country and city.
  # SHARE-CHAIN-ALL-1 (25 Sep 2026): every business is a Share Chain; Buzz free, Tuppence only on a new introduction.
+ # ROLES-25SEP-1 (25 Sep 2026): every type on the 42-type Services board is a live Quick role; the self-employed are vouched for by a customer.
+ "RUL-172": [
+   ("RULINGS.md", ["EVERY TYPE ON THE 42-TYPE SERVICES BOARD IS A LIVE QUICK ROLE"], []),
+   ("ROLE_SLATE_REVIEW.md", ["| Pet sitter / dog walker |  | IN |", "| Bodyguard |  | IN |"], ["| Pet sitter / dog walker | Home & care |"]),
+   ("quick.html", ["SVC-FIND-1 + CUSTOMER-REF-2 (RUL-172", "\"k\": \"pet_sitter_dog_walker\"", "\"k\": \"bodyguard\""], []),
+ ],
  "RUL-171": [
    ("RULINGS.md", ["EVERY BUSINESS IS A SHARE CHAIN"], []),
    ("genie/INTEREST_ON_INTEREST_LOOP.html", ["RUL-171", "Her regulars stay hers"], []),
