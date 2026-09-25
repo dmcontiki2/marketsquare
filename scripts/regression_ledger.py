@@ -29361,5 +29361,36 @@ def rg_trip_type_deeplink():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "trip kind filtered; out-of-view adverts fetched and opened, repo and live")]
 
+
+@entry("RG-0484", "EXAMPLE-MARK-1: an AI example advert is never presented as a real one -- Quick's find results wear the "
+       "red AI EXAMPLE ribbon and stop saying 'real adverts', and the outreach letters stop calling examples 'already live'",
+       OPEN, fixed_on="",
+       scope="quick.html FIND-REAL-1 paint (isEx: super_example or is_demo; heading, count line, ribbon); "
+             "CityLauncher/emailer/templates/*.html (no '<Kind> already live on TrustSquare', no '— live on TrustSquare' alt "
+             "text). CLASS (global): every surface that shows an advert. The app's own cards are guarded by the SUPER-1 entries.",
+       ref="David 25 Sep 2026 with screenshots: 'they get showed as real adverts inside the quick launcher but does show as "
+           "example/demo adverts inside the trustsquare app. This will then be a global fix?' Probe: showcase adverts 315, 336 "
+           "and 306 are super_example=1, and 14 outreach letters showed them under 'already live on TrustSquare'.")
+def rg_example_mark_1():
+    import glob as _g
+    q = repo_file("quick.html")
+    bad = []
+    if q is not None and ("EXAMPLE-MARK-1" not in q or "class=\"exrib\"" not in q):
+        bad.append("Quick lost the AI EXAMPLE ribbon")
+    tdir = os.path.join(REPO, "..", "CityLauncher", "emailer", "templates")
+    if os.path.isdir(tdir):
+        for f in _g.glob(os.path.join(tdir, "*.html")):
+            s = open(f, encoding="utf-8", errors="replace").read()
+            if re.search(r">[A-Z][a-z]+ already live on TrustSquare<", s) or "\u2014 live on TrustSquare\"" in s:
+                bad.append("letter %s presents examples as live adverts" % os.path.basename(f))
+    live = _get("/q/")
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - /q/ unreadable")] + ([(FAIL, "; ".join(bad[:4]))] if bad else [])
+    if "EXAMPLE-MARK-1" not in live:
+        bad.append("live Quick has no example ribbon (not deployed?)")
+    if bad:
+        return [(FAIL, "; ".join(bad[:4]))]
+    return [(INFO, "examples marked in Quick and in the letters, repo and live")]
+
 if __name__ == "__main__":
     sys.exit(main())
