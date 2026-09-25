@@ -1091,6 +1091,7 @@ def main():
     _post_heartbeat(report, mode, key)
     report["backup"] = _backup_lane()
     report["standup"] = _standup_lane()
+    report["host_queue"] = _hostqueue_lane()
     report["screen_walk"] = _screen_walk_lane()
     _flush()
     return 0
@@ -1158,6 +1159,99 @@ def _standup_lane():
     except Exception as e:
         rec["reason"] = "watchdog could not run: %s: %s" % (type(e).__name__, str(e)[:120])
     say("standup lane: %s (%s)" % (rec["state"], rec["reason"] or "-"))
+    return rec
+
+
+def _hostqueue_lane():
+    """HOSTQUEUE-WATCHDOG-1 (25 Sep 2026).
+
+    WHY THIS EXISTS. HOST-QUEUE-1 (RUL-095) is Claude's only pair of hands outside the
+    sandbox: every git push and every host-side run goes through a .req that
+    autodeploy_agent.bat executes on David's PC on a ~20-minute tick. On 25 Sep that agent
+    stopped after 13:15:06Z and nothing noticed for 7h31m. By the evening stand-up FIVE
+    commits were stranded unpushed -- including the 25 Sep inspection's critical fixes --
+    so nothing had reached the mirror and nothing could deploy, while every instrument
+    that looks at the SITE read green, correctly, because the site was fine. The site
+    being healthy is not evidence that the way to change it is open.
+
+    The detector is deliberately not "have results appeared lately": the agent only writes
+    a result when there is work, so quiet is normal. The unambiguous signal is a PENDING
+    request that nobody executed -- a permission-backed instruction sitting past two whole
+    ticks means the executor is not running. Same shape as STANDUP-WATCHDOG-1 above.
+
+    Local-only by construction: host_queue/ is gitignored, so it exists on the mount and on
+    David's PC and never on the origin -- the lane skips there (BACKUP-ORIGIN-SKIP-1's
+    precedent) rather than reporting a confident UNKNOWN from a vantage that cannot see it.
+    Never raises: a watchdog that can take the run down with it is worse than no watchdog,
+    and per RG-0187 an unreadable queue reports UNKNOWN, never OK.
+    """
+    import glob, time as _t
+    rec = {"ran": False, "state": "UNKNOWN", "pending": None, "oldest_pending_h": None,
+           "last_result_h": None, "ahead": None, "oldest_unpushed_h": None, "reason": ""}
+    if os.path.realpath(REPO).startswith("/opt/marketsquare-src"):
+        rec["reason"] = "skipped: host_queue is local-only and never reaches the origin"
+        say("host-queue lane: %s" % rec["reason"])
+        return rec
+    try:
+        qdir = os.path.join(REPO, "host_queue")
+        if not os.path.isdir(qdir):
+            rec["reason"] = "no host_queue/ directory on this vantage"
+            say("host-queue lane: UNKNOWN (%s)" % rec["reason"]); return rec
+        now = _t.time()
+        pend = glob.glob(os.path.join(qdir, "*.req"))
+        done = glob.glob(os.path.join(qdir, "done", "*.result"))
+        rec["pending"] = len(pend)
+        if done:
+            rec["last_result_h"] = round((now - max(os.path.getmtime(f) for f in done)) / 3600.0, 2)
+        rec["ran"] = True
+        # The second signal, and the one that would have caught 25 Sep: work can be stranded
+        # with NOTHING queued. Nothing was queued between 13:01Z and 20:38Z that day, yet five
+        # commits -- including the inspection's criticals -- sat unpushed for hours, because the
+        # push is what the dead agent was supposed to do. Commits ahead of the mirror ARE the
+        # harm; a queued request is only one way of causing it.
+        try:
+            import subprocess
+            env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
+            r = subprocess.run(["git", "log", "--format=%ct", "origin/main..HEAD"],
+                               cwd=REPO, env=env, capture_output=True, text=True, timeout=30)
+            times = [int(x) for x in r.stdout.split() if x.isdigit()] if r.returncode == 0 else []
+            rec["ahead"] = len(times)
+            if times:
+                rec["oldest_unpushed_h"] = round((now - min(times)) / 3600.0, 2)
+        except Exception as e:
+            rec["ahead"] = None
+            rec["reason"] = "ahead-count unavailable: %s" % type(e).__name__
+        stranded = bool(rec.get("ahead")) and (rec.get("oldest_unpushed_h") or 0) > (40 / 60.0)
+        if stranded:
+            rec["state"] = "STALLED"
+            rec["reason"] = ("%d commit(s) committed but never pushed, oldest %.1f h -- they are "
+                             "not on the mirror, so the origin cannot pull them and nothing they "
+                             "fix is live" % (rec["ahead"], rec["oldest_unpushed_h"]))
+            say("host-queue lane: %s (%s)" % (rec["state"], rec["reason"]))
+            return rec
+        if not pend:
+            rec["state"] = "OK"
+            rec["reason"] = ("nothing queued, nothing unpushed; newest result %s h old"
+                             % (rec["last_result_h"] if rec["last_result_h"] is not None else "?"))
+        else:
+            oldest = min(os.path.getmtime(f) for f in pend)
+            rec["oldest_pending_h"] = round((now - oldest) / 3600.0, 2)
+            # two whole ticks is the bar: one missed tick is ordinary, two is an executor
+            # that is not running.
+            if (now - oldest) > 40 * 60:
+                rec["state"] = "STALLED"
+                rec["reason"] = ("%d request(s) queued and unexecuted, oldest %.1f h -- "
+                                 "autodeploy_agent.bat is not running on David's PC, so no push "
+                                 "and no deploy can leave this machine: %s"
+                                 % (len(pend), rec["oldest_pending_h"],
+                                    os.path.basename(sorted(pend)[0])))
+            else:
+                rec["state"] = "OK"
+                rec["reason"] = ("%d request(s) queued, oldest %.2f h -- inside one tick"
+                                 % (len(pend), rec["oldest_pending_h"]))
+    except Exception as e:
+        rec["reason"] = "watchdog could not run: %s: %s" % (type(e).__name__, str(e)[:120])
+    say("host-queue lane: %s (%s)" % (rec["state"], rec["reason"] or "-"))
     return rec
 
 
