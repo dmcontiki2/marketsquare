@@ -29456,7 +29456,7 @@ def rg_goods_fit_1():
 
 @entry("RG-0487", "KIND-FIT-1 + CUSTOMER-REF-1: every Quick kind wears its own picture (Services, Crafts, Tutors, Home help) "
        "and a Local Market seller is vouched for by 'A customer'",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="quick.html KIND-FIT-1 block + vouchWho localmarket line; 14 pictures svc_/lm_crafts/tut_/hh_* under /static/quick. "
              "CLASS: no kind tile may borrow another kind's picture; the reference names who really vouches for that seller.",
        ref="David 25 Sep 2026: a Plants draft showed a house and said 'someone you worked for' -- 'it should rather say "
