@@ -145,9 +145,12 @@ var layerCtl=L.control.layers(null,ov,{collapsed:false}).addTo(map);
    Own DB, one query, no external cost. Fails silent (offline / outside the gate). */
 (function(){
   var liveG=L.layerGroup();
-  var b=map.getBounds();
+  /* MAP-FIRST-VIEW-1 (25 Sep 2026): the map has no view yet at this point; asking it for bounds threw and
+     stopped the rest of the page, so the map stayed blank until Route was tapped. */
+  var b=null; try{ b=map.getBounds(); }catch(e){}
   var pts=[];J.days.forEach(function(d){d.stops.forEach(function(s){pts.push([s.lat,s.lng]);});});
   if(pts.length){b=L.latLngBounds(pts).pad(0.35);}
+  if(!b) return;
   var q='/geo/stays?s='+b.getSouth().toFixed(3)+'&w='+b.getWest().toFixed(3)+'&n='+b.getNorth().toFixed(3)+'&e='+b.getEast().toFixed(3);
   var base=(location.protocol==='file:')?'https://trustsquare.co':'';
   fetch(base+q,{credentials:'include'}).then(function(r){return r.ok?r.json():null;}).then(function(d){

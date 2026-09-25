@@ -87,7 +87,8 @@ setTimeout(function(){map.invalidateSize();},250);
    open so linked reports show today's stays, not build-day stays. Fails silent. */
 (function(){setTimeout(function(){
   if(typeof map==='undefined'||!map.getBounds) return;
-  var b=map.getBounds().pad(0.2);
+  /* MAP-FIRST-VIEW-1 (25 Sep 2026): never let the live-stays fetch stop the page when the map has no view yet. */
+  var b=null; try{ b=map.getBounds().pad(0.2); }catch(e){ return; }
   var q='/geo/stays?s='+b.getSouth().toFixed(3)+'&w='+b.getWest().toFixed(3)+'&n='+b.getNorth().toFixed(3)+'&e='+b.getEast().toFixed(3);
   var base=(location.protocol==='file:')?'https://trustsquare.co':'';
   fetch(base+q,{credentials:'include'}).then(function(r){return r.ok?r.json():null;}).then(function(d){

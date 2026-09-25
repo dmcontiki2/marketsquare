@@ -29364,7 +29364,7 @@ def rg_trip_type_deeplink():
 
 @entry("RG-0484", "EXAMPLE-MARK-1: an AI example advert is never presented as a real one -- Quick's find results wear the "
        "red AI EXAMPLE ribbon and stop saying 'real adverts', and the outreach letters stop calling examples 'already live'",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="quick.html FIND-REAL-1 paint (isEx: super_example or is_demo; heading, count line, ribbon); "
              "CityLauncher/emailer/templates/*.html (no '<Kind> already live on TrustSquare', no '— live on TrustSquare' alt "
              "text). CLASS (global): every surface that shows an advert. The app's own cards are guarded by the SUPER-1 entries.",
@@ -29391,6 +29391,36 @@ def rg_example_mark_1():
     if bad:
         return [(FAIL, "; ".join(bad[:4]))]
     return [(INFO, "examples marked in Quick and in the letters, repo and live")]
+
+
+@entry("RG-0485", "MAP-FIRST-VIEW-1: the adventure maps draw on first view -- the live-stays block may never ask a map with "
+       "no view for its bounds (that threw and stopped the page, so the map stayed blank until Route was tapped)",
+       OPEN, fixed_on="",
+       scope="all 15 adventures_*_map.html + scripts/journey_template.html (the generator); ms.js teItinerary shows words, "
+             "never raw HTML (TE-TEXT-1). CLASS: any code on a map page that reads the view before the view is set.",
+       ref="David 25 Sep 2026: 'the in app maps used to show a map on the first view, but lately i need to either expand or "
+           "open it and even then i first have to press route'. Rendered probe: the live Botswana map threw 'Set map center "
+           "and zoom first' at map.getBounds() inside LIVE-MAP-1 (3 Sep) -- 0 tiles; patched copy: 8 tiles, 41 pins.")
+def rg_map_first_view():
+    import glob as _g
+    bad = []
+    files = _g.glob(os.path.join(REPO, "adventures_*_map.html")) + [os.path.join(REPO, "scripts", "journey_template.html")]
+    for f in files:
+        if not os.path.exists(f): continue
+        s = open(f, encoding="utf-8", errors="replace").read()
+        if re.search(r"\n  var b=map\.getBounds\(\)", s):
+            bad.append(os.path.basename(f) + " reads the map bounds unguarded")
+    m = repo_file("ms.js")
+    if m is not None and "teEsc(teText(d.s))" not in m:
+        bad.append("the trip brief can show raw HTML again")
+    live = _get("/static/adventures_bw_map.html")
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - map page unreadable")] + ([(FAIL, "; ".join(bad[:4]))] if bad else [])
+    if "MAP-FIRST-VIEW-1" not in live:
+        bad.append("live Botswana map is not the fixed one (not deployed?)")
+    if bad:
+        return [(FAIL, "; ".join(bad[:4]))]
+    return [(INFO, "every map guards its first view; brief shows words only, repo and live")]
 
 if __name__ == "__main__":
     sys.exit(main())
