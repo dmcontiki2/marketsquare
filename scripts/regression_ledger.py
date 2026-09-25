@@ -29330,5 +29330,36 @@ def rg_country_pack_1():
         return [(FAIL, "; ".join(bad[:6]))]
     return [(INFO, "every live city has areas; country pack and pictures live")]
 
+
+@entry("RG-0483", "TRIP-TYPE-1 + DEEPLINK-FETCH-1: Quick shows only the trip kind she picked, and EVERY advert link opens "
+       "its advert -- one outside the viewer's loaded city or category is fetched, never dropped to the front page",
+       OPEN, fixed_on="",
+       scope="quick.html FIND-REAL-1 (TYPE_Q search word, typeFilter: lodge = stays, other trips = experiences, words must "
+             "match); ms.js openDetail + the ?listing= deep link (fetch /listings/{id}, add, open). CLASS (global): any "
+             "surface that links to an advert -- Quick, wishlist, showcase, e-mail cards.",
+       ref="David 25 Sep 2026: 'i selected Treinrit ... the next option was not a train option and only took me to the front "
+           "page ... For the selected type only that type should be viewable ... All options must pull through ... This may "
+           "be a global fix'. Live probe: /listings?q=journey* returned 7 adverts, 5 of them not rail.")
+def rg_trip_type_deeplink():
+    q = repo_file("quick.html"); m = repo_file("ms.js")
+    bad = []
+    if q is not None and ("function typeFilter(" not in q or "'Rail journey':'rail*'" not in q):
+        bad.append("Quick lost the trip-kind filter")
+    if m is not None:
+        body = fn_body(m, "function openDetail(")
+        if "DEEPLINK-FETCH-1" not in body or "/listings/' + _raw" not in body:
+            bad.append("openDetail no longer fetches an advert it cannot find")
+    live = _get("/static/ms.js")
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - ms.js unreadable")] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if "DEEPLINK-FETCH-1" not in live:
+        bad.append("live ms.js has no DEEPLINK-FETCH-1 (not deployed?)")
+    lq = _get("/q/")
+    if lq and "function typeFilter(" not in lq:
+        bad.append("live Quick has no trip-kind filter (not deployed?)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "trip kind filtered; out-of-view adverts fetched and opened, repo and live")]
+
 if __name__ == "__main__":
     sys.exit(main())

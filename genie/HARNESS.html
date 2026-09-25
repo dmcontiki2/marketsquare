@@ -3174,6 +3174,13 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     return w+'*';
   }
   window.qTerm=qterm;
+  /* TRIP-TYPE-1 (David 25 Sep 2026): "For the selected type only that type should be viewable" */
+  var TYPE_Q={'Rail journey':'rail*','Game lodge':'lodge*','Safari':'safari*','Guided tour':'tour*','Self-drive':'drive*','Fishing':'fish*'};
+  var TYPE_RX={'Game lodge':/lodge|game reserve|bush camp/i,'Safari':/safari|game drive/i,'Guided tour':/guided|\btour/i,
+               'Self-drive':/self[- ]?drive|road ?trip|4x4/i,'Rail journey':/\brail|\btrain/i,'Fishing':/\bfish|angling/i};
+  function typeFilter(list){ var w=roleLabel(), rx=TYPE_RX[w]; if(!rx || cat().key!=='adventures') return list;
+    var want = w==='Game lodge' ? /accommodation/ : /experiences/;
+    return list.filter(function(l){ return want.test(String(l.category||'')) && rx.test((l.title||'')+' '+(l.description||'')); }); }
   drawLookup=function(){
     var c=cat(), co=catOut(c), my=++_lkSeq;
     var trail=picks.map(function(pk){ return pk.photo?'<img src="'+PH[pk.photo]+'" alt="">':'<span>'+E(pk.label)+'</span>'; }).join('');
@@ -3213,10 +3220,11 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
       try{ qTranslate($('screen')); }catch(e){}
     }
     if(!LIVE){ paint([], false); return; }
-    var url='/listings?city='+encodeURIComponent(city)+'&category='+encodeURIComponent(co.category)+'&page_size=5'
-           +(qterm(what)?'&q='+encodeURIComponent(qterm(what)):'');
+    var qt=(cat().key==='adventures' && TYPE_Q[what]) || qterm(what);
+    var url='/listings?city='+encodeURIComponent(city)+'&category='+encodeURIComponent(co.category)+'&page_size=20'
+           +(qt?'&q='+encodeURIComponent(qt):'');
     fetch(url,{credentials:'include'}).then(function(r){ return r.ok?r.json():Promise.reject(r.status); })
-      .then(function(j){ paint(Array.isArray(j)?j:(j&&(j.listings||j.items))||[], false); })
+      .then(function(j){ paint(typeFilter(Array.isArray(j)?j:(j&&(j.listings||j.items))||[]), false); })
       .catch(function(){ paint([], true); });
   };
 
@@ -3607,6 +3615,12 @@ var QPACK = {"ZA": {"name": "South Africa", "cur": "R", "tz": ["Africa/Johannesb
     if(!userCity && !QCITY){ if(d.city && setCity(d.city,false)) return; if(g.city) setCity(g.city,false); }
   }).catch(function(){}); }catch(e){}
 })();
+
+/* TRIP-TYPE-1: each trip kind wears its own picture (tour, rail and fishing wore a safari's). */
+(function(){ var K={'Guided tour':'advk_guided_tour','Self-drive':'advk_self_drive','Rail journey':'advk_rail_journey','Fishing':'advk_fishing'};
+  Object.keys(K).forEach(function(n){ PH[K[n]]=PH_BASE+K[n]+'.jpg'; });
+  CATS.forEach(function(c){ if(c.key!=='adventures') return; ['sell','find'].forEach(function(side){ ((c[side]||{}).steps||[]).forEach(function(s){
+    if(s.key==='what') (s.tiles||[]).forEach(function(t){ if(K[t.t]) t.p=K[t.t]; }); }); }); }); })();
 
 drawDoor();
 </script>

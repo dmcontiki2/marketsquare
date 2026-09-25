@@ -822,5 +822,11 @@
   "made": "2026-09-25T09:59:24.277430Z",
   "provider": "higgsfield",
   "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "advk_rail_journey": {
+  "made": "2026-09-25T10:14:18.059756Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). A classic vintage passenger train with dark green carriages winding through a golden African landscape at sunset, no lettering on the train.",
+  "ruling": "RUL-164 / TRIP-TYPE-1"
  }
 }

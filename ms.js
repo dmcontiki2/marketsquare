@@ -1032,8 +1032,12 @@ async function _msInit(){
       if(_hit){
         try{ goTo('browse'); }catch(e){}
         try{ openDetail(_hit.id); }catch(e){}
-      } else if(tries > 0){
+      } else if(tries > 0 && !(typeof LISTINGS !== 'undefined' && LISTINGS && LISTINGS.length && tries < 22)){
         setTimeout(function(){ _openDeepLink(tries - 1); }, 400);
+      } else {
+        /* DEEPLINK-FETCH-1: loaded and still not here -- another city or category. Fetch it and open it. */
+        try{ goTo('browse'); }catch(e){}
+        try{ openDetail('bea_' + _dlId); }catch(e){}
       }
     })(25);
   }
@@ -5051,6 +5055,21 @@ function openDetail(id){
   let l = findListing(id);
   if (!l && id != null && !String(id).startsWith('bea_')) l = findListing('bea_' + id);
   if (!l) {
+    /* DEEPLINK-FETCH-1 (David 25 Sep 2026: "All options must pull through ... This may be a global fix"): an advert
+       outside the loaded city/category is FETCHED and opened, never dropped to the front page. Once per tap. */
+    const _raw = String(id).replace(/^bea_/, '');
+    if (/^\d+$/.test(_raw) && window._msDetailFetching !== _raw) {
+      window._msDetailFetching = _raw;
+      fetch(BEA_URL + '/listings/' + _raw, {credentials:'include'}).then(r => r.ok ? r.json() : null).then(row => {
+        if (row && row.id != null) {
+          if (!findListing('bea_' + row.id)) { try { LISTINGS.push(_msMapBeaListing(row)); } catch(e){} }
+          if (findListing('bea_' + row.id)) { try { goTo('browse'); } catch(e){} openDetail('bea_' + row.id); window._msDetailFetching = null; return; }
+        }
+        window._msDetailFetching = null;
+        if (typeof showToast === 'function') showToast('That listing is not available any more.');
+      }).catch(() => { window._msDetailFetching = null; if (typeof showToast === 'function') showToast('That listing is not in view right now — try Browse.'); });
+      return;
+    }
     console.warn('openDetail: no listing for id', id);
     if (typeof showToast === 'function') showToast('That listing is not in view right now — try Browse.');
     return;
