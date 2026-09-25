@@ -146,6 +146,7 @@ __DATA__
   }
   var _dsC=drawStep;
   drawStep=function(){
+    if(QCITY && LOC.city!==QCITY && QP.cities[QCITY]){ LOC.city=QCITY; }   /* one city for the whole door, whatever answered last */
     var s=null; try{ s=flow().steps[step]; }catch(e){}
     var isWhere = s && s.key==='where' && cat().key!=='adventures';
     if(isWhere && !QCITY && mode){ drawCityPick(); return; }
@@ -162,7 +163,7 @@ __DATA__
   try{ _mf(location.origin+'/quick/me',{credentials:'include'}).then(function(r){ return r.ok?r.json():null; }).then(function(d){
     if(!d) return; var g=d.geo||{}, gc=String(g.country||'').toUpperCase(); if(gc==='UK') gc='GB';
     if(!userCC && QPACK[gc] && gc!==QCC && !mode){ applyPack(gc); localNames(); }
-    if(!userCity && !QCITY){ if(d.city && setCity(d.city,false)) return; if(g.city) setCity(g.city,false); }
+    if(!userCity){ if(d.city && setCity(d.city,false)) return; if(!QCITY && g.city) setCity(g.city,false); }   /* her account beats this phone's memory */
   }).catch(function(){}); }catch(e){}
 })();
 """
