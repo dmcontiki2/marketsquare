@@ -47,7 +47,8 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 
 # ── Injected seams (bea_main.configure) ───────────────────────────────────────
 _S = {"key_hash": None, "new_identity": None, "establish_session": None,
-      "agency_admin": None, "trust_recompute": None, "app_url": "https://trustsquare.co"}
+      "agency_admin": None, "trust_recompute": None, "app_url": "https://trustsquare.co",
+      "session_email": None, "admin_key_ok": None}
 
 
 def configure(**kw):
@@ -110,6 +111,28 @@ def role_label(key, lang="en"):
     if isinstance(lab, dict):
         return lab.get(lang) or lab.get("en") or key.replace("_", " ").capitalize()
     return str(lab or key)
+
+
+def _org_admin(agency_id, ts_user, x_admin_key, ctx):
+    """Who may enrol or read an organisation's people: ops with the admin key, or THAT organisation's
+    own admin, proven by session. Enforced here as well as by the shared agency seam, so the kill
+    switch that can put the agency lane into shadow mode can never open this door -- enrolment
+    mints accounts and can carry a 12-point confirmation."""
+    _S["agency_admin"](agency_id, ts_user, x_admin_key, ctx)
+    if _S["admin_key_ok"] and _S["admin_key_ok"](x_admin_key):
+        return "admin-key"
+    sess = (_S["session_email"](ts_user) if _S["session_email"] else None) or ""
+    if not sess:
+        raise HTTPException(status_code=401, detail="Please sign in to do that.")
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT 1 FROM agencies WHERE id=? AND LOWER(admin_email)=?",
+                           (agency_id, sess.strip().lower())).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        raise HTTPException(status_code=403, detail="Only this organisation's admin can do that.")
+    return "agency-admin:%d" % int(agency_id)
 
 
 class EnrolRow(BaseModel):
@@ -251,12 +274,12 @@ def enrol(agency_id: int, body: EnrolIn, format: str = Query(default="json"),
           ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
     """The importer. The organisation's own admin (or ops with the admin key) enrols a list of people.
     It creates their key accounts and memberships and CANNOT create an advert."""
-    _S["agency_admin"](agency_id, ts_user, x_admin_key, "org-enrol")
+    actor = _org_admin(agency_id, ts_user, x_admin_key, "org-enrol")
     rows = _clean_rows(body.rows, (body.lang or "en").lower())
     conn = database.get_db()
     try:
         org = conn.execute("SELECT name FROM agencies WHERE id=?", (agency_id,)).fetchone()
-        people = enrol_rows(conn, agency_id, rows, actor=("admin-key" if x_admin_key else "agency-admin:%d" % agency_id))
+        people = enrol_rows(conn, agency_id, rows, actor=actor)
     finally:
         conn.close()
     if format == "sheet":
@@ -268,7 +291,7 @@ def enrol(agency_id: int, body: EnrolIn, format: str = Query(default="json"),
 @router.get("/agencies/{agency_id}/enrolments")
 def enrolments(agency_id: int, ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
     """The organisation sees its own people: enrolled, opened, confirmed, published. No links, no secrets."""
-    _S["agency_admin"](agency_id, ts_user, x_admin_key, "org-enrolments")
+    _org_admin(agency_id, ts_user, x_admin_key, "org-enrolments")
     conn = database.get_db()
     try:
         init_schema(conn)

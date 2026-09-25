@@ -28867,6 +28867,13 @@ def rg_org_enrol_1():
     for line in ("org_enrol.py", "roles/role_registry.json"):
         if not mf or not re.search(r"(?m)^%s\s*\|" % re.escape(line), mf):
             bad.append("%s is not in the deploy manifest" % line)
+    # the door's own guard: org admin by key or proven session, independent of the agency seam's kill switch
+    if src.count("_org_admin(agency_id, ts_user, x_admin_key") < 2:
+        bad.append("enrol / enrolments no longer run the organisation-admin guard (_org_admin)")
+    rp = repo_file("route_policy.json") or ""
+    for rk in ("POST /agencies/{agency_id}/enrol", "GET /agencies/{agency_id}/enrolments", "GET /e/{secret}"):
+        if '"%s"' % rk not in rp:
+            bad.append("route_policy.json does not declare %s -- the stranger gate refuses the deploy" % rk)
     if bad:
         return [(FAIL, "; ".join(bad))]
     # behavioural: enrol two people on an in-memory database and count adverts

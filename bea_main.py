@@ -25753,7 +25753,8 @@ try:
     import org_enrol
     org_enrol.configure(key_hash=_key_hash, new_identity=_new_key_identity,
                         establish_session=_establish_user_session, agency_admin=_agency_admin_or_refuse,
-                        trust_recompute=trust_score_breakdown, app_url=APP_URL)
+                        trust_recompute=trust_score_breakdown, app_url=APP_URL, session_email=_session_email,
+                        admin_key_ok=lambda k: bool(k and MS_ADMIN_KEY and k == MS_ADMIN_KEY))
     org_enrol.init_schema()
     app.include_router(org_enrol.router)
 except Exception as _oe_ex:      # pragma: no cover -- a supply side-lane must never take the app down at boot

@@ -23,3 +23,11 @@
   and the cto-fix lane's aged git-lock sweep log, which had sat uncommitted under that lane's work lock.
 
 Cost model impact: none.
+
+- **First deploy refused, correctly (06:42Z).** The stranger gate refused 19f89c3 because the three new routes
+  had no rule in `route_policy.json`; the live site was not changed. Declared: enrol and enrolments = signed-in
+  user who OWNS the agency; `/e/{secret}` = token. Hardened in the same pass: the door now runs its own
+  organisation-admin guard (`_org_admin`: admin key, or a session that IS that organisation's admin), so the
+  kill switch that can drop the shared agency seam into shadow mode can never open enrolment. Behavioural test
+  22/22 including shadow-mode stranger -> 401 and signed-in intruder -> 403. RG-0474 now also asserts the guard
+  and the three route declarations.

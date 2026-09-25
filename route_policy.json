@@ -1805,6 +1805,32 @@
    "level": "token"
   },
   {
+   "key": "POST /agencies/{agency_id}/enrol",
+   "level": "user",
+   "own": [
+    {
+     "name": "agency_id",
+     "in": "path",
+     "resource": "agency"
+    }
+   ]
+  },
+  {
+   "key": "GET /agencies/{agency_id}/enrolments",
+   "level": "user",
+   "own": [
+    {
+     "name": "agency_id",
+     "in": "path",
+     "resource": "agency"
+    }
+   ]
+  },
+  {
+   "key": "GET /e/{secret}",
+   "level": "token"
+  },
+  {
    "key": "GET /agents/nearby",
    "level": "public"
   },
