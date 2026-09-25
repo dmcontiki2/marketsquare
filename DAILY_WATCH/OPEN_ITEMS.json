@@ -1,5 +1,5 @@
 {
- "next_id": 154,
+ "next_id": 159,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -80,11 +80,11 @@
   },
   "DW-010": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-09-24",
+   "last_seen": "2026-09-25",
    "sev": "MEDIUM",
    "source": "cc_age_check (Monday lane)",
    "status": "SCHEDULED",
-   "summary": "cc_age 2026-09-24: CC-002 open 106d, CC-005 open 23d. cc_age 2026-09-23: CC-002 open 105d, CC-005 open 22d against the 7d threshold. Stays SCHEDULED: both are David's sign-offs (canon call + wording), not technical forks. cc_age 2026-09-14: CC-002 open 96d and CC-005 open 13d against the 7d threshold - both past it, CC-002 now a day past the week David deferred it to. Stays SCHEDULED: landing CC-002 is a canon call (its staged edits were built on the RETIRED five-tier model), and that call is David's.",
+   "summary": "cc_age 2026-09-25 (off-lane): CC-002 open 107d, CC-005 open 24d vs the 7d threshold. cc_age 2026-09-24: CC-002 open 106d, CC-005 open 23d. cc_age 2026-09-23: CC-002 open 105d, CC-005 open 22d against the 7d threshold. Stays SCHEDULED: both are David's sign-offs (canon call + wording), not technical forks. cc_age 2026-09-14: CC-002 open 96d and CC-005 open 13d against the 7d threshold - both past it, CC-002 now a day past the week David deferred it to. Stays SCHEDULED: landing CC-002 is a canon call (its staged edits were built on the RETIRED five-tier model), and that call is David's.",
    "disposition": "FORMALLY DEFERRED 2026-08-21 (attended session, reflected here by the watch) — CC-002 is ~10 open product/pricing questions in AWAITING_DAVID.md, several touching the EULA and one a live payment path, against SOFT-to-PUBLIC 29 Aug / FULL LAUNCH 1 Sep (RUL-001). Target: first post-launch week, from Mon 8 Sep 2026. David's veto point: name any single item that must land before launch and it lands on its own.",
    "last_note": "2026-09-18: cc_age_check re-ran off-lane (cheap date check) - CC-002 open 100d (4/5 STAGED), CC-005 open 17d (1/8 spec written), both past the 7d threshold. Stays SCHEDULED - both are David's calls."
   },
@@ -1601,38 +1601,38 @@
   },
   "DW-146": {
    "first_seen": "2026-09-24",
-   "last_seen": "2026-09-24",
+   "last_seen": "2026-09-25",
    "sev": "HIGH",
    "source": "regression ledger RG-0351 (LOCKED) REGRESSION + test_pg_readiness.py",
    "status": "OPEN",
-   "summary": "3 plain datetime('now') back in bea_main.py (lines 625, 4249, 4257, phone_codes) from commit 4300824 LINK-KEY-1/PHONE-KEY-1; test_pg_readiness FAIL datetime_now 15->20. LIVE: server main.py 2026-09-24T04:32:36Z carries them (probed via SSH ~07:55Z); the 07:45Z alert's 'not yet shipped' line read a stale local origin/deploy and was wrong. Harmless on SQLite; raises the Postgres-move cost.",
-   "next_action": "Owning lane swaps them for CURRENT_TIMESTAMP and ships; RG-0351 [ ok ] closes it."
+   "summary": "25 Sep: STILL RED, shape changed. The 3 plain datetime('now') from 4300824 are GONE (0 left; fixed by 4677444 PG-PORTABLE-3), but RG-0351 now reads 'REGRESSION: 17 modifier-form SQLite clock call(s) in code against a baseline of 15'; test_pg_readiness.py -> FAIL SQLite-specific surface GREW {'datetime_now': (15, 17), 'julianday': (2, 4), 'insert_or': (12, 13)}. git log -G since 23 Sep points at the 24 Sep evening commits 57a9f0b (E2E-HMI-1c) and 73d327a (LM-NOSHOW-1), both ancestors of the live release be1b2a6. Fourth same-day breach of this ratchet. | 3 plain datetime('now') back in bea_main.py (lines 625, 4249, 4257, phone_codes) from commit 4300824 LINK-KEY-1/PHONE-KEY-1; test_pg_readiness FAIL datetime_now 15->20. LIVE: server main.py 2026-09-24T04:32:36Z carries them (probed via SSH ~07:55Z); the 07:45Z alert's 'not yet shipped' line read a stale local origin/deploy and was wrong. Harmless on SQLite; raises the Postgres-move cost.",
+   "next_action": "Owning lane converts the two new modifier-form clock calls + the julianday/INSERT OR additions to _sql_since()/bound stamps/portable SQL; RG-0351 [ ok ] and test_pg_readiness PASS close it."
   },
   "DW-147": {
    "first_seen": "2026-09-24",
-   "last_seen": "2026-09-24",
+   "last_seen": "2026-09-25",
    "sev": "MEDIUM",
    "source": "regression ledger RG-0413 (LOCKED) REGRESSION + read of quick.html",
-   "status": "OPEN",
-   "summary": "False red: quick.html:2650 still fires q_published on live publish; 4300824 split the handover beacon into link/phone, and the entry pins the old exact string.",
-   "next_action": "Owning lane amends RG-0413's token to the property and records it in the ref; RG-0413 [ ok ] closes it."
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-25 -- originating check re-ran and PASSED: chunked board 25 Sep reads '[  ok  ] RG-0413  DOOR-FUNNEL-1' (entry amended by 4677444 maintenance-loop to the property). | False red: quick.html:2650 still fires q_published on live publish; 4300824 split the handover beacon into link/phone, and the entry pins the old exact string.",
+   "next_action": "-"
   },
   "DW-148": {
    "first_seen": "2026-09-24",
-   "last_seen": "2026-09-24",
+   "last_seen": "2026-09-25",
    "sev": "MEDIUM",
    "source": "regression ledger RG-0431 (LOCKED) REGRESSION + git log -S",
-   "status": "OPEN",
-   "summary": "False red: bea_main.py:4758 still resets extra_status to 'draft' via CASE WHEN (AUDIT-L3, 1aea5c4 23 Sep 20:42Z); the entry pins the literal extra_status='draft' WHERE id=?.",
-   "next_action": "Owning lane re-points RG-0431's needle at the CASE form or the property; RG-0431 [ ok ] closes it."
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-25 -- originating check re-ran and PASSED: chunked board 25 Sep reads '[  ok  ] RG-0431  LANG-LAYER-1' (needle re-pointed by 4677444). | False red: bea_main.py:4758 still resets extra_status to 'draft' via CASE WHEN (AUDIT-L3, 1aea5c4 23 Sep 20:42Z); the entry pins the literal extra_status='draft' WHERE id=?.",
+   "next_action": "-"
   },
   "DW-149": {
    "first_seen": "2026-09-24",
-   "last_seen": "2026-09-24",
+   "last_seen": "2026-09-25",
    "sev": "LOW",
    "source": "cost_compliance_sweep.py NEW WARN vs 23 Sep",
    "status": "OPEN",
-   "summary": "bea_main.py:25968 _lang_ai helper has no platform ceiling check; bounded by RG-0439 lane caps.",
+   "summary": "25 Sep: STILL WARN - cost sweep exit 1, only WARN is '_lang_ai - helper; caller logs spend, but add a ceiling check' (now bea_main.py:27704); no CRITICAL. | bea_main.py:25968 _lang_ai helper has no platform ceiling check; bounded by RG-0439 lane caps.",
    "next_action": "Same rail fix as DW-142; sweep with no WARN on _lang_ai closes it."
   },
   "DW-150": {
@@ -1670,15 +1670,60 @@
   },
   "DW-153": {
    "first_seen": "2026-09-24",
-   "last_seen": "2026-09-24",
+   "last_seen": "2026-09-25",
    "sev": "HIGH",
    "source": "authz_probe.py (LATENT findings)",
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-25 -- the check its own next-action named re-ran and PASSED: QA Bot nightly 2026-09-25T00:34:27Z (report 20260925-003446-nightly.json): POST /agencies/{agency_id}/verify publickey 403 + stranger 403 PASS; PUT /agencies/{agency_id} publickey 403 + stranger 403 PASS; POST /trust-score/credential publickey 403 + stranger 403 PASS (all three ruled class 'admin' by OpenAI). Bot summary PASS 251 / SKIP 57, 0 open to the wrong person. RESIDUAL: the assertion is the QA Bot's deploy gate + nightly (kept from weakening by RG-0454), not a ledger entry naming these three routes. | AUTHZ-CONSOLE-KEY-1: the admin + agency consoles authenticate with the PUBLIC app key (shipped in ms.js), so 3 admin-intent routes are reachable by anyone holding it -- POST /agencies/{id}/verify (grants agency tier, 'never self-served', no frontend caller), PUT /agencies/{id} (rename), POST /trust-score/credential (sets any user's trust credential -> inflate trust score). Same class as ADMIN-BIND-1, which that sweep missed. Probe flags them as LATENT (public key gets past the gate; only a bogus id/payload stopped the probe).",
+   "next_action": "-"
+  },
+  "DW-154": {
+   "first_seen": "2026-09-25",
+   "last_seen": "2026-09-25",
+   "sev": "HIGH",
+   "source": "regression ledger RG-0015 + RG-0197 (LOCKED) -- REGRESSION",
+   "status": "CLOSED",
+   "summary": "RAISED AND CLOSED IN THE SAME RUN. Board: 'REGRESSION: MarketSquare/.git/HEAD.lock is STRANDED (278 min)'. The 0-byte lock is dated 00:01:50Z, the second of commit be1b2a6 ('Run 20 close'), so that commit planted it. Healed by scripts/git_unlock.py at the watch's Phase D pre-step ('healed: .git/HEAD.lock -> stale_locks/'); both entries re-judged through _judge(): RG-0015 HOLDING, RG-0197 HOLDING. RESIDUAL: the 05:30 SAST nightly checkpoint calls git_unlock.bat first (HEAD.lock is in its list) yet the lock survived it for 3+ more hours -- why the host lane did not clear it is not visible from the sandbox (coverage card to AMBER).",
+   "next_action": "-"
+  },
+  "DW-155": {
+   "first_seen": "2026-09-25",
+   "last_seen": "2026-09-25",
+   "sev": "HIGH",
+   "source": "regression ledger RG-0373 (LOCKED) -- REGRESSION, live probe of POST /trust-score/guidance, re-judged",
    "status": "OPEN",
-   "summary": "AUTHZ-CONSOLE-KEY-1: the admin + agency consoles authenticate with the PUBLIC app key (shipped in ms.js), so 3 admin-intent routes are reachable by anyone holding it -- POST /agencies/{id}/verify (grants agency tier, 'never self-served', no frontend caller), PUT /agencies/{id} (rename), POST /trust-score/credential (sets any user's trust credential -> inflate trust score). Same class as ADMIN-BIND-1, which that sweep missed. Probe flags them as LATENT (public key gets past the gate; only a bogus id/payload stopped the probe).",
-   "next_action": "OWNED BY THE QA BOT. OpenAI rules POST /agencies/{id}/verify, PUT /agencies/{id} and POST /trust-score/credential as 'admin'; the bot attacks them every deploy + nightly and rolls back any release that leaves them open to the public key. Closes when the bot reports them PASS (refused). The handler fix is the SEC-GATE-1 lane's."
+   "summary": "The AI trust plan for a Tutors seller now includes a REFERRAL step. Board: 'REGRESSION: step 4 offers a referral signal -- referrals are not tracked, so this step can never award its points'; re-judged minutes later: same fault at step 5 (AI output varies, the fault does not). A real seller is told to do something that can never raise her score. User-facing.",
+   "next_action": "Owning lane stops /trust-score/guidance offering untracked signals (filter referral out of the plan, the class fix the entry names); RG-0373 [ ok ] closes it."
+  },
+  "DW-156": {
+   "first_seen": "2026-09-25",
+   "last_seen": "2026-09-25",
+   "sev": "HIGH",
+   "source": "regression ledger RG-0450 (LOCKED) -- REGRESSION, re-judged",
+   "status": "OPEN",
+   "summary": "'REGRESSION: genie/HARNESS.html differs from quick.html (house rule: identical)'. HARNESS.html is dated 24 Sep 10:18 SAST; quick.html 24 Sep 19:31 SAST. The harness lacks the later Quick-door changes (QUICK-WHERE-1 where-tap in CATS, BUGSWEEP-24SEP storage try/catch, own-city LOC fix, EULA-conditional 'terms accepted', back-button picks fix) from e0a4d22 / 303fbc0 / b951503. Live quick.html is correct (deploy drift clean, 19/19); only the test copy is stale, so anything walked through the harness tests yesterday's door.",
+   "next_action": "Owning lane copies quick.html over genie/HARNESS.html (or re-generates it); RG-0450 [ ok ] closes it."
+  },
+  "DW-157": {
+   "first_seen": "2026-09-25",
+   "last_seen": "2026-09-25",
+   "sev": "LOW",
+   "source": "server cron sensor (orchestrator/findings.cron.json) + journalctl",
+   "status": "OPEN",
+   "summary": "Cron parity could not be assessed: findings.cron.json still carries loop_date 2026-09-24 (written 24 Sep 01:30:03Z). The host REBOOTED at 01:30:06Z today (last -x: kernel 6.8.0-138 -> 6.8.0-139; secassess_postboot.sh ran 01:30:30Z), so the 01:30 sensor.py and ops_sweep.py runs never started. Service came back clean (health ok 1.3.1, uptime since 01:30:16Z).",
+   "next_action": "Closes when tomorrow's findings.cron.json carries loop_date 2026-09-26 and parity holds. Owning lane may add a post-boot catch-up for sensor.py so a reboot at :30 cannot eat a day."
+  },
+  "DW-158": {
+   "first_seen": "2026-09-25",
+   "last_seen": "2026-09-25",
+   "sev": "LOW",
+   "source": "watch check 1 (site pulse) GET /payment/test",
+   "status": "OPEN",
+   "summary": "The watch's anonymous GET /payment/test now answers 403 {'code':'admin_required'} -- by design since SEC-GATE-1 (f780893, 24 Sep 08:49Z), same answer from 127.0.0.1 on the box. The payment leg of check 1 is therefore blind to the watch (instrument debt, not an app fault). Substitute evidence today: subscription_monitor paystack UP 'key ok'.",
+   "next_action": "An attended session re-points check 1's payment leg at the subscription_monitor paystack row (or an authenticated probe); closes when the watch reads a payment verdict again."
   }
  },
- "last_run": "2026-09-24",
+ "last_run": "2026-09-25",
  "last_verdict": "RED",
  "recheck_pass_2026_08_20": {
   "requested_by": "David: close all open actions",
@@ -3395,5 +3440,110 @@
   "reassigned": [
    "DW-153 -> QA Bot"
   ]
+ },
+ "watch_pass_2026_09_25": {
+  "verdict": "RED",
+  "reason": "3 LOCKED entries REGRESSED after self-heal: RG-0373 (real, user-facing), RG-0351 (ratchet, shape changed), RG-0450 (harness drift); RG-0015/RG-0197 cleared in-run by git_unlock.py",
+  "site": {
+   "health": "ok",
+   "version": "1.3.1",
+   "db_integrity": "ok",
+   "root_seconds": 0.389,
+   "root_bytes": 272927,
+   "payment_test": "403 admin_required (SEC-GATE-1 by design, DW-158)",
+   "paystack_monitor": "UP key ok",
+   "tls_days": 58,
+   "tls_expires": "2026-11-22",
+   "bit": "403 admin_required (gated)",
+   "host_reboot": "2026-09-25T01:30:06Z kernel 6.8.0-139"
+  },
+  "ledger": {
+   "method": "--chunk, 3 calls",
+   "entries": 452,
+   "holding": 427,
+   "regressed": 5,
+   "regressed_ids": [
+    "RG-0015",
+    "RG-0197",
+    "RG-0351",
+    "RG-0373",
+    "RG-0450"
+   ],
+   "after_self_heal": [
+    "RG-0351",
+    "RG-0373",
+    "RG-0450"
+   ],
+   "open": 19,
+   "ready_to_lock": 1,
+   "ready_ids": [
+    "RG-0426"
+   ],
+   "unverified": 0,
+   "seconds": 284.2
+  },
+  "audit": {
+   "findings": 2,
+   "new": 0,
+   "all": "INFO"
+  },
+  "cost_sweep": {
+   "exit": 1,
+   "critical": 0,
+   "warn": 1,
+   "new": [],
+   "still": "DW-149"
+  },
+  "daily_checks": "DEPLOY DRIFT clean, 19/19",
+  "server": {
+   "ssh": "SSH_OK msdeploy",
+   "fea_integrity": "ok, 0 alerts",
+   "subscriptions": {
+    "UP": 35,
+    "HELD": 15,
+    "PLANNED": 1,
+    "DOWN": 0
+   },
+   "disk_free_pct": 50.2,
+   "queue": [],
+   "staged": [],
+   "last_deploy": "2026-09-25T00:04:45Z DEPLOY OK be1b2a6",
+   "qa_bot_nightly": "PASS 251 / SKIP 57, 0 open; review RED only because the gate refused e9cd050 on 24 Sep (later shipped inside be1b2a6 after its fix)"
+  },
+  "cron_parity": "NOT ASSESSABLE - loop_date 2026-09-24, host rebooted at the 01:30 cron minute (DW-157)",
+  "smoke": "40 OK / 0 FAIL",
+  "ai_watch": "all-clear for ZA; Sora API shutdown 24 Sep (app does not use Sora, grep 0); no Anthropic/OpenAI price or policy change",
+  "heartbeat": {
+   "last_run_before": "2026-09-24",
+   "gap_days": 1
+  },
+  "alert": {
+   "lane": "worker",
+   "resend_id": "01a0d6e5-9d27-7a31-92b4-6ae8ee8f91e9",
+   "exit": 0
+  },
+  "new": [
+   "DW-154",
+   "DW-155",
+   "DW-156",
+   "DW-157",
+   "DW-158"
+  ],
+  "closed": [
+   "DW-147",
+   "DW-148",
+   "DW-153",
+   "DW-154"
+  ],
+  "still_open": [
+   "DW-010",
+   "DW-146",
+   "DW-149",
+   "DW-155",
+   "DW-156",
+   "DW-157",
+   "DW-158"
+  ],
+  "checks_run": "12 of 12 applicable (Monday lane not in scope; cc_age run off-lane for DW-010)"
  }
 }
