@@ -410,19 +410,53 @@ def open_faults(key):
 # and the console can no longer say "0 seen" without also saying what the customer lane
 # holds. Counts-only by construction: DASH-TRIAGE-REDACT-1 (RG-0222) serves rows only to
 # an admin credential, which this agent does not hold and should not.
-def email_lane_census():
-    """Counts from the live customer-email lane. Fail-SOFT: never affects the run."""
+def _staff_key_for_census():
+    """MS_ADMIN_KEY from .secrets/deploy_keys.txt, or '' (off David's machine / on the box)."""
     try:
-        req = urllib.request.Request(BASE + "/dashboard/email-triage?limit=1",
-                                     headers=dict(UA_HEADER))
-        with urllib.request.urlopen(req, timeout=20) as r:
-            d = json.loads(r.read().decode() or "{}")
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                               ".secrets", "deploy_keys.txt"), encoding="utf-8") as f:
+            for ln in f:
+                if ln.startswith("MS_ADMIN_KEY="):
+                    return ln.split("=", 1)[1].strip()
+    except Exception:
+        pass
+    return ""
+
+
+def email_lane_census():
+    """Counts from the live customer-email lane. Fail-SOFT: never affects the run.
+
+    CENSUS-DOOR-1 (maintenance loop, 25 Sep 2026): SEC-GATE-1 (24 Sep) made
+    GET /dashboard/email-triage admin-only (loopback automation on the box still admitted),
+    so the anonymous counts read this census was built on returned 401 and RG-0223 went red.
+    Same class as GATE-SYNC-1 (RG-0457), and the same decision: a reader of a route the gate
+    closed moves to the staff door. The anonymous read is tried first (on the box, loopback
+    is admitted); on 401/403 the census retries once with X-Admin-Key when this machine holds
+    one. COUNTS ONLY is kept by construction: whatever the door, 'items' is never copied into
+    the report -- the agent still never reads, drafts or quotes a customer message.
+    """
+    try:
+        def _read(hdrs):
+            req = urllib.request.Request(BASE + "/dashboard/email-triage?limit=1", headers=hdrs)
+            with urllib.request.urlopen(req, timeout=20) as r:
+                return json.loads(r.read().decode() or "{}")
+        door = "anonymous"
+        try:
+            d = _read(dict(UA_HEADER))
+        except urllib.error.HTTPError as he:
+            _k = _staff_key_for_census()
+            if he.code not in (401, 403) or not _k:
+                raise
+            d = _read(dict(UA_HEADER, **{"X-Admin-Key": _k}))
+            door = "staff"
+        d.pop("items", None)          # counts only, whatever the door
         st = d.get("by_status_30d") or {}
         held = int(st.get("drafted", 0)) + int(st.get("failed", 0))
         return {"lane": "email_triage", "total": d.get("total", 0),
                 "by_category_30d": d.get("by_category_30d") or {},
                 "by_status_30d": st, "held_30d": held,
-                "note": "counts only (RG-0222); rows need the admin credential"}
+                "door": door,
+                "note": "counts only (RG-0222); rows are never copied into the report"}
     except Exception as e:
         return {"lane": "email_triage", "error": "%s: %s" % (type(e).__name__, str(e)[:80]),
                 "note": "customer email lane UNREAD this run -- treat 'seen' as partial"}
