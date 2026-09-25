@@ -29259,7 +29259,7 @@ def rg_fts_keyword():
 @entry("RG-0481", "QUICK-FIT-1: Quick's examples follow what she picked -- the reference names who she works for, "
        "the phone-around shows fitting example contacts, Collectables kinds show their own pictures, and an "
        "Adventure's WHERE is a destination, not a suburb",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="quick.html: vouchWho() (RUL-169), tradersFor() + the EXAMPLES banner, the COL-PICS-1 ad pool and kind "
              "pictures, the DEST-WHERE-1 flow wrapper; assets/quick_ph col_<kind>_<n>.jpg + dest_<slug>.jpg live under "
              "/static/quick. SCOPE: source + live /q/ + one live picture per family.",
@@ -29291,6 +29291,44 @@ def rg_quick_fit_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "reference, phone-around, collector pictures and destinations all fit the pick, repo and live")]
+
+
+@entry("RG-0482", "COUNTRY-PACK-1 (RUL-170): Quick's areas, money, trips and example names follow her country and city -- "
+       "no visitor outside Pretoria is shown Pretoria suburbs and Rands",
+       OPEN, fixed_on="",
+       scope="quick.html QPACK (generated from roles/quick_country_packs.json, all 9 picker countries and every live city from "
+             "/cities), the COUNTRY-PACK-1 runtime, bea_main.py /quick/me geo; dest_<cc>_*.jpg under /static/quick. CLASS: a live "
+             "city with no pack entry is a gap -- this entry compares the pack against the live /cities list.",
+       ref="David 25 Sep 2026. Rendered test before shipping: GB Manchester cleaner (city tap, Didsbury areas, English names, "
+           "GBP floor), KE Game lodge (Maasai Mara pictures, KSh bands), ZA Cape Town (Sea Point areas), ZA Pretoria unchanged.")
+def rg_country_pack_1():
+    import json as _j
+    q = repo_file("quick.html"); pk = repo_file("roles/quick_country_packs.json")
+    bad = []
+    if q is not None and ("COUNTRY-PACK-1 (David 25 Sep 2026" not in q or "var QPACK =" not in q):
+        bad.append("quick.html lost the country pack")
+    live = _get("/q/"); cities = _get("/cities")
+    if pk is not None and cities:
+        try:
+            P = _j.loads(pk); C = _j.loads(cities)
+            for cc, lst in C.items():
+                for city in lst:
+                    if city not in (P.get(cc) or {}).get("cities", {}):
+                        bad.append("live city %s/%s has no areas in the pack" % (cc, city))
+        except Exception as e:
+            bad.append("could not compare pack with /cities: %s" % str(e)[:60])
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - /q/ unreadable from here")] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if "COUNTRY-PACK-1" not in live:
+        bad.append("live /q/ does not carry the country pack (not deployed?)")
+    try:
+        import urllib.request as _u
+        _u.urlopen(_u.Request(BASE + "/static/quick/dest_ke_maasai_mara.jpg", method="HEAD", headers=UA), timeout=15)
+    except Exception as e:
+        bad.append("country destination pictures not served (%s)" % str(e)[:40])
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "every live city has areas; country pack and pictures live")]
 
 if __name__ == "__main__":
     sys.exit(main())

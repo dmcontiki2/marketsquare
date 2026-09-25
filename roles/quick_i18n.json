@@ -2772,6 +2772,20 @@
    "",
    "",
    ""
+  ],
+  "Which city?": [
+   "Watter stad?",
+   "Yiliphi idolobha?",
+   "Toropo efe?",
+   "Sesiphi isixeko?",
+   "Toropo efe?"
+  ],
+  "We ask once. This phone remembers it.": [
+   "Ons vra net een keer. Hierdie foon onthou dit.",
+   "Sibuza kanye. Le foni iyakukhumbula.",
+   "Re botsa hang feela. Fono ena e a hopola.",
+   "Sibuza kanye. Le fowuni iyakukhumbula.",
+   "Re botšiša gatee. Founo ye e a gopola."
   ]
  },
  "p": [
@@ -2888,6 +2902,14 @@
    "$1 ho $2 tse kgethilweng",
    "$1 kwa-$2 ekhethiweyo",
    "$1 go $2 tše kgethilwego"
+  ],
+  [
+   "^Not in (.+)\\? Change city$",
+   "Nie in $1 nie? Verander stad",
+   "Awukho e-$1? Shintsha idolobha",
+   "Ha o $1? Fetola toropo",
+   "Awukho e-$1? Tshintsha isixeko",
+   "Ga o $1? Fetola toropo"
   ]
  ]
 }

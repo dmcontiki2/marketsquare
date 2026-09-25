@@ -1,0 +1,1112 @@
+{
+ "ZA": {
+  "name": "South Africa",
+  "cur": "R",
+  "tz": [
+   "Africa/Johannesburg"
+  ],
+  "default": "Pretoria",
+  "cities": {
+   "Pretoria": [
+    "Pretoria East",
+    "Centurion",
+    "Mamelodi",
+    "Menlyn",
+    "Midrand",
+    "Sandton"
+   ],
+   "Bloemfontein": [
+    "Westdene",
+    "Brandwag",
+    "Universitas",
+    "Fichardt Park",
+    "Langenhoven Park",
+    "Mangaung"
+   ],
+   "Cape Town": [
+    "Sea Point",
+    "Claremont",
+    "Bellville",
+    "Khayelitsha",
+    "Durbanville",
+    "Observatory"
+   ],
+   "Durban": [
+    "Umhlanga",
+    "Berea",
+    "Westville",
+    "Umlazi",
+    "Glenwood",
+    "Durban North"
+   ],
+   "East London": [
+    "Vincent",
+    "Beacon Bay",
+    "Nahoon",
+    "Southernwood",
+    "Mdantsane",
+    "Gonubie"
+   ],
+   "George": [
+    "George Central",
+    "Heatherlands",
+    "Blanco",
+    "Pacaltsdorp",
+    "Thembalethu",
+    "Wilderness"
+   ],
+   "Gqeberha (Port Elizabeth)": [
+    "Summerstrand",
+    "Walmer",
+    "Newton Park",
+    "Lorraine",
+    "Motherwell",
+    "Kabega Park"
+   ],
+   "Johannesburg": [
+    "Sandton",
+    "Rosebank",
+    "Soweto",
+    "Randburg",
+    "Melville",
+    "Fourways"
+   ],
+   "Kimberley": [
+    "Kimberley Central",
+    "Belgravia",
+    "Hadison Park",
+    "Galeshewe",
+    "Royldene",
+    "Cassandra"
+   ],
+   "Knysna": [
+    "Knysna Central",
+    "Leisure Isle",
+    "Brenton-on-Sea",
+    "Hornlee",
+    "Paradise",
+    "Sedgefield"
+   ],
+   "Mbombela (Nelspruit)": [
+    "Sonheuwel",
+    "West Acres",
+    "Riverside Park",
+    "KaNyamazane",
+    "White River",
+    "Stonehenge"
+   ],
+   "Mossel Bay": [
+    "Mossel Bay Central",
+    "Diaz Beach",
+    "Hartenbos",
+    "KwaNonqaba",
+    "Dana Bay",
+    "Great Brak River"
+   ],
+   "Pietermaritzburg": [
+    "Scottsville",
+    "Hayfields",
+    "Wembley",
+    "Edendale",
+    "Hilton",
+    "Northdale"
+   ],
+   "Polokwane": [
+    "Bendor",
+    "Fauna Park",
+    "Westenburg",
+    "Seshego",
+    "Flora Park",
+    "Ivy Park"
+   ]
+  },
+  "dest": null,
+  "names": null,
+  "swap": {}
+ },
+ "NA": {
+  "name": "Namibia",
+  "cur": "N$",
+  "tz": [
+   "Africa/Windhoek"
+  ],
+  "default": "Windhoek",
+  "cities": {
+   "Windhoek": [
+    "Klein Windhoek",
+    "Eros",
+    "Olympia",
+    "Katutura",
+    "Ludwigsdorf",
+    "Khomasdal"
+   ]
+  },
+  "dest": {
+   "lodge": [
+    "Etosha",
+    "Waterberg Plateau",
+    "Okonjima",
+    "Damaraland",
+    "Zambezi Region",
+    "Erindi"
+   ],
+   "tour": [
+    "Sossusvlei",
+    "Swakopmund",
+    "Twyfelfontein",
+    "Kolmanskop",
+    "Windhoek",
+    "Damaraland"
+   ],
+   "drive": [
+    "Skeleton Coast",
+    "Fish River Canyon",
+    "Sossusvlei",
+    "Damaraland",
+    "Kalahari",
+    "Zambezi Region"
+   ],
+   "rail": [
+    "Windhoek",
+    "Swakopmund",
+    "Walvis Bay",
+    "Keetmanshoop",
+    "Tsumeb",
+    "Otjiwarongo"
+   ],
+   "fish": [
+    "Henties Bay",
+    "Walvis Bay",
+    "Zambezi Region",
+    "Hardap Dam",
+    "Orange River",
+    "Lüderitz"
+   ]
+  },
+  "names": [
+   "Ndapewa Shikongo",
+   "Tuyeni Nghidinwa",
+   "Helao Amutenya",
+   "Ndahafa Iipinge",
+   "Selma Nangolo",
+   "Petrus Haufiku"
+  ],
+  "swap": {
+   "R150k": "N$150k",
+   "matric": "Grade 12",
+   "Grade 10": "Grade 10"
+  },
+  "bands": {
+   "cars": [
+    "Under N$150k",
+    "N$150k–N$300k",
+    "N$300k–N$500k",
+    "Over N$500k"
+   ],
+   "collectors": [
+    "Under N$1 000",
+    "N$1 000–N$5 000",
+    "N$5 000–N$20 000",
+    "Over N$20 000"
+   ],
+   "adventures": [
+    "Under N$1 500",
+    "N$1 500–N$3 000",
+    "N$3 000–N$6 000",
+    "Over N$6 000"
+   ],
+   "localmarket": [
+    "Under N$100",
+    "N$100–N$500",
+    "N$500–N$2 000",
+    "Over N$2 000"
+   ]
+  }
+ },
+ "BW": {
+  "name": "Botswana",
+  "cur": "P",
+  "tz": [
+   "Africa/Gaborone"
+  ],
+  "default": "Maun",
+  "cities": {
+   "Maun": [
+    "Maun Central",
+    "Boseja",
+    "Disaneng",
+    "Matlapana",
+    "Sedie",
+    "Shorobe"
+   ]
+  },
+  "dest": {
+   "lodge": [
+    "Okavango Delta",
+    "Chobe",
+    "Moremi",
+    "Makgadikgadi Pans",
+    "Central Kalahari",
+    "Khwai"
+   ],
+   "tour": [
+    "Okavango Delta",
+    "Tsodilo Hills",
+    "Chobe",
+    "Khama Rhino Sanctuary",
+    "Nxai Pan",
+    "Makgadikgadi Pans"
+   ],
+   "drive": [
+    "Chobe",
+    "Makgadikgadi Pans",
+    "Central Kalahari",
+    "Moremi",
+    "Kgalagadi",
+    "Tuli Block"
+   ],
+   "rail": [
+    "Gaborone",
+    "Francistown",
+    "Palapye",
+    "Lobatse",
+    "Mahalapye",
+    "Kasane"
+   ],
+   "fish": [
+    "Okavango Panhandle",
+    "Chobe",
+    "Shakawe",
+    "Gaborone Dam",
+    "Linyanti",
+    "Lake Ngami"
+   ]
+  },
+  "names": [
+   "Kagiso Molefe",
+   "Boitumelo Kgosi",
+   "Mpho Seretse",
+   "Onalenna Dintwe",
+   "Tebogo Masire",
+   "Neo Mogae"
+  ],
+  "swap": {
+   "R150k": "P100k",
+   "matric": "Form 5",
+   "Grade 10": "Form 4",
+   "body corporate": "estate committee"
+  },
+  "bands": {
+   "cars": [
+    "Under P100k",
+    "P100k–P200k",
+    "P200k–P350k",
+    "Over P350k"
+   ],
+   "collectors": [
+    "Under P500",
+    "P500–P2 500",
+    "P2 500–P10 000",
+    "Over P10 000"
+   ],
+   "adventures": [
+    "Under P1 000",
+    "P1 000–P2 000",
+    "P2 000–P4 000",
+    "Over P4 000"
+   ],
+   "localmarket": [
+    "Under P50",
+    "P50–P250",
+    "P250–P1 000",
+    "Over P1 000"
+   ]
+  }
+ },
+ "MZ": {
+  "name": "Mozambique",
+  "cur": "MT ",
+  "tz": [
+   "Africa/Maputo"
+  ],
+  "default": "Maputo",
+  "cities": {
+   "Maputo": [
+    "Sommerschield",
+    "Polana Cimento",
+    "Costa do Sol",
+    "Malhangalene",
+    "Alto Maé",
+    "Matola"
+   ]
+  },
+  "dest": {
+   "lodge": [
+    "Gorongosa",
+    "Limpopo National Park",
+    "Niassa Reserve",
+    "Maputo Special Reserve",
+    "Zinave",
+    "Quirimbas"
+   ],
+   "tour": [
+    "Ilha de Moçambique",
+    "Maputo",
+    "Inhambane",
+    "Tofo",
+    "Bazaruto",
+    "Quirimbas"
+   ],
+   "drive": [
+    "Ponta do Ouro",
+    "Inhambane",
+    "Vilanculos",
+    "Bilene",
+    "Xai-Xai",
+    "Gorongosa"
+   ],
+   "rail": [
+    "Maputo",
+    "Beira",
+    "Nampula",
+    "Cuamba",
+    "Ressano Garcia",
+    "Chókwè"
+   ],
+   "fish": [
+    "Bazaruto",
+    "Ponta do Ouro",
+    "Tofo",
+    "Vilanculos",
+    "Inhaca",
+    "Lake Niassa"
+   ]
+  },
+  "names": [
+   "Joaquim Machava",
+   "Ana Cossa",
+   "Celso Mondlane",
+   "Luísa Sitoe",
+   "Armando Tembe",
+   "Rosa Nhantumbo"
+  ],
+  "swap": {
+   "bakkie": "pickup",
+   "R150k": "MT 500k",
+   "matric": "12th class",
+   "Grade 10": "10th class",
+   "body corporate": "building committee"
+  },
+  "bands": {
+   "cars": [
+    "Under MT 500k",
+    "MT 500k–MT 1m",
+    "MT 1m–MT 1.7m",
+    "Over MT 1.7m"
+   ],
+   "collectors": [
+    "Under MT 3 000",
+    "MT 3 000–MT 15 000",
+    "MT 15 000–MT 60 000",
+    "Over MT 60 000"
+   ],
+   "adventures": [
+    "Under MT 5 000",
+    "MT 5 000–MT 10 000",
+    "MT 10 000–MT 20 000",
+    "Over MT 20 000"
+   ],
+   "localmarket": [
+    "Under MT 300",
+    "MT 300–MT 1 500",
+    "MT 1 500–MT 6 000",
+    "Over MT 6 000"
+   ]
+  }
+ },
+ "KE": {
+  "name": "Kenya",
+  "cur": "KSh ",
+  "tz": [
+   "Africa/Nairobi"
+  ],
+  "default": "Nairobi",
+  "cities": {
+   "Nairobi": [
+    "Westlands",
+    "Kilimani",
+    "Karen",
+    "Lavington",
+    "Kileleshwa",
+    "South B"
+   ]
+  },
+  "dest": {
+   "lodge": [
+    "Maasai Mara",
+    "Amboseli",
+    "Tsavo",
+    "Samburu",
+    "Lake Nakuru",
+    "Ol Pejeta"
+   ],
+   "tour": [
+    "Lamu",
+    "Mombasa",
+    "Nairobi",
+    "Hell's Gate",
+    "Lake Naivasha",
+    "Maasai Mara"
+   ],
+   "drive": [
+    "Rift Valley",
+    "Mount Kenya",
+    "Aberdares",
+    "Lake Naivasha",
+    "Diani",
+    "Amboseli"
+   ],
+   "rail": [
+    "Mombasa",
+    "Nairobi",
+    "Voi",
+    "Mtito Andei",
+    "Naivasha",
+    "Tsavo"
+   ],
+   "fish": [
+    "Lake Victoria",
+    "Watamu",
+    "Malindi",
+    "Lake Naivasha",
+    "Lake Turkana",
+    "Diani"
+   ]
+  },
+  "names": [
+   "Wanjiru Kamau",
+   "Njoroge Mwangi",
+   "Wambui Githinji",
+   "Kariuki Ndung'u",
+   "Nyambura Karanja",
+   "Muthoni Njenga"
+  ],
+  "swap": {
+   "bakkie": "pickup",
+   "R150k": "KSh 1m",
+   "matric": "Form 4",
+   "Grade 10": "Form 3",
+   "body corporate": "estate committee"
+  },
+  "bands": {
+   "cars": [
+    "Under KSh 1m",
+    "KSh 1m–KSh 2m",
+    "KSh 2m–KSh 3.5m",
+    "Over KSh 3.5m"
+   ],
+   "collectors": [
+    "Under KSh 5 000",
+    "KSh 5 000–KSh 25 000",
+    "KSh 25 000–KSh 100k",
+    "Over KSh 100k"
+   ],
+   "adventures": [
+    "Under KSh 10 000",
+    "KSh 10 000–KSh 20 000",
+    "KSh 20 000–KSh 40 000",
+    "Over KSh 40 000"
+   ],
+   "localmarket": [
+    "Under KSh 500",
+    "KSh 500–KSh 2 500",
+    "KSh 2 500–KSh 10 000",
+    "Over KSh 10 000"
+   ]
+  }
+ },
+ "GB": {
+  "name": "United Kingdom",
+  "cur": "£",
+  "tz": [
+   "Europe/London"
+  ],
+  "default": "London",
+  "cities": {
+   "London": [
+    "Clapham",
+    "Islington",
+    "Brixton",
+    "Hackney",
+    "Wimbledon",
+    "Ealing"
+   ],
+   "Birmingham": [
+    "Edgbaston",
+    "Moseley",
+    "Harborne",
+    "Sutton Coldfield",
+    "Digbeth",
+    "Kings Heath"
+   ],
+   "Bristol": [
+    "Clifton",
+    "Bedminster",
+    "Redland",
+    "Southville",
+    "Bishopston",
+    "Fishponds"
+   ],
+   "Cardiff": [
+    "Canton",
+    "Roath",
+    "Cathays",
+    "Pontcanna",
+    "Llandaff",
+    "Cardiff Bay"
+   ],
+   "Edinburgh": [
+    "Leith",
+    "Morningside",
+    "Stockbridge",
+    "Portobello",
+    "Marchmont",
+    "Corstorphine"
+   ],
+   "Glasgow": [
+    "West End",
+    "Southside",
+    "Merchant City",
+    "Finnieston",
+    "Dennistoun",
+    "Shawlands"
+   ],
+   "Leeds": [
+    "Headingley",
+    "Chapel Allerton",
+    "Roundhay",
+    "Horsforth",
+    "Kirkstall",
+    "City Centre"
+   ],
+   "Leicester": [
+    "Clarendon Park",
+    "Stoneygate",
+    "Oadby",
+    "Evington",
+    "Belgrave",
+    "Wigston"
+   ],
+   "Liverpool": [
+    "Allerton",
+    "Woolton",
+    "Anfield",
+    "Wavertree",
+    "Aigburth",
+    "Toxteth"
+   ],
+   "Manchester": [
+    "Didsbury",
+    "Chorlton",
+    "Ancoats",
+    "Salford",
+    "Withington",
+    "Levenshulme"
+   ],
+   "Sheffield": [
+    "Ecclesall",
+    "Crookes",
+    "Hillsborough",
+    "Kelham Island",
+    "Nether Edge",
+    "Walkley"
+   ]
+  },
+  "dest": {
+   "lodge": [
+    "Scottish Highlands",
+    "Cairngorms",
+    "Isle of Mull",
+    "Exmoor",
+    "New Forest",
+    "Lake District"
+   ],
+   "tour": [
+    "Edinburgh",
+    "Bath",
+    "Stonehenge",
+    "York",
+    "Oxford",
+    "Cotswolds"
+   ],
+   "drive": [
+    "North Coast 500",
+    "Lake District",
+    "Snowdonia",
+    "Cornwall",
+    "Yorkshire Dales",
+    "Isle of Skye"
+   ],
+   "rail": [
+    "West Highland Line",
+    "Settle–Carlisle",
+    "Cornwall",
+    "Snowdonia",
+    "Scottish Highlands",
+    "Yorkshire Dales"
+   ],
+   "fish": [
+    "River Tay",
+    "River Spey",
+    "Loch Lomond",
+    "Lake District",
+    "River Wye",
+    "Cornwall"
+   ]
+  },
+  "names": [
+   "Sarah Thompson",
+   "James Walker",
+   "Emma Hughes",
+   "Tom Davies",
+   "Lucy Carter",
+   "Oliver Bennett"
+  ],
+  "swap": {
+   "bakkie": "small car",
+   "R150k": "£5k",
+   "matric": "sixth form",
+   "Grade 10": "Year 11",
+   "body corporate": "residents' association"
+  },
+  "bands": {
+   "cars": [
+    "Under £5k",
+    "£5k–£10k",
+    "£10k–£20k",
+    "Over £20k"
+   ],
+   "collectors": [
+    "Under £50",
+    "£50–£250",
+    "£250–£1,000",
+    "Over £1,000"
+   ],
+   "adventures": [
+    "Under £75",
+    "£75–£150",
+    "£150–£300",
+    "Over £300"
+   ],
+   "localmarket": [
+    "Under £5",
+    "£5–£25",
+    "£25–£100",
+    "Over £100"
+   ]
+  }
+ },
+ "DE": {
+  "name": "Germany",
+  "cur": "€",
+  "tz": [
+   "Europe/Berlin"
+  ],
+  "default": "Garmisch-Partenkirchen",
+  "cities": {
+   "Garmisch-Partenkirchen": [
+    "Garmisch",
+    "Partenkirchen",
+    "Grainau",
+    "Farchant",
+    "Oberau",
+    "Burgrain"
+   ]
+  },
+  "dest": {
+   "lodge": [
+    "Bavarian Forest",
+    "Black Forest",
+    "Harz",
+    "Berchtesgaden",
+    "Saxon Switzerland",
+    "Eifel"
+   ],
+   "tour": [
+    "Neuschwanstein",
+    "Munich",
+    "Berlin",
+    "Heidelberg",
+    "Rothenburg",
+    "Cologne"
+   ],
+   "drive": [
+    "Romantic Road",
+    "Black Forest",
+    "Rhine Valley",
+    "Moselle Valley",
+    "German Alpine Road",
+    "Baltic Coast"
+   ],
+   "rail": [
+    "Rhine Valley",
+    "Zugspitze",
+    "Harz",
+    "Black Forest",
+    "Munich",
+    "Berlin"
+   ],
+   "fish": [
+    "Lake Constance",
+    "Chiemsee",
+    "Rhine Valley",
+    "Mecklenburg Lakes",
+    "Baltic Coast",
+    "Königssee"
+   ]
+  },
+  "names": [
+   "Anna Becker",
+   "Lukas Schneider",
+   "Julia Wagner",
+   "Felix Hoffmann",
+   "Laura Fischer",
+   "Jonas Weber"
+  ],
+  "swap": {
+   "bakkie": "small van",
+   "R150k": "€5,000",
+   "matric": "Abitur year",
+   "Grade 10": "Year 10",
+   "body corporate": "residents' board"
+  },
+  "bands": {
+   "cars": [
+    "Under €5,000",
+    "€5,000–€10,000",
+    "€10,000–€20,000",
+    "Over €20,000"
+   ],
+   "collectors": [
+    "Under €50",
+    "€50–€250",
+    "€250–€1,000",
+    "Over €1,000"
+   ],
+   "adventures": [
+    "Under €75",
+    "€75–€150",
+    "€150–€300",
+    "Over €300"
+   ],
+   "localmarket": [
+    "Under €5",
+    "€5–€25",
+    "€25–€100",
+    "Over €100"
+   ]
+  }
+ },
+ "AU": {
+  "name": "Australia",
+  "cur": "A$",
+  "tz": [
+   "Australia/"
+  ],
+  "default": "Sydney",
+  "cities": {
+   "Sydney": [
+    "Bondi",
+    "Parramatta",
+    "Surry Hills",
+    "Chatswood",
+    "Manly",
+    "Newtown"
+   ],
+   "Adelaide": [
+    "Glenelg",
+    "Norwood",
+    "North Adelaide",
+    "Prospect",
+    "Unley",
+    "Salisbury"
+   ]
+  },
+  "dest": {
+   "lodge": [
+    "Kakadu",
+    "Kangaroo Island",
+    "Daintree",
+    "Flinders Ranges",
+    "Kimberley",
+    "Uluru"
+   ],
+   "tour": [
+    "Great Barrier Reef",
+    "Blue Mountains",
+    "Barossa Valley",
+    "Great Ocean Road",
+    "Uluru",
+    "Kangaroo Island"
+   ],
+   "drive": [
+    "Great Ocean Road",
+    "Nullarbor",
+    "Red Centre",
+    "Pacific Coast",
+    "Flinders Ranges",
+    "Tasmania"
+   ],
+   "rail": [
+    "Red Centre",
+    "Nullarbor",
+    "Kuranda",
+    "Blue Mountains",
+    "Barossa Valley",
+    "Kakadu"
+   ],
+   "fish": [
+    "Great Barrier Reef",
+    "Cape York",
+    "Kimberley",
+    "Murray River",
+    "Tasmania",
+    "Exmouth"
+   ]
+  },
+  "names": [
+   "Chloe Mitchell",
+   "Jack Robinson",
+   "Mia Campbell",
+   "Liam Stewart",
+   "Ella Morris",
+   "Noah Kelly"
+  ],
+  "swap": {
+   "bakkie": "ute",
+   "R150k": "A$20k",
+   "matric": "Year 12",
+   "Grade 10": "Year 10",
+   "body corporate": "strata"
+  },
+  "bands": {
+   "cars": [
+    "Under A$10k",
+    "A$10k–A$20k",
+    "A$20k–A$35k",
+    "Over A$35k"
+   ],
+   "collectors": [
+    "Under A$100",
+    "A$100–A$500",
+    "A$500–A$2,000",
+    "Over A$2,000"
+   ],
+   "adventures": [
+    "Under A$150",
+    "A$150–A$300",
+    "A$300–A$600",
+    "Over A$600"
+   ],
+   "localmarket": [
+    "Under A$10",
+    "A$10–A$50",
+    "A$50–A$200",
+    "Over A$200"
+   ]
+  }
+ },
+ "US": {
+  "name": "United States",
+  "cur": "$",
+  "tz": [
+   "America/New_York",
+   "America/Chicago",
+   "America/Denver",
+   "America/Los_Angeles",
+   "America/Phoenix"
+  ],
+  "default": "New York",
+  "cities": {
+   "New York": [
+    "Brooklyn",
+    "Queens",
+    "Upper West Side",
+    "Harlem",
+    "The Bronx",
+    "Staten Island"
+   ],
+   "Austin": [
+    "Downtown",
+    "South Congress",
+    "East Austin",
+    "Hyde Park",
+    "Mueller",
+    "Round Rock"
+   ],
+   "Chicago": [
+    "Lincoln Park",
+    "Wicker Park",
+    "Hyde Park",
+    "Logan Square",
+    "Lakeview",
+    "Pilsen"
+   ],
+   "Dallas": [
+    "Uptown",
+    "Deep Ellum",
+    "Oak Lawn",
+    "Lakewood",
+    "Bishop Arts",
+    "Plano"
+   ],
+   "Denver": [
+    "LoDo",
+    "Capitol Hill",
+    "Highlands",
+    "Cherry Creek",
+    "Washington Park",
+    "Aurora"
+   ],
+   "Houston": [
+    "Montrose",
+    "The Heights",
+    "Midtown",
+    "River Oaks",
+    "Katy",
+    "Sugar Land"
+   ],
+   "Los Angeles": [
+    "Santa Monica",
+    "Silver Lake",
+    "Pasadena",
+    "Koreatown",
+    "Echo Park",
+    "Long Beach"
+   ],
+   "Philadelphia": [
+    "Center City",
+    "Fishtown",
+    "South Philly",
+    "Manayunk",
+    "Germantown",
+    "University City"
+   ],
+   "Phoenix": [
+    "Scottsdale",
+    "Tempe",
+    "Mesa",
+    "Arcadia",
+    "Glendale",
+    "Chandler"
+   ],
+   "San Antonio": [
+    "Alamo Heights",
+    "Pearl District",
+    "Southtown",
+    "Stone Oak",
+    "Monte Vista",
+    "Helotes"
+   ],
+   "San Diego": [
+    "La Jolla",
+    "North Park",
+    "Pacific Beach",
+    "Hillcrest",
+    "Chula Vista",
+    "Mission Valley"
+   ],
+   "San Jose": [
+    "Willow Glen",
+    "Downtown",
+    "Almaden Valley",
+    "Santa Clara",
+    "Evergreen",
+    "Rose Garden"
+   ]
+  },
+  "dest": {
+   "lodge": [
+    "Yellowstone",
+    "Grand Teton",
+    "Glacier",
+    "Denali",
+    "Everglades",
+    "Yosemite"
+   ],
+   "tour": [
+    "Grand Canyon",
+    "Yosemite",
+    "Charleston",
+    "New Orleans",
+    "Washington DC",
+    "Everglades"
+   ],
+   "drive": [
+    "Route 66",
+    "Pacific Coast Highway",
+    "Blue Ridge Parkway",
+    "Utah's Mighty 5",
+    "Florida Keys",
+    "Glacier"
+   ],
+   "rail": [
+    "California Zephyr",
+    "Grand Canyon",
+    "Glacier",
+    "Pacific Coast Highway",
+    "Denali",
+    "Yosemite"
+   ],
+   "fish": [
+    "Florida Keys",
+    "Montana rivers",
+    "Outer Banks",
+    "Lake of the Ozarks",
+    "Alaska rivers",
+    "Cape Cod"
+   ]
+  },
+  "names": [
+   "Emily Johnson",
+   "Michael Brown",
+   "Ashley Davis",
+   "Tyler Miller",
+   "Megan Wilson",
+   "Josh Anderson"
+  ],
+  "swap": {
+   "bakkie": "pickup",
+   "R150k": "$15k",
+   "matric": "senior year",
+   "Grade 10": "10th grade",
+   "body corporate": "HOA"
+  },
+  "bands": {
+   "cars": [
+    "Under $8k",
+    "$8k–$15k",
+    "$15k–$25k",
+    "Over $25k"
+   ],
+   "collectors": [
+    "Under $50",
+    "$50–$250",
+    "$250–$1,000",
+    "Over $1,000"
+   ],
+   "adventures": [
+    "Under $100",
+    "$100–$200",
+    "$200–$400",
+    "Over $400"
+   ],
+   "localmarket": [
+    "Under $5",
+    "$5–$25",
+    "$25–$100",
+    "Over $100"
+   ]
+  }
+ }
+}

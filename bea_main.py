@@ -6147,9 +6147,13 @@ def admin_registry_upsert(body: _RegistryUpsertIn, _admin=Depends(_require_admin
 # ms.js ships to every visitor (nothing new exposed), and the EULA fact. Ungated -- a stranger
 # gets {signed_in: false} plus the key, which is exactly what the door needs to go live.
 @app.get("/quick/me")
-def quick_me(ts_user: str = Cookie(default=None)):
+def quick_me(request: Request, ts_user: str = Cookie(default=None)):
     em = _session_email(ts_user)
-    out = {"signed_in": False, "key": auth.API_KEY if hasattr(auth, "API_KEY") else os.environ.get("MS_API_KEY", ""),
+    # COUNTRY-PACK-1 (25 Sep 2026): where the visitor is, as Cloudflare already tells us -- country (and city when
+    # Cloudflare adds it). Read-only, never stored; Quick uses it only to pick which examples to show.
+    _geo = {"country": (request.headers.get("cf-ipcountry") or "").upper()[:2] or None,
+            "city": (request.headers.get("cf-ipcity") or "")[:60] or None}
+    out = {"geo": _geo, "signed_in": False, "key": auth.API_KEY if hasattr(auth, "API_KEY") else os.environ.get("MS_API_KEY", ""),
            "email": None, "name": None, "eula_accepted": False, "city": None, "listings": 0}
     try:
         import sms_provider

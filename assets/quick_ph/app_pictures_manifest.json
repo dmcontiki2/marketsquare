@@ -232,5 +232,595 @@
   "provider": "higgsfield",
   "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Lake Jozini: a long blue lake between the Lebombo mountains with a fishing boat.",
   "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_na_etosha": {
+  "made": "2026-09-25T09:39:07.026964Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_na_waterberg_plateau": {
+  "made": "2026-09-25T09:39:07.029065Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_na_okonjima": {
+  "made": "2026-09-25T09:39:07.031165Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_na_damaraland": {
+  "made": "2026-09-25T09:39:07.033264Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_na_zambezi_region": {
+  "made": "2026-09-25T09:39:07.035313Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_na_erindi": {
+  "made": "2026-09-25T09:39:07.037489Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_na_sossusvlei": {
+  "made": "2026-09-25T09:40:53.618043Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_na_swakopmund": {
+  "made": "2026-09-25T09:40:53.620110Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_na_twyfelfontein": {
+  "made": "2026-09-25T09:40:53.622241Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_na_kolmanskop": {
+  "made": "2026-09-25T09:40:53.624384Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_na_windhoek": {
+  "made": "2026-09-25T09:40:53.626705Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_na_skeleton_coast": {
+  "made": "2026-09-25T09:40:53.629317Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_na_fish_river_canyon": {
+  "made": "2026-09-25T09:40:53.631502Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_na_kalahari": {
+  "made": "2026-09-25T09:40:53.633716Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_bw_okavango_delta": {
+  "made": "2026-09-25T09:43:07.123073Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_bw_chobe": {
+  "made": "2026-09-25T09:43:07.124779Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_bw_moremi": {
+  "made": "2026-09-25T09:43:07.126535Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_bw_makgadikgadi_pans": {
+  "made": "2026-09-25T09:43:07.128222Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_bw_central_kalahari": {
+  "made": "2026-09-25T09:43:07.130427Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_bw_khwai": {
+  "made": "2026-09-25T09:43:07.132889Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_bw_tsodilo_hills": {
+  "made": "2026-09-25T09:43:07.135419Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_bw_khama_rhino_sanctuary": {
+  "made": "2026-09-25T09:43:07.137592Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_bw_nxai_pan": {
+  "made": "2026-09-25T09:43:07.139751Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_bw_kgalagadi": {
+  "made": "2026-09-25T09:43:07.142195Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_bw_tuli_block": {
+  "made": "2026-09-25T09:43:07.144425Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_gorongosa": {
+  "made": "2026-09-25T09:45:27.221625Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_limpopo_national_park": {
+  "made": "2026-09-25T09:45:27.223682Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_niassa_reserve": {
+  "made": "2026-09-25T09:45:27.225779Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_maputo_special_reserve": {
+  "made": "2026-09-25T09:45:27.227749Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_zinave": {
+  "made": "2026-09-25T09:45:27.229845Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_quirimbas": {
+  "made": "2026-09-25T09:45:27.232130Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_ilha_de_mocambique": {
+  "made": "2026-09-25T09:45:27.234219Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_maputo": {
+  "made": "2026-09-25T09:45:27.236258Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_inhambane": {
+  "made": "2026-09-25T09:45:27.238382Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_tofo": {
+  "made": "2026-09-25T09:45:27.240560Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_bazaruto": {
+  "made": "2026-09-25T09:45:27.242831Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_ponta_do_ouro": {
+  "made": "2026-09-25T09:45:27.245335Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_vilanculos": {
+  "made": "2026-09-25T09:45:27.247533Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_bilene": {
+  "made": "2026-09-25T09:45:27.249805Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_mz_xai_xai": {
+  "made": "2026-09-25T09:45:27.251981Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_maasai_mara": {
+  "made": "2026-09-25T09:48:01.151684Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_amboseli": {
+  "made": "2026-09-25T09:48:01.153893Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_tsavo": {
+  "made": "2026-09-25T09:48:01.156074Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_samburu": {
+  "made": "2026-09-25T09:48:01.158178Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_lake_nakuru": {
+  "made": "2026-09-25T09:48:01.160482Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_ol_pejeta": {
+  "made": "2026-09-25T09:48:01.162643Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_lamu": {
+  "made": "2026-09-25T09:48:01.164836Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_mombasa": {
+  "made": "2026-09-25T09:48:01.167234Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_nairobi": {
+  "made": "2026-09-25T09:48:01.169360Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_hell_s_gate": {
+  "made": "2026-09-25T09:48:01.171521Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_lake_naivasha": {
+  "made": "2026-09-25T09:48:01.173693Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_rift_valley": {
+  "made": "2026-09-25T09:48:01.175906Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_mount_kenya": {
+  "made": "2026-09-25T09:48:01.178173Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_aberdares": {
+  "made": "2026-09-25T09:48:01.180327Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_ke_diani": {
+  "made": "2026-09-25T09:48:01.182931Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_scottish_highlands": {
+  "made": "2026-09-25T09:50:40.687925Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_cairngorms": {
+  "made": "2026-09-25T09:50:40.689940Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_isle_of_mull": {
+  "made": "2026-09-25T09:50:40.691957Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_exmoor": {
+  "made": "2026-09-25T09:50:40.694099Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_new_forest": {
+  "made": "2026-09-25T09:50:40.696092Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_lake_district": {
+  "made": "2026-09-25T09:50:40.698144Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_edinburgh": {
+  "made": "2026-09-25T09:50:40.700674Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_bath": {
+  "made": "2026-09-25T09:50:40.705997Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_stonehenge": {
+  "made": "2026-09-25T09:50:40.707999Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_york": {
+  "made": "2026-09-25T09:50:40.709919Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_oxford": {
+  "made": "2026-09-25T09:50:40.711958Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_cotswolds": {
+  "made": "2026-09-25T09:50:40.713966Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_north_coast_500": {
+  "made": "2026-09-25T09:50:40.716250Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_snowdonia": {
+  "made": "2026-09-25T09:50:40.718412Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_cornwall": {
+  "made": "2026-09-25T09:50:40.720489Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_yorkshire_dales": {
+  "made": "2026-09-25T09:50:40.722474Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_gb_isle_of_skye": {
+  "made": "2026-09-25T09:50:40.724458Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_kakadu": {
+  "made": "2026-09-25T09:55:06.578389Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_kangaroo_island": {
+  "made": "2026-09-25T09:55:06.580497Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_daintree": {
+  "made": "2026-09-25T09:55:06.582674Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_flinders_ranges": {
+  "made": "2026-09-25T09:55:06.584889Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_kimberley": {
+  "made": "2026-09-25T09:55:06.587369Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_uluru": {
+  "made": "2026-09-25T09:55:06.589776Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_great_barrier_reef": {
+  "made": "2026-09-25T09:55:06.592123Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_blue_mountains": {
+  "made": "2026-09-25T09:55:06.594366Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_barossa_valley": {
+  "made": "2026-09-25T09:55:06.596476Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_great_ocean_road": {
+  "made": "2026-09-25T09:55:06.598584Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_nullarbor": {
+  "made": "2026-09-25T09:55:06.600822Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_red_centre": {
+  "made": "2026-09-25T09:55:06.603170Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_pacific_coast": {
+  "made": "2026-09-25T09:55:06.605815Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_au_tasmania": {
+  "made": "2026-09-25T09:55:06.607960Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_yellowstone": {
+  "made": "2026-09-25T09:57:46.976482Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_grand_teton": {
+  "made": "2026-09-25T09:57:46.978579Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_glacier": {
+  "made": "2026-09-25T09:57:46.980708Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_denali": {
+  "made": "2026-09-25T09:57:46.982952Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_everglades": {
+  "made": "2026-09-25T09:57:46.985058Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_yosemite": {
+  "made": "2026-09-25T09:57:46.987250Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_grand_canyon": {
+  "made": "2026-09-25T09:57:46.989532Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_charleston": {
+  "made": "2026-09-25T09:57:46.991599Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_new_orleans": {
+  "made": "2026-09-25T09:57:46.993715Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_washington_dc": {
+  "made": "2026-09-25T09:57:46.995838Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_route_66": {
+  "made": "2026-09-25T09:57:46.997607Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_pacific_coast_highway": {
+  "made": "2026-09-25T09:57:46.999395Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_blue_ridge_parkway": {
+  "made": "2026-09-25T09:57:47.001171Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_utah_s_mighty_5": {
+  "made": "2026-09-25T09:57:47.003107Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_us_florida_keys": {
+  "made": "2026-09-25T09:57:47.005607Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_bavarian_forest": {
+  "made": "2026-09-25T09:59:24.243172Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_black_forest": {
+  "made": "2026-09-25T09:59:24.245464Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_harz": {
+  "made": "2026-09-25T09:59:24.247480Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_berchtesgaden": {
+  "made": "2026-09-25T09:59:24.249604Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_saxon_switzerland": {
+  "made": "2026-09-25T09:59:24.251616Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_eifel": {
+  "made": "2026-09-25T09:59:24.253647Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_neuschwanstein": {
+  "made": "2026-09-25T09:59:24.255541Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_munich": {
+  "made": "2026-09-25T09:59:24.257695Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_berlin": {
+  "made": "2026-09-25T09:59:24.259946Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_heidelberg": {
+  "made": "2026-09-25T09:59:24.262371Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_rothenburg": {
+  "made": "2026-09-25T09:59:24.264727Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_cologne": {
+  "made": "2026-09-25T09:59:24.266970Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_romantic_road": {
+  "made": "2026-09-25T09:59:24.268981Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_rhine_valley": {
+  "made": "2026-09-25T09:59:24.270971Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_moselle_valley": {
+  "made": "2026-09-25T09:59:24.272964Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_german_alpine_road": {
+  "made": "2026-09-25T09:59:24.274975Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
+ },
+ "dest_de_baltic_coast": {
+  "made": "2026-09-25T09:59:24.277430Z",
+  "provider": "higgsfield",
+  "ruling": "RUL-164 / COUNTRY-PACK-1"
  }
 }
