@@ -139,7 +139,7 @@ Rules (David, 2 Aug 2026):
 - **DW-156 (amber):** harness re-synced; RG-0450 ok. Closed.
 - **DW-157 (amber):** sensor catch-up built (RG-0468) and it ran for real at 06:45:01Z, writing today's file; parity holds. Closed.
 - **DW-144/145 residual (amber):** TRANSPORT-BLIND-1 in `_judge()` (RG-0466, behavioural self-test). Card GREEN.
-- **DW-154 residual (amber):** GIT-LOCK-6 (RG-0467): nightly checkpoint sweeps before its clean-tree exit; the 20-min agent sweeps aged locks every tick. Live: a planted aged probe lock was cleared by the host's full sweep on the 08:55 tick.
+- **DW-154 residual (amber):** GIT-LOCK-6 (RG-0467): nightly checkpoint sweeps before its clean-tree exit; the 20-min agent sweeps aged locks every tick. **Proven live:** a planted 30-minute-old probe lock was removed by the 09:35 SAST tick with no queued work (`cleared aged ...zz_gitlock6_probe.lock`). Card GREEN.
 
 ### Watch pass — 2026-09-25 (Friday, unattended ~04:37–05:00 UTC — launch day +24; Monday deep-scan/canon lane NOT in scope)
 

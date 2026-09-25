@@ -1683,7 +1683,7 @@
    "sev": "HIGH",
    "source": "regression ledger RG-0015 + RG-0197 (LOCKED) -- REGRESSION",
    "status": "CLOSED",
-   "summary": "RAISED AND CLOSED IN THE SAME RUN. Board: 'REGRESSION: MarketSquare/.git/HEAD.lock is STRANDED (278 min)'. The 0-byte lock is dated 00:01:50Z, the second of commit be1b2a6 ('Run 20 close'), so that commit planted it. Healed by scripts/git_unlock.py at the watch's Phase D pre-step ('healed: .git/HEAD.lock -> stale_locks/'); both entries re-judged through _judge(): RG-0015 HOLDING, RG-0197 HOLDING. RESIDUAL: the 05:30 SAST nightly checkpoint calls git_unlock.bat first (HEAD.lock is in its list) yet the lock survived it for 3+ more hours -- why the host lane did not clear it is not visible from the sandbox (coverage card to AMBER).",
+   "summary": "RESIDUAL RESOLVED 2026-09-25 (attended, GIT-LOCK-6 / RG-0467): cause -- nightly_checkpoint.bat exited on a clean tree before git_unlock.bat, and the 20-min agent swept only when it had work. Now the checkpoint sweeps first and every agent tick runs git_unlock.bat /aged (>15 min only). PROVEN LIVE 09:35 SAST: planted 30-min-old probe .git/refs/heads/zz_gitlock6_probe.lock removed by the tick with no queued work ('cleared aged ...zz_gitlock6_probe.lock', host_queue/git_unlock_aged.txt). | RAISED AND CLOSED IN THE SAME RUN. Board: 'REGRESSION: MarketSquare/.git/HEAD.lock is STRANDED (278 min)'. The 0-byte lock is dated 00:01:50Z, the second of commit be1b2a6 ('Run 20 close'), so that commit planted it. Healed by scripts/git_unlock.py at the watch's Phase D pre-step ('healed: .git/HEAD.lock -> stale_locks/'); both entries re-judged through _judge(): RG-0015 HOLDING, RG-0197 HOLDING. RESIDUAL: the 05:30 SAST nightly checkpoint calls git_unlock.bat first (HEAD.lock is in its list) yet the lock survived it for 3+ more hours -- why the host lane did not clear it is not visible from the sandbox (coverage card to AMBER).",
    "next_action": "-"
   },
   "DW-155": {
@@ -3563,6 +3563,7 @@
    "HARNESS": "genie/HARNESS.html resynced (RG-0450)"
   },
   "deploy": "c444c99 DEPLOY OK 2026-09-25T05:55:43Z, health ok, migration 052 ok",
-  "board": "459 entries, 439 holding, 0 REGRESSED, 19 open, 1 ready (RG-0426), 0 UNVERIFIED; rulings 142 checked 0 FAIL"
+  "board": "459 entries, 439 holding, 0 REGRESSED, 19 open, 1 ready (RG-0426), 0 UNVERIFIED; rulings 142 checked 0 FAIL",
+  "git_lock_live_proof": "09:35:08 SAST tick: cleared aged C:\\Users\\David\\Projects\\MarketSquare\\.git\\refs\\heads\\zz_gitlock6_probe.lock"
  }
 }
