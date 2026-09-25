@@ -20126,8 +20126,8 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
      old machine words kept being painted from it and no server fix could ever reach them.
      The stamp goes in the key: raise it whenever the checked words change, and every browser
      drops what it has and refetches once. Old copies are swept out on load. */
-  var DICTV='2';
-  var KEY='ts_lang', CACHE='ts_i18n'+DICTV+'_', MAXLEN=240, CHUNK=60;
+  var DICTV='3';   /* I18N-AF-2 (25 Sep 2026): David's corrections on the AI-function cards */
+  var KEY='ts_lang', CACHE='ts_i18n'+DICTV+'_', MAXLEN=400, CHUNK=60;   /* 400: the longest card blurbs are ~340 */
   try{ for(var _i=localStorage.length-1;_i>=0;_i--){ var _k=localStorage.key(_i);
        if(_k && _k.indexOf('ts_i18n')===0 && _k.indexOf(CACHE)!==0) localStorage.removeItem(_k); }
   }catch(e){}

@@ -29780,5 +29780,39 @@ def rg_roles_25sep_1():
         return [(FAIL, "; ".join(bad[:8]))]
     return [(INFO, "73 roles live, each found by its own search only, repo and live")]
 
+@entry("RG-0493", "I18N-AF-2: the Afrikaans AI-function cards carry David's words -- 'Eksamens studieplan', "
+       "'Mark verslag', 'voorgestelde naweekpakket' -- and the long card blurbs are translated, not English",
+       OPEN, fixed_on="",
+       scope="roles/app_i18n_af.json (checked words) -> migrations/054_i18n_af_ai_cards.py -> i18n_cache; ms.js DICTV 3 "
+             "and MAXLEN 400, bea_main.py I18N_MAX_CHARS 400. CLASS: a reader's correction lives in the checked file, "
+             "reaches the server cache by migration and every browser by the DICTV stamp.",
+       ref="David 25 Sep 2026: 'This should be \"Eksamens studieplan\" not \"Eksamenstu dieplan\"'; '+ Mark verslag and not "
+           "Marktverslag'; 'aangebode is wrong, it should be voorgestelde'.")
+def rg_i18n_af_2():
+    import json as _j
+    bad = []
+    f = repo_file("roles/app_i18n_af.json")
+    t = _j.loads(f).get("t", {}) if f else {}
+    want = {"Exam Study Plan": "Eksamens studieplan",
+            "Collectables Advert + Market Report": "Versamelstukke-advertensie + Mark verslag"}
+    for en, af in want.items():
+        if t.get(en) != af: bad.append("checked file lost %r" % af)
+    if any("aangebode naweekpakket" in v or "Marktverslag" in v or "Eksamenstu dieplan" in v for v in t.values()):
+        bad.append("checked file carries a word David corrected")
+    js = repo_file("ms.js") or ""
+    if "MAXLEN=400" not in js: bad.append("ms.js MAXLEN below 400")
+    try:
+        import urllib.request as _u
+        req = _u.Request(BASE + "/i18n/translate", method="POST", headers=dict(UA, **{"Content-Type": "application/json"}),
+                         data=_j.dumps({"lang": "af", "strings": list(want)}).encode())
+        out = _j.loads(_u.urlopen(req, timeout=20).read().decode()).get("out", {})
+        for en, af in want.items():
+            if out.get(en) != af: bad.append("live serves %r for %r" % (out.get(en), en))
+    except Exception as e:
+        return [(INFO, "NOT EVALUATED (live half) - %s" % str(e)[:60])] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "David's Afrikaans corrections served live")]
+
 if __name__ == "__main__":
     sys.exit(main())

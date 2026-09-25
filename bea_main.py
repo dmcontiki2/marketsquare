@@ -27565,7 +27565,7 @@ I18N_LANGS = {"zu": "isiZulu", "st": "Sesotho (Southern Sotho)", "af": "Afrikaan
               "zh": "Simplified Chinese (Mandarin)", "tl": "Tagalog", "vi": "Vietnamese",
               "yue": "Cantonese (Traditional Chinese characters)", "en": "English"}
 I18N_MAX_STRINGS = 60          # per request
-I18N_MAX_CHARS = 240           # per string
+I18N_MAX_CHARS = 400           # per string (I18N-AF-2, 25 Sep 2026: the AI-function card blurbs run to ~340)
 I18N_DAILY_CALL_CAP = 400      # AI calls per day across all readers -- a hard ceiling on spend
 I18N_TASK = "reason"           # I18N-AF-1 (20 Sep 2026): the cheapest tier produced Dutch Afrikaans.
                                # The checked files now answer almost every phrase from cache, so this
