@@ -737,8 +737,87 @@ def _qa_listing_ids(fixture):
         conn.close()
 
 
+# ── QA-GATE-BLIND-1 (25 Sep 2026) ───────────────────────────────────────────────────────
+# The bot must prove it can SEE the app before it is allowed to grade it.
+# Both 25 Sep gate reports graded every route from a vantage that answered 403 BEFORE the
+# request reached the app (640/640 at 08:07Z, 629/629 at 07:18Z) -- public routes included.
+# judge() turns 403 into PASS "refused", so a wall in front of the app reads exactly like
+# perfect security: the gate passed, and then accept() wrote that blind run over last.json,
+# erasing every real verdict the bot had ever earned. A wall is not a refusal.
+# Same class as BIT-EDGE-BLIND-1 (23 Sep) and RG-0401: an edge refusal is BLIND, never a
+# verdict. Not weakened -- a genuinely locked-down app still PASSes route by route; only a
+# run in which the bot never reached the app at all is refused a verdict.
+BLIND_SHARE = float(os.environ.get("QA_BLIND_SHARE", "0.90"))
+CANARY_PATH = os.environ.get("QA_CANARY", "/health")
+APP_DIRECT = os.environ.get("QA_APP_DIRECT", "http://127.0.0.1:8000")
+
+def canary(base):
+    """(ok, status, detail). A known-public route must answer 2xx through the SAME client, vantage
+    and pinning the probes use."""
+    status, text = send("GET", base + CANARY_PATH, {"User-Agent": "TrustSquare-QA-Bot/1"}, None)
+    if 200 <= status < 300:
+        return True, status, "canary GET %s%s -> %d" % (base, CANARY_PATH, status)
+    return False, status, ("canary GET %s%s -> %s before the app was reached: %s"
+                           % (base, CANARY_PATH, status, " ".join(str(text)[:180].split())))
+
+def choose_vantage():
+    """Pick a door the bot can actually SEE the app through, and say what that door does not cover.
+
+    Preferred: the front door (nginx -> app), because nginx-level locks count and nginx-level holes
+    show. If the front door refuses the bot before the app is reached -- which is what happened all
+    day on 25 Sep -- fall back to the app's own loopback port, which the bot already trusts enough
+    to read the route list from (SPEC_URL). That is a NARROWER measurement, not a blind one: it
+    tests the app's own identity checks and says plainly that the nginx/edge layer was not covered.
+    Degrading to a smaller real measurement beats both certifying blindly and freezing every
+    release, which is what an unconditional hard stop here would have done."""
+    ok, st, why = canary(BASE)
+    if ok:
+        return {"ok": True, "base": BASE, "via": "front door", "detail": why, "not_covered": ""}
+    ok2, st2, why2 = canary(APP_DIRECT)
+    if ok2:
+        return {"ok": True, "base": APP_DIRECT, "via": "app loopback (front door refused)",
+                "detail": "%s; fell back to %s" % (why, why2),
+                "not_covered": "nginx and the Cloudflare edge: a lock or a hole in either is NOT "
+                               "covered by this run, because the front door answered %s to a "
+                               "public route before the app was reached" % st}
+    return {"ok": False, "base": BASE, "via": "none", "not_covered": "",
+            "detail": "no door reaches the app -- %s; and %s" % (why, why2)}
+
+def blind_run(run):
+    """(blind, detail). One status shared by >= BLIND_SHARE of every persona answer is one wall,
+    not N independent verdicts. Counts personas, not routes: a route is only as measured as the
+    answers under it."""
+    codes = {}
+    for r in run.get("results", []):
+        for pr in r.get("personas", {}).values():
+            codes[pr["status"]] = codes.get(pr["status"], 0) + 1
+    total = sum(codes.values())
+    if total < 20:                      # too few to argue from; say nothing rather than guess
+        return False, ""
+    code, n = max(codes.items(), key=lambda kv: kv[1])
+    if float(n) / total >= BLIND_SHARE:
+        return True, ("%d of %d probe answers (%.0f%%) were the same status %s -- one wall in "
+                      "front of the app, not %d independent verdicts"
+                      % (n, total, 100.0 * n / total, code, total))
+    return False, ""
+
+def not_measured(run):
+    """(blind, why) for a finished run: the canary first, then the concentration check."""
+    v = run.get("vantage") or {}
+    if v and not v.get("ok", True):
+        return True, v.get("detail", "the vantage canary failed")
+    return blind_run(run)
+
+
 def probe(env, policy):
     pin_front_door()
+    global BASE                                # QA-GATE-BLIND-1
+    van = choose_vantage()
+    say("vantage:", van["via"], "--", van["detail"])
+    if van["not_covered"]:
+        say("vantage: NOT COVERED by this run --", van["not_covered"])
+    if van["ok"]:
+        BASE = van["base"]
     spec = load_openapi()
     pubkey = public_app_key()
     jwt_secret = env.get("MS_JWT_SECRET", "")
@@ -789,6 +868,7 @@ def probe(env, policy):
         restore(fixture, snap)
     return {"at": now_iso(), "base": BASE, "results": results,
             "cleanup": {"found": len(ids), "removed": removed, "ids": ids},
+            "vantage": van,
             "pubkey_found": bool(pubkey), "intruder": bool(intruder_cookie), "fixture": fixture}
 
 
@@ -955,7 +1035,17 @@ def save_run(run, html_text, tag):
 
 
 def accept(run):
+    # QA-GATE-BLIND-1: a run the bot could not see is never written over the
+    # baseline. Guarded HERE as well as at the call sites, because losing
+    # last.json is the damage that outlives the bad run: regressions() skips a
+    # route whose previous verdict was UNPROVEN, so one accepted blind run
+    # disarms the gate for every route until a clean run replaces it.
+    blind, why = not_measured(run)
+    if blind:
+        say("baseline NOT updated -- this run measured nothing:", why)
+        return False
     jsave(os.path.join(STATE, "last.json"), {r["id"]: r["verdict"] for r in run["results"]})
+    return True
 
 
 def print_table(run):
@@ -992,6 +1082,18 @@ def main():
         run = probe(env, policy)
         run["classify_cost"] = cost
         print_table(run)
+        blind, why = not_measured(run)          # QA-GATE-BLIND-1
+        run["not_measured"] = why if blind else ""
+        if blind:
+            page = render(run, "QA Bot: NOT MEASURED", new_rules=new)
+            path = save_run(run, page, cmd)
+            say("NOT MEASURED -- the bot never reached the app, so this run is not a verdict about it.")
+            say(" ", why)
+            say("  baseline left untouched; report", path)
+            if cmd in ("gate", "nightly"):
+                email(env, "QA Bot could not see the app (%s) -- release refused" % cmd,
+                      email_body(run, "QA Bot: NOT MEASURED -- " + why))
+            return 2   # server_deploy.sh fails CLOSED on any non-zero rc
         last = jload(os.path.join(STATE, "last.json"), None)
         if cmd == "gate":
             reg = regressions(run, last or {}) if last is not None else []
