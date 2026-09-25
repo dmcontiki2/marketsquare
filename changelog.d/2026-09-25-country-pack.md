@@ -21,3 +21,4 @@ Pretoria suburbs and prices in Rand.
 
 Cost model impact: ~US$7 one-off on the prepaid picture account.
 - Fix after the live check (25 Sep 10:35 UTC): a signed-in account city from another country (David's Pretoria account previewing ?cc=KE) set LOC.city behind the pack's back, so the advert would have been filed in Pretoria. The chosen city now always wins at every step, and an account city beats this phone's remembered city.
+- Live 25 Sep ~10:40 UTC, checked in Chrome: GB/Leeds city tap and areas, the GBP floor blocking £95 a day, KE Game lodge destinations with pictures and KSh bands. RG-0482 LOCKED.

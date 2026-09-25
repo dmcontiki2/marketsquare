@@ -29295,7 +29295,7 @@ def rg_quick_fit_1():
 
 @entry("RG-0482", "COUNTRY-PACK-1 (RUL-170): Quick's areas, money, trips and example names follow her country and city -- "
        "no visitor outside Pretoria is shown Pretoria suburbs and Rands",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="quick.html QPACK (generated from roles/quick_country_packs.json, all 9 picker countries and every live city from "
              "/cities), the COUNTRY-PACK-1 runtime, bea_main.py /quick/me geo; dest_<cc>_*.jpg under /static/quick. CLASS: a live "
              "city with no pack entry is a gap -- this entry compares the pack against the live /cities list.",
@@ -29333,7 +29333,7 @@ def rg_country_pack_1():
 
 @entry("RG-0483", "TRIP-TYPE-1 + DEEPLINK-FETCH-1: Quick shows only the trip kind she picked, and EVERY advert link opens "
        "its advert -- one outside the viewer's loaded city or category is fetched, never dropped to the front page",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="quick.html FIND-REAL-1 (TYPE_Q search word, typeFilter: lodge = stays, other trips = experiences, words must "
              "match); ms.js openDetail + the ?listing= deep link (fetch /listings/{id}, add, open). CLASS (global): any "
              "surface that links to an advert -- Quick, wishlist, showcase, e-mail cards.",
