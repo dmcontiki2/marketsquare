@@ -29648,7 +29648,7 @@ def rg_advert_words_1():
 
 @entry("RG-0491", "ROLES-25SEP-1 + SVC-FIND-1 (RUL-172): all 42 board types are live Quick roles with their own work picture, "
        "a Services search returns only the role asked for, and the self-employed are vouched for by 'A customer'",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="ROLE_SLATE_REVIEW.md -> roles/role_registry.json -> quick.html QUICK-ROLES block; quick.html SVC-FIND-1 block "
              "(GROUP_RX per role, groupRx covers Services, typeFilter reads service_type); role_*.jpg under /static/quick. "
              "CLASS: every live role has a picture, a search match that finds it and no other role, and the right voucher.",
