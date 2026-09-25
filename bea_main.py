@@ -27584,7 +27584,8 @@ I18N_GLOSS = {
            "contact details between one buyer and one seller -- in Afrikaans 'n voorstelling, so "
            "\"Make an introduction\" is \"Maak 'n voorstelling\" and never \"stel jouself voor\". "
            "A LISTING is an advertensie. LISTING SLOTS are advertensieplekke. A SELLER is a "
-           "verkoper and a BUYER a koper. A WISHLIST is a wenslys."),
+           "verkoper and a BUYER a koper. A WISHLIST is a wenslys. Market goods: raw honey is "
+           "'rou heuning', beeswax is 'byewas', propolis stays 'propolis'."),
 }
 
 def _i18n_prompt(lang: str, items) -> str:
@@ -27888,7 +27889,14 @@ def _lang_translate_advert(title: str, desc: str, src: str, dst: str):
     prompt = (
         "Translate this TrustSquare marketplace advert from %s into %s. It was written by the seller "
         "herself. Keep her meaning exactly; do not add, praise or soften anything. Keep every price, "
-        "currency, number, date, place name, person name and brand name exactly as written.\n%s\n%s\n\n"
+        "currency, number, date, place name, person name and brand name exactly as written.\n"
+        # ADVERT-WORDS-1 (David 25 Sep 2026): 'by the Bee Lady' came back 'deur die Bylady' and 'raw honey' as
+        # the invented 'roupasteunings'. A nickname made of ordinary words is still a NAME, and a word the
+        # model does not know must never be made up.
+        "A trading name or nickname is a NAME even when it is made of ordinary words -- 'the Bee Lady', "
+        "'Misty Forest', 'Mr Fix-It': keep it exactly as written and translate only the words around it "
+        "(in Afrikaans 'by the Bee Lady' is 'deur die Bee Lady'). Never invent a word: if you do not know "
+        "the word in the target language, keep the seller's own word.\n%s\n%s\n\n"
         "Reply in exactly this form and nothing else:\nTITLE: <the title>\nTEXT: <the description>\n\n"
         "TITLE: %s\nTEXT: %s" % (src_n, dst_n, I18N_HOUSE.get(dst, ""), I18N_GLOSS.get(dst, ""),
                                  (title or "").strip(), (desc or "").strip()))

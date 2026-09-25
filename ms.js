@@ -4657,7 +4657,7 @@ function cardHtml(l){
     </div>
     <div class="cbody">
       <div class="ccat">${l.cat}</div>
-      <div class="ctitle">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
+      <div class="ctitle" data-notranslate="1">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
       <div class="cloc">📍 ${l.area}${_distLabel(l)}</div>
       <div class="cbot">
         <div class="cprice">${l.price?`${_priceLabel(l)}${l.per?`<span class="per"> ${l.per}</span>`:''}`:'<span class="neg">Negotiable</span>'}</div>
@@ -4697,7 +4697,7 @@ function renderFeatured(){
       <div style="position:relative;height:88px;overflow:hidden;flex-shrink:0;background:${catCfg(l).bg};">${imgHtml}${featTrust}</div>
       <div style="padding:6px 9px 4px;flex:1;">
         <div class="ccat" style="font-size:9px;margin-bottom:2px;">${l.cat}</div>
-        <div class="ctitle" style="font-size:11.5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
+        <div class="ctitle" data-notranslate="1" style="font-size:11.5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
       </div>
       <div style="padding:0 9px 8px;display:flex;flex-direction:column;gap:2px;">
         <div class="cloc" style="font-size:9.5px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📍 ${l.area}</div>
@@ -5176,7 +5176,7 @@ function openDetail(id){
         ${l.feat?'<span style="font-size:10px;font-weight:700;color:var(--accent);">★ FEATURED</span>':''}${fspark(l)}
       </div>
       ${l.super_example?'<div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.02em;font-family:Syne,sans-serif;margin-bottom:6px;">AI EXAMPLE GENERATED ADVERT — not a real listing; an AI-made example of the benchmark for this category</div>':''}
-      <div class="dtitle"${_lv.on?' data-notranslate="1"':''}>${_lv.title||(l.cat?l.cat+' listing':'Untitled')}${_lv.chip}</div>${_lv.flip}
+      <div class="dtitle" data-notranslate="1">${_lv.title||(l.cat?l.cat+' listing':'Untitled')}${_lv.chip}</div>${_lv.flip}
       <div class="dmeta"><div class="dmi" onclick="showListingAreaMap('${id}')" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||l.country.toUpperCase()}`:''}${advEnvLabel?' · '+advEnvLabel:''} <span style="color:var(--accent);font-size:11px;font-weight:600;">· View on map</span></div></div>
       <div class="price-block">
         <div>
@@ -5257,7 +5257,7 @@ function openDetail(id){
         ${l.area||l.suburb ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📍 ${l.suburb||l.area}</span>` : ''}
       </div>` : ''}
       ${l.cat==='Cars' ? vehSpecPanel(l) : ''}
-      <div class="dsec"${_lv.on?' data-notranslate="1"':''}><h3>About this listing</h3>${maskContactInfo(formatDesc(_lv.desc),_introAccepted)}</div>
+      <div class="dsec"><h3>About this listing</h3><div data-notranslate="1">${maskContactInfo(formatDesc(_lv.desc),_introAccepted)}</div></div>
       ${isAdv ? advNearbyStrip(l, id) : ''}
       ${(function(){ if(!(l.super_example && isAdv)) return ''; var _mc=(l.tour&&ADV_TOUR_MAP[l.tour])||ADV_COUNTRY_MAP[(l.country||'ZA').toUpperCase()]; if(!_mc) return ''; var _u='/static/'+_mc.file; var _bs='background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap;'; return '<div class="dsec adv-reserve-map"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px;flex-wrap:wrap;"><h3 style="margin:0;">'+_mc.title+'</h3><div style="display:flex;gap:7px;flex-shrink:0;"><button type="button" data-u="'+_u+'" data-t="'+_mc.title+'" onclick="advMapExpand(this)" style="'+_bs+'">⤢ Expand</button><a href="'+_u+'" target="_blank" rel="noopener" style="'+_bs+'text-decoration:none;display:inline-flex;align-items:center;">Open ↗</a></div></div><div style="font-size:12px;color:var(--text-3);margin:-2px 0 10px;">'+_mc.blurb+'</div><div style="border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border);box-shadow:0 3px 14px rgba(0,0,0,.10);"><iframe src="'+_u+'" title="Interactive tour map" loading="lazy" style="width:100%;height:480px;border:0;display:block;background:#0d1b2e;"></iframe></div></div>'; })()}
       ${(l.super_example && isAdv) ? tripEssentialsPanel(l, id) : ''}
@@ -15025,7 +15025,7 @@ async function lmLoadGrid() {
             `</div>` +
             `<div class="cbody">` +
               `<div class="ccat">Local Market</div>` +
-              `<div class="ctitle">${_lmEsc(l.title || '')}</div>` +
+              `<div class="ctitle" data-notranslate="1">${_lmEsc(l.title || '')}</div>` +
               `<div class="cloc">📍 ${loc}</div>` +
               `<div class="cbot"><div class="cprice">${price}</div>` +
               `<div class="ctrust" style="color:${t.c};">${l.trust || 0} ${t.label}</div></div>` +
@@ -15062,7 +15062,7 @@ async function lmLoadGrid() {
         `</div>` +
         `<div class="cbody">` +
           `<div class="ccat">Local Market</div>` +
-          `<div class="ctitle">${_lmEsc(c.title || '')}</div>` +
+          `<div class="ctitle" data-notranslate="1">${_lmEsc(c.title || '')}</div>` +
           `<div class="cloc">📍 ${loc}</div>` +
           `<div class="cbot"><div class="cprice">${price}</div>${t}</div>` +
           `<div class="seller-cv-badge" onclick="event.stopPropagation();lmOpenDetailAndProfile(${c.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> View seller profile</div>` +
@@ -15135,14 +15135,14 @@ async function lmOpenDetail(listingId) {
       heroHtml +
       `<div class="dsheet">` +
         `<div class="dcat-row"><span class="dcat">Local Market</span></div>` +
-        `<div class="dtitle">${_lmEsc(c.title || '')}</div>` +
+        `<div class="dtitle" data-notranslate="1">${_lmEsc(c.title || '')}</div>` +
         `<div class="dmeta"><div class="dmi"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${_lmEsc(c.suburb || c.city || '')}</div></div>` +
         `<div class="trust-block" style="background:${tBg};border-color:${tColor}30;">` +
           `<div><div class="tscore" style="color:${tColor};">${trust}</div><div class="tlabel" style="color:${tColor};">${tLabel}</div><div class="tsub" style="color:${tColor};">Trust Score</div></div>` +
           `<div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" style="width:${trust}%;background:${tColor};"></div></div><div class="tscale" style="color:${tColor};">0 · New · 40 · Established · 70 · Trusted · 90 · Highly Trusted</div></div>` +
         `</div>` +
         `<div class="price-block"><div><div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">Price</div>${priceHtml}</div></div>` +
-        `<div class="dsec"><h3>About this listing</h3><p style="white-space:pre-wrap;font-size:14px;line-height:1.65;color:var(--text);">${_lmEsc((c.description || '').replace(/^\[photos:[^\]]*\]\n?/, ''))}</p></div>` +
+        `<div class="dsec"><h3>About this listing</h3><p data-notranslate="1" style="white-space:pre-wrap;font-size:14px;line-height:1.65;color:var(--text);">${_lmEsc((c.description || '').replace(/^\[photos:[^\]]*\]\n?/, ''))}</p></div>` +
         `<div style="margin-bottom:16px;">` +
           `<button onclick="openLMSellerProfile()" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">` +
             `<div style="width:40px;height:40px;border-radius:50%;background:#1f2937;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🛍️</div>` +
@@ -20032,6 +20032,10 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
    asks the server, which translates a phrase ONCE and then serves it from cache to
    everybody, for nothing.
 
+   ADVERT-WORDS-1 (David 25 Sep 2026: the Bee Lady's advert came out as 'roupasteunings ... deur die Bylady'):
+   an advert's title and text are the SELLER'S words, never the interface's (RUL-162: the advert is in her
+   language, plus one extra language only she approves). Every advert title and description carries
+   data-notranslate, on the main and the Local Market cards and detail pages alike.
    What it never touches: the EULA and terms (data-notranslate — RUL-143 keeps the
    English binding), form inputs, and anything with no letters in it (prices, scores,
    dates, phone numbers travel unchanged). If the server cannot answer, the screen

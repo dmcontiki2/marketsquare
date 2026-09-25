@@ -3187,7 +3187,20 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
   var TYPE_Q={'Rail journey':'rail*','Game lodge':'lodge*','Safari':'safari*','Guided tour':'tour*','Self-drive':'drive*','Fishing':'fish*'};
   var TYPE_RX={'Game lodge':/lodge|game reserve|bush camp/i,'Safari':/safari|game drive/i,'Guided tour':/guided|\btour/i,
                'Self-drive':/self[- ]?drive|road ?trip|4x4/i,'Rail journey':/\brail|\btrain/i,'Fishing':/\bfish|angling/i};
-  function typeFilter(list){ var w=roleLabel(), rx=TYPE_RX[w]; if(!rx || cat().key!=='adventures') return list;
+  /* LM-GROUP-FIND-1 (David 25 Sep 2026: looking for honey locally, the Bee Lady's live advert did not come up).
+     A Local Market tile is a GROUP, not a word: "Food & preserves" became the one search word "preserv*" and missed
+     "raw honey, propolis & beeswax"; "Furniture" missed a teak sideboard the same way. A group is therefore matched on
+     the advert's own title and text, the way TRIP-TYPE-1 filters Adventures -- and a typed word still searches as before. */
+  var GROUP_RX={'Food & preserves':/honey|heuning|propolis|jam\b|konfyt|preserve|chutney|pickle|atjar|biltong|dro[e\u00eb]wors|bak(e|ed|ing|ery|kery)\b|bread|brood|cake|koek|rusk|beskuit|\beggs?\b|eier|cheese|kaas|sauce|spice|coffee|\btea\b|fruit|vegetable|groente|organic|fudge|sweets|lekkers|\bpies?\b|food|\bkos\b/i,
+                'Crafts':/craft|handmade|hand-made|hand made|bead|knit|crochet|\bsew|pottery|ceramic|carv|candle|soap|jewel|weav|embroider|leather|basket/i,
+                'Furniture':/furniture|meubel|sideboard|table|chair|dresser|cabinet|desk|couch|sofa|wardrobe|shel(f|ves)|bench|teak|\boak\b|stinkwood|restor/i,
+                'Plants':/plant|seedling|succulent|herb|\btrees?\b|flower|garden|indigenous|nursery|cycad|fynbos|bulb/i,
+                'Clothes':/cloth|dress|shirt|apron|jacket|knitwear|fashion|shoe|\bhats?\b|scarf|skirt|jersey/i,
+                'Tools':/\btools?\b|drill|\bsaws?\b|spanner|hammer|wrench|grinder|equipment|workshop/i};
+  window.GROUP_RX=GROUP_RX;
+  function groupRx(){ return cat().key==='localmarket' ? (GROUP_RX[roleLabel()]||null) : null; }
+  function typeFilter(list){ var g=groupRx(); if(g) return list.filter(function(l){ return g.test((l.title||'')+' '+(l.description||'')); });
+    var w=roleLabel(), rx=TYPE_RX[w]; if(!rx || cat().key!=='adventures') return list;
     var want = w==='Game lodge' ? /accommodation/ : /experiences/;
     return list.filter(function(l){ return want.test(String(l.category||'')) && rx.test((l.title||'')+' '+(l.description||'')); }); }
   drawLookup=function(){
@@ -3232,8 +3245,9 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
       try{ qTranslate($('screen')); }catch(e){}
     }
     if(!LIVE){ paint([], false); return; }
-    var qt=(cat().key==='adventures' && TYPE_Q[what]) || qterm(what);
-    var url='/listings?city='+encodeURIComponent(city)+'&category='+encodeURIComponent(co.category)+'&page_size=20'
+    var grp=groupRx();                                    /* LM-GROUP-FIND-1: a group asks for the whole category, then filters */
+    var qt=grp ? '' : ((cat().key==='adventures' && TYPE_Q[what]) || qterm(what));
+    var url='/listings?city='+encodeURIComponent(city)+'&category='+encodeURIComponent(co.category)+'&page_size='+(grp?200:20)
            +(qt?'&q='+encodeURIComponent(qt):'');
     fetch(url,{credentials:'include'}).then(function(r){ return r.ok?r.json():Promise.reject(r.status); })
       .then(function(j){ paint(typeFilter(Array.isArray(j)?j:(j&&(j.listings||j.items))||[]), false); })

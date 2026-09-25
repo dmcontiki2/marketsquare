@@ -29485,5 +29485,67 @@ def rg_kind_fit_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "every kind wears its own picture, repo and live")]
 
+
+@entry("RG-0488", "LM-GROUP-FIND-1: Quick's Local Market Find matches a GROUP tile on the advert's own words -- "
+       "'Food & preserves' finds the Bee Lady's raw honey instead of searching the single word 'preserv*'",
+       OPEN, fixed_on="",
+       scope="quick.html + genie/HARNESS.html (kept identical): GROUP_RX / groupRx() / typeFilter and the drawLookup query. "
+             "CLASS: a tile that names a GROUP of goods may never be reduced to one search word -- the last word of "
+             "'Food & preserves' missed honey, and 'Furniture' missed a teak sideboard.",
+       ref="David 25 Sep 2026: 'in the quick listing app i looked for honey locally and her live advert did not come up'. "
+           "/listings?city=Pretoria&category=local_market&q=preserv* returned nothing while q=honey* returned listing 273.")
+def rg_lm_group_find_1():
+    bad = []
+    for name in ("quick.html", "genie/HARNESS.html"):
+        q = repo_file(name)
+        if q is None:
+            continue
+        for tok, what in (("LM-GROUP-FIND-1", "the group-find block"), ("'Food & preserves':/honey|", "the food group's words"),
+                          ("var qt=grp ? '' :", "the no-keyword query for a group")):
+            if tok not in q:
+                bad.append("%s lost %s" % (name, what))
+    live = _get("/q/")
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - /q/ unreadable")] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if "LM-GROUP-FIND-1" not in live:
+        bad.append("live Quick has no LM-GROUP-FIND-1 (not deployed?)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Local Market groups match the advert's own words, repo and live")]
+
+
+@entry("RG-0489", "ADVERT-WORDS-1: the interface translator never rewrites an advert -- every advert title and "
+       "description carries data-notranslate, and the advert translator keeps nicknames and never invents words",
+       OPEN, fixed_on="",
+       scope="ms.js: main + Local Market cards (.ctitle) and detail pages (.dtitle, description); bea_main.py "
+             "_lang_translate_advert prompt + I18N_GLOSS['af']. CLASS: the seller's own words change language only through "
+             "her own approved second language (RUL-162), never through the page translator.",
+       ref="David 25 Sep 2026, Afrikaans view of the Bee Lady's advert: 'raw honey is rou heuning, i don't know what "
+           "roupasteunings is' and 'The Bee Lady is her called name, it should not be translated to Bylady'.")
+def rg_advert_words_1():
+    bad = []
+    m = repo_file("ms.js")
+    if m is not None:
+        for tok, what in (("<div class=\"ctitle\" data-notranslate=\"1\">${l.title", "the main card title guard"),
+                          ("`<div class=\"ctitle\" data-notranslate=\"1\">${_lmEsc(c.title", "the Local Market card title guard"),
+                          ("`<div class=\"dtitle\" data-notranslate=\"1\">${_lmEsc(c.title", "the Local Market detail title guard"),
+                          ("<div class=\"dtitle\" data-notranslate=\"1\">", "the main detail title guard"),
+                          ("ADVERT-WORDS-1", "the walker's rule")):
+            if tok not in m:
+                bad.append("ms.js lost " + what)
+        if "<div class=\"ctitle\">${l.title" in m or "`<div class=\"ctitle\">${_lmEsc(" in m or "`<div class=\"dtitle\">${_lmEsc(" in m:
+            bad.append("ms.js has an advert title the page translator can rewrite")
+    b = repo_file("bea_main.py")
+    if b is not None and "A trading name or nickname is a NAME" not in b:
+        bad.append("bea_main.py advert translator lost the nickname rule")
+    live = _get("/static/ms.js")
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - /static/ms.js unreadable")] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if "ADVERT-WORDS-1" not in live:
+        bad.append("live ms.js has no ADVERT-WORDS-1 (not deployed?)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "advert words are never page-translated, repo and live")]
+
 if __name__ == "__main__":
     sys.exit(main())
