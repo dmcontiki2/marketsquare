@@ -1102,6 +1102,7 @@ REFLECTIONS = {
    ("RULINGS.md", ["EVERY BUSINESS IS A SHARE CHAIN"], []),
    ("genie/INTEREST_ON_INTEREST_LOOP.html", ["RUL-171", "Her regulars stay hers"], []),
    ("genie/SHARE_CHAIN.html", ["Worker \u2192 hirer is the only referral that counts"], []),
+   ("docs/TrustSquare_Contagion_Model_v0.2.html", ["RUL-171", "k:\"chIntro\"", "chainOn:0"], []),
  ],
  "RUL-170": [
    ("RULINGS.md", ["QUICK'S EXAMPLES FOLLOW WHERE SHE IS"], []),

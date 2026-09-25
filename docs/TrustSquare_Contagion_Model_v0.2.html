@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Contagion Model v1.9 &mdash; Services Lane re-based (casual workers, 24 Sep 2026)</title>
+<title>Contagion Model v2.0 &mdash; Share Chain: every business invites its regulars (RUL-171, 25 Sep 2026)</title>
 <style>
 :root{
   --navy:#0d1b2a; --navy2:#11253a; --panel:#132b42; --line:#22405c; --ink:#e8eef4;
@@ -144,6 +144,16 @@ button.svc.on{background:#14b8a6;color:#04211d;border-color:#14b8a6;font-weight:
 .svcbar .up{color:var(--good)} .svcbar .dn{color:var(--bad)}
 .svcbar .hdr{background:#0f3a33;min-width:150px}
 .svcbar .hdr b{color:#5eead4}
+/* v2.0 Share Chain (RUL-171): same strip as the Services lane, purple */
+button.svc.chain{border-color:#a78bfa;color:#c4b5fd}
+button.svc.chain.on{background:#8b5cf6;color:#12002b;border-color:#8b5cf6;font-weight:700}
+.svcbar.chainbar{background:#171233;border-bottom-color:#3b2d6b}
+.svcbar.chainbar .c{border-right-color:#3b2d6b}
+.svcbar.chainbar .c span{color:#b7a6f0}
+.svcbar.chainbar .c i{color:#8f84b8}
+.svcbar.chainbar .hdr{background:#221a48}
+.svcbar.chainbar .hdr b{color:#c4b5fd}
+.svcbar.chainbar .c.pair{background:#1f1840}
 /* ---- v1.8.1 map view controls (all sizes) ---- */
 .mapctl{position:absolute;right:10px;top:10px;display:flex;gap:4px;z-index:5}
 .mapctl button{padding:5px 9px;font-size:11px;background:rgba(19,43,66,.92)}
@@ -206,7 +216,7 @@ button.svc.on{background:#14b8a6;color:#04211d;border-color:#14b8a6;font-weight:
 <div class="app">
 
   <div class="top">
-    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v1.9&nbsp;&middot;&nbsp;Services lane re-based 24 Sep (teal toggle) + goal agent (RUL-096) + clubs, unions &amp; federations WITH their own audience + measured funnel + planners + wave plan v3.2 + RAMP-1</span></div>
+    <div class="brand"><b>Contagion Model</b><span>TrustSquare&nbsp;&middot;&nbsp;v2.0&nbsp;&middot;&nbsp;Share Chain, RUL-171 (purple toggle) + Services lane re-based 24 Sep (teal toggle) + goal agent (RUL-096) + clubs, unions &amp; federations WITH their own audience + measured funnel + planners + wave plan v3.2 + RAMP-1</span></div>
     <div class="clock"><span id="dateOut">1 Sep 2026</span><small id="weekOut">week 0 of 156</small></div>
     <div class="ctrls">
       <button class="primary" id="btnPlay">&#9654;&nbsp; Run</button>
@@ -220,6 +230,7 @@ button.svc.on{background:#14b8a6;color:#04211d;border-color:#14b8a6;font-weight:
     </div>
     <div class="ctrls">
       <button id="btnSvc" class="svc" title="v1.9: switch the Services lane on or off. ON adds the Services-Casuals / Services-Technical role slate, enrolled through employers (RUL-150/151/152), across South Africa. OFF is exactly v1.7 - the dashboard pins stay on OFF.">Services lane: OFF</button>
+      <button id="btnChain" class="svc chain" title="v2.0: switch the Share Chain on or off (RUL-171). ON = every seller can hand her regulars a link to book and Buzz her direct; some regulars run businesses and list too; rivals who watch her diary fill copy her. Buzz is free - money only when a regular is introduced to a seller she does not know. OFF is v1.9 exactly.">Share Chain: OFF</button>
     </div>
     <div class="stats">
       <div class="stat"><b id="sTot">0</b><span>Sellers</span></div>
@@ -240,6 +251,7 @@ button.svc.on{background:#14b8a6;color:#04211d;border-color:#14b8a6;font-weight:
   <div class="money" id="moneyBar"></div>
   <div class="cmp" id="cmpBar"></div>
   <div class="svcbar" id="svcBar"></div>
+  <div class="svcbar chainbar" id="chainBar"></div>
 
   <div class="body">
     <div class="mapwrap">
@@ -537,6 +549,18 @@ const PARAMS = [
  {k:"svcChanN", g:"Services lane", l:"Door visits per week from the ground + air channels, once they run", lo:60, mid:250, hi:1200, src:"guess", n:"NEW 24 Sep 2026. Proposals 4-6 of the casuals research: posters with QR + WORK number at the ranks she stands at twice a day (Denneboom, Bosman St, Marabastad, Soshanguve - 15m taxi trips a day nationally), listing mornings (30-40 people helped to publish per morning), community radio live reads (Soshanguve CR ~18k listeners, Mams FM, Moretele), SA Youth (4m young people, zero-rated), ~850 WhatsApp job groups, Facebook groups, and R3 Meta clicks only where a source code converts (R1,000 = ~330 visits). Ramps in over six weeks. Every visit is counted by its ?src= code, so this number stops being a guess in the first week it runs."},
  {k:"svcChanConv", g:"Services lane", l:"Door visit -> she starts her own draft (enters the invited pool)", lo:.05, mid:.15, hi:.35, src:"guess", n:"NEW 24 Sep 2026. A poster scan or a radio call to action is colder than an employer's invitation; a listing morning is warmer (an ambassador's phone, her own hand). Blended. She still has to publish (svcAct) and pass the gate (svcMail / svcKeyW)."},
 
+ // --- v2.0 SHARE CHAIN (RUL-171, 25 Sep 2026): every business invites its regulars ---
+ // Sampled from their OWN stream (rC), so adding them moves no v1.9 draw and no dashboard pin.
+ {k:"chUse", g:"Share Chain", l:"Share of sellers who hand their regulars the link", lo:.15, mid:.35, hi:.60, src:"guess", n:"Only businesses with REPEAT customers have regulars to invite - a hairdresser, tutor, honey seller, housekeeper, an agent with mandate clients - while a one-off car or collectable seller has none. Of those who could, not all bother. Nothing measures it until the invite link records who sent it."},
+ {k:"chJoin", g:"Share Chain", l:"Of her regulars, share who join when SHE asks them to book through the app", lo:.05, mid:.22, hi:.50, src:"guess", n:"The same three reasons assocJoin gives (the ask comes from someone they already pay and will see next week; it is transactional - booking her IS the app; they join as buyers, the small commitment), set a little below assocJoin's .25 because Buzz on an iPhone needs the app on the home screen first. The model applies only the INCREMENT over custJoin's 9% ordinary mention, so nothing is counted twice."},
+ {k:"chPace", g:"Share Chain", l:"Share of her not-yet-asked regulars she asks per week", lo:.08, mid:.17, hi:.35, src:"guess", n:"She asks each regular at the next visit: a tutor weekly, a hairdresser roughly every 5-8 weeks, a honey buyer monthly. .17/week is one ask per ~6 weeks."},
+ {k:"chQ", g:"Share Chain", l:"Imitation coefficient q (rivals copying a visible success, per year)", lo:.15, mid:.38, hi:.60, src:"lit", n:"Bass diffusion: the average imitation coefficient across product categories is q = 0.38 a year, typical range 0.3-0.5 (Mahajan, Muller & Bass 1995, Marketing Science, 'Diffusion of new products: empirical generalizations'). Applied locally: a rival who watches ONE Buzz seller among her own niche of rivals+1 copies at q x 1/(rivals+1) a year."},
+ {k:"chRivals", g:"Share Chain", l:"Direct local rivals who can watch her diary fill", lo:1, mid:3, hi:8, src:"guess", n:"The other hairdressers, tutors or honey sellers in her suburb who hear it from shared customers. Only rivals NOT yet on TrustSquare count, so the pool shrinks as the city fills."},
+ {k:"chB2sX", g:"Share Chain", l:"Buyer-to-seller lift for a regular who watched her own seller use it", lo:1.0, mid:1.3, hi:2.0, src:"guess", n:"On top of b2s. Capped at 19% of a city's Share-Chain regulars ever listing: GEM South Africa 2025 puts 15% of adults starting or running a new business and 4% owning an established one - nobody else has a business to list."},
+ {k:"chBuyKeep", g:"Share Chain", l:"Churn-hazard cut for a regular brought in by her own seller", lo:.05, mid:.18, hi:.30, src:"lit", n:"Schmitt, Skiera & Van den Bulte (2011, Journal of Marketing, 'Referral programs and customer value'): referred customers had an ~18% lower churn hazard after controls (82.0% vs 79.2% still active at 33 months), ~10,000 bank customers. A bank, not a marketplace - so it is the mid, not a floor."},
+ {k:"chKeep", g:"Share Chain", l:"Churn multiplier for a seller whose regulars book her through the app", lo:.55, mid:.80, hi:.95, src:"guess", n:"Her diary lives in the app now; leaving means moving every regular back to WhatsApp. Applied to the Share-Chain share of each city's sellers only."},
+ {k:"chIntro", g:"Share Chain", l:"Paid introductions per regular per month, to a seller she does NOT know", lo:.003, mid:.02, hi:.06, src:"guess", n:"RUL-171(b): the only money in the chain. Buzz and her own seller are free forever (RUL-135(h), RUL-171(a)). A regular who is already in the app when she needs a plumber or a tutor; .02 a month is one paid introduction every ~4 years per regular. Charged on accept (introAcc)."},
+
  // --- agencies ---
  {k:"agRate",  g:"Agencies", l:"Agency conversions /city /week", lo:.002, mid:.012, hi:.045, src:"guess", n:"Hub events, scaled by city size. Three agencies already signed up pre-launch, so the floor is not zero."},
  {k:"agSize",  g:"Agencies", l:"Agents per agency", lo:4, mid:14, hi:55, src:"guess", n:"Only 2 agencies / 3 memberships exist so far - too few to measure."},
@@ -569,7 +593,7 @@ const DEFAULTS={allure:1,badge:.35,discount:0,referral:0,complaint:0,delay:0,poo
   dayCap:30,measured:1,agGateW:8,rollW:157,featW:8,liveKeysW:0,barriers:1,localiseW:157,
   tpW:0,tpToursW:157,refW:157,varsityW:157,ramp:1,rampCap:96,ring2W:1,ring3W:4,ring4W:8,ring5W:157,scrapeWk:30,aipaW:13,aucW:26,fideW:157,fideUp:1.35,
   clubW:1,clubProvW:157,fedW:157,unionW:157,goalW:0,goalCap:6,goalCities:43,
-  svcOn:0,svcW:3,empPace:4,svcLangW:3,svcKeyW:157,svcChanW:157};
+  svcOn:0,svcW:3,empPace:4,svcLangW:3,svcKeyW:157,svcChanW:157,chainOn:0,chainW:8};
 
 /* -------- scenario levers: things David can actually change -------- */
 const LEVERS = {
@@ -625,6 +649,8 @@ const LEVERS = {
   svcLangW: {v:3,     lo:0,  hi:157, st:1,   l:"Week the launch languages shipped (did: week 3)", n:"SHIPPED 23 Sep 2026 = week 3 (RUL-164/165): English, isiZulu, isiXhosa, Afrikaans, Sepedi are ON for everyone, on Claude's drafts, proofreading after launch. 157 = never, kept for the English-only counterfactual. Before 24 Sep this sat at 13 (1 Dec)."},
   svcKeyW:  {v:157,   lo:0,  hi:157, st:1,   l:"Week the phone / link key ships (D2: no e-mail needed to publish)", n:"157 = never = today's truth: RUL-166 (23 Sep) keeps her e-mail and her signed EULA as the key. The casuals research (23 Sep, section 2) calls this the ONE decision that multiplies or zeroes every reach channel: option A (the draft link is the key + phone notifications) or option B (phone number + one-time code, EULA still signed in the app). Until it ships, only svcMail of invited casual workers can publish. Set a week to see what opening the gate is worth; the EULA stays mandatory either way."},
   svcChanW: {v:157,   lo:0,  hi:157, st:1,   l:"Week the ground + air channels start (ranks, radio, SA Youth, job groups)", n:"157 = never = today's truth: nothing printed, no WORK number held, no test budget approved. The 23 Sep six-week sequence puts the free rails (Status card, SA Youth, job groups) first and money (posters R500, ambassador R20-30 per published advert, radio R1-5k a month) from week 3 of the plan - roughly model week 7-8 if David decides this week. Pretoria for the first twelve weeks, then the rest of SA."},
+  chainOn:  {v:0,    lo:0,  hi:1,   st:1,   l:"Share Chain (v2.0, RUL-171)",  n:"The purple toggle in the top bar does the same. OFF = v1.9 exactly, draw for draw, so the dashboard pins do not move. ON = every business can hand its regulars a link to book and Buzz it direct (RUL-171): her regulars join as buyers, some of them run businesses and list, and rivals who watch her diary fill copy her. Buzz is free; the money is a regular introduced to a seller she does not know."},
+  chainW:   {v:8,    lo:0,  hi:157, st:1,   l:"Week the invite-your-regulars link ships", n:"A placeholder, not a commitment - move it to the week the per-seller link (and its QR for the counter) is live. From that week every new seller can use it, and the sellers already live start asking their regulars too. 157 = never."},
 };
 
 /* ================= EMAIL WAVE PLAN v3.2 =========================
@@ -860,8 +886,10 @@ function simulate(seed, L, sample, keepTrace, v32){
   // v1.8: the Services-lane parameters draw from their own stream, so adding them leaves every
   // v1.7 ensemble draw - and therefore every dashboard pin - exactly where it was
   const rP=mulberry32((seed^0x5E7C0DE)>>>0);
+  // v2.0: the Share Chain parameters get their OWN stream too - OFF stays v1.9 draw for draw
+  const rC=mulberry32((seed^0x0C4A1B5)>>>0);
   const P={}; PARAMS.forEach(p=>{
-    P[p.k] = (p.lock && p.obs!==null) ? p.obs : (sample ? pert(p.g==="Services lane"?rP:r,p.lo,p.mid,p.hi) : (p.obs!==null?p.obs:p.mid));
+    P[p.k] = (p.lock && p.obs!==null) ? p.obs : (sample ? pert(p.g==="Services lane"?rP:(p.g==="Share Chain"?rC:r),p.lo,p.mid,p.hi) : (p.obs!==null?p.obs:p.mid));
   });
   const beta = P.peers*P.pTell*P.pTake*L.allure*(1+1.4*L.referral);
   const delayPen=1-0.55*L.delay, cmpPen=1-Math.min(.8,L.complaint*14);
@@ -961,6 +989,25 @@ function simulate(seed, L, sample, keepTrace, v32){
   let unionPool=0, unionOpen=false;
   let tpAccrued=0;
   const seriesTot=new Float64Array(WEEKS);
+  // v2.0: buyers and planner runs per week, so the ensemble can pair every seed with and without the chain
+  const seriesBU=new Float64Array(WEEKS), seriesPlan=new Float64Array(WEEKS);
+  // ---- v2.0 SHARE CHAIN state (RUL-171). Every array stays zero while the toggle is OFF. ----
+  // CSA  sellers who hand their regulars the link (fractional, an expectation - no draw)
+  // RG   her regulars not yet asked       CB  regulars who joined through her (buyers)
+  // WCH  rivals watching a Buzz seller     CE  rivals who copied her, registered, not yet listed
+  const chainOn=(L.chainOn||0)>=.5;
+  const r3=mulberry32((seed^0x0C4A1B6)>>>0);    // its own dynamics stream, like the Services lane's r2
+  const CSA=new Float64Array(n),RG=new Float64Array(n),CB=new Float64Array(n),WCH=new Float64Array(n),
+        CE=new Float64Array(n),CBever=new Float64Array(n),CBconv=new Float64Array(n);
+  let chainEver=0, chainJoined=0, chainCopies=0, chainB2s=0, chainKept=0;
+  const chJoinX = chainOn ? Math.max(0,(P.chJoin-P.custJoin)/Math.max(.01,1-P.custJoin)) : 0;
+  // one seller starts using the link: her regulars go on the to-ask list, her rivals start watching
+  function chainAdd(i, k, regX){
+    if(!(k>0)) return;
+    CSA[i]+=k; chainEver+=k;
+    RG[i]+=k*P.custPer*(regX||1);
+    WCH[i]+=k*P.chRivals*(N[i]>0?S[i]/N[i]:0);
+  }
   let deliverDecay=1;
 
   for(let w=0; w<WEEKS; w++){
@@ -1362,6 +1409,7 @@ function simulate(seed, L, sample, keepTrace, v32){
         const size=pois(r,P.agSize), join=binom(r,size,P.agJoin);
         const here=Math.round(join*0.75), away=join-here;
         AG[i]+=here; S[i]=Math.max(0,S[i]-here); everAct+=join;
+        if(chainOn && w>=L.chainW && L.chainW<157) chainAdd(i, here*P.chUse, 0.5);   // an agent's mandate clients: half a regular book
         { const want=binom(r,Math.round(join*P.custPer*0.5),P.custJoin);
           const g2=Math.min(want,Math.round(GS[i])); GS[i]-=g2; BU[i]+=g2; }
         if(away>0){ const sib=[];for(let j=0;j<n;j++)if(j!==i&&CITIES[j].c===CITIES[i].c)sib.push(j);
@@ -1388,7 +1436,13 @@ function simulate(seed, L, sample, keepTrace, v32){
       // Referred users churn less than acquired ones - applied to the referred share only.
       const at_=A0[i]+A5[i]+A20[i]+AG[i];
       const refShare = at_>0 ? Math.min(1,REF[i]/at_) : 0;
-      const cr=Math.max(.001, base*(1 - refShare*(1-1/Math.max(1,P.refKeep))));
+      let cr=Math.max(.001, base*(1 - refShare*(1-1/Math.max(1,P.refKeep))));
+      // v2.0: a seller whose regulars book her through the app churns less (chKeep), on her share only.
+      // Only p moves, never n, so no draw in the stream shifts.
+      const chShare = (chainOn && at_>0) ? Math.min(1, CSA[i]/at_) : 0;
+      const chMix = 1 - chShare*(1-P.chKeep);
+      if(chShare>0) cr = Math.max(.001, cr*chMix);
+      const at0_=at_;
       const arr=[[A0,1.0],[A5,.62],[A20,.45],[AG,.80]];
       for(const [arrRef,mult] of arr){
         const lost=binom(r,Math.round(arrRef[i]),Math.min(.6,cr*mult));
@@ -1399,6 +1453,11 @@ function simulate(seed, L, sample, keepTrace, v32){
         const imm=binom(r,lost,P.immune);
         Q[i]+=imm; D[i]+=lost-imm;
         if(REF[i]>0) REF[i]=Math.max(0,REF[i]-lost*refShare);
+      }
+      if(chShare>0){
+        const at1_=A0[i]+A5[i]+A20[i]+AG[i];
+        const lossF = at0_>0 ? Math.max(0,1-at1_/at0_) : 0;
+        CSA[i] = Math.min(at1_, Math.max(0, CSA[i]*(1-lossF*P.chKeep/Math.max(.05,chMix))));
       }
     }
 
@@ -1438,6 +1497,60 @@ function simulate(seed, L, sample, keepTrace, v32){
       if(WARM[i]>=1){
         const bw=binom(r,Math.round(WARM[i]),Math.min(.35,P.reactWarm*lift));
         WARM[i]-=bw; A0[i]+=bw; everAct+=bw; backTot+=bw;   // first time they have ever listed
+      }
+    }
+
+    // ---- 5d. v2.0 THE SHARE CHAIN (RUL-171): every business invites its regulars ----
+    // Three pathways, each on its own stream r3: (1) her regulars join as buyers when SHE asks them
+    // to book through the app; (2) some of those regulars run businesses and list; (3) rivals who
+    // watch her diary fill copy her (Bass imitation, applied to her local niche). Buzz itself is free.
+    if(chainOn && w>=L.chainW && L.chainW<157){
+      for(let i=0;i<n;i++){
+        const at=A0[i]+A5[i]+A20[i]+AG[i];
+        // who starts using the link this week: at switch-on, the sellers already live; after it,
+        // this week's first listings - rivals who copied her are chain sellers by definition
+        if(w===L.chainW && at>0){ chainAdd(i, (A0[i]+A5[i]+A20[i])*P.chUse, 1); chainAdd(i, AG[i]*P.chUse, 0.5); }
+        else if(newAct[i]>0){
+          const cShare = Math.min(1, CE[i]/Math.max(1,E[i]+newAct[i]));
+          const fromCopy = newAct[i]*cShare;
+          chainAdd(i, fromCopy + (newAct[i]-fromCopy)*P.chUse, 1);
+          CE[i] = Math.max(0, CE[i]-fromCopy);
+        }
+        CE[i] *= (1-P.eLapse);
+        // (1) her regulars, asked at their next visit
+        if(RG[i]>=1){
+          const ask=binom(r3, Math.round(RG[i]), P.chPace);
+          RG[i]=Math.max(0,RG[i]-ask);
+          const join=binom(r3, ask, chJoinX);
+          const got=Math.min(join, Math.round(GS[i]));
+          if(got>0){ GS[i]-=got; BU[i]+=got; CB[i]+=got; CBever[i]+=got; chainJoined+=got; }
+        }
+        RG[i] *= (1-P.churn*P.chKeep);        // a regular whose seller left is never asked
+        // a regular brought by her own seller stays longer (the base decays every buyer 3% a week)
+        if(CB[i]>0){
+          CB[i] *= 0.97;
+          const kept = CB[i]/0.97*0.03*P.chBuyKeep;
+          CB[i]+=kept; BU[i]+=kept; chainKept+=kept;
+          CB[i]=Math.min(CB[i], BU[i]);
+        }
+        // (2) regulars who have a business of their own - capped at GEM SA's 19%
+        if(CB[i]>=1 && P.chB2sX>1){
+          const room = Math.max(0, 0.19*CBever[i]-CBconv[i]);
+          const lq = LqPrev[i];
+          let c=binom(r3, Math.round(CB[i]), Math.min(.2, P.b2s*(P.chB2sX-1)*(0.25+0.75*lq)));
+          c=Math.min(c, Math.round(room), Math.round(S[i]));
+          if(c>0){ CB[i]=Math.max(0,CB[i]-c); BU[i]=Math.max(0,BU[i]-c); S[i]-=c; E[i]+=c; CBconv[i]+=c; chainB2s+=c; }
+        }
+        // (3) rivals copy a visible success: Bass q x 1/(rivals+1) a year, per rival watching one seller
+        if(WCH[i]>=1 && S[i]>=1){
+          const h=(P.chQ/52)/(P.chRivals+1)*delayPen*cmpPen;
+          let cp=binom(r3, Math.round(WCH[i]), Math.min(.5,h));
+          cp=Math.min(cp, Math.round(S[i]));
+          if(cp>0){ WCH[i]=Math.max(0,WCH[i]-cp); S[i]-=cp; E[i]+=cp; CE[i]+=cp; chainCopies+=cp; }
+        }
+        WCH[i] *= (1-P.churn*P.chKeep);       // a rival stops watching when the seller she watched leaves
+        if(N[i]>0) WCH[i]=Math.min(WCH[i], S[i]);
+        if(at<=0 && CSA[i]>0) CSA[i]=0;
       }
     }
 
@@ -1570,6 +1683,7 @@ function simulate(seed, L, sample, keepTrace, v32){
       }
     }
     seriesTot[w]=tA;
+    { let bu=0; for(let i=0;i<n;i++) bu+=BU[i]; seriesBU[w]=bu; seriesPlan[w]=planRuns; }
     if(keepTrace){
       trace.A.push(tA); trace.R.push(rden>0?rnum/rden:0);
       trace.mix.push([t0,t5,t20,tG,tS]);
@@ -1619,6 +1733,17 @@ function simulate(seed, L, sample, keepTrace, v32){
         svcFee+=(iRev+sRev)*FEE_ZA_PCT + (VA5[i]+intros/Math.max(1,P.bundleT))*FEE_ZA_FIX;
       }
       introRev += svcIntroRev; subSeller += svcSubRev;
+      // v2.0 Share Chain money: ONLY a regular introduced to a seller she does not know (RUL-171(b)).
+      // Her own seller and Buzz are free (RUL-135(h), RUL-171(a)) - so there is no line for them at all.
+      let chIntroRev=0, chFee=0, chZA=0;
+      if(chainOn) for(let i=0;i<n;i++){
+        if(!rails.has(CITIES[i].c) || CB[i]<=0) continue;
+        const rv=CB[i]*P.chIntro*P.introAcc*TUPPENCE_USD;          // chIntro is already per month
+        chIntroRev+=rv;
+        const za=(CITIES[i].c==="ZA"); if(za) chZA+=rv;
+        chFee += rv*(za?FEE_ZA_PCT:FEE_MOR_PCT) + (rv/TUPPENCE_USD/Math.max(1,P.bundleT))*(za?FEE_ZA_FIX:FEE_MOR_FIX);
+      }
+      introRev += chIntroRev;
       const featIntroRev = featIntros*TUPPENCE_USD*WEEKS_PER_MONTH*railShare;
       const featRevMo    = featRev*WEEKS_PER_MONTH*railShare;
       const featCostMo   = featCost*WEEKS_PER_MONTH;
@@ -1649,6 +1774,7 @@ function simulate(seed, L, sample, keepTrace, v32){
         feeCost += rev*pct + (subs+tups)*fix;
       }
       feeCost += svcFee; revZA += svcIntroRev+svcSubRev;
+      feeCost += chFee; revZA += chZA;
       zaShare = mrr>0 ? revZA/mrr : 1;
       const fixedCost=FIXED_MO_USD;
       // AI PA (RUL-081): the assistant's token bill, every active user, once on.
@@ -1672,6 +1798,11 @@ function simulate(seed, L, sample, keepTrace, v32){
         clubSignups:clubSignups, fedSignups:fedSignups, unionSignups:unionSignups,
         assocActives:assocActives, assocBuyers:assocBuyers,
         goalSignups:goalSignups, fedBodies:fedBodies, outPub:outPub,
+        chainOn:(chainOn?1:0), chIntroRev:chIntroRev, chainEver:chainEver, chainJoined:chainJoined, chainCopies:chainCopies, chainB2s:chainB2s, chainKept:chainKept,
+        chainSellers:(function(){let t=0;for(let i=0;i<n;i++)t+=CSA[i];return t;})(),
+        chainBuyers:(function(){let t=0;for(let i=0;i<n;i++)t+=CB[i];return t;})(),
+        chainToAsk:(function(){let t=0;for(let i=0;i<n;i++)t+=RG[i];return t;})(),
+        chainWatch:(function(){let t=0;for(let i=0;i<n;i++)t+=WCH[i];return t;})(),
         svcOn:(svcOn?1:0), svcActives:tS, svcIntroRev:svcIntroRev, svcSubRev:svcSubRev, svcEver:svcEver, svcBuyers:svcBuyers,
         svcOrg:svcOrg, svcCross:svcCross, empApproached:empApproached, empEnrolled:empEnrolled, empRoster:empRoster, svcInvited:svcInvited, svcRefd:svcRefd,
         svcNew:svcNewWk, svcGateFailed:svcGateFailed, svcChan:svcChan,
@@ -1699,7 +1830,7 @@ function simulate(seed, L, sample, keepTrace, v32){
         aware:(function(){let s=0;for(let i=0;i<n;i++)s+=(GP[i]-GS[i]);return s;})()});
     }
   }
-  return {series:seriesTot, trace:trace};
+  return {series:seriesTot, bu:seriesBU, plan:seriesPlan, trace:trace};
 }
 
 /* ======================= ENSEMBLE ============================== */
@@ -1714,23 +1845,27 @@ function runEnsemble(){
   const jobs=[{key:'old',v32:false,label:'v0.1 drip'},{key:'new',v32:true,label:'v3.2 plan'}];
   ENSD.base=null;
   if(L.svcOn>=.5) jobs.push({key:'base',v32:true,label:'without services',L:Object.assign({},L,{svcOn:0})});
+  ENSD.nochain=null;
+  // v2.0: the SAME seeds with the Share Chain off, so every run is compared with its own twin
+  if(L.chainOn>=.5) jobs.push({key:'nochain',v32:true,label:'without the Share Chain',L:Object.assign({},L,{chainOn:0})});
   let ji=0, runs=[], done=0;
   function finishJob(){
     const p10=new Float64Array(WEEKS),p50=new Float64Array(WEEKS),p90=new Float64Array(WEEKS),col=new Float64Array(ENS);
     for(let w=0;w<WEEKS;w++){
-      for(let k=0;k<ENS;k++)col[k]=runs[k][w];
+      for(let k=0;k<ENS;k++)col[k]=runs[k].series[w];
       const so=Array.from(col).sort((a,b)=>a-b);
       p10[w]=so[Math.floor(ENS*.1)];p50[w]=so[Math.floor(ENS*.5)];p90[w]=so[Math.floor(ENS*.9)];
     }
-    let f=0,to=0; for(let k=0;k<ENS;k++){ if(runs[k][52]<100) f++; if(runs[k][104]>=1000) to++; }
-    ENSD[jobs[ji].key]={p10:p10,p50:p50,p90:p90,fizzle:f/ENS,takeoff:to/ENS};
+    let f=0,to=0; for(let k=0;k<ENS;k++){ if(runs[k].series[52]<100) f++; if(runs[k].series[104]>=1000) to++; }
+    ENSD[jobs[ji].key]={p10:p10,p50:p50,p90:p90,fizzle:f/ENS,takeoff:to/ENS,
+      seeds:{A:runs.map(x=>x.series),B:runs.map(x=>x.bu),F:runs.map(x=>x.plan)}};
     ji++; runs=[]; done=0;
   }
   (function chunk(){
     if(token!==ensToken) return;
     const t0=performance.now();
     while(ji<jobs.length && performance.now()-t0<45){
-      runs.push(simulate(1000+done, jobs[ji].L||L, true, false, jobs[ji].v32).series); done++;
+      { const rr=simulate(1000+done, jobs[ji].L||L, true, false, jobs[ji].v32); runs.push({series:rr.series,bu:rr.bu,plan:rr.plan}); } done++;
       if(done>=ENS) finishJob();
     }
     const total=jobs.length*ENS, sofar=ji*ENS+done;
@@ -1741,6 +1876,7 @@ function runEnsemble(){
     lbl.innerHTML='<b style="color:var(--gold)">v3.2 &rarr; '+Math.round(nw.takeoff*100)+'% took off</b>'+
                   ' &nbsp;vs&nbsp; v0.1 &rarr; '+Math.round(o.takeoff*100)+'%'+
                   ' &nbsp;&middot;&nbsp; '+ENS+' runs each';
+    if(ENSD.nochain) lbl.innerHTML+=' &nbsp;&middot;&nbsp; <b style="color:#c4b5fd">Share Chain '+Math.round(nw.takeoff*100)+'% vs '+Math.round(ENSD.nochain.takeoff*100)+'% without</b>';
     if(ENSD.base) lbl.innerHTML+=' &nbsp;&middot;&nbsp; <b style="color:#5eead4">services '+Math.round(nw.takeoff*100)+'% vs '+Math.round(ENSD.base.takeoff*100)+'% without</b>';
     syncFizz(); draw();
   })();
@@ -1754,7 +1890,7 @@ function syncFizz(){
 /* ======================= LIVE RUN ============================== */
 /* Both plans are always computed on the same seed and the same scenario dials,
    so the only thing separating the two curves is the wave plan itself. */
-let RUNS={old:null,new:null,base:null}, VIEW='new', RUN=null, week=0, playing=false, timer=null;
+let RUNS={old:null,new:null,base:null,nochain:null}, VIEW='new', RUN=null, week=0, playing=false, timer=null;
 function leverVals(){const o={};for(const k in LEVERS)o[k]=LEVERS[k].v;return o;}
 function rebuild(){
   const L=leverVals();
@@ -1762,7 +1898,9 @@ function rebuild(){
   RUNS.new=simulate(7, L, false, true, true);
   // v1.8: the same seed with the Services lane OFF, so the toggle shows exactly what it changes
   RUNS.base = (L.svcOn>=.5) ? simulate(7, Object.assign({},L,{svcOn:0}), false, true, true) : null;
-  syncSvcUI();
+  // v2.0: the same seed with the Share Chain OFF - the gap is exactly what RUL-171 adds
+  RUNS.nochain = (L.chainOn>=.5) ? simulate(7, Object.assign({},L,{chainOn:0}), false, true, true) : null;
+  syncSvcUI(); syncChainUI();
   RUN=RUNS[VIEW];
   if(week>=WEEKS)week=WEEKS-1;
   runEnsemble(); draw();
@@ -1887,7 +2025,7 @@ function draw(){
   }  // end mapOK
   drawCharts();
   const st=RUN.trace.events.filter(e=>e.t==='stat'&&e.w===week)[0]||{mrr:0,cities:0,ctry:0};
-  diagnose(st); cmpBar(); moneyBar(); svcBar();
+  diagnose(st); cmpBar(); moneyBar(); svcBar(); chainBar();
   const mix=RUN.trace.mix[week], tot=RUN.trace.A[week];
   document.getElementById('sTot').textContent=Math.round(tot).toLocaleString();
   document.getElementById('sCity').textContent=st.cities;
@@ -1969,6 +2107,14 @@ function drawCharts(){
   g.fillStyle='#c9a227'; g.fillText('solid '+(VIEW==='new'?'v3.2':'v0.1'),10,22);
   g.fillStyle='rgba(215,230,245,.7)'; g.fillText('dashed '+(VIEW==='new'?'v0.1':'v3.2'),10,33);
   if(runBase){ g.fillStyle='#5eead4'; g.fillText('dotted teal = without services',10,44); }
+  const runNoCh=(VIEW==='new')?RUNS.nochain:null;
+  if(runNoCh){   // v2.0: the same plan WITHOUT the Share Chain
+    g.setLineDash([2,3]);
+    g.beginPath(); g.moveTo(xA(0),yA(runNoCh.trace.A[0]));
+    for(let w=1;w<WEEKS;w++)g.lineTo(xA(w),yA(runNoCh.trace.A[w]));
+    g.strokeStyle='#a78bfa'; g.lineWidth=1.6; g.stroke(); g.setLineDash([]);
+    g.fillStyle='#c4b5fd'; g.fillText('dotted purple = without the Share Chain',10,runBase?55:44);
+  }
 
     const cB=chart('chartB'); const h=cB.g;
   let rmx=1.5; for(let w=0;w<WEEKS;w++)rmx=Math.max(rmx,RUN.trace.R[w]);
@@ -2256,6 +2402,8 @@ function moneyBar(){
     ['Travelpayouts', st.affRev||0,    (st.toursOpen? 'flights 1.2% + tours 8%' : 'flights only - tours declined')+', no fee'],
     ['Agency agents', 0, Math.round(st.agentsFree||0).toLocaleString()+' paying $0 by canon']
   ];
+  if(st.chainOn) cells.splice(1,0,['Share Chain intros', st.chIntroRev||0,
+    Math.round(st.chainBuyers||0).toLocaleString()+' regulars meeting sellers they do not know; Buzz free']);
   if(st.svcOn) cells.splice(1,0,['Services lane', (st.svcIntroRev||0)+(st.svcSubRev||0),
     Math.round(st.svcActives||0).toLocaleString()+' workers; inside the lines around it']);
   let h='<div class="m hdr"><span>Revenue / month</span><b>'+f(tot)+'</b><i>'+
@@ -2373,6 +2521,86 @@ function svcBar(){
   el.innerHTML=h;
 }
 
+/* ---- v2.0: what the Share Chain (RUL-171) changes, at the week on screen ---- */
+function syncChainUI(){
+  const on=LEVERS.chainOn.v>=.5, b=document.getElementById('btnChain');
+  if(b){ b.classList.toggle('on',on); b.textContent='Share Chain: '+(on?'ON':'OFF'); }
+}
+// Paired uplift: seed k WITH the chain against the SAME seed k without it. The spread of those
+// 110 ratios is the honest uncertainty - it carries every prior's range, not one guess.
+function pairedUplift(key, w){
+  const a=ENSD.new, b=ENSD.nochain; if(!a||!b||!a.seeds||!b.seeds) return null;
+  const A=a.seeds[key], B=b.seeds[key], r=[];
+  for(let k=0;k<Math.min(A.length,B.length);k++){ const x=A[k][w], y=B[k][w]; if(y>=1) r.push(x/y-1); }
+  if(!r.length) return null;
+  r.sort((p,q)=>p-q);
+  const q=f=>r[Math.min(r.length-1,Math.floor(r.length*f))];
+  return {p10:q(.1),p50:q(.5),p90:q(.9),min:r[0],neg:r.filter(v=>v<-0.005).length,n:r.length};
+}
+// Weeks EARLIER to reach a milestone, seed against its own twin - the trajectory, not the ceiling
+function weeksEarlier(key, thr){
+  const a=ENSD.new, b=ENSD.nochain; if(!a||!b||!a.seeds||!b.seeds) return null;
+  const A=a.seeds[key], B=b.seeds[key], r=[]; let onlyOn=0, neither=0;
+  const first=s=>{ for(let w=0;w<s.length;w++) if(s[w]>=thr) return w; return -1; };
+  for(let k=0;k<Math.min(A.length,B.length);k++){
+    const x=first(A[k]), y=first(B[k]);
+    if(x<0&&y<0){neither++;continue;}
+    if(y<0){onlyOn++; r.push(WEEKS-x); continue;}      // reached only WITH the chain: at least this much earlier
+    if(x<0){ r.push(-(WEEKS-y)); continue; }
+    r.push(y-x);
+  }
+  if(!r.length) return null;
+  r.sort((p,q)=>p-q);
+  const q=f=>r[Math.min(r.length-1,Math.floor(r.length*f))];
+  return {p10:q(.1),p50:q(.5),p90:q(.9),onlyOn:onlyOn,neither:neither,n:r.length};
+}
+function chainBar(){
+  const el=document.getElementById('chainBar'); if(!el) return;
+  const on=LEVERS.chainOn.v>=.5 && RUNS.nochain && VIEW==='new';
+  el.classList.toggle('show', !!on);
+  if(!on){ el.innerHTML=''; return; }
+  const sn=statAt(RUNS.new,week), sb=statAt(RUNS.nochain,week);
+  const f=(v,m)=>(m?'$':'')+Math.round(v).toLocaleString();
+  const pc=v=>(v>=0?'+':'')+(Math.abs(v*100)>=1000?Math.round(v*100).toLocaleString():(v*100).toFixed(Math.abs(v)<.1?1:0))+'%';
+  const d=(nv,ov)=>{ if(ov>0){const p=(nv/ov-1); return '<u class="'+(p>.02?'up':(p<-.02?'dn':''))+'">'+pc(p)+'</u>';}
+                     return nv>0?'<u class="up">new</u>':''; };
+  const rows=[
+    ['Sellers, ensemble median', (ENSD.new?ENSD.new.p50[week]:0), (ENSD.nochain?ENSD.nochain.p50[week]:0), 0],
+    ['Sellers, mid run',      RUNS.new.trace.A[week], RUNS.nochain.trace.A[week], 0],
+    ['Buyers',                sn.buyers||0, sb.buyers||0, 0],
+    ['Planner runs /mo',      sn.planRuns||0, sb.planRuns||0, 0],
+    ['Revenue /mo',           sn.mrr||0, sb.mrr||0, 1],
+    ['Net, canon costs',      sn.netCanon||0, sb.netCanon||0, 1],
+    ['Cities working',        sn.working||0, sb.working||0, 0]
+  ];
+  let h='<div class="c hdr"><span>Share Chain ON &middot; RUL-171</span><b>v2.0</b><i>purple = with it &middot; vs without</i></div>';
+  const wk=Math.max(1,week);
+  const cells=[['A','Sellers'],['B','Buyers'],['F','Planner runs']];
+  for(const [key,lab] of cells){
+    const u=pairedUplift(key,wk);
+    if(u) h+='<div class="c pair" title="Each of '+u.n+' seeds run twice, with and without the chain; the spread of the '+u.n+' paired ratios. '+(u.neg?u.neg+' runs came out below their twin - noise from re-drawn buyers, not a mechanism that removes anyone.':'No run came out below its twin.')+'"><span>'+lab+' uplift, paired '+u.n+' seeds</span><b>'+pc(u.p50)+'</b><i>p10 '+pc(u.p10)+' &middot; p90 '+pc(u.p90)+' &middot; '+u.neg+' of '+u.n+' below twin</i></div>';
+  }
+  const mil=[['A',1000,'1,000 sellers'],['A',10000,'10,000 sellers'],['B',100000,'100,000 buyers']];
+  for(const [key,thr,lab] of mil){
+    const m=weeksEarlier(key,thr);
+    if(m) h+='<div class="c pair" title="Per seed: the week it first reaches '+lab+' without the chain, minus the week with it. '+(m.onlyOn?m.onlyOn+' seeds reach it only WITH the chain. ':'')+(m.neither?m.neither+' seeds never reach it either way.':'')+'"><span>Weeks earlier to '+lab+'</span><b>'+(m.p50>0?m.p50:m.p50)+' wk</b><i>p10 '+m.p10+' &middot; p90 '+m.p90+' wk</i></div>';
+  }
+  for(const [lab,nv,ov,m] of rows) h+='<div class="c"><span>'+lab+'</span><b>'+f(nv,m)+'</b>'+d(nv,ov)+'<i>without '+f(ov,m)+'</i></div>';
+  const only=[
+    ['Sellers using the link',  f(sn.chainSellers||0), f(sn.chainEver||0)+' ever'],
+    ['Regulars joined via her', f(sn.chainJoined||0),  f(sn.chainBuyers||0)+' still active'],
+    ['Regulars still to ask',   f(sn.chainToAsk||0),   'asked at their next visit'],
+    ['Regulars who listed too', f(sn.chainB2s||0),     'their own business, capped at 19% (GEM SA)'],
+    ['Rivals watching',         f(sn.chainWatch||0),   'not yet on TrustSquare'],
+    ['Rivals who copied her',   f(sn.chainCopies||0),  'Bass q, her local niche'],
+    ['Intros, regular to stranger', f(sn.chIntroRev||0,1), 'the chain\'s only money; Buzz is free']
+  ];
+  for(const [lab,v,sub] of only) h+='<div class="c"><span>'+lab+'</span><b style="color:#c4b5fd">'+v+'</b><i>'+sub+'</i></div>';
+  if(ENSD.new&&ENSD.nochain){ const p=Math.round(ENSD.new.takeoff*100), q=Math.round(ENSD.nochain.takeoff*100);
+    h+='<div class="c"><span>Takes off (ensemble)</span><b>'+p+'%</b><u class="'+(p>q?'up':(p<q?'dn':''))+'">'+(p-q>=0?'+':'')+(p-q)+'pt</u><i>without '+q+'%</i></div>'; }
+  el.innerHTML=h;
+}
+
 /* ======================= PANEL UI ============================== */
 const TELEMETRY=[
  {s:0,t:"Referral / inviter on signup",d:"There is no referred_by, invite code or inviter_id anywhere. users.referral_count exists but the code says \"not yet tracked. Always missing.\" Without this, pTell and pTake - the entire allure term - can never be measured, only guessed."},
@@ -2386,6 +2614,7 @@ const TELEMETRY=[
  {s:0,t:"Buyer arrival",d:"Anonymous buyers create no row; a buyer_token only materialises if a wishlist signal is written. There is no buyer count and no buyer signup curve, so the liquidity term has no data behind it."},
  {s:0,t:"Search volume over time",d:"wishlist_signals deduplicates - a repeated search bumps seen_count instead of inserting - so created_at is first-seen only."},
  {s:0,t:"Delivered + unsubscribed as events",d:"The Resend webhook maps opened, clicked and bounced but never delivered. Opt-out only flips prospects.status, with no timestamp, so unsubscribe rate over time cannot be rebuilt."},
+ {s:0,t:"Which seller's link a buyer came in on (RUL-171)",d:"The Share Chain has no observable until a buyer signup records the seller whose link or QR brought her. With it, chJoin (share of her regulars who join) and chPace become measured in the first month; without it, the three guesses that decide v2.0 stay guesses."},
  {s:0,t:"A generic events table",d:"There is no events/audit table at all. Every metric to date has needed a bespoke column, which is exactly why this list is eleven items long."},
  {s:1,t:"Seller adoption curve",d:"users.created_at. Live total 34 accounts."},
  {s:1,t:"Listing supply + time to first listing",d:"listings.created_at, published_at, and MIN(created_at) per seller_email."},
@@ -2454,7 +2683,19 @@ function buildPanel(which){
       "<li><b>Languages</b> (EN, isiZulu, Sesotho, Afrikaans) lift the lane from English-only to ~90%.</li></ol>"+
       "OFF is v1.7 exactly, so the dashboard's BEAT THE MODEL pins do not move. Every new number is in Calibration under <i>Services lane</i>, and every one is a guess until the door's beacons say otherwise.";
     b.appendChild(pb3);
-    const groups={"Services lane (v1.9, RUL-150)":["svcOn","svcW","empPace","svcLangW","svcKeyW","svcChanW"],
+    const pb4=document.createElement('div'); pb4.className='planbox';
+    pb4.style.borderLeftColor='#8b5cf6';
+    pb4.innerHTML="<b>v2.0 &mdash; the Share Chain (RUL-171, 25 Sep 2026), behind the purple toggle.</b> "+
+      "Every business can hand its regulars a link to book and Buzz it direct. Buzz is free; the only money is a regular introduced to a seller she does not know."+
+      "<ol><li><b>Her regulars join as buyers</b> when SHE asks them, at their next visit (chUse, chJoin, chPace) &mdash; only the increment over custJoin's ordinary mention, so nothing is counted twice.</li>"+
+      "<li><b>Some regulars run a business</b> and list it (chB2sX on top of b2s), capped at the 19% of South African adults who start or run one (GEM SA 2025).</li>"+
+      "<li><b>Rivals who watch her diary fill copy her</b> &mdash; Bass imitation, q = 0.38 a year on average (Mahajan, Muller &amp; Bass 1995), shared across her local niche (chRivals).</li>"+
+      "<li><b>Everyone stays longer:</b> regulars brought by their own seller churn ~18% less (Schmitt, Skiera &amp; Van den Bulte 2011); sellers whose diary lives in the app churn less (chKeep).</li></ol>"+
+      "The strip under the money bar pairs each of the 110 seeds with its own twin without the chain, so the uplift comes with its p10 and p90, and the worst run. "+
+      "OFF is v1.9 exactly. Every new number is in Calibration under <i>Share Chain</i>; the three guesses that matter most are chUse, chJoin and chRivals.";
+    b.appendChild(pb4);
+    const groups={"Share Chain (v2.0, RUL-171)":["chainOn","chainW"],
+      "Services lane (v1.9, RUL-150)":["svcOn","svcW","empPace","svcLangW","svcKeyW","svcChanW"],
       "Product & offer":["allure","badge","discount","referral"],
       "Damage":["complaint","delay"],
       "Email Wave Plan v3.2":["dayCap","measured","agGateW","rollW"],
@@ -2490,6 +2731,8 @@ function buildPanel(which){
           if(k==='unionW')    return L.v>=157?'no union approached':'week '+L.v;
           if(k==='measured') return L.v>=.5?'measured lists':'at the cap';
           if(k==='svcOn')    return L.v>=.5?'ON':'OFF';
+          if(k==='chainOn')  return L.v>=.5?'ON':'OFF';
+          if(k==='chainW')   return L.v>=157?'link never ships':'week '+L.v;
           if(k==='svcW')     return L.v>=157?'no employer door':'week '+L.v;
           if(k==='empPace')  return Math.round(L.v)+' / month';
           if(k==='svcLangW') return L.v>=157?'English only':'week '+L.v;
@@ -2505,7 +2748,7 @@ function buildPanel(which){
           '<div class="note">'+L.n+'</div>';
         const inp=row.querySelector('input'), out=row.querySelector('b');
         inp.addEventListener('input',()=>{L.v=parseFloat(inp.value);out.textContent=disp();});
-        inp.addEventListener('change',()=>{rebuild(); if(k==='svcOn') buildPanel('scn');});
+        inp.addEventListener('change',()=>{rebuild(); if(k==='svcOn'||k==='chainOn') buildPanel('scn');});
         g.appendChild(row);
       }
     }
@@ -2564,6 +2807,10 @@ function buildPanel(which){
       "Reach plan + a Growth Partner doubles the employer pace":{svcOn:1,svcW:3,empPace:8,svcLangW:3,svcKeyW:6,svcChanW:8},
       "Services lane, English only (languages never ship)":{svcOn:1,svcW:3,empPace:4,svcLangW:157,svcKeyW:157,svcChanW:157},
       "Services lane, one employer a month":{svcOn:1,svcW:3,empPace:1,svcLangW:3,svcKeyW:157,svcChanW:157},
+      "SHARE CHAIN (RUL-171): the invite link from week 8":{chainOn:1,chainW:8},
+      "Share Chain from week 5, with the Services lane as today":{chainOn:1,chainW:5,svcOn:1,svcW:3,empPace:4,svcLangW:3,svcKeyW:157,svcChanW:157},
+      "Share Chain, but the link only ships in month 6":{chainOn:1,chainW:26},
+      "David's example: every Buzz seller pulls in 2 rivals a year (far above the literature's q)":{chainOn:1,chainW:8,__lock:{chQ:2.67,chRivals:3}},
       "Everything goes right":{allure:1.6,badge:1,referral:.8,batch:300,agPush:3,stripeW:0,compW:157,complaint:0,delay:0},
       "Honest base case (current policy)":{allure:1,badge:.35,referral:0,batch:28,agPush:1,stripeW:0,compW:157,complaint:.002,delay:.1},
       "Planner lane never ships":{featW:157,allure:1,badge:.35,batch:28,agPush:1,stripeW:0,compW:157,complaint:.002,delay:.1},
@@ -2591,14 +2838,19 @@ function buildPanel(which){
       const btn=document.createElement('button'); btn.textContent=nm; btn.style.cssText='width:100%;margin-bottom:5px;text-align:left';
       btn.onclick=()=>{const d=Object.assign({},DEFAULTS);
         d.svcOn=LEVERS.svcOn.v;            // a preset that does not mention the Services lane keeps the toggle where it is
+        d.chainOn=LEVERS.chainOn.v;        // same for the Share Chain
         Object.assign(d,presets[nm]);
         // A preset may also pin an OBSERVED parameter value - used by the human-verified
         // click preset, which is the difference between the goal landing and missing.
         const pin=d.__obs; delete d.__obs;
+        // v2.0: __lock pins a value for the ensemble too (obs AND lock); cleared by any other preset
+        const lk=d.__lock; delete d.__lock;
+        PARAMS.forEach(p=>{ if(p.__presetLocked){ p.obs=null; p.lock=false; p.__presetLocked=false; } });
+        if(lk) for(const pk in lk){ if(PM[pk]){ PM[pk].obs=lk[pk]; PM[pk].lock=true; PM[pk].__presetLocked=true; } }
         PARAMS.forEach(p=>{ if(p.__presetPinned){ p.obs=null; p.__presetPinned=false; } });
         if(pin) for(const pk in pin){ if(PM[pk]){ PM[pk].obs=pin[pk]; PM[pk].__presetPinned=true; } }
         for(const k in d) if(LEVERS[k]) LEVERS[k].v=d[k];
-        week=0; rebuild(); syncSvcUI();};
+        week=0; rebuild(); syncSvcUI(); syncChainUI();};
       g.appendChild(btn);
     }
     b.appendChild(g);
@@ -2631,6 +2883,11 @@ document.getElementById('btnOld').onclick=()=>setView('old');
 document.getElementById('btnNew').onclick=()=>setView('new');
 document.getElementById('btnSvc').onclick=()=>{
   LEVERS.svcOn.v = LEVERS.svcOn.v>=.5 ? 0 : 1;
+  if(VIEW!=='new') setView('new');       // the comparison lives on the v3.2 plan
+  rebuild(); const at=document.querySelector('.tab.active'); if(at && at.dataset.t==='scn') buildPanel('scn');
+};
+document.getElementById('btnChain').onclick=()=>{
+  LEVERS.chainOn.v = LEVERS.chainOn.v>=.5 ? 0 : 1;
   if(VIEW!=='new') setView('new');       // the comparison lives on the v3.2 plan
   rebuild(); const at=document.querySelector('.tab.active'); if(at && at.dataset.t==='scn') buildPanel('scn');
 };

@@ -1,0 +1,1 @@
+- 25 Sep 2026: Contagion Model v2.0 (SIM-CHAIN-1) - Share Chain (RUL-171) behind a purple toggle; OFF = v1.9 draw for draw, dashboard pin v2.0. ON, mid run: sellers wk52 114,634 vs 84,474 (+36%), wk156 +2%; paired ensemble +2.2% wk52, never below twin from wk104. Speeds the curve, does not raise the market ceiling.
