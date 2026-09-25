@@ -224,6 +224,10 @@ const mins = (a, b) => Math.round((a - b) / 60000);
 
 async function runCheck(env, now) {
   const state = await readState(env);
+  // KV-QUIET-1 (25 Sep 2026): write the state only when it CHANGES. Writing it every 5 minutes used
+  // ~600 of the free plan's 1,000 KV writes a day and set off Cloudflare's daily 50% warning. A healthy
+  // site leaves the state unchanged, so writes drop to the daily heartbeat plus real up/down changes.
+  const before = JSON.stringify(state);
   const res = await probe(env);
   const strikes = parseInt(cfg(env, "FAILS_BEFORE_ALERT"), 10);
   const repeatAfter = parseInt(cfg(env, "REPEAT_ALERT_MINUTES"), 10);
@@ -281,7 +285,7 @@ async function runCheck(env, now) {
     actions.push(`heartbeat mail ${m.sent ? "sent" : "FAILED: " + m.why}`);
   }
 
-  await writeState(env, state);
+  if (JSON.stringify(state) !== before) await writeState(env, state);
   return { at: stamp, ok: res.ok, reason: res.reason, ms: res.ms, consecutiveFails: state.consecutiveFails, down: state.down, actions, kv: !state._nokv };
 }
 
