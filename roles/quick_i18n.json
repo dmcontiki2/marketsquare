@@ -1428,6 +1428,1350 @@
    "Kwala",
    "Vala",
    "Tswalela"
+  ],
+  "Your employer says": [
+   "Jou werkgewer sê",
+   "Umqashi wakho uthi",
+   "Mohiri wa hao o re",
+   "Umqeshi wakho uthi",
+   "Mothwadi wa gago o re"
+  ],
+  "A parent or student you teach says": [
+   "'n Ouer of leerder vir wie jy klas gee sê",
+   "Umzali noma umfundi omfundisayo uthi",
+   "Motswadi kapa moithuti eo o mo rutang o re",
+   "Umzali okanye umfundi omfundisayo uthi",
+   "Motswadi goba moithuti yo o mo rutago o re"
+  ],
+  "A customer you have worked for says": [
+   "'n Klant vir wie jy gewerk het sê",
+   "Ikhasimende osebenzele lona lithi",
+   "Moreki eo o kileng wa mo sebeletsa o re",
+   "Umthengi omsebenzeleyo uthi",
+   "Moreki yo o kilego wa mo šomela o re"
+  ],
+  "A guest you have hosted says": [
+   "'n Gas wat jy ontvang het sê",
+   "Isivakashi osake wasamukela sithi",
+   "Moeti eo o kileng wa mo amohela o re",
+   "Undwendwe owakhe walwamkela luthi",
+   "Moeng yo o kilego wa mo amogela o re"
+  ],
+  "Someone you have worked for says": [
+   "Iemand vir wie jy gewerk het sê",
+   "Umuntu osake wamsebenzela uthi",
+   "Motho eo o kileng wa mo sebeletsa o re",
+   "Umntu owakhe wamsebenzela uthi",
+   "Motho yo o kilego wa mo šomela o re"
+  ],
+  "one sentence": [
+   "een sin",
+   "umusho owodwa",
+   "polelo e le nngwe",
+   "isivakalisi esinye",
+   "lefoko le tee"
+  ],
+  "about you. That is what opens your trust score — nothing you write about yourself can do it. Four taps on their side, and they never have to use TrustSquare again.": [
+   "oor jou. Dit is wat jou vertrouenstelling oopmaak — niks wat jy oor jouself skryf kan dit doen nie. Vier tikke aan hulle kant, en hulle hoef nooit weer TrustSquare te gebruik nie.",
+   "ngawe. Yilokho okuvula amaphuzu akho okwethenjwa — akukho lutho olubhala ngawe ongakwenza lokho. Ukuthinta okune ohlangothini lwabo, futhi abasoze bawusebenzise futhi uTrustSquare.",
+   "ka wena. Ke sona se bulang sekoro sa hao sa tshepo — ha ho letho leo o le ngolang ka wena le ka etsang seo. Ho tobetsa hane ka lehlakoreng la bona, mme ha ba sa tla hlola ba sebedisa TrustSquare.",
+   "ngawe. Yiyo evula amanqaku akho okuthenjwa — akukho nto oyibhalayo ngawe enokwenza oko. Ukucofa kane kwicala labo, kwaye abasoze baphinde basebenzise iTrustSquare.",
+   "ka wena. Ke sona se bulago sekoro sa gago sa go tshepega — ga go selo seo o se ngwalago ka wena se ka dirago seo. Dikgotlo tše nne ka lehlakoreng la bona, gomme ga ba sa swanela go šomiša TrustSquare gape."
+  ],
+  "Buzz — one line to the other phone": [
+   "Buzz — een reël na die ander foon",
+   "Buzz — umugqa owodwa kwenye ifoni",
+   "Buzz — mola o le mong ho fono e nngwe",
+   "Buzz — umgca omnye kwenye ifowuni",
+   "Buzz — mothaladi o tee go founo ye nngwe"
+  ],
+  "They have exactly the same button for you. One line each way, no thread to scroll, and email catches it if their push is off.": [
+   "Hulle het presies dieselfde knoppie vir jou. Een reël elke kant toe, geen draad om deur te rol nie, en e-pos vang dit as hul kennisgewings af is.",
+   "Nabo banenkinobho efanayo ngqo yakho. Umugqa owodwa ngapha nangapha, ayikho intambo yokuskrola, futhi i-imeyili iyakubamba uma izaziso zabo zivaliwe.",
+   "Le bona ba na le konopo e tshwanang hantle bakeng sa hao. Mola o le mong ka nqa ka nngwe, ha ho puisano e telele, mme imeile e e tshwara ha ditsebiso tsa bona di timilwe.",
+   "Nabo banenqaku elifanayo ncam lakho. Umgca omnye kwicala ngalinye, akukho mtya wokuskrola, kwaye i-imeyile iyayibamba ukuba izaziso zabo zicinyiwe.",
+   "Le bona ba na le konopo ye e swanago gabotse ya gago. Mothaladi o tee ka lehlakore le lengwe le le lengwe, ga go poledišano ye telele, gomme imeile e e swara ge ditsebišo tša bona di timilwe."
+  ],
+  "One line to the parents you teach for - a moved lesson, an exam week, a late child.": [
+   "Een reël na die ouers vir wie jy klas gee - 'n geskuifde les, 'n eksamenweek, 'n laat kind.",
+   "Umugqa owodwa kubazali obafundisela - isifundo esihanjisiwe, isonto lezivivinyo, ingane efike sekwephuzile.",
+   "Mola o le mong ho batswadi bao o ba rutelang - thuto e sutisitsweng, beke ya ditlhahlobo, ngwana ya diehang.",
+   "Umgca omnye kubazali obafundisela - isifundo esishenxisiweyo, iveki yeemviwo, umntwana ofika emva kwexesha.",
+   "Mothaladi o tee go batswadi bao o ba rutelago - thuto ye e šuthišitšwego, beke ya ditlhahlobo, ngwana yo a diegilego."
+  ],
+  "One line to your regular customers - on my way, running late, job done.": [
+   "Een reël na jou vaste kliënte - op pad, laat, werk klaar.",
+   "Umugqa owodwa kumakhasimende akho ajwayelekile - ngisendleleni, ngizophuza, umsebenzi uqediwe.",
+   "Mola o le mong ho bareki ba hao ba kamehla - ke tseleng, ke tla dieha, mosebetsi o phethilwe.",
+   "Umgca omnye kubathengi bakho abaqhelekileyo - ndisendleleni, ndiza kufika emva kwexesha, umsebenzi ugqityiwe.",
+   "Mothaladi o tee go bareki ba gago ba ka mehla - ke tseleng, ke tla diega, mošomo o phethilwe."
+  ],
+  "One line to every guest who asked - dates, late arrivals, one more bed.": [
+   "Een reël na elke gas wat gevra het - datums, laat aankomste, nog een bed.",
+   "Umugqa owodwa kuso sonke isivakashi esibuzile - izinsuku, ukufika sekwephuzile, omunye umbhede.",
+   "Mola o le mong ho moeti e mong le e mong ya botsitseng - matsatsi, ho fihla ka morao, bethe e nngwe.",
+   "Umgca omnye kulo lonke undwendwe olubuzileyo - imihla, ukufika emva kwexesha, enye ibhedi.",
+   "Mothaladi o tee go moeng yo mongwe le yo mongwe yo a botšišitšego - matšatši, go fihla morago, malao a mangwe."
+  ],
+  "One line to everyone who asked about your place - viewings, offers, show days.": [
+   "Een reël na almal wat oor jou plek gevra het - besigtigings, aanbiedinge, skoudae.",
+   "Umugqa owodwa kubo bonke ababuze ngendawo yakho - ukubuka, izithembiso, izinsuku zokubukisa.",
+   "Mola o le mong ho bohle ba botsitseng ka sebaka sa hao - ho sheba, dinyehelo, matsatsi a pontsho.",
+   "Umgca omnye kubo bonke ababuze ngendawo yakho - ukujonga, izithembiso, iintsuku zomboniso.",
+   "Mothaladi o tee go bohle bao ba botšišitšego ka lefelo la gago - go lebelela, dithekišo, matšatši a pontšho."
+  ],
+  "Ask the people who would know": [
+   "Vra die mense wat sal weet",
+   "Buza abantu abangazi",
+   "Botsa batho ba ka tsebang",
+   "Buza abantu abanokwazi",
+   "Botšiša batho bao ba ka tsebago"
+  ],
+  "One line, to each of them separately. They never see each other — this is the phone-around, not a group.": [
+   "Een reël, aan elkeen afsonderlik. Hulle sien mekaar nooit nie — dis rondbel, nie 'n groep nie.",
+   "Umugqa owodwa, komunye nomunye ngokwehlukana. Abasoze babonane — lokhu ukushayela abantu, akulona iqembu.",
+   "Mola o le mong, ho e mong le e mong ka thoko. Ha ba bonane — ena ke ho letsetsa batho, e seng sehlopha.",
+   "Umgca omnye, komnye nomnye ngokwahlukeneyo. Abaze babonane — oku kukutsalela abantu umnxeba, asiloqela.",
+   "Mothaladi o tee, go yo mongwe le yo mongwe ka noši. Ga ba bonane — se ke go leletša batho, e sego sehlopha."
+  ],
+  "Examples — in the app you pick from your own contacts": [
+   "Voorbeelde — in die app kies jy uit jou eie kontakte",
+   "Izibonelo — ku-app ukhetha kubantu bakho",
+   "Mehlala — ho app o kgetha ho batho ba hao",
+   "Imizekelo — kwi-app ukhetha kubantu bakho",
+   "Mehlala — ka go app o kgetha go batho ba gago"
+  ],
+  "Each one is an ordinary buzz, with your name on it, and each of them can switch you off on their own. There is no group and no thread — whoever knows something buzzes you back.": [
+   "Elkeen is 'n gewone buzz, met jou naam daarop, en elkeen kan jou self afskakel. Daar is geen groep en geen draad nie — wie iets weet, buzz jou terug.",
+   "Ngayinye iyi-buzz ejwayelekile, enegama lakho, futhi ngamunye angakucisha yedwa. Alikho iqembu futhi ayikho intambo — noma ubani owaziyo uzokubuzela emuva.",
+   "E nngwe le e nngwe ke buzz e tlwaelehileng, e nang le lebitso la hao, mme e mong le e mong a ka o tima a le mong. Ha ho sehlopha ebile ha ho puisano — ya tsebang ho hong o tla o buzz hape.",
+   "Nganye yi-buzz eqhelekileyo, enegama lakho, kwaye nganye inokukucima yodwa. Akukho qela kwaye akukho mtya — nabani na owaziyo uya kukubuzela emva.",
+   "Ye nngwe le ye nngwe ke buzz ye e tlwaelegilego, ye e nago le leina la gago, gomme yo mongwe le yo mongwe a ka go tima a nnoši. Ga go sehlopha le poledišano — yo a tsebago se sengwe o tla go buzz morago."
+  ],
+  "Ask": [
+   "Vra",
+   "Buza",
+   "Botsa",
+   "Buza",
+   "Botšiša"
+  ],
+  "Back": [
+   "Terug",
+   "Emuva",
+   "Morao",
+   "Emva",
+   "Morago"
+  ],
+  "Five is the cap — this is a phone-around, not a mailing list.": [
+   "Vyf is die maksimum — dis rondbel, nie 'n poslys nie.",
+   "Abahlanu yibona abaningi — lokhu ukushayela abantu, akusilo uhlu lokuposa.",
+   "Ba bahlano ke bongata — ena ke ho letsetsa batho, e seng lenane la poso.",
+   "Abahlanu ngabona baninzi — oku kukutsalela abantu umnxeba, asiluhlu lokuposa.",
+   "Ba bahlano ke bontši — se ke go leletša batho, e sego lenaneo la poso."
+  ],
+  "e.g. Anyone got a 1947 penny?": [
+   "bv. Het iemand 'n 1947-pennie?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "e.g. Does your cleaner have a free day? We are looking.": [
+   "bv. Het jou huishulp 'n vry dag? Ons soek.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "e.g. Know a plumber who actually pitches up?": [
+   "bv. Ken jy 'n loodgieter wat regtig opdaag?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "e.g. Anyone know a maths tutor for Grade 10?": [
+   "bv. Ken iemand 'n wiskunde-tutor vir Graad 10?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "e.g. Know anyone selling a bakkie under R150k?": [
+   "bv. Ken jy iemand wat 'n bakkie onder R150k verkoop?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "e.g. Heard of a 2-bedroom to rent near Menlyn?": [
+   "bv. Weet jy van 'n 2-slaapkamer te huur naby Menlyn?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "e.g. Anyone know a good guesthouse in Clarens for May?": [
+   "bv. Ken iemand 'n goeie gastehuis in Clarens vir Mei?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "e.g. Anyone selling fresh eggs nearby?": [
+   "bv. Verkoop iemand vars eiers naby?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "coins, last year": [
+   "munte, verlede jaar",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "stamps, March": [
+   "seëls, Maart",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "militaria, twice": [
+   "militaria, twee keer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "watches, 2024": [
+   "horlosies, 2024",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "art, once": [
+   "kuns, een keer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "cards, last month": [
+   "kaarte, verlede maand",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "neighbour, has a cleaner": [
+   "buurvrou, het 'n huishulp",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "friend, Menlyn": [
+   "vriend, Menlyn",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "your sister": [
+   "jou suster",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "colleague": [
+   "kollega",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "neighbour, two doors down": [
+   "buurvrou, twee huise af",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "church friend": [
+   "kerkvriend",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "neighbour, had a plumber in": [
+   "buurman, het 'n loodgieter gehad",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "friend, renovated last year": [
+   "vriend, het verlede jaar opgeknap",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "your brother-in-law": [
+   "jou swaer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "neighbour, new roof": [
+   "buurman, nuwe dak",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "body corporate chair": [
+   "voorsitter, beheerliggaam",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "parent, same class": [
+   "ouer, dieselfde klas",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "parent, soccer club": [
+   "ouer, sokkerklub",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "teacher friend": [
+   "onderwyser-vriend",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "your cousin": [
+   "jou neef",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "parent, lift club": [
+   "ouer, saamryklub",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "neighbour, child in matric": [
+   "buurvrou, kind in matriek",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "your mechanic": [
+   "jou werktuigkundige",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "friend, sold his car": [
+   "vriend, het sy kar verkoop",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "your brother": [
+   "jou broer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "neighbour": [
+   "buurman",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "friend at a dealership": [
+   "vriend by 'n handelaar",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "friend, estate agent": [
+   "vriend, eiendomsagent",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "colleague, moved recently": [
+   "kollega, onlangs getrek",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "your landlord": [
+   "jou verhuurder",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "friend, body corporate": [
+   "vriend, beheerliggaam",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "friend, went last year": [
+   "vriend, was verlede jaar daar",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "colleague, travels a lot": [
+   "kollega, reis baie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "friend, hiking club": [
+   "vriend, stapklub",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "your aunt": [
+   "jou tannie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "friend, market stall": [
+   "vriend, markstalletjie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "neighbour, keeps chickens": [
+   "buurvrou, hou hoenders",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "2–3 nights": [
+   "2–3 nagte",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "A week": [
+   "'n Week",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Accounting": [
+   "Rekeningkunde",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "All year": [
+   "Heeljaar",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Any day": [
+   "Enige dag",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Anything": [
+   "Enigiets",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Art": [
+   "Kuns",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Ask your traders instead": [
+   "Vra eerder jou handelaars",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Authenticated?": [
+   "Gewaarmerk?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Best season?": [
+   "Beste seisoen?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Bike": [
+   "Motorfiets",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Both": [
+   "Albei",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Browse everything on TrustSquare ›": [
+   "Blaai deur alles op TrustSquare ›",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Buying": [
+   "Koop",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Buying or renting?": [
+   "Koop of huur?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Cards": [
+   "Kaarte",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Childminding": [
+   "Kinderoppas",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Cleaning": [
+   "Skoonmaak",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Clothes": [
+   "Klere",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Coding": [
+   "Kodering",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Coins": [
+   "Munte",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Collect": [
+   "Kom haal",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Commercial": [
+   "Kommersieel",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Cooking": [
+   "Kosmaak",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Crafts": [
+   "Handwerk",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Day trip": [
+   "Dagrit",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Double cab": [
+   "Dubbelkajuit",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Farm": [
+   "Plaas",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Find help": [
+   "Kry hulp",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Fishing": [
+   "Visvang",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Flat": [
+   "Woonstel",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Food & preserves": [
+   "Kos en inmaak",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Free quote": [
+   "Gratis kwotasie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Furniture": [
+   "Meubels",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Game lodge": [
+   "Wildsplaas-lodge",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Garden help": [
+   "Tuinhulp",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Get work": [
+   "Kry werk",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Good": [
+   "Goed",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Graded": [
+   "Gegradeer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Guided tour": [
+   "Begeleide toer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Hatchback": [
+   "Luikrug",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "High school": [
+   "Hoërskool",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "House": [
+   "Huis",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Housekeeping": [
+   "Huishulp",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "How do they get it?": [
+   "Hoe kry hulle dit?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "How long?": [
+   "Hoe lank?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "How many bedrooms?": [
+   "Hoeveel slaapkamers?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "How much?": [
+   "Hoeveel?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "How rare?": [
+   "Hoe skaars?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "I deliver": [
+   "Ek lewer af",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "In person": [
+   "Persoonlik",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Later this year": [
+   "Later vanjaar",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Laundry & ironing": [
+   "Wasgoed en stryk",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Longer": [
+   "Langer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Market day": [
+   "Markdag",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Maths": [
+   "Wiskunde",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Matric": [
+   "Matriek",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Militaria": [
+   "Militaria",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Mint": [
+   "Nuut",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Near mint": [
+   "Byna nuut",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Next few months": [
+   "Volgende paar maande",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Not listed yet": [
+   "Nog nie gelys nie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Not yet": [
+   "Nog nie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Office cleaning": [
+   "Kantoorskoonmaak",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Older": [
+   "Ouer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Online": [
+   "Aanlyn",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Online or in person?": [
+   "Aanlyn of persoonlik?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Other": [
+   "Ander",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Over R2 000": [
+   "Oor R2 000",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Over R20 000": [
+   "Oor R20 000",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Over R500k": [
+   "Oor R500k",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Over R6 000": [
+   "Oor R6 000",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Per person, per night?": [
+   "Per persoon, per nag?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Plants": [
+   "Plante",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Played": [
+   "Gebruik",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Plot": [
+   "Erf",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Pool care": [
+   "Swembadsorg",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Post it": [
+   "Pos dit",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Primary": [
+   "Laerskool",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Rail journey": [
+   "Treinrit",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Rare only": [
+   "Net skaars",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Renting": [
+   "Huur",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Roughly what year?": [
+   "Omtrent watter jaar?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Safari": [
+   "Safari",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Scarce": [
+   "Skaars",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Science": [
+   "Wetenskap",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Sedan": [
+   "Sedan",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Self-drive": [
+   "Selfbestuur",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Stamps": [
+   "Seëls",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Summer": [
+   "Somer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "The people you have dealt with before. One line, to each of them.": [
+   "Die mense met wie jy al te doen gehad het. Een reël, aan elkeen.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "To let": [
+   "Te huur",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "To sell": [
+   "Te koop",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "To sell, or to let?": [
+   "Te koop of te huur?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Tools": [
+   "Gereedskap",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Townhouse": [
+   "Meenthuis",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Under R1 000": [
+   "Onder R1 000",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Under R1 500": [
+   "Onder R1 500",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Under R100": [
+   "Onder R100",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Under R150k": [
+   "Onder R150k",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Ungraded": [
+   "Ongegradeer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "University": [
+   "Universiteit",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Watches": [
+   "Horlosies",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What are you after?": [
+   "Waarna soek jy?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What are you asking?": [
+   "Wat vra jy?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What are you hunting?": [
+   "Waarna jag jy?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What are you listing?": [
+   "Wat lys jy?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What are you looking for?": [
+   "Waarna soek jy?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What are you offering?": [
+   "Wat bied jy aan?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What are you selling?": [
+   "Wat verkoop jy?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What can you spend?": [
+   "Hoeveel kan jy spandeer?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What condition?": [
+   "Watter toestand?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What do they need?": [
+   "Wat het hulle nodig?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What do you need done?": [
+   "Wat moet gedoen word?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What do you teach?": [
+   "Wat gee jy klas in?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What is the call-out?": [
+   "Wat is die uitroepfooi?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What is your trade?": [
+   "Wat is jou ambag?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What kind of trip?": [
+   "Watter soort reis?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "What work do you do?": [
+   "Watter werk doen jy?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "When?": [
+   "Wanneer?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Where do you want to look?": [
+   "Waar wil jy soek?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Where?": [
+   "Waar?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Which day?": [
+   "Watter dag?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Which level?": [
+   "Watter vlak?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Which make?": [
+   "Watter fabrikaat?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Winter": [
+   "Winter",
+   "",
+   "",
+   "",
+   ""
   ]
  },
  "p": [
@@ -1528,6 +2872,22 @@
    "E tlase e dumelletsweng: $1 — moputso o tlase wa naha.",
    "Okuncinci okuvumelekileyo: $1 — umvuzo omncinci wesizwe.",
    "Ya fasana ye e dumeletšwego: $1 — moputso wa fasana wa naga."
+  ],
+  [
+   "^Pick up to (\\d+)\\.$",
+   "Kies tot $1.",
+   "Khetha abangafika ku-$1.",
+   "Kgetha ho fihla ho $1.",
+   "Khetha ukuya kuthi ga ku-$1.",
+   "Kgetha go fihla go $1."
+  ],
+  [
+   "^(\\d+) of (\\d+) picked$",
+   "$1 van $2 gekies",
+   "$1 kwangu-$2 okukhethiwe",
+   "$1 ho $2 tse kgethilweng",
+   "$1 kwa-$2 ekhethiweyo",
+   "$1 go $2 tše kgethilwego"
   ]
  ]
 }

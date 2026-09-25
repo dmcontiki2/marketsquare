@@ -34,5 +34,203 @@
   "made": "2026-09-23T20:27:28",
   "provider": "higgsfield",
   "prompt": "Photorealistic, natural daylight, warm late-afternoon light, shallow depth of field, square 1:1. Street-level view of an ordinary South African suburb scene. NO people's faces (people only from behind or far away), NO readable text, NO signs with words, NO logos, NO brand names, NO single famous landmark. Calm, welcoming, true to Gauteng: jacaranda or acacia trees, highveld sky. Mamelodi: a well-kept paved residential street of neat face-brick family homes with painted gates, small tended gardens and a jacaranda, the Magaliesberg ridge soft in the distance. Proud, orderly, welcoming -- the same care as any suburb."
+ },
+ "col_stamps_1": {
+  "made": "2026-09-25T07:41:48.955702Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product photograph for a collectors' marketplace, square 1:1, warm soft studio light, dark walnut wood or navy velvet surface, shallow depth of field, a collector's white cotton glove or loupe may appear. NO readable text, NO words, NO numbers, NO logos, NO brand names, NO faces. An open stamp album page of old colourful postage stamps with plain unreadable designs of birds, flowers and landscapes, held with tweezers.",
+  "ruling": "RUL-164 / COL-PICS-1"
+ },
+ "col_stamps_2": {
+  "made": "2026-09-25T07:42:52.904146Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product photograph for a collectors' marketplace, square 1:1, warm soft studio light, dark walnut wood or navy velvet surface, shallow depth of field, a collector's white cotton glove or loupe may appear. NO readable text, NO words, NO numbers, NO logos, NO brand names, NO faces. A small stack of vintage postage stamps and a magnifying loupe on dark wood, stamps with plain pictorial designs and no readable lettering.",
+  "ruling": "RUL-164 / COL-PICS-1"
+ },
+ "col_cards_1": {
+  "made": "2026-09-25T07:43:53.162255Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product photograph for a collectors' marketplace, square 1:1, warm soft studio light, dark walnut wood or navy velvet surface, shallow depth of field, a collector's white cotton glove or loupe may appear. NO readable text, NO words, NO numbers, NO logos, NO brand names, NO faces. Collectible trading cards in clear protective graded plastic slabs, laid out in a row, card fronts show abstract colourful fantasy-style artwork with no characters from any real game and no readable text.",
+  "ruling": "RUL-164 / COL-PICS-1"
+ },
+ "col_cards_2": {
+  "made": "2026-09-25T07:45:07.997361Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product photograph for a collectors' marketplace, square 1:1, warm soft studio light, dark walnut wood or navy velvet surface, shallow depth of field, a collector's white cotton glove or loupe may appear. NO readable text, NO words, NO numbers, NO logos, NO brand names, NO faces. A binder of collectible trading cards in plastic sleeves, cards show abstract colourful original artwork, a gloved hand turning a page, no readable text.",
+  "ruling": "RUL-164 / COL-PICS-1"
+ },
+ "col_militaria_1": {
+  "made": "2026-09-25T07:46:19.857519Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product photograph for a collectors' marketplace, square 1:1, warm soft studio light, dark walnut wood or navy velvet surface, shallow depth of field, a collector's white cotton glove or loupe may appear. NO readable text, NO words, NO numbers, NO logos, NO brand names, NO faces. Several old bronze and silver service medals with striped ribbons laid on navy velvet, plain generic designs, no symbols, no text.",
+  "ruling": "RUL-164 / COL-PICS-1"
+ },
+ "col_militaria_2": {
+  "made": "2026-09-25T07:47:30.923345Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product photograph for a collectors' marketplace, square 1:1, warm soft studio light, dark walnut wood or navy velvet surface, shallow depth of field, a collector's white cotton glove or loupe may appear. NO readable text, NO words, NO numbers, NO logos, NO brand names, NO faces. A vintage leather dispatch case with brass buttons, an old compass and a medal with a striped ribbon on dark wood, no insignia, no text.",
+  "ruling": "RUL-164 / COL-PICS-1"
+ },
+ "col_watches_1": {
+  "made": "2026-09-25T07:48:36.890857Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product photograph for a collectors' marketplace, square 1:1, warm soft studio light, dark walnut wood or navy velvet surface, shallow depth of field, a collector's white cotton glove or loupe may appear. NO readable text, NO words, NO numbers, NO logos, NO brand names, NO faces. A classic gold pocket watch with an open lid and chain on navy velvet, plain dial with simple hour marks and no brand name.",
+  "ruling": "RUL-164 / COL-PICS-1"
+ },
+ "col_watches_2": {
+  "made": "2026-09-25T07:49:48.866953Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product photograph for a collectors' marketplace, square 1:1, warm soft studio light, dark walnut wood or navy velvet surface, shallow depth of field, a collector's white cotton glove or loupe may appear. NO readable text, NO words, NO numbers, NO logos, NO brand names, NO faces. Three vintage wristwatches with leather straps in an open wooden watch box, plain dials with simple hour marks, no brand names.",
+  "ruling": "RUL-164 / COL-PICS-1"
+ },
+ "col_art_1": {
+  "made": "2026-09-25T07:50:45.887468Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product photograph for a collectors' marketplace, square 1:1, warm soft studio light, dark walnut wood or navy velvet surface, shallow depth of field, a collector's white cotton glove or loupe may appear. NO readable text, NO words, NO numbers, NO logos, NO brand names, NO faces. A small framed original oil painting of a highveld landscape at sunset leaning on an easel in a quiet room, ornate gold frame.",
+  "ruling": "RUL-164 / COL-PICS-1"
+ },
+ "col_art_2": {
+  "made": "2026-09-25T07:52:06.178875Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic product photograph for a collectors' marketplace, square 1:1, warm soft studio light, dark walnut wood or navy velvet surface, shallow depth of field, a collector's white cotton glove or loupe may appear. NO readable text, NO words, NO numbers, NO logos, NO brand names, NO faces. A small bronze sculpture of an antelope beside a framed watercolour of acacia trees on a dark wood table, gallery lighting.",
+  "ruling": "RUL-164 / COL-PICS-1"
+ },
+ "dest_kruger": {
+  "made": "2026-09-25T07:54:36.411332Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Kruger National Park: open bushveld savanna with elephants at a waterhole and a marula tree.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_pilanesberg": {
+  "made": "2026-09-25T07:55:31.620276Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Pilanesberg: a green volcanic crater valley with rolling hills, a lake and zebra grazing.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_waterberg": {
+  "made": "2026-09-25T07:56:23.702820Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Waterberg: red sandstone cliffs above dense bushveld and a winding river valley.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_madikwe": {
+  "made": "2026-09-25T07:57:26.057412Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Madikwe: dry golden grassland with scattered camelthorn trees and a pair of giraffe at dusk.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_zululand": {
+  "made": "2026-09-25T07:58:11.626901Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Zululand: lush green hills of Hluhluwe with white rhino grazing and misty valleys.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_addo": {
+  "made": "2026-09-25T07:59:10.266484Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Addo, Eastern Cape: thick green spekboom thicket with a herd of elephants on a red dirt track.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_cape_town": {
+  "made": "2026-09-25T08:00:13.902746Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Cape Town: Table Mountain with its flat top above the city bowl and the ocean at sunset, seen from afar.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_garden_route": {
+  "made": "2026-09-25T08:01:04.616570Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Garden Route: an indigenous forest meeting a lagoon and golden beach on the southern Cape coast.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_drakensberg": {
+  "made": "2026-09-25T08:02:06.409864Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Drakensberg: towering basalt mountain walls above green grassland and a mountain stream.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_cradle": {
+  "made": "2026-09-25T08:03:27.061810Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Cradle of Humankind: rolling highveld grassland with a limestone cave entrance among trees.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_mapungubwe": {
+  "made": "2026-09-25T08:05:46.458120Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Mapungubwe: huge baobab trees among sandstone koppies above the Limpopo river valley.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_panorama": {
+  "made": "2026-09-25T08:06:51.917919Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Panorama Route, Mpumalanga: a deep green canyon with round rock towers and a waterfall.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_wild_coast": {
+  "made": "2026-09-25T08:08:01.098997Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Wild Coast: green hills rolling down to a rocky shore with a natural rock arch in the sea.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_karoo": {
+  "made": "2026-09-25T08:08:56.949140Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Karoo: vast flat semi-desert plains with a lone windmill and flat-topped koppies at dusk.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_durban": {
+  "made": "2026-09-25T08:12:57.208567Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Durban: golden beach and warm Indian Ocean waves with palm trees along the promenade, people far away.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_vaal_dam": {
+  "made": "2026-09-25T08:14:13.903652Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Vaal Dam: a wide calm dam at sunrise with a small fishing boat and reeds on the shore.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_hartbeespoort": {
+  "made": "2026-09-25T08:15:09.284431Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Hartbeespoort Dam: calm water below the Magaliesberg mountains with a fishing jetty.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_sodwana": {
+  "made": "2026-09-25T08:16:53.791377Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Sodwana Bay: a turquoise bay with a white sand beach and a ski-boat pulled up on the sand.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_soweto": {
+  "made": "2026-09-25T08:18:56.170526Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Soweto: a lively street of neat township homes with colourful walls and big sky at sunset, people far away.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_namaqualand": {
+  "made": "2026-09-25T08:19:47.532969Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Namaqualand: a valley carpeted in orange and white spring wildflowers under blue sky.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_orange_river": {
+  "made": "2026-09-25T08:23:56.495844Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Orange River: a wide river through rugged desert canyon rock with a canoe on the bank.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_victoria_falls": {
+  "made": "2026-09-25T08:24:57.263896Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Victoria Falls: the wide curtain of the falls with spray and a rainbow above the gorge.",
+  "ruling": "RUL-164 / DEST-PICS-1"
+ },
+ "dest_jozini": {
+  "made": "2026-09-25T08:26:07.331829Z",
+  "provider": "higgsfield",
+  "prompt": "Photorealistic travel photograph, square 1:1, golden-hour light, wide landscape view. NO readable text, NO signs, NO logos, NO brand names, NO faces (people only far away or from behind). Lake Jozini: a long blue lake between the Lebombo mountains with a fishing boat.",
+  "ruling": "RUL-164 / DEST-PICS-1"
  }
 }

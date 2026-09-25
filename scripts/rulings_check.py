@@ -1095,6 +1095,12 @@ REFLECTIONS = {
  # approved; the advert speaks the lister's language. Reflected in the approved-list file the app
  # reads, the server's language set, the app's menu, and the Quick door's five languages.
  # QUICK-OPEN-RATE-1 (25 Sep 2026): Quick wage rates are typed with a minimum-wage floor, no preset amounts.
+ # VOUCH-WHO-1 (25 Sep 2026): the reference is worded for whoever the seller works for.
+ "RUL-169": [
+   ("RULINGS.md", ["AN EXISTING CLIENT FOR THE SELF-EMPLOYED"], []),
+   ("quick.html", ["VOUCH-WHO-1", "A parent or student you teach"], ["+'<p>Your employer says <b>one sentence</b>"]),
+   ("confirm.html", ["someone they worked for confirmed them"], ["a previous employer confirmed them"]),
+ ],
  "RUL-168": [
    ("RULINGS.md", ["QUICK RATES ARE TYPED, NOT PICKED"], []),
    ("quick.html", ["QUICK-OPEN-RATE-1", "var MINW=", "Call-out + per hour"], []),

@@ -12888,7 +12888,7 @@ _TRUST_SIGNALS = {
         "evidence_required": False,   # self-declared, which is why it is worth 3 and not 12
     },
     "universal.employer_confirmed": {
-        "name": "A previous employer confirmed you",
+        "name": "Someone you worked for confirmed you",
         "points": 12, "max": 12,
         "how_to_earn": "Send your link to someone you have worked for - they confirm in one tap.",
         "evidence_required": False,   # recorded when the employer opens the link and confirms
@@ -12896,7 +12896,7 @@ _TRUST_SIGNALS = {
     # RUL-142: a SECOND employer confirmation stacks at 6 - the one signal this market can stack.
     # A different link (its own nonce) from a different person; the same link tapped twice never counts.
     "universal.employer_confirmed_2": {
-        "name": "A second previous employer confirmed you",
+        "name": "A second person you worked for confirmed you",
         "points": 6, "max": 6,
         "how_to_earn": "Send a new link to another person you have worked for - one tap, no account.",
         "evidence_required": False,   # recorded when the second employer confirms

@@ -29255,5 +29255,42 @@ def rg_fts_keyword():
     return [(INFO, "a search with OR answers normally, repo and live")]
 
 
+
+@entry("RG-0481", "QUICK-FIT-1: Quick's examples follow what she picked -- the reference names who she works for, "
+       "the phone-around shows fitting example contacts, Collectables kinds show their own pictures, and an "
+       "Adventure's WHERE is a destination, not a suburb",
+       OPEN, fixed_on="",
+       scope="quick.html: vouchWho() (RUL-169), tradersFor() + the EXAMPLES banner, the COL-PICS-1 ad pool and kind "
+             "pictures, the DEST-WHERE-1 flow wrapper; assets/quick_ph col_<kind>_<n>.jpg + dest_<slug>.jpg live under "
+             "/static/quick. SCOPE: source + live /q/ + one live picture per family.",
+       ref="David 25 Sep 2026, four screenshots in one sitting (tutor 'your employer'; cleaner shown a 1947 penny; Cards "
+           "shown coins; Game lodge shown suburbs). Rendered test before shipping in Afrikaans: all four screens correct.")
+def rg_quick_fit_1():
+    q = repo_file("quick.html")
+    bad = []
+    if q is not None:
+        for tok, what in (("function vouchWho(", "the role-worded reference"), ("function tradersFor(", "fitting phone-around examples"),
+                          ("Examples \u2014 in the app you pick from your own contacts", "the EXAMPLES banner"),
+                          ("COL-PICS-1: only this kind's pictures", "the Collectables picture pool"),
+                          ("'Game lodge':WILD", "Adventure destinations")):
+            if tok not in q:
+                bad.append("quick.html lost " + what)
+        if "placeholder=\"Anyone got a 1947 penny?\"" in q:
+            bad.append("the phone-around is back to one collectors' question for every category")
+    live = _get("/q/")
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - /q/ unreadable from here")] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if "DEST-WHERE-1" not in live or "function vouchWho(" not in live:
+        bad.append("live /q/ does not carry QUICK-FIT-1 (not deployed?)")
+    for pic in ("col_cards_1.jpg", "dest_kruger.jpg"):
+        try:
+            import urllib.request as _u
+            _u.urlopen(_u.Request(BASE + "/static/quick/" + pic, method="HEAD", headers=UA), timeout=15)
+        except Exception as e:
+            bad.append("live picture %s not served (%s)" % (pic, str(e)[:40]))
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "reference, phone-around, collector pictures and destinations all fit the pick, repo and live")]
+
 if __name__ == "__main__":
     sys.exit(main())
