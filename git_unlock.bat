@@ -55,7 +55,8 @@ for /r ".git\objects" %%F in (tmp_obj_*) do del /f /q "%%F" >nul 2>&1
 exit /b %RC%
 
 :aged
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$c=(Get-Date).AddMinutes(-15); $l=@(); foreach($n in 'index.lock','HEAD.lock','packed-refs.lock'){ $p=Join-Path '.git' $n; if(Test-Path $p){ $l+=Get-Item $p } }; if(Test-Path '.git\refs'){ $l+=Get-ChildItem '.git\refs' -Recurse -Filter '*.lock' -File }; foreach($f in $l){ if($f.LastWriteTime -lt $c){ Remove-Item -Force $f.FullName; Write-Output ('cleared aged ' + $f.FullName) } }"
+echo %date% %time% aged sweep
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$c=(Get-Date).AddMinutes(-15); $l=@(); foreach($n in 'index.lock','HEAD.lock','packed-refs.lock'){ $p=Join-Path '.git' $n; if(Test-Path $p){ $l+=Get-Item -Force $p } }; if(Test-Path '.git\refs'){ $l+=Get-ChildItem '.git\refs' -Recurse -Force -Filter '*.lock' -File }; foreach($f in $l){ if($f.LastWriteTime -lt $c){ Remove-Item -Force $f.FullName; Write-Output ('cleared aged ' + $f.FullName) } else { Write-Output ('kept (young) ' + $f.FullName + ' ' + $f.LastWriteTime) } }; Write-Output ('locks seen: ' + $l.Count)"
 exit /b 0
 
 :clearone

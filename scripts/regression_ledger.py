@@ -28839,5 +28839,263 @@ def rg_sensor_catchup_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "catch-up armed: after boot + hourly, no-op once today's run exists")]
 
+
+@entry("RG-0474", "ORG-ENROL-1: the employer door -- an organisation enrols its people with their OWN private "
+       "links, and the importer CANNOT create an advert",
+       LOCKED, fixed_on="2026-09-25",
+       scope="org_enrol.py (POST /agencies/{id}/enrol, GET /agencies/{id}/enrolments, GET /e/{secret}), "
+             "scripts/enrol_import.py, the router mount in bea_main.py, three manifest lines. RUL-150 / "
+             "QUICK_LISTING_SPEC s12a: 'the importer must be built so that it CANNOT' create a listing -- "
+             "'asserted by the ledger, not by code review'. SCOPE: source + a behavioural run on an "
+             "in-memory database (no SQLite file is written).",
+       ref="CASUALS_REACH_PROPOSALS_2026-09-23.html proposal 1 (employer doors: enrol links + an importer that "
+           "cannot create a listing). A verified organisation's enrolment is its employer confirmation "
+           "(universal.employer_confirmed, 12 pts, once; never re-earns a rejected one).")
+def rg_org_enrol_1():
+    src = repo_file("org_enrol.py")
+    bea = repo_file("bea_main.py")
+    mf = repo_file("ops/autodeploy/deploy_manifest.txt")
+    if src is None:
+        return [(FAIL, "org_enrol.py is missing -- the employer door is gone")]
+    bad = []
+    if re.search(r"(?i)(insert\s+into|update|delete\s+from|replace\s+into)\s+listings\b", src):
+        bad.append("org_enrol.py WRITES the listings table -- the importer could create or change an advert")
+    if re.search(r"create_listing|publish_listing|quick_publish|/listings/quick-publish", src):
+        bad.append("org_enrol.py reaches an advert-creating path")
+    if not bea or "app.include_router(org_enrol.router)" not in bea:
+        bad.append("the employer door is not mounted in bea_main.py")
+    for line in ("org_enrol.py", "roles/role_registry.json"):
+        if not mf or not re.search(r"(?m)^%s\s*\|" % re.escape(line), mf):
+            bad.append("%s is not in the deploy manifest" % line)
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    # behavioural: enrol two people on an in-memory database and count adverts
+    try:
+        import sqlite3, hashlib, importlib, sys as _sys
+        _sys.path.insert(0, REPO)
+        import database as _db
+        _orig = _db.get_db
+        mem = sqlite3.connect(":memory:"); mem.row_factory = sqlite3.Row
+        mem.executescript(
+            "CREATE TABLE users(email TEXT PRIMARY KEY, name TEXT, key_hash TEXT, aa_free_used INT, aa_sessions_remaining INT, closed_at TEXT);"
+            "CREATE TABLE agencies(id INTEGER PRIMARY KEY, name TEXT, verified INT);"
+            "CREATE TABLE agency_members(agency_id INT, agent_email TEXT, listing_cap INT, status TEXT, agent_name TEXT, role TEXT, joined_at TEXT, PRIMARY KEY(agency_id, agent_email));"
+            "CREATE TABLE user_credentials(email TEXT, signal_id TEXT, status TEXT, points INT, notes TEXT, verified_at TEXT, verified_by TEXT, listing_category TEXT, UNIQUE(email, signal_id));"
+            "CREATE TABLE listings(id INTEGER PRIMARY KEY, seller_email TEXT, listing_status TEXT);"
+            "INSERT INTO agencies VALUES (1,'Probe Estate',1);")
+        try:
+            O = importlib.import_module("org_enrol")
+            _n = [0]
+            def _nid():
+                _n[0] += 1
+                return "w-probe%d@key.trustsquare.co" % _n[0]
+            O.configure(key_hash=lambda s: hashlib.sha256(("ts-key:" + s).encode()).hexdigest(), new_identity=_nid)
+            role = (list(O.roles()) or ["home_cleaner"])[0]
+            out = O.enrol_rows(mem, 1, [{"name": "Probe A", "role": role, "lang": "zu", "former": False},
+                                        {"name": "Probe B", "role": role, "lang": "en", "former": True}], actor="ledger")
+        finally:
+            _db.get_db = _orig
+        n_list = mem.execute("SELECT COUNT(*) FROM listings").fetchone()[0]
+        n_keys = mem.execute("SELECT COUNT(*) FROM users WHERE key_hash IS NOT NULL").fetchone()[0]
+        n_pts = mem.execute("SELECT COUNT(*) FROM user_credentials WHERE signal_id='universal.employer_confirmed' AND points=12").fetchone()[0]
+        clear = any(o["link"].split("/e/")[1] in str([tuple(r) for r in mem.execute("SELECT * FROM users")]) for o in out)
+    except Exception as exc:
+        return [(INFO, "NOT EVALUATED - behavioural probe could not run here: %r" % (exc,))]
+    if n_list:
+        return [(FAIL, "the importer created %d advert(s) -- RUL-150 hard line broken" % n_list)]
+    if n_keys != 2 or clear:
+        return [(FAIL, "enrolment did not mint two hashed key accounts (keys=%d, secret in clear=%s)" % (n_keys, clear))]
+    if n_pts != 2:
+        return [(FAIL, "a verified organisation's enrolment no longer carries the employer confirmation")]
+    return [(INFO, "2 enrolled -> 2 key accounts, 2 x 12-pt confirmations, 0 adverts")]
+
+
+@entry("RG-0475", "STATUS-CARD-FIT-1: a long title on her Status card reads as words (two lines) and no text "
+       "runs past the card or its panel",
+       LOCKED, fixed_on="2026-09-25",
+       scope="status_card.py title block (92 -> 76 -> 64 px, two lines before any ellipsis) and the 'Ask me on "
+             "TrustSquare' heading (shrinks to the panel). FOUND 25 Sep 2026 on the live card for listing 367: "
+             "'The Great Ameri...' and the heading crossing the panel border. SCOPE: behavioural render.",
+       ref="changelog.d/2026-09-24-status-card.md; the one-line ellipsis from 24 Sep kept the card inside the "
+           "frame but cut most titles to a fragment.")
+def rg_status_card_fit_1():
+    try:
+        import importlib, sys as _sys
+        _sys.path.insert(0, REPO)
+        from PIL import ImageDraw
+        sc = importlib.import_module("status_card")
+    except Exception as exc:
+        return [(INFO, "NOT EVALUATED - renderer not importable here: %r" % (exc,))]
+    seen = []
+    _orig = ImageDraw.ImageDraw.text
+    def _spy(self, xy, text, *a, **k):
+        f = k.get("font")
+        try:
+            seen.append((xy[0], str(text), self.textlength(str(text), font=f) if f else 0))
+        except Exception:
+            pass
+        return _orig(self, xy, text, *a, **k)
+    ImageDraw.ImageDraw.text = _spy
+    try:
+        sc.render({"title": "The Great American Yellowstone Safari", "service_type": "The Great American Yellowstone Safari",
+                   "city": "Chicago", "price": "$6,900 / person"},
+                  "https://trustsquare.co/?listing=1&src=status", "https://trustsquare.co/quick/?src=status", trust=90)
+    except Exception as exc:
+        return [(INFO, "NOT EVALUATED - render failed here: %r" % (exc,))]
+    finally:
+        ImageDraw.ImageDraw.text = _orig
+    W = 1080
+    over = [t for (x, t, w) in seen if x + w > W - 60 + 1]
+    title = [t for (x, t, w) in seen if "Yellowstone" in t or "Great" in t]
+    bad = []
+    if over:
+        bad.append("text runs past the card edge: %s" % ", ".join(repr(t[:30]) for t in over[:3]))
+    if any("…" in t for t in title) or not any("Yellowstone" in t for t in title):
+        bad.append("a title that fits on two lines is still cut: %s" % title)
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "title on %d line(s), every text run inside the card" % len(title))]
+
+@entry("RG-0469", "E2E-HMI-1: a private advert can never publish a phone number or email -- the contact "
+       "scrub runs on EVERY write path, not only agency imports",
+       LOCKED, fixed_on="2026-09-24",
+       scope="bea_main.py _private_text_scrub and its call sites: listing create, listing edit, Listing Coach "
+             "publish and the seller profile. CLASS: any new path that writes buyer-visible seller text must "
+             "call the scrub. SCOPE: source (code pattern) -- the live proof is the 24 Sep walk.",
+       ref="E2E_HMI_WALK_2026-09-24.html, 'Phone numbers and emails in a private advert went live'. Entry added "
+           "25 Sep 2026 because the walk fixed it without a ledger entry (CLAUDE.md: no entry = not done).")
+def rg_e2e_hmi_contact_scrub():
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py is not readable here")]
+    if "def _private_text_scrub(" not in bea:
+        return [(FAIL, "_private_text_scrub is gone -- private adverts publish contact details again")]
+    calls = bea.count("_private_text_scrub(") - 1
+    bad = []
+    if calls < 4:
+        bad.append("only %d call sites (need create, edit, Coach publish, profile)" % calls)
+    if '"aa-publish")' not in bea:
+        bad.append("the Listing Coach publish no longer scrubs")
+    if '"profile")' not in bea:
+        bad.append("the seller profile no longer scrubs")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "contact scrub on %d write paths" % calls)]
+
+
+@entry("RG-0470", "E2E-HMI-1: ticking Buzz never opens publishing -- /buzz/accept records Buzz only and never "
+       "writes the Seller Terms acceptance",
+       LOCKED, fixed_on="2026-09-24",
+       scope="bea_main.py buzz_accept. The Seller Terms (users.eula_accepted_at) gate publishing; one Buzz tick "
+             "used to write it, so a Quick lister could go live without the Terms ever shown. SCOPE: source.",
+       ref="E2E_HMI_WALK_2026-09-24.html, 'Accepting Buzz silently accepted the whole Seller Terms'. Entry "
+           "added 25 Sep 2026 (walk fixed it without a ledger entry).")
+def rg_e2e_hmi_buzz_not_eula():
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py is not readable here")]
+    body = fn_body(bea, "def buzz_accept(")
+    if not body:
+        return [(FAIL, "buzz_accept is gone")]
+    if re.search(r"eula_accepted_at\s*=", body):
+        return [(FAIL, "buzz_accept writes eula_accepted_at again -- one Buzz tick opens publishing")]
+    if "buzz_accepted_at" not in body:
+        return [(FAIL, "buzz_accept no longer records buzz_accepted_at")]
+    return [(INFO, "Buzz tick records Buzz only")]
+
+
+@entry("RG-0471", "E2E-HMI-1: drafts, paused, archived and blocked adverts are not readable by strangers by id "
+       "(EULA s4.6) -- only the seller or staff",
+       LOCKED, fixed_on="2026-09-24",
+       scope="bea_main.py get_listing (GET /listings/{id}). CLASS: every by-id read of an advert. SCOPE: source.",
+       ref="E2E_HMI_WALK_2026-09-24.html, 'Drafts, archived and paused adverts are no longer readable by "
+           "strangers by id'. Entry added 25 Sep 2026 (walk fixed it without a ledger entry).")
+def rg_e2e_hmi_nonlive_private():
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py is not readable here")]
+    body = fn_body(bea, "def get_listing(")
+    if not body:
+        return [(FAIL, "get_listing is gone")]
+    if 'if _st not in ("live", "active"):' not in body or "seller_email" not in body:
+        return [(FAIL, "get_listing lost its non-live gate -- any advert is readable by id in any state")]
+    return [(INFO, "non-live adverts answer 404 to strangers")]
+
+
+@entry("RG-0472", "E2E-HMI-1: the seller and enforcement controls the walk found dead stay wired -- Pause, "
+       "Report this listing, block/uphold, Terms version re-accept, held-photo notice, honest cancel wording",
+       LOCKED, fixed_on="2026-09-24",
+       scope="bea_main.py routes POST /listings/{id}/pause, /admin/listings/{id}/block, /admin/complaints/uphold, "
+             "the eula_prev_accepted_at re-accept path; ms.js Report link to the support queue, photos_held "
+             "notice, 'Nothing was charged' on a cancelled checkout; no test-phase wording in the app. "
+             "SCOPE: source + live ms.js (shared cached fetch).",
+       ref="E2E_HMI_WALK_2026-09-24.html (Pause dead, complaints mailto-only, no uphold writer, 'test mode' on "
+           "live Paystack, 'Skip for testing'). Entry added 25 Sep 2026 (walk fixed them without ledger entries).")
+def rg_e2e_hmi_controls_wired():
+    bea = repo_file("bea_main.py"); ms = repo_file("ms.js"); html = repo_file("marketsquare.html")
+    bad = []
+    if bea is not None:
+        for tok, what in (('@app.post("/listings/{listing_id}/pause")', "Pause route"),
+                          ('@app.post("/admin/listings/{listing_id}/block")', "staff block route"),
+                          ('@app.post("/admin/complaints/uphold")', "complaint uphold route"),
+                          ("eula_prev_accepted_at", "Terms version re-accept"),
+                          ("photos_held", "held-photo report")):
+            if tok not in bea:
+                bad.append("bea_main.py lost the " + what)
+    if ms is not None:
+        if "/support?topic=report" not in ms:
+            bad.append("ms.js lost 'Report this listing' -> support queue")
+        if "photos_held" not in ms:
+            bad.append("ms.js no longer tells the seller a photo was held")
+        if "othing was charged" not in ms:
+            bad.append("ms.js lost the cancelled-checkout 'nothing was charged' wording")
+    for name, txt in (("ms.js", ms), ("marketsquare.html", html)):
+        if txt is not None and ("Skip for testing" in txt or "test mode" in txt):
+            bad.append(name + " carries test-phase wording again")
+    try:
+        live = _get("/static/ms.js")
+        if not live:
+            return [(INFO, "NOT EVALUATED (live half) - live ms.js unreadable from here")] + ([(FAIL, "; ".join(bad))] if bad else [])
+        if "/support?topic=report" not in live:
+            bad.append("live ms.js has no Report -> support link (not deployed?)")
+    except Exception as e:
+        return [(INFO, "NOT EVALUATED (live half) - " + str(e)[:80])] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Pause, Report, block/uphold, re-accept, held-photo and cancel wording all wired")]
+
+
+@entry("RG-0473", "QUICK-OPEN-RATE-1 (RUL-168): Quick wage rates are TYPED -- no preset amount chips for time-paid work, "
+       "and the floor is the national minimum wage of her country",
+       OPEN, fixed_on="",
+       scope="quick.html (source + live /q/ page): the rate screen intercepts every sell-side 'price' step in Services and "
+             "Tutors and the trades 'how' step; MINW holds all nine picker countries; the old preset chip rows may not "
+             "come back as the screen. SCOPE: Quick door only -- the app's own edit form is a separate surface.",
+       ref="David 25 Sep 2026 (RUL-168). Rendered test before shipping: casual day rate, trade call-out + hourly + parts, "
+           "Quote first, per job, UK and KE floors, isiZulu -- all advanced to the advert with no page errors.")
+def rg_quick_open_rate():
+    q = repo_file("quick.html")
+    bad = []
+    if q is not None:
+        if "QUICK-OPEN-RATE-1" not in q or "var MINW=" not in q:
+            bad.append("quick.html lost the open rate screen")
+        for cc in ("ZA:", "NA:", "BW:", "MZ:", "KE:", "UK:", "DE:", "AU:", "US:"):
+            if cc not in q[q.find("var MINW="):q.find("var MINW=")+1500]:
+                bad.append("the floor table lost " + cc[:2])
+        if "if(isRate(s)){ drawRate(s); return; }" not in q:
+            bad.append("drawStep no longer routes wage steps to the typed rate screen")
+    try:
+        live = _get("/q/")
+    except Exception as e:
+        live = ""
+    if not live:
+        out = [(INFO, "NOT EVALUATED (live half) - /q/ unreadable from here")]
+        return out + ([(FAIL, "; ".join(bad))] if bad else [])
+    if "QUICK-OPEN-RATE-1" not in live:
+        bad.append("live /q/ does not carry the open rate screen (not deployed?)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "typed rates with a minimum-wage floor, repo and live")]
+
 if __name__ == "__main__":
     sys.exit(main())

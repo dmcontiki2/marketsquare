@@ -124,14 +124,21 @@ def render(listing, link, make_link, first_name=None, trust=None):
     area = listing.get("area") or listing.get("suburb") or listing.get("city") or ""
     who = (first_name.strip().split()[0] if first_name and first_name.strip() else "")
     head = (who + " · " if who else "") + role
-    _lines = _wrap(d, head, _font(92), W - 120)
-    if len(_lines) > 1:                          # long titles: one line, ellipsised, so the card never overflows
-        _one = head
-        while _one and d.textlength(_one + "…", font=_font(92)) > W - 120:
-            _one = _one[:-1].rstrip()
-        _lines = [_one + "…"]
+    # STATUS-CARD-FIT-1: step the size down and allow two lines before any ellipsis,
+    # so "The Great American ..." reads as words, not "The Great Ameri…"; never overflows.
+    _sz, _lines = 92, None
+    for _sz in (92, 76, 64):
+        _lines = _wrap(d, head, _font(_sz), W - 120)
+        if len(_lines) <= (1 if _sz == 92 else 2):
+            break
+    if len(_lines) > 2 or any(d.textlength(l, font=_font(_sz)) > W - 120 for l in _lines):
+        _lines = _lines[:2]
+        _two = _lines[-1]
+        while _two and d.textlength(_two + "…", font=_font(_sz)) > W - 120:
+            _two = _two[:-1].rstrip()
+        _lines[-1] = _two + "…"
     for ln in _lines:
-        d.text((60, y), ln, font=_font(92), fill=(255, 255, 255)); y += 104
+        d.text((60, y), ln, font=_font(_sz), fill=(255, 255, 255)); y += int(_sz * 1.13)
     sub = " · ".join([s for s in (area, str(listing.get("availability") or "").strip(), str(listing.get("price") or "").strip()) if s])
     for ln in _wrap(d, sub, _font(46, False), W - 120)[:2]:
         d.text((60, y + 8), ln, font=_font(46, False), fill=(205, 226, 218)); y += 62
@@ -146,7 +153,10 @@ def render(listing, link, make_link, first_name=None, trust=None):
         tx = 440
     else:
         tx = 100
-    d.text((tx, y + 60), "Ask me on TrustSquare", font=_font(48), fill=(255, 255, 255))
+    _ask_sz = 48                                   # STATUS-CARD-FIT-1: the heading stays inside the panel border
+    while _ask_sz > 30 and d.textlength("Ask me on TrustSquare", font=_font(_ask_sz)) > W - 60 - tx - 36:
+        _ask_sz -= 2
+    d.text((tx, y + 60), "Ask me on TrustSquare", font=_font(_ask_sz), fill=(255, 255, 255))
     for i, ln in enumerate(_wrap(d, "Scan, or tap the link in this Status. Your name and number stay private until you both accept.", _font(32, False), W - 60 - tx - 40)[:4]):
         d.text((tx, y + 130 + i * 42), ln, font=_font(32, False), fill=(205, 226, 218))
     short = re.sub(r"[?&]src=[^&]*", "", link.replace("https://", ""))   # the QR and the shared text carry ?src=status; the printed link stays short

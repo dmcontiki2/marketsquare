@@ -25746,6 +25746,19 @@ estate_agents.configure(anon_fn=_anon_regex_clean, quality_fn=_import_quality_sc
 estate_agents.init_schema()
 app.include_router(estate_agents.router)
 
+# ── ORG-ENROL-1 (25 Sep 2026, RUL-150 / QUICK_LISTING_SPEC s12a): the employer door. An organisation's
+# admin enrols a list of people; each gets HER OWN private link (a RUL-167 key account) and the Quick door
+# opens on her role in her language. The importer CANNOT create an advert (RG ledger asserts it).
+try:
+    import org_enrol
+    org_enrol.configure(key_hash=_key_hash, new_identity=_new_key_identity,
+                        establish_session=_establish_user_session, agency_admin=_agency_admin_or_refuse,
+                        trust_recompute=trust_score_breakdown, app_url=APP_URL)
+    org_enrol.init_schema()
+    app.include_router(org_enrol.router)
+except Exception as _oe_ex:      # pragma: no cover -- a supply side-lane must never take the app down at boot
+    print("[ORG-ENROL-1] employer door not mounted: %r" % (_oe_ex,), flush=True)
+
 # ── TP-LINKOUT-1 (24 Aug 2026): the SAFE affiliate lane — server-side 302s, no
 # third-party script, hard host allowlist, dark unless TP_LINKOUT_ENABLED is set.
 # Built the day Travelpayouts' dashboard offered +25% rewards to switch their

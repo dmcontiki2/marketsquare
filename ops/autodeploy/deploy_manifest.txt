@@ -301,3 +301,6 @@ quick.html | q/index.html
 # link; the person they worked for opens this page and confirms in one tap. nginx serves this
 # one file for /confirm/ and every /confirm/<token>, so the token never has to be a route.
 confirm.html | confirm/index.html
+org_enrol.py               | org_enrol.py
+scripts/enrol_import.py    | enrol_import.py
+roles/role_registry.json   | roles/role_registry.json

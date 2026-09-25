@@ -1094,6 +1094,12 @@ REFLECTIONS = {
  # LANG-LAYER-1 (23 Sep 2026): Sepedi takes Sesotho's place in South Africa; nine country lists
  # approved; the advert speaks the lister's language. Reflected in the approved-list file the app
  # reads, the server's language set, the app's menu, and the Quick door's five languages.
+ # QUICK-OPEN-RATE-1 (25 Sep 2026): Quick wage rates are typed with a minimum-wage floor, no preset amounts.
+ "RUL-168": [
+   ("RULINGS.md", ["QUICK RATES ARE TYPED, NOT PICKED"], []),
+   ("quick.html", ["QUICK-OPEN-RATE-1", "var MINW=", "Call-out + per hour"], []),
+   ("roles/quick_i18n.json", ["Your price, your call. Type what your work is worth."], []),
+ ],
  "RUL-165": [
    ("RULINGS.md", ["SOUTH AFRICA GOES LIVE FIRST"], []),
    ("roles/lang_countries.json", ['"prepared"', '["zu","offered"]'], ['["pt","offered"]', '["de","offered"]', '["sw","offered"]', '["tn","offered"]']),

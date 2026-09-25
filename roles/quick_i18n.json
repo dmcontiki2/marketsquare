@@ -1337,6 +1337,83 @@
    "O kae?",
    "Uphi?",
    "O kae?"
+  ],
+  "Per day": [
+   "Per dag",
+   "Ngosuku",
+   "Ka letsatsi",
+   "Ngosuku",
+   "Ka letšatši"
+  ],
+  "Per visit": [
+   "Per besoek",
+   "Ngokuvakasha ngakunye",
+   "Ka ketelo",
+   "Ngotyelelo ngalunye",
+   "Ka ketelo"
+  ],
+  "Call-out + per hour": [
+   "Uitroep + per uur",
+   "Ukubizwa + ngehora",
+   "Pitso + ka hora",
+   "Ubizo + ngeyure",
+   "Pitšo + ka iri"
+  ],
+  "Call-out fee": [
+   "Uitroepfooi",
+   "Imali yokubizwa",
+   "Tefo ya pitso",
+   "Intlawulo yobizo",
+   "Tefo ya pitšo"
+  ],
+  "Then per hour": [
+   "Daarna per uur",
+   "Bese ngehora",
+   "Ebe ka hora",
+   "Emva koko ngeyure",
+   "Ke moka ka iri"
+  ],
+  "optional": [
+   "opsioneel",
+   "akuphoqelekile",
+   "ha ho qobelle",
+   "akunyanzelekanga",
+   "ga go gapeletšwe"
+  ],
+  "Your amount": [
+   "Jou bedrag",
+   "Inani lakho",
+   "Tjhelete ya hao",
+   "Isixa sakho",
+   "Tšhelete ya gago"
+  ],
+  "Plus parts and materials": [
+   "Plus onderdele en materiaal",
+   "Kanye nezingxenye nezinto zokusebenza",
+   "Le dikarolo le disebediswa",
+   "Kunye namalungu nezixhobo",
+   "Le dikarolo le didirišwa"
+  ],
+  "Next": [
+   "Volgende",
+   "Okulandelayo",
+   "E latelang",
+   "Okulandelayo",
+   "Latelang"
+  ],
+  "Your price, your call. Type what your work is worth.": [
+   "Jou prys, jou besluit. Tik wat jou werk werd is.",
+   "Inani lakho, isinqumo sakho. Bhala ukuthi umsebenzi wakho ubiza malini.",
+   "Theko ya hao, qeto ya hao. Ngola hore mosebetsi wa hao o bohlokwa hakae.",
+   "Ixabiso lakho, isigqibo sakho. Bhala ukuba umsebenzi wakho uxabisa malini.",
+   "Theko ya gago, sephetho sa gago. Ngwala gore mošomo wa gago o bohlokwa bokae."
+  ],
+  "That is below the national minimum wage.": [
+   "Dit is onder die nasionale minimum loon.",
+   "Lokhu kungaphansi kweholo elincane likazwelonke.",
+   "Hona ho ka tlase ho moputso o tlase wa naha.",
+   "Oku kungaphantsi komvuzo omncinci wesizwe.",
+   "Se se ka tlase ga moputso wa fasana wa naga."
   ]
  },
  "p": [
@@ -1429,6 +1506,14 @@
    "",
    "+$1 efumanekayo",
    "+$1 e a hwetšagala"
+  ],
+  [
+   "^Lowest allowed: (.+) — the national minimum wage\\.$",
+   "Laagste toegelaat: $1 — die nasionale minimum loon.",
+   "Okuncane okuvunyelwe: $1 — iholo elincane likazwelonke.",
+   "E tlase e dumelletsweng: $1 — moputso o tlase wa naha.",
+   "Okuncinci okuvumelekileyo: $1 — umvuzo omncinci wesizwe.",
+   "Ya fasana ye e dumeletšwego: $1 — moputso wa fasana wa naga."
   ]
  ]
 }
