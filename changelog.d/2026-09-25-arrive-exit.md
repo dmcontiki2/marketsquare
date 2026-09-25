@@ -11,3 +11,4 @@ David, with two screenshots: *"There is no go back button from this screen, is i
   nothing carried over, no page errors. Ledger entry added (OPEN until live).
 
 Cost model impact: none.
+- Live 25 Sep 07:25 UTC: checked in Chrome on trustsquare.co/q/ (publish answered in-page, no real advert): arrival screen shows the close and 'List something else'; tapping it returns to the front door with nothing carried over. RG-0476 LOCKED.

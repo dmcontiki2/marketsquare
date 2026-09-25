@@ -16,3 +16,4 @@ show as example/demo adverts inside the trustsquare app. This will then be a glo
 - Ledger RG-0484 (OPEN until live) also scans every letter template, so an "already live" example cannot return.
 
 Cost model impact: none.
+- Live 25 Sep ~11:25 UTC, checked in Chrome on /q/ in Afrikaans: Visvang and Treinrit both read 'Tot dusver net voorbeelde', every card wears the red KI-VOORBEELD ribbon (1/1 and 3/3). CityLauncher letters queued for the host agent's deploy. RG-0484 LOCKED.
