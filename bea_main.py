@@ -3305,9 +3305,12 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
     # order from FILTER_ENGINE_DESIGN (Trust + Freshness; Closeness = branch order).
     _xw, _xp = [], []
     if q and q.strip():
-        _terms = [t for t in re.findall(r"[A-Za-z0-9]{2,}", q)][:8]
+        # FTS-KEYWORD-1 (SEAM-1, 25 Sep 2026): "garden OR service" answered HTTP 500 -- OR/AND/NOT/NEAR are FTS5
+        # operators and "OR*" is a syntax error. Operators are dropped and every term is quoted, so any text a
+        # person types is a plain prefix search and can never break the query.
+        _terms = [t for t in re.findall(r"[A-Za-z0-9]{2,}", q) if t.upper() not in ("AND", "OR", "NOT", "NEAR")][:8]
         if _terms:
-            _match = " ".join(t + "*" for t in _terms)
+            _match = " ".join('"' + t + '"*' for t in _terms)
             # LANG-LAYER-1 (RUL-162): an advert written in isiZulu is found by an English search --
             # every non-English advert carries an English search layer (listings.search_en).
             _en_like = " AND ".join(["LOWER(COALESCE(l3.search_en,'')) LIKE ?"] * len(_terms))
@@ -6168,6 +6171,141 @@ def quick_me(ts_user: str = Cookie(default=None)):
         return out
     finally:
         conn.close()
+
+# ── QUICK-PASS-1 (David, 25 Sep 2026: "can two phones be held head to head and then the sender swipes the
+# icon towards the other phone ... where the two owners actually hold the phones they both approve"; he
+# answered "Build it now"). One Quick user hands Quick to the person beside her. What travels is a
+# single-use INVITE LINK -- never her key link (/k/...), never a phone number (RUL-146). Two approvals:
+# her flick creates the invite; the receiver taps Accept. Passing Quick on earns NO trust points (RUL-142
+# pays verified clients only, never signups). No timer: an invite ends when it is used or cancelled.
+# The routes live outside /quick/ because nginx serves every /quick/* path as the Quick page itself.
+_QI_IP_LOG = {}
+_QI_IP_MAX = 40            # invites per client address per 24h
+_QI_CATS = ("services", "homehelp", "property", "cars", "tutors", "collectors", "adventures", "localmarket")
+_QI_LANGS = ("en", "zu", "xh", "af", "nso", "st")
+_QI_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{8,40}$")
+
+
+class _QuickInviteIn(BaseModel):
+    cat: Optional[str] = None
+    lang: Optional[str] = None
+    name: Optional[str] = None
+
+
+def _qi_db():
+    conn = database.get_db()
+    conn.execute("CREATE TABLE IF NOT EXISTS quick_invites (token_hash TEXT PRIMARY KEY, created_at TEXT NOT NULL, "
+                 "cat TEXT, lang TEXT, inviter_name TEXT, inviter_email TEXT, status TEXT NOT NULL DEFAULT 'open', "
+                 "accepted_at TEXT, cancelled_at TEXT)")
+    return conn
+
+
+def _qi_hash(tok):
+    return hashlib.sha256(("quick-invite:" + (tok or "")).encode("utf-8")).hexdigest()
+
+
+def _qi_row(conn, tok):
+    if not _QI_TOKEN_RE.match(tok or ""):
+        return None
+    return conn.execute("SELECT cat, lang, inviter_name, status FROM quick_invites WHERE token_hash=?",
+                        (_qi_hash(tok),)).fetchone()
+
+
+@app.post("/quick-invite")
+def quick_invite_create(body: _QuickInviteIn, request: Request, ts_user: str = Cookie(default=None)):
+    """QUICK-PASS-1: her first approval. Returns the single-use invite link and its QR."""
+    import time as _qt, secrets as _qs
+    ip = _qp_client_ip(request)
+    now_t = _qt.time()
+    hits = [t for t in _QI_IP_LOG.get(ip, []) if now_t - t < 86400]
+    if len(hits) >= _QI_IP_MAX:
+        raise HTTPException(status_code=429, detail="Too many invites from this connection today -- please try again tomorrow.")
+    hits.append(now_t)
+    _QI_IP_LOG[ip] = hits
+    cat = (body.cat or "").strip().lower()
+    cat = cat if cat in _QI_CATS else "services"
+    lang = (body.lang or "en").strip().lower()
+    lang = lang if lang in _QI_LANGS else "en"
+    name = re.sub(r"[^\w' -]", "", (body.name or ""), flags=re.UNICODE).strip()
+    name = (name.split(" ")[0][:24] if name else None)          # a first name at most -- she is standing right there
+    em = _session_email(ts_user)
+    tok = _qs.token_urlsafe(9)
+    conn = _qi_db()
+    try:
+        conn.execute("INSERT INTO quick_invites (token_hash, created_at, cat, lang, inviter_name, inviter_email) "
+                     "VALUES (?,?,?,?,?,?)",
+                     (_qi_hash(tok), datetime.now(timezone.utc).isoformat(timespec="seconds"), cat, lang, name, em))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"token": tok, "url": APP_URL + "/quick/?i=" + tok, "qr": "/quick-invite/" + tok + "/qr.png",
+            "status": "open"}
+
+
+@app.get("/quick-invite/{token}")
+def quick_invite_status(token: str):
+    """QUICK-PASS-1: what the receiver is being offered, and (for the sender's poll) whether it was accepted.
+    Carries a first name at most -- no e-mail, no number, no account."""
+    conn = _qi_db()
+    try:
+        r = _qi_row(conn, token)
+    finally:
+        conn.close()
+    if not r:
+        return {"status": "unknown"}
+    return {"status": r["status"], "cat": r["cat"], "lang": r["lang"], "name": r["inviter_name"]}
+
+
+def _qi_close(token, new_status, col):
+    conn = _qi_db()
+    try:
+        if not _QI_TOKEN_RE.match(token or ""):
+            raise HTTPException(status_code=404, detail="This invite is not one we know.")
+        cur = conn.execute("UPDATE quick_invites SET status=?, " + col + "=? WHERE token_hash=? AND status='open'",
+                           (new_status, datetime.now(timezone.utc).isoformat(timespec="seconds"), _qi_hash(token)))
+        conn.commit()
+        r = _qi_row(conn, token)
+    finally:
+        conn.close()
+    if not r:
+        raise HTTPException(status_code=404, detail="This invite is not one we know.")
+    if cur.rowcount != 1:
+        raise HTTPException(status_code=409, detail=("This invite was already accepted." if r["status"] == "accepted"
+                                                     else "This invite was cancelled."))
+    return {"ok": True, "status": new_status, "cat": r["cat"], "lang": r["lang"], "name": r["inviter_name"]}
+
+
+@app.post("/quick-invite/{token}/accept")
+def quick_invite_accept(token: str):
+    """QUICK-PASS-1: the receiver's own approval. Single use -- a second accept is refused."""
+    return _qi_close(token, "accepted", "accepted_at")
+
+
+@app.post("/quick-invite/{token}/cancel")
+def quick_invite_cancel(token: str):
+    """QUICK-PASS-1: the sender withdraws an invite nobody has accepted yet."""
+    return _qi_close(token, "cancelled", "cancelled_at")
+
+
+@app.get("/quick-invite/{token}/qr.png")
+def quick_invite_qr(token: str):
+    """QUICK-PASS-1: the QR her screen shows -- it encodes nothing but the invite link."""
+    from fastapi.responses import Response as _Resp
+    if not _QI_TOKEN_RE.match(token or ""):
+        raise HTTPException(status_code=404, detail="Not found")
+    try:
+        import io as _io
+        import qrcode
+        q = qrcode.QRCode(border=2, box_size=10, error_correction=qrcode.constants.ERROR_CORRECT_M)
+        q.add_data(APP_URL + "/quick/?i=" + token)
+        q.make(fit=True)
+        buf = _io.BytesIO()
+        q.make_image(fill_color="black", back_color="white").save(buf, format="PNG")
+    except Exception as exc:
+        _log.warning("QUICK-PASS-1 QR failed: %s", exc)
+        raise HTTPException(status_code=503, detail="The QR code could not be drawn right now.")
+    return _Resp(content=buf.getvalue(), media_type="image/png", headers={"Cache-Control": "private, max-age=3600"})
+
 
 @app.post("/listings/photo")
 async def upload_listing_photo(

@@ -18110,7 +18110,11 @@ function sfHomeS(){
   h+='<div class="sf-tile sf-wide" onclick="sfStartCat(\'local_market\')"><div class="sf-bg" style="background:linear-gradient(140deg,#14532d,#166534)">🛍️</div>'+
      '<img class="sf-ph" src="'+lm.own+'" onerror="if(this.src!==\''+lm.fall+'\'){this.src=\''+lm.fall+'\';}else{this.style.display=\'none\';}">'+
      '<div class="sf-lab"><div class="sf-nm">Local Market</div><div class="sf-ct">Honey to guitars to rare finds</div></div></div>';
-  h+='</div><div class="sf-foot"><button class="sf-btn gho" onclick="goTo(\'home\')">← Exit</button></div>';
+  h+='</div>';
+  // QUICK-GATE-A (SEAM-1, David 25 Sep 2026, option A): one small line into the 5-tap Quick door, seen only by
+  // someone who has chosen to sell. Quick carries the way back (?from=app), so this is no longer a one-way door.
+  h+='<a class="sf-quick-line" href="/quick/?from=app&src=sell-flow" style="display:flex;align-items:center;justify-content:center;gap:7px;margin:14px 0 2px;font-size:13px;font-weight:600;color:#c4b5fd;text-decoration:none;"><span style="width:14px;height:14px;border-radius:4px;background:#8b5cf6;display:inline-block;"></span>In a hurry? 5-tap Quick advert &rsaquo;</a>';
+  h+='<div class="sf-foot"><button class="sf-btn gho" onclick="goTo(\'home\')">← Exit</button></div>';
   return h;
 }
 function sfSubpickS(){

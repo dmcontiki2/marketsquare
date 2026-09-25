@@ -266,6 +266,26 @@
    "level": "public"
   },
   {
+   "key": "POST /quick-invite",
+   "level": "public"
+  },
+  {
+   "key": "GET /quick-invite/{token}",
+   "level": "public"
+  },
+  {
+   "key": "POST /quick-invite/{token}/accept",
+   "level": "public"
+  },
+  {
+   "key": "POST /quick-invite/{token}/cancel",
+   "level": "public"
+  },
+  {
+   "key": "GET /quick-invite/{token}/qr.png",
+   "level": "public"
+  },
+  {
    "key": "POST /listings/photo",
    "level": "public"
   },

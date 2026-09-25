@@ -1,6 +1,9 @@
 {
+  "id": "/",
   "name": "TrustSquare",
   "short_name": "TrustSquare",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "/static/brand/icon-192.png",

@@ -93,8 +93,12 @@ self.addEventListener('notificationclick', (event) => {
   // Focus the app or open a new tab — the feed surfaces the match anyway
   event.waitUntil((async () => {
     const all = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    // PUSH-TO-APP-1 (SEAM-1, 25 Sep 2026): the Quick door lives on this origin too (/quick/, /q/), so the
+    // old "focus the first same-site window" could surface the Quick door instead of the introduction.
+    // A match is TrustSquare's business: focus a TrustSquare window, never a Quick one; else open the app.
+    const isQuick = (u) => { try { return /^\/(quick|q)(\/|\.html|$)|^\/quick_next\.html$/.test(new URL(u).pathname); } catch (_e) { return false; } };
     for (const c of all) {
-      if (c.url.includes(self.registration.scope) && 'focus' in c) return c.focus();
+      if (c.url.includes(self.registration.scope) && !isQuick(c.url) && 'focus' in c) return c.focus();
     }
     if (clients.openWindow) return clients.openWindow('/');
   })());

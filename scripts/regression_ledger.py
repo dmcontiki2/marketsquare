@@ -29134,5 +29134,126 @@ def rg_arrive_exit():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "arrival screen has a close and 'List something else', repo and live")]
 
+@entry("RG-0477", "SEAM-1 (Quick side): the phone's Back gesture steps back inside Quick; 'Find a pro' reads REAL "
+       "TrustSquare adverts and a tap opens the advert; her advert is filed in the city of the area she chose; her Quick "
+       "language carries into the app; Quick's tile covers /quick/ only; the Quick tile is offered at her first save; "
+       "'Pass Quick on' (single-use invite, QR + share sheet, the other person's Accept)",
+       OPEN, fixed_on="",
+       scope="quick.html SEAM-1 module + celebrate() hooks; static/brand/quick.webmanifest. SCOPE: source + live /quick/ page.",
+       ref="David 25 Sep 2026 seam audit (QUICK_TS_SEAM_AUDIT_2026-09-25.html) and his calls: gate A, both tiles at their "
+           "moments, build Pass it on now. Probed before the fix: one Back left Quick mid-advert; Find showed five invented "
+           "cleaners with zero server calls; every stranger's advert filed under Pretoria. Rendered test 25/25.")
+def rg_seam_quick():
+    q = repo_file("quick.html")
+    bad = []
+    if q is not None:
+        for tok, what in (("BACK-GESTURE-1", "the Back-gesture guard"), ("FIND-REAL-1", "the real Find"),
+                          ("/listings?city=", "the listings read"), ("CITY-FROM-AREA-1", "city from area"),
+                          ("ts_lang", "the language carry"), ("QUICK-PASS-1", "Pass Quick on"),
+                          ("/quick-invite", "the invite routes"), ("quick.webmanifest?v=2", "the manifest stamp")):
+            if tok not in q:
+                bad.append("quick.html lost " + what)
+        body = q[q.find("drawLookup=function"):q.find("drawLookup=function")+4000]
+        if "Menlyn first" in body or "c.ads(" in body:
+            bad.append("Find is back on invented cards")
+        h = repo_file("genie/HARNESS.html")
+        if h is not None and h != q:
+            bad.append("genie/HARNESS.html differs from quick.html")
+    m = repo_file("static/brand/quick.webmanifest")
+    if m is not None and '"scope": "/quick/"' not in m:
+        bad.append("quick.webmanifest scope is not /quick/")
+    live = _get("/quick/")
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - /quick/ unreadable from here")] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if "FIND-REAL-1" not in live or "QUICK-PASS-1" not in live:
+        bad.append("live /quick/ lacks SEAM-1 (not deployed?)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Quick: Back gesture, real Find, city from area, language carry, own scope, tile offer, Pass it on -- repo and live")]
+
+
+@entry("RG-0478", "SEAM-1 (app side): a small Quick door inside Sell (David's option A) that now has a way back; "
+       "the repo copy of TrustSquare's manifest matches the served one (id / start_url / scope, RUL-123); a push tap opens "
+       "TrustSquare, never the Quick door",
+       OPEN, fixed_on="",
+       scope="marketsquare.html sell sheet + ms.js sfHomeS(); static/brand/site.webmanifest; assets/service-worker.js.",
+       ref="David 25 Sep 2026: 'we do need it in the app somewhere but small and unobtrusive' -> A. The served manifest "
+           "(12 Sep) already carried the RUL-123 fields; the repo's static/brand copy had drifted without them.")
+def rg_seam_app():
+    bad = []
+    idx = repo_file("marketsquare.html")
+    if idx is not None and "sell-quick-line" not in idx:
+        bad.append("marketsquare.html lost the Sell-sheet Quick line")
+    ms = repo_file("ms.js")
+    if ms is not None and "sf-quick-line" not in ms:
+        bad.append("ms.js sell flow lost the Quick line")
+    sm = repo_file("static/brand/site.webmanifest")
+    if sm is not None and not all(k in sm for k in ('"id"', '"start_url"', '"scope"')):
+        bad.append("site.webmanifest lost id/start_url/scope")
+    sw = repo_file("assets/service-worker.js")
+    if sw is not None and "PUSH-TO-APP-1" not in sw:
+        bad.append("service worker can focus the Quick door on a push tap")
+    live = _get("/")
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - / unreadable from here")] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if "sell-quick-line" not in live:
+        bad.append("live app has no Quick line in the Sell sheet (not deployed?)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "app: Quick door inside Sell, manifest id/start/scope, push opens TrustSquare -- repo and live")]
+
+
+@entry("RG-0479", "QUICK-PASS-1 (server): /quick-invite routes -- create, read, accept ONCE, cancel, QR; a first name at most, "
+       "never a number or a key link; declared public in route_policy.json",
+       OPEN, fixed_on="",
+       scope="bea_main.py QUICK-PASS-1 block; route_policy.json; migrations/053_quick_invites.py. SCOPE: source + live.",
+       ref="David 25 Sep 2026: 'Build it now'. TestClient: create 200, read open, QR PNG, accept 200, second accept 409, "
+           "cancel after accept 409, unknown 404; stranger test PASS (299 routes).")
+def rg_quick_pass_server():
+    bad = []
+    src = repo_file("bea_main.py")
+    if src is not None:
+        for tok in ('@app.post("/quick-invite")', '@app.get("/quick-invite/{token}")', '"/quick-invite/{token}/accept"',
+                    '"/quick-invite/{token}/cancel"', '"/quick-invite/{token}/qr.png"', "status='open'"):
+            if tok not in src:
+                bad.append("bea_main.py lost " + tok)
+    pol = repo_file("route_policy.json")
+    if pol is not None and pol.count('quick-invite') < 5:
+        bad.append("route_policy.json does not declare all five /quick-invite routes")
+    try:
+        live = _get("/quick-invite/AAAAAAAAAAAA")
+    except Exception:
+        live = ""
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - /quick-invite unreadable from here")] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if '"unknown"' not in live:
+        bad.append("live /quick-invite does not answer (not deployed?)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "invite routes answer; single-use enforced in source")]
+
+
+@entry("RG-0480", "FTS-KEYWORD-1: a search containing OR / AND / NOT / NEAR never breaks the listings query (it answered "
+       "HTTP 500 on 'garden OR service'); operators are dropped and every term is quoted",
+       OPEN, fixed_on="",
+       scope="bea_main.py get_listings() full-text branch. SCOPE: source + live GET /listings.",
+       ref="Found 25 Sep 2026 in the Quick/TrustSquare seam audit while wiring Find to real adverts: "
+           "/listings?q=garden%20OR%20servic* -> 500. sqlite FTS5 check: quoted terms parse, bare OR* does not.")
+def rg_fts_keyword():
+    bad = []
+    src = repo_file("bea_main.py")
+    if src is not None and "FTS-KEYWORD-1" not in src:
+        bad.append("get_listings lost the operator guard")
+    try:
+        live = _get("/listings?city=Pretoria&category=Services&page_size=1&q=garden%20OR%20service")
+    except Exception as e:
+        return [(FAIL if "500" in str(e) else INFO, "live search with OR: %s" % str(e)[:80])] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half)")] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a search with OR answers normally, repo and live")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

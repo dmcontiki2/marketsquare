@@ -3678,6 +3678,8 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     </div>
     <button class="modal-cta commit" onclick="sellSheetContinue()" style="margin-bottom:8px;">Continue with this account →</button>
     <button class="modal-cancel" onclick="sellSheetNewAccount()">Use a different account</button>
+    <!-- QUICK-GATE-A (SEAM-1, David 25 Sep 2026: "we do need it in the app somewhere but small and unobtrusive" -> option A, inside Sell). Quick now carries the way back (?from=app). -->
+    <a class="sell-quick-line" href="/quick/?from=app&amp;src=sell-sheet" style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;font-size:13px;font-weight:600;color:#7C3AED;text-decoration:none;"><span style="width:14px;height:14px;border-radius:4px;background:#7C3AED;display:inline-block;"></span>In a hurry? 5-tap Quick advert &rsaquo;</a>
   </div>
 </div>
 
