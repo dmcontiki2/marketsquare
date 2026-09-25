@@ -26599,8 +26599,8 @@ def rg_adv_country_chip_truthful():
 
 
 @entry("RG-0426", "The app has a SECOND working AI lane -- the failover is real, not only ranked",
-       OPEN, fixed_on="",
-       scope="The live marketsquare service environment on the Hetzner box, against the lane "
+       LOCKED, fixed_on="2026-09-25",
+       scope="LOCKED 25 Sep 2026: the board reported READY TO LOCK -- ranked lanes anthropic, openai, scaleway reachable. The live marketsquare service environment on the Hetzner box, against the lane "
              "ranking in AI_BASELINE.json. WHY THIS IS OPEN (20 Sep 2026): David's Anthropic API "
              "organisation ran out of prepaid credit and API access was switched off over an "
              "unpaid balance of US$0.19. AI_BASELINE ranks a standby lane FIRST in every tier "
@@ -29074,8 +29074,8 @@ def rg_e2e_hmi_controls_wired():
 
 @entry("RG-0473", "QUICK-OPEN-RATE-1 (RUL-168): Quick wage rates are TYPED -- no preset amount chips for time-paid work, "
        "and the floor is the national minimum wage of her country",
-       OPEN, fixed_on="",
-       scope="quick.html (source + live /q/ page): the rate screen intercepts every sell-side 'price' step in Services and "
+       LOCKED, fixed_on="2026-09-25",
+       scope="LOCKED 25 Sep 2026: READY TO LOCK after the 25 Sep deploy put it live. quick.html (source + live /q/ page): the rate screen intercepts every sell-side 'price' step in Services and "
              "Tutors and the trades 'how' step; MINW holds all nine picker countries; the old preset chip rows may not "
              "come back as the screen. SCOPE: Quick door only -- the app's own edit form is a separate surface.",
        ref="David 25 Sep 2026 (RUL-168). Rendered test before shipping: casual day rate, trade call-out + hourly + parts, "
