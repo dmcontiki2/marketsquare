@@ -29514,6 +29514,91 @@ def rg_lm_group_find_1():
     return [(INFO, "Local Market groups match the advert's own words, repo and live")]
 
 
+@entry("RG-0492", "EMPLOYER-HARVEST-1 (RUL-150): CityLauncher looks for the ORGANISATIONS that "
+       "employ the roles -- and never for the households",
+       LOCKED, fixed_on="2026-09-25",
+       scope="CityLauncher/scraper/sources/openstreetmap.py OSM_TAGS['Employers'] and "
+             "EMPLOYER_KINDS_NOT_ON_A_MAP. RUL-150 (David, 19 Sep 2026): 'THE EMPLOYER IS THE "
+             "SUPPLY CHANNEL: ORGANISATIONS ENROL THEIR CURRENT AND FORMER EMPLOYEES.' "
+             "MarketSquare's employer door shipped 25 Sep (org_enrol.py -- an org enrols its "
+             "people from a list, each gets a private link on a printable slip that opens the "
+             "Quick door on her role in her language). Nothing in CityLauncher was looking for "
+             "the organisations: on 25 Sep the 6,748-row list held sports clubs, teachers, "
+             "outfitters, estate agents, tutors and car dealers, and ZERO rows of any employer "
+             "kind. DERIVED, NOT INVENTED: every tag maps to an employer_kind named by "
+             "MarketSquare's own roles/role_registry.json, ordered by how many live roles each "
+             "kind employs. PROBED in Tshwane before being claimed, because element count is not "
+             "contactability: tourism=hotel 85 found / 19 email / 37 website; amenity=restaurant "
+             "300 / 16 / 33; office=government 92 / 15 / 50; landuse=industrial 182 / 1 / 2 -- a "
+             "dud, kept only because source_health kills a barren tag per-tag so it cannot "
+             "poison the source. THE DELIBERATE ABSENCE IS THE POINT AND IT IS NAMED IN CODE: "
+             "'household' is the LARGEST employer kind in the registry (18 roles) and is not "
+             "here, because private homes are not on a map and must never be harvested -- she "
+             "reaches us through the Quick door, WhatsApp or SMS, never through an address. "
+             "EMPLOYER_KINDS_NOT_ON_A_MAP records household, estate, brand, dealership, "
+             "clothing_factory and transport_operator so the absence stays a decision instead of "
+             "becoming a gap somebody later 'fixes' by scraping private addresses. SCOPE: the "
+             "harvester only. The employer LETTER is not written here -- its CTA has to choose "
+             "between the agency console and the new enrolment door, org_enrol.py is hours old "
+             "and the other lane is still shaping it, so RUL-140/SO-5 says the owner ships it.",
+       ref="The leverage is why this is worth a board entry: one hotel employs nine of the "
+           "registry's role types, so an employer is not one prospect, it is a list. Probed "
+           "against live Overpass in Tshwane, tag by tag.")
+def rg_employer_harvest_1():
+    osm = os.path.join(REPO, "..", "CityLauncher", "scraper", "sources", "openstreetmap.py")
+    if not sibling_visible(osm):
+        return [(INFO, "NOT EVALUATED - CityLauncher is not mounted on this vantage")]
+    if not os.path.exists(osm):
+        return [(FAIL, "CityLauncher/scraper/sources/openstreetmap.py is gone")]
+    with open(osm, encoding="utf-8", errors="replace") as fh:
+        s = fh.read()
+    bad = []
+    if "'Employers': [" not in s:
+        bad.append("the Employers tag set is gone -- nothing hunts the organisations RUL-150 "
+                   "makes the supply channel")
+    if "EMPLOYER_KINDS_NOT_ON_A_MAP" not in s:
+        bad.append("the not-on-a-map list is gone -- the household exclusion stops being a "
+                   "recorded decision")
+    # the exclusion itself, which is the safety property
+    try:
+        blk = s.split("'Employers': [", 1)[1].split("]", 1)[0]
+    except Exception:
+        blk = ""
+    # Judge the TAG PAIRS, never a substring of the block. The first version of this
+    # check tested for "house" in the block and convicted on ('tourism', 'guest_house') --
+    # a guest house is a hotel-kind employer, not somebody's home. Same fault as
+    # FN-WINDOW-1: a crude read standing in for the real property, failing towards
+    # conviction.
+    import ast as _ast
+    pairs = []
+    try:
+        pairs = [tuple(x) for x in
+                 _ast.literal_eval("[\n" + blk.rstrip().rstrip(",") + "\n]")]
+    except Exception:
+        bad.append("the Employers tag set is no longer a readable list of (key, value) pairs "
+                   "-- this check cannot judge what it reaches")
+    FORBIDDEN = {("building", "house"), ("building", "residential"),
+                 ("building", "apartments"), ("landuse", "residential"),
+                 ("place", "house"), ("building", "detached")}
+    for _pr in pairs:
+        if _pr in FORBIDDEN:
+            bad.append("the Employers tag set reaches private homes (%s=%s) -- households are "
+                       "never harvested" % _pr)
+    if "EMPLOYER_KINDS_NOT_ON_A_MAP" in s:
+        tail = s.split("EMPLOYER_KINDS_NOT_ON_A_MAP", 1)[1][:400]
+        if "household" not in tail:
+            bad.append("'household' has left the not-on-a-map list -- the one kind that must "
+                       "never be scraped is no longer recorded as excluded")
+    # the tags must still be reachable by the worker that imports this dict
+    if "OSM_TAGS" not in s:
+        bad.append("OSM_TAGS is gone -- orchestration/scraper_worker.py imports it")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    n = blk.count("('")
+    return [(INFO, "%d employer tags derived from the role registry's employer kinds; "
+                   "households named as never-harvested" % n)]
+
+
 @entry("RG-0490", "QUICK-LINK-1: an outreach letter opens the door on HER ROLE, in a language the "
        "country actually offers, carrying its wave tag -- never a bare pre-RUL-159 door name",
        LOCKED, fixed_on="2026-09-25",
