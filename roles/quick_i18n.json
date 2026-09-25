@@ -2849,6 +2849,69 @@
    "",
    "",
    ""
+  ],
+  "Someone who has bought from you says": [
+   "Iemand wat al by jou gekoop het sê",
+   "Umuntu osake wathenga kuwe uthi",
+   "Motho ya kileng a reka ho wena o re",
+   "Umntu owakhe wathenga kuwe uthi",
+   "Motho yo a kilego a reka go wena o re"
+  ],
+  "A collector you have dealt with says": [
+   "'n Versamelaar met wie jy al te doen gehad het sê",
+   "Umqoqi osake wasebenzisana naye uthi",
+   "Mmokedi eo o kileng wa sebetsa le yena o re",
+   "Umqokeleli owakhe wasebenzisana naye uthi",
+   "Mokgobokedi yo o kilego wa šoma le yena o re"
+  ],
+  "Someone who has rented or bought from you says": [
+   "Iemand wat al by jou gehuur of gekoop het sê",
+   "Umuntu osake waqasha noma wathenga kuwe uthi",
+   "Motho ya kileng a hira kapa a reka ho wena o re",
+   "Umntu owakhe waqesha okanye wathenga kuwe uthi",
+   "Motho yo a kilego a hira goba a reka go wena o re"
+  ],
+  "One line to each buyer asking about your car - until it is sold.": [
+   "Een reël na elke koper wat oor jou motor vra - totdat dit verkoop is.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One line to the collectors who buy from you - a new piece, a swap, a price.": [
+   "Een reël na die versamelaars wat by jou koop - 'n nuwe stuk, 'n ruil, 'n prys.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One line to the people who buy from you - fresh today, sold out, at the gate.": [
+   "Een reël na die mense wat by jou koop - vars vandag, uitverkoop, by die hek.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One tap on your phone buzzes your employer, with your name on it.": [
+   "Een tik op jou foon buzz jou werkgewer, met jou naam daarop.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "EXAMPLE PHOTO — add your own in the app": [
+   "VOORBEELDFOTO — voeg jou eie in die app by",
+   "ISITHOMBE SESIBONELO — engeza esakho ku-app",
+   "SETSHWANTSHO SA MOHLALA — kenya sa hao ho app",
+   "UMFANEKISO WOMZEKELO — yongeza owakho kwi-app",
+   "SEHLAKANGWA SA MOHLALA — tsenya sa gago ka go app"
+  ],
+  "bedrooms": [
+   "slaapkamers",
+   "amakamelo okulala",
+   "dikamore tsa ho robala",
+   "amagumbi okulala",
+   "diphapoši tša go robala"
   ]
  },
  "p": [

@@ -29422,5 +29422,37 @@ def rg_map_first_view():
         return [(FAIL, "; ".join(bad[:4]))]
     return [(INFO, "every map guards its first view; brief shows words only, repo and live")]
 
+
+@entry("RG-0486", "GOODS-FIT-1: Local Market, Cars and Property drafts fit the pick -- each kind its own picture, the picture "
+       "marked EXAMPLE PHOTO, a buyer's reference, the seller's side of Buzz, no bedrooms for a plot, Price not Rate",
+       OPEN, fixed_on="",
+       scope="quick.html GOODS-FIT-1 block + vouchWho goods lines + sellCard for cars/collectors/localmarket + the two advert "
+             "body builders; 15 pictures lm_/car_/prop_* under /static/quick. CLASS: any Quick draft picture is an illustration "
+             "and must say so; any kind tile must wear a picture of that kind.",
+       ref="David 25 Sep 2026: Local Market 'Plants' showed a house; 'the referral and buzz need to be topic specific ... here "
+           "also'; a Plot showed a house and the draft picture was not marked as an example.")
+def rg_goods_fit_1():
+    q = repo_file("quick.html")
+    bad = []
+    if q is not None:
+        for tok, what in (("'Plot':'prop_plot'", "the plot picture"), ("EXAMPLE PHOTO \u2014 add your own in the app", "the example-photo mark"),
+                          ("Someone who has bought from you", "the buyer's reference"), ("One line to the people who buy from you", "the market seller's Buzz"),
+                          ("/^(Plot|Commercial)$/", "no bedrooms for a plot")):
+            if tok not in q:
+                bad.append("quick.html lost " + what)
+    live = _get("/q/")
+    if not live:
+        return [(INFO, "NOT EVALUATED (live half) - /q/ unreadable")] + ([(FAIL, "; ".join(bad))] if bad else [])
+    if "GOODS-FIT-1 (David 25 Sep 2026). Each Local Market" not in live:
+        bad.append("live Quick has no GOODS-FIT-1 (not deployed?)")
+    try:
+        import urllib.request as _u
+        _u.urlopen(_u.Request(BASE + "/static/quick/prop_plot.jpg", method="HEAD", headers=UA), timeout=15)
+    except Exception as e:
+        bad.append("kind pictures not served (%s)" % str(e)[:40])
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "goods drafts fit the pick, repo and live")]
+
 if __name__ == "__main__":
     sys.exit(main())
