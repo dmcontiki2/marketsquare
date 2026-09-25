@@ -29488,7 +29488,7 @@ def rg_kind_fit_1():
 
 @entry("RG-0488", "LM-GROUP-FIND-1: Quick's Local Market Find matches a GROUP tile on the advert's own words -- "
        "'Food & preserves' finds the Bee Lady's raw honey instead of searching the single word 'preserv*'",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="quick.html + genie/HARNESS.html (kept identical): GROUP_RX / groupRx() / typeFilter and the drawLookup query. "
              "CLASS: a tile that names a GROUP of goods may never be reduced to one search word -- the last word of "
              "'Food & preserves' missed honey, and 'Furniture' missed a teak sideboard.",
@@ -29516,7 +29516,7 @@ def rg_lm_group_find_1():
 
 @entry("RG-0489", "ADVERT-WORDS-1: the interface translator never rewrites an advert -- every advert title and "
        "description carries data-notranslate, and the advert translator keeps nicknames and never invents words",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="ms.js: main + Local Market cards (.ctitle) and detail pages (.dtitle, description); bea_main.py "
              "_lang_translate_advert prompt + I18N_GLOSS['af']. CLASS: the seller's own words change language only through "
              "her own approved second language (RUL-162), never through the page translator.",
