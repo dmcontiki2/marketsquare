@@ -28804,6 +28804,12 @@ def rg_git_lock_6():
         bad.append("autodeploy_agent.bat no longer runs the aged sweep on every tick (before its early exit)")
     if ':aged' not in gu or 'AddMinutes(-15)' not in gu or 'if /i "%~1"=="/aged" goto :aged' not in gu:
         bad.append("git_unlock.bat lost its age-gated /aged mode")
+    # The FULL sweep must still execute, not merely be mentioned in a comment (a bad edit on
+    # 25 Sep briefly cut it out while every marker survived in the REM lines).
+    for need in ('do call :clearone %%L', 'for /r ".git\\refs" %%F in (*.lock) do del /f /q "%%F"',
+                 'exit /b %RC%'):
+        if need not in gu:
+            bad.append("git_unlock.bat's full sweep lost: %s" % need)
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "host sweeps stale git locks nightly and every 20 min, aged-only")]
@@ -29107,7 +29113,7 @@ def rg_quick_open_rate():
 
 @entry("RG-0476", "ARRIVE-EXIT-1: the 'Your advert is live' screen in Quick has a way out -- a close button and "
        "'List something else', both to a FRESH start, never back into the form just published",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-25",
        scope="quick.html celebrate() (the arrival overlay). SCOPE: source + live /q/ page.",
        ref="David 25 Sep 2026 with two screenshots: 'There is no go back button from this screen'. Rendered test before "
            "shipping: publish (mocked) -> arrival -> 'List something else' -> Quick front door, picks empty, no errors.")

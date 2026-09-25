@@ -1604,9 +1604,9 @@
    "last_seen": "2026-09-25",
    "sev": "HIGH",
    "source": "regression ledger RG-0351 (LOCKED) REGRESSION + test_pg_readiness.py",
-   "status": "OPEN",
-   "summary": "25 Sep: STILL RED, shape changed. The 3 plain datetime('now') from 4300824 are GONE (0 left; fixed by 4677444 PG-PORTABLE-3), but RG-0351 now reads 'REGRESSION: 17 modifier-form SQLite clock call(s) in code against a baseline of 15'; test_pg_readiness.py -> FAIL SQLite-specific surface GREW {'datetime_now': (15, 17), 'julianday': (2, 4), 'insert_or': (12, 13)}. git log -G since 23 Sep points at the 24 Sep evening commits 57a9f0b (E2E-HMI-1c) and 73d327a (LM-NOSHOW-1), both ancestors of the live release be1b2a6. Fourth same-day breach of this ratchet. | 3 plain datetime('now') back in bea_main.py (lines 625, 4249, 4257, phone_codes) from commit 4300824 LINK-KEY-1/PHONE-KEY-1; test_pg_readiness FAIL datetime_now 15->20. LIVE: server main.py 2026-09-24T04:32:36Z carries them (probed via SSH ~07:55Z); the 07:45Z alert's 'not yet shipped' line read a stale local origin/deploy and was wrong. Harmless on SQLite; raises the Postgres-move cost.",
-   "next_action": "Owning lane converts the two new modifier-form clock calls + the julianday/INSERT OR additions to _sql_since()/bound stamps/portable SQL; RG-0351 [ ok ] and test_pg_readiness PASS close it."
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-25 (attended CTO pass, David: 'fix the two new reds') -- originating check re-ran and PASSED: full chunked board 459 entries, '[  ok  ] RG-0351'; test_pg_readiness.py 'PASS pg-readiness ratchet: datetime_now 15, strftime 15, julianday 2, insert_or 12' (back to baseline). PG-PORTABLE-4: LM no-show age in Python (was julianday), LM my-accepted + EULA 14.5 B3 windows on bound _sql_since() stamps (were datetime('now', ...)), used_signin_links ON CONFLICT(link_hash) DO NOTHING (was INSERT OR IGNORE). Deployed c444c99, DEPLOY OK 05:55:43Z, no app errors in the journal since. RESIDUAL: the ratchet still catches breaches only after commit (4th same-day breach); nothing stops the commit. | 25 Sep: STILL RED, shape changed. The 3 plain datetime('now') from 4300824 are GONE (0 left; fixed by 4677444 PG-PORTABLE-3), but RG-0351 now reads 'REGRESSION: 17 modifier-form SQLite clock call(s) in code against a baseline of 15'; test_pg_readiness.py -> FAIL SQLite-specific surface GREW {'datetime_now': (15, 17), 'julianday': (2, 4), 'insert_or': (12, 13)}. git log -G since 23 Sep points at the 24 Sep evening commits 57a9f0b (E2E-HMI-1c) and 73d327a (LM-NOSHOW-1), both ancestors of the live release be1b2a6. Fourth same-day breach of this ratchet. | 3 plain datetime('now') back in bea_main.py (lines 625, 4249, 4257, phone_codes) from commit 4300824 LINK-KEY-1/PHONE-KEY-1; test_pg_readiness FAIL datetime_now 15->20. LIVE: server main.py 2026-09-24T04:32:36Z carries them (probed via SSH ~07:55Z); the 07:45Z alert's 'not yet shipped' line read a stale local origin/deploy and was wrong. Harmless on SQLite; raises the Postgres-move cost.",
+   "next_action": "-"
   },
   "DW-147": {
    "first_seen": "2026-09-24",
@@ -1691,27 +1691,27 @@
    "last_seen": "2026-09-25",
    "sev": "HIGH",
    "source": "regression ledger RG-0373 (LOCKED) -- REGRESSION, live probe of POST /trust-score/guidance, re-judged",
-   "status": "OPEN",
-   "summary": "The AI trust plan for a Tutors seller now includes a REFERRAL step. Board: 'REGRESSION: step 4 offers a referral signal -- referrals are not tracked, so this step can never award its points'; re-judged minutes later: same fault at step 5 (AI output varies, the fault does not). A real seller is told to do something that can never raise her score. User-facing.",
-   "next_action": "Owning lane stops /trust-score/guidance offering untracked signals (filter referral out of the plan, the class fix the entry names); RG-0373 [ ok ] closes it."
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-25 (attended CTO pass) -- the red was the ASSERTION, not the app. RUL-142 (David, 18 Sep; built 24 Sep 303fbc0) made verified-client (referral) steps earnable via 'I hired them' (POST /intros/{id}/hired); the live plan's step is correct (do='wait', points at that tap). RG-0373's referral leg amended to the property (COACH-EARNABLE-2): offered only while the ladder can earn it, must point at the real tap; proven able to say no on stripped source. Board: '[  ok  ] RG-0373'. Not user-facing after all. | The AI trust plan for a Tutors seller now includes a REFERRAL step. Board: 'REGRESSION: step 4 offers a referral signal -- referrals are not tracked, so this step can never award its points'; re-judged minutes later: same fault at step 5 (AI output varies, the fault does not). A real seller is told to do something that can never raise her score. User-facing.",
+   "next_action": "-"
   },
   "DW-156": {
    "first_seen": "2026-09-25",
    "last_seen": "2026-09-25",
    "sev": "HIGH",
    "source": "regression ledger RG-0450 (LOCKED) -- REGRESSION, re-judged",
-   "status": "OPEN",
-   "summary": "'REGRESSION: genie/HARNESS.html differs from quick.html (house rule: identical)'. HARNESS.html is dated 24 Sep 10:18 SAST; quick.html 24 Sep 19:31 SAST. The harness lacks the later Quick-door changes (QUICK-WHERE-1 where-tap in CATS, BUGSWEEP-24SEP storage try/catch, own-city LOC fix, EULA-conditional 'terms accepted', back-button picks fix) from e0a4d22 / 303fbc0 / b951503. Live quick.html is correct (deploy drift clean, 19/19); only the test copy is stale, so anything walked through the harness tests yesterday's door.",
-   "next_action": "Owning lane copies quick.html over genie/HARNESS.html (or re-generates it); RG-0450 [ ok ] closes it."
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-25 -- genie/HARNESS.html re-synced to quick.html (byte-identical, cmp), committed c444c99; board '[  ok  ] RG-0450'. | 'REGRESSION: genie/HARNESS.html differs from quick.html (house rule: identical)'. HARNESS.html is dated 24 Sep 10:18 SAST; quick.html 24 Sep 19:31 SAST. The harness lacks the later Quick-door changes (QUICK-WHERE-1 where-tap in CATS, BUGSWEEP-24SEP storage try/catch, own-city LOC fix, EULA-conditional 'terms accepted', back-button picks fix) from e0a4d22 / 303fbc0 / b951503. Live quick.html is correct (deploy drift clean, 19/19); only the test copy is stale, so anything walked through the harness tests yesterday's door.",
+   "next_action": "-"
   },
   "DW-157": {
    "first_seen": "2026-09-25",
    "last_seen": "2026-09-25",
    "sev": "LOW",
    "source": "server cron sensor (orchestrator/findings.cron.json) + journalctl",
-   "status": "OPEN",
-   "summary": "Cron parity could not be assessed: findings.cron.json still carries loop_date 2026-09-24 (written 24 Sep 01:30:03Z). The host REBOOTED at 01:30:06Z today (last -x: kernel 6.8.0-138 -> 6.8.0-139; secassess_postboot.sh ran 01:30:30Z), so the 01:30 sensor.py and ops_sweep.py runs never started. Service came back clean (health ok 1.3.1, uptime since 01:30:16Z).",
-   "next_action": "Closes when tomorrow's findings.cron.json carries loop_date 2026-09-26 and parity holds. Owning lane may add a post-boot catch-up for sensor.py so a reboot at :30 cannot eat a day."
+   "status": "CLOSED",
+   "summary": "CLOSED 2026-09-25 -- originating check re-ran and PASSED: findings.cron.json generated 2026-09-25T06:45:01Z, loop_date 2026-09-25, smoke 39/39 all_green, health ok, spend not breached (ceiling 10.0) vs sandbox smoke 40/40, health ok -> parity holds. Written by the NEW catch-up (sensor_cron.log: 'SENSOR-CATCHUP-1: no run recorded for 2026-09-25 -- catching up'). SENSOR-CATCHUP-1: sensor.py --catch-up + /etc/cron.d/marketsquare-sensor-catchup (@reboot + hourly :45, migration 052 'ok (recorded)'); sensor.py joined the deploy manifest; RG-0468 LOCKED. | Cron parity could not be assessed: findings.cron.json still carries loop_date 2026-09-24 (written 24 Sep 01:30:03Z). The host REBOOTED at 01:30:06Z today (last -x: kernel 6.8.0-138 -> 6.8.0-139; secassess_postboot.sh ran 01:30:30Z), so the 01:30 sensor.py and ops_sweep.py runs never started. Service came back clean (health ok 1.3.1, uptime since 01:30:16Z).",
+   "next_action": "-"
   },
   "DW-158": {
    "first_seen": "2026-09-25",
@@ -3545,5 +3545,24 @@
    "DW-158"
   ],
   "checks_run": "12 of 12 applicable (Monday lane not in scope; cc_age run off-lane for DW-010)"
+ },
+ "attended_cto_pass_2026_09_25": {
+  "instruction": "David, 25 Sep 2026: 'Claude please fix the two new reds, and also the 4 ambers.'",
+  "closed": [
+   "DW-146",
+   "DW-155",
+   "DW-156",
+   "DW-157"
+  ],
+  "fixed": {
+   "COACH-EARNABLE-2": "RG-0373 assertion amended (stale premise since RUL-142)",
+   "PG-PORTABLE-4": "4 SQLite-only calls made portable (RG-0351)",
+   "GIT-LOCK-6": "host sweeps stale git locks nightly + every agent tick, aged-only (RG-0467)",
+   "SENSOR-CATCHUP-1": "sensor catch-up after boot + hourly, migration 052 (RG-0468)",
+   "TRANSPORT-BLIND-1": "transport-shaped FAILs read BLIND in _judge (RG-0466)",
+   "HARNESS": "genie/HARNESS.html resynced (RG-0450)"
+  },
+  "deploy": "c444c99 DEPLOY OK 2026-09-25T05:55:43Z, health ok, migration 052 ok",
+  "board": "459 entries, 439 holding, 0 REGRESSED, 19 open, 1 ready (RG-0426), 0 UNVERIFIED; rulings 142 checked 0 FAIL"
  }
 }

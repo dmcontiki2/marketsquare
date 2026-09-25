@@ -56,7 +56,15 @@ exit /b %RC%
 
 :aged
 echo %date% %time% aged sweep
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$c=(Get-Date).AddMinutes(-15); $l=@(); foreach($n in 'index.lock','HEAD.lock','packed-refs.lock'){ $p=Join-Path '.git' $n; if(Test-Path $p){ $l+=Get-Item -Force $p } }; if(Test-Path '.git\refs'){ $l+=Get-ChildItem '.git\refs' -Recurse -Force -Filter '*.lock' -File }; foreach($f in $l){ if($f.LastWriteTime -lt $c){ Remove-Item -Force $f.FullName; Write-Output ('cleared aged ' + $f.FullName) } else { Write-Output ('kept (young) ' + $f.FullName + ' ' + $f.LastWriteTime) } }; Write-Output ('locks seen: ' + $l.Count)"
+REM Enumerate with cmd (the same for /r the full sweep proves on every run), judge each
+REM file's age in PowerShell. A first cut enumerated in PowerShell too and saw 0 locks while
+REM a probe lock sat in .git\refs\heads (08:35 tick, 25 Sep) - cause not visible from here.
+for %%L in (index.lock HEAD.lock packed-refs.lock) do if exist ".git\%%L" call :agedone ".git\%%L"
+for /r ".git\refs" %%F in (*.lock) do call :agedone "%%F"
+exit /b 0
+
+:agedone
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$f=Get-Item -LiteralPath '%~1' -Force; if($f.LastWriteTime -lt (Get-Date).AddMinutes(-15)){ Remove-Item -LiteralPath $f.FullName -Force; 'cleared aged ' + $f.FullName } else { 'kept (young) ' + $f.FullName + ' ' + $f.LastWriteTime }"
 exit /b 0
 
 :clearone
