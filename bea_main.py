@@ -6192,8 +6192,12 @@ class _QuickInviteIn(BaseModel):
     name: Optional[str] = None
 
 
-def _qi_db():
+def _qi_db(create=False):
+    # Only the create route may create the table: a READ must never change the schema (25 Sep 2026 -- a GET that
+    # created it mid-run made the QA Bot gate read every later probe as "changed another person's data").
     conn = database.get_db()
+    if not create:
+        return conn
     conn.execute("CREATE TABLE IF NOT EXISTS quick_invites (token_hash TEXT PRIMARY KEY, created_at TEXT NOT NULL, "
                  "cat TEXT, lang TEXT, inviter_name TEXT, inviter_email TEXT, status TEXT NOT NULL DEFAULT 'open', "
                  "accepted_at TEXT, cancelled_at TEXT)")
@@ -6206,6 +6210,8 @@ def _qi_hash(tok):
 
 def _qi_row(conn, tok):
     if not _QI_TOKEN_RE.match(tok or ""):
+        return None
+    if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='quick_invites'").fetchone():
         return None
     return conn.execute("SELECT cat, lang, inviter_name, status FROM quick_invites WHERE token_hash=?",
                         (_qi_hash(tok),)).fetchone()
@@ -6230,7 +6236,7 @@ def quick_invite_create(body: _QuickInviteIn, request: Request, ts_user: str = C
     name = (name.split(" ")[0][:24] if name else None)          # a first name at most -- she is standing right there
     em = _session_email(ts_user)
     tok = _qs.token_urlsafe(9)
-    conn = _qi_db()
+    conn = _qi_db(create=True)
     try:
         conn.execute("INSERT INTO quick_invites (token_hash, created_at, cat, lang, inviter_name, inviter_email) "
                      "VALUES (?,?,?,?,?,?)",
@@ -6260,6 +6266,9 @@ def _qi_close(token, new_status, col):
     conn = _qi_db()
     try:
         if not _QI_TOKEN_RE.match(token or ""):
+            raise HTTPException(status_code=404, detail="This invite is not one we know.")
+        r = _qi_row(conn, token)
+        if not r:
             raise HTTPException(status_code=404, detail="This invite is not one we know.")
         cur = conn.execute("UPDATE quick_invites SET status=?, " + col + "=? WHERE token_hash=? AND status='open'",
                            (new_status, datetime.now(timezone.utc).isoformat(timespec="seconds"), _qi_hash(token)))
