@@ -1691,7 +1691,7 @@
   "check": "Server refuses a signed-out request; the app keeps plain results",
   "seen_live": "Live: a signed-out AI search request is refused; plain search still answers.",
   "guard": "",
-  "live_since": "26 Sep (third deploy)"
+  "live_since": "26 Sep 11:39"
  },
  {
   "id": "qa-16",
@@ -2069,7 +2069,7 @@
   "check": "Checked against the server's own rule for introductions",
   "seen_live": "",
   "guard": "",
-  "live_since": "26 Sep (third deploy)"
+  "live_since": "26 Sep 11:39"
  },
  {
   "id": "langt-03",
