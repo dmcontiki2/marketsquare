@@ -29782,7 +29782,7 @@ def rg_roles_25sep_1():
 
 @entry("RG-0493", "I18N-AF-2: the Afrikaans AI-function cards carry David's words -- 'Eksamens studieplan', "
        "'Mark verslag', 'voorgestelde naweekpakket' -- and the long card blurbs are translated, not English",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-26",
        scope="roles/app_i18n_af.json (checked words) -> migrations/054_i18n_af_ai_cards.py -> i18n_cache; ms.js DICTV 3 "
              "and MAXLEN 400, bea_main.py I18N_MAX_CHARS 400. CLASS: a reader's correction lives in the checked file, "
              "reaches the server cache by migration and every browser by the DICTV stamp.",
