@@ -1,5 +1,5 @@
 {
- "_about": "Quick door translations (preview, NOT a ruling). Claude's first draft 20 Sep 2026; to be read by David's reviewers and the Language reviewer (RUL-160). Keys are the exact English on screen. 23 Sep 2026 (RUL-162): Sepedi ('nso') added as the fifth column; Sesotho ('st') is kept for readers who chose it before, but is no longer offered. 23 Sep 2026 evening (David: 'translate the draft screen's own words for all five languages'): the draft/publish/arrival screens' words added, Claude's draft for David's readers (RUL-160). 25 Sep 2026 inspection (fix wave C1): the save step, saved screen, Buzz explainer, previews, city step and score panel carry whole-sentence keys; David's Afrikaans corrections applied (25 Sep 2026 inspection, langq-20, langq-21, langq-22, langq-24, langq-25, langq-26); new keys are written in Afrikaans and, for isiZulu, isiXhosa and Sepedi, left empty (clean English fallback) unless an existing translation carried the same meaning -- their readers fill the rest after launch (RUL-165).",
+ "_about": "Quick door translations (preview, NOT a ruling). Claude's first draft 20 Sep 2026; to be read by David's reviewers and the Language reviewer (RUL-160). Keys are the exact English on screen. 23 Sep 2026 (RUL-162): Sepedi ('nso') added as the fifth column; Sesotho ('st') is kept for readers who chose it before, but is no longer offered. 23 Sep 2026 evening (David: 'translate the draft screen's own words for all five languages'): the draft/publish/arrival screens' words added, Claude's draft for David's readers (RUL-160). 25 Sep 2026 inspection (fix wave C1): the save step, saved screen, Buzz explainer, previews, city step and score panel carry whole-sentence keys; David's Afrikaans corrections applied (25 Sep 2026 inspection, langq-20, langq-21, langq-22, langq-24, langq-25, langq-26); new keys are written in Afrikaans and, for isiZulu, isiXhosa and Sepedi, left empty (clean English fallback) unless an existing translation carried the same meaning -- their readers fill the rest after launch (RUL-165). 26 Sep 2026 (INSPECT-FIX-2, RUL-165 -- Claude's versions are the live ones, readers correct them after launch): the whole-sentence keys the inspection added, and the lines it reworded, now carry Claude's isiZulu, isiXhosa and Sepedi drafts instead of an English fallback (419 phrases and 25 patterns).",
  "langs": [
   "af",
   "zu",
@@ -832,7 +832,7 @@
    "Umshayeli we-TLB",
    "Mokganni wa TLB",
    "Umqhubi we-TLB",
-   "Mootledi wa metšhene (TLB / excavator)"
+   "Mootledi wa metšhene (TLB / motšhene wa go epa)"
   ],
   "Welder": [
    "Sweiser",
@@ -867,14 +867,14 @@
    "Umshayeli weKhodi 10 / 14",
    "Mokganni wa Khoutu 10 / 14",
    "Umqhubi weKhowudi 10 / 14",
-   "Mootledi wa Code 10 / Code 14"
+   "Mootledi wa Khoutu 10 / 14"
   ],
   "Taxi / shuttle driver": [
    "Taxi- / pendelbestuurder",
    "Umshayeli wetekisi",
    "Mokganni wa tekesi",
    "Umqhubi weteksi",
-   "Mootledi wa thekisi / shuttle"
+   "Mootledi wa thekisi / khombi"
   ],
   "Diesel mechanic": [
    "Dieselwerktuigkundige",
@@ -1571,1207 +1571,1207 @@
   ],
   "e.g. Anyone got a 1947 penny?": [
    "bv. Het iemand ’n 1947-pennie?",
+   "isib. Ukhona onepeni lango-1947?",
    "",
-   "",
-   "",
-   ""
+   "umz. Ukhona onepeni ka-1947?",
+   "mohl. Na go na le yo a nago le peni ya 1947?"
   ],
   "e.g. Does your cleaner have a free day? We are looking.": [
    "bv. Het jou huishulp ’n vry dag? Ons soek.",
+   "isib. Umhlanzi wakho unosuku olukhululekile? Sifuna umuntu.",
    "",
-   "",
-   "",
-   ""
+   "umz. Umcoci wakho unalo usuku olukhululekileyo? Siyakhangela.",
+   "mohl. Na mohlwekiši wa gago o na le letšatši leo a lokologilego ka lona? Re a nyaka."
   ],
   "e.g. Know a plumber who actually pitches up?": [
    "bv. Ken jy ’n loodgieter wat regtig opdaag?",
+   "isib. Uyamazi umlungisi wamapayipi ofika ngempela?",
    "",
-   "",
-   "",
-   ""
+   "umz. Umazi umlungisi wemibhobho ofikayo ngenene?",
+   "mohl. O tseba moratšhi wa dipeipi yo a fihlago ka nnete?"
   ],
   "e.g. Anyone know a maths tutor for Grade 10?": [
    "bv. Ken iemand ’n wiskundetutor vir Graad 10?",
+   "isib. Ukhona owazi umfundisi wezibalo weBanga le-10?",
    "",
-   "",
-   "",
-   ""
+   "umz. Ukhona omaziyo umfundisi wezibalo weBanga 10?",
+   "mohl. Na go na le yo a tsebago morutiši wa dipalo wa Mphato wa 10?"
   ],
   "e.g. Know anyone selling a bakkie under R150k?": [
    "bv. Ken jy iemand wat ’n bakkie onder R150k verkoop?",
+   "isib. Uyamazi umuntu othengisa i-bakkie engaphansi kuka-R150k?",
    "",
-   "",
-   "",
-   ""
+   "umz. Ukhona umntu omaziyo othengisa ibhakki engaphantsi kwe-R150k?",
+   "mohl. O tseba motho yo a rekišago bakkie ka tlase ga R150k?"
   ],
   "e.g. Heard of a 2-bedroom to rent near Menlyn?": [
    "bv. Weet jy van ’n 2-slaapkamer te huur naby Menlyn?",
+   "isib. Uzwile ngendlu yokuqasha enamakamelo okulala ama-2 eduze kwaseMenlyn?",
    "",
-   "",
-   "",
-   ""
+   "umz. Ukhe weva ngendlu enamagumbi okulala ama-2 eqeshwayo kufutshane neMenlyn?",
+   "mohl. O kwele ka ntlo ya diphapoši tše 2 tša go robala ye e hirišwago kgauswi le Menlyn?"
   ],
   "e.g. Anyone know a good guesthouse in Clarens for May?": [
    "bv. Ken iemand ’n goeie gastehuis in Clarens vir Mei?",
+   "isib. Ukhona owazi indlu yezivakashi enhle eClarens ngoMeyi?",
    "",
-   "",
-   "",
-   ""
+   "umz. Ukhona oyaziyo indlu yeendwendwe elungileyo eClarens ngoMeyi?",
+   "mohl. Na go na le yo a tsebago ntlo ya baeti ye botse kua Clarens ka Mei?"
   ],
   "e.g. Anyone selling fresh eggs nearby?": [
    "bv. Verkoop iemand vars eiers naby?",
+   "isib. Ukhona othengisa amaqanda amasha eduze?",
    "",
-   "",
-   "",
-   ""
+   "umz. Ukhona othengisa amaqanda amatsha kufutshane?",
+   "mohl. Na go na le yo a rekišago mae a mafsa kgauswi?"
   ],
   "coins, last year": [
    "munte, verlede jaar",
+   "izinhlamvu zemali, nyakenye",
    "",
-   "",
-   "",
-   ""
+   "iingqekembe, nyakenye",
+   "dikhoine, ngwagola"
   ],
   "stamps, March": [
    "seëls, Maart",
+   "izitembu, ngoMashi",
    "",
-   "",
-   "",
-   ""
+   "izitampu, ngoMatshi",
+   "ditempe, Matšhe"
   ],
   "militaria, twice": [
    "militaria, twee keer",
+   "izinto zempi, kabili",
    "",
-   "",
-   "",
-   ""
+   "izinto zomkhosi, kabini",
+   "dilo tša sešole, gabedi"
   ],
   "watches, 2024": [
    "horlosies, 2024",
+   "amawashi, 2024",
    "",
-   "",
-   "",
-   ""
+   "iiwotshi, 2024",
+   "diwatšhe, 2024"
   ],
   "art, once": [
    "kuns, een keer",
+   "ubuciko, kanye",
    "",
-   "",
-   "",
-   ""
+   "ubugcisa, kanye",
+   "bokgabo, gatee"
   ],
   "cards, last month": [
    "kaarte, verlede maand",
+   "amakhadi, ngenyanga edlule",
    "",
-   "",
-   "",
-   ""
+   "amakhadi, kwinyanga ephelileyo",
+   "dikarata, kgwedi ye e fetilego"
   ],
   "neighbour, has a cleaner": [
    "buurvrou, het ’n huishulp",
+   "umakhelwane, unomhlanzi",
    "",
-   "",
-   "",
-   ""
+   "ummelwane, unomcoci",
+   "moagišani, o na le mohlwekiši"
   ],
   "friend, Menlyn": [
    "vriend, Menlyn",
+   "umngane, eMenlyn",
    "",
-   "",
-   "",
-   ""
+   "umhlobo, eMenlyn",
+   "mogwera, Menlyn"
   ],
   "your sister": [
    "jou suster",
+   "udadewenu",
    "",
-   "",
-   "",
-   ""
+   "udadewenu",
+   "sesi wa gago"
   ],
   "colleague": [
    "kollega",
+   "osebenza naye",
    "",
-   "",
-   "",
-   ""
+   "osebenza naye",
+   "mošomimmogo"
   ],
   "neighbour, two doors down": [
    "buurvrou, twee huise af",
+   "umakhelwane, izindlu ezimbili ukusuka kuwe",
    "",
-   "",
-   "",
-   ""
+   "ummelwane, izindlu ezimbini ukusuka kuwe",
+   "moagišani, dintlo tše pedi go tloga mo"
   ],
   "church friend": [
    "kerkvriend",
+   "umngane wasesontweni",
    "",
-   "",
-   "",
-   ""
+   "umhlobo wasecaweni",
+   "mogwera wa kerekeng"
   ],
   "neighbour, had a plumber in": [
    "buurman, het ’n loodgieter gehad",
+   "umakhelwane, wake wabiza umlungisi wamapayipi",
    "",
-   "",
-   "",
-   ""
+   "ummelwane, wakhe wabiza umlungisi wemibhobho",
+   "moagišani, o bitšitše moratšhi wa dipeipi"
   ],
   "friend, renovated last year": [
    "vriend, het verlede jaar opgeknap",
+   "umngane, walungisa indlu nyakenye",
    "",
-   "",
-   "",
-   ""
+   "umhlobo, walungisa indlu nyakenye",
+   "mogwera, o mpshafaditše ntlo ngwagola"
   ],
   "your brother-in-law": [
    "jou swaer",
+   "umlamu wakho",
    "",
-   "",
-   "",
-   ""
+   "umlamu wakho",
+   "molamo wa gago"
   ],
   "neighbour, new roof": [
    "buurman, nuwe dak",
+   "umakhelwane, uphahla olusha",
    "",
-   "",
-   "",
-   ""
+   "ummelwane, uphahla olutsha",
+   "moagišani, marulelo a mafsa"
   ],
   "body corporate chair": [
    "voorsitter, beheerliggaam",
+   "usihlalo we-body corporate",
    "",
-   "",
-   "",
-   ""
+   "usihlalo we-body corporate",
+   "modulasetulo wa komiti ya beng"
   ],
   "parent, same class": [
    "ouer, dieselfde klas",
+   "umzali, ikilasi elifanayo",
    "",
-   "",
-   "",
-   ""
+   "umzali, iklasi enye",
+   "motswadi, phapoši e tee"
   ],
   "parent, soccer club": [
    "ouer, sokkerklub",
+   "umzali, iqembu lebhola",
    "",
-   "",
-   "",
-   ""
+   "umzali, iklabhu yebhola",
+   "motswadi, sehlopha sa kgwele ya maoto"
   ],
   "teacher friend": [
    "onderwyservriend",
+   "umngane onguthisha",
    "",
-   "",
-   "",
-   ""
+   "umhlobo ongutitshala",
+   "mogwera, morutiši"
   ],
   "your cousin": [
    "jou neef",
+   "umzala wakho",
    "",
-   "",
-   "",
-   ""
+   "umzala wakho",
+   "motswala wa gago"
   ],
   "parent, lift club": [
    "ouer, saamryklub",
+   "umzali, i-lift club",
    "",
-   "",
-   "",
-   ""
+   "umzali, i-lift club",
+   "motswadi, sehlopha sa go namedišana"
   ],
   "neighbour, child in matric": [
    "buurvrou, kind in matriek",
+   "umakhelwane, ingane yenza umatikuletsheni",
    "",
-   "",
-   "",
-   ""
+   "ummelwane, umntwana ukwimatriki",
+   "moagišani, ngwana wa matriki"
   ],
   "your mechanic": [
    "jou werktuigkundige",
+   "umakhenikha wakho",
    "",
-   "",
-   "",
-   ""
+   "umkhandi wakho",
+   "mokhenike wa gago"
   ],
   "friend, sold his car": [
    "vriend, het sy kar verkoop",
+   "umngane, wathengisa imoto yakhe",
    "",
-   "",
-   "",
-   ""
+   "umhlobo, uthengise imoto yakhe",
+   "mogwera, o rekišitše koloi ya gagwe"
   ],
   "your brother": [
    "jou broer",
+   "umfowenu",
    "",
-   "",
-   "",
-   ""
+   "ubhuti wakho",
+   "buti wa gago"
   ],
   "neighbour": [
    "buurman",
+   "umakhelwane",
    "",
-   "",
-   "",
-   ""
+   "ummelwane",
+   "moagišani"
   ],
   "friend at a dealership": [
    "vriend by ’n handelaar",
+   "umngane othengisa izimoto",
    "",
-   "",
-   "",
-   ""
+   "umhlobo osebenza kumthengisi weemoto",
+   "mogwera, o šoma ga barekiši ba dikoloi"
   ],
   "friend, estate agent": [
    "vriend, eiendomsagent",
+   "umngane, i-ejenti yezindlu",
    "",
-   "",
-   "",
-   ""
+   "umhlobo, i-arhente yezindlu",
+   "mogwera, moagente wa thoto"
   ],
   "colleague, moved recently": [
    "kollega, onlangs getrek",
+   "osebenza naye, uthuthe muva nje",
    "",
-   "",
-   "",
-   ""
+   "osebenza naye, ufudukile kutshanje",
+   "mošomimmogo, o sa tšwa go huduga"
   ],
   "your landlord": [
    "jou verhuurder",
+   "umninindlu wakho",
    "",
-   "",
-   "",
-   ""
+   "umninindlu wakho",
+   "mong wa ntlo ya gago"
   ],
   "friend, body corporate": [
    "vriend, beheerliggaam",
+   "umngane, ose-body corporate",
    "",
-   "",
-   "",
-   ""
+   "umhlobo, i-body corporate",
+   "mogwera, komiti ya beng"
   ],
   "friend, went last year": [
    "vriend, was verlede jaar daar",
+   "umngane, waya khona nyakenye",
    "",
-   "",
-   "",
-   ""
+   "umhlobo, waya apho nyakenye",
+   "mogwera, o ile gona ngwagola"
   ],
   "colleague, travels a lot": [
    "kollega, reis baie",
+   "osebenza naye, uhamba kakhulu",
    "",
-   "",
-   "",
-   ""
+   "osebenza naye, uhamba kakhulu",
+   "mošomimmogo, o eta kudu"
   ],
   "friend, hiking club": [
    "vriend, stapklub",
+   "umngane, iqembu lokuhamba ngezinyawo",
    "",
-   "",
-   "",
-   ""
+   "umhlobo, iklabhu yokuhamba iintaba",
+   "mogwera, sehlopha sa go sepela dithabeng"
   ],
   "your aunt": [
    "jou tannie",
+   "ubabekazi wakho",
    "",
-   "",
-   "",
-   ""
+   "umakazi wakho",
+   "rakgadi wa gago"
   ],
   "friend, market stall": [
    "vriend, markstalletjie",
+   "umngane, unetafula emakethe",
    "",
-   "",
-   "",
-   ""
+   "umhlobo, uthengisa emarikeni",
+   "mogwera, o rekiša mmarakeng"
   ],
   "neighbour, keeps chickens": [
    "buurvrou, hou hoenders",
+   "umakhelwane, ufuya izinkukhu",
    "",
-   "",
-   "",
-   ""
+   "ummelwane, ufuya iinkukhu",
+   "moagišani, o fuwa dikgogo"
   ],
   "2–3 nights": [
    "2–3 nagte",
+   "Ubusuku obungu-2–3",
    "",
-   "",
-   "",
-   ""
+   "Ubusuku obu-2–3",
+   "Mašego a 2–3"
   ],
   "A week": [
    "’n Week",
+   "Isonto elilodwa",
    "",
-   "",
-   "",
-   ""
+   "Iveki enye",
+   "Beke e tee"
   ],
   "Accounting": [
    "Rekeningkunde",
+   "Ukubalwa kwezimali",
    "",
-   "",
-   "",
-   ""
+   "Ubalo-mali",
+   "Dipalo tša ditšhelete"
   ],
   "All year": [
    "Heeljaar",
+   "Unyaka wonke",
    "",
-   "",
-   "",
-   ""
+   "Unyaka wonke",
+   "Ngwaga ka moka"
   ],
   "Any day": [
    "Enige dag",
+   "Noma yiluphi usuku",
    "",
-   "",
-   "",
-   ""
+   "Nangaluphi na usuku",
+   "Letšatši lefe goba lefe"
   ],
   "Anything": [
    "Enigiets",
+   "Noma yini",
    "",
-   "",
-   "",
-   ""
+   "Nantoni na",
+   "Selo sefe goba sefe"
   ],
   "Art": [
    "Kuns",
+   "Ubuciko",
    "",
-   "",
-   "",
-   ""
+   "Ubugcisa",
+   "Bokgabo"
   ],
   "Ask your traders instead": [
    "Vra eerder jou handelaars",
+   "Kunalokho buza labo ohwebelana nabo",
    "",
-   "",
-   "",
-   ""
+   "Buza abantu orhweba nabo endaweni yoko",
+   "Botšiša bagwebi ba gago go e na le moo"
   ],
   "Authenticated?": [
    "Gewaarmerk?",
+   "Kuqinisekisiwe ukuthi kungokwangempela?",
    "",
-   "",
-   "",
-   ""
+   "Iqinisekisiwe?",
+   "E netefaditšwe?"
   ],
   "Best season?": [
    "Beste seisoen?",
+   "Yisiphi isikhathi sonyaka esingcono?",
    "",
-   "",
-   "",
-   ""
+   "Elona xesha lilungileyo?",
+   "Sehla se sekaone?"
   ],
   "Bike": [
    "Motorfiets",
+   "Isithuthuthu",
    "",
-   "",
-   "",
-   ""
+   "Isithuthuthu",
+   "Sethuthuthu"
   ],
   "Both": [
    "Albei",
+   "Kokubili",
    "",
-   "",
-   "",
-   ""
+   "Zombini",
+   "Ka bobedi"
   ],
   "Browse everything on TrustSquare ›": [
    "Blaai deur alles op TrustSquare ›",
+   "Bhekabheka konke ku-TrustSquare ›",
    "",
-   "",
-   "",
-   ""
+   "Khangela yonke into ekwiTrustSquare ›",
+   "Lebelela tšohle go TrustSquare ›"
   ],
   "Buying": [
    "Koop",
+   "Ukuthenga",
    "",
-   "",
-   "",
-   ""
+   "Ukuthenga",
+   "Go reka"
   ],
   "Buying or renting?": [
    "Koop of huur?",
+   "Uyathenga noma uyaqasha?",
    "",
-   "",
-   "",
-   ""
+   "Uyathenga okanye uyaqesha?",
+   "Go reka goba go hira?"
   ],
   "Cards": [
    "Kaarte",
+   "Amakhadi",
    "",
-   "",
-   "",
-   ""
+   "Amakhadi",
+   "Dikarata"
   ],
   "Childminding": [
    "Kinderoppas",
+   "Ukunakekela izingane",
    "",
-   "",
-   "",
-   ""
+   "Ukugcina abantwana",
+   "Go hlokomela bana"
   ],
   "Cleaning": [
    "Skoonmaak",
+   "Ukuhlanza",
    "",
-   "",
-   "",
-   ""
+   "Ukucoca",
+   "Go hlwekiša"
   ],
   "Clothes": [
    "Klere",
+   "Izingubo",
    "",
-   "",
-   "",
-   ""
+   "Iimpahla zokunxiba",
+   "Diaparo"
   ],
   "Coding": [
    "Kodering",
+   "Ukubhala amakhodi",
    "",
-   "",
-   "",
-   ""
+   "Ukukhowuda",
+   "Go ngwala khoutu"
   ],
   "Coins": [
    "Munte",
+   "Izinhlamvu zemali",
    "",
-   "",
-   "",
-   ""
+   "Iingqekembe",
+   "Dikhoine"
   ],
   "Collect": [
    "Kom haal",
+   "Bazolanda",
    "",
-   "",
-   "",
-   ""
+   "Bayayilanda",
+   "Ba tla go e tšea"
   ],
   "Commercial": [
    "Kommersieel",
+   "Indawo yebhizinisi",
    "",
-   "",
-   "",
-   ""
+   "Eyorhwebo",
+   "Lefelo la kgwebo"
   ],
   "Cooking": [
    "Kosmaak",
+   "Ukupheka",
    "",
-   "",
-   "",
-   ""
+   "Ukupheka",
+   "Go apea"
   ],
   "Crafts": [
    "Handwerk",
+   "Imisebenzi yezandla",
    "",
-   "",
-   "",
-   ""
+   "Imisebenzi yezandla",
+   "Mešomo ya diatla"
   ],
   "Day trip": [
    "Dagrit",
+   "Uhambo losuku",
    "",
-   "",
-   "",
-   ""
+   "Uhambo losuku",
+   "Leeto la letšatši"
   ],
   "Double cab": [
    "Dubbelkajuit",
+   "I-double cab",
    "",
-   "",
-   "",
-   ""
+   "I-double cab",
+   "Bakkie ya double cab"
   ],
   "Farm": [
    "Plaas",
+   "Ipulazi",
    "",
-   "",
-   "",
-   ""
+   "Ifama",
+   "Polase"
   ],
   "Find help": [
    "Soek hulp",
+   "Thola usizo",
    "",
-   "",
-   "",
-   ""
+   "Fumana uncedo",
+   "Hwetša thušo"
   ],
   "Fishing": [
    "Visvang",
+   "Ukudoba",
    "",
-   "",
-   "",
-   ""
+   "Ukuloba",
+   "Go rea dihlapi"
   ],
   "Flat": [
    "Woonstel",
+   "Ifulethi",
    "",
-   "",
-   "",
-   ""
+   "Iflethi",
+   "Folete"
   ],
   "Food & preserves": [
    "Kos en inmaak",
+   "Ukudla nokulondoloziwe",
    "",
-   "",
-   "",
-   ""
+   "Ukutya nokutya okugciniweyo",
+   "Dijo le dijo tše di bolokilwego"
   ],
   "Free quote": [
    "Gratis kwotasie",
+   "Ikhotheshini yamahhala",
    "",
-   "",
-   "",
-   ""
+   "Ikowuteyishini yasimahla",
+   "Kakanyo ya theko ya mahala"
   ],
   "Furniture": [
    "Meubels",
+   "Ifenisha",
    "",
-   "",
-   "",
-   ""
+   "Ifenitshala",
+   "Fenitšhara"
   ],
   "Game lodge": [
    "Wildsplaas-lodge",
+   "I-lodge yezilwane",
    "",
-   "",
-   "",
-   ""
+   "I-lodge yezilwanyana zasendle",
+   "Lodge ya diphoofolo tša lešoka"
   ],
   "Garden help": [
    "Tuinhulp",
+   "Usizo lwasengadini",
    "",
-   "",
-   "",
-   ""
+   "Uncedo lwegadi",
+   "Thušo ka serapeng"
   ],
   "Get work": [
    "Kry werk",
+   "Thola umsebenzi",
    "",
-   "",
-   "",
-   ""
+   "Fumana umsebenzi",
+   "Hwetša mošomo"
   ],
   "Good": [
    "Goed",
+   "Kusesimweni esihle",
    "",
-   "",
-   "",
-   ""
+   "Imeko entle",
+   "E botse"
   ],
   "Graded": [
    "Gegradeer",
+   "Kunikezwe izinga",
    "",
-   "",
-   "",
-   ""
+   "Inenqanaba",
+   "E filwe maemo"
   ],
   "Guided tour": [
    "Begeleide toer",
+   "Uhambo olunomholi",
    "",
-   "",
-   "",
-   ""
+   "Ukhenketho olukhokelwayo",
+   "Leeto le mohlahli"
   ],
   "Hatchback": [
    "Luikrug",
+   "I-hatchback",
    "",
-   "",
-   "",
-   ""
+   "I-hatchback",
+   "Koloi ya hatchback"
   ],
   "High school": [
    "Hoërskool",
+   "Isikole samabanga aphezulu",
    "",
-   "",
-   "",
-   ""
+   "Amabanga aphakamileyo",
+   "Sekolo se se phagamego"
   ],
   "House": [
    "Huis",
+   "Indlu",
    "",
-   "",
-   "",
-   ""
+   "Indlu",
+   "Ntlo"
   ],
   "Housekeeping": [
    "Huishulp",
+   "Ukunakekela indlu",
    "",
-   "",
-   "",
-   ""
+   "Ukugcina indlu",
+   "Go hlokomela ntlo"
   ],
   "How do they get it?": [
    "Hoe kry hulle dit?",
+   "Bakuthola kanjani?",
    "",
-   "",
-   "",
-   ""
+   "Bayifumana njani?",
+   "Ba e hwetša bjang?"
   ],
   "How long?": [
    "Hoe lank?",
+   "Isikhathi esingakanani?",
    "",
-   "",
-   "",
-   ""
+   "Ixesha elingakanani?",
+   "Nako ye kaakang?"
   ],
   "How many bedrooms?": [
    "Hoeveel slaapkamers?",
+   "Mangaki amakamelo okulala?",
    "",
-   "",
-   "",
-   ""
+   "Mangaphi amagumbi okulala?",
+   "Diphapoši tše kae tša go robala?"
   ],
   "How much?": [
    "Hoeveel?",
+   "Malini?",
    "",
-   "",
-   "",
-   ""
+   "Malini?",
+   "Ke bokae?"
   ],
   "How rare?": [
    "Hoe seldsaam?",
+   "Kuyivelakancane kangakanani?",
    "",
-   "",
-   "",
-   ""
+   "Inqabe kangakanani?",
+   "E hlaka gakaakang?"
   ],
   "I deliver": [
    "Ek lewer af",
+   "Ngiyabalethela",
    "",
-   "",
-   "",
-   ""
+   "Ndiyayihambisa",
+   "Ke a e iša"
   ],
   "In person": [
    "Persoonlik",
+   "Ubuso nobuso",
    "",
-   "",
-   "",
-   ""
+   "Ubuso ngobuso",
+   "Mahlo ka mahlo"
   ],
   "Later this year": [
    "Later vanjaar",
+   "Kamuva kulo nyaka",
    "",
-   "",
-   "",
-   ""
+   "Kamva kulo nyaka",
+   "Moragonyana ngwageng wo"
   ],
   "Laundry & ironing": [
    "Wasgoed en stryk",
+   "Ukuwasha nokwayina",
    "",
-   "",
-   "",
-   ""
+   "Ukuhlamba nokuayina",
+   "Go hlatswa le go aena"
   ],
   "Longer": [
    "Langer",
+   "Isikhathi eside",
    "",
-   "",
-   "",
-   ""
+   "Ixesha elide ngakumbi",
+   "Go feta moo"
   ],
   "Market day": [
    "Markdag",
+   "Usuku lwemakethe",
    "",
-   "",
-   "",
-   ""
+   "Usuku lwemarike",
+   "Letšatši la mmaraka"
   ],
   "Maths": [
    "Wiskunde",
+   "Izibalo",
    "",
-   "",
-   "",
-   ""
+   "Izibalo",
+   "Dipalo"
   ],
   "Matric": [
    "Matriek",
+   "Umatikuletsheni",
    "",
-   "",
-   "",
-   ""
+   "Imatriki",
+   "Matriki"
   ],
   "Militaria": [
    "Militaria",
+   "Izinto zempi",
    "",
-   "",
-   "",
-   ""
+   "Izinto zomkhosi",
+   "Dilo tša sešole"
   ],
   "Mint": [
    "Nuut",
+   "Kusha nya",
    "",
-   "",
-   "",
-   ""
+   "Intsha nya",
+   "E mpsha"
   ],
   "Near mint": [
    "Byna nuut",
+   "Cishe kusha nya",
    "",
-   "",
-   "",
-   ""
+   "Iphantse ibe ntsha",
+   "E batla e le mpsha"
   ],
   "Next few months": [
    "Volgende paar maande",
+   "Ezinyangeni ezimbalwa ezizayo",
    "",
-   "",
-   "",
-   ""
+   "Kwiinyanga ezimbalwa ezizayo",
+   "Dikgwedi tše mmalwa tše di tlago"
   ],
   "Not listed yet": [
    "Nog nie geadverteer nie",
+   "Akukafakwa",
    "",
-   "",
-   "",
-   ""
+   "Ayikabhengezwa",
+   "Ga e so papatšwe"
   ],
   "Not yet": [
    "Nog nie",
+   "Hhayi okwamanje",
    "",
-   "",
-   "",
-   ""
+   "Hayi okwangoku",
+   "Ga e so"
   ],
   "Office cleaning": [
    "Kantoorskoonmaak",
+   "Ukuhlanza amahhovisi",
    "",
-   "",
-   "",
-   ""
+   "Ukucoca iiofisi",
+   "Go hlwekiša diofisi"
   ],
   "Older": [
    "Ouer",
+   "Okudala",
    "",
-   "",
-   "",
-   ""
+   "Endala ngakumbi",
+   "Tša kgale go feta moo"
   ],
   "Online": [
    "Aanlyn",
+   "Ku-inthanethi",
    "",
-   "",
-   "",
-   ""
+   "Kwi-intanethi",
+   "Inthaneteng"
   ],
   "Online or in person?": [
    "Aanlyn of persoonlik?",
+   "Ku-inthanethi noma ubuso nobuso?",
    "",
-   "",
-   "",
-   ""
+   "Kwi-intanethi okanye ubuso ngobuso?",
+   "Inthaneteng goba mahlo ka mahlo?"
   ],
   "Other": [
    "Ander",
+   "Okunye",
    "",
-   "",
-   "",
-   ""
+   "Okunye",
+   "Se sengwe"
   ],
   "Over R2 000": [
    "Meer as R2 000",
+   "Ngaphezu kuka-R2 000",
    "",
-   "",
-   "",
-   ""
+   "Ngaphezu kwe-R2 000",
+   "Go feta R2 000"
   ],
   "Over R20 000": [
    "Meer as R20 000",
+   "Ngaphezu kuka-R20 000",
    "",
-   "",
-   "",
-   ""
+   "Ngaphezu kwe-R20 000",
+   "Go feta R20 000"
   ],
   "Over R500k": [
    "Meer as R500k",
+   "Ngaphezu kuka-R500k",
    "",
-   "",
-   "",
-   ""
+   "Ngaphezu kwe-R500k",
+   "Go feta R500k"
   ],
   "Over R6 000": [
    "Meer as R6 000",
+   "Ngaphezu kuka-R6 000",
    "",
-   "",
-   "",
-   ""
+   "Ngaphezu kwe-R6 000",
+   "Go feta R6 000"
   ],
   "Per person, per night?": [
    "Per persoon, per nag?",
+   "Ngomuntu, ngobusuku?",
    "",
-   "",
-   "",
-   ""
+   "Ngomntu, ngobusuku?",
+   "Ka motho, ka bošego?"
   ],
   "Plants": [
    "Plante",
+   "Izitshalo",
    "",
-   "",
-   "",
-   ""
+   "Izityalo",
+   "Dimela"
   ],
   "Played": [
    "Gebruik",
+   "Kusetshenzisiwe",
    "",
-   "",
-   "",
-   ""
+   "Isetyenzisiwe",
+   "E šomišitšwe"
   ],
   "Plot": [
    "Erf",
+   "Isiza",
    "",
-   "",
-   "",
-   ""
+   "Isiza",
+   "Setsha"
   ],
   "Pool care": [
    "Swembadonderhoud",
+   "Ukunakekela ichibi lokubhukuda",
    "",
-   "",
-   "",
-   ""
+   "Ukukhathalela idama lokuqubha",
+   "Tlhokomelo ya bodiba bja go rutha"
   ],
   "Post it": [
    "Pos dit",
+   "Ngiyabaposela",
    "",
-   "",
-   "",
-   ""
+   "Ndiyayiposa",
+   "Ke e romela ka poso"
   ],
   "Primary": [
    "Laerskool",
+   "Isikole samabanga aphansi",
    "",
-   "",
-   "",
-   ""
+   "Amabanga aphantsi",
+   "Sekolo sa praemari"
   ],
   "Rail journey": [
    "Treinrit",
+   "Uhambo ngesitimela",
    "",
-   "",
-   "",
-   ""
+   "Uhambo ngololiwe",
+   "Leeto ka setimela"
   ],
   "Rare only": [
    "Net seldsaam",
+   "Okuyivelakancane kuphela",
    "",
-   "",
-   "",
-   ""
+   "Ezinqabileyo kuphela",
+   "Tše di hlakago kudu fela"
   ],
   "Renting": [
    "Huur",
+   "Ukuqasha",
    "",
-   "",
-   "",
-   ""
+   "Ukuqesha",
+   "Go hira"
   ],
   "Roughly what year?": [
    "Omtrent watter jaar?",
+   "Cishe unyaka muni?",
    "",
-   "",
-   "",
-   ""
+   "Malunga nowuphi unyaka?",
+   "Ngwaga ofe, ka kakanyo?"
   ],
   "Safari": [
    "Safari",
+   "Isafari",
    "",
-   "",
-   "",
-   ""
+   "Isafari",
+   "Leeto la safari"
   ],
   "Scarce": [
    "Skaars",
+   "Akutholakali kalula",
    "",
-   "",
-   "",
-   ""
+   "Inqabile",
+   "Tše di hlakago"
   ],
   "Science": [
    "Wetenskap",
+   "Isayensi",
    "",
-   "",
-   "",
-   ""
+   "Inzululwazi",
+   "Saense"
   ],
   "Sedan": [
    "Sedan",
+   "I-sedan",
    "",
-   "",
-   "",
-   ""
+   "I-sedan",
+   "Koloi ya sedan"
   ],
   "Self-drive": [
    "Selfry",
+   "Ukuzishayelela",
    "",
-   "",
-   "",
-   ""
+   "Ukuziqhubela",
+   "O otlela ka bowena"
   ],
   "Stamps": [
    "Seëls",
+   "Izitembu",
    "",
-   "",
-   "",
-   ""
+   "Izitampu",
+   "Ditempe"
   ],
   "Summer": [
    "Somer",
+   "Ihlobo",
    "",
-   "",
-   "",
-   ""
+   "Ihlobo",
+   "Selemo"
   ],
   "The people you have dealt with before. One line, to each of them.": [
    "Die mense met wie jy al te doen gehad het. Een reël, aan elkeen.",
+   "Abantu osake wasebenzisana nabo. Umugqa owodwa, komunye nomunye wabo.",
    "",
-   "",
-   "",
-   ""
+   "Abantu owakhe wasebenzisana nabo ngaphambili. Umgca omnye, komnye nomnye wabo.",
+   "Batho bao o kilego wa šoma le bona. Mothaladi o tee, go yo mongwe le yo mongwe wa bona."
   ],
   "To let": [
    "Te huur",
+   "Kuyaqashiswa",
    "",
-   "",
-   "",
-   ""
+   "Iyaqeshwa",
+   "Go hirišwa"
   ],
   "To sell": [
    "Te koop",
+   "Kuyathengiswa",
    "",
-   "",
-   "",
-   ""
+   "Iyathengiswa",
+   "Go rekišwa"
   ],
   "To sell, or to let?": [
    "Te koop of te huur?",
+   "Kuyathengiswa, noma kuyaqashiswa?",
    "",
-   "",
-   "",
-   ""
+   "Iyathengiswa, okanye iyaqeshwa?",
+   "Go rekišwa, goba go hirišwa?"
   ],
   "Tools": [
    "Gereedskap",
+   "Amathuluzi",
    "",
-   "",
-   "",
-   ""
+   "Izixhobo",
+   "Didirišwa"
   ],
   "Townhouse": [
    "Meenthuis",
+   "I-townhouse",
    "",
-   "",
-   "",
-   ""
+   "I-townhouse",
+   "Ntlo ya komplekse"
   ],
   "Under R1 000": [
    "Onder R1 000",
+   "Ngaphansi kuka-R1 000",
    "",
-   "",
-   "",
-   ""
+   "Ngaphantsi kwe-R1 000",
+   "Ka tlase ga R1 000"
   ],
   "Under R1 500": [
    "Onder R1 500",
+   "Ngaphansi kuka-R1 500",
    "",
-   "",
-   "",
-   ""
+   "Ngaphantsi kwe-R1 500",
+   "Ka tlase ga R1 500"
   ],
   "Under R100": [
    "Onder R100",
+   "Ngaphansi kuka-R100",
    "",
-   "",
-   "",
-   ""
+   "Ngaphantsi kwe-R100",
+   "Ka tlase ga R100"
   ],
   "Under R150k": [
    "Onder R150k",
+   "Ngaphansi kuka-R150k",
    "",
-   "",
-   "",
-   ""
+   "Ngaphantsi kwe-R150k",
+   "Ka tlase ga R150k"
   ],
   "Ungraded": [
    "Ongegradeer",
+   "Akunikezwanga izinga",
    "",
-   "",
-   "",
-   ""
+   "Ayinanqanaba",
+   "Ga se ya fiwa maemo"
   ],
   "University": [
    "Universiteit",
+   "Inyuvesi",
    "",
-   "",
-   "",
-   ""
+   "Iyunivesithi",
+   "Yunibesithi"
   ],
   "Watches": [
    "Horlosies",
+   "Amawashi",
    "",
-   "",
-   "",
-   ""
+   "Iiwotshi",
+   "Diwatšhe"
   ],
   "What are you after?": [
    "Waarna soek jy?",
+   "Ufunani?",
    "",
-   "",
-   "",
-   ""
+   "Ufuna ntoni?",
+   "O rata go hwetša eng?"
   ],
   "What are you asking?": [
    "Wat vra jy?",
+   "Uthengisa ngamalini?",
    "",
-   "",
-   "",
-   ""
+   "Ufuna malini ngayo?",
+   "O kgopela bokae?"
   ],
   "What are you hunting?": [
    "Waarna jag jy?",
+   "Uzingelani?",
    "",
-   "",
-   "",
-   ""
+   "Uzingela ntoni?",
+   "O tsoma eng?"
   ],
   "What are you listing?": [
    "Wat adverteer jy?",
+   "Ufaka ini?",
    "",
-   "",
-   "",
-   ""
+   "Ubhengeza ntoni?",
+   "O papatša eng?"
   ],
   "What are you looking for?": [
    "Waarna soek jy?",
+   "Ufuna ini?",
    "",
-   "",
-   "",
-   ""
+   "Ukhangela ntoni?",
+   "O nyaka eng?"
   ],
   "What are you offering?": [
    "Wat bied jy aan?",
+   "Unikezani?",
    "",
-   "",
-   "",
-   ""
+   "Unikeza ntoni?",
+   "O fa eng?"
   ],
   "What are you selling?": [
    "Wat verkoop jy?",
+   "Uthengisani?",
    "",
-   "",
-   "",
-   ""
+   "Uthengisa ntoni?",
+   "O rekiša eng?"
   ],
   "What can you spend?": [
    "Hoeveel kan jy spandeer?",
+   "Ungasebenzisa malini?",
    "",
-   "",
-   "",
-   ""
+   "Ungachitha malini?",
+   "O ka šomiša bokae?"
   ],
   "What condition?": [
    "Watter toestand?",
+   "Kusesimweni esinjani?",
    "",
-   "",
-   "",
-   ""
+   "Imeko enjani?",
+   "E maemong afe?"
   ],
   "What do they need?": [
    "Wat het hulle nodig?",
+   "Badingani?",
    "",
-   "",
-   "",
-   ""
+   "Bafuna ntoni?",
+   "Ba nyaka eng?"
   ],
   "What do you need done?": [
    "Wat moet gedoen word?",
+   "Ufuna kwenziwe ini?",
    "",
-   "",
-   "",
-   ""
+   "Ufuna kwenziwe ntoni?",
+   "O nyaka go dirwa eng?"
   ],
   "What do you teach?": [
    "Wat gee jy klas in?",
+   "Ufundisani?",
    "",
-   "",
-   "",
-   ""
+   "Ufundisa ntoni?",
+   "O ruta eng?"
   ],
   "What is the call-out?": [
    "Wat is die uitroepfooi?",
+   "Imalini imali yokubizwa?",
    "",
-   "",
-   "",
-   ""
+   "Yimalini imali yokubizwa?",
+   "Tefo ya pitšo ke bokae?"
   ],
   "What is your trade?": [
    "Wat is jou ambag?",
+   "Yiliphi ikhono lakho?",
    "",
-   "",
-   "",
-   ""
+   "Buyintoni ubugcisa bakho?",
+   "Mošomo wa gago wa diatla ke ofe?"
   ],
   "What kind of trip?": [
    "Watter soort reis?",
+   "Uhlobo luni lohambo?",
    "",
-   "",
-   "",
-   ""
+   "Luhlobo luni lohambo?",
+   "Ke leeto la mohuta ofe?"
   ],
   "What work do you do?": [
    "Watter werk doen jy?",
+   "Wenza muphi umsebenzi?",
    "",
-   "",
-   "",
-   ""
+   "Wenza msebenzi mni?",
+   "O dira mošomo ofe?"
   ],
   "When?": [
    "Wanneer?",
+   "Nini?",
    "",
-   "",
-   "",
-   ""
+   "Nini?",
+   "Neng?"
   ],
   "Where do you want to look?": [
    "Waar wil jy soek?",
+   "Ufuna ukubheka kuphi?",
    "",
-   "",
-   "",
-   ""
+   "Ufuna ukukhangela phi?",
+   "O nyaka go lebelela kae?"
   ],
   "Where?": [
    "Waar?",
+   "Kuphi?",
    "",
-   "",
-   "",
-   ""
+   "Phi?",
+   "Kae?"
   ],
   "Which day?": [
    "Watter dag?",
+   "Yiluphi usuku?",
    "",
-   "",
-   "",
-   ""
+   "Luluphi usuku?",
+   "Letšatši lefe?"
   ],
   "Which level?": [
    "Watter vlak?",
+   "Yiliphi izinga?",
    "",
-   "",
-   "",
-   ""
+   "Leliphi inqanaba?",
+   "Legato lefe?"
   ],
   "Which make?": [
    "Watter fabrikaat?",
+   "Yiluphi uhlobo lwemoto?",
    "",
-   "",
-   "",
-   ""
+   "Yeyiphi ibhrendi?",
+   "Ke mohuta ofe?"
   ],
   "Winter": [
    "Winter",
+   "Ubusika",
    "",
-   "",
-   "",
-   ""
+   "Ubusika",
+   "Marega"
   ],
   "Which city?": [
    "Watter stad?",
@@ -2845,10 +2845,10 @@
   ],
   "Tap one to ask for an introduction — it opens in TrustSquare, where introductions and Tuppence live.": [
    "Tik op een om ’n voorstelling te vra — dit gaan in TrustSquare oop, waar jou voorstellings en Tuppence is.",
+   "Thinta esisodwa ukuze ucele isethulo — kuvuleka ku-TrustSquare, lapho kugcinwa khona izethulo ne-Tuppence.",
    "",
-   "",
-   "",
-   ""
+   "Cofa enye ukuze ucele intshayelelo — iyavuleka kwiTrustSquare, apho iintshayelelo neTuppence zihlala khona.",
+   "Kgotla e tee go kgopela tsebišo — e bulega go TrustSquare, moo ditsebišo le Tuppence di dulago gona."
   ],
   "Someone who has bought from you says": [
    "Iemand wat al by jou gekoop het, sê",
@@ -2873,31 +2873,31 @@
   ],
   "One line to each buyer asking about your car - until it is sold.": [
    "Een reël na elke koper wat oor jou motor vra - totdat dit verkoop is.",
+   "Umugqa owodwa kumthengi ngamunye obuza ngemoto yakho - ize ithengiswe.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye kumthengi ngamnye obuza ngemoto yakho - ide ithengiswe.",
+   "Mothaladi o tee go moreki yo mongwe le yo mongwe yo a botšišago ka koloi ya gago - go fihlela e rekišwa."
   ],
   "One line to the collectors who buy from you - a new piece, a swap, a price.": [
    "Een reël na die versamelaars wat by jou koop - ’n nuwe stuk, ’n ruil, ’n prys.",
+   "Umugqa owodwa kubaqoqi abathenga kuwe - into entsha, ukushintshana, inani.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye kubaqokeleli abathenga kuwe - into entsha, ukutshintshiselana, ixabiso.",
+   "Mothaladi o tee go bakgobokanyi bao ba rekago go wena - selo se sefsa, go ananya, theko."
   ],
   "One line to the people who buy from you - fresh today, sold out, at the gate.": [
    "Een reël na die mense wat by jou koop - vars vandag, uitverkoop, by die hek.",
+   "Umugqa owodwa kubantu abathenga kuwe - okusha namuhla, kuphelile, ngisesangweni.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye kubantu abathenga kuwe - kutsha namhlanje, kuphelile, ndisesangweni.",
+   "Mothaladi o tee go batho bao ba rekago go wena - tše mpsha lehono, di fedile, ke kgorong."
   ],
   "One tap on your phone buzzes your employer, with your name on it.": [
    "Een tik op jou foon buzz jou werkgewer, met jou naam daarop.",
+   "Ukuthinta kanye efonini yakho kuthumela i-buzz kumqashi wakho, enegama lakho.",
    "",
-   "",
-   "",
-   ""
+   "Ukucofa kanye kwifowuni yakho kuthumelela umqeshi wakho i-buzz, enegama lakho.",
+   "Go kgotla gatee go founo ya gago go romelela mothwadi wa gago buzz, ye e nago le leina la gago."
   ],
   "EXAMPLE PHOTO — add your own in the app": [
    "VOORBEELDFOTO — voeg jou eie in die app by",
@@ -3097,31 +3097,31 @@
   ],
   "Tap one to ask for an introduction — it opens in TrustSquare.": [
    "Tik op een om ’n voorstelling te vra — dit gaan in TrustSquare oop.",
+   "Thinta esisodwa ukuze ucele isethulo — kuvuleka ku-TrustSquare.",
    "",
-   "",
-   "",
-   ""
+   "Cofa enye ukuze ucele intshayelelo — iyavuleka kwiTrustSquare.",
+   "Kgotla e tee go kgopela tsebišo — e bulega go TrustSquare."
   ],
   "A 6-digit code comes by SMS. Introductions reach you on this number.": [
+   "’n 6-syfer-kode kom per SMS. Voorstellings bereik jou op hierdie nommer.",
+   "Ikhodi yezinombolo ezi-6 ifika nge-SMS. Izethulo zikufinyelela kule nombolo.",
    "",
-   "",
-   "",
-   "",
-   ""
+   "Ikhowudi yamanani ama-6 iza nge-SMS. Iintshayelelo zifika kuwe kule nombolo.",
+   "Khoutu ya dinomoro tše 6 e tla ka SMS. Ditsebišo di go fihlelela ka nomoro ye."
   ],
   "Type the 6 digits from the SMS.": [
+   "Tik die 6 syfers uit die SMS in.",
+   "Bhala izinombolo ezi-6 ezise-SMS.",
    "",
-   "",
-   "",
-   "",
-   ""
+   "Bhala amanani ama-6 akwi-SMS.",
+   "Ngwala dinomoro tše 6 tše di lego go SMS."
   ],
   "No email needed. You get a private link that is your key to this advert — send it to yourself on WhatsApp and keep it. Introductions wait for you inside.": [
+   "Geen e-pos nodig nie. Jy kry ’n privaat skakel wat jou sleutel tot hierdie advertensie is — stuur dit vir jouself op WhatsApp en hou dit. Voorstellings wag vir jou daarbinne.",
+   "Ayidingeki i-imeyili. Uthola isixhumanisi esiyimfihlo esiwukhiye wakho walesi sikhangiso — sizithumelele ku-WhatsApp bese usigcina. Izethulo zikulindile ngaphakathi.",
    "",
-   "",
-   "",
-   "",
-   ""
+   "Akufuneki i-imeyile. Ufumana ikhonkco eliyimfihlo eliyisitshixo sakho kwesi sibhengezo — lizithumelele kuWhatsApp uligcine. Iintshayelelo zikulindile ngaphakathi.",
+   "Ga go nyakege imeile. O hwetša kgokagano ya sephiri yeo e lego senotlelo sa gago sa papatšo ye — e iromele ka WhatsApp gomme o e boloke. Ditsebišo di go letile ka gare."
   ],
   "Email": [
    "E-pos",
@@ -3139,745 +3139,745 @@
   ],
   "WhatsApp link": [
    "WhatsApp-skakel",
+   "Isixhumanisi se-WhatsApp",
    "",
-   "",
-   "",
-   ""
+   "Ikhonkco leWhatsApp",
+   "Kgokagano ya WhatsApp"
   ],
   "Save my advert": [
    "Stoor my advertensie",
+   "Gcina isikhangiso sami",
    "",
-   "",
-   "",
-   ""
+   "Gcina isibhengezo sam",
+   "Boloka papatšo ya ka"
   ],
   "Saving…": [
    "Stoor tans…",
+   "Iyagcina…",
    "",
-   "",
-   "",
-   ""
+   "Iyagcina…",
+   "E a bolokwa…"
   ],
   "Free. Before it goes live, you read and sign the {terms} in the app.": [
    "Gratis. Voordat dit sigbaar word, lees en teken jy die {terms} in die app.",
+   "Mahhala. Ngaphambi kokuthi sibonakale, ufunda bese usayina {terms} ku-app.",
    "",
-   "",
-   "",
-   ""
+   "Simahla. Phambi kokuba sipapashwe, ufunda uze usayine {terms} kwi-app.",
+   "Ke mahala. Pele e thoma go phela, o bala gomme o saena {terms} ka go app."
   ],
   "Sign the terms and publish": [
    "Teken die bepalings en plaas dit",
+   "Sayina imigomo bese ushicilela",
    "",
-   "",
-   "",
-   ""
+   "Sayina imimiselo uze upapashe",
+   "Saena melawana gomme o phatlalatše"
   ],
   "Your private key link": [
    "Jou privaat sleutelskakel",
+   "Isixhumanisi sakho sokhiye esiyimfihlo",
    "",
-   "",
-   "",
-   ""
+   "Ikhonkco lakho lesitshixo eliyimfihlo",
+   "Kgokagano ya gago ya senotlelo sa sephiri"
   ],
   "Send my key to myself on WhatsApp": [
    "Stuur my sleutel vir myself op WhatsApp",
+   "Zithumelele ukhiye wakho ku-WhatsApp",
    "",
-   "",
-   "",
-   ""
+   "Ndizithumelele isitshixo sam kuWhatsApp",
+   "Ke iromele senotlelo sa ka ka WhatsApp"
   ],
   "Pass Quick on to someone": [
    "Stuur Quick vir iemand anders",
+   "Dlulisela i-Quick komunye umuntu",
    "",
-   "",
-   "",
-   ""
+   "Dlulisela iQuick komnye umntu",
+   "Fetišetša Quick go motho yo mongwe"
   ],
   "Your phone number": [
    "Jou foonnommer",
+   "Inombolo yakho yefoni",
    "",
-   "",
-   "",
-   ""
+   "Inombolo yakho yefowuni",
+   "Nomoro ya gago ya founo"
   ],
   "Send code": [
    "Stuur kode",
+   "Thumela ikhodi",
    "",
-   "",
-   "",
-   ""
+   "Thumela ikhowudi",
+   "Romela khoutu"
   ],
   "6-digit code": [
    "6-syfer-kode",
+   "Ikhodi yezinombolo ezi-6",
    "",
-   "",
-   "",
-   ""
+   "Ikhowudi yamanani ama-6",
+   "Khoutu ya dinomoro tše 6"
   ],
   "Confirm": [
    "Bevestig",
+   "Qinisekisa",
    "",
-   "",
-   "",
-   ""
+   "Qinisekisa",
+   "Netefatša"
   ],
   "Type the number you use for SMS, for example 082 123 4567.": [
    "Tik die nommer wat jy vir SMS’e gebruik, byvoorbeeld 082 123 4567.",
+   "Bhala inombolo oyisebenzisela ama-SMS, isibonelo 082 123 4567.",
    "",
-   "",
-   "",
-   ""
+   "Bhala inombolo oyisebenzisela ii-SMS, umzekelo 082 123 4567.",
+   "Ngwala nomoro ye o e šomišago go SMS, mohlala 082 123 4567."
   ],
   "Type your mobile number.": [
    "Tik jou selfoonnommer.",
+   "Bhala inombolo yakho yeselula.",
    "",
-   "",
-   "",
-   ""
+   "Bhala inombolo yakho yeselfowuni.",
+   "Ngwala nomoro ya gago ya selefouno."
   ],
   "Sending the code…": [
    "Stuur tans die kode…",
+   "Ithumela ikhodi…",
    "",
-   "",
-   "",
-   ""
+   "Kuthunyelwa ikhowudi…",
+   "Khoutu e a romelwa…"
   ],
   "Code sent to": [
    "Kode gestuur na",
+   "Ikhodi ithunyelwe ku",
    "",
-   "",
-   "",
-   ""
+   "Ikhowudi ithunyelwe ku",
+   "Khoutu e rometšwe go"
   ],
   "Type it here.": [
    "Tik dit hier.",
+   "Yibhale lapha.",
    "",
-   "",
-   "",
-   ""
+   "Yibhale apha.",
+   "E ngwale mo."
   ],
   "SMS codes are not switched on yet — your private WhatsApp link works today.": [
    "SMS-kodes is nog nie aangeskakel nie — jou privaat WhatsApp-skakel werk vandag.",
+   "Amakhodi e-SMS awakavulwa — isixhumanisi sakho se-WhatsApp esiyimfihlo siyasebenza namuhla.",
    "",
-   "",
-   "",
-   ""
+   "Iikhowudi ze-SMS azikavulwa — ikhonkco lakho leWhatsApp eliyimfihlo liyasebenza namhlanje.",
+   "Dikhoutu tša SMS ga di so bulwe — kgokagano ya gago ya sephiri ya WhatsApp e a šoma lehono."
   ],
   "Could not send the code. Try again.": [
    "Kon nie die kode stuur nie. Probeer weer.",
+   "Asikwazanga ukuthumela ikhodi. Zama futhi.",
    "",
-   "",
-   "",
-   ""
+   "Asikwazanga ukuthumela ikhowudi. Zama kwakhona.",
+   "Re paletšwe ke go romela khoutu. Leka gape."
   ],
   "That code is not right.": [
    "Daardie kode is nie reg nie.",
+   "Leyo khodi ayilungile.",
    "",
-   "",
-   "",
-   ""
+   "Loo khowudi ayichanekanga.",
+   "Khoutu yeo ga e nepagale."
   ],
   "Phone confirmed. Introductions reach you by SMS.": [
    "Foon bevestig. Voorstellings bereik jou per SMS.",
+   "Ifoni iqinisekisiwe. Izethulo zikufinyelela nge-SMS.",
    "",
-   "",
-   "",
-   ""
+   "Ifowuni iqinisekisiwe. Iintshayelelo zifika kuwe nge-SMS.",
+   "Founo e netefaditšwe. Ditsebišo di go fihlelela ka SMS."
   ],
   "Confirm the SMS code first, then save.": [
    "Bevestig eers die SMS-kode, en stoor dan.",
+   "Qinisekisa ikhodi ye-SMS kuqala, bese ugcina.",
    "",
-   "",
-   "",
-   ""
+   "Qala uqinisekise ikhowudi ye-SMS, emva koko ugcine.",
+   "Netefatša khoutu ya SMS pele, ke moka o boloke."
   ],
   "No connection — try again.": [
    "Geen verbinding nie — probeer weer.",
+   "Akukho ukuxhumana — zama futhi.",
    "",
-   "",
-   "",
-   ""
+   "Akukho qhagamshelo — zama kwakhona.",
+   "Ga go kgokagano — leka gape."
   ],
   "Too many adverts from this phone today. Please try again tomorrow.": [
    "Te veel advertensies van hierdie foon af vandag. Probeer asseblief môre weer.",
+   "Izikhangiso eziningi kakhulu kule foni namuhla. Sicela uzame futhi kusasa.",
    "",
-   "",
-   "",
-   ""
+   "Zininzi kakhulu izibhengezo ezivela kule fowuni namhlanje. Nceda uzame kwakhona ngomso.",
+   "Go na le dipapatšo tše dintši kudu go tšwa founong ye lehono. Hle leka gape gosasa."
   ],
   "Too many adverts for this email address today. Please try again tomorrow.": [
    "Te veel advertensies vir hierdie e-posadres vandag. Probeer asseblief môre weer.",
+   "Izikhangiso eziningi kakhulu zaleli kheli le-imeyili namuhla. Sicela uzame futhi kusasa.",
    "",
-   "",
-   "",
-   ""
+   "Zininzi kakhulu izibhengezo zale dilesi ye-imeyile namhlanje. Nceda uzame kwakhona ngomso.",
+   "Go na le dipapatšo tše dintši kudu tša aterese ye ya imeile lehono. Hle leka gape gosasa."
   ],
   "Please type an email address we can reach you on.": [
    "Tik asseblief ’n e-posadres waarop ons jou kan bereik.",
+   "Sicela ubhale ikheli le-imeyili esingakuthola kulo.",
    "",
-   "",
-   "",
-   ""
+   "Nceda ubhale idilesi ye-imeyile esinokukufikelela ngayo.",
+   "Hle ngwala aterese ya imeile yeo re ka go hwetšago ka yona."
   ],
   "Something is missing from this advert. Please try again.": [
    "Iets kort in hierdie advertensie. Probeer asseblief weer.",
+   "Kukhona okushodayo kulesi sikhangiso. Sicela uzame futhi.",
    "",
-   "",
-   "",
-   ""
+   "Kukho into eswelekayo kwesi sibhengezo. Nceda uzame kwakhona.",
+   "Go na le se se hlaelago papatšong ye. Hle leka gape."
   ],
   "Not saved — nothing was lost. Please try again.": [
    "Nie gestoor nie — niks is verlore nie. Probeer asseblief weer.",
+   "Akugcinwanga — akukho okulahlekile. Sicela uzame futhi.",
    "",
-   "",
-   "",
-   ""
+   "Asigcinwanga — akukho nto ilahlekileyo. Nceda uzame kwakhona.",
+   "Ga se ya bolokwa — ga go se se lahlegilego. Hle leka gape."
   ],
   "Next: open it in TrustSquare, sign the terms and publish.": [
    "Volgende: maak dit in TrustSquare oop, teken die bepalings en plaas dit.",
+   "Okulandelayo: sivule ku-TrustSquare, usayine imigomo bese ushicilela.",
    "",
-   "",
-   "",
-   ""
+   "Okulandelayo: sivule kwiTrustSquare, usayine imimiselo uze upapashe.",
+   "Se se latelago: e bule go TrustSquare, o saene melawana gomme o phatlalatše."
   ],
   "You already have a TrustSquare account. We emailed you a link — open it to publish.": [
    "Jy het reeds ’n TrustSquare-rekening. Ons het vir jou ’n skakel ge-e-pos — maak dit oop om te plaas.",
+   "Usunayo i-akhawunti ye-TrustSquare. Sikuthumelele isixhumanisi nge-imeyili — sivule ukuze ushicilele.",
    "",
-   "",
-   "",
-   ""
+   "Sele unayo iakhawunti yeTrustSquare. Sikuthumelele ikhonkco nge-imeyile — livule ukuze upapashe.",
+   "O šetše o na le akhaonto ya TrustSquare. Re go romeletše kgokagano ka imeile — e bule go phatlalatša."
   ],
   "Saved, not published yet — open it in TrustSquare to finish.": [
    "Gestoor, nog nie geplaas nie — maak dit in TrustSquare oop om klaar te maak.",
+   "Sigciniwe, asikashicilelwa — sivule ku-TrustSquare ukuze uqedele.",
    "",
-   "",
-   "",
-   ""
+   "Sigciniwe, asikapapashwa — sivule kwiTrustSquare ukuze ugqibe.",
+   "E bolokilwe, ga e so phatlalatšwe — e bule go TrustSquare go e fetša."
   ],
   "Keep this link — it is your key. Send it to yourself on WhatsApp now.": [
    "Hou hierdie skakel — dit is jou sleutel. Stuur dit nou vir jouself op WhatsApp.",
+   "Gcina lesi sixhumanisi — siwukhiye wakho. Sizithumelele ku-WhatsApp manje.",
    "",
-   "",
-   "",
-   ""
+   "Gcina eli khonkco — sisitshixo sakho. Lizithumelele kuWhatsApp ngoku.",
+   "Boloka kgokagano ye — ke senotlelo sa gago. E iromele ka WhatsApp bjale."
   ],
   "Introductions wait in your TrustSquare hub — open it with your private link.": [
    "Voorstellings wag in jou TrustSquare-hub — maak dit met jou privaat skakel oop.",
+   "Izethulo zikulindile esikhungweni sakho se-TrustSquare — sivule ngesixhumanisi sakho esiyimfihlo.",
    "",
-   "",
-   "",
-   ""
+   "Iintshayelelo zikulindile kwiziko lakho leTrustSquare — livule ngekhonkco lakho eliyimfihlo.",
+   "Ditsebišo di go letile lefelong la gago la TrustSquare — le bule ka kgokagano ya gago ya sephiri."
   ],
   "Introductions reach you by SMS.": [
    "Voorstellings bereik jou per SMS.",
+   "Izethulo zikufinyelela nge-SMS.",
    "",
-   "",
-   "",
-   ""
+   "Iintshayelelo zifika kuwe nge-SMS.",
+   "Ditsebišo di go fihlelela ka SMS."
   ],
   "We also emailed a link to": [
    "Ons het ook ’n skakel ge-e-pos aan",
+   "Siphinde sathumela isixhumanisi nge-imeyili ku",
    "",
-   "",
-   "",
-   ""
+   "Sikwathumele ikhonkco nge-imeyile ku",
+   "Re romeletše le kgokagano ka imeile go"
   ],
   "Not right? Change it": [
    "Verkeerd? Verander dit",
+   "Akulungile? Kushintshe",
    "",
-   "",
-   "",
-   ""
+   "Ayichanekanga? Yitshintshe",
+   "Ga e nepagale? E fetole"
   ],
   "We also emailed you a link.": [
    "Ons het ook vir jou ’n skakel ge-e-pos.",
+   "Siphinde sakuthumelela isixhumanisi nge-imeyili.",
    "",
-   "",
-   "",
-   ""
+   "Sikwakuthumelele ikhonkco nge-imeyile.",
+   "Re go romeletše le kgokagano ka imeile."
   ],
   "My TrustSquare advert": [
    "My TrustSquare-advertensie",
+   "Isikhangiso sami se-TrustSquare",
    "",
-   "",
-   "",
-   ""
+   "Isibhengezo sam seTrustSquare",
+   "Papatšo ya ka ya TrustSquare"
   ],
   "This link is my key to it — keep it, do not share it:": [
    "Hierdie skakel is my sleutel daartoe — hou dit, moenie dit deel nie:",
+   "Lesi sixhumanisi siwukhiye wami wesikhangiso — sigcine, ungabelani ngaso:",
    "",
-   "",
-   "",
-   ""
+   "Eli khonkco sisitshixo sam saso — ligcine, musa ukwabelana ngalo:",
+   "Kgokagano ye ke senotlelo sa ka sa yona — e boloke, o se ke wa e abelana:"
   ],
   "My TrustSquare advert is live:": [
    "My TrustSquare-advertensie is aanlyn:",
+   "Isikhangiso sami se-TrustSquare sesiphila:",
    "",
-   "",
-   "",
-   ""
+   "Isibhengezo sam seTrustSquare siphila ngoku:",
+   "Papatšo ya ka ya TrustSquare e phela bjale:"
   ],
   "My TrustSquare advert is saved:": [
    "My TrustSquare-advertensie is gestoor:",
+   "Isikhangiso sami se-TrustSquare sigciniwe:",
    "",
-   "",
-   "",
-   ""
+   "Isibhengezo sam seTrustSquare sigciniwe:",
+   "Papatšo ya ka ya TrustSquare e bolokilwe:"
   ],
   "Your advert — ready to save": [
    "Jou advertensie — gereed om te stoor",
+   "Isikhangiso sakho — silungele ukugcinwa",
    "",
-   "",
-   "",
-   ""
+   "Isibhengezo sakho — silungele ukugcinwa",
+   "Papatšo ya gago — e loketše go bolokwa"
   ],
   "You can add it in the app before you publish.": [
    "Jy kan dit in die app byvoeg voordat jy dit plaas.",
+   "Ungakwengeza ku-app ngaphambi kokushicilela.",
    "",
-   "",
-   "",
-   ""
+   "Unokuyongeza kwi-app phambi kokuba upapashe.",
+   "O ka e oketša go app pele o phatlalatša."
   ],
   "Everything that counts is in.": [
    "Alles wat tel, is in.",
+   "Konke okubalulekile sekufakiwe.",
    "",
-   "",
-   "",
-   ""
+   "Yonke into ebalulekileyo ikhona.",
+   "Tšohle tše di balwago di tsene."
   ],
   "terms accepted": [
    "bepalings aanvaar",
+   "imigomo yamukelwe",
    "",
-   "",
-   "",
-   ""
+   "imimiselo yamkelwe",
+   "melawana e amogetšwe"
   ],
   "Use another email": [
    "Gebruik ’n ander e-posadres",
+   "Sebenzisa enye i-imeyili",
    "",
-   "",
-   "",
-   ""
+   "Sebenzisa enye i-imeyile",
+   "Šomiša imeile ye nngwe"
   ],
   "Change this in TrustSquare": [
    "Verander dit in TrustSquare",
+   "Shintsha lokhu ku-TrustSquare",
    "",
-   "",
-   "",
-   ""
+   "Tshintsha oku kwiTrustSquare",
+   "Fetola se go TrustSquare"
   ],
   "Ranking": [
    "Rangorde",
+   "Ukukleliswa",
    "",
-   "",
-   "",
-   ""
+   "Indawo kuluhlu",
+   "Maemo"
   ],
   "Trust": [
    "Vertroue",
+   "Ukwethenjwa",
    "",
-   "",
-   "",
-   ""
+   "Ukuthembeka",
+   "Go tshepega"
   ],
   "Advert": [
    "Advertensie",
+   "Isikhangiso",
    "",
-   "",
-   "",
-   ""
+   "Isibhengezo",
+   "Papatšo"
   ],
   "new": [
    "nuut",
+   "kusha",
    "",
-   "",
-   "",
-   ""
+   "usemtsha",
+   "mofsa"
   ],
   "established": [
    "gevestig",
+   "kusimeme",
    "",
-   "",
-   "",
-   ""
+   "uzinzile",
+   "yo a tiilego"
   ],
   "trusted": [
    "vertrou",
+   "kuyathembeka",
    "",
-   "",
-   "",
-   ""
+   "uthembekile",
+   "yo a botegago"
   ],
   "highly trusted": [
    "hoogs vertrou",
+   "kuthembeke kakhulu",
    "",
-   "",
-   "",
-   ""
+   "uthembeke kakhulu",
+   "yo a botegago kudu"
   ],
   "Your ranking is half trust and half advert quality. It goes up when either of them goes up.": [
    "Jou rangorde is half vertroue en half advertensiegehalte. Dit styg wanneer enigeen van die twee styg.",
+   "Ingxenye yokukleliswa kwakho ivela ekwethenjweni, enye ingxenye ivela ezingeni lesikhangiso. Kuyakhuphuka uma noma yikuphi kulokhu kukhuphuka.",
    "",
-   "",
-   "",
-   ""
+   "Indawo yakho kuluhlu yakhiwa sisiqingatha sokuthembeka nesiqingatha somgangatho wesibhengezo. Iyanyuka xa enye yezi zinto zimbini inyuka.",
+   "Maemo a gago ke seripa sa go tshepega le seripa sa boleng bja papatšo. A a hlatloga ge e nngwe ya tše pedi e hlatloga."
   ],
   "Your trust score goes up when someone who knows your work vouches for you, or when you pass an ID check.": [
    "Jou vertrouenstelling styg wanneer iemand wat jou werk ken, vir jou instaan, of wanneer jy ’n ID-kontrole slaag.",
+   "Amaphuzu akho okwethenjwa ayakhuphuka uma umuntu owazi umsebenzi wakho ekuncoma, noma uma uphumelela ekuhlolweni kwe-ID.",
    "",
-   "",
-   "",
-   ""
+   "Amanqaku akho okuthenjwa ayanyuka xa umntu owaziyo umsebenzi wakho ekungqinela, okanye xa uphumelela uvavanyo lwe-ID.",
+   "Sekoro sa gago sa go tshepega se a hlatloga ge motho yo a tsebago mošomo wa gago a go emela, goba ge o phasa tekolo ya ID."
   ],
   "what raises your trust score": [
    "wat jou vertrouenstelling verhoog",
+   "okukhuphula amaphuzu akho okwethenjwa",
    "",
-   "",
-   "",
-   ""
+   "into enyusa amanqaku akho okuthenjwa",
+   "seo se hlatlošago sekoro sa gago sa go tshepega"
   ],
   "These raise your trust score, not your advert score — which is why they are not in the list above. You add them once in TrustSquare and they count on every advert you make.": [
    "Dit verhoog jou vertrouenstelling, nie jou advertensietelling nie — daarom is hulle nie in die lys hierbo nie. Jy voeg hulle een keer in TrustSquare by en hulle tel op elke advertensie wat jy maak.",
+   "Lezi zinto zikhuphula amaphuzu akho okwethenjwa, hhayi amaphuzu esikhangiso sakho — yingakho zingekho ohlwini olungenhla. Uzifaka kanye ku-TrustSquare, bese zibalwa kuso sonke isikhangiso osenzayo.",
    "",
-   "",
-   "",
-   ""
+   "Ezi zinyusa amanqaku akho okuthenjwa, hayi amanqaku esibhengezo sakho — yiyo loo nto zingekho kuluhlu olungentla. Uzongeza kanye kwiTrustSquare kwaye zibalwa kuso sonke isibhengezo osenzayo.",
+   "Tše di hlatloša sekoro sa gago sa go tshepega, e sego sekoro sa gago sa papatšo — ke ka lebaka leo di sa bonagalego lenaneong le le lego ka godimo. O di oketša gatee go TrustSquare gomme di balwa papatšong ye nngwe le ye nngwe ye o e dirago."
   ],
   "This is your asking price — buyers see it as asked, not as a valuation.": [
    "Dit is jou vraprys — kopers sien dit soos gevra, nie as ’n waardasie nie.",
+   "Leli yinani olicelayo — abathengi balibona njengenani elicelwayo, hhayi njengenani elihlolwe uchwepheshe.",
    "",
-   "",
-   "",
-   ""
+   "Eli lixabiso olicelayo — abathengi balibona njengoko ulicelile, hayi njengoqikelelo lwexabiso.",
+   "Ye ke theko ye o e kgopelago — bareki ba e bona bjalo ka theko ye e kgopelwago, e sego bjalo ka tekanyetšo ya boleng."
   ],
   "This is your asking price. TrustSquare can look up a verified market price for cards, coins and LEGO from free public sources, so you can see where yours sits — it never changes what you asked.": [
    "Dit is jou vraprys. TrustSquare kan ’n geverifieerde markprys vir kaarte, munte en LEGO uit gratis openbare bronne opsoek, sodat jy kan sien waar joune staan — dit verander nooit wat jy gevra het nie.",
+   "Leli yinani olicelayo. I-TrustSquare ingakutholela inani lemakethe eliqinisekisiwe emithonjeni yomphakathi yamahhala uma uthengisa amakhadi, izinhlamvu zemali noma i-LEGO, ukuze ubone ukuthi elakho likuphi — ayilishintshi neze inani olicelile.",
    "",
-   "",
-   "",
-   ""
+   "Eli lixabiso olicelayo. ITrustSquare ingakhangela ixabiso lemarike eliqinisekisiweyo lamakhadi, iingqekembe neLEGO kwimithombo yoluntu yasimahla, ukuze ubone apho elakho lime khona — ayisoze itshintshe oko ukucelileyo.",
+   "Ye ke theko ye o e kgopelago. TrustSquare e ka nyaka theko ya mmaraka ye e netefaditšwego ya dikarata, dikhoine le LEGO go tšwa methopong ya setšhaba ya mahala, gore o bone moo ya gago e lego gona — ga e fetole seo o se kgopetšego le ka mohla."
   ],
   "advert score": [
    "advertensietelling",
+   "amaphuzu esikhangiso",
    "",
-   "",
-   "",
-   ""
+   "amanqaku esibhengezo",
+   "sekoro sa papatšo"
   ],
   "trust not opened yet": [
    "vertroue nog nie oopgemaak nie",
+   "ukwethenjwa akukavulwa",
    "",
-   "",
-   "",
-   ""
+   "ukuthembeka akukavulwa",
+   "go tshepega ga go so bulwe"
   ],
   "Before you publish": [
    "Voordat jy plaas",
+   "Ngaphambi kokushicilela",
    "",
-   "",
-   "",
-   ""
+   "Phambi kokuba upapashe",
+   "Pele o phatlalatša"
   ],
   "Add the property type": [
    "Voeg die eiendomstipe by",
+   "Engeza uhlobo lwendawo",
    "",
-   "",
-   "",
-   ""
+   "Yongeza uhlobo lwepropathi",
+   "Oketša mohuta wa thoto"
   ],
   "Say whether it is for sale or to let": [
    "Sê of dit te koop of te huur is",
+   "Sho ukuthi kuyathengiswa noma kuyaqashiswa",
    "",
-   "",
-   "",
-   ""
+   "Chaza ukuba iyathengiswa okanye iyaqeshwa",
+   "Bolela ge e le ya go rekišwa goba ya go hirišwa"
   ],
   "Add the number of bedrooms": [
    "Voeg die aantal slaapkamers by",
+   "Engeza inani lamakamelo okulala",
    "",
-   "",
-   "",
-   ""
+   "Yongeza inani lamagumbi okulala",
+   "Oketša palo ya diphapoši tša go robala"
   ],
   "Add the number of bathrooms": [
    "Voeg die aantal badkamers by",
+   "Engeza inani lamagumbi okugezela",
    "",
-   "",
-   "",
-   ""
+   "Yongeza inani lamagumbi okuhlambela",
+   "Oketša palo ya diphapoši tša go hlapela"
   ],
   "Add the make": [
    "Voeg die fabrikaat by",
+   "Engeza uhlobo lwemoto",
    "",
-   "",
-   "",
-   ""
+   "Yongeza ibhrendi",
+   "Oketša mohuta"
   ],
   "Add the model": [
    "Voeg die model by",
+   "Engeza imodeli",
    "",
-   "",
-   "",
-   ""
+   "Yongeza imodeli",
+   "Oketša mmotlolo"
   ],
   "Add the year": [
    "Voeg die jaar by",
+   "Engeza unyaka",
    "",
-   "",
-   "",
-   ""
+   "Yongeza unyaka",
+   "Oketša ngwaga"
   ],
   "Add the mileage": [
    "Voeg die kilometerstand by",
+   "Engeza ibanga elihanjiwe",
    "",
-   "",
-   "",
-   ""
+   "Yongeza imayile",
+   "Oketša dikhilomithara tše e di sepetšego"
   ],
   "Add the transmission": [
    "Voeg die ratkas by",
+   "Engeza uhlobo lwegiya",
    "",
-   "",
-   "",
-   ""
+   "Yongeza uhlobo lwegiya",
+   "Oketša mohuta wa dikere"
   ],
   "Add the subject": [
    "Voeg die vak by",
+   "Engeza isifundo",
    "",
-   "",
-   "",
-   ""
+   "Yongeza isifundo",
+   "Oketša thuto"
   ],
   "Add the level": [
    "Voeg die vlak by",
+   "Engeza izinga",
    "",
-   "",
-   "",
-   ""
+   "Yongeza inqanaba",
+   "Oketša legato"
   ],
   "Say whether you teach in person or online": [
    "Sê of jy persoonlik of aanlyn klas gee",
+   "Sho ukuthi ufundisa ubuso nobuso noma ku-inthanethi",
    "",
-   "",
-   "",
-   ""
+   "Chaza ukuba ufundisa ubuso ngobuso okanye kwi-intanethi",
+   "Bolela ge o ruta mahlo ka mahlo goba inthaneteng"
   ],
   "Say what work you do": [
    "Sê watter werk jy doen",
+   "Sho ukuthi wenza muphi umsebenzi",
    "",
-   "",
-   "",
-   ""
+   "Chaza umsebenzi owenzayo",
+   "Bolela mošomo wo o o dirago"
   ],
   "Write 15 words or more": [
    "Skryf 15 woorde of meer",
+   "Bhala amagama angu-15 noma ngaphezulu",
    "",
-   "",
-   "",
-   ""
+   "Bhala amagama ali-15 nangaphezulu",
+   "Ngwala mantšu a 15 goba go feta"
   ],
   "Put a price on it — asking for a quote scores nothing": [
    "Sit ’n prys daarop — om ’n kwotasie te vra, tel niks",
+   "Faka inani — ukucela ikhotheshini akukutholeli maphuzu",
    "",
-   "",
-   "",
-   ""
+   "Faka ixabiso — ukucela ikowuteyishini akukuniki manqaku",
+   "E bee theko — go kgopela kakanyo ya theko ga go go fe dintlha"
   ],
   "Say which area you work in": [
    "Sê in watter area jy werk",
+   "Sho ukuthi usebenza kuyiphi indawo",
    "",
-   "",
-   "",
-   ""
+   "Chaza indawo osebenza kuyo",
+   "Bolela lefelo leo o šomago go lona"
   ],
   "Say which area you teach in": [
    "Sê in watter area jy klas gee",
+   "Sho ukuthi ufundisa kuyiphi indawo",
    "",
-   "",
-   "",
-   ""
+   "Chaza indawo ofundisa kuyo",
+   "Bolela lefelo leo o rutago go lona"
   ],
   "Say which suburb it is in": [
    "Sê in watter voorstad dit is",
+   "Sho ukuthi kusesiphi isigodi",
    "",
-   "",
-   "",
-   ""
+   "Chaza ukuba ikweliphi ihlomela",
+   "Bolela motsesetoropo wo e lego go wona"
   ],
   "Say where the car can be seen": [
    "Sê waar die motor gesien kan word",
+   "Sho ukuthi imoto ingabonwa kuphi",
    "",
-   "",
-   "",
-   ""
+   "Chaza apho imoto inokubonwa khona",
+   "Bolela moo koloi e ka bonwago gona"
   ],
   "Say where it can be collected": [
    "Sê waar dit afgehaal kan word",
+   "Sho ukuthi kungalandwa kuphi",
    "",
-   "",
-   "",
-   ""
+   "Chaza apho inokulandwa khona",
+   "Bolela moo e ka tšewago gona"
   ],
   "Say where the trip starts": [
    "Sê waar die reis begin",
+   "Sho ukuthi uhambo luqala kuphi",
    "",
-   "",
-   "",
-   ""
+   "Chaza apho uhambo luqala khona",
+   "Bolela moo leeto le thomago gona"
   ],
   "Ask for a one-line reference": [
    "Vra vir ’n verwysing van een sin",
+   "Cela isincomo somugqa owodwa",
    "",
-   "",
-   "",
-   ""
+   "Cela ubungqina bomgca omnye",
+   "Kgopela bopaki bja mothaladi o tee"
   ],
   "Your employer writes one sentence about you.": [
    "Jou werkgewer skryf een sin oor jou.",
+   "Umqashi wakho ubhala umusho owodwa ngawe.",
    "",
-   "",
-   "",
-   ""
+   "Umqeshi wakho ubhala isivakalisi esinye ngawe.",
+   "Mothwadi wa gago o ngwala lefoko le tee ka wena."
   ],
   "A customer writes one sentence about you.": [
    "’n Klant skryf een sin oor jou.",
+   "Ikhasimende libhala umusho owodwa ngawe.",
    "",
-   "",
-   "",
-   ""
+   "Umthengi ubhala isivakalisi esinye ngawe.",
+   "Moreki o ngwala lefoko le tee ka wena."
   ],
   "A parent or student you teach writes one sentence about you.": [
    "’n Ouer of leerder vir wie jy klas gee, skryf een sin oor jou.",
+   "Umzali noma umfundi omfundisayo ubhala umusho owodwa ngawe.",
    "",
-   "",
-   "",
-   ""
+   "Umzali okanye umfundi omfundisayo ubhala isivakalisi esinye ngawe.",
+   "Motswadi goba moithuti yo o mo rutago o ngwala lefoko le tee ka wena."
   ],
   "A customer you have worked for writes one sentence about you.": [
    "’n Klant vir wie jy gewerk het, skryf een sin oor jou.",
+   "Ikhasimende osebenzele lona libhala umusho owodwa ngawe.",
    "",
-   "",
-   "",
-   ""
+   "Umthengi omsebenzeleyo ubhala isivakalisi esinye ngawe.",
+   "Moreki yo o kilego wa mo šomela o ngwala lefoko le tee ka wena."
   ],
   "A guest you have hosted writes one sentence about you.": [
    "’n Gas wat jy ontvang het, skryf een sin oor jou.",
+   "Isivakashi osake wasamukela sibhala umusho owodwa ngawe.",
    "",
-   "",
-   "",
-   ""
+   "Undwendwe owakhe walwamkela lubhala isivakalisi esinye ngawe.",
+   "Moeng yo o kilego wa mo amogela o ngwala lefoko le tee ka wena."
   ],
   "Someone who has bought from you writes one sentence about you.": [
    "Iemand wat al by jou gekoop het, skryf een sin oor jou.",
+   "Umuntu osake wathenga kuwe ubhala umusho owodwa ngawe.",
    "",
-   "",
-   "",
-   ""
+   "Umntu owakhe wathenga kuwe ubhala isivakalisi esinye ngawe.",
+   "Motho yo a kilego a reka go wena o ngwala lefoko le tee ka wena."
   ],
   "A collector you have dealt with writes one sentence about you.": [
    "’n Versamelaar met wie jy al te doen gehad het, skryf een sin oor jou.",
+   "Umqoqi osake wasebenzisana naye ubhala umusho owodwa ngawe.",
    "",
-   "",
-   "",
-   ""
+   "Umqokeleli owakhe wasebenzisana naye ubhala isivakalisi esinye ngawe.",
+   "Mokgobokedi yo o kilego wa šoma le yena o ngwala lefoko le tee ka wena."
   ],
   "Someone who has rented or bought from you writes one sentence about you.": [
    "Iemand wat al by jou gehuur of gekoop het, skryf een sin oor jou.",
+   "Umuntu osake waqasha noma wathenga kuwe ubhala umusho owodwa ngawe.",
    "",
-   "",
-   "",
-   ""
+   "Umntu owakhe waqesha okanye wathenga kuwe ubhala isivakalisi esinye ngawe.",
+   "Motho yo a kilego a hira goba a reka go wena o ngwala lefoko le tee ka wena."
   ],
   "Someone you have worked for writes one sentence about you.": [
    "Iemand vir wie jy gewerk het, skryf een sin oor jou.",
+   "Umuntu osake wamsebenzela ubhala umusho owodwa ngawe.",
    "",
-   "",
-   "",
-   ""
+   "Umntu owakhe wamsebenzela ubhala isivakalisi esinye ngawe.",
+   "Motho yo o kilego wa mo šomela o ngwala lefoko le tee ka wena."
   ],
   "That opens your trust score — nothing you write about yourself can. It takes them four taps, and they never have to use TrustSquare again.": [
    "Dit maak jou vertrouenstelling oop — niks wat jy oor jouself skryf, kan dit doen nie. Dit kos hulle vier tikke, en hulle hoef nooit weer TrustSquare te gebruik nie.",
+   "Lokho kuvula amaphuzu akho okwethenjwa — akukho lutho olubhala ngawe olungakwenza lokho. Kubathatha ukuthinta okune, futhi abasoze baphinde basebenzise i-TrustSquare.",
    "",
-   "",
-   "",
-   ""
+   "Yiyo evula amanqaku akho okuthenjwa — akukho nto oyibhalayo ngawe enokwenza oko. Kubathatha ukucofa kane, kwaye abasoze baphinde basebenzise iTrustSquare.",
+   "Seo se bula sekoro sa gago sa go tshepega — ga go selo seo o se ngwalago ka wena se ka dirago seo. Go ba tšea dikgotlo tše nne, gomme ga ba sa swanela go šomiša TrustSquare gape."
   ],
   "See what they will see": [
    "Kyk wat hulle sal sien",
+   "Bona lokho abazokubona",
    "",
-   "",
-   "",
-   ""
+   "Jonga into abaza kuyibona",
+   "Bona seo ba tlago go se bona"
   ],
   "A few taps and your price. Your advert, your language.": [
    "’n Paar tikke en jou prys. Jou advertensie, jou taal.",
+   "Ukuthinta okumbalwa nenani lakho. Isikhangiso sakho, ngolimi lwakho.",
    "",
-   "",
-   "",
-   ""
+   "Ukucofa okumbalwa kunye nexabiso lakho. Isibhengezo sakho, ngolwimi lwakho.",
+   "Go kgotla gannyane le theko ya gago. Papatšo ya gago, ka polelo ya gago."
   ],
   "Some categories are still in English.": [
    "Sommige kategorieë is nog in Engels.",
+   "Ezinye izigaba zisesesiNgisini.",
    "",
-   "",
-   "",
-   ""
+   "Ezinye iindidi zisesiNgesini.",
+   "Magoro a mangwe a sa le ka Seisemane."
   ],
   "isiZulu, isiXhosa and Sepedi: some categories are still in English.": [
    "isiZulu, isiXhosa en Sepedi: sommige kategorieë is nog in Engels.",
+   "isiZulu, isiXhosa neSepedi: ezinye izigaba zisesesiNgisini.",
    "",
-   "",
-   "",
-   ""
+   "isiZulu, isiXhosa neSepedi: ezinye iindidi zisesiNgesini.",
+   "isiZulu, isiXhosa le Sepedi: magoro a mangwe a sa le ka Seisemane."
   ],
   "Your unfinished advert": [
    "Jou onvoltooide advertensie",
+   "Isikhangiso sakho esingaqediwe",
    "",
-   "",
-   "",
-   ""
+   "Isibhengezo sakho esingagqitywanga",
+   "Papatšo ya gago ye e sa fetšwago"
   ],
   "Your unfinished search": [
    "Jou onvoltooide soektog",
+   "Ukusesha kwakho okungaqediwe",
    "",
-   "",
-   "",
-   ""
+   "Ukhangelo lwakho olungagqitywanga",
+   "Nyakišišo ya gago ye e sa fetšwago"
   ],
   "Carry on ›": [
    "Gaan voort ›",
+   "Qhubeka ›",
    "",
-   "",
-   "",
-   ""
+   "Qhubeka ›",
+   "Tšwela pele ›"
   ],
   "Open it": [
    "Maak oop",
+   "Kuvule",
    "",
-   "",
-   "",
-   ""
+   "Yivule",
+   "E bule"
   ],
   "Your advert": [
    "Jou advertensie",
+   "Isikhangiso sakho",
    "",
-   "",
-   "",
-   ""
+   "Isibhengezo sakho",
+   "Papatšo ya gago"
   ],
   "Add Quick to your home screen": [
    "Voeg Quick by jou tuisskerm",
+   "Engeza i-Quick esikrinini sakho sasekhaya",
    "",
-   "",
-   "",
-   ""
+   "Yongeza iQuick kwisikrini sakho sasekhaya",
+   "Oketša Quick sekirining sa gago sa gae"
   ],
   "Quick is on your home screen.": [
    "Quick is op jou tuisskerm.",
+   "I-Quick isesikrinini sakho sasekhaya.",
    "",
-   "",
-   "",
-   ""
+   "IQuick ikwisikrini sakho sasekhaya.",
+   "Quick e sekirining sa gago sa gae."
   ],
   "yes": [
    "ja",
@@ -3888,346 +3888,346 @@
   ],
   "Days you can work:": [
    "Dae wat jy kan werk:",
+   "Izinsuku ongasebenza ngazo:",
    "",
-   "",
-   "",
-   ""
+   "Iintsuku onokusebenza ngazo:",
+   "Matšatši ao o ka šomago ka ona:"
   ],
   "Every day of the week.": [
    "Elke dag van die week.",
+   "Zonke izinsuku zesonto.",
    "",
-   "",
-   "",
-   ""
+   "Yonke imihla yeveki.",
+   "Letšatši le lengwe le le lengwe la beke."
   ],
   "Say what you are looking for.": [
    "Sê waarna jy soek.",
+   "Sho ukuthi ufunani.",
    "",
-   "",
-   "",
-   ""
+   "Chaza into oyikhangelayo.",
+   "Bolela seo o se nyakago."
   ],
   "Whatever you type is what people will see.": [
    "Wat jy tik, is wat mense sal sien.",
+   "Noma yini oyibhalayo yiyona abantu abazoyibona.",
    "",
-   "",
-   "",
-   ""
+   "Nantoni na oyibhalayo yiyo abantu abaza kuyibona.",
+   "Seo o se ngwalago ke sona seo batho ba tlago go se bona."
   ],
   "The list only shows the most common answers. We look for exactly what you type.": [
    "Die lys wys net die algemeenste antwoorde. Ons soek presies wat jy tik.",
+   "Uhlu lukhombisa izimpendulo ezivame kakhulu kuphela. Sifuna khona kanye lokho okubhalayo.",
    "",
-   "",
-   "",
-   ""
+   "Uluhlu lubonisa kuphela iimpendulo eziqhelekileyo kakhulu. Sikhangela kanye le nto uyibhalayo.",
+   "Lenaneo le bontšha fela dikarabo tše di tlwaelegilego kudu. Re nyaka tlwa seo o se ngwalago."
   ],
   "The list only shows the most common answers. What you type goes on your advert exactly as you type it.": [
    "Die lys wys net die algemeenste antwoorde. Wat jy tik, kom op jou advertensie net soos jy dit tik.",
+   "Uhlu lukhombisa izimpendulo ezivame kakhulu kuphela. Lokho okubhalayo kungena esikhangisweni sakho ncamashi njengoba ukubhalile.",
    "",
-   "",
-   "",
-   ""
+   "Uluhlu lubonisa kuphela iimpendulo eziqhelekileyo kakhulu. Into oyibhalayo iya kuvela kwisibhengezo sakho kanye njengoko uyibhala.",
+   "Lenaneo le bontšha fela dikarabo tše di tlwaelegilego kudu. Seo o se ngwalago se tsena papatšong ya gago tlwa ka mo o se ngwalago ka gona."
   ],
   "Back to the list": [
    "Terug na die lys",
+   "Buyela ohlwini",
    "",
-   "",
-   "",
-   ""
+   "Buyela kuluhlu",
+   "Boela lenaneong"
   ],
   "Name it in your own words": [
    "Noem dit in jou eie woorde",
+   "Kusho ngamagama akho",
    "",
-   "",
-   "",
-   ""
+   "Yibize ngamazwi akho",
+   "E bolele ka mantšu a gago"
   ],
   "Type the amount": [
    "Tik die bedrag",
+   "Bhala inani",
    "",
-   "",
-   "",
-   ""
+   "Bhala isixa",
+   "Ngwala tšhelete"
   ],
   "Type the area": [
    "Tik die area",
+   "Bhala indawo",
    "",
-   "",
-   "",
-   ""
+   "Bhala indawo",
+   "Ngwala lefelo"
   ],
   "Say which": [
    "Sê watter",
+   "Sho ukuthi yikuphi",
    "",
-   "",
-   "",
-   ""
+   "Chaza ukuba yeyiphi",
+   "Bolela gore ke efe"
   ],
   "How many": [
    "Hoeveel",
+   "Kungaki",
    "",
-   "",
-   "",
-   ""
+   "Zingaphi",
+   "Ke tše kae"
   ],
   "Type the make": [
    "Tik die fabrikaat",
+   "Bhala uhlobo lwemoto",
    "",
-   "",
-   "",
-   ""
+   "Bhala ibhrendi",
+   "Ngwala mohuta"
   ],
   "Type the year": [
    "Tik die jaar",
+   "Bhala unyaka",
    "",
-   "",
-   "",
-   ""
+   "Bhala unyaka",
+   "Ngwala ngwaga"
   ],
   "Type the level": [
    "Tik die vlak",
+   "Bhala izinga",
    "",
-   "",
-   "",
-   ""
+   "Bhala inqanaba",
+   "Ngwala legato"
   ],
   "Say how": [
    "Sê hoe",
+   "Sho ukuthi kanjani",
    "",
-   "",
-   "",
-   ""
+   "Chaza ukuba njani",
+   "Bolela gore bjang"
   ],
   "Say when": [
    "Sê wanneer",
+   "Sho ukuthi nini",
    "",
-   "",
-   "",
-   ""
+   "Chaza ukuba nini",
+   "Bolela gore neng"
   ],
   "Describe the condition": [
    "Beskryf die toestand",
+   "Chaza ukuthi kusesimweni esinjani",
    "",
-   "",
-   "",
-   ""
+   "Chaza imeko yayo",
+   "Hlaloša maemo a yona"
   ],
   "Say what you have": [
    "Sê wat jy het",
+   "Sho ukuthi unani",
    "",
-   "",
-   "",
-   ""
+   "Chaza into onayo",
+   "Bolela seo o nago le sona"
   ],
   "Say how long": [
    "Sê hoe lank",
+   "Sho ukuthi isikhathi esingakanani",
    "",
-   "",
-   "",
-   ""
+   "Chaza ukuba ixesha lide kangakanani",
+   "Bolela gore ke nako ye kaakang"
   ],
   "Describe it": [
    "Beskryf dit",
+   "Kuchaze",
    "",
-   "",
-   "",
-   ""
+   "Yichaze",
+   "E hlaloše"
   ],
   "Type it in": [
    "Tik dit in",
+   "Kubhale",
    "",
-   "",
-   "",
-   ""
+   "Yibhale",
+   "E ngwale"
   ],
   "Name your work": [
    "Noem jou werk",
+   "Bhala igama lomsebenzi wakho",
    "",
-   "",
-   "",
-   ""
+   "Bhala igama lomsebenzi wakho",
+   "Bolela leina la mošomo wa gago"
   ],
   "Type your qualification": [
    "Tik jou kwalifikasie",
+   "Bhala iziqu zakho",
    "",
-   "",
-   "",
-   ""
+   "Bhala isiqinisekiso sakho",
+   "Ngwala lengwalo la gago la thuto"
   ],
   "Per person?": [
    "Per persoon?",
+   "Ngomuntu?",
    "",
-   "",
-   "",
-   ""
+   "Ngomntu?",
+   "Ka motho?"
   ],
   "My city is not listed": [
    "My stad is nie gelys nie",
+   "Idolobha lami alikho ohlwini",
    "",
-   "",
-   "",
-   ""
+   "Isixeko sam asikho kuluhlu",
+   "Toropo ya ka ga e gona lenaneong"
   ],
   "Type your city": [
    "Tik jou stad",
+   "Bhala idolobha lakho",
    "",
-   "",
-   "",
-   ""
+   "Bhala isixeko sakho",
+   "Ngwala toropo ya gago"
   ],
   "Your advert is filed under the city you type.": [
    "Jou advertensie word gelys onder die stad wat jy tik.",
+   "Isikhangiso sakho sifakwa ngaphansi kwedolobha olibhalayo.",
    "",
-   "",
-   "",
-   ""
+   "Isibhengezo sakho sifakwa phantsi kwesixeko osibhalayo.",
+   "Papatšo ya gago e bewa ka tlase ga toropo ye o e ngwalago."
   ],
   "Which country?": [
    "Watter land?",
+   "Yiliphi izwe?",
    "",
-   "",
-   "",
-   ""
+   "Leliphi ilizwe?",
+   "Naga efe?"
   ],
   "South Africa": [
    "Suid-Afrika",
+   "iNingizimu Afrika",
    "",
-   "",
-   "",
-   ""
+   "uMzantsi Afrika",
+   "Afrika Borwa"
   ],
   "Namibia": [
    "Namibië",
+   "iNamibia",
    "",
-   "",
-   "",
-   ""
+   "iNamibia",
+   "Namibia"
   ],
   "Botswana": [
    "Botswana",
+   "iBotswana",
    "",
-   "",
-   "",
-   ""
+   "iBotswana",
+   "Botswana"
   ],
   "Mozambique": [
    "Mosambiek",
+   "iMozambiki",
    "",
-   "",
-   "",
-   ""
+   "iMozambiki",
+   "Mosambiki"
   ],
   "Kenya": [
    "Kenia",
+   "iKenya",
    "",
-   "",
-   "",
-   ""
+   "iKenya",
+   "Kenya"
   ],
   "United Kingdom": [
    "Verenigde Koninkryk",
+   "iNgilandi (UK)",
    "",
-   "",
-   "",
-   ""
+   "iBritane",
+   "Brithania"
   ],
   "Germany": [
    "Duitsland",
+   "iJalimane",
    "",
-   "",
-   "",
-   ""
+   "iJamani",
+   "Jeremane"
   ],
   "Australia": [
    "Australië",
+   "i-Australia",
    "",
-   "",
-   "",
-   ""
+   "iOstreliya",
+   "Australia"
   ],
   "United States": [
    "Verenigde State",
+   "iMelika",
    "",
-   "",
-   "",
-   ""
+   "iMelika",
+   "Amerika"
   ],
   "★ = trust score": [
    "★ = vertrouenstelling",
+   "★ = amaphuzu okwethenjwa",
    "",
-   "",
-   "",
-   ""
+   "★ = amanqaku okuthenjwa",
+   "★ = sekoro sa go tshepega"
   ],
   "Ask people you know": [
    "Vra mense wat jy ken",
+   "Buza abantu obaziyo",
    "",
-   "",
-   "",
-   ""
+   "Buza abantu obaziyo",
+   "Botšiša batho bao o ba tsebago"
   ],
   "One short message to each of them — up to five.": [
    "Een kort boodskap aan elkeen — tot vyf.",
+   "Umlayezo owodwa omfushane komunye nomunye wabo — kuze kube ngabahlanu.",
    "",
-   "",
-   "",
-   ""
+   "Umyalezo omnye omfutshane komnye nomnye wabo — ukuya kuthi ga kwabahlanu.",
+   "Molaetša o mokopana go yo mongwe le yo mongwe — go fihla go ba bahlano."
   ],
   "TrustSquare is new here.": [
    "TrustSquare is nuut hier.",
+   "I-TrustSquare isanda kufika lapha.",
    "",
-   "",
-   "",
-   ""
+   "ITrustSquare intsha apha.",
+   "TrustSquare e sa le mpsha mo."
   ],
   "Ask people you know, or browse everything on TrustSquare.": [
    "Vra mense wat jy ken, of blaai deur alles op TrustSquare.",
+   "Buza abantu obaziyo, noma ubhekabheke konke ku-TrustSquare.",
    "",
-   "",
-   "",
-   ""
+   "Buza abantu obaziyo, okanye ukhangele yonke into ekwiTrustSquare.",
+   "Botšiša batho bao o ba tsebago, goba o lebelele tšohle go TrustSquare."
   ],
   "Nobody has listed this in": [
    "Niemand het dit nog in",
+   "Akekho osefake lokhu ku",
    "",
-   "",
-   "",
-   ""
+   "Akukabikho mntu uyibhengezileyo le nto ku",
+   "Ga go motho yo a papaditšego se go"
   ],
   "yet.": [
    "geadverteer nie.",
+   "okwamanje.",
    "",
-   "",
-   "",
-   ""
+   "okwangoku.",
+   "go fihla bjale."
   ],
   "Looking on TrustSquare": [
    "Ons soek op TrustSquare",
+   "Siyasesha ku-TrustSquare",
    "",
-   "",
-   "",
-   ""
+   "Sikhangela kwiTrustSquare",
+   "Re nyaka go TrustSquare"
   ],
   "No connection right now": [
    "Geen verbinding nie",
+   "Akukho ukuxhumana njengamanje",
    "",
-   "",
-   "",
-   ""
+   "Akukho qhagamshelo ngoku",
+   "Ga go kgokagano bjale"
   ],
   "We could not reach TrustSquare.": [
    "Ons kon TrustSquare nie bereik nie.",
+   "Asikwazanga ukufinyelela ku-TrustSquare.",
    "",
-   "",
-   "",
-   ""
+   "Asikwazanga ukufikelela kwiTrustSquare.",
+   "Re paletšwe ke go fihlelela TrustSquare."
   ],
   "Check your data and try again.": [
    "Kyk na jou data en probeer weer.",
+   "Hlola idatha yakho bese uzama futhi.",
    "",
-   "",
-   "",
-   ""
+   "Jonga idatha yakho uze uzame kwakhona.",
+   "Lekola data ya gago gomme o leke gape."
   ],
   "EXAMPLE PHOTO": [
    "VOORBEELDFOTO",
@@ -4238,388 +4238,388 @@
   ],
   "One line, straight to the other phone, with your name on it. No thread, no history, nothing to scroll — say the one thing and it is said.": [
    "Een reël, reguit na die ander foon, met jou naam daarop. Geen draad, geen geskiedenis, niks om deur te rol nie — sê die een ding en dit is gesê.",
+   "Umugqa owodwa, uqonde kwenye ifoni, unegama lakho. Ayikho intambo, awukho umlando, akukho okuskrolwayo — sho into eyodwa, bese isishiwo.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye, ngqo kwenye ifowuni, enegama lakho. Akukho mtya, akukho mbali, akukho nto yokuskrola — yitsho into enye, kwaye sele itshiwo.",
+   "Mothaladi o tee, thwii go founo ye nngwe, wo o nago le leina la gago. Ga go poledišano ye telele, ga go histori, ga go selo sa go sekrola — bolela selo se tee, gomme se boletšwe."
   ],
   "how it works here": [
    "hoe dit hier werk",
+   "ukuthi kusebenza kanjani lapha",
    "",
-   "",
-   "",
-   ""
+   "indlela esebenza ngayo apha",
+   "ka moo e šomago ka gona mo"
   ],
   "Who": [
    "Wie",
+   "Ubani",
    "",
-   "",
-   "",
-   ""
+   "Ngubani",
+   "Mang"
   ],
   "How you met": [
    "Hoe julle ontmoet het",
+   "Nahlangana kanjani",
    "",
-   "",
-   "",
-   ""
+   "Nadibana njani",
+   "Ka moo le kopanego ka gona"
   ],
   "Who paid": [
    "Wie het betaal",
+   "Ubani okhokhile",
    "",
-   "",
-   "",
-   ""
+   "Ngubani ohlawulileyo",
+   "Yo a lefilego"
   ],
   "Switched on in the TrustSquare app — once, by each of you": [
    "Een keer aangeskakel in die TrustSquare-app, deur elkeen van julle",
+   "Kuvulwa ku-app ye-TrustSquare — kanye, ngamunye wenu",
    "",
-   "",
-   "",
-   ""
+   "Ivulwa kwi-app yeTrustSquare — kanye, ngumntu ngamnye kuni",
+   "E bulwa ka go app ya TrustSquare — gatee, ke yo mongwe le yo mongwe wa lena"
   ],
   "Let TrustSquare buzz this phone": [
    "Laat TrustSquare hierdie foon buzz",
+   "Vumela i-TrustSquare ithumele i-buzz kule foni",
    "",
-   "",
-   "",
-   ""
+   "Vumela iTrustSquare ithumele i-buzz kule fowuni",
+   "Dumelela TrustSquare go romela buzz go founo ye"
   ],
   "Let": [
    "Laat",
+   "Vumela",
    "",
-   "",
-   "",
-   ""
+   "Vumela",
+   "Dumelela"
   ],
   "buzz me": [
    "my buzz",
+   "angithumelele i-buzz",
    "",
-   "",
-   "",
-   ""
+   "andithumelele i-buzz",
+   "go nthomelela buzz"
   ],
   "They answer the same two questions when they join from your link.": [
    "Hulle beantwoord dieselfde twee vrae wanneer hulle via jou skakel aansluit.",
+   "Baphendula imibuzo emibili efanayo uma bejoyina ngesixhumanisi sakho.",
    "",
-   "",
-   "",
-   ""
+   "Baphendula imibuzo emibini efanayo xa bejoyina ngekhonkco lakho.",
+   "Ba araba dipotšišo tše pedi tše di swanago ge ba tsena ka kgokagano ya gago."
   ],
   "Only the people you are paired with can buzz you — a buzz is never open to strangers.": [
    "Net die mense met wie jy gekoppel is, kan jou buzz — ’n buzz is nooit oop vir vreemdelinge nie.",
+   "Abantu obhangqwe nabo kuphela abangakuthumelela i-buzz — i-buzz ayivulekele neze abantu ongabazi.",
    "",
-   "",
-   "",
-   ""
+   "Ngabantu odityaniswe nabo kuphela abanokukuthumelela i-buzz — i-buzz ayisoze ivulelwe abantu ongabaziyo.",
+   "Ke fela batho bao o kopantšwego le bona bao ba ka go romelelago buzz — buzz ga e bulegele batho bao o sa ba tsebego le ka mohla."
   ],
   "You each switch this on once, in the TrustSquare app.": [
    "Julle skakel dit elkeen een keer aan, in die TrustSquare-app.",
+   "Ngamunye wenu uvula lokhu kanye, ku-app ye-TrustSquare.",
    "",
-   "",
-   "",
-   ""
+   "Ngamnye kuni uyivula kanye, kwi-app yeTrustSquare.",
+   "Yo mongwe le yo mongwe wa lena o bula se gatee, ka go app ya TrustSquare."
   ],
   "It arrives as a notification on their phone. If notifications are off, it goes to their email. It is free — no SMS.": [
    "Dit kom as ’n kennisgewing op hul foon aan. As kennisgewings af is, gaan dit na hul e-pos. Dit is gratis — geen SMS nie.",
+   "Ifika njengesaziso efonini yabo. Uma izaziso zivaliwe, iya ku-imeyili yabo. Imahhala — akukho SMS.",
    "",
-   "",
-   "",
-   ""
+   "Ifika njengesaziso kwifowuni yabo. Ukuba izaziso zicinyiwe, iya kwi-imeyile yabo. Simahla — akukho SMS.",
+   "E fihla go founo ya bona bjalo ka tsebišo. Ge ditsebišo di timilwe, e ya go imeile ya bona. Ke mahala — ga go SMS."
   ],
   "This is an example. Nothing is sent from this screen.": [
    "Dit is ’n voorbeeld. Niks word van hierdie skerm af gestuur nie.",
+   "Lesi yisibonelo. Akukho okuthunyelwa kusuka kulesi sikrini.",
    "",
-   "",
-   "",
-   ""
+   "Lo ngumzekelo. Akukho nto ithunyelwa kwesi sikrini.",
+   "Wo ke mohlala. Ga go se se romelwago go tšwa sekirining se."
   ],
   "Live — this sends a real buzz.": [
    "Regstreeks — dit stuur ’n regte buzz.",
+   "Bukhoma — lokhu kuthumela i-buzz yangempela.",
    "",
-   "",
-   "",
-   ""
+   "Ngokwenene — oku kuthumela i-buzz yokwenyani.",
+   "E a phela — se se romela buzz ya nnete."
   ],
   "Send a buzz": [
    "Stuur ’n buzz",
+   "Thumela i-buzz",
    "",
-   "",
-   "",
-   ""
+   "Thumela i-buzz",
+   "Romela buzz"
   ],
   "Back to my advert": [
    "Terug na my advertensie",
+   "Buyela esikhangisweni sami",
    "",
-   "",
-   "",
-   ""
+   "Buyela kwisibhengezo sam",
+   "Boela papatšong ya ka"
   ],
   "Buzz is a convenience, not a guarantee — phones go flat and networks fail, so if it matters, phone. Either of you can close it at any time: closing it closes it for both, the other person is told plainly, and whoever closed it can open it again. You already have each other’s numbers.": [
    "Buzz is ’n gerief, nie ’n waarborg nie — fone gaan pap en netwerke faal, so as dit saak maak, bel. Enigeen van julle kan dit enige tyd sluit: as een dit sluit, is dit vir albei gesluit, die ander persoon word duidelik ingelig, en wie dit gesluit het, kan dit weer oopmaak. Julle het reeds mekaar se nommers.",
+   "I-Buzz iwusizo, akusona isiqinisekiso — amafoni ayaphelelwa yibhethri namanethiwekhi ayehluleka, ngakho uma kubalulekile, shayela ucingo. Noma ngubani kinina angayivala noma nini: uma omunye eyivala, ivaleka kinina nobabili, omunye utshelwa ngokucacile, futhi lowo oyivalile angaphinda ayivule. Senivele ninazo izinombolo zomunye nomunye.",
    "",
-   "",
-   "",
-   ""
+   "IBuzz luncedo, ayisosiqinisekiso — iifowuni ziyafa kwaye uthungelwano luyasilela, ngoko ukuba kubalulekile, tsalela umnxeba. Nabani na kuni angayivala nanini na: ukuyivala kuyivalela nobabini, omnye umntu uxelelwa ngokucacileyo, kwaye lowo uyivalileyo angayivula kwakhona. Sele ninazo iinombolo zomnye nomnye.",
+   "Buzz ke boiketlo, e sego kgonthišo — difouno di fela mohlagase gomme dinetweke di a palelwa, ka fao ge taba e le bohlokwa, leletša. Mang goba mang wa lena a ka e tswalela nako efe goba efe: ge e tswaletšwe, e tswaletšwe go lena ka bobedi, motho yo mongwe o botšwa ka go hlaka, gomme yo a e tswaletšego a ka e bula gape. Le šetše le na le dinomoro tša yo mongwe le yo mongwe."
   ],
   "Switch both permissions on first — a buzz that was never allowed is a buzz that never arrives.": [
    "Skakel eers albei toestemmings aan — ’n buzz wat nooit toegelaat is nie, is ’n buzz wat nooit aankom nie.",
+   "Qala uvule izimvume zombili — i-buzz engakaze ivunyelwe yi-buzz engasoze ifike.",
    "",
-   "",
-   "",
-   ""
+   "Qala uvule zombini iimvume — i-buzz engazange ivunyelwe yi-buzz engasoze ifike.",
+   "Bula ditumelelo ka bobedi pele — buzz ye e sa kago ya dumelelwa ke buzz ye e sa fihlego le ka mohla."
   ],
   "When the car is sold, close every one of them. Here that is the feature working, not failing — the pair was always meant to end.": [
    "Wanneer die motor verkoop is, sluit almal. Hier is dit die funksie wat werk, nie faal nie — die paar was nog altyd bedoel om te eindig.",
+   "Uma imoto isithengisiwe, zivale zonke. Lapha lokho kusho ukuthi isici siyasebenza, asehluleki — isibhangqa besihloselwe ukuphela kusukela ekuqaleni.",
    "",
-   "",
-   "",
-   ""
+   "Xa imoto ithengisiwe, zivale zonke. Apha oko yinkqubo esebenzayo, hayi esilelayo — isibini besisoloko simiselwe ukuphela.",
+   "Ge koloi e rekišitšwe, di tswalele ka moka. Mo, seo se ra gore karolo ye e a šoma, ga se gore e paletšwe — para e be e swanetše go fela go tloga mathomong."
   ],
   "your employer, Menlyn": [
    "jou werkgewer, Menlyn",
+   "umqashi wakho, eMenlyn",
    "",
-   "",
-   "",
-   ""
+   "umqeshi wakho, eMenlyn",
+   "mothwadi wa gago, Menlyn"
   ],
   "the agency holding your listing": [
    "die agentskap wat jou advertensie hanteer",
+   "i-ejensi ephethe isikhangiso sakho",
    "",
-   "",
-   "",
-   ""
+   "i-arhente ephethe isibhengezo sakho",
+   "etšensi ye e swerego papatšo ya gago"
   ],
   "one of the places you asked": [
    "een van die plekke wat jy gevra het",
+   "enye yezindawo ozibuzile",
    "",
-   "",
-   "",
-   ""
+   "enye yeendawo ozibuzileyo",
+   "le lengwe la mafelo ao o a botšišitšego"
   ],
   "the plumber you called": [
    "die loodgieter wat jy gebel het",
+   "umlungisi wamapayipi omshayele",
    "",
-   "",
-   "",
-   ""
+   "umlungisi wemibhobho ombizileyo",
+   "moratšhi wa dipeipi yo o mmitšitšego"
   ],
   "your child’s tutor": [
    "jou kind se tutor",
+   "umfundisi wengane yakho",
    "",
-   "",
-   "",
-   ""
+   "umfundisi womntwana wakho",
+   "morutiši wa ngwana wa gago"
   ],
   "the buyer who asked": [
    "die koper wat gevra het",
+   "umthengi obuzile",
    "",
-   "",
-   "",
-   ""
+   "umthengi obuzileyo",
+   "moreki yo a botšišitšego"
   ],
   "a collector you dealt with": [
    "’n versamelaar met wie jy te doen gehad het",
+   "umqoqi osake wasebenzisana naye",
    "",
-   "",
-   "",
-   ""
+   "umqokeleli owakhe wasebenzisana naye",
+   "mokgobokedi yo o kilego wa šoma le yena"
   ],
   "two streets over": [
    "twee strate verder",
+   "imigwaqo emibili ukusuka kuwe",
    "",
-   "",
-   "",
-   ""
+   "izitrato ezimbini ukusuka kuwe",
+   "mebila e mebedi go tloga mo"
   ],
   "You brought them — they joined from your own link.": [
    "Jy het hulle gebring — hulle het via jou eie skakel aangesluit.",
+   "Nguwe owabaletha — bajoyina ngesixhumanisi sakho.",
    "",
-   "",
-   "",
-   ""
+   "Nguwe obazisileyo — bajoyine ngekhonkco lakho.",
+   "O ba tlišitše — ba tsene ka kgokagano ya gago."
   ],
   "Free, always. You brought this connection, so there is nothing to sell.": [
    "Altyd gratis. Jy het hierdie verbinding gebring, so daar is niks om te verkoop nie.",
+   "Mahhala, njalo. Nguwe owaletha lokhu kuxhumana, ngakho akukho okungathengiswa.",
    "",
-   "",
-   "",
-   ""
+   "Simahla, ngalo lonke ixesha. Nguwe owazisa olu qhagamshelo, ngoko akukho nto yokuthengisa.",
+   "Mahala, ka mehla. O tlišitše kgokagano ye, ka fao ga go selo sa go rekišwa."
   ],
   "One pair per job. As many pairs as you have employers.": [
    "Een paar per werk. Soveel pare as wat jy werkgewers het.",
+   "Isibhangqa esisodwa emsebenzini ngamunye. Izibhangqa eziningi ngangenani labaqashi onabo.",
    "",
-   "",
-   "",
-   ""
+   "Isibini esinye ngomsebenzi ngamnye. Izibini zilingana nenani labaqeshi bakho.",
+   "Para e tee mošomong o mongwe le o mongwe. Dipara di lekana le bathwadi ba gago."
   ],
   "They asked for your details and paid for the introduction.": [
    "Hulle het vir jou besonderhede gevra en vir die voorstelling betaal.",
+   "Bacela imininingwane yakho futhi bakhokhela isethulo.",
    "",
-   "",
-   "",
-   ""
+   "Bacele iinkcukacha zakho baza bahlawulela intshayelelo.",
+   "Ba kgopetše dintlha tša gago gomme ba lefela tsebišo."
   ],
   "The agency paid. You never pay to be found — you are the lead.": [
    "Die agentskap het betaal. Jy betaal nooit om gevind te word nie — jy is die kontak.",
+   "I-ejensi ikhokhile. Awukhokhi neze ukuze utholakale — nguwe ofunwayo.",
    "",
-   "",
-   "",
-   ""
+   "I-arhente ihlawulile. Akusoze uhlawule ukuze ufunyanwe — nguwe ofunwayo.",
+   "Etšensi e lefile. Ga o lefe le ka mohla gore o hwetšwe — ke wena yo a nyakwago."
   ],
   "One agency at a time. Close it and the next one may take a turn.": [
    "Een agentskap op ’n slag. Sluit dit en die volgende een kan ’n beurt kry.",
+   "I-ejensi eyodwa ngesikhathi. Kuvale, bese elandelayo ithola ithuba.",
    "",
-   "",
-   "",
-   ""
+   "I-arhente enye ngexesha. Yivale, ize elandelayo ifumane ithuba.",
+   "Etšensi e tee ka nako. E tswalele gomme ye e latelago e ka tšea sebaka."
   ],
   "You asked several places at once — they all answered.": [
    "Jy het verskeie plekke gelyk gevra — hulle het almal geantwoord.",
+   "Ubuze izindawo eziningana ngesikhathi esisodwa — zonke ziphendulile.",
    "",
-   "",
-   "",
-   ""
+   "Ubuze iindawo ezininzi ngaxeshanye — zonke ziphendule.",
+   "O botšišitše mafelo a mmalwa ka nako e tee — ka moka a arabile."
   ],
   "You paid one introduction. Talking to all of them is included.": [
    "Jy het vir een voorstelling betaal. Om met almal te praat, is ingesluit.",
+   "Ukhokhele isethulo esisodwa. Ukukhuluma nazo zonke kufakiwe.",
    "",
-   "",
-   "",
-   ""
+   "Uhlawule intshayelelo enye. Ukuthetha nazo zonke kubandakanyiwe.",
+   "O lefetše tsebišo e tee. Go bolela le ka moka ga ona go akareditšwe."
   ],
   "Many at once. Three quotes is the point — exclusivity would be absurd.": [
    "Baie gelyk. Drie kwotasies is die punt — eksklusiwiteit sou absurd wees.",
+   "Eziningi ngesikhathi esisodwa. Injongo ngamakhotheshini amathathu — ukukhetha oyedwa kuphela kungaba yinto engenangqondo.",
    "",
-   "",
-   "",
-   ""
+   "Ezininzi ngaxeshanye. Injongo ziikowuteyishini ezintathu — ukubambelela kumntu omnye kuphela kungaba yinto engenangqiqo.",
+   "Tše dintši ka nako e tee. Dikakanyo tša theko tše tharo ke tšona morero — go ba le o tee fela e ka ba bošilo."
   ],
   "Either — the platform found them, or they were already your regular.": [
    "Of — die platform het hulle gevind, of hulle was reeds jou vaste klant.",
+   "Noma yikuphi — inkundla ibatholile, noma bebevele bengamakhasimende akho ajwayelekile.",
    "",
-   "",
-   "",
-   ""
+   "Nokuba yeyiphi — iqonga libafumene, okanye sele bengabathengi bakho abaqhelekileyo.",
+   "Efe goba efe — platfomo e ba hweditše, goba ba be ba šetše ba le bareki ba gago ba ka mehla."
   ],
   "A new customer costs 1 Tuppence. Your own regulars are free.": [
    "’n Nuwe klant kos 1 Tuppence. Jou eie vaste klante is gratis.",
+   "Ikhasimende elisha libiza 1 Tuppence. Amakhasimende akho ajwayelekile mahhala.",
    "",
-   "",
-   "",
-   ""
+   "Umthengi omtsha uxabisa i-1 Tuppence. Abathengi bakho abaqhelekileyo abahlawulelwa.",
+   "Moreki yo mofsa ke Tuppence e 1. Bareki ba gago ba ka mehla ke mahala."
   ],
   "Many, and repeating. A tradesman carries dozens of standing customers.": [
    "Baie, en herhalend. ’n Vakman het dosyne vaste klante.",
+   "Eziningi, futhi ziyaphindaphinda. Ingcweti inamakhasimende ajwayelekile angamashumi.",
    "",
-   "",
-   "",
-   ""
+   "Ezininzi, kwaye ziyaphindaphindwa. Ingcali inamashumi abathengi abasisigxina.",
+   "Tše dintši, gomme di a boelelwa. Setsebi sa mošomo wa diatla se na le bareki ba ka mehla ba masome a mmalwa."
   ],
   "The platform introduced you, and then it repeats every week.": [
    "Die platform het julle voorgestel, en dan herhaal dit elke week.",
+   "Inkundla yanethula, bese kuphindeka isonto nesonto.",
    "",
-   "",
-   "",
-   ""
+   "Iqonga linazisile, emva koko kuyaphindwa yonke iveki.",
+   "Platfomo e le tsebišitše, ke moka go boeletšwa beke le beke."
   ],
   "You paid the introduction. The weekly rhythm after it is free.": [
    "Jy het vir die voorstelling betaal. Die weeklikse ritme daarna is gratis.",
+   "Ukhokhele isethulo. Okwenzeka isonto nesonto emva kwaso kumahhala.",
    "",
-   "",
-   "",
-   ""
+   "Uhlawule intshayelelo. Ukudibana kweveki nganye emva koko kusimahla.",
+   "O lefetše tsebišo. Tlwaelo ya beke le beke ka morago ga yona ke mahala."
   ],
   "One pair per child, standing for a school term.": [
    "Een paar per kind, vir ’n skoolkwartaal.",
+   "Isibhangqa esisodwa enganeni ngayinye, esihlala ithemu yesikole yonke.",
    "",
-   "",
-   "",
-   ""
+   "Isibini esinye ngomntwana ngamnye, kangangekota yesikolo.",
+   "Para e tee ka ngwana, e dula kotara ya sekolo ka moka."
   ],
   "A third person is in this one — the child. Nothing about the child goes through a buzz; this is the two adults arranging their own diary.": [
    "’n Derde persoon is hierby betrokke — die kind. Niks oor die kind gaan deur ’n buzz nie; dit is die twee volwassenes wat hul eie dagboek reël.",
+   "Kulokhu kukhona umuntu wesithathu — ingane. Akukho lutho mayelana nengane oluthunyelwa nge-buzz; lokhu ngabantu abadala ababili abahlela izikhathi zabo.",
    "",
-   "",
-   "",
-   ""
+   "Kule kukho umntu wesithathu — umntwana. Akukho nto ngomntwana edlula nge-buzz; ngabantu abadala ababini abacwangcisa ishedyuli yabo.",
+   "Go na le motho wa boraro mo — ngwana. Ga go selo ka ngwana se se fetago ka buzz; ye ke bagolo ba babedi ba beakanya lenaneo la bona la matšatši."
   ],
   "They paid for the introduction to your car.": [
    "Hulle het vir die voorstelling aan jou motor betaal.",
+   "Bakhokhele isethulo semoto yakho.",
    "",
-   "",
-   "",
-   ""
+   "Bahlawulele intshayelelo kwimoto yakho.",
+   "Ba lefetše tsebišo ya koloi ya gago."
   ],
   "They paid. Answering them costs you nothing.": [
    "Hulle het betaal. Om hulle te antwoord, kos jou niks.",
+   "Bakhokhile. Ukubaphendula akukubizi lutho.",
    "",
-   "",
-   "",
-   ""
+   "Bahlawulile. Ukubaphendula akukuxabisi nto.",
+   "Ba lefile. Go ba araba ga go go lefiše selo."
   ],
   "Many buyers, one car — and it ends the day it sells.": [
    "Baie kopers, een motor — en dit eindig die dag wanneer dit verkoop.",
+   "Abathengi abaningi, imoto eyodwa — futhi kuphela ngosuku ethengiswa ngalo.",
    "",
-   "",
-   "",
-   ""
+   "Abathengi abaninzi, imoto enye — kwaye kuphela ngosuku ethengiswa ngalo.",
+   "Bareki ba bantši, koloi e tee — gomme e fela ka letšatši leo e rekišwago ka lona."
   ],
   "This is the one category where closing is the normal ending, not a complaint. When the car is sold, close them all — that is the feature working, not failing.": [
    "Dit is die een kategorie waar sluit die normale einde is, nie ’n klagte nie. Wanneer die motor verkoop is, sluit hulle almal — dit is die funksie wat werk, nie faal nie.",
+   "Lesi yisigaba esisodwa lapho ukuvala kuyisiphetho esijwayelekile, hhayi isikhalo. Uma imoto isithengisiwe, zivale zonke — lokho kusho ukuthi isici siyasebenza, asehluleki.",
    "",
-   "",
-   "",
-   ""
+   "Olu kuphela kodidi apho ukuvala kusisiphelo esiqhelekileyo, hayi isikhalazo. Xa imoto ithengisiwe, zivale zonke — oko yinkqubo esebenzayo, hayi esilelayo.",
+   "Le ke legoro le tee leo go tswalela e lego mafelelo a tlwaelegilego, e sego ngongorego. Ge koloi e rekišitšwe, di tswalele ka moka — seo se ra gore karolo ye e a šoma, ga se gore e paletšwe."
   ],
   "One introduction, years ago. You have traded ever since.": [
    "Een voorstelling, jare gelede. Julle handel sedertdien.",
+   "Isethulo esisodwa, eminyakeni eyadlula. Nihwebelana kusukela lapho.",
    "",
-   "",
-   "",
-   ""
+   "Intshayelelo enye, kwiminyaka eyadlulayo. Nibe nirhweba ukususela ngoko.",
+   "Tsebišo e tee, mengwaga ye e fetilego. Le gwebišane go tloga ka nako yeo."
   ],
   "Paid once, at the first introduction. Everything after is yours.": [
    "Een keer betaal, by die eerste voorstelling. Alles daarna is joune.",
+   "Kukhokhwe kanye, esethulweni sokuqala. Konke okulandelayo kungokwakho.",
    "",
-   "",
-   "",
-   ""
+   "Kuhlawulwe kanye, kwintshayelelo yokuqala. Yonke into emva koko yeyakho.",
+   "E lefilwe gatee, ka tsebišo ya mathomo. Tšohle tše di latelago ke tša gago."
   ],
   "Many, and long-lived — collectors keep the same people for decades.": [
    "Baie, en langdurig — versamelaars hou dieselfde mense vir dekades.",
+   "Eziningi, futhi zihlala isikhathi eside — abaqoqi bahlala nabantu abafanayo amashumi eminyaka.",
    "",
-   "",
-   "",
-   ""
+   "Ezininzi, kwaye zihlala ixesha elide — abaqokeleli bahlala nabantu abafanayo amashumi eminyaka.",
+   "Tše dintši, gomme di tšea nako ye telele — bakgobokanyi ba dula le batho ba ba swanago masome a mengwaga."
   ],
   "They live around the corner. You probably already knew them.": [
    "Hulle woon om die hoek. Jy het hulle waarskynlik al geken.",
+   "Bahlala eduze nje. Mhlawumbe wawuvele ubazi.",
    "",
-   "",
-   "",
-   ""
+   "Bahlala kufuphi apha. Mhlawumbi ubusele ubazi.",
+   "Ba dula kgauswi le wena. Mohlomongwe o be o šetše o ba tseba."
   ],
   "Usually nothing — at these amounts an introduction rarely applies.": [
    "Gewoonlik niks — by hierdie bedrae geld ’n voorstelling selde.",
+   "Imvamisa akukho lutho — kulawa manani isethulo asivamile ukudingeka.",
    "",
-   "",
-   "",
-   ""
+   "Ngesiqhelo akukho nto — kwezi zixa intshayelelo ayifane ifuneke.",
+   "Gantši ga go selo — ka ditšhelete tše, tsebišo ga e hlokege gantši."
   ],
   "Many, casual, short.": [
    "Baie, gemaklik, kort.",
+   "Eziningi, ezingahlelekile, ezimfushane.",
    "",
-   "",
-   "",
-   ""
+   "Ezininzi, ezingekho sesikweni, ezimfutshane.",
+   "Tše dintši, tša go se be semmušo, tše kopana."
   ],
   "One line to the agency holding your place — viewings, offers, show days.": [
    "Een reël na die agentskap wat jou plek hanteer — besigtigings, aanbiedinge, skoudae.",
+   "Umugqa owodwa ku-ejensi ephethe indawo yakho — ukubuka, izithembiso, izinsuku zokubukisa.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye kwi-arhente ephethe indawo yakho — ukujonga, izithembiso, iintsuku zomboniso.",
+   "Mothaladi o tee go etšensi ye e swerego lefelo la gago — go lebelela, dithekišo, matšatši a pontšho."
   ],
   "One line to everyone who asked about your place — viewings, offers, show days.": [
    "Een reël na almal wat oor jou plek gevra het — besigtigings, aanbiedinge, skoudae.",
@@ -4630,10 +4630,10 @@
   ],
   "One line to every place you asked — dates, late arrivals, one more bed.": [
    "Een reël na elke plek wat jy gevra het — datums, laat aankomste, nog een bed.",
+   "Umugqa owodwa kuyo yonke indawo oyibuzile — izinsuku, ukufika sekwephuzile, omunye umbhede.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye kuyo yonke indawo oyibuzileyo — imihla, ukufika emva kwexesha, enye ibhedi.",
+   "Mothaladi o tee go lefelo le lengwe le le lengwe leo o le botšišitšego — matšatši, go fihla morago, malao a mangwe."
   ],
   "One line to every guest who asked — dates, late arrivals, one more bed.": [
    "Een reël na elke gas wat gevra het — datums, laat aankomste, nog een bed.",
@@ -4644,10 +4644,10 @@
   ],
   "One line to the trade you use — on my way, running late, job done.": [
    "Een reël na die vakman wat jy gebruik — op pad, laat, werk klaar.",
+   "Umugqa owodwa kungcweti oyisebenzisayo — ngisendleleni, ngizophuza, umsebenzi uqediwe.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye kwingcali oyisebenzisayo — ndisendleleni, ndiza kufika emva kwexesha, umsebenzi ugqityiwe.",
+   "Mothaladi o tee go setsebi seo o se šomišago — ke tseleng, ke tla diega, mošomo o phethilwe."
   ],
   "One line to your regular customers — on my way, running late, job done.": [
    "Een reël na jou vaste kliënte — op pad, laat, werk klaar.",
@@ -4658,10 +4658,10 @@
   ],
   "One line to the tutor — a moved lesson, an exam week, a late child.": [
    "Een reël na die tutor — ’n geskuifde les, ’n eksamenweek, ’n laat kind.",
+   "Umugqa owodwa kumfundisi — isifundo esihanjisiwe, isonto lezivivinyo, ingane efike sekwephuzile.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye kumfundisi — isifundo esishenxisiweyo, iveki yeemviwo, umntwana ofika emva kwexesha.",
+   "Mothaladi o tee go morutiši — thuto ye e šuthišitšwego, beke ya ditlhahlobo, ngwana yo a diegilego."
   ],
   "One line to the parents you teach for — a moved lesson, an exam week, a late child.": [
    "Een reël na die ouers vir wie jy klas gee — ’n geskuifde les, ’n eksamenweek, ’n laat kind.",
@@ -4672,577 +4672,577 @@
   ],
   "One line to the people asking about your car — until it is sold.": [
    "Een reël na die mense wat oor jou motor vra — totdat dit verkoop is.",
+   "Umugqa owodwa kubantu ababuza ngemoto yakho — ize ithengiswe.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye kubantu ababuza ngemoto yakho — ide ithengiswe.",
+   "Mothaladi o tee go batho bao ba botšišago ka koloi ya gago — go fihlela e rekišwa."
   ],
   "One line to each buyer asking about your car — until it is sold.": [
    "Een reël na elke koper wat oor jou motor vra — totdat dit verkoop is.",
+   "Umugqa owodwa kumthengi ngamunye obuza ngemoto yakho — ize ithengiswe.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye kumthengi ngamnye obuza ngemoto yakho — ide ithengiswe.",
+   "Mothaladi o tee go moreki yo mongwe le yo mongwe yo a botšišago ka koloi ya gago — go fihlela e rekišwa."
   ],
   "One line to the collectors you trade with.": [
    "Een reël na die versamelaars met wie jy handel dryf.",
+   "Umugqa owodwa kubaqoqi ohwebelana nabo.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye kubaqokeleli orhweba nabo.",
+   "Mothaladi o tee go bakgobokanyi bao o gwebago le bona."
   ],
   "One line to the collectors who buy from you — a new piece, a swap, a price.": [
    "Een reël na die versamelaars wat by jou koop — ’n nuwe stuk, ’n ruil, ’n prys.",
+   "Umugqa owodwa kubaqoqi abathenga kuwe — into entsha, ukushintshana, inani.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye kubaqokeleli abathenga kuwe — into entsha, ukutshintshiselana, ixabiso.",
+   "Mothaladi o tee go bakgobokanyi bao ba rekago go wena — selo se sefsa, go ananya, theko."
   ],
   "One line to your neighbour — at the gate, sold out, bring change.": [
    "Een reël na jou buurman — by die hek, uitverkoop, bring kleingeld.",
+   "Umugqa owodwa kumakhelwane wakho — ngisesangweni, kuphelile, letha ushintshi.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye kummelwane wakho — ndisesangweni, kuphelile, yiza netshintshi.",
+   "Mothaladi o tee go moagišani wa gago — ke kgorong, di fedile, tla le tšhelete ye nnyane."
   ],
   "One line to the people who buy from you — fresh today, sold out, at the gate.": [
    "Een reël na die mense wat by jou koop — vars vandag, uitverkoop, by die hek.",
+   "Umugqa owodwa kubantu abathenga kuwe — okusha namuhla, kuphelile, ngisesangweni.",
    "",
-   "",
-   "",
-   ""
+   "Umgca omnye kubantu abathenga kuwe — kutsha namhlanje, kuphelile, ndisesangweni.",
+   "Mothaladi o tee go batho bao ba rekago go wena — tše mpsha lehono, di fedile, ke kgorong."
   ],
   "Preview only — nothing is sent from Quick": [
    "Net ’n voorskou — niks word uit Quick gestuur nie",
+   "Ukubuka kuqala kuphela — akukho okuthunyelwa kusuka ku-Quick",
    "",
-   "",
-   "",
-   ""
+   "Ngumboniso nje — akukho nto ithunyelwa ukusuka kwiQuick",
+   "Ke ponelopele fela — ga go se se romelwago go tšwa go Quick"
   ],
   "Nothing was sent — this is a preview.": [
    "Niks is gestuur nie — dit is ’n voorskou.",
+   "Akukho okuthunyelwe — lokhu ukubuka kuqala.",
    "",
-   "",
-   "",
-   ""
+   "Akukho nto ithunyelweyo — lo ngumboniso nje.",
+   "Ga go se se rometšwego — ye ke ponelopele."
   ],
   "Example — this is what your employer sees": [
    "Voorbeeld — dit is wat jou werkgewer sien",
+   "Isibonelo — yilokhu okubonwa ngumqashi wakho",
    "",
-   "",
-   "",
-   ""
+   "Umzekelo — nantsi into ayibonayo umqeshi wakho",
+   "Mohlala — se ke seo mothwadi wa gago a se bonago"
   ],
   "Example — this is what a customer sees": [
    "Voorbeeld — dit is wat ’n klant sien",
+   "Isibonelo — yilokhu okubonwa yikhasimende",
    "",
-   "",
-   "",
-   ""
+   "Umzekelo — nantsi into ayibonayo umthengi",
+   "Mohlala — se ke seo moreki a se bonago"
   ],
   "Example — this is what a parent or student you teach sees": [
    "Voorbeeld — dit is wat ’n ouer of leerder vir wie jy klas gee, sien",
+   "Isibonelo — yilokhu okubonwa ngumzali noma umfundi omfundisayo",
    "",
-   "",
-   "",
-   ""
+   "Umzekelo — nantsi into ayibonayo umzali okanye umfundi omfundisayo",
+   "Mohlala — se ke seo motswadi goba moithuti yo o mo rutago a se bonago"
   ],
   "Example — this is what a customer you have worked for sees": [
    "Voorbeeld — dit is wat ’n klant vir wie jy gewerk het, sien",
+   "Isibonelo — yilokhu okubonwa yikhasimende osebenzele lona",
    "",
-   "",
-   "",
-   ""
+   "Umzekelo — nantsi into ayibonayo umthengi omsebenzeleyo",
+   "Mohlala — se ke seo moreki yo o kilego wa mo šomela a se bonago"
   ],
   "Example — this is what a guest you have hosted sees": [
    "Voorbeeld — dit is wat ’n gas wat jy ontvang het, sien",
+   "Isibonelo — yilokhu okubonwa yisivakashi osake wasamukela",
    "",
-   "",
-   "",
-   ""
+   "Umzekelo — nantsi into oluyibonayo undwendwe owakhe walwamkela",
+   "Mohlala — se ke seo moeng yo o kilego wa mo amogela a se bonago"
   ],
   "Example — this is what someone who has bought from you sees": [
    "Voorbeeld — dit is wat iemand wat al by jou gekoop het, sien",
+   "Isibonelo — yilokhu okubonwa ngumuntu osake wathenga kuwe",
    "",
-   "",
-   "",
-   ""
+   "Umzekelo — nantsi into ayibonayo umntu owakhe wathenga kuwe",
+   "Mohlala — se ke seo motho yo a kilego a reka go wena a se bonago"
   ],
   "Example — this is what a collector you have dealt with sees": [
    "Voorbeeld — dit is wat ’n versamelaar met wie jy al te doen gehad het, sien",
+   "Isibonelo — yilokhu okubonwa ngumqoqi osake wasebenzisana naye",
    "",
-   "",
-   "",
-   ""
+   "Umzekelo — nantsi into ayibonayo umqokeleli owakhe wasebenzisana naye",
+   "Mohlala — se ke seo mokgobokedi yo o kilego wa šoma le yena a se bonago"
   ],
   "Example — this is what someone who has rented or bought from you sees": [
    "Voorbeeld — dit is wat iemand wat al by jou gehuur of gekoop het, sien",
+   "Isibonelo — yilokhu okubonwa ngumuntu osake waqasha noma wathenga kuwe",
    "",
-   "",
-   "",
-   ""
+   "Umzekelo — nantsi into ayibonayo umntu owakhe waqesha okanye wathenga kuwe",
+   "Mohlala — se ke seo motho yo a kilego a hira goba a reka go wena a se bonago"
   ],
   "Example — this is what someone you have worked for sees": [
    "Voorbeeld — dit is wat iemand vir wie jy gewerk het, sien",
+   "Isibonelo — yilokhu okubonwa ngumuntu osake wamsebenzela",
    "",
-   "",
-   "",
-   ""
+   "Umzekelo — nantsi into ayibonayo umntu owakhe wamsebenzela",
+   "Mohlala — se ke seo motho yo o kilego wa mo šomela a se bonago"
   ],
   "A reference, please": [
    "’n Verwysing, asseblief",
+   "Isincomo, ngiyacela",
    "",
-   "",
-   "",
-   ""
+   "Ubungqina, nceda",
+   "Bopaki, hle"
   ],
   "asked you for a reference": [
    "het jou vir ’n verwysing gevra",
+   "ukucele isincomo",
    "",
-   "",
-   "",
-   ""
+   "ukucele ubungqina",
+   "o go kgopetše bopaki"
   ],
   "You employed them, so you are the only person who can say this.": [
    "Jy het hulle in diens gehad, so jy is die enigste persoon wat dit kan sê.",
+   "Wamqasha, ngakho nguwe kuphela ongasho lokhu.",
    "",
-   "",
-   "",
-   ""
+   "Wakha wamqesha, ngoko nguwe kuphela umntu onokuyitsho le nto.",
+   "O mo thwetše, ka fao ke wena fela motho yo a ka bolelago se."
   ],
   "You have used their work, so you are the only person who can say this.": [
    "Jy het hulle werk gebruik, so jy is die enigste persoon wat dit kan sê.",
+   "Usuwusebenzisile umsebenzi wakhe, ngakho nguwe kuphela ongasho lokhu.",
    "",
-   "",
-   "",
-   ""
+   "Wakha wawusebenzisa umsebenzi wakhe, ngoko nguwe kuphela umntu onokuyitsho le nto.",
+   "O šomišitše mošomo wa gagwe, ka fao ke wena fela motho yo a ka bolelago se."
   ],
   "You have used them as a tutor, so you are the only person who can say this.": [
    "Jy het hulle as tutor gebruik, so jy is die enigste persoon wat dit kan sê.",
+   "Usumsebenzisile njengomfundisi, ngakho nguwe kuphela ongasho lokhu.",
    "",
-   "",
-   "",
-   ""
+   "Wakha wamsebenzisa njengomfundisi, ngoko nguwe kuphela umntu onokuyitsho le nto.",
+   "O mo šomišitše bjalo ka morutiši, ka fao ke wena fela motho yo a ka bolelago se."
   ],
   "You have stayed with them, so you are the only person who can say this.": [
    "Jy het by hulle tuisgegaan, so jy is die enigste persoon wat dit kan sê.",
+   "Usuke wahlala kubo, ngakho nguwe kuphela ongasho lokhu.",
    "",
-   "",
-   "",
-   ""
+   "Wakha wahlala kwindawo yakhe, ngoko nguwe kuphela umntu onokuyitsho le nto.",
+   "O kile wa dula ga gagwe, ka fao ke wena fela motho yo a ka bolelago se."
   ],
   "You have bought from them, so you are the only person who can say this.": [
    "Jy het al by hulle gekoop, so jy is die enigste persoon wat dit kan sê.",
+   "Usuke wathenga kuye, ngakho nguwe kuphela ongasho lokhu.",
    "",
-   "",
-   "",
-   ""
+   "Wakha wathenga kuye, ngoko nguwe kuphela umntu onokuyitsho le nto.",
+   "O kile wa reka go yena, ka fao ke wena fela motho yo a ka bolelago se."
   ],
   "You have dealt with them, so you are the only person who can say this.": [
    "Jy het al met hulle te doen gehad, so jy is die enigste persoon wat dit kan sê.",
+   "Usuke wasebenzisana naye, ngakho nguwe kuphela ongasho lokhu.",
    "",
-   "",
-   "",
-   ""
+   "Wakha wasebenzisana naye, ngoko nguwe kuphela umntu onokuyitsho le nto.",
+   "O kile wa šoma le yena, ka fao ke wena fela motho yo a ka bolelago se."
   ],
   "You have rented or bought from them, so you are the only person who can say this.": [
    "Jy het al by hulle gehuur of gekoop, so jy is die enigste persoon wat dit kan sê.",
+   "Usuke waqasha noma wathenga kuye, ngakho nguwe kuphela ongasho lokhu.",
    "",
-   "",
-   "",
-   ""
+   "Wakha waqesha okanye wathenga kuye, ngoko nguwe kuphela umntu onokuyitsho le nto.",
+   "O kile wa hira goba wa reka go yena, ka fao ke wena fela motho yo a ka bolelago se."
   ],
   "They have worked for you, so you are the only person who can say this.": [
    "Hulle het vir jou gewerk, so jy is die enigste persoon wat dit kan sê.",
+   "Useke wakusebenzela, ngakho nguwe kuphela ongasho lokhu.",
    "",
-   "",
-   "",
-   ""
+   "Wakha wakusebenzela, ngoko nguwe kuphela umntu onokuyitsho le nto.",
+   "Yena o kile a go šomela, ka fao ke wena fela motho yo a ka bolelago se."
   ],
   "Free, about a minute, and you never have to use TrustSquare again if you do not want to. Four taps from here.": [
    "Gratis, omtrent ’n minuut, en jy hoef nooit weer TrustSquare te gebruik as jy nie wil nie. Vier tikke van hier af.",
+   "Mahhala, cishe umzuzu owodwa, futhi akudingeki uphinde usebenzise i-TrustSquare uma ungafuni. Ukuthinta okune ukusuka lapha.",
    "",
-   "",
-   "",
-   ""
+   "Simahla, malunga nomzuzu omnye, kwaye akunyanzelekanga ukuba uphinde usebenzise iTrustSquare ukuba awufuni. Ukucofa kane ukusuka apha.",
+   "Ke mahala, ke motsotso o tee goba ka mo, gomme ga o sa swanela go šomiša TrustSquare gape ge o sa nyake. Dikgotlo tše nne go tloga mo."
   ],
   "Yes — I’ll do it": [
    "Ja — ek sal dit doen",
+   "Yebo — ngizokwenza",
    "",
-   "",
-   "",
-   ""
+   "Ewe — ndiza kukwenza",
+   "Ee — ke tla dira bjalo"
   ],
   "Who is vouching?": [
    "Wie gee die verwysing?",
+   "Ngubani oncomayo?",
    "",
-   "",
-   "",
-   ""
+   "Ngubani ongqinayo?",
+   "Ke mang yo a fago bopaki?"
   ],
   "Continue": [
    "Gaan voort",
+   "Qhubeka",
    "",
-   "",
-   "",
-   ""
+   "Qhubeka",
+   "Tšwela pele"
   ],
   "This is the only thing they are asked for, and it is what signs them up — free, no card.": [
    "Dit is al wat hulle gevra word, en dit is wat hulle registreer — gratis, geen kaart nie.",
+   "Yilokhu kuphela abakucelwayo, futhi yikho okubabhalisayo — mahhala, akudingeki ikhadi.",
    "",
-   "",
-   "",
-   ""
+   "Yile kuphela into abacelwa yona, kwaye yiyo ebabhalisayo — simahla, akukho khadi.",
+   "Se ke sona fela seo ba se kgopelwago, gomme ke sona se ba ngwadišago — mahala, ga go karata."
   ],
   "When they continue, they accept the TrustSquare terms, Buzz included as it is: a doorbell between two people, with an off switch on both sides (§3.8).": [
    "Wanneer hulle voortgaan, aanvaar hulle die TrustSquare-bepalings, Buzz ingesluit soos dit is: ’n deurklokkie tussen twee mense, met ’n afskakelaar aan albei kante (§3.8).",
+   "Uma beqhubeka, bamukela imigomo ye-TrustSquare, kuhlanganise ne-Buzz njengoba injalo: insimbi yasemnyango phakathi kwabantu ababili, enenkinobho yokucisha ezinhlangothini zombili (§3.8).",
    "",
-   "",
-   "",
-   ""
+   "Xa beqhubeka, bamkela imimiselo yeTrustSquare, kuquka iBuzz njengoko injalo: intsimbi yomnyango phakathi kwabantu ababini, eneqhosha lokucima kumacala omabini (§3.8).",
+   "Ge ba tšwela pele, ba amogela melawana ya TrustSquare, go akaretšwa le Buzz ka mo e lego ka gona: pele ya mojako magareng ga batho ba babedi, ye e ka timwago ka mahlakore ka bobedi (§3.8)."
   ],
   "Send it": [
    "Stuur dit",
+   "Kuthumele",
    "",
-   "",
-   "",
-   ""
+   "Yithumele",
+   "E romele"
   ],
   "Say what you would tell a friend who asked.": [
    "Sê wat jy vir ’n vriend sou sê wat gevra het.",
+   "Sho lokho obungakusho kumngane obuzile.",
    "",
-   "",
-   "",
-   ""
+   "Yitsho into obunokuyithetha kumhlobo obuzileyo.",
+   "Bolela seo o bego o tla se botša mogwera yo a go botšišitšego."
   ],
   "That is everything": [
    "Dit is al",
+   "Yilokho kuphela",
    "",
-   "",
-   "",
-   ""
+   "Kuphelele apho",
+   "Ke tšohle"
   ],
   "One last thing, and it takes a second": [
    "Een laaste ding, en dit vat ’n oomblik",
+   "Into eyodwa yokugcina, futhi ithatha umzuzwana",
    "",
-   "",
-   "",
-   ""
+   "Into enye yokugqibela, kwaye ithatha umzuzwana nje",
+   "Selo sa mafelelo, gomme se tšea motsotswana"
   ],
   "— you, just now": [
    "— jy, netnou",
+   "— wena, manje nje",
    "",
-   "",
-   "",
-   ""
+   "— wena, kanye ngoku",
+   "— wena, bjale bjale"
   ],
   "Either of you can switch it off, and switching it off ends it for both.": [
    "Enigeen van julle kan dit afskakel, en afskakel beëindig dit vir albei.",
+   "Noma ngubani kinina angayicisha, futhi ukuyicisha kuyiqeda kinina nobabili.",
    "",
-   "",
-   "",
-   ""
+   "Nabani na kuni angayicima, kwaye ukuyicima kuyiphelisa kuni nobabini.",
+   "Mang goba mang wa lena a ka e tima, gomme go e tima go e fetša go lena ka bobedi."
   ],
   "trust": [
    "vertroue",
+   "ukwethenjwa",
    "",
-   "",
-   "",
-   ""
+   "ukuthembeka",
+   "go tshepega"
   ],
   "Done": [
    "Klaar",
+   "Kuqediwe",
    "",
-   "",
-   "",
-   ""
+   "Kugqityiwe",
+   "Go fedile"
   ],
   "Four taps. You are finished.": [
    "Vier tikke. Jy is klaar.",
+   "Ukuthinta okune. Usuqedile.",
    "",
-   "",
-   "",
-   ""
+   "Ukucofa kane. Ugqibile.",
+   "Dikgotlo tše nne. O feditše."
   ],
   "Pass Quick on": [
    "Gee Quick aan",
+   "Dlulisela i-Quick",
    "",
-   "",
-   "",
-   ""
+   "Dlulisela iQuick",
+   "Fetišetša Quick"
   ],
   "Let them scan the code with their camera — or share the link.": [
    "Laat hulle die kode met hul kamera skandeer — of deel die skakel.",
+   "Bavumele baskene ikhodi ngekhamera yabo — noma wabelane ngesixhumanisi.",
    "",
-   "",
-   "",
-   ""
+   "Mabaskene ikhowudi ngekhamera yabo — okanye wabelane ngekhonkco.",
+   "Ba dumelele go skena khoutu ka khamera ya bona — goba o abelane kgokagano."
   ],
   "Share the link": [
    "Deel die skakel",
+   "Yabelana ngesixhumanisi",
    "",
-   "",
-   "",
-   ""
+   "Yabelana ngekhonkco",
+   "Abelana kgokagano"
   ],
   "Flick up to share": [
    "Swiep op om te deel",
+   "Swayipha uye phezulu ukuze wabelane",
    "",
-   "",
-   "",
-   ""
+   "Tyibilizisa phezulu ukuze wabelane",
+   "Gogela godimo go abelana"
   ],
   "Making the code": [
    "Maak die kode",
+   "Senza ikhodi",
    "",
-   "",
-   "",
-   ""
+   "Kwenziwa ikhowudi",
+   "Khoutu e a dirwa"
   ],
   "They will see:": [
    "Hulle sal sien:",
+   "Bazobona:",
    "",
-   "",
-   "",
-   ""
+   "Baza kubona:",
+   "Ba tla bona:"
   ],
   "passed you Quick": [
    "het Quick vir jou aangegee",
+   "ukudlulisele i-Quick",
    "",
-   "",
-   "",
-   ""
+   "ukudlulisele iQuick",
+   "o go fetišeditše Quick"
   ],
   "hide my name": [
    "versteek my naam",
+   "fihla igama lami",
    "",
-   "",
-   "",
-   ""
+   "fihla igama lam",
+   "uta leina la ka"
   ],
   "Send it on WhatsApp": [
    "Stuur dit op WhatsApp",
+   "Kuthumele ku-WhatsApp",
    "",
-   "",
-   "",
-   ""
+   "Yithumele kuWhatsApp",
+   "E romele ka WhatsApp"
   ],
   "Cancel this invite": [
    "Kanselleer hierdie uitnodiging",
+   "Khansela lesi simemo",
    "",
-   "",
-   "",
-   ""
+   "Rhoxisa esi simemo",
+   "Khansela memo ye"
   ],
   "They get their own Quick — never your advert, your key link or your number. It works once.": [
    "Hulle kry hul eie Quick — nooit jou advertensie, jou sleutelskakel of jou nommer nie. Dit werk een keer.",
+   "Bathola i-Quick yabo — hhayi isikhangiso sakho, isixhumanisi sakho sokhiye noma inombolo yakho. Kusebenza kanye.",
    "",
-   "",
-   "",
-   ""
+   "Bafumana iQuick yabo — abasoze bafumane isibhengezo sakho, ikhonkco lakho lesitshixo okanye inombolo yakho. Isebenza kanye.",
+   "Ba hwetša Quick ya bona — le ka mohla e sego papatšo ya gago, kgokagano ya gago ya senotlelo goba nomoro ya gago. E šoma gatee."
   ],
   "Waiting for them to accept": [
    "Wag dat hulle aanvaar",
+   "Silinde ukuthi bamukele",
    "",
-   "",
-   "",
-   ""
+   "Silindele ukuba bamkele",
+   "Re emetše gore ba amogele"
   ],
   "Accepted — Quick is on their phone.": [
    "Aanvaar — Quick is op hul foon.",
+   "Kwamukelwe — i-Quick isefonini yabo.",
    "",
-   "",
-   "",
-   ""
+   "Bamkele — iQuick ikwifowuni yabo.",
+   "E amogetšwe — Quick e go founo ya bona."
   ],
   "They said no thanks. Nothing was shared.": [
    "Hulle het nee dankie gesê. Niks is gedeel nie.",
+   "Bathe cha ngiyabonga. Akukho okwabiwe.",
    "",
-   "",
-   "",
-   ""
+   "Bathe hayi enkosi. Akukho nto kwabelwana ngayo.",
+   "Ba itše aowa, ke a leboga. Ga go se se abetšwego."
   ],
   "Link copied — or let them scan the code.": [
    "Skakel gekopieer — of laat hulle die kode skandeer.",
+   "Isixhumanisi sikopishiwe — noma ubavumele baskene ikhodi.",
    "",
-   "",
-   "",
-   ""
+   "Ikhonkco likotshiwe — okanye mabaskene ikhowudi.",
+   "Kgokagano e kopilwe — goba ba dumelele go skena khoutu."
   ],
   "Let them scan the code.": [
    "Laat hulle die kode skandeer.",
+   "Bavumele baskene ikhodi.",
    "",
-   "",
-   "",
-   ""
+   "Mabaskene ikhowudi.",
+   "Ba dumelele go skena khoutu."
   ],
   "QR code for their phone": [
    "QR-kode vir hul foon",
+   "Ikhodi ye-QR yefoni yabo",
    "",
-   "",
-   "",
-   ""
+   "Ikhowudi ye-QR yefowuni yabo",
+   "Khoutu ya QR ya founo ya bona"
   ],
   "Could not make the invite. Try again.": [
    "Kon nie die uitnodiging maak nie. Probeer weer.",
+   "Asikwazanga ukwenza isimemo. Zama futhi.",
    "",
-   "",
-   "",
-   ""
+   "Asikwazanga ukwenza isimemo. Zama kwakhona.",
+   "Re paletšwe ke go dira memo. Leka gape."
   ],
   "passed you TrustSquare Quick": [
    "het TrustSquare Quick vir jou aangegee",
+   "ukudlulisele i-TrustSquare Quick",
    "",
-   "",
-   "",
-   ""
+   "ukudlulisele iTrustSquare Quick",
+   "o go fetišeditše TrustSquare Quick"
   ],
   "You were passed TrustSquare Quick": [
    "Iemand het TrustSquare Quick vir jou aangegee",
+   "Udluliselwe i-TrustSquare Quick",
    "",
-   "",
-   "",
-   ""
+   "Udluliselwe iTrustSquare Quick",
+   "O fetišeditšwe TrustSquare Quick"
   ],
   "Make an advert for your work in a few taps. Free. Your name and number stay private until you accept an introduction.": [
    "Maak ’n advertensie vir jou werk met ’n paar tikke. Gratis. Jou naam en nommer bly privaat totdat jy ’n voorstelling aanvaar.",
+   "Yenza isikhangiso somsebenzi wakho ngokuthinta okumbalwa. Mahhala. Igama lakho nenombolo kuhlala kuyimfihlo uze wamukele isethulo.",
    "",
-   "",
-   "",
-   ""
+   "Yenza isibhengezo somsebenzi wakho ngokucofa okumbalwa. Simahla. Igama lakho nenombolo zihlala ziyimfihlo de wamkele intshayelelo.",
+   "Dira papatšo ya mošomo wa gago ka go kgotla gannyane. Ke mahala. Leina la gago le nomoro di dula e le sephiri go fihlela o amogela tsebišo."
   ],
   "Accept": [
    "Aanvaar",
+   "Yamukela",
    "",
-   "",
-   "",
-   ""
+   "Yamkela",
+   "Amogela"
   ],
   "No thanks": [
    "Nee dankie",
+   "Cha, ngiyabonga",
    "",
-   "",
-   "",
-   ""
+   "Hayi enkosi",
+   "Aowa, ke a leboga"
   ],
   "Quick is yours.": [
    "Quick is joune.",
+   "I-Quick ingeyakho.",
    "",
-   "",
-   "",
-   ""
+   "IQuick yeyakho.",
+   "Quick ke ya gago."
   ],
   "That invite was already used — you can still make your own advert here.": [
    "Daardie uitnodiging is al gebruik — jy kan steeds jou eie advertensie hier maak.",
+   "Leso simemo sesisetshenzisiwe — usengakwazi ukwenza isikhangiso sakho lapha.",
    "",
-   "",
-   "",
-   ""
+   "Eso simemo sele sisetyenzisiwe — usenako ukwenza esakho isibhengezo apha.",
+   "Memo yeo e šetše e šomišitšwe — o sa kgona go dira papatšo ya gago mo."
   ],
   "That invite is no longer open — you can still make your own advert here.": [
    "Daardie uitnodiging is nie meer oop nie — jy kan steeds jou eie advertensie hier maak.",
+   "Leso simemo asisavulekile — usengakwazi ukwenza isikhangiso sakho lapha.",
    "",
-   "",
-   "",
-   ""
+   "Eso simemo asisavulekanga — usenako ukwenza esakho isibhengezo apha.",
+   "Memo yeo e tswaletšwe — o sa kgona go dira papatšo ya gago mo."
   ],
   "That invite is no longer open.": [
    "Daardie uitnodiging is nie meer oop nie.",
+   "Leso simemo asisavulekile.",
    "",
-   "",
-   "",
-   ""
+   "Eso simemo asisavulekanga.",
+   "Memo yeo e tswaletšwe."
   ],
   "TrustSquare Quick": [
    "TrustSquare Quick",
+   "TrustSquare Quick",
    "",
-   "",
-   "",
-   ""
+   "TrustSquare Quick",
+   "TrustSquare Quick"
   ],
   "make an advert for your work in a few taps:": [
    "maak ’n advertensie vir jou werk met ’n paar tikke:",
+   "yenza isikhangiso somsebenzi wakho ngokuthinta okumbalwa:",
    "",
-   "",
-   "",
-   ""
+   "yenza isibhengezo somsebenzi wakho ngokucofa okumbalwa:",
+   "dira papatšo ya mošomo wa gago ka go kgotla gannyane:"
   ],
   "make an advert for your work in a few taps.": [
    "maak ’n advertensie vir jou werk met ’n paar tikke.",
+   "yenza isikhangiso somsebenzi wakho ngokuthinta okumbalwa.",
    "",
-   "",
-   "",
-   ""
+   "yenza isibhengezo somsebenzi wakho ngokucofa okumbalwa.",
+   "dira papatšo ya mošomo wa gago ka go kgotla gannyane."
   ],
   "Sign language (SASL)": [
    "Gebaretaal (SAGT)",
+   "Ulimi lwezandla (SASL)",
    "",
-   "",
-   "",
-   ""
+   "Ulwimi lwezandla (SASL)",
+   "Polelo ya dimaswao (SASL)"
   ],
   "English": [
    "Engels",
+   "IsiNgisi",
    "",
-   "",
-   "",
-   ""
+   "IsiNgesi",
+   "Seisemane"
   ],
   "Over R300": [
    "Meer as R300",
+   "Ngaphezu kuka-R300",
    "",
-   "",
-   "",
-   ""
+   "Ngaphezu kwe-R300",
+   "Go feta R300"
   ],
   "Over R3m": [
    "Meer as R3m",
+   "Ngaphezu kuka-R3m",
    "",
-   "",
-   "",
-   ""
+   "Ngaphezu kwe-R3m",
+   "Go feta R3m"
   ],
   "Over R400": [
    "Meer as R400",
+   "Ngaphezu kuka-R400",
    "",
-   "",
-   "",
-   ""
+   "Ngaphezu kwe-R400",
+   "Go feta R400"
   ],
   "Under R1.5m": [
    "Onder R1.5m",
+   "Ngaphansi kuka-R1.5m",
    "",
-   "",
-   "",
-   ""
+   "Ngaphantsi kwe-R1.5m",
+   "Ka tlase ga R1.5m"
   ],
   "Under R200": [
    "Onder R200",
+   "Ngaphansi kuka-R200",
    "",
-   "",
-   "",
-   ""
+   "Ngaphantsi kwe-R200",
+   "Ka tlase ga R200"
   ],
   "Under R3 000": [
    "Onder R3 000",
+   "Ngaphansi kuka-R3 000",
    "",
-   "",
-   "",
-   ""
+   "Ngaphantsi kwe-R3 000",
+   "Ka tlase ga R3 000"
   ],
   "Under R300": [
    "Onder R300",
+   "Ngaphansi kuka-R300",
    "",
-   "",
-   "",
-   ""
+   "Ngaphantsi kwe-R300",
+   "Ka tlase ga R300"
   ],
   "Under R400": [
    "Onder R400",
+   "Ngaphansi kuka-R400",
    "",
-   "",
-   "",
-   ""
+   "Ngaphantsi kwe-R400",
+   "Ka tlase ga R400"
   ],
   "Your name and number stay private until you accept an introduction.": [
    "Jou naam en nommer bly privaat totdat jy ’n voorstelling aanvaar.",
@@ -5253,17 +5253,17 @@
   ],
   "It shows in searches once an employer has confirmed you or your ID is verified in TrustSquare.": [
    "Dit verskyn in soektogte sodra ’n werkgewer jou bevestig het of jou ID in TrustSquare geverifieer is.",
+   "Kuvela ekuseshweni uma umqashi esekuqinisekisile noma i-ID yakho isiqinisekisiwe ku-TrustSquare.",
    "",
-   "",
-   "",
-   ""
+   "Ivela kwiziphumo zokukhangela xa umqeshi ekuqinisekisile okanye i-ID yakho iqinisekisiwe kwiTrustSquare.",
+   "E tšwelela dinyakišišong ge mothwadi a go netefaditše goba ID ya gago e netefaditšwe go TrustSquare."
   ],
   "It shows in searches once your police clearance is verified in TrustSquare.": [
    "Dit verskyn in soektogte sodra jou polisieklaring in TrustSquare geverifieer is.",
+   "Kuvela ekuseshweni uma isitifiketi sakho samaphoyisa sesiqinisekisiwe ku-TrustSquare.",
    "",
-   "",
-   "",
-   ""
+   "Ivela kwiziphumo zokukhangela xa isiqinisekiso sakho samapolisa siqinisekisiwe kwiTrustSquare.",
+   "E tšwelela dinyakišišong ge tiišetšo ya gago ya maphodisa e netefaditšwe go TrustSquare."
   ]
  },
  "p": [
@@ -5360,18 +5360,18 @@
   [
    "^Lowest allowed: (.+) / day — the legal minimum wage\\.$",
    "Laagste toegelate bedrag: $1 per dag — die nasionale minimumloon.",
+   "Okuphansi kakhulu okuvunyelwe: $1 ngosuku — iholo elincane likazwelonke.",
    "",
-   "",
-   "",
-   ""
+   "Esona sixa siphantsi esivumelekileyo: $1 ngosuku — umvuzo omncinci wesizwe.",
+   "Palo ya fasana ye e dumeletšwego: $1 / letšatši — moputso wa fasana wa naga."
   ],
   [
    "^Lowest allowed: (.+) / hour — the legal minimum wage\\.$",
    "Laagste toegelate bedrag: $1 per uur — die nasionale minimumloon.",
+   "Okuphansi kakhulu okuvunyelwe: $1 ngehora — iholo elincane likazwelonke.",
    "",
-   "",
-   "",
-   ""
+   "Esona sixa siphantsi esivumelekileyo: $1 ngeyure — umvuzo omncinci wesizwe.",
+   "Palo ya fasana ye e dumeletšwego: $1 / iri — moputso wa fasana wa naga."
   ],
   [
    "^Lowest allowed: (.+) — the legal minimum wage\\.$",
@@ -5384,10 +5384,10 @@
   [
    "^Lowest allowed: (.+) — one hour at the minimum wage\\.$",
    "Laagste toegelate bedrag: $1 — een uur teen die minimumloon.",
+   "Okuphansi kakhulu okuvunyelwe: $1 — ihora elilodwa ngeholo elincane.",
    "",
-   "",
-   "",
-   ""
+   "Esona sixa siphantsi esivumelekileyo: $1 — iyure enye ngomvuzo omncinci.",
+   "Palo ya fasana ye e dumeletšwego: $1 — iri e tee ka moputso wa fasana."
   ],
   [
    "^Pick up to (\\d+)\\.$",
@@ -5416,178 +5416,178 @@
   [
    "^(\\d+) characters left$",
    "$1 karakters oor",
+   "Kusele izinhlamvu ezingu-$1",
    "",
-   "",
-   "",
-   ""
+   "Oonobumba abaseleyo: $1",
+   "Ditlhaka tše $1 di šetše"
   ],
   [
    "^Next — 1 day$",
    "Volgende — 1 dag",
+   "Okulandelayo — usuku olu-1",
    "",
-   "",
-   "",
-   ""
+   "Okulandelayo — usuku olu-1",
+   "Latelang — letšatši le 1"
   ],
   [
    "^Next — (\\d+) days$",
    "Volgende — $1 dae",
+   "Okulandelayo — izinsuku ezingu-$1",
    "",
-   "",
-   "",
-   ""
+   "Okulandelayo — iintsuku ezi-$1",
+   "Latelang — matšatši a $1"
   ],
   [
    "^Saving as (.+)$",
    "Jy stoor as $1",
+   "Ugcina njengo-$1",
    "",
-   "",
-   "",
-   ""
+   "Ugcina njenge-$1",
+   "O boloka bjalo ka $1"
   ],
   [
    "^Publishing as (.+)$",
    "Jy plaas as $1",
+   "Ushicilela njengo-$1",
    "",
-   "",
-   "",
-   ""
+   "Upapasha njenge-$1",
+   "O phatlalatša bjalo ka $1"
   ],
   [
    "^Car adverts ask for more details than most — (\\d+) instead of 1 — so they start lower and can climb higher\\.$",
    "Motoradvertensies vra meer besonderhede as die meeste — $1 in plaas van 1 — so hulle begin laer en kan hoër klim.",
+   "Izikhangiso zezimoto zicela imininingwane eminingi kunezinye — engu-$1 esikhundleni se-1 — ngakho ziqala phansi futhi zingakhuphuka ziye phezulu.",
    "",
-   "",
-   "",
-   ""
+   "Izibhengezo zeemoto zicela iinkcukacha ezingaphezulu kunezinye ezininzi — $1 endaweni ye-1 — ngoko ziqala ngaphantsi kwaye zinokunyuka ziye phezulu ngakumbi.",
+   "Dipapatšo tša dikoloi di kgopela dintlha tše dintši go feta tše dingwe — $1 go e na le 1 — ka fao di thoma ka fase gomme di ka hlatlogela godimo kudu."
   ],
   [
    "^Property adverts ask for more details than most — (\\d+) instead of 1 — so they start lower and can climb higher\\.$",
    "Eiendomsadvertensies vra meer besonderhede as die meeste — $1 in plaas van 1 — so hulle begin laer en kan hoër klim.",
+   "Izikhangiso zezindlu nezindawo zicela imininingwane eminingi kunezinye — engu-$1 esikhundleni se-1 — ngakho ziqala phansi futhi zingakhuphuka ziye phezulu.",
    "",
-   "",
-   "",
-   ""
+   "Izibhengezo zezindlu nemihlaba zicela iinkcukacha ezingaphezulu kunezinye ezininzi — $1 endaweni ye-1 — ngoko ziqala ngaphantsi kwaye zinokunyuka ziye phezulu ngakumbi.",
+   "Dipapatšo tša thoto di kgopela dintlha tše dintši go feta tše dingwe — $1 go e na le 1 — ka fao di thoma ka fase gomme di ka hlatlogela godimo kudu."
   ],
   [
    "^★ (\\d+) trust$",
    "★ $1 vertroue",
+   "★ $1 ukwethenjwa",
    "",
-   "",
-   "",
-   ""
+   "★ $1 ukuthembeka",
+   "★ $1 go tshepega"
   ],
   [
    "^\\+(\\d+) still on the table — the app shows you where, and your trust score follows you onto every advert you make\\.$",
    "+$1 punte lê nog op die tafel — die app wys jou waar, en jou vertrouenstelling volg jou na elke advertensie wat jy maak.",
+   "+$1 amaphuzu asatholakala — i-app ikukhombisa ukuthi kuphi, futhi amaphuzu akho okwethenjwa akulandela kuso sonke isikhangiso osenzayo.",
    "",
-   "",
-   "",
-   ""
+   "+$1 amanqaku asalindile — i-app ikubonisa apho akhona, kwaye amanqaku akho okuthenjwa akulandela kuso sonke isibhengezo osenzayo.",
+   "+dintlha tše $1 di sa le gona — app e go bontšha gore di kae, gomme sekoro sa gago sa go tshepega se go latela go papatšo ye nngwe le ye nngwe ye o e dirago."
   ],
   [
    "^Add (\\d+) more photos$",
    "Voeg nog $1 foto’s by",
+   "Engeza ezinye izithombe ezingu-$1",
    "",
-   "",
-   "",
-   ""
+   "Yongeza ezinye iifoto ezi-$1",
+   "Oketša diswantšho tše dingwe tše $1"
   ],
   [
    "^Not in (.+)\\? Change country$",
    "Nie in $1 nie? Verander land",
+   "Awukho e-$1? Shintsha izwe",
    "",
-   "",
-   "",
-   ""
+   "Awukho e-$1? Tshintsha ilizwe",
+   "Ga se $1? Fetola naga"
   ],
   [
    "^In the app, this sends (.+) and (.+) one buzz each, with your name on it\\.$",
    "In die app stuur dit vir $1 en $2 elkeen een buzz, met jou naam daarop.",
+   "Ku-app, lokhu kuthumela i-buzz eyodwa, enegama lakho, kulaba bantu ababili ngamunye: $1 no-$2.",
    "",
-   "",
-   "",
-   ""
+   "Kwi-app, oku kuthumelela u-$1 no-$2 i-buzz enye ngamnye, enegama lakho.",
+   "Ka go app, se se romelela $1 le $2 buzz e tee go yo mongwe le yo mongwe, ye e nago le leina la gago."
   ],
   [
    "^In the app, this sends (.+) one buzz, with your name on it\\.$",
    "In die app stuur dit vir $1 een buzz, met jou naam daarop.",
+   "Ku-app, lokhu kuthumela i-buzz eyodwa, enegama lakho, kulo muntu: $1.",
    "",
-   "",
-   "",
-   ""
+   "Kwi-app, oku kuthumelela u-$1 i-buzz enye, enegama lakho.",
+   "Ka go app, se se romelela $1 buzz e tee, ye e nago le leina la gago."
   ],
   [
    "^One sentence is the whole job — it opens (.+)’s trust score, and nothing (.+) writes about themselves ever can\\.$",
    "Een sin is al wat nodig is — dit maak $1 se vertrouenstelling oop, en niks wat $2 oor hulself skryf, kan dit ooit doen nie.",
+   "Umusho owodwa yiwo wonke umsebenzi — uvula amaphuzu okwethenjwa ka-$1, futhi akukho lutho u-$2 alubhala ngaye olungakwenza lokho.",
    "",
-   "",
-   "",
-   ""
+   "Isivakalisi esinye ngumsebenzi wonke — sivula amanqaku okuthenjwa ka-$1, kwaye akukho nto u-$2 ayibhalayo ngaye enokuze ikwenze oko.",
+   "Lefoko le tee ke mošomo ka moka — le bula sekoro sa go tshepega sa $1, gomme ga go selo seo $2 a se ngwalago ka yena se ka dirago seo le ka mohla."
   ],
   [
    "^Tap (\\d) of 4$",
    "Tik $1 van 4",
+   "Ukuthinta $1 kokungu-4",
    "",
-   "",
-   "",
-   ""
+   "Ukucofa $1 kwa-4",
+   "Kgotlo $1 go 4"
   ],
   [
    "^Only (.+) sees your name on the reference\\.$",
    "Net $1 sien jou naam op die verwysing.",
+   "Ngu-$1 kuphela obona igama lakho esincomweni.",
    "",
-   "",
-   "",
-   ""
+   "Ngu-$1 kuphela obona igama lakho kubungqina.",
+   "Ke $1 fela yo a bonago leina la gago bopaking."
   ],
   [
    "^One sentence about (.+)$",
    "Een sin oor $1",
+   "Umusho owodwa ngo-$1",
    "",
-   "",
-   "",
-   ""
+   "Isivakalisi esinye ngo-$1",
+   "Lefoko le tee ka $1"
   ],
   [
    "^It goes on (.+)’s advert with their name under it\\. Nobody will ask them to justify it or chase them about it — it is a reference, not a reference check\\.$",
    "Dit kom op $1 se advertensie met hul naam daaronder. Niemand sal hulle vra om dit te regverdig of hulle daaroor agtervolg nie — dit is ’n verwysing, nie ’n verwysingskontrole nie.",
+   "Umusho ufakwa esikhangisweni sika-$1, negama lalowo owubhalile ngaphansi kwawo. Akekho ozomcela ukuthi awuthethelele noma amhluphe ngawo — yisincomo, hhayi ukuhlolwa kwesincomo.",
    "",
-   "",
-   "",
-   ""
+   "Siya kuvela kwisibhengezo sika-$1 negama labo ngaphantsi kwaso. Akukho mntu uya kubacela ukuba basithethelele okanye abalandele ngaso — bubungqina, hayi uphando lobungqina.",
+   "Le tsena papatšong ya $1 le leina la bona ka tlase ga lona. Ga go yo a tlago go ba kgopela gore ba le thekge goba go ba šalašala morago ka lona — ke bopaki, e sego tekolo ya bopaki."
   ],
   [
    "^In the app, this buzzes (.+), who can buzz you back the same way — one line each, no thread\\.$",
    "In die app buzz dit vir $1, wat jou op dieselfde manier kan terugbuzz — een reël elk, geen draad nie.",
+   "Ku-app, lokhu kuthumela i-buzz kulo muntu: $1. Naye angakuthumelela i-buzz ngendlela efanayo — umugqa owodwa ngamunye, ayikho intambo.",
    "",
-   "",
-   "",
-   ""
+   "Kwi-app, oku kuthumelela u-$1 i-buzz, onokukuthumelela nawe ngendlela efanayo — umgca omnye ngamnye, akukho mtya.",
+   "Ka go app, se se romelela $1 buzz, yo a ka go romelelago buzz morago ka tsela ye e swanago — mothaladi o tee go yo mongwe le yo mongwe, ga go poledišano ye telele."
   ],
   [
    "^What (.+)’s score would gain\\. An outside voucher is the one thing a lister cannot give themselves\\.$",
    "Wat $1 se telling sou wen. ’n Verwysing van buite is die een ding wat ’n adverteerder nie vir hulself kan gee nie.",
+   "Lokho amaphuzu ka-$1 angakuzuza. Isincomo esivela komunye umuntu yiyona nto eyodwa umuntu ofaka isikhangiso angeke azinike yona.",
    "",
-   "",
-   "",
-   ""
+   "Oko u-$1 anokukuzuza kumanqaku akhe. Ubungqina obuvela ngaphandle kuphela kwento umbhengezi angenakuzinika yona.",
+   "Seo sekoro sa $1 se ka se hwetšago. Bopaki bja motho wa ka ntle ke selo se tee seo mopapatši a sa kgonego go se ipha."
   ],
   [
    "^Buzz is how (.+) tells you about running late, and how you say not to come\\. Ring it once now, while you are both looking at it — a doorbell nobody has ever rung is a doorbell nobody trusts\\.$",
    "Buzz is hoe $1 jou laat weet dat hulle laat is, en hoe jy sê hulle moenie kom nie. Lui dit nou een keer, terwyl julle albei daarna kyk — ’n deurklokkie wat nog nooit gelui het nie, is een wat niemand vertrou nie.",
+   "I-Buzz yindlela u-$1 akwazisa ngayo uma ezophuza, nendlela omtshela ngayo ukuthi angezi. Yikhalise kanye manje, nisayibheka nobabili — insimbi yasemnyango engakaze ikhaliswe muntu yinsimbi engathenjwa muntu.",
    "",
-   "",
-   "",
-   ""
+   "IBuzz yindlela u-$1 akwazisa ngayo xa eza kufika emva kwexesha, nendlela omxelela ngayo ukuba angezi. Yikhalise kanye ngoku, nobabini nisayijongile — intsimbi yomnyango engazange ikhaliswe yintsimbi engathenjwa mntu.",
+   "Buzz ke ka moo $1 a go botšago ge a diega, le ka moo o mmotšago gore a se tle. E letše gatee bjale, ge le e lebeletše ka bobedi — pele ya mojako ye e sa kago ya letšwa ga e tshepwe ke motho."
   ],
   [
    "^Buzz (.+) once$",
    "Buzz $1 een keer",
+   "Thumela i-buzz ku-$1 kanye",
    "",
-   "",
-   "",
-   ""
+   "Thumelela u-$1 i-buzz kanye",
+   "Romelela $1 buzz gatee"
   ]
  ]
 }

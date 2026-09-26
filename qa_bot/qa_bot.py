@@ -196,8 +196,19 @@ def operations(spec):
                 ops.append((method.upper(), path, op))
     return ops
 
+def app_source():
+    """QA-SRC-LIVE-1 (26 Sep 2026): the file the service RUNS. The deploy manifest ships bea_main.py to main.py; the
+    bea_main.py beside it is a copy from 12 Sep that nothing updates, and every ruling and appeal since has read that
+    stale copy -- an appeal on 26 Sep was judged against code that no longer ran ('no per-address limit' on a route that
+    had one). main.py first; the deployed source checkout next; the stale name last, only if nothing else exists."""
+    for p in (os.path.join(LIVE, "main.py"), os.path.join(SRC, "bea_main.py"), os.path.join(LIVE, "bea_main.py")):
+        if os.path.isfile(p):
+            return p
+    return os.path.join(LIVE, "bea_main.py")
+
+
 def handler_sources(src_path):
-    """{'METHOD /path': (function name, source text)} from the running bea_main.py."""
+    """{'METHOD /path': (function name, source text)} from the running app (see app_source)."""
     out = {}
     try:
         text = open(src_path, encoding="utf-8").read()
@@ -302,7 +313,7 @@ def classify(env, only_new=True, batch=14, workers=4):
     key = env.get("OPENAI_API_KEY")
     policy = jload(os.path.join(STATE, "policy.json"), {})
     spec = load_openapi()
-    srcs = handler_sources(os.path.join(LIVE, "bea_main.py"))
+    srcs = handler_sources(app_source())   # QA-SRC-LIVE-1
     todo = []
     for method, path, op in operations(spec):
         rid = "%s %s" % (method, path)
@@ -362,7 +373,7 @@ def appeal(env, rid, objection):
     if not key or not old:
         say("appeal: no key, or %r has no ruling yet" % rid)
         return None
-    name, src = handler_sources(os.path.join(LIVE, "bea_main.py")).get(rid, ("?", "(source not found)"))
+    name, src = handler_sources(app_source()).get(rid, ("?", "(source not found)"))   # QA-SRC-LIVE-1
     user = ("APPEAL of one ruling. Your earlier ruling: %s -- %s\n\nThe Author objects: %s\n\n"
             "The Author's argument is not evidence by itself: check it against the code below, then rule "
             "again on this ONE route (you may keep your ruling).\n\n===== ROUTE %s  (handler %s) =====\n%s"

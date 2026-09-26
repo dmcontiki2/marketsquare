@@ -1606,7 +1606,13 @@
   "Listings with photos get 3× more introduction requests. You can skip and add one later.": "Advertensies met foto's kry 3× meer voorstellingsversoeke. Jy kan dit oorslaan en later een byvoeg.",
   "All prices exclude VAT. No commission ever. Tuppence introduction fees apply on all plans.": "Alle pryse sluit BTW uit. Nooit enige kommissie nie. Tuppence-voorstellingsfooie geld op alle planne.",
   "Property listings pause when a buyer requests an introduction — you respond within 48 hours.": "Eiendomsadvertensies word gepouseer wanneer 'n koper 'n voorstelling versoek — jy reageer binne 48 uur.",
-  "Each AI service is charged from your Tuppence balance and is non-refundable. Each one below costs 1T.": "Elke AI-diens word van jou Tuppence-saldo afgetrek en is nie terugbetaalbaar nie. Elkeen hieronder kos 1T."
+  "Each AI service is charged from your Tuppence balance and is non-refundable. Each one below costs 1T.": "Elke AI-diens word van jou Tuppence-saldo afgetrek en is nie terugbetaalbaar nie. Elkeen hieronder kos 1T.",
+  "Refresh": "Verfris",
+  "Each agent keeps their own Trust Score, introductions & bulk-import via API": "Elke agent hou sy eie Trust Score, voorstellings & grootmaatinvoer via API",
+  "New": "Nuut",
+  "Established": "Gevestig",
+  "Trusted": "Vertrou",
+  "The highest level": "Die hoogste vlak"
  },
  "en": [
   "KE",
