@@ -1018,7 +1018,7 @@ function msSessionEnded(){
   try{ localStorage.removeItem('ms_aa_email'); }catch(_){}
   try{ if (typeof updateHeaderAuthBtn === 'function') updateHeaderAuthBtn(); }catch(_){}
   try{ var _qe = localStorage.getItem('ts_quick_email') || ''; var _si = document.getElementById('si-email'); if (_qe && _si && !_si.value) _si.value = _qe; }catch(_){}
-  showToast('Your sign-in on this phone has ended — sign in again and your advert opens straight after.', 7000);
+  showToast('Your sign-in on this phone has ended — sign in again and your listing opens straight after.', 7000);
   goTo('signin');   // ts_land_draft stays: DRAFT-AFTER-SIGNIN-1 opens the advert after she signs in
 }
 
@@ -1089,7 +1089,7 @@ async function _msInit(){
            screen with her advert still waiting, instead of an empty hub that greets her as a first-timer. */
         if(localStorage.getItem('ms_aa_email')){ (adopted ? Promise.resolve(true) : msSessionAlive()).then(function(alive){ if(alive === false){ msSessionEnded(); return; } goTo('dashboard'); msLandDraft(); }); }
         else { try{ var _qe=localStorage.getItem('ts_quick_email')||''; var _si=document.getElementById('si-email'); if(_qe && _si && !_si.value) _si.value=_qe; }catch(_){}   /* E2E-HMI-1: no re-asking what Quick knows */
-          showToast('Sign in with the email your advert is waiting on \u2014 it opens straight after.'); goTo('signin'); }
+          showToast('Sign in with the email your listing is waiting on \u2014 it opens straight after.'); goTo('signin'); }
       }catch(e){}
       });
     }, 600);
@@ -1939,7 +1939,7 @@ window._tsOperatorMode = window._tsOperatorMode || false;
 function _agL(key){
   var A={title:'Agency console',brand:'Agency',people:'Agents',person:'Agent',
     invite:'Invite agent',noPeople:'No agents yet — invite one above.',
-    ph:'agent@email.com',imports:'Import your current adverts',
+    ph:'agent@email.com',imports:'Import your current listings',
     intros:'Intros to agents',stock:'Listings (pooled)',org:'agency',
     setup:'Agencies are set up by TrustSquare on application.',
     created:'Agency created',createTest:'Create a test agency',namePh:'Agency name',
@@ -2110,7 +2110,7 @@ async function _renderAgency(agencyId){
   }
   el.innerHTML= opsBar
     +'<div style="background:var(--navy,#0c1a2e);color:#fff;border-radius:14px;padding:18px 20px;margin-bottom:14px;">'
-      +'<div style="font-family:Syne,sans-serif;font-weight:800;font-size:19px;">'+a.name+' <span style="font-size:11px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:3px 10px;margin-left:6px;">✓ '+(a.verified?'Verified':'Pending')+' '+_agL('brand')+'</span>'+(localStorage.getItem('ms_superuser')==='1'?' <button onclick="agencyRename()" title="Rename before a demo" style="background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;cursor:pointer;margin-left:6px;">\u270E Rename</button>':'')+' <a href="'+_agL('manualUrl')+'" target="_blank" title="Open the onboarding playbook (PDF)" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">User manual</a> <a href="/static/agency-import-guide.html" target="_blank" title="Bulk-import your adverts: schema, rules, error report" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">Import guide</a> <a href="/static/agents-as-a-service.html" target="_blank" title="The buy-in page: three categories, the screens each prospect and agent sees, the scores and the 1T lead deal" style="display:inline-block;border:1px solid rgba(232,201,123,.6);background:rgba(232,201,123,.15);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">&#9733; Agents as a Service</a>'+'</div>'
+      +'<div style="font-family:Syne,sans-serif;font-weight:800;font-size:19px;">'+a.name+' <span style="font-size:11px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:3px 10px;margin-left:6px;">✓ '+(a.verified?'Verified':'Pending')+' '+_agL('brand')+'</span>'+(localStorage.getItem('ms_superuser')==='1'?' <button onclick="agencyRename()" title="Rename before a demo" style="background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;cursor:pointer;margin-left:6px;">\u270E Rename</button>':'')+' <a href="'+_agL('manualUrl')+'" target="_blank" title="Open the onboarding playbook (PDF)" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">User manual</a> <a href="/static/agency-import-guide.html" target="_blank" title="Bulk-import your listings: schema, rules, error report" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">Import guide</a> <a href="/static/agents-as-a-service.html" target="_blank" title="The buy-in page: three categories, the screens each prospect and agent sees, the scores and the 1T lead deal" style="display:inline-block;border:1px solid rgba(232,201,123,.6);background:rgba(232,201,123,.15);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">&#9733; Agents as a Service</a>'+'</div>'
       +'<div style="font-size:12px;opacity:.7;margin-top:4px;">Admin '+a.admin_email+' · operating in '+(a.countries||'—')+'</div></div>'
     +'<div style="background:#f0f7f2;border-left:4px solid #1e7d4f;border-radius:0 10px 10px 0;padding:8px 13px;margin-bottom:12px;font-size:12px;color:#274536;line-height:1.5;">'+_agL('gate')+'</div>'
     +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">'
@@ -2119,9 +2119,9 @@ async function _renderAgency(agencyId){
       +'<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:22px;font-weight:800;font-family:Syne,sans-serif;">'+introsTotal+'</div><div style="font-size:11px;color:var(--text-3);">'+_agL('intros')+'</div></div></div>'
     +'<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;">'
       +'<div style="font-weight:700;font-size:14px;">'+_agL('imports')+'</div>'
-      +'<div style="font-size:12px;color:var(--text-3);margin:4px 0 8px;">POST adverts (each with an agent_email) to <code>/agencies/'+a.id+'/import</code> with this key — each lands as a draft under that agent.</div>'
+      +'<div style="font-size:12px;color:var(--text-3);margin:4px 0 8px;">POST listings (each with an agent_email) to <code>/agencies/'+a.id+'/import</code> with this key — each lands as a draft under that agent.</div>'
       +'<div style="font-family:monospace;background:#0f172a;color:#a7f3d0;border-radius:8px;padding:8px 11px;font-size:12px;word-break:break-all;">'+a.api_key+'</div>'
-      +'<div style="margin-top:10px;"><button onclick="advertBulkOpen()" title="Paste your stock list — every advert lands as a draft under the right agent" style="background:#fff;color:var(--navy,#0c1a2e);border:1.5px solid var(--navy,#0c1a2e);border-radius:50px;padding:9px 16px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">⇪ Bulk import adverts</button>'
+      +'<div style="margin-top:10px;"><button onclick="advertBulkOpen()" title="Paste your stock list — every listing lands as a draft under the right agent" style="background:#fff;color:var(--navy,#0c1a2e);border:1.5px solid var(--navy,#0c1a2e);border-radius:50px;padding:9px 16px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">⇪ Bulk import listings</button>'
       +'<span style="font-size:11px;color:var(--text-3);margin-left:10px;">No IT needed — same pipeline as the API.</span></div></div>'
     +'<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">'
       +'<div style="font-weight:700;font-size:14px;margin-bottom:8px;">'+_agL('people')+'</div>'
@@ -2503,14 +2503,14 @@ window.addEventListener('popstate', function(e){
 const AI_PRO_ONLY = new Set(['heritage_tour','expedition_dossier','weekend_itinerary','property_dossier','car_dossier','collection_liquidation','collectables_advert','study_plan','retirement_planner']);
 
 const _SUB_TIERS = [
-  { id:'free',    label:'Free',    usd:0,  slots:2,  zar:0,   tup:0,  color:'#64748b', desc:'Card verified · never charged',
+  { id:'free',    label:'Free',    usd:0,  slots:2,  zar:0,   tup:0,  color:'#64748b', desc:'Free forever · no card needed',   /* CARD-WORDS-2 (26 Sep 2026): no card is ever taken (langt-04) */
     bullets:['2 listing slots','Free AI Coach on every listing','Browse, free examples & free tools — all open'] },
   { id:'starter', label:'Starter', usd:5,  slots:10, zar:90,  tup:2,  color:'#4f46e5', desc:'The regular individual seller',
     bullets:['10 listing slots','2 Tuppence granted every month — runs your Offer Strategy brief monthly','Everything in Free'] },
   { id:'pro',     label:'Pro',     usd:20, slots:30, zar:360, tup:10, color:'#7c3aed', desc:'The power seller',
     bullets:['30 listing slots','10 Tuppence granted every month','Unlocks the full AI research suite — dossiers & planners (3–5T per use)'] },
   { id:'agency',  label:'Agency',  usd:0,  slots:10, zar:0,   tup:0,  color:'#b3362e', desc:'Team · by application · multi-agent, each agent verified',
-    bullets:['Multiple agents under one verified umbrella','Free seat = Starter tools (10 listings) · $5 = Pro AI suite (20)','Each agent: own Trust Score, own introductions, Tuppence as-needed','Bulk-import your current adverts via API'] },
+    bullets:['Multiple agents under one verified umbrella','Free seat = Starter tools (10 listings) · $5 = Pro AI suite (20)','Each agent: own Trust Score, own introductions, Tuppence as-needed','Bulk-import your current listings via API'] },
 ];
 const _TIER_ORDER = _SUB_TIERS.map(t => t.id);
 
@@ -3943,7 +3943,7 @@ function renderAdvGrid(){
       : `<div class="adv-card-img-placeholder">${isAccom?'🏕':'🌄'}</div>`;
 
     return `<div style="background:#fff;border:1.5px solid #e2e5ea;border-radius:16px;overflow:hidden;cursor:pointer;" onclick="openDetail('${esc(l.id)}')">
-      <div style="position:relative;">${imgHtml}${l.super_example?'<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:8.5px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.02em;line-height:1.2;max-width:calc(100% - 8px);font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">AI EXAMPLE GENERATED ADVERT</div>':''}${(String(l.id).startsWith('demo_'))?'<div class="demo-card-badge"></div>':''}</div>
+      <div style="position:relative;">${imgHtml}${l.super_example?'<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:8.5px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.02em;line-height:1.2;max-width:calc(100% - 8px);font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">AI EXAMPLE GENERATED LISTING</div>':''}${(String(l.id).startsWith('demo_'))?'<div class="demo-card-badge"></div>':''}</div>
       <div style="padding:12px 14px 14px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
           <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${badgeCol};background:${badgeBg};padding:2px 8px;border-radius:10px;">${catLabel}</span>
@@ -5109,7 +5109,7 @@ function cardHtml(l){
   return`<div class="lcard${l.paused?' paused':''}" onclick="${l.paused?'':` openDetail('${l.id}')`}">
     <div class="ibox${_isCollectors?' collectors-thumb':''}" style="background:${catCfg(l).bg}">
       ${imgHtml}
-      ${l.super_example?'<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:8.5px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.02em;line-height:1.2;max-width:calc(100% - 8px);font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">AI EXAMPLE GENERATED ADVERT</div>':''}
+      ${l.super_example?'<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:8.5px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.02em;line-height:1.2;max-width:calc(100% - 8px);font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">AI EXAMPLE GENERATED LISTING</div>':''}
       ${(String(l.id).startsWith('demo_')||String(l.id).startsWith('ph_'))?'<div class="demo-card-badge"></div>':''}
       ${l.feat&&!l.paused?'<div class="feat-badge">Featured</div>':''}
       ${l.paused?'<div class="paused-badge">⏸ On hold for a buyer</div>':''}
@@ -5118,7 +5118,7 @@ function cardHtml(l){
       ${rentalCardBadge(l)}
       <div class="model-badge ${m}">${m==='commit'?'⏳ One buyer at a time':'👥 Open to several buyers'}</div>
       ${l.cat==='Services'&&l.service_class?`<div class="model-badge queue" style="bottom:24px;">${l.service_class==='Technical'?'🔧 Technical':'🤝 Casuals'}</div>`:''}
-      ${!l.paused?`<button class="wish-btn ${sv?'saved':''}" aria-label="Save advert" aria-pressed="${sv?'true':'false'}" onclick="toggleWish(event,'${l.id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="${sv?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>`:''}
+      ${!l.paused?`<button class="wish-btn ${sv?'saved':''}" aria-label="Save listing" aria-pressed="${sv?'true':'false'}" onclick="toggleWish(event,'${l.id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="${sv?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>`:''}
     </div>
     <div class="cbody">
       <div class="ccat">${l.cat}</div>
@@ -5224,7 +5224,7 @@ function renderSaved(){
      and shown here as Local Market cards that open their own page -- they used to be saved and never seen again. */
   const lmSaved=[...wishlist].map(String).filter(id=>/^lm_\d+$/.test(id)).map(id=>_msLmSaved.get(id)).filter(Boolean);
   const loading=_msSavedFetch(function(){ if(document.querySelector('#screen-saved.active')) renderSaved(); });
-  if(!saved.length && !lmSaved.length){el.innerHTML=loading?'<div class="empty-state"><p>Loading your saved adverts…</p></div>':'<div class="empty-state"><div class="empty-icon">🔖</div><h3>No saved listings</h3><p>Tap the heart icon on any listing to save it here.</p></div>';return;}
+  if(!saved.length && !lmSaved.length){el.innerHTML=loading?'<div class="empty-state"><p>Loading your saved listings…</p></div>':'<div class="empty-state"><div class="empty-icon">🔖</div><h3>No saved listings</h3><p>Tap the heart icon on any listing to save it here.</p></div>';return;}
   el.innerHTML=`<div class="lgrid">${saved.map(cardHtml).join('')}${lmSaved.map(_msLmSavedCard).join('')}</div>`;
 }
 var _msWishTried = new Set();   // WISH-KEEP-1: each saved advert is fetched at most once per visit
@@ -5542,14 +5542,14 @@ function msLandDraft(){
       try{ card.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){ card.scrollIntoView(); }
       card.style.transition='box-shadow .4s'; card.style.boxShadow='0 0 0 3px #7C3AED, 0 10px 30px rgba(124,58,237,.35)';
       var _isPub=/dashPublish/.test(btn.getAttribute('onclick')||'');
-      if(_isPub) btn.textContent='Publish my advert';
-      if(typeof showToast==='function') showToast(_isPub ? 'Here is the advert you just made \u2014 tap Publish when it looks right.'
-                                                         : 'Here is your advert \u2014 it is live. Add photos to make it stronger.');
+      if(_isPub) btn.textContent='Publish my listing';
+      if(typeof showToast==='function') showToast(_isPub ? 'Here is the listing you just made \u2014 tap Publish when it looks right.'
+                                                         : 'Here is your listing \u2014 it is live. Add photos to make it stronger.');
       return;
     }
     if(n>0) setTimeout(function(){ tryIt(n-1); }, 500);
     else { try{ sessionStorage.removeItem('ts_land_draft'); }catch(e){}   /* DRAFT-AFTER-SIGNIN-1: never a silent give-up */
-      if(typeof showToast==='function') showToast('We could not find that advert on this account yet \u2014 if you used another email in Quick, sign in with that one.', 7000); }
+      if(typeof showToast==='function') showToast('We could not find that listing on this account yet \u2014 if you used another email in Quick, sign in with that one.', 7000); }
   })(40);
 }
 
@@ -5576,7 +5576,7 @@ function msLangView(l){
   var code = showX ? x.lang : orig;
   var _e=function(t){ return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
   if(showX){ v.title = _e(x.title); v.desc = x.desc ? _e(x.desc) : l.desc; }   /* AUDIT-S4: AI text is escaped */
-  v.chip = ' <span class="ts-lchip" title="This advert is in '+msLangCode(code)+'">'+msLangCode(code)+'</span>';
+  v.chip = ' <span class="ts-lchip" title="This listing is in '+msLangCode(code)+'">'+msLangCode(code)+'</span>';
   if(x) v.flip = '<button class="ts-lflip" onclick="_msLangFlip[\''+l.id+'\']=!_msLangFlip[\''+l.id+'\'];window._msRerenderFlag=true;openDetail(\''+l.id+'\')">'
     + 'Also in ' + msLangCode(showX ? orig : x.lang) + ' \u2014 show it</button>';
   return v;
@@ -5700,7 +5700,7 @@ function openDetail(id){
         ${_toQuick
           ? `<button class="dib" onclick="msBackToQuick()" style="width:auto;padding:0 13px;border-radius:50px;font:700 13px/1 Syne,system-ui,sans-serif;color:var(--text);">&lsaquo; Back to Quick</button>`
           : `<button class="dib" aria-label="Back" onclick="msBack('${_backTo}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>`}
-        <button class="dib" id="dwish-btn" aria-label="Save advert" aria-pressed="${wishlist.has(id)?'true':'false'}" onclick="toggleWishDetail('${id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="${wishlist.has(id)?'#c8873a':'none'}" stroke="${wishlist.has(id)?'#c8873a':'currentColor'}" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+        <button class="dib" id="dwish-btn" aria-label="Save listing" aria-pressed="${wishlist.has(id)?'true':'false'}" onclick="toggleWishDetail('${id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="${wishlist.has(id)?'#c8873a':'none'}" stroke="${wishlist.has(id)?'#c8873a':'currentColor'}" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
       </div>
     </div>`;
   const flowHtml=isCommit?`
@@ -5737,7 +5737,7 @@ function openDetail(id){
         <span class="model-badge ${m}" style="position:static;font-size:10px;padding:3px 8px;">${isCommit?'⏳ One buyer at a time':'👥 Open to several buyers'}</span>
         ${l.feat?'<span style="font-size:10px;font-weight:700;color:var(--accent);">★ FEATURED</span>':''}${fspark(l)}
       </div>
-      ${l.super_example?'<div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.02em;font-family:Syne,sans-serif;margin-bottom:6px;">AI EXAMPLE GENERATED ADVERT — not a real listing; an AI-made example of the benchmark for this category</div>':''}
+      ${l.super_example?'<div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.02em;font-family:Syne,sans-serif;margin-bottom:6px;">AI EXAMPLE GENERATED LISTING — not a real listing from a seller; an AI-made example of the benchmark for this category</div>':''}
       <div class="dtitle" data-notranslate="1">${_lv.title||(l.cat?l.cat+' listing':'Untitled')}${_lv.chip}</div>${_lv.flip}
       <div class="dmeta"><div class="dmi" onclick="showListingAreaMap('${id}')" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${_lmEsc(l.area)}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||_lmEsc(l.country.toUpperCase())}`:''}${advEnvLabel?' · '+advEnvLabel:''} <span style="color:var(--accent);font-size:11px;font-weight:600;">· View on map</span></div></div>
       <div class="price-block">
@@ -5845,7 +5845,7 @@ function openDetail(id){
         <p>Seller name, contact details and specific address are only revealed after both parties accept.</p>
       </div>
     </div>
-    ${String(l.cat||'').toLowerCase()==='services' ? `<div style="margin:0 0 14px;text-align:center;font-size:13px;color:var(--text-3);">Do work like this yourself? <a href="/quick/?src=detail-make" style="color:var(--accent);font-weight:700;">Make your own advert \u2014 free</a></div>` : ''}<!-- QUICK-LINK-CARRY-1b (ts1-12): counted as a tap on this advert page, no longer as a WhatsApp Status -->
+    ${String(l.cat||'').toLowerCase()==='services' ? `<div style="margin:0 0 14px;text-align:center;font-size:13px;color:var(--text-3);">Do work like this yourself? <a href="/quick/?src=detail-make" style="color:var(--accent);font-weight:700;">Make your own listing \u2014 free</a></div>` : ''}<!-- QUICK-LINK-CARRY-1b (ts1-12): counted as a tap on this advert page, no longer as a WhatsApp Status -->
     <!-- DETAIL-CTA-FAST-1 (ts1-19): the tap shows at once; the seller check was already asked when the page opened -->
 
     <div style="margin:0 0 14px;text-align:center;font-size:12px;"><a href="/support?topic=report&amp;listing=${encodeURIComponent(String(l.id||'').replace('bea_',''))}#support-form" style="color:var(--text-3);">🚩 Report this listing</a></div>
@@ -6615,7 +6615,7 @@ function _openModalNow(id, _fetched){
      is fetched on its own before the form opens; if that fails she is told -- the tap never silently does nothing. */
   if(!findListing(id)){
     const _n=String(id).replace(/^bea_/,'');
-    const _say=function(){ showToast('This advert could not be loaded — check your connection and tap again.'); };
+    const _say=function(){ showToast('This listing could not be loaded — check your connection and tap again.'); };
     if(_fetched || !/^\d+$/.test(_n) || (typeof DEMO_MODE !== 'undefined' && DEMO_MODE)){ _say(); return; }   // demo: LISTINGS only
     fetch(BEA_URL+'/listings/'+_n,{credentials:'include'}).then(function(r){ return r.ok ? r.json() : null; })
       .then(function(row){ if(row && row.id!=null){ _msPin(_msMapBeaListing(row)); _openModalNow('bea_'+row.id, true); } else _say(); })
@@ -6705,7 +6705,7 @@ function submitIntro(){
     lmSubmitIntro(lmId, name, email, msg);
   } else if(pendingIntroId!==null){
     // INTRO-FIND-1 (25 Sep 2026 inspection, ts1-04): never a silent crash -- the form stays open with her words in it
-    if(!findListing(pendingIntroId)){ showToast('This advert could not be found — close this and open the advert again. Your message is still here.', 6000); return; }
+    if(!findListing(pendingIntroId)){ showToast('This listing could not be found — close this and open the listing again. Your message is still here.', 6000); return; }
     const l=findListing(pendingIntroId),isCommit=catCfg(l).model==='commit';
     const _markSent=function(){
       if(isCommit){l.paused=true;}else{l.queueCount=(l.queueCount||0)+1;}
@@ -7437,7 +7437,7 @@ async function paDoPublish(){
         let _w1='';
         try{ if(_pr1){ const _j1=await _pr1.json(); _w1=(_j1&&_j1.detail)||''; } }catch(e){}
         showToast('⚠ Your photo could not be added: '+(_w1||'the upload did not complete')+
-                  '. The advert is live — re-add the photo from Edit.', 8000);
+                  '. The listing is live — re-add the photo from Edit.', 8000);
       }
     }
     // 4. Store email for returning seller recognition
@@ -8333,7 +8333,7 @@ async function _sobGoLiveInner() {
     fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/id-status').then(function(r){ return r.ok ? r.json() : null; }).then(function(st){
       if (!st || st.green_tick) return;
       const sub = document.getElementById('sob-success-sub');
-      if (sub) sub.innerHTML = 'Your advert is live and buyers can see it. <strong style="color:#fbbf24">Buyers can send you introductions once your ID is verified</strong> \u2014 do it in My Space \u2192 Trust \u2192 Upload ID. It is what keeps scammers out.';
+      if (sub) sub.innerHTML = 'Your listing is live and buyers can see it. <strong style="color:#fbbf24">Buyers can send you introductions once your ID is verified</strong> \u2014 do it in My Space \u2192 Trust \u2192 Upload ID. It is what keeps scammers out.';
     }).catch(function(){});
   } catch (e) {}
   obTrack('publish_ok',{n:successCount});   // ONBOARD-FUNNEL-1: the number's own event
@@ -8380,8 +8380,14 @@ async function _sobGoLiveInner() {
     }
   } catch(e) { /* a nudge may never break a successful publish */ }
 
-  /* BANKING-NUDGE-OFF-1 (25 Sep 2026 inspection, ts2-17): the banking nudge called the details 'Required' and offered
-     a form that does not exist anywhere in the app. It stays hidden until there is a real form to send her to. */
+  /* BANKING-FORM-1 (26 Sep 2026, David: "we do need the users banking details, we use it both as security to know
+     our customer and also for them to purchase tuppence's ... we just dont use it to pay them any money out"). The
+     25 Sep inspection hid this nudge (ts2-17) because it promised payouts and offered a form that did not exist. The
+     form exists now (msOpenBankingSheet) and the card says what the details are for; nothing is ever paid out. */
+  if (!sobState._hasBanking) {
+    const nudge = document.getElementById('sob-banking-nudge');
+    if (nudge) nudge.style.display = 'flex';
+  }
 }
 
 function sobP2Back() {
@@ -8426,11 +8432,11 @@ function sobStartOver() {
    their own advert -- the supply loop. */
 async function msShareStatus(listingId, title){
   const id = parseInt(String(listingId).replace(/^bea_/, ''), 10);
-  if (!id) { showToast('This advert is not live yet.'); return; }
+  if (!id) { showToast('This listing is not live yet.'); return; }
   const url  = BEA_URL + '/listings/' + id + '/status-card.png';
   const link = 'https://trustsquare.co/?listing=' + id + '&src=status';
   const text = (title ? title + ' \u2014 ' : '') + 'on TrustSquare. Ask for an introduction: ' + link +
-               '\nMake your own advert, free: https://trustsquare.co/quick/?src=status';
+               '\nMake your own listing, free: https://trustsquare.co/quick/?src=status';
   try { if (typeof obTrack === 'function') obTrack('status_share', {listing: id}); } catch (e) {}
   try {
     const r = await fetch(url, {credentials: 'include'});
@@ -8450,7 +8456,7 @@ async function msShareStatus(listingId, title){
 function sobShareStatus() {
   const first = sobState.drafts && sobState.drafts[0];
   if (first && first.id) msShareStatus(first.id, first.title || '');
-  else showToast('Open My Space to share your advert once it is live.');
+  else showToast('Open My Space to share your listing once it is live.');
 }
 
 function sobViewMyListing() {
@@ -8471,9 +8477,91 @@ function sobViewMyListing() {
 }
 
 function sobAddBanking() {
-  // Navigate to dashboard banking section after going live
-  goTo('dashboard');
-  showToast('Add your banking details in your Seller Hub settings.');
+  msOpenBankingSheet();   // BANKING-FORM-1: the form itself, not a hunt for a settings page
+}
+
+/* BANKING-FORM-1 (26 Sep 2026). The one place a seller gives her banking details. They help TrustSquare confirm who
+   she is (the account holder is matched to her verified ID name) and are used when she buys Tuppence; TrustSquare
+   never pays money out (Terms 5.2: Tuppence is not redeemable for cash). The server keeps the account number's last
+   4 digits only (POST /users/{email}/banking, bound to her own session). */
+function _msBankEmail(){
+  try{ return localStorage.getItem('ms_user_email') || localStorage.getItem('ms_aa_email') || (typeof sobState!=='undefined' && sobState && sobState.email) || ''; }catch(_){ return ''; }
+}
+var MS_BANKS = ['ABSA','African Bank','Capitec','Discovery Bank','FNB','Investec','Nedbank','Standard Bank','TymeBank','Other'];
+function msOpenBankingSheet(){
+  var email = _msBankEmail();
+  if(!email){ showToast('Sign in first to add your banking details.'); return; }
+  var old = document.getElementById('ms-bank-overlay'); if(old) old.remove();
+  var ov = document.createElement('div'); ov.id = 'ms-bank-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  var fld = 'display:block;width:100%;box-sizing:border-box;margin:4px 0 12px;padding:11px 12px;border:1.5px solid #cbd5e1;border-radius:10px;font:inherit;font-size:15px;color:#0f172a;background:#fff;';
+  var lab = 'display:block;font-size:12.5px;font-weight:700;color:#334155;';
+  ov.innerHTML = '<div role="dialog" aria-modal="true" aria-labelledby="ms-bank-h" style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;padding:18px 20px 24px;box-sizing:border-box;">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+    +   '<span id="ms-bank-h" style="font-size:16px;font-weight:800;color:#1e293b;">Your banking details</span>'
+    +   '<button type="button" aria-label="Close" id="ms-bank-x" style="background:none;border:none;font-size:22px;line-height:1;color:#64748b;cursor:pointer;">\u00d7</button></div>'
+    + '<p style="margin:0 0 14px;font-size:13px;line-height:1.55;color:#475569;">We use them to confirm who you are and when you buy Tuppence. TrustSquare never pays money out to this account.</p>'
+    + '<label style="'+lab+'" for="ms-bank-holder">Account holder</label><input id="ms-bank-holder" type="text" autocomplete="name" style="'+fld+'">'
+    + '<label style="'+lab+'" for="ms-bank-name">Bank</label><select id="ms-bank-name" style="'+fld+'"><option value="">Choose your bank</option>'
+    +   MS_BANKS.map(function(b){ return '<option>'+b+'</option>'; }).join('') + '</select>'
+    + '<label style="'+lab+'" for="ms-bank-acc">Account number</label><input id="ms-bank-acc" type="text" inputmode="numeric" autocomplete="off" style="'+fld+'">'
+    + '<label style="'+lab+'" for="ms-bank-branch">Branch code (optional)</label><input id="ms-bank-branch" type="text" inputmode="numeric" autocomplete="off" style="'+fld+'">'
+    + '<p style="margin:-4px 0 14px;font-size:12px;color:#64748b;">We keep only the last 4 digits of the account number.</p>'
+    + '<div id="ms-bank-err" role="alert" style="display:none;margin:0 0 10px;font-size:13px;color:#b91c1c;"></div>'
+    + '<button type="button" id="ms-bank-save" style="width:100%;background:#0f172a;color:#fff;border:none;border-radius:50px;padding:13px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;">Save banking details</button>'
+    + '</div>';
+  document.body.appendChild(ov);
+  var close = function(){ var o = document.getElementById('ms-bank-overlay'); if(o) o.remove(); };
+  ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+  document.getElementById('ms-bank-x').onclick = close;
+  try{ var nm = localStorage.getItem('ms_aa_name') || (typeof sobState!=='undefined' && sobState && sobState.name) || ''; if(nm) document.getElementById('ms-bank-holder').value = nm; }catch(_){}
+  document.getElementById('ms-bank-save').onclick = async function(){
+    var holder = document.getElementById('ms-bank-holder').value.trim();
+    var bank = document.getElementById('ms-bank-name').value;
+    var acc = document.getElementById('ms-bank-acc').value.replace(/\D/g, '');
+    var branch = document.getElementById('ms-bank-branch').value.replace(/\D/g, '');
+    var err = document.getElementById('ms-bank-err');
+    var say = function(t){ err.textContent = t; err.style.display = 'block'; };
+    if(!holder){ say('Please type the account holder\'s name.'); return; }
+    if(!bank){ say('Please choose your bank.'); return; }
+    if(acc.length < 6){ say('Please type the full account number.'); return; }
+    var btn = this; btn.disabled = true; btn.textContent = 'Saving\u2026'; err.style.display = 'none';
+    try{
+      var r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/banking', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
+        body: JSON.stringify({ account_holder: holder, bank_name: bank, account_number: acc, branch_code: branch }) });
+      if(r.status === 401 || r.status === 403){ btn.disabled = false; btn.textContent = 'Save banking details'; say('Please sign in again to save your banking details.'); return; }
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      var d = await r.json().catch(function(){ return {}; });
+      try{ if(typeof sobState !== 'undefined' && sobState) sobState._hasBanking = true; if(typeof sbState !== 'undefined' && sbState) sbState._hasBanking = true; }catch(_){}
+      ['sob-banking-nudge','sb-banking-nudge'].forEach(function(id){ var n = document.getElementById(id); if(n) n.style.display = 'none'; });
+      close();
+      showToast('Banking details saved \u2014 account ending ' + (d.account_last4 || acc.slice(-4)) + '.', 5000);
+      msLoadBankingCard();
+    }catch(e){
+      btn.disabled = false; btn.textContent = 'Save banking details';
+      say('Could not save \u2014 nothing was stored. Please try again.');
+    }
+  };
+  setTimeout(function(){ try{ document.getElementById('ms-bank-holder').focus(); }catch(_){} }, 60);
+}
+function msLoadBankingCard(){
+  var st = document.getElementById('ms-banking-state'), b = document.getElementById('ms-banking-btn');
+  if(!st) return;
+  var email = _msBankEmail(); if(!email) return;
+  fetch(BEA_URL + '/users/' + encodeURIComponent(email), { credentials: 'include', headers: { 'X-Api-Key': API_KEY } })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(u){
+      if(!u) return;
+      if(u.banking_added_at){
+        st.textContent = 'On file' + (u.banking_bank ? ' \u00b7 ' + u.banking_bank : '') + (u.banking_account_last4 ? ' \u00b7 account ending ' + u.banking_account_last4 : '');
+        if(b) b.textContent = 'Update banking details \u2192';
+      } else {
+        st.textContent = 'Not added yet';
+        if(b) b.textContent = 'Add banking details \u2192';
+      }
+    }).catch(function(){});
 }
 
 function sobDone() {
@@ -9069,13 +9157,13 @@ function goRevealDraft(draft, warnings, anonymityScrubbed, violatingIndices) {
       if (_tips.length) {
         tipsEl.style.cssText = 'display:block;margin-top:10px;';
         tipsEl.innerHTML = `
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.5);margin-bottom:8px;">\u2728 Advert coach \u2014 optional tips</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.5);margin-bottom:8px;">\u2728 Listing coach \u2014 optional tips</div>
           ${_tips.map(t => `
             <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 11px;background:rgba(255,215,130,.07);border:1px solid rgba(255,215,130,.22);border-radius:8px;margin-bottom:6px;">
               <div style="font-size:14px;flex-shrink:0;">\ud83d\udca1</div>
               <div style="flex:1;font-size:12px;color:rgba(255,255,255,.75);line-height:1.45;">${t}</div>
             </div>`).join('')}
-          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:4px;text-align:center;">Suggestions only \u2014 your advert, your call</div>`;
+          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:4px;text-align:center;">Suggestions only \u2014 your listing, your call</div>`;
       } else {
         tipsEl.style.display = 'none';
         tipsEl.innerHTML = '';
@@ -9739,7 +9827,7 @@ async function goHandoff(opts) {
   if (BEA_ENABLED && goState.email && goState.listingId && !goState._returnLinkSent) {
     goState._returnLinkSent = true;
     showToast(msIsKeyId(goState.email) ? '✓ Draft saved — it is waiting in your account.'   // KEY-ID-HIDE-1: no letter goes to a key account
-      : '✓ Draft saved — we emailed ' + goState.email + ' a link straight back to this advert. It works for a week.', 6000);
+      : '✓ Draft saved — we emailed ' + goState.email + ' a link straight back to this listing. It works for a week.', 6000);
   }
 
   if (btn) { btn.disabled = false; btn.textContent = 'Take me to the app →'; }
@@ -10997,7 +11085,7 @@ async function sbDoPublish(){
       if(_photoFails.length && typeof showToast==='function'){
         showToast('⚠ '+_photoFails.length+' photo'+(_photoFails.length>1?'s':'')+
                   ' could not be added — '+_photoFails.join('; ')+
-                  '. Your advert is live; re-add them from Edit.', 9000);
+                  '. Your listing is live; re-add them from Edit.', 9000);
       }
     }
     // Upload trust documents (B7 signals) — persist to seller profile + auto-earn credentials
@@ -11025,8 +11113,11 @@ async function sbDoPublish(){
     showToast('✓ Listing published!');
     loadLiveListings();
 
-    /* BANKING-NUDGE-OFF-1 (25 Sep 2026 inspection, ts2-17): the banking nudge called the details 'Required' and
-       offered a form that does not exist anywhere in the app. It stays hidden until there is a real form. */
+    /* BANKING-FORM-1 (26 Sep 2026): the nudge is back, pointing at the real form, with the real purpose. */
+    if(!sbState._hasBanking){
+      const _sbBankNudge=document.getElementById('sb-banking-nudge');
+      if(_sbBankNudge) _sbBankNudge.style.display='flex';
+    }
   } catch(err){
     const msg=err&&err.message?err.message:'Unknown error';
     if(errEl){errEl.innerHTML=`<strong>Couldn't publish your listing.</strong><br>${msg}<br><span style="font-size:11px;color:var(--text-3);margin-top:4px;display:block;">Check your connection and try again.</span>`;errEl.style.display='block';}
@@ -11153,7 +11244,7 @@ function sbLifecycleChip(ls){
 function msKeepLive(id){
   var email = localStorage.getItem('ms_aa_email') || '';
   // KEEP-LIVE-SAYS-1 (25 Sep 2026 inspection, ts2-21): both failures went to the console only, so the button looked dead.
-  if(!email){ showToast('Sign in first to keep your advert live.'); return; }
+  if(!email){ showToast('Sign in first to keep your listing live.'); return; }
   fetch(BEA_URL + '/listings/' + id + '/keep-live', {
     method: 'POST', credentials: 'include', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({email: email})
@@ -11252,7 +11343,7 @@ function renderDashCard(dl){
       ${wonderBanners}
       ${introsHtml}
       ${lmNoShowRows(dl)}
-      ${dl.beaListingId?(_ls==='archived'?`<div class="ml-actions"><span style="font-size:11px;color:var(--text-3);">Archived — an archived advert cannot come back. Make a new one any time.</span><button class="mla-btn" style="color:#dc2626;border-color:#fecaca;" onclick="dashDeleteListing(${dl.beaListingId}, ${JSON.stringify(String(dl.title||'')).replace(/"/g,'&quot;')})">Delete</button></div>`:`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${(dl.status!=='draft'&&_ls==='live')?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||'')).replace(/"/g,'&quot;')})">Share to Status</button>`:''}${_ls==='live'?`<button class="mla-btn" onclick="msPauseListing(${dl.beaListingId}, true)">Pause</button>`:''}${_ls==='paused'?`<button class="mla-btn accent" onclick="msPauseListing(${dl.beaListingId}, false)">Resume</button>`:''}</div>`):''}
+      ${dl.beaListingId?(_ls==='archived'?`<div class="ml-actions"><span style="font-size:11px;color:var(--text-3);">Archived — an archived listing cannot come back. Make a new one any time.</span><button class="mla-btn" style="color:#dc2626;border-color:#fecaca;" onclick="dashDeleteListing(${dl.beaListingId}, ${JSON.stringify(String(dl.title||'')).replace(/"/g,'&quot;')})">Delete</button></div>`:`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${(dl.status!=='draft'&&_ls==='live')?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||'')).replace(/"/g,'&quot;')})">Share to Status</button>`:''}${_ls==='live'?`<button class="mla-btn" onclick="msPauseListing(${dl.beaListingId}, true)">Pause</button>`:''}${_ls==='paused'?`<button class="mla-btn accent" onclick="msPauseListing(${dl.beaListingId}, false)">Resume</button>`:''}</div>`):''}
     </div>
   </div>`;
 }
@@ -11295,7 +11386,7 @@ function lmNoShowOpen(introId, listingId){
   bg.onclick = function(e){ if (e.target === bg) bg.remove(); };
   bg.innerHTML = '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="lmns-h" style="max-width:440px;">'
     + '<h3 id="lmns-h" style="margin:0 0 6px;font-size:18px;">What happened?</h3>'
-    + '<p style="font-size:13px;color:var(--text-2);margin:0 0 12px;line-height:1.5;">We tell the buyer and give them 7 days to answer before anyone decides. If the report is upheld, the buyer loses 3 trust points and, if this advert is still live, you get 1T back.</p>'
+    + '<p style="font-size:13px;color:var(--text-2);margin:0 0 12px;line-height:1.5;">We tell the buyer and give them 7 days to answer before anyone decides. If the report is upheld, the buyer loses 3 trust points and, if this listing is still live, you get 1T back.</p>'
     + LM_NOSHOW_REASONS.map(function(r, i){ return '<label style="display:flex;gap:10px;align-items:center;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;margin:0 0 8px;cursor:pointer;font-size:14px;"><input type="radio" name="lmns-r" value="' + r[0] + '"' + (i===0?' checked':'') + '> ' + r[1] + '</label>'; }).join('')
     + '<textarea id="lmns-note" maxlength="300" placeholder="Anything we should know (optional)" style="width:100%;box-sizing:border-box;min-height:70px;border:1.5px solid var(--border);border-radius:10px;padding:10px;font:inherit;margin:4px 0 12px;"></textarea>'
     + '<button id="lmns-go" class="modal-cta commit" style="width:100%;">Report the no-show</button>'
@@ -11620,13 +11711,13 @@ async function elLangRender(raw){
         +'<button class="mla-btn" id="el-lang-off">Remove '+msLangCode(extra)+'</button></div></div>';
     }
     box.innerHTML='<div style="border:1.5px solid var(--border);border-radius:12px;overflow:hidden">'
-      +'<div style="background:var(--surface-2);padding:10px 14px;font-size:13px;font-weight:700">\ud83c\udf10 Advert languages</div>'
+      +'<div style="background:var(--surface-2);padding:10px 14px;font-size:13px;font-weight:700">\ud83c\udf10 Listing languages</div>'
       +'<div style="padding:12px 14px;font-size:13px;line-height:1.5">'
       +'<label style="display:block;font-weight:700;margin-bottom:4px">You wrote it in</label>'
       +'<select id="el-lang-orig" style="width:100%;padding:9px;border-radius:8px">'+opt(orig,null)+'</select>'
       +'<label style="display:block;font-weight:700;margin:12px 0 4px">Also show it in (optional, one language)</label>'
       +'<select id="el-lang-extra" style="width:100%;padding:9px;border-radius:8px"><option value="">\u2014 No second language \u2014</option>'+opt(extra,orig)+'</select>'
-      +'<div style="font-size:12px;color:var(--text-3);margin-top:6px">Your advert goes live in your own words straight away. A second language only goes live after you approve it.'
+      +'<div style="font-size:12px;color:var(--text-3);margin-top:6px">Your listing goes live in your own words straight away. A second language only goes live after you approve it.'
       +(orig!=='en'?' We also add an English search layer, so people searching in English still find you.':'')+'</div>'
       +'<button class="mla-btn" id="el-lang-go" style="margin-top:10px;background:var(--accent);color:#fff;border-color:var(--accent)">Save languages</button>'
       +'<div id="el-lang-msg" style="font-size:12px;margin-top:8px"></div>'
@@ -14211,7 +14302,7 @@ function aaGoToPublished(draft) {
   const lid = draft.listing_id;
   goTo('dashboard');
   if (draft.needs_terms) {
-    showToast('This advert is saved in My Listings — one step left: accept the Terms to publish it.', 5000);
+    showToast('This listing is saved in My Listings — one step left: accept the Terms to publish it.', 5000);
     setTimeout(function(){ try { dashPublish(lid); } catch(_) {} }, 1200);
   } else {
     showToast('Already published — opening it in My Listings so you can edit it.', 4000);
@@ -16256,7 +16347,7 @@ function lmToggleWish(event, listingId) {
   const svg = btn.querySelector('svg');
   // A11Y-NAMES-1 (25 Sep 2026 inspection, shell-08): the heart says what it does and whether it is on
   btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-  btn.setAttribute('aria-label', on ? 'Remove from saved' : 'Save advert');
+  btn.setAttribute('aria-label', on ? 'Remove from saved' : 'Save listing');
   if (btn.classList.contains('wish-btn')) {
     btn.classList.toggle('saved', on);
     if (svg) svg.setAttribute('fill', on ? 'currentColor' : 'none');
@@ -16347,7 +16438,7 @@ async function lmLoadGrid() {
               (String(l.id).startsWith('demo_') ? '<div class="demo-card-badge"></div>' : '') +
               (l.feat ? '<div class="feat-badge">Featured</div>' : '') +
               `<div class="model-badge queue">🛍️ Open to several buyers</div>` +
-              `<button class="wish-btn ${svLM?'saved':''}" aria-label="${svLM?'Remove from saved':'Save advert'}" aria-pressed="${svLM?'true':'false'}" onclick="event.stopPropagation();toggleWish(event,'${l.id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="${svLM?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>` +
+              `<button class="wish-btn ${svLM?'saved':''}" aria-label="${svLM?'Remove from saved':'Save listing'}" aria-pressed="${svLM?'true':'false'}" onclick="event.stopPropagation();toggleWish(event,'${l.id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="${svLM?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>` +
             `</div>` +
             `<div class="cbody">` +
               `<div class="ccat">Local Market</div>` +
@@ -16382,10 +16473,10 @@ async function lmLoadGrid() {
         `<div class="lcard" onclick="lmOpenDetail(${c.id})">` +
         `<div class="ibox" style="background:#1f2937">` +
           imgHtml +
-          (c.super_example ? '<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:8.5px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.02em;line-height:1.2;max-width:calc(100% - 8px);font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">AI EXAMPLE GENERATED ADVERT</div>' : '') +
+          (c.super_example ? '<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:8.5px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.02em;line-height:1.2;max-width:calc(100% - 8px);font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">AI EXAMPLE GENERATED LISTING</div>' : '') +
           (isFeat ? '<div class="feat-badge">Featured</div>' : '') +
           `<div class="model-badge queue">🛍️ Open to several buyers</div>` +
-          `<button class="wish-btn ${svLM?'saved':''}" aria-label="${svLM?'Remove from saved':'Save advert'}" aria-pressed="${svLM?'true':'false'}" onclick="event.stopPropagation();lmToggleWish(event,${c.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="${svLM?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>` +
+          `<button class="wish-btn ${svLM?'saved':''}" aria-label="${svLM?'Remove from saved':'Save listing'}" aria-pressed="${svLM?'true':'false'}" onclick="event.stopPropagation();lmToggleWish(event,${c.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="${svLM?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>` +
         `</div>` +
         `<div class="cbody">` +
           `<div class="ccat">Local Market</div>` +
@@ -16453,7 +16544,7 @@ async function lmOpenDetail(listingId) {
         lmDotsHtml + lmArrows +
         `<div class="dnav">` +
           `<button class="dib" aria-label="Back to Local Market" onclick="goTo('local-market')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>` +
-          `<button class="dib" aria-label="${wishlist.has('lm_'+c.id)?'Remove from saved':'Save advert'}" aria-pressed="${wishlist.has('lm_'+c.id)?'true':'false'}" onclick="lmToggleWish(event,${c.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="${wishlist.has('lm_'+c.id)?'#c8873a':'none'}" stroke="${wishlist.has('lm_'+c.id)?'#c8873a':'currentColor'}" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>` +
+          `<button class="dib" aria-label="${wishlist.has('lm_'+c.id)?'Remove from saved':'Save listing'}" aria-pressed="${wishlist.has('lm_'+c.id)?'true':'false'}" onclick="lmToggleWish(event,${c.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="${wishlist.has('lm_'+c.id)?'#c8873a':'none'}" stroke="${wishlist.has('lm_'+c.id)?'#c8873a':'currentColor'}" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>` +
         `</div>` +
       `</div>`;
     const priceHtml = c.price
@@ -17161,6 +17252,7 @@ function loadBillingTxMore() {
 }
 
 function _renderBillingTab(d, email) {
+  try{ msLoadBankingCard(); }catch(_){}   // BANKING-FORM-1
   const tier  = d?.seller_tier || 'free';
   const limit = d?.slot_limit ?? 2;
   const used  = d?.slots_used ?? 0;
@@ -17172,7 +17264,7 @@ function _renderBillingTab(d, email) {
      'admin test account … (dev override)'. That line is for superusers only; Agency says what Agency is
      (PRICING_CANON §1: free + verified, 10 base slots that grow with the Trust Score). */
   let _priceTxt = tier === 'agency' ? 'Free with verification · your slot allowance grows with your Trust Score'
-    : (meta.usd === 0 ? 'Free forever · card verified at signup, never charged' : '$' + meta.usd + '/month · ≈ R' + meta.zar);
+    : (meta.usd === 0 ? 'Free forever · no card needed' :   /* CARD-WORDS-2 (langt-04) */ '$' + meta.usd + '/month · ≈ R' + meta.zar);
   if (limit > meta.slots && typeof isSuperuser === 'function' && isSuperuser()) _priceTxt += ' · your listing limit: ' + limit + ' (set by your agency)';
   document.getElementById('billing-tier-price').textContent = _priceTxt;
   document.getElementById('billing-slots-used').textContent = used;
@@ -19051,7 +19143,7 @@ var SF_TILE_IMGS = {
 
 var SF_CATS = {
 Cars: { label:'Cars', aiCap:'number plates and contact details', priceLabel:'Asking price',
-  slots:[['main','Main photo','Front three-quarter — your advert cover','📸'],
+  slots:[['main','Main photo','Front three-quarter — your listing cover','📸'],
          ['side','Side view','Full profile, whole car','🚙'],
          ['interior','Interior','Front seats and cabin','💺'],
          ['dash','Dashboard','Ignition on — odometer visible','🎛️'],
@@ -20050,7 +20142,7 @@ function sfHomeS(){
     Services:'linear-gradient(140deg,#7c2d12,#b45309)',Cars:'linear-gradient(140deg,#0c1a2e,#1e3a5f)',
     Collectors:'linear-gradient(140deg,#44403c,#78716c)',Adventures:'linear-gradient(140deg,#7c3d0a,#b45309)'};
   var h='<div class="sf-hdr"><div class="sf-step">Sell on TrustSquare</div><h2>Sell</h2></div>'+
-  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>What are you listing?</b> Pick a category — I\'ll guide you photo by photo and write the advert with you. Nothing is visible until you publish.</div></div>';
+  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>What are you listing?</b> Pick a category — I\'ll guide you photo by photo and write the listing with you. Nothing is visible until you publish.</div></div>';
   /* SF-DRAFT-KEEP-1 (ts4-04): a listing in progress is offered back first -- 'Continue' or a deliberate 'Start again'. */
   if(sfHasData()){
     var _np=sfPhotoCount();
@@ -20076,13 +20168,13 @@ function sfHomeS(){
   // someone who has chosen to sell. Quick carries the way back (?from=app), so this is no longer a one-way door.
   /* QUICK-LEAVE-1 (25 Sep 2026 inspection, ts4-08): with a listing in progress the Quick line asks first, and the
      listing is kept (SF-DRAFT-KEEP-1) so Sell carries on with it when she comes back. */
-  h+='<a class="sf-quick-line" href="/quick/?from=app&src=sell-flow" onclick="return sfQuickLeave()" style="display:flex;align-items:center;justify-content:center;gap:7px;margin:14px 0 2px;font-size:13px;font-weight:600;color:#c4b5fd;text-decoration:none;"><span style="width:14px;height:14px;border-radius:4px;background:#8b5cf6;display:inline-block;"></span>In a hurry? 5-tap Quick advert &rsaquo;</a>';
+  h+='<a class="sf-quick-line" href="/quick/?from=app&src=sell-flow" onclick="return sfQuickLeave()" style="display:flex;align-items:center;justify-content:center;gap:7px;margin:14px 0 2px;font-size:13px;font-weight:600;color:#c4b5fd;text-decoration:none;"><span style="width:14px;height:14px;border-radius:4px;background:#8b5cf6;display:inline-block;"></span>In a hurry? 5-tap Quick listing &rsaquo;</a>';
   h+='<div class="sf-foot"><button class="sf-btn gho" onclick="goTo(\'home\')">← Exit</button></div>';
   return h;
 }
 function sfQuickLeave(){   // QUICK-LEAVE-1
   if(!sfHasData()) return true;
-  if(!confirm('Leave this listing for the 5-tap Quick advert?\n\nYour photos and answers are kept \u2014 tap Sell when you come back to carry on.')) return false;
+  if(!confirm('Leave this listing and make a 5-tap Quick listing instead?\n\nYour photos and answers are kept \u2014 tap Sell when you come back to carry on.')) return false;
   sfDraftSave(); _sfSkipUnloadPrompt=true;
   return true;
 }
@@ -20090,7 +20182,7 @@ function sfQuickLeave(){   // QUICK-LEAVE-1
 function sfSubpickS(){
   var c=SF_CATS[sfState.cat], p=c.subPick;
   var h='<div class="sf-hdr"><div class="sf-step">Before we start · '+c.label+'</div><h2>'+p.title+'</h2></div>'+
-  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Different worlds, different templates.</b> Pick the one that fits — the photos and questions change to match.'+(sfState.cat==='Services'?' Professional agents get their own hub instead of an advert.':'')+'</div></div><div class="sf-subgrid">';
+  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Different worlds, different templates.</b> Pick the one that fits — the photos and questions change to match.'+(sfState.cat==='Services'?' Professional agents get their own hub instead of a listing.':'')+'</div></div><div class="sf-subgrid">';
   var SUB_IMGS = { technical:'/static/brand-photos/cat_services.jpg', casual:'/static/brand-photos/svc_casual.jpg', agents:'/static/agent-stock/property.jpg',
     experiences:'/static/brand-photos/cat_adventures.jpg', accommodation:'/static/brand-photos/adv_accommodation.jpg' };
   p.subs.forEach(function(s){
@@ -20154,7 +20246,7 @@ function sfPhotosS(){
   } else if(sfState.mainPhase===3){
     // WRONG-TYPE-1: main photo rejected — wrong kind of item for this advert
     h+='<div class="sf-aipanel" style="border-color:rgba(239,68,68,.55);">'+(sfState.previews.main?'<img src="'+sfState.previews.main+'" style="opacity:.45;">':'')+
-       '<div class="sf-cap" style="color:#fca5a5;">⚠ '+(sfState.mainMsg||'This photo doesn\'t match your advert type — please choose another.')+'</div></div>';
+       '<div class="sf-cap" style="color:#fca5a5;">⚠ '+(sfState.mainMsg||'This photo doesn\'t match your listing type — please choose another.')+'</div></div>';
   }
   h+=sfSlotHtml(f.slots[0]);
   if(sfState.photos.main===2){
@@ -20221,7 +20313,7 @@ function sfDcbPhotosS(){
   } else if(sfState.mainPhase===2){
     h+='<div class="sf-aipanel" style="border-color:rgba(52,211,153,.5);"><div class="sf-cap ok">'+(sfState.mainMsg||'✓ Cover accepted')+'</div></div>';
   } else if(sfState.mainPhase===3){
-    h+='<div class="sf-aipanel" style="border-color:rgba(239,68,68,.55);"><div class="sf-cap" style="color:#fca5a5;">⚠ '+(sfState.mainMsg||'That cover doesn\'t match your advert type — tap another photo as the cover.')+'</div></div>';
+    h+='<div class="sf-aipanel" style="border-color:rgba(239,68,68,.55);"><div class="sf-cap" style="color:#fca5a5;">⚠ '+(sfState.mainMsg||'That cover doesn\'t match your listing type — tap another photo as the cover.')+'</div></div>';
   }
   h+='<div class="dcb-grid" id="dcb-grid">';
   d.items.forEach(function(it, i){
@@ -20734,7 +20826,7 @@ function sfUpd(scope,id,v){
 function sfFeatS(){
   var f=sfFlow();
   var h='<div class="sf-hdr"><div class="sf-step">Step 5 of 6 · '+f.label+'</div><h2>Features</h2></div>'+sfMeter()+
-  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Tap everything that applies.</b> Features don\'t affect the score — they just make your advert richer.</div></div>'+
+  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Tap everything that applies.</b> Features don\'t affect the score — they just make your listing richer.</div></div>'+
   '<div class="sf-card"><div class="sf-title">Features & extras</div><div class="sf-chips">';
   f.feats.forEach(function(ft){
     var on=sfState.features.indexOf(ft)>=0;
@@ -20845,7 +20937,7 @@ function sfScoreS(){
   var col = sc.total>=75?'#34d399':sc.total>=50?'#fbbf24':'#f87171';
   var verdict = sc.total>=85?'Excellent listing':sc.total>=70?'Strong listing':sc.total>=50?'Good to go':'Below the listing standard';
   var sub = sc.total>=50
-    ? 'Your advert meets the TrustSquare standard. The advice below lifts you higher in search — quality never hides anyone, it only rewards effort.'
+    ? 'Your listing meets the TrustSquare standard. The advice below lifts you higher in search — quality never hides anyone, it only rewards effort.'
     : 'You need '+(50-sc.total)+' more points to publish. Your listing is kept on this phone until you publish or tap Save draft — the quickest wins are below.';   // DRAFT-TRUTH-1 (ts4-09)
   var h='<div class="sf-hdr"><div class="sf-step">'+f.label+' · Quality check</div><h2>Your listing score</h2></div>'+
   '<div class="sf-dial" style="--sfpct:'+sc.total+';--sfdialcol:'+col+';"><div class="sf-inner"><div class="sf-num" style="color:'+col+'">'+sc.total+'</div><div class="sf-of">out of 100</div></div></div>'+
@@ -20896,14 +20988,14 @@ function sfScoreS(){
     h+='<div class="sf-card" id="sf-terms-ack" style="border-color:rgba(200,135,58,.55);">'+
        '<div style="font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:rgba(200,135,58,.9);margin-bottom:6px;">Before you publish</div>'+
        '<div style="font-size:13px;line-height:1.55;">By tapping <b>Publish now</b> you confirm: I have read and accept the <a href="/terms" target="_blank" rel="noopener" style="color:#fbbf24;font-weight:700;">TrustSquare Seller Terms</a>, and confirm all listing information is accurate. I understand that listings with inappropriate content will be permanently removed.</div>'+
-       '<div style="font-size:12px;color:var(--text-3,#8b93a7);margin-top:6px;line-height:1.45;">Your listing goes live on the free plan straight away. Your account details, plan and payout details can wait \u2014 we email you a sign-in link.</div></div>'+
+       '<div style="font-size:12px;color:var(--text-3,#8b93a7);margin-top:6px;line-height:1.45;">Your listing goes live on the free plan straight away. Your account details, plan and banking details can wait \u2014 we email you a sign-in link.</div></div>'+
        '<div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'photos\')">Improve first</button>'+
        '<button class="sf-btn pri" id="sf-list-btn" onclick="sfFinish(false)">Publish now \u2014 I accept the Terms</button></div>';
   } else {
     h+='<div class="sf-foot"><button class="sf-btn gho" onclick="sfFinish(true)">Save draft & finish later</button>'+
        '<button class="sf-btn pri" onclick="sfGo(\'photos\')">Add what\'s missing →</button></div>';
   }
-  h+='<div style="text-align:center;"><span class="sf-pill">Score is never shown on the advert · never touches your Trust Score</span></div>';
+  h+='<div style="text-align:center;"><span class="sf-pill">Score is never shown on the listing · never touches your Trust Score</span></div>';
   return h;
 }
 
@@ -21188,10 +21280,10 @@ function _asProfileHtml(p,tpl){
     (live?' <span style="font-size:10px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:3px 10px;margin-left:6px;">● LIVE</span>':' <span style="font-size:10px;background:rgba(255,255,255,.12);border-radius:20px;padding:3px 10px;margin-left:6px;">DRAFT</span>')+'</div>'+
     '<div style="font-size:11.5px;opacity:.75;margin-top:4px;">Anonymous to sellers until you accept an introduction. Your certificates drive your rank: 50% listing quality · 50% Trust Score.</div>'+
     (p.anon_ref?'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">'+
-      [['Trust Score',p.trust_score||0,'verified credentials'],['Listing quality',p.avg_listing_quality||0,'technical, regulatory & safety completeness of your adverts'],['Rank',(p.match_rank!=null?p.match_rank:Math.round((( p.avg_listing_quality||0)+(p.trust_score||0))/2)),'half Trust Score, half listing quality — your list position']].map(function(m){
+      [['Trust Score',p.trust_score||0,'verified credentials'],['Listing quality',p.avg_listing_quality||0,'technical, regulatory & safety completeness of your listings'],['Rank',(p.match_rank!=null?p.match_rank:Math.round((( p.avg_listing_quality||0)+(p.trust_score||0))/2)),'half Trust Score, half listing quality — your list position']].map(function(m){
         return '<div style="flex:1;min-width:96px;background:rgba(255,255,255,.10);border-radius:10px;padding:8px 10px;text-align:center;"><div style="font-size:18px;font-weight:800;">'+m[1]+'</div><div style="font-size:9.5px;opacity:.8;line-height:1.3;">'+m[0]+'<br>'+m[2]+'</div></div>';
       }).join('')+'</div>'+
-      '<div style="font-size:10.5px;opacity:.65;margin-top:8px;line-height:1.4;">Prospects see the generic '+(_asState.vertical==='cars'?'car sales agent':_asState.vertical==='travel'?'tour agent':'property agent')+' scene — never a person — until an introduction is accepted. Lift your ranking by improving advert quality and verifying credentials.</div>':'')+'</div>';
+      '<div style="font-size:10.5px;opacity:.65;margin-top:8px;line-height:1.4;">Prospects see the generic '+(_asState.vertical==='cars'?'car sales agent':_asState.vertical==='travel'?'tour agent':'property agent')+' scene — never a person — until an introduction is accepted. Lift your ranking by improving listing quality and verifying credentials.</div>':'')+'</div>';
   if(badges.earned.length||badges.pending.length){
     h+='<div style="margin-bottom:12px;">'+
       badges.earned.map(function(b){return '<span style="display:inline-block;background:#e7f2e3;border:1px solid #538135;color:#2f5d20;border-radius:8px;padding:3px 9px;font-size:11px;font-weight:700;margin:0 4px 4px 0;">✓ '+b+'</span>';}).join('')+
@@ -21522,18 +21614,18 @@ function advertBulkOpen(){
   var d=document.createElement('div'); d.id='ad-bulk-box';
   d.style.cssText='background:var(--surface,#fff);border:2px dashed var(--border);border-radius:12px;padding:14px 16px;margin:12px 0;box-sizing:border-box;max-width:100%;';
   var _cat=({dealer:'Cars',operator:'Adventures',collector:'Collectors',institution:'Tutors',service_company:'Services'})[window._tsSkin]||'Property';
-  d.innerHTML='<div style="font-weight:700;font-size:14px;margin-bottom:4px;">Bulk import adverts — your whole book, as drafts</div>'+
-    '<div style="font-size:12.5px;color:var(--text-3);line-height:1.6;margin-bottom:6px;">One line per advert, pasted from Excel or your system\'s export. Required: <b>agent_email</b> (someone already on your roster above) and a <b>title</b>. Photos are web addresses in a <b>photos</b> column, separated by | . Every advert lands as a <b>draft</b> under that agent — contact details are stripped, photos are checked, and nothing goes live until the agent reviews and publishes.</div>'+
+  d.innerHTML='<div style="font-weight:700;font-size:14px;margin-bottom:4px;">Bulk import listings — your whole book, as drafts</div>'+
+    '<div style="font-size:12.5px;color:var(--text-3);line-height:1.6;margin-bottom:6px;">One line per listing, pasted from Excel or your system\'s export. Required: <b>agent_email</b> (someone already on your roster above) and a <b>title</b>. Photos are web addresses in a <b>photos</b> column, separated by | . Every listing lands as a <b>draft</b> under that agent — contact details are stripped, photos are checked, and nothing goes live until the agent reviews and publishes.</div>'+
     '<div style="font-size:12px;color:var(--text-3);line-height:1.6;margin-bottom:6px;">Columns you can use (any order — leave out what you don\'t have; category defaults to <b>'+_cat+'</b> here):<br>'+
     '<code style="display:block;white-space:normal;word-break:break-word;font-size:11px;background:var(--surface-2,#f4f6fa);border-radius:8px;padding:7px 9px;margin:4px 0;">'+
     '<b>basics:</b> agent_email, category, title, description, price, city, suburb, area, photos<br>'+
     '<b>property:</b> listing_type, prop_type, beds, baths, garages, floor_area, erf_size, rental_status, available_from &nbsp;·&nbsp; <b>cars:</b> make, model, variant, vehicle_year, mileage_km, transmission, fuel_type, body_type, colour</code>'+
-    'Start with 5–10 adverts to see your report, then send the rest. Each advert is AI-processed, so big batches take a few minutes — keep this tab open. Re-importing the same advert creates a duplicate: send each one once.</div>'+
+    'Start with 5–10 listings to see your report, then send the rest. Each listing is AI-processed, so big batches take a few minutes — keep this tab open. Re-importing the same listing creates a duplicate: send each one once.</div>'+
     '<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">'+
     '<button onclick="advertBulkCopy(\'header\')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:11.5px;cursor:pointer;">⧉ Copy the column header</button>'+
     '<button onclick="advertBulkCopy(\'example\')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:11.5px;cursor:pointer;">⧉ Copy a filled example</button></div>'+
     '<textarea id="ad-bulk-text" rows="7" placeholder="'+advertBulkExample().replace(/"/g,'&quot;').replace(/\n/g,'&#10;')+'" style="width:100%;box-sizing:border-box;max-width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px;font-family:monospace;font-size:12px;"></textarea>'+
-    '<div style="display:flex;gap:8px;margin-top:8px;"><button id="ad-bulk-go" onclick="advertBulkRun()" style="background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:10px 18px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Import adverts</button>'+
+    '<div style="display:flex;gap:8px;margin-top:8px;"><button id="ad-bulk-go" onclick="advertBulkRun()" style="background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:10px 18px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Import listings</button>'+
     '<button onclick="document.getElementById(\'ad-bulk-box\').remove()" style="background:none;border:1px solid var(--border);border-radius:50px;padding:10px 18px;cursor:pointer;">Cancel</button></div>'+
     '<div id="ad-bulk-report" style="margin-top:10px;"></div>';
   var anchorEl=el.querySelector('#ag-inv-email');
@@ -21614,9 +21706,9 @@ async function agencyDraftsView(email){
 async function advertBulkRun(){
   var rep=document.getElementById('ad-bulk-report');
   var _raw=((document.getElementById('ad-bulk-text')||{}).value||'').trim();
-  if(!_raw){ if(rep) rep.innerHTML='<div style="color:var(--text-3,#5f6b78);font-size:12px;">Nothing to import yet — the grey text is just an example. Paste your own advert list into the box, then tap Import adverts.</div>'; return; }
+  if(!_raw){ if(rep) rep.innerHTML='<div style="color:var(--text-3,#5f6b78);font-size:12px;">Nothing to import yet — the grey text is just an example. Paste your own list of listings into the box, then tap Import listings.</div>'; return; }
   var rows=_agBulkParse(_raw);
-  if(!rows||!rows.length){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">Could not read that — the first line must be the column names (e.g. agent_email,title,price), with one advert per line below it. Tap ⧉ Copy a filled example to see a working sample.</div>'; return; }
+  if(!rows||!rows.length){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">Could not read that — the first line must be the column names (e.g. agent_email,title,price), with one listing per line below it. Tap ⧉ Copy a filled example to see a working sample.</div>'; return; }
   var _cat=({dealer:'Cars',operator:'Adventures',collector:'Collectors',institution:'Tutors',service_company:'Services'})[window._tsSkin]||'Property';
   rows.forEach(function(r){
     if(!r.category) r.category=_cat;
@@ -21624,9 +21716,9 @@ async function advertBulkRun(){
     if(typeof r.photos==='string') r.photos=r.photos.split(/[|\s]+/).map(function(u){return u.trim();}).filter(Boolean);
   });
   var bad=rows.filter(function(r){ return !(r.agent_email&&String(r.agent_email).indexOf('@')>0) || !r.title; });
-  if(bad.length){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">'+bad.length+' line(s) are missing agent_email or title — every advert needs both. Fix those lines and try again.</div>'; return; }
+  if(bad.length){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">'+bad.length+' line(s) are missing agent_email or title — every listing needs both. Fix those lines and try again.</div>'; return; }
   var go=document.getElementById('ad-bulk-go'); if(go){ go.disabled=true; go.textContent='Importing '+rows.length+'…'; }
-  if(rep) rep.innerHTML='<div style="font-size:12px;color:var(--text-3);">Importing '+rows.length+' advert'+(rows.length===1?'':'s')+' — each one is AI-processed, this can take a few minutes…</div>';
+  if(rep) rep.innerHTML='<div style="font-size:12px;color:var(--text-3);">Importing '+rows.length+' listing'+(rows.length===1?'':'s')+' — each one is AI-processed, this can take a few minutes…</div>';
   try{
     var r=await fetch(BEA_URL+'/agencies/'+window._agencyId+'/import',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({api_key:window._agencyKey||'',adverts:rows})});
@@ -21645,9 +21737,9 @@ async function advertBulkRun(){
     h+='<div style="font-size:11px;color:var(--text-3);margin-top:6px;">Drafts sit under each agent — they review, fix anything the 50/100 quality gate flags, and publish.</div>';
     h+='<div style="margin-top:8px;"><a href="#" onclick="_renderAgency(window._agencyId);return false;" style="font-size:12px;color:var(--navy,#0c1a2e);font-weight:700;">\u21bb Refresh console counts</a> <span style="font-size:11px;color:var(--text-3);">(your report stays on screen until you do)</span></div>';
     if(rep) rep.innerHTML=h;
-    showToast((d.imported||0)+' adverts imported as drafts');
+    showToast((d.imported||0)+' listings imported as drafts');
   }catch(e){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">Network hiccup — nothing may have been saved. Check the listing counts above before re-sending (re-imports duplicate).</div>'; }
-  finally{ var g2=document.getElementById('ad-bulk-go'); if(g2){ g2.disabled=false; g2.textContent='Import adverts'; } }
+  finally{ var g2=document.getElementById('ad-bulk-go'); if(g2){ g2.disabled=false; g2.textContent='Import listings'; } }
 }
 
 /* ── AGENT-SVC-3: Tour agents for holiday SEARCHERS (Adventures screen) ──
@@ -22130,7 +22222,7 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
      old machine words kept being painted from it and no server fix could ever reach them.
      The stamp goes in the key: raise it whenever the checked words change, and every browser
      drops what it has and refetches once. Old copies are swept out on load. */
-  var DICTV='5';   /* I18N-AF-4 (26 Sep 2026): carry-over words for the reworded English; I18N-AF-3 (26 Sep 2026, 25 Sep inspection): Afrikaans corrections + the reworded English; I18N-AF-2 was DICTV 3 */
+  var DICTV='6';   /* I18N-LISTING-1 (26 Sep 2026): one word 'listing' + the banking form; I18N-AF-4 (26 Sep 2026): carry-over words for the reworded English; I18N-AF-3 (26 Sep 2026, 25 Sep inspection): Afrikaans corrections + the reworded English; I18N-AF-2 was DICTV 3 */
   var KEY='ts_lang', CACHE='ts_i18n'+DICTV+'_', MAXLEN=400, CHUNK=60;   /* 400: the longest card blurbs are ~340 */
   try{ for(var _i=localStorage.length-1;_i>=0;_i--){ var _k=localStorage.key(_i);
        if(_k && _k.indexOf('ts_i18n')===0 && _k.indexOf(CACHE)!==0) localStorage.removeItem(_k); }
@@ -22343,7 +22435,7 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
         return '<b data-l="'+x[0]+'" class="'+(x[0]===lang?'on':'')+'">'
           +(_on?'<em style="display:inline-block;min-width:30px;font-style:normal;font-weight:800;opacity:.7">'+msLangCode(x[0])+'</em>':'')
           +x[1]+'</b>'; }).join('')
-       +'<i>'+(_on?'The app is translated for you. Adverts stay in the language the seller chose. The terms stay in English.'
+       +'<i>'+(_on?'The app is translated for you. Listings stay in the language the seller chose. The terms stay in English.'
                  :'Machine translation. The terms stay in English.')+'</i></div>');
       var bs=p.querySelectorAll('[data-l]');
       for(var i=0;i<bs.length;i++) bs[i].onclick=function(ev){ ev.stopPropagation(); setLang(this.getAttribute('data-l')); };

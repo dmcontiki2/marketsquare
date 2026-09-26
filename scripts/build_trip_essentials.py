@@ -90,13 +90,13 @@ TRIPS.append({
    {"d":"Leg 4","t":"Pilanesberg — Manyane Gate","x":"Gates open at sunrise","s":"Big-5 reserve, self-drive game viewing on 200+ km of maintained gravel and tar. A sedan is fine — no 4x4 needed."},
  ],
  "budget":{
-   "basis":"Two SA adults, own car, one night out, Aug 2026 prices. Conservation and toll figures verified; accommodation is the advert's own rate.",
+   "basis":"Two SA adults, own car, one night out, Aug 2026 prices. Conservation and toll figures verified; accommodation is the listing's own rate.",
    "rows":[
      R("Pilanesberg gate — SA adult","R168 per person per day","https://www.pilanesbergnationalpark.org/travel/tariffs-gate-times/", note="SA ID must be shown for the resident rate. SADC R385, international R748. Tariff effective 1 Dec 2025.", flag=True),
      R("Pilanesberg gate — vehicle","R168 per sedan / LDV / SUV per day","https://www.pilanesbergnationalpark.org/travel/tariffs-gate-times/", flag=True),
      R("N4 tolls (Bakwena)","≈ R39 each way","https://www.bakwena.co.za/tolls-and-tariffs/", note="Doornpoort R19.50 + Brits R19.50, Class 1, from 1 Mar 2026. Gauteng e-tolls are dead — no tag needed."),
      R("Fuel","≈ 340 km round trip","", note="Attendant-served. Most take cards, a minority are cash-only — carry some cash."),
-     R("Stay","From R2 450 / night (Thatch & Bushveld, 15 min from Manyane Gate)","", note="This advert's own rate. Ask for an introduction below."),
+     R("Stay","From R2 450 / night (Thatch & Bushveld, 15 min from Manyane Gate)","", note="This listing's own rate. Ask for an introduction below."),
      R("Tips","Petrol attendant R5–R10 · car guard R5–R10 · restaurant 10–15%","https://www.africanbudgetsafaris.com/blog/south-africa-tipping-etiquette-top-tips-tipping-south-africa/"),
    ],
    "note":"Indicative only. Not a quote, and nothing here is bookable through TrustSquare."

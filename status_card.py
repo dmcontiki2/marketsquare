@@ -165,7 +165,7 @@ def render(listing, link, make_link, first_name=None, trust=None):
     # supply loop
     y2 = y + ch + 50
     d.rounded_rectangle((60, y2, W - 60, y2 + 150), 40, fill=_hex(accent))
-    d.text((100, y2 + 30), "Make your own advert — free", font=_font(50), fill=_hex(bg))
+    d.text((100, y2 + 30), "Make your own listing — free", font=_font(50), fill=_hex(bg))   # LISTING-WORD-1
     d.text((100, y2 + 96), make_link.replace("https://", ""), font=_font(30, False), fill=_hex(bg))
 
     out = io.BytesIO(); im.save(out, "PNG", optimize=True); return out.getvalue()

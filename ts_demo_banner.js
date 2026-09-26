@@ -37,7 +37,7 @@
       'font-family:Inter,system-ui,Arial,sans-serif;font-size:12.5px;line-height:1.55;' +
       'box-shadow:0 6px 22px rgba(8,12,20,.34);',
       '<b style="display:block;margin-bottom:4px;font-size:13px;color:' + RED + '">This is a demonstration</b>' +
-      'The routes, adverts and prices on this page are <b>AI-generated examples</b>. ' +
+      'The routes, listings and prices on this page are <b>AI-generated examples</b>. ' +
       'They are not real listings, not for sale, and no introduction can be bought against them. ' +
       'They are here to show how the real thing looks.');
     var got = el('button', 'display:block;margin-top:11px;background:' + RED + ';color:#fff;border:none;' +

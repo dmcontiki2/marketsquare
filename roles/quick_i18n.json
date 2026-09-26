@@ -554,11 +554,11 @@
    "Iilwimi endisebenza ngazo",
    "Maleme ao ke šomago ka ona"
   ],
-  "Here is your advert": [
+  "Here is your listing": [
    "Hier is jou advertensie",
    "Nasi isikhangiso sakho",
    "Papatso ya hao ke ena",
-   "Nantsi intengiso yakho",
+   "Nantsi isibhengezo sakho",
    "Papatšo ya gago ke ye"
   ],
   "Publish it": [
@@ -1030,7 +1030,7 @@
    "Yifake kwiTrustSquare — ngomzuzu omnye",
    "E bee go TrustSquare — ka motsotso o tee"
   ],
-  "A few taps, no typing. Your advert, your language.": [
+  "A few taps, no typing. Your listing, your language.": [
    "’n Paar klikke, geen tikwerk nie. Jou advertensie, jou taal.",
    "Ukuthinta okumbalwa, akukho ukubhala. Isikhangiso sakho, ngolimi lwakho.",
    "",
@@ -1072,7 +1072,7 @@
    "Khetha iintsuku zakho",
    "Kgetha matšatši a gago"
   ],
-  "Your advert — ready to publish": [
+  "Your listing — ready to publish": [
    "Jou advertensie — gereed om te plaas",
    "Isikhangiso sakho — silungele ukushicilelwa",
    "",
@@ -1086,7 +1086,7 @@
    "Unokuyongeza kwi-app emva kokupapasha.",
    "O ka e oketša go app ka morago ga go phatlalatša."
   ],
-  "How your advert is scored": [
+  "How your listing is scored": [
    "Hoe jou advertensie punte kry",
    "Isikhangiso sakho sibalwa kanjani",
    "",
@@ -1113,13 +1113,6 @@
    "",
    "Kubaluleke ngaphezu kwayo nantoni na onokuyenza ngoku.",
    "E bohlokwa go feta se sengwe le se sengwe seo o ka se dirago bjale."
-  ],
-  "Each of these adds to your listing score": [
-   "Elkeen hiervan tel by jou advertensiepunt",
-   "Ngayinye yalezi yengeza kumaphuzu esikhangiso sakho",
-   "",
-   "Nganye kwezi yongeza kumanqaku esibhengezo sakho",
-   "Se sengwe le se sengwe sa tše se oketša meputso ya papatšo ya gago"
   ],
   "Check the wording": [
    "Kyk na die bewoording",
@@ -1205,14 +1198,14 @@
    "I-imeyile yakho — iintshayelelo zifika kuwe apha",
    "Imeile ya gago — ditsebišo di go fihlelela mo"
   ],
-  "Your advert is live.": [
+  "Your listing is live.": [
    "Jou advertensie is aanlyn.",
    "Isikhangiso sakho sesiphila.",
    "",
    "Isibhengezo sakho siphila ngoku.",
    "Papatšo ya gago e phela bjale."
   ],
-  "Your advert is saved.": [
+  "Your listing is saved.": [
    "Jou advertensie is gestoor.",
    "Isikhangiso sakho sigciniwe.",
    "",
@@ -1226,7 +1219,7 @@
    "Abantu banokusifumana ngoku. Igama lakho nenombolo zihlala ziyimfihlo de wamkele intshayelelo.",
    "Batho ba ka e hwetša bjale. Leina la gago le nomoro di dula e le sephiri go fihlela o amogela tsebišo."
   ],
-  "See my advert": [
+  "See my listing": [
    "Kyk na my advertensie",
    "Bona isikhangiso sami",
    "",
@@ -2787,7 +2780,7 @@
    "Sibuza kanye. Le fowuni iyakukhumbula.",
    "Re botšiša gatee. Founo ye e a gopola."
   ],
-  "AI EXAMPLE ADVERT": [
+  "AI EXAMPLE LISTING": [
    "KI-VOORBEELD",
    "ISIBONELO SE-AI",
    "MOHLALA WA AI",
@@ -2801,21 +2794,21 @@
    "Imizekelo kuphela okwangoku",
    "Mehlala fela go fihla bjale"
   ],
-  "real adverts and AI examples": [
+  "real listings and AI examples": [
    "regte advertensies en KI-voorbeelde",
    "izikhangiso zangempela nezibonelo ze-AI",
    "dipapatso tsa nnete le mehlala ya AI",
    "izibhengezo zokwenyani nemizekelo ye-AI",
    "dipapatšo tša nnete le mehlala ya AI"
   ],
-  "AI examples of what an advert looks like": [
+  "AI examples of what a listing looks like": [
    "KI-voorbeelde van hoe ’n advertensie lyk",
    "izibonelo ze-AI zokuthi isikhangiso sibukeka kanjani",
    "mehlala ya AI ya hore papatso e shebahala jwang",
    "imizekelo ye-AI yendlela isibhengezo esikhangeleka ngayo",
    "mehlala ya AI ya ka moo papatšo e bonagalago ka gona"
   ],
-  "real adverts": [
+  "real listings": [
    "regte advertensies",
    "izikhangiso zangempela",
    "dipapatso tsa nnete",
@@ -3060,7 +3053,7 @@
    "Nabo banenqaku elifanayo ncam lakho. Umgca omnye kwicala ngalinye, akukho mtya wokuskrola, kwaye i-imeyile iyayibamba ukuba izaziso zabo zicinyiwe.",
    "Le bona ba na le konopo ye e swanago gabotse ya gago. Mothaladi o tee ka lehlakore le lengwe le le lengwe, ga go poledišano ye telele, gomme imeile e e swara ge ditsebišo tša bona di timilwe."
   ],
-  "Each of these adds to your advert score": [
+  "Each of these adds to your listing score": [
    "Elkeen hiervan tel by jou advertensietelling",
    "Ngayinye yalezi yengeza kumaphuzu esikhangiso sakho",
    "",
@@ -3116,7 +3109,7 @@
    "Bhala amanani ama-6 akwi-SMS.",
    "Ngwala dinomoro tše 6 tše di lego go SMS."
   ],
-  "No email needed. You get a private link that is your key to this advert — send it to yourself on WhatsApp and keep it. Introductions wait for you inside.": [
+  "No email needed. You get a private link that is your key to this listing — send it to yourself on WhatsApp and keep it. Introductions wait for you inside.": [
    "Geen e-pos nodig nie. Jy kry ’n privaat skakel wat jou sleutel tot hierdie advertensie is — stuur dit vir jouself op WhatsApp en hou dit. Voorstellings wag vir jou daarbinne.",
    "Ayidingeki i-imeyili. Uthola isixhumanisi esiyimfihlo esiwukhiye wakho walesi sikhangiso — sizithumelele ku-WhatsApp bese usigcina. Izethulo zikulindile ngaphakathi.",
    "",
@@ -3144,7 +3137,7 @@
    "Ikhonkco leWhatsApp",
    "Kgokagano ya WhatsApp"
   ],
-  "Save my advert": [
+  "Save my listing": [
    "Stoor my advertensie",
    "Gcina isikhangiso sami",
    "",
@@ -3298,14 +3291,14 @@
    "Akukho qhagamshelo — zama kwakhona.",
    "Ga go kgokagano — leka gape."
   ],
-  "Too many adverts from this phone today. Please try again tomorrow.": [
+  "Too many listings from this phone today. Please try again tomorrow.": [
    "Te veel advertensies van hierdie foon af vandag. Probeer asseblief môre weer.",
    "Izikhangiso eziningi kakhulu kule foni namuhla. Sicela uzame futhi kusasa.",
    "",
    "Zininzi kakhulu izibhengezo ezivela kule fowuni namhlanje. Nceda uzame kwakhona ngomso.",
    "Go na le dipapatšo tše dintši kudu go tšwa founong ye lehono. Hle leka gape gosasa."
   ],
-  "Too many adverts for this email address today. Please try again tomorrow.": [
+  "Too many listings for this email address today. Please try again tomorrow.": [
    "Te veel advertensies vir hierdie e-posadres vandag. Probeer asseblief môre weer.",
    "Izikhangiso eziningi kakhulu zaleli kheli le-imeyili namuhla. Sicela uzame futhi kusasa.",
    "",
@@ -3319,7 +3312,7 @@
    "Nceda ubhale idilesi ye-imeyile esinokukufikelela ngayo.",
    "Hle ngwala aterese ya imeile yeo re ka go hwetšago ka yona."
   ],
-  "Something is missing from this advert. Please try again.": [
+  "Something is missing from this listing. Please try again.": [
    "Iets kort in hierdie advertensie. Probeer asseblief weer.",
    "Kukhona okushodayo kulesi sikhangiso. Sicela uzame futhi.",
    "",
@@ -3396,7 +3389,7 @@
    "Sikwakuthumelele ikhonkco nge-imeyile.",
    "Re go romeletše le kgokagano ka imeile."
   ],
-  "My TrustSquare advert": [
+  "My TrustSquare listing": [
    "My TrustSquare-advertensie",
    "Isikhangiso sami se-TrustSquare",
    "",
@@ -3410,21 +3403,21 @@
    "Eli khonkco sisitshixo sam saso — ligcine, musa ukwabelana ngalo:",
    "Kgokagano ye ke senotlelo sa ka sa yona — e boloke, o se ke wa e abelana:"
   ],
-  "My TrustSquare advert is live:": [
+  "My TrustSquare listing is live:": [
    "My TrustSquare-advertensie is aanlyn:",
    "Isikhangiso sami se-TrustSquare sesiphila:",
    "",
    "Isibhengezo sam seTrustSquare siphila ngoku:",
    "Papatšo ya ka ya TrustSquare e phela bjale:"
   ],
-  "My TrustSquare advert is saved:": [
+  "My TrustSquare listing is saved:": [
    "My TrustSquare-advertensie is gestoor:",
    "Isikhangiso sami se-TrustSquare sigciniwe:",
    "",
    "Isibhengezo sam seTrustSquare sigciniwe:",
    "Papatšo ya ka ya TrustSquare e bolokilwe:"
   ],
-  "Your advert — ready to save": [
+  "Your listing — ready to save": [
    "Jou advertensie — gereed om te stoor",
    "Isikhangiso sakho — silungele ukugcinwa",
    "",
@@ -3480,7 +3473,7 @@
    "Ukuthembeka",
    "Go tshepega"
   ],
-  "Advert": [
+  "Listing": [
    "Advertensie",
    "Isikhangiso",
    "",
@@ -3515,7 +3508,7 @@
    "uthembeke kakhulu",
    "yo a botegago kudu"
   ],
-  "Your ranking is half trust and half advert quality. It goes up when either of them goes up.": [
+  "Your ranking is half trust and half listing quality. It goes up when either of them goes up.": [
    "Jou rangorde is half vertroue en half advertensiegehalte. Dit styg wanneer enigeen van die twee styg.",
    "Ingxenye yokukleliswa kwakho ivela ekwethenjweni, enye ingxenye ivela ezingeni lesikhangiso. Kuyakhuphuka uma noma yikuphi kulokhu kukhuphuka.",
    "",
@@ -3536,7 +3529,7 @@
    "into enyusa amanqaku akho okuthenjwa",
    "seo se hlatlošago sekoro sa gago sa go tshepega"
   ],
-  "These raise your trust score, not your advert score — which is why they are not in the list above. You add them once in TrustSquare and they count on every advert you make.": [
+  "These raise your trust score, not your listing score — which is why they are not in the list above. You add them once in TrustSquare and they count on every listing you make.": [
    "Dit verhoog jou vertrouenstelling, nie jou advertensietelling nie — daarom is hulle nie in die lys hierbo nie. Jy voeg hulle een keer in TrustSquare by en hulle tel op elke advertensie wat jy maak.",
    "Lezi zinto zikhuphula amaphuzu akho okwethenjwa, hhayi amaphuzu esikhangiso sakho — yingakho zingekho ohlwini olungenhla. Uzifaka kanye ku-TrustSquare, bese zibalwa kuso sonke isikhangiso osenzayo.",
    "",
@@ -3557,7 +3550,7 @@
    "Eli lixabiso olicelayo. ITrustSquare ingakhangela ixabiso lemarike eliqinisekisiweyo lamakhadi, iingqekembe neLEGO kwimithombo yoluntu yasimahla, ukuze ubone apho elakho lime khona — ayisoze itshintshe oko ukucelileyo.",
    "Ye ke theko ye o e kgopelago. TrustSquare e ka nyaka theko ya mmaraka ye e netefaditšwego ya dikarata, dikhoine le LEGO go tšwa methopong ya setšhaba ya mahala, gore o bone moo ya gago e lego gona — ga e fetole seo o se kgopetšego le ka mohla."
   ],
-  "advert score": [
+  "listing score": [
    "advertensietelling",
    "amaphuzu esikhangiso",
    "",
@@ -3809,7 +3802,7 @@
    "Jonga into abaza kuyibona",
    "Bona seo ba tlago go se bona"
   ],
-  "A few taps and your price. Your advert, your language.": [
+  "A few taps and your price. Your listing, your language.": [
    "’n Paar tikke en jou prys. Jou advertensie, jou taal.",
    "Ukuthinta okumbalwa nenani lakho. Isikhangiso sakho, ngolimi lwakho.",
    "",
@@ -3830,7 +3823,7 @@
    "isiZulu, isiXhosa neSepedi: ezinye iindidi zisesiNgesini.",
    "isiZulu, isiXhosa le Sepedi: magoro a mangwe a sa le ka Seisemane."
   ],
-  "Your unfinished advert": [
+  "Your unfinished listing": [
    "Jou onvoltooide advertensie",
    "Isikhangiso sakho esingaqediwe",
    "",
@@ -3858,7 +3851,7 @@
    "Yivule",
    "E bule"
   ],
-  "Your advert": [
+  "Your listing": [
    "Jou advertensie",
    "Isikhangiso sakho",
    "",
@@ -3921,7 +3914,7 @@
    "Uluhlu lubonisa kuphela iimpendulo eziqhelekileyo kakhulu. Sikhangela kanye le nto uyibhalayo.",
    "Lenaneo le bontšha fela dikarabo tše di tlwaelegilego kudu. Re nyaka tlwa seo o se ngwalago."
   ],
-  "The list only shows the most common answers. What you type goes on your advert exactly as you type it.": [
+  "The list only shows the most common answers. What you type goes on your listing exactly as you type it.": [
    "Die lys wys net die algemeenste antwoorde. Wat jy tik, kom op jou advertensie net soos jy dit tik.",
    "Uhlu lukhombisa izimpendulo ezivame kakhulu kuphela. Lokho okubhalayo kungena esikhangisweni sakho ncamashi njengoba ukubhalile.",
    "",
@@ -4075,7 +4068,7 @@
    "Bhala isixeko sakho",
    "Ngwala toropo ya gago"
   ],
-  "Your advert is filed under the city you type.": [
+  "Your listing is filed under the city you type.": [
    "Jou advertensie word gelys onder die stad wat jy tik.",
    "Isikhangiso sakho sifakwa ngaphansi kwedolobha olibhalayo.",
    "",
@@ -4348,7 +4341,7 @@
    "Thumela i-buzz",
    "Romela buzz"
   ],
-  "Back to my advert": [
+  "Back to my listing": [
    "Terug na my advertensie",
    "Buyela esikhangisweni sami",
    "",
@@ -5034,7 +5027,7 @@
    "Rhoxisa esi simemo",
    "Khansela memo ye"
   ],
-  "They get their own Quick — never your advert, your key link or your number. It works once.": [
+  "They get their own Quick — never your listing, your key link or your number. It works once.": [
    "Hulle kry hul eie Quick — nooit jou advertensie, jou sleutelskakel of jou nommer nie. Dit werk een keer.",
    "Bathola i-Quick yabo — hhayi isikhangiso sakho, isixhumanisi sakho sokhiye noma inombolo yakho. Kusebenza kanye.",
    "",
@@ -5104,7 +5097,7 @@
    "Udluliselwe iTrustSquare Quick",
    "O fetišeditšwe TrustSquare Quick"
   ],
-  "Make an advert for your work in a few taps. Free. Your name and number stay private until you accept an introduction.": [
+  "Make a listing for your work in a few taps. Free. Your name and number stay private until you accept an introduction.": [
    "Maak ’n advertensie vir jou werk met ’n paar tikke. Gratis. Jou naam en nommer bly privaat totdat jy ’n voorstelling aanvaar.",
    "Yenza isikhangiso somsebenzi wakho ngokuthinta okumbalwa. Mahhala. Igama lakho nenombolo kuhlala kuyimfihlo uze wamukele isethulo.",
    "",
@@ -5132,14 +5125,14 @@
    "IQuick yeyakho.",
    "Quick ke ya gago."
   ],
-  "That invite was already used — you can still make your own advert here.": [
+  "That invite was already used — you can still make your own listing here.": [
    "Daardie uitnodiging is al gebruik — jy kan steeds jou eie advertensie hier maak.",
    "Leso simemo sesisetshenzisiwe — usengakwazi ukwenza isikhangiso sakho lapha.",
    "",
    "Eso simemo sele sisetyenzisiwe — usenako ukwenza esakho isibhengezo apha.",
    "Memo yeo e šetše e šomišitšwe — o sa kgona go dira papatšo ya gago mo."
   ],
-  "That invite is no longer open — you can still make your own advert here.": [
+  "That invite is no longer open — you can still make your own listing here.": [
    "Daardie uitnodiging is nie meer oop nie — jy kan steeds jou eie advertensie hier maak.",
    "Leso simemo asisavulekile — usengakwazi ukwenza isikhangiso sakho lapha.",
    "",
@@ -5160,14 +5153,14 @@
    "TrustSquare Quick",
    "TrustSquare Quick"
   ],
-  "make an advert for your work in a few taps:": [
+  "make a listing for your work in a few taps:": [
    "maak ’n advertensie vir jou werk met ’n paar tikke:",
    "yenza isikhangiso somsebenzi wakho ngokuthinta okumbalwa:",
    "",
    "yenza isibhengezo somsebenzi wakho ngokucofa okumbalwa:",
    "dira papatšo ya mošomo wa gago ka go kgotla gannyane:"
   ],
-  "make an advert for your work in a few taps.": [
+  "make a listing for your work in a few taps.": [
    "maak ’n advertensie vir jou werk met ’n paar tikke.",
    "yenza isikhangiso somsebenzi wakho ngokuthinta okumbalwa.",
    "",
@@ -5342,7 +5335,7 @@
    "Kakanyo — go šetše dilo tše $1 go feleletša"
   ],
   [
-   "^Your advert is (\\d+)% strong$",
+   "^Your listing is (\\d+)% strong$",
    "Jou advertensie is $1% sterk",
    "Isikhangiso sakho siqine ngo-$1%",
    "",
@@ -5454,7 +5447,7 @@
    "O phatlalatša bjalo ka $1"
   ],
   [
-   "^Car adverts ask for more details than most — (\\d+) instead of 1 — so they start lower and can climb higher\\.$",
+   "^Car listings ask for more details than most — (\\d+) instead of 1 — so they start lower and can climb higher\\.$",
    "Motoradvertensies vra meer besonderhede as die meeste — $1 in plaas van 1 — so hulle begin laer en kan hoër klim.",
    "Izikhangiso zezimoto zicela imininingwane eminingi kunezinye — engu-$1 esikhundleni se-1 — ngakho ziqala phansi futhi zingakhuphuka ziye phezulu.",
    "",
@@ -5462,7 +5455,7 @@
    "Dipapatšo tša dikoloi di kgopela dintlha tše dintši go feta tše dingwe — $1 go e na le 1 — ka fao di thoma ka fase gomme di ka hlatlogela godimo kudu."
   ],
   [
-   "^Property adverts ask for more details than most — (\\d+) instead of 1 — so they start lower and can climb higher\\.$",
+   "^Property listings ask for more details than most — (\\d+) instead of 1 — so they start lower and can climb higher\\.$",
    "Eiendomsadvertensies vra meer besonderhede as die meeste — $1 in plaas van 1 — so hulle begin laer en kan hoër klim.",
    "Izikhangiso zezindlu nezindawo zicela imininingwane eminingi kunezinye — engu-$1 esikhundleni se-1 — ngakho ziqala phansi futhi zingakhuphuka ziye phezulu.",
    "",
@@ -5478,7 +5471,7 @@
    "★ $1 go tshepega"
   ],
   [
-   "^\\+(\\d+) still on the table — the app shows you where, and your trust score follows you onto every advert you make\\.$",
+   "^\\+(\\d+) still on the table — the app shows you where, and your trust score follows you onto every listing you make\\.$",
    "+$1 punte lê nog op die tafel — die app wys jou waar, en jou vertrouenstelling volg jou na elke advertensie wat jy maak.",
    "+$1 amaphuzu asatholakala — i-app ikukhombisa ukuthi kuphi, futhi amaphuzu akho okwethenjwa akulandela kuso sonke isikhangiso osenzayo.",
    "",
@@ -5550,7 +5543,7 @@
    "Lefoko le tee ka $1"
   ],
   [
-   "^It goes on (.+)’s advert with their name under it\\. Nobody will ask them to justify it or chase them about it — it is a reference, not a reference check\\.$",
+   "^It goes on (.+)’s listing with their name under it\\. Nobody will ask them to justify it or chase them about it — it is a reference, not a reference check\\.$",
    "Dit kom op $1 se advertensie met hul naam daaronder. Niemand sal hulle vra om dit te regverdig of hulle daaroor agtervolg nie — dit is ’n verwysing, nie ’n verwysingskontrole nie.",
    "Umusho ufakwa esikhangisweni sika-$1, negama lalowo owubhalile ngaphansi kwawo. Akekho ozomcela ukuthi awuthethelele noma amhluphe ngawo — yisincomo, hhayi ukuhlolwa kwesincomo.",
    "",

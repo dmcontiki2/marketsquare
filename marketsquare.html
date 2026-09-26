@@ -15,6 +15,7 @@
      link included) does not download the home page's photos while its own screen is being opened; ms.js lifts this on
      the first screen change (goTo) and after 8 s at the latest. -->
 <script>try{if(/[?&](listing|draft|signin)=/.test(location.search)){document.documentElement.classList.add('ts-landing');var _tsl=document.createElement('style');_tsl.textContent='html.ts-landing #screen-home img:not([src*="/static/brand/"]){display:none!important}';document.head.appendChild(_tsl);}}catch(e){}</script>
+<script>/* R2-FALLBACK-EARLY-1 (26 Sep 2026): the page's own <img onerror="r2Fallback(this)"> can fire before ms.js has loaded, which threw 'r2Fallback is not defined' and skipped the fallback. The same function, defined first; ms.js redefines it identically. */window.r2Fallback=window.r2Fallback||function(img){if(img.dataset.r2tried)return;img.dataset.r2tried='1';if(/^https?:\/\/[^/]+\.r2\.dev\//.test(img.src)){img.src=img.src.replace(/^https?:\/\/[^/]+\.r2\.dev\//,'/media/');}};</script>
 <!-- LANDING-LEAN-1: the font files' host is known up front, so its connection opens while the font stylesheet loads -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2350,7 +2351,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
           <div style="font-size:20px;flex-shrink:0;">🏦</div>
           <div style="flex:1;">
             <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:4px;">Add your banking details</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">Required so Tuppence payouts can be processed when introductions convert to sales. Takes 30 seconds.</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">We use them to confirm who you are and when you buy Tuppence. Nothing is ever paid out to this account. Takes 30 seconds.</div>
             <button onclick="sobAddBanking()" style="background:#fbbf24;color:#1e2a3a;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Add banking details →</button>
             <button onclick="document.getElementById('sob-banking-nudge').style.display='none';" style="background:none;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.8);border-radius:50px;padding:6px 14px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;margin-left:8px;">Later</button>
           </div>
@@ -2979,8 +2980,8 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
           <div style="font-size:20px;flex-shrink:0;">🏦</div>
           <div style="flex:1;">
             <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:4px;">Add your banking details</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">Required so Tuppence payouts can be processed when introductions convert to sales.</div>
-            <button onclick="goTo('dashboard')" style="background:#fbbf24;color:#1e2a3a;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Add in dashboard →</button>
+            <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">We use them to confirm who you are and when you buy Tuppence. Nothing is ever paid out to this account. Takes 30 seconds.</div>
+            <button onclick="msOpenBankingSheet()" style="background:#fbbf24;color:#1e2a3a;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Add banking details →</button>
             <button onclick="document.getElementById('sb-banking-nudge').style.display='none';" style="background:none;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.8);border-radius:50px;padding:6px 14px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;margin-left:8px;">Later</button>
           </div>
         </div>
@@ -3432,6 +3433,13 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       </div>
 
       <!-- Plans -->
+      <!-- BANKING-FORM-1 (26 Sep 2026): the one place a seller gives or updates her banking details -->
+      <div class="ms-section-lbl">Banking details</div>
+      <div class="ms-card" id="ms-banking-card" style="margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:4px;" id="ms-banking-state">Not added yet</div>
+        <div style="font-size:11.5px;color:var(--text-3);line-height:1.5;margin-bottom:10px;">We use them to confirm who you are and when you buy Tuppence. TrustSquare never pays money out to this account.</div>
+        <button type="button" class="ms-ai-btn" id="ms-banking-btn" onclick="msOpenBankingSheet()">Add banking details →</button>
+      </div>
       <div class="ms-section-lbl">Plans</div>
       <div id="billing-plans-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
         <div style="color:var(--text-3);font-size:13px;padding:8px 0;">Loading…</div>
@@ -3720,7 +3728,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <button class="modal-cta commit" onclick="sellSheetContinue()" style="margin-bottom:8px;">Continue with this account →</button>
     <button class="modal-cancel" onclick="sellSheetNewAccount()">Use a different account</button>
     <!-- QUICK-GATE-A (SEAM-1, David 25 Sep 2026: "we do need it in the app somewhere but small and unobtrusive" -> option A, inside Sell). Quick now carries the way back (?from=app). -->
-    <a class="sell-quick-line" href="/quick/?from=app&amp;src=sell-sheet" style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;font-size:13px;font-weight:600;color:#7C3AED;text-decoration:none;"><span style="width:14px;height:14px;border-radius:4px;background:#7C3AED;display:inline-block;"></span>In a hurry? Quick advert in about a minute &rsaquo;</a>
+    <a class="sell-quick-line" href="/quick/?from=app&amp;src=sell-sheet" style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;font-size:13px;font-weight:600;color:#7C3AED;text-decoration:none;"><span style="width:14px;height:14px;border-radius:4px;background:#7C3AED;display:inline-block;"></span>In a hurry? Quick listing in about a minute &rsaquo;</a>
   </div>
 </div>
 

@@ -5852,7 +5852,7 @@ def rg_showcase_immortal():
         if "showcase" not in cands:
             out.append((FAIL, "bea_main.py lost the sweep's showcase exemption -- a showcase "
                               "listing is a fade candidate again"))
-        if bea.count("Showcase adverts are admin-managed.") < 2:
+        if bea.count("Showcase listings are admin-managed.") < 2:   # LISTING-WORD-1 wording
             out.append((FAIL, "a delete endpoint lost its showcase admin guard"))
         arch = sweep.split("FADE: archive after", 1)[-1].split('res["fade_archived"]', 1)[0]
         if "showcase" not in arch:
@@ -7942,7 +7942,7 @@ def rg_trip_essentials():
             HONEST = _re.compile(r"not published|could not be confirmed|UNVERIFIED|not confirmed"
                                  r"|no scheme found|ask your|ask the|ask before|ask us|confirm"
                                  r"|verify|indicative|not independently|not stated|no official"
-                                 r"|this advert's own", _re.I)
+                                 r"|this advert's own|this listing's own", _re.I)
             bare = []
             for t in trips:
                 rows = list((t.get("budget") or {}).get("rows") or [])
@@ -8589,10 +8589,15 @@ def rg_google_consent_published():
            "old one would trip. OPEN until the next frontend deploy ships the new ms.js -- the repo half passes now, the live half cannot until David ships. PROMOTED TO LOCKED 22 Aug 2026 after the deploy: live ms.js v516 carries all four labelled sites, the old wording absent. STRENGTHENED same day (22 Aug, David): also asserts the ABSENCE of 'free for a real seller to claim'. The first cut of the pill branched on showcase and offered exactly that -- struck, because it implies a seller could claim THAT EXACT advert, and therefore that the advert already exists as a real thing. The whole point of the rename is to stop an exemplar reading as a real, transactable listing; a claim offer walks it straight back. Never weakened.")
 def rg_ai_example_label():
     out = []
-    LABEL = "AI EXAMPLE GENERATED ADVERT"
+    # LISTING-WORD-1 (26 Sep 2026): David chose one word for both apps, "listing" (langt-21), so the
+    # ribbon reads AI EXAMPLE GENERATED LISTING -- RUL-040 amended, same intent. The old ribbon and the
+    # even older SUPER ADVERT must both stay gone.
+    LABEL = "AI EXAMPLE GENERATED LISTING"
     OLD = "SUPER ADVERT"
 
     def check(js, where):
+        if "AI EXAMPLE GENERATED ADVERT" in js:
+            out.append((FAIL, where + " still paints the pre-26-Sep ribbon 'AI EXAMPLE GENERATED ADVERT' -- both apps say listing now (LISTING-WORD-1, RUL-040 amended)"))
         if OLD in js:
             out.append((FAIL, where + " still calls an AI example advert a '" + OLD + "' -- the "
                               "accolade wording reads as a real, buyable listing (AI-EXAMPLE-1)"))
@@ -10133,7 +10138,7 @@ def rg_console_advert_bulk():
     fp = _os.path.join(REPO, "ms.js")
     if _os.path.exists(fp):
         js = open(fp, encoding="utf-8", errors="replace").read()
-        for needle in ("function advertBulkOpen", "function advertBulkRun", "Bulk import adverts"):
+        for needle in ("function advertBulkOpen", "function advertBulkRun", "Bulk import listings"):
             if needle not in js:
                 out.append((FAIL, "repo ms.js lost: " + needle))
     else:
@@ -24709,7 +24714,7 @@ def rg_quick_return_1():
     if "source: 'quick'" not in qk:
         out.append((FAIL, "quick.html no longer marks its hand-over as the Quick lane -- the "
                           "server cannot tell it apart and the author is never mailed"))
-    if "emailed" not in qk.split("Advert #", 1)[-1][:900]:
+    if "emailed" not in qk.split("Listing #", 1)[-1][:900]:
         out.append((INFO, "the hand-back screen no longer promises the email -- check the copy "
                           "still matches what the server actually does"))
 
@@ -27802,8 +27807,8 @@ def rg_eula_signoff_1():
     if q is not None:
         if "qTr('Publishing accepts the')" in q or "<p>Publishing accepts the" in q:
             out.append((FAIL, "quick.html still tells visitors that publishing accepts the terms"))
-        if "Save my advert" not in q or "QUICK.eula" not in q:
-            out.append((FAIL, "quick.html lost the Save-my-advert path for visitors without a signed EULA"))
+        if "Save my listing" not in q or "QUICK.eula" not in q:
+            out.append((FAIL, "quick.html lost the Save-my-listing path for visitors without a signed EULA"))
     return out
 
 
@@ -30366,6 +30371,314 @@ def rg_qa_src_live_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "rulings and appeals read main.py, the code the service runs")]
+
+
+
+# ── what a person actually READS: text nodes, visible attributes and every JS string / template literal ──
+# (LISTING-WORD-1 / BANKING-FORM-1, 26 Sep 2026.) A word check that greps the raw file also hits comments,
+# function names (advertBulkOpen) and API paths (/advert-agent/), so it either cries wolf or gets an allowlist
+# so long it measures nothing. These helpers keep only what can reach a screen.
+_UI_KW_BEFORE_REGEX = {"return", "typeof", "case", "in", "of", "new", "delete", "void", "throw",
+                       "instanceof", "do", "else", "yield", "await"}
+
+
+def _ui_js_literals(src):
+    """The text of every string and template literal in JS source; ${...} parts are read as code."""
+    import re as _re
+    out = []
+    n = len(src)
+
+    def code(i, stop_on_brace):
+        depth = 0; last_sig = ''; last_word = ''
+        while i < n:
+            c = src[i]
+            if c in ' \t\r\n':
+                i += 1; continue
+            if src.startswith('//', i):
+                j = src.find('\n', i); i = n if j < 0 else j; continue
+            if src.startswith('/*', i):
+                j = src.find('*/', i + 2); i = n if j < 0 else j + 2; continue
+            if c in '\'"':
+                j = i + 1; buf = []
+                while j < n and src[j] != c:
+                    if src[j] == '\\' and j + 1 < n:
+                        buf.append(src[j:j + 2]); j += 2; continue
+                    if src[j] == '\n':
+                        break
+                    buf.append(src[j]); j += 1
+                out.append(''.join(buf)); i = j + 1; last_sig = c; last_word = ''; continue
+            if c == '`':
+                i = template(i + 1); last_sig = '`'; last_word = ''; continue
+            if c == '/' and ((last_sig == '' or last_sig in '(,=:[!&|?{};+-*%<>~^') or last_word in _UI_KW_BEFORE_REGEX):
+                j = i + 1; in_cls = False
+                while j < n:
+                    ch = src[j]
+                    if ch == '\\':
+                        j += 2; continue
+                    if ch == '[':
+                        in_cls = True
+                    elif ch == ']':
+                        in_cls = False
+                    elif (ch == '/' and not in_cls) or ch == '\n':
+                        break
+                    j += 1
+                j += 1
+                while j < n and src[j].isalpha():
+                    j += 1
+                i = j; last_sig = ')'; last_word = ''; continue
+            if c == '{':
+                depth += 1
+            elif c == '}':
+                if stop_on_brace and depth == 0:
+                    return i + 1
+                depth -= 1
+            m = _re.match(r'[A-Za-z_$][\w$]*', src[i:i + 40])
+            if m:
+                last_word = m.group(0); last_sig = 'a'; i += len(last_word); continue
+            last_sig = c; last_word = ''; i += 1
+        return i
+
+    def template(i):
+        buf = []
+        while i < n:
+            c = src[i]
+            if c == '\\' and i + 1 < n:
+                buf.append(src[i:i + 2]); i += 2; continue
+            if c == '`':
+                out.append(''.join(buf)); return i + 1
+            if src.startswith('${', i):
+                buf.append(' '); i = code(i + 2, True); continue
+            buf.append(c); i += 1
+        out.append(''.join(buf)); return i
+
+    code(0, False)
+    return out
+
+
+def _ui_visible_html(s):
+    """(visible text pieces, inline script bodies) of an HTML document or fragment."""
+    import html.parser as _hp
+
+    class _V(_hp.HTMLParser):
+        def __init__(self):
+            super().__init__(convert_charrefs=True)
+            self.text = []; self.scripts = []; self._in = None; self._buf = []
+
+        def handle_starttag(self, tag, attrs):
+            if tag in ("script", "style"):
+                self._in = tag; self._buf = []; return
+            for k, v in attrs:
+                if v and (k in ("title", "placeholder", "aria-label", "alt", "label")
+                          or (k == "value" and tag in ("input", "button", "option"))):
+                    self.text.append(v)
+
+        def handle_endtag(self, tag):
+            if tag == self._in:
+                if tag == "script":
+                    self.scripts.append(''.join(self._buf))
+                self._in = None
+
+        def handle_data(self, d):
+            (self._buf if self._in else self.text).append(d)
+
+    v = _V()
+    try:
+        v.feed(s); v.close()
+    except Exception:
+        pass
+    return v.text, v.scripts
+
+
+def _ui_texts(name, text):
+    """Every piece of user-readable text in one front-end file (.html or .js)."""
+    pieces = []
+    if name.endswith(".html"):
+        vis, scripts = _ui_visible_html(text)
+        pieces.extend(vis)
+        for sc in scripts:
+            for lit in _ui_js_literals(sc):
+                pieces.extend(_ui_visible_html(lit)[0])
+    else:
+        for lit in _ui_js_literals(text):
+            pieces.extend(_ui_visible_html(lit)[0])
+    return pieces
+
+
+def _py_message_literals(src):
+    """(kind, line, text) for server strings a person reads: HTTPException/JSON 'detail' values and HTML pages or
+    letters. Docstrings, AI prompts and dictionary keys are left out on purpose."""
+    import io as _io, re as _re, tokenize as _tk
+    try:
+        toks = [t for t in _tk.generate_tokens(_io.StringIO(src).readline)
+                if t.type not in (_tk.NL, _tk.NEWLINE, _tk.COMMENT, _tk.INDENT, _tk.DEDENT)]
+    except Exception:
+        return []
+    fs = tuple(getattr(_tk, x) for x in ("FSTRING_START", "FSTRING_MIDDLE", "FSTRING_END") if hasattr(_tk, x))
+    out = []; i = 0
+    while i < len(toks):
+        if toks[i].type == _tk.STRING or toks[i].type in fs:
+            start = i; parts = []
+            while i < len(toks) and (toks[i].type == _tk.STRING or toks[i].type in fs):
+                parts.append(toks[i].string); i += 1
+            text = ''.join(parts)
+            p1 = toks[start - 1].string if start else ''
+            p2 = toks[start - 2].string if start > 1 else ''
+            if (p1 == '=' and p2 == 'detail') or (p1 == ':' and p2 in ('"detail"', "'detail'")):
+                out.append(("detail", toks[start].start[0], text))
+            elif not text.lstrip('rbuRBUfF').startswith(('"""', "\'\'\'")) and _re.search(r"<(h1|h2|p|title|div)\b", text):
+                out.append(("page", toks[start].start[0], text))
+            continue
+        i += 1
+    return out
+
+
+@entry("RG-0503", "BANKING-FORM-1: a seller can give her banking details in the app, and every line about them says "
+       "what they are for -- confirming who she is and buying Tuppence; nothing is ever paid out",
+       LOCKED, fixed_on="2026-09-26",
+       scope="ms.js msOpenBankingSheet/msLoadBankingCard/sobAddBanking; marketsquare.html sob/sb nudges + the Billing "
+             "card #ms-banking-card; bea_main.py category.lm.banking how_to_earn; route_policy POST "
+             "/users/{email}/banking. FOUND 25 Sep 2026 (ts2-17, langt-06): the nudge promised 'Tuppence payouts' and "
+             "'Add in dashboard' led nowhere -- the server route existed, the form never did. David, 26 Sep 2026: "
+             "'we do need the users banking details ... security to know our customer and also for them to purchase "
+             "tuppence ... we just dont use it to pay them any money out'.",
+       ref="Terms 5.2 (Tuppence is not redeemable for cash); INSPECTION_2026-09-25.html ts2-17 / langt-06; "
+           "CARD-WORDS-2 (langt-04 leftovers).")
+def rg_banking_form_1():
+    import json as _j, re as _re
+    js = repo_file("ms.js"); h = repo_file("marketsquare.html"); b = repo_file("bea_main.py"); rp = repo_file("route_policy.json")
+    if js is None or h is None:
+        return [(INFO, "NOT EVALUATED - ms.js / marketsquare.html not readable from here")]
+    bad = []
+    i = js.find("function msOpenBankingSheet(")
+    if i < 0:
+        bad.append("the banking form (msOpenBankingSheet) is gone")
+    else:
+        body = js[i:i + 6000]
+        if not _re.search(r"'/users/'\s*\+\s*encodeURIComponent\(\s*email\s*\)\s*\+\s*'/banking'", body):
+            bad.append("the form no longer posts to /users/{email}/banking")
+        if "method: 'POST'" not in body and 'method:"POST"' not in body and "method:'POST'" not in body:
+            bad.append("the form does not POST")
+        if "credentials: 'include'" not in body and "credentials:'include'" not in body:
+            bad.append("the form does not send the sign-in (credentials include) -- the route is bound to her session")
+        for k in ("account_holder", "bank_name", "account_number", "branch_code"):
+            if k not in body:
+                bad.append("the form does not send %s" % k)
+    j = js.find("function sobAddBanking(")
+    if j < 0 or "msOpenBankingSheet()" not in js[j:j + 300]:
+        bad.append("the success-screen button no longer opens the form")
+    if not _re.search(r"id=\"sb-banking-nudge\"[\s\S]{0,1500}?onclick=\"msOpenBankingSheet\(\)\"", h):
+        bad.append("the Sell-flow nudge does not open the form")
+    if not _re.search(r"id=\"ms-banking-card\"[\s\S]{0,1200}?onclick=\"msOpenBankingSheet\(\)\"", h):
+        bad.append("the Billing tab has no banking card that opens the form")
+    k = js.find("function _renderBillingTab(")
+    if k < 0 or "msLoadBankingCard()" not in js[k:k + 20000]:
+        bad.append("the Billing tab does not read whether banking details are on file")
+    W = _re.compile(r"(?<![\w])(pay-?outs?|card verified)(?![\w])", _re.I)
+    for name, text in (("ms.js", js), ("marketsquare.html", h)):
+        hits = [p for p in _ui_texts(name, text) if W.search(p)]
+        if hits:
+            m = W.search(hits[0])
+            bad.append("%s tells users about %r: '%s'" % (name, m.group(0), hits[0][max(0, m.start() - 50):m.end() + 30].strip()))
+    if b is not None:
+        m = _re.search(r'"category\.lm\.banking":\s*\{[^}]*"how_to_earn":\s*"([^"]*)"', b)
+        if not m:
+            bad.append("the banking trust signal lost its how-to-earn line")
+        elif _re.search(r"pay-?out", m.group(1), _re.I) or "Tuppence" not in m.group(1):
+            bad.append("the banking trust signal's line does not say what the details are for: %r" % m.group(1))
+    if rp is not None:
+        try:
+            P = _j.loads(rp); rows = P if isinstance(P, list) else P.get("routes", [])
+            r = [x for x in rows if isinstance(x, dict) and x.get("key") == "POST /users/{email}/banking"]
+            if not r or r[0].get("level") != "user" or not any(x.get("name") == "email" for x in r[0].get("bind", [])):
+                bad.append("POST /users/{email}/banking is no longer a signed-in route bound to her own address")
+        except Exception as e:
+            bad.append("route_policy.json unreadable: %s" % e)
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "the form posts to her own bound route; nudges and the Billing card open it; no payout or card-check words")]
+
+
+@entry("RG-0504", "LISTING-WORD-1: one word for the thing a seller makes -- 'listing' -- on every screen of both apps "
+       "and in every message the server sends her; 'advert' comes back only through the allowlist",
+       LOCKED, fixed_on="2026-09-26",
+       scope="What a person reads in ms.js, marketsquare.html, quick.html, trip_essentials.js, ts_demo_banner.js "
+             "(text, visible attributes, every JS string) and bea_main.py's 'detail' messages and HTML pages/letters. "
+             "FOUND 25 Sep 2026 (langt-21): 'advert', 'listing' and 'ad' named the same thing. David, 26 Sep 2026: "
+             "'Listing'. The RUL-040 badge now reads AI EXAMPLE GENERATED LISTING (amended the same day).",
+       ref="RUL-040 amendment 26 Sep 2026; INSPECTION_2026-09-25.html langt-21; ALLOW: the feature name "
+           "'Collectables Advert + Market Report' (RG-0493's key) and the Terms' own text (changes only by a new version).")
+def rg_listing_word_1():
+    import re as _re
+    W = _re.compile(r"(?<![\w/.\-$])advert(?:s|isement|isements)?(?![\w/\-$])", _re.I)
+    allow = ("Collectables Advert + Market Report", "Seller advert (an Introduction product)")
+    bad = []; seen = 0
+    for name in ("ms.js", "marketsquare.html", "quick.html", "trip_essentials.js", "ts_demo_banner.js"):
+        text = repo_file(name)
+        if text is None:
+            continue
+        seen += 1
+        for p in _ui_texts(name, text):
+            q = p
+            for a in allow:
+                q = q.replace(a, "")
+            m = W.search(q)
+            if m:
+                bad.append("%s: '%s'" % (name, q[max(0, m.start() - 45):m.end() + 35].strip().replace("\n", " ")))
+    b = repo_file("bea_main.py")
+    if b is not None:
+        seen += 1
+        for kind, line, text in _py_message_literals(b):
+            q = text
+            for a in allow:
+                q = q.replace(a, "")
+            m = W.search(q)
+            if m:
+                bad.append("bea_main.py:%d (%s): '%s'" % (line, kind, q[max(0, m.start() - 45):m.end() + 35].strip()))
+    if not seen:
+        return [(INFO, "NOT EVALUATED - no front-end or server file readable from here")]
+    if bad:
+        return [(FAIL, "%d place(s) still call it an advert: %s" % (len(bad), "; ".join(bad[:4])))]
+    return [(INFO, "every screen and server message says 'listing' (allowlist: the Collectables feature name, the Terms)")]
+
+
+@entry("RG-0505", "R2-FALLBACK-EARLY-1: the page's own <img onerror=\"r2Fallback(this)\"> never throws "
+       "'r2Fallback is not defined' -- the fallback exists before the first image can fail",
+       LOCKED, fixed_on="2026-09-26",
+       scope="marketsquare.html early <script> defining window.r2Fallback; ms.js function r2Fallback. FOUND 26 Sep "
+             "2026 in the banking walk: the console showed 'r2Fallback is not defined' on first paint -- an image "
+             "that failed before ms.js loaded stayed broken instead of retrying through /media/.",
+       ref="ms.js r2Fallback (the same regex and target); INSPECT-FIX-4 banking walk.")
+def rg_r2_fallback_early_1():
+    import re as _re
+    h = repo_file("marketsquare.html"); js = repo_file("ms.js")
+    if h is None or js is None:
+        return [(INFO, "NOT EVALUATED - marketsquare.html / ms.js not readable from here")]
+    bad = []
+    d = h.find("window.r2Fallback=window.r2Fallback||function(")
+    # the first REAL use: script bodies (the stub's own comment names the handler) are blanked, positions kept
+    first_use = _re.sub(r"<script\b[\s\S]*?</script>", lambda m: " " * len(m.group(0)), h).find('onerror="r2Fallback(')
+    ms_tag = h.find('src="/static/ms.js')
+    if ms_tag < 0:
+        ms_tag = h.find("ms.js")
+    if d < 0:
+        bad.append("the page no longer defines r2Fallback before ms.js")
+    else:
+        if first_use >= 0 and d > first_use:
+            bad.append("an <img onerror=r2Fallback> comes before the early definition")
+        if ms_tag >= 0 and d > ms_tag:
+            bad.append("the early definition sits after the ms.js tag -- it is not early")
+        stub = h[d:d + 400]
+        rx = r"/^https?:\/\/[^/]+\.r2\.dev\//"
+        if stub.count(rx) < 2 or "'/media/'" not in stub or "r2tried" not in stub:
+            bad.append("the early r2Fallback no longer does what ms.js does (r2.dev -> /media/, once)")
+    k = js.find("function r2Fallback(")
+    if k < 0:
+        bad.append("ms.js lost r2Fallback")
+    elif "/^https?:\\/\\/[^/]+\\.r2\\.dev\\//" not in js[k:k + 400] or "'/media/'" not in js[k:k + 400]:
+        bad.append("ms.js r2Fallback changed -- change the page's early copy the same way")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "r2Fallback exists before the first image and matches ms.js")]
 
 
 if __name__ == "__main__":

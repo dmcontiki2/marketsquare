@@ -4482,7 +4482,7 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     buyers never see the email; introductions reach it. Guards that stay: listing velocity, the
     price-basis rule, the free-plan slot limit (a full plan returns 402 and the advert stays a draft)."""
     if not body.accept_terms:
-        raise HTTPException(status_code=400, detail="The Save/Publish button must be tapped to send the advert.")
+        raise HTTPException(status_code=400, detail="The Save/Publish button must be tapped to send the listing.")
     sess = _session_email(ts_user)
     key_mode = (body.key_mode or "email").strip().lower()
     key_secret = None
@@ -4493,12 +4493,12 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     now_t = _qt.time()
     hits = [t for t in _QP_IP_LOG.get(ip, []) if now_t - t < 86400]
     if len(hits) >= _QP_IP_MAX and not sess:
-        raise HTTPException(status_code=429, detail="Too many adverts from this connection today — please try again tomorrow.")
+        raise HTTPException(status_code=429, detail="Too many listings from this connection today — please try again tomorrow.")
     try:
         _probe = dict(body.listing or {}); _probe["seller_email"] = "probe@trustsquare.co"
         Listing(**{k: v for k, v in _probe.items() if k in Listing.__fields__})
     except Exception as exc:
-        raise HTTPException(status_code=422, detail="That advert is missing something: %s" % str(exc)[:160])
+        raise HTTPException(status_code=422, detail="That listing is missing something: %s" % str(exc)[:160])
     if not sess and key_mode == "link":
         # LINK-KEY-1 (RUL-167, David 24 Sep 2026): no e-mail -- the private link IS her key. The key
         # account is created first so the draft has an owner; the secret goes back to her once and only
@@ -4527,7 +4527,7 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
             finally:
                 conn.close()
             if _n_addr >= _QP_ID_MAX:
-                raise HTTPException(status_code=429, detail="Too many adverts for this email address today — please try again tomorrow.")
+                raise HTTPException(status_code=429, detail="Too many listings for this email address today — please try again tomorrow.")
     # AUDIT-Q1 (23 Sep 2026): one tap may create a NEW seller and publish at once, but it may never act
     # for somebody who already exists. An address that already has an account, typed by someone who
     # is not signed in as it, gets a DRAFT and a sign-in link to that inbox -- only its owner can
@@ -4554,7 +4554,7 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     try:
         listing = Listing(**{k: v for k, v in fields.items() if k in Listing.__fields__})
     except Exception as exc:
-        raise HTTPException(status_code=422, detail="That advert is missing something: %s" % str(exc)[:160])
+        raise HTTPException(status_code=422, detail="That listing is missing something: %s" % str(exc)[:160])
     created = create_listing(listing, background_tasks, "quick-door")
     lid = int(created["id"])
     if not sess:
@@ -4582,15 +4582,15 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
             # the one time the secret travels: back to her, to send to herself on WhatsApp
             return {"id": lid, "live": False, "need": "eula", "identity": "link",
                     "key_url": APP_URL + "/k/" + key_secret + "?draft=" + str(lid),
-                    "detail": "Your advert is saved. The private link below is your key to it — send it to yourself on WhatsApp, then open it to read and sign the Terms and publish."}
+                    "detail": "Your listing is saved. The private link below is your key to it — send it to yourself on WhatsApp, then open it to read and sign the Terms and publish."}
         if _is_key_identity(em):
             # a key-account session (phone code, employer slip or WhatsApp link): hand back a sign-in hop so the app
             # opens on her draft. SMS-TRUTH-1 (25 Sep 2026 inspection, backend-07): 'phone' only when a number is on file.
             return {"id": lid, "live": False, "need": "eula", "identity": _qp_identity_kind(em),
                     "open_url": _mint_signin_url(em, lid, 60),
-                    "detail": "Your advert is saved. Open it in TrustSquare, read and sign the Terms, and publish."}
+                    "detail": "Your listing is saved. Open it in TrustSquare, read and sign the Terms, and publish."}
         return {"id": lid, "live": False, "need": "eula", "identity": "email",
-                "detail": "Your advert is saved. We emailed you a link — open it in TrustSquare, read and sign the Terms, and publish."}
+                "detail": "Your listing is saved. We emailed you a link — open it in TrustSquare, read and sign the Terms, and publish."}
     _log.info("ONE-TAP-PUBLISH-1: listing %s published in one tap by signed member %s", lid, em)
     try:
         publish_listing(lid, em)
@@ -4614,7 +4614,7 @@ def key_link_open(secret: str, draft: int = 0):
         if not u:
             return HTMLResponse("<!doctype html><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
                                 "<body style='font-family:system-ui;padding:32px;background:#0b1512;color:#e6f2ec'>"
-                                "<h2>This link is not one we know.</h2><p>Make a new advert at "
+                                "<h2>This link is not one we know.</h2><p>Make a new listing at "
                                 "<a style='color:#7fe0b6' href='/quick/'>trustsquare.co/quick</a> and keep the new link.</p></body>",
                                 status_code=404)
         em = u["email"]
@@ -4746,7 +4746,7 @@ def auth_phone_start(body: _PhoneStart, request: Request):
         _day = conn.execute("SELECT COUNT(*) AS n FROM phone_codes WHERE created_at > ?", (_sql_since(hours=24),)).fetchone()["n"]
         if _day >= int(os.environ.get("SMS_DAILY_CAP", "300") or 300):
             _log.warning("SMS-CAP-1: platform daily SMS ceiling reached (%s)", _day)
-            raise HTTPException(status_code=429, detail="We can't send more codes today — please use the e-mail or link option.")
+            raise HTTPException(status_code=429, detail="We can't send more codes today — please use the email or link option.")
         code = "%06d" % _sk.randbelow(1000000)
         conn.execute("INSERT INTO phone_codes (phone, code_hash, expires_at) VALUES (?,?,?)",
                      (e164, _key_hash(e164 + ":" + code), _sql_since(hours=-10 / 60.0)))   # ten minutes AHEAD
@@ -4881,15 +4881,15 @@ def withdraw_listing(listing_id: int, email: str = "", t: str = "", confirm: int
         return HTMLResponse(_WITHDRAW_PAGE % (
             "Link not valid",
             "<h1 style='font-size:1.4rem;margin:0 0 1rem'>This take-down link is not valid or has expired.</h1>"
-            "<p style='margin:0'>Sign in to TrustSquare and remove the advert from your listings, or simply "
+            "<p style='margin:0'>Sign in to TrustSquare and remove the listing from My Listings, or simply "
             "reply to our letter and we will take it down for you.</p>"), status_code=403)
     if not int(confirm or 0):
         conn.close()
         import html as _h
         return HTMLResponse(_WITHDRAW_PAGE % (
-            "Take your advert down?",
-            "<h1 style='font-size:1.4rem;margin:0 0 1rem'>Take your advert down?</h1>"
-            "<p style='margin:0 0 1rem'>This archives the advert and deletes its photographs.</p>"
+            "Take your listing down?",
+            "<h1 style='font-size:1.4rem;margin:0 0 1rem'>Take your listing down?</h1>"
+            "<p style='margin:0 0 1rem'>This archives the listing and deletes its photographs.</p>"
             "<form method='get' action='/listings/%d/withdraw'>"
             "<input type='hidden' name='email' value='%s'>"
             "<input type='hidden' name='t' value='%s'><input type='hidden' name='confirm' value='1'>"
@@ -4934,17 +4934,17 @@ def withdraw_listing(listing_id: int, email: str = "", t: str = "", confirm: int
 
     note = ("Your photographs have been deleted."
             if failed == 0 else
-            "Your advert is down. One or more photographs could not be deleted "
+            "Your listing is down. One or more photographs could not be deleted "
             "automatically; email us and we will remove them by hand.")
     return HTMLResponse(
         "<!doctype html><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-        "<title>Advert withdrawn</title>"
+        "<title>Listing withdrawn</title>"
         "<body style=\"margin:0;background:#0b1020;color:#e8ecf4;"
         "font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;"
         "display:flex;align-items:center;justify-content:center;min-height:100vh\">"
         "<div style='max-width:32rem;padding:2rem'>"
-        "<h1 style='font-size:1.4rem;margin:0 0 1rem'>Done - your advert is down.</h1>"
+        "<h1 style='font-size:1.4rem;margin:0 0 1rem'>Done - your listing is down.</h1>"
         "<p style='margin:0 0 1rem'>" + note + "</p>"
         "<p style='margin:0;color:#9aa4b8'>You will not hear from us about it again. "
         "Thank you for the time you did put into it.</p>"
@@ -5560,7 +5560,7 @@ def delete_listing(listing_id: int, _key: str = Depends(auth.require_api_key),
             _require_admin_or_key(x_admin_token, x_admin_key)
         except HTTPException:
             conn.close()
-            raise HTTPException(status_code=403, detail="Showcase adverts are admin-managed.")
+            raise HTTPException(status_code=403, detail="Showcase listings are admin-managed.")
     conn.execute("DELETE FROM listings WHERE id = ?", (listing_id,))
     conn.commit()
     conn.close()
@@ -5587,7 +5587,7 @@ def delete_listing_by_seller(listing_id: int, email: str = "",
         raise HTTPException(status_code=403, detail="Email does not match listing owner")
     if row["showcase"] or row["super_example"]:   # SUPER-IMMORTAL-2
         conn.close()
-        raise HTTPException(status_code=403, detail="Showcase adverts are admin-managed.")
+        raise HTTPException(status_code=403, detail="Showcase listings are admin-managed.")
     conn.execute("DELETE FROM listings WHERE id = ?", (listing_id,))
     conn.execute("DELETE FROM listing_cities WHERE listing_id = ?", (listing_id,))
     conn.commit()
@@ -6008,16 +6008,16 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
     if _fits is False:
         if is_primary:
             raise HTTPException(status_code=422,
-                detail="This photo doesn't look like what this advert is selling"
+                detail="This photo doesn't look like what this listing is selling"
                        + (" (it shows: %s)" % _subj if _subj else "")
-                       + ". The main advert photo must show the item itself - "
+                       + ". The main listing photo must show the item itself - "
                          "please use a photo of it.")
         _mismatch = "|subject-mismatch:" + (_subj[:40] if _subj else "wrong-type")
     elif _fits is None and _subj:
         _hints = _SUBJECT_HINTS.get((category or "").strip().lower())
         if _hints and not any(hh in _subj for hh in _hints):
             _mismatch = "|subject-mismatch:" + _subj[:40]
-    _retake = ("TrustSquare adverts are anonymous — please retake the photo "
+    _retake = ("TrustSquare listings are anonymous — please retake the photo "
                "avoiding number plates, signage and contact details.")
     if scan["verdict"] == "reject":
         raise HTTPException(status_code=422,
@@ -8171,7 +8171,7 @@ def _relay_forward(to_real: str, from_alias: str, subject: str, body: str) -> bo
         _log.warning("INTRO-RELAY-1 forward skipped — bad recipient")
         return False
     if _is_key_identity(to_clean):          # LINK-KEY-1: no inbox -- an SMS nudge if she left a phone
-        _sms_key_seller(to_clean, "TrustSquare: a message about your advert is waiting. Open your TrustSquare link to read it.", "relay-nudge")
+        _sms_key_seller(to_clean, "TrustSquare: a message about your listing is waiting. Open your TrustSquare link to read it.", "relay-nudge")
         return False
     key = ai_provider.envkey("RESEND_API_KEY") or ""
     if not key:
@@ -8290,7 +8290,7 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
     # burn the buyer's 1T, so it is refused before anything is held.
     if (listing["category"] or "").strip().lower() in ("local_market", "local market"):
         conn.close()
-        raise HTTPException(status_code=409, detail="Local Market introductions are free for buyers \u2014 open the advert in Local Market to ask.")
+        raise HTTPException(status_code=409, detail="Local Market introductions are free for buyers \u2014 open the listing in Local Market to ask.")
     # Self-intro guard — buyer cannot intro their own listing
     if listing["seller_email"] and intro.buyer_email and        listing["seller_email"].lower() == intro.buyer_email.lower():
         conn.close()
@@ -8363,7 +8363,7 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
         if _is_key_identity(listing["seller_email"]):   # LINK-KEY-1: she has no inbox -- SMS if she left a phone
             background_tasks.add_task(_sms_key_seller, listing["seller_email"],
                 "TrustSquare: someone asked to be introduced to you about '%s'. Open your TrustSquare link to answer."
-                % ((listing["title"] or "your advert")[:50]), "intro-request")
+                % ((listing["title"] or "your listing")[:50]), "intro-request")
     except Exception:
         pass
     return {"message": "Introduction request submitted"}
@@ -10325,7 +10325,7 @@ SF_COACH_ASK_CAP = int(os.getenv("SF_COACH_ASK_CAP", "10"))
 SF_COACH_ASK_DAILY_CAP = int(os.getenv("SF_COACH_ASK_DAILY_CAP", "30"))
 SF_COACH_ASK_WARN_LEFT = 2
 SF_COACH_ASK_CAP_COPY = ("You\u2019ve used your %d free questions for this listing. Finish and publish it \u2014 "
-                         "then the AI Coach on your dashboard can go deeper on this advert for 1 Tuppence a session.")
+                         "then the AI Coach on your dashboard can go deeper on this listing for 1 Tuppence a session.")
 
 
 @app.post("/advert-agent/coach/ask")
@@ -10761,7 +10761,7 @@ async def aa_publish(
         return _JR(status_code=409, content={
             "listing_id": listing_id, "pdf_url": None, "live": False, "need": "eula",
             "photos_held": sum(1 for _n in _anon_notes if ":held:" in _n),   # E2E-HMI-1: say it, never drop silently
-            "detail": "Your advert is saved as a draft. Read and accept the TrustSquare Terms in the app to publish it."})
+            "detail": "Your listing is saved as a draft. Read and accept the TrustSquare Terms in the app to publish it."})
     # Wishlist matching — async, never blocks publish (PR-14)
     background_tasks.add_task(run_match_job, listing_id)
     return {"listing_id": listing_id, "pdf_url": None,   # PDF generation added in Stage 4
@@ -12770,7 +12770,7 @@ def lm_create_listing(listing: LMListingIn, background_tasks: BackgroundTasks,
         from fastapi.responses import JSONResponse as _JR
         return _JR(status_code=409, content={
             "id": new_id, "live": False, "need": "eula",
-            "detail": "Your advert is saved as a draft. Read and accept the TrustSquare Terms in the app to publish it."})
+            "detail": "Your listing is saved as a draft. Read and accept the TrustSquare Terms in the app to publish it."})
     # Run wishlist matching against this new LM listing — same engine as Wishlist Feed
     background_tasks.add_task(run_match_job, new_id)
     return {"id": new_id, "message": "Local Market listing created"}
@@ -13619,7 +13619,7 @@ _CATEGORY_SIGNALS = {
     "local_market": {
         # ── Identity (max ~20 from category — Universal also contributes) ──
         "category.lm.phone_verified":      {"name": "Phone number verified",               "points": 2,  "how_to_earn": "Add and verify your mobile number in your profile.", "evidence_required": False},
-        "category.lm.banking":             {"name": "Banking details on file",              "points": 2,  "how_to_earn": "Add your bank account details — required for Tuppence payouts.", "evidence_required": False},
+        "category.lm.banking":             {"name": "Banking details on file",              "points": 2,  "how_to_earn": "Add your bank account details — they help confirm who you are and are used when you buy Tuppence.", "evidence_required": False},
         "category.lm.banking_name_match":  {"name": "Bank account holder name verified",   "points": 3,  "how_to_earn": "Account holder name on bank details matches your verified ID name.", "evidence_required": False},
         "category.lm.id_uploaded":         {"name": "Government-issued ID uploaded",        "points": 2,  "how_to_earn": "Upload a clear photo of your SA ID, passport, or drivers licence.", "evidence_required": True},
         "category.lm.id_number_valid":     {"name": "ID / passport number entered & valid", "points": 2,  "how_to_earn": "Enter your SA ID number (13 digits) or passport number — format validated instantly.", "evidence_required": False},
@@ -18183,37 +18183,37 @@ def _send_draft_waiting_email(to_email: str, link: str, title: str, code: str = 
     This is NOT outreach and is not sent on anyone's behalf: it goes only to an address
     the person typed into our own form seconds earlier for exactly this purpose, and it
     does one thing -- gives him back the advert he just made. He still presses publish."""
-    safe = (title or "your advert").replace("<", "&lt;").replace(">", "&gt;")
-    subject = "Your TrustSquare advert is composed \u2014 one step left"
+    safe = (title or "your listing").replace("<", "&lt;").replace(">", "&gt;")
+    subject = "Your TrustSquare listing is composed \u2014 one step left"
     html = (
         "<div style='font-family:Inter,Arial,sans-serif;max-width:460px;margin:auto'>"
-        "<h2 style='color:#0c1a2e;margin-bottom:6px'>Your advert is waiting</h2>"
+        "<h2 style='color:#0c1a2e;margin-bottom:6px'>Your listing is waiting</h2>"
         "<p style='color:#0c1a2e;font-size:16px;margin-top:0'><b>" + safe + "</b></p>"
         "<p>You built this on TrustSquare a moment ago. It is saved and nobody else can "
         "see it yet \u2014 the last step is yours: check it over, add anything you want, "
         "and publish it.</p>"
         "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
         "text-decoration:none;padding:13px 24px;border-radius:8px;font-weight:700'>"
-        "Open my advert &rarr;</a></p>"
+        "Open my listing &rarr;</a></p>"
         # LETTER-REOPEN-1 (25 Sep 2026 inspection, backend-06): the letter states the rule the server keeps.
         + ("<p style='color:#6b7280;font-size:13px'>Tap it within 3 days: it signs you in on that phone and "
-           "opens your advert, and it keeps opening it there for 7 days. Any other time, or on another phone, "
+           "opens your listing, and it keeps opening it there for 7 days. Any other time, or on another phone, "
            "open <a href='" + APP_URL + "'>trustsquare.co</a> and sign in with <b>"
-           + to_email + "</b> \u2014 the advert is waiting on that address, and only "
+           + to_email + "</b> \u2014 the listing is waiting on that address, and only "
            "that one.</p>")
         + "<p style='color:#6b7280;font-size:12px'>You are getting this because you "
-          "entered this address to publish an advert. If that wasn't you, ignore it "
+          "entered this address to publish a listing. If that wasn't you, ignore it "
           "\u2014 nothing is public and nothing else will be sent.</p>"
         "</div>"
     )
-    plain = ("Your TrustSquare advert is composed and waiting: " + (title or "")
+    plain = ("Your TrustSquare listing is composed and waiting: " + (title or "")
              + "\n\nIt is saved and not yet public. Open it, check it and publish it:\n"
              + link
-             + "\n\nTap it within 3 days: it signs you in on that phone and opens your advert, and it keeps "
+             + "\n\nTap it within 3 days: it signs you in on that phone and opens your listing, and it keeps "
              "opening it there for 7 days. Any other time, or on another phone, open " + APP_URL + " and sign in with "
-             + to_email + " -- the advert is waiting on that address.\n\n"
-             "You are getting this because you entered this address to publish an "
-             "advert. If that wasn't you, ignore it.")
+             + to_email + " -- the listing is waiting on that address.\n\n"
+             "You are getting this because you entered this address to publish a "
+             "listing. If that wasn't you, ignore it.")
     return _send_html_email(to_email, subject, html, plain)
 
 
@@ -18263,24 +18263,24 @@ def _quick_draft_return(to_email: str, listing_id: int, title: str) -> None:
 def _send_quick_live_email(to_email: str, link: str, title: str) -> str:
     """ONE-TAP-PUBLISH-1 (David, 23 Sep 2026: "make the SAVE and PUBLISH a single tap"). The advert
     went live in the tap; this letter is her key back to it, and the honest exit if it was not her."""
-    safe = (title or "your advert").replace("<", "&lt;").replace(">", "&gt;")
-    subject = "Your TrustSquare advert is live"
+    safe = (title or "your listing").replace("<", "&lt;").replace(">", "&gt;")
+    subject = "Your TrustSquare listing is live"
     html = (
         "<div style='font-family:Inter,Arial,sans-serif;max-width:460px;margin:auto'>"
-        "<h2 style='color:#0c1a2e;margin-bottom:6px'>Your advert is live</h2>"
+        "<h2 style='color:#0c1a2e;margin-bottom:6px'>Your listing is live</h2>"
         "<p style='color:#0c1a2e;font-size:16px;margin-top:0'><b>" + safe + "</b></p>"
         "<p>People can find it on TrustSquare now. Your name and contact details stay private until "
         "you accept an introduction.</p>"
         "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
         "text-decoration:none;padding:13px 24px;border-radius:8px;font-weight:700'>"
-        "Open my advert &rarr;</a></p>"
+        "Open my listing &rarr;</a></p>"
         "<p style='color:#6b7280;font-size:13px'>Add photos there to make it stronger. Tap the button within "
-        "3 days to sign in on that phone; it keeps opening your advert there for 7 days. Any other time, "
+        "3 days to sign in on that phone; it keeps opening your listing there for 7 days. Any other time, "
         "sign in at <a href='" + APP_URL + "'>trustsquare.co</a> with <b>"
         + to_email + "</b>.</p>"   # LETTER-REOPEN-1 (25 Sep 2026 inspection, backend-06)
         "<p style='color:#6b7280;font-size:12px'>If this was not you, open the link and delete the "
-        "advert, or ignore this letter.</p></div>")
-    plain = ("Your TrustSquare advert is live: " + (title or "") + "\n\nOpen it:\n" + link +
+        "listing, or ignore this letter.</p></div>")
+    plain = ("Your TrustSquare listing is live: " + (title or "") + "\n\nOpen it:\n" + link +
              "\n\nIf this was not you, open the link and delete it, or ignore this letter.")
     return _send_html_email(to_email, subject, html, plain)
 
@@ -18289,7 +18289,7 @@ def _quick_live_mail(to_email: str, listing_id: int, title: str) -> None:
     try:
         em = (to_email or "").strip().lower()
         if _is_key_identity(em):            # LINK-KEY-1: SMS if she left a phone; the hub shows it either way
-            _sms_key_seller(em, "TrustSquare: your advert '%s' is live. Open your TrustSquare link to see it." % (title or "")[:50], "quick-live")
+            _sms_key_seller(em, "TrustSquare: your listing '%s' is live. Open your TrustSquare link to see it." % (title or "")[:50], "quick-live")
             return
         if "@" not in em or not _JWT_SECRET:
             if not _JWT_SECRET:
@@ -20196,7 +20196,7 @@ def agency_import(agency_id: int, req: _AgencyImport):
         # SEC-GATE-1 (24 Sep 2026): bound the paid AI rewrite + vision work one call can trigger.
         if isinstance(req.adverts, list) and len(req.adverts) > 200:
             raise HTTPException(status_code=413,
-                                detail="At most 200 adverts per import call - split the file and send the rest in another call.")
+                                detail="At most 200 listings per import call - split the file and send the rest in another call.")
         members = {r["agent_email"].lower() for r in conn.execute(
             "SELECT agent_email FROM agency_members WHERE agency_id=? AND status!='removed'", (agency_id,)).fetchall()}
         imported = 0; unmatched = 0; capped = 0; needs_rev = 0; rows = []
@@ -22506,7 +22506,7 @@ async def vision_draft(
     draft["off_category_photo_indices"] = ocpi
     if ocpi:
         all_warnings.append(
-            "%d photo(s) do not appear to show the kind of item this advert "
+            "%d photo(s) do not appear to show the kind of item this listing "
             "sells - the main photo must show the item itself." % len(ocpi))
     if draft["anonymity_scrubbed"]:
         n_violating = len(vpi)
@@ -24497,7 +24497,8 @@ async def _classify_email(from_addr: str, subject: str, body: str,
         "telling someone an option exists without saying where it is is not an answer.\n"
         "- THE CHARGE, stated correctly: 1 Tuppence (about $2) is HELD when the buyer "
         "sends the request and is deducted ONLY IF the seller accepts. If the seller "
-        "declines, or does not answer within 48 hours, the hold is released in full and "
+        "declines, or the request closes unanswered after 96 hours (the seller is asked to reply "
+        "within 48), the hold is released in full and "
         "the buyer pays NOTHING. Never tell a buyer they must spend or pay Tuppence to "
         "contact a seller -- they pay only when the introduction is actually delivered.\n"
         "- When the seller accepts, both sides' contact details are revealed to each "
@@ -26861,10 +26862,10 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
                              "WHERE LOWER(seller_email) = ? AND listing_status IN ('live','paused','faded')",
                              (now_iso, sb["seller"]))
             res["b3_blocked"] += len(live)
-            _mail(sb["seller"], "Your adverts are blocked \u2014 introductions went unanswered",
-                  _lc_email_html("Your adverts are blocked",
+            _mail(sb["seller"], "Your listings are blocked \u2014 introductions went unanswered",
+                  _lc_email_html("Your listings are blocked",
                       str(sb["n"]) + " introduction requests went unanswered in the last 30 days, which the "
-                      "Terms (Section 14.5, cause B3) treat as systematic ignoring. Your adverts are hidden "
+                      "Terms (Section 14.5, cause B3) treat as systematic ignoring. Your listings are hidden "
                       "from buyers. You can ask for reinstatement after a 60-day cooling-off by replying to "
                       "this email and confirming you have read the introduction rules.", "Open TrustSquare"))
 
@@ -27691,7 +27692,7 @@ def pause_listing(listing_id: int, req: _PauseIn,
         if st == want:
             return {"listing_id": listing_id, "listing_status": st}
         if st not in ("live", "paused"):
-            raise HTTPException(status_code=409, detail="Only a live advert can be paused (this one is %s)." % st)
+            raise HTTPException(status_code=409, detail="Only a live listing can be paused (this one is %s)." % st)
         now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         conn.execute("UPDATE listings SET listing_status=?, status_changed_at=? WHERE id=?",
                      (want, now_iso, listing_id))
@@ -27949,7 +27950,7 @@ def _squire_shortlist(conn, brief) -> list:
         if r.get("attested_at"):
             reasons.append("specs attested by the seller")
         if r.get("super_example"):
-            reasons.append("AI example advert")
+            reasons.append("AI example listing")
         out.append({"listing_id": lid, "score": res["scores"].get(str(lid)), "reasons": reasons,
                     "listing": _zoom_public_row(r)})
     return out
@@ -28436,7 +28437,7 @@ def _lang_owner_row(conn, listing_id, ts_user, email, ctx, admin_key=None):
     if not row:
         raise HTTPException(status_code=404, detail="Listing not found")
     if (row["seller_email"] or "").strip().lower() != (em or "").strip().lower():
-        raise HTTPException(status_code=403, detail="Only the seller can change this advert's languages.")
+        raise HTTPException(status_code=403, detail="Only the seller can change this listing's languages.")
     return dict(row)
 
 
@@ -28468,7 +28469,7 @@ def listing_lang_draft(listing_id: int, body: _LangDraftIn, ts_user: str = Cooki
         conn.execute("CREATE TABLE IF NOT EXISTS lang_draft_log (listing_id INTEGER, day TEXT, n INTEGER, PRIMARY KEY (listing_id, day))")
         n = conn.execute("SELECT n FROM lang_draft_log WHERE listing_id=? AND day=?", (listing_id, day)).fetchone()
         if n and (n["n"] if not isinstance(n, tuple) else n[0]) >= LANG_DRAFTS_PER_ADVERT_DAY:
-            raise HTTPException(status_code=429, detail="You can redraft this advert's languages %d times a day." % LANG_DRAFTS_PER_ADVERT_DAY)
+            raise HTTPException(status_code=429, detail="You can redraft this listing's languages %d times a day." % LANG_DRAFTS_PER_ADVERT_DAY)
         conn.execute("INSERT INTO lang_draft_log (listing_id, day, n) VALUES (?,?,1) "
                      "ON CONFLICT(listing_id, day) DO UPDATE SET n = n + 1", (listing_id, day))
         conn.commit()

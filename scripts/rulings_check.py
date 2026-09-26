@@ -760,7 +760,7 @@ REFLECTIONS = {
    # forbidden clause. (b) the DEMO tab exists, ships, and is NOT on the tester lane:
    # ts_report.js is removed at Soft Launch and DEMO must survive that day.
    ("RULINGS.md", ["AI EXAMPLE GENERATED ADVERTS, AND A DEMO BANNER"], []),
-   ("ms.js", ["AI EXAMPLE GENERATED ADVERT", "not a real listing"],
+   ("ms.js", ["AI EXAMPLE GENERATED LISTING", "not a real listing"],   # RUL-040 amended 26 Sep 2026 (one word: listing)
                 ["SUPER ADVERT", "free for a real seller to claim"]),
    ("ts_demo_banner.js", ["ts-demo-tab"], ["fault_report"]),
    ("adventures_za_map.html", ["ts_demo_banner.js"], []),
@@ -818,7 +818,7 @@ REFLECTIONS = {
    ("RULINGS.md", ["THE SUPERS STAY THROUGH LAUNCH"], []),
  ],
  "RUL-026": [
-   ("bea_main.py", ["RUL-026: showcase supers never fade", "Showcase adverts are admin-managed."], []),
+   ("bea_main.py", ["RUL-026: showcase supers never fade", "Showcase listings are admin-managed."], []),
    ("migrations/024_showcase_immortal.py", ["RUL-026"], []),
    ("scripts/regression_ledger.py", ["RG-0106", "rg_showcase_immortal"], []),
  ],
