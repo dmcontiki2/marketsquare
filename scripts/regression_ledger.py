@@ -30573,6 +30573,11 @@ def rg_banking_form_1():
     k = js.find("function _renderBillingTab(")
     if k < 0 or "msLoadBankingCard()" not in js[k:k + 20000]:
         bad.append("the Billing tab does not read whether banking details are on file")
+    # CARD-WORDS-3 (26 Sep 2026): the plan card prints 'Free forever · ' + desc, so a free-tier desc that itself starts
+    # 'Free forever' reads twice ('Free forever · Free forever · no card needed' was live for an hour).
+    mfree = _re.search(r"\{\s*id:'free'[^}]*?desc:'([^']*)'", js)
+    if mfree and mfree.group(1).lower().startswith("free forever"):
+        bad.append("the free plan's description starts 'Free forever' and the plan card already says it: '%s'" % mfree.group(1))
     W = _re.compile(r"(?<![\w])(pay-?outs?|card verified)(?![\w])", _re.I)
     for name, text in (("ms.js", js), ("marketsquare.html", h)):
         hits = [p for p in _ui_texts(name, text) if W.search(p)]
@@ -30679,6 +30684,65 @@ def rg_r2_fallback_early_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "r2Fallback exists before the first image and matches ms.js")]
+
+
+
+@entry("RG-0506", "QA-11: POST /agencies/wave-prep (it mints one-click sign-in links) answers only a caller that shows "
+       "the admin key -- no loopback pass, and CityLauncher's outreach wave sends X-Admin-Key",
+       LOCKED, fixed_on="2026-09-26",
+       scope="route_policy.json POST /agencies/wave-prep; bea_main.py agency_wave_prep; CityLauncher "
+             "emailer/emailer.py mint_agency_console_link + _ms_admin_key. FOUND 25 Sep 2026 by the QA bot (qa-11): "
+             "the route kept a loopback exemption because CityLauncher called it over 127.0.0.1 with the public app "
+             "key only, so anything on the box could mint a sign-in link for any address. CityLauncher now sends the "
+             "running app's key (the wave runs as root and reads the service secrets file; proven equal to the app's "
+             "key by hash, never printed); the exemption and the handler's _local_caller branch are gone.",
+       ref="ADMIN-KEY-LOCAL-1 (the same class for the deploy purge, sensor and sweeps); SEC-GATE-1; RG-0455.")
+def rg_qa11_wave_prep_admin_only():
+    import json as _j, re as _re
+    rp = repo_file("route_policy.json"); b = repo_file("bea_main.py")
+    if rp is None or b is None:
+        return [(INFO, "NOT EVALUATED - route_policy.json / bea_main.py not readable from here")]
+    bad = []
+    try:
+        P = _j.loads(rp); rows = P if isinstance(P, list) else P.get("routes", [])
+        r = [x for x in rows if isinstance(x, dict) and x.get("key") == "POST /agencies/wave-prep"]
+        if not r:
+            bad.append("POST /agencies/wave-prep is not declared")
+        else:
+            if r[0].get("level") != "admin":
+                bad.append("POST /agencies/wave-prep is level %r, not admin" % r[0].get("level"))
+            if r[0].get("local"):
+                bad.append("POST /agencies/wave-prep has the loopback exemption back (\"local\": true)")
+    except Exception as e:
+        bad.append("route_policy.json unreadable: %s" % e)
+    i = b.find("def agency_wave_prep(")
+    body = b[i:i + 2500] if i >= 0 else ""
+    if not body:
+        bad.append("agency_wave_prep is gone")
+    else:
+        if "_local_caller" in body or "127.0.0.1" in body:
+            bad.append("the handler lets a loopback caller skip the admin check again")
+        if not _re.search(r"\n    _require_admin_or_key\(x_admin_token=x_admin_token, x_admin_key=x_admin_key\)", body):
+            bad.append("the handler no longer demands the admin key unconditionally")
+    notes = []
+    cl = repo_file(os.path.join("..", "CityLauncher", "emailer", "emailer.py"))
+    if cl is None:
+        notes.append("CityLauncher not visible from here -- its half is checked from David's PC")
+    else:
+        j = cl.find("def mint_agency_console_link(")
+        fn = cl[j:j + 3000] if j >= 0 else ""
+        if not fn:
+            bad.append("CityLauncher's mint_agency_console_link is gone")
+        elif "'X-Admin-Key'" not in fn and '"X-Admin-Key"' not in fn:
+            bad.append("CityLauncher's wave-prep call does not send X-Admin-Key -- every agency letter falls back to the solo link")
+        if "def _ms_admin_key(" not in cl:
+            bad.append("CityLauncher has no _ms_admin_key() -- nothing reads the key")
+        elif _re.search(r"(?:log|print)[\w.]*\([^)]*\badmin\b\s*[,)]", fn):
+            bad.append("CityLauncher logs the admin key")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "wave-prep is admin-only with no loopback pass" + ("; CityLauncher sends X-Admin-Key" if cl is not None else "")
+             + ("" if not notes else " (" + notes[0] + ")"))]
 
 
 if __name__ == "__main__":

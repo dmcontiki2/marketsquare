@@ -18529,16 +18529,6 @@ def auth_providers():
     we are removing."""
     return {p: _oauth_ready(p) for p in _OIDC}
 
-def _local_caller(request) -> bool:
-    """SEC-GATE-1 (24 Sep 2026): the server's own automation - a loopback caller that did not come through
-    nginx (nginx always sets X-Real-IP). The security gate has already normalised request.client."""
-    try:
-        host = request.client.host if request and request.client else ""
-    except Exception:
-        host = ""
-    return host in ("127.0.0.1", "::1") and not request.headers.get("x-real-ip")
-
-
 def _oauth_safe_next(nxt) -> str:
     # SEC-GATE-1 (24 Sep 2026): '//host' and '/\host' pass startswith('/') but browsers treat them as off-site (open redirect).
     # Only a same-site path of printable ASCII: tabs/newlines ('/\t/evil.com') are dropped by browsers
@@ -18973,10 +18963,10 @@ def agency_wave_prep(req: _AgencyWavePrep, _key: str = Depends(auth.require_api_
     (the n8n payload node honors prospect.magic_link). Unlike create_agency these orgs
     land verified=0 -- verification is earned on application, and the 'agency' seller
     tier follows verification (AGENCY-TIER-1)."""
-    # SEC-GATE-1 (24 Sep 2026): this mints one-click SIGN-IN links for any address it is given, so it is
-    # the box's own outreach (CityLauncher, loopback) or an admin - never the public app key.
-    if not _local_caller(request):
-        _require_admin_or_key(x_admin_token=x_admin_token, x_admin_key=x_admin_key)
+    # SEC-GATE-1 (24 Sep 2026): this mints one-click SIGN-IN links for any address it is given, so it is an admin
+    # act - never the public app key. QA-11 (26 Sep 2026): the loopback pass for CityLauncher is gone; its outreach
+    # wave sends X-Admin-Key like every other caller.
+    _require_admin_or_key(x_admin_token=x_admin_token, x_admin_key=x_admin_key)
     days = max(1, min(int(req.link_days or 14), 30))
     out = []
     conn = database.get_db()

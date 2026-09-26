@@ -1135,8 +1135,7 @@
   {
    "key": "POST /agencies/wave-prep",
    "level": "admin",
-   "local": true,
-   "note": "ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-11): the loopback exemption STAYS until CityLauncher's mint_agency_console_link sends X-Admin-Key -- CityLauncher is a separate repo and still calls this over loopback with the public app key only."
+   "note": "ADMIN-KEY-LOCAL-1 / QA-11 (26 Sep 2026): no loopback exemption. It mints one-click sign-in links, so every caller shows the admin key -- CityLauncher's mint_agency_console_link sends X-Admin-Key (the running app's key, read by the wave from the service secrets file)."
   },
   {
    "key": "GET /agencies/{agency_id}",
