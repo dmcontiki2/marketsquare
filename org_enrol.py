@@ -48,7 +48,8 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 # ── Injected seams (bea_main.configure) ───────────────────────────────────────
 _S = {"key_hash": None, "new_identity": None, "establish_session": None,
       "agency_admin": None, "trust_recompute": None, "app_url": "https://trustsquare.co",
-      "session_email": None, "admin_key_ok": None}
+      "session_email": None, "admin_key_ok": None,
+      "mint_signin": None}   # SLIP-SIGNIN-1: bea_main._mint_signin_url, the same hop /k/<secret> hands out
 
 
 def configure(**kw):
@@ -299,7 +300,9 @@ def enrolments(agency_id: int, ts_user: str = Cookie(default=None), x_admin_key:
                             "FROM org_enrolments WHERE agency_id=? ORDER BY id", (agency_id,)).fetchall()
         live = {}
         for r in rows:
-            c = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE LOWER(seller_email)=? AND listing_status='LIVE'",
+            # ENROL-COUNT-1 (25 Sep 2026 inspection, backend-13): statuses are stored lower-case ('live'); the upper-case
+            # comparison matched nothing, so every organisation read 0 published.
+            c = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE LOWER(seller_email)=? AND LOWER(listing_status)='live'",
                              (r["identity"],)).fetchone()   # a READ -- the count she earned herself
             live[r["identity"]] = int(c["n"] if c else 0)
     finally:
@@ -333,11 +336,22 @@ def open_enrolment(secret: str):
             conn.execute("UPDATE org_enrolments SET claimed_at=? WHERE identity=?", (_now(), ident))
         _confirm(conn, ident, en["agency_id"], "claim")          # an organisation verified since the import
         conn.commit()
-        has_advert = conn.execute("SELECT 1 FROM listings WHERE LOWER(seller_email)=? LIMIT 1", (ident,)).fetchone()
+        # SLIP-SIGNIN-1 (25 Sep 2026 inspection, backend-04): the advert to land on -- her newest draft first (it is
+        # waiting for her to publish), otherwise her newest advert.
+        has_advert = conn.execute("SELECT id FROM listings WHERE LOWER(seller_email)=? "
+                                  "ORDER BY CASE WHEN listing_status='draft' THEN 0 ELSE 1 END, id DESC LIMIT 1",
+                                  (ident,)).fetchone()
     finally:
         conn.close()
     if has_advert:
+        # SLIP-SIGNIN-1: the app only knows who she is from a sign-in hop; the bare front page looked signed out on a
+        # new phone, so her draft could not be published and her introductions could not be seen. Same hop as /k/.
         target = "/"
+        if _S["mint_signin"]:
+            try:
+                target = _S["mint_signin"](ident, int(has_advert["id"]), 20) or "/"
+            except Exception:
+                target = "/"
     else:
         target = "/q/services?role=%s&lang=%s&src=org%d" % (en["role"], en["lang"] or "en", int(en["agency_id"]))
     resp = RedirectResponse(url=target, status_code=303)

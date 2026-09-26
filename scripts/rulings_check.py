@@ -791,7 +791,10 @@ REFLECTIONS = {
    ("RULINGS.md", ["AN ADVERT FOR A TRIP MUST CARRY THE PRE-INFORMATION"], []),
    ("ms.js", ["tripEssentialsPanel", "does not sell or book"], []),
    ("trip_essentials.js", ["window.TRIP_ESSENTIALS"], []),
-   ("marketsquare.html", ["/static/trip_essentials.js"], []),
+   # TRIP-LAZY-1 (26 Sep 2026, 25 Sep 2026 inspection shell-14): the page no longer loads the data for every
+   # visitor; ms.js loads it on demand before the panel renders. Re-aimed at the loader, not dropped.
+   ("ms.js", ["function teLoadData(", "/static/trip_essentials.js", "teLoadData().then"], []),
+   ("marketsquare.html", [], ['trip_essentials.js?v=1" defer', "trip_essentials.js?v=1' defer"]),
    ("ops/autodeploy/deploy_manifest.txt", ["trip_essentials.js"], []),
    ("scripts/regression_ledger.py", ["RG-0135", "rg_trip_essentials"], []),
  ],

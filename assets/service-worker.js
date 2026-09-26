@@ -13,7 +13,16 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil((async () => {
+    /* SW-PRELOAD-1 (25 Sep 2026 inspection, shell-17): with navigation preload the browser starts the
+     * page request itself while this worker is still starting up, instead of waiting for it -- every
+     * launch and every hand-off (Quick -> TrustSquare) stops paying the worker's start-up time.
+     * Still nothing is cached: the fetch handler below simply uses the response already on its way. */
+    if (self.registration.navigationPreload) {
+      try { await self.registration.navigationPreload.enable(); } catch (_e) {}
+    }
+    await self.clients.claim();
+  })());
 });
 
 /* SW-FETCH-1 (12 Sep 2026): Chrome will not fire beforeinstallprompt -- the one-tap
@@ -57,7 +66,10 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET' || req.mode !== 'navigate') return;
   event.respondWith((async () => {
     try {
-      // fetch(req) preserves the navigation's redirect mode, so 301/302 still work.
+      // SW-PRELOAD-1: the navigation preload response when the browser started one (it keeps the
+      // navigation's redirect handling); otherwise fetch(req), which preserves the redirect mode too.
+      const pre = await event.preloadResponse;
+      if (pre) return pre;
       return await fetch(req);
     } catch (err) {
       return new Response(OFFLINE_HTML, {
@@ -90,16 +102,23 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  // Focus the app or open a new tab — the feed surfaces the match anyway
+  const matchId = (event.notification.data && event.notification.data.match_id) || null;
   event.waitUntil((async () => {
     const all = await clients.matchAll({ type: 'window', includeUncontrolled: true });
     // PUSH-TO-APP-1 (SEAM-1, 25 Sep 2026): the Quick door lives on this origin too (/quick/, /q/), so the
     // old "focus the first same-site window" could surface the Quick door instead of the introduction.
     // A match is TrustSquare's business: focus a TrustSquare window, never a Quick one; else open the app.
-    const isQuick = (u) => { try { return /^\/(quick|q)(\/|\.html|$)|^\/quick_next\.html$/.test(new URL(u).pathname); } catch (_e) { return false; } };
+    // PUSH-TO-MATCH-1 (25 Sep 2026 inspection, shell-16): "a TrustSquare window" could still be a Terms,
+    // Privacy or Support tab. Only the APP itself (/ or /index.html) is focused now; it is told which
+    // match was tapped (message {type:'wl_match', match_id}) rather than reloaded, so nothing half-typed
+    // is lost. With no app window open, the app opens on /?wl_match=<id>.
+    const isApp = (u) => { try { const p = new URL(u).pathname; return p === '/' || p === '/index.html'; } catch (_e) { return false; } };
     for (const c of all) {
-      if (c.url.includes(self.registration.scope) && !isQuick(c.url) && 'focus' in c) return c.focus();
+      if (c.url.includes(self.registration.scope) && isApp(c.url) && 'focus' in c) {
+        try { c.postMessage({ type: 'wl_match', match_id: matchId }); } catch (_e) {}
+        return c.focus();
+      }
     }
-    if (clients.openWindow) return clients.openWindow('/');
+    if (clients.openWindow) return clients.openWindow(matchId ? '/?wl_match=' + encodeURIComponent(matchId) : '/');
   })());
 });

@@ -28,7 +28,9 @@ land recipients in a console wearing another vertical's labels and gates.
 1. **Pick the agency prospects** in CityLauncher (category: Estate Agents) — name,
    admin email per agency.
 2. **Mint consoles + links**: `POST https://trustsquare.co/agencies/wave-prep`
-   (X-Api-Key: app key) with `{"agencies":[{"name":"...","admin_email":"..."}],
+   (X-Api-Key: app key **and X-Admin-Key: MS_ADMIN_KEY** -- the route is admin-only since
+   SEC-GATE-1, 24 Sep 2026, and refuses the app key alone; ADMIN-KEY-LOCAL-1, 25 Sep 2026
+   inspection, qa-11) with `{"agencies":[{"name":"...","admin_email":"..."}],
    "link_days":14}`. Idempotent — safe to re-run; existing orgs get a fresh link,
    never a duplicate. Orgs land verified=0 (verification is earned on application).
    NO email is sent by this call.

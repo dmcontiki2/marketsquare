@@ -4,6 +4,34 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>TrustSquare · Orchestrator</title>
+<script>
+/* ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-01/qa-04): /dashboard/summary and /dashboard/cost are admin routes
+   (the gate refuses a caller with no admin credential), and this page read them bare -- so its Session and AI-spend
+   tiles showed nothing. Same wrapper as dashboard.server.html (SEC-GATE-1): every call to this page's own server
+   carries the admin token the dashboard keeps in sessionStorage (ms_admin_token), and a renewed token is kept.
+   No token -> the call goes out exactly as before and the tiles read 'not measured', never a guess. */
+(function(){
+  if (window.__tsAdminFetch) return; window.__tsAdminFetch = true;
+  var _f = window.fetch.bind(window);
+  window.fetch = function(input, init){
+    try {
+      var url = (typeof input === 'string') ? input : ((input && input.url) || '');
+      var own = url.indexOf('http') !== 0 || url.indexOf(location.origin) === 0 || url.indexOf('https://trustsquare.co') === 0;
+      var tok = sessionStorage.getItem('ms_admin_token');
+      if (own && tok) {
+        init = Object.assign({}, init || {});
+        var h = new Headers(init.headers || ((typeof input !== 'string' && input && input.headers) || {}));
+        if (!h.has('X-Admin-Token')) h.set('X-Admin-Token', tok);
+        init.headers = h;
+      }
+    } catch (e) {}
+    return _f(input, init).then(function(r){
+      try { var nt = r.headers.get('X-Admin-Token-Renewed'); if (nt) sessionStorage.setItem('ms_admin_token', nt); } catch (e) {}
+      return r;
+    });
+  };
+})();
+</script>
 <style>
   :root{
     --bg:#0b1220; --card:#131c2e; --card2:#0f1828; --line:#243149;

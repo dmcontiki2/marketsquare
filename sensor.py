@@ -30,9 +30,55 @@ LOGMD = os.path.join(ORCH, "log.md" if LIVE else "log.cron.md")
 SENSOR_VERSION = "cron-sensor v1.0 (RM-4 P1, deterministic, zero-token)"
 
 
-def _curl_json(path, timeout=8):
+def _app_admin_key():
+    """ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-01/qa-04): the admin key exactly as the RUNNING app holds it.
+
+    /dashboard/cost and /dashboard/summary are admin routes; this sensor used to read them over loopback with no
+    key, which is the only reason the gate kept a loopback exemption for them. The app compares X-Admin-Key with
+    ITS OWN environment, so that is read first (/proc/<MainPID>/environ -- this runs as root from cron); the
+    service's secrets file and the app .env are fallbacks for a moment when the app is between processes. The
+    value is never printed or written anywhere; '' when none is readable (the reads then degrade, as before)."""
+    v = os.environ.get("MS_ADMIN_KEY", "").strip()
+    if v:
+        return v
     try:
-        out = subprocess.run(["curl", "-s", "--max-time", str(timeout), BASE + path],
+        pid = subprocess.run(["systemctl", "show", "-p", "MainPID", "--value", "marketsquare"],
+                             capture_output=True, text=True, timeout=10).stdout.strip()
+        if pid.isdigit() and pid != "0":
+            with open("/proc/%s/environ" % pid, "rb") as fh:
+                for kv in fh.read().split(b"\0"):
+                    if kv.startswith(b"MS_ADMIN_KEY="):
+                        v = kv.split(b"=", 1)[1].decode("utf-8", "replace").strip()
+                        if v:
+                            return v
+    except Exception:
+        pass
+    for path in ("/etc/marketsquare/secrets.env", os.path.join(ROOT, ".env")):
+        try:
+            for ln in open(path, encoding="utf-8"):
+                ln = ln.strip()
+                if ln.startswith("export "):
+                    ln = ln[7:].strip()
+                if ln.startswith("MS_ADMIN_KEY="):
+                    v = ln.split("=", 1)[1].strip().strip('"').strip("'")
+                    if v:
+                        return v
+        except OSError:
+            pass
+    return ""
+
+
+def _curl_json(path, timeout=8, admin=False):
+    try:
+        cmd = ["curl", "-s", "--max-time", str(timeout)]
+        feed = None
+        if admin:
+            # ADMIN-KEY-LOCAL-1: the header travels on stdin (-H @-), so the key never appears in the process list.
+            k = _app_admin_key()
+            if k:
+                cmd += ["-H", "@-"]
+                feed = ("X-Admin-Key: %s\n" % k).encode("utf-8")
+        out = subprocess.run(cmd + [BASE + path], input=feed,
                              capture_output=True, timeout=timeout + 5)
         return json.loads(out.stdout.decode("utf-8", "replace"))
     except Exception:
@@ -102,8 +148,8 @@ def main():
     dow = int(now.strftime("%u"))  # 1=Mon
 
     health = _curl_json("/health") or {}
-    cost = _curl_json("/dashboard/cost") or {}
-    summ = _curl_json("/dashboard/summary") or {}
+    cost = _curl_json("/dashboard/cost", admin=True) or {}        # ADMIN-KEY-LOCAL-1 (qa-01): admin route
+    summ = _curl_json("/dashboard/summary", admin=True) or {}     # ADMIN-KEY-LOCAL-1 (qa-04): admin route
     ceil = cost.get("ceilings") or {}
 
     passed, total, green = run_smoke()

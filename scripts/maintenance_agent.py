@@ -409,9 +409,16 @@ def open_faults(key):
 # EMAIL_AUTO_SEND and legal/compliance stay excluded. What it buys is that the run report
 # and the console can no longer say "0 seen" without also saying what the customer lane
 # holds. Counts-only by construction: DASH-TRIAGE-REDACT-1 (RG-0222) serves rows only to
-# an admin credential, which this agent does not hold and should not.
+# an admin credential. Since CENSUS-DOOR-1 / ADMIN-KEY-LOCAL-1 (25 Sep 2026) this census
+# presents that credential for its ONE read (the route is admin-only everywhere now) and
+# still throws the rows away unread -- the brain never sees a customer's message.
 def _staff_key_for_census():
-    """MS_ADMIN_KEY from .secrets/deploy_keys.txt, or '' (off David's machine / on the box)."""
+    """MS_ADMIN_KEY for the counts-only census read, or '' when this machine holds none.
+
+    David's machine: .secrets/deploy_keys.txt. ON THE BOX (ADMIN-KEY-LOCAL-1, 25 Sep 2026 inspection, qa-02): the
+    key the RUNNING app holds -- its /proc/<MainPID>/environ (this unit runs as root), then the service secrets
+    file and the app .env. The loopback exemption this read used to lean on is gone, so on the box it must carry
+    the key like every other caller. Used for this one GET only; the value is never printed or stored."""
     try:
         with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                ".secrets", "deploy_keys.txt"), encoding="utf-8") as f:
@@ -420,6 +427,33 @@ def _staff_key_for_census():
                     return ln.split("=", 1)[1].strip()
     except Exception:
         pass
+    v = os.environ.get("MS_ADMIN_KEY", "").strip()
+    if v:
+        return v
+    try:
+        pid = subprocess.run(["systemctl", "show", "-p", "MainPID", "--value", "marketsquare"],
+                             capture_output=True, text=True, timeout=10).stdout.strip()
+        if pid.isdigit() and pid != "0":
+            with open("/proc/%s/environ" % pid, "rb") as fh:
+                for kv in fh.read().split(b"\0"):
+                    if kv.startswith(b"MS_ADMIN_KEY="):
+                        v = kv.split(b"=", 1)[1].decode("utf-8", "replace").strip()
+                        if v:
+                            return v
+    except Exception:
+        pass
+    for path in ("/etc/marketsquare/secrets.env", "/var/www/marketsquare/.env"):
+        try:
+            for ln in open(path, encoding="utf-8"):
+                ln = ln.strip()
+                if ln.startswith("export "):
+                    ln = ln[7:].strip()
+                if ln.startswith("MS_ADMIN_KEY="):
+                    v = ln.split("=", 1)[1].strip().strip('"').strip("'")
+                    if v:
+                        return v
+        except OSError:
+            pass
     return ""
 
 
@@ -430,25 +464,21 @@ def email_lane_census():
     GET /dashboard/email-triage admin-only (loopback automation on the box still admitted),
     so the anonymous counts read this census was built on returned 401 and RG-0223 went red.
     Same class as GATE-SYNC-1 (RG-0457), and the same decision: a reader of a route the gate
-    closed moves to the staff door. The anonymous read is tried first (on the box, loopback
-    is admitted); on 401/403 the census retries once with X-Admin-Key when this machine holds
-    one. COUNTS ONLY is kept by construction: whatever the door, 'items' is never copied into
-    the report -- the agent still never reads, drafts or quotes a customer message.
+    closed moves to the staff door. ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-02): the box
+    no longer admits a key-less loopback read either, so the census goes straight to the staff
+    door whenever this machine holds the key (David's machine: deploy_keys.txt; the box: the
+    running app's own key) and reads anonymously only when it holds none. COUNTS ONLY is kept
+    by construction: whatever the door, 'items' is never copied into the report -- the agent
+    still never reads, drafts or quotes a customer message.
     """
     try:
         def _read(hdrs):
             req = urllib.request.Request(BASE + "/dashboard/email-triage?limit=1", headers=hdrs)
             with urllib.request.urlopen(req, timeout=20) as r:
                 return json.loads(r.read().decode() or "{}")
-        door = "anonymous"
-        try:
-            d = _read(dict(UA_HEADER))
-        except urllib.error.HTTPError as he:
-            _k = _staff_key_for_census()
-            if he.code not in (401, 403) or not _k:
-                raise
-            d = _read(dict(UA_HEADER, **{"X-Admin-Key": _k}))
-            door = "staff"
+        _k = _staff_key_for_census()
+        door = "staff" if _k else "anonymous"
+        d = _read(dict(UA_HEADER, **({"X-Admin-Key": _k} if _k else {})))
         d.pop("items", None)          # counts only, whatever the door
         st = d.get("by_status_30d") or {}
         held = int(st.get("drafted", 0)) + int(st.get("failed", 0))

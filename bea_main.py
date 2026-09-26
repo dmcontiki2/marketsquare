@@ -349,6 +349,35 @@ def _eula_apply_material(conn):
     return n
 
 
+# PRICE-NUM-1 (25 Sep 2026 inspection, backend-10): the numeric mirror of a price is its FIRST amount, with a k / m
+# multiplier. The old reader glued every digit in the text together ('R1 000-R5 000' became 10005000, 'R350 /
+# call-out + R300 / hour' became 350300), and only the boot backfill wrote it, so a new advert had none until the
+# next restart. Thousands may be split by spaces, commas or apostrophes; a decimal comma is read as a decimal.
+_PRICE_NUM_RE = re.compile(
+    r"(\d{1,3}(?:[ ,\u00a0\u202f'](?=\d{3}(?!\d))\d{3})+(?:\.\d+)?|\d+(?:[.,]\d+)?)"
+    r"\s*(k|m|mil|mill?ion|bn|billion)?(?![a-z])", re.I)
+_PRICE_NUM_MULT = {"k": 1e3, "m": 1e6, "mil": 1e6, "milion": 1e6, "million": 1e6, "bn": 1e9, "billion": 1e9}
+
+
+def _price_number(price):
+    """The first amount in a price text as a float, or None (POA, 'Ask me', empty)."""
+    if price is None:
+        return None
+    m = _PRICE_NUM_RE.search(str(price))
+    if not m:
+        return None
+    raw = m.group(1)
+    if re.fullmatch(r"\d{1,3}(?:[ ,\u00a0\u202f']\d{3})+(?:\.\d+)?", raw):
+        raw = re.sub(r"[ ,\u00a0\u202f']", "", raw)
+    else:
+        raw = raw.replace(",", ".")
+    try:
+        v = float(raw) * _PRICE_NUM_MULT.get((m.group(2) or "").lower(), 1)
+    except ValueError:
+        return None
+    return v if v > 0 else None
+
+
 def run_migrations(conn):
     """Add suburbs table and suburb column to listings if not present."""
     conn.execute("""
@@ -480,18 +509,18 @@ def run_migrations(conn):
     # price_num: numeric mirror of the TEXT price for honest server-side filtering.
     if "price_num" not in listing_cols:
         conn.execute("ALTER TABLE listings ADD COLUMN price_num REAL")
-    # Backfill any unparsed rows (idempotent, cheap at current scale).
+    # Backfill (idempotent, cheap at current scale). PRICE-NUM-1 (25 Sep 2026 inspection, backend-10): every priced
+    # row is re-read with the first-amount parser, so the values the old digit-gluing reader got wrong are corrected
+    # once; a row whose stored value already agrees is not written again.
     try:
-        import re as _re_pm
-        _rows = conn.execute("SELECT id, price FROM listings WHERE price_num IS NULL AND price IS NOT NULL").fetchall()
+        _rows = conn.execute("SELECT id, price, price_num FROM listings WHERE price IS NOT NULL").fetchall()
         for _r in _rows:
-            _c = _re_pm.sub(r"[^0-9.]", "", str(_r["price"]).replace(",", "").replace(" ", ""))
-            try:
-                _v = float(_c)
-                if _v > 0:
-                    conn.execute("UPDATE listings SET price_num=? WHERE id=?", (_v, _r["id"]))
-            except Exception:
-                pass
+            _v = _price_number(_r["price"])
+            _old = _r["price_num"]
+            if _v is None and _old is None:
+                continue
+            if _v is None or _old is None or abs(float(_old) - _v) > 1e-6:
+                conn.execute("UPDATE listings SET price_num=? WHERE id=?", (_v, _r["id"]))
     except Exception:
         pass
     conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_price_num ON listings(price_num)")
@@ -3047,8 +3076,8 @@ def ops_selfcheck(_key: str = Depends(auth.require_api_key)):
 async def purge_cache(request: Request, x_admin_key: str = Header(None)):
     """Purge Cloudflare cache. Called automatically after deploys.
     ADMIN-LOCALGUARD-1 (24 Sep 2026): fail-closed — was open to anonymous external callers
-    when the env key was unset (found by scripts/authz_probe.py). The deploy calls this
-    directly on localhost (no X-Forwarded-For); external callers always carry one."""
+    when the env key was unset (found by scripts/authz_probe.py). ADMIN-KEY-LOCAL-1 (25 Sep 2026
+    inspection, qa-10): the deploy's loopback purge now sends X-Admin-Key like every other caller."""
     if not _admin_local_or_key(request, x_admin_key, "purge-cache"):
         raise HTTPException(status_code=403, detail="Not found")
     await _cf_purge_all()
@@ -3252,6 +3281,142 @@ def _reset_vehicle_confirmations(existing, d):
         d["spec_confirmed"] = json.dumps(conf)
 
 
+# ── STRANGER-GATE-1 (25 Sep 2026 inspection, backend-05) · RUL-115 / RUL-153 ──────────────────────────────────
+# RUL-115 (David, 9 Sep 2026): a Casuals worker -- a housekeeper, a gardener, a home cleaner -- is LISTED the moment
+# she finishes, but until one employer confirmation or an ID check lands she does not appear to strangers AT ALL:
+# absent, not greyed out, because a visible-but-locked card still leaks her free days and her area.
+# RUL-153 (19 Sep 2026): for the roles where she is alone with a child or a dependent adult -- Nanny, Caregiver,
+# Crèche assistant, and Au pair (RUL-172) -- it is a VERIFIED police clearance that opens public visibility.
+# She always sees her own advert; staff see everything; demo, exemplar and showcase adverts are not real people
+# and stay visible. ONE predicate serves every read that lists or shows adverts to strangers.
+_GATE_CATEGORIES = ("services", "housekeeping", "homehelp")
+_GATE_VOUCH_SIGNALS = ("universal.employer_confirmed", "universal.employer_confirmed_2")
+_GATE_ID_SIGNALS = ("universal.id_verified", "category.lm.id_ai_verified")
+_GATE_CLEARANCE_SIGNALS = ("category.services_cas.clearance", "category.tutors.clearance")
+_GATE_ROLES = {"casual": None, "clearance": None}
+
+
+def _gate_role_names():
+    """(casual role names, police-clearance role names), lowercased, from roles/role_registry.json (English label and
+    aliases). The Quick Services door sends the role's English label as service_type; the old Housekeeping door and
+    the Listing Coach send service_class 'Casuals', which the predicate reads as well."""
+    if _GATE_ROLES["casual"] is None:
+        casual = set()
+        clearance = {"nanny", "caregiver", "crèche assistant", "creche assistant", "au pair",
+                     "childminding", "child minding"}   # the old Housekeeping door and the Coach call nanny work this
+        try:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "roles", "role_registry.json"),
+                      encoding="utf-8") as _fh:
+                for _r in json.load(_fh).get("roles", []):
+                    _names = {str((_r.get("label") or {}).get("en") or "").strip().lower()}
+                    _names |= {str(_a).strip().lower() for _a in (_r.get("aliases") or [])}
+                    _names.discard("")
+                    if (_r.get("gate") or {}).get("type") == "police_clearance":
+                        clearance |= _names
+                    elif (_r.get("service_class") or "").strip().lower() == "casuals":
+                        casual |= _names
+        except Exception as _rex:
+            _log.warning("STRANGER-GATE-1: role registry unreadable (%s) -- service_class alone decides", _rex)
+        _GATE_ROLES["casual"], _GATE_ROLES["clearance"] = casual - clearance, clearance
+    return _GATE_ROLES["casual"], _GATE_ROLES["clearance"]
+
+
+def _sql_lit(s) -> str:
+    return "'" + str(s).replace("'", "''") + "'"
+
+
+def _stranger_hidden_sql(p: str = "l.") -> str:
+    """SQL, TRUE when the advert row (its columns prefixed with p) must not be shown to a stranger. Every value in
+    it comes from this file or the role registry, never from a request."""
+    casual, clearance = _gate_role_names()
+    st = "LOWER(TRIM(COALESCE(%sservice_type,'')))" % p
+    who = "LOWER(TRIM(COALESCE(%sseller_email,'')))" % p
+
+    # Uncorrelated IN-lists: each is built once per query (a correlated EXISTS was planned against the status
+    # index and re-scanned every earned credential for every advert -- ten times slower on 4,000 adverts).
+    def _has(sigs):
+        return ("%s IN (SELECT LOWER(TRIM(_gc.email)) FROM user_credentials _gc WHERE _gc.signal_id IN (%s) "
+                "AND _gc.status = 'earned')" % (who, ",".join(_sql_lit(x) for x in sigs)))
+    _id_on_file = ("%s IN (SELECT LOWER(TRIM(_gu.email)) FROM users _gu WHERE _gu.id_verified_at IS NOT NULL)" % who)
+    clr_in = ",".join(_sql_lit(x) for x in sorted(clearance)) or "''"
+    cas_in = ",".join(_sql_lit(x) for x in sorted(casual)) or "''"
+    return ("(LOWER(COALESCE(%scategory,'')) IN (%s) AND COALESCE(%sis_demo,0) = 0 AND COALESCE(%ssuper_example,0) = 0 "
+            "AND COALESCE(%sshowcase,0) = 0 AND (CASE "
+            "WHEN %s IN (%s) THEN (CASE WHEN %s THEN 0 ELSE 1 END) "
+            "WHEN LOWER(COALESCE(%sservice_class,'')) = 'casuals' OR %s IN (%s) "
+            "THEN (CASE WHEN %s OR %s OR %s THEN 0 ELSE 1 END) "
+            "ELSE 0 END) = 1)" % (
+                p, ",".join(_sql_lit(c) for c in _GATE_CATEGORIES), p, p, p,
+                st, clr_in, _has(_GATE_CLEARANCE_SIGNALS),
+                p, st, cas_in,
+                _has(_GATE_VOUCH_SIGNALS), _has(_GATE_ID_SIGNALS), _id_on_file))
+
+
+def _stranger_visible_sql(p: str = "l.", viewer: str = "") -> str:
+    """SQL, TRUE when the row may be shown to this viewer: not gated, or the viewer is its seller."""
+    v = (viewer or "").strip().lower()
+    own = (" OR LOWER(TRIM(COALESCE(%sseller_email,''))) = %s" % (p, _sql_lit(v))) if v else ""
+    return "(NOT %s%s)" % (_stranger_hidden_sql(p), own)
+
+
+def _hidden_from_strangers(conn, listing_id) -> bool:
+    """The same predicate for ONE advert (single-advert reads, the status card, buyer matching)."""
+    try:
+        r = conn.execute("SELECT %s AS h FROM listings l WHERE l.id = ?" % _stranger_hidden_sql("l."),
+                         (int(listing_id),)).fetchone()
+        return bool(r and r["h"])
+    except Exception as _hex:
+        _log.warning("STRANGER-GATE-1: gate check failed for listing %s: %s", listing_id, _hex)
+        return False
+
+
+def _staff_caller(x_admin_key=None, x_admin_token=None) -> bool:
+    if x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY:
+        return True
+    if x_admin_token:
+        try:
+            return bool(_admin_claims(x_admin_token))
+        except Exception:
+            return False
+    return False
+
+
+def _etag_matches(if_none_match: str, tag: str) -> bool:
+    """LIST-ETAG-1: RFC 9110 weak comparison of an If-None-Match list against one entity tag."""
+    want = tag[2:] if tag.startswith("W/") else tag
+    for part in (if_none_match or "").split(","):
+        p = part.strip()
+        if p == "*":
+            return True
+        if (p[2:] if p.startswith("W/") else p) == want:
+            return True
+    return False
+
+
+def _listings_etag(request, response, payload, viewer, staff):
+    """LIST-ETAG-1 (25 Sep 2026 inspection, ts1-15): an unchanged list costs a phone almost nothing.
+
+    The app re-reads the city's list while it is on screen (every 3 minutes since ts1-15's app half); each read was
+    up to 200 adverts with full descriptions, identical to the last one most of the time. A signed-out answer now
+    carries a weak ETag over exactly what is served, with Cache-Control no-cache: the browser keeps the list and
+    asks 'still the same?' (If-None-Match) on every read, and an unchanged list answers 304 with no body. Nothing
+    can go stale: every read is still checked here against the live rows. A signed-in or staff answer is shaped by
+    who is asking and keeps its 'private, no-store' (STRANGER-GATE-1), so it never gets a tag. Any fault in the
+    tag falls back to the plain answer -- this can only ever save bytes, never break the feed."""
+    if viewer or staff or request is None or response is None:
+        return payload
+    try:
+        blob = json.dumps(payload, sort_keys=True, default=str, separators=(",", ":"), ensure_ascii=False)
+        tag = 'W/"ls-' + hashlib.sha256(blob.encode("utf-8")).hexdigest()[:32] + '"'
+        if _etag_matches(request.headers.get("if-none-match") or "", tag):
+            return Response(status_code=304, headers={"ETag": tag, "Cache-Control": "no-cache"})
+        response.headers["ETag"] = tag
+        response.headers["Cache-Control"] = "no-cache"
+    except Exception as _ee:
+        _log.warning("LIST-ETAG-1: tag skipped (%s)", _ee)
+    return payload
+
+
 @app.get("/listings")
 def get_listings(city: str = "Pretoria", category: Optional[str] = None,
                  suburb: Optional[str] = None, demo: int = 0,
@@ -3261,7 +3426,8 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
                  trust_min: Optional[int] = None,
                  make: Optional[str] = None, model: Optional[str] = None,
                  year_min: Optional[int] = None, year_max: Optional[int] = None,
-                 facets: int = 0):
+                 facets: int = 0, request: Request = None, response: Response = None,
+                 ts_user: str = Cookie(default=None)):
     conn = database.get_db()
     # M0 pagination: default page_size=200 preserves prior behaviour; FEA passes page/page_size for infinite scroll
     page = max(1, page)
@@ -3332,6 +3498,21 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
         _xw.append("vehicle_year >= ?"); _xp.append(year_min)
     if year_max is not None:
         _xw.append("vehicle_year <= ?"); _xp.append(year_max)
+    # STRANGER-GATE-1 (25 Sep 2026 inspection, backend-05): an unvouched worker is absent from EVERY branch of this
+    # feed for strangers (the outer filter below wraps them all); she still finds her own advert, staff see all.
+    _gate_viewer = ""
+    try:
+        _gate_viewer = (_session_email(ts_user) or "").strip().lower() if ts_user else ""
+    except Exception:
+        _gate_viewer = ""
+    try:
+        _gate_staff = bool(request is not None and _gate_is_admin(request.headers, request.cookies))
+    except Exception:
+        _gate_staff = False
+    if not _gate_staff:
+        _xw.append(_stranger_visible_sql("", _gate_viewer))
+    if (_gate_viewer or _gate_staff) and response is not None:
+        response.headers["Cache-Control"] = "private, no-store"   # this answer is shaped by who is asking
     _extra_where = (" WHERE " + " AND ".join(_xw)) if _xw else ""
     _sort_map = {
         # SUPER-PIN-1 (20 Jul 2026, David): super_example exemplars are LIVE LAUNCH
@@ -3502,8 +3683,8 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
             fc["error"] = "facets unavailable"
         finally:
             conn2.close()
-        return {"items": out, "facets": fc}
-    return out
+        return _listings_etag(request, response, {"items": out, "facets": fc}, _gate_viewer, _gate_staff)   # LIST-ETAG-1
+    return _listings_etag(request, response, out, _gate_viewer, _gate_staff)   # LIST-ETAG-1 (ts1-15)
 
 # ═══════════════════════════════════════════════════════════════════════════════════════
 # ZOOM — the narrowing funnel (ZOOM-HMI-1 · RUL-076/078/089 · RG-0221 · 17 Sep 2026)
@@ -3551,13 +3732,15 @@ def _buyer_reach_tier(conn, email: str) -> str:
             return "free"
     return "free"
 
-def _zoom_candidates(conn, cat_norm: str, city: str, demo: int, tier: str):
+def _zoom_candidates(conn, cat_norm: str, city: str, demo: int, tier: str, viewer: str = ""):
     """The reach-scoped set. Travel is borderless (canon 2a); online-mode rows are borderless
     (canon 2b); physical categories are the buyer's city (+ extended) for Free and every city
     for Global. Returns (rows, locked_geo) where locked_geo carries the TRUE counts of cities a
     Free buyer cannot open (spec 6.2 rule 3: locked != empty)."""
     susp = "(l.suspension_reason IS NULL OR l.suspension_reason = '') AND (l.listing_status IS NULL OR l.listing_status = 'live')"
     demo_f = "" if demo else "AND (l.is_demo = 0 OR l.is_demo IS NULL)"
+    # STRANGER-GATE-1 (25 Sep 2026 inspection, backend-05): the funnel counts and shows only what strangers may see.
+    susp = susp + " AND " + _stranger_visible_sql("l.", viewer)
     base = "SELECT l.*, gs.lat AS suburb_lat, gs.lng AS suburb_lng FROM listings l LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id WHERE " + susp + " " + demo_f
     locked = []
     if cat_norm == "Travel":
@@ -3615,7 +3798,7 @@ def zoom_next(category: str, city: str = "Pretoria", f: Optional[str] = None, q:
     try:
         # SEC-GATE-1 (24 Sep 2026): reach tier comes from the proven session, never the typed ?email= (which let anyone borrow a Pro account's global reach).
         tier = _buyer_reach_tier(conn, _session_email(ts_user) or "")
-        cands, locked = _zoom_candidates(conn, cat_norm, city, demo, tier)
+        cands, locked = _zoom_candidates(conn, cat_norm, city, demo, tier, _session_email(ts_user) or "")
         # quality: the stored column; a row stamped before the column existed is scored live
         def _qf(r):
             return _import_quality_score(r)[0]
@@ -3690,7 +3873,7 @@ def zoom_watch_list(email: str):
                     if ":" in part:
                         k, v = part.split(":", 1); chosen[k] = unquote(v)
                 tier = _buyer_reach_tier(conn, email)
-                cands, _lk = _zoom_candidates(conn, d["category"], d["city"] or "Pretoria", 0, tier)
+                cands, _lk = _zoom_candidates(conn, d["category"], d["city"] or "Pretoria", 0, tier, email)
                 res = _zoom.next_step(cands, d["category"], chosen, tier=tier)
                 d["total"] = res["total"]; d["ids"] = res["ids"][:12]
             except Exception:
@@ -3815,6 +3998,7 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
          listing.spec_confirmed, _country)
     )
     new_id = cursor.lastrowid
+    conn.execute("UPDATE listings SET price_num = ? WHERE id = ?", (_price_number(listing.price), new_id))   # PRICE-NUM-1
     # LANG-LAYER-1 (RUL-162): record the advert's original language when the composer knows it
     # (the Quick door does -- she chose it). Only a language we serve is stored; anything else is dropped.
     try:
@@ -4258,7 +4442,26 @@ class _QuickPublishIn(BaseModel):
 
 
 _QP_IP_LOG = {}
-_QP_IP_MAX = 5            # one-tap publishes per client address per 24h (AUDIT-Q1)
+# QUICK-LIMIT-1 (25 Sep 2026 inspection, backend-01): five saves per address per day locked out everybody after the
+# fifth person on one mobile network, office Wi-Fi or employer hotspot, and a signed-in member's saves used up the
+# strangers' allowance. Now a signed-in member is never counted here (her own account carries its limits), only a
+# save that really created an advert for a signed-out person counts, the per-address ceiling is sized for a shared
+# connection, and a typed e-mail address has its own daily cap, counted in the database so a restart cannot reset it.
+_QP_IP_MAX = 50           # signed-out saves per client address per 24h (AUDIT-Q1, raised by QUICK-LIMIT-1)
+_QP_ID_MAX = 10           # adverts per typed e-mail address per 24h (QUICK-LIMIT-1, read from the listings table)
+
+
+def _qp_identity_kind(em):
+    """SMS-TRUTH-1 (25 Sep 2026 inspection, backend-07): how introductions reach this seller. A key account is
+    'phone' only when a phone number is really on file; an employer-enrolled or WhatsApp-link account has none and
+    is 'link' (her hub). Anyone else is 'email'."""
+    if not _is_key_identity(em):
+        return "email"
+    conn = database.get_db()
+    try:
+        return "phone" if _user_phone(conn, em) else "link"
+    finally:
+        conn.close()
 
 
 def _qp_client_ip(request):
@@ -4268,7 +4471,7 @@ def _qp_client_ip(request):
 
 
 @app.post("/listings/quick-publish")
-def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, request: Request,
+def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, request: Request, response: Response,
                   ts_user: str = Cookie(default=None)):
     """ONE-TAP-PUBLISH-1 (David, 23 Sep 2026: "make the SAVE and PUBLISH a single tap -- your reasoning
     here is impeccable"; RUL-145: no wall, no account). The Quick door's one ask -- her email, on a
@@ -4290,7 +4493,7 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     now_t = _qt.time()
     hits = [t for t in _QP_IP_LOG.get(ip, []) if now_t - t < 86400]
     if len(hits) >= _QP_IP_MAX and not sess:
-        raise HTTPException(status_code=429, detail="Too many adverts from this connection today -- please try again tomorrow.")
+        raise HTTPException(status_code=429, detail="Too many adverts from this connection today — please try again tomorrow.")
     try:
         _probe = dict(body.listing or {}); _probe["seller_email"] = "probe@trustsquare.co"
         Listing(**{k: v for k, v in _probe.items() if k in Listing.__fields__})
@@ -4314,12 +4517,22 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
         em = (sess or body.email or "").strip().lower()
         if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", em):
             raise HTTPException(status_code=400, detail="Please type an email address we can reach you on.")
+        if not sess:
+            # QUICK-LIMIT-1 (25 Sep 2026 inspection, backend-01): the abuse cap follows the typed address, not the
+            # shared connection -- one address cannot be flooded with drafts from any number of places.
+            conn = database.get_db()
+            try:
+                _n_addr = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE LOWER(seller_email)=? AND created_at > ?",
+                                       (em, _sql_since(hours=24))).fetchone()["n"]
+            finally:
+                conn.close()
+            if _n_addr >= _QP_ID_MAX:
+                raise HTTPException(status_code=429, detail="Too many adverts for this email address today — please try again tomorrow.")
     # AUDIT-Q1 (23 Sep 2026): one tap may create a NEW seller and publish at once, but it may never act
     # for somebody who already exists. An address that already has an account, typed by someone who
     # is not signed in as it, gets a DRAFT and a sign-in link to that inbox -- only its owner can
     # publish it, and nobody's terms are accepted on their behalf. A per-address rate limit stops the
     # door being used to mail strangers.
-    hits.append(now_t); _QP_IP_LOG[ip] = hits
     conn = database.get_db()
     try:
         _u = conn.execute("SELECT email, eula_accepted_at FROM users WHERE LOWER(email)=?", (em,)).fetchone()
@@ -4344,10 +4557,13 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
         raise HTTPException(status_code=422, detail="That advert is missing something: %s" % str(exc)[:160])
     created = create_listing(listing, background_tasks, "quick-door")
     lid = int(created["id"])
+    if not sess:
+        # QUICK-LIMIT-1 (25 Sep 2026 inspection, backend-01): only a signed-out save that created an advert counts.
+        hits.append(now_t); _QP_IP_LOG[ip] = hits
     if existing_account:
         _log.info("ONE-TAP-PUBLISH-1: %s already has an account and is not signed in -- draft %s + sign-in letter", em, lid)
         return {"id": lid, "live": False, "verify": True,
-                "detail": "You already have a TrustSquare account. We emailed you a link -- open it to publish."}
+                "detail": "You already have a TrustSquare account. We emailed you a link — open it to publish."}
     if not signed_member:
         conn = database.get_db()
         try:
@@ -4358,25 +4574,32 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
             conn.close()
         _log.info("EULA-SIGNOFF-1: draft %s for %s -- EULA not yet signed, publish happens in the app", lid, em)
         if key_secret:
+            # ONE-KEY-1 (25 Sep 2026 inspection, quick-02): this phone stays signed in as the key account it just made,
+            # so 'List something else' saves her next advert under the SAME key and hub instead of minting a second
+            # anonymous account. Only a brand-new account is signed in here -- nobody else's -- and an email save is
+            # never signed in by a typed address (AUDIT-Q1: that needs the inbox to prove it).
+            _establish_user_session(em, response)
             # the one time the secret travels: back to her, to send to herself on WhatsApp
             return {"id": lid, "live": False, "need": "eula", "identity": "link",
                     "key_url": APP_URL + "/k/" + key_secret + "?draft=" + str(lid),
-                    "detail": "Your advert is saved. The private link below is your key to it -- send it to yourself on WhatsApp, then open it to read and sign the Terms and publish."}
+                    "detail": "Your advert is saved. The private link below is your key to it — send it to yourself on WhatsApp, then open it to read and sign the Terms and publish."}
         if _is_key_identity(em):
-            # a phone-code session: hand back a sign-in hop so the app opens on her draft
-            return {"id": lid, "live": False, "need": "eula", "identity": "phone",
+            # a key-account session (phone code, employer slip or WhatsApp link): hand back a sign-in hop so the app
+            # opens on her draft. SMS-TRUTH-1 (25 Sep 2026 inspection, backend-07): 'phone' only when a number is on file.
+            return {"id": lid, "live": False, "need": "eula", "identity": _qp_identity_kind(em),
                     "open_url": _mint_signin_url(em, lid, 60),
                     "detail": "Your advert is saved. Open it in TrustSquare, read and sign the Terms, and publish."}
-        return {"id": lid, "live": False, "need": "eula",
-                "detail": "Your advert is saved. We emailed you a link -- open it in TrustSquare, read and sign the Terms, and publish."}
+        return {"id": lid, "live": False, "need": "eula", "identity": "email",
+                "detail": "Your advert is saved. We emailed you a link — open it in TrustSquare, read and sign the Terms, and publish."}
     _log.info("ONE-TAP-PUBLISH-1: listing %s published in one tap by signed member %s", lid, em)
     try:
         publish_listing(lid, em)
     except HTTPException as he:
         background_tasks.add_task(_quick_draft_return, em, lid, listing.title)   # AUDIT-Q3: the way back is real
-        return {"id": lid, "live": False, "detail": he.detail, "status": he.status_code}
+        return {"id": lid, "live": False, "detail": he.detail, "status": he.status_code,
+                "identity": _qp_identity_kind(em)}   # SMS-TRUTH-1 (25 Sep 2026 inspection, backend-07)
     background_tasks.add_task(_quick_live_mail, em, lid, listing.title)
-    return {"id": lid, "live": True}
+    return {"id": lid, "live": True, "identity": _qp_identity_kind(em)}   # SMS-TRUTH-1: how introductions reach her
 
 
 @app.get("/k/{secret}")
@@ -4430,6 +4653,16 @@ def listing_status_card(listing_id: int, ts_user: str = Cookie(default=None)):
     finally:
         conn.close()
     owner = bool(seller) and _session_email(ts_user) == seller
+    if not owner:
+        # STRANGER-GATE-1 (25 Sep 2026 inspection, backend-05): the card of an advert strangers may not see is hers
+        # to make and share, never a public picture anyone can fetch by number.
+        _gcon = database.get_db()
+        try:
+            _gate_hidden = _hidden_from_strangers(_gcon, listing_id)
+        finally:
+            _gcon.close()
+        if _gate_hidden:
+            raise HTTPException(status_code=404, detail="Listing not found")
     first_name = (u["name"] if (owner and u and u["name"]) else None)
     trust = l.get("trust_score") if l.get("trust_score") is not None else (u["trust_score"] if u else None)
     link = APP_URL + "/?listing=%d&src=status" % int(listing_id)
@@ -4456,11 +4689,31 @@ def auth_session_link(draft: int = 0, ts_user: str = Cookie(default=None)):
 class _PhoneStart(BaseModel):
     phone: str
     name: str = ""
+    country: str = ""     # PHONE-CC-1: the country Quick is set to (QCC)
 
 class _PhoneVerify(BaseModel):
     phone: str
     code: str
     draft: int = 0
+    country: str = ""     # PHONE-CC-1
+
+
+def _phone_e164(phone, explicit_country, request):
+    """PHONE-CC-1 (25 Sep 2026 inspection, backend-12): a number typed the local way (0712 345 678) belongs to the
+    seller's own country. The country Quick names is used to place it; failing that, Cloudflare's country for this
+    visitor -- and outside South Africa a local number is then REFUSED rather than guessed, because guessing sent the
+    code to a stranger's South African phone. A number typed with its + country code is always accepted.
+    Returns (e164 or None, country used)."""
+    import sms_provider
+    cc = (explicit_country or "").strip().upper()[:2]
+    explicit = bool(cc)
+    if not cc:
+        try:
+            cc = ((request.headers.get("cf-ipcountry") if request is not None else "") or "").strip().upper()[:2]
+        except Exception:
+            cc = ""
+    cc = cc if re.fullmatch(r"[A-Z]{2}", cc or "") and cc not in ("XX", "T1") else "ZA"
+    return sms_provider.normalise(phone, country=cc, local_ok=explicit), cc
 
 _PH_IP_LOG = {}
 
@@ -4469,8 +4722,10 @@ def auth_phone_start(body: _PhoneStart, request: Request):
     """PHONE-KEY-1 (RUL-167): a one-time code by SMS. Fails dark with 503 sms_unavailable until an SMS
     provider is configured, so the door can fall back to the link key without a dead end."""
     import sms_provider, secrets as _sk, time as _t
-    e164 = sms_provider.normalise(body.phone)
+    e164, _ph_cc = _phone_e164(body.phone, body.country, request)   # PHONE-CC-1 (25 Sep 2026 inspection, backend-12)
     if not e164:
+        if _ph_cc != "ZA":
+            raise HTTPException(status_code=400, detail="Please type your number with its country code, starting with + (for example +254 712 345 678).")
         raise HTTPException(status_code=400, detail="Please type a phone number we can send a code to (for example 082 123 4567).")
     if not sms_provider.ready():
         raise HTTPException(status_code=503, detail="sms_unavailable")
@@ -4485,13 +4740,13 @@ def auth_phone_start(body: _PhoneStart, request: Request):
         n = conn.execute("SELECT COUNT(*) AS n FROM phone_codes WHERE phone=? AND created_at > ?",
                          (e164, _sql_since(hours=1))).fetchone()["n"]
         if n >= 3:
-            raise HTTPException(status_code=429, detail="Three codes went to that number in the last hour -- use the last one, or wait a while.")
+            raise HTTPException(status_code=429, detail="Three codes went to that number in the last hour — use the last one, or wait a while.")
         # SMS-CAP-1 (24 Sep 2026, security assessment): SMS pumping walks premium number ranges from many IPs;
         # one platform-wide daily ceiling bounds the bill whatever the rotation.
         _day = conn.execute("SELECT COUNT(*) AS n FROM phone_codes WHERE created_at > ?", (_sql_since(hours=24),)).fetchone()["n"]
         if _day >= int(os.environ.get("SMS_DAILY_CAP", "300") or 300):
             _log.warning("SMS-CAP-1: platform daily SMS ceiling reached (%s)", _day)
-            raise HTTPException(status_code=429, detail="We can't send more codes today -- please use the e-mail or link option.")
+            raise HTTPException(status_code=429, detail="We can't send more codes today — please use the e-mail or link option.")
         code = "%06d" % _sk.randbelow(1000000)
         conn.execute("INSERT INTO phone_codes (phone, code_hash, expires_at) VALUES (?,?,?)",
                      (e164, _key_hash(e164 + ":" + code), _sql_since(hours=-10 / 60.0)))   # ten minutes AHEAD
@@ -4500,14 +4755,16 @@ def auth_phone_start(body: _PhoneStart, request: Request):
         conn.close()
     st, info = sms_provider.send(e164, "TrustSquare code: %s. It works for 10 minutes. Never share it." % code, "phone-code")
     if st != "sent":
-        raise HTTPException(status_code=503, detail="We could not send the code right now (%s)." % info)
+        _log.warning("SMS send failed: %s", info)
+        raise HTTPException(status_code=503, detail="We could not send the code right now. Please try again.")
     return {"ok": True, "masked": sms_provider.mask(e164)}
 
 
 @app.post("/auth/phone/verify")
-def auth_phone_verify(body: _PhoneVerify, response: Response):
+def auth_phone_verify(body: _PhoneVerify, response: Response, request: Request = None):
     import sms_provider
-    e164 = sms_provider.normalise(body.phone); code = (body.code or "").strip()
+    e164, _ph_cc = _phone_e164(body.phone, body.country, request)   # PHONE-CC-1: placed exactly as /auth/phone/start placed it
+    code = (body.code or "").strip()
     if not e164 or not re.fullmatch(r"\d{6}", code):
         raise HTTPException(status_code=400, detail="Type the six-digit code from the SMS.")
     conn = database.get_db()
@@ -4842,7 +5099,16 @@ def publish_listing(listing_id: int, email: str, attested: int = 0,
     _stamp_quality_score(conn, listing_id)   # ZOOM-HMI-1
     conn.commit()
     conn.close()
+    # PUBLISH-FAST-1 (25 Sep 2026 inspection, backend-11): the address geocode, the wonders link and the nearby-places
+    # look-up call slow public map services (up to ~30 s together). They ran inside the publish request, so the
+    # one-tap publish looked frozen. They now run beside it, exactly as /admin/refresh-pois already does.
+    import threading as _pub_thr
+    _pub_thr.Thread(target=_publish_autolinks, args=(listing_id,), daemon=True).start()
+    return {"message": "Listing is now live", "listing_id": listing_id}
 
+
+def _publish_autolinks(listing_id: int):
+    """PUBLISH-FAST-1: the post-publish enrichment, off the request path. Never raises."""
     # Auto-link nearby World Heritage wonders (only if none already linked)
     try:
         # Geocode street address → listing_lat/lng if not already set
@@ -4922,8 +5188,6 @@ def publish_listing(listing_id: int, email: str, attested: int = 0,
     except Exception as _e:
         pass  # auto-link failure must never block publish
 
-    return {"message": "Listing is now live", "listing_id": listing_id}
-
 @app.get("/listings/mine")
 def get_seller_listings(email: str = "", ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
     """Return all listings for this seller -- AUDIT-AUTH-1 (23 Sep 2026): bound to the proven session
@@ -4988,6 +5252,20 @@ def get_listing(listing_id: int, ts_user: str = Cookie(default=None),
                 _staff = False
         if not _staff and (not _viewer or _viewer != (_d.get("seller_email") or "").strip().lower()):
             raise HTTPException(status_code=404, detail="Listing not found")
+    # STRANGER-GATE-1 (25 Sep 2026 inspection, backend-05): an unvouched worker is not shown to strangers by id either
+    # (RUL-115 / RUL-153) -- only to herself and to staff. The advert reads as absent, exactly as in the lists.
+    try:
+        _gv = (_session_email(ts_user) or "").strip().lower()
+    except Exception:
+        _gv = ""
+    if not (_gv and _gv == (_d.get("seller_email") or "").strip().lower()) and not _staff_caller(x_admin_key, x_admin_token):
+        _gcon = database.get_db()
+        try:
+            _gate_hidden = _hidden_from_strangers(_gcon, listing_id)
+        finally:
+            _gcon.close()
+        if _gate_hidden:
+            raise HTTPException(status_code=404, detail="Listing not found")
     if (_d.get("category") or "").lower() == "property":
         _d["availability_label"] = _rental_availability(_d.get("rental_status"), _d.get("available_from"))
     _scrub_vehicle_specs(_d)   # CARS-SPEC-1 D1: unconfirmed vehicle specs never public
@@ -5024,12 +5302,18 @@ def get_listing(listing_id: int, ts_user: str = Cookie(default=None),
     return _d
 
 @app.get("/sellers/summary/{listing_id}")
-def seller_summary_for_listing(listing_id: int):
+def seller_summary_for_listing(listing_id: int, ts_user: str = Cookie(default=None)):
     """SELLER-CV-1: anonymized seller-level aggregates for the buyer-facing Seller CV.
     Counts, categories and tenure ONLY - no identity fields ever leave this endpoint."""
     conn = database.get_db()
     row = conn.execute("SELECT seller_email FROM listings WHERE id = ?", (listing_id,)).fetchone()
     if not row or not ((row["seller_email"] or "").strip()):
+        conn.close()
+        return {"found": False}
+    # STRANGER-GATE-1 (25 Sep 2026 inspection, backend-05): the profile behind an advert strangers may not see is
+    # not shown through this side door either.
+    if (_session_email(ts_user) or "").strip().lower() != (row["seller_email"] or "").strip().lower() \
+            and _hidden_from_strangers(conn, listing_id):
         conn.close()
         return {"found": False}
     rows = conn.execute(
@@ -5156,6 +5440,8 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
     _validate_rental_fields(d.get("rental_status"), d.get("available_from"))
     _validate_vehicle_fields(d.get("vehicle_specs"), d.get("spec_confirmed"))
     _reset_vehicle_confirmations(dict(existing), d)   # CARS-SPEC-1: edits clear section confirmations
+    if "price" in d:
+        d["price_num"] = _price_number(d["price"])   # PRICE-NUM-1 (25 Sep 2026 inspection, backend-10)
 
     # Preserve [photos:...] prefix if description is being updated without it
     if "description" in d:
@@ -6158,6 +6444,9 @@ def admin_registry_upsert(body: _RegistryUpsertIn, _admin=Depends(_require_admin
 # Now: identity from the proven cookie (never from what was typed), the same public app key
 # ms.js ships to every visitor (nothing new exposed), and the EULA fact. Ungated -- a stranger
 # gets {signed_in: false} plus the key, which is exactly what the door needs to go live.
+_QUICK_BASE_TRUST = 40   # QUICK-TRUST-1: "All sellers start at 40 (Established base)" -- the value users.trust_score defaults to
+
+
 @app.get("/quick/me")
 def quick_me(request: Request, ts_user: str = Cookie(default=None)):
     em = _session_email(ts_user)
@@ -6166,7 +6455,10 @@ def quick_me(request: Request, ts_user: str = Cookie(default=None)):
     _geo = {"country": (request.headers.get("cf-ipcountry") or "").upper()[:2] or None,
             "city": (request.headers.get("cf-ipcity") or "")[:60] or None}
     out = {"geo": _geo, "signed_in": False, "key": auth.API_KEY if hasattr(auth, "API_KEY") else os.environ.get("MS_API_KEY", ""),
-           "email": None, "name": None, "eula_accepted": False, "city": None, "listings": 0}
+           "email": None, "name": None, "eula_accepted": False, "city": None, "listings": 0,
+           # QUICK-TRUST-1 (25 Sep 2026 inspection, backend-09): the trust Quick shows is the app's own number --
+           # every seller starts at the canon base of 40 (TRUST_SCORE_CRITERIA), a member at her account's score.
+           "trust_score": _QUICK_BASE_TRUST}
     try:
         import sms_provider
         out["sms_ready"] = bool(sms_provider.ready())     # PHONE-KEY-1: the door offers the phone code only when it can send one
@@ -6177,13 +6469,14 @@ def quick_me(request: Request, ts_user: str = Cookie(default=None)):
         return out
     conn = database.get_db()
     try:
-        u = conn.execute("SELECT name, eula_accepted_at, lm_eula_accepted_at, last_city FROM users WHERE LOWER(email)=?", (em,)).fetchone()
+        u = conn.execute("SELECT name, eula_accepted_at, lm_eula_accepted_at, last_city, trust_score FROM users WHERE LOWER(email)=?", (em,)).fetchone()
         if not u:
             return out
         n = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE LOWER(seller_email)=? AND (listing_status IS NULL OR listing_status='live')", (em,)).fetchone()["n"]
-        out.update({"signed_in": True, "email": em, "name": u["name"] or em.split("@")[0],
+        out.update({"signed_in": True, "email": em, "name": _shown_name(u["name"], em),   # KEY-ID-HIDE-1 (backend-14)
                     "eula_accepted": bool(u["eula_accepted_at"]),   # BUGSWEEP-24SEP: quick-publish checks the main terms only
-                    "city": u["last_city"], "listings": n})
+                    "city": u["last_city"], "listings": n,
+                    "trust_score": int(u["trust_score"]) if u["trust_score"] is not None else _QUICK_BASE_TRUST})   # QUICK-TRUST-1
         return out
     finally:
         conn.close()
@@ -7497,6 +7790,16 @@ KEY_ID_DOMAIN = "key.trustsquare.co"
 def _is_key_identity(email) -> bool:
     return (email or "").strip().lower().endswith("@" + KEY_ID_DOMAIN)
 
+def _shown_name(name, email):
+    """KEY-ID-HIDE-1 (25 Sep 2026 inspection, backend-14): the name the apps may show for an account. A WhatsApp-link
+    or phone-code account has no inbox and no chosen name, and its internal address (w-3f9a0c12bd@key.trustsquare.co)
+    is never offered as one: it gets None, and Quick and the app say 'You' / 'Your account'. Everyone else keeps
+    their name, or the first part of their email address as before."""
+    n = (name or "").strip()
+    if _is_key_identity(email):
+        return None if (not n or re.match(r"^w-[0-9a-f]{6,}$", n, re.I)) else n
+    return n or (email or "").split("@")[0]
+
 def _new_key_identity() -> str:
     import secrets as _sk
     return "w-" + _sk.token_hex(5) + "@" + KEY_ID_DOMAIN
@@ -7724,26 +8027,20 @@ def _admin_only(admin_key, ctx=""):
 
 
 def _admin_local_or_key(request, admin_key, ctx=""):
-    """ADMIN-LOCALGUARD-1 (24 Sep 2026). For OUR-OWN ops endpoints that a LOCAL process
-    calls directly (the deploy's CDN purge hits http://localhost:8000 with no proxy) but
-    the public must never reach. Fail-closed. True only if:
-      - a correct admin key is presented (MS_ADMIN_KEY or the legacy ADMIN_KEY env), OR
-      - the request carries NO X-Forwarded-For — i.e. it did not pass through nginx, which
-        stamps X-Forwarded-For (via $proxy_add_x_forwarded_for) on every proxied request.
-        Only a process on the box can reach uvicorn without the proxy, and port 8000 is
-        firewalled to localhost, so an external caller can never satisfy this branch.
-    Found by scripts/authz_probe.py: /admin/purge-cache answered anonymous callers 200
-    because its old guard failed OPEN when the env key was unset."""
+    """ADMIN-LOCALGUARD-1 (24 Sep 2026). For OUR-OWN ops endpoints (the CDN purge, the POI refresh) that the
+    public must never reach. Fail-closed: True only when a correct admin key is presented (MS_ADMIN_KEY or the
+    legacy ADMIN_KEY env). Found by scripts/authz_probe.py: /admin/purge-cache answered anonymous callers 200
+    because its old guard failed OPEN when the env key was unset.
+
+    ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-10): the second door -- "no X-Forwarded-For, so it must be a
+    process on the box" -- is gone. It existed only because the deploy engine purged over loopback with no key;
+    every caller on the box now sends the key the running app holds (server_deploy.sh, media_push.bat,
+    refresh_dashboard.bat), and the gate's loopback exemption for the purge is gone with it. This handler check
+    stays as the second lock for the day the gate runs log-only (MS_GATE_ENFORCE=0)."""
     keys = [k for k in (MS_ADMIN_KEY, os.getenv("ADMIN_KEY", "")) if k]
     if admin_key and admin_key in keys:
         return True
-    try:
-        xff = request.headers.get("x-forwarded-for")
-    except Exception:
-        xff = None
-    if not xff:
-        return True
-    _log.warning("ADMIN-LOCALGUARD-1 refusal (ctx=%s): external caller, no valid key", ctx)
+    _log.warning("ADMIN-LOCALGUARD-1 refusal (ctx=%s): no valid admin key", ctx)
     return False
 
 
@@ -8589,10 +8886,17 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
         # promises no charge, not no service), any hold is returned in full, and no Tuppence
         # is deducted. Default True keeps today's behaviour.
         _burn_on = _bit_flag("tuppence_burn_enabled", True)
+        # KEY-UNREACHABLE-1 (25 Sep 2026 inspection, ts2-09): a seller whose only account is a private-link key (no
+        # inbox, no phone number on file) cannot receive the buyer's messages and cannot answer them, so accepting
+        # delivers no introduction. The EULA burns the held 1T only on DELIVERY; here the hold goes back to the buyer
+        # in full, inside this same transaction, and the answer says seller_unreachable so the app can say so.
+        # Local Market is untouched (its seller paid at request time, LM-T1).
+        _seller_em = ((listing["seller_email"] or "") if listing else "").strip().lower()
+        _unreachable = (not _lm) and _is_key_identity(_seller_em) and not _user_phone(conn, _seller_em)
         _balance = conn.execute(
             "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
             (_buyer,)).fetchone()["bal"]
-        if _burn_on and not _held and not _lm and (_balance is None or _balance < 1):   # insufficient -> 402, never a negative wallet
+        if _burn_on and not _held and not _lm and not _unreachable and (_balance is None or _balance < 1):   # insufficient -> 402, never a negative wallet
             conn.rollback(); conn.close()
             raise HTTPException(
                 status_code=402,
@@ -8602,6 +8906,12 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
             # UPDATE that requires tuppence_charged = 0, and it is the one authority on
             # whether the money actually went back (releasing twice would MINT Tuppence).
             _release_intro_hold(conn, intro_id, "burn disabled by BIT safe-state")
+        elif _unreachable and _held:
+            # KEY-UNREACHABLE-1: same rule as the line above -- released before the flip, exactly once. If the
+            # release cannot be written, nothing is written: the hold stays whole and she can try again.
+            if not _release_intro_hold(conn, intro_id, "seller has no message channel"):
+                conn.rollback(); conn.close()
+                raise HTTPException(status_code=500, detail="Could not accept this introduction.")
         _upd = conn.execute(
             "UPDATE intro_requests SET status = 'accepted', tuppence_charged = 1 "
             "WHERE id = ? AND COALESCE(tuppence_charged, 0) = 0 "
@@ -8625,6 +8935,15 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
                 (_buyer, f"Introduction delivered · charge WAIVED by BIT safe-state "
                          f"(tuppence_burn_enabled off) · listing #{intro['listing_id']} "
                          f"· {listing['title'] if listing else ''}"))
+        elif _unreachable:
+            # KEY-UNREACHABLE-1: nothing was delivered, so nothing is burned or deducted. A held 1T went back above
+            # (its intro_hold_release row is the record); an intro that never held one gets a zero row saying why.
+            if not _held:
+                conn.execute(
+                    "INSERT INTO transactions (user_email, type, amount, description) "
+                    "VALUES (?, 'intro_waived', 0, ?)",
+                    (_buyer, f"Introduction accepted · NOT charged -- the seller has no message channel yet "
+                             f"· listing #{intro['listing_id']} · {listing['title'] if listing else ''}"))
         elif _held:
             # The hold becomes the fee. Append a ZERO-amount audit row rather than mutating
             # the original -1: the ledger stays append-only and the burn is still visible.
@@ -8690,6 +9009,11 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
             "timestamp":          datetime.now(timezone.utc).isoformat(),
         }
         background_tasks.add_task(_fire_webhook, N8N_WEBHOOK_ACCEPT, payload)
+    if _unreachable:
+        # KEY-UNREACHABLE-1 (25 Sep 2026 inspection, ts2-09): accepted, and the buyer was not charged.
+        return {"message": "Introduction accepted — no Tuppence charged: this seller has no message channel yet, "
+                           + ("so the buyer's held 1T was returned." if _held else "so the buyer was not charged."),
+                "seller_unreachable": True, "charged": False}
     return {"message": "Introduction accepted — 1T charged"}
 
 @app.post("/intros/{intro_id}/hired")
@@ -10106,6 +10430,25 @@ def aa_buy_pack(email: str):
         detail="AI coaching packs are retired — the AI Coach charges your Tuppence wallet per use (first use free).")
 
 
+_AA_INT_COLS = ("beds", "baths", "garages", "floor_area", "erf_size")
+_AA_TEXT_COLS = ("prop_type", "listing_type", "subject", "level", "mode", "service_type", "availability", "condition")
+
+
+def _aa_structured_columns(field_data) -> dict:
+    """COACH-FIELDS-1 (25 Sep 2026 inspection, ts3-07): the Listing Coach's answers that have their own listings
+    column. The column names are this fixed list, never a key from the request."""
+    out = {}
+    for _k in _AA_INT_COLS:
+        _m = re.search(r"\d+", str(field_data.get(_k) or "").replace(" ", "").replace(",", ""))
+        if _m:
+            out[_k] = int(_m.group(0))
+    for _k in _AA_TEXT_COLS:
+        _v = field_data.get(_k)
+        if isinstance(_v, str) and _v.strip():
+            out[_k] = _v.strip()[:200]
+    return out
+
+
 @app.post("/advert-agent/publish")
 async def aa_publish(
     background_tasks: BackgroundTasks,
@@ -10113,7 +10456,11 @@ async def aa_publish(
     category: str = Form(...),
     fields: str = Form(...),        # JSON string
     coach_output: str = Form(""),
-    city: str = Form("Pretoria"),
+    # COACH-CITY-1 (25 Sep 2026 inspection, ts3-05): no more 'Pretoria' default -- the advert is filed where the
+    # seller is (city, its geo id and country, resolved below exactly as create_listing does).
+    city: str = Form(""),
+    country: str = Form(""),
+    geo_city_id: str = Form(""),    # a string, so an unexpected value is ignored instead of refusing the publish
     attested: int = Form(0),
     photos: list[UploadFile] = File(default=[]),
 ):
@@ -10129,6 +10476,14 @@ async def aa_publish(
 
     title         = field_data.get("title") or field_data.get("item_name", "")
     price         = field_data.get("price") or field_data.get("rate")
+    if not price:
+        # COACH-FIELDS-1 (25 Sep 2026 inspection, ts3-07): Adventures ask for a price PER NIGHT or PER PERSON; that
+        # answer IS the advert's price, with its basis, instead of an advert that goes live with none.
+        for _pk, _per in (("price_per_night", "night"), ("price_per_person", "person")):
+            _pv = str(field_data.get(_pk) or "").strip()
+            if _pv:
+                price = _pv if re.search(r"/|\bper\b", _pv, re.I) else "%s / %s" % (("R" + _pv) if _pv[:1].isdigit() else _pv, _per)
+                break
     # SEC-GATE-1 (24 Sep 2026): the same gates as every other publish door (create_listing / quick_publish):
     # per-day listing velocity and the price-basis rule, checked before any photo is stored.
     launch_redemption.check_listing_velocity(email)
@@ -10222,6 +10577,24 @@ async def aa_publish(
         "trailer_included": "Trailer included",
         "vehicle_type": "Vehicle type",
         "capacity":     "Capacity",
+        # COACH-FIELDS-1 (25 Sep 2026 inspection, ts3-07): the Coach asks these and they were thrown away.
+        "item_type":          "Collection type",
+        "condition":          "Condition",
+        "catalogue_ref":      "Catalogue reference",
+        "edition_year":       "Edition / year of issue",
+        "accommodation_type": "Accommodation type",
+        "activity_type":      "Activity type",
+        "environment_type":   "Environment",
+        "destination":        "Destination",   # COACH-LABELS-1 (25 Sep 2026 inspection, ts3-07): the app's edit screen label
+        "duration":           "Duration",
+        "group_size":         "Group size",
+        "difficulty":         "Difficulty",
+        "amenities":          "Amenities",
+        "registered":         "Registered",
+        "callout_fee":        "Call-out fee",
+        "days_available":     "Days available",
+        "references":         "References",
+        "parking_type":       "Parking type",
     }
     for key, label in field_labels.items():
         val = field_data.get(key, "").strip() if isinstance(field_data.get(key), str) else ""
@@ -10232,8 +10605,9 @@ async def aa_publish(
         structured_block = "\n".join(structured_lines)
         desc = f"{structured_block}\n\n{desc}".strip() if desc else structured_block
 
-    if coach_output:
-        desc = f"{desc}\n\n---\nAI coaching notes:\n{coach_output}".strip()
+    # COACH-PRIVATE-2 (25 Sep 2026 inspection, ts3-06): coach_output is the seller's PRIVATE Trust Score to-do list
+    # ('Upload your PPRA registration (+15 pts)'). It used to be printed at the foot of the public advert, telling
+    # every buyer which credentials she lacks. It is accepted (older cached apps still send it) and never published.
     title, desc, _scrubbed = _private_text_scrub(title, desc, email, "aa-publish")   # E2E-HMI-1
 
     # Upload photos to R2 (or local fallback) — EXIF-rotate before storage
@@ -10286,6 +10660,29 @@ async def aa_publish(
             medium_url = url
 
     conn = database.get_db()
+    # COACH-CITY-1 (25 Sep 2026 inspection, ts3-05): file the advert in HER city, resolved the way create_listing
+    # does: the geo city id the app sends (when it agrees with the name), else the city name; the city is stored in
+    # the geo table's own spelling, because the browse feed matches it exactly. Country: what she told us, then the
+    # geo table's, then ZA as the last resort (LISTING-COUNTRY-1). Never a silent 'Pretoria' any more.
+    city = (city or "").strip()[:80]
+    _grow = None
+    try:
+        _gid_in = int(str(geo_city_id or "").strip())
+    except (TypeError, ValueError):
+        _gid_in = None
+    if _gid_in:
+        _grow = conn.execute("SELECT id, name, country_iso2 FROM geo_cities WHERE id = ?", (_gid_in,)).fetchone()
+        if _grow is not None and city and city.lower() != (_grow["name"] or "").strip().lower():
+            _grow = None          # the id and the name disagree: the name decides, resolved below
+    if _grow is None and city:
+        _grow = conn.execute("SELECT id, name, country_iso2 FROM geo_cities WHERE LOWER(name) = LOWER(?) AND active = 1 "
+                             "ORDER BY id LIMIT 1", (city,)).fetchone()
+    if _grow is not None:
+        city = (_grow["name"] or city).strip()
+    _aa_geo_city_id = _grow["id"] if _grow is not None else None
+    _aa_country = ((country or "").strip()
+                   or ((_grow["country_iso2"] or "") if _grow is not None else "")
+                   or "ZA").strip().upper()[:2]
     # Inherit seller trust_score + slot_limit from users table
     ts_row = conn.execute(
         "SELECT trust_score, slot_limit, is_superuser, eula_accepted_at FROM users WHERE LOWER(email) = ?", (email,)
@@ -10327,16 +10724,25 @@ async def aa_publish(
         """INSERT INTO listings
            (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class, seller_email, trust_score, ai_suggested_price, scryfall_id, published_at,
             make, model, variant, vehicle_year, mileage_km, transmission, fuel_type, body_type, colour, vehicle_specs, spec_confirmed, attested_at, attested_email,
-            listing_status)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, CURRENT_TIMESTAMP,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            listing_status, geo_city_id, country)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, CURRENT_TIMESTAMP,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (title, price, category, city, suburb, suburb, desc, thumb_url, medium_url, service_class, email, seller_trust, ai_price_anchor, scryfall_id,
          _veh_cols["make"], _veh_cols["model"], _veh_cols["variant"], _veh_cols["vehicle_year"],
          _veh_cols["mileage_km"], _veh_cols["transmission"], _veh_cols["fuel_type"], _veh_cols["body_type"],
          _veh_cols["colour"], _veh_cols["vehicle_specs"], _veh_cols["spec_confirmed"],
          _veh_cols["attested_at"], _veh_cols["attested_email"],
-         "live" if _go_live else "draft"),   # SEC-GATE-1 (24 Sep 2026): draft until the EULA is on record
+         "live" if _go_live else "draft",   # SEC-GATE-1 (24 Sep 2026): draft until the EULA is on record
+         _aa_geo_city_id, _aa_country),     # COACH-CITY-1 (25 Sep 2026 inspection, ts3-05)
     )
     listing_id = cursor.lastrowid
+    # COACH-FIELDS-1 (25 Sep 2026 inspection, ts3-07): the structured answers land in the columns buyers filter and
+    # sort on (bedrooms, sale or rent, sizes, subject, level, mode ...), and the price gets its numeric mirror.
+    _aa_cols = _aa_structured_columns(field_data)
+    if _aa_cols:
+        conn.execute("UPDATE listings SET " + ", ".join(_c + " = ?" for _c in _aa_cols) + " WHERE id = ?",
+                     list(_aa_cols.values()) + [listing_id])
+    conn.execute("UPDATE listings SET price_num = ? WHERE id = ?", (_price_number(price), listing_id))   # PRICE-NUM-1
+    _stamp_quality_score(conn, listing_id)   # ZOOM-HMI-1: scored with the answers it now keeps
     if len(_aa_urls) > 1:   # E2E-HMI-1: the gallery gets every photo she took
         conn.execute("UPDATE listings SET photo_urls = ? WHERE id = ?", (_json.dumps(_aa_urls), listing_id))
     # Upsert user record so seller can use AA coach going forward
@@ -10672,6 +11078,11 @@ def run_match_job(listing_id: int):
             conn.close()
             return
         listing = dict(listing)
+        if _hidden_from_strangers(conn, listing_id):
+            # STRANGER-GATE-1 (25 Sep 2026 inspection, backend-05): an advert strangers may not see is never pushed
+            # into strangers' feeds either (RUL-115 / RUL-153).
+            conn.close()
+            return
         intent = MATCHER.extract_intent(listing)
         seller_trust = int(listing.get("trust_score") or 0)
         listing_country = _seller_country_for_listing(conn, listing)
@@ -11115,8 +11526,12 @@ def _demand_match_and_compose(conn, limit=20):
 class SearchInterpretIn(BaseModel):
     q: str
 
+_SI_IP_LOG = {}
+_SI_IP_MAX = 30   # SEARCH-AI-IP-1: fresh (uncached) AI interpretations per client address per hour
+
+
 @app.post("/search/interpret")
-def search_interpret(req: SearchInterpretIn):
+def search_interpret(req: SearchInterpretIn, request: Request = None):
     """Public, heavily gated. Returns {"enabled":false} when dark — the FEA's
     deterministic parser simply remains the whole story."""
     if not SEARCH_AI_ENABLED:
@@ -11136,6 +11551,18 @@ def search_interpret(req: SearchInterpretIn):
         ).fetchone()["c"]
         if spent >= SEARCH_AI_DAILY_USD:
             return {"enabled": True, "fallback": True}   # cap reached — degrade, never overspend
+        # SEARCH-AI-IP-1 (25 Sep 2026 inspection, qa-15): signed-out search is by design, but one address may not
+        # spend the whole day's AI budget and switch the feature off for every other buyer -- past its hourly share
+        # it gets the same deterministic fallback, and nothing is spent.
+        import time as _si_clock
+        _si_ip = _qp_client_ip(request) if request is not None else "?"
+        _si_now = _si_clock.time()
+        _si_hits = [t for t in _SI_IP_LOG.get(_si_ip, []) if _si_now - t < 3600]
+        if len(_si_hits) >= _SI_IP_MAX:
+            _SI_IP_LOG[_si_ip] = _si_hits
+            return {"enabled": True, "fallback": True}
+        _si_hits.append(_si_now)
+        _SI_IP_LOG[_si_ip] = _si_hits
         if SEARCH_AI_DRYRUN:
             params, model_used, it, ot = _si_mock(qn), "dryrun", 0, 0
         else:
@@ -11374,6 +11801,7 @@ def get_wishlist_feed(buyer_token: str, min_trust_override: int = 0, limit: int 
            JOIN listings l ON l.id = m.listing_id
            WHERE m.buyer_token = ?
              AND m.seller_trust >= ?
+             AND """ + _stranger_visible_sql("l.") + """
            ORDER BY m.boost_rank DESC, m.matched_at DESC
            LIMIT ?""",
         (buyer_token, max(0, min_trust_override), limit)
@@ -12287,29 +12715,62 @@ def _lm_recompute_seller_state(conn, seller_email: str):
 def lm_create_listing(listing: LMListingIn, background_tasks: BackgroundTasks,
                       _key: str = Depends(auth.require_api_key)):
     """Create a Local Market listing. Seller must have Trust Score ≥ 30 (LM-08)."""
+    # LM-GUARDS-1 (25 Sep 2026 inspection, ts3-18): this door published straight away with none of the guards every
+    # sibling door runs. Now: plain text with phone numbers and addresses scrubbed (AUDIT-XSS-1 / E2E-HMI-1), the
+    # daily velocity limit, the plan's slot limit, and nothing goes live without the seller's recorded acceptance of
+    # the TrustSquare Terms (RUL-166 / EULA-PUBLISH-1) -- without it the advert is saved as a draft, as the Coach does.
+    _lm_seller = (listing.seller_email or "").strip().lower()
+    listing.title = _plain_text(listing.title)
+    listing.description = _plain_text(listing.description)
+    listing.title, listing.description, _lm_scrubbed = _private_text_scrub(
+        listing.title, listing.description, _lm_seller, "lm-create")
+    launch_redemption.check_listing_velocity(_lm_seller)
     conn = database.get_db()
     err = _lm_check_seller_can_publish(conn, listing.seller_email)
     if err:
         conn.close()
         raise HTTPException(status_code=403, detail=err)
+    _lm_u = conn.execute("SELECT eula_accepted_at, is_superuser, slot_limit FROM users WHERE LOWER(email) = ?",
+                         (_lm_seller,)).fetchone()
+    _lm_super = bool(_lm_u and _lm_u["is_superuser"])
+    _lm_live = _lm_super or bool(_lm_u and _lm_u["eula_accepted_at"])
+    if _lm_live and not _lm_super:
+        _lm_slots = int(_lm_u["slot_limit"]) if _lm_u and _lm_u["slot_limit"] else 2
+        _lm_count = conn.execute(
+            "SELECT COUNT(*) AS n FROM listings WHERE LOWER(seller_email)=? "
+            "AND (listing_status IS NULL OR listing_status = 'live')", (_lm_seller,)).fetchone()["n"]
+        if _lm_count >= _lm_slots:
+            conn.close()
+            raise HTTPException(
+                status_code=402,
+                detail=f"Listing slot limit reached ({_lm_count}/{_lm_slots}) — your current "
+                       f"plan allows {_lm_slots} live listings. Choose a bigger plan to publish more.")
     # Persist country on the user row if supplied (LM-29)
     if listing.country:
         conn.execute(
             "UPDATE users SET country = ? WHERE email = ?",
             (listing.country, listing.seller_email)
         )
+    _lm_status = "live" if _lm_live else "draft"
     cur = conn.execute(
         """INSERT INTO listings
            (title, price, category, city, area, suburb, description,
-            thumb_url, medium_url, photo_urls, geo_city_id, seller_email, published_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?, CURRENT_TIMESTAMP)""",
+            thumb_url, medium_url, photo_urls, geo_city_id, seller_email, listing_status, published_at, price_num)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?, CASE WHEN ? = 'live' THEN CURRENT_TIMESTAMP ELSE NULL END, ?)""",
         (listing.title, listing.price, LM_CATEGORY, listing.city, listing.suburb,
          listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
-         listing.photo_urls, listing.geo_city_id, listing.seller_email)
+         listing.photo_urls, listing.geo_city_id, _lm_seller or listing.seller_email,
+         _lm_status, _lm_status, _price_number(listing.price))   # PRICE-NUM-1
     )
     new_id = cur.lastrowid
     conn.commit()
     conn.close()
+    if not _lm_live:
+        # LM-GUARDS-1: 409, not 200 -- the Local Market form shows this line instead of "published" (as aa_publish does).
+        from fastapi.responses import JSONResponse as _JR
+        return _JR(status_code=409, content={
+            "id": new_id, "live": False, "need": "eula",
+            "detail": "Your advert is saved as a draft. Read and accept the TrustSquare Terms in the app to publish it."})
     # Run wishlist matching against this new LM listing — same engine as Wishlist Feed
     background_tasks.add_task(run_match_job, new_id)
     return {"id": new_id, "message": "Local Market listing created"}
@@ -16177,7 +16638,8 @@ def presence_ping(p: PresencePing, _key: str = Depends(auth.require_api_key),
     # visitor whose page only remembers a typed email is not bounced to sign-in every 45 seconds.
     email = _session_email(ts_user) or ""
     if not email:
-        return {"ok": True, "recorded": False}
+        # PING-QUIET-1 (25 Sep 2026 inspection, qa-13): nothing was recorded, so the answer claims nothing either.
+        return {"recorded": False}
     conn = database.get_db()
     try:
         conn.execute(
@@ -17733,7 +18195,9 @@ def _send_draft_waiting_email(to_email: str, link: str, title: str, code: str = 
         "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
         "text-decoration:none;padding:13px 24px;border-radius:8px;font-weight:700'>"
         "Open my advert &rarr;</a></p>"
-        + ("<p style='color:#6b7280;font-size:13px'>The link works for 7 days. After that, "
+        # LETTER-REOPEN-1 (25 Sep 2026 inspection, backend-06): the letter states the rule the server keeps.
+        + ("<p style='color:#6b7280;font-size:13px'>Tap it within 3 days: it signs you in on that phone and "
+           "opens your advert, and it keeps opening it there for 7 days. Any other time, or on another phone, "
            "open <a href='" + APP_URL + "'>trustsquare.co</a> and sign in with <b>"
            + to_email + "</b> \u2014 the advert is waiting on that address, and only "
            "that one.</p>")
@@ -17745,7 +18209,8 @@ def _send_draft_waiting_email(to_email: str, link: str, title: str, code: str = 
     plain = ("Your TrustSquare advert is composed and waiting: " + (title or "")
              + "\n\nIt is saved and not yet public. Open it, check it and publish it:\n"
              + link
-             + "\n\nThe link works for 7 days. After that, open " + APP_URL + " and sign in with "
+             + "\n\nTap it within 3 days: it signs you in on that phone and opens your advert, and it keeps "
+             "opening it there for 7 days. Any other time, or on another phone, open " + APP_URL + " and sign in with "
              + to_email + " -- the advert is waiting on that address.\n\n"
              "You are getting this because you entered this address to publish an "
              "advert. If that wasn't you, ignore it.")
@@ -17809,9 +18274,10 @@ def _send_quick_live_email(to_email: str, link: str, title: str) -> str:
         "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
         "text-decoration:none;padding:13px 24px;border-radius:8px;font-weight:700'>"
         "Open my advert &rarr;</a></p>"
-        "<p style='color:#6b7280;font-size:13px'>Add photos there to make it stronger. The link works "
-        "for 7 days; after that, sign in at <a href='" + APP_URL + "'>trustsquare.co</a> with <b>"
-        + to_email + "</b>.</p>"
+        "<p style='color:#6b7280;font-size:13px'>Add photos there to make it stronger. Tap the button within "
+        "3 days to sign in on that phone; it keeps opening your advert there for 7 days. Any other time, "
+        "sign in at <a href='" + APP_URL + "'>trustsquare.co</a> with <b>"
+        + to_email + "</b>.</p>"   # LETTER-REOPEN-1 (25 Sep 2026 inspection, backend-06)
         "<p style='color:#6b7280;font-size:12px'>If this was not you, open the link and delete the "
         "advert, or ignore this letter.</p></div>")
     plain = ("Your TrustSquare advert is live: " + (title or "") + "\n\nOpen it:\n" + link +
@@ -17957,7 +18423,7 @@ def _establish_user_session(email: str, response: Response):
             pass
         conn.commit()
         row = conn.execute("SELECT name FROM users WHERE email=?", (email,)).fetchone()
-        name = row["name"] if row and row["name"] else email.split("@")[0]
+        name = _shown_name(row["name"] if row else None, email)   # KEY-ID-HIDE-1 (backend-14)
     finally:
         conn.close()
     # ACCOUNT-BIND-1 (5 Aug 2026): proven email possession, kept as an HttpOnly cookie.
@@ -18242,6 +18708,8 @@ _SIGNIN_SEND_PER_EMAIL = 4   # codes mailed to one address per _RATE_WINDOW
 _SIGNIN_SEND_PER_IP    = 20  # codes mailed from one client IP per _RATE_WINDOW
 _signin_send_email  = {}     # email -> [sends, window_start_epoch]
 _signin_send_ip     = {}     # ip -> [sends, window_start_epoch]
+_SIGNIN_CODE_IP_FAILS = 30   # CODE-NAT-1: wrong sign-in codes from one client address per _RATE_WINDOW
+_signin_code_ip_fails = {}   # ip -> [wrong codes, window_start_epoch]
 
 def _signin_fail_blocked(email: str) -> bool:
     """SEC-GATE-1 (24 Sep 2026): True while this address has used up its wrong-code budget."""
@@ -18269,8 +18737,17 @@ def auth_verify_code(req: _SignInCodeVerify, request: Request, response: Respons
     can spend. Rate-limited per IP on top of the per-code guess budget."""
     ip = (request.headers.get("x-forwarded-for")
           or (request.client.host if request.client else "?")).split(",")[0].strip()
-    if not _review_rate_ok(ip):
-        raise HTTPException(status_code=429, detail="Too many attempts. Please wait a few minutes.")
+    # CODE-NAT-1 (25 Sep 2026 inspection, backend-15): every attempt used to spend one of eight slots shared with the
+    # reviewer lanes, so the ninth person behind one mobile network or office Wi-Fi was refused with the right code.
+    # A code box is a password prompt: only WRONG codes count against a connection, in this door's own bucket, with
+    # room for a shared address. The per-address budget below (12 wrong codes an hour) and the per-code guess budget
+    # remain the brute-force guard, and neither is touched.
+    if not _rate_ok(_signin_code_ip_fails, ip, _SIGNIN_CODE_IP_FAILS):
+        _left = max(_rate_retry_after(_signin_code_ip_fails, ip), 1)
+        raise HTTPException(status_code=429,
+                            detail="Too many wrong codes from this connection. Try again in %s."
+                                   % (("%dm %02ds" % (_left // 60, _left % 60)) if _left >= 60 else ("%d seconds" % _left)),
+                            headers={"Retry-After": str(_left)})
     email = (req.email or "").strip().lower()
     # SEC-GATE-1 (24 Sep 2026): per-address wrong-code budget survives /auth/request-link issuing a fresh code.
     if _signin_fail_blocked(email):
@@ -18278,6 +18755,7 @@ def auth_verify_code(req: _SignInCodeVerify, request: Request, response: Respons
                             detail="Too many wrong codes for this address. Please wait an hour, or use the link in the email.")
     if not _signin_code_ok(email, req.code or ""):
         _signin_fail_note(email)   # SEC-GATE-1 (24 Sep 2026)
+        _rate_note_failure(_signin_code_ip_fails, ip)   # CODE-NAT-1: a wrong code is what counts
         raise HTTPException(status_code=401,
                             detail="That code is wrong or has expired — send yourself a new one.")
     _signin_fails.pop(email, None)   # SEC-GATE-1 (24 Sep 2026): a correct code clears the address's slate
@@ -18315,7 +18793,7 @@ def auth_request_link(req: _SignInRequest, request: Request):
     return {"ok": True, "sent": status}
 
 @app.post("/auth/verify")
-def auth_verify(req: _SignInVerify, response: Response):
+def auth_verify(req: _SignInVerify, response: Response, ts_user: str = Cookie(default=None)):
     """Verify a sign-in token; create the account on first use. Returns email+name."""
     try:
         payload = _pyjwt.decode(req.token, _JWT_SECRET, algorithms=[_JWT_ALGO])
@@ -18331,16 +18809,23 @@ def auth_verify(req: _SignInVerify, response: Response):
     # SIGNIN-ONCE-1 (24 Sep 2026, security assessment, David approved): a sign-in link works ONCE and
     # never after 72 hours, so a forwarded mail, a mail-scanner log or browser history cannot replay it.
     # The same browser re-sending it within a minute (a double render) is not a second use.
+    # LETTER-REOPEN-1 (25 Sep 2026 inspection, backend-06): a browser that is ALREADY signed in as the link's own
+    # address replays nothing -- it already holds that session. Re-opening her letter on her own phone therefore
+    # lands on her advert instead of the sign-in screen. Everybody else meets SIGNIN-ONCE-1 exactly as before.
+    try:
+        _same_session = bool(email) and (_session_email(ts_user) or "") == email
+    except Exception:
+        _same_session = False
     import time as _t
     _iat = payload.get("iat")
-    if isinstance(_iat, (int, float)) and _t.time() - float(_iat) > 72 * 3600:
+    if isinstance(_iat, (int, float)) and _t.time() - float(_iat) > 72 * 3600 and not _same_session:
         raise HTTPException(status_code=401, detail="This sign-in link is too old — request a new one.")
     _h = hashlib.sha256(req.token.encode("utf-8")).hexdigest()
     conn = database.get_db()
     try:
         _sv_ensure(conn)
         _row = conn.execute("SELECT used_at FROM used_signin_links WHERE link_hash=?", (_h,)).fetchone()
-        if _row and _t.time() - float(_row["used_at"]) > 60:
+        if _row and _t.time() - float(_row["used_at"]) > 60 and not _same_session:
             raise HTTPException(status_code=410, detail="This sign-in link was already used — request a new one.")
         if not _row:
             conn.execute("INSERT INTO used_signin_links (link_hash, used_at) VALUES (?, ?) "
@@ -18497,6 +18982,10 @@ def agency_wave_prep(req: _AgencyWavePrep, _key: str = Depends(auth.require_api_
     conn = database.get_db()
     try:
         for row in (req.agencies or [])[:500]:
+            if not isinstance(row, dict):
+                # WAVEPREP-ROWS-1 (25 Sep 2026 inspection, qa-11): a row that is not an object answered 500.
+                out.append({"admin_email": None, "ok": False, "error": "each row must be an object with name and admin_email"})
+                continue
             name = str((row or {}).get("name") or "").strip()
             admin = str((row or {}).get("admin_email") or "").strip().lower()
             if "@" not in admin or not name:
@@ -19805,8 +20294,7 @@ def agency_import(agency_id: int, req: _AgencyImport):
             if isinstance(_vspecs, dict): _vspecs = json.dumps(_vspecs)
             elif _vspecs is not None: _vspecs = str(_vspecs)[:4000]
             _price_txt = str(ad.get("price") or "POA")
-            _pn_digits = re.sub(r"[^0-9.]", "", _price_txt)
-            _price_num = float(_pn_digits) if _pn_digits else None
+            _price_num = _price_number(_price_txt)   # PRICE-NUM-1 (25 Sep 2026 inspection, backend-10)
             _imp_cols = ["title","price","category","city","area","suburb","description","seller_email",
                          "listing_status","thumb_url","medium_url","import_source","price_num",
                          "listing_type","prop_type","beds","baths","garages","floor_area","erf_size",
@@ -25923,7 +26411,9 @@ try:
     org_enrol.configure(key_hash=_key_hash, new_identity=_new_key_identity,
                         establish_session=_establish_user_session, agency_admin=_agency_admin_or_refuse,
                         trust_recompute=trust_score_breakdown, app_url=APP_URL, session_email=_session_email,
-                        admin_key_ok=lambda k: bool(k and MS_ADMIN_KEY and k == MS_ADMIN_KEY))
+                        admin_key_ok=lambda k: bool(k and MS_ADMIN_KEY and k == MS_ADMIN_KEY),
+                        # SLIP-SIGNIN-1 (25 Sep 2026 inspection, backend-04): the slip opens the app signed in on her advert
+                        mint_signin=lambda em, draft, minutes: (_mint_signin_url(em, draft, minutes) if _JWT_SECRET else None))
     org_enrol.init_schema()
     app.include_router(org_enrol.router)
 except Exception as _oe_ex:      # pragma: no cover -- a supply side-lane must never take the app down at boot
@@ -27157,10 +27647,12 @@ def keep_listing_live(listing_id: int, req: _KeepLiveIn,
         if (row["seller_email"] or "").lower() != (actor or "").lower():
             raise HTTPException(status_code=403, detail="Not your listing")
         st = (row["listing_status"] or "live").lower()
-        if st not in ("faded", "live", "paused"):
+        # KEEP-LIVE-FADING-1 (25 Sep 2026 inspection, langt-47): 'fade_out' (the state machine's FADE OUT name) is
+        # the same hidden state as 'faded', and the hub offers Keep live on both.
+        if st not in ("faded", "fade_out", "live", "paused"):
             raise HTTPException(status_code=409, detail="Cannot revive a listing in state: " + st)
         now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        if st == "faded":
+        if st in ("faded", "fade_out"):
             conn.execute("UPDATE listings SET listing_status='live', status_changed_at=?, "
                          "fade_nudge_sent_at=NULL WHERE id=?", (now_iso, listing_id))
         else:
@@ -27555,8 +28047,9 @@ def squire_brief_create(body: _SquireBriefIn, ts_user: str = Cookie(default=None
 # ---------------------------------------------------------------------------
 I18N_LANGS = {"zu": "isiZulu", "st": "Sesotho (Southern Sotho)", "af": "Afrikaans", "xh": "isiXhosa",
               # LANG-LAYER-1 (RUL-162, David 23 Sep 2026): Sepedi takes Sesotho's place in South Africa
-              # (census 2022); "st" stays ACCEPTED so a reader who picked it before still gets an answer,
-              # but no screen offers it any more. The rest are the nine-country lists David approved --
+              # (census 2022). "st" stays in this table only so an advert written in it keeps its name;
+              # LANG-ZA-5 (25 Sep 2026 inspection, langt-31): the translate lane no longer serves it --
+              # the app now carries a reader who chose Sesotho on in Sepedi (ms.js maps a saved 'st' once). The rest are the nine-country lists David approved --
               # only the 'offered' ones in roles/lang_countries.json; 'reader' languages are not here.
               "nso": "Sepedi (Sesotho sa Leboa / Northern Sotho)", "ng": "Oshiwambo (Oshindonga)",
               "tn": "Setswana", "pt": "Portuguese (as written in Mozambique)", "sw": "Kiswahili",
@@ -27847,7 +28340,9 @@ def _plain_text(v):
 
 
 def _lang_offered_anywhere():
-    out = {"st"}
+    # LANG-ZA-5 (25 Sep 2026 inspection, langt-31): only what a country OFFERS -- "st" is retired in South Africa
+    # (roles/lang_countries.json) and is no longer let through on its own.
+    out = set()
     for c in (_lang_countries().get("countries") or {}).values():
         out.update(code for code, st in (c.get("langs") or []) if st == "offered")
     return out
@@ -28809,10 +29304,13 @@ def listings_coverage():
     is_demo split included so the dashboard can show real vs demo coverage."""
     conn = database.get_db()
     try:
+        # COVERAGE-LIVE-1 (25 Sep 2026 inspection, qa-06): the public count is of LIVE adverts, as documented --
+        # drafts, archived and suspended adverts were counted too.
         rows = conn.execute(
             "SELECT city, COUNT(*) AS n, "
             "SUM(CASE WHEN COALESCE(is_demo,0)=1 THEN 1 ELSE 0 END) AS demo "
-            "FROM listings GROUP BY city").fetchall()
+            "FROM listings WHERE (listing_status IS NULL OR listing_status = 'live') "
+            "AND (suspension_reason IS NULL OR suspension_reason = '') GROUP BY city").fetchall()
     finally:
         conn.close()
     cities = {}

@@ -77,11 +77,33 @@ def _ctx():
     return ssl.create_default_context()
 
 
+def _admin_key():
+    """ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-10): the purge route is admin-only (a key-less purge has been
+    refused since 24 Sep), so the operator's key goes with it -- MS_ADMIN_KEY from the environment, else the repo's
+    .secrets/deploy_keys.txt, the same place the regression ledger reads it. Never printed; '' when neither."""
+    k = (os.environ.get("MS_ADMIN_KEY") or "").strip()
+    if k:
+        return k
+    try:
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".secrets",
+                               "deploy_keys.txt"), encoding="utf-8") as f:
+            for ln in f:
+                if ln.startswith("MS_ADMIN_KEY="):
+                    return ln.split("=", 1)[1].strip()
+    except OSError:
+        pass
+    return ""
+
+
 def purge_cdn():
     """Issue the BEA cache purge so the next fetch can't be served a stale copy."""
     try:
+        hdrs = {"User-Agent": "human-view-verify"}
+        _k = _admin_key()
+        if _k:
+            hdrs["X-Admin-Key"] = _k      # ADMIN-KEY-LOCAL-1 (qa-10)
         req = urllib.request.Request(PURGE_ENDPOINT, method="POST", data=b"",
-                                     headers={"User-Agent": "human-view-verify"})
+                                     headers=hdrs)
         code = urllib.request.urlopen(req, timeout=TIMEOUT, context=_ctx()).status
         # give the edge a beat to evict before we re-fetch
         time.sleep(2.0)

@@ -221,7 +221,23 @@
     "N$500–N$2 000",
     "Over N$2 000"
    ]
-  }
+  },
+  "pics": [
+   "Etosha",
+   "Waterberg Plateau",
+   "Okonjima",
+   "Damaraland",
+   "Zambezi Region",
+   "Erindi",
+   "Sossusvlei",
+   "Swakopmund",
+   "Twyfelfontein",
+   "Kolmanskop",
+   "Windhoek",
+   "Skeleton Coast",
+   "Fish River Canyon",
+   "Kalahari"
+  ]
  },
  "BW": {
   "name": "Botswana",
@@ -321,7 +337,20 @@
     "P250–P1 000",
     "Over P1 000"
    ]
-  }
+  },
+  "pics": [
+   "Okavango Delta",
+   "Chobe",
+   "Moremi",
+   "Makgadikgadi Pans",
+   "Central Kalahari",
+   "Khwai",
+   "Tsodilo Hills",
+   "Khama Rhino Sanctuary",
+   "Nxai Pan",
+   "Kgalagadi",
+   "Tuli Block"
+  ]
  },
  "MZ": {
   "name": "Mozambique",
@@ -422,7 +451,24 @@
     "MT 1 500–MT 6 000",
     "Over MT 6 000"
    ]
-  }
+  },
+  "pics": [
+   "Gorongosa",
+   "Limpopo National Park",
+   "Niassa Reserve",
+   "Maputo Special Reserve",
+   "Zinave",
+   "Quirimbas",
+   "Ilha de Moçambique",
+   "Maputo",
+   "Inhambane",
+   "Tofo",
+   "Bazaruto",
+   "Ponta do Ouro",
+   "Vilanculos",
+   "Bilene",
+   "Xai-Xai"
+  ]
  },
  "KE": {
   "name": "Kenya",
@@ -454,7 +500,7 @@
     "Lamu",
     "Mombasa",
     "Nairobi",
-    "Hell's Gate",
+    "Hell’s Gate",
     "Lake Naivasha",
     "Maasai Mara"
    ],
@@ -487,7 +533,7 @@
    "Wanjiru Kamau",
    "Njoroge Mwangi",
    "Wambui Githinji",
-   "Kariuki Ndung'u",
+   "Kariuki Ndung’u",
    "Nyambura Karanja",
    "Muthoni Njenga"
   ],
@@ -523,7 +569,24 @@
     "KSh 2 500–KSh 10 000",
     "Over KSh 10 000"
    ]
-  }
+  },
+  "pics": [
+   "Maasai Mara",
+   "Amboseli",
+   "Tsavo",
+   "Samburu",
+   "Lake Nakuru",
+   "Ol Pejeta",
+   "Lamu",
+   "Mombasa",
+   "Nairobi",
+   "Hell’s Gate",
+   "Lake Naivasha",
+   "Rift Valley",
+   "Mount Kenya",
+   "Aberdares",
+   "Diani"
+  ]
  },
  "GB": {
   "name": "United Kingdom",
@@ -673,11 +736,11 @@
    "Oliver Bennett"
   ],
   "swap": {
-   "bakkie": "small car",
+   "bakkie": "pickup",
    "R150k": "£5k",
    "matric": "sixth form",
    "Grade 10": "Year 11",
-   "body corporate": "residents' association"
+   "body corporate": "residents’ association"
   },
   "bands": {
    "cars": [
@@ -704,7 +767,26 @@
     "£25–£100",
     "Over £100"
    ]
-  }
+  },
+  "pics": [
+   "Scottish Highlands",
+   "Cairngorms",
+   "Isle of Mull",
+   "Exmoor",
+   "New Forest",
+   "Lake District",
+   "Edinburgh",
+   "Bath",
+   "Stonehenge",
+   "York",
+   "Oxford",
+   "Cotswolds",
+   "North Coast 500",
+   "Snowdonia",
+   "Cornwall",
+   "Yorkshire Dales",
+   "Isle of Skye"
+  ]
  },
  "DE": {
   "name": "Germany",
@@ -774,11 +856,11 @@
    "Jonas Weber"
   ],
   "swap": {
-   "bakkie": "small van",
+   "bakkie": "pickup",
    "R150k": "€5,000",
    "matric": "Abitur year",
    "Grade 10": "Year 10",
-   "body corporate": "residents' board"
+   "body corporate": "residents’ board"
   },
   "bands": {
    "cars": [
@@ -805,7 +887,26 @@
     "€25–€100",
     "Over €100"
    ]
-  }
+  },
+  "pics": [
+   "Bavarian Forest",
+   "Black Forest",
+   "Harz",
+   "Berchtesgaden",
+   "Saxon Switzerland",
+   "Eifel",
+   "Neuschwanstein",
+   "Munich",
+   "Berlin",
+   "Heidelberg",
+   "Rothenburg",
+   "Cologne",
+   "Romantic Road",
+   "Rhine Valley",
+   "Moselle Valley",
+   "German Alpine Road",
+   "Baltic Coast"
+  ]
  },
  "AU": {
   "name": "Australia",
@@ -914,7 +1015,23 @@
     "A$50–A$200",
     "Over A$200"
    ]
-  }
+  },
+  "pics": [
+   "Kakadu",
+   "Kangaroo Island",
+   "Daintree",
+   "Flinders Ranges",
+   "Kimberley",
+   "Uluru",
+   "Great Barrier Reef",
+   "Blue Mountains",
+   "Barossa Valley",
+   "Great Ocean Road",
+   "Nullarbor",
+   "Red Centre",
+   "Pacific Coast",
+   "Tasmania"
+  ]
  },
  "US": {
   "name": "United States",
@@ -1046,7 +1163,7 @@
     "Route 66",
     "Pacific Coast Highway",
     "Blue Ridge Parkway",
-    "Utah's Mighty 5",
+    "Utah’s Mighty 5",
     "Florida Keys",
     "Glacier"
    ],
@@ -1107,6 +1224,23 @@
     "$25–$100",
     "Over $100"
    ]
-  }
+  },
+  "pics": [
+   "Yellowstone",
+   "Grand Teton",
+   "Glacier",
+   "Denali",
+   "Everglades",
+   "Yosemite",
+   "Grand Canyon",
+   "Charleston",
+   "New Orleans",
+   "Washington DC",
+   "Route 66",
+   "Pacific Coast Highway",
+   "Blue Ridge Parkway",
+   "Utah’s Mighty 5",
+   "Florida Keys"
+  ]
  }
 }

@@ -35,7 +35,8 @@
 #    MS_HEALTH_URL   health endpoint             (default http://localhost:8000/health)
 #    MS_HEALTH_OK    grep pattern for healthy    (default '"status":"ok"')
 #    MS_PURGE_URL    CDN purge endpoint          (default http://localhost:8000/admin/purge-cache)
-#    MS_ADMIN_KEY    optional X-Admin-Key for purge (default unset → no header)
+#    MS_ADMIN_KEY    X-Admin-Key for the purge   (default: the key the RUNNING app holds, read from its
+#                                                  /proc/<MainPID>/environ -- ADMIN-KEY-LOCAL-1, qa-10)
 #    MS_LOG          deploy log file             (default /var/log/marketsquare-deploy.log)
 #    MS_LOCK         lock file                   (default /run/marketsquare-deploy.lock)
 #    MS_KEEP_BACKUPS how many rollback snapshots (default 10)
@@ -57,6 +58,27 @@ MS_LOCK="${MS_LOCK:-/run/marketsquare-deploy.lock}"
 MS_KEEP_BACKUPS="${MS_KEEP_BACKUPS:-10}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MANIFEST="${MS_MANIFEST:-$SCRIPT_DIR/deploy_manifest.txt}"
+
+# ── ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-10) ────────────────────────
+# POST /admin/purge-cache is an admin route. This engine used to purge over loopback with NO key (MS_ADMIN_KEY
+# is not set in marketsquare-deploy.service), which is the only reason the gate kept a loopback exemption for
+# that route. The purge now sends the key the RUNNING app itself holds -- read from its process environment
+# (this unit runs as root), then the service secrets file, then the app .env. Never echoed, never logged, and
+# handed to curl on stdin (-H @-) so it never appears in the process list.
+_app_admin_key() {
+    local pid v f
+    pid="$(systemctl show -p MainPID --value "${MS_APP_SERVICE:-marketsquare}" 2>/dev/null)"
+    if [ -n "$pid" ] && [ "$pid" != "0" ] && [ -r "/proc/$pid/environ" ]; then
+        v="$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | sed -n 's/^MS_ADMIN_KEY=//p' | head -n 1)"
+        [ -n "$v" ] && { printf '%s' "$v"; return 0; }
+    fi
+    for f in /etc/marketsquare/secrets.env "$MS_LIVE/.env"; do
+        [ -r "$f" ] || continue
+        v="$(sed -n 's/^[[:space:]]*\(export[[:space:]]\{1,\}\)\{0,1\}MS_ADMIN_KEY=//p' "$f" 2>/dev/null | head -n 1 | tr -d "\"'\r")"
+        [ -n "$v" ] && { printf '%s' "$v"; return 0; }
+    done
+    return 1
+}
 
 main() {   # entire run parses before execution — safe against self-update mid-run (2 Aug 2026)
 FORCE=0
@@ -274,13 +296,17 @@ fi
 if [ "$healthy" -eq 1 ] && [ "$restart_ok" -eq 1 ] && [ "$qa_ok" -eq 1 ]; then
     echo "$TARGET_SHA" > "$STATE_FILE"
     # purge CDN (best-effort, non-fatal) now that the app is confirmed healthy
-    if [ -n "$MS_ADMIN_KEY" ]; then
-        curl -sf -m 20 -X POST -H "X-Admin-Key: $MS_ADMIN_KEY" "$MS_PURGE_URL" >/dev/null 2>&1 \
+    # ADMIN-KEY-LOCAL-1 (qa-10): the purge carries the admin key; read AFTER the restart, so it is the new
+    # process's own key. Without one the route refuses, and the log says why instead of a bare "failed".
+    _purge_key="$MS_ADMIN_KEY"
+    [ -n "$_purge_key" ] || _purge_key="$(_app_admin_key)"
+    if [ -n "$_purge_key" ]; then
+        printf 'X-Admin-Key: %s\n' "$_purge_key" | curl -sf -m 20 -X POST -H @- "$MS_PURGE_URL" >/dev/null 2>&1 \
             && log "CDN purge requested" || warn "CDN purge failed (non-fatal)"
     else
-        curl -sf -m 20 -X POST "$MS_PURGE_URL" >/dev/null 2>&1 \
-            && log "CDN purge requested" || warn "CDN purge failed (non-fatal)"
+        warn "CDN purge skipped (non-fatal): no MS_ADMIN_KEY readable on this box -- the purge route needs it"
     fi
+    _purge_key=""
     # prune old rollback snapshots
     if [ -d "$MS_LIVE/.deploy-backups" ]; then
         ls -1dt "$MS_LIVE"/.deploy-backups/*/ 2>/dev/null | tail -n +"$((MS_KEEP_BACKUPS+1))" \

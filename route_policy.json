@@ -12,7 +12,7 @@
   {
    "key": "GET /optout/status",
    "level": "admin",
-   "local": true
+   "note": "LOCAL-DOOR-1 (25 Sep 2026 inspection, qa-09): the loopback exemption is gone -- no automation on the box reads this route without a key, so a caller on the box now needs the admin credential like everyone else."
   },
   {
    "key": "GET /health",
@@ -21,12 +21,12 @@
   {
    "key": "GET /ops/selfcheck",
    "level": "admin",
-   "local": true
+   "note": "LOCAL-DOOR-1 (25 Sep 2026 inspection, qa-08): the loopback exemption is gone -- no automation on the box reads this route without a key, so a caller on the box now needs the admin credential like everyone else."
   },
   {
    "key": "POST /admin/purge-cache",
    "level": "admin",
-   "local": true
+   "note": "ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-10): the loopback exemption is gone -- the deploy engine (server_deploy.sh), media_push.bat and refresh_dashboard.bat now purge with the key the running app holds, so a caller on the box needs the admin credential like everyone else."
   },
   {
    "key": "POST /admin/refresh-pois/{listing_id}",
@@ -295,7 +295,14 @@
   },
   {
    "key": "POST /users",
-   "level": "public"
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ],
+   "note": "USERS-BIND-1 (25 Sep 2026 inspection, qa-16): registering an account needs a sign-in and only ever registers the signed-in address."
   },
   {
    "key": "GET /users/{email}",
@@ -961,7 +968,8 @@
   },
   {
    "key": "GET /dashboard/summary",
-   "level": "public"
+   "level": "admin",
+   "note": "SUMMARY-DOOR-1 (25 Sep 2026 inspection, qa-04): admin only through the front door; every page that reads it sends the admin token. ADMIN-KEY-LOCAL-1: the loopback exemption is gone too -- sensor.py and refresh_dashboard.bat now send the key the running app holds."
   },
   {
    "key": "POST /dashboard/bit",
@@ -995,7 +1003,7 @@
   {
    "key": "GET /onboard/funnel",
    "level": "admin",
-   "local": true
+   "note": "LOCAL-DOOR-1 (25 Sep 2026 inspection, qa-07): the loopback exemption is gone -- no automation on the box reads this route without a key, so a caller on the box now needs the admin credential like everyone else."
   },
   {
    "key": "GET /wonders",
@@ -1057,7 +1065,7 @@
   {
    "key": "GET /health/resources",
    "level": "admin",
-   "local": true
+   "note": "ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-05): the loopback exemption is gone -- ops_sweep.py now sends the key the running app holds, so a caller on the box needs the admin credential like everyone else."
   },
   {
    "key": "GET /privacy",
@@ -1126,7 +1134,8 @@
   {
    "key": "POST /agencies/wave-prep",
    "level": "admin",
-   "local": true
+   "local": true,
+   "note": "ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-11): the loopback exemption STAYS until CityLauncher's mint_agency_console_link sends X-Admin-Key -- CityLauncher is a separate repo and still calls this over loopback with the public app key only."
   },
   {
    "key": "GET /agencies/{agency_id}",
@@ -1466,17 +1475,17 @@
   {
    "key": "GET /dashboard/email-triage",
    "level": "admin",
-   "local": true
+   "note": "ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-02): the loopback exemption is gone -- the maintenance agent's census now sends the key the running app holds (rows still discarded unread), so a caller on the box needs the admin credential like everyone else."
   },
   {
    "key": "GET /dashboard/cost",
    "level": "admin",
-   "local": true
+   "note": "ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-01): the loopback exemption is gone -- sensor.py now sends the key the running app holds, so a caller on the box needs the admin credential like everyone else."
   },
   {
    "key": "GET /dashboard/scan",
    "level": "admin",
-   "local": true
+   "note": "LOCAL-DOOR-1 (25 Sep 2026 inspection, qa-03): the loopback exemption is gone -- no automation on the box reads this route without a key, so a caller on the box now needs the admin credential like everyone else."
   },
   {
    "key": "POST /orchestrator/approve",

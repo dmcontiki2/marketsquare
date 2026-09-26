@@ -1,5 +1,5 @@
 {
- "_about": "Quick door translations (preview, NOT a ruling). Claude's first draft 20 Sep 2026; to be read by David's reviewers and the Language reviewer (RUL-160). Keys are the exact English on screen. 23 Sep 2026 (RUL-162): Sepedi ('nso') added as the fifth column; Sesotho ('st') is kept for readers who chose it before, but is no longer offered. 23 Sep 2026 evening (David: 'translate the draft screen's own words for all five languages'): the draft/publish/arrival screens' words added, Claude's draft for David's readers (RUL-160).",
+ "_about": "Quick door translations (preview, NOT a ruling). Claude's first draft 20 Sep 2026; to be read by David's reviewers and the Language reviewer (RUL-160). Keys are the exact English on screen. 23 Sep 2026 (RUL-162): Sepedi ('nso') added as the fifth column; Sesotho ('st') is kept for readers who chose it before, but is no longer offered. 23 Sep 2026 evening (David: 'translate the draft screen's own words for all five languages'): the draft/publish/arrival screens' words added, Claude's draft for David's readers (RUL-160). 25 Sep 2026 inspection (fix wave C1): the save step, saved screen, Buzz explainer, previews, city step and score panel carry whole-sentence keys; David's Afrikaans corrections applied (25 Sep 2026 inspection, langq-20, langq-21, langq-22, langq-24, langq-25, langq-26); new keys are written in Afrikaans and, for isiZulu, isiXhosa and Sepedi, left empty (clean English fallback) unless an existing translation carried the same meaning -- their readers fill the rest after launch (RUL-165).",
  "langs": [
   "af",
   "zu",
@@ -58,35 +58,35 @@
    "Mmaraka wa selegae"
   ],
   "Find a place": [
-   "Soek 'n plek",
+   "Soek ’n plek",
    "Thola indawo",
    "Fumana sebaka",
    "Fumana indawo",
    "Hwetša lefelo"
   ],
   "List a place": [
-   "Adverteer 'n plek",
+   "Adverteer ’n plek",
    "Faka indawo",
    "Kenya sebaka",
    "Faka indawo",
    "Papatša lefelo"
   ],
   "Find a car": [
-   "Soek 'n motor",
+   "Soek ’n motor",
    "Thola imoto",
    "Fumana koloi",
    "Fumana imoto",
    "Hwetša koloi"
   ],
   "Sell a car": [
-   "Verkoop 'n motor",
+   "Verkoop ’n motor",
    "Thengisa imoto",
    "Rekisa koloi",
    "Thengisa imoto",
    "Rekiša koloi"
   ],
   "Find a tutor": [
-   "Soek 'n tutor",
+   "Soek ’n tutor",
    "Thola umfundisi",
    "Fumana morupeli",
    "Fumana umfundisi",
@@ -100,42 +100,42 @@
    "Fa thuto"
   ],
   "Find a pro": [
-   "Soek 'n vakman",
+   "Soek ’n vakman",
    "Thola uchwepheshe",
    "Fumana setsebi",
    "Fumana ingcali",
    "Hwetša setsebi"
   ],
   "Offer a service": [
-   "Bied 'n diens aan",
+   "Bied ’n diens aan",
    "Nikeza insizakalo",
    "Fana ka tshebeletso",
    "Nikezela ngenkonzo",
    "Fa tirelo"
   ],
   "Find a piece": [
-   "Soek 'n stuk",
+   "Soek ’n stuk",
    "Thola into",
    "Fumana ntho",
    "Fumana into",
    "Hwetša selo"
   ],
   "Sell a piece": [
-   "Verkoop 'n stuk",
+   "Verkoop ’n stuk",
    "Thengisa into",
    "Rekisa ntho",
    "Thengisa into",
    "Rekiša selo"
   ],
   "Find a trip": [
-   "Soek 'n uitstappie",
+   "Soek ’n reis",
    "Thola uhambo",
    "Fumana leeto",
    "Fumana uhambo",
    "Hwetša leeto"
   ],
   "List a trip": [
-   "Adverteer 'n uitstappie",
+   "Adverteer ’n reis",
    "Faka uhambo",
    "Kenya leeto",
    "Faka uhambo",
@@ -240,7 +240,7 @@
    "Ka pela gakaakang?"
   ],
   "Another option": [
-   "'n Ander opsie",
+   "’n Ander opsie",
    "Okunye",
    "Kgetho e nngwe",
    "Olunye ukhetho",
@@ -345,21 +345,21 @@
    "Ka iri"
   ],
   "Per job": [
-   "Per werk",
+   "Per taak",
    "Ngomsebenzi",
    "Ka mosebetsi",
    "Ngomsebenzi",
    "Ka mošomo"
   ],
   "Quote first": [
-   "Kwotasie eers",
+   "Eers ’n kwotasie",
    "Ikhotheshini kuqala",
    "Theko pele",
    "Ikowuteyishini kuqala",
    "Theko pele"
   ],
   "Trade-tested": [
-   "Vakgetoets",
+   "Ambagstoets geslaag",
    "Uhlolwe ekhonweni",
    "O lekotswe mosebetsing",
    "Uvavanyiwe kubugcisa",
@@ -436,14 +436,14 @@
    "Tšhireletšo"
   ],
   "Heavy industry & plant": [
-   "Swaar nywerheid & masjinerie",
+   "Swaarnywerheid & masjinerie",
    "Izimboni ezinkulu nemishini",
    "Diindasteri tse boima le metjhini",
    "Imizi-mveliso emikhulu noomatshini",
    "Diintasteri tše boima le metšhene"
   ],
   "Driving & vehicles": [
-   "Bestuur & voertuie",
+   "Vervoer & voertuie",
    "Ukushayela nezimoto",
    "Ho kganna le dikoloi",
    "Ukuqhuba nezithuthi",
@@ -464,7 +464,7 @@
    "Bahlomi le balokiši"
   ],
   "Which ages do you care for?": [
-   "Watter ouderdomme versorg jy?",
+   "Vir watter ouderdomme sorg jy?",
    "Unakekela izingane zeminyaka emingaki?",
    "O hlokomela bana ba dilemo dife?",
    "Ukhathalela abantwana abaneminyaka emingaphi?",
@@ -485,7 +485,7 @@
    "Bana ba bannyane"
   ],
   "School age": [
-   "Skoolgaande",
+   "Skoolgaande kinders",
    "Abasesikoleni",
    "Ba sekolo",
    "Abasesikolweni",
@@ -506,14 +506,14 @@
    "O hlokomela mang?"
   ],
   "An older person": [
-   "'n Ouer persoon",
+   "’n Ouer persoon",
    "Umuntu osekhulile",
    "Motho ya hodileng",
    "Umntu omdala",
    "Motho yo a godilego"
   ],
   "A person with a disability": [
-   "'n Persoon met 'n gestremdheid",
+   "’n Persoon met ’n gestremdheid",
    "Umuntu okhubazekile",
    "Motho ya nang le bokowa",
    "Umntu okhubazekileyo",
@@ -562,7 +562,7 @@
    "Papatšo ya gago ke ye"
   ],
   "Publish it": [
-   "Publiseer dit",
+   "Plaas dit",
    "Yishicilele",
    "E phatlalatse",
    "Yipapashe",
@@ -632,7 +632,7 @@
    "Molemi wa serapa"
   ],
   "Handyman": [
-   "Handwerksman",
+   "Nutsman",
    "Umlungisi wezinto",
    "Molokisi wa dintho",
    "Umlungisi wezinto",
@@ -814,7 +814,7 @@
    "Setsebi sa dinala"
   ],
   "Car washer": [
-   "Karwasser",
+   "Motorwasser",
    "Umgezi wezimoto",
    "Mohlatswi wa dikoloi",
    "Umhlambi weemoto",
@@ -828,7 +828,7 @@
    "Molebeledi"
   ],
   "Plant operator (TLB / excavator)": [
-   "Masjienoperateur (TLB / graaf)",
+   "Masjienoperateur (TLB / graafmasjien)",
    "Umshayeli we-TLB",
    "Mokganni wa TLB",
    "Umqhubi we-TLB",
@@ -933,7 +933,7 @@
    "Mophaditši"
   ],
   "Tiler": [
-   "Teëlêer",
+   "Teëllêer",
    "Umbeki wamathayela",
    "Mobei wa dithaele",
    "Umbeki weethayile",
@@ -961,7 +961,7 @@
    "Mobei wa diphefi"
   ],
   "Air-con & refrigeration technician": [
-   "Lugversorging- en verkoelingstegnikus",
+   "Lugversorgings- en verkoelingstegnikus",
    "Uchwepheshe wama-aircon nezifriji",
    "Setsebi sa di-aircon le difriji",
    "Ingcali yee-aircon neefriji",
@@ -1017,21 +1017,21 @@
    "Tše dingwe"
   ],
   "Get seen for work — in a minute": [
-   "Word gesien vir werk — binne 'n minuut",
+   "Word raakgesien vir werk — binne ’n minuut",
    "Bonakala ukuze uthole umsebenzi — ngomzuzu owodwa",
    "",
    "Bonwa ukuze ufumane umsebenzi — ngomzuzu omnye",
    "Bonwa gore o hwetše mošomo — ka motsotso o tee"
   ],
   "Put it on TrustSquare — in a minute": [
-   "Sit dit op TrustSquare — binne 'n minuut",
+   "Sit dit op TrustSquare — binne ’n minuut",
    "Kufake ku-TrustSquare — ngomzuzu owodwa",
    "",
    "Yifake kwiTrustSquare — ngomzuzu omnye",
    "E bee go TrustSquare — ka motsotso o tee"
   ],
   "A few taps, no typing. Your advert, your language.": [
-   "'n Paar klikke, geen tikwerk nie. Jou advertensie, jou taal.",
+   "’n Paar klikke, geen tikwerk nie. Jou advertensie, jou taal.",
    "Ukuthinta okumbalwa, akukho ukubhala. Isikhangiso sakho, ngolimi lwakho.",
    "",
    "Ukucofa okumbalwa, akukho kuchwetheza. Isibhengezo sakho, ngolwimi lwakho.",
@@ -1059,7 +1059,7 @@
    "ke a bulega"
   ],
   "Tap every day you are free. Tap one again to take it back.": [
-   "Tik elke dag wat jy vry is. Tik weer om dit terug te neem.",
+   "Tik op elke dag waarop jy vry is. Tik weer op ’n dag om dit af te haal.",
    "Thinta usuku ngalunye okhululekile ngalo. Thinta futhi ukuze ulususe.",
    "",
    "Cofa yonke imihla ekhululekileyo. Cofa kwakhona ukuyirhoxisa.",
@@ -1080,7 +1080,7 @@
    "Papatšo ya gago — e loketše go phatlalatšwa"
   ],
   "You can add it in the app after you publish.": [
-   "Jy kan dit in die app byvoeg nadat jy geplaas het.",
+   "Jy kan dit in die app byvoeg nadat jy jou advertensie geplaas het.",
    "Ungakwengeza ku-app ngemva kokushicilela.",
    "",
    "Unokuyongeza kwi-app emva kokupapasha.",
@@ -1101,14 +1101,14 @@
    "Ke wena fela yo a bonago se. Bareki ba bona naledi fela."
   ],
   "Add your own photos": [
-   "Voeg jou eie foto's by",
+   "Voeg jou eie foto’s by",
    "Engeza izithombe zakho",
    "",
    "Yongeza iifoto zakho",
    "Oketša diswantšho tša gago"
   ],
   "Worth more than anything else you can do right now.": [
-   "Werd meer as enigiets anders wat jy nou kan doen.",
+   "Meer werd as enigiets anders wat jy nou kan doen.",
    "Kubaluleke ukwedlula noma yini ongayenza manje.",
    "",
    "Kubaluleke ngaphezu kwayo nantoni na onokuyenza ngoku.",
@@ -1136,14 +1136,14 @@
    "Netefatša nomoro ya gago"
   ],
   "What happens after you publish": [
-   "Wat gebeur nadat jy plaas",
+   "Wat gebeur nadat jy jou advertensie geplaas het",
    "Kwenzekani ngemva kokushicilela",
    "",
    "Kwenzeka ntoni emva kokupapasha",
    "Go direga eng ka morago ga go phatlalatša"
   ],
   "The fastest thing on this whole app": [
-   "Die vinnigste ding op hierdie hele app",
+   "Die vinnigste ding in hierdie hele app",
    "Into esheshayo kunazo zonke kule app",
    "",
    "Eyona nto ikhawulezayo kule app yonke",
@@ -1220,14 +1220,14 @@
    "Papatšo ya gago e bolokilwe."
   ],
   "People can find it now. Your name and number stay private until you accept an introduction.": [
-   "Mense kan dit nou vind. Jou naam en nommer bly privaat totdat jy 'n voorstelling aanvaar.",
+   "Mense kan dit nou vind. Jou naam en nommer bly privaat totdat jy ’n voorstelling aanvaar.",
    "Abantu sebengasithola manje. Igama lakho nenombolo kuhlala kuyimfihlo uze wamukele isethulo.",
    "",
    "Abantu banokusifumana ngoku. Igama lakho nenombolo zihlala ziyimfihlo de wamkele intshayelelo.",
    "Batho ba ka e hwetša bjale. Leina la gago le nomoro di dula e le sephiri go fihlela o amogela tsebišo."
   ],
   "See my advert": [
-   "Sien my advertensie",
+   "Kyk na my advertensie",
    "Bona isikhangiso sami",
    "",
    "Jonga isibhengezo sam",
@@ -1248,7 +1248,7 @@
    "Ke e iromelle ka WhatsApp"
   ],
   "We emailed you a link to it as well.": [
-   "Ons het ook vir jou 'n skakel daarna ge-e-pos.",
+   "Ons het ook ’n skakel na jou advertensie vir jou ge-e-pos.",
    "Sikuthumelele nesixhumanisi nge-imeyili.",
    "",
    "Sikuthumelele nekhonkco nge-imeyile.",
@@ -1276,7 +1276,7 @@
    "Tiišetšo ya maphodisa / tekolo ya morago"
   ],
   "Any NQF qualification or short course": [
-   "Enige NQF-kwalifikasie of kort kursus",
+   "Enige NQF-kwalifikasie of kortkursus",
    "Noma iyiphi iziqu ze-NQF noma isifundo esifushane",
    "",
    "Nasiphi na isiqinisekiso seNQF okanye ikhosi emfutshane",
@@ -1311,7 +1311,7 @@
    "O lefiša bokae?"
   ],
   "Draft translations, being checked by readers. Tap any time to switch back.": [
-   "Konsepvertalings, word deur lesers nagegaan. Tik enige tyd om terug te skakel.",
+   "Konsepvertalings — lesers gaan dit nog na. Tik enige tyd om terug te skakel.",
    "Izinguqulo ezisalungiswa, zihlolwa ngabafundi. Thinta noma nini ukuze ubuyele.",
    "",
    "Iinguqulelo eziyidrafti, zihlolwa ngabafundi. Cofa nanini na ukubuyela.",
@@ -1409,14 +1409,14 @@
    "Theko ya gago, sephetho sa gago. Ngwala gore mošomo wa gago o bohlokwa bokae."
   ],
   "That is below the national minimum wage.": [
-   "Dit is onder die nasionale minimum loon.",
+   "Dit is onder die nasionale minimumloon.",
    "Lokhu kungaphansi kweholo elincane likazwelonke.",
    "Hona ho ka tlase ho moputso o tlase wa naha.",
    "Oku kungaphantsi komvuzo omncinci wesizwe.",
    "Se se ka tlase ga moputso wa fasana wa naga."
   ],
   "List something else": [
-   "Lys iets anders",
+   "Adverteer iets anders",
    "Faka okunye",
    "Kenya se seng",
    "Faka enye into",
@@ -1437,28 +1437,28 @@
    "Mothwadi wa gago o re"
   ],
   "A parent or student you teach says": [
-   "'n Ouer of leerder vir wie jy klas gee sê",
+   "’n Ouer of leerder vir wie jy klas gee, sê",
    "Umzali noma umfundi omfundisayo uthi",
    "Motswadi kapa moithuti eo o mo rutang o re",
    "Umzali okanye umfundi omfundisayo uthi",
    "Motswadi goba moithuti yo o mo rutago o re"
   ],
   "A customer you have worked for says": [
-   "'n Klant vir wie jy gewerk het sê",
+   "’n Klant vir wie jy gewerk het, sê",
    "Ikhasimende osebenzele lona lithi",
    "Moreki eo o kileng wa mo sebeletsa o re",
    "Umthengi omsebenzeleyo uthi",
    "Moreki yo o kilego wa mo šomela o re"
   ],
   "A guest you have hosted says": [
-   "'n Gas wat jy ontvang het sê",
+   "’n Gas wat jy ontvang het, sê",
    "Isivakashi osake wasamukela sithi",
    "Moeti eo o kileng wa mo amohela o re",
    "Undwendwe owakhe walwamkela luthi",
    "Moeng yo o kilego wa mo amogela o re"
   ],
   "Someone you have worked for says": [
-   "Iemand vir wie jy gewerk het sê",
+   "Iemand vir wie jy gewerk het, sê",
    "Umuntu osake wamsebenzela uthi",
    "Motho eo o kileng wa mo sebeletsa o re",
    "Umntu owakhe wamsebenzela uthi",
@@ -1472,7 +1472,7 @@
    "lefoko le tee"
   ],
   "about you. That is what opens your trust score — nothing you write about yourself can do it. Four taps on their side, and they never have to use TrustSquare again.": [
-   "oor jou. Dit is wat jou vertrouenstelling oopmaak — niks wat jy oor jouself skryf kan dit doen nie. Vier tikke aan hulle kant, en hulle hoef nooit weer TrustSquare te gebruik nie.",
+   "oor jou. Dit is wat jou vertrouenstelling oopmaak — niks wat jy oor jouself skryf, kan dit doen nie. Vier tikke aan hulle kant, en hulle hoef nooit weer TrustSquare te gebruik nie.",
    "ngawe. Yilokho okuvula amaphuzu akho okwethenjwa — akukho lutho olubhala ngawe ongakwenza lokho. Ukuthinta okune ohlangothini lwabo, futhi abasoze bawusebenzise futhi uTrustSquare.",
    "ka wena. Ke sona se bulang sekoro sa hao sa tshepo — ha ho letho leo o le ngolang ka wena le ka etsang seo. Ho tobetsa hane ka lehlakoreng la bona, mme ha ba sa tla hlola ba sebedisa TrustSquare.",
    "ngawe. Yiyo evula amanqaku akho okuthenjwa — akukho nto oyibhalayo ngawe enokwenza oko. Ukucofa kane kwicala labo, kwaye abasoze baphinde basebenzise iTrustSquare.",
@@ -1493,7 +1493,7 @@
    "Le bona ba na le konopo ye e swanago gabotse ya gago. Mothaladi o tee ka lehlakore le lengwe le le lengwe, ga go poledišano ye telele, gomme imeile e e swara ge ditsebišo tša bona di timilwe."
   ],
   "One line to the parents you teach for - a moved lesson, an exam week, a late child.": [
-   "Een reël na die ouers vir wie jy klas gee - 'n geskuifde les, 'n eksamenweek, 'n laat kind.",
+   "Een reël na die ouers vir wie jy klas gee - ’n geskuifde les, ’n eksamenweek, ’n laat kind.",
    "Umugqa owodwa kubazali obafundisela - isifundo esihanjisiwe, isonto lezivivinyo, ingane efike sekwephuzile.",
    "Mola o le mong ho batswadi bao o ba rutelang - thuto e sutisitsweng, beke ya ditlhahlobo, ngwana ya diehang.",
    "Umgca omnye kubazali obafundisela - isifundo esishenxisiweyo, iveki yeemviwo, umntwana ofika emva kwexesha.",
@@ -1528,7 +1528,7 @@
    "Botšiša batho bao ba ka tsebago"
   ],
   "One line, to each of them separately. They never see each other — this is the phone-around, not a group.": [
-   "Een reël, aan elkeen afsonderlik. Hulle sien mekaar nooit nie — dis rondbel, nie 'n groep nie.",
+   "Een reël, aan elkeen afsonderlik. Hulle sien mekaar nooit nie — dis rondbel, nie ’n groep nie.",
    "Umugqa owodwa, komunye nomunye ngokwehlukana. Abasoze babonane — lokhu ukushayela abantu, akulona iqembu.",
    "Mola o le mong, ho e mong le e mong ka thoko. Ha ba bonane — ena ke ho letsetsa batho, e seng sehlopha.",
    "Umgca omnye, komnye nomnye ngokwahlukeneyo. Abaze babonane — oku kukutsalela abantu umnxeba, asiloqela.",
@@ -1542,7 +1542,7 @@
    "Mehlala — ka go app o kgetha go batho ba gago"
   ],
   "Each one is an ordinary buzz, with your name on it, and each of them can switch you off on their own. There is no group and no thread — whoever knows something buzzes you back.": [
-   "Elkeen is 'n gewone buzz, met jou naam daarop, en elkeen kan jou self afskakel. Daar is geen groep en geen draad nie — wie iets weet, buzz jou terug.",
+   "Elkeen is ’n gewone buzz, met jou naam daarop, en elkeen kan jou self afskakel. Daar is geen groep en geen draad nie — wie iets weet, buzz jou terug.",
    "Ngayinye iyi-buzz ejwayelekile, enegama lakho, futhi ngamunye angakucisha yedwa. Alikho iqembu futhi ayikho intambo — noma ubani owaziyo uzokubuzela emuva.",
    "E nngwe le e nngwe ke buzz e tlwaelehileng, e nang le lebitso la hao, mme e mong le e mong a ka o tima a le mong. Ha ho sehlopha ebile ha ho puisano — ya tsebang ho hong o tla o buzz hape.",
    "Nganye yi-buzz eqhelekileyo, enegama lakho, kwaye nganye inokukucima yodwa. Akukho qela kwaye akukho mtya — nabani na owaziyo uya kukubuzela emva.",
@@ -1563,56 +1563,56 @@
    "Morago"
   ],
   "Five is the cap — this is a phone-around, not a mailing list.": [
-   "Vyf is die maksimum — dis rondbel, nie 'n poslys nie.",
+   "Vyf is die maksimum — dis rondbel, nie ’n poslys nie.",
    "Abahlanu yibona abaningi — lokhu ukushayela abantu, akusilo uhlu lokuposa.",
    "Ba bahlano ke bongata — ena ke ho letsetsa batho, e seng lenane la poso.",
    "Abahlanu ngabona baninzi — oku kukutsalela abantu umnxeba, asiluhlu lokuposa.",
    "Ba bahlano ke bontši — se ke go leletša batho, e sego lenaneo la poso."
   ],
   "e.g. Anyone got a 1947 penny?": [
-   "bv. Het iemand 'n 1947-pennie?",
+   "bv. Het iemand ’n 1947-pennie?",
    "",
    "",
    "",
    ""
   ],
   "e.g. Does your cleaner have a free day? We are looking.": [
-   "bv. Het jou huishulp 'n vry dag? Ons soek.",
+   "bv. Het jou huishulp ’n vry dag? Ons soek.",
    "",
    "",
    "",
    ""
   ],
   "e.g. Know a plumber who actually pitches up?": [
-   "bv. Ken jy 'n loodgieter wat regtig opdaag?",
+   "bv. Ken jy ’n loodgieter wat regtig opdaag?",
    "",
    "",
    "",
    ""
   ],
   "e.g. Anyone know a maths tutor for Grade 10?": [
-   "bv. Ken iemand 'n wiskunde-tutor vir Graad 10?",
+   "bv. Ken iemand ’n wiskundetutor vir Graad 10?",
    "",
    "",
    "",
    ""
   ],
   "e.g. Know anyone selling a bakkie under R150k?": [
-   "bv. Ken jy iemand wat 'n bakkie onder R150k verkoop?",
+   "bv. Ken jy iemand wat ’n bakkie onder R150k verkoop?",
    "",
    "",
    "",
    ""
   ],
   "e.g. Heard of a 2-bedroom to rent near Menlyn?": [
-   "bv. Weet jy van 'n 2-slaapkamer te huur naby Menlyn?",
+   "bv. Weet jy van ’n 2-slaapkamer te huur naby Menlyn?",
    "",
    "",
    "",
    ""
   ],
   "e.g. Anyone know a good guesthouse in Clarens for May?": [
-   "bv. Ken iemand 'n goeie gastehuis in Clarens vir Mei?",
+   "bv. Ken iemand ’n goeie gastehuis in Clarens vir Mei?",
    "",
    "",
    "",
@@ -1668,7 +1668,7 @@
    ""
   ],
   "neighbour, has a cleaner": [
-   "buurvrou, het 'n huishulp",
+   "buurvrou, het ’n huishulp",
    "",
    "",
    "",
@@ -1710,7 +1710,7 @@
    ""
   ],
   "neighbour, had a plumber in": [
-   "buurman, het 'n loodgieter gehad",
+   "buurman, het ’n loodgieter gehad",
    "",
    "",
    "",
@@ -1759,7 +1759,7 @@
    ""
   ],
   "teacher friend": [
-   "onderwyser-vriend",
+   "onderwyservriend",
    "",
    "",
    "",
@@ -1815,7 +1815,7 @@
    ""
   ],
   "friend at a dealership": [
-   "vriend by 'n handelaar",
+   "vriend by ’n handelaar",
    "",
    "",
    "",
@@ -1899,7 +1899,7 @@
    ""
   ],
   "A week": [
-   "'n Week",
+   "’n Week",
    "",
    "",
    "",
@@ -2088,7 +2088,7 @@
    ""
   ],
   "Find help": [
-   "Kry hulp",
+   "Soek hulp",
    "",
    "",
    "",
@@ -2228,7 +2228,7 @@
    ""
   ],
   "How rare?": [
-   "Hoe skaars?",
+   "Hoe seldsaam?",
    "",
    "",
    "",
@@ -2319,7 +2319,7 @@
    ""
   ],
   "Not listed yet": [
-   "Nog nie gelys nie",
+   "Nog nie geadverteer nie",
    "",
    "",
    "",
@@ -2368,28 +2368,28 @@
    ""
   ],
   "Over R2 000": [
-   "Oor R2 000",
+   "Meer as R2 000",
    "",
    "",
    "",
    ""
   ],
   "Over R20 000": [
-   "Oor R20 000",
+   "Meer as R20 000",
    "",
    "",
    "",
    ""
   ],
   "Over R500k": [
-   "Oor R500k",
+   "Meer as R500k",
    "",
    "",
    "",
    ""
   ],
   "Over R6 000": [
-   "Oor R6 000",
+   "Meer as R6 000",
    "",
    "",
    "",
@@ -2424,7 +2424,7 @@
    ""
   ],
   "Pool care": [
-   "Swembadsorg",
+   "Swembadonderhoud",
    "",
    "",
    "",
@@ -2452,7 +2452,7 @@
    ""
   ],
   "Rare only": [
-   "Net skaars",
+   "Net seldsaam",
    "",
    "",
    "",
@@ -2501,7 +2501,7 @@
    ""
   ],
   "Self-drive": [
-   "Selfbestuur",
+   "Selfry",
    "",
    "",
    "",
@@ -2634,7 +2634,7 @@
    ""
   ],
   "What are you listing?": [
-   "Wat lys jy?",
+   "Wat adverteer jy?",
    "",
    "",
    "",
@@ -2809,7 +2809,7 @@
    "dipapatšo tša nnete le mehlala ya AI"
   ],
   "AI examples of what an advert looks like": [
-   "KI-voorbeelde van hoe 'n advertensie lyk",
+   "KI-voorbeelde van hoe ’n advertensie lyk",
    "izibonelo ze-AI zokuthi isikhangiso sibukeka kanjani",
    "mehlala ya AI ya hore papatso e shebahala jwang",
    "imizekelo ye-AI yendlela isibhengezo esikhangeleka ngayo",
@@ -2844,28 +2844,28 @@
    "ke go tshepega"
   ],
   "Tap one to ask for an introduction — it opens in TrustSquare, where introductions and Tuppence live.": [
-   "Tik een om 'n voorstelling te vra — dit maak oop in TrustSquare, waar voorstellings en Tuppence woon.",
+   "Tik op een om ’n voorstelling te vra — dit gaan in TrustSquare oop, waar jou voorstellings en Tuppence is.",
    "",
    "",
    "",
    ""
   ],
   "Someone who has bought from you says": [
-   "Iemand wat al by jou gekoop het sê",
+   "Iemand wat al by jou gekoop het, sê",
    "Umuntu osake wathenga kuwe uthi",
    "Motho ya kileng a reka ho wena o re",
    "Umntu owakhe wathenga kuwe uthi",
    "Motho yo a kilego a reka go wena o re"
   ],
   "A collector you have dealt with says": [
-   "'n Versamelaar met wie jy al te doen gehad het sê",
+   "’n Versamelaar met wie jy al te doen gehad het, sê",
    "Umqoqi osake wasebenzisana naye uthi",
    "Mmokedi eo o kileng wa sebetsa le yena o re",
    "Umqokeleli owakhe wasebenzisana naye uthi",
    "Mokgobokedi yo o kilego wa šoma le yena o re"
   ],
   "Someone who has rented or bought from you says": [
-   "Iemand wat al by jou gehuur of gekoop het sê",
+   "Iemand wat al by jou gehuur of gekoop het, sê",
    "Umuntu osake waqasha noma wathenga kuwe uthi",
    "Motho ya kileng a hira kapa a reka ho wena o re",
    "Umntu owakhe waqesha okanye wathenga kuwe uthi",
@@ -2879,7 +2879,7 @@
    ""
   ],
   "One line to the collectors who buy from you - a new piece, a swap, a price.": [
-   "Een reël na die versamelaars wat by jou koop - 'n nuwe stuk, 'n ruil, 'n prys.",
+   "Een reël na die versamelaars wat by jou koop - ’n nuwe stuk, ’n ruil, ’n prys.",
    "",
    "",
    "",
@@ -2914,7 +2914,7 @@
    "diphapoši tša go robala"
   ],
   "A customer says": [
-   "'n Klant sê",
+   "’n Klant sê",
    "Ikhasimende lithi",
    "Moreki o re",
    "Umthengi uthi",
@@ -3045,6 +3045,2225 @@
    "moreki wa hao wa kamehla, Menlyn",
    "umthengi wakho oqhelekileyo, eMenlyn",
    "moreki wa gago wa ka mehla, Menlyn"
+  ],
+  "That is below the legal minimum wage.": [
+   "Dit is onder die nasionale minimumloon.",
+   "Lokhu kungaphansi kweholo elincane likazwelonke.",
+   "Hona ho ka tlase ho moputso o tlase wa naha.",
+   "Oku kungaphantsi komvuzo omncinci wesizwe.",
+   "Se se ka tlase ga moputso wa fasana wa naga."
+  ],
+  "They have exactly the same button for you. One line each way, no thread to scroll, and email catches it if their notifications are off.": [
+   "Hulle het presies dieselfde knoppie vir jou. Een reël elke kant toe, geen draad om deur te rol nie, en e-pos vang dit as hul kennisgewings af is.",
+   "Nabo banenkinobho efanayo ngqo yakho. Umugqa owodwa ngapha nangapha, ayikho intambo yokuskrola, futhi i-imeyili iyakubamba uma izaziso zabo zivaliwe.",
+   "Le bona ba na le konopo e tshwanang hantle bakeng sa hao. Mola o le mong ka nqa ka nngwe, ha ho puisano e telele, mme imeile e e tshwara ha ditsebiso tsa bona di timilwe.",
+   "Nabo banenqaku elifanayo ncam lakho. Umgca omnye kwicala ngalinye, akukho mtya wokuskrola, kwaye i-imeyile iyayibamba ukuba izaziso zabo zicinyiwe.",
+   "Le bona ba na le konopo ye e swanago gabotse ya gago. Mothaladi o tee ka lehlakore le lengwe le le lengwe, ga go poledišano ye telele, gomme imeile e e swara ge ditsebišo tša bona di timilwe."
+  ],
+  "Each of these adds to your advert score": [
+   "Elkeen hiervan tel by jou advertensietelling",
+   "Ngayinye yalezi yengeza kumaphuzu esikhangiso sakho",
+   "",
+   "Nganye kwezi yongeza kumanqaku esibhengezo sakho",
+   "Se sengwe le se sengwe sa tše se oketša meputso ya papatšo ya gago"
+  ],
+  "Tap every day you can work. Tap again to remove it.": [
+   "Tik op elke dag waarop jy kan werk. Tik weer op ’n dag om dit af te haal.",
+   "Thinta usuku ngalunye okhululekile ngalo. Thinta futhi ukuze ulususe.",
+   "",
+   "Cofa yonke imihla ekhululekileyo. Cofa kwakhona ukuyirhoxisa.",
+   "Kgotla letšatši le lengwe le le lengwe leo o lokologilego. Kgotla gape go le tloša."
+  ],
+  "Pick the days you can work": [
+   "Kies die dae waarop jy kan werk",
+   "Khetha izinsuku zakho",
+   "",
+   "Khetha iintsuku zakho",
+   "Kgetha matšatši a gago"
+  ],
+  "Which days can you work?": [
+   "Op watter dae kan jy werk?",
+   "Yiziphi izinsuku otholakala ngazo?",
+   "O fumaneha ka matsatsi afe?",
+   "Zeziphi iintsuku ofumaneka ngazo?",
+   "O bulegile ka matšatši afe?"
+  ],
+  "Which qualification do you have?": [
+   "Watter kwalifikasie het jy?",
+   "Unaziphi iziqu?",
+   "O na le lengolo lefe?",
+   "Unaziphi iziqinisekiso?",
+   "O na le lengwalo lefe?"
+  ],
+  "Tap one to ask for an introduction — it opens in TrustSquare.": [
+   "Tik op een om ’n voorstelling te vra — dit gaan in TrustSquare oop.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "A 6-digit code comes by SMS. Introductions reach you on this number.": [
+   "",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Type the 6 digits from the SMS.": [
+   "",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "No email needed. You get a private link that is your key to this advert — send it to yourself on WhatsApp and keep it. Introductions wait for you inside.": [
+   "",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Email": [
+   "E-pos",
+   "I-imeyili",
+   "",
+   "I-imeyile",
+   "Imeile"
+  ],
+  "Phone": [
+   "Foon",
+   "Ifoni",
+   "",
+   "Ifowuni",
+   "Founo"
+  ],
+  "WhatsApp link": [
+   "WhatsApp-skakel",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Save my advert": [
+   "Stoor my advertensie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Saving…": [
+   "Stoor tans…",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Free. Before it goes live, you read and sign the {terms} in the app.": [
+   "Gratis. Voordat dit sigbaar word, lees en teken jy die {terms} in die app.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Sign the terms and publish": [
+   "Teken die bepalings en plaas dit",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Your private key link": [
+   "Jou privaat sleutelskakel",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Send my key to myself on WhatsApp": [
+   "Stuur my sleutel vir myself op WhatsApp",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Pass Quick on to someone": [
+   "Stuur Quick vir iemand anders",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Your phone number": [
+   "Jou foonnommer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Send code": [
+   "Stuur kode",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "6-digit code": [
+   "6-syfer-kode",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Confirm": [
+   "Bevestig",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Type the number you use for SMS, for example 082 123 4567.": [
+   "Tik die nommer wat jy vir SMS’e gebruik, byvoorbeeld 082 123 4567.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Type your mobile number.": [
+   "Tik jou selfoonnommer.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Sending the code…": [
+   "Stuur tans die kode…",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Code sent to": [
+   "Kode gestuur na",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Type it here.": [
+   "Tik dit hier.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "SMS codes are not switched on yet — your private WhatsApp link works today.": [
+   "SMS-kodes is nog nie aangeskakel nie — jou privaat WhatsApp-skakel werk vandag.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Could not send the code. Try again.": [
+   "Kon nie die kode stuur nie. Probeer weer.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "That code is not right.": [
+   "Daardie kode is nie reg nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Phone confirmed. Introductions reach you by SMS.": [
+   "Foon bevestig. Voorstellings bereik jou per SMS.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Confirm the SMS code first, then save.": [
+   "Bevestig eers die SMS-kode, en stoor dan.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "No connection — try again.": [
+   "Geen verbinding nie — probeer weer.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Too many adverts from this phone today. Please try again tomorrow.": [
+   "Te veel advertensies van hierdie foon af vandag. Probeer asseblief môre weer.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Too many adverts for this email address today. Please try again tomorrow.": [
+   "Te veel advertensies vir hierdie e-posadres vandag. Probeer asseblief môre weer.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Please type an email address we can reach you on.": [
+   "Tik asseblief ’n e-posadres waarop ons jou kan bereik.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Something is missing from this advert. Please try again.": [
+   "Iets kort in hierdie advertensie. Probeer asseblief weer.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Not saved — nothing was lost. Please try again.": [
+   "Nie gestoor nie — niks is verlore nie. Probeer asseblief weer.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Next: open it in TrustSquare, sign the terms and publish.": [
+   "Volgende: maak dit in TrustSquare oop, teken die bepalings en plaas dit.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You already have a TrustSquare account. We emailed you a link — open it to publish.": [
+   "Jy het reeds ’n TrustSquare-rekening. Ons het vir jou ’n skakel ge-e-pos — maak dit oop om te plaas.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Saved, not published yet — open it in TrustSquare to finish.": [
+   "Gestoor, nog nie geplaas nie — maak dit in TrustSquare oop om klaar te maak.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Keep this link — it is your key. Send it to yourself on WhatsApp now.": [
+   "Hou hierdie skakel — dit is jou sleutel. Stuur dit nou vir jouself op WhatsApp.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Introductions wait in your TrustSquare hub — open it with your private link.": [
+   "Voorstellings wag in jou TrustSquare-hub — maak dit met jou privaat skakel oop.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Introductions reach you by SMS.": [
+   "Voorstellings bereik jou per SMS.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "We also emailed a link to": [
+   "Ons het ook ’n skakel ge-e-pos aan",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Not right? Change it": [
+   "Verkeerd? Verander dit",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "We also emailed you a link.": [
+   "Ons het ook vir jou ’n skakel ge-e-pos.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "My TrustSquare advert": [
+   "My TrustSquare-advertensie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "This link is my key to it — keep it, do not share it:": [
+   "Hierdie skakel is my sleutel daartoe — hou dit, moenie dit deel nie:",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "My TrustSquare advert is live:": [
+   "My TrustSquare-advertensie is aanlyn:",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "My TrustSquare advert is saved:": [
+   "My TrustSquare-advertensie is gestoor:",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Your advert — ready to save": [
+   "Jou advertensie — gereed om te stoor",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You can add it in the app before you publish.": [
+   "Jy kan dit in die app byvoeg voordat jy dit plaas.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Everything that counts is in.": [
+   "Alles wat tel, is in.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "terms accepted": [
+   "bepalings aanvaar",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Use another email": [
+   "Gebruik ’n ander e-posadres",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Change this in TrustSquare": [
+   "Verander dit in TrustSquare",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Ranking": [
+   "Rangorde",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Trust": [
+   "Vertroue",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Advert": [
+   "Advertensie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "new": [
+   "nuut",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "established": [
+   "gevestig",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "trusted": [
+   "vertrou",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "highly trusted": [
+   "hoogs vertrou",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Your ranking is half trust and half advert quality. It goes up when either of them goes up.": [
+   "Jou rangorde is half vertroue en half advertensiegehalte. Dit styg wanneer enigeen van die twee styg.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Your trust score goes up when someone who knows your work vouches for you, or when you pass an ID check.": [
+   "Jou vertrouenstelling styg wanneer iemand wat jou werk ken, vir jou instaan, of wanneer jy ’n ID-kontrole slaag.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "what raises your trust score": [
+   "wat jou vertrouenstelling verhoog",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "These raise your trust score, not your advert score — which is why they are not in the list above. You add them once in TrustSquare and they count on every advert you make.": [
+   "Dit verhoog jou vertrouenstelling, nie jou advertensietelling nie — daarom is hulle nie in die lys hierbo nie. Jy voeg hulle een keer in TrustSquare by en hulle tel op elke advertensie wat jy maak.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "This is your asking price — buyers see it as asked, not as a valuation.": [
+   "Dit is jou vraprys — kopers sien dit soos gevra, nie as ’n waardasie nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "This is your asking price. TrustSquare can look up a verified market price for cards, coins and LEGO from free public sources, so you can see where yours sits — it never changes what you asked.": [
+   "Dit is jou vraprys. TrustSquare kan ’n geverifieerde markprys vir kaarte, munte en LEGO uit gratis openbare bronne opsoek, sodat jy kan sien waar joune staan — dit verander nooit wat jy gevra het nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "advert score": [
+   "advertensietelling",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "trust not opened yet": [
+   "vertroue nog nie oopgemaak nie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Before you publish": [
+   "Voordat jy plaas",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Add the property type": [
+   "Voeg die eiendomstipe by",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say whether it is for sale or to let": [
+   "Sê of dit te koop of te huur is",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Add the number of bedrooms": [
+   "Voeg die aantal slaapkamers by",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Add the number of bathrooms": [
+   "Voeg die aantal badkamers by",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Add the make": [
+   "Voeg die fabrikaat by",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Add the model": [
+   "Voeg die model by",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Add the year": [
+   "Voeg die jaar by",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Add the mileage": [
+   "Voeg die kilometerstand by",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Add the transmission": [
+   "Voeg die ratkas by",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Add the subject": [
+   "Voeg die vak by",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Add the level": [
+   "Voeg die vlak by",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say whether you teach in person or online": [
+   "Sê of jy persoonlik of aanlyn klas gee",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say what work you do": [
+   "Sê watter werk jy doen",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Write 15 words or more": [
+   "Skryf 15 woorde of meer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Put a price on it — asking for a quote scores nothing": [
+   "Sit ’n prys daarop — om ’n kwotasie te vra, tel niks",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say which area you work in": [
+   "Sê in watter area jy werk",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say which area you teach in": [
+   "Sê in watter area jy klas gee",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say which suburb it is in": [
+   "Sê in watter voorstad dit is",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say where the car can be seen": [
+   "Sê waar die motor gesien kan word",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say where it can be collected": [
+   "Sê waar dit afgehaal kan word",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say where the trip starts": [
+   "Sê waar die reis begin",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Ask for a one-line reference": [
+   "Vra vir ’n verwysing van een sin",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Your employer writes one sentence about you.": [
+   "Jou werkgewer skryf een sin oor jou.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "A customer writes one sentence about you.": [
+   "’n Klant skryf een sin oor jou.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "A parent or student you teach writes one sentence about you.": [
+   "’n Ouer of leerder vir wie jy klas gee, skryf een sin oor jou.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "A customer you have worked for writes one sentence about you.": [
+   "’n Klant vir wie jy gewerk het, skryf een sin oor jou.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "A guest you have hosted writes one sentence about you.": [
+   "’n Gas wat jy ontvang het, skryf een sin oor jou.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Someone who has bought from you writes one sentence about you.": [
+   "Iemand wat al by jou gekoop het, skryf een sin oor jou.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "A collector you have dealt with writes one sentence about you.": [
+   "’n Versamelaar met wie jy al te doen gehad het, skryf een sin oor jou.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Someone who has rented or bought from you writes one sentence about you.": [
+   "Iemand wat al by jou gehuur of gekoop het, skryf een sin oor jou.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Someone you have worked for writes one sentence about you.": [
+   "Iemand vir wie jy gewerk het, skryf een sin oor jou.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "That opens your trust score — nothing you write about yourself can. It takes them four taps, and they never have to use TrustSquare again.": [
+   "Dit maak jou vertrouenstelling oop — niks wat jy oor jouself skryf, kan dit doen nie. Dit kos hulle vier tikke, en hulle hoef nooit weer TrustSquare te gebruik nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "See what they will see": [
+   "Kyk wat hulle sal sien",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "A few taps and your price. Your advert, your language.": [
+   "’n Paar tikke en jou prys. Jou advertensie, jou taal.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Some categories are still in English.": [
+   "Sommige kategorieë is nog in Engels.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "isiZulu, isiXhosa and Sepedi: some categories are still in English.": [
+   "isiZulu, isiXhosa en Sepedi: sommige kategorieë is nog in Engels.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Your unfinished advert": [
+   "Jou onvoltooide advertensie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Your unfinished search": [
+   "Jou onvoltooide soektog",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Carry on ›": [
+   "Gaan voort ›",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Open it": [
+   "Maak oop",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Your advert": [
+   "Jou advertensie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Add Quick to your home screen": [
+   "Voeg Quick by jou tuisskerm",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Quick is on your home screen.": [
+   "Quick is op jou tuisskerm.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "yes": [
+   "ja",
+   "yebo",
+   "",
+   "ewe",
+   "ee"
+  ],
+  "Days you can work:": [
+   "Dae wat jy kan werk:",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Every day of the week.": [
+   "Elke dag van die week.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say what you are looking for.": [
+   "Sê waarna jy soek.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Whatever you type is what people will see.": [
+   "Wat jy tik, is wat mense sal sien.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "The list only shows the most common answers. We look for exactly what you type.": [
+   "Die lys wys net die algemeenste antwoorde. Ons soek presies wat jy tik.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "The list only shows the most common answers. What you type goes on your advert exactly as you type it.": [
+   "Die lys wys net die algemeenste antwoorde. Wat jy tik, kom op jou advertensie net soos jy dit tik.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Back to the list": [
+   "Terug na die lys",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Name it in your own words": [
+   "Noem dit in jou eie woorde",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Type the amount": [
+   "Tik die bedrag",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Type the area": [
+   "Tik die area",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say which": [
+   "Sê watter",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "How many": [
+   "Hoeveel",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Type the make": [
+   "Tik die fabrikaat",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Type the year": [
+   "Tik die jaar",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Type the level": [
+   "Tik die vlak",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say how": [
+   "Sê hoe",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say when": [
+   "Sê wanneer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Describe the condition": [
+   "Beskryf die toestand",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say what you have": [
+   "Sê wat jy het",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say how long": [
+   "Sê hoe lank",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Describe it": [
+   "Beskryf dit",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Type it in": [
+   "Tik dit in",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Name your work": [
+   "Noem jou werk",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Type your qualification": [
+   "Tik jou kwalifikasie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Per person?": [
+   "Per persoon?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "My city is not listed": [
+   "My stad is nie gelys nie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Type your city": [
+   "Tik jou stad",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Your advert is filed under the city you type.": [
+   "Jou advertensie word gelys onder die stad wat jy tik.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Which country?": [
+   "Watter land?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "South Africa": [
+   "Suid-Afrika",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Namibia": [
+   "Namibië",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Botswana": [
+   "Botswana",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Mozambique": [
+   "Mosambiek",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Kenya": [
+   "Kenia",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "United Kingdom": [
+   "Verenigde Koninkryk",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Germany": [
+   "Duitsland",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Australia": [
+   "Australië",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "United States": [
+   "Verenigde State",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "★ = trust score": [
+   "★ = vertrouenstelling",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Ask people you know": [
+   "Vra mense wat jy ken",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One short message to each of them — up to five.": [
+   "Een kort boodskap aan elkeen — tot vyf.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "TrustSquare is new here.": [
+   "TrustSquare is nuut hier.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Ask people you know, or browse everything on TrustSquare.": [
+   "Vra mense wat jy ken, of blaai deur alles op TrustSquare.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Nobody has listed this in": [
+   "Niemand het dit nog in",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "yet.": [
+   "geadverteer nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Looking on TrustSquare": [
+   "Ons soek op TrustSquare",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "No connection right now": [
+   "Geen verbinding nie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "We could not reach TrustSquare.": [
+   "Ons kon TrustSquare nie bereik nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Check your data and try again.": [
+   "Kyk na jou data en probeer weer.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "EXAMPLE PHOTO": [
+   "VOORBEELDFOTO",
+   "ISITHOMBE SESIBONELO",
+   "",
+   "UMFANEKISO WOMZEKELO",
+   "SEHLAKANGWA SA MOHLALA"
+  ],
+  "One line, straight to the other phone, with your name on it. No thread, no history, nothing to scroll — say the one thing and it is said.": [
+   "Een reël, reguit na die ander foon, met jou naam daarop. Geen draad, geen geskiedenis, niks om deur te rol nie — sê die een ding en dit is gesê.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "how it works here": [
+   "hoe dit hier werk",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Who": [
+   "Wie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "How you met": [
+   "Hoe julle ontmoet het",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Who paid": [
+   "Wie het betaal",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Switched on in the TrustSquare app — once, by each of you": [
+   "Een keer aangeskakel in die TrustSquare-app, deur elkeen van julle",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Let TrustSquare buzz this phone": [
+   "Laat TrustSquare hierdie foon buzz",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Let": [
+   "Laat",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "buzz me": [
+   "my buzz",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "They answer the same two questions when they join from your link.": [
+   "Hulle beantwoord dieselfde twee vrae wanneer hulle via jou skakel aansluit.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Only the people you are paired with can buzz you — a buzz is never open to strangers.": [
+   "Net die mense met wie jy gekoppel is, kan jou buzz — ’n buzz is nooit oop vir vreemdelinge nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You each switch this on once, in the TrustSquare app.": [
+   "Julle skakel dit elkeen een keer aan, in die TrustSquare-app.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "It arrives as a notification on their phone. If notifications are off, it goes to their email. It is free — no SMS.": [
+   "Dit kom as ’n kennisgewing op hul foon aan. As kennisgewings af is, gaan dit na hul e-pos. Dit is gratis — geen SMS nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "This is an example. Nothing is sent from this screen.": [
+   "Dit is ’n voorbeeld. Niks word van hierdie skerm af gestuur nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Live — this sends a real buzz.": [
+   "Regstreeks — dit stuur ’n regte buzz.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Send a buzz": [
+   "Stuur ’n buzz",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Back to my advert": [
+   "Terug na my advertensie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Buzz is a convenience, not a guarantee — phones go flat and networks fail, so if it matters, phone. Either of you can close it at any time: closing it closes it for both, the other person is told plainly, and whoever closed it can open it again. You already have each other’s numbers.": [
+   "Buzz is ’n gerief, nie ’n waarborg nie — fone gaan pap en netwerke faal, so as dit saak maak, bel. Enigeen van julle kan dit enige tyd sluit: as een dit sluit, is dit vir albei gesluit, die ander persoon word duidelik ingelig, en wie dit gesluit het, kan dit weer oopmaak. Julle het reeds mekaar se nommers.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Switch both permissions on first — a buzz that was never allowed is a buzz that never arrives.": [
+   "Skakel eers albei toestemmings aan — ’n buzz wat nooit toegelaat is nie, is ’n buzz wat nooit aankom nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "When the car is sold, close every one of them. Here that is the feature working, not failing — the pair was always meant to end.": [
+   "Wanneer die motor verkoop is, sluit almal. Hier is dit die funksie wat werk, nie faal nie — die paar was nog altyd bedoel om te eindig.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "your employer, Menlyn": [
+   "jou werkgewer, Menlyn",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "the agency holding your listing": [
+   "die agentskap wat jou advertensie hanteer",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "one of the places you asked": [
+   "een van die plekke wat jy gevra het",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "the plumber you called": [
+   "die loodgieter wat jy gebel het",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "your child’s tutor": [
+   "jou kind se tutor",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "the buyer who asked": [
+   "die koper wat gevra het",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "a collector you dealt with": [
+   "’n versamelaar met wie jy te doen gehad het",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "two streets over": [
+   "twee strate verder",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You brought them — they joined from your own link.": [
+   "Jy het hulle gebring — hulle het via jou eie skakel aangesluit.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Free, always. You brought this connection, so there is nothing to sell.": [
+   "Altyd gratis. Jy het hierdie verbinding gebring, so daar is niks om te verkoop nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One pair per job. As many pairs as you have employers.": [
+   "Een paar per werk. Soveel pare as wat jy werkgewers het.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "They asked for your details and paid for the introduction.": [
+   "Hulle het vir jou besonderhede gevra en vir die voorstelling betaal.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "The agency paid. You never pay to be found — you are the lead.": [
+   "Die agentskap het betaal. Jy betaal nooit om gevind te word nie — jy is die kontak.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One agency at a time. Close it and the next one may take a turn.": [
+   "Een agentskap op ’n slag. Sluit dit en die volgende een kan ’n beurt kry.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You asked several places at once — they all answered.": [
+   "Jy het verskeie plekke gelyk gevra — hulle het almal geantwoord.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You paid one introduction. Talking to all of them is included.": [
+   "Jy het vir een voorstelling betaal. Om met almal te praat, is ingesluit.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Many at once. Three quotes is the point — exclusivity would be absurd.": [
+   "Baie gelyk. Drie kwotasies is die punt — eksklusiwiteit sou absurd wees.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Either — the platform found them, or they were already your regular.": [
+   "Of — die platform het hulle gevind, of hulle was reeds jou vaste klant.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "A new customer costs 1 Tuppence. Your own regulars are free.": [
+   "’n Nuwe klant kos 1 Tuppence. Jou eie vaste klante is gratis.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Many, and repeating. A tradesman carries dozens of standing customers.": [
+   "Baie, en herhalend. ’n Vakman het dosyne vaste klante.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "The platform introduced you, and then it repeats every week.": [
+   "Die platform het julle voorgestel, en dan herhaal dit elke week.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You paid the introduction. The weekly rhythm after it is free.": [
+   "Jy het vir die voorstelling betaal. Die weeklikse ritme daarna is gratis.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One pair per child, standing for a school term.": [
+   "Een paar per kind, vir ’n skoolkwartaal.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "A third person is in this one — the child. Nothing about the child goes through a buzz; this is the two adults arranging their own diary.": [
+   "’n Derde persoon is hierby betrokke — die kind. Niks oor die kind gaan deur ’n buzz nie; dit is die twee volwassenes wat hul eie dagboek reël.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "They paid for the introduction to your car.": [
+   "Hulle het vir die voorstelling aan jou motor betaal.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "They paid. Answering them costs you nothing.": [
+   "Hulle het betaal. Om hulle te antwoord, kos jou niks.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Many buyers, one car — and it ends the day it sells.": [
+   "Baie kopers, een motor — en dit eindig die dag wanneer dit verkoop.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "This is the one category where closing is the normal ending, not a complaint. When the car is sold, close them all — that is the feature working, not failing.": [
+   "Dit is die een kategorie waar sluit die normale einde is, nie ’n klagte nie. Wanneer die motor verkoop is, sluit hulle almal — dit is die funksie wat werk, nie faal nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One introduction, years ago. You have traded ever since.": [
+   "Een voorstelling, jare gelede. Julle handel sedertdien.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Paid once, at the first introduction. Everything after is yours.": [
+   "Een keer betaal, by die eerste voorstelling. Alles daarna is joune.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Many, and long-lived — collectors keep the same people for decades.": [
+   "Baie, en langdurig — versamelaars hou dieselfde mense vir dekades.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "They live around the corner. You probably already knew them.": [
+   "Hulle woon om die hoek. Jy het hulle waarskynlik al geken.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Usually nothing — at these amounts an introduction rarely applies.": [
+   "Gewoonlik niks — by hierdie bedrae geld ’n voorstelling selde.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Many, casual, short.": [
+   "Baie, gemaklik, kort.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One line to the agency holding your place — viewings, offers, show days.": [
+   "Een reël na die agentskap wat jou plek hanteer — besigtigings, aanbiedinge, skoudae.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One line to everyone who asked about your place — viewings, offers, show days.": [
+   "Een reël na almal wat oor jou plek gevra het — besigtigings, aanbiedinge, skoudae.",
+   "Umugqa owodwa kubo bonke ababuze ngendawo yakho — ukubuka, izithembiso, izinsuku zokubukisa.",
+   "Mola o le mong ho bohle ba botsitseng ka sebaka sa hao — ho sheba, dinyehelo, matsatsi a pontsho.",
+   "Umgca omnye kubo bonke ababuze ngendawo yakho — ukujonga, izithembiso, iintsuku zomboniso.",
+   "Mothaladi o tee go bohle bao ba botšišitšego ka lefelo la gago — go lebelela, dithekišo, matšatši a pontšho."
+  ],
+  "One line to every place you asked — dates, late arrivals, one more bed.": [
+   "Een reël na elke plek wat jy gevra het — datums, laat aankomste, nog een bed.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One line to every guest who asked — dates, late arrivals, one more bed.": [
+   "Een reël na elke gas wat gevra het — datums, laat aankomste, nog een bed.",
+   "Umugqa owodwa kuso sonke isivakashi esibuzile — izinsuku, ukufika sekwephuzile, omunye umbhede.",
+   "Mola o le mong ho moeti e mong le e mong ya botsitseng — matsatsi, ho fihla ka morao, bethe e nngwe.",
+   "Umgca omnye kulo lonke undwendwe olubuzileyo — imihla, ukufika emva kwexesha, enye ibhedi.",
+   "Mothaladi o tee go moeng yo mongwe le yo mongwe yo a botšišitšego — matšatši, go fihla morago, malao a mangwe."
+  ],
+  "One line to the trade you use — on my way, running late, job done.": [
+   "Een reël na die vakman wat jy gebruik — op pad, laat, werk klaar.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One line to your regular customers — on my way, running late, job done.": [
+   "Een reël na jou vaste kliënte — op pad, laat, werk klaar.",
+   "Umugqa owodwa kumakhasimende akho ajwayelekile — ngisendleleni, ngizophuza, umsebenzi uqediwe.",
+   "Mola o le mong ho bareki ba hao ba kamehla — ke tseleng, ke tla dieha, mosebetsi o phethilwe.",
+   "Umgca omnye kubathengi bakho abaqhelekileyo — ndisendleleni, ndiza kufika emva kwexesha, umsebenzi ugqityiwe.",
+   "Mothaladi o tee go bareki ba gago ba ka mehla — ke tseleng, ke tla diega, mošomo o phethilwe."
+  ],
+  "One line to the tutor — a moved lesson, an exam week, a late child.": [
+   "Een reël na die tutor — ’n geskuifde les, ’n eksamenweek, ’n laat kind.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One line to the parents you teach for — a moved lesson, an exam week, a late child.": [
+   "Een reël na die ouers vir wie jy klas gee — ’n geskuifde les, ’n eksamenweek, ’n laat kind.",
+   "Umugqa owodwa kubazali obafundisela — isifundo esihanjisiwe, isonto lezivivinyo, ingane efike sekwephuzile.",
+   "Mola o le mong ho batswadi bao o ba rutelang — thuto e sutisitsweng, beke ya ditlhahlobo, ngwana ya diehang.",
+   "Umgca omnye kubazali obafundisela — isifundo esishenxisiweyo, iveki yeemviwo, umntwana ofika emva kwexesha.",
+   "Mothaladi o tee go batswadi bao o ba rutelago — thuto ye e šuthišitšwego, beke ya ditlhahlobo, ngwana yo a diegilego."
+  ],
+  "One line to the people asking about your car — until it is sold.": [
+   "Een reël na die mense wat oor jou motor vra — totdat dit verkoop is.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One line to each buyer asking about your car — until it is sold.": [
+   "Een reël na elke koper wat oor jou motor vra — totdat dit verkoop is.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One line to the collectors you trade with.": [
+   "Een reël na die versamelaars met wie jy handel dryf.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One line to the collectors who buy from you — a new piece, a swap, a price.": [
+   "Een reël na die versamelaars wat by jou koop — ’n nuwe stuk, ’n ruil, ’n prys.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One line to your neighbour — at the gate, sold out, bring change.": [
+   "Een reël na jou buurman — by die hek, uitverkoop, bring kleingeld.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One line to the people who buy from you — fresh today, sold out, at the gate.": [
+   "Een reël na die mense wat by jou koop — vars vandag, uitverkoop, by die hek.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Preview only — nothing is sent from Quick": [
+   "Net ’n voorskou — niks word uit Quick gestuur nie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Nothing was sent — this is a preview.": [
+   "Niks is gestuur nie — dit is ’n voorskou.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Example — this is what your employer sees": [
+   "Voorbeeld — dit is wat jou werkgewer sien",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Example — this is what a customer sees": [
+   "Voorbeeld — dit is wat ’n klant sien",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Example — this is what a parent or student you teach sees": [
+   "Voorbeeld — dit is wat ’n ouer of leerder vir wie jy klas gee, sien",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Example — this is what a customer you have worked for sees": [
+   "Voorbeeld — dit is wat ’n klant vir wie jy gewerk het, sien",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Example — this is what a guest you have hosted sees": [
+   "Voorbeeld — dit is wat ’n gas wat jy ontvang het, sien",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Example — this is what someone who has bought from you sees": [
+   "Voorbeeld — dit is wat iemand wat al by jou gekoop het, sien",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Example — this is what a collector you have dealt with sees": [
+   "Voorbeeld — dit is wat ’n versamelaar met wie jy al te doen gehad het, sien",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Example — this is what someone who has rented or bought from you sees": [
+   "Voorbeeld — dit is wat iemand wat al by jou gehuur of gekoop het, sien",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Example — this is what someone you have worked for sees": [
+   "Voorbeeld — dit is wat iemand vir wie jy gewerk het, sien",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "A reference, please": [
+   "’n Verwysing, asseblief",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "asked you for a reference": [
+   "het jou vir ’n verwysing gevra",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You employed them, so you are the only person who can say this.": [
+   "Jy het hulle in diens gehad, so jy is die enigste persoon wat dit kan sê.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You have used their work, so you are the only person who can say this.": [
+   "Jy het hulle werk gebruik, so jy is die enigste persoon wat dit kan sê.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You have used them as a tutor, so you are the only person who can say this.": [
+   "Jy het hulle as tutor gebruik, so jy is die enigste persoon wat dit kan sê.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You have stayed with them, so you are the only person who can say this.": [
+   "Jy het by hulle tuisgegaan, so jy is die enigste persoon wat dit kan sê.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You have bought from them, so you are the only person who can say this.": [
+   "Jy het al by hulle gekoop, so jy is die enigste persoon wat dit kan sê.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You have dealt with them, so you are the only person who can say this.": [
+   "Jy het al met hulle te doen gehad, so jy is die enigste persoon wat dit kan sê.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You have rented or bought from them, so you are the only person who can say this.": [
+   "Jy het al by hulle gehuur of gekoop, so jy is die enigste persoon wat dit kan sê.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "They have worked for you, so you are the only person who can say this.": [
+   "Hulle het vir jou gewerk, so jy is die enigste persoon wat dit kan sê.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Free, about a minute, and you never have to use TrustSquare again if you do not want to. Four taps from here.": [
+   "Gratis, omtrent ’n minuut, en jy hoef nooit weer TrustSquare te gebruik as jy nie wil nie. Vier tikke van hier af.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Yes — I’ll do it": [
+   "Ja — ek sal dit doen",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Who is vouching?": [
+   "Wie gee die verwysing?",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Continue": [
+   "Gaan voort",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "This is the only thing they are asked for, and it is what signs them up — free, no card.": [
+   "Dit is al wat hulle gevra word, en dit is wat hulle registreer — gratis, geen kaart nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "When they continue, they accept the TrustSquare terms, Buzz included as it is: a doorbell between two people, with an off switch on both sides (§3.8).": [
+   "Wanneer hulle voortgaan, aanvaar hulle die TrustSquare-bepalings, Buzz ingesluit soos dit is: ’n deurklokkie tussen twee mense, met ’n afskakelaar aan albei kante (§3.8).",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Send it": [
+   "Stuur dit",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Say what you would tell a friend who asked.": [
+   "Sê wat jy vir ’n vriend sou sê wat gevra het.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "That is everything": [
+   "Dit is al",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "One last thing, and it takes a second": [
+   "Een laaste ding, en dit vat ’n oomblik",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "— you, just now": [
+   "— jy, netnou",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Either of you can switch it off, and switching it off ends it for both.": [
+   "Enigeen van julle kan dit afskakel, en afskakel beëindig dit vir albei.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "trust": [
+   "vertroue",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Done": [
+   "Klaar",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Four taps. You are finished.": [
+   "Vier tikke. Jy is klaar.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Pass Quick on": [
+   "Gee Quick aan",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Let them scan the code with their camera — or share the link.": [
+   "Laat hulle die kode met hul kamera skandeer — of deel die skakel.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Share the link": [
+   "Deel die skakel",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Flick up to share": [
+   "Swiep op om te deel",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Making the code": [
+   "Maak die kode",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "They will see:": [
+   "Hulle sal sien:",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "passed you Quick": [
+   "het Quick vir jou aangegee",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "hide my name": [
+   "versteek my naam",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Send it on WhatsApp": [
+   "Stuur dit op WhatsApp",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Cancel this invite": [
+   "Kanselleer hierdie uitnodiging",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "They get their own Quick — never your advert, your key link or your number. It works once.": [
+   "Hulle kry hul eie Quick — nooit jou advertensie, jou sleutelskakel of jou nommer nie. Dit werk een keer.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Waiting for them to accept": [
+   "Wag dat hulle aanvaar",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Accepted — Quick is on their phone.": [
+   "Aanvaar — Quick is op hul foon.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "They said no thanks. Nothing was shared.": [
+   "Hulle het nee dankie gesê. Niks is gedeel nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Link copied — or let them scan the code.": [
+   "Skakel gekopieer — of laat hulle die kode skandeer.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Let them scan the code.": [
+   "Laat hulle die kode skandeer.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "QR code for their phone": [
+   "QR-kode vir hul foon",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Could not make the invite. Try again.": [
+   "Kon nie die uitnodiging maak nie. Probeer weer.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "passed you TrustSquare Quick": [
+   "het TrustSquare Quick vir jou aangegee",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "You were passed TrustSquare Quick": [
+   "Iemand het TrustSquare Quick vir jou aangegee",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Make an advert for your work in a few taps. Free. Your name and number stay private until you accept an introduction.": [
+   "Maak ’n advertensie vir jou werk met ’n paar tikke. Gratis. Jou naam en nommer bly privaat totdat jy ’n voorstelling aanvaar.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Accept": [
+   "Aanvaar",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "No thanks": [
+   "Nee dankie",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Quick is yours.": [
+   "Quick is joune.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "That invite was already used — you can still make your own advert here.": [
+   "Daardie uitnodiging is al gebruik — jy kan steeds jou eie advertensie hier maak.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "That invite is no longer open — you can still make your own advert here.": [
+   "Daardie uitnodiging is nie meer oop nie — jy kan steeds jou eie advertensie hier maak.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "That invite is no longer open.": [
+   "Daardie uitnodiging is nie meer oop nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "TrustSquare Quick": [
+   "TrustSquare Quick",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "make an advert for your work in a few taps:": [
+   "maak ’n advertensie vir jou werk met ’n paar tikke:",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "make an advert for your work in a few taps.": [
+   "maak ’n advertensie vir jou werk met ’n paar tikke.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Sign language (SASL)": [
+   "Gebaretaal (SAGT)",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "English": [
+   "Engels",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Over R300": [
+   "Meer as R300",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Over R3m": [
+   "Meer as R3m",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Over R400": [
+   "Meer as R400",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Under R1.5m": [
+   "Onder R1.5m",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Under R200": [
+   "Onder R200",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Under R3 000": [
+   "Onder R3 000",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Under R300": [
+   "Onder R300",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Under R400": [
+   "Onder R400",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "Your name and number stay private until you accept an introduction.": [
+   "Jou naam en nommer bly privaat totdat jy ’n voorstelling aanvaar.",
+   "Igama lakho nenombolo kuhlala kuyimfihlo uze wamukele isethulo.",
+   "",
+   "Igama lakho nenombolo zihlala ziyimfihlo de wamkele intshayelelo.",
+   "Leina la gago le nomoro di dula e le sephiri go fihlela o amogela tsebišo."
+  ],
+  "It shows in searches once an employer has confirmed you or your ID is verified in TrustSquare.": [
+   "Dit verskyn in soektogte sodra ’n werkgewer jou bevestig het of jou ID in TrustSquare geverifieer is.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "It shows in searches once your police clearance is verified in TrustSquare.": [
+   "Dit verskyn in soektogte sodra jou polisieklaring in TrustSquare geverifieer is.",
+   "",
+   "",
+   "",
+   ""
   ]
  },
  "p": [
@@ -3090,7 +5309,7 @@
   ],
   [
    "Add your own photos",
-   "Voeg jou eie foto's by",
+   "Voeg jou eie foto’s by",
    "Engeza izithombe zakho",
    "",
    "Yongeza iifoto zakho",
@@ -3139,12 +5358,36 @@
    "+$1 e a hwetšagala"
   ],
   [
-   "^Lowest allowed: (.+) — the national minimum wage\\.$",
-   "Laagste toegelaat: $1 — die nasionale minimum loon.",
+   "^Lowest allowed: (.+) / day — the legal minimum wage\\.$",
+   "Laagste toegelate bedrag: $1 per dag — die nasionale minimumloon.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Lowest allowed: (.+) / hour — the legal minimum wage\\.$",
+   "Laagste toegelate bedrag: $1 per uur — die nasionale minimumloon.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Lowest allowed: (.+) — the legal minimum wage\\.$",
+   "Laagste toegelate bedrag: $1 — die nasionale minimumloon.",
    "Okuncane okuvunyelwe: $1 — iholo elincane likazwelonke.",
    "E tlase e dumelletsweng: $1 — moputso o tlase wa naha.",
    "Okuncinci okuvumelekileyo: $1 — umvuzo omncinci wesizwe.",
    "Ya fasana ye e dumeletšwego: $1 — moputso wa fasana wa naga."
+  ],
+  [
+   "^Lowest allowed: (.+) — one hour at the minimum wage\\.$",
+   "Laagste toegelate bedrag: $1 — een uur teen die minimumloon.",
+   "",
+   "",
+   "",
+   ""
   ],
   [
    "^Pick up to (\\d+)\\.$",
@@ -3169,6 +5412,182 @@
    "Ha o $1? Fetola toropo",
    "Awukho e-$1? Tshintsha isixeko",
    "Ga o $1? Fetola toropo"
+  ],
+  [
+   "^(\\d+) characters left$",
+   "$1 karakters oor",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Next — 1 day$",
+   "Volgende — 1 dag",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Next — (\\d+) days$",
+   "Volgende — $1 dae",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Saving as (.+)$",
+   "Jy stoor as $1",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Publishing as (.+)$",
+   "Jy plaas as $1",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Car adverts ask for more details than most — (\\d+) instead of 1 — so they start lower and can climb higher\\.$",
+   "Motoradvertensies vra meer besonderhede as die meeste — $1 in plaas van 1 — so hulle begin laer en kan hoër klim.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Property adverts ask for more details than most — (\\d+) instead of 1 — so they start lower and can climb higher\\.$",
+   "Eiendomsadvertensies vra meer besonderhede as die meeste — $1 in plaas van 1 — so hulle begin laer en kan hoër klim.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^★ (\\d+) trust$",
+   "★ $1 vertroue",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^\\+(\\d+) still on the table — the app shows you where, and your trust score follows you onto every advert you make\\.$",
+   "+$1 punte lê nog op die tafel — die app wys jou waar, en jou vertrouenstelling volg jou na elke advertensie wat jy maak.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Add (\\d+) more photos$",
+   "Voeg nog $1 foto’s by",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Not in (.+)\\? Change country$",
+   "Nie in $1 nie? Verander land",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^In the app, this sends (.+) and (.+) one buzz each, with your name on it\\.$",
+   "In die app stuur dit vir $1 en $2 elkeen een buzz, met jou naam daarop.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^In the app, this sends (.+) one buzz, with your name on it\\.$",
+   "In die app stuur dit vir $1 een buzz, met jou naam daarop.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^One sentence is the whole job — it opens (.+)’s trust score, and nothing (.+) writes about themselves ever can\\.$",
+   "Een sin is al wat nodig is — dit maak $1 se vertrouenstelling oop, en niks wat $2 oor hulself skryf, kan dit ooit doen nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Tap (\\d) of 4$",
+   "Tik $1 van 4",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Only (.+) sees your name on the reference\\.$",
+   "Net $1 sien jou naam op die verwysing.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^One sentence about (.+)$",
+   "Een sin oor $1",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^It goes on (.+)’s advert with their name under it\\. Nobody will ask them to justify it or chase them about it — it is a reference, not a reference check\\.$",
+   "Dit kom op $1 se advertensie met hul naam daaronder. Niemand sal hulle vra om dit te regverdig of hulle daaroor agtervolg nie — dit is ’n verwysing, nie ’n verwysingskontrole nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^In the app, this buzzes (.+), who can buzz you back the same way — one line each, no thread\\.$",
+   "In die app buzz dit vir $1, wat jou op dieselfde manier kan terugbuzz — een reël elk, geen draad nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^What (.+)’s score would gain\\. An outside voucher is the one thing a lister cannot give themselves\\.$",
+   "Wat $1 se telling sou wen. ’n Verwysing van buite is die een ding wat ’n adverteerder nie vir hulself kan gee nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Buzz is how (.+) tells you about running late, and how you say not to come\\. Ring it once now, while you are both looking at it — a doorbell nobody has ever rung is a doorbell nobody trusts\\.$",
+   "Buzz is hoe $1 jou laat weet dat hulle laat is, en hoe jy sê hulle moenie kom nie. Lui dit nou een keer, terwyl julle albei daarna kyk — ’n deurklokkie wat nog nooit gelui het nie, is een wat niemand vertrou nie.",
+   "",
+   "",
+   "",
+   ""
+  ],
+  [
+   "^Buzz (.+) once$",
+   "Buzz $1 een keer",
+   "",
+   "",
+   "",
+   ""
   ]
  ]
 }

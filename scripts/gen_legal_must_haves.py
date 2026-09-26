@@ -116,6 +116,8 @@ CONTENT["ZA"] = {
    "One-off private sales are generally exempt from dealer registration."),
 }
 
+# UK-SPELLING-1 (25 Sep 2026 inspection, langq-40): the US cards use the app's UK spelling like every other country's
+# card (licence as a noun, scrutinise, programmes); official names stay as issued ("Commercial Use Authorization").
 CONTENT["US"] = {
  "property": ([
   ("doc","Clear Title & Title Search","Title company confirms ownership & liens","Title company / closing attorney runs the search — buyer takes title insurance","REQUIRED FOR CLOSING"),
@@ -134,7 +136,7 @@ CONTENT["US"] = {
  ],"Miss the release-of-liability deadline and the new owner's tickets are yours.",
    "Plates usually stay with the seller — check your state DMV."),
  "tutors": ([
-  ("shield","Background Check","Expected for minors; mandatory for school programs","Tutor obtains state / FBI check as required","REQUIRED FOR SCHOOL-LINKED WORK"),
+  ("shield","Background Check","Expected for minors; mandatory for school programmes","Tutor obtains state / FBI check as required","REQUIRED FOR SCHOOL-LINKED WORK"),
   ("form","Written Tutoring Agreement","Rates, cancellation, refunds","Both parties sign","PROTECTS BOTH PARTIES"),
   ("lock","Parental Consent & Student Data Care","Minors' records handled with consent","Parent / guardian consents in writing","BEST PRACTICE — STATE PRIVACY LAWS"),
   ("cash","Self-Employment Tax (IRS)","Schedule C; 1099-K may apply","Tutor reports income — quarterly estimates if needed","IRS REQUIREMENT"),
@@ -142,13 +144,13 @@ CONTENT["US"] = {
  ],"Working with minors: checks and consent first — trust is the product.",
    "Rules are state-specific; school-district work has stricter requirements."),
  "services": ([
-  ("bolt","State Contractor / Trade License","Electrical, plumbing, HVAC, general contracting","Provider licenses with the state board before quoting regulated work","LEGALLY REQUIRED — VARIES BY STATE"),
+  ("bolt","State Contractor / Trade Licence","Electrical, plumbing, HVAC, general contracting","Provider licenses with the state board before quoting regulated work","LEGALLY REQUIRED — VARIES BY STATE"),
   ("form","Written Contract","Home-improvement contracts regulated in many states","Itemised scope & price, signed before work starts","STATE LAW / BEST PRACTICE"),
   ("shield","Liability Insurance & Bonding","Many states require proof for licensure","Provider arranges cover — bond where required","PROTECTS CLIENT & PROVIDER"),
   ("house","EPA RRP Lead-Safe Certification","Renovating homes built before 1978","Firm certifies & follows lead-safe practices","FEDERAL REQUIREMENT"),
   ("id","Workers' Comp (if employees)","State-mandated","Provider registers with the state fund / insurer","LEGALLY REQUIRED FOR EMPLOYERS"),
  ],"Unlicensed contracting is a crime in several states — and can void your right to payment.",
-   "Licensing thresholds differ by state (e.g. California: jobs over $500 need a license)."),
+   "Licensing thresholds differ by state (e.g. California: jobs over $500 need a licence)."),
  "adventures_accommodation": ([
   ("house","Short-Term Rental Permit","City / county registration — many require a permit number","Host registers with the local authority & displays the permit on listings","REQUIRED BY LOCAL LAW"),
   ("cash","Occupancy / Lodging Taxes","Transient occupancy tax","Host registers & remits — platforms sometimes collect","TAX REQUIREMENT"),
@@ -161,9 +163,9 @@ CONTENT["US"] = {
   ("form","Liability Waiver","Enforceability varies by state","Participants sign before the activity — properly drafted, not a template","ESSENTIAL — STATE LAW VARIES"),
   ("shield","Commercial Liability Insurance","Adequate cover for the activity","Operator arranges own cover","ESSENTIAL PROTECTION"),
   ("tree","Public Lands Permits","Commercial Use Authorization (NPS / USFS / BLM)","Operator obtains before guiding on public land","FEDERAL / STATE REQUIREMENT"),
-  ("id","Guide / Outfitter License","State-specific (fishing, hunting, rafting)","Guide licenses with the state agency","REQUIRED PER STATE & ACTIVITY"),
+  ("id","Guide / Outfitter Licence","State-specific (fishing, hunting, rafting)","Guide licenses with the state agency","REQUIRED PER STATE & ACTIVITY"),
   ("cross","First Aid / CPR Certification","Level appropriate to the activity","Operator keeps certification current","INDUSTRY STANDARD"),
- ],"Waivers don't replace insurance — courts scrutinize both.",
+ ],"Waivers don't replace insurance — courts scrutinise both.",
    "Minors need parent / guardian-signed waivers."),
  "collectors": ([
   ("gem","Provenance & Authentication","Certificates, receipts, grading reports","Seller provides documentation to buyer","PROTECTS VALUE & BUYER TRUST"),

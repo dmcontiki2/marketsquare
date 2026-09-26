@@ -42,9 +42,17 @@ def proc_env():
     except Exception:
         return {}
 
-def http_json(url, timeout=12):
-    with urllib.request.urlopen(url, timeout=timeout) as r:
+def http_json(url, timeout=12, headers=None):
+    req = urllib.request.Request(url, headers=headers or {})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read())
+
+def admin_headers():
+    """ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-05): /health/resources is an admin route. This sweep read it
+    over loopback with no key, which is the only reason the gate kept a loopback exemption for it. It now sends
+    the key the running app itself holds (proc_env, the same read that finds RESEND_API_KEY below). Never printed."""
+    k = (os.environ.get("MS_ADMIN_KEY") or proc_env().get("MS_ADMIN_KEY") or "").strip()
+    return {"X-Admin-Key": k} if k else {}
 
 def check_all():
     items = []  # (key, level green|amber|red, label, detail)
@@ -67,7 +75,7 @@ def check_all():
             add(f"svc.{svc}", "red", f"service {svc}", str(e))
     # 3. resources (endpoint self-reports status per metric)
     try:
-        res = http_json(f"{BASE}/health/resources")
+        res = http_json(f"{BASE}/health/resources", headers=admin_headers())   # ADMIN-KEY-LOCAL-1 (qa-05)
         for metric in ("ram", "disk", "cpu", "bandwidth"):
             m = res.get(metric, {})
             st, pct = m.get("status", "?"), m.get("pct")

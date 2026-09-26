@@ -41,7 +41,7 @@ HONESTY RULES (non-negotiable — these are what stop it becoming fiction)
 REGENERATE:  python3 scripts/build_trip_essentials.py
 Verified by: scripts/trip_essentials_selftest.py  and regression ledger RG-0031.
 """
-import json, os, sys, io, datetime
+import json, os, sys, io, datetime, re
 
 CHECKED = "2026-08-21"
 HERE    = os.path.dirname(os.path.abspath(__file__))
@@ -96,7 +96,7 @@ TRIPS.append({
      R("Pilanesberg gate — vehicle","R168 per sedan / LDV / SUV per day","https://www.pilanesbergnationalpark.org/travel/tariffs-gate-times/", flag=True),
      R("N4 tolls (Bakwena)","≈ R39 each way","https://www.bakwena.co.za/tolls-and-tariffs/", note="Doornpoort R19.50 + Brits R19.50, Class 1, from 1 Mar 2026. Gauteng e-tolls are dead — no tag needed."),
      R("Fuel","≈ 340 km round trip","", note="Attendant-served. Most take cards, a minority are cash-only — carry some cash."),
-     R("Stay","From R2,450 / night (Thatch & Bushveld, 15 min from Manyane Gate)","", note="This advert's own rate. Ask for an introduction below."),
+     R("Stay","From R2 450 / night (Thatch & Bushveld, 15 min from Manyane Gate)","", note="This advert's own rate. Ask for an introduction below."),
      R("Tips","Petrol attendant R5–R10 · car guard R5–R10 · restaurant 10–15%","https://www.africanbudgetsafaris.com/blog/south-africa-tipping-etiquette-top-tips-tipping-south-africa/"),
    ],
    "note":"Indicative only. Not a quote, and nothing here is bookable through TrustSquare."
@@ -917,6 +917,12 @@ MANUAL_ITIN = {
  ],
 }
 
+# RAND-SPACE-1 (25 Sep 2026 inspection, langq-41): rand thousands are written with a space everywhere, as Quick and the
+# app write them ("R5 200", not "R5,200") -- the cached fares in journeys/*.json are normalised as they are read.
+_RAND_COMMA = re.compile(r"\bR(\d{1,3}),(\d{3})(?!\d)")
+def _rand_space(t):
+    return _RAND_COMMA.sub(lambda m: "R%s %s" % (m.group(1), m.group(2)), t or "")
+
 def load_itineraries():
     out = {}
     jdir = os.path.join(ROOT, "journeys")
@@ -932,7 +938,7 @@ def load_itineraries():
               "d": "%s %s" % (unit, d.get("day")),
               "t": (d.get("title") or "").replace("&amp;", "&"),
               "x": (d.get("dist") or d.get("mode") or ""),
-              "s": (d.get("summary") or "").replace("&amp;", "&"),
+              "s": _rand_space((d.get("summary") or "").replace("&amp;", "&")),
             })
         if rows:
             out[key] = rows

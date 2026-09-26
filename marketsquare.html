@@ -11,13 +11,17 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>TrustSquare</title>
+<!-- LANDING-LEAN-1 (25 Sep 2026 inspection, live-06): an arrival on one advert, one draft or a sign-in link (Quick's key
+     link included) does not download the home page's photos while its own screen is being opened; ms.js lifts this on
+     the first screen change (goTo) and after 8 s at the latest. -->
+<script>try{if(/[?&](listing|draft|signin)=/.test(location.search)){document.documentElement.classList.add('ts-landing');var _tsl=document.createElement('style');_tsl.textContent='html.ts-landing #screen-home img:not([src*="/static/brand/"]){display:none!important}';document.head.appendChild(_tsl);}}catch(e){}</script>
+<!-- LANDING-LEAN-1: the font files' host is known up front, so its connection opens while the font stylesheet loads -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<!-- Leaflet map (proximity search + map view) -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<!-- Leaflet map (proximity search + map view). MAP-LAZY-1 (25 Sep 2026 inspection, live-06; same fault as shell-06):
+     no longer two render-blocking scripts and three stylesheets on every visit -- ms.js (_msMapLib) loads the same
+     unpkg versions (leaflet 1.9.4, markercluster 1.5.3) the first time a map is opened. -->
 
 <!--
 ╔══════════════════════════════════════════════════════════════╗
@@ -233,7 +237,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <link rel="manifest" href="/static/brand/site.webmanifest?v=5">
   <meta name="theme-color" content="#22C55E">
   <meta property="og:title" content="TrustSquare">
-  <meta property="og:description" content="A mobile-first local marketplace connecting buyers with trusted, anonymous sellers.">
+  <meta property="og:description" content="A global marketplace where you meet trusted sellers through an introduction. Sellers stay anonymous until you both agree.">
   <meta property="og:image" content="/static/brand/og-image-1200x630.png">
   <meta name="twitter:card" content="summary_large_image">
 </head>
@@ -269,8 +273,8 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <button id="gate-email-btn" onclick="gateRequestLink()" style="
         width:100%;padding:14px;font-size:15px;font-weight:700;
         background:#e63946;color:#fff;border:none;border-radius:10px;cursor:pointer;">
-        Email me my access link
-      </button>
+        Email me a sign-in link and code
+      </button><!-- SIGNIN-WORDS-1 (25 Sep 2026 inspection, langt-23): one name for the emailed link -->
       <!-- GATE-NOLOCK-1 (19 Aug 2026): the CROSS-DEVICE door. A magic link only ever
            unlocks the browser that OPENS it — mail opens on the phone while the tester
            is working on a laptop, so the laptop stayed locked with no way to finish.
@@ -313,6 +317,11 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       </div>
       <div style="text-align:center;margin-top:20px;font-size:11px;color:#334155;">
         Pre-launch access only
+      </div>
+      <!-- GATE-FLAKY-1 (25 Sep 2026 inspection, shell-04): a way off this wall without closing the app. -->
+      <div style="text-align:center;margin-top:10px;">
+        <a href="#" onclick="gateRetry();return false;"
+           style="font-size:12px;color:#94a3b8;text-decoration:underline;">Already have access? Try again</a>
       </div>
     </div>
 
@@ -381,25 +390,59 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     setTimeout(function(){ document.getElementById('gate-new-pin').focus(); }, 100);
   }
 
-  function _verifyReviewToken(){
+  /* GATE-FLAKY-1 (25 Sep 2026 inspection, shell-04): ONE failed check on a weak connection used to
+     put every visitor behind this wall ("Pre-launch access only"), with no way back but closing the
+     app. The wall is not the lock -- the edge and the origin are (RG-0027) -- so a network error or a
+     5xx is not an answer: it is asked again once after ~2 s, and if it still fails the app simply
+     stays open. Only a definite refusal (401/403, or a reply without valid:true) shows the wall.
+     GATE-TRUTH: branches on r.status BEFORE parsing. Verdicts: 'valid' | 'refused' | 'flaky'. */
+  function _gateAsk(url, opts, then, tries){
+    fetch(url, opts)
+      .then(function(r){
+        if(r.status === 401 || r.status === 403){ return 'refused'; }
+        if(!r.ok){ return 'flaky'; }
+        return r.json().then(function(d){ return (d && d.valid) ? 'valid' : 'refused'; },
+                             function(){ return 'flaky'; });
+      }, function(){ return 'flaky'; })
+      .then(function(v){
+        if(v === 'flaky' && !tries){ setTimeout(function(){ _gateAsk(url, opts, then, 1); }, 2000); return; }
+        then(v);
+      });
+  }
+  function _verifyReviewToken(done){
     /* GATE-COOKIE-2 (GATE-EMAIL-1, 15 Aug 2026): the ts_review cookie is HttpOnly and
        rides every same-origin fetch on its own — so ALWAYS ask /review/verify, with the
        sessionStorage token as a mere extra. The old `if(!rt){ showGate(); }` short-circuit
        re-locked testers holding a perfectly valid 365-day cookie every time sessionStorage
        died with the tab — THE recurring "locked out" class. */
     var rt = sessionStorage.getItem('ms_review_token');
-    fetch(BEA + '/review/verify', rt ? {headers:{'X-Review-Token': rt}} : {})
-      .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(d){ if(d && d.valid){ hideGate(); } else { sessionStorage.removeItem('ms_review_token'); showGate(); } })
-      .catch(function(){ showGate(); });   /* fail-closed */
+    _gateAsk(BEA + '/review/verify', rt ? {headers:{'X-Review-Token': rt}} : {}, function(v){
+      if(v === 'valid'){ hideGate(); }
+      else if(v === 'refused'){ sessionStorage.removeItem('ms_review_token'); showGate(); }
+      /* 'flaky' twice: leave the app as it is -- a weak line is not a refusal (GATE-FLAKY-1) */
+      if(done){ done(v); }
+    });
   }
-  var stored = sessionStorage.getItem('ms_admin_token');
-  if(stored){
-    fetch(BEA + '/admin/verify', {headers:{'X-Admin-Token': stored}})
-      .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(d){ if(d && d.valid){ hideGate(); } else { sessionStorage.removeItem('ms_admin_token'); _verifyReviewToken(); } })
-      .catch(function(){ showGate(); });   /* fail-closed */
-  } else { _verifyReviewToken(); } /* pre-launch gate RE-LOCKED — SERVER-validated review code or admin login required */
+  function _gateCheck(done){
+    var stored = sessionStorage.getItem('ms_admin_token');
+    if(stored){
+      _gateAsk(BEA + '/admin/verify', {headers:{'X-Admin-Token': stored}}, function(v){
+        if(v === 'refused'){ sessionStorage.removeItem('ms_admin_token'); _verifyReviewToken(done); return; }
+        if(v === 'valid'){ hideGate(); }
+        if(done){ done(v); }
+      });
+    } else { _verifyReviewToken(done); } /* pre-launch gate RE-LOCKED — SERVER-validated review code or admin login required */
+  }
+  _gateCheck();
+  /* GATE-FLAKY-1: the wall's own "Try again" asks the server again instead of making the visitor
+     close and reopen the app. */
+  window.gateRetry = function(){
+    showLinkMsg('Checking again\u2026', false);
+    _gateCheck(function(v){
+      if(v === 'refused'){ showLinkMsg('This device still has no access \u2014 enter your email for a link.', true); }
+      else if(v === 'flaky'){ showLinkMsg('No connection right now \u2014 check your signal, then try again.', true); }
+    });
+  };
 
   /* GATE-EMAIL-1 (15 Aug 2026): tester types an email; the server mails a one-time
      link (/review/request-link); clicking it sets the ts_review cookie at /review/enter
@@ -442,7 +485,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         document.getElementById('gate-code-block').style.display = 'block';
         return;
       }
-      showLinkMsg('Sent \u2014 check your email (and spam). Open the link on THIS device, ' +
+      showLinkMsg('Sent \u2014 check your email (and spam). Open the sign-in link on THIS device, ' +
                   'or type the email\u2019s 6-digit code below to unlock this one.', false);
       /* GATE-NOLOCK-1: reveal the cross-device code box and put the cursor in it. */
       var ob = document.getElementById('gate-otp-block');
@@ -494,11 +537,11 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
        cause is what made the scanner-prefetch fault take two rounds to find. */
     var _m = /[?&]why=([a-z]+)/.exec(location.search);
     var _why = _m ? _m[1] : '';
-    var _txt = 'That access link did not work \u2014 enter your email for a fresh one.';
-    if(_why === 'expired'){ _txt = 'That link is older than 30 minutes \u2014 enter your email for a fresh one.'; }
-    else if(_why === 'used'){ _txt = 'That link has been opened too many times \u2014 enter your email for a fresh one, or use the 6-digit code.'; }
-    else if(_why === 'invalid'){ _txt = 'That link was damaged in transit (some mail apps break long links) \u2014 request a fresh one and use the 6-digit code instead.'; }
-    else if(_why === 'none'){ _txt = 'That link arrived without its access token \u2014 request a fresh one and use the 6-digit code instead.'; }
+    var _txt = 'That sign-in link did not work \u2014 enter your email for a fresh one.';   // SIGNIN-WORDS-1 (langt-23)
+    if(_why === 'expired'){ _txt = 'That sign-in link is older than 30 minutes \u2014 enter your email for a fresh one.'; }
+    else if(_why === 'used'){ _txt = 'That sign-in link has been opened too many times \u2014 enter your email for a fresh one, or use the 6-digit code.'; }
+    else if(_why === 'invalid'){ _txt = 'That sign-in link was damaged in transit (some mail apps break long links) \u2014 request a fresh one and use the 6-digit code instead.'; }
+    else if(_why === 'none'){ _txt = 'That sign-in link arrived incomplete \u2014 request a fresh one and use the 6-digit code instead.'; }
     showLinkMsg(_txt, true);
     /* The code box is the scanner-proof door -- open it straight away on any link failure. */
     var _ob = document.getElementById('gate-otp-block');
@@ -653,7 +696,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <!-- ══ WORLD WONDERS STRIP ═══════════════════════════════════ -->
   <div id="home-wonders-section" style="display:none;margin-top:14px;">
     <div class="sec-head" style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
-      <h2>🌍 World Heritage</h2>
+      <h2>🌍 Nearby landmarks</h2>
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
         <select id="wf-country-select" onchange="setWonderFilter('country',this.value)" style="font-size:11px;font-weight:600;border:1.5px solid var(--border);border-radius:20px;padding:3px 8px;background:var(--surface);color:var(--text-2);cursor:pointer;outline:none;font-family:'Inter',sans-serif;">
           <option value="all">🌍 All</option>
@@ -723,7 +766,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <!-- ══ WISHLIST FEED · bottom-half scroll (PR-26) ═══════════ -->
   <div class="sec-head" style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;">
     <h2 id="wf-heading">For You</h2>
-    <a onclick="goTo('wishlist')" title="Wishlist settings" style="cursor:pointer;font-size:13px;">⚙️</a>
+    <a class="wf-cog" onclick="goTo('wishlist')" title="Wishlist settings" aria-label="Wishlist settings" style="cursor:pointer;font-size:13px;">⚙️</a>
   </div>
   <div id="wf-upgrade" style="display:none;margin:0 16px 10px;padding:10px 12px;background:rgba(255,193,7,.12);border:1px solid rgba(255,193,7,.4);border-radius:10px;font-size:12.5px;color:var(--text);"></div>
   <div class="featured-wrap" id="wf-wrap">
@@ -769,7 +812,8 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 
   <!-- ══ LM-20: Local Market entry — distinct from structured grid ══ -->
   <div class="lm-banner" onclick="goTo('local-market')" role="button" tabindex="0">
-    <div class="lm-banner-icon" style="width:56px;height:40px;flex-shrink:0;"><img src="/static/brand-photos/lm_1_honey.jpg" alt="" style="width:56px;height:40px;object-fit:cover;border-radius:8px;"></div>
+    <!-- LANDING-LEAN-1 (25 Sep 2026 inspection, live-06): this and the six filter-sheet title pictures load lazily -- they sit on screens and sheets that are hidden at start -->
+    <div class="lm-banner-icon" style="width:56px;height:40px;flex-shrink:0;"><img src="/static/brand-photos/lm_1_honey.jpg" alt="" loading="lazy" style="width:56px;height:40px;object-fit:cover;border-radius:8px;"></div>
     <div class="lm-banner-body">
       <div class="lm-banner-title">Local Market</div>
       <div class="lm-banner-sub">Anything goes — vintage finds, second-hand, rare items.</div>
@@ -808,8 +852,9 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;">
     <div id="results-count" class="results-count" style="padding:0;"></div>
     <div id="view-toggle" style="display:flex;gap:4px;">
-      <button onclick="setViewMode('grid')" id="btn-view-grid" class="view-btn active" title="Grid view">▦</button>
-      <button onclick="setViewMode('map')" id="btn-view-map" class="view-btn" title="Map view">🗺</button>
+      <!-- A11Y-NAMES-1 (25 Sep 2026 inspection, shell-08): the switch and the sheet handle below have spoken names; ms.js keeps aria-pressed in step -->
+      <button onclick="setViewMode('grid')" id="btn-view-grid" class="view-btn active" title="Grid view" aria-label="Grid view" aria-pressed="true">▦</button>
+      <button onclick="setViewMode('map')" id="btn-view-map" class="view-btn" title="Map view" aria-label="Map view" aria-pressed="false">🗺</button>
     </div>
   </div>
 
@@ -821,7 +866,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div class="filter-sheet-bg" id="fs-property" onclick="closeFsBg(event,'fs-property')">
   <div class="filter-sheet">
     <div class="fs-handle"></div>
-    <div class="fs-title"><img src="/static/brand-photos/cat_property.jpg" alt="" style="width:34px;height:24px;object-fit:cover;border-radius:6px;vertical-align:-6px;margin-right:7px;border:1px solid rgba(0,0,0,.08);">Property Filters</div>
+    <div class="fs-title"><img src="/static/brand-photos/cat_property.jpg" alt="" loading="lazy" style="width:34px;height:24px;object-fit:cover;border-radius:6px;vertical-align:-6px;margin-right:7px;border:1px solid rgba(0,0,0,.08);">Property Filters</div>
     <div class="fs-sub js-city-sub">Pretoria · narrow your search</div>
 
     <div class="fs-section">
@@ -838,7 +883,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div class="fs-options">
         <div class="fs-opt" onclick="toggleOpt(this,'fp-listing-type')">Any</div>
         <div class="fs-opt" onclick="toggleOpt(this,'fp-listing-type')">For Sale</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fp-listing-type')">For Rent</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-listing-type')">To Rent</div><!-- RENT-WORDS-1 (25 Sep 2026 inspection, langt-44) -->
       </div>
     </div>
 
@@ -958,7 +1003,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div class="filter-sheet-bg" id="fs-tutors" onclick="closeFsBg(event,'fs-tutors')">
   <div class="filter-sheet">
     <div class="fs-handle"></div>
-    <div class="fs-title"><img src="/static/brand-photos/cat_tutors.jpg" alt="" style="width:34px;height:24px;object-fit:cover;border-radius:6px;vertical-align:-6px;margin-right:7px;border:1px solid rgba(0,0,0,.08);">Tutor Filters</div>
+    <div class="fs-title"><img src="/static/brand-photos/cat_tutors.jpg" alt="" loading="lazy" style="width:34px;height:24px;object-fit:cover;border-radius:6px;vertical-align:-6px;margin-right:7px;border:1px solid rgba(0,0,0,.08);">Tutor Filters</div>
     <div class="fs-sub js-city-sub">Pretoria · narrow your search</div>
 
     <div class="fs-section">
@@ -1038,7 +1083,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div class="filter-sheet-bg" id="fs-services" onclick="closeFsBg(event,'fs-services')">
   <div class="filter-sheet">
     <div class="fs-handle"></div>
-    <div class="fs-title"><img src="/static/brand-photos/cat_services.jpg" alt="" style="width:34px;height:24px;object-fit:cover;border-radius:6px;vertical-align:-6px;margin-right:7px;border:1px solid rgba(0,0,0,.08);">Services Filters</div>
+    <div class="fs-title"><img src="/static/brand-photos/cat_services.jpg" alt="" loading="lazy" style="width:34px;height:24px;object-fit:cover;border-radius:6px;vertical-align:-6px;margin-right:7px;border:1px solid rgba(0,0,0,.08);">Services Filters</div>
     <div class="fs-sub js-city-sub">Pretoria · narrow your search</div>
 
     <div class="fs-section">
@@ -1111,7 +1156,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div class="filter-sheet-bg" id="fs-adventures" onclick="closeFsBg(event,'fs-adventures')">
   <div class="filter-sheet">
     <div class="fs-handle"></div>
-    <div class="fs-title"><img src="/static/brand-photos/cat_adventures.jpg" alt="" style="width:34px;height:24px;object-fit:cover;border-radius:6px;vertical-align:-6px;margin-right:7px;border:1px solid rgba(0,0,0,.08);">Adventures Filters</div>
+    <div class="fs-title"><img src="/static/brand-photos/cat_adventures.jpg" alt="" loading="lazy" style="width:34px;height:24px;object-fit:cover;border-radius:6px;vertical-align:-6px;margin-right:7px;border:1px solid rgba(0,0,0,.08);">Adventures Filters</div>
     <div class="fs-sub js-city-sub">Pretoria · narrow your search</div>
 
     <div class="fs-section">
@@ -1191,7 +1236,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div class="filter-sheet-bg" id="fs-collectors" onclick="closeFsBg(event,'fs-collectors')">
   <div class="filter-sheet">
     <div class="fs-handle"></div>
-    <div class="fs-title"><img src="/static/brand-photos/cat_collectors.jpg" alt="" style="width:34px;height:24px;object-fit:cover;border-radius:6px;vertical-align:-6px;margin-right:7px;border:1px solid rgba(0,0,0,.08);">Collectors Filters</div>
+    <div class="fs-title"><img src="/static/brand-photos/cat_collectors.jpg" alt="" loading="lazy" style="width:34px;height:24px;object-fit:cover;border-radius:6px;vertical-align:-6px;margin-right:7px;border:1px solid rgba(0,0,0,.08);">Collectors Filters</div>
     <div class="fs-sub js-city-sub">Pretoria · narrow your search</div>
 
     <div class="fs-section">
@@ -1251,7 +1296,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div class="filter-sheet-bg" id="fs-cars" onclick="closeFsBg(event,'fs-cars')">
   <div class="filter-sheet">
     <div class="fs-handle"></div>
-    <div class="fs-title"><img src="/static/brand-photos/cat_cars.jpg" alt="" style="width:34px;height:24px;object-fit:cover;border-radius:6px;vertical-align:-6px;margin-right:7px;border:1px solid rgba(0,0,0,.08);">Cars Filters</div>
+    <div class="fs-title"><img src="/static/brand-photos/cat_cars.jpg" alt="" loading="lazy" style="width:34px;height:24px;object-fit:cover;border-radius:6px;vertical-align:-6px;margin-right:7px;border:1px solid rgba(0,0,0,.08);">Cars Filters</div>
     <div class="fs-sub js-city-sub">Pretoria · narrow your search</div>
 
     <div class="fs-section">
@@ -1316,7 +1361,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- WONDER DETAIL SCREEN -->
 <div id="screen-wonder-detail" class="screen">
   <div style="position:relative;">
-    <button class="back-btn" id="wd-back-btn" onclick="closeWonderDetail()" style="position:absolute;top:12px;left:12px;z-index:10;border-color:rgba(255,255,255,.85);background:rgba(0,0,0,.4);backdrop-filter:blur(4px);">
+    <button class="back-btn" aria-label="Back" id="wd-back-btn" onclick="closeWonderDetail()" style="position:absolute;top:12px;left:12px;z-index:10;border-color:rgba(255,255,255,.85);background:rgba(0,0,0,.4);backdrop-filter:blur(4px);">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <div style="position:relative;line-height:0;">
@@ -1476,7 +1521,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ═══ AI FEATURES · AdvertAgent advanced functions (S133) — paid per use, NOT introductions ═══ -->
 <div id="screen-ai-features" class="screen">
   <div class="ai-head">
-    <button class="ai-back" onclick="goTo('tuppence')">&#8249;</button>
+    <button class="ai-back" onclick="goTo('tuppence')" aria-label="Back">&#8249;</button>
     <div>
       <div class="ai-title">AI Features</div>
       <div class="ai-sub">Advanced AI &middot; paid per use in Tuppence &middot; <b>introductions are charged separately (1T)</b></div>
@@ -1488,7 +1533,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div class="ai-fn-blurb" id="ai-fn-blurb"></div>
     <div class="ai-glimpse" id="ai-glimpse" style="display:none"></div>
     <div id="ai-params"></div>
-    <label class="ai-dry"><input type="checkbox" id="ai-dryrun" checked> Sample preview &mdash; $0, no Tuppence charged <span class="ai-dev">(testing phase &middot; untick for a real run)</span></label>
+    <label class="ai-dry"><input type="checkbox" id="ai-dryrun" checked> Sample preview &mdash; free <span class="ai-dev">(untick for the full report)</span></label>
     <button class="ai-exbtn" id="ai-exbtn" onclick="aiExample()">&#128065; See an example (free)</button>
     <button class="ai-runbtn" id="ai-runbtn" onclick="aiRun()"></button>
     <div class="ai-status" id="ai-status"></div>
@@ -1505,7 +1550,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     </div>
     <div class="ai-meta" id="ai-meta"></div>
   </div>
-  <div class="ai-foot">Holds commit on request &middot; burn on delivery &middot; released on failure &mdash; a failed run never charges</div>
+  <div class="ai-foot">You pay only when your report arrives. If it fails, nothing is charged.</div>
 </div>
 
 <div id="screen-tuppence" class="screen">
@@ -1550,7 +1595,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <svg class="ai-svc-chev" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </summary>
       <div class="ai-svc-body">
-      <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">Each AI service is charged from your Tuppence balance and is non-refundable. Most cost 1T; batch tools are priced per run.</p>
+      <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">Each AI service is charged from your Tuppence balance and is non-refundable. Each one below costs 1T.</p>
       <!-- Seller AI services -->
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:8px;">For sellers &middot; in your listing edit screen</div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
@@ -1559,28 +1604,21 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
           <div style="flex:1;">
             <div style="font-size:13px;font-weight:700;color:var(--text);">AI Listing Rewrite <span style="font-size:11px;font-weight:400;color:var(--text-3);">&middot; 1T</span></div>
             <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Our AI rewrites your title and description using current SA market language and buyer psychology &mdash; pre-fills your edit form to review and save.</div>
-            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; Open any listing &rarr; Edit &rarr; "&#10024; Rewrite"</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; Open one of your listings in Seller Hub &rarr; Edit &rarr; "&#10024; Rewrite"</div>
           </div>
           <div style="font-size:12px;font-weight:700;color:#d97706;background:#fef3c7;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">1T</div>
         </div>
         <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
           <div style="font-size:22px;flex-shrink:0;">&#128269;</div>
           <div style="flex:1;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);">Why No Intros? AI Audit <span style="font-size:11px;font-weight:400;color:var(--text-3);">&middot; 1T</span></div>
-            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Our AI reviews your listing &mdash; title, description, price and trust score &mdash; then gives you 3 specific fixes to attract more buyers right now.</div>
-            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; Open any listing &rarr; Edit &rarr; "&#128269; Why No Intros?"</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Why No Introductions? AI Audit <span style="font-size:11px;font-weight:400;color:var(--text-3);">&middot; 1T</span></div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Our AI reviews your listing &mdash; title, description, price and Trust Score &mdash; then gives you 3 specific fixes to attract more buyers right now.</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; Open any listing &rarr; Edit &rarr; "&#128269; Why No Introductions?"</div>
           </div>
           <div style="font-size:12px;font-weight:700;color:#059669;background:#d1fae5;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">1T</div>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
-          <div style="font-size:22px;flex-shrink:0;">&#127183;</div>
-          <div style="flex:1;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);">AI Batch Card Lister <span style="font-size:11px;font-weight:400;color:var(--text-3);">&middot; per run</span></div>
-            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Upload photos of many collector cards at once and our AI drafts a separate listing for each &mdash; title, set, condition and a suggested price.</div>
-            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; + Sell &rarr; Collector cards &rarr; "Batch Cards"</div>
-          </div>
-          <div style="font-size:12px;font-weight:700;color:#5b21b6;background:#ede9fe;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">bulk</div>
-        </div>
+        <!-- AI-SVC-PATHS-1 (25 Sep 2026 inspection, langt-28): the "AI Batch Card Lister" card is gone until Batch Cards is
+             back in the Sell menu -- its "+ Sell -> Collector cards -> Batch Cards" path no longer exists there. -->
       </div>
       <!-- Buyer AI services -->
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:8px;">For buyers &middot; on any listing</div>
@@ -1618,10 +1656,10 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:14px;padding:16px;">
         <div id="tq-rate-line" style="font-size:12px;color:var(--text-3);margin-bottom:10px;">1 Tuppence = 1 introduction = $2. Same price at any quantity — buy exactly what you need.</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px;">
-          <button onclick="tqAdjust(-1)" style="width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:22px;font-weight:700;cursor:pointer;">−</button>
-          <input type="text" id="tq-qty" inputmode="numeric" value="1" oninput="tqInput(this)"
+          <button onclick="tqAdjust(-1)" aria-label="Fewer Tuppence" style="width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:22px;font-weight:700;cursor:pointer;">−</button>
+          <input type="text" id="tq-qty" aria-label="How many Tuppence" inputmode="numeric" value="1" oninput="tqInput(this)"
             style="width:90px;text-align:center;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:28px;font-weight:800;letter-spacing:.5px;background:transparent;border:none;border-bottom:2px solid var(--border);color:var(--text);outline:none;">
-          <button onclick="tqAdjust(1)" style="width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:22px;font-weight:700;cursor:pointer;">+</button>
+          <button onclick="tqAdjust(1)" aria-label="More Tuppence" style="width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:22px;font-weight:700;cursor:pointer;">+</button>
         </div>
         <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;">
           <span class="tq-chip" onclick="tqSet(1)" style="cursor:pointer;border:1.5px solid var(--border);border-radius:50px;padding:5px 13px;font-size:12px;color:var(--text-2);">1</span>
@@ -1639,13 +1677,13 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <!-- HOW INTRODUCTIONS WORK -->
     <div class="tn-sec">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">How introductions work</h2><button class="ai-vtutor" onclick="aiVideoTutor('introductions')" aria-label="Watch the introductions video">&#9654; Introductions</button></div>
-      <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">Each Tuppence buys one anonymous introduction. You pay only when you choose to connect. Pick your category, then step through how it works.</p>
+      <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">Each Tuppence pays for one introduction. You pay only if the seller accepts your request. Pick your category, then step through how it works.</p>
 
       <div class="hiw" id="hiw-widget">
         <div class="hiw-bar">
           <button type="button" class="hiw-nav" id="hiw-prev" onclick="hiwStep(-1)" aria-label="Previous feature">&lsaquo;</button>
           <div class="hiw-feat">
-            <div class="hiw-feat-label" id="hiw-feat-label">Listing paused on intro</div>
+            <div class="hiw-feat-label" id="hiw-feat-label">Listing paused on introduction request</div>
             <div class="hiw-dots" id="hiw-dots"></div>
           </div>
           <button type="button" class="hiw-nav" id="hiw-next" onclick="hiwStep(1)" aria-label="Next feature">&rsaquo;</button>
@@ -1704,7 +1742,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- PLANS -->
 <div id="screen-plans" class="screen">
   <div class="plans-header">
-    <button class="back-btn" id="plans-back-btn" onclick="goTo(window._plansReturnTo||'dashboard')" style="position:absolute;left:16px;top:16px;border-color:rgba(255,255,255,.2);"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <button class="back-btn" aria-label="Back" id="plans-back-btn" onclick="goTo(window._plansReturnTo||'dashboard')" style="position:absolute;left:16px;top:16px;border-color:rgba(255,255,255,.2);"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
     <h1>Subscription Plans</h1><p>Start free. Upgrade when your market grows.</p>
   </div>
   <!-- Slot-limit callout — shown when arriving from a publish block -->
@@ -1716,12 +1754,12 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div class="plan-card" id="plan-card-free">
       <div class="plan-name">Free</div>
       <div class="plan-price">$0<span class="plan-period"> / month</span></div>
-      <div class="plan-zar">Card verified at signup · never charged</div>
+      <div class="plan-zar">Free forever · no card needed</div>
       <div class="plan-features">
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>2 active listing slots</div>
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Tuppence pay-as-you-go</div>
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Anonymous seller profile</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All features included</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All selling tools included</div>
       </div>
       <button class="plan-btn secondary" id="plan-btn-free" onclick="setPlan('free','Free')">Select Free</button>
     </div>
@@ -1734,7 +1772,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div class="plan-features">
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>10 active listing slots</div>
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>+2 Tuppence every month</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All features included</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Everything in Free, plus 10 listing slots and 2 Tuppence a month</div>
       </div>
       <button class="plan-btn accent" id="plan-btn-starter" onclick="setPlan('starter','Starter')">Upgrade to Starter</button>
     </div>
@@ -1746,7 +1784,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div class="plan-features">
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>30 active listing slots</div>
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>+10 Tuppence every month</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All features included</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Everything in Starter, plus the AI research suite and Squire</div>
       </div>
       <button class="plan-btn primary" id="plan-btn-pro" onclick="setPlan('pro','Pro')">Upgrade to Pro</button>
     </div>
@@ -1758,7 +1796,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div class="plan-features">
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Multiple agents under one verified umbrella</div>
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Free seat = Starter tools (10 listings) · $5 seat = Pro AI suite (20)</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Each agent keeps their own Trust Score, intros &amp; bulk-import via API</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Each agent keeps their own Trust Score, introductions &amp; bulk-import via API</div>
       </div>
       <button class="plan-btn secondary" id="plan-btn-agency" onclick="setPlan('agency','Agency')">Apply as an agency</button>
     </div>
@@ -1770,7 +1808,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div id="screen-adventures" class="screen">
   <div class="adv-hero">
     <div class="adv-hero-top">
-      <button class="adv-back" onclick="goTo('browse')">←</button>
+      <button class="adv-back" onclick="goTo('browse')" aria-label="Back">←</button>
       <h1>🧭 Adventures</h1>
       <div class="adv-country-pill" id="adv-country-pill" onclick="openAdvCountrySheet()">
         <span id="adv-country-flag">🌍</span>
@@ -1820,7 +1858,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 
   <div id="adv-results-count" style="font-size:12px;color:#6b7280;padding:6px 16px 4px;"></div>
   <div class="lm-search" style="margin-top:10px;">
-    <input type="text" id="adv-search-input" placeholder="Search everywhere - e.g. safari weekend, bmw 1996..." oninput="advSearchInput()" onkeydown="if(event.key===&quot;Enter&quot;){event.preventDefault();advSearchEnter(this);}">
+    <input type="text" id="adv-search-input" placeholder="Search everywhere — e.g. safari weekend, BMW 1996…" oninput="advSearchInput()" onkeydown="if(event.key===&quot;Enter&quot;){event.preventDefault();advSearchEnter(this);}">
   </div>
 
   <div id="adv-grid" style="padding:8px 16px 100px;display:flex;flex-direction:column;gap:12px;min-height:200px;"></div>
@@ -2171,7 +2209,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
           <div class="sob-tier-name">Free</div>
           <div style="font-size:11px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:4px;padding:2px 8px;" id="sob-sel-free">Selected</div>
         </div>
-        <div class="sob-tier-price">R0 / month · card verified, never charged</div>
+        <div class="sob-tier-price">Free forever — no card needed</div>
         <div class="sob-tier-feat">
           <span>✓ 2 active listings</span>
           <span>✓ Local city visibility</span>
@@ -2209,7 +2247,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         </div>
       </div>
 
-      <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.85);margin-top:8px;line-height:1.6;">All prices exclude VAT. No commission ever. Tuppence intro fees apply on all plans.<br>All listings fade gracefully after their duration — renew free at any time.</div>
+      <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.85);margin-top:8px;line-height:1.6;">All prices exclude VAT. No commission ever. Tuppence introduction fees apply on all plans.<br>All listings fade gracefully after their duration — renew free at any time.</div>
     </div>
     <div class="sob-footer" style="flex-direction:column;gap:8px;">
       <button class="sob-btn-next" id="sob-p2-next" onclick="sobContinueFromTier()">Continue →</button>
@@ -2233,7 +2271,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:16px;font-weight:400;">Review the terms, accept, and your listing goes live. You stay anonymous until both parties accept an introduction.</p>
 
       <div id="sob-returning-eula-note" style="display:none;background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.35);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;">
-        <strong style="color:#fbbf24;">One quick step before you go live.</strong> You have an existing account but haven't yet accepted the TrustSquare EULA. Please read and accept the terms below — your listing will go live immediately after.
+        <strong style="color:#fbbf24;">One quick step before you go live.</strong> You have an existing account but haven't yet accepted our Terms of Use. Please read and accept the Terms of Use below — your listing will go live immediately after.
       </div>
 
       <div class="sob-eula-box" id="sob-eula-scroll" onscroll="sobEulaScroll()">
@@ -2357,7 +2395,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:12px;padding:14px 15px;font-size:15px;font-family:'Inter',sans-serif;outline:none;"
       onkeydown="if(event.key==='Enter')requestSignInLink('si-email','si-msg')">
     <button onclick="requestSignInLink('si-email','si-msg')"
-      style="width:100%;box-sizing:border-box;margin-top:12px;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Email me a sign-in link</button>
+      style="width:100%;box-sizing:border-box;margin-top:12px;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Email me a sign-in link and code</button><!-- SIGNIN-WORDS-1 (25 Sep 2026 inspection, langt-23) -->
     <div id="si-msg" style="font-size:12.5px;margin-top:12px;display:none;text-align:center;line-height:1.5;"></div>
     <div style="text-align:center;margin-top:24px;">
       <a onclick="goTo('home')" style="color:var(--text-3);font-size:13px;cursor:pointer;">or just browse for now →</a>
@@ -2379,7 +2417,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg> Back
       </button>
       <div class="ob-logo"><img src="/static/brand/logo-white-400.png" alt="TrustSquare" style="height:24px;width:auto;display:block;"></div>
-      <div class="ob-eyebrow">Sell on TrustSquare · Pretoria</div>
+      <div class="ob-eyebrow">Sell on TrustSquare</div>
       <h1>Reach serious buyers.<br>No commission.</h1>
       <p>TrustSquare connects you directly with qualified buyers via a secure introduction system. You stay anonymous until both parties agree to connect.</p>
       <div class="ob-cards">
@@ -2397,10 +2435,10 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div id="magic-banner-area"></div>
       <h2>Create your seller account</h2>
       <div class="osub">Takes less than 3 minutes. Start with your profile, then publish your first listing.</div>
-      <div class="field"><label>Your name <span class="req">*</span></label><input type="text" id="ob-name" placeholder="Full name"></div>
-      <div class="field"><label>Business or trading name <span class="opt">(optional)</span></label><input type="text" id="ob-biz" placeholder="e.g. Louw Tutoring or Botha Electrical"></div>
-      <div class="field"><label>Email address <span class="req">*</span></label><input type="email" id="ob-email" placeholder="you@example.com"></div>
-      <div class="field"><label>Your category</label><select id="ob-cat">
+      <div class="field"><label for="ob-name">Your name <span class="req">*</span></label><input type="text" id="ob-name" aria-required="true" placeholder="Full name"></div>
+      <div class="field"><label for="ob-biz">Business or trading name <span class="opt">(optional)</span></label><input type="text" id="ob-biz" placeholder="e.g. Louw Tutoring or Botha Electrical"></div>
+      <div class="field"><label for="ob-email">Email address <span class="req">*</span></label><input type="email" id="ob-email" aria-required="true" placeholder="you@example.com"></div>
+      <div class="field"><label for="ob-cat">Your category</label><select id="ob-cat">
         <option value="Property">Property</option>
         <option value="Tutors">Tutors</option>
         <option value="Services">Services</option>
@@ -2439,21 +2477,21 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <!-- PA-1: Single photo -->
   <div id="pa-1" class="pub-phase">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="goTo('browse')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="goTo('browse')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
         <div class="pub-step-pill">Step 1 of 3</div>
         <h1>Add a photo</h1>
       </div>
     </div>
     <div style="padding:20px 20px 0;">
-      <p style="font-size:14px;color:var(--text-2);margin-bottom:18px;line-height:1.6;font-weight:400;">Listings with photos get 3× more intro requests. You can skip and add one later.</p>
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:18px;line-height:1.6;font-weight:400;">Listings with photos get 3× more introduction requests. You can skip and add one later.</p>
       <div class="upload-zone" onclick="document.getElementById('pa-img-inp').click()">
         <input type="file" id="pa-img-inp" accept="image/*" style="display:none" onchange="paHandleImg(event)">
         <div id="pa-uz-default"><div class="uz-icon">📷</div><div class="uz-title">Tap to add a photo</div><div class="uz-sub">Camera or gallery · JPG or PNG</div></div>
         <div id="pa-uz-preview" style="display:none;"><img id="pa-uz-img" style="width:100%;max-height:260px;object-fit:cover;border-radius:10px;"><button onclick="paClearImg(event)" style="margin-top:10px;background:none;border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--text-2);">Remove photo</button></div>
       </div>
       <div class="field" style="margin-top:18px;">
-        <label>One sentence about it <span class="opt">(optional — we draft the listing for you, free)</span></label>
+        <label for="pa-intent">One sentence about it <span class="opt">(optional — we draft the listing for you, free)</span></label>
         <input type="text" id="pa-intent" placeholder="e.g. selling my 2019 MacBook, lightly used, hoping for about R15k" style="font-size:15px;">
         <div class="hint">Add a photo + one sentence and we’ll draft the title, category, price and description — you just fine-tune.</div>
       </div>
@@ -2467,7 +2505,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <!-- PA-2: Category + headline + price -->
   <div id="pa-2" class="pub-phase" style="display:none;">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="paGoStep(1)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="paGoStep(1)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
         <div class="pub-step-pill">Step 2 of 3</div>
         <h1>What are you selling?</h1>
@@ -2476,7 +2514,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div style="padding:20px;">
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
         <div class="cat-big-tile" id="pa-cbt-Property" onclick="paSelCat('Property')">
-          <div class="cbt-icon">🏡</div><div class="cbt-body"><div class="cbt-name">Property</div><div class="cbt-desc">Home, apartment, land or commercial space</div><div class="cbt-model" style="color:var(--gold);">⏳ Commitment model — listing pauses per intro request</div></div><div class="cbt-check">✓</div>
+          <div class="cbt-icon">🏡</div><div class="cbt-body"><div class="cbt-name">Property</div><div class="cbt-desc">Home, apartment, land or commercial space</div><div class="cbt-model" style="color:var(--gold);">⏳ Commitment model — listing pauses per introduction request</div></div><div class="cbt-check">✓</div>
         </div>
         <div class="cat-big-tile" id="pa-cbt-Tutors" onclick="paSelCat('Tutors')">
           <div class="cbt-icon">🎓</div><div class="cbt-body"><div class="cbt-name">Tutors</div><div class="cbt-desc">Teaching, coaching or academic support</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
@@ -2494,24 +2532,24 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
           <div class="cbt-icon">🚗</div><div class="cbt-body"><div class="cbt-name">Cars</div><div class="cbt-desc">Vehicle for sale or hire</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
         </div>
         <div class="cat-big-tile" id="pa-cbt-LocalMarket" onclick="paSelCat('LocalMarket')">
-          <div class="cbt-icon">🛍️</div><div class="cbt-body"><div class="cbt-name">Local Market</div><div class="cbt-desc">Sell a physical item — furniture, collectibles, clothing, anything</div><div class="cbt-model" style="color:var(--green);">🏷️ Peer-to-peer — buyer pays intro fee on connection</div></div><div class="cbt-check">✓</div>
+          <div class="cbt-icon">🛍️</div><div class="cbt-body"><div class="cbt-name">Local Market</div><div class="cbt-desc">Sell a physical item — furniture, collectibles, clothing, anything</div><div class="cbt-model" style="color:var(--green);">🏷️ Peer-to-peer — buyer pays introduction fee on connection</div></div><div class="cbt-check">✓</div>
         </div>
       </div>
       <div class="field">
-        <label>What are you offering? <span class="req">*</span></label>
-        <input type="text" id="pa-title" placeholder="e.g. 3-bed home in Centurion" style="font-size:16px;" oninput="paCheckStep2()">
+        <label for="pa-title">What are you offering? <span class="req">*</span></label>
+        <input type="text" id="pa-title" aria-required="true" placeholder="e.g. 3-bed home in Centurion" style="font-size:16px;" oninput="paCheckStep2()">
       </div>
       <div id="pa-draft-note" style="display:none;border-radius:var(--r-sm);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);padding:11px 13px;font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:14px;">✨ <strong>Drafted for you</strong> — from your photo and sentence, free. Fine-tune anything below, then continue.</div>
       <div class="field">
-        <label>Price / rate <span class="opt">(optional)</span></label>
+        <label for="pa-price">Price / rate <span class="opt">(optional)</span></label>
         <input type="text" id="pa-price" placeholder="e.g. R4 200 000 or R350/hr">
         <div class="hint">Leave blank to show "Negotiable"</div>
       </div>
       <div class="field">
-        <label>Description <span class="opt">(optional)</span></label>
+        <label for="pa-desc">Description <span class="opt">(optional)</span></label>
         <textarea id="pa-desc" rows="3" placeholder="A few honest sentences about what you’re offering" style="font-size:14px;width:100%;resize:vertical;"></textarea>
       </div>
-      <div id="pa-model-note" style="display:none;border-radius:var(--r-sm);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);padding:11px 13px;font-size:12px;color:var(--text-2);line-height:1.6;margin-top:4px;">Property listings pause when a buyer requests an intro — you respond within 48 hours.</div>
+      <div id="pa-model-note" style="display:none;border-radius:var(--r-sm);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);padding:11px 13px;font-size:12px;color:var(--text-2);line-height:1.6;margin-top:4px;">Property listings pause when a buyer requests an introduction — you respond within 48 hours.</div>
     </div>
     <div class="pub-footer">
       <button class="btn-bk" onclick="paGoStep(1)">← Back</button>
@@ -2522,7 +2560,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <!-- PA-3: Identity + EULA -->
   <div id="pa-3" class="pub-phase" style="display:none;">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="paGoStep(2)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="paGoStep(2)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
         <div class="pub-step-pill">Step 3 of 3</div>
         <h1>Almost live</h1>
@@ -2530,9 +2568,9 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     </div>
     <div style="padding:20px 20px 0;">
       <p style="font-size:14px;color:var(--text-2);margin-bottom:20px;line-height:1.6;font-weight:400;">Your listing goes live immediately. You stay anonymous — buyers see credentials only.</p>
-      <div class="field"><label>Your name <span class="req">*</span></label><input type="text" id="pa-name" placeholder="Full name"></div>
-      <div class="field"><label>Email address <span class="req">*</span></label><input type="email" id="pa-email" placeholder="you@example.com"></div>
-      <div class="field"><label>City <span class="req">*</span></label><input type="text" id="pa-city" placeholder="e.g. Pretoria" value="Pretoria"></div>
+      <div class="field"><label for="pa-name">Your name <span class="req">*</span></label><input type="text" id="pa-name" aria-required="true" placeholder="Full name"></div>
+      <div class="field"><label for="pa-email">Email address <span class="req">*</span></label><input type="email" id="pa-email" aria-required="true" placeholder="you@example.com"></div>
+      <div class="field"><label for="pa-city">City <span class="req">*</span></label><input type="text" id="pa-city" aria-required="true" placeholder="e.g. Pretoria" value="Pretoria"></div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px;margin-bottom:6px;">
         <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:13px;color:var(--text-2);line-height:1.5;">
           <input type="checkbox" id="pa-eula" style="margin-top:2px;flex-shrink:0;" onchange="paCheckStep3()">
@@ -2582,7 +2620,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
        this step is the entry point — shows a brief confirmation then goes to B2) -->
   <div id="sb-b1" class="pub-phase">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="sbClosePath()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="sbClosePath()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
         <div class="pub-step-pill">New listing</div>
         <h1>How do you want to start?</h1>
@@ -2637,7 +2675,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <!-- sb-batch: Batch Cards flow for Collectors -->
   <div id="sb-batch" class="pub-phase" style="display:none;">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="sbGoStep('b1')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="sbGoStep('b1')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
         <div class="pub-step-pill">Collectors &#183; Batch listing</div>
         <h1>Add card photos</h1>
@@ -2696,7 +2734,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <!-- B2: Category + agent/private gate -->
   <div id="sb-b2" class="pub-phase" style="display:none;">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="sbGoStep('b1')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="sbGoStep('b1')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
         <div class="pub-step-pill">Step 1 of 7</div>
         <h1>Category</h1>
@@ -2705,7 +2743,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div style="padding:20px;">
       <div id="sb-b2-cats" style="display:flex;flex-direction:column;gap:10px;">
         <div class="cat-big-tile" id="sb-cbt-Property" onclick="sbSelCat('Property')">
-          <div class="cbt-icon">🏡</div><div class="cbt-body"><div class="cbt-name">Property</div><div class="cbt-desc">Home, apartment, land or commercial space</div><div class="cbt-model" style="color:var(--gold);">⏳ Commitment model — listing pauses per intro request</div></div><div class="cbt-check">✓</div>
+          <div class="cbt-icon">🏡</div><div class="cbt-body"><div class="cbt-name">Property</div><div class="cbt-desc">Home, apartment, land or commercial space</div><div class="cbt-model" style="color:var(--gold);">⏳ Commitment model — listing pauses per introduction request</div></div><div class="cbt-check">✓</div>
         </div>
         <div class="cat-big-tile" id="sb-cbt-Tutors" onclick="sbSelCat('Tutors')">
           <div class="cbt-icon">🎓</div><div class="cbt-body"><div class="cbt-name">Tutors</div><div class="cbt-desc">Teaching, coaching or academic support</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
@@ -2723,7 +2761,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
           <div class="cbt-icon">🚗</div><div class="cbt-body"><div class="cbt-name">Cars</div><div class="cbt-desc">Vehicle for sale or hire</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
         </div>
         <div class="cat-big-tile" id="sb-cbt-LocalMarket" onclick="sbSelCat('LocalMarket')">
-          <div class="cbt-icon">🛍️</div><div class="cbt-body"><div class="cbt-name">Local Market</div><div class="cbt-desc">Sell a physical item — furniture, collectibles, clothing, anything</div><div class="cbt-model" style="color:var(--green);">🏷️ Peer-to-peer — buyer pays intro fee on connection</div></div><div class="cbt-check">✓</div>
+          <div class="cbt-icon">🛍️</div><div class="cbt-body"><div class="cbt-name">Local Market</div><div class="cbt-desc">Sell a physical item — furniture, collectibles, clothing, anything</div><div class="cbt-model" style="color:var(--green);">🏷️ Peer-to-peer — buyer pays introduction fee on connection</div></div><div class="cbt-check">✓</div>
         </div>
       </div>
       <!-- Agent/private gate — shown only for Property and Cars -->
@@ -2755,7 +2793,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <!-- B3: Structured fields + inline AI market note -->
   <div id="sb-b3" class="pub-phase" style="display:none;">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="sbGoStep('b2')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="sbGoStep('b2')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
         <div class="pub-step-pill">Step 2 of 7</div>
         <h1 id="sb-b3-title">Details</h1>
@@ -2778,7 +2816,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <!-- B4: AI drafts description -->
   <div id="sb-b4" class="pub-phase" style="display:none;">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="sbGoStep('b3')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="sbGoStep('b3')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
         <div class="pub-step-pill">Step 3 of 7</div>
         <h1>Your description</h1>
@@ -2808,7 +2846,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <!-- B5: Room-by-room photo gallery -->
   <div id="sb-b5" class="pub-phase" style="display:none;">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="sbGoStep('b4')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="sbGoStep('b4')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
         <div class="pub-step-pill">Step 4 of 7</div>
         <h1>Photos</h1>
@@ -2832,7 +2870,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <!-- B6: Seller profile photo (selfie) -->
   <div id="sb-b6" class="pub-phase" style="display:none;">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="sbGoStep('b5')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="sbGoStep('b5')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
         <div class="pub-step-pill">Step 5 of 7</div>
         <h1>Profile photo</h1>
@@ -2851,14 +2889,14 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <button class="btn-next" onclick="sbGoStep('b7')">Continue →</button>
     </div>
     <div style="text-align:center;padding:0 20px 16px;">
-      <button onclick="sbGoStep('b7')" style="background:none;border:none;color:var(--text-3);font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">Skip — I\'ll add a photo later</button>
+      <button onclick="sbGoStep('b7')" style="background:none;border:none;color:var(--text-3);font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">Skip — I'll add a photo later</button>
     </div>
   </div>
 
   <!-- B7: Trust Score checklist -->
   <div id="sb-b7" class="pub-phase" style="display:none;">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="sbGoStep('b6')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="sbGoStep('b6')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
         <div class="pub-step-pill">Step 6 of 7</div>
         <h1>Trust Score</h1>
@@ -2873,7 +2911,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div id="sb-b7-badge" style="font-size:13px;font-weight:700;padding:6px 14px;border-radius:50px;background:var(--surface);border:1.5px solid var(--border);">—</div>
     </div>
     <div style="padding:14px 20px 8px;">
-      <p style="font-size:13px;color:var(--text-2);line-height:1.6;font-weight:400;">Your Trust Score determines how visible and credible you are to buyers. You don\'t need to complete this now — but the higher your score, the more intros you\'ll receive.</p>
+      <p style="font-size:13px;color:var(--text-2);line-height:1.6;font-weight:400;">Your Trust Score determines how visible and credible you are to buyers. You don't need to complete this now — but the higher your score, the more introductions you'll receive.</p>
     </div>
     <div id="sb-b7-signals" style="padding:0 20px 16px;">
       <!-- Rendered dynamically by sbRenderB7() -->
@@ -2884,7 +2922,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <button class="btn-next" onclick="sbGoStep('b8')">Continue →</button>
     </div>
     <div style="text-align:center;padding:0 20px 4px;">
-      <button onclick="sbGoStep('b8')" style="background:none;border:none;color:var(--text-3);font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">Skip Trust Score — I\'ll add credentials later</button>
+      <button onclick="sbGoStep('b8')" style="background:none;border:none;color:var(--text-3);font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">Skip Trust Score — I'll add credentials later</button>
     </div>
     <div style="text-align:center;padding:0 20px 16px;">
       <button onclick="sbSaveDraftAndExit()" style="background:none;border:none;color:var(--text-3);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;">💾 Save draft — finish later</button>
@@ -2894,7 +2932,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <!-- B8: Publish / review -->
   <div id="sb-b8" class="pub-phase" style="display:none;">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="sbGoStep('b7')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="sbGoStep('b7')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
         <div class="pub-step-pill">Step 7 of 7</div>
         <h1>Ready to publish</h1>
@@ -2957,7 +2995,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- DASHBOARD -->
 <div id="screen-dashboard" class="screen">
   <div class="dash-hdr" style="position:relative;">
-    <h1>My Seller Hub</h1><p>Manage listings &amp; profile · Pretoria</p><button onclick="signOut()" style="position:absolute;top:16px;right:18px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;white-space:nowrap;">Sign out</button>
+    <h1>Seller Hub</h1><p>Manage your listings and profile</p><button onclick="signOut()" style="position:absolute;top:16px;right:18px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;white-space:nowrap;">Sign out</button>
     <div class="dash-stats">
       <div class="dstat"><div class="dstat-val" id="dash-active">0</div><div class="dstat-label">Active</div></div>
       <div class="dstat"><div class="dstat-val" id="dash-pending">0</div><div class="dstat-label">Pending</div></div>
@@ -2973,7 +3011,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <b>First time here — the short version.</b>
     <ul>
       <li>This is <b>your side</b> of TrustSquare: what you have listed, what buyers have asked you, and your profile.</li>
-      <li>Start with <b>List with AI Coach</b> — add one photo, answer a few taps, and it drafts the advert for you.</li>
+      <li>Start with <b>List with AI Coach</b> — pick a category, fill in the details and add photos; the coach suggests improvements.</li>
       <li><b>Listing is free</b>, and nothing is public until you tap Publish.</li>
       <li>You accept the terms at that same moment, not before — so look around first.</li>
     </ul>
@@ -3019,7 +3057,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ── EDIT LISTING SCREEN ── -->
 <div id="screen-edit-listing" class="screen">
   <div class="el-hdr">
-    <button class="back-btn" onclick="goTo('dashboard')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <button class="back-btn" aria-label="Back" onclick="goTo('dashboard')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
     <h1 id="el-screen-title">Edit Listing</h1>
   </div>
   <div class="el-body">
@@ -3029,7 +3067,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
         <button class="el-ai-btn" id="el-ai-btn" onclick="editAISuggest()" style="font-size:11px;padding:7px 11px;">💬 Ask AI Coach</button>
         <button class="el-ai-btn" id="el-rewrite-btn" onclick="elRunRewrite()" style="font-size:11px;padding:7px 11px;background:#5b21b6;">✨ Rewrite</button>
-        <button class="el-ai-btn" id="el-audit-btn" onclick="elRunAudit()" style="font-size:11px;padding:7px 11px;background:#0e7490;">🔍 Why No Intros?</button>
+        <button class="el-ai-btn" id="el-audit-btn" onclick="elRunAudit()" style="font-size:11px;padding:7px 11px;background:#0e7490;">🔍 Why No Introductions?</button>
         <button class="el-ai-btn" id="el-yield-btn" onclick="elRunYield()" style="display:none;font-size:11px;padding:7px 11px;background:#065f46;">📈 Yield Calc</button>
       </div>
     </div>
@@ -3049,7 +3087,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div id="el-dochub-section" style="margin-top:12px;display:none;"></div>
     <!-- World Wonders Picker -->
     <div class="wp-section" id="el-wonder-section" style="background:#0d1424;border-radius:14px;padding:14px 14px 12px;border:1px solid rgba(255,255,255,.1);">
-      <div class="wp-label">🌍 Nearby World Wonders</div>
+      <div class="wp-label">🌍 Nearby landmarks</div>
       <div style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:10px;margin-top:-4px;">Link up to 5 UNESCO sites or National Parks near your listing</div>
       <input class="wp-search" id="wp-search" type="text" placeholder="Search e.g. South Africa, Kruger, UNESCO…" oninput="wpSearch(this.value)" onfocus="wpShowResults()">
       <div class="wp-results" id="wp-results"></div>
@@ -3071,7 +3109,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div id="screen-cv-edit" class="screen">
   <div class="cv-edit-screen">
     <div class="cv-edit-hdr">
-      <button class="back-btn" onclick="goTo('dashboard')" style="border-color:rgba(255,255,255,.2);"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="goTo('dashboard')" style="border-color:rgba(255,255,255,.2);"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <h1>Edit Seller Profile</h1>
       <button class="cv-edit-save" onclick="saveCVEdit()">Save</button>
     </div>
@@ -3091,7 +3129,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div id="screen-aa-home" class="screen">
   <div class="aa-hdr">
     <div class="aa-hdr-row">
-      <button class="back-btn" onclick="goTo('dashboard')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="goTo('dashboard')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <h1>Listing Coach</h1>
       <button class="aa-flow-info-btn" onclick="aaShowFlowSheet()" title="How it works">?</button>
     </div>
@@ -3108,7 +3146,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div id="screen-aa-detail" class="screen">
   <div class="aa-hdr">
     <div class="aa-hdr-row">
-      <button class="back-btn" onclick="goTo('aa-home')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="goTo('aa-home')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <h1>Item Detail</h1>
       <button class="aa-flow-info-btn" onclick="aaShowFlowSheet(aaGetSelectedCategory())" title="How it works">?</button>
       <span class="aa-stage-pill">Stage 1 of 3</span>
@@ -3122,7 +3160,10 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div id="aa-detail-ai"></div>
   </div>
   <div class="aa-footer">
-    <button class="aa-btn-secondary" onclick="goTo('aa-home')">Save Draft</button>
+    <!-- DRAFT-SAVE-1 (25 Sep 2026 inspection, ts3-10): "Save Draft" only went back to the list and kept
+         nothing. It now calls aaSaveDetailDraft() (ms.js) to store what was typed first; until that
+         function ships it falls back to the old behaviour rather than breaking the button. -->
+    <button class="aa-btn-secondary" onclick="typeof aaSaveDetailDraft==='function'?aaSaveDetailDraft():goTo('aa-home')">Save Draft</button>
     <button class="aa-btn-primary" id="aa-detail-next" onclick="aaSaveDetailAndNext()">Next: Photos</button>
   </div>
 </div>
@@ -3131,7 +3172,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div id="screen-aa-photos" class="screen">
   <div class="aa-hdr">
     <div class="aa-hdr-row">
-      <button class="back-btn" onclick="goTo('aa-detail')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="goTo('aa-detail')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <h1>Item Photos</h1>
       <span class="aa-stage-pill">Stage 2 of 3</span>
     </div>
@@ -3153,7 +3194,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div id="screen-aa-coach" class="screen">
   <div class="aa-hdr">
     <div class="aa-hdr-row">
-      <button class="back-btn" onclick="goTo('aa-photos')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="goTo('aa-photos')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <h1>AI Coach</h1>
       <span class="aa-stage-pill">Stage 3 of 4</span>
     </div>
@@ -3172,7 +3213,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div id="screen-aa-publish" class="screen">
   <div class="aa-hdr">
     <div class="aa-hdr-row">
-      <button class="back-btn" onclick="goTo('aa-photos')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" aria-label="Back" onclick="goTo('aa-photos')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <h1>Publish</h1>
       <span class="aa-stage-pill">Stage 3 of 3</span>
     </div>
@@ -3183,7 +3224,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   </div>
   <div class="aa-footer">
     <button class="aa-btn-secondary" onclick="goTo('aa-photos')">Back</button>
-    <button class="aa-btn-primary" id="aa-publish-btn" onclick="aaDoPublish()">Publish Listing</button>
+    <button class="aa-btn-primary" id="aa-publish-btn" onclick="aaDoPublish()">Publish listing</button>
   </div>
 </div>
 
@@ -3258,7 +3299,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div class="ms-section-lbl">Wallet</div>
       <div class="ms-card" style="margin-bottom:12px;">
         <div class="ms-wallet-big"><span id="ms-wallet-balance">0</span> <span style="font-size:16px;color:var(--text-3);font-weight:400;">Tuppence</span></div>
-        <div class="ms-wallet-sub">Introduction currency · earn by completing deals</div>
+        <div class="ms-wallet-sub">1 Tuppence = 1 introduction ($2)</div>
         <div class="ms-wallet-btns">
           <button class="ms-wallet-btn" onclick="goTo('tuppence')">📥 History</button>
           <button class="ms-wallet-btn" onclick="goTo('tuppence')">🏪 Buy Pack</button>
@@ -3289,12 +3330,12 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div id="ms-tab-intros" class="ms-tab-content">
       <div class="ms-section-lbl">Received</div>
       <div class="ms-card" id="ms-intros-recv">
-        <div class="ms-empty">No intros received yet</div>
+        <div class="ms-empty">No introductions received yet</div>
       </div>
 
       <div class="ms-section-lbl">Sent</div>
       <div class="ms-card" id="ms-intros-sent">
-        <div class="ms-empty">No intros sent yet</div>
+        <div class="ms-empty">No introductions sent yet</div>
       </div>
 
       <div class="ms-section-lbl">Wishlist</div>
@@ -3341,7 +3382,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         </div>
         <div class="ms-signal-row">
           <div class="ms-sig-icon ms-sig-miss">✗</div>
-          <div class="ms-signal-text">Complete your first intro</div>
+          <div class="ms-signal-text">Complete your first introduction</div>
           <span class="ms-signal-pts ms-pts-avail">+20 available</span>
         </div>
         <div class="ms-signal-row">
@@ -3352,7 +3393,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       </div>
 
       <div class="ms-card">
-        <div style="font-size:13px;color:var(--text-2);margin-bottom:4px;">Improve your trust score with AI guidance</div>
+        <div style="font-size:13px;color:var(--text-2);margin-bottom:4px;">Improve your Trust Score with AI guidance</div>
         <div style="font-size:11px;color:var(--text-3);margin-bottom:8px;">Get a personalised action plan to build credibility</div>
         <button id="tn-trust-coach-btn" class="ms-ai-btn" onclick="msAskAI()">✨ Ask AI how to improve my score →</button>
         <div id="tn-trust-coach-result" style="display:none;"></div>
@@ -3437,7 +3478,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:var(--text-3);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="ms-card" style="margin-bottom:20px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="openEulaModal()">
-        <div><div style="font-size:14px;font-weight:700;color:var(--navy);">📄 Terms &amp; Conditions</div><div style="font-size:12px;color:var(--text-3);margin-top:2px;">TrustSquare EULA and platform rules</div></div>
+        <div><div style="font-size:14px;font-weight:700;color:var(--navy);">📄 Terms &amp; Conditions</div><div style="font-size:12px;color:var(--text-3);margin-top:2px;">TrustSquare Terms of Use and platform rules</div></div>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:var(--text-3);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
 
@@ -3566,7 +3607,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- SUBSCRIPTION SCREEN -->
 <div id="screen-subscription" class="screen">
   <div style="background:linear-gradient(135deg,#1e1b4b,#312e81);padding:20px 20px 24px;position:relative;">
-    <button class="back-btn" onclick="goTo(window._subReturnTo||'myspace')" style="border-color:rgba(255,255,255,.2);margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <button class="back-btn" aria-label="Back" onclick="goTo(window._subReturnTo||'myspace')" style="border-color:rgba(255,255,255,.2);margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
     <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:4px;">Subscription</div>
     <div style="font-size:13px;color:rgba(255,255,255,.65);">Manage your plan, slots and billing</div>
     <!-- Current plan pill -->
@@ -3631,7 +3672,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div class="ms-card" style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="openEulaModal()">
       <div>
         <div style="font-size:14px;font-weight:700;color:var(--navy);">📄 Terms &amp; Conditions</div>
-        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">TrustSquare EULA and platform rules</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">TrustSquare Terms of Use and platform rules</div>
       </div>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:var(--text-3);"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
@@ -3666,7 +3707,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- SELL ACCOUNT PICKER SHEET -->
 <div class="modal-bg" id="sell-account-sheet" onclick="closeSellSheet(event)">
   <div class="modal">
-    <div class="modal-handle" onclick="document.getElementById('sell-account-sheet').classList.remove('open')" style="cursor:pointer;"></div>
+    <div class="modal-handle" role="button" tabindex="0" aria-label="Close" onclick="document.getElementById('sell-account-sheet').classList.remove('open')" style="cursor:pointer;"></div>
     <h2>List something new</h2>
     <p class="modal-sub" id="sell-sheet-sub">Continue with your existing seller account, or register a separate account for a second business.</p>
     <div style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
@@ -3679,7 +3720,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <button class="modal-cta commit" onclick="sellSheetContinue()" style="margin-bottom:8px;">Continue with this account →</button>
     <button class="modal-cancel" onclick="sellSheetNewAccount()">Use a different account</button>
     <!-- QUICK-GATE-A (SEAM-1, David 25 Sep 2026: "we do need it in the app somewhere but small and unobtrusive" -> option A, inside Sell). Quick now carries the way back (?from=app). -->
-    <a class="sell-quick-line" href="/quick/?from=app&amp;src=sell-sheet" style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;font-size:13px;font-weight:600;color:#7C3AED;text-decoration:none;"><span style="width:14px;height:14px;border-radius:4px;background:#7C3AED;display:inline-block;"></span>In a hurry? 5-tap Quick advert &rsaquo;</a>
+    <a class="sell-quick-line" href="/quick/?from=app&amp;src=sell-sheet" style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;font-size:13px;font-weight:600;color:#7C3AED;text-decoration:none;"><span style="width:14px;height:14px;border-radius:4px;background:#7C3AED;display:inline-block;"></span>In a hurry? Quick advert in about a minute &rsaquo;</a>
   </div>
 </div>
 
@@ -3687,7 +3728,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div class="modal-bg" id="intro-modal" onclick="closeMBg(event)">
   <div class="modal">
     <div class="modal-handle"></div>
-    <h2 id="modal-title">Request Introduction</h2>
+    <h2 id="modal-title">Request introduction</h2>
     <p class="modal-sub" id="modal-desc"></p>
     <div class="modal-notice commit" id="modal-notice-commit">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -3701,9 +3742,11 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
       1 Tuppence ($2) deducted only on seller acceptance
     </div>
-    <div class="field"><label>Your name <span class="req">*</span></label><input type="text" id="m-name" placeholder="Full name"></div>
-    <div class="field"><label>Your email <span class="req">*</span></label><input type="email" id="m-email" placeholder="you@example.com"></div>
-    <div class="field"><label>Message <span class="opt">(optional)</span></label><textarea id="m-msg" style="height:64px;resize:none;" placeholder="Briefly tell the seller why you're interested…"></textarea></div>
+    <!-- A11Y-LABELS-1 (25 Sep 2026 inspection, shell-18): labels are tied to their boxes (for=) so a
+         screen reader says "Your name, required" instead of reading the grey example text. -->
+    <div class="field"><label for="m-name">Your name <span class="req">*</span></label><input type="text" id="m-name" aria-required="true" placeholder="Full name"></div>
+    <div class="field"><label for="m-email">Your email <span class="req">*</span></label><input type="email" id="m-email" aria-required="true" placeholder="you@example.com"></div>
+    <div class="field"><label for="m-msg">Message <span class="opt">(optional)</span></label><textarea id="m-msg" style="height:64px;resize:none;" placeholder="Briefly tell the seller why you're interested…"></textarea></div>
     <button class="modal-cta commit" id="modal-cta-btn" onclick="submitIntro()">Submit Introduction Request</button>
     <button class="modal-cancel" onclick="document.getElementById('intro-modal').classList.remove('open')">Cancel</button>
   </div>
@@ -3720,7 +3763,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <span>Secure payment via Paystack · billed in ZAR</span>
     </div>
     <div style="margin-bottom:16px;margin-top:12px;">
-      <label style="font-size:13px;color:var(--text-2);font-weight:500;display:block;margin-bottom:6px;">Your email</label>
+      <label for="topup-email" style="font-size:13px;color:var(--text-2);font-weight:500;display:block;margin-bottom:6px;">Your email</label>
       <input id="topup-email" type="email" placeholder="your@email.com" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:Inter,sans-serif;box-sizing:border-box;">
     </div>
     <div style="background:var(--surface-2);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:18px;">
@@ -3751,7 +3794,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div id="loc-panel-country" style="display:none;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <h3 style="font-size:17px;font-weight:700;color:var(--navy);">Select Country</h3>
-        <button onclick="closeCitySelector()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3);line-height:1;padding:4px;">✕</button>
+        <button onclick="closeCitySelector()" aria-label="Close" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3);line-height:1;padding:4px;">✕</button>
       </div>
       <div id="loc-list-country"></div>
     </div>
@@ -3760,7 +3803,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div id="loc-panel-region" style="display:none;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
         <button onclick="openLocPanel('country');_loadAndRenderCountries()" style="background:none;border:none;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;">← Countries</button>
-        <button onclick="closeCitySelector()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3);line-height:1;padding:4px;">✕</button>
+        <button onclick="closeCitySelector()" aria-label="Close" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3);line-height:1;padding:4px;">✕</button>
       </div>
       <h3 id="loc-title-region" style="font-size:17px;font-weight:700;color:var(--navy);margin-bottom:16px;">Select Region</h3>
       <div id="loc-list-region"></div>
@@ -3770,7 +3813,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div id="loc-panel-city">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
         <button id="city-back-btn" onclick="openLocPanel('region');_loadAndRenderRegions()" style="background:none;border:none;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;">← Regions</button>
-        <button onclick="closeCitySelector()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3);line-height:1;padding:4px;">✕</button>
+        <button onclick="closeCitySelector()" aria-label="Close" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3);line-height:1;padding:4px;">✕</button>
       </div>
       <h3 id="loc-title-city" style="font-size:17px;font-weight:700;color:var(--navy);margin-bottom:16px;">Select City</h3>
       <div id="loc-list-city"></div>
@@ -3781,7 +3824,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div id="loc-panel-suburb" style="display:none;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
         <button id="suburb-back-btn" onclick="openLocPanel('city');_loadAndRenderCities()" style="background:none;border:none;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;">← Cities</button>
-        <button onclick="closeCitySelector()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3);line-height:1;padding:4px;">✕</button>
+        <button onclick="closeCitySelector()" aria-label="Close" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3);line-height:1;padding:4px;">✕</button>
       </div>
       <h3 id="suburb-panel-title" style="font-size:17px;font-weight:700;color:var(--navy);margin-bottom:16px;">Select Suburb</h3>
       <div id="loc-list-suburb"></div>
@@ -3806,9 +3849,9 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div style="margin-bottom:12px;"><strong>1. Tuppence is non-refundable platform currency.</strong> Balances may be frozen if your account is suspended but are never confiscated. Frozen Tuppence is restored automatically when your account is reinstated.</div>
       <div style="margin-bottom:12px;"><strong>2. Trust Score and visibility.</strong> You may publish from day one with no minimum Trust Score. Buyers may filter Local Market listings by seller Trust Score. Sellers below 40 are visible to buyers using the default "Any seller" filter.</div>
       <div style="margin-bottom:12px;"><strong>3. Repeat-offender escalation.</strong> First suspension: until score recovers. Second within 90 days: 30-day mandatory cooling-off. Third: permanent ban from Local Market (other categories remain available).</div>
-      <div style="margin-bottom:12px;"><strong>4. Buyer no-show accountability.</strong> Buyers who do not follow through on accepted introductions lose 3 Trust Score points per upheld complaint. The buyer\'s current Trust Score is shown to you on every introduction request.</div>
+      <div style="margin-bottom:12px;"><strong>4. Buyer no-show accountability.</strong> Buyers who do not follow through on accepted introductions lose 3 Trust Score points per upheld complaint. The buyer's current Trust Score is shown to you on every introduction request.</div>
       <div style="margin-bottom:12px;"><strong>5. Seller pays on introduction.</strong> Your Tuppence balance is debited 1T (or 2T if boosted) when a buyer submits the first introduction request on a listing. This is non-refundable if you decline or ignore.</div>
-      <div style="margin-bottom:12px;"><strong>6. EULA updates.</strong> These terms may be updated with 14 days in-app notice. Continued use after the notice period constitutes acceptance.</div>
+      <div style="margin-bottom:12px;"><strong>6. Terms updates.</strong> These terms may be updated with 14 days' in-app notice. Continued use after the notice period constitutes acceptance.</div>
     </div>
     <div style="display:flex;gap:8px;margin-top:14px;position:sticky;bottom:-18px;background:#1c2128;padding:12px 0 0;border-top:1px solid var(--border);">
       <button onclick="feaLmCloseEula(false)" style="flex:1;background:transparent;color:var(--text-2);border:1.5px solid var(--border);border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Cancel</button>
@@ -3822,48 +3865,48 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <div style="background:#1c2128;border-radius:14px;max-width:520px;width:100%;max-height:92vh;overflow-y:auto;padding:22px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
       <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);">Local Market — new listing</div>
-      <button onclick="feaLmCloseCreate()" style="background:transparent;border:none;color:var(--text-3);font-size:22px;cursor:pointer;line-height:1;">×</button>
+      <button onclick="feaLmCloseCreate()" aria-label="Close" style="background:transparent;border:none;color:var(--text-3);font-size:22px;cursor:pointer;line-height:1;">×</button>
     </div>
     <h2 style="font-size:20px;font-weight:800;color:var(--text);margin:0 0 6px;">Create listing</h2>
     <div class="hk-strip" id="lm-haiko-strip" style="border-radius:8px;margin-bottom:10px;border:1px solid rgba(139,92,246,.2);">
       <span class="hk-strip-icon">&#10024;</span>
-      <span class="hk-strip-msg" id="lm-haiko-msg"><strong>Keep it simple</strong> &#8212; a clear title, honest description, and a fair price are all you need. I\'ll remind you if anything's missing.</span>
+      <span class="hk-strip-msg" id="lm-haiko-msg"><strong>Keep it simple</strong> &#8212; a clear title, honest description, and a fair price are all you need. I'll remind you if anything's missing.</span>
     </div>
     <!-- Session email — display only, never editable -->
     <div id="fea-lm-seller-bar" style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:9px 13px;font-size:13px;color:var(--text-2);margin-bottom:14px;">
       Listing as: <strong id="fea-lm-seller-email" style="color:var(--text);"></strong>
     </div>
     <div style="margin-bottom:12px;">
-      <label style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Title <span style="color:var(--red);">*</span></label>
-      <input type="text" id="fea-lm-title" placeholder="e.g. Vintage 1965 brass desk lamp"
+      <label for="fea-lm-title" style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Title <span style="color:var(--red);">*</span></label>
+      <input type="text" id="fea-lm-title" aria-required="true" placeholder="e.g. Vintage 1965 brass desk lamp"
         style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);outline:none;box-sizing:border-box;">
     </div>
     <div style="margin-bottom:12px;">
-      <label style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Description <span style="color:var(--red);">*</span></label>
-      <textarea id="fea-lm-desc" rows="4" placeholder="Describe the item — condition, history, dimensions, anything a buyer would want to know."
+      <label for="fea-lm-desc" style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Description <span style="color:var(--red);">*</span></label>
+      <textarea id="fea-lm-desc" aria-required="true" rows="4" placeholder="Describe the item — condition, history, dimensions, anything a buyer would want to know."
         style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);outline:none;resize:vertical;box-sizing:border-box;"></textarea>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
       <div>
-        <label style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Price (or "POA")</label>
+        <label for="fea-lm-price" style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Price (or "POA")</label>
         <input type="text" id="fea-lm-price" placeholder="R 850"
           style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);outline:none;box-sizing:border-box;">
       </div>
       <div>
-        <label style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Suburb <span style="color:var(--red);">*</span></label>
-        <input type="text" id="fea-lm-suburb" placeholder="Brooklyn"
+        <label for="fea-lm-suburb" style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Suburb <span style="color:var(--red);">*</span></label>
+        <input type="text" id="fea-lm-suburb" aria-required="true" placeholder="Brooklyn"
           style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);outline:none;box-sizing:border-box;">
       </div>
     </div>
     <div style="margin-bottom:12px;">
-      <label style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">City <span style="color:var(--red);">*</span></label>
-      <input type="text" id="fea-lm-city" placeholder="Pretoria"
+      <label for="fea-lm-city" style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">City <span style="color:var(--red);">*</span></label>
+      <input type="text" id="fea-lm-city" aria-required="true" placeholder="Pretoria"
         style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);outline:none;box-sizing:border-box;">
     </div>
     <img id="fea-lm-photo-preview" src="" alt="Photo preview"
       style="display:none;width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:12px;">
     <div id="fea-lm-photo-row" style="margin-bottom:12px;">
-      <label style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Photos (up to 5)</label>
+      <label for="fea-lm-photos" style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Photos (up to 5)</label>
       <input type="file" id="fea-lm-photos" accept="image/*" multiple style="width:100%;font-size:13px;color:var(--text-2);">
       <div style="font-size:11px;color:var(--text-3);margin-top:4px;">First photo becomes the thumbnail.</div>
     </div>
@@ -3884,18 +3927,93 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <div class="plb-counter" id="plb-counter"></div>
 </div>
 
-<footer id="ts-footer" style="margin:48px 12px 84px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);text-align:center;font-size:12px;color:rgba(255,255,255,.45);">
-  <a href="/terms" style="color:rgba(255,255,255,.6);text-decoration:none;">Terms of Use</a> &nbsp;&middot;&nbsp;
-  <a href="/privacy" style="color:rgba(255,255,255,.6);text-decoration:none;">Privacy Policy</a> &nbsp;&middot;&nbsp;
-  <a href="mailto:support@trustsquare.co" style="color:rgba(255,255,255,.6);text-decoration:none;">Contact</a>
+<!-- FOOTER-CONTRAST-1 (25 Sep 2026 inspection, shell-07): the footer was white on the light grey page
+     and practically invisible; it now uses the page's own grey text colours, and it ends clear of the
+     floating language pill (80-114 px above the bottom), which used to sit on the registration line. -->
+<footer id="ts-footer" style="margin:48px 12px 124px;padding-top:18px;border-top:1px solid var(--border);text-align:center;font-size:12px;color:var(--text-3);">
+  <a href="/terms" style="color:var(--text-2);text-decoration:none;">Terms of Use</a> &nbsp;&middot;&nbsp;
+  <a href="/privacy" style="color:var(--text-2);text-decoration:none;">Privacy Policy</a> &nbsp;&middot;&nbsp;
+  <a href="mailto:support@trustsquare.co" style="color:var(--text-2);text-decoration:none;">Contact</a>
   <div style="margin-top:6px;">&copy; 2026 TrustSquare (Pty) Ltd &middot; Reg No. 2026/340128/07</div>
 </footer>
+<!-- A11Y-KEYS-1 (25 Sep 2026 inspection, shell-09): adverts, category tiles, filter chips, the location
+     picker and the language button are drawn as plain boxes, so a keyboard could not reach them and a
+     screen reader never said "button". This layer gives each one a role and a place in the Tab order and
+     lets Enter (and Space, for buttons) press it -- including the ones ms.js draws later. It also ties the
+     form labels that ms.js draws to their boxes (A11Y-LABELS-1, shell-18). Nothing a finger or a mouse
+     sees changes. -->
+<script>
+(function(){
+  var NATIVE = 'button,a[href],input,select,textarea,summary,label,option';
+  /* Things that OPEN an advert, a match or a heritage site are links: a card may hold its own heart or
+     profile button, which a link (unlike a button) may contain. */
+  var LINKS = ['[onclick*="openDetail("]', '[onclick*="lmOpenDetail("]', '[onclick*="wfFeedTap("]',
+    '[onclick*="wfShowcaseTap("]', '[onclick*="openWonderDetail("]', 'a[onclick]:not([href])'];
+  /* Things that DO something (category, filter, place, language, photo slot, tab) are buttons. */
+  var BUTTONS = ['.cat-tile', '.cat-big-tile', '.chip', '.fs-opt', '.filter-pill', '#adv-filter-pill',
+    '.lm-trust-chip', '.tq-chip', '.adv-cat-chip', '.adv-cat-more', '.adv-cat-option', '.adv-country-pill',
+    '.adv-country-option', '.af-tag', '.zoom-chip', '.city-badge', '.city-option', '#ts-langb',
+    '#ts-langm [data-l]', '.sf-tile', '.sf-subcard', '.sf-chip', '.sf-slot', '.dcb-tile', '.aa-photo-slot',
+    '.ms-tab', '.dash-tab', '.ms-tn-pill', '.ms-edit-link', '.ms-card[onclick]', '.sob-tier-card',
+    '.ob-model-pill', '.seller-cv-badge', '.photo-strip-slide', '.adv-thumb', '.ai-card', '.hiw-dot',
+    'span[onclick]:not([onclick="event.stopPropagation()"])'];
+  function sel(list){ return list.map(function(s){ return s + ':not([data-kb])'; }).join(','); }
+  var SEL_L = sel(LINKS), SEL_B = sel(BUTTONS), seq = 0, queued = false;
+  function mark(nodes, role){
+    for (var i = 0; i < nodes.length; i++){
+      var el = nodes[i];
+      el.setAttribute('data-kb', '1');
+      if (el.matches(NATIVE)) continue;
+      if (!el.hasAttribute('role')) el.setAttribute('role', role);
+      if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+    }
+  }
+  function labels(){
+    var ls = document.querySelectorAll('label:not([for]):not([data-kb])');
+    for (var i = 0; i < ls.length; i++){
+      var lb = ls[i], c = lb.nextElementSibling;
+      lb.setAttribute('data-kb', '1');
+      if (lb.querySelector('input,select,textarea')) continue;          /* already wraps its box */
+      if (!c || !/^(INPUT|SELECT|TEXTAREA)$/.test(c.tagName) || c.type === 'hidden') continue;
+      if (c.id) { lb.htmlFor = c.id; }
+      else if (!c.hasAttribute('aria-label') && !c.hasAttribute('aria-labelledby')) {
+        if (!lb.id) lb.id = 'kb-label-' + (++seq);
+        c.setAttribute('aria-labelledby', lb.id);
+      }
+      if (/\*\s*$/.test(lb.textContent) && !c.hasAttribute('aria-required')) c.setAttribute('aria-required', 'true');
+    }
+  }
+  function run(){
+    queued = false;
+    try { mark(document.querySelectorAll(SEL_L), 'link'); mark(document.querySelectorAll(SEL_B), 'button'); labels(); }
+    catch (e) {}
+  }
+  function soon(){ if (!queued) { queued = true; setTimeout(run, 120); } }
+  try { new MutationObserver(soon).observe(document.body, {childList: true, subtree: true}); } catch (e) {}
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
+  document.addEventListener('keydown', function(e){
+    if (e.defaultPrevented || e.repeat || e.altKey || e.ctrlKey || e.metaKey) return;
+    var k = e.key;
+    if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar') return;
+    var t = e.target;
+    if (!t || t.nodeType !== 1 || t.isContentEditable || t.hasAttribute('onkeydown')) return;
+    var role = t.getAttribute('role');
+    if (role !== 'button' && role !== 'link') return;
+    if (t.matches(NATIVE)) return;                          /* real controls already answer the keyboard */
+    if (role === 'link' && k !== 'Enter') return;           /* a link answers Enter only, like a real one */
+    try { if (getComputedStyle(t).pointerEvents === 'none') return; } catch (_e) {}   /* locked or paused */
+    e.preventDefault();
+    t.click();
+  });
+})();
+</script>
 
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
 <script src="/static/legal-must-haves/legal-cards.js?v=1"></script>
-<script src="/static/trip_essentials.js?v=1"></script>
+<!-- TRIP-LAZY-1 (25 Sep 2026 inspection, shell-14): trip_essentials.js is no longer loaded for every visitor -- ms.js
+     teLoadData() fetches it the first time an advert shows the trip panel (RG-0135 re-aimed). -->
 <script src="/static/ms_gate.js?v=1"></script><!-- SEC-GATE-1: sign-in prompt on a gate refusal -->
 <script src="/static/ms.js?v=501"></script>
 <!-- ════════════════════════════════════════════════════════════

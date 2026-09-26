@@ -72,7 +72,9 @@ if exist "%PROJECT%\n8n\email_templates" %SYNC% -LocalDir "%PROJECT%\n8n\email_t
 
 echo  [7/7] Permissions + CDN purge + video re-warm...
 ssh -n -o ConnectTimeout=15 %SERVER% "chmod 755 %REMOTE%/static/super %REMOTE%/static/videos %REMOTE%/static/legal-must-haves %REMOTE%/static/legal-must-haves/* 2>/dev/null; chmod 644 %REMOTE%/static/super/*.jpg %REMOTE%/static/videos/*.mp4 %REMOTE%/static/legal-must-haves/*/*.png %REMOTE%/static/phone_*.jpg 2>/dev/null; true"
-ssh -n -o ConnectTimeout=15 %SERVER% "cd %REMOTE% && KEY=$(grep -oP '(?<=^ADMIN_KEY=).*' .env 2>/dev/null); curl -sf -m 20 -X POST -H 'x-admin-key: '$KEY http://localhost:8000/admin/purge-cache >/dev/null 2>&1" && echo   [OK] CDN purge requested || echo   [WARN] CDN purge failed - purge manually if stale
+:: ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-10): the purge route is admin-only on the box too, so it sends the key
+:: the RUNNING app holds (read on the server, passed to curl on stdin - never typed, never in a process list).
+ssh -n -o ConnectTimeout=15 %SERVER% "P=$(systemctl show -p MainPID --value marketsquare); K=$(tr '\0' '\n' < /proc/$P/environ 2>/dev/null | sed -n 's/^MS_ADMIN_KEY=//p' | head -n 1); echo X-Admin-Key: $K | curl -sf -m 20 -X POST -H @- http://localhost:8000/admin/purge-cache >/dev/null 2>&1" && echo   [OK] CDN purge requested || echo   [WARN] CDN purge failed - purge manually if stale
 ssh -n -o ConnectTimeout=15 %SERVER% "test -f %REMOTE%/warm_videos.sh && bash %REMOTE%/warm_videos.sh" && echo   [OK] videos re-warmed || echo   [WARN] video warm skipped/failed
 
 echo.

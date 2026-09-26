@@ -7899,7 +7899,14 @@ def rg_id_npr():
            "MODEL: MarketSquare is an introductory service (CLAUDE.md, 1 Aug 2026), so the "
            "panel informs for free and hands off to a travel agency; copy that implied we "
            "sell or book the trip would be a defect, and is asserted against here. "
-           "OPEN until the panel is DEPLOYED and proven live; promote to LOCKED then.")
+           "OPEN until the panel is DEPLOYED and proven live; promote to LOCKED then. "
+           "AMENDED 26 Sep 2026 (TRIP-LAZY-1, 25 Sep 2026 inspection shell-14): the data used to be "
+           "proven by marketsquare.html loading trip_essentials.js SYNC, not deferred, so every visitor "
+           "downloaded ~140 KB of trip data. It is now loaded on demand by ms.js before the panel renders "
+           "(tripEssentialsPanel leaves a slot below the map, teLoadData fetches the file once and the "
+           "slot fills the moment it lands, deep links included). The assertion was RE-AIMED at that "
+           "loader, not weakened: the page or the loader must deliver the data, and nothing may load it "
+           "deferred.")
 def rg_trip_essentials():
     import json as _j, re as _re
     out = []
@@ -7984,9 +7991,27 @@ def rg_trip_essentials():
             if orphan:
                 out.append((FAIL, "map(s) with NO pre-information behind them -- an advert that "
                                   "is still just a map and a sentence: " + ", ".join(sorted(orphan))))
-    if idx is not None and "/static/trip_essentials.js" not in idx:
-        out.append((FAIL, "marketsquare.html does not load trip_essentials.js -- the panel "
-                          "renders nothing at all"))
+    # TRIP-LAZY-1 (26 Sep 2026, 25 Sep 2026 inspection, shell-14): RE-AIMED, not weakened. The property is
+    # unchanged -- the data is loaded BEFORE the panel needs it, and a deep link still gets the panel. It used to be
+    # proven by marketsquare.html's own <script> tag, which made every visitor download ~140 KB of trip data; ms.js now
+    # loads it on demand: tripEssentialsPanel() hands back an empty slot below the map, teLoadData() fetches the file
+    # once, and the slot is filled the moment it lands (a failed fetch is retried by the next advert). So either the
+    # page loads it, or ms.js's on-demand loader is wired into the panel -- and nothing loads it deferred (below).
+    _te_body = ""
+    if ms is not None and "function tripEssentialsPanel" in ms:
+        _te_i = ms.index("function tripEssentialsPanel")
+        _te_j = ms.find("\nfunction ", _te_i + 10)
+        _te_body = _re.sub(r"//[^\n]*|/\*.*?\*/", "", ms[_te_i:_te_j if _te_j > -1 else len(ms)], flags=_re.S)
+    _ld_body = ""
+    if ms is not None and "function teLoadData(" in ms:
+        _ld_i = ms.index("function teLoadData(")
+        _ld_j = ms.find("\nfunction ", _ld_i + 10)
+        _ld_body = _re.sub(r"//[^\n]*|/\*.*?\*/", "", ms[_ld_i:_ld_j if _ld_j > -1 else len(ms)], flags=_re.S)
+    _lazy = (bool(_ld_body) and "/static/trip_essentials.js" in _ld_body and "createElement('script')" in _ld_body
+             and "!window.TRIP_ESSENTIALS" in _te_body and "teLoadData()" in _te_body and "te-slot-" in _te_body)
+    if idx is not None and "/static/trip_essentials.js" not in idx and not _lazy:
+        out.append((FAIL, "neither marketsquare.html nor the on-demand loader in ms.js (TRIP-LAZY-1) loads "
+                          "trip_essentials.js -- the panel renders nothing at all"))
     if idx is not None and _re.search(r'trip_essentials\.js[^>]*\bdefer\b', idx):
         out.append((FAIL, "trip_essentials.js is deferred. A deep link (?listing=NNN -- exactly "
                           "what the journey maps emit) renders the detail during ms.js's first "
@@ -8021,7 +8046,12 @@ def rg_trip_essentials():
                         % (n_live if n_live >= 0 else "unparseable", len(trips))))
     home = _get("/")
     if "/static/trip_essentials.js" not in home:
-        out.append((FAIL, "the live index does not load trip_essentials.js"))
+        # TRIP-LAZY-1 (shell-14): the live ms.js -- at the ?v= the live index references -- is the loader now.
+        _mv = _re.search(r"ms\.js\?v=(\d+)", home)
+        _live_ms = _get("/static/ms.js" + ("?v=" + _mv.group(1) if _mv else ""))
+        if "function teLoadData(" not in _live_ms or "/static/trip_essentials.js" not in _live_ms:
+            out.append((FAIL, "neither the live index nor the live ms.js on-demand loader (TRIP-LAZY-1) loads "
+                              "trip_essentials.js"))
 
     if not out:
         out.append((INFO, "%d journeys carry full pre-information; every map is covered; "
@@ -8034,9 +8064,12 @@ def rg_trip_essentials():
                   "the super admin can never be rate-limited out of his own dashboard by traffic "
                   "he did not generate",
        LOCKED, scope="the login rate-limiter class entire: /admin/login and /review/login get "
-                     "failure-only accounting in separate buckets, while /review/request-link, "
-                     "/review/claim-code and /auth/verify-code keep CALL counting (a send "
-                     "endpoint must meter calls, not failures). Both halves of the fault: the "
+                     "failure-only accounting in separate buckets, while /review/request-link and "
+                     "/review/claim-code keep CALL counting (a send endpoint must meter calls, not "
+                     "failures). /auth/verify-code is a PASSWORD PROMPT (she types the code she was "
+                     "mailed), so since 25 Sep 2026 (CODE-NAT-1, inspection backend-15) it has its OWN "
+                     "failure-only bucket beside the per-address and per-code guess budgets -- its "
+                     "assertion was RE-AIMED at that (4c), not dropped. Both halves of the fault: the "
                      "shared bucket (cause) and successes spending budget (the half that starves "
                      "every lane)",
        fixed_on="2026-08-21",
@@ -8116,20 +8149,64 @@ def rg_admin_door_has_own_failure_budget():
     # interchangeable. Caught in review 21 Aug, never shipped.
     k = c.find("def _review_rate_ok(")
     if k < 0:
-        out.append((FAIL, "_review_rate_ok is gone -- /review/request-link (an EMAIL sender), "
-                          "/review/claim-code and /auth/verify-code have lost their only rate "
-                          "limit"))
+        out.append((FAIL, "_review_rate_ok is gone -- /review/request-link (an EMAIL sender) and "
+                          "/review/claim-code have lost their only rate limit"))
     elif "rec[0] += 1" not in c[k:k + 1600]:
         out.append((FAIL, "_review_rate_ok no longer increments -- it CHECKS without SPENDING, "
                           "so /review/request-link can be driven as a mail bomb and "
-                          "/auth/verify-code brute-forced without limit. This is the exact "
+                          "/review/claim-code guessed without limit. This is the exact "
                           "draft error caught in review on 21 Aug"))
-    for ep in ('@app.post("/review/request-link")', '@app.post("/review/claim-code")',
-               '@app.post("/auth/verify-code")'):
+    for ep in ('@app.post("/review/request-link")', '@app.post("/review/claim-code")'):
         e = c.find(ep)
         if e >= 0 and "_review_rate_ok(ip)" not in c[e:e + 1200]:
             out.append((FAIL, "%s no longer consumes rate budget -- an unmetered send/verify "
                               "endpoint" % ep))
+
+    # 4c. CODE-NAT-1 (25 Sep 2026 inspection, backend-15) -- /auth/verify-code RE-AIMED, NOT
+    # DROPPED. It sat in 4b's call-counted list, but it is a password prompt, not a send
+    # endpoint: counting every call let eight people behind one mobile network or office Wi-Fi
+    # starve the ninth, who was refused WITH THE RIGHT CODE -- this entry's own class (a door
+    # starved by successes), in its sibling lane. What must stay true, asserted on the handler
+    # with its comments stripped: (a) a full connection bucket refuses BEFORE the code is even
+    # checked; (b) a WRONG code, and only a wrong code, spends that bucket; (c) the per-address
+    # budget (a fresh code cannot reset the guessing) and (d) the per-code guess budget are both
+    # still wired; (e) the shared reviewer allowance is not back. LIVE LOGIC below proves the
+    # bucket locks at its ceiling.
+    v = c.find('@app.post("/auth/verify-code")')
+    if v < 0:
+        out.append((FAIL, "/auth/verify-code is gone -- 4c has lost its subject and would pass "
+                          "vacuously (see RG-0068)"))
+    else:
+        vb = c[v:v + 4000]
+        _nx = vb.find("\n@app.", 1)
+        vb = re.sub(r"#[^\n]*", "", vb[:_nx] if _nx > 0 else vb)
+        g, chk = vb.find("_rate_ok(_signin_code_ip_fails"), vb.find("_signin_code_ok(")
+        if g < 0:
+            out.append((FAIL, "/auth/verify-code no longer gates on its own connection bucket "
+                              "(_rate_ok(_signin_code_ip_fails, ...)) -- the code box can be guessed "
+                              "from one connection without a ceiling (CODE-NAT-1)"))
+        elif chk >= 0 and g > chk:
+            out.append((FAIL, "/auth/verify-code checks the code BEFORE its connection bucket -- a "
+                              "full bucket no longer stops the next guess (CODE-NAT-1)"))
+        if chk < 0:
+            out.append((FAIL, "/auth/verify-code no longer spends the code through _signin_code_ok -- "
+                              "the per-code guess budget and single use are bypassed"))
+        if "_signin_fail_blocked(" not in vb or "_signin_fail_note(" not in vb:
+            out.append((FAIL, "/auth/verify-code lost the per-address wrong-code budget "
+                              "(_signin_fail_blocked / _signin_fail_note) -- a freshly mailed code "
+                              "resets the guessing (SEC-GATE-1)"))
+        _w = vb.find("if not _signin_code_ok(")
+        _r = vb.find("raise HTTPException(status_code=401", _w) if _w >= 0 else -1
+        if _w < 0 or _r < 0 or "_rate_note_failure(_signin_code_ip_fails" not in vb[_w:_r]:
+            out.append((FAIL, "/auth/verify-code no longer records a WRONG code against its "
+                              "connection bucket -- the ceiling can never fill (CODE-NAT-1)"))
+        elif "_rate_note_failure(" in vb[_r:]:
+            out.append((FAIL, "/auth/verify-code spends allowance on a CORRECT code again -- the "
+                              "ninth person behind one address is refused with the right code "
+                              "(CODE-NAT-1, backend-15)"))
+        if "_review_rate_ok(" in vb:
+            out.append((FAIL, "/auth/verify-code is back on the shared reviewer allowance -- every "
+                              "correct code spends a slot again (CODE-NAT-1, backend-15)"))
 
     # 5. The 429 tells the human a number, not prose.
     if "Retry-After" not in c or "Try again in %s" not in c:
@@ -8170,14 +8247,38 @@ def rg_admin_door_has_own_failure_budget():
         clr_(A, IP)
         if not ok_(A, IP, 10):
             out.append((FAIL, "LIVE LOGIC: a correct admin credential did not clear the bucket"))
+        # 4c's live half (CODE-NAT-1): the code box's own bucket fills at its ceiling and not before.
+        _m = re.search(r"(?m)^_SIGNIN_CODE_IP_FAILS\s*=\s*(\d+)", s)
+        if not _m:
+            out.append((FAIL, "LIVE LOGIC: _SIGNIN_CODE_IP_FAILS is gone -- the code box has no "
+                              "connection ceiling (CODE-NAT-1)"))
+        else:
+            cap, CB = int(_m.group(1)), {}
+            if not 1 <= cap <= 1000:
+                out.append((FAIL, "LIVE LOGIC: the code box's connection ceiling is %d wrong codes per "
+                                  "window -- that is no ceiling (CODE-NAT-1)" % cap))
+            else:
+                for _ in range(cap - 1):
+                    note_(CB, IP)
+                if not ok_(CB, IP, cap):
+                    out.append((FAIL, "LIVE LOGIC: the code box locked BEFORE its %d-wrong-code ceiling "
+                                      "-- a shared address is starved again (CODE-NAT-1)" % cap))
+                note_(CB, IP)
+                if ok_(CB, IP, cap):
+                    out.append((FAIL, "LIVE LOGIC: %d wrong codes from one connection did not lock the "
+                                      "code box -- guessing is unlimited per connection" % cap))
+                if not ok_(A, IP, 10):
+                    out.append((FAIL, "LIVE LOGIC: wrong sign-in codes leaked into the admin bucket"))
     except Exception as exc:                                     # noqa: BLE001
         out.append((FAIL, "LIVE LOGIC: the limiter could not be exercised (%s) -- unproven"
                     % exc))
 
     if not out:
         out.append((INFO, "admin door has its own 10-failure budget; successes cost nothing in "
-                          "either lane; the three call-metered endpoints still spend; refusals "
-                          "carry exact seconds"))
+                          "either lane; the two call-metered send endpoints still spend; the "
+                          "sign-in code box counts only wrong codes in its own bucket and still "
+                          "carries its per-address and per-code budgets; refusals carry exact "
+                          "seconds"))
     return out
 
 
@@ -10048,7 +10149,12 @@ def rg_console_advert_bulk():
 
 
 @entry("RG-0167", "The Pro seat is PURCHASABLE end-to-end -- the agent's own $5/mo seat subscription (EULA + payment) exists",
-       LOCKED, fixed_on="2026-08-24", scope="ms.js agent-side seat-subscribe lane + bea_main.py seat plan handling (marker SEAT-SUB-1 when built). "
+       OPEN, scope="REOPENED 26 Sep 2026 (25 Sep inspection): this entry read green only because a TOOLTIP in the agency "
+             "console said 'Self-serve subscription billing arrives with SEAT-SUB-1 (RG-0167)' -- a code name shown to "
+             "users, which the language pass removed. No seat-subscribe lane exists in ms.js or bea_main.py; it was "
+             "never built, so this is OPEN (known, not yet built), not a regression. The check now needs the marker "
+             "on BOTH sides, so a user-facing string can never pass it again. "
+             "ms.js agent-side seat-subscribe lane + bea_main.py seat plan handling (marker SEAT-SUB-1 when built). "
              "RUL-048: an agency agent lifts 10->20 + Pro AI suite ONLY by subscribing themselves -- EULA accepted, $5/mo "
              "paid, through the subscription machinery. Until this lane ships, the console can only INVITE the upgrade "
              "(agencyProInvite) and the tier is ops-settable for reconciliation. CLASS: no paid tier is ever reachable "
@@ -10058,11 +10164,11 @@ def rg_console_advert_bulk():
 def rg_pro_seat_purchasable():
     out = []
     import os as _os
-    found = False
-    for f in ("ms.js", "bea_main.py"):
+    found = True
+    for f in ("ms.js", "bea_main.py"):   # both halves of the lane, not either (a tooltip once passed this alone)
         fp = _os.path.join(REPO, f)
-        if _os.path.exists(fp) and "SEAT-SUB-1" in open(fp, encoding="utf-8", errors="replace").read():
-            found = True
+        if not (_os.path.exists(fp) and "SEAT-SUB-1" in open(fp, encoding="utf-8", errors="replace").read()):
+            found = False
     if not found:
         out.append((FAIL, "no SEAT-SUB-1 lane in repo -- the Pro seat cannot actually be bought yet (console invites only)"))
     return out or [(INFO, "agent-side seat subscription lane present")]
@@ -12551,24 +12657,51 @@ def rg_beat_the_model_card():
              "(RG-0133 -- a failed probe reads grey, never a guessed number).",
        ref="DASH-SUMMARY-REDACT-1, 29 Aug 2026. OPEN until built and live. The assertion "
            "below is LIVE-half: it probes the endpoint anonymously and fails while counts "
-           "leak. Promoted LOCKED 30 Aug 2026 -- heartbeat-only payload probed live.")
+           "leak. Promoted LOCKED 30 Aug 2026 -- heartbeat-only payload probed live. "
+           "AMENDED 26 Sep 2026 (inspection qa-04, not weakened): the route is admin-only "
+           "(SUMMARY-DOOR-1, and no loopback exemption since ADMIN-KEY-LOCAL-1), so a 401/403 "
+           "to a stranger now scores as the stronger pass instead of 'not evaluated'; the leak "
+           "test still runs on whatever body a stranger receives, refusal included; and a "
+           "blind read says NOT EVALUATED, where it used to be scored as HOLDING.")
 def rg_summary_anon_heartbeat_only():
     out = []
+    status = 200
     try:
         import urllib.request
         # deliberately anonymous: UA only (Cloudflare drops bare urllib), NEVER the
         # review cookie -- the whole point is what a stranger sees
         req = urllib.request.Request(BASE + "/dashboard/summary", headers=UA)
         body = urllib.request.urlopen(req, timeout=15).read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as he:
+        # SUMMARY-DOOR-1 / ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-04): the route is admin-only now,
+        # so a stranger is REFUSED outright -- stronger than the heartbeat this entry was written for, and
+        # it used to print 'not evaluated' here. The refusal's own body goes through the SAME leak test
+        # below, so a refusal that carried counts or infrastructure would still fail. 5xx judges nothing.
+        status = he.code
+        try:
+            body = (he.read() or b"").decode("utf-8", "replace")
+        except Exception:
+            body = ""
+        if status >= 500:
+            out.append((INFO, "NOT EVALUATED - /dashboard/summary answered %d anonymously; nothing "
+                              "was judged this run" % status))
+            return out
     except Exception as exc:
-        out.append((INFO, "could not probe /dashboard/summary anonymously (%s) -- RG-0211 "
-                          "not evaluated this run" % exc))
+        # A blind read says it is blind (RG-0401's rule): this used to print a lower-case
+        # 'not evaluated' that the board scored as HOLDING, i.e. a pass nobody measured.
+        out.append((INFO, "NOT EVALUATED - could not probe /dashboard/summary anonymously (%s) -- "
+                          "RG-0211 not evaluated this run" % exc))
         return out
     leaks = [t for t in ('"sellers"', '"liveListings"', '"intros"', 'Hetzner', 'SQLite')
              if t in body]
     if leaks:
         out.append((FAIL, "anonymous /dashboard/summary still leaks: %s -- heartbeat-only "
                           "redaction not yet live" % ", ".join(leaks)))
+    elif status in (401, 403):
+        out.append((INFO, "a stranger is refused outright (HTTP %d) -- no counts, session state or "
+                          "infrastructure detail reaches one" % status))
+    elif status != 200:
+        out.append((INFO, "/dashboard/summary answered %d anonymously -- nothing published" % status))
     return out
 
 
@@ -13475,7 +13608,11 @@ def rg_triage_pii():
              "the agent counts and says, it never drafts or sends -- email replies stay "
              "behind EMAIL_AUTO_SEND and legal/compliance stay excluded. Counts-only by "
              "construction, because RG-0222 keeps the rows behind a credential this agent "
-             "does not hold and should not.",
+             "does not hold and should not. AMENDED 26 Sep 2026 (inspection qa-02, prose only, "
+             "no assertion changed): the route is admin-only everywhere now, loopback included "
+             "(ADMIN-KEY-LOCAL-1), so the census presents the admin key for its ONE read and "
+             "still throws the rows away unread -- counts-only is kept by the code, not by the "
+             "door.",
        ref="Found by the maintenance loop, 31 Aug 2026. The agent's sole intake is GET "
            "/admin/faults?status=new, fed by the in-app REPORT tab -- and RUL-040 REMOVES "
            "that tab at soft launch, when customer complaints take over. PROBED live: /flags "
@@ -23940,7 +24077,12 @@ def rg_dcb001_batch_then_order():
     for needle, why in (
             ("if(sfDcbOn()) return sfDcbPhotosS();", "the flag-gated hand-off from the slot step"),
             ("function sfDcbChosen(input){", "batch pick"),
-            ("var placed=files.map(function(file,i){", "the seller's own order kept across async reads"),
+            # PHOTO-SMALL-1 (26 Sep 2026, 25 Sep inspection): photos are shrunk before they are held, one
+            # at a time. The order property moved with the code: the shrinker is a sequential promise
+            # chain that pushes each result in selection order, and the items are placed only after it.
+            ("sfShrinkAll(files).then(function(smalls){", "batch pick placed only after the ordered shrink"),
+            ("return files.reduce(function(p,f){ return p.then(function(){ return sfShrinkPhoto(f).then(function(x){ out.push(x); }); }); }, Promise.resolve())",
+             "the seller's own order kept across async reads (one photo at a time, results in selection order)"),
             ("function sfDcbSetCover(key){", "tap ONE as cover"),
             ("async function sfDcbAiOrder(){", "the AI order button"),
             ("function sfDcbBindDrag(){", "drag to adjust"),
@@ -25016,7 +25158,11 @@ def rg_eula_fork_2():
     # (3) what ms.js serves IS what the site publishes.
     # The CONSTANT, not the first mention: sobFillEula's comment names _EULA_HTML too, and
     # reading the comment instead of the text is how a version check quietly measures nothing.
-    j = msj.find("_EULA_HTML =")
+    # "const _EULA_HTML =" first: a bare "_EULA_HTML =" also matches "_EULA_HTML ===" in any guard
+    # written above the constant (25 Sep 2026 inspection, TERMS-GATE-EDIT-1), which measured nothing.
+    j = msj.find("const _EULA_HTML =")
+    if j < 0:
+        j = msj.find("_EULA_HTML =")
     if j < 0:
         j = msj.find("_EULA_HTML=")
     mv = ver(msj[j:j + 4000]) if j >= 0 else None
@@ -29928,6 +30074,218 @@ def rg_geo_reach_1():
         return [(FAIL, "; ".join(bad[:6]))]
     return [(INFO, "the wave asks only cities a seller could pick, and the gate ships with "
                    "the file that imports it")]
+
+@entry("RG-0495", "INTRO-GATE-MATCH-1: the app offers an introduction exactly when the server would serve one -- "
+       "the advert carries the server's own yes/no, and the button reads it before any guess of its own",
+       LOCKED, fixed_on="2026-09-25",
+       scope="bea_main.py GET /listings/{id} (seller_can_receive = _seller_intro_gate(...) is None) + ms.js "
+             "_msSellerCanReceive and the unverified-seller gate. CLASS: a client gate that re-derives a server rule "
+             "from one field drifts from it. FOUND 25 Sep 2026 inspection (ts4-01): the paid Home Affairs tick alone "
+             "locked 44 of 65 live adverts whose sellers the server accepts (verified ID document or agency).",
+       ref="INSPECTION_2026-09-25.html ts4-01; deployed 25 Sep 2026 (84b287e).")
+def rg_intro_gate_match_1():
+    bea = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if bea is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if '_d["seller_can_receive"] = _seller_intro_gate(' not in bea:
+        bad.append("GET /listings/{id} no longer carries the server's own seller_can_receive answer")
+    if "if (typeof d.seller_can_receive === 'boolean') return d.seller_can_receive;" not in js:
+        bad.append("ms.js _msSellerCanReceive no longer reads the server's answer first")
+    if "typeof ld.seller_can_receive === 'boolean'" not in js:
+        bad.append("ms.js unverified-seller gate no longer reads the server's answer first")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    try:
+        import json as _j
+        rows = _j.loads(_get("/listings"))
+        rows = rows.get("listings", rows) if isinstance(rows, dict) else rows
+        lid = next((r.get("id") for r in rows if isinstance(r, dict) and r.get("id")
+                    and str(r.get("category", "")).lower() not in ("local_market", "localmarket")), None)
+        if lid is None:
+            return [(INFO, "repo half holds; live half NOT EVALUATED - no live advert listed")]
+        one = _j.loads(_get("/listings/%s" % str(lid).replace("bea_", "")))
+        if not isinstance(one.get("seller_can_receive"), bool):
+            return [(FAIL, "live GET /listings/%s carries no boolean seller_can_receive (not deployed?)" % lid)]
+    except ProbeOffline as e:
+        return [(INFO, "repo half holds; live half NOT EVALUATED - %s" % str(e)[:80])]
+    except Exception as e:
+        return [(INFO, "repo half holds; live half NOT EVALUATED - %s" % str(e)[:80])]
+    return [(INFO, "server answer on the advert, read first by both client gates, live on advert %s" % lid)]
+
+
+@entry("RG-0496", "LM-PAID-GUARD-1 + LM-DEEPLINK-1: a Local Market advert is never charged as a paid introduction -- "
+       "the paid door refuses it before anything is held, and a link to one opens its own free page",
+       LOCKED, fixed_on="2026-09-25",
+       scope="bea_main.py POST /intros (409 for category local_market BEFORE the seller gate and any Tuppence hold) + "
+             "ms.js openDetail (a LocalMarket advert routes to lmOpenDetail). CLASS: two doors to one advert with "
+             "different prices; the free one must win. FOUND 25 Sep 2026 inspection (ts1-03).",
+       ref="INSPECTION_2026-09-25.html ts1-03.")
+def rg_lm_paid_guard_1():
+    bea = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if bea is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    g = bea.find('in ("local_market", "local market"):')
+    s = bea.find("_gate = _seller_intro_gate(conn, listing[\"seller_email\"])")
+    if g < 0:
+        bad.append("POST /intros no longer refuses a Local Market advert -- a buyer's 1T can be held and burnt")
+    elif s >= 0 and g > s:
+        bad.append("the Local Market refusal now sits AFTER the seller gate -- it must come before anything is held")
+    elif "status_code=409" not in bea[g:g + 400]:
+        bad.append("the Local Market refusal no longer answers 409")
+    if "if (_lmL && _lmL.cat === 'LocalMarket' && typeof lmOpenDetail === 'function') { lmOpenDetail(" not in js:
+        bad.append("ms.js openDetail no longer routes a Local Market advert to its own free page")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "paid door refuses Local Market before any hold; links open the free Local Market page")]
+
+
+@entry("RG-0497", "PRICE-KEEP-1: saving an edit without touching the price never rewrites the price -- a Quick range "
+       "like 'R1 000-R5 000' can no longer become R10,005,000",
+       LOCKED, fixed_on="2026-09-26",
+       scope="ms.js saveEditedListing: the edit box shows the stored price as digits, so re-sending it unchanged "
+             "reduced any range or basis to one number. An untouched box leaves the stored price alone. FOUND 25 Sep "
+             "2026 inspection (ts3-01).",
+       ref="INSPECTION_2026-09-25.html ts3-01.")
+def rg_price_keep_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    need = ("const _storedP = String((elCurrentRaw && elCurrentRaw.price) || '');",
+            "if (!(_storedP && _typedP === _storedP.replace(/[^0-9.]/g, ''))) {")
+    miss = [n for n in need if n not in js]
+    if miss:
+        return [(FAIL, "ms.js saveEditedListing lost the untouched-price guard (%s) -- an edit re-sends the "
+                       "digits-only price and corrupts ranges" % miss[0][:60])]
+    i = js.find(need[1]); f = js.rfind("function saveEditedListing", 0, i)
+    if f < 0 or i - f > 20000:
+        return [(FAIL, "the untouched-price guard is no longer inside saveEditedListing")]
+    return [(INFO, "an untouched price box leaves the stored price alone")]
+
+
+@entry("RG-0498", "CONTENT-GATE-2: every seller- or buyer-written field the app paints is output-encoded -- markup "
+       "is stripped and a straight double quote cannot close an attribute, on adverts and on Buzz pair rows",
+       LOCKED, fixed_on="2026-09-26",
+       scope="security_gate.py _TEXT_KEYS (subject, level, mode, service_type, service_class, availability, "
+             "buyer_name, buyer_first_name, price, per, other_name, from_name, colour, variant, body_type, "
+             "condition, destination) + record detection on pair_id + _pt quote handling. Asserted by RUNNING the "
+             "gate's encoder on hostile records, not by reading the key list. FOUND 25 Sep 2026 inspection "
+             "(ts1-01, ts2-01, ts2-03, ts3-02, ts3-04).",
+       ref="INSPECTION_2026-09-25.html ts1-01/ts2-01/ts2-03/ts3-02/ts3-04; CONTENT-GATE-1.")
+def rg_content_gate_2():
+    src = repo_file("security_gate.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - security_gate.py not readable from here")]
+    import types as _t
+    mod = _t.ModuleType("_sg_probe")
+    mod.__file__ = os.path.join(REPO, "security_gate.py")
+    try:
+        exec(compile(src, mod.__file__, "exec"), mod.__dict__)
+    except ImportError as e:
+        return [(INFO, "NOT EVALUATED - security_gate imports a module this machine lacks (%s)" % str(e)[:60])]
+    enc = mod._encode
+    hostile = '"><img src=x onerror=alert(1)>'
+    bad = []
+    rec = {"id": 1}
+    keys = ("subject", "level", "mode", "service_type", "service_class", "availability", "buyer_name",
+            "buyer_first_name", "price", "per", "other_name", "from_name", "colour", "variant", "body_type",
+            "condition", "destination", "title")
+    for k in keys:
+        rec[k] = "Ann " + hostile
+    out = enc(rec)
+    for k in keys:
+        v = out.get(k, "")
+        if "<" in v or '"' in v:
+            bad.append("%s passes %r" % (k, v[:40]))
+    pair = enc({"pair_id": 7, "other_name": "<b>Bo</b>" + hostile})
+    if "<" in pair["other_name"] or '"' in pair["other_name"]:
+        bad.append("a Buzz pair row (pair_id, no id) is not treated as a record")
+    if enc({"id": 2, "price": 9000})["price"] != 9000:
+        bad.append("a numeric price is no longer passed through untouched")
+    if bad:
+        return [(FAIL, "; ".join(bad[:5]))]
+    return [(INFO, "hostile markup and quotes neutralised on all %d painted fields and on pair rows" % len(keys))]
+
+
+@entry("RG-0499", "I18N-AF-3: the Afrikaans words the 25 Sep inspection corrected stay corrected -- Handrat, "
+       "Laerskool, Nutsman, Verbintenis, topverkoper, Oop tou, Uitgelig -- in the checked file and live",
+       OPEN,
+       scope="roles/app_i18n_af.json -> migrations/055_i18n_af_inspection.py -> i18n_cache; ms.js DICTV 4. "
+             "CLASS as RG-0493: a reader's correction lives in the checked file, reaches the server cache by "
+             "migration and every browser by the DICTV stamp. OPEN until the deploy carrying 055 is checked live.",
+       ref="INSPECTION_2026-09-25.html langt-32/33/51-54, langt-01..; I18N-AF-2 / RG-0493 is the same lane.")
+def rg_i18n_af_3():
+    import json as _j
+    f = repo_file("roles/app_i18n_af.json")
+    t = _j.loads(f).get("t", {}) if f else {}
+    want = {"Manual": "Handrat", "Primary": "Laerskool", "Handyman": "Nutsman", "Featured": "Uitgelig",
+            "⏳ Commit": "⏳ Verbintenis", "\U0001f465 Soft Queue": "\U0001f465 Oop tou"}
+    bad = []
+    for en, af in want.items():
+        if t.get(en) != af:
+            bad.append("checked file has %r for %r" % (t.get(en), en))
+    wrong = ("Handmatig", "kragverkoper", "Sagte tou", "Uitgestal", "lopie")
+    for en, v in t.items():
+        if any(w in v for w in wrong):
+            bad.append("checked file carries a corrected word again: %r" % v[:50])
+            break
+    js = repo_file("ms.js") or ""
+    import re as _re
+    m = _re.search(r"var DICTV='(\d+)'", js)
+    if not m or int(m.group(1)) < 4:
+        bad.append("ms.js DICTV below 4 -- browsers keep the old Afrikaans")
+    if repo_file("migrations/055_i18n_af_inspection.py") is None:
+        bad.append("migration 055 is gone -- the server cache never receives the corrections")
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    try:
+        import urllib.request as _u
+        req = _u.Request(BASE + "/i18n/translate", method="POST",
+                         headers=dict(UA, **{"Content-Type": "application/json"}),
+                         data=_j.dumps({"lang": "af", "strings": list(want)}).encode())
+        out = _j.loads(_u.urlopen(req, timeout=20).read().decode()).get("out", {})
+        live_bad = ["live serves %r for %r" % (out.get(en), en) for en, af in want.items() if out.get(en) != af]
+    except Exception as e:
+        return [(INFO, "repo half holds; live half NOT EVALUATED - %s" % str(e)[:60])]
+    if live_bad:
+        return [(FAIL, "; ".join(live_bad[:4]))]
+    return [(INFO, "the corrected Afrikaans is in the checked file and served live")]
+
+
+@entry("RG-0500", "AMOUNT-PARSE-1: Quick reads '1,500', '1 500' and '1.500' as R1 500 and '12,50' as R12.50 -- a "
+       "thousands mark is never mistaken for a decimal point",
+       LOCKED, fixed_on="2026-09-26",
+       scope="quick.html (and its twin genie/HARNESS.html) num(): the two regexes that drop a thousands separator "
+             "before a remaining comma becomes the decimal point. Asserted by RUNNING the file's own regex source "
+             "over real inputs. FOUND 25 Sep 2026 inspection (quick-12): '1,500' read as R1.50 and was refused as "
+             "below the minimum wage.",
+       ref="INSPECTION_2026-09-25.html quick-12.")
+def rg_amount_parse_1():
+    import re as _re
+    html = repo_file("quick.html")
+    if html is None:
+        return [(INFO, "NOT EVALUATED - quick.html not readable from here")]
+    m = _re.search(r"function num\(id\)\{\s*var v=String\(\(\$\(id\)\|\|\{\}\)\.value\|\|''\)\.replace\(/(.+?)/g,''\)\.trim\(\);\s*"
+                   r"v=v\.replace\(/(.+?)/g,''\)\.replace\(/\\s/g,''\)\.replace\(',','\.'\);", html)
+    if not m:
+        return [(FAIL, "quick.html num() changed shape -- the thousands-mark handling cannot be found (AMOUNT-PARSE-1)")]
+    keep, thou = m.group(1), m.group(2)
+
+    def num(s):
+        v = _re.sub(keep, "", s).strip()
+        v = _re.sub(thou, "", v)
+        v = _re.sub(r"\s", "", v).replace(",", ".", 1)
+        try:
+            return float(v)
+        except ValueError:
+            return None
+    cases = {"1,500": 1500.0, "1 500": 1500.0, "1.500": 1500.0, "R1 500": 1500.0, "12,50": 12.5,
+             "12.50": 12.5, "250": 250.0, "1,500.50": 1500.5, "100 000": 100000.0}
+    bad = ["%r -> %r (want %r)" % (k, num(k), w) for k, w in cases.items() if num(k) != w]
+    if bad:
+        return [(FAIL, "Quick misreads amounts: " + "; ".join(bad[:4]))]
+    return [(INFO, "thousands marks and decimal commas read correctly on %d real inputs" % len(cases))]
 
 
 if __name__ == "__main__":

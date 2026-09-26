@@ -9,8 +9,11 @@ Provider-agnostic, fails DARK: with no provider configured ready() is False, eve
                                               SMSPortal: <client id>:<client secret>)
     SMS_SENDER=TrustSquare                    (optional alphanumeric sender where the network allows it)
 
-Numbers are normalised to E.164 for South Africa (0XX... -> +27XX...); any other country must arrive
-with its + prefix. No number is ever logged in full -- only its last three digits.
+Numbers are normalised to E.164 for South Africa (0XX... -> +27XX...). PHONE-CC-1 (25 Sep 2026 inspection,
+backend-12): a caller that knows the seller's country passes it, and a local number is then placed in THAT
+country (Kenya 0712 345 678 -> +254 712 345 678); a local number for any other country is refused, never guessed
+as South African -- guessing sent codes to strangers' phones. A number with its + prefix is always accepted.
+No number is ever logged in full -- only its last three digits.
 """
 import os, re, json, logging, base64, time
 
@@ -19,8 +22,19 @@ _RATE = {}           # to_e164 -> [epoch, ...]  (per-number throttle: 6 messages
 _TOKEN_CACHE = {}    # smsportal bearer token
 
 
-def normalise(phone: str, default_cc: str = "27"):
-    """Return +E.164 or None. ZA local 0XXXXXXXXX -> +27XXXXXXXXX; keeps a leading + as given."""
+# PHONE-CC-1: ISO country -> (calling code, national trunk prefix, shortest and longest national number). The
+# markets Quick serves and their neighbours; a country missing here must be typed with its + code.
+_COUNTRY_CC = {
+    "NA": ("264", "0", 8, 9), "BW": ("267", "", 7, 8), "MZ": ("258", "", 8, 9), "KE": ("254", "0", 9, 9),
+    "ZW": ("263", "0", 9, 9), "ZM": ("260", "0", 9, 9), "LS": ("266", "", 8, 8), "SZ": ("268", "", 8, 8),
+    "GB": ("44", "0", 9, 10), "DE": ("49", "0", 6, 13), "US": ("1", "1", 10, 10), "AU": ("61", "0", 9, 9),
+}
+
+
+def normalise(phone: str, default_cc: str = "27", country: str = None, local_ok: bool = True):
+    """Return +E.164 or None. ZA local 0XXXXXXXXX -> +27XXXXXXXXX; keeps a leading + as given.
+    PHONE-CC-1: with a non-ZA `country` a local number is placed in that country when `local_ok` (the caller KNOWS
+    the country) and refused otherwise; an unknown country's local number is always refused."""
     p = re.sub(r"[^\d+]", "", phone or "")
     if not p:
         return None
@@ -28,7 +42,17 @@ def normalise(phone: str, default_cc: str = "27"):
         p = "+" + p[2:]
     if p.startswith("+"):
         digits = p[1:]
-        return ("+" + digits) if 9 <= len(digits) <= 15 else None
+        return ("+" + digits) if (9 <= len(digits) <= 15 and digits.isdigit()) else None
+    iso = (country or "").strip().upper()
+    if iso and iso != "ZA":
+        spec = _COUNTRY_CC.get(iso)
+        if not spec or not local_ok:
+            return None
+        cc, trunk, lo, hi = spec
+        if p.startswith(cc) and lo <= len(p) - len(cc) <= hi:
+            return "+" + p
+        nsn = p[len(trunk):] if (trunk and p.startswith(trunk)) else p
+        return ("+" + cc + nsn) if lo <= len(nsn) <= hi else None
     if p.startswith("0") and len(p) == 10:
         return "+" + default_cc + p[1:]
     if len(p) == 9 and default_cc == "27":

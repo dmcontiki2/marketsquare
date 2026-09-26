@@ -116,12 +116,19 @@
        a window choice to achieve the same end, so it is gone. Drag-and-drop rides the
        same handler for free; the file picker stays for phones, quietly. */
     var captured = null;
+    /* REPORT-PHONE-1 (25 Sep 2026 inspection, langq-39): a phone has no Win + Shift + S or Ctrl + V -- on a touch
+       screen the box asks for what a phone can do: take a screenshot, then tap here to add it. */
+    var TOUCH = false;
+    try { TOUCH = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || ('ontouchstart' in window); } catch (e) {}
+    var DROP_HTML = TOUCH
+      ? '<b style="color:' + NAVY + ';font-size:13.5px">Add a screenshot</b><br>Take a screenshot, then tap here to add it.'
+      : '<b style="color:' + NAVY + ';font-size:13.5px">Paste a screenshot</b><br>' +
+        'Snip it (<b>Win + Shift + S</b>), then press <b>Ctrl + V</b> anywhere in here';
 
     var drop = el('div', 'margin-top:6px;border:2px dashed ' + LINE + ';border-radius:11px;' +
                          'padding:16px 14px;text-align:center;color:#94a3b8;font-size:13px;' +
                          'cursor:pointer;transition:.15s;background:#fcfdfe;',
-                  '<b style="color:' + NAVY + ';font-size:13.5px">Paste a screenshot</b><br>' +
-                  'Snip it (<b>Win + Shift + S</b>), then press <b>Ctrl + V</b> anywhere in here');
+                  DROP_HTML);
     var pv = el('div', 'display:none;margin-top:10px;border:2px solid #15803d;border-radius:11px;' +
                        'overflow:hidden;background:#fff;');
     var pvHead = el('div', 'display:flex;align-items:center;justify-content:space-between;gap:8px;' +
@@ -149,8 +156,7 @@
       try { if (thumb.src) URL.revokeObjectURL(thumb.src); } catch (e) {}
       thumb.removeAttribute('src');
       drop.style.borderColor = LINE; drop.style.background = '#fcfdfe';
-      drop.innerHTML = '<b style="color:' + NAVY + ';font-size:13.5px">Paste a screenshot</b><br>' +
-                       'Snip it (<b>Win + Shift + S</b>), then press <b>Ctrl + V</b> anywhere in here';
+      drop.innerHTML = DROP_HTML;
       try { shot.value = ''; } catch (e) {}
     }
     pvDrop.onclick = function (ev) { ev.preventDefault(); detach(); };
@@ -162,7 +168,7 @@
       drop.style.borderColor = '#bfe0ca'; drop.style.background = '#f2faf5';
       drop.innerHTML = '<b style="color:#15803d">&#10003; Screenshot attached</b> &middot; ' +
                        Math.round(file.size / 1024) + ' KB<br>' +
-                       '<span style="font-size:12px">Paste again to replace it</span>';
+                       '<span style="font-size:12px">' + (TOUCH ? 'Tap again to replace it' : 'Paste again to replace it') + '</span>';
       /* David, 5 Aug: "it pasted something but I could not identify it as the snippy."
          The paste HAD worked — the preview simply rendered below the fold of the scrolling
          sheet, so from where he sat nothing visibly happened. Attaching silently is the same
@@ -252,7 +258,10 @@
         .catch(function (err) {
           send.disabled = false; send.textContent = 'Send report';
           note.style.color = '#b91c1c';
-          note.textContent = String(err.message || err) + ' — nothing was lost, try once more.';
+          /* REPORT-PHONE-1 (langq-39): the tester reads a sentence, not the browser's raw error (the error itself
+             still rides in the console tail of the next report) */
+          try { console.warn('ts_report send failed:', err && (err.message || err)); } catch (e) {}
+          note.textContent = 'Could not send \u2014 nothing was lost. Please try once more.';
         });
     };
 
