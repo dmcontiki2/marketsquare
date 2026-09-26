@@ -497,6 +497,117 @@ def email_lane_census():
 # chokepoint decides the rung from the price card and the day's budget. Fable never runs here.
 FIX_TIER = "reason"       # requested; the chokepoint may step DOWN, never up
 
+# ══════════════════════════════════════════════════════════════════════════════
+# DESIGN-ROUTE-1 (26 Sep 2026) -- PATH_B actually files a dossier.
+#
+# WHAT WAS BROKEN, and it was a proxy assertion, not a gap: classify() returned
+# PATH_B and the loop wrote the sentence "routed to design backlog (batched,
+# designer gate)" into its report. Nothing wrote a dossier. Nothing in scripts/
+# touched DESIGN_BACKLOG.md at all. MEASURED 26 Sep 2026: TS-0027 and TS-0006 were
+# both closed on 11 Aug with "routed to the design backlog" in their fix_note, and
+# DESIGN_BACKLOG.md holds exactly ONE dossier -- DCB-001, which is neither of them.
+# Two faults said routed; zero arrived. The register said done and the lane was empty,
+# which is the same class as the orphaned-commit fault the push guard above exists for.
+#
+# AND IT IS WHY OPEN_LOOPS L8 READ ZERO FOR 26 DAYS. RUL-013 sent design work to the
+# 'design' task tier from 1 Sep 2026; four consecutive stand-ups re-probed
+# `grep task="design"` -> 0 callers and called the tier unwired. The tier was wired
+# at the chokepoint the whole time. It had no caller because no design work ever
+# reached a backlog, because the routing was a string. The count was the symptom.
+#
+# WHAT THIS DOES, and deliberately no more: it writes the dossier in the exact
+# template DESIGN_CHANGE_GUIDELINES.md publishes, with the PROPOSED DIRECTION asked
+# of the design tier (task="design" -- RUL-013's allocated lane, its first real
+# caller), and it leaves the GATE LINE EMPTY. The guidelines are explicit that an
+# absent gate means NOT APPROVED, DO NOT BUILD, and open item (2) -- binding the
+# designer role -- is still David's. So this files evidence for a decision; it never
+# makes one, never scores itself a pass, and never ships anything user-visible.
+#
+# The brain is local-only from a sandbox vantage (VANTAGE-BRAIN-1). When it cannot be
+# reached, the dossier is filed with PROPOSED DIRECTION left blank and the reason
+# NAMED in the line -- never a guess, and never a silent omission. A dossier with no
+# direction is still a dossier; a dossier that invents one is worse than none.
+# ══════════════════════════════════════════════════════════════════════════════
+DESIGN_BACKLOG = os.path.join(REPO, "DESIGN_BACKLOG.md")
+
+
+def _next_dcb_id():
+    """The next DCB-nnn, read from the file itself so two runs cannot collide on a number."""
+    try:
+        body = open(DESIGN_BACKLOG, encoding="utf-8").read()
+    except Exception:
+        return "DCB-001", ""
+    nums = [int(m) for m in re.findall(r"DCB-(\d{3})", body)]
+    return "DCB-%03d" % ((max(nums) + 1) if nums else 1), body
+
+
+def design_direction(fault):
+    """Ask the DESIGN tier for a solution-free direction sketch. RUL-013's lane.
+
+    Returns (text, source, why_blank). A failure is reported, never papered over:
+    an unreachable brain yields ('', source, reason) and the dossier says so.
+    """
+    sys_p = ("You are the design lane for a marketplace. Given a user's complaint, sketch ONE "
+             "possible DIRECTION in at most three sentences. Reuse existing patterns. Do NOT "
+             "write code, do NOT name files, do NOT claim the change is approved. If the "
+             "complaint does not describe a design problem, answer exactly: NO DIRECTION.")
+    msg = [{"role": "user", "content": "TITLE: %s\nDETAIL: %s\nPAGE: %s" % (
+        fault.get("title", ""), fault.get("detail", ""), fault.get("page_url", ""))}]
+    r = brain("design", msg, task="design", max_tokens=400, system=sys_p)
+    src = "%s/%s" % (r.provider, r.model)
+    if not r.ok:
+        return "", src, "design tier not reached (%s)" % (r.error_kind or "unknown")
+    txt = (r.text or "").strip()
+    if not txt or txt.upper().startswith("NO DIRECTION"):
+        return "", src, "design tier returned NO DIRECTION"
+    return txt, src, ""
+
+
+def file_design_dossier(fault, why_classified):
+    """Append a dossier for this fault to DESIGN_BACKLOG.md. Returns (dcb_id, note).
+
+    (None, reason) when nothing was written -- and the caller must report that reason
+    verbatim rather than the old sentence, which asserted a routing that never happened.
+    """
+    ref = fault.get("ref") or ("id-%s" % fault.get("id"))
+    dcb, body = _next_dcb_id()
+    if body and ("FEEDER: Maintenance (%s)" % ref) in body:
+        return None, "dossier for %s already filed -- not duplicated" % ref
+    direction, src, why_blank = design_direction(fault)
+    title = (fault.get("title") or "untitled").strip().replace("\n", " ")[:80]
+    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:40] or "design-change"
+    block = [
+        "",
+        "---",
+        "",
+        "## %s -- %s" % (dcb, title),
+        "",
+        "    DOSSIER: %s        DATE: %s   FEEDER: Maintenance (%s)" % (slug, time.strftime("%Y-%m-%d"), ref),
+        "    PROBLEM: %s" % ((fault.get("detail") or title).strip().replace("\n", " ")[:400]),
+        "    EVIDENCE: %s (one report). Criterion 1 needs >=2 independent reports, recurrence",
+        "             >=3, or a measured number -- so this dossier is NOT yet scorable on",
+        "             evidence alone. Filed so the second report has something to join.",
+        "    PROPOSED DIRECTION (rides separately): %s" % (direction.replace("\n", " ") if direction
+                                                          else "NONE -- %s" % why_blank),
+        "    DIRECTION SOURCE: %s (task=design, RUL-013)" % src,
+        "    SCOPE: not yet named -- criterion 3 is unmet until a session names files/screens.",
+        "    REVERT: not yet named -- criterion 5 is unmet.",
+        "    MEASUREMENT: retest by %s." % ref,
+        "    SCORE: not scored. Filed by the maintenance loop; scoring is a session's act.",
+        "    GATE:   -- EMPTY. Absent gate = NOT APPROVED, DO NOT BUILD",
+        "            (DESIGN_CHANGE_GUIDELINES.md criterion 10; binding the designer role",
+        "             is open item 2 and is David's).",
+        "    ROUTED BECAUSE: %s" % (why_classified or "").replace("\n", " ")[:200],
+        "",
+    ]
+    try:
+        with open(DESIGN_BACKLOG, "a", encoding="utf-8") as fh:
+            fh.write("\n".join(block))
+    except Exception as e:
+        return None, "could not write DESIGN_BACKLOG.md (%s) -- NOT routed" % str(e)[:80]
+    return dcb, ("filed %s in DESIGN_BACKLOG.md, GATE empty (not approved)" % dcb)
+
+
 # ── classify: REFUSE | ESCALATE | PATH_B | PATH_A ────────────────────────────────
 def classify(fault):
     ref = is_refused(fault)
@@ -977,8 +1088,20 @@ def main():
 
         if lane in ("ESCALATE", "PATH_B"):
             # neither is autonomously fixed: escalate = report+safest; path_b = design backlog.
-            item["outcome"] = "escalated (safety/legal/cost)" if lane == "ESCALATE" \
-                              else "routed to design backlog (batched, designer gate)"
+            if lane == "ESCALATE":
+                item["outcome"] = "escalated (safety/legal/cost)"
+            else:
+                # DESIGN-ROUTE-1: file the dossier, then report what was WRITTEN -- never
+                # the old sentence, which asserted a routing nothing performed.
+                try:
+                    dcb, note = file_design_dossier(f, why)
+                except Exception as e:
+                    dcb, note = None, "dossier filer errored (%s) -- NOT routed" % type(e).__name__
+                if dcb:
+                    item["dossier"] = dcb
+                    item["outcome"] = "design backlog: %s (batched, designer gate)" % note
+                else:
+                    item["outcome"] = "design change NOT routed -- %s" % note
             report["actions"].append(item); say("%s -> %s (%s)" % (ref, lane, why)); _flush(); continue
 
         # ── PATH_A: propose, gate, and (only if fully armed) ship ───────────────────

@@ -294,6 +294,50 @@ def _review_cookie():
     return _REVIEW["cookie"] or ""
 
 
+def _edge_refused(e):
+    """Did the EDGE refuse this client, rather than the app answering it?
+
+    EDGE-STATUS-BLIND-1 (26 Sep 2026). _get() has told an edge refusal from an app answer
+    since EDGE-BLIND-1 (18 Sep), but _status(), _post_status() and _headers() never learned
+    it: each one hands the caller Cloudflare's own 403 as though the APP had said 403. An
+    entry that asserts "this route must answer 200" then convicts a perfect route, and
+    entries that assert "this route must refuse anonymous callers" PASS for the wrong
+    reason -- the same two-sided damage QA-GATE-BLIND-1 found in the deploy gate on 25 Sep,
+    one layer in. RG-0401 (LOCKED, 18 Sep) already rules it: an edge refusal is BLIND,
+    never REGRESSED. This is the single writer of that test, so the four readers cannot
+    drift apart again (the ONE-WRITER pattern of RG-0421).
+
+    NOT a widening. Only a refusal that Cloudflare SIGNS counts -- its own error code, its
+    interstitial, or Server: cloudflare on a challenge status. A 401/403 the app itself
+    produced carries none of those and is returned unchanged, so every negative entry that
+    asserts a gate refuses anonymous callers still convicts. Origin 5xx is deliberately NOT
+    covered here: UPSTREAM-BLIND-1 keeps that in _get() alone, so "this endpoint must not
+    5xx" entries are untouched.
+    """
+    code = getattr(e, "code", None)
+    if code not in (403, 429, 503):
+        return ""
+    try:
+        peek = e.read().decode("utf-8", "replace")[:600]
+    except Exception:
+        peek = ""
+    try:
+        server = (dict(e.headers or {}).get("Server") or "").lower()
+    except Exception:
+        server = ""
+    signed = ("error code: 1010" in peek
+              or "cf-browser-verification" in peek
+              or "Attention Required" in peek
+              or "Cloudflare" in peek
+              or "cloudflare" in server)
+    if not signed:
+        return ""
+    return ("edge (Cloudflare) refused this client with HTTP %s -- the APP was never "
+            "reached, so this entry is BLIND here, not regressed and not passed. Probe the "
+            "app directly (http://127.0.0.1:8000) from the box, or re-run from a vantage "
+            "the edge allows." % code)
+
+
 def _get(path):
     if path not in _cache:
         _require_net()
@@ -378,6 +422,9 @@ def _headers(path):
             with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
                 h = dict(r.headers)
         except urllib.error.HTTPError as e:
+            blind = _edge_refused(e)                  # EDGE-STATUS-BLIND-1
+            if blind:
+                raise ProbeOffline(blind)
             h = dict(e.headers or {})
         except Exception as ex:
             raise ProbeOffline(repr(ex)[:140])
@@ -393,6 +440,9 @@ def _status(path):
     try:
         return urllib.request.urlopen(req, timeout=TIMEOUT).getcode()
     except urllib.error.HTTPError as e:
+        blind = _edge_refused(e)                      # EDGE-STATUS-BLIND-1
+        if blind:
+            raise ProbeOffline(blind)
         return e.code
     except Exception as ex:
         raise ProbeOffline(repr(ex)[:140])
@@ -406,6 +456,9 @@ def _post_status(path, data=b""):
     try:
         return urllib.request.urlopen(req, timeout=TIMEOUT).getcode()
     except urllib.error.HTTPError as e:
+        blind = _edge_refused(e)                      # EDGE-STATUS-BLIND-1
+        if blind:
+            raise ProbeOffline(blind)
         return e.code
     except Exception as ex:
         raise ProbeOffline(repr(ex)[:140])

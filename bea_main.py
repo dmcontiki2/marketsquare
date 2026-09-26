@@ -17067,7 +17067,23 @@ def dashboard_presence(city: str = "", window: int = 150):
 
 @app.get("/dashboard/bit")
 def dashboard_bit_get():
-    """Live BIT Self-Test status for the dashboard health panel + Ops view. No auth (obscure URL)."""
+    """Live BIT Self-Test status for the dashboard health panel + Ops view. ADMIN, not open.
+
+    INSTRUMENT-DOOR-1 (26 Sep 2026). This docstring said "No auth (obscure URL)" for six
+    weeks after it stopped being true. SEC-GATE-1 (24 Sep 2026) declares this route
+    **admin** in route_policy.json, so the gate refuses an anonymous caller with 401
+    {"code":"admin_required"} before the handler below is ever entered -- and a reader who
+    trusts the old sentence builds an anonymous probe and goes silently blind. That is what
+    happened: the 25 Sep daily watch recorded /payment/test and this route answering 401 to
+    its anonymous probes (DW-158), and this stand-up read both dashboards blind until it
+    carried a credential. The handler itself is unchanged and stays facts-only; what is
+    corrected is the sentence describing its door.
+
+    THE DOOR, for whoever reads this next: send X-Admin-Key (or an admin-scope
+    X-Admin-Token). Browser pages get it automatically from the SEC-GATE-1 fetch wrapper at
+    the head of dashboard.server.html. A probe that reads this route without a credential is
+    not measuring the instrument, it is measuring the gate.
+    """
     import json as _json, os as _os
     p = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "bit_status.json")
     if not _os.path.exists(p):
@@ -25257,7 +25273,8 @@ def app_faults_mine(email: str, x_review_token: str = Header(default=None),
 # ── MAINT-DASH-1 (12 Aug 2026, David: "put this in the ops dashboard as a switch
 # for launch"). The B2b agent's launch-readiness on the +1 page, told by the LOOP
 # ITSELF -- no human, no deploy in the refresh (RG-0051 rule). The POST rides the
-# maintenance credential the loop already holds; the GET is open like /dashboard/bit.
+# maintenance credential the loop already holds. The GET was open when this was written;
+# SEC-GATE-1 (24 Sep 2026) made both it and /dashboard/bit **admin** -- INSTRUMENT-DOOR-1.
 # FACTS ONLY by whitelist: lane NAMES and counters, never key material (RG-0042 rule).
 # The brain key and MAINTENANCE_AGENT_ENABLED remain file/env acts on the machine that
 # runs the loop -- there is deliberately NO write surface here that could arm anything.
@@ -25293,8 +25310,24 @@ def dashboard_maint_post(payload: dict = Body(...), _admin=Depends(_require_main
 
 @app.get("/dashboard/maint")
 def dashboard_maint_get():
-    """Latest maintenance-loop heartbeat for the +1 page card. No auth (obscure URL,
-    same posture as /dashboard/bit); the payload is facts-only by the POST whitelist."""
+    """Latest maintenance-loop heartbeat for the +1 page card. ADMIN, not open; the payload
+    is facts-only by the POST whitelist.
+
+    INSTRUMENT-DOOR-1 (26 Sep 2026). This docstring said "No auth (obscure URL)" for six
+    weeks after it stopped being true. SEC-GATE-1 (24 Sep 2026) declares this route
+    **admin** in route_policy.json, so the gate refuses an anonymous caller with 401
+    {"code":"admin_required"} before the handler below is ever entered -- and a reader who
+    trusts the old sentence builds an anonymous probe and goes silently blind. That is what
+    happened: the 25 Sep daily watch recorded /payment/test and this route answering 401 to
+    its anonymous probes (DW-158), and this stand-up read both dashboards blind until it
+    carried a credential. The handler itself is unchanged and stays facts-only; what is
+    corrected is the sentence describing its door.
+
+    THE DOOR, for whoever reads this next: send X-Admin-Key (or an admin-scope
+    X-Admin-Token). Browser pages get it automatically from the SEC-GATE-1 fetch wrapper at
+    the head of dashboard.server.html. A probe that reads this route without a credential is
+    not measuring the instrument, it is measuring the gate.
+    """
     import json as _json, os as _os
     p = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "maint_status.json")
     if not _os.path.exists(p):
