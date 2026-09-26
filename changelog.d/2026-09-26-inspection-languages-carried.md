@@ -25,3 +25,13 @@ Ledger: RG-0325 re-aimed (the invited seller's city seed moved into sfNewState()
 progress; the check followed it, red on a seed without the invited city, green on the old and new shape); RG-0499 LOCKED after the live check (every corrected Afrikaans word served live); RG-0501 (every Quick phrase in
 all four live languages, the page equal to its source, no false 'still in English' notice) and RG-0502 (the QA bot reads
 main.py) added, each proven red on a deliberately broken copy and green on the real files.
+- **AI search help needs a sign-in (qa-15)** — the security judge, now reading the running code, kept its ruling that
+  POST /search/interpret must require a signed-in person (a per-address cap is not proof of a person). The route is
+  'user' level; plain search stays open to everyone, a signed-out caller gets 401 and the app keeps its plain results.
+  AI search is switched off today (SEARCH_AI_ENABLED dark), so nobody sees a difference yet. The other two appeals
+  (per-city advert counts, 'pass Quick on') were won once the judge read the right code; GET /quick/me was won earlier.
+- **The paid green-tick card no longer sounds compulsory (langt-02 follow-up, ID-WORDS-2)** — the 25 Sep wording said
+  buyers 'can only request introductions once you are verified' on the 1 Tuppence Home Affairs card. The server opens
+  introductions once the seller's UPLOADED ID is confirmed (free); the paid check is optional (RUL-039). The card now
+  says exactly that. The success screen already pointed to the free upload.
+- **Session counter** brought up to date (208): the day's fragments had put it one sitting behind the evidence (RG-0154).

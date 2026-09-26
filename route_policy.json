@@ -571,7 +571,8 @@
   },
   {
    "key": "POST /search/interpret",
-   "level": "public"
+   "level": "user",
+   "note": "SEARCH-AI-SESSION-1 (26 Sep 2026, QA appeal lost, qa-15): the security judge kept its ruling that AI search help needs a signed-in person -- a per-address cap is not proof of a person. Plain search stays open to everyone; a signed-out caller gets 401 and the app keeps its plain results (the AI branch is a no-op without enabled:true). The feature is dark (SEARCH_AI_ENABLED) today."
   },
   {
    "key": "POST /wishlist/signal",

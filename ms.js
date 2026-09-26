@@ -21984,9 +21984,11 @@ async function msRenderIdVerifyCard(containerId){
   host.innerHTML = '<div class="ms-idv"><div class="ms-idv-body">'
     + interimLine
     + '<strong>Get the green tick — ' + price + ' Tuppence</strong>'
-    + '<p>We check your ID number against the Home Affairs population register. '
-    + 'Buyers see a verified badge on your listings, and can only request '
-    + 'introductions once you are verified.</p>'
+    /* ID-WORDS-2 (26 Sep 2026, langt-02 follow-up): introductions open once her UPLOADED ID is confirmed
+       (_seller_intro_gate reads id_verified_at, set by the free upload check); this paid green tick is optional
+       (RUL-039: offered, visible, never a blocker). The 25 Sep wording made the paid check sound required. */
+    + '<p>We check your ID number against the Home Affairs population register and your listings show the green tick. '
+    + 'This is optional: buyers can request introductions as soon as your uploaded ID is confirmed.</p>'
     + '<label class="ms-idv-field">Full name as it appears on your ID'
     + '<input id="ms-idv-name" type="text" autocomplete="name" placeholder="e.g. Anna Janse van Rensburg"></label>'
     + '<label class="ms-idv-field">ID number'
