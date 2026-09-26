@@ -1,5 +1,5 @@
 {
-  "next_id": 160,
+  "next_id": 162,
   "items": {
     "DW-001": {
       "first_seen": "2026-08-02",
@@ -80,11 +80,11 @@
     },
     "DW-010": {
       "first_seen": "2026-08-03",
-      "last_seen": "2026-09-25",
+      "last_seen": "2026-09-26",
       "sev": "MEDIUM",
       "source": "cc_age_check (Monday lane)",
       "status": "SCHEDULED",
-      "summary": "cc_age 2026-09-25 (off-lane): CC-002 open 107d, CC-005 open 24d vs the 7d threshold. cc_age 2026-09-24: CC-002 open 106d, CC-005 open 23d. cc_age 2026-09-23: CC-002 open 105d, CC-005 open 22d against the 7d threshold. Stays SCHEDULED: both are David's sign-offs (canon call + wording), not technical forks. cc_age 2026-09-14: CC-002 open 96d and CC-005 open 13d against the 7d threshold - both past it, CC-002 now a day past the week David deferred it to. Stays SCHEDULED: landing CC-002 is a canon call (its staged edits were built on the RETIRED five-tier model), and that call is David's.",
+      "summary": "cc_age 2026-09-26 (Saturday, off-lane): CC-002 open 108d, CC-005 open 25d vs the 7d threshold - still both David's sign-offs. cc_age 2026-09-25 (off-lane): CC-002 open 107d, CC-005 open 24d vs the 7d threshold. cc_age 2026-09-24: CC-002 open 106d, CC-005 open 23d. cc_age 2026-09-23: CC-002 open 105d, CC-005 open 22d against the 7d threshold. Stays SCHEDULED: both are David's sign-offs (canon call + wording), not technical forks. cc_age 2026-09-14: CC-002 open 96d and CC-005 open 13d against the 7d threshold - both past it, CC-002 now a day past the week David deferred it to. Stays SCHEDULED: landing CC-002 is a canon call (its staged edits were built on the RETIRED five-tier model), and that call is David's.",
       "disposition": "FORMALLY DEFERRED 2026-08-21 (attended session, reflected here by the watch) — CC-002 is ~10 open product/pricing questions in AWAITING_DAVID.md, several touching the EULA and one a live payment path, against SOFT-to-PUBLIC 29 Aug / FULL LAUNCH 1 Sep (RUL-001). Target: first post-launch week, from Mon 8 Sep 2026. David's veto point: name any single item that must land before launch and it lands on its own.",
       "last_note": "2026-09-18: cc_age_check re-ran off-lane (cheap date check) - CC-002 open 100d (4/5 STAGED), CC-005 open 17d (1/8 spec written), both past the 7d threshold. Stays SCHEDULED - both are David's calls."
     },
@@ -1628,11 +1628,11 @@
     },
     "DW-149": {
       "first_seen": "2026-09-24",
-      "last_seen": "2026-09-25",
+      "last_seen": "2026-09-26",
       "sev": "LOW",
       "source": "cost_compliance_sweep.py NEW WARN vs 23 Sep",
       "status": "OPEN",
-      "summary": "25 Sep: STILL WARN - cost sweep exit 1, only WARN is '_lang_ai - helper; caller logs spend, but add a ceiling check' (now bea_main.py:27704); no CRITICAL. | bea_main.py:25968 _lang_ai helper has no platform ceiling check; bounded by RG-0439 lane caps.",
+      "summary": "26 Sep: STILL WARN - cost sweep exit 1, only WARN is '_lang_ai - helper; caller logs spend, but add a ceiling check' (now bea_main.py:27892); no CRITICAL; the sweep is identical to 25 Sep apart from line numbers. | 25 Sep: STILL WARN - cost sweep exit 1, only WARN is '_lang_ai - helper; caller logs spend, but add a ceiling check' (now bea_main.py:27704); no CRITICAL. | bea_main.py:25968 _lang_ai helper has no platform ceiling check; bounded by RG-0439 lane caps.",
       "next_action": "Same rail fix as DW-142; sweep with no WARN on _lang_ai closes it."
     },
     "DW-150": {
@@ -1715,25 +1715,46 @@
     },
     "DW-158": {
       "first_seen": "2026-09-25",
-      "last_seen": "2026-09-25",
+      "last_seen": "2026-09-26",
       "sev": "LOW",
       "source": "watch check 1 (site pulse) GET /payment/test",
       "status": "OPEN",
-      "summary": "The watch's anonymous GET /payment/test now answers 403 {'code':'admin_required'} -- by design since SEC-GATE-1 (f780893, 24 Sep 08:49Z), same answer from 127.0.0.1 on the box. The payment leg of check 1 is therefore blind to the watch (instrument debt, not an app fault). Substitute evidence today: subscription_monitor paystack UP 'key ok'.",
+      "summary": "26 Sep: STILL BLIND - anonymous GET /payment/test now answers 401 {'code':'admin_required'} (403 on 25 Sep; same gate, same code; /dashboard/bit likewise 401). Substitute evidence today: subscription_monitor paystack UP 'HTTP 403; key ok'. | The watch's anonymous GET /payment/test now answers 403 {'code':'admin_required'} -- by design since SEC-GATE-1 (f780893, 24 Sep 08:49Z), same answer from 127.0.0.1 on the box. The payment leg of check 1 is therefore blind to the watch (instrument debt, not an app fault). Substitute evidence today: subscription_monitor paystack UP 'key ok'.",
       "next_action": "An attended session re-points check 1's payment leg at the subscription_monitor paystack row (or an authenticated probe); closes when the watch reads a payment verdict again."
     },
     "DW-159": {
       "first_seen": "2026-09-25",
-      "last_seen": "2026-09-25",
+      "last_seen": "2026-09-26",
       "sev": "MEDIUM",
       "status": "OPEN",
       "source": "regression_ledger RG-0391 (QUICK-READY-6), 25 Sep ~21:40Z",
-      "summary": "RG-0391 red: the Quick manifest id/start_url moved ('/quick.html' -> '/quick/') and quick.html no longer links its manifest -- an already-installed Quick tile breaks when either moves (RUL-125(a)).",
-      "next_action": "quick.html is LOCKED by session goods-fit-2026-09-25 (taken 11:21:58Z, last written 21:00 today), so RUL-140/SO-5 leaves it to the owner. Recorded here rather than edited. NOT caused by the CityLauncher sync work in this session, which touched no MarketSquare front-end file."
+      "summary": "26 Sep: STILL RED - and PROBED as a STALE ASSERTION, not a rotted fix. Board: RG-0391 'REGRESSION: the Quick manifest id/start_url changed -- an installed tile would break: /quick.html / /quick/' + 'quick.html no longer links its manifest'. Live, read-only: the manifest keeps id /quick.html (installed tiles keep their identity), start_url and scope /quick/, theme #7C3AED, icons inlined; /quick.html and /quick/ answer 200 and both carry <link rel=\"manifest\" href=\"/static/brand/quick.webmanifest?v=2\">. Both FAIL legs trace to SEAM-1 (93f93ac, 25 Sep 07:45Z, 'Quick scope'), which moved the tile to RUL-125(a)'s ruled /quick/ sub-path on purpose; the assertion still wants start_url == '/quick.html' and a link string with no ?v=. Same reading as OPEN_LOOPS L20(b). | RG-0391 red: the Quick manifest id/start_url moved ('/quick.html' -> '/quick/') and quick.html no longer links its manifest -- an already-installed Quick tile breaks when either moves (RUL-125(a)).",
+      "next_action": "Attended session (Claude, RUL-037): re-aim RG-0391 at the shipped shape - id stays /quick.html, start_url + scope /quick/, the link may carry ?v= - per OPEN_LOOPS L20(b). The work lock that stopped it (goods-fit-2026-09-25, 12 h TTL from 11:21:58Z) has lapsed. Closes when the board reads '[  ok  ] RG-0391'. Earlier note (25 Sep): quick.html was LOCKED by session goods-fit-2026-09-25, so RUL-140/SO-5 left it to the owner; not caused by the CityLauncher sync work in that session.",
+      "md_row": "added by the watch 2026-09-26 - the row existed in OPEN_ITEMS.json only (see DW-161)"
+    },
+    "DW-160": {
+      "first_seen": "2026-09-26",
+      "last_seen": "2026-09-26",
+      "sev": "MEDIUM",
+      "source": "QA Bot nightly 20260926-003159 (on-box, read-only) + front-door GET probes from the sandbox + read of bea_main.py",
+      "status": "OPEN",
+      "summary": "NEW - the QA Bot's security board is now read through a door where the app trusts it, so it is mostly artefact and partly blind. Nightly 20260926-003159 and every gate/probe since 20:58Z 25 Sep report 'via: app loopback (front door refused)': the front door answers the bot's canary 403 (the OPEN_LOOPS L18 cause), so it falls back to http://127.0.0.1:8000. A request there carries no X-Forwarded-For, and _admin_local_or_key() (ADMIN-LOCALGUARD-1) passes any such request as a local process; /agencies/wave-prep likewise skips its admin check for _local_caller. Board: PASS 218 / FAIL 15 / CRASH 1 / UNPROVEN 25 / SKIP 57. The 20:58Z and 21:02Z gates REFUSED deploys on it (qa_gate=0, rolled back); a 21:04:47Z probe then became the baseline (last.json; the old one kept as last.json.bak-blindbase-20260925-210310), and every gate since passes - the 21:52Z gate passed 54af268a. Front-door PROBE from the sandbox, same morning (read-only GETs): /dashboard/cost, /dashboard/email-triage, /dashboard/scan, /health/resources, /onboard/funnel, /ops/selfcheck, /optout/status -> 401 admin_required (closed); /dashboard/summary -> the by-design redacted heartbeat (RG-0198); /quick/me -> signed_in:false + the public ms.js key only; /listings-coverage -> per-city counts, public by design (COVERAGE-1). Not probed (POST, side effects; the watch is observe-only): /admin/purge-cache, /agencies/wave-prep (the CRASH: public key -> 500), /presence/ping, /quick-invite, /search/interpret, /users. Consequence: on these 16 routes the deploy gate cannot see a REAL reopening (already FAIL in its baseline), and the nightly reads red on noise. On loopback the bot's attacks on local-trusted routes also EXECUTE (e.g. POST /admin/purge-cache purges the CDN) - which side effects persisted is UNVERIFIED.",
+      "next_action": "Attended session (Claude, RUL-037): make the loopback fallback present itself as a REMOTE caller (e.g. stamp an X-Forwarded-For on every probe) so no local-trust exception applies, re-baseline, and appeal any ruling that contradicts a by-design public route (/dashboard/summary heartbeat, /quick/me, /listings-coverage) via 'qa_bot.py appeal'. Closes when the nightly reads 0 FAIL / 0 CRASH, or every remaining FAIL is PROBED open through the front door and filed as its own hole. Sibling of OPEN_LOOPS L18 (why the front door refuses the bot)."
+    },
+    "DW-161": {
+      "first_seen": "2026-09-26",
+      "last_seen": "2026-09-26",
+      "sev": "LOW",
+      "source": "register reconciliation (markdown rows vs OPEN_ITEMS.json) - recurrence of closed DW-119",
+      "status": "CLOSED",
+      "closed": "2026-09-26",
+      "summary": "RAISED AND CLOSED IN THE SAME RUN - the register's two halves disagreed again (DW-119, closed 14 Sep). OPEN_ITEMS.json held DW-159 (added ~21:40Z 25 Sep by a non-watch session) with no markdown row and no mention anywhere in OPEN_ITEMS.md. Every other JSON id appears in the markdown.",
+      "closed_evidence": "The watch added DW-159's markdown row in Phase B (both files written in one step) and re-ran the check: every id in OPEN_ITEMS.json now appears in OPEN_ITEMS.md; next_id 162 is one past the highest id in both halves (DW-161).",
+      "residual": "Nothing ASSERTS the halves agree - any session that writes one half can repeat it. The DW-119 card stays BLUE; the recurrence is noted on it."
     }
   },
-  "last_run": "2026-09-25",
-  "last_verdict": "RED",
+  "last_run": "2026-09-26",
+  "last_verdict": "AMBER",
   "recheck_pass_2026_08_20": {
     "requested_by": "David: close all open actions",
     "items_rechecked": 15,
@@ -3574,5 +3595,103 @@
     "deploy": "c444c99 DEPLOY OK 2026-09-25T05:55:43Z, health ok, migration 052 ok",
     "board": "459 entries, 439 holding, 0 REGRESSED, 19 open, 1 ready (RG-0426), 0 UNVERIFIED; rulings 142 checked 0 FAIL",
     "git_lock_live_proof": "09:35:08 SAST tick: cleared aged C:\\Users\\David\\Projects\\MarketSquare\\.git\\refs\\heads\\zz_gitlock6_probe.lock"
+  },
+  "watch_pass_2026_09_26": {
+    "verdict": "AMBER",
+    "reason": "site green; the one ledger red (RG-0391, DW-159) PROBED as a stale assertion from the deliberate /quick/ move - not a rotted fix, so no RED and no email (31 Aug DW-086 precedent); the QA Bot's board is read through a trusted loopback door (DW-160 NEW)",
+    "site": {
+      "health": "ok",
+      "version": "1.3.1",
+      "db_integrity": "ok",
+      "root_seconds": 0.219,
+      "root_bytes": 273490,
+      "payment_test": "401 admin_required (SEC-GATE-1 by design, DW-158; was 403)",
+      "paystack_monitor": "UP key ok",
+      "tls_days": 56,
+      "tls_expires": "2026-11-22",
+      "bit": "401 admin_required (gated)"
+    },
+    "ledger": {
+      "method": "--chunk, 3 calls",
+      "entries": 481,
+      "holding": 460,
+      "regressed": 1,
+      "regressed_ids": [
+        "RG-0391"
+      ],
+      "open": 19,
+      "ready_to_lock": 1,
+      "ready_ids": [
+        "RG-0485"
+      ],
+      "unverified": 0,
+      "seconds": 282.6,
+      "note": "RG-0426 promoted overnight (LOCKED, ok)"
+    },
+    "audit": {
+      "findings": 2,
+      "new": 0,
+      "all": "INFO"
+    },
+    "cost_sweep": {
+      "exit": 1,
+      "critical": 0,
+      "warn": 1,
+      "new": [],
+      "still": "DW-149"
+    },
+    "daily_checks": "DEPLOY DRIFT clean, 19/19",
+    "server": {
+      "ssh": "SSH_OK msdeploy",
+      "fea_integrity": "ok, 0 alerts",
+      "subscriptions": {
+        "UP": 35,
+        "HELD": 15,
+        "PLANNED": 1,
+        "DOWN": 0
+      },
+      "disk_free_pct": 50.4,
+      "queue": [],
+      "staged": [],
+      "last_deploy": "2026-09-25T21:52:27Z DEPLOY OK 54af268a (migration 054 ok)",
+      "qa_bot_nightly": "PASS 218 / FAIL 15 / CRASH 1 / UNPROVEN 25 / SKIP 57 via app loopback (front door refused) - DW-160; review RED only on the 21:02Z refusal of dc6425b (shipped later inside 54af268a)"
+    },
+    "cron_parity": "holds - findings.cron.json loop_date 2026-09-26 (01:30:01Z): smoke 39/39 vs sandbox 40/40, health ok/1.3.1 both, spend $0.34 of the $10 platform ceiling (3.4%), not breached; month $3.48 over 1,411 calls",
+    "smoke": "40 OK / 0 FAIL",
+    "ai_watch": "all-clear for ZA. Field notes: Anthropic bills pre-output refusals again for bio/frontier_llm/reasoning_extraction from 24 Sep (official release notes; marketplace prompts, spend ceilings bound it); OpenAI retires o1/o1-pro/o3-mini/o4-mini on 23 Oct and o3/o3-pro on 11 Dec (app pins gpt-5.6-*/gpt-5, grep 0); Nebius GPU prices +17-21% from 1 Oct (Reuters 17 Sep, shortlist only, reference note); stale Sonnet-5 $3/$15 claim not seen",
+    "heartbeat": {
+      "last_run_before": "2026-09-25",
+      "gap_days": 1
+    },
+    "alert": "none - verdict AMBER",
+    "coverage_map": {
+      "green": 95,
+      "blue": 2,
+      "amber": 3,
+      "red": 0,
+      "grey": 11,
+      "cards": 111,
+      "changes": [
+        "DW-152 card GREEN->AMBER (DW-160)",
+        "NEW AMBER DW-159",
+        "NEW AMBER DW-158",
+        "DW-119 BLUE card: recurrence DW-161 noted"
+      ]
+    },
+    "new": [
+      "DW-160",
+      "DW-161"
+    ],
+    "closed": [
+      "DW-161"
+    ],
+    "still_open": [
+      "DW-010",
+      "DW-149",
+      "DW-158",
+      "DW-159",
+      "DW-160"
+    ],
+    "checks_run": "12 of 12 applicable (Monday lane not in scope; cc_age run off-lane for DW-010)"
   }
 }
