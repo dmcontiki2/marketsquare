@@ -24205,21 +24205,32 @@ def rg_quick_ready_5():
              "042_quick_subpath.py (QUICK-PATH-1: nginx serves /quick/ onto the same file; the installed "
              "tile's start_url /quick.html keeps working). The service worker registration that lets "
              "Chrome offer the install is RG-0364.",
-       ref="RUL-125(a) same origin, sub-path, own manifest, own tile.")
+       ref="RUL-125(a) same origin, sub-path, own manifest, own tile. ASSERTION CORRECTED 26 Sep 2026: it "
+           "pinned start_url=/quick.html and an unstamped manifest link, so QUICK-SCOPE-1's deliberate move to "
+           "start_url/scope /quick/ + ?v=2 (SEAM-1, 25 Sep, RG-0477) read as a regression. It now guards the id "
+           "(the installed tile's identity), start_url inside scope, and any ?v= stamp; nothing was weakened -- "
+           "the live /quick/ and /quick.html 200 checks stay.")
 def rg_quick_ready_6():
     out = []
     try:
         mj = json.loads(_get("/static/brand/quick.webmanifest"))
-        if mj.get("id") != "/quick.html" or mj.get("start_url") != "/quick.html":
-            out.append((FAIL, "the Quick manifest id/start_url changed -- an installed tile would break: %r/%r"
-                              % (mj.get("id"), mj.get("start_url"))))
+        # ASSERTION CORRECTED 26 Sep 2026 (maintenance loop): QUICK-SCOPE-1 (SEAM-1, 25 Sep) deliberately
+        # moved start_url to /quick/ and scoped the tile to /quick/ (RG-0477 asserts that scope). What keeps
+        # an installed tile alive is its IDENTITY (id), which must never change; start_url must sit inside
+        # the scope, and both the new path and the old /quick.html must still answer (checked below).
+        _sc = mj.get("scope") or "/"
+        if mj.get("id") != "/quick.html":
+            out.append((FAIL, "the Quick manifest id changed -- every installed tile would break: %r" % mj.get("id")))
+        if not str(mj.get("start_url") or "").startswith(_sc):
+            out.append((FAIL, "the Quick start_url %r sits outside its own scope %r -- the tile would open in a browser tab"
+                              % (mj.get("start_url"), _sc)))
         if mj.get("theme_color", "").upper() != "#7C3AED":
             out.append((FAIL, "the Quick tile lost its own colour (%r)" % mj.get("theme_color")))
         ic = (mj.get("icons") or [{}])[0].get("src", "")
         if not ic.startswith("data:image/png"):
             out.append((FAIL, "the Quick icon is no longer inlined -- a first deploy would lose the tile to a screenshot"))
         html = _get("/quick.html")
-        if '<link rel="manifest" href="/static/brand/quick.webmanifest">' not in html:
+        if not re.search(r'<link rel="manifest" href="/static/brand/quick\.webmanifest(\?v=\d+)?">', html):
             out.append((FAIL, "quick.html no longer links its manifest"))
         import urllib.request as _u
         try:
@@ -29395,12 +29406,13 @@ def rg_example_mark_1():
 
 @entry("RG-0485", "MAP-FIRST-VIEW-1: the adventure maps draw on first view -- the live-stays block may never ask a map with "
        "no view for its bounds (that threw and stopped the page, so the map stayed blank until Route was tapped)",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-09-26",
        scope="all 15 adventures_*_map.html + scripts/journey_template.html (the generator); ms.js teItinerary shows words, "
              "never raw HTML (TE-TEXT-1). CLASS: any code on a map page that reads the view before the view is set.",
        ref="David 25 Sep 2026: 'the in app maps used to show a map on the first view, but lately i need to either expand or "
            "open it and even then i first have to press route'. Rendered probe: the live Botswana map threw 'Set map center "
-           "and zoom first' at map.getBounds() inside LIVE-MAP-1 (3 Sep) -- 0 tiles; patched copy: 8 tiles, 41 pins.")
+           "and zoom first' at map.getBounds() inside LIVE-MAP-1 (3 Sep) -- 0 tiles; patched copy: 8 tiles, 41 pins. "
+           "PROMOTED 26 Sep 2026 by the maintenance loop the run it printed READY TO LOCK (repo and live passing).")
 def rg_map_first_view():
     import glob as _g
     bad = []
@@ -29813,6 +29825,110 @@ def rg_i18n_af_2():
     if bad:
         return [(FAIL, "; ".join(bad[:6]))]
     return [(INFO, "David's Afrikaans corrections served live")]
+
+@entry("RG-0494", "GEO-REACH-1: the wave only asks a city whose people can SAY WHERE THEY ARE "
+       "on the live site",
+       LOCKED, fixed_on="2026-09-26",
+       scope="CityLauncher/scripts/geo_reachable.py (new), scripts/wave_cities.py, "
+             "deploy_citylauncher.bat, nightly_wave.sh. FOUND 26 Sep 2026 by run 21 of the "
+             "onboarding goal, auditing the denominator instead of the conversion rate. "
+             "MEASURED on the live register, not reasoned: of 1,911 letters sent to the "
+             "United States, 1,499 went to a state the seller's own location picker does not "
+             "offer -- Maine 211, Montana 201, Alaska 156 -- and 55 of the 95 armed cities "
+             "have no home on the site at all. The wave's entire remaining runway was 347 "
+             "more letters to Maine at ~13 a night, while Pretoria, the LAUNCH city, was "
+             "asked for nothing. Rick Wemple, the prospect runs 19 and 20 spent two sessions "
+             "on -- a personal letter, a recoup link, a vigil for his reply -- is in Montana. "
+             "He clicked, and there was never a place on the form for him to stand. THE "
+             "CLASS: this is the fifth number in this project that read HIGH by default "
+             "(FUNNEL-DENOM-1, ONBOARD-REAL-1, the contract's naive probe, PROXY-OPEN-1, and "
+             "now '2,587 emailed'). Every one flattered, and every one survived because a "
+             "rising number does not get audited. '2,587 letters' was never 2,587 chances; "
+             "it was about 600. FIX: wave_cities.py asks the live geo tables which places a "
+             "seller may pick and does not ASK an unreachable city. Every downstream gate -- "
+             "stop-loss, daily cap, domain bounce, suppression -- is untouched; this decides "
+             "who is asked, never who may send. ASKED, NEVER HARDCODED, the same shape as "
+             "WAVE-CITIES-DISCOVER-1 and WAVE-SKIP-EMPTY-1: activate Maine on the site and "
+             "Maine returns to the wave with no edit here. FAILS OPEN, because silently "
+             "halting every wave on an unreadable geo DB is worse than one wasted night. "
+             "PROBED after shipping: `wave_cities.py --with-people` now returns Pretoria, "
+             "Cape Town, Bloemfontein and names the 55 it skipped on stderr -- a shrunken "
+             "list is never silent.",
+       ref="Far-end leg included deliberately, and it is the RG-0464 lesson paid forward: "
+           "wave_cities.py IMPORTS geo_reachable.py, so shipping one without the other makes "
+           "the gate fail open on every city and the wave quietly writes to Maine again while "
+           "every source check on the board stays green. This entry therefore asserts the "
+           "manifest line and the nightly_wave.sh preflight as well as the code. RESIDUAL, "
+           "named rather than swept: the reachability gate does not create South African "
+           "supply. After it, the wave can reach ~96 ZA addresses; 1,066 more are held by "
+           "SOURCE-QUALITY-1 and 1,114 by the teachers category block, which is David's "
+           "POPIA call (D8), not a defect.")
+def rg_geo_reach_1():
+    cl = os.path.join(REPO, "..", "CityLauncher")
+    if not sibling_visible(cl):
+        return [(INFO, "NOT EVALUATED - CityLauncher is not mounted on this vantage")]
+    bad = []
+
+    def _read(rel):
+        fp = os.path.join(cl, rel)
+        if not os.path.exists(fp):
+            return None
+        with open(fp, encoding="utf-8", errors="replace") as fh:
+            return fh.read()
+
+    gr = _read(os.path.join("scripts", "geo_reachable.py"))
+    if gr is None:
+        return [(FAIL, "CityLauncher/scripts/geo_reachable.py is gone -- the wave has no way "
+                       "to tell a reachable city from Maine")]
+    for needle, why in (
+            ("def reachable_places(", "reachable_places() is gone"),
+            ("def is_reachable(", "is_reachable() is gone"),
+            ("geo_regions", "the gate no longer reads the region table"),
+            ("geo_cities", "the gate no longer reads the city table"),
+            ("active=1", "the gate no longer restricts to ACTIVE places -- an inactive state "
+                         "would read as reachable and Maine comes back")):
+        if needle not in gr:
+            bad.append(why)
+
+    wc = _read(os.path.join("scripts", "wave_cities.py"))
+    if wc is None:
+        bad.append("wave_cities.py is gone")
+    else:
+        if "_is_reachable" not in wc:
+            bad.append("wave_cities.py no longer knows about reachability")
+        if "if not _is_reachable(city):" not in wc:
+            bad.append("the gate is defined but NOT APPLIED in the city loop -- the exact "
+                       "half-fix shape: present in source, absent in behaviour")
+        if "skipped_unreachable" not in wc:
+            bad.append("the skipped cities are no longer named -- a silently shrunken list is "
+                       "the fault this project keeps re-learning")
+
+    # THE FAR END (RG-0464): code that is not on the manifest does not run on the box.
+    bat = _read("deploy_citylauncher.bat")
+    if bat is None:
+        bad.append("deploy_citylauncher.bat is gone")
+    elif not any(l.lstrip().lower().startswith("scp ") and "geo_reachable.py" in l
+                 for l in bat.splitlines()):
+        # Deliberately an scp LINE, not the bare string: this entry's own comment block in
+        # the .bat contains the filename, so a substring test would stay green with the
+        # shipping line deleted -- a proxy assertion of exactly the kind RG-0465 is about.
+        bad.append("geo_reachable.py has no scp line in deploy_citylauncher.bat -- "
+                   "wave_cities.py would ship without the module it imports, the gate would "
+                   "fail open on every city, and the wave would write to Maine again with "
+                   "the board green")
+
+    nw = _read("nightly_wave.sh")
+    if nw is None:
+        bad.append("nightly_wave.sh is gone")
+    elif "scripts/geo_reachable.py" not in nw:
+        bad.append("nightly_wave.sh no longer preflights geo_reachable.py -- a missing gate "
+                   "would fail open silently instead of stopping the wave")
+
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "the wave asks only cities a seller could pick, and the gate ships with "
+                   "the file that imports it")]
+
 
 if __name__ == "__main__":
     sys.exit(main())
