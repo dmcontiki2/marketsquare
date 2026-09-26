@@ -1,0 +1,667 @@
+{
+ "changes": [
+  {
+   "section": "Title",
+   "old": "End User License Agreement (EULA)",
+   "new": "End User Licence Agreement (EULA)",
+   "why": "South African spelling: 'licence' is the noun, as the rest of the document already writes it.",
+   "source": "consistency"
+  },
+  {
+   "section": "Title block (version line)",
+   "old": "Version 1.18 · Last updated 19 September 2026",
+   "new": "Version 1.19 · Last updated 26 September 2026",
+   "why": "Version and date of this draft.",
+   "source": "version"
+  },
+  {
+   "section": "1.1 (AI Feature)",
+   "old": "AdvertAgent / AI Feature",
+   "new": "AI Feature",
+   "why": "Drops the internal code name 'AdvertAgent'; the app's own screen is titled 'AI Features'.",
+   "source": "code name"
+  },
+  {
+   "section": "1.1 (Anonymity Gate)",
+   "old": "<td>Anonymity Gate / Mode B</td>",
+   "new": "<td>Anonymity Gate</td>",
+   "why": "Drops the internal code name 'Mode B'.",
+   "source": "code name"
+  },
+  {
+   "section": "1.1 (Partner Content)",
+   "old": "and the Anonymity Gate / Mode B does not apply to it (Section 6.1B).",
+   "new": "and the Anonymity Gate does not apply to it (Section 6.1B).",
+   "why": "Drops the internal code name 'Mode B'.",
+   "source": "code name"
+  },
+  {
+   "section": "1.1 (Collectors)",
+   "old": "A planned Platform category for physical and digital collectibles, including trading cards, memorabilia, art, and similar items. Launch subject to Solar Council confirmation of introduction model and category rules.",
+   "new": "A Platform category for physical and digital collectibles, including trading cards, memorabilia, art, and similar items. It uses the Soft Queue introduction model described in Section 5.3.",
+   "why": "Collectors is live in the app (home tile, filter sheet, sell flow) and runs on the Soft Queue model (marketsquare.html CATS.Collectors model 'queue'), so 'planned' and the Solar Council reference go.",
+   "source": "code name"
+  },
+  {
+   "section": "1.1 (EULA / Agreement)",
+   "old": "This End User License Agreement, including all schedules, annexures, and documents incorporated by reference.",
+   "new": "This End User Licence Agreement, including all schedules, annexures, and documents incorporated by reference.",
+   "why": "South African spelling: 'Licence' as the noun, matching the title.",
+   "source": "consistency"
+  },
+  {
+   "section": "1.1 (Scheduled Country / Country Schedule)",
+   "old": "South Africa, the United Kingdom, the United States, and Australia — the countries in which the Platform is offered. Each country other than South Africa is covered by a Country Schedule (Schedules A–C at the end of this EULA) that grants that country’s mandatory protections automatically. See Section 13.6.",
+   "new": "South Africa, the United Kingdom, the United States, Australia, France, Portugal, New Zealand, and Argentina — the countries in which the Platform is offered. Each country other than South Africa is covered by a Country Schedule (Schedules A–G at the end of this EULA) that grants that country’s mandatory protections automatically. See Section 13.6.",
+   "why": "The definition listed four countries and Schedules A–C; Section 13.6 has eight countries and Schedules A–G.",
+   "source": "consistency"
+  },
+  {
+   "section": "2.4 (heading)",
+   "old": "2.4 EULA Acceptance Gate — Mandatory Before Registration",
+   "new": "2.4 EULA Acceptance Gate — Mandatory Before a Listing Goes Live",
+   "why": "The app creates accounts and drafts before acceptance (Quick page, 'Save draft', invites); what it enforces is that nothing is published without a recorded acceptance (bea_main.py publish_listing).",
+   "source": "app alignment"
+  },
+  {
+   "section": "2.4 (opening paragraph)",
+   "old": "You must read and accept this EULA before your registration is created on the Platform. The acceptance process is as follows:",
+   "new": "You must read and accept this EULA before any listing of yours goes live on the Platform. A listing may be saved as a draft before you accept, but a draft is never shown to Buyers. The acceptance process is as follows:",
+   "why": "Drafts exist before acceptance, so 'before your registration is created' is contradicted by the app; the server refuses to publish until acceptance is recorded (EULA-PUBLISH-1).",
+   "source": "app alignment"
+  },
+  {
+   "section": "2.4 (acceptance steps)",
+   "old": "<ol type=\"1\">\n<li><p>You receive a Magic Link via email or click a sign-up link on the Platform.</p></li>\n<li><p>On clicking the link, an EULA acceptance screen is presented as the first step before any registration or listing data is created.</p></li>\n<li><p>You must tick \"I have read and agree to the Terms of Use / EULA and Privacy Policy\" and click \"Accept and Continue\".</p></li>\n<li><p>The Platform records your acceptance timestamp and EULA version number. This record is stored in the Platform's database and constitutes your binding agreement.</p></li>\n<li><p>Clicking \"Accept and Continue\" constitutes your electronic signature on this Agreement per Section 4 of the ECT Act.</p></li>\n</ol>",
+   "new": "<ol type=\"1\">\n<li><p>You start a listing from a Magic Link sent to you, from the sell flow in the Platform's app, or from the Platform's Quick page.</p></li>\n<li><p>In the sell flow, the acceptance is set out directly above the publish button, with this EULA linked: \"By tapping Publish now you confirm: I have read and accept the TrustSquare Seller Terms, and confirm all listing information is accurate. I understand that listings with inappropriate content will be permanently removed.\" Tapping \"Publish now — I accept the Terms\" is your acceptance.</p></li>\n<li><p>When you publish a saved draft — for example from a Magic Link or from your Seller Hub — the step headed \"Almost live\" shows this EULA in full. Once you have scrolled to the end, you must tick \"I have read and accept the TrustSquare Seller Terms, and confirm all listing information is accurate\" and \"I understand that listings with inappropriate content will be permanently removed\", and tap \"Go live\".</p></li>\n<li><p>If you save an edit to a listing, or publish from elsewhere in the app, before you have accepted this EULA, this EULA is shown in full on a Terms sheet: you must scroll to the end, tick the same two confirmations and tap \"I accept\".</p></li>\n<li><p>Unless you have already accepted this EULA, a listing saved on the Quick page is kept as a draft and goes live only after you have read and accepted this EULA in the Platform's app.</p></li>\n<li><p>If this EULA changes materially after you have accepted it, you are asked to accept it again, in the same way, the next time you publish or edit a listing.</p></li>\n<li><p>The Platform records your acceptance timestamp and EULA version number. This record is stored in the Platform's database and constitutes your binding agreement.</p></li>\n<li><p>Tapping \"Publish now — I accept the Terms\", \"Go live\" or \"I accept\" constitutes your electronic signature on this Agreement per Section 4 of the ECT Act.</p></li>\n</ol>",
+   "why": "Replaces the 'Accept and Continue' flow, which exists nowhere in the app, with the acceptance points it actually uses (ms.js sell-flow scorecard and _tsSellerTermsGate, marketsquare.html 'Almost live' step sob-p3, bea_main.py quick_publish and EULA-VERSION-1), keeping the timestamp-and-version record (users.eula_accepted_at plus the eula_version trigger).",
+   "source": "app alignment"
+  },
+  {
+   "section": "2.4 (Why Acceptance Happens Here)",
+   "old": "Acceptance here also satisfies POPIA's requirement for informed, specific, opt-in consent before personal data is processed.",
+   "new": "Acceptance here also satisfies POPIA's requirement for informed, specific, opt-in consent.",
+   "why": "Drafts holding the Seller's email and photos are stored before acceptance, so 'before personal data is processed' is contradicted by the app.",
+   "source": "app alignment"
+  },
+  {
+   "section": "3.1 (heading)",
+   "old": "3.1 Anonymity Principle — Mode B",
+   "new": "3.1 Anonymity Principle",
+   "why": "Drops the internal code name 'Mode B'.",
+   "source": "code name"
+  },
+  {
+   "section": "3.1 (public profile list)",
+   "old": "An emoji avatar (randomly assigned)",
+   "new": "Your profile photo, blurred (or, if you have not added one, an emoji icon for your category)",
+   "why": "Before acceptance the app shows a Seller's photo blurred ('Buyers see a blurred version', ms.js cvAvatarHtml / openBEASellerProfile) and, with no photo, the category's emoji icon — nothing is randomly assigned.",
+   "source": "app alignment"
+  },
+  {
+   "section": "3.1 (closing line)",
+   "old": "No photo. No name. No contact details. No personal identifiers — until both parties complete the bilateral acceptance described in Section 3.2.",
+   "new": "No clear photo. No name. No contact details. No personal identifiers — until both parties complete the bilateral acceptance described in Section 3.2.",
+   "why": "A blurred photo is shown, so 'No photo' was inaccurate.",
+   "source": "app alignment"
+  },
+  {
+   "section": "3.4",
+   "old": "South Africa's FICA requires customer identification before a business relationship commences. The Platform interprets \"business relationship\" as the first Introduction acceptance (i.e. the first transaction), not account creation. This interpretation must be confirmed by legal counsel before publication.",
+   "new": "South Africa's FICA requires customer identification before a business relationship commences. The Platform interprets \"business relationship\" as the first Introduction acceptance (i.e. the first transaction), not account creation.",
+   "why": "Internal drafting note removed.",
+   "source": "drafting note"
+  },
+  {
+   "section": "3.5",
+   "old": "Your identity documents are encrypted in transit (TLS 1.3), stored on the Platform's server (Hetzner CPX32, Germany — upgraded from CPX22 on 25 May 2026), and accessible only to the Platform's compliance team.",
+   "new": "Your identity documents are encrypted in transit (TLS 1.3), stored on the Platform's servers in Germany (EU), hosted by Hetzner, and accessible only to the Platform's compliance team.",
+   "why": "One server fact with no machine model or upgrade date; ID documents go to the private store on the server, never the photo bucket (bea_main.py PRIVATE-DOCS-1), and the server's host name ubuntu-4gb-nbg1-1 is Hetzner Nuremberg, Germany.",
+   "source": "consistency"
+  },
+  {
+   "section": "3.5A",
+   "old": "and no Buyer should treat the badge as a guarantee of any Seller&rsquo;s conduct, solvency, or the existence or condition of any advertised property.",
+   "new": "and no Buyer should treat the badge as a guarantee of any Seller&rsquo;s conduct, solvency, or the existence or condition of any property offered in a listing.",
+   "why": "David's decision of 26 Sep 2026: 'listing', not 'advert', for what a Seller puts up. ('listed property' was avoided because it can mean a heritage-listed building.)",
+   "source": "consistency"
+  },
+  {
+   "section": "4.4",
+   "old": "Current and planned categories include Property (Estate Agents), Tutors, Services, Casuals, Adventures Accommodation, Adventures Experiences, and Collectors.",
+   "new": "Current categories include Property (Estate Agents), Tutors, Services, Casuals, Adventures Accommodation, Adventures Experiences, and Collectors.",
+   "why": "Collectors, the one category in this list that was still planned, is live in the app.",
+   "source": "app alignment"
+  },
+  {
+   "section": "5.2",
+   "old": "Non-redeemable for cash (current state): Tuppence cannot currently be converted to ZAR or any other currency. [Note: Cash-out functionality may be introduced in future, subject to FSCA compliance and updated terms];",
+   "new": "Non-redeemable for cash (current state): Tuppence cannot currently be converted to ZAR or any other currency;",
+   "why": "Internal bracketed drafting note removed.",
+   "source": "drafting note"
+  },
+  {
+   "section": "5.3 (Property row)",
+   "old": "<td>Property (Estate Agents)</td>\n<td>Commitment: listing pauses on Introduction; one Buyer at a time; 48-hour window. Seller ignores: Trust Score −5; listing unpauses automatically. No Tuppence is deducted (Principle A8).</td>",
+   "new": "<td>Property (Estate Agents)</td>\n<td>Commitment: listing pauses on Introduction; one Buyer at a time; 48-hour window. Seller ignores: Trust Score −5; listing unpauses automatically. No Tuppence is deducted.</td>",
+   "why": "Internal code reference '(Principle A8)' removed.",
+   "source": "code name"
+  },
+  {
+   "section": "5.3 (Tutors row)",
+   "old": "<td>Tutors</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>−3 points for ignoring; no penalty for declining</td>",
+   "new": "<td>Tutors</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>−5 points for ignoring; no penalty for declining</td>",
+   "why": "The code gives one −5 penalty for every Introduction left unanswered for 48 hours (bea_main.py RESP_PENALTY_PTS = -5, _lifecycle_sweep), matching the −5 elsewhere in this table and the 5 points in 4.9; −3 exists nowhere in the app.",
+   "source": "consistency"
+  },
+  {
+   "section": "5.3 (Services row)",
+   "old": "<td>Services</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>−3 points for ignoring; no penalty for declining</td>",
+   "new": "<td>Services</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>−5 points for ignoring; no penalty for declining</td>",
+   "why": "The code gives one −5 penalty for every Introduction left unanswered for 48 hours (bea_main.py RESP_PENALTY_PTS = -5, _lifecycle_sweep), matching the −5 elsewhere in this table and the 5 points in 4.9; −3 exists nowhere in the app.",
+   "source": "consistency"
+  },
+  {
+   "section": "5.3 (Collectors row)",
+   "old": "<td>Collectors</td>\n<td>Commitment: listing pauses on Introduction; one Buyer at a time; 48-hour window. Seller ignores: Trust Score −5; listing unpauses automatically. No Tuppence is deducted (Principle A8).</td>\n<td>−5 points for ignoring</td>",
+   "new": "<td>Collectors</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>−5 points for ignoring; no penalty for declining</td>",
+   "why": "The app runs Collectors on the Soft Queue model (marketsquare.html CATS.Collectors 'queue'; the in-app 'How introductions work' table groups it with Tutors and Services), with −5 for ignoring and no penalty for declining.",
+   "source": "app alignment"
+  },
+  {
+   "section": "5.3 (Collectors box, heading)",
+   "old": "Collectors — Introduction Model Pending Council Confirmation",
+   "new": "Collectors — Soft Queue Introduction Model",
+   "why": "Replaces the 'pending Council confirmation' heading with the current fact.",
+   "source": "code name"
+  },
+  {
+   "section": "5.3 (Collectors box, text)",
+   "old": "The Collectors category (physical and digital collectibles, trading cards, memorabilia, art) is planned but not yet live. The introduction model shown above (Commitment, same as Property) is the recommended model — a rare or unique item should only be offered to one serious Buyer at a time. However, this must be confirmed by the Solar Council before the Collectors category is activated. This EULA entry is a placeholder and will be updated at that time.",
+   "new": "The Collectors category (physical and digital collectibles, trading cards, memorabilia, art) is live and uses the Soft Queue model shown above: the listing stays live and several Buyers can request an Introduction at the same time.",
+   "why": "Collectors is live on the Soft Queue model, so 'planned but not yet live', the Solar Council reference and the placeholder sentence go.",
+   "source": "app alignment"
+  },
+  {
+   "section": "5.5",
+   "old": "The Platform offers an optional AI-assisted feature (\"AdvertAgent\" or equivalent) that allows Sellers to access artificial intelligence support for listing creation, optimisation, and related tasks.",
+   "new": "The Platform offers optional AI Features that allow Sellers to access artificial intelligence support for listing creation, optimisation, and related tasks.",
+   "why": "Drops the internal code name 'AdvertAgent' and names the feature with the defined term, as the app's 'AI Features' screen does.",
+   "source": "code name"
+  },
+  {
+   "section": "6.1B (Openly branded)",
+   "old": "<strong>Openly branded — outside Mode B.</strong> Partner Content is always presented under the supplying brand's own name and marking. The Anonymity Gate / Mode B (Section 3.1) applies to Sellers holding accounts on the Platform;",
+   "new": "<strong>Openly branded — outside the Anonymity Gate.</strong> Partner Content is always presented under the supplying brand's own name and marking. The Anonymity Gate (Section 3.1) applies to Sellers holding accounts on the Platform;",
+   "why": "Drops the internal code name 'Mode B'.",
+   "source": "code name"
+  },
+  {
+   "section": "6.1B (Clear separation)",
+   "old": "so a Buyer can always tell an anonymous Seller advert (an Introduction product) from openly-branded Partner Content (a referral product).",
+   "new": "so a Buyer can always tell an anonymous Seller listing (an Introduction product) from openly-branded Partner Content (a referral product).",
+   "why": "David's decision of 26 Sep 2026: 'listing', not 'advert', for what a Seller puts up.",
+   "source": "consistency"
+  },
+  {
+   "section": "7.3 (Bonus Values Are Indicative box)",
+   "old": "The Trust Score bonus values above are indicative and subject to confirmation in the Solar Council Codex. Final values will be published in the Platform's Trust Score policy document before the Adventures category goes live.",
+   "new": "The Trust Score bonus values above are indicative. The values actually applied are those in the Platform's current Trust Score criteria, which the app shows to each Seller, credential by credential.",
+   "why": "Drops the Solar Council Codex reference and the stale 'before Adventures goes live'; the points applied come from the Platform's Trust Score catalogue (bea_main.py _CATEGORY_SIGNALS, mirroring TRUST_SCORE_CRITERIA.md), which the app lists with each credential's points.",
+   "source": "code name"
+  },
+  {
+   "section": "9.1",
+   "old": "for Users habitually resident in the United Kingdom, the United States, or Australia, the additional privacy provisions of the applicable Country Schedule (UK GDPR / Data Protection Act 2018; US state privacy laws including the CCPA/CPRA; the Australian Privacy Act 1988 and APPs) apply together with the Privacy Policy.",
+   "new": "for Users habitually resident in the United Kingdom, the United States, Australia, France, Portugal, New Zealand, or Argentina, the additional privacy provisions of the applicable Country Schedule (UK GDPR / Data Protection Act 2018; US state privacy laws including the CCPA/CPRA; the Australian Privacy Act 1988 and APPs; the GDPR with the French Loi Informatique et Libertés or the Portuguese Lei n.º 58/2019; the New Zealand Privacy Act 2020; the Argentine Ley 25.326) apply together with the Privacy Policy.",
+   "why": "The list of Scheduled Countries must match Section 13.6, and Schedules D5, E5, F5 and G4 each carry their own privacy provision.",
+   "source": "consistency"
+  },
+  {
+   "section": "9.2 (NEW row: banking details)",
+   "old": "<tr>\n<td>Transaction data: Tuppence earned/spent, Introduction history</td>\n<td>Tuppence Wallet management; dispute resolution; FICA records. Legal basis: contractual necessity; legal obligation.</td>\n</tr>",
+   "new": "<tr>\n<td>Transaction data: Tuppence earned/spent, Introduction history</td>\n<td>Tuppence Wallet management; dispute resolution; FICA records. Legal basis: contractual necessity; legal obligation.</td>\n</tr>\n<tr>\n<td>Banking details (Sellers): account holder, bank, last 4 digits of the account number, branch code</td>\n<td>Confirmation of the Seller's identity (the account holder is matched to the verified ID name); Tuppence purchases. The Platform never pays money out to this account, and Tuppence is not redeemable for cash. Legal basis: consent (given when you add them).</td>\n</tr>",
+   "why": "NEW — David's addition of 26 Sep 2026, matching the app: POST /users/{email}/banking keeps holder, bank, last 4 digits and branch code and matches the holder to the verified ID name, and the in-app form says the details confirm who you are and are used when you buy Tuppence, with nothing paid out (row inserted after 'Transaction data').",
+   "source": "David 26 Sep"
+  },
+  {
+   "section": "9.6",
+   "old": "Platform servers are hosted on Hetzner (currently CPX22, upgrading to CPX32 on 25 May 2026), located in Germany (EU).",
+   "new": "Platform servers are hosted by Hetzner in Germany (EU).",
+   "why": "One server fact with no machine model or upgrade date.",
+   "source": "consistency"
+  },
+  {
+   "section": "Footer (end line)",
+   "old": "— End of TrustSquare Terms of Use / EULA v1.18 —",
+   "new": "— End of TrustSquare Terms of Use / EULA v1.19 —",
+   "why": "Version of this draft.",
+   "source": "version"
+  },
+  {
+   "section": "Footer (version line)",
+   "old": "v1.18 · Republic of South Africa",
+   "new": "v1.19 · Republic of South Africa",
+   "why": "Version of this draft (the eula_sync.py end anchor '· Republic of South Africa · Country Schedules:' is unchanged).",
+   "source": "version"
+  },
+  {
+   "section": "1.1 (Tuppence / T)",
+   "old": "advanced features are priced per use and capped (Free / 2T / 3T / 5T), available to Buyers and Sellers.",
+   "new": "advanced features are priced per use and capped (Free / 1T / 2T / 3T / 5T), available to Buyers and Sellers.",
+   "why": "The app also charges 1T (an AI Coach session after the first free one, AI Listing Rewrite, the 'Why No Introductions?' audit, the price and yield checks), so the price ladder now lists every price it charges, the same as 5.5. [2nd pass #16]",
+   "source": "bea_main.py:10034-10048 and 10292-10303 (AI Coach: first session free, then 1T); 22780-22800 (AI Listing Rewrite 1T); 22869-22901 (Why No Introductions? audit 1T); 23479-23492, 23804-23815 and ai_service_tiers.py:29-35 (price check and yield: 0T / 1T / 2T tiers); 24000-24020 (batch card drafts 2T); feature-videos/real-reports/*.meta.json (research features price_t 2 / 3 / 5); ms.js:18629 (price shown on each AI feature card)"
+  },
+  {
+   "section": "1.1 (AI Feature)",
+   "old": "advanced features are priced per use in Tuppence (Free / 2T / 3T / 5T), shown before you use them.",
+   "new": "advanced features are priced per use in Tuppence (Free / 1T / 2T / 3T / 5T), shown before you use them.",
+   "why": "Same price ladder as 5.5, now including the 1T features. [2nd pass #16]",
+   "source": "bea_main.py:10034-10048 and 10292-10303 (AI Coach: first session free, then 1T); 22780-22800 (AI Listing Rewrite 1T); 22869-22901 (Why No Introductions? audit 1T); 23479-23492, 23804-23815 and ai_service_tiers.py:29-35 (price check and yield: 0T / 1T / 2T tiers); 24000-24020 (batch card drafts 2T); feature-videos/real-reports/*.meta.json (research features price_t 2 / 3 / 5); ms.js:18629 (price shown on each AI feature card)"
+  },
+  {
+   "section": "1.1 (Collectors)",
+   "old": "<td>A Platform category for physical and digital collectibles, including trading cards",
+   "new": "<td>A Platform category for physical collectibles, including trading cards",
+   "why": "Nothing in the app handles digital collectibles; its Collectors types are stamps, trading cards, coins, memorabilia and other physical items. [2nd pass #9]",
+   "source": "ms.js:13858 (Collectors types: Stamps, Trading Cards, Coins, Memorabilia, Other); marketsquare.html:2530 (sell-flow tile 'Stamps, coins, cards, memorabilia & collectibles'); nothing in bea_main.py or ms.js handles digital collectibles"
+  },
+  {
+   "section": "2.1",
+   "old": "multiple categories including real estate, tutoring, services,",
+   "new": "multiple categories including real estate, cars, tutoring, services,",
+   "why": "Cars is a live category (filter chip, category picker, sell-flow tile). Local Market is put to David (needs_david). [2nd pass #8]",
+   "source": "marketsquare.html:61 (CATS.Cars model 'queue'), 838 (filter chip), 1968 (category picker), 2533 (sell-flow tile 'Cars - Vehicle for sale or hire - Soft queue')"
+  },
+  {
+   "section": "2.1",
+   "old": "and Collectors (physical and digital collectibles).</p>",
+   "new": "and Collectors (physical collectibles).</p>",
+   "why": "Nothing in the app handles digital collectibles (as for 1.1). [2nd pass #9]",
+   "source": "ms.js:13858 (Collectors types: Stamps, Trading Cards, Coins, Memorabilia, Other); marketsquare.html:2530 (sell-flow tile 'Stamps, coins, cards, memorabilia & collectibles'); nothing in bea_main.py or ms.js handles digital collectibles"
+  },
+  {
+   "section": "2.4 (last acceptance step)",
+   "old": "constitutes your electronic signature on this Agreement per Section 4 of the ECT Act.",
+   "new": "constitutes your electronic signature on this Agreement per Section 13 of the ECT Act.",
+   "why": "Electronic signatures are dealt with in section 13 of the ECT Act (Act 25 of 2002); section 4 is the Act's sphere of application. [2nd pass #19]",
+   "source": "editorial"
+  },
+  {
+   "section": "3.4",
+   "old": "<li><p>Before first Introduction acceptance: account requires verified email only. Full identity is not yet required.</p></li>\n<li><p>After first Introduction acceptance: FICA-compliant identity verification is initiated within 24 hours. This must be completed within 5 business days. If verification fails or is not completed, the Introduction is cancelled. Tuppence already spent remains spent.</p></li>",
+   "new": "<li><p>Creating an account and publishing a listing: no identity document is required.</p></li>\n<li><p>Before a Seller's listings can receive Introductions: the Seller must upload a government-issued identity document and have it confirmed by the Platform's automated document check (Section 3.5). Until it is confirmed, Introduction requests to that Seller's listings are refused and no Tuppence is held from the Buyer.</p></li>",
+   "why": "The app checks a Seller's ID before any Introduction, not after the first acceptance: a request to a Seller whose uploaded ID is not confirmed is refused before anything is held, and nothing is started, timed or cancelled after acceptance. [2nd pass #14]",
+   "source": "bea_main.py:7729-7758 (_seller_intro_gate), 8298-8302 (gate runs before the hold at 8307), 15842-15857 (the automated document check sets id_verified_at); RULINGS.md RUL-039 (the document check 'keeps its existing job as the introduction gate')"
+  },
+  {
+   "section": "3.5 (list numbering)",
+   "old": "<ol start=\"6\" type=\"1\">",
+   "new": "<ol type=\"1\">",
+   "why": "A left-over start number made this list begin at 6 instead of 1. [2nd pass #21]",
+   "source": "editorial"
+  },
+  {
+   "section": "3.5",
+   "old": "<p>After accepting your first Introduction, you will be asked to provide:</p>\n<ol type=\"1\">\n<li><p>A government-issued identity document (South African Smart Card ID, passport, or driver's licence);</p></li>\n<li><p>Proof of address",
+   "new": "<p>Before Buyers can request Introductions to your listings, you must upload a photo of a government-issued identity document (South African Smart Card ID, passport, or driver's licence), and the Platform's free, automated document check must confirm it (the \"Document checked\" state in Section 3.5A). Until it is confirmed, Introduction requests to your listings are refused. If you are an agent of an agency whose verification the Platform has confirmed, the agency's verification covers you. The Platform may also ask you to provide:</p>\n<ol type=\"1\">\n<li><p>Proof of address",
+   "why": "The free ID document check is required before any Introduction, not after the first acceptance. The app has no proof-of-address or liveness step, so both are kept only as requests the Platform may make. An agent of a verified agency passes through the agency's verification. [2nd pass #14]",
+   "source": "bea_main.py:7551-7560 (upload accepts SA ID / passport / driver's licence), 7738-7758 (_seller_intro_gate, incl. the verified-agency pass), 15777-15865 (automated check, no charge); ms.js:22079-22083 ('buyers can request introductions as soon as your uploaded ID is confirmed'); RULINGS.md RUL-039 (a live selfie is 'a future tier'); no proof-of-address or liveness code in bea_main.py, ms.js or marketsquare.html"
+  },
+  {
+   "section": "3.5A (voluntary, never a barrier)",
+   "old": "<p><strong>Verification is voluntary and is never a barrier.</strong> A Seller who does not verify keeps their listing and can still receive Introductions. The Platform does not withhold, suspend, or downrank a listing for want of verification.",
+   "new": "<p><strong>Home Affairs verification is voluntary and is never a barrier.</strong> A Seller who does not verify with Home Affairs keeps their listing and can still receive Introductions once the identity document they uploaded has been confirmed (Section 3.5). The Platform does not withhold, suspend, or downrank a listing for want of Home Affairs verification.",
+   "why": "Only the Home Affairs check is optional: without the free ID document check a Seller receives no Introductions at all. [2nd pass #15]",
+   "source": "bea_main.py:8478-8487 (the paid check is never a blocker; id_verified_at stays the introduction gate), 7738-7758; ms.js:22079-22083; id_npr_verified_at is read only in the notice and status code (bea_main.py:8455-8760), never in ranking"
+  },
+  {
+   "section": "4.2",
+   "old": "and other ranking factors (see Section 12);",
+   "new": "and other ranking factors (see Section 11);",
+   "why": "Trust Score and ranking are Section 11; Section 12 is Tuppence classification. [2nd pass #20]",
+   "source": "editorial"
+  },
+  {
+   "section": "4.4",
+   "old": "Current categories include Property (Estate Agents), Tutors,",
+   "new": "Current categories include Property (Estate Agents), Cars, Tutors,",
+   "why": "Cars is a live category. Local Market is put to David (needs_david). [2nd pass #8]",
+   "source": "marketsquare.html:61 (CATS.Cars model 'queue'), 838 (filter chip), 1968 (category picker), 2533 (sell-flow tile 'Cars - Vehicle for sale or hire - Soft queue')"
+  },
+  {
+   "section": "4.4",
+   "old": "introduction models, and Trust Score mechanics as described in Section 12.",
+   "new": "introduction models, and Trust Score mechanics as described in Sections 5.3 and 11.",
+   "why": "Introduction models are in 5.3 and Trust Score in 11; Section 12 is Tuppence classification. [2nd pass #20]",
+   "source": "editorial"
+  },
+  {
+   "section": "5.1 (list numbering)",
+   "old": "<ol start=\"9\" type=\"1\">",
+   "new": "<ol type=\"1\">",
+   "why": "A left-over start number made this list begin at 9 instead of 1. [2nd pass #21]",
+   "source": "editorial"
+  },
+  {
+   "section": "5.1 (step 1)",
+   "old": "<li><p>A Buyer sends an Introduction request to a Seller at no immediate cost. No Tuppence is deducted from the Buyer's balance at the time of sending.",
+   "new": "<li><p>A Buyer sends an Introduction request to a Seller. When the request is sent, 1T is committed (held) on the Buyer's Tuppence balance; a Buyer needs at least 1T available to send a request.",
+   "why": "The app holds 1T from the Buyer when the request is made, as 1.1 and 5.4 already say, and refuses the request below 1T. [2nd pass #1]",
+   "source": "bea_main.py:8307-8333 (INTRO-HOLD-1: 1T held at request); bea_main.py:8317-8322 (402 below 1T)"
+  },
+  {
+   "section": "5.1 (step 2)",
+   "old": "<li><p>If the Seller accepts the Introduction, 1T is deducted from the Buyer's Tuppence balance and credited to the Seller's Tuppence Wallet. Both parties' contact details are then revealed to each other. This is the only event that triggers a Tuppence deduction. (In Casuals: if the Helper accepts the Requester's Introduction, 1T is deducted from the Requester's balance and credited to the Helper's Wallet. The mechanics are identical.)</p></li>",
+   "new": "<li><p>If the Seller accepts the Introduction, the held 1T is burned: it is the fee for the Introduction, and no Tuppence is credited to the Seller. Both parties' contact details are then revealed to each other. Acceptance is the only event on which Introduction Tuppence is spent. (In Casuals: if the Helper accepts the Requester's Introduction, the Requester's held 1T is burned and nothing is credited to the Helper. The mechanics are identical.)</p></li>",
+   "why": "On acceptance the app burns the Buyer's hold and credits the Seller nothing, as 1.1, 4.9 and 5.4 already say. [2nd pass #1]",
+   "source": "bea_main.py:8947-8954 (accept: held 1T burned, 0-amount audit row, nothing credited); bea_main.py:13138-13140 (lm_credit, the Local Market no-show credit, is the only Seller credit)"
+  },
+  {
+   "section": "5.1 (step 3)",
+   "old": "<li><p>If the Seller declines or does not respond within the 48-hour window, no Tuppence is deducted from the Buyer's balance. The Introduction closes with no charge to either party.</p></li>",
+   "new": "<li><p>If the Seller declines, or does not respond and the Introduction is removed at 96 hours (Section 4.9), the hold is released in full to the Buyer's balance. The Introduction closes with no charge to either party.</p></li>",
+   "why": "An unanswered request stays open until 96 hours (the −5 applies at 48) and the hold is released on decline or at removal, as 4.9 says. [2nd pass #2]",
+   "source": "bea_main.py:9092-9094 (decline releases the hold); 26602-26605 and 26804-26824 (penalty at 48 h, removal and hold release at 96 h)"
+  },
+  {
+   "section": "5.2 (non-redeemable)",
+   "old": "<li><p>Non-redeemable for cash (current state): Tuppence cannot currently be converted to ZAR or any other currency;</p></li>",
+   "new": "<li><p>Non-redeemable for cash: Tuppence cannot be converted to ZAR or any other currency;</p></li>",
+   "why": "'(current state)' and 'currently' hinted at a cash-out to come, while 6.3, 14.1 and 14.3 say Tuppence is never redeemable for cash. [2nd pass #6]",
+   "source": "editorial"
+  },
+  {
+   "section": "5.3 (NEW row: Cars)",
+   "old": "<td>Collectors</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>−5 points for ignoring; no penalty for declining</td>\n</tr>",
+   "new": "<td>Collectors</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>−5 points for ignoring; no penalty for declining</td>\n</tr>\n<tr>\n<td>Cars</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>−5 points for ignoring; no penalty for declining</td>\n</tr>",
+   "why": "NEW row for the live Cars category, which the app runs on the Soft Queue model with the same −5 for ignoring and no penalty for declining. Local Market is put to David (needs_david). [2nd pass #8]",
+   "source": "marketsquare.html:61 (CATS.Cars model 'queue'), 838 (filter chip), 1968 (category picker), 2533 (sell-flow tile 'Cars - Vehicle for sale or hire - Soft queue'); bea_main.py:26775-26795 (−5 for every category except Local Market), 9055-9114 (declining carries no penalty)"
+  },
+  {
+   "section": "5.3 (Collectors box)",
+   "old": "The Collectors category (physical and digital collectibles, trading cards",
+   "new": "The Collectors category (physical collectibles, trading cards",
+   "why": "Same wording as 1.1: nothing in the app handles digital collectibles. [2nd pass #9]",
+   "source": "ms.js:13858 (Collectors types: Stamps, Trading Cards, Coins, Memorabilia, Other); marketsquare.html:2530 (sell-flow tile 'Stamps, coins, cards, memorabilia & collectibles'); nothing in bea_main.py or ms.js handles digital collectibles"
+  },
+  {
+   "section": "5.5 (opening)",
+   "old": "The Platform offers optional AI Features that allow Sellers to access artificial intelligence support for listing creation, optimisation, and related tasks.",
+   "new": "The Platform offers optional AI Features that allow Buyers and Sellers to access artificial intelligence support for listing creation, optimisation, research, and related tasks.",
+   "why": "Buyers use AI features too (price check, yield calculator, research features), as 1.1 and the 5.5 table already say. [2nd pass #17]",
+   "source": "bea_main.py:23449-23452 ('AI3: Buyer pays'), 23764-23779 (AI4 yield); ms.js:18627 (BUYER / SELLER tag on each AI feature card)"
+  },
+  {
+   "section": "5.5 (Nature of use)",
+   "old": "<td>Entirely optional. A Seller chooses to invoke an AI feature.",
+   "new": "<td>Entirely optional. A Buyer or Seller chooses to invoke an AI feature.",
+   "why": "Same Seller-only wording as the 5.5 opening; Buyers invoke AI features too. [2nd pass #17]",
+   "source": "bea_main.py:23449-23452, 23764-23779; ms.js:18627"
+  },
+  {
+   "section": "5.5 (Why Tuppence is charged)",
+   "old": "each use costs Tuppence (capped — Free / 2T / 3T / 5T), shown before you confirm;",
+   "new": "each use costs Tuppence (capped — Free / 1T / 2T / 3T / 5T), shown before you confirm;",
+   "why": "Adds the 1T price the app charges. [2nd pass #16]",
+   "source": "bea_main.py:10034-10048 and 10292-10303 (AI Coach: first session free, then 1T); 22780-22800 (AI Listing Rewrite 1T); 22869-22901 (Why No Introductions? audit 1T); 23479-23492, 23804-23815 and ai_service_tiers.py:29-35 (price check and yield: 0T / 1T / 2T tiers); 24000-24020 (batch card drafts 2T); feature-videos/real-reports/*.meta.json (research features price_t 2 / 3 / 5); ms.js:18629 (price shown on each AI feature card)"
+  },
+  {
+   "section": "5.5 (Pricing)",
+   "old": "<td>Advanced AI features are priced per use, in Tuppence, capped: Free / 2T / 3T / 5T. The price for each feature is disclosed at the point of use, before you confirm.</td>",
+   "new": "<td>Advanced AI features are priced per use, in Tuppence, capped: Free / 1T / 2T / 3T / 5T. An AI Coach session is free the first time and costs 1T per session after that. The price for each feature is disclosed at the point of use, before you confirm.</td>",
+   "why": "Lists what the app charges: 1T per AI Coach session after the first free one (the app shows '1 free coaching session included' and 'costs 1T per coach call' before the run), 1T for AI Listing Rewrite, the 'Why No Introductions?' audit and the price and yield checks, 2T for batch card drafts, and 2T / 3T / 5T for the research features. Note: /tuppence/ai-commit still admits only superusers ('Paid AI features are in closed testing until launch'), so the public cannot yet buy the 2T / 3T / 5T research features. [2nd pass #16]",
+   "source": "bea_main.py:10034-10048 and 10292-10303 (AI Coach: first session free, then 1T); 22780-22800 (AI Listing Rewrite 1T); 22869-22901 (Why No Introductions? audit 1T); 23479-23492, 23804-23815 and ai_service_tiers.py:29-35 (price check and yield: 0T / 1T / 2T tiers); 24000-24020 (batch card drafts 2T); feature-videos/real-reports/*.meta.json (research features price_t 2 / 3 / 5); ms.js:18629 (price shown on each AI feature card); bea_main.py:10424-10430 (packs retired: 'first use free'); ms.js:14766-14770 (coach badge); bea_main.py:26494-26502 (closed-testing guard)"
+  },
+  {
+   "section": "5.5 (Important box)",
+   "old": "a priced service billed per use (capped — Free / 2T / 3T / 5T), distinct",
+   "new": "a priced service billed per use (capped — Free / 1T / 2T / 3T / 5T), distinct",
+   "why": "Same price ladder as the 5.5 table. [2nd pass #16]",
+   "source": "bea_main.py:10034-10048 and 10292-10303 (AI Coach: first session free, then 1T); 22780-22800 (AI Listing Rewrite 1T); 22869-22901 (Why No Introductions? audit 1T); 23479-23492, 23804-23815 and ai_service_tiers.py:29-35 (price check and yield: 0T / 1T / 2T tiers); 24000-24020 (batch card drafts 2T); feature-videos/real-reports/*.meta.json (research features price_t 2 / 3 / 5); ms.js:18629 (price shown on each AI feature card)"
+  },
+  {
+   "section": "6.1 (AI Feature Tuppence)",
+   "old": "<li><p>AI Feature Tuppence: per use, in Tuppence, capped (Free / 2T / 3T / 5T) and shown before use;",
+   "new": "<li><p>AI Feature Tuppence: per use, in Tuppence, capped (Free / 1T / 2T / 3T / 5T) and shown before use;",
+   "why": "Same price ladder as 5.5, now including the 1T features. [2nd pass #16]",
+   "source": "bea_main.py:10034-10048 and 10292-10303 (AI Coach: first session free, then 1T); 22780-22800 (AI Listing Rewrite 1T); 22869-22901 (Why No Introductions? audit 1T); 23479-23492, 23804-23815 and ai_service_tiers.py:29-35 (price check and yield: 0T / 1T / 2T tiers); 24000-24020 (batch card drafts 2T); feature-videos/real-reports/*.meta.json (research features price_t 2 / 3 / 5); ms.js:18629 (price shown on each AI feature card)"
+  },
+  {
+   "section": "6.1 (Tuppence top-ups)",
+   "old": "<li><p>Any future Tuppence top-up or purchase fees (subject to updated terms and FSCA compliance).</p></li>",
+   "new": "<li><p>Tuppence top-ups: Tuppence bought through Paystack at 1T = USD $2.00, with the amount payable shown before you pay (Section 6.4).</p></li>",
+   "why": "Paystack Tuppence top-ups are live, not future: the app sells Tuppence at USD $2 each (charged in rand at the live rate) and shows the amount before handing over to Paystack. [2nd pass #5]",
+   "source": "bea_main.py:9172-9240 (/payment/initialize and /payment/verify: tuppence x USD 2, charged in ZAR), 9247-9335 (/payment/webhook credit), 9120-9128 (grants on the live key); ms.js:1691-1737 (top-up modal, then Paystack); STATUS.md:2259-2268 (real purchases settled to FNB on the live key, 15 Aug 2026)"
+  },
+  {
+   "section": "6.3 (opening)",
+   "old": "It is not money. No Tuppence is deducted from a Buyer's balance unless and until the Seller explicitly accepts the Introduction. If the Seller declines or does not respond, no charge arises and no reissuance is necessary.",
+   "new": "It is not money. When a Buyer requests an Introduction, 1T is held on the Buyer's balance; it is spent (burned) only if the Seller explicitly accepts the Introduction. If the Seller declines or does not respond, the hold is released in full, no charge arises and no reissuance is necessary.",
+   "why": "The app holds 1T at request and burns it only on acceptance, as 1.1, 4.9 and 5.4 say; 'nothing is deducted before acceptance' contradicted that. [2nd pass #3]",
+   "source": "bea_main.py:8307-8333 (INTRO-HOLD-1: 1T held at request); bea_main.py:8947-8954 (accept: held 1T burned, 0-amount audit row, nothing credited); bea_main.py:9092-9094 (decline releases the hold); 26602-26605 and 26804-26824 (penalty at 48 h, removal and hold release at 96 h)"
+  },
+  {
+   "section": "6.3 (first bullet)",
+   "old": "<li><p>Seller did not respond to the Introduction within the 48-hour window — no Tuppence was deducted (the charge only fires on acceptance), so no reissuance is required; the Introduction closes automatically with no charge to the Buyer;</p></li>",
+   "new": "<li><p>Seller did not respond to the Introduction — the Introduction is removed at 96 hours and the hold is released in full (Section 4.9), so no reissuance is required; the Introduction closes automatically with no charge to the Buyer;</p></li>",
+   "why": "An unanswered Introduction closes at 96 hours, not 48, and the hold is released then (4.9). [2nd pass #2]",
+   "source": "bea_main.py:9092-9094 (decline releases the hold); 26602-26605 and 26804-26824 (penalty at 48 h, removal and hold release at 96 h)"
+  },
+  {
+   "section": "6.3 (second bullet)",
+   "old": "<li><p>Seller declined the Introduction — no Tuppence was deducted (the charge only fires on acceptance), so no reissuance is required;",
+   "new": "<li><p>Seller declined the Introduction — the hold is released in full, so no reissuance is required;",
+   "why": "On decline the app releases the Buyer's hold. [2nd pass #3]",
+   "source": "bea_main.py:9092-9094"
+  },
+  {
+   "section": "6.3 (third bullet)",
+   "old": "(per Section 5.4) — no Tuppence was deducted, so no reissuance is required; the Introduction closes with no charge;",
+   "new": "(per Section 5.4) — the hold is released in full, so no reissuance is required; the Introduction closes with no charge;",
+   "why": "Matches 5.4: on withdrawal only a hold was placed, and it is released in full. [2nd pass #3]",
+   "source": "editorial (Section 5.4)"
+  },
+  {
+   "section": "6.3 (fourth bullet)",
+   "old": "<li><p>Tuppence is not reissuable under any circumstance. Spending Tuppence on an Introduction request or AI feature consumes the Tuppence regardless of outcome. This is the consideration for the buyer-commitment signal that underpins the Platform’s anti-spam design.</p></li>",
+   "new": "<li><p>Tuppence is not reissuable once it has been burned — when the Seller accepts an Introduction, or when a paid AI feature delivers its result (a failed AI run is not charged). Holding 1T on each Introduction request is the buyer-commitment signal that underpins the Platform’s anti-spam design.</p></li>",
+   "why": "An Introduction request only holds 1T (released on decline or expiry) and an AI feature is charged only on delivery, so 'consumes the Tuppence regardless of outcome' contradicted the app and 5.4 / 5.5. [2nd pass #3]",
+   "source": "bea_main.py:8307-8333 (INTRO-HOLD-1: 1T held at request); bea_main.py:9092-9094 (decline releases the hold); 26602-26605 and 26804-26824 (penalty at 48 h, removal and hold release at 96 h); bea_main.py:22851-22858 and 22961-22966 (AI charged only after a result), 26543-26570 (ai-settle releases a failed run)"
+  },
+  {
+   "section": "6.3 (closing paragraph)",
+   "old": "<p>Tuppence already credited to a Seller's Wallet upon acceptance of an Introduction is not reissuable under any circumstances.",
+   "new": "<p>No Tuppence is credited to a Seller when an Introduction is accepted, and the 1T burned on acceptance is not reissuable under any circumstances.",
+   "why": "The app never credits a Seller for a standard Introduction. [2nd pass #4]",
+   "source": "bea_main.py:8947-8954 (accept: held 1T burned, 0-amount audit row, nothing credited); bea_main.py:13138-13140 (lm_credit, the Local Market no-show credit, is the only Seller credit)"
+  },
+  {
+   "section": "6.4",
+   "old": "<p>Tuppence purchases (when enabled) and subscription payments are processed by Paystack",
+   "new": "<p>Tuppence purchases and subscription payments are processed by Paystack",
+   "why": "Paystack Tuppence top-ups are live. [2nd pass #5]",
+   "source": "bea_main.py:9172-9240 (/payment/initialize and /payment/verify: tuppence x USD 2, charged in ZAR), 9247-9335 (/payment/webhook credit), 9120-9128 (grants on the live key); ms.js:1691-1737 (top-up modal, then Paystack); STATUS.md:2259-2268 (real purchases settled to FNB on the live key, 15 Aug 2026)"
+  },
+  {
+   "section": "7.1 (NEW row: Cars)",
+   "old": "<td>Registration with the Estate Agency Affairs Board (EAAB)</td>\n</tr>",
+   "new": "<td>Registration with the Estate Agency Affairs Board (EAAB)</td>\n</tr>\n<tr>\n<td>Cars</td>\n<td>Dealer or trader registration as applicable under sector legislation; not required for a private seller</td>\n</tr>",
+   "why": "NEW row for the live Cars category, following the app's own split between a registered dealer (dealer / trader registration credential) and a private seller (private-seller declaration). Local Market is put to David (needs_david). [2nd pass #8]",
+   "source": "bea_main.py:13471-13479 (category.cars.dealer_reg, category.cars.private_seller)"
+  },
+  {
+   "section": "7.3 (heading)",
+   "old": "<p><strong>7.3 Adventures Certification Uplift — Trust Score Bonus</strong></p>",
+   "new": "<p><strong>7.3 Certification Uplift — Trust Score Bonus</strong></p>",
+   "why": "Credential bonuses exist in every category, not only Adventures. [2nd pass #11]",
+   "source": "bea_main.py:13446-13573 (_CATEGORY_SIGNALS: credentials for Property, Cars, Tutors, Services, Adventures, Collectors, Travel, Tour Guides and Local Market); docs/TRUST_SCORE_CRITERIA.md section 1 (Category Credentials, per category)"
+  },
+  {
+   "section": "7.3 (opening)",
+   "old": "<p>Sellers in the Adventures category (Accommodation and Experiences) may upload verifiable credentials to earn a Trust Score bonus that increases listing visibility. This mechanism is specific to Adventures and does not apply to other categories without a separate platform decision.</p>\n<p>Bonus certification types and indicative Trust Score awards:</p>",
+   "new": "<p>Sellers in every category may upload verifiable credentials to earn a Trust Score bonus that increases listing visibility. The credentials that count, and the points each earns, differ by category.</p>\n<p>For the Adventures category (Accommodation and Experiences), bonus certification types and indicative Trust Score awards:</p>",
+   "why": "The live catalogue awards credential points in every category. The table stays the Adventures table; its values are put to David (needs_david). [2nd pass #11]",
+   "source": "bea_main.py:13446-13573 (_CATEGORY_SIGNALS: credentials for Property, Cars, Tutors, Services, Adventures, Collectors, Travel, Tour Guides and Local Market); docs/TRUST_SCORE_CRITERIA.md section 1 (Category Credentials, per category)"
+  },
+  {
+   "section": "7.4 (list numbering)",
+   "old": "<ol start=\"13\" type=\"1\">",
+   "new": "<ol type=\"1\">",
+   "why": "A left-over start number made this list begin at 13 instead of 1. [2nd pass #21]",
+   "source": "editorial"
+  },
+  {
+   "section": "7.4 (step 1)",
+   "old": "certificate during Adventures onboarding or from your Seller profile.",
+   "new": "certificate during onboarding or from your Seller profile.",
+   "why": "Credential uploads are open in every category, not only during Adventures onboarding. [2nd pass #11]",
+   "source": "bea_main.py:13446-13573 (_CATEGORY_SIGNALS: credentials for Property, Cars, Tutors, Services, Adventures, Collectors, Travel, Tour Guides and Local Market); docs/TRUST_SCORE_CRITERIA.md section 1 (Category Credentials, per category)"
+  },
+  {
+   "section": "8.4 (list numbering)",
+   "old": "<ol start=\"18\" type=\"1\">",
+   "new": "<ol type=\"1\">",
+   "why": "A left-over start number made this list begin at 18 instead of 1. [2nd pass #21]",
+   "source": "editorial"
+  },
+  {
+   "section": "8.6 (list numbering)",
+   "old": "<ol start=\"24\" type=\"1\">",
+   "new": "<ol type=\"1\">",
+   "why": "A left-over start number made this list begin at 24 instead of 1. [2nd pass #21]",
+   "source": "editorial"
+  },
+  {
+   "section": "10.2 (list numbering)",
+   "old": "<ol start=\"29\" type=\"1\">",
+   "new": "<ol type=\"1\">",
+   "why": "A left-over start number made this list begin at 29 instead of 1. [2nd pass #21]",
+   "source": "editorial"
+  },
+  {
+   "section": "11.2",
+   "old": "policy violations; and — for Adventures Sellers — approved certification bonuses (Section 7.3).",
+   "new": "policy violations; and approved certification bonuses (Section 7.3).",
+   "why": "Certification bonuses count in every category. [2nd pass #11]",
+   "source": "bea_main.py:13446-13573 (_CATEGORY_SIGNALS: credentials for Property, Cars, Tutors, Services, Adventures, Collectors, Travel, Tour Guides and Local Market); docs/TRUST_SCORE_CRITERIA.md section 1 (Category Credentials, per category)"
+  },
+  {
+   "section": "11.3",
+   "old": "Penalties decay over time: each penalty reduces by 50% every 90 days. Full recovery typically occurs within 180 days.",
+   "new": "Penalties ease over time: a penalty for an ignored Introduction drops out of your score entirely 90 days after it was incurred (Section 4.9), and a deduction for a complaint counts at half its value once the complaint is more than 24 months old.",
+   "why": "The app does not halve penalties every 90 days: an ignored-Introduction −5 counts in full for 90 days and then drops out (as 4.9 says), and a complaint deduction halves after 24 months. [2nd pass #12]",
+   "source": "bea_main.py:26602-26605 and 26668-26680 (penalties count only within 90 days), 14048-14055 (complaint deduction halved after 730 days); docs/TRUST_SCORE_CRITERIA.md Amendment v1.3 point 3 and section 5b"
+  },
+  {
+   "section": "12.1",
+   "old": "AI Feature Tuppence (Seller-to-Platform, optional a per-use, capped charge (Free / 2T / 3T / 5T))",
+   "new": "AI Feature Tuppence (User-to-Platform, an optional per-use, capped charge (Free / 1T / 2T / 3T / 5T))",
+   "why": "Buyers use AI features too (as 1.1 and 5.5 say), so the defined term User replaces Seller; the garbled 'optional a per-use' is corrected; and the price ladder matches 5.5. [2nd pass #17, #16]",
+   "source": "bea_main.py:23449-23452; editorial"
+  },
+  {
+   "section": "12.2 (list numbering)",
+   "old": "<ol start=\"35\" type=\"1\">",
+   "new": "<ol type=\"1\">",
+   "why": "A left-over start number made this list begin at 35 instead of 1. [2nd pass #21]",
+   "source": "editorial"
+  },
+  {
+   "section": "12.3",
+   "old": "<p>Tuppence is currently earned through Introduction acceptance and is not purchased by Users via credit or installment. The National Credit Act (NCA) therefore does not apply to Tuppence in its current form. If a Tuppence purchase mechanism is introduced in future, the NCA's affordability assessment and disclosure obligations will apply, and fresh consent will be obtained from Users at that time.</p>",
+   "new": "<p>Tuppence is bought through Paystack and paid for in full at the time of purchase, or granted by the Platform (Section 5.2); it is not sold to Users on credit or by instalments. The National Credit Act (NCA) therefore does not apply to Tuppence in its current form. If Tuppence is ever offered on credit or by instalments, the NCA's affordability assessment and disclosure obligations will apply, and fresh consent will be obtained from Users at that time.</p>",
+   "why": "No Tuppence is earned through Introduction acceptance, and Paystack purchases are live, so the NCA reasoning now rests on what the app does: Tuppence is paid for up front or granted, never sold on credit ('instalment' in South African spelling). [2nd pass #4, #5]",
+   "source": "bea_main.py:8947-8954 (accept: held 1T burned, 0-amount audit row, nothing credited); bea_main.py:9172-9240 (/payment/initialize and /payment/verify: tuppence x USD 2, charged in ZAR), 9247-9335 (/payment/webhook credit), 9120-9128 (grants on the live key); ms.js:1691-1737 (top-up modal, then Paystack); STATUS.md:2259-2268 (real purchases settled to FNB on the live key, 15 Aug 2026); launch_redemption.py grant_monthly_tuppence (monthly grants, PRICING_CANON.md section 5)"
+  },
+  {
+   "section": "13.4",
+   "old": "legal@trustsquare.co or.</p>",
+   "new": "legal@trustsquare.co.</p>",
+   "why": "Removes a dangling 'or'. [2nd pass #22]",
+   "source": "editorial"
+  },
+  {
+   "section": "14.2",
+   "old": "<li><p>Fail to complete identity verification (Section 3.5) after acceptance of a first Introduction;</p></li>",
+   "new": "<li><p>Fail to complete identity verification (Section 3.5) when the Platform asks you to;</p></li>",
+   "why": "Identity verification happens before a Seller's first Introduction, not after acceptance, so this ground now refers to verification the Platform asks for under 3.5. [2nd pass #14]",
+   "source": "bea_main.py:7729-7758 (_seller_intro_gate), 8298-8302 (gate runs before the hold at 8307), 15842-15857 (the automated document check sets id_verified_at)"
+  },
+  {
+   "section": "15.9 (contact table)",
+   "old": "<td>Privacy / POPIA / UK GDPR / CCPA / Australian Privacy Act — all data-subject requests</td>",
+   "new": "<td>Privacy / POPIA / UK GDPR / CCPA / Australian Privacy Act / GDPR (France, Portugal) / New Zealand Privacy Act / Argentine Ley 25.326 — all data-subject requests</td>",
+   "why": "Names the France, Portugal, New Zealand and Argentina privacy regimes that 9.1 and Schedules D5, E5, F5 and G4 already list; the routing to support@ is unchanged. [2nd pass #23]",
+   "source": "editorial"
+  },
+  {
+   "section": "9.7",
+   "old": "<p>You have the following rights under POPIA, exercisable by emailing legal@trustsquare.co:</p>",
+   "new": "<p>You have the following rights under POPIA, exercisable by emailing support@trustsquare.co:</p>",
+   "why": "v1.17 moved every data-subject request to support@ (the mailbox that is read, because a POPIA request has a one-month clock) and 15.9 already says so; 9.7 still pointed at legal@. [review]",
+   "source": "LEGAL_VERSIONS.md v1.17; 15.9 contact table"
+  },
+  {
+   "section": "6.3",
+   "old": "Unused Tuppence expires after 24 consecutive months of account inactivity (no login, no Introduction, no purchase). The Platform will notify you by email not less than 30 days before expiry. ",
+   "new": "Tuppence you buy or earn does not expire; granted Tuppence does not roll over (Section 5.2). ",
+   "why": "6.3 said unused Tuppence expires after 24 months of inactivity, while 5.2 says bought or earned Tuppence never expires. Canon agrees with 5.2 (only unspent monthly grants are reset) and no code expires a balance. [review]",
+   "source": "PRICING_CANON.md (monthly grant is non-rolling; purchased and earned Tuppence is never swept); PRINCIPLE_REQUIREMENTS.md A8; launch_redemption.grant_monthly_tuppence"
+  },
+  {
+   "section": "5.2 (no expiry)",
+   "old": "<li><p>No expiry of purchased or earned Tuppence (current state): Tuppence you buy or earn does not expire",
+   "new": "<li><p>No expiry of purchased or earned Tuppence: Tuppence you buy or earn does not expire",
+   "why": "'(current state)' hinted at an expiry to come; canon says bought and earned Tuppence is never removed (same fix as the non-redeemable bullet). [review]",
+   "source": "editorial; PRICING_CANON.md"
+  }
+ ],
+ "needs_david": [
+  {
+   "section": "5.3 (Casuals and Adventures rows, 'Adventures — No Trust Score Penalty' box) and 4.9",
+   "question": "Should Casuals and Adventures Sellers be exempt from the −5 for ignoring an Introduction? The Terms promise them no penalty, but the code gives every category except Local Market the same −5 (bea_main.py _lifecycle_sweep), and the app's own 'How introductions work' table shows −5 for Accommodation and Experiences. Options: (a) Drop the exemption from 5.3 (the Casuals and Adventures rows and the 'Adventures — No Trust Score Penalty' box), so the Terms match the code and the app. (b) Build the exemption into the code (skip the −5 for Casuals and Adventures in _lifecycle_sweep) and correct the app's table. Recommended: (a), because your RESP-1 ruling of 23 Jul 2026 (docs/TRUST_SCORE_CRITERIA.md, Amendment v1.3) applies the −5 to every standard Introduction and the app already tells Adventures Sellers so. The text is left as it stands in this draft."
+  },
+  {
+   "section": "9.2 (new banking row)",
+   "question": "Which legal basis should the new banking row give? Options: (a) Consent, given when the Seller adds the details (as drafted, like the certification-documents row). (b) Contractual necessity. (c) Legitimate interest. Recommended: (a), because adding banking details is optional in the app (a 2-point trust signal, POST /users/{email}/banking) and nothing in the contract depends on them."
+  },
+  {
+   "section": "9.2 (new banking row)",
+   "question": "Should the banking row keep 'Tuppence purchases' as a purpose? It is your wording and the in-app form says the details are used 'when you buy Tuppence', but no purchase code reads the stored banking details — Paystack takes the payment details itself. Options: (a) Keep the purpose as worded. (b) Drop it from this row and from the in-app form text, leaving confirmation of identity as the purpose. Recommended: (b), because POPIA requires the stated purpose to be the real one, and today the details are used only for the name match against the verified ID and as a trust signal."
+  },
+  {
+   "section": "Publishing v1.19",
+   "question": "Should v1.19 be marked a material change? bea_main.py has EULA_CURRENT_VERSION = '1.18' and EULA_MATERIAL_VERSION = '1.16'. Options: (a) Material: set EULA_MATERIAL_VERSION to '1.19', so every Seller accepts again at their next publish or edit, after the 14 days' notice that Section 15.1 requires. (b) Not material: bump only EULA_CURRENT_VERSION to '1.19'. Recommended: (a), because v1.19 rewrites what Sellers agreed to on identity checks (3.4–3.5), how Tuppence moves (5.1, 6.3) and AI prices (5.5), and re-acceptance is what binds existing Sellers to the corrected text. Nothing outside the two draft files was touched."
+  },
+  {
+   "section": "10.6 (Sellers' liability cap)",
+   "question": "What should the Sellers' liability cap in 10.6 be? It is 'the total Tuppence earned and credited to your Wallet' in the 12-month period, but a Seller is never credited Tuppence for an Introduction (bea_main.py accept_intro burns the Buyer's hold; only Local Market no-show credits exist), so the cap is in practice about zero. Options: (a) The same as Buyers: ZAR 500. (b) The Tuppence the Seller bought or spent on the Platform in that period, valued at USD $2 each. (c) The greater of (a) and (b). Recommended: (c), because a cap of about zero risks being struck out as unfair under the CPA, while (c) keeps a floor and tracks what the Seller actually paid. The text is left as it stands; 5.1, 6.3 and 12.3 were corrected."
+  },
+  {
+   "section": "5.3 (Property row)",
+   "question": "Should a Property listing really pause and take one Buyer at a time? The Terms, canon A3 (PRINCIPLE_REQUIREMENTS.md) and docs/LISTING_STATE_MACHINE.md say so, but the server never pauses the listing or limits requests (bea_main.py create_intro): only the requesting Buyer's own screen shows it paused, and the app's 'How introductions work' table says 'Up to 3' and groups Cars with Property. Options: (a) Build it: the server pauses a Property listing on a request and refuses others until it is answered, and the 'Up to 3' copy is corrected. (b) Retire the Commitment model: Property runs Soft Queue, and the Terms, canon A3 and the app copy say so. (c) Cap it at 3 open requests per Property listing, enforced by the server, with the Terms and canon changed to match. Recommended: (a), because canon A3 may not change without full council review and the Terms, listing screen and state machine already describe it, so only the server is out of line. The Property row is left as it stands; this draft adds Cars as Soft Queue, as the sell flow runs it (marketsquare.html CATS.Cars), so if you choose (a) or (c), say whether Cars follows Property."
+  },
+  {
+   "section": "2.1, 4.4, 5.3, 7.1 (Local Market)",
+   "question": "How should the Terms cover Local Market? It is live but runs under its own six in-app clauses (marketsquare.html, 'Local Market — Terms') with a Seller-pays model: the Seller pays 1T (2T if boosted) when the first request on a listing arrives, Buyers pay nothing, and there are no-show credits and a suspension ladder (bea_main.py /local-market/intro; docs/LOCAL_MARKET_REQUIREMENTS.md). The EULA never mentions it, and the model conflicts with 2.6 and 5.1 ('the party seeking the service always pays') and with canon A8's list of allowed deductions. Options: (a) Fold Local Market into the EULA: name it in 2.1 and 4.4, add 5.3 and 7.1 rows, and state the Seller-pays exception in 2.6 and 5.1. (b) Keep it separate: name it in 2.2 as governed by supplemental Local Market Terms, and publish those clauses alongside the EULA. Recommended: (a), because a Seller who pays should find the fee in the Terms they accept, and the six clauses are short enough to fold in. Cars was added in this draft; Local Market was not."
+  },
+  {
+   "section": "7.3 (bonus table)",
+   "question": "Should the Adventures bonus table match what the app actually awards? The live catalogue (bea_main.py _CATEGORY_SIGNALS; docs/TRUST_SCORE_CRITERIA.md) gives TGCSA 1–5 star 6/10/14/18/22 (table: 5/10/15/20/25), first aid 6 (table: 5) and CATHSSETA 8 (table: 10), and has no SATSA, FEDHASA, liquor-licence or PDP/SABOA credential at all. Options: (a) Replace the table with the catalogue's Adventures credentials and points. (b) Change the app to the table: add the four missing credentials to the catalogue and use the table's values. (c) Drop the table and rely on the 'Bonus Values Are Indicative' box, which already says the in-app criteria govern. Recommended: (a), because the Terms should not promise bonuses the app never awards, and the catalogue is the canon the app shows each Seller."
+  },
+  {
+   "section": "11.4",
+   "question": "What should 11.4 say? It suspends an account whose Trust Score 'falls below 0', which cannot happen because the score is held between 0 and 100 (bea_main.py _trust_math), and no code suspends an account for a low score except in Local Market, which suspends a Local Market Seller below 30 with an active complaint (_lm_apply_suspension). Options: (a) Delete 11.4, because 10.2 and the blocking causes in 14.5 already cover suspension. (b) Keep a low-score suspension but make it real: pick a reachable threshold and build it. (c) Replace it with the Local Market rule once Local Market is in the Terms. Recommended: (a), because a clause that can never trigger protects nobody, and 14.5 already lists every cause for blocking an account."
+  },
+  {
+   "section": "2.5, 9.3 (Buyer acceptance)",
+   "question": "Should Buyers formally accept the Terms somewhere? Only Sellers do today (before a listing goes live, plus the separate Buzz and Local Market acceptances: bea_main.py /users/{email}/eula, /buzz/accept, /local-market/eula/accept), so 'By accepting this EULA' in 2.5 (age and capacity warranties) and 9.3 (POPIA consent) never binds a Buyer. Options: (a) Add a one-tap Buyer acceptance, recorded with timestamp and version like the Seller's, at the first Introduction request or first Tuppence top-up. (b) Reword 2.5 and 9.3 to 'By using the Platform', relying on use alone. Recommended: (a), because POPIA consent and an ECT Act signature both need a positive act, and the first request or top-up is where a Buyer first commits money."
+  },
+  {
+   "section": "13.5, 13.6 (Quick country packs)",
+   "question": "Do the countries the Quick page is set up for need a Country Schedule? Quick packs exist for ZA, NA, BW, MZ, KE, GB, DE, AU and US (roles/quick_country_packs.json), so Namibia, Botswana, Mozambique, Kenya and Germany get a localised Quick page but no Schedule, while France, Portugal, New Zealand and Argentina have a Schedule but no Quick pack. Options: (a) Add Country Schedules for the five Quick-pack countries (Germany can follow the France and Portugal GDPR pattern). (b) Switch those five Quick packs off until Schedules exist. (c) Leave both and rely on 13.5's own-initiative, own-risk clause. Recommended: (a), because a localised Quick page shows the Platform deliberately offers itself there, which undercuts 13.5's own-risk clause; the missing Quick packs for the four Scheduled countries are a product gap, not a legal one."
+  }
+ ],
+ "noticed_not_changed": []
+}
