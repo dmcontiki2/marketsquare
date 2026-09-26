@@ -47,3 +47,23 @@
 - Gates after: `rulings_check` 150 rulings, **0 FAIL**, 25 WARN, 38 NOT CHECKED (VANTAGE-BLIND-1
   reporting its blindness). BIT board from the edge vantage **8/8 PASS**. The three pre-existing
   instrument tests (hostqueue watchdog, stand-up watchdog, QA gate blind) all still exit 0.
+
+- **BIT-STORE-FLOOR-1 — found live DURING this run's post-deploy verification, and it is the
+  reason the run did not report green and stop.** At **19:36:04Z** a caller POSTed an **empty body**
+  to `POST /dashboard/bit`. The handler stored `dict(payload)` unconditionally, so
+  `bit_status.json` became `{"received_at": "2026-09-26T19:36:04Z"}` and nothing else — and
+  `GET /dashboard/bit` served exactly that: **no state, no results, no verdict.** It could not even
+  fall through to the handler's own "no BIT run recorded yet" branch, because the file existed. Two
+  probes 60 s apart returned the same stub, so it was persistent, not a mid-write. **The site was
+  healthy throughout:** the board had read 8/8 PASS at 19:02:29Z and an independent edge-vantage run
+  returned 8/8 PASS minutes after the wipe. One empty POST replaced a real verdict with a blank, and
+  the dashboard panel read neither green nor red. Verified **not** caused by this run's own deploy:
+  the bea_main.py change in `d449eec` is 37 inserted lines of docstring prose and touches no handler.
+  This is QA-GATE-BLIND-1's lesson (25 Sep) one store along — there the damage was not the blind run
+  but `accept()` writing it over the baseline. Fixed with the same rule: a payload carrying no
+  `results`, no `state` and no `total` is **NOT MEASURED** and does not overwrite; it is recorded as
+  `last_blind_post` **inside** the surviving board so the blindness is visible rather than silent,
+  and the caller gets 200 with `stored: false` and the reason — never an error, because a BIT runner
+  that cannot post is a second failure on top of the first. **The floor never suppresses red:** an
+  all-FAIL board still overwrites, asserted by name in the test. `scripts/test_bit_store_floor1.py`
+  is red on the pre-fix source and reproduces the wipe verbatim.

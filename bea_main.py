@@ -16611,11 +16611,59 @@ def dashboard_bit_post(payload: dict = Body(...)):
     Stores the JSON board to bit_status.json; the dashboard reads it via GET /dashboard/bit.
     The BIT Agent is a separate read-only article; this is its ONE write surface, and it only
     records a status snapshot (no app state is changed here)."""
+    # ══════════════════════════════════════════════════════════════════════════
+    # BIT-STORE-FLOOR-1 (26 Sep 2026): a board that measured NOTHING may not be
+    # written over a board that measured something.
+    #
+    # MEASURED THIS RUN. At 19:36:04Z a caller POSTed an empty body here. This
+    # handler stored `dict(payload)` unconditionally, so bit_status.json became
+    # {"received_at": "..."} and nothing else -- and GET /dashboard/bit then served
+    # that: no state, no results, no verdict. It could not even fall through to the
+    # "no BIT run recorded yet" branch, because the file existed. The board had read
+    # 8/8 PASS at 19:02:29Z and the site was healthy throughout (an independent edge
+    # run returned 8/8 PASS minutes later). So one empty POST silently replaced a
+    # real verdict with a blank, and the dashboard panel read neither green nor red.
+    #
+    # This is exactly QA-GATE-BLIND-1's lesson (25 Sep) one store along: there the
+    # damage was not the blind run but `accept()` writing it over the baseline. The
+    # rule is the same -- a run that did not see the app is NOT MEASURED, and NOT
+    # MEASURED never becomes the record.
+    #
+    # So: a payload carrying no results and no state does not overwrite. It is
+    # recorded INSIDE the surviving board as last_blind_post, so the blindness is
+    # visible rather than silent, and the caller gets 200 with stored=false and the
+    # reason -- never an error, because a BIT runner that cannot post is a second
+    # failure on top of the first. A real board with results still overwrites
+    # normally, including a real board that is all FAIL: this floor is about
+    # EMPTINESS, never about a bad verdict.
+    # ══════════════════════════════════════════════════════════════════════════
     import json as _json, os as _os, datetime as _dt
     try:
         payload = dict(payload or {})
         payload["received_at"] = _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         p = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "bit_status.json")
+        measured = bool(payload.get("results")) or bool(payload.get("state")) \
+            or payload.get("total") not in (None, 0)
+        if not measured:
+            prev = None
+            try:
+                with open(p, encoding="utf-8") as fh:
+                    prev = _json.load(fh)
+            except Exception:
+                prev = None
+            reason = ("post carried no results, no state and no total -- NOT MEASURED, "
+                      "so the previous board was kept (BIT-STORE-FLOOR-1)")
+            if isinstance(prev, dict) and (prev.get("results") or prev.get("state")):
+                prev["last_blind_post"] = {"at": payload["received_at"], "reason": reason}
+                with open(p, "w", encoding="utf-8") as fh:
+                    _json.dump(prev, fh)
+                return {"ok": True, "stored": False, "reason": reason}
+            # nothing worth keeping: record the blindness itself rather than a fake board
+            payload["state"] = "not_measured"
+            payload["note"] = reason
+            with open(p, "w", encoding="utf-8") as fh:
+                _json.dump(payload, fh)
+            return {"ok": True, "stored": False, "reason": reason}
         with open(p, "w", encoding="utf-8") as fh:
             _json.dump(payload, fh)
         return {"ok": True, "stored": True}
