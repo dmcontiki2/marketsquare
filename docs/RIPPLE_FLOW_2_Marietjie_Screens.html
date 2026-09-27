@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Ripple flow 2 — Marietjie's honey link</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#EDF2F0; --surface:#FFFFFF; --ink:#13201C; --ink2:#51615C; --line:#D3DDD9;
+  --share:#12968A; --buzz:#3B9A3B; --quick:#DE9C12; --intro:#E0602A; --ai:#7757D4; --auction:#C4325E; --upgrade:#2C6BD2; --off:#6B7773;
+  --quick-ink:#2A1C00;
+  --display:'Bricolage Grotesque',ui-sans-serif,system-ui,sans-serif;
+  --body:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){color-scheme:dark;
+    --bg:#0B1311; --surface:#121D1A; --ink:#E3ECE9; --ink2:#98AAA4; --line:#2A3B36;
+    --share:#2BBFAD; --buzz:#5BBF58; --quick:#F2B532; --intro:#F57A43; --ai:#9D84F2; --auction:#E25A82; --upgrade:#5C95F2; --off:#8A9793;}
+}
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#0B1311; --surface:#121D1A; --ink:#E3ECE9; --ink2:#98AAA4; --line:#2A3B36;
+  --share:#2BBFAD; --buzz:#5BBF58; --quick:#F2B532; --intro:#F57A43; --ai:#9D84F2; --auction:#E25A82; --upgrade:#5C95F2; --off:#8A9793;}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);padding-inline:16px;padding-block:28px 56px;margin:0}
+.wrap{max-width:1220px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+.eyebrow{font:700 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+h1{font:800 clamp(36px,5.4vw,60px)/1 var(--display);margin:8px 0 12px;letter-spacing:-.015em;text-wrap:balance}
+.lede{max-width:68ch;color:var(--ink2);margin:0;font-size:17px}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.legend .ttl{font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);width:100%}
+.lg{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600}
+.lg small{font-weight:400;color:var(--ink2);font-size:13px}
+.sw{width:22px;height:22px;border-radius:6px;flex:none}
+.fr{width:26px;height:34px;border-radius:7px;border:2px solid var(--ink);background:var(--surface);flex:none}
+.fr.build{border-style:dashed;border-color:var(--ink2)}
+.fr.off{border-color:var(--off);background:var(--bg)}
+.legends{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+nav.jump{display:flex;flex-wrap:wrap;gap:8px}
+nav.jump a{font-weight:600;font-size:15px;color:var(--ink);text-decoration:none;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+nav.jump a:focus-visible,.lots button:focus-visible{outline:2px solid var(--share);outline-offset:2px}
+
+section.story{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding-block:26px;padding-inline:clamp(16px,2.6vw,30px);display:flex;flex-direction:column;gap:14px;scroll-margin-top:16px}
+.kicker{font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+h2{font:700 clamp(26px,3.2vw,38px)/1.08 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h3{font:700 19px/1.2 var(--display);margin:10px 0 0;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+h3 small{font:400 14px var(--body);color:var(--ink2)}
+p.sum{margin:0;max-width:74ch;color:var(--ink2)}
+
+/* the horizontal flow */
+.flow{display:flex;gap:21px;overflow-x:auto;padding-block:8px 12px;padding-inline:2px;scroll-snap-type:x proximity}
+.stepc{flex:0 0 142px;display:flex;flex-direction:column;gap:8px;position:relative;scroll-snap-align:start}
+.stepc.wide{flex-basis:206px}
+.stepc:not(:last-child)::after{content:"";position:absolute;right:-18px;top:140px;width:13px;height:2px;background:var(--ink2)}
+.stepc:not(:last-child)::before{content:"";position:absolute;right:-19px;top:136px;border:5px solid transparent;border-left:7px solid var(--ink2)}
+.phone{--fn:var(--ink2);--fnink:#fff;height:300px;border:2px solid var(--ink);border-radius:20px;background:var(--surface);overflow:hidden;display:flex;flex-direction:column}
+.phone.build{border-style:dashed;border-color:var(--ink2)}
+.phone.off{border-color:var(--off);background:var(--bg)}
+.bar{height:24px;flex:none;background:var(--fn);color:var(--fnink);font:700 9px var(--mono);letter-spacing:.05em;display:flex;align-items:center;justify-content:space-between;padding-inline:10px;text-transform:uppercase}
+.scr{padding:10px 10px 12px;display:flex;flex-direction:column;gap:7px;font-size:11px;line-height:1.35;flex:1;min-height:0}
+.scr h4{font:700 12.5px/1.2 var(--display);margin:0;text-wrap:balance}
+.scr .p{margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:10px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.chip.on{background:var(--fn);color:var(--fnink);border-color:var(--fn);font-weight:700}
+.inp{display:flex;flex-direction:column;gap:2px}
+.inp span{font-size:9.5px;color:var(--ink2)}
+.inp b{font-weight:600;border:1px solid var(--line);border-radius:7px;padding:4px 7px;background:var(--bg);font-size:10.5px}
+.btn{margin-top:auto;background:var(--fn);color:var(--fnink);border-radius:999px;text-align:center;font:700 10.5px var(--body);padding:6px 8px}
+.btns2{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.btns2 i{font-style:normal;text-align:center;border-radius:999px;padding:5px;font:700 10px var(--body);border:1px solid var(--line)}
+.btns2 i:first-child{background:var(--fn);color:var(--fnink);border-color:var(--fn)}
+.nt{font-size:9.5px;color:var(--ink2);margin:0}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.ph{aspect-ratio:1;border-radius:6px;border:1px dashed var(--ink2);display:grid;place-items:center;font-size:8.5px;color:var(--ink2);text-align:center;padding:2px;background:var(--bg)}
+.ph.got{border-style:solid;border-color:var(--fn);color:var(--fn);font-weight:700}
+.code{display:grid;grid-template-columns:repeat(6,1fr);gap:3px}
+.code i{height:18px;border:1px solid var(--line);border-radius:4px;background:var(--bg);font:700 10px var(--mono);font-style:normal;display:grid;place-items:center}
+.qr{width:74px;height:74px;align-self:center;display:grid;grid-template-columns:repeat(9,1fr);gap:1px;padding:4px;border:1px solid var(--line);border-radius:6px;background:#fff}
+.qr i{background:#13201C}.qr i.w{background:#fff}
+.bub{background:color-mix(in srgb,var(--fn) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--fn) 45%,var(--surface));border-radius:10px 10px 10px 3px;padding:6px 8px;font-size:10.5px}
+.bub.me{border-radius:10px 10px 3px 10px;align-self:flex-end}
+.bub small{display:block;font:700 8.5px var(--mono);color:var(--ink2);text-transform:uppercase;letter-spacing:.04em}
+.lst{display:flex;flex-direction:column;gap:3px}
+.lst div{display:flex;justify-content:space-between;gap:4px;border-bottom:1px solid var(--line);padding-block:2px;font-size:10.5px}
+.lst div em{font-style:normal;color:var(--fn);font-weight:700}
+.card{border:1px solid var(--line);border-radius:9px;padding:6px 8px;display:flex;flex-direction:column;gap:1px;background:var(--bg)}
+.card b{font-size:11px}.card span{font-size:9.5px;color:var(--ink2)}
+.cap{font-size:13px;line-height:1.35}
+.cap b{font:700 12px var(--mono);margin-right:4px}
+.tag{font:700 9px var(--mono);letter-spacing:.05em;text-transform:uppercase;align-self:flex-start;padding:2px 7px;border-radius:999px;border:1.5px solid var(--ink);white-space:nowrap}
+.tag.build{border-style:dashed;border-color:var(--ink2);color:var(--ink2)}
+.tag.off{border-color:var(--off);color:var(--off)}
+
+/* report */
+.rep{display:flex;flex-direction:column;gap:6px}
+.rep .hd{display:flex;gap:7px;align-items:center}
+.rep .th{width:40px;height:40px;border-radius:8px;flex:none;background:color-mix(in srgb,var(--ai) 14%,var(--surface));display:grid;place-items:center}
+.rep .th svg{width:28px;height:28px}
+.rep .nm{font:700 11px/1.2 var(--display)}
+.verdict{font:700 10px var(--body);padding:3px 8px;border-radius:999px;color:#fff;align-self:flex-start}
+.rrow{display:flex;justify-content:space-between;gap:6px;font-size:10px;border-bottom:1px solid var(--line);padding-block:2px}
+.rrow b{font-family:var(--mono);font-size:10px;font-variant-numeric:tabular-nums}
+.rbar{width:100%;height:26px;display:block}
+
+.lots{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lots .lab{font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);margin-right:4px}
+.lots button{font:600 13.5px var(--body);border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+.lots button[aria-pressed="true"]{background:var(--ai);color:#fff;border-color:var(--ai)}
+.after{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}
+.repbig{border:2px dashed var(--ink2);border-radius:16px;padding:16px 18px;background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.repbig .ttl{font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ai)}
+.repbig .rep{gap:9px}.repbig .rep .nm{font-size:17px}.repbig .th{width:56px;height:56px}.repbig .th svg{width:38px;height:38px}
+.repbig .verdict{font-size:13px;padding:4px 11px}.repbig .rrow{font-size:14.5px;padding-block:6px}.repbig .rrow b{font-size:14px}.repbig .rbar{height:auto;max-height:64px}.repbig .nt{font-size:12.5px}
+.outcome{display:flex;flex-direction:column;gap:8px;padding:16px 18px;border-radius:16px;background:var(--bg);font-size:15.5px}
+.outcome .ttl{font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+.outcome b{font-family:var(--mono)}
+footer{font-size:13.5px;color:var(--ink2);max-width:86ch}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">TrustSquare · the screens behind each ripple</div>
+  <h1>Ripple App Flows</h1>
+  <p class="lede">The same three stories, told as the screens each person taps through. Read each row left to right. The frame of each screen tells you whether that screen is in the app today or still has to be built.</p>
+  <div class="legends">
+    <div class="legend" aria-label="Screen status key">
+      <div class="ttl">Frame = where the screen stands</div>
+      <div class="lg"><span class="fr"></span>In the app today <small>Quick or TrustSquare</small></div>
+      <div class="lg"><span class="fr build"></span>To build <small>new screen or new use</small></div>
+      <div class="lg"><span class="fr off"></span>Off the app <small>WhatsApp or the auction house</small></div>
+    </div>
+    <div class="legend" aria-label="Colour key">
+      <div class="ttl">Colour bar = what the step does</div>
+      <div class="lg"><span class="sw" style="background:var(--quick)"></span>Lists (Quick)</div>
+      <div class="lg"><span class="sw" style="background:var(--share)"></span>Shares a link <small>free</small></div>
+      <div class="lg"><span class="sw" style="background:var(--buzz)"></span>Buzz &amp; regulars <small>free</small></div>
+      <div class="lg"><span class="sw" style="background:var(--intro)"></span>Tuppence introduction <small>1T</small></div>
+      <div class="lg"><span class="sw" style="background:var(--ai)"></span>AI check or report <small>1T–5T each</small></div>
+      <div class="lg"><span class="sw" style="background:var(--off)"></span>Outside TrustSquare</div>
+    </div>
+  </div>
+</header>
+
+
+<section class="story" id="f2">
+  <div class="kicker" style="color:var(--buzz)">Example 2 · one quick link to repeat buyers</div>
+  <h2>Marietjie sends one link, and her regulars order by Buzz</h2>
+  <p class="sum">Row A is Marietjie bringing her eight regulars in and taking an order by Buzz, all free. Row B is a regular's friend reaching her through a 1T introduction, then getting her own Quick.</p>
+  <h3>A · Her regulars join and order <small>free for everyone</small></h3>
+  <div class="flow" data-flow="f2a"></div>
+  <h3>B · A friend of a regular <small>Sarie, who bakes rusks</small></h3>
+  <div class="flow" data-flow="f2b"></div>
+</section>
+
+<footer>Screen status comes from reading the app's own on-screen text and code on 27 Sep 2026, not from a live walk-through. Jacques's input screens are drawn from what each AI feature does; the exact fields in the app may differ. Names, prices and report figures are illustrative examples. 1T ≈ R36.</footer>
+</div>
+<script>
+(function(){
+const FN={quick:['var(--quick)','var(--quick-ink)'],share:['var(--share)','#fff'],buzz:['var(--buzz)','#fff'],intro:['var(--intro)','#fff'],ai:['var(--ai)','#fff'],off:['var(--off)','#fff']};
+const TAG={app:'In the app',build:'To build',off:'Off the app'};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const R$=v=>'R'+Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+
+function qr(seed){let h='',x=seed||7;for(let i=0;i<81;i++){x=(x*1103515245+12345)&0x7fffffff;const r=Math.floor(i/9),c=i%9;
+  const finder=(r<3&&c<3)||(r<3&&c>5)||(r>5&&c<3); const dark=finder?!(r%2===1&&c%2===1&&false)&&!((r===1&&c===1)||(r===1&&c===7)||(r===7&&c===1)):(x>>8)%2===0;
+  h+=`<i class="${dark?'':'w'}"></i>`}return `<div class="qr">${h}</div>`}
+
+const ICON={
+ Antiques:'<svg viewBox="0 0 28 28"><rect x="6" y="3" width="16" height="20" rx="2" fill="none" stroke="var(--ai)" stroke-width="2"/><line x1="14" y1="3" x2="14" y2="23" stroke="var(--ai)" stroke-width="2"/><line x1="8" y1="23" x2="8" y2="26" stroke="var(--ai)" stroke-width="2"/><line x1="20" y1="23" x2="20" y2="26" stroke="var(--ai)" stroke-width="2"/></svg>',
+ Jewellery:'<svg viewBox="0 0 28 28"><circle cx="14" cy="17" r="8" fill="none" stroke="var(--ai)" stroke-width="2.4"/><path d="M10 6 L14 2 L18 6 L14 10 Z" fill="var(--ai)"/></svg>',
+ Property:'<svg viewBox="0 0 28 28"><path d="M4 14 L14 5 L24 14" fill="none" stroke="var(--ai)" stroke-width="2.2" stroke-linejoin="round"/><rect x="7" y="13" width="14" height="11" fill="none" stroke="var(--ai)" stroke-width="2"/><rect x="12" y="17" width="4" height="7" fill="var(--ai)"/></svg>'
+};
+
+function body(items){return items.map(it=>{const [t,a,b]=it;switch(t){
+  case 'h':return `<h4>${esc(a)}</h4>`;
+  case 'p':return `<p class="p">${esc(a)}</p>`;
+  case 'nt':return `<p class="nt">${esc(a)}</p>`;
+  case 'chips':return `<div class="chips">${a.map(([l,on])=>`<span class="chip${on?' on':''}">${esc(l)}</span>`).join('')}</div>`;
+  case 'inp':return `<div class="inp"><span>${esc(a)}</span><b>${esc(b)}</b></div>`;
+  case 'btn':return `<div class="btn">${esc(a)}</div>`;
+  case 'btns2':return `<div class="btns2"><i>${esc(a)}</i><i>${esc(b)}</i></div>`;
+  case 'photos':return `<div class="photos">${a.map(([l,got])=>`<div class="ph${got?' got':''}">${esc(l)}</div>`).join('')}</div>`;
+  case 'code':return `<div class="code">${'418207'.split('').map(d=>`<i>${d}</i>`).join('')}</div>`;
+  case 'qr':return qr(a);
+  case 'bub':return `<div class="bub${b&&b.me?' me':''}"><small>${esc(a)}</small>${esc(b.t)}</div>`;
+  case 'lst':return `<div class="lst">${a.map(([n,s])=>`<div><span>${esc(n)}</span><em>${esc(s)}</em></div>`).join('')}</div>`;
+  case 'card':return `<div class="card"><b>${esc(a)}</b><span>${esc(b)}</span></div>`;
+  case 'raw':return a;
+ }}).join('')}
+
+function screen(s,i){
+  const [c,ci]=FN[s.fn];
+  return `<div class="stepc${s.wide?' wide':''}"><div class="phone ${s.st==='app'?'':s.st}" style="--fn:${c};--fnink:${ci}">
+    <div class="bar"><span>${esc(s.app)}</span><span>${esc(s.who||'')}</span></div>
+    <div class="scr">${body(s.body)}</div></div>
+    <span class="tag ${s.st==='app'?'':s.st}">${TAG[s.st]}</span>
+    <div class="cap"><b>${i+1}</b>${esc(s.cap)}</div></div>`;
+}
+function draw(key,screens){const el=document.querySelector(`[data-flow="${key}"]`);if(el)el.innerHTML=screens.map(screen).join('')}
+
+/* ---------- Example 1 ---------- */
+draw('f1a',[
+ {fn:'quick',st:'app',app:'Quick',who:'Annatjie',cap:'Opens Quick and taps Offer a service.',body:[['h','What do you need?'],['chips',[['Find a pro'],['Offer a service',1],['Find something'],['Sell something'],['Find a place'],['List a place']]]]},
+ {fn:'quick',st:'app',app:'Quick',who:'Annatjie',cap:'Picks Home cleaner.',body:[['h','What kind of work?'],['chips',[['Home cleaner',1],['Office cleaner'],['Window cleaner'],['Pool cleaner']]],['nt','We ask once. This phone remembers it.']]},
+ {fn:'quick',st:'app',app:'Quick',who:'Annatjie',cap:'Sets her area and working days.',body:[['h','Where do you work?'],['inp','Which area?','Menlyn, Pretoria'],['h','Which days are you open?'],['chips',[['Mon',1],['Tue',1],['Wed',1],['Thu',1],['Fri',1],['Sat'],['Sun']]]]},
+ {fn:'quick',st:'app',app:'Quick',who:'Annatjie',cap:'Types her own price.',body:[['h','From what price, per job?'],['inp','Per job','R350'],['nt','Your price, your call. Type what your work is worth.']]},
+ {fn:'quick',st:'app',app:'Quick',who:'Annatjie',cap:'Adds photos and one line about her work.',body:[['h','Add your own photos'],['photos',[['photo',1],['photo',1],['+']]],['inp','Describe it','Thorough, reliable, own transport']]},
+ {fn:'quick',st:'app',app:'Quick',who:'Annatjie',cap:'Confirms her phone and signs the terms.',body:[['h','Your phone number'],['inp','Phone','082 ••• ••••'],['code'],['btn','Sign the terms and publish']]},
+ {fn:'quick',st:'app',app:'Quick',who:'Annatjie',cap:'Live. Her number stays private.',body:[['h','Your listing is live.'],['p','People can find it now. Your name and number stay private until you accept an introduction.'],['btn','Share the link']]}
+]);
+draw('f1b',[
+ {fn:'share',st:'app',app:'Quick',who:'Annatjie',cap:'Annatjie shares Quick with her friend Sannie.',body:[['h','Share the link'],['nt','Let them scan the code with their camera — or share the link.'],['qr',11],['btn','Send it on WhatsApp']]},
+ {fn:'off',st:'off',app:'WhatsApp',who:'Sannie',cap:'Sannie gets the link on WhatsApp.',body:[['bub','Annatjie',{t:'Get your own Quick — list your cleaning for free.'}],['nt','They get their own Quick — never your listing, your key link or your number. It works once.'],['btn','Open the link']]},
+ {fn:'quick',st:'app',app:'Quick',who:'Sannie',cap:'Sannie accepts and makes her own listing (row A again).',body:[['h','Accepted — Quick is on their phone.'],['p','Make a listing for your work in a few taps. Free.'],['btn','Offer a service']]},
+ {fn:'buzz',st:'app',app:'Quick',who:'Elsabé',cap:'Her employer Elsabé buzzes her. Free.',body:[['h','Buzz — one line to the other phone'],['bub','Elsabé',{t:'Can you come Thursday instead?'}],['nt','It arrives as a notification on their phone. It is free — no SMS.'],['btn','Send a buzz']]},
+ {fn:'intro',st:'app',app:'TrustSquare',who:'Karin',cap:'Elsabé passes the listing on. Her friend Karin asks for an introduction.',body:[['card','Home cleaner · Menlyn','From R350 per job · Mon–Fri'],['nt','A new customer costs 1 Tuppence. Your own regulars are free.'],['btn','Request introduction · 1T']]},
+ {fn:'intro',st:'app',app:'TrustSquare',who:'Annatjie',cap:'Annatjie accepts. Karin pays only if she accepts.',body:[['h','Introduction request'],['card','A new customer in Menlyn','Wants a weekly clean'],['nt','If you decline or ignore it, they pay nothing.'],['btns2','Accept','Decline']]},
+ {fn:'intro',st:'app',app:'TrustSquare',who:'Both',cap:'They are introduced and arrange the work themselves.',body:[['h','Introduction accepted'],['p','You can now contact each other.'],['card','Karin','New customer · via Elsabé'],['nt','Nothing more is charged for this pair.']]}
+]);
+
+/* ---------- Example 2 ---------- */
+draw('f2a',[
+ {fn:'share',st:'app',app:'Quick',who:'Marietjie',cap:'Her honey listing is live. She taps Share the link.',body:[['h','Your listing is live.'],['card','Raw honey · 500 g jar','R95 · Pretoria East'],['btn','Share the link']]},
+ {fn:'off',st:'off',app:'WhatsApp',who:'Marietjie',cap:'Sends it once to her WhatsApp list of 8 regulars.',body:[['h','Send to…'],['lst',[['Honey regulars','8'],['Bets',''],['Gert',''],['Hanlie','']]],['btn','Send']]},
+ {fn:'buzz',st:'app',app:'Quick',who:'Bets',cap:'Bets joins from the link in one step. Free, no card.',body:[['bub','Marietjie',{t:'Order your honey here from now on.'}],['nt','This is the only thing they are asked for, and it is what signs them up — free, no card.'],['btn','Continue']]},
+ {fn:'buzz',st:'app',app:'Quick',who:'Marietjie',cap:'Her regulars list fills up. Regulars are free.',body:[['h','Your regulars'],['lst',[['Bets','joined'],['Gert','joined'],['Hanlie','joined'],['Wimpie','joined'],['Ria','joined']]],['nt','You brought them — they joined from your own link.']]},
+ {fn:'buzz',st:'app',app:'Quick',who:'Bets',cap:'Bets orders with one buzz.',body:[['h','Buzz — one line to the other phone'],['bub','Bets',{t:'2 jars for Saturday please.'}],['btn','Send a buzz']]},
+ {fn:'buzz',st:'app',app:'Quick',who:'Marietjie',cap:'Marietjie buzzes back. No SMS cost.',body:[['bub','Bets',{t:'2 jars for Saturday please.'}],['bub','You',{t:'Ready Saturday from 10:00.',me:1}],['nt','One line to your regular customers — on my way, running late, job done.']]}
+]);
+draw('f2b',[
+ {fn:'off',st:'off',app:'Word of mouth',who:'Hanlie',cap:'Hanlie tells her friend Sarie about the honey.',body:[['bub','Hanlie',{t:'Look up Marietjie’s honey on TrustSquare, it’s the best.'}]]},
+ {fn:'intro',st:'app',app:'TrustSquare',who:'Sarie',cap:'Sarie finds the listing and asks for an introduction.',body:[['card','Raw honey · 500 g jar','R95 · Pretoria East'],['nt','A new customer costs 1 Tuppence.'],['btn','Request introduction · 1T']]},
+ {fn:'intro',st:'app',app:'TrustSquare',who:'Marietjie',cap:'Marietjie accepts. Sarie becomes a customer.',body:[['h','Introduction request'],['card','A new customer','Wants 4 jars a month'],['btns2','Accept','Decline']]},
+ {fn:'share',st:'app',app:'Quick',who:'Marietjie',cap:'Sarie bakes rusks, so Marietjie gives her Quick too.',body:[['h','Share the link'],['nt','Let them scan the code.'],['qr',23]]},
+ {fn:'quick',st:'app',app:'Quick',who:'Sarie',cap:'Sarie lists her rusks and starts her own ripple.',body:[['h','Your listing is live.'],['card','Buttermilk rusks · 1 kg','R120 · Pretoria East'],['btn','Share the link']]}
+]);
+
+/* ---------- Example 3 ---------- */
+const LOTS=[
+ {k:'Bench',lane:'Antiques',item:'Stinkwood riempie bench',lot:12,guide:[4000,6000],lo:8500,hi:10000,what:'Riempie bench, stinkwood',age:'About 1880',cond:'Riempies redone, frame sound',size:'1.6 m long',photos:['front','joints','underside'],day:{buy:4800,sell:9200}},
+ {k:'Armoire',lane:'Antiques',item:'Yellowwood armoire, Cape Dutch',lot:47,guide:[15000,20000],lo:26000,hi:31000,what:'Armoire, yellowwood',age:'Early 1800s',cond:'Original hinges, one door repaired',size:'2.1 m tall',photos:['front','hinges','back panel'],day:{buy:17500,sell:28500}},
+ {k:'Rug',lane:'Antiques',item:'Persian rug, hand-knotted',lot:63,guide:[6000,8000],lo:7500,hi:9000,what:'Persian rug, wool',age:'About 1960',cond:'Worn edge on one side',size:'2 × 3 m',photos:['top','knots','worn edge'],day:{buy:14000,sell:null}},
+ {k:'Ring',lane:'Jewellery',item:'18ct gold ring, 0.5ct diamond',lot:8,guide:[10000,14000],lo:17000,hi:20000,what:'Ring, 18ct gold, solitaire',age:'1990s',cond:'Hallmarked, stone clean',size:'0.5 ct diamond',photos:['ring','hallmark','stone'],day:{buy:11500,sell:18500}},
+ {k:'Tea service',lane:'Jewellery',item:'Victorian silver tea service',lot:21,guide:[7000,9000],lo:12000,hi:14500,what:'Tea service, sterling silver',age:'About 1890',cond:'Four pieces, light dents',size:'4 pieces',photos:['set','hallmarks','dent']},
+ {k:'Brooch',lane:'Jewellery',item:'Art Deco sapphire brooch',lot:34,guide:[12000,16000],lo:15000,hi:18000,what:'Brooch, platinum, sapphires',age:'1930s',cond:'One small stone replaced',size:'4 cm wide',photos:['front','back','clasp'],day:{buy:26000,sell:null}},
+ {k:'Flat',lane:'Property',item:'2-bed flat, Pretoria East',lot:3,guide:[560000,650000],lo:780000,hi:820000,what:'2-bed, 1-bath flat, 78 m²',age:'Built 2004',cond:'Needs paint, new geyser 2023',size:'Rent in area ~R7 200 / month',photos:['outside','kitchen','view'],rent:7200,yld:'10.8%',day:{buy:590000,sell:790000}},
+ {k:'House',lane:'Property',item:'3-bed house, Centurion',lot:5,guide:[980000,1100000],lo:1350000,hi:1450000,what:'3-bed, 2-bath house, 1 000 m² stand',age:'Built 1998',cond:'Roof redone, garden overgrown',size:'Rent in area ~R11 200 / month',photos:['street','lounge','garden'],rent:11200,yld:'9.6%',day:{buy:1020000,sell:1380000}}
+];
+LOTS[4].day={buy:7900,sell:13200};
+
+const CM={m:{buy:1.20125,auc:0.79875,lbl:'Buyer’s premium',v:'17.5% + VAT',sell:'re-auctioned (17.5% + VAT commission)'},p:{buy:1.155,auc:0.9425,lbl:'Buyer’s commission',v:'10% + VAT, + ~4% transfer',sell:'sold through an agent (5% + VAT)'}};
+const kind=L=>L.lane==='Property'?'p':'m';
+const topBid=L=>L.lo/CM[kind(L)].buy*0.9;
+const FEAT=L=>L.lane==='Property'?{n:'Property Area Dossier',t:3,subj:'Subject',read:'Indicative area band'}:{n:'Collectables + market report',t:5,subj:'Item identified',read:'Suggested asking band'};
+function report(L,big){
+  const C=CM[kind(L)], top=topBid(L), F=FEAT(L);
+  const mx=Math.max(L.hi,L.guide[1])*1.06, mn=Math.min(top,L.guide[0])*0.9, X=v=>(6+(v-mn)/(mx-mn)*168).toFixed(1);
+  const bar=`<svg class="rbar" viewBox="0 0 180 26"><line x1="4" x2="176" y1="13" y2="13" stroke="var(--line)" stroke-width="2"/>
+    <rect x="${X(L.guide[0])}" y="9" width="${(X(L.guide[1])-X(L.guide[0])).toFixed(1)}" height="8" rx="2" fill="var(--off)" opacity=".55"/>
+    <rect x="${X(L.lo)}" y="5" width="${(X(L.hi)-X(L.lo)).toFixed(1)}" height="16" rx="3" fill="var(--ai)" opacity=".4"/>
+    ${big?`<line x1="${X(top)}" x2="${X(top)}" y1="2" y2="24" stroke="var(--ai)" stroke-width="2.5"/>`:''}</svg>`;
+  const below=L.guide[1]<L.lo;
+  const verdict=below?['Guide is below the market range','var(--buzz)']:['Guide is close to the market range','var(--intro)'];
+  if(!big) return `<div class="rep"><div class="hd"><div class="th">${ICON[L.lane]}</div><div class="nm">${esc(F.n)}</div></div>
+    <div class="rrow"><span>${F.subj}</span><b>${esc(L.item.split(',')[0])}</b></div>
+    <div class="rrow"><span>${F.read}</span><b style="color:var(--ai)">${R$(L.lo)}–${R$(L.hi)}</b></div>
+    <p class="nt">Indicative only · dated today</p></div>`;
+  const sub=t=>`<div class="ttl" style="margin-top:6px;color:var(--ink2)">${t}</div>`;
+  return `<div class="rep"><div class="hd"><div class="th">${ICON[L.lane]}</div><div class="nm">${esc(L.item)}</div></div>
+    ${sub('The report says · '+F.n+' · '+F.t+'T')}
+    <div class="rrow"><span>${F.subj}</span><b>${esc(L.what)}</b></div>
+    <div class="rrow"><span>${F.read}</span><b style="color:var(--ai)">${R$(L.lo)}–${R$(L.hi)}</b></div>
+    ${L.rent?`<div class="rrow"><span>Rent in the area</span><b>${R$(L.rent)} / month</b></div>`:''}
+    ${sub('His own sums, before auction day')}
+    <span class="verdict" style="background:${verdict[1]}">${verdict[0]}</span>${bar}
+    <div class="rrow"><span>Auction guide</span><b>${R$(L.guide[0])}–${R$(L.guide[1])}</b></div>
+    <div class="rrow"><span>Auction costs</span><b>${C.v}</b></div>
+    <div class="rrow"><span>Top hammer bid <small style="color:var(--ink2)">(keeps 10% for him)</small></span><b style="color:var(--ai)">${R$(top)}</b></div>
+    <div class="rrow"><span>To sell it again</span><b>ask ${R$(L.lo)}–${R$(L.hi)}</b></div>
+    <p class="nt">Grey = auction guide · purple = market range from the report · purple line = his top hammer bid after costs</p></div>`;
+}
+
+function jacques(L){
+  const prop=L.lane==='Property', F=FEAT(L), t=F.t;
+  const s=[
+   {fn:'off',st:'off',app:'Auction',who:'Catalogue',cap:'Jacques sees the lot in a real auction catalogue.',body:[['h',`Lot ${L.lot} · ${L.item}`],['raw',`<div class="card" style="align-items:center;padding:10px">${ICON[L.lane]}</div>`],['inp','Guide price',`${R$(L.guide[0])}–${R$(L.guide[1])}`],['nt','Viewing Friday · sale Saturday 10:00']]},
+   {fn:'ai',st:'app',app:'TrustSquare',who:'Jacques',cap:`Opens AI Features and picks ${F.n}.`,body:[['h','AI Features'],['lst',[['Collectables + market report','5T'],['Property Area Dossier','3T'],['Car Purchase Dossier','3T'],['Collection Liquidation Plan','5T']]],['chips',[[F.n,1]]],['nt','See an example before you pay.']]},
+   {fn:'ai',st:'app',app:'TrustSquare',who:'Jacques',cap:'Adds his own photos from the viewing.',body:[['h','Add photos'],['photos',L.photos.map(p=>[p,1])],['nt',prop?'Outside, inside and the street tell the most.':'Marks, joints and any damage matter most.']]},
+   {fn:'ai',st:'app',app:'TrustSquare',who:'Jacques',cap:'Describes what it is and its condition.',body:[['h','Describe it'],['inp','What is it?',L.what],['inp',prop?'Age':'Age or period',L.age],['inp','Condition',L.cond]]},
+   {fn:'ai',st:'app',app:'TrustSquare',who:'Jacques',cap:'Pays from his Tuppence balance.',body:[['h','Confirm'],['lst',[[F.n,t+'T']]],['nt','Charged from your Tuppence balance.'],['btn',`Pay ${t}T and run it`]]},
+   {fn:'ai',st:'app',app:'TrustSquare',who:'Report',cap:'Gets the report: what it is and its market range.',body:[['raw',report(L,false)]]},
+   {fn:'off',st:'off',app:'His sums',who:'Jacques',cap:'Takes the auction costs off to set his top bid.',body:[['h','My top bid'],['inp','Market range (low)',R$(L.lo)],['inp','Auction costs',CM[kind(L)].v],['inp','Keep for me','10%'],['raw',`<div class="card"><b style="color:var(--ai)">Top bid ${R$(topBid(L))}</b><span>hammer price, before costs</span></div>`]]}
+  ];
+  draw('f3',s);
+  document.querySelector('[data-report="f3"]').innerHTML=`<div class="ttl">Screens 6 and 7, enlarged · ${F.n}</div>`+report(L,true);
+  const o=document.querySelector('[data-outcome="f3"]'), C=CM[kind(L)], top=topBid(L), b=L.day.buy, cost=b*C.buy;
+  const row=(k,v,c)=>`<div class="rrow" style="font-size:14.5px;padding-block:5px"><span>${k}</span><b style="font-size:14px${c?';color:'+c:''}">${v}</b></div>`;
+  if(L.day.sell==null){
+    o.innerHTML=`<span class="ttl">Auction day</span>`+row('Valuation',`${t}T ≈ ${R$(t*36)}`,'var(--ai)')+row('His top hammer bid',R$(top),'var(--ai)')+row('Bidding passed',R$(b))+row('All-in, with '+C.v,R$(cost))+`<span>He stopped at his top bid. Overpay avoided: <b style="color:var(--auction)">${R$(cost-L.hi)}</b>.</span>`;
+    document.querySelector('[data-flow="f3c"]').innerHTML='<p class="nt" style="font-size:14px">Nothing to sell. He walked away and kept his money.</p>';
+    return;
+  }
+  const na=L.day.sell*C.auc-cost, nt=L.day.sell-cost;
+  o.innerHTML=`<span class="ttl">Auction day and after</span>`+row('Valuation',`${t}T ≈ ${R$(t*36)}`,'var(--ai)')+row('Won at (hammer)',`${R$(b)} <small>top was ${R$(top)}</small>`)+row('All-in, with '+C.v,R$(cost))+row('Sold again at',R$(L.day.sell))+row('Net if '+C.sell,'+'+R$(na),'var(--ink2)')+row('Net on a free TrustSquare listing','+'+R$(nt),'var(--buzz)');
+  draw('f3c',[
+   {fn:'quick',st:'app',app:'Quick',who:'Jacques',cap:prop?'He lists it with List a place. Listing is free.':'He lists it with Sell a piece. Listing is free.',body:[['h',prop?'List a place':'Sell a piece'],['card',L.item,prop?'Pretoria':'Collected, cleaned, photographed'],['inp','Asking price',R$(L.day.sell)],['nt','This is your asking price — buyers see it as asked, not as a valuation.']]},
+   {fn:'ai',st:'build',app:'Quick',who:'Jacques',cap:'He attaches the same AI report to his listing.',body:[['h','Attach your report?'],['raw',`<div class="card"><b>${FEAT(L).n}</b><span>Market range ${R$(L.lo)}–${R$(L.hi)}</span></div>`],['nt','Buyers see the fair range next to your price. Your top bid and costs stay private.'],['btn','Attach report']]},
+   {fn:'ai',st:'app',app:'TrustSquare',who:'Buyer',cap:'A buyer checks the price for 1T and sees it is fair.',body:[['card',L.item,'Asking '+R$(L.day.sell)],['h','Is this a fair price?'],['raw',`<span class="verdict" style="background:var(--buzz)">Fair — inside the market range</span>`],['nt','Our AI compares the asking price to current SA market rates.']]},
+   {fn:'intro',st:'app',app:'TrustSquare',who:'Buyer',cap:'The buyer pays 1T for the introduction. Jacques pays no commission.',body:[['h','Introduction request'],['card','A new buyer','Wants to view this week'],['nt','If you decline or ignore it, they pay nothing.'],['btns2','Accept','Decline']]}
+  ]);
+}
+const lb=document.querySelector('[data-lots="f3"]');
+if(lb){
+  const btns=LOTS.map((L,i)=>{const b=document.createElement('button');b.type='button';b.textContent=L.k;b.addEventListener('click',()=>{btns.forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');jacques(L)});lb.appendChild(b);return b});
+  btns[1].setAttribute('aria-pressed','true'); btns.forEach((b,i)=>{if(i!==1)b.setAttribute('aria-pressed','false')});
+  jacques(LOTS[1]);
+}
+})();
+</script>
+</body>
+</html>

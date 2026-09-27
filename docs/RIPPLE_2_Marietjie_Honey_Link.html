@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Ripple 2 — Marietjie's honey link</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#EDF2F0; --surface:#FFFFFF; --ink:#13201C; --ink2:#51615C; --line:#D3DDD9; --ring:#B4C4BE;
+  --share:#12968A; --buzz:#3B9A3B; --quick:#DE9C12; --intro:#E0602A; --ai:#7757D4; --auction:#C4325E; --upgrade:#2C6BD2;
+  --quick-ink:#2A1C00;
+  --display:'Bricolage Grotesque',ui-sans-serif,system-ui,sans-serif;
+  --body:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){color-scheme:dark;
+    --bg:#0B1311; --surface:#121D1A; --ink:#E3ECE9; --ink2:#98AAA4; --line:#22322D; --ring:#3A554E;
+    --share:#2BBFAD; --buzz:#5BBF58; --quick:#F2B532; --intro:#F57A43; --ai:#9D84F2; --auction:#E25A82; --upgrade:#5C95F2;}
+}
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#0B1311; --surface:#121D1A; --ink:#E3ECE9; --ink2:#98AAA4; --line:#22322D; --ring:#3A554E;
+  --share:#2BBFAD; --buzz:#5BBF58; --quick:#F2B532; --intro:#F57A43; --ai:#9D84F2; --auction:#E25A82; --upgrade:#5C95F2;}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);padding-inline:16px;padding-block:28px 56px;margin:0}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+.eyebrow{font:700 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+h1{font:800 clamp(36px,5.4vw,60px)/1 var(--display);margin:8px 0 12px;letter-spacing:-.015em;text-wrap:balance}
+.lede{max-width:66ch;color:var(--ink2);margin:0;font-size:17px}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:20px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.legend .ttl{font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);width:100%}
+.lg{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600}
+.lg small{font-weight:400;color:var(--ink2);font-size:13px}
+.sw{width:22px;height:22px;border-radius:6px;flex:none;display:grid;place-items:center;font:700 9.5px var(--mono);color:#fff}
+.sw.q{color:var(--quick-ink)}
+nav.jump{display:flex;flex-wrap:wrap;gap:8px}
+nav.jump a{font-weight:600;font-size:15px;color:var(--ink);text-decoration:none;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+nav.jump a:hover{border-color:var(--ink2)}
+nav.jump a:focus-visible{outline:2px solid var(--share);outline-offset:2px}
+
+section.story{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding-block:26px;padding-inline:clamp(16px,3vw,34px);display:flex;flex-direction:column;gap:18px;scroll-margin-top:16px}
+.story-head{display:flex;flex-direction:column;gap:6px}
+.kicker{font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+h2{font:700 clamp(26px,3.2vw,38px)/1.08 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+p.sum{margin:0;max-width:72ch;color:var(--ink2)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .lab{font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);margin-right:4px}
+.controls button{font:600 14px var(--body);border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:6px 13px;border-radius:999px;cursor:pointer}
+.controls button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.controls button.play{border-color:var(--share);color:var(--share);background:transparent}
+.controls button:focus-visible{outline:2px solid var(--share);outline-offset:2px}
+.dia{overflow-x:auto;border-radius:14px}
+.dia svg{display:block;width:100%;height:auto}
+.dia svg.radial{min-width:760px}
+.dia svg.loop{min-width:640px;max-width:900px;margin:0 auto}
+.dia text{font-family:var(--body)}
+.nm{font:700 15px var(--display);fill:var(--ink)}
+.nm.big{font-size:19px}
+.rl{font-size:13px;fill:var(--ink2)}
+.ft{font:700 14px var(--display);fill:var(--ink)}
+.halo{paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-linejoin:round}
+.ringc{fill:none;stroke:var(--ring);stroke-width:1.2;stroke-dasharray:3 7}
+.kick{font-family:var(--mono);font-weight:700}
+.glyph{font-family:var(--mono);font-weight:700;text-anchor:middle;dominant-baseline:central}
+[data-lv]{transition:opacity .55s ease}
+@media (prefers-reduced-motion:reduce){[data-lv]{transition:none}}
+
+.stats{display:flex;flex-wrap:wrap;gap:8px}
+.stat{display:flex;align-items:center;gap:9px;padding:8px 13px;border-radius:12px;background:var(--bg);font-size:14.5px}
+.stat b{font:700 19px var(--mono);font-variant-numeric:tabular-nums}
+.stat i{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
+.note{font-size:13.5px;color:var(--ink2);margin:0}
+
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;font-weight:600}
+.pn{width:34px;height:34px;border-radius:50%;display:inline-grid;place-items:center;color:#fff;font:700 16px var(--display);flex:none}
+.pn.q{color:var(--quick-ink)}
+.arr{font:700 12px var(--mono);letter-spacing:.04em;padding:4px 10px;border-radius:999px;border:1.5px solid currentColor}
+
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:980px;font-size:14.5px}
+th{font:700 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);text-align:left;padding:8px 8px;border-bottom:1.5px solid var(--line)}
+td{padding:11px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td .lane{font:700 12px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+td .item{font-weight:600}
+td .sub{font-size:12.5px;color:var(--ink2)}
+.res{font-family:var(--mono);font-weight:700;white-space:nowrap}
+.barsvg{width:170px;height:30px;display:block}
+.value{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.vt{background:var(--bg);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.vt b{font:700 26px var(--mono);font-variant-numeric:tabular-nums}
+.vt span{font-size:14px;color:var(--ink2)}
+footer{font-size:13.5px;color:var(--ink2);max-width:80ch}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">TrustSquare · how one person becomes many</div>
+  <h1>Ripple Stories</h1>
+  <p class="lede">Three people, three ripples. Each ring is one step further from the person who started it, and every colour is a different thing they do on TrustSquare.</p>
+  <div class="legend" aria-label="Colour key">
+    <div class="ttl">Colour = what the person does</div>
+    <div class="lg"><span class="sw" style="background:var(--share)">↗</span>Shares a link <small>free</small></div>
+    <div class="lg"><span class="sw" style="background:var(--buzz)">Bz</span>Buzz &amp; bookings <small>free, own regulars</small></div>
+    <div class="lg"><span class="sw q" style="background:var(--quick)">+</span>Lists (Quick) <small>becomes a seller</small></div>
+    <div class="lg"><span class="sw" style="background:var(--intro)">1T</span>Tuppence introduction <small>1T ≈ R36</small></div>
+    <div class="lg"><span class="sw" style="background:var(--ai)">AI</span>AI check or report <small>1T–5T each</small></div>
+    <div class="lg"><span class="sw" style="background:var(--auction)">Bid</span>Auctions <small>trust-gated</small></div>
+    <div class="lg"><span class="sw" style="background:var(--upgrade)">$</span>Plan upgrade <small>$5 / $20</small></div>
+  </div>
+</header>
+
+
+<section class="story" id="ex2">
+  <div class="story-head">
+    <div class="kicker" style="color:var(--buzz)">Example 2 · one quick link to repeat buyers</div>
+    <h2>Marietjie's honey link turns her regulars into a network</h2>
+    <p class="sum">Marietjie sends one quick link to her eight repeat honey buyers. They order free by Buzz and pass her on to friends, who reach her through paid introductions. Two of those friends start selling too, and each sends a quick link of their own.</p>
+  </div>
+  <div class="controls" data-for="ex2"></div>
+  <div class="dia"><svg class="radial" viewBox="-640 -470 1280 940" role="img" aria-label="Ripple diagram for Marietjie"></svg></div>
+  <div class="stats" data-stats="ex2"></div>
+</section>
+
+<footer>Names, lots and Rand figures are illustrative examples, not forecasts. Rand values use 1T ≈ R36. AI verdicts are guidance. Auction rates vary by house; the ones used are listed under Example 3.</footer>
+</div>
+<script>
+(function(){
+const NS='http://www.w3.org/2000/svg';
+const GLYPH={share:'↗',buzz:'Bz',quick:'+',intro:'1T',ai:'AI',auction:'Bid',upgrade:'$'};
+const STATL={share:['shares onward','shares onward'],buzz:['free Buzz user','free Buzz users'],quick:['new seller','new sellers'],intro:['Tuppence intro','Tuppence intros'],ai:['AI check','AI checks'],auction:['auction bid','auction bids'],upgrade:['plan upgrade','plan upgrades']};
+const RINGS=['Seed','1 · First share','2 · Their referrals','3 · New features'];
+const R=[0,140,260,375], NR=[36,23,19,15];
+const col=f=>`var(--${f})`, ink=f=>f==='quick'?'var(--quick-ink)':'#fff';
+function el(tag,a,p){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+function tx(p,x,y,s,cls,anchor,extra){const t=el('text',Object.assign({x,y,class:cls,'text-anchor':anchor||'middle'},extra||{}),p);t.textContent=s;return t}
+const rad=d=>d*Math.PI/180;
+
+const DATA={
+ ex1:[
+  {id:'A',n:'Annatjie',r:'Housecleaner · Quick listing',f:'quick',l:0},
+  {id:'e',n:'Elsabé',r:'Her employer · Buzz',f:'buzz',l:1,p:'A',a:200,v:'buzz'},
+  {id:'s',n:'Sannie',r:'Cleaner friend · lists too',f:'quick',l:1,p:'A',a:-20,v:'share'},
+  {id:'k',n:'Karin',r:"Elsabé's friend · 1T intro",f:'intro',l:2,p:'e',a:150,v:'share'},
+  {id:'ri',n:'Riana',r:"Elsabé's sister · 1T intro",f:'intro',l:2,p:'e',a:195,v:'share'},
+  {id:'lz',n:'Lize',r:'Neighbour · 1T intro',f:'intro',l:2,p:'e',a:240,v:'share'},
+  {id:'h',n:'Hettie',r:"Sannie's employer · Buzz",f:'buzz',l:2,p:'s',a:-62,v:'share'},
+  {id:'m',n:'Marlize',r:"Sannie's employer · Buzz",f:'buzz',l:2,p:'s',a:-18,v:'share'},
+  {id:'g',n:'Magda',r:"Sannie's friend · lists",f:'quick',l:2,p:'s',a:30,v:'share'},
+  {id:'k1',t:'Sells her old couch',s:'Quick listing',f:'quick',l:3,p:'k',a:126},
+  {id:'k2',t:'Books a Karoo weekend',s:'Adventures · 1T intro',f:'intro',l:3,p:'k',a:152},
+  {id:'r1',t:'"Is this a fair price?"',s:'on a used car · 1T',f:'ai',l:3,p:'ri',a:184},
+  {id:'z1',t:'Finds a gardener',s:'1T intro',f:'intro',l:3,p:'lz',a:216},
+  {id:'z2',t:'Lists her guest flat',s:'Starter plan · $5',f:'upgrade',l:3,p:'lz',a:244},
+  {id:'h1',t:'Yield Estimate',s:'on a rental flat · 1T',f:'ai',l:3,p:'h',a:-82},
+  {id:'m1',t:'Bids on an antique clock',s:'Auctions',f:'auction',l:3,p:'m',a:-34},
+  {id:'g1',t:'Her 3 employers join',s:'free Buzz bookings',f:'buzz',l:3,p:'g',a:14},
+  {id:'g2',t:'Shares with her friend',s:'the next ripple starts',f:'share',l:3,p:'g',a:44}
+ ],
+ ex2:[
+  {id:'M',n:'Marietjie',r:'Honey seller · Quick link',f:'quick',l:0},
+  {id:'b',n:'Bets',r:'Regular · Buzz order',f:'buzz',l:1,p:'M',a:-90,v:'share'},
+  {id:'gt',n:'Gert',r:'Regular · Buzz order',f:'buzz',l:1,p:'M',a:-45,v:'share'},
+  {id:'hn',n:'Hanlie',r:'Regular · Buzz order',f:'buzz',l:1,p:'M',a:0,v:'share'},
+  {id:'w',n:'Wimpie',r:'Regular · Buzz order',f:'buzz',l:1,p:'M',a:45,v:'share'},
+  {id:'ra',n:'Ria',r:'Regular · Buzz order',f:'buzz',l:1,p:'M',a:90,v:'share'},
+  {id:'ko',n:'Kobus',r:'Regular · Buzz order',f:'buzz',l:1,p:'M',a:135,v:'share'},
+  {id:'el',n:'Elna',r:'Regular · Buzz order',f:'buzz',l:1,p:'M',a:180,v:'share'},
+  {id:'dw',n:'Dawie',r:'Regular · Buzz order',f:'buzz',l:1,p:'M',a:225,v:'share'},
+  {id:'lt',n:'Lettie',r:"Bets's friend · 1T intro",f:'intro',l:2,p:'b',a:-76,v:'share'},
+  {id:'fk',n:'Frik',r:"Gert's cousin · 1T intro",f:'intro',l:2,p:'gt',a:-31,v:'share'},
+  {id:'sr',n:'Sarie',r:'Bakes rusks · lists too',f:'quick',l:2,p:'hn',a:14,v:'share'},
+  {id:'jo',n:'Johan',r:"Wimpie's colleague · 1T intro",f:'intro',l:2,p:'w',a:59,v:'share'},
+  {id:'mk',n:'Mariska',r:"Ria's daughter · 1T intro",f:'intro',l:2,p:'ra',a:104,v:'share'},
+  {id:'ch',n:'Christo',r:'Makes biltong · lists too',f:'quick',l:2,p:'ko',a:149,v:'share'},
+  {id:'ty',n:'Tanya',r:"Elna's neighbour · 1T intro",f:'intro',l:2,p:'el',a:194,v:'share'},
+  {id:'ne',n:'Nelia',r:"Dawie's sister · 1T intro",f:'intro',l:2,p:'dw',a:239,v:'share'},
+  {id:'x1',t:'"Is this a fair price?"',s:'on a fridge · 1T',f:'ai',l:3,p:'lt',a:-96},
+  {id:'x2',t:'Bids on a trailer',s:'Auctions',f:'auction',l:3,p:'fk',a:-52},
+  {id:'x3',t:'Sends her own quick link',s:'a new ripple starts',f:'share',l:3,p:'sr',a:-10},
+  {id:'x4',t:'Needs more listings',s:'Starter plan · $5',f:'upgrade',l:3,p:'sr',a:18},
+  {id:'x5',t:'Books a Kruger stay',s:'Adventures · 1T intro',f:'intro',l:3,p:'jo',a:52},
+  {id:'x6',t:'Yield Estimate',s:'on her first flat · 1T',f:'ai',l:3,p:'mk',a:97},
+  {id:'x7',t:'Sends his own quick link',s:'a new ripple starts',f:'share',l:3,p:'ch',a:134},
+  {id:'x8',t:'"Is this a fair price?"',s:'on a used bakkie · 1T',f:'ai',l:3,p:'ch',a:160},
+  {id:'x9',t:'Lists a used pram',s:'Quick listing',f:'quick',l:3,p:'ty',a:196},
+  {id:'x10',t:'Finds a home hairdresser',s:'1T intro',f:'intro',l:3,p:'ne',a:236}
+ ]
+};
+
+function pos(n){return n.l===0?{x:0,y:0}:{x:R[n.l]*Math.cos(rad(n.a)),y:R[n.l]*Math.sin(rad(n.a))}}
+
+function radial(key){
+  const sec=document.getElementById(key); if(!sec)return;
+  const svg=sec.querySelector('svg.radial'), nodes=DATA[key], by={};
+  nodes.forEach(n=>by[n.id]=n);
+  const gR=el('g',{},svg), gE=el('g',{},svg), gN=el('g',{},svg);
+  for(let i=1;i<=3;i++) el('circle',{cx:0,cy:0,r:R[i],class:'ringc','data-lv':i},gR);
+  nodes.forEach(n=>{ if(!n.p)return;
+    const p=by[n.p], a=pos(p), b=pos(n), mr=(R[p.l]+R[n.l])/2;
+    const cx=mr*Math.cos(rad(n.a)), cy=mr*Math.sin(rad(n.a));
+    const f=n.l===3?n.f:n.v;
+    el('path',{d:`M${a.x.toFixed(1)} ${a.y.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`,fill:'none',style:`stroke:${col(f)}`,'stroke-width':[0,3.4,2.4,1.8][n.l],'stroke-linecap':'round','stroke-dasharray':n.l===3?'4 5':'none',opacity:.85,'data-lv':n.l},gE);
+  });
+  nodes.forEach(n=>{
+    const g=el('g',{'data-lv':n.l},gN), c=pos(n);
+    if(n.l<3){
+      const r=NR[n.l];
+      el('circle',{cx:c.x,cy:c.y,r:r+4,style:`fill:${col(n.f)}`,opacity:.18},g);
+      el('circle',{cx:c.x,cy:c.y,r,style:`fill:${col(n.f)}`},g);
+      tx(g,c.x,c.y,n.n[0],'glyph',null,{style:`fill:${ink(n.f)};font-size:${[22,16,14][n.l]}px`});
+      tx(g,c.x,c.y+r+17,n.n,'nm halo'+(n.l===0?' big':''));
+      tx(g,c.x,c.y+r+(n.l===0?36:32),n.r,'rl halo');
+    }else{
+      el('rect',{x:c.x-15,y:c.y-15,width:30,height:30,rx:7,style:`fill:${col(n.f)}`},g);
+      tx(g,c.x,c.y,GLYPH[n.f],'glyph',null,{style:`fill:${ink(n.f)};font-size:${GLYPH[n.f].length>2?9.5:11}px`});
+      const d=R[3]+28, cs=Math.cos(rad(n.a)), sn=Math.sin(rad(n.a));
+      const x=d*cs, y=d*sn, an=cs>0.35?'start':cs<-0.35?'end':'middle';
+      let y1=y-3,y2=y+14;
+      if(an==='middle'){ if(sn<0){y1=y-20;y2=y-4}else{y1=y+10;y2=y+26} }
+      tx(g,x,y1,n.t,'ft halo',an); tx(g,x,y2,n.s,'rl halo',an);
+    }
+  });
+  // controls
+  const ctl=sec.querySelector('.controls');
+  const lab=document.createElement('span');lab.className='lab';lab.textContent='Grow the ripple';ctl.appendChild(lab);
+  const btns=RINGS.map((name,i)=>{const b=document.createElement('button');b.type='button';b.textContent=name;b.addEventListener('click',()=>{stop();show(i)});ctl.appendChild(b);return b});
+  const play=document.createElement('button');play.type='button';play.className='play';play.textContent='▶ Play the spread';ctl.appendChild(play);
+  let timers=[];
+  function stop(){timers.forEach(clearTimeout);timers=[]}
+  function show(k){svg.querySelectorAll('[data-lv]').forEach(e=>{e.style.opacity=(+e.dataset.lv<=k)?'':'0.07'});btns.forEach((b,i)=>b.setAttribute('aria-pressed',String(i===k)))}
+  play.addEventListener('click',()=>{stop();[0,1,2,3].forEach((k,i)=>timers.push(setTimeout(()=>show(k),i*1150)))});
+  show(3);
+  // stats
+  const st=sec.querySelector('[data-stats]'); const cnt={}; let people=0, feats=0;
+  nodes.forEach(n=>{if(n.l===0)return; cnt[n.f]=(cnt[n.f]||0)+1; if(n.l<3)people++; else feats++;});
+  const add=(num,label,c)=>{const d=document.createElement('div');d.className='stat';d.innerHTML=(c?`<i style="background:${c}"></i>`:'')+`<b>${num}</b><span>${label}</span>`;st.appendChild(d)};
+  add(people,'people reached in two rings'); add(feats,'new things they start doing');
+  ['quick','intro','ai','auction','upgrade','buzz','share'].forEach(f=>{if(cnt[f])add(cnt[f],STATL[f][cnt[f]>1?1:0],col(f))});
+}
+
+function loop(){
+  const sec=document.getElementById('ex3'); if(!sec)return;
+  const svg=sec.querySelector('svg.loop'), RR=245, W=232, H=106;
+  const ST=[
+    {f:'ink2',a:-90,k:'1 · FIND · OFF THE APP',t:'Reads the catalogue',d:['Real auction lots: antiques,','jewellery and property']},
+    {f:'ai',a:-18,k:'2 · VALUE · 3T–5T',t:'Values it on TrustSquare',d:['Collectables + market report 5T,','Property Area Dossier 3T']},
+    {f:'ai',a:54,k:'3 · DECIDE · FREE',t:'Sets his top bid',d:['Fair value, less auction costs','and a 10% margin for himself']},
+    {f:'ink2',a:126,k:'4 · BUY · OFF THE APP',t:'Bids at the real auction',d:['Arrives with prior info;','pays the auction house']},
+    {f:'ink2',a:198,k:'5 · RESELL · NEW BUYERS',t:'Sells it again',d:['Specialist auction, or a free','TrustSquare listing']}
+  ];
+  el('circle',{cx:0,cy:0,r:RR,fill:'none',style:'stroke:var(--ring)','stroke-width':2.5},svg);
+  ST.forEach(s=>{const m=rad(s.a+36),P={x:RR*Math.cos(m),y:RR*Math.sin(m)},t={x:-Math.sin(m),y:Math.cos(m)},n={x:Math.cos(m),y:Math.sin(m)};
+    const tip=`${P.x+t.x*10},${P.y+t.y*10}`, b1=`${P.x-t.x*7+n.x*7},${P.y-t.y*7+n.y*7}`, b2=`${P.x-t.x*7-n.x*7},${P.y-t.y*7-n.y*7}`;
+    el('polygon',{points:`${tip} ${b1} ${b2}`,style:'fill:var(--ink2)'},svg);});
+  el('circle',{cx:0,cy:0,r:88,style:'fill:var(--bg);stroke:var(--line)'},svg);
+  el('circle',{cx:0,cy:-44,r:20,style:'fill:var(--ai)'},svg);
+  tx(svg,0,-44,'J','glyph',null,{style:'fill:#fff;font-size:17px;font-family:var(--display)'});
+  tx(svg,0,-2,'Jacques','nm',null,{style:'font-size:22px'});
+  tx(svg,0,20,"Marietjie's brother",'rl');
+  tx(svg,0,40,'pays 3T–5T per valuation','rl',null,{style:'font-family:var(--mono);font-size:11px'});
+  ST.forEach(s=>{const cx=RR*Math.cos(rad(s.a)), cy=RR*Math.sin(rad(s.a)), x=cx-W/2, y=cy-H/2, g=el('g',{},svg), c=col(s.f), on=s.f==='ai';
+    el('rect',{x,y,width:W,height:H,rx:14,style:`fill:var(--surface);stroke:${c}`,'stroke-width':on?2.5:1.5,'stroke-dasharray':on?'none':'6 4'},g);
+    el('rect',{x,y,width:8,height:H,rx:4,style:`fill:${c}`},g);
+    tx(g,x+20,y+23,s.k,'kick','start',{style:`fill:${c};font-size:10.5px;letter-spacing:.05em`});
+    tx(g,x+20,y+47,s.t,'ft','start',{style:'font-size:17px'});
+    tx(g,x+20,y+70,s.d[0],'rl','start'); tx(g,x+20,y+88,s.d[1],'rl','start');
+  });
+  // eight lots: only valuation features cost Tuppence. Costs: movables 17.5%+VAT both ways; property 10%+VAT commission + ~4% transfer/conveyancing, agent 5%+VAT on resale
+  const COST={m:{buy:1.20125,auc:0.79875,how:'incl. premium'},p:{buy:1.155,auc:0.9425,how:'incl. commission, transfer'}};
+  const D=[
+    {lane:'Antiques',k:'m',c:'var(--quick)',item:'Stinkwood riempie bench',use:[['Collectables + market report',5]],lo:8500,hi:10000,buy:4800,sell:9200},
+    {lane:'Antiques',k:'m',c:'var(--quick)',item:'Yellowwood armoire, Cape Dutch',use:[['Collectables + market report',5]],lo:26000,hi:31000,buy:17500,sell:28500},
+    {lane:'Antiques',k:'m',c:'var(--quick)',item:'Persian rug, hand-knotted',use:[['Collectables + market report',5]],lo:7500,hi:9000,buy:14000,sell:null},
+    {lane:'Jewellery',k:'m',c:'var(--ai)',item:'18ct gold ring, 0.5ct diamond',use:[['Collectables + market report',5]],lo:17000,hi:20000,buy:11500,sell:18500},
+    {lane:'Jewellery',k:'m',c:'var(--ai)',item:'Victorian silver tea service',use:[['Collectables + market report',5]],lo:12000,hi:14500,buy:7900,sell:13200},
+    {lane:'Jewellery',k:'m',c:'var(--ai)',item:'Art Deco sapphire brooch',use:[['Collectables + market report',5]],lo:15000,hi:18000,buy:26000,sell:null},
+    {lane:'Property',k:'p',c:'var(--upgrade)',item:'2-bed flat, Pretoria East',use:[['Property Area Dossier',3]],lo:780000,hi:820000,buy:590000,sell:790000},
+    {lane:'Property',k:'p',c:'var(--upgrade)',item:'3-bed house, Centurion',use:[['Property Area Dossier',3]],lo:1350000,hi:1450000,buy:1020000,sell:1380000}
+  ];
+  const R$=v=>(v<0?'−':'')+'R'+Math.round(Math.abs(v)).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  const tb=sec.querySelector('table[data-deals] tbody');
+  let netA=0, netT=0, spent=0, avoided=0, deals=0, walked=0;
+  D.forEach(d=>{
+    const t=d.use.reduce((a,u)=>a+u[1],0), C=COST[d.k]; spent+=t;
+    const top=d.lo/C.buy*0.9, cost=d.buy*C.buy;
+    const tr=document.createElement('tr');
+    const ham=d.sell==null?`<span class="sub">bidding passed</span><br>${R$(d.buy)}`:`${R$(d.buy)}<div class="sub">top bid ${R$(top)}</div>`;
+    let a,b,allin,sold;
+    if(d.sell!=null){
+      const na=d.sell*C.auc-cost, nt=d.sell-cost; netA+=na; netT+=nt; deals++;
+      allin=`${R$(cost)}<div class="sub">${C.how}</div>`; sold=R$(d.sell);
+      a=`<span class="res" style="color:var(--ink2)">+${R$(na)}</span>`; b=`<span class="res" style="color:var(--buzz)">+${R$(nt)}</span>`;
+    }else{
+      const ov=d.buy*C.buy-d.hi; avoided+=ov; walked++;
+      allin=`<span class="sub">would have been</span><br>${R$(d.buy*C.buy)}`; sold='<span class="sub">did not bid</span>';
+      a=`<span class="res" style="color:var(--auction)">${R$(ov)}</span><div class="sub">overpay avoided</div>`; b='<span class="sub">—</span>';
+    }
+    const ref=d.sell==null?d.buy*C.buy:cost;
+    const mx=Math.max(d.hi,ref,d.sell||0)*1.06, mn=Math.min(d.lo,ref)*0.85, X=v=>(8+(v-mn)/(mx-mn)*204).toFixed(1);
+    let bar=`<svg class="barsvg" viewBox="0 0 220 30"><line x1="8" x2="212" y1="15" y2="15" style="stroke:var(--line)" stroke-width="2"/><rect x="${X(d.lo)}" y="7" width="${(X(d.hi)-X(d.lo)).toFixed(1)}" height="16" rx="3" style="fill:var(--ai)" opacity=".38"/>`;
+    if(d.sell!=null) bar+=`<line x1="${X(cost)}" x2="${X(d.sell)}" y1="15" y2="15" style="stroke:var(--buzz)" stroke-width="4" stroke-linecap="round"/><circle cx="${X(d.sell)}" cy="15" r="6" style="fill:var(--share)"/>`;
+    else bar+=`<line x1="${X(d.hi)}" x2="${X(ref)}" y1="15" y2="15" style="stroke:var(--auction)" stroke-width="4" stroke-dasharray="4 3"/>`;
+    bar+=`<circle cx="${X(ref)}" cy="15" r="6" style="fill:var(--ink2)"/></svg>`;
+    const how=d.use.map(u=>u[0]).join(' + ');
+    tr.innerHTML=`<td><span class="lane" style="color:${d.c}">${d.lane}</span><div class="item">${d.item}</div></td><td><span class="res" style="color:var(--ai)">${t}T</span> <span class="sub">≈${R$(t*36)}</span><div class="sub">${how}</div></td><td class="num">${R$(d.lo)}–<br>${R$(d.hi)}</td><td class="num">${ham}</td><td class="num">${allin}</td><td class="num">${sold}</td><td>${a}</td><td>${b}</td><td>${bar}</td>`;
+    tb.appendChild(tr);
+  });
+  const v=sec.querySelector('[data-value]');
+  [[`${spent}T`,`paid for ${D.length} valuations (≈${R$(spent*36)}), nothing else`,'var(--ai)'],
+   [R$(netT),`net on ${deals} bargains sold on a free TrustSquare listing`,'var(--buzz)'],
+   [R$(netA),`net on the same ${deals} if he re-auctions them or uses an agent`,'var(--ink2)'],
+   [R$(avoided),`all-in overpay avoided on ${walked} lots he walked away from`,'var(--auction)']].forEach(([b,s,c])=>{
+    const d=document.createElement('div');d.className='vt';d.innerHTML=`<b style="color:${c}">${b}</b><span>${s}</span>`;v.appendChild(d)});
+}
+radial('ex1'); radial('ex2'); loop();
+})();
+</script>
+</body>
+</html>

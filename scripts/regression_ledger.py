@@ -31959,5 +31959,29 @@ def rg_demo_inactive_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "demo examples are marked and both introduction doors refuse them first")]
 
+
+@entry("RG-0529", "AA-SEAM-1: the AI Features service (Collectables report, dossiers, plans) runs on the same lane order as "
+       "the main app -- OpenAI base, Anthropic failover -- and never dies because one vendor has no key",
+       LOCKED, fixed_on="2026-09-27",
+       scope="AdvertAgent/service/advert_agent.py: run_model() lane loop (openai Responses API + hosted web_search, then "
+             "anthropic), keys read from env or /var/www/marketsquare/.env, /ai/health reports lanes; bea_known_user forwards "
+             "the person's own ts_user + X-Api-Key (SEC-GATE-1 made /users/{email} a signed-in route); bea_commit passes the "
+             "BEA's 402/403 sentence through instead of a 500. CLASS: a service outside the seam hard-wired to one vendor.",
+       ref="David 27 Sep 2026 ('Yes please do'), after the Ripple E2E audit found every AI Features run returning 503. "
+           "PROBED 27 Sep: /ai/health lanes=[openai]; server-side runs collectables_advert (gpt-5.6-terra, $0.058) and "
+           "property_dossier ($0.214) delivered sourced reports; the in-app run now stops at the BEA closed-testing guard "
+           "with its own sentence (David's ruling, not a fault).")
+def rg_aa_seam_1():
+    try:
+        h = json.loads(_get("/ai/health"))
+    except Exception as e:
+        return [(INFO, "NOT EVALUATED - /ai/health unreadable from here (%s)" % str(e)[:80])]
+    lanes = h.get("lanes")
+    if lanes is None:
+        return [(FAIL, "/ai/health no longer reports lanes -- the AI Features service is back on a single hard-wired vendor")]
+    if "openai" not in lanes:
+        return [(FAIL, "AI Features base lane (openai) is not configured: lanes=%s" % lanes)]
+    return [(INFO, "AI Features lanes live: %s" % ", ".join(lanes))]
+
 if __name__ == "__main__":
     sys.exit(main())
