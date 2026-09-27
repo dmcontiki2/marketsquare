@@ -32130,12 +32130,16 @@ def rg_receipt_email_1():
 @entry("RG-0535", "RUL-191 RIPPLE-2: the Ripple stories work as advertised -- a seller's own Buzz link for her regulars, "
        "paid reports kept (My reports) and attachable to his listing, a 1T fair-price check on Collectors and Local "
        "Market, a tester's single-use 200T invitation, and several areas per worker in Quick",
-       OPEN, fixed_on="2026-09-27",
+       LOCKED, fixed_on="2026-09-27",
        scope="ripple_features.py (TESTER-INVITE-1, BUZZ-JOIN-1, REPORT-ATTACH-1) mounted in bea_main.py before the route "
              "gate + join.html at /join/<token> (nginx location); ms.js bzMyLink, aiLoadMyReports/aiOpenJob/aiAttachOffer/"
              "msReportBadge, Local Market fair-price block; AdvertAgent jobs()/job() (REPORT-KEEP-1); ai_service_tiers + "
              "tier_resolvers + _fair_price_resolve (FAIR-PRICE-LM-1); quick.html AREAS-MULTI-1 + suburb/area search.",
-       ref="David 27 Sep 2026 (RUL-191). Promote to LOCKED after the rendered re-run on live trustsquare.co.")
+       ref="David 27 Sep 2026 (RUL-191). LOCKED 27 Sep after the rendered re-run on live trustsquare.co at phone width "
+           "(0dc7cfe): QA invite -> signed in by code -> 200T; honey seller's Buzz link -> Karin connected and buzzed; "
+           "Jacques reopened the Krugerrand report from My reports and attached it to listing 429 -> buyer sees 'Market "
+           "range R78,000-R84,000'; Collectors 1T check returned the Numista figure (1T charged); Quick cleaner listed "
+           "Menlyn, Centurion, Lynnwood and a Lynnwood search finds her. Local Market's check stays hidden until eBay keys.")
 def rg_ripple2_rul191():
     bea = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html")
     rf = repo_file("ripple_features.py"); jh = repo_file("join.html")

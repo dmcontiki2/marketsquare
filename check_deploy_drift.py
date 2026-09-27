@@ -49,6 +49,32 @@ FILEMAP = {
     "demo_sellers.json":      "demo_sellers.json",
 }
 
+# DRIFT-MANIFEST-1 (27 Sep 2026, RIPPLE-2): the 19 files above were the ONLY ones compared, so a change to any
+# other shipped file (ripple_features.py, join.html, tier_resolvers.py ...) read "clean - in sync" and the nightly
+# / on-request ship said SHIPPED while shipping nothing. Every "src | dest" line of the deploy manifest is now
+# compared as well; FILEMAP stays as the explicit base.
+def _manifest_map():
+    out = {}
+    try:
+        with open(os.path.join(HERE, "ops", "autodeploy", "deploy_manifest.txt"), encoding="utf-8") as f:
+            for ln in f:
+                ln = ln.split("#", 1)[0].strip()
+                if "|" not in ln:
+                    continue
+                src, dst = [x.strip() for x in ln.split("|", 1)]
+                # binaries ride the media lane (git ignores them), so only text sources are compared here
+                if os.path.splitext(src)[1].lower() in (".jpg", ".jpeg", ".png", ".gif", ".webp", ".mp4", ".webm",
+                                                        ".gz", ".zip", ".pdf", ".ico", ".woff", ".woff2", ".mp3"):
+                    continue
+                if src and dst and not dst.endswith("/") and "*" not in src and os.path.isfile(os.path.join(HERE, src)):
+                    out[src] = dst
+    except Exception:
+        return {}
+    return out
+
+for _src, _dst in _manifest_map().items():
+    FILEMAP.setdefault(_src, _dst)
+
 _CACHEBUST_RE = re.compile(rb"\?v=[0-9]+")
 
 def _md5(path):
