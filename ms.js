@@ -19325,7 +19325,7 @@ async function aiPoll(jobId, t){
     if(typeof aiOpts!=='undefined' && aiOpts && aiVerifiedOn()){ try{ document.getElementById('ai-result').insertAdjacentHTML('afterbegin', renderVerifiedCards(aiOpts)); }catch(e){} }
     aiDrawMap(wps);
     document.getElementById('ai-meta').textContent =
-      j.cost_usd>0 ? `model ${j.model} · ${j.searches} web searches` : 'sample preview — superseded by the first real run';
+      j.cost_usd>0 ? `${j.searches} web searches` : 'sample preview — superseded by the first real run';   // NO-MODEL-LABEL-1: never name the AI model to the customer (David, 17 Sep 2026)
     const sb=document.getElementById('ai-safetybox');
     const ml=document.querySelector('#ai-maplinks a');
     AI_LAST = { fn: AI_SEL?AI_SEL.name:'AI report',
@@ -19417,7 +19417,9 @@ function aiDrawMap(wps){
 function aiEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function aiInline(s){return s
   .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,function(m,t,u){ return (/^https?:\/\/[^\s"'<>]+$/.test(u) && !/&(quot|#39|lt|gt);/i.test(u)) ? '<a href="'+u+'" target="_blank" rel="noopener">'+t+'</a>' : t; })
-  .replace(/listing #([\w-]+)/gi,'listing <a href="javascript:void(0)" onclick="aiOpenListing(\'$1\')" style="font-weight:700">#$1</a>')
+  .replace(/listing #([\w-]+)/gi,function(m,id){   // AI-LINK-TRUTH-1: link only a listing that exists (an auction 'lot 47' became a link to listing #47)
+    try{ if(String(id).startsWith('example') || (typeof findListing==='function' && (findListing(id) || findListing('bea_'+id)))) return 'listing <a href="javascript:void(0)" onclick="aiOpenListing(\''+id+'\')" style="font-weight:700">#'+id+'</a>'; }catch(_){}
+    return m; })
   .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')}
 
 // Tap-through from an AI report to the listing — the introduction is the revenue moment.
