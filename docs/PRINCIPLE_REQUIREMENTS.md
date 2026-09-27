@@ -13,7 +13,7 @@ When the Codex is updated, regenerate this file from Claude Chat and replace all
 
 ### A1 · Tuppence is the only transaction currency
 - 1 Tuppence (1T) = USD $2. Fixed. Not configurable.
-- The requester pays (the service consumer — the buyer, for introductions). Tuppence follows the HOLD (CC-001): committed on request → burned on delivery (seller accepts / AI result delivered) → released in full on decline, 48-h expiry, or AI failure. A release frees an un-spent hold — it is never a refund.
+- The requester pays (the service consumer — the buyer, for introductions). Tuppence follows the HOLD (CC-001): committed on request → burned on delivery (seller accepts / AI result delivered) → released in full on decline, withdrawal, removal of a request left unanswered for 96 h (RESP-1; the −5 lands at 48 h), or AI failure. A release frees an un-spent hold — it is never a refund.
 - Seller earns zero commission. TrustSquare earns from intro fees + subscriptions only.
 - Applies to: FEA wallet · BEA /intros/accept · Paystack flow · all pricing displays.
 
