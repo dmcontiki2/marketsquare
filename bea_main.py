@@ -16197,15 +16197,33 @@ def admin_identity_confirm(body: _IdConfirmIn, _admin=Depends(_require_admin_or_
 def identity_status(email: str, _key: str = Depends(auth.require_api_key),
                     ts_user: str = Cookie(default=None),
                     x_admin_key: str = Header(default=None)):
-    """Return KYC status for a seller — used by admin Document Hub."""
+    """Return KYC status for a seller — used by admin Document Hub.
+
+    RUL-176 (27 Sep 2026): this response used to carry banking_holder, banking_bank,
+    banking_account_last4 and banking_added_at. It was the READ side of a store that the
+    ruling removed, and it kept reporting those four fields after the write side was gone —
+    a surface still describing data we had undertaken not to hold. Removed, and replaced by
+    the three VERDICT columns that took their place (migration 060): each is a yes/no and a
+    date, and none of them can carry an account number, a bank or a name.
+    """
     email = _actor(ts_user, email, "identity-status", x_admin_key)
     email = email.lower().strip()
     conn = database.get_db()
-    row = conn.execute(
-        """SELECT id_name, id_doc_type, id_verified_at, id_ai_score,
-                  banking_holder, banking_bank, banking_account_last4, banking_added_at
-           FROM users WHERE email=?""", (email,)
-    ).fetchone()
+    try:
+        row = conn.execute(
+            """SELECT id_name, id_doc_type, id_verified_at, id_ai_score,
+                      phone_verified_at, payment_name_verified_at, bank_name_verified_at
+               FROM users WHERE email=?""", (email,)
+        ).fetchone()
+    except Exception as e:
+        # A missing verdict column means migration 060 has not run on this box. Say that
+        # plainly rather than 500 with a bare SQL error — the operator needs to know WHICH
+        # thing is not there, and the honest answer is "the migration", not "the seller".
+        conn.close()
+        raise HTTPException(status_code=503,
+                            detail="Identity verdict columns are not present on this "
+                                   "deployment yet (migrations/060_identity_verdicts.py). "
+                                   "SQL said: %s" % str(e)[:120]) from e
     conn.close()
     if not row:
         raise HTTPException(status_code=404, detail="Seller not found")

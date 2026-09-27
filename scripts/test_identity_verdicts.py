@@ -62,6 +62,26 @@ def main():
           "category.lm.banking" not in bea)
     check("the app no longer reads stored bank details",
           "banking_added_at" not in msjs and "banking_account_last4" not in msjs)
+    # The READ side matters as much as the write side: identity-status kept REPORTING the
+    # four banking fields after the store was removed, which is a surface still describing
+    # data we had undertaken not to hold. Found on the live box post-deploy, 27 Sep.
+    m_idst = re.search(r'def identity_status\(.*?\n(?=\n@app\.|\n# )', bea, re.S)
+    idst = m_idst.group(0) if m_idst else ""
+    check("identity-status exists", bool(idst))
+    # Check the SELECT, not the prose: the docstring legitimately NAMES the fields it
+    # removed, and a test that cannot tell an explanation from a live reference is a test
+    # that will be silenced by rewording rather than by fixing.
+    m_sel = re.search(r"SELECT id_name.*?FROM users WHERE email=", idst, re.S)
+    sel = m_sel.group(0) if m_sel else ""
+    check("  ... its SELECT exists", bool(sel))
+    check("  ... its SELECT no longer reads the retired banking fields",
+          "banking_" not in sel, "SELECT still reads: %s"
+          % ", ".join(sorted(set(re.findall(r"banking_\w+", sel)))))
+    check("  ... it reports the three verdicts instead",
+          all(c in idst for c in ("phone_verified_at", "payment_name_verified_at",
+                                  "bank_name_verified_at")))
+    check("  ... a missing verdict column names the MIGRATION, not the seller",
+          "060_identity_verdicts.py" in idst and "503" in idst)
 
     print("the five columns are LEFT ALONE (dropping them is David's, not mine):")
     mig = os.path.join(REPO, "migrations", "060_identity_verdicts.py")

@@ -55,3 +55,13 @@ as per your suggestion is good, i approve it."* **RUL-176 and RUL-178.**
   `predeploy_check.py` to **DANGER**. `_utc_now()` exists for exactly this and its own docstring warns
   about the trap. Converted all four; verdict back to REVIEW. Gates after: `rulings_check` 150 rulings
   **0 FAIL**; `test_trust_base40`, `test_trust_evidence_true` and all seven instrument tests exit 0.
+
+- **Found by the post-deploy probe, not by reading the diff: the READ side had been left behind.**
+  `GET /users/{email}/identity-status` was still returning `banking_holder`, `banking_bank`,
+  `banking_account_last4` and `banking_added_at` after the write side was gone — a live surface still
+  describing data we had just undertaken not to hold. All four removed from its SELECT and replaced by
+  the three verdict columns. It now also answers **503 naming `migrations/060_identity_verdicts.py`**
+  if a verdict column is missing, rather than a bare SQL 500: an operator needs to know that the
+  MIGRATION is not there, not that the seller isn't. The test was extended to cover the read side, and
+  checks the SELECT rather than the prose — the docstring legitimately names the fields it removed, and
+  a check that cannot tell an explanation from a live reference is one that gets silenced by rewording.
