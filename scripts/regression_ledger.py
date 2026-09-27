@@ -31920,13 +31920,15 @@ def rg_grant_who_1():
 
 @entry("RG-0528", "DEMO-INACTIVE-1: demo examples stay visible but are marked, and no introduction can be made to one "
        "-- the buyer is told there is no real product or service, before anything is held or charged",
-       OPEN, fixed_on="2026-09-27",
+       LOCKED, fixed_on="2026-09-27",
        scope="bea_main.py: _is_demo_example (house accounts @trustsquare.co / @example.com, or is_demo), demo_example "
              "flag on /listings, /listings/{id}, the Local Market list and detail, zoom; /intros and /local-market/intro "
              "refuse with DEMO_EXAMPLE_DETAIL (family test accounts exempt). ms.js: badge on cards and pages, the "
              "request button says so, the modal refuses. SCOPE: every category. CLASS: a showcase advert that behaves "
              "like a real one turns a real buyer away with a wrong reason.",
-       ref="RUL-187, David 27 Sep 2026. Found while checking which Local Market sellers had under 1T: all were house accounts.")
+       ref="RUL-187, David 27 Sep 2026. LOCKED after the rendered check: bdf5c88 live 07:54Z; Browse shows 41 Demo example badges "
+           "of 58 cards (the 17 unmarked are the two real sellers); the Local Market sideboard's button reads 'Demo example' and a tap "
+           "shows the warning with no modal. The server refusal was not fired live: the only signed-in account is exempt.")
 def rg_demo_inactive_1():
     bm = repo_file("bea_main.py"); js = repo_file("ms.js")
     if bm is None or js is None:
