@@ -12,3 +12,9 @@ OPEN (owner: whichever lane holds ms.js / bea_main.py / quick.html next)
 4. AI Features cards still carry a "PRO" badge although every signed-in customer may run them (RUL-188).
 5. After a Local Market Accept the Seller Hub still shows the old Tuppence balance (4 instead of 3) until reload.
 6. Attached report shows name + date but no market range for the Krugerrand.
+
+## Closed 27 Sep 2026, 20:20 UTC (walk 3 re-run)
+- 1 names, 2 hidden-casual card, 4 PRO badge, 5 balance refresh: fixed (RG-0537), seen on the live app.
+- 3 fair price on Collectors: live (Numista R74,517 vs R84,900, 1T charged). Local Market waits on EBAY_APP_ID / EBAY_CERT_ID.
+- 6 attached report range: shows 'Market range R78,000-R84,000'.
+- QA listings 428, 430, 433, 434 deleted.

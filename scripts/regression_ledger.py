@@ -32211,6 +32211,8 @@ def rg_ripple_walk_3():
         bad.append("AI cards show PRO while the Pro gate is dormant")
     if "_msRefreshBalance" not in js:
         bad.append("the hub keeps the old Tuppence figure after an Accept")
+    if "function qItemTitle(" not in q or 'id="qpitem"' not in q:
+        bad.append("Quick no longer lets a Local Market / Collectors seller name the item")
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "names asked; hidden worker told; no PRO label; balance refreshes")]

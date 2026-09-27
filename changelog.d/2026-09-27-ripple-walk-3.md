@@ -4,3 +4,4 @@
 - AI Feature cards no longer say PRO while every signed-in customer may run them (RUL-188).
 - BALANCE-AFTER-ACCEPT-1: the hub's Tuppence figure refreshes after an Accept.
 - The introduction form no longer prefills the first half of the buyer's email as her name; the name she types becomes her account name when she has none.
+- ITEM-NAME-1: a Local Market or Collectors seller in Quick can say exactly what it is ("Raw honey, 500 g jar"); it becomes the listing title instead of "Food & preserves".
