@@ -24166,13 +24166,23 @@ async def _web_comps_band(title: str, city, country) -> dict | None:
              "items. Every price must be one you READ on that exact page; never estimate, never average, never invent a "
              "page. currency is ZAR or USD only. If you cannot find at least 3, return {\"comps\":[]}.")
     import asyncio as _wa
-    text, _urls, _it, _ot, model = await _wa.to_thread(
-        ai_provider.web_search_json, instr, "Item: %s\nWhere: %s, %s" % (title[:160], city or "", country or "ZA"))
-    seen = {_wc_norm(x) for x in _urls}
-    try:
-        _log_ai_spend("", "/listings/price-check#web-comps", "reason", _it, _ot, provider="openai", model=model)
-    except Exception:
-        pass
+    # The listing title carries her area ("Raw honey, 500 g jar — Pretoria East"); a comparable is the same KIND of
+    # item anywhere in the country, online shops included -- searching her suburb found nothing (walk 3).
+    _item = title.split(" \u2014 ")[0].strip() or title
+    _cn = {"ZA": "South Africa", "UK": "United Kingdom", "US": "United States", "AU": "Australia",
+           "NA": "Namibia", "KE": "Kenya"}.get(str(country or "ZA").upper(), str(country or "South Africa"))
+    _q = "Item: %s\nCountry: %s (any town, and online shops count)" % (_item[:160], _cn)
+    text, seen = "", set()
+    for _try in range(2):   # one retry when the first search comes back empty
+        _t, _urls, _it, _ot, model = await _wa.to_thread(ai_provider.web_search_json, instr, _q)
+        seen |= {_wc_norm(x) for x in _urls}
+        try:
+            _log_ai_spend("", "/listings/price-check#web-comps", "reason", _it, _ot, provider="openai", model=model)
+        except Exception:
+            pass
+        text = _t or ""
+        if '"url"' in text:
+            break
     m = _wr.search(r"\{[\s\S]*\}", text or "")
     try:
         comps = (_wj.loads(m.group(0)) if m else {}).get("comps") or []
