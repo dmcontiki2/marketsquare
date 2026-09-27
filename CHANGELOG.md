@@ -24853,3 +24853,42 @@ yesterday used 0.03% of it. At the measured $0.0044 per call the existing ceilin
 order of a thousand new sellers a day. The gauge exists not because the number is alarming but
 because the day it is alarming is not the day to start building the means to see it.
 Cost model impact: none — ceilings unchanged.
+
+
+## Onboarding goal — run 22 (26–27 Sep 2026, 23:07–00:15 UTC, Opus 5)
+
+The number is still 0 (both probes). The 26 Sep wave confirmed run 21's reachability gate is
+working — it visited Pretoria, Cape Town and Bloemfontein and no American state — and sent
+exactly one letter, which is what exposed the rest of this.
+
+**RG-0507 SOURCE-HARDSTOP-1 (shipped, probed live).** SOURCE-QUALITY-1 held a source only when
+sends >= 20 AND bounces >= 3 AND rate > 5%. The send floor and the bounce floor guarded the same
+thing from the same side, so a source could bounce any proportion of an under-20 sample and stay
+allowed. property24 had sent 12 and bounced 8 (66.7%, the worst in the database) and was not
+held — while being the only non-teacher supply left in Durban, Port Elizabeth, Cape Town and
+Johannesburg (67 unsent rows) and the proven cause of two of the three ZA stop-loss latches. The
+floor may now be cleared by sample size OR by an absolute bounce count (default 5). Strictly
+tightening, measured against the live register before shipping: old blocked 11, new 12,
+released 0, newly held exactly property24.
+
+**RG-0509 GUESSED-ADDRESS-1 (open, the root cause).** property24 constructs
+firstname.lastname@agencydomain when it finds no real address — its own docstring says so. The
+domains are real, so every invented address passes MX, which is why run 21's 2,240-row MX sweep
+pronounced the ZA pool 96% clean. A scraper may not invent an address and hand it on as a
+harvested one; closing this means either dropping the fallback or writing constructed addresses
+under their own source suffix. Nothing guessed can be sent meanwhile (RG-0507 holds the source).
+
+**RG-0508 HELD-BLIND-1 (shipped, probed live).** held_by_guard() promised "so a shrunken pool is
+never a mystery" and applied the source clause and the category filter in its own query, so the
+two largest reasons a pool shrinks were the two it could not see. It returned an empty dict for
+eleven of twelve armed ZA cities — Durban printed "sendable 0, held {}" over 633 rows. That
+blindness produced run 21's claim that the 1,114-row teachers register was "held only by a POPIA
+ruling" and was "92% of the reachable list": 1,091 of those rows are also held by ORG-NAME-1
+because they are schools, and PERSON-ONLY-1 had measured exactly that on 5 September. The census
+now buckets every scraped row by the reason it is held and the buckets sum to the pool. RG-0494's
+residual was amended with the replacement measurement. D8 is withdrawn from David's question list.
+
+Boards: pre-work 493 entries / 472 holding / 1 REGRESSED / 20 open; post-work 496 / 475 /
+0 REGRESSED / 21 open / 0 ready to lock / 0 UNVERIFIED. rulings_check 150 / 0 FAIL / 25 WARN,
+before and after. Both new entries proven to FAIL on a reverted tree and pass on this one.
+Cost model impact: none.
