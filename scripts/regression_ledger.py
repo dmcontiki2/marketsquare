@@ -31990,13 +31990,15 @@ def rg_aa_seam_1():
 @entry("RG-0530", "RUL-188 LAUNCHED-MEANS-OPEN: paid AI is open to every signed-in customer in live mode, the Pro gate is "
        "dormant while no paid feed is on, an unchecked ID warns the buyer and never stops an introduction, and every AI "
        "call without an explicit lane follows the AI Providers card",
-       OPEN, fixed_on="2026-09-27",
+       LOCKED, fixed_on="2026-09-27",
        scope="bea_main.py /tuppence/ai-commit (PAID-AI-OPEN-1: closed-testing guard only when mode != live; "
              "_paid_feed_gate_active()), _seller_intro_gate/_seller_id_checked (ID-NEVER-BLOCKS-1), GET /listings/{id} "
              "seller_id_checked; ms.js openModal/msUnverifiedGate warn-not-block; ai_provider.ACTIVE_RESOLVER (LANE-TRUTH-1) "
              "set to _ts_active_provider. CLASS: pre-launch guards that outlived launch; call sites that ignored the "
              "standing lane (247 translation calls on Claude on 27 Sep while the card said OpenAI).",
-       ref="David 27 Sep 2026 (RUL-188). Promote to LOCKED after the rendered Ripple re-run on the live app.")
+       ref="David 27 Sep 2026 (RUL-188). LOCKED 27 Sep after the rendered Ripple re-run on live trustsquare.co at phone "
+           "width (a7931cf/b3d1b5d): Collectables 5T + Property Dossier 3T delivered to a signed-in buyer; Karin's request to "
+           "an ID-unchecked seller went through with 'Seller ID not yet checked'; 11 of 11 AI calls after the deploy on openai.")
 def rg_rul188_open():
     bea = repo_file("bea_main.py"); js = repo_file("ms.js"); ap = repo_file("ai_provider.py")
     if bea is None or js is None or ap is None:
@@ -32067,6 +32069,42 @@ def rg_rul190_lm_standard_flow():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "Local Market requests always reach her; she pays on her first accept; short = top up, not refused")]
+
+@entry("RG-0533", "RIPPLE-RERUN-1: the Ripple E2E dead ends stay fixed -- the reference page signs in on the page, a Buzz "
+       "reply reaches the sender, My Space shows and answers received introductions on the server, AI forms carry real "
+       "City/Currency, a re-price rewrites the description's Price, a draft is never called live, Quick's button never "
+       "sticks on 'Saving...', and an AI report's opening notice is not a row of '>'",
+       LOCKED, fixed_on="2026-09-27",
+       scope="confirm.html (CONFIRM-SIGNIN-1), bea_main.py buzz email Reply-To (BUZZ-REPLY-1), ms.js msLoadIntros/"
+             "msIntroAction (RECV-REAL-1), _aiPrefill (AI-PREFILL-1), saveEditedListing (PRICE-DESC-SYNC-1, DRAFT-TRUTH-1), "
+             "aiMd (AI-QUOTE-1); quick.html publishNow (SAVED-BTN-1). CLASS: a screen that promises a step it cannot "
+             "deliver ('Please sign in first' with no door; 'Accepted!' with no server call; 'changes are live' on a draft).",
+       ref="Rendered re-run 27 Sep 2026 on live trustsquare.co (phone width): Elsabe signed in by code on /confirm and "
+           "the Yes reached the server; Buzz email Reply-To read as the sender in Gmail's original; honey seller saw "
+           "Karin's request in My Space, Accept answered 402 top-up then accepted (lm_intro_deduct -1T); R95->R90 "
+           "rewrote 'Price: R90.'; toast 'still a draft'; Quick button read 'Published'/'Saved'.")
+def rg_ripple_rerun_1():
+    bea = repo_file("bea_main.py"); js = repo_file("ms.js"); cf = repo_file("confirm.html"); q = repo_file("quick.html")
+    if None in (bea, js, cf, q):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "CONFIRM-SIGNIN-1" not in cf or "/auth/verify-code" not in cf or "signin_required" not in cf:
+        bad.append("the reference page no longer signs a confirmer in on the page")
+    if "None if _is_key_identity(sender) else sender" not in bea or "reply_to or os.getenv(\"SUPPORT_REPLY_TO\"" not in bea:
+        bad.append("a Buzz email reply goes to support again (BUZZ-REPLY-1)")
+    if "const recv = []" in js or "RECV-REAL-1" not in js or "_introAnswerPut(introId, accept)" not in js:
+        bad.append("My Space received introductions are a placeholder or Accept is a toast again (RECV-REAL-1)")
+    if "function _aiPrefill" not in js:
+        bad.append("AI forms show City/Currency as grey hints again (AI-PREFILL-1)")
+    if "PRICE-DESC-SYNC-1" not in js or "DRAFT-TRUTH-1" not in js:
+        bad.append("re-price no longer rewrites Price:, or a draft is called live (PRICE-DESC-SYNC-1 / DRAFT-TRUTH-1)")
+    if "AI-QUOTE-1" not in js:
+        bad.append("AI report notice renders as raw '>' again (AI-QUOTE-1)")
+    if "SAVED-BTN-1" not in q:
+        bad.append("Quick's save button can stick on 'Saving...' (SAVED-BTN-1)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "reference sign-in, Buzz reply-to, received intros, AI prefill, price sync, draft truth, AI notice, Quick button")]
 
 if __name__ == "__main__":
     sys.exit(main())
