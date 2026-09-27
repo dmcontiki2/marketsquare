@@ -11439,6 +11439,43 @@ function msPauseListing(id, pause){
     .catch(function(e){ showToast(e && e.whole ? e.message : 'Could not change it: ' + e.message, 6000); });   // PROPERTY-ONE-1: the 409 says what to do
 }
 
+/* HIDDEN-CASUAL-1 (Ripple walk 3, 27 Sep 2026): RUL-115 keeps a new home worker out of strangers' sight until one
+   person she worked for confirms her (or her ID is checked). She was never told, and the link lived on the fifth
+   card of the trust coach. Her own card now says so, with the link one tap away. */
+function msHiddenCasualNote(lid){
+  return '<div class="ms-hidden-note" style="margin:8px 0;border:1.5px solid #fcd34d;background:#fffbeb;border-radius:11px;padding:10px 12px;">'
+    + '<div style="font-size:12.5px;font-weight:700;color:#92400e;">Only people you send your link to can see this listing</div>'
+    + '<div style="font-size:12px;color:#78350f;margin:3px 0 8px;line-height:1.45;">Strangers see it once one person you have worked for confirms you (one tap for them), or once your ID is checked. This keeps you safe.</div>'
+    + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msEmployerLinkCard(this)">Get my link for someone I worked for</button></div>';
+}
+async function msEmployerLinkCard(btn){
+  const email = _msSignedEmail(); const host = btn.parentNode;
+  btn.disabled = true; btn.textContent = 'Getting your link\u2026';
+  try{
+    const r = await fetch(BEA_URL + '/trust/employer-link?email=' + encodeURIComponent(email), {credentials:'include'});
+    const j = await r.json().catch(function(){ return {}; });
+    if(!r.ok) throw new Error(j.detail || ('HTTP ' + r.status));
+    const msg = 'Hi, I am setting up my profile on TrustSquare. Could you confirm that I worked '
+              + 'for you? It is one tap and it costs you nothing: ' + j.url;
+    btn.style.display = 'none';
+    const box = document.createElement('div');
+    box.innerHTML = '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:8px 10px;font-size:11.5px;word-break:break-all;color:#374151;">' + _lmEsc(j.url) + '</div>'
+      + '<div style="display:flex;gap:7px;margin-top:8px;"><a href="https://wa.me/?text=' + encodeURIComponent(msg) + '" target="_blank" rel="noopener" '
+      + 'style="flex:2;text-align:center;padding:10px;border-radius:10px;background:#25D366;color:#fff;font-size:13px;font-weight:700;text-decoration:none;">Send on WhatsApp</a>'
+      + '<button class="mla-btn" style="flex:1;">Copy</button></div>';
+    host.appendChild(box);
+    box.querySelector('button').onclick = function(){ try{ navigator.clipboard.writeText(j.url); showToast('Link copied', 2500); }catch(_){ showToast('Press and hold the link to copy it', 4000); } };
+  }catch(err){ showToast(err.message || 'Could not make your link just now', 5000); btn.disabled = false; btn.textContent = 'Get my link for someone I worked for'; }
+}
+/* BALANCE-AFTER-ACCEPT-1 (Ripple walk 3): after an Accept the hub kept the old Tuppence figure until a reload. */
+async function _msRefreshBalance(){
+  try{
+    const em = _msSignedEmail(); if(!em) return;
+    const r = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(em), {credentials:'include', headers:{'X-Api-Key': API_KEY}});
+    if(!r.ok) return; const d = await r.json();
+    if(typeof d.balance === 'number'){ tuppence = d.balance; if(typeof updateTuppenceUI === 'function') updateTuppenceUI(); if(typeof renderDash === 'function') renderDash(); }
+  }catch(_){}
+}
 function renderDashCard(dl){
   const pendingIntros = dl.intros.filter(i=>i.status==='pending');
   const thumbHtml = dl.photo
@@ -11506,6 +11543,7 @@ function renderDashCard(dl){
       <div class="mltitle">${dl.title}</div>
       <div class="mlcat">${dl.cat === 'LocalMarket' ? 'Local Market' : dl.cat}</div>
       ${statusBadge}
+      ${(dl._raw && dl._raw.hidden_from_strangers && _ls==='live') ? msHiddenCasualNote(dl.beaListingId) : ''}
       ${wonderBanners}
       ${introsHtml}
       ${lmNoShowRows(dl)}
@@ -11708,6 +11746,7 @@ async function handleIntro(dlId, introId, action){
     intro.status = 'accepted';
     dl.status = 'active';
     _msPropertyReopened(dl, intro);
+    setTimeout(_msRefreshBalance, 400);   // BALANCE-AFTER-ACCEPT-1
     const listing = LISTINGS.find(l=>l.title===dl.title);
     if(listing) acceptedIntros.add(`${listing.sellerIdx}-${listing.id}`);
     /* KEY-ACCEPT-TRUTH-1 (25 Sep 2026 inspection, ts2-09): a WhatsApp-link (key) account has no inbox and nothing
@@ -15918,6 +15957,32 @@ function _bzChooseWire(box, c){
   };
 }
 
+/* NAME-ASK-1 (Ripple walk 3, 27 Sep 2026): a buzz carries her name -- when her account has none, ask once, here. */
+async function bzNameCheck(){
+  const host = document.getElementById('bz-namecard'); if(!host) return;
+  try{
+    const r = await fetch(BEA_URL + '/quick/me', {credentials:'include'}); if(!r.ok) return;
+    const d = await r.json(); const em = String(d.email || ''), nm = String(d.name || '').trim();
+    if(!em || (nm && nm !== em.split('@')[0])) return;
+    host.innerHTML = '<div class="ms-card" style="border:1.5px solid #fcd34d;background:#fffbeb;"><b>What is your first name?</b>'
+      + '<p style="font-size:12.5px;margin:4px 0 8px;">Every buzz carries it. Without it people see the first part of your email address.</p>'
+      + '<div style="display:flex;gap:7px;"><input id="bz-nm" type="text" maxlength="40" autocomplete="given-name" placeholder="Your first name" style="flex:2;padding:10px;border:1.5px solid #d1d5db;border-radius:9px;">'
+      + '<button class="ms-btn-sm primary" style="flex:1;" onclick="bzNameSave(this)">Save</button></div></div>';
+  }catch(_){}
+}
+async function bzNameSave(btn){
+  const v = ((document.getElementById('bz-nm') || {}).value || '').trim(); if(!v){ showToast('Type your first name first'); return; }
+  btn.disabled = true;
+  try{
+    const r = await fetch(BEA_URL + '/users/me/name', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: v})});
+    const d = await r.json().catch(function(){ return {}; });
+    if(!r.ok) throw new Error(d.detail || 'Could not save');
+    try{ localStorage.setItem('ms_user_name', d.name || v); }catch(_){}
+    const host = document.getElementById('bz-namecard'); if(host) host.innerHTML = '';
+    showToast('\u2713 Saved \u2014 your buzzes now say ' + (d.name || v), 3500);
+  }catch(e){ btn.disabled = false; showToast(e.message || 'Could not save just now'); }
+}
+
 /* BUZZ-JOIN-1 (RIPPLE-2): fetch her own Buzz link and offer WhatsApp + Copy. again=1 makes a NEW link and retires the old. */
 async function bzMyLink(btn, again){
   const host = document.getElementById('bz-mylink'); if(!host) return;
@@ -15985,6 +16050,8 @@ async function buzzRender(){
      + 'already uses. Email is the backup when a phone has no push. No SMS: a per-message cost is '
      + 'out.</div></div>';
 
+  h += '<div id="bz-namecard"></div>';   /* NAME-ASK-1 */
+  setTimeout(bzNameCheck, 60);
   h += '<div class="ms-section-lbl">People you are connected to</div>';
   h += _bzCircleCard(_bzCircle);
   /* BUZZ-JOIN-1 (RIPPLE-2, David 27 Sep 2026: "the someone you worked for is not mandatory and never was"):
@@ -18370,6 +18437,7 @@ async function msIntroAction(introId, accept, btn){
   if(ok==='topup'){ try{ if(btn) btn.disabled = false; }catch(_){} return; }
   if(!ok){ try{ if(btn) btn.disabled = false; }catch(_){} showToast('That did not go through \u2014 please sign in and try again.'); return; }
   showToast(accept ? '\u2713 Accepted \u2014 you can now see how to reach them.' : 'Declined \u2014 no penalty.');
+  if(accept) setTimeout(_msRefreshBalance, 400);   // BALANCE-AFTER-ACCEPT-1
   try{ const _em = localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || ''; if(_em) msLoadIntros(_em); }catch(_){}
 }
 
@@ -19187,7 +19255,7 @@ async function aiBoot(){
       <div class="ai-card" id="ai-card-${f.id}" onclick="aiSel('${f.id}')">
         <div class="ai-row">
           <span class="ai-tag ${f.side}">${f.side.toUpperCase()}</span>
-          ${AI_PRO_ONLY.has(f.id)?'<span class="ai-tag" style="background:#7c3aed;color:#fff;">PRO</span>':''}
+          ${(AI_PRO_ONLY.has(f.id) && window.TS_PRO_GATE_ON)?'<span class="ai-tag" style="background:#7c3aed;color:#fff;">PRO</span>':''}
           <span class="ai-tag price">${f.has_glimpse?'Level 2 \u00b7 ':''}${f.price_t}T per use</span>
           <span class="ai-tag ${f.status==='live'?'live':'stub'}">${f.status==='live'?'LIVE':'PREVIEW'}</span>
           ${(AI_VIDEOS[f.id] && window.FEATURES && window.FEATURES.videos_visible)?`<button class="ai-vtutor" onclick="event.stopPropagation();aiVideoTutor('${f.id}')" aria-label="Watch the video tutor">\u25B6 Video Tutor</button>`:''}

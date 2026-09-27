@@ -32185,5 +32185,31 @@ def rg_email_anchor_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "new accounts anchor on e-mail; the WhatsApp-link key is dormant until WhatsApp is subscribed")]
 
+@entry("RG-0537", "RIPPLE-WALK-3: every person is asked a first name (Quick, the Buzz join page, the Buzz screen), a hidden "
+       "home worker is told she is hidden and gets the someone-I-worked-for link on her own card, AI cards carry no PRO "
+       "label while the Pro gate is dormant, and the hub's Tuppence figure refreshes after an Accept",
+       OPEN, fixed_on="2026-09-27",
+       scope="quick.html #qpname (NAME-ASK-1) -> quick_publish sets users.name for a new account; POST /users/me/name; "
+             "join.html #nm; ms.js bzNameCheck/bzNameSave, msHiddenCasualNote/msEmployerLinkCard (HIDDEN-CASUAL-1, "
+             "/listings/mine hidden_from_strangers), _msRefreshBalance (BALANCE-AFTER-ACCEPT-1), PRO tag behind "
+             "window.TS_PRO_GATE_ON. CLASS: the walk showed email local parts as names and a listing hidden with no word.",
+       ref="Ripple walk 3, 27 Sep 2026 (docs/E2E_RIPPLE3_FINDINGS_2026-09-27.md). LOCK after the rendered re-walk.")
+def rg_ripple_walk_3():
+    b = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html"); jn = repo_file("join.html")
+    if None in (b, js, q, jn):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if '@app.post("/users/me/name")' not in b or 'id="qpname"' not in q or 'id="nm"' not in jn or "function bzNameCheck(" not in js:
+        bad.append("somewhere a person is no longer asked a first name")
+    if 'd["hidden_from_strangers"]' not in b or "msHiddenCasualNote(" not in js:
+        bad.append("a hidden home worker is no longer told she is hidden")
+    if "window.TS_PRO_GATE_ON" not in js:
+        bad.append("AI cards show PRO while the Pro gate is dormant")
+    if "_msRefreshBalance" not in js:
+        bad.append("the hub keeps the old Tuppence figure after an Accept")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "names asked; hidden worker told; no PRO label; balance refreshes")]
+
 if __name__ == "__main__":
     sys.exit(main())

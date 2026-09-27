@@ -4682,6 +4682,9 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
         try:
             conn.execute("INSERT INTO users (email, aa_free_used, aa_sessions_remaining) VALUES (?, 0, 0) "
                          "ON CONFLICT(email) DO NOTHING", (em,))
+            _qn = _plain_text(str(body.name or ""))[:40].strip()   # NAME-ASK-1: the first name she typed in Quick
+            if _qn and _qn.lower() != em.split("@")[0]:
+                conn.execute("UPDATE users SET name=? WHERE email=? AND (name IS NULL OR TRIM(name)='')", (_qn, em))
             conn.commit()
         finally:
             conn.close()
@@ -5333,10 +5336,19 @@ def get_seller_listings(email: str = "", ts_user: str = Cookie(default=None), x_
            WHERE LOWER(l.seller_email) = LOWER(?) ORDER BY l.created_at DESC""",
         (email,)
     ).fetchall()
+    # HIDDEN-CASUAL-1 (Ripple walk 3, 27 Sep 2026): RUL-115 keeps a new home worker out of strangers' sight until one
+    # person she worked for confirms her (or her ID is checked) -- and nothing told her. Her own list says so now.
+    try:
+        _hid = {int(x["id"]) for x in conn.execute(
+            "SELECT l.id FROM listings l WHERE LOWER(l.seller_email) = LOWER(?) AND " + _stranger_hidden_sql("l."),
+            (email,)).fetchall()}
+    except Exception as _hx:
+        _log.warning("HIDDEN-CASUAL-1: %s", _hx); _hid = set()
     conn.close()
     out = []
     for r in rows:
         d = dict(r)
+        d["hidden_from_strangers"] = int(d.get("id") or 0) in _hid
         if (d.get("category") or "").lower() == "property":
             d["availability_label"] = _rental_availability(d.get("rental_status"), d.get("available_from"))
         out.append(d)
@@ -29011,6 +29023,30 @@ class _ProfileIn(BaseModel):
     region: Optional[str] = None
     tags: Optional[list] = None
     email: Optional[str] = None
+
+
+class _NameIn(BaseModel):
+    name: str = ""
+
+
+@app.post("/users/me/name")
+def save_my_name(req: _NameIn, ts_user: str = Cookie(default=None)):
+    """NAME-ASK-1 (Ripple walk 3, 27 Sep 2026): nobody was asked her name, so every buzz, Buzz link and
+    introduction showed the first half of her email address. Session-bound: she names only herself."""
+    me = (_session_email(ts_user) or "").strip().lower()
+    if "@" not in me:
+        raise HTTPException(status_code=401, detail="Sign in first.")
+    nm = _plain_text(str(req.name or ""))[:40].strip()
+    if not nm:
+        raise HTTPException(status_code=422, detail="Please type your first name.")
+    conn = database.get_db()
+    try:
+        conn.execute("INSERT INTO users (email) VALUES (?) ON CONFLICT(email) DO NOTHING", (me,))
+        conn.execute("UPDATE users SET name=? WHERE email=?", (nm, me))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True, "name": nm}
 
 
 @app.post("/users/me/profile")
