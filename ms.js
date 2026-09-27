@@ -6769,7 +6769,8 @@ function _openModalNow(id, _fetched){
     if(_meRow) _meRow.style.display = _keyAcc ? 'none' : '';
     if(_me && _keyAcc && msIsKeyId(_me.value)) _me.value = '';
     if(_me && !_me.value && !_keyAcc) _me.value=_msSignedEmail();
-    if(_mn && !_mn.value) _mn.value=msShownName(_msSignedName(), _msSignedEmail()); }catch(_){}
+    /* NAME-ASK-1 (Ripple walk 3): never prefill the first half of her email address as her name -- leave it for her to type */
+    if(_mn && !_mn.value){ const _sn=msShownName(_msSignedName(), _msSignedEmail()); _mn.value=(_sn && _sn!==String(_msSignedEmail()).split('@')[0]) ? _sn : ''; } }catch(_){}
   // Reset tn-deduct-notice to standard text (LM modal changes it to seller-pays)
   const tnNotice = document.querySelector('#intro-modal .tn-deduct-notice');
   // INTRO-HOLD-WORDS-1 (25 Sep 2026 inspection, ts2-05): the 1T is HELD the moment the request is sent (INTRO-HOLD-1)
@@ -6827,6 +6828,10 @@ function submitIntro(){
   if(!email && msIsKeyId(_msSignedEmail())) email=_msSignedEmail();   // KEY-ID-HIDE-1: her account, never typed or shown
   const msg=document.getElementById('m-msg').value.trim();
   if(!name||!email){showToast('Please fill in your name and email');return;}
+  /* NAME-ASK-1: the name she types here becomes her account name when it has none yet (session-bound on the server) */
+  try{ if(_msSignedEmail() && name !== String(_msSignedEmail()).split('@')[0] && (!_msSignedName() || _msSignedName() === String(_msSignedEmail()).split('@')[0])){
+    fetch(BEA_URL+'/users/me/name',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name})}).catch(function(){});
+    try{ localStorage.setItem('ms_user_name', name); }catch(_){} } }catch(_){}
   if(pendingLMIntroId!==null){
     // Local Market intro — goes via /local-market/intro (seller-pays model)
     _msIntroClose(true);
