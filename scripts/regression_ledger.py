@@ -31054,7 +31054,7 @@ def rg_guessed_address_1():
 @entry("RG-0510", "CIRCLE-CAPS-1 + KEEP-CHOICE-1: the regulars limits (Free 10 / $5 50 / $20 200) sit behind "
        "David's one switch, and on every downgrade -- regulars AND listing slots -- SHE chooses what stays active: "
        "the rest rest, never deleted, upgrading wakes them, and she is told before she confirms",
-       OPEN, fixed_on="2026-09-27",
+       LOCKED, fixed_on="2026-09-27",
        scope="bea_main.py (CIRCLE_LIMITS, _circle_on/_circle_owner/_circle_status, launch_switches.circle_caps, "
              "buzz_pairs.circle_owner/under_caps, the refusal in /buzz/pair and in the reference link's "
              "connection, the downgrade pause in POST /buzz, /buzz/me circle, /buzz/pairs paused, "
@@ -31067,7 +31067,10 @@ def rg_guessed_address_1():
              "active and rests 30, who can still buzz her; a swap works; upgrading wakes all; LISTINGS: a Free "
              "move with paid time left is SCHEDULED, her 2 ticked stay live on the day, 6 rest, drafts untouched, "
              "a swap works, raising the plan wakes all. The three choose routes refuse a stranger (401). "
-             "Staged in scripts/apply_circle_caps.py while WORK-LOCK-1 is held by another lane.",
+             "Staged in scripts/apply_circle_caps.py while WORK-LOCK-1 was held by another lane; applied 01:28Z, "
+             "deployed 5d94955, LOCKED 27 Sep 2026 after the live check: /flags circle_caps false + limits 10/50/200, "
+             "the three choose routes 401 to a stranger, the Buzz screen rendered 'Your regulars: 0', the +1 page "
+             "rendered the Regulars limits switch OFF, the Subscription screen rendered with no limit shown.",
        ref="RUL-173/174/175/176. David 27 Sep 2026: 'please build it now as a switch that works as you "
            "explained'. The switch itself is David's to flip; this entry asserts the machinery, not the switch.")
 def rg_circle_caps_1():
