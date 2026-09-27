@@ -19651,8 +19651,12 @@ function aiOpenListing(id){
   }catch(e){}
   showToast('Listing #'+id+' — find it under Browse (it may have closed since this report)');
 }
+/* AI-UTM-1 (27 Sep 2026, Ripple progress re-run): the web-search lane appends '?utm_source=openai' to every source
+   link it cites, so a buyer reading a report saw the provider's name in each URL -- the app names no AI model or
+   provider to its users. Strip that tag (and only that tag) wherever a report is shown, shared or printed. */
+function aiUtm(t){ return String(t==null?'':t).replace(/([?&])utm_source=openai(?:(&)|(?=[\s)\]"'<]|$))/g, (m,a,b)=> b ? a : ''); }
 function aiMd(src){
-  const lines=aiEsc(src).split('\n'); let out='',i=0,inList=false,inFence=false;
+  const lines=aiEsc(aiUtm(src)).split('\n'); let out='',i=0,inList=false,inFence=false;
   const closeList=()=>{ if(inList){out+='</ul>';inList=false;} };
   while(i<lines.length){
     let L2=lines[i];
@@ -19687,7 +19691,7 @@ function aiMd(src){
 // $0 by design — shares the text we already have; no model call, no server round-trip.
 async function aiShare(){
   if(!AI_LAST) return;
-  const plain = (AI_LAST.text || AI_LAST.html.replace(/<[^>]+>/g,' ')).replace(/[#*`]/g,'').replace(/\n{3,}/g,'\n\n').trim();
+  const plain = aiUtm(AI_LAST.text || AI_LAST.html.replace(/<[^>]+>/g,' ')).replace(/[#*`]/g,'').replace(/\n{3,}/g,'\n\n').trim();
   const payload = {
     title: AI_LAST.fn + ' \u2014 TrustSquare AI report',
     text: AI_LAST.fn + ' \u2014 TrustSquare AI report\n' + new Date().toLocaleDateString() + '\n\n' + plain +

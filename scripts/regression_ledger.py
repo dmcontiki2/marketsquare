@@ -32217,5 +32217,20 @@ def rg_ripple_walk_3():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "names asked; hidden worker told; no PRO label; balance refreshes")]
 
+@entry("RG-0538", "AI-UTM-1: an AI report's source links no longer carry '?utm_source=openai' -- the web-search lane "
+       "tags every cited URL with the provider's name, and the app names no AI model or provider to its users",
+       OPEN, fixed_on="2026-09-27",
+       scope="ms.js aiUtm() applied in aiMd (shown, attached and printed reports) and aiShare (shared text). "
+             "CLASS: a provider's tracking tag leaking through third-party URLs in generated content.",
+       ref="Ripple progress re-run, 27 Sep 2026: Jacques's reopened report linked Strauss & Co lots as "
+           "'...?utm_source=openai'. LOCK after the rendered check.")
+def rg_ai_utm_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "function aiUtm(" not in js or "aiEsc(aiUtm(src))" not in js or "aiUtm(AI_LAST.text" not in js:
+        return [(FAIL, "AI report links show '?utm_source=openai' again (aiUtm not applied in aiMd/aiShare)")]
+    return [(INFO, "report links carry no provider tag")]
+
 if __name__ == "__main__":
     sys.exit(main())
