@@ -31735,11 +31735,11 @@ def rg_fault_text_1():
 
 @entry("RG-0522", "LM-429-WORDING-1: a Local Market buyer who hits the daily limit is told 'try again tomorrow', "
        "not 'wait 7 days' -- the two limits that answer 429 each say their own reason",
-       OPEN, fixed_on="2026-09-27",
+       LOCKED, fixed_on="2026-09-27",
        scope="ms.js lmSubmitIntro (the only Local Market intro door). SCOPE: Local Market only; other intro doors "
              "carry their own messages. CLASS: one status code, two causes -- the page must read the server's "
              "detail, never guess from the code.",
-       ref="RUL-185 session, 27 Sep 2026. Promote to LOCKED after the live release.")
+       ref="RUL-185 session, 27 Sep 2026. LOCKED after live check: 865ad7b live 07:03Z, served ms.js?v=806 carries the fix.")
 def rg_lm_429_wording_1():
     js = repo_file("ms.js")
     if js is None:
@@ -31755,13 +31755,13 @@ def rg_lm_429_wording_1():
 
 @entry("RG-0523", "LM-LOWBAL-1: a Local Market seller who cannot pay for her first buyer is TOLD -- at once when "
        "a buyer is turned away, and when she lists with less than 1T",
-       OPEN, fixed_on="2026-09-27",
+       LOCKED, fixed_on="2026-09-27",
        scope="bea_main.py lm_create_intro (402 path calls _lm_low_balance_notice: e-mail, or SMS for a key "
              "identity; once a day per listing) and lm_create_listing (low_tuppence_warning in the reply); ms.js "
              "shows the warning after publishing. SCOPE: Local Market -- the only category where the seller pays "
              "(RUL-185). Agents pay at ACCEPT time and already see the 402 themselves. CLASS: a charge that can "
              "fail silently on the payer's side turns customers away unseen.",
-       ref="RUL-185 (David, 27 Sep 2026: 'Tell and warn her'). Promote to LOCKED after the live release.")
+       ref="RUL-185 (David, 27 Sep 2026: 'Tell and warn her'). LOCKED after live check: 865ad7b live 07:03Z; server main.py and served ms.js carry it.")
 def rg_lm_lowbal_1():
     bm = repo_file("bea_main.py")
     js = repo_file("ms.js")
