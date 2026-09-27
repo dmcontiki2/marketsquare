@@ -362,7 +362,12 @@ async function _introAnswerPut(introId, accept){
       const m = msg.match(/costs (\d+)T and your balance is (-?\d+)T/);
       const need = m ? Math.max(1, parseInt(m[1],10) - parseInt(m[2],10)) : 1;
       showToast(msg, 9000);
-      setTimeout(function(){ try{ topUp(need); }catch(_){} }, 2500);
+      setTimeout(function(){ try{
+        topUp(need);
+        const _d=document.getElementById('topup-modal-desc');
+        if(_d) _d.textContent='A buyer is waiting. Top up '+need+'T, then accept — the request waits for you.';
+        const _t=document.getElementById('toast'); if(_t) _t.classList.remove('show');   // never cover Confirm Purchase
+      }catch(_){} }, 2500);
       return 'topup';
     }
     if(!res.ok) return null;
@@ -817,7 +822,11 @@ function formatDesc(desc) {
 function formatIntroTime(ts) {
   if (!ts) return 'Recently';
   try {
-    const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+    /* INTRO-TIME-UTC-1 (27 Sep 2026, RUL-190 walk): the server's times are UTC without a zone ("2026-09-27 17:45:37");
+       read bare as LOCAL time, a request made a minute ago showed "2h ago" in South Africa. Bare = UTC. */
+    let _s = String(ts);
+    if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(_s)) _s = _s.replace(' ', 'T') + 'Z';
+    const diff = Math.floor((Date.now() - new Date(_s).getTime()) / 1000);
     if (diff < 60)   return 'Just now';
     if (diff < 3600) return Math.floor(diff/60) + 'm ago';
     if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
