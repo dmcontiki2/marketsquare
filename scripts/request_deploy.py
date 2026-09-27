@@ -92,6 +92,27 @@ def main():
         git('add', '-A', check=True)
         git('-c', 'user.name=Claude (CTO)', '-c', 'user.email=claude@trustsquare.co', 'commit', '-q', '-m', reason, check=True)
         print('committed:', git('log', '-1', '--format=%h %s')[:90])
+    # RELAY-BUMP-1 (27 Sep 2026): the relay lane shipped changed ms.js under the SAME ?v= stamp, and that URL is
+    # served "immutable, max-age=1 year" through Cloudflare -- so a browser that already had ms.js?v=814 kept the old
+    # code for a year. The host lane runs autobump.py (deploy_marketsquare.bat step 2/6); the relay lane never did.
+    # Run it here and commit ONLY the bump files, and only when nobody else has them mid-edit.
+    try:
+        _bf = ('marketsquare.html', 'ms.js', 'scripts/static_versions.json')
+        _dirty = set(l[3:].strip() for l in git('status', '--porcelain').splitlines())
+        _ab = subprocess.run([sys.executable, os.path.join(HERE, 'autobump.py')], cwd=REPO,
+                             capture_output=True, text=True, timeout=90)
+        _after = set(l[3:].strip() for l in git('status', '--porcelain').splitlines())
+        _new = [f for f in _bf if f in _after and f not in _dirty]
+        _blocked = [f for f in _bf if f in _dirty]
+        if _new and not _blocked:
+            git('add', *_new, check=True)
+            git('-c', 'user.name=Claude (CTO)', '-c', 'user.email=claude@trustsquare.co', 'commit', '-q', '-m',
+                'RELAY-BUMP-1: cache-buster bump before relay (%s)' % reason[:60], '--', *_new, check=True)
+            print('cache-buster bumped:', ' '.join(l for l in (_ab.stdout or '').splitlines() if 'bump' in l.lower())[:160])
+        elif _new and _blocked:
+            print('RELAY-BUMP-1: autobump changed %s but %s had uncommitted edits -- bump left for the host release' % (_new, _blocked))
+    except Exception as _e:
+        print('RELAY-BUMP-1: autobump skipped (%s)' % str(_e)[:100])
     head = git('rev-parse', '--short', 'HEAD')
     # LANE A -- relay through the origin when SSH is open (RELAY-DEPLOY-1, 3 Sep 2026): push HEAD
     # to the server's clone, the server pushes it to GitHub main+deploy with its own deploy key,
