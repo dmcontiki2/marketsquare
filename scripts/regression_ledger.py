@@ -31307,14 +31307,14 @@ def rg_eula_119_notice():
     bad = []
     mv = _re.search(r'^EULA_CURRENT_VERSION\s*=\s*"([\d.]+)"', b, _re.M)
     me = _re.search(r'^EULA_V119_EFFECTIVE\s*=\s*"(\d{4})-(\d{2})-(\d{2})"', b, _re.M)
-    if not mv or mv.group(1) != "1.19":
-        bad.append("the running Terms version is not 1.19")
+    if not mv or tuple(int(x) for x in mv.group(1).split(".")) < (1, 19):   # RUL-190: v1.20+ carries the v1.19 step
+        bad.append("the running Terms version is older than 1.19")
     if not me:
         bad.append("v1.19 has no effective date")
     if not _re.search(r'\("1\.19",\s*EULA_V119_EFFECTIVE,', b):
         bad.append("v1.19 is not a dated material step -- existing accounts would be parked at once, with no notice")
     months = {"September": 9, "October": 10, "November": 11}
-    mp = _re.search(r"Version 1\.19 \u00b7 Last updated (\d{1,2}) (September|October|November) (\d{4})", eu or "")
+    mp = _re.search(r"Version 1\.(?:19|2\d) \u00b7 Last updated (\d{1,2}) (September|October|November) (\d{4})", eu or "")
     if me and mp:
         eff = _date(int(me.group(1)), int(me.group(2)), int(me.group(3)))
         pub = _date(int(mp.group(3)), months[mp.group(2)], int(mp.group(1)))
@@ -31340,7 +31340,7 @@ def rg_eula_119_notice():
     for name, text in (("eula_clean.html", eu), ("terms.html", tm), ("ms.js (_EULA_HTML)", js)):
         if text is None:
             continue
-        if "Version 1.19" not in text or "12 October 2026" not in text:
+        if not _re.search(r"Version 1\.(?:19|2\d)\b", text) or "12 October 2026" not in text:
             bad.append("%s does not carry the v1.19 version line with its 12 October 2026 date" % name)
     if bad:
         return [(FAIL, "; ".join(bad[:6]))]
@@ -31480,7 +31480,7 @@ def rg_lm_words_1():
     if not tiles:
         bad.append("the Local Market tile is gone")
     for t in tiles:
-        if "the seller pays 1T when the first buyer asks" not in t or "buyers pay nothing" not in t:
+        if "the seller pays 1T when she accepts her first buyer" not in t or "buyers pay nothing" not in t:   # RUL-190
             bad.append("a Local Market tile says something else about who pays: %r" % t.strip()[:90])
             break
     if _re.search(r"buyer pays introduction fee", h, _re.I):
@@ -31773,9 +31773,10 @@ def rg_lm_lowbal_1():
     bad = []
     i = bm.find("def lm_create_intro(")
     seg = bm[i:i + 9000] if i >= 0 else ""
-    k = seg.find("seller_insufficient_tuppence")
-    if k < 0 or "_lm_low_balance_notice(" not in seg[max(0, k - 600):k]:
-        bad.append("the turned-away buyer no longer triggers a notice to the seller")
+    if "seller_insufficient_tuppence" in seg or "status_code=402" in seg:   # RUL-190: never refused for her balance
+        bad.append("RUL-190 BREACH: a Local Market buyer is turned away for the seller's balance again")
+    if "_lm_short" not in seg or "_lm_low_balance_notice(" not in seg:
+        bad.append("a seller who is short is no longer told she has a buyer waiting")
     if "def _lm_low_balance_notice(" not in bm or "LM_LOWBAL_REPEAT_HOURS" not in bm:
         bad.append("the seller notice (with its once-a-day limit) is gone")
     if '"low_tuppence_warning": _lm_warn' not in bm:
@@ -32038,6 +32039,34 @@ def rg_rul189_tester():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "testers skip the Pro gate on every paid AI feature, with no end date")]
+
+@entry("RG-0532", "RUL-190 LM-STANDARD-FLOW-1: a Local Market request always reaches the seller; she pays 1T (2T boosted) "
+       "once per listing when she ACCEPTS her first buyer, and a short balance means 'top up, then accept' -- never a "
+       "turned-away buyer",
+       OPEN, fixed_on="2026-09-27",
+       scope="bea_main.py lm_create_intro (no balance refusal, no charge), accept_intro (_lm_cost: 402 when short, "
+             "flip lm_intro_charged + one seller deduct row on the paying accept); eula_clean.html 5.3A (v1.20). "
+             "CLASS: an exception to the standard flow that turns customers away unseen.",
+       ref="David 27 Sep 2026 (RUL-190). Promote to LOCKED after a rendered accept + top-up walk on the live app.")
+def rg_rul190_lm_standard_flow():
+    bea = repo_file("bea_main.py"); eu = repo_file("eula_clean.html")
+    if bea is None or eu is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    i = bea.find("def lm_create_intro("); seg = bea[i:i + 9000] if i >= 0 else ""
+    if "status_code=402" in seg or "lm_intro_deduct" in seg:
+        bad.append("the request path refuses or charges for the seller's balance again")
+    a = bea.find("def accept_intro("); acc = bea[a:a + 16000] if a >= 0 else ""
+    if "_lm_cost" not in acc or "A buyer is waiting" not in acc or "lm_intro_charged = 1" not in acc:
+        bad.append("accepting the first Local Market buyer no longer charges the seller once (or no longer says 'top up')")
+    js = repo_file("ms.js")
+    if js is not None and ("async function _introAnswerPut(" not in js or "topUp(need)" not in js):
+        bad.append("the seller's Accept no longer opens a top-up when her balance is short")
+    if "the request waits for her and is never refused for this reason" not in eu:
+        bad.append("Terms 5.3A no longer say the request waits for her")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Local Market requests always reach her; she pays on her first accept; short = top up, not refused")]
 
 if __name__ == "__main__":
     sys.exit(main())

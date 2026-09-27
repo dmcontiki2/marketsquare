@@ -1725,7 +1725,10 @@
   "0 · New · 40 · Some evidence · 70 · Strong evidence · 90 · Fullest evidence": "0 · Usemtsha · 40 · Obunye ubungqina · 70 · Ubungqina obomeleleyo · 90 · Ubungqina obupheleleyo",
   "Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character.": "I-Trust Score ibonisa ubungqina obunikezwe ngumthengisi kunye nokuhlola esikugqibileyo. Linqaku, ayisosiqinisekiso okanye uvavanyo lwesimilo somntu.",
   "A new seller simply has less evidence — not a mark against them.": "Umthengisi omtsha unobungqina obuncinci nje — asiyonto embi ngaye.",
-  "to see sellers by the evidence they have supplied. Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character. A new seller simply has less evidence — not a mark against them.": "ukuze ubone abathengisi ngokobungqina ababunikezileyo. I-Trust Score ibonisa ubungqina obunikezwe ngumthengisi kunye nokuhlola esikugqibileyo. Linqaku, ayisosiqinisekiso okanye uvavanyo lwesimilo somntu. Umthengisi omtsha unobungqina obuncinci nje — asiyonto embi ngaye."
+  "to see sellers by the evidence they have supplied. Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character. A new seller simply has less evidence — not a mark against them.": "ukuze ubone abathengisi ngokobungqina ababunikezileyo. I-Trust Score ibonisa ubungqina obunikezwe ngumthengisi kunye nokuhlola esikugqibileyo. Linqaku, ayisosiqinisekiso okanye uvavanyo lwesimilo somntu. Umthengisi omtsha unobungqina obuncinci nje — asiyonto embi ngaye.",
+  "a seller's unchecked ID is shown to the buyer as a warning and never stops an introduction;": "isazisi somthengisi esingekahlolwa siboniswa umthengi njengesilumkiso kwaye asiyithinteli intshayelelo;",
+  "Local Market sellers pay 1T when they accept their first buyer, and no buyer is turned away;": "abathengisi beMarike yasekhaya bahlawula i-1T xa bamkela umthengi wabo wokuqala, kwaye akukho mthengi ugxothwayo;",
+  "🏷️ Peer-to-peer — the seller pays 1T when she accepts her first buyer; buyers pay nothing": "🏷️ Umntu nomntu — umthengisi uhlawula i-1T xa amkela umthengi wakhe wokuqala; abathengi abahlawuli nto"
  },
  "en": [
   "KE",
@@ -2232,6 +2235,7 @@
   "The following South African Acts are mandatory public law and cannot be waived, contracted out of, or overridden by this EULA. If any provision of this EULA conflicts with these Acts, the relevant Act prevails to the extent of the conflict:",
   "Some evidence — blue badge; standard listing position",
   "Strong evidence — green badge; higher visibility",
-  "Fullest evidence — gold badge + featured position"
+  "Fullest evidence — gold badge + featured position",
+  "5. Seller pays when she accepts."
  ]
 }

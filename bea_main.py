@@ -304,7 +304,7 @@ def _demand_norm_category(raw):
     return None
 
 
-EULA_CURRENT_VERSION = "1.19"
+EULA_CURRENT_VERSION = "1.20"   # v1.20 (27 Sep 2026, RUL-190): non-material - two changes in the user's favour, folded into the 12 Oct step
 # The last version whose changes are MATERIAL (everyone who accepted an earlier one re-accepts once, at her next
 # Publish or Edit -- and, from v1.19, a Buyer at her next introduction request or top-up). Raise it ONLY when David
 # marks a version material; a non-material version just bumps EULA_CURRENT_VERSION.
@@ -316,8 +316,8 @@ EULA_CURRENT_VERSION = "1.19"
 EULA_V119_EFFECTIVE = "2026-10-12"
 EULA_V119_SUMMARY = ("They now say exactly how TrustSquare works: 1 Tuppence is held when you request an "
                      "introduction and returned in full if the seller declines or does not answer within 96 hours; "
-                     "a seller's free ID check comes before any introduction; a Property listing takes one buyer at "
-                     "a time; Local Market sellers pay 1T when the first buyer asks; buyers accept the Terms once; "
+                     "a seller's unchecked ID is shown to the buyer as a warning and never stops an introduction; a Property listing takes one buyer at "
+                     "a time; Local Market sellers pay 1T when they accept their first buyer, and no buyer is turned away; buyers accept the Terms once; "
                      "which identity checks we record (never your bank details); what AI help costs; and country "
                      "rules for Kenya and Namibia.")
 _EULA_MATERIAL_STEPS = (
@@ -9189,7 +9189,7 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
         _buyer = _row["buyer_email"]
         # LM-ACCEPT-1 (24 Sep 2026, found building the no-show button): a Local Market intro was
         # accepted through this door as if the BUYER paid - a 1T charge (or a 402 for a buyer with
-        # an empty wallet, i.e. every anonymous one). LM-T1: the SELLER paid 1T when the first request
+        # an empty wallet, i.e. every anonymous one). RUL-190: the SELLER pays 1T when she accepts her first buyer (below); the first request
         # arrived; accepting costs nobody anything. Same race guard, no money row.
         _lm = ((intro["intro_type"] if "intro_type" in intro.keys() else "") or "").strip().lower() == "local_market"
         # INTRO-HOLD-1: if a hold was placed at request time the money has ALREADY left
@@ -9208,12 +9208,34 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
         # inbox, no phone number on file) cannot receive the buyer's messages and cannot answer them, so accepting
         # delivers no introduction. The EULA burns the held 1T only on DELIVERY; here the hold goes back to the buyer
         # in full, inside this same transaction, and the answer says seller_unreachable so the app can say so.
-        # Local Market is untouched (its seller paid at request time, LM-T1).
+        # Local Market is untouched (its seller pays on accept, RUL-190).
         _seller_em = ((listing["seller_email"] or "") if listing else "").strip().lower()
         _unreachable = (not _lm) and _is_key_identity(_seller_em) and not _user_phone(conn, _seller_em)
         _balance = conn.execute(
             "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
             (_buyer,)).fetchone()["bal"]
+        # LM-STANDARD-FLOW-1 (RUL-190): a Local Market seller pays 1T (2T boosted) when she accepts her FIRST buyer on
+        # the listing -- the standard flow: the payer is told and tops up; nobody is turned away. Below balance -> 402
+        # (her app opens a top-up), and the request stays pending for her.
+        _lm_cost = 0
+        if _lm and _burn_on and listing is not None:
+            _lst = conn.execute("SELECT COALESCE(lm_intro_charged, 0) AS c, boost_until FROM listings WHERE id = ?",
+                                (intro["listing_id"],)).fetchone()
+            if _lst is not None and int(_lst["c"] or 0) == 0:
+                _boosted = False
+                try:
+                    _boosted = bool(_lst["boost_until"]) and datetime.fromisoformat(_lst["boost_until"]) > datetime.now(timezone.utc)
+                except Exception:
+                    _boosted = False
+                _lm_cost = LM_BOOST_COST_T if _boosted else LM_INTRO_COST_T
+                _sbal = conn.execute("SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE LOWER(user_email) = ?",
+                                     (_seller_em,)).fetchone()["bal"] or 0
+                if int(_sbal) < _lm_cost:
+                    conn.rollback(); conn.close()
+                    raise HTTPException(
+                        status_code=402,
+                        detail="A buyer is waiting. Accepting your first buyer on this listing costs %dT and your balance "
+                               "is %dT - top up, then accept. The request waits for you." % (_lm_cost, int(_sbal)))
         if _burn_on and not _held and not _lm and not _unreachable and (_balance is None or _balance < 1):   # insufficient -> 402, never a negative wallet
             conn.rollback(); conn.close()
             raise HTTPException(
@@ -9242,7 +9264,16 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
                                 detail="This introduction was just accepted elsewhere.")
         _commitment_resume(conn, intro_id)   # PROPERTY-ONE-1: answered -- the listing opens to the next buyer
         if _lm:
-            pass   # LM-ACCEPT-1: nothing to charge - the seller paid at request time (LM-T1)
+            # LM-STANDARD-FLOW-1 (RUL-190): the seller pays here, once per listing -- only the accept that flips the flag pays.
+            if _lm_cost:
+                _flip = conn.execute(
+                    "UPDATE listings SET lm_intro_charged = 1 WHERE id = ? AND COALESCE(lm_intro_charged, 0) = 0",
+                    (intro["listing_id"],))
+                if _flip.rowcount == 1:
+                    conn.execute(
+                        "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, ?, ?, ?)",
+                        (listing["seller_email"], "lm_boost_deduct" if _lm_cost == LM_BOOST_COST_T and LM_BOOST_COST_T != LM_INTRO_COST_T else "lm_intro_deduct",
+                         -_lm_cost, f"Local Market intro accepted · listing #{intro['listing_id']} · {listing['title'] if listing else ''}"))
         elif not _burn_on:
             # Charge waived by the BIT safe-state. tuppence_charged is still set to 1 by the
             # UPDATE above so the once-only race guard is untouched and no later accept can
@@ -13204,8 +13235,8 @@ def lm_create_listing(listing: LMListingIn, background_tasks: BackgroundTasks,
         _lm_bal = conn.execute("SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
                                (_lm_seller or listing.seller_email,)).fetchone()["bal"] or 0
         if int(_lm_bal) < LM_INTRO_COST_T:
-            _lm_warn = ("Heads up: on Local Market you pay %sT when your first buyer asks, and your balance is %sT. "
-                        "Top up so buyers are not turned away." % (LM_INTRO_COST_T, int(_lm_bal)))
+            _lm_warn = ("Heads up: on Local Market you pay %sT when you accept your first buyer, and your balance is %sT. "
+                        "Buyers can still ask - top up before you accept." % (LM_INTRO_COST_T, int(_lm_bal)))
     except Exception:
         pass
     conn.close()
@@ -13314,16 +13345,15 @@ def _lm_low_balance_notice(seller_email: str, listing_id: int, title: str, cost_
         em = (seller_email or "").strip().lower()
         t = (title or "your item")[:60]
         if _is_key_identity(em):
-            _sms_key_seller(em, "TrustSquare: a buyer asked about '%s' but you need %sT to accept. Top up so the next buyer gets through." % (t[:40], cost_T), "lm-lowbal")
+            _sms_key_seller(em, "TrustSquare: a buyer is waiting for '%s'. Accepting your first buyer costs %sT - top up, then accept." % (t[:40], cost_T), "lm-lowbal")
             return
         if "@" not in em:
             return
-        plain = ("A buyer asked about your Local Market listing '%s', but the request could not reach you: "
-                 "the first buyer's introduction costs you %s Tuppence and your balance is lower than that. "
-                 "Top up your Tuppence in TrustSquare so the next buyer gets through. "
-                 "You pay once per listing, however many buyers follow." % (t, cost_T))
+        plain = ("You have a buyer for your Local Market listing '%s'. Accepting your first buyer on it costs "
+                 "%s Tuppence and your balance is lower than that. Top up your Tuppence in TrustSquare, then accept -- "
+                 "the buyer's request waits for you. You pay once per listing, however many buyers follow." % (t, cost_T))
         html = "<p>" + _ts_html.escape(plain) + "</p><p><a href=\"https://trustsquare.co/\">Open TrustSquare</a></p>"
-        _send_html_email(em, "A buyer asked about your listing - top up to receive it", html, plain)
+        _send_html_email(em, "You have a buyer waiting - top up to accept", html, plain)
     except Exception as exc:
         _log.error("LM-LOWBAL-1 notice failed for listing %s: %s", listing_id, exc)
 
@@ -13413,20 +13443,18 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks, ts_user: 
     # First-intro idempotency — only deduct from seller on the FIRST intro per listing (LM-T1)
     first_intro = (int(listing.get("lm_intro_charged") or 0) == 0)
 
-    # Seller balance check (only if this is the first chargeable intro)
+    # LM-STANDARD-FLOW-1 (RUL-190, David 27 Sep 2026: "inform her as we would for all other prospect buyers that she
+    # has a buyer and her wallet needs to pay the 1T ... We don't have exceptions to our standard flows"). A Local
+    # Market request is NEVER refused for the seller's balance. It lands in her queue like every other request; she
+    # pays 1T (2T boosted) when she ACCEPTS her first buyer on the listing (accept_intro), exactly as an agent pays to
+    # accept. If her balance is short she is told now that a buyer is waiting and to top up (LM-LOWBAL-1 notice).
+    _lm_short = False
     if first_intro:
-        _wallet_lock(conn)   # BUGSWEEP-24SEP
         bal = conn.execute(
-            "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
+            "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE LOWER(user_email) = LOWER(?)",
             (seller_email,)
         ).fetchone()["bal"] or 0
-        if int(bal) < cost_T:
-            conn.rollback(); conn.close()
-            _lm_low_balance_notice(seller_email, req.listing_id, listing.get("title", ""), cost_T)   # LM-LOWBAL-1
-            raise HTTPException(
-                status_code=402,
-                detail=f"seller_insufficient_tuppence (needs {cost_T}T, has {bal}T)"
-            )
+        _lm_short = int(bal) < cost_T
 
     # SEC-GATE-1 (24 Sep 2026): one buyer may not fan intros across every LM listing, each of which debits its seller 1T.
     _lm_recent = conn.execute(
@@ -13448,23 +13476,13 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks, ts_user: 
     )
     new_intro_id = cur.lastrowid
 
-    # Charge the seller on the first intro per listing (LM-T1, LM-T5)
-    if first_intro:
-        # BUGSWEEP-24SEP: claim the first-intro flag atomically; only the request that flips it pays.
-        _flip = conn.execute(
-            "UPDATE listings SET lm_intro_charged = 1 WHERE id = ? AND COALESCE(lm_intro_charged, 0) = 0",
-            (req.listing_id,))
-        first_intro = (_flip.rowcount == 1)
-    if first_intro:
-        txn_type = "lm_boost_deduct" if is_boosted else "lm_intro_deduct"
-        conn.execute(
-            "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, ?, ?, ?)",
-            (seller_email, txn_type, -cost_T,
-             f"Local Market intro · listing #{req.listing_id} · {listing.get('title','')}")
-        )
+    # LM-STANDARD-FLOW-1 (RUL-190): nothing is charged at request time any more -- the seller pays when she
+    # accepts her first buyer on this listing (accept_intro). lm_intro_charged is flipped there, once.
 
     conn.commit()
     conn.close()
+    if _lm_short:
+        _lm_low_balance_notice(seller_email, req.listing_id, listing.get("title", ""), cost_T)   # LM-LOWBAL-1 / RUL-190
 
     # n8n webhook (existing pattern — anonymous-safe payload)
     if N8N_WEBHOOK_NEW_INTRO:
@@ -13476,7 +13494,7 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks, ts_user: 
             "buyer_name":     req.buyer_name,
             "buyer_trust_score": buyer_score,   # seller's accept/decline signal
             "seller_email":   seller_email,
-            "tuppence_charged_to_seller": cost_T if first_intro else 0,
+            "tuppence_charged_to_seller": 0,   # RUL-190: she pays on accept
             "timestamp":      datetime.now(timezone.utc).isoformat(),
         }
         background_tasks.add_task(_fire_webhook, N8N_WEBHOOK_NEW_INTRO, payload)
@@ -13484,7 +13502,8 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks, ts_user: 
     return {
         "intro_id": new_intro_id,
         "message": "Local Market intro submitted",
-        "tuppence_charged_to_seller": cost_T if first_intro else 0,
+        "tuppence_charged_to_seller": 0,   # RUL-190: she pays when she accepts her first buyer
+        "seller_pays_on_accept_T": cost_T if first_intro else 0,
         "buyer_trust_score": buyer_score,
         "boosted": is_boosted,
     }

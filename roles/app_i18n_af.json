@@ -1732,7 +1732,10 @@
   "0 · New · 40 · Some evidence · 70 · Strong evidence · 90 · Fullest evidence": "0 · Nuut · 40 · Enkele bewyse · 70 · Sterk bewyse · 90 · Volledigste bewyse",
   "Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character.": "Die Trust Score wys die bewyse wat ’n verkoper verskaf het en die kontroles wat ons voltooi het. Dit is ’n telling, nie ’n waarborg of ’n oordeel oor iemand se karakter nie.",
   "A new seller simply has less evidence — not a mark against them.": "’n Nuwe verkoper het bloot minder bewyse — dit tel nie teen hulle nie.",
-  "to see sellers by the evidence they have supplied. Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character. A new seller simply has less evidence — not a mark against them.": "om verkopers te sien volgens die bewyse wat hulle verskaf het. Die Trust Score wys die bewyse wat ’n verkoper verskaf het en die kontroles wat ons voltooi het. Dit is ’n telling, nie ’n waarborg of ’n oordeel oor iemand se karakter nie. ’n Nuwe verkoper het bloot minder bewyse — dit tel nie teen hulle nie."
+  "to see sellers by the evidence they have supplied. Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character. A new seller simply has less evidence — not a mark against them.": "om verkopers te sien volgens die bewyse wat hulle verskaf het. Die Trust Score wys die bewyse wat ’n verkoper verskaf het en die kontroles wat ons voltooi het. Dit is ’n telling, nie ’n waarborg of ’n oordeel oor iemand se karakter nie. ’n Nuwe verkoper het bloot minder bewyse — dit tel nie teen hulle nie.",
+  "a seller's unchecked ID is shown to the buyer as a warning and never stops an introduction;": "'n verkoper se ongekontroleerde ID word as 'n waarskuwing aan die koper gewys en keer nooit 'n voorstelling nie;",
+  "Local Market sellers pay 1T when they accept their first buyer, and no buyer is turned away;": "Plaaslike Mark-verkopers betaal 1T wanneer hulle hul eerste koper aanvaar, en geen koper word weggewys nie;",
+  "🏷️ Peer-to-peer — the seller pays 1T when she accepts her first buyer; buyers pay nothing": "🏷️ Persoon-tot-persoon — die verkoper betaal 1T wanneer sy haar eerste koper aanvaar; kopers betaal niks"
  },
  "en": [
   "KE",
@@ -2239,6 +2242,7 @@
   "The following South African Acts are mandatory public law and cannot be waived, contracted out of, or overridden by this EULA. If any provision of this EULA conflicts with these Acts, the relevant Act prevails to the extent of the conflict:",
   "Some evidence — blue badge; standard listing position",
   "Strong evidence — green badge; higher visibility",
-  "Fullest evidence — gold badge + featured position"
+  "Fullest evidence — gold badge + featured position",
+  "5. Seller pays when she accepts."
  ]
 }

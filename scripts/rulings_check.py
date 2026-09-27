@@ -86,6 +86,23 @@ def _outside_repo(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-189": [
+   ("RULINGS.md", ["TESTERS RUN EVERY PAID AI FEATURE ON ANY PLAN, FOR EVER"], []),
+   ("bea_main.py", ["def _ai_is_tester(", "_paid_feed_gate_active() and not _ai_is_tester(conn, email)"], []),
+ ],
+ "RUL-188": [
+   ("RULINGS.md", ["LAUNCHED MEANS OPEN"], []),
+   ("bea_main.py", ["if not _is_live and not (_su", "requires_paid_feed(function_id) and _paid_feed_gate_active()"], []),
+   ("eula_clean.html", ["an unchecked ID never stops an Introduction"], ["Introduction requests to your listings are refused."]),
+ ],
+ "RUL-190": [
+   ("RULINGS.md", ["ONE STANDARD FLOW: A LOCAL MARKET BUYER IS NEVER TURNED AWAY"], []),
+   ("bea_main.py", ["LM-STANDARD-FLOW-1", "A buyer is waiting. Accepting your first buyer"], ['detail=f"seller_insufficient_tuppence']),
+   ("eula_clean.html", ["the request waits for her and is never refused for this reason"], ["If the Seller's balance is below the amount due, the request is refused."]),
+   ("LEGAL_VERSIONS.md", ["| **EULA** | **v1.20** |"], []),
+   ("ms.js", ["async function _introAnswerPut(", "if(ok==='topup') return;"], []),
+   ("canon.yml", ['eula: "v1.20"'], []),
+ ],
  "RUL-187": [
    ("RULINGS.md", ["DEMO EXAMPLES ARE INACTIVE"], []),
    ("bea_main.py", ["DEMO_EXAMPLE_DETAIL", "def _demo_refusal(", "raise HTTPException(status_code=409, detail=DEMO_EXAMPLE_DETAIL)"], []),
@@ -141,10 +158,9 @@ REFLECTIONS = {
  ],
  "RUL-181": [
    ("RULINGS.md", ["TERMS v1.19 PUBLISHED"], []),
-   ("bea_main.py", ['EULA_CURRENT_VERSION = "1.19"', 'EULA_V119_EFFECTIVE = "2026-10-12"', "TERMS_REQUIRED_DETAIL"], []),
-   ("eula_clean.html", ["Version 1.19 \u00b7 Last updated 27 September 2026", "I accept the Terms", "withdraw the request in the app"], ["expire automatically after 30 days"]),
-   ("LEGAL_VERSIONS.md", ["| **EULA** | **v1.19** |"], []),
-   ("canon.yml", ['eula: "v1.19"'], []),
+   ("bea_main.py", ['EULA_V119_EFFECTIVE = "2026-10-12"', "TERMS_REQUIRED_DETAIL"], []),   # RUL-190: version moved on to 1.20
+   ("eula_clean.html", ["Last updated 27 September 2026", "I accept the Terms", "withdraw the request in the app"], ["expire automatically after 30 days"]),
+   ("LEGAL_VERSIONS.md", ["**v1.19 (27 September 2026)"], []),
  ],
  "RUL-126": [
    # THE BASELINE CHANGES ONCE (14 Sep): one flag for the whole batch, dark by default, armed by
