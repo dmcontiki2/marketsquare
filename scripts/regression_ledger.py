@@ -31798,5 +31798,40 @@ def rg_a8_seller_pays_1():
         return [(FAIL, "A8 no longer lists the Local Market seller fee and the agent accept fee")]
     return [(INFO, "A8 lists both seller-side introduction fees")]
 
+
+@entry("RG-0525", "LANG-COST-RAIL-1: the second-language listing draft is inside the platform AI spend rail -- "
+       "refused over the day's ceiling, and every call's tokens logged",
+       LOCKED, fixed_on="2026-09-27",
+       scope="bea_main.py _lang_ai() (the one AI call behind POST /listings/{id}/lang/draft: the draft, the "
+             "back-translation and the English search layer). SCOPE: every language and every market -- the "
+             "rail sits in the helper, not in a route. CLASS: every paid AI call checks _check_cost_ceiling "
+             "BEFORE and calls _log_ai_spend AFTER (I18N-COST-RAIL-1 / RG-0453 is the sibling). FOUND 24 Sep "
+             "2026 by the cost sweep (DW-149, WARN '_lang_ai -- add a ceiling check'); the calls were capped by "
+             "their own per-advert and daily counters but outside the $10/day platform ceiling and invisible "
+             "to the spend dashboard. Sweep re-run 27 Sep: '_lang_ai -- ceiling OK spend-log OK', exit 0.",
+       ref="DW-149, RG-0453 (I18N-COST-RAIL-1), RUL-164.")
+def rg_lang_cost_rail_1():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py not readable from here")]
+    i = src.find("def _lang_ai(")
+    body = src[i:src.find("\ndef ", i + 10)] if i >= 0 else ""
+    bad = []
+    if not body:
+        bad.append("_lang_ai is gone")
+    else:
+        c, a, l = body.find("_check_cost_ceiling("), body.find("ai_provider.complete("), body.find("_log_ai_spend(")
+        if c < 0:
+            bad.append("_lang_ai no longer checks the platform ceiling")
+        elif a >= 0 and c > a:
+            bad.append("the ceiling check runs AFTER the AI call, so it cannot refuse it")
+        if l < 0:
+            bad.append("_lang_ai no longer logs its spend")
+        elif a >= 0 and l < a:
+            bad.append("the spend log runs before the call and cannot carry its tokens")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the listing language draft checks the ceiling first and logs every call")]
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -29523,8 +29523,14 @@ def lang_countries(ts_review: str = Cookie(default=None)):
 
 def _lang_ai(prompt: str, max_tokens: int = 1200) -> str:
     import ai_provider
+    # LANG-COST-RAIL-1 (27 Sep 2026, DW-149): the second-language draft is inside the platform rail like
+    # every other AI call (I18N-COST-RAIL-1's pattern) -- refused over the day's platform ceiling, and every
+    # call's real tokens are logged so the spend dashboard sees it. Its own per-advert and daily caps stay.
+    _check_cost_ceiling("")
     res = ai_provider.complete([{"role": "user", "content": prompt}], task=I18N_TASK,
                                max_tokens=max_tokens, timeout=18)
+    _log_ai_spend("", "/listings/lang/draft", I18N_TASK, res.in_tokens, res.out_tokens,
+                  provider=res.provider, model=res.model)
     if not (res.ok and res.text):
         raise HTTPException(status_code=503, detail="Translation is busy right now -- please try again in a minute.")
     return res.text.strip()

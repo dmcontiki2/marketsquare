@@ -105,7 +105,7 @@ mechanism copy, the Tuppence-ledger transactional write path (scale-shape invari
 ---
 
 ## CC-002 · Pricing + AI canon
-**Stage:** 4/5 STAGED (Fable run 10 Jun) — baseline ✓ · term map evidence-based (PROVISIONAL) · matrix built (35 rows) · staged edits complete incl. Gate-2 `bea_main.py` retired-paths diff · zero-token proof PASS (2 allowlisted AD-15 wishlist-Global hits) · NOTHING LIVE. Sequencing honoured: CC-002 staged files build on CC-001's. See `REPORT_CC-002.md` + `AWAITING_DAVID.md`. · **Opened:** 10 Jun 2026
+**Stage:** SUPERSEDED 27 Sep 2026 by RUL-107 + PRICING_CANON.md — never landed, nothing of it is live. Its staged edits and the AD-06..AD-18 questions were all written for the five-tier model that was retired 9–15 Jun and purged from the code on 7 Sep (RUL-107, David: *"we don't want the old tier process to resurface again"*); landing any of it would re-introduce that model. Pricing and tier questions are answered against PRICING_CANON.md from here. Closed by the attended session of 27 Sep (DW-010). [was: 4/5 STAGED (Fable run 10 Jun) — baseline ✓ · term map evidence-based (PROVISIONAL) · matrix built (35 rows) · staged edits complete incl. Gate-2 `bea_main.py` retired-paths diff · zero-token proof PASS (2 allowlisted AD-15 wishlist-Global hits) · NOTHING LIVE. Sequencing honoured: CC-002 staged files build on CC-001's. See `REPORT_CC-002.md` + `AWAITING_DAVID.md`. · **Opened:** 10 Jun 2026]
 **One-paragraph change:** "AI uses" / "AI sessions" are **retired**. In-app AI guidance is **FREE**;
 advanced AI functions are **Tuppence-priced per use**. Subscription tiers become **$0 / $12 / $20 / $40 /
 $100**; the **1T = $2** anchor sets monthly Tuppence allocations at **price ÷ 2 → 6 / 10 / 20 / 50T**; listing
