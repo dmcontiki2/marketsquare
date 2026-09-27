@@ -12,6 +12,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REG = os.path.join(ROOT, "roles", "role_registry.json")
 QH = os.path.join(ROOT, "quick.html")
 PH = os.path.join(ROOT, "assets", "quick_ph")
+CHECK_ONLY = False   # set from argv at the bottom (SYNC-GUARD-1)
 
 # door groups: the slate's working groups, in the words a worker would recognise
 GROUP_LABEL = {
@@ -59,8 +60,105 @@ def main():
           "var QI18N = %s;\n/* QUICK-I18N:END */" % json.dumps(d, ensure_ascii=False))
     ipat = re.compile(r"/\* QUICK-I18N:BEGIN.*?/\* QUICK-I18N:END \*/", re.S)
     if ipat.search(new): new = ipat.sub(lambda m: ib, new)
+    if CHECK_ONLY:
+        return _report_drift(q, block, ib, pat, ipat)
     if new != q: io.open(QH, "w", encoding="utf-8").write(new)
     print("quick.html: %d roles in %d groups; pictures in assets/quick_ph (role_*.jpg)" % (len(roles), len(grp)))
+    return 0
+
+
+def _blockwise(text, pat):
+    m = pat.search(text)
+    return m.group(0) if m else ""
+
+
+def _qi18n_obj(text):
+    """The QI18N object out of a quick.html, parsed. Returns None if it is not there or not
+    parseable -- callers must treat that as NOT MEASURED, never as agreement."""
+    m = re.search(r"var QI18N = (\{.*?\});", text, re.S)
+    if not m:
+        return None
+    try:
+        return json.loads(m.group(1))
+    except Exception:
+        return None
+
+
+def _report_drift(q, block, ib, pat, ipat):
+    """SYNC-CHECK-1 (27 Sep 2026) -- is the generated content in quick.html in step with its
+    sources, JUDGED BY CONTENT AND NOT BY BYTES?
+
+    Why this exists. Regression-ledger entry RG-0501 (QUICK-LANG-FULL-1) guarantees that every
+    word on Quick's screens exists in isiZulu, isiXhosa, Sepedi and Afrikaans. On 27 Sep its board
+    printed REGRESSION -- "quick.html's QI18N block is not the one roles/quick_i18n.json
+    generates -- run scripts/sync_quick_roles.py" -- and rc=1, "Do not deploy over this", over a
+    healthy page. MEASURED: regenerating the block changed 1 line and **0 keys and 0
+    translations** (771 whole-sentence keys, 6 phrases, 34 patterns, identical before and after,
+    value-for-value). The only difference was the ORDER the keys serialise in. So the conviction
+    was a byte comparison wearing a language-gap's words -- the same class as RG-0028 and
+    RG-0391, and the third time an instrument here has printed "do not deploy" over a healthy
+    site.
+
+    A missing key, a changed translation or a stale value still fails here. Serialisation order
+    does not, because a reader cannot see it.
+    """
+    ok = True
+    have_roles = _blockwise(q, pat)
+    if have_roles.strip() != block.strip():
+        print("DRIFT: the QUICK-ROLES block in quick.html is not what role_registry.json "
+              "generates -- run this script with no arguments to regenerate it.")
+        ok = False
+    else:
+        print("in step: QUICK-ROLES block matches roles/role_registry.json")
+
+    want = _qi18n_obj(ib)
+    have = _qi18n_obj(q)
+    if want is None or have is None:
+        print("NOT MEASURED: could not parse the QI18N object out of %s -- this is the checker "
+              "being blind, not agreement." % ("the generated block" if want is None else "quick.html"))
+        return 2
+    canon = lambda d: json.dumps(d, sort_keys=True, ensure_ascii=False)
+    if canon(want) == canon(have):
+        print("in step: QI18N matches roles/quick_i18n.json -- %d words, %d phrases, %d patterns "
+              "(compared by CONTENT; key order is not a fault a reader can see)"
+              % (len(have.get("w", {})), len(have.get("p", [])), len(have.get("r", []))))
+    else:
+        ok = False
+        hw, ww = have.get("w", {}), want.get("w", {})
+        missing = sorted(set(ww) - set(hw))
+        extra = sorted(set(hw) - set(ww))
+        changed = [k for k in set(hw) & set(ww) if hw[k] != ww[k]]
+        print("DRIFT: QI18N in quick.html is not the CONTENT roles/quick_i18n.json generates.")
+        print("  missing from quick.html: %d%s" % (len(missing), (" e.g. " + repr(missing[0][:70])) if missing else ""))
+        print("  present only in quick.html: %d%s" % (len(extra), (" e.g. " + repr(extra[0][:70])) if extra else ""))
+        print("  same key, different translations: %d%s" % (len(changed), (" e.g. " + repr(changed[0][:70])) if changed else ""))
+        if not (missing or extra or changed):
+            print("  ...and none of the three: the phrase or pattern LISTS differ (p: %d vs %d, "
+                  "r: %d vs %d). Still content, still worth fixing."
+                  % (len(have.get("p", [])), len(want.get("p", [])),
+                     len(have.get("r", [])), len(want.get("r", []))))
+    return 0 if ok else 1
+
+
+USAGE = """sync_quick_roles.py -- regenerate the generated blocks in quick.html from their sources.
+
+  (no arguments)   regenerate QUICK-ROLES (from roles/role_registry.json) and QUICK-I18N
+                   (from roles/quick_i18n.json) in quick.html, and WRITE the file.
+  --check          report whether those blocks are in step, BY CONTENT, and write nothing.
+                   exit 0 in step, 1 real drift, 2 could not measure.
+  --help, -h       this text. Writes nothing.
+
+SYNC-GUARD-1 (27 Sep 2026): this script used to ignore argv entirely, so `--help` RAN THE FULL
+SYNC and rewrote a live page -- which is how the 27 Sep stand-up rewrote quick.html's 771-key
+QI18N block while asking the script what it did. An informational call must never write."""
 
 if __name__ == "__main__":
-    main()
+    _args = [a for a in sys.argv[1:] if a.strip()]
+    CHECK_ONLY = "--check" in _args
+    if "--help" in _args or "-h" in _args:
+        print(USAGE)
+        sys.exit(0)
+    _unknown = [a for a in _args if a not in ("--check",)]
+    if _unknown:
+        sys.exit("unknown argument(s): %s\n\n%s" % (" ".join(_unknown), USAGE))
+    sys.exit(main() or 0)
