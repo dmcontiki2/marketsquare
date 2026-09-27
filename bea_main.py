@@ -9554,7 +9554,15 @@ def _paystack_paid_enough(data, expected_rands, ref=""):
 
 
 @app.post("/payment/initialize")
-def initialize_payment(email: str, tuppence: int, ai_pack_sessions: int = 0, callback_url: str = ""):
+def initialize_payment(email: str, tuppence: int, ai_pack_sessions: int = 0, callback_url: str = "",
+                       ts_user: str = Cookie(default=None)):
+    # RECEIPT-EMAIL-1 (RUL-190 follow-up, David 27 Sep 2026: "Yes"): the Tuppence is credited to the SIGNED-IN
+    # account; `email` is where Paystack sends the receipt. A WhatsApp-link (key) seller has no inbox, so she types a
+    # real address for the receipt -- and her Tuppence still lands on her key account, not on a stranger's row.
+    receipt_email = (email or "").strip()
+    email = (_session_email(ts_user) or receipt_email).strip().lower()
+    if _is_key_identity(receipt_email.lower()) or "@" not in receipt_email:
+        raise HTTPException(status_code=422, detail="Please give a real email address for your payment receipt.")
     # BUYER-TERMS-1: accepted Terms before the first Tuppence top-up (a positive act before money is committed).
     _tc = database.get_db()
     try:
@@ -9570,10 +9578,11 @@ def initialize_payment(email: str, tuppence: int, ai_pack_sessions: int = 0, cal
     # SEC-GATE-1 (24 Sep 2026): AI packs are retired and were never priced here - never carry a free count into metadata.
     ai_pack_sessions = 0
     result = payments.initialize_payment(
-        email=email,
+        email=receipt_email,                     # RECEIPT-EMAIL-1: the receipt goes to a real inbox
         amount_rands=amount_rands,
         reference=reference,
-        metadata={"tuppence": tuppence, "email": email, "ai_pack_sessions": ai_pack_sessions},
+        metadata={"tuppence": tuppence, "email": email, "receipt_email": receipt_email,   # "email" = the account credited
+                  "ai_pack_sessions": ai_pack_sessions},
         callback_url=_safe_callback_url(callback_url)   # SEC-GATE-1 (24 Sep 2026): own-site callback only
     )
     if result.get("status"):

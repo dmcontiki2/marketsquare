@@ -32106,5 +32106,26 @@ def rg_ripple_rerun_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "reference sign-in, Buzz reply-to, received intros, AI prefill, price sync, draft truth, AI notice, Quick button")]
 
+@entry("RG-0534", "RECEIPT-EMAIL-1: a top-up credits the SIGNED-IN account and sends the Paystack receipt to a real inbox "
+       "-- a WhatsApp-link seller types her own email for the receipt and her Tuppence still lands on her key account",
+       OPEN, fixed_on="2026-09-27",
+       scope="bea_main.py initialize_payment (session = account credited, email = receipt; a key address is refused as "
+             "a receipt address); ms.js topUp/confirmTopUp (no key address prefilled, credentials sent). CLASS: the "
+             "payer's identity and the receipt address were one field, so fixing one broke the other.",
+       ref="David 27 Sep 2026 ('Yes'), RUL-167 (key accounts), RUL-190. LOCK after a rendered top-up sheet check.")
+def rg_receipt_email_1():
+    b = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = b.find("def initialize_payment("); seg = b[i:i + 3000] if i >= 0 else ""
+    bad = []
+    if "_session_email(ts_user) or receipt_email" not in seg or "email=receipt_email" not in seg:
+        bad.append("the top-up no longer separates the account credited from the receipt address")
+    if "RECEIPT-EMAIL-1" not in js or "credentials:'include'" not in js[js.find("async function confirmTopUp"):js.find("async function confirmTopUp") + 2500]:
+        bad.append("the top-up sheet prefills a key address or does not send the session")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "top-up credits the session account; the receipt goes to a real inbox")]
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -1719,7 +1719,12 @@ function topUp(n){
   var _tuIso=(typeof activeCountry!=='undefined' && activeCountry && activeCountry.iso2)||'ZA';
   document.getElementById('topup-zar-label').textContent=fxTopupLine(_tuIso, usd);
   document.getElementById('topup-usd-label').textContent='$'+usd;
-  try{ const _te=document.getElementById('topup-email'); if(_te && !_te.value) _te.value=_msSignedEmail(); }catch(_){}   // E2E-HMI-1
+  try{ const _te=document.getElementById('topup-email'); const _se=String(_msSignedEmail()||'');
+       /* RECEIPT-EMAIL-1: a WhatsApp-link account's address is private and never mailed -- ask for a real one for the
+          Paystack receipt; the Tuppence still goes to the signed-in account (the server credits the session). */
+       if(_te && /@key\.trustsquare\.co$/i.test(_te.value||'')) _te.value='';
+       if(_te && /@key\.trustsquare\.co$/i.test(_se)){ _te.placeholder='Your email, for the payment receipt'; }
+       else if(_te && !_te.value) _te.value=_se; }catch(_){}   // E2E-HMI-1
   document.getElementById('topup-modal').classList.add('open');
 }
 function aaBuyAIPack(t, sessions){
@@ -1766,6 +1771,7 @@ async function confirmTopUp(){
   const emailEl=document.getElementById('topup-email');
   const email=emailEl?emailEl.value.trim():'';
   if(!email||!email.includes('@')){ showToast('Please enter your email address'); return; }
+  if(/@key\.trustsquare\.co$/i.test(email)){ showToast('Please give a real email address for your payment receipt.'); return; }   // RECEIPT-EMAIL-1
   showToast('Redirecting to secure payment…');
   document.getElementById('topup-modal').classList.remove('open');
   const aiSessions=pendingAIPackSessions;
@@ -1774,7 +1780,7 @@ async function confirmTopUp(){
     const callbackUrl = encodeURIComponent(window.location.origin + window.location.pathname + '?ps_return=1');
     let url=BEA_URL+'/payment/initialize?email='+encodeURIComponent(email)+'&tuppence='+n+'&callback_url='+callbackUrl;
     if(aiSessions) url+='&ai_pack_sessions='+aiSessions;
-    const res = await _tsWithTerms(email, function(){ return fetch(url, {method:'POST'}); });   // BUYER-TERMS-1
+    const res = await _tsWithTerms(email, function(){ return fetch(url, {method:'POST', credentials:'include'}); });   // BUYER-TERMS-1; RECEIPT-EMAIL-1: the session is the account credited
     if(!res){ showToast('Top-up cancelled — the Terms were not accepted.'); return; }
     const data = await res.json();
     if(data.authorization_url){ window.location.href = data.authorization_url; }
