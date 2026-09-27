@@ -2119,6 +2119,10 @@
    ]
   },
   {
+   "key": "POST /users/me/name",
+   "level": "user"
+  },
+  {
    "key": "POST /users/me/profile",
    "level": "user",
    "bind": [
