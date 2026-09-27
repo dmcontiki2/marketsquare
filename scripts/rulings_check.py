@@ -87,6 +87,13 @@ def _outside_repo(path):
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
  # R7 (27 Sep 2026): Terms v1.19 published with David's answers; the open countries; one buyer at a time on Property.
+ "RUL-184": [
+   ("RULINGS.md", ["A COMPLAINT CARRIES PLAIN WORDS ONLY"], []),
+   ("fault_text.py", ["TITLE_MAX = 150", "DETAIL_MAX = 1000", "NAME_MAX = 80"], []),
+   ("bea_main.py", ["title = _fault_text.clean_title(title)", "message = _fault_text.clean_detail(message)"], ["message = (message or \"\").strip()[:4000]"]),
+   ("scripts/maintenance_agent.py", ["def _complaint(fault, page=True):"], []),
+   ("support.html", ['maxlength="1000"'], []),
+ ],
  "RUL-183": [
    ("RULINGS.md", ["A PROPERTY LISTING TAKES ONE BUYER AT A TIME"], []),
    ("bea_main.py", ['_COMMITMENT_CATEGORIES = ("property",)', "SET listing_status = 'paused', auto_paused_intro_id = ?"], []),

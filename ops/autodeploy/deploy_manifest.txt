@@ -20,6 +20,7 @@ bea_main.py                | main.py
 # SEC-GATE-1 (24 Sep 2026): the central security gate + its route policy. main.py imports the gate at
 # startup and the gate refuses every route this policy does not declare - both must ship together.
 security_gate.py           | security_gate.py
+fault_text.py              | fault_text.py
 route_policy.json          | route_policy.json
 
 # ── Static front-end assets (nginx serves these from /static/) ───────────────

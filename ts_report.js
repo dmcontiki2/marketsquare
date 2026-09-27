@@ -101,6 +101,21 @@
     field('title', 'What&rsquo;s wrong? <span style="color:' + GOLD + '">*</span>',
           el('textarea', FLD + 'height:104px;resize:vertical;')).placeholder =
             'Just say it plainly — what you did, and what happened instead.';
+    /* FAULT-TEXT-1 (27 Sep 2026, DW-162 -- David: "No complaint should allow large amount of characters
+       but only a limited set of characters"). The box stops at 1,000 characters and says so; the server
+       applies the same limit and keeps only letters, numbers and ordinary punctuation (fault_text.py),
+       so markup or hidden characters can never ride in on a report. */
+    var MAXC = 1000;
+    f.title.maxLength = MAXC;
+    var cnt = el('div', 'font-size:11.5px;color:#94a3b8;margin-top:4px;display:flex;justify-content:space-between;gap:8px;');
+    var cntHint = el('span', '', 'Letters, numbers and ordinary punctuation only.');
+    var cntNum = el('span', 'white-space:nowrap;', '0 / ' + MAXC);
+    cnt.appendChild(cntHint); cnt.appendChild(cntNum); body.appendChild(cnt);
+    f.title.addEventListener('input', function () {
+      var n = (f.title.value || '').length;
+      cntNum.textContent = n + ' / ' + MAXC;
+      cntNum.style.color = n >= MAXC ? '#b91c1c' : '#94a3b8';
+    });
 
     var em = field('reporter_email', 'Your email <span style="color:' + GOLD + '">*</span>', el('input', FLD));
     em.type = 'email'; em.value = testerEmail();
@@ -234,8 +249,8 @@
 
       var fd = new FormData();
       // first line becomes the headline; the whole thing is kept as the detail
-      fd.append('title', t.split('\n')[0].slice(0, 160));
-      fd.append('detail', t);
+      fd.append('title', t.split('\n')[0].slice(0, 150));
+      fd.append('detail', t.slice(0, MAXC));
       fd.append('reporter_email', e);
       fd.append('reporter_name', testerName());
       // bin is derived server-side from the page address; severity is set at triage

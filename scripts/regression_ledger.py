@@ -31647,5 +31647,89 @@ def rg_witness_in_agent_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "the maintenance loop refreshes the wave-hygiene witness on every run")]
 
+
+@entry("RG-0521", "FAULT-TEXT-1: a complaint carries plain words only -- letters, digits and ordinary punctuation, "
+       "at most 1,000 characters -- at the door AND where the maintenance agent uses it",
+       OPEN, fixed_on="2026-09-27",
+       scope="fault_text.py (the one cleaner, deployed beside main.py); bea_main.py POST /app/fault and POST "
+             "/support/message (title 150, message 1,000, name 80, before anything is stored); "
+             "scripts/maintenance_agent.py _complaint() (every AI prompt that carries a complaint: design, "
+             "classify, patch, rewrite -- cleaned, capped and fenced as DATA) and the design dossier (cleaned, "
+             "heading markdown-escaped); ts_report.js and support.html (1,000-character box with a counter). "
+             "SCOPE: every door a complaint enters by today -- in-app report and the public support form -- and "
+             "every old row the agent reads. CLASS: text typed by the public is data; it may never carry markup, "
+             "hidden characters or a wall of text into a page, a file or an AI prompt. FOUND 27 Sep 2026 by the "
+             "QA Bot's nightly code review (DW-162). David, 27 Sep 2026: 'No complaint should allow large amount "
+             "of characters but only a limited set of characters, and how can we make it safe of hidden code?'",
+       ref="DW-162, RUL-184, QA-BOT-1 nightly 20260927-003507.")
+def rg_fault_text_1():
+    out, bad = [], []
+    src = repo_file("fault_text.py")
+    if src is None:
+        out.append((INFO, "repo half NOT EVALUATED - fault_text.py not readable from here"))
+    else:
+        import importlib.util, tempfile
+        tmp = os.path.join(tempfile.mkdtemp(), "fault_text_rg0521.py")
+        with open(tmp, "w", encoding="utf-8") as fh:
+            fh.write(src)
+        spec = importlib.util.spec_from_file_location("fault_text_rg0521", tmp)
+        ft = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(ft)
+        hostile = ["<script>alert(1)</script>", "[x](javascript:alert(1))", "a\u200bb\u202ec\u2066d",
+                   "`x` {y} |z| \\w ^v ~u", "e" + "\u0301" * 40]
+        for h in hostile:
+            c = ft.clean_detail(h)
+            if any(ch in c for ch in "<>[]{}`|\\^~\u200b\u202e\u2066"):
+                bad.append("the cleaner let a code or hidden character through: %r -> %r" % (h[:30], c[:30]))
+            if "\u0301" * 3 in c:
+                bad.append("the cleaner let a stack of accent marks through")
+        if len(ft.clean_detail("x" * 50000)) > 1000 or len(ft.clean_title("y" * 5000)) > 150:
+            bad.append("a complaint can exceed its length limit")
+        keep = "Ngiyabonga! R1,500.00 - listing #12 (https://trustsquare.co/?listing=12): e-mail a@b.co"
+        if ft.clean_detail(keep) != keep:
+            bad.append("the cleaner damages ordinary words: %r" % ft.clean_detail(keep))
+        bm = repo_file("bea_main.py") or ""
+        for needle, what in (("title = _fault_text.clean_title(title)", "/app/fault title"),
+                             ("detail = _fault_text.clean_detail(detail)", "/app/fault detail"),
+                             ("message = _fault_text.clean_detail(message)", "/support/message body"),
+                             ("name = _fault_text.clean_name(name)", "/support/message name")):
+            if needle not in bm:
+                bad.append("%s is no longer cleaned at the door" % what)
+        ma = repo_file("scripts/maintenance_agent.py") or ""
+        if ma.count("_complaint(fault") < 4:
+            bad.append("an AI prompt in the maintenance agent no longer uses the fenced, cleaned complaint")
+        if '"TITLE: %s\\nDETAIL: %s\\nPAGE: %s" % (\n        fault.get("title"' in ma:
+            bad.append("a raw complaint prompt is back in the maintenance agent")
+        if "_FT.md_inline(title" not in ma:
+            bad.append("the dossier heading is no longer markdown-escaped")
+        man = repo_file("ops/autodeploy/deploy_manifest.txt") or ""
+        if not any(l.split("|")[0].strip() == "fault_text.py" for l in man.splitlines() if "|" in l):
+            bad.append("fault_text.py is not in the deploy manifest -- the server would fail to import it")
+        tr = repo_file("ts_report.js") or ""
+        if "f.title.maxLength = MAXC" not in tr:
+            bad.append("the in-app report box no longer stops at the limit")
+        if not bad:
+            out.append((INFO, "the cleaner holds on hostile input and every door and prompt uses it, repo"))
+    # live half: the public support form, in probe mode (.invalid never stores or mails)
+    try:
+        _require_net()
+        body = urllib.parse.urlencode({"message": "<<<>>> {} [] ``` || ~~ ^^",
+                                       "email": "ledger-probe@rg0521.invalid"}).encode()
+        req = urllib.request.Request(BASE + "/support/message", data=body, method="POST",
+                                     headers=dict(UA, **{"Content-Type": "application/x-www-form-urlencoded"}))
+        try:
+            code = urllib.request.urlopen(req, timeout=TIMEOUT).getcode()
+        except urllib.error.HTTPError as e:
+            code = e.code
+        if code == 400:
+            out.append((INFO, "live: a message made only of code characters is refused (400)"))
+        else:
+            bad.append("live: a message made only of code characters was accepted (HTTP %s)" % code)
+    except ProbeOffline as ex:
+        out.append((INFO, "live half NOT EVALUATED - %s" % ex))
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return out
+
 if __name__ == "__main__":
     sys.exit(main())

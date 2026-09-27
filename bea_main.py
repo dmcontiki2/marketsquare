@@ -25590,6 +25590,9 @@ def _fault_ip_ok(ip: str) -> bool:
     return rec[0] <= _FAULT_MAX_PER_IP
 
 
+import fault_text as _fault_text   # FAULT-TEXT-1 (27 Sep 2026, DW-162): the one complaint-text cleaner
+
+
 def _fault_row_public(r) -> dict:
     d = dict(r)
     d.pop("user_agent", None)
@@ -25632,11 +25635,13 @@ async def app_fault_file(
     if not _fault_ip_ok(ip):
         raise HTTPException(status_code=429, detail="Too many reports. Please wait a few minutes.")
 
-    title = (title or "").strip()[:200]
+    # FAULT-TEXT-1 (27 Sep 2026, DW-162): letters, digits and ordinary punctuation only, and a hard
+    # length limit - so no complaint can carry markup, hidden characters or a wall of text.
+    title = _fault_text.clean_title(title)
     if not title:
         raise HTTPException(status_code=400, detail="Tell us in one line what went wrong.")
-    detail = (detail or "").strip()[:4000]
-    reporter_name = (reporter_name or "").strip()[:120]
+    detail = _fault_text.clean_detail(detail)
+    reporter_name = _fault_text.clean_name(reporter_name)
     bin = (bin or "").strip().upper()
     if bin not in FAULT_BINS:
         # SIMPLIFIED INTAKE (David, 5 Aug 2026): the tester is no longer asked to classify
@@ -25838,7 +25843,7 @@ async def support_message(
                             detail="That is a lot of messages at once. Please wait a few minutes "
                                    "and try again - nothing you typed is lost.")
 
-    message = (message or "").strip()[:4000]
+    message = _fault_text.clean_detail(message)   # FAULT-TEXT-1 (27 Sep 2026, DW-162)
     if len(message) < 10:
         raise HTTPException(status_code=400,
                             detail="Please tell us a little more about what went wrong.")
@@ -25846,7 +25851,7 @@ async def support_message(
     if "@" not in email or "." not in email.split("@")[-1]:
         raise HTTPException(status_code=400,
                             detail="Please give us an email address so we can write back.")
-    name = (name or "").strip()[:120]
+    name = _fault_text.clean_name(name)          # FAULT-TEXT-1
     topic = (topic or "").strip().lower()[:40]
     bin_ = SUPPORT_TOPIC_BINS.get(topic, "MISC")
 
@@ -25857,7 +25862,7 @@ async def support_message(
     if email.endswith(".invalid"):
         return {"ok": True, "probe": True, "would_store": True, "bin": bin_}
 
-    title = message.splitlines()[0].strip()[:140] or "Support message"
+    title = _fault_text.clean_title(message.splitlines()[0]) or "Support message"
     conn = database.get_db()
     try:
         # SEC-GATE-1 (24 Sep 2026): per-recipient hourly cap on the AI triage + ack mail, so the

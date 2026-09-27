@@ -403,7 +403,7 @@
       <div class="form-row">
         <div class="form-field">
           <label>Your Name</label>
-          <input type="text" name="name" placeholder="David Maurice" required>
+          <input type="text" name="name" placeholder="David Maurice" maxlength="80" required>
         </div>
         <div class="form-field">
           <label>Email Address</label>
@@ -435,7 +435,10 @@
       </div>
       <div class="form-field">
         <label>Message</label>
-        <textarea name="message" placeholder="Describe your issue or question in as much detail as possible…" required></textarea>
+        <textarea name="message" placeholder="Describe your issue or question in as much detail as possible…" maxlength="1000" required></textarea>
+        <!-- FAULT-TEXT-1 (27 Sep 2026, DW-162): 1,000 characters, plain words only. The server applies the
+             same limit and keeps only letters, numbers and ordinary punctuation (fault_text.py). -->
+        <div id="msg-count" style="font-size:12px;color:#94a3b8;margin-top:4px;display:flex;justify-content:space-between;gap:8px;"><span>Letters, numbers and ordinary punctuation only.</span><span id="msg-count-n">0 / 1000</span></div>
       </div>
       <!-- Honeypot: off-screen and aria-hidden, so no human ever fills it in. A bot that
            fills every field is accepted and silently dropped - telling it that it was caught
@@ -564,6 +567,17 @@
 })();
 </script>
 
-<script src="/static/ts_report.js?v=6" defer></script>
+<script src="/static/ts_report.js?v=8" defer></script>
+<script>
+/* FAULT-TEXT-1 (27 Sep 2026): live character count for the message box. */
+(function(){
+  try{
+    var ta=document.querySelector('#support-form textarea[name=message]'), n=document.getElementById('msg-count-n');
+    if(!ta||!n) return;
+    function upd(){ var c=(ta.value||'').length; n.textContent=c+' / 1000'; n.style.color=c>=1000?'#b91c1c':'#94a3b8'; }
+    ta.addEventListener('input',upd); setTimeout(upd,400);
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
