@@ -898,14 +898,25 @@
    "level": "admin"
   },
   {
-   "key": "POST /users/{email}/banking",
+   "key": "GET /payment/banks",
+   "level": "public",
+   "note": "BANKRESOLVE-1: Paystack's bank list so the picker carries real bank codes rather than a guessed table. Public, cached a day, no customer data."
+  },
+  {
+   "key": "POST /users/{email}/verify-bank-name",
    "level": "user",
    "bind": [
     {
      "name": "email",
      "in": "path"
     }
-   ]
+   ],
+   "note": "BANKRESOLVE-1 (27 Sep 2026, RUL-176/178): replaces POST /users/{email}/banking, which stored account holder, bank, last-4 and branch code. This one holds nothing: the account number is a local variable for one Paystack /bank/resolve call and only the boolean verdict is written (users.bank_name_verified_at). Same 'user' level and same email binding as the route it replaces, so a Seller can only ever check her own account."
+  },
+  {
+   "key": "POST /admin/identity/confirm",
+   "level": "admin",
+   "note": "ID-CONFIRM-1 (27 Sep 2026, RUL-178): a human confirms or rejects an uploaded identity document. Admin only and deliberately NOT 'local: true' — confirming an identity is a judgement a person makes, never something automation on the box may do."
   },
   {
    "key": "GET /users/{email}/identity-status",

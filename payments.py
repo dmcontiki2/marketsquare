@@ -140,3 +140,97 @@ def verify_webhook_signature(payload_bytes: bytes, signature: str) -> bool:
         hashlib.sha512,
     ).hexdigest()
     return hmac.compare_digest(expected, signature)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# BANKRESOLVE-1 (27 Sep 2026) — RUL-176/178.
+#
+# Ask the bank, through Paystack, for the name that stands against an account number.
+# This is the only place in the codebase that handles a customer account number, and it
+# handles it as an argument that is never returned, never logged and never stored: the
+# caller gets {"ok": bool, "account_name": str} and writes only a verdict from it.
+#
+# Deliberately NOT a free call. Paystack charges per account resolution, so:
+#   - one call per Seller per attempt, never a loop or a retry;
+#   - a transport failure returns ok=False and the caller records NOT MEASURED, never a
+#     failed match, so a vendor outage does not cost a Seller points;
+#   - nothing here caches the number in order to "save" a later call.
+# David approved the paid lane on 27 Sep 2026 (option 4 of four).
+#
+# NOTE ON LOGGING: this function must never log `account_number`, and must never put it
+# in an exception it raises. scripts/test_identity_verdicts.py reads this source and
+# fails if the name appears in a logging or raise statement.
+# ══════════════════════════════════════════════════════════════════════════════
+def resolve_account_name(account_number: str, bank_code: str) -> dict:
+    """Resolve an account number to the account holder name the bank holds.
+
+    Returns {"ok": True, "account_name": "..."} or {"ok": False, "reason": "..."}.
+    The reason never contains the account number.
+    """
+    try:
+        resp = requests.get(
+            f"{_BASE_URL}/bank/resolve",
+            params={"account_number": account_number, "bank_code": bank_code},
+            headers=_headers(),
+            timeout=20,
+        )
+        body = resp.json()
+    except Exception:
+        # The exception text can carry the query string, so it is deliberately discarded
+        # rather than echoed — a leak into a log is exactly what this lane exists to avoid.
+        return {"ok": False, "reason": "bank name lookup unreachable"}
+    if not body.get("status"):
+        return {"ok": False, "reason": "bank could not confirm that account"}
+    name = ((body.get("data") or {}).get("account_name") or "").strip()
+    if not name:
+        return {"ok": False, "reason": "bank returned no account name"}
+    return {"ok": True, "account_name": name}
+
+
+def payment_account_name(verify_data: dict) -> str:
+    """PAYNAME-1 (27 Sep 2026) — the account or sender name Paystack reports for a
+    payment that already happened, or '' when it reports none.
+
+    Paystack returns a usable name for EFT / DebiCheck and for some mobile-money and
+    bank channels; for most card charges it returns none. So this returns '' far more
+    often than not, and the caller MUST treat '' as "not measured" rather than as a
+    mismatch — a Seller who paid by card has not failed a check, she was never checked.
+    """
+    d = verify_data or {}
+    auth = d.get("authorization") or {}
+    for cand in (auth.get("account_name"), auth.get("sender_name"),
+                 auth.get("receiver_bank_account_name"), d.get("sender_name"),
+                 (d.get("customer") or {}).get("account_name")):
+        if isinstance(cand, str) and cand.strip():
+            return cand.strip()
+    return ""
+
+
+def list_banks(currency: str = "ZAR") -> dict:
+    """Banks Paystack can resolve for, as [{"name","code"}].
+
+    BANKRESOLVE-1 (27 Sep 2026): the resolve call needs Paystack's own bank CODE, not a
+    bank name. Hardcoding a code table would be inventing data we cannot verify and would
+    rot silently the first time Paystack changed one, so the list is fetched and the app's
+    picker is built from it. A failure returns ok=False and the picker says it cannot load
+    rather than offering a guess.
+    """
+    try:
+        resp = requests.get(
+            f"{_BASE_URL}/bank",
+            params={"currency": currency},
+            headers=_headers(),
+            timeout=20,
+        )
+        body = resp.json()
+    except Exception as exc:
+        return {"ok": False, "reason": str(exc)[:120]}
+    if not body.get("status"):
+        return {"ok": False, "reason": (body.get("message") or "bank list unavailable")[:120]}
+    banks = []
+    for b in (body.get("data") or []):
+        name, code = (b.get("name") or "").strip(), (b.get("code") or "").strip()
+        if name and code:
+            banks.append({"name": name, "code": code})
+    banks.sort(key=lambda x: x["name"].lower())
+    return {"ok": True, "banks": banks}

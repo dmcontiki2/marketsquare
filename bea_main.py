@@ -4785,6 +4785,17 @@ def auth_phone_verify(body: _PhoneVerify, response: Response, request: Request =
         else:
             em = _new_key_identity()
             conn.execute("INSERT INTO users (email, phone, aa_free_used, aa_sessions_remaining) VALUES (?,?,0,0)", (em, e164))
+        # PHONE-CRED-1 (27 Sep 2026, RUL-178): this flow was already complete — a hashed
+        # six-digit code, five-attempt limit, expiry, single use — and it awarded NOTHING.
+        # category.lm.phone_verified (2 pts) had been declared since the catalogue was
+        # written and no code ever wrote it, so a Seller who proved she holds that SIM got
+        # no credit for it. Possession of the number is proven at exactly this line.
+        try:
+            conn.execute("UPDATE users SET phone_verified_at=? WHERE email=?",
+                         (_utc_now(), em))
+            _upsert_credential(conn, em, "category.lm.phone_verified", "earned")
+        except Exception as _e:
+            _log.warning("PHONE-CRED-1: credential not written (%s)", type(_e).__name__)
         conn.commit()
     finally:
         conn.close()
@@ -9234,10 +9245,36 @@ def verify_payment(reference: str):
                 "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + ? WHERE email = ?",
                 (ai_sessions, email)
             )
+        # PAYNAME-1, same check on the client-side path (whichever lands first wins; the
+        # credential upsert is idempotent). The verdict never reaches this response.
+        if email:
+            _payment_name_check(conn, email, result["data"])
         conn.commit()
         conn.close()
         return {"status": "ok", "tuppence_credited": tuppence, "ai_sessions_credited": ai_sessions, "email": email}
     raise HTTPException(status_code=400, detail="Payment verification failed")
+
+@app.get("/payment/banks")
+def payment_banks():
+    """The bank picker for BANKRESOLVE-1, from Paystack's own list, cached for a day.
+
+    Why an endpoint and not a constant in ms.js: the resolve call needs Paystack's bank
+    CODE. A hardcoded table would be data we invented, and it would rot silently the first
+    time a code changed. On failure this returns ok=false and the app says the list cannot
+    load — it never offers a guessed code, because a wrong code resolves to the wrong bank.
+    """
+    import time as _t
+    now = _t.time()
+    c = globals().setdefault("_BANKS_CACHE", {"at": 0.0, "payload": None})
+    if c["payload"] and (now - c["at"]) < 86400:
+        return c["payload"]
+    res = payments.list_banks("ZAR")
+    payload = ({"ok": True, "banks": res["banks"]} if res.get("ok")
+               else {"ok": False, "banks": [], "reason": "bank list unavailable just now"})
+    if res.get("ok"):
+        c["at"], c["payload"] = now, payload
+    return payload
+
 
 @app.get("/payment/test")
 def test_payment_connection():
@@ -9327,6 +9364,12 @@ async def paystack_webhook(request: Request):
                 (ai_sessions, email)
             )
             _log.info("Paystack webhook: credited %d AI sessions to %s (ref %s)", ai_sessions, email, reference)
+
+        # PAYNAME-1: read the payer's name off a payment that already succeeded and keep
+        # only whether it matched her verified ID. Never fails the webhook — Paystack
+        # retries a non-2xx, so a trust check must not be able to replay a credit.
+        if email:
+            _payment_name_check(conn, email, data)
 
         conn.commit()
         conn.close()
@@ -13619,8 +13662,20 @@ _CATEGORY_SIGNALS = {
     "local_market": {
         # ── Identity (max ~20 from category — Universal also contributes) ──
         "category.lm.phone_verified":      {"name": "Phone number verified",               "points": 2,  "how_to_earn": "Add and verify your mobile number in your profile.", "evidence_required": False},
-        "category.lm.banking":             {"name": "Banking details on file",              "points": 2,  "how_to_earn": "Add your bank account details — they help confirm who you are and are used when you buy Tuppence.", "evidence_required": False},
-        "category.lm.banking_name_match":  {"name": "Bank account holder name verified",   "points": 3,  "how_to_earn": "Account holder name on bank details matches your verified ID name.", "evidence_required": False},
+        # ── RUL-176/178 (David, 27 Sep 2026): the two banking credentials below were
+        # RETIRED, and these two replace their 5 points with checks that hold NO
+        # customer data. What the old pair actually measured was "a bank has checked
+        # this person and the account holder name matches her ID" -- but it got there
+        # by asking her to TYPE an account number nobody validated, and by storing it.
+        # These two get the same fact from a third party and keep only the verdict:
+        #   payment_name_verified -- a bank MOVED MONEY in that name (strictly stronger
+        #     evidence than a typed number), read off the payment she was making anyway.
+        #   bank_name_verified    -- Paystack resolved the account number to its holder
+        #     name; the number lived in one local variable and was never written down.
+        # Retired ids stay listed in _RETIRED_SIGNALS so an old earned row stops scoring
+        # instead of silently keeping points for a credential we no longer stand behind.
+        "category.lm.payment_name_verified": {"name": "Name on payment matches verified ID", "points": 3, "how_to_earn": "Buy Tuppence or a subscription — if your bank or card gives us the account name, we check it against your verified ID name and keep only whether it matched.", "evidence_required": False},
+        "category.lm.bank_name_verified":    {"name": "Bank account name matches verified ID", "points": 2, "how_to_earn": "Enter your account number once so your bank can confirm the name on it. We never store the number — only whether the name matched.", "evidence_required": False},
         "category.lm.id_uploaded":         {"name": "Government-issued ID uploaded",        "points": 2,  "how_to_earn": "Upload a clear photo of your SA ID, passport, or drivers licence.", "evidence_required": True},
         "category.lm.id_number_valid":     {"name": "ID / passport number entered & valid", "points": 2,  "how_to_earn": "Enter your SA ID number (13 digits) or passport number — format validated instantly.", "evidence_required": False},
         "category.lm.id_ai_verified":      {"name": "Identity AI-verified",                "points": 5,  "how_to_earn": "AI vision confirms your name and ID number match your uploaded document.", "evidence_required": True},
@@ -15767,11 +15822,6 @@ class IdentityVerifyIn(BaseModel):
     doc_url: str            # URL of the already-uploaded ID document in R2
 
 
-class BankingIn(BaseModel):
-    account_holder: str
-    bank_name: str
-    account_number: str   # We store last 4 digits only
-    branch_code: str = ""
 
 
 @app.post("/users/{email}/verify-identity")
@@ -15928,57 +15978,219 @@ def _upsert_credential(conn, email: str, signal_id: str, status: str):
         )
 
 
-@app.post("/users/{email}/banking")
-def add_banking(
+# ══════════════════════════════════════════════════════════════════════════════
+# PAYNAME-1 (27 Sep 2026) — RUL-176/178. The strongest identity check we have, and it
+# costs nothing, because it reads a payment the Seller was making anyway.
+#
+# When Paystack reports the name on the instrument that paid, a BANK has moved money in
+# that name. Compared against her verified ID name that is two independent sources — and
+# it is strictly stronger than the retired banking_name_match, where both sides of the
+# comparison were typed by the same person.
+#
+# THE RULE THAT MATTERS: Paystack reports no name for most card charges. A missing name is
+# NOT MEASURED, never a mismatch. A Seller who paid by card has not failed anything, so
+# nothing is written and no credential moves — the same principle as RG-0401 for the
+# instruments, applied to a person. Only a name that came back and did NOT match is a
+# real negative, and even then this records nothing: it simply does not award.
+#
+# Only the verdict is kept: users.payment_name_verified_at and the credential. The name
+# itself is never stored, and never appears in the endpoint's response.
+# ══════════════════════════════════════════════════════════════════════════════
+def _payment_name_check(conn, email: str, verify_data: dict) -> dict:
+    """Compare the payment's account name to the verified ID name. Verdict only.
+
+    Returns {"checked": bool, "matched": bool}. Never raises: a top-up must never fail
+    because an optional trust check did, so every fault here is swallowed into
+    checked=False (the money path is the caller's job, not this function's).
+    """
+    out = {"checked": False, "matched": False}
+    try:
+        name = payments.payment_account_name(verify_data)
+        if not name:
+            return out                      # no name reported -> NOT MEASURED
+        row = conn.execute("SELECT id_name FROM users WHERE email=?", (email,)).fetchone()
+        id_name = (row["id_name"] if row and row["id_name"] else "").strip()
+        if not id_name:
+            return out                      # nothing verified to compare against yet
+        out["checked"] = True
+        if _names_match(name, id_name) >= 0.75:
+            out["matched"] = True
+            conn.execute("UPDATE users SET payment_name_verified_at=? WHERE email=?",
+                         (_utc_now(), email))
+            _upsert_credential(conn, email, "category.lm.payment_name_verified", "earned")
+    except Exception as _e:
+        _log.warning("PAYNAME-1: name check skipped (%s)", type(_e).__name__)
+        return {"checked": False, "matched": False}
+    return out
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# BANKRESOLVE-1 (27 Sep 2026) — RUL-176/178. This REPLACES POST /users/{email}/banking.
+#
+# THE OLD ENDPOINT asked a Seller to type her account holder name, bank, account number
+# and branch code, wrote four of them to users.banking_*, and awarded 5 Trust Score
+# points: 2 for "details on file" and 3 for the typed name matching her verified ID name.
+# David's ruling, 27 Sep 2026: "we dont store the customers banking details because that
+# was an earlier option before we had Paystack, we dont need it now."
+#
+# The old design also did not do what it claimed. Nothing validated the account number,
+# so "details on file" evidenced only that she could type sixteen digits, and the name it
+# matched was a name SHE supplied — the two sides of the comparison came from the same
+# person. No purchase code ever read the stored details; Paystack takes payment details
+# itself. So the Platform held a Seller's bank account for no purpose it could name,
+# which is the POPIA failure exactly: a stated purpose that is not the real one.
+#
+# THIS ENDPOINT gets the fact the old one only claimed. Paystack resolves the account
+# number to the name the BANK holds against it, and that name is compared to her verified
+# ID name. Two independent sources, one of them a bank.
+#
+# WHAT IS KEPT: one timestamp, users.bank_name_verified_at, and the credential. That is
+# all. The account number and the bank's returned name exist as local variables for the
+# length of one HTTPS call and are never written to the database, a log line, a response
+# body or an exception message — scripts/test_identity_verdicts.py asserts each of those
+# and fails if a later edit leaks one. The response tells her only whether it matched.
+# ══════════════════════════════════════════════════════════════════════════════
+class BankNameCheckIn(BaseModel):
+    account_number: str
+    bank_code: str
+
+
+@app.post("/users/{email}/verify-bank-name")
+def verify_bank_name(
     email: str,
-    payload: BankingIn,
+    payload: BankNameCheckIn,
     _key: str = Depends(auth.require_api_key),
     ts_user: str = Cookie(default=None),
     x_admin_key: str = Header(default=None),
 ):
-    """Store bank details (last 4 digits only). Cross-check account holder name
-    against verified ID name on file. Award trust signals."""
-    email = _actor(ts_user, email, "banking", x_admin_key)
+    """Ask the bank for the name on an account, compare it to the verified ID name, and
+    keep ONLY whether it matched. The number is never stored (BANKRESOLVE-1, RUL-176)."""
+    email = _actor(ts_user, email, "verify-bank-name", x_admin_key)
     email = email.lower().strip()
     conn = database.get_db()
-    user = conn.execute("SELECT id_name FROM users WHERE email=?", (email,)).fetchone()
-    if not user:
+    try:
+        user = conn.execute("SELECT id_name FROM users WHERE email=?", (email,)).fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="Seller not found")
+        id_name = (user["id_name"] or "").strip()
+        if not id_name:
+            # Nothing to compare against — say so rather than award or half-award.
+            return {"checked": False, "matched": False,
+                    "reason": "Verify your ID first — there is no confirmed name to compare against yet."}
+
+        acct = (payload.account_number or "").strip()
+        code = (payload.bank_code or "").strip()
+        if not acct.isdigit() or not (6 <= len(acct) <= 20) or not code:
+            raise HTTPException(status_code=400, detail="Check the account number and bank.")
+
+        res = payments.resolve_account_name(acct, code)
+        # `acct` is not referenced again below this line, and neither the number nor the
+        # resolved name is placed in any dict that is returned, logged or stored.
+        if not res.get("ok"):
+            # A resolve that did not happen is NOT MEASURED, never a failed match: the
+            # same rule the instruments follow (RG-0401). She is not penalised for our
+            # vendor being unreachable, and no credential is written either way.
+            return {"checked": False, "matched": False,
+                    "reason": "We could not reach your bank to check the name just now. "
+                              "Nothing was saved; try again later."}
+
+        score = _names_match(res.get("account_name") or "", id_name)
+        matched = score >= 0.75
+        if matched:
+            conn.execute("UPDATE users SET bank_name_verified_at=? WHERE email=?",
+                         (_utc_now(), email))
+            _upsert_credential(conn, email, "category.lm.bank_name_verified", "earned")
+            conn.commit()
+        return {"checked": True, "matched": matched,
+                "signals_awarded": ["category.lm.bank_name_verified"] if matched else [],
+                "reason": ("The name on that account matches your verified ID."
+                           if matched else
+                           "The name on that account does not match your verified ID, so no "
+                           "points were added. Nothing about the account was saved.")}
+    finally:
         conn.close()
-        raise HTTPException(status_code=404, detail="Seller not found")
 
-    last4 = re.sub(r"\D", "", payload.account_number)[-4:] if payload.account_number else ""
-    conn.execute(
-        """UPDATE users SET banking_holder=?, banking_bank=?,
-           banking_account_last4=?, banking_branch=?,
-           banking_added_at=strftime('%Y-%m-%dT%H:%M:%SZ','now')
-           WHERE email=?""",
-        (payload.account_holder, payload.bank_name, last4,
-         payload.branch_code, email)
-    )
-    signals = []
-    _upsert_credential(conn, email, "category.lm.banking", "earned")
-    signals.append("category.lm.banking")
 
-    # Name match against ID name on file
-    name_match_score = 0.0
-    id_name = user["id_name"] if user["id_name"] else ""
-    if id_name:
-        name_match_score = _names_match(payload.account_holder, id_name)
-        if name_match_score >= 0.75:
-            _upsert_credential(conn, email, "category.lm.banking_name_match", "earned")
-            signals.append("category.lm.banking_name_match")
+# ══════════════════════════════════════════════════════════════════════════════
+# ID-CONFIRM-1 (27 Sep 2026) — RUL-178. The route two credentials were waiting for.
+#
+# WHAT WAS BROKEN, and it was one gap producing two dead credentials, not two gaps:
+#   • category.lm.id_uploaded (2 pts) IS written when a Seller uploads an ID document,
+#     but EVIDENCE-TRUE-2 writes it as "pending" because a legal credential waits for a
+#     human — and no route existed for that human to act, so it could never become earned.
+#   • category.lm.id_admin_verified (5 pts) was declared in the catalogue and no code
+#     anywhere ever wrote it.
+# So 7 of the identity block's declared points were unreachable, and the AI lane
+# (id_ai_verified, 5 pts) was carrying identity on its own. This is the same shape as
+# OPEN_LOOPS L8 and DESIGN-ROUTE-1: a capability fully declared with no caller.
+#
+# MUTUAL EXCLUSIVITY, deliberately. id_ai_verified and id_admin_verified are two ROUTES
+# to one fact — "this document belongs to this person". They must not stack to 10, or a
+# Seller whose document was checked twice outscores one checked once by a wider margin
+# than the evidence supports. When the AI lane has already earned, confirming by hand
+# does NOT add 5: it supersedes, and the response says so.
+#
+# This route only ever RAISES a verdict a human reached by looking at the document. It
+# cannot be reached by the Seller, it records who acted, and a rejection downgrades
+# nothing silently — it says plainly that the document was not accepted.
+# ══════════════════════════════════════════════════════════════════════════════
+class _IdConfirmIn(BaseModel):
+    email: str
+    decision: str = "confirm"        # confirm | reject
+    note: str = ""
+
+
+@app.post("/admin/identity/confirm")
+def admin_identity_confirm(body: _IdConfirmIn, _admin=Depends(_require_admin_or_key)):
+    """A human confirms (or rejects) a Seller's uploaded identity document."""
+    email = (body.email or "").strip().lower()
+    decision = (body.decision or "").strip().lower()
+    if decision not in ("confirm", "reject"):
+        raise HTTPException(status_code=400, detail="decision must be confirm or reject")
+    who = str((_admin or {}).get("name") or "admin")[:80] if isinstance(_admin, dict) else "admin"
+    conn = database.get_db()
+    try:
+        user = conn.execute("SELECT email FROM users WHERE email=?", (email,)).fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="Seller not found")
+        doc = conn.execute(
+            "SELECT id FROM seller_documents WHERE email=? AND doc_type='id_doc' ORDER BY id DESC LIMIT 1",
+            (email,)).fetchone()
+        if not doc:
+            raise HTTPException(status_code=400,
+                                detail="This Seller has uploaded no identity document to confirm.")
+        awarded, superseded = [], False
+        if decision == "reject":
+            conn.commit()
+            return {"ok": True, "decision": "reject", "by": who,
+                    "signals_awarded": [],
+                    "note": "Document not accepted. Nothing was awarded and nothing already "
+                            "earned was removed — tell the Seller what to upload instead."}
+
+        # the upload's own pending credential finally becomes earned
+        _upsert_credential(conn, email, "category.lm.id_uploaded", "earned")
+        awarded.append("category.lm.id_uploaded")
+
+        ai = conn.execute("SELECT status FROM user_credentials WHERE email=? AND signal_id=?",
+                          (email, "category.lm.id_ai_verified")).fetchone()
+        if ai and ai["status"] == "earned":
+            # Two routes to one fact — do not stack to 10 (see the header).
+            superseded = True
         else:
-            _upsert_credential(conn, email, "category.lm.banking_name_match", "pending")
-            signals.append("category.lm.banking_name_match (pending — name mismatch, admin review)")
-
-    conn.commit()
-    conn.close()
-    return {
-        "signals_awarded": signals,
-        "name_match_score": name_match_score,
-        "account_last4": last4,
-        "name_on_file": id_name or "No ID name on file yet",
-    }
+            _upsert_credential(conn, email, "category.lm.id_admin_verified", "earned")
+            awarded.append("category.lm.id_admin_verified")
+        conn.execute("UPDATE users SET id_verified_at=? WHERE email=?",
+                     (_utc_now(), email))
+        conn.commit()
+        return {"ok": True, "decision": "confirm", "by": who,
+                "signals_awarded": awarded,
+                "ai_already_earned": superseded,
+                "note": ("Confirmed by hand. The AI lane had already earned the 5 identity "
+                         "points, so this confirms the same fact rather than adding another 5."
+                         if superseded else
+                         "Confirmed by hand — identity points awarded.")}
+    finally:
+        conn.close()
 
 
 @app.get("/users/{email}/identity-status")

@@ -218,11 +218,11 @@
    "source": "consistency"
   },
   {
-   "section": "9.2 (NEW row: banking details)",
-   "old": "<tr>\n<td>Transaction data: Tuppence earned/spent, Introduction history</td>\n<td>Tuppence Wallet management; dispute resolution; FICA records. Legal basis: contractual necessity; legal obligation.</td>\n</tr>",
-   "new": "<tr>\n<td>Transaction data: Tuppence earned/spent, Introduction history</td>\n<td>Tuppence Wallet management; dispute resolution; FICA records. Legal basis: contractual necessity; legal obligation.</td>\n</tr>\n<tr>\n<td>Banking details (Sellers): account holder, bank, last 4 digits of the account number, branch code</td>\n<td>Confirmation of the Seller's identity (the account holder is matched to the verified ID name); Tuppence purchases. The Platform never pays money out to this account, and Tuppence is not redeemable for cash. Legal basis: consent (given when you add them).</td>\n</tr>",
-   "why": "NEW — David's addition of 26 Sep 2026, matching the app: POST /users/{email}/banking keeps holder, bank, last 4 digits and branch code and matches the holder to the verified ID name, and the in-app form says the details confirm who you are and are used when you buy Tuppence, with nothing paid out (row inserted after 'Transaction data').",
-   "source": "David 26 Sep"
+   "section": "9.2 (banking details)",
+   "old": "Banking details (Sellers): account holder, bank, last 4 digits of the account number, branch code — drafted 26 Sep as a NEW row in the 9.2 data table.",
+   "new": "ROW REMOVED. The Terms no longer mention banking details at all.",
+   "why": "David's ruling, 27 Sep 2026: \"we don't store the customers banking details, because that was an earlier option before we had Paystack, we don't need it now\". This answers review decisions 2 (legal basis) and 3 (whether Tuppence purchases are a real purpose) by removing the subject: Paystack takes payment details itself and no code read the stored details at purchase. Data minimisation — the strongest POPIA answer is not to hold it.",
+   "source": "David 27 Sep"
   },
   {
    "section": "9.6",
@@ -615,20 +615,47 @@
    "new": "<li><p>No expiry of purchased or earned Tuppence: Tuppence you buy or earn does not expire",
    "why": "'(current state)' hinted at an expiry to come; canon says bought and earned Tuppence is never removed (same fix as the non-redeemable bullet). [review]",
    "source": "editorial; PRICING_CANON.md"
+  },
+  {
+   "section": "4.6 Listing Lifecycle",
+   "old": "Draft listings are invisible to Buyers and expire automatically after 30 days.",
+   "new": "Draft listings are invisible to Buyers and remain available to the Seller until the Seller publishes or deletes them.",
+   "why": "David: drafts do not expire. Carried from EULA_v1.19_DRAFT_country_schedules.md (24 Sep), which was a second v1.19 draft this one did not know about.",
+   "source": "David 24 Sep · merged 27 Sep"
+  },
+  {
+   "section": "13.5 Scheduled Countries",
+   "old": "South Africa, the United Kingdom, the United States, Australia, France, Portugal, New Zealand, and Argentina.",
+   "new": "South Africa, Australia, Botswana, Germany, Kenya, Mozambique, Namibia, the United Kingdom and the United States, together with France, Portugal, New Zealand and Argentina.",
+   "why": "Matches the app's country picker canon. France, Portugal, New Zealand and Argentina keep their schedules so no existing user loses a protection.",
+   "source": "David 24 Sep · merged 27 Sep"
+  },
+  {
+   "section": "13.6 Country Schedules",
+   "old": "Schedules A–G.",
+   "new": "Schedules A–L: adds Schedule H — Botswana; I — Germany; J — Kenya; K — Mozambique; L — Namibia.",
+   "why": "Five countries had a localised Quick page and no Country Schedule. Closes review decision 11, which asked whether they needed one after they had already been drafted.",
+   "source": "David 24 Sep · merged 27 Sep"
+  },
+  {
+   "section": "Schedules H–L (new)",
+   "old": "—",
+   "new": "Botswana (4 clauses: Consumer Protection Act 2018, ECT Act 2014, Data Protection Act 18 of 2024, unfair terms) · Germany (7: BGB 305–310/312–312k, 14-day withdrawal, liability, GDPR+BDSG, VSBG s36, DDG s5 provider identification, BGB 307–309) · Kenya (4: Consumer Protection Act 2012, KICA, Data Protection Act 2019/ODPC, unfair terms) · Mozambique (3: Law 22/2009, Law 3/2017 + Constitution art. 71, Portuguese language) · Namibia (3: mandatory rights, Electronic Transactions Act 2019, Constitution art. 13).",
+   "why": "Carried verbatim from the 24 Sep draft, whose law status was checked that day. Mozambique and Namibia have no dedicated data protection act in force, and both clauses say so and bind us to the coming law on commencement.",
+   "source": "David 24 Sep · merged 27 Sep"
+  },
+  {
+   "section": "9.2 (identity checks — replaces the withdrawn banking row)",
+   "old": "— (the 26 Sep banking row was removed on David's 27 Sep ruling)",
+   "new": "A much narrower row: only the YES/NO and the date of two identity checks are held, and the row states in bold that we do not store the account number, account name, bank, branch code or cardholder name. Legal basis: consent, declinable.",
+   "why": "CONSEQUENCE OF DAVID'S APPROVAL of option 4 on 27 Sep. Removing the old row was right, but the bank-name check does PROCESS an account number transiently (one call to Paystack's /bank/resolve), and POPIA requires the Terms to say what is processed even when nothing is kept. Saying nothing would have been the same defect as the old row in reverse.",
+   "source": "Claude, from David's 27 Sep approval"
   }
  ],
  "needs_david": [
   {
    "section": "5.3 (Casuals and Adventures rows, 'Adventures — No Trust Score Penalty' box) and 4.9",
    "question": "Should Casuals and Adventures Sellers be exempt from the −5 for ignoring an Introduction? The Terms promise them no penalty, but the code gives every category except Local Market the same −5 (bea_main.py _lifecycle_sweep), and the app's own 'How introductions work' table shows −5 for Accommodation and Experiences. Options: (a) Drop the exemption from 5.3 (the Casuals and Adventures rows and the 'Adventures — No Trust Score Penalty' box), so the Terms match the code and the app. (b) Build the exemption into the code (skip the −5 for Casuals and Adventures in _lifecycle_sweep) and correct the app's table. Recommended: (a), because your RESP-1 ruling of 23 Jul 2026 (docs/TRUST_SCORE_CRITERIA.md, Amendment v1.3) applies the −5 to every standard Introduction and the app already tells Adventures Sellers so. The text is left as it stands in this draft."
-  },
-  {
-   "section": "9.2 (new banking row)",
-   "question": "Which legal basis should the new banking row give? Options: (a) Consent, given when the Seller adds the details (as drafted, like the certification-documents row). (b) Contractual necessity. (c) Legitimate interest. Recommended: (a), because adding banking details is optional in the app (a 2-point trust signal, POST /users/{email}/banking) and nothing in the contract depends on them."
-  },
-  {
-   "section": "9.2 (new banking row)",
-   "question": "Should the banking row keep 'Tuppence purchases' as a purpose? It is your wording and the in-app form says the details are used 'when you buy Tuppence', but no purchase code reads the stored banking details — Paystack takes the payment details itself. Options: (a) Keep the purpose as worded. (b) Drop it from this row and from the in-app form text, leaving confirmation of identity as the purpose. Recommended: (b), because POPIA requires the stated purpose to be the real one, and today the details are used only for the name match against the verified ID and as a trust signal."
   },
   {
    "section": "Publishing v1.19",
@@ -657,11 +684,24 @@
   {
    "section": "2.5, 9.3 (Buyer acceptance)",
    "question": "Should Buyers formally accept the Terms somewhere? Only Sellers do today (before a listing goes live, plus the separate Buzz and Local Market acceptances: bea_main.py /users/{email}/eula, /buzz/accept, /local-market/eula/accept), so 'By accepting this EULA' in 2.5 (age and capacity warranties) and 9.3 (POPIA consent) never binds a Buyer. Options: (a) Add a one-tap Buyer acceptance, recorded with timestamp and version like the Seller's, at the first Introduction request or first Tuppence top-up. (b) Reword 2.5 and 9.3 to 'By using the Platform', relying on use alone. Recommended: (a), because POPIA consent and an ECT Act signature both need a positive act, and the first request or top-up is where a Buyer first commits money."
+  }
+ ],
+ "noticed_not_changed": [],
+ "answered_by_david": [
+  {
+   "section": "9.2 (new banking row)",
+   "question": "Which legal basis should the new banking row give? Options: (a) Consent, given when the Seller adds the details (as drafted, like the certification-documents row). (b) Contractual necessity. (c) Legitimate interest. Recommended: (a), because adding banking details is optional in the app (a 2-point trust signal, POST /users/{email}/banking) and nothing in the contract depends on them.",
+   "ruling": "David 27 Sep 2026: banking details are not stored at all — an earlier option from before Paystack. The row is removed, so neither the legal basis nor the purpose needs answering."
+  },
+  {
+   "section": "9.2 (new banking row)",
+   "question": "Should the banking row keep 'Tuppence purchases' as a purpose? It is your wording and the in-app form says the details are used 'when you buy Tuppence', but no purchase code reads the stored banking details — Paystack takes the payment details itself. Options: (a) Keep the purpose as worded. (b) Drop it from this row and from the in-app form text, leaving confirmation of identity as the purpose. Recommended: (b), because POPIA requires the stated purpose to be the real one, and today the details are used only for the name match against the verified ID and as a trust signal.",
+   "ruling": "David 27 Sep 2026: banking details are not stored at all — an earlier option from before Paystack. The row is removed, so neither the legal basis nor the purpose needs answering."
   },
   {
    "section": "13.5, 13.6 (Quick country packs)",
-   "question": "Do the countries the Quick page is set up for need a Country Schedule? Quick packs exist for ZA, NA, BW, MZ, KE, GB, DE, AU and US (roles/quick_country_packs.json), so Namibia, Botswana, Mozambique, Kenya and Germany get a localised Quick page but no Schedule, while France, Portugal, New Zealand and Argentina have a Schedule but no Quick pack. Options: (a) Add Country Schedules for the five Quick-pack countries (Germany can follow the France and Portugal GDPR pattern). (b) Switch those five Quick packs off until Schedules exist. (c) Leave both and rely on 13.5's own-initiative, own-risk clause. Recommended: (a), because a localised Quick page shows the Platform deliberately offers itself there, which undercuts 13.5's own-risk clause; the missing Quick packs for the four Scheduled countries are a product gap, not a legal one."
+   "question": "Do the countries the Quick page is set up for need a Country Schedule? Quick packs exist for ZA, NA, BW, MZ, KE, GB, DE, AU and US (roles/quick_country_packs.json), so Namibia, Botswana, Mozambique, Kenya and Germany get a localised Quick page but no Schedule, while France, Portugal, New Zealand and Argentina have a Schedule but no Quick pack. Options: (a) Add Country Schedules for the five Quick-pack countries (Germany can follow the France and Portugal GDPR pattern). (b) Switch those five Quick packs off until Schedules exist. (c) Leave both and rely on 13.5's own-initiative, own-risk clause. Recommended: (a), because a localised Quick page shows the Platform deliberately offers itself there, which undercuts 13.5's own-risk clause; the missing Quick packs for the four Scheduled countries are a product gap, not a legal one.",
+   "ruling": "David 27 Sep 2026: merge the two v1.19 drafts before he reads it — Schedules H–L were already drafted on 24 Sep, so this was never an open question."
   }
- ],
- "noticed_not_changed": []
+ ]
 }

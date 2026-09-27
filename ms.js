@@ -7866,7 +7866,7 @@ async function sobInit() {
         // EULA-VERSION-1 (24 Sep 2026): a returning seller re-accepting after a material change is
         // told what changed, not told she never accepted.
         sobState._eulaChanges   = uData.eula_reaccept ? (uData.eula_changes || 'The Terms have changed since you accepted them.') : '';
-        sobState._hasBanking    = !!uData.banking_added_at;
+        sobState._hasBankName   = !!uData.bank_name_verified_at;   /* BANKRESOLVE-1: the verdict, not stored details */
       }
     } catch(e) {}
     // Jump straight to phase 3 (EULA) when he has not signed -- or when we could not find
@@ -8384,7 +8384,7 @@ async function _sobGoLiveInner() {
      our customer and also for them to purchase tuppence's ... we just dont use it to pay them any money out"). The
      25 Sep inspection hid this nudge (ts2-17) because it promised payouts and offered a form that did not exist. The
      form exists now (msOpenBankingSheet) and the card says what the details are for; nothing is ever paid out. */
-  if (!sobState._hasBanking) {
+  if (!sobState._hasBankName) {
     const nudge = document.getElementById('sob-banking-nudge');
     if (nudge) nudge.style.display = 'flex';
   }
@@ -8487,65 +8487,94 @@ function sobAddBanking() {
 function _msBankEmail(){
   try{ return localStorage.getItem('ms_user_email') || localStorage.getItem('ms_aa_email') || (typeof sobState!=='undefined' && sobState && sobState.email) || ''; }catch(_){ return ''; }
 }
-var MS_BANKS = ['ABSA','African Bank','Capitec','Discovery Bank','FNB','Investec','Nedbank','Standard Bank','TymeBank','Other'];
-function msOpenBankingSheet(){
+/* BANKRESOLVE-1 (27 Sep 2026, RUL-176/178). This REPLACED the banking-details form of 26 Sep.
+   David, 27 Sep: "we dont store the customers banking details because that was an earlier option
+   before we had Paystack, we dont need it now."
+   The old sheet asked for account holder, bank, account number and branch code and saved four of
+   them. It also did not do what it claimed: nothing validated the number, and the name it matched
+   was one SHE typed, so both sides of the comparison came from the same person.
+   This sheet asks her bank instead. The number goes straight to Paystack's /bank/resolve, the name
+   the BANK holds is compared to her verified ID name, and only the answer is kept. No account
+   holder field -- we already have her verified name, which is the whole point -- and no branch code.
+   Bank codes come from GET /payment/banks (Paystack's own list), never a hardcoded table. */
+var MS_BANKS = null;   /* filled from the server; never guessed */
+async function _msLoadBanks(){
+  if (MS_BANKS) return MS_BANKS;
+  try{
+    var r = await fetch(BEA_URL + '/payment/banks', { headers: { 'X-Api-Key': API_KEY } });
+    var d = await r.json();
+    MS_BANKS = (d && d.ok && d.banks && d.banks.length) ? d.banks : null;
+  }catch(e){ MS_BANKS = null; }
+  return MS_BANKS;
+}
+async function msOpenBankNameCheck(){
   var email = _msBankEmail();
-  if(!email){ showToast('Sign in first to add your banking details.'); return; }
+  if(!email){ showToast('Sign in first to confirm your bank name.'); return; }
+  var banks = await _msLoadBanks();
   var old = document.getElementById('ms-bank-overlay'); if(old) old.remove();
   var ov = document.createElement('div'); ov.id = 'ms-bank-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
-  var fld = 'display:block;width:100%;box-sizing:border-box;margin:4px 0 12px;padding:11px 12px;border:1.5px solid #cbd5e1;border-radius:10px;font:inherit;font-size:15px;color:#0f172a;background:#fff;';
+  var fld = 'display:block;width:100%;box-sizing:border-box;margin:4px 0 12px;padding:11px 12px;border:1.5px solid #cbd5e1;border-radius:10px;font:inherit;font-size:15px;';
   var lab = 'display:block;font-size:12.5px;font-weight:700;color:#334155;';
-  ov.innerHTML = '<div role="dialog" aria-modal="true" aria-labelledby="ms-bank-h" style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;padding:18px 20px 24px;box-sizing:border-box;">'
+  var picker = banks
+    ? '<label style="'+lab+'" for="ms-bank-name">Your bank</label><select id="ms-bank-name" style="'+fld+'"><option value="">Choose your bank</option>'
+      + banks.map(function(b){ return '<option value="'+b.code+'">'+b.name+'</option>'; }).join('') + '</select>'
+    : '<p style="margin:0 0 12px;font-size:13px;color:#b91c1c;">We cannot load the bank list just now, so this check is unavailable. Nothing else is affected — try again later.</p>';
+  ov.innerHTML = '<div role="dialog" aria-modal="true" aria-labelledby="ms-bank-h" style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88vh;overflow:auto;padding:18px 18px 26px;">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-    +   '<span id="ms-bank-h" style="font-size:16px;font-weight:800;color:#1e293b;">Your banking details</span>'
-    +   '<button type="button" aria-label="Close" id="ms-bank-x" style="background:none;border:none;font-size:22px;line-height:1;color:#64748b;cursor:pointer;">\u00d7</button></div>'
-    + '<p style="margin:0 0 14px;font-size:13px;line-height:1.55;color:#475569;">We use them to confirm who you are and when you buy Tuppence. TrustSquare never pays money out to this account.</p>'
-    + '<label style="'+lab+'" for="ms-bank-holder">Account holder</label><input id="ms-bank-holder" type="text" autocomplete="name" style="'+fld+'">'
-    + '<label style="'+lab+'" for="ms-bank-name">Bank</label><select id="ms-bank-name" style="'+fld+'"><option value="">Choose your bank</option>'
-    +   MS_BANKS.map(function(b){ return '<option>'+b+'</option>'; }).join('') + '</select>'
-    + '<label style="'+lab+'" for="ms-bank-acc">Account number</label><input id="ms-bank-acc" type="text" inputmode="numeric" autocomplete="off" style="'+fld+'">'
-    + '<label style="'+lab+'" for="ms-bank-branch">Branch code (optional)</label><input id="ms-bank-branch" type="text" inputmode="numeric" autocomplete="off" style="'+fld+'">'
-    + '<p style="margin:-4px 0 14px;font-size:12px;color:#64748b;">We keep only the last 4 digits of the account number.</p>'
+    +   '<span id="ms-bank-h" style="font-size:16px;font-weight:800;color:#1e293b;">Confirm the name on your bank account</span>'
+    +   '<button type="button" aria-label="Close" id="ms-bank-x" style="background:none;border:none;font-size:22px;line-height:1;color:#64748b;cursor:pointer;">×</button></div>'
+    + '<p style="margin:0 0 14px;font-size:13px;line-height:1.55;color:#475569;">Your bank tells us the name on the account, and we check it against your verified ID name. '
+    +   '<b>We do not store your account number or any bank details</b> — only whether the name matched. It is worth 2 Trust Score points.</p>'
+    + picker
+    + (banks ? '<label style="'+lab+'" for="ms-bank-acc">Account number</label><input id="ms-bank-acc" type="text" inputmode="numeric" autocomplete="off" style="'+fld+'">'
+      + '<p style="margin:-4px 0 14px;font-size:12px;color:#64748b;">Used once, for this check, and never saved.</p>' : '')
     + '<div id="ms-bank-err" role="alert" style="display:none;margin:0 0 10px;font-size:13px;color:#b91c1c;"></div>'
-    + '<button type="button" id="ms-bank-save" style="width:100%;background:#0f172a;color:#fff;border:none;border-radius:50px;padding:13px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;">Save banking details</button>'
+    + (banks ? '<button type="button" id="ms-bank-save" style="width:100%;background:#0f172a;color:#fff;border:none;border-radius:50px;padding:13px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;">Check the name</button>' : '')
     + '</div>';
   document.body.appendChild(ov);
   var close = function(){ var o = document.getElementById('ms-bank-overlay'); if(o) o.remove(); };
   ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
   document.getElementById('ms-bank-x').onclick = close;
-  try{ var nm = localStorage.getItem('ms_aa_name') || (typeof sobState!=='undefined' && sobState && sobState.name) || ''; if(nm) document.getElementById('ms-bank-holder').value = nm; }catch(_){}
+  if(!banks) return;
   document.getElementById('ms-bank-save').onclick = async function(){
-    var holder = document.getElementById('ms-bank-holder').value.trim();
-    var bank = document.getElementById('ms-bank-name').value;
+    var code = document.getElementById('ms-bank-name').value;
     var acc = document.getElementById('ms-bank-acc').value.replace(/\D/g, '');
-    var branch = document.getElementById('ms-bank-branch').value.replace(/\D/g, '');
     var err = document.getElementById('ms-bank-err');
     var say = function(t){ err.textContent = t; err.style.display = 'block'; };
-    if(!holder){ say('Please type the account holder\'s name.'); return; }
-    if(!bank){ say('Please choose your bank.'); return; }
+    if(!code){ say('Please choose your bank.'); return; }
     if(acc.length < 6){ say('Please type the full account number.'); return; }
-    var btn = this; btn.disabled = true; btn.textContent = 'Saving\u2026'; err.style.display = 'none';
+    var btn = this; btn.disabled = true; btn.textContent = 'Asking your bank…'; err.style.display = 'none';
     try{
-      var r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/banking', {
+      var r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/verify-bank-name', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
-        body: JSON.stringify({ account_holder: holder, bank_name: bank, account_number: acc, branch_code: branch }) });
-      if(r.status === 401 || r.status === 403){ btn.disabled = false; btn.textContent = 'Save banking details'; say('Please sign in again to save your banking details.'); return; }
+        body: JSON.stringify({ account_number: acc, bank_code: code }) });
+      /* the typed number is not kept in any variable past this point */
+      acc = '';
+      document.getElementById('ms-bank-acc').value = '';
+      if(r.status === 401 || r.status === 403){ btn.disabled = false; btn.textContent = 'Check the name'; say('Please sign in again to run this check.'); return; }
       if(!r.ok) throw new Error('HTTP ' + r.status);
       var d = await r.json().catch(function(){ return {}; });
-      try{ if(typeof sobState !== 'undefined' && sobState) sobState._hasBanking = true; if(typeof sbState !== 'undefined' && sbState) sbState._hasBanking = true; }catch(_){}
-      ['sob-banking-nudge','sb-banking-nudge'].forEach(function(id){ var n = document.getElementById(id); if(n) n.style.display = 'none'; });
-      close();
-      showToast('Banking details saved \u2014 account ending ' + (d.account_last4 || acc.slice(-4)) + '.', 5000);
-      msLoadBankingCard();
+      if(d.matched){
+        try{ if(typeof sobState !== 'undefined' && sobState) sobState._hasBankName = true; if(typeof sbState !== 'undefined' && sbState) sbState._hasBankName = true; }catch(_){}
+        ['sob-banking-nudge','sb-banking-nudge'].forEach(function(id){ var n = document.getElementById(id); if(n) n.style.display = 'none'; });
+        close();
+        showToast('Your bank confirmed the name — 2 Trust Score points added. Nothing about the account was saved.', 6000);
+        if(typeof msLoadBankingCard === 'function') msLoadBankingCard();
+      } else {
+        btn.disabled = false; btn.textContent = 'Check the name';
+        say(d.reason || 'That did not match your verified ID name, so no points were added. Nothing was saved.');
+      }
     }catch(e){
-      btn.disabled = false; btn.textContent = 'Save banking details';
-      say('Could not save \u2014 nothing was stored. Please try again.');
+      btn.disabled = false; btn.textContent = 'Check the name';
+      say('We could not reach your bank just now. Nothing was saved — please try again later.');
     }
   };
-  setTimeout(function(){ try{ document.getElementById('ms-bank-holder').focus(); }catch(_){} }, 60);
+  setTimeout(function(){ try{ document.getElementById('ms-bank-acc').focus(); }catch(_){} }, 60);
 }
+/* Existing call sites still say msOpenBankingSheet; they now open the name check. */
+function msOpenBankingSheet(){ return msOpenBankNameCheck(); }
 function msLoadBankingCard(){
   var st = document.getElementById('ms-banking-state'), b = document.getElementById('ms-banking-btn');
   if(!st) return;
@@ -8554,12 +8583,13 @@ function msLoadBankingCard(){
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(u){
       if(!u) return;
-      if(u.banking_added_at){
-        st.textContent = 'On file' + (u.banking_bank ? ' \u00b7 ' + u.banking_bank : '') + (u.banking_account_last4 ? ' \u00b7 account ending ' + u.banking_account_last4 : '');
-        if(b) b.textContent = 'Update banking details \u2192';
+      /* BANKRESOLVE-1: nothing is 'on file' any more — report the verdict, never a bank or a last-4. */
+      if(u.bank_name_verified_at){
+        st.textContent = 'Your bank confirmed the name on your account';
+        if(b) b.textContent = 'Check again \u2192';
       } else {
-        st.textContent = 'Not added yet';
-        if(b) b.textContent = 'Add banking details \u2192';
+        st.textContent = 'Not confirmed yet \u00b7 worth 2 points';
+        if(b) b.textContent = 'Confirm the name on your account \u2192';
       }
     }).catch(function(){});
 }
@@ -10992,7 +11022,7 @@ async function sbDoPublish(){
           return sbDoPublish();
         }
         // Banking nudge: remember for post-publish display
-        sbState._hasBanking=!!_ud.banking_added_at;
+        sbState._hasBankName=!!_ud.bank_name_verified_at;   /* BANKRESOLVE-1 */
       }
     }catch(_){}
   }
@@ -11114,7 +11144,7 @@ async function sbDoPublish(){
     loadLiveListings();
 
     /* BANKING-FORM-1 (26 Sep 2026): the nudge is back, pointing at the real form, with the real purpose. */
-    if(!sbState._hasBanking){
+    if(!sbState._hasBankName){
       const _sbBankNudge=document.getElementById('sb-banking-nudge');
       if(_sbBankNudge) _sbBankNudge.style.display='flex';
     }
